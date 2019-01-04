@@ -2,14 +2,14 @@
 
 . ../../testenv.sh
 
+GHDL_STD_FLAGS=--std=08
+
 analyze repro.vhdl
 if ghdl_has_feature repro dump-rti; then
     elab_simulate repro --dump-rti
 fi
 
 clean
-
-GHDL_STD_FLAGS=--std=08
 
 analyze --work=poc my_config_ML505.vhdl
 analyze --work=poc my_project.vhdl
