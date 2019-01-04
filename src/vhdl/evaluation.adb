@@ -2392,6 +2392,7 @@ package body Evaluation is
       El : Iir;
    begin
       Idx := Eval_Static_Expr (Get_Nth_Element (Indexes, 0));
+      Set_Nth_Element (Indexes, 0, Idx);
       Pos := Eval_Pos_In_Range (Index_Range, Idx);
 
       El := Get_Nth_Element (Get_Simple_Aggregate_List (Aggr), Natural (Pos));
@@ -2442,8 +2443,136 @@ package body Evaluation is
          when others =>
             Error_Kind ("eval_indexed_name", Prefix);
       end case;
-      return Null_Iir;
    end Eval_Indexed_Name;
+
+   function Eval_Indexed_Aggregate_By_Offset
+     (Aggr : Iir; Off : Iir_Index32; Dim : Natural := 0) return Iir
+   is
+      Prefix_Type : constant Iir := Get_Type (Aggr);
+      Indexes_Type : constant Iir_Flist :=
+        Get_Index_Subtype_List (Prefix_Type);
+      Assoc : Iir;
+      Assoc_Expr : Iir;
+      Assoc_Len : Iir_Index32;
+      Aggr_Bounds : Iir;
+      Cur_Off : Iir_Index32;
+      Res : Iir;
+      Left_Pos : Iir_Int64;
+      Assoc_Pos : Iir_Int64;
+   begin
+      Aggr_Bounds := Eval_Static_Range (Get_Nth_Element (Indexes_Type, Dim));
+      Left_Pos := Eval_Pos (Eval_Discrete_Range_Left (Aggr_Bounds));
+
+      Cur_Off := 0;
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      Assoc_Expr := Null_Iir;
+      while Assoc /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Assoc_Expr := Assoc;
+         end if;
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Choice_By_None =>
+               if Get_Element_Type_Flag (Assoc) then
+                  if Off = Cur_Off then
+                     return Get_Associated_Expr (Assoc);
+                  end if;
+                  Assoc_Len := 1;
+               else
+                  Res := Get_Associated_Expr (Assoc);
+                  Assoc_Len := Iir_Index32
+                    (Eval_Discrete_Range_Length
+                       (Get_Index_Type (Get_Type (Res), 0)));
+                  if Off >= Cur_Off and then Off < Cur_Off + Assoc_Len then
+                     return Eval_Indexed_Name_By_Offset (Res, Off - Cur_Off);
+                  end if;
+               end if;
+               Cur_Off := Cur_Off + Assoc_Len;
+            when Iir_Kind_Choice_By_Expression =>
+               Assoc_Pos := Eval_Pos (Get_Choice_Expression (Assoc));
+               case Get_Direction (Aggr_Bounds) is
+                  when Iir_To =>
+                     Cur_Off := Iir_Index32 (Assoc_Pos - Left_Pos);
+                  when Iir_Downto =>
+                     Cur_Off := Iir_Index32 (Left_Pos - Assoc_Pos);
+               end case;
+               if Cur_Off = Off then
+                  return Get_Associated_Expr (Assoc);
+               end if;
+            when Iir_Kind_Choice_By_Range =>
+               declare
+                  Rng : Iir;
+                  Left : Iir_Int64;
+                  Right : Iir_Int64;
+                  Hi, Lo : Iir_Int64;
+                  Lo_Off, Hi_Off : Iir_Index32;
+               begin
+                  Rng := Eval_Range (Get_Choice_Range (Assoc));
+                  Set_Choice_Range (Assoc, Rng);
+
+                  Left := Eval_Pos (Get_Left_Limit (Rng));
+                  Right := Eval_Pos (Get_Right_Limit (Rng));
+                  case Get_Direction (Rng) is
+                     when Iir_To =>
+                        Lo := Left;
+                        Hi := Right;
+                     when Iir_Downto =>
+                        Lo := Right;
+                        Hi := Left;
+                  end case;
+                  case Get_Direction (Aggr_Bounds) is
+                     when Iir_To =>
+                        Lo_Off := Iir_Index32 (Lo - Left_Pos);
+                        Hi_Off := Iir_Index32 (Hi - Left_Pos);
+                     when Iir_Downto =>
+                        Lo_Off := Iir_Index32 (Left_Pos - Lo);
+                        Hi_Off := Iir_Index32 (Left_Pos - Hi);
+                  end case;
+                  if Off >= Lo_Off and then Off <= Hi_Off then
+                     Res := Get_Associated_Expr (Assoc);
+                     if Get_Element_Type_Flag (Assoc) then
+                        return Res;
+                     else
+                        return Eval_Indexed_Name_By_Offset
+                          (Res, Off - Lo_Off);
+                     end if;
+                  end if;
+               end;
+            when Iir_Kind_Choice_By_Others =>
+               return Get_Associated_Expr (Assoc_Expr);
+            when others =>
+               raise Internal_Error;
+         end case;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+      raise Internal_Error;
+   end Eval_Indexed_Aggregate_By_Offset;
+
+   function Eval_Indexed_Name_By_Offset (Prefix : Iir; Off : Iir_Index32)
+                                        return Iir
+   is
+   begin
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Aggregate =>
+            return Eval_Indexed_Aggregate_By_Offset (Prefix, Off);
+         when Iir_Kind_String_Literal8 =>
+            declare
+               Id : constant String8_Id := Get_String8_Id (Prefix);
+               El_Type : constant Iir :=
+                 Get_Element_Subtype (Get_Type (Prefix));
+               Enums : constant Iir_Flist :=
+                 Get_Enumeration_Literal_List (El_Type);
+               Lit : Pos32;
+            begin
+               Lit := Str_Table.Element_String8 (Id, Int32 (Off + 1));
+               return Get_Nth_Element (Enums, Natural (Lit));
+            end;
+         when Iir_Kind_Simple_Aggregate =>
+            return Get_Nth_Element (Get_Simple_Aggregate_List (Prefix),
+                                    Natural (Off));
+         when others =>
+            Error_Kind ("eval_indexed_name_by_offset", Prefix);
+      end case;
+   end Eval_Indexed_Name_By_Offset;
 
    function Eval_Static_Expr (Expr: Iir) return Iir
    is

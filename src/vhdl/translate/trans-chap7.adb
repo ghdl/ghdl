@@ -212,12 +212,36 @@ package body Trans.Chap7 is
                Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
 
                if Dim = Nbr_Dims then
-                  for I in Vect'Range loop
-                     New_Array_Aggr_El
-                       (List,
-                        Translate_Static_Expression
-                          (Get_Associated_Expr (Vect (I)), El_Type));
-                  end loop;
+                  declare
+                     Idx : Natural;
+                     Assoc : Iir;
+                     Expr : Iir;
+                     El : Iir;
+                     Assoc_Len : Iir_Index32;
+                  begin
+                     Idx := 0;
+                     while Idx < Natural (Len) loop
+                        Assoc := Vect (Idx);
+                        Expr  := Get_Associated_Expr (Assoc);
+                        if Get_Element_Type_Flag (Assoc) then
+                           New_Array_Aggr_El
+                             (List,
+                              Translate_Static_Expression (Expr, El_Type));
+                           Idx := Idx + 1;
+                        else
+                           Assoc_Len := Iir_Index32
+                             (Eval_Discrete_Range_Length
+                                (Get_Choice_Range (Assoc)));
+                           for I in 0 .. Assoc_Len - 1 loop
+                              El := Eval_Indexed_Name_By_Offset (Expr, I);
+                              New_Array_Aggr_El
+                                (List,
+                                 Translate_Static_Expression (El, El_Type));
+                              Idx := Idx + 1;
+                           end loop;
+                        end if;
+                     end loop;
+                  end;
                else
                   for I in Vect'Range loop
                      Translate_Static_Array_Aggregate_1
@@ -2928,13 +2952,12 @@ package body Trans.Chap7 is
       Close_Temp;
    end Translate_Array_Aggregate_Gen_String;
 
-   procedure Translate_Array_Aggregate_Gen
-     (Base_Ptr   : Mnode;
-      Bounds_Ptr : Mnode;
-      Aggr       : Iir;
-      Aggr_Type  : Iir;
-      Dim        : Natural;
-      Var_Index  : O_Dnode)
+   procedure Translate_Array_Aggregate_Gen (Base_Ptr   : Mnode;
+                                            Bounds_Ptr : Mnode;
+                                            Aggr       : Iir;
+                                            Aggr_Type  : Iir;
+                                            Dim        : Natural;
+                                            Var_Index  : O_Dnode)
    is
       Index_List : Iir_Flist;
       Expr_Type  : Iir;
@@ -2942,16 +2965,16 @@ package body Trans.Chap7 is
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
       --  update VAR_INDEX.  Handles sub-aggregates.
-      procedure Do_Assign (Assoc : Iir; Expr : Iir)
+      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Iir_Int64)
       is
          Dest : Mnode;
-         Len : Iir_Int64;
       begin
          if Final then
             if Get_Element_Type_Flag (Assoc) then
                Dest := Chap3.Index_Base (Base_Ptr, Aggr_Type,
                                          New_Obj_Value (Var_Index));
                Translate_Assign (Dest, Expr, Expr_Type);
+               Assoc_Len := 1;
                Inc_Var (Var_Index);
             else
                Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
@@ -2959,17 +2982,19 @@ package body Trans.Chap7 is
                Translate_Assign (Dest, Expr, Get_Type (Expr));
                --  FIXME: handle non-static expression type (at least for
                --  choice by range).
-               Len := Eval_Discrete_Type_Length
+               Assoc_Len := Eval_Discrete_Type_Length
                  (Get_Index_Type (Get_Type (Expr), 0));
                New_Assign_Stmt
                  (New_Obj (Var_Index),
-                  New_Dyadic_Op (ON_Add_Ov,
-                                 New_Obj_Value (Var_Index),
-                                 New_Lit (New_Index_Lit (Unsigned_64 (Len)))));
+                  New_Dyadic_Op
+                    (ON_Add_Ov,
+                     New_Obj_Value (Var_Index),
+                     New_Lit (New_Index_Lit (Unsigned_64 (Assoc_Len)))));
             end if;
          else
             Translate_Array_Aggregate_Gen
               (Base_Ptr, Bounds_Ptr, Expr, Aggr_Type, Dim + 1, Var_Index);
+            Assoc_Len := 1;
          end if;
       end Do_Assign;
 
@@ -2977,6 +3002,7 @@ package body Trans.Chap7 is
       is
          P  : Natural;
          El : Iir;
+         Assoc_Len : Iir_Int64;
       begin
          --  First, assign positionnal association.
          --  FIXME: count the number of positionnal association and generate
@@ -2987,14 +3013,8 @@ package body Trans.Chap7 is
          loop
             exit when El = Null_Iir;
             exit when Get_Kind (El) /= Iir_Kind_Choice_By_None;
-            Do_Assign (El, Get_Associated_Expr (El));
-            if not Final or else Get_Element_Type_Flag (El) then
-               P := P + 1;
-            else
-               P := P + Natural
-                 (Eval_Discrete_Type_Length
-                    (Get_Index_Type (Get_Type (Get_Associated_Expr (El)), 0)));
-            end if;
+            Do_Assign (El, Get_Associated_Expr (El), Assoc_Len);
+            P := P + Natural (Assoc_Len);
             El := Get_Chain (El);
          end loop;
 
@@ -3035,7 +3055,8 @@ package body Trans.Chap7 is
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
 
-            Do_Assign (El, Get_Associated_Expr (El));
+            Do_Assign (El, Get_Associated_Expr (El), Assoc_Len);
+            pragma Assert (Assoc_Len = 1);
             Dec_Var (Var_Len);
             Finish_Loop_Stmt (Label);
             Close_Temp;
@@ -3045,6 +3066,7 @@ package body Trans.Chap7 is
       procedure Translate_Array_Aggregate_Gen_Named
       is
          El : Iir;
+         Assoc_Len : Iir_Int64;
       begin
          El := Get_Association_Choices_Chain (Aggr);
 
@@ -3057,9 +3079,11 @@ package body Trans.Chap7 is
                   --  Handled by positional.
                   raise Internal_Error;
                when Iir_Kind_Choice_By_Expression =>
-                  Do_Assign (El, Get_Associated_Expr (El));
+                  Do_Assign (El, Get_Associated_Expr (El), Assoc_Len);
                   return;
                when Iir_Kind_Choice_By_Range =>
+                  --  FIXME: todo.
+                  pragma Assert (Get_Element_Type_Flag (El));
                   declare
                      Var_Length : O_Dnode;
                      Var_I      : O_Dnode;
@@ -3077,7 +3101,7 @@ package body Trans.Chap7 is
                                                     New_Obj_Value (Var_I),
                                                     New_Obj_Value (Var_Length),
                                                     Ghdl_Bool_Type));
-                     Do_Assign (El, Get_Associated_Expr (El));
+                     Do_Assign (El, Get_Associated_Expr (El), Assoc_Len);
                      Inc_Var (Var_I);
                      Finish_Loop_Stmt (Label);
                      Close_Temp;
@@ -3090,11 +3114,13 @@ package body Trans.Chap7 is
 
          --  Several choices..
          declare
-            Range_Type : Iir;
+            Range_Type : constant Iir :=
+              Get_Base_Type (Get_Index_Type (Index_List, Dim - 1));
+            Rtinfo     : constant Type_Info_Acc := Get_Info (Range_Type);
             Var_Pos    : O_Dnode;
             Var_Len    : O_Dnode;
+            Var_Alen   : O_Dnode;
             Range_Ptr  : Mnode;
-            Rtinfo     : Type_Info_Acc;
             If_Blk     : O_If_Block;
             Case_Blk   : O_Case_Block;
             Label      : O_Snode;
@@ -3104,27 +3130,26 @@ package body Trans.Chap7 is
             Open_Temp;
             --  Create a loop from left +- number of positionnals associations
             --   to/downto right.
-            Range_Type := Get_Base_Type (Get_Index_Type (Index_List, Dim - 1));
-            Rtinfo := Get_Info (Range_Type);
             Var_Pos := Create_Temp (Rtinfo.Ortho_Type (Mode_Value));
             Range_Ptr := Stabilize
               (Chap3.Bounds_To_Range (Bounds_Ptr, Aggr_Type, Dim));
             New_Assign_Stmt (New_Obj (Var_Pos),
                              M2E (Chap3.Range_To_Left (Range_Ptr)));
-            Var_Len := Create_Temp (Ghdl_Index_Type);
 
+            Var_Len := Create_Temp (Ghdl_Index_Type);
             Len_Tmp := M2E (Chap3.Range_To_Length (Range_Ptr));
             New_Assign_Stmt (New_Obj (Var_Len), Len_Tmp);
+
+            Var_Alen := Create_Temp (Ghdl_Index_Type);
 
             --  Start loop.
             Start_Loop_Stmt (Label);
             --  Check if end of loop.
-            Gen_Exit_When
-              (Label,
-               New_Compare_Op (ON_Eq,
-                               New_Obj_Value (Var_Len),
-                               New_Lit (Ghdl_Index_0),
-                               Ghdl_Bool_Type));
+            Gen_Exit_When (Label,
+                           New_Compare_Op (ON_Eq,
+                                           New_Obj_Value (Var_Len),
+                                           New_Lit (Ghdl_Index_0),
+                                           Ghdl_Bool_Type));
 
             --  convert aggr into a case statement.
             Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Pos));
@@ -3138,7 +3163,10 @@ package body Trans.Chap7 is
                if not Get_Same_Alternative_Flag (El) then
                   Expr := Get_Associated_Expr (El);
                end if;
-               Do_Assign (El, Expr);
+               Do_Assign (El, Expr, Assoc_Len);
+               New_Assign_Stmt
+                 (New_Obj (Var_Alen),
+                  New_Lit (New_Index_Lit (Unsigned_64 (Assoc_Len))));
                El := Get_Chain (El);
             end loop;
             Finish_Case_Stmt (Case_Blk);
@@ -3149,13 +3177,27 @@ package body Trans.Chap7 is
                                M2E (Chap3.Range_To_Dir (Range_Ptr)),
                                New_Lit (Ghdl_Dir_To_Node),
                                Ghdl_Bool_Type));
-            Chap8.Gen_Update_Iterator (Var_Pos, Iir_To, Unsigned_64 (1),
-                                       Range_Type);
+            New_Assign_Stmt
+              (New_Obj (Var_Pos),
+               New_Dyadic_Op
+                 (ON_Add_Ov,
+                  New_Obj_Value (Var_Pos),
+                  New_Convert_Ov (New_Obj_Value (Var_Alen),
+                                  Rtinfo.Ortho_Type (Mode_Value))));
             New_Else_Stmt (If_Blk);
-            Chap8.Gen_Update_Iterator (Var_Pos, Iir_Downto, Unsigned_64 (1),
-                                       Range_Type);
+            New_Assign_Stmt
+              (New_Obj (Var_Pos),
+               New_Dyadic_Op
+                 (ON_Sub_Ov,
+                  New_Obj_Value (Var_Pos),
+                  New_Convert_Ov (New_Obj_Value (Var_Alen),
+                                  Rtinfo.Ortho_Type (Mode_Value))));
             Finish_If_Stmt (If_Blk);
-            Dec_Var (Var_Len);
+            --  Update var_len.
+            New_Assign_Stmt (New_Obj (Var_Len),
+                             New_Dyadic_Op (ON_Sub_Ov,
+                                            New_Obj_Value (Var_Len),
+                                            New_Obj_Value (Var_Alen)));
             Finish_Loop_Stmt (Label);
             Close_Temp;
          end;
