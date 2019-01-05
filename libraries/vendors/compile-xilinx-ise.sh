@@ -170,7 +170,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "     --unimacro            Compile the unimacro library."
 	echo "     --simprim             Compile the simprim library."
 	echo "     --corelib             Compile the corelib library."
-	echo "     --secureip            Compile the secureip library."
+	echo "     --with-secureip       Compile the secureip library."
 	echo ""
 	echo "Library compile options:"  
 	echo "     --vhdl93              Compile the libraries with VHDL-93."

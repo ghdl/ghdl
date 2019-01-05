@@ -73,33 +73,35 @@ test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function SetupDirectories( <I
 SetupDirectories() {
 	local Index=$1
 	local Name=$2
+	
+	declare -n Settings="${Index}_Settings"
 
 	# source directory
 	# ----------------------
 	# If a command line argument ('--src') was passed in, use it, else use the default value
 	# from config.sh
-	if [ ! -z "$SrcDir" ]; then
+	if [[ ! -z "$SrcDir" ]]; then
 		SourceDirectory=${SrcDir%/}										# remove trailing slashes
-	elif [ ! -z "$EnvSourceDir" ]; then
+	elif [[ ! -z "$EnvSourceDir" ]]; then
 		SourceDirectory=$EnvSourceDir									# fall back to environment variable
-	elif [ ! -z "${InstallationDirectories[$Index]}" ]; then
-		SourceDirectory=${InstallationDirectories[$Index]}/${SourceDirectories[$Index]}	# fall back to value from config.sh
+	elif [[ ! -z "${Settings[InstallationDirectory]}" ]]; then
+		SourceDirectory=${Settings[InstallationDirectory]}/${Settings[SourceDirectory]}	# fall back to value from config.sh
 	fi
 	# output directory
 	# ----------------------
 	# If a command line argument ('--out') was passed in, use it, else use the default value
 	# from config.sh
-	if [ ! -z "$DestDir" ]; then
+	if [[ ! -z "$DestDir" ]]; then
 		DestinationDirectory=${DestDir%/}												# remove trailing slashes
 	else
-		DestinationDirectory=${DestinationDirectories[$Index]}	# fall back to value from config.sh
+		DestinationDirectory=${Settings[DestinationDirectory]}	# fall back to value from config.sh
 	fi
 
-	if [ -z $SourceDirectory ] || [ -z $DestinationDirectory ]; then
+	if [[ -z $SourceDirectory || -z $DestinationDirectory ]]; then
 		echo 1>&2 -e "${COLORED_ERROR} $Name is not configured in '$ScriptDir/config.sh'.${ANSI_NOCOLOR}"
 		echo 1>&2 -e "  Use adv. options '--src' and '--out' or configure 'config.sh'."
 		exit 1
-	elif [ ! -d $SourceDirectory ]; then
+	elif [[ ! -d $SourceDirectory ]]; then
 		echo 1>&2 -e "${COLORED_ERROR} Path '$SourceDirectory' does not exist.${ANSI_NOCOLOR}"
 		exit 1
 	fi

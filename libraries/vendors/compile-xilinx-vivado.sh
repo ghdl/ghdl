@@ -164,7 +164,7 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "     --unisim              Compile the unisim library."
 	echo "     --unimacro            Compile the unimacro library."
 	echo "     --unifast             Compile the unifast library."
-	echo "     --secureip            Compile the secureip library."
+	echo "     --with-secureip       Compile the secureip library."
 	echo ""
 	echo "Library compile options:"  
 	echo "     --vhdl93              Compile the libraries with VHDL-93."
