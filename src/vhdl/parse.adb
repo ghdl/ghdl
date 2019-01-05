@@ -2430,9 +2430,21 @@ package body Parse is
          --  Skip '='.
          Expect_Scan (Tok_Equal);
 
-         Multiplier := Parse_Primary;
-         Set_Physical_Literal (Unit, Multiplier);
+         case Current_Token is
+            when Tok_Integer
+              | Tok_Identifier
+              | Tok_Real =>
+               Multiplier := Parse_Primary;
+            when others =>
+               Error_Msg_Parse
+                 ("physical literal expected to define a secondary unit");
+               Skip_Until_Semi_Colon;
+               Multiplier := Null_Iir;
+         end case;
+
          if Multiplier /= Null_Iir then
+            Set_Physical_Literal (Unit, Multiplier);
+
             case Get_Kind (Multiplier) is
                when Iir_Kind_Simple_Name
                  | Iir_Kind_Selected_Name
