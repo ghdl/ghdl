@@ -61,7 +61,7 @@ DEBUG=0
 FILTERING=0  # TODO: 1
 SKIP_LARGE_FILES=0
 SUPPRESS_WARNINGS=0
-HALT_ON_ERROR=0
+CONTINUE_ON_ERROR=1
 VHDLStandard=93
 GHDLBinDir=""
 DestDir=""
@@ -121,7 +121,7 @@ while [[ $# > 0 ]]; do
 			SUPPRESS_WARNINGS=1
 			;;
 		-H|--halt-on-error)
-			HALT_ON_ERROR=1
+			CONTINUE_ON_ERROR=0
 			;;
 		--ghdl)
 			GHDL="$2"				# overwrite a potentially existing GHDL environment variable
@@ -145,6 +145,7 @@ while [[ $# > 0 ]]; do
 done
 
 ERRORCOUNT=0
+Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
@@ -254,21 +255,20 @@ SetupGRCat
 # <= $VHDLFlavor
 GHDLSetup
 
-# Define global GHDL Options
-GHDL_OPTIONS=(
+# Extend global GHDL Options
+Analyze_Parameters+=(
 	-fexplicit
-	-frelaxed-rules
 	--no-vital-checks
 	-Wbinding
-	--mb-comments
+	-Wno-hide
+	-Wno-others
+	-Wno-parenthesis
+	-Wno-library
+	-Wno-pure
+	--ieee=$VHDLFlavor
+	--std=$VHDLStandard
+	-P$DestinationDirectory
 )
-
-# Create a set of GHDL parameters
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
-
-
-STOPCOMPILING=0
 
 # Cleanup directory
 # ==============================================================================
@@ -282,124 +282,100 @@ fi
 
 # Library unisim
 # ==============================================================================
-# compile unisim packages
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
-	Library="unisim"
-	Files=(
-		${Library}s/unisim_VPKG.vhd
-		${Library}s/unisim_VCOMP.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
+test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${ANSI_NOCOLOR}"
 
-	GHDLCompilePackages
-fi
+# Reading unisim files
+StructName="UNISIM"
+Library="unisim"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/${Library}s/primitive/vhdl_analyze_order'${ANSI_NOCOLOR}"
+Files=(
+	unisim_VPKG.vhd
+	unisim_VCOMP.vhd
+)
+while IFS= read -r File; do
+	Files+=("primitive/$File")
+done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/vhdl_analyze_order")
 
-# compile unisim primitives
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
-	Library="unisim"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/${Library}s/primitive/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/vhdl_analyze_order")
+CreateLibraryStruct $StructName $Library "${Library}s" $VHDLVersion "${Files[@]}"
+test $COMPILE_UNISIM -eq 1 && Libraries+=($StructName)
 
-	GHDLCompileLibrary
-fi
+# Reading unisim secureip files
+StructName="UNISIM_SECUREIP"
+Library="unisim"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/${Library}s/secureip/vhdl_analyze_order'${ANSI_NOCOLOR}"
+Files=()
+while IFS= read -r File; do
+	Files+=("secureip/$File")
+done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/secureip/vhdl_analyze_order")
 
-# compile unisim secureip primitives
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ] && [ "$COMPILE_SECUREIP" == "TRUE" ]; then
-	Library="secureip"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/unisims/$Library/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/unisims/$Library/vhdl_analyze_order")
+CreateLibraryStruct $StructName "secureip" "${Library}s" $VHDLVersion "${Files[@]}"
+test $COMPILE_UNISIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=($StructName)
 
-	GHDLCompileLibrary
-fi
 
 # Library unimacro
 # ==============================================================================
-# compile unimacro packages
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
-	Library="unimacro"
-	Files=(
-		$Library/unimacro_VCOMP.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
+# Reading unimacro files
+StructName="UNIMACRO"
+Library="unimacro"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$SourceDirectory/$Library/' for '*_MACRO.vhd'${ANSI_NOCOLOR}"
+Files=(
+	$Library/unimacro_VCOMP.vhd
+)
+Files=( $(cd $SourceDirectory/$Library; LC_COLLATE=C ls *_MACRO.vhd) )
 
-	GHDLCompilePackages
-fi
-	
-# compile unimacro macros
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
-	Library="unimacro"
-	SourceFiles=($(LC_COLLATE=C ls $SourceDirectory/$Library/*_MACRO.vhd))
+CreateLibraryStruct $StructName $Library $Library $VHDLVersion "${Files[@]}"
+test $COMPILE_UNIMACRO -eq 1 && Libraries+=($StructName)
 
-	GHDLCompileLibrary
-fi
 
 # Library simprim
 # ==============================================================================
-# compile simprim packages
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_SIMPRIM" == "TRUE" ]; then
-	Library="simprim"
-	Files=(
-		${Library}s/simprim_Vpackage.vhd
-		${Library}s/simprim_Vcomponents.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
+# Reading simprim files
+StructName="SIMPRIM"
+Library="simprim"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/${Library}s/primitive/other/vhdl_analyze_order'${ANSI_NOCOLOR}"
+Files=(
+	simprim_Vpackage.vhd
+	simprim_Vcomponents.vhd
+)
+# while IFS= read -r File; do
+	# Files+=("primitive/other/$File")
+# done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/other/vhdl_analyze_order")
 
-	GHDLCompilePackages
-fi
+CreateLibraryStruct $StructName $Library "${Library}s" $VHDLVersion "${Files[@]}"
+test $COMPILE_SIMPRIM -eq 1 && Libraries+=($StructName)
 
-# compile simprim primitives
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_SIMPRIM" == "TRUE" ]; then
-	Library="simprim"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/${Library}s/primitive/other/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/other/vhdl_analyze_order")
 
-	GHDLCompileLibrary
-fi
+# Reading simprim secureip files
+StructName="SIMPRIM_SECUREIP"
+Library="simprim"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/${Library}s/secureip/other/vhdl_analyze_order'${ANSI_NOCOLOR}"
+Files=()
+while IFS= read -r File; do
+	Files+=("secureip/other/$File")
+done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/secureip/other/vhdl_analyze_order")
 
-# compile simprim secureip primitives
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_SIMPRIM" == "TRUE" ] && [ "$COMPILE_SECUREIP" == "TRUE" ]; then
-	Library="secureip"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/simprims/$Library/other/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/simprims/$Library/other/vhdl_analyze_order")
+CreateLibraryStruct $StructName "secureip" "${Library}s" $VHDLVersion "${Files[@]}"
+test $COMPILE_SIMPRIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=($StructName)
 
-	GHDLCompileLibrary
-fi
 
-# Library corelib
+# Library xilinxcorelib
 # ==============================================================================
-# compile corelib packages
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CORELIB" == "TRUE" ]; then
-	Library="xilinxcorelib"
-	
-	# append absolute source path
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/XilinxCoreLib/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/XilinxCoreLib/vhdl_analyze_order")
+# Reading corelib files
+StructName="CORELIB"
+Library="xilinxcorelib"
+Files=()
+while IFS= read -r File; do
+	Files+=("$File")
+done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/XilinxCoreLib/vhdl_analyze_order")
 
-	GHDLCompilePackages
+CreateLibraryStruct $StructName $Library "XilinxCoreLib" $VHDLVersion "${Files[@]}"
+test $COMPILE_CORELIB -eq 1 && Libraries+=($StructName)
+
+if [[ $DEBUG -eq 1 ]]; then
+	for StructName in ${Libraries[*]}; do
+		PrintLibraryStruct $StructName "    "
+	done
 fi
-
 	
 # Compile libraries
 if [[ "$Libraries" != "" ]]; then

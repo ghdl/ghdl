@@ -140,6 +140,7 @@ while [[ $# > 0 ]]; do
 done
 
 ERRORCOUNT=0
+Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"

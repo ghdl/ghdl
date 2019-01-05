@@ -58,6 +58,10 @@ Analyze_Parameters=(
 	--mb-comments
 )
 
+VERBOSE=${VERBOSE:-0}
+DEBUG=${DEBUG:-0}
+CONTINUE_ON_ERROR=${CONTINUE_ON_ERROR:-0}
+
 test $VERBOSE -eq 1 && echo -e "  Declaring Bash functions for GHDL..."
 
 test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function SetupDirectories( <Index> <Name> )${ANSI_NOCOLOR}"
@@ -262,9 +266,11 @@ AnalyzeVHDL() {
 		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceDirectory/$LibraryPath/$File\"${ANSI_NOCOLOR}"
 		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName --workdir=$DestinationDirectory "$SourceDirectory/$LibraryPath/$File"
 		ExitCode=$?
-		if [ $ExitCode -ne 0 ]; then
+		if [[ $ExitCode -ne 0 ]]; then
 			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
-			exit 1;
+			if [[ $CONTINUE_ON_ERROR -eq 0 ]]; then
+				exit 1;
+			fi
 		fi
 	# else
 		# test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceDirectory/$LibraryPath/$File\" | \\\\${ANSI_NOCOLOR}"
@@ -273,9 +279,12 @@ AnalyzeVHDL() {
 		# local PiplineStatus=("${PIPESTATUS[@]}")
 		# if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
 			# echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
-			# exit 1;
+			# if [[ $CONTINUE_ON_ERROR -eq 1 ]]; then
+				# exit 1;
+			# fi
 		# elif [[ ${PiplineStatus[1]}  -ne 0 ]]; then
 			# case $(( ${PiplineStatus[1]} % 4 )) in
+				# TODO: implement CONTINUE_ON_ERROR in cases ...
 				# 3) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Fatal errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
 				# 2) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
 				# 1) echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
