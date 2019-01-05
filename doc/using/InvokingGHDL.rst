@@ -344,6 +344,11 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
 .. HINT::
    You could disable a warning by using the ``--warn-no-XXX`` or ``-Wno-XXX`` instead of ``--warn-XXX`` or ``-WXXX``.
 
+.. HINT::
+   The warnings ``-Wbinding``, ``-Wlibrary``, ``-Wshared``,
+   ``-Wpure``, ``-Wspecs``, ``-Whide``, ``-Wport`` are enabled by
+   default.
+
 .. option:: --warn-library
 
   Warns if a design unit replaces another design unit with the same name.
