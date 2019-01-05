@@ -262,20 +262,25 @@ AnalyzeVHDL() {
 		local Filter_Indent="  "
 	fi
 
+	local SourceFile="$SourceDirectory/$LibraryPath/$File"
+	
+	if [[ ! -f "$SourceFile" ]]; then
+		echo 1>&2 -e "${COLORED_ERROR} Source file '$File' not found.${ANSI_NOCOLOR}"
+		test $CONTINUE_ON_ERROR -eq 0 && exit 1
+	fi
+	
 	if [[ $FILTERING -eq 0 ]]; then
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceDirectory/$LibraryPath/$File\"${ANSI_NOCOLOR}"
-		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName --workdir=$DestinationDirectory "$SourceDirectory/$LibraryPath/$File"
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceFile\"${ANSI_NOCOLOR}"
+		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName --workdir=$DestinationDirectory "$SourceFile"
 		ExitCode=$?
 		if [[ $ExitCode -ne 0 ]]; then
 			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
-			if [[ $CONTINUE_ON_ERROR -eq 0 ]]; then
-				exit 1;
-			fi
+			test $CONTINUE_ON_ERROR -eq 0 && exit 1
 		fi
 	# else
-		# test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceDirectory/$LibraryPath/$File\" | \\\\${ANSI_NOCOLOR}"
+		# test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceFile\" | \\\\${ANSI_NOCOLOR}"
 		# test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
-		# $GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$SourceDirectory/$LibraryPath/$File" 2>&1 | $GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
+		# $GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$SourceFile" 2>&1 | $GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
 		# local PiplineStatus=("${PIPESTATUS[@]}")
 		# if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
 			# echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"

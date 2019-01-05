@@ -35,10 +35,10 @@
 #	02111-1307, USA.
 # ==============================================================================
 
-# work around for Darwin (Mac OS)
+# Work around for Darwin (Mac OS)
 READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
 
-# save working directory
+# Save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
 ScriptDir="$($READLINK -f $ScriptDir)"
@@ -177,13 +177,13 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "     --vhdl2008            Compile the libraries with VHDL-2008."
 	echo "  -S --skip-largefiles     Don't compile large files. Exclude *HSSI* and *HIP* files."
 	echo "  -H --halt-on-error       Halt on error(s)."
-	echo ""                          
-	echo "Advanced options:"         
+	echo ""
+	echo "Advanced options:"
 	echo "     --ghdl <GHDL binary>  Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
 	echo "     --out <dir name>      Name of the output directory, e.g. uvvm_util"
 	echo "     --src <Path to UVVM>  Path to the sources."
-	echo ""                          
-	echo "Verbosity:"                
+	echo ""
+	echo "Verbosity:"
 	echo "  -v --verbose             Print verbose messages."
 	echo "  -d --debug               Print debug messages."
 #	echo "  -n --no-filter           Disable output filtering scripts."
@@ -201,8 +201,8 @@ if [[ $COMMAND -eq 2 ]]; then
 fi
 
 if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_NOCOLOR}"
-	HALT_ON_ERROR=0
+	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	CONTINUE_ON_ERROR=1
 fi
 
 

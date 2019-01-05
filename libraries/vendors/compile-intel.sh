@@ -208,8 +208,8 @@ if [[ $COMMAND -eq 2 ]]; then
 fi
 
 if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Altera packages are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_NOCOLOR}"
-	HALT_ON_ERROR=0
+	echo -e "${ANSI_RED}Not all Altera packages are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	CONTINUE_ON_ERROR=1
 fi
 
 DefaultDirectories=("/opt/IntelFPGA" "/opt/intelfpga" "/opt/Intel" "/opt/intel" "/opt/Altera" "/opt/altera")

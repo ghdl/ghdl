@@ -60,7 +60,7 @@ DEBUG=0
 FILTERING=0  # TODO: 1
 SKIP_LARGE_FILES=0
 SUPPRESS_WARNINGS=0
-HALT_ON_ERROR=0
+CONTINUE_ON_ERROR=0
 VHDLStandard=93
 GHDLBinDir=""
 DestDir=""
@@ -116,7 +116,7 @@ while [[ $# > 0 ]]; do
 			SUPPRESS_WARNINGS=1
 			;;
 		-H|--halt-on-error)
-			HALT_ON_ERROR=1
+			CONTINUE_ON_ERROR=1
 			;;
 		--ghdl)
 			GHDL="$2"				# overwrite a potentially existing GHDL environment variable
@@ -194,8 +194,8 @@ if [[ $COMMAND -eq 2 ]]; then
 fi
 
 if [[ $VHDLStandard -eq 2008 ]]; then
-	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_NOCOLOR}"
-	HALT_ON_ERROR=0
+	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting CONTINUE_ON_ERROR to TRUE.${ANSI_NOCOLOR}"
+	CONTINUE_ON_ERROR=1
 fi
 
 
@@ -237,7 +237,7 @@ CreateDestinationDirectory
 cd $DestinationDirectory
 
 
-# => $SUPPRESS_WARNINGS
+# -> $SUPPRESS_WARNINGS
 # <= $GRC_COMMAND
 SetupGRCat
 
@@ -248,21 +248,21 @@ SetupGRCat
 # <= $VHDLFlavor
 GHDLSetup
 
-# Define global GHDL Options
-GHDL_OPTIONS=(
+# Extend global GHDL Options
+Analyze_Parameters+=(
 	-fexplicit
-	-frelaxed-rules
+								
 	--no-vital-checks
 	-Wbinding
-	--mb-comments
+	-Wno-hide
+	-Wno-others
+	-Wno-parenthesis
+	-Wno-library
+	-Wno-pure
+	--ieee=$VHDLFlavor
+	--std=$VHDLStandard
+	-P$DestinationDirectory
 )
-
-# Create a set of GHDL parameters
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
-
-
-STOPCOMPILING=0
 
 # Cleanup directory
 # ==============================================================================
@@ -276,91 +276,77 @@ fi
 
 # Library unisim
 # ==============================================================================
-# compile unisim packages
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
-	Library="unisim"
-	Files=(
-		${Library}s/unisim_VPKG.vhd
-		${Library}s/unisim_VCOMP.vhd
-		${Library}s/retarget_VCOMP.vhd
-		${Library}s/unisim_retarget_VCOMP.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
+test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${ANSI_NOCOLOR}"
 
-	GHDLCompilePackages
-fi
+# Reading unisim files
+StructName="UNISIM"
+Library="unisim"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/${Library}s/primitive/vhdl_analyze_order'${ANSI_NOCOLOR}"
+Files=(
+	unisim_VPKG.vhd
+	unisim_retarget_VCOMP.vhd
+)
+while IFS= read -r File; do
+	Files+=("primitive/$File")
+done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/vhdl_analyze_order")
 
-# compile unisim primitives
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
-	Library="unisim"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/${Library}s/primitive/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/vhdl_analyze_order")
+# Reading unisim retarget files
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/${Library}s/retarget/vhdl_analyze_order'${ANSI_NOCOLOR}"
+while IFS= read -r File; do
+	Files+=("retarget/$File")
+done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/retarget/vhdl_analyze_order")
+	
+CreateLibraryStruct $StructName $Library "${Library}s" $VHDLVersion "${Files[@]}"
+test $COMPILE_UNISIM -eq 1 && Libraries+=($StructName)
 
-	GHDLCompileLibrary
-fi
+# Reading unisim secureip files
+StructName="UNISIM_SECUREIP"
+Library="unisim"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$SourceDirectory/${Library}s/secureip' for '*.vhd'${ANSI_NOCOLOR}"
+Files=( $(cd $SourceDirectory/${Library}s/secureip; LC_COLLATE=C ls *.vhd) )
 
-# compile unisim retarget primitives
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
-	Library="unisim"
-	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/${Library}s/retarget/*.vhd)"
+CreateLibraryStruct $StructName "secureip" "${Library}s/secureip" $VHDLVersion "${Files[@]}"
+test $COMPILE_UNISIM -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=($StructName)
 
-	GHDLCompileLibrary
-fi
-
-# compile unisim secureip primitives
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ] && [ "$COMPILE_SECUREIP" == "TRUE" ]; then
-	Library="secureip"
-	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/unisims/$Library/*.vhd)"
-
-	GHDLCompileLibrary
-fi
 
 # Library unimacro
 # ==============================================================================
-# compile unimacro packages
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
-	Library="unimacro"
-	Files=(
-		$Library/unimacro_VCOMP.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
+# Reading unimacro files
+StructName="UNIMACRO"
+Library="unimacro"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$SourceDirectory/$Library/' for '*_MACRO.vhd'${ANSI_NOCOLOR}"
+Files=(
+	unimacro_VCOMP.vhd
+)
+while IFS= read -r File; do
+	Files+=("$File")
+done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/$Library/vhdl_analyze_order")
 
-	GHDLCompilePackages
-fi
-	
-# compile unimacro macros
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
-	Library="unimacro"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/${Library}/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}/vhdl_analyze_order")
+CreateLibraryStruct $StructName $Library $Library $VHDLVersion "${Files[@]}"
+test $COMPILE_UNIMACRO -eq 1 && Libraries+=($StructName)
 
-	GHDLCompileLibrary
-fi
-
-# Library UNIFAST
+# Library unifast
 # ==============================================================================
-# compile unisim primitives
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIFAST" == "TRUE" ]; then
-	Library="unifast"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/${Library}/primitive/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}/primitive/vhdl_analyze_order")
+StructName="UNIFAST"
+Library="unifast"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$Library/primitive/vhdl_analyze_order'${ANSI_NOCOLOR}"
+Files=()
+while IFS= read -r File; do
+	Files+=("$File")
+done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/$Library/primitive/vhdl_analyze_order")
 
-	GHDLCompileLibrary
-fi
+CreateLibraryStruct $StructName $Library "$Library/primitive" $VHDLVersion "${Files[@]}"
+test $COMPILE_UNIFAST -eq 1 && Libraries+=($StructName)
+
+# Reading unifast secureip files
+StructName="UNIFAST_SECUREIP"
+Library="unifast"
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Scanning directory '$SourceDirectory/$Library/secureip' for '*.vhd'${ANSI_NOCOLOR}"
+Files=( $(cd $SourceDirectory/$Library/secureip; LC_COLLATE=C ls *.vhd) )
+
+CreateLibraryStruct $StructName "secureip" "$Library/secureip" $VHDLVersion "${Files[@]}"
+test $COMPILE_UNIFAST -eq 1 && test $COMPILE_SECUREIP -eq 1 && Libraries+=($StructName)
+
 
 # Compile libraries
 if [[ "$Libraries" != "" ]]; then
