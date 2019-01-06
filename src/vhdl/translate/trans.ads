@@ -1063,6 +1063,9 @@ package Trans is
    subtype Type_Mode_Valid is Type_Mode_Type range
      Type_Mode_B1 .. Type_Mode_Type'Last;
 
+   subtype Type_Mode_Discrete is Type_Mode_Type range
+     Type_Mode_B1 .. Type_Mode_I64;
+
    subtype Type_Mode_Scalar is Type_Mode_Type range
      Type_Mode_B1 .. Type_Mode_F64;
 
