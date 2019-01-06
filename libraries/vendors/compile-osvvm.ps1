@@ -99,11 +99,23 @@ $GHDLBinary =           Get-GHDLBinary $GHDL
 New-DestinationDirectory $DestinationDirectory
 cd $DestinationDirectory
 
-
 $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables
 
 # define global GHDL Options
-$GHDLOptions = @("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "--std=$VHDLStandard", "-P$DestinationDirectory")
+$GHDLOptions = @(
+	"-a",
+	"-fexplicit",
+	"-frelaxed-rules",
+	"--mb-comments",
+	"-Wbinding",
+	"-Wno-hide",
+	"-Wno-others",
+	"-Wno-static",
+	"--ieee=$VHDLFlavor",
+	"--no-vital-checks",
+	"--std=$VHDLStandard",
+	"-P$DestinationDirectory"
+)
 
 # extract data from configuration
 # $SourceDir =      $InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"

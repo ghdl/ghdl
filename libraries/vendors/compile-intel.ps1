@@ -169,7 +169,9 @@ $GHDLOptions = @(
 	"-fexplicit",
 	"-frelaxed-rules",
 	"--mb-comments",
-	"--warn-binding",
+	"-Wbinding",
+	"-Wno-hide",
+	"-Wno-library",
 	"--ieee=$VHDLFlavor",
 	"--no-vital-checks",
 	"--std=$VHDLStandard",
@@ -274,8 +276,10 @@ if ((-not $StopCompiling) -and $Max)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile maxii library
@@ -287,8 +291,10 @@ if ((-not $StopCompiling) -and $Max)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile maxv library
@@ -300,8 +306,10 @@ if ((-not $StopCompiling) -and $Max)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriaii library
@@ -315,8 +323,10 @@ if ((-not $StopCompiling) -and $Arria)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriaii_pcie_hip library
@@ -328,8 +338,10 @@ if ((-not $StopCompiling) -and $Arria)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriaiigz library
@@ -342,8 +354,10 @@ if ((-not $StopCompiling) -and $Arria)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriav library
@@ -357,8 +371,10 @@ if ((-not $StopCompiling) -and $Arria)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriavgz library
@@ -372,8 +388,10 @@ if ((-not $StopCompiling) -and $Arria)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile arriavgz_pcie_hip library
@@ -385,8 +403,10 @@ if ((-not $StopCompiling) -and $Arria)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile cycloneiv library
@@ -400,8 +420,10 @@ if ((-not $StopCompiling) -and $Cyclone)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile cycloneiv_pcie_hip library
@@ -413,8 +435,10 @@ if ((-not $StopCompiling) -and $Cyclone)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile cycloneive library
@@ -426,8 +450,10 @@ if ((-not $StopCompiling) -and $Cyclone)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile cyclonev library
@@ -441,8 +467,10 @@ if ((-not $StopCompiling) -and $Cyclone)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile stratixiv library
@@ -456,8 +484,10 @@ if ((-not $StopCompiling) -and $Stratix)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile stratixiv_pcie_hip library
@@ -469,8 +499,10 @@ if ((-not $StopCompiling) -and $Stratix)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile stratixv library
@@ -484,8 +516,10 @@ if ((-not $StopCompiling) -and $Stratix)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile stratixv_pcie_hip library
@@ -497,8 +531,10 @@ if ((-not $StopCompiling) -and $Stratix)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile fiftyfivenm library
@@ -510,8 +546,10 @@ if ((-not $StopCompiling) -and $Nanometer)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 # compile twentynm library
@@ -527,8 +565,10 @@ if ((-not $StopCompiling) -and $Nanometer)
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
-	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	if (Test-Path $SourceFiles[0])
+	{	$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+	}
 }
 
 Write-Host "--------------------------------------------------------------------------------"
