@@ -23,6 +23,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with PSL.Nodes;
 with PSL.NFAs;
+with PSL.NFAs.Utils;
 with Std_Package;
 with Trans_Analyzes;
 with Simul.Elaboration; use Simul.Elaboration;
@@ -357,6 +358,13 @@ package body Simul.Simulation.Main is
    procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc);
    pragma Convention (C, PSL_Process_Executer);
 
+   procedure PSL_Assert_Finalizer (Self : Grt.Processes.Instance_Acc);
+   pragma Convention (C, PSL_Assert_Finalizer);
+
+   type PSL_Entry_Acc is access all PSL_Entry;
+   function To_PSL_Entry_Acc is new Ada.Unchecked_Conversion
+     (Grt.Processes.Instance_Acc, PSL_Entry_Acc);
+
    function Execute_Psl_Expr (Instance : Block_Instance_Acc;
                               Expr : PSL_Node;
                               Eos : Boolean)
@@ -399,10 +407,6 @@ package body Simul.Simulation.Main is
 
    procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc)
    is
-      type PSL_Entry_Acc is access all PSL_Entry;
-      function To_PSL_Entry_Acc is new Ada.Unchecked_Conversion
-        (Grt.Processes.Instance_Acc, PSL_Entry_Acc);
-
       use PSL.NFAs;
 
       E : constant PSL_Entry_Acc := To_PSL_Entry_Acc (Self);
@@ -504,6 +508,41 @@ package body Simul.Simulation.Main is
       Current_Process := null;
    end PSL_Process_Executer;
 
+   procedure PSL_Assert_Finalizer (Self : Grt.Processes.Instance_Acc)
+   is
+      use PSL.NFAs;
+      Ent : constant PSL_Entry_Acc := To_PSL_Entry_Acc (Self);
+
+      NFA : constant PSL_NFA := Get_PSL_NFA (Ent.Stmt);
+      S : NFA_State;
+      E : NFA_Edge;
+      Sd : NFA_State;
+      S_Num : Int32;
+   begin
+      S := Get_Final_State (NFA);
+      E := Get_First_Dest_Edge (S);
+      while E /= No_Edge loop
+         Sd := Get_Edge_Src (E);
+
+         if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
+
+            S_Num := Get_State_Label (Sd);
+
+            if Ent.States (S_Num)
+              and then
+              Execute_Psl_Expr (Ent.Instance, Get_Edge_Expr (E), True)
+            then
+               Execute_Failed_Assertion
+                 (Ent.Instance, "psl assertion", Ent.Stmt,
+                  "assertion violation", 2);
+               exit;
+            end if;
+         end if;
+
+         E := Get_Next_Dest_Edge (E);
+      end loop;
+   end PSL_Assert_Finalizer;
+
    procedure Create_PSL is
    begin
       for I in PSL_Table.First .. PSL_Table.Last loop
@@ -521,6 +560,20 @@ package body Simul.Simulation.Main is
 
             Register_Sensitivity
               (E.Instance, Get_PSL_Clock_Sensitivity (E.Stmt));
+
+            case Get_Kind (E.Stmt) is
+               when Iir_Kind_Psl_Assert_Statement =>
+                  if Get_PSL_EOS_Flag (E.Stmt) then
+                     Grt.Processes.Ghdl_Finalize_Register
+                       (To_Instance_Acc (E'Address),
+                        PSL_Assert_Finalizer'Access);
+                  end if;
+               when Iir_Kind_Psl_Cover_Statement =>
+                  --  TODO
+                  null;
+               when others =>
+                  null;
+            end case;
          end;
       end loop;
 
