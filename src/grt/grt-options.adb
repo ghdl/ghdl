@@ -32,6 +32,26 @@ with Grt.Wave_Opt.File;
 
 package body Grt.Options is
 
+   procedure Set_Time_Resolution is
+   begin
+      case Flag_String (5) is
+         when 'f' | '-' =>
+            Time_Resolution_Scale := 5;
+         when 'p' =>
+            Time_Resolution_Scale := 4;
+         when 'n' =>
+            Time_Resolution_Scale := 3;
+         when 'u' =>
+            Time_Resolution_Scale := 2;
+         when 'm' =>
+            Time_Resolution_Scale := 1;
+         when 's' =>
+            Time_Resolution_Scale := 0;
+         when others =>
+            Error ("unhandled time resolution");
+      end case;
+   end Set_Time_Resolution;
+
    procedure Help
    is
       use Grt.Astdio;
@@ -384,22 +404,8 @@ package body Grt.Options is
       Len : Natural;
       Status : Decode_Option_Status;
    begin
-      case Flag_String (5) is
-         when 'f' | '-' =>
-            Time_Resolution_Scale := 5;
-         when 'p' =>
-            Time_Resolution_Scale := 4;
-         when 'n' =>
-            Time_Resolution_Scale := 3;
-         when 'u' =>
-            Time_Resolution_Scale := 2;
-         when 'm' =>
-            Time_Resolution_Scale := 1;
-         when 's' =>
-            Time_Resolution_Scale := 0;
-         when others =>
-            Error ("unhandled time resolution");
-      end case;
+      --  Must be done before decoding options.
+      Set_Time_Resolution;
 
       Stop := False;
       Last_Opt := Argc - 1;
