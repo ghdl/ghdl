@@ -62,4 +62,4 @@ jobs:
       script: ./dist/travis/man.sh
       deploy:
         - <<: *deploy-docker
-        file: "doc/_build/man/ghdl.1"
+          file: "doc/_build/man/ghdl.1"
