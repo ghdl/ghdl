@@ -221,14 +221,16 @@ class Sem_Lib:
     Load_File = libghdl.sem_lib__load_file
 
 
-# std.standard
+class Std_Package:
+    # Use .value
+    Std_Location = c_int32.in_dll(libghdl, "std_package__std_location")
 
-# Use .value
-Standard_Package = c_int32.in_dll(libghdl, "std_package__standard_package")
+    # Use .value
+    Standard_Package = c_int32.in_dll(libghdl, "std_package__standard_package")
 
-# Use .value
-Character_Type_Definition = c_int32.in_dll(
-    libghdl, "std_package__character_type_definition")
+    # Use .value
+    Character_Type_Definition = c_int32.in_dll(
+        libghdl, "std_package__character_type_definition")
 
 class Libraries:
     Get_Libraries_Chain = libghdl.libraries__get_libraries_chain

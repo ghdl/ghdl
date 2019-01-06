@@ -39,7 +39,7 @@ else
 # GPL compatible
 vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
 vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93
-vhdl.libs.v08: std.v08
+vhdl.libs.v08: std.v08 ieee.v08
 endif
 
 STD_SRCS := std/textio.vhdl std/textio_body.vhdl
@@ -84,7 +84,8 @@ IEEE_SRCS := openieee/std_logic_1164.vhdl openieee/std_logic_1164-body.vhdl \
 MATH_SRCS := openieee/math_real.vhdl openieee/math_real-body.vhdl
 VITAL95_BSRCS :=
 VITAL2000_BSRCS :=
-IEEE08_BSRCS :=
+IEEE08_BSRCS := openieee/std_logic_1164.v08 openieee/std_logic_1164-body.v08 \
+ openieee/math_real.vhdl openieee/math_real-body.vhdl
 endif
 
 ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
@@ -300,6 +301,9 @@ $(STD08_DIR)/std-obj08.cf: $(ANALYZE_DEP) $(STD08_SRCS)
 	done
 
 $(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
+	$(CP) $< $@
+
+$(LIBDST_DIR)/src/openieee/%.v08: $(LIBSRC_DIR)/openieee/%.v08
 	$(CP) $< $@
 
 ANALYZE_IEEE08=$(ANALYZE08) -P../.. --work=ieee

@@ -152,6 +152,7 @@ package body Ortho_Front is
 
    function Decode_Option (Opt : String_Acc; Arg: String_Acc) return Natural
    is
+      pragma Assert (Opt'First = 1);
    begin
       if Opt.all = "--compile-standard" then
          Action := Action_Compile_Std_Package;
@@ -221,11 +222,16 @@ package body Ortho_Front is
          Flag_Expect_Failure := True;
          return 1;
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--ghdl-" then
-         if Options.Parse_Option (Opt (7 .. Opt'Last)) then
-            return 1;
-         else
-            return 0;
-         end if;
+         declare
+            subtype Str_Type is String (1 .. Opt'Last - 6);
+         begin
+            --  The option parameter must be normalized (starts at index 1).
+            if Options.Parse_Option (Str_Type (Opt (7 .. Opt'Last))) then
+               return 1;
+            else
+               return 0;
+            end if;
+         end;
       elsif Options.Parse_Option (Opt.all) then
          return 1;
       else

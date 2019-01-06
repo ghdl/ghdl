@@ -551,6 +551,7 @@ package body Trans.Chap12 is
       F := fopen (Fname'Address, Mode'Address);
       if F = NULL_Stream then
          Error_Msg_Elab ("cannot open " & Filelist);
+         return;
       end if;
 
       --  Clear elab flags on design files.

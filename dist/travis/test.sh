@@ -11,6 +11,8 @@ echo "$0" "$@"
 # Stop in case of error
 set -e
 
+export ISGPL=false
+
 # Transform long options to short ones
 for arg in "$@"; do
   shift

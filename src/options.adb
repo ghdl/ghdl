@@ -63,10 +63,9 @@ package body Options is
       return False;
    end Option_Warning;
 
-   function Parse_Option (Option : String) return Boolean
+   function Parse_Option (Opt : String) return Boolean
    is
-      subtype Option_String is String (1 .. Option'Length);
-      Opt : Option_String renames Option;
+      pragma Assert (Opt'First = 1);
    begin
       if Opt'Last > 5 and then Opt (1 .. 6) = "--std=" then
          if Opt'Length = 8 then

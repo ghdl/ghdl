@@ -100,6 +100,11 @@ package body Sem is
       --  Resolve the name.
 
       Name := Get_Entity_Name (Library_Unit);
+      if Is_Error (Name) then
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return Null_Iir;
+      end if;
+
       if Get_Kind (Name) = Iir_Kind_Simple_Name then
          --  LRM93 10.1 Declarative Region
          --  LRM08 12.1 Declarative Region
@@ -1986,6 +1991,7 @@ package body Sem is
    procedure Sem_Subprogram_Body (Subprg : Iir)
    is
       Spec : constant Iir := Get_Subprogram_Specification (Subprg);
+      Warn_Hide_Enabled : constant Boolean := Is_Warning_Enabled (Warnid_Hide);
       El : Iir;
    begin
       Set_Impure_Depth (Subprg, Iir_Depth_Pure);
@@ -1996,7 +2002,10 @@ package body Sem is
       Open_Declarative_Region;
       Set_Is_Within_Flag (Spec, True);
 
-      -- Add the interface names into the current declarative region.
+      --  Add the interface names into the current declarative region.
+      --  (Do not emit warnings for hiding, they were already emitted during
+      --   analysis of the subprogram spec).
+      Enable_Warning (Warnid_Hide, False);
       El := Get_Interface_Declaration_Chain (Spec);
       while El /= Null_Iir loop
          Add_Name (El, Get_Identifier (El), False);
@@ -2005,6 +2014,7 @@ package body Sem is
          end if;
          El := Get_Chain (El);
       end loop;
+      Enable_Warning (Warnid_Hide, Warn_Hide_Enabled);
 
       Sem_Sequential_Statements (Spec, Subprg);
 
@@ -2079,7 +2089,7 @@ package body Sem is
                end;
             end if;
 
-            --  Do not add to Analysis_Check_List as procedures can't
+            --  Do not add to Analysis_Checks_List as procedures can't
             --  generate purity/wait/all-sensitized errors by themselves.
 
          when Iir_Kind_Function_Declaration =>
@@ -2570,7 +2580,8 @@ package body Sem is
             when Iir_Kind_Terminal_Declaration =>
                null;
             when others =>
-               Error_Kind ("package_need_body_p", El);
+               pragma Assert (Flags.Flag_Force_Analysis);
+               null;
          end case;
          El := Get_Chain (El);
       end loop;
@@ -2905,12 +2916,18 @@ package body Sem is
       --  declarations that will potentialy become directly visible.
 
       Name := Get_Selected_Name (Clause);
+      if Name = Null_Iir then
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return;
+      end if;
+
       case Get_Kind (Name) is
          when Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Selected_Name =>
             Name_Prefix := Get_Prefix (Name);
          when others =>
             Error_Msg_Sem (+Name, "use clause allows only selected name");
+            Set_Selected_Name (Clause, Create_Error_Name (Name));
             return;
       end case;
 
@@ -2922,6 +2939,7 @@ package body Sem is
             Error_Msg_Sem
               (+Name_Prefix,
                "use clause prefix must be a name or a selected name");
+            Set_Selected_Name (Clause, Create_Error_Name (Name));
             return;
       end case;
 
@@ -2929,6 +2947,7 @@ package body Sem is
       Set_Prefix (Name, Name_Prefix);
       Prefix := Get_Named_Entity (Name_Prefix);
       if Is_Error (Prefix) then
+         Set_Selected_Name (Clause, Create_Error_Name (Name));
          return;
       end if;
 
@@ -2958,15 +2977,13 @@ package body Sem is
                Error_Msg_Sem
                  (+Name_Prefix,
                   "use of uninstantiated package is not allowed");
-               --  FIXME: is it ok from ownership POV ?
-               Set_Named_Entity (Name_Prefix, Create_Error (Prefix));
+               Set_Prefix (Name, Create_Error_Name (Name_Prefix));
                return;
             end if;
          when others =>
             Error_Msg_Sem
               (+Prefix, "prefix must designate a package or a library");
-            --  FIXME: is it ok from ownership POV ?
-            Set_Named_Entity (Name_Prefix, Create_Error (Prefix));
+            Set_Prefix (Name, Create_Error_Name (Name_Prefix));
             return;
       end case;
 
@@ -3216,11 +3233,13 @@ package body Sem is
 
       --  If there is already a unit with the same name, mark it as being
       --  replaced.
-      if Get_Kind (Library_Unit) in Iir_Kinds_Primary_Unit then
-         Prev_Unit := Libraries.Find_Primary_Unit
-           (Library, Get_Identifier (Library_Unit));
-         if Is_Valid (Prev_Unit) and then Prev_Unit /= Design_Unit then
-            Set_Date (Prev_Unit, Date_Replacing);
+      if Library_Unit /= Null_Iir then
+         if Get_Kind (Library_Unit) in Iir_Kinds_Primary_Unit then
+            Prev_Unit := Libraries.Find_Primary_Unit
+              (Library, Get_Identifier (Library_Unit));
+            if Is_Valid (Prev_Unit) and then Prev_Unit /= Design_Unit then
+               Set_Date (Prev_Unit, Date_Replacing);
+            end if;
          end if;
       end if;
 
@@ -3261,22 +3280,27 @@ package body Sem is
       Sem_Context_Clauses (Design_Unit);
 
       --  Analyze the library unit.
-      case Iir_Kinds_Library_Unit (Get_Kind (Library_Unit)) is
-         when Iir_Kind_Entity_Declaration =>
-            Sem_Entity_Declaration (Library_Unit);
-         when Iir_Kind_Architecture_Body =>
-            Sem_Architecture_Body (Library_Unit);
-         when Iir_Kind_Package_Declaration =>
-            Sem_Package_Declaration (Library_Unit);
-         when Iir_Kind_Package_Body =>
-            Sem_Package_Body (Library_Unit);
-         when Iir_Kind_Configuration_Declaration =>
-            Sem_Configuration_Declaration (Library_Unit);
-         when Iir_Kind_Package_Instantiation_Declaration =>
-            Sem_Package_Instantiation_Declaration (Library_Unit);
-         when Iir_Kind_Context_Declaration =>
-            Sem_Context_Declaration (Library_Unit);
-      end case;
+      if Library_Unit /= Null_Iir then
+         case Iir_Kinds_Library_Unit (Get_Kind (Library_Unit)) is
+            when Iir_Kind_Entity_Declaration =>
+               Sem_Entity_Declaration (Library_Unit);
+            when Iir_Kind_Architecture_Body =>
+               Sem_Architecture_Body (Library_Unit);
+            when Iir_Kind_Package_Declaration =>
+               Sem_Package_Declaration (Library_Unit);
+            when Iir_Kind_Package_Body =>
+               Sem_Package_Body (Library_Unit);
+            when Iir_Kind_Configuration_Declaration =>
+               Sem_Configuration_Declaration (Library_Unit);
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               Sem_Package_Instantiation_Declaration (Library_Unit);
+            when Iir_Kind_Context_Declaration =>
+               Sem_Context_Declaration (Library_Unit);
+         end case;
+      else
+         pragma Assert (Flags.Flag_Force_Analysis);
+         null;
+      end if;
 
       Close_Declarative_Region;
 

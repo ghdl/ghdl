@@ -212,6 +212,11 @@ package body Errorout is
       Line_Pos : Source_Ptr;
       pragma Unreferenced (Line_Pos);
    begin
+      --  Discard warnings that aren't enabled.
+      if Id in Msgid_Warnings and then not Is_Warning_Enabled (Id) then
+         return;
+      end if;
+
       --  Reclassify warnings to errors if -Werror.
       if Flags.Warn_Error
         and then (Id = Msgid_Warning or Id in Msgid_Warnings)
@@ -688,9 +693,10 @@ package body Errorout is
             return "overloaded name or expression";
 
          when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Wildcard_Type_Definition =>
+           | Iir_Kind_Enumeration_Type_Definition =>
             return Image_Identifier (Get_Type_Declarator (Node));
+         when Iir_Kind_Wildcard_Type_Definition =>
+            return "<any>";
          when Iir_Kind_Array_Type_Definition =>
             return Disp_Type (Node, "array type");
          when Iir_Kind_Array_Subtype_Definition =>

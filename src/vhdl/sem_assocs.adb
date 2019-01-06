@@ -739,7 +739,7 @@ package body Sem_Assocs is
    procedure Add_Individual_Assoc_Selected_Name
      (Choice : out Iir; Sub_Assoc : Iir; Formal : Iir)
    is
-      Element : constant Iir := Get_Selected_Element (Formal);
+      Element : constant Iir := Get_Named_Entity (Formal);
       Last_Choice : Iir;
    begin
       --  Try to find the existing choice.
@@ -871,14 +871,12 @@ package body Sem_Assocs is
       Index_Tlist : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Dims : constant Natural := Get_Nbr_Elements (Index_Tlist);
       Index_Type : constant Iir := Get_Nth_Element (Index_Tlist, Dim - 1);
+      Chain : constant Iir := Get_Individual_Association_Chain (Assoc);
       Low, High : Iir;
-      Chain : Iir;
       El : Iir;
    begin
-      Chain := Get_Individual_Association_Chain (Assoc);
       Sem_Check_Continuous_Choices
-        (Chain, Index_Type, Low, High, Get_Location (Assoc), False, False);
-      Set_Individual_Association_Chain (Assoc, Chain);
+        (Chain, Index_Type, Low, High, Get_Location (Assoc), False);
       if Dim < Nbr_Dims then
          El := Chain;
          while El /= Null_Iir loop

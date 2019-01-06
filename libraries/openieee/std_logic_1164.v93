@@ -1,5 +1,5 @@
---  This is an implementation of ieee.std_logic_1164 based only on the
---  specifications.  This file is part of GHDL.
+--  This is an implementation of -*- vhdl -*- ieee.std_logic_1164 based only
+--  on the specifications.  This file is part of GHDL.
 --  Copyright (C) 2015 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -16,14 +16,12 @@
 --  along with GCC; see the file COPYING2.  If not see
 --  <http://www.gnu.org/licenses/>.
 
---  This package is valid for VHDL version until but not including 2008.
---  For VHDL87, the functions xnor should be removed.
-
 package std_logic_1164 is
 
   --  Unresolved logic state.
   type std_ulogic is
-    ('U',  --  Uninitialized, this is also the default value.
+    (
+     'U',  --  Uninitialized, this is also the default value.
      'X',  --  Unknown / conflict value (forcing level).
      '0',  --  0 (forcing level).
      '1',  --  1 (forcing level).
@@ -32,7 +30,7 @@ package std_logic_1164 is
      'L',  --  0 (weak level).
      'H',  --  1 (weak level).
      '-'   --  Don't care.
-     );
+    );
 
   --  Vector of logic state.
   type std_ulogic_vector is array (natural range <>) of std_ulogic;

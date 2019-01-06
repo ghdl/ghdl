@@ -6,13 +6,9 @@ GCC Backend on GNU/Linux with GCC/GNAT
 .. HINT:: There are some dependencies for building GCC (``gmp``, ``mpfr`` and ``mpc``). If you have not installed them on your system, you can either build them manually or use the ``download_prerequisites`` script provided in the GCC source tree (recommended): ``cd /path/to/gcc/source/dir && ./contrib/download_prerequisites``.
 
 * First configure GHDL, specify GCC source directory and installation prefix (like  ``/usr/local`` or ``/opt/ghdl``).
-
 * Next, invoke ``make copy-sources`` to copy GHDL sources in the source directory.
-
 * Then, configure GCC. The list of ``--disable`` configure options can be adjusted to your needs. GHDL does not require all these optional libraries and disabling them will speed up the build.
-
 * Now, build and install GCC with ``make``.
-
 * Last, build and install GHDL libraries.
 
 .. rubric:: Example:

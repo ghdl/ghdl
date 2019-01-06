@@ -51,11 +51,6 @@ package body Iirs_Utils is
       return Get_Kind (N) = Iir_Kind_Error;
    end Is_Error;
 
-   function Is_Any_Error (N : Iir) return Boolean is
-   begin
-      return N = Null_Iir or else Get_Kind (N) = Iir_Kind_Error;
-   end Is_Any_Error;
-
    function Is_Overflow_Literal (N : Iir) return Boolean is
    begin
       return Get_Kind (N) = Iir_Kind_Overflow_Literal;
@@ -779,18 +774,19 @@ package body Iirs_Utils is
    is
       Range_Expr : Iir_Range_Expression;
       Literal_List : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
+      List_Len : constant Natural := Get_Nbr_Elements (Literal_List);
    begin
       --  Create a constraint.
       Range_Expr := Create_Iir (Iir_Kind_Range_Expression);
       Location_Copy (Range_Expr, Def);
       Set_Type (Range_Expr, Def);
       Set_Direction (Range_Expr, Iir_To);
-      Set_Left_Limit
-        (Range_Expr,
-         Get_Nth_Element (Literal_List, 0));
-      Set_Right_Limit
-        (Range_Expr,
-         Get_Nth_Element (Literal_List, Get_Nbr_Elements (Literal_List) - 1));
+      if List_Len >= 1 then
+         Set_Left_Limit
+           (Range_Expr, Get_Nth_Element (Literal_List, 0));
+         Set_Right_Limit
+           (Range_Expr, Get_Nth_Element (Literal_List, List_Len - 1));
+      end if;
       Set_Expr_Staticness (Range_Expr, Locally);
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;
@@ -1600,6 +1596,17 @@ package body Iirs_Utils is
       Set_Signal_Type_Flag (Res, True);
       return Res;
    end Create_Error_Type;
+
+   function Create_Error_Name (Orig : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Error);
+      Set_Expr_Staticness (Res, None);
+      Set_Error_Origin (Res, Orig);
+      Location_Copy (Res, Orig);
+      return Res;
+   end Create_Error_Name;
 
    --  Extract the entity from ASPECT.
    --  Note: if ASPECT is a component declaration, returns ASPECT.

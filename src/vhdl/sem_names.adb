@@ -892,6 +892,11 @@ package body Sem_Names is
       --  The name must not have been analyzed.
       pragma Assert (Get_Type (Name) = Null_Iir);
 
+      if Is_Error (Name) then
+         Set_Type (Name, Name);
+         return Name;
+      end if;
+
       --  Analyze the name (if not already done).
       Res := Get_Named_Entity (Name);
       if Res = Null_Iir then
@@ -1312,13 +1317,14 @@ package body Sem_Names is
          return Conv;
       end if;
 
-      -- LRM93 7.3.5
-      -- Furthermore, the operand of a type conversion is not allowed to be
-      -- the literal null, an allocator, an aggregate, or a string literal.
+      --  LRM93 7.3.5
+      --  Furthermore, the operand of a type conversion is not allowed to be
+      --  the literal null, an allocator, an aggregate, or a string literal.
       case Get_Kind (Actual) is
          when Iir_Kind_Null_Literal
            | Iir_Kind_Aggregate
-           | Iir_Kind_String_Literal8 =>
+           | Iir_Kind_String_Literal8
+           | Iir_Kinds_Allocator =>
             Error_Msg_Sem
               (+Actual, "%n cannot be a type conversion operand", +Actual);
             return Conv;
@@ -1327,61 +1333,58 @@ package body Sem_Names is
             Error_Msg_Sem
               (+Actual, "subtype indication not allowed in an expression");
             return Conv;
+         when Iir_Kind_Error =>
+            return Conv;
          when others =>
-            -- LRM93 7.3.5
-            -- The type of the operand of a type conversion must be
-            -- determinable independent of the context (in particular,
-            -- independent of the target type).
-            Expr := Sem_Expression_Universal (Actual);
-            if Expr = Null_Iir then
-               return Conv;
-            end if;
-            if Get_Kind (Expr) in Iir_Kinds_Allocator then
-               Error_Msg_Sem
-                 (+Expr, "%n cannot be a type conversion operand", +Expr);
-            end if;
-            Set_Expression (Conv, Expr);
+            null;
       end case;
+
+      --  LRM93 7.3.5
+      --  The type of the operand of a type conversion must be
+      --  determinable independent of the context (in particular,
+      --  independent of the target type).
+      Expr := Sem_Expression_Universal (Actual);
+      if Expr = Null_Iir then
+         return Conv;
+      end if;
+      Set_Expression (Conv, Expr);
 
       --  LRM93 7.4.1 Locally Static Primaries.
       --  9. a type conversion whose expression is a locally static expression.
       --  LRM93 7.4.2 Globally Static Primaries.
       --  14. a type conversion whose expression is a globally static
       --      expression.
-      if Expr /= Null_Iir then
-         Staticness := Get_Expr_Staticness (Expr);
+      Staticness := Get_Expr_Staticness (Expr);
 
-         --  If the type mark is not locally static, the expression cannot
-         --  be locally static.  This was clarified in VHDL 08, but a type
-         --  mark that denotes an unconstrained array type, does not prevent
-         --  the expression from being static.
-         if Get_Kind (Conv_Type) not in Iir_Kinds_Array_Type_Definition
-           or else Get_Constraint_State (Conv_Type) = Fully_Constrained
-         then
-            Staticness := Min (Staticness, Get_Type_Staticness (Conv_Type));
-         end if;
+      --  If the type mark is not locally static, the expression cannot
+      --  be locally static.  This was clarified in VHDL 08, but a type
+      --  mark that denotes an unconstrained array type, does not prevent
+      --  the expression from being static.
+      if Get_Kind (Conv_Type) not in Iir_Kinds_Array_Type_Definition
+        or else Get_Constraint_State (Conv_Type) = Fully_Constrained
+      then
+         Staticness := Min (Staticness, Get_Type_Staticness (Conv_Type));
+      end if;
 
-         --  LRM87 7.4 Static Expressions
-         --  A type conversion is not a locally static expression.
-         if Flags.Vhdl_Std = Vhdl_87 then
-            Staticness := Min (Globally, Staticness);
-         end if;
-         Set_Expr_Staticness (Conv, Staticness);
+      --  LRM87 7.4 Static Expressions
+      --  A type conversion is not a locally static expression.
+      if Flags.Vhdl_Std = Vhdl_87 then
+         Staticness := Min (Globally, Staticness);
+      end if;
+      Set_Expr_Staticness (Conv, Staticness);
 
-         if not Are_Types_Closely_Related (Conv_Type, Get_Type (Expr))
-         then
-            --  FIXME: should explain why the types are not closely related.
-            Error_Msg_Sem
-              (+Conv,
-               "conversion not allowed between not closely related types");
-            --  Avoid error storm in evaluation.
-            Set_Expr_Staticness (Conv, None);
-         else
-            --  Unless the type conversion appears in the formal part of an
-            --  association, the expression must be readable.
-            if not In_Formal then
-               Check_Read (Expr);
-            end if;
+      if not Are_Types_Closely_Related (Conv_Type, Get_Type (Expr)) then
+         --  FIXME: should explain why the types are not closely related.
+         Error_Msg_Sem
+           (+Conv,
+            "conversion not allowed between not closely related types");
+         --  Avoid error storm in evaluation.
+         Set_Expr_Staticness (Conv, None);
+      else
+         --  Unless the type conversion appears in the formal part of an
+         --  association, the expression must be readable.
+         if not In_Formal then
+            Check_Read (Expr);
          end if;
       end if;
       return Conv;
@@ -1777,7 +1780,7 @@ package body Sem_Names is
             Free_Parenthesis_Name (Name, Res);
          when Iir_Kind_Selected_Element =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Selected_Name);
-            Xref_Ref (Res, Get_Selected_Element (Res));
+            Xref_Ref (Res, Get_Named_Entity (Res));
             Set_Name_Staticness (Res, Get_Name_Staticness (Prefix));
             Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
             Set_Base_Name (Res, Get_Base_Name (Prefix));
@@ -1995,7 +1998,7 @@ package body Sem_Names is
          Set_Prefix (Se, R);
          Set_Type (Se, Get_Type (Rec_El));
          Set_Identifier (Se, Suffix);
-         Set_Selected_Element (Se, Rec_El);
+         Set_Named_Entity (Se, Rec_El);
          Set_Base_Name (Se, Get_Object_Prefix (R, False));
          Add_Result (Res, Se);
       end Sem_As_Selected_Element;
@@ -2082,7 +2085,7 @@ package body Sem_Names is
          Sem_Name (Prefix_Name);
       end if;
       Prefix := Get_Named_Entity (Prefix_Name);
-      if Prefix = Error_Mark then
+      if Is_Error (Prefix) then
          Set_Named_Entity (Name, Prefix);
          return;
       end if;
@@ -4204,17 +4207,6 @@ package body Sem_Names is
             return Create_Error_Type (Name);
       end case;
    end Name_To_Type_Definition;
-
-   function Create_Error_Name (Orig : Iir) return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Create_Iir (Iir_Kind_Error);
-      Set_Expr_Staticness (Res, None);
-      Set_Error_Origin (Res, Orig);
-      Location_Copy (Res, Orig);
-      return Res;
-   end Create_Error_Name;
 
    function Sem_Denoting_Name (Name: Iir) return Iir
    is

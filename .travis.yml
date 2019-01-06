@@ -31,16 +31,17 @@ env:
     - IMAGE=fedora28+llvm
 
 deploy:
-  provider: releases
-  skip_cleanup: true
-  api_key:
-    secure: ji6LXOmD5V2N+ELHZr4oJsmxPhedk+8W6jfCqQdEbewQ42N+fKOq3lgqJni7ZdfpZaulB9OHPTApv3bwOjXjtN9rfBGmq//U9CwvzHmUeomdQv6WQOVevaWSXl3DNL9fk3yKynyFrsv4pvr45L8GIjaHLggKcYhNFPJ2rrnJlDoFT9MqQNpmP7Bg/LnwVQiv+ZDPkLlMWQzrXzLamdQILARPQka+kCdXl/sHH6OKvLgRvu9yvyXYSSfbyAHP+THISS5gDciizSBeWGlU75kgj/N+mkV+8NvtTTfEIgG8y49WJz6aBooTmRzk/jZW1dKMbDR6c5bpTmRvMZSzeSBuAR6WLhr6HevgCPi/1fX1y3pkVSrgBUF5KcxPgWCZp0I05QjaJOdvQDl1hH4TlVwpT18lM2+cWrui9fS7spnk/AuNKX882C5QWWRy28lIPasCVnwfeKX8a9KAwY9OqVOenoLC1yx7NJOGfH1bjuSYYxyR4XgLiGTHKALAuknCyD9QL0o378IwqxHMcsN0Gsd+GndMu0/b8GvSqfzDpV1XknqabQFwkZLs+Yydw0snfBUzXw9TfOk78IiPYEgXAxsQKBAkK7qvO36HIxLlSQXglXU1D4IDtQYDUel6vKll4pgu0WMxStQCbj51yDVJKvRhzwiBNC6Pwgzt2JTrpwM/T/U=
-  file: "ghdl-*.tgz"
-  file_glob: true
-  on:
-    repo: ghdl/ghdl
-    all_branches: true
-    tags: true
+  - &deploy-docker
+    provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: ji6LXOmD5V2N+ELHZr4oJsmxPhedk+8W6jfCqQdEbewQ42N+fKOq3lgqJni7ZdfpZaulB9OHPTApv3bwOjXjtN9rfBGmq//U9CwvzHmUeomdQv6WQOVevaWSXl3DNL9fk3yKynyFrsv4pvr45L8GIjaHLggKcYhNFPJ2rrnJlDoFT9MqQNpmP7Bg/LnwVQiv+ZDPkLlMWQzrXzLamdQILARPQka+kCdXl/sHH6OKvLgRvu9yvyXYSSfbyAHP+THISS5gDciizSBeWGlU75kgj/N+mkV+8NvtTTfEIgG8y49WJz6aBooTmRzk/jZW1dKMbDR6c5bpTmRvMZSzeSBuAR6WLhr6HevgCPi/1fX1y3pkVSrgBUF5KcxPgWCZp0I05QjaJOdvQDl1hH4TlVwpT18lM2+cWrui9fS7spnk/AuNKX882C5QWWRy28lIPasCVnwfeKX8a9KAwY9OqVOenoLC1yx7NJOGfH1bjuSYYxyR4XgLiGTHKALAuknCyD9QL0o378IwqxHMcsN0Gsd+GndMu0/b8GvSqfzDpV1XknqabQFwkZLs+Yydw0snfBUzXw9TfOk78IiPYEgXAxsQKBAkK7qvO36HIxLlSQXglXU1D4IDtQYDUel6vKll4pgu0WMxStQCbj51yDVJKvRhzwiBNC6Pwgzt2JTrpwM/T/U=
+    file: "ghdl-*.tgz"
+    file_glob: true
+    on:
+      repo: ghdl/ghdl
+      all_branches: true
+      tags: true
 
 jobs:
   include:
@@ -57,3 +58,8 @@ jobs:
       env: IMAGE=macosx+mcode
 #    - <<: *osx
 #      osx_image: xcode8.3
+    - env: IMAGE=""
+      script: ./dist/travis/man.sh
+      deploy:
+        - <<: *deploy-docker
+          file: "doc/_build/man/ghdl.1"

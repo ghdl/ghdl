@@ -532,6 +532,7 @@ package body Trans.Chap6 is
       Slice_Range  : Mnode;
       Prefix_Range : Mnode;
 
+      Diff_Type       : O_Tnode;
       Diff            : O_Dnode;
       Unsigned_Diff   : O_Dnode;
       If_Blk, If_Blk1 : O_If_Block;
@@ -646,7 +647,20 @@ package body Trans.Chap6 is
                                  Ghdl_Bool_Type));
       New_Assign_Stmt (New_Obj (Unsigned_Diff), New_Lit (Ghdl_Index_0));
       New_Else_Stmt (If_Blk);
-      Diff := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
+
+      --  Use a signed intermediate type to do the substraction.  This is
+      --  required for enum types.
+      case Type_Mode_Discrete (Index_Info.Type_Mode) is
+         when Type_Mode_B1
+           | Type_Mode_E8
+           | Type_Mode_E32
+           | Type_Mode_I32 =>
+            Diff_Type := Ghdl_I32_Type;
+         when Type_Mode_I64 =>
+            Diff_Type := Ghdl_I64_Type;
+      end case;
+
+      Diff := Create_Temp (Diff_Type);
 
       --  Compute the offset in the prefix.
       if not Static_Range then
@@ -660,9 +674,12 @@ package body Trans.Chap6 is
          --  Diff = slice - bounds.
          New_Assign_Stmt
            (New_Obj (Diff),
-            New_Dyadic_Op (ON_Sub_Ov,
-                           M2E (Chap3.Range_To_Left (Slice_Range)),
-                           M2E (Chap3.Range_To_Left (Prefix_Range))));
+            New_Dyadic_Op
+              (ON_Sub_Ov,
+               New_Convert_Ov (M2E (Chap3.Range_To_Left (Slice_Range)),
+                               Diff_Type),
+               New_Convert_Ov (M2E (Chap3.Range_To_Left (Prefix_Range)),
+                               Diff_Type)));
       end if;
       if not Static_Range then
          New_Else_Stmt (If_Blk1);
@@ -672,9 +689,12 @@ package body Trans.Chap6 is
          --  Diff = bounds - slice.
          New_Assign_Stmt
            (New_Obj (Diff),
-            New_Dyadic_Op (ON_Sub_Ov,
-                           M2E (Chap3.Range_To_Left (Prefix_Range)),
-                           M2E (Chap3.Range_To_Left (Slice_Range))));
+            New_Dyadic_Op
+              (ON_Sub_Ov,
+               New_Convert_Ov (M2E (Chap3.Range_To_Left (Prefix_Range)),
+                               Diff_Type),
+               New_Convert_Ov (M2E (Chap3.Range_To_Left (Slice_Range)),
+                               Diff_Type)));
       end if;
       if not Static_Range then
          Finish_If_Stmt (If_Blk1);
@@ -694,8 +714,7 @@ package body Trans.Chap6 is
          Err_1 := New_Compare_Op
            (ON_Lt,
             New_Obj_Value (Diff),
-            New_Lit (New_Signed_Literal (Index_Info.Ortho_Type (Mode_Value),
-                                         0)),
+            New_Lit (New_Signed_Literal (Diff_Type, 0)),
             Ghdl_Bool_Type);
          --  Bounds error if right of slice is after right of prefix.
          Err_2 := New_Compare_Op
@@ -954,65 +973,6 @@ package body Trans.Chap6 is
       end if;
    end Translate_Selected_Element;
 
-   --       function Translate_Formal_Interface_Name (Scope_Type : O_Tnode;
-   --                                                 Scope_Param : O_Lnode;
-   --                                                 Name : Iir;
-   --                                                 Kind : Object_Kind_Type)
-   --                                                return Mnode
-   --       is
-   --          Type_Info : Type_Info_Acc;
-   --          Info : Ortho_Info_Acc;
-   --          Res : Mnode;
-   --       begin
-   --          Type_Info := Get_Info (Get_Type (Name));
-   --          Info := Get_Info (Name);
-   --          Push_Scope_Soft (Scope_Type, Scope_Param);
-   --          Res := Get_Var (Info.Object_Var, Type_Info, Kind);
-   --          Clear_Scope_Soft (Scope_Type);
-   --          return Res;
-   --       end Translate_Formal_Interface_Name;
-
-   --       function Translate_Formal_Name (Scope_Type : O_Tnode;
-   --                                       Scope_Param : O_Lnode;
-   --                                       Name : Iir)
-   --                                      return Mnode
-   --       is
-   --          Prefix : Iir;
-   --          Prefix_Name : Mnode;
-   --       begin
-   --          case Get_Kind (Name) is
-   --             when Iir_Kind_Interface_Constant_Declaration =>
-   --                return Translate_Formal_Interface_Name
-   --                  (Scope_Type, Scope_Param, Name, Mode_Value);
-
-   --             when Iir_Kind_Interface_Signal_Declaration =>
-   --                return Translate_Formal_Interface_Name
-   --                  (Scope_Type, Scope_Param, Name, Mode_Signal);
-
-   --             when Iir_Kind_Indexed_Name =>
-   --                Prefix := Get_Prefix (Name);
-   --                Prefix_Name := Translate_Formal_Name
-   --                  (Scope_Type, Scope_Param, Prefix);
-   --                return Translate_Indexed_Name (Prefix_Name, Name);
-
-   --             when Iir_Kind_Slice_Name =>
-   --                Prefix := Get_Prefix (Name);
-   --                Prefix_Name := Translate_Formal_Name
-   --                  (Scope_Type, Scope_Param, Prefix);
-   --                return Translate_Slice_Name (Prefix_Name, Name);
-
-   --             when Iir_Kind_Selected_Element =>
-   --                Prefix := Get_Prefix (Name);
-   --                Prefix_Name := Translate_Formal_Name
-   --                  (Scope_Type, Scope_Param, Prefix);
-   --                return Translate_Selected_Element
-   --                  (Prefix_Name, Get_Selected_Element (Name));
-
-   --             when others =>
-   --                Error_Kind ("translate_generic_name", Name);
-   --          end case;
-   --       end Translate_Formal_Name;
-
    function Translate_Object_Alias_Name (Name : Iir; Mode : Object_Kind_Type)
                                         return Mnode
    is
@@ -1165,7 +1125,7 @@ package body Trans.Chap6 is
          when Iir_Kind_Selected_Element =>
             return Translate_Selected_Element
               (Translate_Name (Get_Prefix (Name), Mode),
-               Get_Selected_Element (Name));
+               Get_Named_Entity (Name));
 
          when Iir_Kind_Function_Call =>
             pragma Assert (Mode = Mode_Value);
@@ -1255,7 +1215,7 @@ package body Trans.Chap6 is
             end;
          when Iir_Kind_Selected_Element =>
             declare
-               El      : constant Iir := Get_Selected_Element (Name);
+               El      : constant Iir := Get_Named_Entity (Name);
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin

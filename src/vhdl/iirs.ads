@@ -535,9 +535,8 @@ package Iirs is
    --  associations have the same_alternative_flag set.
    --   Get/Set_Chain (Field2)
    --
-   --  Lexical order of appareance.  Choices are sorted during analysis.  This
-   --  field can be used to display the choices in the original order.
-   --   Get/Set_Choice_Position (Field1)
+   --  Ordered position of the choice from 1 to N.  0 is reserved for others.
+   --   Get/Set_Choice_Order (Field1)
    --
    --  Should be a simple_name.
    -- Only for Iir_Kind_Choice_By_Name:
@@ -567,15 +566,15 @@ package Iirs is
    --  * a sequential statement chain for a case_statement.
    --   Get/Set_Associated_Chain (Field4)
    --
+   --  Set when share the same association as the previous one.
    --   Get/Set_Same_Alternative_Flag (Flag1)
    --
+   --  For aggregates: if True, associated expression is for one element.
    --   Get/Set_Element_Type_Flag (Flag2)
    --
    -- Only for Iir_Kind_Choice_By_Range:
    -- Only for Iir_Kind_Choice_By_Expression:
    --   Get/Set_Choice_Staticness (State1)
-   --
-   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Entity_Aspect_Entity (Short)
    --
@@ -1931,6 +1930,8 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
 
    -- Iir_Kind_Free_Quantity_Declaration (Short)
    --
@@ -3803,15 +3804,19 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Selected_Element (Field2)
-   --
    --   Get/Set_Identifier (Field3)
+   --
+   -- The selected element.
+   --   Get/Set_Named_Entity (Field4)
    --
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --  Always false.
+   --   Get/Set_Is_Forward_Ref (Flag1)
 
    -- Iir_Kind_Implicit_Dereference (Short)
    -- Iir_Kind_Dereference (Short)
@@ -6153,23 +6158,21 @@ package Iirs is
    procedure Set_Time (We : Iir_Waveform_Element; An_Iir : Iir);
 
    --  Field: Field1 (pos)
-   function Get_Choice_Position (Choice : Iir) return Int32;
-   procedure Set_Choice_Position (Choice : Iir; Pos : Int32);
+   function Get_Choice_Order (Choice : Iir) return Int32;
+   procedure Set_Choice_Order (Choice : Iir; Pos : Int32);
 
    --  Node associated with a choice.
-   --  Field: Field3 Maybe_Ref
+   --  Field: Field3
    function Get_Associated_Expr (Target : Iir) return Iir;
    procedure Set_Associated_Expr (Target : Iir; Associated : Iir);
 
    --  Node associated with a choice.
-   --  Field: Field3 Maybe_Ref
+   --  Field: Field3
    function Get_Associated_Block (Target : Iir) return Iir;
    procedure Set_Associated_Block (Target : Iir; Associated : Iir);
 
    --  Chain associated with a choice.
-   --  A Maybe_Ref_Chain is a reference to a chain if Get_Is_Ref is True,
-   --  otherwise this is a normal chain.
-   --  Field: Field4 Maybe_Ref_Chain
+   --  Field: Field4 Chain
    function Get_Associated_Chain (Target : Iir) return Iir;
    procedure Set_Associated_Chain (Target : Iir; Associated : Iir);
 
@@ -6480,10 +6483,6 @@ package Iirs is
    --  Field: Field4 (pos)
    function Get_Element_Position (Target : Iir) return Iir_Index32;
    procedure Set_Element_Position (Target : Iir; Pos : Iir_Index32);
-
-   --  Field: Field2 Ref
-   function Get_Selected_Element (Target : Iir) return Iir;
-   procedure Set_Selected_Element (Target : Iir; El : Iir);
 
    --  Selected names of an use_clause are chained.
    --  Field: Field3

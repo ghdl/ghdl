@@ -141,6 +141,9 @@ package body Ghdlsimul is
       Grt.Options.Progname := Grt.Types.To_Ghdl_C_String (Argv0.all'Address);
       Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
 
+      Grtlink.Flag_String := Flags.Flag_String;
+      Grt.Options.Set_Time_Resolution;
+
       for I in Args'Range loop
          Arg := Args (I);
          if Arg.all = "--disp-tree" then
@@ -186,8 +189,6 @@ package body Ghdlsimul is
          Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
          return;
       end if;
-
-      Grtlink.Flag_String := Flags.Flag_String;
 
       Simul.Simulation.Main.Simulation_Entity (Top_Conf);
 

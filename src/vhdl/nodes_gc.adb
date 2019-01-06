@@ -249,12 +249,6 @@ package body Nodes_GC is
                         end if;
                      when Attr_Chain =>
                         Mark_Chain (Get_Iir (N, F));
-                     when Attr_Maybe_Ref_Chain =>
-                        if Get_Is_Ref (N) then
-                           Mark_Iir_Ref_Field (N, F);
-                        else
-                           Mark_Chain (Get_Iir (N, F));
-                        end if;
                      when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                         raise Internal_Error;
                   end case;

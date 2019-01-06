@@ -56,10 +56,9 @@ package body Ghdllocal is
       Compile_Init;
    end Init;
 
-   function Decode_Driver_Option (Option : String) return Boolean
+   function Decode_Driver_Option (Opt : String) return Boolean
    is
-      subtype Opt_String is String (1 .. Option'Length);
-      Opt : Opt_String renames Option;
+      pragma Assert (Opt'First = 1);
    begin
       if Opt = "-v" and then Flag_Verbose = False then
          Flag_Verbose := True;

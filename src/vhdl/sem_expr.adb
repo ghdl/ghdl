@@ -2018,15 +2018,21 @@ package body Sem_Expr is
    begin
       for I in 1 .. Len loop
          Ch := Str_Table.Char_String8 (Id, I);
-         Res := Map (Ch);
-         if Res = No_Pos then
-            El := Find_Literal (El_Type, Ch);
-            if El = Null_Iir then
-               Res := 0;
-            else
+         if Ch not in Map'Range then
+            --  Invalid character.
+            pragma Assert (Flags.Flag_Force_Analysis);
+            Res := 0;
+         else
+            Res := Map (Ch);
+            if Res = No_Pos then
+               El := Find_Literal (El_Type, Ch);
+               if El = Null_Iir then
+                  Res := 0;
+               else
                Enum_Pos := Get_Enum_Pos (El);
                Res := Nat8 (Enum_Pos);
                Map (Ch) := Res;
+               end if;
             end if;
          end if;
          Str_Table.Set_Element_String8 (Id, I, Res);
@@ -2285,6 +2291,8 @@ package body Sem_Expr is
             Error_Msg_Sem (+Sel, "array type must be locally static");
             return;
          end if;
+         --  Use the base type so that the subtype of the choices is computed.
+         Sel_Type := Get_Base_Type (Sel_Type);
       end if;
       Sel_El_Type := Get_Element_Subtype (Sel_Type);
       Sel_El_Length := Eval_Discrete_Type_Length (Sel_El_Type);
@@ -2430,13 +2438,12 @@ package body Sem_Expr is
       Disc_Heap_Sort (Info.Nbr_Choices);
    end Sort_Discrete_Choices;
 
-   procedure Sem_Check_Continuous_Choices (Choice_Chain : in out Iir;
+   procedure Sem_Check_Continuous_Choices (Choice_Chain : Iir;
                                            Choice_Type : Iir;
                                            Low : out Iir;
                                            High : out Iir;
                                            Loc : Location_Type;
-                                           Is_Sub_Range : Boolean;
-                                           Reorder_Choices : Boolean)
+                                           Is_Sub_Range : Boolean)
    is
       --  Nodes that can appear.
       Info : Choice_Info_Type;
@@ -2504,6 +2511,10 @@ package body Sem_Expr is
       Count_Choices (Info, Choice_Chain);
       Fill_Choices_Array (Info, Choice_Chain);
       Sort_Discrete_Choices (Info);
+
+      for I in Info.Arr'Range loop
+         Set_Choice_Order (Info.Arr (I), Int32 (I));
+      end loop;
 
       --  Set low and high bounds.
       if Info.Nbr_Choices > 0 then
@@ -2624,98 +2635,6 @@ package body Sem_Expr is
          Warning_Msg_Sem
            (Warnid_Static, +Info.Others_Choice,
             "'others' choice allowed only if the index constraint is static");
-      end if;
-
-      if Reorder_Choices then
-         declare
-            Ngroups : Int32;
-         begin
-
-            --  First, set Associated_Expr and Associated_Chain for nodes with
-            --  the same alternative.
-            declare
-               Assoc_Expr : Iir;
-               Assoc_Chain : Iir;
-               Assoc : Iir;
-            begin
-               Assoc := Choice_Chain;
-               Assoc_Expr := Null_Iir;
-               Assoc_Chain := Null_Iir;
-               Ngroups := 0;
-               while Assoc /= Null_Iir loop
-                  if Get_Same_Alternative_Flag (Assoc) then
-                     Set_Is_Ref (Assoc, True);
-                     Set_Associated_Expr (Assoc, Assoc_Expr);
-                     Set_Associated_Chain (Assoc, Assoc_Chain);
-                     Set_Same_Alternative_Flag (Assoc, False);
-                  else
-                     Set_Is_Ref (Assoc, False);
-                     Assoc_Expr := Get_Associated_Expr (Assoc);
-                     Assoc_Chain := Get_Associated_Chain (Assoc);
-                     Ngroups := Ngroups + 1;
-                  end if;
-
-                  --  The choice position is now a group id.
-                  Set_Choice_Position (Assoc, Ngroups);
-                  Assoc := Get_Chain (Assoc);
-               end loop;
-            end;
-
-            --  Then set Is_Ref on the first alternative.
-            declare
-               type Group_Array is array (1 .. Ngroups) of Boolean;
-               type Group_Acc is access Group_Array;
-               procedure Free is new Ada.Unchecked_Deallocation
-                 (Group_Array, Group_Acc);
-               Groups : Group_Acc;
-               Gid : Int32;
-               Pos : Int32;
-               Assoc : Iir;
-            begin
-               Groups := new Group_Array'(others => False);
-               for I in Info.Arr'Range loop
-                  Gid := Get_Choice_Position (Info.Arr (I));
-                  if Groups (Gid) then
-                     --  Already handled.
-                     Set_Is_Ref (Info.Arr (I), True);
-                  else
-                     Groups (Gid) := True;
-                     Set_Is_Ref (Info.Arr (I), False);
-                  end if;
-               end loop;
-
-               Free (Groups);
-
-               --  Restore Choice_Position.
-               Assoc := Choice_Chain;
-               Pos := 0;
-               while Assoc /= Null_Iir loop
-                  Set_Choice_Position (Assoc, Pos);
-                  Pos := Pos + 1;
-                  Assoc := Get_Chain (Assoc);
-               end loop;
-            end;
-
-            --  Then reorder.
-            declare
-               Assoc : Iir;
-               Assoc1 : Iir;
-            begin
-               Choice_Chain := Info.Arr (Info.Arr'First);
-               Assoc := Choice_Chain;
-               for I in Info.Arr'First + 1 .. Info.Arr'Last loop
-                  Assoc1 := Info.Arr (I);
-                  Set_Chain (Assoc, Assoc1);
-                  Assoc := Assoc1;
-               end loop;
-               Assoc1 := Info.Others_Choice;
-               if Assoc1 /= Null_Iir then
-                  Set_Chain (Assoc, Assoc1);
-                  Assoc := Assoc1;
-               end if;
-               Set_Chain (Assoc, Null_Iir);
-            end;
-         end;
       end if;
 
       Free (Info.Arr);
@@ -2953,8 +2872,8 @@ package body Sem_Expr is
          return;
       end if;
 
-      Sem_Check_Continuous_Choices (Choice_Chain, Choice_Type, Low, High, Loc,
-                                    Is_Sub_Range, not Is_Case_Stmt);
+      Sem_Check_Continuous_Choices
+        (Choice_Chain, Choice_Type, Low, High, Loc, Is_Sub_Range);
    end Sem_Choices_Range;
 
    -- Perform semantisation on a (sub)aggregate AGGR, which is of type
@@ -3029,7 +2948,6 @@ package body Sem_Expr is
          Set_Associated_Chain (N_El, Get_Associated_Chain (Ass));
          Set_Chain (N_El, Get_Chain (Ass));
          Set_Same_Alternative_Flag (N_El, Get_Same_Alternative_Flag (Ass));
-         Set_Choice_Position (N_El, Get_Choice_Position (Ass));
 
          Free_Iir (Ass);
          Add_Match (N_El, Aggr_El);
@@ -3141,12 +3059,6 @@ package body Sem_Expr is
                pragma Assert (not Ok);
                null;
             end if;
-         else
-            --  Always set associated expression.
-            pragma Assert (Expr = Null_Iir);
-            pragma Assert (Prev_El /= Null_Iir);
-            Set_Associated_Expr (El, Get_Associated_Expr (Prev_El));
-            Set_Is_Ref (El, True);
          end if;
 
          Prev_El := El;
@@ -3388,10 +3300,14 @@ package body Sem_Expr is
 
             --  GHDL: must be checked for all associations, so do it outside
             --  the above 'if' statement.
+            --  GHDL: improve error message.
             case Get_Kind (El) is
                when Iir_Kind_Choice_By_None
                  | Iir_Kind_Choice_By_Range =>
                   null;
+               when Iir_Kind_Choice_By_Others =>
+                  Error_Msg_Sem
+                    (+El, "expression for 'others' must be an element");
                when others =>
                   Error_Msg_Sem
                     (+El, "positional association or "
@@ -4022,6 +3938,10 @@ package body Sem_Expr is
          when others =>
             Error_Kind ("sem_physical_literal", Lit);
       end case;
+      if Is_Error (Unit_Name) then
+         return Create_Error_Expr (Res, Error_Mark);
+      end if;
+
       Unit_Name := Sem_Denoting_Name (Unit_Name);
       Unit := Get_Named_Entity (Unit_Name);
       if Get_Kind (Unit) /= Iir_Kind_Unit_Declaration then
@@ -4622,6 +4542,17 @@ package body Sem_Expr is
             Error_Msg_Sem (+Expr, "%n cannot be used as an expression", +Expr);
             return Null_Iir;
 
+         when Iir_Kind_Range_Expression =>
+            --  Can only happen in case of parse error, as a range is not an
+            --  expression.
+            pragma Assert (Flags.Flag_Force_Analysis);
+            declare
+               Res : Iir;
+            begin
+               Res := Sem_Simple_Range_Expression (Expr, A_Type, True);
+               return Create_Error_Expr (Res, A_Type);
+            end;
+
          when Iir_Kind_Error =>
             -- Always ok.
             return Expr;
@@ -4927,7 +4858,7 @@ package body Sem_Expr is
       Result_Type : Iir;
       Expr_Type : Iir;
    begin
-      if Expr = Null_Iir then
+      if Is_Error (Expr) then
          return;
       end if;
 
@@ -5064,34 +4995,33 @@ package body Sem_Expr is
       end if;
    end Sem_Composite_Expression;
 
-   function Sem_Expression_Universal (Expr : Iir) return Iir
+   --  EXPR must be an expression with type is an overload list.
+   --  Extract and finish the analysis of the expression that is of universal
+   --  type, if there is one and if all types are either integer types or
+   --  floating point types.
+   --  This is used to get rid of implicit conversions.
+   function Sem_Favour_Universal_Type (Expr : Iir) return Iir
    is
-      Expr1 : Iir;
-      Expr_Type : Iir;
-      El : Iir;
+      Expr_Type : constant Iir := Get_Type (Expr);
+      Type_List : constant Iir_List := Get_Overload_List (Expr_Type);
+      --  Extract kind (from the first element).
+      First_El : constant Iir := Get_First_Element (Type_List);
+      Kind : constant Iir_Kind := Get_Kind (Get_Base_Type (First_El));
       Res : Iir;
-      List : Iir_List;
+      El : Iir;
+
       It : List_Iterator;
    begin
-      Expr1 := Sem_Expression_Ov (Expr, Null_Iir);
-      if Expr1 = Null_Iir then
-         return Null_Iir;
-      end if;
-      Expr_Type := Get_Type (Expr1);
-      if Expr_Type = Null_Iir then
-         --  FIXME: improve message
-         Error_Msg_Sem (+Expr, "bad expression for a scalar");
-         return Null_Iir;
-      end if;
-      if not Is_Overload_List (Expr_Type) then
-         return Expr1;
-      end if;
-
-      List := Get_Overload_List (Expr_Type);
       Res := Null_Iir;
-      It := List_Iterate (List);
+
+      It := List_Iterate (Type_List);
       while Is_Valid (It) loop
          El := Get_Element (It);
+         if Get_Kind (Get_Base_Type (El)) /= Kind then
+            --  Must be of the same kind.
+            Res := Null_Iir;
+            exit;
+         end if;
          if El = Universal_Integer_Type_Definition
            or El = Convertible_Integer_Type_Definition
            or El = Universal_Real_Type_Definition
@@ -5100,19 +5030,37 @@ package body Sem_Expr is
             if Res = Null_Iir then
                Res := El;
             else
-               Error_Overload (Expr1);
-               Disp_Overload_List (List, Expr1);
-               return Null_Iir;
+               Res := Null_Iir;
+               exit;
             end if;
          end if;
          Next (It);
       end loop;
+
       if Res = Null_Iir then
-         Error_Overload (Expr1);
-         Disp_Overload_List (List, Expr1);
+         Error_Overload (Expr);
+         Disp_Overload_List (Type_List, Expr);
          return Null_Iir;
       end if;
-      return Sem_Expression_Ov (Expr1, Res);
+
+      return Sem_Expression_Ov (Expr, Res);
+   end Sem_Favour_Universal_Type;
+
+   function Sem_Expression_Universal (Expr : Iir) return Iir
+   is
+      Expr1 : Iir;
+      Expr_Type : Iir;
+   begin
+      Expr1 := Sem_Expression_Wildcard (Expr, Wildcard_Any_Type);
+      Expr_Type := Get_Type (Expr1);
+      if Is_Error (Expr_Type) then
+         return Null_Iir;
+      end if;
+      if not Is_Overload_List (Expr_Type) then
+         return Expr1;
+      else
+         return Sem_Favour_Universal_Type (Expr1);
+      end if;
    end Sem_Expression_Universal;
 
    function Sem_Case_Expression (Expr : Iir) return Iir

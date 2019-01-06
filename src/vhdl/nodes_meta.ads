@@ -117,7 +117,7 @@ package Nodes_Meta is
       Field_After_Drivers_Flag,
       Field_We_Value,
       Field_Time,
-      Field_Choice_Position,
+      Field_Choice_Order,
       Field_Associated_Expr,
       Field_Associated_Block,
       Field_Associated_Chain,
@@ -178,7 +178,6 @@ package Nodes_Meta is
       Field_File_Logical_Name,
       Field_File_Open_Kind,
       Field_Element_Position,
-      Field_Selected_Element,
       Field_Use_Clause_Chain,
       Field_Context_Reference_Chain,
       Field_Selected_Name,
@@ -408,7 +407,6 @@ package Nodes_Meta is
       Attr_Forward_Ref,
       Attr_Maybe_Forward_Ref,
       Attr_Maybe_Ref,
-      Attr_Maybe_Ref_Chain,
       Attr_Of_Maybe_Ref,
       Attr_Of_Ref,
       Attr_Ref
@@ -647,7 +645,7 @@ package Nodes_Meta is
    function Has_After_Drivers_Flag (K : Iir_Kind) return Boolean;
    function Has_We_Value (K : Iir_Kind) return Boolean;
    function Has_Time (K : Iir_Kind) return Boolean;
-   function Has_Choice_Position (K : Iir_Kind) return Boolean;
+   function Has_Choice_Order (K : Iir_Kind) return Boolean;
    function Has_Associated_Expr (K : Iir_Kind) return Boolean;
    function Has_Associated_Block (K : Iir_Kind) return Boolean;
    function Has_Associated_Chain (K : Iir_Kind) return Boolean;
@@ -708,7 +706,6 @@ package Nodes_Meta is
    function Has_File_Logical_Name (K : Iir_Kind) return Boolean;
    function Has_File_Open_Kind (K : Iir_Kind) return Boolean;
    function Has_Element_Position (K : Iir_Kind) return Boolean;
-   function Has_Selected_Element (K : Iir_Kind) return Boolean;
    function Has_Use_Clause_Chain (K : Iir_Kind) return Boolean;
    function Has_Context_Reference_Chain (K : Iir_Kind) return Boolean;
    function Has_Selected_Name (K : Iir_Kind) return Boolean;

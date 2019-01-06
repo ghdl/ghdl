@@ -400,6 +400,9 @@ package body Ghdlcomp is
 
       Hooks.Compile_Init.all (True);
 
+      --  Analysis won't chock on incorrect parse tree.
+      Flags.Flag_Force_Analysis := Cmd.Flag_Force_Analysis;
+
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
@@ -428,7 +431,10 @@ package body Ghdlcomp is
 
                Next_Unit := Get_Chain (Unit);
 
-               if Errorout.Nbr_Errors = 0 then
+               if Errorout.Nbr_Errors = 0
+                 or else (Cmd.Flag_Force_Analysis
+                            and then Get_Library_Unit (Unit) /= Null_Iir)
+               then
                   Set_Chain (Unit, Null_Iir);
                   Libraries.Add_Design_Unit_Into_Library (Unit);
                   New_Design_File := Get_Design_File (Unit);
@@ -443,7 +449,12 @@ package body Ghdlcomp is
                raise Compilation_Error;
             end if;
 
-            Free_Iir (Design_File);
+            if New_Design_File = Design_File then
+               pragma Assert (Flags.Flag_Force_Analysis);
+               null;
+            else
+               Free_Iir (Design_File);
+            end if;
 
             --  Do late analysis checks.
             if New_Design_File /= Null_Iir then

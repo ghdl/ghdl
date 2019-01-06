@@ -134,7 +134,7 @@ package body Xrefs is
             end;
          when Iir_Kind_Selected_Element =>
             Add_Xref (Get_Location (Name),
-                      Get_Selected_Element (Name), Xref_Ref);
+                      Get_Named_Entity (Name), Xref_Ref);
          when Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Slice_Name
