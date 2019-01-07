@@ -198,6 +198,7 @@ package body Sem_Psl is
                end if;
                return Res;
             when Iir_Kind_Function_Call
+              | Iir_Kind_Indexed_Name
               | Iir_Kind_Selected_Element =>
                Expr := Name;
             when others =>
