@@ -4035,6 +4035,7 @@ package body Sem_Expr is
                --  A subtype indication that is part of an allocator must
                --  not include a resolution function.
                if Is_Anonymous_Type_Definition (Arg)
+                 and then Get_Kind (Arg) /= Iir_Kind_Access_Subtype_Definition
                  and then Get_Resolution_Indication (Arg) /= Null_Iir
                then
                   Error_Msg_Sem (+Expr, "subtype indication must not include"
