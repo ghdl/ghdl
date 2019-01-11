@@ -900,6 +900,7 @@ package body Trans.Chap7 is
    is
       Ainfo : Type_Info_Acc;
       Einfo : Type_Info_Acc;
+      Mode : Object_Kind_Type;
    begin
       pragma Assert
         (Get_Kind (Expr_Type) in Iir_Kinds_Array_Type_Definition);
@@ -933,7 +934,13 @@ package body Trans.Chap7 is
                   --  the code is not required to run.
                   Chap6.Gen_Bound_Error (Loc);
                end if;
-               return Expr;
+               --  Convert.  For subtypes of arrays with unbounded elements,
+               --  the subtype can be the same but the ortho type can be
+               --  different.
+               Mode := Get_Object_Kind (Expr);
+               return E2M (New_Convert_Ov (M2Addr (Expr),
+                                           Ainfo.Ortho_Ptr_Type (Mode)),
+                           Ainfo, Mode);
             else
                --  Unbounded/bounded array to bounded array.
                return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
