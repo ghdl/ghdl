@@ -557,7 +557,6 @@ package body Simul.Environments is
       return Create_Range_Value (Left, Right, Dir, Len);
    end Create_Range_Value;
 
-   -- Return an array of length LENGTH.
    function Create_Array_Value (Dim : Iir_Index32;
                                 Pool : Areapool_Acc := Current_Pool)
                                return Iir_Value_Literal_Acc
@@ -580,9 +579,9 @@ package body Simul.Environments is
       return Res;
    end Create_Array_Value;
 
-   procedure Create_Array_Data (Arr : Iir_Value_Literal_Acc;
-                                Len : Iir_Index32;
+   function Create_Value_Array (Len : Iir_Index32;
                                 Pool : Areapool_Acc := Current_Pool)
+                               return Value_Array_Acc
    is
       use System;
       subtype Data_Type is Value_Array (Len);
@@ -605,7 +604,14 @@ package body Simul.Environments is
          null;
       end;
 
-      Arr.Val_Array := To_Value_Array_Acc (Res);
+      return To_Value_Array_Acc (Res);
+   end Create_Value_Array;
+
+   procedure Create_Array_Data (Arr : Iir_Value_Literal_Acc;
+                                Len : Iir_Index32;
+                                Pool : Areapool_Acc := Current_Pool) is
+   begin
+      Arr.Val_Array := Create_Value_Array (Len, Pool);
    end Create_Array_Data;
 
    function Create_Array_Value (Length: Iir_Index32;

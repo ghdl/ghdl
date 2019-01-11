@@ -1720,22 +1720,20 @@ package body Simul.Execution is
    --  Create an iir_value_literal of kind iir_value_array and of life LIFE.
    --  Allocate the array of bounds, and fill it from A_TYPE.
    --  Allocate the array of values.
-   function Create_Array_Bounds_From_Type
-     (Block : Block_Instance_Acc;
-      A_Type : Iir;
-      Create_Val_Array : Boolean)
-     return Iir_Value_Literal_Acc
+   function Create_Array_Bounds_From_Type (Block : Block_Instance_Acc;
+                                           A_Type : Iir;
+                                           Create_Val_Array : Boolean)
+                                          return Iir_Value_Literal_Acc
    is
       --  Only for constrained subtypes.
-      pragma Assert (Get_Kind (A_Type) /= Iir_Kind_Array_Type_Definition);
+      pragma Assert (Get_Constraint_State (A_Type) = Fully_Constrained);
 
       Index_List : constant Iir_Flist := Get_Index_Subtype_List (A_Type);
       Res : Iir_Value_Literal_Acc;
       Len : Iir_Index32;
       Bound : Iir_Value_Literal_Acc;
    begin
-      Res := Create_Array_Value
-        (Iir_Index32 (Get_Nbr_Elements (Index_List)));
+      Res := Create_Array_Value (Iir_Index32 (Get_Nbr_Elements (Index_List)));
       Len := 1;
       for I in 1 .. Res.Bounds.Nbr_Dims loop
          Bound := Execute_Bounds
@@ -1841,15 +1839,14 @@ package body Simul.Execution is
    --  Fill LENGTH elements of RES, starting at ORIG by steps of STEP.
    --  Use expressions from (BLOCK, AGGREGATE) to fill the elements.
    --  EL_TYPE is the type of the array element.
-   procedure Fill_Array_Aggregate_1
-     (Block : Block_Instance_Acc;
-      Aggregate : Iir;
-      Res : Iir_Value_Literal_Acc;
-      Orig : Iir_Index32;
-      Step : Iir_Index32;
-      Dim : Iir_Index32;
-      Nbr_Dim : Iir_Index32;
-      El_Type : Iir)
+   procedure Fill_Array_Aggregate_1 (Block : Block_Instance_Acc;
+                                     Aggregate : Iir;
+                                     Res : Iir_Value_Literal_Acc;
+                                     Orig : Iir_Index32;
+                                     Step : Iir_Index32;
+                                     Dim : Iir_Index32;
+                                     Nbr_Dim : Iir_Index32;
+                                     El_Type : Iir)
    is
       Value : Iir;
       Bound : constant Iir_Value_Literal_Acc := Res.Bounds.D (Dim);
@@ -2009,10 +2006,9 @@ package body Simul.Execution is
    end Fill_Array_Aggregate_1;
 
    --  Use expressions from (BLOCK, AGGREGATE) to fill RES.
-   procedure Fill_Array_Aggregate
-     (Block : Block_Instance_Acc;
-      Aggregate : Iir;
-      Res : Iir_Value_Literal_Acc)
+   procedure Fill_Array_Aggregate (Block : Block_Instance_Acc;
+                                   Aggregate : Iir;
+                                   Res : Iir_Value_Literal_Acc)
    is
       Aggr_Type : constant Iir := Get_Type (Aggregate);
       El_Type : constant Iir := Get_Element_Subtype (Aggr_Type);
@@ -2260,6 +2256,8 @@ package body Simul.Execution is
                Res : Iir_Value_Literal_Acc;
                Step : Iir_Index32;
             begin
+               pragma Assert
+                 (Get_Constraint_State (Aggregate_Type) = Fully_Constrained);
                Res := Create_Array_Bounds_From_Type
                  (Block, Aggregate_Type, True);
                Step := Get_Step_For_Dim (Res, 1);
