@@ -554,17 +554,15 @@ package body Trans.Chap6 is
 
          --  Both prefix and result are constrained array.
          declare
+            Index_Range : constant Iir := Get_Range_Constraint (Index_Type);
+            Slice_Index_Type : constant Iir := Get_Index_Type (Slice_Type, 0);
+            Slice_Range : constant Iir :=
+              Get_Range_Constraint (Slice_Index_Type);
             Prefix_Left, Slice_Left : Iir_Int64;
             Off                     : Iir_Int64;
-            Slice_Index_Type        : Iir;
-            Slice_Range             : Iir;
             Slice_Length            : Iir_Int64;
-            Index_Range             : Iir;
          begin
-            Index_Range := Get_Range_Constraint (Index_Type);
             Prefix_Left := Eval_Pos (Get_Left_Limit (Index_Range));
-            Slice_Index_Type := Get_Index_Type (Slice_Type, 0);
-            Slice_Range := Get_Range_Constraint (Slice_Index_Type);
             Slice_Left := Eval_Pos (Get_Left_Limit (Slice_Range));
             Slice_Length := Eval_Discrete_Range_Length (Slice_Range);
             if Slice_Length = 0 then
