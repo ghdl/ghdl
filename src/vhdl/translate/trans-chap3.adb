@@ -1090,6 +1090,8 @@ package body Trans.Chap3 is
             --  Element has been constrained by this subtype, so create the
             --  base array (and the pointer).
             Create_Array_For_Array_Subtype (Def, Base, Info.Ortho_Ptr_Type);
+            Info.B.Base_Type := Base;
+            Info.B.Base_Ptr_Type := Info.Ortho_Ptr_Type;
          else
             Base := Pinfo.B.Base_Type;
             Info.Ortho_Ptr_Type := Pinfo.B.Base_Ptr_Type;
