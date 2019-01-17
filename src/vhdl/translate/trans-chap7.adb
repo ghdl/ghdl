@@ -3490,7 +3490,7 @@ package body Trans.Chap7 is
       Var_Index := Create_Temp_Init
         (Ghdl_Index_Type, New_Lit (Ghdl_Index_0));
       Translate_Array_Aggregate_Gen
-        (Base, Bounds, Aggr, Aggr_Type, 1, Var_Index);
+        (Base, Bounds, Aggr, Target_Type, 1, Var_Index);
       Close_Temp;
 
       --  FIXME: creating aggregate subtype is expensive and rarely used.
