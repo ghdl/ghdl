@@ -3499,20 +3499,21 @@ package body Trans.Chap7 is
    end Translate_Array_Aggregate;
 
    procedure Translate_Aggregate
-     (Target : Mnode; Target_Type : Iir; Aggr : Iir)
-   is
-      Aggr_Type : constant Iir := Get_Type (Aggr);
-      El        : Iir;
+     (Target : Mnode; Target_Type : Iir; Aggr : Iir) is
    begin
-      case Iir_Kinds_Composite_Type_Definition (Get_Kind (Aggr_Type)) is
+      case Iir_Kinds_Composite_Type_Definition (Get_Kind (Target_Type)) is
          when Iir_Kind_Array_Subtype_Definition
-            | Iir_Kind_Array_Type_Definition =>
-            El := Is_Aggregate_Others (Aggr);
-            if El /= Null_Iir then
-               Translate_Aggregate_Others (Target, Target_Type, El);
-            else
-               Translate_Array_Aggregate (Target, Target_Type, Aggr);
-            end if;
+           | Iir_Kind_Array_Type_Definition =>
+            declare
+               El : Iir;
+            begin
+               El := Is_Aggregate_Others (Aggr);
+               if El /= Null_Iir then
+                  Translate_Aggregate_Others (Target, Target_Type, El);
+               else
+                  Translate_Array_Aggregate (Target, Target_Type, Aggr);
+               end if;
+            end;
          when Iir_Kind_Record_Type_Definition
             | Iir_Kind_Record_Subtype_Definition =>
             Translate_Record_Aggregate (Target, Aggr);
