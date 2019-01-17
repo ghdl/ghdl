@@ -3327,11 +3327,11 @@ package body Sem_Expr is
    --  The type of the array is computed into A_SUBTYPE.
    --  DIM is the dimension index in A_TYPE.
    --  Return FALSE in case of error.
-   procedure Sem_Array_Aggregate_Type_1 (Aggr: Iir;
-                                         A_Type: Iir;
-                                         Infos : in out Array_Aggr_Info_Arr;
-                                         Constrained : Boolean;
-                                         Dim: Natural)
+   procedure Sem_Array_Aggregate_1 (Aggr: Iir;
+                                    A_Type: Iir;
+                                    Infos : in out Array_Aggr_Info_Arr;
+                                    Constrained : Boolean;
+                                    Dim: Natural)
    is
       Index_List : constant Iir_Flist := Get_Index_Subtype_List (A_Type);
 
@@ -3393,14 +3393,14 @@ package body Sem_Expr is
                   Sub_Aggr := Get_Associated_Expr (Choice);
                   case Get_Kind (Sub_Aggr) is
                      when Iir_Kind_Aggregate =>
-                        Sem_Array_Aggregate_Type_1
+                        Sem_Array_Aggregate_1
                           (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
                         if not Get_Aggregate_Expand_Flag (Sub_Aggr) then
                            Set_Aggregate_Expand_Flag (Aggr, False);
                         end if;
                      when Iir_Kind_String_Literal8 =>
                         if Dim + 1 = Get_Nbr_Elements (Index_List) then
-                           Sem_Array_Aggregate_Type_1
+                           Sem_Array_Aggregate_1
                              (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
                         else
                            Error_Msg_Sem
@@ -3504,7 +3504,7 @@ package body Sem_Expr is
                      end if;
                      Has_Others := True;
                   when others =>
-                     Error_Kind ("sem_array_aggregate_type", Choice);
+                     Error_Kind ("sem_array_aggregate", Choice);
                end case;
                --  LRM93 7.3.2.2
                --  Apart from the final element with the single choice
@@ -3542,7 +3542,7 @@ package body Sem_Expr is
             Info.Nbr_Assocs := Info.Nbr_Assocs + Len;
 
          when others =>
-            Error_Kind ("sem_array_aggregate_type_1", Aggr);
+            Error_Kind ("sem_array_aggregate(1)", Aggr);
       end case;
 
       if Is_Positional = False then
@@ -3601,7 +3601,7 @@ package body Sem_Expr is
                   Info.Index_Subtype :=
                     Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
                when others =>
-                  Error_Kind ("sem_array_aggregate_type2", Index_Type);
+                  Error_Kind ("sem_array_aggregate(2)", Index_Type);
             end case;
             Location_Copy (Info.Index_Subtype, Aggr);
             Set_Base_Type (Info.Index_Subtype, Get_Base_Type (Index_Type));
@@ -3715,7 +3715,7 @@ package body Sem_Expr is
 
       Expr_Staticness := Min (Get_Expr_Staticness (Aggr), Choice_Staticness);
       Set_Expr_Staticness (Aggr, Expr_Staticness);
-   end Sem_Array_Aggregate_Type_1;
+   end Sem_Array_Aggregate_1;
 
    --  Analyze an array aggregate whose type is AGGR_TYPE.
    --  If CONSTRAINED is true, then the aggregate appears in one of the
@@ -3723,7 +3723,7 @@ package body Sem_Expr is
    --  If CONSTRAINED is false, the aggregate can not have an 'others' choice.
    --  Create a subtype for this aggregate.
    --  Return NULL_IIR in case of error, or AGGR if not.
-   function Sem_Array_Aggregate_Type
+   function Sem_Array_Aggregate
      (Aggr : Iir; Aggr_Type : Iir; Constrained : Boolean) return Iir
    is
       A_Subtype: Iir;
@@ -3739,7 +3739,7 @@ package body Sem_Expr is
       Set_Aggregate_Expand_Flag (Aggr, True);
 
       --  Analyze the aggregate.
-      Sem_Array_Aggregate_Type_1 (Aggr, Aggr_Type, Infos, Constrained, 1);
+      Sem_Array_Aggregate_1 (Aggr, Aggr_Type, Infos, Constrained, 1);
 
       Aggr_Constrained := True;
       for I in Infos'Range loop
@@ -3847,7 +3847,7 @@ package body Sem_Expr is
          Set_Aggr_Others_Flag (Info, Infos (I).Has_Others);
       end loop;
       return Aggr;
-   end Sem_Array_Aggregate_Type;
+   end Sem_Array_Aggregate;
 
    --  Analyze aggregate EXPR whose type is expected to be A_TYPE.
    --  A_TYPE cannot be null_iir (this case is handled in sem_expression_ov)
@@ -3884,11 +3884,11 @@ package body Sem_Expr is
       Set_Type (Expr, A_Type); -- FIXME: should free old type
       case Get_Kind (A_Type) is
          when Iir_Kind_Array_Subtype_Definition =>
-            return Sem_Array_Aggregate_Type
+            return Sem_Array_Aggregate
               (Expr, A_Type,
                Force_Constrained2 or else Get_Index_Constraint_Flag (A_Type));
          when Iir_Kind_Array_Type_Definition =>
-            return Sem_Array_Aggregate_Type (Expr, A_Type, Force_Constrained2);
+            return Sem_Array_Aggregate (Expr, A_Type, Force_Constrained2);
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             if not Sem_Record_Aggregate (Expr, A_Type) then
