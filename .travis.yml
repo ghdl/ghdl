@@ -45,19 +45,20 @@ deploy:
 
 jobs:
   include:
-    # Additional jobs are described in stage 'test' for the macos build.
+    # One additional job is described in stage 'test' for the macos build.
     # The constraints above are used, except explicitly overriden.
     - &osx
       os: osx
       language: c
-      osx_image: xcode9.3
+      osx_image: xcode9.4
       install: true
       cache:
         directories:
           - gnat
       env: IMAGE=macosx+mcode
-#    - <<: *osx
-#      osx_image: xcode8.3
+    # Optionally, more macos jobs can be added. See list of available versions at https://docs.travis-ci.com/user/reference/osx/#macos-version
+#   - <<: *osx
+#     osx_image: xcode10
     - env: IMAGE=""
       script: ./dist/travis/man.sh
       deploy:
