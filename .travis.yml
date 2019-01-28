@@ -1,6 +1,5 @@
 os: linux
 dist: xenial
-sudo: required
 services: docker
 language: minimal
 install: skip
