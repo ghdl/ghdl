@@ -1,19 +1,9 @@
-branches:
-  except:
-    - appveyor
-
 os: linux
-dist: trusty
-sudo: required
+dist: xenial
 services: docker
 language: minimal
 install: skip
 script: "./dist/travis/travis-ci.sh"
-
-addons:
-  apt:
-    packages:
-      - docker-ce
 
 # For each linux build, a different job/instance (with the constraints
 # above) is executed in parallel in stage 'test'.
