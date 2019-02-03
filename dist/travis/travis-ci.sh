@@ -50,6 +50,11 @@ echo "travis_fold:start:fetch"
 git fetch --unshallow || true
 echo "travis_fold:end:fetch"
 
+if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    # Install gnat compiler (use cache)
+    ./dist/macosx/install-ada.sh || exit 1
+    PATH=$PWD/gnat/bin:$PATH
+fi
 
 # Compute package name
 
@@ -86,10 +91,6 @@ echo "build cmd: $BUILD_CMD_OPTS"
 # Build
 
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    # Install gnat compiler (use cache)
-    ./dist/macosx/install-ada.sh || exit 1
-    PATH=$PWD/gnat/bin:$PATH
-
     bash -c "${scriptdir}/build.sh $BUILD_CMD_OPTS"
 else
     # Assume linux
