@@ -23,6 +23,10 @@ elab_simulate repro4
 analyze repro5.vhdl
 elab_simulate repro5
 
+# Reproducer6
+analyze repro6.vhdl
+elab_simulate repro6
+
 # OSVVM
 if true; then
 analyze --work=osvvm OSVVM/NamePkg.vhd
