@@ -148,6 +148,9 @@ package body Sem_Inst is
    --  The virtual file for the instance.
    Instance_File : Source_File_Entry;
 
+   --  True if currently instantiated a shared generic.
+   Is_Within_Shared_Instance : Boolean := False;
+
    --  Get the new location.
    function Relocate (Loc : Location_Type) return Location_Type is
    begin
@@ -573,7 +576,24 @@ package body Sem_Inst is
                   null;
                when Field_Package =>
                   Instantiate_Iir_Field (Res, N, F);
-                  Set_Package_Body (Get_Package (Res), Res);
+                  declare
+                     Pkg : constant Iir := Get_Package (Res);
+                  begin
+                     --  The current node can be the body of a package; in that
+                     --  case set the forward link.
+                     --  Or it can be the body of an instantiated package; in
+                     --  that case there is no forward link.
+                     if Get_Kind (Pkg) = Iir_Kind_Package_Declaration then
+                        Set_Package_Body (Get_Package (Res), Res);
+                     end if;
+                  end;
+
+               when Field_Instance_Package_Body =>
+                  --  Do not instantiate the body of a package while
+                  --  instantiating a shared package.
+                  if not Is_Within_Shared_Instance then
+                     Instantiate_Iir_Field (Res, N, F);
+                  end if;
 
                when Field_Subtype_Definition =>
                   --  TODO
@@ -969,6 +989,8 @@ package body Sem_Inst is
       Header : constant Iir := Get_Package_Header (Pkg);
       Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
+      Prev_Within_Shared_Instance : constant Boolean :=
+        Is_Within_Shared_Instance;
    begin
       Create_Relocation (Inst, Pkg);
       Set_Instance_Source_File (Inst, Instance_File);
@@ -978,6 +1000,8 @@ package body Sem_Inst is
 
       --  For Parent: the instance of PKG is INST.
       Set_Origin (Pkg, Inst);
+
+      Is_Within_Shared_Instance := not Get_Macro_Expanded_Flag (Pkg);
 
       Set_Generic_Chain
         (Inst, Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Header)));
@@ -989,6 +1013,8 @@ package body Sem_Inst is
 
       Instance_File := Prev_Instance_File;
       Restore_Origin (Mark);
+
+      Is_Within_Shared_Instance := Prev_Within_Shared_Instance;
    end Instantiate_Package_Declaration;
 
    function Instantiate_Package_Body (Inst : Iir) return Iir

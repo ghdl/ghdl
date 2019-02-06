@@ -96,6 +96,7 @@ package body Nodes_Meta is
       Field_Entity_Name => Type_Iir,
       Field_Package => Type_Iir,
       Field_Package_Body => Type_Iir,
+      Field_Instance_Package_Body => Type_Iir,
       Field_Need_Body => Type_Boolean,
       Field_Macro_Expanded_Flag => Type_Boolean,
       Field_Need_Instance_Bodies => Type_Boolean,
@@ -509,6 +510,8 @@ package body Nodes_Meta is
             return "package";
          when Field_Package_Body =>
             return "package_body";
+         when Field_Instance_Package_Body =>
+            return "instance_package_body";
          when Field_Need_Body =>
             return "need_body";
          when Field_Macro_Expanded_Flag =>
@@ -1711,6 +1714,8 @@ package body Nodes_Meta is
             return Attr_Ref;
          when Field_Package_Body =>
             return Attr_Forward_Ref;
+         when Field_Instance_Package_Body =>
+            return Attr_None;
          when Field_Need_Body =>
             return Attr_None;
          when Field_Macro_Expanded_Flag =>
@@ -2854,7 +2859,7 @@ package body Nodes_Meta is
       Field_Declaration_Chain,
       Field_Chain,
       Field_Attribute_Value_Chain,
-      Field_Package_Body,
+      Field_Instance_Package_Body,
       --  Iir_Kind_Package_Body
       Field_Identifier,
       Field_End_Has_Reserved_Id,
@@ -5142,6 +5147,8 @@ package body Nodes_Meta is
             return Get_Package (N);
          when Field_Package_Body =>
             return Get_Package_Body (N);
+         when Field_Instance_Package_Body =>
+            return Get_Instance_Package_Body (N);
          when Field_Block_Configuration =>
             return Get_Block_Configuration (N);
          when Field_Concurrent_Statement_Chain =>
@@ -5536,6 +5543,8 @@ package body Nodes_Meta is
             Set_Package (N, V);
          when Field_Package_Body =>
             Set_Package_Body (N, V);
+         when Field_Instance_Package_Body =>
+            Set_Instance_Package_Body (N, V);
          when Field_Block_Configuration =>
             Set_Block_Configuration (N, V);
          when Field_Concurrent_Statement_Chain =>
@@ -7208,14 +7217,13 @@ package body Nodes_Meta is
 
    function Has_Package_Body (K : Iir_Kind) return Boolean is
    begin
-      case K is
-         when Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Instantiation_Declaration =>
-            return True;
-         when others =>
-            return False;
-      end case;
+      return K = Iir_Kind_Package_Declaration;
    end Has_Package_Body;
+
+   function Has_Instance_Package_Body (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Package_Instantiation_Declaration;
+   end Has_Instance_Package_Body;
 
    function Has_Need_Body (K : Iir_Kind) return Boolean is
    begin

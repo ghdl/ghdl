@@ -1552,7 +1552,7 @@ package body Trans.Chap2 is
          --  Generate code for the body.
          if Global_Storage /= O_Storage_External then
             declare
-               Bod : constant Iir := Get_Package_Body (Inst);
+               Bod : constant Iir := Get_Instance_Package_Body (Inst);
             begin
                if Is_Valid (Bod) then
                   Translate_Package_Body (Bod);

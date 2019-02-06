@@ -2522,7 +2522,7 @@ package body Trans.Chap4 is
                  (Get_Uninstantiated_Package_Decl (El))
                then
                   declare
-                     Bod : constant Iir := Get_Package_Body (El);
+                     Bod : constant Iir := Get_Instance_Package_Body (El);
                      Mark  : Id_Mark_Type;
                   begin
                      Push_Identifier_Prefix (Mark, Get_Identifier (El));

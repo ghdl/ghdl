@@ -1826,6 +1826,22 @@ package body Iirs is
       Set_Field5 (Pkg, Decl);
    end Set_Package_Body;
 
+   function Get_Instance_Package_Body (Pkg : Iir) return Iir is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Instance_Package_Body (Get_Kind (Pkg)),
+                     "no field Instance_Package_Body");
+      return Get_Field5 (Pkg);
+   end Get_Instance_Package_Body;
+
+   procedure Set_Instance_Package_Body (Pkg : Iir; Decl : Iir) is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Instance_Package_Body (Get_Kind (Pkg)),
+                     "no field Instance_Package_Body");
+      Set_Field5 (Pkg, Decl);
+   end Set_Instance_Package_Body;
+
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);

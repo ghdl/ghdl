@@ -2735,7 +2735,7 @@ package body Canon is
       then
          Bod := Sem_Inst.Instantiate_Package_Body (Decl);
          Set_Parent (Bod, Get_Parent (Decl));
-         Set_Package_Body (Decl, Bod);
+         Set_Instance_Package_Body (Decl, Bod);
       end if;
 
       return Decl;

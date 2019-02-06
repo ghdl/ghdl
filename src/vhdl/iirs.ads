@@ -987,7 +987,8 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Package_Body (Field5)
+   --  For macro-expanded packages: the body.
+   --   Get/Set_Instance_Package_Body (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -6263,6 +6264,11 @@ package Iirs is
    --  Field: Field5 Forward_Ref
    function Get_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
+
+   --  The package body corresponding to the package declaration.
+   --  Field: Field5
+   function Get_Instance_Package_Body (Pkg : Iir) return Iir;
+   procedure Set_Instance_Package_Body (Pkg : Iir; Decl : Iir);
 
    --  Field: Flag1
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean;
