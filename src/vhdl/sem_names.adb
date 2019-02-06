@@ -2268,7 +2268,8 @@ package body Sem_Names is
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Slice_Name
            | Iir_Kind_Procedure_Call_Statement
-           | Iir_Kind_Attribute_Declaration =>
+           | Iir_Kind_Attribute_Declaration
+           | Iir_Kind_Type_Conversion =>
             if not Soft then
                Error_Msg_Sem
                  (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
