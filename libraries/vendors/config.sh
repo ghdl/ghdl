@@ -44,8 +44,8 @@ declare -A InstallationDirectories
 InstallationDirectories[AlteraQuartus]=""     # "/opt/altera/16.0/quartus"
 InstallationDirectories[IntelQuartus]=""      # "/opt/intelFPGA/17.1/quartus"
 InstallationDirectories[LatticeDiamond]=""    # "/usr/local/diamond/3.7_x64"
-InstallationDirectories[OSVVM]=""	   					# "~/git/github/osvvm"
-InstallationDirectories[UVVM]=""	   					# "~/git/github/uvvm_all"
+InstallationDirectories[OSVVM]=""	   					# "~/git/github/OSVVM"
+InstallationDirectories[UVVM]=""	   					# "~/git/github/UVVM"
 InstallationDirectories[XilinxISE]=""	  		  # "/opt/Xilinx/14.7/ISE_DS/ISE"
 InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2017.4"
 
