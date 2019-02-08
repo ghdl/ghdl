@@ -68,11 +68,11 @@ The vendor library compile scripts need to know where the used / latest vendor
 tool chain is installed. Therefore, the script implement a default installation
 directory search as well as environment variable checks. If a vendor tool could
 not be detected or the script choses the wrong vendor library source directory,
-then it's possible to provide the path via `--source` or `-Source`.
+then it's possible to provide the path via `--src` or `-Source`.
 
 The generated output is stored relative to the current working directory. The
 scripts create a sub-directory for each vendor. The default output directory can
-be overwritten by the parameter `--output` or `-Output`.
+be overwritten by the parameter `--out` or `-Output`.
 
 To compile all source files with GHDL, the simulator executable is searched in
 `PATH`. The found default GHDL executable can be overwritten by setting the
