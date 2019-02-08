@@ -44,7 +44,7 @@ ScriptDir="$(dirname $0)"
 ScriptDir="$($READLINK -f $ScriptDir)"
 
 # source configuration file from GHDL's 'vendors' library directory
-. $ScriptDir/../ansi_color.sh
+. $ScriptDir/../../dist/ansi_color.sh
 . $ScriptDir/config.sh
 . $ScriptDir/shared.sh
 
