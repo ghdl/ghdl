@@ -345,7 +345,7 @@ package body Grt.Vpi is
       Error : AvhpiErrorT;
    begin
       case aType is
-         when vpiNet =>
+         when vpiPort | vpiNet =>
             Rel := VhpiDecls;
          when vpiModule =>
             if Ref = null then
@@ -485,6 +485,17 @@ package body Grt.Vpi is
             Res := Vpi_Get_Size (Ref);
          when vpiVector =>
             Res := Boolean'Pos (Vpi_Get_Vector (Ref));
+         when vpiDirection =>
+            case Vhpi_Get_Mode (Ref.Ref) is
+               when VhpiInMode =>
+                   Res := vpiInput;
+               when VhpiOutMode =>
+                   Res := vpiOutput;
+               when VhpiInoutMode =>
+                   Res := vpiInout;
+               when others =>
+                   Res := vpiNoDirection;
+            end case;
          when others =>
             dbgPut_Line ("vpi_get: unknown property");
             Res := 0;
@@ -513,8 +524,16 @@ package body Grt.Vpi is
            | VhpiForGenerateK
            | VhpiCompInstStmtK =>
             return vpiModule;
-         when VhpiPortDeclK
-           | VhpiSigDeclK =>
+         when VhpiPortDeclK =>
+            declare
+               Info : Verilog_Wire_Info;
+            begin
+               Get_Verilog_Wire (Res, Info);
+               if Info.Vtype /= Vcd_Bad then
+                  return vpiPort;
+               end if;
+            end;
+         when VhpiSigDeclK =>
             declare
                Info : Verilog_Wire_Info;
             begin
@@ -547,6 +566,9 @@ package body Grt.Vpi is
                                          Ref => Res);
          when vpiNet =>
             return new struct_vpiHandle'(mType => vpiNet,
+                                         Ref => Res);
+         when vpiPort =>
+            return new struct_vpiHandle'(mType => vpiPort,
                                          Ref => Res);
          when vpiParameter =>
             return new struct_vpiHandle'(mType => vpiParameter,
@@ -592,6 +614,8 @@ package body Grt.Vpi is
          when vpiInternalScope
            | vpiModule =>
             Expected_Kind := vpiModule;
+         when vpiPort =>
+            Expected_Kind := vpiPort;
          when vpiNet =>
             Expected_Kind := vpiNet;
          when others =>
@@ -722,7 +746,7 @@ package body Grt.Vpi is
          when vpiRightRange
            | vpiLeftRange =>
             case Ref.mType is
-               when vpiNet =>
+               when vpiPort| vpiNet =>
                   Res := new struct_vpiHandle (aType);
                   Res.Ref := Ref.Ref;
                   return Res;
