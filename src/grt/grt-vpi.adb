@@ -488,13 +488,13 @@ package body Grt.Vpi is
          when vpiDirection =>
             case Vhpi_Get_Mode (Ref.Ref) is
                when VhpiInMode =>
-                   Res := vpiInput;
+                  Res := vpiInput;
                when VhpiOutMode =>
-                   Res := vpiOutput;
+                  Res := vpiOutput;
                when VhpiInoutMode =>
-                   Res := vpiInout;
+                  Res := vpiInout;
                when others =>
-                   Res := vpiNoDirection;
+                  Res := vpiNoDirection;
             end case;
          when others =>
             dbgPut_Line ("vpi_get: unknown property");

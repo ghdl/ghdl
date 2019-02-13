@@ -45,13 +45,13 @@ package Grt.Vpi is
    vpiModule:        constant integer := 32;
    vpiNet:           constant integer := 36;
    vpiPort:          constant integer := 44;
+   --
    vpiDirection:     constant integer := 20;
    vpiInput:         constant integer :=  1;
    vpiOutput:        constant integer :=  2;
    vpiInout:         constant integer :=  3;
    vpiMixedIO:       constant integer :=  4;
    vpiNoDirection:   constant integer :=  5;
-   
 
    vpiParameter:     constant integer := 41;
    vpiLeftRange:     constant integer := 79;
