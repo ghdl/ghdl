@@ -3883,7 +3883,7 @@ $ /path/to/gcc/source/dir/configure --prefix=/usr/local --enable-languages=c,vhd
 --disable-bootstrap --disable-lto --disable-multilib --disable-libssp \
 --disable-libgomp --disable-libquadmath
 $ make -j2 && make install
-$ cd /path/to/ghdl/source/dir
+$ cd /path/to/ghdl/source/dir/build
 $ make ghdllib
 $ make install
 @end example
