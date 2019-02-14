@@ -627,7 +627,7 @@ package body Grt.Vpi is
          exit when Error /= AvhpiErrorOk;
 
          Kind := Vhpi_Handle_To_Vpi_Prop (Res);
-         if Kind /= vpiUndefined and then (Kind = Expected_Kind or
+         if Kind /= vpiUndefined and (Kind = Expected_Kind or
            (Kind = vpiPort and Expected_Kind = vpiNet)) then
             return Build_vpiHandle (Res, Kind);
          end if;
