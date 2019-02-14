@@ -20,14 +20,14 @@ void printContent (vpiHandle parent)
   vpi_printf ("Full module name (vpiFullName): \t%s\n", vpi_get_str (vpiFullName, parent));
   vpi_printf ("Simple module name (vpiName): \t\t%s\n", vpi_get_str (vpiName, parent));
 
-  Iterator = vpi_iterate (vpiNet, parent);
+  Iterator = vpi_iterate (vpiPort, parent);
   if (Iterator)
     {
       vpiHandle netHandle;
       while ((netHandle = vpi_scan (Iterator)))
 	{
 	  char *NetName = vpi_get_str (vpiName, netHandle);
-	  vpi_printf (" net %s\n", NetName);
+	  vpi_printf (" port %s\n", NetName);
 	}
     }
 
@@ -86,7 +86,7 @@ void my_handle_register()
   s_cb_data cb;
 
   cb.reason = cbEndOfCompile;
-  cb.cb_rtn = &printModules;
+  cb.cb_rtn = (PLI_INT32 (*)(struct t_cb_data *)) &printModules;
   cb.user_data = NULL;
   if (vpi_register_cb (&cb) == NULL)
     vpi_printf ("cannot register EndOfCompile call back\n");

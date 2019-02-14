@@ -1,9 +1,9 @@
 CWD = $(shell pwd)
-COCOTB = $(CWD)/../../..
+COCOTB =? $(CWD)/../../..
 
 TOPLEVEL_LANG = vhdl
 
-VHDL_SOURCES = $(CWD)/../hdl/top.vhd
+VHDL_SOURCES = $(CWD)/top.vhd
 
 SIM = ghdl
 CMD_BIN = ghdl
