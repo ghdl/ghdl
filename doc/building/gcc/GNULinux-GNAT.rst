@@ -25,7 +25,7 @@ GCC Backend on GNU/Linux with GCC/GNAT
  --disable-bootstrap --disable-lto --disable-multilib --disable-libssp \
  --disable-libgomp --disable-libquadmath
  $ make -j2 && make install
- $ cd /path/to/ghdl/source/dir
+ $ cd /path/to/ghdl/source/dir/build
  $ make ghdllib
  $ make install
 
