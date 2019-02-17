@@ -36,7 +36,16 @@ package Grt.Vpi is
    vpiName:          constant integer :=  2;
    vpiFullName:      constant integer :=  3;
    vpiSize:          constant integer :=  4;
+   vpiFile:          constant integer :=  5;
+   vpiLineNo:        constant integer :=  6;
+   vpiTopModule:     constant integer :=  7;
+   vpiCellInstance:  constant integer :=  8;
+   vpiDefName:       constant integer :=  9;
+   vpiProtected:     constant integer := 10;
+   vpiTimeUnit:      constant integer := 11;
    vpiTimePrecision: constant integer := 12;
+   vpiDefNetType:    constant integer := 13;
+   vpiDefFile:       constant integer := 15;
 
    vpiScalar:        constant integer := 17;
    vpiVector:        constant integer := 18;

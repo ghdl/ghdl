@@ -198,8 +198,14 @@ package body Grt.Vpi is
 
          when vpiModule =>
             Trace ("vpiModule");
+         when vpiDefFile =>
+            Trace ("vpiDefFile");
          when vpiNet =>
             Trace ("vpiNet");
+         when vpiPort =>
+            Trace ("vpiPort");
+         when vpiDirection =>
+            Trace ("vpiDirection");
          when vpiParameter =>
             Trace ("vpiParameter");
          when vpiScope =>
@@ -627,8 +633,7 @@ package body Grt.Vpi is
          exit when Error /= AvhpiErrorOk;
 
          Kind := Vhpi_Handle_To_Vpi_Prop (Res);
-         if Kind /= vpiUndefined and then (Kind = Expected_Kind or
-           (Kind = vpiPort and Expected_Kind = vpiNet)) then
+         if Kind /= vpiUndefined and then Kind = Expected_Kind then
             return Build_vpiHandle (Res, Kind);
          end if;
       end loop;
@@ -665,6 +670,63 @@ package body Grt.Vpi is
       Prop : VhpiStrPropertyT;
       Len : Natural;
       Res : Ghdl_C_String;
+
+      procedure Get_VpiType_String is
+         R : String renames Tmpstring2;
+
+         procedure Add (C : Character) is
+         begin
+            Len := Len + 1;
+            if Len <= R'Last then
+               R (Len) := C;
+            end if;
+         end Add;
+
+         procedure Add (Str : String) is
+         begin
+            for I in Str'Range loop
+               Add (Str (I));
+            end loop;
+         end Add;
+
+      begin
+         Len := 0;
+         case Vhpi_Get_Kind(Ref.Ref) is
+            when VhpiEnumTypeDeclK =>
+               Add ("vpiEnum");
+            when VhpiIntTypeDeclK =>
+               Add ("vpiIntVal");
+            when VhpiEntityDeclK
+              | VhpiArchBodyK
+              | VhpiBlockStmtK
+              | VhpiIfGenerateK
+              | VhpiForGenerateK
+              | VhpiCompInstStmtK =>
+               Add ("vpiModule");
+            when VhpiSigDeclK =>
+               Add ("vpiNet");
+            when VhpiPortDeclK =>
+               Add ("vpiPort");
+            When VhpiGenericDeclK =>
+               Add ("vpiParameter");
+            when VhpiSubtypeDeclK =>
+               Add ("VhpiSubtypeDeclK");
+            when VhpiArrayTypeDeclK =>
+               Add ("VhpiArrayTypeDeclK");
+            when VhpiPackInstK =>
+               Add ("VhpiArrayTypeDeclK");
+            when vhpiVarDeclK =>
+               Add ("vhpiVarDeclK");
+            when vhpiSigParamDeclK =>
+               Add ("vhpiSigParamDeclK");
+            when VhpiRootInstK =>
+               Add ("VhpiRootInstK");
+            when others =>
+               Add ("vpiUndefined");
+         end case;
+         R (Len + 1) := NUL;
+      end Get_VpiType_String;
+
    begin
       if Ref = null then
          return null;
@@ -675,15 +737,16 @@ package body Grt.Vpi is
             Prop := VhpiFullNameP;
          when vpiName =>
             Prop := VhpiNameP;
+         when vpiDefFile =>
+            Prop := VhpiFileNameP;
          when vpiType =>
-            Tmpstring2 (1 .. 4) := "???" & NUL;
+            Get_VpiType_String;
             return To_Ghdl_C_String (Tmpstring2'Address);
          when others =>
             dbgPut_Line ("vpi_get_str: unhandled property");
             return null;
       end case;
       Vhpi_Get_Str (Prop, Ref.Ref, Tmpstring2, Len);
-      Tmpstring2 (Len + 1) := NUL;
       if Property = vpiFullName then
          for I in Tmpstring2'First .. Len loop
             if Tmpstring2 (I) = ':' then
@@ -829,10 +892,9 @@ package body Grt.Vpi is
 
       case Info.Vtype is
          when Vcd_Bad
-           | Vcd_Enum8
            | Vcd_Float64 =>
             return null;
-         when Vcd_Integer32 =>
+         when Vcd_Integer32 | Vcd_Enum8 =>
             declare
                V : Ghdl_U32;
             begin
@@ -1115,7 +1177,6 @@ package body Grt.Vpi is
             dbgPut_Line ("vpi_put_value: vpiObjTypeVal");
          when vpiBinStrVal =>
             Ii_Vpi_Put_Value_Bin_Str (Info, Len, aValue.Str);
-            -- dbgPut_Line ("vpi_put_value: vpiBinStrVal");
          when vpiOctStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiOctStrVal");
          when vpiDecStrVal =>

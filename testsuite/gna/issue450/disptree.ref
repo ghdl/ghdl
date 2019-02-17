@@ -3,9 +3,9 @@ got to here1
 Module disptree:
 Full module name (vpiFullName): 	disptree
 Simple module name (vpiName): 		disptree
- net clk
- net a
- net b
+ port clk
+ port a
+ port b
 Full module name (vpiFullName): 	disptree.gen_for(1)
 Simple module name (vpiName): 		gen_for(1)
 Full module name (vpiFullName): 	disptree.gen_for(2)

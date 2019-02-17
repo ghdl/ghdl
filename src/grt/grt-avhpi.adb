@@ -679,6 +679,45 @@ package body Grt.Avhpi is
       Len := 0;
 
       case Property is
+         when VhpiKindStrP =>
+            case Obj.Kind is
+               when VhpiEnumTypeDeclK =>
+                  Add ("VhpiEnumTypeDeclK");
+               when VhpiIntTypeDeclK =>
+                  Add ("VhpiIntTypeDeclK");
+               when VhpiSubtypeDeclK =>
+                  Add ("VhpiSubtypeDeclK");
+               when VhpiArrayTypeDeclK =>
+                  Add ("VhpiArrayTypeDeclK");
+               when VhpiPackInstK =>
+                  Add ("VhpiArrayTypeDeclK");
+               when VhpiArchBodyK =>
+                  Add ("VhpiArchBodyK");
+               when VhpiEntityDeclK =>
+                  Add ("VhpiProcessStmtK");
+               when VhpiBlockStmtK =>
+                  Add ("VVhpiBlockStmtK");
+               when VhpiRootInstK =>
+                  Add ("VhpiRootInstK");
+               when VhpiCompInstStmtK =>
+                  Add ("VhpiCompInstStmtK");
+               when VhpiSigDeclK =>
+                  Add ("VhpiSigDeclK");
+               when vhpiSigParamDeclK =>
+                  Add ("vhpiSigParamDeclK");
+               when vhpiVarDeclK =>
+                  Add ("vhpiVarDeclK");
+               when VhpiPortDeclK =>
+                  Add ("VhpiPortDeclK");
+               When VhpiGenericDeclK =>
+                  Add ("VhpiGenericDeclK");
+               when VhpiIfGenerateK =>
+                  Add ("VhpiIfGenerateK");
+               when VhpiForGenerateK =>
+                  Add ("VhpiForGenerateK");
+               when others =>
+                  Add ("other");
+            end case;
          when VhpiFileNameP =>
             declare
                Str : Ghdl_C_String;
@@ -827,6 +866,7 @@ package body Grt.Avhpi is
          when others =>
             null;
       end case;
+      R (Len + 1) := NUL;
    end Vhpi_Get_Str;
 
    procedure Vhpi_Handle (Rel : VhpiOneToOneT;

@@ -9,4 +9,4 @@ def test_gen(dut):
     yield Timer(1000)
 
     for i in dut:       
-        print i._log.info("Found something: %s" % i._fullname)
+        print(i._log.info("Found something: %s" % i._fullname) )
