@@ -228,9 +228,8 @@ package body Grt.Vpi is
       end case;
    end Vpi_Type_To_String;
 
-
    procedure Trace_Property (V : Integer) is
-      Str: access constant String := Vpi_Type_To_String(V);
+      Str: constant access constant String := Vpi_Type_To_String(V);
    begin
       if Str = null then
          Trace(V);
