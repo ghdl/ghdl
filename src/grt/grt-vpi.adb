@@ -671,9 +671,6 @@ package body Grt.Vpi is
 
       procedure Copy_VpiType_CString is
          R : String renames Tmpstring2;
-         VpiProp : Integer;
-         AStr: access constant String;
-
          procedure Add (C : Character) is
          begin
             Len := Len + 1;
