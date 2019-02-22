@@ -679,45 +679,6 @@ package body Grt.Avhpi is
       Len := 0;
 
       case Property is
-         when VhpiKindStrP =>
-            case Obj.Kind is
-               when VhpiEnumTypeDeclK =>
-                  Add ("VhpiEnumTypeDeclK");
-               when VhpiIntTypeDeclK =>
-                  Add ("VhpiIntTypeDeclK");
-               when VhpiSubtypeDeclK =>
-                  Add ("VhpiSubtypeDeclK");
-               when VhpiArrayTypeDeclK =>
-                  Add ("VhpiArrayTypeDeclK");
-               when VhpiPackInstK =>
-                  Add ("VhpiArrayTypeDeclK");
-               when VhpiArchBodyK =>
-                  Add ("VhpiArchBodyK");
-               when VhpiEntityDeclK =>
-                  Add ("VhpiProcessStmtK");
-               when VhpiBlockStmtK =>
-                  Add ("VhpiBlockStmtK");
-               when VhpiRootInstK =>
-                  Add ("VhpiRootInstK");
-               when VhpiCompInstStmtK =>
-                  Add ("VhpiCompInstStmtK");
-               when VhpiSigDeclK =>
-                  Add ("VhpiSigDeclK");
-               when VhpiSigParamDeclK =>
-                  Add ("VhpiSigParamDeclK");
-               when VhpiVarDeclK =>
-                  Add ("VhpiVarDeclK");
-               when VhpiPortDeclK =>
-                  Add ("VhpiPortDeclK");
-               when VhpiGenericDeclK =>
-                  Add ("VhpiGenericDeclK");
-               when VhpiIfGenerateK =>
-                  Add ("VhpiIfGenerateK");
-               when VhpiForGenerateK =>
-                  Add ("VhpiForGenerateK");
-               when others =>
-                  Add ("other");
-            end case;
          when VhpiFileNameP =>
             declare
                Str : Ghdl_C_String;
