@@ -696,7 +696,7 @@ package body Grt.Avhpi is
                when VhpiEntityDeclK =>
                   Add ("VhpiProcessStmtK");
                when VhpiBlockStmtK =>
-                  Add ("VVhpiBlockStmtK");
+                  Add ("VhpiBlockStmtK");
                when VhpiRootInstK =>
                   Add ("VhpiRootInstK");
                when VhpiCompInstStmtK =>
