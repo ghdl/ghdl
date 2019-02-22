@@ -189,8 +189,20 @@ package body Grt.Vpi is
             Trace ("vpiFullName");
          when vpiSize =>
             Trace ("vpiSize");
+         when vpiFile =>
+            Trace ("vpiFile");
+         when vpiLineNo =>
+            Trace ("vpiLineNo");
+
+         when vpiDefName =>
+            Trace ("vpiDefName");
          when vpiTimePrecision =>
             Trace ("vpiTimePrecision");
+         when vpiDefFile =>
+            Trace ("vpiDefFile");
+
+         --  Port and net properties
+
          when vpiScalar =>
             Trace ("vpiScalar");
          when vpiVector =>
@@ -200,6 +212,8 @@ package body Grt.Vpi is
             Trace ("vpiModule");
          when vpiNet =>
             Trace ("vpiNet");
+         when vpiPort =>
+            Trace ("vpiPort");
          when vpiParameter =>
             Trace ("vpiParameter");
          when vpiScope =>
