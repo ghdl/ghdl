@@ -827,7 +827,6 @@ package body Grt.Avhpi is
          when others =>
             null;
       end case;
-      R (Len + 1) := NUL;
    end Vhpi_Get_Str;
 
    procedure Vhpi_Handle (Rel : VhpiOneToOneT;
