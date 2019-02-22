@@ -229,8 +229,9 @@ package body Grt.Vpi is
    end Vpi_Type_To_String;
 
    procedure Trace_Property (V : Integer) is
-      Str: constant access constant String := Vpi_Type_To_String(V);
+      Str: access constant String;
    begin
+      Str := Vpi_Type_To_String(V);
       if Str = null then
          Trace(V);
       else
