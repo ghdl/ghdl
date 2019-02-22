@@ -176,57 +176,67 @@ package body Grt.Vpi is
       end case;
    end Trace_Cb_Reason;
 
-   procedure Trace_Property (V : Integer) is
+   -- Returns a string representation of a vpiType property
+   function Vpi_Type_To_String(V: Integer) return access constant String
+   is
    begin
       case V is
          when vpiUndefined =>
-            Trace ("vpiUndefined");
+            return new String'("vpiUndefined");
          when vpiType =>
-            Trace ("vpiType");
+            return new String'("vpiType");
          when vpiName =>
-            Trace ("vpiName");
+            return new String'("vpiName");
          when vpiFullName =>
-            Trace ("vpiFullName");
+            return new String'("vpiFullName");
          when vpiSize =>
-            Trace ("vpiSize");
+            return new String'("vpiSize");
          when vpiTimePrecision =>
-            Trace ("vpiTimePrecision");
+            return new String'("vpiTimePrecision");
          when vpiScalar =>
-            Trace ("vpiScalar");
+            return new String'("vpiScalar");
          when vpiVector =>
-            Trace ("vpiVector");
-
+            return new String'("vpiVector");
          when vpiModule =>
-            Trace ("vpiModule");
+            return new String'("vpiModule");
          when vpiDefFile =>
-            Trace ("vpiDefFile");
+            return new String'("vpiDefFile");
          when vpiNet =>
-            Trace ("vpiNet");
+            return new String'("vpiNet");
          when vpiPort =>
-            Trace ("vpiPort");
+            return new String'("vpiPort");
          when vpiDirection =>
-            Trace ("vpiDirection");
+            return new String'("vpiDirection");
          when vpiParameter =>
-            Trace ("vpiParameter");
+            return new String'("vpiParameter");
          when vpiScope =>
-            Trace ("vpiScope");
+            return new String'("vpiScope");
          when vpiInternalScope =>
-            Trace ("vpiInternalScope");
+            return new String'("vpiInternalScope");
          when vpiLeftRange =>
-            Trace ("vpiLeftRange");
+            return new String'("vpiLeftRange");
          when vpiRightRange =>
-            Trace ("vpiRightRange");
-
+            return new String'("vpiRightRange");
          when vpiStop =>
-            Trace ("vpiStop");
+            return new String'("vpiStop");
          when vpiFinish =>
-            Trace ("vpiFinish");
+            return new String'("vpiFinish");
          when vpiReset =>
-            Trace ("vpiReset");
-
+            return new String'("vpiReset");
          when others =>
-            Trace (V);
+            return null;
       end case;
+   end Vpi_Type_To_String;
+
+
+   procedure Trace_Property (V : Integer) is
+      Str: access constant String := Vpi_Type_To_String(V);
+   begin
+      if Str = null then
+         Trace(V);
+      else
+         Trace(Str.all);
+      end if;
    end Trace_Property;
 
    procedure Trace_Format (F : Integer) is
@@ -588,7 +598,7 @@ package body Grt.Vpi is
    -- vpiHandle  vpi_scan(vpiHandle iter)
    -- Scan the Verilog HDL hierarchy for objects with a one-to-many
    -- relationship.
-   -- see IEEE 1364-2001, chapter 27.36, page 709
+   -- see IEEE Std 1800-2017, chapter 38.40, page 1109
    function Vpi_Scan_Internal (Iter: vpiHandle) return vpiHandle
    is
       Res : VhpiHandleT;
@@ -662,7 +672,7 @@ package body Grt.Vpi is
 
    ------------------------------------------------------------------------
    -- char *vpi_get_str(int property, vpiHandle ref)
-   -- see IEEE 1364-2001, page xxx
+   -- see IEEE Std 1800-2017, page 1061
    Tmpstring2 : String (1 .. 1024);
    function Vpi_Get_Str_Internal (Property : Integer; Ref : vpiHandle)
                                  return Ghdl_C_String
@@ -671,8 +681,10 @@ package body Grt.Vpi is
       Len : Natural;
       Res : Ghdl_C_String;
 
-      procedure Get_VpiType_String is
+      procedure Copy_VpiType_CString is
          R : String renames Tmpstring2;
+         VpiProp : Integer;
+         AStr: access constant String;
 
          procedure Add (C : Character) is
          begin
@@ -691,41 +703,13 @@ package body Grt.Vpi is
 
       begin
          Len := 0;
-         case Vhpi_Get_Kind(Ref.Ref) is
-            when VhpiEnumTypeDeclK =>
-               Add ("vpiEnum");
-            when VhpiIntTypeDeclK =>
-               Add ("vpiIntVal");
-            when VhpiEntityDeclK
-              | VhpiArchBodyK
-              | VhpiBlockStmtK
-              | VhpiIfGenerateK
-              | VhpiForGenerateK
-              | VhpiCompInstStmtK =>
-               Add ("vpiModule");
-            when VhpiSigDeclK =>
-               Add ("vpiNet");
-            when VhpiPortDeclK =>
-               Add ("vpiPort");
-            When VhpiGenericDeclK =>
-               Add ("vpiParameter");
-            when VhpiSubtypeDeclK =>
-               Add ("VhpiSubtypeDeclK");
-            when VhpiArrayTypeDeclK =>
-               Add ("VhpiArrayTypeDeclK");
-            when VhpiPackInstK =>
-               Add ("VhpiArrayTypeDeclK");
-            when vhpiVarDeclK =>
-               Add ("vhpiVarDeclK");
-            when vhpiSigParamDeclK =>
-               Add ("vhpiSigParamDeclK");
-            when VhpiRootInstK =>
-               Add ("VhpiRootInstK");
-            when others =>
-               Add ("vpiUndefined");
-         end case;
-         R (Len + 1) := NUL;
-      end Get_VpiType_String;
+         VpiProp := Vhpi_Handle_To_Vpi_Prop(Ref.Ref);
+         AStr := Vpi_Type_To_String(VpiProp);
+         if AStr /= null then
+            Add (AStr.all);
+            R (Len + 1) := NUL;
+         end if;
+      end Copy_VpiType_CString;
 
    begin
       if Ref = null then
@@ -740,8 +724,12 @@ package body Grt.Vpi is
          when vpiDefFile =>
             Prop := VhpiFileNameP;
          when vpiType =>
-            Get_VpiType_String;
-            return To_Ghdl_C_String (Tmpstring2'Address);
+            Copy_VpiType_CString;
+            if Len = 0 then
+               return null;
+            else
+               return To_Ghdl_C_String (Tmpstring2'Address);
+            end if;
          when others =>
             dbgPut_Line ("vpi_get_str: unhandled property");
             return null;
