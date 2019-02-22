@@ -703,13 +703,13 @@ package body Grt.Avhpi is
                   Add ("VhpiCompInstStmtK");
                when VhpiSigDeclK =>
                   Add ("VhpiSigDeclK");
-               when vhpiSigParamDeclK =>
-                  Add ("vhpiSigParamDeclK");
-               when vhpiVarDeclK =>
-                  Add ("vhpiVarDeclK");
+               when VhpiSigParamDeclK =>
+                  Add ("VhpiSigParamDeclK");
+               when VhpiVarDeclK =>
+                  Add ("VhpiVarDeclK");
                when VhpiPortDeclK =>
                   Add ("VhpiPortDeclK");
-               When VhpiGenericDeclK =>
+               when VhpiGenericDeclK =>
                   Add ("VhpiGenericDeclK");
                when VhpiIfGenerateK =>
                   Add ("VhpiIfGenerateK");
