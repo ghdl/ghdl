@@ -24,7 +24,7 @@ Supported third party projects: [VUnit](https://vunit.github.io), [OSVVM](http:/
 GHDL is free software:
 
 - [![GNU General Public License 2](https://img.shields.io/badge/code%20license-GPLv2-bd0000.svg?longCache=true&style=flat-square&label=license&logo=gnu)](https://github.com/ghdl/ghdl/blob/master/COPYING.md)
-- [![Creative Commons Attribution-ShareAlike](https://img.shields.io/badge/doc%20license-CC--BY--SA--4.0-aab2ab.svg?longCache=true&style=flat-square)](https://github.com/ghdl/ghdl/blob/master/doc/COPYING_DOC.md) available at [ghdl.readthedocs.io](https://ghdl.readthedocs.io)
+- [![Creative Commons Attribution-ShareAlike](https://img.shields.io/badge/doc%20license-Creative%20Commons%20Attribution--ShareAlike--4.0-aab2ab.svg?longCache=true&style=flat-square)](https://github.com/ghdl/ghdl/blob/master/doc/COPYING_DOC.md) available at [ghdl.readthedocs.io](https://ghdl.readthedocs.io)
 - Some of the runtime libraries, are under different terms; see the individual source files for details.
 
 ## Getting GHDL
