@@ -544,7 +544,7 @@ package body Grt.Vpi is
             begin
                Get_Verilog_Wire (Res, Info);
                if Info.Vtype /= Vcd_Bad then
-                  return vpiPort;
+                  return vpiNet;
                end if;
             end;
          when VhpiSigDeclK =>
