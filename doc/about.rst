@@ -1,4 +1,8 @@
-.. include:: shieldswho.inc
+.. only:: html
+
+   .. exec::
+      from helpers import createShields
+      createShields('shieldswho')
 
 About GHDL
 ##########
@@ -53,6 +57,6 @@ Who uses GHDL?
       | |SHIELD:gh-poc|   | |SHIELD:rtd-poc|   | `PoC-Library <https://github.com/VLSI-EDA/PoC>`_   | A Vendor-Independent, Open-Source IP Core and Utility Library. |
       +-------------------+--------------------+----------------------------------------------------+----------------------------------------------------------------+
       | |SHIELD:gh-vunit| | |SHIELD:doc-vunit| | `VUnit <https://vunit.github.io/>`_                | A unit testing framework for VHDL/SystemVerilog                |
-      +-------------------+--------------------+----------------------------------------------------+----------------------------------------------------------------+ 
+      +-------------------+--------------------+----------------------------------------------------+----------------------------------------------------------------+
       | |SHIELD:gl-p1076| | |SHIELD:tw-p1076|  | `IEEE P1076 WG <https://www.eda-twiki.org/vasg/>`_ | IEEE P1076 Working Group [VASG]                                |
       +-------------------+--------------------+----------------------------------------------------+----------------------------------------------------------------+
