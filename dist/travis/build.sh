@@ -2,8 +2,7 @@
 
 scriptdir=$(dirname $0)
 
-. "$scriptdir/travis-utils.sh"
-. "$scriptdir/../ansi_color.sh"
+. "$scriptdir/utils.sh"
 disable_color
 
 echo "$0" "$@"
@@ -40,29 +39,26 @@ rm -f build_ok
 
 #--- Env
 
-echo "travis_fold:start:env.docker"
-printf "$ANSI_YELLOW[Info] Environment $ANSI_NOCOLOR\n"
+travis_start "env.docker" "$ANSI_YELLOW[Info] Environment $ANSI_NOCOLOR"
 env
-echo "travis_fold:end:env.docker"
+travis_finish "env.docker"
 
 #--- GPL: gpl-ize sources
 
 if [ "$ISGPL" = "true" ]; then
-    echo "travis_fold:start:gpl.src"
-    printf "$ANSI_YELLOW[Source] create GPL sources $ANSI_NOCOLOR\n"
+    travis_start "gpl.src" "$ANSI_YELLOW[Source] create GPL sources $ANSI_NOCOLOR"
     files=`echo *`
     make -f Makefile.in srcdir=. clean-pure-gpl
     mkdir ${PKG_NAME}
     cp -pdrl $files ${PKG_NAME}
     tar -zcf "${PKG_NAME}.tar.gz" ${PKG_NAME}
     PKG_NAME="${PKG_NAME}-${BLD}"
-    echo "travis_fold:end:gpl.src"
+    travis_finish "gpl.src"
 fi
 
 #--- Configure
 
-echo "travis_fold:start:configure"
-printf "$ANSI_YELLOW[GHDL - build] Configure $ANSI_NOCOLOR\n"
+travis_start "configure" "$ANSI_YELLOW[GHDL - build] Configure $ANSI_NOCOLOR" -notime
 
 CDIR=$(pwd)
 export prefix="$CDIR/install-$BLD"
@@ -72,9 +68,7 @@ cd "build-$BLD"
 
 case "$BLD" in
     gcc*)
-        echo "travis_fold:start:get_gcc"
-        travis_time_start
-        printf "$ANSI_YELLOW[GHDL] Get gcc sources $ANSI_NOCOLOR\n"
+        travis_start "get_gcc" "$ANSI_YELLOW[GHDL] Get gcc sources $ANSI_NOCOLOR"
         echo "https://github.com/gcc-mirror/gcc/archive/$(echo ${BLD} | sed -e 's/\./_/g')-release.tar.gz"
         mkdir gcc-srcs
         curl -L "https://github.com/gcc-mirror/gcc/archive/$(echo ${BLD} | sed -e 's/\./_/g')-release.tar.gz" | tar -xz -C gcc-srcs --strip-components=1
@@ -82,18 +76,14 @@ case "$BLD" in
         sed -i.bak s/ftp:/http:/g ./contrib/download_prerequisites
         ./contrib/download_prerequisites
         cd ..
-        travis_time_finish
-        echo "travis_fold:end:get_gcc"
+        travis_finish "get_gcc"
 
-        echo "travis_fold:start:configure_gcc"
-        travis_time_start
-        printf "$ANSI_YELLOW[GHDL] Configure gcc $ANSI_NOCOLOR\n"
+        travis_start "configure_gcc" "$ANSI_YELLOW[GHDL] Configure gcc $ANSI_NOCOLOR"
         ../configure --with-gcc=gcc-srcs --prefix="$prefix"
         make copy-sources
         mkdir gcc-objs; cd gcc-objs
         ../gcc-srcs/configure --prefix="$prefix" --enable-languages=c,vhdl --disable-bootstrap --disable-lto --disable-multilib --disable-libssp --disable-libgomp --disable-libquadmath "`gcc -v 2>&1 | grep -o -- --enable-default-pie`"
-        travis_time_finish
-        echo "travis_fold:end:configure_gcc"
+        travis_finish "configure_gcc"
     ;;
     mcode)
 	      config_opts=""
@@ -137,47 +127,38 @@ if [ ! "$(echo $BLD | grep gcc)" ]; then
     ../configure "--prefix=$prefix" $config_opts
 fi
 
-echo "travis_fold:end:configure"
+travis_finish "configure" -notime
 
 #--- make
 
-echo "travis_fold:start:make"
-travis_time_start
-printf "$ANSI_YELLOW[GHDL - build] Make $ANSI_NOCOLOR\n"
+travis_start "make" "$ANSI_YELLOW[GHDL - build] Make $ANSI_NOCOLOR"
 set +e
 make -j$(nproc) 2>make_err.log
 tail -1000 make_err.log
 set -e
-travis_time_finish
-echo "travis_fold:end:make"
+travis_finish "make"
 
-echo "travis_fold:start:install"
-printf "$ANSI_YELLOW[GHDL - build] Install $ANSI_NOCOLOR\n"
+travis_start "install" "$ANSI_YELLOW[GHDL - build] Install $ANSI_NOCOLOR"
 make install
 cd ..
-echo "travis_fold:end:install"
+travis_finish "install"
 
 if [ "$(echo $BLD | grep gcc)" ]; then
-    echo "travis_fold:start:make_ghdllib"
-    travis_time_start
-    printf "$ANSI_YELLOW[GHDL - build] Make ghdllib $ANSI_NOCOLOR\n"
+    travis_start "make_ghdllib" "$ANSI_YELLOW[GHDL - build] Make ghdllib $ANSI_NOCOLOR"
     make ghdllib
-    travis_time_finish
-    echo "travis_fold:end:make_ghdllib"
+    travis_finish "make_ghdllib"
 
-    echo "travis_fold:start:install_ghdllib"
-    printf "$ANSI_YELLOW[GHDL - build] Install ghdllib $ANSI_NOCOLOR\n"
+    travis_start "install_ghdllib" "$ANSI_YELLOW[GHDL - build] Install ghdllib $ANSI_NOCOLOR"
     make install
     cd ..
-    echo "travis_fold:end:install_ghdllib"
+    travis_finish "install_ghdllib"
 fi
 
 #--- package
 
-echo "travis_fold:start:tar.bin"
-printf "$ANSI_YELLOW[GHDL - build] Create package ${ANSI_DARKCYAN}${PKG_NAME}.tgz $ANSI_NOCOLOR\n"
+travis_start "tar.bin" "$ANSI_YELLOW[GHDL - build] Create package ${ANSI_DARKCYAN}${PKG_NAME}.tgz $ANSI_NOCOLOR"
 tar -zcvf "${PKG_NAME}.tgz" -C "$prefix" .
-echo "travis_fold:end:tar.bin"
+travis_finish "tar.bin"
 
 #--- build tools versions
 

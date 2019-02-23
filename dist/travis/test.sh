@@ -2,8 +2,7 @@
 
 scriptdir=$(dirname $0)
 
-. "$scriptdir/travis-utils.sh"
-. "$scriptdir/../ansi_color.sh"
+. "$scriptdir/utils.sh"
 disable_color
 
 echo "$0" "$@"
@@ -43,9 +42,7 @@ fi
 cd testsuite
 failures=""
 
-echo "travis_fold:start:tests.sanity"
-travis_time_start
-printf "$ANSI_YELLOW[GHDL - test] sanity $ANSI_NOCOLOR\n"
+travis_start "tests.sanity" "$ANSI_YELLOW[GHDL - test] sanity $ANSI_NOCOLOR"
 cd sanity
 for d in [0-9]*; do
     cd $d
@@ -62,14 +59,11 @@ for d in [0-9]*; do
     [ "$failures" = "" ] || break
 done
 cd ..
-travis_time_finish
-echo "travis_fold:end:tests.sanity"
+travis_finish "tests.sanity"
 [ "$failures" = "" ] || exit 1
 
 if [ "$ISGPL" != "true" ]; then
-    echo "travis_fold:start:tests.gna"
-    travis_time_start
-    printf "$ANSI_YELLOW[GHDL - test] gna $ANSI_NOCOLOR\n"
+    travis_start "tests.gna" "$ANSI_YELLOW[GHDL - test] gna $ANSI_NOCOLOR"
     cd gna
     dirs=`./testsuite.sh --list-tests`
     for d in $dirs; do
@@ -87,14 +81,11 @@ if [ "$ISGPL" != "true" ]; then
 	[ "$failures" = "" ] || break
     done
     cd ..
-    travis_time_finish
-    echo "travis_fold:end:tests.gna"
+    travis_finish "tests.gna"
     [ "$failures" = "" ] || exit 1
 fi
 
-echo "travis_fold:start:tests.vests"
-travis_time_start
-printf "$ANSI_YELLOW[GHDL - test] vests $ANSI_NOCOLOR\n"
+travis_start "tests.vests" "$ANSI_YELLOW[GHDL - test] vests $ANSI_NOCOLOR"
 cd vests
 if ./testsuite.sh > vests.log 2>&1 ; then
     echo "${ANSI_GREEN}Vests is OK$ANSI_NOCOLOR"
@@ -105,8 +96,7 @@ else
     failures=vests
 fi
 cd ..
-travis_time_finish
-echo "travis_fold:end:tests.vests"
+travis_finish "tests.vests"
 [ "$failures" = "" ] || exit 1
 
 $GHDL --version
