@@ -12,11 +12,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
-import os
-import shlex
-import re
-import subprocess
+import sys, os, shlex, re, subprocess
 
 # http://docs.readthedocs.io/en/latest/getting_started.html#in-markdown
 from recommonmark.parser import CommonMarkParser
@@ -51,6 +47,8 @@ extensions = [
 # SphinxContrib extensions
 	# 'sphinxcontrib.textstyle',
 	# 'sphinxcontrib.spelling',
+# Other
+    'exec',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

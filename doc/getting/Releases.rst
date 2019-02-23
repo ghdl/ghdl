@@ -11,60 +11,50 @@ Releases and sources
 Downloading pre-built packages
 ******************************
 
-.. |Strect-mcode-gpl| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/ghdl-gpl-0.35-mcode.tgz.svg?longCache=true&style=flat-square&logo=github
-   :target: https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-gpl-0.35-mcode.tgz
-   :alt: ghdl-gpl-0.35-mcode.tgz
-.. |Strect-mcode| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/ghdl-0.35-mcode-stretch.tgz.svg?longCache=true&style=flat-square&logo=github
-   :target: https:// github.com/ghdl/ghdl/releases/download/v0.35/ghdl-0.35-mcode-stretch.tgz
-   :alt: ghdl-0.35-mcode-stretch.tgz
-.. |Ubu1404-mcode| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/ghdl-0.35-mcode-ubuntu14.tgz.svg?longCache=true&style=flat-square&logo=github
-   :target: https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-0.35-mcode-ubuntu14.tgz
-   :alt: ghdl-0.35-mcode-ubuntu14.tgz
-.. |Ubu1404-llvm38| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/ghdl-0.35-llvm-3.8-ubuntu14.tgz.svg?longCache=true&style=flat-square&logo=github
-   :target: https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-0.35-llvm-3.8-ubuntu14.tgz
-   :alt: ghdl-0.35-llvm-3.8-ubuntu14.tgz
-.. |Fedora26-mcode| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/ghdl-0.35-mcode-fedora26.tgz.svg?longCache=true&style=flat-square&logo=github
-   :target: https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-0.35-mcode-fedora26.tgz
-   :alt: ghdl-0.35-mcode-fedora26.tgz
-.. |Win32-mcode| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/ghdl-v0.35-mingw32-mcode.zip.svg?longCache=true&style=flat-square&logo=github
-   :target: https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-v0.35-mingw32-mcode.zip
-   :alt: ghdl-v0.35-mingw32-mcode.zip
-.. |Win64-llvm| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/ghdl-v0.35-mingw64-llvm.zip.svg?longCache=true&style=flat-square&logo=github
-   :target: https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-v0.35-mingw64-llvm.zip
-   :alt: ghdl-v0.35-mingw64-llvm.zip
-.. |MacOS-mcode| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/ghdl-0.35-mcode-macosx.tgz.svg?longCache=true&style=flat-square&logo=github
-   :target: https://github.com/ghdl/ghdl/releases/download/v0.35/ghdl-0.35-mcode-macosx.tgz
-   :alt: ghdl-0.35-mcode-macosx.tgz
-.. |Sum| image:: https://img.shields.io/github/downloads/ghdl/ghdl/v0.35/total.svg?longCache=true&style=flat-square&logo=github
-   :target: https://github.com/ghdl/ghdl/releases/tag/v0.35
-   :alt: Downloads of GHDL v0.35
+.. TODO How to extend this directive to use `.. only:: html` and `.. only:: html` in the python code passed to it?
 
-+------------------------+----------+-----------+--------------------+
-| OS                     | Backend  | Filesize  | Downloads          |
-+========================+==========+===========+====================+
-| Debian 9 (Stretch) GPL | mcode    | 2.61 MB   | |Strect-mcode-gpl| |
-+------------------------+----------+-----------+--------------------+
-| Debian 9 (Stretch)     | mcode    | 2.93 MB   | |Strect-mcode|     |
-+------------------------+----------+-----------+--------------------+
-| Ubuntu 14 (Trusty)     | mcode    | 3.15 MB   | |Ubu1404-mcode|    |
-+------------------------+----------+-----------+--------------------+
-| Ubuntu 14 (Trusty)     | LLVM     | 14.11MB   | |Ubu1404-llvm38|   |
-+------------------------+----------+-----------+--------------------+
-| Fedora 26              | mcode    | 2.83 MB   | |Fedora26-mcode|   |
-+------------------------+----------+-----------+--------------------+
-| Windows x86 (MinGW32)  | mcode    | 3.05 MB   | |Win32-mcode|      |
-+------------------------+----------+-----------+--------------------+
-| Windows x86 (MinGW64)  | LLVM     | 12.7 MB   | |Win64-llvm|       |
-+------------------------+----------+-----------+--------------------+
-| Mac OS X               | mcode    | 2.26 MB   | |MacOS-mcode|      |
-+------------------------+----------+-----------+--------------------+
-| Sum:                   |          |           | |Sum|              |
-+------------------------+----------+-----------+--------------------+
+.. exec::
+   from helpers import createReleasesShields, printReleaseTab, printReleasesList
+
+   # Optionally, provide a <tag> name to get the assets table of a specific release. By default, the table of 'latest' is returned.
+   data = createReleasesShields()
+
+.. only:: html
+
+   .. exec::
+      from helpers import printReleaseTab
+      printReleaseTab('data')
+
+.. only:: latex
+
+   .. exec::
+      from helpers import printReleaseTab
+      printReleaseTab('data', latex=True)
+
+Pre-built packages of older releases
+====================================
+
+.. only:: html
+
+   .. exec::
+      from helpers import printReleasesList
+      printReleasesList('data')
+
+.. only:: latex
+
+   .. exec::
+      from helpers import printReleasesList
+      printReleasesList('data', latex=True)
 
 .. _RELEASE:Sources:
 
 Downloading Source Files
 ************************
+
+.. HINT::
+
+   All the following procedures will retrieve the latest development version of GHDL, i.e., the `master` branch at `github.com/ghdl/ghdl <https://github.com/ghdl/ghdl>`_.
+   We do our best to keep it stable, but bugs can seldom be published. See `HINT` boxes below for instructions to get older releases.
 
 .. _RELEASE:Sources:Zip:
 
@@ -92,6 +82,10 @@ choose your desired format/version:
    | master   | |tgz-master|           |
    +----------+------------------------+
 
+.. HINT::
+
+   To download a specific version of GHDL, use these alternative URL, where ``<format>`` is ``tar`` or ``zip``: ``https://api.github.com/repos/ghdl/ghdl/<format>ball/<tag>``.
+
 .. _RELEASE:Sources:GitClone:
 
 Downloading via ``git clone``
@@ -112,6 +106,10 @@ later instructions or on other pages in this documentation.
 +----------+----------------------------------------+
 | SSH      | ssh://git@github.com:ghdl/ghdl.git     |
 +----------+----------------------------------------+
+
+.. HINT::
+
+   Execute ``git checkout -b stable <tag>`` after ``git clone``, to checkout a specific version of GHDL.
 
 
 On Linux
