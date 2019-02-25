@@ -214,3 +214,22 @@ def printReleasesList(releases, latex=False):
         rs[x+1] = [r[1][1:-7]] + r
 
    printTab(rs)
+
+#
+# Create shields/badges from JSON file
+#
+
+def createShields(file='shields'):
+   shields = getJSON(file)
+   for k, v in shields.items():
+      t = v['target']
+      if t[0:3] == 'gh:':
+        t = 'https://github.com/' + t[3:]
+
+      printShieldSrc(
+         'SHIELD:'+k,
+         v['alt'],
+         'https://img.shields.io/' + v['src'] + '&style=flat-square&longCache=true',
+         t,
+         False
+      )

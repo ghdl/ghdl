@@ -1,6 +1,8 @@
-.. include:: shields.inc
-
 .. only:: html
+
+   .. exec::
+      from helpers import createShields
+      createShields()
 
    |SHIELD:gh-logo| |SHIELD:gitter| |SHIELD:code-lic| |SHIELD:doc-lic| |SHIELD:travis-ci| |SHIELD:appveyor| |SHIELD:release|
 
