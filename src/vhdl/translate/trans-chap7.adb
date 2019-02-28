@@ -178,7 +178,7 @@ package body Trans.Chap7 is
    begin
       for I in 1 .. Len loop
          Lit := Get_Nth_Element
-           (Literal_List, Natural (Str_Table.Element_String8 (Id, Pos32 (I))));
+           (Literal_List, Natural (Str_Table.Element_String8 (Id, I)));
          New_Array_Aggr_El (List, Get_Ortho_Literal (Lit));
       end loop;
    end Translate_Static_String_Literal8_Inner;
