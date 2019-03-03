@@ -1,6 +1,6 @@
 SRCS= \
 conf.py ../src/version.in \
-prolog.inc shields.inc shieldswho.inc \
+prolog.inc shields.json shieldswho.json \
 about.rst \
 appendix/Meta.rst appendix/Roadmap.rst \
 building/Building.rst \
