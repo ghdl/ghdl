@@ -38,7 +38,7 @@ class GHDLBuild(build):
                           os.path.join(dstdir, "ghdl"))
 
 setup (name='libghdl',
-       version='0.35',
+       version=libghdl_version,
        description = 'Interface to ghdl, a VHDL analyzer',
        author = 'Tristan Gingold',
        author_email = 'tgingold@free.fr',
