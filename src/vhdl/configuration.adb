@@ -301,6 +301,10 @@ package body Configuration is
          when Iir_Kind_Entity_Aspect_Entity =>
             --  Add the entity.
             Entity_Lib := Get_Entity (Aspect);
+            if Entity_Lib = Null_Iir then
+               --  In case of error (using -c).
+               return;
+            end if;
             Entity := Get_Design_Unit (Entity_Lib);
             Add_Design_Unit (Entity, Aspect);
 
