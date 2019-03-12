@@ -584,7 +584,6 @@ package body Simul.Execution is
 
    procedure Assert_Std_Ulogic_Dc (Loc : Iir)
    is
-      use Grt.Std_Logic_1164;
    begin
       Execute_Failed_Assertion
         ("assertion",
