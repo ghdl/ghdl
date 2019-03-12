@@ -660,10 +660,16 @@ package body Configuration is
             Set_Default_Configuration_Declaration (Lib_Unit, Top);
             pragma Assert (Is_Valid (Top));
          when Iir_Kind_Configuration_Declaration =>
+            if Secondary_Id /= Null_Identifier then
+               Error_Msg_Elab
+                 ("no secondary unit allowed after configuration %i",
+                  +Primary_Id);
+               return Null_Iir;
+            end if;
             Top := Unit;
          when others =>
-            Error_Msg_Elab (Name_Table.Image (Primary_Id)
-                            & " is neither an entity nor a configuration");
+            Error_Msg_Elab ("%i is neither an entity nor a configuration",
+                           +Primary_Id);
             return Null_Iir;
       end case;
 
