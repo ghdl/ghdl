@@ -677,7 +677,6 @@ package body Synth.Stmts is
       Inter_Chain : Iir;
       Assoc_Chain : Iir)
    is
-      use Simul.Annotations;
       Inter : Iir;
       Assoc : Iir;
       Assoc_Inter : Iir;

@@ -34,7 +34,6 @@ with Grt.Main;
 with Simul.Debugger; use Simul.Debugger;
 with Simul.Debugger.AMS;
 with Grt.Errors;
-with Grt.Rtis;
 with Grt.Processes;
 with Grt.Signals;
 with Areapools; use Areapools;
@@ -1033,7 +1032,6 @@ package body Simul.Simulation.Main is
                                  Sig : Iir_Value_Literal_Acc;
                                  Val : Iir_Value_Literal_Acc)
    is
-      use Grt.Rtis;
       use Grt.Signals;
 
       procedure Create_Signal (Val : Iir_Value_Literal_Acc;
