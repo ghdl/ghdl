@@ -3281,6 +3281,7 @@ package body Sem is
 
       --  Analyze the library unit.
       if Library_Unit /= Null_Iir then
+         --  Can be null_iir in case of parse error.
          case Iir_Kinds_Library_Unit (Get_Kind (Library_Unit)) is
             when Iir_Kind_Entity_Declaration =>
                Sem_Entity_Declaration (Library_Unit);
@@ -3297,9 +3298,6 @@ package body Sem is
             when Iir_Kind_Context_Declaration =>
                Sem_Context_Declaration (Library_Unit);
          end case;
-      else
-         pragma Assert (Flags.Flag_Force_Analysis);
-         null;
       end if;
 
       Close_Declarative_Region;

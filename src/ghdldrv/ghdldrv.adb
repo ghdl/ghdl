@@ -1355,6 +1355,7 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
       Elab_Index : Integer;
+      Error : Boolean;
    begin
       Elab_Index := -1;
       for I in Args'Range loop
@@ -1364,7 +1365,10 @@ package body Ghdldrv is
          end if;
       end loop;
       if Elab_Index < 0 then
-         Analyze_Files (Args, True);
+         Analyze_Files (Args, True, Error);
+         if Error then
+            raise Errorout.Compilation_Error;
+         end if;
       else
          Set_Elab_Units ("-c", Args (Elab_Index + 1 .. Args'Last));
          Setup_Compiler (False);

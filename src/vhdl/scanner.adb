@@ -2277,8 +2277,9 @@ package body Scanner is
             end if;
          when '_' =>
             Error_Msg_Scan ("an identifier can't start with '_'");
-            Pos := Pos + 1;
-            goto Again;
+            Scan_Identifier (Flag_Psl);
+            --  Cannot be a reserved word.
+            return;
          when 'A' .. 'Z' | 'a' .. 'z' =>
             Scan_Identifier (Flag_Psl);
             Identifier_To_Token;

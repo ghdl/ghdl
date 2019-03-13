@@ -752,9 +752,15 @@ package body Ghdllocal is
    end Perform_Action;
 
    --  Command Check_Syntax.
-   type Command_Check_Syntax is new Command_Lib with null record;
+   type Command_Check_Syntax is new Command_Lib with record
+      Flag_Expect_Failure : Boolean := False;
+   end record;
    function Decode_Command (Cmd : Command_Check_Syntax; Name : String)
                            return Boolean;
+   procedure Decode_Option (Cmd : in out Command_Check_Syntax;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res);
    function Get_Short_Help (Cmd : Command_Check_Syntax) return String;
    procedure Perform_Action (Cmd : Command_Check_Syntax;
                              Args : Argument_List);
@@ -774,13 +780,30 @@ package body Ghdllocal is
       return "-s [OPTS] FILEs    Check syntax of FILEs";
    end Get_Short_Help;
 
-   procedure Analyze_One_File (File_Name : String)
+   procedure Decode_Option (Cmd : in out Command_Check_Syntax;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res)
+   is
+      pragma Assert (Option'First = 1);
+   begin
+      if Option = "--expect-failure" then
+         Cmd.Flag_Expect_Failure := True;
+         Res := Option_Ok;
+      else
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
+
+   procedure Analyze_One_File (File_Name : String; Error : out Boolean)
    is
       Id : Name_Id;
       Design_File : Iir_Design_File;
       Unit : Iir;
       Next_Unit : Iir;
    begin
+      Error := True;
+
       Id := Name_Table.Get_Identifier (File_Name);
       if Flag_Verbose then
          Put (File_Name);
@@ -788,7 +811,7 @@ package body Ghdllocal is
       end if;
       Design_File := Sem_Lib.Load_File_Name (Id);
       if Design_File = Null_Iir then
-         raise Errorout.Compilation_Error;
+         return;
       end if;
 
       Unit := Get_First_Design_Unit (Design_File);
@@ -810,21 +833,26 @@ package body Ghdllocal is
          Unit := Next_Unit;
       end loop;
 
-      if Errorout.Nbr_Errors > 0 then
-         raise Errorout.Compilation_Error;
+      if Errorout.Nbr_Errors = 0 then
+         Error := False;
       end if;
    end Analyze_One_File;
 
-   procedure Analyze_Files (Files : Argument_List; Save_Library : Boolean) is
+   procedure Analyze_Files
+     (Files : Argument_List; Save_Library : Boolean; Error : out Boolean)
+   is
+      Error_1 : Boolean;
    begin
       Setup_Libraries (True);
 
       --  Parse all files.
+      Error := False;
       for I in Files'Range loop
-         Analyze_One_File (Files (I).all);
+         Analyze_One_File (Files (I).all, Error_1);
+         Error := Error or Error_1;
       end loop;
 
-      if Save_Library then
+      if Save_Library and then not Error then
          Libraries.Save_Work_Library;
       end if;
    end Analyze_Files;
@@ -832,9 +860,12 @@ package body Ghdllocal is
    procedure Perform_Action (Cmd : Command_Check_Syntax;
                              Args : Argument_List)
    is
-      pragma Unreferenced (Cmd);
+      Error : Boolean;
    begin
-      Analyze_Files (Args, False);
+      Analyze_Files (Args, False, Error);
+      if Error xor Cmd.Flag_Expect_Failure then
+         raise Errorout.Compilation_Error;
+      end if;
    end Perform_Action;
 
    --  Command --clean: remove object files.

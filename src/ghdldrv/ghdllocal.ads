@@ -120,7 +120,8 @@ package Ghdllocal is
 
    --  Setup library, analyze FILES, and if SAVE_LIBRARY is set save the
    --  work library only
-   procedure Analyze_Files (Files : Argument_List; Save_Library : Boolean);
+   procedure Analyze_Files
+     (Files : Argument_List; Save_Library : Boolean; Error : out Boolean);
 
    --  Load and parse all libraries and files, starting from the work library.
    --  The work library must already be loaded.
