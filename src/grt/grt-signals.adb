@@ -252,6 +252,8 @@ package body Grt.Signals is
                               Nbr_Ports => 0,
                               Ports => null,
 
+                              Dump_Table_Idx => 0,
+
                               S => S);
 
       if Resolv /= null and then Resolv.Resolv_Ptr = System.Null_Address then
@@ -621,6 +623,8 @@ package body Grt.Signals is
 
                                      Nbr_Ports => 0,
                                      Ports => null,
+
+                                     Dump_Table_Idx => 0,
 
                                      S => (Mode_Sig => Mode_End));
 
@@ -3123,7 +3127,12 @@ package body Grt.Signals is
 
       Sig.Event := True;
       Sig.Last_Event := Current_Time;
-      Sig.Flags.RO_Event := True;
+      if not Sig.Flags.RO_Event then
+         Sig.Flags.RO_Event := True;
+         if Sig.Dump_Table_Idx /= 0 then
+            Changed_Sig_Table.Append(Sig);
+         end if;
+      end if;
 
       El := Sig.Event_List;
       while El /= null loop

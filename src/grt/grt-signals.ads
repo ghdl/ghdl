@@ -355,6 +355,8 @@ package Grt.Signals is
       Nbr_Ports : Ghdl_Index_Type;
       Ports : Signal_Arr_Ptr;
 
+      Dump_Table_Idx : Dump_Table_Index;
+
       --  Mode of the signal (in, out ...)
       --Mode_Signal : Mode_Signal_Type;
       S : Ghdl_Signal_Data;
@@ -365,6 +367,13 @@ package Grt.Signals is
      (Table_Component_Type => Ghdl_Signal_Ptr,
       Table_Index_Type => Sig_Table_Index,
       Table_Low_Bound => 0,
+      Table_Initial => 128);
+
+   -- Signals with RO_Event set. Cleared in Grt.Wave.Wave_Cycle.
+   package Changed_Sig_Table is new Grt.Table
+     (Table_Component_Type => Ghdl_Signal_Ptr,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
       Table_Initial => 128);
 
    --  Read the value pointed by VALUE_PTR.  It cannot be simply deferred as
