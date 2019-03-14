@@ -180,6 +180,9 @@ package Grt.Types is
       First, Last : Sig_Table_Index;
    end record;
 
+   --  Signal index in Waves.Dump_Table.
+   type Dump_Table_Index is new Natural;
+
    --  Simple values, used for signals.
    type Mode_Type is
      (Mode_B1, Mode_E8, Mode_E32, Mode_I32, Mode_I64, Mode_F64);
