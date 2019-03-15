@@ -31,6 +31,7 @@ package body Grt.Avls is
          return Tree (N).Height;
       end if;
    end Get_Height;
+   pragma Inline (Get_Height);
 
    procedure Check_AVL (Tree : AVL_Tree; N : AVL_Nid)
    is
@@ -43,12 +44,11 @@ package body Grt.Avls is
       end if;
       L := Tree (N).Left;
       R := Tree (N).Right;
-      H := Get_Height (Tree, N);
+      H := Tree (N).Height;
       if L = AVL_Nil and R = AVL_Nil then
-         if Get_Height (Tree, N) /= 1 then
+         if H /= 1 then
             Internal_Error ("check_AVL(1)");
          end if;
-         return;
       elsif L = AVL_Nil then
          Check_AVL (Tree, R);
          if H /= Get_Height (Tree, R) + 1 or H > 2 then
@@ -215,7 +215,7 @@ package body Grt.Avls is
          Internal_Error ("avls.get_node");
       end if;
       Insert (Tree, Cmp, N, AVL_Root, Res);
-      Check_AVL (Tree, AVL_Root);
+      pragma Debug (Check_AVL (Tree, AVL_Root));
    end Get_Node;
 
    function Find_Node (Tree : AVL_Tree;
