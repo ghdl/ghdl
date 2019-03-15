@@ -75,7 +75,7 @@ package body Canon is
    procedure Canon_Subtype_Indication_If_Anonymous (Def : Iir);
 
    function Canon_Conditional_Signal_Assignment
-     (Conc_Stmt : Iir; Proc : Iir; Parent : Iir) return Iir;
+     (Conc_Stmt : Iir; Proc : Iir; Parent : Iir; Clear : Boolean) return Iir;
    procedure Canon_Conditional_Signal_Assignment_Expression (Stmt : Iir);
 
    procedure Canon_Extract_Sensitivity_Aggregate
@@ -1153,7 +1153,7 @@ package body Canon is
                                                          return Iir is
    begin
       return Canon_Conditional_Signal_Assignment
-        (Stmt, Null_Iir, Get_Parent (Stmt));
+        (Stmt, Null_Iir, Get_Parent (Stmt), False);
    end Canon_Conditional_Signal_Assignment_Statement;
 
    --  Inner loop if any; used to canonicalize exit/next statement.
@@ -1560,7 +1560,7 @@ package body Canon is
 
    --  Create signal_transform for a concurrent conditional signal assignment.
    function Canon_Conditional_Signal_Assignment
-     (Conc_Stmt : Iir; Proc : Iir; Parent : Iir) return Iir
+     (Conc_Stmt : Iir; Proc : Iir; Parent : Iir; Clear : Boolean) return Iir
    is
       Expr : Iir;
       Stmt : Iir;
@@ -1616,8 +1616,10 @@ package body Canon is
             Last_Res := Res1;
          end if;
 
-         Set_Condition (Cond_Wf, Null_Iir);
-         Set_Waveform_Chain (Cond_Wf, Null_Iir);
+         if Clear then
+            Set_Condition (Cond_Wf, Null_Iir);
+            Set_Waveform_Chain (Cond_Wf, Null_Iir);
+         end if;
 
          Cond_Wf := Get_Chain (Cond_Wf);
       end loop;
@@ -1631,7 +1633,8 @@ package body Canon is
    is
       Stmt : Iir;
    begin
-      Stmt := Canon_Conditional_Signal_Assignment (Conc_Stmt, Proc, Parent);
+      Stmt := Canon_Conditional_Signal_Assignment
+        (Conc_Stmt, Proc, Parent, True);
       Set_Sequential_Statement_Chain (Parent, Stmt);
    end Canon_Concurrent_Conditional_Signal_Assignment;
 
