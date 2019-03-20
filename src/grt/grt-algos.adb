@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package body Algos is
+package body Grt.Algos is
    procedure Heap_Sort (N : Natural) is
       --  An heap is an almost complete binary tree whose each edge is less
       --  than or equal as its decendent.
@@ -52,4 +52,4 @@ package body Algos is
          Bubble_Down (1, I - 1);
       end loop;
    end Heap_Sort;
-end Algos;
+end Grt.Algos;

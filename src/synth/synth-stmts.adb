@@ -21,7 +21,7 @@
 with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
-with Algos;
+with Grt.Algos;
 with Areapools;
 with Errorout; use Errorout;
 
@@ -278,7 +278,8 @@ package body Synth.Stmts is
          Arr (To) := T;
       end Swap;
 
-      procedure Wid_Heap_Sort is new Algos.Heap_Sort (Lt => Lt, Swap => Swap);
+      procedure Wid_Heap_Sort is
+         new Grt.Algos.Heap_Sort (Lt => Lt, Swap => Swap);
    begin
       Wid_Heap_Sort (Arr'Length);
    end Sort_Wire_Id_Array;

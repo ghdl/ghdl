@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Algos;
+with Grt.Algos;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
 with Flags; use Flags;
@@ -2189,7 +2189,7 @@ package body Sem_Expr is
       end Swap;
 
       procedure Str_Heap_Sort is
-         new Algos.Heap_Sort (Lt => Lt, Swap => Swap);
+         new Grt.Algos.Heap_Sort (Lt => Lt, Swap => Swap);
    begin
       Str_Heap_Sort (Info.Nbr_Choices);
    end Sort_String_Choices;
@@ -2433,7 +2433,8 @@ package body Sem_Expr is
          Swap_Choice_Info (Info, From, To);
       end Swap;
 
-      procedure Disc_Heap_Sort is new Algos.Heap_Sort (Lt => Lt, Swap => Swap);
+      procedure Disc_Heap_Sort is
+         new Grt.Algos.Heap_Sort (Lt => Lt, Swap => Swap);
    begin
       Disc_Heap_Sort (Info.Nbr_Choices);
    end Sort_Discrete_Choices;

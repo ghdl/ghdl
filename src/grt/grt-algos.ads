@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package Algos is
+package Grt.Algos is
    --  Heap sort the N elements.
    generic
       --  Compare two elements, return true iff OP1 < OP2.
@@ -25,4 +25,4 @@ package Algos is
       --  Swap two elements.
       with procedure Swap (From : Natural; To : Natural);
    procedure Heap_Sort (N : Natural);
-end Algos;
+end Grt.Algos;
