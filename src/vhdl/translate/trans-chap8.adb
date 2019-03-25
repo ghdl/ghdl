@@ -4433,7 +4433,9 @@ package body Trans.Chap8 is
             Open_Temp;
             Targ2 := Targ;
             Translate_Waveform_Expression (Value, Target_Type, Targ2, Val);
-            if Is_Composite (Targ_Tinfo) then
+            if Is_Composite (Targ_Tinfo)
+              and then Get_Constraint_State (Target_Type) /= Fully_Constrained
+            then
                Stabilize (Targ2);
                Stabilize (Val);
                Chap3.Check_Array_Match
