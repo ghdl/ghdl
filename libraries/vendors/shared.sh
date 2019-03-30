@@ -76,7 +76,11 @@ SetupDirectories() {
 	fi
 
 	# Resolve paths to an absolute paths
-	READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+  if greadlink --version > /dev/null 2>&1 ; then
+		READLINK=greadlink
+	else
+		READLINK=readlink
+	fi
 	SourceDirectory=$($READLINK -f $SourceDirectory)
 	if [[ ! "$DestinationDirectory" = /* ]]; then
 		DestinationDirectory=$WorkingDir/$DestinationDirectory

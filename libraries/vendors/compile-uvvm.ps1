@@ -73,6 +73,10 @@ param(
 		[switch]$UVVM_VIP_SPI =					$true,
 		# Compile VIP: UART
 		[switch]$UVVM_VIP_UART =				$true,
+		# Compile VIP: CLOCK_GENERATOR
+		[switch]$UVVM_VIP_CLOCK_GENERATOR = $true,
+		# Compile VIP: SCOREBOARD
+		[switch]$UVVM_VIP_SCOREBOARD =  $true,
 	
 	# Clean up directory before analyzing.
 	[switch]$Clean =							$false,
@@ -106,7 +110,8 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentL
 if ($Help -or (-not ($All -or $Clean -or
 										($UVVM -or			($UVVM_Utilities -or $UVVM_VVC_Framework)) -or
 										($UVVM_VIP -or	($UVVM_VIP_Avalon_MM -or $UVVM_VIP_AXI_Lite -or $UVVM_VIP_AXI_Stream -or $UVVM_VIP_GPIO -or $UVVM_VIP_I2C -or
-										 $UVVM_VIP_SBI -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))		)))
+										 $UVVM_VIP_SBI -or $UVVM_VIP_SPI -or $UVVM_VIP_UART -or
+										 $UVVM_VIP_CLOCK_GENERATOR -or $UVVM_VIP_SCOREBOARD))		)))
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
@@ -128,6 +133,8 @@ if ($UVVM_VIP)
 	$UVVM_VIP_SBI =					$true
 	$UVVM_VIP_SPI =					$true
 	$UVVM_VIP_UART =				$true
+	$UVVM_VIP_CLOCK_GENERATOR = $true
+	$UVVM_VIP_SCOREBOARD =  $true
 }
 
 
