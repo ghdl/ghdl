@@ -490,13 +490,7 @@ package body Sem is
 
             --  GHDL: for a direct instantiation, follow rules of
             --  LRM 1.1.1.1 Generic and LRM 1.1.1.2 Ports.
-            if Flags.Vhdl_Std = Vhdl_87
-              or else Get_Kind (Inter_Parent) = Iir_Kind_Entity_Declaration
-            then
-               Miss := Missing_Port;
-            else
-               Miss := Missing_Allowed;
-            end if;
+            Miss := Missing_Port;
          when Iir_Kind_Binding_Indication =>
             --  LRM 5.2.1.2  Generic map and port map aspects
             Miss := Missing_Allowed;

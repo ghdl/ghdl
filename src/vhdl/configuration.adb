@@ -412,8 +412,8 @@ package body Configuration is
                end if;
                return True;
             end if;
-         when others =>
-            Error_Kind ("check_open_port", Port);
+         when Iir_Unknown_Mode =>
+            raise Internal_Error;
       end case;
       return False;
    end Check_Open_Port;

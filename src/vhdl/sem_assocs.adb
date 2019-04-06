@@ -2488,8 +2488,8 @@ package body Sem_Assocs is
       --  LRM93 1.1.1.2 / LRM08 6.5.6.3 Port clauses
       --  A port of mode IN may be unconnected or unassociated only if its
       --  declaration includes a default expression.
-      --  It is an error if a port of any mode other than IN is unconnected
-      --  or unassociated and its type is an unconstrained array type.
+      --  A port of any mode other than IN may be unconnected or unassociated
+      --  as long as its type is not an unconstrained array type.
 
       --  LRM08 6.5.6.2 Generic clauses
       --  It is an error if no such actual [instantiated package] is specified
@@ -2500,50 +2500,55 @@ package body Sem_Assocs is
       Pos := 0;
       while Inter /= Null_Iir loop
          if Inter_Matched (Pos) <= Open then
+            --  Interface is unassociated (none or open).
             case Get_Kind (Inter) is
                when Iir_Kinds_Interface_Object_Declaration =>
-                  if Get_Default_Value (Inter) = Null_Iir then
-                     case Missing is
-                        when Missing_Parameter
-                          | Missing_Generic =>
+                  case Missing is
+                     when Missing_Parameter
+                       | Missing_Generic =>
+                        if Get_Mode (Inter) /= Iir_In_Mode
+                          or else Get_Default_Value (Inter) = Null_Iir
+                        then
                            if Finish then
                               Error_Msg_Sem (+Loc, "no actual for %n", +Inter);
                            end if;
                            Match := Not_Compatible;
                            return;
-                        when Missing_Port =>
-                           case Get_Mode (Inter) is
-                              when Iir_In_Mode =>
-                                 --  No overloading for components/entities.
-                                 pragma Assert (Finish);
+                        end if;
+                     when Missing_Port =>
+                        case Get_Mode (Inter) is
+                           when Iir_In_Mode =>
+                              --  No overloading for components/entities.
+                              pragma Assert (Finish);
+                              if Get_Default_Value (Inter) = Null_Iir then
                                  Error_Msg_Sem
                                    (+Loc,
                                     "%n of mode IN must be connected", +Inter);
                                  Match := Not_Compatible;
                                  return;
-                              when Iir_Out_Mode
-                                | Iir_Linkage_Mode
-                                | Iir_Inout_Mode
-                                | Iir_Buffer_Mode =>
-                                 --  No overloading for components/entities.
-                                 pragma Assert (Finish);
-                                 if not Is_Fully_Constrained_Type
-                                   (Get_Type (Inter))
-                                 then
-                                    Error_Msg_Sem
-                                      (+Loc,
-                                       "unconstrained %n must be connected",
-                                       +Inter);
-                                    Match := Not_Compatible;
-                                    return;
-                                 end if;
-                              when Iir_Unknown_Mode =>
-                                 raise Internal_Error;
+                              end if;
+                           when Iir_Out_Mode
+                             | Iir_Linkage_Mode
+                             | Iir_Inout_Mode
+                             | Iir_Buffer_Mode =>
+                              --  No overloading for components/entities.
+                              pragma Assert (Finish);
+                              if not (Is_Fully_Constrained_Type
+                                        (Get_Type (Inter)))
+                              then
+                                 Error_Msg_Sem
+                                   (+Loc,
+                                    "unconstrained %n must be connected",
+                                    +Inter);
+                                 Match := Not_Compatible;
+                                 return;
+                              end if;
+                           when Iir_Unknown_Mode =>
+                              raise Internal_Error;
                            end case;
-                        when Missing_Allowed =>
-                           null;
-                     end case;
-                  end if;
+                     when Missing_Allowed =>
+                        null;
+                  end case;
                when Iir_Kind_Interface_Package_Declaration
                  | Iir_Kind_Interface_Function_Declaration
                  | Iir_Kind_Interface_Procedure_Declaration =>
