@@ -415,6 +415,11 @@ package body textio is
       deallocate (l);
     end if;
 
+    --  End of file is not expected.  The user should check endfile before
+    --  calling readline.
+    assert not endfile (f)
+      report "eof in std.textio.readline" severity failure;
+
     -- We read the input in 128-byte chunks.
     -- We keep reading until we reach a newline or there is no more input.
     -- The loop invariant is that old_l is allocated and contains the
