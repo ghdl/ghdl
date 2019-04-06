@@ -1031,6 +1031,9 @@ package body Sem_Expr is
                      Error_Kind ("sem_call_purity_check(2)", Subprg);
                end case;
             end;
+         when Iir_Kind_Interface_Procedure_Declaration =>
+            --  We have no idea about this procedure.
+            null;
          when others =>
             Error_Kind ("sem_call_purity_check", Callee);
       end case;
