@@ -2461,7 +2461,8 @@ package body Sem is
                   Keep := True;
                   if Emit_Warnings then
                      declare
-                        Callees : constant Iir_List := Get_Callees_List (El);
+                        Bod : constant Iir := Get_Subprogram_Body (El);
+                        Callees : constant Iir_List := Get_Callees_List (Bod);
                         pragma Assert (Callees /= Null_Iir_List);
                         Callee : constant Iir := Get_First_Element (Callees);
                      begin
