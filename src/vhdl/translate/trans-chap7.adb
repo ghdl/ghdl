@@ -3785,7 +3785,8 @@ package body Trans.Chap7 is
    function Bounds_Acc_To_Fat_Pointer (Ptr : O_Dnode; Acc_Type : Iir)
                                       return Mnode
    is
-      D_Type   : constant Iir := Get_Designated_Type (Acc_Type);
+      D_Type   : constant Iir :=
+        Get_Designated_Type (Get_Base_Type (Acc_Type));
       D_Info   : constant Type_Info_Acc := Get_Info (D_Type);
       Res : Mnode;
    begin
