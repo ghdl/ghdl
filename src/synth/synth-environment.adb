@@ -50,6 +50,7 @@ package body Synth.Environment is
                           Nbr => 0));
    end Push_Phi;
 
+   --  Get list of assignments for this current block.
    procedure Pop_Phi (Phi : out Phi_Type)
    is
       Cur_Phi : constant Phi_Id := Current_Phi;
@@ -74,6 +75,7 @@ package body Synth.Environment is
       Asgn : Assign;
    begin
       Pop_Phi (Phi);
+
       Asgn := Phi.First;
       while Asgn /= No_Assign loop
          declare
@@ -230,6 +232,7 @@ package body Synth.Environment is
       end if;
    end Get_Last_Assigned_Value;
 
+   --  Add muxes for two lists T and F of assignments.
    procedure Merge_Phis (Ctxt : Builders.Context_Acc;
                          Sel : Net;
                          T, F : Phi_Type)

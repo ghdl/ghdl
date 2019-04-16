@@ -71,13 +71,6 @@ package body Synth.Inference is
    --  This is a memorizing element as there is a loop.  It is an asynchronous
    --  reset as Q is forced to '0' when RST is asserted.
 
-   type Mux_Info_Type is record
-      Mux : Instance;
-      Chain : Port_Nbr;
-   end record;
-
-   type Mux_Info_Arr is array (Natural range <>) of Mux_Info_Type;
-
    --  Find the longest chain of mux starting from VAL with a final input
    --  of PREV_VAL.  Such a chain means this is a memorising element.
    --  RES is the last mux in the chain, DIST the number of mux in the chain.
@@ -180,113 +173,139 @@ package body Synth.Inference is
          return Val;
       end if;
 
-      --  Create the array of mux till the last one.
-      --  Find the one with clock edge.
-      --  If none -> latch (not yet supported)
-      --  If found -> previous mux2 (if any) are either asynch set/reset or
-      --    enable.
       declare
-         Mux_Info : Mux_Info_Arr (1 .. Len);
+         Sel : constant Input := Get_Mux2_Sel (Last_Mux);
+         I0 : constant Input := Get_Mux2_I0 (Last_Mux);
+         I1 : constant Input := Get_Mux2_I1 (Last_Mux);
+         O : constant Net := Get_Output (Last_Mux, 0);
+         Data : Net;
+         Clk : Net;
+         Enable : Net;
+         Res : Net;
+         Sig : Instance;
+         Init : Net;
+         Init_Input : Input;
+         Rst : Net;
+         Rst_Val : Net;
       begin
-         --  Fill array.
-         declare
-            Mux : Instance;
-            O : Net;
-         begin
-            --  Start with the last mux.
-            Mux := Last_Mux;
-            for I in reverse Mux_Info'Range loop
-               --  The chain of mux consists only of muxes!
-               pragma Assert (Get_Id (Mux) = Id_Mux2);
+         Extract_Clock (Get_Driver (Sel), Clk, Enable);
+         if Clk = No_Net then
+            --  No clock -> latch
+            raise Internal_Error;
+         else
+            --  Create and return the DFF.
+            Disconnect (Sel);
+            if Get_Driver (I0) /= Prev_Val then
+               --  There must be no 'else' part for clock expression.
+               raise Internal_Error;
+            end if;
+            --  Don't try to free driver of I0 as this is Prev_Val.
+            Disconnect (I0);
+            Data := Get_Driver (I1);
+            --  Don't try to free driver of I1 as it is reconnected.
+            Disconnect (I1);
+            if Enable /= No_Net then
+               Data := Build_Mux2 (Ctxt, Enable, Prev_Val, Data);
+            end if;
 
-               Mux_Info (I) := (Mux => Mux, Chain => 0);
-               exit when I = Mux_Info'First;
+            --  If the signal declaration has an initial value, move it
+            --  to the dff.
+            Sig := Get_Parent (Prev_Val);
+            if Get_Id (Get_Module (Sig)) = Id_Isignal then
+               Init_Input := Get_Input (Sig, 1);
+               Init := Get_Driver (Init_Input);
+               Disconnect (Init_Input);
+            else
+               Init := No_Net;
+            end if;
 
-               --  The next mux is connected to the output.
-               O := Get_Output (Mux, 0);
-               pragma Assert (Has_One_Connection (O));
-               Mux := Get_Parent (Get_First_Sink (O));
-            end loop;
-         end;
 
-         --  Classify.
-         for I in Mux_Info'Range loop
+            Rst_Val := No_Net;
+            Rst := No_Net;
+
             declare
-               Mi : Mux_Info_Type renames Mux_Info (I);
-               Sel : constant Input := Get_Mux2_Sel (Mi.Mux);
-               I0 : constant Input := Get_Mux2_I0 (Mi.Mux);
-               I1 : constant Input := Get_Mux2_I1 (Mi.Mux);
-               Data : Net;
-               Clk : Net;
-               Enable : Net;
-               Res : Net;
-               Sig : Instance;
-               Init : Net;
-               Init_Input : Input;
+               Mux : Instance;
+               Sel : Net;
+               Last_Out : Net;
+               Mux_Rst : Net;
+               Mux_Rst_Val : Net;
             begin
-               Extract_Clock (Get_Driver (Sel), Clk, Enable);
-               if Clk = No_Net then
-                  --  Enable or async reset/set.
-                  if Get_Driver (I0) = Prev_Val then
-                     --  Enable
+               Last_Out := O;
+
+               while Is_Connected (Last_Out) loop
+                  if not Has_One_Connection (Last_Out) then
+                     --  TODO.
                      raise Internal_Error;
-                  elsif Get_Driver (I1) = Prev_Val then
-                     --  /Enable
+                  end if;
+
+                  Mux := Get_Parent (Get_First_Sink (Last_Out));
+                  if Get_Id (Mux) /= Id_Mux2 then
                      raise Internal_Error;
+                  end if;
+
+                  Sel := Get_Driver (Get_Mux2_Sel (Mux));
+                  if Get_Driver (Get_Mux2_I0 (Mux)) = O then
+                     Mux_Rst_Val := Get_Driver (Get_Mux2_I1 (Mux));
+                     Mux_Rst := Sel;
+                  elsif Get_Driver (Get_Mux2_I1 (Mux)) = O then
+                     Mux_Rst_Val := Get_Driver (Get_Mux2_I0 (Mux));
+                     Mux_Rst := Build_Monadic (Ctxt, Id_Not, Sel);
                   else
-                     --  Set or reset.
-                     --  The value must be a constant.
+                     --  Cannot happen.
                      raise Internal_Error;
                   end if;
-               else
-                  --  Create and return the DFF.
-                  Disconnect (Sel);
-                  if Get_Driver (I0) /= Prev_Val then
-                     --  There must be no 'else' part for clock expression.
-                     raise Internal_Error;
-                  end if;
-                  --  Don't try to free driver of I0 as this is Prev_Val.
-                  Disconnect (I0);
-                  Data := Get_Driver (I1);
-                  --  Don't try to free driver of I1 as it is reconnected.
-                  Disconnect (I1);
-                  if Enable /= No_Net then
-                     Data := Build_Mux2 (Ctxt, Enable, Prev_Val, Data);
-                  end if;
 
-                  --  If the signal declaration has an initial value, move it
-                  --  to the dff.
-                  Sig := Get_Parent (Prev_Val);
-                  if Get_Id (Get_Module (Sig)) = Id_Isignal then
-                     Init_Input := Get_Input (Sig, 1);
-                     Init := Get_Driver (Init_Input);
-                     Disconnect (Init_Input);
+                  Last_Out := Get_Output (Mux, 0);
+
+                  if Rst = No_Net then
+                     --  Remove the last mux.
+                     Disconnect (Get_Mux2_I0 (Mux));
+                     Disconnect (Get_Mux2_I1 (Mux));
+                     Disconnect (Get_Mux2_Sel (Mux));
+
+                     Redirect_Inputs (Last_Out, Mux_Rst_Val);
+                     Free_Instance (Mux);
+
+                     Rst := Mux_Rst;
+                     Rst_Val := Mux_Rst_Val;
                   else
-                     Init := No_Net;
+                     Rst := Build_Dyadic (Ctxt, Id_Or, Mux_Rst, Rst);
+                     Rst_Val := Last_Out;
                   end if;
-
-                  if Init /= No_Net then
-                     Res := Build_Idff (Ctxt, Clk, D => Data, Init => Init);
-                  else
-                     Res := Build_Dff (Ctxt, Clk, D => Data);
-                  end if;
-
-                  --  The output of the mux may be read later in the process,
-                  --  like this:
-                  --    if clk'event and clk = '1' then
-                  --       d := i + 1;
-                  --    end if;
-                  --    d1 := d + 1;
-                  --  So connections to the mux output are redirected to dff
-                  --  output.
-                  Redirect_Inputs (Get_Output (Mi.Mux, 0), Res);
-
-                  Free_Instance (Mi.Mux);
-                  return Res;
-               end if;
+               end loop;
             end;
-         end loop;
+
+            if Rst = No_Net then
+               pragma Assert (Rst_Val = No_Net);
+               if Init /= No_Net then
+                  Res := Build_Idff (Ctxt, Clk, D => Data, Init => Init);
+               else
+                  Res := Build_Dff (Ctxt, Clk, D => Data);
+               end if;
+            else
+               if Init /= No_Net then
+                  Res := Build_Iadff (Ctxt, Clk, D => Data,
+                                      Rst => Rst, Rst_Val => Rst_Val,
+                                      Init => Init);
+               else
+                  Res := Build_Adff (Ctxt, Clk, D => Data,
+                                     Rst => Rst, Rst_Val => Rst_Val);
+               end if;
+            end if;
+
+            --  The output of the mux may be read later in the process,
+            --  like this:
+            --    if clk'event and clk = '1' then
+            --       d := i + 1;
+            --    end if;
+            --    d1 := d + 1;
+            --  So connections to the mux output are redirected to dff
+            --  output.
+            Redirect_Inputs (O, Res);
+
+            Free_Instance (Last_Mux);
+            return Res;
+         end if;
       end;
-      raise Internal_Error;
    end Infere;
 end Synth.Inference;
