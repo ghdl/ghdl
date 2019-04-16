@@ -119,6 +119,23 @@ package body Synth.Expr is
       end case;
    end Bit_Extract;
 
+   function Vec_Extract (Val : Value_Acc; Off : Uns32; Rng : Value_Range_Acc)
+                        return Value_Acc is
+   begin
+      case Val.Kind is
+         when Value_Lit =>
+            --  TODO.
+            raise Internal_Error;
+         when Value_Net
+           | Value_Wire =>
+            return Create_Value_Net
+              (Build_Slice (Build_Context, Get_Net (Val), Off, Rng.Len),
+               Rng);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Vec_Extract;
+
    function Synth_Uresize (Val : Value_Acc; W : Width) return Net
    is
       N : constant Net := Get_Net (Val);
@@ -502,6 +519,7 @@ package body Synth.Expr is
          return null;
       end if;
 
+      --  The offset is from the LSB (bit 0).  Bit 0 is the rightmost one.
       case Rng.Dir is
          when Iir_To =>
             return Bit_Extract (Pfx, Uns32 (Rng.Right - Idx));
@@ -509,6 +527,73 @@ package body Synth.Expr is
             return Bit_Extract (Pfx, Uns32 (Idx - Rng.Right));
       end case;
    end Synth_Indexed_Name;
+
+   function Synth_Slice_Name (Syn_Inst : Synth_Instance_Acc; Name : Iir)
+                              return Value_Acc
+   is
+      Pfx : constant Value_Acc :=
+        Synth_Expression (Syn_Inst, Get_Prefix (Name));
+      Expr : constant Iir := Get_Suffix (Name);
+      Res_Rng : Value_Range_Acc;
+      Left, Right : Value_Acc;
+      Dir : Iir_Direction;
+      Rng : Value_Range_Acc;
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kind_Range_Expression =>
+            Left := Synth_Expression (Syn_Inst, Get_Left_Limit (Expr));
+            Right := Synth_Expression (Syn_Inst, Get_Right_Limit (Expr));
+            Dir := Get_Direction (Expr);
+         when others =>
+            Error_Msg_Synth (+Expr, "only range supported for slices");
+      end case;
+
+      if Left.Kind /= Value_Lit
+        or else Left.Lit.Kind /= Iir_Value_I64
+      then
+         Error_Msg_Synth (+Name, "non constant integer left not supported");
+         return null;
+      end if;
+
+      if Right.Kind /= Value_Lit
+        or else Right.Lit.Kind /= Iir_Value_I64
+      then
+         Error_Msg_Synth (+Name, "non constant integer right not supported");
+         return null;
+      end if;
+
+      Rng := Extract_Range (Pfx);
+      if Rng.Dir /= Dir then
+         Error_Msg_Synth (+Name, "direction mismatch in slice");
+         return null;
+      end if;
+
+      if not In_Range (Rng, Int32 (Left.Lit.I64))
+        or else not In_Range (Rng, Int32 (Right.Lit.I64))
+      then
+         Error_Msg_Synth (+Name, "index not within bounds");
+         return null;
+      end if;
+
+      case Rng.Dir is
+         when Iir_To =>
+            Res_Rng := Create_Range_Value
+              (Value_Range'(Dir => Iir_To,
+                            Len => Width (Right.Lit.I64 - Left.Lit.I64 + 1),
+                            Left => Int32 (Left.Lit.I64),
+                            Right => Int32 (Right.Lit.I64)));
+            return Vec_Extract
+              (Pfx, Uns32 (Rng.Right - Res_Rng.Right), Res_Rng);
+         when Iir_Downto =>
+            Res_Rng := Create_Range_Value
+              (Value_Range'(Dir => Iir_Downto,
+                            Len => Width (Left.Lit.I64 - Right.Lit.I64 + 1),
+                            Left => Int32 (Left.Lit.I64),
+                            Right => Int32 (Right.Lit.I64)));
+            return Vec_Extract
+              (Pfx, Uns32 (Res_Rng.Right - Rng.Right), Res_Rng);
+      end case;
+   end Synth_Slice_Name;
 
    --  Match: clk_signal_name'event
    --  and return clk_signal_name.
@@ -700,6 +785,8 @@ package body Synth.Expr is
             return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Indexed_Name =>
             return Synth_Indexed_Name (Syn_Inst, Expr);
+         when Iir_Kind_Slice_Name =>
+            return Synth_Slice_Name (Syn_Inst, Expr);
          when Iir_Kind_Character_Literal
            | Iir_Kind_Integer_Literal
            | Iir_Kind_String_Literal8 =>

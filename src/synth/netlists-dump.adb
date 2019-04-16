@@ -465,6 +465,7 @@ package body Netlists.Dump is
 
    procedure Disp_Module (M : Module; Indent : Natural := 0) is
    begin
+      --  Name and ports.
       Dump_Module_Header (M, Indent);
 
       --  Submodules.
