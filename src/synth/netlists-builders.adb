@@ -247,6 +247,28 @@ package body Netlists.Builders is
                                    1 => Create_Input ("d"),
                                    2 => Create_Input ("init")),
                      Outputs);
+
+
+      Ctxt.M_Adff := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("adff")),
+         Id_Adff, 4, 1, 0);
+      Outputs := (0 => Create_Output ("q"));
+      Set_Port_Desc (Ctxt.M_Adff, (0 => Create_Input ("clk", 1),
+                                   1 => Create_Input ("d"),
+                                   2 => Create_Input ("rst", 1),
+                                   3 => Create_Input ("rst_val")),
+                     Outputs);
+
+      Ctxt.M_Iadff := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("iadff")),
+         Id_Iadff, 5, 1, 0);
+      Outputs := (0 => Create_Output ("q"));
+      Set_Port_Desc (Ctxt.M_Iadff, (0 => Create_Input ("clk", 1),
+                                    1 => Create_Input ("d"),
+                                    2 => Create_Input ("rst"),
+                                    3 => Create_Input ("rst_val"),
+                                    4 => Create_Input ("init")),
+                     Outputs);
    end Create_Dff_Modules;
 
    function Build_Builders (Design : Module) return Context_Acc
@@ -628,6 +650,49 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 2), Init);
       return O;
    end Build_Idff;
+
+   function Build_Adff (Ctxt : Context_Acc;
+                        Clk : Net;
+                        D : Net;
+                        Rst : Net; Rst_Val : Net) return Net
+   is
+      Wd : constant Width := Get_Width (D);
+      pragma Assert (Wd /= No_Width);
+      pragma Assert (Get_Width (Clk) = 1);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Adff);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Connect (Get_Input (Inst, 0), Clk);
+      Connect (Get_Input (Inst, 1), D);
+      Connect (Get_Input (Inst, 2), Rst);
+      Connect (Get_Input (Inst, 3), Rst_Val);
+      return O;
+   end Build_Adff;
+
+   function Build_Iadff (Ctxt : Context_Acc;
+                         Clk : Net;
+                         D : Net;
+                         Rst : Net; Rst_Val : Net; Init : Net) return Net
+   is
+      Wd : constant Width := Get_Width (D);
+      pragma Assert (Wd /= No_Width);
+      pragma Assert (Get_Width (Clk) = 1);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Iadff);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Connect (Get_Input (Inst, 0), Clk);
+      Connect (Get_Input (Inst, 1), D);
+      Connect (Get_Input (Inst, 2), Rst);
+      Connect (Get_Input (Inst, 3), Rst_Val);
+      Connect (Get_Input (Inst, 4), Init);
+      return O;
+   end Build_Iadff;
 
    function Build_Slice
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net
