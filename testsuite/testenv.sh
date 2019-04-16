@@ -101,6 +101,12 @@ elab_simulate_failure ()
      $@ --expect-failure
 }
 
+synth()
+{
+    echo "Synthesis of $@"
+    "$GHDL" --synth $@
+}
+
 # Check if a feature is present
 ghdl_has_feature ()
 {
