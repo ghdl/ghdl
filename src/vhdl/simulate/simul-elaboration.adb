@@ -37,7 +37,7 @@ package body Simul.Elaboration is
 
    procedure Elaborate_Dependence (Design_Unit: Iir_Design_Unit);
 
-   procedure Elaborate_Statement_Part
+   procedure Elaborate_Concurrent_Statement_Part
      (Instance : Block_Instance_Acc; Stmt_Chain: Iir);
    procedure Elaborate_Type_Definition
      (Instance : Block_Instance_Acc; Def : Iir);
@@ -332,11 +332,10 @@ package body Simul.Elaboration is
    --  at the origin of the instantiation (it is generally the same as OBJ,
    --  except for component where STMT is the component instantation
    --  statement).
-   function Create_Block_Instance
-     (Father : Block_Instance_Acc;
-      Obj : Iir;
-      Stmt : Iir)
-      return Block_Instance_Acc
+   function Create_Block_Instance (Father : Block_Instance_Acc;
+                                   Obj : Iir;
+                                   Stmt : Iir)
+                                  return Block_Instance_Acc
    is
       Obj_Info : constant Sim_Info_Acc := Get_Info (Obj);
       Res : Block_Instance_Acc;
@@ -363,6 +362,7 @@ package body Simul.Elaboration is
          Result => null);
 
       if Father /= null then
+         --  Prepend the instance to the chain of children.
          case Obj_Info.Kind is
             when Kind_Block
               | Kind_Process =>
@@ -1490,7 +1490,7 @@ package body Simul.Elaboration is
       Elaborate_Declarative_Part (Ninstance,
                                   Get_Declaration_Chain (Block));
       --  [...] followed by the elaboration of the block statement part.
-      Elaborate_Statement_Part
+      Elaborate_Concurrent_Statement_Part
         (Ninstance, Get_Concurrent_Statement_Chain (Block));
       --  Elaboration of a block statement may occur under the control of a
       --  configuration declaration.
@@ -1697,7 +1697,7 @@ package body Simul.Elaboration is
    begin
       Elaborate_Declarative_Part
         (Instance, Get_Declaration_Chain (Bod));
-      Elaborate_Statement_Part
+      Elaborate_Concurrent_Statement_Part
         (Instance, Get_Concurrent_Statement_Chain (Bod));
    end Elaborate_Generate_Statement_Body;
 
@@ -1853,7 +1853,7 @@ package body Simul.Elaboration is
    end Elaborate_Psl_Directive;
 
    --  LRM93 §12.4  Elaboration of a Statement Part.
-   procedure Elaborate_Statement_Part
+   procedure Elaborate_Concurrent_Statement_Part
      (Instance : Block_Instance_Acc; Stmt_Chain: Iir)
    is
       Stmt : Iir;
@@ -1907,7 +1907,7 @@ package body Simul.Elaboration is
                null;
 
             when others =>
-               Error_Kind ("elaborate_statement_part", Stmt);
+               Error_Kind ("elaborate_concurrent_statement_part", Stmt);
          end case;
          Stmt := Get_Chain (Stmt);
       end loop;
@@ -1927,7 +1927,7 @@ package body Simul.Elaboration is
          end loop;
          Instance.Children := Last;
       end;
-   end Elaborate_Statement_Part;
+   end Elaborate_Concurrent_Statement_Part;
 
    --  Compute the default value for declaration DECL, using either
    --  DEFAULT_VALUE if not null, or the implicit default value for DECL.
@@ -2232,13 +2232,12 @@ package body Simul.Elaboration is
 
       Item : Iir;
    begin
-      --  Gather children and reverse the list.
+      --  Gather children.
       declare
-         Child, Prev, First : Block_Instance_Acc;
+         Child : Block_Instance_Acc;
          Info : Sim_Info_Acc;
       begin
          Child := Instance.Children;
-         First := null;
          while Child /= null loop
             Info := Get_Info (Child.Label);
             if Info.Kind = Kind_Block then
@@ -2246,15 +2245,8 @@ package body Simul.Elaboration is
                pragma Assert (Sub_Instances (Info.Inst_Slot) = null);
                Sub_Instances (Info.Inst_Slot) := Child;
             end if;
-
-            --  Reverse
-            Prev := Child.Brother;
-            Child.Brother := First;
-            First := Child;
-
-            Child := Prev;
+            Child := Child.Brother;
          end loop;
-         Instance.Children := First;
       end;
 
       --  Associate configuration items with subinstance.  Gather items for
@@ -2854,9 +2846,9 @@ package body Simul.Elaboration is
       Elaborate_Declarative_Part
         (Instance, Get_Declaration_Chain (Entity));
       Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Arch));
-      Elaborate_Statement_Part
+      Elaborate_Concurrent_Statement_Part
         (Instance, Get_Concurrent_Statement_Chain (Entity));
-      Elaborate_Statement_Part
+      Elaborate_Concurrent_Statement_Part
         (Instance, Get_Concurrent_Statement_Chain (Arch));
 
       --  Configure the unit.  This will create sub units.
