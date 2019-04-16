@@ -71,6 +71,23 @@ package body Synth.Inference is
    --  This is a memorizing element as there is a loop.  It is an asynchronous
    --  reset as Q is forced to '0' when RST is asserted.
 
+   function Has_Clock (N : Net) return Boolean
+   is
+      Inst : constant Instance := Get_Net_Parent (N);
+   begin
+      case Get_Id (Inst) is
+         when Edge_Module_Id =>
+            return True;
+         when Id_And =>
+            --  Assume the condition is canonicalized, ie of the form:
+            --  CLK and EXPR.
+            --  FIXME: do it!
+            return Has_Clock (Get_Driver (Get_Input (Inst, 0)));
+         when others =>
+            return False;
+      end case;
+   end Has_Clock;
+
    --  Find the longest chain of mux starting from VAL with a final input
    --  of PREV_VAL.  Such a chain means this is a memorising element.
    --  RES is the last mux in the chain, DIST the number of mux in the chain.
@@ -84,31 +101,36 @@ package body Synth.Inference is
             Res0, Res1 : Instance;
             Dist0, Dist1 : Integer;
          begin
-            Find_Longest_Loop
-              (Get_Driver (Get_Mux2_I0 (Inst)), Prev_Val, Res0, Dist0);
-            Find_Longest_Loop
-              (Get_Driver (Get_Mux2_I1 (Inst)), Prev_Val, Res1, Dist1);
-            --  Input1 has an higher priority than input0 in case the selector
-            --  is a clock.
-            --  FIXME: improve algorithm.
-            if Dist1 > Dist0 then
-               Dist := Dist1 + 1;
-               if Dist1 > 0 then
-                  Res := Res1;
-               else
-                  Res := Inst;
-               end if;
-            elsif Dist0 >= 0 then
-               Dist := Dist0 + 1;
-               if Dist0 > 0 then
-                  Res := Res0;
-               else
-                  Res := Inst;
-               end if;
+            if Has_Clock (Get_Driver (Get_Mux2_Sel (Inst))) then
+               Res := Inst;
+               Dist := 1;
             else
-               pragma Assert (Dist1 < 0 and Dist0 < 0);
-               Res := No_Instance;
-               Dist := -1;
+               Find_Longest_Loop
+                 (Get_Driver (Get_Mux2_I0 (Inst)), Prev_Val, Res0, Dist0);
+               Find_Longest_Loop
+                 (Get_Driver (Get_Mux2_I1 (Inst)), Prev_Val, Res1, Dist1);
+               --  Input1 has an higher priority than input0 in case
+               --  the selector is a clock.
+               --  FIXME: improve algorithm.
+               if Dist1 > Dist0 then
+                  Dist := Dist1 + 1;
+                  if Dist1 > 0 then
+                     Res := Res1;
+                  else
+                     Res := Inst;
+                  end if;
+               elsif Dist0 >= 0 then
+                  Dist := Dist0 + 1;
+                  if Dist0 > 0 then
+                     Res := Res0;
+                  else
+                     Res := Inst;
+                  end if;
+               else
+                  pragma Assert (Dist1 < 0 and Dist0 < 0);
+                  Res := No_Instance;
+                  Dist := -1;
+               end if;
             end if;
          end;
       elsif Val = Prev_Val then
