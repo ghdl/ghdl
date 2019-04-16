@@ -172,6 +172,11 @@ package body Synth.Expr is
                      Set_Elem (Pos);
                   end if;
                   Pos := Pos + 1;
+               when Iir_Kind_Choice_By_Others =>
+                  while Pos < Bound.Length loop
+                     Set_Elem (Pos);
+                     Pos := Pos + 1;
+                  end loop;
                when others =>
                   Error_Msg_Synth
                     (+Assoc, "unhandled association form");
