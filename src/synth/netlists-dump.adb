@@ -305,8 +305,6 @@ package body Netlists.Dump is
       end if;
    end Dump_Net_Name_And_Width;
 
-   Flag_Disp_Inline : constant Boolean := True;
-
    function Can_Inline (Inst : Instance) return Boolean is
    begin
       case Get_Id (Inst) is
@@ -409,6 +407,12 @@ package body Netlists.Dump is
       if With_Name then
          Put (' ');
          Dump_Name (Get_Name (Inst));
+      end if;
+
+      if True then
+         Put ('[');
+         Put_Trim (Instance'Image (Inst));
+         Put (']');
       end if;
 
       if Get_Nbr_Inputs (M) > 0 then

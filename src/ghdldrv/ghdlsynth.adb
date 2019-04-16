@@ -18,7 +18,7 @@
 
 with Ghdllocal; use Ghdllocal;
 with Ghdlcomp;
-with Ghdlmain;
+with Ghdlmain; use Ghdlmain;
 with Ghdlsimul;
 
 with Libraries;
@@ -32,11 +32,16 @@ with Netlists.Dump;
 
 package body Ghdlsynth is
    --  Command --synth
-   type Command_Synth is new Command_Lib with null record;
+   type Command_Synth is new Command_Lib with record
+      Disp_Inline : Boolean := True;
+   end record;
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Synth) return String;
-
+   procedure Decode_Option (Cmd : in out Command_Synth;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res);
    procedure Perform_Action (Cmd : Command_Synth;
                              Args : Argument_List);
 
@@ -54,6 +59,19 @@ package body Ghdlsynth is
    begin
       return "--synth [FILES... -e] UNIT [ARCH]   Synthesis from UNIT";
    end Get_Short_Help;
+
+   procedure Decode_Option (Cmd : in out Command_Synth;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res) is
+   begin
+      if Option = "--disp-noinline" then
+         Cmd.Disp_Inline := False;
+         Res := Option_Ok;
+      else
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
 
    function Ghdl_Synth (Args : Argument_List) return Netlists.Module
    is
@@ -104,10 +122,10 @@ package body Ghdlsynth is
    procedure Perform_Action (Cmd : Command_Synth;
                              Args : Argument_List)
    is
-      pragma Unreferenced (Cmd);
       Res : Netlists.Module;
    begin
       Res := Ghdl_Synth (Args);
+      Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
       Netlists.Dump.Disp_Module (Res);
    end Perform_Action;
 

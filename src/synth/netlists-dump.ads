@@ -19,6 +19,9 @@
 --  MA 02110-1301, USA.
 
 package Netlists.Dump is
+   --  If set, compact print.
+   Flag_Disp_Inline : Boolean := True;
+
    procedure Dump_Net_Name (N : Net; With_Id : Boolean := False);
    procedure Disp_Driver (Drv : Net);
    procedure Disp_Instance (Inst : Instance; With_Name : Boolean);
