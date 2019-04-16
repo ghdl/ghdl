@@ -815,6 +815,10 @@ package body Synth.Stmts is
             when Iir_Kind_Sensitized_Process_Statement =>
                Synth_Process_Statement (Syn_Inst, Sim_Child, Stmt);
                Sim_Child := Sim_Child.Brother;
+            when Iir_Kind_Component_Instantiation_Statement =>
+               --  TODO.
+               null;
+               Sim_Child := Sim_Child.Brother;
             when others =>
                Error_Kind ("synth_statements", Stmt);
          end case;
