@@ -58,13 +58,29 @@ package body Synth.Expr is
       end case;
    end Get_Width;
 
+   function Is_Logic (Val : Value_Acc) return Boolean is
+   begin
+      if Val.Kind = Value_Lit then
+         case Val.Lit.Kind is
+            when Iir_Value_B1 =>
+               return True;
+            when Iir_Value_E8 =>
+               return Is_Bit_Type (Val.Lit_Type);
+            when others =>
+               return False;
+         end case;
+      else
+         return False;
+      end if;
+   end Is_Logic;
+
    procedure To_Logic (Lit : Iir_Value_Literal_Acc;
                        Val : out Uns32;
-                       Xz : out Uns32) is
+                       Zx  : out Uns32) is
    begin
       case Lit.Kind is
          when Iir_Value_B1 =>
-            Xz := 0;
+            Zx := 0;
             Val := Ghdl_B1'Pos (Lit.B1);
          when Iir_Value_E8 =>
             --  Std_logic.
@@ -72,20 +88,20 @@ package body Synth.Expr is
                when Ieee.Std_Logic_1164.Std_Logic_0_Pos
                  |  Ieee.Std_Logic_1164.Std_Logic_L_Pos =>
                   Val := 0;
-                  Xz := 0;
+                  Zx := 0;
                when Ieee.Std_Logic_1164.Std_Logic_1_Pos
                  |  Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
                   Val := 1;
-                  Xz := 0;
+                  Zx := 0;
                when Ieee.Std_Logic_1164.Std_Logic_U_Pos
                  |  Ieee.Std_Logic_1164.Std_Logic_X_Pos
                  |  Ieee.Std_Logic_1164.Std_Logic_D_Pos =>
-                  Val := 0;
-                  Xz := 1;
+                  Val := 1;
+                  Zx := 1;
                when Ieee.Std_Logic_1164.Std_Logic_Z_Pos
                  |  Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
-                  Val := 1;
-                  Xz := 1;
+                  Val := 0;
+                  Zx := 1;
                when others =>
                   --  Only 9 values.
                   raise Internal_Error;
@@ -218,12 +234,44 @@ package body Synth.Expr is
       Idx, New_Idx : Iir_Index32;
       Res : Value_Acc;
    begin
-      Len := Val.Arr.Len;
-
       --  Dynamically allocate ARR to handle large arrays.
-      Arr := new Net_Array (1 .. Len);
-      for I in Arr'Range loop
-         Arr (I) := Get_Net (Val.Arr.V (I));
+      Arr := new Net_Array (1 .. Val.Arr.Len);
+      Idx := 1;
+      Len := 0;
+      while Idx <= Val.Arr.Len loop
+         declare
+            W_Zx, B_Zx : Uns32;
+            W_Va, B_Va : Uns32;
+            Off : Natural;
+            E : Net;
+         begin
+            W_Zx := 0;
+            W_Va := 0;
+            Off := 0;
+            while Idx <= Val.Arr.Len
+              and then Off < 32
+              and then Is_Logic (Val.Arr.V (Idx))
+            loop
+               To_Logic (Val.Arr.V (Idx).Lit, B_Va, B_Zx);
+               W_Zx := W_Zx or Shift_Left (B_Zx, Off);
+               W_Va := W_Va or Shift_Left (B_Va, Off);
+               Off := Off + 1;
+               Idx := Idx + 1;
+            end loop;
+            if Off = 0 then
+               E := Get_Net (Val.Arr.V (Idx));
+            else
+               if W_Zx = 0 then
+                  E := Build_Const_UB32
+                    (Build_Context, W_Va, Uns32 (Off));
+               else
+                  E := Build_Const_UL32
+                    (Build_Context, W_Va, W_Zx, Uns32 (Off));
+               end if;
+            end if;
+            Len := Len + 1;
+            Arr (Len) := E;
+         end;
       end loop;
 
       while Len > 1 loop

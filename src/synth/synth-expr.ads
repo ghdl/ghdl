@@ -29,7 +29,7 @@ package Synth.Expr is
 
    procedure To_Logic (Lit : Iir_Value_Literal_Acc;
                        Val : out Uns32;
-                       Xz : out Uns32);
+                       Zx  : out Uns32);
 
    function Bit_Extract (Val : Value_Acc; Off : Uns32) return Value_Acc;
 
