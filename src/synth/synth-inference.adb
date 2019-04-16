@@ -24,6 +24,53 @@ with Netlists.Gates_Ports; use Netlists.Gates_Ports;
 with Types; use Types;
 
 package body Synth.Inference is
+   --  DFF inference.
+   --  As an initial implementation, the following 'styles' must be
+   --  supported:
+   --  Note: rising_edge is any clock_edge; '<=' can be ':='.
+   --
+   --  1)
+   --  if rising_edge(clk) then
+   --    r <= x;
+   --  end if;
+   --
+   --  2)
+   --  if rst = '0' then
+   --    r <= x;
+   --  elsif rising_edge (clk) then
+   --    r <= y;
+   --  end if;
+   --
+   --  3)
+   --  wait until rising_edge(clk);
+   --   r <= x;
+   --  Which is equivalent to 1) when the wait statement is the only and first
+   --  statement, as it can be converted to an if statement.
+   --
+   --  Netlist derived from 1)
+   --      +------+
+   --      |      |
+   --      |   /| |
+   --      |  |0+-+
+   --  Q --+--+ |
+   --         |1+--- D
+   --          \|
+   --         CLK
+   --  This is a memorizing element as there is a loop, the value is changed
+   --  to D on a rising edge of the clock.
+   --
+   --  Netlist derived from 2)
+   --      +------------+
+   --      |         /| |
+   --      |   /|   |0+-+
+   --      |  |0+---+ |
+   --  Q --+--+ |   |1+----- D
+   --         |1+-+  \|
+   --          \| | CLK
+   --         RST +--------- '0'
+   --  This is a memorizing element as there is a loop.  It is an asynchronous
+   --  reset as Q is forced to '0' when RST is asserted.
+
    type Mux_Info_Type is record
       Mux : Instance;
       Chain : Port_Nbr;
@@ -31,6 +78,9 @@ package body Synth.Inference is
 
    type Mux_Info_Arr is array (Natural range <>) of Mux_Info_Type;
 
+   --  Find the longest chain of mux starting from VAL with a final input
+   --  of PREV_VAL.  Such a chain means this is a memorising element.
+   --  RES is the last mux in the chain, DIST the number of mux in the chain.
    procedure Find_Longest_Loop
      (Val : Net; Prev_Val : Net; Res : out Instance; Dist : out Integer)
    is
@@ -143,11 +193,16 @@ package body Synth.Inference is
             Mux : Instance;
             O : Net;
          begin
+            --  Start with the last mux.
             Mux := Last_Mux;
             for I in reverse Mux_Info'Range loop
+               --  The chain of mux consists only of muxes!
                pragma Assert (Get_Id (Mux) = Id_Mux2);
+
                Mux_Info (I) := (Mux => Mux, Chain => 0);
                exit when I = Mux_Info'First;
+
+               --  The next mux is connected to the output.
                O := Get_Output (Mux, 0);
                pragma Assert (Has_One_Connection (O));
                Mux := Get_Parent (Get_First_Sink (O));
@@ -180,6 +235,7 @@ package body Synth.Inference is
                      raise Internal_Error;
                   else
                      --  Set or reset.
+                     --  The value must be a constant.
                      raise Internal_Error;
                   end if;
                else

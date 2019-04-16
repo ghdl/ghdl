@@ -56,14 +56,44 @@ package Netlists is
    function Get_Sname_Version (Name : Sname) return Uns32;
    function Get_Sname_Num (Name : Sname) return Uns32;
 
-   type Net is private;
-   No_Net : constant Net;
-
+   --  Module.
+   --
+   --  A module represent an uninstantiated netlist.  It is composed of nets
+   --  and instances.
+   --
+   --  From the outside, a module has ports (inputs and outputs), and
+   --  optionally parameters.  A module must have at least one port.  Both
+   --  ports and parameters have names.
+   --
+   --  From a module, you can get the list of ports, and the list of instances.
+   --  Instances have names.
+   --
+   --  In a module, there is a special instance (the self one) one that
+   --  represent the ports of the module itself, but with the opposite
+   --  direction.  Using this trick, there is no difference between ports of
+   --  instances and ports of the module itself.
+   --
+   --  In some cases, you also want to read an output port.  This is
+   --  not possible in this model, so just add an 'output' gate that
+   --  is a nop but provides a net.
+   --
+   --  Some modules are predefined and therefore have no inner description.
+   --  These are the well known elementary gates.
    type Module is private;
    No_Module : constant Module;
 
+   --  An instance is an instantiated module within a module.  It is
+   --  connected.
    type Instance is private;
    No_Instance : constant Instance;
+
+   --  A net is an output of a gate or a sub-circuit.  A net can be connected
+   --  to several inputs.
+   type Net is private;
+   No_Net : constant Net;
+
+   type Input is private;
+   No_Input : constant Input;
 
    --  Witdh of a net, ie number of bits.
    --  No_Width (value 0) is reserved to mean unknown.  This is allowed only to
@@ -139,18 +169,7 @@ package Netlists is
 
    type Param_Desc_Array is array (Param_Idx range <>) of Param_Desc;
 
-   --  Module.
-   --
-   --  A module represent an uninstantiated netlist.  It is composed of nets
-   --  and instances
-   --
-   --  From the outside, a module has ports (inputs and outputs), and
-   --  optionally parameters.  A module must have at least one port.
-   --
-   --  In a module, there is a special instance (the self one) one that
-   --  represent the ports of the module itself, but with the opposite
-   --  direction.  Using this trick, there is no difference between ports of
-   --  instances and ports of the module itself.
+   --  Subprograms for modules.
    function New_Design (Name : Sname) return Module;
    function New_User_Module (Parent : Module;
                              Name : Sname;
@@ -190,9 +209,6 @@ package Netlists is
    --  Use Modules to iterate.
    function Get_First_Sub_Module (M : Module) return Module;
    function Get_Next_Sub_Module (M : Module) return Module;
-
-   type Input is private;
-   No_Input : constant Input;
 
    --  Instance
    function New_Instance (Parent : Module; M : Module; Name : Sname)

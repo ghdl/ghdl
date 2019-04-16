@@ -189,6 +189,7 @@ package body Netlists.Dump is
 
    procedure Dump_Module_Header (M : Module; Indent : Natural := 0) is
    begin
+      --  Module id and name.
       Put_Indent (Indent);
       Put ("module (");
       Put_Trim (Module'Image (M));
@@ -196,6 +197,7 @@ package body Netlists.Dump is
       Dump_Name (Get_Name (M));
       New_Line;
 
+      --  Parameters.
       for P of Params_Desc (M) loop
          Put_Indent (Indent + 1);
          Put ("parameter");
@@ -211,6 +213,7 @@ package body Netlists.Dump is
          New_Line;
       end loop;
 
+      --  Ports.
       for P of Ports_Desc (M) loop
          Put_Indent (Indent + 1);
          case P.Dir is
@@ -460,6 +463,7 @@ package body Netlists.Dump is
    begin
       Dump_Module_Header (M, Indent);
 
+      --  Submodules.
       for S of Sub_Modules (M) loop
          if Get_Id (S) >= Id_User_None then
             Disp_Module (S, Indent + 1);
@@ -472,6 +476,7 @@ package body Netlists.Dump is
          end if;
       end loop;
 
+      --  Assignments to outputs.
       declare
          Self : constant Instance := Get_Self_Instance (M);
       begin
