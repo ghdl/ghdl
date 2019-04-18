@@ -56,6 +56,8 @@ package Netlists is
    function Get_Sname_Version (Name : Sname) return Uns32;
    function Get_Sname_Num (Name : Sname) return Uns32;
 
+   --  TODO: procedure to free an Sname.
+
    --  Module.
    --
    --  A module represent an uninstantiated netlist.  It is composed of nets
@@ -216,6 +218,7 @@ package Netlists is
 
    --  Mark INST as free, but keep it in the module.
    --  Use Remove_Free_Instances for a cleanup.
+   --  TODO: Destroy instance in Remove_Free_Instances.
    procedure Free_Instance (Inst : Instance);
 
    function Is_Self_Instance (I : Instance) return Boolean;
@@ -256,6 +259,7 @@ package Netlists is
 
    --  Reconnect all sinks of OLD to N.
    procedure Redirect_Inputs (Old : Net; N : Net);
+
 private
    type Sname is new Uns32 range 0 .. 2**30 - 1;
    No_Sname : constant Sname := 0;
@@ -328,8 +332,11 @@ private
       First_Output : Net;
    end record;
 
-   --  Procedures to rewrite the instances of a module: first extract the chain
-   --  of instances from module M, then add the ones to keep.
+   --  Procedures to rewrite the list of instances of a module:
+   --  * first extract the chain of instances from module M (and reset the
+   --    list of instances - so there is none),
+   --  * then add the ones to keep.
+   --  The list of instances is walked by using Get_Next_Instance.
    procedure Extract_All_Instances (M : Module; First_Instance : out Instance);
    procedure Append_Instance (M : Module; Inst : Instance);
 

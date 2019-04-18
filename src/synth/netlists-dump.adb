@@ -310,12 +310,14 @@ package body Netlists.Dump is
       case Get_Id (Inst) is
          when Id_Signal
            | Id_Output =>
+            --  Cut loops.
             return False;
          when others =>
-            return not Is_Self_Instance (Inst)
-              and then Get_Nbr_Outputs (Inst) = 1
-              and then Has_One_Connection (Get_Output (Inst, 0));
+            null;
       end case;
+      return not Is_Self_Instance (Inst)
+        and then Get_Nbr_Outputs (Inst) = 1
+        and then Has_One_Connection (Get_Output (Inst, 0));
    end Can_Inline;
 
    procedure Disp_Driver (Drv : Net)
@@ -490,7 +492,11 @@ package body Netlists.Dump is
                Put_Indent (Indent + 1);
                Dump_Name (Get_Output_Desc (M, Get_Port_Idx (I)).Name);
                Put (" := ");
-               Disp_Net_Name (Get_Driver (I));
+               if False then
+                  Disp_Driver (Get_Driver (I));
+               else
+                  Disp_Net_Name (Get_Driver (I));
+               end if;
                New_Line;
             end loop;
          end if;
