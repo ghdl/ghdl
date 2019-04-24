@@ -1,4 +1,4 @@
-{
+ANY {
   global:
 vpi_chk_error;
 vpi_control;
