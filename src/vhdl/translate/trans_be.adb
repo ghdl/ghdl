@@ -37,7 +37,7 @@ package body Trans_Be is
          when others =>
             Error_Kind ("sem_foreign", Decl);
       end case;
-      --  Let is generate error messages.
+      --  Let it generate error messages.
       Fi := Translate_Foreign_Id (Decl);
    end Sem_Foreign;
 
