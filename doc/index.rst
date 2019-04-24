@@ -21,6 +21,9 @@ LRM) is a plus.
    News
    ****
 
+   03.03.2019 - GHDL v0.36 was released.
+   =========================================
+
    23.02.2019 - GHDL v0.36-rc1 was released.
    =========================================
 
@@ -49,6 +52,8 @@ LRM) is a plus.
    ====================================
 
 .. only:: latex
+
+   .. rubric:: 03.03.2019 - GHDL v0.36 was released.
 
    .. rubric:: 23.02.2019 - GHDL v0.36-rc1 was released.
 
@@ -87,6 +92,7 @@ LRM) is a plus.
    using/QuickStartGuide
    using/InvokingGHDL
    using/Simulation
+   using/Foreign
 
 .. raw:: latex
 

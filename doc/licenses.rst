@@ -1,4 +1,3 @@
-.. include:: shields.inc
 .. _INTRO:Copyrights:
 
 Copyrights | Licenses
@@ -67,6 +66,12 @@ Lehmann, Patrick           Windows compile scripts, vendor library pre-compile s
 Martinez-Corral, Unai      Docker builds, Travis-CI & Docker, adapt/fix RTD theme
 van Rantwijk, Joris        Debian packaging
 =========================  ============================================================
+
+.. only:: html
+
+   .. exec::
+      from helpers import createShields
+      createShields('shields')
 
 Only those who made substantial contributions are shown in the table above, but many others contributed with minor patches. You can find a list at |SHIELD:contributors|
 

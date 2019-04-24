@@ -1,4 +1,9 @@
-.. include:: shields.inc
+.. only:: html
+
+   .. exec::
+      from helpers import createShields
+      createShields('shields')
+
 .. _INTRO:Contributing:
 
 Contributing
