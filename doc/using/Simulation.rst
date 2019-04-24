@@ -14,11 +14,10 @@ invoking a program. Contrary to most programming languages, there is no
 standard method in VHDL to obtain the arguments or to set the exit
 status.
 
-In GHDL, it is impossible to pass parameters to your design. A later version
-could do it through the generic interfaces of the top entity.
-
-However, the GHDL runtime behaviour can be modified with some options; for
-example, it is possible to stop simulation after a certain time.
+However, the GHDL runtime behaviour can be modified with some options. For
+example, it is possible to pass parameters to your design through the generic
+interfaces of the top entity. It is also possible to stop simulation after a
+certain time.
 
 The exit status of the simulation is ``EXIT_SUCCESS`` (0) if the
 simulation completes, or ``EXIT_FAILURE`` (1) in case of error
@@ -26,7 +25,15 @@ simulation completes, or ``EXIT_FAILURE`` (1) in case of error
 
 Here is the list of the most useful options. Some debugging options are
 also available, but not described here. The :option:`--help` option lists
-all options available, including the debugging one.
+all options available, including the debugging ones.
+
+.. option:: -gGENERIC=VALUE
+
+  Set value `VALUE` to generic with name `GENERIC`.
+
+  .. WARNING::
+     This is currently a run option; but in the future it will be deprecated to
+     become an elaboration option only.
 
 .. option:: --assert-level<=LEVEL>
 

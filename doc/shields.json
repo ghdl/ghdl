@@ -39,7 +39,7 @@
     "src":    "badge/new-feature--request-yellowgreen.svg?logo=github",
     "target": "gh:ghdl/ghdl/issues/new?template=feature_request.md",
     "alt":    "Open new feature request at GitHub" },
-  "lissues-open": {
+  "issues-open": {
     "src":    "github/issues/ghdl/ghdl.svg?logo=github",
     "target": "gh:ghdl/ghdl/issues",
     "alt":    "Open issues" },
