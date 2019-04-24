@@ -42,23 +42,23 @@ vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93
 vhdl.libs.v08: std.v08 ieee.v08
 endif
 
-STD_SRCS := std/textio.vhdl std/textio_body.vhdl
+STD_SRCS := std/textio.vhdl std/textio-body.vhdl
 SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
   synopsys/std_logic_unsigned.vhdl \
   synopsys/std_logic_signed.vhdl
 SYNOPSYS_V_BSRCS := synopsys/std_logic_misc.vhdl \
   synopsys/std_logic_misc-body.vhdl
 SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl
-MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
+MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith-body.vhdl
 
 ifeq ($(enable_openieee),false)
-IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
+IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164-body.vhdl \
   ieee/numeric_bit.vhdl ieee/numeric_bit-body.vhdl \
   ieee/numeric_std.vhdl ieee/numeric_std-body.vhdl
 MATH_SRCS := ieee/math_real.vhdl ieee/math_real-body.vhdl \
   ieee/math_complex.vhdl ieee/math_complex-body.vhdl
-VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing_body.vhdl \
-  vital95/vital_primitives.vhdl vital95/vital_primitives_body.vhdl
+VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing-body.vhdl \
+  vital95/vital_primitives.vhdl vital95/vital_primitives-body.vhdl
 VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
   vital2000/prmtvs_p.vhdl vital2000/prmtvs_b.vhdl \
   vital2000/memory_p.vhdl vital2000/memory_b.vhdl
@@ -93,7 +93,7 @@ ANALYZE_DEP=$(GHDL)
 
 STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)
 STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
-STD08_BSRCS := $(STD_SRCS:.vhdl=.v08) std/env.vhdl std/env_body.vhdl
+STD08_BSRCS := $(STD_SRCS:.vhdl=.v08) std/env.vhdl std/env-body.vhdl
 IEEE87_BSRCS := $(IEEE_SRCS:.vhdl=.v87)
 IEEE93_BSRCS := $(IEEE_SRCS:.vhdl=.v93) $(MATH_SRCS)
 SYNOPSYS87_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS)

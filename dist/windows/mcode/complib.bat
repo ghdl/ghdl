@@ -10,18 +10,18 @@ set LIBSRC=%REL%\..\..\libraries
 ::
 :: library sources
 ::
-set STD_SRCS=       textio textio_body
-set IEEE_SRCS=      std_logic_1164 std_logic_1164_body numeric_std numeric_std-body numeric_bit numeric_bit-body
+set STD_SRCS=       textio textio-body
+set IEEE_SRCS=      std_logic_1164 std_logic_1164-body numeric_std numeric_std-body numeric_bit numeric_bit-body
 set MATH_SRCS=      math_real math_real-body math_complex math_complex-body
 
-set STD08_SRCS=     textio textio_body env env_body
+set STD08_SRCS=     textio textio-body env env-body
 set IEEE08_SRCS=    std_logic_1164 std_logic_1164-body std_logic_textio math_real math_real-body math_complex math_complex-body numeric_bit numeric_bit-body numeric_bit_unsigned numeric_bit_unsigned-body numeric_std numeric_std-body numeric_std_unsigned numeric_std_unsigned-body fixed_float_types fixed_generic_pkg fixed_generic_pkg-body fixed_pkg float_generic_pkg float_generic_pkg-body float_pkg ieee_bit_context ieee_std_context
 
-set VITAL95_SRCS=   vital_timing vital_timing_body vital_primitives vital_primitives_body
+set VITAL95_SRCS=   vital_timing vital_timing-body vital_primitives vital_primitives-body
 set VITAL2000_SRCS= timing_p timing_b prmtvs_p prmtvs_b memory_p memory_b
 
 set SYNOPSYS_SRCS=  std_logic_arith std_logic_textio std_logic_unsigned std_logic_signed std_logic_misc std_logic_misc-body
-set MENTOR_SRCS=    std_logic_arith std_logic_arith_body
+set MENTOR_SRCS=    std_logic_arith std_logic_arith-body
 
 
 mkdir lib
