@@ -29,9 +29,9 @@ while getopts ":b:p:cg" opt; do
     p) PKG_NAME=$OPTARG;;
     g) ISGPL=true;;
     \?) printf "$ANSI_RED[GHDL - build] Invalid option: -$OPTARG $ANSI_NOCOLOR\n" >&2
-	exit 1 ;;
+        exit 1 ;;
     :)  printf "$ANSI_RED[GHDL - build] Option -$OPTARG requires an argument. $ANSI_NOCOLOR\n" >&2
-	exit 1 ;;
+        exit 1 ;;
   esac
 done
 
@@ -86,45 +86,45 @@ case "$BLD" in
         travis_finish "configure_gcc"
     ;;
     mcode)
-	      config_opts=""
+        CONFIG_OPTS+=""
         CXX=""
     ;;
     llvm)
-	      CXX="clang"
-	      config_opts="--with-llvm-config CXX=$CXX"
+        CXX="clang"
+        CONFIG_OPTS+="--with-llvm-config CXX=$CXX"
     ;;
     llvm-3.5)
-	      CXX="clang++"
-	      config_opts="--with-llvm-config=llvm-config-3.5 CXX=$CXX"
+        CXX="clang++"
+        CONFIG_OPTS+="--with-llvm-config=llvm-config-3.5 CXX=$CXX"
     ;;
     llvm-3.8)
-	      CXX="clang++-3.8"
-	      config_opts="--with-llvm-config=llvm-config-3.8 CXX=$CXX"
+        CXX="clang++-3.8"
+        CONFIG_OPTS+="--with-llvm-config=llvm-config-3.8 CXX=$CXX"
     ;;
     llvm-3.9)
-	      CXX="clang++-3.9"
-	      config_opts="--with-llvm-config=llvm-config-3.9 CXX=$CXX"
+        CXX="clang++-3.9"
+        CONFIG_OPTS+="--with-llvm-config=llvm-config-3.9 CXX=$CXX"
     ;;
     llvm-4.0)
-	      CXX="clang++-4.0"
-	      config_opts="--with-llvm-config=llvm-config-4.0 CXX=$CXX"
+        CXX="clang++-4.0"
+        CONFIG_OPTS+="--with-llvm-config=llvm-config-4.0 CXX=$CXX"
     ;;
     llvm-5.0)
-	      CXX="clang++-5.0"
-	      config_opts="--with-llvm-config=llvm-config-5.0 CXX=$CXX"
+        CXX="clang++-5.0"
+        CONFIG_OPTS+="--with-llvm-config=llvm-config-5.0 CXX=$CXX"
     ;;
     llvm-6.0)
-	      CXX="clang++-6.0"
-	      config_opts="--with-llvm-config=llvm-config-6.0 CXX=$CXX"
+        CXX="clang++-6.0"
+        CONFIG_OPTS+="--with-llvm-config=llvm-config-6.0 CXX=$CXX"
     ;;
     *)
-	      echo "$ANSI_RED[GHDL - build] Unknown build $BLD $ANSI_NOCOLOR"
-	      exit 1;;
+        echo "$ANSI_RED[GHDL - build] Unknown build $BLD $ANSI_NOCOLOR"
+        exit 1;;
 esac
 
 if [ ! "$(echo $BLD | grep gcc)" ]; then
-    echo "../configure --prefix=$prefix $config_opts"
-    ../configure "--prefix=$prefix" $config_opts
+    echo "../configure --prefix=$prefix $CONFIG_OPTS"
+    ../configure "--prefix=$prefix" $CONFIG_OPTS
 fi
 
 travis_finish "configure" -notime
