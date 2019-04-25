@@ -80,7 +80,7 @@ OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
 GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf $(OPT_FLAGS) $(ADA_FLAGS)
-GRT_FLAGS=$(OPT_FLAGS)
+GRT_FLAGS=$(OPT_FLAGS) $(PIC_FLAGS)
 
 WARN_CFLAGS=-Wall
 
