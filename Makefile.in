@@ -60,9 +60,9 @@ VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 
 ifeq "$(enable_checks)" "true"
  # Debug + checks
- OPT_FLAGS=-g
- ADA_FLAGS=-gnata
- LIB_CFLAGS=
+ OPT_FLAGS+=-g
+ ADA_FLAGS+=-gnata
+ LIB_CFLAGS+=
 else
  # Optimize + no checks
  ADA_FLAGS+=-gnatpn
