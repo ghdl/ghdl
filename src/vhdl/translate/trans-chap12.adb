@@ -592,6 +592,8 @@ package body Trans.Chap12 is
    is
       use Configuration;
 
+      Has_Filelist : constant Boolean := Filelist /= "";
+
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
       Config_Lib : Iir_Configuration_Declaration;
@@ -750,7 +752,7 @@ package body Trans.Chap12 is
       end if;
 
       --  Write the file containing the list of object files.
-      if Filelist /= "" then
+      if Has_Filelist then
          Write_File_List (Filelist);
       end if;
 
