@@ -41,6 +41,7 @@ enable_werror=@enable_werror@
 enable_checks=@enable_checks@
 enable_openieee=@enable_openieee@
 enable_python=@enable_python@
+default_pic=@default_pic@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -80,7 +81,11 @@ OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
 GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf $(OPT_FLAGS) $(ADA_FLAGS)
-GRT_FLAGS=$(OPT_FLAGS) $(PIC_FLAGS)
+GRT_FLAGS=$(OPT_FLAGS)
+
+ifeq "$(default_pic)" "true"
+GRT_FLAGS+=$(PIC_FLAGS)
+endif
 
 WARN_CFLAGS=-Wall
 
