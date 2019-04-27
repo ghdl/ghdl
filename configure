@@ -45,7 +45,7 @@ enable_werror=true
 enable_checks=true
 enable_openieee=unknown
 enable_python=false
-default_pie=false
+default_pic=false
 EXEEXT=
 SOEXT=.so
 PIC_FLAGS=-fPIC
@@ -107,7 +107,7 @@ for opt do
 		--disable-openieee)     enable_openieee=false;;
 		--enable-python)        enable_python=true;;
 		--disable-python)       enable_python=false;;
-		--enable-default-pie)   default_pie=true;;
+		--default-pic)          default_pic=true;;
 		--enable-coverage)      build_mode="coverage";;
 		-h|-help|--help)        show_help=yes;;
 		*)
@@ -281,6 +281,10 @@ libghdl_version=`echo $ghdl_version | sed -e 's/[-.]/_/g'`
 # Check if gcc was configured with --enable-default-pie.  In that case -fPIC
 # should be added.
 if gcc -v 2>&1 | grep -q enable-default-pie; then
+	default_pie="true"
+fi
+
+if [ "x$default_pic" = "xtrue" ]; then
 	default_pie="true"
 fi
 
