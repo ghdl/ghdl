@@ -2130,8 +2130,7 @@ package body Translation is
       Free_Old_Temp;
    end Finalize;
 
-   procedure Elaborate (Config : Iir;
-                        Filelist : String;
-                        Whole : Boolean) renames Trans.Chap12.Elaborate;
+   procedure Elaborate (Config : Iir; Whole : Boolean)
+     renames Trans.Chap12.Elaborate;
 
 end Translation;

@@ -44,12 +44,15 @@ with Ieee.Std_Logic_1164;
 
 with Lists;
 with Str_Table;
+with Hash;
+with Interning;
 with Nodes;
 with Files_Map;
 with Name_Table;
 
 with Grt.Main;
 with Grt.Modules;
+with Grt.Dynload; use Grt.Dynload;
 with Grt.Lib;
 with Grt.Processes;
 with Grt.Rtis;
@@ -80,6 +83,36 @@ package body Ghdlrun is
    --  Default elaboration mode is dynamic.
    Elab_Mode : constant Elab_Mode_Type := Elab_Dynamic;
 
+   type Shlib_Object_Type is record
+      Name : String_Access;
+      Handler : Address;
+   end record;
+
+   function Shlib_Build (Name : String) return Shlib_Object_Type
+   is
+      Name_Acc : constant String_Access := new String'(Name);
+      C_Name : constant String := Name & Nul;
+      Handler : Address;
+   begin
+      Handler :=
+        Grt_Dynload_Open (Grt.Types.To_Ghdl_C_String (C_Name'Address));
+      return (Name => Name_Acc,
+              Handler => Handler);
+   end Shlib_Build;
+
+   function Shlib_Equal (Obj : Shlib_Object_Type; Param : String)
+                        return Boolean is
+   begin
+      return Obj.Name.all = Param;
+   end Shlib_Equal;
+
+   package Shlib_Interning is new Interning
+     (Params_Type => String,
+      Object_Type => Shlib_Object_Type,
+      Hash => Hash.String_Hash,
+      Build => Shlib_Build,
+      Equal => Shlib_Equal);
+
    procedure Foreign_Hook (Decl : Iir;
                            Info : Translation.Foreign_Info_Type;
                            Ortho : O_Dnode);
@@ -103,6 +136,7 @@ package body Ghdlrun is
       end if;
 
       Translation.Foreign_Hook := Foreign_Hook'Access;
+      Shlib_Interning.Init;
 
       --  FIXME: add a flag to force unnesting.
       --  Translation.Flag_Unnest_Subprograms := True;
@@ -174,7 +208,7 @@ package body Ghdlrun is
          when Elab_Static =>
             raise Program_Error;
          when Elab_Dynamic =>
-            Translation.Elaborate (Config, "", True);
+            Translation.Elaborate (Config, True);
       end case;
 
       if Errorout.Nbr_Errors > 0 then
@@ -241,14 +275,43 @@ package body Ghdlrun is
             declare
                Name : constant String :=
                  Info.Subprg_Name (1 .. Info.Subprg_Len);
+               Lib : constant String :=
+                 Info.Lib_Name (1 .. Info.Lib_Len);
+               Shlib : Shlib_Object_Type;
             begin
-               Res := Foreigns.Find_Foreign (Name);
-               if Res /= Null_Address then
-                  Def (Ortho, Res);
+               if Info.Lib_Len = 0
+                 or else Lib = "null"
+               then
+                  Res := Foreigns.Find_Foreign (Name);
+                  if Res = Null_Address then
+                     Error_Msg_Sem
+                       (+Decl, "unknown foreign VHPIDIRECT '" & Name & "'");
+                     return;
+                  end if;
                else
-                  Error_Msg_Sem
-                    (+Decl, "unknown foreign VHPIDIRECT '" & Name & "'");
+                  Shlib := Shlib_Interning.Get (Lib);
+                  if Shlib.Handler = Null_Address then
+                     Error_Msg_Sem
+                       (+Decl, "cannot load VHPIDIRECT shared library '" &
+                          Lib & "'");
+                     return;
+                  end if;
+
+                  declare
+                     C_Name : constant String := Name & Nul;
+                  begin
+                     Res := Grt_Dynload_Symbol
+                       (Shlib.Handler,
+                        Grt.Types.To_Ghdl_C_String (C_Name'Address));
+                  end;
+                  if Res = Null_Address then
+                     Error_Msg_Sem
+                       (+Decl, "cannot resolve VHPIDIRECT symbol '"
+                          & Name & "'");
+                     return;
+                  end if;
                end if;
+               Def (Ortho, Res);
             end;
          when Foreign_Intrinsic =>
 

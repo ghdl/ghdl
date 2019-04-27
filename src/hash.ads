@@ -1,5 +1,5 @@
---  Iir to ortho translator.
---  Copyright (C) 2002 - 2014 Tristan Gingold
+--  Hash.
+--  Copyright (C) 2019 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -12,17 +12,15 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package Trans.Chap12 is
-   --  Generate ortho declarations for elaboration.
-   procedure Gen_Elab_Decls;
+with Types; use Types;
 
-   --  Generate ortho code to elaborate declaration of the top unit.
-   procedure Call_Elab_Decls (Arch : Iir; Arch_Instance : O_Enode);
+package Hash is
+   type Hash_Value_Type is new Uns32;
 
-   --  Generate elaboration code for CONFIG.
-   procedure Elaborate (Config : Iir_Design_Unit; Whole : Boolean);
-end Trans.Chap12;
+   --  A simple hash function for strings.
+   function String_Hash (Key : String) return Hash_Value_Type;
+end Hash;

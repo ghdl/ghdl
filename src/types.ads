@@ -177,6 +177,4 @@ package Types is
 
    --  Result of a comparaison of two numeric values.
    type Order_Type is (Less, Equal, Greater);
-
-   subtype Hash_Value_Type is Uns32;
 end Types;

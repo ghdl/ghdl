@@ -315,6 +315,7 @@ package body Ghdldrv is
       Free (Obj_File);
    end Do_Compile;
 
+   --  Table of files to be linked.
    package Filelist is new Tables
      (Table_Component_Type => String_Access,
       Table_Index_Type => Natural,
@@ -383,6 +384,9 @@ package body Ghdldrv is
             if Line (1) = '>' then
                Dir_Len := L - 1;
                Dir (1 .. Dir_Len) := Line (2 .. L);
+            elsif Line (1) = '+' then
+               File := new String'(Line (2 .. L));
+               Filelist.Append (File);
             else
                if To_Obj then
                   File := new String'(Dir (1 .. Dir_Len)
@@ -392,8 +396,7 @@ package body Ghdldrv is
                   File := new String'(Substitute (Line (1 .. L)));
                end if;
 
-               Filelist.Increment_Last;
-               Filelist.Table (Filelist.Last) := File;
+               Filelist.Append (File);
 
                Dir_Len := 0;
             end if;

@@ -15,8 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Iirs; use Iirs;
-with Translation;
 with Errorout; use Errorout;
 with Ada.Text_IO;
 with Back_End;
@@ -26,7 +24,6 @@ package body Trans_Be is
    is
       use Translation;
       Fi : Foreign_Info_Type;
-      pragma Unreferenced (Fi);
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Architecture_Body =>
@@ -39,6 +36,10 @@ package body Trans_Be is
       end case;
       --  Let it generate error messages.
       Fi := Translate_Foreign_Id (Decl);
+
+      if Sem_Foreign_Hook /= null then
+         Sem_Foreign_Hook.all (Decl, Fi);
+      end if;
    end Sem_Foreign;
 
    function Parse_Option (Opt : String) return Boolean is

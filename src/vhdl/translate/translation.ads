@@ -42,9 +42,7 @@ package Translation is
 
    --  Generate elaboration code for CONFIG.  Also use units from Configure
    --  package.
-   procedure Elaborate (Config : Iir;
-                        Filelist : String;
-                        Whole : Boolean);
+   procedure Elaborate (Config : Iir; Whole : Boolean);
 
    --  If set, generate Run-Time Information nodes.
    Flag_Rti : Boolean := True;

@@ -16,13 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with System;
 with Configuration;
-with Interfaces.C_Streams;
 with Errorout; use Errorout;
 with Std_Package; use Std_Package;
 with Iirs_Utils; use Iirs_Utils;
-with Name_Table;
 with Libraries;
 with Flags;
 with Sem;
@@ -528,71 +525,9 @@ package body Trans.Chap12 is
       end loop;
    end Gen_Stubs;
 
-   --  Write to file FILELIST all the files that are needed to link the design.
-   procedure Write_File_List (Filelist : String)
-   is
-      use Interfaces.C_Streams;
-      use System;
-      use Configuration;
-      use Name_Table;
-
-      Nul : constant Character := Character'Val (0);
-      Fname : String := Filelist & Nul;
-      Mode : constant String := "wt" & Nul;
-      F : FILEs;
-      R : int;
-      S : size_t;
-      pragma Unreferenced (R, S); -- FIXME
-      Id : Name_Id;
-      Lib : Iir_Library_Declaration;
-      File : Iir_Design_File;
-      Unit : Iir_Design_Unit;
-   begin
-      F := fopen (Fname'Address, Mode'Address);
-      if F = NULL_Stream then
-         Error_Msg_Elab ("cannot open " & Filelist);
-         return;
-      end if;
-
-      --  Clear elab flags on design files.
-      for I in Design_Units.First .. Design_Units.Last loop
-         Unit := Design_Units.Table (I);
-         File := Get_Design_File (Unit);
-         Set_Elab_Flag (File, False);
-      end loop;
-
-      for J in Design_Units.First .. Design_Units.Last loop
-         Unit := Design_Units.Table (J);
-         File := Get_Design_File (Unit);
-         if not Get_Elab_Flag (File) then
-            Set_Elab_Flag (File, True);
-
-            --  Write '>LIBRARY_DIRECTORY'.
-            Lib := Get_Library (File);
-            R := fputc (Character'Pos ('>'), F);
-            Id := Get_Library_Directory (Lib);
-            S := fwrite (Get_Address (Id),
-                         size_t (Get_Name_Length (Id)), 1, F);
-            R := fputc (10, F);
-
-            --  Write 'FILENAME'.
-            Id := Get_Design_File_Filename (File);
-            S := fwrite (Get_Address (Id),
-                         size_t (Get_Name_Length (Id)), 1, F);
-            R := fputc (10, F);
-         end if;
-      end loop;
-
-      R := fclose (F);
-   end Write_File_List;
-
-   procedure Elaborate (Config : Iir_Design_Unit;
-                        Filelist : String;
-                        Whole : Boolean)
+   procedure Elaborate (Config : Iir_Design_Unit; Whole : Boolean)
    is
       use Configuration;
-
-      Has_Filelist : constant Boolean := Filelist /= "";
 
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
@@ -749,11 +684,6 @@ package body Trans.Chap12 is
       --  configurations.
       if not Whole then
          Gen_Stubs;
-      end if;
-
-      --  Write the file containing the list of object files.
-      if Has_Filelist then
-         Write_File_List (Filelist);
       end if;
 
       --  Disp list of files needed.

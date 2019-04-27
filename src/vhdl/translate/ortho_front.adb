@@ -15,8 +15,13 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System;
+with Interfaces.C_Streams;
+
 with Types; use Types;
 with Name_Table;
+with Hash;
+with Interning;
 with Iirs; use Iirs;
 with Libraries;
 with Iirs_Utils; use Iirs_Utils;
@@ -397,6 +402,117 @@ package body Ortho_Front is
       Libraries.Save_Work_Library;
    end Do_Compile;
 
+   --  Table of libraries gathered from vhpidirect.
+   function Shlib_Build (Name : String) return String_Acc is
+   begin
+      return new String'(Name);
+   end Shlib_Build;
+
+   function Shlib_Equal (Obj : String_Acc; Param : String) return Boolean is
+   begin
+      return Obj.all = Param;
+   end Shlib_Equal;
+
+   package Shlib_Interning is new Interning
+     (Params_Type => String,
+      Object_Type => String_Acc,
+      Hash => Hash.String_Hash,
+      Build => Shlib_Build,
+      Equal => Shlib_Equal);
+
+   procedure Sem_Foreign_Hook
+     (Decl : Iir; Info : Translation.Foreign_Info_Type)
+   is
+      pragma Unreferenced (Decl);
+      use Translation;
+   begin
+      case Info.Kind is
+         when Foreign_Vhpidirect =>
+            declare
+               Lib : constant String :=
+                 Info.Lib_Name (1 .. Info.Lib_Len);
+               Shlib : String_Acc;
+               pragma Unreferenced (Shlib);
+            begin
+               if Info.Lib_Len /= 0 and then Lib /= "null" then
+                  Shlib := Shlib_Interning.Get (Lib);
+               end if;
+            end;
+         when Foreign_Intrinsic =>
+            null;
+         when Foreign_Unknown =>
+            null;
+      end case;
+   end Sem_Foreign_Hook;
+
+   --  Write to file FILELIST all the files that are needed to link the design.
+   procedure Write_File_List (Filelist : String)
+   is
+      use Interfaces.C_Streams;
+      use System;
+      use Configuration;
+      use Name_Table;
+
+      Nul : constant Character := Character'Val (0);
+      Fname : String := Filelist & Nul;
+      Mode : constant String := "wt" & Nul;
+      F : FILEs;
+      R : int;
+      S : size_t;
+      pragma Unreferenced (R, S); -- FIXME
+      Id : Name_Id;
+      Lib : Iir_Library_Declaration;
+      File : Iir_Design_File;
+      Unit : Iir_Design_Unit;
+   begin
+      F := fopen (Fname'Address, Mode'Address);
+      if F = NULL_Stream then
+         Error_Msg_Elab ("cannot open " & Filelist);
+         return;
+      end if;
+
+      --  Clear elab flags on design files.
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         File := Get_Design_File (Unit);
+         Set_Elab_Flag (File, False);
+      end loop;
+
+      for J in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (J);
+         File := Get_Design_File (Unit);
+         if not Get_Elab_Flag (File) then
+            Set_Elab_Flag (File, True);
+
+            --  Write '>LIBRARY_DIRECTORY'.
+            Lib := Get_Library (File);
+            R := fputc (Character'Pos ('>'), F);
+            Id := Get_Library_Directory (Lib);
+            S := fwrite (Get_Address (Id),
+                         size_t (Get_Name_Length (Id)), 1, F);
+            R := fputc (10, F);
+
+            --  Write 'FILENAME'.
+            Id := Get_Design_File_Filename (File);
+            S := fwrite (Get_Address (Id),
+                         size_t (Get_Name_Length (Id)), 1, F);
+            R := fputc (10, F);
+         end if;
+      end loop;
+
+      for I in Shlib_Interning.First_Index .. Shlib_Interning.Last_Index loop
+         declare
+            Str : constant String_Acc := Shlib_Interning.Get_By_Index (I);
+         begin
+            R := fputc (Character'Pos ('+'), F);
+            S := fwrite (Str.all'Address, size_t (Str'Length), 1, F);
+            R := fputc (10, F);
+         end;
+      end loop;
+
+      R := fclose (F);
+   end Write_File_List;
+
    Nbr_Parse : Natural := 0;
 
    function Parse (Filename : String_Acc) return Boolean
@@ -429,13 +545,21 @@ package body Ortho_Front is
                Error_Msg_Option ("missing -l for --elab");
                raise Option_Error;
             end if;
+
+            --  Be sure to collect libraries used for vhpidirect.
+            Trans_Be.Sem_Foreign_Hook := Sem_Foreign_Hook'Access;
+            Shlib_Interning.Init;
+
             Config := Configuration.Configure
               (Elab_Entity.all, Elab_Architecture.all);
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).
                raise Compilation_Error;
             end if;
-            Translation.Elaborate (Config, Elab_Filelist.all, False);
+
+            Translation.Elaborate (Config, False);
+
+            Write_File_List (Elab_Filelist.all);
 
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).
@@ -482,7 +606,7 @@ package body Ortho_Front is
             Flags.Flag_Only_Elab_Warnings := False;
             Config := Configuration.Configure
               (Elab_Entity.all, Elab_Architecture.all);
-            Translation.Elaborate (Config, "", True);
+            Translation.Elaborate (Config, True);
 
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).
