@@ -145,21 +145,20 @@ package body Translation is
             end if;
             --  Extract library.
             Lf := P;
-            while P < Length and then Name (P) /= ' ' loop
+            while P <= Length and then Name (P) /= ' ' loop
                P := P + 1;
             end loop;
-            Ll := P;
+            Ll := P - 1;
             --  Extract subprogram.
-            P := P + 1;
             while P <= Length and then Name (P) = ' ' loop
                P := P + 1;
             end loop;
             Sf := P;
-            while P < Length and then Name (P) /= ' ' loop
+            while P <= Length and then Name (P) /= ' ' loop
                P := P + 1;
             end loop;
-            Sl := P;
-            if P < Length then
+            Sl := P - 1;
+            if P <= Length then
                Error_Msg_Sem (+Spec, "garbage at end of VHPIDIRECT");
             end if;
 
