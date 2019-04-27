@@ -32,7 +32,7 @@
 
 #include "vpi_user.h"
 #include "vpi_thunk.h"
-#include "grt-dynload.h"
+#include "grt-cdynload.h"
 
 /* Extension of a shared library.  */
 #if defined (WINNT)
