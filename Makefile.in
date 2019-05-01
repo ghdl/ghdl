@@ -125,6 +125,10 @@ LIBVHDL_FLAGS_TO_PASS=\
 all: Makefile all.$(backend) all.libghdl.$(enable_python)
 
 install: install.$(backend)
+#       Generate std.standard package VHDL source
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=87 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/standard.v87
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=93 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/standard.v93
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=08 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/standard.v08
 
 check: check.$(backend)
 
