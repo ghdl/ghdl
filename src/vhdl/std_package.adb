@@ -793,9 +793,8 @@ package body Std_Package is
          Last_Unit : Iir_Unit_Declaration;
          use Iir_Chains.Unit_Chain_Handling;
 
-         function Create_Std_Phys_Lit (Value : Iir_Int64;
-                                       Unit : Iir_Simple_Name)
-           return Iir_Physical_Int_Literal
+         function Create_Std_Phys_Lit_Wo_Unit (Value : Iir_Int64; Unit : Iir)
+                                      return Iir_Physical_Int_Literal
          is
             Lit: Iir_Physical_Int_Literal;
          begin
@@ -805,6 +804,19 @@ package body Std_Package is
             Set_Physical_Unit (Lit, Unit);
             Set_Type (Lit, Time_Type_Definition);
             Set_Expr_Staticness (Lit, Time_Staticness);
+            return Lit;
+         end Create_Std_Phys_Lit_Wo_Unit;
+
+         function Create_Std_Phys_Lit (Value : Iir_Int64; Unit : Iir)
+                                      return Iir_Physical_Int_Literal
+         is
+            Lit: Iir_Physical_Int_Literal;
+            Unit_Name : Iir;
+         begin
+            Lit := Create_Std_Phys_Lit_Wo_Unit (Value, Unit);
+            Unit_Name := Create_Std_Iir (Iir_Kind_Simple_Name);
+            Set_Identifier (Unit_Name, Get_Identifier (Unit));
+            Set_Unit_Name (Lit, Unit_Name);
             return Lit;
          end Create_Std_Phys_Lit;
 
@@ -881,10 +893,10 @@ package body Std_Package is
          Time_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Physical_Subtype_Definition);
          Constraint := Create_Std_Range_Expr
-           (Create_Std_Phys_Lit (Low_Bound (Flags.Flag_Time_64),
-                                 Time_Fs_Unit),
-            Create_Std_Phys_Lit (High_Bound (Flags.Flag_Time_64),
-                                 Time_Fs_Unit),
+           (Create_Std_Phys_Lit_Wo_Unit (Low_Bound (Flags.Flag_Time_64),
+                                         Time_Fs_Unit),
+            Create_Std_Phys_Lit_Wo_Unit (High_Bound (Flags.Flag_Time_64),
+                                         Time_Fs_Unit),
             Time_Type_Definition);
          Set_Range_Constraint (Time_Subtype_Definition, Constraint);
          Set_Base_Type (Time_Subtype_Definition, Time_Type_Definition);
