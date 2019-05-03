@@ -345,7 +345,9 @@ package body Trans.Chap3 is
       Get_Low_High_Limit (Get_Range_Constraint (St), L, H);
       Lv := Get_Value (L);
       Hv := Get_Value (H);
-      if Lv >= -(2 ** 31) and then Hv <= (2 ** 31 - 1) then
+      if Lv in -(2 ** 31) .. 2 ** 31 - 1
+        and then Hv in -(2 ** 31) .. 2 ** 31 - 1
+      then
          return Precision_32;
       else
          if Translation.Flag_Only_32b then
