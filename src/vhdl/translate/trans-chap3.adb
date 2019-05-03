@@ -3422,7 +3422,10 @@ package body Trans.Chap3 is
       end if;
    end Maybe_Insert_Scalar_Check;
 
-   function Locally_Array_Match (L_Type, R_Type : Iir) return Boolean
+   function Locally_Types_Match (L_Type : Iir; R_Type : Iir)
+                                return Tri_State_Type;
+
+   function Locally_Array_Match (L_Type, R_Type : Iir) return Tri_State_Type
    is
       L_Indexes : constant Iir_Flist := Get_Index_Subtype_List (L_Type);
       R_Indexes : constant Iir_Flist := Get_Index_Subtype_List (R_Type);
@@ -3432,64 +3435,197 @@ package body Trans.Chap3 is
       for I in Flist_First .. Flist_Last (L_Indexes) loop
          L_El := Get_Index_Type (L_Indexes, I);
          R_El := Get_Index_Type (R_Indexes, I);
+         if Get_Type_Staticness (L_El) /= Locally
+           or else Get_Type_Staticness (R_El) /= Locally
+         then
+            return Unknown;
+         end if;
          if Eval_Discrete_Type_Length (L_El)
            /= Eval_Discrete_Type_Length (R_El)
          then
             return False;
          end if;
       end loop;
-      return True;
+      return Locally_Types_Match (Get_Element_Subtype (L_Type),
+                                  Get_Element_Subtype (R_Type));
    end Locally_Array_Match;
 
-   procedure Check_Array_Match (L_Type : Iir;
-                                L_Node : Mnode;
-                                R_Type : Iir;
-                                R_Node : Mnode;
-                                Loc    : Iir)
+   function Locally_Record_Match (L_Type : Iir; R_Type : Iir)
+                                 return Tri_State_Type
    is
-      L_Tinfo : constant Type_Info_Acc := Get_Info (L_Type);
-      R_Tinfo : constant Type_Info_Acc := Get_Info (R_Type);
+      L_List : constant Iir_Flist := Get_Elements_Declaration_List (L_Type);
+      R_List : constant Iir_Flist := Get_Elements_Declaration_List (R_Type);
+      Res : Tri_State_Type;
    begin
-      if L_Tinfo.Type_Mode not in Type_Mode_Arrays then
-         return;
+      Res := True;
+      for I in Flist_First .. Flist_Last (L_List) loop
+         case Locally_Types_Match (Get_Type (Get_Nth_Element (L_List, I)),
+                                   Get_Type (Get_Nth_Element (R_List, I))) is
+            when False =>
+               return False;
+            when True =>
+               null;
+            when Unknown =>
+               Res := Unknown;
+         end case;
+      end loop;
+      return Res;
+   end Locally_Record_Match;
+
+   --  Return True IFF locally static types L_TYPE and R_TYPE matches.
+   function Locally_Types_Match (L_Type : Iir; R_Type : Iir)
+                                return Tri_State_Type is
+   begin
+      if L_Type = R_Type then
+         return True;
       end if;
-      --  FIXME: optimize for a statically bounded array of a complex type.
-      if L_Tinfo.Type_Mode in Type_Mode_Arrays
-        and then L_Tinfo.Type_Locally_Constrained
-        and then R_Tinfo.Type_Mode in Type_Mode_Arrays
-        and then R_Tinfo.Type_Locally_Constrained
+      case Get_Kind (L_Type) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            return Locally_Array_Match (L_Type, R_Type);
+         when Iir_Kind_Record_Subtype_Definition
+           | Iir_Kind_Record_Type_Definition =>
+            return Locally_Record_Match (L_Type, R_Type);
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
+            return True;
+         when Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Access_Subtype_Definition =>
+            return True;
+         when others =>
+            Error_Kind ("locally_types_match", L_Type);
+      end case;
+   end Locally_Types_Match;
+
+   function Types_Match (L_Type : Iir; R_Type : Iir) return Tri_State_Type is
+   begin
+      if Get_Kind (L_Type) not in Iir_Kinds_Composite_Type_Definition then
+         return True;
+      end if;
+      if Get_Constraint_State (L_Type) /= Fully_Constrained
+        or else Get_Constraint_State (R_Type) /= Fully_Constrained
       then
-         --  Both left and right are thin array.
-         --  Check here the length are the same.
-         if not Locally_Array_Match (L_Type, R_Type) then
-            Chap6.Gen_Bound_Error (Loc);
-         end if;
-      else
-         --  Check length match.
-         declare
-            Index_List : constant Iir_Flist :=
-              Get_Index_Subtype_List (L_Type);
-            Cond       : O_Enode;
-            Sub_Cond   : O_Enode;
-         begin
-            for I in 1 .. Get_Nbr_Elements (Index_List) loop
-               Sub_Cond := New_Compare_Op
-                 (ON_Neq,
-                  M2E (Range_To_Length
-                    (Get_Array_Range (L_Node, L_Type, I))),
-                  M2E (Range_To_Length
-                    (Get_Array_Range (R_Node, R_Type, I))),
-                  Ghdl_Bool_Type);
-               if I = 1 then
-                  Cond := Sub_Cond;
+         --  If one of the type is not fully constrained, the check is dynamic.
+         return Unknown;
+      end if;
+      if L_Type = R_Type then
+         --  If the type is the same, they match (they are constrained).
+         return True;
+      end if;
+      --  We cannot use type staticness, as a record may not be locally static
+      --  because it has one scalar element with non-locally static bounds.
+      return Locally_Types_Match (L_Type, R_Type);
+   end Types_Match;
+
+   function Check_Match_Cond (L_Type : Iir;
+                              L_Bounds : Mnode;
+                              R_Type : Iir;
+                              R_Bounds : Mnode) return O_Enode is
+   begin
+      case Iir_Kinds_Composite_Type_Definition (Get_Kind (L_Type)) is
+         when Iir_Kinds_Array_Type_Definition =>
+            --  Check length match.
+            declare
+               Index_List : constant Iir_Flist :=
+                 Get_Index_Subtype_List (L_Type);
+               Nbr_Dim : constant Natural := Get_Nbr_Elements (Index_List);
+               L_El : constant Iir := Get_Element_Subtype (L_Type);
+               R_El : constant Iir := Get_Element_Subtype (R_Type);
+               El_Match : Tri_State_Type;
+               Cond       : O_Enode;
+               Sub_Cond   : O_Enode;
+               L_Bounds1 : Mnode;
+               R_Bounds1 : Mnode;
+            begin
+               --  FIXME: stabilize.
+               El_Match := Types_Match (L_El, R_El);
+               if El_Match = Unknown or Nbr_Dim > 1 then
+                  L_Bounds1 := Stabilize (L_Bounds);
+                  R_Bounds1 := Stabilize (R_Bounds);
                else
+                  L_Bounds1 := L_Bounds;
+                  R_Bounds1 := R_Bounds;
+               end if;
+
+               for I in 1 .. Nbr_Dim loop
+                  Sub_Cond := New_Compare_Op
+                    (ON_Neq,
+                     M2E (Range_To_Length
+                            (Bounds_To_Range (L_Bounds1, L_Type, I))),
+                     M2E (Range_To_Length
+                            (Bounds_To_Range (R_Bounds1, R_Type, I))),
+                     Ghdl_Bool_Type);
+                  if I = 1 then
+                     Cond := Sub_Cond;
+                  else
+                     Cond := New_Dyadic_Op (ON_Or, Cond, Sub_Cond);
+                  end if;
+               end loop;
+               if El_Match = Unknown then
+                  Sub_Cond := Check_Match_Cond
+                    (L_El, Array_Bounds_To_Element_Bounds (L_Bounds1, L_Type),
+                     R_El, Array_Bounds_To_Element_Bounds (R_Bounds1, R_Type));
                   Cond := New_Dyadic_Op (ON_Or, Cond, Sub_Cond);
                end if;
-            end loop;
-            Chap6.Check_Bound_Error (Cond, Loc, 0);
-         end;
-      end if;
-   end Check_Array_Match;
+               return Cond;
+            end;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            declare
+               L_El_List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (L_Type);
+               R_El_List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (R_Type);
+               Cond : O_Enode;
+               Sub_Cond : O_Enode;
+            begin
+               Cond := O_Enode_Null;
+               for I in Flist_First .. Flist_Last (L_El_List) loop
+                  declare
+                     L_El : constant Iir := Get_Nth_Element (L_El_List, I);
+                     R_El : constant Iir := Get_Nth_Element (R_El_List, I);
+                     L_El_Type : constant Iir := Get_Type (L_El);
+                     R_El_Type : constant Iir := Get_Type (R_El);
+                  begin
+                     if Types_Match (L_El_Type, R_El_Type) = Unknown then
+                        Sub_Cond := Check_Match_Cond
+                          (L_El_Type,
+                           Record_Bounds_To_Element_Bounds (L_Bounds, L_El),
+                           R_El_Type,
+                           Record_Bounds_To_Element_Bounds (R_Bounds, R_El));
+                        if Cond = O_Enode_Null then
+                           Cond := Sub_Cond;
+                        else
+                           Cond := New_Dyadic_Op (ON_Or, Cond, Sub_Cond);
+                        end if;
+                     end if;
+                  end;
+               end loop;
+               pragma Assert (Cond /= O_Enode_Null);
+               return Cond;
+            end;
+      end case;
+   end Check_Match_Cond;
+
+   procedure Check_Composite_Match (L_Type : Iir;
+                                    L_Node : Mnode;
+                                    R_Type : Iir;
+                                    R_Node : Mnode;
+                                    Loc    : Iir)
+   is
+      Res : O_Enode;
+   begin
+      case Types_Match (L_Type, R_Type) is
+         when True =>
+            return;
+         when False =>
+            --  FIXME: emit a warning ?
+            Chap6.Gen_Bound_Error (Loc);
+            return;
+         when Unknown =>
+            Res := Check_Match_Cond (L_Type, Get_Composite_Bounds (L_Node),
+                                     R_Type, Get_Composite_Bounds (R_Node));
+            Chap6.Check_Bound_Error (Res, Loc, 0);
+      end case;
+   end Check_Composite_Match;
 
    procedure Create_Range_From_Array_Attribute_And_Length
      (Array_Attr : Iir; Length : O_Dnode; Res : Mnode)

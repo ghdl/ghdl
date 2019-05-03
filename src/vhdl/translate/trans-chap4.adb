@@ -1692,8 +1692,9 @@ package body Trans.Chap4 is
                   Stabilize (N);
                   New_Assign_Stmt (Get_Var (A),
                                    M2E (Chap3.Get_Composite_Base (N)));
-                  Chap3.Check_Array_Match (Decl_Type, T2M (Decl_Type, Mode),
-                                           Name_Type, N, Decl);
+                  Chap3.Check_Composite_Match
+                    (Decl_Type, T2M (Decl_Type, Mode),
+                     Name_Type, N, Decl);
                when Type_Mode_Acc
                  | Type_Mode_Bounds_Acc =>
                   New_Assign_Stmt (Get_Var (A), M2Addr (N));
@@ -1706,6 +1707,7 @@ package body Trans.Chap4 is
                   end case;
                when Type_Mode_Bounded_Records =>
                   Stabilize (N);
+                  --  FIXME: Check ?
                   New_Assign_Stmt (Get_Var (A), M2Addr (N));
                when others =>
                   raise Internal_Error;

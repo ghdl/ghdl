@@ -5068,6 +5068,10 @@ package Iirs is
    --Iir_Kind_Array_Subtype_Definition
      Iir_Kind_Record_Subtype_Definition;
 
+   subtype Iir_Kinds_Composite_Subtype_Definition is Iir_Kind range
+     Iir_Kind_Array_Subtype_Definition ..
+     Iir_Kind_Record_Subtype_Definition;
+
    subtype Iir_Kinds_Type_Declaration is Iir_Kind range
      Iir_Kind_Type_Declaration ..
    --Iir_Kind_Anonymous_Type_Declaration

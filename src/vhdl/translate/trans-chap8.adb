@@ -4304,7 +4304,7 @@ package body Trans.Chap8 is
       if Is_Composite (Target_Tinfo) then
          Stabilize (Val);
          Stabilize (Stable_Targ);
-         Chap3.Check_Array_Match
+         Chap3.Check_Composite_Match
            (Target_Type, Stable_Targ, Get_Type (We), Val, We);
       end if;
       Arg := (Drv => Drv,
@@ -4438,7 +4438,7 @@ package body Trans.Chap8 is
             then
                Stabilize (Targ2);
                Stabilize (Val);
-               Chap3.Check_Array_Match
+               Chap3.Check_Composite_Match
                  (Target_Type, Targ2, Get_Type (Value), Val, Wf_Chain);
             end if;
             Gen_Simple_Signal_Assign (Targ2, Target_Type, M2E (Val));
@@ -4500,7 +4500,7 @@ package body Trans.Chap8 is
                Translate_Waveform_Expression
                  (Value, Target_Type, Var_Targ, Val);
                Stabilize (Val);
-               Chap3.Check_Array_Match
+               Chap3.Check_Composite_Match
                  (Target_Type, Var_Targ, Get_Type (Value), Val, We);
             end if;
             Data := Signal_Assign_Data'(Expr => Val,
@@ -4532,7 +4532,7 @@ package body Trans.Chap8 is
                   Val := Chap7.Translate_Expression (Value, Target_Type);
                   if Is_Composite (Targ_Tinfo) then
                      Stabilize (Val);
-                     Chap3.Check_Array_Match
+                     Chap3.Check_Composite_Match
                        (Target_Type, Var_Targ, Get_Type (Value), Val, We);
                   end if;
                end if;

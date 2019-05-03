@@ -77,7 +77,7 @@ package body Trans.Chap7 is
         and then Get_Constraint_State (Res_Type) = Fully_Constrained
       then
          --  constrained to constrained.
-         if not Chap3.Locally_Array_Match (Expr_Type, Res_Type) then
+         if Chap3.Locally_Array_Match (Expr_Type, Res_Type) /= True then
             --  Sem should have replaced the expression by an overflow.
             raise Internal_Error;
             --  Chap6.Gen_Bound_Error (Loc);
@@ -928,7 +928,7 @@ package body Trans.Chap7 is
             if Einfo.Type_Mode = Type_Mode_Static_Array then
                --  FIXME: optimize static vs non-static
                --  constrained to constrained.
-               if not Chap3.Locally_Array_Match (Expr_Type, Res_Type) then
+               if Chap3.Locally_Array_Match (Expr_Type, Res_Type) /= True then
                   --  FIXME: generate a bound error ?
                   --  Even if this is caught at compile-time,
                   --  the code is not required to run.
@@ -2769,7 +2769,8 @@ package body Trans.Chap7 is
            | Type_Mode_Bounds_Acc
            | Type_Mode_File =>
             New_Assign_Stmt (M2Lv (Target), Val);
-         when Type_Mode_Unbounded_Array =>
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
             declare
                T : Mnode;
                E : O_Dnode;
@@ -2779,7 +2780,7 @@ package body Trans.Chap7 is
                E := Create_Temp_Init
                  (T_Info.Ortho_Ptr_Type (Mode_Value), Val);
                EM := Dp2M (E, T_Info, Mode_Value);
-               Chap3.Check_Array_Match
+               Chap3.Check_Composite_Match
                  (Target_Type, T, Get_Type (Expr), EM, Loc);
                Chap3.Translate_Object_Copy (T, EM, Target_Type);
             end;
@@ -2789,9 +2790,6 @@ package body Trans.Chap7 is
             --  necessary.
             Chap3.Translate_Object_Copy
               (Target, E2M (Val, T_Info, Mode_Value), Target_Type);
-         when Type_Mode_Unbounded_Record =>
-            --  TODO
-            raise Internal_Error;
          when Type_Mode_Unknown
             | Type_Mode_Protected =>
             raise Internal_Error;
@@ -3886,7 +3884,7 @@ package body Trans.Chap7 is
       E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
       case Res_Info.Type_Mode is
          when Type_Mode_Bounded_Arrays =>
-            Chap3.Check_Array_Match
+            Chap3.Check_Composite_Match
               (Res_Type, T2M (Res_Type, Mode_Value),
                Expr_Type, E,
                Loc);
@@ -3899,7 +3897,7 @@ package body Trans.Chap7 is
             begin
                Res := Create_Temp (Res_Info);
                Copy_Fat_Pointer (Res, E);
-               Chap3.Check_Array_Match (Res_Type, Res, Expr_Type, E, Loc);
+               Chap3.Check_Composite_Match (Res_Type, Res, Expr_Type, E, Loc);
                return M2Addr (Res);
             end;
          when others =>
