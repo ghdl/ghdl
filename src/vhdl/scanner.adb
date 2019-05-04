@@ -1593,8 +1593,7 @@ package body Scanner is
    is
       procedure Error_Missing_Directive is
       begin
-         Error_Msg_Scan
-           ("tool directive required after '`'");
+         Error_Msg_Scan ("tool directive required after '`'");
          Skip_Until_EOL;
       end Error_Missing_Directive;
 
@@ -1712,6 +1711,15 @@ package body Scanner is
       end if;
       Scan_Next_Line;
    end Scan_LF_Newline;
+
+   --  Emit an error message for an invalid character.
+   procedure Error_Bad_Character is
+   begin
+      --  Technically character literals, string literals, extended
+      --  identifiers and comments.
+      Error_Msg_Scan ("character %c can only be used in strings or comments",
+                      +Source (Pos));
+   end Error_Bad_Character;
 
    -- Get a new token.
    procedure Scan is
@@ -2208,7 +2216,7 @@ package body Scanner is
             return;
          when '?' =>
             if Vhdl_Std < Vhdl_08 then
-               Error_Msg_Scan ("'?' can only be used in strings or comments");
+               Error_Bad_Character;
                Pos := Pos + 1;
                goto Again;
             else
@@ -2250,17 +2258,14 @@ package body Scanner is
             if Vhdl_Std >= Vhdl_08 then
                Scan_Tool_Directive;
             else
-               Warning_Msg_Scan (Warnid_Directive,
-                                 "tool directives are ignored");
+               Error_Bad_Character;
                Skip_Until_EOL;
             end if;
             goto Again;
          when '$'
            | Inverted_Exclamation .. Inverted_Question
            | Multiplication_Sign | Division_Sign =>
-            Error_Msg_Scan
-              ("character %c can only be used in strings or comments",
-               +Source (Pos));
+            Error_Bad_Character;
             Pos := Pos + 1;
             goto Again;
          when '@' =>
@@ -2269,9 +2274,7 @@ package body Scanner is
                Pos := Pos + 1;
                return;
             else
-               Error_Msg_Scan
-                 ("character %c can only be used in strings or comments",
-                  +Source (Pos));
+               Error_Bad_Character;
                Pos := Pos + 1;
                goto Again;
             end if;
