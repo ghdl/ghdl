@@ -23,7 +23,7 @@ with Std_Names;
 with PSL.Nodes;
 with PSL.Dump_Tree;
 with Disp_Tree;
-with Scanner;
+with Vhdl.Scanner;
 with Back_End; use Back_End;
 with Flags; use Flags;
 with Files_Map;
@@ -121,7 +121,7 @@ package body Options is
             Name : String (1 .. Opt'Last - 8 + 1);
          begin
             Name := Opt (8 .. Opt'Last);
-            Scanner.Convert_Identifier (Name);
+            Vhdl.Scanner.Convert_Identifier (Name);
             Libraries.Work_Library_Name := Get_Identifier (Name);
          end;
       elsif Opt = "-C" or else Opt = "--mb-comments" then
@@ -167,8 +167,8 @@ package body Options is
       elsif Opt = "--vital-checks" then
          Flag_Vital_Checks := True;
       elsif Opt = "-fpsl" then
-         Scanner.Flag_Psl_Comment := True;
-         Scanner.Flag_Comment_Keyword := True;
+         Vhdl.Scanner.Flag_Psl_Comment := True;
+         Vhdl.Scanner.Flag_Comment_Keyword := True;
       elsif Opt = "-dp" then
          Dump_Parse := True;
       elsif Opt = "-ds" then

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Logging; use Logging;
-with Scanner;
+with Vhdl.Scanner;
 with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Files_Map; use Files_Map;
@@ -257,15 +257,15 @@ package body Errorout is
                   when Elaboration =>
                      null;
                   when Scan =>
-                     File := Scanner.Get_Current_Source_File;
-                     Line := Scanner.Get_Current_Line;
-                     Offset  := Scanner.Get_Current_Offset;
+                     File := Vhdl.Scanner.Get_Current_Source_File;
+                     Line := Vhdl.Scanner.Get_Current_Line;
+                     Offset := Vhdl.Scanner.Get_Current_Offset;
                      Loc_Length := 1;
                   when Parse =>
-                     File := Scanner.Get_Current_Source_File;
-                     Line := Scanner.Get_Current_Line;
-                     Offset  := Scanner.Get_Token_Offset;
-                     Loc_Length := Scanner.Get_Current_Offset - Offset;
+                     File := Vhdl.Scanner.Get_Current_Source_File;
+                     Line := Vhdl.Scanner.Get_Current_Line;
+                     Offset := Vhdl.Scanner.Get_Token_Offset;
+                     Loc_Length := Vhdl.Scanner.Get_Current_Offset - Offset;
                   when Semantic =>
                      null;
                end case;

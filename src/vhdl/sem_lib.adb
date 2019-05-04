@@ -21,7 +21,7 @@ with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Libraries; use Libraries;
-with Scanner;
+with Vhdl.Scanner;
 with Parse;
 with Disp_Tree;
 with Disp_Vhdl;
@@ -40,15 +40,15 @@ package body Sem_Lib is
    is
       Res : Iir_Design_File;
    begin
-      Scanner.Set_File (File);
-      if Scanner.Detect_Encoding_Errors then
+      Vhdl.Scanner.Set_File (File);
+      if Vhdl.Scanner.Detect_Encoding_Errors then
          --  Don't even try to parse such a file.  The BOM will be interpreted
          --  as an identifier, which is not valid at the beginning of a file.
          Res := Null_Iir;
       else
          Res := Parse.Parse_Design_File;
       end if;
-      Scanner.Close_File;
+      Vhdl.Scanner.Close_File;
 
       if Res /= Null_Iir then
          Set_Parent (Res, Work_Library);
@@ -159,7 +159,7 @@ package body Sem_Lib is
 
    procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
    is
-      use Scanner;
+      use Vhdl.Scanner;
       Design_File : constant Iir_Design_File := Get_Design_File (Design_Unit);
       Fe : Source_File_Entry;
       Line, Off: Natural;

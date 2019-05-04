@@ -27,7 +27,7 @@ with Name_Table;
 with Std_Names;
 with Disp_Vhdl;
 with Default_Paths;
-with Scanner;
+with Vhdl.Scanner;
 with Errorout;
 with Configuration;
 with Files_Map;
@@ -1621,7 +1621,7 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
       Res := new String'(Name.all);
-      Scanner.Convert_Identifier (Res.all);
+      Vhdl.Scanner.Convert_Identifier (Res.all);
       return Res;
    end Convert_Name;
 

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Ada.Unchecked_Deallocation;
 with Interfaces;
-with Scanner;
+with Vhdl.Scanner;
 with Errorout; use Errorout;
 with Name_Table; use Name_Table;
 with Str_Table;
@@ -1906,7 +1906,7 @@ package body Evaluation is
       -- Separate string into numeric value and make lowercase unit.
       for I in reverse Val'range loop
          UnitName (I) := Ada.Characters.Handling.To_Lower (Val (I));
-         if Scanner.Is_Whitespace (Val (I)) and Found_Unit then
+         if Vhdl.Scanner.Is_Whitespace (Val (I)) and Found_Unit then
             Sep := I;
             exit;
          else
@@ -2193,11 +2193,11 @@ package body Evaluation is
       First := Value'First;
       Last := Value'Last;
       while First <= Last loop
-         exit when not Scanner.Is_Whitespace (Value (First));
+         exit when not Vhdl.Scanner.Is_Whitespace (Value (First));
          First := First + 1;
       end loop;
       while Last >= First loop
-         exit when not Scanner.Is_Whitespace (Value (Last));
+         exit when not Vhdl.Scanner.Is_Whitespace (Value (Last));
          Last := Last - 1;
       end loop;
 

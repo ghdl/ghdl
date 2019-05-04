@@ -28,7 +28,7 @@ with Libraries;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Tokens;
-with Scanner;
+with Vhdl.Scanner;
 with Parse;
 with Canon;
 with Version;
@@ -85,7 +85,7 @@ package body Ghdlprint is
    procedure PP_Html_File (File : Source_File_Entry)
    is
       use Flags;
-      use Scanner;
+      use Vhdl.Scanner;
       use Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
@@ -345,8 +345,8 @@ package body Ghdlprint is
          end if;
       end Disp_Attribute;
    begin
-      Scanner.Flag_Comment := True;
-      Scanner.Flag_Newline := True;
+      Vhdl.Scanner.Flag_Comment := True;
+      Vhdl.Scanner.Flag_Newline := True;
 
       Set_File (File);
       Buf := Get_File_Source (File);
@@ -855,7 +855,7 @@ package body Ghdlprint is
    procedure Perform_Action (Cmd : Command_Lines; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Scanner;
+      use Vhdl.Scanner;
       use Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
@@ -1048,7 +1048,7 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
       use Tokens;
-      use Scanner;
+      use Vhdl.Scanner;
 
       package Ref_Tokens is new Tables
         (Table_Component_Type => Token_Type,

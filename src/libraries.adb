@@ -21,7 +21,7 @@ with GNAT.OS_Lib;
 with Logging; use Logging;
 with Tables;
 with Errorout; use Errorout;
-with Scanner;
+with Vhdl.Scanner;
 with Iirs_Utils; use Iirs_Utils;
 with Name_Table; use Name_Table;
 with Str_Table;
@@ -327,7 +327,7 @@ package body Libraries is
    -- Return TRUE if the library was found.
    function Load_Library (Library: Iir_Library_Declaration) return Boolean
    is
-      use Scanner;
+      use Vhdl.Scanner;
       use Tokens;
 
       File : Source_File_Entry;
@@ -418,7 +418,7 @@ package body Libraries is
          return False;
       end if;
 
-      Scanner.Set_File (File);
+      Vhdl.Scanner.Set_File (File);
 
       --  Parse header.
       Scan;
@@ -601,7 +601,7 @@ package body Libraries is
       end loop;
       Set_Date (Library, Max_Date);
 
-      Scanner.Close_File;
+      Vhdl.Scanner.Close_File;
 
       --  Don't need the library file anymore.
       Files_Map.Unload_Last_Source_File (File);

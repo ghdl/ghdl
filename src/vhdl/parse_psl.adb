@@ -19,7 +19,7 @@
 with Errorout; use Errorout;
 with PSL.Nodes; use PSL.Nodes;
 with Iirs;
-with Scanner; use Scanner;
+with Vhdl.Scanner; use Vhdl.Scanner;
 with PSL.Errors; use PSL.Errors;
 with PSL.Priorities; use PSL.Priorities;
 with Parse;

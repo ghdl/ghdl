@@ -23,7 +23,7 @@ with Std_Names;
 with Str_Table;
 with Flags; use Flags;
 
-package body Scanner is
+package body Vhdl.Scanner is
 
    -- This classification is a simplification of the categories of LRM93 13.1
    -- LRM93 13.1
@@ -2329,4 +2329,4 @@ package body Scanner is
          return False;
       end if;
    end Is_Whitespace;
-end Scanner;
+end Vhdl.Scanner;

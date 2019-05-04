@@ -19,7 +19,7 @@
 with Interfaces; use Interfaces;
 with Grt.Fcvt; use Grt.Fcvt;
 
-separate (Scanner)
+separate (Vhdl.Scanner)
 
 -- scan a decimal literal or a based literal.
 --

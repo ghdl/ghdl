@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Iir_Chains; use Iir_Chains;
 with Tokens; use Tokens;
-with Scanner; use Scanner;
+with Vhdl.Scanner; use Vhdl.Scanner;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Std_Names; use Std_Names;
@@ -4371,7 +4371,7 @@ package body Parse is
       Xrefs.Xref_Keyword (Get_Token_Location);
 
       --  Recognize PSL keywords.
-      Scanner.Flag_Psl := True;
+      Vhdl.Scanner.Flag_Psl := True;
 
       --  Skip 'clock'.
       Expect_Scan (Tok_Psl_Clock);
@@ -4381,8 +4381,8 @@ package body Parse is
 
       Set_Psl_Boolean (Res, Parse_Psl.Parse_Psl_Boolean);
 
-      Scanner.Flag_Scan_In_Comment := False;
-      Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Scan_In_Comment := False;
+      Vhdl.Scanner.Flag_Psl := False;
 
       Expect_Scan (Tok_Semi_Colon);
 
@@ -4398,7 +4398,7 @@ package body Parse is
       Loc := Get_Token_Location;
 
       --  Recognize PSL keywords.
-      Scanner.Flag_Psl := True;
+      Vhdl.Scanner.Flag_Psl := True;
 
       --  Skip 'default'.
       Scan;
@@ -4425,10 +4425,10 @@ package body Parse is
       end if;
 
       --  Parse PSL declaration.
-      Scanner.Flag_Psl := True;
+      Vhdl.Scanner.Flag_Psl := True;
       Decl := Parse_Psl.Parse_Psl_Declaration (Tok);
-      Scanner.Flag_Scan_In_Comment := False;
-      Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Scan_In_Comment := False;
+      Vhdl.Scanner.Flag_Psl := False;
 
       Expect_Scan (Tok_Semi_Colon);
 
@@ -8469,7 +8469,7 @@ package body Parse is
    procedure Parse_Psl_Assert_Report_Severity (Stmt : Iir) is
    begin
       --  No more PSL tokens after the property.
-      Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Psl := False;
 
       if Current_Token = Tok_Report then
          --  Skip 'report'
@@ -8485,7 +8485,7 @@ package body Parse is
          Set_Severity_Expression (Stmt, Parse_Expression);
       end if;
 
-      Scanner.Flag_Scan_In_Comment := False;
+      Vhdl.Scanner.Flag_Scan_In_Comment := False;
 
       Expect_Scan (Tok_Semi_Colon);
    end Parse_Psl_Assert_Report_Severity;
@@ -8498,7 +8498,7 @@ package body Parse is
 
       --  Accept PSL tokens
       if Flags.Vhdl_Std >= Vhdl_08 then
-         Scanner.Flag_Psl := True;
+         Vhdl.Scanner.Flag_Psl := True;
       end if;
 
       --  Skip 'assert'

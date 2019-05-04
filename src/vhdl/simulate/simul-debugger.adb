@@ -24,7 +24,7 @@ with Name_Table;
 with Str_Table;
 with Files_Map;
 with Parse;
-with Scanner;
+with Vhdl.Scanner;
 with Tokens;
 with Sem_Expr;
 with Sem_Scopes;
@@ -1899,13 +1899,13 @@ package body Simul.Debugger is
       File := Files_Map.Create_Source_File_From_String
         (Name_Table.Get_Identifier ("*debug" & Index_Str & '*'),
          Line (P .. Line'Last));
-      Scanner.Set_File (File);
-      Scanner.Scan;
+      Vhdl.Scanner.Set_File (File);
+      Vhdl.Scanner.Scan;
       Expr := Parse.Parse_Expression;
-      if Scanner.Current_Token /= Tok_Eof then
+      if Vhdl.Scanner.Current_Token /= Tok_Eof then
          Put_Line ("garbage at end of expression ignored");
       end if;
-      Scanner.Close_File;
+      Vhdl.Scanner.Close_File;
       if Nbr_Errors /= 0 then
          Put_Line ("error while parsing expression, evaluation aborted");
          Nbr_Errors := 0;

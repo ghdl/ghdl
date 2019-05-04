@@ -18,7 +18,7 @@
 with Types; use Types;
 with Tokens; use Tokens;
 
-package Scanner is
+package Vhdl.Scanner is
    -- Global variables
    -- The token that was just scanned.
    -- When the token was eaten, you can call invalidate_current_token to
@@ -141,4 +141,4 @@ package Scanner is
    --  LRM93 13.2 Lexical elements, separators, and delimiters
    --  A space character (SPACE or NBSP) ...
    function Is_Whitespace (C : Character) return Boolean;
-end Scanner;
+end Vhdl.Scanner;
