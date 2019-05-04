@@ -15,7 +15,8 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-package body Tokens is
+
+package body Vhdl.Tokens is
    -- Return the name of the token.
    function Image (Token: Token_Type) return String is
    begin
@@ -452,4 +453,4 @@ package body Tokens is
       end case;
    end Image;
 
-end Tokens;
+end Vhdl.Tokens;

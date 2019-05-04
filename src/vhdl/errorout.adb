@@ -147,7 +147,7 @@ package body Errorout is
       return (Kind => Earg_Id, Val_Id => V);
    end "+";
 
-   function "+" (V : Tokens.Token_Type) return Earg_Type is
+   function "+" (V : Vhdl.Tokens.Token_Type) return Earg_Type is
    begin
       return (Kind => Earg_Token, Val_Tok => V);
    end "+";
@@ -330,7 +330,7 @@ package body Errorout is
                   when 't' =>
                      --  A token
                      declare
-                        use Tokens;
+                        use Vhdl.Tokens;
                         Arg : Earg_Type renames Args (Argn);
                         Tok : Token_Type;
                      begin

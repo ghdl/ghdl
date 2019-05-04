@@ -34,9 +34,9 @@ with Xrefs; use Xrefs;
 with Back_End;
 
 package body Sem_Specs is
-   function Get_Entity_Class_Kind (Decl : Iir) return Tokens.Token_Type
+   function Get_Entity_Class_Kind (Decl : Iir) return Vhdl.Tokens.Token_Type
    is
-      use Tokens;
+      use Vhdl.Tokens;
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Entity_Declaration =>
@@ -186,7 +186,7 @@ package body Sem_Specs is
                                Check_Class : Boolean;
                                Check_Defined : Boolean)
    is
-      use Tokens;
+      use Vhdl.Tokens;
       Attr_Expr : constant Iir := Get_Expression (Attr);
 
       El : Iir_Attribute_Value;
@@ -380,7 +380,7 @@ package body Sem_Specs is
       --  Note: ENT and DECL are different for aliases.
       function Sem_Named_Entity1 (Ent : Iir; Decl : Iir) return Boolean
       is
-         use Tokens;
+         use Vhdl.Tokens;
          Ent_Id : constant Name_Id := Get_Identifier (Ent);
       begin
          if (not Is_Designator or else Ent_Id = Get_Identifier (Name))
@@ -738,7 +738,7 @@ package body Sem_Specs is
            (+Name, "no %i for attribute specification", (1 => +Name));
       end Error_Attribute_Specification;
 
-      use Tokens;
+      use Vhdl.Tokens;
 
       Name : Iir;
       Attr : Iir_Attribute_Declaration;
@@ -877,7 +877,7 @@ package body Sem_Specs is
    procedure Check_Post_Attribute_Specification
      (Attr_Spec_Chain : Iir; Decl : Iir)
    is
-      use Tokens;
+      use Vhdl.Tokens;
 
       Has_Error : Boolean;
       Spec : Iir;

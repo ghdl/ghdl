@@ -25,7 +25,7 @@ with Str_Table;
 with Files_Map;
 with Parse;
 with Vhdl.Scanner;
-with Tokens;
+with Vhdl.Tokens;
 with Sem_Expr;
 with Sem_Scopes;
 with Canon;
@@ -1869,7 +1869,7 @@ package body Simul.Debugger is
 
    procedure Print_Proc (Line : String)
    is
-      use Tokens;
+      use Vhdl.Tokens;
       Index_Str : String := Natural'Image (Buffer_Index);
       File : Source_File_Entry;
       Expr : Iir;

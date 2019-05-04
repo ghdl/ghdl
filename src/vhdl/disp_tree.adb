@@ -337,8 +337,8 @@ package body Disp_Tree is
       end case;
    end Image_Iir_Direction;
 
-   function Image_Token_Type (Tok : Tokens.Token_Type) return String
-     renames Tokens.Image;
+   function Image_Token_Type (Tok : Vhdl.Tokens.Token_Type) return String
+     renames Vhdl.Tokens.Image;
 
    function Image_String8 (N : Iir) return String
    is

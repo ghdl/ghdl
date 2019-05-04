@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
-with Tokens; use Tokens;
+with Vhdl.Tokens; use Vhdl.Tokens;
 with Nodes;
 with Lists;
 with Flists;

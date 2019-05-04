@@ -18,7 +18,7 @@
 with Errorout; use Errorout;
 with Types; use Types;
 with Std_Names;
-with Tokens;
+with Vhdl.Tokens;
 with Flags; use Flags;
 with Std_Package; use Std_Package;
 with Evaluation; use Evaluation;
@@ -1790,7 +1790,7 @@ package body Sem_Decls is
 
    procedure Sem_Group_Declaration (Group : Iir_Group_Declaration)
    is
-      use Tokens;
+      use Vhdl.Tokens;
 
       Constituent_List : Iir_Flist;
       Template : Iir_Group_Template_Declaration;

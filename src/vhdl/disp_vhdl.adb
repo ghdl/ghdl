@@ -28,7 +28,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Name_Table;
 with Str_Table;
 with Std_Names;
-with Tokens;
+with Vhdl.Tokens;
 with PSL.Nodes;
 with PSL.Prints;
 with PSL.NFAs;
@@ -1610,9 +1610,9 @@ package body Disp_Vhdl is
       Disp_Ident (Get_Identifier (Attr));
    end Disp_Attribute_Name;
 
-   procedure Disp_Entity_Kind (Tok : Tokens.Token_Type) is
+   procedure Disp_Entity_Kind (Tok : Vhdl.Tokens.Token_Type) is
    begin
-      Put (Tokens.Image (Tok));
+      Put (Vhdl.Tokens.Image (Tok));
    end Disp_Entity_Kind;
 
    procedure Disp_Entity_Name_List (List : Iir_Flist)
@@ -1667,7 +1667,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Group_Template_Declaration (Decl : Iir)
    is
-      use Tokens;
+      use Vhdl.Tokens;
       Ent : Iir;
    begin
       Put ("group ");

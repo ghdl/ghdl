@@ -25,7 +25,7 @@ with Vhdl.Scanner;
 with Iirs_Utils; use Iirs_Utils;
 with Name_Table; use Name_Table;
 with Str_Table;
-with Tokens;
+with Vhdl.Tokens;
 with Files_Map;
 with Flags;
 with Std_Package;
@@ -328,7 +328,7 @@ package body Libraries is
    function Load_Library (Library: Iir_Library_Declaration) return Boolean
    is
       use Vhdl.Scanner;
-      use Tokens;
+      use Vhdl.Tokens;
 
       File : Source_File_Entry;
 

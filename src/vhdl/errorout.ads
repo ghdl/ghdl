@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Iirs; use Iirs;
-with Tokens;
+with Vhdl.Tokens;
 
 package Errorout is
    Option_Error: exception;
@@ -166,7 +166,7 @@ package Errorout is
    function "+" (V : Iir) return Earg_Type;
    function "+" (V : Location_Type) return Earg_Type;
    function "+" (V : Name_Id) return Earg_Type;
-   function "+" (V : Tokens.Token_Type) return Earg_Type;
+   function "+" (V : Vhdl.Tokens.Token_Type) return Earg_Type;
    function "+" (V : Character) return Earg_Type;
    function "+" (V : String8_Len_Type) return Earg_Type;
 
@@ -346,7 +346,7 @@ private
          when Earg_Char =>
             Val_Char : Character;
          when Earg_Token =>
-            Val_Tok : Tokens.Token_Type;
+            Val_Tok : Vhdl.Tokens.Token_Type;
          when Earg_String8 =>
             Val_Str8 : String8_Len_Type;
       end case;

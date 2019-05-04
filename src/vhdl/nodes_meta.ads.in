@@ -18,7 +18,7 @@
 
 with Types; use Types;
 with Iirs; use Iirs;
-with Tokens; use Tokens;
+with Vhdl.Tokens; use Vhdl.Tokens;
 
 package Nodes_Meta is
    --  The enumeration of all possible types in the nodes.

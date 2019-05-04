@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Iirs; use Iirs;
-with Tokens;
+with Vhdl.Tokens;
 
 package Sem_Specs is
    --  Return the attribute_value for named entity ENT and attribute identifier
@@ -29,7 +29,7 @@ package Sem_Specs is
    --  is also the parent of the declaration, but there are exceptions...
    function Get_Attribute_Value_Chain_Parent (Decl : Iir) return Iir;
 
-   function Get_Entity_Class_Kind (Decl : Iir) return Tokens.Token_Type;
+   function Get_Entity_Class_Kind (Decl : Iir) return Vhdl.Tokens.Token_Type;
 
    procedure Sem_Attribute_Specification
      (Spec : Iir_Attribute_Specification; Scope : Iir);

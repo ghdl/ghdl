@@ -19,7 +19,7 @@ with Types; use Types;
 with Std_Names;
 with Errorout; use Errorout;
 with Std_Package; use Std_Package;
-with Tokens; use Tokens;
+with Vhdl.Tokens; use Vhdl.Tokens;
 with Name_Table;
 with Ieee.Std_Logic_1164; use Ieee.Std_Logic_1164;
 with Sem_Scopes;

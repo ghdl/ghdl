@@ -27,7 +27,7 @@ with Files_Map;
 with Libraries;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
-with Tokens;
+with Vhdl.Tokens;
 with Vhdl.Scanner;
 with Parse;
 with Canon;
@@ -86,7 +86,7 @@ package body Ghdlprint is
    is
       use Flags;
       use Vhdl.Scanner;
-      use Tokens;
+      use Vhdl.Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
 
@@ -856,7 +856,7 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
       use Vhdl.Scanner;
-      use Tokens;
+      use Vhdl.Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
 
@@ -1047,7 +1047,7 @@ package body Ghdlprint is
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Tokens;
+      use Vhdl.Tokens;
       use Vhdl.Scanner;
 
       package Ref_Tokens is new Tables

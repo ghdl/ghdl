@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Tokens; use Tokens;
+with Vhdl.Tokens; use Vhdl.Tokens;
 
 package Parse_Psl is
    function Parse_Psl_Sequence (Full_Hdl_Expr : Boolean) return PSL_Node;
