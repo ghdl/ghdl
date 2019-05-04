@@ -33,7 +33,7 @@ with PSL.Nodes;
 with PSL.Prints;
 with PSL.NFAs;
 
-package body Disp_Vhdl is
+package body Vhdl.Disp_Vhdl is
 
    subtype Count is Positive;
 
@@ -3613,4 +3613,4 @@ package body Disp_Vhdl is
          Put (Str);
       end if;
    end Disp_Fp64;
-end Disp_Vhdl;
+end Vhdl.Disp_Vhdl;

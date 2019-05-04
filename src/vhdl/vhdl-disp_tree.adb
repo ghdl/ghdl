@@ -28,7 +28,7 @@ with Nodes_Meta;
 --  Do not add a use clause for iirs_utils, as it may crash for ill-formed
 --  trees, which is annoying while debugging.
 
-package body Disp_Tree is
+package body Vhdl.Disp_Tree is
    --  Max depth for Disp_Iir.  Can be modified from a debugger.
    pragma Warnings (Off);
    Max_Depth : Natural := 10;
@@ -601,4 +601,4 @@ package body Disp_Tree is
          Disp_Iir (Tree, 1, Max_Depth);
       end if;
    end Disp_Tree;
-end Disp_Tree;
+end Vhdl.Disp_Tree;

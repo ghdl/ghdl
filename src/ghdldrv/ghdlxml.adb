@@ -21,7 +21,7 @@ with Types; use Types;
 with Name_Table; use Name_Table;
 with Nodes_Meta; use Nodes_Meta;
 with Files_Map;
-with Disp_Tree; use Disp_Tree;
+with Vhdl.Disp_Tree; use Vhdl.Disp_Tree;
 with Ghdlprint; use Ghdlprint;
 with Libraries;
 with Errorout; use Errorout;

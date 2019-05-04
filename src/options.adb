@@ -22,7 +22,7 @@ with Libraries;
 with Std_Names;
 with PSL.Nodes;
 with PSL.Dump_Tree;
-with Disp_Tree;
+with Vhdl.Disp_Tree;
 with Vhdl.Scanner;
 with Back_End; use Back_End;
 with Flags; use Flags;
@@ -34,7 +34,7 @@ package body Options is
       Std_Names.Std_Names_Initialize;
       Libraries.Init_Paths;
       PSL.Nodes.Init;
-      PSL.Dump_Tree.Dump_Hdl_Node := Disp_Tree.Disp_Tree_For_Psl'Access;
+      PSL.Dump_Tree.Dump_Hdl_Node := Vhdl.Disp_Tree.Disp_Tree_For_Psl'Access;
    end Initialize;
 
    function Option_Warning (Opt: String; Val : Boolean) return Boolean is

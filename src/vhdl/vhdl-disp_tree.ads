@@ -19,7 +19,7 @@ with Types; use Types;
 with Iirs; use Iirs;
 with Vhdl.Tokens; use Vhdl.Tokens;
 
-package Disp_Tree is
+package Vhdl.Disp_Tree is
    --  Disp TREE recursively.
    procedure Disp_Tree (Tree : Iir; Flat : Boolean := False);
 
@@ -50,4 +50,4 @@ package Disp_Tree is
    function Image_Iir_Direction (Dir : Iir_Direction) return String;
    function Image_Token_Type (Tok : Vhdl.Tokens.Token_Type) return String;
    function Image_String8 (N : Iir) return String;
-end Disp_Tree;
+end Vhdl.Disp_Tree;

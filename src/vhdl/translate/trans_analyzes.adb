@@ -18,7 +18,7 @@
 
 with Iirs_Utils; use Iirs_Utils;
 with Iirs_Walk; use Iirs_Walk;
-with Disp_Vhdl;
+with Vhdl.Disp_Vhdl;
 with Ada.Text_IO;
 with Errorout;
 
@@ -246,7 +246,7 @@ package body Trans_Analyzes is
          else
             Put ("   ");
          end if;
-         Disp_Vhdl.Disp_Vhdl (El);
+         Vhdl.Disp_Vhdl.Disp_Vhdl (El);
          New_Line;
          Next (It);
       end loop;

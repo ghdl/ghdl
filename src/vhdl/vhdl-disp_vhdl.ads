@@ -18,7 +18,7 @@
 with Types; use Types;
 with Iirs; use Iirs;
 
-package Disp_Vhdl is
+package Vhdl.Disp_Vhdl is
    -- General procedure to display a node.
    -- Mainly used to dispatch to other functions according to the kind of
    -- the node.
@@ -37,4 +37,4 @@ package Disp_Vhdl is
 
    -- Disp an iir_Fp64, without the leading blank.
    procedure Disp_Fp64 (Val: Iir_Fp64);
-end Disp_Vhdl;
+end Vhdl.Disp_Vhdl;

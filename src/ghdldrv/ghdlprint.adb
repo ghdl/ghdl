@@ -36,7 +36,7 @@ with Xrefs;
 with Sem_Lib; use Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
-with Disp_Vhdl;
+with Vhdl.Disp_Vhdl;
 with Elocations;
 
 package body Ghdlprint is
@@ -1006,7 +1006,7 @@ package body Ghdlprint is
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
-               Disp_Vhdl.Disp_Vhdl (Unit);
+               Vhdl.Disp_Vhdl.Disp_Vhdl (Unit);
                Set_Chain (Unit, Null_Iir);
                Libraries.Add_Design_Unit_Into_Library (Unit);
             end if;

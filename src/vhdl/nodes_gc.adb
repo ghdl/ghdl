@@ -23,7 +23,7 @@ with Nodes;
 with Nodes_Meta; use Nodes_Meta;
 with Errorout; use Errorout;
 with Libraries;
-with Disp_Tree;
+with Vhdl.Disp_Tree;
 with Std_Package;
 
 package body Nodes_GC is
@@ -43,14 +43,14 @@ package body Nodes_GC is
       Log ("early reference to ");
       Log (Nodes_Meta.Get_Field_Image (F));
       Log (" in ");
-      Disp_Tree.Disp_Tree (N, True);
+      Vhdl.Disp_Tree.Disp_Tree (N, True);
       Has_Error := True;
    end Report_Early_Reference;
 
    procedure Report_Already_Marked (N : Iir) is
    begin
       Log ("Already marked ");
-      Disp_Tree.Disp_Tree (N, True);
+      Vhdl.Disp_Tree.Disp_Tree (N, True);
       Has_Error := True;
    end Report_Already_Marked;
 
@@ -177,7 +177,7 @@ package body Nodes_GC is
 
    procedure Report_Unreferenced_Node (N : Iir) is
    begin
-      Disp_Tree.Disp_Tree (N, True);
+      Vhdl.Disp_Tree.Disp_Tree (N, True);
       Has_Error := True;
    end Report_Unreferenced_Node;
 

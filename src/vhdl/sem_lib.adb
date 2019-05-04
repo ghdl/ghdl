@@ -23,8 +23,8 @@ with Errorout; use Errorout;
 with Libraries; use Libraries;
 with Vhdl.Scanner;
 with Vhdl.Parse;
-with Disp_Tree;
-with Disp_Vhdl;
+with Vhdl.Disp_Tree;
+with Vhdl.Disp_Vhdl;
 with Sem;
 with Post_Sems;
 with Canon;
@@ -80,7 +80,7 @@ package body Sem_Lib is
    begin
       Lib_Unit := Get_Library_Unit (Unit);
       if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
-         Disp_Tree.Disp_Tree (Unit);
+         Vhdl.Disp_Tree.Disp_Tree (Unit);
       end if;
 
       if Flags.Check_Ast_Level > 0 then
@@ -95,7 +95,7 @@ package body Sem_Lib is
       Sem.Semantic (Unit);
 
       if (Main or Flags.Dump_All) and then Flags.Dump_Sem then
-         Disp_Tree.Disp_Tree (Unit);
+         Vhdl.Disp_Tree.Disp_Tree (Unit);
       end if;
 
       if Errorout.Nbr_Errors > 0 then
@@ -103,7 +103,7 @@ package body Sem_Lib is
       end if;
 
       if (Main or Flags.List_All) and then Flags.List_Sem then
-         Disp_Vhdl.Disp_Vhdl (Unit);
+         Vhdl.Disp_Vhdl.Disp_Vhdl (Unit);
       end if;
 
       if Flags.Check_Ast_Level > 0 then
@@ -130,7 +130,7 @@ package body Sem_Lib is
       Canon.Canonicalize (Unit);
 
       if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
-         Disp_Tree.Disp_Tree (Unit);
+         Vhdl.Disp_Tree.Disp_Tree (Unit);
       end if;
 
       if Errorout.Nbr_Errors > 0 then
@@ -138,7 +138,7 @@ package body Sem_Lib is
       end if;
 
       if (Main or Flags.List_All) and then Flags.List_Canon then
-         Disp_Vhdl.Disp_Vhdl (Unit);
+         Vhdl.Disp_Vhdl.Disp_Vhdl (Unit);
       end if;
 
       if Flags.Check_Ast_Level > 0 then
