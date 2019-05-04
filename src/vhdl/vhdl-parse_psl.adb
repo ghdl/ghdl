@@ -22,9 +22,9 @@ with Iirs;
 with Vhdl.Scanner; use Vhdl.Scanner;
 with PSL.Errors; use PSL.Errors;
 with PSL.Priorities; use PSL.Priorities;
-with Parse;
+with Vhdl.Parse;
 
-package body Parse_Psl is
+package body Vhdl.Parse_Psl is
    procedure Error_Msg_Parse (Msg: String) is
    begin
       Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg);
@@ -864,4 +864,4 @@ package body Parse_Psl is
    begin
       return Get_Parameter_List (N) = Null_Node;
    end Is_Instantiated_Declaration;
-end Parse_Psl;
+end Vhdl.Parse_Psl;

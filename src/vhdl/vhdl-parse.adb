@@ -22,7 +22,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Std_Names; use Std_Names;
 with Flags; use Flags;
-with Parse_Psl;
+with Vhdl.Parse_Psl;
 with Str_Table;
 with Xrefs;
 with Elocations; use Elocations;
@@ -44,8 +44,7 @@ with Elocations; use Elocations;
 --    'a token' means the current token was analysed.
 --    'next token' means the current token is to be analysed.
 
-
-package body Parse is
+package body Vhdl.Parse is
 
    -- current_token must be valid.
    -- Leaves a token.
@@ -9869,4 +9868,4 @@ package body Parse is
 
       return Res;
    end Parse_Design_File;
-end Parse;
+end Vhdl.Parse;

@@ -18,7 +18,7 @@
 with Types; use Types;
 with Iirs; use Iirs;
 
-package Parse is
+package Vhdl.Parse is
    --  If True, create nodes for parenthesis expressions.
    Flag_Parse_Parenthesis : Boolean := False;
 
@@ -60,4 +60,4 @@ package Parse is
    --  The scanner must have been initialized as for parse_design_unit.
    --  Return Null_Iir in case of error.
    function Parse_Design_File return Iir_Design_File;
-end Parse;
+end Vhdl.Parse;

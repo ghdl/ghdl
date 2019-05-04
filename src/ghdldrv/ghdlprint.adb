@@ -29,7 +29,7 @@ with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Tokens;
 with Vhdl.Scanner;
-with Parse;
+with Vhdl.Parse;
 with Canon;
 with Version;
 with Xrefs;
@@ -984,7 +984,7 @@ package body Ghdlprint is
       Setup_Libraries (True);
 
       --  Keep parenthesis during parse.
-      Parse.Flag_Parse_Parenthesis := True;
+      Vhdl.Parse.Flag_Parse_Parenthesis := True;
 
       Canon.Canon_Flag_Concurrent_Stmts := False;
       Canon.Canon_Flag_Configurations := False;

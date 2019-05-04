@@ -23,7 +23,7 @@ with Types; use Types;
 with Name_Table;
 with Str_Table;
 with Files_Map;
-with Parse;
+with Vhdl.Parse;
 with Vhdl.Scanner;
 with Vhdl.Tokens;
 with Sem_Expr;
@@ -1337,7 +1337,8 @@ package body Simul.Debugger is
                Len := Len + 1;
                P := P + 1;
             end loop;
-            Break_Id := Parse.Str_To_Operator_Name (Str, Len, No_Location);
+            Break_Id := Vhdl.Parse.Str_To_Operator_Name
+              (Str, Len, No_Location);
             --  FIXME: free string.
             --  FIXME: catch error.
          end;
@@ -1901,7 +1902,7 @@ package body Simul.Debugger is
          Line (P .. Line'Last));
       Vhdl.Scanner.Set_File (File);
       Vhdl.Scanner.Scan;
-      Expr := Parse.Parse_Expression;
+      Expr := Vhdl.Parse.Parse_Expression;
       if Vhdl.Scanner.Current_Token /= Tok_Eof then
          Put_Line ("garbage at end of expression ignored");
       end if;

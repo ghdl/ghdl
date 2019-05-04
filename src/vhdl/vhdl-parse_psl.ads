@@ -19,7 +19,7 @@
 with Types; use Types;
 with Vhdl.Tokens; use Vhdl.Tokens;
 
-package Parse_Psl is
+package Vhdl.Parse_Psl is
    function Parse_Psl_Sequence (Full_Hdl_Expr : Boolean) return PSL_Node;
    function Parse_Psl_Property return PSL_Node;
    function Parse_Psl_Boolean return PSL_Node;
@@ -27,4 +27,4 @@ package Parse_Psl is
 
    --  True if endpoint declaration N is instantiated (ie has no parameters).
    function Is_Instantiated_Declaration (N : PSL_Node) return Boolean;
-end Parse_Psl;
+end Vhdl.Parse_Psl;

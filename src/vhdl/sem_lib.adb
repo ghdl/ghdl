@@ -22,7 +22,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Libraries; use Libraries;
 with Vhdl.Scanner;
-with Parse;
+with Vhdl.Parse;
 with Disp_Tree;
 with Disp_Vhdl;
 with Sem;
@@ -46,7 +46,7 @@ package body Sem_Lib is
          --  as an identifier, which is not valid at the beginning of a file.
          Res := Null_Iir;
       else
-         Res := Parse.Parse_Design_File;
+         Res := Vhdl.Parse.Parse_Design_File;
       end if;
       Vhdl.Scanner.Close_File;
 
@@ -207,7 +207,7 @@ package body Sem_Lib is
 
       --  Parse
       Scan;
-      Res := Parse.Parse_Design_Unit;
+      Res := Vhdl.Parse.Parse_Design_Unit;
       Close_File;
       if Res = Null_Iir then
          raise Compilation_Error;

@@ -20,7 +20,7 @@ with Errorout; use Errorout;
 with Flags; use Flags;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
-with Parse;
+with Vhdl.Parse;
 with Std_Names;
 with Sem_Names; use Sem_Names;
 with Sem_Types;
@@ -83,7 +83,7 @@ package body Sem_Assocs is
          when Iir_Kinds_Interface_Subprogram_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Subprogram);
             if Get_Kind (Actual) = Iir_Kind_String_Literal8 then
-               Actual := Parse.String_To_Operator_Symbol (Actual);
+               Actual := Vhdl.Parse.String_To_Operator_Symbol (Actual);
             end if;
          when others =>
             Error_Kind ("rewrite_non_object_association", Inter);
