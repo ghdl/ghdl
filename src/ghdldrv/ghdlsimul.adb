@@ -29,7 +29,7 @@ with Errorout; use Errorout;
 with Std_Package;
 with Libraries;
 with Vhdl.Canon;
-with Configuration;
+with Vhdl.Configuration;
 with Iirs_Utils;
 with Simul.Annotations;
 with Simul.Elaboration;
@@ -81,7 +81,7 @@ package body Ghdlsimul is
    is
       use Name_Table;
       use Types;
-      use Configuration;
+      use Vhdl.Configuration;
 
       First_Id : Name_Id;
       Sec_Id : Name_Id;
@@ -102,7 +102,7 @@ package body Ghdlsimul is
       else
          Sec_Id := Get_Identifier (Sec_Name.all);
       end if;
-      Top_Conf := Configuration.Configure (First_Id, Sec_Id);
+      Top_Conf := Vhdl.Configuration.Configure (First_Id, Sec_Id);
       if Top_Conf = Null_Iir then
          raise Compilation_Error;
       end if;
@@ -115,7 +115,7 @@ package body Ghdlsimul is
            (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
          Entity : constant Iir := Iirs_Utils.Get_Entity (Arch);
       begin
-         Configuration.Check_Entity_Declaration_Top (Entity);
+         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity);
          if Nbr_Errors > 0 then
             raise Compilation_Error;
          end if;

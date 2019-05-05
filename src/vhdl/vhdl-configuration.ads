@@ -19,7 +19,7 @@ with Types; use Types;
 with Iirs; use Iirs;
 with Tables;
 
-package Configuration is
+package Vhdl.Configuration is
    package Design_Units is new Tables
      (Table_Component_Type => Iir_Design_Unit,
       Table_Index_Type => Natural,
@@ -60,4 +60,4 @@ package Configuration is
    --  a design file): mark all instantiated units and return the unmarked
    --  one if there is only one.
    function Find_Top_Entity (From : Iir) return Iir;
-end Configuration;
+end Vhdl.Configuration;

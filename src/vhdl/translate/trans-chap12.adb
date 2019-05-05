@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Configuration;
+with Vhdl.Configuration;
 with Errorout; use Errorout;
 with Std_Package; use Std_Package;
 with Iirs_Utils; use Iirs_Utils;
@@ -419,7 +419,7 @@ package body Trans.Chap12 is
    --  Write to file FILELIST all the files that are needed to link the design.
    procedure Gen_Stubs
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       --  Add all dependences of UNIT.
       --  UNIT is not used, but added during link.
@@ -527,7 +527,7 @@ package body Trans.Chap12 is
 
    procedure Elaborate (Config : Iir_Design_Unit; Whole : Boolean)
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;

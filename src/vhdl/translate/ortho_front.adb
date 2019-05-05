@@ -27,7 +27,7 @@ with Libraries;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package;
 with Flags;
-with Configuration;
+with Vhdl.Configuration;
 with Translation;
 with Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
@@ -324,7 +324,7 @@ package body Ortho_Front is
 
       --  Gather dependencies
       pragma Assert (Flags.Flag_Elaborate = False);
-      Configuration.Flag_Load_All_Design_Units := False;
+      Vhdl.Configuration.Flag_Load_All_Design_Units := False;
 
       --  Exclude std.standard
       Set_Configuration_Mark_Flag (Std_Package.Std_Standard_Unit, True);
@@ -450,7 +450,7 @@ package body Ortho_Front is
    is
       use Interfaces.C_Streams;
       use System;
-      use Configuration;
+      use Vhdl.Configuration;
       use Name_Table;
 
       Nul : constant Character := Character'Val (0);
@@ -550,7 +550,7 @@ package body Ortho_Front is
             Trans_Be.Sem_Foreign_Hook := Sem_Foreign_Hook'Access;
             Shlib_Interning.Init;
 
-            Config := Configuration.Configure
+            Config := Vhdl.Configuration.Configure
               (Elab_Entity.all, Elab_Architecture.all);
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).
@@ -604,7 +604,7 @@ package body Ortho_Front is
 
             Flags.Flag_Elaborate := True;
             Flags.Flag_Only_Elab_Warnings := False;
-            Config := Configuration.Configure
+            Config := Vhdl.Configuration.Configure
               (Elab_Entity.all, Elab_Architecture.all);
             Translation.Elaborate (Config, True);
 

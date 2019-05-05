@@ -27,7 +27,7 @@ with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Canon;
 
-package body Configuration is
+package body Vhdl.Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
    procedure Add_Design_Block_Configuration (Blk : Iir_Block_Configuration);
    procedure Add_Design_Aspect (Aspect : Iir; Add_Default : Boolean);
@@ -971,4 +971,4 @@ package body Configuration is
       end if;
    end Find_Top_Entity;
 
-end Configuration;
+end Vhdl.Configuration;

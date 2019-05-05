@@ -29,7 +29,7 @@ with Vhdl.Disp_Vhdl;
 with Default_Paths;
 with Vhdl.Scanner;
 with Errorout;
-with Configuration;
+with Vhdl.Configuration;
 with Files_Map;
 with Options;
 with Iirs_Utils; use Iirs_Utils;
@@ -1166,7 +1166,7 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
 
-      Top := Configuration.Find_Top_Entity (From);
+      Top := Vhdl.Configuration.Find_Top_Entity (From);
 
       if Top = Null_Iir then
          Error ("no top entity found");
@@ -1344,7 +1344,7 @@ package body Ghdllocal is
          Append_Element (List, File);
       end Build_Dependence_List;
 
-      use Configuration;
+      use Vhdl.Configuration;
       use Name_Table;
 
       Top : Iir;

@@ -27,7 +27,7 @@ with Std_Package;
 with Types; use Types;
 with Iirs; use Iirs;
 with Files_Map;
-with Configuration;
+with Vhdl.Configuration;
 with Default_Paths;
 with Interfaces.C_Streams;
 with System;
@@ -1488,7 +1488,7 @@ package body Ghdldrv is
 
    procedure Perform_Action (Cmd : Command_Make; Args : Argument_List)
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       File : Iir_Design_File;
       Unit : Iir;

@@ -37,7 +37,7 @@ with Flags;
 with Errorout; use Errorout;
 with Libraries;
 with Vhdl.Canon;
-with Configuration;
+with Vhdl.Configuration;
 with Trans_Be;
 with Translation;
 with Ieee.Std_Logic_1164;
@@ -167,7 +167,7 @@ package body Ghdlrun is
 
       Flags.Flag_Elaborate := True;
 
-      Config := Configuration.Configure (Prim_Name.all, Sec_Name.all);
+      Config := Vhdl.Configuration.Configure (Prim_Name.all, Sec_Name.all);
       if Config = Null_Iir then
          raise Compilation_Error;
       end if;
