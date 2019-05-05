@@ -110,7 +110,7 @@ package Netlists is
    subtype Port_Outs is Port_Kind range Port_Out .. Port_Inout;
 
    --  Each module has a numeric identifier that can be used to easily identify
-   --  a module.  Gates (and, or, ...) have reverved identifiers.
+   --  a module.  Gates (and, or, ...) have reserved identifiers.
    type Module_Id is new Uns32;
 
    --  Reserved id for no identifier.
