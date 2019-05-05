@@ -17,9 +17,9 @@
 --  02111-1307, USA.
 with Iirs; use Iirs;
 
-package Post_Sems is
+package Vhdl.Post_Sems is
    --  Do post analyze checks, such as VITAL checks.
    --  This procedure is also used to extract declarations from ieee
    --  packages.
    procedure Post_Sem_Checks (Unit : Iir_Design_Unit);
-end Post_Sems;
+end Vhdl.Post_Sems;

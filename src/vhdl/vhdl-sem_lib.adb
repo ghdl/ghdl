@@ -26,7 +26,7 @@ with Vhdl.Parse;
 with Vhdl.Disp_Tree;
 with Vhdl.Disp_Vhdl;
 with Vhdl.Sem;
-with Post_Sems;
+with Vhdl.Post_Sems;
 with Vhdl.Canon;
 with Nodes_GC;
 
@@ -113,7 +113,7 @@ package body Vhdl.Sem_Lib is
       --  Post checks
       ----------------
 
-      Post_Sems.Post_Sem_Checks (Unit);
+      Vhdl.Post_Sems.Post_Sem_Checks (Unit);
 
       if Errorout.Nbr_Errors > 0 then
          return;

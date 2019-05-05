@@ -23,7 +23,7 @@ with Ieee.Vital_Timing;
 with Ieee.Numeric;
 with Flags; use Flags;
 
-package body Post_Sems is
+package body Vhdl.Post_Sems is
    procedure Post_Sem_Checks (Unit : Iir_Design_Unit)
    is
       Lib_Unit : constant Iir := Get_Library_Unit (Unit);
@@ -79,4 +79,4 @@ package body Post_Sems is
          end loop;
       end if;
    end Post_Sem_Checks;
-end Post_Sems;
+end Vhdl.Post_Sems;
