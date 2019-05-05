@@ -16,9 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Elocations; use Elocations;
+with Vhdl.Elocations; use Vhdl.Elocations;
 
-package body Elocations_Meta is
+package body Vhdl.Elocations_Meta is
    function Get_Field_Image (F : Fields_Enum) return String is
    begin
       case F is
@@ -402,4 +402,4 @@ package body Elocations_Meta is
 
 
    pragma Warnings (On, """others"" choice is redundant");
-end Elocations_Meta;
+end Vhdl.Elocations_Meta;

@@ -25,7 +25,7 @@ with Flags; use Flags;
 with Vhdl.Parse_Psl;
 with Str_Table;
 with Xrefs;
-with Elocations; use Elocations;
+with Vhdl.Elocations; use Vhdl.Elocations;
 
 --  Recursive descendant parser.
 --  Each subprogram (should) parse one production rules.

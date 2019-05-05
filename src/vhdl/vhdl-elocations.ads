@@ -19,7 +19,7 @@
 with Types; use Types;
 with Iirs; use Iirs;
 
-package Elocations is
+package Vhdl.Elocations is
 
    -- Start of Iir_Kind.
 
@@ -696,4 +696,4 @@ package Elocations is
    --  Field: Field3
    function Get_Assign_Location (N : Iir) return Location_Type;
    procedure Set_Assign_Location (N : Iir; Loc : Location_Type);
-end Elocations;
+end Vhdl.Elocations;

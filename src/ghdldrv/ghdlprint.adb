@@ -37,7 +37,7 @@ with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Vhdl.Disp_Vhdl;
-with Elocations;
+with Vhdl.Elocations;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -754,7 +754,7 @@ package body Ghdlprint is
                Lib := Get_Library_Unit (Unit);
 
                Location_To_File_Pos
-                 (Elocations.Get_End_Location (Lib), File_Entry, Lend);
+                 (Vhdl.Elocations.Get_End_Location (Lib), File_Entry, Lend);
                if Lend < First then
                   raise Internal_Error;
                end if;

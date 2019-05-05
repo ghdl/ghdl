@@ -1,4 +1,4 @@
---  Meta description of elocations
+--  Meta description of Elocations.
 --  Copyright (C) 2017 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -16,21 +16,28 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Types; use Types;
-with Iirs; use Iirs;
+with Vhdl.Elocations; use Vhdl.Elocations;
 
-package Elocations_Meta is
-   --  The enumeration of all fields defined in iirs.
-   type Fields_Enum is
-     (
-      --  FIELDS
-     );
-   pragma Discard_Names (Fields_Enum);
+package body Vhdl.Elocations_Meta is
+   function Get_Field_Image (F : Fields_Enum) return String is
+   begin
+      case F is
+         --  FIELD_IMAGE
+      end case;
+   end Get_Field_Image;
 
-   --  Get the name of a field.
-   function Get_Field_Image (F : Fields_Enum) return String;
+   type Field_Type is (Type_Location_Type);
 
+   function Fields_Type (F : Fields_Enum) return Field_Type
+   is
+      pragma Unreferenced (F);
+   begin
+      return Type_Location_Type;
+   end Fields_Type;
 
-   --  Get/Set a field.
-   --  FUNCS
-end Elocations_Meta;
+   pragma Warnings (Off, """others"" choice is redundant");
+
+   --  FUNCS_BODY
+
+   pragma Warnings (On, """others"" choice is redundant");
+end Vhdl.Elocations_Meta;

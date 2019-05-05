@@ -18,9 +18,9 @@
 
 with Tables;
 with Nodes;
-with Elocations_Meta; use Elocations_Meta;
+with Vhdl.Elocations_Meta; use Vhdl.Elocations_Meta;
 
-package body Elocations is
+package body Vhdl.Elocations is
 
    --  Format of a node.
    type Format_Type is
@@ -707,4 +707,4 @@ package body Elocations is
       Set_Field3 (N, Loc);
    end Set_Assign_Location;
 
-end Elocations;
+end Vhdl.Elocations;

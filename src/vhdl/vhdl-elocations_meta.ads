@@ -19,7 +19,7 @@
 with Types; use Types;
 with Iirs; use Iirs;
 
-package Elocations_Meta is
+package Vhdl.Elocations_Meta is
    --  The enumeration of all fields defined in iirs.
    type Fields_Enum is
      (
@@ -66,4 +66,4 @@ package Elocations_Meta is
    function Has_Arrow_Location (K : Iir_Kind) return Boolean;
    function Has_Colon_Location (K : Iir_Kind) return Boolean;
    function Has_Assign_Location (K : Iir_Kind) return Boolean;
-end Elocations_Meta;
+end Vhdl.Elocations_Meta;
