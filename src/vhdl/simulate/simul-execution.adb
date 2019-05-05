@@ -23,7 +23,7 @@ with Grt.Types; use Grt.Types;
 with Flags; use Flags;
 with Errorout; use Errorout;
 with Vhdl.Std_Package;
-with Evaluation;
+with Vhdl.Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Simul.Annotations; use Simul.Annotations;
 with Name_Table;
@@ -361,7 +361,7 @@ package body Simul.Execution is
    function Execute_Path_Instance_Name_Attribute
      (Block : Block_Instance_Acc; Attr : Iir) return Iir_Value_Literal_Acc
    is
-      use Evaluation;
+      use Vhdl.Evaluation;
       use Grt.Vstrings;
       use Name_Table;
 
@@ -1420,7 +1420,7 @@ package body Simul.Execution is
             begin
                Unit := Get_Unit_Chain (Vhdl.Std_Package.Time_Type_Definition);
                while Unit /= Null_Iir loop
-                  exit when Evaluation.Get_Physical_Value (Unit)
+                  exit when Vhdl.Evaluation.Get_Physical_Value (Unit)
                     = Iir_Int64 (Right.I64);
                   Unit := Get_Chain (Unit);
                end loop;
@@ -2279,7 +2279,7 @@ package body Simul.Execution is
    is
       Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Attr));
       Dim : constant Natural :=
-        Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
+        Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
    begin
       case Get_Kind (Prefix) is
          when Iir_Kind_Type_Declaration
@@ -3076,7 +3076,7 @@ package body Simul.Execution is
            | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Unit_Declaration =>
             return Create_I64_Value
-              (Ghdl_I64 (Evaluation.Get_Physical_Value (Expr)));
+              (Ghdl_I64 (Vhdl.Evaluation.Get_Physical_Value (Expr)));
 
          when Iir_Kind_String_Literal8 =>
             return Execute_String_Literal (Expr, Block);
@@ -4380,7 +4380,7 @@ package body Simul.Execution is
               Get_Type (Get_Choice_Expression (Assoc));
             Choice_Len : Iir_Int64;
          begin
-            Choice_Len := Evaluation.Eval_Discrete_Type_Length
+            Choice_Len := Vhdl.Evaluation.Eval_Discrete_Type_Length
               (Get_String_Type_Bound_Type (Choice_Type));
             if Choice_Len /= Iir_Int64 (Value.Bounds.D (1).Length) then
                Error_Msg_Constraint (Expr);

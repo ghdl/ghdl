@@ -19,7 +19,7 @@
 with Files_Map;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Trans.Chap3;
 with Trans.Chap7;
 with Trans.Chap14;

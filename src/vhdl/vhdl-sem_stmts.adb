@@ -28,7 +28,7 @@ with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
 with Vhdl.Sem_Types;
 with Vhdl.Sem_Psl;
 with Std_Names;
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Xrefs; use Xrefs;
 

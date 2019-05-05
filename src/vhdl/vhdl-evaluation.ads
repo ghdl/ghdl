@@ -18,7 +18,7 @@
 with Types; use Types;
 with Iirs; use Iirs;
 
-package Evaluation is
+package Vhdl.Evaluation is
 
    --  Evaluation is about compile-time computation of expressions, such as
    --  2 + 1 --> 3.  This is (of course) possible only with locally (and some
@@ -215,4 +215,4 @@ package Evaluation is
 
    --  Create a copy of VAL.
    function Copy_Constant (Val : Iir) return Iir;
-end Evaluation;
+end Vhdl.Evaluation;

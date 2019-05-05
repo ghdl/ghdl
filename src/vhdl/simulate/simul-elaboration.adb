@@ -19,7 +19,7 @@
 with Ada.Text_IO;
 with Str_Table;
 with Errorout; use Errorout;
-with Evaluation;
+with Vhdl.Evaluation;
 with Simul.Execution; use Simul.Execution;
 with Iirs_Utils; use Iirs_Utils;
 with Libraries;
@@ -2861,7 +2861,7 @@ package body Simul.Elaboration is
 
    function Override_Generic (Formal : Iir; Str : String) return Iir
    is
-      use Evaluation;
+      use Vhdl.Evaluation;
       Formal_Type : constant Iir := Get_Type (Formal);
       Formal_Btype : constant Iir := Get_Base_Type (Formal_Type);
       Res : Iir;

@@ -28,7 +28,7 @@ with Errorout; use Errorout;
 with Vhdl.Sem_Expr;
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Ieee.Std_Logic_1164;
-with Evaluation;
+with Vhdl.Evaluation;
 
 with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
@@ -197,7 +197,7 @@ package body Synth.Stmts is
    begin
       if El_Type = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
          declare
-            use Evaluation.String_Utils;
+            use Vhdl.Evaluation.String_Utils;
 
             Info : constant Str_Info := Get_Str_Info (Expr);
          begin

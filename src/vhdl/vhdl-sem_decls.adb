@@ -21,7 +21,7 @@ with Std_Names;
 with Vhdl.Tokens;
 with Flags; use Flags;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Sem; use Vhdl.Sem;
 with Vhdl.Sem_Utils; use Vhdl.Sem_Utils;

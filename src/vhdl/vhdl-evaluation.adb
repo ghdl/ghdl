@@ -28,7 +28,7 @@ with Std_Names;
 with Ada.Characters.Handling;
 with Grt.Fcvt;
 
-package body Evaluation is
+package body Vhdl.Evaluation is
    --  If FORCE is true, always return a literal.
    function Eval_Expr_Keep_Orig (Expr : Iir; Force : Boolean) return Iir;
 
@@ -3991,4 +3991,4 @@ package body Evaluation is
       end;
    end Get_Path_Instance_Name_Suffix;
 
-end Evaluation;
+end Vhdl.Evaluation;

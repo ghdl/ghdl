@@ -25,7 +25,7 @@ with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Flags; use Flags;
 with Vhdl.Canon;
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap6;

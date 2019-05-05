@@ -19,7 +19,7 @@
 with Name_Table;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Trans.Chap2;
 with Trans.Chap4;
 with Trans.Chap6;

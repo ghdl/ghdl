@@ -26,7 +26,7 @@ with Vhdl.Sem;
 with Name_Table;
 with Str_Table;
 with Iirs_Utils; use Iirs_Utils;
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Iir_Chains; use Iir_Chains;
 with Vhdl.Sem_Types;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;

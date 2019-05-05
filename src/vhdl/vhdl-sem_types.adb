@@ -19,7 +19,7 @@ with Libraries;
 with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Sem_Utils;
 with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;

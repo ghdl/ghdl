@@ -21,7 +21,7 @@ with Std_Names;
 with Errorout; use Errorout;
 with Iir_Chains;
 with Vhdl.Canon;
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Iirs_Utils; use Iirs_Utils;
 with Trans.Chap2;

@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Evaluation; use Evaluation;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
