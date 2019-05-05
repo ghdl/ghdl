@@ -837,7 +837,8 @@ package body Synth.Expr is
             return Synth_Slice_Name (Syn_Inst, Expr);
          when Iir_Kind_Character_Literal
            | Iir_Kind_Integer_Literal
-           | Iir_Kind_String_Literal8 =>
+           | Iir_Kind_String_Literal8
+           | Iir_Kind_Enumeration_Literal =>
             return Create_Value_Lit
               (Simul.Execution.Execute_Expression (Syn_Inst.Sim, Expr),
                Get_Base_Type (Get_Type (Expr)));
