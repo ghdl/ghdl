@@ -20,7 +20,7 @@ with Types; use Types;
 with Std_Names;
 with Vhdl.Tokens;
 with Flags; use Flags;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Evaluation; use Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Sem; use Vhdl.Sem;

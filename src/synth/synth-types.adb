@@ -19,7 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
-with Std_Package;
+with Vhdl.Std_Package;
 with Ieee.Std_Logic_1164;
 with Iirs_Utils; use Iirs_Utils;
 
@@ -32,8 +32,8 @@ package body Synth.Types is
    begin
       return Atype = Ieee.Std_Logic_1164.Std_Ulogic_Type
         or else Atype = Ieee.Std_Logic_1164.Std_Logic_Type
-        or else Atype = Std_Package.Boolean_Type_Definition
-        or else Atype = Std_Package.Bit_Type_Definition;
+        or else Atype = Vhdl.Std_Package.Boolean_Type_Definition
+        or else Atype = Vhdl.Std_Package.Bit_Type_Definition;
    end Is_Bit_Type;
 
    function Is_Vector_Type (Atype : Iir) return Boolean is

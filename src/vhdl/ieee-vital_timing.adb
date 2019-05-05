@@ -18,7 +18,7 @@
 with Types; use Types;
 with Std_Names;
 with Errorout; use Errorout;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Name_Table;
 with Ieee.Std_Logic_1164; use Ieee.Std_Logic_1164;

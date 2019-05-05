@@ -21,7 +21,7 @@
 --  input file.  If parenthesis are kept by the parser, the only differences
 --  are comments and layout.
 with GNAT.OS_Lib;
-with Std_Package;
+with Vhdl.Std_Package;
 with Flags; use Flags;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
@@ -442,10 +442,10 @@ package body Vhdl.Disp_Vhdl is
       Base_Type: Iir_Integer_Type_Definition;
       Decl: Iir;
    begin
-      if Def /= Std_Package.Universal_Integer_Subtype_Definition then
+      if Def /= Vhdl.Std_Package.Universal_Integer_Subtype_Definition then
          Base_Type := Get_Base_Type (Def);
          Decl := Get_Type_Declarator (Base_Type);
-         if Base_Type /= Std_Package.Universal_Integer_Subtype_Definition
+         if Base_Type /= Vhdl.Std_Package.Universal_Integer_Subtype_Definition
            and then Def /= Decl
          then
             Disp_Name_Of (Decl);
@@ -464,10 +464,10 @@ package body Vhdl.Disp_Vhdl is
       Base_Type: Iir_Floating_Type_Definition;
       Decl: Iir;
    begin
-      if Def /= Std_Package.Universal_Real_Subtype_Definition then
+      if Def /= Vhdl.Std_Package.Universal_Real_Subtype_Definition then
          Base_Type := Get_Base_Type (Def);
          Decl := Get_Type_Declarator (Base_Type);
-         if Base_Type /= Std_Package.Universal_Real_Subtype_Definition
+         if Base_Type /= Vhdl.Std_Package.Universal_Real_Subtype_Definition
            and then Def /= Decl
          then
             Disp_Name_Of (Decl);
@@ -2683,7 +2683,7 @@ package body Vhdl.Disp_Vhdl is
       Put (Name);
       Param := Get_Parameter (Expr);
       if Param /= Null_Iir
-        and then Param /= Std_Package.Universal_Integer_One
+        and then Param /= Vhdl.Std_Package.Universal_Integer_One
       then
          Put (" (");
          Disp_Expression (Param);

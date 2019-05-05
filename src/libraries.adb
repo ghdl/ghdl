@@ -28,7 +28,7 @@ with Str_Table;
 with Vhdl.Tokens;
 with Files_Map;
 with Flags;
-with Std_Package;
+with Vhdl.Std_Package;
 
 package body Libraries is
    --  Chain of known libraries.  This is also the top node of all iir node.
@@ -626,7 +626,7 @@ package body Libraries is
    -- Note: the scanner shouldn't be in use, since this procedure uses it.
    procedure Load_Std_Library (Build_Standard : Boolean := True)
    is
-      use Std_Package;
+      use Vhdl.Std_Package;
       Dir : Name_Id;
    begin
       if Libraries_Chain /= Null_Iir then
@@ -637,7 +637,7 @@ package body Libraries is
       Flags.Create_Flag_String;
       Create_Virtual_Locations;
 
-      Std_Package.Create_First_Nodes;
+      Vhdl.Std_Package.Create_First_Nodes;
 
       --  Create the library.
       Std_Library := Create_Iir (Iir_Kind_Library_Declaration);
@@ -1325,7 +1325,7 @@ package body Libraries is
       Design_File := Get_Design_File_Chain (Library);
       while Design_File /= Null_Iir loop
          --  Ignore std.standard as there is no corresponding file.
-         if Design_File = Std_Package.Std_Standard_File then
+         if Design_File = Vhdl.Std_Package.Std_Standard_File then
             goto Continue;
          end if;
          Design_Unit := Get_First_Design_Unit (Design_File);

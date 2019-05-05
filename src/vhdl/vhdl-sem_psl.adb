@@ -28,7 +28,7 @@ with Vhdl.Sem_Names;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Evaluation; use Evaluation;
-with Std_Package;
+with Vhdl.Std_Package;
 with Ieee.Std_Logic_1164;
 with Errorout; use Errorout;
 with Xrefs; use Xrefs;
@@ -46,8 +46,8 @@ package body Vhdl.Sem_Psl is
          return False;
       end if;
       Btype := Get_Base_Type (Atype);
-      return Btype = Std_Package.Boolean_Type_Definition
-        or else Btype = Std_Package.Bit_Type_Definition
+      return Btype = Vhdl.Std_Package.Boolean_Type_Definition
+        or else Btype = Vhdl.Std_Package.Bit_Type_Definition
         or else Btype = Ieee.Std_Logic_1164.Std_Ulogic_Type;
    end Is_Psl_Bool_Type;
 
@@ -544,7 +544,7 @@ package body Vhdl.Sem_Psl is
 
       --  Endpoints are considered as an HDL declaration and must have a
       --  type.
-      Set_Type (Stmt, Std_Package.Boolean_Type_Definition);
+      Set_Type (Stmt, Vhdl.Std_Package.Boolean_Type_Definition);
       Set_Expr_Staticness (Stmt, None);
 
       Set_Visible_Flag (Stmt, True);
@@ -600,7 +600,7 @@ package body Vhdl.Sem_Psl is
       if Get_Type (Cond) = Null_Iir then
          Cond := Sem_Expr.Sem_Condition (Cond);
       elsif Get_Base_Type (Get_Type (Cond))
-        /= Std_Package.Boolean_Type_Definition
+        /= Vhdl.Std_Package.Boolean_Type_Definition
       then
          Cond := Sem_Expr.Insert_Condition_Operator (Cond);
       end if;

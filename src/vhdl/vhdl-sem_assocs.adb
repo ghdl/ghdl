@@ -25,7 +25,7 @@ with Std_Names;
 with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Vhdl.Sem_Types;
 with Vhdl.Sem_Decls;
-with Std_Package;
+with Vhdl.Std_Package;
 with Vhdl.Sem_Scopes;
 with Iir_Chains; use Iir_Chains;
 with Xrefs;
@@ -1499,7 +1499,7 @@ package body Vhdl.Sem_Assocs is
          end if;
          --  That returns a boolean.
          if (Get_Base_Type (Get_Return_Type (Decl))
-               /= Std_Package.Boolean_Type_Definition)
+               /= Vhdl.Std_Package.Boolean_Type_Definition)
          then
             return False;
          end if;

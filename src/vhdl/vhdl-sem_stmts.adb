@@ -19,7 +19,7 @@ with Errorout; use Errorout;
 with Types; use Types;
 with Flags; use Flags;
 with Vhdl.Sem_Specs; use Vhdl.Sem_Specs;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Sem; use Vhdl.Sem;
 with Vhdl.Sem_Decls; use Vhdl.Sem_Decls;
 with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;

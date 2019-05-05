@@ -22,7 +22,7 @@ with System;
 with Grt.Types; use Grt.Types;
 with Flags; use Flags;
 with Errorout; use Errorout;
-with Std_Package;
+with Vhdl.Std_Package;
 with Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Simul.Annotations; use Simul.Annotations;
@@ -1321,7 +1321,7 @@ package body Simul.Execution is
                Pos : constant Natural := Get_Enum_Pos (Left);
                Id : Name_Id;
             begin
-               if Base_Type = Std_Package.Character_Type_Definition then
+               if Base_Type = Vhdl.Std_Package.Character_Type_Definition then
                   Result := String_To_Iir_Value ((1 => Character'Val (Pos)));
                else
                   Id := Get_Identifier (Get_Nth_Element (Lits, Pos));
@@ -1418,7 +1418,7 @@ package body Simul.Execution is
                First : Natural;
                Unit : Iir;
             begin
-               Unit := Get_Unit_Chain (Std_Package.Time_Type_Definition);
+               Unit := Get_Unit_Chain (Vhdl.Std_Package.Time_Type_Definition);
                while Unit /= Null_Iir loop
                   exit when Evaluation.Get_Physical_Value (Unit)
                     = Iir_Int64 (Right.I64);

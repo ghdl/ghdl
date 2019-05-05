@@ -19,7 +19,7 @@
 with Errorout; use Errorout;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Canon;
 with Translation; use Translation;
 with Trans.Chap2;

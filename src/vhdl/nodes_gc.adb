@@ -24,7 +24,7 @@ with Nodes_Meta; use Nodes_Meta;
 with Errorout; use Errorout;
 with Libraries;
 with Vhdl.Disp_Tree;
-with Std_Package;
+with Vhdl.Std_Package;
 
 package body Nodes_GC is
 
@@ -375,7 +375,7 @@ package body Nodes_GC is
    --  but referenced nodes in std_package.
    procedure Mark_Init
    is
-      use Std_Package;
+      use Vhdl.Std_Package;
    begin
       Markers := new Marker_Array'(Null_Iir .. Iirs.Get_Last_Node => False);
 
@@ -389,7 +389,7 @@ package body Nodes_GC is
    --  Marks known nodes that aren't owned.
    procedure Mark_Not_Owned
    is
-      use Std_Package;
+      use Vhdl.Std_Package;
    begin
       --  These nodes are owned by type/subtype declarations, so unmark them
       --  before marking their owner.
@@ -478,7 +478,7 @@ package body Nodes_GC is
 
    procedure Report_Unreferenced
    is
-      use Std_Package;
+      use Vhdl.Std_Package;
       El : Iir;
       Nbr_Unreferenced : Natural;
    begin

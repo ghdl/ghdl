@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Iirs_Utils; use Iirs_Utils;
-with Std_Package;
+with Vhdl.Std_Package;
 
 package body Ieee is
    function Skip_Copyright_Notice (Decl : Iir) return Iir
@@ -26,7 +26,7 @@ package body Ieee is
       if Decl /= Null_Iir
         and then Get_Kind (Decl) = Iir_Kind_Constant_Declaration
         and then (Get_Base_Type (Get_Type (Decl))
-                    = Std_Package.String_Type_Definition)
+                    = Vhdl.Std_Package.String_Type_Definition)
       then
          return Get_Chain (Decl);
       else

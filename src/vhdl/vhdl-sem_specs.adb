@@ -19,7 +19,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
 with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Evaluation; use Evaluation;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Vhdl.Sem; use Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;

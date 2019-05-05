@@ -23,7 +23,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Iir_Chains; use Iir_Chains;
 with Ieee.Std_Logic_1164;
 with Std_Names;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 
 package body Vhdl.Sem_Utils is
    procedure Compute_Subprogram_Hash (Subprg : Iir)

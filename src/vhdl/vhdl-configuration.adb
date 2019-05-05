@@ -18,7 +18,7 @@
 
 with Libraries;
 with Errorout; use Errorout;
-with Std_Package;
+with Vhdl.Std_Package;
 with Name_Table; use Name_Table;
 with Flags;
 with Iirs_Utils; use Iirs_Utils;
@@ -675,8 +675,8 @@ package body Vhdl.Configuration is
       end case;
 
       --  Exclude std.standard
-      Set_Configuration_Mark_Flag (Std_Package.Std_Standard_Unit, True);
-      Set_Configuration_Done_Flag (Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Mark_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Done_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
 
       Add_Design_Unit (Top, Null_Iir);
       return Top;

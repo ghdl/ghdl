@@ -22,7 +22,7 @@ with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with Std_Names;
 with Ieee.Std_Logic_1164;
-with Std_Package;
+with Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Simul.Execution;
 with Grt.Types; use Grt.Types;
@@ -695,11 +695,11 @@ package body Synth.Expr is
          return Build_Edge (Build_Context, True, Clk);
       end if;
       Lit := Get_Named_Entity (Right);
-      if Lit = Std_Package.Bit_0
+      if Lit = Vhdl.Std_Package.Bit_0
         or else Lit = Ieee.Std_Logic_1164.Std_Ulogic_0
       then
          Posedge := False;
-      elsif Lit = Std_Package.Bit_1
+      elsif Lit = Vhdl.Std_Package.Bit_1
         or else Lit = Ieee.Std_Logic_1164.Std_Ulogic_1
       then
          Posedge := True;

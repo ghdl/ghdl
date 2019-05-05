@@ -24,7 +24,7 @@ with Errorout; use Errorout;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
-with Std_Package;
+with Vhdl.Std_Package;
 with Trans_Analyzes;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
@@ -379,7 +379,7 @@ package body Simul.Simulation.Main is
                Res   : Iir_Value_Literal_Acc;
             begin
                Res := Execute_Expression (Instance, E);
-               if Rtype = Std_Package.Boolean_Type_Definition then
+               if Rtype = Vhdl.Std_Package.Boolean_Type_Definition then
                   return Res.B1 = True;
                elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   return Res.E8 = 3 or Res.E8 = 7; --  1 or H

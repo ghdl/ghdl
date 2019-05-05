@@ -18,7 +18,7 @@
 with Tables;
 with GNAT.Heap_Sort_A;
 with Flags;
-with Std_Package;
+with Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Nodes;
 
@@ -127,7 +127,7 @@ package body Xrefs is
             declare
                Res : constant Iir := Get_Named_Entity (Name);
             begin
-               if Res = Std_Package.Error_Mark then
+               if Res = Vhdl.Std_Package.Error_Mark then
                   return;
                end if;
                Add_Xref (Get_Location (Name), Res, Xref_Ref);

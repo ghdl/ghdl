@@ -25,7 +25,7 @@ with Iirs_Utils;
 with Vhdl.Sem_Utils;
 with Iir_Chains;
 
-package body Std_Package is
+package body Vhdl.Std_Package is
    type Bound_Array is array (Boolean) of Iir_Int64;
    Low_Bound : constant Bound_Array := (False => -(2 ** 31),
                                         True => -(2 ** 63));
@@ -1360,4 +1360,4 @@ package body Std_Package is
       end if;
       return '?';
    end Get_Minimal_Time_Resolution;
-end Std_Package;
+end Vhdl.Std_Package;

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Std_Names;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Vhdl.Sem_Inst;
 with Nodes_Meta;

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Evaluation; use Evaluation;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Trans_Decls; use Trans_Decls;

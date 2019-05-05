@@ -29,7 +29,7 @@ with Vhdl.Sem_Inst;
 with Name_Table;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Ieee.Std_Logic_1164;
 with Xrefs; use Xrefs;
 

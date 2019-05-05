@@ -29,7 +29,7 @@ with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Name_Table;
 with Errorout; use Errorout;
 with Libraries;
-with Std_Package;
+with Vhdl.Std_Package;
 with Files_Map;
 with Version;
 
@@ -682,7 +682,7 @@ package body Ghdlcomp is
       while Is_Valid (It) loop
          File := Get_Element (It);
 
-         if File = Std_Package.Std_Standard_File then
+         if File = Vhdl.Std_Package.Std_Standard_File then
             null;
          elsif Source_File_Modified (File)
            or else Is_File_Outdated (File)
@@ -778,7 +778,7 @@ package body Ghdlcomp is
 
    function Is_Makeable_File (File : Iir_Design_File) return Boolean is
    begin
-      if File = Std_Package.Std_Standard_File then
+      if File = Vhdl.Std_Package.Std_Standard_File then
          return False;
       end if;
       return True;

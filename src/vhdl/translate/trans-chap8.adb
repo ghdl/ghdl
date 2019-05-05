@@ -22,7 +22,7 @@ with Errorout; use Errorout;
 with Iir_Chains;
 with Vhdl.Canon;
 with Evaluation; use Evaluation;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Iirs_Utils; use Iirs_Utils;
 with Trans.Chap2;
 with Trans.Chap3;

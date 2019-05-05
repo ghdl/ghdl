@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Grt.Algos;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Flags; use Flags;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;

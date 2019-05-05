@@ -19,7 +19,7 @@
 with Types; use Types;
 with Iirs; use Iirs;
 
-package Std_Package is
+package Vhdl.Std_Package is
 
    --  This is a special node, not really declared in the STANDARD package,
    --  used to mark a node as erroneous.
@@ -199,4 +199,4 @@ private
      := 5;
    Convertible_Real_Type_Definition : constant Iir_Floating_Type_Definition
      := 6;
-end Std_Package;
+end Vhdl.Std_Package;

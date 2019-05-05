@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Std_Package;
+with Vhdl.Std_Package;
 with Std_Names; use Std_Names;
 with Errorout; use Errorout;
 with Ieee.Std_Logic_1164;
@@ -88,10 +88,10 @@ package body Ieee.Numeric is
          elsif Arg_Type = Unsigned_Type then
             Sign := Type_Unsigned;
             Kind := Arg_Vect;
-         elsif Arg_Type = Std_Package.Integer_Subtype_Definition then
+         elsif Arg_Type = Vhdl.Std_Package.Integer_Subtype_Definition then
             Sign := Type_Signed;
             Kind := Arg_Scal;
-         elsif Arg_Type = Std_Package.Natural_Subtype_Definition then
+         elsif Arg_Type = Vhdl.Std_Package.Natural_Subtype_Definition then
             Sign := Type_Unsigned;
             Kind := Arg_Scal;
          elsif Arg_Type = Ieee.Std_Logic_1164.Std_Ulogic_Type then
@@ -157,7 +157,7 @@ package body Ieee.Numeric is
       if Decl /= Null_Iir
         and then Get_Kind (Decl) = Iir_Kind_Constant_Declaration
         and then (Get_Base_Type (Get_Type (Decl))
-                  = Std_Package.String_Type_Definition)
+                  = Vhdl.Std_Package.String_Type_Definition)
       then
          Decl := Get_Chain (Decl);
       end if;

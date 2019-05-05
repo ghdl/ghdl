@@ -26,7 +26,7 @@ with Types;
 with Flags;
 with Name_Table;
 with Errorout; use Errorout;
-with Std_Package;
+with Vhdl.Std_Package;
 with Libraries;
 with Vhdl.Canon;
 with Vhdl.Configuration;
@@ -61,14 +61,14 @@ package body Ghdlsimul is
       end if;
 
       if Time_Resolution /= 'a' then
-         Std_Package.Set_Time_Resolution (Time_Resolution);
+         Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
       end if;
 
       if Analyze_Only then
          return;
       end if;
 
-      Simul.Annotations.Annotate (Std_Package.Std_Standard_Unit);
+      Simul.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
 
       Vhdl.Canon.Canon_Flag_Add_Labels := True;
       Vhdl.Canon.Canon_Flag_Sequentials_Stmts := True;

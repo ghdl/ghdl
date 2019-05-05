@@ -18,7 +18,7 @@
 
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
-with Std_Package; use Std_Package;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Flags;
 with Libraries;
 with Vhdl.Canon;

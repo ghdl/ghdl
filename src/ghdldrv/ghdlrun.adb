@@ -32,7 +32,7 @@ with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
 with Iirs; use Iirs;
-with Std_Package;
+with Vhdl.Std_Package;
 with Flags;
 with Errorout; use Errorout;
 with Libraries;
@@ -128,7 +128,7 @@ package body Ghdlrun is
       end if;
 
       if Time_Resolution /= 'a' then
-         Std_Package.Set_Time_Resolution (Time_Resolution);
+         Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
       end if;
 
       if Analyze_Only then
@@ -173,7 +173,7 @@ package body Ghdlrun is
       end if;
 
       if Time_Resolution = 'a' then
-         Time_Resolution := Std_Package.Get_Minimal_Time_Resolution;
+         Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;
          if Time_Resolution = '?' then
             Time_Resolution := 'f';
          end if;
@@ -195,7 +195,7 @@ package body Ghdlrun is
             end;
          end if;
       end if;
-      Std_Package.Set_Time_Resolution (Time_Resolution);
+      Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
 
       --  Overwrite time resolution in flag string.
       Flags.Flag_String (5) := Time_Resolution;

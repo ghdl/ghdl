@@ -25,7 +25,7 @@ with Grt.Types; use Grt.Types;
 with Errorout; use Errorout;
 with Iirs_Utils;
 
-with Std_Package;
+with Vhdl.Std_Package;
 with Ieee.Std_Logic_1164;
 
 with Simul.Annotations; use Simul.Annotations;
@@ -139,8 +139,9 @@ package body Synth.Context is
             case Val.Lit.Kind is
                when Iir_Value_B1 =>
                   pragma Assert
-                    (Val.Lit_Type = Std_Package.Boolean_Type_Definition
-                       or else Val.Lit_Type = Std_Package.Bit_Type_Definition);
+                    (Val.Lit_Type = Vhdl.Std_Package.Boolean_Type_Definition
+                       or else
+                       Val.Lit_Type = Vhdl.Std_Package.Bit_Type_Definition);
                   return Build_Const_UB32
                     (Build_Context, Ghdl_B1'Pos (Val.Lit.B1), 1);
                when Iir_Value_E8 =>

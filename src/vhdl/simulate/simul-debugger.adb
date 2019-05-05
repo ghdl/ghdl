@@ -31,7 +31,7 @@ with Vhdl.Sem_Scopes;
 with Vhdl.Canon;
 with Std_Names;
 with Libraries;
-with Std_Package;
+with Vhdl.Std_Package;
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
@@ -1826,7 +1826,7 @@ package body Simul.Debugger is
 
       --  Add STD
       Add_Name (Libraries.Std_Library, Std_Names.Name_Std, False);
-      Use_All_Names (Std_Package.Standard_Package);
+      Use_All_Names (Vhdl.Std_Package.Standard_Package);
 
       Foreach_Scopes (Node, Add_Decls_For'Access);
    end Enter_Scope;
