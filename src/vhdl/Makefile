@@ -81,7 +81,7 @@ python/libghdl/std_names.py: $(PNODESPY) ../std_names.ads
 	$(PNODESPY) libghdl-names > $@
 	chmod -w $@
 
-python/libghdl/tokens.py: $(PNODESPY) tokens.ads
+python/libghdl/tokens.py: $(PNODESPY) vhdl-tokens.ads
 	$(RM) $@
 	$(PNODESPY) libghdl-tokens > $@
 	chmod -w $@

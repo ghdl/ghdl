@@ -217,7 +217,7 @@ def do_libghdl_names():
 
 
 def do_libghdl_tokens():
-    read_enum("tokens.ads", "Token_Type", "Tok_", "Tok")
+    read_enum("vhdl-tokens.ads", "Token_Type", "Tok_", "Tok")
 
 
 def do_libghdl_errorout():
