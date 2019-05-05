@@ -18,7 +18,7 @@
 with Types; use Types;
 with Tables;
 with Dyn_Tables;
-with Nodes;
+with Vhdl.Types;
 
 --  Source file handling
 
@@ -71,7 +71,7 @@ package Files_Map is
    --  new locations so that it is possible to retrieve the instance from
    --  the new locations.
    function Create_Instance_Source_File
-     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Nodes.Node_Type)
+     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Vhdl.Types.Node)
      return Source_File_Entry;
 
    --  Unload last source file.  Works only with the last one.  Must be

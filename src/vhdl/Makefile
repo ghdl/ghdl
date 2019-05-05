@@ -23,13 +23,15 @@
 PNODES=../xtools/pnodes.py
 PNODESPY=python/pnodespy.py
 
-DEPS=iirs.ads nodes.ads $(PNODES)
+DEPS=iirs.ads iirs.adb.in $(PNODES)
 
 GEN_FILES=iirs.adb nodes_meta.ads nodes_meta.adb \
   vhdl-elocations.adb vhdl-elocations_meta.ads vhdl-elocations_meta.adb \
   python/libghdl/iirs.py python/libghdl/nodes_meta.py \
   python/libghdl/std_names.py python/libghdl/tokens.py \
   python/libghdl/elocations.py python/libghdl/errorout.py
+
+NODES_FLAGS=--field-file=iirs.adb.in
 
 ELOCATIONS_FLAGS=--node-file=vhdl-elocations.ads \
   --field-file=vhdl-elocations.adb.in \
@@ -39,17 +41,17 @@ all: $(GEN_FILES)
 
 iirs.adb: iirs.adb.in $(DEPS)
 	$(RM) $@
-	$(PNODES) body > $@
+	$(PNODES) $(NODES_FLAGS) body > $@
 	chmod -w $@
 
 nodes_meta.ads: nodes_meta.ads.in $(DEPS)
 	$(RM) $@
-	$(PNODES) meta_specs > $@
+	$(PNODES) $(NODES_FLAGS) meta_specs > $@
 	chmod -w $@
 
 nodes_meta.adb: nodes_meta.adb.in $(DEPS)
 	$(RM) $@
-	$(PNODES) meta_body > $@
+	$(PNODES) $(NODES_FLAGS) meta_body > $@
 	chmod -w $@
 
 vhdl-elocations.adb: vhdl-elocations.adb.in vhdl-elocations.ads $(DEPS)
@@ -69,22 +71,22 @@ vhdl-elocations_meta.adb: vhdl-elocations_meta.adb.in vhdl-elocations.ads $(DEPS
 
 python/libghdl/iirs.py: $(DEPS) $(PNODESPY)
 	$(RM) $@
-	$(PNODESPY) libghdl-iirs > $@
+	$(PNODESPY) $(NODES_FLAGS) libghdl-iirs > $@
 	chmod -w $@
 
 python/libghdl/nodes_meta.py: $(DEPS) $(PNODESPY)
 	$(RM) $@
-	$(PNODESPY) libghdl-meta > $@
+	$(PNODESPY) $(NODES_FLAGS) libghdl-meta > $@
 	chmod -w $@
 
 python/libghdl/std_names.py: $(PNODESPY) ../std_names.ads
 	$(RM) $@
-	$(PNODESPY) libghdl-names > $@
+	$(PNODESPY) $(NODES_FLAGS) libghdl-names > $@
 	chmod -w $@
 
 python/libghdl/tokens.py: $(PNODESPY) vhdl-tokens.ads
 	$(RM) $@
-	$(PNODESPY) libghdl-tokens > $@
+	$(PNODESPY) $(NODES_FLAGS) libghdl-tokens > $@
 	chmod -w $@
 
 python/libghdl/elocations.py: $(PNODESPY) vhdl-elocations.ads

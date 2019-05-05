@@ -19,7 +19,6 @@
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Logging; use Logging;
-with Nodes;
 with Nodes_Meta; use Nodes_Meta;
 with Errorout; use Errorout;
 with Libraries;
@@ -497,7 +496,7 @@ package body Vhdl.Nodes_GC is
             Nbr_Unreferenced := Nbr_Unreferenced + 1;
             Report_Unreferenced_Node (El);
          end if;
-         El := Iir (Nodes.Next_Node (Nodes.Node_Type (El)));
+         El := Next_Node (El);
       end loop;
 
       Free (Markers);

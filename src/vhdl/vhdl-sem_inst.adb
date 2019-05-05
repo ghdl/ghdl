@@ -15,7 +15,7 @@
 --  the original declaration are also stored in that table.
 
 with Tables;
-with Nodes;
+with Vhdl.Nodes_Priv;
 with Nodes_Meta;
 with Types; use Types;
 with Files_Map;
@@ -48,7 +48,7 @@ package body Vhdl.Sem_Inst is
 
    procedure Expand_Origin_Table
    is
-      use Nodes;
+      use Vhdl.Nodes_Priv;
       Last : constant Iir := Iirs.Get_Last_Node;
       El : constant Iir := Origin_Table.Last;
    begin
@@ -62,7 +62,7 @@ package body Vhdl.Sem_Inst is
    function Get_Origin (N : Iir) return Iir
    is
       --  Make the '<=' operator visible.
-      use Nodes;
+      use Vhdl.Nodes_Priv;
    begin
       if N <= Origin_Table.Last then
          return Origin_Table.Table (N);
@@ -75,7 +75,7 @@ package body Vhdl.Sem_Inst is
    function Get_Instance (N : Iir) return Iir
    is
       --  Make '<=' operator visible for the assert.
-      use Nodes;
+      use Vhdl.Nodes_Priv;
    begin
       pragma Assert (N <= Origin_Table.Last);
       return Origin_Table.Table (N);
@@ -120,7 +120,7 @@ package body Vhdl.Sem_Inst is
    --  of ORIG is saved.
    procedure Set_Instance (Orig : Iir; N : Iir)
    is
-      use Nodes;
+      use Vhdl.Nodes_Priv;
    begin
       pragma Assert (Orig <= Origin_Table.Last);
 

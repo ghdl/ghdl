@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Tables;
-with Nodes;
+with Vhdl.Nodes_Priv;
 with Vhdl.Elocations_Meta; use Vhdl.Elocations_Meta;
 
 package body Vhdl.Elocations is
@@ -90,7 +90,7 @@ package body Vhdl.Elocations is
 
    procedure Create_Elocations (N : Iir)
    is
-      use Nodes;
+      use Vhdl.Nodes_Priv;
       Format : constant Format_Type := Get_Format (Get_Kind (N));
       El : constant Iir := Elocations_Index_Table.Last;
       Len : Location_Index_Type;
@@ -148,7 +148,7 @@ package body Vhdl.Elocations is
 
    function Get_FieldX (N : Iir) return Location_Type
    is
-      use Nodes;
+      use Vhdl.Nodes_Priv;
       Idx : Location_Index_Type;
    begin
       pragma Assert (N <= Elocations_Index_Table.Last);
@@ -158,7 +158,7 @@ package body Vhdl.Elocations is
 
    procedure Set_FieldX (N : Iir; Loc : Location_Type)
    is
-      use Nodes;
+      use Vhdl.Nodes_Priv;
       Idx : Location_Index_Type;
    begin
       pragma Assert (N <= Elocations_Index_Table.Last);

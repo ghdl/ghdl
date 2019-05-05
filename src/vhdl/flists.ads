@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
-with Nodes; use Nodes;
+with Vhdl.Nodes_Priv; use Vhdl.Nodes_Priv;
 
 package Flists is
    type Flist_Type is new Int32;

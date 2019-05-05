@@ -46,7 +46,6 @@ with Lists;
 with Str_Table;
 with Hash;
 with Interning;
-with Nodes;
 with Files_Map;
 with Name_Table;
 
@@ -759,7 +758,7 @@ package body Ghdlrun is
       Translation.Finalize;
       Lists.Initialize;
       Str_Table.Initialize;
-      Nodes.Initialize;
+      Iirs.Initialize;
       Files_Map.Initialize;
       Name_Table.Finalize;
 

@@ -20,7 +20,7 @@ with GNAT.Heap_Sort_A;
 with Flags;
 with Vhdl.Std_Package;
 with Errorout; use Errorout;
-with Nodes;
+with Vhdl.Nodes_Priv;
 
 package body Xrefs is
    type Xref_Type is record
@@ -220,7 +220,7 @@ package body Xrefs is
       N1 := Get_Xref_Node (Op1);
       N2 := Get_Xref_Node (Op2);
       if Iirs."/=" (N1, N2) then
-         return Nodes."<" (N1, N2);
+         return Vhdl.Nodes_Priv."<" (N1, N2);
       end if;
 
       --  Try to get declaration first.

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Name_Table; -- use Name_Table;
-with Nodes;
+with Vhdl.Nodes_Priv;
 with Tables;
 with Trans_Decls; use Trans_Decls;
 
@@ -1368,11 +1368,11 @@ package body Trans is
 
    procedure Update_Node_Infos
    is
-      use Nodes;
+      use Vhdl.Nodes_Priv;
       F, L : Iir;
    begin
       F := Node_Infos.Last;
-      L := Nodes.Get_Last_Node;
+      L := Get_Last_Node;
       Node_Infos.Set_Last (L);
       Node_Infos.Table (F + 1 .. L) := (others => null);
    end Update_Node_Infos;

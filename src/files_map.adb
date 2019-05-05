@@ -619,7 +619,7 @@ package body Files_Map is
    end Create_Virtual_Source_File;
 
    function Create_Instance_Source_File
-     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Nodes.Node_Type)
+     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Vhdl.Types.Node)
      return Source_File_Entry
    is
       pragma Unreferenced (Inst);

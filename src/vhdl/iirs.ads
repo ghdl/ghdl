@@ -18,7 +18,7 @@
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Vhdl.Tokens; use Vhdl.Tokens;
-with Nodes;
+with Vhdl.Nodes_Priv;
 with Lists;
 with Flists;
 
@@ -167,8 +167,8 @@ package Iirs is
    --  Get the location of the node: ie the current position in the source
    --  file when the node was created.  This is a little bit fuzzy.
    --
-   --   procedure Set_Location (Target: in out Iir; Location: Location_Type);
-   --   function Get_Location (Target: in out Iir) return Location_Type;
+   --   procedure Set_Location (Target : Iir; Location: Location_Type);
+   --   function Get_Location (Target : Iir) return Location_Type;
    --
    --  Copy a location from a node to another one.
    --   procedure Location_Copy (Target: in out Iir; Src: in Iir);
@@ -5448,9 +5448,9 @@ package Iirs is
 
    --  Nodes and lists.
 
-   subtype Iir is Nodes.Node_Type;
+   subtype Iir is Vhdl.Nodes_Priv.Node_Type;
 
-   Null_Iir : constant Iir := Nodes.Null_Node;
+   Null_Iir : constant Iir := 0;
 
    --  Return True iff Node is null / not set.
    function Is_Null (Node : Iir) return Boolean;
@@ -5460,9 +5460,11 @@ package Iirs is
    function Is_Valid (Node : Iir) return Boolean;
    pragma Inline (Is_Valid);
 
-   function "=" (L, R : Iir) return Boolean renames Nodes."=";
+   function "=" (L, R : Iir) return Boolean renames Vhdl.Nodes_Priv."=";
 
-   function Get_Last_Node return Iir renames Nodes.Get_Last_Node;
+   --  Get the last node allocated.
+   function Get_Last_Node return Iir;
+   pragma Inline (Get_Last_Node);
 
    subtype Iir_List is Lists.List_Type;
    Null_Iir_List : constant Iir_List := Lists.Null_List;
@@ -5847,20 +5849,23 @@ package Iirs is
    function Get_Kind (N : Iir) return Iir_Kind;
    pragma Inline (Get_Kind);
 
+   function Next_Node (N : Iir) return Iir;
+
    --  Create a new IIR of kind NEW_KIND, and copy fields from SRC to this
    --  iir.  Src fields are cleaned.
    --function Clone_Iir (Src: Iir; New_Kind : Iir_Kind) return Iir;
 
-   procedure Set_Location (Target : Iir; Location : Location_Type)
-     renames Nodes.Set_Location;
-   function Get_Location (Target : Iir) return Location_Type
-     renames Nodes.Get_Location;
+   procedure Set_Location (N : Iir; Location : Location_Type);
+   function Get_Location (N : Iir) return Location_Type;
 
    procedure Location_Copy (Target : Iir; Src : Iir);
 
    function Create_Iir (Kind : Iir_Kind) return Iir;
    function Create_Iir_Error return Iir;
-   procedure Free_Iir (Target : Iir) renames Nodes.Free_Node;
+   procedure Free_Iir (Target : Iir);
+
+   --  Free all and reinit.
+   procedure Initialize;
 
    --  Disp statistics about node usage.
    procedure Disp_Stats;
