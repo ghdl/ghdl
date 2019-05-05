@@ -23,23 +23,24 @@
 PNODES=../xtools/pnodes.py
 PNODESPY=python/pnodespy.py
 
-DEPS=iirs.ads iirs.adb.in $(PNODES)
+DEPS=vhdl-nodes.ads vhdl-nodes.adb.in $(PNODES)
 
-GEN_FILES=iirs.adb nodes_meta.ads nodes_meta.adb \
+GEN_FILES=vhdl-nodes.adb nodes_meta.ads nodes_meta.adb \
   vhdl-elocations.adb vhdl-elocations_meta.ads vhdl-elocations_meta.adb \
   python/libghdl/iirs.py python/libghdl/nodes_meta.py \
   python/libghdl/std_names.py python/libghdl/tokens.py \
   python/libghdl/elocations.py python/libghdl/errorout.py
 
-NODES_FLAGS=--field-file=iirs.adb.in
+NODES_FLAGS=--node-file=vhdl-nodes.ads --field-file=vhdl-nodes.adb.in \
+  --template-file=vhdl-nodes.adb.in --kind-file=vhdl-nodes.ads
 
 ELOCATIONS_FLAGS=--node-file=vhdl-elocations.ads \
-  --field-file=vhdl-elocations.adb.in \
+  --field-file=vhdl-elocations.adb.in --kind-file=vhdl-nodes.ads \
   --template-file=vhdl-elocations.adb.in --meta-basename=vhdl-elocations_meta
 
 all: $(GEN_FILES)
 
-iirs.adb: iirs.adb.in $(DEPS)
+vhdl-nodes.adb: vhdl-nodes.adb.in $(DEPS)
 	$(RM) $@
 	$(PNODES) $(NODES_FLAGS) body > $@
 	chmod -w $@

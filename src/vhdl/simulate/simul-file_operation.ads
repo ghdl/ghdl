@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Simul.Environments; use Simul.Environments;
 with Grt.Files; use Grt.Files;
 with Grt.Types; use Grt.Types;

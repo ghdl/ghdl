@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Canon_PSL is
    --  Version of Canon.Canon_Extract_Sensitivity for PSL nodes.

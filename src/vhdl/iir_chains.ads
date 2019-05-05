@@ -15,7 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Iir_Chain_Handling;
 pragma Elaborate_All (Iir_Chain_Handling);
 with Nodes_Meta;

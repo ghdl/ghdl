@@ -18,7 +18,7 @@
 
 with Tables;
 with Types; use Types;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Simul.Environments; use Simul.Environments;
 with Grt.Types; use Grt.Types;
 

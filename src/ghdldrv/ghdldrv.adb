@@ -25,7 +25,7 @@ with Libraries;
 with Name_Table; use Name_Table;
 with Vhdl.Std_Package;
 with Types; use Types;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Files_Map;
 with Vhdl.Configuration;
 with Default_Paths;

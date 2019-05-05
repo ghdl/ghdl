@@ -25,7 +25,7 @@ with Vhdl.Disp_Tree; use Vhdl.Disp_Tree;
 with Ghdlprint; use Ghdlprint;
 with Libraries;
 with Errorout; use Errorout;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;

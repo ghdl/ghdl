@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Sem_Psl is
    procedure Sem_Psl_Declaration (Stmt : Iir);

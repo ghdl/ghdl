@@ -885,7 +885,7 @@ def main():
     global formats, fields, nodes, kinds, kinds_ranges, funcs
 
     global type_name, prefix_name, template_file, node_type, meta_base_file
-    global prefix_range_name, flag_keep_order
+    global prefix_range_name, flag_keep_order, kind_file
 
     type_name = args.kind_type
     prefix_name = args.kind_prefix

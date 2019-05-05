@@ -3464,8 +3464,8 @@ package body Vhdl.Sem_Expr is
                     | Iir_Kind_Choice_By_Expression =>
                      Is_Positional := False;
                      Choice_Staticness :=
-                       Iirs.Min (Choice_Staticness,
-                                 Get_Choice_Staticness (Choice));
+                       Nodes.Min (Choice_Staticness,
+                                  Get_Choice_Staticness (Choice));
                      --  FIXME: not true for range.
                      Len := Len + 1;
                   when Iir_Kind_Choice_By_None =>
@@ -3490,7 +3490,7 @@ package body Vhdl.Sem_Expr is
                                     Len := Len + Natural
                                       (Eval_Discrete_Type_Length (Expr_Index));
                                  when Globally | None =>
-                                    Len_Staticness := Iirs.Min
+                                    Len_Staticness := Nodes.Min
                                       (Len_Staticness, Index_Staticness);
                                  when Unknown =>
                                     --  Must have been caught by Is_Error.

@@ -23,7 +23,7 @@ with Synth.Values; use Synth.Values;
 with Simul.Environments; use Simul.Environments;
 with Netlists; use Netlists;
 with Netlists.Builders;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Context is
    type Instance_Map_Array is array (Block_Instance_Id range <>)

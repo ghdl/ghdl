@@ -20,7 +20,7 @@
 
 with Netlists; use Netlists;
 with Synth.Values; use Synth.Values;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Types is
    --  All known enumeration type that are translated to a single bit.

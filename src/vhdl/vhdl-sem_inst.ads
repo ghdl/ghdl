@@ -14,7 +14,7 @@
 --  package to its duplicated node.  Links from instantiated declaration to
 --  the original declaration are also stored in that table.
 
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Sem_Inst is
    --  Return the origin of node N, the node from which N was instantiated.

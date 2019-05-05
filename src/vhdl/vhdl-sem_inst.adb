@@ -49,7 +49,7 @@ package body Vhdl.Sem_Inst is
    procedure Expand_Origin_Table
    is
       use Vhdl.Nodes_Priv;
-      Last : constant Iir := Iirs.Get_Last_Node;
+      Last : constant Iir := Nodes.Get_Last_Node;
       El : constant Iir := Origin_Table.Last;
    begin
       if El < Last then

@@ -23,7 +23,7 @@ with Lists; use Lists;
 with Nodes_Meta; use Nodes_Meta;
 with Vhdl.Nodes_Priv; use Vhdl.Nodes_Priv;
 
-package body Iirs is
+package body Vhdl.Nodes is
    --  A simple type that needs only 2 bits.
    type Bit2_Type is range 0 .. 2 ** 2 - 1;
 
@@ -6566,4 +6566,4 @@ package body Iirs is
       Set_Flag1 (N, Flag);
    end Set_PSL_EOS_Flag;
 
-end Iirs;
+end Vhdl.Nodes;

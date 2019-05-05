@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Elocations_Meta is
    --  The enumeration of all fields defined in iirs.

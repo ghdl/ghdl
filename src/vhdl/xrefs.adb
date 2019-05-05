@@ -219,7 +219,7 @@ package body Xrefs is
       --  Note: nodes of std_standard have the same location.  FIXME ?
       N1 := Get_Xref_Node (Op1);
       N2 := Get_Xref_Node (Op2);
-      if Iirs."/=" (N1, N2) then
+      if Vhdl.Nodes."/=" (N1, N2) then
          return Vhdl.Nodes_Priv."<" (N1, N2);
       end if;
 

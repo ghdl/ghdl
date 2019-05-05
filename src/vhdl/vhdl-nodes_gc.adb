@@ -376,7 +376,7 @@ package body Vhdl.Nodes_GC is
    is
       use Vhdl.Std_Package;
    begin
-      Markers := new Marker_Array'(Null_Iir .. Iirs.Get_Last_Node => False);
+      Markers := new Marker_Array'(Null_Iir .. Nodes.Get_Last_Node => False);
 
       Has_Error := False;
 

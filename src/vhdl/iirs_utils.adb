@@ -746,7 +746,7 @@ package body Iirs_Utils is
    --  Get identifier of NODE as a string.
    function Image_Identifier (Node : Iir) return String is
    begin
-      return Name_Table.Image (Iirs.Get_Identifier (Node));
+      return Name_Table.Image (Vhdl.Nodes.Get_Identifier (Node));
    end Image_Identifier;
 
    function Image_String_Lit (Str : Iir) return String is

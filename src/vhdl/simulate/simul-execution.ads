@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Simul.Environments; use Simul.Environments;
 with Simul.Elaboration; use Simul.Elaboration;
 with Areapools; use Areapools;

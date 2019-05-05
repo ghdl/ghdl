@@ -18,7 +18,7 @@
 
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Sem_Expr is
    -- Set semantic to EXPR.

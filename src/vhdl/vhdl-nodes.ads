@@ -22,7 +22,7 @@ with Vhdl.Nodes_Priv;
 with Lists;
 with Flists;
 
-package Iirs is
+package Vhdl.Nodes is
    --  This package defines the semantic tree and functions to handle it.
    --  The tree is roughly based on IIR (Internal Intermediate Representation),
    --  [AIRE/CE Advanced Intermediate Representation with Extensibility,
@@ -7546,4 +7546,4 @@ package Iirs is
    function Get_PSL_EOS_Flag (N : Iir) return Boolean;
    procedure Set_PSL_EOS_Flag (N : Iir; Flag : Boolean);
 
-end Iirs;
+end Vhdl.Nodes;

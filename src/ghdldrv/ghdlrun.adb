@@ -31,7 +31,7 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
 with Flags;
 with Errorout; use Errorout;
@@ -758,7 +758,7 @@ package body Ghdlrun is
       Translation.Finalize;
       Lists.Initialize;
       Str_Table.Initialize;
-      Iirs.Initialize;
+      Vhdl.Nodes.Initialize;
       Files_Map.Initialize;
       Name_Table.Finalize;
 

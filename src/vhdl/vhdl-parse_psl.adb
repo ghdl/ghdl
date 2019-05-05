@@ -18,13 +18,15 @@
 
 with Errorout; use Errorout;
 with PSL.Nodes; use PSL.Nodes;
-with Iirs;
+with Vhdl.Nodes;
 with Vhdl.Scanner; use Vhdl.Scanner;
 with PSL.Errors; use PSL.Errors;
 with PSL.Priorities; use PSL.Priorities;
 with Vhdl.Parse;
 
 package body Vhdl.Parse_Psl is
+   subtype Vhdl_Node is Vhdl.Nodes.Iir;
+
    procedure Error_Msg_Parse (Msg: String) is
    begin
       Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg);
@@ -72,12 +74,12 @@ package body Vhdl.Parse_Psl is
       end if;
    end Parse_Count;
 
-   function Psl_To_Vhdl (N : Node) return Iirs.Iir;
+   function Psl_To_Vhdl (N : Node) return Vhdl_Node;
 
-   function Binary_Psl_Operator_To_Vhdl (N : Node; Kind : Iirs.Iir_Kind)
-                                        return Iirs.Iir
+   function Binary_Psl_Operator_To_Vhdl (N : Node; Kind : Vhdl.Nodes.Iir_Kind)
+                                        return Vhdl_Node
    is
-      use Iirs;
+      use Vhdl.Nodes;
       Res : Iir;
    begin
       Res := Create_Iir (Kind);
@@ -87,14 +89,14 @@ package body Vhdl.Parse_Psl is
       return Res;
    end Binary_Psl_Operator_To_Vhdl;
 
-   function Psl_To_Vhdl (N : Node) return Iirs.Iir
+   function Psl_To_Vhdl (N : Node) return Vhdl_Node
    is
-      use Iirs;
+      use Vhdl.Nodes;
       Res : Iir;
    begin
       case Get_Kind (N) is
          when N_HDL_Expr =>
-            Res := Iirs.Iir (Get_HDL_Node (N));
+            Res := Vhdl_Node (Get_HDL_Node (N));
          when N_And_Prop =>
             Res := Binary_Psl_Operator_To_Vhdl (N, Iir_Kind_And_Operator);
          when N_Or_Prop =>
@@ -109,9 +111,9 @@ package body Vhdl.Parse_Psl is
       return Res;
    end Psl_To_Vhdl;
 
-   function Vhdl_To_Psl (N : Iirs.Iir) return Node
+   function Vhdl_To_Psl (N : Vhdl_Node) return Node
    is
-      use Iirs;
+      use Vhdl.Nodes;
       Res : Node;
    begin
       Res := Create_Node_Loc (N_HDL_Expr);
@@ -129,7 +131,7 @@ package body Vhdl.Parse_Psl is
    function Parse_Unary_Boolean (Full_Hdl_Expr : Boolean) return Node
    is
       use Parse;
-      use Iirs;
+      use Vhdl.Nodes;
       Left, Expr : Iir;
       Op : Iir_Kind;
    begin
@@ -444,7 +446,7 @@ package body Vhdl.Parse_Psl is
 
          if Get_Kind (Res) = N_HDL_Expr then
             declare
-               N : Iirs.Iir;
+               N : Vhdl_Node;
             begin
                N := Psl_To_Vhdl (Res);
                N := Parse.Parse_Binary_Expression (N, Parse.Prio_Expression);

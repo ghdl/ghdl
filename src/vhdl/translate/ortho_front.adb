@@ -22,7 +22,7 @@ with Types; use Types;
 with Name_Table;
 with Hash;
 with Interning;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Libraries;
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Std_Package;
