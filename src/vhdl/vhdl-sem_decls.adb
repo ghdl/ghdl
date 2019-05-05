@@ -23,18 +23,18 @@ with Flags; use Flags;
 with Std_Package; use Std_Package;
 with Evaluation; use Evaluation;
 with Iirs_Utils; use Iirs_Utils;
-with Sem; use Sem;
-with Sem_Utils; use Sem_Utils;
-with Sem_Expr; use Sem_Expr;
-with Sem_Scopes; use Sem_Scopes;
-with Sem_Names; use Sem_Names;
-with Sem_Specs; use Sem_Specs;
-with Sem_Types; use Sem_Types;
-with Sem_Psl;
-with Sem_Inst;
+with Vhdl.Sem; use Vhdl.Sem;
+with Vhdl.Sem_Utils; use Vhdl.Sem_Utils;
+with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
+with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
+with Vhdl.Sem_Names; use Vhdl.Sem_Names;
+with Vhdl.Sem_Specs; use Vhdl.Sem_Specs;
+with Vhdl.Sem_Types; use Vhdl.Sem_Types;
+with Vhdl.Sem_Psl;
+with Vhdl.Sem_Inst;
 with Xrefs; use Xrefs;
 
-package body Sem_Decls is
+package body Vhdl.Sem_Decls is
    --  Region that can declare signals.  Used to add implicit declarations.
    Current_Signals_Region : Implicit_Signal_Declaration_Type :=
      (Null_Iir, Null_Iir, Null_Iir, False, Null_Iir);
@@ -2339,4 +2339,4 @@ package body Sem_Decls is
 
       Set_Expr_Staticness (Iterator, Staticness);
    end Sem_Iterator;
-end Sem_Decls;
+end Vhdl.Sem_Decls;

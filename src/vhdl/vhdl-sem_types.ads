@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Iirs; use Iirs;
 
-package Sem_Types is
+package Vhdl.Sem_Types is
    --  Analyze of types (LRM93 3 / LRM08 5)
 
    --  Analyze subtype indication DEF.
@@ -65,4 +65,4 @@ package Sem_Types is
 
    --  Although a nature is not a type, it is patterned like a type.
    function Sem_Subnature_Indication (Def: Iir) return Iir;
-end Sem_Types;
+end Vhdl.Sem_Types;

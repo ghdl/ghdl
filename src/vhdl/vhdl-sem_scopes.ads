@@ -18,7 +18,7 @@
 with Iirs; use Iirs;
 with Types; use Types;
 
-package Sem_Scopes is
+package Vhdl.Sem_Scopes is
 
    --  The purpose of SEM_NAME package is to handle association between
    --  identifiers and declarations.
@@ -217,4 +217,4 @@ private
    No_Name_Interpretation : constant Name_Interpretation_Type := 0;
 
    First_Valid_Interpretation : constant Name_Interpretation_Type := 1;
-end Sem_Scopes;
+end Vhdl.Sem_Scopes;

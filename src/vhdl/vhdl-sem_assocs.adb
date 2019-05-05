@@ -22,15 +22,15 @@ with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Parse;
 with Std_Names;
-with Sem_Names; use Sem_Names;
-with Sem_Types;
-with Sem_Decls;
+with Vhdl.Sem_Names; use Vhdl.Sem_Names;
+with Vhdl.Sem_Types;
+with Vhdl.Sem_Decls;
 with Std_Package;
-with Sem_Scopes;
+with Vhdl.Sem_Scopes;
 with Iir_Chains; use Iir_Chains;
 with Xrefs;
 
-package body Sem_Assocs is
+package body Vhdl.Sem_Assocs is
    function Rewrite_Non_Object_Association (Assoc : Iir; Inter : Iir)
                                            return Iir
    is
@@ -2568,4 +2568,4 @@ package body Sem_Assocs is
          Pos := Pos + 1;
       end loop;
    end Sem_Association_Chain;
-end Sem_Assocs;
+end Vhdl.Sem_Assocs;

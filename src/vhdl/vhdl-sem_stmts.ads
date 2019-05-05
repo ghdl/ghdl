@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Iirs; use Iirs;
 
-package Sem_Stmts is
+package Vhdl.Sem_Stmts is
    --  Analyze declarations and concurrent statements of BLK, which is
    --  either an architecture_declaration, and entity_declaration,
    --  a block_statement or a generate_statement_body.
@@ -55,4 +55,4 @@ package Sem_Stmts is
    --    The current statement list does not belong to a process,
    --    SIG is a formal signal interface.
    procedure Sem_Add_Driver (Sig : Iir; Stmt : Iir);
-end Sem_Stmts;
+end Vhdl.Sem_Stmts;

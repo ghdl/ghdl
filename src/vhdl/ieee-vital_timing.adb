@@ -22,10 +22,10 @@ with Std_Package; use Std_Package;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Name_Table;
 with Ieee.Std_Logic_1164; use Ieee.Std_Logic_1164;
-with Sem_Scopes;
-with Sem_Specs;
+with Vhdl.Sem_Scopes;
+with Vhdl.Sem_Specs;
 with Evaluation;
-with Sem;
+with Vhdl.Sem;
 with Iirs_Utils;
 
 package body Ieee.Vital_Timing is
@@ -317,7 +317,7 @@ package body Ieee.Vital_Timing is
       --  Returns the port.
       function Check_Port return Iir
       is
-         use Sem_Scopes;
+         use Vhdl.Sem_Scopes;
          use Name_Table;
 
          C : Character;
@@ -1052,8 +1052,8 @@ package body Ieee.Vital_Timing is
                --  Furthermore, the type of the biased propagation generic
                --  shall be the same as the type of the corresponding delay
                --  generic.
-               if not Sem.Are_Trees_Equal (Get_Type (Decl),
-                                           Get_Type (Tpd_Decl))
+               if not Vhdl.Sem.Are_Trees_Equal (Get_Type (Decl),
+                                                Get_Type (Tpd_Decl))
                then
                   Error_Vital
                     (+Decl, "type of VITAL 'tbpd' generic mismatch type of "
@@ -1241,7 +1241,7 @@ package body Ieee.Vital_Timing is
    --  Checks rules for a VITAL level 0 entity.
    procedure Check_Vital_Level0_Entity (Ent : Iir_Entity_Declaration)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
       Decl : Iir;
       Gen_Chain : Iir;
    begin
@@ -1295,7 +1295,7 @@ package body Ieee.Vital_Timing is
       Value : Iir_Attribute_Value;
       Spec : Iir_Attribute_Specification;
    begin
-      Value := Sem_Specs.Find_Attribute_Value
+      Value := Vhdl.Sem_Specs.Find_Attribute_Value
         (Unit, Std_Names.Name_VITAL_Level0);
       if Value = Null_Iir then
          return False;

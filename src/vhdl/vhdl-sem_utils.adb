@@ -25,7 +25,7 @@ with Ieee.Std_Logic_1164;
 with Std_Names;
 with Std_Package; use Std_Package;
 
-package body Sem_Utils is
+package body Vhdl.Sem_Utils is
    procedure Compute_Subprogram_Hash (Subprg : Iir)
    is
       type Hash_Type is mod 2**32;
@@ -1036,4 +1036,4 @@ package body Sem_Utils is
          end;
       end if;
    end Create_Implicit_Operations;
-end Sem_Utils;
+end Vhdl.Sem_Utils;

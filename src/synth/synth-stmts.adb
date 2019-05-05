@@ -25,7 +25,7 @@ with Grt.Algos;
 with Areapools;
 with Errorout; use Errorout;
 
-with Sem_Expr;
+with Vhdl.Sem_Expr;
 with Iirs_Utils; use Iirs_Utils;
 with Ieee.Std_Logic_1164;
 with Evaluation;
@@ -442,7 +442,7 @@ package body Synth.Stmts is
 
    procedure Synth_Case_Statement (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
    is
-      use Sem_Expr;
+      use Vhdl.Sem_Expr;
 
       Expr : constant Iir := Get_Expression (Stmt);
       Expr_Type : constant Iir := Get_Type (Expr);

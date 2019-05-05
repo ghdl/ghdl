@@ -16,9 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Iirs; use Iirs;
-with Sem_Expr; use Sem_Expr;
+with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
 
-package Sem_Assocs is
+package Vhdl.Sem_Assocs is
    --  Rewrite the association chain by changing the kind of assocation
    --  corresponding to non-object interfaces.  Such an association mustn't be
    --  handled an like association for object as the actual is not an
@@ -65,4 +65,4 @@ package Sem_Assocs is
    procedure Check_Port_Association_Bounds_Restrictions
      (Formal : Iir; Actual : Iir; Assoc : Iir);
 
-end Sem_Assocs;
+end Vhdl.Sem_Assocs;

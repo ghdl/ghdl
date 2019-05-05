@@ -25,12 +25,12 @@ with Vhdl.Scanner;
 with Vhdl.Parse;
 with Vhdl.Disp_Tree;
 with Vhdl.Disp_Vhdl;
-with Sem;
+with Vhdl.Sem;
 with Post_Sems;
 with Vhdl.Canon;
 with Nodes_GC;
 
-package body Sem_Lib is
+package body Vhdl.Sem_Lib is
    procedure Error_Lib_Msg (Msg : String; Arg1 : Earg_Type) is
    begin
       Report_Msg (Msgid_Error, Library, No_Location, Msg, (1 => Arg1));
@@ -408,4 +408,4 @@ package body Sem_Lib is
       end if;
       return Design_Unit;
    end Load_Secondary_Unit;
-end Sem_Lib;
+end Vhdl.Sem_Lib;

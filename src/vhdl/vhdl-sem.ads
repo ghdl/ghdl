@@ -18,7 +18,7 @@
 with Iirs; use Iirs;
 with Types; use Types;
 
-package Sem is
+package Vhdl.Sem is
    --  Semantic analysis for chapters 1, 2, 10 (uses clauses) and 11.
 
    -- Do the semantic analysis of design unit DESIGN_UNIT.
@@ -91,4 +91,4 @@ package Sem is
    --  uninstantiated package.
    function Sem_Uninstantiated_Package_Name (Decl : Iir) return Iir;
 
-end Sem;
+end Vhdl.Sem;

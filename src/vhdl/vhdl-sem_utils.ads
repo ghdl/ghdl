@@ -1,5 +1,5 @@
---  Semantic analysis pass for PSL.
---  Copyright (C) 2009 Tristan Gingold
+--  Semantic utilities.
+--  Copyright (C) 2018 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -15,17 +15,16 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-
 with Iirs; use Iirs;
 
-package Sem_Psl is
-   procedure Sem_Psl_Declaration (Stmt : Iir);
-   procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir);
+package Vhdl.Sem_Utils is
+   --  Compute and set the hash profile of a subprogram or enumeration clause.
+   procedure Compute_Subprogram_Hash (Subprg : Iir);
 
-   --  May return a non-psl concurrent assertion statement.
-   function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir;
+   function Create_Anonymous_Interface
+     (Atype : Iir) return Iir_Interface_Constant_Declaration;
 
-   procedure Sem_Psl_Cover_Statement (Stmt : Iir);
-   procedure Sem_Psl_Default_Clock (Stmt : Iir);
-   function Sem_Psl_Name (Name : Iir) return Iir;
-end Sem_Psl;
+   --  Create predefined operations for DECL.
+   procedure Create_Implicit_Operations
+     (Decl : Iir; Is_Std_Standard : Boolean := False);
+end Vhdl.Sem_Utils;

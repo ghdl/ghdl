@@ -16,24 +16,24 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Iirs_Utils; use Iirs_Utils;
-with Sem_Expr; use Sem_Expr;
-with Sem_Names; use Sem_Names;
+with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
+with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Evaluation; use Evaluation;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
-with Sem; use Sem;
-with Sem_Lib; use Sem_Lib;
-with Sem_Scopes; use Sem_Scopes;
-with Sem_Assocs; use Sem_Assocs;
+with Vhdl.Sem; use Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
+with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
+with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
 with Libraries;
 with Iir_Chains; use Iir_Chains;
 with Flags; use Flags;
 with Std_Names;
-with Sem_Decls;
+with Vhdl.Sem_Decls;
 with Xrefs; use Xrefs;
 with Back_End;
 
-package body Sem_Specs is
+package body Vhdl.Sem_Specs is
    function Get_Entity_Class_Kind (Decl : Iir) return Vhdl.Tokens.Token_Type
    is
       use Vhdl.Tokens;
@@ -1925,4 +1925,4 @@ package body Sem_Specs is
          Decl := Get_Chain (Decl);
       end loop;
    end Sem_Specification_Chain;
-end Sem_Specs;
+end Vhdl.Sem_Specs;

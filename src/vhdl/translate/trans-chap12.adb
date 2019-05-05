@@ -22,8 +22,8 @@ with Std_Package; use Std_Package;
 with Iirs_Utils; use Iirs_Utils;
 with Libraries;
 with Flags;
-with Sem;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Trans.Chap1;
 with Trans.Chap2;
 with Trans.Chap6;
@@ -550,7 +550,7 @@ package body Trans.Chap12 is
       if Flag_Load_All_Design_Units then
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
-            Sem.Sem_Analysis_Checks_List (Unit, False);
+            Vhdl.Sem.Sem_Analysis_Checks_List (Unit, False);
             --  There cannot be remaining checks to do.
             pragma Assert
               (Get_Analysis_Checks_List (Unit) = Null_Iir_List);

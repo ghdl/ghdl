@@ -23,7 +23,7 @@ with Files_Map; use Files_Map;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 
-package body Sem_Scopes is
+package body Vhdl.Sem_Scopes is
    --  An interpretation cell is the element of the simply linked list
    --  of interpretation for an identifier.
    --  Interpretation cells are stored in table Interpretations.
@@ -1669,4 +1669,4 @@ package body Sem_Scopes is
          end;
       end loop;
    end Disp_Scopes;
-end Sem_Scopes;
+end Vhdl.Sem_Scopes;

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Std_Names; use Std_Names;
-with Sem_Specs;
+with Vhdl.Sem_Specs;
 with Ieee.Std_Logic_1164;
 with Ieee.Vital_Timing;
 with Ieee.Numeric;
@@ -65,7 +65,7 @@ package body Post_Sems is
       --  Look for VITAL attributes.
       if Flag_Vital_Checks then
          Value := Get_Attribute_Value_Chain
-           (Sem_Specs.Get_Attribute_Value_Chain_Parent (Lib_Unit));
+           (Vhdl.Sem_Specs.Get_Attribute_Value_Chain_Parent (Lib_Unit));
          while Value /= Null_Iir loop
             Spec := Get_Attribute_Specification (Value);
             Attr_Decl := Get_Named_Entity (Get_Attribute_Designator (Spec));

@@ -23,8 +23,8 @@ with Name_Table; use Name_Table;
 with Flags;
 with Iirs_Utils; use Iirs_Utils;
 with Iirs_Walk;
-with Sem_Scopes;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem_Scopes;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Canon;
 
 package body Configuration is
@@ -803,7 +803,7 @@ package body Configuration is
                Load_Design_Unit (Design, Null_Iir);
             when Iir_Kind_Entity_Declaration =>
                Load_Design_Unit (Design, Null_Iir);
-               Sem_Scopes.Add_Name (Get_Library_Unit (Design));
+               Vhdl.Sem_Scopes.Add_Name (Get_Library_Unit (Design));
             when Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Instantiation_Declaration
               | Iir_Kind_Package_Body
@@ -851,7 +851,7 @@ package body Configuration is
                   end if;
                end;
                declare
-                  use Sem_Scopes;
+                  use Vhdl.Sem_Scopes;
                   Comp : constant Iir := Get_Named_Entity (Inst);
                   Interp : constant Name_Interpretation_Type :=
                     Get_Interpretation (Get_Identifier (Comp));
@@ -913,8 +913,8 @@ package body Configuration is
          Status : Walk_Status;
       begin
          --  Name table is used to map names to entities.
-         Sem_Scopes.Push_Interpretations;
-         Sem_Scopes.Open_Declarative_Region;
+         Vhdl.Sem_Scopes.Push_Interpretations;
+         Vhdl.Sem_Scopes.Open_Declarative_Region;
 
          --  1. Add all design entities in the name table.
          Status := Walk_Design_Units (Lib, Add_Entity_Cb'Access);
@@ -925,8 +925,8 @@ package body Configuration is
          Status := Walk_Design_Units (Lib, Mark_Units_Cb'Access);
          pragma Assert (Status = Walk_Continue);
 
-         Sem_Scopes.Close_Declarative_Region;
-         Sem_Scopes.Pop_Interpretations;
+         Vhdl.Sem_Scopes.Close_Declarative_Region;
+         Vhdl.Sem_Scopes.Pop_Interpretations;
       end Mark_Instantiated_Units;
 
       function Extract_Entity_Cb (Design : Iir) return Walk_Status

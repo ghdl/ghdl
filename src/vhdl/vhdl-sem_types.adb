@@ -20,12 +20,12 @@ with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
 with Evaluation; use Evaluation;
-with Sem_Utils;
-with Sem_Expr; use Sem_Expr;
-with Sem_Scopes; use Sem_Scopes;
-with Sem_Names; use Sem_Names;
-with Sem_Decls;
-with Sem_Inst;
+with Vhdl.Sem_Utils;
+with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
+with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
+with Vhdl.Sem_Names; use Vhdl.Sem_Names;
+with Vhdl.Sem_Decls;
+with Vhdl.Sem_Inst;
 with Name_Table;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
@@ -33,7 +33,7 @@ with Std_Package; use Std_Package;
 with Ieee.Std_Logic_1164;
 with Xrefs; use Xrefs;
 
-package body Sem_Types is
+package body Vhdl.Sem_Types is
    --  Mark the resolution function (this may be required by the back-end to
    --  generate resolver).
    procedure Mark_Resolution_Function (Subtyp : Iir)
@@ -2379,4 +2379,4 @@ package body Sem_Types is
       end case;
    end Sem_Subnature_Indication;
 
-end Sem_Types;
+end Vhdl.Sem_Types;

@@ -21,9 +21,9 @@ with Types; use Types;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
-with Sem_Utils;
+with Vhdl.Sem_Utils;
 
-package body Sem_Inst is
+package body Vhdl.Sem_Inst is
    --  Table of origin.  This is an extension of vhdl nodes to track the
    --  origin of a node.  If a node has a non-null origin, then the node was
    --  instantiated for the origin node.
@@ -1214,4 +1214,4 @@ package body Sem_Inst is
       end loop;
    end Substitute_On_Chain;
 
-end Sem_Inst;
+end Vhdl.Sem_Inst;

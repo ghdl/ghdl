@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Iirs; use Iirs;
 
-package Sem_Names is
+package Vhdl.Sem_Names is
    --  In VHDL, most of name notations are ambiguous:
    --   P.N is either
    --     an expanded name or
@@ -156,4 +156,4 @@ package Sem_Names is
 
    --  Emit an error for NAME that doesn't match its class CLASS_NAME.
    procedure Error_Class_Match (Name : Iir; Class_Name : String);
-end Sem_Names;
+end Vhdl.Sem_Names;

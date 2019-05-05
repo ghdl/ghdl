@@ -44,7 +44,7 @@ with Grt.Errors;
 with Grt.Std_Logic_1164;
 with Grt.Lib;
 with Grt.Strings;
-with Sem_Inst;
+with Vhdl.Sem_Inst;
 
 package body Simul.Execution is
 
@@ -3344,7 +3344,7 @@ package body Simul.Execution is
       if Res /= Null_Iir then
          return Res;
       else
-         Orig := Sem_Inst.Get_Origin (Spec);
+         Orig := Vhdl.Sem_Inst.Get_Origin (Spec);
          pragma Assert (Orig /= Null_Iir);
          return Get_Subprogram_Body_Origin (Orig);
       end if;
@@ -3361,7 +3361,7 @@ package body Simul.Execution is
       if Res /= Null_Iir then
          return Res;
       else
-         Orig := Sem_Inst.Get_Origin (Spec);
+         Orig := Vhdl.Sem_Inst.Get_Origin (Spec);
          return Get_Protected_Type_Body_Origin (Orig);
       end if;
    end Get_Protected_Type_Body_Origin;

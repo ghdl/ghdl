@@ -16,7 +16,7 @@
 
 with Iirs; use Iirs;
 
-package Sem_Inst is
+package Vhdl.Sem_Inst is
    --  Return the origin of node N, the node from which N was instantiated.
    --  If N is not an instance, this function returns Null_Iir.
    function Get_Origin (N : Iir) return Iir;
@@ -33,4 +33,4 @@ package Sem_Inst is
 
    --  Deep copy of ORIG.  Doesn't change location.
    function Copy_Tree (Orig : Iir) return Iir;
-end Sem_Inst;
+end Vhdl.Sem_Inst;

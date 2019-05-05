@@ -26,7 +26,7 @@ with Ghdlprint; use Ghdlprint;
 with Libraries;
 with Errorout; use Errorout;
 with Iirs; use Iirs;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 

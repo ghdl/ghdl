@@ -26,8 +26,8 @@ with Files_Map;
 with Vhdl.Parse;
 with Vhdl.Scanner;
 with Vhdl.Tokens;
-with Sem_Expr;
-with Sem_Scopes;
+with Vhdl.Sem_Expr;
+with Vhdl.Sem_Scopes;
 with Vhdl.Canon;
 with Std_Names;
 with Libraries;
@@ -1750,7 +1750,7 @@ package body Simul.Debugger is
 
    procedure Add_Decls_For (N : Iir)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
    begin
       case Get_Kind (N) is
          when Iir_Kind_Entity_Declaration =>
@@ -1819,7 +1819,7 @@ package body Simul.Debugger is
 
    procedure Enter_Scope (Node : Iir)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
    begin
       Push_Interpretations;
       Open_Declarative_Region;
@@ -1833,7 +1833,7 @@ package body Simul.Debugger is
 
    procedure Del_Decls_For (N : Iir)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
    begin
       case Get_Kind (N) is
          when Iir_Kind_Entity_Declaration =>
@@ -1858,7 +1858,7 @@ package body Simul.Debugger is
 
    procedure Leave_Scope (Node : Iir)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
    begin
       Foreach_Scopes (Node, Del_Decls_For'Access);
 
@@ -1914,7 +1914,7 @@ package body Simul.Debugger is
       end if;
 
       Enter_Scope (Dbg_Cur_Frame.Stmt);
-      Expr := Sem_Expr.Sem_Expression_Universal (Expr);
+      Expr := Vhdl.Sem_Expr.Sem_Expression_Universal (Expr);
       Leave_Scope (Dbg_Cur_Frame.Stmt);
 
       if Expr = Null_Iir

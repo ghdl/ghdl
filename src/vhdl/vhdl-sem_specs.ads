@@ -19,7 +19,7 @@ with Types; use Types;
 with Iirs; use Iirs;
 with Vhdl.Tokens;
 
-package Sem_Specs is
+package Vhdl.Sem_Specs is
    --  Return the attribute_value for named entity ENT and attribute identifier
    --  ID.  Return Null_Iir if ENT was not decorated with attribute ID.
    function Find_Attribute_Value (Ent : Iir; Id : Name_Id) return Iir;
@@ -96,4 +96,4 @@ package Sem_Specs is
                                            return Iir_Design_Unit;
 
    procedure Sem_Specification_Chain (Decls_Parent : Iir; Parent_Stmts: Iir);
-end Sem_Specs;
+end Vhdl.Sem_Specs;

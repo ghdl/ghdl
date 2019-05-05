@@ -21,10 +21,10 @@ with PSL.Nodes; use PSL.Nodes;
 with PSL.Subsets;
 with PSL.Hash;
 
-with Sem_Expr;
-with Sem_Stmts; use Sem_Stmts;
-with Sem_Scopes;
-with Sem_Names;
+with Vhdl.Sem_Expr;
+with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
+with Vhdl.Sem_Scopes;
+with Vhdl.Sem_Names;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Evaluation; use Evaluation;
@@ -33,7 +33,7 @@ with Ieee.Std_Logic_1164;
 with Errorout; use Errorout;
 with Xrefs; use Xrefs;
 
-package body Sem_Psl is
+package body Vhdl.Sem_Psl is
    procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out Node);
 
    --  Return TRUE iff Atype is a PSL boolean type.
@@ -805,4 +805,4 @@ package body Sem_Psl is
       return Null_Iir;
    end Sem_Psl_Name;
 
-end Sem_Psl;
+end Vhdl.Sem_Psl;

@@ -20,23 +20,23 @@ with Std_Package; use Std_Package;
 with Ieee.Std_Logic_1164;
 with Libraries;
 with Std_Names;
-with Sem_Scopes; use Sem_Scopes;
-with Sem_Expr; use Sem_Expr;
-with Sem_Names; use Sem_Names;
-with Sem_Specs; use Sem_Specs;
-with Sem_Decls; use Sem_Decls;
-with Sem_Assocs; use Sem_Assocs;
-with Sem_Inst;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
+with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
+with Vhdl.Sem_Names; use Vhdl.Sem_Names;
+with Vhdl.Sem_Specs; use Vhdl.Sem_Specs;
+with Vhdl.Sem_Decls; use Vhdl.Sem_Decls;
+with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
+with Vhdl.Sem_Inst;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Iirs_Utils; use Iirs_Utils;
 with Flags; use Flags;
 with Str_Table;
-with Sem_Utils;
-with Sem_Stmts; use Sem_Stmts;
+with Vhdl.Sem_Utils;
+with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Iir_Chains;
 with Xrefs; use Xrefs;
 
-package body Sem is
+package body Vhdl.Sem is
    -- Forward declarations.
    procedure Sem_Context_Clauses (Unit: Iir);
    procedure Sem_Block_Configuration
@@ -3311,4 +3311,4 @@ package body Sem is
       Current_Design_Unit := Old_Design_Unit;
       Pop_Signals_Declarative_Part (Implicit);
    end Semantic;
-end Sem;
+end Vhdl.Sem;

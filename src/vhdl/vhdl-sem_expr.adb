@@ -20,21 +20,21 @@ with Grt.Algos;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
 with Flags; use Flags;
-with Sem_Scopes; use Sem_Scopes;
-with Sem_Names; use Sem_Names;
-with Sem;
+with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
+with Vhdl.Sem_Names; use Vhdl.Sem_Names;
+with Vhdl.Sem;
 with Name_Table;
 with Str_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Evaluation; use Evaluation;
 with Iir_Chains; use Iir_Chains;
-with Sem_Types;
-with Sem_Stmts; use Sem_Stmts;
-with Sem_Assocs; use Sem_Assocs;
-with Sem_Decls;
+with Vhdl.Sem_Types;
+with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
+with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
+with Vhdl.Sem_Decls;
 with Xrefs; use Xrefs;
 
-package body Sem_Expr is
+package body Vhdl.Sem_Expr is
 
    -- Replace type of TARGET by A_TYPE.
    -- If TARGET has already a type, it must be an overload list, and in this
@@ -5226,4 +5226,4 @@ package body Sem_Expr is
       end if;
    end Sem_Condition;
 
-end Sem_Expr;
+end Vhdl.Sem_Expr;

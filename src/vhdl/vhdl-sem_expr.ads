@@ -20,7 +20,7 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Iirs; use Iirs;
 
-package Sem_Expr is
+package Vhdl.Sem_Expr is
    -- Set semantic to EXPR.
    --  Replace simple_name with the referenced node,
    --  Set type to nodes,
@@ -267,4 +267,4 @@ package Sem_Expr is
    --  To be used after Sem_Expression_Wildcard to update list ATYPE of
    --  possible types.
    procedure Merge_Wildcard_Type (Expr : Iir; Atype : in out Iir);
-end Sem_Expr;
+end Vhdl.Sem_Expr;

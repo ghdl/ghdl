@@ -29,8 +29,8 @@ with Std_Package;
 with Flags;
 with Configuration;
 with Translation;
-with Sem;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Errorout; use Errorout;
 with Errorout.Console;
 with GNAT.OS_Lib;
@@ -317,7 +317,7 @@ package body Ortho_Front is
       --  Do late analysis checks.
       Design := Get_First_Design_Unit (New_Design_File);
       while Is_Valid (Design) loop
-         Sem.Sem_Analysis_Checks_List
+         Vhdl.Sem.Sem_Analysis_Checks_List
            (Design, Is_Warning_Enabled (Warnid_Delayed_Checks));
          Design := Get_Chain (Design);
       end loop;

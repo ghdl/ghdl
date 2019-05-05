@@ -24,8 +24,8 @@ with Ada.Text_IO;
 
 with Types;
 with Flags;
-with Sem;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Name_Table;
 with Errorout; use Errorout;
 with Libraries;
@@ -276,7 +276,7 @@ package body Ghdlcomp is
       --  Do late analysis checks.
       Unit := Get_First_Design_Unit (New_Design_File);
       while Unit /= Null_Iir loop
-         Sem.Sem_Analysis_Checks_List
+         Vhdl.Sem.Sem_Analysis_Checks_List
            (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
          Unit := Get_Chain (Unit);
       end loop;
@@ -460,7 +460,7 @@ package body Ghdlcomp is
             if New_Design_File /= Null_Iir then
                Unit := Get_First_Design_Unit (New_Design_File);
                while Unit /= Null_Iir loop
-                  Sem.Sem_Analysis_Checks_List
+                  Vhdl.Sem.Sem_Analysis_Checks_List
                     (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
                   Unit := Get_Chain (Unit);
                end loop;

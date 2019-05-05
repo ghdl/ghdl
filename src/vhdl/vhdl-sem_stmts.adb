@@ -18,21 +18,21 @@
 with Errorout; use Errorout;
 with Types; use Types;
 with Flags; use Flags;
-with Sem_Specs; use Sem_Specs;
+with Vhdl.Sem_Specs; use Vhdl.Sem_Specs;
 with Std_Package; use Std_Package;
-with Sem; use Sem;
-with Sem_Decls; use Sem_Decls;
-with Sem_Expr; use Sem_Expr;
-with Sem_Names; use Sem_Names;
-with Sem_Scopes; use Sem_Scopes;
-with Sem_Types;
-with Sem_Psl;
+with Vhdl.Sem; use Vhdl.Sem;
+with Vhdl.Sem_Decls; use Vhdl.Sem_Decls;
+with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
+with Vhdl.Sem_Names; use Vhdl.Sem_Names;
+with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
+with Vhdl.Sem_Types;
+with Vhdl.Sem_Psl;
 with Std_Names;
 with Evaluation; use Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Xrefs; use Xrefs;
 
-package body Sem_Stmts is
+package body Vhdl.Sem_Stmts is
    -- Process is the scope, this is also the process for which drivers can
    -- be created.
    -- Note: FIRST_STMT is the first statement, which can be get by:
@@ -2180,4 +2180,4 @@ package body Sem_Stmts is
          end if;
       end if;
    end Sem_Add_Driver;
-end Sem_Stmts;
+end Vhdl.Sem_Stmts;

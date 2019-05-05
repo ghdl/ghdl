@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Iirs; use Iirs;
 
-package Sem_Decls is
+package Vhdl.Sem_Decls is
    --  Analyze an interface chain.
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type);
@@ -102,4 +102,4 @@ private
       --  will be appended to LAST_DECL.
       Last_Decl : Iir;
    end record;
-end Sem_Decls;
+end Vhdl.Sem_Decls;

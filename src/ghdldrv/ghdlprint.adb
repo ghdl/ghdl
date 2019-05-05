@@ -33,7 +33,7 @@ with Vhdl.Parse;
 with Vhdl.Canon;
 with Version;
 with Xrefs;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Vhdl.Disp_Vhdl;
@@ -1002,7 +1002,7 @@ package body Ghdlprint is
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
             --  Analyze the design unit.
-            Sem_Lib.Finish_Compilation (Unit, True);
+            Vhdl.Sem_Lib.Finish_Compilation (Unit, True);
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
@@ -1284,7 +1284,7 @@ package body Ghdlprint is
               | Date_Disk =>
                raise Internal_Error;
             when Date_Parse =>
-               Sem_Lib.Load_Design_Unit (Unit, Unit);
+               Vhdl.Sem_Lib.Load_Design_Unit (Unit, Unit);
                if Errorout.Nbr_Errors /= 0 then
                   raise Compilation_Error;
                end if;

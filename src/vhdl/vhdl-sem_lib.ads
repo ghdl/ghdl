@@ -18,7 +18,7 @@
 with Types; use Types;
 with Iirs; use Iirs;
 
-package Sem_Lib is
+package Vhdl.Sem_Lib is
    --  Start the analyse a file (ie load and parse it).
    --  The file is read from the current directory (unless FILE_NAME is an
    --    absolute path).
@@ -55,4 +55,4 @@ package Sem_Lib is
    --  Analyze UNIT.
    procedure Finish_Compilation
      (Unit : Iir_Design_Unit; Main : Boolean := False);
-end Sem_Lib;
+end Vhdl.Sem_Lib;

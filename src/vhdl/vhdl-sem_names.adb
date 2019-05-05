@@ -24,19 +24,19 @@ with Std_Package; use Std_Package;
 with Types; use Types;
 with Iir_Chains; use Iir_Chains;
 with Std_Names;
-with Sem;
-with Sem_Lib; use Sem_Lib;
-with Sem_Scopes; use Sem_Scopes;
-with Sem_Expr; use Sem_Expr;
-with Sem_Stmts; use Sem_Stmts;
-with Sem_Decls; use Sem_Decls;
-with Sem_Assocs; use Sem_Assocs;
-with Sem_Specs;
-with Sem_Types;
-with Sem_Psl;
+with Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
+with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
+with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
+with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
+with Vhdl.Sem_Decls; use Vhdl.Sem_Decls;
+with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
+with Vhdl.Sem_Specs;
+with Vhdl.Sem_Types;
+with Vhdl.Sem_Psl;
 with Xrefs; use Xrefs;
 
-package body Sem_Names is
+package body Vhdl.Sem_Names is
    --  Finish the analyze of NAME using RES as named entity.
    --  This is called when the analyze is finished and an uniq
    --  interpretation has been determined (RES).
@@ -4310,4 +4310,4 @@ package body Sem_Names is
                         +Get_Named_Entity (Name));
       end if;
    end Error_Class_Match;
-end Sem_Names;
+end Vhdl.Sem_Names;

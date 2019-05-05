@@ -19,7 +19,7 @@
 with Std_Names;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
-with Sem_Inst;
+with Vhdl.Sem_Inst;
 with Nodes_Meta;
 with Iirs_Utils; use Iirs_Utils;
 with Trans.Chap3;
@@ -1377,7 +1377,7 @@ package body Trans.Chap2 is
          Kind      : constant Iir_Kind := Get_Kind (N);
          Fields    : constant Fields_Array := Get_Fields (Kind);
          F         : Fields_Enum;
-         Orig      : constant Iir := Sem_Inst.Get_Origin (N);
+         Orig      : constant Iir := Vhdl.Sem_Inst.Get_Origin (N);
          pragma Assert (Orig /= Null_Iir);
          Orig_Info : constant Ortho_Info_Acc := Get_Info (Orig);
          Info      : Ortho_Info_Acc;
@@ -1489,7 +1489,7 @@ package body Trans.Chap2 is
    begin
       Inter := Chain;
       while Inter /= Null_Iir loop
-         Orig := Sem_Inst.Get_Origin (Inter);
+         Orig := Vhdl.Sem_Inst.Get_Origin (Inter);
          Orig_Info := Get_Info (Orig);
 
          Info := Add_Info (Inter, Orig_Info.Kind);
