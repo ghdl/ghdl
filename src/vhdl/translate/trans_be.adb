@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Errorout; use Errorout;
 with Ada.Text_IO;
-with Back_End;
+with Vhdl.Back_End;
 
 package body Trans_Be is
    procedure Sem_Foreign (Decl : Iir)
@@ -69,8 +69,8 @@ package body Trans_Be is
 
    procedure Register_Translation_Back_End is
    begin
-      Back_End.Sem_Foreign := Sem_Foreign'Access;
-      Back_End.Parse_Option := Parse_Option'Access;
-      Back_End.Disp_Option := Disp_Option'Access;
+      Vhdl.Back_End.Sem_Foreign := Sem_Foreign'Access;
+      Vhdl.Back_End.Parse_Option := Parse_Option'Access;
+      Vhdl.Back_End.Disp_Option := Disp_Option'Access;
    end Register_Translation_Back_End;
 end Trans_Be;

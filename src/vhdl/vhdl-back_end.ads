@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Iirs; use Iirs;
 
-package Back_End is
+package Vhdl.Back_End is
    --  Back-end options.
    type Parse_Option_Acc is access function (Opt : String) return Boolean;
    Parse_Option : Parse_Option_Acc := null;
@@ -31,4 +31,4 @@ package Back_End is
    --  May be NULL for no additionnal checks.
    type Sem_Foreign_Acc is access procedure (Decl : Iir);
    Sem_Foreign : Sem_Foreign_Acc := null;
-end Back_End;
+end Vhdl.Back_End;

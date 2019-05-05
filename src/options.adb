@@ -24,7 +24,7 @@ with PSL.Nodes;
 with PSL.Dump_Tree;
 with Vhdl.Disp_Tree;
 with Vhdl.Scanner;
-with Back_End; use Back_End;
+with Vhdl.Back_End; use Vhdl.Back_End;
 with Flags; use Flags;
 with Files_Map;
 
@@ -199,8 +199,8 @@ package body Options is
          Flag_Integer_64 := True;
       elsif Opt = "--ftime32" then
          Flag_Time_64 := False;
-      elsif Back_End.Parse_Option /= null
-        and then Back_End.Parse_Option.all (Opt)
+      elsif Vhdl.Back_End.Parse_Option /= null
+        and then Vhdl.Back_End.Parse_Option.all (Opt)
       then
          null;
       else
@@ -251,8 +251,8 @@ package body Options is
       P ("Compilation dump:");
       P ("  -d[psa]            dump tree after parse, semantics or annotate");
       P ("  --dall             -dX options apply to all files");
-      if Back_End.Disp_Option /= null then
-         Back_End.Disp_Option.all;
+      if Vhdl.Back_End.Disp_Option /= null then
+         Vhdl.Back_End.Disp_Option.all;
       end if;
    end Disp_Options_Help;
 

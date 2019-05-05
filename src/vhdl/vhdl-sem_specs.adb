@@ -31,7 +31,7 @@ with Flags; use Flags;
 with Std_Names;
 with Vhdl.Sem_Decls;
 with Xrefs; use Xrefs;
-with Back_End;
+with Vhdl.Back_End;
 
 package body Vhdl.Sem_Specs is
    function Get_Entity_Class_Kind (Decl : Iir) return Vhdl.Tokens.Token_Type
@@ -354,7 +354,7 @@ package body Vhdl.Sem_Specs is
          end if;
 
          declare
-            use Back_End;
+            use Vhdl.Back_End;
          begin
             if Sem_Foreign /= null then
                Sem_Foreign.all (Decl);
