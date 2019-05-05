@@ -18,7 +18,7 @@
 
 with Iirs; use Iirs;
 
-package Nodes_GC is
+package Vhdl.Nodes_GC is
    Flag_Disp_Multiref : Boolean := True;
 
    --  Perform an internal check on the tree structure of UNIT.
@@ -26,4 +26,4 @@ package Nodes_GC is
 
    procedure Report_Unreferenced;
    --  Display nodes that aren't referenced.
-end Nodes_GC;
+end Vhdl.Nodes_GC;

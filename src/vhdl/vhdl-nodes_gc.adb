@@ -26,7 +26,7 @@ with Libraries;
 with Vhdl.Disp_Tree;
 with Vhdl.Std_Package;
 
-package body Nodes_GC is
+package body Vhdl.Nodes_GC is
 
    type Marker_Array is array (Iir range <>) of Boolean;
    type Marker_Array_Acc is access Marker_Array;
@@ -516,4 +516,4 @@ package body Nodes_GC is
          raise Internal_Error;
       end if;
    end Check_Tree;
-end Nodes_GC;
+end Vhdl.Nodes_GC;

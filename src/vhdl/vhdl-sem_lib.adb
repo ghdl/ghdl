@@ -28,7 +28,7 @@ with Vhdl.Disp_Vhdl;
 with Vhdl.Sem;
 with Vhdl.Post_Sems;
 with Vhdl.Canon;
-with Nodes_GC;
+with Vhdl.Nodes_GC;
 
 package body Vhdl.Sem_Lib is
    procedure Error_Lib_Msg (Msg : String; Arg1 : Earg_Type) is
@@ -84,7 +84,7 @@ package body Vhdl.Sem_Lib is
       end if;
 
       if Flags.Check_Ast_Level > 0 then
-         Nodes_GC.Check_Tree (Unit);
+         Vhdl.Nodes_GC.Check_Tree (Unit);
       end if;
 
       if Flags.Verbose then
@@ -107,7 +107,7 @@ package body Vhdl.Sem_Lib is
       end if;
 
       if Flags.Check_Ast_Level > 0 then
-         Nodes_GC.Check_Tree (Unit);
+         Vhdl.Nodes_GC.Check_Tree (Unit);
       end if;
 
       --  Post checks
@@ -142,7 +142,7 @@ package body Vhdl.Sem_Lib is
       end if;
 
       if Flags.Check_Ast_Level > 0 then
-         Nodes_GC.Check_Tree (Unit);
+         Vhdl.Nodes_GC.Check_Tree (Unit);
       end if;
    end Finish_Compilation;
 
