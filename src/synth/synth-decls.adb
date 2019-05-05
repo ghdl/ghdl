@@ -78,8 +78,6 @@ package body Synth.Decls is
             Create_Var_Wire (Syn_Inst, Decl, null);
          when Iir_Kind_Constant_Declaration =>
             null;
-         when Iir_Kind_Interface_Constant_Declaration =>
-            null;
          when Iir_Kind_Signal_Declaration =>
             declare
                Def : constant Iir := Get_Default_Value (Decl);
