@@ -20,9 +20,9 @@ with Types; use Types;
 with Vhdl.Std_Package;
 with Std_Names; use Std_Names;
 with Errorout; use Errorout;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 
-package body Ieee.Numeric is
+package body Vhdl.Ieee.Numeric is
    type Pkg_Kind is (Pkg_Std, Pkg_Bit);
    type Sign_Kind is (Type_Signed, Type_Unsigned,
                       Type_Log, Type_Slv, Type_Suv);
@@ -256,4 +256,4 @@ package body Ieee.Numeric is
          Numeric_Std_Unsigned_Type := Null_Iir;
          Numeric_Std_Signed_Type := Null_Iir;
    end Extract_Std_Declarations;
-end Ieee.Numeric;
+end Vhdl.Ieee.Numeric;

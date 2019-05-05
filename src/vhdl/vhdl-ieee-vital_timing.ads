@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package Ieee.Vital_Timing is
+package Vhdl.Ieee.Vital_Timing is
    --  Attribute declarations.
    Vital_Level0_Attribute : Iir_Attribute_Declaration := Null_Iir;
    Vital_Level1_Attribute : Iir_Attribute_Declaration := Null_Iir;
@@ -37,4 +37,4 @@ package Ieee.Vital_Timing is
 
    procedure Check_Vital_Level0 (Unit : Iir_Design_Unit);
    procedure Check_Vital_Level1 (Unit : Iir_Design_Unit);
-end Ieee.Vital_Timing;
+end Vhdl.Ieee.Vital_Timing;

@@ -40,7 +40,7 @@ with Vhdl.Canon;
 with Vhdl.Configuration;
 with Trans_Be;
 with Translation;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 
 with Lists;
 with Str_Table;
@@ -738,9 +738,9 @@ package body Ghdlrun is
         Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
       Grtlink.Std_Standard_Bit_RTI_Ptr :=
         Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
-      if Ieee.Std_Logic_1164.Resolved /= Null_Iir then
+      if Vhdl.Ieee.Std_Logic_1164.Resolved /= Null_Iir then
          Decl := Translation.Get_Resolv_Ortho_Decl
-           (Ieee.Std_Logic_1164.Resolved);
+           (Vhdl.Ieee.Std_Logic_1164.Resolved);
          if Decl /= O_Dnode_Null then
             Grtlink.Ieee_Std_Logic_1164_Resolved_Resolv_Ptr :=
               Ortho_Jit.Get_Address (Decl);

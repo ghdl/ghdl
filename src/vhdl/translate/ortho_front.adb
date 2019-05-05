@@ -25,7 +25,7 @@ with Interning;
 with Iirs; use Iirs;
 with Libraries;
 with Iirs_Utils; use Iirs_Utils;
-with Std_Package;
+with Vhdl.Std_Package;
 with Flags;
 with Vhdl.Configuration;
 with Translation;
@@ -327,8 +327,8 @@ package body Ortho_Front is
       Vhdl.Configuration.Flag_Load_All_Design_Units := False;
 
       --  Exclude std.standard
-      Set_Configuration_Mark_Flag (Std_Package.Std_Standard_Unit, True);
-      Set_Configuration_Done_Flag (Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Mark_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Done_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
 
       Dep_List := Create_Iir_List;
 

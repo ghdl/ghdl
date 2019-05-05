@@ -18,9 +18,9 @@
 with Types; use Types;
 with Std_Names; use Std_Names;
 with Vhdl.Sem_Specs;
-with Ieee.Std_Logic_1164;
-with Ieee.Vital_Timing;
-with Ieee.Numeric;
+with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Vital_Timing;
+with Vhdl.Ieee.Numeric;
 with Flags; use Flags;
 
 package body Vhdl.Post_Sems is
@@ -51,11 +51,11 @@ package body Vhdl.Post_Sems is
          if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration then
             case Id is
                when Name_Std_Logic_1164 =>
-                  Ieee.Std_Logic_1164.Extract_Declarations (Lib_Unit);
+                  Vhdl.Ieee.Std_Logic_1164.Extract_Declarations (Lib_Unit);
                when Name_VITAL_Timing =>
-                  Ieee.Vital_Timing.Extract_Declarations (Lib_Unit);
+                  Vhdl.Ieee.Vital_Timing.Extract_Declarations (Lib_Unit);
                when Name_Numeric_Std =>
-                  Ieee.Numeric.Extract_Std_Declarations (Lib_Unit);
+                  Vhdl.Ieee.Numeric.Extract_Std_Declarations (Lib_Unit);
                when others =>
                   null;
             end case;
@@ -69,10 +69,11 @@ package body Vhdl.Post_Sems is
          while Value /= Null_Iir loop
             Spec := Get_Attribute_Specification (Value);
             Attr_Decl := Get_Named_Entity (Get_Attribute_Designator (Spec));
-            if Attr_Decl = Ieee.Vital_Timing.Vital_Level0_Attribute then
-               Ieee.Vital_Timing.Check_Vital_Level0 (Unit);
-            elsif Attr_Decl = Ieee.Vital_Timing.Vital_Level1_Attribute then
-               Ieee.Vital_Timing.Check_Vital_Level1 (Unit);
+            if Attr_Decl = Vhdl.Ieee.Vital_Timing.Vital_Level0_Attribute then
+               Vhdl.Ieee.Vital_Timing.Check_Vital_Level0 (Unit);
+            elsif Attr_Decl = Vhdl.Ieee.Vital_Timing.Vital_Level1_Attribute
+            then
+               Vhdl.Ieee.Vital_Timing.Check_Vital_Level1 (Unit);
             end if;
 
             Value := Get_Value_Chain (Value);

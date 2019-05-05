@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package Ieee.Std_Logic_1164 is
+package Vhdl.Ieee.Std_Logic_1164 is
    --  Nodes corresponding to declarations in the package.
    Std_Logic_1164_Pkg : Iir_Package_Declaration := Null_Iir;
    Std_Ulogic_Type : Iir_Enumeration_Type_Definition := Null_Iir;
@@ -44,4 +44,4 @@ package Ieee.Std_Logic_1164 is
    --  PKG is the package declaration for ieee.std_logic_1164 package.
    --  Fills the node aboves.
    procedure Extract_Declarations (Pkg : Iir_Package_Declaration);
-end Ieee.Std_Logic_1164;
+end Vhdl.Ieee.Std_Logic_1164;

@@ -27,7 +27,7 @@ with Errorout; use Errorout;
 
 with Vhdl.Sem_Expr;
 with Iirs_Utils; use Iirs_Utils;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 with Evaluation;
 
 with Synth.Types; use Synth.Types;
@@ -195,7 +195,7 @@ package body Synth.Stmts is
       El_Type : constant Iir :=
         Get_Base_Type (Get_Element_Subtype (Get_Type (Expr)));
    begin
-      if El_Type = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+      if El_Type = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
          declare
             use Evaluation.String_Utils;
 
@@ -210,17 +210,17 @@ package body Synth.Stmts is
                Val := Shift_Left (Val, 1);
                Dc := Shift_Left (Dc, 1);
                case Get_Pos (Info, I) is
-                  when Ieee.Std_Logic_1164.Std_Logic_0_Pos =>
+                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos =>
                      Val := Val or 0;
-                  when Ieee.Std_Logic_1164.Std_Logic_1_Pos =>
+                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos =>
                      Val := Val or 1;
-                  when Ieee.Std_Logic_1164.Std_Logic_U_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_X_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_Z_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_W_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_D_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_L_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
+                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_L_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
                      Dc := Dc or 1;
                   when others =>
                      raise Internal_Error;

@@ -19,7 +19,7 @@
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Std_Package;
 
-package body Ieee is
+package body Vhdl.Ieee is
    function Skip_Copyright_Notice (Decl : Iir) return Iir
    is
    begin
@@ -47,4 +47,4 @@ package body Ieee is
       end loop;
       return Res;
    end Skip_Implicit;
-end Ieee;
+end Vhdl.Ieee;

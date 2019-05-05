@@ -23,7 +23,7 @@ with Tables;
 with GNAT.Dynamic_Tables;
 with Libraries;
 with Name_Table; use Name_Table;
-with Std_Package;
+with Vhdl.Std_Package;
 with Types; use Types;
 with Iirs; use Iirs;
 with Files_Map;
@@ -1570,7 +1570,7 @@ package body Ghdldrv is
       while Is_Valid (Files_It) loop
          File := Get_Element (Files_It);
 
-         if File = Std_Package.Std_Standard_File then
+         if File = Vhdl.Std_Package.Std_Standard_File then
             Need_Analyze := False;
          elsif Missing_Object_File (File)
            or else Source_File_Modified (File)
@@ -1710,7 +1710,7 @@ package body Ghdldrv is
 
    function Is_Makeable_File (File : Iir_Design_File) return Boolean is
    begin
-      if File = Std_Package.Std_Standard_File then
+      if File = Vhdl.Std_Package.Std_Standard_File then
          return False;
       end if;
       return True;

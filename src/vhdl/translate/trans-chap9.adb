@@ -27,7 +27,7 @@ with Nodes_Meta;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 with Trans.Chap1;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -389,7 +389,7 @@ package body Trans.Chap9 is
                      Res,
                      New_Lit (Get_Ortho_Literal (Bit_1)),
                      Get_Ortho_Type (Boolean_Type_Definition, Mode_Value));
-               elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+               elsif Rtype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   return New_Value
                     (New_Indexed_Element
                        (New_Obj (Ghdl_Std_Ulogic_To_Boolean_Array),

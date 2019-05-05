@@ -20,7 +20,7 @@ with Name_Table;
 with Std_Names; use Std_Names;
 with Errorout; use Errorout;
 
-package body Ieee.Std_Logic_1164 is
+package body Vhdl.Ieee.Std_Logic_1164 is
    function Is_Scalar_Parameter (Inter : Iir) return Boolean is
    begin
       return Get_Base_Type (Get_Type (Inter)) = Std_Ulogic_Type;
@@ -316,4 +316,4 @@ package body Ieee.Std_Logic_1164 is
          Rising_Edge := Null_Iir;
          Falling_Edge := Null_Iir;
    end Extract_Declarations;
-end Ieee.Std_Logic_1164;
+end Vhdl.Ieee.Std_Logic_1164;

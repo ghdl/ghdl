@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Errorout; use Errorout;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 with Libraries;
 with Std_Names;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
@@ -2661,7 +2661,7 @@ package body Vhdl.Sem is
         and then (Get_Identifier (Get_Library (Get_Design_File (Unit)))
                     = Std_Names.Name_Ieee)
       then
-         Ieee.Std_Logic_1164.Std_Logic_1164_Pkg := Pkg;
+         Vhdl.Ieee.Std_Logic_1164.Std_Logic_1164_Pkg := Pkg;
       end if;
 
       --  LRM93 10.1 Declarative Region

@@ -20,7 +20,7 @@
 
 with Types; use Types;
 with Vhdl.Std_Package;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 with Iirs_Utils; use Iirs_Utils;
 
 with Simul.Environments; use Simul.Environments;
@@ -30,8 +30,8 @@ with Errorout; use Errorout;
 package body Synth.Types is
    function Is_Bit_Type (Atype : Iir) return Boolean is
    begin
-      return Atype = Ieee.Std_Logic_1164.Std_Ulogic_Type
-        or else Atype = Ieee.Std_Logic_1164.Std_Logic_Type
+      return Atype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
+        or else Atype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
         or else Atype = Vhdl.Std_Package.Boolean_Type_Definition
         or else Atype = Vhdl.Std_Package.Bit_Type_Definition;
    end Is_Bit_Type;

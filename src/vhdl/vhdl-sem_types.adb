@@ -30,7 +30,7 @@ with Name_Table;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 with Xrefs; use Xrefs;
 
 package body Vhdl.Sem_Types is
@@ -837,9 +837,9 @@ package body Vhdl.Sem_Types is
       --  Identifier IEEE.Std_Logic_1164.Std_Ulogic.
       if Get_Identifier (Decl) = Std_Names.Name_Std_Ulogic
         and then
-        Get_Parent (Decl) = Ieee.Std_Logic_1164.Std_Logic_1164_Pkg
+        Get_Parent (Decl) = Vhdl.Ieee.Std_Logic_1164.Std_Logic_1164_Pkg
       then
-         Ieee.Std_Logic_1164.Std_Ulogic_Type := Def;
+         Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type := Def;
       end if;
 
       return Def;

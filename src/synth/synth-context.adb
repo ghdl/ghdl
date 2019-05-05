@@ -26,7 +26,7 @@ with Errorout; use Errorout;
 with Iirs_Utils;
 
 with Vhdl.Std_Package;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Execution;
@@ -90,8 +90,8 @@ package body Synth.Context is
             end if;
          when Iir_Kind_Array_Type_Definition =>
             --  Well known array types.
-            if Btype = Ieee.Std_Logic_1164.Std_Logic_Vector_Type
-              or else Btype = Ieee.Std_Logic_1164.Std_Ulogic_Vector_Type
+            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type
+              or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Vector_Type
             then
                return Alloc_Wire
                  (Kind, Obj, Bounds_To_Range (Val.Bounds.D (1)));

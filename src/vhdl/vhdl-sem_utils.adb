@@ -21,7 +21,7 @@ with Flags; use Flags;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Iir_Chains; use Iir_Chains;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 with Std_Names;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 

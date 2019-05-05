@@ -29,7 +29,7 @@ with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Evaluation; use Evaluation;
 with Vhdl.Std_Package;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 with Errorout; use Errorout;
 with Xrefs; use Xrefs;
 
@@ -48,7 +48,7 @@ package body Vhdl.Sem_Psl is
       Btype := Get_Base_Type (Atype);
       return Btype = Vhdl.Std_Package.Boolean_Type_Definition
         or else Btype = Vhdl.Std_Package.Bit_Type_Definition
-        or else Btype = Ieee.Std_Logic_1164.Std_Ulogic_Type;
+        or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type;
    end Is_Psl_Bool_Type;
 
    --  Return TRUE if EXPR type is a PSL boolean type.

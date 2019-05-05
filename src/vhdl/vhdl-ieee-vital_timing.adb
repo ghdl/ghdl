@@ -21,14 +21,14 @@ with Errorout; use Errorout;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Name_Table;
-with Ieee.Std_Logic_1164; use Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Specs;
 with Evaluation;
 with Vhdl.Sem;
 with Iirs_Utils;
 
-package body Ieee.Vital_Timing is
+package body Vhdl.Ieee.Vital_Timing is
    --  This package is based on IEEE 1076.4 1995.
 
    --  Control generics identifier.
@@ -1352,4 +1352,4 @@ package body Ieee.Vital_Timing is
       --  FIXME: todo
    end Check_Vital_Level1;
 
-end Ieee.Vital_Timing;
+end Vhdl.Ieee.Vital_Timing;

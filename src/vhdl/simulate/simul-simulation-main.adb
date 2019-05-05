@@ -29,7 +29,7 @@ with Trans_Analyzes;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
 with Simul.Annotations; use Simul.Annotations;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 with Grt.Main;
 with Simul.Debugger; use Simul.Debugger;
 with Simul.Debugger.AMS;
@@ -381,7 +381,7 @@ package body Simul.Simulation.Main is
                Res := Execute_Expression (Instance, E);
                if Rtype = Vhdl.Std_Package.Boolean_Type_Definition then
                   return Res.B1 = True;
-               elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+               elsif Rtype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   return Res.E8 = 3 or Res.E8 = 7; --  1 or H
                else
                   Error_Kind ("execute_psl_expr", Expr);
