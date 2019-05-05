@@ -27,7 +27,7 @@ with Vhdl.Disp_Tree;
 with Vhdl.Disp_Vhdl;
 with Sem;
 with Post_Sems;
-with Canon;
+with Vhdl.Canon;
 with Nodes_GC;
 
 package body Sem_Lib is
@@ -127,7 +127,7 @@ package body Sem_Lib is
                      "canonicalize %n", (1 => +Lib_Unit));
       end if;
 
-      Canon.Canonicalize (Unit);
+      Vhdl.Canon.Canonicalize (Unit);
 
       if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
          Vhdl.Disp_Tree.Disp_Tree (Unit);

@@ -36,7 +36,7 @@ with Std_Package;
 with Flags;
 with Errorout; use Errorout;
 with Libraries;
-with Canon;
+with Vhdl.Canon;
 with Configuration;
 with Trans_Be;
 with Translation;
@@ -146,12 +146,12 @@ package body Ghdlrun is
 
       case Elab_Mode is
          when Elab_Static =>
-            Canon.Canon_Flag_Add_Labels := True;
-            Canon.Canon_Flag_Sequentials_Stmts := True;
-            Canon.Canon_Flag_Expressions := True;
-            Canon.Canon_Flag_All_Sensitivity := True;
+            Vhdl.Canon.Canon_Flag_Add_Labels := True;
+            Vhdl.Canon.Canon_Flag_Sequentials_Stmts := True;
+            Vhdl.Canon.Canon_Flag_Expressions := True;
+            Vhdl.Canon.Canon_Flag_All_Sensitivity := True;
          when Elab_Dynamic =>
-            Canon.Canon_Flag_Add_Labels := True;
+            Vhdl.Canon.Canon_Flag_Add_Labels := True;
       end case;
    end Compile_Init;
 

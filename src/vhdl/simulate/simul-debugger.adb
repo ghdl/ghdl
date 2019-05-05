@@ -28,7 +28,7 @@ with Vhdl.Scanner;
 with Vhdl.Tokens;
 with Sem_Expr;
 with Sem_Scopes;
-with Canon;
+with Vhdl.Canon;
 with Std_Names;
 with Libraries;
 with Std_Package;
@@ -1929,7 +1929,7 @@ package body Simul.Debugger is
       New_Line;
 
       Annotate_Expand_Table;
-      Canon.Canon_Expression (Expr);
+      Vhdl.Canon.Canon_Expression (Expr);
 
       Mark (Marker, Expr_Pool);
 

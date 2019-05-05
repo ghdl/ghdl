@@ -20,7 +20,7 @@ with Errorout; use Errorout;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
-with Canon;
+with Vhdl.Canon;
 with Translation; use Translation;
 with Trans.Chap2;
 with Trans.Chap3;
@@ -2403,7 +2403,7 @@ package body Trans.Chap4 is
                   Call : constant Iir := Get_Procedure_Call (Stmt);
                   Imp : constant Iir := Get_Implementation (Call);
                begin
-                  Canon.Canon_Subprogram_Call (Call);
+                  Vhdl.Canon.Canon_Subprogram_Call (Call);
                   Update_Node_Infos;
 
                   if Get_Suspend_Flag (Imp) then

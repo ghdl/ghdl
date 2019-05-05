@@ -20,7 +20,7 @@ with Ada.Text_IO;
 with Std_Names;
 with Errorout; use Errorout;
 with Iir_Chains;
-with Canon;
+with Vhdl.Canon;
 with Evaluation; use Evaluation;
 with Std_Package; use Std_Package;
 with Iirs_Utils; use Iirs_Utils;
@@ -3556,7 +3556,7 @@ package body Trans.Chap8 is
       if Sensitivity = Null_Iir_List and Cond /= Null_Iir then
          --  Extract sensitivity from condition.
          Sensitivity := Create_Iir_List;
-         Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
+         Vhdl.Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
          Set_Sensitivity_List (Stmt, Sensitivity);
       end if;
 
@@ -4683,7 +4683,8 @@ package body Trans.Chap8 is
                C_Stmt : Iir;
             begin
                C_Stmt :=
-                 Canon.Canon_Conditional_Variable_Assignment_Statement (Stmt);
+                 Vhdl.Canon.Canon_Conditional_Variable_Assignment_Statement
+                 (Stmt);
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
             end;
@@ -4692,7 +4693,8 @@ package body Trans.Chap8 is
                C_Stmt : Iir;
             begin
                C_Stmt :=
-                 Canon.Canon_Conditional_Signal_Assignment_Statement (Stmt);
+                 Vhdl.Canon.Canon_Conditional_Signal_Assignment_Statement
+                 (Stmt);
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
             end;
@@ -4711,7 +4713,7 @@ package body Trans.Chap8 is
             begin
                if not Get_Suspend_Flag (Stmt) then
                   --  Suspendable calls were already canonicalized.
-                  Canon.Canon_Subprogram_Call (Call);
+                  Vhdl.Canon.Canon_Subprogram_Call (Call);
                   Trans.Update_Node_Infos;
                end if;
 

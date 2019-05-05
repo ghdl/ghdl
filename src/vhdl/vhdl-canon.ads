@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Iirs; use Iirs;
 
-package Canon is
+package Vhdl.Canon is
    --  If true, a label will be added to unlabelled concurrent statements.
    Canon_Flag_Add_Labels : Boolean := False;
 
@@ -93,4 +93,4 @@ package Canon is
    function Canon_Extract_Process_Sensitivity
      (Proc : Iir_Sensitized_Process_Statement)
      return Iir_List;
-end Canon;
+end Vhdl.Canon;

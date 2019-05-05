@@ -23,7 +23,7 @@ with Ghdlsimul;
 
 with Libraries;
 with Flags;
-with Canon;
+with Vhdl.Canon;
 
 with Simul.Elaboration;
 
@@ -94,9 +94,9 @@ package body Ghdlsynth is
       Libraries.Load_Work_Library (E_Opt >= Args'First);
 
       --  Do not canon concurrent statements.
-      Canon.Canon_Flag_Concurrent_Stmts := False;
+      Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
 
-      Canon.Canon_Flag_Add_Labels := True;
+      Vhdl.Canon.Canon_Flag_Add_Labels := True;
 
       --  Analyze files (if any)
       for I in Args'First .. E_Opt - 1 loop

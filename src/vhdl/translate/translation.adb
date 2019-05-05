@@ -29,7 +29,7 @@ with Std_Package; use Std_Package;
 with Sem_Specs;
 with Libraries;
 with Std_Names;
-with Canon;
+with Vhdl.Canon;
 with Trans;
 with Trans_Decls; use Trans_Decls;
 with Trans.Chap1;
@@ -375,7 +375,7 @@ package body Translation is
       Init_Node_Infos;
 
       --  Set flags for canon.
-      Canon.Canon_Flag_Add_Labels := True;
+      Vhdl.Canon.Canon_Flag_Add_Labels := True;
 
       --  Force to unnest subprograms is the code generator doesn't support
       --  nested subprograms.

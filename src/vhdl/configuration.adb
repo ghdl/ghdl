@@ -25,7 +25,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Iirs_Walk;
 with Sem_Scopes;
 with Sem_Lib; use Sem_Lib;
-with Canon;
+with Vhdl.Canon;
 
 package body Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
@@ -348,8 +348,8 @@ package body Configuration is
                --  previous instantiation.  Create it if it doesn't exist.
                Config := Get_Default_Configuration_Declaration (Arch_Lib);
                if Is_Null (Config) then
-                  Config :=
-                    Canon.Create_Default_Configuration_Declaration (Arch_Lib);
+                  Config := Vhdl.Canon.Create_Default_Configuration_Declaration
+                    (Arch_Lib);
                   Set_Default_Configuration_Declaration (Arch_Lib, Config);
                end if;
 
@@ -656,7 +656,8 @@ package body Configuration is
             pragma Assert
               (Is_Null (Get_Default_Configuration_Declaration (Lib_Unit)));
 
-            Top := Canon.Create_Default_Configuration_Declaration (Lib_Unit);
+            Top := Vhdl.Canon.Create_Default_Configuration_Declaration
+              (Lib_Unit);
             Set_Default_Configuration_Declaration (Lib_Unit, Top);
             pragma Assert (Is_Valid (Top));
          when Iir_Kind_Configuration_Declaration =>

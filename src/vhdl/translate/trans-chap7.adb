@@ -24,7 +24,7 @@ with Iir_Chains; use Iir_Chains;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
 with Flags; use Flags;
-with Canon;
+with Vhdl.Canon;
 with Evaluation; use Evaluation;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -4397,7 +4397,7 @@ package body Trans.Chap7 is
                        (Expr, Left, Right, Res_Type);
                   end;
                else
-                  Canon.Canon_Subprogram_Call (Expr);
+                  Vhdl.Canon.Canon_Subprogram_Call (Expr);
                   Trans.Update_Node_Infos;
                   Assoc_Chain := Get_Parameter_Association_Chain (Expr);
                   Res := Chap8.Translate_Subprogram_Call

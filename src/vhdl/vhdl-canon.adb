@@ -29,9 +29,9 @@ with PSL.Rewrites;
 with PSL.Build;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
-with Canon_PSL;
+with Vhdl.Canon_PSL;
 
-package body Canon is
+package body Vhdl.Canon is
    Canon_Flag_Set_Assoc_Formals : constant Boolean := False;
 
    --  Canonicalize the chain of declarations in Declaration_Chain of
@@ -3287,4 +3287,4 @@ package body Canon is
       return Res;
    end Create_Default_Configuration_Declaration;
 
-end Canon;
+end Vhdl.Canon;

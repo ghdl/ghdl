@@ -30,7 +30,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Tokens;
 with Vhdl.Scanner;
 with Vhdl.Parse;
-with Canon;
+with Vhdl.Canon;
 with Version;
 with Xrefs;
 with Sem_Lib; use Sem_Lib;
@@ -986,10 +986,10 @@ package body Ghdlprint is
       --  Keep parenthesis during parse.
       Vhdl.Parse.Flag_Parse_Parenthesis := True;
 
-      Canon.Canon_Flag_Concurrent_Stmts := False;
-      Canon.Canon_Flag_Configurations := False;
-      Canon.Canon_Flag_Specification_Lists := False;
-      Canon.Canon_Flag_Associations := False;
+      Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+      Vhdl.Canon.Canon_Flag_Configurations := False;
+      Vhdl.Canon.Canon_Flag_Specification_Lists := False;
+      Vhdl.Canon.Canon_Flag_Associations := False;
 
       --  Parse all files.
       for I in Args'Range loop
