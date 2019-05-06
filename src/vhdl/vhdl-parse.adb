@@ -15,7 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Vhdl.Scanner; use Vhdl.Scanner;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -2396,7 +2396,6 @@ package body Vhdl.Parse is
    function Parse_Physical_Type_Definition (Parent : Iir)
                                            return Iir_Physical_Type_Definition
    is
-      use Iir_Chains.Unit_Chain_Handling;
       Res: Iir_Physical_Type_Definition;
       Unit: Iir_Unit_Declaration;
       Last : Iir_Unit_Declaration;
@@ -2416,8 +2415,8 @@ package body Vhdl.Parse is
 
       Scan_Semi_Colon ("primary physical unit");
 
-      Build_Init (Last);
-      Append (Last, Res, Unit);
+      Set_Unit_Chain (Res, Unit);
+      Last := Unit;
 
       --  Parse secondary units.
       while Current_Token = Tok_Identifier loop
@@ -2457,7 +2456,9 @@ package body Vhdl.Parse is
                   Skip_Until_Semi_Colon;
             end case;
          end if;
-         Append (Last, Res, Unit);
+         Set_Chain (Last, Unit);
+         Last := Unit;
+
          Scan_Semi_Colon ("secondary physical unit");
       end loop;
 
@@ -4200,10 +4201,9 @@ package body Vhdl.Parse is
       case Current_Token is
          when Tok_Is =>
             declare
-               use Iir_Chains.Entity_Class_Entry_Chain_Handling;
                Res : Iir_Group_Template_Declaration;
                El : Iir_Entity_Class;
-               Last : Iir_Entity_Class;
+               First, Last : Iir_Entity_Class;
             begin
                Res := Create_Iir (Iir_Kind_Group_Template_Declaration);
                Set_Location (Res, Loc);
@@ -4215,14 +4215,14 @@ package body Vhdl.Parse is
                --  Skip '('.
                Expect_Scan (Tok_Left_Paren);
 
-               Build_Init (Last);
+               Sub_Chain_Init (First, Last);
                loop
-                  Append (Last, Res, Parse_Entity_Class_Entry);
+                  Sub_Chain_Append (First, Last, Parse_Entity_Class_Entry);
                   if Current_Token = Tok_Box then
                      El := Create_Iir (Iir_Kind_Entity_Class);
                      Set_Location (El);
                      Set_Entity_Class (El, Tok_Box);
-                     Append (Last, Res, El);
+                     Sub_Chain_Append (First, Last, El);
 
                      --  Skip '<>'.
                      Scan;
@@ -4238,6 +4238,7 @@ package body Vhdl.Parse is
                   --  Skip ','.
                   Scan;
                end loop;
+               Set_Entity_Class_Entry_Chain (Res, First);
 
                --  Skip ')' ';'
                Expect_Scan (Tok_Right_Paren);
@@ -4664,8 +4665,7 @@ package body Vhdl.Parse is
    --       architecture_body and generate_statement)
    procedure Parse_Declarative_Part (Parent : Iir)
    is
-      use Declaration_Chain_Handling;
-      Last_Decl : Iir;
+      First_Decl, Last_Decl : Iir;
       Decl : Iir;
       Package_Parent_Cache : Iir;
 
@@ -4678,7 +4678,7 @@ package body Vhdl.Parse is
       end Package_Parent;
    begin
       Package_Parent_Cache := Null_Iir;
-      Build_Init (Last_Decl);
+      Sub_Chain_Init (First_Decl, Last_Decl);
       loop
          Decl := Null_Iir;
          case Current_Token is
@@ -4966,10 +4966,18 @@ package body Vhdl.Parse is
             when others =>
                exit;
          end case;
-         if Decl /= Null_Iir then
-            Append_Subchain (Last_Decl, Parent, Decl);
-         end if;
+         while Decl /= Null_Iir loop
+            Set_Parent (Decl, Parent);
+            if First_Decl = Null_Iir then
+               First_Decl := Decl;
+            else
+               Set_Chain (Last_Decl, Decl);
+            end if;
+            Last_Decl := Decl;
+            Decl := Get_Chain (Decl);
+         end loop;
       end loop;
+      Set_Declaration_Chain (Parent, First_Decl);
    end Parse_Declarative_Part;
 
    --  precond : ENTITY
@@ -5153,10 +5161,9 @@ package body Vhdl.Parse is
    --  element_association ::= [ choices => ] expression
    function Parse_Aggregate return Iir
    is
-      use Iir_Chains.Association_Choices_Chain_Handling;
       Expr: Iir;
       Res: Iir;
-      Last : Iir;
+      First, Last : Iir;
       Assoc: Iir;
       Loc, Right_Loc : Location_Type;
    begin
@@ -5221,7 +5228,7 @@ package body Vhdl.Parse is
       end if;
       Res := Create_Iir (Iir_Kind_Aggregate);
       Set_Location (Res, Loc);
-      Build_Init (Last);
+      Sub_Chain_Init (First, Last);
       loop
          if Current_Token = Tok_Others then
             Assoc := Parse_A_Choice (Null_Iir, Loc);
@@ -5256,7 +5263,7 @@ package body Vhdl.Parse is
             end case;
          end if;
          Set_Associated_Expr (Assoc, Expr);
-         Append_Subchain (Last, Res, Assoc);
+         Sub_Chain_Append_Subchain (First, Last, Assoc);
          exit when Current_Token /= Tok_Comma;
 
          Loc := Get_Token_Location;
@@ -5266,6 +5273,7 @@ package body Vhdl.Parse is
 
          Expr := Null_Iir;
       end loop;
+      Set_Association_Choices_Chain (Res, First);
 
       --  Eat ')'.
       Expect_Scan (Tok_Right_Paren);
@@ -6181,12 +6189,11 @@ package body Vhdl.Parse is
    --      waveform WHEN choices
    function Parse_Selected_Signal_Assignment return Iir
    is
-      use Iir_Chains.Selected_Waveform_Chain_Handling;
       Res : Iir;
       Assoc : Iir;
       Wf_Chain : Iir_Waveform_Element;
       Target : Iir;
-      Last : Iir;
+      First, Last : Iir;
       When_Loc : Location_Type;
    begin
       --  Skip 'with'.
@@ -6208,7 +6215,7 @@ package body Vhdl.Parse is
 
       Parse_Options (Res);
 
-      Build_Init (Last);
+      Sub_Chain_Init (First, Last);
       loop
          Wf_Chain := Parse_Waveform;
          Expect (Tok_When, "'when' expected after waveform");
@@ -6219,11 +6226,12 @@ package body Vhdl.Parse is
 
          Parse_Choices (Null_Iir, When_Loc, Assoc);
          Set_Associated_Chain (Assoc, Wf_Chain);
-         Append_Subchain (Last, Res, Assoc);
+         Sub_Chain_Append_Subchain (First, Last, Assoc);
          exit when Current_Token /= Tok_Comma;
          --  Skip ','.
          Scan;
       end loop;
+      Set_Selected_Waveform_Chain (Res, First);
 
       Expect_Scan (Tok_Semi_Colon, "';' expected at end of signal assignment");
 
@@ -6768,10 +6776,9 @@ package body Vhdl.Parse is
    --  case_statement_alternative ::= WHEN choices => sequence_of_statements
    function Parse_Case_Statement (Label : Name_Id) return Iir
    is
-      use Iir_Chains.Case_Statement_Alternative_Chain_Handling;
       Stmt : Iir;
       Assoc: Iir;
-      Last_Assoc : Iir;
+      First_Assoc, Last_Assoc : Iir;
       When_Loc : Location_Type;
    begin
       Stmt := Create_Iir (Iir_Kind_Case_Statement);
@@ -6791,7 +6798,7 @@ package body Vhdl.Parse is
          Error_Msg_Parse ("missing alternative in case statement");
       end if;
 
-      Build_Init (Last_Assoc);
+      Sub_Chain_Init (First_Assoc, Last_Assoc);
       while Current_Token = Tok_When loop
          When_Loc := Get_Token_Location;
 
@@ -6804,8 +6811,9 @@ package body Vhdl.Parse is
          Expect_Scan (Tok_Double_Arrow);
 
          Set_Associated_Chain (Assoc, Parse_Sequential_Statements (Stmt));
-         Append_Subchain (Last_Assoc, Stmt, Assoc);
+         Sub_Chain_Append_Subchain (First_Assoc, Last_Assoc, Assoc);
       end loop;
+      Set_Case_Statement_Alternative_Chain (Stmt, First_Assoc);
 
       if Flag_Elocations then
          Create_Elocations (Stmt);
@@ -9145,26 +9153,26 @@ package body Vhdl.Parse is
       --  Parse use clauses.
       if Current_Token = Tok_Use then
          declare
-            Last : Iir;
-            use Declaration_Chain_Handling;
+            First, Last : Iir;
          begin
-            Build_Init (Last);
+            Sub_Chain_Init (First, Last);
 
             while Current_Token = Tok_Use loop
-               Append_Subchain (Last, Res, Parse_Use_Clause);
+               Sub_Chain_Append_Subchain (First, Last, Parse_Use_Clause);
             end loop;
+            Set_Declaration_Chain (Res, First);
          end;
       end if;
 
       --  Parse configuration item list
       declare
-         use Iir_Chains.Configuration_Item_Chain_Handling;
-         Last : Iir;
+         First, Last : Iir;
       begin
-         Build_Init (Last);
+         Sub_Chain_Init (First, Last);
          while Current_Token = Tok_For loop
-            Append (Last, Res, Parse_Configuration_Item);
+            Sub_Chain_Append (First, Last, Parse_Configuration_Item);
          end loop;
+         Set_Configuration_Item_Chain (Res, First);
       end;
       Expect_Scan (Tok_End);
       Expect_Scan (Tok_For);
@@ -9279,17 +9287,16 @@ package body Vhdl.Parse is
    --  FIXME: attribute_specification, group_declaration
    procedure Parse_Configuration_Declarative_Part (Parent : Iir)
    is
-      use Declaration_Chain_Handling;
-      Last : Iir;
+      First, Last : Iir;
       El : Iir;
    begin
-      Build_Init (Last);
+      Sub_Chain_Init (First, Last);
       loop
          case Current_Token is
             when Tok_Invalid =>
                raise Internal_Error;
             when Tok_Use =>
-               Append_Subchain (Last, Parent, Parse_Use_Clause);
+               Sub_Chain_Append_Subchain (First, Last, Parse_Use_Clause);
             when Tok_Attribute =>
                El := Parse_Attribute;
                if El /= Null_Iir then
@@ -9297,7 +9304,7 @@ package body Vhdl.Parse is
                      Error_Msg_Parse
                        ("attribute declaration not allowed here");
                   end if;
-                  Append (Last, Parent, El);
+                  Sub_Chain_Append (First, Last, El);
                end if;
             when Tok_Group =>
                El := Parse_Group;
@@ -9306,12 +9313,13 @@ package body Vhdl.Parse is
                      Error_Msg_Parse
                        ("group template declaration not allowed here");
                   end if;
-                  Append (Last, Parent, El);
+                  Sub_Chain_Append (First, Last, El);
                end if;
             when others =>
                exit;
          end case;
       end loop;
+      Set_Declaration_Chain (Parent, First);
    end Parse_Configuration_Declarative_Part;
 
    --  precond : CONFIGURATION
@@ -9622,11 +9630,10 @@ package body Vhdl.Parse is
    --  context_item ::= library_clause | use_clause | context_reference
    procedure Parse_Context_Clause (Unit : Iir)
    is
-      use Context_Items_Chain_Handling;
-      Last : Iir;
+      First, Last : Iir;
       Els : Iir;
    begin
-      Build_Init (Last);
+      Sub_Chain_Init (First, Last);
 
       loop
          case Current_Token is
@@ -9659,8 +9666,9 @@ package body Vhdl.Parse is
             when others =>
                exit;
          end case;
-         Append_Subchain (Last, Unit, Els);
+         Sub_Chain_Append_Subchain (First, Last, Els);
       end loop;
+      Set_Context_Items (Unit, First);
    end Parse_Context_Clause;
 
    --  Precond:  IS

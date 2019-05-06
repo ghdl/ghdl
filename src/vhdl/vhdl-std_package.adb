@@ -23,7 +23,7 @@ with Std_Names; use Std_Names;
 with Flags; use Flags;
 with Vhdl.Utils;
 with Vhdl.Sem_Utils;
-with Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 
 package body Vhdl.Std_Package is
    type Bound_Array is array (Boolean) of Iir_Int64;
@@ -790,8 +790,7 @@ package body Vhdl.Std_Package is
       -- time definition
       declare
          Time_Staticness : Iir_Staticness;
-         Last_Unit : Iir_Unit_Declaration;
-         use Iir_Chains.Unit_Chain_Handling;
+         First_Unit, Last_Unit : Iir_Unit_Declaration;
 
          function Create_Std_Phys_Lit_Wo_Unit (Value : Iir_Int64; Unit : Iir)
                                       return Iir_Physical_Int_Literal
@@ -841,7 +840,7 @@ package body Vhdl.Std_Package is
 
             Set_Expr_Staticness (Unit, Time_Staticness);
             Set_Name_Staticness (Unit, Locally);
-            Append (Last_Unit, Time_Type_Definition, Unit);
+            Sub_Chain_Append (First_Unit, Last_Unit, Unit);
          end Create_Unit;
 
          Constraint : Iir_Range_Expression;
@@ -861,7 +860,7 @@ package body Vhdl.Std_Package is
                               not Flags.Flag_Whole_Analyze);
          Set_End_Has_Reserved_Id (Time_Type_Definition, True);
 
-         Build_Init (Last_Unit);
+         Sub_Chain_Init (First_Unit, Last_Unit);
 
          Time_Fs_Unit := Create_Std_Decl (Iir_Kind_Unit_Declaration);
          Set_Std_Identifier (Time_Fs_Unit, Name_Fs);
@@ -870,7 +869,7 @@ package body Vhdl.Std_Package is
          Set_Name_Staticness (Time_Fs_Unit, Locally);
          Set_Physical_Literal
            (Time_Fs_Unit, Create_Std_Phys_Lit (1, Time_Fs_Unit));
-         Append (Last_Unit, Time_Type_Definition, Time_Fs_Unit);
+         Sub_Chain_Append (First_Unit, Last_Unit, Time_Fs_Unit);
 
          Create_Unit (Time_Ps_Unit, 1000, Time_Fs_Unit, Name_Ps);
          Create_Unit (Time_Ns_Unit, 1000, Time_Ps_Unit, Name_Ns);
@@ -886,6 +885,7 @@ package body Vhdl.Std_Package is
          Set_Identifier (Time_Type_Declaration, Name_Time);
          Set_Type_Definition (Time_Type_Declaration, Time_Type_Definition);
          Set_Type_Declarator (Time_Type_Definition, Time_Type_Declaration);
+         Set_Unit_Chain (Time_Type_Definition, First_Unit);
          Add_Decl (Time_Type_Declaration);
 
          Add_Implicit_Operations (Time_Type_Declaration);

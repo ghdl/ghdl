@@ -26,7 +26,7 @@ with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
 with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
 with Libraries;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Flags; use Flags;
 with Std_Names;
 with Vhdl.Sem_Decls;
@@ -1735,7 +1735,7 @@ package body Vhdl.Sem_Specs is
          Sub_Chain_Append (Res, Last, Assoc);
          Ent_El := Get_Chain (Ent_El);
       end loop;
-      if Iir_Chains.Get_Chain_Length (Comp_Chain) /= Found then
+      if Nodes_Utils.Get_Chain_Length (Comp_Chain) /= Found then
          --  At least one component generic/port cannot be associated with
          --  the entity one.
 

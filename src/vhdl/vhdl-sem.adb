@@ -33,7 +33,7 @@ with Flags; use Flags;
 with Str_Table;
 with Vhdl.Sem_Utils;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
-with Iir_Chains;
+with Vhdl.Nodes_Utils;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem is
@@ -1710,7 +1710,7 @@ package body Vhdl.Sem is
       Nbr_Interfaces : Natural;
       Is_Method : Boolean;
    begin
-      Nbr_Interfaces := Iir_Chains.Get_Chain_Length
+      Nbr_Interfaces := Vhdl.Nodes_Utils.Get_Chain_Length
         (Get_Interface_Declaration_Chain (Subprg));
 
       --  For vhdl-02, the protected variable is an implicit parameter.

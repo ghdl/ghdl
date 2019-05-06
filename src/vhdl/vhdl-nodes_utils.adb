@@ -15,7 +15,8 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-package body Iir_Chains is
+
+package body Vhdl.Nodes_Utils is
    function Get_Chain_Length (First : Iir) return Natural
    is
       Res : Natural := 0;
@@ -79,6 +80,26 @@ package body Iir_Chains is
       Last := Last_Sub;
    end Sub_Chain_Append_Chain;
 
+   procedure Sub_Chain_Append_Subchain (First, Last : in out Iir;
+                                        Sub : Iir)
+   is
+      N : Iir;
+   begin
+      pragma Assert (Sub /= Null_Iir);
+      if First = Null_Iir then
+         First := Sub;
+      else
+         Set_Chain (Last, Sub);
+      end if;
+
+      --  Update last.
+      N := Sub;
+      while N /= Null_Iir loop
+         Last := N;
+         N := Get_Chain (N);
+      end loop;
+   end Sub_Chain_Append_Subchain;
+
    function Is_Chain_Length_One (Chain : Iir) return Boolean is
    begin
       return Chain /= Null_Iir and then Get_Chain (Chain) = Null_Iir;
@@ -96,4 +117,4 @@ package body Iir_Chains is
       Set_Chain (Last, El);
       Last := El;
    end Insert_Incr;
-end Iir_Chains;
+end Vhdl.Nodes_Utils;

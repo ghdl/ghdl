@@ -16,11 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Iir_Chain_Handling;
-pragma Elaborate_All (Iir_Chain_Handling);
 with Vhdl.Nodes_Meta;
 
-package Iir_Chains is
+package Vhdl.Nodes_Utils is
    --  Chains are simply linked list of iirs.
    --  Elements of the chain are ordered.
    --  Each element of a chain have a Chain field, which points to the next
@@ -43,43 +41,6 @@ package Iir_Chains is
    --  have to be appended.  Indeed, there is no direct access to the last
    --  element of a chain.
    --  An efficient way to build a chain is to keep the last element of it.
-   --  See Iir_Chain_Handling package.
-
-   package Declaration_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Declaration_Chain,
-      Set_Chain_Start => Set_Declaration_Chain);
-
-   package Interface_Declaration_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Interface_Declaration_Chain,
-      Set_Chain_Start => Set_Interface_Declaration_Chain);
-
-   package Context_Items_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Context_Items,
-      Set_Chain_Start => Set_Context_Items);
-
-   package Unit_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Unit_Chain,
-      Set_Chain_Start => Set_Unit_Chain);
-
-   package Configuration_Item_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Configuration_Item_Chain,
-      Set_Chain_Start => Set_Configuration_Item_Chain);
-
-   package Entity_Class_Entry_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Entity_Class_Entry_Chain,
-      Set_Chain_Start => Set_Entity_Class_Entry_Chain);
-
-   package Selected_Waveform_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Selected_Waveform_Chain,
-      Set_Chain_Start => Set_Selected_Waveform_Chain);
-
-   package Association_Choices_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Association_Choices_Chain,
-      Set_Chain_Start => Set_Association_Choices_Chain);
-
-   package Case_Statement_Alternative_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Case_Statement_Alternative_Chain,
-      Set_Chain_Start => Set_Case_Statement_Alternative_Chain);
 
    --  Return the number of elements in a chain starting with FIRST.
    --  Not very efficient since O(N).
@@ -105,6 +66,8 @@ package Iir_Chains is
    --  Null_Iir.
    procedure Sub_Chain_Append_Chain (First, Last : in out Iir;
                                      First_Sub, Last_Sub : Iir);
+   procedure Sub_Chain_Append_Subchain (First, Last : in out Iir;
+                                        Sub : Iir);
 
    --  Return TRUE iff CHAIN is of length one, ie CHAIN is not NULL_IIR
    --  and chain (CHAIN) is NULL_IIR.
@@ -116,4 +79,4 @@ package Iir_Chains is
 
    --  Insert EL after LAST and set LAST to EL.
    procedure Insert_Incr (Last : in out Iir; El : Iir);
-end Iir_Chains;
+end Vhdl.Nodes_Utils;

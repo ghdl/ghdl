@@ -22,7 +22,7 @@ with Flags; use Flags;
 with Name_Table;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Types; use Types;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Std_Names;
 with Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;

@@ -20,7 +20,7 @@ with Ada.Text_IO;
 with Name_Table;
 with Str_Table;
 with Vhdl.Utils; use Vhdl.Utils;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Flags; use Flags;

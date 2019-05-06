@@ -32,7 +32,7 @@ with Simul.Debugger; use Simul.Debugger;
 with Std_Names;
 with Str_Table;
 with Files_Map;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Simul.Simulation; use Simul.Simulation;
 with Grt.Astdio.Vhdl;
 with Grt.Stdio;

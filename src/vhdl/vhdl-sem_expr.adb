@@ -27,7 +27,7 @@ with Name_Table;
 with Str_Table;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Sem_Types;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
@@ -1829,7 +1829,7 @@ package body Vhdl.Sem_Expr is
             --
             --  GHDL: So even in presence of default expression in a parameter,
             --  a unary operation has to match with a binary operator.
-            if Iir_Chains.Get_Chain_Length (Interface_Chain) /= Arity then
+            if Get_Chain_Length (Interface_Chain) /= Arity then
                goto Continue;
             end if;
 

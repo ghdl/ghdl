@@ -25,7 +25,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Libraries;
 with Name_Table;
 with Simul.File_Operation;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration.AMS; use Simul.Elaboration.AMS;

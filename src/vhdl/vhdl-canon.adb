@@ -23,7 +23,7 @@ with Name_Table;
 with Vhdl.Sem;
 with Vhdl.Sem_Inst;
 with Vhdl.Sem_Specs;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with PSL.Nodes;
 with PSL.Rewrites;
 with PSL.Build;
@@ -2888,13 +2888,13 @@ package body Vhdl.Canon is
    procedure Canon_Block_Configuration (Top : Iir_Design_Unit;
                                         Conf : Iir_Block_Configuration)
    is
-      use Iir_Chains.Configuration_Item_Chain_Handling;
+      --  use Iir_Chains.Configuration_Item_Chain_Handling;
       Spec : constant Iir := Get_Block_Specification (Conf);
       Blk : constant Iir := Get_Block_From_Block_Specification (Spec);
       Stmts : constant Iir := Get_Concurrent_Statement_Chain (Blk);
       El : Iir;
       Sub_Blk : Iir;
-      Last_Item : Iir;
+      First_Item, Last_Item : Iir;
 
       procedure Create_Default_Block_Configuration (Targ : Iir)
       is
@@ -2913,7 +2913,7 @@ package body Vhdl.Canon is
             Spec := El;
          end if;
          Set_Block_Specification (Res, Spec);
-         Append (Last_Item, Conf, Res);
+         Sub_Chain_Append (First_Item, Last_Item, Res);
       end Create_Default_Block_Configuration;
    begin
       --  Note: the only allowed declarations are use clauses, which are not
@@ -2922,8 +2922,6 @@ package body Vhdl.Canon is
       --  FIXME: handle indexed/sliced name?
 
       Clear_Instantiation_Configuration (Blk, False);
-
-      Build_Init (Last_Item, Conf);
 
       --  1) Configure instantiations with configuration specifications.
       --  TODO: merge.
@@ -2939,7 +2937,8 @@ package body Vhdl.Canon is
 
       --  2) Configure instantations with component configurations,
       --     and map block configurations with block/generate statements.
-      El := Get_Configuration_Item_Chain (Conf);
+      First_Item := Get_Configuration_Item_Chain (Conf);
+      El := First_Item;
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Configuration_Specification =>
@@ -2970,6 +2969,7 @@ package body Vhdl.Canon is
             when others =>
                Error_Kind ("canon_block_configuration(1)", El);
          end case;
+         Last_Item := El;
          El := Get_Chain (El);
       end loop;
 
@@ -3005,7 +3005,7 @@ package body Vhdl.Canon is
                           (Designator_List, Build_Simple_Name (El, El));
                         Set_Instantiation_List
                           (Res, List_To_Flist (Designator_List));
-                        Append (Last_Item, Conf, Res);
+                        Sub_Chain_Append (First_Item, Last_Item, Res);
                      end if;
                   elsif Get_Kind (Comp_Conf)
                     = Iir_Kind_Configuration_Specification
@@ -3038,7 +3038,7 @@ package body Vhdl.Canon is
                      Set_Binding_Indication
                        (Res, Get_Binding_Indication (Comp_Conf));
                      Set_Is_Ref (Res, True);
-                     Append (Last_Item, Conf, Res);
+                     Sub_Chain_Append (First_Item, Last_Item, Res);
                   end if;
                end;
             when Iir_Kind_Block_Statement =>
@@ -3106,7 +3106,7 @@ package body Vhdl.Canon is
                         Set_Base_Name (Blk_Spec, El);
                         Set_Prefix (Blk_Spec, Build_Simple_Name (Bod, Res));
                         Set_Block_Specification (Res, Blk_Spec);
-                        Append (Last_Item, Conf, Res);
+                        Sub_Chain_Append (First_Item, Last_Item, Res);
                      end if;
                   end if;
                end;
@@ -3123,9 +3123,10 @@ package body Vhdl.Canon is
          end case;
          El := Get_Chain (El);
       end loop;
+      Set_Configuration_Item_Chain (Conf, First_Item);
 
       --  4) Canon component configuration and block configuration (recursion).
-      El := Get_Configuration_Item_Chain (Conf);
+      El := First_Item;
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Block_Configuration =>

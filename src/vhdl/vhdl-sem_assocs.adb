@@ -27,7 +27,7 @@ with Vhdl.Sem_Types;
 with Vhdl.Sem_Decls;
 with Vhdl.Std_Package;
 with Vhdl.Sem_Scopes;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Xrefs;
 
 package body Vhdl.Sem_Assocs is

@@ -19,7 +19,7 @@
 with Ada.Text_IO;
 with Std_Names;
 with Errorout; use Errorout;
-with Iir_Chains;
+with Vhdl.Nodes_Utils;
 with Vhdl.Canon;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
@@ -2656,7 +2656,7 @@ package body Trans.Chap8 is
       type Mnode_Array is array (Natural range <>) of Mnode;
       type O_Enode_Array is array (Natural range <>) of O_Enode;
       Nbr_Assoc : constant Natural :=
-        Iir_Chains.Get_Chain_Length (Assoc_Chain);
+        Vhdl.Nodes_Utils.Get_Chain_Length (Assoc_Chain);
 
       --  References to the formals (for copy-out), and variables for whole
       --  actual of individual associations.
