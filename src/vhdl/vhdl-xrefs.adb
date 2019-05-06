@@ -22,7 +22,7 @@ with Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Vhdl.Nodes_Priv;
 
-package body Xrefs is
+package body Vhdl.Xrefs is
    type Xref_Type is record
       --  Where the cross-reference (or the name) appears.
       Loc : Location_Type;
@@ -282,4 +282,4 @@ package body Xrefs is
          end if;
       end loop;
    end Fix_End_Xrefs;
-end Xrefs;
+end Vhdl.Xrefs;

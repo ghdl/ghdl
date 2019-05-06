@@ -30,7 +30,7 @@ with Iir_Chains; use Iir_Chains;
 with Flags; use Flags;
 with Std_Names;
 with Vhdl.Sem_Decls;
-with Xrefs; use Xrefs;
+with Vhdl.Xrefs; use Vhdl.Xrefs;
 with Vhdl.Back_End;
 
 package body Vhdl.Sem_Specs is

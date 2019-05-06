@@ -30,7 +30,7 @@ with Vhdl.Sem_Psl;
 with Std_Names;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Iirs_Utils; use Iirs_Utils;
-with Xrefs; use Xrefs;
+with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Stmts is
    -- Process is the scope, this is also the process for which drivers can

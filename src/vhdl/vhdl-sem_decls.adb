@@ -32,7 +32,7 @@ with Vhdl.Sem_Specs; use Vhdl.Sem_Specs;
 with Vhdl.Sem_Types; use Vhdl.Sem_Types;
 with Vhdl.Sem_Psl;
 with Vhdl.Sem_Inst;
-with Xrefs; use Xrefs;
+with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Decls is
    --  Region that can declare signals.  Used to add implicit declarations.

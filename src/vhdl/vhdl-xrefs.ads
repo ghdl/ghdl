@@ -18,7 +18,7 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Xrefs is
+package Vhdl.Xrefs is
    type Xref_Kind is
      (
       --  Declaration of an identifier.
@@ -112,4 +112,4 @@ package Xrefs is
    --  Get the node referenced by the name.
    function Get_Xref_Node (N : Xref) return Iir;
    pragma Inline (Get_Xref_Node);
-end Xrefs;
+end Vhdl.Xrefs;

@@ -31,7 +31,7 @@ with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Errorout; use Errorout;
-with Xrefs; use Xrefs;
+with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Psl is
    procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out Node);

@@ -32,7 +32,7 @@ with Vhdl.Scanner;
 with Vhdl.Parse;
 with Vhdl.Canon;
 with Version;
-with Xrefs;
+with Vhdl.Xrefs;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
@@ -229,7 +229,7 @@ package body Ghdlprint is
 
       procedure Disp_Identifier
       is
-         use Xrefs;
+         use Vhdl.Xrefs;
          Ref : Xref;
          Decl : Iir;
          Bod : Iir;
@@ -311,7 +311,7 @@ package body Ghdlprint is
 
       procedure Disp_Attribute
       is
-         use Xrefs;
+         use Vhdl.Xrefs;
          Ref : Xref;
          Decl : Iir;
          Loc : Location_Type;
@@ -1315,7 +1315,7 @@ package body Ghdlprint is
       Files : File_Data_Array;
       Output : File_Type;
    begin
-      Xrefs.Init;
+      Vhdl.Xrefs.Init;
       Flags.Flag_Xref := True;
 
       --  Load work library.
@@ -1369,13 +1369,13 @@ package body Ghdlprint is
          Analyze_Design_File_Units (Files (I).Design_File);
       end loop;
 
-      Xrefs.Sort_By_Location;
+      Vhdl.Xrefs.Sort_By_Location;
 
       if False then
          --  Dump locations
-         for I in 1 .. Xrefs.Get_Last_Xref loop
+         for I in 1 .. Vhdl.Xrefs.Get_Last_Xref loop
             declare
-               use Xrefs;
+               use Vhdl.Xrefs;
 
                procedure Put_Loc (L : Location_Type)
                is
@@ -1571,7 +1571,7 @@ package body Ghdlprint is
       --  Load work library.
       Setup_Libraries (True);
 
-      Xrefs.Init;
+      Vhdl.Xrefs.Init;
       Flags.Flag_Xref := True;
 
       --  Parse all files.
@@ -1597,15 +1597,15 @@ package body Ghdlprint is
          Analyze_Design_File_Units (Files (I).Design_File);
       end loop;
 
-      Xrefs.Fix_End_Xrefs;
-      Xrefs.Sort_By_Node_Location;
+      Vhdl.Xrefs.Fix_End_Xrefs;
+      Vhdl.Xrefs.Sort_By_Node_Location;
 
       for F in Files'Range loop
 
          Put ("GHDL-XREF V0");
 
          declare
-            use Xrefs;
+            use Vhdl.Xrefs;
 
             Cur_Decl : Iir;
             Cur_File : Source_File_Entry;

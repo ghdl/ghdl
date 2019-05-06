@@ -34,7 +34,7 @@ with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
 with Vhdl.Sem_Specs;
 with Vhdl.Sem_Types;
 with Vhdl.Sem_Psl;
-with Xrefs; use Xrefs;
+with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Names is
    --  Finish the analyze of NAME using RES as named entity.

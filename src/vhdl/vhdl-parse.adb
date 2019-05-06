@@ -24,7 +24,7 @@ with Std_Names; use Std_Names;
 with Flags; use Flags;
 with Vhdl.Parse_Psl;
 with Str_Table;
-with Xrefs;
+with Vhdl.Xrefs;
 with Vhdl.Elocations; use Vhdl.Elocations;
 
 --  Recursive descendant parser.

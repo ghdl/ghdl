@@ -32,7 +32,7 @@ with Vhdl.Sem_Types;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
 with Vhdl.Sem_Decls;
-with Xrefs; use Xrefs;
+with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Expr is
 

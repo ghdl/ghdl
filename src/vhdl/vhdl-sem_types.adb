@@ -31,7 +31,7 @@ with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
-with Xrefs; use Xrefs;
+with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Types is
    --  Mark the resolution function (this may be required by the back-end to

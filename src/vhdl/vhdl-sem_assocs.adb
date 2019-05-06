@@ -28,7 +28,7 @@ with Vhdl.Sem_Decls;
 with Vhdl.Std_Package;
 with Vhdl.Sem_Scopes;
 with Iir_Chains; use Iir_Chains;
-with Xrefs;
+with Vhdl.Xrefs;
 
 package body Vhdl.Sem_Assocs is
    function Rewrite_Non_Object_Association (Assoc : Iir; Inter : Iir)
@@ -1773,7 +1773,7 @@ package body Vhdl.Sem_Assocs is
       end case;
 
       Set_Named_Entity (Actual, Res);
-      Xrefs.Xref_Name (Actual);
+      Vhdl.Xrefs.Xref_Name (Actual);
       Sem_Decls.Mark_Subprogram_Used (Res);
    end Sem_Association_Subprogram;
 

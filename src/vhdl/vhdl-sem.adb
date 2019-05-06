@@ -34,7 +34,7 @@ with Str_Table;
 with Vhdl.Sem_Utils;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Iir_Chains;
-with Xrefs; use Xrefs;
+with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem is
    -- Forward declarations.
