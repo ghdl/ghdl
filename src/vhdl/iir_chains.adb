@@ -29,9 +29,9 @@ package body Iir_Chains is
    end Get_Chain_Length;
 
    procedure Append_Chain
-     (N : Iir; Field : Nodes_Meta.Fields_Enum; Chain : Iir)
+     (N : Iir; Field : Vhdl.Nodes_Meta.Fields_Enum; Chain : Iir)
    is
-      use Nodes_Meta;
+      use Vhdl.Nodes_Meta;
       N_Chain : Iir;
       Next_Chain : Iir;
    begin

@@ -23,7 +23,7 @@ with Name_Table;
 with Str_Table;
 with Files_Map;
 with PSL.Dump_Tree;
-with Nodes_Meta;
+with Vhdl.Nodes_Meta;
 
 --  Do not add a use clause for iirs_utils, as it may crash for ill-formed
 --  trees, which is annoying while debugging.
@@ -376,7 +376,7 @@ package body Vhdl.Disp_Tree is
 
    procedure Disp_Header (N : Iir)
    is
-      use Nodes_Meta;
+      use Vhdl.Nodes_Meta;
       K : Iir_Kind;
    begin
       if N = Null_Iir then
@@ -439,7 +439,7 @@ package body Vhdl.Disp_Tree is
       end;
 
       declare
-         use Nodes_Meta;
+         use Vhdl.Nodes_Meta;
          Fields : constant Fields_Array := Get_Fields (Get_Kind (N));
          F : Fields_Enum;
       begin

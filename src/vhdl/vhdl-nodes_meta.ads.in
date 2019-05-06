@@ -20,7 +20,7 @@ with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Tokens; use Vhdl.Tokens;
 
-package Nodes_Meta is
+package Vhdl.Nodes_Meta is
    --  The enumeration of all possible types in the nodes.
    type Types_Enum is
      (
@@ -70,4 +70,4 @@ package Nodes_Meta is
 
    --  Get/Set a field.
    --  FUNCS
-end Nodes_Meta;
+end Vhdl.Nodes_Meta;

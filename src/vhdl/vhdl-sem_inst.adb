@@ -16,7 +16,7 @@
 
 with Tables;
 with Vhdl.Nodes_Priv;
-with Nodes_Meta;
+with Vhdl.Nodes_Meta;
 with Types; use Types;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;

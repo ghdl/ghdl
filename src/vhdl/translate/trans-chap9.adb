@@ -23,7 +23,7 @@ with Flags;
 with Libraries;
 with Vhdl.Canon;
 with Trans_Analyzes;
-with Nodes_Meta;
+with Vhdl.Nodes_Meta;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
@@ -1253,7 +1253,7 @@ package body Trans.Chap9 is
       end if;
 
       declare
-         use Nodes_Meta;
+         use Vhdl.Nodes_Meta;
          Kind      : constant Iir_Kind := Get_Kind (N);
          Fields    : constant Fields_Array := Get_Fields (Kind);
          F         : Fields_Enum;

@@ -19,7 +19,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Types; use Types;
 with Name_Table; use Name_Table;
-with Nodes_Meta; use Nodes_Meta;
+with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
 with Files_Map;
 with Vhdl.Disp_Tree; use Vhdl.Disp_Tree;
 with Ghdlprint; use Ghdlprint;

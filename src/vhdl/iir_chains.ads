@@ -18,7 +18,7 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Iir_Chain_Handling;
 pragma Elaborate_All (Iir_Chain_Handling);
-with Nodes_Meta;
+with Vhdl.Nodes_Meta;
 
 package Iir_Chains is
    --  Chains are simply linked list of iirs.
@@ -87,7 +87,7 @@ package Iir_Chains is
 
    --  Append CHAIN to the chain FIELD of node N.  Not very efficient.
    procedure Append_Chain
-     (N : Iir; Field : Nodes_Meta.Fields_Enum; Chain : Iir);
+     (N : Iir; Field : Vhdl.Nodes_Meta.Fields_Enum; Chain : Iir);
 
    --  These two subprograms can be used to build a sub-chain.
    --  FIRST and LAST designates respectively the first and last element of

@@ -19,7 +19,7 @@
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Logging; use Logging;
-with Nodes_Meta; use Nodes_Meta;
+with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
 with Errorout; use Errorout;
 with Libraries;
 with Vhdl.Disp_Tree;

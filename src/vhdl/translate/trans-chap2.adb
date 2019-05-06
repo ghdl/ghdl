@@ -20,7 +20,7 @@ with Std_Names;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Vhdl.Sem_Inst;
-with Nodes_Meta;
+with Vhdl.Nodes_Meta;
 with Iirs_Utils; use Iirs_Utils;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -1373,7 +1373,7 @@ package body Trans.Chap2 is
       end if;
 
       declare
-         use Nodes_Meta;
+         use Vhdl.Nodes_Meta;
          Kind      : constant Iir_Kind := Get_Kind (N);
          Fields    : constant Fields_Array := Get_Fields (Kind);
          F         : Fields_Enum;

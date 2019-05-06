@@ -20,7 +20,7 @@ with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Tokens; use Vhdl.Tokens;
 
-package Nodes_Meta is
+package Vhdl.Nodes_Meta is
    --  The enumeration of all possible types in the nodes.
    type Types_Enum is
      (
@@ -921,4 +921,4 @@ package Nodes_Meta is
    function Has_PSL_Nbr_States (K : Iir_Kind) return Boolean;
    function Has_PSL_Clock_Sensitivity (K : Iir_Kind) return Boolean;
    function Has_PSL_EOS_Flag (K : Iir_Kind) return Boolean;
-end Nodes_Meta;
+end Vhdl.Nodes_Meta;

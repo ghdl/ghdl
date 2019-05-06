@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package body Nodes_Meta is
+package body Vhdl.Nodes_Meta is
    Fields_Type : constant array (Fields_Enum) of Types_Enum :=
      (
       Field_First_Design_Unit => Type_Iir,
@@ -10783,4 +10783,4 @@ package body Nodes_Meta is
       end case;
    end Has_PSL_EOS_Flag;
 
-end Nodes_Meta;
+end Vhdl.Nodes_Meta;
