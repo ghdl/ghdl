@@ -21,7 +21,7 @@ with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
 with Vhdl.Sem_Inst;
 with Vhdl.Nodes_Meta;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap5;

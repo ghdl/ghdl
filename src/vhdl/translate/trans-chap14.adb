@@ -19,7 +19,7 @@
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans_Decls; use Trans_Decls;
 with Trans.Chap3;
 with Trans.Chap6;

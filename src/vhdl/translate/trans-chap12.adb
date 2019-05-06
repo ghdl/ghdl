@@ -19,7 +19,7 @@
 with Vhdl.Configuration;
 with Errorout; use Errorout;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Libraries;
 with Flags;
 with Vhdl.Sem;

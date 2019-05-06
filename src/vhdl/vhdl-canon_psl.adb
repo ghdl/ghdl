@@ -19,7 +19,7 @@
 with PSL.Nodes; use PSL.Nodes;
 with PSL.Errors; use PSL.Errors;
 with Vhdl.Canon; use Vhdl.Canon;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 
 package body Vhdl.Canon_PSL is
    --  Version of Canon.Canon_Extract_Sensitivity for PSL nodes.

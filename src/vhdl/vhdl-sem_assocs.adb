@@ -19,7 +19,7 @@ with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Errorout; use Errorout;
 with Flags; use Flags;
 with Types; use Types;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Parse;
 with Std_Names;
 with Vhdl.Sem_Names; use Vhdl.Sem_Names;

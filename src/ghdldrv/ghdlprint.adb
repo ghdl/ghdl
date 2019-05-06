@@ -26,7 +26,7 @@ with Name_Table; use Name_Table;
 with Files_Map;
 with Libraries;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Tokens;
 with Vhdl.Scanner;
 with Vhdl.Parse;

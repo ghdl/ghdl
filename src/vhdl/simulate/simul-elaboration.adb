@@ -21,7 +21,7 @@ with Str_Table;
 with Errorout; use Errorout;
 with Vhdl.Evaluation;
 with Simul.Execution; use Simul.Execution;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Libraries;
 with Name_Table;
 with Simul.File_Operation;

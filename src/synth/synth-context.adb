@@ -23,7 +23,7 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Grt.Types; use Grt.Types;
 with Errorout; use Errorout;
-with Iirs_Utils;
+with Vhdl.Utils;
 
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
@@ -97,7 +97,7 @@ package body Synth.Context is
                  (Kind, Obj, Bounds_To_Range (Val.Bounds.D (1)));
             end if;
             if Is_Bit_Type (Get_Element_Subtype (Btype))
-              and then Iirs_Utils.Get_Nbr_Dimensions (Btype) = 1
+              and then Vhdl.Utils.Get_Nbr_Dimensions (Btype) = 1
             then
                --  A vector of bits.
                return Alloc_Wire

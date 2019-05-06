@@ -18,7 +18,7 @@
 
 with Files_Map;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Trans.Chap3;
 with Trans.Chap7;

@@ -21,7 +21,7 @@
 with Types; use Types;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 
 with Simul.Environments; use Simul.Environments;
 with Simul.Execution;

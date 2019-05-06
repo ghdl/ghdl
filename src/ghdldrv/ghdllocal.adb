@@ -32,7 +32,7 @@ with Errorout;
 with Vhdl.Configuration;
 with Files_Map;
 with Options;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 
 package body Ghdllocal is
    --  Version of the IEEE library to use.  This just change paths.

@@ -25,7 +25,7 @@ with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Vhdl.Sem;
 with Name_Table;
 with Str_Table;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Iir_Chains; use Iir_Chains;
 with Vhdl.Sem_Types;
@@ -1765,7 +1765,7 @@ package body Vhdl.Sem_Expr is
          Left := Get_Left (Expr);
          Right := Get_Right (Expr);
       end if;
-      Operator := Iirs_Utils.Get_Operator_Name (Expr);
+      Operator := Utils.Get_Operator_Name (Expr);
 
       if Get_Type (Expr) = Null_Iir then
          --  First pass.

@@ -19,7 +19,7 @@
 with Ada.Text_IO;
 with Name_Table;
 with Str_Table;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Iir_Chains; use Iir_Chains;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;

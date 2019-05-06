@@ -19,7 +19,7 @@ with Vhdl.Nodes_Priv;
 with Vhdl.Nodes_Meta;
 with Types; use Types;
 with Files_Map;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
 with Vhdl.Sem_Utils;
 

@@ -20,7 +20,7 @@ with Tables;
 with Ada.Text_IO;
 with Vhdl.Std_Package;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Types; use Types;
 
 package body Simul.Annotations is

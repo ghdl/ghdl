@@ -21,7 +21,7 @@ with Errorout; use Errorout;
 with Vhdl.Std_Package;
 with Name_Table; use Name_Table;
 with Flags;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Iirs_Walk;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;

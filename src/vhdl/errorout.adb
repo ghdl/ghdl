@@ -19,7 +19,7 @@
 with Logging; use Logging;
 with Vhdl.Scanner;
 with Name_Table;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Files_Map; use Files_Map;
 with Ada.Strings.Unbounded;
 with Std_Names;

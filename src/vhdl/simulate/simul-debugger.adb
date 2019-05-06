@@ -35,7 +35,7 @@ with Vhdl.Std_Package;
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
 with Vhdl.Disp_Vhdl;
 with Iirs_Walk; use Iirs_Walk;

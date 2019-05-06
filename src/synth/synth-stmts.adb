@@ -26,7 +26,7 @@ with Areapools;
 with Errorout; use Errorout;
 
 with Vhdl.Sem_Expr;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Evaluation;
 

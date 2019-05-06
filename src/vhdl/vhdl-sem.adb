@@ -28,7 +28,7 @@ with Vhdl.Sem_Decls; use Vhdl.Sem_Decls;
 with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
 with Vhdl.Sem_Inst;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Flags; use Flags;
 with Str_Table;
 with Vhdl.Sem_Utils;

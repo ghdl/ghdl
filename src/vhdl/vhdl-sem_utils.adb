@@ -19,7 +19,7 @@ with Ada.Unchecked_Conversion;
 with Types; use Types;
 with Flags; use Flags;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Iir_Chains; use Iir_Chains;
 with Vhdl.Ieee.Std_Logic_1164;
 with Std_Names;

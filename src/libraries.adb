@@ -22,7 +22,7 @@ with Logging; use Logging;
 with Tables;
 with Errorout; use Errorout;
 with Vhdl.Scanner;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Name_Table; use Name_Table;
 with Str_Table;
 with Vhdl.Tokens;
@@ -722,7 +722,7 @@ package body Libraries is
       end if;
 
       --  Check if the library has already been loaded.
-      Library := Iirs_Utils.Find_Name_In_Chain (Libraries_Chain, Ident);
+      Library := Vhdl.Utils.Find_Name_In_Chain (Libraries_Chain, Ident);
       if Library /= Null_Iir then
          return Library;
       end if;
@@ -918,7 +918,7 @@ package body Libraries is
 
                         --  Keep direct reference (for speed-up).
                         if Get_Kind (El) /= Iir_Kind_Design_Unit then
-                           Iirs_Utils.Free_Recursive (El);
+                           Vhdl.Utils.Free_Recursive (El);
                            Set_Element (It, Unit);
                         end if;
 

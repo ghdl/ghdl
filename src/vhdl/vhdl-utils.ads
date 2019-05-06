@@ -18,7 +18,7 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Iirs_Utils is
+package Vhdl.Utils is
    --  Transform the current token into an iir literal.
    --  The current token must be either a character, a string or an identifier.
    function Current_Text return Iir;
@@ -372,4 +372,4 @@ package Iirs_Utils is
    --  IIR wrapper around Get_HDL_Node/Set_HDL_Node.
    function Get_HDL_Node (N : PSL_Node) return Iir;
    procedure Set_HDL_Node (N : PSL_Node; Expr : Iir);
-end Iirs_Utils;
+end Vhdl.Utils;

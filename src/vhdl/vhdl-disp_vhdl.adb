@@ -24,7 +24,7 @@ with GNAT.OS_Lib;
 with Vhdl.Std_Package;
 with Flags; use Flags;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Name_Table;
 with Str_Table;
 with Std_Names;
@@ -262,7 +262,7 @@ package body Vhdl.Disp_Vhdl is
             Put (".all");
          when Iir_Kind_Simple_Name
            | Iir_Kind_Character_Literal =>
-            Put (Iirs_Utils.Image_Identifier (Name));
+            Put (Utils.Image_Identifier (Name));
          when Iir_Kind_Operator_Symbol =>
             Disp_Function_Name (Name);
          when Iir_Kind_Selected_Name =>
@@ -2114,7 +2114,7 @@ package body Vhdl.Disp_Vhdl is
          Put ("(");
       end if;
       Disp_Expression (Get_Left (Expr));
-      Put (' ' & Name_Table.Image (Iirs_Utils.Get_Operator_Name (Expr)) & ' ');
+      Put (' ' & Name_Table.Image (Utils.Get_Operator_Name (Expr)) & ' ');
       Disp_Expression (Get_Right (Expr));
       if Flag_Parenthesis then
          Put (")");
@@ -2128,7 +2128,7 @@ package body Vhdl.Disp_Vhdl is
          return;
       end if;
 
-      Put (Name_Table.Image (Iirs_Utils.Get_Operator_Name (Expr)));
+      Put (Name_Table.Image (Utils.Get_Operator_Name (Expr)));
       Put (' ');
       if Flag_Parenthesis then
          Put ('(');

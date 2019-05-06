@@ -21,7 +21,7 @@ with Flags; use Flags;
 with Name_Table; -- use Name_Table;
 with Files_Map; use Files_Map;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 
 package body Vhdl.Sem_Scopes is
    --  An interpretation cell is the element of the simply linked list

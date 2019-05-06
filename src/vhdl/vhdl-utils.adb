@@ -25,7 +25,7 @@ with Vhdl.Std_Package;
 with Flags; use Flags;
 with PSL.Nodes;
 
-package body Iirs_Utils is
+package body Vhdl.Utils is
    -- Transform the current token into an iir literal.
    -- The current token must be either a character or an identifier.
    function Current_Text return Iir is
@@ -1685,4 +1685,4 @@ package body Iirs_Utils is
    begin
       PSL.Nodes.Set_HDL_Node (N, PSL.Nodes.HDL_Node (Expr));
    end Set_HDL_Node;
-end Iirs_Utils;
+end Vhdl.Utils;

@@ -21,7 +21,7 @@ with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
 with Flags; use Flags;
-with Iirs_Utils;
+with Vhdl.Utils;
 with Vhdl.Sem_Utils;
 with Iir_Chains;
 
@@ -66,7 +66,7 @@ package body Vhdl.Std_Package is
    is
       Res : Iir;
    begin
-      Res := Iirs_Utils.Build_Simple_Name (Ref, Std_Location);
+      Res := Utils.Build_Simple_Name (Ref, Std_Location);
       Set_Type (Res, Get_Type (Ref));
       return Res;
    end Create_Std_Type_Mark;
@@ -461,7 +461,7 @@ package body Vhdl.Std_Package is
          Create_Std_Type (Boolean_Type_Declaration, Boolean_Type_Definition,
                           Name_Boolean);
 
-         Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
+         Utils.Create_Range_Constraint_For_Enumeration_Type
            (Boolean_Type_Definition);
          Add_Implicit_Operations (Boolean_Type_Declaration);
       end;
@@ -498,7 +498,7 @@ package body Vhdl.Std_Package is
          -- type bit is
          Create_Std_Type (Bit_Type_Declaration, Bit_Type_Definition, Name_Bit);
 
-         Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
+         Utils.Create_Range_Constraint_For_Enumeration_Type
            (Bit_Type_Definition);
          Add_Implicit_Operations (Bit_Type_Declaration);
       end;
@@ -562,7 +562,7 @@ package body Vhdl.Std_Package is
            (Character_Type_Declaration, Character_Type_Definition,
             Name_Character);
 
-         Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
+         Utils.Create_Range_Constraint_For_Enumeration_Type
            (Character_Type_Definition);
          Add_Implicit_Operations (Character_Type_Declaration);
       end;
@@ -595,7 +595,7 @@ package body Vhdl.Std_Package is
            (Severity_Level_Type_Declaration, Severity_Level_Type_Definition,
             Name_Severity_Level);
 
-         Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
+         Utils.Create_Range_Constraint_For_Enumeration_Type
            (Severity_Level_Type_Definition);
          Add_Implicit_Operations (Severity_Level_Type_Declaration);
       end;
@@ -1151,7 +1151,7 @@ package body Vhdl.Std_Package is
            (File_Open_Kind_Type_Declaration, File_Open_Kind_Type_Definition,
             Name_File_Open_Kind);
 
-         Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
+         Utils.Create_Range_Constraint_For_Enumeration_Type
            (File_Open_Kind_Type_Definition);
          Add_Implicit_Operations (File_Open_Kind_Type_Declaration);
       else
@@ -1190,7 +1190,7 @@ package body Vhdl.Std_Package is
          Create_Std_Type (File_Open_Status_Type_Declaration,
                           File_Open_Status_Type_Definition,
                           Name_File_Open_Status);
-         Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
+         Utils.Create_Range_Constraint_For_Enumeration_Type
            (File_Open_Status_Type_Definition);
          Add_Implicit_Operations (File_Open_Status_Type_Declaration);
       else
@@ -1266,7 +1266,7 @@ package body Vhdl.Std_Package is
       Create_Wildcard_Type (Wildcard_Any_String_Type, "any string type");
       Create_Wildcard_Type (Wildcard_Any_Access_Type, "any access type");
 
-      Error_Type := Iirs_Utils.Create_Error_Type (Wildcard_Any_Type);
+      Error_Type := Utils.Create_Error_Type (Wildcard_Any_Type);
       Set_Error_Origin (Error_Type, Null_Iir);
       Create_Wildcard_Type (Error_Type, "unknown type");
    end Create_Std_Standard_Package;

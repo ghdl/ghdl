@@ -28,7 +28,7 @@ with Vhdl.Sem_Decls;
 with Vhdl.Sem_Inst;
 with Name_Table;
 with Std_Names;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Xrefs; use Vhdl.Xrefs;

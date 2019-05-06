@@ -24,7 +24,7 @@ with Flags; use Flags;
 with Errorout; use Errorout;
 with Vhdl.Std_Package;
 with Vhdl.Evaluation;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Simul.Annotations; use Simul.Annotations;
 with Name_Table;
 with Simul.File_Operation;

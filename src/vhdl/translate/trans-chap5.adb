@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap6;

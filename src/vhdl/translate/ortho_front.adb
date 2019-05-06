@@ -24,7 +24,7 @@ with Hash;
 with Interning;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Libraries;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Flags;
 with Vhdl.Configuration;

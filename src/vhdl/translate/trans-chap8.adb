@@ -23,7 +23,7 @@ with Iir_Chains;
 with Vhdl.Canon;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans.Chap2;
 with Trans.Chap3;
 with Trans.Chap4;

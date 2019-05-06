@@ -26,7 +26,7 @@ with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Names;
 with Std_Names;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;

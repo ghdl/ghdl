@@ -18,7 +18,7 @@
 with Flags;
 with Name_Table;
 with Files_Map;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
 with Libraries; use Libraries;
 with Vhdl.Scanner;
@@ -220,7 +220,7 @@ package body Vhdl.Sem_Lib is
       --  Move the unit in the library: keep the design_unit of the library,
       --  but replace the library_unit by the one that has been parsed.  Do
       --  not forget to relocate parents.
-      Iirs_Utils.Free_Recursive (Get_Library_Unit (Design_Unit));
+      Vhdl.Utils.Free_Recursive (Get_Library_Unit (Design_Unit));
       Set_Library_Unit (Design_Unit, Get_Library_Unit (Res));
       Set_Design_Unit (Get_Library_Unit (Res), Design_Unit);
       Set_Parent (Get_Library_Unit (Res), Design_Unit);

@@ -24,7 +24,7 @@ with Errorout; use Errorout;
 with Name_Table; -- use Name_Table;
 with Str_Table;
 with Files_Map;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Sem_Specs;
 with Libraries;

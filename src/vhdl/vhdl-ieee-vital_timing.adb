@@ -26,7 +26,7 @@ with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Specs;
 with Vhdl.Evaluation;
 with Vhdl.Sem;
-with Iirs_Utils;
+with Vhdl.Utils;
 
 package body Vhdl.Ieee.Vital_Timing is
    --  This package is based on IEEE 1076.4 1995.
@@ -1312,7 +1312,7 @@ package body Vhdl.Ieee.Vital_Timing is
       --  IEEE 1076.4 4.1
       --  The entity associated with a Level 0 architecture shall be a VITAL
       --  Level 0 entity.
-      if not Is_Vital_Level0 (Iirs_Utils.Get_Entity (Arch)) then
+      if not Is_Vital_Level0 (Utils.Get_Entity (Arch)) then
          Error_Vital (+Arch, "entity associated with a VITAL level 0 "
                         & "architecture shall be a VITAL level 0 entity");
       end if;

@@ -30,7 +30,7 @@ with Vhdl.Std_Package;
 with Libraries;
 with Vhdl.Canon;
 with Vhdl.Configuration;
-with Iirs_Utils;
+with Vhdl.Utils;
 with Simul.Annotations;
 with Simul.Elaboration;
 with Simul.Simulation.Main;
@@ -113,7 +113,7 @@ package body Ghdlsimul is
          Conf_Unit : constant Iir := Get_Library_Unit (Top_Conf);
          Arch : constant Iir := Get_Named_Entity
            (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
-         Entity : constant Iir := Iirs_Utils.Get_Entity (Arch);
+         Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
       begin
          Vhdl.Configuration.Check_Entity_Declaration_Top (Entity);
          if Nbr_Errors > 0 then

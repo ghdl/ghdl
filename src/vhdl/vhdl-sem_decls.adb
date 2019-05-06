@@ -22,7 +22,7 @@ with Vhdl.Tokens;
 with Flags; use Flags;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Sem; use Vhdl.Sem;
 with Vhdl.Sem_Utils; use Vhdl.Sem_Utils;
 with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;

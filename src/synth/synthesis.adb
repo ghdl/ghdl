@@ -24,7 +24,7 @@ with Name_Table; use Name_Table;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils;
 
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Simul.Environments; use Simul.Environments;
 with Simul.Elaboration; use Simul.Elaboration;
 
