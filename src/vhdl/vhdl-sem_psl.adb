@@ -199,7 +199,8 @@ package body Vhdl.Sem_Psl is
                return Res;
             when Iir_Kind_Function_Call
               | Iir_Kind_Indexed_Name
-              | Iir_Kind_Selected_Element =>
+              | Iir_Kind_Selected_Element
+              | Iir_Kinds_Expression_Attribute =>
                Expr := Name;
             when others =>
                Expr := Name_To_Expression (Expr, Null_Iir);
