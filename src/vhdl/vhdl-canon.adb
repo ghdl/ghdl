@@ -562,20 +562,12 @@ package body Vhdl.Canon is
                   raise Internal_Error;
 
                when Unknown =>
-                  --  Must be a subprogram declared in a different design unit.
+                  --  Must be a subprogram declared in a different design unit,
+                  --  or a subprogram calling such a subprogram.
                   --  Only a package can apply to this case.
                   --  Will be checked at elaboration.
                   pragma Assert (not Flags.Flag_Elaborate);
-                  declare
-                     Parent : Iir;
-                  begin
-                     Parent := Get_Parent (Callee);
-                     pragma Assert
-                       (Get_Kind (Parent) = Iir_Kind_Package_Declaration);
-                     Parent := Get_Parent (Parent);
-                     pragma Assert
-                       (Get_Kind (Parent) = Iir_Kind_Design_Unit);
-                  end;
+                  null;
             end case;
          end if;
          Next (It);
