@@ -1,7 +1,7 @@
 # Gdb commands useful to debug ghdl
 
 define pt
-call disp_tree.disp_iir ($arg0, 1, 10)
+call vhdl.disp_tree.disp_iir ($arg0, 1, 10)
 end
 
 document pt
@@ -9,7 +9,7 @@ Print the structure of the iirs that is $arg0.
 end
 
 define ptf
-call disp_tree.disp_iir ($arg0, 1, 0)
+call vhdl.disp_tree.disp_iir ($arg0, 1, 0)
 end
 
 document ptf
@@ -17,7 +17,7 @@ Print the iirs that is $arg0.
 end
 
 define pt1
-call disp_tree.disp_iir ($arg0, 1, 1)
+call vhdl.disp_tree.disp_iir ($arg0, 1, 1)
 end
 
 define prt
@@ -47,7 +47,7 @@ Print flatly the list of iirs that is $arg0.
 end
 
 define ptc
-call disp_tree.disp_chain ($arg0, 0, 0)
+call vhdl.disp_tree.disp_chain ($arg0, 0, 0)
 end
 
 document ptc
