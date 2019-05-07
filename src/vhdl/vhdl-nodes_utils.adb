@@ -51,13 +51,13 @@ package body Vhdl.Nodes_Utils is
       end if;
    end Append_Chain;
 
-   procedure Sub_Chain_Init (First, Last : out Iir) is
+   procedure Chain_Init (First, Last : out Iir) is
    begin
       First := Null_Iir;
       Last := Null_Iir;
-   end Sub_Chain_Init;
+   end Chain_Init;
 
-   procedure Sub_Chain_Append (First, Last : in out Iir; El : Iir) is
+   procedure Chain_Append (First, Last : in out Iir; El : Iir) is
    begin
       pragma Assert (El /= Null_Iir);
       if First = Null_Iir then
@@ -66,9 +66,9 @@ package body Vhdl.Nodes_Utils is
          Set_Chain (Last, El);
       end if;
       Last := El;
-   end Sub_Chain_Append;
+   end Chain_Append;
 
-   procedure Sub_Chain_Append_Chain (First, Last : in out Iir;
+   procedure Chain_Append_Chain (First, Last : in out Iir;
                                      First_Sub, Last_Sub : Iir) is
    begin
       pragma Assert (First_Sub /= Null_Iir);
@@ -78,9 +78,9 @@ package body Vhdl.Nodes_Utils is
          Set_Chain (Last, First_Sub);
       end if;
       Last := Last_Sub;
-   end Sub_Chain_Append_Chain;
+   end Chain_Append_Chain;
 
-   procedure Sub_Chain_Append_Subchain (First, Last : in out Iir;
+   procedure Chain_Append_Subchain (First, Last : in out Iir;
                                         Sub : Iir)
    is
       N : Iir;
@@ -98,18 +98,12 @@ package body Vhdl.Nodes_Utils is
          Last := N;
          N := Get_Chain (N);
       end loop;
-   end Sub_Chain_Append_Subchain;
+   end Chain_Append_Subchain;
 
    function Is_Chain_Length_One (Chain : Iir) return Boolean is
    begin
       return Chain /= Null_Iir and then Get_Chain (Chain) = Null_Iir;
    end Is_Chain_Length_One;
-
-   procedure Insert (Last : Iir; El : Iir) is
-   begin
-      Set_Chain (El, Get_Chain (Last));
-      Set_Chain (Last, El);
-   end Insert;
 
    procedure Insert_Incr (Last : in out Iir; El : Iir) is
    begin

@@ -1674,7 +1674,7 @@ package body Vhdl.Sem_Specs is
       --  No error found yet.
       Error := False;
 
-      Sub_Chain_Init (Res, Last);
+      Chain_Init (Res, Last);
       Found := 0;
       Ent_El := Ent_Chain;
       while Ent_El /= Null_Iir loop
@@ -1732,7 +1732,7 @@ package body Vhdl.Sem_Specs is
             Set_Collapse_Signal_Flag
               (Assoc, Can_Collapse_Signals (Assoc, Ent_El));
          end if;
-         Sub_Chain_Append (Res, Last, Assoc);
+         Chain_Append (Res, Last, Assoc);
          Ent_El := Get_Chain (Ent_El);
       end loop;
       if Nodes_Utils.Get_Chain_Length (Comp_Chain) /= Found then

@@ -840,7 +840,7 @@ package body Vhdl.Std_Package is
 
             Set_Expr_Staticness (Unit, Time_Staticness);
             Set_Name_Staticness (Unit, Locally);
-            Sub_Chain_Append (First_Unit, Last_Unit, Unit);
+            Chain_Append (First_Unit, Last_Unit, Unit);
          end Create_Unit;
 
          Constraint : Iir_Range_Expression;
@@ -860,7 +860,7 @@ package body Vhdl.Std_Package is
                               not Flags.Flag_Whole_Analyze);
          Set_End_Has_Reserved_Id (Time_Type_Definition, True);
 
-         Sub_Chain_Init (First_Unit, Last_Unit);
+         Chain_Init (First_Unit, Last_Unit);
 
          Time_Fs_Unit := Create_Std_Decl (Iir_Kind_Unit_Declaration);
          Set_Std_Identifier (Time_Fs_Unit, Name_Fs);
@@ -869,7 +869,7 @@ package body Vhdl.Std_Package is
          Set_Name_Staticness (Time_Fs_Unit, Locally);
          Set_Physical_Literal
            (Time_Fs_Unit, Create_Std_Phys_Lit (1, Time_Fs_Unit));
-         Sub_Chain_Append (First_Unit, Last_Unit, Time_Fs_Unit);
+         Chain_Append (First_Unit, Last_Unit, Time_Fs_Unit);
 
          Create_Unit (Time_Ps_Unit, 1000, Time_Fs_Unit, Name_Ps);
          Create_Unit (Time_Ns_Unit, 1000, Time_Ps_Unit, Name_Ns);

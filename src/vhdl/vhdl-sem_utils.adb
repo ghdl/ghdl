@@ -151,7 +151,7 @@ package body Vhdl.Sem_Utils is
             Set_Identifier (Proc, Std_Names.Name_File_Open);
             Set_Visible_Flag (Proc, True);
             Set_Wait_State (Proc, False);
-            Sub_Chain_Init (First_Interface, Last_Interface);
+            Chain_Init (First_Interface, Last_Interface);
             case I is
                when 1 =>
                   Set_Implicit_Definition (Proc, Iir_Predefined_File_Open);
@@ -167,7 +167,7 @@ package body Vhdl.Sem_Utils is
                             Std_Package.File_Open_Status_Type_Definition);
                   Set_Mode (Inter, Iir_Out_Mode);
                   Set_Visible_Flag (Inter, True);
-                  Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+                  Chain_Append (First_Interface, Last_Interface, Inter);
             end case;
             --  File F : FT
             Inter := Create_Iir (Iir_Kind_Interface_File_Declaration);
@@ -176,7 +176,7 @@ package body Vhdl.Sem_Utils is
             Set_Type (Inter, Type_Definition);
             Set_Mode (Inter, Iir_Inout_Mode);
             Set_Visible_Flag (Inter, True);
-            Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+            Chain_Append (First_Interface, Last_Interface, Inter);
             --  External_Name : in STRING
             Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
             Set_Location (Inter, Loc);
@@ -184,7 +184,7 @@ package body Vhdl.Sem_Utils is
             Set_Type (Inter, Std_Package.String_Type_Definition);
             Set_Mode (Inter, Iir_In_Mode);
             Set_Visible_Flag (Inter, True);
-            Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+            Chain_Append (First_Interface, Last_Interface, Inter);
             --  Open_Kind : in File_Open_Kind := Read_Mode.
             Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
             Set_Location (Inter, Loc);
@@ -195,7 +195,7 @@ package body Vhdl.Sem_Utils is
               (Inter,
                Build_Simple_Name (Std_Package.File_Open_Kind_Read_Mode, Loc));
             Set_Visible_Flag (Inter, True);
-            Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+            Chain_Append (First_Interface, Last_Interface, Inter);
             Set_Interface_Declaration_Chain (Proc, First_Interface);
             Compute_Subprogram_Hash (Proc);
             -- Add it to the list.
@@ -235,14 +235,14 @@ package body Vhdl.Sem_Utils is
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Visible_Flag (Proc, True);
       Set_Wait_State (Proc, False);
-      Sub_Chain_Init (First_Interface, Last_Interface);
+      Chain_Init (First_Interface, Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
       Set_Location (Inter, Loc);
       Set_Type (Inter, Type_Definition);
       Set_Mode (Inter, Iir_In_Mode);
       Set_Visible_Flag (Inter, True);
-      Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+      Chain_Append (First_Interface, Last_Interface, Inter);
       Inter := Create_Iir (Iir_Kind_Interface_Variable_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
@@ -250,7 +250,7 @@ package body Vhdl.Sem_Utils is
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_Out_Mode);
       Set_Visible_Flag (Inter, True);
-      Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+      Chain_Append (First_Interface, Last_Interface, Inter);
       if Get_Kind (Type_Mark_Type) in Iir_Kinds_Array_Type_Definition
         and then Get_Constraint_State (Type_Mark_Type) /= Fully_Constrained
       then
@@ -260,7 +260,7 @@ package body Vhdl.Sem_Utils is
          Set_Type (Inter, Std_Package.Natural_Subtype_Definition);
          Set_Mode (Inter, Iir_Out_Mode);
          Set_Visible_Flag (Inter, True);
-         Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+         Chain_Append (First_Interface, Last_Interface, Inter);
          Set_Implicit_Definition (Proc, Iir_Predefined_Read_Length);
       else
          Set_Implicit_Definition (Proc, Iir_Predefined_Read);
@@ -277,7 +277,7 @@ package body Vhdl.Sem_Utils is
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Visible_Flag (Proc, True);
       Set_Wait_State (Proc, False);
-      Sub_Chain_Init (First_Interface, Last_Interface);
+      Chain_Init (First_Interface, Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
       Set_Location (Inter, Loc);
@@ -286,7 +286,7 @@ package body Vhdl.Sem_Utils is
       Set_Name_Staticness (Inter, Locally);
       Set_Expr_Staticness (Inter, None);
       Set_Visible_Flag (Inter, True);
-      Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+      Chain_Append (First_Interface, Last_Interface, Inter);
       Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
@@ -294,7 +294,7 @@ package body Vhdl.Sem_Utils is
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_In_Mode);
       Set_Visible_Flag (Inter, True);
-      Sub_Chain_Append (First_Interface, Last_Interface, Inter);
+      Chain_Append (First_Interface, Last_Interface, Inter);
       Set_Implicit_Definition (Proc, Iir_Predefined_Write);
       Set_Interface_Declaration_Chain (Proc, First_Interface);
       Compute_Subprogram_Hash (Proc);

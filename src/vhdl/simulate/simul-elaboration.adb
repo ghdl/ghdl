@@ -1572,7 +1572,7 @@ package body Simul.Elaboration is
             Local := Get_Chain (Local);
          end loop;
 
-         Sub_Chain_Init (First, Last);
+         Chain_Init (First, Last);
          Formal := Formal_Chain;
          for I in Assoc_List'Range loop
             if Assoc_List (I) = Null_Iir then
@@ -1587,7 +1587,7 @@ package body Simul.Elaboration is
             end if;
             Set_Whole_Association_Flag (Assoc, True);
             Set_Formal (Assoc, Formal);
-            Sub_Chain_Append (First, Last, Assoc);
+            Chain_Append (First, Last, Assoc);
 
             Formal := Get_Chain (Formal);
          end loop;

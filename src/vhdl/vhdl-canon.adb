@@ -940,7 +940,7 @@ package body Vhdl.Canon is
          return Null_Iir;
       end if;
 
-      Sub_Chain_Init (N_Chain, Last);
+      Chain_Init (N_Chain, Last);
       Assoc_Chain := Association_Chain;
 
       -- Reorder the list of association in the interface order.
@@ -975,7 +975,7 @@ package body Vhdl.Canon is
 
                --  Append ASSOC_EL in N_CHAIN.
                Set_Chain (Assoc_El, Null_Iir);
-               Sub_Chain_Append (N_Chain, Last, Assoc_El);
+               Chain_Append (N_Chain, Last, Assoc_El);
 
                case Get_Kind (Assoc_El) is
                   when Iir_Kind_Association_Element_Open =>
@@ -1015,7 +1015,7 @@ package body Vhdl.Canon is
             Set_Formal (Assoc_El, Inter);
          end if;
 
-         Sub_Chain_Append (N_Chain, Last, Assoc_El);
+         Chain_Append (N_Chain, Last, Assoc_El);
 
          << Done >> null;
          Inter := Get_Chain (Inter);
@@ -1087,7 +1087,7 @@ package body Vhdl.Canon is
       end if;
 
       El := Interface_Chain;
-      Sub_Chain_Init (Res, Last);
+      Chain_Init (Res, Last);
       while El /= Null_Iir loop
          Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
          Set_Whole_Association_Flag (Assoc, True);
@@ -1096,7 +1096,7 @@ package body Vhdl.Canon is
             Set_Formal (Assoc, El);
          end if;
          Location_Copy (Assoc, El);
-         Sub_Chain_Append (Res, Last, Assoc);
+         Chain_Append (Res, Last, Assoc);
          El := Get_Chain (El);
       end loop;
       return Res;
@@ -1165,7 +1165,7 @@ package body Vhdl.Canon is
       N_Stmt : Iir;
       Res, Last : Iir;
    begin
-      Sub_Chain_Init (Res, Last);
+      Chain_Init (Res, Last);
 
       Stmt := First;
       while Stmt /= Null_Iir loop
@@ -1303,7 +1303,7 @@ package body Vhdl.Canon is
                Error_Kind ("canon_sequential_stmts", Stmt);
          end case;
 
-         Sub_Chain_Append (Res, Last, N_Stmt);
+         Chain_Append (Res, Last, N_Stmt);
 
          Stmt := Get_Chain (Stmt);
       end loop;
@@ -2410,7 +2410,7 @@ package body Vhdl.Canon is
                      Error_Kind ("copy_association", Assoc);
                end case;
 
-               Sub_Chain_Append (First, Last, El);
+               Chain_Append (First, Last, El);
                Next_Association_Interface (Assoc, Inter);
                exit when Assoc = Null_Iir;
                exit when
@@ -2437,7 +2437,7 @@ package body Vhdl.Canon is
       begin
          F_El := First_Chain;
          F_Inter := Inter_Chain;
-         Sub_Chain_Init (First, Last);
+         Chain_Init (First, Last);
          Inter := Inter_Chain;
          while Inter /= Null_Iir loop
             --  Consistency check.
@@ -2913,7 +2913,7 @@ package body Vhdl.Canon is
             Spec := El;
          end if;
          Set_Block_Specification (Res, Spec);
-         Sub_Chain_Append (First_Item, Last_Item, Res);
+         Chain_Append (First_Item, Last_Item, Res);
       end Create_Default_Block_Configuration;
    begin
       --  Note: the only allowed declarations are use clauses, which are not
@@ -3005,7 +3005,7 @@ package body Vhdl.Canon is
                           (Designator_List, Build_Simple_Name (El, El));
                         Set_Instantiation_List
                           (Res, List_To_Flist (Designator_List));
-                        Sub_Chain_Append (First_Item, Last_Item, Res);
+                        Chain_Append (First_Item, Last_Item, Res);
                      end if;
                   elsif Get_Kind (Comp_Conf)
                     = Iir_Kind_Configuration_Specification
@@ -3038,7 +3038,7 @@ package body Vhdl.Canon is
                      Set_Binding_Indication
                        (Res, Get_Binding_Indication (Comp_Conf));
                      Set_Is_Ref (Res, True);
-                     Sub_Chain_Append (First_Item, Last_Item, Res);
+                     Chain_Append (First_Item, Last_Item, Res);
                   end if;
                end;
             when Iir_Kind_Block_Statement =>
@@ -3106,7 +3106,7 @@ package body Vhdl.Canon is
                         Set_Base_Name (Blk_Spec, El);
                         Set_Prefix (Blk_Spec, Build_Simple_Name (Bod, Res));
                         Set_Block_Specification (Res, Blk_Spec);
-                        Sub_Chain_Append (First_Item, Last_Item, Res);
+                        Chain_Append (First_Item, Last_Item, Res);
                      end if;
                   end if;
                end;
