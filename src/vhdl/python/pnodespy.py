@@ -41,10 +41,10 @@ def do_class_kinds():
         print()
 
 def do_iirs_subprg():
-    classname = pnodes.node_type.lower() + 's'
+    classname = 'vhdl__nodes'
     print()
     print('Get_Kind = {0}.{1}__get_kind'.format(libname, classname))
-    print('Get_Location = {0}.nodes__get_location'.format(libname, classname))
+    print('Get_Location = {0}.{1}__get_location'.format(libname, classname))
     for k in pnodes.funcs:
         print()
         print('Get_{0} = {1}.{2}__get_{3}'.format(
@@ -75,7 +75,7 @@ def do_types_subprg():
     print()
     for k in pnodes.get_types():
         print()
-        print('Get_{0} = {1}.nodes_meta__get_{2}'.format(
+        print('Get_{0} = {1}.vhdl__nodes_meta__get_{2}'.format(
             k, libname, k.lower()))
 
 
@@ -84,7 +84,7 @@ def do_has_subprg():
     for f in pnodes.funcs:
         print()
         print('Has_{0} =\\'.format(f.name))
-        print('    {0}.nodes_meta__has_{1}'.format(libname, f.name.lower()))
+        print('    {0}.vhdl__nodes_meta__has_{1}'.format(libname, f.name.lower()))
 
 
 def do_class_field_attributes():
@@ -154,15 +154,15 @@ def do_libghdl_meta():
 
 
 # From nodes_meta
-get_fields_first = libghdl.nodes_meta__get_fields_first
+get_fields_first = libghdl.vhdl__nodes_meta__get_fields_first
 
-get_fields_last = libghdl.nodes_meta__get_fields_last
+get_fields_last = libghdl.vhdl__nodes_meta__get_fields_last
 
-get_field_by_index = libghdl.nodes_meta__get_field_by_index
+get_field_by_index = libghdl.vhdl__nodes_meta__get_field_by_index
 
-get_field_type = libghdl.nodes_meta__get_field_type
+get_field_type = libghdl.vhdl__nodes_meta__get_field_type
 
-get_field_attribute = libghdl.nodes_meta__get_field_attribute""")
+get_field_attribute = libghdl.vhdl__nodes_meta__get_field_attribute""")
     do_class_types()
     do_class_field_attributes()
     do_class_fields()
