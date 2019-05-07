@@ -3487,6 +3487,20 @@ package body Vhdl.Evaluation is
       end case;
    end Eval_Discrete_Type_Length;
 
+   function Eval_Is_Null_Discrete_Range (Rng : Iir) return Boolean
+   is
+      Left, Right : Iir_Int64;
+   begin
+      Left := Eval_Pos (Get_Left_Limit (Rng));
+      Right := Eval_Pos (Get_Right_Limit (Rng));
+      case Get_Direction (Rng) is
+         when Iir_To =>
+            return Right < Left;
+         when Iir_Downto =>
+            return Left < Right;
+      end case;
+   end Eval_Is_Null_Discrete_Range;
+
    function Eval_Pos (Expr : Iir) return Iir_Int64 is
    begin
       case Get_Kind (Expr) is

@@ -127,6 +127,9 @@ package Vhdl.Evaluation is
    --  Note: the range constraint may be an attribute or a subtype.
    function Eval_Discrete_Range_Left (Constraint : Iir) return Iir;
 
+   --  Return true iff RNG is a null range.
+   function Eval_Is_Null_Discrete_Range (Rng : Iir) return Boolean;
+
    --  Return the position of EXPR, ie the result of sub_type'pos (EXPR), where
    --  sub_type is the type of expr.
    --  EXPR must be of a discrete subtype.

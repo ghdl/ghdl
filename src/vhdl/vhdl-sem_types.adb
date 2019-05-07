@@ -265,6 +265,13 @@ package body Vhdl.Sem_Types is
 
       case Get_Kind (Get_Base_Type (Get_Type (Get_Left_Limit (Rng)))) is
          when Iir_Kind_Integer_Type_Definition =>
+            if Get_Expr_Staticness (Rng) = Locally
+              and then Eval_Is_Null_Discrete_Range (Rng)
+            then
+               Warning_Msg_Sem
+                 (Warnid_Runtime_Error, +Expr,
+                  "integer type %i has a null range", (1 => +Decl));
+            end if;
             Res := Create_Integer_Type (Expr, Rng, Decl);
          when Iir_Kind_Floating_Type_Definition =>
             declare
@@ -374,6 +381,13 @@ package body Vhdl.Sem_Types is
            Get_Range_Constraint (Universal_Integer_Subtype_Definition);
       else
          Range_Expr1 := Eval_Range_If_Static (Range_Expr1);
+         if Get_Expr_Staticness (Range_Expr1) = Locally
+           and then Eval_Is_Null_Discrete_Range (Range_Expr1)
+         then
+            Warning_Msg_Sem
+              (Warnid_Runtime_Error, +Range_Expr,
+               "physical type %i has a null range", (1 => +Decl));
+         end if;
       end if;
 
       --  Create the subtype.
