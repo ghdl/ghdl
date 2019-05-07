@@ -122,7 +122,7 @@ LIBVHDL_FLAGS_TO_PASS=\
  enable_openieee="$(enable_openieee)" \
  LN="$(LN)" CP="$(CP)" MKDIR="$(MKDIR)"
 
-all: Makefile all.$(backend) all.libghdl.$(enable_python)
+all: Makefile all.$(backend) all.libghdl
 
 install: install.$(backend)
 #       Generate std.standard package VHDL source
@@ -362,6 +362,7 @@ $(libghdl_name): $(GRT_SRC_DEPS) version.ads force
 
 all.libghdl.true: $(libghdl_name)
 all.libghdl.false:
+all.libghdl: all.libghdl.$(enable_python)
 
 ################ ghdlsynth library ######################################
 
