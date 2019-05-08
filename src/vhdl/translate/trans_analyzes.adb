@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Vhdl.Utils; use Vhdl.Utils;
-with Iirs_Walk; use Iirs_Walk;
+with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Vhdl.Disp_Vhdl;
 with Ada.Text_IO;
 with Errorout;

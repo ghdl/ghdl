@@ -19,7 +19,7 @@
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
 
-package body Iirs_Walk is
+package body Vhdl.Nodes_Walk is
    function Walk_Chain (Chain : Iir; Cb : Walk_Cb) return Walk_Status
    is
       El : Iir;
@@ -174,4 +174,4 @@ package body Iirs_Walk is
 
       return Walk_Continue;
    end Walk_Concurrent_Statements_Chain;
-end Iirs_Walk;
+end Vhdl.Nodes_Walk;

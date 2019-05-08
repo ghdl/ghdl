@@ -18,7 +18,7 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Iirs_Walk is
+package Vhdl.Nodes_Walk is
    type Walk_Status is
      (
       --  Continue to walk.
@@ -50,4 +50,4 @@ package Iirs_Walk is
    function Walk_Concurrent_Statements_Chain (Chain : Iir; Cb : Walk_Cb)
                                        return Walk_Status;
 
-end Iirs_Walk;
+end Vhdl.Nodes_Walk;

@@ -38,7 +38,7 @@ with Simul.Execution; use Simul.Execution;
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
 with Vhdl.Disp_Vhdl;
-with Iirs_Walk; use Iirs_Walk;
+with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Areapools; use Areapools;
 with Grt.Types; use Grt.Types;
 with Grt.Disp;

@@ -22,7 +22,7 @@ with Vhdl.Std_Package;
 with Name_Table; use Name_Table;
 with Flags;
 with Vhdl.Utils; use Vhdl.Utils;
-with Iirs_Walk;
+with Vhdl.Nodes_Walk;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Canon;
@@ -787,7 +787,7 @@ package body Vhdl.Configuration is
    end Top;
 
    package body Top is
-      use Iirs_Walk;
+      use Nodes_Walk;
 
       function Add_Entity_Cb (Design : Iir) return Walk_Status
       is
