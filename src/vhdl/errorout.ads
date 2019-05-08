@@ -24,8 +24,6 @@ package Errorout is
    Compilation_Error: exception;
 
    --  This kind can't be handled.
-   procedure Error_Kind (Msg: String; An_Iir: in Iir);
-   procedure Error_Kind (Msg: String; Def : Iir_Predefined_Functions);
    procedure Error_Kind (Msg : String; N : PSL_Node);
    pragma No_Return (Error_Kind);
 
@@ -163,15 +161,12 @@ package Errorout is
    --  %n: node name
    --  %s: a string
    --  TODO: %m: mode, %y: type of
-   function "+" (V : Iir) return Earg_Type;
    function "+" (V : Location_Type) return Earg_Type;
    function "+" (V : Name_Id) return Earg_Type;
-   function "+" (V : Vhdl.Tokens.Token_Type) return Earg_Type;
    function "+" (V : Character) return Earg_Type;
    function "+" (V : String8_Len_Type) return Earg_Type;
 
    --  Convert location.
-   function "+" (L : Iir) return Location_Type;
    function "+" (L : PSL_Node) return Location_Type;
 
    --  Pass that detected the error.
@@ -230,104 +225,8 @@ package Errorout is
    --  Warn about an option.
    procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);
 
-   -- Disp a message during semantic analysis.
-   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
-                              Loc : Location_Type;
-                              Msg: String;
-                              Args : Earg_Arr := No_Eargs;
-                              Cont : Boolean := False);
-   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
-                              Loc : Location_Type;
-                              Msg: String;
-                              Arg1 : Earg_Type;
-                              Cont : Boolean := False);
-
-   procedure Error_Msg_Sem (Loc: Location_Type;
-                            Msg: String;
-                            Args : Earg_Arr := No_Eargs;
-                            Cont : Boolean := False);
-   procedure Error_Msg_Sem
-     (Loc: Location_Type; Msg: String; Arg1 : Earg_Type);
-   procedure Error_Msg_Sem_1 (Msg: String; Loc : PSL_Node);
-
-   --  Like Error_Msg_Sem, but a warning if -frelaxed or --std=93c.
-   procedure Error_Msg_Sem_Relaxed (Loc : Iir;
-                                    Id : Msgid_Warnings;
-                                    Msg : String;
-                                    Args : Earg_Arr := No_Eargs);
-
-   -- Disp a message during elaboration (or configuration).
-   procedure Error_Msg_Elab
-     (Msg: String; Args : Earg_Arr := No_Eargs);
-   procedure Error_Msg_Elab
-     (Msg: String; Arg1 : Earg_Type);
-   procedure Error_Msg_Elab
-     (Loc: Iir; Msg: String; Args : Earg_Arr := No_Eargs);
-   procedure Error_Msg_Elab
-     (Loc: Iir; Msg: String; Arg1 : Earg_Type);
-
-   --  Like Error_Msg_Elab, but a warning if -frelaxed or --std=93c.
-   procedure Error_Msg_Elab_Relaxed (Loc : Iir;
-                                     Id : Msgid_Warnings;
-                                     Msg : String;
-                                     Args : Earg_Arr := No_Eargs);
-
-   --  Disp a warning durig elaboration (or configuration).
-   procedure Warning_Msg_Elab (Id : Msgid_Warnings;
-                               Loc : Iir;
-                               Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False);
-   procedure Warning_Msg_Elab (Id : Msgid_Warnings;
-                               Loc : Iir;
-                               Msg: String;
-                               Args : Earg_Arr := No_Eargs;
-                               Cont : Boolean := False);
-
-   -- Disp a bug message.
-   procedure Error_Internal (Expr: Iir; Msg: String := "");
-   pragma No_Return (Error_Internal);
-
-   -- Disp a node.
-   -- Used for output of message.
-   function Disp_Node (Node: Iir) return String;
-
-   -- Disp a node location.
-   -- Used for output of message.
-   function Disp_Location (Node: Iir) return String;
-
-   --  Disp non-terminal name from KIND.
-   function Disp_Name (Kind : Iir_Kind) return String;
-
-   --  SUBPRG must be a subprogram declaration or an enumeration literal
-   --  declaration.
-   --  Returns:
-   --   "enumeration literal XX [ return TYPE ]"
-   --   "function XXX [ TYPE1, TYPE2 return TYPE ]"
-   --   "procedure XXX [ TYPE1, TYPE2 ]"
-   --   "implicit function XXX [ TYPE1, TYPE2 return TYPE ]"
-   --   "implicit procedure XXX [ TYPE1, TYPE2 ]"
-   function Disp_Subprg (Subprg : Iir) return String;
-
-   --  Print element POS of discrete type DTYPE.
-   function Disp_Discrete (Dtype : Iir; Pos : Iir_Int64) return String;
-
-   --  Disp the name of the type of NODE if known.
-   --  Disp "unknown" if it is not known.
-   --  Disp all possible types if it is an overload list.
-   function Disp_Type_Of (Node : Iir) return String;
-
-   --  Disp an error message when a pure function CALLER calls impure CALLEE.
-   procedure Error_Pure
-     (Origin : Report_Origin; Caller : Iir; Callee : Iir; Loc : Iir);
-
-   --  Report an error message as type of EXPR does not match A_TYPE.
-   --  Location is EXPR.
-   procedure Error_Not_Match (Expr: Iir; A_Type: Iir);
-
-   --  Disp interface mode MODE.
-   function Get_Mode_Name (Mode : Iir_Mode) return String;
-
+   function Make_Earg_Vhdl_Node (V : Iir) return Earg_Type;
+   function Make_Earg_Vhdl_Token (V : Vhdl.Tokens.Token_Type) return Earg_Type;
 private
    type Earg_Kind is
      (Earg_None,

@@ -21,7 +21,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with System;
 with Grt.Types; use Grt.Types;
 with Flags; use Flags;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package;
 with Vhdl.Evaluation;
 with Vhdl.Utils; use Vhdl.Utils;

@@ -21,6 +21,7 @@ with Ortho_Ident; use Ortho_Ident;
 with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Name_Table; -- use Name_Table;
 with Str_Table;
 with Files_Map;

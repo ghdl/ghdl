@@ -20,6 +20,7 @@ with Vhdl.Tokens; use Vhdl.Tokens;
 with Vhdl.Scanner; use Vhdl.Scanner;
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Std_Names; use Std_Names;
 with Flags; use Flags;
 with Vhdl.Parse_Psl;

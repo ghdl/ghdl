@@ -19,7 +19,7 @@ with Tables;
 with GNAT.Heap_Sort_A;
 with Flags;
 with Vhdl.Std_Package;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Nodes_Priv;
 
 package body Vhdl.Xrefs is

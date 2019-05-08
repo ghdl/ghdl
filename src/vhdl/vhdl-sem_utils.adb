@@ -18,7 +18,7 @@
 with Ada.Unchecked_Conversion;
 with Types; use Types;
 with Flags; use Flags;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164;

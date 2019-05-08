@@ -18,6 +18,7 @@
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Flags; use Flags;
 with Name_Table;
 with Vhdl.Std_Package; use Vhdl.Std_Package;

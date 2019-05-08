@@ -31,6 +31,7 @@ with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Psl is

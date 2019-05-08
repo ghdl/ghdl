@@ -20,6 +20,7 @@ with Types; use Types;
 with Std_Names;
 with Vhdl.Tokens;
 with Flags; use Flags;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Utils; use Vhdl.Utils;

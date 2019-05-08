@@ -23,7 +23,7 @@ with Ada.Unchecked_Deallocation;
 with Std_Names;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Simul.Execution;
 with Grt.Types; use Grt.Types;
 

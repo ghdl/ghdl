@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Vhdl.Utils; use Vhdl.Utils;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 
 package body Vhdl.Nodes_Walk is
    function Walk_Chain (Chain : Iir; Cb : Walk_Cb) return Walk_Status

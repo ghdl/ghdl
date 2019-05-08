@@ -21,6 +21,7 @@ with Vhdl.Scanner;
 with Errorout; use Errorout;
 with Name_Table; use Name_Table;
 with Str_Table;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Flags; use Flags;

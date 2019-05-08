@@ -21,6 +21,7 @@ with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem; use Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;

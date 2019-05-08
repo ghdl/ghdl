@@ -35,6 +35,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
 with Flags;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Libraries;
 with Vhdl.Canon;
 with Vhdl.Configuration;

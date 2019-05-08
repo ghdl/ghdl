@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Vhdl.Scanner; use Vhdl.Scanner;
 with Vhdl.Tokens; use Vhdl.Tokens;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;

@@ -20,7 +20,7 @@ with Vhdl.Nodes_Meta;
 with Types; use Types;
 with Files_Map;
 with Vhdl.Utils; use Vhdl.Utils;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem_Utils;
 
 package body Vhdl.Sem_Inst is

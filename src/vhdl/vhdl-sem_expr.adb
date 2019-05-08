@@ -19,6 +19,7 @@
 with Grt.Algos;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Flags; use Flags;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
 with Vhdl.Sem_Names; use Vhdl.Sem_Names;

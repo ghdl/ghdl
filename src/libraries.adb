@@ -21,6 +21,7 @@ with GNAT.OS_Lib;
 with Logging; use Logging;
 with Tables;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Scanner;
 with Vhdl.Utils; use Vhdl.Utils;
 with Name_Table; use Name_Table;

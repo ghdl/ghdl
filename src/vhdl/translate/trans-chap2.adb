@@ -18,7 +18,7 @@
 
 with Std_Names;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem_Inst;
 with Vhdl.Nodes_Meta;
 with Vhdl.Utils; use Vhdl.Utils;

@@ -37,6 +37,7 @@ with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Disp_Vhdl;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Areapools; use Areapools;

@@ -19,7 +19,7 @@
 with Types; use Types;
 with Vhdl.Std_Package;
 with Std_Names; use Std_Names;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Ieee.Std_Logic_1164;
 
 package body Vhdl.Ieee.Numeric is

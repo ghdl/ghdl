@@ -19,6 +19,7 @@
 with Ada.Text_IO;
 with Str_Table;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Evaluation;
 with Simul.Execution; use Simul.Execution;
 with Vhdl.Utils; use Vhdl.Utils;

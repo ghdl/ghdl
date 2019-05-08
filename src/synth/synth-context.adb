@@ -22,7 +22,7 @@ with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
 with Grt.Types; use Grt.Types;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils;
 
 with Vhdl.Std_Package;

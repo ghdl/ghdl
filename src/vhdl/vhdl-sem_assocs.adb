@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Flags; use Flags;
 with Types; use Types;
 with Vhdl.Utils; use Vhdl.Utils;

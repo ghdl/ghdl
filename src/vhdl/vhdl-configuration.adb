@@ -18,6 +18,7 @@
 
 with Libraries;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package;
 with Name_Table; use Name_Table;
 with Flags;

@@ -19,7 +19,7 @@
 with Tables;
 with Ada.Text_IO;
 with Vhdl.Std_Package;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Types; use Types;
 

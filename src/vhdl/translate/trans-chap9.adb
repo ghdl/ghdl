@@ -18,6 +18,7 @@
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Flags;
 with Libraries;

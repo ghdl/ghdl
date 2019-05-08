@@ -19,6 +19,7 @@ with Libraries;
 with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Sem_Utils;
 with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;

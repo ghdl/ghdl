@@ -23,6 +23,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Flags; use Flags;
 with Vhdl.Canon;
 with Vhdl.Evaluation; use Vhdl.Evaluation;

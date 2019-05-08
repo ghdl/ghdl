@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Name_Table;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Trans.Chap2;

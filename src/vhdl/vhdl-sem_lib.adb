@@ -20,6 +20,7 @@ with Name_Table;
 with Files_Map;
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Libraries; use Libraries;
 with Vhdl.Scanner;
 with Vhdl.Parse;

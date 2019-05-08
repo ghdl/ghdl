@@ -18,6 +18,7 @@
 with Errorout; use Errorout;
 with Types; use Types;
 with Flags; use Flags;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem_Specs; use Vhdl.Sem_Specs;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Sem; use Vhdl.Sem;

@@ -23,7 +23,7 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Grt.Algos;
 with Areapools;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 
 with Vhdl.Sem_Expr;
 with Vhdl.Utils; use Vhdl.Utils;

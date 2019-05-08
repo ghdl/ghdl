@@ -1,5 +1,6 @@
 with Types; use Types;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Files_Map;
 
 package PSL.Errors is
@@ -10,5 +11,5 @@ package PSL.Errors is
      Errorout.Error_Kind;
 
    procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node)
-     renames Errorout.Error_Msg_Sem_1;
+     renames Vhdl.Errors.Error_Msg_Sem_1;
 end PSL.Errors;

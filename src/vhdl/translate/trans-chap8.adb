@@ -18,7 +18,7 @@
 
 with Ada.Text_IO;
 with Std_Names;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Nodes_Utils;
 with Vhdl.Canon;
 with Vhdl.Evaluation; use Vhdl.Evaluation;

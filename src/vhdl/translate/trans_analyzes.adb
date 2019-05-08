@@ -21,6 +21,7 @@ with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Vhdl.Disp_Vhdl;
 with Ada.Text_IO;
 with Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 
 package body Trans_Analyzes is
    Driver_List : Iir_List;

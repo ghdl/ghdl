@@ -18,6 +18,7 @@
 with Types; use Types;
 with Std_Names;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Name_Table;

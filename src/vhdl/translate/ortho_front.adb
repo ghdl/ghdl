@@ -33,6 +33,7 @@ with Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Errorout; use Errorout;
 with Errorout.Console;
+with Vhdl.Errors; use Vhdl.Errors;
 with GNAT.OS_Lib;
 with Bug;
 with Trans_Be;

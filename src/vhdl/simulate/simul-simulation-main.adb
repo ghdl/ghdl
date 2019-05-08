@@ -21,6 +21,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;

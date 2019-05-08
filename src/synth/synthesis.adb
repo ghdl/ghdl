@@ -39,6 +39,7 @@ with Synth.Environment.Debug;
 pragma Unreferenced (Synth.Environment.Debug);
 
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 
 package body Synthesis is
    function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is

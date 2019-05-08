@@ -18,7 +18,7 @@
 with Types; use Types;
 with Name_Table;
 with Std_Names; use Std_Names;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 
 package body Vhdl.Ieee.Std_Logic_1164 is
    function Is_Scalar_Parameter (Inter : Iir) return Boolean is

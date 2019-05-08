@@ -18,7 +18,7 @@
 
 with Name_Table;
 with Files_Map;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Configuration;
 with Libraries;
