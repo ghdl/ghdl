@@ -221,7 +221,7 @@ def do_libghdl_tokens():
 
 
 def do_libghdl_errorout():
-    read_enum("errorout.ads", "Msgid_Type", "(Msgid|Warnid)_", "Msgid",
+    read_enum("../errorout.ads", "Msgid_Type", "(Msgid|Warnid)_", "Msgid",
               g=lambda m: m.group(1) + '_' + m.group(2))
 
 

@@ -96,7 +96,7 @@ python/libghdl/elocations.py: $(PNODESPY) vhdl-elocations.ads
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-elocs > $@
 	chmod -w $@
 
-python/libghdl/errorout.py: $(PNODESPY) errorout.ads
+python/libghdl/errorout.py: $(PNODESPY) ../errorout.ads
 	$(RM) $@
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-errorout > $@
 	chmod -w $@
