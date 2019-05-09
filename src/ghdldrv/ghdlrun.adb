@@ -43,7 +43,7 @@ with Trans_Be;
 with Translation;
 with Vhdl.Ieee.Std_Logic_1164;
 
-with Lists;
+with Vhdl.Lists;
 with Str_Table;
 with Hash;
 with Interning;
@@ -757,7 +757,7 @@ package body Ghdlrun is
       Ortho_Jit.Finish;
 
       Translation.Finalize;
-      Lists.Initialize;
+      Vhdl.Lists.Initialize;
       Str_Table.Initialize;
       Vhdl.Nodes.Initialize;
       Files_Map.Initialize;

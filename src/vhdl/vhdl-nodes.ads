@@ -19,7 +19,7 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Vhdl.Nodes_Priv;
-with Lists;
+with Vhdl.Lists;
 with Vhdl.Flists;
 
 package Vhdl.Nodes is

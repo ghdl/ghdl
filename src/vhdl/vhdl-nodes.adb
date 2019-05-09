@@ -19,7 +19,7 @@
 with Ada.Unchecked_Conversion;
 with Tables;
 with Logging; use Logging;
-with Lists; use Lists;
+with Vhdl.Lists; use Vhdl.Lists;
 with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
 with Vhdl.Nodes_Priv; use Vhdl.Nodes_Priv;
 
