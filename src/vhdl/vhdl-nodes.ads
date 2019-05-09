@@ -20,7 +20,7 @@ with Types; use Types;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with Vhdl.Nodes_Priv;
 with Lists;
-with Flists;
+with Vhdl.Flists;
 
 package Vhdl.Nodes is
    --  This package defines the semantic tree and functions to handle it.

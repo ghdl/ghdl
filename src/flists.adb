@@ -40,7 +40,7 @@ package body Flists is
 
    --  Table of all elements.
    package Els is new Tables
-     (Table_Component_Type => Node_Type,
+     (Table_Component_Type => El_Type,
       Table_Index_Type => El_Index_Type,
       Table_Low_Bound => 0,
       Table_Initial => 128);
@@ -78,7 +78,7 @@ package body Flists is
             if Prev = Null_Flist then
                Free_Flists (Free_Flists'Last) := Next;
             else
-               Els.Table (Flistt.Table (Prev).Els) := Node_Type (Next);
+               Els.Table (Flistt.Table (Prev).Els) := El_Type (Next);
             end if;
          end if;
       else
@@ -105,8 +105,7 @@ package body Flists is
       declare
          Idx : constant El_Index_Type := Flistt.Table (Res).Els;
       begin
-         Els.Table (Idx .. Idx + El_Index_Type (Len) - 1) :=
-           (others => Null_Node);
+         Els.Table (Idx .. Idx + El_Index_Type (Len) - 1) := (others => 0);
       end;
 
       return Res;
@@ -122,7 +121,7 @@ package body Flists is
          Prev := Free_Flists (Free_Flists'Last);
          Free_Flists (Free_Flists'Last) := Flist;
 
-         Els.Table (Flistt.Table (Flist).Els) := Node_Type (Prev);
+         Els.Table (Flistt.Table (Flist).Els) := El_Type (Prev);
       else
          Prev := Free_Flists (Len);
          Free_Flists (Len) := Flist;
@@ -143,7 +142,7 @@ package body Flists is
       return Natural (Flistt.Table (Flist).Len);
    end Length;
 
-   function Get_Nth_Element (Flist : Flist_Type; N : Natural) return Node_Type
+   function Get_Nth_Element (Flist : Flist_Type; N : Natural) return El_Type
    is
       E : Entry_Type renames Flistt.Table (Flist);
    begin
@@ -151,7 +150,7 @@ package body Flists is
       return Els.Table (E.Els + El_Index_Type (N));
    end Get_Nth_Element;
 
-   procedure Set_Nth_Element (Flist : Flist_Type; N : Natural; V : Node_Type)
+   procedure Set_Nth_Element (Flist : Flist_Type; N : Natural; V : El_Type)
    is
       E : Entry_Type renames Flistt.Table (Flist);
    begin

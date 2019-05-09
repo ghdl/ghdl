@@ -16,8 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
-with Vhdl.Nodes_Priv; use Vhdl.Nodes_Priv;
 
+generic
+   type El_Type is range <>;
 package Flists is
    type Flist_Type is new Int32;
    for Flist_Type'Size use 32;
@@ -44,8 +45,8 @@ package Flists is
    function Length (Flist : Flist_Type) return Natural;
 
    --  Get the N-th element of FLIST.  First element has index 0.
-   function Get_Nth_Element (Flist : Flist_Type; N : Natural) return Node_Type;
+   function Get_Nth_Element (Flist : Flist_Type; N : Natural) return El_Type;
 
    --  Set the N-th element of FLIST to V.
-   procedure Set_Nth_Element (Flist : Flist_Type; N : Natural; V : Node_Type);
+   procedure Set_Nth_Element (Flist : Flist_Type; N : Natural; V : El_Type);
 end Flists;
