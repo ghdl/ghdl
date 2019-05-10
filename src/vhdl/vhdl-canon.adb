@@ -25,6 +25,7 @@ with Vhdl.Sem;
 with Vhdl.Sem_Inst;
 with Vhdl.Sem_Specs;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
+with PSL.Types; use PSL.Types;
 with PSL.Nodes;
 with PSL.Rewrites;
 with PSL.Build;

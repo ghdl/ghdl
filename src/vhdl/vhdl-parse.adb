@@ -27,6 +27,7 @@ with Vhdl.Parse_Psl;
 with Str_Table;
 with Vhdl.Xrefs;
 with Vhdl.Elocations; use Vhdl.Elocations;
+with PSL.Types; use PSL.Types;
 
 --  Recursive descendant parser.
 --  Each subprogram (should) parse one production rules.

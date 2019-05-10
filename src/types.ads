@@ -130,12 +130,6 @@ package Types is
       Offset : Natural;
    end record;
 
-   --  PSL Node.
-   type PSL_Node is new Int32;
-
-   --  PSL NFA
-   type PSL_NFA is new Int32;
-
    --  Indentation.
    --  This is used by all packages that display vhdl code or informations.
    Indentation : constant := 2;

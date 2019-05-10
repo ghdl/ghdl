@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
+with PSL.Types; use PSL.Types;
 
 package Vhdl.Disp_Vhdl is
    -- General procedure to display a node.

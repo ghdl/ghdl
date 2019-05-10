@@ -19,6 +19,7 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Tokens; use Vhdl.Tokens;
+with PSL.Types; use PSL.Types;
 
 package Vhdl.Nodes_Meta is
    --  The enumeration of all possible types in the nodes.

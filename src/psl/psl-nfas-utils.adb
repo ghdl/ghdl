@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with PSL.Types; use PSL.Types;
+with PSL.Nodes_Priv;
 with PSL.Errors; use PSL.Errors;
 
 package body PSL.NFAs.Utils is
@@ -45,7 +47,7 @@ package body PSL.NFAs.Utils is
             L_Expr : constant Node := Get_Edge_Expr (L);
             R_Expr : constant Node := Get_Edge_Expr (R);
          begin
-            return L_Expr < R_Expr
+            return PSL.Nodes_Priv."<" (L_Expr, R_Expr)
               or else (L_Expr = R_Expr
                          and then Get_Edge_State (L) < Get_Edge_State (R));
          end Lt;

@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Types; use Types;
+with PSL.Types; use PSL.Types;
 with Vhdl.Tokens; use Vhdl.Tokens;
 
 package Vhdl.Parse_Psl is

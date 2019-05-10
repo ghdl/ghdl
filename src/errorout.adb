@@ -127,8 +127,9 @@ package body Errorout is
       return (Kind => Earg_String8, Val_Str8 => V);
    end "+";
 
-   function "+" (L : PSL_Node) return Location_Type
+   function "+" (L : PSL.Types.PSL_Node) return Location_Type
    is
+      use PSL.Types;
       use PSL.Nodes;
    begin
       if L = Null_Node then

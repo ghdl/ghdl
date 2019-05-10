@@ -1,4 +1,5 @@
 with Types; use Types;
+with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 with PSL.CSE; use PSL.CSE;
 

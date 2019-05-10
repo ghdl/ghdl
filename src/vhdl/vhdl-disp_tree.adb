@@ -22,6 +22,7 @@ with Logging; use Logging;
 with Name_Table;
 with Str_Table;
 with Files_Map;
+with PSL.Types; use PSL.Types;
 with PSL.Dump_Tree;
 with Vhdl.Nodes_Meta;
 

@@ -24,6 +24,7 @@ with Libraries;
 with Vhdl.Canon;
 with Trans_Analyzes;
 with Vhdl.Nodes_Meta;
+with PSL.Types; use PSL.Types;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;

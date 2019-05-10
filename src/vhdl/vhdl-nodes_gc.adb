@@ -24,6 +24,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Libraries;
 with Vhdl.Disp_Tree;
 with Vhdl.Std_Package;
+with PSL.Types; use PSL.Types;
 
 package body Vhdl.Nodes_GC is
 

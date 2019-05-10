@@ -19,6 +19,7 @@
 with Tables;
 with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
+with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 with PSL.CSE; use PSL.CSE;
 with PSL.QM;

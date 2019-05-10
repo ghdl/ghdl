@@ -18,6 +18,7 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Tokens;
+with PSL.Types;
 
 package Errorout is
    Option_Error: exception;
@@ -163,7 +164,7 @@ package Errorout is
    function "+" (V : String8_Len_Type) return Earg_Type;
 
    --  Convert location.
-   function "+" (L : PSL_Node) return Location_Type;
+   function "+" (L : PSL.Types.PSL_Node) return Location_Type;
 
    --  Pass that detected the error.
    type Report_Origin is

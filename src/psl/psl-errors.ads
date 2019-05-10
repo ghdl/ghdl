@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Files_Map;
+with PSL.Types; use PSL.Types;
 
 package PSL.Errors is
    function Image (Loc : Location_Type; Filename : Boolean := True)

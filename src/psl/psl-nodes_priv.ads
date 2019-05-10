@@ -1,5 +1,5 @@
---  Canonicalization pass for PSL.
---  Copyright (C) 2009 Tristan Gingold
+--  Base types for PSL.
+--  Copyright (C) 2019 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -15,12 +15,12 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Types; use Types;
 
-with Vhdl.Nodes; use Vhdl.Nodes;
-with PSL.Types; use PSL.Types;
+package PSL.Nodes_Priv is
+   --  PSL Node.
+   type PSL_Node is new Int32;
 
-package Vhdl.Canon_PSL is
-   --  Version of Canon.Canon_Extract_Sensitivity for PSL nodes.
-   procedure Canon_Extract_Sensitivity
-     (Expr: PSL_Node; Sensitivity_List: Iir_List);
-end Vhdl.Canon_PSL;
+   --  PSL NFA
+   type PSL_NFA is new Int32;
+end PSL.Nodes_Priv;
