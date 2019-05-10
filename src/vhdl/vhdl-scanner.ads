@@ -123,6 +123,9 @@ package Vhdl.Scanner is
    function Get_Token_Offset return Natural;
    function Get_Token_Position return Source_Ptr;
 
+   function Get_Current_Coord return Source_Coord_Type;
+   function Get_Token_Coord return Source_Coord_Type;
+
    --  Return the initial location before the current token (ie before all
    --  the blanks, comments and newlines have been skipped).  Useful for the
    --  location of a missing token.

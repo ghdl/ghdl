@@ -51,7 +51,12 @@ package body Vhdl.Errors is
 
    function "+" (L : Iir) return Location_Type renames Get_Location_Safe;
 
-      procedure Warning_Msg_Sem (Id : Msgid_Warnings;
+   function "+" (L : Iir) return Source_Coord_Type is
+   begin
+      return +Get_Location_Safe (L);
+   end "+";
+
+   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
                               Loc : Location_Type;
                               Msg: String;
                               Args : Earg_Arr := No_Eargs;
@@ -60,7 +65,7 @@ package body Vhdl.Errors is
       if Flags.Flag_Only_Elab_Warnings then
          return;
       end if;
-      Report_Msg (Id, Semantic, Loc, Msg, Args, Cont);
+      Report_Msg (Id, Semantic, +Loc, Msg, Args, Cont);
    end Warning_Msg_Sem;
 
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
@@ -92,9 +97,9 @@ package body Vhdl.Errors is
 
    -- Disp a message during semantic analysis.
    -- LOC is used for location and current token.
-   procedure Error_Msg_Sem (Msg: String; Loc: in Iir) is
+   procedure Error_Msg_Sem (Msg: String; Loc: Iir) is
    begin
-      Report_Msg (Msgid_Error, Semantic, Get_Location_Safe (Loc), Msg);
+      Report_Msg (Msgid_Error, Semantic, +Get_Location_Safe (Loc), Msg);
    end Error_Msg_Sem;
 
    procedure Error_Msg_Sem (Loc: Location_Type;
@@ -102,13 +107,13 @@ package body Vhdl.Errors is
                             Args : Earg_Arr := No_Eargs;
                             Cont : Boolean := False) is
    begin
-      Report_Msg (Msgid_Error, Semantic, Loc, Msg, Args, Cont);
+      Report_Msg (Msgid_Error, Semantic, +Loc, Msg, Args, Cont);
    end Error_Msg_Sem;
 
    procedure Error_Msg_Sem
      (Loc: Location_Type; Msg: String; Arg1 : Earg_Type) is
    begin
-      Report_Msg (Msgid_Error, Semantic, Loc, Msg, (1 => Arg1));
+      Report_Msg (Msgid_Error, Semantic, +Loc, Msg, (1 => Arg1));
    end Error_Msg_Sem;
 
    procedure Error_Msg_Relaxed (Origin : Report_Origin;
@@ -127,7 +132,7 @@ package body Vhdl.Errors is
       else
          Level := Msgid_Error;
       end if;
-      Report_Msg (Level, Origin, Get_Location_Safe (Loc), Msg, Args);
+      Report_Msg (Level, Origin, +Loc, Msg, Args);
    end Error_Msg_Relaxed;
 
    procedure Error_Msg_Sem_Relaxed (Loc : Iir;
@@ -142,7 +147,7 @@ package body Vhdl.Errors is
    procedure Error_Msg_Elab
      (Msg: String; Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Msgid_Error, Elaboration, No_Location, Msg, Args);
+      Report_Msg (Msgid_Error, Elaboration, No_Source_Coord, Msg, Args);
    end Error_Msg_Elab;
 
    procedure Error_Msg_Elab

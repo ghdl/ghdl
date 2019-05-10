@@ -89,13 +89,15 @@ package body Vhdl.Parse is
    -- the message.
    procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type) is
    begin
-      Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg, (1 => Arg1));
+      Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord,
+                  Msg, (1 => Arg1));
    end Error_Msg_Parse;
 
    procedure Error_Msg_Parse
      (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False) is
    begin
-      Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg, Args, Cont);
+      Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord,
+                  Msg, Args, Cont);
    end Error_Msg_Parse;
 
    procedure Error_Msg_Parse (Loc : Location_Type;
@@ -103,7 +105,7 @@ package body Vhdl.Parse is
                               Args : Earg_Arr := No_Eargs;
                               Cont : Boolean := False) is
    begin
-      Report_Msg (Msgid_Error, Errorout.Parse, Loc, Msg, Args, Cont);
+      Report_Msg (Msgid_Error, Errorout.Parse, +Loc, Msg, Args, Cont);
    end Error_Msg_Parse;
 
    procedure Unexpected (Where: String) is

@@ -252,14 +252,14 @@ package body Ghdlmain is
    is
       use Errorout;
    begin
-      Report_Msg (Msgid_Error, Option, No_Location, Msg);
+      Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg);
    end Error;
 
    procedure Warning (Msg : String)
    is
       use Errorout;
    begin
-      Report_Msg (Msgid_Warning, Option, No_Location, Msg);
+      Report_Msg (Msgid_Warning, Option, No_Source_Coord, Msg);
    end Warning;
 
    procedure Main

@@ -49,7 +49,7 @@ package body Libraries is
    --  Report an error message.
    procedure Error_Lib_Msg (Msg : String) is
    begin
-      Report_Msg (Msgid_Error, Library, No_Location, Msg);
+      Report_Msg (Msgid_Error, Library, No_Source_Coord, Msg);
    end Error_Lib_Msg;
 
    --  Initialize paths table.

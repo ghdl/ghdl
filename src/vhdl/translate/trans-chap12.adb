@@ -564,12 +564,12 @@ package body Trans.Chap12 is
       end if;
 
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                      "List of units in the hierarchy design:");
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-            Report_Msg (Msgid_Note, Elaboration, No_Location,
+            Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                         " %n", (1 => +Lib_Unit));
          end loop;
       end if;
@@ -689,12 +689,12 @@ package body Trans.Chap12 is
 
       --  Disp list of files needed.
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                      "List of units not used:");
          for I in Last_Design_Unit + 1 .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-            Report_Msg (Msgid_Note, Elaboration, No_Location,
+            Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                         " %n", (1 => +Lib_Unit));
          end loop;
       end if;

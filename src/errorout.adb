@@ -16,11 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Vhdl.Scanner;
 with Name_Table;
 with Files_Map; use Files_Map;
 with Flags; use Flags;
-with PSL.Nodes;
 with Str_Table;
 
 with Vhdl.Errors; use Vhdl.Errors;
@@ -127,21 +125,18 @@ package body Errorout is
       return (Kind => Earg_String8, Val_Str8 => V);
    end "+";
 
-   function "+" (L : PSL.Types.PSL_Node) return Location_Type
+   function "+" (L : Location_Type) return Source_Coord_Type
    is
-      use PSL.Types;
-      use PSL.Nodes;
+      Res : Source_Coord_Type;
    begin
-      if L = Null_Node then
-         return No_Location;
-      else
-         return PSL.Nodes.Get_Location (L);
-      end if;
+      Files_Map.Location_To_Coord
+        (L, Res.File, Res.Line_Pos, Res.Line, Res.Offset);
+      return Res;
    end "+";
 
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
-                         Loc : Location_Type;
+                         Loc : Source_Coord_Type;
                          Msg : String;
                          Args : Earg_Arr := No_Eargs;
                          Cont : Boolean := False)
@@ -159,13 +154,7 @@ package body Errorout is
          Coord_To_Position (File, Line_Pos, Offset, Name, Col);
       end Location_To_Position;
 
-      File : Source_File_Entry;
-      Line : Natural;
       New_Id : Msgid_Type;
-      Offset : Natural;
-      Loc_Length : Natural;
-      Line_Pos : Source_Ptr;
-      pragma Unreferenced (Line_Pos);
    begin
       --  Discard warnings that aren't enabled.
       if Id in Msgid_Warnings and then not Is_Warning_Enabled (Id) then
@@ -190,45 +179,8 @@ package body Errorout is
          end if;
       end if;
 
-      --  Set error location.
-      File := No_Source_File_Entry;
-      Line := 0;
-      Offset := 0;
-      Loc_Length := 0;
-
-      case Origin is
-         when Option
-           | Library =>
-            pragma Assert (Loc = No_Location);
-            null;
-         when others =>
-            if Loc /= No_Location then
-               Location_To_Coord (Loc, File, Line_Pos, Line, Offset);
-            else
-               case Origin is
-                  when Option
-                    | Library =>
-                     raise Program_Error;
-                  when Elaboration =>
-                     null;
-                  when Scan =>
-                     File := Vhdl.Scanner.Get_Current_Source_File;
-                     Line := Vhdl.Scanner.Get_Current_Line;
-                     Offset := Vhdl.Scanner.Get_Current_Offset;
-                     Loc_Length := 1;
-                  when Parse =>
-                     File := Vhdl.Scanner.Get_Current_Source_File;
-                     Line := Vhdl.Scanner.Get_Current_Line;
-                     Offset := Vhdl.Scanner.Get_Token_Offset;
-                     Loc_Length := Vhdl.Scanner.Get_Current_Offset - Offset;
-                  when Semantic =>
-                     null;
-               end case;
-            end if;
-      end case;
-
       Report_Handler.Error_Start
-        (Err => (Origin, New_Id, Cont, File, Line, Offset, Loc_Length));
+        (Err => (Origin, New_Id, Cont, Loc.File, Loc.Line, Loc.Offset, 0));
 
       --  Display message.
       declare
@@ -329,7 +281,7 @@ package body Errorout is
 
                         --  Do not print the filename if in the same file as
                         --  the error location.
-                        if Arg_File = File then
+                        if Arg_File = Loc.File then
                            Report_Handler.Message ("line ");
                         else
                            Report_Handler.Message
@@ -400,7 +352,7 @@ package body Errorout is
 
    procedure Error_Msg_Option_NR (Msg: String) is
    begin
-      Report_Msg (Msgid_Error, Option, No_Location, Msg);
+      Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg);
    end Error_Msg_Option_NR;
 
    procedure Error_Msg_Option (Msg: String) is
@@ -411,7 +363,7 @@ package body Errorout is
 
    procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String) is
    begin
-      Report_Msg (Id, Option, No_Location, Msg);
+      Report_Msg (Id, Option, No_Source_Coord, Msg);
    end Warning_Msg_Option;
 
    function Make_Earg_Vhdl_Node (V : Iir) return Earg_Type is

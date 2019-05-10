@@ -34,6 +34,7 @@ package Vhdl.Errors is
 
    --  Convert location.
    function "+" (L : Iir) return Location_Type;
+   function "+" (L : Iir) return Source_Coord_Type;
 
       -- Disp a message during semantic analysis.
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;

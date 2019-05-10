@@ -1092,7 +1092,7 @@ package body Ghdlprint is
             loop
                Scan;
                if Ref_Tokens.Table (Tok_Idx) /= Current_Token then
-                  Report_Msg (Msgid_Error, Errorout.Parse, No_Location,
+                  Report_Msg (Msgid_Error, Errorout.Parse, No_Source_Coord,
                               "token mismatch");
                   exit;
                end if;

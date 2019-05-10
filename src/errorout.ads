@@ -18,7 +18,6 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Tokens;
-with PSL.Types;
 
 package Errorout is
    Option_Error: exception;
@@ -164,7 +163,7 @@ package Errorout is
    function "+" (V : String8_Len_Type) return Earg_Type;
 
    --  Convert location.
-   function "+" (L : PSL.Types.PSL_Node) return Location_Type;
+   function "+" (L : Location_Type) return Source_Coord_Type;
 
    --  Pass that detected the error.
    type Report_Origin is
@@ -205,7 +204,7 @@ package Errorout is
    --  name is displayed.
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
-                         Loc : Location_Type;
+                         Loc : Source_Coord_Type;
                          Msg : String;
                          Args : Earg_Arr := No_Eargs;
                          Cont : Boolean := False);

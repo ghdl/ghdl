@@ -20,6 +20,8 @@ with Files_Map;
 with PSL.Types; use PSL.Types;
 
 package PSL.Errors is
+   function "+" (L : PSL.Types.PSL_Node) return Location_Type;
+
    function Image (Loc : Location_Type; Filename : Boolean := True)
                   return String renames Files_Map.Image;
 

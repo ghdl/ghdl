@@ -30,16 +30,17 @@ package body Vhdl.Parse_Psl is
 
    procedure Error_Msg_Parse (Msg: String) is
    begin
-      Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg);
+      Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord, Msg);
    end Error_Msg_Parse;
 
    procedure Error_Msg_Parse
      (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Msgid_Error, Errorout.Parse, Loc, Msg, Args);
+      Report_Msg (Msgid_Error, Errorout.Parse, +Loc, Msg, Args);
    end Error_Msg_Parse;
 
-   function Create_Node_Loc (K : Nkind) return Node is
+   function Create_Node_Loc (K : Nkind) return Node
+   is
       Res : Node;
    begin
       Res := PSL.Nodes.Create_Node (K);
@@ -47,7 +48,8 @@ package body Vhdl.Parse_Psl is
       return Res;
    end Create_Node_Loc;
 
-   function Parse_Number return Node is
+   function Parse_Number return Node
+   is
       Res : Node;
    begin
       if Current_Token = Tok_Integer then

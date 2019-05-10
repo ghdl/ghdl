@@ -130,6 +130,9 @@ package Types is
       Offset : Natural;
    end record;
 
+   No_Source_Coord : constant Source_Coord_Type :=
+     (No_Source_File_Entry, Source_Ptr_Bad, 0, 0);
+
    --  Indentation.
    --  This is used by all packages that display vhdl code or informations.
    Indentation : constant := 2;

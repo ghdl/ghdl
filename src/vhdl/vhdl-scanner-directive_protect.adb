@@ -32,7 +32,7 @@ package body Directive_Protect is
 
       Scan_Identifier (False);
       if Current_Token /= Tok_Identifier then
-         Error_Msg_Scan (Get_Token_Location, "keyword must be an identifier");
+         Error_Msg_Scan (+Get_Token_Location, "keyword must be an identifier");
          return False;
       end if;
 

@@ -396,7 +396,7 @@ package body Simul.Elaboration is
         Create_Instance_Value (Instance);
 
       if Trace_Elaboration then
-         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Source_Coord,
                      "elaborating %n", (1 => +Decl));
       end if;
 
@@ -447,7 +447,7 @@ package body Simul.Elaboration is
         Block.Objects (Package_Info.Pkg_Slot).Instance;
    begin
       if Trace_Elaboration then
-         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Source_Coord,
                      "elaborating %n", (1 => +Decl));
       end if;
 

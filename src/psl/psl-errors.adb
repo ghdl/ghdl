@@ -20,6 +20,17 @@ with Errorout; use Errorout;
 with PSL.Nodes;
 
 package body PSL.Errors is
+   function "+" (L : PSL_Node) return Location_Type
+   is
+      use PSL.Nodes;
+   begin
+      if L = Null_Node then
+         return No_Location;
+      else
+         return PSL.Nodes.Get_Location (L);
+      end if;
+   end "+";
+
    procedure Error_Kind (Msg : String; N : PSL_Node) is
    begin
       Log (Msg);
@@ -30,6 +41,6 @@ package body PSL.Errors is
 
    procedure Error_Msg_Sem (Msg: String; Loc : PSL_Node) is
    begin
-      Report_Msg (Msgid_Error, Semantic, +Loc, Msg, No_Eargs, False);
+      Report_Msg (Msgid_Error, Semantic, +(+Loc), Msg, No_Eargs, False);
    end Error_Msg_Sem;
 end PSL.Errors;

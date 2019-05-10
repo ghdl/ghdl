@@ -163,38 +163,6 @@ package body Vhdl.Scanner is
    end record;
    pragma Suppress_Initialization (Scan_Context);
 
-   -- Disp a message during scan.
-   -- The current location is automatically displayed before the message.
-   -- Disp a message during scan.
-   procedure Error_Msg_Scan (Msg: String) is
-   begin
-      Report_Msg (Msgid_Error, Scan, No_Location, Msg);
-   end Error_Msg_Scan;
-
-   procedure Error_Msg_Scan (Loc : Location_Type; Msg: String) is
-   begin
-      Report_Msg (Msgid_Error, Scan, Loc, Msg);
-   end Error_Msg_Scan;
-
-   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type) is
-   begin
-      Report_Msg (Msgid_Error, Scan, No_Location, Msg, (1 => Arg1));
-   end Error_Msg_Scan;
-
-   -- Disp a message during scan.
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String) is
-   begin
-      Report_Msg (Id, Scan, No_Location, Msg);
-   end Warning_Msg_Scan;
-
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
-                               Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False) is
-   begin
-      Report_Msg (Id, Scan, No_Location, Msg, (1 => Arg1), Cont);
-   end Warning_Msg_Scan;
-
    -- The current context.
    -- Default value is an invalid context.
    Current_Context: Scan_Context := (Source => null,
@@ -214,6 +182,55 @@ package body Vhdl.Scanner is
                                      Str_Len => 0,
                                      Lit_Int64 => 0,
                                      Lit_Fp64 => 0.0);
+
+   function Get_Current_Coord return Source_Coord_Type is
+   begin
+      return (File => Get_Current_Source_File,
+              Line_Pos => Current_Context.Line_Pos,
+              Line => Get_Current_Line,
+              Offset => Get_Current_Offset);
+   end Get_Current_Coord;
+
+   function Get_Token_Coord return Source_Coord_Type is
+   begin
+      return (File => Get_Current_Source_File,
+              Line_Pos => Current_Context.Line_Pos,
+              Line => Get_Current_Line,
+              Offset => Get_Token_Offset);
+   end Get_Token_Coord;
+
+   -- Disp a message during scan.
+   -- The current location is automatically displayed before the message.
+   -- Disp a message during scan.
+   procedure Error_Msg_Scan (Msg: String) is
+   begin
+      Report_Msg (Msgid_Error, Scan, Get_Current_Coord, Msg);
+   end Error_Msg_Scan;
+
+   procedure Error_Msg_Scan (Loc : Source_Coord_Type; Msg: String) is
+   begin
+      Report_Msg (Msgid_Error, Scan, Loc, Msg);
+   end Error_Msg_Scan;
+
+   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type) is
+   begin
+      Report_Msg (Msgid_Error, Scan, Get_Current_Coord, Msg, (1 => Arg1));
+   end Error_Msg_Scan;
+
+   -- Disp a message during scan.
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String) is
+   begin
+      Report_Msg (Id, Scan, Get_Current_Coord, Msg);
+   end Warning_Msg_Scan;
+
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
+                               Msg: String;
+                               Arg1 : Earg_Type;
+                               Cont : Boolean := False) is
+   begin
+      Report_Msg (Id, Scan, Get_Current_Coord, Msg, (1 => Arg1), Cont);
+   end Warning_Msg_Scan;
+
 
    Source: File_Buffer_Acc renames Current_Context.Source;
    Pos: Source_Ptr renames Current_Context.Pos;
@@ -477,7 +494,7 @@ package body Vhdl.Scanner is
                   --  as the remainder operator, instead of 'rem'.  This will
                   --  improve the error message.
                   Error_Msg_Scan
-                    (Get_Token_Location,
+                    (+Get_Token_Location,
                      "'%%' is not a vhdl operator, use 'rem'");
                   Current_Token := Tok_Rem;
                   Pos := Current_Context.Token_Pos + 1;
@@ -624,7 +641,7 @@ package body Vhdl.Scanner is
                else
                   if Mark = '%' then
                      Error_Msg_Scan
-                       (File_Pos_To_Location
+                       (+File_Pos_To_Location
                           (Current_Context.Source_File, Orig_Pos),
                         "'%%' is not a vhdl operator, use 'rem'");
                      Current_Token := Tok_Rem;
@@ -1894,7 +1911,7 @@ package body Vhdl.Scanner is
                         if Pos >= Current_Context.File_Len then
                            --  Point at the start of the comment.
                            Error_Msg_Scan
-                             (Get_Token_Location,
+                             (+Get_Token_Location,
                               "block comment not terminated at end of file");
                            exit;
                         end if;
@@ -1952,7 +1969,7 @@ package body Vhdl.Scanner is
                if Source (Pos + 1) = '=' then
                   --  != is not allowed in VHDL, but be friendly with C users.
                   Error_Msg_Scan
-                    (Get_Token_Location, "Use '/=' for inequality in vhdl");
+                    (+Get_Token_Location, "Use '/=' for inequality in vhdl");
                   Current_Token := Tok_Not_Equal;
                   Pos := Pos + 1;
                else

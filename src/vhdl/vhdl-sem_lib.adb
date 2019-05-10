@@ -34,7 +34,7 @@ with Vhdl.Nodes_GC;
 package body Vhdl.Sem_Lib is
    procedure Error_Lib_Msg (Msg : String; Arg1 : Earg_Type) is
    begin
-      Report_Msg (Msgid_Error, Library, No_Location, Msg, (1 => Arg1));
+      Report_Msg (Msgid_Error, Library, No_Source_Coord, Msg, (1 => Arg1));
    end Error_Lib_Msg;
 
    function Load_File (File : Source_File_Entry) return Iir_Design_File
