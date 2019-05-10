@@ -23,7 +23,6 @@
 with GNAT.OS_Lib;
 with Vhdl.Std_Package;
 with Flags; use Flags;
-with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Name_Table;
@@ -33,6 +32,7 @@ with Vhdl.Tokens;
 with PSL.Nodes;
 with PSL.Prints;
 with PSL.NFAs;
+with PSL.Errors;
 
 package body Vhdl.Disp_Vhdl is
 
@@ -1766,7 +1766,7 @@ package body Vhdl.Disp_Vhdl is
             Put_Line (";");
             Disp_PSL_NFA (Get_PSL_NFA (Stmt));
          when others =>
-            Error_Kind ("disp_psl_declaration", Decl);
+            PSL.Errors.Error_Kind ("disp_psl_declaration", Decl);
       end case;
    end Disp_Psl_Declaration;
 

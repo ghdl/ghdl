@@ -53,7 +53,6 @@ package Vhdl.Errors is
                             Cont : Boolean := False);
    procedure Error_Msg_Sem
      (Loc: Location_Type; Msg: String; Arg1 : Earg_Type);
-   procedure Error_Msg_Sem_1 (Msg: String; Loc : PSL_Node);
 
    --  Like Error_Msg_Sem, but a warning if -frelaxed or --std=93c.
    procedure Error_Msg_Sem_Relaxed (Loc : Iir;

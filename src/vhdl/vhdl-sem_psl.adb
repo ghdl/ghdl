@@ -20,6 +20,7 @@ with Types; use Types;
 with PSL.Nodes; use PSL.Nodes;
 with PSL.Subsets;
 with PSL.Hash;
+with PSL.Errors; use PSL.Errors;
 
 with Vhdl.Sem_Expr;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;

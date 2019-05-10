@@ -15,7 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Errorout; use Errorout;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Types; use Types;
@@ -30,6 +30,7 @@ with PSL.Rewrites;
 with PSL.Build;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
+with PSL.Errors; use PSL.Errors;
 with Vhdl.Canon_PSL;
 
 package body Vhdl.Canon is

@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Logging; use Logging;
 with Vhdl.Scanner;
 with Name_Table;
 with Files_Map; use Files_Map;
@@ -27,14 +26,6 @@ with Str_Table;
 with Vhdl.Errors; use Vhdl.Errors;
 
 package body Errorout is
-   procedure Error_Kind (Msg : String; N : PSL_Node) is
-   begin
-      Log (Msg);
-      Log (": cannot handle ");
-      Log_Line (PSL.Nodes.Nkind'Image (PSL.Nodes.Get_Kind (N)));
-      raise Internal_Error;
-   end Error_Kind;
-
    function Natural_Image (Val: Natural) return String
    is
       Str: constant String := Natural'Image (Val);

@@ -23,10 +23,6 @@ package Errorout is
    Option_Error: exception;
    Compilation_Error: exception;
 
-   --  This kind can't be handled.
-   procedure Error_Kind (Msg : String; N : PSL_Node);
-   pragma No_Return (Error_Kind);
-
    --  The number of errors (ie, number of calls to error_msg*).
    Nbr_Errors : Natural := 0;
 

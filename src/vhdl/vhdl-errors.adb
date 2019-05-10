@@ -111,11 +111,6 @@ package body Vhdl.Errors is
       Report_Msg (Msgid_Error, Semantic, Loc, Msg, (1 => Arg1));
    end Error_Msg_Sem;
 
-   procedure Error_Msg_Sem_1 (Msg: String; Loc : PSL_Node) is
-   begin
-      Error_Msg_Sem (+Loc, Msg);
-   end Error_Msg_Sem_1;
-
    procedure Error_Msg_Relaxed (Origin : Report_Origin;
                                 Id : Msgid_Warnings;
                                 Msg : String;

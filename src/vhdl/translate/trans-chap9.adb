@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 
 with Vhdl.Utils; use Vhdl.Utils;
-with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Flags;
@@ -28,6 +27,7 @@ with Vhdl.Nodes_Meta;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
+with PSL.Errors; use PSL.Errors;
 with Vhdl.Ieee.Std_Logic_1164;
 with Trans.Chap1;
 with Trans.Chap3;
