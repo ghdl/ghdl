@@ -158,8 +158,8 @@ package body Vhdl.Scanner is
       Str_Id : String8_Id;
       Str_Len : Nat32;
       Identifier: Name_Id;
-      Int64 : Iir_Int64;
-      Fp64 : Iir_Fp64;
+      Lit_Int64 : Int64;
+      Lit_Fp64 : Fp64;
    end record;
    pragma Suppress_Initialization (Scan_Context);
 
@@ -212,8 +212,8 @@ package body Vhdl.Scanner is
                                      Bit_Str_Sign => ' ',
                                      Str_Id => Null_String8,
                                      Str_Len => 0,
-                                     Int64 => 0,
-                                     Fp64 => 0.0);
+                                     Lit_Int64 => 0,
+                                     Lit_Fp64 => 0.0);
 
    Source: File_Buffer_Acc renames Current_Context.Source;
    Pos: Source_Ptr renames Current_Context.Pos;
@@ -259,14 +259,14 @@ package body Vhdl.Scanner is
       return Current_Context.Bit_Str_Sign;
    end Get_Bit_String_Sign;
 
-   function Current_Iir_Int64 return Iir_Int64 is
+   function Current_Iir_Int64 return Int64 is
    begin
-      return Current_Context.Int64;
+      return Current_Context.Lit_Int64;
    end Current_Iir_Int64;
 
-   function Current_Iir_Fp64 return Iir_Fp64 is
+   function Current_Iir_Fp64 return Fp64 is
    begin
-      return Current_Context.Fp64;
+      return Current_Context.Lit_Fp64;
    end Current_Iir_Fp64;
 
    function Get_Current_Source_File return Source_File_Entry is
@@ -333,8 +333,8 @@ package body Vhdl.Scanner is
                           Bit_Str_Sign => ' ',
                           Str_Id => Null_String8,
                           Str_Len => 0,
-                          Int64 => -1,
-                          Fp64 => 0.0);
+                          Lit_Int64 => -1,
+                          Lit_Fp64 => 0.0);
       Current_Token := Tok_Invalid;
    end Set_File;
 

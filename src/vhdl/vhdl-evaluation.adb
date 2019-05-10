@@ -34,11 +34,11 @@ package body Vhdl.Evaluation is
    function Eval_Expr_Keep_Orig (Expr : Iir; Force : Boolean) return Iir;
 
    function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir;
-   function Eval_Integer_Image (Val : Iir_Int64; Orig : Iir) return Iir;
+   function Eval_Integer_Image (Val : Int64; Orig : Iir) return Iir;
 
    function Eval_Scalar_Compare (Left, Right : Iir) return Compare_Type;
 
-   function Get_Physical_Value (Expr : Iir) return Iir_Int64
+   function Get_Physical_Value (Expr : Iir) return Int64
    is
       pragma Unsuppress (Overflow_Check);
       Kind : constant Iir_Kind := Get_Kind (Expr);
@@ -55,8 +55,7 @@ package body Vhdl.Evaluation is
                when Iir_Kind_Physical_Int_Literal =>
                   return Get_Value (Expr) * Get_Value (Unit);
                when Iir_Kind_Physical_Fp_Literal =>
-                  return Iir_Int64
-                    (Get_Fp_Value (Expr) * Iir_Fp64 (Get_Value (Unit)));
+                  return Int64 (Get_Fp_Value (Expr) * Fp64 (Get_Value (Unit)));
                when others =>
                   raise Program_Error;
             end case;
@@ -67,7 +66,7 @@ package body Vhdl.Evaluation is
       end case;
    end Get_Physical_Value;
 
-   function Build_Integer (Val : Iir_Int64; Origin : Iir)
+   function Build_Integer (Val : Int64; Origin : Iir)
      return Iir_Integer_Literal
    is
       Res : Iir_Integer_Literal;
@@ -81,7 +80,7 @@ package body Vhdl.Evaluation is
       return Res;
    end Build_Integer;
 
-   function Build_Floating (Val : Iir_Fp64; Origin : Iir)
+   function Build_Floating (Val : Fp64; Origin : Iir)
      return Iir_Floating_Point_Literal
    is
       Res : Iir_Floating_Point_Literal;
@@ -111,7 +110,7 @@ package body Vhdl.Evaluation is
       return Res;
    end Build_Enumeration_Constant;
 
-   function Build_Physical (Val : Iir_Int64; Origin : Iir)
+   function Build_Physical (Val : Int64; Origin : Iir)
      return Iir_Physical_Int_Literal
    is
       Res : Iir_Physical_Int_Literal;
@@ -128,7 +127,7 @@ package body Vhdl.Evaluation is
       return Res;
    end Build_Physical;
 
-   function Build_Discrete (Val : Iir_Int64; Origin : Iir) return Iir is
+   function Build_Discrete (Val : Int64; Origin : Iir) return Iir is
    begin
       case Get_Kind (Get_Type (Origin)) is
          when Iir_Kind_Enumeration_Type_Definition
@@ -309,9 +308,9 @@ package body Vhdl.Evaluation is
       case Get_Kind (Orig_Type) is
          when Iir_Kind_Integer_Type_Definition =>
             if Is_Pos then
-               return Build_Integer (Iir_Int64'Last, Origin);
+               return Build_Integer (Int64'Last, Origin);
             else
-               return Build_Integer (Iir_Int64'First, Origin);
+               return Build_Integer (Int64'First, Origin);
             end if;
          when others =>
             Error_Kind ("build_extreme_value", Orig_Type);
@@ -322,12 +321,12 @@ package body Vhdl.Evaluation is
    --  left_limit and direction are set.
    --  Type of A_RANGE must have a range_constraint.
    --  Set the right limit of A_RANGE from LEN.
-   procedure Set_Right_Limit_By_Length (A_Range : Iir; Len : Iir_Int64)
+   procedure Set_Right_Limit_By_Length (A_Range : Iir; Len : Int64)
    is
       A_Type : constant Iir := Get_Type (A_Range);
       Left : constant Iir := Get_Left_Limit (A_Range);
       Right : Iir;
-      Pos : Iir_Int64;
+      Pos : Int64;
    begin
       pragma Assert (Get_Expr_Staticness (A_Range) = Locally);
 
@@ -358,7 +357,7 @@ package body Vhdl.Evaluation is
    --  * the right bound
    --  The left bound *IS NOT* created, but points to the left bound of A_TYPE.
    function Create_Range_By_Length
-     (A_Type : Iir; Len : Iir_Int64; Loc : Location_Type)
+     (A_Type : Iir; Len : Int64; Loc : Location_Type)
      return Iir
    is
       Index_Constraint : Iir;
@@ -405,7 +404,7 @@ package body Vhdl.Evaluation is
    --  Create a subtype of A_TYPE whose length is LEN.
    --  This is used to create subtypes for strings or aggregates.
    function Create_Range_Subtype_By_Length
-     (A_Type : Iir; Len : Iir_Int64; Loc : Location_Type)
+     (A_Type : Iir; Len : Int64; Loc : Location_Type)
      return Iir
    is
       Res : Iir;
@@ -432,7 +431,7 @@ package body Vhdl.Evaluation is
    end Create_Unidim_Array_From_Index;
 
    function Create_Unidim_Array_By_Length
-     (Base_Type : Iir; Len : Iir_Int64; Loc : Iir)
+     (Base_Type : Iir; Len : Int64; Loc : Iir)
      return Iir_Array_Subtype_Definition
    is
       Index_Type : constant Iir := Get_Index_Type (Base_Type, 0);
@@ -490,8 +489,8 @@ package body Vhdl.Evaluation is
    --  Assume no overflow.
    function Eval_Pos_In_Range (Rng : Iir; Expr : Iir) return Iir_Index32
    is
-      Left_Pos : constant Iir_Int64 := Eval_Pos (Get_Left_Limit (Rng));
-      Pos : constant Iir_Int64 := Eval_Pos (Expr);
+      Left_Pos : constant Int64 := Eval_Pos (Get_Left_Limit (Rng));
+      Pos : constant Int64 := Eval_Pos (Expr);
    begin
       case Get_Direction (Rng) is
          when Iir_To =>
@@ -528,7 +527,7 @@ package body Vhdl.Evaluation is
                declare
                   Rng : constant Iir := Get_Choice_Range (Assoc);
                   Rng_Start : Iir;
-                  Rng_Len : Iir_Int64;
+                  Rng_Len : Int64;
                begin
                   if Get_Direction (Rng) = Get_Direction (Choice_Range) then
                      Rng_Start := Get_Left_Limit (Rng);
@@ -564,7 +563,7 @@ package body Vhdl.Evaluation is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
       Index_Range : constant Iir := Eval_Static_Range (Index_Type);
-      Len : constant Iir_Int64 := Eval_Discrete_Range_Length (Index_Range);
+      Len : constant Int64 := Eval_Discrete_Range_Length (Index_Range);
       Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
       Vect : Iir_Array (0 .. Integer (Len - 1));
       List : Iir_Flist;
@@ -905,7 +904,7 @@ package body Vhdl.Evaluation is
      (Left, Right : Iir; Origin : Iir; Func : Iir_Predefined_Shift_Functions)
      return Iir
    is
-      Count : constant Iir_Int64 := Get_Value (Right);
+      Count : constant Int64 := Get_Value (Right);
       Arr_List : constant Iir_Flist := Get_Simple_Aggregate_List (Left);
       Len : constant Natural := Get_Nbr_Elements (Arr_List);
       Cnt : Natural;
@@ -1118,7 +1117,7 @@ package body Vhdl.Evaluation is
                Set_Left_Limit (A_Range, Get_Left_Limit (Left_Range));
                Set_Direction (A_Range, Get_Direction (Left_Range));
                Location_Copy (A_Range, Orig);
-               Set_Right_Limit_By_Length (A_Range, Iir_Int64 (Res_Len));
+               Set_Right_Limit_By_Length (A_Range, Int64 (Res_Len));
                Index_Type := Create_Range_Subtype_From_Type
                  (Left_Index, Get_Location (Orig));
                Set_Range_Constraint (Index_Type, A_Range);
@@ -1133,7 +1132,7 @@ package body Vhdl.Evaluation is
             --  concatenation is the direction of S, and the left bound of the
             --  result is S'LEFT.
             Res_Type := Create_Unidim_Array_By_Length
-              (Origin_Type, Iir_Int64 (Res_Len), Orig);
+              (Origin_Type, Int64 (Res_Len), Orig);
          end if;
       end if;
       --  FIXME: this is not necessarily a string, it may be an aggregate if
@@ -1166,8 +1165,8 @@ package body Vhdl.Evaluation is
             end;
          when Iir_Kind_Physical_Type_Definition =>
             declare
-               L_Val : constant Iir_Int64 := Get_Physical_Value (Left);
-               R_Val : constant Iir_Int64 := Get_Physical_Value (Right);
+               L_Val : constant Int64 := Get_Physical_Value (Left);
+               R_Val : constant Int64 := Get_Physical_Value (Right);
             begin
                if L_Val = R_Val then
                   return Compare_Eq;
@@ -1181,8 +1180,8 @@ package body Vhdl.Evaluation is
             end;
          when Iir_Kind_Integer_Type_Definition =>
             declare
-               L_Val : constant Iir_Int64 := Get_Value (Left);
-               R_Val : constant Iir_Int64 := Get_Value (Right);
+               L_Val : constant Int64 := Get_Value (Left);
+               R_Val : constant Int64 := Get_Value (Right);
             begin
                if L_Val = R_Val then
                   return Compare_Eq;
@@ -1196,8 +1195,8 @@ package body Vhdl.Evaluation is
             end;
          when Iir_Kind_Floating_Type_Definition =>
             declare
-               L_Val : constant Iir_Fp64 := Get_Fp_Value (Left);
-               R_Val : constant Iir_Fp64 := Get_Fp_Value (Right);
+               L_Val : constant Fp64 := Get_Fp_Value (Left);
+               R_Val : constant Fp64 := Get_Fp_Value (Right);
             begin
                if L_Val = R_Val then
                   return Compare_Eq;
@@ -1395,9 +1394,9 @@ package body Vhdl.Evaluation is
             end if;
          when Iir_Predefined_Floating_Exp =>
             declare
-               Exp : Iir_Int64;
-               Res : Iir_Fp64;
-               Val : Iir_Fp64;
+               Exp : Int64;
+               Res : Fp64;
+               Val : Fp64;
             begin
                Res := 1.0;
                Val := Get_Fp_Value (Left);
@@ -1478,25 +1477,25 @@ package body Vhdl.Evaluation is
          when Iir_Predefined_Real_Physical_Mul =>
             --  FIXME: overflow??
             return Build_Physical
-              (Iir_Int64 (Get_Fp_Value (Left)
-                          * Iir_Fp64 (Get_Physical_Value (Right))), Orig);
+              (Int64 (Get_Fp_Value (Left)
+                          * Fp64 (Get_Physical_Value (Right))), Orig);
          when Iir_Predefined_Physical_Real_Mul =>
             --  FIXME: overflow??
             return Build_Physical
-              (Iir_Int64 (Iir_Fp64 (Get_Physical_Value (Left))
+              (Int64 (Fp64 (Get_Physical_Value (Left))
                           * Get_Fp_Value (Right)), Orig);
          when Iir_Predefined_Physical_Real_Div =>
             --  FIXME: overflow??
             return Build_Physical
-              (Iir_Int64 (Iir_Fp64 (Get_Physical_Value (Left))
+              (Int64 (Fp64 (Get_Physical_Value (Left))
                           / Get_Fp_Value (Right)), Orig);
 
          when Iir_Predefined_Physical_Minimum =>
-            return Build_Physical (Iir_Int64'Min (Get_Physical_Value (Left),
+            return Build_Physical (Int64'Min (Get_Physical_Value (Left),
                                                   Get_Physical_Value (Right)),
                                    Orig);
          when Iir_Predefined_Physical_Maximum =>
-            return Build_Physical (Iir_Int64'Max (Get_Physical_Value (Left),
+            return Build_Physical (Int64'Max (Get_Physical_Value (Left),
                                                   Get_Physical_Value (Right)),
                                    Orig);
 
@@ -1578,13 +1577,13 @@ package body Vhdl.Evaluation is
 
          when Iir_Predefined_Universal_R_I_Mul =>
             return Build_Floating
-              (Get_Fp_Value (Left) * Iir_Fp64 (Get_Value (Right)), Orig);
+              (Get_Fp_Value (Left) * Fp64 (Get_Value (Right)), Orig);
          when Iir_Predefined_Universal_I_R_Mul =>
             return Build_Floating
-              (Iir_Fp64 (Get_Value (Left)) * Get_Fp_Value (Right), Orig);
+              (Fp64 (Get_Value (Left)) * Get_Fp_Value (Right), Orig);
          when Iir_Predefined_Universal_R_I_Div =>
             return Build_Floating
-              (Get_Fp_Value (Left) / Iir_Fp64 (Get_Value (Right)), Orig);
+              (Get_Fp_Value (Left) / Fp64 (Get_Value (Right)), Orig);
 
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl
@@ -1777,12 +1776,12 @@ package body Vhdl.Evaluation is
       return Get_Nth_Element (Get_Index_Subtype_List (Prefix_Type), Dim - 1);
    end Eval_Array_Attribute;
 
-   function Eval_Integer_Image (Val : Iir_Int64; Orig : Iir) return Iir
+   function Eval_Integer_Image (Val : Int64; Orig : Iir) return Iir
    is
       use Str_Table;
       Img : String (1 .. 24); --  23 is enough, 24 is rounded.
       L : Natural;
-      V : Iir_Int64;
+      V : Int64;
       Id : String8_Id;
    begin
       V := Val;
@@ -1804,7 +1803,7 @@ package body Vhdl.Evaluation is
       return Build_String (Id, Nat32 (Img'Last - L), Orig);
    end Eval_Integer_Image;
 
-   function Eval_Floating_Image (Val : Iir_Fp64; Orig : Iir) return Iir
+   function Eval_Floating_Image (Val : Fp64; Orig : Iir) return Iir
    is
       use Str_Table;
       Id : String8_Id;
@@ -1827,7 +1826,7 @@ package body Vhdl.Evaluation is
       Res := Build_String (Id, Int32 (P), Orig);
       --  FIXME: this is not correct since the type is *not* constrained.
       Set_Type (Res, Create_Unidim_Array_By_Length
-                (Get_Type (Orig), Iir_Int64 (P), Orig));
+                (Get_Type (Orig), Int64 (P), Orig));
       return Res;
    end Eval_Floating_Image;
 
@@ -1872,7 +1871,7 @@ package body Vhdl.Evaluation is
    function Eval_Physical_Image (Phys, Expr: Iir) return Iir
    is
       --  Reduces to the base unit (e.g. femtoseconds).
-      Value : constant String := Iir_Int64'Image (Get_Physical_Value (Phys));
+      Value : constant String := Int64'Image (Get_Physical_Value (Phys));
       Unit : constant Iir :=
         Get_Primary_Unit (Get_Base_Type (Get_Type (Phys)));
       UnitName : constant String := Image_Identifier (Unit);
@@ -1898,7 +1897,7 @@ package body Vhdl.Evaluation is
    function Build_Physical_Value (Val: String; Phys_Type, Expr: Iir) return Iir
    is
       UnitName : String (Val'range);
-      Mult : Iir_Int64;
+      Mult : Int64;
       Sep : Natural;
       Found_Unit : Boolean := false;
       Found_Real : Boolean := false;
@@ -1939,12 +1938,12 @@ package body Vhdl.Evaluation is
       Mult := Get_Value (Get_Physical_Literal (Unit));
       if Found_Real then
          return Build_Physical
-           (Iir_Int64 (Iir_Fp64'Value (Val (Val'First .. Sep))
-                         * Iir_Fp64 (Mult)),
+           (Int64 (Fp64'Value (Val (Val'First .. Sep))
+                         * Fp64 (Mult)),
             Expr);
       else
          return Build_Physical
-           (Iir_Int64'Value (Val (Val'First .. Sep)) * Mult, Expr);
+           (Int64'Value (Val (Val'First .. Sep)) * Mult, Expr);
       end if;
    end Build_Physical_Value;
 
@@ -2002,17 +2001,17 @@ package body Vhdl.Evaluation is
       return Build_String (Image_Id, Nat32 (Len), Orig);
    end Eval_Enum_To_String;
 
-   function Eval_Incdec (Expr : Iir; N : Iir_Int64; Origin : Iir) return Iir
+   function Eval_Incdec (Expr : Iir; N : Int64; Origin : Iir) return Iir
    is
-      P : Iir_Int64;
+      P : Int64;
    begin
       case Get_Kind (Expr) is
          when Iir_Kind_Integer_Literal =>
             return Build_Integer (Get_Value (Expr) + N, Origin);
          when Iir_Kind_Enumeration_Literal =>
-            P := Iir_Int64 (Get_Enum_Pos (Expr)) + N;
+            P := Int64 (Get_Enum_Pos (Expr)) + N;
             if P < 0
-              or else (P >= Iir_Int64
+              or else (P >= Int64
                          (Get_Nbr_Elements
                             (Get_Enumeration_Literal_List
                                (Get_Base_Type (Get_Type (Expr))))))
@@ -2130,14 +2129,14 @@ package body Vhdl.Evaluation is
                      Res := Build_Integer (Get_Value (Val), Conv);
                   when Iir_Kind_Floating_Type_Definition =>
                      Res := Build_Integer
-                       (Iir_Int64 (Get_Fp_Value (Val)), Conv);
+                       (Int64 (Get_Fp_Value (Val)), Conv);
                   when others =>
                      Error_Kind ("eval_type_conversion(1)", Val_Type);
                end case;
             when Iir_Kind_Floating_Type_Definition =>
                case Get_Kind (Val_Type) is
                   when Iir_Kind_Integer_Type_Definition =>
-                     Res := Build_Floating (Iir_Fp64 (Get_Value (Val)), Conv);
+                     Res := Build_Floating (Fp64 (Get_Value (Val)), Conv);
                   when Iir_Kind_Floating_Type_Definition =>
                      Res := Build_Floating (Get_Fp_Value (Val), Conv);
                   when others =>
@@ -2207,11 +2206,11 @@ package body Vhdl.Evaluation is
       begin
          case Get_Kind (Base_Type) is
             when Iir_Kind_Integer_Type_Definition =>
-               return Build_Discrete (Iir_Int64'Value (Value1), Orig);
+               return Build_Discrete (Int64'Value (Value1), Orig);
             when Iir_Kind_Enumeration_Type_Definition =>
                return Build_Enumeration_Value (Value1, Base_Type, Orig);
             when Iir_Kind_Floating_Type_Definition =>
-               return Build_Floating (Iir_Fp64'value (Value1), Orig);
+               return Build_Floating (Fp64'value (Value1), Orig);
             when Iir_Kind_Physical_Type_Definition =>
                return Build_Physical_Value (Value1, Base_Type, Orig);
             when others =>
@@ -2310,7 +2309,7 @@ package body Vhdl.Evaluation is
       Assoc_Expr : Iir;
       Aggr_Bounds : Iir;
       Aggr : Iir;
-      Cur_Pos : Iir_Int64;
+      Cur_Pos : Int64;
       Res : Iir;
    begin
       Aggr := Prefix;
@@ -2458,8 +2457,8 @@ package body Vhdl.Evaluation is
       Aggr_Bounds : Iir;
       Cur_Off : Iir_Index32;
       Res : Iir;
-      Left_Pos : Iir_Int64;
-      Assoc_Pos : Iir_Int64;
+      Left_Pos : Int64;
+      Assoc_Pos : Int64;
    begin
       Aggr_Bounds := Eval_Static_Range (Get_Nth_Element (Indexes_Type, Dim));
       Left_Pos := Eval_Pos (Eval_Discrete_Range_Left (Aggr_Bounds));
@@ -2502,9 +2501,9 @@ package body Vhdl.Evaluation is
             when Iir_Kind_Choice_By_Range =>
                declare
                   Rng : Iir;
-                  Left : Iir_Int64;
-                  Right : Iir_Int64;
-                  Hi, Lo : Iir_Int64;
+                  Left : Int64;
+                  Right : Int64;
+                  Hi, Lo : Int64;
                   Lo_Off, Hi_Off : Iir_Index32;
                begin
                   Rng := Eval_Range (Get_Choice_Range (Assoc));
@@ -2688,7 +2687,7 @@ package body Vhdl.Evaluation is
             declare
                Expr_Type : constant Iir := Get_Type (Expr);
                Val_Expr : Iir;
-               Val : Iir_Int64;
+               Val : Int64;
             begin
                Val_Expr := Eval_Static_Expr (Get_Parameter (Expr));
                Val := Eval_Pos (Val_Expr);
@@ -2835,7 +2834,7 @@ package body Vhdl.Evaluation is
            | Iir_Kind_Rightof_Attribute =>
             declare
                Rng : Iir;
-               N : Iir_Int64;
+               N : Int64;
                Prefix_Type : constant Iir := Get_Type (Get_Prefix (Expr));
                Res : Iir;
             begin
@@ -2949,7 +2948,7 @@ package body Vhdl.Evaluation is
    is
       Expr_Type : constant Iir := Get_Type (Expr);
       Indexes : Iir_Flist;
-      Len : Iir_Int64;
+      Len : Int64;
    begin
       --  Consider only arrays.  Records are never composite.
       if Get_Kind (Expr_Type) /= Iir_Kind_Array_Subtype_Definition then
@@ -3128,7 +3127,7 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Expr_Check_If_Static;
 
-   function Eval_Int_In_Range (Val : Iir_Int64; Bound : Iir) return Boolean is
+   function Eval_Int_In_Range (Val : Int64; Bound : Iir) return Boolean is
    begin
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
@@ -3152,9 +3151,9 @@ package body Vhdl.Evaluation is
       return True;
    end Eval_Int_In_Range;
 
-   function Eval_Phys_In_Range (Val : Iir_Int64; Bound : Iir) return Boolean
+   function Eval_Phys_In_Range (Val : Int64; Bound : Iir) return Boolean
    is
-      Left, Right : Iir_Int64;
+      Left, Right : Int64;
    begin
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
@@ -3186,7 +3185,7 @@ package body Vhdl.Evaluation is
       return True;
    end Eval_Phys_In_Range;
 
-   function Eval_Fp_In_Range (Val : Iir_Fp64; Bound : Iir) return Boolean is
+   function Eval_Fp_In_Range (Val : Fp64; Bound : Iir) return Boolean is
    begin
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
@@ -3267,7 +3266,7 @@ package body Vhdl.Evaluation is
             --  'val attribute.
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Int_In_Range
-              (Iir_Int64 (Get_Enum_Pos (Val)), Type_Range);
+              (Int64 (Get_Enum_Pos (Val)), Type_Range);
 
          when Iir_Kind_Physical_Subtype_Definition =>
             if Get_Expr_Staticness (Val) /= Locally
@@ -3390,7 +3389,7 @@ package body Vhdl.Evaluation is
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
             declare
-               L, R : Iir_Int64;
+               L, R : Int64;
             begin
                --  Check for null range.
                L := Eval_Pos (Get_Left_Limit (Range_Constraint));
@@ -3410,7 +3409,7 @@ package body Vhdl.Evaluation is
             end;
          when Iir_Kind_Floating_Subtype_Definition =>
             declare
-               L, R : Iir_Fp64;
+               L, R : Fp64;
             begin
                --  Check for null range.
                L := Get_Fp_Value (Get_Left_Limit (Range_Constraint));
@@ -3446,12 +3445,12 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Check_Range;
 
-   function Eval_Discrete_Range_Length (Constraint : Iir) return Iir_Int64
+   function Eval_Discrete_Range_Length (Constraint : Iir) return Int64
    is
       --  We don't want to deal with very large ranges here.
       pragma Suppress (Overflow_Check);
-      Res : Iir_Int64;
-      Left, Right : Iir_Int64;
+      Res : Int64;
+      Left, Right : Int64;
    begin
       Left := Eval_Pos (Get_Left_Limit (Constraint));
       Right := Eval_Pos (Get_Right_Limit (Constraint));
@@ -3474,7 +3473,7 @@ package body Vhdl.Evaluation is
       return Res;
    end Eval_Discrete_Range_Length;
 
-   function Eval_Discrete_Type_Length (Sub_Type : Iir) return Iir_Int64
+   function Eval_Discrete_Type_Length (Sub_Type : Iir) return Int64
    is
    begin
       case Get_Kind (Sub_Type) is
@@ -3490,7 +3489,7 @@ package body Vhdl.Evaluation is
 
    function Eval_Is_Null_Discrete_Range (Rng : Iir) return Boolean
    is
-      Left, Right : Iir_Int64;
+      Left, Right : Int64;
    begin
       Left := Eval_Pos (Get_Left_Limit (Rng));
       Right := Eval_Pos (Get_Right_Limit (Rng));
@@ -3502,13 +3501,13 @@ package body Vhdl.Evaluation is
       end case;
    end Eval_Is_Null_Discrete_Range;
 
-   function Eval_Pos (Expr : Iir) return Iir_Int64 is
+   function Eval_Pos (Expr : Iir) return Int64 is
    begin
       case Get_Kind (Expr) is
          when Iir_Kind_Integer_Literal =>
             return Get_Value (Expr);
          when Iir_Kind_Enumeration_Literal =>
-            return Iir_Int64 (Get_Enum_Pos (Expr));
+            return Int64 (Get_Enum_Pos (Expr));
          when Iir_Kind_Physical_Int_Literal
            | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Unit_Declaration =>

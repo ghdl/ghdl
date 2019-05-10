@@ -1031,7 +1031,7 @@ package body Vhdl.Sem_Names is
       end if;
 
       declare
-         Dim : Iir_Int64;
+         Dim : Int64;
          Indexes_List : constant Iir_Flist :=
            Get_Index_Subtype_List (Prefix_Type);
       begin
@@ -1042,7 +1042,7 @@ package body Vhdl.Sem_Names is
          else
             Dim := Get_Value (Parameter);
          end if;
-         if Dim < 1 or else Dim > Iir_Int64 (Get_Nbr_Elements (Indexes_List))
+         if Dim < 1 or else Dim > Int64 (Get_Nbr_Elements (Indexes_List))
          then
             Error_Msg_Sem (+Attr, "parameter value out of bound");
             Dim := 1;
@@ -3633,7 +3633,7 @@ package body Vhdl.Sem_Names is
                Set_Simple_Name_Identifier (Res, Id);
                Attr_Type := Create_Unidim_Array_By_Length
                  (String_Type_Definition,
-                  Iir_Int64 (Name_Table.Get_Name_Length (Id)),
+                  Int64 (Name_Table.Get_Name_Length (Id)),
                   Attr);
                Set_Simple_Name_Subtype (Res, Attr_Type);
                Set_Expr_Staticness (Res, Locally);

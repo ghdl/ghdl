@@ -59,11 +59,11 @@ package Vhdl.Scanner is
 
    -- When CURRENT_TOKEN is tok_integer, returns the value.
    -- When CURRENT_TOKEN is tok_bit_string, returns the log of the base.
-   function Current_Iir_Int64 return Iir_Int64;
+   function Current_Iir_Int64 return Int64;
    pragma Inline (Current_Iir_Int64);
 
    -- When CURRENT_TOKEN is tok_real, it returns the value.
-   function Current_Iir_Fp64 return Iir_Fp64;
+   function Current_Iir_Fp64 return Fp64;
    pragma Inline (Current_Iir_Fp64);
 
    -- Advances the lexical analyser.  Put a new token into current_token.

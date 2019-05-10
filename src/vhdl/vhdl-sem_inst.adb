@@ -352,8 +352,8 @@ package body Vhdl.Sem_Inst is
             Set_Iir_Mode (Res, F, Get_Iir_Mode (N, F));
          when Type_Iir_Index32 =>
             Set_Iir_Index32 (Res, F, Get_Iir_Index32 (N, F));
-         when Type_Iir_Int64 =>
-            Set_Iir_Int64 (Res, F, Get_Iir_Int64 (N, F));
+         when Type_Int64 =>
+            Set_Int64 (Res, F, Get_Int64 (N, F));
          when Type_Boolean =>
             Set_Boolean (Res, F, Get_Boolean (N, F));
          when Type_Iir_Staticness =>
@@ -377,8 +377,8 @@ package body Vhdl.Sem_Inst is
             Set_Iir_Int32 (Res, F, Get_Iir_Int32 (N, F));
          when Type_Int32 =>
             Set_Int32 (Res, F, Get_Int32 (N, F));
-         when Type_Iir_Fp64 =>
-            Set_Iir_Fp64 (Res, F, Get_Iir_Fp64 (N, F));
+         when Type_Fp64 =>
+            Set_Fp64 (Res, F, Get_Fp64 (N, F));
          when Type_Token_Type =>
             Set_Token_Type (Res, F, Get_Token_Type (N, F));
          when Type_Name_Id =>

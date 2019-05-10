@@ -310,8 +310,8 @@ package body Trans.Chap6 is
       Cond2           : O_Enode;
       Index           : O_Enode;
       Index_Base_Type : Iir;
-      V               : Iir_Int64;
-      B               : Iir_Int64;
+      V               : Int64;
+      B               : Int64;
    begin
       B := Eval_Pos (Get_Left_Limit (Index_Range));
       if Get_Expr_Staticness (Expr) = Locally then
@@ -558,9 +558,9 @@ package body Trans.Chap6 is
             Slice_Index_Type : constant Iir := Get_Index_Type (Slice_Type, 0);
             Slice_Range : constant Iir :=
               Get_Range_Constraint (Slice_Index_Type);
-            Prefix_Left, Slice_Left : Iir_Int64;
-            Off                     : Iir_Int64;
-            Slice_Length            : Iir_Int64;
+            Prefix_Left, Slice_Left : Int64;
+            Off                     : Int64;
+            Slice_Length            : Int64;
          begin
             Prefix_Left := Eval_Pos (Get_Left_Limit (Index_Range));
             Slice_Left := Eval_Pos (Get_Left_Limit (Slice_Range));

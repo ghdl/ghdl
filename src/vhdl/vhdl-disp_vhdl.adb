@@ -3582,9 +3582,9 @@ package body Vhdl.Disp_Vhdl is
       end case;
    end Disp_Vhdl;
 
-   procedure Disp_Int64 (Val: Iir_Int64)
+   procedure Disp_Int64 (Val: Int64)
    is
-      Str: constant String := Iir_Int64'Image (Val);
+      Str: constant String := Int64'Image (Val);
    begin
       if Str (Str'First) = ' ' then
          Put (Str (Str'First + 1 .. Str'Last));
@@ -3604,9 +3604,9 @@ package body Vhdl.Disp_Vhdl is
       end if;
    end Disp_Int32;
 
-   procedure Disp_Fp64 (Val: Iir_Fp64)
+   procedure Disp_Fp64 (Val: Fp64)
    is
-      Str: constant String := Iir_Fp64'Image (Val);
+      Str: constant String := Fp64'Image (Val);
    begin
       if Str (Str'First) = ' ' then
          Put (Str (Str'First + 1 .. Str'Last));

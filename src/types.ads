@@ -29,6 +29,10 @@ package Types is
    type Int32 is range -2**31 .. 2**31 - 1;
    for Int32'Size use 32;
 
+   --  64 bits integer.
+   type Int64 is range -2**63 .. 2**63 - 1;
+   for Int64'Size use 64;
+
    subtype Nat32 is Int32 range 0 .. Int32'Last;
    subtype Pos32 is Nat32 range 1 .. Nat32'Last;
 
@@ -38,18 +42,6 @@ package Types is
    type Uns64 is new Interfaces.Unsigned_64;
 
    type Fp64 is new Interfaces.IEEE_Float_64;
-
-   -- iir_int32 is aimed at containing integer literal values.
-   type Iir_Int32 is new Interfaces.Integer_32;
-
-   -- iir_int64 is aimed at containing units values.
-   type Iir_Int64 is new Interfaces.Integer_64;
-
-   -- iir_fp64 is aimed at containing floating point values.
-   subtype Iir_Fp64 is Fp64;
-
-   --  iir_index32 is aimed at containing an array index.
-   type Iir_Index32 is new Nat32;
 
    --  Useful types.
    type String_Acc is access String;

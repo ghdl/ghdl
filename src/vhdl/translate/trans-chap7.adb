@@ -199,7 +199,7 @@ package body Trans.Chap7 is
                Index_Type : constant Iir :=
                  Get_Index_Type (Aggr_Type, Dim - 1);
                Index_Range : constant Iir := Eval_Static_Range (Index_Type);
-               Len : constant Iir_Int64 :=
+               Len : constant Int64 :=
                  Eval_Discrete_Range_Length (Index_Range);
                Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
                Vect : Iir_Array (0 .. Integer (Len - 1));
@@ -1229,7 +1229,7 @@ package body Trans.Chap7 is
       Expr_Type  : constant Iir := Get_Return_Type (Concat_Imp);
       Index_Type : constant Iir := Get_Index_Type (Expr_Type, 0);
       Info : constant Type_Info_Acc := Get_Info (Expr_Type);
-      Static_Length : Iir_Int64 := 0;
+      Static_Length : Int64 := 0;
       Nbr_Dyn_Expr : Natural := 0;
 
       type Handle_Acc is access procedure (E : Iir);
@@ -2971,7 +2971,7 @@ package body Trans.Chap7 is
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
       --  update VAR_INDEX.  Handles sub-aggregates.
-      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Iir_Int64)
+      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Int64)
       is
          Dest : Mnode;
       begin
@@ -3008,7 +3008,7 @@ package body Trans.Chap7 is
       is
          P  : Natural;
          El : Iir;
-         Assoc_Len : Iir_Int64;
+         Assoc_Len : Int64;
       begin
          --  First, assign positionnal association.
          --  FIXME: count the number of positionnal association and generate
@@ -3072,7 +3072,7 @@ package body Trans.Chap7 is
       procedure Translate_Array_Aggregate_Gen_Named
       is
          El : Iir;
-         Assoc_Len : Iir_Int64;
+         Assoc_Len : Int64;
       begin
          El := Get_Association_Choices_Chain (Aggr);
 
@@ -3525,7 +3525,7 @@ package body Trans.Chap7 is
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       Assoc : Iir;
-      Static_Len : Iir_Int64;
+      Static_Len : Int64;
       Var_Len : O_Dnode;
       Expr_Type : Iir;
       Range_Type : Iir;
@@ -4217,7 +4217,7 @@ package body Trans.Chap7 is
             declare
                Otype : constant O_Tnode :=
                  Get_Ortho_Type (Expr_Type, Mode_Value);
-               Val : Iir_Int64;
+               Val : Int64;
             begin
                --  Get the value now, as it may generate a constraint_error.
                Val := Get_Physical_Value (Expr);

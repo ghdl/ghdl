@@ -114,7 +114,7 @@ package Vhdl.Errors is
    function Disp_Subprg (Subprg : Iir) return String;
 
    --  Print element POS of discrete type DTYPE.
-   function Disp_Discrete (Dtype : Iir; Pos : Iir_Int64) return String;
+   function Disp_Discrete (Dtype : Iir; Pos : Int64) return String;
 
    --  Disp the name of the type of NODE if known.
    --  Disp "unknown" if it is not known.

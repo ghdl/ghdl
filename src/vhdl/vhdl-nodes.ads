@@ -4945,6 +4945,12 @@ package Vhdl.Nodes is
      Procedure_Parameter_Interface_List ..
      Function_Parameter_Interface_List;
 
+   -- iir_int32 is aimed at containing integer literal values.
+   type Iir_Int32 is new Int32;
+
+   --  iir_index32 is aimed at containing an array index.
+   type Iir_Index32 is new Nat32;
+
    ---------------
    -- subranges --
    ---------------
@@ -6007,8 +6013,8 @@ package Vhdl.Nodes is
 
    --  Value of an integer/physical literal.
    --  Field: Field4,Field5 (grp)
-   function Get_Value (Lit : Iir) return Iir_Int64;
-   procedure Set_Value (Lit : Iir; Val : Iir_Int64);
+   function Get_Value (Lit : Iir) return Int64;
+   procedure Set_Value (Lit : Iir; Val : Int64);
 
    --  Position (same as lit_type'pos) of an enumeration literal.
    --  Field: Field5 (pos)
@@ -6021,8 +6027,8 @@ package Vhdl.Nodes is
 
    --  Value of a floating point literal.
    --  Field: Field4,Field5 (grp)
-   function Get_Fp_Value (Lit : Iir) return Iir_Fp64;
-   procedure Set_Fp_Value (Lit : Iir; Val : Iir_Fp64);
+   function Get_Fp_Value (Lit : Iir) return Fp64;
+   procedure Set_Fp_Value (Lit : Iir; Val : Fp64);
 
    --  List of elements of a simple aggregate.
    --  Field: Field4 Ref (uc)

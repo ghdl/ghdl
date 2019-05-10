@@ -43,10 +43,10 @@ package body Vhdl.Nodes_Meta is
       Field_Design_Unit_Source_Pos => Type_Source_Ptr,
       Field_Design_Unit_Source_Line => Type_Int32,
       Field_Design_Unit_Source_Col => Type_Int32,
-      Field_Value => Type_Iir_Int64,
+      Field_Value => Type_Int64,
       Field_Enum_Pos => Type_Iir_Int32,
       Field_Physical_Literal => Type_Iir,
-      Field_Fp_Value => Type_Iir_Fp64,
+      Field_Fp_Value => Type_Fp64,
       Field_Simple_Aggregate_List => Type_Iir_Flist,
       Field_String8_Id => Type_String8_Id,
       Field_String_Length => Type_Int32,
@@ -5060,6 +5060,30 @@ package body Vhdl.Nodes_Meta is
       end case;
    end Set_File_Checksum_Id;
 
+   function Get_Fp64
+      (N : Iir; F : Fields_Enum) return Fp64 is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Fp64);
+      case F is
+         when Field_Fp_Value =>
+            return Get_Fp_Value (N);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Fp64;
+
+   procedure Set_Fp64
+      (N : Iir; F : Fields_Enum; V: Fp64) is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Fp64);
+      case F is
+         when Field_Fp_Value =>
+            Set_Fp_Value (N, V);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Set_Fp64;
+
    function Get_Iir
       (N : Iir; F : Fields_Enum) return Iir is
    begin
@@ -6016,30 +6040,6 @@ package body Vhdl.Nodes_Meta is
       end case;
    end Set_Iir_Flist;
 
-   function Get_Iir_Fp64
-      (N : Iir; F : Fields_Enum) return Iir_Fp64 is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Iir_Fp64);
-      case F is
-         when Field_Fp_Value =>
-            return Get_Fp_Value (N);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Iir_Fp64;
-
-   procedure Set_Iir_Fp64
-      (N : Iir; F : Fields_Enum; V: Iir_Fp64) is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Iir_Fp64);
-      case F is
-         when Field_Fp_Value =>
-            Set_Fp_Value (N, V);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Set_Iir_Fp64;
-
    function Get_Iir_Index32
       (N : Iir; F : Fields_Enum) return Iir_Index32 is
    begin
@@ -6107,30 +6107,6 @@ package body Vhdl.Nodes_Meta is
             raise Internal_Error;
       end case;
    end Set_Iir_Int32;
-
-   function Get_Iir_Int64
-      (N : Iir; F : Fields_Enum) return Iir_Int64 is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Iir_Int64);
-      case F is
-         when Field_Value =>
-            return Get_Value (N);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Iir_Int64;
-
-   procedure Set_Iir_Int64
-      (N : Iir; F : Fields_Enum; V: Iir_Int64) is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Iir_Int64);
-      case F is
-         when Field_Value =>
-            Set_Value (N, V);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Set_Iir_Int64;
 
    function Get_Iir_List
       (N : Iir; F : Fields_Enum) return Iir_List is
@@ -6355,6 +6331,30 @@ package body Vhdl.Nodes_Meta is
             raise Internal_Error;
       end case;
    end Set_Int32;
+
+   function Get_Int64
+      (N : Iir; F : Fields_Enum) return Int64 is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Int64);
+      case F is
+         when Field_Value =>
+            return Get_Value (N);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Int64;
+
+   procedure Set_Int64
+      (N : Iir; F : Fields_Enum; V: Int64) is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Int64);
+      case F is
+         when Field_Value =>
+            Set_Value (N, V);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Set_Int64;
 
    function Get_Name_Id
       (N : Iir; F : Fields_Enum) return Name_Id is

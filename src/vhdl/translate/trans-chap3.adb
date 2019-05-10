@@ -340,7 +340,7 @@ package body Trans.Chap3 is
       St     : constant Iir :=
         Get_Subtype_Definition (Get_Type_Declarator (Def));
       L, H   : Iir;
-      Lv, Hv : Iir_Int64;
+      Lv, Hv : Int64;
    begin
       Get_Low_High_Limit (Get_Range_Constraint (St), L, H);
       Lv := Get_Value (L);
@@ -983,12 +983,12 @@ package body Trans.Chap3 is
    --  Get the length of DEF, ie the number of elements.
    --  If the length is not statically defined, returns -1.
    function Get_Array_Subtype_Length (Def : Iir_Array_Subtype_Definition)
-                                      return Iir_Int64
+                                      return Int64
    is
       Indexes_List : constant Iir_Flist := Get_Index_Subtype_List (Def);
       Index        : Iir;
-      Idx_Len      : Iir_Int64;
-      Len          : Iir_Int64;
+      Idx_Len      : Int64;
+      Len          : Int64;
    begin
       --  Check if the bounds of the array are locally static.
       Len := 1;
@@ -1059,7 +1059,7 @@ package body Trans.Chap3 is
       Info      : constant Type_Info_Acc := Get_Info (Def);
       Pinfo     : constant Type_Info_Acc := Get_Info (Parent_Type);
 
-      Len : Iir_Int64;
+      Len : Int64;
 
       Id : O_Ident;
       El_Constrained : Boolean;
@@ -2068,24 +2068,24 @@ package body Trans.Chap3 is
             end;
          when Type_Mode_I64 =>
             declare
-               V : Iir_Int64;
+               V : Int64;
             begin
                V := Get_Value (Lit);
                if Is_Hi then
-                  return V = Iir_Int64'Last;
+                  return V = Int64'Last;
                else
-                  return V = Iir_Int64'First;
+                  return V = Int64'First;
                end if;
             end;
          when Type_Mode_P64 =>
             declare
-               V : Iir_Int64;
+               V : Int64;
             begin
                V := Get_Physical_Value (Lit);
                if Is_Hi then
-                  return V = Iir_Int64'Last;
+                  return V = Int64'Last;
                else
-                  return V = Iir_Int64'First;
+                  return V = Int64'First;
                end if;
             end;
          when Type_Mode_F64 =>
@@ -2657,7 +2657,7 @@ package body Trans.Chap3 is
       Indexes_List : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Dim      : constant Natural := Get_Nbr_Elements (Indexes_List);
       Index        : Iir;
-      Val          : Iir_Int64;
+      Val          : Int64;
       Rng          : Iir;
    begin
       Val := 1;

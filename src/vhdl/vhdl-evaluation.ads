@@ -43,7 +43,7 @@ package Vhdl.Evaluation is
 
    --  Get the value of a physical integer literal or unit.  May propagate
    --  Constraint_Error.
-   function Get_Physical_Value (Expr : Iir) return Iir_Int64;
+   function Get_Physical_Value (Expr : Iir) return Int64;
 
    --  Get the parameter of an attribute, or 1 if doesn't exist.
    function Eval_Attribute_Parameter_Or_1 (Attr : Iir) return Natural;
@@ -115,13 +115,13 @@ package Vhdl.Evaluation is
      return Boolean;
 
    --  Return TRUE iff VAL belongs to BOUND.
-   function Eval_Int_In_Range (Val : Iir_Int64; Bound : Iir) return Boolean;
+   function Eval_Int_In_Range (Val : Int64; Bound : Iir) return Boolean;
 
    --  Return the length of the discrete range CONSTRAINT.
-   function Eval_Discrete_Range_Length (Constraint : Iir) return Iir_Int64;
+   function Eval_Discrete_Range_Length (Constraint : Iir) return Int64;
 
    --  Return the length of SUB_TYPE.
-   function Eval_Discrete_Type_Length (Sub_Type : Iir) return Iir_Int64;
+   function Eval_Discrete_Type_Length (Sub_Type : Iir) return Int64;
 
    --  Get the left bound of a range constraint.
    --  Note: the range constraint may be an attribute or a subtype.
@@ -133,7 +133,7 @@ package Vhdl.Evaluation is
    --  Return the position of EXPR, ie the result of sub_type'pos (EXPR), where
    --  sub_type is the type of expr.
    --  EXPR must be of a discrete subtype.
-   function Eval_Pos (Expr : Iir) return Iir_Int64;
+   function Eval_Pos (Expr : Iir) return Int64;
 
    --  Return True iff L and R (scalar literals) are equal.
    function Eval_Is_Eq (L, R : Iir) return Boolean;
@@ -155,13 +155,13 @@ package Vhdl.Evaluation is
    --  Create an array subtype from LEN and BASE_TYPE, according to rules
    --  of LRM93 7.3.2.2. (which are the same as LRM93 7.2.4).
    function Create_Unidim_Array_By_Length
-     (Base_Type : Iir; Len : Iir_Int64; Loc : Iir)
+     (Base_Type : Iir; Len : Int64; Loc : Iir)
      return Iir_Array_Subtype_Definition;
 
    --  Create a subtype of A_TYPE whose length is LEN.
    --  This is used to create subtypes for strings or aggregates.
    function Create_Range_Subtype_By_Length
-     (A_Type : Iir; Len : Iir_Int64; Loc : Location_Type)
+     (A_Type : Iir; Len : Int64; Loc : Location_Type)
      return Iir;
 
    --  Compute ATYPE'value (VALUE) using origin ORIG, but without checking

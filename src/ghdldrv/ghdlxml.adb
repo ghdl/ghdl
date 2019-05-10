@@ -362,8 +362,8 @@ package body Ghdlxml is
                   Put_Field (F, Image_Iir_Mode (Get_Iir_Mode (N, F)));
                when Type_Iir_Index32 =>
                   Put_Field (F, Iir_Index32'Image (Get_Iir_Index32 (N, F)));
-               when Type_Iir_Int64 =>
-                  Put_Field (F, Iir_Int64'Image (Get_Iir_Int64 (N, F)));
+               when Type_Int64 =>
+                  Put_Field (F, Int64'Image (Get_Int64 (N, F)));
                when Type_Boolean =>
                   Put_Field (F, Image_Boolean (Get_Boolean (N, F)));
                when Type_Iir_Staticness =>
@@ -398,8 +398,8 @@ package body Ghdlxml is
                     (F, Strip (Iir_Int32'Image (Get_Iir_Int32 (N, F))));
                when Type_Int32 =>
                   Put_Field (F, Strip (Int32'Image (Get_Int32 (N, F))));
-               when Type_Iir_Fp64 =>
-                  Put_Field (F, Iir_Fp64'Image (Get_Iir_Fp64 (N, F)));
+               when Type_Fp64 =>
+                  Put_Field (F, Fp64'Image (Get_Fp64 (N, F)));
                when Type_Time_Stamp_Id =>
                   Put_Field (F, Image_Time_Stamp_Id
                                (Get_Time_Stamp_Id (N, F)));

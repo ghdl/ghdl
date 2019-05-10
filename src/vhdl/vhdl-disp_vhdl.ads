@@ -30,11 +30,11 @@ package Vhdl.Disp_Vhdl is
    --  Display an expression.
 
    -- Disp an iir_int64, without the leading blank.
-   procedure Disp_Int64 (Val: Iir_Int64);
+   procedure Disp_Int64 (Val: Int64);
 
    -- Disp an iir_int32, without the leading blank.
    procedure Disp_Int32 (Val: Iir_Int32);
 
    -- Disp an iir_Fp64, without the leading blank.
-   procedure Disp_Fp64 (Val: Iir_Fp64);
+   procedure Disp_Fp64 (Val: Fp64);
 end Vhdl.Disp_Vhdl;

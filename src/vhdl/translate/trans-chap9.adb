@@ -1351,7 +1351,7 @@ package body Trans.Chap9 is
                  | Type_Iir_Constraint
                  | Type_Iir_Mode
                  | Type_Iir_Index32
-                 | Type_Iir_Int64
+                 | Type_Int64
                  | Type_Boolean
                  | Type_Iir_Staticness
                  | Type_Iir_All_Sensitized
@@ -1363,7 +1363,7 @@ package body Trans.Chap9 is
                  | Type_Iir_Direction
                  | Type_Iir_Int32
                  | Type_Int32
-                 | Type_Iir_Fp64
+                 | Type_Fp64
                  | Type_Token_Type
                  | Type_Name_Id =>
                   null;

@@ -530,8 +530,8 @@ package body Vhdl.Disp_Tree is
                   Log_Line (Image_Iir_Mode (Get_Iir_Mode (N, F)));
                when Type_Iir_Index32 =>
                   Log_Line (Iir_Index32'Image (Get_Iir_Index32 (N, F)));
-               when Type_Iir_Int64 =>
-                  Log_Line (Iir_Int64'Image (Get_Iir_Int64 (N, F)));
+               when Type_Int64 =>
+                  Log_Line (Int64'Image (Get_Int64 (N, F)));
                when Type_Boolean =>
                   Log_Line (Image_Boolean
                               (Get_Boolean (N, F)));
@@ -566,8 +566,8 @@ package body Vhdl.Disp_Tree is
                   Log_Line (Iir_Int32'Image (Get_Iir_Int32 (N, F)));
                when Type_Int32 =>
                   Log_Line (Int32'Image (Get_Int32 (N, F)));
-               when Type_Iir_Fp64 =>
-                  Log_Line (Iir_Fp64'Image (Get_Iir_Fp64 (N, F)));
+               when Type_Fp64 =>
+                  Log_Line (Fp64'Image (Get_Fp64 (N, F)));
                when Type_Time_Stamp_Id =>
                   Log_Line (Image_Time_Stamp_Id
                               (Get_Time_Stamp_Id (N, F)));

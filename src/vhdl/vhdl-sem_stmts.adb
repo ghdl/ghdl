@@ -477,7 +477,7 @@ package body Vhdl.Sem_Stmts is
    is
       Expr: Iir;
       We: Iir_Waveform_Element;
-      Time, Last_Time : Iir_Int64;
+      Time, Last_Time : Int64;
    begin
       if Get_Kind (Waveform_Chain) = Iir_Kind_Unaffected_Waveform then
          --  Unaffected.

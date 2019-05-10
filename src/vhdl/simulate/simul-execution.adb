@@ -19,6 +19,7 @@
 with Ada.Unchecked_Conversion;
 with Ada.Text_IO; use Ada.Text_IO;
 with System;
+with Types; use Types;
 with Grt.Types; use Grt.Types;
 with Flags; use Flags;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -1421,7 +1422,7 @@ package body Simul.Execution is
                Unit := Get_Unit_Chain (Vhdl.Std_Package.Time_Type_Definition);
                while Unit /= Null_Iir loop
                   exit when Vhdl.Evaluation.Get_Physical_Value (Unit)
-                    = Iir_Int64 (Right.I64);
+                    = Int64 (Right.I64);
                   Unit := Get_Chain (Unit);
                end loop;
                if Unit = Null_Iir then
@@ -2394,8 +2395,8 @@ package body Simul.Execution is
                when Iir_Value_I64 =>
                   null;
                when Iir_Value_F64 =>
-                  if Res.F64 > Ghdl_F64 (Iir_Int64'Last) or
-                    Res.F64 < Ghdl_F64 (Iir_Int64'First)
+                  if Res.F64 > Ghdl_F64 (Int64'Last) or
+                    Res.F64 < Ghdl_F64 (Int64'First)
                   then
                      Error_Msg_Constraint (Loc);
                   end if;
@@ -3042,7 +3043,7 @@ package body Simul.Execution is
          when Iir_Kind_Integer_Literal =>
             declare
                Lit_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
-               Lit : constant Iir_Int64 := Get_Value (Expr);
+               Lit : constant Int64 := Get_Value (Expr);
             begin
                case Get_Info (Lit_Type).Scalar_Mode is
                   when Iir_Value_I64 =>
@@ -4378,11 +4379,11 @@ package body Simul.Execution is
          declare
             Choice_Type : constant Iir :=
               Get_Type (Get_Choice_Expression (Assoc));
-            Choice_Len : Iir_Int64;
+            Choice_Len : Int64;
          begin
             Choice_Len := Vhdl.Evaluation.Eval_Discrete_Type_Length
               (Get_String_Type_Bound_Type (Choice_Type));
-            if Choice_Len /= Iir_Int64 (Value.Bounds.D (1).Length) then
+            if Choice_Len /= Int64 (Value.Bounds.D (1).Length) then
                Error_Msg_Constraint (Expr);
             end if;
          end;

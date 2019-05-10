@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Types; use Types;
 
 package body Simul.Grt_Interface is
    To_Dir : constant array (Iir_Direction) of Ghdl_Dir_Type :=

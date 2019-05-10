@@ -318,7 +318,7 @@ package body Vhdl.Sem_Types is
       return Res;
    end Range_Expr_To_Type_Definition;
 
-   function Create_Physical_Literal (Val : Iir_Int64; Unit : Iir) return Iir
+   function Create_Physical_Literal (Val : Int64; Unit : Iir) return Iir
    is
       Lit : Iir;
    begin

@@ -553,10 +553,10 @@ package body Vhdl.Ieee.Vital_Timing is
       --  If P is a scalar port, return PORT_LENGTH_SCALAR
       --  If P is a vector, return the length of the vector (>= 0)
       --  Otherwise, return PORT_LENGTH_ERROR.
-      Port_Length_Unknown : constant Iir_Int64 := -1;
-      Port_Length_Scalar  : constant Iir_Int64 := -2;
-      Port_Length_Error   : constant Iir_Int64 := -3;
-      function Get_Port_Length (P : Iir) return Iir_Int64
+      Port_Length_Unknown : constant Int64 := -1;
+      Port_Length_Scalar  : constant Int64 := -2;
+      Port_Length_Error   : constant Int64 := -3;
+      function Get_Port_Length (P : Iir) return Int64
       is
          Ptype : constant Iir := Get_Type (P);
          Itype : Iir;
@@ -631,7 +631,7 @@ package body Vhdl.Ieee.Vital_Timing is
          return Timing_Type_Bad;
       end Get_Timing_Generic_Type_Kind;
 
-      function Get_Timing_Generic_Type_Length return Iir_Int64
+      function Get_Timing_Generic_Type_Length return Int64
       is
          Itype : Iir;
       begin
@@ -657,8 +657,8 @@ package body Vhdl.Ieee.Vital_Timing is
                                         Is_Scalar : Boolean := False)
       is
          Kind : Timing_Generic_Type_Kind;
-         Len : Iir_Int64;
-         Len1 : Iir_Int64;
+         Len : Int64;
+         Len1 : Int64;
       begin
          Kind := Get_Timing_Generic_Type_Kind;
          if P = Null_Iir or Kind = Timing_Type_Bad then
@@ -722,9 +722,9 @@ package body Vhdl.Ieee.Vital_Timing is
          Is_Scalar : Boolean := False)
       is
          Kind : Timing_Generic_Type_Kind;
-         Len1 : Iir_Int64;
-         Len2 : Iir_Int64;
-         Lenp : Iir_Int64;
+         Len1 : Int64;
+         Len2 : Int64;
+         Lenp : Int64;
       begin
          Kind := Get_Timing_Generic_Type_Kind;
          if P1 = Null_Iir or P2 = Null_Iir or Kind = Timing_Type_Bad then

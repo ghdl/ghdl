@@ -106,7 +106,7 @@ begin
          --  a universal integer.
          Current_Token := Tok_Integer;
          --  No possible overflow.
-         Current_Context.Int64 := Iir_Int64 (D);
+         Current_Context.Lit_Int64 := Int64 (D);
          return;
       elsif D >= (Natural'Last / 10) - 1 then
          --  Number may be greather than the natural limit.
@@ -130,7 +130,7 @@ begin
       if C not in '0' .. '9' then
          Error_Msg_Scan ("a dot must be followed by a digit");
          Current_Token := Tok_Real;
-         Current_Context.Fp64 := Fp64 (To_Float_64 (False, Res, Base, 0));
+         Current_Context.Lit_Fp64 := Fp64 (To_Float_64 (False, Res, Base, 0));
          return;
       end if;
       Scan_Integer;
@@ -283,7 +283,7 @@ begin
       -- a universal real.
       Current_Token := Tok_Real;
 
-      Current_Context.Fp64 :=
+      Current_Context.Lit_Fp64 :=
         Fp64 (To_Float_64 (False, Res, Base, Exp - Scale));
    else
       -- a universal integer.
@@ -298,10 +298,10 @@ begin
          U : Unsigned_64;
       begin
          Bignum_To_Int (Res, U, Ok);
-         if U > Unsigned_64 (Iir_Int64'Last) then
+         if U > Unsigned_64 (Int64'Last) then
             Ok := False;
          else
-            Current_Context.Int64 := Iir_Int64 (U);
+            Current_Context.Lit_Int64 := Int64 (U);
          end if;
       end;
       if not Ok then
@@ -313,5 +313,5 @@ exception
       Error_Msg_Scan ("literal overflow");
 
       Current_Token := Tok_Integer;
-      Current_Context.Int64 := 0;
+      Current_Context.Lit_Int64 := 0;
 end Scan_Literal;

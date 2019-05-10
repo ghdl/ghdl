@@ -1616,37 +1616,37 @@ package body Vhdl.Nodes is
       Set_Field12 (Design_Unit, Int32_To_Iir (Line));
    end Set_Design_Unit_Source_Col;
 
-   type Iir_Int64_Conv is record
+   type Int64_Conv is record
       Field4: Iir;
       Field5: Iir;
    end record;
-   pragma Pack (Iir_Int64_Conv);
-   pragma Assert (Iir_Int64_Conv'Size = Iir_Int64'Size);
+   pragma Pack (Int64_Conv);
+   pragma Assert (Int64_Conv'Size = Int64'Size);
 
-   function Get_Value (Lit : Iir) return Iir_Int64
+   function Get_Value (Lit : Iir) return Int64
    is
-      function To_Iir_Int64 is new Ada.Unchecked_Conversion
-         (Iir_Int64_Conv, Iir_Int64);
-      Conv : Iir_Int64_Conv;
+      function To_Int64 is new Ada.Unchecked_Conversion
+         (Int64_Conv, Int64);
+      Conv : Int64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Value (Get_Kind (Lit)),
                      "no field Value");
       Conv.Field4 := Get_Field4 (Lit);
       Conv.Field5 := Get_Field5 (Lit);
-      return To_Iir_Int64 (Conv);
+      return To_Int64 (Conv);
    end Get_Value;
 
-   procedure Set_Value (Lit : Iir; Val : Iir_Int64)
+   procedure Set_Value (Lit : Iir; Val : Int64)
    is
-      function To_Iir_Int64_Conv is new Ada.Unchecked_Conversion
-         (Iir_Int64, Iir_Int64_Conv);
-      Conv : Iir_Int64_Conv;
+      function To_Int64_Conv is new Ada.Unchecked_Conversion
+         (Int64, Int64_Conv);
+      Conv : Int64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Value (Get_Kind (Lit)),
                      "no field Value");
-      Conv := To_Iir_Int64_Conv (Val);
+      Conv := To_Int64_Conv (Val);
       Set_Field4 (Lit, Conv.Field4);
       Set_Field5 (Lit, Conv.Field5);
    end Set_Value;
@@ -1683,37 +1683,37 @@ package body Vhdl.Nodes is
       Set_Field4 (Unit, Lit);
    end Set_Physical_Literal;
 
-   type Iir_Fp64_Conv is record
+   type Fp64_Conv is record
       Field4: Iir;
       Field5: Iir;
    end record;
-   pragma Pack (Iir_Fp64_Conv);
-   pragma Assert (Iir_Fp64_Conv'Size = Iir_Fp64'Size);
+   pragma Pack (Fp64_Conv);
+   pragma Assert (Fp64_Conv'Size = Fp64'Size);
 
-   function Get_Fp_Value (Lit : Iir) return Iir_Fp64
+   function Get_Fp_Value (Lit : Iir) return Fp64
    is
-      function To_Iir_Fp64 is new Ada.Unchecked_Conversion
-         (Iir_Fp64_Conv, Iir_Fp64);
-      Conv : Iir_Fp64_Conv;
+      function To_Fp64 is new Ada.Unchecked_Conversion
+         (Fp64_Conv, Fp64);
+      Conv : Fp64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Fp_Value (Get_Kind (Lit)),
                      "no field Fp_Value");
       Conv.Field4 := Get_Field4 (Lit);
       Conv.Field5 := Get_Field5 (Lit);
-      return To_Iir_Fp64 (Conv);
+      return To_Fp64 (Conv);
    end Get_Fp_Value;
 
-   procedure Set_Fp_Value (Lit : Iir; Val : Iir_Fp64)
+   procedure Set_Fp_Value (Lit : Iir; Val : Fp64)
    is
-      function To_Iir_Fp64_Conv is new Ada.Unchecked_Conversion
-         (Iir_Fp64, Iir_Fp64_Conv);
-      Conv : Iir_Fp64_Conv;
+      function To_Fp64_Conv is new Ada.Unchecked_Conversion
+         (Fp64, Fp64_Conv);
+      Conv : Fp64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Fp_Value (Get_Kind (Lit)),
                      "no field Fp_Value");
-      Conv := To_Iir_Fp64_Conv (Val);
+      Conv := To_Fp64_Conv (Val);
       Set_Field4 (Lit, Conv.Field4);
       Set_Field5 (Lit, Conv.Field5);
    end Set_Fp_Value;

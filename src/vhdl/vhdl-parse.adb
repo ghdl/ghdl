@@ -5461,7 +5461,7 @@ package body Vhdl.Parse is
    --  postcond: likewise
    --
    --  Return an integer_literal or a physical_literal.
-   function Parse_Integer_Literal (Val : Iir_Int64) return Iir
+   function Parse_Integer_Literal (Val : Int64) return Iir
    is
       Res : Iir;
    begin
@@ -5509,8 +5509,8 @@ package body Vhdl.Parse is
    function Parse_Primary return Iir_Expression
    is
       Res: Iir_Expression;
-      Int: Iir_Int64;
-      Fp: Iir_Fp64;
+      Int: Int64;
+      Fp: Fp64;
       Loc: Location_Type;
    begin
       case Current_Token is

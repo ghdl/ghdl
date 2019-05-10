@@ -28,16 +28,15 @@ package Vhdl.Nodes_Meta is
       Type_Date_State_Type,
       Type_Date_Type,
       Type_File_Checksum_Id,
+      Type_Fp64,
       Type_Iir,
       Type_Iir_All_Sensitized,
       Type_Iir_Constraint,
       Type_Iir_Delay_Mechanism,
       Type_Iir_Direction,
       Type_Iir_Flist,
-      Type_Iir_Fp64,
       Type_Iir_Index32,
       Type_Iir_Int32,
-      Type_Iir_Int64,
       Type_Iir_List,
       Type_Iir_Mode,
       Type_Iir_Predefined_Functions,
@@ -45,6 +44,7 @@ package Vhdl.Nodes_Meta is
       Type_Iir_Signal_Kind,
       Type_Iir_Staticness,
       Type_Int32,
+      Type_Int64,
       Type_Name_Id,
       Type_Number_Base_Type,
       Type_PSL_NFA,
@@ -453,6 +453,11 @@ package Vhdl.Nodes_Meta is
    procedure Set_File_Checksum_Id
       (N : Iir; F : Fields_Enum; V: File_Checksum_Id);
 
+   function Get_Fp64
+      (N : Iir; F : Fields_Enum) return Fp64;
+   procedure Set_Fp64
+      (N : Iir; F : Fields_Enum; V: Fp64);
+
    function Get_Iir
       (N : Iir; F : Fields_Enum) return Iir;
    procedure Set_Iir
@@ -483,11 +488,6 @@ package Vhdl.Nodes_Meta is
    procedure Set_Iir_Flist
       (N : Iir; F : Fields_Enum; V: Iir_Flist);
 
-   function Get_Iir_Fp64
-      (N : Iir; F : Fields_Enum) return Iir_Fp64;
-   procedure Set_Iir_Fp64
-      (N : Iir; F : Fields_Enum; V: Iir_Fp64);
-
    function Get_Iir_Index32
       (N : Iir; F : Fields_Enum) return Iir_Index32;
    procedure Set_Iir_Index32
@@ -497,11 +497,6 @@ package Vhdl.Nodes_Meta is
       (N : Iir; F : Fields_Enum) return Iir_Int32;
    procedure Set_Iir_Int32
       (N : Iir; F : Fields_Enum; V: Iir_Int32);
-
-   function Get_Iir_Int64
-      (N : Iir; F : Fields_Enum) return Iir_Int64;
-   procedure Set_Iir_Int64
-      (N : Iir; F : Fields_Enum; V: Iir_Int64);
 
    function Get_Iir_List
       (N : Iir; F : Fields_Enum) return Iir_List;
@@ -537,6 +532,11 @@ package Vhdl.Nodes_Meta is
       (N : Iir; F : Fields_Enum) return Int32;
    procedure Set_Int32
       (N : Iir; F : Fields_Enum; V: Int32);
+
+   function Get_Int64
+      (N : Iir; F : Fields_Enum) return Int64;
+   procedure Set_Int64
+      (N : Iir; F : Fields_Enum; V: Int64);
 
    function Get_Name_Id
       (N : Iir; F : Fields_Enum) return Name_Id;

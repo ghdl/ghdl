@@ -26,7 +26,7 @@ with Vhdl.Sem_Utils;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 
 package body Vhdl.Std_Package is
-   type Bound_Array is array (Boolean) of Iir_Int64;
+   type Bound_Array is array (Boolean) of Int64;
    Low_Bound : constant Bound_Array := (False => -(2 ** 31),
                                         True => -(2 ** 63));
    High_Bound : constant Bound_Array := (False => (2 ** 31) - 1,
@@ -120,7 +120,7 @@ package body Vhdl.Std_Package is
          Set_Visible_Flag (Decl, True);
       end Set_Std_Identifier;
 
-      function Create_Std_Integer (Val : Iir_Int64; Lit_Type : Iir)
+      function Create_Std_Integer (Val : Int64; Lit_Type : Iir)
         return Iir_Integer_Literal
       is
          Res : Iir_Integer_Literal;
@@ -132,7 +132,7 @@ package body Vhdl.Std_Package is
          return Res;
       end Create_Std_Integer;
 
-      function Create_Std_Fp (Val : Iir_Fp64; Lit_Type : Iir)
+      function Create_Std_Fp (Val : Fp64; Lit_Type : Iir)
         return Iir_Floating_Point_Literal
       is
          Res : Iir_Floating_Point_Literal;
@@ -650,8 +650,8 @@ package body Vhdl.Std_Package is
          Set_Base_Type (Universal_Real_Subtype_Definition,
                         Universal_Real_Type_Definition);
          Constraint := Create_Std_Range_Expr
-           (Create_Std_Fp (Iir_Fp64'First, Universal_Real_Type_Definition),
-            Create_Std_Fp (Iir_Fp64'Last, Universal_Real_Type_Definition),
+           (Create_Std_Fp (Fp64'First, Universal_Real_Type_Definition),
+            Create_Std_Fp (Fp64'Last, Universal_Real_Type_Definition),
             Universal_Real_Type_Definition);
          Set_Range_Constraint (Universal_Real_Subtype_Definition, Constraint);
          Set_Type_Staticness (Universal_Real_Subtype_Definition, Locally);
@@ -764,8 +764,8 @@ package body Vhdl.Std_Package is
            Create_Std_Iir (Iir_Kind_Floating_Subtype_Definition);
          Set_Base_Type (Real_Subtype_Definition, Real_Type_Definition);
          Constraint := Create_Std_Range_Expr
-           (Create_Std_Fp (Iir_Fp64'First, Universal_Real_Type_Definition),
-            Create_Std_Fp (Iir_Fp64'Last, Universal_Real_Type_Definition),
+           (Create_Std_Fp (Fp64'First, Universal_Real_Type_Definition),
+            Create_Std_Fp (Fp64'Last, Universal_Real_Type_Definition),
              Universal_Real_Type_Definition);
          Set_Range_Constraint (Real_Subtype_Definition, Constraint);
          Set_Type_Staticness (Real_Subtype_Definition, Locally);
@@ -792,7 +792,7 @@ package body Vhdl.Std_Package is
          Time_Staticness : Iir_Staticness;
          First_Unit, Last_Unit : Iir_Unit_Declaration;
 
-         function Create_Std_Phys_Lit_Wo_Unit (Value : Iir_Int64; Unit : Iir)
+         function Create_Std_Phys_Lit_Wo_Unit (Value : Int64; Unit : Iir)
                                       return Iir_Physical_Int_Literal
          is
             Lit: Iir_Physical_Int_Literal;
@@ -806,7 +806,7 @@ package body Vhdl.Std_Package is
             return Lit;
          end Create_Std_Phys_Lit_Wo_Unit;
 
-         function Create_Std_Phys_Lit (Value : Iir_Int64; Unit : Iir)
+         function Create_Std_Phys_Lit (Value : Int64; Unit : Iir)
                                       return Iir_Physical_Int_Literal
          is
             Lit: Iir_Physical_Int_Literal;
@@ -820,7 +820,7 @@ package body Vhdl.Std_Package is
          end Create_Std_Phys_Lit;
 
          procedure Create_Unit (Unit : out Iir_Unit_Declaration;
-                                Multiplier_Value : Iir_Int64;
+                                Multiplier_Value : Int64;
                                 Multiplier : in Iir_Unit_Declaration;
                                 Name : Name_Id)
          is

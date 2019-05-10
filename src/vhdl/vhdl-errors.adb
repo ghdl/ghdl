@@ -762,9 +762,9 @@ package body Vhdl.Errors is
       end case;
    end Disp_Name;
 
-   function Image (N : Iir_Int64) return String
+   function Image (N : Int64) return String
    is
-      Res : constant String := Iir_Int64'Image (N);
+      Res : constant String := Int64'Image (N);
    begin
       if Res (1) = ' ' then
          return Res (2 .. Res'Last);
@@ -773,7 +773,7 @@ package body Vhdl.Errors is
       end if;
    end Image;
 
-   function Disp_Discrete (Dtype : Iir; Pos : Iir_Int64) return String is
+   function Disp_Discrete (Dtype : Iir; Pos : Int64) return String is
    begin
       case Get_Kind (Dtype) is
          when Iir_Kind_Integer_Type_Definition =>

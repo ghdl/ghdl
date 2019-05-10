@@ -577,7 +577,7 @@ package body Trans.Chap14 is
       Info        : Type_Info_Acc;
       Var         : O_Dnode;
       Data        : Last_Time_Data;
-      Right_Bound : Iir_Int64;
+      Right_Bound : Int64;
       If_Blk      : O_If_Block;
    begin
       Name := Chap6.Translate_Name (Prefix, Mode_Signal);
