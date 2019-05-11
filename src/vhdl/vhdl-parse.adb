@@ -5961,6 +5961,20 @@ package body Vhdl.Parse is
          Scan;
 
          Set_Operand (Res, Parse_Primary);
+
+         --  Improve error message for expressions like '?? a and b'; in
+         --  particular it avoids cascaded errors.
+         case Current_Token is
+            when Token_Logical_Type
+              | Token_Relational_Operator_Type
+              | Token_Shift_Operator_Type
+              | Token_Adding_Operator_Type =>
+               Error_Msg_Parse
+                 ("'??' cannot be followed by a binary expression");
+               Res := Parse_Binary_Expression (Res, Prio);
+            when others =>
+               null;
+         end case;
       else
          Left := Parse_Unary_Expression;
          Res := Parse_Binary_Expression (Left, Prio);
