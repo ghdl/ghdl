@@ -1581,6 +1581,7 @@ package body Vhdl.Sem_Specs is
       Entity := Get_Library_Unit (Design_Unit);
 
       Res := Create_Iir (Iir_Kind_Binding_Indication);
+      Location_Copy (Res, Parent);
       Aspect := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
       Location_Copy (Aspect, Parent);
 
