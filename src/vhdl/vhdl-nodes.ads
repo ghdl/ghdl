@@ -3730,7 +3730,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Subtype_Indication (Field5)
    --
-   --  Only for Iir_Kind_External_Variable_Name:
+   -- Only for Iir_Kind_External_Variable_Name:
    --   Get/Set_Shared_Flag (Flag2)
    --
    --   Get/Set_Expr_Staticness (State1)
