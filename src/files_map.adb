@@ -354,17 +354,12 @@ package body Files_Map is
       Coord_To_Position (File, Line_Pos, Offset, Name, Col);
    end Location_To_Position;
 
-   procedure Location_To_Coord (Location : Location_Type;
-                                File : out Source_File_Entry;
+   procedure File_Pos_To_Coord (File : Source_File_Entry;
+                                Pos : Source_Ptr;
                                 Line_Pos : out Source_Ptr;
                                 Line : out Positive;
-                                Offset : out Natural)
-   is
-      Pos : Source_Ptr;
+                                Offset : out Natural) is
    begin
-      --  Get FILE and position POS in the file.
-      Location_To_File_Pos (Location, File, Pos);
-
       case Source_Files.Table (File).Kind is
          when Source_File_File =>
             Location_To_Coord (Source_Files.Table (File), Pos,
@@ -382,6 +377,19 @@ package body Files_Map is
                                   Line_Pos, Line, Offset);
             end;
       end case;
+   end File_Pos_To_Coord;
+
+   procedure Location_To_Coord (Location : Location_Type;
+                                File : out Source_File_Entry;
+                                Line_Pos : out Source_Ptr;
+                                Line : out Positive;
+                                Offset : out Natural)
+   is
+      Pos : Source_Ptr;
+   begin
+      --  Get FILE and position POS in the file.
+      Location_To_File_Pos (Location, File, Pos);
+      File_Pos_To_Coord (File, Pos, Line_Pos, Line, Offset);
    end Location_To_Coord;
 
    function Location_File_To_Pos

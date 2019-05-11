@@ -195,6 +195,13 @@ package Files_Map is
                                 Line : out Positive;
                                 Offset : out Natural);
 
+   --  Convert FILE and POS to coordinate.
+   procedure File_Pos_To_Coord (File : Source_File_Entry;
+                                Pos : Source_Ptr;
+                                Line_Pos : out Source_Ptr;
+                                Line : out Positive;
+                                Offset : out Natural);
+
    --  Convert a physical column to a logical column.
    --  A physical column is the offset in byte from the first byte of the line.
    --  A logical column is the position of the character when displayed.
