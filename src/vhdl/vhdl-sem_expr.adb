@@ -3809,6 +3809,12 @@ package body Vhdl.Sem_Expr is
             Set_Aggregate_Expand_Flag (Aggr, False);
          end if;
       else
+         --  If the array is not constrained, expression cannot be more
+         --  static than the type.  In particular, if the type is not
+         --  constrained, the expression cannot be locally static.
+         Set_Expr_Staticness (Aggr, Min (Get_Type_Staticness (Aggr_Type),
+                                         Get_Expr_Staticness (Aggr)));
+
          --  Free unused indexes subtype.
          for I in Infos'Range loop
             declare
