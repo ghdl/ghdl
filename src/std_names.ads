@@ -395,9 +395,16 @@ package Std_Names is
    Name_Wildcard :       constant Name_Id := Name_First_SV3_1a + 13;
    Name_Last_SV3_1a :    constant Name_Id := Name_First_SV3_1a + 13;
 
+   Name_First_SV2009 :   constant Name_Id := Name_Last_SV3_1a + 1;
+   Name_Implies :        constant Name_Id := Name_First_SV2009 + 0;
+   Name_S_Until :        constant Name_Id := Name_First_SV2009 + 1;
+   Name_S_Until_With :   constant Name_Id := Name_First_SV2009 + 2;
+   Name_Until_With :     constant Name_Id := Name_First_SV2009 + 3;
+   Name_Last_SV2009 :    constant Name_Id := Name_First_SV2009 + 3;
+
    --  VHDL operators.  Used as identifiers for declaration of overloaded
    --  operators.
-   Name_First_Operator :         constant Name_Id := Name_Last_SV3_1a + 1;
+   Name_First_Operator :         constant Name_Id := Name_Last_SV2009 + 1;
    Name_Op_Equality :            constant Name_Id := Name_First_Operator + 000;
    Name_Op_Inequality :          constant Name_Id := Name_First_Operator + 001;
    Name_Op_Less :                constant Name_Id := Name_First_Operator + 002;
@@ -526,44 +533,45 @@ package Std_Names is
    Name_Sec :                 constant Name_Id := Name_First_Standard + 023;
    Name_Min :                 constant Name_Id := Name_First_Standard + 024;
    Name_Hr :                  constant Name_Id := Name_First_Standard + 025;
-   Name_Delay_Length :        constant Name_Id := Name_First_Standard + 026;
-   Name_Now :                 constant Name_Id := Name_First_Standard + 027;
-   Name_Natural :             constant Name_Id := Name_First_Standard + 028;
-   Name_Positive :            constant Name_Id := Name_First_Standard + 029;
-   Name_Bit_Vector :          constant Name_Id := Name_First_Standard + 030;
-   Name_File_Open_Kind :      constant Name_Id := Name_First_Standard + 031;
-   Name_Read_Mode :           constant Name_Id := Name_First_Standard + 032;
-   Name_Write_Mode :          constant Name_Id := Name_First_Standard + 033;
-   Name_Append_Mode :         constant Name_Id := Name_First_Standard + 034;
-   Name_File_Open_Status :    constant Name_Id := Name_First_Standard + 035;
-   Name_Open_Ok :             constant Name_Id := Name_First_Standard + 036;
-   Name_Status_Error :        constant Name_Id := Name_First_Standard + 037;
-   Name_Name_Error :          constant Name_Id := Name_First_Standard + 038;
-   Name_Mode_Error :          constant Name_Id := Name_First_Standard + 039;
-   Name_Foreign :             constant Name_Id := Name_First_Standard + 040;
+   Name_Max :                 constant Name_Id := Name_First_Standard + 026;
+   Name_Delay_Length :        constant Name_Id := Name_First_Standard + 027;
+   Name_Now :                 constant Name_Id := Name_First_Standard + 028;
+   Name_Natural :             constant Name_Id := Name_First_Standard + 029;
+   Name_Positive :            constant Name_Id := Name_First_Standard + 030;
+   Name_Bit_Vector :          constant Name_Id := Name_First_Standard + 031;
+   Name_File_Open_Kind :      constant Name_Id := Name_First_Standard + 032;
+   Name_Read_Mode :           constant Name_Id := Name_First_Standard + 033;
+   Name_Write_Mode :          constant Name_Id := Name_First_Standard + 034;
+   Name_Append_Mode :         constant Name_Id := Name_First_Standard + 035;
+   Name_File_Open_Status :    constant Name_Id := Name_First_Standard + 036;
+   Name_Open_Ok :             constant Name_Id := Name_First_Standard + 037;
+   Name_Status_Error :        constant Name_Id := Name_First_Standard + 038;
+   Name_Name_Error :          constant Name_Id := Name_First_Standard + 039;
+   Name_Mode_Error :          constant Name_Id := Name_First_Standard + 040;
+   Name_Foreign :             constant Name_Id := Name_First_Standard + 041;
 
    --  Added by VHDL 08
-   Name_Boolean_Vector :   constant Name_Id := Name_First_Standard + 041;
-   Name_To_Bstring :       constant Name_Id := Name_First_Standard + 042;
-   Name_To_Binary_String : constant Name_Id := Name_First_Standard + 043;
-   Name_To_Ostring :       constant Name_Id := Name_First_Standard + 044;
-   Name_To_Octal_String :  constant Name_Id := Name_First_Standard + 045;
-   Name_To_Hstring :       constant Name_Id := Name_First_Standard + 046;
-   Name_To_Hex_String :    constant Name_Id := Name_First_Standard + 047;
-   Name_Integer_Vector :   constant Name_Id := Name_First_Standard + 048;
-   Name_Real_Vector :      constant Name_Id := Name_First_Standard + 049;
-   Name_Time_Vector :      constant Name_Id := Name_First_Standard + 050;
-   Name_Digits      :      constant Name_Id := Name_First_Standard + 051;
-   Name_Format      :      constant Name_Id := Name_First_Standard + 052;
-   Name_Unit        :      constant Name_Id := Name_First_Standard + 053;
+   Name_Boolean_Vector :   constant Name_Id := Name_First_Standard + 042;
+   Name_To_Bstring :       constant Name_Id := Name_First_Standard + 043;
+   Name_To_Binary_String : constant Name_Id := Name_First_Standard + 044;
+   Name_To_Ostring :       constant Name_Id := Name_First_Standard + 045;
+   Name_To_Octal_String :  constant Name_Id := Name_First_Standard + 046;
+   Name_To_Hstring :       constant Name_Id := Name_First_Standard + 047;
+   Name_To_Hex_String :    constant Name_Id := Name_First_Standard + 048;
+   Name_Integer_Vector :   constant Name_Id := Name_First_Standard + 049;
+   Name_Real_Vector :      constant Name_Id := Name_First_Standard + 050;
+   Name_Time_Vector :      constant Name_Id := Name_First_Standard + 051;
+   Name_Digits      :      constant Name_Id := Name_First_Standard + 052;
+   Name_Format      :      constant Name_Id := Name_First_Standard + 053;
+   Name_Unit        :      constant Name_Id := Name_First_Standard + 054;
 
    --  Added by AMS vhdl.
-   Name_Domain_Type :      constant Name_Id := Name_First_Standard + 054;
-   Name_Quiescent_Domain : constant Name_Id := Name_First_Standard + 055;
-   Name_Time_Domain :      constant Name_Id := Name_First_Standard + 056;
-   Name_Frequency_Domain : constant Name_Id := Name_First_Standard + 057;
-   Name_Domain :           constant Name_Id := Name_First_Standard + 058;
-   Name_Frequency :        constant Name_Id := Name_First_Standard + 059;
+   Name_Domain_Type :      constant Name_Id := Name_First_Standard + 055;
+   Name_Quiescent_Domain : constant Name_Id := Name_First_Standard + 056;
+   Name_Time_Domain :      constant Name_Id := Name_First_Standard + 057;
+   Name_Frequency_Domain : constant Name_Id := Name_First_Standard + 058;
+   Name_Domain :           constant Name_Id := Name_First_Standard + 059;
+   Name_Frequency :        constant Name_Id := Name_First_Standard + 060;
 
    Name_Last_Standard :    constant Name_Id := Name_Frequency;
 
@@ -674,7 +682,8 @@ package Std_Names is
    Name_Item :                  constant Name_Id := Name_First_Misc + 033;
    Name_Uu_File_Uu :            constant Name_Id := Name_First_Misc + 034;
    Name_Uu_Line_Uu :            constant Name_Id := Name_First_Misc + 035;
-   Name_Last_Misc :             constant Name_Id := Name_Uu_Line_Uu;
+   Name_None :                  constant Name_Id := Name_First_Misc + 036;
+   Name_Last_Misc :             constant Name_Id := Name_None;
 
    Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;
    Name_Ieee               : constant Name_Id := Name_First_Ieee + 000;
@@ -713,11 +722,15 @@ package Std_Names is
    Name_Key_Block :       constant Name_Id := Name_First_Directive + 10;
    Name_Data_Block :      constant Name_Id := Name_First_Directive + 11;
    Name_Line :            constant Name_Id := Name_First_Directive + 12;
-   Name_Last_Directive :  constant Name_Id := Name_Line;
+   Name_Celldefine :      constant Name_Id := Name_First_Directive + 13;
+   Name_Endcelldefine :   constant Name_Id := Name_First_Directive + 14;
+   Name_Default_Nettype : constant Name_Id := Name_First_Directive + 15;
+   Name_Resetall :        constant Name_Id := Name_First_Directive + 16;
+   Name_Last_Directive :  constant Name_Id := Name_Resetall;
 
    --  Verilog system tasks/functions.
    Name_First_Systask :  constant Name_Id := Name_Last_Directive + 1;
-   Name_D_Bits :         constant Name_Id := Name_First_Systask + 00;
+   Name_Bits :           constant Name_Id := Name_First_Systask + 00;
    Name_D_Root :         constant Name_Id := Name_First_Systask + 01;
    Name_D_Unit :         constant Name_Id := Name_First_Systask + 02;
    Name_Last_Systask :   constant Name_Id := Name_D_Unit;
@@ -744,7 +757,15 @@ package Std_Names is
    Name_Find_Last :         constant Name_Id := Name_First_SV_Method + 17;
    Name_Find_Last_Index :   constant Name_Id := Name_First_SV_Method + 18;
    Name_Num :               constant Name_Id := Name_First_SV_Method + 19;
-   Name_Last_SV_Method :    constant Name_Id := Name_Num;
+   Name_Randomize :         constant Name_Id := Name_First_SV_Method + 20;
+   Name_Pre_Randomize :     constant Name_Id := Name_First_SV_Method + 21;
+   Name_Post_Randomize :    constant Name_Id := Name_First_SV_Method + 22;
+   Name_Srandom :           constant Name_Id := Name_First_SV_Method + 23;
+   Name_Get_Randstate :     constant Name_Id := Name_First_SV_Method + 24;
+   Name_Set_Randstate :     constant Name_Id := Name_First_SV_Method + 25;
+   Name_Seed :              constant Name_Id := Name_First_SV_Method + 26;
+   Name_State :             constant Name_Id := Name_First_SV_Method + 27;
+   Name_Last_SV_Method :    constant Name_Id := Name_State;
 
    --  BSV names
    Name_First_BSV :         constant Name_Id := Name_Last_SV_Method + 1;

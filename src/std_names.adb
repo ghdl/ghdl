@@ -354,6 +354,12 @@ package body Std_Names is
       Def ("tagged",              Name_Tagged);
       Def ("wildcard",            Name_Wildcard);
 
+      --  SystemVerilog 2009
+      Def ("implies",             Name_Implies);
+      Def ("s_until",             Name_S_Until);
+      Def ("s_until_with",        Name_S_Until_With);
+      Def ("until_with",          Name_Until_With);
+
       -- Create operators.
       Def ("=",  Name_Op_Equality);
       Def ("/=", Name_Op_Inequality);
@@ -451,6 +457,7 @@ package body Std_Names is
       Def ("sec",                 Name_Sec);
       Def ("min",                 Name_Min);
       Def ("hr",                  Name_Hr);
+      Def ("max",                 Name_Max);
       Def ("delay_length",        Name_Delay_Length);
       Def ("now",                 Name_Now);
       Def ("natural",             Name_Natural);
@@ -594,6 +601,7 @@ package body Std_Names is
       Def ("item",                  Name_Item);
       Def ("__FILE__",              Name_Uu_File_Uu);
       Def ("__LINE__",              Name_Uu_Line_Uu);
+      Def ("none",                  Name_None);
 
       Def ("ieee",               Name_Ieee);
       Def ("std_logic_1164",     Name_Std_Logic_1164);
@@ -629,9 +637,13 @@ package body Std_Names is
       Def ("key_block",       Name_Key_Block);
       Def ("data_block",      Name_Data_Block);
       Def ("line",            Name_Line);
+      Def ("celldefine",      Name_Celldefine);
+      Def ("endcelldefine",   Name_Endcelldefine);
+      Def ("default_nettype", Name_Default_Nettype);
+      Def ("resetall",        Name_Resetall);
 
       --  Verilog system tasks
-      Def ("$bits",           Name_D_Bits);
+      Def ("bits",            Name_Bits);
       Def ("$root",           Name_D_Root);
       Def ("$unit",           Name_D_Unit);
 
@@ -656,6 +668,14 @@ package body Std_Names is
       Def ("find_last",        Name_Find_Last);
       Def ("find_last_index",  Name_Find_Last_Index);
       Def ("num",              Name_Num);
+      Def ("randomize",        Name_Randomize);
+      Def ("pre_randomize",    Name_Pre_Randomize);
+      Def ("post_randomize",   Name_Post_Randomize);
+      Def ("srandom",          Name_Srandom);
+      Def ("get_randstate",    Name_Get_Randstate);
+      Def ("set_randstate",    Name_Set_Randstate);
+      Def ("seed",             Name_Seed);
+      Def ("state",            Name_State);
 
       --  BSV keywords
       Def ("Action",         Name_uAction);
