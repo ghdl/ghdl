@@ -42,6 +42,7 @@ package Types is
    type Uns64 is new Interfaces.Unsigned_64;
 
    type Fp64 is new Interfaces.IEEE_Float_64;
+   type Fp32 is new Interfaces.IEEE_Float_32;
 
    --  Useful types.
    type String_Acc is access String;
