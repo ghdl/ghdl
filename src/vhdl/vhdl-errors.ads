@@ -22,7 +22,7 @@ with Vhdl.Tokens;
 
 package Vhdl.Errors is
    --  This kind can't be handled.
-   procedure Error_Kind (Msg: String; An_Iir: in Iir);
+   procedure Error_Kind (Msg: String; N : Iir);
    procedure Error_Kind (Msg: String; Def : Iir_Predefined_Functions);
    pragma No_Return (Error_Kind);
 

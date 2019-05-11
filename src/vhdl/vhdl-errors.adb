@@ -25,11 +25,10 @@ with Std_Names;
 with Logging; use Logging;
 
 package body Vhdl.Errors is
-   procedure Error_Kind (Msg : String; An_Iir : Iir) is
+   procedure Error_Kind (Msg : String; N : Iir) is
    begin
-      Log_Line
-        (Msg & ": cannot handle " & Iir_Kind'Image (Get_Kind (An_Iir))
-           & " (" & Disp_Location (An_Iir) & ')');
+      Log_Line (Msg & ": cannot handle " & Iir_Kind'Image (Get_Kind (N))
+                  & " (" & Disp_Location (N) & ')');
       raise Internal_Error;
    end Error_Kind;
 
