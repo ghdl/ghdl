@@ -520,7 +520,8 @@ package body Synth.Expr is
             return Synth_Name (Syn_Inst, Get_Named_Entity (Name));
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Signal_Declaration =>
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Constant_Declaration =>
             return Get_Value (Syn_Inst, Name);
          when others =>
             Error_Kind ("synth_name", Name);
