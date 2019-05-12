@@ -204,11 +204,12 @@ package body Vhdl.Sem_Stmts is
       for I in Name_Arr'Range loop
          for J in 0 .. I - 1 loop
             if not Is_Disjoint (Obj_Arr (I), Obj_Arr (J)) then
+               Report_Start_Group;
                Error_Msg_Sem
-                 (+Name_Arr (I), "target is assigned more than once",
-                  Cont => True);
+                 (+Name_Arr (I), "target is assigned more than once");
                Error_Msg_Sem
                  (+Name_Arr (J), " (previous assignment is here)");
+               Report_End_Group;
                return;
             end if;
          end loop;
@@ -679,9 +680,10 @@ package body Vhdl.Sem_Stmts is
            | Iir_Kind_Guard_Signal_Declaration =>
             null;
          when others =>
-            Error_Msg_Sem (+Stmt, "visible GUARD object is not a signal",
-                          Cont => True);
+            Report_Start_Group;
+            Error_Msg_Sem (+Stmt, "visible GUARD object is not a signal");
             Error_Msg_Sem (+Stmt, "GUARD object is %n", +Guard);
+            Report_End_Group;
             return;
       end case;
 

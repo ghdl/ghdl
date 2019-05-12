@@ -274,18 +274,21 @@ package body Vhdl.Sem_Specs is
                      return;
                   end if;
                   if Check_Defined then
+                     Report_Start_Group;
                      Error_Msg_Sem
-                       (+Attr, "%n has already %n", (+Decl, +Attr),
-                        Cont => True);
+                       (+Attr, "%n has already %n", (+Decl, +Attr));
                      Error_Msg_Sem
                        (+Attr, "previous attribute specification at %l", +El);
+                     Report_End_Group;
                   end if;
                   return;
                elsif Get_Identifier (El_Attr) = Get_Identifier (Attr_Decl) then
+                  Report_Start_Group;
                   Error_Msg_Sem (+Attr, "%n is already decorated with an %n",
-                                 (+Decl, +El_Attr), Cont => True);
+                                 (+Decl, +El_Attr));
                   Error_Msg_Sem
                     (+El, "(previous attribute specification was here)");
+                  Report_End_Group;
                   return;
                end if;
             end;
@@ -946,9 +949,10 @@ package body Vhdl.Sem_Specs is
                if Get_Identifier (Get_Attribute_Designator (Decl))
                  = Get_Identifier (Get_Attribute_Designator (Spec))
                then
+                  Report_Start_Group;
                   Error_Msg_Sem
                     (+Decl, "no attribute specification may follow an "
-                       & "all/others spec", Cont => True);
+                       & "all/others spec");
                   Has_Error := True;
                end if;
             else
@@ -956,15 +960,17 @@ package body Vhdl.Sem_Specs is
                --  It is an error if a named entity in the specificied entity
                --  class is declared in a given declarative part following such
                --  an attribute specification.
+               Report_Start_Group;
                Error_Msg_Sem
                  (+Decl, "no named entity may follow an all/others attribute "
-                    & "specification", Cont => True);
+                    & "specification");
                Has_Error := True;
             end if;
             if Has_Error then
                Error_Msg_Sem
                  (+Spec, "(previous all/others specification for the given "
                     &"entity class)");
+               Report_End_Group;
             end if;
          end if;
          Spec := Get_Attribute_Specification_Chain (Spec);
@@ -1264,10 +1270,12 @@ package body Vhdl.Sem_Specs is
 
       procedure Prev_Spec_Error is
       begin
+         Report_Start_Group;
          Error_Msg_Sem
            (+Spec, "%n is alreay bound by a configuration specification",
-            (1 => +Comp), Cont => True);
+            +Comp);
          Error_Msg_Sem (+Prev_Spec, "(previous is %n)", +Prev_Spec);
+         Report_End_Group;
       end Prev_Spec_Error;
 
       Prev_Binding : Iir_Binding_Indication;
@@ -1308,10 +1316,12 @@ package body Vhdl.Sem_Specs is
                --  How can this happen ?
                raise Internal_Error;
             when Iir_Kind_Component_Configuration =>
+               Report_Start_Group;
                Error_Msg_Sem
                  (+Spec, "%n is already bound by a component configuration",
-                  (1 => +Comp), Cont => True);
+                  +Comp);
                Error_Msg_Sem (+Prev_Conf, "(previous is %n)", +Prev_Conf);
+               Report_End_Group;
                return;
             when others =>
                Error_Kind ("apply_configuration_specification(2)", Spec);
@@ -1650,9 +1660,7 @@ package body Vhdl.Sem_Specs is
          if Error then
             return;
          end if;
-         Error_Msg_Sem
-           (+Parent, "for default port binding of %n:",
-            (1 => +Parent), Cont => True);
+         Error_Msg_Sem (+Parent, "for default port binding of %n:", +Parent);
          Error := True;
       end Error_Header;
 
@@ -1687,25 +1695,28 @@ package body Vhdl.Sem_Specs is
             Location_Copy (Assoc, Parent);
          else
             if Are_Nodes_Compatible (Comp_El, Ent_El) = Not_Compatible then
+               Report_Start_Group;
                Error_Header;
                Error_Msg_Sem
-                 (+Parent, "type of %n declared at %l",
-                  (+Comp_El, +Comp_El), Cont => True);
+                 (+Parent, "type of %n declared at %l", (+Comp_El, +Comp_El));
                Error_Msg_Sem
                  (+Parent, "not compatible with type of %n declared at %l",
                   (+Ent_El, +Ent_El));
+               Report_End_Group;
             elsif Kind = Map_Port
               and then not Check_Port_Association_Mode_Restrictions
               (Ent_El, Comp_El, Null_Iir)
             then
+               Report_Start_Group;
                Error_Header;
                Error_Msg_Sem (+Parent, "cannot associate "
                                 & Get_Mode_Name (Get_Mode (Ent_El))
                                 & " %n declared at %l",
-                              (+Ent_El, +Ent_El), Cont => True);
+                              (+Ent_El, +Ent_El));
                Error_Msg_Sem (+Parent, "with actual port of mode "
                                 & Get_Mode_Name (Get_Mode (Comp_El))
                                 & " declared at %l", +Comp_El);
+               Report_End_Group;
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);

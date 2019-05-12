@@ -93,11 +93,17 @@ package body Errorout.Memory is
       Messages.Append (ASCII.NUL);
    end Memory_Message_End;
 
+   procedure Memory_Message_Group (Start : Boolean) is
+   begin
+      null;
+   end Memory_Message_Group;
+
    procedure Install_Handler is
    begin
       Set_Report_Handler ((Memory_Error_Start'Access,
                            Memory_Message'Access,
-                           Memory_Message_End'Access));
+                           Memory_Message_End'Access,
+                           Memory_Message_Group'Access));
    end Install_Handler;
 
 end Errorout.Memory;

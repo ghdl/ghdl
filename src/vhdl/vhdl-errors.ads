@@ -40,18 +40,15 @@ package Vhdl.Errors is
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
                               Loc : Location_Type;
                               Msg: String;
-                              Args : Earg_Arr := No_Eargs;
-                              Cont : Boolean := False);
+                              Args : Earg_Arr := No_Eargs);
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
                               Loc : Location_Type;
                               Msg: String;
-                              Arg1 : Earg_Type;
-                              Cont : Boolean := False);
+                              Arg1 : Earg_Type);
 
    procedure Error_Msg_Sem (Loc: Location_Type;
                             Msg: String;
-                            Args : Earg_Arr := No_Eargs;
-                            Cont : Boolean := False);
+                            Args : Earg_Arr := No_Eargs);
    procedure Error_Msg_Sem
      (Loc: Location_Type; Msg: String; Arg1 : Earg_Type);
 
@@ -81,13 +78,11 @@ package Vhdl.Errors is
    procedure Warning_Msg_Elab (Id : Msgid_Warnings;
                                Loc : Iir;
                                Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False);
+                               Arg1 : Earg_Type);
    procedure Warning_Msg_Elab (Id : Msgid_Warnings;
                                Loc : Iir;
                                Msg: String;
-                               Args : Earg_Arr := No_Eargs;
-                               Cont : Boolean := False);
+                               Args : Earg_Arr := No_Eargs);
 
    -- Disp a bug message.
    procedure Error_Internal (Expr: Iir; Msg: String := "");

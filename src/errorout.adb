@@ -24,6 +24,18 @@ with Str_Table;
 with Vhdl.Errors; use Vhdl.Errors;
 
 package body Errorout is
+   --  Messages in a group.
+   --  Set to 0 for individual messages,
+   --  Set to 1 .. n for messages in a group.
+   In_Group : Natural := 0;
+
+   Report_Handler : Report_Msg_Handler;
+
+   procedure Set_Report_Handler (Handler : Report_Msg_Handler) is
+   begin
+      Report_Handler := Handler;
+   end Set_Report_Handler;
+
    function Natural_Image (Val: Natural) return String
    is
       Str: constant String := Natural'Image (Val);
@@ -38,13 +50,6 @@ package body Errorout is
       Line_Pos := File_Line_To_Position (E.File, E.Line);
       return Coord_To_Col (E.File, Line_Pos, E.Offset);
    end Get_Error_Col;
-
-   Report_Handler : Report_Msg_Handler;
-
-   procedure Set_Report_Handler (Handler : Report_Msg_Handler) is
-   begin
-      Report_Handler := Handler;
-   end Set_Report_Handler;
 
    --  Warnings.
 
@@ -138,8 +143,7 @@ package body Errorout is
                          Origin : Report_Origin;
                          Loc : Source_Coord_Type;
                          Msg : String;
-                         Args : Earg_Arr := No_Eargs;
-                         Cont : Boolean := False)
+                         Args : Earg_Arr := No_Eargs)
    is
       procedure Location_To_Position (Location : Location_Type;
                                       File : out Source_File_Entry;
@@ -171,16 +175,33 @@ package body Errorout is
       end if;
       pragma Unreferenced (Id);
 
-      --  Limit the number of errors.
-      if not Cont and then New_Id = Msgid_Error then
-         Nbr_Errors := Nbr_Errors + 1;
-         if Nbr_Errors > Max_Nbr_Errors then
-            return;
+      if In_Group <= 1
+        and then New_Id = Msgid_Error
+      then
+         if Nbr_Errors = Max_Nbr_Errors then
+            --  Limit reached.  Emit a message.
+            Report_Handler.Error_Start
+              (Err => (Option, Msgid_Error,
+                       No_Source_File_Entry, 0, 0, 0));
+            Report_Handler.Message ("error limit reached");
+            Report_Handler.Message_End.all;
+         else
+            Nbr_Errors := Nbr_Errors + 1;
          end if;
       end if;
 
+      --  Limit the number of errors.
+      if New_Id = Msgid_Error and then Nbr_Errors > Max_Nbr_Errors then
+         return;
+      end if;
+
       Report_Handler.Error_Start
-        (Err => (Origin, New_Id, Cont, Loc.File, Loc.Line, Loc.Offset, 0));
+        (Err => (Origin, New_Id,
+                 Loc.File, Loc.Line, Loc.Offset, 0));
+
+      if In_Group > 0 then
+         In_Group := In_Group + 1;
+      end if;
 
       --  Display message.
       declare
@@ -337,18 +358,21 @@ package body Errorout is
       end;
 
       Report_Handler.Message_End.all;
-
-      if not Cont
-        and then New_Id = Msgid_Error
-        and then Nbr_Errors = Max_Nbr_Errors
-      then
-         --  Limit reached.  Emit a message.
-         Report_Handler.Error_Start (Err => (Option, Msgid_Error, False,
-                                             No_Source_File_Entry, 0, 0, 0));
-         Report_Handler.Message ("error limit reached");
-         Report_Handler.Message_End.all;
-      end if;
    end Report_Msg;
+
+   procedure Report_Start_Group is
+   begin
+      pragma Assert (In_Group = 0);
+      In_Group := 1;
+      Report_Handler.Message_Group.all (True);
+   end Report_Start_Group;
+
+   procedure Report_End_Group is
+   begin
+      pragma Assert (In_Group > 1);
+      In_Group := 0;
+      Report_Handler.Message_Group.all (False);
+   end Report_End_Group;
 
    procedure Error_Msg_Option_NR (Msg: String) is
    begin

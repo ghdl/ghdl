@@ -96,6 +96,8 @@ package body Errorout.Console is
 
    Msg_Len : Natural;
    Current_Error : Error_Record;
+   Current_Line : Natural;
+   In_Group : Boolean := False;
 
    procedure Put (Str : String)
    is
@@ -154,6 +156,13 @@ package body Errorout.Console is
       Progname : Boolean;
    begin
       Current_Error := E;
+
+      if In_Group then
+         Current_Line := Current_Line + 1;
+      else
+         pragma Assert (Current_Line <= 1);
+         Current_Line := 1;
+      end if;
 
       Detect_Terminal;
 
@@ -228,7 +237,8 @@ package body Errorout.Console is
 
    procedure Console_Message_End is
    begin
-      if Flag_Diagnostics_Show_Option
+      if Current_Line = 1
+        and then Flag_Diagnostics_Show_Option
         and then Current_Error.Id in Msgid_Warnings
       then
          Put (" [-W");
@@ -242,7 +252,8 @@ package body Errorout.Console is
 
       Put_Line;
 
-      if Flag_Caret_Diagnostics
+      if Current_Line = 1
+        and then Flag_Caret_Diagnostics
         and then (Current_Error.File /= No_Source_File_Entry
                     and Current_Error.Line /= 0)
       then
@@ -252,10 +263,18 @@ package body Errorout.Console is
       end if;
    end Console_Message_End;
 
+   procedure Console_Message_Group (Start : Boolean) is
+   begin
+      Current_Line := 0;
+      pragma Assert (In_Group /= Start);
+      In_Group := Start;
+   end Console_Message_Group;
+
    procedure Install_Handler is
    begin
       Set_Report_Handler ((Console_Error_Start'Access,
                            Console_Message'Access,
-                           Console_Message_End'Access));
+                           Console_Message_End'Access,
+                           Console_Message_Group'Access));
    end Install_Handler;
 end Errorout.Console;

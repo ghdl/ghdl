@@ -691,19 +691,19 @@ package body Vhdl.Sem_Types is
       then
          Set_Protected_Type_Declaration (Bod, Decl);
          if Get_Protected_Type_Body (Decl) /= Null_Iir then
+            Report_Start_Group;
             Error_Msg_Sem
-              (+Bod, "protected type body already declared for %n",
-               (1 => +Decl), Cont => True);
+              (+Bod, "protected type body already declared for %n", +Decl);
             Error_Msg_Sem
               (+Get_Protected_Type_Body (Decl), "(previous body)");
+            Report_End_Group;
             Decl := Null_Iir;
          elsif not Get_Visible_Flag (Type_Decl) then
             --  Can this happen ?
-            Error_Msg_Sem
-              (+Bod, "protected type declaration not yet visible",
-               Cont => True);
-            Error_Msg_Sem
-              (+Decl, "(location of protected type declaration)");
+            Report_Start_Group;
+            Error_Msg_Sem (+Bod, "protected type declaration not yet visible");
+            Error_Msg_Sem (+Decl, "(location of protected type declaration)");
+            Report_End_Group;
             Decl := Null_Iir;
          else
             Set_Protected_Type_Body (Decl, Bod);
@@ -1388,12 +1388,13 @@ package body Vhdl.Sem_Types is
                if Res /= Null_Iir then
                   if not Has_Error then
                      Has_Error := True;
+                     Report_Start_Group;
                      Error_Msg_Sem
                        (+Atype,
-                        "can't resolve overload for resolution function",
-                        Cont => True);
+                        "can't resolve overload for resolution function");
                      Error_Msg_Sem (+Atype, "candidate functions are:");
                      Error_Msg_Sem (+Func, " " & Disp_Subprg (Func));
+                     Report_End_Group;
                   end if;
                   Error_Msg_Sem (+El, " " & Disp_Subprg (El));
                else
@@ -1718,12 +1719,13 @@ package body Vhdl.Sem_Types is
                --  The type mark must denote either an unconstrained array
                --  type, or an access type whose designated type is such
                --  an array type.
+               Report_Start_Group;
                Error_Msg_Sem
                  (+Def,
-                  "only unconstrained array type may be contrained by index",
-                  Cont => True);
+                  "only unconstrained array type may be contrained by index");
                Error_Msg_Sem
                  (+Type_Mark, " (type mark is %n)", +Type_Mark);
+               Report_End_Group;
                return Type_Mark;
          end case;
       end if;
@@ -1992,11 +1994,12 @@ package body Vhdl.Sem_Types is
                   else
                      Pos := Natural (Get_Element_Position (Tm_El));
                      if Els (Pos) /= Null_Iir then
+                        Report_Start_Group;
                         Error_Msg_Sem
-                          (+El, "%n was already constrained",
-                           (1 => +El), Cont => True);
+                          (+El, "%n was already constrained", +El);
                         Error_Msg_Sem
                           (+Els (Pos), " (location of previous constrained)");
+                        Report_End_Group;
                      else
                         Els (Pos) := El;
                         Set_Parent (El, Res);
@@ -2039,10 +2042,11 @@ package body Vhdl.Sem_Types is
                   else
                      Pos := Natural (Get_Element_Position (Tm_El));
                      if Res_Els (Pos) /= Null_Iir then
-                        Error_Msg_Sem (+El, "%n was already resolved",
-                                       (1 => +El), Cont => True);
+                        Report_Start_Group;
+                        Error_Msg_Sem (+El, "%n was already resolved", +El);
                         Error_Msg_Sem
                           (+Els (Pos), " (location of previous constrained)");
+                        Report_End_Group;
                      else
                         Res_Els (Pos) := Tm_El;
                      end if;
@@ -2124,11 +2128,10 @@ package body Vhdl.Sem_Types is
          --  FIXME: find the correct sentence from LRM
          --  GHDL: subtype_definition may also be used just to add
          --    a resolution function.
-         Error_Msg_Sem
-           (+Def, "only scalar types may be constrained by range",
-            Cont => True);
-         Error_Msg_Sem
-           (+Type_Mark, " (type mark is %n)", +Type_Mark);
+         Report_Start_Group;
+         Error_Msg_Sem (+Def, "only scalar types may be constrained by range");
+         Error_Msg_Sem (+Type_Mark, " (type mark is %n)", +Type_Mark);
+         Report_End_Group;
          Res := Copy_Subtype_Indication (Type_Mark);
       else
          Tolerance := Get_Tolerance (Def);

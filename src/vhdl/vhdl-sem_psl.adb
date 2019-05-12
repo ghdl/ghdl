@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
+with Errorout; use Errorout;
 with PSL.Types; use PSL.Types;
 with PSL.Nodes; use PSL.Nodes;
 with PSL.Subsets;
@@ -707,12 +708,13 @@ package body Vhdl.Sem_Psl is
       if Current_Psl_Default_Clock /= Null_Iir
         and then Get_Parent (Current_Psl_Default_Clock) = Get_Parent (Stmt)
       then
+         Report_Start_Group;
          Error_Msg_Sem
-           (+Stmt, "redeclaration of PSL default clock in the same region",
-            Cont => True);
+           (+Stmt, "redeclaration of PSL default clock in the same region");
          Error_Msg_Sem
            (+Current_Psl_Default_Clock,
             " (previous default clock declaration)");
+         Report_End_Group;
       end if;
       Expr := Sem_Boolean (Get_Psl_Boolean (Stmt));
       Set_Psl_Boolean (Stmt, Expr);

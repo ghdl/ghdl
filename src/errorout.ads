@@ -172,7 +172,8 @@ package Errorout is
    type Error_Record is record
       Origin : Report_Origin;
       Id : Msgid_Type;
-      Cont : Boolean;
+
+      --  Error soure file.
       File : Source_File_Entry;
 
       --  The first line is line 1, 0 can be used when line number is not
@@ -188,26 +189,33 @@ package Errorout is
    end record;
 
    type Error_Start_Handler is access procedure (Err : Error_Record);
-   type Message_Handler is access procedure (Str : String);
+   type Message_Str_Handler is access procedure (Str : String);
    type Message_End_Handler is access procedure;
+   type Message_Group_Handler is access procedure (Start : Boolean);
 
    type Report_Msg_Handler is record
       Error_Start : Error_Start_Handler;
-      Message : Message_Handler;
+      Message : Message_Str_Handler;
       Message_End : Message_End_Handler;
+      Message_Group : Message_Group_Handler;
    end record;
 
    procedure Set_Report_Handler (Handler : Report_Msg_Handler);
 
-   --  Generic report message.  LOC maybe No_Location.
-   --  If ORIGIN is Option or Library, LOC must be No_Location and the program
-   --  name is displayed.
+   --  Generic report message.
+   --  If ORIGIN is Option or Library, LOC must be No_Source_Coord and the
+   --  program name is displayed.
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Source_Coord_Type;
                          Msg : String;
-                         Args : Earg_Arr := No_Eargs;
-                         Cont : Boolean := False);
+                         Args : Earg_Arr := No_Eargs);
+
+   --  Group several messages (for multi-lines messages).
+   --  Report_Start_Group must be called before the first Report_Msg call,
+   --  and Report_End_Group after the last one.
+   procedure Report_Start_Group;
+   procedure Report_End_Group;
 
    --  Disp an error, prepended with program name, and raise option_error.
    --  This is used for errors before initialisation, such as bad option or

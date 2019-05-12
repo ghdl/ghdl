@@ -452,12 +452,14 @@ package body Vhdl.Configuration is
             if Is_Warning_Enabled (Warnid_Binding)
               and then not Get_Artificial_Flag (Assoc)
             then
+               Report_Start_Group;
                Warning_Msg_Elab
                  (Warnid_Binding, Assoc, "%n of %n is not bound",
-                  (+Formal, +Get_Parent (Formal)), Cont => True);
+                  (+Formal, +Get_Parent (Formal)));
                Warning_Msg_Elab
                  (Warnid_Binding, Current_Configuration,
                   "(in %n)", +Current_Configuration);
+               Report_End_Group;
             end if;
          end if;
          Next_Association_Interface (Assoc, Inter);
@@ -552,13 +554,13 @@ package body Vhdl.Configuration is
          if Is_Warning_Enabled (Warnid_Binding) then
             Inst := Get_Nth_Element (Get_Instantiation_List (Conf), 0);
             Inst := Strip_Denoting_Name (Inst);
-            Warning_Msg_Elab
-              (Warnid_Binding, Conf,
-               "%n of %n is not bound",
-               (+Inst, +Get_Instantiated_Unit (Inst)), Cont => True);
-            Warning_Msg_Elab
-              (Warnid_Binding, Current_Configuration,
-               "(in %n)", +Current_Configuration);
+            Report_Start_Group;
+            Warning_Msg_Elab (Warnid_Binding, Conf,
+                              "%n of %n is not bound",
+                              (+Inst, +Get_Instantiated_Unit (Inst)));
+            Warning_Msg_Elab (Warnid_Binding, Current_Configuration,
+                              "(in %n)", +Current_Configuration);
+            Report_End_Group;
          end if;
          return;
       end if;

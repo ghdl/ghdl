@@ -1044,13 +1044,13 @@ package body Vhdl.Sem_Expr is
    is
       procedure Error_Wait is
       begin
+         Report_Start_Group;
          Error_Msg_Sem
            (+Loc, "%n must not contain wait statement, but calls",
-            (1 => +Subprg), Cont => True);
+            (1 => +Subprg));
          Error_Msg_Sem
            (+Callee, "%n which has (indirectly) a wait statement", +Callee);
-         --Error_Msg_Sem
-         --  ("(indirect) wait statement not allowed in " & Where, Loc);
+         Report_End_Group;
       end Error_Wait;
    begin
       pragma Assert (Get_Kind (Callee) = Iir_Kind_Procedure_Declaration);
@@ -1137,11 +1137,13 @@ package body Vhdl.Sem_Expr is
                      --  signal whose explicit ancestor is not a formal signal
                      --  parameter or member of a formal parameter of
                      --  the subprogram or of any of its parents.
+                     Report_Start_Group;
                      Error_Msg_Sem (+Loc, "all-sensitized %n can't call %n",
-                                    (+Subprg, +Callee), Cont => True);
+                                    (+Subprg, +Callee));
                      Error_Msg_Sem
                        (+Loc,
                         " (as this subprogram reads (indirectly) a signal)");
+                     Report_End_Group;
                   end if;
                when Iir_Kind_Process_Statement =>
                   return;
@@ -1392,18 +1394,20 @@ package body Vhdl.Sem_Expr is
             --  Only one interpretation for the subprogram name.
             if Is_Func then
                if not Is_Function_Declaration (Inter_List) then
-                  Error_Msg_Sem (+Expr, "name does not designate a function",
-                                 Cont => True);
+                  Report_Start_Group;
+                  Error_Msg_Sem (+Expr, "name does not designate a function");
                   Error_Msg_Sem (+Expr, "name is %n defined at %l",
                                  (+Inter_List, +Inter_List));
+                  Report_End_Group;
                   return Null_Iir;
                end if;
             else
                if not Is_Procedure_Declaration (Inter_List) then
-                  Error_Msg_Sem (+Expr, "name does not designate a procedure",
-                                Cont => True);
+                  Report_Start_Group;
+                  Error_Msg_Sem (+Expr, "name does not designate a procedure");
                   Error_Msg_Sem (+Expr, "name is %n defined at %l",
                                  (+Inter_List, +Inter_List));
+                  Report_End_Group;
                   return Null_Iir;
                end if;
             end if;

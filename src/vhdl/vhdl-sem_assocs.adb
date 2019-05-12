@@ -1872,13 +1872,15 @@ package body Vhdl.Sem_Assocs is
 
       if Match = Not_Compatible then
          if Finish and then not Is_Error (Actual) then
-            Error_Msg_Sem (+Assoc, "can't associate %n with %n",
-                           (+Actual, +Inter), Cont => True);
+            Report_Start_Group;
+            Error_Msg_Sem
+              (+Assoc, "can't associate %n with %n", (+Actual, +Inter));
             Error_Msg_Sem
               (+Assoc, "(type of %n is " & Disp_Type_Of (Actual) & ")",
-               (1 => +Actual), Cont => True);
+               (1 => +Actual));
             Error_Msg_Sem
               (+Inter, "(type of %n is " & Disp_Type_Of (Inter) & ")", +Inter);
+            Report_End_Group;
          end if;
          return;
       end if;

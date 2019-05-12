@@ -218,19 +218,19 @@ package body Vhdl.Scanner is
    end Error_Msg_Scan;
 
    -- Disp a message during scan.
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String) is
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
+                               Msg: String;
+                               Arg1 : Earg_Type) is
    begin
-      Report_Msg (Id, Scan, Get_Current_Coord, Msg);
+      Report_Msg (Id, Scan, Get_Current_Coord, Msg, (1 => Arg1));
    end Warning_Msg_Scan;
 
    procedure Warning_Msg_Scan (Id : Msgid_Warnings;
                                Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False) is
+                               Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Id, Scan, Get_Current_Coord, Msg, (1 => Arg1), Cont);
+      Report_Msg (Id, Scan, Get_Current_Coord, Msg, Args);
    end Warning_Msg_Scan;
-
 
    Source: File_Buffer_Acc renames Current_Context.Source;
    Pos: Source_Ptr renames Current_Context.Pos;
@@ -1255,13 +1255,15 @@ package body Vhdl.Scanner is
             when Std_Names.Name_Id_Vhdl93_Reserved_Words =>
                if Vhdl_Std = Vhdl_87 then
                   if Is_Warning_Enabled (Warnid_Reserved_Word) then
+                     Report_Start_Group;
                      Warning_Msg_Scan
                        (Warnid_Reserved_Word,
                         "using %i vhdl93 reserved word as a vhdl87 identifier",
-                        +Current_Identifier, True);
+                        +Current_Identifier);
                      Warning_Msg_Scan
                        (Warnid_Reserved_Word,
                         "(use option --std=93 to compile as vhdl93)");
+                     Report_End_Group;
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
