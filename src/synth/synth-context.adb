@@ -22,11 +22,11 @@ with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
 with Grt.Types; use Grt.Types;
-with Errorout; use Errorout;
-with Iirs_Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils;
 
-with Std_Package;
-with Ieee.Std_Logic_1164;
+with Vhdl.Std_Package;
+with Vhdl.Ieee.Std_Logic_1164;
 
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Execution;
@@ -90,14 +90,14 @@ package body Synth.Context is
             end if;
          when Iir_Kind_Array_Type_Definition =>
             --  Well known array types.
-            if Btype = Ieee.Std_Logic_1164.Std_Logic_Vector_Type
-              or else Btype = Ieee.Std_Logic_1164.Std_Ulogic_Vector_Type
+            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type
+              or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Vector_Type
             then
                return Alloc_Wire
                  (Kind, Obj, Bounds_To_Range (Val.Bounds.D (1)));
             end if;
             if Is_Bit_Type (Get_Element_Subtype (Btype))
-              and then Iirs_Utils.Get_Nbr_Dimensions (Btype) = 1
+              and then Vhdl.Utils.Get_Nbr_Dimensions (Btype) = 1
             then
                --  A vector of bits.
                return Alloc_Wire
@@ -139,8 +139,9 @@ package body Synth.Context is
             case Val.Lit.Kind is
                when Iir_Value_B1 =>
                   pragma Assert
-                    (Val.Lit_Type = Std_Package.Boolean_Type_Definition
-                       or else Val.Lit_Type = Std_Package.Bit_Type_Definition);
+                    (Val.Lit_Type = Vhdl.Std_Package.Boolean_Type_Definition
+                       or else
+                       Val.Lit_Type = Vhdl.Std_Package.Bit_Type_Definition);
                   return Build_Const_UB32
                     (Build_Context, Ghdl_B1'Pos (Val.Lit.B1), 1);
                when Iir_Value_E8 =>

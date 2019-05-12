@@ -22,17 +22,18 @@ with Types; use Types;
 with Name_Table;
 with Hash;
 with Interning;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Libraries;
-with Iirs_Utils; use Iirs_Utils;
-with Std_Package;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Std_Package;
 with Flags;
-with Configuration;
+with Vhdl.Configuration;
 with Translation;
-with Sem;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Errorout; use Errorout;
 with Errorout.Console;
+with Vhdl.Errors; use Vhdl.Errors;
 with GNAT.OS_Lib;
 with Bug;
 with Trans_Be;
@@ -317,18 +318,18 @@ package body Ortho_Front is
       --  Do late analysis checks.
       Design := Get_First_Design_Unit (New_Design_File);
       while Is_Valid (Design) loop
-         Sem.Sem_Analysis_Checks_List
+         Vhdl.Sem.Sem_Analysis_Checks_List
            (Design, Is_Warning_Enabled (Warnid_Delayed_Checks));
          Design := Get_Chain (Design);
       end loop;
 
       --  Gather dependencies
       pragma Assert (Flags.Flag_Elaborate = False);
-      Configuration.Flag_Load_All_Design_Units := False;
+      Vhdl.Configuration.Flag_Load_All_Design_Units := False;
 
       --  Exclude std.standard
-      Set_Configuration_Mark_Flag (Std_Package.Std_Standard_Unit, True);
-      Set_Configuration_Done_Flag (Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Mark_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Done_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
 
       Dep_List := Create_Iir_List;
 
@@ -450,7 +451,7 @@ package body Ortho_Front is
    is
       use Interfaces.C_Streams;
       use System;
-      use Configuration;
+      use Vhdl.Configuration;
       use Name_Table;
 
       Nul : constant Character := Character'Val (0);
@@ -550,7 +551,7 @@ package body Ortho_Front is
             Trans_Be.Sem_Foreign_Hook := Sem_Foreign_Hook'Access;
             Shlib_Interning.Init;
 
-            Config := Configuration.Configure
+            Config := Vhdl.Configuration.Configure
               (Elab_Entity.all, Elab_Architecture.all);
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).
@@ -604,7 +605,7 @@ package body Ortho_Front is
 
             Flags.Flag_Elaborate := True;
             Flags.Flag_Only_Elab_Warnings := False;
-            Config := Configuration.Configure
+            Config := Vhdl.Configuration.Configure
               (Elab_Entity.all, Elab_Architecture.all);
             Translation.Elaborate (Config, True);
 

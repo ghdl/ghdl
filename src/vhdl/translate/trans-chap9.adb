@@ -16,18 +16,20 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Iirs_Utils; use Iirs_Utils;
-with Errorout; use Errorout;
-with Std_Package; use Std_Package;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Flags;
 with Libraries;
-with Canon;
+with Vhdl.Canon;
 with Trans_Analyzes;
-with Nodes_Meta;
+with Vhdl.Nodes_Meta;
+with PSL.Types; use PSL.Types;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
-with Ieee.Std_Logic_1164;
+with PSL.Errors; use PSL.Errors;
+with Vhdl.Ieee.Std_Logic_1164;
 with Trans.Chap1;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -389,7 +391,7 @@ package body Trans.Chap9 is
                      Res,
                      New_Lit (Get_Ortho_Literal (Bit_1)),
                      Get_Ortho_Type (Boolean_Type_Definition, Mode_Value));
-               elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+               elsif Rtype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   return New_Value
                     (New_Indexed_Element
                        (New_Obj (Ghdl_Std_Ulogic_To_Boolean_Array),
@@ -1253,7 +1255,7 @@ package body Trans.Chap9 is
       end if;
 
       declare
-         use Nodes_Meta;
+         use Vhdl.Nodes_Meta;
          Kind      : constant Iir_Kind := Get_Kind (N);
          Fields    : constant Fields_Array := Get_Fields (Kind);
          F         : Fields_Enum;
@@ -1350,7 +1352,7 @@ package body Trans.Chap9 is
                  | Type_Iir_Constraint
                  | Type_Iir_Mode
                  | Type_Iir_Index32
-                 | Type_Iir_Int64
+                 | Type_Int64
                  | Type_Boolean
                  | Type_Iir_Staticness
                  | Type_Iir_All_Sensitized
@@ -1362,7 +1364,7 @@ package body Trans.Chap9 is
                  | Type_Iir_Direction
                  | Type_Iir_Int32
                  | Type_Int32
-                 | Type_Iir_Fp64
+                 | Type_Fp64
                  | Type_Token_Type
                  | Type_Name_Id =>
                   null;
@@ -1758,7 +1760,7 @@ package body Trans.Chap9 is
       if Is_Sensitized then
          List_Orig := Get_Sensitivity_List (Proc);
          if List_Orig = Iir_List_All then
-            List := Canon.Canon_Extract_Process_Sensitivity (Proc);
+            List := Vhdl.Canon.Canon_Extract_Process_Sensitivity (Proc);
          else
             List := List_Orig;
          end if;

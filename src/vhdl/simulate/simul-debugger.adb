@@ -23,22 +23,23 @@ with Types; use Types;
 with Name_Table;
 with Str_Table;
 with Files_Map;
-with Parse;
-with Scanner;
-with Tokens;
-with Sem_Expr;
-with Sem_Scopes;
-with Canon;
+with Vhdl.Parse;
+with Vhdl.Scanner;
+with Vhdl.Tokens;
+with Vhdl.Sem_Expr;
+with Vhdl.Sem_Scopes;
+with Vhdl.Canon;
 with Std_Names;
 with Libraries;
-with Std_Package;
+with Vhdl.Std_Package;
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
-with Disp_Vhdl;
-with Iirs_Walk; use Iirs_Walk;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Disp_Vhdl;
+with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Areapools; use Areapools;
 with Grt.Types; use Grt.Types;
 with Grt.Disp;
@@ -1337,7 +1338,8 @@ package body Simul.Debugger is
                Len := Len + 1;
                P := P + 1;
             end loop;
-            Break_Id := Parse.Str_To_Operator_Name (Str, Len, No_Location);
+            Break_Id := Vhdl.Parse.Str_To_Operator_Name
+              (Str, Len, No_Location);
             --  FIXME: free string.
             --  FIXME: catch error.
          end;
@@ -1520,7 +1522,7 @@ package body Simul.Debugger is
             Put ('.');
             Put (Name_Table.Image (Get_Identifier (E.Stmt)));
             New_Line;
-            Disp_Vhdl.Disp_PSL_NFA (Get_PSL_NFA (E.Stmt));
+            Vhdl.Disp_Vhdl.Disp_PSL_NFA (Get_PSL_NFA (E.Stmt));
             Put ("    01234567890123456789012345678901234567890123456789");
             for I in E.States'Range loop
                if I mod 50 = 0 then
@@ -1749,7 +1751,7 @@ package body Simul.Debugger is
 
    procedure Add_Decls_For (N : Iir)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
    begin
       case Get_Kind (N) is
          when Iir_Kind_Entity_Declaration =>
@@ -1818,21 +1820,21 @@ package body Simul.Debugger is
 
    procedure Enter_Scope (Node : Iir)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
    begin
       Push_Interpretations;
       Open_Declarative_Region;
 
       --  Add STD
       Add_Name (Libraries.Std_Library, Std_Names.Name_Std, False);
-      Use_All_Names (Std_Package.Standard_Package);
+      Use_All_Names (Vhdl.Std_Package.Standard_Package);
 
       Foreach_Scopes (Node, Add_Decls_For'Access);
    end Enter_Scope;
 
    procedure Del_Decls_For (N : Iir)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
    begin
       case Get_Kind (N) is
          when Iir_Kind_Entity_Declaration =>
@@ -1857,7 +1859,7 @@ package body Simul.Debugger is
 
    procedure Leave_Scope (Node : Iir)
    is
-      use Sem_Scopes;
+      use Vhdl.Sem_Scopes;
    begin
       Foreach_Scopes (Node, Del_Decls_For'Access);
 
@@ -1869,7 +1871,7 @@ package body Simul.Debugger is
 
    procedure Print_Proc (Line : String)
    is
-      use Tokens;
+      use Vhdl.Tokens;
       Index_Str : String := Natural'Image (Buffer_Index);
       File : Source_File_Entry;
       Expr : Iir;
@@ -1899,13 +1901,13 @@ package body Simul.Debugger is
       File := Files_Map.Create_Source_File_From_String
         (Name_Table.Get_Identifier ("*debug" & Index_Str & '*'),
          Line (P .. Line'Last));
-      Scanner.Set_File (File);
-      Scanner.Scan;
-      Expr := Parse.Parse_Expression;
-      if Scanner.Current_Token /= Tok_Eof then
+      Vhdl.Scanner.Set_File (File);
+      Vhdl.Scanner.Scan;
+      Expr := Vhdl.Parse.Parse_Expression;
+      if Vhdl.Scanner.Current_Token /= Tok_Eof then
          Put_Line ("garbage at end of expression ignored");
       end if;
-      Scanner.Close_File;
+      Vhdl.Scanner.Close_File;
       if Nbr_Errors /= 0 then
          Put_Line ("error while parsing expression, evaluation aborted");
          Nbr_Errors := 0;
@@ -1913,7 +1915,7 @@ package body Simul.Debugger is
       end if;
 
       Enter_Scope (Dbg_Cur_Frame.Stmt);
-      Expr := Sem_Expr.Sem_Expression_Universal (Expr);
+      Expr := Vhdl.Sem_Expr.Sem_Expression_Universal (Expr);
       Leave_Scope (Dbg_Cur_Frame.Stmt);
 
       if Expr = Null_Iir
@@ -1924,11 +1926,11 @@ package body Simul.Debugger is
          return;
       end if;
 
-      Disp_Vhdl.Disp_Expression (Expr);
+      Vhdl.Disp_Vhdl.Disp_Expression (Expr);
       New_Line;
 
       Annotate_Expand_Table;
-      Canon.Canon_Expression (Expr);
+      Vhdl.Canon.Canon_Expression (Expr);
 
       Mark (Marker, Expr_Pool);
 

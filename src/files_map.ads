@@ -18,7 +18,7 @@
 with Types; use Types;
 with Tables;
 with Dyn_Tables;
-with Nodes;
+with Vhdl.Types;
 
 --  Source file handling
 
@@ -71,7 +71,7 @@ package Files_Map is
    --  new locations so that it is possible to retrieve the instance from
    --  the new locations.
    function Create_Instance_Source_File
-     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Nodes.Node_Type)
+     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Vhdl.Types.Node)
      return Source_File_Entry;
 
    --  Unload last source file.  Works only with the last one.  Must be
@@ -191,6 +191,13 @@ package Files_Map is
    --     a tabulation is one character),
    procedure Location_To_Coord (Location : Location_Type;
                                 File : out Source_File_Entry;
+                                Line_Pos : out Source_Ptr;
+                                Line : out Positive;
+                                Offset : out Natural);
+
+   --  Convert FILE and POS to coordinate.
+   procedure File_Pos_To_Coord (File : Source_File_Entry;
+                                Pos : Source_Ptr;
                                 Line_Pos : out Source_Ptr;
                                 Line : out Positive;
                                 Offset : out Natural);

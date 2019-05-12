@@ -18,9 +18,9 @@
 
 with Tables;
 with Ada.Text_IO;
-with Std_Package;
-with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Std_Package;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 with Types; use Types;
 
 package body Simul.Annotations is
@@ -279,8 +279,8 @@ package body Simul.Annotations is
             declare
                Mode : Iir_Value_Kind;
             begin
-               if Def = Std_Package.Boolean_Type_Definition
-                 or else Def = Std_Package.Bit_Type_Definition
+               if Def = Vhdl.Std_Package.Boolean_Type_Definition
+                 or else Def = Vhdl.Std_Package.Bit_Type_Definition
                then
                   Mode := Iir_Value_B1;
                elsif (Get_Nbr_Elements (Get_Enumeration_Literal_List (Def))
@@ -1161,7 +1161,7 @@ package body Simul.Annotations is
             Annotate_Architecture (El);
          when Iir_Kind_Package_Declaration =>
             declare
-               use Std_Package;
+               use Vhdl.Std_Package;
             begin
                if El = Standard_Package then
                   pragma Assert (Global_Info = null);

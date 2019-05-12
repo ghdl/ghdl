@@ -17,11 +17,11 @@
 --  02111-1307, USA.
 
 with Std_Names;
-with Std_Package; use Std_Package;
-with Errorout; use Errorout;
-with Sem_Inst;
-with Nodes_Meta;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Sem_Inst;
+with Vhdl.Nodes_Meta;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap5;
@@ -1373,11 +1373,11 @@ package body Trans.Chap2 is
       end if;
 
       declare
-         use Nodes_Meta;
+         use Vhdl.Nodes_Meta;
          Kind      : constant Iir_Kind := Get_Kind (N);
          Fields    : constant Fields_Array := Get_Fields (Kind);
          F         : Fields_Enum;
-         Orig      : constant Iir := Sem_Inst.Get_Origin (N);
+         Orig      : constant Iir := Vhdl.Sem_Inst.Get_Origin (N);
          pragma Assert (Orig /= Null_Iir);
          Orig_Info : constant Ortho_Info_Acc := Get_Info (Orig);
          Info      : Ortho_Info_Acc;
@@ -1455,7 +1455,7 @@ package body Trans.Chap2 is
                   | Type_Iir_Constraint
                   | Type_Iir_Mode
                   | Type_Iir_Index32
-                  | Type_Iir_Int64
+                  | Type_Int64
                   | Type_Boolean
                   | Type_Iir_Staticness
                   | Type_Iir_All_Sensitized
@@ -1467,7 +1467,7 @@ package body Trans.Chap2 is
                   | Type_Iir_Direction
                   | Type_Iir_Int32
                   | Type_Int32
-                  | Type_Iir_Fp64
+                  | Type_Fp64
                   | Type_Token_Type
                   | Type_Name_Id =>
                   null;
@@ -1489,7 +1489,7 @@ package body Trans.Chap2 is
    begin
       Inter := Chain;
       while Inter /= Null_Iir loop
-         Orig := Sem_Inst.Get_Origin (Inter);
+         Orig := Vhdl.Sem_Inst.Get_Origin (Inter);
          Orig_Info := Get_Info (Orig);
 
          Info := Add_Info (Inter, Orig_Info.Kind);

@@ -16,10 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Evaluation; use Evaluation;
-with Std_Package; use Std_Package;
-with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans_Decls; use Trans_Decls;
 with Trans.Chap3;
 with Trans.Chap6;
@@ -577,7 +577,7 @@ package body Trans.Chap14 is
       Info        : Type_Info_Acc;
       Var         : O_Dnode;
       Data        : Last_Time_Data;
-      Right_Bound : Iir_Int64;
+      Right_Bound : Int64;
       If_Blk      : O_If_Block;
    begin
       Name := Chap6.Translate_Name (Prefix, Mode_Signal);

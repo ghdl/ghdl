@@ -21,7 +21,7 @@
 with Types; use Types;
 with Simul.Environments; use Simul.Environments;
 with Synth.Values; use Synth.Values;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Expr is
    function Is_Const (Val : Value_Acc) return Boolean;

@@ -21,9 +21,9 @@
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with Std_Names;
-with Ieee.Std_Logic_1164;
-with Std_Package;
-with Errorout; use Errorout;
+with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Std_Package;
+with Vhdl.Errors; use Vhdl.Errors;
 with Simul.Execution;
 with Grt.Types; use Grt.Types;
 
@@ -85,21 +85,21 @@ package body Synth.Expr is
          when Iir_Value_E8 =>
             --  Std_logic.
             case Lit.E8 is
-               when Ieee.Std_Logic_1164.Std_Logic_0_Pos
-                 |  Ieee.Std_Logic_1164.Std_Logic_L_Pos =>
+               when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos
+                 |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_L_Pos =>
                   Val := 0;
                   Zx := 0;
-               when Ieee.Std_Logic_1164.Std_Logic_1_Pos
-                 |  Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
+               when Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos
+                 |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
                   Val := 1;
                   Zx := 0;
-               when Ieee.Std_Logic_1164.Std_Logic_U_Pos
-                 |  Ieee.Std_Logic_1164.Std_Logic_X_Pos
-                 |  Ieee.Std_Logic_1164.Std_Logic_D_Pos =>
+               when Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
+                 |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
+                 |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos =>
                   Val := 1;
                   Zx := 1;
-               when Ieee.Std_Logic_1164.Std_Logic_Z_Pos
-                 |  Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
+               when Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
+                 |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
                   Val := 0;
                   Zx := 1;
                when others =>
@@ -696,12 +696,12 @@ package body Synth.Expr is
          return Build_Edge (Build_Context, True, Clk);
       end if;
       Lit := Get_Named_Entity (Right);
-      if Lit = Std_Package.Bit_0
-        or else Lit = Ieee.Std_Logic_1164.Std_Ulogic_0
+      if Lit = Vhdl.Std_Package.Bit_0
+        or else Lit = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_0
       then
          Posedge := False;
-      elsif Lit = Std_Package.Bit_1
-        or else Lit = Ieee.Std_Logic_1164.Std_Ulogic_1
+      elsif Lit = Vhdl.Std_Package.Bit_1
+        or else Lit = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_1
       then
          Posedge := True;
       else
@@ -853,7 +853,7 @@ package body Synth.Expr is
                Imp : constant Iir := Get_Implementation (Expr);
                Clk : Net;
             begin
-               if Imp = Ieee.Std_Logic_1164.Rising_Edge then
+               if Imp = Vhdl.Ieee.Std_Logic_1164.Rising_Edge then
                   Clk := Get_Net
                     (Synth_Assoc_In
                        (Syn_Inst, Get_Parameter_Association_Chain (Expr)));

@@ -21,15 +21,16 @@ with Ortho_Ident; use Ortho_Ident;
 with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Name_Table; -- use Name_Table;
 with Str_Table;
 with Files_Map;
-with Iirs_Utils; use Iirs_Utils;
-with Std_Package; use Std_Package;
-with Sem_Specs;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Sem_Specs;
 with Libraries;
 with Std_Names;
-with Canon;
+with Vhdl.Canon;
 with Trans;
 with Trans_Decls; use Trans_Decls;
 with Trans.Chap1;
@@ -109,7 +110,7 @@ package body Translation is
    is
       --  Look for 'FOREIGN.
       Attr : constant Iir_Attribute_Value :=
-        Sem_Specs.Find_Attribute_Value (Decl, Std_Names.Name_Foreign);
+        Vhdl.Sem_Specs.Find_Attribute_Value (Decl, Std_Names.Name_Foreign);
       pragma Assert (Attr /= Null_Iir);
       Spec : constant Iir_Attribute_Specification :=
         Get_Attribute_Specification (Attr);
@@ -375,7 +376,7 @@ package body Translation is
       Init_Node_Infos;
 
       --  Set flags for canon.
-      Canon.Canon_Flag_Add_Labels := True;
+      Vhdl.Canon.Canon_Flag_Add_Labels := True;
 
       --  Force to unnest subprograms is the code generator doesn't support
       --  nested subprograms.

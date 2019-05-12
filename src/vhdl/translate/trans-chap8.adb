@@ -18,12 +18,12 @@
 
 with Ada.Text_IO;
 with Std_Names;
-with Errorout; use Errorout;
-with Iir_Chains;
-with Canon;
-with Evaluation; use Evaluation;
-with Std_Package; use Std_Package;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Nodes_Utils;
+with Vhdl.Canon;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans.Chap2;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -1206,7 +1206,7 @@ package body Trans.Chap8 is
       Expr       : constant Iir := Get_Expression (Stmt);
       Expr_Type  : Iir;
       Base_Type  : Iir;
-      Sel_Length : Iir_Int64;
+      Sel_Length : Int64;
       Cond       : O_Enode;
    begin
       --  Translate into if/elsif statements.
@@ -1294,7 +1294,7 @@ package body Trans.Chap8 is
       --  Number of associations.
       Nbr_Assocs  : Natural;
 
-      Sel_Length  : Iir_Int64;
+      Sel_Length  : Int64;
 
       --  Dichotomy table (table of choices).
       String_Type     : O_Tnode;
@@ -2656,7 +2656,7 @@ package body Trans.Chap8 is
       type Mnode_Array is array (Natural range <>) of Mnode;
       type O_Enode_Array is array (Natural range <>) of O_Enode;
       Nbr_Assoc : constant Natural :=
-        Iir_Chains.Get_Chain_Length (Assoc_Chain);
+        Vhdl.Nodes_Utils.Get_Chain_Length (Assoc_Chain);
 
       --  References to the formals (for copy-out), and variables for whole
       --  actual of individual associations.
@@ -3556,7 +3556,7 @@ package body Trans.Chap8 is
       if Sensitivity = Null_Iir_List and Cond /= Null_Iir then
          --  Extract sensitivity from condition.
          Sensitivity := Create_Iir_List;
-         Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
+         Vhdl.Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
          Set_Sensitivity_List (Stmt, Sensitivity);
       end if;
 
@@ -4304,7 +4304,7 @@ package body Trans.Chap8 is
       if Is_Composite (Target_Tinfo) then
          Stabilize (Val);
          Stabilize (Stable_Targ);
-         Chap3.Check_Array_Match
+         Chap3.Check_Composite_Match
            (Target_Type, Stable_Targ, Get_Type (We), Val, We);
       end if;
       Arg := (Drv => Drv,
@@ -4438,7 +4438,7 @@ package body Trans.Chap8 is
             then
                Stabilize (Targ2);
                Stabilize (Val);
-               Chap3.Check_Array_Match
+               Chap3.Check_Composite_Match
                  (Target_Type, Targ2, Get_Type (Value), Val, Wf_Chain);
             end if;
             Gen_Simple_Signal_Assign (Targ2, Target_Type, M2E (Val));
@@ -4500,7 +4500,7 @@ package body Trans.Chap8 is
                Translate_Waveform_Expression
                  (Value, Target_Type, Var_Targ, Val);
                Stabilize (Val);
-               Chap3.Check_Array_Match
+               Chap3.Check_Composite_Match
                  (Target_Type, Var_Targ, Get_Type (Value), Val, We);
             end if;
             Data := Signal_Assign_Data'(Expr => Val,
@@ -4532,7 +4532,7 @@ package body Trans.Chap8 is
                   Val := Chap7.Translate_Expression (Value, Target_Type);
                   if Is_Composite (Targ_Tinfo) then
                      Stabilize (Val);
-                     Chap3.Check_Array_Match
+                     Chap3.Check_Composite_Match
                        (Target_Type, Var_Targ, Get_Type (Value), Val, We);
                   end if;
                end if;
@@ -4683,7 +4683,8 @@ package body Trans.Chap8 is
                C_Stmt : Iir;
             begin
                C_Stmt :=
-                 Canon.Canon_Conditional_Variable_Assignment_Statement (Stmt);
+                 Vhdl.Canon.Canon_Conditional_Variable_Assignment_Statement
+                 (Stmt);
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
             end;
@@ -4692,7 +4693,8 @@ package body Trans.Chap8 is
                C_Stmt : Iir;
             begin
                C_Stmt :=
-                 Canon.Canon_Conditional_Signal_Assignment_Statement (Stmt);
+                 Vhdl.Canon.Canon_Conditional_Signal_Assignment_Statement
+                 (Stmt);
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
             end;
@@ -4711,7 +4713,7 @@ package body Trans.Chap8 is
             begin
                if not Get_Suspend_Flag (Stmt) then
                   --  Suspendable calls were already canonicalized.
-                  Canon.Canon_Subprogram_Call (Call);
+                  Vhdl.Canon.Canon_Subprogram_Call (Call);
                   Trans.Update_Node_Infos;
                end if;
 

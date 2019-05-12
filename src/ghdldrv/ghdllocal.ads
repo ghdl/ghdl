@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ghdlmain; use Ghdlmain;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Ghdllocal is
    --  Init procedure for the functionnal interface.

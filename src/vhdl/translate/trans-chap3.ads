@@ -317,15 +317,15 @@ package Trans.Chap3 is
      (Value : O_Enode; Expr : Iir; Atype : Iir) return O_Enode;
 
    --  Return True iff all indexes of L_TYPE and R_TYPE have the same
-   --  length.  They must be locally static.
-   function Locally_Array_Match (L_Type, R_Type : Iir) return Boolean;
+   --  length.  They must be constrained.
+   function Locally_Array_Match (L_Type, R_Type : Iir) return Tri_State_Type;
 
-   --  Check bounds length of L match bounds length of R.
-   --  If L_TYPE (resp. R_TYPE) is not a thin array, then L_NODE
+   --  Check bounds of L match bounds of R.
+   --  If L_TYPE (resp. R_TYPE) is not a thin composite type, then L_NODE
    --    (resp. R_NODE) are not used (and may be Mnode_Null).
-   --  If L_TYPE (resp. T_TYPE) is a fat array, then L_NODE (resp. R_NODE)
-   --    must designate the array.
-   procedure Check_Array_Match
+   --  If L_TYPE (resp. T_TYPE) is a fat type, then L_NODE (resp. R_NODE)
+   --    must designate the object.
+   procedure Check_Composite_Match
      (L_Type : Iir; L_Node : Mnode; R_Type : Iir; R_Node : Mnode; Loc : Iir);
 
    --  Create a subtype range to be stored into RES from length LENGTH, which

@@ -19,6 +19,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Name_Table;
+with PSL.Types; use PSL.Types;
 with PSL.Errors;
 with PSL.Nodes_Meta;
 

@@ -22,9 +22,9 @@ with Libraries;
 with Std_Names;
 with PSL.Nodes;
 with PSL.Dump_Tree;
-with Disp_Tree;
-with Scanner;
-with Back_End; use Back_End;
+with Vhdl.Disp_Tree;
+with Vhdl.Scanner;
+with Vhdl.Back_End; use Vhdl.Back_End;
 with Flags; use Flags;
 with Files_Map;
 
@@ -34,7 +34,7 @@ package body Options is
       Std_Names.Std_Names_Initialize;
       Libraries.Init_Paths;
       PSL.Nodes.Init;
-      PSL.Dump_Tree.Dump_Hdl_Node := Disp_Tree.Disp_Tree_For_Psl'Access;
+      PSL.Dump_Tree.Dump_Hdl_Node := Vhdl.Disp_Tree.Disp_Tree_For_Psl'Access;
    end Initialize;
 
    function Option_Warning (Opt: String; Val : Boolean) return Boolean is
@@ -121,7 +121,7 @@ package body Options is
             Name : String (1 .. Opt'Last - 8 + 1);
          begin
             Name := Opt (8 .. Opt'Last);
-            Scanner.Convert_Identifier (Name);
+            Vhdl.Scanner.Convert_Identifier (Name);
             Libraries.Work_Library_Name := Get_Identifier (Name);
          end;
       elsif Opt = "-C" or else Opt = "--mb-comments" then
@@ -167,8 +167,8 @@ package body Options is
       elsif Opt = "--vital-checks" then
          Flag_Vital_Checks := True;
       elsif Opt = "-fpsl" then
-         Scanner.Flag_Psl_Comment := True;
-         Scanner.Flag_Comment_Keyword := True;
+         Vhdl.Scanner.Flag_Psl_Comment := True;
+         Vhdl.Scanner.Flag_Comment_Keyword := True;
       elsif Opt = "-dp" then
          Dump_Parse := True;
       elsif Opt = "-ds" then
@@ -199,8 +199,8 @@ package body Options is
          Flag_Integer_64 := True;
       elsif Opt = "--ftime32" then
          Flag_Time_64 := False;
-      elsif Back_End.Parse_Option /= null
-        and then Back_End.Parse_Option.all (Opt)
+      elsif Vhdl.Back_End.Parse_Option /= null
+        and then Vhdl.Back_End.Parse_Option.all (Opt)
       then
          null;
       else
@@ -251,8 +251,8 @@ package body Options is
       P ("Compilation dump:");
       P ("  -d[psa]            dump tree after parse, semantics or annotate");
       P ("  --dall             -dX options apply to all files");
-      if Back_End.Disp_Option /= null then
-         Back_End.Disp_Option.all;
+      if Vhdl.Back_End.Disp_Option /= null then
+         Vhdl.Back_End.Disp_Option.all;
       end if;
    end Disp_Options_Help;
 

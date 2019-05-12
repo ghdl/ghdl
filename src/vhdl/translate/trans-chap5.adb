@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap6;
@@ -456,11 +456,12 @@ package body Trans.Chap5 is
 
          if Get_Kind (Formal_Type) in Iir_Kinds_Array_Type_Definition then
             --  Check length matches.
+            --  FIXME: records ?
             Stabilize (Formal_Sig);
             Stabilize (Actual_Sig);
-            Chap3.Check_Array_Match (Formal_Type, Formal_Sig,
-                                     Actual_Type, Actual_Sig,
-                                     Assoc);
+            Chap3.Check_Composite_Match (Formal_Type, Formal_Sig,
+                                         Actual_Type, Actual_Sig,
+                                         Assoc);
          end if;
 
          Data := (Actual_Sig => Actual_Sig,

@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
+with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 with Name_Table; use Name_Table;
 with Ada.Text_IO; use Ada.Text_IO;

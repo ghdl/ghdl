@@ -22,7 +22,7 @@ with Types; use Types;
 with Netlists; use Netlists;
 with Synth.Environment; use Synth.Environment;
 with Simul.Environments; use Simul.Environments;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Values is
    --  Values is how signals and variables are decomposed.  This is similar to

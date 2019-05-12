@@ -31,22 +31,22 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
 with Trans_Decls;
-with Iirs; use Iirs;
-with Std_Package;
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Std_Package;
 with Flags;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Libraries;
-with Canon;
-with Configuration;
+with Vhdl.Canon;
+with Vhdl.Configuration;
 with Trans_Be;
 with Translation;
-with Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164;
 
-with Lists;
+with Vhdl.Lists;
 with Str_Table;
 with Hash;
 with Interning;
-with Nodes;
 with Files_Map;
 with Name_Table;
 
@@ -128,7 +128,7 @@ package body Ghdlrun is
       end if;
 
       if Time_Resolution /= 'a' then
-         Std_Package.Set_Time_Resolution (Time_Resolution);
+         Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
       end if;
 
       if Analyze_Only then
@@ -146,12 +146,12 @@ package body Ghdlrun is
 
       case Elab_Mode is
          when Elab_Static =>
-            Canon.Canon_Flag_Add_Labels := True;
-            Canon.Canon_Flag_Sequentials_Stmts := True;
-            Canon.Canon_Flag_Expressions := True;
-            Canon.Canon_Flag_All_Sensitivity := True;
+            Vhdl.Canon.Canon_Flag_Add_Labels := True;
+            Vhdl.Canon.Canon_Flag_Sequentials_Stmts := True;
+            Vhdl.Canon.Canon_Flag_Expressions := True;
+            Vhdl.Canon.Canon_Flag_All_Sensitivity := True;
          when Elab_Dynamic =>
-            Canon.Canon_Flag_Add_Labels := True;
+            Vhdl.Canon.Canon_Flag_Add_Labels := True;
       end case;
    end Compile_Init;
 
@@ -167,13 +167,13 @@ package body Ghdlrun is
 
       Flags.Flag_Elaborate := True;
 
-      Config := Configuration.Configure (Prim_Name.all, Sec_Name.all);
+      Config := Vhdl.Configuration.Configure (Prim_Name.all, Sec_Name.all);
       if Config = Null_Iir then
          raise Compilation_Error;
       end if;
 
       if Time_Resolution = 'a' then
-         Time_Resolution := Std_Package.Get_Minimal_Time_Resolution;
+         Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;
          if Time_Resolution = '?' then
             Time_Resolution := 'f';
          end if;
@@ -195,7 +195,7 @@ package body Ghdlrun is
             end;
          end if;
       end if;
-      Std_Package.Set_Time_Resolution (Time_Resolution);
+      Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
 
       --  Overwrite time resolution in flag string.
       Flags.Flag_String (5) := Time_Resolution;
@@ -738,9 +738,9 @@ package body Ghdlrun is
         Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
       Grtlink.Std_Standard_Bit_RTI_Ptr :=
         Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
-      if Ieee.Std_Logic_1164.Resolved /= Null_Iir then
+      if Vhdl.Ieee.Std_Logic_1164.Resolved /= Null_Iir then
          Decl := Translation.Get_Resolv_Ortho_Decl
-           (Ieee.Std_Logic_1164.Resolved);
+           (Vhdl.Ieee.Std_Logic_1164.Resolved);
          if Decl /= O_Dnode_Null then
             Grtlink.Ieee_Std_Logic_1164_Resolved_Resolv_Ptr :=
               Ortho_Jit.Get_Address (Decl);
@@ -757,9 +757,9 @@ package body Ghdlrun is
       Ortho_Jit.Finish;
 
       Translation.Finalize;
-      Lists.Initialize;
+      Vhdl.Lists.Initialize;
       Str_Table.Initialize;
-      Nodes.Initialize;
+      Vhdl.Nodes.Initialize;
       Files_Map.Initialize;
       Name_Table.Finalize;
 

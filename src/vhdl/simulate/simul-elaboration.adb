@@ -19,14 +19,15 @@
 with Ada.Text_IO;
 with Str_Table;
 with Errorout; use Errorout;
-with Evaluation;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Evaluation;
 with Simul.Execution; use Simul.Execution;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Libraries;
 with Name_Table;
 with Simul.File_Operation;
-with Iir_Chains; use Iir_Chains;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration.AMS; use Simul.Elaboration.AMS;
 with Areapools; use Areapools;
@@ -395,7 +396,7 @@ package body Simul.Elaboration is
         Create_Instance_Value (Instance);
 
       if Trace_Elaboration then
-         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Source_Coord,
                      "elaborating %n", (1 => +Decl));
       end if;
 
@@ -446,7 +447,7 @@ package body Simul.Elaboration is
         Block.Objects (Package_Info.Pkg_Slot).Instance;
    begin
       if Trace_Elaboration then
-         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Source_Coord,
                      "elaborating %n", (1 => +Decl));
       end if;
 
@@ -1572,7 +1573,7 @@ package body Simul.Elaboration is
             Local := Get_Chain (Local);
          end loop;
 
-         Sub_Chain_Init (First, Last);
+         Chain_Init (First, Last);
          Formal := Formal_Chain;
          for I in Assoc_List'Range loop
             if Assoc_List (I) = Null_Iir then
@@ -1587,7 +1588,7 @@ package body Simul.Elaboration is
             end if;
             Set_Whole_Association_Flag (Assoc, True);
             Set_Formal (Assoc, Formal);
-            Sub_Chain_Append (First, Last, Assoc);
+            Chain_Append (First, Last, Assoc);
 
             Formal := Get_Chain (Formal);
          end loop;
@@ -2861,7 +2862,7 @@ package body Simul.Elaboration is
 
    function Override_Generic (Formal : Iir; Str : String) return Iir
    is
-      use Evaluation;
+      use Vhdl.Evaluation;
       Formal_Type : constant Iir := Get_Type (Formal);
       Formal_Btype : constant Iir := Get_Base_Type (Formal_Type);
       Res : Iir;

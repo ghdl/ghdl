@@ -19,12 +19,13 @@
 with Ada.Unchecked_Conversion;
 with Ada.Text_IO; use Ada.Text_IO;
 with System;
+with Types; use Types;
 with Grt.Types; use Grt.Types;
 with Flags; use Flags;
-with Errorout; use Errorout;
-with Std_Package;
-with Evaluation;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Std_Package;
+with Vhdl.Evaluation;
+with Vhdl.Utils; use Vhdl.Utils;
 with Simul.Annotations; use Simul.Annotations;
 with Name_Table;
 with Simul.File_Operation;
@@ -32,7 +33,7 @@ with Simul.Debugger; use Simul.Debugger;
 with Std_Names;
 with Str_Table;
 with Files_Map;
-with Iir_Chains; use Iir_Chains;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Simul.Simulation; use Simul.Simulation;
 with Grt.Astdio.Vhdl;
 with Grt.Stdio;
@@ -44,7 +45,7 @@ with Grt.Errors;
 with Grt.Std_Logic_1164;
 with Grt.Lib;
 with Grt.Strings;
-with Sem_Inst;
+with Vhdl.Sem_Inst;
 
 package body Simul.Execution is
 
@@ -361,7 +362,7 @@ package body Simul.Execution is
    function Execute_Path_Instance_Name_Attribute
      (Block : Block_Instance_Acc; Attr : Iir) return Iir_Value_Literal_Acc
    is
-      use Evaluation;
+      use Vhdl.Evaluation;
       use Grt.Vstrings;
       use Name_Table;
 
@@ -1321,7 +1322,7 @@ package body Simul.Execution is
                Pos : constant Natural := Get_Enum_Pos (Left);
                Id : Name_Id;
             begin
-               if Base_Type = Std_Package.Character_Type_Definition then
+               if Base_Type = Vhdl.Std_Package.Character_Type_Definition then
                   Result := String_To_Iir_Value ((1 => Character'Val (Pos)));
                else
                   Id := Get_Identifier (Get_Nth_Element (Lits, Pos));
@@ -1418,10 +1419,10 @@ package body Simul.Execution is
                First : Natural;
                Unit : Iir;
             begin
-               Unit := Get_Unit_Chain (Std_Package.Time_Type_Definition);
+               Unit := Get_Unit_Chain (Vhdl.Std_Package.Time_Type_Definition);
                while Unit /= Null_Iir loop
-                  exit when Evaluation.Get_Physical_Value (Unit)
-                    = Iir_Int64 (Right.I64);
+                  exit when Vhdl.Evaluation.Get_Physical_Value (Unit)
+                    = Int64 (Right.I64);
                   Unit := Get_Chain (Unit);
                end loop;
                if Unit = Null_Iir then
@@ -2279,7 +2280,7 @@ package body Simul.Execution is
    is
       Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Attr));
       Dim : constant Natural :=
-        Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
+        Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
    begin
       case Get_Kind (Prefix) is
          when Iir_Kind_Type_Declaration
@@ -2394,8 +2395,8 @@ package body Simul.Execution is
                when Iir_Value_I64 =>
                   null;
                when Iir_Value_F64 =>
-                  if Res.F64 > Ghdl_F64 (Iir_Int64'Last) or
-                    Res.F64 < Ghdl_F64 (Iir_Int64'First)
+                  if Res.F64 > Ghdl_F64 (Int64'Last) or
+                    Res.F64 < Ghdl_F64 (Int64'First)
                   then
                      Error_Msg_Constraint (Loc);
                   end if;
@@ -3042,7 +3043,7 @@ package body Simul.Execution is
          when Iir_Kind_Integer_Literal =>
             declare
                Lit_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
-               Lit : constant Iir_Int64 := Get_Value (Expr);
+               Lit : constant Int64 := Get_Value (Expr);
             begin
                case Get_Info (Lit_Type).Scalar_Mode is
                   when Iir_Value_I64 =>
@@ -3076,7 +3077,7 @@ package body Simul.Execution is
            | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Unit_Declaration =>
             return Create_I64_Value
-              (Ghdl_I64 (Evaluation.Get_Physical_Value (Expr)));
+              (Ghdl_I64 (Vhdl.Evaluation.Get_Physical_Value (Expr)));
 
          when Iir_Kind_String_Literal8 =>
             return Execute_String_Literal (Expr, Block);
@@ -3344,7 +3345,7 @@ package body Simul.Execution is
       if Res /= Null_Iir then
          return Res;
       else
-         Orig := Sem_Inst.Get_Origin (Spec);
+         Orig := Vhdl.Sem_Inst.Get_Origin (Spec);
          pragma Assert (Orig /= Null_Iir);
          return Get_Subprogram_Body_Origin (Orig);
       end if;
@@ -3361,7 +3362,7 @@ package body Simul.Execution is
       if Res /= Null_Iir then
          return Res;
       else
-         Orig := Sem_Inst.Get_Origin (Spec);
+         Orig := Vhdl.Sem_Inst.Get_Origin (Spec);
          return Get_Protected_Type_Body_Origin (Orig);
       end if;
    end Get_Protected_Type_Body_Origin;
@@ -4378,11 +4379,11 @@ package body Simul.Execution is
          declare
             Choice_Type : constant Iir :=
               Get_Type (Get_Choice_Expression (Assoc));
-            Choice_Len : Iir_Int64;
+            Choice_Len : Int64;
          begin
-            Choice_Len := Evaluation.Eval_Discrete_Type_Length
+            Choice_Len := Vhdl.Evaluation.Eval_Discrete_Type_Length
               (Get_String_Type_Bound_Type (Choice_Type));
-            if Choice_Len /= Iir_Int64 (Value.Bounds.D (1).Length) then
+            if Choice_Len /= Int64 (Value.Bounds.D (1).Length) then
                Error_Msg_Constraint (Expr);
             end if;
          end;

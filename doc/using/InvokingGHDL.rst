@@ -51,7 +51,7 @@ Elaboration [``-e``]
 
 .. option:: -e <[options...] primary_unit [secondary_unit]>
 
-Re-analyzes all the configurations, entities, architectures and package declarations, and creates the default configurations and the default binding indications according to the LRM rules. It also generates the list of object files required for the executable. Then, it links all these files with the runtime library. The actual elaboration is performed at runtime.
+Re-analyzes all the configurations, entities, architectures and package declarations, and creates the default configurations and the default binding indications according to the LRM rules. It also generates the list of object files required for the executable. Then, it links all these files with the runtime library.
 
 * The elaboration command, :option:`-e`, must be followed by a name of either:
 
@@ -64,6 +64,9 @@ Name of the units must be a simple name, without any dot. You can select the nam
 * If the GCC/LLVM backend was enabled during the compilation of GHDL, the elaboration command creates an executable containing the code of the VHDL sources, the elaboration code and simulation code to execute a design hierarchy. The executable is created in the current directory and the the filename is the name of the primary unit, or for the latter case, the concatenation of the name of the primary unit, a dash, and the name of the secondary unit (or architecture). Option :option:`-o` followed by a filename can override the default executable filename.
 
 * If mcode is used, this command elaborates the design but does not generate anything. Since the run command also elaborates the design, this can be skipped.
+
+  .. WARNING::
+     This elaboration command is not a complete elaboration in terms of the VHDL standard. The actual elaboration is performed at runtime. Therefore, in order to get a complete VHDL elaboration without running the simulation, ``ghdl --elab-run --no-run`` is required.
 
 
 .. index:: cmd run
@@ -510,6 +513,7 @@ Make a local copy of an existing library. This is very useful if you want to add
   ghdl --copy --work=ieee --ieee=synopsys
   ghdl -a --work=ieee numeric_unsigned.vhd
 
+.. _VPI_build_commands:
 
 VPI build commands
 ==================

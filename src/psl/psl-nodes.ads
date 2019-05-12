@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
+with PSL.Types; use PSL.Types;
 
 package PSL.Nodes is
    type Nkind is
@@ -425,7 +426,7 @@ package PSL.Nodes is
 
    subtype NFA is Types.PSL_NFA;
 
-   subtype HDL_Node is Types.Int32;
+   subtype HDL_Node is Int32;
    HDL_Null : constant HDL_Node := 0;
 
    -- General methods.

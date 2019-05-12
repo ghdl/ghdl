@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with GNAT.OS_Lib; use GNAT.OS_Lib;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Ghdlcomp is
    --  This procedure is called at start of commands which call

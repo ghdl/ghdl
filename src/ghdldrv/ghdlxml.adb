@@ -19,14 +19,14 @@ with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Types; use Types;
 with Name_Table; use Name_Table;
-with Nodes_Meta; use Nodes_Meta;
+with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;
 with Files_Map;
-with Disp_Tree; use Disp_Tree;
+with Vhdl.Disp_Tree; use Vhdl.Disp_Tree;
 with Ghdlprint; use Ghdlprint;
 with Libraries;
 with Errorout; use Errorout;
-with Iirs; use Iirs;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 
@@ -362,8 +362,8 @@ package body Ghdlxml is
                   Put_Field (F, Image_Iir_Mode (Get_Iir_Mode (N, F)));
                when Type_Iir_Index32 =>
                   Put_Field (F, Iir_Index32'Image (Get_Iir_Index32 (N, F)));
-               when Type_Iir_Int64 =>
-                  Put_Field (F, Iir_Int64'Image (Get_Iir_Int64 (N, F)));
+               when Type_Int64 =>
+                  Put_Field (F, Int64'Image (Get_Int64 (N, F)));
                when Type_Boolean =>
                   Put_Field (F, Image_Boolean (Get_Boolean (N, F)));
                when Type_Iir_Staticness =>
@@ -398,8 +398,8 @@ package body Ghdlxml is
                     (F, Strip (Iir_Int32'Image (Get_Iir_Int32 (N, F))));
                when Type_Int32 =>
                   Put_Field (F, Strip (Int32'Image (Get_Int32 (N, F))));
-               when Type_Iir_Fp64 =>
-                  Put_Field (F, Iir_Fp64'Image (Get_Iir_Fp64 (N, F)));
+               when Type_Fp64 =>
+                  Put_Field (F, Fp64'Image (Get_Fp64 (N, F)));
                when Type_Time_Stamp_Id =>
                   Put_Field (F, Image_Time_Stamp_Id
                                (Get_Time_Stamp_Id (N, F)));

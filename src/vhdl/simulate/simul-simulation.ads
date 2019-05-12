@@ -18,7 +18,7 @@
 
 with System;
 with Grt.Types; use Grt.Types;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Simul.Environments; use Simul.Environments;
 
 package Simul.Simulation is

@@ -18,9 +18,9 @@
 
 with Name_Table;
 with Files_Map;
-with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
-with Configuration;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Configuration;
 with Libraries;
 with Trans.Chap7;
 with Trans; use Trans.Helpers;
@@ -2926,7 +2926,7 @@ package body Trans.Rtis is
 
    procedure Generate_Top (Nbr_Pkgs : out Natural)
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       Unit : Iir_Design_Unit;
       Lib  : Iir_Library_Declaration;

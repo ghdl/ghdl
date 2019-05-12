@@ -24,7 +24,7 @@ with Name_Table; use Name_Table;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils;
 
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 with Simul.Environments; use Simul.Environments;
 with Simul.Elaboration; use Simul.Elaboration;
 
@@ -39,6 +39,7 @@ with Synth.Environment.Debug;
 pragma Unreferenced (Synth.Environment.Debug);
 
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 
 package body Synthesis is
    function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is

@@ -68,7 +68,7 @@ package body Lists is
       return Listt.Table (List).Nbr = 0;
    end Is_Empty;
 
-   procedure Append_Element (List: List_Type; Element: Node_Type)
+   procedure Append_Element (List: List_Type; Element: El_Type)
    is
       L : List_Record renames Listt.Table (List);
       C : Chunk_Index_Type;
@@ -91,7 +91,7 @@ package body Lists is
       L.Nbr := L.Nbr + 1;
    end Append_Element;
 
-   function Get_First_Element (List: List_Type) return Node_Type
+   function Get_First_Element (List: List_Type) return El_Type
    is
       L : List_Record renames Listt.Table (List);
    begin
@@ -100,7 +100,7 @@ package body Lists is
    end Get_First_Element;
 
    -- Add (append) an element only if it was not already present in the list.
-   procedure Add_Element (List: List_Type; El: Node_Type)
+   procedure Add_Element (List: List_Type; El: El_Type)
    is
       It : Iterator;
    begin
@@ -201,12 +201,12 @@ package body Lists is
       It.Remain := It.Remain - 1;
    end Next;
 
-   function Get_Element (It : Iterator) return Node_Type is
+   function Get_Element (It : Iterator) return El_Type is
    begin
       return Chunkt.Table (It.Chunk).Els (It.Chunk_Idx);
    end Get_Element;
 
-   procedure Set_Element (It : Iterator; El : Node_Type) is
+   procedure Set_Element (It : Iterator; El : El_Type) is
    begin
       Chunkt.Table (It.Chunk).Els (It.Chunk_Idx) := El;
    end Set_Element;

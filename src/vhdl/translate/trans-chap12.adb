@@ -16,14 +16,15 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Configuration;
+with Vhdl.Configuration;
 with Errorout; use Errorout;
-with Std_Package; use Std_Package;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Utils; use Vhdl.Utils;
 with Libraries;
 with Flags;
-with Sem;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Trans.Chap1;
 with Trans.Chap2;
 with Trans.Chap6;
@@ -419,7 +420,7 @@ package body Trans.Chap12 is
    --  Write to file FILELIST all the files that are needed to link the design.
    procedure Gen_Stubs
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       --  Add all dependences of UNIT.
       --  UNIT is not used, but added during link.
@@ -527,7 +528,7 @@ package body Trans.Chap12 is
 
    procedure Elaborate (Config : Iir_Design_Unit; Whole : Boolean)
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
@@ -550,7 +551,7 @@ package body Trans.Chap12 is
       if Flag_Load_All_Design_Units then
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
-            Sem.Sem_Analysis_Checks_List (Unit, False);
+            Vhdl.Sem.Sem_Analysis_Checks_List (Unit, False);
             --  There cannot be remaining checks to do.
             pragma Assert
               (Get_Analysis_Checks_List (Unit) = Null_Iir_List);
@@ -563,12 +564,12 @@ package body Trans.Chap12 is
       end if;
 
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                      "List of units in the hierarchy design:");
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-            Report_Msg (Msgid_Note, Elaboration, No_Location,
+            Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                         " %n", (1 => +Lib_Unit));
          end loop;
       end if;
@@ -688,12 +689,12 @@ package body Trans.Chap12 is
 
       --  Disp list of files needed.
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                      "List of units not used:");
          for I in Last_Design_Unit + 1 .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-            Report_Msg (Msgid_Note, Elaboration, No_Location,
+            Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                         " %n", (1 => +Lib_Unit));
          end loop;
       end if;

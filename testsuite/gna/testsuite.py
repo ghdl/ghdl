@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import glob
 import subprocess
 import select
@@ -28,7 +29,7 @@ class Job(object):
         self.poll.remove(self.out_fd)
         return self.p.wait()
 
-def run():
+def run(keep):
     # List of tests to run
     tests = []
     for d in DIRS:
@@ -50,21 +51,20 @@ def run():
             print('Starting {}'.format(test))
             j.start()
         elif len(jobs) > 0:
-            #print('polling {}'.format(poll))
+            # Wait for output or end of job.
             assert len(poll) == NUMJOBS or len(tests) == 0
-            t1 = time.time()
             res = select.select(poll, [], [])
-            t2 = time.time()
-            #print('poll res {}sec: {}'.format(t2 - t2, res[0]))
             done = set()
             for fd in res[0]:
                 d = os.read(fd.fileno(), 1024)
                 if len(d) == 0:
+                    # EOF => end of job.
                     for j in jobs:
                         if fd == j.out_fd:
                             done.add(j)
                             break
                 else:
+                    # Gather output
                     for j in jobs:
                         if fd == j.out_fd:
                             j.out += d
@@ -76,7 +76,8 @@ def run():
                     print('############### Error for {}'.format(j.dirname))
                     nbr_err += 1
                     failures.append(j.dirname)
-                    tests = []
+                    if not keep:
+                        tests = []
                 jobs.remove(j)
                 nbr_run += 1
     end_time = time.time()
@@ -88,5 +89,9 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    parser = argparse.ArgumentParser(description="parallel test driver")
+    parser.add_argument("-k", "--keep",
+                        help="keep running", action='store_true')
+    args = parser.parse_args()
+    run(args.keep)
 

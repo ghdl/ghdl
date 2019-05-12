@@ -19,7 +19,7 @@ with Ada.Unchecked_Deallocation;
 with Interfaces; use Interfaces;
 with Ortho_Nodes; use Ortho_Nodes;
 with Ortho_Ident; use Ortho_Ident;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Types; use Types;
 
 package Trans is

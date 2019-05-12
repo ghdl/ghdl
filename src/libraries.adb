@@ -21,14 +21,15 @@ with GNAT.OS_Lib;
 with Logging; use Logging;
 with Tables;
 with Errorout; use Errorout;
-with Scanner;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Scanner;
+with Vhdl.Utils; use Vhdl.Utils;
 with Name_Table; use Name_Table;
 with Str_Table;
-with Tokens;
+with Vhdl.Tokens;
 with Files_Map;
 with Flags;
-with Std_Package;
+with Vhdl.Std_Package;
 
 package body Libraries is
    --  Chain of known libraries.  This is also the top node of all iir node.
@@ -48,7 +49,7 @@ package body Libraries is
    --  Report an error message.
    procedure Error_Lib_Msg (Msg : String) is
    begin
-      Report_Msg (Msgid_Error, Library, No_Location, Msg);
+      Report_Msg (Msgid_Error, Library, No_Source_Coord, Msg);
    end Error_Lib_Msg;
 
    --  Initialize paths table.
@@ -327,8 +328,8 @@ package body Libraries is
    -- Return TRUE if the library was found.
    function Load_Library (Library: Iir_Library_Declaration) return Boolean
    is
-      use Scanner;
-      use Tokens;
+      use Vhdl.Scanner;
+      use Vhdl.Tokens;
 
       File : Source_File_Entry;
 
@@ -418,7 +419,7 @@ package body Libraries is
          return False;
       end if;
 
-      Scanner.Set_File (File);
+      Vhdl.Scanner.Set_File (File);
 
       --  Parse header.
       Scan;
@@ -601,7 +602,7 @@ package body Libraries is
       end loop;
       Set_Date (Library, Max_Date);
 
-      Scanner.Close_File;
+      Vhdl.Scanner.Close_File;
 
       --  Don't need the library file anymore.
       Files_Map.Unload_Last_Source_File (File);
@@ -626,7 +627,7 @@ package body Libraries is
    -- Note: the scanner shouldn't be in use, since this procedure uses it.
    procedure Load_Std_Library (Build_Standard : Boolean := True)
    is
-      use Std_Package;
+      use Vhdl.Std_Package;
       Dir : Name_Id;
    begin
       if Libraries_Chain /= Null_Iir then
@@ -637,7 +638,7 @@ package body Libraries is
       Flags.Create_Flag_String;
       Create_Virtual_Locations;
 
-      Std_Package.Create_First_Nodes;
+      Vhdl.Std_Package.Create_First_Nodes;
 
       --  Create the library.
       Std_Library := Create_Iir (Iir_Kind_Library_Declaration);
@@ -722,7 +723,7 @@ package body Libraries is
       end if;
 
       --  Check if the library has already been loaded.
-      Library := Iirs_Utils.Find_Name_In_Chain (Libraries_Chain, Ident);
+      Library := Vhdl.Utils.Find_Name_In_Chain (Libraries_Chain, Ident);
       if Library /= Null_Iir then
          return Library;
       end if;
@@ -918,7 +919,7 @@ package body Libraries is
 
                         --  Keep direct reference (for speed-up).
                         if Get_Kind (El) /= Iir_Kind_Design_Unit then
-                           Iirs_Utils.Free_Recursive (El);
+                           Vhdl.Utils.Free_Recursive (El);
                            Set_Element (It, Unit);
                         end if;
 
@@ -1325,7 +1326,7 @@ package body Libraries is
       Design_File := Get_Design_File_Chain (Library);
       while Design_File /= Null_Iir loop
          --  Ignore std.standard as there is no corresponding file.
-         if Design_File = Std_Package.Std_Standard_File then
+         if Design_File = Vhdl.Std_Package.Std_Standard_File then
             goto Continue;
          end if;
          Design_Unit := Get_First_Design_Unit (Design_File);

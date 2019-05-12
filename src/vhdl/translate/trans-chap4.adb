@@ -16,11 +16,11 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Files_Map;
-with Iirs_Utils; use Iirs_Utils;
-with Std_Package; use Std_Package;
-with Canon;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Canon;
 with Translation; use Translation;
 with Trans.Chap2;
 with Trans.Chap3;
@@ -1692,8 +1692,9 @@ package body Trans.Chap4 is
                   Stabilize (N);
                   New_Assign_Stmt (Get_Var (A),
                                    M2E (Chap3.Get_Composite_Base (N)));
-                  Chap3.Check_Array_Match (Decl_Type, T2M (Decl_Type, Mode),
-                                           Name_Type, N, Decl);
+                  Chap3.Check_Composite_Match
+                    (Decl_Type, T2M (Decl_Type, Mode),
+                     Name_Type, N, Decl);
                when Type_Mode_Acc
                  | Type_Mode_Bounds_Acc =>
                   New_Assign_Stmt (Get_Var (A), M2Addr (N));
@@ -1706,6 +1707,7 @@ package body Trans.Chap4 is
                   end case;
                when Type_Mode_Bounded_Records =>
                   Stabilize (N);
+                  --  FIXME: Check ?
                   New_Assign_Stmt (Get_Var (A), M2Addr (N));
                when others =>
                   raise Internal_Error;
@@ -2401,7 +2403,7 @@ package body Trans.Chap4 is
                   Call : constant Iir := Get_Procedure_Call (Stmt);
                   Imp : constant Iir := Get_Implementation (Call);
                begin
-                  Canon.Canon_Subprogram_Call (Call);
+                  Vhdl.Canon.Canon_Subprogram_Call (Call);
                   Update_Node_Infos;
 
                   if Get_Suspend_Flag (Imp) then

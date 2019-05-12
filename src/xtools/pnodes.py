@@ -221,7 +221,11 @@ def read_kinds(filename):
                 ml = pat_middle.match(l)
                 if ml:
                     # Check element in the middle
-                    if kinds.index(ml.group(1)) != idx + 1:
+                    n = ml.group(1)
+                    if n not in kinds:
+                        raise ParseError(
+                            lr, "unknown kind " + n + " in subtype")
+                    if kinds.index(n) != idx + 1:
                         raise ParseError(
                             lr, "missing " + kinds[idx + 1] + " in subtype")
                     has_middle = True
@@ -312,6 +316,7 @@ def read_methods(filename):
 #  (one description may describe several nodes).
 def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
     pat_only = re.compile('   -- Only for ' + prefix_name + '(\w+):\n')
+    pat_only_bad = re.compile ('   -- *Only for.*\n')
     pat_field = re.compile('   --   Get/Set_(\w+) \((Alias )?([\w,]+)\)\n')
     pat_comment = re.compile('   --.*\n')
     pat_start = re.compile('   --   \w.*\n')
@@ -369,6 +374,8 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
             only_nodes = cur_nodes
         elif pat_start.match(l):
             raise ParseError(lr, 'bad line in node description')
+        elif pat_only_bad.match(l):
+            raise ParseError(lr, "misleading 'Only for' comment")
         elif not pat_comment.match(l):
             raise ParseError(lr, 'bad line in node description')
         l = lr.get()
@@ -885,7 +892,7 @@ def main():
     global formats, fields, nodes, kinds, kinds_ranges, funcs
 
     global type_name, prefix_name, template_file, node_type, meta_base_file
-    global prefix_range_name, flag_keep_order
+    global prefix_range_name, flag_keep_order, kind_file
 
     type_name = args.kind_type
     prefix_name = args.kind_prefix

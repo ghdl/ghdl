@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
-with Types; use Types;
 
 package body PSL.Subsets is
    procedure Check_Simple (N : Node)

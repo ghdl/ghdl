@@ -20,19 +20,19 @@ with Ada.Command_Line;
 with GNAT.Directory_Operations;
 with Types; use Types;
 with Libraries;
-with Sem_Lib;
-with Std_Package;
+with Vhdl.Sem_Lib;
+with Vhdl.Std_Package;
 with Flags;
 with Name_Table;
 with Std_Names;
-with Disp_Vhdl;
+with Vhdl.Disp_Vhdl;
 with Default_Paths;
-with Scanner;
+with Vhdl.Scanner;
 with Errorout;
-with Configuration;
+with Vhdl.Configuration;
 with Files_Map;
 with Options;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 
 package body Ghdllocal is
    --  Version of the IEEE library to use.  This just change paths.
@@ -638,7 +638,7 @@ package body Ghdllocal is
 
       for I in Args'Range loop
          Id := Get_Identifier (Args (I).all);
-         Design_File := Sem_Lib.Load_File_Name (Id);
+         Design_File := Vhdl.Sem_Lib.Load_File_Name (Id);
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
@@ -699,7 +699,7 @@ package body Ghdllocal is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Sem_Lib.Load_File_Name (Id);
+         Design_File := Vhdl.Sem_Lib.Load_File_Name (Id);
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
@@ -734,7 +734,7 @@ package body Ghdllocal is
                     | Date_Analyzed =>
                      null;
                   when Date_Parsed =>
-                     Sem_Lib.Finish_Compilation (Unit, False);
+                     Vhdl.Sem_Lib.Finish_Compilation (Unit, False);
                   when others =>
                      raise Internal_Error;
                end case;
@@ -809,7 +809,7 @@ package body Ghdllocal is
          Put (File_Name);
          Put_Line (":");
       end if;
-      Design_File := Sem_Lib.Load_File_Name (Id);
+      Design_File := Vhdl.Sem_Lib.Load_File_Name (Id);
       if Design_File = Null_Iir then
          return;
       end if;
@@ -822,7 +822,7 @@ package body Ghdllocal is
             New_Line;
          end if;
          -- Sem, canon, annotate a design unit.
-         Sem_Lib.Finish_Compilation (Unit, True);
+         Vhdl.Sem_Lib.Finish_Compilation (Unit, True);
 
          Next_Unit := Get_Chain (Unit);
          if Errorout.Nbr_Errors = 0 then
@@ -1116,7 +1116,7 @@ package body Ghdllocal is
       end if;
       Flags.Bootstrap := True;
       Libraries.Load_Std_Library;
-      Disp_Vhdl.Disp_Vhdl (Std_Package.Std_Standard_Unit);
+      Vhdl.Disp_Vhdl.Disp_Vhdl (Vhdl.Std_Package.Std_Standard_Unit);
    end Perform_Action;
 
    --  Command --find-top.
@@ -1166,7 +1166,7 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
 
-      Top := Configuration.Find_Top_Entity (From);
+      Top := Vhdl.Configuration.Find_Top_Entity (From);
 
       if Top = Null_Iir then
          Error ("no top entity found");
@@ -1266,14 +1266,14 @@ package body Ghdllocal is
                Set_Design_File_Source (File, Fe);
                Unit := Get_First_Design_Unit (File);
                while Unit /= Null_Iir loop
-                  Sem_Lib.Load_Parse_Design_Unit (Unit, Null_Iir);
+                  Vhdl.Sem_Lib.Load_Parse_Design_Unit (Unit, Null_Iir);
                   Extract_Library_Clauses (Unit);
                   Unit := Get_Chain (Unit);
                end loop;
             else
                --  File has been modified.
                --  Parse it.
-               Design_File := Sem_Lib.Load_File (Fe);
+               Design_File := Vhdl.Sem_Lib.Load_File (Fe);
 
                --  Exit now in case of parse error.
                if Design_File = Null_Iir
@@ -1344,7 +1344,7 @@ package body Ghdllocal is
          Append_Element (List, File);
       end Build_Dependence_List;
 
-      use Configuration;
+      use Vhdl.Configuration;
       use Name_Table;
 
       Top : Iir;
@@ -1391,7 +1391,7 @@ package body Ghdllocal is
                                 Get_File_Checksum (File))
                   then
                      --  FILE has been modified.
-                     Design_File := Sem_Lib.Load_File (Fe);
+                     Design_File := Vhdl.Sem_Lib.Load_File (Fe);
                      if Design_File /= Null_Iir then
                         Libraries.Add_Design_File_Into_Library (Design_File);
                      end if;
@@ -1527,7 +1527,7 @@ package body Ghdllocal is
                         return True;
                      end if;
                      Dep_File := Get_Design_File (Dep);
-                     if Dep /= Std_Package.Std_Standard_Unit
+                     if Dep /= Vhdl.Std_Package.Std_Standard_Unit
                        and then
                        Files_Map.Is_Gt (Get_Analysis_Time_Stamp (Dep_File),
                                         Stamp)
@@ -1621,7 +1621,7 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
       Res := new String'(Name.all);
-      Scanner.Convert_Identifier (Res.all);
+      Vhdl.Scanner.Convert_Identifier (Res.all);
       return Res;
    end Convert_Name;
 

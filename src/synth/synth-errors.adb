@@ -24,13 +24,13 @@ package body Synth.Errors is
                               Arg1 : Earg_Type) is
    begin
       Report_Msg (Msgid_Error, Errorout.Elaboration,
-                  Loc, Msg, (1 => Arg1));
+                  +Loc, Msg, (1 => Arg1));
    end Error_Msg_Synth;
 
    procedure Error_Msg_Synth (Loc : Location_Type;
                               Msg : String) is
    begin
       Report_Msg (Msgid_Error, Errorout.Elaboration,
-                  Loc, Msg, (1 .. 0 => <>));
+                  +Loc, Msg, (1 .. 0 => <>));
    end Error_Msg_Synth;
 end Synth.Errors;

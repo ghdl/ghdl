@@ -19,13 +19,14 @@
 with Ada.Text_IO;
 with Name_Table;
 with Str_Table;
-with Iirs_Utils; use Iirs_Utils;
-with Iir_Chains; use Iir_Chains;
-with Std_Package; use Std_Package;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Flags; use Flags;
-with Canon;
-with Evaluation; use Evaluation;
+with Vhdl.Canon;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap6;
@@ -77,7 +78,7 @@ package body Trans.Chap7 is
         and then Get_Constraint_State (Res_Type) = Fully_Constrained
       then
          --  constrained to constrained.
-         if not Chap3.Locally_Array_Match (Expr_Type, Res_Type) then
+         if Chap3.Locally_Array_Match (Expr_Type, Res_Type) /= True then
             --  Sem should have replaced the expression by an overflow.
             raise Internal_Error;
             --  Chap6.Gen_Bound_Error (Loc);
@@ -198,7 +199,7 @@ package body Trans.Chap7 is
                Index_Type : constant Iir :=
                  Get_Index_Type (Aggr_Type, Dim - 1);
                Index_Range : constant Iir := Eval_Static_Range (Index_Type);
-               Len : constant Iir_Int64 :=
+               Len : constant Int64 :=
                  Eval_Discrete_Range_Length (Index_Range);
                Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
                Vect : Iir_Array (0 .. Integer (Len - 1));
@@ -928,7 +929,7 @@ package body Trans.Chap7 is
             if Einfo.Type_Mode = Type_Mode_Static_Array then
                --  FIXME: optimize static vs non-static
                --  constrained to constrained.
-               if not Chap3.Locally_Array_Match (Expr_Type, Res_Type) then
+               if Chap3.Locally_Array_Match (Expr_Type, Res_Type) /= True then
                   --  FIXME: generate a bound error ?
                   --  Even if this is caught at compile-time,
                   --  the code is not required to run.
@@ -1228,7 +1229,7 @@ package body Trans.Chap7 is
       Expr_Type  : constant Iir := Get_Return_Type (Concat_Imp);
       Index_Type : constant Iir := Get_Index_Type (Expr_Type, 0);
       Info : constant Type_Info_Acc := Get_Info (Expr_Type);
-      Static_Length : Iir_Int64 := 0;
+      Static_Length : Int64 := 0;
       Nbr_Dyn_Expr : Natural := 0;
 
       type Handle_Acc is access procedure (E : Iir);
@@ -2769,7 +2770,8 @@ package body Trans.Chap7 is
            | Type_Mode_Bounds_Acc
            | Type_Mode_File =>
             New_Assign_Stmt (M2Lv (Target), Val);
-         when Type_Mode_Unbounded_Array =>
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
             declare
                T : Mnode;
                E : O_Dnode;
@@ -2779,7 +2781,7 @@ package body Trans.Chap7 is
                E := Create_Temp_Init
                  (T_Info.Ortho_Ptr_Type (Mode_Value), Val);
                EM := Dp2M (E, T_Info, Mode_Value);
-               Chap3.Check_Array_Match
+               Chap3.Check_Composite_Match
                  (Target_Type, T, Get_Type (Expr), EM, Loc);
                Chap3.Translate_Object_Copy (T, EM, Target_Type);
             end;
@@ -2789,9 +2791,6 @@ package body Trans.Chap7 is
             --  necessary.
             Chap3.Translate_Object_Copy
               (Target, E2M (Val, T_Info, Mode_Value), Target_Type);
-         when Type_Mode_Unbounded_Record =>
-            --  TODO
-            raise Internal_Error;
          when Type_Mode_Unknown
             | Type_Mode_Protected =>
             raise Internal_Error;
@@ -2972,7 +2971,7 @@ package body Trans.Chap7 is
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
       --  update VAR_INDEX.  Handles sub-aggregates.
-      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Iir_Int64)
+      procedure Do_Assign (Assoc : Iir; Expr : Iir; Assoc_Len : out Int64)
       is
          Dest : Mnode;
       begin
@@ -3009,7 +3008,7 @@ package body Trans.Chap7 is
       is
          P  : Natural;
          El : Iir;
-         Assoc_Len : Iir_Int64;
+         Assoc_Len : Int64;
       begin
          --  First, assign positionnal association.
          --  FIXME: count the number of positionnal association and generate
@@ -3073,7 +3072,7 @@ package body Trans.Chap7 is
       procedure Translate_Array_Aggregate_Gen_Named
       is
          El : Iir;
-         Assoc_Len : Iir_Int64;
+         Assoc_Len : Int64;
       begin
          El := Get_Association_Choices_Chain (Aggr);
 
@@ -3526,7 +3525,7 @@ package body Trans.Chap7 is
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       Assoc : Iir;
-      Static_Len : Iir_Int64;
+      Static_Len : Int64;
       Var_Len : O_Dnode;
       Expr_Type : Iir;
       Range_Type : Iir;
@@ -3886,7 +3885,7 @@ package body Trans.Chap7 is
       E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
       case Res_Info.Type_Mode is
          when Type_Mode_Bounded_Arrays =>
-            Chap3.Check_Array_Match
+            Chap3.Check_Composite_Match
               (Res_Type, T2M (Res_Type, Mode_Value),
                Expr_Type, E,
                Loc);
@@ -3899,7 +3898,7 @@ package body Trans.Chap7 is
             begin
                Res := Create_Temp (Res_Info);
                Copy_Fat_Pointer (Res, E);
-               Chap3.Check_Array_Match (Res_Type, Res, Expr_Type, E, Loc);
+               Chap3.Check_Composite_Match (Res_Type, Res, Expr_Type, E, Loc);
                return M2Addr (Res);
             end;
          when others =>
@@ -4218,7 +4217,7 @@ package body Trans.Chap7 is
             declare
                Otype : constant O_Tnode :=
                  Get_Ortho_Type (Expr_Type, Mode_Value);
-               Val : Iir_Int64;
+               Val : Int64;
             begin
                --  Get the value now, as it may generate a constraint_error.
                Val := Get_Physical_Value (Expr);
@@ -4399,7 +4398,7 @@ package body Trans.Chap7 is
                        (Expr, Left, Right, Res_Type);
                   end;
                else
-                  Canon.Canon_Subprogram_Call (Expr);
+                  Vhdl.Canon.Canon_Subprogram_Call (Expr);
                   Trans.Update_Node_Infos;
                   Assoc_Chain := Get_Parameter_Association_Chain (Expr);
                   Res := Chap8.Translate_Subprogram_Call

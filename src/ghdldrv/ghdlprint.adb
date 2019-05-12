@@ -26,18 +26,19 @@ with Name_Table; use Name_Table;
 with Files_Map;
 with Libraries;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
-with Tokens;
-with Scanner;
-with Parse;
-with Canon;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Tokens;
+with Vhdl.Scanner;
+with Vhdl.Parse;
+with Vhdl.Canon;
 with Version;
-with Xrefs;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Xrefs;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
-with Disp_Vhdl;
-with Elocations;
+with Vhdl.Disp_Vhdl;
+with Vhdl.Elocations;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -85,8 +86,8 @@ package body Ghdlprint is
    procedure PP_Html_File (File : Source_File_Entry)
    is
       use Flags;
-      use Scanner;
-      use Tokens;
+      use Vhdl.Scanner;
+      use Vhdl.Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
 
@@ -229,7 +230,7 @@ package body Ghdlprint is
 
       procedure Disp_Identifier
       is
-         use Xrefs;
+         use Vhdl.Xrefs;
          Ref : Xref;
          Decl : Iir;
          Bod : Iir;
@@ -311,7 +312,7 @@ package body Ghdlprint is
 
       procedure Disp_Attribute
       is
-         use Xrefs;
+         use Vhdl.Xrefs;
          Ref : Xref;
          Decl : Iir;
          Loc : Location_Type;
@@ -345,8 +346,8 @@ package body Ghdlprint is
          end if;
       end Disp_Attribute;
    begin
-      Scanner.Flag_Comment := True;
-      Scanner.Flag_Newline := True;
+      Vhdl.Scanner.Flag_Comment := True;
+      Vhdl.Scanner.Flag_Newline := True;
 
       Set_File (File);
       Buf := Get_File_Source (File);
@@ -754,7 +755,7 @@ package body Ghdlprint is
                Lib := Get_Library_Unit (Unit);
 
                Location_To_File_Pos
-                 (Elocations.Get_End_Location (Lib), File_Entry, Lend);
+                 (Vhdl.Elocations.Get_End_Location (Lib), File_Entry, Lend);
                if Lend < First then
                   raise Internal_Error;
                end if;
@@ -855,8 +856,8 @@ package body Ghdlprint is
    procedure Perform_Action (Cmd : Command_Lines; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Scanner;
-      use Tokens;
+      use Vhdl.Scanner;
+      use Vhdl.Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
 
@@ -984,12 +985,12 @@ package body Ghdlprint is
       Setup_Libraries (True);
 
       --  Keep parenthesis during parse.
-      Parse.Flag_Parse_Parenthesis := True;
+      Vhdl.Parse.Flag_Parse_Parenthesis := True;
 
-      Canon.Canon_Flag_Concurrent_Stmts := False;
-      Canon.Canon_Flag_Configurations := False;
-      Canon.Canon_Flag_Specification_Lists := False;
-      Canon.Canon_Flag_Associations := False;
+      Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+      Vhdl.Canon.Canon_Flag_Configurations := False;
+      Vhdl.Canon.Canon_Flag_Specification_Lists := False;
+      Vhdl.Canon.Canon_Flag_Associations := False;
 
       --  Parse all files.
       for I in Args'Range loop
@@ -1002,11 +1003,11 @@ package body Ghdlprint is
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
             --  Analyze the design unit.
-            Sem_Lib.Finish_Compilation (Unit, True);
+            Vhdl.Sem_Lib.Finish_Compilation (Unit, True);
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
-               Disp_Vhdl.Disp_Vhdl (Unit);
+               Vhdl.Disp_Vhdl.Disp_Vhdl (Unit);
                Set_Chain (Unit, Null_Iir);
                Libraries.Add_Design_Unit_Into_Library (Unit);
             end if;
@@ -1047,8 +1048,8 @@ package body Ghdlprint is
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Tokens;
-      use Scanner;
+      use Vhdl.Tokens;
+      use Vhdl.Scanner;
 
       package Ref_Tokens is new Tables
         (Table_Component_Type => Token_Type,
@@ -1091,7 +1092,7 @@ package body Ghdlprint is
             loop
                Scan;
                if Ref_Tokens.Table (Tok_Idx) /= Current_Token then
-                  Report_Msg (Msgid_Error, Errorout.Parse, No_Location,
+                  Report_Msg (Msgid_Error, Errorout.Parse, No_Source_Coord,
                               "token mismatch");
                   exit;
                end if;
@@ -1284,7 +1285,7 @@ package body Ghdlprint is
               | Date_Disk =>
                raise Internal_Error;
             when Date_Parse =>
-               Sem_Lib.Load_Design_Unit (Unit, Unit);
+               Vhdl.Sem_Lib.Load_Design_Unit (Unit, Unit);
                if Errorout.Nbr_Errors /= 0 then
                   raise Compilation_Error;
                end if;
@@ -1315,7 +1316,7 @@ package body Ghdlprint is
       Files : File_Data_Array;
       Output : File_Type;
    begin
-      Xrefs.Init;
+      Vhdl.Xrefs.Init;
       Flags.Flag_Xref := True;
 
       --  Load work library.
@@ -1369,13 +1370,13 @@ package body Ghdlprint is
          Analyze_Design_File_Units (Files (I).Design_File);
       end loop;
 
-      Xrefs.Sort_By_Location;
+      Vhdl.Xrefs.Sort_By_Location;
 
       if False then
          --  Dump locations
-         for I in 1 .. Xrefs.Get_Last_Xref loop
+         for I in 1 .. Vhdl.Xrefs.Get_Last_Xref loop
             declare
-               use Xrefs;
+               use Vhdl.Xrefs;
 
                procedure Put_Loc (L : Location_Type)
                is
@@ -1571,7 +1572,7 @@ package body Ghdlprint is
       --  Load work library.
       Setup_Libraries (True);
 
-      Xrefs.Init;
+      Vhdl.Xrefs.Init;
       Flags.Flag_Xref := True;
 
       --  Parse all files.
@@ -1597,15 +1598,15 @@ package body Ghdlprint is
          Analyze_Design_File_Units (Files (I).Design_File);
       end loop;
 
-      Xrefs.Fix_End_Xrefs;
-      Xrefs.Sort_By_Node_Location;
+      Vhdl.Xrefs.Fix_End_Xrefs;
+      Vhdl.Xrefs.Sort_By_Node_Location;
 
       for F in Files'Range loop
 
          Put ("GHDL-XREF V0");
 
          declare
-            use Xrefs;
+            use Vhdl.Xrefs;
 
             Cur_Decl : Iir;
             Cur_File : Source_File_Entry;

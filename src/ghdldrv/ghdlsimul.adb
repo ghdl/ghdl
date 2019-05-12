@@ -26,11 +26,11 @@ with Types;
 with Flags;
 with Name_Table;
 with Errorout; use Errorout;
-with Std_Package;
+with Vhdl.Std_Package;
 with Libraries;
-with Canon;
-with Configuration;
-with Iirs_Utils;
+with Vhdl.Canon;
+with Vhdl.Configuration;
+with Vhdl.Utils;
 with Simul.Annotations;
 with Simul.Elaboration;
 with Simul.Simulation.Main;
@@ -61,19 +61,19 @@ package body Ghdlsimul is
       end if;
 
       if Time_Resolution /= 'a' then
-         Std_Package.Set_Time_Resolution (Time_Resolution);
+         Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
       end if;
 
       if Analyze_Only then
          return;
       end if;
 
-      Simul.Annotations.Annotate (Std_Package.Std_Standard_Unit);
+      Simul.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
 
-      Canon.Canon_Flag_Add_Labels := True;
-      Canon.Canon_Flag_Sequentials_Stmts := True;
-      Canon.Canon_Flag_Expressions := True;
-      Canon.Canon_Flag_All_Sensitivity := True;
+      Vhdl.Canon.Canon_Flag_Add_Labels := True;
+      Vhdl.Canon.Canon_Flag_Sequentials_Stmts := True;
+      Vhdl.Canon.Canon_Flag_Expressions := True;
+      Vhdl.Canon.Canon_Flag_All_Sensitivity := True;
    end Compile_Init;
 
    procedure Compile_Elab
@@ -81,7 +81,7 @@ package body Ghdlsimul is
    is
       use Name_Table;
       use Types;
-      use Configuration;
+      use Vhdl.Configuration;
 
       First_Id : Name_Id;
       Sec_Id : Name_Id;
@@ -102,7 +102,7 @@ package body Ghdlsimul is
       else
          Sec_Id := Get_Identifier (Sec_Name.all);
       end if;
-      Top_Conf := Configuration.Configure (First_Id, Sec_Id);
+      Top_Conf := Vhdl.Configuration.Configure (First_Id, Sec_Id);
       if Top_Conf = Null_Iir then
          raise Compilation_Error;
       end if;
@@ -113,9 +113,9 @@ package body Ghdlsimul is
          Conf_Unit : constant Iir := Get_Library_Unit (Top_Conf);
          Arch : constant Iir := Get_Named_Entity
            (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
-         Entity : constant Iir := Iirs_Utils.Get_Entity (Arch);
+         Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
       begin
-         Configuration.Check_Entity_Declaration_Top (Entity);
+         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity);
          if Nbr_Errors > 0 then
             raise Compilation_Error;
          end if;

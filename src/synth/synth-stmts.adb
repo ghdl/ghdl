@@ -23,12 +23,12 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Grt.Algos;
 with Areapools;
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 
-with Sem_Expr;
-with Iirs_Utils; use Iirs_Utils;
-with Ieee.Std_Logic_1164;
-with Evaluation;
+with Vhdl.Sem_Expr;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Evaluation;
 
 with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
@@ -195,9 +195,9 @@ package body Synth.Stmts is
       El_Type : constant Iir :=
         Get_Base_Type (Get_Element_Subtype (Get_Type (Expr)));
    begin
-      if El_Type = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+      if El_Type = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
          declare
-            use Evaluation.String_Utils;
+            use Vhdl.Evaluation.String_Utils;
 
             Info : constant Str_Info := Get_Str_Info (Expr);
          begin
@@ -210,17 +210,17 @@ package body Synth.Stmts is
                Val := Shift_Left (Val, 1);
                Dc := Shift_Left (Dc, 1);
                case Get_Pos (Info, I) is
-                  when Ieee.Std_Logic_1164.Std_Logic_0_Pos =>
+                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos =>
                      Val := Val or 0;
-                  when Ieee.Std_Logic_1164.Std_Logic_1_Pos =>
+                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos =>
                      Val := Val or 1;
-                  when Ieee.Std_Logic_1164.Std_Logic_U_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_X_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_Z_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_W_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_D_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_L_Pos
-                    |  Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
+                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_L_Pos
+                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
                      Dc := Dc or 1;
                   when others =>
                      raise Internal_Error;
@@ -442,7 +442,7 @@ package body Synth.Stmts is
 
    procedure Synth_Case_Statement (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
    is
-      use Sem_Expr;
+      use Vhdl.Sem_Expr;
 
       Expr : constant Iir := Get_Expression (Stmt);
       Expr_Type : constant Iir := Get_Type (Expr);

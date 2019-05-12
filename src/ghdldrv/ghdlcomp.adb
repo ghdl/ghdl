@@ -24,12 +24,12 @@ with Ada.Text_IO;
 
 with Types;
 with Flags;
-with Sem;
-with Sem_Lib; use Sem_Lib;
+with Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Name_Table;
 with Errorout; use Errorout;
 with Libraries;
-with Std_Package;
+with Vhdl.Std_Package;
 with Files_Map;
 with Version;
 
@@ -276,7 +276,7 @@ package body Ghdlcomp is
       --  Do late analysis checks.
       Unit := Get_First_Design_Unit (New_Design_File);
       while Unit /= Null_Iir loop
-         Sem.Sem_Analysis_Checks_List
+         Vhdl.Sem.Sem_Analysis_Checks_List
            (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
          Unit := Get_Chain (Unit);
       end loop;
@@ -460,7 +460,7 @@ package body Ghdlcomp is
             if New_Design_File /= Null_Iir then
                Unit := Get_First_Design_Unit (New_Design_File);
                while Unit /= Null_Iir loop
-                  Sem.Sem_Analysis_Checks_List
+                  Vhdl.Sem.Sem_Analysis_Checks_List
                     (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
                   Unit := Get_Chain (Unit);
                end loop;
@@ -682,7 +682,7 @@ package body Ghdlcomp is
       while Is_Valid (It) loop
          File := Get_Element (It);
 
-         if File = Std_Package.Std_Standard_File then
+         if File = Vhdl.Std_Package.Std_Standard_File then
             null;
          elsif Source_File_Modified (File)
            or else Is_File_Outdated (File)
@@ -778,7 +778,7 @@ package body Ghdlcomp is
 
    function Is_Makeable_File (File : Iir_Design_File) return Boolean is
    begin
-      if File = Std_Package.Std_Standard_File then
+      if File = Vhdl.Std_Package.Std_Standard_File then
          return False;
       end if;
       return True;

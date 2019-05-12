@@ -145,21 +145,23 @@ Null_Identifier = 0
 
 class Ieee:
     Std_Logic_1164_Pkg = c_int.in_dll(
-        libghdl, "ieee__std_logic_1164__std_logic_1164_pkg")
+        libghdl, "vhdl__ieee__std_logic_1164__std_logic_1164_pkg")
 
     # Get value
     Std_Logic_Type = c_int.in_dll(
-        libghdl, "ieee__std_logic_1164__std_logic_type")
+        libghdl, "vhdl__ieee__std_logic_1164__std_logic_type")
 
     # Get value
     Std_Logic_Vector_Type = c_int.in_dll(
-        libghdl, "ieee__std_logic_1164__std_logic_vector_type")
+        libghdl, "vhdl__ieee__std_logic_1164__std_logic_vector_type")
 
     # Get value
-    Rising_Edge = c_int.in_dll(libghdl, "ieee__std_logic_1164__rising_edge")
+    Rising_Edge = c_int.in_dll(
+        libghdl, "vhdl__ieee__std_logic_1164__rising_edge")
 
     # Get value
-    Falling_Edge = c_int.in_dll(libghdl, "ieee__std_logic_1164__falling_edge")
+    Falling_Edge = c_int.in_dll(
+        libghdl, "vhdl__ieee__std_logic_1164__falling_edge")
 
 
 # Flags
@@ -174,71 +176,72 @@ class Flags:
 
 # Scanner
 class Scanner:
-    Set_File = libghdl.scanner__set_file
+    Set_File = libghdl.vhdl__scanner__set_file
 
-    Close_File = libghdl.scanner__close_file
+    Close_File = libghdl.vhdl__scanner__close_file
 
-    Scan = libghdl.scanner__scan
+    Scan = libghdl.vhdl__scanner__scan
 
     # This is a c_int, so you want to use its .value
-    Current_Token = c_int.in_dll(libghdl, "scanner__current_token")
+    Current_Token = c_int.in_dll(libghdl, "vhdl__scanner__current_token")
 
-    Flag_Comment = c_bool.in_dll(libghdl, "scanner__flag_comment")
+    Flag_Comment = c_bool.in_dll(libghdl, "vhdl__scanner__flag_comment")
 
-    Get_Current_Line = libghdl.scanner__get_current_line
+    Get_Current_Line = libghdl.vhdl__scanner__get_current_line
 
-    Get_Token_Offset = libghdl.scanner__get_token_offset
+    Get_Token_Offset = libghdl.vhdl__scanner__get_token_offset
 
-    Get_Token_Position = libghdl.scanner__get_token_position
+    Get_Token_Position = libghdl.vhdl__scanner__get_token_position
 
-    Get_Position = libghdl.scanner__get_position
+    Get_Position = libghdl.vhdl__scanner__get_position
 
-    Current_Identifier = libghdl.scanner__current_identifier
+    Current_Identifier = libghdl.vhdl__scanner__current_identifier
 
 
 class Parse:
-    Parse_Design_File = libghdl.parse__parse_design_file
+    Parse_Design_File = libghdl.vhdl__parse__parse_design_file
 
     Flag_Parse_Parenthesis = c_bool.in_dll(
-        libghdl, "parse__flag_parse_parenthesis")
+        libghdl, "vhdl__parse__flag_parse_parenthesis")
 
 
 class Canon:
     Flag_Concurrent_Stmts = c_bool.in_dll(
-        libghdl, "canon__canon_flag_concurrent_stmts")
+        libghdl, "vhdl__canon__canon_flag_concurrent_stmts")
 
     Flag_Configurations = c_bool.in_dll(
-        libghdl, "canon__canon_flag_configurations")
+        libghdl, "vhdl__canon__canon_flag_configurations")
 
     Flag_Associations = c_bool.in_dll(
-        libghdl, "canon__canon_flag_associations")
+        libghdl, "vhdl__canon__canon_flag_associations")
 
     Extract_Sequential_Statement_Chain_Sensitivity = \
-        libghdl.canon__canon_extract_sequential_statement_chain_sensitivity
+        libghdl.vhdl__canon__canon_extract_sequential_statement_chain_sensitivity
 
 
 class Sem_Lib:
-    Load_File = libghdl.sem_lib__load_file
+    Load_File = libghdl.vhdl__sem_lib__load_file
+
+    Finish_Compilation = libghdl.vhdl__sem_lib__finish_compilation
 
 
 class Std_Package:
     # Use .value
-    Std_Location = c_int32.in_dll(libghdl, "std_package__std_location")
+    Std_Location = c_int32.in_dll(libghdl, "vhdl__std_package__std_location")
 
     # Use .value
-    Standard_Package = c_int32.in_dll(libghdl, "std_package__standard_package")
+    Standard_Package = c_int32.in_dll(
+        libghdl, "vhdl__std_package__standard_package")
 
     # Use .value
     Character_Type_Definition = c_int32.in_dll(
-        libghdl, "std_package__character_type_definition")
+        libghdl, "vhdl__std_package__character_type_definition")
 
 class Libraries:
     Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
 
     Add_Design_Unit_Into_Library = \
         libghdl.libraries__add_design_unit_into_library
-
-    Finish_Compilation = libghdl.sem_lib__finish_compilation
 
     # Use .value
     Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
@@ -253,23 +256,23 @@ class Libraries:
 
 # Disp_Tree
 
-Disp_Iir = libghdl.disp_tree__disp_iir
+Disp_Iir = libghdl.vhdl__disp_tree__disp_iir
 
 # Iirs_Utils
 
 class Iirs_Utils:
-    Strip_Denoting_Name = libghdl.iirs_utils__strip_denoting_name
+    Strip_Denoting_Name = libghdl.vhdl__utils__strip_denoting_name
 
-    Get_Entity = libghdl.iirs_utils__get_entity
+    Get_Entity = libghdl.vhdl__utils__get_entity
 
     Is_Second_Subprogram_Specification = \
-        libghdl.iirs_utils__is_second_subprogram_specification
+        libghdl.vhdl__utils__is_second_subprogram_specification
 
     Get_Entity_From_Entity_Aspect = \
-        libghdl.iirs_utils__get_entity_from_entity_aspect
+        libghdl.vhdl__utils__get_entity_from_entity_aspect
 
     Get_Interface_Of_Formal = \
-        libghdl.iirs_utils__get_interface_of_formal
+        libghdl.vhdl__utils__get_interface_of_formal
 
 # Errorout
 

@@ -122,9 +122,13 @@ LIBVHDL_FLAGS_TO_PASS=\
  enable_openieee="$(enable_openieee)" \
  LN="$(LN)" CP="$(CP)" MKDIR="$(MKDIR)"
 
-all: Makefile all.$(backend) all.libghdl.$(enable_python)
+all: Makefile all.$(backend) all.libghdl
 
 install: install.$(backend)
+#       Generate std.standard package VHDL source
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=87 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/standard.v87
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=93 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/standard.v93
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=08 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/standard.v08
 
 check: check.$(backend)
 
@@ -224,8 +228,9 @@ copy-sources.gcc: version.ads
 	 6 | 6.*)  gcc_ortho_lang=ortho-lang-6.c ;; \
 	 7.*)      gcc_ortho_lang=ortho-lang-7.c ;; \
 	 8.*)      gcc_ortho_lang=ortho-lang-8.c ;; \
+	 9.*)      gcc_ortho_lang=ortho-lang-9.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
-	    echo "Need gcc version 4.9.x, 5.x, 6.x, 7.x or 8.x"; \
+	    echo "Need gcc version 4.9.x, 5.x, 6.x, 7.x, 8.x or 9.x"; \
 	    exit 1 ;; \
 	esac; \
 	$(CP) -p $(srcdir)/src/ortho/gcc/$$gcc_ortho_lang \
@@ -357,6 +362,7 @@ $(libghdl_name): $(GRT_SRC_DEPS) version.ads force
 
 all.libghdl.true: $(libghdl_name)
 all.libghdl.false:
+all.libghdl: all.libghdl.$(enable_python)
 
 ################ ghdlsynth library ######################################
 
