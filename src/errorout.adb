@@ -148,6 +148,22 @@ package body Errorout is
       return Res;
    end "+";
 
+   procedure Report_Vhdl_Token (Tok : Vhdl.Tokens.Token_Type)
+   is
+      use Vhdl.Tokens;
+   begin
+      case Tok is
+         when Tok_Identifier =>
+            Report_Handler.Message ("an identifier");
+         when Tok_Eof =>
+            Report_Handler.Message ("end of file");
+         when others =>
+            Report_Handler.Message ("'");
+            Report_Handler.Message (Image (Tok));
+            Report_Handler.Message ("'");
+      end case;
+   end Report_Vhdl_Token;
+
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Source_Coord_Type;
@@ -236,8 +252,9 @@ package body Errorout is
                      begin
                         Report_Handler.Message ("""");
                         case Arg.Kind is
-                           when Earg_Iir =>
-                              Id := Get_Identifier (Arg.Val_Iir);
+                           when Earg_Vhdl_Node =>
+                              Id := Vhdl.Nodes.Get_Identifier
+                                (Arg.Val_Vhdl_Node);
                            when Earg_Id =>
                               Id := Arg.Val_Id;
                            when others =>
@@ -265,26 +282,14 @@ package body Errorout is
                   when 't' =>
                      --  A token
                      declare
-                        use Vhdl.Tokens;
                         Arg : Earg_Type renames Args (Argn);
-                        Tok : Token_Type;
                      begin
                         case Arg.Kind is
-                           when Earg_Token =>
-                              Tok := Arg.Val_Tok;
+                           when Earg_Vhdl_Token =>
+                              Report_Vhdl_Token (Arg.Val_Vhdl_Tok);
                            when others =>
                               --  Invalid conversion to character.
                               raise Internal_Error;
-                        end case;
-                        case Tok is
-                           when Tok_Identifier =>
-                              Report_Handler.Message ("an identifier");
-                           when Tok_Eof =>
-                              Report_Handler.Message ("end of file");
-                           when others =>
-                              Report_Handler.Message ("'");
-                              Report_Handler.Message (Image (Tok));
-                              Report_Handler.Message ("'");
                         end case;
                      end;
                   when 'l' =>
@@ -299,8 +304,9 @@ package body Errorout is
                         case Arg.Kind is
                            when Earg_Location =>
                               Arg_Loc := Arg.Val_Loc;
-                           when Earg_Iir =>
-                              Arg_Loc := Get_Location (Arg.Val_Iir);
+                           when Earg_Vhdl_Node =>
+                              Arg_Loc := Vhdl.Nodes.Get_Location
+                                (Arg.Val_Vhdl_Node);
                            when others =>
                               raise Internal_Error;
                         end case;
@@ -326,8 +332,9 @@ package body Errorout is
                         Arg : Earg_Type renames Args (Argn);
                      begin
                         case Arg.Kind is
-                           when Earg_Iir =>
-                              Report_Handler.Message (Disp_Node (Arg.Val_Iir));
+                           when Earg_Vhdl_Node =>
+                              Report_Handler.Message
+                                (Disp_Node (Arg.Val_Vhdl_Node));
                            when others =>
                               --  Invalid conversion to node.
                               raise Internal_Error;
@@ -386,9 +393,9 @@ package body Errorout is
       Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg);
    end Error_Msg_Option_NR;
 
-   procedure Error_Msg_Option (Msg: String) is
+   procedure Error_Msg_Option (Msg: String; Args : Earg_Arr := No_Eargs) is
    begin
-      Error_Msg_Option_NR (Msg);
+      Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg, Args);
       raise Option_Error;
    end Error_Msg_Option;
 
@@ -397,14 +404,14 @@ package body Errorout is
       Report_Msg (Id, Option, No_Source_Coord, Msg);
    end Warning_Msg_Option;
 
-   function Make_Earg_Vhdl_Node (V : Iir) return Earg_Type is
+   function Make_Earg_Vhdl_Node (V : Vhdl.Nodes.Iir) return Earg_Type is
    begin
-      return (Kind => Earg_Iir, Val_Iir => V);
+      return (Kind => Earg_Vhdl_Node, Val_Vhdl_Node => V);
    end Make_Earg_Vhdl_Node;
 
    function Make_Earg_Vhdl_Token (V : Vhdl.Tokens.Token_Type)
                                  return Earg_Type is
    begin
-      return (Kind => Earg_Token, Val_Tok => V);
+      return (Kind => Earg_Vhdl_Token, Val_Vhdl_Tok => V);
    end Make_Earg_Vhdl_Token;
 end Errorout;
