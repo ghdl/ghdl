@@ -164,8 +164,6 @@ package body Errorout.Console is
          Current_Line := 1;
       end if;
 
-      Detect_Terminal;
-
       --  And no program name.
       Progname := False;
 
@@ -272,6 +270,8 @@ package body Errorout.Console is
 
    procedure Install_Handler is
    begin
+      Detect_Terminal;
+
       Set_Report_Handler ((Console_Error_Start'Access,
                            Console_Message'Access,
                            Console_Message_End'Access,
