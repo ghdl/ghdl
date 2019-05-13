@@ -151,10 +151,6 @@ package Flags is
    -- --warn-undriven
    --Warn_Undriven : Boolean := False;
 
-   --  --warn-error
-   --  Turns warnings into errors.
-   Warn_Error : Boolean := False;
-
    --  If True, disp original source line and a caret indicating the column.
    Flag_Caret_Diagnostics : Boolean := False;
 

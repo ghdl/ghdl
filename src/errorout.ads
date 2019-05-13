@@ -122,6 +122,9 @@ package Errorout is
    subtype Msgid_Warnings is Msgid_Type
      range Warnid_Library .. Warnid_Static;
 
+   subtype Msgid_All_Warnings is Msgid_Type
+     range Msgid_Warnings'First .. Msgid_Warning;
+
    --  Get the image of a warning.  This correspond the the identifier of ID,
    --  in lower case, without the Msgid_Warn_ prefix and with '_' replaced
    --  by '-'.
@@ -132,6 +135,9 @@ package Errorout is
 
    --  Get enable status of a warning.
    function Is_Warning_Enabled (Id : Msgid_Warnings) return Boolean;
+
+   --  Consider a warning as an error.
+   procedure Warning_Error (Id : Msgid_All_Warnings; As_Error : Boolean);
 
    --  State of warnings.
    type Warnings_Setting is private;
@@ -262,12 +268,12 @@ private
       Error : Boolean;
    end record;
 
-   type Warnings_Setting is array (Msgid_Warnings) of Warning_Control_Type;
+   type Warnings_Setting is array (Msgid_All_Warnings) of Warning_Control_Type;
 
    Default_Warnings : constant Warnings_Setting :=
      (Warnid_Library | Warnid_Binding | Warnid_Port | Warnid_Shared
-        | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs
-        | Warnid_Hide    => (Enabled => True, Error => False),
+        | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
+        | Msgid_Warning  => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
 
    --  Compute the column from Error_Record E.

@@ -41,8 +41,23 @@ package body Options is
    begin
       --  Handle -Werror.
       if Opt = "error" then
-         Warn_Error := Val;
+         for I in Msgid_Warnings loop
+            Warning_Error (I, Val);
+         end loop;
          return True;
+      end if;
+
+      --  Handle -Werror=xxx
+      if Opt'Length >= 6
+        and then Opt (Opt'First .. Opt'First + 5) = "error="
+      then
+         for I in Msgid_Warnings loop
+            if Warning_Image (I) = Opt (Opt'First + 6 .. Opt'Last) then
+               Warning_Error (I, Val);
+               return True;
+            end if;
+         end loop;
+         return False;
       end if;
 
       --  Normal warnings.

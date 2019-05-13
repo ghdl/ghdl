@@ -18,7 +18,6 @@
 
 with Name_Table;
 with Files_Map; use Files_Map;
-with Flags; use Flags;
 with Str_Table;
 
 with Vhdl.Errors; use Vhdl.Errors;
@@ -64,6 +63,16 @@ package body Errorout is
    begin
       return Warnings_Control (Id).Enabled;
    end Is_Warning_Enabled;
+
+   procedure Warning_Error (Id : Msgid_All_Warnings; As_Error : Boolean) is
+   begin
+      Warnings_Control (Id).Error := As_Error;
+   end Warning_Error;
+
+   function Is_Warning_Error (Id : Msgid_All_Warnings) return Boolean is
+   begin
+      return Warnings_Control (Id).Error;
+   end Is_Warning_Error;
 
    function Warning_Image (Id : Msgid_Warnings) return String
    is
@@ -166,9 +175,7 @@ package body Errorout is
       end if;
 
       --  Reclassify warnings to errors if -Werror.
-      if Flags.Warn_Error
-        and then (Id = Msgid_Warning or Id in Msgid_Warnings)
-      then
+      if Id in Msgid_All_Warnings and then Is_Warning_Error (Id) then
          New_Id := Msgid_Error;
       else
          New_Id := Id;
@@ -400,6 +407,4 @@ package body Errorout is
    begin
       return (Kind => Earg_Token, Val_Tok => V);
    end Make_Earg_Vhdl_Token;
-
-
 end Errorout;
