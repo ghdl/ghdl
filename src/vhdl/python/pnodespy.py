@@ -134,8 +134,17 @@ def read_spec_enum(type_name, prefix, class_name):
     read_enum(pnodes.kind_file, type_name, prefix, class_name)
 
 
-def do_libghdl_iirs():
+def do_libghdl_nodes():
     print('from libghdl import libghdl')
+    print("""
+Null_Iir = 0
+Null_Iir_List = 0
+Iir_List_All = 1
+
+Null_Iir_Flist = 0
+Iir_Flist_Others = 1
+Iir_Flist_All = 2
+""")
     do_class_kinds()
     read_spec_enum('Iir_Mode', 'Iir_', 'Iir_Mode')
     read_spec_enum('Iir_Staticness', '', 'Iir_Staticness')
@@ -221,12 +230,22 @@ def do_libghdl_tokens():
 
 
 def do_libghdl_errorout():
+    print("""from ctypes import c_int8, c_int32
+class Error_Record(Structure):
+    _fields_ = [("origin", c_int8),
+                ("id", c_int8),
+                ("file", c_int32),
+                ("line", c_int32),
+                ("offset", c_int32),
+                ("length", c_int32)]
+""")
+
     read_enum("../errorout.ads", "Msgid_Type", "(Msgid|Warnid)_", "Msgid",
               g=lambda m: m.group(1) + '_' + m.group(2))
 
 
 pnodes.actions.update({'class-kinds': do_class_kinds,
-                       'libghdl-iirs': do_libghdl_iirs,
+                       'libghdl-nodes': do_libghdl_nodes,
                        'libghdl-meta': do_libghdl_meta,
                        'libghdl-names': do_libghdl_names,
                        'libghdl-tokens': do_libghdl_tokens,
