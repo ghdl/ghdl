@@ -211,7 +211,7 @@ def do_libghdl_names():
     print('class Name:')
     for n, v in res:
         # Avoid clash with Python names
-        if n in ['False', 'True']:
+        if n in ['False', 'True', 'None']:
             n = 'N' + n
         print('    {0} = {1}'.format(n, v))
 

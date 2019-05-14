@@ -49,40 +49,40 @@ class Lists:
                     ("chunk_idx", c_int32),
                     ("remain", c_int32)]
 
-    Iterate = libghdl.lists__iterate
+    Iterate = libghdl.vhdl__lists__iterate
     Iterate.argstype = [List_Type]
     Iterate.restype = Iterator
 
-    Is_Valid = libghdl.lists__is_valid
+    Is_Valid = libghdl.vhdl__lists__is_valid
     Is_Valid.argstype = [POINTER(Iterator)]
     Is_Valid.restype = c_bool
 
-    Next = libghdl.lists__next
+    Next = libghdl.vhdl__lists__next
     Next.argstype = [POINTER(Iterator)]
     Next.restype = None
 
-    Get_Element = libghdl.lists__get_element
+    Get_Element = libghdl.vhdl__lists__get_element
     Get_Element.argstype = [POINTER(Iterator)]
     Get_Element.restype = c_int32
 
-    Get_Nbr_Elements = libghdl.lists__get_nbr_elements
+    Get_Nbr_Elements = libghdl.vhdl__lists__get_nbr_elements
     Get_Nbr_Elements.argtype = [List_Type]
     Get_Nbr_Elements.restype = c_int32
 
-    Create_Iir_List = libghdl.lists__create_list
+    Create_Iir_List = libghdl.vhdl__lists__create_list
 
-    Destroy_Iir_List = libghdl.lists__destroy_list
+    Destroy_Iir_List = libghdl.vhdl__lists__destroy_list
 
 
 class Flists:
     Flist_Type = c_int32
 
     Ffirst = 0
-    Flast = libghdl.flists__flast
+    Flast = libghdl.vhdl__flists__flast
 
-    Length = libghdl.flists__length
+    Length = libghdl.vhdl__flists__length
 
-    Get_Nth_Element = libghdl.flists__get_nth_element
+    Get_Nth_Element = libghdl.vhdl__flists__get_nth_element
 
 
 # Files
