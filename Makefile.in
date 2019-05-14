@@ -148,6 +148,9 @@ libs: libs.vhdl.$(backend)
 Makefile: $(srcdir)/Makefile.in ./config.status
 	./config.status
 
+setup.py: $(srcdir)/setup.py.in ./config.status
+	./config.status
+
 GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/grt -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
 
 GRTSRCDIR=$(abs_srcdir)/src/grt
