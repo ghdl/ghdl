@@ -3102,7 +3102,7 @@ package body Trans.Chap8 is
                   then
                      pragma Assert (Sig = O_Enode_Null); --  TODO
 
-                     if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                     if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
                         pragma Assert
                           (Assoc_Info.Call_Assoc_Fat (Mode) /= Null_Var);
                         --  Allocate array base
