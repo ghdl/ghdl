@@ -7269,16 +7269,20 @@ package body Vhdl.Parse is
          Set_Start_Location (Subprg, Start_Loc);
       end if;
 
-      if Current_Token /= Tok_Is then
-         --  Skip ';'.
-         Expect_Scan (Tok_Semi_Colon);
+      case Current_Token is
+         when Tok_Is =>
+            --  Skip 'is'.
+            Is_Loc := Get_Token_Location;
+            Scan;
+         when Tok_Begin =>
+            Error_Msg_Parse ("missing 'is' before 'begin'");
+            Is_Loc := Get_Token_Location;
+         when others =>
+            --  Skip ';'.
+            Expect_Scan (Tok_Semi_Colon);
 
-         return Subprg;
-      end if;
-
-      --  Skip 'is'.
-      Is_Loc := Get_Token_Location;
-      Scan;
+            return Subprg;
+      end case;
 
       --  The body.
       Set_Has_Body (Subprg, True);
