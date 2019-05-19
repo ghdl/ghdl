@@ -16,9 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Unchecked_Conversion;
-with Ada.Text_IO; use Ada.Text_IO;
 with System;
+with Ada.Unchecked_Conversion;
+with Simple_IO; use Simple_IO;
 with Types; use Types;
 with Grt.Types; use Grt.Types;
 with Flags; use Flags;
@@ -4250,33 +4250,33 @@ package body Simul.Execution is
       -- The error message consists of at least:
 
       -- 4: name of the design unit containing the assertion.
-      Put (Standard_Output, Disp_Location (Stmt));
+      Put (Disp_Location (Stmt));
 
-      Put (Standard_Output, ":@");
+      Put (":@");
       Grt.Astdio.Vhdl.Put_Time (Grt.Stdio.stdout, Current_Time);
 
       -- 1: an indication that this message is from an assertion.
-      Put (Standard_Output, ":(");
-      Put (Standard_Output, Msg);
-      Put (Standard_Output, ' ');
+      Put (":(");
+      Put (Msg);
+      Put (' ');
 
       -- 2: the value of the severity level.
       case Severity is
          when 0 =>
-            Put (Standard_Output, "note");
+            Put ("note");
          when 1 =>
-            Put (Standard_Output, "warning");
+            Put ("warning");
          when 2 =>
-            Put (Standard_Output, "error");
+            Put ("error");
          when 3 =>
-            Put (Standard_Output, "failure");
+            Put ("failure");
          when others =>
             Error_Internal (Null_Iir, "execute_failed_assertion");
       end case;
-      Put (Standard_Output, "): ");
+      Put ("): ");
 
       -- 3: the value of the message string.
-      Put_Line (Standard_Output, Report);
+      Put_Line (Report);
 
       -- Stop execution if the severity is too high.
       if Severity >= Grt.Options.Severity_Level then

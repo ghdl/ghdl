@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
 with GNAT.OS_Lib;
+with Simple_IO;
 with Name_Table;
 with Files_Map; use Files_Map;
 with Flags; use Flags;
@@ -66,12 +66,7 @@ package body Errorout.Console is
    --  Switch to COLOR.
    procedure Set_Color (Color : Color_Type)
    is
-      procedure Put (S : String)
-      is
-         use Ada.Text_IO;
-      begin
-         Put (Standard_Error, S);
-      end Put;
+      use Simple_IO;
    begin
       if Flag_Color_Diagnostics = Off then
          return;
@@ -81,17 +76,17 @@ package body Errorout.Console is
       --  They are also documented on msdn in 'Console Virtual Terminal
       --  sequences'.
 
-      Put (ASCII.ESC & '[');
+      Put_Err (ASCII.ESC & '[');
       case Color is
-         when Color_Locus   => Put ("1");    --  Bold
-         when Color_Note    => Put ("1;36"); --  Bold, cyan
-         when Color_Warning => Put ("1;35"); --  Bold, magenta
-         when Color_Error   => Put ("1;31"); --  Bold, red
-         when Color_Fatal   => Put ("1;33"); --  Bold, yellow
-         when Color_Message => Put ("0;1");  --  Normal, bold
-         when Color_None    => Put ("0");    --  Normal
+         when Color_Locus   => Put_Err ("1");    --  Bold
+         when Color_Note    => Put_Err ("1;36"); --  Bold, cyan
+         when Color_Warning => Put_Err ("1;35"); --  Bold, magenta
+         when Color_Error   => Put_Err ("1;31"); --  Bold, red
+         when Color_Fatal   => Put_Err ("1;33"); --  Bold, yellow
+         when Color_Message => Put_Err ("0;1");  --  Normal, bold
+         when Color_None    => Put_Err ("0");    --  Normal
       end case;
-      Put ("m");
+      Put_Err ("m");
    end Set_Color;
 
    Msg_Len : Natural;
@@ -99,27 +94,21 @@ package body Errorout.Console is
    Current_Line : Natural;
    In_Group : Boolean := False;
 
-   procedure Put (Str : String)
-   is
-      use Ada.Text_IO;
+   procedure Put (Str : String) is
    begin
       Msg_Len := Msg_Len + Str'Length;
-      Put (Standard_Error, Str);
+      Simple_IO.Put_Err (Str);
    end Put;
 
-   procedure Put (C : Character)
-   is
-      use Ada.Text_IO;
+   procedure Put (C : Character) is
    begin
       Msg_Len := Msg_Len + 1;
-      Put (Standard_Error, C);
+      Simple_IO.Put_Err (C);
    end Put;
 
-   procedure Put_Line (Str : String := "")
-   is
-      use Ada.Text_IO;
+   procedure Put_Line (Str : String := "") is
    begin
-      Put_Line (Standard_Error, Str);
+      Simple_IO.Put_Line_Err (Str);
       Msg_Len := 0;
    end Put_Line;
 

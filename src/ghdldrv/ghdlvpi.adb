@@ -16,9 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ada.Command_Line; use Ada.Command_Line;
+with Simple_IO; use Simple_IO;
+
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal;
 with Default_Paths; use Default_Paths;

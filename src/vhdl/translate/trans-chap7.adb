@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
+with Simple_IO;
 with Name_Table;
 with Str_Table;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -1132,10 +1132,7 @@ package body Trans.Chap7 is
             Invert := True;
             Val := 0;
          when others =>
-            Ada.Text_IO.Put_Line
-              ("translate_shortcut_operator: cannot handle "
-               & Iir_Predefined_Functions'Image (Kind));
-            raise Internal_Error;
+            Error_Kind ("translate_shortcut_operator", Kind);
       end case;
 
       V := Get_Ortho_Literal
@@ -2334,7 +2331,7 @@ package body Trans.Chap7 is
                | ON_Not =>
                Res := New_Monadic_Op (Op, Left_Tree);
             when others =>
-               Ada.Text_IO.Put_Line
+               Simple_IO.Put_Line_Err
                  ("translate_predefined_operator: cannot handle "
                   & ON_Op_Kind'Image (Op));
                raise Internal_Error;
@@ -2747,11 +2744,7 @@ package body Trans.Chap7 is
             end;
 
          when others =>
-            Ada.Text_IO.Put_Line
-              ("translate_predefined_operator(2): cannot handle "
-               & Iir_Predefined_Functions'Image (Kind));
-            raise Internal_Error;
-            return O_Enode_Null;
+            Error_Kind ("translate_predefined_operator(2)", Kind);
       end case;
    end Translate_Predefined_Operator;
 

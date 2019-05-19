@@ -1,5 +1,5 @@
---  Very simple logging package.
---  Copyright (C) 2018 Tristan Gingold
+--  Very simple IO package
+--  Copyright (C) 2019 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -16,16 +16,14 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Simple_IO;
+package Simple_IO is
+   procedure Put (S : String);
+   procedure Put (C : Character);
+   procedure Put_Line (S : String);
+   procedure New_Line;
 
-package body Logging is
-   procedure Log (S : String) is
-   begin
-      Simple_IO.Put_Err (S);
-   end Log;
-
-   procedure Log_Line (S : String := "") is
-   begin
-      Simple_IO.Put_Line_Err (S);
-   end Log_Line;
-end Logging;
+   procedure Put_Err (S : String);
+   procedure Put_Err (C : Character);
+   procedure Put_Line_Err (S : String);
+   procedure New_Line_Err;
+end Simple_IO;

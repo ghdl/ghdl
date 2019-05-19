@@ -19,9 +19,8 @@ with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 
 with Ada.Command_Line;
-with Ada.Characters.Latin_1;
-with Ada.Text_IO;
 
+with Simple_IO;
 with Types;
 with Flags;
 with Vhdl.Sem;
@@ -97,7 +96,7 @@ package body Ghdlcomp is
 
    procedure Disp_Long_Help (Cmd : Command_Comp)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
    begin
       Disp_Long_Help (Command_Lib (Cmd));
       Hooks.Disp_Long_Help.all;
@@ -600,7 +599,7 @@ package body Ghdlcomp is
 
    procedure Disp_Config
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       use Libraries;
    begin
       Disp_Config_Prefixes;
@@ -616,7 +615,7 @@ package body Ghdlcomp is
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Ada.Text_IO;
+      use Simple_IO;
    begin
       if Args'Length /= 0 then
          Error ("--disp-config does not accept any argument");
@@ -789,11 +788,11 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
       use Types;
-      use Ada.Text_IO;
+      use Simple_IO;
       use Ada.Command_Line;
       use Name_Table;
 
-      HT : constant Character := Ada.Characters.Latin_1.HT;
+      HT : constant Character := ASCII.HT;
       Files_List : Iir_List;
       File : Iir_Design_File;
       Files_It : List_Iterator;

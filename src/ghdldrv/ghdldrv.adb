@@ -16,11 +16,12 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Command_Line; use Ada.Command_Line;
-with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
-with Tables;
 with GNAT.Dynamic_Tables;
+
+with Tables;
+with Simple_IO; use Simple_IO;
 with Libraries;
 with Name_Table; use Name_Table;
 with Vhdl.Std_Package;

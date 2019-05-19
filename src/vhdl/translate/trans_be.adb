@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Simple_IO;
 with Vhdl.Errors; use Vhdl.Errors;
-with Ada.Text_IO;
 with Vhdl.Back_End;
 
 package body Trans_Be is
@@ -63,7 +63,7 @@ package body Trans_Be is
 
    procedure Disp_Option
    is
-      procedure P (Str : String) renames Ada.Text_IO.Put_Line;
+      procedure P (Str : String) renames Simple_IO.Put_Line;
    begin
       P ("  --dump-drivers     dump processes drivers");
    end Disp_Option;

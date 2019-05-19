@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Simple_IO; use Simple_IO;
 with Vhdl.Utils; use Vhdl.Utils;
-with Ada.Text_IO; use Ada.Text_IO;
 with Vhdl.Disp_Vhdl;
 
 package body Simul.Debugger.AMS is
