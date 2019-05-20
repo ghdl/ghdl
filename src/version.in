@@ -2,4 +2,10 @@ package Version is
    Ghdl_Ver : constant String := "@VER@";
    Ghdl_Release : constant String :=
       "(tarball) [Dunoon edition]";
+
+   --  Additionnal one-line message displayed by the --version command,
+   --  if defined.
+   --  Used to customize.
+   type String_Cst_Acc is access constant String;
+   Version_String : String_Cst_Acc := null;
 end Version;

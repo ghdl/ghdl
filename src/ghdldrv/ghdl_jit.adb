@@ -22,12 +22,13 @@ with Ghdlrun;
 with Ghdlvpi;
 with Ghdlxml;
 with Ortho_Jit;
+with Version; use Version;
 
 procedure Ghdl_Jit is
 begin
    --  Manual elaboration so that the order is known (because it is the order
    --  used to display help).
-   Ghdlmain.Version_String :=
+   Version.Version_String :=
      new String'(Ortho_Jit.Get_Jit_Name & " code generator");
    Ghdlrun.Register_Commands;
    Ghdllocal.Register_Commands;

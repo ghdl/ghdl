@@ -30,7 +30,7 @@ with Errorout; use Errorout;
 with Libraries;
 with Vhdl.Std_Package;
 with Files_Map;
-with Version;
+with Version; use Version;
 
 package body Ghdlcomp is
 
@@ -812,8 +812,8 @@ package body Ghdlcomp is
       Put (' ');
       Put (Version.Ghdl_Release);
       Put (" - ");
-      if Version_String /= null then
-         Put (Version_String.all);
+      if Version.Version_String /= null then
+         Put (Version.Version_String.all);
       end if;
       New_Line;
       Put_Line ("# Command used to generate this makefile:");

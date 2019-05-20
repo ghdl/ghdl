@@ -19,7 +19,7 @@ with Ada.Command_Line;
 with Ada.Command_Line.Response_File;
 
 with Simple_IO;
-with Version;
+with Version; use Version;
 with Bug;
 with Options;
 with Types; use Types;
@@ -230,9 +230,9 @@ package body Ghdlmain is
       Put (' ');
       Put_Line (Version.Ghdl_Release);
       Put_Line (" Compiled with " & Bug.Get_Gnat_Version);
-      if Version_String /= null then
+      if Version.Version_String /= null then
          Put (" ");
-         Put (Version_String.all);
+         Put (Version.Version_String.all);
       end if;
       New_Line;
       Put_Line ("Written by Tristan Gingold.");

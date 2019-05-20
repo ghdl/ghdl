@@ -71,15 +71,11 @@ package body Bug is
         ("Please report this bug on https://github.com/ghdl/ghdl/issues");
       Put_Line_Err ("GHDL release: " & Ghdl_Ver & ' ' & Ghdl_Release);
       Put_Line_Err ("Compiled with " & Get_Gnat_Version);
+      if Version.Version_String /= null then
+         Put_Line_Err (Version.Version_String.all);
+      end if;
       Put_Line_Err ("Target: " & Standard'Target_Name);
       Put_Line_Err (GNAT.Directory_Operations.Get_Current_Dir);
-      --Put_Line
-      --  ("Program name: " & Command_Name);
-      --Put_Line
-      --  ("Program arguments:");
-      --for I in 1 .. Argument_Count loop
-      --   Put_Line ("  " & Argument (I));
-      --end loop;
       Put_Line_Err ("Command line:");
       Put_Err (Command_Name);
       for I in 1 .. Argument_Count loop

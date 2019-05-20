@@ -32,7 +32,7 @@ with Vhdl.Tokens;
 with Vhdl.Scanner;
 with Vhdl.Parse;
 with Vhdl.Canon;
-with Version;
+with Version; use Version;
 with Vhdl.Xrefs;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;

@@ -80,12 +80,6 @@ package Ghdlmain is
 
    procedure Main;
 
-   --  Additionnal one-line message displayed by the --version command,
-   --  if defined.
-   --  Used to customize.
-   type String_Cst_Acc is access constant String;
-   Version_String : String_Cst_Acc := null;
-
    --  Registers all commands in this package.
    procedure Register_Commands;
 end Ghdlmain;

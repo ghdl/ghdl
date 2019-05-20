@@ -21,12 +21,13 @@ with Ghdlprint;
 with Ghdldrv;
 with Ghdlvpi;
 with Ghdlxml;
+with Version; use Version;
 
 procedure Ghdl_Llvm is
 begin
    --  Manual elaboration so that the order is known (because it is the order
    --  used to display help).
-   Ghdlmain.Version_String := new String'("llvm code generator");
+   Version.Version_String := new String'("llvm code generator");
    Ghdldrv.Backend := Ghdldrv.Backend_Llvm;
    Ghdldrv.Register_Commands;
    Ghdllocal.Register_Commands;

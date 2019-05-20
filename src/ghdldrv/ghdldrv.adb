@@ -34,7 +34,7 @@ with System;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Errorout;
-with Version;
+with Version; use Version;
 with Options;
 
 package body Ghdldrv is
@@ -1786,8 +1786,8 @@ package body Ghdldrv is
       Put (' ');
       Put (Version.Ghdl_Release);
       Put (" - ");
-      if Version_String /= null then
-         Put (Version_String.all);
+      if Version.Version_String /= null then
+         Put (Version.Version_String.all);
       end if;
       New_Line;
       Put_Line ("# Command used to generate this makefile:");
