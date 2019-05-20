@@ -138,6 +138,7 @@ def do_libghdl_nodes():
     print('from libghdl import libghdl')
     print("""
 Null_Iir = 0
+
 Null_Iir_List = 0
 Iir_List_All = 1
 
@@ -230,7 +231,8 @@ def do_libghdl_tokens():
 
 
 def do_libghdl_errorout():
-    print("""from ctypes import c_int8, c_int32
+    print("""from ctypes import c_int8, c_int32, Structure
+
 class Error_Record(Structure):
     _fields_ = [("origin", c_int8),
                 ("id", c_int8),

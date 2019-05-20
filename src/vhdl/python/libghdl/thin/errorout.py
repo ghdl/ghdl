@@ -1,4 +1,5 @@
-from ctypes import c_int8, c_int32
+from ctypes import c_int8, c_int32, Structure
+
 class Error_Record(Structure):
     _fields_ = [("origin", c_int8),
                 ("id", c_int8),
