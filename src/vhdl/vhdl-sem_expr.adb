@@ -1325,8 +1325,10 @@ package body Vhdl.Sem_Expr is
                if A_Type /= Null_Iir then
                   -- Cannot find a single interpretation for a given
                   -- type.
+                  Report_Start_Group;
                   Error_Overload (Expr);
                   Disp_Overload_List (Imp_List, Expr);
+                  Report_End_Group;
                   return Null_Iir;
                end if;
 
@@ -1341,16 +1343,20 @@ package body Vhdl.Sem_Expr is
 
                if Get_Nbr_Elements (Res_Type) = 1 then
                   -- several implementations but one profile.
+                  Report_Start_Group;
                   Error_Overload (Expr);
                   Disp_Overload_List (Imp_List, Expr);
+                  Report_End_Group;
                   return Null_Iir;
                end if;
                Set_Type (Expr, Create_Overload_List (Res_Type));
             else
                --  For a procedure call, the context does't help to resolve
                --  overload.
+               Report_Start_Group;
                Error_Overload (Expr);
                Disp_Overload_List (Imp_List, Expr);
+               Report_End_Group;
             end if;
             return Expr;
       end case;
@@ -1457,8 +1463,10 @@ package body Vhdl.Sem_Expr is
               /= Not_Compatible
             then
                if Res /= Null_Iir then
+                  Report_Start_Group;
                   Error_Overload (Expr);
                   Disp_Overload_List (Overload_List, Expr);
+                  Report_End_Group;
                   return Null_Iir;
                else
                   Res := Inter;
@@ -1757,8 +1765,10 @@ package body Vhdl.Sem_Expr is
       --  Note: operator and implementation node of expr must be set.
       procedure Error_Operator_Overload (List : Iir_List) is
       begin
+         Report_Start_Group;
          Error_Msg_Sem (+Expr, "operator ""%i"" is overloaded", +Operator);
          Disp_Overload_List (List, Expr);
+         Report_End_Group;
       end Error_Operator_Overload;
 
       Interface_Chain : Iir;
@@ -4959,10 +4969,12 @@ package body Vhdl.Sem_Expr is
       if Res /= Null_Iir and then Is_Overloaded (Res) then
          --  FIXME: clarify between overload and not determinable from the
          --  context.
+         Report_Start_Group;
          Error_Overload (Expr);
          if Get_Type (Res) /= Null_Iir then
             Disp_Overload_List (Get_Overload_List (Get_Type (Res)), Expr);
          end if;
+         Report_End_Group;
          return Null_Iir;
       end if;
       return Res;
@@ -4996,8 +5008,10 @@ package body Vhdl.Sem_Expr is
                Error_Overload (Expr);
                return Null_Iir;
             elsif Is_Overload_List (Res_Type) then
+               Report_Start_Group;
                Error_Overload (Expr);
                Disp_Overload_List (Get_Overload_List (Res_Type), Expr);
+               Report_End_Group;
                Free_Overload_List (Res_Type);
                return Null_Iir;
             else
@@ -5054,8 +5068,10 @@ package body Vhdl.Sem_Expr is
       end loop;
 
       if Res = Null_Iir then
+         Report_Start_Group;
          Error_Overload (Expr);
          Disp_Overload_List (Type_List, Expr);
+         Report_End_Group;
          return Null_Iir;
       end if;
 
@@ -5126,16 +5142,20 @@ package body Vhdl.Sem_Expr is
             if Res = Null_Iir then
                Res := El;
             else
+               Report_Start_Group;
                Error_Overload (Expr1);
                Disp_Overload_List (List, Expr1);
+               Report_End_Group;
                return Null_Iir;
             end if;
          end if;
          Next (It);
       end loop;
       if Res = Null_Iir then
+         Report_Start_Group;
          Error_Overload (Expr1);
          Disp_Overload_List (List, Expr1);
+         Report_End_Group;
          return Null_Iir;
       end if;
       return Sem_Expression_Ov (Expr1, Get_Base_Type (Res));

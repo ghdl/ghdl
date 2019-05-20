@@ -62,7 +62,6 @@ package body Vhdl.Sem_Names is
       El : Iir;
       It : List_Iterator;
    begin
-      Report_Start_Group;
       Error_Msg_Sem (+Loc, "possible interpretations are:");
       It := List_Iterate (List);
       while Is_Valid (It) loop
@@ -79,7 +78,6 @@ package body Vhdl.Sem_Names is
          end case;
          Next (It);
       end loop;
-      Report_End_Group;
    end Disp_Overload_List;
 
    -- Create an overload list.
@@ -4049,8 +4047,10 @@ package body Vhdl.Sem_Names is
                   Free_Iir (Res);
                   Res := Res1;
                else
+                  Report_Start_Group;
                   Error_Overload (Name);
                   Disp_Overload_List (Get_Overload_List (Res), Name);
+                  Report_End_Group;
                   Free_Iir (Res);
                   return Create_Error_Expr (Name, A_Type);
                end if;
@@ -4077,8 +4077,10 @@ package body Vhdl.Sem_Names is
                else
                   --  There is either no types or one type for
                   --  several meanings.
+                  Report_Start_Group;
                   Error_Overload (Name);
                   Disp_Overload_List (Expr_List, Name);
+                  Report_End_Group;
                   --Free_Iir (Ret_Type);
                   return Create_Error_Expr (Name, A_Type);
                end if;

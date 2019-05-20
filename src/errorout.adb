@@ -383,7 +383,7 @@ package body Errorout is
 
    procedure Report_End_Group is
    begin
-      pragma Assert (In_Group > 1);
+      pragma Assert (In_Group > 0);
       In_Group := 0;
       Report_Handler.Message_Group.all (False);
    end Report_End_Group;
