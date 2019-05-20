@@ -29,6 +29,7 @@ with Simul.Elaboration;
 
 with Synthesis;
 with Netlists.Dump;
+with Netlists.Disp_Vhdl;
 
 package body Ghdlsynth is
    --  Command --synth
@@ -125,8 +126,12 @@ package body Ghdlsynth is
       Res : Netlists.Module;
    begin
       Res := Ghdl_Synth (Args);
-      Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
-      Netlists.Dump.Disp_Module (Res);
+      if False then
+         Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
+         Netlists.Dump.Disp_Module (Res);
+      else
+         Netlists.Disp_Vhdl.Disp_Vhdl (Res);
+      end if;
    end Perform_Action;
 
    procedure Register_Commands is
