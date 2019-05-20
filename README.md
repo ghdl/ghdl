@@ -1,4 +1,4 @@
-[![Read the Docs](https://img.shields.io/readthedocs/ghdl.svg?longCache=true&style=flat-square&logo=read-the-docs&logoColor=e8ecef)](http://ghdl.readthedocs.io) [![Join the chat at https://gitter.im/ghdl1/Lobby](https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=4db797)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Linux/Mac boxes at Travis-CI](https://img.shields.io/travis/ghdl/ghdl/master.svg?longCache=true&style=flat-square&logo=travis)](https://travis-ci.org/ghdl/ghdl/branches) ![AppVeyor branch](https://img.shields.io/appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=aab2ab&style=flat-square) [![Commits since latest release](https://img.shields.io/github/commits-since/ghdl/ghdl/latest.svg?longCache=true&style=flat-square)](https://github.com/ghdl/ghdl/releases)
+[![Read the Docs](https://img.shields.io/readthedocs/ghdl.svg?longCache=true&style=flat-square&logo=read-the-docs&logoColor=e8ecef)](http://ghdl.readthedocs.io) [![Join the chat at https://gitter.im/ghdl1/Lobby](https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=4db797)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Linux/Mac boxes at Travis-CI](https://img.shields.io/travis/ghdl/ghdl/master.svg?longCache=true&style=flat-square&logo=travis)](https://travis-ci.org/ghdl/ghdl/branches) ![AppVeyor branch](https://img.shields.io/appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=aab2ab&style=flat-square) ![Docker Pulls](https://img.shields.io/docker/pulls/ghdl/ghdl.svg) [![Commits since latest release](https://img.shields.io/github/commits-since/ghdl/ghdl/latest.svg?longCache=true&style=flat-square)](https://github.com/ghdl/ghdl/releases)
 
 **A new GitHub organization was created (2017-12-20) and the main repo was moved from [github.com/tgingold/ghdl](https://github.com/tgingold/ghdl) to [github.com/ghdl/ghdl](https://github.com/ghdl/ghdl). Old refs will continue working, because permanent redirects are set up. However, we suggest every contributor to update the remote URLs in their local clones. See
 [Changing a remote's URL](https://help.github.com/articles/changing-a-remote-s-url/).**
@@ -15,7 +15,7 @@ Partial support of [PSL](https://en.wikipedia.org/wiki/Property_Specification_La
 
 By using a code generator ([LLVM](http://llvm.org/), [GCC](http://gcc.gnu.org/) or, [x86_64](https://en.wikipedia.org/wiki/X86-64)/[i386](https://en.wikipedia.org/wiki/Intel_80386) only, a built-in one), it is much faster than any interpreted simulator. It can handle very large designs, such as [leon3/grlib](http://www.gaisler.com/index.php/downloads/leongrlib).
 
-GHDL runs on [GNU/Linux](http://en.wikipedia.org/wiki/Linux_distribution), [Windows](http://en.wikipedia.org/wiki/Microsoft_Windows) and [macOS](http://en.wikipedia.org/wiki/MacOS), both on `x86` and on `x86_64`. You can freely download a binary distribution for your OS, or try to build it on your own machine (see *'Getting GHDL'* below).
+GHDL runs on [GNU/Linux](http://en.wikipedia.org/wiki/Linux_distribution), [Windows](http://en.wikipedia.org/wiki/Microsoft_Windows) and [macOS](http://en.wikipedia.org/wiki/MacOS), both on `x86` and on `x86_64`. You can freely download a binary distribution for your OS, use [GHDL Docker images](https://github.com/ghdl/docker), or try to build it on your own machine (see *'Getting GHDL'* below).
 
 Can write waveforms to a [GHW](http://ghdl.readthedocs.io/en/latest/using/Simulation.html?highlight=GHW#cmdoption-wave), [VCD](https://en.wikipedia.org/wiki/Value_change_dump) or FST file. Combined with a [GUI](http://en.wikipedia.org/wiki/Graphical_user_interface)-based [waveform viewer](https://en.wikipedia.org/wiki/Waveform_viewer) and a good text editor, GHDL is a very powerful tool for writing, testing and simulating your code.
 
@@ -31,7 +31,7 @@ GHDL is free software:
 
 ### Pre-built releases
 
-Periodically (not regularly), several binary distributions are made available through the [releases](https://github.com/ghdl/ghdl/releases) tab. If you can't find the one matching the platform and versions you need, you can build it yourself!
+Periodically (not regularly), several binary distributions are made available through the [releases](https://github.com/ghdl/ghdl/releases) tab. You may use [GHDL Docker images](https://github.com/ghdl/docker) in case your didn't find a suitable release, or build GHDL yourself!
 
 ### Building GHDL
 
