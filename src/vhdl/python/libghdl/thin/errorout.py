@@ -1,13 +1,3 @@
-from ctypes import c_int8, c_int32, Structure
-
-class Error_Record(Structure):
-    _fields_ = [("origin", c_int8),
-                ("id", c_int8),
-                ("file", c_int32),
-                ("line", c_int32),
-                ("offset", c_int32),
-                ("length", c_int32)]
-
 
 
 class Msgid:

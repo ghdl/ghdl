@@ -231,17 +231,6 @@ def do_libghdl_tokens():
 
 
 def do_libghdl_errorout():
-    print("""from ctypes import c_int8, c_int32, Structure
-
-class Error_Record(Structure):
-    _fields_ = [("origin", c_int8),
-                ("id", c_int8),
-                ("file", c_int32),
-                ("line", c_int32),
-                ("offset", c_int32),
-                ("length", c_int32)]
-""")
-
     read_enum("../errorout.ads", "Msgid_Type", "(Msgid|Warnid)_", "Msgid",
               g=lambda m: m.group(1) + '_' + m.group(2))
 

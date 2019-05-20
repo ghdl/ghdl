@@ -21,12 +21,37 @@ with System;
 package Errorout.Memory is
    type Error_Index is new Uns32;
 
+   type Group_Type is (Msg_Single,
+                       Msg_Main, Msg_Related, Msg_Last);
+
+   type Error_Message is record
+      --  Message error/warning id
+      Id : Msgid_Type;
+
+      --  Whether this is an single message or a related one.
+      Group : Group_Type;
+
+      --  Error soure file.
+      File : Source_File_Entry;
+
+      --  The first line is line 1, 0 can be used when line number is not
+      --  relevant.
+      Line : Natural;
+
+      --  Offset in the line.  The first character is at offset 0.
+      Offset : Natural;
+
+      --  Length of the location (for a range).  It is assumed to be on the
+      --  same line; use 0 when unknown.
+      Length : Natural;
+   end record;
+
    --  Get number of messages available.
    function Get_Nbr_Messages return Error_Index;
 
    --  Get messages.
    --  Idx is from 1 to Nbr_Messages.
-   function Get_Error_Record (Idx : Error_Index) return Error_Record;
+   function Get_Error_Record (Idx : Error_Index) return Error_Message;
    function Get_Error_Message (Idx : Error_Index) return String;
    function Get_Error_Message_Addr (Idx : Error_Index) return System.Address;
 
