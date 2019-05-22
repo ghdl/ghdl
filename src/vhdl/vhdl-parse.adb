@@ -1620,9 +1620,6 @@ package body Vhdl.Parse is
                Last := N_Interface;
 
                Inter := Get_Chain (O_Interface);
-               if Flag_Elocations then
-                  Delete_Elocations (O_Interface);
-               end if;
                Free_Iir (O_Interface);
                O_Interface := Inter;
             end loop;

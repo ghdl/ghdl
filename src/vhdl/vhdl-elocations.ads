@@ -631,10 +631,6 @@ package Vhdl.Elocations is
    --  Allocate memory to store elocations for node N.  Must be called once.
    procedure Create_Elocations (N : Iir);
 
-   --  Delete locations.  Memory is not yet reclaimed (but doesn't happen
-   --  frequently).
-   procedure Delete_Elocations (N : Iir);
-
    -- General methods.
 
    --  Field: Field1

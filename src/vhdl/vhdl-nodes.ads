@@ -5871,6 +5871,10 @@ package Vhdl.Nodes is
    function Create_Iir_Error return Iir;
    procedure Free_Iir (Target : Iir);
 
+   --  Hooks called when a node is free.
+   type Free_Iir_Hook is access procedure (N : Iir);
+   procedure Register_Free_Hook (Hook : Free_Iir_Hook);
+
    --  Free all and reinit.
    procedure Initialize;
 
