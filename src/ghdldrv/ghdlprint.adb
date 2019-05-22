@@ -950,10 +950,16 @@ package body Ghdlprint is
    end Perform_Action;
 
    --  Command Reprint.
-   type Command_Reprint is new Command_Lib with null record;
+   type Command_Reprint is new Command_Lib with record
+      Flag_Sem : Boolean := True;
+   end record;
    function Decode_Command (Cmd : Command_Reprint; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Reprint) return String;
+   procedure Decode_Option (Cmd : in out Command_Reprint;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res);
    procedure Perform_Action (Cmd : Command_Reprint;
                              Args : Argument_List);
 
@@ -972,17 +978,32 @@ package body Ghdlprint is
       return "--reprint [OPTS] FILEs    Redisplay FILEs";
    end Get_Short_Help;
 
+   procedure Decode_Option (Cmd : in out Command_Reprint;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res) is
+   begin
+      if Option = "--no-sem" then
+         Cmd.Flag_Sem := False;
+         Res := Option_Ok;
+      else
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
+
    procedure Perform_Action (Cmd : Command_Reprint;
                              Args : Argument_List)
    is
-      pragma Unreferenced (Cmd);
       Design_File : Iir_Design_File;
+
       Unit : Iir;
+      Next_Unit : Iir;
 
       Id : Name_Id;
-      Next_Unit : Iir;
    begin
-      Setup_Libraries (True);
+      if Cmd.Flag_Sem then
+         Setup_Libraries (True);
+      end if;
 
       --  Keep parenthesis during parse.
       Vhdl.Parse.Flag_Parse_Parenthesis := True;
@@ -1002,14 +1023,18 @@ package body Ghdlprint is
 
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
-            --  Analyze the design unit.
-            Vhdl.Sem_Lib.Finish_Compilation (Unit, True);
+            if Cmd.Flag_Sem then
+               --  Analyze the design unit.
+               Vhdl.Sem_Lib.Finish_Compilation (Unit, True);
+            end if;
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
                Vhdl.Disp_Vhdl.Disp_Vhdl (Unit);
                Set_Chain (Unit, Null_Iir);
-               Libraries.Add_Design_Unit_Into_Library (Unit);
+               if Cmd.Flag_Sem then
+                  Libraries.Add_Design_Unit_Into_Library (Unit);
+               end if;
             end if;
 
             Unit := Next_Unit;
@@ -1128,8 +1153,7 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
-   is
+                            Res : out Option_Res) is
    begin
       if Option = "--format=css" then
          Html_Format := Html_Css;
