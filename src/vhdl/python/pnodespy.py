@@ -55,7 +55,7 @@ def do_iirs_subprg():
 
 
 def do_libghdl_elocations():
-    classname = 'elocations'
+    classname = 'vhdl__elocations'
     print('from libghdl import libghdl')
     print()
     for k in pnodes.funcs:
