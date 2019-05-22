@@ -50,9 +50,7 @@ package Netlists.Builders is
                               Xz : Uns32;
                               W : Width) return Net;
 
-   function Build_Edge (Ctxt : Context_Acc;
-                        Is_Pos : Boolean;
-                        Src : Net) return Net;
+   function Build_Edge (Ctxt : Context_Acc; Src : Net) return Net;
 
    function Build_Mux2 (Ctxt : Context_Acc;
                         Sel : Net;
@@ -111,8 +109,7 @@ private
       M_Concat : Module_Arr (Concat_Module_Id);
       M_Const_UB32 : Module;
       M_Const_UL32 : Module;
-      M_Posedge : Module;
-      M_Negedge : Module;
+      M_Edge : Module;
       M_Mux2 : Module;
       M_Mux4 : Module;
       M_Output : Module;

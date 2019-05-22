@@ -103,11 +103,10 @@ package Netlists.Gates is
    --  Extract a bit or a slice at a constant offset.
    Id_Extract : constant Module_Id := 44;
 
-   --  Edge detectors.  These are pseudo gates.
-   Id_Posedge : constant Module_Id := 50;
-   Id_Negedge : constant Module_Id := 51;
-
-   subtype Edge_Module_Id is Module_Id range Id_Posedge .. Id_Negedge;
+   --  Positive/rising edge detector.  This is a pseudo gate.
+   --  A negative edge detector can be made using by negating the clock before
+   --  the detector.
+   Id_Edge : constant Module_Id := 50;
 
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
