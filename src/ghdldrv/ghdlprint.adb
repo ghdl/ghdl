@@ -1017,7 +1017,9 @@ package body Ghdlprint is
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
          Design_File := Load_File_Name (Id);
-         if Design_File = Null_Iir then
+         if Design_File = Null_Iir
+           or else Errorout.Nbr_Errors > 0
+         then
             raise Errorout.Compilation_Error;
          end if;
 
@@ -1117,7 +1119,7 @@ package body Ghdlprint is
             loop
                Scan;
                if Ref_Tokens.Table (Tok_Idx) /= Current_Token then
-                  Report_Msg (Msgid_Error, Errorout.Parse, No_Source_Coord,
+                  Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord,
                               "token mismatch");
                   exit;
                end if;
