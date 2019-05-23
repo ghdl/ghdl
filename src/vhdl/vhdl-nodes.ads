@@ -2691,6 +2691,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Subtype_Type_Mark (Field2)
    --
+   --   Get/Set_Type_Declarator (Field3)
+   --
+   --   Get/Set_Base_Type (Field4)
+   --
    --   Get/Set_Resolution_Indication (Field5)
    --
    --   Get/Set_Tolerance (Field7)
