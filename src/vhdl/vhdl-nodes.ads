@@ -2977,6 +2977,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Within_Flag (Flag5)
    --
+   --   Get/Set_Has_Is (Flag7)
+   --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)

@@ -3809,6 +3809,7 @@ package body Vhdl.Nodes_Meta is
       Field_Label,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
+      Field_Has_Is,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
       Field_Parent,
@@ -10506,7 +10507,8 @@ package body Vhdl.Nodes_Meta is
       case K is
          when Iir_Kind_Component_Declaration
            | Iir_Kind_Sensitized_Process_Statement
-           | Iir_Kind_Process_Statement =>
+           | Iir_Kind_Process_Statement
+           | Iir_Kind_Block_Statement =>
             return True;
          when others =>
             return False;

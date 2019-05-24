@@ -7875,6 +7875,8 @@ package body Vhdl.Parse is
             Error_Msg_Parse ("'is' not allowed here in vhdl87");
          end if;
 
+         Set_Has_Is (Res, True);
+
          --  Eat 'is'.
          Scan;
       end if;
