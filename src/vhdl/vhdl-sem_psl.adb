@@ -251,7 +251,8 @@ package body Vhdl.Sem_Psl is
 
    --  Used by Sem_Property to rewrite a property logical operator to a
    --  boolean logical operator.
-   function Reduce_Logic_Node (Prop : Node; Bool_Kind : Nkind) return Node
+   function Reduce_Logic_Binary_Node (Prop : Node; Bool_Kind : Nkind)
+                                     return Node
    is
       Res : Node;
    begin
@@ -261,7 +262,19 @@ package body Vhdl.Sem_Psl is
       Set_Right (Res, Get_Right (Prop));
       Free_Node (Prop);
       return Res;
-   end Reduce_Logic_Node;
+   end Reduce_Logic_Binary_Node;
+
+   function Reduce_Logic_Unary_Node (Prop : Node; Bool_Kind : Nkind)
+                                    return Node
+   is
+      Res : Node;
+   begin
+      Res := Create_Node (Bool_Kind);
+      Set_Location (Res, Get_Location (Prop));
+      Set_Boolean (Res, Get_Property (Prop));
+      Free_Node (Prop);
+      return Res;
+   end Reduce_Logic_Unary_Node;
 
    function Sem_Sequence (Seq : Node) return Node
    is
@@ -352,7 +365,6 @@ package body Vhdl.Sem_Psl is
    function Sem_Property (Prop : Node; Top : Boolean := False) return Node
    is
       Res : Node;
-      L, R : Node;
    begin
       case Get_Kind (Prop) is
          when N_Braced_SERE =>
@@ -387,31 +399,49 @@ package body Vhdl.Sem_Psl is
          when N_Log_Imp_Prop
            | N_And_Prop
            | N_Or_Prop =>
-            L := Sem_Property (Get_Left (Prop));
-            Set_Left (Prop, L);
-            R := Sem_Property (Get_Right (Prop));
-            Set_Right (Prop, R);
-            if Get_Psl_Type (L) = Type_Boolean
-              and then Get_Psl_Type (R) = Type_Boolean
-            then
-               case Get_Kind (Prop) is
-                  when N_And_Prop =>
-                     return Reduce_Logic_Node (Prop, N_And_Bool);
-                  when N_Or_Prop =>
-                     return Reduce_Logic_Node (Prop, N_Or_Bool);
-                  when N_Log_Imp_Prop =>
-                     return Reduce_Logic_Node (Prop, N_Imp_Bool);
-                  when others =>
-                     Error_Kind ("psl.sem_property(log)", Prop);
-               end case;
-            end if;
-            return Prop;
+            declare
+               L, R : Node;
+            begin
+               L := Sem_Property (Get_Left (Prop));
+               Set_Left (Prop, L);
+               R := Sem_Property (Get_Right (Prop));
+               Set_Right (Prop, R);
+               if Get_Psl_Type (L) = Type_Boolean
+                 and then Get_Psl_Type (R) = Type_Boolean
+               then
+                  case Get_Kind (Prop) is
+                     when N_And_Prop =>
+                        return Reduce_Logic_Binary_Node (Prop, N_And_Bool);
+                     when N_Or_Prop =>
+                        return Reduce_Logic_Binary_Node (Prop, N_Or_Bool);
+                     when N_Log_Imp_Prop =>
+                        return Reduce_Logic_Binary_Node (Prop, N_Imp_Bool);
+                     when others =>
+                        Error_Kind ("psl.sem_property(log)", Prop);
+                  end case;
+               else
+                  return Prop;
+               end if;
+            end;
          when N_Overlap_Imp_Seq
            | N_Imp_Seq =>
             Res := Sem_Sequence (Get_Sequence (Prop));
             Set_Sequence (Prop, Res);
             Sem_Property (Prop);
             return Prop;
+         when N_Paren_Prop =>
+            declare
+               Op : Node;
+            begin
+               Op := Get_Property (Prop);
+               Op := Sem_Property (Op);
+               Set_Property (Prop, Op);
+               if Get_Psl_Type (Op) = Type_Boolean then
+                  return Reduce_Logic_Unary_Node (Prop, N_Paren_Bool);
+               else
+                  return Prop;
+               end if;
+            end;
          when N_Next =>
             Sem_Number (Prop);
             Sem_Property (Prop);
@@ -588,6 +618,23 @@ package body Vhdl.Sem_Psl is
             return Rewrite_Dyadic_Operator (Prop, Iir_Kind_Or_Operator);
          when N_Not_Bool =>
             return Rewrite_Monadic_Operator (Prop, Iir_Kind_Not_Operator);
+         when N_Paren_Bool =>
+            declare
+               Expr : constant PSL_Node := Get_Boolean (Prop);
+               Hexpr : Iir;
+               Res : Iir;
+            begin
+               Res := Create_Iir (Iir_Kind_Parenthesis_Expression);
+               Set_Location (Res, Get_Location (Prop));
+               if Get_Kind (Expr) = N_HDL_Expr then
+                  Hexpr := Get_HDL_Node (Expr);
+                  Set_Expression (Res, Hexpr);
+                  Set_Type (Res, Get_Type (Hexpr));
+               else
+                  Set_Expression (Res, Rewrite_As_Boolean_Expression (Expr));
+               end if;
+               return Res;
+            end;
          when others =>
             Error_Kind ("rewrite_as_boolean_expression", Prop);
       end case;
@@ -623,7 +670,7 @@ package body Vhdl.Sem_Psl is
       case Get_Kind (Expr) is
          when N_HDL_Expr =>
             return True;
-         when N_And_Bool | N_Or_Bool | N_Not_Bool =>
+         when N_And_Bool | N_Or_Bool | N_Not_Bool | N_Paren_Bool =>
             return True;
          when others =>
             return False;

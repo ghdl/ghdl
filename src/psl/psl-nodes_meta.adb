@@ -203,6 +203,8 @@ package body PSL.Nodes_Meta is
             return "or_prop";
          when N_And_Prop =>
             return "and_prop";
+         when N_Paren_Prop =>
+            return "paren_prop";
          when N_Braced_SERE =>
             return "braced_sere";
          when N_Concat_SERE =>
@@ -227,6 +229,8 @@ package body PSL.Nodes_Meta is
             return "plus_repeat_seq";
          when N_Equal_Repeat_Seq =>
             return "equal_repeat_seq";
+         when N_Paren_Bool =>
+            return "paren_bool";
          when N_Not_Bool =>
             return "not_bool";
          when N_And_Bool =>
@@ -464,6 +468,8 @@ package body PSL.Nodes_Meta is
       --  N_And_Prop
       Field_Left,
       Field_Right,
+      --  N_Paren_Prop
+      Field_Property,
       --  N_Braced_SERE
       Field_SERE,
       --  N_Concat_SERE
@@ -501,6 +507,11 @@ package body PSL.Nodes_Meta is
       Field_Sequence,
       Field_Low_Bound,
       Field_High_Bound,
+      --  N_Paren_Bool
+      Field_Hash,
+      Field_Presence,
+      Field_Boolean,
+      Field_Hash_Link,
       --  N_Not_Bool
       Field_Hash,
       Field_Presence,
@@ -584,29 +595,31 @@ package body PSL.Nodes_Meta is
       N_Before => 99,
       N_Or_Prop => 101,
       N_And_Prop => 103,
-      N_Braced_SERE => 104,
-      N_Concat_SERE => 106,
-      N_Fusion_SERE => 108,
-      N_Within_SERE => 110,
-      N_Clocked_SERE => 112,
-      N_Match_And_Seq => 114,
-      N_And_Seq => 116,
-      N_Or_Seq => 118,
-      N_Star_Repeat_Seq => 121,
-      N_Goto_Repeat_Seq => 124,
-      N_Plus_Repeat_Seq => 125,
-      N_Equal_Repeat_Seq => 128,
-      N_Not_Bool => 132,
-      N_And_Bool => 137,
-      N_Or_Bool => 142,
-      N_Imp_Bool => 147,
-      N_HDL_Expr => 152,
-      N_False => 152,
-      N_True => 152,
-      N_EOS => 155,
-      N_Name => 157,
-      N_Name_Decl => 159,
-      N_Number => 160
+      N_Paren_Prop => 104,
+      N_Braced_SERE => 105,
+      N_Concat_SERE => 107,
+      N_Fusion_SERE => 109,
+      N_Within_SERE => 111,
+      N_Clocked_SERE => 113,
+      N_Match_And_Seq => 115,
+      N_And_Seq => 117,
+      N_Or_Seq => 119,
+      N_Star_Repeat_Seq => 122,
+      N_Goto_Repeat_Seq => 125,
+      N_Plus_Repeat_Seq => 126,
+      N_Equal_Repeat_Seq => 129,
+      N_Paren_Bool => 133,
+      N_Not_Bool => 137,
+      N_And_Bool => 142,
+      N_Or_Bool => 147,
+      N_Imp_Bool => 152,
+      N_HDL_Expr => 157,
+      N_False => 157,
+      N_True => 157,
+      N_EOS => 160,
+      N_Name => 162,
+      N_Name_Decl => 164,
+      N_Number => 165
      );
 
    function Get_Fields (K : Nkind) return Fields_Array
@@ -1007,7 +1020,8 @@ package body PSL.Nodes_Meta is
            | N_Next_Event
            | N_Next_Event_A
            | N_Next_Event_E
-           | N_Abort =>
+           | N_Abort
+           | N_Paren_Prop =>
             return True;
          when others =>
             return False;
@@ -1178,6 +1192,7 @@ package body PSL.Nodes_Meta is
            | N_Next_Event_E
            | N_Abort
            | N_Clocked_SERE
+           | N_Paren_Bool
            | N_Not_Bool =>
             return True;
          when others =>
@@ -1198,7 +1213,8 @@ package body PSL.Nodes_Meta is
    function Has_Hash (K : Nkind) return Boolean is
    begin
       case K is
-         when N_Not_Bool
+         when N_Paren_Bool
+           | N_Not_Bool
            | N_And_Bool
            | N_Or_Bool
            | N_Imp_Bool
@@ -1213,7 +1229,8 @@ package body PSL.Nodes_Meta is
    function Has_Hash_Link (K : Nkind) return Boolean is
    begin
       case K is
-         when N_Not_Bool
+         when N_Paren_Bool
+           | N_Not_Bool
            | N_And_Bool
            | N_Or_Bool
            | N_Imp_Bool
@@ -1239,7 +1256,8 @@ package body PSL.Nodes_Meta is
    function Has_Presence (K : Nkind) return Boolean is
    begin
       case K is
-         when N_Not_Bool
+         when N_Paren_Bool
+           | N_Not_Bool
            | N_And_Bool
            | N_Or_Bool
            | N_Imp_Bool

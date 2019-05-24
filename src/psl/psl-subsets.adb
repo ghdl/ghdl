@@ -163,7 +163,8 @@ package body PSL.Subsets is
             Check_Simple (Get_Right (N));
          when N_Next
            | N_Next_A
-           | N_Next_E =>
+           | N_Next_E
+           | N_Paren_Prop =>
             Check_Simple (Get_Property (N));
          when N_Next_Event
            | N_Next_Event_A
@@ -171,7 +172,8 @@ package body PSL.Subsets is
            | N_Abort =>
             Check_Simple (Get_Boolean (N));
             Check_Simple (Get_Property (N));
-         when N_Not_Bool =>
+         when N_Not_Bool
+           | N_Paren_Bool =>
             Check_Simple (Get_Boolean (N));
          when N_Const_Parameter
            | N_Sequence_Parameter

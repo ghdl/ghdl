@@ -378,7 +378,19 @@ package body Vhdl.Parse_Psl is
          when Tok_Brack_Star =>
             return Parse_Maybe_Count (N_Star_Repeat_Seq, Null_Node);
          when Tok_Left_Paren =>
-            Res := Parse_Parenthesis_Boolean;
+            if Parse.Flag_Parse_Parenthesis then
+               Res := Create_Node_Loc (N_Paren_Bool);
+               --  Skip '('.
+               Scan;
+               Set_Boolean (Res, Parse_Psl_Boolean);
+               if Current_Token = Tok_Right_Paren then
+                  Scan;
+               else
+                  Error_Msg_Parse ("missing matching ')'");
+               end if;
+            else
+               Res := Parse_Parenthesis_Boolean;
+            end if;
             if Current_Token = Tok_Or
               or else Current_Token = Tok_And
             then
@@ -426,7 +438,9 @@ package body Vhdl.Parse_Psl is
 
    --  precond:  '('
    --  postcond: next token
-   function Parse_Parenthesis_FL_Property return Node is
+   function Parse_Parenthesis_FL_Property return Node
+   is
+      Prop : Node;
       Res : Node;
       Loc : Location_Type;
    begin
@@ -435,10 +449,15 @@ package body Vhdl.Parse_Psl is
          Error_Msg_Parse ("'(' expected around property");
          return Parse_FL_Property (Prio_Lowest);
       else
+         if Parse.Flag_Parse_Parenthesis then
+            Res := Create_Node_Loc (N_Paren_Prop);
+         end if;
+
          --  Skip '('.
          Scan;
 
-         Res := Parse_FL_Property (Prio_Lowest);
+         Prop := Parse_FL_Property (Prio_Lowest);
+
          if Current_Token = Tok_Right_Paren then
             --  Skip ')'.
             Scan;
@@ -447,16 +466,22 @@ package body Vhdl.Parse_Psl is
                                & Image (Loc, False));
          end if;
 
-         if Get_Kind (Res) = N_HDL_Expr then
+         if Get_Kind (Prop) = N_HDL_Expr then
             declare
                N : Vhdl_Node;
             begin
-               N := Psl_To_Vhdl (Res);
+               N := Psl_To_Vhdl (Prop);
                N := Parse.Parse_Binary_Expression (N, Parse.Prio_Expression);
-               Res := Vhdl_To_Psl (N);
+               Prop := Vhdl_To_Psl (N);
             end;
          end if;
-         return Res;
+
+         if Parse.Flag_Parse_Parenthesis then
+            Set_Property (Res, Prop);
+            return Res;
+         else
+            return Prop;
+         end if;
       end if;
    end Parse_Parenthesis_FL_Property;
 
@@ -618,7 +643,8 @@ package body Vhdl.Parse_Psl is
            | N_Next_E
            | N_Next_A
            | N_Next
-           | N_Log_Imp_Prop =>
+           | N_Log_Imp_Prop
+           | N_Paren_Prop =>
             Error_Msg_Parse (+N, "construct not allowed in sequences");
             return N;
          when N_Const_Parameter
@@ -639,6 +665,7 @@ package body Vhdl.Parse_Psl is
            | N_Or_Bool
            | N_And_Bool
            | N_Not_Bool
+           | N_Paren_Bool
            | N_Fusion_SERE
            | N_HDL_Expr
            | N_Hdl_Mod_Name
