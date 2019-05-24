@@ -1943,6 +1943,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Chain (Field2)
    --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
    --   Get/Set_Default_Value (Field4)
    --
    --   Get/Set_Identifier (Field3)
@@ -1954,6 +1956,8 @@ package Vhdl.Nodes is
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Across_Quantity_Declaration (Medium)
    -- Iir_Kind_Through_Quantity_Declaration (Medium)

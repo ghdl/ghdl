@@ -3317,6 +3317,9 @@ package body Vhdl.Parse is
          Chain_Append (First, Last, Terminal);
 
          exit when Current_Token /= Tok_Comma;
+
+         Set_Has_Identifier_List (Terminal, True);
+
          --  Skip ','.
          Scan;
       end loop;
@@ -3408,7 +3411,18 @@ package body Vhdl.Parse is
          when Tok_Colon =>
             --  Either a free quantity (or a source quantity)
             --  TODO
-            raise Program_Error;
+
+            --  Skip ':'.
+            Scan;
+
+            Set_Subtype_Indication (First, Parse_Subtype_Indication);
+
+            if Current_Token = Tok_Assign then
+               --  Skip ':='.
+               Scan;
+
+               Set_Default_Value (First, Parse_Expression);
+            end if;
          when Tok_Tolerance
            | Tok_Assign
            | Tok_Across
