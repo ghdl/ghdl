@@ -65,6 +65,15 @@ package pkg is
      procedure decrement (constant n : natural);
      impure function get return natural;
   end protected;
+
+  type my_urec is record
+    l : std_ulogic;
+    adr : std_ulogic_vector;
+    dat : std_ulogic_vector;
+  end record;
+
+  subtype my_urec8 is my_urec (adr (1 downto 0), dat (7 downto 0));
+  subtype my_slv is (resolved) std_ulogic_vector;
 end pkg;
 
 package body pkg is
@@ -154,6 +163,12 @@ package body genpkg is
     l := plus (l, val);
   end add;
 end genpkg;
+
+package genpkg2 is
+  generic (v : natural;
+           type t1;
+           package subgenpkg is new work.genpkg generic map (<>));
+end genpkg2;
 
 package my_adder_pkg is new work.genpkg generic map (val => open, plus => "+");
 
@@ -301,9 +316,14 @@ begin
   process (all)
   begin
     s1 <= not rst_n;
+    assert s1'driving and s1'driving_value /= '0';
   end process;
 
   si <= integer'(1) when clk = '0' else 2;
+
+  assert si'event or si'active or si'last_value < 3;
+  assert si'last_active < 10 ns and si'last_event < 10 ns;
+  assert si'transaction = '0';
 
   postponed process is
   begin
@@ -313,19 +333,27 @@ begin
       din <= get_vector(i);
       wait on my_clk until rising_edge(my_clk);
     end loop;
+
     wait;
   end process;
 
   compute: process
+    subtype byte_idx is natural range 0 to 7;
     variable v : integer;
     variable b1, b2, b3 : boolean;
-    variable bv1, bv2 : bit_vector (0 to 7);
+    variable bv1, bv2 : bit_vector (byte_idx);
     variable d : distance;
   begin
     b2 := true;
     b1 := (b2 and b3) or b1;
     b3 := (b1 xor b2) nand b3;
     b2 := (b1 nor b2) xnor b3;
+
+    assert byte_idx'left = 0 and byte_idx'low = 0;
+    assert byte_idx'right = 7 and byte_idx'high = 7;
+    assert byte_idx'ascending;
+
+    assert boolean'pos(b1) = 1;
 
     bv1 := bv2 sll v;
     bv2 := (bv1 rol v) and 8x"f0";
@@ -399,12 +427,14 @@ begin
 
     g4: case conf generate
       when g4_1: 1 | 2 =>
-        cmp : configuration work.reg_conf1
-          generic map (width => 1)
-          port map (clk => clk,
-                    rst_n => std_logic (rst_n),
-                    d => di,
-                    q => do);
+        begin
+          cmp : configuration work.reg_conf1
+            generic map (width => 1)
+            port map (clk => clk,
+                      rst_n => std_logic (rst_n),
+                      d => di,
+                      q => do);
+        end g4_1;
       when others =>
     end generate g4;
   end block blk2;
@@ -416,6 +446,13 @@ configuration cfg of reg_tb is
     for cmp_reg : reg
       use entity work.reg (behav);
     end for;
-    --  TODO: blocks, generate
+    for blk1
+      for g1(1)
+      end for;
+      for g1(2 to 3)
+        for g2
+        end for;
+      end for;
+    end for;
   end for;
 end cfg;
