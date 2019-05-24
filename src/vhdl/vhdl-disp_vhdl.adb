@@ -20,15 +20,15 @@
 --  sequence of tokens displayed is the same as the sequence of tokens in the
 --  input file.  If parenthesis are kept by the parser, the only differences
 --  are comments and layout.
-with GNAT.OS_Lib;
-with Vhdl.Std_Package;
+with Types; use Types;
+with Simple_IO;
 with Flags; use Flags;
-with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Utils; use Vhdl.Utils;
 with Name_Table;
 with Str_Table;
-with Std_Names;
-with Vhdl.Tokens;
+with Std_Names; use Std_Names;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Std_Package;
 with PSL.Nodes;
 with PSL.Prints;
 with PSL.NFAs;
@@ -36,68 +36,56 @@ with PSL.Errors;
 
 package body Vhdl.Disp_Vhdl is
 
-   subtype Count is Positive;
-
-   Col : Count := 1;
-
-   IO_Error : exception;
-
-   --  Disp the name of DECL.
-   procedure Disp_Name_Of (Decl: Iir);
-
-   --  Indentation for nested declarations and statements.
-   Indentation: constant Count := 2;
-
-   --  Line length (used to try to have a nice display).
-   Line_Length : constant Count := 80;
-
    --  If True, display extra parenthesis to make priority of operators
    --  explicit.
    Flag_Parenthesis : constant Boolean := False;
 
-   -- If set, disp after a string literal the type enclosed into brackets.
+   --  If set, disp after a string literal the type enclosed into brackets.
    Flag_Disp_String_Literal_Type: constant Boolean := False;
 
-   -- If set, disp position number of associations
-   --Disp_Position_Number: constant Boolean := False;
+   --  If set, disp implicit declarations.
+   Flag_Implicit : constant Boolean := False;
 
---    procedure Disp_Tab (Tab: Natural) is
---       Blanks : String (1 .. Tab) := (others => ' ');
---    begin
---       Put (Blanks);
---    end Disp_Tab;
+   procedure Disp_Type (Ctxt : in out Ctxt_Class; A_Type: Iir);
+   procedure Disp_Range (Ctxt : in out Ctxt_Class; Rng : Iir);
+   procedure Print (Ctxt : in out Ctxt_Class; Expr: Iir);
 
-   procedure Disp_Type (A_Type: Iir);
-   procedure Disp_Nature (Nature : Iir);
-   procedure Disp_Range (Rng : Iir);
-
-   procedure Disp_Concurrent_Statement (Stmt: Iir);
-   procedure Disp_Concurrent_Statement_Chain (Parent: Iir; Indent : Count);
-   procedure Disp_Declaration_Chain (Parent : Iir; Indent: Count);
-   procedure Disp_Process_Statement (Process: Iir);
-   procedure Disp_Sequential_Statements (First : Iir);
-   procedure Disp_Choice (Choice: in out Iir);
-   procedure Disp_Association_Chain (Chain : Iir);
+   procedure Disp_Concurrent_Statement (Ctxt : in out Ctxt_Class; Stmt: Iir);
+   procedure Disp_Concurrent_Statement_Chain
+     (Ctxt : in out Ctxt_Class; Parent: Iir);
+   procedure Disp_Declaration_Chain
+     (Ctxt : in out Ctxt_Class; Parent : Iir);
+   procedure Disp_Process_Statement (Ctxt : in out Ctxt_Class; Process: Iir);
+   procedure Disp_Sequential_Statements
+     (Ctxt : in out Ctxt_Class; First : Iir);
+   procedure Disp_Choice (Ctxt : in out Ctxt_Class; Choice: in out Iir);
+   procedure Disp_Association_Chain (Ctxt : in out Ctxt_Class; Chain : Iir);
    procedure Disp_Block_Configuration
-     (Block: Iir_Block_Configuration; Indent: Count);
-   procedure Disp_Subprogram_Declaration (Subprg: Iir);
-   procedure Disp_Binding_Indication (Bind : Iir; Indent : Count);
-   procedure Disp_Subtype_Indication (Def : Iir; Full_Decl : Boolean := False);
-   procedure Disp_Parametered_Attribute (Name : String; Expr : Iir);
-   procedure Disp_String_Literal (Str : Iir; El_Type : Iir);
-   procedure Disp_Package_Declaration (Decl: Iir_Package_Declaration);
-   procedure Disp_Package_Instantiation_Declaration (Decl: Iir);
-   procedure Disp_Package_Body (Decl: Iir);
+     (Ctxt : in out Ctxt_Class; Block: Iir_Block_Configuration);
+   procedure Disp_Subprogram_Declaration
+     (Ctxt : in out Ctxt_Class; Subprg: Iir; Implicit : Boolean := False);
+   procedure Disp_Binding_Indication
+     (Ctxt : in out Ctxt_Class; Bind : Iir);
+   procedure Disp_Subtype_Indication
+     (Ctxt : in out Ctxt_Class; Def : Iir; Full_Decl : Boolean := False);
+   procedure Disp_Parametered_Attribute
+     (Ctxt : in out Ctxt_Class; Name : Name_Id; Expr : Iir);
+   procedure Disp_String_Literal
+     (Ctxt : in out Ctxt_Class; Str : Iir; El_Type : Iir);
+   procedure Disp_Package_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Package_Declaration);
+   procedure Disp_Package_Instantiation_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir);
+   procedure Disp_Package_Body (Ctxt : in out Ctxt_Class; Decl: Iir);
+   procedure Disp_Attribute_Name (Ctxt : in out Ctxt_Class; Attr : Iir);
 
-   procedure Put (Str : String)
-   is
-      use GNAT.OS_Lib;
-      Len : constant Natural := Str'Length;
+   procedure Disp_Int64 (Ctxt : in out Ctxt_Class; Val: Int64);
+   procedure Disp_Int32 (Ctxt : in out Ctxt_Class; Val: Iir_Int32);
+   procedure Disp_Fp64 (Ctxt : in out Ctxt_Class; Val: Fp64);
+
+   procedure Put (Str : String) is
    begin
-      if Write (Standout, Str'Address, Len) /= Len then
-         raise IO_Error;
-      end if;
-      Col := Col + Len;
+      Simple_IO.Put_Err (Str);
    end Put;
 
    procedure Put (C : Character) is
@@ -108,7 +96,6 @@ package body Vhdl.Disp_Vhdl is
    procedure New_Line is
    begin
       Put (ASCII.LF);
-      Col := 1;
    end New_Line;
 
    procedure Put_Line (Str : String) is
@@ -117,43 +104,48 @@ package body Vhdl.Disp_Vhdl is
       New_Line;
    end Put_Line;
 
-   procedure Set_Col (P : Count) is
+   procedure Disp_Token (Ctxt : in out Ctxt_Class; Tok1, Tok2 : Token_Type) is
    begin
-      if Col = P then
-         return;
-      end if;
-      if Col >= P then
-         New_Line;
-      end if;
-      Put ((Col .. P - 1 => ' '));
-   end Set_Col;
+      Disp_Token (Ctxt, Tok1);
+      Disp_Token (Ctxt, Tok2);
+   end Disp_Token;
 
-   procedure Disp_Ident (Id: Name_Id) is
+   procedure Disp_Ident (Ctxt : in out Ctxt_Class; Id: Name_Id) is
    begin
-      Put (Name_Table.Image (Id));
+      if Name_Table.Is_Character (Id) then
+         Start_Lit (Ctxt, Tok_Character);
+         Disp_Char (Ctxt, ''');
+         Disp_Char (Ctxt, Name_Table.Get_Character (Id));
+         Disp_Char (Ctxt, ''');
+         Close_Lit (Ctxt);
+      else
+         Start_Lit (Ctxt, Tok_Identifier);
+         if Id = Null_Identifier then
+            Disp_Str (Ctxt, "<anonymous>");
+         else
+            Disp_Str (Ctxt, Name_Table.Image (Id));
+         end if;
+         Close_Lit (Ctxt);
+      end if;
    end Disp_Ident;
 
-   procedure Disp_Identifier (Node : Iir)
-   is
-      Ident : Name_Id;
+   function Or_Else (L, R : Iir) return Iir is
    begin
-      Ident := Get_Identifier (Node);
-      if Ident /= Null_Identifier then
-         Disp_Ident (Ident);
-      else
-         Put ("<anonymous>");
+      if L /= Null_Iir then
+         return L;
       end if;
+      pragma Assert (R /= Null_Iir);
+      return R;
+   end Or_Else;
+
+   procedure Disp_Identifier (Ctxt : in out Ctxt_Class; Node : Iir) is
+   begin
+      Disp_Ident (Ctxt, Get_Identifier (Node));
    end Disp_Identifier;
 
-   procedure Disp_Character_Literal (Lit: Iir_Character_Literal) is
-   begin
-      Put (''' & Name_Table.Get_Character (Get_Identifier (Lit)) & ''');
-   end Disp_Character_Literal;
-
-   procedure Disp_Function_Name (Func: Iir)
+   procedure Disp_Function_Name (Ctxt : in out Ctxt_Class; Func: Iir)
    is
       use Name_Table;
-      use Std_Names;
       Id: Name_Id;
    begin
       Id := Get_Identifier (Func);
@@ -163,16 +155,18 @@ package body Vhdl.Disp_Vhdl is
            | Name_Logical_Operators
            | Name_Xnor
            | Name_Shift_Operators =>
-            Put ("""");
-            Put (Image (Id));
-            Put ("""");
+            Start_Lit (Ctxt, Tok_String);
+            Disp_Char (Ctxt, '"');
+            Disp_Str (Ctxt, Image (Id));
+            Disp_Char (Ctxt, '"');
+            Close_Lit (Ctxt);
          when others =>
-            Disp_Ident (Id);
+            Disp_Ident (Ctxt, Id);
       end case;
    end Disp_Function_Name;
 
    --  Disp the name of DECL.
-   procedure Disp_Name_Of (Decl: Iir) is
+   procedure Disp_Name_Of (Ctxt : in out Ctxt_Class; Decl: Iir) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Component_Declaration
@@ -203,106 +197,57 @@ package body Vhdl.Disp_Vhdl is
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Character_Literal
            | Iir_Kinds_Process_Statement =>
-            Disp_Identifier (Decl);
+            Disp_Identifier (Ctxt, Decl);
          when Iir_Kind_Anonymous_Type_Declaration =>
-            Put ('<');
-            Disp_Ident (Get_Identifier (Decl));
-            Put ('>');
+            Start_Lit (Ctxt, Tok_Identifier);
+            Disp_Char (Ctxt, '<');
+            Disp_Str (Ctxt, Name_Table.Image (Get_Identifier (Decl)));
+            Disp_Char (Ctxt, '>');
+            Close_Lit (Ctxt);
          when Iir_Kind_Function_Declaration =>
-            Disp_Function_Name (Decl);
+            Disp_Function_Name (Ctxt, Decl);
          when Iir_Kind_Procedure_Declaration =>
-            Disp_Identifier (Decl);
+            Disp_Identifier (Ctxt, Decl);
          when Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Protected_Type_Declaration =>
             --  Used for 'end' DECL_NAME.
-            Disp_Identifier (Get_Type_Declarator (Decl));
+            Disp_Identifier (Ctxt, Get_Type_Declarator (Decl));
          when Iir_Kind_Component_Instantiation_Statement =>
-            Disp_Ident (Get_Label (Decl));
+            Disp_Ident (Ctxt, Get_Label (Decl));
          when Iir_Kind_Design_Unit =>
-            Disp_Name_Of (Get_Library_Unit (Decl));
+            Disp_Name_Of (Ctxt, Get_Library_Unit (Decl));
          when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Simple_Name =>
-            Disp_Identifier (Decl);
+            Disp_Identifier (Ctxt, Decl);
          when Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement =>
-            declare
-               Ident : constant Name_Id := Get_Label (Decl);
-            begin
-               if Ident /= Null_Identifier then
-                  Disp_Ident (Ident);
-               else
-                  Put ("<anonymous>");
-               end if;
-            end;
+            Disp_Ident (Ctxt, Get_Label (Decl));
          when Iir_Kind_Package_Body =>
-            Disp_Identifier (Get_Package (Decl));
+            Disp_Identifier (Ctxt, Decl);
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
-            Disp_Function_Name (Get_Subprogram_Specification (Decl));
+            Disp_Function_Name (Ctxt, Get_Subprogram_Specification (Decl));
          when Iir_Kind_Protected_Type_Body =>
-            Disp_Identifier
-              (Get_Type_Declarator (Get_Protected_Type_Declaration (Decl)));
+            Disp_Identifier (Ctxt, Decl);
          when others =>
             Error_Kind ("disp_name_of", Decl);
       end case;
    end Disp_Name_Of;
 
-   procedure Disp_Name (Name: Iir) is
+   procedure Disp_Name_Attribute
+     (Ctxt : in out Ctxt_Class; Attr : Iir; Name : Name_Id) is
    begin
-      case Get_Kind (Name) is
-         when Iir_Kind_Selected_By_All_Name =>
-            Disp_Name (Get_Prefix (Name));
-            Put (".all");
-         when Iir_Kind_Dereference =>
-            Disp_Name (Get_Prefix (Name));
-            Put (".all");
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Character_Literal =>
-            Put (Utils.Image_Identifier (Name));
-         when Iir_Kind_Operator_Symbol =>
-            Disp_Function_Name (Name);
-         when Iir_Kind_Selected_Name =>
-            Disp_Name (Get_Prefix (Name));
-            Put (".");
-            Disp_Function_Name (Name);
-         when Iir_Kind_Parenthesis_Name =>
-            Disp_Name (Get_Prefix (Name));
-            Disp_Association_Chain (Get_Association_Chain (Name));
-         when Iir_Kind_Base_Attribute =>
-            Disp_Name (Get_Prefix (Name));
-            Put ("'base");
-         when Iir_Kind_Subtype_Attribute =>
-            Disp_Name (Get_Prefix (Name));
-            Put ("'subtype");
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Enumeration_Literal
-           | Iir_Kind_Unit_Declaration
-           | Iir_Kinds_Interface_Object_Declaration
-           | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Terminal_Declaration
-           | Iir_Kind_Component_Declaration
-           | Iir_Kind_Group_Template_Declaration =>
-            Disp_Name_Of (Name);
-         when Iir_Kind_Range_Array_Attribute
-           | Iir_Kind_Reverse_Range_Array_Attribute =>
-            Disp_Range (Name);
-         when Iir_Kind_Reference_Name =>
-            Disp_Name (Get_Referenced_Name (Name));
-         when others =>
-            Error_Kind ("disp_name", Name);
-      end case;
-   end Disp_Name;
+      Print (Ctxt, Get_Prefix (Attr));
+      Disp_Token (Ctxt, Tok_Tick);
+      Disp_Ident (Ctxt, Name);
+   end Disp_Name_Attribute;
 
-   procedure Disp_Range (Rng : Iir) is
+   procedure Disp_Range (Ctxt : in out Ctxt_Class; Rng : Iir) is
    begin
       case Get_Kind (Rng) is
          when Iir_Kind_Range_Expression =>
@@ -310,98 +255,133 @@ package body Vhdl.Disp_Vhdl is
                Origin : constant Iir := Get_Range_Origin (Rng);
             begin
                if Dump_Origin_Flag and then Origin /= Null_Iir then
-                  Disp_Expression (Origin);
+                  Print (Ctxt, Origin);
                else
-                  Disp_Expression (Get_Left_Limit (Rng));
+                  Print (Ctxt, Or_Else (Get_Left_Limit_Expr (Rng),
+                                        Get_Left_Limit (Rng)));
                   if Get_Direction (Rng) = Iir_To then
-                     Put (" to ");
+                     Disp_Token (Ctxt, Tok_To);
                   else
-                     Put (" downto ");
+                     Disp_Token (Ctxt, Tok_Downto);
                   end if;
-                  Disp_Expression (Get_Right_Limit (Rng));
+                  Print (Ctxt, Or_Else (Get_Right_Limit_Expr (Rng),
+                                        Get_Right_Limit (Rng)));
                end if;
             end;
          when Iir_Kind_Range_Array_Attribute =>
-            Disp_Parametered_Attribute ("range", Rng);
+            Disp_Parametered_Attribute (Ctxt, Name_Range, Rng);
          when Iir_Kind_Reverse_Range_Array_Attribute =>
-            Disp_Parametered_Attribute ("reverse_range", Rng);
+            Disp_Parametered_Attribute (Ctxt, Name_Reverse_Range, Rng);
          when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
-            Disp_Name (Rng);
+           | Iir_Kind_Selected_Name
+           | Iir_Kind_Attribute_Name
+           | Iir_Kind_Parenthesis_Name =>
+            Print (Ctxt, Rng);
          when others =>
-            Disp_Subtype_Indication (Rng);
+            Disp_Subtype_Indication (Ctxt, Rng);
             --  Disp_Name_Of (Get_Type_Declarator (Decl));
       end case;
    end Disp_Range;
 
-   procedure Disp_After_End (Decl : Iir; Name : String) is
+   procedure Disp_After_End
+     (Ctxt : in out Ctxt_Class;
+      Decl : Iir; Tok1 : Token_Type; Tok2 : Token_Type := Tok_Invalid) is
    begin
       if Get_End_Has_Reserved_Id (Decl) then
-         Put (' ');
-         Put (Name);
+         Disp_Token (Ctxt, Tok1);
+         if Tok2 /= Tok_Invalid then
+            Disp_Token (Ctxt, Tok2);
+         end if;
       end if;
       if Get_End_Has_Identifier (Decl) then
-         Put (' ');
-         Disp_Name_Of (Decl);
+         Disp_Name_Of (Ctxt, Decl);
       end if;
-      Put (';');
-      New_Line;
+      Disp_Token (Ctxt, Tok_Semi_Colon);
    end Disp_After_End;
 
-   procedure Disp_End (Decl : Iir; Name : String) is
+   procedure Disp_End_No_Close
+     (Ctxt : in out Ctxt_Class;
+      Decl : Iir; Tok1 : Token_Type; Tok2 : Token_Type := Tok_Invalid) is
    begin
-      Put ("end");
-      Disp_After_End (Decl, Name);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_End);
+      Disp_After_End (Ctxt, Decl, Tok1, Tok2);
+   end Disp_End_No_Close;
+
+   procedure Disp_End
+     (Ctxt : in out Ctxt_Class;
+      Decl : Iir; Tok1 : Token_Type; Tok2 : Token_Type := Tok_Invalid) is
+   begin
+      Disp_End_No_Close (Ctxt, Decl, Tok1, Tok2);
+      Close_Hbox (Ctxt);
    end Disp_End;
 
-   procedure Disp_End_Label (Stmt : Iir; Name : String) is
+   procedure Disp_End (Ctxt : in out Ctxt_Class; Tok1 : Token_Type) is
    begin
-      Put ("end");
-      Put (' ');
-      Put (Name);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_End);
+      Disp_Token (Ctxt, Tok1);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
+   end Disp_End;
+
+   procedure Disp_End_Label_No_Close
+     (Ctxt : in out Ctxt_Class; Stmt : Iir; Tok : Token_Type) is
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_End);
+      Disp_Token (Ctxt, Tok);
       if Get_End_Has_Identifier (Stmt) then
-         Put (' ');
-         Disp_Ident (Get_Label (Stmt));
+         Disp_Ident (Ctxt, Get_Label (Stmt));
       end if;
-      Put (';');
-      New_Line;
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+   end Disp_End_Label_No_Close;
+
+   procedure Disp_End_Label
+     (Ctxt : in out Ctxt_Class; Stmt : Iir; Tok : Token_Type) is
+   begin
+      Disp_End_Label_No_Close (Ctxt, Stmt, Tok);
+      Close_Hbox (Ctxt);
    end Disp_End_Label;
 
-   procedure Disp_Use_Clause (Clause: Iir_Use_Clause)
+   procedure Disp_Use_Clause (Ctxt : in out Ctxt_Class; Clause: Iir_Use_Clause)
    is
       Name : Iir;
    begin
-      Put ("use ");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Use);
       Name := Clause;
       loop
-         Disp_Name (Get_Selected_Name (Name));
+         Print (Ctxt, Get_Selected_Name (Name));
          Name := Get_Use_Clause_Chain (Name);
          exit when Name = Null_Iir;
-         Put (", ");
+         Disp_Token (Ctxt, Tok_Comma);
       end loop;
-      Put_Line (";");
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Use_Clause;
 
    -- Disp the resolution function (if any) of type definition DEF.
-   procedure Disp_Resolution_Indication (Subtype_Def: Iir)
+   procedure Disp_Resolution_Indication
+     (Ctxt : in out Ctxt_Class; Subtype_Def: Iir)
    is
       procedure Inner (Ind : Iir) is
       begin
          case Get_Kind (Ind) is
             when Iir_Kinds_Denoting_Name =>
-               Disp_Name (Ind);
+               Print (Ctxt, Ind);
             when Iir_Kind_Array_Element_Resolution =>
                declare
                   Res : constant Iir := Get_Resolution_Indication (Ind);
                begin
-                  Put ("(");
+                  Disp_Token (Ctxt, Tok_Left_Paren);
                   if Is_Valid (Res) then
                      Inner (Res);
                   else
-                     Disp_Name (Get_Resolution_Indication
+                     Print (Ctxt, Get_Resolution_Indication
                                   (Get_Element_Subtype_Indication (Ind)));
                   end if;
-                  Put (")");
+                  Disp_Token (Ctxt, Tok_Right_Paren);
                end;
             when others =>
                Error_Kind ("disp_resolution_indication", Ind);
@@ -422,68 +402,27 @@ package body Vhdl.Disp_Vhdl is
             end if;
       end case;
 
-      declare
-         Type_Mark : constant Iir := Get_Denoted_Type_Mark (Subtype_Def);
-      begin
-         if Get_Kind (Type_Mark) in Iir_Kinds_Subtype_Definition
-           and then Get_Resolution_Indication (Type_Mark) = Ind
-         then
-            --  Resolution indication was inherited from the type_mark.
-            return;
-         end if;
-      end;
+      if False then
+         declare
+            Type_Mark : constant Iir := Get_Denoted_Type_Mark (Subtype_Def);
+         begin
+            if Get_Kind (Type_Mark) in Iir_Kinds_Subtype_Definition
+              and then Get_Resolution_Indication (Type_Mark) = Ind
+            then
+               --  Resolution indication was inherited from the type_mark.
+               return;
+            end if;
+         end;
+      end if;
 
       Inner (Ind);
-      Put (" ");
    end Disp_Resolution_Indication;
 
-   procedure Disp_Integer_Subtype_Definition
-     (Def: Iir_Integer_Subtype_Definition)
-   is
-      Base_Type: Iir_Integer_Type_Definition;
-      Decl: Iir;
-   begin
-      if Def /= Vhdl.Std_Package.Universal_Integer_Subtype_Definition then
-         Base_Type := Get_Base_Type (Def);
-         Decl := Get_Type_Declarator (Base_Type);
-         if Base_Type /= Vhdl.Std_Package.Universal_Integer_Subtype_Definition
-           and then Def /= Decl
-         then
-            Disp_Name_Of (Decl);
-            Put (" ");
-         end if;
-      end if;
-      Disp_Resolution_Indication (Def);
-      Put ("range ");
-      Disp_Expression (Get_Range_Constraint (Def));
-      Put (";");
-   end Disp_Integer_Subtype_Definition;
+   procedure Disp_Element_Constraint
+     (Ctxt : in out Ctxt_Class; Def : Iir; Type_Mark : Iir);
 
-   procedure Disp_Floating_Subtype_Definition
-     (Def: Iir_Floating_Subtype_Definition)
-   is
-      Base_Type: Iir_Floating_Type_Definition;
-      Decl: Iir;
-   begin
-      if Def /= Vhdl.Std_Package.Universal_Real_Subtype_Definition then
-         Base_Type := Get_Base_Type (Def);
-         Decl := Get_Type_Declarator (Base_Type);
-         if Base_Type /= Vhdl.Std_Package.Universal_Real_Subtype_Definition
-           and then Def /= Decl
-         then
-            Disp_Name_Of (Decl);
-            Put (" ");
-         end if;
-      end if;
-      Disp_Resolution_Indication (Def);
-      Put ("range ");
-      Disp_Expression (Get_Range_Constraint (Def));
-      Put (";");
-   end Disp_Floating_Subtype_Definition;
-
-   procedure Disp_Element_Constraint (Def : Iir; Type_Mark : Iir);
-
-   procedure Disp_Array_Element_Constraint (Def : Iir; Type_Mark : Iir)
+   procedure Disp_Array_Element_Constraint
+     (Ctxt : in out Ctxt_Class; Def : Iir; Type_Mark : Iir)
    is
       Def_El : constant Iir := Get_Element_Subtype (Def);
       Tm_El : constant Iir := Get_Element_Subtype (Type_Mark);
@@ -499,27 +438,31 @@ package body Vhdl.Disp_Vhdl is
       if Get_Constraint_State (Type_Mark) /= Fully_Constrained
         and then Has_Index
       then
-         Indexes := Get_Index_Subtype_List (Def);
-         Put (" (");
+         Indexes := Get_Index_Constraint_List (Def);
+         if Indexes = Null_Iir_Flist then
+            Indexes := Get_Index_Subtype_List (Def);
+         end if;
+         Disp_Token (Ctxt, Tok_Left_Paren);
          for I in Flist_First .. Flist_Last (Indexes) loop
             Index := Get_Nth_Element (Indexes, I);
             if I /= 0 then
-               Put (", ");
+               Disp_Token (Ctxt, Tok_Comma);
             end if;
-            --Disp_Expression (Get_Range_Constraint (Index));
-            Disp_Range (Index);
+            --Print (Get_Range_Constraint (Index));
+            Disp_Range (Ctxt, Index);
          end loop;
-         Put (")");
+         Disp_Token (Ctxt, Tok_Right_Paren);
       end if;
 
       if Has_Own_Element_Subtype
         and then Get_Kind (Def_El) in Iir_Kinds_Composite_Type_Definition
       then
-         Disp_Element_Constraint (Def_El, Tm_El);
+         Disp_Element_Constraint (Ctxt, Def_El, Tm_El);
       end if;
    end Disp_Array_Element_Constraint;
 
-   procedure Disp_Record_Element_Constraint (Def : Iir)
+   procedure Disp_Record_Element_Constraint
+     (Ctxt : in out Ctxt_Class; Def : Iir)
    is
       El_List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
       El : Iir;
@@ -531,43 +474,46 @@ package body Vhdl.Disp_Vhdl is
            and then Get_Parent (El) = Def
          then
             if Has_El then
-               Put (", ");
+               Disp_Token (Ctxt, Tok_Comma);
             else
-               Put ("(");
+               Disp_Token (Ctxt, Tok_Left_Paren);
                Has_El := True;
             end if;
-            Disp_Name_Of (El);
-            Disp_Element_Constraint (Get_Type (El),
+            Disp_Name_Of (Ctxt, El);
+            Disp_Element_Constraint (Ctxt, Get_Type (El),
                                      Get_Base_Type (Get_Type (El)));
          end if;
       end loop;
       if Has_El then
-         Put (")");
+         Disp_Token (Ctxt, Tok_Right_Paren);
       end if;
    end Disp_Record_Element_Constraint;
 
-   procedure Disp_Element_Constraint (Def : Iir; Type_Mark : Iir) is
+   procedure Disp_Element_Constraint
+     (Ctxt : in out Ctxt_Class; Def : Iir; Type_Mark : Iir) is
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Record_Subtype_Definition =>
-            Disp_Record_Element_Constraint (Def);
+            Disp_Record_Element_Constraint (Ctxt, Def);
          when Iir_Kind_Array_Subtype_Definition =>
-            Disp_Array_Element_Constraint (Def, Type_Mark);
+            Disp_Array_Element_Constraint (Ctxt, Def, Type_Mark);
          when others =>
             Error_Kind ("disp_element_constraint", Def);
       end case;
    end Disp_Element_Constraint;
 
-   procedure Disp_Tolerance_Opt (N : Iir) is
+   procedure Disp_Tolerance_Opt (Ctxt : in out Ctxt_Class; N : Iir)
+   is
       Tol : constant Iir := Get_Tolerance (N);
    begin
       if Tol /= Null_Iir then
-         Put ("tolerance ");
-         Disp_Expression (Tol);
+         Disp_Token (Ctxt, Tok_Tolerance);
+         Print (Ctxt, Tol);
       end if;
    end Disp_Tolerance_Opt;
 
-   procedure Disp_Subtype_Indication (Def : Iir; Full_Decl : Boolean := False)
+   procedure Disp_Subtype_Indication
+     (Ctxt : in out Ctxt_Class; Def : Iir; Full_Decl : Boolean := False)
    is
       Type_Mark : Iir;
       Base_Type : Iir;
@@ -575,8 +521,9 @@ package body Vhdl.Disp_Vhdl is
    begin
       case Get_Kind (Def) is
          when Iir_Kinds_Denoting_Name
-           | Iir_Kind_Subtype_Attribute =>
-            Disp_Name (Def);
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Attribute_Name =>
+            Print (Ctxt, Def);
             return;
          when others =>
             null;
@@ -584,215 +531,182 @@ package body Vhdl.Disp_Vhdl is
 
       Decl := Get_Type_Declarator (Def);
       if not Full_Decl and then Decl /= Null_Iir then
-         Disp_Name_Of (Decl);
+         Disp_Name_Of (Ctxt, Decl);
          return;
       end if;
 
       -- Resolution function name.
-      Disp_Resolution_Indication (Def);
+      Disp_Resolution_Indication (Ctxt, Def);
 
       -- type mark.
       Type_Mark := Get_Subtype_Type_Mark (Def);
       if Type_Mark /= Null_Iir then
-         Disp_Name (Type_Mark);
+         Print (Ctxt, Type_Mark);
          Type_Mark := Get_Type (Type_Mark);
       end if;
 
-      Base_Type := Get_Base_Type (Def);
-      case Get_Kind (Base_Type) is
-         when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Floating_Type_Definition
-           | Iir_Kind_Physical_Type_Definition =>
-            if Type_Mark = Null_Iir
-              or else Get_Range_Constraint (Def)
-              /= Get_Range_Constraint (Type_Mark)
-            then
-               if Type_Mark /= Null_Iir then
-                  Put (" range ");
-               end if;
-               Disp_Expression (Get_Range_Constraint (Def));
-            end if;
-            if Get_Kind (Base_Type) = Iir_Kind_Floating_Type_Definition then
-               Disp_Tolerance_Opt (Def);
-            end if;
-         when Iir_Kind_Access_Type_Definition =>
+      case Get_Kind (Def) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            Disp_Array_Element_Constraint
+              (Ctxt, Def, Or_Else (Type_Mark, Def));
+         when Iir_Kind_Subtype_Definition =>
             declare
-               Des_Ind : constant Iir :=
-                 Get_Designated_Subtype_Indication (Def);
+               Rng : constant Iir := Get_Range_Constraint (Def);
             begin
-               if Des_Ind /= Null_Iir then
-                  pragma Assert
-                    (Get_Kind (Des_Ind) = Iir_Kind_Array_Subtype_Definition);
-                  Disp_Array_Element_Constraint
-                    (Des_Ind, Get_Designated_Type (Base_Type));
+               if Rng /= Null_Iir then
+                  Disp_Token (Ctxt, Tok_Range);
+                  Print (Ctxt, Get_Range_Constraint (Def));
                end if;
+               Disp_Tolerance_Opt (Ctxt, Def);
             end;
-         when Iir_Kind_Array_Type_Definition =>
-            if Type_Mark = Null_Iir then
-               Disp_Array_Element_Constraint (Def, Def);
-            else
-               Disp_Array_Element_Constraint (Def, Type_Mark);
-            end if;
-         when Iir_Kind_Record_Type_Definition =>
-            Disp_Record_Element_Constraint (Def);
          when others =>
-            Error_Kind ("disp_subtype_indication", Base_Type);
+            Base_Type := Get_Base_Type (Def);
+            case Get_Kind (Base_Type) is
+               when Iir_Kind_Integer_Type_Definition
+                 | Iir_Kind_Enumeration_Type_Definition
+                 | Iir_Kind_Floating_Type_Definition
+                 | Iir_Kind_Physical_Type_Definition =>
+                  if Type_Mark = Null_Iir
+                    or else Get_Range_Constraint (Def)
+                    /= Get_Range_Constraint (Type_Mark)
+                  then
+                     if Type_Mark /= Null_Iir then
+                        Disp_Token (Ctxt, Tok_Range);
+                     end if;
+                     Print (Ctxt, Get_Range_Constraint (Def));
+                  end if;
+                  if Get_Kind (Base_Type) = Iir_Kind_Floating_Type_Definition
+                  then
+                     Disp_Tolerance_Opt (Ctxt, Def);
+                  end if;
+               when Iir_Kind_Access_Type_Definition =>
+                  declare
+                     Des_Ind : constant Iir :=
+                       Get_Designated_Subtype_Indication (Def);
+                  begin
+                     if Des_Ind /= Null_Iir then
+                        pragma Assert (Get_Kind (Des_Ind)
+                                         = Iir_Kind_Array_Subtype_Definition);
+                        Disp_Array_Element_Constraint
+                          (Ctxt, Des_Ind, Get_Designated_Type (Base_Type));
+                     end if;
+                  end;
+               when Iir_Kind_Array_Type_Definition =>
+                  Disp_Array_Element_Constraint
+                    (Ctxt, Def, Or_Else (Type_Mark, Def));
+               when Iir_Kind_Record_Type_Definition =>
+                  Disp_Record_Element_Constraint (Ctxt, Def);
+               when others =>
+                  Error_Kind ("disp_subtype_indication", Base_Type);
+            end case;
       end case;
    end Disp_Subtype_Indication;
 
    procedure Disp_Enumeration_Type_Definition
-     (Def: Iir_Enumeration_Type_Definition)
+     (Ctxt : in out Ctxt_Class; Def: Iir_Enumeration_Type_Definition)
    is
       Lits : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
-      Len : Count;
-      Start_Col: Count;
-      Decl: Name_Id;
       A_Lit: Iir; --Enumeration_Literal_Acc;
    begin
+      Disp_Token (Ctxt, Tok_Left_Paren);
       for I in Flist_First .. Flist_Last (Lits) loop
          A_Lit := Get_Nth_Element (Lits, I);
-         if I = 0 then
-            Put ("(");
-            Start_Col := Col;
-         else
-            Put (", ");
+         if I > 0 then
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
-         Decl := Get_Identifier (A_Lit);
-         if Name_Table.Is_Character (Decl) then
-            Len := 3;
-         else
-            Len := Count (Name_Table.Get_Name_Length (Decl));
-         end if;
-         if Col + Len + 2 > Line_Length then
-            New_Line;
-            Set_Col (Start_Col);
-         end if;
-         Disp_Name_Of (A_Lit);
+         Disp_Name_Of (Ctxt, A_Lit);
       end loop;
-      Put (");");
+      Disp_Token (Ctxt, Tok_Right_Paren, Tok_Semi_Colon);
    end Disp_Enumeration_Type_Definition;
 
-   procedure Disp_Enumeration_Subtype_Definition
-     (Def: Iir_Enumeration_Subtype_Definition)
-   is
-   begin
-      Disp_Resolution_Indication (Def);
-      Put ("range ");
-      Disp_Range (Def);
-      Put (";");
-   end Disp_Enumeration_Subtype_Definition;
-
-   procedure Disp_Discrete_Range (Iterator: Iir) is
+   procedure Disp_Discrete_Range
+     (Ctxt : in out Ctxt_Class; Iterator: Iir) is
    begin
       if Get_Kind (Iterator) in Iir_Kinds_Subtype_Definition then
-         Disp_Subtype_Indication (Iterator);
+         Disp_Subtype_Indication (Ctxt, Iterator);
       else
-         Disp_Range (Iterator);
+         Disp_Range (Ctxt, Iterator);
       end if;
    end Disp_Discrete_Range;
 
-   procedure Disp_Array_Subtype_Definition (Def: Iir_Array_Subtype_Definition)
+   procedure Disp_Array_Type_Definition
+     (Ctxt : in out Ctxt_Class; Def: Iir_Array_Type_Definition)
    is
-      Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
+      Indexes : Iir_Flist;
       Index: Iir;
    begin
-      Disp_Resolution_Indication (Def);
-
-      Put ("array (");
+      Indexes := Get_Index_Subtype_Definition_List (Def);
+      if Indexes = Null_Iir_Flist then
+         Indexes := Get_Index_Subtype_List (Def);
+      end if;
+      Disp_Token (Ctxt, Tok_Array, Tok_Left_Paren);
       for I in Flist_First .. Flist_Last (Indexes) loop
          Index := Get_Nth_Element (Indexes, I);
          if I /= 0 then
-            Put (", ");
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
-         Disp_Discrete_Range (Index);
+         Print (Ctxt, Index);
+         Disp_Token (Ctxt, Tok_Range, Tok_Box);
       end loop;
-      Put (") of ");
-      Disp_Subtype_Indication (Get_Element_Subtype (Def));
-   end Disp_Array_Subtype_Definition;
-
-   procedure Disp_Array_Type_Definition (Def: Iir_Array_Type_Definition)
-   is
-      Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
-      Index: Iir;
-   begin
-      Put ("array (");
-      for I in Flist_First .. Flist_Last (Indexes) loop
-         Index := Get_Nth_Element (Indexes, I);
-         if I /= 0 then
-            Put (", ");
-         end if;
-         Disp_Name (Index);
-         Put (" range <>");
-      end loop;
-      Put (") of ");
-      Disp_Subtype_Indication (Get_Element_Subtype_Indication (Def));
-      Put (";");
+      Disp_Token (Ctxt, Tok_Right_Paren, Tok_Of);
+      Disp_Subtype_Indication (Ctxt, Get_Element_Subtype_Indication (Def));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
    end Disp_Array_Type_Definition;
 
-   procedure Disp_Physical_Literal (Lit: Iir)
+   procedure Disp_Physical_Literal (Ctxt : in out Ctxt_Class; Lit: Iir)
    is
       Unit : Iir;
    begin
-      case Get_Kind (Lit) is
+      case Iir_Kinds_Physical_Literal (Get_Kind (Lit)) is
          when Iir_Kind_Physical_Int_Literal =>
-            Disp_Int64 (Get_Value (Lit));
+            Disp_Int64 (Ctxt, Get_Value (Lit));
          when Iir_Kind_Physical_Fp_Literal =>
-            Disp_Fp64 (Get_Fp_Value (Lit));
-         when Iir_Kind_Unit_Declaration =>
-            Disp_Identifier (Lit);
-            return;
-         when others =>
-            Error_Kind ("disp_physical_literal", Lit);
+            Disp_Fp64 (Ctxt, Get_Fp_Value (Lit));
       end case;
-      Put (' ');
 
       Unit := Get_Unit_Name (Lit);
       if Is_Valid (Unit) then
          --  No unit in range_constraint of physical type declaration.
-         Disp_Name (Unit);
+         Print (Ctxt, Unit);
       end if;
    end Disp_Physical_Literal;
 
-   procedure Disp_Physical_Subtype_Definition
-     (Def: Iir_Physical_Subtype_Definition) is
-   begin
-      Disp_Resolution_Indication (Def);
-      Put ("range ");
-      Disp_Expression (Get_Range_Constraint (Def));
-   end Disp_Physical_Subtype_Definition;
-
    procedure Disp_Record_Type_Definition
-     (Def: Iir_Record_Type_Definition; Indent: Count)
+     (Ctxt : in out Ctxt_Class; Def: Iir_Record_Type_Definition)
    is
       List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
       El: Iir_Element_Declaration;
+      El_Subtype : Iir;
       Reindent : Boolean;
    begin
-      Put_Line ("record");
-      Set_Col (Indent);
+      Disp_Token (Ctxt, Tok_Record);
+      Close_Hbox (Ctxt);
       Reindent := True;
+      Start_Vbox (Ctxt);
       for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
          if Reindent then
-            Set_Col (Indent + Indentation);
+            El_Subtype := Get_Subtype_Indication (El);
+            Start_Hbox (Ctxt);
          end if;
-         Disp_Identifier (El);
+         Disp_Identifier (Ctxt, El);
          if Get_Has_Identifier_List (El) then
-            Put (", ");
+            Disp_Token (Ctxt, Tok_Comma);
             Reindent := False;
          else
-            Put (" : ");
-            Disp_Subtype_Indication (Get_Type (El));
-            Put_Line (";");
+            Disp_Token (Ctxt, Tok_Colon);
+            Disp_Subtype_Indication
+              (Ctxt, Or_Else (El_Subtype, Get_Type (El)));
+            Disp_Token (Ctxt, Tok_Semi_Colon);
+            Close_Hbox (Ctxt);
             Reindent := True;
          end if;
       end loop;
-      Set_Col (Indent);
-      Disp_End (Def, "record");
+      Close_Vbox (Ctxt);
+      Disp_End_No_Close (Ctxt, Def, Tok_Record);
    end Disp_Record_Type_Definition;
 
-   procedure Disp_Designator_List (List: Iir_List)
+   procedure Disp_Designator_List (Ctxt : in out Ctxt_Class; List: Iir_List)
    is
       El : Iir;
       It : List_Iterator;
@@ -802,175 +716,209 @@ package body Vhdl.Disp_Vhdl is
          when Null_Iir_List =>
             null;
          when Iir_List_All =>
-            Put ("all");
+            Disp_Token (Ctxt, Tok_All);
          when others =>
             It := List_Iterate (List);
             Is_First := True;
             while Is_Valid (It) loop
                El := Get_Element (It);
                if not Is_First then
-                  Put (", ");
+                  Disp_Token (Ctxt, Tok_Comma);
                else
                   Is_First := False;
                end if;
-               Disp_Expression (El);
+               Print (Ctxt, El);
                Next (It);
             end loop;
       end case;
    end Disp_Designator_List;
 
+   procedure Disp_Array_Subtype_Definition
+     (Ctxt : in out Ctxt_Class; Def : Iir; El_Def : Iir)
+   is
+      Indexes : Iir_Flist;
+      Index : Iir;
+   begin
+      Indexes := Get_Index_Constraint_List (Def);
+      if Indexes = Null_Iir_Flist then
+         Indexes := Get_Index_Subtype_List (Def);
+      end if;
+      Disp_Token (Ctxt, Tok_Array, Tok_Left_Paren);
+      for I in Flist_First .. Flist_Last (Indexes) loop
+         Index := Get_Nth_Element (Indexes, I);
+         if I /= 0 then
+            Disp_Token (Ctxt, Tok_Comma);
+         end if;
+         Disp_Discrete_Range (Ctxt, Index);
+      end loop;
+      Disp_Token (Ctxt, Tok_Right_Paren, Tok_Of);
+      Disp_Subtype_Indication (Ctxt, El_Def);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+   end Disp_Array_Subtype_Definition;
+
    -- Display the full definition of a type, ie the sequence that can create
    -- such a type.
-   procedure Disp_Type_Definition (Def: Iir; Indent: Count) is
+   procedure Disp_Type_Definition (Ctxt : in out Ctxt_Class; Def: Iir) is
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            Disp_Enumeration_Type_Definition (Def);
-         when Iir_Kind_Enumeration_Subtype_Definition =>
-            Disp_Enumeration_Subtype_Definition (Def);
-         when Iir_Kind_Integer_Subtype_Definition =>
-            Disp_Integer_Subtype_Definition (Def);
-         when Iir_Kind_Floating_Subtype_Definition =>
-            Disp_Floating_Subtype_Definition (Def);
+            Disp_Enumeration_Type_Definition (Ctxt, Def);
          when Iir_Kind_Array_Type_Definition =>
-            Disp_Array_Type_Definition (Def);
+            Disp_Array_Type_Definition (Ctxt, Def);
          when Iir_Kind_Array_Subtype_Definition =>
-            Disp_Array_Subtype_Definition (Def);
-         when Iir_Kind_Physical_Subtype_Definition =>
-            Disp_Physical_Subtype_Definition (Def);
+            Disp_Array_Subtype_Definition
+              (Ctxt, Def, Get_Element_Subtype (Get_Base_Type (Def)));
          when Iir_Kind_Record_Type_Definition =>
-            Disp_Record_Type_Definition (Def, Indent);
+            Disp_Record_Type_Definition (Ctxt, Def);
          when Iir_Kind_Access_Type_Definition =>
-            Put ("access ");
-            Disp_Subtype_Indication (Get_Designated_Subtype_Indication (Def));
-            Put (';');
+            Disp_Token (Ctxt, Tok_Access);
+            Disp_Subtype_Indication
+              (Ctxt, Get_Designated_Subtype_Indication (Def));
+            Disp_Token (Ctxt, Tok_Semi_Colon);
          when Iir_Kind_File_Type_Definition =>
-            Put ("file of ");
-            Disp_Subtype_Indication (Get_File_Type_Mark (Def));
-            Put (';');
+            Disp_Token (Ctxt, Tok_File, Tok_Of);
+            Disp_Subtype_Indication (Ctxt, Get_File_Type_Mark (Def));
+            Disp_Token (Ctxt, Tok_Semi_Colon);
          when Iir_Kind_Protected_Type_Declaration =>
-            Put_Line ("protected");
-            Disp_Declaration_Chain (Def, Indent + Indentation);
-            Set_Col (Indent);
-            Disp_End (Def, "protected");
-         when Iir_Kind_Integer_Type_Definition =>
-            Put ("<integer base type>");
-         when Iir_Kind_Floating_Type_Definition =>
-            Put ("<floating base type>");
-         when Iir_Kind_Physical_Type_Definition =>
-            Put ("<physical base type>");
+            Disp_Token (Ctxt, Tok_Protected);
+            Close_Hbox (Ctxt);
+            Start_Vbox (Ctxt);
+            Disp_Declaration_Chain (Ctxt, Def);
+            Close_Vbox (Ctxt);
+            Disp_End_No_Close (Ctxt, Def, Tok_Protected);
+         when Iir_Kind_Attribute_Name
+           | Iir_Kind_Range_Expression
+           | Iir_Kind_Parenthesis_Name =>
+            Disp_Token (Ctxt, Tok_Range);
+            Print (Ctxt, Def);
+            Disp_Token (Ctxt, Tok_Semi_Colon);
          when others =>
             Error_Kind ("disp_type_definition", Def);
       end case;
    end Disp_Type_Definition;
 
-   procedure Disp_Type_Declaration (Decl: Iir_Type_Declaration)
+   procedure Disp_Type_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Type_Declaration)
    is
-      Indent : constant Count := Col;
       Def : constant Iir := Get_Type_Definition (Decl);
    begin
-      Put ("type ");
-      Disp_Name_Of (Decl);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Type);
+      Disp_Name_Of (Ctxt, Decl);
       if Def = Null_Iir
         or else Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
       then
-         Put_Line (";");
+         Disp_Token (Ctxt, Tok_Semi_Colon);
       else
-         Put (" is ");
-         Disp_Type_Definition (Def, Indent);
-         New_Line;
+         Disp_Token (Ctxt, Tok_Is);
+         Disp_Type_Definition (Ctxt, Def);
       end if;
+      Close_Hbox (Ctxt);
    end Disp_Type_Declaration;
 
-   procedure Disp_Anonymous_Type_Declaration
-     (Decl: Iir_Anonymous_Type_Declaration)
+   procedure Disp_Physical_Type_Definition
+     (Ctxt : in out Ctxt_Class; Decl : Iir)
    is
       Def : constant Iir := Get_Type_Definition (Decl);
-      Indent: constant Count := Col;
+      St : constant Iir := Get_Subtype_Definition (Decl);
+      Unit : Iir_Unit_Declaration;
+      Rng : Iir;
    begin
-      Put ("type ");
-      Disp_Identifier (Decl);
-      Put (" is ");
+      Disp_Token (Ctxt, Tok_Range);
+      Rng := Or_Else (St, Def);
+      Print (Ctxt, Get_Range_Constraint (Rng));
+      Disp_Token (Ctxt, Tok_Units);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Unit := Get_Unit_Chain (Def);
+      Start_Hbox (Ctxt);
+      Disp_Identifier (Ctxt, Unit);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
+      Unit := Get_Chain (Unit);
+      while Unit /= Null_Iir loop
+         Start_Hbox (Ctxt);
+         Disp_Identifier (Ctxt, Unit);
+         Disp_Token (Ctxt, Tok_Equal);
+         Print (Ctxt, Get_Physical_Literal (Unit));
+         Disp_Token (Ctxt, Tok_Semi_Colon);
+         Close_Hbox (Ctxt);
+         Unit := Get_Chain (Unit);
+      end loop;
+      Close_Vbox (Ctxt);
+      Disp_End_No_Close (Ctxt, Def, Tok_Units);
+   end Disp_Physical_Type_Definition;
+
+   procedure Disp_Anonymous_Type_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Anonymous_Type_Declaration)
+   is
+      Def : constant Iir := Get_Type_Definition (Decl);
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Type);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
       case Get_Kind (Def) is
          when Iir_Kind_Array_Type_Definition =>
-            declare
-               St : constant Iir := Get_Subtype_Definition (Decl);
-               Indexes : constant Iir_Flist := Get_Index_Subtype_List (St);
-               Index : Iir;
-            begin
-               Put ("array (");
-               for I in Flist_First .. Flist_Last (Indexes) loop
-                  Index := Get_Nth_Element (Indexes, I);
-                  if I /= 0 then
-                     Put (", ");
-                  end if;
-                  Disp_Discrete_Range (Index);
-               end loop;
-               Put (") of ");
-               Disp_Subtype_Indication (Get_Element_Subtype_Indication (Def));
-               Put (";");
-            end;
+            Disp_Array_Subtype_Definition
+              (Ctxt, Get_Subtype_Definition (Decl),
+               Get_Element_Subtype_Indication (Def));
+         when Iir_Kind_Array_Subtype_Definition =>
+            Disp_Array_Subtype_Definition
+              (Ctxt, Def, Get_Array_Element_Constraint (Def));
          when Iir_Kind_Physical_Type_Definition =>
-            declare
-               St : constant Iir := Get_Subtype_Definition (Decl);
-               Unit : Iir_Unit_Declaration;
-            begin
-               Put ("range ");
-               Disp_Expression (Get_Range_Constraint (St));
-               Put_Line (" units");
-               Set_Col (Indent + Indentation);
-               Unit := Get_Unit_Chain (Def);
-               Disp_Identifier (Unit);
-               Put_Line (";");
-               Unit := Get_Chain (Unit);
-               while Unit /= Null_Iir loop
-                  Set_Col (Indent + Indentation);
-                  Disp_Identifier (Unit);
-                  Put (" = ");
-                  Disp_Expression (Get_Physical_Literal (Unit));
-                  Put_Line (";");
-                  Unit := Get_Chain (Unit);
-               end loop;
-               Set_Col (Indent);
-               Disp_End (Def, "units");
-            end;
+            Disp_Physical_Type_Definition (Ctxt, Decl);
          when Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Integer_Type_Definition =>
             declare
                St : constant Iir := Get_Subtype_Definition (Decl);
             begin
-               Put ("range ");
-               Disp_Expression (Get_Range_Constraint (St));
-               Put (";");
+               Disp_Token (Ctxt, Tok_Range);
+               Print (Ctxt, Get_Range_Constraint (St));
+               Disp_Token (Ctxt, Tok_Semi_Colon);
             end;
          when others =>
-            Disp_Type_Definition (Def, Indent);
+            Disp_Type_Definition (Ctxt, Def);
       end case;
-      New_Line;
+      Close_Hbox (Ctxt);
    end Disp_Anonymous_Type_Declaration;
 
-   procedure Disp_Subtype_Declaration (Decl: in Iir_Subtype_Declaration)
+   procedure Disp_Subtype_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Subtype_Declaration)
    is
       Def : constant Iir := Get_Type (Decl);
-      Bt_Decl : constant Iir := Get_Type_Declarator (Get_Base_Type (Def));
    begin
-      if Get_Identifier (Decl) = Get_Identifier (Bt_Decl) then
-         Put ("-- ");
+      --  If the subtype declaration was implicit (added because of a type
+      --  declaration), put it as a comment.
+      if Def /= Null_Iir
+        and then
+        (Get_Identifier (Decl)
+           = Get_Identifier (Get_Type_Declarator (Get_Base_Type (Def))))
+      then
+         if Flag_Implicit then
+            Put ("-- ");
+         else
+            return;
+         end if;
       end if;
-      Put ("subtype ");
-      Disp_Name_Of (Decl);
-      Put (" is ");
-      Disp_Subtype_Indication (Def, True);
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Subtype);
+      Disp_Name_Of (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
+      Disp_Subtype_Indication
+        (Ctxt, Or_Else (Get_Subtype_Indication (Decl), Get_Type (Decl)), True);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Subtype_Declaration;
 
-   procedure Disp_Type (A_Type: Iir)
+   procedure Disp_Type (Ctxt : in out Ctxt_Class; A_Type: Iir)
    is
       Decl: Iir;
    begin
       Decl := Get_Type_Declarator (A_Type);
       if Decl /= Null_Iir then
-         Disp_Name_Of (Decl);
+         Disp_Name_Of (Ctxt, Decl);
       else
          case Get_Kind (A_Type) is
             when Iir_Kind_Enumeration_Type_Definition
@@ -979,291 +927,318 @@ package body Vhdl.Disp_Vhdl is
             when Iir_Kind_Integer_Subtype_Definition
               | Iir_Kind_Enumeration_Subtype_Definition
               | Iir_Kind_Access_Subtype_Definition =>
-               Disp_Subtype_Indication (A_Type);
+               Disp_Subtype_Indication (Ctxt, A_Type);
             when Iir_Kind_Array_Subtype_Definition =>
-               Disp_Subtype_Indication (A_Type);
+               Disp_Subtype_Indication (Ctxt, A_Type);
             when others =>
                Error_Kind ("disp_type", A_Type);
          end case;
       end if;
    end Disp_Type;
 
-   procedure Disp_Nature_Definition (Def : Iir) is
+   procedure Disp_Nature_Definition (Ctxt : in out Ctxt_Class; Def : Iir) is
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Scalar_Nature_Definition =>
-            Disp_Subtype_Indication (Get_Across_Type (Def));
-            Put (" across ");
-            Disp_Subtype_Indication (Get_Through_Type (Def));
-            Put (" through ");
-            Disp_Name_Of (Get_Reference (Def));
-            Put (" reference");
+            Disp_Subtype_Indication (Ctxt, Get_Across_Type (Def));
+            Disp_Token (Ctxt, Tok_Across);
+            Disp_Subtype_Indication (Ctxt, Get_Through_Type (Def));
+            Disp_Token (Ctxt, Tok_Through);
+            Disp_Name_Of (Ctxt, Get_Reference (Def));
+            Disp_Token (Ctxt, Tok_Reference);
          when others =>
             Error_Kind ("disp_nature_definition", Def);
       end case;
    end Disp_Nature_Definition;
 
-   procedure Disp_Nature_Declaration (Decl : Iir) is
+   procedure Disp_Nature_Declaration (Ctxt : in out Ctxt_Class; Decl : Iir) is
    begin
-      Put ("nature ");
-      Disp_Name_Of (Decl);
-      Put (" is ");
-      Disp_Nature_Definition (Get_Nature (Decl));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Nature);
+      Disp_Name_Of (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
+      Disp_Nature_Definition (Ctxt, Get_Nature (Decl));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Nature_Declaration;
 
-   procedure Disp_Nature (Nature : Iir)
+   procedure Disp_Subnature_Indication (Ctxt : in out Ctxt_Class; Ind : Iir)
    is
       Decl: Iir;
    begin
-      Decl := Get_Nature_Declarator (Nature);
-      if Decl /= Null_Iir then
-         Disp_Name_Of (Decl);
-      else
-         Error_Kind ("disp_nature", Nature);
-      end if;
-   end Disp_Nature;
+      case Get_Kind (Ind) is
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Attribute_Name =>
+            Print (Ctxt, Ind);
+            return;
+         when others =>
+            null;
+      end case;
 
-   procedure Disp_Mode (Mode: Iir_Mode) is
+      Decl := Get_Nature_Declarator (Ind);
+      if Decl /= Null_Iir then
+         Disp_Name_Of (Ctxt, Decl);
+      else
+         Error_Kind ("disp_subnature_indication", Ind);
+      end if;
+   end Disp_Subnature_Indication;
+
+   procedure Disp_Mode (Ctxt : in out Ctxt_Class; Mode: Iir_Mode) is
    begin
       case Mode is
          when Iir_In_Mode =>
-            Put ("in ");
+            Disp_Token (Ctxt, Tok_In);
          when Iir_Out_Mode =>
-            Put ("out ");
+            Disp_Token (Ctxt, Tok_Out);
          when Iir_Inout_Mode =>
-            Put ("inout ");
+            Disp_Token (Ctxt, Tok_Inout);
          when Iir_Buffer_Mode =>
-            Put ("buffer ");
+            Disp_Token (Ctxt, Tok_Buffer);
          when Iir_Linkage_Mode =>
-            Put ("linkage ");
+            Disp_Token (Ctxt, Tok_Linkage);
          when Iir_Unknown_Mode =>
             Put ("<unknown> ");
       end case;
    end Disp_Mode;
 
-   procedure Disp_Signal_Kind (Sig : Iir) is
+   procedure Disp_Signal_Kind (Ctxt : in out Ctxt_Class; Sig : Iir) is
    begin
       if Get_Guarded_Signal_Flag (Sig) then
          case Get_Signal_Kind (Sig) is
             when Iir_Register_Kind =>
-               Put (" register");
+               Disp_Token (Ctxt, Tok_Register);
             when Iir_Bus_Kind =>
-               Put (" bus");
+               Disp_Token (Ctxt, Tok_Bus);
          end case;
       end if;
    end Disp_Signal_Kind;
 
-   procedure Disp_Interface_Class (Inter: Iir) is
+   procedure Disp_Interface_Class (Ctxt : in out Ctxt_Class; Inter: Iir) is
    begin
       if Get_Has_Class (Inter) then
          case Get_Kind (Inter) is
             when Iir_Kind_Interface_Signal_Declaration =>
-               Put ("signal ");
+               Disp_Token (Ctxt, Tok_Signal);
             when Iir_Kind_Interface_Variable_Declaration =>
-               Put ("variable ");
+               Disp_Token (Ctxt, Tok_Variable);
             when Iir_Kind_Interface_Constant_Declaration =>
-               Put ("constant ");
+               Disp_Token (Ctxt, Tok_Constant);
             when Iir_Kind_Interface_File_Declaration =>
-               Put ("file ");
+               Disp_Token (Ctxt, Tok_File);
             when others =>
                Error_Kind ("disp_interface_class", Inter);
          end case;
       end if;
    end Disp_Interface_Class;
 
-   procedure Disp_Interface_Mode_And_Type (Inter: Iir)
+   procedure Disp_Interface_Mode_And_Type
+     (Ctxt : in out Ctxt_Class; Inter: Iir)
    is
       Default: constant Iir := Get_Default_Value (Inter);
       Ind : constant Iir := Get_Subtype_Indication (Inter);
    begin
-      Put (": ");
+      Disp_Token (Ctxt, Tok_Colon);
       if Get_Has_Mode (Inter) then
-         Disp_Mode (Get_Mode (Inter));
+         Disp_Mode (Ctxt, Get_Mode (Inter));
       end if;
       if Ind = Null_Iir then
          --  For implicit subprogram
-         Disp_Type (Get_Type (Inter));
+         Disp_Type (Ctxt, Get_Type (Inter));
       else
-         Disp_Subtype_Indication (Get_Subtype_Indication (Inter));
+         Disp_Subtype_Indication (Ctxt, Get_Subtype_Indication (Inter));
       end if;
       if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
-         Disp_Signal_Kind (Inter);
+         Disp_Signal_Kind (Ctxt, Inter);
       end if;
       if Default /= Null_Iir then
-         Put (" := ");
-         Disp_Expression (Default);
+         Disp_Token (Ctxt, Tok_Assign);
+         Print (Ctxt, Default);
       end if;
    end Disp_Interface_Mode_And_Type;
 
    --  Disp interfaces, followed by END_STR (';' in general).
-   procedure Disp_Interface_Chain (Chain: Iir;
-                                   End_Str: String := "";
-                                   Comment_Col : Natural := 0)
+   procedure Disp_Interface_Chain (Ctxt : in out Ctxt_Class; Chain: Iir)
    is
       Inter: Iir;
       Next_Inter : Iir;
       First_Inter : Iir;
-      Start: Count;
    begin
       if Chain = Null_Iir then
          return;
       end if;
-      Put (" (");
-      Start := Col;
+      Disp_Token (Ctxt, Tok_Left_Paren);
+
       Inter := Chain;
       loop
          Next_Inter := Get_Chain (Inter);
-         Set_Col (Start);
 
          First_Inter := Inter;
 
          case Get_Kind (Inter) is
             when Iir_Kinds_Interface_Object_Declaration =>
-               Disp_Interface_Class (Inter);
-               Disp_Name_Of (Inter);
+               Disp_Interface_Class (Ctxt, Inter);
+               Disp_Name_Of (Ctxt, Inter);
                while Get_Has_Identifier_List (Inter) loop
-                  Put (", ");
+                  Disp_Token (Ctxt, Tok_Comma);
                   Inter := Next_Inter;
                   Next_Inter := Get_Chain (Inter);
-                  Disp_Name_Of (Inter);
+                  Disp_Name_Of (Ctxt, Inter);
                end loop;
-               Disp_Interface_Mode_And_Type (First_Inter);
+               Disp_Interface_Mode_And_Type (Ctxt, First_Inter);
             when Iir_Kind_Interface_Package_Declaration =>
-               Put ("package ");
-               Disp_Identifier (Inter);
-               Put (" is new ");
-               Disp_Name (Get_Uninstantiated_Package_Name (Inter));
-               Put (" generic map ");
+               Disp_Token (Ctxt, Tok_Package);
+               Disp_Identifier (Ctxt, Inter);
+               Disp_Token (Ctxt, Tok_Is, Tok_New);
+               Print (Ctxt, Get_Uninstantiated_Package_Name (Inter));
+               Disp_Token (Ctxt, Tok_Generic, Tok_Map);
                declare
                   Assoc_Chain : constant Iir :=
                     Get_Generic_Map_Aspect_Chain (Inter);
                begin
                   if Assoc_Chain = Null_Iir then
-                     Put ("(<>)");
+                     Disp_Token (Ctxt, Tok_Left_Paren);
+                     Disp_Token (Ctxt, Tok_Box);
+                     Disp_Token (Ctxt, Tok_Right_Paren);
                   else
-                     Disp_Association_Chain (Assoc_Chain);
+                     Disp_Association_Chain (Ctxt, Assoc_Chain);
                   end if;
                end;
             when Iir_Kind_Interface_Type_Declaration =>
-               Put ("type ");
-               Disp_Identifier (Inter);
+               Disp_Token (Ctxt, Tok_Type);
+               Disp_Identifier (Ctxt, Inter);
             when Iir_Kinds_Interface_Subprogram_Declaration =>
-               Disp_Subprogram_Declaration (Inter);
+               Disp_Subprogram_Declaration (Ctxt, Inter);
             when others =>
                Error_Kind ("disp_interface_chain", Inter);
          end case;
 
-         if Next_Inter /= Null_Iir then
-            Put (";");
-            if Comment_Col /= 0 then
-               New_Line;
-               Set_Col (Comment_Col);
-               Put ("--");
-            end if;
-         else
-            Put (')');
-            Put (End_Str);
-            exit;
-         end if;
+         exit when Next_Inter = Null_Iir;
+         Disp_Token (Ctxt, Tok_Semi_Colon);
 
          Inter := Next_Inter;
          Next_Inter := Get_Chain (Inter);
       end loop;
+
+      Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Interface_Chain;
 
-   procedure Disp_Ports (Parent : Iir) is
+   procedure Disp_Ports (Ctxt : in out Ctxt_Class; Parent : Iir)
+   is
+      Ports : constant Iir := Get_Port_Chain (Parent);
    begin
-      Put ("port");
-      Disp_Interface_Chain (Get_Port_Chain (Parent), ";");
+      if Ports /= Null_Iir then
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_Port);
+         Disp_Interface_Chain (Ctxt, Ports);
+         Disp_Token (Ctxt, Tok_Semi_Colon);
+         Close_Hbox (Ctxt);
+      end if;
    end Disp_Ports;
 
-   procedure Disp_Generics (Parent : Iir) is
+   procedure Disp_Generics (Ctxt : in out Ctxt_Class; Parent : Iir)
+   is
+      Generics : constant Iir := Get_Generic_Chain (Parent);
    begin
-      Put ("generic");
-      Disp_Interface_Chain (Get_Generic_Chain (Parent), ";");
+      if Generics /= Null_Iir then
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_Generic);
+         Disp_Interface_Chain (Ctxt, Generics);
+         Disp_Token (Ctxt, Tok_Semi_Colon);
+         Close_Hbox (Ctxt);
+      end if;
    end Disp_Generics;
 
-   procedure Disp_Entity_Declaration (Decl: Iir_Entity_Declaration)
-   is
-      Start: constant Count := Col;
+   procedure Disp_Entity_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Entity_Declaration) is
    begin
-      Put ("entity ");
-      Disp_Name_Of (Decl);
-      Put_Line (" is");
-      if Get_Generic_Chain (Decl) /= Null_Iir then
-         Set_Col (Start + Indentation);
-         Disp_Generics (Decl);
-      end if;
-      if Get_Port_Chain (Decl) /= Null_Iir then
-         Set_Col (Start + Indentation);
-         Disp_Ports (Decl);
-      end if;
-      Disp_Declaration_Chain (Decl, Start + Indentation);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Entity);
+      Disp_Name_Of (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Generics (Ctxt, Decl);
+      Disp_Ports (Ctxt, Decl);
+      Disp_Declaration_Chain (Ctxt, Decl);
+      Close_Vbox (Ctxt);
+
       if Get_Has_Begin (Decl) then
-         Set_Col (Start);
-         Put_Line ("begin");
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_Begin);
+         Close_Hbox (Ctxt);
       end if;
       if Get_Concurrent_Statement_Chain (Decl) /= Null_Iir then
-         Disp_Concurrent_Statement_Chain (Decl, Start + Indentation);
+         Start_Vbox (Ctxt);
+         Disp_Concurrent_Statement_Chain (Ctxt, Decl);
+         Close_Vbox (Ctxt);
       end if;
-      Set_Col (Start);
-      Disp_End (Decl, "entity");
+      Disp_End (Ctxt, Decl, Tok_Entity);
    end Disp_Entity_Declaration;
 
-   procedure Disp_Component_Declaration (Decl: Iir_Component_Declaration)
-   is
-      Indent: Count;
+   procedure Disp_Component_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Component_Declaration) is
    begin
-      Indent := Col;
-      Put ("component ");
-      Disp_Name_Of (Decl);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Component);
+      Disp_Name_Of (Ctxt, Decl);
       if Get_Has_Is (Decl) then
-         Put (" is");
+         Disp_Token (Ctxt, Tok_Is);
       end if;
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
       if Get_Generic_Chain (Decl) /= Null_Iir then
-         Set_Col (Indent + Indentation);
-         Disp_Generics (Decl);
+         Disp_Generics (Ctxt, Decl);
       end if;
       if Get_Port_Chain (Decl) /= Null_Iir then
-         Set_Col (Indent + Indentation);
-         Disp_Ports (Decl);
+         Disp_Ports (Ctxt, Decl);
       end if;
-      Set_Col (Indent);
-      Disp_End (Decl, "component");
+      Close_Vbox (Ctxt);
+
+      Disp_End (Ctxt, Decl, Tok_Component);
    end Disp_Component_Declaration;
 
-   procedure Disp_Concurrent_Statement_Chain (Parent : Iir; Indent : Count)
+   procedure Disp_Concurrent_Statement_Chain
+     (Ctxt : in out Ctxt_Class; Parent : Iir)
    is
       El: Iir;
    begin
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
-         Set_Col (Indent);
-         Disp_Concurrent_Statement (El);
+         Disp_Concurrent_Statement (Ctxt, El);
          El := Get_Chain (El);
       end loop;
    end Disp_Concurrent_Statement_Chain;
 
-   procedure Disp_Architecture_Body (Arch: Iir_Architecture_Body)
-   is
-      Start: Count;
+   procedure Disp_Architecture_Body
+     (Ctxt : in out Ctxt_Class; Arch: Iir_Architecture_Body) is
    begin
-      Start := Col;
-      Put ("architecture ");
-      Disp_Name_Of (Arch);
-      Put (" of ");
-      Disp_Name (Get_Entity_Name (Arch));
-      Put_Line (" is");
-      Disp_Declaration_Chain (Arch, Start + Indentation);
-      Set_Col (Start);
-      Put_Line ("begin");
-      Disp_Concurrent_Statement_Chain (Arch, Start + Indentation);
-      Set_Col (Start);
-      Disp_End (Arch, "architecture");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Architecture);
+      Disp_Name_Of (Ctxt, Arch);
+      Disp_Token (Ctxt, Tok_Of);
+      Print (Ctxt, Get_Entity_Name (Arch));
+      Disp_Token (Ctxt, Tok_Is);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Declaration_Chain (Ctxt, Arch);
+      Close_Vbox (Ctxt);
+
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Begin);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Concurrent_Statement_Chain (Ctxt, Arch);
+      Close_Vbox (Ctxt);
+
+      Disp_End (Ctxt, Arch, Tok_Architecture);
    end Disp_Architecture_Body;
 
-   procedure Disp_Signature (Sig : Iir)
+   procedure Disp_Signature (Ctxt : in out Ctxt_Class; Sig : Iir)
    is
       Prefix : constant Iir := Get_Signature_Prefix (Sig);
       List : constant Iir_Flist := Get_Type_Marks_List (Sig);
@@ -1271,202 +1246,229 @@ package body Vhdl.Disp_Vhdl is
    begin
       if Is_Valid (Prefix) then
          --  Only in alias.
-         Disp_Name (Prefix);
+         Print (Ctxt, Prefix);
       end if;
-      Put (" [");
+      Disp_Token (Ctxt, Tok_Left_Bracket);
       if List /= Null_Iir_Flist then
          for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
             if I /= 0 then
-               Put (", ");
+               Disp_Token (Ctxt, Tok_Comma);
             end if;
-            Disp_Name (El);
+            Print (Ctxt, El);
          end loop;
       end if;
       El := Get_Return_Type_Mark (Sig);
       if El /= Null_Iir then
-         Put (" return ");
-         Disp_Name (El);
+         Disp_Token (Ctxt, Tok_Return);
+         Print (Ctxt, El);
       end if;
-      Put ("]");
+      Disp_Token (Ctxt, Tok_Right_Bracket);
    end Disp_Signature;
 
-   procedure Disp_Object_Alias_Declaration (Decl: Iir_Object_Alias_Declaration)
+   procedure Disp_Object_Alias_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Object_Alias_Declaration)
    is
+      St_Ind : constant Iir := Get_Subtype_Indication (Decl);
+      Atype : constant Iir := Get_Type (Decl);
    begin
-      Put ("alias ");
-      Disp_Name_Of (Decl);
-      Put (": ");
-      Disp_Type (Get_Type (Decl));
-      Put (" is ");
-      Disp_Expression (Get_Name (Decl));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Alias);
+      Disp_Function_Name (Ctxt, Decl);
+      if St_Ind /= Null_Iir or else Atype /= Null_Iir then
+         Disp_Token (Ctxt, Tok_Colon);
+         Disp_Subtype_Indication (Ctxt, Or_Else (St_Ind, Atype));
+      end if;
+      Disp_Token (Ctxt, Tok_Is);
+      Print (Ctxt, Get_Name (Decl));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Object_Alias_Declaration;
 
    procedure Disp_Non_Object_Alias_Declaration
-     (Decl: Iir_Non_Object_Alias_Declaration)
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Non_Object_Alias_Declaration)
    is
       Sig : constant Iir := Get_Alias_Signature (Decl);
    begin
       if Get_Implicit_Alias_Flag (Decl) then
-         Put ("-- ");
+         if Flag_Implicit then
+            Put ("-- ");
+         else
+            return;
+         end if;
       end if;
 
-      Put ("alias ");
-      Disp_Function_Name (Decl);
-      Put (" is ");
-      Disp_Name (Get_Name (Decl));
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Alias);
+      Disp_Function_Name (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
+      Print (Ctxt, Get_Name (Decl));
       if Sig /= Null_Iir then
-         Disp_Signature (Sig);
+         Disp_Signature (Ctxt, Sig);
       end if;
-      Put_Line (";");
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Non_Object_Alias_Declaration;
 
-   procedure Disp_File_Declaration (Decl: Iir_File_Declaration)
+   procedure Disp_File_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_File_Declaration)
    is
       Next_Decl : Iir;
       Expr: Iir;
    begin
-      Put ("file ");
-      Disp_Name_Of (Decl);
+      Disp_Token (Ctxt, Tok_File);
+      Disp_Name_Of (Ctxt, Decl);
       Next_Decl := Decl;
       while Get_Has_Identifier_List (Next_Decl) loop
          Next_Decl := Get_Chain (Next_Decl);
-         Put (", ");
-         Disp_Name_Of (Next_Decl);
+         Disp_Token (Ctxt, Tok_Comma);
+         Disp_Name_Of (Ctxt, Next_Decl);
       end loop;
-      Put (": ");
-      Disp_Type (Get_Type (Decl));
+      Disp_Token (Ctxt, Tok_Colon);
+      Disp_Subtype_Indication (Ctxt, Or_Else (Get_Subtype_Indication (Decl),
+                                              Get_Type (Decl)));
       if Vhdl_Std = Vhdl_87 then
-         Put (" is ");
+         Disp_Token (Ctxt, Tok_Is);
          if Get_Has_Mode (Decl) then
-            Disp_Mode (Get_Mode (Decl));
+            Disp_Mode (Ctxt, Get_Mode (Decl));
          end if;
-         Disp_Expression (Get_File_Logical_Name (Decl));
+         Print (Ctxt, Get_File_Logical_Name (Decl));
       else
          Expr := Get_File_Open_Kind (Decl);
          if Expr /= Null_Iir then
-            Put (" open ");
-            Disp_Expression (Expr);
+            Disp_Token (Ctxt, Tok_Open);
+            Print (Ctxt, Expr);
          end if;
          Expr := Get_File_Logical_Name (Decl);
          if Expr /= Null_Iir then
-            Put (" is ");
-            Disp_Expression (Expr);
+            Disp_Token (Ctxt, Tok_Is);
+            Print (Ctxt, Expr);
          end if;
       end if;
-      Put (';');
+      Disp_Token (Ctxt, Tok_Semi_Colon);
    end Disp_File_Declaration;
 
-   procedure Disp_Quantity_Declaration (Decl: Iir)
+   procedure Disp_Quantity_Declaration (Ctxt : in out Ctxt_Class; Decl: Iir)
    is
       Expr : Iir;
       Term : Iir;
    begin
-      Put ("quantity ");
-      Disp_Name_Of (Decl);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Quantity);
+      Disp_Name_Of (Ctxt, Decl);
 
       case Get_Kind (Decl) is
          when Iir_Kinds_Branch_Quantity_Declaration =>
-            Disp_Tolerance_Opt (Decl);
+            Disp_Tolerance_Opt (Ctxt, Decl);
             Expr := Get_Default_Value (Decl);
             if Expr /= Null_Iir then
-               Put (":= ");
-               Disp_Expression (Expr);
+               Disp_Token (Ctxt, Tok_Assign);
+               Print (Ctxt, Expr);
             end if;
             if Get_Kind (Decl) = Iir_Kind_Across_Quantity_Declaration then
-               Put (" across ");
+               Disp_Token (Ctxt, Tok_Across);
             else
-               Put (" through ");
+               Disp_Token (Ctxt, Tok_Through);
             end if;
-            Disp_Name_Of (Get_Plus_Terminal (Decl));
+            Disp_Name_Of (Ctxt, Get_Plus_Terminal (Decl));
             Term := Get_Minus_Terminal (Decl);
             if Term /= Null_Iir then
-               Put (" to ");
-               Disp_Name_Of (Term);
+               Disp_Token (Ctxt, Tok_To);
+               Disp_Name_Of (Ctxt, Term);
             end if;
          when Iir_Kind_Free_Quantity_Declaration =>
-            Put (": ");
-            Disp_Type (Get_Type (Decl));
+            Disp_Token (Ctxt, Tok_Colon);
+            Disp_Subtype_Indication
+              (Ctxt, Or_Else (Get_Subtype_Indication (Decl), Get_Type (Decl)));
             Expr := Get_Default_Value (Decl);
             if Expr /= Null_Iir then
-               Put (":= ");
-               Disp_Expression (Expr);
+               Disp_Token (Ctxt, Tok_Assign);
+               Print (Ctxt, Expr);
             end if;
          when others =>
             raise Program_Error;
       end case;
-      Put (';');
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Quantity_Declaration;
 
-   procedure Disp_Terminal_Declaration (Decl: Iir) is
+   procedure Disp_Terminal_Declaration (Ctxt : in out Ctxt_Class; Decl: Iir)
+   is
+      Ndecl : Iir;
    begin
-      Put ("terminal ");
-      Disp_Name_Of (Decl);
-      Put (": ");
-      Disp_Nature (Get_Nature (Decl));
-      Put (';');
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Terminal);
+      Disp_Name_Of (Ctxt, Decl);
+      Ndecl := Decl;
+      while Get_Has_Identifier_List (Ndecl) loop
+         Disp_Token (Ctxt, Tok_Comma);
+         Ndecl := Get_Chain (Ndecl);
+         Disp_Name_Of (Ctxt, Ndecl);
+      end loop;
+      Disp_Token (Ctxt, Tok_Colon);
+      Disp_Subnature_Indication (Ctxt, Get_Nature (Decl));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Terminal_Declaration;
 
-   procedure Disp_Object_Declaration (Decl: Iir)
+   procedure Disp_Object_Declaration (Ctxt : in out Ctxt_Class; Decl: Iir)
    is
       Next_Decl : Iir;
    begin
+      Start_Hbox (Ctxt);
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
             if Get_Shared_Flag (Decl) then
-               Put ("shared ");
+               Disp_Token (Ctxt, Tok_Shared);
             end if;
-            Put ("variable ");
+            Disp_Token (Ctxt, Tok_Variable);
          when Iir_Kind_Constant_Declaration =>
-            Put ("constant ");
+            Disp_Token (Ctxt, Tok_Constant);
          when Iir_Kind_Signal_Declaration =>
-            Put ("signal ");
+            Disp_Token (Ctxt, Tok_Signal);
          when Iir_Kind_File_Declaration =>
-            Disp_File_Declaration (Decl);
+            Disp_File_Declaration (Ctxt, Decl);
+            Close_Hbox (Ctxt);
             return;
          when others =>
             raise Internal_Error;
       end case;
-      Disp_Name_Of (Decl);
+      Disp_Name_Of (Ctxt, Decl);
       Next_Decl := Decl;
       while Get_Has_Identifier_List (Next_Decl) loop
          Next_Decl := Get_Chain (Next_Decl);
-         Put (", ");
-         Disp_Name_Of (Next_Decl);
+         Disp_Token (Ctxt, Tok_Comma);
+         Disp_Name_Of (Ctxt, Next_Decl);
       end loop;
-      Put (": ");
-      Disp_Subtype_Indication (Get_Subtype_Indication (Decl));
+      Disp_Token (Ctxt, Tok_Colon);
+      Disp_Subtype_Indication (Ctxt, Get_Subtype_Indication (Decl));
       if Get_Kind (Decl) = Iir_Kind_Signal_Declaration then
-         Disp_Signal_Kind (Decl);
+         Disp_Signal_Kind (Ctxt, Decl);
       end if;
 
       if Get_Default_Value (Decl) /= Null_Iir then
-         Put (" := ");
-         Disp_Expression (Get_Default_Value (Decl));
+         Disp_Token (Ctxt, Tok_Assign);
+         Print (Ctxt, Get_Default_Value (Decl));
       end if;
-      Put_Line (";");
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Object_Declaration;
 
-   procedure Disp_Pure (Subprg : Iir) is
+   procedure Disp_Pure (Ctxt : in out Ctxt_Class; Subprg : Iir) is
    begin
       if Get_Pure_Flag (Subprg) then
-         Put ("pure");
+         Disp_Token (Ctxt, Tok_Pure);
       else
-         Put ("impure");
+         Disp_Token (Ctxt, Tok_Impure);
       end if;
    end Disp_Pure;
 
-   procedure Disp_Subprogram_Declaration (Subprg: Iir)
+   procedure Disp_Subprogram_Declaration
+     (Ctxt : in out Ctxt_Class; Subprg: Iir; Implicit : Boolean := False)
    is
-      Start : constant Count := Col;
-      Implicit : constant Boolean := Is_Implicit_Subprogram (Subprg);
       Inter : Iir;
    begin
-      if Implicit
-        and then
-        Get_Implicit_Definition (Subprg) /= Iir_Predefined_Now_Function
-      then
+      if Implicit then
          Put ("-- ");
       end if;
 
@@ -1474,41 +1476,32 @@ package body Vhdl.Disp_Vhdl is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Interface_Function_Declaration =>
             if Get_Has_Pure (Subprg) then
-               Disp_Pure (Subprg);
-               Put (' ');
+               Disp_Pure (Ctxt, Subprg);
             end if;
-            Put ("function");
+            Disp_Token (Ctxt, Tok_Function);
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Interface_Procedure_Declaration =>
-            Put ("procedure");
+            Disp_Token (Ctxt, Tok_Procedure);
          when others =>
             raise Internal_Error;
       end case;
 
-      Put (' ');
-      Disp_Function_Name (Subprg);
+      Disp_Function_Name (Ctxt, Subprg);
 
       if Get_Has_Parameter (Subprg) then
-         Put (' ');
-         Put ("parameter");
+         Disp_Token (Ctxt, Tok_Parameter);
       end if;
 
       Inter := Get_Interface_Declaration_Chain (Subprg);
-      if Implicit then
-         Disp_Interface_Chain (Inter, "", Start);
-      else
-         Disp_Interface_Chain (Inter, "", 0);
-      end if;
+      Disp_Interface_Chain (Ctxt, Inter);
 
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Interface_Function_Declaration =>
-            Put (" return ");
-            if Implicit then
-               Disp_Type (Get_Return_Type (Subprg));
-            else
-               Disp_Name (Get_Return_Type_Mark (Subprg));
-            end if;
+            Disp_Token (Ctxt, Tok_Return);
+            Disp_Subtype_Indication
+              (Ctxt, Or_Else (Get_Return_Type_Mark (Subprg),
+                              Get_Return_Type (Subprg)));
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Interface_Procedure_Declaration =>
             null;
@@ -1517,227 +1510,249 @@ package body Vhdl.Disp_Vhdl is
       end case;
    end Disp_Subprogram_Declaration;
 
-   procedure Disp_Subprogram_Body (Subprg : Iir)
-   is
-      Indent : constant Count := Col;
+   procedure Disp_Subprogram_Body (Ctxt : in out Ctxt_Class; Subprg : Iir) is
    begin
-      Disp_Declaration_Chain (Subprg, Indent + Indentation);
-      Set_Col (Indent);
-      Put_Line ("begin");
-      Set_Col (Indent + Indentation);
-      Disp_Sequential_Statements (Get_Sequential_Statement_Chain (Subprg));
-      Set_Col (Indent);
+      Start_Vbox (Ctxt);
+      Disp_Declaration_Chain (Ctxt, Subprg);
+      Close_Vbox (Ctxt);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Begin);
+      Close_Hbox (Ctxt);
+      Start_Vbox (Ctxt);
+      Disp_Sequential_Statements
+        (Ctxt, Get_Sequential_Statement_Chain (Subprg));
+      Close_Vbox (Ctxt);
       if Get_Kind (Subprg) = Iir_Kind_Function_Body then
-         Disp_End (Subprg, "function");
+         Disp_End (Ctxt, Subprg, Tok_Function);
       else
-         Disp_End (Subprg, "procedure");
+         Disp_End (Ctxt, Subprg, Tok_Procedure);
       end if;
    end Disp_Subprogram_Body;
 
-   procedure Disp_Instantiation_List (Insts: Iir_Flist) is
+   procedure Disp_Instantiation_List
+     (Ctxt : in out Ctxt_Class; Insts: Iir_Flist)
+   is
       El : Iir;
    begin
-      if Insts = Iir_Flist_All then
-         Put ("all");
-      elsif Insts = Iir_Flist_Others then
-         Put ("others");
-      else
-         for I in Flist_First .. Flist_Last (Insts) loop
-            El := Get_Nth_Element (Insts, I);
-            if I /= Flist_First then
-               Put (", ");
-            end if;
-            Disp_Name (El);
-         end loop;
-      end if;
+      case Insts is
+         when Iir_Flist_All =>
+            Disp_Token (Ctxt, Tok_All);
+         when Iir_Flist_Others =>
+            Disp_Token (Ctxt, Tok_Others);
+         when others =>
+            for I in Flist_First .. Flist_Last (Insts) loop
+               El := Get_Nth_Element (Insts, I);
+               if I /= Flist_First then
+                  Disp_Token (Ctxt, Tok_Comma);
+               end if;
+               Print (Ctxt, El);
+            end loop;
+      end case;
    end Disp_Instantiation_List;
 
    procedure Disp_Configuration_Specification
-     (Spec : Iir_Configuration_Specification)
-   is
-      Indent : Count;
+     (Ctxt : in out Ctxt_Class; Spec : Iir_Configuration_Specification) is
    begin
-      Indent := Col;
-      Put ("for ");
-      Disp_Instantiation_List (Get_Instantiation_List (Spec));
-      Put (": ");
-      Disp_Name (Get_Component_Name (Spec));
-      New_Line;
-      Disp_Binding_Indication (Get_Binding_Indication (Spec),
-                               Indent + Indentation);
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_For);
+      Disp_Instantiation_List (Ctxt, Get_Instantiation_List (Spec));
+      Disp_Token (Ctxt, Tok_Colon);
+      Print (Ctxt, Get_Component_Name (Spec));
+      Disp_Binding_Indication (Ctxt, Get_Binding_Indication (Spec));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Configuration_Specification;
 
    procedure Disp_Disconnection_Specification
-     (Dis : Iir_Disconnection_Specification)
-   is
+     (Ctxt : in out Ctxt_Class; Dis : Iir_Disconnection_Specification) is
    begin
-      Put ("disconnect ");
-      Disp_Instantiation_List (Get_Signal_List (Dis));
-      Put (": ");
-      Disp_Name (Get_Type_Mark (Dis));
-      Put (" after ");
-      Disp_Expression (Get_Expression (Dis));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Disconnect);
+      Disp_Instantiation_List (Ctxt, Get_Signal_List (Dis));
+      Disp_Token (Ctxt, Tok_Colon);
+      Print (Ctxt, Get_Type_Mark (Dis));
+      Disp_Token (Ctxt, Tok_After);
+      Print (Ctxt, Get_Expression (Dis));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Disconnection_Specification;
 
-   procedure Disp_Attribute_Declaration (Attr : Iir_Attribute_Declaration)
-   is
+   procedure Disp_Attribute_Declaration
+     (Ctxt : in out Ctxt_Class; Attr : Iir_Attribute_Declaration) is
    begin
-      Put ("attribute ");
-      Disp_Identifier (Attr);
-      Put (": ");
-      Disp_Name (Get_Type_Mark (Attr));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Attribute);
+      Disp_Identifier (Ctxt, Attr);
+      Disp_Token (Ctxt, Tok_Colon);
+      Print (Ctxt, Get_Type_Mark (Attr));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Attribute_Declaration;
 
-   procedure Disp_Attribute_Value (Attr : Iir) is
+   procedure Disp_Attribute_Value (Ctxt : in out Ctxt_Class; Attr : Iir) is
    begin
-      Disp_Name_Of (Get_Designated_Entity (Attr));
+      Disp_Name_Of (Ctxt, Get_Designated_Entity (Attr));
       Put ("'");
       Disp_Identifier
-        (Get_Attribute_Designator (Get_Attribute_Specification (Attr)));
+        (Ctxt, Get_Attribute_Designator (Get_Attribute_Specification (Attr)));
    end Disp_Attribute_Value;
 
-   procedure Disp_Attribute_Name (Attr : Iir)
+   procedure Disp_Attribute_Name (Ctxt : in out Ctxt_Class; Attr : Iir)
    is
       Sig : constant Iir := Get_Attribute_Signature (Attr);
    begin
-      Disp_Name (Get_Prefix (Attr));
+      Print (Ctxt, Get_Prefix (Attr));
       if Sig /= Null_Iir then
-         Disp_Signature (Sig);
+         Disp_Signature (Ctxt, Sig);
       end if;
-      Put ("'");
-      Disp_Ident (Get_Identifier (Attr));
+      Disp_Token (Ctxt, Tok_Tick);
+      Disp_Ident (Ctxt, Get_Identifier (Attr));
    end Disp_Attribute_Name;
 
-   procedure Disp_Entity_Kind (Tok : Vhdl.Tokens.Token_Type) is
+   procedure Disp_Entity_Kind (Ctxt : in out Ctxt_Class; Tok : Token_Type) is
    begin
-      Put (Vhdl.Tokens.Image (Tok));
+      Disp_Token (Ctxt, Tok);
    end Disp_Entity_Kind;
 
-   procedure Disp_Entity_Name_List (List : Iir_Flist)
+   procedure Disp_Entity_Name_List (Ctxt : in out Ctxt_Class; List : Iir_Flist)
    is
       El : Iir;
    begin
-      if List = Iir_Flist_All then
-         Put ("all");
-      elsif List = Iir_Flist_Others then
-         Put ("others");
-      else
-         for I in Flist_First .. Flist_Last (List) loop
-            El := Get_Nth_Element (List, I);
-            if I /= Flist_First then
-               Put (", ");
-            end if;
-            if Get_Kind (El) = Iir_Kind_Signature then
-               Disp_Signature (El);
-            else
-               Disp_Name (El);
-            end if;
-         end loop;
-      end if;
+      case List is
+         when Iir_Flist_All =>
+            Disp_Token (Ctxt, Tok_All);
+         when Iir_Flist_Others =>
+            Disp_Token (Ctxt, Tok_Others);
+         when others =>
+            for I in Flist_First .. Flist_Last (List) loop
+               El := Get_Nth_Element (List, I);
+               if I /= Flist_First then
+                  Disp_Token (Ctxt, Tok_Comma);
+               end if;
+               Print (Ctxt, El);
+            end loop;
+      end case;
    end Disp_Entity_Name_List;
 
-   procedure Disp_Attribute_Specification (Attr : Iir_Attribute_Specification)
-   is
+   procedure Disp_Attribute_Specification
+     (Ctxt : in out Ctxt_Class; Attr : Iir_Attribute_Specification) is
    begin
-      Put ("attribute ");
-      Disp_Identifier (Get_Attribute_Designator (Attr));
-      Put (" of ");
-      Disp_Entity_Name_List (Get_Entity_Name_List (Attr));
-      Put (": ");
-      Disp_Entity_Kind (Get_Entity_Class (Attr));
-      Put (" is ");
-      Disp_Expression (Get_Expression (Attr));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Attribute);
+      Disp_Identifier (Ctxt, Get_Attribute_Designator (Attr));
+      Disp_Token (Ctxt, Tok_Of);
+      Disp_Entity_Name_List (Ctxt, Get_Entity_Name_List (Attr));
+      Disp_Token (Ctxt, Tok_Colon);
+      Disp_Entity_Kind (Ctxt, Get_Entity_Class (Attr));
+      Disp_Token (Ctxt, Tok_Is);
+      Print (Ctxt, Get_Expression (Attr));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Attribute_Specification;
 
    procedure Disp_Protected_Type_Body
-     (Bod : Iir_Protected_Type_Body; Indent : Count)
-   is
+     (Ctxt : in out Ctxt_Class; Bod : Iir_Protected_Type_Body) is
    begin
-      Put ("type ");
-      Disp_Identifier (Bod);
-      Put (" is protected body");
-      New_Line;
-      Disp_Declaration_Chain (Bod, Indent + Indentation);
-      Set_Col (Indent);
-      Disp_End (Bod, "protected body");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Type);
+      Disp_Identifier (Ctxt, Bod);
+      Disp_Token (Ctxt, Tok_Is);
+      Disp_Token (Ctxt, Tok_Protected, Tok_Body);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Declaration_Chain (Ctxt, Bod);
+      Close_Vbox (Ctxt);
+
+      Disp_End (Ctxt, Bod, Tok_Protected, Tok_Body);
    end Disp_Protected_Type_Body;
 
-   procedure Disp_Group_Template_Declaration (Decl : Iir)
+   procedure Disp_Group_Template_Declaration
+     (Ctxt : in out Ctxt_Class; Decl : Iir)
    is
-      use Vhdl.Tokens;
       Ent : Iir;
    begin
-      Put ("group ");
-      Disp_Identifier (Decl);
-      Put (" is (");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Group);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is, Tok_Left_Paren);
       Ent := Get_Entity_Class_Entry_Chain (Decl);
       loop
-         Disp_Entity_Kind (Get_Entity_Class (Ent));
+         Disp_Entity_Kind (Ctxt, Get_Entity_Class (Ent));
          Ent := Get_Chain (Ent);
          exit when Ent = Null_Iir;
          if Get_Entity_Class (Ent) = Tok_Box then
-            Put (" <>");
+            Disp_Token (Ctxt, Tok_Box);
             exit;
          else
-            Put (", ");
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
       end loop;
-      Put_Line (");");
+      Disp_Token (Ctxt, Tok_Right_Paren, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Group_Template_Declaration;
 
-   procedure Disp_Group_Declaration (Decl : Iir)
+   procedure Disp_Group_Declaration (Ctxt : in out Ctxt_Class; Decl : Iir)
    is
       List : Iir_Flist;
       El : Iir;
    begin
-      Put ("group ");
-      Disp_Identifier (Decl);
-      Put (" : ");
-      Disp_Name (Get_Group_Template_Name (Decl));
-      Put (" (");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Group);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Colon);
+      Print (Ctxt, Get_Group_Template_Name (Decl));
+      Disp_Token (Ctxt, Tok_Left_Paren);
       List := Get_Group_Constituent_List (Decl);
       for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
          if I /= 0 then
-            Put (", ");
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
-         Disp_Name_Of (El);
+         Disp_Name_Of (Ctxt, El);
       end loop;
-      Put_Line (");");
+      Disp_Token (Ctxt, Tok_Right_Paren, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Group_Declaration;
 
-   procedure Disp_PSL_HDL_Expr (N : PSL.Nodes.HDL_Node) is
+   procedure Disp_PSL_HDL_Expr
+     (N : PSL.Nodes.HDL_Node) is
    begin
       Disp_Expression (Iir (N));
    end Disp_PSL_HDL_Expr;
 
-   procedure Disp_Psl_Expression (Expr : PSL_Node) is
+   procedure Disp_Psl_Expression
+     (Ctxt : in out Ctxt_Class; Expr : PSL_Node)  is
    begin
       PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
+      --  Hack.
+      Disp_Char (Ctxt, ' ');
       PSL.Prints.Print_Property (Expr);
    end Disp_Psl_Expression;
 
-   procedure Disp_Psl_Sequence (Expr : PSL_Node) is
+   procedure Disp_Psl_Sequence
+     (Ctxt : in out Ctxt_Class; Expr : PSL_Node) is
    begin
       PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
+      --  Hack.
+      Disp_Char (Ctxt, ' ');
       PSL.Prints.Print_Sequence (Expr);
    end Disp_Psl_Sequence;
 
-   procedure Disp_Psl_Default_Clock (Stmt : Iir) is
+   procedure Disp_Psl_Default_Clock (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
       if Vhdl_Std < Vhdl_08 then
          Put ("--psl ");
       end if;
-      Put ("default clock is ");
-      Disp_Psl_Expression (Get_Psl_Boolean (Stmt));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Psl_Default, Tok_Psl_Clock);
+      Disp_Token (Ctxt, Tok_Is);
+      Disp_Psl_Expression (Ctxt, Get_Psl_Boolean (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Psl_Default_Clock;
 
-   procedure Disp_Psl_Declaration (Stmt : Iir)
+   procedure Disp_Psl_Declaration (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
       use PSL.Nodes;
       Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
@@ -1748,21 +1763,21 @@ package body Vhdl.Disp_Vhdl is
       case Get_Kind (Decl) is
          when N_Property_Declaration =>
             Put ("property ");
-            Disp_Ident (Get_Identifier (Decl));
+            Disp_Ident (Ctxt, Get_Identifier (Decl));
             Put (" is ");
-            Disp_Psl_Expression (Get_Property (Decl));
+            Disp_Psl_Expression (Ctxt, Get_Property (Decl));
             Put_Line (";");
          when N_Sequence_Declaration =>
             Put ("sequence ");
-            Disp_Ident (Get_Identifier (Decl));
+            Disp_Ident (Ctxt, Get_Identifier (Decl));
             Put (" is ");
-            Disp_Psl_Sequence (Get_Sequence (Decl));
+            Disp_Psl_Sequence (Ctxt, Get_Sequence (Decl));
             Put_Line (";");
          when N_Endpoint_Declaration =>
             Put ("endpoint ");
-            Disp_Ident (Get_Identifier (Decl));
+            Disp_Ident (Ctxt, Get_Identifier (Decl));
             Put (" is ");
-            Disp_Psl_Sequence (Get_Sequence (Decl));
+            Disp_Psl_Sequence (Ctxt, Get_Sequence (Decl));
             Put_Line (";");
             Disp_PSL_NFA (Get_PSL_NFA (Stmt));
          when others =>
@@ -1770,78 +1785,92 @@ package body Vhdl.Disp_Vhdl is
       end case;
    end Disp_Psl_Declaration;
 
-   procedure Disp_Declaration_Chain (Parent : Iir; Indent: Count)
+   procedure Disp_Declaration_Chain
+     (Ctxt : in out Ctxt_Class; Parent : Iir)
    is
       Decl: Iir;
    begin
       Decl := Get_Declaration_Chain (Parent);
       while Decl /= Null_Iir loop
-         Set_Col (Indent);
          case Get_Kind (Decl) is
             when Iir_Kind_Type_Declaration =>
-               Disp_Type_Declaration (Decl);
+               Disp_Type_Declaration (Ctxt, Decl);
             when Iir_Kind_Anonymous_Type_Declaration =>
-               Disp_Anonymous_Type_Declaration (Decl);
+               Disp_Anonymous_Type_Declaration (Ctxt, Decl);
             when Iir_Kind_Subtype_Declaration =>
-               Disp_Subtype_Declaration (Decl);
+               Disp_Subtype_Declaration (Ctxt, Decl);
             when Iir_Kind_Use_Clause =>
-               Disp_Use_Clause (Decl);
+               Disp_Use_Clause (Ctxt, Decl);
             when Iir_Kind_Component_Declaration =>
-               Disp_Component_Declaration (Decl);
+               Disp_Component_Declaration (Ctxt, Decl);
             when Iir_Kind_File_Declaration
               | Iir_Kind_Signal_Declaration
               | Iir_Kind_Constant_Declaration
               | Iir_Kind_Variable_Declaration =>
-               Disp_Object_Declaration (Decl);
+               Disp_Object_Declaration (Ctxt, Decl);
                while Get_Has_Identifier_List (Decl) loop
                   Decl := Get_Chain (Decl);
                end loop;
             when Iir_Kind_Object_Alias_Declaration =>
-               Disp_Object_Alias_Declaration (Decl);
+               Disp_Object_Alias_Declaration (Ctxt, Decl);
             when Iir_Kind_Terminal_Declaration =>
-               Disp_Terminal_Declaration (Decl);
+               Disp_Terminal_Declaration (Ctxt, Decl);
+               while Get_Has_Identifier_List (Decl) loop
+                  Decl := Get_Chain (Decl);
+               end loop;
             when Iir_Kinds_Quantity_Declaration =>
-               Disp_Quantity_Declaration (Decl);
+               Disp_Quantity_Declaration (Ctxt, Decl);
             when Iir_Kind_Nature_Declaration =>
-               Disp_Nature_Declaration (Decl);
+               Disp_Nature_Declaration (Ctxt, Decl);
             when Iir_Kind_Non_Object_Alias_Declaration =>
-               Disp_Non_Object_Alias_Declaration (Decl);
+               Disp_Non_Object_Alias_Declaration (Ctxt, Decl);
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
-               Disp_Subprogram_Declaration (Decl);
-               if not Get_Has_Body (Decl) then
-                  Put_Line (";");
-               end if;
+               declare
+                  Implicit : constant Boolean :=
+                    Is_Implicit_Subprogram (Decl)
+                    and then (Get_Implicit_Definition (Decl)
+                                /= Iir_Predefined_Now_Function);
+               begin
+                  if not Implicit or else Flag_Implicit then
+                     Start_Hbox (Ctxt);
+                     Disp_Subprogram_Declaration (Ctxt, Decl, Implicit);
+                     if not Get_Has_Body (Decl) then
+                        Disp_Token (Ctxt, Tok_Semi_Colon);
+                        Close_Hbox (Ctxt);
+                     end if;
+                  end if;
+               end;
             when Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                --  The declaration was just displayed.
-               Put_Line ("is");
-               Set_Col (Indent);
-               Disp_Subprogram_Body (Decl);
+               Disp_Token (Ctxt, Tok_Is);
+               Close_Hbox (Ctxt);
+               Disp_Subprogram_Body (Ctxt, Decl);
             when Iir_Kind_Protected_Type_Body =>
-               Disp_Protected_Type_Body (Decl, Indent);
+               Disp_Protected_Type_Body (Ctxt, Decl);
             when Iir_Kind_Configuration_Specification =>
-               Disp_Configuration_Specification (Decl);
+               Disp_Configuration_Specification (Ctxt, Decl);
             when Iir_Kind_Disconnection_Specification =>
-               Disp_Disconnection_Specification (Decl);
+               Disp_Disconnection_Specification (Ctxt, Decl);
             when Iir_Kind_Attribute_Declaration =>
-               Disp_Attribute_Declaration (Decl);
+               Disp_Attribute_Declaration (Ctxt, Decl);
             when Iir_Kind_Attribute_Specification =>
-               Disp_Attribute_Specification (Decl);
+               Disp_Attribute_Specification (Ctxt, Decl);
             when Iir_Kind_Signal_Attribute_Declaration =>
                null;
             when Iir_Kind_Group_Template_Declaration =>
-               Disp_Group_Template_Declaration (Decl);
+               Disp_Group_Template_Declaration (Ctxt, Decl);
             when Iir_Kind_Group_Declaration =>
-               Disp_Group_Declaration (Decl);
+               Disp_Group_Declaration (Ctxt, Decl);
             when Iir_Kind_Package_Declaration =>
-               Disp_Package_Declaration (Decl);
+               Disp_Package_Declaration (Ctxt, Decl);
             when Iir_Kind_Package_Body =>
-               Disp_Package_Body (Decl);
+               Disp_Package_Body (Ctxt, Decl);
             when Iir_Kind_Package_Instantiation_Declaration =>
-               Disp_Package_Instantiation_Declaration (Decl);
+               Disp_Package_Instantiation_Declaration (Ctxt, Decl);
             when Iir_Kind_Psl_Default_Clock =>
-               Disp_Psl_Default_Clock (Decl);
+               Disp_Psl_Default_Clock (Ctxt, Decl);
             when others =>
                Error_Kind ("disp_declaration_chain", Decl);
          end case;
@@ -1849,7 +1878,8 @@ package body Vhdl.Disp_Vhdl is
       end loop;
    end Disp_Declaration_Chain;
 
-   procedure Disp_Waveform (Chain : Iir_Waveform_Element)
+   procedure Disp_Waveform
+     (Ctxt : in out Ctxt_Class; Chain : Iir_Waveform_Element)
    is
       We: Iir_Waveform_Element;
       Val : Iir;
@@ -1858,81 +1888,95 @@ package body Vhdl.Disp_Vhdl is
          Put ("null after {disconnection_time}");
          return;
       elsif Get_Kind (Chain) = Iir_Kind_Unaffected_Waveform then
-         Put ("unaffected");
+         Disp_Token (Ctxt, Tok_Unaffected);
          return;
       end if;
       We := Chain;
       while We /= Null_Iir loop
          if We /= Chain then
-            Put (", ");
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
          Val := Get_We_Value (We);
-         Disp_Expression (Val);
+         Print (Ctxt, Val);
          if Get_Time (We) /= Null_Iir then
-            Put (" after ");
-            Disp_Expression (Get_Time (We));
+            Disp_Token (Ctxt, Tok_After);
+            Print (Ctxt, Get_Time (We));
          end if;
          We := Get_Chain (We);
       end loop;
    end Disp_Waveform;
 
-   procedure Disp_Delay_Mechanism (Stmt: Iir) is
+   procedure Disp_Delay_Mechanism (Ctxt : in out Ctxt_Class; Stmt: Iir) is
       Expr: Iir;
    begin
       case Get_Delay_Mechanism (Stmt) is
          when Iir_Transport_Delay =>
-            Put ("transport ");
+            Disp_Token (Ctxt, Tok_Transport);
          when Iir_Inertial_Delay =>
             Expr := Get_Reject_Time_Expression (Stmt);
             if Expr /= Null_Iir then
-               Put ("reject ");
-               Disp_Expression (Expr);
-               Put (" inertial ");
+               Disp_Token (Ctxt, Tok_Reject);
+               Print (Ctxt, Expr);
+               Disp_Token (Ctxt, Tok_Inertial);
             end if;
       end case;
    end Disp_Delay_Mechanism;
 
-   procedure Disp_Simple_Signal_Assignment (Stmt: Iir) is
+   procedure Disp_Label (Ctxt : in out Ctxt_Class; Stmt : Iir)
+   is
+      Label: constant Name_Id := Get_Label (Stmt);
    begin
-      Disp_Expression (Get_Target (Stmt));
-      Put (" <= ");
-      Disp_Delay_Mechanism (Stmt);
-      Disp_Waveform (Get_Waveform_Chain (Stmt));
-      Put_Line (";");
+      if Label /= Null_Identifier then
+         Disp_Ident (Ctxt, Label);
+         Disp_Token (Ctxt, Tok_Colon);
+      end if;
+   end Disp_Label;
+
+   procedure Disp_Simple_Signal_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Print (Ctxt, Get_Target (Stmt));
+      Disp_Token (Ctxt, Tok_Less_Equal);
+      Disp_Delay_Mechanism (Ctxt, Stmt);
+      Disp_Waveform (Ctxt, Get_Waveform_Chain (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Simple_Signal_Assignment;
 
-   procedure Disp_Conditional_Waveform (Chain : Iir)
+   procedure Disp_Conditional_Waveform (Ctxt : in out Ctxt_Class; Chain : Iir)
    is
       Cond_Wf : Iir;
-      Indent : Count;
       Expr : Iir;
    begin
-      Indent := Col;
-      Set_Col (Indent);
       Cond_Wf := Chain;
       while Cond_Wf /= Null_Iir loop
-         Disp_Waveform (Get_Waveform_Chain (Cond_Wf));
+         Disp_Waveform (Ctxt, Get_Waveform_Chain (Cond_Wf));
          Expr := Get_Condition (Cond_Wf);
          if Expr /= Null_Iir then
-            Put (" when ");
-            Disp_Expression (Expr);
-            Put_Line (" else");
-            Set_Col (Indent);
+            Disp_Token (Ctxt, Tok_When);
+            Print (Ctxt, Expr);
+            Disp_Token (Ctxt, Tok_Else);
          end if;
          Cond_Wf := Get_Chain (Cond_Wf);
       end loop;
    end Disp_Conditional_Waveform;
 
-   procedure Disp_Conditional_Signal_Assignment (Stmt: Iir) is
+   procedure Disp_Conditional_Signal_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
-      Disp_Expression (Get_Target (Stmt));
-      Put (" <= ");
-      Disp_Delay_Mechanism (Stmt);
-      Disp_Conditional_Waveform (Get_Conditional_Waveform_Chain (Stmt));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Print (Ctxt, Get_Target (Stmt));
+      Disp_Token (Ctxt, Tok_Less_Equal);
+      Disp_Delay_Mechanism (Ctxt, Stmt);
+      Disp_Conditional_Waveform (Ctxt, Get_Conditional_Waveform_Chain (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Conditional_Signal_Assignment;
 
-   procedure Disp_Selected_Waveforms (Stmt : Iir; Indent : Count)
+   procedure Disp_Selected_Waveforms
+     (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
       Assoc_Chain : constant Iir := Get_Selected_Waveform_Chain (Stmt);
       Assoc: Iir;
@@ -1940,447 +1984,581 @@ package body Vhdl.Disp_Vhdl is
       Assoc := Assoc_Chain;
       while Assoc /= Null_Iir loop
          if Assoc /= Assoc_Chain then
-            Put_Line (",");
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
-         Set_Col (Indent + Indentation);
-         Disp_Waveform (Get_Associated_Chain (Assoc));
-         Put (" when ");
-         Disp_Choice (Assoc);
+         Disp_Waveform (Ctxt, Get_Associated_Chain (Assoc));
+         Disp_Token (Ctxt, Tok_When);
+         Disp_Choice (Ctxt, Assoc);
       end loop;
-      Put_Line (";");
+      Disp_Token (Ctxt, Tok_Semi_Colon);
    end Disp_Selected_Waveforms;
 
-   procedure Disp_Selected_Waveform_Assignment (Stmt: Iir; Indent : Count) is
+   procedure Disp_Selected_Waveform_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
       Put ("with ");
-      Disp_Expression (Get_Expression (Stmt));
+      Print (Ctxt, Get_Expression (Stmt));
       Put (" select ");
-      Disp_Expression (Get_Target (Stmt));
+      Print (Ctxt, Get_Target (Stmt));
       Put (" <= ");
-      Disp_Delay_Mechanism (Stmt);
-      Disp_Selected_Waveforms (Stmt, Indent);
+      Disp_Delay_Mechanism (Ctxt, Stmt);
+      Disp_Selected_Waveforms (Ctxt, Stmt);
+      Close_Hbox (Ctxt);
    end Disp_Selected_Waveform_Assignment;
 
-   procedure Disp_Variable_Assignment (Stmt: Iir) is
+   procedure Disp_Variable_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
-      Disp_Expression (Get_Target (Stmt));
-      Put (" := ");
-      Disp_Expression (Get_Expression (Stmt));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Print (Ctxt, Get_Target (Stmt));
+      Disp_Token (Ctxt, Tok_Assign);
+      Print (Ctxt, Get_Expression (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Variable_Assignment;
 
-   procedure Disp_Conditional_Expression (Exprs : Iir)
+   procedure Disp_Conditional_Expression
+     (Ctxt : in out Ctxt_Class; Exprs : Iir)
    is
       Expr : Iir;
       Cond : Iir;
    begin
       Expr := Exprs;
       loop
-         Disp_Expression (Get_Expression (Expr));
+         Print (Ctxt, Get_Expression (Expr));
          Cond := Get_Condition (Expr);
          if Cond /= Null_Iir then
-            Put (" when ");
-            Disp_Expression (Cond);
+            Disp_Token (Ctxt, Tok_When);
+            Print (Ctxt, Cond);
          end if;
          Expr := Get_Chain (Expr);
          exit when Expr = Null_Iir;
-         Put (" else ");
+         Disp_Token (Ctxt, Tok_Else);
       end loop;
    end Disp_Conditional_Expression;
 
-   procedure Disp_Conditional_Variable_Assignment (Stmt: Iir) is
+   procedure Disp_Conditional_Variable_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
-      Disp_Expression (Get_Target (Stmt));
-      Put (" := ");
-      Disp_Conditional_Expression (Get_Conditional_Expression (Stmt));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Print (Ctxt, Get_Target (Stmt));
+      Disp_Token (Ctxt, Tok_Assign);
+      Disp_Conditional_Expression (Ctxt, Get_Conditional_Expression (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Conditional_Variable_Assignment;
 
-   procedure Disp_Label (Stmt : Iir)
-   is
-      Label: constant Name_Id := Get_Label (Stmt);
-   begin
-      if Label /= Null_Identifier then
-         Disp_Ident (Label);
-         Put (": ");
-      end if;
-   end Disp_Label;
-
-   procedure Disp_Postponed (Stmt : Iir) is
+   procedure Disp_Postponed (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
       if Get_Postponed_Flag (Stmt) then
-         Put ("postponed ");
+         Disp_Token (Ctxt, Tok_Postponed);
       end if;
    end Disp_Postponed;
 
-   procedure Disp_Concurrent_Simple_Signal_Assignment (Stmt: Iir)
-   is
-      Indent: Count;
+   procedure Disp_Concurrent_Simple_Signal_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
-      Disp_Label (Stmt);
-      Disp_Postponed (Stmt);
-      Disp_Expression (Get_Target (Stmt));
-      Put (" <= ");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Postponed (Ctxt, Stmt);
+      Print (Ctxt, Get_Target (Stmt));
+      Disp_Token (Ctxt, Tok_Less_Equal);
       if Get_Guard (Stmt) /= Null_Iir then
-         Put ("guarded ");
+         Disp_Token (Ctxt, Tok_Guarded);
       end if;
-      Disp_Delay_Mechanism (Stmt);
-      Indent := Col;
-      Set_Col (Indent);
-      Disp_Waveform (Get_Waveform_Chain (Stmt));
+      Disp_Delay_Mechanism (Ctxt, Stmt);
+      Disp_Waveform (Ctxt, Get_Waveform_Chain (Stmt));
 
-      Put_Line (";");
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Concurrent_Simple_Signal_Assignment;
 
-   procedure Disp_Concurrent_Selected_Signal_Assignment (Stmt: Iir)
-   is
-      Indent: constant Count := Col;
+   procedure Disp_Concurrent_Selected_Signal_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
-      Set_Col (Indent);
-      Disp_Label (Stmt);
-      Disp_Postponed (Stmt);
-      Put ("with ");
-      Disp_Expression (Get_Expression (Stmt));
-      Put (" select ");
-      Disp_Expression (Get_Target (Stmt));
-      Put (" <= ");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Postponed (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_With);
+      Print (Ctxt, Get_Expression (Stmt));
+      Disp_Token (Ctxt, Tok_Select);
+      Print (Ctxt, Get_Target (Stmt));
+      Disp_Token (Ctxt, Tok_Less_Equal);
       if Get_Guard (Stmt) /= Null_Iir then
-         Put ("guarded ");
+         Disp_Token (Ctxt, Tok_Guarded);
       end if;
-      Disp_Delay_Mechanism (Stmt);
-      Disp_Selected_Waveforms (Stmt, Indent);
+      Disp_Delay_Mechanism (Ctxt, Stmt);
+      Disp_Selected_Waveforms (Ctxt, Stmt);
+      Close_Hbox (Ctxt);
    end Disp_Concurrent_Selected_Signal_Assignment;
 
-   procedure Disp_Concurrent_Conditional_Signal_Assignment (Stmt: Iir) is
+   procedure Disp_Concurrent_Conditional_Signal_Assignment
+     (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
-      Disp_Label (Stmt);
-      Disp_Postponed (Stmt);
-      Disp_Expression (Get_Target (Stmt));
-      Put (" <= ");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Postponed (Ctxt, Stmt);
+      Print (Ctxt, Get_Target (Stmt));
+      Disp_Token (Ctxt, Tok_Less_Equal);
       if Get_Guard (Stmt) /= Null_Iir then
-         Put ("guarded ");
+         Disp_Token (Ctxt, Tok_Guarded);
       end if;
-      Disp_Delay_Mechanism (Stmt);
-      Disp_Conditional_Waveform (Get_Conditional_Waveform_Chain (Stmt));
-      Put_Line (";");
+      Disp_Delay_Mechanism (Ctxt, Stmt);
+      Disp_Conditional_Waveform (Ctxt, Get_Conditional_Waveform_Chain (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Concurrent_Conditional_Signal_Assignment;
 
-   procedure Disp_Assertion_Statement (Stmt: Iir)
+   procedure Disp_Severity_Expression (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
-      Start: constant Count := Col;
-      Expr: Iir;
+      Expr : constant Iir := Get_Severity_Expression (Stmt);
    begin
+      if Expr /= Null_Iir then
+         Disp_Token (Ctxt, Tok_Severity);
+         Print (Ctxt, Expr);
+      end if;
+   end Disp_Severity_Expression;
+
+   procedure Disp_Report_Expression (Ctxt : in out Ctxt_Class; Stmt : Iir)
+   is
+      Expr : constant Iir := Get_Report_Expression (Stmt);
+   begin
+      if Expr /= Null_Iir then
+         Disp_Token (Ctxt, Tok_Report);
+         Print (Ctxt, Expr);
+      end if;
+   end Disp_Report_Expression;
+
+   procedure Disp_Assertion_Statement (Ctxt : in out Ctxt_Class; Stmt: Iir) is
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
       if Get_Kind (Stmt) = Iir_Kind_Concurrent_Assertion_Statement then
-         Disp_Label (Stmt);
-         Disp_Postponed (Stmt);
+         Disp_Postponed (Ctxt, Stmt);
       end if;
-      Put ("assert ");
-      Disp_Expression (Get_Assertion_Condition (Stmt));
-      Expr := Get_Report_Expression (Stmt);
-      if Expr /= Null_Iir then
-         Set_Col (Start + Indentation);
-         Put ("report ");
-         Disp_Expression (Expr);
-      end if;
-      Expr := Get_Severity_Expression (Stmt);
-      if Expr /= Null_Iir then
-         Set_Col (Start + Indentation);
-         Put ("severity ");
-         Disp_Expression (Expr);
-      end if;
-      Put_Line (";");
+      Disp_Token (Ctxt, Tok_Assert);
+      Print (Ctxt, Get_Assertion_Condition (Stmt));
+      Disp_Report_Expression (Ctxt, Stmt);
+      Disp_Severity_Expression (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Assertion_Statement;
 
-   procedure Disp_Report_Statement (Stmt: Iir)
-   is
-      Start: Count;
-      Expr: Iir;
+   procedure Disp_Report_Statement (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
-      Start := Col;
-      Put ("report ");
-      Expr := Get_Report_Expression (Stmt);
-      Disp_Expression (Expr);
-      Expr := Get_Severity_Expression (Stmt);
-      if Expr /= Null_Iir then
-         Set_Col (Start + Indentation);
-         Put ("severity ");
-         Disp_Expression (Expr);
-      end if;
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Report);
+      Print (Ctxt, Get_Report_Expression (Stmt));
+      Disp_Severity_Expression (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Report_Statement;
 
-   procedure Disp_Dyadic_Operator (Expr: Iir) is
+   function Get_Operator_Token (Op : Iir) return Token_Type is
+   begin
+      case Get_Kind (Op) is
+         when Iir_Kind_And_Operator
+           | Iir_Kind_Reduction_And_Operator =>
+            return Tok_And;
+         when Iir_Kind_Or_Operator
+           | Iir_Kind_Reduction_Or_Operator =>
+            return Tok_Or;
+         when Iir_Kind_Nand_Operator
+           | Iir_Kind_Reduction_Nand_Operator =>
+            return Tok_Nand;
+         when Iir_Kind_Nor_Operator
+           | Iir_Kind_Reduction_Nor_Operator =>
+            return Tok_Nor;
+         when Iir_Kind_Xor_Operator
+           | Iir_Kind_Reduction_Xor_Operator =>
+            return Tok_Xor;
+         when Iir_Kind_Xnor_Operator
+           | Iir_Kind_Reduction_Xnor_Operator =>
+            return Tok_Xnor;
+
+         when Iir_Kind_Equality_Operator =>
+            return Tok_Equal;
+         when Iir_Kind_Inequality_Operator =>
+            return Tok_Not_Equal;
+         when Iir_Kind_Less_Than_Operator =>
+            return Tok_Less;
+         when Iir_Kind_Less_Than_Or_Equal_Operator =>
+            return Tok_Less_Equal;
+         when Iir_Kind_Greater_Than_Operator =>
+            return Tok_Greater;
+         when Iir_Kind_Greater_Than_Or_Equal_Operator =>
+            return Tok_Greater_Equal;
+
+         when Iir_Kind_Match_Equality_Operator =>
+            return Tok_Match_Equal;
+         when Iir_Kind_Match_Inequality_Operator =>
+            return Tok_Match_Not_Equal;
+         when Iir_Kind_Match_Less_Than_Operator =>
+            return Tok_Match_Less;
+         when Iir_Kind_Match_Less_Than_Or_Equal_Operator =>
+            return Tok_Match_Less_Equal;
+         when Iir_Kind_Match_Greater_Than_Operator =>
+            return Tok_Match_Greater;
+         when Iir_Kind_Match_Greater_Than_Or_Equal_Operator =>
+            return Tok_Match_Greater_Equal;
+
+         when Iir_Kind_Sll_Operator =>
+            return Tok_Sll;
+         when Iir_Kind_Sla_Operator =>
+            return Tok_Sla;
+         when Iir_Kind_Srl_Operator =>
+            return Tok_Srl;
+         when Iir_Kind_Sra_Operator =>
+            return Tok_Sra;
+         when Iir_Kind_Rol_Operator =>
+            return Tok_Rol;
+         when Iir_Kind_Ror_Operator =>
+            return Tok_Ror;
+
+         when Iir_Kind_Addition_Operator =>
+            return Tok_Plus;
+         when Iir_Kind_Substraction_Operator =>
+            return Tok_Minus;
+         when Iir_Kind_Concatenation_Operator =>
+            return Tok_Ampersand;
+         when Iir_Kind_Multiplication_Operator =>
+            return Tok_Star;
+         when Iir_Kind_Division_Operator =>
+            return Tok_Slash;
+         when Iir_Kind_Modulus_Operator =>
+            return Tok_Mod;
+         when Iir_Kind_Remainder_Operator =>
+            return Tok_Rem;
+         when Iir_Kind_Exponentiation_Operator =>
+            return Tok_Double_Star;
+         when Iir_Kind_Not_Operator =>
+            return Tok_Not;
+         when Iir_Kind_Negation_Operator =>
+            return Tok_Minus;
+         when Iir_Kind_Identity_Operator =>
+            return Tok_Plus;
+         when Iir_Kind_Absolute_Operator =>
+            return Tok_Abs;
+         when Iir_Kind_Condition_Operator
+           | Iir_Kind_Implicit_Condition_Operator =>
+            return Tok_Condition;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Operator_Token;
+
+   procedure Disp_Dyadic_Operator (Ctxt : in out Ctxt_Class; Expr: Iir) is
    begin
       if Flag_Parenthesis then
          Put ("(");
       end if;
-      Disp_Expression (Get_Left (Expr));
-      Put (' ' & Name_Table.Image (Utils.Get_Operator_Name (Expr)) & ' ');
-      Disp_Expression (Get_Right (Expr));
+      Print (Ctxt, Get_Left (Expr));
+      Disp_Token (Ctxt, Get_Operator_Token (Expr));
+      Print (Ctxt, Get_Right (Expr));
       if Flag_Parenthesis then
          Put (")");
       end if;
    end Disp_Dyadic_Operator;
 
-   procedure Disp_Monadic_Operator (Expr: Iir) is
+   procedure Disp_Monadic_Operator (Ctxt : in out Ctxt_Class; Expr: Iir) is
    begin
       if Get_Kind (Expr) = Iir_Kind_Implicit_Condition_Operator then
-         Disp_Expression (Get_Operand (Expr));
+         Print (Ctxt, Get_Operand (Expr));
          return;
       end if;
 
-      Put (Name_Table.Image (Utils.Get_Operator_Name (Expr)));
-      Put (' ');
+      Disp_Token (Ctxt, Get_Operator_Token (Expr));
       if Flag_Parenthesis then
          Put ('(');
       end if;
-      Disp_Expression (Get_Operand (Expr));
+      Print (Ctxt, Get_Operand (Expr));
       if Flag_Parenthesis then
          Put (')');
       end if;
    end Disp_Monadic_Operator;
 
-   procedure Disp_Case_Statement (Stmt: Iir_Case_Statement)
+   procedure Disp_Case_Statement
+     (Ctxt : in out Ctxt_Class; Stmt: Iir_Case_Statement)
    is
-      Indent: Count;
       Assoc: Iir;
       Sel_Stmt : Iir;
    begin
-      Indent := Col;
-      Put ("case ");
-      Disp_Expression (Get_Expression (Stmt));
-      Put_Line (" is");
+      Disp_Token (Ctxt, Tok_Case);
+      Print (Ctxt, Get_Expression (Stmt));
+      Disp_Token (Ctxt, Tok_Is);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
       Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
       while Assoc /= Null_Iir loop
-         Set_Col (Indent + Indentation);
-         Put ("when ");
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_When);
          Sel_Stmt := Get_Associated_Chain (Assoc);
-         Disp_Choice (Assoc);
-         Put_Line (" =>");
-         Set_Col (Indent + 2 * Indentation);
-         Disp_Sequential_Statements (Sel_Stmt);
+         Disp_Choice (Ctxt, Assoc);
+         Disp_Token (Ctxt, Tok_Double_Arrow);
+         Close_Hbox (Ctxt);
+
+         Start_Vbox (Ctxt);
+         Disp_Sequential_Statements (Ctxt, Sel_Stmt);
+         Close_Vbox (Ctxt);
       end loop;
-      Set_Col (Indent);
-      Disp_End_Label (Stmt, "case");
+      Close_Vbox (Ctxt);
+
+      Disp_End_Label_No_Close (Ctxt, Stmt, Tok_Case);
    end Disp_Case_Statement;
 
-   procedure Disp_Wait_Statement (Stmt: Iir_Wait_Statement) is
+   procedure Disp_Wait_Statement
+     (Ctxt : in out Ctxt_Class; Stmt: Iir_Wait_Statement)
+   is
       List: Iir_List;
       Expr: Iir;
    begin
-      Put ("wait");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Wait);
       List := Get_Sensitivity_List (Stmt);
       if List /= Null_Iir_List then
-         Put (" on ");
-         Disp_Designator_List (List);
+         Disp_Token (Ctxt, Tok_On);
+         Disp_Designator_List (Ctxt, List);
       end if;
       Expr := Get_Condition_Clause (Stmt);
       if Expr /= Null_Iir then
-         Put (" until ");
-         Disp_Expression (Expr);
+         Disp_Token (Ctxt, Tok_Until);
+         Print (Ctxt, Expr);
       end if;
       Expr := Get_Timeout_Clause (Stmt);
       if Expr /= Null_Iir then
-         Put (" for ");
-         Disp_Expression (Expr);
+         Disp_Token (Ctxt, Tok_For);
+         Print (Ctxt, Expr);
       end if;
-      Put_Line (";");
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Wait_Statement;
 
-   procedure Disp_If_Statement (Stmt: Iir_If_Statement) is
-      Clause: Iir;
-      Expr: Iir;
-      Start: Count;
+   procedure Disp_If_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir_If_Statement)
+   is
+      Clause : Iir;
+      Expr : Iir;
    begin
-      Start := Col;
-      Put ("if ");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_If);
       Clause := Stmt;
-      Disp_Expression (Get_Condition (Clause));
-      Put_Line (" then");
+      Print (Ctxt, Get_Condition (Clause));
+      Disp_Token (Ctxt, Tok_Then);
+      Close_Hbox (Ctxt);
       while Clause /= Null_Iir loop
-         Set_Col (Start + Indentation);
-         Disp_Sequential_Statements (Get_Sequential_Statement_Chain (Clause));
+         Start_Vbox (Ctxt);
+         Disp_Sequential_Statements
+           (Ctxt, Get_Sequential_Statement_Chain (Clause));
+         Close_Vbox (Ctxt);
          Clause := Get_Else_Clause (Clause);
          exit when Clause = Null_Iir;
+         Start_Hbox (Ctxt);
          Expr := Get_Condition (Clause);
-         Set_Col (Start);
          if Expr /= Null_Iir then
-            Put ("elsif ");
-            Disp_Expression (Expr);
-            Put_Line (" then");
+            Disp_Token (Ctxt, Tok_Elsif);
+            Print (Ctxt, Expr);
+            Disp_Token (Ctxt, Tok_Then);
          else
-            Put_Line ("else");
+            Disp_Token (Ctxt, Tok_Else);
          end if;
+         Close_Hbox (Ctxt);
       end loop;
-      Set_Col (Start);
-      Disp_End_Label (Stmt, "if");
+      Disp_End_Label (Ctxt, Stmt, Tok_If);
    end Disp_If_Statement;
 
    procedure Disp_Parameter_Specification
-     (Iterator : Iir_Iterator_Declaration) is
+     (Ctxt : in out Ctxt_Class; Iterator : Iir_Iterator_Declaration) is
    begin
-      Disp_Identifier (Iterator);
-      Put (" in ");
-      Disp_Discrete_Range (Get_Subtype_Indication (Iterator));
+      Disp_Identifier (Ctxt, Iterator);
+      Disp_Token (Ctxt, Tok_In);
+      Disp_Discrete_Range (Ctxt, Or_Else (Get_Discrete_Range (Iterator),
+                                          Get_Subtype_Indication (Iterator)));
    end Disp_Parameter_Specification;
 
-   procedure Disp_Method_Object (Call : Iir)
+   procedure Disp_Procedure_Call (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
-      Obj : Iir;
+      Call : constant Iir := Get_Procedure_Call (Stmt);
    begin
-      Obj := Get_Method_Object (Call);
-      if Obj /= Null_Iir then
-         Disp_Name (Obj);
-         Put ('.');
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      if Get_Kind (Stmt) = Iir_Kind_Concurrent_Procedure_Call_Statement then
+         Disp_Postponed (Ctxt, Stmt);
       end if;
-   end Disp_Method_Object;
-
-   procedure Disp_Procedure_Call (Call : Iir) is
-   begin
-      if True then
-         Disp_Name (Get_Prefix (Call));
-      else
-         Disp_Method_Object (Call);
-         Disp_Identifier (Get_Implementation (Call));
-         Put (' ');
-      end if;
-      Disp_Association_Chain (Get_Parameter_Association_Chain (Call));
-      Put_Line (";");
+      Print (Ctxt, Get_Prefix (Call));
+      Disp_Association_Chain (Ctxt, Get_Parameter_Association_Chain (Call));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Procedure_Call;
 
-   procedure Disp_Sequential_Statements (First : Iir)
+   procedure Disp_For_Loop_Statement (Ctxt : in out Ctxt_Class; Stmt : Iir) is
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_For);
+      Disp_Parameter_Specification (Ctxt, Get_Parameter_Specification (Stmt));
+      Disp_Token (Ctxt, Tok_Loop);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Sequential_Statements (Ctxt, Get_Sequential_Statement_Chain (Stmt));
+      Close_Vbox (Ctxt);
+
+      Disp_End_Label (Ctxt, Stmt, Tok_Loop);
+   end Disp_For_Loop_Statement;
+
+   procedure Disp_Sequential_Statements (Ctxt : in out Ctxt_Class; First : Iir)
    is
-      Start: constant Count := Col;
       Stmt: Iir;
    begin
       Stmt := First;
       while Stmt /= Null_Iir loop
-         Set_Col (Start);
-         Disp_Label (Stmt);
          case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
             when Iir_Kind_Null_Statement =>
-               Put_Line ("null;");
+               Start_Hbox (Ctxt);
+               Disp_Label (Ctxt, Stmt);
+               Disp_Token (Ctxt, Tok_Null, Tok_Semi_Colon);
+               Close_Hbox (Ctxt);
             when Iir_Kind_If_Statement =>
-               Disp_If_Statement (Stmt);
+               Disp_If_Statement (Ctxt, Stmt);
             when Iir_Kind_For_Loop_Statement =>
-               Put ("for ");
-               Disp_Parameter_Specification
-                 (Get_Parameter_Specification (Stmt));
-               Put_Line (" loop");
-               Set_Col (Start + Indentation);
-               Disp_Sequential_Statements
-                 (Get_Sequential_Statement_Chain (Stmt));
-               Set_Col (Start);
-               Disp_End_Label (Stmt, "loop");
+               Disp_For_Loop_Statement (Ctxt, Stmt);
             when Iir_Kind_While_Loop_Statement =>
+               Start_Hbox (Ctxt);
+               Disp_Label (Ctxt, Stmt);
                if Get_Condition (Stmt) /= Null_Iir then
-                  Put ("while ");
-                  Disp_Expression (Get_Condition (Stmt));
-                  Put (" ");
+                  Disp_Token (Ctxt, Tok_While);
+                  Print (Ctxt, Get_Condition (Stmt));
                end if;
-               Put_Line ("loop");
-               Set_Col (Start + Indentation);
+               Disp_Token (Ctxt, Tok_Loop);
+               Close_Hbox (Ctxt);
+               Start_Vbox (Ctxt);
                Disp_Sequential_Statements
-                 (Get_Sequential_Statement_Chain (Stmt));
-               Set_Col (Start);
-               Disp_End_Label (Stmt, "loop");
+                 (Ctxt, Get_Sequential_Statement_Chain (Stmt));
+               Close_Vbox (Ctxt);
+               Disp_End_Label (Ctxt, Stmt, Tok_Loop);
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
-               Disp_Simple_Signal_Assignment (Stmt);
+               Disp_Simple_Signal_Assignment (Ctxt, Stmt);
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
-               Disp_Conditional_Signal_Assignment (Stmt);
+               Start_Hbox (Ctxt);
+               Disp_Label (Ctxt, Stmt);
+               Disp_Conditional_Signal_Assignment (Ctxt, Stmt);
+               Close_Hbox (Ctxt);
             when Iir_Kind_Selected_Waveform_Assignment_Statement =>
-               Disp_Selected_Waveform_Assignment (Stmt, Start);
+               Disp_Selected_Waveform_Assignment (Ctxt, Stmt);
             when Iir_Kind_Variable_Assignment_Statement =>
-               Disp_Variable_Assignment (Stmt);
+               Disp_Variable_Assignment (Ctxt, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
-               Disp_Conditional_Variable_Assignment (Stmt);
+               Disp_Conditional_Variable_Assignment (Ctxt, Stmt);
             when Iir_Kind_Assertion_Statement =>
-               Disp_Assertion_Statement (Stmt);
+               Disp_Assertion_Statement (Ctxt, Stmt);
             when Iir_Kind_Report_Statement =>
-               Disp_Report_Statement (Stmt);
+               Disp_Report_Statement (Ctxt, Stmt);
             when Iir_Kind_Return_Statement =>
+               Start_Hbox (Ctxt);
+               Disp_Label (Ctxt, Stmt);
+               Disp_Token (Ctxt, Tok_Return);
                if Get_Expression (Stmt) /= Null_Iir then
-                  Put ("return ");
-                  Disp_Expression (Get_Expression (Stmt));
-                  Put_Line (";");
-               else
-                  Put_Line ("return;");
+                  Print (Ctxt, Get_Expression (Stmt));
                end if;
+               Disp_Token (Ctxt, Tok_Semi_Colon);
+               Close_Hbox (Ctxt);
             when Iir_Kind_Case_Statement =>
-               Disp_Case_Statement (Stmt);
+               Start_Hbox (Ctxt);
+               Disp_Label (Ctxt, Stmt);
+               Disp_Case_Statement (Ctxt, Stmt);
+               Close_Hbox (Ctxt);
             when Iir_Kind_Wait_Statement =>
-               Disp_Wait_Statement (Stmt);
+               Disp_Wait_Statement (Ctxt, Stmt);
             when Iir_Kind_Procedure_Call_Statement =>
-               Disp_Procedure_Call (Get_Procedure_Call (Stmt));
+               Disp_Procedure_Call (Ctxt, Stmt);
             when Iir_Kind_Exit_Statement
               | Iir_Kind_Next_Statement =>
                declare
                   Label : constant Iir := Get_Loop_Label (Stmt);
                   Cond : constant Iir := Get_Condition (Stmt);
                begin
+                  Start_Hbox (Ctxt);
+                  Disp_Label (Ctxt, Stmt);
                   if Get_Kind (Stmt) = Iir_Kind_Exit_Statement then
-                     Put ("exit");
+                     Disp_Token (Ctxt, Tok_Exit);
                   else
-                     Put ("next");
+                     Disp_Token (Ctxt, Tok_Next);
                   end if;
                   if Label /= Null_Iir then
-                     Put (" ");
-                     Disp_Name (Label);
+                     Print (Ctxt, Label);
                   end if;
                   if Cond /= Null_Iir then
-                     Put (" when ");
-                     Disp_Expression (Cond);
+                     Disp_Token (Ctxt, Tok_When);
+                     Print (Ctxt, Cond);
                   end if;
-                  Put_Line (";");
+                  Disp_Token (Ctxt, Tok_Semi_Colon);
+                  Close_Hbox (Ctxt);
                end;
          end case;
          Stmt := Get_Chain (Stmt);
       end loop;
    end Disp_Sequential_Statements;
 
-   procedure Disp_Process_Statement (Process: Iir)
-   is
-      Start: constant Count := Col;
+   procedure Disp_Process_Statement (Ctxt : in out Ctxt_Class; Process: Iir) is
    begin
-      Disp_Label (Process);
-      Disp_Postponed (Process);
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Process);
+      Disp_Postponed (Ctxt, Process);
 
-      Put ("process ");
+      Disp_Token (Ctxt, Tok_Process);
       if Get_Kind (Process) = Iir_Kind_Sensitized_Process_Statement then
-         Put ("(");
-         Disp_Designator_List (Get_Sensitivity_List (Process));
-         Put (")");
+         Disp_Token (Ctxt, Tok_Left_Paren);
+         Disp_Designator_List (Ctxt, Get_Sensitivity_List (Process));
+         Disp_Token (Ctxt, Tok_Right_Paren);
       end if;
       if Get_Has_Is (Process) then
-         Put (" is");
+         Disp_Token (Ctxt, Tok_Is);
       end if;
-      New_Line;
-      Disp_Declaration_Chain (Process, Start + Indentation);
-      Set_Col (Start);
-      Put_Line ("begin");
-      Set_Col (Start + Indentation);
-      Disp_Sequential_Statements (Get_Sequential_Statement_Chain (Process));
-      Set_Col (Start);
-      Put ("end");
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Declaration_Chain (Ctxt, Process);
+      Close_Vbox (Ctxt);
+
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Begin);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Sequential_Statements
+        (Ctxt, Get_Sequential_Statement_Chain (Process));
+      Close_Vbox (Ctxt);
+
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_End);
       if Get_End_Has_Postponed (Process) then
-         Put (" postponed");
+         Disp_Token (Ctxt, Tok_Postponed);
       end if;
-      Disp_After_End (Process, "process");
+      Disp_After_End (Ctxt, Process, Tok_Process);
+      Close_Hbox (Ctxt);
    end Disp_Process_Statement;
 
-   procedure Disp_Conversion (Conv : Iir) is
+   procedure Disp_Conversion (Ctxt : in out Ctxt_Class; Conv : Iir) is
    begin
       case Get_Kind (Conv) is
          when Iir_Kind_Function_Call =>
-            Disp_Function_Name (Get_Implementation (Conv));
+            Disp_Function_Name (Ctxt, Get_Implementation (Conv));
          when Iir_Kind_Type_Conversion =>
-            Disp_Name_Of (Get_Type_Mark (Conv));
+            Disp_Name_Of (Ctxt, Get_Type_Mark (Conv));
          when others =>
             Error_Kind ("disp_conversion", Conv);
       end case;
    end Disp_Conversion;
 
-   procedure Disp_Association_Chain (Chain : Iir)
+   procedure Disp_Association_Chain (Ctxt : in out Ctxt_Class; Chain : Iir)
    is
       El: Iir;
       Formal: Iir;
@@ -2390,22 +2568,22 @@ package body Vhdl.Disp_Vhdl is
       if Chain = Null_Iir then
          return;
       end if;
-      Put ("(");
+      Disp_Token (Ctxt, Tok_Left_Paren);
       Need_Comma := False;
 
       El := Chain;
       while El /= Null_Iir loop
          if Get_Kind (El) /= Iir_Kind_Association_Element_By_Individual then
             if Need_Comma then
-               Put (", ");
+               Disp_Token (Ctxt, Tok_Comma);
             end if;
 
             --  Formal part.
             if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
                Conv := Get_Formal_Conversion (El);
                if Conv /= Null_Iir then
-                  Disp_Conversion (Conv);
-                  Put (" (");
+                  Disp_Conversion (Ctxt, Conv);
+                  Disp_Token (Ctxt, Tok_Left_Paren);
                end if;
             else
                Conv := Null_Iir;
@@ -2416,222 +2594,210 @@ package body Vhdl.Disp_Vhdl is
                   when Iir_Kind_Association_Element_Package
                     | Iir_Kind_Association_Element_Type
                     | Iir_Kind_Association_Element_Subprogram =>
-                     Disp_Name (Formal);
+                     Print (Ctxt, Formal);
                   when Iir_Kind_Association_Element_By_Expression
                     | Iir_Kind_Association_Element_By_Individual
                     | Iir_Kind_Association_Element_Open =>
-                     Disp_Expression (Formal);
+                     Print (Ctxt, Formal);
                   when others =>
                      raise Internal_Error;
                end case;
                if Conv /= Null_Iir then
-                  Put (")");
+                  Disp_Token (Ctxt, Tok_Right_Paren);
                end if;
-               Put (" => ");
+               Disp_Token (Ctxt, Tok_Double_Arrow);
             end if;
 
             case Get_Kind (El) is
                when Iir_Kind_Association_Element_Open =>
-                  Put ("open");
+                  Disp_Token (Ctxt, Tok_Open);
                when Iir_Kind_Association_Element_Package
                  | Iir_Kind_Association_Element_Type
                  | Iir_Kind_Association_Element_Subprogram =>
-                  Disp_Name (Get_Actual (El));
+                  Print (Ctxt, Get_Actual (El));
                when others =>
                   Conv := Get_Actual_Conversion (El);
                   if Conv /= Null_Iir then
-                     Disp_Conversion (Conv);
-                     Put (" (");
+                     Disp_Conversion (Ctxt, Conv);
+                     Disp_Token (Ctxt, Tok_Left_Paren);
                   end if;
-                  Disp_Expression (Get_Actual (El));
+                  Print (Ctxt, Get_Actual (El));
                   if Conv /= Null_Iir then
-                     Put (")");
+                     Disp_Token (Ctxt, Tok_Right_Paren);
                   end if;
             end case;
             Need_Comma := True;
          end if;
          El := Get_Chain (El);
       end loop;
-      Put (")");
+      Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Association_Chain;
 
-   procedure Disp_Generic_Map_Aspect (Parent : Iir) is
+   procedure Disp_Generic_Map_Aspect
+     (Ctxt : in out Ctxt_Class; Parent : Iir) is
    begin
-      Put ("generic map ");
-      Disp_Association_Chain (Get_Generic_Map_Aspect_Chain (Parent));
+      Disp_Token (Ctxt, Tok_Generic, Tok_Map);
+      Disp_Association_Chain (Ctxt, Get_Generic_Map_Aspect_Chain (Parent));
    end Disp_Generic_Map_Aspect;
 
-   procedure Disp_Port_Map_Aspect (Parent : Iir) is
+   procedure Disp_Port_Map_Aspect (Ctxt : in out Ctxt_Class; Parent : Iir) is
    begin
-      Put ("port map ");
-      Disp_Association_Chain (Get_Port_Map_Aspect_Chain (Parent));
+      Disp_Token (Ctxt, Tok_Port, Tok_Map);
+      Disp_Association_Chain (Ctxt, Get_Port_Map_Aspect_Chain (Parent));
    end Disp_Port_Map_Aspect;
 
-   procedure Disp_Entity_Aspect (Aspect : Iir) is
+   procedure Disp_Entity_Aspect (Ctxt : in out Ctxt_Class; Aspect : Iir) is
       Arch : Iir;
    begin
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
-            Put ("entity ");
-            Disp_Name (Get_Entity_Name (Aspect));
+            Disp_Token (Ctxt, Tok_Entity);
+            Print (Ctxt, Get_Entity_Name (Aspect));
             Arch := Get_Architecture (Aspect);
             if Arch /= Null_Iir then
-               Put (" (");
-               Disp_Name_Of (Arch);
-               Put (")");
+               Disp_Token (Ctxt, Tok_Left_Paren);
+               Disp_Name_Of (Ctxt, Arch);
+               Disp_Token (Ctxt, Tok_Right_Paren);
             end if;
          when Iir_Kind_Entity_Aspect_Configuration =>
-            Put ("configuration ");
-            Disp_Name (Get_Configuration_Name (Aspect));
+            Disp_Token (Ctxt, Tok_Configuration);
+            Print (Ctxt, Get_Configuration_Name (Aspect));
          when Iir_Kind_Entity_Aspect_Open =>
-            Put ("open");
+            Disp_Token (Ctxt, Tok_Open);
          when others =>
             Error_Kind ("disp_entity_aspect", Aspect);
       end case;
    end Disp_Entity_Aspect;
 
    procedure Disp_Component_Instantiation_Statement
-     (Stmt: Iir_Component_Instantiation_Statement)
+     (Ctxt : in out Ctxt_Class; Stmt: Iir_Component_Instantiation_Statement)
    is
       Component: constant Iir := Get_Instantiated_Unit (Stmt);
       Alist: Iir;
    begin
-      Disp_Label (Stmt);
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
       if Get_Kind (Component) in Iir_Kinds_Denoting_Name then
          if Get_Has_Component (Stmt) then
-            Put ("component");
-            Put (" ");
+            Disp_Token (Ctxt, Tok_Component);
          end if;
-         Disp_Name (Component);
+         Print (Ctxt, Component);
       else
-         Disp_Entity_Aspect (Component);
+         Disp_Entity_Aspect (Ctxt, Component);
       end if;
       Alist := Get_Generic_Map_Aspect_Chain (Stmt);
       if Alist /= Null_Iir then
-         Put (" ");
-         Disp_Generic_Map_Aspect (Stmt);
+         Disp_Generic_Map_Aspect (Ctxt, Stmt);
       end if;
       Alist := Get_Port_Map_Aspect_Chain (Stmt);
       if Alist /= Null_Iir then
-         Put (" ");
-         Disp_Port_Map_Aspect (Stmt);
+         Disp_Port_Map_Aspect (Ctxt, Stmt);
       end if;
-      Put (";");
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Component_Instantiation_Statement;
 
-   procedure Disp_Function_Call (Expr: Iir_Function_Call) is
+   procedure Disp_Function_Call
+     (Ctxt : in out Ctxt_Class; Expr: Iir_Function_Call) is
    begin
-      if True then
-         Disp_Name (Get_Prefix (Expr));
-      else
-         Disp_Method_Object (Expr);
-         Disp_Function_Name (Get_Implementation (Expr));
-      end if;
-      Disp_Association_Chain (Get_Parameter_Association_Chain (Expr));
+      Print (Ctxt, Get_Prefix (Expr));
+      Disp_Association_Chain (Ctxt, Get_Parameter_Association_Chain (Expr));
    end Disp_Function_Call;
 
-   procedure Disp_Indexed_Name (Indexed: Iir)
+   procedure Disp_Indexed_Name (Ctxt : in out Ctxt_Class; Indexed: Iir)
    is
       List : Iir_Flist;
       El: Iir;
    begin
-      Disp_Expression (Get_Prefix (Indexed));
-      Put (" (");
+      Print (Ctxt, Get_Prefix (Indexed));
+      Disp_Token (Ctxt, Tok_Left_Paren);
       List := Get_Index_List (Indexed);
       for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
          if I /= 0 then
-            Put (", ");
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
-         Disp_Expression (El);
+         Print (Ctxt, El);
       end loop;
-      Put (")");
+      Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Indexed_Name;
 
-   procedure Disp_A_Choice (Choice : Iir) is
+   procedure Disp_A_Choice (Ctxt : in out Ctxt_Class; Choice : Iir) is
    begin
       case Iir_Kinds_Choice (Get_Kind (Choice)) is
          when Iir_Kind_Choice_By_Others =>
-            Put ("others");
+            Disp_Token (Ctxt, Tok_Others);
          when Iir_Kind_Choice_By_None =>
             null;
          when Iir_Kind_Choice_By_Expression =>
-            Disp_Expression (Get_Choice_Expression (Choice));
+            Print (Ctxt, Get_Choice_Expression (Choice));
          when Iir_Kind_Choice_By_Range =>
-            Disp_Range (Get_Choice_Range (Choice));
+            Disp_Range (Ctxt, Get_Choice_Range (Choice));
          when Iir_Kind_Choice_By_Name =>
-            Disp_Name_Of (Get_Choice_Name (Choice));
+            Disp_Name_Of (Ctxt, Get_Choice_Name (Choice));
       end case;
    end Disp_A_Choice;
 
-   procedure Disp_Choice (Choice: in out Iir) is
+   procedure Disp_Choice (Ctxt : in out Ctxt_Class; Choice: in out Iir) is
    begin
       loop
-         Disp_A_Choice (Choice);
+         Disp_A_Choice (Ctxt, Choice);
          Choice := Get_Chain (Choice);
          exit when Choice = Null_Iir;
          exit when Get_Same_Alternative_Flag (Choice) = False;
          --exit when Choice = Null_Iir;
-         Put (" | ");
+         Disp_Token (Ctxt, Tok_Bar);
       end loop;
    end Disp_Choice;
 
    --  EL_TYPE is Null_Iir for record aggregates.
    procedure Disp_Aggregate_1
-     (Aggr: Iir_Aggregate; Index : Positive; El_Type : Iir)
+     (Ctxt : in out Ctxt_Class;
+      Aggr: Iir_Aggregate; Index : Positive; El_Type : Iir)
    is
-      Indent : Count;
       Assoc : Iir;
       Expr : Iir;
       Is_First : Boolean;
    begin
-      Indent := Col + 1;
-      if Indent > Line_Length - 10 then
-         Indent := 2 * Indentation;
-      end if;
-      Put ("(");
+      Disp_Token (Ctxt, Tok_Left_Paren);
       Assoc := Get_Association_Choices_Chain (Aggr);
       Is_First := True;
       while Assoc /= Null_Iir loop
          if Is_First then
             Is_First := False;
          else
-            Put (", ");
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
          pragma Assert (not Get_Same_Alternative_Flag (Assoc));
          Expr := Get_Associated_Expr (Assoc);
-         Disp_A_Choice (Assoc);
+         Disp_A_Choice (Ctxt, Assoc);
          if Get_Kind (Assoc) /= Iir_Kind_Choice_By_None then
             Assoc := Get_Chain (Assoc);
             while Assoc /= Null_Iir
               and then Get_Same_Alternative_Flag (Assoc)
             loop
-               Put (" | ");
-               Disp_A_Choice (Assoc);
+               Disp_Token (Ctxt, Tok_Bar);
+               Disp_A_Choice (Ctxt, Assoc);
                Assoc := Get_Chain (Assoc);
             end loop;
-            Put (" => ");
+            Disp_Token (Ctxt, Tok_Double_Arrow);
          else
             Assoc := Get_Chain (Assoc);
          end if;
          if Index > 1 then
-            Set_Col (Indent);
             if Get_Kind (Expr) = Iir_Kind_String_Literal8 then
-               Disp_String_Literal (Expr, El_Type);
+               Disp_String_Literal (Ctxt, Expr, El_Type);
             else
-               Disp_Aggregate_1 (Expr, Index - 1, El_Type);
+               Disp_Aggregate_1 (Ctxt, Expr, Index - 1, El_Type);
             end if;
          else
-            if Get_Kind (Expr) = Iir_Kind_Aggregate then
-               Set_Col (Indent);
-            end if;
-            Disp_Expression (Expr);
+            Print (Ctxt, Expr);
          end if;
       end loop;
-      Put (")");
+      Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Aggregate_1;
 
-   procedure Disp_Aggregate (Aggr: Iir_Aggregate)
+   procedure Disp_Aggregate (Ctxt : in out Ctxt_Class; Aggr: Iir_Aggregate)
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       Base_Type : Iir;
@@ -2641,14 +2807,15 @@ package body Vhdl.Disp_Vhdl is
       then
          Base_Type := Get_Base_Type (Aggr_Type);
          Disp_Aggregate_1
-           (Aggr, Get_Nbr_Elements (Get_Index_Subtype_List (Base_Type)),
+           (Ctxt, Aggr, Get_Nbr_Elements (Get_Index_Subtype_List (Base_Type)),
             Get_Element_Subtype (Base_Type));
       else
-         Disp_Aggregate_1 (Aggr, 1, Null_Iir);
+         Disp_Aggregate_1 (Ctxt, Aggr, 1, Null_Iir);
       end if;
    end Disp_Aggregate;
 
-   procedure Disp_Simple_Aggregate (Aggr: Iir_Simple_Aggregate)
+   procedure Disp_Simple_Aggregate
+     (Ctxt : in out Ctxt_Class; Aggr: Iir_Simple_Aggregate)
    is
       List : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
       El : Iir;
@@ -2662,12 +2829,13 @@ package body Vhdl.Disp_Vhdl is
          else
             Put (", ");
          end if;
-         Disp_Expression (El);
+         Print (Ctxt, El);
       end loop;
       Put (")");
    end Disp_Simple_Aggregate;
 
-   procedure Disp_Parametered_Attribute (Name : String; Expr : Iir)
+   procedure Disp_Parametered_Attribute
+     (Ctxt : in out Ctxt_Class; Name : Name_Id; Expr : Iir)
    is
       Param : Iir;
       Pfx : Iir;
@@ -2676,68 +2844,82 @@ package body Vhdl.Disp_Vhdl is
       case Get_Kind (Pfx) is
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration =>
-            Disp_Name_Of (Pfx);
+            Disp_Name_Of (Ctxt, Pfx);
          when others =>
-            Disp_Expression (Pfx);
+            Print (Ctxt, Pfx);
       end case;
-      Put ("'");
-      Put (Name);
+      Disp_Token (Ctxt, Tok_Tick);
+      Disp_Ident (Ctxt, Name);
       Param := Get_Parameter (Expr);
       if Param /= Null_Iir
         and then Param /= Vhdl.Std_Package.Universal_Integer_One
       then
-         Put (" (");
-         Disp_Expression (Param);
-         Put (")");
+         Disp_Token (Ctxt, Tok_Left_Paren);
+         Print (Ctxt, Param);
+         Disp_Token (Ctxt, Tok_Right_Paren);
       end if;
    end Disp_Parametered_Attribute;
 
-   procedure Disp_Parametered_Type_Attribute (Name : String; Expr : Iir) is
+   procedure Disp_Parametered_Type_Attribute
+     (Ctxt : in out Ctxt_Class; Name : Name_Id; Expr : Iir) is
    begin
-      Disp_Name (Get_Prefix (Expr));
-      Put ("'");
-      Put (Name);
-      Put (" (");
-      Disp_Expression (Get_Parameter (Expr));
-      Put (")");
+      Print (Ctxt, Get_Prefix (Expr));
+      Disp_Token (Ctxt, Tok_Tick);
+      Disp_Ident (Ctxt, Name);
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      Print (Ctxt, Get_Parameter (Expr));
+      Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Parametered_Type_Attribute;
 
-   procedure Disp_String_Literal (Str : Iir; El_Type : Iir)
+   procedure Disp_String_Literal
+     (Ctxt : in out Ctxt_Class; Str : Iir; El_Type : Iir)
    is
       Str_Id : constant String8_Id := Get_String8_Id (Str);
       Len : constant Nat32 := Get_String_Length (Str);
-      Literal_List : constant Iir_Flist :=
-        Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
+      Literal_List : Iir_Flist;
       Pos : Nat8;
       Lit : Iir;
       Id : Name_Id;
       C : Character;
    begin
+      Start_Lit (Ctxt, Tok_String);
       if Get_Bit_String_Base (Str) /= Base_None then
          if Get_Has_Length (Str) then
-            Disp_Int32 (Iir_Int32 (Get_String_Length (Str)));
+            Disp_Int32 (Ctxt, Iir_Int32 (Get_String_Length (Str)));
          end if;
-         Put ("b");
+         Disp_Char (Ctxt, 'b');
       end if;
 
-      Put ("""");
+      Disp_Char (Ctxt, '"');
+
+      if El_Type /= Null_Iir then
+         Literal_List :=
+           Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
+      else
+         Literal_List := Null_Iir_Flist;
+      end if;
 
       for I in 1 .. Len loop
          Pos := Str_Table.Element_String8 (Str_Id, I);
-         Lit := Get_Nth_Element (Literal_List, Natural (Pos));
-         Id := Get_Identifier (Lit);
+         if Literal_List /= Null_Iir_Flist then
+            Lit := Get_Nth_Element (Literal_List, Natural (Pos));
+            Id := Get_Identifier (Lit);
+         else
+            Id := Name_Table.Get_Identifier (Character'Val (Pos));
+         end if;
          pragma Assert (Name_Table.Is_Character (Id));
          C := Name_Table.Get_Character (Id);
          if C = '"' then
-            Put ('"');
+            Disp_Char (Ctxt, C);
          end if;
-         Put (C);
+         Disp_Char (Ctxt, C);
       end loop;
 
-      Put ("""");
+      Disp_Char (Ctxt, '"');
+      Close_Lit (Ctxt);
    end Disp_String_Literal;
 
-   procedure Disp_Expression (Expr: Iir)
+   procedure Print (Ctxt : in out Ctxt_Class; Expr: Iir)
    is
       Orig : Iir;
    begin
@@ -2745,117 +2927,116 @@ package body Vhdl.Disp_Vhdl is
          when Iir_Kind_Integer_Literal =>
             Orig := Get_Literal_Origin (Expr);
             if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Disp_Expression (Orig);
+               Print (Ctxt, Orig);
             else
-               Disp_Int64 (Get_Value (Expr));
+               Disp_Int64 (Ctxt, Get_Value (Expr));
             end if;
          when Iir_Kind_Floating_Point_Literal =>
             Orig := Get_Literal_Origin (Expr);
             if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Disp_Expression (Orig);
+               Print (Ctxt, Orig);
             else
-               Disp_Fp64 (Get_Fp_Value (Expr));
+               Disp_Fp64 (Ctxt, Get_Fp_Value (Expr));
             end if;
          when Iir_Kind_String_Literal8 =>
             Orig := Get_Literal_Origin (Expr);
             if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Disp_Expression (Orig);
+               Print (Ctxt, Orig);
             else
-               Disp_String_Literal
-                 (Expr, Get_Element_Subtype (Get_Type (Expr)));
-               if Flag_Disp_String_Literal_Type or Flags.List_Verbose then
-                  Put ("[type: ");
-                  Disp_Type (Get_Type (Expr));
-                  Put ("]");
-               end if;
+               declare
+                  Expr_Type : constant Iir := Get_Type (Expr);
+                  El_Type : Iir;
+               begin
+                  if Expr_Type /= Null_Iir then
+                     El_Type := Get_Element_Subtype (Expr_Type);
+                  else
+                     El_Type := Null_Iir;
+                  end if;
+                  Disp_String_Literal (Ctxt, Expr, El_Type);
+                  if Flag_Disp_String_Literal_Type or Flags.List_Verbose then
+                     Put ("[type: ");
+                     Disp_Type (Ctxt, Expr_Type);
+                     Put ("]");
+                  end if;
+               end;
             end if;
          when Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Physical_Int_Literal =>
             Orig := Get_Literal_Origin (Expr);
             if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Disp_Expression (Orig);
+               Print (Ctxt, Orig);
             else
-               Disp_Physical_Literal (Expr);
+               Disp_Physical_Literal (Ctxt, Expr);
             end if;
-         when Iir_Kind_Unit_Declaration =>
-            Disp_Name_Of (Expr);
-         when Iir_Kind_Character_Literal =>
-            Disp_Identifier (Expr);
          when Iir_Kind_Enumeration_Literal =>
             Orig := Get_Literal_Origin (Expr);
             if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Disp_Expression (Orig);
+               Print (Ctxt, Orig);
             else
-               Disp_Name_Of (Expr);
+               Disp_Name_Of (Ctxt, Expr);
             end if;
          when Iir_Kind_Overflow_Literal =>
             Orig := Get_Literal_Origin (Expr);
             if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Disp_Expression (Orig);
+               Print (Ctxt, Orig);
             else
                Put ("*OVERFLOW*");
             end if;
 
          when Iir_Kind_Object_Alias_Declaration =>
-            Disp_Name_Of (Expr);
+            Disp_Name_Of (Ctxt, Expr);
          when Iir_Kind_Aggregate =>
-            Disp_Aggregate (Expr);
+            Disp_Aggregate (Ctxt, Expr);
          when Iir_Kind_Null_Literal =>
-            Put ("null");
+            Disp_Token (Ctxt, Tok_Null);
          when Iir_Kind_Simple_Aggregate =>
             Orig := Get_Literal_Origin (Expr);
             if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Disp_Expression (Orig);
+               Print (Ctxt, Orig);
             else
-               Disp_Simple_Aggregate (Expr);
+               Disp_Simple_Aggregate (Ctxt, Expr);
             end if;
 
          when Iir_Kind_Attribute_Value =>
-            Disp_Attribute_Value (Expr);
+            Disp_Attribute_Value (Ctxt, Expr);
          when Iir_Kind_Attribute_Name =>
-            Disp_Attribute_Name (Expr);
+            Disp_Attribute_Name (Ctxt, Expr);
 
          when Iir_Kind_Element_Declaration =>
-            Disp_Name_Of (Expr);
+            Disp_Name_Of (Ctxt, Expr);
 
-         when Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Signal_Declaration
+         when Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Iterator_Declaration =>
-            Disp_Name_Of (Expr);
+            Disp_Name_Of (Ctxt, Expr);
             return;
          when Iir_Kind_Reference_Name =>
             declare
                Name : constant Iir := Get_Referenced_Name (Expr);
             begin
                if Is_Valid (Name) then
-                  Disp_Name (Name);
+                  Print (Ctxt, Name);
                else
-                  Disp_Expression (Get_Named_Entity (Expr));
+                  Print (Ctxt, Get_Named_Entity (Expr));
                end if;
             end;
 
          when Iir_Kinds_Dyadic_Operator =>
-            Disp_Dyadic_Operator (Expr);
+            Disp_Dyadic_Operator (Ctxt, Expr);
          when Iir_Kinds_Monadic_Operator =>
-            Disp_Monadic_Operator (Expr);
+            Disp_Monadic_Operator (Ctxt, Expr);
          when Iir_Kind_Function_Call =>
-            Disp_Function_Call (Expr);
+            Disp_Function_Call (Ctxt, Expr);
          when Iir_Kind_Parenthesis_Expression =>
-            Put ("(");
-            Disp_Expression (Get_Expression (Expr));
-            Put (")");
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Print (Ctxt, Get_Expression (Expr));
+            Disp_Token (Ctxt, Tok_Right_Paren);
          when Iir_Kind_Type_Conversion =>
-            Disp_Name (Get_Type_Mark (Expr));
-            Put (" (");
-            Disp_Expression (Get_Expression (Expr));
-            Put (")");
+            Print (Ctxt, Get_Type_Mark (Expr));
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Print (Ctxt, Get_Expression (Expr));
+            Disp_Token (Ctxt, Tok_Right_Paren);
          when Iir_Kind_Qualified_Expression =>
             declare
                Qexpr : constant Iir := Get_Expression (Expr);
@@ -2863,152 +3044,161 @@ package body Vhdl.Disp_Vhdl is
                  Get_Kind (Qexpr) = Iir_Kind_Parenthesis_Expression
                  or else Get_Kind (Qexpr) = Iir_Kind_Aggregate;
             begin
-               Disp_Name (Get_Type_Mark (Expr));
-               Put ("'");
+               Print (Ctxt, Get_Type_Mark (Expr));
+               Disp_Token (Ctxt, Tok_Tick);
                if not Has_Paren then
-                  Put ("(");
+                  Disp_Token (Ctxt, Tok_Left_Paren);
                end if;
-               Disp_Expression (Qexpr);
+               Print (Ctxt, Qexpr);
                if not Has_Paren then
-                  Put (")");
+                  Disp_Token (Ctxt, Tok_Right_Paren);
                end if;
             end;
          when Iir_Kind_Allocator_By_Expression =>
-            Put ("new ");
-            Disp_Expression (Get_Expression (Expr));
+            Disp_Token (Ctxt, Tok_New);
+            Print (Ctxt, Get_Expression (Expr));
          when Iir_Kind_Allocator_By_Subtype =>
-            Put ("new ");
-            Disp_Subtype_Indication (Get_Subtype_Indication (Expr));
+            Disp_Token (Ctxt, Tok_New);
+            Disp_Subtype_Indication (Ctxt, Get_Subtype_Indication (Expr));
 
          when Iir_Kind_Indexed_Name =>
-            Disp_Indexed_Name (Expr);
+            Disp_Indexed_Name (Ctxt, Expr);
          when Iir_Kind_Slice_Name =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put (" (");
-            Disp_Range (Get_Suffix (Expr));
-            Put (")");
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Disp_Range (Ctxt, Get_Suffix (Expr));
+            Disp_Token (Ctxt, Tok_Right_Paren);
          when Iir_Kind_Selected_Element =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put (".");
-            Disp_Name_Of (Get_Named_Entity (Expr));
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Token (Ctxt, Tok_Dot);
+            Disp_Name_Of (Ctxt, Get_Named_Entity (Expr));
          when Iir_Kind_Implicit_Dereference =>
-            Disp_Expression (Get_Prefix (Expr));
-         when Iir_Kind_Dereference =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put (".all");
+            Print (Ctxt, Get_Prefix (Expr));
 
          when Iir_Kind_Left_Type_Attribute =>
-            Disp_Name (Get_Prefix (Expr));
-            Put ("'left");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Left);
          when Iir_Kind_Right_Type_Attribute =>
-            Disp_Name (Get_Prefix (Expr));
-            Put ("'right");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Right);
          when Iir_Kind_High_Type_Attribute =>
-            Disp_Name (Get_Prefix (Expr));
-            Put ("'high");
+            Disp_Name_Attribute (Ctxt, Expr, Name_High);
          when Iir_Kind_Low_Type_Attribute =>
-            Disp_Name (Get_Prefix (Expr));
-            Put ("'low");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Low);
          when Iir_Kind_Ascending_Type_Attribute =>
-            Disp_Name (Get_Prefix (Expr));
-            Put ("'ascending");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Ascending);
 
          when Iir_Kind_Stable_Attribute =>
-            Disp_Parametered_Attribute ("stable", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Stable, Expr);
          when Iir_Kind_Quiet_Attribute =>
-            Disp_Parametered_Attribute ("quiet", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Quiet, Expr);
          when Iir_Kind_Delayed_Attribute =>
-            Disp_Parametered_Attribute ("delayed", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Delayed, Expr);
          when Iir_Kind_Transaction_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ("'transaction");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Transaction);
          when Iir_Kind_Event_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ("'event");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Event);
          when Iir_Kind_Active_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ("'active");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Active);
          when Iir_Kind_Driving_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ("'driving");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Driving);
          when Iir_Kind_Driving_Value_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ("'driving_value");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Driving_Value);
          when Iir_Kind_Last_Value_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ("'last_value");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Value);
          when Iir_Kind_Last_Active_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ("'last_active");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Active);
          when Iir_Kind_Last_Event_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ("'last_event");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Event);
 
          when Iir_Kind_Pos_Attribute =>
-            Disp_Parametered_Type_Attribute ("pos", Expr);
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Pos, Expr);
          when Iir_Kind_Val_Attribute =>
-            Disp_Parametered_Type_Attribute ("val", Expr);
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Val, Expr);
          when Iir_Kind_Succ_Attribute =>
-            Disp_Parametered_Type_Attribute ("succ", Expr);
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Succ, Expr);
          when Iir_Kind_Pred_Attribute =>
-            Disp_Parametered_Type_Attribute ("pred", Expr);
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Pred, Expr);
          when Iir_Kind_Leftof_Attribute =>
-            Disp_Parametered_Type_Attribute ("leftof", Expr);
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Leftof, Expr);
          when Iir_Kind_Rightof_Attribute =>
-            Disp_Parametered_Type_Attribute ("rightof", Expr);
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Rightof, Expr);
 
          when Iir_Kind_Length_Array_Attribute =>
-            Disp_Parametered_Attribute ("length", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Length, Expr);
          when Iir_Kind_Range_Array_Attribute =>
-            Disp_Parametered_Attribute ("range", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Range, Expr);
          when Iir_Kind_Reverse_Range_Array_Attribute =>
-            Disp_Parametered_Attribute ("reverse_range", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Reverse_Range, Expr);
          when Iir_Kind_Left_Array_Attribute =>
-            Disp_Parametered_Attribute ("left", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Left, Expr);
          when Iir_Kind_Right_Array_Attribute =>
-            Disp_Parametered_Attribute ("right", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Right, Expr);
          when Iir_Kind_Low_Array_Attribute =>
-            Disp_Parametered_Attribute ("low", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Low, Expr);
          when Iir_Kind_High_Array_Attribute =>
-            Disp_Parametered_Attribute ("high", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_High, Expr);
          when Iir_Kind_Ascending_Array_Attribute =>
-            Disp_Parametered_Attribute ("ascending", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Ascending, Expr);
 
          when Iir_Kind_Image_Attribute =>
-            Disp_Parametered_Attribute ("image", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Image, Expr);
          when Iir_Kind_Value_Attribute =>
-            Disp_Parametered_Attribute ("value", Expr);
+            Disp_Parametered_Attribute (Ctxt, Name_Value, Expr);
          when Iir_Kind_Simple_Name_Attribute =>
-            Disp_Name (Get_Prefix (Expr));
-            Put ("'simple_name");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Simple_Name);
          when Iir_Kind_Instance_Name_Attribute =>
-            Disp_Name (Get_Prefix (Expr));
-            Put ("'instance_name");
+            Disp_Name_Attribute (Ctxt, Expr, Name_Instance_Name);
          when Iir_Kind_Path_Name_Attribute =>
-            Disp_Name (Get_Prefix (Expr));
-            Put ("'path_name");
-
-         when Iir_Kind_Selected_By_All_Name =>
-            Disp_Expression (Get_Prefix (Expr));
-         when Iir_Kind_Selected_Name =>
-            Disp_Name (Expr);
-         when Iir_Kind_Simple_Name =>
-            Disp_Name (Expr);
+            Disp_Name_Attribute (Ctxt, Expr, Name_Path_Name);
 
          when Iir_Kinds_Type_And_Subtype_Definition =>
-            Disp_Type (Expr);
+            Disp_Type (Ctxt, Expr);
 
          when Iir_Kind_Range_Expression =>
-            Disp_Range (Expr);
-         when Iir_Kind_Subtype_Declaration =>
-            Disp_Name_Of (Expr);
+            Disp_Range (Ctxt, Expr);
+
+         when Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Dereference =>
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Token (Ctxt, Tok_Dot, Tok_All);
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal =>
+            Disp_Identifier (Ctxt, Expr);
+         when Iir_Kind_Operator_Symbol =>
+            Disp_Function_Name (Ctxt, Expr);
+         when Iir_Kind_Selected_Name =>
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Token (Ctxt, Tok_Dot);
+            Disp_Function_Name (Ctxt, Expr);
+         when Iir_Kind_Parenthesis_Name =>
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Association_Chain (Ctxt, Get_Association_Chain (Expr));
+         when Iir_Kind_Base_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Base);
+         when Iir_Kind_Subtype_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Subtype);
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Unit_Declaration
+           | Iir_Kinds_Interface_Object_Declaration
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Terminal_Declaration
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Group_Template_Declaration =>
+            Disp_Name_Of (Ctxt, Expr);
+
+         when Iir_Kind_Signature =>
+            Disp_Signature (Ctxt, Expr);
 
          when others =>
-            Error_Kind ("disp_expression", Expr);
+            Error_Kind ("print", Expr);
       end case;
-   end Disp_Expression;
+   end Print;
 
-   procedure Disp_Block_Header (Header : Iir_Block_Header; Indent: Count)
+   procedure Disp_Block_Header
+     (Ctxt : in out Ctxt_Class; Header : Iir_Block_Header)
    is
       Chain : Iir;
    begin
@@ -3017,163 +3207,205 @@ package body Vhdl.Disp_Vhdl is
       end if;
       Chain := Get_Generic_Chain (Header);
       if Chain /= Null_Iir then
-         Set_Col (Indent + Indentation);
-         Disp_Generics (Header);
+         Start_Hbox (Ctxt);
+         Disp_Generics (Ctxt, Header);
+         Close_Hbox (Ctxt);
+
          Chain := Get_Generic_Map_Aspect_Chain (Header);
          if Chain /= Null_Iir then
-            Set_Col (Indent + Indentation);
-            Disp_Generic_Map_Aspect (Header);
-            Put_Line (";");
+            Start_Hbox (Ctxt);
+            Disp_Generic_Map_Aspect (Ctxt, Header);
+            Disp_Token (Ctxt, Tok_Semi_Colon);
+            Close_Hbox (Ctxt);
          end if;
       end if;
       Chain := Get_Port_Chain (Header);
       if Chain /= Null_Iir then
-         Set_Col (Indent + Indentation);
-         Disp_Ports (Header);
+         Start_Hbox (Ctxt);
+         Disp_Ports (Ctxt, Header);
+         Close_Hbox (Ctxt);
+
          Chain := Get_Port_Map_Aspect_Chain (Header);
          if Chain /= Null_Iir then
-            Set_Col (Indent + Indentation);
-            Disp_Port_Map_Aspect (Header);
-            Put_Line (";");
+            Start_Hbox (Ctxt);
+            Disp_Port_Map_Aspect (Ctxt, Header);
+            Disp_Token (Ctxt, Tok_Semi_Colon);
+            Close_Hbox (Ctxt);
          end if;
       end if;
    end Disp_Block_Header;
 
-   procedure Disp_Block_Statement (Block: Iir_Block_Statement)
+   procedure Disp_Block_Statement
+     (Ctxt : in out Ctxt_Class; Block: Iir_Block_Statement)
    is
-      Indent: Count;
       Sensitivity: Iir_List;
       Guard : Iir_Guard_Signal_Declaration;
    begin
-      Indent := Col;
-      Disp_Label (Block);
-      Put ("block");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Block);
+      Disp_Token (Ctxt, Tok_Block);
       Guard := Get_Guard_Decl (Block);
       if Guard /= Null_Iir then
-         Put (" (");
-         Disp_Expression (Get_Guard_Expression (Guard));
-         Put_Line (")");
+         Disp_Token (Ctxt, Tok_Left_Paren);
+         Print (Ctxt, Get_Guard_Expression (Guard));
+         Disp_Token (Ctxt, Tok_Right_Paren);
+      end if;
+      if Get_Has_Is (Block) then
+         Disp_Token (Ctxt, Tok_Is);
+      end if;
+      Close_Hbox (Ctxt);
+
+      if Flags.List_Verbose and then Guard /= Null_Iir then
          Sensitivity := Get_Guard_Sensitivity_List (Guard);
          if Sensitivity /= Null_Iir_List then
-            Set_Col (Indent + Indentation);
             Put ("-- guard sensitivity list ");
-            Disp_Designator_List (Sensitivity);
+            Disp_Designator_List (Ctxt, Sensitivity);
          end if;
-      else
-         New_Line;
       end if;
-      Disp_Block_Header (Get_Block_Header (Block),
-                         Indent + Indentation);
-      Disp_Declaration_Chain (Block, Indent + Indentation);
-      Set_Col (Indent);
-      Put_Line ("begin");
-      Disp_Concurrent_Statement_Chain (Block, Indent + Indentation);
-      Set_Col (Indent);
-      Disp_End (Block, "block");
+
+      Start_Vbox (Ctxt);
+      Disp_Block_Header (Ctxt, Get_Block_Header (Block));
+      Disp_Declaration_Chain (Ctxt, Block);
+      Close_Vbox (Ctxt);
+
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Begin);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Concurrent_Statement_Chain (Ctxt, Block);
+      Close_Vbox (Ctxt);
+
+      Disp_End (Ctxt, Block, Tok_Block);
    end Disp_Block_Statement;
 
-   procedure Disp_Generate_Statement_Body (Bod : Iir; Indent : Count) is
+   procedure Disp_Generate_Statement_Body (Ctxt : in out Ctxt_Class; Bod : Iir)
+   is
+      Has_Beg : constant Boolean := Get_Has_Begin (Bod);
+      Has_End : constant Boolean := Get_Has_End (Bod);
    begin
-      Disp_Declaration_Chain (Bod, Indent);
-      if Get_Has_Begin (Bod) then
-         Set_Col (Indent);
-         Put_Line ("begin");
+      Disp_Declaration_Chain (Ctxt, Bod);
+      if Has_Beg then
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_Begin);
+         Close_Hbox (Ctxt);
       end if;
-      Disp_Concurrent_Statement_Chain (Bod, Indent + Indentation);
-      if Get_Has_End (Bod) then
-         Set_Col (Indent);
-         Put ("end");
+
+      if Has_Beg or Has_End then
+         Start_Vbox (Ctxt);
+      end if;
+      Disp_Concurrent_Statement_Chain (Ctxt, Bod);
+      if Has_Beg or Has_End then
+         Close_Vbox (Ctxt);
+      end if;
+
+      if Has_End then
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_End);
          if Get_End_Has_Identifier (Bod) then
-            Put (' ');
-            Disp_Ident (Get_Alternative_Label (Bod));
+            Disp_Ident (Ctxt, Get_Alternative_Label (Bod));
          end if;
-         Put (';');
-         New_Line;
+         Disp_Token (Ctxt, Tok_Semi_Colon);
+         Close_Hbox (Ctxt);
       end if;
    end Disp_Generate_Statement_Body;
 
-   procedure Disp_For_Generate_Statement (Stmt : Iir)
-   is
-      Indent : constant Count := Col;
+   procedure Disp_For_Generate_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
-      Disp_Label (Stmt);
-      Put ("for ");
-      Disp_Parameter_Specification (Get_Parameter_Specification (Stmt));
-      Put_Line (" generate");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_For);
+      Disp_Parameter_Specification (Ctxt, Get_Parameter_Specification (Stmt));
+      Disp_Token (Ctxt, Tok_Generate);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
       Disp_Generate_Statement_Body
-        (Get_Generate_Statement_Body (Stmt), Indent);
-      Set_Col (Indent);
-      Disp_End (Stmt, "generate");
+        (Ctxt, Get_Generate_Statement_Body (Stmt));
+      Close_Vbox (Ctxt);
+
+      Disp_End (Ctxt, Stmt, Tok_Generate);
    end Disp_For_Generate_Statement;
 
-   procedure Disp_If_Generate_Statement (Stmt : Iir)
+   procedure Disp_If_Generate_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
-      Indent : constant Count := Col;
       Bod : Iir;
       Clause : Iir;
       Cond : Iir;
    begin
-      Disp_Label (Stmt);
-      Put ("if ");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_If);
       Cond := Get_Condition (Stmt);
       Clause := Stmt;
       loop
          Bod := Get_Generate_Statement_Body (Clause);
          if Get_Has_Label (Bod) then
-            Disp_Ident (Get_Alternative_Label (Bod));
-            Put (": ");
+            Disp_Ident (Ctxt, Get_Alternative_Label (Bod));
+            Disp_Token (Ctxt, Tok_Colon);
          end if;
          if Cond /= Null_Iir then
-            Disp_Expression (Cond);
-            Put (" ");
+            Print (Ctxt, Cond);
          end if;
-         Put_Line ("generate");
-         Disp_Generate_Statement_Body (Bod, Indent);
+         Disp_Token (Ctxt, Tok_Generate);
+         Close_Hbox (Ctxt);
+
+         Start_Vbox (Ctxt);
+         Disp_Generate_Statement_Body (Ctxt, Bod);
+         Close_Vbox (Ctxt);
 
          Clause := Get_Generate_Else_Clause (Clause);
          exit when Clause = Null_Iir;
 
+         Start_Hbox (Ctxt);
          Cond := Get_Condition (Clause);
-         Set_Col (Indent);
          if Cond = Null_Iir then
-            Put ("else ");
+            Disp_Token (Ctxt, Tok_Else);
          else
-            Put ("elsif ");
+            Disp_Token (Ctxt, Tok_Elsif);
          end if;
       end loop;
-      Set_Col (Indent);
-      Disp_End (Stmt, "generate");
+      Disp_End (Ctxt, Stmt, Tok_Generate);
    end Disp_If_Generate_Statement;
 
-   procedure Disp_Case_Generate_Statement (Stmt : Iir)
+   procedure Disp_Case_Generate_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
-      Indent : constant Count := Col;
       Bod : Iir;
       Assoc : Iir;
    begin
-      Disp_Label (Stmt);
-      Put ("case ");
-      Disp_Expression (Get_Expression (Stmt));
-      Put_Line (" generate");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Case);
+      Print (Ctxt, Get_Expression (Stmt));
+      Disp_Token (Ctxt, Tok_Generate);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
       Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
       while Assoc /= Null_Iir loop
-         Set_Col (Indent + Indentation);
-         Put ("when ");
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_When);
          Bod := Get_Associated_Block (Assoc);
          if Get_Has_Label (Bod) then
-            Disp_Ident (Get_Alternative_Label (Bod));
-            Put (": ");
+            Disp_Ident (Ctxt, Get_Alternative_Label (Bod));
+            Disp_Token (Ctxt, Tok_Colon);
          end if;
-         Disp_Choice (Assoc);
-         Put (" ");
-         Put_Line ("=>");
-         Disp_Generate_Statement_Body (Bod, Indent + 2 * Indentation);
+         Disp_Choice (Ctxt, Assoc);
+         Disp_Token (Ctxt, Tok_Double_Arrow);
+         Close_Hbox (Ctxt);
+
+         Start_Vbox (Ctxt);
+         Disp_Generate_Statement_Body (Ctxt, Bod);
+         Close_Vbox (Ctxt);
       end loop;
-      Set_Col (Indent);
-      Disp_End (Stmt, "generate");
+      Close_Vbox (Ctxt);
+      Disp_End (Ctxt, Stmt, Tok_Generate);
    end Disp_Case_Generate_Statement;
 
-   procedure Disp_PSL_NFA (N : PSL.Nodes.NFA)
+   procedure Disp_PSL_NFA (Ctxt : in out Ctxt_Class; N : PSL.Nodes.NFA)
    is
       use PSL.NFAs;
 
@@ -3202,7 +3434,7 @@ package body Vhdl.Disp_Vhdl is
                Put (" -> ");
                Disp_State (Get_Edge_Dest (E));
                Put (": ");
-               Disp_Psl_Expression (Get_Edge_Expr (E));
+               Disp_Psl_Expression (Ctxt, Get_Edge_Expr (E));
                New_Line;
                E := Get_Next_Src_Edge (E);
             end loop;
@@ -3211,165 +3443,184 @@ package body Vhdl.Disp_Vhdl is
       end if;
    end Disp_PSL_NFA;
 
-   procedure Disp_Psl_Assert_Statement (Stmt : Iir) is
+   procedure Disp_Psl_Assert_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
-      Put ("--psl ");
-      Disp_Label (Stmt);
-      Put ("assert ");
-      Disp_Psl_Expression (Get_Psl_Property (Stmt));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      if Vhdl_Std < Vhdl_08 then
+         Put ("--psl ");
+      end if;
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Assert);
+      Disp_Psl_Expression (Ctxt, Get_Psl_Property (Stmt));
+      Disp_Report_Expression (Ctxt, Stmt);
+      Disp_Severity_Expression (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
    end Disp_Psl_Assert_Statement;
 
-   procedure Disp_Psl_Cover_Statement (Stmt : Iir) is
+   procedure Disp_Psl_Cover_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
       Put ("--psl ");
-      Disp_Label (Stmt);
+      Disp_Label (Ctxt, Stmt);
       Put ("cover ");
-      Disp_Psl_Sequence (Get_Psl_Sequence (Stmt));
+      Disp_Psl_Sequence (Ctxt, Get_Psl_Sequence (Stmt));
       Put_Line (";");
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
    end Disp_Psl_Cover_Statement;
 
-   procedure Disp_Simple_Simultaneous_Statement (Stmt : Iir)
-   is
+   procedure Disp_Simple_Simultaneous_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
-      Disp_Label (Stmt);
-      Disp_Expression (Get_Simultaneous_Left (Stmt));
-      Put (" == ");
-      Disp_Expression (Get_Simultaneous_Right (Stmt));
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Print (Ctxt, Get_Simultaneous_Left (Stmt));
+      Disp_Token (Ctxt, Tok_Equal_Equal);
+      Print (Ctxt, Get_Simultaneous_Right (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Simple_Simultaneous_Statement;
 
-   procedure Disp_Concurrent_Statement (Stmt: Iir) is
+   procedure Disp_Concurrent_Statement (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
       case Get_Kind (Stmt) is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
-            Disp_Concurrent_Simple_Signal_Assignment (Stmt);
+            Disp_Concurrent_Simple_Signal_Assignment (Ctxt, Stmt);
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
-            Disp_Concurrent_Conditional_Signal_Assignment (Stmt);
+            Disp_Concurrent_Conditional_Signal_Assignment (Ctxt, Stmt);
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
-            Disp_Concurrent_Selected_Signal_Assignment (Stmt);
+            Disp_Concurrent_Selected_Signal_Assignment (Ctxt, Stmt);
          when Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement =>
-            Disp_Process_Statement (Stmt);
+            Disp_Process_Statement (Ctxt, Stmt);
          when Iir_Kind_Concurrent_Assertion_Statement =>
-            Disp_Assertion_Statement (Stmt);
+            Disp_Assertion_Statement (Ctxt, Stmt);
          when Iir_Kind_Component_Instantiation_Statement =>
-            Disp_Component_Instantiation_Statement (Stmt);
+            Disp_Component_Instantiation_Statement (Ctxt, Stmt);
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
-            Disp_Label (Stmt);
-            Disp_Postponed (Stmt);
-            Disp_Procedure_Call (Get_Procedure_Call (Stmt));
+            Disp_Procedure_Call (Ctxt, Stmt);
          when Iir_Kind_Block_Statement =>
-            Disp_Block_Statement (Stmt);
+            Disp_Block_Statement (Ctxt, Stmt);
          when Iir_Kind_If_Generate_Statement =>
-            Disp_If_Generate_Statement (Stmt);
+            Disp_If_Generate_Statement (Ctxt, Stmt);
          when Iir_Kind_Case_Generate_Statement =>
-            Disp_Case_Generate_Statement (Stmt);
+            Disp_Case_Generate_Statement (Ctxt, Stmt);
          when Iir_Kind_For_Generate_Statement =>
-            Disp_For_Generate_Statement (Stmt);
+            Disp_For_Generate_Statement (Ctxt, Stmt);
          when Iir_Kind_Psl_Default_Clock =>
-            Disp_Psl_Default_Clock (Stmt);
+            Disp_Psl_Default_Clock (Ctxt, Stmt);
          when Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration =>
-            Disp_Psl_Declaration (Stmt);
+            Disp_Psl_Declaration (Ctxt, Stmt);
          when Iir_Kind_Psl_Assert_Statement =>
-            Disp_Psl_Assert_Statement (Stmt);
+            Disp_Psl_Assert_Statement (Ctxt, Stmt);
          when Iir_Kind_Psl_Cover_Statement =>
-            Disp_Psl_Cover_Statement (Stmt);
+            Disp_Psl_Cover_Statement (Ctxt, Stmt);
          when Iir_Kind_Simple_Simultaneous_Statement =>
-            Disp_Simple_Simultaneous_Statement (Stmt);
+            Disp_Simple_Simultaneous_Statement (Ctxt, Stmt);
          when others =>
             Error_Kind ("disp_concurrent_statement", Stmt);
       end case;
    end Disp_Concurrent_Statement;
 
-   procedure Disp_Package_Declaration (Decl: Iir_Package_Declaration)
+   procedure Disp_Package_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Package_Declaration)
    is
       Header : constant Iir := Get_Package_Header (Decl);
    begin
-      Put ("package ");
-      Disp_Identifier (Decl);
-      Put_Line (" is");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Package);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
+      Close_Hbox (Ctxt);
+      Start_Vbox (Ctxt);
       if Header /= Null_Iir then
-         Disp_Generics (Header);
-         New_Line;
+         Disp_Generics (Ctxt, Header);
       end if;
-      Disp_Declaration_Chain (Decl, Col + Indentation);
-      Disp_End (Decl, "package");
+      Disp_Declaration_Chain (Ctxt, Decl);
+      Close_Vbox (Ctxt);
+      Disp_End (Ctxt, Decl, Tok_Package);
    end Disp_Package_Declaration;
 
-   procedure Disp_Package_Body (Decl: Iir)
-   is
+   procedure Disp_Package_Body (Ctxt : in out Ctxt_Class; Decl: Iir) is
    begin
-      Put ("package body ");
-      Disp_Identifier (Decl);
-      Put_Line (" is");
-      Disp_Declaration_Chain (Decl, Col + Indentation);
-      Disp_End (Decl, "package body");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Package, Tok_Body);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
+      Close_Hbox (Ctxt);
+      Start_Vbox (Ctxt);
+      Disp_Declaration_Chain (Ctxt, Decl);
+      Close_Vbox (Ctxt);
+      Disp_End (Ctxt, Decl, Tok_Package, Tok_Body);
    end Disp_Package_Body;
 
-   procedure Disp_Package_Instantiation_Declaration (Decl: Iir) is
+   procedure Disp_Package_Instantiation_Declaration
+     (Ctxt : in out Ctxt_Class; Decl: Iir) is
    begin
-      Put ("package ");
-      Disp_Identifier (Decl);
-      Put_Line (" is new ");
-      Disp_Name (Get_Uninstantiated_Package_Name (Decl));
-      Put (" ");
-      Disp_Generic_Map_Aspect (Decl);
-      Put_Line (";");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Package);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is, Tok_New);
+      Print (Ctxt, Get_Uninstantiated_Package_Name (Decl));
+      Disp_Generic_Map_Aspect (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
    end Disp_Package_Instantiation_Declaration;
 
-   procedure Disp_Binding_Indication (Bind : Iir; Indent : Count)
+   procedure Disp_Binding_Indication (Ctxt : in out Ctxt_Class; Bind : Iir)
    is
       El : Iir;
    begin
       El := Get_Entity_Aspect (Bind);
       if El /= Null_Iir then
-         Set_Col (Indent);
-         Put ("use ");
-         Disp_Entity_Aspect (El);
+         Disp_Token (Ctxt, Tok_Use);
+         Disp_Entity_Aspect (Ctxt, El);
       end if;
       El := Get_Generic_Map_Aspect_Chain (Bind);
       if El /= Null_Iir then
-         Set_Col (Indent);
-         Disp_Generic_Map_Aspect (Bind);
+         Disp_Generic_Map_Aspect (Ctxt, Bind);
       end if;
       El := Get_Port_Map_Aspect_Chain (Bind);
       if El /= Null_Iir then
-         Set_Col (Indent);
-         Disp_Port_Map_Aspect (Bind);
+         Disp_Port_Map_Aspect (Ctxt, Bind);
       end if;
    end Disp_Binding_Indication;
 
    procedure Disp_Component_Configuration
-     (Conf : Iir_Component_Configuration; Indent : Count)
+     (Ctxt : in out Ctxt_Class; Conf : Iir_Component_Configuration)
    is
       Block : Iir_Block_Configuration;
       Binding : Iir;
    begin
-      Set_Col (Indent);
-      Put ("for ");
-      Disp_Instantiation_List (Get_Instantiation_List (Conf));
-      Put (" : ");
-      Disp_Name (Get_Component_Name (Conf));
-      New_Line;
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_For);
+      Disp_Instantiation_List (Ctxt, Get_Instantiation_List (Conf));
+      Disp_Token (Ctxt, Tok_Colon);
+      Print (Ctxt, Get_Component_Name (Conf));
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
       Binding := Get_Binding_Indication (Conf);
       if Binding /= Null_Iir then
-         Disp_Binding_Indication (Binding, Indent + Indentation);
-         Put (";");
+         Start_Hbox (Ctxt);
+         Disp_Binding_Indication (Ctxt, Binding);
+         Disp_Token (Ctxt, Tok_Semi_Colon);
+         Close_Hbox (Ctxt);
       end if;
       Block := Get_Block_Configuration (Conf);
       if Block /= Null_Iir then
-         Disp_Block_Configuration (Block, Indent + Indentation);
+         Disp_Block_Configuration (Ctxt, Block);
       end if;
-      Set_Col (Indent);
-      Put_Line ("end for;");
+      Close_Vbox (Ctxt);
+
+      Disp_End (Ctxt, Tok_For);
    end Disp_Component_Configuration;
 
    procedure Disp_Configuration_Items
-     (Conf : Iir_Block_Configuration; Indent : Count)
+     (Ctxt : in out Ctxt_Class; Conf : Iir_Block_Configuration)
    is
       El : Iir;
    begin
@@ -3377,14 +3628,12 @@ package body Vhdl.Disp_Vhdl is
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Block_Configuration =>
-               Disp_Block_Configuration (El, Indent);
+               Disp_Block_Configuration (Ctxt, El);
             when Iir_Kind_Component_Configuration =>
-               Disp_Component_Configuration (El, Indent);
+               Disp_Component_Configuration (Ctxt, El);
             when Iir_Kind_Configuration_Specification =>
                --  This may be created by canon.
-               Set_Col (Indent);
-               Disp_Configuration_Specification (El);
-               Set_Col (Indent);
+               Disp_Configuration_Specification (Ctxt, El);
                Put_Line ("end for;");
             when others =>
                Error_Kind ("disp_configuration_item_list", El);
@@ -3394,65 +3643,72 @@ package body Vhdl.Disp_Vhdl is
    end Disp_Configuration_Items;
 
    procedure Disp_Block_Configuration
-     (Block: Iir_Block_Configuration; Indent: Count)
+     (Ctxt : in out Ctxt_Class; Block: Iir_Block_Configuration)
    is
       Spec : Iir;
    begin
-      Set_Col (Indent);
-      Put ("for ");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_For);
       Spec := Get_Block_Specification (Block);
       case Get_Kind (Spec) is
          when Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Architecture_Body =>
-            Disp_Name_Of (Spec);
+            Disp_Name_Of (Ctxt, Spec);
          when Iir_Kind_Indexed_Name =>
             declare
                Index_List : constant Iir_Flist := Get_Index_List (Spec);
             begin
-               Disp_Name_Of (Get_Prefix (Spec));
-               Put (" (");
+               Disp_Name_Of (Ctxt, Get_Prefix (Spec));
+               Disp_Token (Ctxt, Tok_Left_Paren);
                if Index_List = Iir_Flist_Others then
                   Put ("others");
                else
-                  Disp_Expression (Get_Nth_Element (Index_List, 0));
+                  Print (Ctxt, Get_Nth_Element (Index_List, 0));
                end if;
-               Put (")");
+               Disp_Token (Ctxt, Tok_Right_Paren);
             end;
          when Iir_Kind_Slice_Name =>
-            Disp_Name_Of (Get_Prefix (Spec));
-            Put (" (");
-            Disp_Range (Get_Suffix (Spec));
-            Put (")");
+            Disp_Name_Of (Ctxt, Get_Prefix (Spec));
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Disp_Range (Ctxt, Get_Suffix (Spec));
+            Disp_Token (Ctxt, Tok_Right_Paren);
          when Iir_Kind_Simple_Name
            | Iir_Kind_Parenthesis_Name =>
-            Disp_Name (Spec);
+            Print (Ctxt, Spec);
          when others =>
             Error_Kind ("disp_block_configuration", Spec);
       end case;
-      New_Line;
-      Disp_Declaration_Chain (Block, Indent + Indentation);
-      Disp_Configuration_Items (Block, Indent + Indentation);
-      Set_Col (Indent);
-      Put_Line ("end for;");
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Declaration_Chain (Ctxt, Block);
+      Disp_Configuration_Items (Ctxt, Block);
+      Close_Vbox (Ctxt);
+      Disp_End (Ctxt, Tok_For);
    end Disp_Block_Configuration;
 
    procedure Disp_Configuration_Declaration
-     (Decl: Iir_Configuration_Declaration) is
+     (Ctxt : in out Ctxt_Class; Decl: Iir_Configuration_Declaration) is
    begin
-      Put ("configuration ");
-      Disp_Name_Of (Decl);
-      Put (" of ");
-      Disp_Name (Get_Entity_Name (Decl));
-      Put_Line (" is");
-      Disp_Declaration_Chain (Decl, Col);
-      Disp_Block_Configuration (Get_Block_Configuration (Decl),
-                                Col + Indentation);
-      Disp_End (Decl, "configuration");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Configuration);
+      Disp_Name_Of (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Of);
+      Print (Ctxt, Get_Entity_Name (Decl));
+      Disp_Token (Ctxt, Tok_Is);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Declaration_Chain (Ctxt, Decl);
+      Disp_Block_Configuration (Ctxt, Get_Block_Configuration (Decl));
+      Close_Vbox (Ctxt);
+
+      Disp_End (Ctxt, Decl, Tok_Configuration);
    end Disp_Configuration_Declaration;
 
-   procedure Disp_Context_Items (First : Iir; Indent : Count)
+   procedure Disp_Context_Items (Ctxt : in out Ctxt_Class; First : Iir)
    is
       Decl: Iir;
       Next_Decl : Iir;
@@ -3461,157 +3717,332 @@ package body Vhdl.Disp_Vhdl is
       while Decl /= Null_Iir loop
          Next_Decl := Get_Chain (Decl);
 
-         Set_Col (Indent);
-         case Get_Kind (Decl) is
+         case Iir_Kinds_Clause (Get_Kind (Decl)) is
             when Iir_Kind_Use_Clause =>
-               Disp_Use_Clause (Decl);
+               Disp_Use_Clause (Ctxt, Decl);
             when Iir_Kind_Library_Clause =>
-               Put ("library ");
-               Disp_Identifier (Decl);
+               Start_Hbox (Ctxt);
+               Disp_Token (Ctxt, Tok_Library);
+               Disp_Identifier (Ctxt, Decl);
                while Get_Has_Identifier_List (Decl) loop
                   Decl := Next_Decl;
                   Next_Decl := Get_Chain (Decl);
-                  Put (", ");
-                  Disp_Identifier (Decl);
+                  Disp_Token (Ctxt, Tok_Comma);
+                  Disp_Identifier (Ctxt, Decl);
                end loop;
-               Put_Line (";");
+               Disp_Token (Ctxt, Tok_Semi_Colon);
+               Close_Hbox (Ctxt);
             when Iir_Kind_Context_Reference =>
-               Put ("context ");
+               Start_Hbox (Ctxt);
+               Disp_Token (Ctxt, Tok_Context);
                declare
                   Ref : Iir;
                begin
                   Ref := Decl;
                   loop
-                     Disp_Name (Get_Selected_Name (Ref));
+                     Print (Ctxt, Get_Selected_Name (Ref));
                      Ref := Get_Context_Reference_Chain (Ref);
                      exit when Ref = Null_Iir;
-                     Put (", ");
+                     Disp_Token (Ctxt, Tok_Comma);
                   end loop;
-                  Put_Line (";");
+                  Disp_Token (Ctxt, Tok_Semi_Colon);
                end;
-            when others =>
-               Error_Kind ("disp_context_items", Decl);
+               Close_Hbox (Ctxt);
          end case;
          Decl := Next_Decl;
       end loop;
    end Disp_Context_Items;
 
-   procedure Disp_Context_Declaration (Decl: Iir) is
+   procedure Disp_Context_Declaration (Ctxt : in out Ctxt_Class; Decl: Iir) is
    begin
-      Put ("context ");
-      Disp_Name_Of (Decl);
-      Put_Line (" is");
-      Disp_Context_Items (Get_Context_Items (Decl), Col + Indentation);
-      Disp_End (Decl, "context");
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Context);
+      Disp_Name_Of (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
+      Close_Hbox (Ctxt);
+      Start_Vbox (Ctxt);
+      Disp_Context_Items (Ctxt, Get_Context_Items (Decl));
+      Close_Vbox (Ctxt);
+      Disp_End (Ctxt, Decl, Tok_Context);
    end Disp_Context_Declaration;
 
-   procedure Disp_Design_Unit (Unit: Iir_Design_Unit)
+   procedure Disp_Design_Unit (Ctxt : in out Ctxt_Class; Unit: Iir_Design_Unit)
    is
-      Indent: constant Count := Col;
       Decl: Iir;
    begin
-      Disp_Context_Items (Get_Context_Items (Unit), Indent);
+      Disp_Context_Items (Ctxt, Get_Context_Items (Unit));
 
       Decl := Get_Library_Unit (Unit);
-      Set_Col (Indent);
-      case Get_Kind (Decl) is
+      case Iir_Kinds_Library_Unit (Get_Kind (Decl)) is
          when Iir_Kind_Entity_Declaration =>
-            Disp_Entity_Declaration (Decl);
+            Disp_Entity_Declaration (Ctxt, Decl);
          when Iir_Kind_Architecture_Body =>
-            Disp_Architecture_Body (Decl);
+            Disp_Architecture_Body (Ctxt, Decl);
          when Iir_Kind_Package_Declaration =>
-            Disp_Package_Declaration (Decl);
+            Disp_Package_Declaration (Ctxt, Decl);
          when Iir_Kind_Package_Body =>
-            Disp_Package_Body (Decl);
+            Disp_Package_Body (Ctxt, Decl);
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Disp_Package_Instantiation_Declaration (Decl);
+            Disp_Package_Instantiation_Declaration (Ctxt, Decl);
          when Iir_Kind_Configuration_Declaration =>
-            Disp_Configuration_Declaration (Decl);
+            Disp_Configuration_Declaration (Ctxt, Decl);
          when Iir_Kind_Context_Declaration =>
-            Disp_Context_Declaration (Decl);
-         when others =>
-            Error_Kind ("disp_design_unit2", Decl);
+            Disp_Context_Declaration (Ctxt, Decl);
       end case;
-      New_Line;
-      New_Line;
    end Disp_Design_Unit;
 
-   procedure Disp_Vhdl (An_Iir: Iir) is
+   procedure Disp_Vhdl (Ctxt : in out Ctxt_Class; N : Iir) is
    begin
-      -- Put (Count'Image (Line_Length));
-      case Get_Kind (An_Iir) is
+      case Get_Kind (N) is
          when Iir_Kind_Design_Unit =>
-            Disp_Design_Unit (An_Iir);
-         when Iir_Kind_Character_Literal =>
-            Disp_Character_Literal (An_Iir);
+            Disp_Design_Unit (Ctxt, N);
          when Iir_Kind_Enumeration_Type_Definition =>
-            Disp_Enumeration_Type_Definition (An_Iir);
-         when Iir_Kind_Enumeration_Subtype_Definition =>
-            Disp_Enumeration_Subtype_Definition (An_Iir);
+            Disp_Enumeration_Type_Definition (Ctxt, N);
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
-            Disp_Concurrent_Conditional_Signal_Assignment (An_Iir);
+            Disp_Concurrent_Conditional_Signal_Assignment (Ctxt, N);
          when Iir_Kinds_Dyadic_Operator =>
-            Disp_Dyadic_Operator (An_Iir);
+            Disp_Dyadic_Operator (Ctxt, N);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Object_Alias_Declaration =>
-            Disp_Name_Of (An_Iir);
+            Disp_Name_Of (Ctxt, N);
          when Iir_Kind_Enumeration_Literal =>
-            Disp_Identifier (An_Iir);
+            Disp_Identifier (Ctxt, N);
          when Iir_Kind_Component_Instantiation_Statement =>
-            Disp_Component_Instantiation_Statement (An_Iir);
-         when Iir_Kind_Integer_Subtype_Definition =>
-            Disp_Integer_Subtype_Definition (An_Iir);
-         when Iir_Kind_Array_Subtype_Definition =>
-            Disp_Array_Subtype_Definition (An_Iir);
+            Disp_Component_Instantiation_Statement (Ctxt, N);
          when Iir_Kind_Array_Type_Definition =>
-            Disp_Array_Type_Definition (An_Iir);
+            Disp_Array_Type_Definition (Ctxt, N);
          when Iir_Kind_Package_Declaration =>
-            Disp_Package_Declaration (An_Iir);
+            Disp_Package_Declaration (Ctxt, N);
          when Iir_Kind_Wait_Statement =>
-            Disp_Wait_Statement (An_Iir);
+            Disp_Wait_Statement (Ctxt, N);
          when Iir_Kind_Selected_Name
            | Iir_Kind_Selected_Element
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
-            Disp_Expression (An_Iir);
+            Print (Ctxt, N);
          when Iir_Kind_Psl_Cover_Statement =>
-            Disp_Psl_Cover_Statement (An_Iir);
+            Disp_Psl_Cover_Statement (Ctxt, N);
          when others =>
-            Error_Kind ("disp", An_Iir);
+            Error_Kind ("disp", N);
       end case;
    end Disp_Vhdl;
 
-   procedure Disp_Int64 (Val: Int64)
-   is
-      Str: constant String := Int64'Image (Val);
+   procedure Disp_Int_Trim (Ctxt : in out Ctxt_Class; Str : String) is
    begin
+      Start_Lit (Ctxt, Tok_Integer);
       if Str (Str'First) = ' ' then
-         Put (Str (Str'First + 1 .. Str'Last));
+         Disp_Str (Ctxt, Str (Str'First + 1 .. Str'Last));
       else
-         Put (Str);
+         Disp_Str (Ctxt, Str);
       end if;
+      Close_Lit (Ctxt);
+   end Disp_Int_Trim;
+
+   procedure Disp_Int64 (Ctxt : in out Ctxt_Class; Val: Int64) is
+   begin
+      Disp_Int_Trim (Ctxt, Int64'Image (Val));
    end Disp_Int64;
 
-   procedure Disp_Int32 (Val: Iir_Int32)
-   is
-      Str: constant String := Iir_Int32'Image (Val);
+   procedure Disp_Int32 (Ctxt : in out Ctxt_Class; Val: Iir_Int32) is
    begin
-      if Str (Str'First) = ' ' then
-         Put (Str (Str'First + 1 .. Str'Last));
-      else
-         Put (Str);
-      end if;
+      Disp_Int_Trim (Ctxt, Iir_Int32'Image (Val));
    end Disp_Int32;
 
-   procedure Disp_Fp64 (Val: Fp64)
+   procedure Disp_Fp64 (Ctxt : in out Ctxt_Class; Val: Fp64)
    is
       Str: constant String := Fp64'Image (Val);
    begin
+      Start_Lit (Ctxt, Tok_Real);
       if Str (Str'First) = ' ' then
-         Put (Str (Str'First + 1 .. Str'Last));
+         Disp_Str (Ctxt, Str (Str'First + 1 .. Str'Last));
       else
-         Put (Str);
+         Disp_Str (Ctxt, Str);
       end if;
+      Close_Lit (Ctxt);
    end Disp_Fp64;
+
+   procedure Disp_Str (Ctxt : in out Ctxt_Class; Str : String) is
+   begin
+      for I in Str'Range loop
+         Disp_Char (Ctxt, Str (I));
+      end loop;
+   end Disp_Str;
+
+   package Simple_Disp_Ctxt is
+      type Simple_Ctxt is new Disp_Ctxt with record
+         Vnum : Natural;
+         Hnum : Natural;
+         Prev_Tok : Token_Type;
+      end record;
+
+      procedure Init (Ctxt : out Simple_Ctxt);
+      procedure Start_Hbox (Ctxt : in out Simple_Ctxt);
+      procedure Close_Hbox (Ctxt : in out Simple_Ctxt);
+      procedure Start_Vbox (Ctxt : in out Simple_Ctxt);
+      procedure Close_Vbox (Ctxt : in out Simple_Ctxt);
+      procedure Disp_Token (Ctxt : in out Simple_Ctxt; Tok : Token_Type);
+      procedure Start_Lit (Ctxt : in out Simple_Ctxt; Tok : Token_Type);
+      procedure Disp_Char (Ctxt : in out Simple_Ctxt; C : Character);
+      procedure Close_Lit (Ctxt : in out Simple_Ctxt);
+   private
+      procedure Put (Ctxt : in out Simple_Ctxt; C : Character);
+   end Simple_Disp_Ctxt;
+
+   package body Simple_Disp_Ctxt is
+      procedure Init (Ctxt : out Simple_Ctxt) is
+      begin
+         Ctxt := (Vnum => 0,
+                  Hnum => 0,
+                  Prev_Tok => Tok_Newline);
+      end Init;
+
+      procedure Put (Ctxt : in out Simple_Ctxt; C : Character)
+      is
+         pragma Unreferenced (Ctxt);
+      begin
+         Simple_IO.Put (C);
+      end Put;
+
+      procedure Start_Hbox (Ctxt : in out Simple_Ctxt) is
+      begin
+         if Ctxt.Hnum = 0 then
+            for I in 1 .. Ctxt.Vnum loop
+               Put (Ctxt, ' ');
+               Put (Ctxt, ' ');
+            end loop;
+         end if;
+         Ctxt.Hnum := Ctxt.Hnum + 1;
+      end Start_Hbox;
+
+      procedure Close_Hbox (Ctxt : in out Simple_Ctxt) is
+      begin
+         Ctxt.Hnum := Ctxt.Hnum - 1;
+         if Ctxt.Hnum = 0 then
+            Put (Ctxt, ASCII.LF);
+            Ctxt.Prev_Tok := Tok_Newline;
+         end if;
+      end Close_Hbox;
+
+      procedure Start_Vbox (Ctxt : in out Simple_Ctxt) is
+      begin
+         pragma Assert (Ctxt.Hnum = 0);
+         Ctxt.Vnum := Ctxt.Vnum + 1;
+      end Start_Vbox;
+
+      procedure Close_Vbox (Ctxt : in out Simple_Ctxt) is
+      begin
+         Ctxt.Vnum := Ctxt.Vnum - 1;
+      end Close_Vbox;
+
+      procedure Disp_Space (Ctxt : in out Simple_Ctxt; Tok : Token_Type)
+      is
+         Prev_Tok : constant Token_Type := Ctxt.Prev_Tok;
+      begin
+         if Prev_Tok = Tok_Newline then
+            null;
+         elsif Prev_Tok >= Tok_First_Keyword then
+            --  A space after a keyword.
+            if Tok /= Tok_Semi_Colon
+              and Tok /= Tok_Dot
+            then
+               Put (Ctxt, ' ');
+            end if;
+         elsif Tok >= Tok_First_Keyword then
+            --  Space before a keyword.
+            if Prev_Tok /= Tok_Dot
+              and Prev_Tok /= Tok_Left_Paren
+            then
+               Put (Ctxt, ' ');
+            end if;
+         elsif (Tok = Tok_Identifier
+                  or Tok = Tok_String)
+           and (Prev_Tok = Tok_Identifier
+                  or Prev_Tok = Tok_String
+                  or Prev_Tok = Tok_Integer
+                  or Prev_Tok = Tok_Real)
+         then
+            --  A space is needed between 2 identifiers.
+            Put (Ctxt, ' ');
+         elsif Prev_Tok = Tok_Comma
+           or Prev_Tok = Tok_Semi_Colon
+           or Prev_Tok = Tok_Colon
+           or Prev_Tok = Tok_Assign
+           or Prev_Tok = Tok_Double_Arrow
+           or Prev_Tok in Token_Relational_Operator_Type
+           or Prev_Tok in Token_Adding_Operator_Type
+           or Prev_Tok in Token_Multiplying_Operator_Type
+           or Prev_Tok = Tok_Bar
+         then
+            --  Always a space after ',', ':', ':='
+            Put (Ctxt, ' ');
+         elsif Tok = Tok_Left_Paren then
+            if Prev_Tok /= Tok_Tick and Prev_Tok /= Tok_Left_Paren then
+               --  A space before '('.
+               Put (Ctxt, ' ');
+            end if;
+         elsif Tok = Tok_Left_Bracket
+           or Tok = Tok_Assign
+           or Tok = Tok_Double_Arrow
+           or Tok in Token_Relational_Operator_Type
+           or Tok in Token_Adding_Operator_Type
+           or Tok in Token_Multiplying_Operator_Type
+           or Tok = Tok_Bar
+         then
+            --  Always a space before '[', ':='.
+            Put (Ctxt, ' ');
+         end if;
+
+         Ctxt.Prev_Tok := Tok;
+      end Disp_Space;
+
+      procedure Disp_Token (Ctxt : in out Simple_Ctxt; Tok : Token_Type) is
+      begin
+         Disp_Space (Ctxt, Tok);
+         Disp_Str (Ctxt, Image (Tok));
+      end Disp_Token;
+
+      procedure Start_Lit (Ctxt : in out Simple_Ctxt; Tok : Token_Type) is
+      begin
+         Disp_Space (Ctxt, Tok);
+      end Start_Lit;
+
+      procedure Disp_Char (Ctxt : in out Simple_Ctxt; C : Character) is
+      begin
+         Put (Ctxt, C);
+      end Disp_Char;
+
+      procedure Close_Lit (Ctxt : in out Simple_Ctxt) is
+      begin
+         null;
+      end Close_Lit;
+   end Simple_Disp_Ctxt;
+
+   procedure Disp_Vhdl (N : Iir)
+   is
+      use Simple_Disp_Ctxt;
+      Ctxt : Simple_Ctxt;
+   begin
+      Init (Ctxt);
+      Disp_Vhdl (Ctxt, N);
+   end Disp_Vhdl;
+
+   procedure Disp_Expression (Expr: Iir)
+   is
+      use Simple_Disp_Ctxt;
+      Ctxt : Simple_Ctxt;
+   begin
+      Init (Ctxt);
+      Print (Ctxt, Expr);
+   end Disp_Expression;
+
+   procedure Disp_PSL_NFA (N : PSL.Nodes.NFA)
+   is
+      use Simple_Disp_Ctxt;
+      Ctxt : Simple_Ctxt;
+   begin
+      Init (Ctxt);
+      Disp_PSL_NFA (Ctxt, N);
+   end Disp_PSL_NFA;
+
 end Vhdl.Disp_Vhdl;
