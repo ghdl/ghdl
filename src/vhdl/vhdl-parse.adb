@@ -2365,6 +2365,7 @@ package body Vhdl.Parse is
          Res_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
          Set_Array_Element_Constraint (Res_Type, Element_Subtype);
          Set_Index_Constraint_List (Res_Type, List_To_Flist (Index_List));
+         Set_Index_Constraint_Flag (Res_Type, True);
       else
          Res_Type := Create_Iir (Iir_Kind_Array_Type_Definition);
          Set_Element_Subtype_Indication (Res_Type, Element_Subtype);
@@ -2650,6 +2651,7 @@ package body Vhdl.Parse is
          Res := Create_Iir (Iir_Kind_Protected_Type_Declaration);
          Set_Location (Res, Loc);
          Set_Type_Definition (Decl, Res);
+         Set_Type_Declarator (Res, Decl);
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
@@ -2777,6 +2779,7 @@ package body Vhdl.Parse is
                   end if;
                   Set_Range_Constraint (Phys_Def, Def);
                   Set_Type_Definition (Decl, Phys_Def);
+                  Set_Type_Declarator (Phys_Def, Decl);
                end;
             end if;
 
@@ -2790,6 +2793,7 @@ package body Vhdl.Parse is
             Set_Location (Decl, Loc);
             Def := Parse_Record_Type_Definition;
             Set_Type_Definition (Decl, Def);
+            Set_Type_Declarator (Def, Decl);
             if Current_Token = Tok_Identifier then
                if Flags.Vhdl_Std = Vhdl_87 then
                   Error_Msg_Parse ("simple_name not allowed here in vhdl87");
@@ -2975,6 +2979,7 @@ package body Vhdl.Parse is
       --  Index_constraint.
       Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Def);
+      Set_Index_Constraint_Flag (Def, True);
 
       --  Eat '('.
       Scan;
