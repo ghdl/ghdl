@@ -296,7 +296,6 @@ package body Vhdl.Disp_Vhdl is
       if Get_End_Has_Identifier (Decl) then
          Disp_Name_Of (Ctxt, Decl);
       end if;
-      Disp_Token (Ctxt, Tok_Semi_Colon);
    end Disp_After_End;
 
    procedure Disp_End_No_Close
@@ -313,6 +312,7 @@ package body Vhdl.Disp_Vhdl is
       Decl : Iir; Tok1 : Token_Type; Tok2 : Token_Type := Tok_Invalid) is
    begin
       Disp_End_No_Close (Ctxt, Decl, Tok1, Tok2);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
    end Disp_End;
 
@@ -616,7 +616,7 @@ package body Vhdl.Disp_Vhdl is
          end if;
          Disp_Name_Of (Ctxt, A_Lit);
       end loop;
-      Disp_Token (Ctxt, Tok_Right_Paren, Tok_Semi_Colon);
+      Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Enumeration_Type_Definition;
 
    procedure Disp_Discrete_Range
@@ -650,7 +650,6 @@ package body Vhdl.Disp_Vhdl is
       end loop;
       Disp_Token (Ctxt, Tok_Right_Paren, Tok_Of);
       Disp_Subtype_Indication (Ctxt, Get_Element_Subtype_Indication (Def));
-      Disp_Token (Ctxt, Tok_Semi_Colon);
    end Disp_Array_Type_Definition;
 
    procedure Disp_Physical_Literal (Ctxt : in out Ctxt_Class; Lit: Iir)
@@ -753,7 +752,6 @@ package body Vhdl.Disp_Vhdl is
       end loop;
       Disp_Token (Ctxt, Tok_Right_Paren, Tok_Of);
       Disp_Subtype_Indication (Ctxt, El_Def);
-      Disp_Token (Ctxt, Tok_Semi_Colon);
    end Disp_Array_Subtype_Definition;
 
    -- Display the full definition of a type, ie the sequence that can create
@@ -774,11 +772,9 @@ package body Vhdl.Disp_Vhdl is
             Disp_Token (Ctxt, Tok_Access);
             Disp_Subtype_Indication
               (Ctxt, Get_Designated_Subtype_Indication (Def));
-            Disp_Token (Ctxt, Tok_Semi_Colon);
          when Iir_Kind_File_Type_Definition =>
             Disp_Token (Ctxt, Tok_File, Tok_Of);
             Disp_Subtype_Indication (Ctxt, Get_File_Type_Mark (Def));
-            Disp_Token (Ctxt, Tok_Semi_Colon);
          when Iir_Kind_Protected_Type_Declaration =>
             Disp_Token (Ctxt, Tok_Protected);
             Close_Hbox (Ctxt);
@@ -791,7 +787,6 @@ package body Vhdl.Disp_Vhdl is
            | Iir_Kind_Parenthesis_Name =>
             Disp_Token (Ctxt, Tok_Range);
             Print (Ctxt, Def);
-            Disp_Token (Ctxt, Tok_Semi_Colon);
          when others =>
             Error_Kind ("disp_type_definition", Def);
       end case;
@@ -812,6 +807,7 @@ package body Vhdl.Disp_Vhdl is
       else
          Disp_Token (Ctxt, Tok_Is);
          Disp_Type_Definition (Ctxt, Def);
+         Disp_Token (Ctxt, Tok_Semi_Colon);
       end if;
       Close_Hbox (Ctxt);
    end Disp_Type_Declaration;
@@ -876,11 +872,11 @@ package body Vhdl.Disp_Vhdl is
             begin
                Disp_Token (Ctxt, Tok_Range);
                Print (Ctxt, Get_Range_Constraint (St));
-               Disp_Token (Ctxt, Tok_Semi_Colon);
             end;
          when others =>
             Disp_Type_Definition (Ctxt, Def);
       end case;
+      Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
    end Disp_Anonymous_Type_Declaration;
 
@@ -2543,6 +2539,7 @@ package body Vhdl.Disp_Vhdl is
          Disp_Token (Ctxt, Tok_Postponed);
       end if;
       Disp_After_End (Ctxt, Process, Tok_Process);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
    end Disp_Process_Statement;
 
