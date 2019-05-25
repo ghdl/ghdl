@@ -20,10 +20,6 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with PSL.Types; use PSL.Types;
 
 package Vhdl.Utils is
-   --  Transform the current token into an iir literal.
-   --  The current token must be either a character, a string or an identifier.
-   function Current_Text return Iir;
-
    --  Get identifier of NODE as a string.
    function Image_Identifier (Node : Iir) return String;
    function Image_String_Lit (Str : Iir) return String;

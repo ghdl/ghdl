@@ -15,37 +15,16 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Vhdl.Scanner; use Vhdl.Scanner;
-with Vhdl.Tokens; use Vhdl.Tokens;
-with Vhdl.Errors; use Vhdl.Errors;
+
+with Flags; use Flags;
 with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
 with Vhdl.Std_Package;
-with Flags; use Flags;
+with Vhdl.Errors; use Vhdl.Errors;
 with PSL.Nodes;
 
 package body Vhdl.Utils is
-   -- Transform the current token into an iir literal.
-   -- The current token must be either a character or an identifier.
-   function Current_Text return Iir is
-      Res: Iir;
-   begin
-      case Current_Token is
-         when Tok_Identifier =>
-            Res := Create_Iir (Iir_Kind_Simple_Name);
-         when Tok_Character =>
-            Res := Create_Iir (Iir_Kind_Character_Literal);
-         when others =>
-            raise Internal_Error;
-      end case;
-      Set_Identifier (Res, Current_Identifier);
-      Invalidate_Current_Identifier;
-      Invalidate_Current_Token;
-      Set_Location (Res, Get_Token_Location);
-      return Res;
-   end Current_Text;
-
    function Is_Error (N : Iir) return Boolean is
    begin
       return Get_Kind (N) = Iir_Kind_Error;
