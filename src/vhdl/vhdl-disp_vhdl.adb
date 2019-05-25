@@ -3328,8 +3328,7 @@ package body Vhdl.Disp_Vhdl is
       Disp_End (Ctxt, Stmt, Tok_Generate);
    end Disp_For_Generate_Statement;
 
-   procedure Disp_If_Generate_Statement
-     (Ctxt : in out Ctxt_Class; Stmt : Iir)
+   procedure Disp_If_Generate_Statement (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
       Bod : Iir;
       Clause : Iir;
@@ -3451,6 +3450,7 @@ package body Vhdl.Disp_Vhdl is
          Put ("--psl ");
       end if;
       Disp_Label (Ctxt, Stmt);
+      Disp_Postponed (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Assert);
       Disp_Psl_Expression (Ctxt, Get_Psl_Property (Stmt));
       Disp_Report_Expression (Ctxt, Stmt);
