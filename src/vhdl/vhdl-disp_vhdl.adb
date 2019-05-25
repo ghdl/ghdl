@@ -694,8 +694,8 @@ package body Vhdl.Disp_Vhdl is
             Reindent := False;
          else
             Disp_Token (Ctxt, Tok_Colon);
-            Disp_Subtype_Indication
-              (Ctxt, Or_Else (El_Subtype, Get_Type (El)));
+            Disp_Subtype_Indication (Ctxt, Or_Else (El_Subtype,
+                                                    Get_Type (El)));
             Disp_Token (Ctxt, Tok_Semi_Colon);
             Close_Hbox (Ctxt);
             Reindent := True;
@@ -800,15 +800,13 @@ package body Vhdl.Disp_Vhdl is
       Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Type);
       Disp_Name_Of (Ctxt, Decl);
-      if Def = Null_Iir
-        or else Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
+      if Def /= Null_Iir
+        and then Get_Kind (Def) /= Iir_Kind_Incomplete_Type_Definition
       then
-         Disp_Token (Ctxt, Tok_Semi_Colon);
-      else
          Disp_Token (Ctxt, Tok_Is);
          Disp_Type_Definition (Ctxt, Def);
-         Disp_Token (Ctxt, Tok_Semi_Colon);
       end if;
+      Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
    end Disp_Type_Declaration;
 
