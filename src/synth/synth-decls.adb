@@ -77,14 +77,7 @@ package body Synth.Decls is
             Make_Object (Syn_Inst, Wire_Variable, Decl);
             Create_Var_Wire (Syn_Inst, Decl, null);
          when Iir_Kind_Constant_Declaration =>
-            declare
-               Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
-               Init : Iir_Value_Literal_Acc;
-            begin
-               Make_Object (Syn_Inst, Wire_Variable, Decl);
-               Init := Syn_Inst.Sim.Objects (Slot);
-               Create_Var_Wire (Syn_Inst, Decl, Init);
-            end;
+            null;
          when Iir_Kind_Signal_Declaration =>
             declare
                Def : constant Iir := Get_Default_Value (Decl);

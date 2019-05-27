@@ -1,15 +1,15 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity dff07 is
+entity dff09 is
   port (q : out std_logic_vector(7 downto 0);
         d : std_logic_vector(7 downto 0);
         clk : std_logic;
         rst : std_logic;
         en : std_logic);
-end dff07;
+end dff09;
 
-architecture behav of dff07 is
+architecture behav of dff09 is
 begin
   process (clk) is
     constant rval : std_logic_vector(7 downto 0) := x"55";

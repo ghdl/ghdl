@@ -1,14 +1,14 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity dff06 is
+entity dff08 is
   port (q : out std_logic;
         d : std_logic;
         clk : std_logic;
         rstn : std_logic);
-end dff06;
+end dff08;
 
-architecture behav of dff06 is
+architecture behav of dff08 is
 begin
   process (clk, rstn) is
     constant rval : std_logic := '0';

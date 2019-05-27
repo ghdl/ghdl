@@ -25,6 +25,7 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Simul.Execution;
+with Simul.Annotations; use Simul.Annotations;
 with Grt.Types; use Grt.Types;
 
 with Synth.Errors; use Synth.Errors;
@@ -520,9 +521,12 @@ package body Synth.Expr is
             return Synth_Name (Syn_Inst, Get_Named_Entity (Name));
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Constant_Declaration =>
+           | Iir_Kind_Signal_Declaration =>
             return Get_Value (Syn_Inst, Name);
+         when Iir_Kind_Constant_Declaration =>
+            return Create_Value_Lit(
+               Syn_Inst.Sim.Objects(Get_Info(Name).Slot),
+               Get_Type(Name));
          when others =>
             Error_Kind ("synth_name", Name);
       end case;
