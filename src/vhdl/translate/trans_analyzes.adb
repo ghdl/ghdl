@@ -16,11 +16,11 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Errorout;
+with Simple_IO;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Vhdl.Disp_Vhdl;
-with Ada.Text_IO;
-with Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 
 package body Trans_Analyzes is
@@ -230,7 +230,7 @@ package body Trans_Analyzes is
 
    procedure Dump_Drivers (Proc : Iir; List : Iir_List)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       use Errorout;
       El : Iir;
       It : List_Iterator;

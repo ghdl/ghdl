@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Ada.Unchecked_Conversion;
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO; use Simple_IO;
 with Types; use Types;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -196,9 +196,9 @@ package body Simul.Simulation.Main is
       Marker : Mark_Type;
    begin
       if Trace_Drivers then
-         Ada.Text_IO.Put ("Drivers for ");
+         Put ("Drivers for ");
          Disp_Instance_Name (Instance);
-         Ada.Text_IO.Put_Line (": " & Disp_Node (Proc));
+         Put_Line (": " & Disp_Node (Proc));
       end if;
 
       Driver_List := Trans_Analyzes.Extract_Drivers (Proc);

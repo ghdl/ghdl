@@ -16,12 +16,12 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
 with Ada.Command_Line;
 
 with Ghdllocal; use Ghdllocal;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
+with Simple_IO;
 with Types;
 with Flags;
 with Name_Table;
@@ -206,11 +206,9 @@ package body Ghdlsimul is
       return True;
    end Decode_Option;
 
-   procedure Disp_Long_Help
-   is
-      use Ada.Text_IO;
+   procedure Disp_Long_Help is
    begin
-      Put_Line (" --debug        Run with debugger");
+      Simple_IO.Put_Line (" --debug        Run with debugger");
    end Disp_Long_Help;
 
    function Get_Top_Config return Iir is

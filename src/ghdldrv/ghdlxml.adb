@@ -15,8 +15,10 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO; use Ada.Text_IO;
+
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Simple_IO; use Simple_IO;
+
 with Types; use Types;
 with Name_Table; use Name_Table;
 with Vhdl.Nodes_Meta; use Vhdl.Nodes_Meta;

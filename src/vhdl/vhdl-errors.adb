@@ -58,40 +58,36 @@ package body Vhdl.Errors is
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
                               Loc : Location_Type;
                               Msg: String;
-                              Args : Earg_Arr := No_Eargs;
-                              Cont : Boolean := False) is
+                              Args : Earg_Arr := No_Eargs) is
    begin
       if Flags.Flag_Only_Elab_Warnings then
          return;
       end if;
-      Report_Msg (Id, Semantic, +Loc, Msg, Args, Cont);
+      Report_Msg (Id, Semantic, +Loc, Msg, Args);
    end Warning_Msg_Sem;
 
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
                               Loc : Location_Type;
                               Msg: String;
-                              Arg1 : Earg_Type;
-                              Cont : Boolean := False) is
+                              Arg1 : Earg_Type) is
    begin
-      Warning_Msg_Sem (Id, Loc, Msg, Earg_Arr'(1 => Arg1), Cont);
+      Warning_Msg_Sem (Id, Loc, Msg, Earg_Arr'(1 => Arg1));
    end Warning_Msg_Sem;
 
    procedure Warning_Msg_Elab (Id : Msgid_Warnings;
                                Loc : Iir;
                                Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False) is
+                               Arg1 : Earg_Type) is
    begin
-      Report_Msg (Id, Elaboration, +Loc, Msg, Earg_Arr'(1 => Arg1), Cont);
+      Report_Msg (Id, Elaboration, +Loc, Msg, Earg_Arr'(1 => Arg1));
    end Warning_Msg_Elab;
 
    procedure Warning_Msg_Elab (Id : Msgid_Warnings;
                                Loc : Iir;
                                Msg: String;
-                               Args : Earg_Arr := No_Eargs;
-                               Cont : Boolean := False) is
+                               Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Id, Elaboration, +Loc, Msg, Args, Cont);
+      Report_Msg (Id, Elaboration, +Loc, Msg, Args);
    end Warning_Msg_Elab;
 
    -- Disp a message during semantic analysis.
@@ -103,10 +99,9 @@ package body Vhdl.Errors is
 
    procedure Error_Msg_Sem (Loc: Location_Type;
                             Msg: String;
-                            Args : Earg_Arr := No_Eargs;
-                            Cont : Boolean := False) is
+                            Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Msgid_Error, Semantic, +Loc, Msg, Args, Cont);
+      Report_Msg (Msgid_Error, Semantic, +Loc, Msg, Args);
    end Error_Msg_Sem;
 
    procedure Error_Msg_Sem

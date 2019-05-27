@@ -685,19 +685,19 @@ package body Synth.Expr is
       Clk := Get_Net (Synth_Name (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
-         return Build_Edge (Build_Context, True, Clk);
+         return Build_Edge (Build_Context, Clk);
       end if;
       Imp := Get_Implementation (Expr);
       if Get_Implicit_Definition (Imp) /= Iir_Predefined_Enum_Equality then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
-         return Build_Edge (Build_Context, True, Clk);
+         return Build_Edge (Build_Context, Clk);
       end if;
       Left := Get_Left (Expr);
       Right := Get_Right (Expr);
       if Get_Kind (Right) /= Iir_Kind_Character_Literal then
          Error_Msg_Synth
            (+Expr, "ill-formed clock-level, '0' or '1' expected");
-         return Build_Edge (Build_Context, True, Clk);
+         return Build_Edge (Build_Context, Clk);
       end if;
       Lit := Get_Named_Entity (Right);
       if Lit = Vhdl.Std_Package.Bit_0
@@ -717,7 +717,10 @@ package body Synth.Expr is
          Error_Msg_Synth
            (+Left, "clock signal name doesn't match");
       end if;
-      return Build_Edge (Build_Context, Posedge, Clk);
+      if not Posedge then
+         Clk := Build_Monadic (Build_Context, Id_Not, Clk);
+      end if;
+      return Build_Edge (Build_Context, Clk);
    end Extract_Clock_Level;
 
    function Synth_Clock_Edge (Syn_Inst : Synth_Instance_Acc; Expr : Iir)
@@ -856,13 +859,21 @@ package body Synth.Expr is
             declare
                Imp : constant Iir := Get_Implementation (Expr);
                Clk : Net;
+               Edge : Net;
             begin
                if Imp = Vhdl.Ieee.Std_Logic_1164.Rising_Edge then
                   Clk := Get_Net
                     (Synth_Assoc_In
                        (Syn_Inst, Get_Parameter_Association_Chain (Expr)));
-                  return Create_Value_Net
-                    (Build_Edge (Build_Context, True, Clk), No_Range);
+                  Edge := Build_Edge (Build_Context, Clk);
+                  return Create_Value_Net (Edge, No_Range);
+               elsif Imp = Vhdl.Ieee.Std_Logic_1164.Falling_Edge then
+                  Clk := Get_Net
+                    (Synth_Assoc_In
+                       (Syn_Inst, Get_Parameter_Association_Chain (Expr)));
+                  Clk := Build_Monadic (Build_Context, Id_Not, Clk);
+                  Edge := Build_Edge (Build_Context, Clk);
+                  return Create_Value_Net (Edge, No_Range);
                end if;
                Error_Msg_Synth
                  (+Expr, "user function call to %i is not handled", +Imp);
@@ -872,6 +883,7 @@ package body Synth.Expr is
          when others =>
             Error_Kind ("synth_expression", Expr);
       end case;
+      raise Fatal_Error;
       return null;
    end Synth_Expression_With_Type;
 

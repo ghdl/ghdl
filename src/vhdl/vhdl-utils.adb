@@ -1384,6 +1384,8 @@ package body Vhdl.Utils is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             return Get_Identifier (Name);
+         when Iir_Kind_Error =>
+            return Null_Identifier;
          when others =>
             Error_Kind ("get_entity_identifier_of_architecture", Name);
       end case;

@@ -41,6 +41,6 @@ package body PSL.Errors is
 
    procedure Error_Msg_Sem (Msg: String; Loc : PSL_Node) is
    begin
-      Report_Msg (Msgid_Error, Semantic, +(+Loc), Msg, No_Eargs, False);
+      Report_Msg (Msgid_Error, Semantic, +(+Loc), Msg, No_Eargs);
    end Error_Msg_Sem;
 end PSL.Errors;

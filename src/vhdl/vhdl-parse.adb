@@ -93,19 +93,16 @@ package body Vhdl.Parse is
                   Msg, (1 => Arg1));
    end Error_Msg_Parse;
 
-   procedure Error_Msg_Parse
-     (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False) is
+   procedure Error_Msg_Parse (Msg: String; Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord,
-                  Msg, Args, Cont);
+      Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord, Msg, Args);
    end Error_Msg_Parse;
 
    procedure Error_Msg_Parse (Loc : Location_Type;
                               Msg: String;
-                              Args : Earg_Arr := No_Eargs;
-                              Cont : Boolean := False) is
+                              Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Msgid_Error, Errorout.Parse, +Loc, Msg, Args, Cont);
+      Report_Msg (Msgid_Error, Errorout.Parse, +Loc, Msg, Args);
    end Error_Msg_Parse;
 
    procedure Unexpected (Where: String) is
@@ -127,12 +124,13 @@ package body Vhdl.Parse is
       end case;
 
       if Msg'Length > 0 then
-         Error_Msg_Parse (Loc, Msg, Args => No_Eargs, Cont => True);
+         Report_Start_Group;
+         Error_Msg_Parse (Loc, Msg, Args => No_Eargs);
          Error_Msg_Parse (Loc, "(found: %t)", (1 => +Current_Token));
+         Report_End_Group;
       elsif Current_Token = Tok_Identifier then
-         Error_Msg_Parse
-           (Loc, "%t is expected instead of %i",
-            (+Token, +Current_Identifier));
+         Error_Msg_Parse (Loc, "%t is expected instead of %i",
+                          (+Token, +Current_Identifier));
       else
          Error_Msg_Parse
            (Loc, "%t is expected instead of %t", (+Token, + Current_Token));
@@ -1622,9 +1620,6 @@ package body Vhdl.Parse is
                Last := N_Interface;
 
                Inter := Get_Chain (O_Interface);
-               if Flag_Elocations then
-                  Delete_Elocations (O_Interface);
-               end if;
                Free_Iir (O_Interface);
                O_Interface := Inter;
             end loop;
@@ -1833,10 +1828,10 @@ package body Vhdl.Parse is
 
       if Current_Token = Tok_Return then
          if not Is_Func then
-            Error_Msg_Parse
-              ("'return' not allowed for a procedure", Cont => True);
-            Error_Msg_Parse
-              ("(remove return part or declare a function)");
+            Report_Start_Group;
+            Error_Msg_Parse ("'return' not allowed for a procedure");
+            Error_Msg_Parse ("(remove return part or declare a function)");
+            Report_End_Group;
 
             --  Skip 'return'
             Scan;
@@ -2370,6 +2365,7 @@ package body Vhdl.Parse is
          Res_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
          Set_Array_Element_Constraint (Res_Type, Element_Subtype);
          Set_Index_Constraint_List (Res_Type, List_To_Flist (Index_List));
+         Set_Index_Constraint_Flag (Res_Type, True);
       else
          Res_Type := Create_Iir (Iir_Kind_Array_Type_Definition);
          Set_Element_Subtype_Indication (Res_Type, Element_Subtype);
@@ -2655,6 +2651,7 @@ package body Vhdl.Parse is
          Res := Create_Iir (Iir_Kind_Protected_Type_Declaration);
          Set_Location (Res, Loc);
          Set_Type_Definition (Decl, Res);
+         Set_Type_Declarator (Res, Decl);
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
@@ -2782,6 +2779,7 @@ package body Vhdl.Parse is
                   end if;
                   Set_Range_Constraint (Phys_Def, Def);
                   Set_Type_Definition (Decl, Phys_Def);
+                  Set_Type_Declarator (Phys_Def, Decl);
                end;
             end if;
 
@@ -2795,6 +2793,7 @@ package body Vhdl.Parse is
             Set_Location (Decl, Loc);
             Def := Parse_Record_Type_Definition;
             Set_Type_Definition (Decl, Def);
+            Set_Type_Declarator (Def, Decl);
             if Current_Token = Tok_Identifier then
                if Flags.Vhdl_Std = Vhdl_87 then
                   Error_Msg_Parse ("simple_name not allowed here in vhdl87");
@@ -2815,9 +2814,11 @@ package body Vhdl.Parse is
                Error_Msg_Parse ("protected type not allowed in vhdl87/93");
                Decl := Parse_Protected_Type_Definition (Ident, Loc);
             else
+               Report_Start_Group;
                Error_Msg_Parse ("type %i cannot be defined from another type",
-                                (1 => +Ident), Cont => True);
+                                +Ident);
                Error_Msg_Parse ("(you should declare a subtype)");
+               Report_End_Group;
                Decl := Create_Iir (Iir_Kind_Type_Declaration);
             end if;
 
@@ -2978,6 +2979,7 @@ package body Vhdl.Parse is
       --  Index_constraint.
       Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Def);
+      Set_Index_Constraint_Flag (Def, True);
 
       --  Eat '('.
       Scan;
@@ -3315,6 +3317,9 @@ package body Vhdl.Parse is
          Chain_Append (First, Last, Terminal);
 
          exit when Current_Token /= Tok_Comma;
+
+         Set_Has_Identifier_List (Terminal, True);
+
          --  Skip ','.
          Scan;
       end loop;
@@ -3406,7 +3411,18 @@ package body Vhdl.Parse is
          when Tok_Colon =>
             --  Either a free quantity (or a source quantity)
             --  TODO
-            raise Program_Error;
+
+            --  Skip ':'.
+            Scan;
+
+            Set_Subtype_Indication (First, Parse_Subtype_Indication);
+
+            if Current_Token = Tok_Assign then
+               --  Skip ':='.
+               Scan;
+
+               Set_Default_Value (First, Parse_Expression);
+            end if;
          when Tok_Tolerance
            | Tok_Assign
            | Tok_Across
@@ -5898,10 +5914,12 @@ package body Vhdl.Parse is
 
          --  Catch errors for Ada programmers.
          if Current_Token = Tok_Then or Current_Token = Tok_Else then
+            Report_Start_Group;
             Error_Msg_Parse ("""or else"" and ""and then"" sequences "
-                             & "are not allowed in vhdl", Cont => True);
+                               & "are not allowed in vhdl");
             Error_Msg_Parse ("""and"" and ""or"" are short-circuit "
-                             & "operators for BIT and BOOLEAN types");
+                               & "operators for BIT and BOOLEAN types");
+            Report_End_Group;
             Scan;
          end if;
 
@@ -5929,10 +5947,10 @@ package body Vhdl.Parse is
          elsif Op_Prio = Prio_Logical then
             if Current_Token = Op_Tok then
                if Op_Tok = Tok_Nand or Op_Tok = Tok_Nor then
-                  Error_Msg_Parse
-                    ("sequence of 'nor' or 'nand' not allowed", Cont => True);
-                  Error_Msg_Parse
-                    ("('nor' and 'nand' are not associative)");
+                  Report_Start_Group;
+                  Error_Msg_Parse ("sequence of 'nor' or 'nand' not allowed");
+                  Error_Msg_Parse ("('nor' and 'nand' are not associative)");
+                  Report_End_Group;
                end if;
             elsif Current_Token in Token_Logical_Type then
                --  Expression is a sequence of relations, with the same
@@ -7267,16 +7285,20 @@ package body Vhdl.Parse is
          Set_Start_Location (Subprg, Start_Loc);
       end if;
 
-      if Current_Token /= Tok_Is then
-         --  Skip ';'.
-         Expect_Scan (Tok_Semi_Colon);
+      case Current_Token is
+         when Tok_Is =>
+            --  Skip 'is'.
+            Is_Loc := Get_Token_Location;
+            Scan;
+         when Tok_Begin =>
+            Error_Msg_Parse ("missing 'is' before 'begin'");
+            Is_Loc := Get_Token_Location;
+         when others =>
+            --  Skip ';'.
+            Expect_Scan (Tok_Semi_Colon);
 
-         return Subprg;
-      end if;
-
-      --  Skip 'is'.
-      Is_Loc := Get_Token_Location;
-      Scan;
+            return Subprg;
+      end case;
 
       --  The body.
       Set_Has_Body (Subprg, True);
@@ -7701,10 +7723,11 @@ package body Vhdl.Parse is
       Res : Iir;
    begin
       if Flags.Vhdl_Std = Vhdl_87 then
+         Report_Start_Group;
          Error_Msg_Parse
-           ("component instantiation using keyword 'component', 'entity',",
-           Cont => True);
+           ("component instantiation using keyword 'component', 'entity',");
          Error_Msg_Parse (" or 'configuration' is not allowed in vhdl87");
+         Report_End_Group;
       end if;
 
       case Current_Token is
@@ -7865,6 +7888,8 @@ package body Vhdl.Parse is
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("'is' not allowed here in vhdl87");
          end if;
+
+         Set_Has_Is (Res, True);
 
          --  Eat 'is'.
          Scan;

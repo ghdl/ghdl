@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 
 with System;
---  with Ada.Text_IO; use Ada.Text_IO;
 with Tables;
 with Types; use Types;
 with Name_Table;

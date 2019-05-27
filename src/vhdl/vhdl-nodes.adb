@@ -355,17 +355,40 @@ package body Vhdl.Nodes is
       return Res;
    end Create_Node;
 
-   procedure Free_Node (N : Node_Type)
-   is
+   type Free_Node_Hook_Array is
+     array (Natural range 1 .. 8) of Free_Iir_Hook;
+   Nbr_Free_Hooks : Natural := 0;
+
+   Free_Hooks : Free_Node_Hook_Array;
+
+   procedure Register_Free_Hook (Hook : Free_Iir_Hook) is
    begin
-      if N /= Null_Node then
-         Set_Nkind (N, 0);
-         Set_Field1 (N, Free_Chain);
-         Free_Chain := N;
-         if Nodet.Table (N).Format = Format_Medium then
-            Set_Field1 (N + 1, Free_Chain);
-            Free_Chain := N + 1;
-         end if;
+      if Nbr_Free_Hooks >= Free_Hooks'Last then
+         --  Not enough room in Free_Hooks.
+         raise Internal_Error;
+      end if;
+      Nbr_Free_Hooks := Nbr_Free_Hooks + 1;
+      Free_Hooks (Nbr_Free_Hooks) := Hook;
+   end Register_Free_Hook;
+
+   procedure Free_Node (N : Node_Type) is
+   begin
+      if N = Null_Node then
+         return;
+      end if;
+
+      --  Call hooks.
+      for I in Free_Hooks'First .. Nbr_Free_Hooks loop
+         Free_Hooks (I).all (N);
+      end loop;
+
+      --  Really free the node.
+      Set_Nkind (N, 0);
+      Set_Field1 (N, Free_Chain);
+      Free_Chain := N;
+      if Nodet.Table (N).Format = Format_Medium then
+         Set_Field1 (N + 1, Free_Chain);
+         Free_Chain := N + 1;
       end if;
    end Free_Node;
 

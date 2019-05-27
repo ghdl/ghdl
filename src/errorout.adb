@@ -18,12 +18,23 @@
 
 with Name_Table;
 with Files_Map; use Files_Map;
-with Flags; use Flags;
 with Str_Table;
 
 with Vhdl.Errors; use Vhdl.Errors;
 
 package body Errorout is
+   --  Messages in a group.
+   --  Set to 0 for individual messages,
+   --  Set to 1 .. n for messages in a group.
+   In_Group : Natural := 0;
+
+   Report_Handler : Report_Msg_Handler;
+
+   procedure Set_Report_Handler (Handler : Report_Msg_Handler) is
+   begin
+      Report_Handler := Handler;
+   end Set_Report_Handler;
+
    function Natural_Image (Val: Natural) return String
    is
       Str: constant String := Natural'Image (Val);
@@ -39,13 +50,6 @@ package body Errorout is
       return Coord_To_Col (E.File, Line_Pos, E.Offset);
    end Get_Error_Col;
 
-   Report_Handler : Report_Msg_Handler;
-
-   procedure Set_Report_Handler (Handler : Report_Msg_Handler) is
-   begin
-      Report_Handler := Handler;
-   end Set_Report_Handler;
-
    --  Warnings.
 
    Warnings_Control : Warnings_Setting := Default_Warnings;
@@ -59,6 +63,16 @@ package body Errorout is
    begin
       return Warnings_Control (Id).Enabled;
    end Is_Warning_Enabled;
+
+   procedure Warning_Error (Id : Msgid_All_Warnings; As_Error : Boolean) is
+   begin
+      Warnings_Control (Id).Error := As_Error;
+   end Warning_Error;
+
+   function Is_Warning_Error (Id : Msgid_All_Warnings) return Boolean is
+   begin
+      return Warnings_Control (Id).Error;
+   end Is_Warning_Error;
 
    function Warning_Image (Id : Msgid_Warnings) return String
    is
@@ -134,12 +148,27 @@ package body Errorout is
       return Res;
    end "+";
 
+   procedure Report_Vhdl_Token (Tok : Vhdl.Tokens.Token_Type)
+   is
+      use Vhdl.Tokens;
+   begin
+      case Tok is
+         when Tok_Identifier =>
+            Report_Handler.Message ("an identifier");
+         when Tok_Eof =>
+            Report_Handler.Message ("end of file");
+         when others =>
+            Report_Handler.Message ("'");
+            Report_Handler.Message (Image (Tok));
+            Report_Handler.Message ("'");
+      end case;
+   end Report_Vhdl_Token;
+
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Source_Coord_Type;
                          Msg : String;
-                         Args : Earg_Arr := No_Eargs;
-                         Cont : Boolean := False)
+                         Args : Earg_Arr := No_Eargs)
    is
       procedure Location_To_Position (Location : Location_Type;
                                       File : out Source_File_Entry;
@@ -162,25 +191,40 @@ package body Errorout is
       end if;
 
       --  Reclassify warnings to errors if -Werror.
-      if Flags.Warn_Error
-        and then (Id = Msgid_Warning or Id in Msgid_Warnings)
-      then
+      if Id in Msgid_All_Warnings and then Is_Warning_Error (Id) then
          New_Id := Msgid_Error;
       else
          New_Id := Id;
       end if;
       pragma Unreferenced (Id);
 
-      --  Limit the number of errors.
-      if not Cont and then New_Id = Msgid_Error then
-         Nbr_Errors := Nbr_Errors + 1;
-         if Nbr_Errors > Max_Nbr_Errors then
-            return;
+      if In_Group <= 1
+        and then New_Id = Msgid_Error
+      then
+         if Nbr_Errors = Max_Nbr_Errors then
+            --  Limit reached.  Emit a message.
+            Report_Handler.Error_Start
+              (Err => (Option, Msgid_Error,
+                       No_Source_File_Entry, 0, 0, 0));
+            Report_Handler.Message ("error limit reached");
+            Report_Handler.Message_End.all;
+         else
+            Nbr_Errors := Nbr_Errors + 1;
          end if;
       end if;
 
+      --  Limit the number of errors.
+      if New_Id = Msgid_Error and then Nbr_Errors > Max_Nbr_Errors then
+         return;
+      end if;
+
       Report_Handler.Error_Start
-        (Err => (Origin, New_Id, Cont, Loc.File, Loc.Line, Loc.Offset, 0));
+        (Err => (Origin, New_Id,
+                 Loc.File, Loc.Line, Loc.Offset, 0));
+
+      if In_Group > 0 then
+         In_Group := In_Group + 1;
+      end if;
 
       --  Display message.
       declare
@@ -208,8 +252,9 @@ package body Errorout is
                      begin
                         Report_Handler.Message ("""");
                         case Arg.Kind is
-                           when Earg_Iir =>
-                              Id := Get_Identifier (Arg.Val_Iir);
+                           when Earg_Vhdl_Node =>
+                              Id := Vhdl.Nodes.Get_Identifier
+                                (Arg.Val_Vhdl_Node);
                            when Earg_Id =>
                               Id := Arg.Val_Id;
                            when others =>
@@ -237,26 +282,14 @@ package body Errorout is
                   when 't' =>
                      --  A token
                      declare
-                        use Vhdl.Tokens;
                         Arg : Earg_Type renames Args (Argn);
-                        Tok : Token_Type;
                      begin
                         case Arg.Kind is
-                           when Earg_Token =>
-                              Tok := Arg.Val_Tok;
+                           when Earg_Vhdl_Token =>
+                              Report_Vhdl_Token (Arg.Val_Vhdl_Tok);
                            when others =>
                               --  Invalid conversion to character.
                               raise Internal_Error;
-                        end case;
-                        case Tok is
-                           when Tok_Identifier =>
-                              Report_Handler.Message ("an identifier");
-                           when Tok_Eof =>
-                              Report_Handler.Message ("end of file");
-                           when others =>
-                              Report_Handler.Message ("'");
-                              Report_Handler.Message (Image (Tok));
-                              Report_Handler.Message ("'");
                         end case;
                      end;
                   when 'l' =>
@@ -271,8 +304,9 @@ package body Errorout is
                         case Arg.Kind is
                            when Earg_Location =>
                               Arg_Loc := Arg.Val_Loc;
-                           when Earg_Iir =>
-                              Arg_Loc := Get_Location (Arg.Val_Iir);
+                           when Earg_Vhdl_Node =>
+                              Arg_Loc := Vhdl.Nodes.Get_Location
+                                (Arg.Val_Vhdl_Node);
                            when others =>
                               raise Internal_Error;
                         end case;
@@ -298,8 +332,9 @@ package body Errorout is
                         Arg : Earg_Type renames Args (Argn);
                      begin
                         case Arg.Kind is
-                           when Earg_Iir =>
-                              Report_Handler.Message (Disp_Node (Arg.Val_Iir));
+                           when Earg_Vhdl_Node =>
+                              Report_Handler.Message
+                                (Disp_Node (Arg.Val_Vhdl_Node));
                            when others =>
                               --  Invalid conversion to node.
                               raise Internal_Error;
@@ -337,27 +372,30 @@ package body Errorout is
       end;
 
       Report_Handler.Message_End.all;
-
-      if not Cont
-        and then New_Id = Msgid_Error
-        and then Nbr_Errors = Max_Nbr_Errors
-      then
-         --  Limit reached.  Emit a message.
-         Report_Handler.Error_Start (Err => (Option, Msgid_Error, False,
-                                             No_Source_File_Entry, 0, 0, 0));
-         Report_Handler.Message ("error limit reached");
-         Report_Handler.Message_End.all;
-      end if;
    end Report_Msg;
+
+   procedure Report_Start_Group is
+   begin
+      pragma Assert (In_Group = 0);
+      In_Group := 1;
+      Report_Handler.Message_Group.all (True);
+   end Report_Start_Group;
+
+   procedure Report_End_Group is
+   begin
+      pragma Assert (In_Group > 0);
+      In_Group := 0;
+      Report_Handler.Message_Group.all (False);
+   end Report_End_Group;
 
    procedure Error_Msg_Option_NR (Msg: String) is
    begin
       Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg);
    end Error_Msg_Option_NR;
 
-   procedure Error_Msg_Option (Msg: String) is
+   procedure Error_Msg_Option (Msg: String; Args : Earg_Arr := No_Eargs) is
    begin
-      Error_Msg_Option_NR (Msg);
+      Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg, Args);
       raise Option_Error;
    end Error_Msg_Option;
 
@@ -366,16 +404,14 @@ package body Errorout is
       Report_Msg (Id, Option, No_Source_Coord, Msg);
    end Warning_Msg_Option;
 
-   function Make_Earg_Vhdl_Node (V : Iir) return Earg_Type is
+   function Make_Earg_Vhdl_Node (V : Vhdl.Nodes.Iir) return Earg_Type is
    begin
-      return (Kind => Earg_Iir, Val_Iir => V);
+      return (Kind => Earg_Vhdl_Node, Val_Vhdl_Node => V);
    end Make_Earg_Vhdl_Node;
 
    function Make_Earg_Vhdl_Token (V : Vhdl.Tokens.Token_Type)
                                  return Earg_Type is
    begin
-      return (Kind => Earg_Token, Val_Tok => V);
+      return (Kind => Earg_Vhdl_Token, Val_Vhdl_Tok => V);
    end Make_Earg_Vhdl_Token;
-
-
 end Errorout;

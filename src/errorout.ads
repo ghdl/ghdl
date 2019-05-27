@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
-with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Nodes;
 with Vhdl.Tokens;
 
 package Errorout is
@@ -122,6 +122,9 @@ package Errorout is
    subtype Msgid_Warnings is Msgid_Type
      range Warnid_Library .. Warnid_Static;
 
+   subtype Msgid_All_Warnings is Msgid_Type
+     range Msgid_Warnings'First .. Msgid_Warning;
+
    --  Get the image of a warning.  This correspond the the identifier of ID,
    --  in lower case, without the Msgid_Warn_ prefix and with '_' replaced
    --  by '-'.
@@ -132,6 +135,9 @@ package Errorout is
 
    --  Get enable status of a warning.
    function Is_Warning_Enabled (Id : Msgid_Warnings) return Boolean;
+
+   --  Consider a warning as an error.
+   procedure Warning_Error (Id : Msgid_All_Warnings; As_Error : Boolean);
 
    --  State of warnings.
    type Warnings_Setting is private;
@@ -172,7 +178,8 @@ package Errorout is
    type Error_Record is record
       Origin : Report_Origin;
       Id : Msgid_Type;
-      Cont : Boolean;
+
+      --  Error soure file.
       File : Source_File_Entry;
 
       --  The first line is line 1, 0 can be used when line number is not
@@ -188,31 +195,38 @@ package Errorout is
    end record;
 
    type Error_Start_Handler is access procedure (Err : Error_Record);
-   type Message_Handler is access procedure (Str : String);
+   type Message_Str_Handler is access procedure (Str : String);
    type Message_End_Handler is access procedure;
+   type Message_Group_Handler is access procedure (Start : Boolean);
 
    type Report_Msg_Handler is record
       Error_Start : Error_Start_Handler;
-      Message : Message_Handler;
+      Message : Message_Str_Handler;
       Message_End : Message_End_Handler;
+      Message_Group : Message_Group_Handler;
    end record;
 
    procedure Set_Report_Handler (Handler : Report_Msg_Handler);
 
-   --  Generic report message.  LOC maybe No_Location.
-   --  If ORIGIN is Option or Library, LOC must be No_Location and the program
-   --  name is displayed.
+   --  Generic report message.
+   --  If ORIGIN is Option or Library, LOC must be No_Source_Coord and the
+   --  program name is displayed.
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Source_Coord_Type;
                          Msg : String;
-                         Args : Earg_Arr := No_Eargs;
-                         Cont : Boolean := False);
+                         Args : Earg_Arr := No_Eargs);
+
+   --  Group several messages (for multi-lines messages).
+   --  Report_Start_Group must be called before the first Report_Msg call,
+   --  and Report_End_Group after the last one.
+   procedure Report_Start_Group;
+   procedure Report_End_Group;
 
    --  Disp an error, prepended with program name, and raise option_error.
    --  This is used for errors before initialisation, such as bad option or
    --  bad filename.
-   procedure Error_Msg_Option (Msg: String);
+   procedure Error_Msg_Option (Msg: String; Args : Earg_Arr := No_Eargs);
    pragma No_Return (Error_Msg_Option);
 
    --  Same as Error_Msg_Option but do not raise Option_Error.
@@ -221,29 +235,30 @@ package Errorout is
    --  Warn about an option.
    procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);
 
-   function Make_Earg_Vhdl_Node (V : Iir) return Earg_Type;
+   function Make_Earg_Vhdl_Node (V : Vhdl.Nodes.Iir) return Earg_Type;
    function Make_Earg_Vhdl_Token (V : Vhdl.Tokens.Token_Type) return Earg_Type;
 private
    type Earg_Kind is
      (Earg_None,
-      Earg_Iir, Earg_Location, Earg_Id, Earg_Char, Earg_Token, Earg_String8);
+      Earg_Location, Earg_Id, Earg_Char, Earg_String8,
+      Earg_Vhdl_Node, Earg_Vhdl_Token);
 
    type Earg_Type (Kind : Earg_Kind := Earg_None) is record
       case Kind is
          when Earg_None =>
             null;
-         when Earg_Iir =>
-            Val_Iir : Iir;
          when Earg_Location =>
             Val_Loc : Location_Type;
          when Earg_Id =>
             Val_Id : Name_Id;
          when Earg_Char =>
             Val_Char : Character;
-         when Earg_Token =>
-            Val_Tok : Vhdl.Tokens.Token_Type;
          when Earg_String8 =>
             Val_Str8 : String8_Len_Type;
+         when Earg_Vhdl_Node =>
+            Val_Vhdl_Node : Vhdl.Nodes.Iir;
+         when Earg_Vhdl_Token =>
+            Val_Vhdl_Tok : Vhdl.Tokens.Token_Type;
       end case;
    end record;
 
@@ -254,12 +269,12 @@ private
       Error : Boolean;
    end record;
 
-   type Warnings_Setting is array (Msgid_Warnings) of Warning_Control_Type;
+   type Warnings_Setting is array (Msgid_All_Warnings) of Warning_Control_Type;
 
    Default_Warnings : constant Warnings_Setting :=
      (Warnid_Library | Warnid_Binding | Warnid_Port | Warnid_Shared
-        | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs
-        | Warnid_Hide    => (Enabled => True, Error => False),
+        | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
+        | Msgid_Warning  => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
 
    --  Compute the column from Error_Record E.

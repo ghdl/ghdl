@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
+with Simple_IO;
 with Std_Names;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Nodes_Utils;
@@ -2221,7 +2221,7 @@ package body Trans.Chap8 is
             end;
 
          when others =>
-            Ada.Text_IO.Put_Line
+            Simple_IO.Put_Line_Err
               ("translate_implicit_procedure_call: cannot handle "
                & Iir_Predefined_Functions'Image (Kind));
             raise Internal_Error;
@@ -3102,7 +3102,7 @@ package body Trans.Chap8 is
                   then
                      pragma Assert (Sig = O_Enode_Null); --  TODO
 
-                     if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                     if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
                         pragma Assert
                           (Assoc_Info.Call_Assoc_Fat (Mode) /= Null_Var);
                         --  Allocate array base

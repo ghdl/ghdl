@@ -16,11 +16,11 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Command_Line; use Ada.Command_Line;
-with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Characters.Latin_1;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+
 with Tables;
-with GNAT.Dynamic_Tables;
+with Dyn_Tables;
+with Simple_IO; use Simple_IO;
 with Libraries;
 with Name_Table; use Name_Table;
 with Vhdl.Std_Package;
@@ -92,12 +92,11 @@ package body Ghdldrv is
    --  Argument table for the tools.
    --  Each table low bound is 1 so that the length of a table is equal to
    --  the last bound.
-   package Argument_Table_Pkg is new GNAT.Dynamic_Tables
+   package Argument_Table_Pkg is new Dyn_Tables
      (Table_Component_Type => String_Access,
       Table_Index_Type => Integer,
       Table_Low_Bound => 1,
-      Table_Initial => 4,
-      Table_Increment => 100);
+      Table_Initial => 4);
    use Argument_Table_Pkg;
 
    --  Arguments for tools.
@@ -335,7 +334,6 @@ package body Ghdldrv is
    is
       use Interfaces.C_Streams;
       use System;
-      use Ada.Characters.Latin_1;
 
       --  Replace the first '@' with the machine path.
       function Substitute (Str : String) return String
@@ -377,7 +375,8 @@ package body Ghdldrv is
             end loop;
 
             --  Remove trailing NL.
-            while L > 0 and then (Line (L) = LF or Line (L) = CR) loop
+            while L > 0 and then (Line (L) = ASCII.LF or Line (L) = ASCII.CR)
+            loop
                L := L - 1;
             end loop;
 
@@ -1760,7 +1759,7 @@ package body Ghdldrv is
    -- for --gen-depends (Only_Depends) rules and phony targets are omittted
    procedure Gen_Makefile (Args : Argument_List; Only_Depends : Boolean)
    is
-      HT : constant Character := Ada.Characters.Latin_1.HT;
+      HT : constant Character := ASCII.HT;
       Files_List : Iir_List;
       Files_It : List_Iterator;
       File : Iir_Design_File;

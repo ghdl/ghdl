@@ -2142,11 +2142,12 @@ package body Vhdl.Sem is
    is
       procedure Error_Wait (Caller : Iir; Callee : Iir) is
       begin
+         Report_Start_Group;
          Error_Msg_Sem
-           (+Caller, "%n must not contain wait statement, but calls",
-            (1 => +Caller), Cont => True);
+           (+Caller, "%n must not contain wait statement, but calls", +Caller);
          Error_Msg_Sem
            (+Callee, "%n which has (indirectly) a wait statement", +Callee);
+         Report_End_Group;
       end Error_Wait;
 
       --  Kind of subprg.
@@ -2341,12 +2342,14 @@ package body Vhdl.Sem is
                      --  signal whose explicit ancestor is not a formal signal
                      --  parameter or member of a formal parameter of
                      --  the subprogram or of any of its parents.
+                     Report_Start_Group;
                      Error_Msg_Sem
                        (+Subprg, "all-sensitized %n can't call %n",
-                        (+Subprg, +Callee), Cont => True);
+                        (+Subprg, +Callee));
                      Error_Msg_Sem
                        (+Subprg,
                         " (as this subprogram reads (indirectly) a signal)");
+                     Report_End_Group;
                end case;
             end if;
 
@@ -2467,18 +2470,19 @@ package body Vhdl.Sem is
                         pragma Assert (Callees /= Null_Iir_List);
                         Callee : constant Iir := Get_First_Element (Callees);
                      begin
+                        Report_Start_Group;
                         Warning_Msg_Sem
                           (Warnid_Delayed_Checks, +El,
                            "can't assert that all calls in %n"
                              & " are pure or have not wait;"
-                             & " will be checked at elaboration",
-                           +El, Cont => True);
+                             & " will be checked at elaboration", +El);
                         --  FIXME: could improve this message by displaying
                         --  the chain of calls until the first subprograms in
                         --  unknown state.
                         Warning_Msg_Sem
                           (Warnid_Delayed_Checks, +Callee,
                            "(first such call is to %n)", +Callee);
+                        Report_End_Group;
                      end;
                   end if;
                end if;

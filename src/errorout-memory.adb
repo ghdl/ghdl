@@ -29,7 +29,7 @@ package body Errorout.Memory is
       Table_Initial => 128);
 
    type Error_Element is record
-      Header : Error_Record;
+      Header : Error_Message;
       Str : Char_Index;
    end record;
 
@@ -39,12 +39,14 @@ package body Errorout.Memory is
       Table_Low_Bound => 1,
       Table_Initial => 32);
 
+   Group : Group_Type;
+
    function Get_Nbr_Messages return Error_Index is
    begin
       return Errors.Last;
    end Get_Nbr_Messages;
 
-   function Get_Error_Record (Idx : Error_Index) return Error_Record is
+   function Get_Error_Record (Idx : Error_Index) return Error_Message is
    begin
       return Errors.Table (Idx).Header;
    end Get_Error_Record;
@@ -76,9 +78,20 @@ package body Errorout.Memory is
       Nbr_Errors := 0;
    end Clear_Errors;
 
-   procedure Memory_Error_Start (E : Error_Record) is
+   procedure Memory_Error_Start (E : Error_Record)
+   is
+      Msg : constant Error_Message :=
+        (Id => E.Id,
+         Group => Group,
+         File => E.File,
+         Line => E.Line,
+         Offset => E.Offset,
+         Length => E.Length);
    begin
-      Errors.Append ((E, Messages.Last + 1));
+      Errors.Append ((Msg, Messages.Last + 1));
+      if Group = Msg_Main then
+         Group := Msg_Related;
+      end if;
    end Memory_Error_Start;
 
    procedure Memory_Message (Str : String) is
@@ -93,11 +106,32 @@ package body Errorout.Memory is
       Messages.Append (ASCII.NUL);
    end Memory_Message_End;
 
+   procedure Memory_Message_Group (Start : Boolean) is
+   begin
+      if Start then
+         pragma Assert (Group = Msg_Single);
+         Group := Msg_Main;
+      else
+         pragma Assert (Group /= Msg_Single);
+         case Errors.Table (Errors.Last).Header.Group is
+            when Msg_Single | Msg_Last =>
+               raise Internal_Error;
+            when Msg_Main =>
+               Errors.Table (Errors.Last).Header.Group := Msg_Single;
+            when Msg_Related =>
+               Errors.Table (Errors.Last).Header.Group := Msg_Last;
+         end case;
+         Group := Msg_Single;
+      end if;
+   end Memory_Message_Group;
+
    procedure Install_Handler is
    begin
       Set_Report_Handler ((Memory_Error_Start'Access,
                            Memory_Message'Access,
-                           Memory_Message_End'Access));
+                           Memory_Message_End'Access,
+                           Memory_Message_Group'Access));
+      Group := Msg_Single;
    end Install_Handler;
 
 end Errorout.Memory;

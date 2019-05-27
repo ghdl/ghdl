@@ -341,13 +341,12 @@ package body Trans.Chap3 is
         Get_Subtype_Definition (Get_Type_Declarator (Def));
       L, H   : Iir;
       Lv, Hv : Int64;
+      subtype Int64_32 is Int64 range -(2 ** 31) .. 2 ** 31 - 1;
    begin
       Get_Low_High_Limit (Get_Range_Constraint (St), L, H);
       Lv := Get_Value (L);
       Hv := Get_Value (H);
-      if Lv in -(2 ** 31) .. 2 ** 31 - 1
-        and then Hv in -(2 ** 31) .. 2 ** 31 - 1
-      then
+      if Lv in Int64_32 and then Hv in Int64_32 then
          return Precision_32;
       else
          if Translation.Flag_Only_32b then

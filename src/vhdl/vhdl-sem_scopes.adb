@@ -935,11 +935,13 @@ package body Vhdl.Sem_Scopes is
                --  declarative region must not be homographs,
                -- FIXME: unless one of them is the implicit declaration of a
                --  predefined operation.
+               Report_Start_Group;
                Error_Msg_Sem
                  (+Decl, "identifier %i already used for a declaration",
-                  (1 => +Ident), Cont => True);
+                  +Ident);
                Error_Msg_Sem
                  (+Current_Decl, "previous declaration: %n", +Current_Decl);
+               Report_End_Group;
                return;
             else
                --  Homograph, not in the same scope.

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Tables;
-with Ada.Text_IO;
+with Simple_IO;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -1020,9 +1020,10 @@ package body Simul.Annotations is
             when Iir_Kind_Simple_Simultaneous_Statement =>
                null;
 
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment
+              | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
                --  In case concurrent signal assignemnts were not
-               --  canonicalized.
+               --  canonicalized (for synthesis).
                null;
 
             when others =>
@@ -1198,7 +1199,7 @@ package body Simul.Annotations is
    -- Disp annotations for an iir node.
    procedure Disp_Vhdl_Info (Node: Iir)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       Info : constant Sim_Info_Acc := Get_Info (Node);
    begin
       if Info = null then
@@ -1231,11 +1232,8 @@ package body Simul.Annotations is
 
    procedure Disp_Info (Info : Sim_Info_Acc)
    is
-      use Ada.Text_IO;
-      Indent: Count;
+      use Simple_IO;
    begin
-      Indent := Col + 2;
-      Set_Col (Indent);
       if Info = null then
          Put_Line ("*null*");
          return;
@@ -1250,11 +1248,9 @@ package body Simul.Annotations is
                         & Object_Slot_Type'Image (Info.Nbr_Objects));
             case Info.Kind is
                when Kind_Block =>
-                  Set_Col (Indent);
-                  Put_Line ("inst_slot:"
+                  Put ("inst_slot:"
                               & Instance_Slot_Type'Image (Info.Inst_Slot));
-                  Set_Col (Indent);
-                  Put_Line ("nbr instance:"
+                  Put_Line (", nbr instance:"
                               & Instance_Slot_Type'Image (Info.Nbr_Instances));
                when others =>
                   null;

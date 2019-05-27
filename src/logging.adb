@@ -16,16 +16,16 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO;
 
 package body Logging is
    procedure Log (S : String) is
    begin
-      Put (Standard_Error, S);
+      Simple_IO.Put_Err (S);
    end Log;
 
    procedure Log_Line (S : String := "") is
    begin
-      Put_Line (Standard_Error, S);
+      Simple_IO.Put_Line_Err (S);
    end Log_Line;
 end Logging;

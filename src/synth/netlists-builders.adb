@@ -163,15 +163,14 @@ package body Netlists.Builders is
 
    procedure Create_Edge_Module (Ctxt : Context_Acc;
                                  Res : out Module;
-                                 Name : Name_Id;
-                                 Id : Module_Id)
+                                 Name : Name_Id)
 
    is
       Outputs : Port_Desc_Array (0 .. 0);
       Inputs : Port_Desc_Array (0 .. 0);
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name), Id, 1, 1, 0);
+        (Ctxt.Design, New_Sname_Artificial (Name), Id_Edge, 1, 1, 0);
       Inputs := (0 => Create_Input ("i", 1));
       Outputs := (0 => Create_Output ("o", 1));
       Set_Port_Desc (Res, Inputs, Outputs);
@@ -325,8 +324,7 @@ package body Netlists.Builders is
       Create_Monadic_Module (Design, Res.M_Extend (Id_Sextend),
                              Get_Identifier ("sextend"), Id_Sextend);
 
-      Create_Edge_Module (Res, Res.M_Posedge, Name_Posedge, Id_Posedge);
-      Create_Edge_Module (Res, Res.M_Negedge, Name_Negedge, Id_Negedge);
+      Create_Edge_Module (Res, Res.M_Edge, Name_Posedge);
 
       Create_Mux_Modules (Res);
       Create_Objects_Module (Res);
@@ -432,21 +430,13 @@ package body Netlists.Builders is
       return O;
    end Build_Const_UL32;
 
-   function Build_Edge (Ctxt : Context_Acc;
-                        Is_Pos : Boolean;
-                        Src : Net) return Net
+   function Build_Edge (Ctxt : Context_Acc; Src : Net) return Net
    is
       pragma Assert (Get_Width (Src) = 1);
-      M : Module;
       Inst : Instance;
       O : Net;
    begin
-      if Is_Pos then
-         M := Ctxt.M_Posedge;
-      else
-         M := Ctxt.M_Negedge;
-      end if;
-      Inst := New_Internal_Instance (Ctxt, M);
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Edge);
       O := Get_Output (Inst, 0);
       pragma Assert (Get_Width (O) = 1);
       Connect (Get_Input (Inst, 0), Src);

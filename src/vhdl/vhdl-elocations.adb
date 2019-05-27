@@ -130,13 +130,30 @@ package body Vhdl.Elocations is
       Elocations_Table.Table (Idx .. Idx + Len - 1) := (others => No_Location);
    end Create_Elocations;
 
-   procedure Delete_Elocations (N : Iir) is
+   procedure Delete_Elocations (N : Iir)
+   is
+      use Vhdl.Nodes_Priv;
+      Old : Location_Index_Type;
    begin
+      --  Cannot delete an already deleted location.
+      if N > Elocations_Index_Table.Last then
+         return;
+      end if;
+      Old := Elocations_Index_Table.Table (N);
+      if Old = No_Location_Index then
+         return;
+      end if;
+
       --  Clear the corresponding index.
       Elocations_Index_Table.Table (N) := No_Location_Index;
 
       --  FIXME: keep free slots in chained list ?
    end Delete_Elocations;
+
+   procedure Free_Hook (N : Iir) is
+   begin
+      Delete_Elocations (N);
+   end Free_Hook;
 
    generic
       Off : Location_Index_Type;
@@ -707,4 +724,7 @@ package body Vhdl.Elocations is
       Set_Field3 (N, Loc);
    end Set_Assign_Location;
 
+
+begin
+   Vhdl.Nodes.Register_Free_Hook (Free_Hook'Access);
 end Vhdl.Elocations;

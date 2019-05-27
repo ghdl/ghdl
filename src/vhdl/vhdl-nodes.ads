@@ -1943,6 +1943,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Chain (Field2)
    --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
    --   Get/Set_Default_Value (Field4)
    --
    --   Get/Set_Identifier (Field3)
@@ -1954,6 +1956,8 @@ package Vhdl.Nodes is
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Across_Quantity_Declaration (Medium)
    -- Iir_Kind_Through_Quantity_Declaration (Medium)
@@ -2691,6 +2695,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Subtype_Type_Mark (Field2)
    --
+   --   Get/Set_Type_Declarator (Field3)
+   --
+   --   Get/Set_Base_Type (Field4)
+   --
    --   Get/Set_Resolution_Indication (Field5)
    --
    --   Get/Set_Tolerance (Field7)
@@ -2972,6 +2980,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_Has_Is (Flag7)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
@@ -5870,6 +5880,10 @@ package Vhdl.Nodes is
    function Create_Iir (Kind : Iir_Kind) return Iir;
    function Create_Iir_Error return Iir;
    procedure Free_Iir (Target : Iir);
+
+   --  Hooks called when a node is free.
+   type Free_Iir_Hook is access procedure (N : Iir);
+   procedure Register_Free_Hook (Hook : Free_Iir_Hook);
 
    --  Free all and reinit.
    procedure Initialize;

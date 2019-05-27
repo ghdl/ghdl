@@ -55,7 +55,7 @@ def do_iirs_subprg():
 
 
 def do_libghdl_elocations():
-    classname = 'elocations'
+    classname = 'vhdl__elocations'
     print('from libghdl import libghdl')
     print()
     for k in pnodes.funcs:
@@ -134,8 +134,18 @@ def read_spec_enum(type_name, prefix, class_name):
     read_enum(pnodes.kind_file, type_name, prefix, class_name)
 
 
-def do_libghdl_iirs():
+def do_libghdl_nodes():
     print('from libghdl import libghdl')
+    print("""
+Null_Iir = 0
+
+Null_Iir_List = 0
+Iir_List_All = 1
+
+Null_Iir_Flist = 0
+Iir_Flist_Others = 1
+Iir_Flist_All = 2
+""")
     do_class_kinds()
     read_spec_enum('Iir_Mode', 'Iir_', 'Iir_Mode')
     read_spec_enum('Iir_Staticness', '', 'Iir_Staticness')
@@ -211,7 +221,7 @@ def do_libghdl_names():
     print('class Name:')
     for n, v in res:
         # Avoid clash with Python names
-        if n in ['False', 'True']:
+        if n in ['False', 'True', 'None']:
             n = 'N' + n
         print('    {0} = {1}'.format(n, v))
 
@@ -226,7 +236,7 @@ def do_libghdl_errorout():
 
 
 pnodes.actions.update({'class-kinds': do_class_kinds,
-                       'libghdl-iirs': do_libghdl_iirs,
+                       'libghdl-nodes': do_libghdl_nodes,
                        'libghdl-meta': do_libghdl_meta,
                        'libghdl-names': do_libghdl_names,
                        'libghdl-tokens': do_libghdl_tokens,

@@ -18,8 +18,8 @@
 
 with System;
 with Ada.Unchecked_Conversion;
-with Ada.Text_IO;
 with GNAT.Debug_Utilities;
+with Simple_IO;
 with Name_Table;
 with Simul.Debugger; use Simul.Debugger;
 
@@ -815,17 +815,15 @@ package body Simul.Environments is
       end case;
    end Get_Enum_Pos;
 
-   procedure Put_Indent (Indent : Natural)
-   is
-      use Ada.Text_IO;
+   procedure Put_Indent (Indent : Natural) is
    begin
-      Put ((1 .. 2 * Indent => ' '));
+      Simple_IO.Put ((1 .. 2 * Indent => ' '));
    end Put_Indent;
 
    procedure Disp_Value_Tab (Value: Iir_Value_Literal_Acc;
                              Indent : Natural)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       use GNAT.Debug_Utilities;
    begin
       Put_Indent (Indent);
@@ -976,7 +974,7 @@ package body Simul.Environments is
                                    Dim: Iir_Index32;
                                    Off : in out Iir_Index32)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       type Last_Enum_Type is (None, Char, Identifier);
       Last_Enum: Last_Enum_Type;
       El_Type: Iir;
@@ -1056,7 +1054,7 @@ package body Simul.Environments is
    procedure Disp_Iir_Value_Record
      (Value: Iir_Value_Literal_Acc; A_Type: Iir)
    is
-      use Ada.Text_IO;
+      use Simple_IO;
       List : constant Iir_Flist :=
         Get_Elements_Declaration_List (Get_Base_Type (A_Type));
       El : Iir_Element_Declaration;
@@ -1081,11 +1079,12 @@ package body Simul.Environments is
    begin
       Id := Get_Identifier
         (Get_Nth_Element (Get_Enumeration_Literal_List (Bt), Pos));
-      Ada.Text_IO.Put (Name_Table.Image (Id));
+      Simple_IO.Put (Name_Table.Image (Id));
    end Disp_Iir_Value_Enum;
 
-   procedure Disp_Iir_Value (Value: Iir_Value_Literal_Acc; A_Type: Iir) is
-      use Ada.Text_IO;
+   procedure Disp_Iir_Value (Value: Iir_Value_Literal_Acc; A_Type: Iir)
+   is
+      use Simple_IO;
    begin
       if Value = null then
          Put ("!NULL!");

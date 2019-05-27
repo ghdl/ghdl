@@ -15,7 +15,8 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO;
+
+with Simple_IO;
 with Name_Table;
 with Errorout; use Errorout;
 with Libraries;
@@ -41,8 +42,23 @@ package body Options is
    begin
       --  Handle -Werror.
       if Opt = "error" then
-         Warn_Error := Val;
+         for I in Msgid_Warnings loop
+            Warning_Error (I, Val);
+         end loop;
          return True;
+      end if;
+
+      --  Handle -Werror=xxx
+      if Opt'Length >= 6
+        and then Opt (Opt'First .. Opt'First + 5) = "error="
+      then
+         for I in Msgid_Warnings loop
+            if Warning_Image (I) = Opt (Opt'First + 6 .. Opt'Last) then
+               Warning_Error (I, Val);
+               return True;
+            end if;
+         end loop;
+         return False;
       end if;
 
       --  Normal warnings.
@@ -212,7 +228,7 @@ package body Options is
    -- Disp help about these options.
    procedure Disp_Options_Help
    is
-      procedure P (S : String) renames Ada.Text_IO.Put_Line;
+      procedure P (S : String) renames Simple_IO.Put_Line;
    begin
       P ("Main options:");
       P ("  --work=LIB         use LIB as work library");

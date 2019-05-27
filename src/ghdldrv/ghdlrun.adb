@@ -19,14 +19,14 @@ with System; use System;
 
 with Ada.Unchecked_Conversion;
 with Ada.Command_Line;
-with Ada.Text_IO;
+with GNAT.OS_Lib; use GNAT.OS_Lib;
 
 with Interfaces;
 with Interfaces.C;
 
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
-with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Simple_IO; use Simple_IO;
 
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
@@ -178,21 +178,17 @@ package body Ghdlrun is
             Time_Resolution := 'f';
          end if;
          if Flag_Verbose then
-            declare
-               use Ada.Text_IO;
-            begin
-               Put ("Time resolution is 1 ");
-               case Time_Resolution is
-                  when 'f' => Put ("fs");
-                  when 'p' => Put ("ps");
-                  when 'n' => Put ("ns");
-                  when 'u' => Put ("us");
-                  when 'm' => Put ("ms");
-                  when 's' => Put ("sec");
-                  when others => Put ("??");
-               end case;
-               New_Line;
-            end;
+            Put ("Time resolution is 1 ");
+            case Time_Resolution is
+               when 'f' => Put ("fs");
+               when 'p' => Put ("ps");
+               when 'n' => Put ("ns");
+               when 'u' => Put ("us");
+               when 'm' => Put ("ms");
+               when 's' => Put ("sec");
+               when others => Put ("??");
+            end case;
+            New_Line;
          end if;
       end if;
       Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
@@ -256,7 +252,6 @@ package body Ghdlrun is
 
    procedure Ghdl_Elaborate is
    begin
-      --Ada.Text_IO.Put_Line (Standard_Error, "ghdl_elaborate");
       Elaborate_Proc.all;
    end Ghdl_Elaborate;
 
@@ -347,7 +342,7 @@ package body Ghdlrun is
       Decl : O_Dnode;
    begin
       if Flag_Verbose then
-         Ada.Text_IO.Put_Line ("Linking in memory");
+         Put_Line ("Linking in memory");
       end if;
 
       Def (Trans_Decls.Ghdl_Memcpy,
@@ -764,7 +759,7 @@ package body Ghdlrun is
       Name_Table.Finalize;
 
       if Flag_Verbose then
-         Ada.Text_IO.Put_Line ("Starting simulation");
+         Put_Line ("Starting simulation");
       end if;
 
       Grt.Main.Run;
@@ -801,11 +796,9 @@ package body Ghdlrun is
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Ada.Text_IO;
    begin
       if Args'Length /= 0 then
-         Error
-           ("warning: command '--run-help' does not accept any argument");
+         Error ("warning: command '--run-help' does not accept any argument");
       end if;
       Put_Line ("These options can only be placed at [RUNOPTS]");
       --  Register modules, since they add commands.

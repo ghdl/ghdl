@@ -76,7 +76,7 @@ package body Synth.Inference is
       Inst : constant Instance := Get_Net_Parent (N);
    begin
       case Get_Id (Inst) is
-         when Edge_Module_Id =>
+         when Id_Edge =>
             return True;
          when Id_And =>
             --  Assume the condition is canonicalized, ie of the form:
@@ -152,8 +152,9 @@ package body Synth.Inference is
       Enable := No_Net;
 
       case Get_Id (Inst) is
-         when Edge_Module_Id =>
-            Clk := N;
+         when Id_Edge =>
+            --  Get rid of the edge gate, just return the signal.
+            Clk := Get_Driver (Get_Input (Inst, 0));
          when Id_And =>
             --  Assume the condition is canonicalized, ie of the form:
             --  CLK and EXPR.
@@ -164,7 +165,7 @@ package body Synth.Inference is
                Drv : Net;
             begin
                Drv := Get_Driver (I0);
-               if Get_Id (Get_Net_Parent (Drv)) in Edge_Module_Id then
+               if Get_Id (Get_Net_Parent (Drv)) = Id_Edge then
                   --  INST is clearly not synthesizable (boolean operation on
                   --  an edge).  Will be removed at the end by
                   --  remove_unused_instances.  Do not remove it now as its

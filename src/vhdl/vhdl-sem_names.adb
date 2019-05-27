@@ -62,7 +62,7 @@ package body Vhdl.Sem_Names is
       El : Iir;
       It : List_Iterator;
    begin
-      Error_Msg_Sem (+Loc, "possible interpretations are:", Cont => True);
+      Error_Msg_Sem (+Loc, "possible interpretations are:");
       It := List_Iterate (List);
       while Is_Valid (It) loop
          El := Get_Element (It);
@@ -3014,12 +3014,13 @@ package body Vhdl.Sem_Names is
             if Get_Kind (Prefix_Type)
               not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
             then
+               Report_Start_Group;
                Error_Msg_Sem
-                 (+Attr, "prefix of %i attribute must be a scalar type",
-                  (1 => +Id), Cont => True);
+                 (+Attr, "prefix of %i attribute must be a scalar type", +Id);
                Error_Msg_Sem
                  (+Attr, "found %n defined at %l",
                   (+Prefix_Type, +Prefix_Type));
+               Report_End_Group;
                return Error_Mark;
             end if;
          when others =>
@@ -3029,13 +3030,14 @@ package body Vhdl.Sem_Names is
                  | Iir_Kind_Physical_Type_Definition =>
                   null;
                when others =>
+                  Report_Start_Group;
                   Error_Msg_Sem
                     (+Attr, "prefix of %i"
-                       & " attribute must be discrete or physical type",
-                     (1 => +Id), Cont => True);
+                       & " attribute must be discrete or physical type", +Id);
                   Error_Msg_Sem
                     (+Attr, "found %n defined at %l",
                      (+Prefix_Type, +Prefix_Type));
+                  Report_End_Group;
                   return Error_Mark;
             end case;
       end case;
@@ -4045,8 +4047,10 @@ package body Vhdl.Sem_Names is
                   Free_Iir (Res);
                   Res := Res1;
                else
+                  Report_Start_Group;
                   Error_Overload (Name);
                   Disp_Overload_List (Get_Overload_List (Res), Name);
+                  Report_End_Group;
                   Free_Iir (Res);
                   return Create_Error_Expr (Name, A_Type);
                end if;
@@ -4073,8 +4077,10 @@ package body Vhdl.Sem_Names is
                else
                   --  There is either no types or one type for
                   --  several meanings.
+                  Report_Start_Group;
                   Error_Overload (Name);
                   Disp_Overload_List (Expr_List, Name);
+                  Report_End_Group;
                   --Free_Iir (Ret_Type);
                   return Create_Error_Expr (Name, A_Type);
                end if;
@@ -4187,11 +4193,12 @@ package body Vhdl.Sem_Names is
                when Iir_Kind_Error =>
                   return Atype;
                when others =>
+                  Report_Start_Group;
                   Error_Msg_Sem
-                    (+Name, "a type mark must denote a type or a subtype",
-                     Cont => True);
+                    (+Name, "a type mark must denote a type or a subtype");
                   Error_Msg_Sem
                     (+Name, "(type mark denotes %n)", +Atype);
+                  Report_End_Group;
                   return Create_Error_Type (Atype);
             end case;
          when Iir_Kind_Subtype_Attribute

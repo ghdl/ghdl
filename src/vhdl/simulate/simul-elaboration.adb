@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
+with Simple_IO;
 with Str_Table;
 with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -1902,7 +1902,8 @@ package body Simul.Elaboration is
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Elaborate_Psl_Directive (Instance, Stmt);
 
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment
+              | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
                --  In case concurrent signal assignemnts were not
                --  canonicalized.
                null;
@@ -2012,10 +2013,10 @@ package body Simul.Elaboration is
       Sub_Conf : Iir;
    begin
       if Trace_Elaboration then
-         Ada.Text_IO.Put ("configure component ");
-         Ada.Text_IO.Put (Name_Table.Image (Get_Label (Stmt)));
-         Ada.Text_IO.Put (": ");
-         Ada.Text_IO.Put_Line (Image_Identifier (Component));
+         Simple_IO.Put ("configure component ");
+         Simple_IO.Put (Name_Table.Image (Get_Label (Stmt)));
+         Simple_IO.Put (": ");
+         Simple_IO.Put_Line (Image_Identifier (Component));
       end if;
 
       --  Elaboration of a component instantiation statement that instanciates
@@ -2030,7 +2031,7 @@ package body Simul.Elaboration is
       end if;
 
       if Trace_Elaboration then
-         Ada.Text_IO.Put_Line
+         Simple_IO.Put_Line
            (" using " & Disp_Node (Conf) & " from " & Disp_Location (Conf));
       end if;
 
@@ -2821,10 +2822,10 @@ package body Simul.Elaboration is
       Mark (Expr_Mark, Expr_Pool);
 
       if Trace_Elaboration then
-         Ada.Text_IO.Put ("elaborating ");
-         Ada.Text_IO.Put (Image_Identifier (Arch));
-         Ada.Text_IO.Put (" of ");
-         Ada.Text_IO.Put_Line (Image_Identifier (Entity));
+         Simple_IO.Put ("elaborating ");
+         Simple_IO.Put (Image_Identifier (Arch));
+         Simple_IO.Put (" of ");
+         Simple_IO.Put_Line (Image_Identifier (Entity));
       end if;
 
       Instance := Create_Block_Instance (Parent_Instance, Arch, Stmt);

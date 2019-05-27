@@ -239,7 +239,7 @@ if test $backend = llvm; then
 		exit 1
 	fi
 	if check_version 3.5 $llvm_version; then
-		llvm_be=llvm
+		llvm_be=llvm35
 	elif check_version 3.6 $llvm_version ||
 	     check_version 3.7 $llvm_version ||
 	     check_version 3.8 $llvm_version ||

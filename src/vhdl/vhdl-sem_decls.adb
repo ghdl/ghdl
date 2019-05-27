@@ -1422,11 +1422,11 @@ package body Vhdl.Sem_Decls is
                   Res := El;
                else
                   Error := True;
+                  Report_Start_Group;
                   Error_Msg_Sem
                     (+Sig,
-                     "cannot resolve signature, many matching subprograms:",
-                     Cont => True);
-                  Error_Msg_Sem (+Res, "found: %n", (1 => +Res), Cont => True);
+                     "cannot resolve signature, many matching subprograms:");
+                  Error_Msg_Sem (+Res, "found: %n", +Res);
                end if;
                if Error then
                   Error_Msg_Sem (+El, "found: %n", +El);
@@ -1434,6 +1434,9 @@ package body Vhdl.Sem_Decls is
             end if;
             Next (Ov_It);
          end loop;
+         if Error then
+            Report_End_Group;
+         end if;
 
          --  Free the overload list (with a workaround as only variables can
          --  be free).

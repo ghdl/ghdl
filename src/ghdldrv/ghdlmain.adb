@@ -15,9 +15,10 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO;
 with Ada.Command_Line;
 with Ada.Command_Line.Response_File;
+
+with Simple_IO;
 with Version;
 with Bug;
 with Options;
@@ -47,7 +48,7 @@ package body Ghdlmain is
    procedure Disp_Long_Help (Cmd : Command_Type)
    is
       pragma Unreferenced (Cmd);
-      use Ada.Text_IO;
+      use Simple_IO;
    begin
       Put_Line ("This command does not accept options.");
    end Disp_Long_Help;
@@ -121,7 +122,7 @@ package body Ghdlmain is
    is
       pragma Unreferenced (Cmd);
 
-      use Ada.Text_IO;
+      use Simple_IO;
       use Ada.Command_Line;
       C : Command_Acc;
    begin
@@ -222,7 +223,7 @@ package body Ghdlmain is
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Ada.Text_IO;
+      use Simple_IO;
    begin
       Put ("GHDL ");
       Put (Version.Ghdl_Ver);
