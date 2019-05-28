@@ -31,7 +31,7 @@ call disp_iir_list ($arg0, 0, 0)
 end
 
 define psrc
-  call debug_source_loc (nodes.get_location ($arg0))
+  call debug_source_loc (vhdl.nodes.get_location ($arg0))
 end
 
 document pl
