@@ -366,11 +366,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Literal_Origin (Field2)
    --
-   --  The physical unit of the literal.
-   --   Get/Set_Physical_Unit (Field3)
-   --
-   --  The name of the physical unit (if any).
-   --   Get/Set_Unit_Name (Field0)
+   --  The name of the physical unit.
+   --   Get/Set_Unit_Name (Field3)
    --
    --   Get/Set_Type (Field1)
    --
@@ -7149,11 +7146,7 @@ package Vhdl.Nodes is
    function Get_Right (Target : Iir) return Iir;
    procedure Set_Right (Target : Iir; An_Iir : Iir);
 
-   --  Field: Field3 Ref
-   function Get_Physical_Unit (Lit : Iir) return Iir;
-   procedure Set_Physical_Unit (Lit : Iir; Name : Iir);
-
-   --  Field: Field0
+   --  Field: Field3
    function Get_Unit_Name (Target : Iir) return Iir;
    procedure Set_Unit_Name (Target : Iir; Name : Iir);
 

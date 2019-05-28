@@ -5253,28 +5253,12 @@ package body Vhdl.Nodes is
       Set_Field4 (Target, An_Iir);
    end Set_Right;
 
-   function Get_Physical_Unit (Lit : Iir) return Iir is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_Physical_Unit (Get_Kind (Lit)),
-                     "no field Physical_Unit");
-      return Get_Field3 (Lit);
-   end Get_Physical_Unit;
-
-   procedure Set_Physical_Unit (Lit : Iir; Name : Iir) is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_Physical_Unit (Get_Kind (Lit)),
-                     "no field Physical_Unit");
-      Set_Field3 (Lit, Name);
-   end Set_Physical_Unit;
-
    function Get_Unit_Name (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Unit_Name (Get_Kind (Target)),
                      "no field Unit_Name");
-      return Get_Field0 (Target);
+      return Get_Field3 (Target);
    end Get_Unit_Name;
 
    procedure Set_Unit_Name (Target : Iir; Name : Iir) is
@@ -5282,7 +5266,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Unit_Name (Get_Kind (Target)),
                      "no field Unit_Name");
-      Set_Field0 (Target, Name);
+      Set_Field3 (Target, Name);
    end Set_Unit_Name;
 
    function Get_Name (Target : Iir) return Iir is

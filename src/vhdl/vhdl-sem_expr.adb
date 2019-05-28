@@ -3995,7 +3995,6 @@ package body Vhdl.Sem_Expr is
          end if;
       end if;
       Set_Unit_Name (Res, Unit_Name);
-      Set_Physical_Unit (Res, Get_Named_Entity (Unit_Name));
       Unit_Type := Get_Type (Unit_Name);
       Set_Type (Res, Unit_Type);
 

@@ -305,7 +305,6 @@ package Vhdl.Nodes_Meta is
       Field_Operand,
       Field_Left,
       Field_Right,
-      Field_Physical_Unit,
       Field_Unit_Name,
       Field_Name,
       Field_Group_Template_Name,
@@ -838,7 +837,6 @@ package Vhdl.Nodes_Meta is
    function Has_Operand (K : Iir_Kind) return Boolean;
    function Has_Left (K : Iir_Kind) return Boolean;
    function Has_Right (K : Iir_Kind) return Boolean;
-   function Has_Physical_Unit (K : Iir_Kind) return Boolean;
    function Has_Unit_Name (K : Iir_Kind) return Boolean;
    function Has_Name (K : Iir_Kind) return Boolean;
    function Has_Group_Template_Name (K : Iir_Kind) return Boolean;

@@ -48,9 +48,9 @@ package body Vhdl.Evaluation is
          when Iir_Kind_Physical_Int_Literal
            | Iir_Kind_Physical_Fp_Literal =>
             --  Extract Unit.
-            Unit := Get_Physical_Literal (Get_Physical_Unit (Expr));
-            pragma Assert (Get_Physical_Unit (Unit)
-                             = Get_Primary_Unit (Get_Type (Unit)));
+            Unit := Get_Physical_Literal
+              (Get_Named_Entity (Get_Unit_Name (Expr)));
+            pragma Assert (Get_Kind (Unit) = Iir_Kind_Integer_Literal);
             case Kind is
                when Iir_Kind_Physical_Int_Literal =>
                   return Get_Value (Expr) * Get_Value (Unit);
@@ -59,6 +59,8 @@ package body Vhdl.Evaluation is
                when others =>
                   raise Program_Error;
             end case;
+         when Iir_Kind_Integer_Literal =>
+            return Get_Value (Expr);
          when Iir_Kind_Unit_Declaration =>
             return Get_Value (Get_Physical_Literal (Expr));
          when others =>
@@ -81,7 +83,7 @@ package body Vhdl.Evaluation is
    end Build_Integer;
 
    function Build_Floating (Val : Fp64; Origin : Iir)
-     return Iir_Floating_Point_Literal
+                           return Iir_Floating_Point_Literal
    is
       Res : Iir_Floating_Point_Literal;
    begin
@@ -111,15 +113,12 @@ package body Vhdl.Evaluation is
    end Build_Enumeration_Constant;
 
    function Build_Physical (Val : Int64; Origin : Iir)
-     return Iir_Physical_Int_Literal
+                           return Iir_Integer_Literal
    is
-      Res : Iir_Physical_Int_Literal;
-      Unit_Name : Iir;
+      Res : Iir_Integer_Literal;
    begin
-      Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
+      Res := Create_Iir (Iir_Kind_Integer_Literal);
       Location_Copy (Res, Origin);
-      Unit_Name := Get_Primary_Unit (Get_Base_Type (Get_Type (Origin)));
-      Set_Physical_Unit (Res, Unit_Name);
       Set_Value (Res, Val);
       Set_Type (Res, Get_Type (Origin));
       Set_Literal_Origin (Res, Origin);
@@ -214,16 +213,10 @@ package body Vhdl.Evaluation is
               (Iir_Index32 (Get_Enum_Pos (Val)), Origin);
 
          when Iir_Kind_Physical_Int_Literal
-           | Iir_Kind_Physical_Fp_Literal =>
-            Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-            Set_Physical_Unit (Res, Get_Primary_Unit
-                                 (Get_Base_Type (Get_Type (Origin))));
+           | Iir_Kind_Physical_Fp_Literal
+           | Iir_Kind_Unit_Declaration =>
+            Res := Create_Iir (Iir_Kind_Integer_Literal);
             Set_Value (Res, Get_Physical_Value (Val));
-
-         when Iir_Kind_Unit_Declaration =>
-            Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-            Set_Value (Res, Get_Physical_Value (Val));
-            Set_Physical_Unit (Res, Get_Primary_Unit (Get_Type (Val)));
 
          when Iir_Kind_String_Literal8 =>
             Res := Create_Iir (Iir_Kind_String_Literal8);

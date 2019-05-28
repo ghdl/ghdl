@@ -2035,10 +2035,6 @@ Get_Right = libghdl.vhdl__nodes__get_right
 
 Set_Right = libghdl.vhdl__nodes__set_right
 
-Get_Physical_Unit = libghdl.vhdl__nodes__get_physical_unit
-
-Set_Physical_Unit = libghdl.vhdl__nodes__set_physical_unit
-
 Get_Unit_Name = libghdl.vhdl__nodes__get_unit_name
 
 Set_Unit_Name = libghdl.vhdl__nodes__set_unit_name

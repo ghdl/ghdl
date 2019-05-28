@@ -792,30 +792,23 @@ package body Vhdl.Std_Package is
          Time_Staticness : Iir_Staticness;
          First_Unit, Last_Unit : Iir_Unit_Declaration;
 
-         function Create_Std_Phys_Lit_Wo_Unit (Value : Int64; Unit : Iir)
-                                      return Iir_Physical_Int_Literal
-         is
-            Lit: Iir_Physical_Int_Literal;
-         begin
-            Lit := Create_Std_Iir (Iir_Kind_Physical_Int_Literal);
-            Set_Value (Lit, Value);
-            pragma Assert (Get_Kind (Unit) = Iir_Kind_Unit_Declaration);
-            Set_Physical_Unit (Lit, Unit);
-            Set_Type (Lit, Time_Type_Definition);
-            Set_Expr_Staticness (Lit, Time_Staticness);
-            return Lit;
-         end Create_Std_Phys_Lit_Wo_Unit;
-
          function Create_Std_Phys_Lit (Value : Int64; Unit : Iir)
                                       return Iir_Physical_Int_Literal
          is
             Lit: Iir_Physical_Int_Literal;
             Unit_Name : Iir;
          begin
-            Lit := Create_Std_Phys_Lit_Wo_Unit (Value, Unit);
+            Lit := Create_Std_Iir (Iir_Kind_Physical_Int_Literal);
+            Set_Value (Lit, Value);
+            pragma Assert (Get_Kind (Unit) = Iir_Kind_Unit_Declaration);
+
             Unit_Name := Create_Std_Iir (Iir_Kind_Simple_Name);
             Set_Identifier (Unit_Name, Get_Identifier (Unit));
+            Set_Named_Entity (Unit_Name, Unit);
             Set_Unit_Name (Lit, Unit_Name);
+
+            Set_Type (Lit, Time_Type_Definition);
+            Set_Expr_Staticness (Lit, Time_Staticness);
             return Lit;
          end Create_Std_Phys_Lit;
 
@@ -826,15 +819,19 @@ package body Vhdl.Std_Package is
          is
             Lit, Lit1 : Iir_Physical_Int_Literal;
          begin
+            --  The unit.
             Unit := Create_Std_Decl (Iir_Kind_Unit_Declaration);
             Set_Std_Identifier (Unit, Name);
             Set_Type (Unit, Time_Type_Definition);
 
+            --  The physical literal.
             Lit1 := Create_Std_Phys_Lit (Multiplier_Value, Multiplier);
-            Lit := Create_Std_Phys_Lit
-              (Multiplier_Value
-               * Get_Value (Get_Physical_Literal (Multiplier)),
-               Get_Physical_Unit (Get_Physical_Literal (Multiplier)));
+
+            --  The computed value of the physical literal.
+            Lit := Create_Std_Iir (Iir_Kind_Integer_Literal);
+            Set_Value (Lit,
+                       Multiplier_Value
+                         * Get_Value (Get_Physical_Literal (Multiplier)));
             Set_Literal_Origin (Lit, Lit1);
             Set_Physical_Literal (Unit, Lit);
 
@@ -867,8 +864,14 @@ package body Vhdl.Std_Package is
          Set_Type (Time_Fs_Unit, Time_Type_Definition);
          Set_Expr_Staticness (Time_Fs_Unit, Time_Staticness);
          Set_Name_Staticness (Time_Fs_Unit, Locally);
-         Set_Physical_Literal
-           (Time_Fs_Unit, Create_Std_Phys_Lit (1, Time_Fs_Unit));
+         declare
+            Lit : Iir;
+         begin
+            Lit := Create_Std_Iir (Iir_Kind_Integer_Literal);
+            Set_Value (Lit, 1);
+            Set_Physical_Literal (Time_Fs_Unit, Lit);
+            Set_Literal_Origin (Lit, Create_Std_Phys_Lit (1, Time_Fs_Unit));
+         end;
          Chain_Append (First_Unit, Last_Unit, Time_Fs_Unit);
 
          Create_Unit (Time_Ps_Unit, 1000, Time_Fs_Unit, Name_Ps);
@@ -893,10 +896,10 @@ package body Vhdl.Std_Package is
          Time_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Physical_Subtype_Definition);
          Constraint := Create_Std_Range_Expr
-           (Create_Std_Phys_Lit_Wo_Unit (Low_Bound (Flags.Flag_Time_64),
-                                         Time_Fs_Unit),
-            Create_Std_Phys_Lit_Wo_Unit (High_Bound (Flags.Flag_Time_64),
-                                         Time_Fs_Unit),
+           (Create_Std_Phys_Lit (Low_Bound (Flags.Flag_Time_64),
+                                 Time_Fs_Unit),
+            Create_Std_Phys_Lit (High_Bound (Flags.Flag_Time_64),
+                                 Time_Fs_Unit),
             Time_Type_Definition);
          Set_Range_Constraint (Time_Subtype_Definition, Constraint);
          Set_Base_Type (Time_Subtype_Definition, Time_Type_Definition);
@@ -1273,6 +1276,14 @@ package body Vhdl.Std_Package is
 
    procedure Set_Time_Resolution (Resolution : Character)
    is
+      procedure Change_Unit (Lit : Iir; Unit : Iir)
+      is
+         Name : constant Iir := Get_Unit_Name (Lit);
+      begin
+         Set_Identifier (Name, Get_Identifier (Unit));
+         Set_Named_Entity (Name, Unit);
+      end Change_Unit;
+
       Unit : Iir;
       Prim : Iir;
       Rng : Iir;
@@ -1300,14 +1311,14 @@ package body Vhdl.Std_Package is
 
       --  Adjust range of TIME subtype.
       Rng := Get_Range_Constraint (Time_Subtype_Definition);
-      Set_Physical_Unit (Get_Left_Limit (Rng), Prim);
-      Set_Physical_Unit (Get_Right_Limit (Rng), Prim);
+      Change_Unit (Get_Left_Limit (Rng), Prim);
+      Change_Unit (Get_Right_Limit (Rng), Prim);
 
       --  Adjust range of DELAY_LENGTH.
       if Vhdl_Std >= Vhdl_93c then
          Rng := Get_Range_Constraint (Delay_Length_Subtype_Definition);
-         Set_Physical_Unit (Get_Left_Limit (Rng), Prim);
-         Set_Physical_Unit (Get_Right_Limit (Rng), Prim);
+         Change_Unit (Get_Left_Limit (Rng), Prim);
+         Change_Unit (Get_Right_Limit (Rng), Prim);
       end if;
 
       Unit := Get_Unit_Chain (Time_Type_Definition);
@@ -1319,7 +1330,8 @@ package body Vhdl.Std_Package is
          begin
             if Prim = Null_Iir then
                --  Primary already set, just recompute values.
-               Lit_Unit := Get_Physical_Literal (Get_Physical_Unit (Orig));
+               Lit_Unit := Get_Physical_Literal
+                 (Get_Named_Entity (Get_Unit_Name (Orig)));
                Set_Value (Lit, Get_Value (Orig) * Get_Value (Lit_Unit));
             elsif Unit = Prim then
                Set_Value (Lit, 1);

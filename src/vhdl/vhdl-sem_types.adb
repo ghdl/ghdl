@@ -322,9 +322,8 @@ package body Vhdl.Sem_Types is
    is
       Lit : Iir;
    begin
-      Lit := Create_Iir (Iir_Kind_Physical_Int_Literal);
+      Lit := Create_Iir (Iir_Kind_Integer_Literal);
       Set_Value (Lit, Val);
-      Set_Physical_Unit (Lit, Unit);
       Set_Expr_Staticness (Lit, Locally);
       Set_Type (Lit, Get_Type (Unit));
       Location_Copy (Lit, Unit);
@@ -412,23 +411,6 @@ package body Vhdl.Sem_Types is
       Xref_Decl (Unit);
 
       declare
-         --  Convert an integer literal to a physical literal.
-         --  This is used to convert bounds.
-         function Lit_To_Phys_Lit (Lim : Iir_Integer_Literal)
-                                  return Iir_Physical_Int_Literal
-         is
-            Res : Iir_Physical_Int_Literal;
-         begin
-            Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-            Location_Copy (Res, Lim);
-            Set_Type (Res, Def);
-            Set_Value (Res, Get_Value (Lim));
-            Set_Physical_Unit (Res, Get_Primary_Unit (Def));
-            Set_Expr_Staticness (Res, Locally);
-            Set_Literal_Origin (Res, Lim);
-            return Res;
-         end Lit_To_Phys_Lit;
-
          Phys_Range : Iir_Range_Expression;
          Lit : Iir;
       begin
@@ -437,12 +419,12 @@ package body Vhdl.Sem_Types is
          Location_Copy (Phys_Range, Range_Expr1);
          Set_Type (Phys_Range, Def);
          Set_Direction (Phys_Range, Get_Direction (Range_Expr1));
-         Lit := Lit_To_Phys_Lit (Get_Left_Limit (Range_Expr1));
-         Set_Left_Limit (Phys_Range, Lit);
+         Lit := Get_Left_Limit (Range_Expr1);
          Set_Left_Limit_Expr (Phys_Range, Lit);
-         Lit := Lit_To_Phys_Lit (Get_Right_Limit (Range_Expr1));
-         Set_Right_Limit (Phys_Range, Lit);
+         Set_Left_Limit (Phys_Range, Lit);
+         Lit := Get_Right_Limit (Range_Expr1);
          Set_Right_Limit_Expr (Phys_Range, Lit);
+         Set_Right_Limit (Phys_Range, Lit);
          Set_Expr_Staticness
            (Phys_Range, Get_Expr_Staticness (Range_Expr1));
 
