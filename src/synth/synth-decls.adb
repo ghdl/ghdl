@@ -76,6 +76,8 @@ package body Synth.Decls is
             --  Ignore default value.
             Make_Object (Syn_Inst, Wire_Variable, Decl);
             Create_Var_Wire (Syn_Inst, Decl, null);
+         when Iir_Kind_Constant_Declaration =>
+            null;
          when Iir_Kind_Signal_Declaration =>
             declare
                Def : constant Iir := Get_Default_Value (Decl);

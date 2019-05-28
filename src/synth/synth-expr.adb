@@ -25,6 +25,7 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Simul.Execution;
+with Simul.Annotations; use Simul.Annotations;
 with Grt.Types; use Grt.Types;
 
 with Synth.Errors; use Synth.Errors;
@@ -522,6 +523,10 @@ package body Synth.Expr is
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration =>
             return Get_Value (Syn_Inst, Name);
+         when Iir_Kind_Constant_Declaration =>
+            return Create_Value_Lit(
+               Syn_Inst.Sim.Objects(Get_Info(Name).Slot),
+               Get_Type(Name));
          when others =>
             Error_Kind ("synth_name", Name);
       end case;
@@ -840,7 +845,8 @@ package body Synth.Expr is
             return Synth_Slice_Name (Syn_Inst, Expr);
          when Iir_Kind_Character_Literal
            | Iir_Kind_Integer_Literal
-           | Iir_Kind_String_Literal8 =>
+           | Iir_Kind_String_Literal8
+           | Iir_Kind_Enumeration_Literal =>
             return Create_Value_Lit
               (Simul.Execution.Execute_Expression (Syn_Inst.Sim, Expr),
                Get_Base_Type (Get_Type (Expr)));
