@@ -7,7 +7,8 @@ if ! $GHDL --help -a | grep -q time-resolution; then
 else
     # Below the resolution
     analyze_failure --time-resolution=sec ent.vhdl
-    
+    analyze_failure --time-resolution=ns t3.vhdl
+
     # Zero physical literals are always allowed.
     analyze --time-resolution=ms t1.vhdl
     analyze --time-resolution=ms t2.vhdl
