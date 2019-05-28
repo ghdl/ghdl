@@ -1346,6 +1346,12 @@ package body Vhdl.Std_Package is
 
    function Get_Minimal_Time_Resolution return Character is
    begin
+      --  In vhdl87, time units are locally static, so they are evaluated
+      --  during analysis.  The units cannot be changed later.
+      if Vhdl_Std = Vhdl_87 then
+         return 'f';
+      end if;
+
       if Get_Use_Flag (Time_Fs_Unit) then
          return 'f';
       end if;
