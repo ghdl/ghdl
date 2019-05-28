@@ -450,28 +450,31 @@ package body Trans.Chap8 is
       Constraint : constant Iir := Get_Range_Constraint (Iter_Type);
       Name : Iir;
    begin
-      --  A constraint is either a range expression or a range attribute name.
-      pragma Assert (Get_Kind (Constraint) in Iir_Kinds_Range_Attribute);
-
-      Name := Get_Prefix (Constraint);
-      Name := Get_Base_Name (Name);
-
-      case Get_Kind (Name) is
-         when Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Dereference =>
+      case Iir_Kinds_Range_Attribute (Get_Kind (Constraint)) is
+         when Iir_Kind_Reverse_Range_Array_Attribute =>
+            --  Need to create a reversed range...
             return False;
-         when Iir_Kind_Function_Call =>
-            if not Is_Fully_Constrained_Type (Get_Type (Name)) then
-               return False;
-            end if;
-         when Iir_Kinds_Object_Declaration =>
-            null;
-         when Iir_Kind_Subtype_Declaration =>
-            null;
-         when others =>
-            Error_Kind ("is_for_loop_iterator_stable(2)", Name);
+         when Iir_Kind_Range_Array_Attribute =>
+            Name := Get_Prefix (Constraint);
+            Name := Get_Base_Name (Name);
+
+            case Get_Kind (Name) is
+               when Iir_Kind_Implicit_Dereference
+                 | Iir_Kind_Dereference =>
+                  return False;
+               when Iir_Kind_Function_Call =>
+                  if not Is_Fully_Constrained_Type (Get_Type (Name)) then
+                     return False;
+                  end if;
+               when Iir_Kinds_Object_Declaration =>
+                  null;
+               when Iir_Kind_Subtype_Declaration =>
+                  null;
+               when others =>
+                  Error_Kind ("is_for_loop_iterator_stable(2)", Name);
+            end case;
+            return True;
       end case;
-      return True;
    end Is_For_Loop_Iterator_Stable;
 
    function Get_Iterator_Range_Var (Iterator : Iir) return Mnode
