@@ -1282,7 +1282,7 @@ package body Vhdl.Sem_Stmts is
             Expr := Eval_Expr_If_Static (Expr);
             Set_Timeout_Clause (Stmt, Expr);
             if Get_Expr_Staticness (Expr) = Locally
-              and then Get_Value (Expr) < 0
+              and then Get_Physical_Value (Expr) < 0
             then
                Error_Msg_Sem (+Stmt, "timeout value must be positive");
             end if;
