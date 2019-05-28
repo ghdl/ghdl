@@ -17,6 +17,16 @@ else
     elab_simulate --time-resolution=us ent
 
     elab_simulate --time-resolution=auto ent
+
+    analyze t87.vhdl
+    elab_simulate --time-resolution=ps t87
+    elab_simulate --time-resolution=auto t87
+    clean
+
+    GHDL_STD_FLAGS=--std=87
+    analyze t87.vhdl
+    elab_simulate --time-resolution=ps t87
+    elab_simulate_failure --time-resolution=auto t87
     clean
 fi
 
