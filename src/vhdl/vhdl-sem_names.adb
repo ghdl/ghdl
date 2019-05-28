@@ -4107,6 +4107,16 @@ package body Vhdl.Sem_Names is
                Set_Expr_Staticness (Res, Get_Expr_Staticness (Expr));
                --Set_Name_Staticness (Name, Get_Name_Staticness (Expr));
                --Set_Base_Name (Name, Get_Base_Name (Expr));
+
+               if Get_Type (Expr) = Time_Type_Definition
+                 and then Get_Value (Get_Physical_Literal (Expr)) = 0
+               then
+                  --  See Sem_Physical_Literal.
+                  Error_Msg_Sem
+                    (+Res,
+                     "physical unit %i is below the time resolution", +Expr);
+               end if;
+
                return Res;
             end if;
          when Iir_Kind_Function_Call
