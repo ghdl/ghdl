@@ -1875,6 +1875,22 @@ package body Vhdl.Nodes is
       Set_Flag3 (Lit, Flag);
    end Set_Has_Length;
 
+   function Get_Literal_Length (Lit : Iir) return Int32 is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Literal_Length (Get_Kind (Lit)),
+                     "no field Literal_Length");
+      return Iir_To_Int32 (Get_Field0 (Lit));
+   end Get_Literal_Length;
+
+   procedure Set_Literal_Length (Lit : Iir; Len : Int32) is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Literal_Length (Get_Kind (Lit)),
+                     "no field Literal_Length");
+      Set_Field0 (Lit, Int32_To_Iir (Len));
+   end Set_Literal_Length;
+
    function Get_Literal_Origin (Lit : Iir) return Iir is
    begin
       pragma Assert (Lit /= Null_Iir);

@@ -1199,6 +1199,10 @@ Get_Has_Length = libghdl.vhdl__nodes__get_has_length
 
 Set_Has_Length = libghdl.vhdl__nodes__set_has_length
 
+Get_Literal_Length = libghdl.vhdl__nodes__get_literal_length
+
+Set_Literal_Length = libghdl.vhdl__nodes__set_literal_length
+
 Get_Literal_Origin = libghdl.vhdl__nodes__get_literal_origin
 
 Set_Literal_Origin = libghdl.vhdl__nodes__set_literal_origin

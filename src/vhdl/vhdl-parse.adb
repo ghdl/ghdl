@@ -1378,6 +1378,7 @@ package body Vhdl.Parse is
             Res := Create_Iir (Iir_Kind_String_Literal8);
             Set_String8_Id (Res, Current_String_Id);
             Set_String_Length (Res, Current_String_Length);
+            Set_Literal_Length (Res, Get_Token_Length);
             Set_Location (Res);
 
             --  Skip string
@@ -5356,7 +5357,7 @@ package body Vhdl.Parse is
    --  postcond: tok_bit_string
    --
    --  Simply create the node for a bit string.
-   function Parse_Bit_String return Iir
+   function Parse_Bit_String (Len : Int32) return Iir
    is
       Res : Iir;
       B : Number_Base_Type;
@@ -5365,6 +5366,7 @@ package body Vhdl.Parse is
       Set_Location (Res);
       Set_String8_Id (Res, Current_String_Id);
       Set_String_Length (Res, Current_String_Length);
+      Set_Literal_Length (Res, Len + Get_Token_Length);
       case Get_Bit_String_Sign is
          when 's' =>
             Set_Has_Sign (Res, True);
@@ -5500,7 +5502,7 @@ package body Vhdl.Parse is
    --  postcond: likewise
    --
    --  Return an integer_literal or a physical_literal.
-   function Parse_Integer_Literal (Val : Int64) return Iir
+   function Parse_Integer_Literal (Val : Int64; Len : Int32) return Iir
    is
       Res : Iir;
    begin
@@ -5513,6 +5515,7 @@ package body Vhdl.Parse is
          Res := Create_Iir (Iir_Kind_Integer_Literal);
       end if;
       Set_Value (Res, Val);
+      Set_Literal_Length (Res, Len);
       return Res;
    end Parse_Integer_Literal;
 
@@ -5551,22 +5554,25 @@ package body Vhdl.Parse is
       Int: Int64;
       Fp: Fp64;
       Loc: Location_Type;
+      Len : Int32;
    begin
       case Current_Token is
          when Tok_Integer =>
             Int := Current_Iir_Int64;
             Loc := Get_Token_Location;
+            Len := Get_Token_Length;
 
             --  Skip integer
             Scan;
 
-            Res := Parse_Integer_Literal (Int);
+            Res := Parse_Integer_Literal (Int, Len);
             Set_Location (Res, Loc);
             return Res;
 
          when Tok_Real =>
             Fp := Current_Iir_Fp64;
             Loc := Get_Token_Location;
+            Len := Get_Token_Length;
 
             --  Skip real
             Scan;
@@ -5581,6 +5587,7 @@ package body Vhdl.Parse is
             end if;
             Set_Location (Res, Loc);
             Set_Fp_Value (Res, Fp);
+            Set_Literal_Length (Res, Len);
             return Res;
 
          when Tok_Identifier
@@ -5631,12 +5638,13 @@ package body Vhdl.Parse is
          when Tok_Integer_Letter =>
             Int := Current_Iir_Int64;
             Loc := Get_Token_Location;
+            Len := Get_Token_Length;
 
             --  Skip integer
             Scan;
 
             if Current_Token = Tok_Bit_String then
-               Res := Parse_Bit_String;
+               Res := Parse_Bit_String (Len);
                Set_Has_Length (Res, True);
 
                --  Skip bit string
@@ -5648,13 +5656,13 @@ package body Vhdl.Parse is
                Error_Msg_Parse
                  (Get_Token_Location,
                   "space is required between number and unit name");
-               Res := Parse_Integer_Literal (Int);
+               Res := Parse_Integer_Literal (Int, Len);
             end if;
             Set_Location (Res, Loc);
             return Res;
 
          when Tok_Bit_String =>
-            Res := Parse_Bit_String;
+            Res := Parse_Bit_String (0);
 
             --  Skip bit string
             Scan;

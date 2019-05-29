@@ -122,6 +122,7 @@ package Vhdl.Scanner is
    function Get_Token_Location return Location_Type;
    function Get_Token_Offset return Natural;
    function Get_Token_Position return Source_Ptr;
+   function Get_Token_Length return Int32;
 
    function Get_Current_Coord return Source_Coord_Type;
    function Get_Token_Coord return Source_Coord_Type;

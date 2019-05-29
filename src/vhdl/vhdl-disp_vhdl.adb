@@ -26,6 +26,7 @@ with Flags; use Flags;
 with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
+with Files_Map;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
@@ -138,10 +139,52 @@ package body Vhdl.Disp_Vhdl is
       return R;
    end Or_Else;
 
-   procedure Disp_Identifier (Ctxt : in out Ctxt_Class; Node : Iir) is
+   --  Disp a literal from the sources (so using exactely the same characters).
+   procedure Disp_From_Source
+     (Ctxt : in out Ctxt_Class;
+      Loc : Location_Type; Len : Int32; Tok : Token_Type)
+   is
+      use Files_Map;
+      pragma Assert (Len > 0);
+      File : Source_File_Entry;
+      Pos : Source_Ptr;
+      Buf : File_Buffer_Acc;
    begin
-      Disp_Ident (Ctxt, Get_Identifier (Node));
+      Location_To_File_Pos (Loc, File, Pos);
+      Buf := Get_File_Source (File);
+      Start_Lit (Ctxt, Tok);
+      for I in 1 .. Len loop
+         Disp_Char (Ctxt, Buf (Pos));
+         Pos := Pos + 1;
+      end loop;
+      Close_Lit (Ctxt);
+   end Disp_From_Source;
+
+   procedure Disp_Identifier (Ctxt : in out Ctxt_Class; Node : Iir)
+   is
+      use Name_Table;
+      Id : constant Name_Id := Get_Identifier (Node);
+      Loc : constant Location_Type := Get_Location (Node);
+   begin
+      --  Try to display the one from the sources.
+      if Id /= Null_Identifier
+        and then not Is_Character (Id)
+        and then Loc /= No_Location
+        and then Loc /= Std_Package.Std_Location
+      then
+         Disp_From_Source
+           (Ctxt, Loc, Int32 (Get_Name_Length (Id)), Tok_Identifier);
+      else
+         Disp_Ident (Ctxt, Id);
+      end if;
    end Disp_Identifier;
+
+   procedure Disp_Literal_From_Source
+     (Ctxt : in out Ctxt_Class; Lit : Iir; Tok : Token_Type) is
+   begin
+      Disp_From_Source
+        (Ctxt, Get_Location (Lit), Get_Literal_Length (Lit), Tok);
+   end Disp_Literal_From_Source;
 
    procedure Disp_Function_Name (Ctxt : in out Ctxt_Class; Func: Iir)
    is
@@ -654,13 +697,22 @@ package body Vhdl.Disp_Vhdl is
 
    procedure Disp_Physical_Literal (Ctxt : in out Ctxt_Class; Lit: Iir)
    is
+      Len : constant Int32 := Get_Literal_Length (Lit);
       Unit : Iir;
    begin
       case Iir_Kinds_Physical_Literal (Get_Kind (Lit)) is
          when Iir_Kind_Physical_Int_Literal =>
-            Disp_Int64 (Ctxt, Get_Value (Lit));
+            if Len /= 0 then
+               Disp_Literal_From_Source (Ctxt, Lit, Tok_Integer);
+            else
+               Disp_Int64 (Ctxt, Get_Value (Lit));
+            end if;
          when Iir_Kind_Physical_Fp_Literal =>
-            Disp_Fp64 (Ctxt, Get_Fp_Value (Lit));
+            if Len /= 0 then
+               Disp_Literal_From_Source (Ctxt, Lit, Tok_Real);
+            else
+               Disp_Fp64 (Ctxt, Get_Fp_Value (Lit));
+            end if;
       end case;
 
       Unit := Get_Unit_Name (Lit);
@@ -1921,7 +1973,7 @@ package body Vhdl.Disp_Vhdl is
       Label: constant Name_Id := Get_Label (Stmt);
    begin
       if Label /= Null_Identifier then
-         Disp_Ident (Ctxt, Label);
+         Disp_Identifier (Ctxt, Stmt);
          Disp_Token (Ctxt, Tok_Colon);
       end if;
    end Disp_Label;
@@ -2866,7 +2918,7 @@ package body Vhdl.Disp_Vhdl is
       Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Parametered_Type_Attribute;
 
-   procedure Disp_String_Literal
+   procedure Disp_String_Literal_Raw
      (Ctxt : in out Ctxt_Class; Str : Iir; El_Type : Iir)
    is
       Str_Id : constant String8_Id := Get_String8_Id (Str);
@@ -2912,6 +2964,16 @@ package body Vhdl.Disp_Vhdl is
 
       Disp_Char (Ctxt, '"');
       Close_Lit (Ctxt);
+   end Disp_String_Literal_Raw;
+
+   procedure Disp_String_Literal
+     (Ctxt : in out Ctxt_Class; Str : Iir; El_Type : Iir) is
+   begin
+      if Get_Literal_Length (Str) /= 0 then
+         Disp_Literal_From_Source (Ctxt, Str, Tok_String);
+      else
+         Disp_String_Literal_Raw (Ctxt, Str, El_Type);
+      end if;
    end Disp_String_Literal;
 
    procedure Print (Ctxt : in out Ctxt_Class; Expr: Iir)
@@ -2924,14 +2986,22 @@ package body Vhdl.Disp_Vhdl is
             if Dump_Origin_Flag and then Orig /= Null_Iir then
                Print (Ctxt, Orig);
             else
-               Disp_Int64 (Ctxt, Get_Value (Expr));
+               if Get_Literal_Length (Expr) /= 0 then
+                  Disp_Literal_From_Source (Ctxt, Expr, Tok_Integer);
+               else
+                  Disp_Int64 (Ctxt, Get_Value (Expr));
+               end if;
             end if;
          when Iir_Kind_Floating_Point_Literal =>
             Orig := Get_Literal_Origin (Expr);
             if Dump_Origin_Flag and then Orig /= Null_Iir then
                Print (Ctxt, Orig);
             else
-               Disp_Fp64 (Ctxt, Get_Fp_Value (Expr));
+               if Get_Literal_Length (Expr) /= 0 then
+                  Disp_Literal_From_Source (Ctxt, Expr, Tok_Real);
+               else
+                  Disp_Fp64 (Ctxt, Get_Fp_Value (Expr));
+               end if;
             end if;
          when Iir_Kind_String_Literal8 =>
             Orig := Get_Literal_Origin (Expr);

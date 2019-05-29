@@ -311,6 +311,11 @@ package body Vhdl.Scanner is
       return Current_Context.Token_Pos;
    end Get_Token_Position;
 
+   function Get_Token_Length return Int32 is
+   begin
+      return Int32 (Current_Context.Pos - Current_Context.Token_Pos);
+   end Get_Token_Length;
+
    function Get_Position return Source_Ptr is
    begin
       return Current_Context.Pos;

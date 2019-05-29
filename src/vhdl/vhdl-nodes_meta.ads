@@ -96,6 +96,7 @@ package Vhdl.Nodes_Meta is
       Field_Has_Signed,
       Field_Has_Sign,
       Field_Has_Length,
+      Field_Literal_Length,
       Field_Literal_Origin,
       Field_Range_Origin,
       Field_Literal_Subtype,
@@ -623,6 +624,7 @@ package Vhdl.Nodes_Meta is
    function Has_Has_Signed (K : Iir_Kind) return Boolean;
    function Has_Has_Sign (K : Iir_Kind) return Boolean;
    function Has_Has_Length (K : Iir_Kind) return Boolean;
+   function Has_Literal_Length (K : Iir_Kind) return Boolean;
    function Has_Literal_Origin (K : Iir_Kind) return Boolean;
    function Has_Range_Origin (K : Iir_Kind) return Boolean;
    function Has_Literal_Subtype (K : Iir_Kind) return Boolean;
