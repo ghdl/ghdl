@@ -2720,7 +2720,8 @@ package body Vhdl.Disp_Vhdl is
      (Ctxt : in out Ctxt_Class; Stmt: Iir_Component_Instantiation_Statement)
    is
       Component: constant Iir := Get_Instantiated_Unit (Stmt);
-      Alist: Iir;
+      Gen_Map : constant Iir := Get_Generic_Map_Aspect_Chain (Stmt);
+      Port_Map : constant Iir := Get_Port_Map_Aspect_Chain (Stmt);
    begin
       Start_Hbox (Ctxt);
       Disp_Label (Ctxt, Stmt);
@@ -2732,16 +2733,32 @@ package body Vhdl.Disp_Vhdl is
       else
          Disp_Entity_Aspect (Ctxt, Component);
       end if;
-      Alist := Get_Generic_Map_Aspect_Chain (Stmt);
-      if Alist /= Null_Iir then
-         Disp_Generic_Map_Aspect (Ctxt, Stmt);
+
+      if Gen_Map = Null_Iir and Port_Map = Null_Iir then
+         Disp_Token (Ctxt, Tok_Semi_Colon);
+         Close_Hbox (Ctxt);
+      else
+         Close_Hbox (Ctxt);
+
+         Start_Vbox (Ctxt);
+         if Gen_Map /= Null_Iir then
+            Start_Hbox (Ctxt);
+            Disp_Generic_Map_Aspect (Ctxt, Stmt);
+            if Port_Map = Null_Iir then
+               Disp_Token (Ctxt, Tok_Semi_Colon);
+            end if;
+            Close_Hbox (Ctxt);
+         end if;
+
+         if Port_Map /= Null_Iir then
+            Start_Hbox (Ctxt);
+            Disp_Port_Map_Aspect (Ctxt, Stmt);
+            Disp_Token (Ctxt, Tok_Semi_Colon);
+            Close_Hbox (Ctxt);
+         end if;
+
+         Close_Vbox (Ctxt);
       end if;
-      Alist := Get_Port_Map_Aspect_Chain (Stmt);
-      if Alist /= Null_Iir then
-         Disp_Port_Map_Aspect (Ctxt, Stmt);
-      end if;
-      Disp_Token (Ctxt, Tok_Semi_Colon);
-      Close_Hbox (Ctxt);
    end Disp_Component_Instantiation_Statement;
 
    procedure Disp_Function_Call
@@ -2929,12 +2946,14 @@ package body Vhdl.Disp_Vhdl is
       Id : Name_Id;
       C : Character;
    begin
-      Start_Lit (Ctxt, Tok_String);
       if Get_Bit_String_Base (Str) /= Base_None then
+         Start_Lit (Ctxt, Tok_Bit_String);
          if Get_Has_Length (Str) then
             Disp_Int32 (Ctxt, Iir_Int32 (Get_String_Length (Str)));
          end if;
          Disp_Char (Ctxt, 'b');
+      else
+         Start_Lit (Ctxt, Tok_String);
       end if;
 
       Disp_Char (Ctxt, '"');
@@ -2970,7 +2989,16 @@ package body Vhdl.Disp_Vhdl is
      (Ctxt : in out Ctxt_Class; Str : Iir; El_Type : Iir) is
    begin
       if Get_Literal_Length (Str) /= 0 then
-         Disp_Literal_From_Source (Ctxt, Str, Tok_String);
+         declare
+            Tkind : Token_Type;
+         begin
+            if Get_Bit_String_Base (Str) /= Base_None then
+               Tkind := Tok_Bit_String;
+            else
+               Tkind := Tok_String;
+            end if;
+            Disp_Literal_From_Source (Ctxt, Str, Tkind);
+         end;
       else
          Disp_String_Literal_Raw (Ctxt, Str, El_Type);
       end if;
@@ -3272,9 +3300,7 @@ package body Vhdl.Disp_Vhdl is
       end if;
       Chain := Get_Generic_Chain (Header);
       if Chain /= Null_Iir then
-         Start_Hbox (Ctxt);
          Disp_Generics (Ctxt, Header);
-         Close_Hbox (Ctxt);
 
          Chain := Get_Generic_Map_Aspect_Chain (Header);
          if Chain /= Null_Iir then
@@ -3286,9 +3312,7 @@ package body Vhdl.Disp_Vhdl is
       end if;
       Chain := Get_Port_Chain (Header);
       if Chain /= Null_Iir then
-         Start_Hbox (Ctxt);
          Disp_Ports (Ctxt, Header);
-         Close_Hbox (Ctxt);
 
          Chain := Get_Port_Map_Aspect_Chain (Header);
          if Chain /= Null_Iir then
@@ -3859,6 +3883,16 @@ package body Vhdl.Disp_Vhdl is
    procedure Disp_Vhdl (Ctxt : in out Ctxt_Class; N : Iir) is
    begin
       case Get_Kind (N) is
+         when Iir_Kind_Design_File =>
+            declare
+               Unit : Iir;
+            begin
+               Unit := Get_First_Design_Unit (N);
+               while Unit /= Null_Iir loop
+                  Disp_Vhdl (Ctxt, Unit);
+                  Unit := Get_Chain (Unit);
+               end loop;
+            end;
          when Iir_Kind_Design_Unit =>
             Disp_Design_Unit (Ctxt, N);
          when Iir_Kind_Enumeration_Type_Definition =>
@@ -3934,6 +3968,65 @@ package body Vhdl.Disp_Vhdl is
       end loop;
    end Disp_Str;
 
+
+   function Need_Space (Tok, Prev_Tok : Token_Type) return Boolean is
+   begin
+      if Prev_Tok = Tok_Newline then
+         return False;
+      elsif Prev_Tok >= Tok_First_Keyword then
+         --  A space after a keyword.
+         if Tok /= Tok_Semi_Colon
+           and Tok /= Tok_Dot
+         then
+            return True;
+         end if;
+      elsif Tok >= Tok_First_Keyword then
+         --  Space before a keyword.
+         if Prev_Tok /= Tok_Dot
+           and Prev_Tok /= Tok_Left_Paren
+         then
+            return True;
+         end if;
+      elsif (Tok = Tok_Identifier
+               or Tok = Tok_String)
+        and (Prev_Tok = Tok_Identifier
+               or Prev_Tok = Tok_String
+               or Prev_Tok = Tok_Integer
+               or Prev_Tok = Tok_Real)
+      then
+         --  A space is needed between 2 identifiers.
+         return True;
+      elsif Prev_Tok = Tok_Comma
+        or Prev_Tok = Tok_Semi_Colon
+        or Prev_Tok = Tok_Colon
+        or Prev_Tok = Tok_Assign
+        or Prev_Tok = Tok_Double_Arrow
+        or Prev_Tok in Token_Relational_Operator_Type
+        or Prev_Tok in Token_Adding_Operator_Type
+        or Prev_Tok in Token_Multiplying_Operator_Type
+        or Prev_Tok = Tok_Bar
+      then
+         --  Always a space after ',', ':', ':='
+         return True;
+      elsif Tok = Tok_Left_Paren then
+         if Prev_Tok /= Tok_Tick and Prev_Tok /= Tok_Left_Paren then
+            --  A space before '('.
+            return True;
+         end if;
+      elsif Tok = Tok_Left_Bracket
+        or Tok = Tok_Assign
+        or Tok = Tok_Double_Arrow
+        or Tok in Token_Relational_Operator_Type
+        or Tok in Token_Adding_Operator_Type
+        or Tok in Token_Multiplying_Operator_Type
+        or Tok = Tok_Bar
+      then
+         --  Always a space before '[', ':='.
+         return True;
+      end if;
+      return False;
+   end Need_Space;
+
    package Simple_Disp_Ctxt is
       type Simple_Ctxt is new Disp_Ctxt with record
          Vnum : Natural;
@@ -4004,60 +4097,9 @@ package body Vhdl.Disp_Vhdl is
       is
          Prev_Tok : constant Token_Type := Ctxt.Prev_Tok;
       begin
-         if Prev_Tok = Tok_Newline then
-            null;
-         elsif Prev_Tok >= Tok_First_Keyword then
-            --  A space after a keyword.
-            if Tok /= Tok_Semi_Colon
-              and Tok /= Tok_Dot
-            then
-               Put (Ctxt, ' ');
-            end if;
-         elsif Tok >= Tok_First_Keyword then
-            --  Space before a keyword.
-            if Prev_Tok /= Tok_Dot
-              and Prev_Tok /= Tok_Left_Paren
-            then
-               Put (Ctxt, ' ');
-            end if;
-         elsif (Tok = Tok_Identifier
-                  or Tok = Tok_String)
-           and (Prev_Tok = Tok_Identifier
-                  or Prev_Tok = Tok_String
-                  or Prev_Tok = Tok_Integer
-                  or Prev_Tok = Tok_Real)
-         then
-            --  A space is needed between 2 identifiers.
-            Put (Ctxt, ' ');
-         elsif Prev_Tok = Tok_Comma
-           or Prev_Tok = Tok_Semi_Colon
-           or Prev_Tok = Tok_Colon
-           or Prev_Tok = Tok_Assign
-           or Prev_Tok = Tok_Double_Arrow
-           or Prev_Tok in Token_Relational_Operator_Type
-           or Prev_Tok in Token_Adding_Operator_Type
-           or Prev_Tok in Token_Multiplying_Operator_Type
-           or Prev_Tok = Tok_Bar
-         then
-            --  Always a space after ',', ':', ':='
-            Put (Ctxt, ' ');
-         elsif Tok = Tok_Left_Paren then
-            if Prev_Tok /= Tok_Tick and Prev_Tok /= Tok_Left_Paren then
-               --  A space before '('.
-               Put (Ctxt, ' ');
-            end if;
-         elsif Tok = Tok_Left_Bracket
-           or Tok = Tok_Assign
-           or Tok = Tok_Double_Arrow
-           or Tok in Token_Relational_Operator_Type
-           or Tok in Token_Adding_Operator_Type
-           or Tok in Token_Multiplying_Operator_Type
-           or Tok = Tok_Bar
-         then
-            --  Always a space before '[', ':='.
+         if Need_Space (Tok, Prev_Tok) then
             Put (Ctxt, ' ');
          end if;
-
          Ctxt.Prev_Tok := Tok;
       end Disp_Space;
 

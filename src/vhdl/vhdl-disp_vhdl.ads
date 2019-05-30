@@ -37,7 +37,11 @@ package Vhdl.Disp_Vhdl is
 
    subtype Ctxt_Class is Disp_Ctxt'Class;
 
+   --  Helper that calls Disp_Char for every character of STR.
    procedure Disp_Str (Ctxt : in out Ctxt_Class; Str : String);
+
+   --  Return True if a space should be displayed between PREV_TOK and TOK.
+   function Need_Space (Tok, Prev_Tok : Token_Type) return Boolean;
 
    -- General procedure to display a node.
    -- Mainly used to dispatch to other functions according to the kind of
