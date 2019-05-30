@@ -434,6 +434,18 @@ package body Vhdl.Tokens is
             return "abort";
          when Tok_Before =>
             return "before";
+         when Tok_Before_Em =>
+            return "before!";
+         when Tok_Before_Un =>
+            return "before_";
+         when Tok_Before_Em_Un =>
+            return "before!_";
+         when Tok_Until_Em =>
+            return "until!";
+         when Tok_Until_Un =>
+            return "until_";
+         when Tok_Until_Em_Un =>
+            return "until!_";
          when Tok_Always =>
             return "always";
          when Tok_Never =>

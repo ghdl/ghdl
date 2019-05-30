@@ -27,10 +27,12 @@ with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
 with Files_Map;
+with Vhdl.Types; use Vhdl.Types;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
-with PSL.Nodes;
+with PSL.Priorities; use PSL.Priorities;
+with PSL.Nodes; use PSL.Nodes;
 with PSL.Prints;
 with PSL.NFAs;
 with PSL.Errors;
@@ -80,30 +82,38 @@ package body Vhdl.Prints is
    procedure Disp_Package_Body (Ctxt : in out Ctxt_Class; Decl: Iir);
    procedure Disp_Attribute_Name (Ctxt : in out Ctxt_Class; Attr : Iir);
 
+   procedure Print_Property (Ctxt : in out Ctxt_Class;
+                             Prop : PSL_Node;
+                             Parent_Prio : Priority := Prio_Lowest);
+   procedure Print_Sequence (Ctxt : in out Ctxt_Class;
+                             Seq : PSL_Node;
+                             Parent_Prio : Priority := Prio_Lowest);
+
    procedure Disp_Int64 (Ctxt : in out Ctxt_Class; Val: Int64);
    procedure Disp_Int32 (Ctxt : in out Ctxt_Class; Val: Iir_Int32);
    procedure Disp_Fp64 (Ctxt : in out Ctxt_Class; Val: Fp64);
 
-   procedure Put (Str : String) is
-   begin
-      Simple_IO.Put_Err (Str);
-   end Put;
+   package OOB is
+      procedure Put (Str : String);
+      procedure New_Line;
+   end OOB;
 
-   procedure Put (C : Character) is
-   begin
-      Put ((1 => C));
-   end Put;
+   package body OOB is
+      procedure Put (Str : String) is
+      begin
+         Simple_IO.Put_Err (Str);
+      end Put;
 
-   procedure New_Line is
-   begin
-      Put (ASCII.LF);
-   end New_Line;
+      procedure Put (C : Character) is
+      begin
+         Put ((1 => C));
+      end Put;
 
-   procedure Put_Line (Str : String) is
-   begin
-      Put (Str);
-      New_Line;
-   end Put_Line;
+      procedure New_Line is
+      begin
+         Put (ASCII.LF);
+      end New_Line;
+   end OOB;
 
    procedure Disp_Token (Ctxt : in out Ctxt_Class; Tok1, Tok2 : Token_Type) is
    begin
@@ -943,7 +953,7 @@ package body Vhdl.Prints is
            = Get_Identifier (Get_Type_Declarator (Get_Base_Type (Def))))
       then
          if Flag_Implicit then
-            Put ("-- ");
+            OOB.Put ("-- ");
          else
             return;
          end if;
@@ -1044,7 +1054,7 @@ package body Vhdl.Prints is
          when Iir_Linkage_Mode =>
             Disp_Token (Ctxt, Tok_Linkage);
          when Iir_Unknown_Mode =>
-            Put ("<unknown> ");
+            null;
       end case;
    end Disp_Mode;
 
@@ -1338,7 +1348,7 @@ package body Vhdl.Prints is
    begin
       if Get_Implicit_Alias_Flag (Decl) then
          if Flag_Implicit then
-            Put ("-- ");
+            OOB.Put ("-- ");
          else
             return;
          end if;
@@ -1515,7 +1525,7 @@ package body Vhdl.Prints is
       Inter : Iir;
    begin
       if Implicit then
-         Put ("-- ");
+         OOB.Put ("-- ");
       end if;
 
       case Get_Kind (Subprg) is
@@ -1638,7 +1648,7 @@ package body Vhdl.Prints is
    procedure Disp_Attribute_Value (Ctxt : in out Ctxt_Class; Attr : Iir) is
    begin
       Disp_Name_Of (Ctxt, Get_Designated_Entity (Attr));
-      Put ("'");
+      Disp_Token (Ctxt, Tok_Tick);
       Disp_Identifier
         (Ctxt, Get_Attribute_Designator (Get_Attribute_Specification (Attr)));
    end Disp_Attribute_Value;
@@ -1761,34 +1771,325 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
    end Disp_Group_Declaration;
 
-   procedure Disp_PSL_HDL_Expr
-     (N : PSL.Nodes.HDL_Node) is
+   procedure Print_Expr (Ctxt : in out Ctxt_Class;
+                         N : PSL_Node;
+                         Parent_Prio : Priority := Prio_Lowest)
+   is
+      Prio : Priority;
    begin
-      Disp_Expression (Iir (N));
-   end Disp_PSL_HDL_Expr;
+      if N = Null_PSL_Node then
+         OOB.Put (".");
+         return;
+      end if;
+      Prio := PSL.Prints.Get_Priority (N);
+      if Prio < Parent_Prio then
+         Disp_Token (Ctxt, Tok_Left_Paren);
+      end if;
+      case Get_Kind (N) is
+         when N_Number =>
+            declare
+               Str : constant String := Uns32'Image (Get_Value (N));
+            begin
+               Start_Lit (Ctxt, Tok_Integer);
+               Disp_Str (Ctxt, Str);
+               Close_Lit (Ctxt);
+            end;
+         when N_Name_Decl =>
+            Disp_Ident (Ctxt, Get_Identifier (N));
+         when N_HDL_Expr =>
+            Print (Ctxt, Vhdl_Node (PSL.Nodes.Get_HDL_Node (N)));
+            --  FIXME: this is true only when using the scanner.
+            --  Print_Expr (Node (Get_HDL_Node (N)));
+         when N_True =>
+            Start_Lit (Ctxt, Tok_Identifier);
+            Disp_Str (Ctxt, "TRUE");
+            Close_Lit (Ctxt);
+         when N_False =>
+            Start_Lit (Ctxt, Tok_Identifier);
+            Disp_Str (Ctxt, "FALSE");
+            Close_Lit (Ctxt);
+         when N_EOS =>
+            Start_Lit (Ctxt, Tok_Identifier);
+            Disp_Str (Ctxt, "EOS");
+            Close_Lit (Ctxt);
+         when N_Not_Bool =>
+            Disp_Token (Ctxt, Tok_Exclam_Mark);
+            Print_Expr (Ctxt, Get_Boolean (N), Prio);
+         when N_And_Bool =>
+            Print_Expr (Ctxt, Get_Left (N), Prio);
+            Disp_Token (Ctxt, Tok_And);
+            Print_Expr (Ctxt, Get_Right (N), Prio);
+         when N_Or_Bool =>
+            Print_Expr (Ctxt, Get_Left (N), Prio);
+            Disp_Token (Ctxt, Tok_Or);
+            Print_Expr (Ctxt, Get_Right (N), Prio);
+         when N_Imp_Bool =>
+            Print_Expr (Ctxt, Get_Left (N), Prio);
+            Disp_Token (Ctxt, Tok_Minus_Greater);
+            Print_Expr (Ctxt, Get_Right (N), Prio);
+         when others =>
+            PSL.Errors.Error_Kind ("print_expr", N);
+      end case;
+      if Prio < Parent_Prio then
+         Disp_Token (Ctxt, Tok_Right_Paren);
+      end if;
+   end Print_Expr;
+
+   procedure Print_Count (Ctxt : in out Ctxt_Class; N : PSL_Node)
+   is
+      B : PSL_Node;
+   begin
+      B := Get_Low_Bound (N);
+      if B = Null_PSL_Node then
+         return;
+      end if;
+      Print_Expr (Ctxt, B);
+      B := Get_High_Bound (N);
+      if B = Null_PSL_Node then
+         return;
+      end if;
+      Disp_Token (Ctxt, Tok_Colon);
+      Print_Expr (Ctxt, B);
+   end Print_Count;
+
+   procedure Print_Binary_Sequence (Ctxt : in out Ctxt_Class;
+                                    Tok : Token_Type;
+                                    N : PSL_Node;
+                                    Prio : Priority) is
+   begin
+      Print_Sequence (Ctxt, Get_Left (N), Prio);
+      Disp_Token (Ctxt, Tok);
+      Print_Sequence (Ctxt, Get_Right (N), Prio);
+   end Print_Binary_Sequence;
+
+   procedure Print_Repeat_Sequence
+     (Ctxt : in out Ctxt_Class; Tok : Token_Type; N : PSL_Node)
+   is
+      S : PSL_Node;
+   begin
+      S := Get_Sequence (N);
+      if S /= Null_PSL_Node then
+         Print_Sequence (Ctxt, S, Prio_SERE_Repeat);
+      end if;
+      Disp_Token (Ctxt, Tok);
+      Print_Count (Ctxt, N);
+      Disp_Token (Ctxt, Tok_Right_Bracket);
+   end Print_Repeat_Sequence;
+
+   procedure Print_Sequence (Ctxt : in out Ctxt_Class;
+                             Seq : PSL_Node;
+                             Parent_Prio : Priority := Prio_Lowest)
+   is
+      Prio : constant Priority := PSL.Prints.Get_Priority (Seq);
+      Add_Paren : constant Boolean := Prio < Parent_Prio
+        or else Parent_Prio <= Prio_FL_Paren;
+   begin
+      if Add_Paren then
+         Disp_Token (Ctxt, Tok_Left_Curly);
+      end if;
+      case Get_Kind (Seq) is
+         when N_Braced_SERE =>
+            Disp_Token (Ctxt, Tok_Left_Curly);
+            Print_Sequence (Ctxt, Get_SERE (Seq), Prio_Lowest);
+            Disp_Token (Ctxt, Tok_Right_Curly);
+         when N_Concat_SERE =>
+            Print_Binary_Sequence (Ctxt, Tok_Semi_Colon, Seq, Prio);
+         when N_Fusion_SERE =>
+            Print_Binary_Sequence (Ctxt, Tok_Colon, Seq, Prio);
+         when N_Within_SERE =>
+            Print_Binary_Sequence (Ctxt, Tok_Within, Seq, Prio);
+         when N_Match_And_Seq =>
+            Print_Binary_Sequence (Ctxt, Tok_And_And, Seq, Prio);
+         when N_Or_Seq =>
+            Print_Binary_Sequence (Ctxt, Tok_Bar, Seq, Prio);
+         when N_And_Seq =>
+            Print_Binary_Sequence (Ctxt, Tok_Ampersand, Seq, Prio);
+         when N_Star_Repeat_Seq =>
+            Print_Repeat_Sequence (Ctxt, Tok_Brack_Star, Seq);
+         when N_Goto_Repeat_Seq =>
+            Print_Repeat_Sequence (Ctxt, Tok_Brack_Arrow, Seq);
+         when N_Equal_Repeat_Seq =>
+            Print_Repeat_Sequence (Ctxt, Tok_Brack_Equal, Seq);
+         when N_Plus_Repeat_Seq =>
+            Print_Sequence (Ctxt, Get_Sequence (Seq), Prio);
+            Disp_Token (Ctxt, Tok_Brack_Plus_Brack);
+         when N_Booleans
+           | N_Name_Decl =>
+            Print_Expr (Ctxt, Seq);
+         when N_Sequence_Instance =>
+            Disp_Ident (Ctxt, Get_Identifier (Get_Declaration (Seq)));
+         when others =>
+            PSL.Errors.Error_Kind ("print_sequence", Seq);
+      end case;
+      if Add_Paren then
+         Disp_Token (Ctxt, Tok_Right_Curly);
+      end if;
+   end Print_Sequence;
+
+   procedure Print_Binary_Property (Ctxt : in out Ctxt_Class;
+                                    Tok : Token_Type;
+                                    N : PSL_Node;
+                                    Prio : Priority) is
+   begin
+      Print_Property (Ctxt, Get_Left (N), Prio);
+      Disp_Token (Ctxt, Tok);
+      Print_Property (Ctxt, Get_Right (N), Prio);
+   end Print_Binary_Property;
+
+   procedure Print_Binary_Property_SI (Ctxt : in out Ctxt_Class;
+                                       Op, Op_Em, Op_Un, Op_Em_Un : Token_Type;
+                                       N : PSL_Node;
+                                       Prio : Priority) is
+   begin
+      Print_Property (Ctxt, Get_Left (N), Prio);
+      if Get_Strong_Flag (N) then
+         if Get_Inclusive_Flag (N) then
+            Disp_Token (Ctxt, Op_Em_Un);
+         else
+            Disp_Token (Ctxt, Op_Em);
+         end if;
+      else
+         if Get_Inclusive_Flag (N) then
+            Disp_Token (Ctxt, Op_Un);
+         else
+            Disp_Token (Ctxt, Op);
+         end if;
+      end if;
+      Print_Property (Ctxt, Get_Right (N), Prio);
+   end Print_Binary_Property_SI;
+
+   procedure Print_Range_Property
+     (Ctxt : in out Ctxt_Class; Tok : Token_Type; N : PSL_Node) is
+   begin
+      Disp_Token (Ctxt, Tok);
+      Disp_Token (Ctxt, Tok_Left_Bracket);
+      Print_Count (Ctxt, N);
+      Disp_Token (Ctxt, Tok_Right_Bracket);
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      Print_Property (Ctxt, Get_Property (N), Prio_FL_Paren);
+      Disp_Token (Ctxt, Tok_Right_Paren);
+   end Print_Range_Property;
+
+   procedure Print_Boolean_Range_Property
+     (Ctxt : in out Ctxt_Class; Tok : Token_Type; N : PSL_Node) is
+   begin
+      Disp_Token (Ctxt, Tok);
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      Print_Expr (Ctxt, Get_Boolean (N));
+      Disp_Token (Ctxt, Tok_Right_Paren, Tok_Left_Bracket);
+      Print_Count (Ctxt, N);
+      Disp_Token (Ctxt, Tok_Right_Bracket, Tok_Left_Paren);
+      Print_Property (Ctxt, Get_Property (N), Prio_FL_Paren);
+      Disp_Token (Ctxt, Tok_Right_Paren);
+   end Print_Boolean_Range_Property;
+
+   procedure Print_Property (Ctxt : in out Ctxt_Class;
+                             Prop : PSL_Node;
+                             Parent_Prio : Priority := Prio_Lowest)
+   is
+      Prio : constant Priority := PSL.Prints.Get_Priority (Prop);
+   begin
+      if Prio < Parent_Prio then
+         Disp_Token (Ctxt, Tok_Left_Paren);
+      end if;
+      case Get_Kind (Prop) is
+         when N_Never =>
+            Disp_Token (Ctxt, Tok_Never);
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+         when N_Always =>
+            Disp_Token (Ctxt, Tok_Always, Tok_Left_Paren);
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         when N_Eventually =>
+            Disp_Token (Ctxt, Tok_Eventually, Tok_Left_Paren);
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         when N_Strong =>
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Exclam_Mark);
+         when N_Next =>
+            Disp_Token (Ctxt, Tok_Next);
+--              if Get_Strong_Flag (Prop) then
+--                 Put ('!');
+--              end if;
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         when N_Next_A =>
+            Print_Range_Property (Ctxt, Tok_Next_A, Prop);
+         when N_Next_E =>
+            Print_Range_Property (Ctxt, Tok_Next_E, Prop);
+         when N_Next_Event =>
+            Disp_Token (Ctxt, Tok_Next_Event, Tok_Left_Paren);
+            Print_Expr (Ctxt, Get_Boolean (Prop));
+            Disp_Token (Ctxt, Tok_Right_Paren, Tok_Left_Paren);
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         when N_Next_Event_A =>
+            Print_Boolean_Range_Property (Ctxt, Tok_Next_Event_A, Prop);
+         when N_Next_Event_E =>
+            Print_Boolean_Range_Property (Ctxt, Tok_Next_Event_E, Prop);
+         when N_Until =>
+            Print_Binary_Property_SI
+              (Ctxt,
+               Tok_Until, Tok_Until_Em, Tok_Until_Un, Tok_Until_Em_Un,
+               Prop, Prio);
+         when N_Abort =>
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Abort);
+            Print_Expr (Ctxt, Get_Boolean (Prop));
+         when N_Before =>
+            Print_Binary_Property_SI
+              (Ctxt,
+               Tok_Before, Tok_Before_Em, Tok_Before_Un, Tok_Before_Em_Un,
+               Prop, Prio);
+         when N_Or_Prop =>
+            Print_Binary_Property (Ctxt, Tok_Or, Prop, Prio);
+         when N_And_Prop =>
+            Print_Binary_Property (Ctxt, Tok_And, Prop, Prio);
+         when N_Paren_Prop =>
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         when N_Imp_Seq =>
+            Print_Property (Ctxt, Get_Sequence (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Bar_Double_Arrow);
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+         when N_Overlap_Imp_Seq =>
+            Print_Property (Ctxt, Get_Sequence (Prop), Prio);
+            Disp_Token (Ctxt, Tok_Bar_Arrow);
+            Print_Property (Ctxt, Get_Property (Prop), Prio);
+         when N_Log_Imp_Prop =>
+            Print_Binary_Property (Ctxt, Tok_Minus_Greater, Prop, Prio);
+         when N_Booleans
+           | N_Name_Decl =>
+            Print_Expr (Ctxt, Prop);
+         when N_Sequences =>
+            Print_Sequence (Ctxt, Prop, Parent_Prio);
+         when N_Property_Instance =>
+            Disp_Ident (Ctxt, Get_Identifier (Get_Declaration (Prop)));
+         when N_EOS =>
+            Start_Lit (Ctxt, Tok_Identifier);
+            Disp_Str (Ctxt, "EOS");
+            Close_Lit (Ctxt);
+         when others =>
+            PSL.Errors.Error_Kind ("print_property", Prop);
+      end case;
+      if Prio < Parent_Prio then
+         Disp_Token (Ctxt, Tok_Right_Paren);
+      end if;
+   end Print_Property;
 
    procedure Disp_Psl_Expression
      (Ctxt : in out Ctxt_Class; Expr : PSL_Node)  is
    begin
-      PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
-      --  Hack.
-      Disp_Char (Ctxt, ' ');
-      PSL.Prints.Print_Property (Expr);
+      Print_Property (Ctxt, Expr);
    end Disp_Psl_Expression;
-
-   procedure Disp_Psl_Sequence
-     (Ctxt : in out Ctxt_Class; Expr : PSL_Node) is
-   begin
-      PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
-      --  Hack.
-      Disp_Char (Ctxt, ' ');
-      PSL.Prints.Print_Sequence (Expr);
-   end Disp_Psl_Sequence;
 
    procedure Disp_Psl_Default_Clock (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
       if Vhdl_Std < Vhdl_08 then
-         Put ("--psl ");
+         OOB.Put ("--psl ");
       end if;
       Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Psl_Default, Tok_Psl_Clock);
@@ -1800,31 +2101,30 @@ package body Vhdl.Prints is
 
    procedure Disp_Psl_Declaration (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
-      use PSL.Nodes;
       Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
    begin
       if Vhdl_Std < Vhdl_08 then
-         Put ("--psl ");
+         OOB.Put ("--psl ");
       end if;
       case Get_Kind (Decl) is
          when N_Property_Declaration =>
-            Put ("property ");
+            Disp_Token (Ctxt, Tok_Psl_Property);
             Disp_Ident (Ctxt, Get_Identifier (Decl));
-            Put (" is ");
+            Disp_Token (Ctxt, Tok_Is);
             Disp_Psl_Expression (Ctxt, Get_Property (Decl));
-            Put_Line (";");
+            Disp_Token (Ctxt, Tok_Semi_Colon);
          when N_Sequence_Declaration =>
-            Put ("sequence ");
+            Disp_Token (Ctxt, Tok_Psl_Sequence);
             Disp_Ident (Ctxt, Get_Identifier (Decl));
-            Put (" is ");
-            Disp_Psl_Sequence (Ctxt, Get_Sequence (Decl));
-            Put_Line (";");
+            Disp_Token (Ctxt, Tok_Is);
+            Print_Sequence (Ctxt, Get_Sequence (Decl));
+            Disp_Token (Ctxt, Tok_Semi_Colon);
          when N_Endpoint_Declaration =>
-            Put ("endpoint ");
+            Disp_Token (Ctxt, Tok_Psl_Endpoint);
             Disp_Ident (Ctxt, Get_Identifier (Decl));
-            Put (" is ");
-            Disp_Psl_Sequence (Ctxt, Get_Sequence (Decl));
-            Put_Line (";");
+            Disp_Token (Ctxt, Tok_Is);
+            Print_Sequence (Ctxt, Get_Sequence (Decl));
+            Disp_Token (Ctxt, Tok_Semi_Colon);
             Disp_PSL_NFA (Get_PSL_NFA (Stmt));
          when others =>
             PSL.Errors.Error_Kind ("disp_psl_declaration", Decl);
@@ -1931,7 +2231,8 @@ package body Vhdl.Prints is
       Val : Iir;
    begin
       if Chain = Null_Iir then
-         Put ("null after {disconnection_time}");
+         Disp_Token (Ctxt, Tok_Null);
+         --  Put ("null after {disconnection_time}");
          return;
       elsif Get_Kind (Chain) = Iir_Kind_Unaffected_Waveform then
          Disp_Token (Ctxt, Tok_Unaffected);
@@ -2044,11 +2345,11 @@ package body Vhdl.Prints is
    begin
       Start_Hbox (Ctxt);
       Disp_Label (Ctxt, Stmt);
-      Put ("with ");
+      Disp_Token (Ctxt, Tok_With);
       Print (Ctxt, Get_Expression (Stmt));
-      Put (" select ");
+      Disp_Token (Ctxt, Tok_Select);
       Print (Ctxt, Get_Target (Stmt));
-      Put (" <= ");
+      Disp_Token (Ctxt, Tok_Less_Equal);
       Disp_Delay_Mechanism (Ctxt, Stmt);
       Disp_Selected_Waveforms (Ctxt, Stmt);
       Close_Hbox (Ctxt);
@@ -2301,13 +2602,13 @@ package body Vhdl.Prints is
    procedure Disp_Dyadic_Operator (Ctxt : in out Ctxt_Class; Expr: Iir) is
    begin
       if Flag_Parenthesis then
-         Put ("(");
+         Disp_Token (Ctxt, Tok_Left_Paren);
       end if;
       Print (Ctxt, Get_Left (Expr));
       Disp_Token (Ctxt, Get_Operator_Token (Expr));
       Print (Ctxt, Get_Right (Expr));
       if Flag_Parenthesis then
-         Put (")");
+         Disp_Token (Ctxt, Tok_Right_Paren);
       end if;
    end Disp_Dyadic_Operator;
 
@@ -2320,11 +2621,11 @@ package body Vhdl.Prints is
 
       Disp_Token (Ctxt, Get_Operator_Token (Expr));
       if Flag_Parenthesis then
-         Put ('(');
+         Disp_Token (Ctxt, Tok_Left_Paren);
       end if;
       Print (Ctxt, Get_Operand (Expr));
       if Flag_Parenthesis then
-         Put (')');
+         Disp_Token (Ctxt, Tok_Right_Paren);
       end if;
    end Disp_Monadic_Operator;
 
@@ -2885,17 +3186,17 @@ package body Vhdl.Prints is
       El : Iir;
       First : Boolean := True;
    begin
-      Put ("(");
+      Disp_Token (Ctxt, Tok_Left_Paren);
       for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
          if First then
             First := False;
          else
-            Put (", ");
+            Disp_Token (Ctxt, Tok_Comma);
          end if;
          Print (Ctxt, El);
       end loop;
-      Put (")");
+      Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Simple_Aggregate;
 
    procedure Disp_Parametered_Attribute
@@ -3047,9 +3348,9 @@ package body Vhdl.Prints is
                   end if;
                   Disp_String_Literal (Ctxt, Expr, El_Type);
                   if Flag_Disp_String_Literal_Type or Flags.List_Verbose then
-                     Put ("[type: ");
+                     OOB.Put ("[type: ");
                      Disp_Type (Ctxt, Expr_Type);
-                     Put ("]");
+                     OOB.Put ("]");
                   end if;
                end;
             end if;
@@ -3073,7 +3374,9 @@ package body Vhdl.Prints is
             if Dump_Origin_Flag and then Orig /= Null_Iir then
                Print (Ctxt, Orig);
             else
-               Put ("*OVERFLOW*");
+               Start_Lit (Ctxt, Tok_Integer);
+               Disp_Str (Ctxt, "*OVERFLOW*");
+               Close_Lit (Ctxt);
             end if;
 
          when Iir_Kind_Object_Alias_Declaration =>
@@ -3347,7 +3650,7 @@ package body Vhdl.Prints is
       if Flags.List_Verbose and then Guard /= Null_Iir then
          Sensitivity := Get_Guard_Sensitivity_List (Guard);
          if Sensitivity /= Null_Iir_List then
-            Put ("-- guard sensitivity list ");
+            OOB.Put ("-- guard sensitivity list ");
             Disp_Designator_List (Ctxt, Sensitivity);
          end if;
       end if;
@@ -3497,33 +3800,34 @@ package body Vhdl.Prints is
    is
       use PSL.NFAs;
 
-      procedure Disp_State (S : NFA_State) is
+      procedure Disp_State (S : NFA_State)
+      is
          Str : constant String := Int32'Image (Get_State_Label (S));
       begin
-         Put (Str (2 .. Str'Last));
+         OOB.Put (Str (2 .. Str'Last));
       end Disp_State;
 
       S : NFA_State;
       E : NFA_Edge;
    begin
       if N /= No_NFA then
-         Put ("-- start: ");
+         OOB.Put ("-- start: ");
          Disp_State (Get_Start_State (N));
-         Put (", final: ");
+         OOB.Put (", final: ");
          Disp_State (Get_Final_State (N));
-         New_Line;
+         OOB.New_Line;
 
          S := Get_First_State (N);
          while S /= No_State loop
             E := Get_First_Src_Edge (S);
             while E /= No_Edge loop
-               Put ("-- ");
+               OOB.Put ("-- ");
                Disp_State (S);
-               Put (" -> ");
+               OOB.Put (" -> ");
                Disp_State (Get_Edge_Dest (E));
-               Put (": ");
+               OOB.Put (": ");
                Disp_Psl_Expression (Ctxt, Get_Edge_Expr (E));
-               New_Line;
+               OOB.New_Line;
                E := Get_Next_Src_Edge (E);
             end loop;
             S := Get_Next_State (S);
@@ -3536,7 +3840,7 @@ package body Vhdl.Prints is
    begin
       Start_Hbox (Ctxt);
       if Vhdl_Std < Vhdl_08 then
-         Put ("--psl ");
+         OOB.Put ("--psl ");
       end if;
       Disp_Label (Ctxt, Stmt);
       Disp_Postponed (Ctxt, Stmt);
@@ -3552,11 +3856,15 @@ package body Vhdl.Prints is
    procedure Disp_Psl_Cover_Statement
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
-      Put ("--psl ");
+      Start_Hbox (Ctxt);
+      if Vhdl_Std < Vhdl_08 then
+         OOB.Put ("--psl ");
+      end if;
       Disp_Label (Ctxt, Stmt);
-      Put ("cover ");
-      Disp_Psl_Sequence (Ctxt, Get_Psl_Sequence (Stmt));
-      Put_Line (";");
+      Disp_Token (Ctxt, Tok_Psl_Cover);
+      Print_Sequence (Ctxt, Get_Psl_Sequence (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
    end Disp_Psl_Cover_Statement;
 
@@ -3723,7 +4031,8 @@ package body Vhdl.Prints is
             when Iir_Kind_Configuration_Specification =>
                --  This may be created by canon.
                Disp_Configuration_Specification (Ctxt, El);
-               Put_Line ("end for;");
+               Disp_Token (Ctxt, Tok_End, Tok_For);
+               Disp_Token (Ctxt, Tok_Semi_Colon);
             when others =>
                Error_Kind ("disp_configuration_item_list", El);
          end case;
@@ -3752,7 +4061,7 @@ package body Vhdl.Prints is
                Disp_Name_Of (Ctxt, Get_Prefix (Spec));
                Disp_Token (Ctxt, Tok_Left_Paren);
                if Index_List = Iir_Flist_Others then
-                  Put ("others");
+                  Disp_Token (Ctxt, Tok_Others);
                else
                   Print (Ctxt, Get_Nth_Element (Index_List, 0));
                end if;
