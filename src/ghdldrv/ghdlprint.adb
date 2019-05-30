@@ -38,6 +38,7 @@ with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Vhdl.Prints;
+with Vhdl.Formatters;
 with Vhdl.Elocations;
 
 package body Ghdlprint is
@@ -959,6 +960,7 @@ package body Ghdlprint is
    --  Command Reprint.
    type Command_Reprint is new Command_Lib with record
       Flag_Sem : Boolean := True;
+      Flag_Format : Boolean := False;
    end record;
    function Decode_Command (Cmd : Command_Reprint; Name : String)
                            return Boolean;
@@ -992,6 +994,9 @@ package body Ghdlprint is
    begin
       if Option = "--no-sem" then
          Cmd.Flag_Sem := False;
+         Res := Option_Ok;
+      elsif Option = "--format" then
+         Cmd.Flag_Format := True;
          Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
@@ -1045,7 +1050,9 @@ package body Ghdlprint is
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
-               Vhdl.Prints.Disp_Vhdl (Unit);
+               if not Cmd.Flag_Format then
+                  Vhdl.Prints.Disp_Vhdl (Unit);
+               end if;
                if Cmd.Flag_Sem then
                   Set_Chain (Unit, Null_Iir);
                   Libraries.Add_Design_Unit_Into_Library (Unit);
@@ -1057,6 +1064,10 @@ package body Ghdlprint is
 
          if Errorout.Nbr_Errors > 0 then
             raise Errorout.Compilation_Error;
+         end if;
+
+         if Cmd.Flag_Format then
+            Vhdl.Formatters.Format (Design_File);
          end if;
       end loop;
    end Perform_Action;
