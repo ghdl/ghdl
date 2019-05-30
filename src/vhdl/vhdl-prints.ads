@@ -20,7 +20,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Tokens; use Vhdl.Tokens;
 with PSL.Types; use PSL.Types;
 
-package Vhdl.Disp_Vhdl is
+package Vhdl.Prints is
    type Disp_Ctxt is abstract tagged null record;
    procedure Start_Hbox (Ctxt : in out Disp_Ctxt) is abstract;
    procedure Close_Hbox (Ctxt : in out Disp_Ctxt) is abstract;
@@ -54,4 +54,4 @@ package Vhdl.Disp_Vhdl is
 
    procedure Disp_Expression (Expr: Iir);
    --  Display an expression.
-end Vhdl.Disp_Vhdl;
+end Vhdl.Prints;

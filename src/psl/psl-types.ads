@@ -22,6 +22,7 @@ package PSL.Types is
    subtype PSL_Node is PSL.Nodes_Priv.PSL_Node;
    function "=" (L, R : PSL_Node) return Boolean
      renames PSL.Nodes_Priv."=";
+   Null_PSL_Node : constant PSL_Node := PSL.Nodes_Priv.Null_PSL_Node;
 
    --  PSL NFA
    subtype PSL_NFA is PSL.Nodes_Priv.PSL_NFA;

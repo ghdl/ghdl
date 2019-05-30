@@ -25,7 +25,7 @@ with Libraries; use Libraries;
 with Vhdl.Scanner;
 with Vhdl.Parse;
 with Vhdl.Disp_Tree;
-with Vhdl.Disp_Vhdl;
+with Vhdl.Prints;
 with Vhdl.Sem;
 with Vhdl.Post_Sems;
 with Vhdl.Canon;
@@ -104,7 +104,7 @@ package body Vhdl.Sem_Lib is
       end if;
 
       if (Main or Flags.List_All) and then Flags.List_Sem then
-         Vhdl.Disp_Vhdl.Disp_Vhdl (Unit);
+         Vhdl.Prints.Disp_Vhdl (Unit);
       end if;
 
       if Flags.Check_Ast_Level > 0 then
@@ -139,7 +139,7 @@ package body Vhdl.Sem_Lib is
       end if;
 
       if (Main or Flags.List_All) and then Flags.List_Canon then
-         Vhdl.Disp_Vhdl.Disp_Vhdl (Unit);
+         Vhdl.Prints.Disp_Vhdl (Unit);
       end if;
 
       if Flags.Check_Ast_Level > 0 then

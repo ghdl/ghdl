@@ -35,7 +35,7 @@ with PSL.Prints;
 with PSL.NFAs;
 with PSL.Errors;
 
-package body Vhdl.Disp_Vhdl is
+package body Vhdl.Prints is
 
    --  If True, display extra parenthesis to make priority of operators
    --  explicit.
@@ -4152,4 +4152,4 @@ package body Vhdl.Disp_Vhdl is
       Disp_PSL_NFA (Ctxt, N);
    end Disp_PSL_NFA;
 
-end Vhdl.Disp_Vhdl;
+end Vhdl.Prints;

@@ -2155,7 +2155,7 @@ package body Vhdl.Canon is
                         Prop := Get_Property (Decl);
                         Prop := PSL.Rewrites.Rewrite_Property (Prop);
                         Set_Property (Decl, Prop);
-                        if Get_Parameter_List (Decl) = Null_Node then
+                        if Get_Parameter_List (Decl) = Null_PSL_Node then
                            --  Generate the NFA.
                            Fa := PSL.Build.Build_FA (Prop);
                            Set_PSL_NFA (El, Fa);
@@ -2176,7 +2176,7 @@ package body Vhdl.Canon is
                   Seq : PSL_Node;
                   Fa : PSL_NFA;
                begin
-                  pragma Assert (Get_Parameter_List (Decl) = Null_Node);
+                  pragma Assert (Get_Parameter_List (Decl) = Null_PSL_Node);
                   Seq := Get_Sequence (Decl);
                   Seq := PSL.Rewrites.Rewrite_SERE (Seq);
                   Set_Sequence (Decl, Seq);

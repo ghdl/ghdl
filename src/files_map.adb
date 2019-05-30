@@ -626,9 +626,10 @@ package body Files_Map is
       return Create_Source_File_From_String (Name, "");
    end Create_Virtual_Source_File;
 
-   function Create_Instance_Source_File
-     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Vhdl.Types.Node)
-     return Source_File_Entry
+   function Create_Instance_Source_File (Ref : Source_File_Entry;
+                                         Loc : Location_Type;
+                                         Inst : Vhdl.Types.Vhdl_Node)
+                                        return Source_File_Entry
    is
       pragma Unreferenced (Inst);
       Base : Source_File_Entry;

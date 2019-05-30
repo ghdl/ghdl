@@ -37,7 +37,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Psl is
-   procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out Node);
+   procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out PSL_Node);
 
    --  Return TRUE iff Atype is a PSL boolean type.
    --  See PSL1.1 5.1.2  Boolean expressions
@@ -61,7 +61,7 @@ package body Vhdl.Sem_Psl is
    end Is_Psl_Bool_Expr;
 
    --  Convert VHDL and/or/not nodes to PSL nodes.
-   function Convert_Bool (Expr : Iir) return Node
+   function Convert_Bool (Expr : Iir) return PSL_Node
    is
       use Std_Names;
       Impl : Iir;
@@ -72,9 +72,9 @@ package body Vhdl.Sem_Psl is
                Left : Iir;
                Right : Iir;
 
-               function Build_Op (Kind : Nkind) return Node
+               function Build_Op (Kind : Nkind) return PSL_Node
                is
-                  N : Node;
+                  N : PSL_Node;
                begin
                   N := Create_Node (Kind);
                   Set_Location (N, Get_Location (Expr));
@@ -102,9 +102,9 @@ package body Vhdl.Sem_Psl is
             declare
                Operand : Iir;
 
-               function Build_Op (Kind : Nkind) return Node
+               function Build_Op (Kind : Nkind) return PSL_Node
                is
-                  N : Node;
+                  N : PSL_Node;
                begin
                   N := Create_Node (Kind);
                   Set_Location (N, Get_Location (Expr));
@@ -141,14 +141,14 @@ package body Vhdl.Sem_Psl is
 
    --  Analyze an HDL expression.  This may mostly a wrapper except in the
    --  case when the expression is in fact a PSL expression.
-   function Sem_Hdl_Expr (N : Node) return Node
+   function Sem_Hdl_Expr (N : PSL_Node) return PSL_Node
    is
       use Sem_Names;
 
       Expr : Iir;
       Name : Iir;
-      Decl : Node;
-      Res : Node;
+      Decl : PSL_Node;
+      Res : PSL_Node;
    begin
       Expr := Get_HDL_Node (N);
       if Get_Kind (Expr) in Iir_Kinds_Name then
@@ -184,7 +184,7 @@ package body Vhdl.Sem_Psl is
                end case;
                Set_Location (Res, Get_Location (N));
                Set_Declaration (Res, Decl);
-               if Get_Parameter_List (Decl) /= Null_Node then
+               if Get_Parameter_List (Decl) /= Null_PSL_Node then
                   Error_Msg_Sem (+Res, "no actual for instantiation");
                end if;
                Free_Node (N);
@@ -225,7 +225,7 @@ package body Vhdl.Sem_Psl is
    end Sem_Hdl_Expr;
 
    --  Sem a boolean node.
-   function Sem_Boolean (Bool : Node) return Node is
+   function Sem_Boolean (Bool : PSL_Node) return PSL_Node is
    begin
       case Get_Kind (Bool) is
          when N_HDL_Expr =>
@@ -240,9 +240,9 @@ package body Vhdl.Sem_Psl is
       end case;
    end Sem_Boolean;
 
-   procedure Sem_Boolean (N : Node)
+   procedure Sem_Boolean (N : PSL_Node)
    is
-      Bool : Node;
+      Bool : PSL_Node;
    begin
       Bool := Get_Boolean (N);
       Bool := Sem_Boolean (Bool);
@@ -251,10 +251,10 @@ package body Vhdl.Sem_Psl is
 
    --  Used by Sem_Property to rewrite a property logical operator to a
    --  boolean logical operator.
-   function Reduce_Logic_Binary_Node (Prop : Node; Bool_Kind : Nkind)
-                                     return Node
+   function Reduce_Logic_Binary_Node (Prop : PSL_Node; Bool_Kind : Nkind)
+                                     return PSL_Node
    is
-      Res : Node;
+      Res : PSL_Node;
    begin
       Res := Create_Node (Bool_Kind);
       Set_Location (Res, Get_Location (Prop));
@@ -264,10 +264,10 @@ package body Vhdl.Sem_Psl is
       return Res;
    end Reduce_Logic_Binary_Node;
 
-   function Reduce_Logic_Unary_Node (Prop : Node; Bool_Kind : Nkind)
-                                    return Node
+   function Reduce_Logic_Unary_Node (Prop : PSL_Node; Bool_Kind : Nkind)
+                                    return PSL_Node
    is
-      Res : Node;
+      Res : PSL_Node;
    begin
       Res := Create_Node (Bool_Kind);
       Set_Location (Res, Get_Location (Prop));
@@ -276,10 +276,10 @@ package body Vhdl.Sem_Psl is
       return Res;
    end Reduce_Logic_Unary_Node;
 
-   function Sem_Sequence (Seq : Node) return Node
+   function Sem_Sequence (Seq : PSL_Node) return PSL_Node
    is
-      Res : Node;
-      L, R : Node;
+      Res : PSL_Node;
+      L, R : PSL_Node;
    begin
       case Get_Kind (Seq) is
          when N_Braced_SERE =>
@@ -304,7 +304,7 @@ package body Vhdl.Sem_Psl is
             return Seq;
          when N_Star_Repeat_Seq =>
             Res := Get_Sequence (Seq);
-            if Res /= Null_Node then
+            if Res /= Null_PSL_Node then
                Res := Sem_Sequence (Get_Sequence (Seq));
                Set_Sequence (Seq, Res);
             end if;
@@ -312,7 +312,7 @@ package body Vhdl.Sem_Psl is
             return Seq;
          when N_Plus_Repeat_Seq =>
             Res := Get_Sequence (Seq);
-            if Res /= Null_Node then
+            if Res /= Null_PSL_Node then
                Res := Sem_Sequence (Get_Sequence (Seq));
                Set_Sequence (Seq, Res);
             end if;
@@ -341,20 +341,21 @@ package body Vhdl.Sem_Psl is
       end case;
    end Sem_Sequence;
 
-   function Sem_Property (Prop : Node; Top : Boolean := False) return Node;
+   function Sem_Property (Prop : PSL_Node; Top : Boolean := False)
+                         return PSL_Node;
 
-   procedure Sem_Property (N : Node; Top : Boolean := False)
+   procedure Sem_Property (N : PSL_Node; Top : Boolean := False)
    is
-      Prop : Node;
+      Prop : PSL_Node;
    begin
       Prop := Get_Property (N);
       Prop := Sem_Property (Prop, Top);
       Set_Property (N, Prop);
    end Sem_Property;
 
-   procedure Sem_Number (N : Node)
+   procedure Sem_Number (N : PSL_Node)
    is
-      Num : Node;
+      Num : PSL_Node;
    begin
       Num := Get_Number (N);
       --  FIXME: todo
@@ -362,9 +363,10 @@ package body Vhdl.Sem_Psl is
       Set_Number (N, Num);
    end Sem_Number;
 
-   function Sem_Property (Prop : Node; Top : Boolean := False) return Node
+   function Sem_Property (Prop : PSL_Node; Top : Boolean := False)
+                         return PSL_Node
    is
-      Res : Node;
+      Res : PSL_Node;
    begin
       case Get_Kind (Prop) is
          when N_Braced_SERE =>
@@ -400,7 +402,7 @@ package body Vhdl.Sem_Psl is
            | N_And_Prop
            | N_Or_Prop =>
             declare
-               L, R : Node;
+               L, R : PSL_Node;
             begin
                L := Sem_Property (Get_Left (Prop));
                Set_Left (Prop, L);
@@ -431,7 +433,7 @@ package body Vhdl.Sem_Psl is
             return Prop;
          when N_Paren_Prop =>
             declare
-               Op : Node;
+               Op : PSL_Node;
             begin
                Op := Get_Property (Prop);
                Op := Sem_Property (Op);
@@ -459,10 +461,10 @@ package body Vhdl.Sem_Psl is
             Res := Sem_Hdl_Expr (Prop);
             if not Top and then Get_Kind (Res) = N_Property_Instance then
                declare
-                  Decl : constant Node := Get_Declaration (Res);
+                  Decl : constant PSL_Node := Get_Declaration (Res);
                begin
-                  if Decl /= Null_Node
-                    and then Get_Global_Clock (Decl) /= Null_Node
+                  if Decl /= Null_PSL_Node
+                    and then Get_Global_Clock (Decl) /= Null_PSL_Node
                   then
                      Error_Msg_Sem
                        (+Prop, "property instance already has a clock");
@@ -476,11 +478,11 @@ package body Vhdl.Sem_Psl is
    end Sem_Property;
 
    --  Extract the clock from PROP.
-   procedure Extract_Clock (Prop : in out Node; Clk : out Node)
+   procedure Extract_Clock (Prop : in out PSL_Node; Clk : out PSL_Node)
    is
-      Child : Node;
+      Child : PSL_Node;
    begin
-      Clk := Null_Node;
+      Clk := Null_PSL_Node;
       case Get_Kind (Prop) is
          when N_Clock_Event =>
             Clk := Get_Boolean (Prop);
@@ -507,10 +509,10 @@ package body Vhdl.Sem_Psl is
    procedure Sem_Psl_Declaration (Stmt : Iir)
    is
       use Sem_Scopes;
-      Decl : constant Node := Get_Psl_Declaration (Stmt);
-      Prop : Node;
-      Clk : Node;
-      Formal : Node;
+      Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
+      Prop : PSL_Node;
+      Clk : PSL_Node;
+      Formal : PSL_Node;
       El : Iir;
    begin
       Sem_Scopes.Add_Name (Stmt);
@@ -520,7 +522,7 @@ package body Vhdl.Sem_Psl is
 
       --  Make formal parameters visible.
       Formal := Get_Parameter_List (Decl);
-      while Formal /= Null_Node loop
+      while Formal /= Null_PSL_Node loop
          El := Create_Iir (Iir_Kind_Psl_Declaration);
          Set_Location (El, Get_Location (Formal));
          Set_Identifier (El, Get_Identifier (Formal));
@@ -560,13 +562,13 @@ package body Vhdl.Sem_Psl is
 
    procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir)
    is
-      Decl : constant Node := Get_Psl_Declaration (Stmt);
-      Prop : Node;
+      Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
+      Prop : PSL_Node;
    begin
       Sem_Scopes.Add_Name (Stmt);
       Xref_Decl (Stmt);
 
-      pragma Assert (Get_Parameter_List (Decl) = Null_Node);
+      pragma Assert (Get_Parameter_List (Decl) = Null_PSL_Node);
       pragma Assert (Get_Kind (Decl) = N_Endpoint_Declaration);
 
       Prop := Get_Sequence (Decl);
@@ -584,10 +586,10 @@ package body Vhdl.Sem_Psl is
       Set_Visible_Flag (Stmt, True);
    end Sem_Psl_Endpoint_Declaration;
 
-   function Rewrite_As_Boolean_Expression (Prop : Node) return Iir
+   function Rewrite_As_Boolean_Expression (Prop : PSL_Node) return Iir
    is
       function Rewrite_Dyadic_Operator
-        (Expr : Node; Kind : Iir_Kind) return Iir
+        (Expr : PSL_Node; Kind : Iir_Kind) return Iir
       is
          Res : Iir;
       begin
@@ -599,7 +601,7 @@ package body Vhdl.Sem_Psl is
       end Rewrite_Dyadic_Operator;
 
       function Rewrite_Monadic_Operator
-        (Expr : Node; Kind : Iir_Kind) return Iir
+        (Expr : PSL_Node; Kind : Iir_Kind) return Iir
       is
          Res : Iir;
       begin
@@ -665,7 +667,7 @@ package body Vhdl.Sem_Psl is
    end Rewrite_As_Concurrent_Assertion;
 
    --  Return True iff EXPR is a boolean expression.
-   function Is_Boolean_Assertion (Expr : Node) return Boolean is
+   function Is_Boolean_Assertion (Expr : PSL_Node) return Boolean is
    begin
       case Get_Kind (Expr) is
          when N_HDL_Expr =>
@@ -677,15 +679,15 @@ package body Vhdl.Sem_Psl is
       end case;
    end Is_Boolean_Assertion;
 
-   procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out Node)
+   procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out PSL_Node)
    is
-      Clk : Node;
+      Clk : PSL_Node;
    begin
       Extract_Clock (Prop, Clk);
-      if Clk = Null_Node then
+      if Clk = Null_PSL_Node then
          if Current_Psl_Default_Clock = Null_Iir then
             Error_Msg_Sem (+Stmt, "no clock for PSL directive");
-            Clk := Null_Node;
+            Clk := Null_PSL_Node;
          else
             Clk := Get_Psl_Boolean (Current_Psl_Default_Clock);
          end if;
@@ -695,7 +697,7 @@ package body Vhdl.Sem_Psl is
 
    function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir
    is
-      Prop : Node;
+      Prop : PSL_Node;
       Res : Iir;
    begin
       pragma Assert (Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Statement);
@@ -732,7 +734,7 @@ package body Vhdl.Sem_Psl is
 
    procedure Sem_Psl_Cover_Statement (Stmt : Iir)
    is
-      Seq : Node;
+      Seq : PSL_Node;
    begin
       --  Sem report and severity expressions.
       Sem_Report_Statement (Stmt);
@@ -750,7 +752,7 @@ package body Vhdl.Sem_Psl is
 
    procedure Sem_Psl_Default_Clock (Stmt : Iir)
    is
-      Expr : Node;
+      Expr : PSL_Node;
    begin
       if Current_Psl_Default_Clock /= Null_Iir
         and then Get_Parent (Current_Psl_Default_Clock) = Get_Parent (Stmt)
@@ -772,14 +774,14 @@ package body Vhdl.Sem_Psl is
    is
       Prefix : constant Iir := Get_Prefix (Name);
       Ent : constant Iir := Get_Named_Entity (Prefix);
-      Decl : constant Node := Get_Psl_Declaration (Ent);
-      Formal : Node;
+      Decl : constant PSL_Node := Get_Psl_Declaration (Ent);
+      Formal : PSL_Node;
       Assoc : Iir;
-      Res : Node;
-      Last_Assoc : Node;
-      Assoc2 : Node;
+      Res : PSL_Node;
+      Last_Assoc : PSL_Node;
+      Assoc2 : PSL_Node;
       Actual : Iir;
-      Psl_Actual : Node;
+      Psl_Actual : PSL_Node;
       Res2 : Iir;
    begin
       pragma Assert (Get_Kind (Ent) = Iir_Kind_Psl_Declaration
@@ -799,9 +801,9 @@ package body Vhdl.Sem_Psl is
       Set_Location (Res, Get_Location (Name));
       Formal := Get_Parameter_List (Decl);
       Assoc := Get_Association_Chain (Name);
-      Last_Assoc := Null_Node;
+      Last_Assoc := Null_PSL_Node;
 
-      while Formal /= Null_Node loop
+      while Formal /= Null_PSL_Node loop
          if Assoc = Null_Iir then
             Error_Msg_Sem (+Name, "not enough association");
             exit;
@@ -825,7 +827,7 @@ package body Vhdl.Sem_Psl is
          Set_Location (Assoc2, Get_Location (Assoc));
          Set_Formal (Assoc2, Formal);
          Set_Actual (Assoc2, Psl_Actual);
-         if Last_Assoc = Null_Node then
+         if Last_Assoc = Null_PSL_Node then
             Set_Association_Chain (Res, Assoc2);
          else
             Set_Chain (Last_Assoc, Assoc2);

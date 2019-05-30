@@ -37,7 +37,7 @@ with Vhdl.Xrefs;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
-with Vhdl.Disp_Vhdl;
+with Vhdl.Prints;
 with Vhdl.Elocations;
 
 package body Ghdlprint is
@@ -1024,17 +1024,23 @@ package body Ghdlprint is
          end if;
 
          Unit := Get_First_Design_Unit (Design_File);
+         if Cmd.Flag_Sem then
+            Design_File := Null_Iir;
+         end if;
          while Unit /= Null_Iir loop
             if Cmd.Flag_Sem then
                --  Analyze the design unit.
                Vhdl.Sem_Lib.Finish_Compilation (Unit, True);
+               if Cmd.Flag_Sem and then Design_File = Null_Iir then
+                  Design_File := Get_Design_File (Unit);
+               end if;
             end if;
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
-               Vhdl.Disp_Vhdl.Disp_Vhdl (Unit);
-               Set_Chain (Unit, Null_Iir);
+               Vhdl.Prints.Disp_Vhdl (Unit);
                if Cmd.Flag_Sem then
+                  Set_Chain (Unit, Null_Iir);
                   Libraries.Add_Design_Unit_Into_Library (Unit);
                end if;
             end if;

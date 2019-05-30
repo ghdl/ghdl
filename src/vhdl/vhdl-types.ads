@@ -21,5 +21,6 @@ with Vhdl.Nodes_Priv;
 package Vhdl.Types is
    pragma Preelaborate (Vhdl.Types);
 
-   subtype Node is Vhdl.Nodes_Priv.Node_Type;
+   subtype Vhdl_Node is Vhdl.Nodes_Priv.Node_Type;
+   Null_Vhdl_Node : constant Vhdl_Node := Vhdl.Nodes_Priv.Null_Node;
 end Vhdl.Types;

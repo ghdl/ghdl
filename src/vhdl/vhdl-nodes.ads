@@ -5471,8 +5471,10 @@ package Vhdl.Nodes is
    --  Nodes and lists.
 
    subtype Iir is Vhdl.Nodes_Priv.Node_Type;
+   subtype Node is Vhdl.Nodes_Priv.Node_Type;
 
-   Null_Iir : constant Iir := 0;
+   Null_Iir : constant Iir := Vhdl.Nodes_Priv.Null_Node;
+   Null_Node : constant Node := Vhdl.Nodes_Priv.Null_Node;
 
    --  Return True iff Node is null / not set.
    function Is_Null (Node : Iir) return Boolean;

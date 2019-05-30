@@ -20,6 +20,7 @@ with Types; use Types;
 package PSL.Nodes_Priv is
    --  PSL Node.
    type PSL_Node is new Int32;
+   Null_PSL_Node : constant PSL_Node := 0;
 
    --  PSL NFA
    type PSL_NFA is new Int32;

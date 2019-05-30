@@ -18,4 +18,4 @@
 with Vhdl.Types;
 with Flists;
 
-package Vhdl.Flists is new Standard.Flists (El_Type => Vhdl.Types.Node);
+package Vhdl.Flists is new Standard.Flists (El_Type => Vhdl.Types.Vhdl_Node);

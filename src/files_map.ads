@@ -70,9 +70,10 @@ package Files_Map is
    --  location LOC).  The content of this file is the same as REF, but with
    --  new locations so that it is possible to retrieve the instance from
    --  the new locations.
-   function Create_Instance_Source_File
-     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Vhdl.Types.Node)
-     return Source_File_Entry;
+   function Create_Instance_Source_File (Ref : Source_File_Entry;
+                                         Loc : Location_Type;
+                                         Inst : Vhdl.Types.Vhdl_Node)
+                                        return Source_File_Entry;
 
    --  Unload last source file.  Works only with the last one.  Must be
    --  carefully used as the corresponding locations will be reused.

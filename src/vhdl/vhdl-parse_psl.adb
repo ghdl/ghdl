@@ -117,7 +117,7 @@ package body Vhdl.Parse_Psl is
    function Vhdl_To_Psl (N : Vhdl_Node) return Node
    is
       use Vhdl.Nodes;
-      Res : Node;
+      Res : PSL_Node;
    begin
       Res := Create_Node_Loc (N_HDL_Expr);
       if N /= Null_Iir then

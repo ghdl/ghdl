@@ -20,7 +20,7 @@ with Errorout;
 with Simple_IO;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
-with Vhdl.Disp_Vhdl;
+with Vhdl.Prints;
 with Vhdl.Errors; use Vhdl.Errors;
 
 package body Trans_Analyzes is
@@ -247,7 +247,7 @@ package body Trans_Analyzes is
          else
             Put ("   ");
          end if;
-         Vhdl.Disp_Vhdl.Disp_Vhdl (El);
+         Vhdl.Prints.Disp_Vhdl (El);
          New_Line;
          Next (It);
       end loop;

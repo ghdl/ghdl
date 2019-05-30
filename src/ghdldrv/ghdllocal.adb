@@ -27,7 +27,7 @@ with Vhdl.Std_Package;
 with Flags;
 with Name_Table;
 with Std_Names;
-with Vhdl.Disp_Vhdl;
+with Vhdl.Prints;
 with Default_Paths;
 with Vhdl.Scanner;
 with Errorout;
@@ -1118,7 +1118,7 @@ package body Ghdllocal is
       end if;
       Flags.Bootstrap := True;
       Libraries.Load_Std_Library;
-      Vhdl.Disp_Vhdl.Disp_Vhdl (Vhdl.Std_Package.Std_Standard_Unit);
+      Vhdl.Prints.Disp_Vhdl (Vhdl.Std_Package.Std_Standard_Unit);
    end Perform_Action;
 
    --  Command --find-top.

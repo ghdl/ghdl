@@ -18,4 +18,4 @@
 with Vhdl.Types;
 with Lists;
 
-package Vhdl.Lists is new Standard.Lists (El_Type => Vhdl.Types.Node);
+package Vhdl.Lists is new Standard.Lists (El_Type => Vhdl.Types.Vhdl_Node);
