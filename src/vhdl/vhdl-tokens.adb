@@ -56,8 +56,10 @@ package body Vhdl.Tokens is
             return "<EOF>";
          when Tok_Newline =>
             return "<newline>";
-         when Tok_Comment =>
-            return "<comment>";
+         when Tok_Line_Comment =>
+            return "<line-comment>";
+         when Tok_Block_Comment =>
+            return "<block-comment>";
          when Tok_Character =>
             return "<character>";
          when Tok_Identifier =>

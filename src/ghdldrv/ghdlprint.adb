@@ -368,7 +368,8 @@ package body Ghdlprint is
                New_Line;
                Line := Line + 1;
                Disp_Ln;
-            when Tok_Comment =>
+            when Tok_Line_Comment
+              | Tok_Block_Comment =>
                Disp_Spaces;
                case Html_Format is
                   when Html_2 =>

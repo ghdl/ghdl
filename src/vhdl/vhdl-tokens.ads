@@ -42,7 +42,8 @@ package Vhdl.Tokens is
 
       Tok_Eof,                 -- End of file.
       Tok_Newline,
-      Tok_Comment,
+      Tok_Line_Comment,        --  End of line comment (--)
+      Tok_Block_Comment,       --  Block comment (/*  .. */)
       Tok_Character,
       Tok_Identifier,
       Tok_Integer,

@@ -1845,7 +1845,7 @@ package body Vhdl.Scanner is
                   Pos := Pos + 1;
                end loop;
                if Flag_Comment then
-                  Current_Token := Tok_Comment;
+                  Current_Token := Tok_Line_Comment;
                   return;
                end if;
                goto Again;
@@ -1928,7 +1928,7 @@ package body Vhdl.Scanner is
                   end case;
                end loop;
                if Flag_Comment then
-                  Current_Token := Tok_Comment;
+                  Current_Token := Tok_Block_Comment;
                   return;
                end if;
                goto Again;

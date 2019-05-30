@@ -37,7 +37,7 @@ with Simul.Execution; use Simul.Execution;
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Disp_Vhdl;
+with Vhdl.Prints;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Areapools; use Areapools;
 with Grt.Types; use Grt.Types;
@@ -1521,7 +1521,7 @@ package body Simul.Debugger is
             Put ('.');
             Put (Name_Table.Image (Get_Identifier (E.Stmt)));
             New_Line;
-            Vhdl.Disp_Vhdl.Disp_PSL_NFA (Get_PSL_NFA (E.Stmt));
+            Vhdl.Prints.Disp_PSL_NFA (Get_PSL_NFA (E.Stmt));
             Put ("    01234567890123456789012345678901234567890123456789");
             for I in E.States'Range loop
                if I mod 50 = 0 then
@@ -1925,7 +1925,7 @@ package body Simul.Debugger is
          return;
       end if;
 
-      Vhdl.Disp_Vhdl.Disp_Expression (Expr);
+      Vhdl.Prints.Disp_Expression (Expr);
       New_Line;
 
       Annotate_Expand_Table;

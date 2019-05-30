@@ -18,7 +18,7 @@
 
 with Simple_IO; use Simple_IO;
 with Vhdl.Utils; use Vhdl.Utils;
-with Vhdl.Disp_Vhdl;
+with Vhdl.Prints;
 
 package body Simul.Debugger.AMS is
    procedure Disp_Quantity_Name (Quantity : Quantity_Index_Type)
@@ -46,7 +46,7 @@ package body Simul.Debugger.AMS is
          when Op_Quantity =>
             Disp_Quantity_Name (Term.Quantity);
          when Op_Vhdl_Expr =>
-            Vhdl.Disp_Vhdl.Disp_Expression (Term.Vhdl_Expr);
+            Vhdl.Prints.Disp_Expression (Term.Vhdl_Expr);
       end case;
    end Disp_Term;
 
