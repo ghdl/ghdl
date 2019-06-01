@@ -2702,6 +2702,8 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_If);
       Clause := Stmt;
       Print (Ctxt, Get_Condition (Clause));
+      Close_Hbox (Ctxt);
+      Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Then);
       Close_Hbox (Ctxt);
       while Clause /= Null_Iir loop
@@ -2716,6 +2718,8 @@ package body Vhdl.Prints is
          if Expr /= Null_Iir then
             Disp_Token (Ctxt, Tok_Elsif);
             Print (Ctxt, Expr);
+            Close_Hbox (Ctxt);
+            Start_Hbox (Ctxt);
             Disp_Token (Ctxt, Tok_Then);
          else
             Disp_Token (Ctxt, Tok_Else);
