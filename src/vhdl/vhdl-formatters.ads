@@ -21,4 +21,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 package Vhdl.Formatters is
    --  Format/pretty print the file F.
    procedure Format (F : Iir_Design_File);
+
+   --  Reindent the file.
+   procedure Indent (F : Iir_Design_File);
 end Vhdl.Formatters;

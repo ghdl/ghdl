@@ -659,7 +659,7 @@ package body Vhdl.Prints is
      (Ctxt : in out Ctxt_Class; Def: Iir_Enumeration_Type_Definition)
    is
       Lits : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
-      A_Lit: Iir; --Enumeration_Literal_Acc;
+      A_Lit: Iir;
    begin
       Disp_Token (Ctxt, Tok_Left_Paren);
       for I in Flist_First .. Flist_Last (Lits) loop
@@ -1276,6 +1276,8 @@ package body Vhdl.Prints is
       Disp_Name_Of (Ctxt, Arch);
       Disp_Token (Ctxt, Tok_Of);
       Print (Ctxt, Get_Entity_Name (Arch));
+      Close_Hbox (Ctxt);
+      Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Is);
       Close_Hbox (Ctxt);
 
@@ -2190,6 +2192,8 @@ package body Vhdl.Prints is
             when Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                --  The declaration was just displayed.
+               Close_Hbox (Ctxt);
+               Start_Hbox (Ctxt);
                Disp_Token (Ctxt, Tok_Is);
                Close_Hbox (Ctxt);
                Disp_Subprogram_Body (Ctxt, Decl);

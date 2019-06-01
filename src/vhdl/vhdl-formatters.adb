@@ -24,6 +24,38 @@ with Vhdl.Scanner; use Vhdl.Scanner;
 with Vhdl.Prints; use Vhdl.Prints;
 
 package body Vhdl.Formatters is
+   --  Check token TOK with the one from the scanner.  Deal with irregular
+   --  cases.
+   procedure Check_Token (Tok : Token_Type) is
+   begin
+      --  There are a couple of exceptions due to attributes or
+      --  PSL.
+      if Tok = Tok_Identifier
+        and then (Current_Token = Tok_Range
+                    or else Current_Token = Tok_Subtype)
+      then
+         null;
+      elsif (Tok = Tok_Psl_Default
+               or else Tok = Tok_Psl_Clock)
+        and then Current_Token = Tok_Identifier
+      then
+         null;
+      elsif Tok /= Current_Token then
+         declare
+            use Simple_IO;
+         begin
+            Put_Line_Err ("error: token mismatch. ");
+            Put_Err ("  need to print: ");
+            Put_Err (Image (Tok));
+            Put_Err (", but read ");
+            Put_Err (Image (Current_Token));
+            Put_Err (" from file.");
+            New_Line_Err;
+         end;
+         raise Internal_Error;
+      end if;
+   end Check_Token;
+
    package Format_Disp_Ctxt is
       type Format_Ctxt is new Disp_Ctxt with record
          Vnum : Natural;
@@ -203,33 +235,7 @@ package body Vhdl.Formatters is
                   then
                      Scan;
                   end if;
-
-                  --  There are a couple of exceptions due to attributes or
-                  --  PSL.
-                  if Tok = Tok_Identifier
-                    and then (Current_Token = Tok_Range
-                                or else Current_Token = Tok_Subtype)
-                  then
-                     null;
-                  elsif (Tok = Tok_Psl_Default
-                           or else Tok = Tok_Psl_Clock)
-                    and then Current_Token = Tok_Identifier
-                  then
-                     null;
-                  elsif Tok /= Current_Token then
-                     declare
-                        use Simple_IO;
-                     begin
-                        Put_Line_Err ("error: token mismatch. ");
-                        Put_Err ("  need to print: ");
-                        Put_Err (Image (Tok));
-                        Put_Err (", but read ");
-                        Put_Err (Image (Current_Token));
-                        Put_Err (" from file.");
-                        New_Line_Err;
-                     end;
-                     raise Internal_Error;
-                  end if;
+                  Check_Token (Tok);
                   Scan;
                   return;
             end case;
@@ -252,4 +258,187 @@ package body Vhdl.Formatters is
       Init (Ctxt, Sfe);
       Prints.Disp_Vhdl (Ctxt, F);
    end Format;
+
+   package Indent_Disp_Ctxt is
+      type Indent_Ctxt is new Disp_Ctxt with record
+         Vnum : Natural;
+         Hnum : Natural;
+         Hfirst : Boolean;  --  First token in the hbox.
+         Prev_Tok : Token_Type;
+         Last_Tok : Source_Ptr;
+         Col : Natural;
+         Sfe : Source_File_Entry;
+         Source : File_Buffer_Acc;
+      end record;
+
+      procedure Init (Ctxt : out Indent_Ctxt; Sfe : Source_File_Entry);
+      procedure Start_Hbox (Ctxt : in out Indent_Ctxt);
+      procedure Close_Hbox (Ctxt : in out Indent_Ctxt);
+      procedure Start_Vbox (Ctxt : in out Indent_Ctxt);
+      procedure Close_Vbox (Ctxt : in out Indent_Ctxt);
+      procedure Disp_Token (Ctxt : in out Indent_Ctxt; Tok : Token_Type);
+      procedure Start_Lit (Ctxt : in out Indent_Ctxt; Tok : Token_Type);
+      procedure Disp_Char (Ctxt : in out Indent_Ctxt; C : Character) is null;
+      procedure Close_Lit (Ctxt : in out Indent_Ctxt) is null;
+   private
+      procedure Sync (Ctxt : in out Indent_Ctxt; Tok : Token_Type);
+   end Indent_Disp_Ctxt;
+
+   package body Indent_Disp_Ctxt is
+      procedure Init (Ctxt : out Indent_Ctxt; Sfe : Source_File_Entry) is
+      begin
+         Ctxt := (Vnum => 0,
+                  Hnum => 0,
+                  Hfirst => False,
+                  Prev_Tok => Tok_Newline,
+                  Last_Tok => Source_Ptr_Org,
+                  Col => 0,
+                  Sfe => Sfe,
+                  Source => Files_Map.Get_File_Source (Sfe));
+      end Init;
+
+      procedure Disp_Spaces (Ctxt : in out Indent_Ctxt)
+      is
+         use Files_Map;
+         C : Character;
+         P : Source_Ptr;
+         N_Col : Natural;
+         Bef_Tok : Source_Ptr;
+         Indent : Natural;
+      begin
+         if Ctxt.Col = 0 then
+            --  Reindent.
+            Indent := Ctxt.Vnum;
+            if Ctxt.Hnum > 0 and not Ctxt.Hfirst then
+               Indent := Indent + 1;
+            end if;
+            for I in 1 .. Indent loop
+               Simple_IO.Put ("  ");
+            end loop;
+            Ctxt.Col := 2 * Indent;
+         else
+            P := Ctxt.Last_Tok;
+            Bef_Tok := Get_Token_Position;
+            while P < Bef_Tok loop
+               C := Ctxt.Source (P);
+               if C = ASCII.HT then
+                  --  Expand TABS.
+                  N_Col := Ctxt.Col + Tab_Stop;
+                  N_Col := N_Col - N_Col mod Tab_Stop;
+                  while Ctxt.Col < N_Col loop
+                     Simple_IO.Put (' ');
+                     Ctxt.Col := Ctxt.Col + 1;
+                  end loop;
+               else
+                  Simple_IO.Put (' ');
+                  Ctxt.Col := Ctxt.Col + 1;
+               end if;
+               P := P + 1;
+            end loop;
+         end if;
+      end Disp_Spaces;
+
+      --  Disp text for sources for the current token.
+      procedure Disp_Text (Ctxt : in out Indent_Ctxt)
+      is
+         Aft_Tok : constant Source_Ptr := Get_Position;
+         P : Source_Ptr;
+      begin
+         P := Get_Token_Position;
+         while P < Aft_Tok loop
+            Simple_IO.Put (Ctxt.Source (P));
+            Ctxt.Col := Ctxt.Col + 1;
+            P := P + 1;
+         end loop;
+      end Disp_Text;
+
+      procedure Disp_Comments (Ctxt : in out Indent_Ctxt) is
+      begin
+         loop
+            case Current_Token is
+               when Tok_Eof =>
+                  raise Internal_Error;
+               when Tok_Newline =>
+                  Simple_IO.New_Line;
+                  Ctxt.Col := 0;
+               when Tok_Line_Comment
+                 | Tok_Block_Comment =>
+                  Disp_Spaces (Ctxt);
+                  Disp_Text (Ctxt);
+               when others =>
+                  exit;
+            end case;
+            Ctxt.Last_Tok := Get_Position;
+            Scan;
+         end loop;
+      end Disp_Comments;
+
+      procedure Start_Hbox (Ctxt : in out Indent_Ctxt) is
+      begin
+         Disp_Comments (Ctxt);
+         Ctxt.Hnum := Ctxt.Hnum + 1;
+         Ctxt.Hfirst := True;
+      end Start_Hbox;
+
+      procedure Close_Hbox (Ctxt : in out Indent_Ctxt) is
+      begin
+         --  An hbox cannot be empty.
+         pragma Assert (Ctxt.Hfirst = False);
+         Ctxt.Hnum := Ctxt.Hnum - 1;
+      end Close_Hbox;
+
+      procedure Start_Vbox (Ctxt : in out Indent_Ctxt) is
+      begin
+         pragma Assert (Ctxt.Hnum = 0);
+         Ctxt.Vnum := Ctxt.Vnum + 1;
+      end Start_Vbox;
+
+      procedure Close_Vbox (Ctxt : in out Indent_Ctxt) is
+      begin
+         Ctxt.Vnum := Ctxt.Vnum - 1;
+      end Close_Vbox;
+
+      procedure Sync (Ctxt : in out Indent_Ctxt; Tok : Token_Type) is
+      begin
+         Disp_Comments (Ctxt);
+         Disp_Spaces (Ctxt);
+         Disp_Text (Ctxt);
+         if Current_Token = Tok_Integer_Letter
+           and then Tok = Tok_Bit_String
+         then
+            Scan;
+            Disp_Text (Ctxt);
+         end if;
+         Check_Token (Tok);
+         Ctxt.Last_Tok := Get_Position;
+         Ctxt.Hfirst := False;
+         Scan;
+      end Sync;
+
+      procedure Disp_Token (Ctxt : in out Indent_Ctxt; Tok : Token_Type) is
+      begin
+         Sync (Ctxt, Tok);
+      end Disp_Token;
+
+      procedure Start_Lit (Ctxt : in out Indent_Ctxt; Tok : Token_Type) is
+      begin
+         Sync (Ctxt, Tok);
+      end Start_Lit;
+   end Indent_Disp_Ctxt;
+
+   procedure Indent (F : Iir_Design_File)
+   is
+      use Indent_Disp_Ctxt;
+      Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
+      Ctxt : Indent_Ctxt;
+   begin
+      Scanner.Flag_Comment := True;
+      Scanner.Flag_Newline := True;
+
+      Set_File (Sfe);
+      Scan;
+
+      Init (Ctxt, Sfe);
+      Prints.Disp_Vhdl (Ctxt, F);
+   end Indent;
 end Vhdl.Formatters;

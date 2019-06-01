@@ -961,6 +961,7 @@ package body Ghdlprint is
    type Command_Reprint is new Command_Lib with record
       Flag_Sem : Boolean := True;
       Flag_Format : Boolean := False;
+      Flag_Indent : Boolean := False;
    end record;
    function Decode_Command (Cmd : Command_Reprint; Name : String)
                            return Boolean;
@@ -997,6 +998,11 @@ package body Ghdlprint is
          Res := Option_Ok;
       elsif Option = "--format" then
          Cmd.Flag_Format := True;
+         Cmd.Flag_Indent := False;
+         Res := Option_Ok;
+      elsif Option = "--indent" then
+         Cmd.Flag_Format := False;
+         Cmd.Flag_Indent := True;
          Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
@@ -1050,7 +1056,7 @@ package body Ghdlprint is
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
-               if not Cmd.Flag_Format then
+               if not (Cmd.Flag_Format or Cmd.Flag_Indent) then
                   Vhdl.Prints.Disp_Vhdl (Unit);
                end if;
                if Cmd.Flag_Sem then
@@ -1068,6 +1074,8 @@ package body Ghdlprint is
 
          if Cmd.Flag_Format then
             Vhdl.Formatters.Format (Design_File);
+         elsif Cmd.Flag_Indent then
+            Vhdl.Formatters.Indent (Design_File);
          end if;
       end loop;
    end Perform_Action;
