@@ -25,6 +25,7 @@
 
 with Grt.Errors; use Grt.Errors;
 with Grt.To_Strings; use Grt.To_Strings;
+with Grt.Vstrings_IO; use Grt.Vstrings_IO;
 
 package body Grt.Rtis_Utils is
 

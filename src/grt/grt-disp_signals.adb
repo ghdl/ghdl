@@ -34,6 +34,7 @@ with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Errors; use Grt.Errors;
 pragma Elaborate_All (Grt.Rtis_Utils);
 with Grt.Vstrings; use Grt.Vstrings;
+with Grt.Vstrings_IO; use Grt.Vstrings_IO;
 with Grt.Options;
 with Grt.Processes;
 with Grt.Disp; use Grt.Disp;

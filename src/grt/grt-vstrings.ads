@@ -22,7 +22,7 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with Grt.Stdio; use Grt.Stdio;
+
 with Grt.Types; use Grt.Types;
 with System; use System;
 
@@ -54,8 +54,8 @@ package Grt.Vstrings is
    --  It is an error if LEN is greater than the current length.
    procedure Truncate (Vstr : in out Vstring; Len : Natural);
 
-   --  Display VSTR.
-   procedure Put (Stream : FILEs; Vstr : Vstring);
+   --  Return the address of the first character of VSTR.
+   function Get_Address (Vstr : Vstring) return Address;
 
    --  Get VSTR as a C String.  The NUL character must have been added.
    function Get_C_String (Vstr : Vstring) return Ghdl_C_String;
@@ -76,9 +76,6 @@ package Grt.Vstrings is
 
    --  Return the address of the first character of RSTR.
    function Get_Address (Rstr : Rstring) return Address;
-
-   --  Display RSTR.
-   procedure Put (Stream : FILEs; Rstr : Rstring);
 
    --  Copy RSTR to STR, and return length of the string to LEN.
    procedure Copy (Rstr : Rstring; Str : in out String; Len : out Natural);

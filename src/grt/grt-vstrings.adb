@@ -24,7 +24,6 @@
 --  covered by the GNU Public License.
 
 with Grt.Errors; use Grt.Errors;
-with Grt.C; use Grt.C;
 
 package body Grt.Vstrings is
    procedure Free (Fs : Fat_String_Acc);
@@ -112,15 +111,10 @@ package body Grt.Vstrings is
       Vstr.Len := Len;
    end Truncate;
 
-   procedure Put (Stream : FILEs; Vstr : Vstring)
-   is
-      S : size_t;
+   function Get_Address (Vstr : Vstring) return Address is
    begin
-      S := size_t (Vstr.Len);
-      if S > 0 then
-         S := fwrite (Vstr.Str (1)'Address, S, 1, Stream);
-      end if;
-   end Put;
+      return Vstr.Str.all'Address;
+   end Get_Address;
 
    function Get_C_String (Vstr : Vstring) return Ghdl_C_String is
    begin
@@ -212,13 +206,4 @@ package body Grt.Vstrings is
            Rstr.Str (Rstr.First .. Rstr.First + Len - 1);
       end if;
    end Copy;
-
-   procedure Put (Stream : FILEs; Rstr : Rstring)
-   is
-      S : size_t;
-      pragma Unreferenced (S);
-   begin
-      S := fwrite (Get_Address (Rstr), size_t (Length (Rstr)), 1, Stream);
-   end Put;
-
 end Grt.Vstrings;
