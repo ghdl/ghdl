@@ -81,18 +81,15 @@ package Grt.Vstrings is
    procedure Copy (Rstr : Rstring; Str : in out String; Len : out Natural);
 
 private
-   subtype Fat_String is String (Positive);
-   type Fat_String_Acc is access Fat_String;
-
    type Vstring is record
-      Str : Fat_String_Acc := null;
+      Str : Ghdl_C_String := null;
       Max : Natural := 0;
       Len : Natural := 0;
    end record;
 
    type Rstring is record
       --  String whose bounds is (1 .. Max).
-      Str : Fat_String_Acc := null;
+      Str : Ghdl_C_String := null;
 
       --  Last index in STR.
       Max : Natural := 0;
