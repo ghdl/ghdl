@@ -2641,6 +2641,8 @@ package body Vhdl.Prints is
    begin
       Disp_Token (Ctxt, Tok_Case);
       Print (Ctxt, Get_Expression (Stmt));
+      Close_Hbox (Ctxt);
+      Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Is);
       Close_Hbox (Ctxt);
 
@@ -2792,6 +2794,8 @@ package body Vhdl.Prints is
                   Disp_Token (Ctxt, Tok_While);
                   Print (Ctxt, Get_Condition (Stmt));
                end if;
+               Close_Hbox (Ctxt);
+               Start_Hbox (Ctxt);
                Disp_Token (Ctxt, Tok_Loop);
                Close_Hbox (Ctxt);
                Start_Vbox (Ctxt);
