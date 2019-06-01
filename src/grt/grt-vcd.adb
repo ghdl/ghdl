@@ -49,7 +49,7 @@ with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
-with Grt.Vstrings;
+with Grt.To_Strings;
 with Grt.Wave_Opt; use Grt.Wave_Opt;
 with Grt.Wave_Opt.Design; use Grt.Wave_Opt.Design;
 with Grt.Fcvt;
@@ -165,7 +165,7 @@ package body Grt.Vcd is
       Str : String (1 .. 11);
       First : Natural;
    begin
-      Vstrings.To_String (Str, First, V);
+      To_Strings.To_String (Str, First, V);
       Vcd_Put (Str (First .. Str'Last));
    end Vcd_Put_I32;
 
@@ -821,7 +821,7 @@ package body Grt.Vcd is
       First : Natural;
    begin
       Vcd_Putc ('#');
-      Vstrings.To_String (Str, First, Ghdl_I64 (Current_Time));
+      To_Strings.To_String (Str, First, Ghdl_I64 (Current_Time));
       Vcd_Put (Str (First .. Str'Last));
       Vcd_Newline;
    end Vcd_Put_Time;

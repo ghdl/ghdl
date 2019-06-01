@@ -81,6 +81,7 @@ package Grt.Images is
    procedure Ghdl_BV_To_Hstring (Res : Std_String_Ptr;
                                  Base : Std_Bit_Vector_Basep;
                                  Len : Ghdl_Index_Type);
+
 private
    pragma Export (Ada, Ghdl_Image_B1, "__ghdl_image_b1");
    pragma Export (C, Ghdl_Image_E8, "__ghdl_image_e8");

@@ -24,6 +24,7 @@
 --  covered by the GNU Public License.
 
 with Grt.Errors; use Grt.Errors;
+with Grt.To_Strings; use Grt.To_Strings;
 
 package body Grt.Rtis_Utils is
 
@@ -301,11 +302,10 @@ package body Grt.Rtis_Utils is
          end case;
       end Range_Pos_To_Val;
 
-      procedure Pos_To_Vstring
-        (Vstr : in out Vstring;
-         Rti : Ghdl_Rti_Access;
-         Rng : Ghdl_Range_Ptr;
-         Pos : Ghdl_Index_Type)
+      procedure Pos_To_Vstring (Vstr : in out Vstring;
+                                Rti : Ghdl_Rti_Access;
+                                Rng : Ghdl_Range_Ptr;
+                                Pos : Ghdl_Index_Type)
       is
          V : Value_Union;
       begin

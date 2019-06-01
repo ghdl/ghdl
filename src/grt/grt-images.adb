@@ -23,13 +23,11 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with System; use System;
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
 with Ada.Unchecked_Conversion;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Processes; use Grt.Processes;
-with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;
+with Grt.To_Strings; use Grt.To_Strings;
 
 package body Grt.Images is
    function To_Std_String_Basep is new Ada.Unchecked_Conversion
@@ -187,7 +185,7 @@ package body Grt.Images is
      (Res : Std_String_Ptr; Val : Ghdl_F64; Format : Std_String_Ptr)
    is
       C_Format : String (1 .. Positive (Format.Bounds.Dim_1.Length + 1));
-      Str : Grt.Vstrings.String_Real_Format;
+      Str : String_Real_Format;
       P : Natural;
    begin
       for I in 1 .. C_Format'Last - 1 loop
@@ -332,7 +330,7 @@ package body Grt.Images is
      (Res : Std_String_Ptr;
       Val : Std_Time; Unit : Std_Time; Rti : Ghdl_Rti_Access)
    is
-      Str : Grt.Vstrings.String_Time_Unit;
+      Str : String_Time_Unit;
       First : Natural;
       Phys : constant Ghdl_Rtin_Type_Physical_Acc
         := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
@@ -350,7 +348,7 @@ package body Grt.Images is
       if Unit_Name = null then
          Error ("no unit for to_string");
       end if;
-      Grt.Vstrings.To_String (Str, First, Ghdl_I64 (Val), Ghdl_I64 (Unit));
+      To_String (Str, First, Ghdl_I64 (Val), Ghdl_I64 (Unit));
       Unit_Len := strlen (Unit_Name);
       declare
          L : constant Natural := Str'Last + 1 - First;

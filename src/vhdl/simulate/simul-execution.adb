@@ -39,6 +39,7 @@ with Grt.Astdio.Vhdl;
 with Grt.Stdio;
 with Grt.Options;
 with Grt.Vstrings;
+with Grt.To_Strings;
 with Simul.Grt_Interface;
 with Grt.Values;
 with Grt.Errors;
@@ -302,7 +303,7 @@ package body Simul.Execution is
                Str : String (1 .. 24);
                Last : Natural;
             begin
-               Grt.Vstrings.To_String (Str, Last, Val.F64);
+               Grt.To_Strings.To_String (Str, Last, Val.F64);
                return Str (Str'First .. Last);
             end;
          when Iir_Kind_Integer_Type_Definition
@@ -311,7 +312,7 @@ package body Simul.Execution is
                Str : String (1 .. 21);
                First : Natural;
             begin
-               Grt.Vstrings.To_String (Str, First, Val.I64);
+               Grt.To_Strings.To_String (Str, First, Val.I64);
                return Str (First .. Str'Last);
             end;
          when Iir_Kind_Enumeration_Type_Definition
@@ -340,7 +341,7 @@ package body Simul.Execution is
                Id : constant Name_Id :=
                  Get_Identifier (Get_Primary_Unit (Get_Base_Type (Expr_Type)));
             begin
-               Grt.Vstrings.To_String (Str, First, Val.I64);
+               Grt.To_Strings.To_String (Str, First, Val.I64);
                return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
             end;
          when others =>
@@ -1389,10 +1390,10 @@ package body Simul.Execution is
          when Iir_Predefined_Real_To_String_Digits =>
             Eval_Right;
             declare
-               Str : Grt.Vstrings.String_Real_Format;
+               Str : Grt.To_Strings.String_Real_Format;
                Last : Natural;
             begin
-               Grt.Vstrings.To_String
+               Grt.To_Strings.To_String
                  (Str, Last, Left.F64, Ghdl_I32 (Right.I64));
                Result := String_To_Iir_Value (Str (1 .. Last));
             end;
@@ -1400,7 +1401,7 @@ package body Simul.Execution is
             Eval_Right;
             declare
                Format : String (1 .. Natural (Right.Val_Array.Len) + 1);
-               Str : Grt.Vstrings.String_Real_Format;
+               Str : Grt.To_Strings.String_Real_Format;
                Last : Natural;
             begin
                for I in Right.Val_Array.V'Range loop
@@ -1408,14 +1409,14 @@ package body Simul.Execution is
                     Character'Val (Right.Val_Array.V (I).E8);
                end loop;
                Format (Format'Last) := ASCII.NUL;
-               Grt.Vstrings.To_String
+               Grt.To_Strings.To_String
                  (Str, Last, Left.F64, To_Ghdl_C_String (Format'Address));
                Result := String_To_Iir_Value (Str (1 .. Last));
             end;
          when Iir_Predefined_Time_To_String_Unit =>
             Eval_Right;
             declare
-               Str : Grt.Vstrings.String_Time_Unit;
+               Str : Grt.To_Strings.String_Time_Unit;
                First : Natural;
                Unit : Iir;
             begin
@@ -1429,7 +1430,7 @@ package body Simul.Execution is
                   Error_Msg_Exec
                     ("to_string for time called with wrong unit", Expr);
                end if;
-               Grt.Vstrings.To_String (Str, First, Left.I64, Right.I64);
+               Grt.To_Strings.To_String (Str, First, Left.I64, Right.I64);
                Result := String_To_Iir_Value
                  (Str (First .. Str'Last) & ' '
                     & Name_Table.Image (Get_Identifier (Unit)));

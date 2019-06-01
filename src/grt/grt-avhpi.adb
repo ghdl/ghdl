@@ -25,6 +25,7 @@
 with Grt.Errors; use Grt.Errors;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
+with Grt.To_Strings;
 
 package body Grt.Avhpi is
    procedure Get_Root_Inst (Res : out VhpiHandleT) is
@@ -743,7 +744,7 @@ package body Grt.Avhpi is
                      end if;
                      case Iter_Type.Kind is
                         when Ghdl_Rtik_Type_I32 =>
-                           To_String (Buf, Buf_Len, Vptr.I32);
+                           Grt.To_Strings.To_String (Buf, Buf_Len, Vptr.I32);
                            Add (Buf (Buf_Len .. Buf'Last));
 --                         when Ghdl_Rtik_Type_E8 =>
 --                            Disp_Enum_Value
