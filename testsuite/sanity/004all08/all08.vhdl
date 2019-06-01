@@ -27,7 +27,7 @@ package pkg is
     nm = 10 angstrom;
     um = 1000 nm;
     mm = 1000 um;
-    cm = 10 mm;
+    cm = 10 mm;       -- Large unit.
   end units;
 
   type my_float is range 0.0 to 1.0e20;
