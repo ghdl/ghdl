@@ -273,6 +273,7 @@ architecture behav of reg_tb is
   signal s1 : std_logic;
 
   signal si : integer;
+  signal si2 : integer;
 
   alias my_clk : std_logic is clk;
 
@@ -306,6 +307,9 @@ begin
   end process;
 
   rst_n <= '0', '1' after 25 ns;
+
+  si2 <= 1 when rst_n = '0' else
+         2 when rst_n = '1';
 
   cmpz0 : check_zero port map (i0 => din (0));
   cmpz1 : check_zero port map (i0 => din (1));
