@@ -69,6 +69,9 @@ package Ghdlmain is
    procedure Error (Msg : String);
    procedure Warning (Msg : String);
 
+   --  Return the index of C in STR, or 0 if not found.
+   function Index (Str : String; C : Character) return Natural;
+
    --  May be raise by perform_action if the arguments are bad.
    Option_Error : exception renames Errorout.Option_Error;
 

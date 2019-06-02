@@ -269,11 +269,18 @@ package body Vhdl.Formatters is
          Hfirst : Boolean;  --  First token in the hbox.
          Last_Tok : Source_Ptr;
          Col : Natural;
+         Line : Positive;
+         First_Line : Positive;
+         Last_Line : Positive;
+         Discard_Output : Boolean;
          Sfe : Source_File_Entry;
          Source : File_Buffer_Acc;
       end record;
 
-      procedure Init (Ctxt : out Indent_Ctxt; Sfe : Source_File_Entry);
+      procedure Init (Ctxt : out Indent_Ctxt;
+                      Sfe : Source_File_Entry;
+                      First_Line : Positive;
+                      Last_Line : Positive);
       procedure Start_Hbox (Ctxt : in out Indent_Ctxt);
       procedure Close_Hbox (Ctxt : in out Indent_Ctxt);
       procedure Start_Vbox (Ctxt : in out Indent_Ctxt);
@@ -288,13 +295,20 @@ package body Vhdl.Formatters is
    end Indent_Disp_Ctxt;
 
    package body Indent_Disp_Ctxt is
-      procedure Init (Ctxt : out Indent_Ctxt; Sfe : Source_File_Entry) is
+      procedure Init (Ctxt : out Indent_Ctxt;
+                      Sfe : Source_File_Entry;
+                      First_Line : Positive;
+                      Last_Line : Positive) is
       begin
          Ctxt := (Vnum => 0,
                   Hnum => 0,
                   Hfirst => False,
                   Last_Tok => Source_Ptr_Org,
                   Col => 0,
+                  Line => 1,
+                  First_Line => First_Line,
+                  Last_Line => Last_Line,
+                  Discard_Output => First_Line > 1,
                   Sfe => Sfe,
                   Source => Files_Map.Get_File_Source (Sfe));
 
@@ -321,6 +335,10 @@ package body Vhdl.Formatters is
          Bef_Tok : Source_Ptr;
          Indent : Natural;
       begin
+         if Ctxt.Discard_Output then
+            return;
+         end if;
+
          if Ctxt.Col = 0 then
             --  Reindent.
             Indent := Ctxt.Vnum;
@@ -359,6 +377,10 @@ package body Vhdl.Formatters is
          Aft_Tok : constant Source_Ptr := Get_Position;
          P : Source_Ptr;
       begin
+         if Ctxt.Discard_Output then
+            return;
+         end if;
+
          P := Get_Token_Position;
          while P < Aft_Tok loop
             Put (Indent_Ctxt'Class (Ctxt), Ctxt.Source (P));
@@ -374,8 +396,14 @@ package body Vhdl.Formatters is
                when Tok_Eof =>
                   raise Internal_Error;
                when Tok_Newline =>
-                  Put (Indent_Ctxt'Class (Ctxt), ASCII.LF);
+                  if not Ctxt.Discard_Output then
+                     Put (Indent_Ctxt'Class (Ctxt), ASCII.LF);
+                  end if;
                   Ctxt.Col := 0;
+                  Ctxt.Line := Ctxt.Line + 1;
+                  Ctxt.Discard_Output :=
+                    Ctxt.Line < Ctxt.First_Line
+                    or Ctxt.Line > Ctxt.Last_Line;
                when Tok_Line_Comment
                  | Tok_Block_Comment =>
                   Disp_Spaces (Ctxt);
@@ -449,7 +477,9 @@ package body Vhdl.Formatters is
 
       procedure Init (Ctxt : out Vstring_Ctxt;
                       Handle : Vstring_Acc;
-                      Sfe : Source_File_Entry);
+                      Sfe : Source_File_Entry;
+                      First_Line : Positive;
+                      Last_Line : Positive);
       procedure Put (Ctxt : in out Vstring_Ctxt; C : Character);
    private
       type Vstring_Ctxt is new Indent_Disp_Ctxt.Indent_Ctxt with record
@@ -460,9 +490,12 @@ package body Vhdl.Formatters is
    package body Indent_Vstrings_Ctxt is
       procedure Init (Ctxt : out Vstring_Ctxt;
                       Handle : Vstring_Acc;
-                      Sfe : Source_File_Entry) is
+                      Sfe : Source_File_Entry;
+                      First_Line : Positive;
+                      Last_Line : Positive) is
       begin
-         Indent_Disp_Ctxt.Init (Indent_Disp_Ctxt.Indent_Ctxt (Ctxt), Sfe);
+         Indent_Disp_Ctxt.Init (Indent_Disp_Ctxt.Indent_Ctxt (Ctxt), Sfe,
+                                First_Line, Last_Line);
          Ctxt.Hand := Handle;
       end Init;
 
@@ -499,25 +532,31 @@ package body Vhdl.Formatters is
       Deallocate (Handle1);
    end Free;
 
-   procedure Indent_String (F : Iir_Design_File; Handle : Vstring_Acc)
+   procedure Indent_String (F : Iir_Design_File;
+                            Handle : Vstring_Acc;
+                            First_Line : Positive := 1;
+                            Last_Line : Positive := Positive'Last)
    is
       use Indent_Vstrings_Ctxt;
       Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
       Ctxt : Vstring_Ctxt;
    begin
-      Init (Ctxt, Handle, Sfe);
+      Init (Ctxt, Handle, Sfe, First_Line, Last_Line);
       Prints.Disp_Vhdl (Ctxt, F);
    end Indent_String;
 
-   procedure Indent (F : Iir_Design_File) is
+   procedure Indent (F : Iir_Design_File;
+                     First_Line : Positive := 1;
+                     Last_Line : Positive := Positive'Last) is
    begin
       if False then
+         --  Display character per character.  Slow but useful for debugging.
          declare
             use Indent_Disp_Ctxt;
             Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
             Ctxt : Indent_Ctxt;
          begin
-            Init (Ctxt, Sfe);
+            Init (Ctxt, Sfe, First_Line, Last_Line);
             Prints.Disp_Vhdl (Ctxt, F);
          end;
       else
@@ -528,7 +567,7 @@ package body Vhdl.Formatters is
             Len : Natural;
          begin
             Handle := Allocate_Handle;
-            Indent_String (F, Handle);
+            Indent_String (F, Handle, First_Line, Last_Line);
             Res := Get_C_String (Handle);
             Len := Get_Length (Handle);
             Simple_IO.Put (Res (1 .. Len));

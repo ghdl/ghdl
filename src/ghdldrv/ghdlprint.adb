@@ -962,6 +962,8 @@ package body Ghdlprint is
       Flag_Sem : Boolean := True;
       Flag_Format : Boolean := False;
       Flag_Indent : Boolean := False;
+      First_Line : Positive := 1;
+      Last_Line : Positive := Positive'Last;
    end record;
    function Decode_Command (Cmd : Command_Reprint; Name : String)
                            return Boolean;
@@ -991,7 +993,9 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Reprint;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res) is
+                            Res : out Option_Res)
+   is
+      pragma Assert (Option'First = 1);
    begin
       if Option = "--no-sem" then
          Cmd.Flag_Sem := False;
@@ -1004,6 +1008,28 @@ package body Ghdlprint is
          Cmd.Flag_Format := False;
          Cmd.Flag_Indent := True;
          Res := Option_Ok;
+      elsif Option'Length > 8 and then Option (1 .. 8) = "--range=" then
+         declare
+            F : constant Natural := 9;
+            L : constant Natural := Option'Last;
+            Colon : constant Natural := Index (Option (F .. L), ':');
+         begin
+            if Colon = 0 then
+               Cmd.First_Line := Positive'Value (Option (F .. L));
+               Cmd.Last_Line := Cmd.First_Line;
+            else
+               if Colon > 9 then
+                  Cmd.First_Line := Positive'Value (Option (F .. Colon - 1));
+               end if;
+               if Colon < Option'Last then
+                  Cmd.Last_Line := Positive'Value (Option (Colon + 1 .. L));
+               end if;
+            end if;
+            Res := Option_Ok;
+         exception
+            when Constraint_Error =>
+               Res := Option_Err;
+         end;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
@@ -1075,7 +1101,8 @@ package body Ghdlprint is
          if Cmd.Flag_Format then
             Vhdl.Formatters.Format (Design_File);
          elsif Cmd.Flag_Indent then
-            Vhdl.Formatters.Indent (Design_File);
+            Vhdl.Formatters.Indent (Design_File,
+                                    Cmd.First_Line, Cmd.Last_Line);
          end if;
       end loop;
    end Perform_Action;

@@ -263,6 +263,16 @@ package body Ghdlmain is
       Report_Msg (Msgid_Warning, Option, No_Source_Coord, Msg);
    end Warning;
 
+   function Index (Str : String; C : Character) return Natural is
+   begin
+      for I in Str'Range loop
+         if Str (I) = C then
+            return I;
+         end if;
+      end loop;
+      return 0;
+   end Index;
+
    procedure Main
    is
       use Ada.Command_Line;

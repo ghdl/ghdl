@@ -25,11 +25,17 @@ package Vhdl.Formatters is
    procedure Format (F : Iir_Design_File);
 
    --  Reindent the file.
-   procedure Indent (F : Iir_Design_File);
+   procedure Indent (F : Iir_Design_File;
+                     First_Line : Positive := 1;
+                     Last_Line : Positive := Positive'Last);
 
    type Vstring_Acc is access Grt.Vstrings.Vstring;
 
-   procedure Indent_String (F : Iir_Design_File; Handle : Vstring_Acc);
+   --  Reindent all lines of F between [First_Line; Last_Line] to HANDLE.
+   procedure Indent_String (F : Iir_Design_File;
+                            Handle : Vstring_Acc;
+                            First_Line : Positive := 1;
+                            Last_Line : Positive := Positive'Last);
 
    function Allocate_Handle return Vstring_Acc;
    function Get_Length (Handle : Vstring_Acc) return Natural;
