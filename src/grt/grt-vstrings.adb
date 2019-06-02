@@ -23,7 +23,6 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-with Grt.Errors; use Grt.Errors;
 with Grt.C; use Grt.C;
 
 package body Grt.Vstrings is
@@ -60,7 +59,8 @@ package body Grt.Vstrings is
       Vstr.Str := To_Ghdl_C_String
         (Realloc (To_Address (Vstr.Str), size_t (Nmax)));
       if Vstr.Str = null then
-         Internal_Error ("grt.vstrings.grow: memory exhausted");
+         --  Memory exhausted.
+         raise Storage_Error;
       end if;
       Vstr.Max := Nmax;
    end Grow;
@@ -97,7 +97,8 @@ package body Grt.Vstrings is
    procedure Truncate (Vstr : in out Vstring; Len : Natural) is
    begin
       if Len > Vstr.Len then
-         Internal_Error ("grt.vstrings.truncate: bad len");
+         --  Incorrect length.
+         raise Constraint_Error;
       end if;
       Vstr.Len := Len;
    end Truncate;
