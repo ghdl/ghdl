@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Grt.Vstrings;
+with Grt.Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Formatters is
@@ -24,4 +26,14 @@ package Vhdl.Formatters is
 
    --  Reindent the file.
    procedure Indent (F : Iir_Design_File);
+
+   type Vstring_Acc is access Grt.Vstrings.Vstring;
+
+   procedure Indent_String (F : Iir_Design_File; Handle : Vstring_Acc);
+
+   function Allocate_Handle return Vstring_Acc;
+   function Get_Length (Handle : Vstring_Acc) return Natural;
+   function Get_C_String (Handle : Vstring_Acc)
+                         return Grt.Types.Ghdl_C_String;
+   procedure Free (Handle : Vstring_Acc);
 end Vhdl.Formatters;

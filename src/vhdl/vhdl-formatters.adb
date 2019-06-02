@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Files_Map;
 with Simple_IO;
@@ -57,13 +58,7 @@ package body Vhdl.Formatters is
    end Check_Token;
 
    package Format_Disp_Ctxt is
-      type Format_Ctxt is new Disp_Ctxt with record
-         Vnum : Natural;
-         Hnum : Natural;
-         Prev_Tok : Token_Type;
-         Sfe : Source_File_Entry;
-         Source : File_Buffer_Acc;
-      end record;
+      type Format_Ctxt is new Disp_Ctxt with private;
 
       procedure Init (Ctxt : out Format_Ctxt; Sfe : Source_File_Entry);
       procedure Start_Hbox (Ctxt : in out Format_Ctxt);
@@ -75,6 +70,14 @@ package body Vhdl.Formatters is
       procedure Disp_Char (Ctxt : in out Format_Ctxt; C : Character);
       procedure Close_Lit (Ctxt : in out Format_Ctxt);
    private
+      type Format_Ctxt is new Disp_Ctxt with record
+         Vnum : Natural;
+         Hnum : Natural;
+         Prev_Tok : Token_Type;
+         Sfe : Source_File_Entry;
+         Source : File_Buffer_Acc;
+      end record;
+
       procedure Disp_Newline (Ctxt : in out Format_Ctxt);
       procedure Disp_Indent (Ctxt : in out Format_Ctxt);
       procedure Put (Ctxt : in out Format_Ctxt; C : Character);
@@ -264,7 +267,6 @@ package body Vhdl.Formatters is
          Vnum : Natural;
          Hnum : Natural;
          Hfirst : Boolean;  --  First token in the hbox.
-         Prev_Tok : Token_Type;
          Last_Tok : Source_Ptr;
          Col : Natural;
          Sfe : Source_File_Entry;
@@ -280,6 +282,7 @@ package body Vhdl.Formatters is
       procedure Start_Lit (Ctxt : in out Indent_Ctxt; Tok : Token_Type);
       procedure Disp_Char (Ctxt : in out Indent_Ctxt; C : Character) is null;
       procedure Close_Lit (Ctxt : in out Indent_Ctxt) is null;
+      procedure Put (Ctxt : in out Indent_Ctxt; C : Character);
    private
       procedure Sync (Ctxt : in out Indent_Ctxt; Tok : Token_Type);
    end Indent_Disp_Ctxt;
@@ -290,12 +293,24 @@ package body Vhdl.Formatters is
          Ctxt := (Vnum => 0,
                   Hnum => 0,
                   Hfirst => False,
-                  Prev_Tok => Tok_Newline,
                   Last_Tok => Source_Ptr_Org,
                   Col => 0,
                   Sfe => Sfe,
                   Source => Files_Map.Get_File_Source (Sfe));
+
+         Scanner.Flag_Comment := True;
+         Scanner.Flag_Newline := True;
+
+         Set_File (Sfe);
+         Scan;
       end Init;
+
+      procedure Put (Ctxt : in out Indent_Ctxt; C : Character)
+      is
+         pragma Unreferenced (Ctxt);
+      begin
+         Simple_IO.Put (C);
+      end Put;
 
       procedure Disp_Spaces (Ctxt : in out Indent_Ctxt)
       is
@@ -312,8 +327,8 @@ package body Vhdl.Formatters is
             if Ctxt.Hnum > 0 and not Ctxt.Hfirst then
                Indent := Indent + 1;
             end if;
-            for I in 1 .. Indent loop
-               Simple_IO.Put ("  ");
+            for I in 1 .. 2 * Indent loop
+               Put (Indent_Ctxt'Class (Ctxt), ' ');
             end loop;
             Ctxt.Col := 2 * Indent;
          else
@@ -326,11 +341,11 @@ package body Vhdl.Formatters is
                   N_Col := Ctxt.Col + Tab_Stop;
                   N_Col := N_Col - N_Col mod Tab_Stop;
                   while Ctxt.Col < N_Col loop
-                     Simple_IO.Put (' ');
+                     Put (Indent_Ctxt'Class (Ctxt), ' ');
                      Ctxt.Col := Ctxt.Col + 1;
                   end loop;
                else
-                  Simple_IO.Put (' ');
+                  Put (Indent_Ctxt'Class (Ctxt), ' ');
                   Ctxt.Col := Ctxt.Col + 1;
                end if;
                P := P + 1;
@@ -346,7 +361,7 @@ package body Vhdl.Formatters is
       begin
          P := Get_Token_Position;
          while P < Aft_Tok loop
-            Simple_IO.Put (Ctxt.Source (P));
+            Put (Indent_Ctxt'Class (Ctxt), Ctxt.Source (P));
             Ctxt.Col := Ctxt.Col + 1;
             P := P + 1;
          end loop;
@@ -359,7 +374,7 @@ package body Vhdl.Formatters is
                when Tok_Eof =>
                   raise Internal_Error;
                when Tok_Newline =>
-                  Simple_IO.New_Line;
+                  Put (Indent_Ctxt'Class (Ctxt), ASCII.LF);
                   Ctxt.Col := 0;
                when Tok_Line_Comment
                  | Tok_Block_Comment =>
@@ -426,19 +441,101 @@ package body Vhdl.Formatters is
       end Start_Lit;
    end Indent_Disp_Ctxt;
 
-   procedure Indent (F : Iir_Design_File)
-   is
-      use Indent_Disp_Ctxt;
-      Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
-      Ctxt : Indent_Ctxt;
+   package Indent_Vstrings_Ctxt is
+      use Grt.Vstrings;
+      use Grt.Types;
+
+      type Vstring_Ctxt is new Indent_Disp_Ctxt.Indent_Ctxt with private;
+
+      procedure Init (Ctxt : out Vstring_Ctxt;
+                      Handle : Vstring_Acc;
+                      Sfe : Source_File_Entry);
+      procedure Put (Ctxt : in out Vstring_Ctxt; C : Character);
+   private
+      type Vstring_Ctxt is new Indent_Disp_Ctxt.Indent_Ctxt with record
+         Hand : Vstring_Acc;
+      end record;
+   end Indent_Vstrings_Ctxt;
+
+   package body Indent_Vstrings_Ctxt is
+      procedure Init (Ctxt : out Vstring_Ctxt;
+                      Handle : Vstring_Acc;
+                      Sfe : Source_File_Entry) is
+      begin
+         Indent_Disp_Ctxt.Init (Indent_Disp_Ctxt.Indent_Ctxt (Ctxt), Sfe);
+         Ctxt.Hand := Handle;
+      end Init;
+
+      procedure Put (Ctxt : in out Vstring_Ctxt; C : Character) is
+      begin
+         Append (Ctxt.Hand.all, C);
+      end Put;
+   end Indent_Vstrings_Ctxt;
+
+   function Allocate_Handle return Vstring_Acc is
    begin
-      Scanner.Flag_Comment := True;
-      Scanner.Flag_Newline := True;
+      return new Grt.Vstrings.Vstring;
+   end Allocate_Handle;
 
-      Set_File (Sfe);
-      Scan;
+   function Get_Length (Handle : Vstring_Acc) return Natural is
+   begin
+      return Grt.Vstrings.Length (Handle.all);
+   end Get_Length;
 
-      Init (Ctxt, Sfe);
+   function Get_C_String (Handle : Vstring_Acc)
+                         return Grt.Types.Ghdl_C_String is
+   begin
+      return Grt.Vstrings.Get_C_String (Handle.all);
+   end Get_C_String;
+
+   procedure Free (Handle : Vstring_Acc)
+   is
+      procedure Deallocate is new Ada.Unchecked_Deallocation
+        (Grt.Vstrings.Vstring, Vstring_Acc);
+      Handle1 : Vstring_Acc;
+   begin
+      Grt.Vstrings.Free (Handle.all);
+      Handle1 := Handle;
+      Deallocate (Handle1);
+   end Free;
+
+   procedure Indent_String (F : Iir_Design_File; Handle : Vstring_Acc)
+   is
+      use Indent_Vstrings_Ctxt;
+      Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
+      Ctxt : Vstring_Ctxt;
+   begin
+      Init (Ctxt, Handle, Sfe);
       Prints.Disp_Vhdl (Ctxt, F);
+   end Indent_String;
+
+   procedure Indent (F : Iir_Design_File) is
+   begin
+      if False then
+         declare
+            use Indent_Disp_Ctxt;
+            Sfe : constant Source_File_Entry := Get_Design_File_Source (F);
+            Ctxt : Indent_Ctxt;
+         begin
+            Init (Ctxt, Sfe);
+            Prints.Disp_Vhdl (Ctxt, F);
+         end;
+      else
+         declare
+            use Grt.Types;
+            Handle : Vstring_Acc;
+            Res : Ghdl_C_String;
+            Len : Natural;
+         begin
+            Handle := Allocate_Handle;
+            Indent_String (F, Handle);
+            Res := Get_C_String (Handle);
+            Len := Get_Length (Handle);
+            Simple_IO.Put (Res (1 .. Len));
+            Free (Handle);
+         end;
+      end if;
    end Indent;
+
+
 end Vhdl.Formatters;
