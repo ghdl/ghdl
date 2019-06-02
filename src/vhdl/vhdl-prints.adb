@@ -2302,15 +2302,16 @@ package body Vhdl.Prints is
       Expr : Iir;
    begin
       Cond_Wf := Chain;
-      while Cond_Wf /= Null_Iir loop
+      loop
          Disp_Waveform (Ctxt, Get_Waveform_Chain (Cond_Wf));
          Expr := Get_Condition (Cond_Wf);
          if Expr /= Null_Iir then
             Disp_Token (Ctxt, Tok_When);
             Print (Ctxt, Expr);
-            Disp_Token (Ctxt, Tok_Else);
          end if;
          Cond_Wf := Get_Chain (Cond_Wf);
+         exit when Cond_Wf = Null_Iir;
+         Disp_Token (Ctxt, Tok_Else);
       end loop;
    end Disp_Conditional_Waveform;
 
