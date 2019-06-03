@@ -373,6 +373,35 @@ package body Files_Map.Editor is
                     Text_Ptr (0 .. Text_Len - 1));
    end Replace_Text_Ptr;
 
+   procedure Fill_Text_Ptr (File : Source_File_Entry;
+                            Text_Ptr   : File_Buffer_Ptr;
+                            Text_Len   : Source_Ptr)
+   is
+      pragma Assert (File <= Source_Files.Last);
+      F : Source_File_Record renames Source_Files.Table (File);
+      Buf_Len : constant Source_Ptr := Get_Buffer_Length (File);
+   begin
+      if Text_Len + 2 > Buf_Len then
+         raise Constraint_Error;
+      end if;
+
+      if Text_Len > 0 then
+         F.Source (Source_Ptr_Org .. Source_Ptr_Org + Text_Len - 1) :=
+           Text_Ptr (Source_Ptr_Org .. Source_Ptr_Org + Text_Len - 1);
+      end if;
+      Set_File_Length (File, Text_Len);
+      Set_Gap (File, Text_Len + 2, Buf_Len - 1);
+
+      --  Clear cache.
+      F.Cache_Line := 1;
+      F.Cache_Pos := Source_Ptr_Org;
+
+      --  Reset line table.
+      Lines_Tables.Free (F.Lines);
+      Lines_Tables.Init (F.Lines);
+      File_Add_Line_Number (File, 1, Source_Ptr_Org);
+   end Fill_Text_Ptr;
+
    procedure Set_Gap (File : Source_File_Entry;
                       First : Source_Ptr;
                       Last : Source_Ptr)

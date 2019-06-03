@@ -32,10 +32,10 @@ package Files_Map.Editor is
                                Text_Ptr   : File_Buffer_Ptr;
                                Text_Len   : Source_Ptr);
 
-   --  Set the position of the GAP in FILE.
-   procedure Set_Gap (File : Source_File_Entry;
-                      First : Source_Ptr;
-                      Last : Source_Ptr);
+   --  Replace the content of FILE with TEXT.
+   procedure Fill_Text_Ptr (File : Source_File_Entry;
+                            Text_Ptr   : File_Buffer_Ptr;
+                            Text_Len   : Source_Ptr);
 
    --  Recompute lines number.
    procedure Compute_Lines (File : Source_File_Entry);
