@@ -471,7 +471,6 @@ package body Vhdl.Formatters is
 
    package Indent_Vstrings_Ctxt is
       use Grt.Vstrings;
-      use Grt.Types;
 
       type Vstring_Ctxt is new Indent_Disp_Ctxt.Indent_Ctxt with private;
 
