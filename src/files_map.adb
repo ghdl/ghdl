@@ -717,7 +717,7 @@ package body Files_Map is
          --  Read_Source_File call must follow its Create_Source_File.
          pragma Assert (F.First_Location = Next_Location);
 
-         F.Last_Location := Next_Location + Location_Type (Length) + 1;
+         F.Last_Location := Next_Location + Location_Type (Length) - 1;
          Next_Location := F.Last_Location + 1;
       end;
 
@@ -897,12 +897,19 @@ package body Files_Map is
       end;
    end Set_File_Length;
 
-   --  Return the length of the file (which is the size of the file buffer).
    function Get_File_Length (File: Source_File_Entry) return Source_Ptr is
    begin
       Check_File (File);
       return Source_Files.Table (File).File_Length;
    end Get_File_Length;
+
+   function Get_Buffer_Length (File : Source_File_Entry) return Source_Ptr
+   is
+      pragma Assert (File <= Source_Files.Last);
+      F : Source_File_Record renames Source_Files.Table (File);
+   begin
+      return Source_Ptr (F.Last_Location - F.First_Location - 1);
+   end Get_Buffer_Length;
 
    --  Return the name of the file.
    function Get_File_Name (File: Source_File_Entry) return Name_Id is

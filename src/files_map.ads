@@ -106,6 +106,9 @@ package Files_Map is
    procedure Set_File_Length (File : Source_File_Entry; Length : Source_Ptr);
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
 
+   --  Get the length of the buffer, which includes the gap.
+   function Get_Buffer_Length (File : Source_File_Entry) return Source_Ptr;
+
    --  Return the name of the file.
    function Get_File_Name (File : Source_File_Entry) return Name_Id;
 
