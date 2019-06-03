@@ -24,8 +24,6 @@
 --  covered by the GNU Public License.
 
 with Interfaces;
-with Ada.Unchecked_Conversion;
-with Grt.Errors; use Grt.Errors;
 with Grt.Fcvt;
 
 package body Grt.To_Strings is
