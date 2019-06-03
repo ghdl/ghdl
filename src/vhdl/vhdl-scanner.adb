@@ -1006,12 +1006,20 @@ package body Vhdl.Scanner is
    procedure Scan_Identifier (Allow_PSL : Boolean)
    is
       use Name_Table;
-      Buffer : String (1 .. Max_Name_Length);
+      --  Local copy for speed-up.
+      Source : constant File_Buffer_Acc := Current_Context.Source;
+      P : Source_Ptr;
+
+      --  Current and next character.
       C : Character;
+
+      Buffer : String (1 .. Max_Name_Length);
       Len : Natural;
    begin
       -- This is an identifier or a key word.
       Len := 0;
+      P := Pos;
+
       loop
          --  Source (pos) is correct.
          --  LRM93 13.3.1
@@ -1025,7 +1033,7 @@ package body Vhdl.Scanner is
          --  equivalent lower case letters.
          --  The opposite (converting to upper lower case letters) is not
          --  possible because two characters have no upper-case equivalent.
-         C := Source (Pos);
+         C := Source (P);
          case C is
             when 'A' .. 'Z' =>
                C := Character'Val
@@ -1034,7 +1042,7 @@ package body Vhdl.Scanner is
             when 'a' .. 'z' | '0' .. '9' =>
                null;
             when '_' =>
-               if Source (Pos + 1) = '_' then
+               if Source (P + 1) = '_' then
                   Error_Msg_Scan ("two underscores can't be consecutive");
                end if;
             when ' ' | ')' | '.' | ';' | ':' =>
@@ -1072,14 +1080,14 @@ package body Vhdl.Scanner is
          end if;
 
          --  Next character.
-         Pos := Pos + 1;
+         P := P + 1;
       end loop;
 
-      if Source (Pos - 1) = '_' then
+      if Source (P - 1) = '_' then
          if Allow_PSL then
             --  Some PSL reserved words finish with '_'.  This case is handled
             --  later by Scan_Underscore and Scan_Exclam_Mark.
-            Pos := Pos - 1;
+            P := P - 1;
             Len := Len - 1;
             C := '_';
          else
@@ -1087,6 +1095,9 @@ package body Vhdl.Scanner is
             Error_Msg_Scan ("an identifier cannot finish with '_'");
          end if;
       end if;
+
+      --  Update position in the scan context.
+      Pos := P;
 
       -- LRM93 13.2
       -- At least one separator is required between an identifier or an
