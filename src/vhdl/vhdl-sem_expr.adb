@@ -4968,12 +4968,14 @@ package body Vhdl.Sem_Expr is
       if Res /= Null_Iir and then Is_Overloaded (Res) then
          --  FIXME: clarify between overload and not determinable from the
          --  context.
-         Report_Start_Group;
-         Error_Overload (Expr);
-         if Get_Type (Res) /= Null_Iir then
-            Disp_Overload_List (Get_Overload_List (Get_Type (Res)), Expr);
+         if not Is_Error (Expr) then
+            Report_Start_Group;
+            Error_Overload (Expr);
+            if Get_Type (Res) /= Null_Iir then
+               Disp_Overload_List (Get_Overload_List (Get_Type (Res)), Expr);
+            end if;
+            Report_End_Group;
          end if;
-         Report_End_Group;
          return Null_Iir;
       end if;
       return Res;
