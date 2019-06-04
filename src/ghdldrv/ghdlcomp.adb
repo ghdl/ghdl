@@ -61,9 +61,6 @@ package body Ghdlcomp is
       elsif Option = "--check-ast" then
          Flags.Check_Ast_Level := Flags.Check_Ast_Level + 1;
          Res := Option_Ok;
-      elsif Option = "--force-analysis" then
-         Cmd.Flag_Force_Analysis := True;
-         Res := Option_Ok;
       elsif Hooks.Decode_Option.all (Option) then
          Res := Option_Ok;
       elsif Option'Length > 18

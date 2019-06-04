@@ -417,8 +417,7 @@ package body Ghdldrv is
         & Get_Object_Suffix.all;
    end Get_Object_Filename;
 
-   procedure Add_Argument (Inst : in out Instance; Arg : String_Access)
-   is
+   procedure Add_Argument (Inst : in out Instance; Arg : String_Access) is
    begin
       Increment_Last (Inst);
       Inst.Table (Last (Inst)) := Arg;

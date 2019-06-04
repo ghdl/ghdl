@@ -142,6 +142,8 @@ package body Options is
          end;
       elsif Opt = "-C" or else Opt = "--mb-comments" then
          Mb_Comment := True;
+      elsif Opt = "--force-analysis" then
+         Flag_Force_Analysis := True;
       elsif Opt = "-fcaret-diagnostics" then
          Flag_Caret_Diagnostics := True;
       elsif Opt = "-fno-caret-diagnostics" then
