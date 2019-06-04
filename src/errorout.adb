@@ -208,9 +208,9 @@ package body Errorout is
                        No_Source_File_Entry, 0, 0, 0));
             Report_Handler.Message ("error limit reached");
             Report_Handler.Message_End.all;
-         else
-            Nbr_Errors := Nbr_Errors + 1;
          end if;
+
+         Nbr_Errors := Nbr_Errors + 1;
       end if;
 
       --  Limit the number of errors.
