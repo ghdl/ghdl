@@ -3601,6 +3601,16 @@ package body Vhdl.Prints is
          when Iir_Kind_Signature =>
             Disp_Signature (Ctxt, Expr);
 
+         when Iir_Kind_Error =>
+            declare
+               Orig : constant Iir := Get_Error_Origin (Expr);
+            begin
+               if Orig /= Null_Iir then
+                  Print (Ctxt, Orig);
+               else
+                  Error_Kind ("print/error", Expr);
+               end if;
+            end;
          when others =>
             Error_Kind ("print", Expr);
       end case;
