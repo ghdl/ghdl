@@ -1116,6 +1116,10 @@ package body Vhdl.Sem_Specs is
                Arch_Unit : Iir;
             begin
                --  The entity.
+               Entity_Name := Get_Entity_Name (Aspect);
+               if Is_Error (Entity_Name) then
+                  return Null_Iir;
+               end if;
                Entity_Name := Sem_Denoting_Name (Get_Entity_Name (Aspect));
                Set_Entity_Name (Aspect, Entity_Name);
                Entity := Get_Named_Entity (Entity_Name);
