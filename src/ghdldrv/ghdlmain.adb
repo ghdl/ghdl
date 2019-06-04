@@ -296,6 +296,11 @@ package body Ghdlmain is
       for I in Args'Range loop
          Args (I) := new String'(Argument (I));
          pragma Assert (Args (I)'First = 1);
+         if Args (I)'Last < 1 then
+            Error ("empty argument on the command line (#"
+                     & Natural'Image (I) & ")");
+            raise Option_Error;
+         end if;
       end loop;
 
       --  Expand response files
