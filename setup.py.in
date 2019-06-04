@@ -9,6 +9,12 @@ import os.path
 
 so_ext = "@SOEXT@"
 libghdl_version = "@libghdl_version@"
+ghdl_version = "@ghdl_version@"
+
+long_description = """GHDL is a vhdl simulator and libghdl provides a low-level
+interface to the parser. This library gives access to the AST so that you can
+write tools like linters.
+"""
 
 class GHDLBuild(build):
     def my_copy_tree(self, src, dst):
@@ -38,11 +44,13 @@ class GHDLBuild(build):
                           os.path.join(dstdir, "ghdl"))
 
 setup (name='libghdl',
-       version=libghdl_version,
+       version=ghdl_version,
        description = 'Interface to ghdl, a VHDL analyzer',
+       long_description = long_description,
        author = 'Tristan Gingold',
        author_email = 'tgingold@free.fr',
-       url = 'github.com/ghdl/ghdl',
+       url = 'http://github.com/ghdl/ghdl',
+       license = 'GPL-2.0-or-later',
        package_dir = {'libghdl' : 'src/vhdl/python/libghdl'},
        packages = ['libghdl', 'libghdl.thin', 'libghdl.thin.vhdl'],
        cmdclass = {
