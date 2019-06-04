@@ -38,7 +38,7 @@ fi
 analyze ()
 {
    echo "analyze $@"
-   "$GHDL" -a $GHDL_STD_FLAGS $GHDL_FLAGS $@
+   "$GHDL" -a $GHDL_STD_FLAGS $GHDL_FLAGS "$@"
 }
 
 # Analyze files (failure expected)
@@ -46,7 +46,7 @@ analyze_failure ()
 {
    echo "try to analyze $@"
    # for arg in $@; do echo "arg: $arg"; done
-   if ! "$GHDL" -a --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $@ ; then
+   if ! "$GHDL" -a --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS "$@" ; then
      echo "Failure expected"
      return 1
    fi
