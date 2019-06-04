@@ -702,28 +702,27 @@ package body Ghdllocal is
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
          Design_File := Vhdl.Sem_Lib.Load_File_Name (Id);
-         if Design_File /= Null_Iir then
-            Unit := Get_First_Design_Unit (Design_File);
-            while Unit /= Null_Iir loop
-               if Flag_Verbose then
-                  Lib := Get_Library_Unit (Unit);
-                  Disp_Library_Unit (Lib);
-                  if Is_Top_Entity (Lib) then
-                     Put (" **");
-                  end if;
-                  New_Line;
-               end if;
-               Next_Unit := Get_Chain (Unit);
-               Set_Chain (Unit, Null_Iir);
-               Libraries.Add_Design_Unit_Into_Library (Unit);
-               Unit := Next_Unit;
-            end loop;
-         end if;
-      end loop;
 
-      if Nbr_Errors > 0 then
-         raise Compilation_Error;
-      end if;
+         if Nbr_Errors > 0 then
+            raise Compilation_Error;
+         end if;
+
+         Unit := Get_First_Design_Unit (Design_File);
+         while Unit /= Null_Iir loop
+            if Flag_Verbose then
+               Lib := Get_Library_Unit (Unit);
+               Disp_Library_Unit (Lib);
+               if Is_Top_Entity (Lib) then
+                  Put (" **");
+               end if;
+               New_Line;
+            end if;
+            Next_Unit := Get_Chain (Unit);
+            Set_Chain (Unit, Null_Iir);
+            Libraries.Add_Design_Unit_Into_Library (Unit);
+            Unit := Next_Unit;
+         end loop;
+      end loop;
 
       --  Analyze all files.
       if False then
