@@ -41,5 +41,5 @@ package Vhdl.Formatters is
    function Get_Length (Handle : Vstring_Acc) return Natural;
    function Get_C_String (Handle : Vstring_Acc)
                          return Grt.Types.Ghdl_C_String;
-   procedure Free (Handle : Vstring_Acc);
+   procedure Free_Handle (Handle : Vstring_Acc);
 end Vhdl.Formatters;

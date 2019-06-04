@@ -21,8 +21,10 @@ with Ghdllocal;
 with Ghdlcomp;
 with Errorout.Memory;
 with Files_Map.Editor;
+with Vhdl.Formatters;
 pragma Unreferenced (Errorout.Memory);  --  At least from Ada code.
 pragma Unreferenced (Files_Map.Editor);
+pragma Unreferenced (Vhdl.Formatters);
 
 package body Libghdl is
    function Set_Option (Opt : Thin_String_Ptr; Len : Natural) return Integer is

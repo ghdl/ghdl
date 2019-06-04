@@ -260,6 +260,9 @@ package body Vhdl.Formatters is
 
       Init (Ctxt, Sfe);
       Prints.Disp_Vhdl (Ctxt, F);
+      Close_File;
+      Scanner.Flag_Comment := False;
+      Scanner.Flag_Newline := False;
    end Format;
 
    package Indent_Disp_Ctxt is
@@ -520,7 +523,7 @@ package body Vhdl.Formatters is
       return Grt.Vstrings.Get_C_String (Handle.all);
    end Get_C_String;
 
-   procedure Free (Handle : Vstring_Acc)
+   procedure Free_Handle (Handle : Vstring_Acc)
    is
       procedure Deallocate is new Ada.Unchecked_Deallocation
         (Grt.Vstrings.Vstring, Vstring_Acc);
@@ -529,7 +532,7 @@ package body Vhdl.Formatters is
       Grt.Vstrings.Free (Handle.all);
       Handle1 := Handle;
       Deallocate (Handle1);
-   end Free;
+   end Free_Handle;
 
    procedure Indent_String (F : Iir_Design_File;
                             Handle : Vstring_Acc;
@@ -542,6 +545,10 @@ package body Vhdl.Formatters is
    begin
       Init (Ctxt, Handle, Sfe, First_Line, Last_Line);
       Prints.Disp_Vhdl (Ctxt, F);
+
+      Close_File;
+      Scanner.Flag_Comment := False;
+      Scanner.Flag_Newline := False;
    end Indent_String;
 
    procedure Indent (F : Iir_Design_File;
@@ -570,10 +577,8 @@ package body Vhdl.Formatters is
             Res := Get_C_String (Handle);
             Len := Get_Length (Handle);
             Simple_IO.Put (Res (1 .. Len));
-            Free (Handle);
+            Free_Handle (Handle);
          end;
       end if;
    end Indent;
-
-
 end Vhdl.Formatters;
