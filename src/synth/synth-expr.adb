@@ -479,6 +479,17 @@ package body Synth.Expr is
                                 Synth_Uresize (Right, Get_Width (Left))),
                   Create_Res_Range (Left, L));
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
+            --  "-" (Unsigned, Natural)
+            declare
+               L : constant Net := Get_Net (Left);
+            begin
+               return Create_Value_Net
+                 (Build_Dyadic (Build_Context, Id_Sub,
+                                L,
+                                Synth_Uresize (Right, Get_Width (Left))),
+                  Create_Res_Range (Left, L));
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             --  "=" (Unsigned, Natural)
             return Create_Value_Net
