@@ -37,10 +37,7 @@ package body Ghdlcomp is
    Flag_Expect_Failure : Boolean := False;
 
    --  Commands which use the mcode compiler.
-   type Command_Comp is abstract new Command_Lib with record
-      --  If set, force semantic analysis even in case of parse error.
-      Flag_Force_Analysis : Boolean := False;
-   end record;
+   type Command_Comp is abstract new Command_Lib with null record;
 
    procedure Decode_Option (Cmd : in out Command_Comp;
                             Option : String;
@@ -383,6 +380,7 @@ package body Ghdlcomp is
                              Args : Argument_List)
    is
       use Types;
+      pragma Unreferenced (Cmd);
       Id : Name_Id;
       Design_File : Iir_Design_File;
       New_Design_File : Iir_Design_File;
@@ -396,9 +394,6 @@ package body Ghdlcomp is
 
       Hooks.Compile_Init.all (True);
 
-      --  Analysis won't chock on incorrect parse tree.
-      Flags.Flag_Force_Analysis := Cmd.Flag_Force_Analysis;
-
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
@@ -406,7 +401,7 @@ package body Ghdlcomp is
          --  Parse file.
          Design_File := Load_File_Name (Id);
          if Errorout.Nbr_Errors > 0
-           and then not Cmd.Flag_Force_Analysis
+           and then not Flags.Flag_Force_Analysis
          then
             raise Compilation_Error;
          end if;
@@ -428,7 +423,7 @@ package body Ghdlcomp is
                Next_Unit := Get_Chain (Unit);
 
                if Errorout.Nbr_Errors = 0
-                 or else (Cmd.Flag_Force_Analysis
+                 or else (Flags.Flag_Force_Analysis
                             and then Get_Library_Unit (Unit) /= Null_Iir)
                then
                   Set_Chain (Unit, Null_Iir);
@@ -440,7 +435,7 @@ package body Ghdlcomp is
             end loop;
 
             if Errorout.Nbr_Errors > 0
-              and then not Cmd.Flag_Force_Analysis
+              and then not Flags.Flag_Force_Analysis
             then
                raise Compilation_Error;
             end if;
@@ -462,7 +457,7 @@ package body Ghdlcomp is
                end loop;
 
                if Errorout.Nbr_Errors > 0
-                 and then not Cmd.Flag_Force_Analysis
+                 and then not Flags.Flag_Force_Analysis
                then
                   raise Compilation_Error;
                end if;
