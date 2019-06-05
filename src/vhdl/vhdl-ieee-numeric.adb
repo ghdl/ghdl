@@ -52,6 +52,24 @@ package body Vhdl.Ieee.Numeric is
         (others =>
            (others => Iir_Predefined_None)));
 
+   Sub_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
    Eq_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned =>
@@ -221,6 +239,8 @@ package body Vhdl.Ieee.Numeric is
                   case Get_Identifier (Decl) is
                      when Name_Op_Plus =>
                         Handle_Binary (Add_Patterns);
+                     when Name_Op_Minus =>
+                        Handle_Binary (Sub_Patterns);
                      when Name_Op_Equality =>
                         Handle_Binary (Eq_Patterns);
                      when Name_To_Bstring
