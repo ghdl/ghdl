@@ -880,6 +880,9 @@ package body Vhdl.Errors is
    is
       Decl : Iir;
    begin
+      if Is_Error (Def) then
+         return "an erroneous type";
+      end if;
       Decl := Get_Type_Declarator (Def);
       if Decl /= Null_Iir then
          return Image_Identifier (Decl);
