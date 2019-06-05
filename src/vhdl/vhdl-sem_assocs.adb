@@ -402,6 +402,15 @@ package body Vhdl.Sem_Assocs is
                      Error_Kind
                        ("check_subprogram_association(3)", Formal_Inter);
                end case;
+
+               case Get_Kind (Prefix) is
+                  when Iir_Kind_Signal_Declaration
+                    | Iir_Kind_Variable_Declaration =>
+                     Set_Use_Flag (Prefix, True);
+                  when others =>
+                     null;
+               end case;
+
             when Iir_Kind_Association_Element_By_Individual =>
                null;
             when others =>

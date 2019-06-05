@@ -90,9 +90,6 @@ package Vhdl.Sem_Expr is
    --  Check EXPR can be read.
    procedure Check_Read (Expr : Iir);
 
-   --  Check EXPR can be updated.
-   procedure Check_Update (Expr : Iir);
-
    -- For a procedure call, A_TYPE must be null.
    function Sem_Subprogram_Call (Expr: Iir; A_Type: Iir) return Iir;
 

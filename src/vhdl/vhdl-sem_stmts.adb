@@ -332,6 +332,7 @@ package body Vhdl.Sem_Stmts is
             end if;
          when Iir_Kind_Signal_Declaration =>
             Sem_Add_Driver (Target_Object, Stmt);
+            Set_Use_Flag (Target_Prefix, True);
          when Iir_Kind_Guard_Signal_Declaration =>
             Error_Msg_Sem (+Stmt, "implicit GUARD signal cannot be assigned");
             return;
@@ -399,7 +400,7 @@ package body Vhdl.Sem_Stmts is
                return;
             end if;
          when Iir_Kind_Variable_Declaration =>
-            null;
+            Set_Use_Flag (Target_Prefix, True);
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference  =>
             --  LRM 3.3

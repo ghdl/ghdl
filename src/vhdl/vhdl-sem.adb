@@ -545,16 +545,21 @@ package body Vhdl.Sem is
                Check_Port_Association_Bounds_Restrictions
                  (Formal, Actual, Assoc);
                Prefix := Get_Object_Prefix (Object);
-               if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
-               then
-                  declare
-                     P : Boolean;
-                     pragma Unreferenced (P);
-                  begin
-                     P := Check_Port_Association_Mode_Restrictions
-                       (Formal_Base, Prefix, Assoc);
-                  end;
-               end if;
+               case Get_Kind (Prefix) is
+                  when Iir_Kind_Interface_Signal_Declaration =>
+                     declare
+                        P : Boolean;
+                        pragma Unreferenced (P);
+                     begin
+                        P := Check_Port_Association_Mode_Restrictions
+                          (Formal_Base, Prefix, Assoc);
+                     end;
+                  when Iir_Kind_Signal_Declaration =>
+                     Set_Use_Flag (Prefix, True);
+                  when others =>
+                     --  FIXME: attributes ?
+                     null;
+               end case;
             else
                --  Expression.
                Set_Collapse_Signal_Flag (Assoc, False);
@@ -580,6 +585,10 @@ package body Vhdl.Sem is
                        (+Actual,
                         "actual expression must be globally static");
                   end if;
+
+                  --  Is it possible to have a globally static name that is
+                  --  not readable ?
+                  Check_Read (Actual);
                else
                   Error_Msg_Sem
                     (+Assoc,

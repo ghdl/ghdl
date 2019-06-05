@@ -2227,11 +2227,10 @@ package body Vhdl.Sem_Decls is
             when Iir_Kind_Architecture_Body
               | Iir_Kind_Block_Statement =>
                --  Might be used in a configuration.
-               --  FIXME: create a second level of warning.
-               null;
+               Check_Unused := True;
             when  Iir_Kind_Generate_Statement_Body =>
                --  Might be used in a configuration.
-               null;
+               Check_Unused := True;
             when Iir_Kind_Package_Body
               | Iir_Kind_Protected_Type_Body =>
                --  Check only for declarations of the body.
@@ -2308,6 +2307,12 @@ package body Vhdl.Sem_Decls is
                     and then not Is_Implicit_Subprogram (El)
                     and then not Is_Second_Subprogram_Specification (El)
                   then
+                     Warning_Msg_Sem (Warnid_Unused, +El,
+                                      "%n is never referenced", +El);
+                  end if;
+               when Iir_Kind_Signal_Declaration
+                 | Iir_Kind_Variable_Declaration =>
+                  if not Get_Use_Flag (El) then
                      Warning_Msg_Sem (Warnid_Unused, +El,
                                       "%n is never referenced", +El);
                   end if;

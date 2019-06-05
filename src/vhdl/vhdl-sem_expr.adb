@@ -4242,9 +4242,11 @@ package body Vhdl.Sem_Expr is
       loop
          case Get_Kind (Obj) is
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Constant_Declaration
+              | Iir_Kind_Variable_Declaration =>
+               Set_Use_Flag (Obj, True);
+               return;
+            when Iir_Kind_Constant_Declaration
               | Iir_Kind_Interface_Constant_Declaration
-              | Iir_Kind_Variable_Declaration
               | Iir_Kind_Attribute_Value
               | Iir_Kind_Iterator_Declaration
               | Iir_Kind_Guard_Signal_Declaration =>
@@ -4325,13 +4327,6 @@ package body Vhdl.Sem_Expr is
          end case;
       end loop;
    end Check_Read;
-
-   procedure Check_Update (Expr : Iir)
-   is
-      pragma Unreferenced (Expr);
-   begin
-      null;
-   end Check_Update;
 
    --  Emit an error if the constant EXPR is deferred and cannot be used in
    --  the current context.
