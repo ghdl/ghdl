@@ -602,6 +602,7 @@ package body Std_Names is
       Def ("__FILE__",              Name_Uu_File_Uu);
       Def ("__LINE__",              Name_Uu_Line_Uu);
       Def ("none",                  Name_None);
+      Def ("neg",                   Name_Neg);
 
       Def ("ieee",               Name_Ieee);
       Def ("std_logic_1164",     Name_Std_Logic_1164);

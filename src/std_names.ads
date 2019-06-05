@@ -683,7 +683,8 @@ package Std_Names is
    Name_Uu_File_Uu :            constant Name_Id := Name_First_Misc + 034;
    Name_Uu_Line_Uu :            constant Name_Id := Name_First_Misc + 035;
    Name_None :                  constant Name_Id := Name_First_Misc + 036;
-   Name_Last_Misc :             constant Name_Id := Name_None;
+   Name_Neg :                   constant Name_Id := Name_First_Misc + 037;
+   Name_Last_Misc :             constant Name_Id := Name_Neg;
 
    Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;
    Name_Ieee               : constant Name_Id := Name_First_Ieee + 000;

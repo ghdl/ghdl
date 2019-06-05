@@ -303,6 +303,7 @@ package body Netlists.Builders is
                             Get_Identifier ("mul"), Id_Mul);
 
       Create_Monadic_Module (Design, Res.M_Monadic (Id_Not), Name_Not, Id_Not);
+      Create_Monadic_Module (Design, Res.M_Monadic (Id_Neg), Name_Neg, Id_Neg);
 
       Create_Compare_Module (Design, Res.M_Compare (Id_Eq),
                              Get_Identifier ("eq"), Id_Eq);
