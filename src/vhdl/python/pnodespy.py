@@ -231,6 +231,10 @@ def do_libghdl_tokens():
 
 
 def do_libghdl_errorout():
+    print('from libghdl import libghdl')
+    print("""
+Enable_Warning = libghdl.errorout__enable_warning
+""")
     read_enum("../errorout.ads", "Msgid_Type", "(Msgid|Warnid)_", "Msgid",
               g=lambda m: m.group(1) + '_' + m.group(2))
 

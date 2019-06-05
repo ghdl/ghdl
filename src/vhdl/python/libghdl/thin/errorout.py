@@ -1,3 +1,7 @@
+from libghdl import libghdl
+
+Enable_Warning = libghdl.errorout__enable_warning
+
 
 
 class Msgid:
