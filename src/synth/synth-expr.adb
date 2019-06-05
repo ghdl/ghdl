@@ -526,12 +526,21 @@ package body Synth.Expr is
            (Build_Monadic (Build_Context, Id, Get_Net (Operand)),
             No_Range);
       end Synth_Bit_Monadic;
+      function Synth_Vec_Monadic (Id : Monadic_Module_Id) return Value_Acc is
+         Op: constant Net := Get_Net (Operand);
+      begin
+         return Create_Value_Net
+           (Build_Monadic (Build_Context, Id, Op),
+            Create_Res_Range (Operand, Op));
+      end Synth_Vec_Monadic;
    begin
       case Def is
          when Iir_Predefined_Error =>
             return null;
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Synth_Bit_Monadic (Id_Not);
+         when Iir_Predefined_Ieee_1164_Vector_Not =>
+            return Synth_Vec_Monadic (Id_Not);
          when others =>
             Error_Msg_Synth
               (+Loc,
