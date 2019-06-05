@@ -24,6 +24,7 @@ with Std_Names;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 with Simul.Execution;
 with Simul.Annotations; use Simul.Annotations;
 with Grt.Types; use Grt.Types;
@@ -409,7 +410,8 @@ package body Synth.Expr is
       return Create_Range_Value ((Iir_Downto, Wd, Int32 (Wd - 1), 0));
    end Create_Res_Range;
 
-   function Synth_Dyadic_Operation (Def : Iir_Predefined_Functions;
+   function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
+                                    Def : Iir_Predefined_Functions;
                                     Left : Value_Acc;
                                     Right : Value_Acc;
                                     Loc : Iir) return Value_Acc
@@ -484,6 +486,28 @@ package body Synth.Expr is
                               Get_Net (Left),
                               Synth_Uresize (Right, Get_Width (Left))),
                No_Range);
+         when Iir_Predefined_Array_Element_Concat =>
+            declare
+               L : constant Net := Get_Net (Left);
+            begin
+               return Create_Value_Net
+                 (Build_Concat2 (Build_Context, L, Get_Net (Right)),
+                  Bounds_To_Range(Simul.Execution.Create_Bounds_From_Length
+                                    (Syn_Inst.Sim,
+                                     Get_Index_Type (Get_Type (Loc), 0),
+                                     Iir_Index32(Get_Width (L) + 1))));
+            end;
+         when Iir_Predefined_Element_Array_Concat =>
+            declare
+               R : constant Net := Get_Net (Right);
+            begin
+               return Create_Value_Net
+                 (Build_Concat2 (Build_Context, Get_Net (Left), R),
+                  Bounds_To_Range(Simul.Execution.Create_Bounds_From_Length
+                                    (Syn_Inst.Sim,
+                                     Get_Index_Type (Get_Type (Loc), 0),
+                                     Iir_Index32(Get_Width (R) + 1))));
+            end;
          when others =>
             Error_Msg_Synth
               (+Loc,
@@ -817,7 +841,8 @@ package body Synth.Expr is
                if Def in Iir_Predefined_Implicit
                  or else Def in Iir_Predefined_IEEE_Explicit
                then
-                  return Synth_Dyadic_Operation (Def, Left, Right, Expr);
+                  return Synth_Dyadic_Operation (Syn_Inst, Def,
+                                                 Left, Right, Expr);
                else
                   Error_Unknown_Operator (Imp, Expr);
                   return Left;
