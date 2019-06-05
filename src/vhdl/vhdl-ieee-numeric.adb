@@ -34,6 +34,9 @@ package body Vhdl.Ieee.Numeric is
    type Binary_Pattern_Type is array (Pkg_Kind, Sign_Num_Kind, Args_Kind)
      of Iir_Predefined_Functions;
 
+   type Unary_Pattern_Type is array (Pkg_Kind, Sign_Num_Kind)
+     of Iir_Predefined_Functions;
+
    Add_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned =>
@@ -87,6 +90,13 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (others =>
            (others => Iir_Predefined_None)));
+
+   Neg_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
 
    Error : exception;
 
@@ -168,6 +178,11 @@ package body Vhdl.Ieee.Numeric is
          Set_Implicit_Definition (Decl, Pats (Pkg, Sign, Kind));
       end Handle_Binary;
 
+      procedure Handle_Unary (Pats : Unary_Pattern_Type) is
+      begin
+         Set_Implicit_Definition (Decl, Pats (Pkg, Arg1_Sign));
+      end Handle_Unary;
+
    begin
       Decl := Get_Declaration_Chain (Pkg_Decl);
 
@@ -234,6 +249,7 @@ package body Vhdl.Ieee.Numeric is
                Classify_Arg (Arg1, Arg1_Sign, Arg1_Kind);
                Arg2 := Get_Chain (Arg1);
                if Is_Valid (Arg2) then
+                  --  Dyadic function.
                   Classify_Arg (Arg2, Arg2_Sign, Arg2_Kind);
 
                   case Get_Identifier (Decl) is
@@ -247,6 +263,14 @@ package body Vhdl.Ieee.Numeric is
                        | Name_To_Ostring
                        | Name_To_Hstring =>
                         null;
+                     when others =>
+                        null;
+                  end case;
+               else
+                  --  Monadic function.
+                  case Get_Identifier (Decl) is
+                     when Name_Op_Minus =>
+                        Handle_Unary (Neg_Patterns);
                      when others =>
                         null;
                   end case;

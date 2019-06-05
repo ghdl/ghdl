@@ -552,6 +552,9 @@ package body Synth.Expr is
             return Synth_Bit_Monadic (Id_Not);
          when Iir_Predefined_Ieee_1164_Vector_Not =>
             return Synth_Vec_Monadic (Id_Not);
+         when Iir_Predefined_Ieee_Numeric_Std_Neg_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
+            return Synth_Vec_Monadic (Id_Neg);
          when others =>
             Error_Msg_Synth
               (+Loc,

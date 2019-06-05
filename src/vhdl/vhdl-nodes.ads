@@ -4827,7 +4827,11 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn,
       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int,
-      Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn,
+
+      --  Unary functions for numeric_std
+      Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn
      );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.
