@@ -99,6 +99,8 @@ package body Synth.Decls is
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
             null;
+         when Iir_Kind_Attribute_Declaration =>
+            null;
          when others =>
             Error_Kind ("synth_declaration", Decl);
       end case;
