@@ -72,7 +72,7 @@ GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 # Additionnal object files (C or asm files).
 GRT_BASE_C_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o
 GRT_ADD_OBJS:=$(GRT_BASE_C_OBJS) grt-cvpi.o grt-cdynload.o $(GRT_FST_OBJS)
-GRT_ADD_SHOBJS:=$(patsubst %, pic/%, $(GRT_BASE_C_OBJS))
+GRT_ADD_SHOBJS:=$(patsubst %, pic/%, $(GRT_ADD_OBJS))
 
 # Source files create by grt.
 GRT_SRC_DEPS:=grt-backtraces-impl.ads
