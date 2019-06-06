@@ -23,7 +23,6 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-with Grt.Errors; use Grt.Errors;
 with Grt.C; use Grt.C;
 
 package body Grt.Vstrings_IO is
