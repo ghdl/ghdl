@@ -21,6 +21,7 @@
 with Ghdlsynth;
 with Ghdlsimul;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Errorout.Console;
 
 package body Libghdlsynth is
    function Synth (Argc : Natural; Argv : C_String_Array_Acc) return Module
@@ -43,5 +44,6 @@ package body Libghdlsynth is
    Gnat_Version : constant String := "unknown compiler version" & ASCII.NUL;
    pragma Export (C, Gnat_Version, "__gnat_version");
 begin
+   Errorout.Console.Install_Handler;
    Ghdlsimul.Compile_Init;
 end Libghdlsynth;
