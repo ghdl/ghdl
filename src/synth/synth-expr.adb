@@ -423,14 +423,14 @@ package body Synth.Expr is
            No_Range);
       end Synth_Bit_Dyadic;
 
-      --  function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
-      --  is
-      --     L : constant Net := Get_Net (Left);
-      --  begin
-      --     return Create_Value_Net
-      --       (Build_Dyadic (Build_Context, Id, L, Get_Net (Right)),
-      --        Create_Res_Range (Left, L));
-      --  end Synth_Vec_Dyadic;
+      function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
+      is
+         L : constant Net := Get_Net (Left);
+      begin
+         return Create_Value_Net
+           (Build_Dyadic (Build_Context, Id, L, Get_Net (Right)),
+            Create_Res_Range (Left, L));
+      end Synth_Vec_Dyadic;
    begin
       case Def is
          when Iir_Predefined_Error =>
@@ -446,6 +446,12 @@ package body Synth.Expr is
          when Iir_Predefined_Bit_Or
            | Iir_Predefined_Ieee_1164_Scalar_Or =>
             return Synth_Bit_Dyadic (Id_Or);
+         when Iir_Predefined_Ieee_1164_Vector_And =>
+            return Synth_Vec_Dyadic (Id_And);
+         when Iir_Predefined_Ieee_1164_Vector_Or =>
+            return Synth_Vec_Dyadic (Id_Or);
+         when Iir_Predefined_Ieee_1164_Vector_Xor =>
+            return Synth_Vec_Dyadic (Id_Xor);
 
          when Iir_Predefined_Bit_Nor
            | Iir_Predefined_Ieee_1164_Scalar_Nor =>
