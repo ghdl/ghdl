@@ -1049,12 +1049,18 @@ class Iir_Predefined:
     Ieee_Numeric_Std_Add_Sgn_Sgn = 189
     Ieee_Numeric_Std_Add_Sgn_Int = 190
     Ieee_Numeric_Std_Add_Int_Sgn = 191
-    Ieee_Numeric_Std_Eq_Uns_Uns = 192
-    Ieee_Numeric_Std_Eq_Uns_Nat = 193
-    Ieee_Numeric_Std_Eq_Nat_Uns = 194
-    Ieee_Numeric_Std_Eq_Sgn_Sgn = 195
-    Ieee_Numeric_Std_Eq_Sgn_Int = 196
-    Ieee_Numeric_Std_Eq_Int_Sgn = 197
+    Ieee_Numeric_Std_Sub_Uns_Uns = 192
+    Ieee_Numeric_Std_Sub_Uns_Nat = 193
+    Ieee_Numeric_Std_Sub_Nat_Uns = 194
+    Ieee_Numeric_Std_Sub_Sgn_Sgn = 195
+    Ieee_Numeric_Std_Sub_Sgn_Int = 196
+    Ieee_Numeric_Std_Sub_Int_Sgn = 197
+    Ieee_Numeric_Std_Eq_Uns_Uns = 198
+    Ieee_Numeric_Std_Eq_Uns_Nat = 199
+    Ieee_Numeric_Std_Eq_Nat_Uns = 200
+    Ieee_Numeric_Std_Eq_Sgn_Sgn = 201
+    Ieee_Numeric_Std_Eq_Sgn_Int = 202
+    Ieee_Numeric_Std_Eq_Int_Sgn = 203
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location
