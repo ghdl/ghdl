@@ -30,7 +30,6 @@ with Simul.Annotations; use Simul.Annotations;
 with Grt.Types; use Grt.Types;
 
 with Synth.Errors; use Synth.Errors;
-with Synth.Context; use Synth.Context;
 with Synth.Types; use Synth.Types;
 
 with Netlists; use Netlists;

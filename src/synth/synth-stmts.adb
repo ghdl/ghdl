@@ -34,7 +34,7 @@ with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
 with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
-with Synth.Context; use Synth.Context;
+with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 
 with Simul.Environments; use Simul.Environments;

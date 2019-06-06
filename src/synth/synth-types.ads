@@ -19,7 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Netlists; use Netlists;
-with Synth.Values; use Synth.Values;
+with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Types is

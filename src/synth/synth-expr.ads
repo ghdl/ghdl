@@ -21,6 +21,7 @@
 with Types; use Types;
 with Simul.Environments; use Simul.Environments;
 with Synth.Values; use Synth.Values;
+with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Expr is

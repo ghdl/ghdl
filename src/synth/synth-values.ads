@@ -29,8 +29,24 @@ package Synth.Values is
    --  values in simulation, but simplified (no need to handle files,
    --  accesses...)
 
-   type Value_Kind is (Value_Net, Value_Wire, Value_Array, Value_Record,
-                       Value_Lit);
+   type Value_Kind is
+     (
+      --  Value is for a vector or a bit, and is the output of a gate.
+      Value_Net,
+
+      --  Also a vector or a bit, but from an object.  Has to be transformed
+      --  into a net.
+      Value_Wire,
+
+      --  A non-vector array.
+      Value_Array,
+
+      --  A record.
+      Value_Record,
+
+      --  A known value (from simulation).
+      Value_Lit
+     );
 
    type Value_Type (Kind : Value_Kind);
 
@@ -97,22 +113,5 @@ package Synth.Values is
    --  Create a Value_Range from a simulation bound.
    function Bounds_To_Range (Val : Iir_Value_Literal_Acc)
                             return Value_Range_Acc;
-
-   --  Values are stored into Synth_Instance, which is parallel to simulation
-   --  Block_Instance_Type.
-   type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
-
-   type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is record
-      --  Module which owns gates created for this instance.
-      M : Module;
-
-      --  Name prefix for declarations.
-      Name : Sname;
-
-      Sim : Block_Instance_Acc;
-      Objects : Objects_Array (1 .. Max_Objs);
-   end record;
-
-   type Synth_Instance_Acc is access Synth_Instance_Type;
 
 end Synth.Values;

@@ -19,7 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Synth.Values; use Synth.Values;
+with Synth.Context; use Synth.Context;
 
 package Synth.Decls is
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Iir);

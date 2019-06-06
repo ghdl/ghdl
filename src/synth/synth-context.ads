@@ -26,6 +26,26 @@ with Netlists.Builders;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Context is
+   --  Values are stored into Synth_Instance, which is parallel to simulation
+   --  Block_Instance_Type.
+   type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
+
+   type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is record
+      --  Module which owns gates created for this instance.
+      M : Module;
+
+      --  Name prefix for declarations.
+      Name : Sname;
+
+      --  The corresponding instance from simulation.
+      Sim : Block_Instance_Acc;
+
+      --  Instance for synthesis.
+      Objects : Objects_Array (1 .. Max_Objs);
+   end record;
+
+   type Synth_Instance_Acc is access Synth_Instance_Type;
+
    type Instance_Map_Array is array (Block_Instance_Id range <>)
      of Synth_Instance_Acc;
    type Instance_Map_Array_Acc is access Instance_Map_Array;
@@ -33,6 +53,7 @@ package Synth.Context is
    --  Map between simulation instance and synthesis instance.
    Instance_Map : Instance_Map_Array_Acc;
 
+   --  Global context.
    Build_Context : Netlists.Builders.Context_Acc;
 
    function Make_Instance (Sim_Inst : Block_Instance_Acc)
