@@ -227,7 +227,7 @@ package body Synth.Expr is
    procedure Free_Net_Array is new Ada.Unchecked_Deallocation
      (Net_Array, Net_Array_Acc);
 
-   --  Convert the one-dimension VAL to a net.
+   --  Convert the one-dimension VAL to a net by concatenating.
    function Vectorize_Array (Val : Value_Acc) return Value_Acc
    is
       Arr : Net_Array_Acc;
@@ -237,6 +237,8 @@ package body Synth.Expr is
    begin
       --  Dynamically allocate ARR to handle large arrays.
       Arr := new Net_Array (1 .. Val.Arr.Len);
+
+      --  Gather consecutive constant values.
       Idx := 1;
       Len := 0;
       while Idx <= Val.Arr.Len loop
@@ -261,6 +263,7 @@ package body Synth.Expr is
             end loop;
             if Off = 0 then
                E := Get_Net (Val.Arr.V (Idx));
+               Idx := Idx + 1;
             else
                if W_Zx = 0 then
                   E := Build_Const_UB32
