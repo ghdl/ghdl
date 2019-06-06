@@ -493,6 +493,17 @@ package body Synth.Expr is
                                 Synth_Uresize (Right, Get_Width (Left))),
                   Create_Res_Range (Left, L));
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
+            --  "+" (Unsigned, Unsigned)
+            --  FIXME: are they of the same width ?
+            declare
+               L : constant Net := Get_Net (Left);
+            begin
+               return Create_Value_Net
+                 (Build_Dyadic (Build_Context, Id_Add,
+                                L, Get_Net (Right)),
+                  Create_Res_Range (Left, L));
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
             --  "-" (Unsigned, Natural)
             declare
@@ -502,6 +513,17 @@ package body Synth.Expr is
                  (Build_Dyadic (Build_Context, Id_Sub,
                                 L,
                                 Synth_Uresize (Right, Get_Width (Left))),
+                  Create_Res_Range (Left, L));
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
+            --  "-" (Unsigned, Unsigned)
+            -- FIXME: like above
+            declare
+               L : constant Net := Get_Net (Left);
+            begin
+               return Create_Value_Net
+                 (Build_Dyadic (Build_Context, Id_Sub,
+                                L, Get_Net (Right)),
                   Create_Res_Range (Left, L));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
