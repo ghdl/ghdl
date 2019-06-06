@@ -101,6 +101,8 @@ package body Synth.Decls is
             null;
          when Iir_Kind_Attribute_Declaration =>
             null;
+         when Iir_Kind_Attribute_Specification =>
+            null;
          when others =>
             Error_Kind ("synth_declaration", Decl);
       end case;
