@@ -474,6 +474,14 @@ package body Synth.Expr is
             --  TODO
             Error_Msg_Synth (+Loc, "unsupported enum equality");
             raise Internal_Error;
+
+         when Iir_Predefined_Array_Equality =>
+            return Create_Value_Net
+              (Build_Compare (Build_Context, Id_Eq,
+                              Get_Net (Left),
+                              Get_Net (Right)),
+               No_Range);
+
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
             --  "+" (Unsigned, Natural)
             declare
