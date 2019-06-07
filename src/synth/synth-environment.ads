@@ -41,9 +41,12 @@ package Synth.Environment is
    --  nature of a wire as the assignment semantic is not the same (a variable
    --  assignment overwrite the old value, while a signal assignment is
    --  effective at the next cycle).
-   type Wire_Kind is (Wire_None,
-                      Wire_Signal, Wire_Variable,
-                      Wire_Input, Wire_Output, Wire_Inout);
+   type Wire_Kind is
+     (
+      Wire_None,
+      Wire_Signal, Wire_Variable,
+      Wire_Input, Wire_Output, Wire_Inout
+     );
 
    type Assign is new Uns32;
    No_Assign : constant Assign := 0;

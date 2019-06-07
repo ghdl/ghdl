@@ -56,16 +56,21 @@ package Synth.Context is
    --  Global context.
    Build_Context : Netlists.Builders.Context_Acc;
 
+   --  Create and free the corresponding synth instance.
    function Make_Instance (Sim_Inst : Block_Instance_Acc)
                           return Synth_Instance_Acc;
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
 
+   --  Build the value for object OBJ.
+   --  KIND must be Wire_Variable or Wire_Signal.
    procedure Make_Object (Syn_Inst : Synth_Instance_Acc;
                           Kind : Wire_Kind;
                           Obj : Iir);
 
-   function Get_Net (Val : Value_Acc) return Net;
-
+   --  Get the value of OBJ.
    function Get_Value (Inst : Synth_Instance_Acc; Obj : Iir) return Value_Acc;
 
+   --  Get a net from a scalar/vector value.  This will automatically create
+   --  a net for literals.
+   function Get_Net (Val : Value_Acc) return Net;
 end Synth.Context;
