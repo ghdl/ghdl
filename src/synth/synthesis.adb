@@ -25,6 +25,8 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils;
 
 with Vhdl.Utils; use Vhdl.Utils;
+with Simul.Annotations;
+with Simul.Execution;
 with Simul.Environments; use Simul.Environments;
 with Simul.Elaboration; use Simul.Elaboration;
 
@@ -232,6 +234,56 @@ package body Synthesis is
       return Syn_Inst;
    end Synth_Entity;
 
+   procedure Synth_Dependencies (Unit : Iir)
+   is
+      Dep_List : constant Iir_List := Get_Dependence_List (Unit);
+      Dep_It : List_Iterator;
+      Dep : Iir;
+      Dep_Unit : Iir;
+   begin
+      Dep_It := List_Iterate (Dep_List);
+      while Is_Valid (Dep_It) loop
+         Dep := Get_Element (Dep_It);
+         pragma Assert (Get_Kind (Dep) = Iir_Kind_Design_Unit);
+         if not Get_Elab_Flag (Dep) then
+            Set_Elab_Flag (Dep, True);
+            Synth_Dependencies (Dep);
+            Dep_Unit := Get_Library_Unit (Dep);
+            case Iir_Kinds_Library_Unit (Get_Kind (Dep_Unit)) is
+               when Iir_Kind_Entity_Declaration =>
+                  null;
+               when Iir_Kind_Configuration_Declaration =>
+                  null;
+               when Iir_Kind_Context_Declaration =>
+                  null;
+               when Iir_Kind_Package_Declaration =>
+                  pragma Assert (not Is_Uninstantiated_Package (Dep_Unit));
+                  declare
+                     Sim_Info : constant Sim_Info_Acc :=
+                       Simul.Annotations.Get_Info (Dep_Unit);
+                     Sim_Inst : constant Block_Instance_Acc :=
+                       Simul.Execution.Get_Instance_By_Scope
+                       (Global_Instances, Sim_Info);
+                     Bid : constant Block_Instance_Id := Sim_Inst.Id;
+                     Syn_Inst : Synth_Instance_Acc;
+                  begin
+                     pragma Assert (Instance_Map (Bid) = null);
+                     Syn_Inst := Make_Instance (Sim_Inst);
+                     Synth_Declarations
+                       (Syn_Inst, Get_Declaration_Chain (Dep_Unit));
+                  end;
+               when Iir_Kind_Package_Instantiation_Declaration =>
+                  null;
+               when Iir_Kind_Package_Body =>
+                  null;
+               when Iir_Kind_Architecture_Body =>
+                  null;
+            end case;
+         end if;
+         Next (Dep_It);
+      end loop;
+   end Synth_Dependencies;
+
    function Synth_Design (Design : Iir) return Module
    is
       Unit : constant Iir := Get_Library_Unit (Design);
@@ -255,6 +307,11 @@ package body Synthesis is
 
       Des := New_Design (New_Sname_Artificial (Get_Identifier ("top")));
       Build_Context := Build_Builders (Des);
+
+      --  Dependencies first.
+      Synth_Dependencies (Get_Design_Unit (Get_Entity (Arch)));
+      Synth_Dependencies (Get_Design_Unit (Arch));
+
       Syn_Inst := Synth_Entity (Des, Arch, Top_Instance);
 
       if Errorout.Nbr_Errors > 0 then

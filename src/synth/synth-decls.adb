@@ -103,6 +103,13 @@ package body Synth.Decls is
             null;
          when Iir_Kind_Attribute_Specification =>
             null;
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Anonymous_Type_Declaration
+           | Iir_Kind_Subtype_Declaration =>
+            --  TODO, in particular enumerated types.
+            null;
+         when Iir_Kind_Component_Declaration =>
+            null;
          when others =>
             Error_Kind ("synth_declaration", Decl);
       end case;

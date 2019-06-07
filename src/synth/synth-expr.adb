@@ -538,10 +538,10 @@ package body Synth.Expr is
             begin
                return Create_Value_Net
                  (Build_Concat2 (Build_Context, L, Get_Net (Right)),
-                  Bounds_To_Range(Simul.Execution.Create_Bounds_From_Length
-                                    (Syn_Inst.Sim,
-                                     Get_Index_Type (Get_Type (Loc), 0),
-                                     Iir_Index32(Get_Width (L) + 1))));
+                  Bounds_To_Range (Simul.Execution.Create_Bounds_From_Length
+                                     (Syn_Inst.Sim,
+                                      Get_Index_Type (Get_Type (Loc), 0),
+                                      Iir_Index32 (Get_Width (L) + 1))));
             end;
          when Iir_Predefined_Element_Array_Concat =>
             declare
@@ -549,10 +549,10 @@ package body Synth.Expr is
             begin
                return Create_Value_Net
                  (Build_Concat2 (Build_Context, Get_Net (Left), R),
-                  Bounds_To_Range(Simul.Execution.Create_Bounds_From_Length
-                                    (Syn_Inst.Sim,
-                                     Get_Index_Type (Get_Type (Loc), 0),
-                                     Iir_Index32(Get_Width (R) + 1))));
+                  Bounds_To_Range (Simul.Execution.Create_Bounds_From_Length
+                                     (Syn_Inst.Sim,
+                                      Get_Index_Type (Get_Type (Loc), 0),
+                                      Iir_Index32 (Get_Width (R) + 1))));
             end;
          when others =>
             Error_Msg_Synth
@@ -609,9 +609,8 @@ package body Synth.Expr is
            | Iir_Kind_Signal_Declaration =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_Constant_Declaration =>
-            return Create_Value_Lit(
-               Syn_Inst.Sim.Objects(Get_Info(Name).Slot),
-               Get_Type(Name));
+            return Create_Value_Lit
+              (Syn_Inst.Sim.Objects (Get_Info (Name).Slot), Get_Type (Name));
          when others =>
             Error_Kind ("synth_name", Name);
       end case;
