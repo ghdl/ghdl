@@ -38,6 +38,8 @@ package Synth.Values is
       --  into a net.
       Value_Wire,
 
+      Value_Mux2,
+
       --  A non-vector array.
       Value_Array,
 
@@ -78,6 +80,10 @@ package Synth.Values is
          when Value_Wire =>
             W : Wire_Id;
             W_Range : Value_Range_Acc;
+         when Value_Mux2 =>
+            M_Cond : Value_Acc;
+            M_T : Value_Acc;
+            M_F : Value_Acc;
          when Value_Lit =>
             Lit : Simul.Environments.Iir_Value_Literal_Acc;
             Lit_Type : Iir;
@@ -94,6 +100,10 @@ package Synth.Values is
 
    --  Create a Value_Wire.  For a bit wire, RNG must be null.
    function Create_Value_Wire (W : Wire_Id; Rng : Value_Range_Acc)
+                              return Value_Acc;
+
+   --  Create a mux2.
+   function Create_Value_Mux2 (Cond : Value_Acc; T : Value_Acc; F : Value_Acc)
                               return Value_Acc;
 
    --  Create a Value_Lit.

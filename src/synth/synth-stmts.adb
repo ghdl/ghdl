@@ -48,8 +48,7 @@ with Netlists.Builders; use Netlists.Builders;
 package body Synth.Stmts is
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
                             Wf : Iir;
-                            Targ_Type : Iir) return Value_Acc
-   is
+                            Targ_Type : Iir) return Value_Acc is
    begin
       if Get_Kind (Wf) = Iir_Kind_Unaffected_Waveform then
          --  TODO
@@ -67,8 +66,7 @@ package body Synth.Stmts is
         (Syn_Inst, Get_We_Value (Wf), Targ_Type);
    end Synth_Waveform;
 
-   procedure Synth_Assign (Dest : Value_Acc; Val : Value_Acc)
-   is
+   procedure Synth_Assign (Dest : Value_Acc; Val : Value_Acc) is
    begin
       case Dest.Kind is
          when Value_Wire =>
@@ -139,6 +137,37 @@ package body Synth.Stmts is
         (Syn_Inst, Get_Waveform_Chain (Stmt), Get_Type (Target));
       Synth_Assignment (Syn_Inst, Target, Val);
    end Synth_Simple_Signal_Assignment;
+
+   procedure Synth_Conditional_Signal_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
+   is
+      Target : constant Node := Get_Target (Stmt);
+      Targ_Type : constant Node := Get_Type (Target);
+      Cond : Node;
+      Cwf : Node;
+      Val, Cond_Val : Value_Acc;
+      First, Last : Value_Acc;
+   begin
+      Last := null;
+      Cwf := Get_Conditional_Waveform_Chain (Stmt);
+      while Cwf /= Null_Node loop
+         Val := Synth_Waveform (Syn_Inst, Get_Waveform_Chain (Cwf), Targ_Type);
+         Cond := Get_Condition (Cwf);
+         if Cond /= Null_Node then
+            Cond_Val := Synth_Expression (Syn_Inst, Cond);
+            Val := Create_Value_Mux2 (Cond_Val, Val, null);
+         end if;
+
+         if Last /= null then
+            Last.M_F := Val;
+         else
+            First := Val;
+         end if;
+         Last := Val;
+         Cwf := Get_Chain (Cwf);
+      end loop;
+      Synth_Assignment (Syn_Inst, Target, First);
+   end Synth_Conditional_Signal_Assignment;
 
    procedure Synth_Variable_Assignment
      (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
@@ -800,7 +829,8 @@ package body Synth.Stmts is
       Instance_Pool := null;
    end Synth_Process_Statement;
 
-   procedure Synth_Statements (Syn_Inst : Synth_Instance_Acc; Stmts : Iir)
+   procedure Synth_Concurrent_Statements
+     (Syn_Inst : Synth_Instance_Acc; Stmts : Iir)
    is
       Sim_Child : Block_Instance_Acc;
       Stmt : Iir;
@@ -812,6 +842,8 @@ package body Synth.Stmts is
          case Get_Kind (Stmt) is
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
                Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
+            when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+               Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Sensitized_Process_Statement =>
                Synth_Process_Statement (Syn_Inst, Sim_Child, Stmt);
                Sim_Child := Sim_Child.Brother;
@@ -825,5 +857,5 @@ package body Synth.Stmts is
          Pop_And_Merge_Phi (Build_Context);
          Stmt := Get_Chain (Stmt);
       end loop;
-   end Synth_Statements;
+   end Synth_Concurrent_Statements;
 end Synth.Stmts;

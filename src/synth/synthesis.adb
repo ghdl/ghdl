@@ -221,10 +221,12 @@ package body Synthesis is
       end loop;
 
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
-      Synth_Statements (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
+      Synth_Concurrent_Statements
+        (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
 
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
-      Synth_Statements (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+      Synth_Concurrent_Statements
+        (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
 
       --  Remove unused gates.  This is not only an optimization but also
       --  a correctness point: there might be some unsynthesizable gates, like

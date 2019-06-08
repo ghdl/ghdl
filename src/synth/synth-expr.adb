@@ -526,6 +526,12 @@ package body Synth.Expr is
                               Get_Net (Left),
                               Synth_Uresize (Right, Get_Width (Left))),
                No_Range);
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns =>
+            --  "=" (Unsigned, Unsigned)
+            return Create_Value_Net
+              (Build_Compare (Build_Context, Id_Eq,
+                              Get_Net (Left), Get_Net (Right)),
+               No_Range);
          when Iir_Predefined_Array_Element_Concat =>
             declare
                L : constant Net := Get_Net (Left);

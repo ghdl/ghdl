@@ -23,5 +23,6 @@ with Synth.Context; use Synth.Context;
 
 package Synth.Stmts is
    --  Generate netlists for concurrent statements STMTS.
-   procedure Synth_Statements (Syn_Inst : Synth_Instance_Acc; Stmts : Iir);
+   procedure Synth_Concurrent_Statements
+     (Syn_Inst : Synth_Instance_Acc; Stmts : Iir);
 end Synth.Stmts;

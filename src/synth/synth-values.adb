@@ -53,6 +53,17 @@ package body Synth.Values is
                 Value_Type_Net'(Kind => Value_Net, N => N, N_Range => Rng)));
    end Create_Value_Net;
 
+   function Create_Value_Mux2 (Cond : Value_Acc; T : Value_Acc; F : Value_Acc)
+                              return Value_Acc
+   is
+      subtype Value_Type_Mux2 is Value_Type (Value_Mux2);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Mux2);
+   begin
+      return To_Value_Acc
+        (Alloc (Current_Pool,
+                (Kind => Value_Mux2, M_Cond => Cond, M_T => T, M_F => F)));
+   end Create_Value_Mux2;
+
    function Create_Value_Lit (Val : Iir_Value_Literal_Acc; Typ : Iir)
                              return Value_Acc
    is
