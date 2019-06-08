@@ -1021,7 +1021,8 @@ package body Simul.Annotations is
                null;
 
             when Iir_Kind_Concurrent_Simple_Signal_Assignment
-              | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+              | Iir_Kind_Concurrent_Selected_Signal_Assignment
+              | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                --  In case concurrent signal assignemnts were not
                --  canonicalized (for synthesis).
                null;

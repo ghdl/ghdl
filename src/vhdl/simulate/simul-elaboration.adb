@@ -1903,7 +1903,8 @@ package body Simul.Elaboration is
                Elaborate_Psl_Directive (Instance, Stmt);
 
             when Iir_Kind_Concurrent_Simple_Signal_Assignment
-              | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+              | Iir_Kind_Concurrent_Selected_Signal_Assignment
+              | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                --  In case concurrent signal assignemnts were not
                --  canonicalized.
                null;

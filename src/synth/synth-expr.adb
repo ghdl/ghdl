@@ -26,7 +26,6 @@ with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Simul.Execution;
-with Simul.Annotations; use Simul.Annotations;
 with Grt.Types; use Grt.Types;
 
 with Synth.Errors; use Synth.Errors;
@@ -413,7 +412,7 @@ package body Synth.Expr is
                                     Def : Iir_Predefined_Functions;
                                     Left : Value_Acc;
                                     Right : Value_Acc;
-                                    Loc : Iir) return Value_Acc
+                                    Expr : Iir) return Value_Acc
    is
       function Synth_Bit_Dyadic (Id : Dyadic_Module_Id) return Value_Acc is
       begin
@@ -465,20 +464,19 @@ package body Synth.Expr is
          when Iir_Predefined_Enum_Equality =>
             if Get_Width (Left) = 1 then
                if Is_Const (Left) then
-                  return Synth_Bit_Eq_Const (Left, Right, Loc);
+                  return Synth_Bit_Eq_Const (Left, Right, Expr);
                elsif Is_Const (Right) then
-                  return Synth_Bit_Eq_Const (Right, Left, Loc);
+                  return Synth_Bit_Eq_Const (Right, Left, Expr);
                end if;
             end if;
             --  TODO
-            Error_Msg_Synth (+Loc, "unsupported enum equality");
+            Error_Msg_Synth (+Expr, "unsupported enum equality");
             raise Internal_Error;
 
          when Iir_Predefined_Array_Equality =>
             return Create_Value_Net
               (Build_Compare (Build_Context, Id_Eq,
-                              Get_Net (Left),
-                              Get_Net (Right)),
+                              Get_Net (Left), Get_Net (Right)),
                No_Range);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
@@ -488,8 +486,7 @@ package body Synth.Expr is
             begin
                return Create_Value_Net
                  (Build_Dyadic (Build_Context, Id_Add,
-                                L,
-                                Synth_Uresize (Right, Get_Width (Left))),
+                                L, Synth_Uresize (Right, Get_Width (Left))),
                   Create_Res_Range (Left, L));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
@@ -499,8 +496,7 @@ package body Synth.Expr is
                L : constant Net := Get_Net (Left);
             begin
                return Create_Value_Net
-                 (Build_Dyadic (Build_Context, Id_Add,
-                                L, Get_Net (Right)),
+                 (Build_Dyadic (Build_Context, Id_Add, L, Get_Net (Right)),
                   Create_Res_Range (Left, L));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
@@ -510,8 +506,7 @@ package body Synth.Expr is
             begin
                return Create_Value_Net
                  (Build_Dyadic (Build_Context, Id_Sub,
-                                L,
-                                Synth_Uresize (Right, Get_Width (Left))),
+                                L, Synth_Uresize (Right, Get_Width (Left))),
                   Create_Res_Range (Left, L));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
@@ -521,8 +516,7 @@ package body Synth.Expr is
                L : constant Net := Get_Net (Left);
             begin
                return Create_Value_Net
-                 (Build_Dyadic (Build_Context, Id_Sub,
-                                L, Get_Net (Right)),
+                 (Build_Dyadic (Build_Context, Id_Sub, L, Get_Net (Right)),
                   Create_Res_Range (Left, L));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
@@ -540,7 +534,7 @@ package body Synth.Expr is
                  (Build_Concat2 (Build_Context, L, Get_Net (Right)),
                   Bounds_To_Range (Simul.Execution.Create_Bounds_From_Length
                                      (Syn_Inst.Sim,
-                                      Get_Index_Type (Get_Type (Loc), 0),
+                                      Get_Index_Type (Get_Type (Expr), 0),
                                       Iir_Index32 (Get_Width (L) + 1))));
             end;
          when Iir_Predefined_Element_Array_Concat =>
@@ -551,13 +545,30 @@ package body Synth.Expr is
                  (Build_Concat2 (Build_Context, Get_Net (Left), R),
                   Bounds_To_Range (Simul.Execution.Create_Bounds_From_Length
                                      (Syn_Inst.Sim,
-                                      Get_Index_Type (Get_Type (Loc), 0),
+                                      Get_Index_Type (Get_Type (Expr), 0),
                                       Iir_Index32 (Get_Width (R) + 1))));
             end;
+         when Iir_Predefined_Integer_Plus =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Lit
+                 (Create_I64_Value (Left.Lit.I64 + Right.Lit.I64),
+                  Get_Type (Expr));
+            else
+               --  TODO: non-const.
+               raise Internal_Error;
+            end if;
+         when Iir_Predefined_Integer_Minus =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Lit
+                 (Create_I64_Value (Left.Lit.I64 - Right.Lit.I64),
+                  Get_Type (Expr));
+            else
+               --  TODO: non-const.
+               raise Internal_Error;
+            end if;
          when others =>
-            Error_Msg_Synth
-              (+Loc,
-               "unhandled dyadic: " & Iir_Predefined_Functions'Image (Def));
+            Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
+                               & Iir_Predefined_Functions'Image (Def));
             raise Internal_Error;
       end case;
    end Synth_Dyadic_Operation;
@@ -610,7 +621,8 @@ package body Synth.Expr is
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_Constant_Declaration =>
             return Create_Value_Lit
-              (Syn_Inst.Sim.Objects (Get_Info (Name).Slot), Get_Type (Name));
+              (Simul.Execution.Execute_Expression (Syn_Inst.Sim, Name),
+               Get_Type (Name));
          when others =>
             Error_Kind ("synth_name", Name);
       end case;
@@ -807,6 +819,9 @@ package body Synth.Expr is
       return Build_Edge (Build_Context, Clk);
    end Extract_Clock_Level;
 
+   --  Try to match: clk'event and clk = X
+   --            or: clk = X and clk'event
+   --  where X is '0' or '1'.
    function Synth_Clock_Edge (Syn_Inst : Synth_Instance_Acc; Expr : Iir)
                              return Value_Acc
    is
@@ -893,6 +908,7 @@ package body Synth.Expr is
                   end if;
                end if;
 
+               --  FIXME: short-circuit operators ?
                Left := Synth_Expression (Syn_Inst, Get_Left (Expr));
                Right := Synth_Expression (Syn_Inst, Get_Right (Expr));
                if Def in Iir_Predefined_Implicit

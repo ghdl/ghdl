@@ -110,6 +110,8 @@ package body Synth.Decls is
             null;
          when Iir_Kind_Component_Declaration =>
             null;
+         when Iir_Kind_File_Declaration =>
+            null;
          when others =>
             Error_Kind ("synth_declaration", Decl);
       end case;
