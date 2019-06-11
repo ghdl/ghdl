@@ -152,9 +152,8 @@ package body Synth.Expr is
       end case;
    end Vec_Extract;
 
-   function Synth_Uresize (Val : Value_Acc; W : Width) return Net
+   function Synth_Uresize (N : Net; W : Width) return Net
    is
-      N : constant Net := Get_Net (Val);
       Wn : constant Width := Get_Width (N);
    begin
       if Wn > W then
@@ -164,6 +163,11 @@ package body Synth.Expr is
       else
          return N;
       end if;
+   end Synth_Uresize;
+
+   function Synth_Uresize (Val : Value_Acc; W : Width) return Net is
+   begin
+      return Synth_Uresize (Get_Net (Val), W);
    end Synth_Uresize;
 
    procedure Fill_Array_Aggregate
@@ -429,6 +433,25 @@ package body Synth.Expr is
            (Build_Dyadic (Build_Context, Id, L, Get_Net (Right)),
             Create_Res_Range (Left, L));
       end Synth_Vec_Dyadic;
+
+      function Synth_Dyadic_Uns (Id : Dyadic_Module_Id; Is_Res_Vec : Boolean)
+                                return Value_Acc
+      is
+         L : constant Net := Get_Net (Left);
+         R : constant Net := Get_Net (Right);
+         W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+         Rtype : Value_Range_Acc;
+      begin
+         if Is_Res_Vec then
+            Rtype := Create_Range_Value ((Iir_Downto, W, Int32 (W - 1), 0));
+         else
+            Rtype := No_Range;
+         end if;
+         return Create_Value_Net
+           (Build_Dyadic
+              (Build_Context, Id, Synth_Uresize (L, W), Synth_Uresize (R, W)),
+            Rtype);
+      end Synth_Dyadic_Uns;
    begin
       case Def is
          when Iir_Predefined_Error =>
@@ -474,6 +497,7 @@ package body Synth.Expr is
             raise Internal_Error;
 
          when Iir_Predefined_Array_Equality =>
+            --  TODO:
             return Create_Value_Net
               (Build_Compare (Build_Context, Id_Eq,
                               Get_Net (Left), Get_Net (Right)),
@@ -491,14 +515,7 @@ package body Synth.Expr is
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
             --  "+" (Unsigned, Unsigned)
-            --  FIXME: are they of the same width ?
-            declare
-               L : constant Net := Get_Net (Left);
-            begin
-               return Create_Value_Net
-                 (Build_Dyadic (Build_Context, Id_Add, L, Get_Net (Right)),
-                  Create_Res_Range (Left, L));
-            end;
+            return Synth_Dyadic_Uns (Id_Add, True);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
             --  "-" (Unsigned, Natural)
             declare
@@ -511,14 +528,7 @@ package body Synth.Expr is
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
             --  "-" (Unsigned, Unsigned)
-            -- FIXME: like above
-            declare
-               L : constant Net := Get_Net (Left);
-            begin
-               return Create_Value_Net
-                 (Build_Dyadic (Build_Context, Id_Sub, L, Get_Net (Right)),
-                  Create_Res_Range (Left, L));
-            end;
+            return Synth_Dyadic_Uns (Id_Sub, True);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             --  "=" (Unsigned, Natural)
             return Create_Value_Net
