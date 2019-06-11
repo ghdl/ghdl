@@ -806,7 +806,6 @@ package body Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Sim_Inst : Block_Instance_Acc; Proc : Iir)
    is
       use Areapools;
-      pragma Assert (Sim_Inst.Label = Proc);
       Decls_Chain : constant Iir := Get_Declaration_Chain (Proc);
       Proc_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
@@ -814,6 +813,8 @@ package body Synth.Stmts is
       Proc_Inst := Make_Instance (Sim_Inst);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
+
+      --  Processes were not elaborated.
       Elaborate_Declarative_Part (Sim_Inst, Decls_Chain);
 
       if Is_Valid (Decls_Chain) then
@@ -828,6 +829,31 @@ package body Synth.Stmts is
       Release (M, Proc_Pool);
       Instance_Pool := null;
    end Synth_Process_Statement;
+
+   procedure Synth_Generate_Statement_Body
+     (Syn_Inst : Synth_Instance_Acc; Sim_Inst : Block_Instance_Acc; Bod : Iir)
+   is
+      use Areapools;
+      Decls_Chain : constant Iir := Get_Declaration_Chain (Bod);
+      Bod_Inst : Synth_Instance_Acc;
+      M : Areapools.Mark_Type;
+   begin
+      Bod_Inst := Make_Instance (Sim_Inst);
+      Mark (M, Proc_Pool);
+      Instance_Pool := Proc_Pool'Access;
+
+      if Is_Valid (Decls_Chain) then
+         Bod_Inst.Name := New_Sname (Syn_Inst.Name, Get_Identifier (Bod));
+         Synth_Declarations (Bod_Inst, Decls_Chain);
+      end if;
+
+      Synth_Concurrent_Statements
+        (Bod_Inst, Get_Concurrent_Statement_Chain (Bod));
+
+      Free_Instance (Bod_Inst);
+      Release (M, Proc_Pool);
+      Instance_Pool := null;
+   end Synth_Generate_Statement_Body;
 
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Iir)
@@ -845,8 +871,26 @@ package body Synth.Stmts is
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Sensitized_Process_Statement =>
+               pragma Assert (Sim_Child.Label = Stmt);
                Synth_Process_Statement (Syn_Inst, Sim_Child, Stmt);
                Sim_Child := Sim_Child.Brother;
+            when Iir_Kind_If_Generate_Statement =>
+               declare
+                  Gen : Node;
+                  Bod : Node;
+               begin
+                  Gen := Stmt;
+                  while Gen /= Null_Node loop
+                     Bod := Get_Generate_Statement_Body (Gen);
+                     if Sim_Child.Label = Bod then
+                        Synth_Generate_Statement_Body
+                          (Syn_Inst, Sim_Child, Bod);
+                        Sim_Child := Sim_Child.Brother;
+                        exit;
+                     end if;
+                     Gen := Get_Generate_Else_Clause (Gen);
+                  end loop;
+               end;
             when Iir_Kind_Component_Instantiation_Statement =>
                --  TODO.
                null;
