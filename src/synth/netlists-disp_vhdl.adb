@@ -125,17 +125,23 @@ package body Netlists.Disp_Vhdl is
       New_Line;
    end Disp_Entity;
 
-   procedure Disp_Net_Name (N : Net)
-   is
-      Inst : constant Instance := Get_Parent (N);
-      Idx : constant Port_Idx := Get_Port_Idx (N);
+   procedure Disp_Net_Name (N : Net) is
    begin
-      if Is_Self_Instance (Inst) then
-         Put_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
+      if N = No_Net then
+         Put ("<unassigned>");
       else
-         Put_Name (Get_Name (Inst));
-         Put ('.');
-         Put_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
+         declare
+            Inst : constant Instance := Get_Parent (N);
+            Idx : constant Port_Idx := Get_Port_Idx (N);
+         begin
+            if Is_Self_Instance (Inst) then
+               Put_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
+            else
+               Put_Name (Get_Name (Inst));
+               Put ('.');
+               Put_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
+            end if;
+         end;
       end if;
    end Disp_Net_Name;
 
@@ -151,6 +157,8 @@ package body Netlists.Disp_Vhdl is
       --  * generate one signal per net
       --  * generate instances
 
+      --  Display signal declarations.
+      --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
          if not Is_Self_Instance (Inst) then
             for N of Outputs (Inst) loop
@@ -164,6 +172,8 @@ package body Netlists.Disp_Vhdl is
       end loop;
 
       Put_Line ("begin");
+
+      --  Output assignments.
       declare
          Inst : constant Instance := Get_Self_Instance (M);
          Idx : Port_Idx;
@@ -175,6 +185,7 @@ package body Netlists.Disp_Vhdl is
             Put (" <= ");
             Disp_Net_Name (Get_Driver (I));
             New_Line;
+            Idx := Idx + 1;
          end loop;
       end;
 
@@ -182,12 +193,35 @@ package body Netlists.Disp_Vhdl is
          declare
             Imod : constant Module := Get_Module (Inst);
             Idx : Port_Idx;
+            P_Idx : Param_Idx;
          begin
             Put ("  ");
             Put_Name (Get_Name (Inst));
             Put (" : work.");
             Put_Name (Get_Name (Imod));
-            Put_Line (" port map (");
+
+            if Get_Nbr_Params (Imod) /= 0 then
+               Put_Line (" generic map (");
+               First := True;
+               Idx := 0;
+               for P in Params (Inst) loop
+                  if First then
+                     First := False;
+                  else
+                     Put_Line (",");
+                  end if;
+                  Put ("    ");
+                  P_Idx := Get_Param_Idx (P);
+                  Put_Name (Get_Param_Desc (Imod, P_Idx).Name);
+                  Put (" => ");
+                  Put_Trim (Uns32'Image (Get_Param_Uns32 (Inst, P_Idx)));
+               end loop;
+               Put_Line (")");
+               Put_Line ("    port map (");
+            else
+               Put_Line (" port map (");
+            end if;
+
             First := True;
             --  Inputs
             Idx := 0;
@@ -195,7 +229,7 @@ package body Netlists.Disp_Vhdl is
                if First then
                   First := False;
                else
-                  Put_Line (", ");
+                  Put_Line (",");
                end if;
                Put ("    ");
                Put_Name (Get_Input_Desc (Imod, Idx).Name);
