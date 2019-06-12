@@ -425,6 +425,13 @@ package body Synth.Expr is
            No_Range);
       end Synth_Bit_Dyadic;
 
+      function Synth_Compare (Id : Compare_Module_Id) return Value_Acc is
+      begin
+         return Create_Value_Net
+           (Build_Compare (Build_Context, Id, Get_Net (Left), Get_Net (Right)),
+            No_Range);
+      end Synth_Compare;
+
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
          L : constant Net := Get_Net (Left);
@@ -492,16 +499,11 @@ package body Synth.Expr is
                   return Synth_Bit_Eq_Const (Right, Left, Expr);
                end if;
             end if;
-            --  TODO
-            Error_Msg_Synth (+Expr, "unsupported enum equality");
-            raise Internal_Error;
+            return Synth_Compare (Id_Eq);
 
          when Iir_Predefined_Array_Equality =>
-            --  TODO:
-            return Create_Value_Net
-              (Build_Compare (Build_Context, Id_Eq,
-                              Get_Net (Left), Get_Net (Right)),
-               No_Range);
+            --  TODO: check size, handle non-vector.
+            return Synth_Compare (Id_Eq);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
             --  "+" (Unsigned, Natural)
@@ -635,7 +637,8 @@ package body Synth.Expr is
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration =>
             return Get_Value (Syn_Inst, Name);
-         when Iir_Kind_Constant_Declaration =>
+         when Iir_Kind_Constant_Declaration
+           | Iir_Kind_Enumeration_Literal =>
             return Create_Value_Lit
               (Simul.Execution.Execute_Expression (Syn_Inst.Sim, Name),
                Get_Type (Name));

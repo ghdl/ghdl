@@ -25,7 +25,6 @@ with Grt.Types; use Grt.Types;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils;
 
-with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 
 with Simul.Annotations; use Simul.Annotations;
@@ -47,7 +46,7 @@ package body Synth.Context is
                                       M => No_Module,
                                       Name => No_Sname,
                                       Sim => Sim_Inst,
-                                      Objects => (others => null));
+                                      Objects => (others => <>));
       pragma Assert (Instance_Map (Sim_Inst.Id) = null);
       Instance_Map (Sim_Inst.Id) := Res;
       return Res;
@@ -82,12 +81,20 @@ package body Synth.Context is
    begin
       case Get_Kind (Btype) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            if Is_Bit_Type (Btype) then
-               return Alloc_Wire (Kind, Obj, null);
-            else
-               --  TODO
-               raise Internal_Error;
-            end if;
+            declare
+               Info : constant Sim_Info_Acc := Get_Info (Btype);
+               Rng : Value_Range_Acc;
+            begin
+               if Info.Kind = Kind_Bit_Type then
+                  Rng := null;
+               else
+               Rng := Create_Range_Value ((Dir => Iir_Downto,
+                                           Len => Info.Width,
+                                           Left => Int32 (Info.Width - 1),
+                                           Right => 0));
+               end if;
+               return Alloc_Wire (Kind, Obj, Rng);
+            end;
          when Iir_Kind_Array_Type_Definition =>
             --  Well known array types.
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type
@@ -145,29 +152,34 @@ package body Synth.Context is
             end;
          when Value_Lit =>
             case Val.Lit.Kind is
-               when Iir_Value_B1 =>
-                  pragma Assert
-                    (Val.Lit_Type = Vhdl.Std_Package.Boolean_Type_Definition
-                       or else
-                       Val.Lit_Type = Vhdl.Std_Package.Bit_Type_Definition);
-                  return Build_Const_UB32
-                    (Build_Context, Ghdl_B1'Pos (Val.Lit.B1), 1);
-               when Iir_Value_E8 =>
-                  if Is_Bit_Type (Val.Lit_Type) then
-                     declare
-                        V, Xz : Uns32;
-                     begin
-                        To_Logic (Val.Lit, V, Xz);
-                        if Xz = 0 then
-                           return Build_Const_UB32 (Build_Context, V, 1);
-                        else
-                           return Build_Const_UL32 (Build_Context, V, Xz, 1);
-                        end if;
-                     end;
-                  else
-                     --  State machine.
-                     raise Internal_Error;
-                  end if;
+               when Iir_Value_E8
+                 | Iir_Value_B1 =>
+                  declare
+                     Info : constant Sim_Info_Acc :=
+                       Get_Info (Get_Base_Type (Val.Lit_Type));
+                  begin
+                     case Info.Kind is
+                        when Kind_Bit_Type =>
+                           declare
+                              V, Xz : Uns32;
+                           begin
+                              To_Logic (Val.Lit, V, Xz);
+                              if Xz = 0 then
+                                 return Build_Const_UB32
+                                   (Build_Context, V, 1);
+                              else
+                                 return Build_Const_UL32
+                                   (Build_Context, V, Xz, 1);
+                              end if;
+                           end;
+                        when Kind_Enum_Type =>
+                           --  State machine.
+                           return Build_Const_UB32
+                             (Build_Context, Uns32 (Val.Lit.E8), Info.Width);
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                  end;
                when Iir_Value_I64 =>
                   if Val.Lit.I64 >= 0 then
                      for I in 1 .. 32 loop

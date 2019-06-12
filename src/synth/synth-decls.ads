@@ -22,7 +22,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Synth.Context; use Synth.Context;
 
 package Synth.Decls is
-   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Iir);
+   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
-   procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Iir);
+   procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Node);
 end Synth.Decls;

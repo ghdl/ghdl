@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Mutils; use Mutils;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -40,6 +41,7 @@ package body Synth.Decls is
    begin
       case Val.Kind is
          when Value_Wire =>
+            --  FIXME: get the width directly from the wire ?
             W := Get_Width (Syn_Inst, Get_Type (Decl));
             Name := New_Sname (Syn_Inst.Name, Get_Identifier (Decl));
             if Init /= null then
@@ -55,7 +57,38 @@ package body Synth.Decls is
       end case;
    end Create_Var_Wire;
 
-   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Iir) is
+   procedure Synth_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
+   is
+      pragma Unreferenced (Syn_Inst);
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Enumeration_Type_Definition =>
+            declare
+               Info : constant Sim_Info_Acc := Get_Info (Def);
+               Enum_List : constant Node_Flist :=
+                 Get_Enumeration_Literal_List (Def);
+            begin
+               if Is_Bit_Type (Def) then
+                  Info.Width := 1;
+               else
+                  Info.Width :=
+                    Uns32 (Clog2 (Uns64 (Get_Nbr_Elements (Enum_List))));
+               end if;
+            end;
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            null;
+         when Iir_Kind_Access_Type_Definition
+           | Iir_Kind_File_Type_Definition =>
+            null;
+         when others =>
+            Error_Kind ("synth_type_definition", Def);
+      end case;
+   end Synth_Type_Definition;
+
+   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
@@ -104,9 +137,10 @@ package body Synth.Decls is
          when Iir_Kind_Attribute_Specification =>
             null;
          when Iir_Kind_Type_Declaration
-           | Iir_Kind_Anonymous_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
-            --  TODO, in particular enumerated types.
+           | Iir_Kind_Anonymous_Type_Declaration =>
+            Synth_Type_Definition (Syn_Inst, Get_Type_Definition (Decl));
+         when  Iir_Kind_Subtype_Declaration =>
+            --  TODO
             null;
          when Iir_Kind_Component_Declaration =>
             null;

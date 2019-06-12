@@ -24,6 +24,7 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Utils; use Vhdl.Utils;
 
 with Simul.Environments; use Simul.Environments;
+with Simul.Annotations; use Simul.Annotations;
 with Simul.Execution;
 with Vhdl.Errors; use Vhdl.Errors;
 
@@ -49,11 +50,7 @@ package body Synth.Types is
    begin
       case Get_Kind (Atype) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            if Is_Bit_Type (Atype) then
-               return 1;
-            else
-               raise Internal_Error;
-            end if;
+            return Width (Get_Info (Atype).Width);
          when Iir_Kind_Enumeration_Subtype_Definition =>
             --  Tail call
             return Get_Width (Syn_Inst, Btype);
