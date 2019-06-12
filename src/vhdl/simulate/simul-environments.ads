@@ -229,13 +229,15 @@ package Simul.Environments is
 
    -- The annotation depends on the kind of the node.
    type Sim_Info_Kind is
-     (Kind_Block, Kind_Process, Kind_Frame, Kind_Protected, Kind_Package,
-      Kind_Scalar_Type, Kind_File_Type,
+     (
+      Kind_Block, Kind_Process, Kind_Frame, Kind_Protected, Kind_Package,
+      Kind_Bit_Type, Kind_Enum_Type, Kind_Scalar_Type, Kind_File_Type,
       Kind_Object, Kind_Signal,
       Kind_File,
       Kind_Terminal, Kind_Quantity,
       Kind_PSL,
-      Kind_Extra);
+      Kind_Extra
+     );
 
    type Instance_Slot_Type is new Integer;
    Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
@@ -285,8 +287,11 @@ package Simul.Environments is
             --  Variable index in the block.
             Slot: Object_Slot_Type;
 
-         when Kind_Scalar_Type =>
+         when Kind_Scalar_Type
+           | Kind_Bit_Type
+           | Kind_Enum_Type =>
             Scalar_Mode : Iir_Value_Kind;
+            Width : Uns32;
 
          when Kind_File_Type =>
             File_Signature : String_Acc;

@@ -18,10 +18,12 @@
 
 with Tables;
 with Simple_IO;
+with Types; use Types;
+with Mutils; use Mutils;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
-with Types; use Types;
+with Vhdl.Ieee.Std_Logic_1164;
 
 package body Simul.Annotations is
    procedure Annotate_Declaration_List
@@ -91,6 +93,8 @@ package body Simul.Annotations is
            | Kind_Frame
            | Kind_Protected
            | Kind_Package
+           | Kind_Bit_Type
+           | Kind_Enum_Type
            | Kind_Scalar_Type
            | Kind_File_Type
            | Kind_Extra =>
@@ -277,22 +281,36 @@ package body Simul.Annotations is
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
             declare
-               Mode : Iir_Value_Kind;
+               Info : Sim_Info_Acc;
+               Nbr_Enums : Natural;
             begin
                if Def = Vhdl.Std_Package.Boolean_Type_Definition
                  or else Def = Vhdl.Std_Package.Bit_Type_Definition
                then
-                  Mode := Iir_Value_B1;
-               elsif (Get_Nbr_Elements (Get_Enumeration_Literal_List (Def))
-                        <= 256)
+                  Info := new Sim_Info_Type'(Kind => Kind_Bit_Type,
+                                             Ref => Def,
+                                             Scalar_Mode => Iir_Value_B1,
+                                             Width => 1);
+               elsif Def = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
+                 or else Def = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
                then
-                  Mode := Iir_Value_E8;
+                  Info := new Sim_Info_Type'(Kind => Kind_Bit_Type,
+                                             Ref => Def,
+                                             Scalar_Mode => Iir_Value_E8,
+                                             Width => 1);
                else
-                  Mode := Iir_Value_E32;
+                  Nbr_Enums := Get_Nbr_Elements
+                    (Get_Enumeration_Literal_List (Def));
+                  Info := new Sim_Info_Type'
+                    (Kind => Kind_Enum_Type,
+                     Ref => Def,
+                     Scalar_Mode => Iir_Value_E8,
+                     Width => Uns32 (Clog2 (Uns64 (Nbr_Enums))));
+                  if Nbr_Enums > 256 then
+                     Info.Scalar_Mode := Iir_Value_E32;
+                  end if;
                end if;
-               Set_Info (Def, new Sim_Info_Type'(Kind => Kind_Scalar_Type,
-                                                 Ref => Def,
-                                                 Scalar_Mode => Mode));
+               Set_Info (Def, Info);
                Annotate_Range_Expression
                  (Block_Info, Get_Range_Constraint (Def));
             end;
@@ -327,19 +345,22 @@ package body Simul.Annotations is
             Set_Info (Def,
                       new Sim_Info_Type'(Kind => Kind_Scalar_Type,
                                          Ref => Def,
-                                         Scalar_Mode => Iir_Value_I64));
+                                         Scalar_Mode => Iir_Value_I64,
+                                         Width => 0));
 
          when Iir_Kind_Floating_Type_Definition =>
             Set_Info (Def,
                       new Sim_Info_Type'(Kind => Kind_Scalar_Type,
                                          Ref => Def,
-                                         Scalar_Mode => Iir_Value_F64));
+                                         Scalar_Mode => Iir_Value_F64,
+                                         Width => 0));
 
          when Iir_Kind_Physical_Type_Definition =>
             Set_Info (Def,
                       new Sim_Info_Type'(Kind => Kind_Scalar_Type,
                                          Ref => Def,
-                                         Scalar_Mode => Iir_Value_I64));
+                                         Scalar_Mode => Iir_Value_I64,
+                                         Width => 0));
 
          when Iir_Kind_Array_Type_Definition =>
             El := Get_Element_Subtype (Def);
@@ -1225,6 +1246,8 @@ package body Simul.Annotations is
            | Kind_PSL =>
             Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Scalar_Type
+           | Kind_Bit_Type
+           | Kind_Enum_Type
            | Kind_File_Type
            | Kind_Extra =>
             null;
@@ -1265,6 +1288,10 @@ package body Simul.Annotations is
          when Kind_Scalar_Type =>
             Put_Line ("scalar type: "
                         & Iir_Value_Kind'Image (Info.Scalar_Mode));
+         when Kind_Bit_Type =>
+            Put_Line ("bit type");
+         when Kind_Enum_Type =>
+            Put_Line ("enum type");
          when Kind_File_Type =>
             Put ("file type: ");
             if Info.File_Signature = null then
