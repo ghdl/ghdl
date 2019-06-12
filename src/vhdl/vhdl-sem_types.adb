@@ -2321,6 +2321,7 @@ package body Vhdl.Sem_Types is
             Type_Mark := Sem_Type_Mark (Def, Incomplete);
             return Type_Mark;
          when Iir_Kind_Error =>
+            Set_Base_Type (Def, Def);
             return Def;
          when others =>
             null;
