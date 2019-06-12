@@ -179,6 +179,13 @@ package body Synth.Expr is
       Stride : Iir_Index32)
    is
       Bound : constant Iir_Value_Literal_Acc := Res.Bounds.D (Dim);
+      Aggr_Type : constant Node := Get_Type (Aggr);
+      El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
+      Idx_Type : constant Node :=
+        Get_Index_Type (Aggr_Type, Natural (Dim - 1));
+      type Boolean_Array is array (Iir_Index32 range <>) of Boolean;
+      pragma Pack (Boolean_Array);
+      Is_Set : Boolean_Array (0 .. Bound.Length - 1);
       Value : Iir;
       Assoc : Iir;
       Pos : Iir_Index32;
@@ -188,9 +195,10 @@ package body Synth.Expr is
          Val : Value_Acc;
       begin
          if Dim = Res.Bounds.Nbr_Dims then
-            Val := Synth_Expression_With_Type
-              (Syn_Inst, Value, Get_Element_Subtype (Get_Type (Aggr)));
+            Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type);
             Res.Arr.V (Orig + Stride * Pos) := Val;
+            pragma Assert (not Is_Set (Pos));
+            Is_Set (Pos) := True;
          else
             Error_Msg_Synth (+Assoc, "multi-dim aggregate not handled");
          end if;
@@ -198,6 +206,7 @@ package body Synth.Expr is
    begin
       Assoc := Get_Association_Choices_Chain (Aggr);
       Pos := 0;
+      Is_Set := (others => False);
       while Is_Valid (Assoc) loop
          Value := Get_Associated_Expr (Assoc);
          loop
@@ -211,9 +220,27 @@ package body Synth.Expr is
                   Pos := Pos + 1;
                when Iir_Kind_Choice_By_Others =>
                   while Pos < Bound.Length loop
-                     Set_Elem (Pos);
+                     if not Is_Set (Pos) then
+                        Set_Elem (Pos);
+                     end if;
                      Pos := Pos + 1;
                   end loop;
+               when Iir_Kind_Choice_By_Expression =>
+                  declare
+                     Ch : constant Node := Get_Choice_Expression (Assoc);
+                     Idx : Value_Acc;
+                  begin
+                     Idx := Synth_Expression_With_Type
+                       (Syn_Inst, Ch, Idx_Type);
+                     if not Is_Const (Idx) then
+                        Error_Msg_Synth (+Ch, "choice is not static");
+                     else
+                        Set_Elem (Simul.Execution.Get_Index_Offset
+                                    (Idx.Lit, Bound, Ch));
+                     end if;
+                  end;
+               when Iir_Kind_Choice_By_Range =>
+                  raise Internal_Error;
                when others =>
                   Error_Msg_Synth
                     (+Assoc, "unhandled association form");
