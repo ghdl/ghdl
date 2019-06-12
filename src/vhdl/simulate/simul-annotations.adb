@@ -614,7 +614,7 @@ package body Simul.Annotations is
 
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
          declare
-            Bod : constant Iir := Get_Package_Body (Decl);
+            Bod : constant Iir := Get_Instance_Package_Body (Decl);
          begin
             if Bod /= Null_Iir then
                Set_Info (Bod, Package_Info);

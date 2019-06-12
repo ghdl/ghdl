@@ -383,6 +383,7 @@ package body Simul.Elaboration is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
       Instance : Block_Instance_Acc;
       Hdr : Iir;
+      Bod : Iir;
    begin
       if Block /= Global_Instances then
          --  Packages in library unit can be elaborated in a different order.
@@ -418,17 +419,18 @@ package body Simul.Elaboration is
       Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
 
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         Bod := Get_Instance_Package_Body (Decl);
          --  Elaborate the body now.
-         if Get_Package_Body (Decl) /= Null_Iir then
+         if Bod /= Null_Iir then
             --  Macro-expanded.
             Elaborate_Declarative_Part
-              (Instance, Get_Declaration_Chain (Get_Package_Body (Decl)));
+              (Instance, Get_Declaration_Chain (Bod));
          else
             --  Shared body.
             declare
                Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
-               Bod : constant Iir := Get_Package_Body (Uninst);
             begin
+               Bod := Get_Package_Body (Uninst);
                Instance.Uninst_Scope := Get_Info (Uninst);
                if Is_Valid (Bod) then
                   --  Body is optional.
