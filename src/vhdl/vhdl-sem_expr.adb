@@ -4928,7 +4928,9 @@ package body Vhdl.Sem_Expr is
          if A_Type /= Null_Iir
            and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
          then
-            Error_Not_Match (Expr, A_Type);
+            if not Is_Error (Expr_Type) then
+               Error_Not_Match (Expr, A_Type);
+            end if;
             return Null_Iir;
          end if;
          return Expr;

@@ -1741,7 +1741,7 @@ package body Vhdl.Sem_Stmts is
       --  LRM93 9.7
       --  The discrete range in a generation scheme of the first form must
       --  be a static discrete range;
-      if Get_Type (Param) /= Null_Iir
+      if not Is_Error (Get_Type (Param))
         and then Get_Type_Staticness (Get_Type (Param)) < Globally
       then
          Error_Msg_Sem (+Stmt, "range must be a static discrete range");

@@ -958,7 +958,7 @@ package body Vhdl.Errors is
 
    procedure Error_Not_Match (Expr: Iir; A_Type: Iir) is
    begin
-      if Get_Kind (A_Type) = Iir_Kind_Error then
+      if Is_Error (A_Type) then
          --  Cascade error message.
          return;
       end if;
