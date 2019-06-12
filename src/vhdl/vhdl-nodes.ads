@@ -5502,6 +5502,7 @@ package Vhdl.Nodes is
    pragma Inline (Get_Last_Node);
 
    subtype Iir_List is Lists.List_Type;
+   subtype Node_List is Lists.List_Type;
    Null_Iir_List : constant Iir_List := Lists.Null_List;
    Iir_List_All : constant Iir_List := Lists.List_All;
 
@@ -5540,6 +5541,7 @@ package Vhdl.Nodes is
    function "=" (L, R : Iir_List) return Boolean renames Lists."=";
 
    subtype Iir_Flist is Flists.Flist_Type;
+   subtype Node_Flist is Flists.Flist_Type;
    Null_Iir_Flist   : constant Iir_Flist := Flists.Null_Flist;
    Iir_Flist_Others : constant Iir_Flist := Flists.Flist_Others;
    Iir_Flist_All    : constant Iir_Flist := Flists.Flist_All;
