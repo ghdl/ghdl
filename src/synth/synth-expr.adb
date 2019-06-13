@@ -172,7 +172,7 @@ package body Synth.Expr is
 
    procedure Fill_Array_Aggregate
      (Syn_Inst : Synth_Instance_Acc;
-      Aggr : Iir;
+      Aggr : Node;
       Res : Value_Acc;
       Dim : Iir_Index32;
       Orig : Iir_Index32;
@@ -186,8 +186,8 @@ package body Synth.Expr is
       type Boolean_Array is array (Iir_Index32 range <>) of Boolean;
       pragma Pack (Boolean_Array);
       Is_Set : Boolean_Array (0 .. Bound.Length - 1);
-      Value : Iir;
-      Assoc : Iir;
+      Value : Node;
+      Assoc : Node;
       Pos : Iir_Index32;
 
       procedure Set_Elem (Pos : Iir_Index32)
@@ -344,8 +344,8 @@ package body Synth.Expr is
    end Vectorize_Array;
 
    function Synth_Aggregate (Syn_Inst : Synth_Instance_Acc;
-                             Aggr : Iir;
-                             Aggr_Type : Iir) return Value_Acc is
+                             Aggr : Node;
+                             Aggr_Type : Node) return Value_Acc is
    begin
       case Get_Kind (Aggr_Type) is
          when Iir_Kind_Array_Type_Definition
@@ -377,7 +377,7 @@ package body Synth.Expr is
       end case;
    end Synth_Aggregate;
 
-   function Synth_Bit_Eq_Const (Cst : Value_Acc; Expr : Value_Acc; Loc : Iir)
+   function Synth_Bit_Eq_Const (Cst : Value_Acc; Expr : Value_Acc; Loc : Node)
                                return Value_Acc
    is
       pragma Unreferenced (Loc);
@@ -443,7 +443,7 @@ package body Synth.Expr is
                                     Def : Iir_Predefined_Functions;
                                     Left : Value_Acc;
                                     Right : Value_Acc;
-                                    Expr : Iir) return Value_Acc
+                                    Expr : Node) return Value_Acc
    is
       function Synth_Bit_Dyadic (Id : Dyadic_Module_Id) return Value_Acc is
       begin
@@ -620,7 +620,7 @@ package body Synth.Expr is
 
    function Synth_Monadic_Operation (Def : Iir_Predefined_Functions;
                                      Operand : Value_Acc;
-                                     Loc : Iir) return Value_Acc
+                                     Loc : Node) return Value_Acc
    is
       function Synth_Bit_Monadic (Id : Monadic_Module_Id) return Value_Acc is
       begin
@@ -654,7 +654,7 @@ package body Synth.Expr is
       end case;
    end Synth_Monadic_Operation;
 
-   function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Iir)
+   function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Value_Acc is
    begin
       case Get_Kind (Name) is
@@ -684,7 +684,7 @@ package body Synth.Expr is
       end case;
    end In_Range;
 
-   function Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc; Name : Iir)
+   function Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                                return Value_Acc
    is
       Pfx : constant Value_Acc :=
@@ -723,12 +723,12 @@ package body Synth.Expr is
       end case;
    end Synth_Indexed_Name;
 
-   function Synth_Slice_Name (Syn_Inst : Synth_Instance_Acc; Name : Iir)
+   function Synth_Slice_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                               return Value_Acc
    is
       Pfx : constant Value_Acc :=
         Synth_Expression (Syn_Inst, Get_Prefix (Name));
-      Expr : constant Iir := Get_Suffix (Name);
+      Expr : constant Node := Get_Suffix (Name);
       Res_Rng : Value_Range_Acc;
       Left, Right : Value_Acc;
       Dir : Iir_Direction;
@@ -792,16 +792,16 @@ package body Synth.Expr is
 
    --  Match: clk_signal_name'event
    --  and return clk_signal_name.
-   function Extract_Event_Expr_Prefix (Expr : Iir) return Iir is
+   function Extract_Event_Expr_Prefix (Expr : Node) return Node is
    begin
       if Get_Kind (Expr) = Iir_Kind_Event_Attribute then
          return Get_Prefix (Expr);
       else
-         return Null_Iir;
+         return Null_Node;
       end if;
    end Extract_Event_Expr_Prefix;
 
-   function Is_Same_Node (Left, Right : Iir) return Boolean is
+   function Is_Same_Node (Left, Right : Node) return Boolean is
    begin
       if Get_Kind (Left) /= Get_Kind (Right) then
          return False;
@@ -816,12 +816,12 @@ package body Synth.Expr is
 
    --  Match: clk_signal_name = '1' | clk_signal_name = '0'
    function Extract_Clock_Level
-     (Syn_Inst : Synth_Instance_Acc; Expr : Iir; Prefix : Iir) return Net
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Prefix : Node) return Net
    is
       Clk : Net;
-      Imp : Iir;
-      Left, Right : Iir;
-      Lit : Iir;
+      Imp : Node;
+      Left, Right : Node;
+      Lit : Node;
       Posedge : Boolean;
    begin
       Clk := Get_Net (Synth_Name (Syn_Inst, Prefix));
@@ -868,13 +868,13 @@ package body Synth.Expr is
    --  Try to match: clk'event and clk = X
    --            or: clk = X and clk'event
    --  where X is '0' or '1'.
-   function Synth_Clock_Edge (Syn_Inst : Synth_Instance_Acc; Expr : Iir)
+   function Synth_Clock_Edge (Syn_Inst : Synth_Instance_Acc; Expr : Node)
                              return Value_Acc
    is
       pragma Assert (Get_Kind (Expr) = Iir_Kind_And_Operator);
-      Left : constant Iir := Get_Left (Expr);
-      Right : constant Iir := Get_Right (Expr);
-      Prefix : Iir;
+      Left : constant Node := Get_Left (Expr);
+      Right : constant Node := Get_Right (Expr);
+      Prefix : Node;
    begin
       --  Try with left.
       Prefix := Extract_Event_Expr_Prefix (Left);
@@ -893,10 +893,10 @@ package body Synth.Expr is
       return null;
    end Synth_Clock_Edge;
 
-   function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc; Conv : Iir)
+   function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc; Conv : Node)
                                   return Value_Acc
    is
-      Expr : constant Iir := Get_Expression (Conv);
+      Expr : constant Node := Get_Expression (Conv);
       Val : Value_Acc;
    begin
       Val := Synth_Expression (Syn_Inst, Expr);
@@ -909,7 +909,7 @@ package body Synth.Expr is
    end Synth_Type_Conversion;
 
    function Synth_Assoc_In (Syn_Inst : Synth_Instance_Acc;
-                            Assoc : Iir) return Value_Acc is
+                            Assoc : Node) return Value_Acc is
    begin
       if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression then
          return Synth_Expression (Syn_Inst, Get_Actual (Assoc));
@@ -918,7 +918,7 @@ package body Synth.Expr is
       end if;
    end Synth_Assoc_In;
 
-   procedure Error_Unknown_Operator (Imp : Iir; Loc : Iir) is
+   procedure Error_Unknown_Operator (Imp : Node; Loc : Node) is
    begin
       if Get_Kind (Get_Parent (Imp)) = Iir_Kind_Package_Declaration
         and then (Get_Identifier
@@ -934,13 +934,13 @@ package body Synth.Expr is
    end Error_Unknown_Operator;
 
    function Synth_Expression_With_Type
-     (Syn_Inst : Synth_Instance_Acc; Expr : Iir; Expr_Type : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Node)
      return Value_Acc is
    begin
       case Get_Kind (Expr) is
          when Iir_Kinds_Dyadic_Operator =>
             declare
-               Imp : constant Iir := Get_Implementation (Expr);
+               Imp : constant Node := Get_Implementation (Expr);
                Def : constant Iir_Predefined_Functions :=
                  Get_Implicit_Definition (Imp);
                Left : Value_Acc;
@@ -969,7 +969,7 @@ package body Synth.Expr is
             end;
          when Iir_Kinds_Monadic_Operator =>
             declare
-               Imp : constant Iir := Get_Implementation (Expr);
+               Imp : constant Node := Get_Implementation (Expr);
                Def : constant Iir_Predefined_Functions :=
                  Get_Implicit_Definition (Imp);
                Operand : Value_Acc;
@@ -1004,7 +1004,7 @@ package body Synth.Expr is
               (Syn_Inst, Get_Expression (Expr), Get_Type (Expr));
          when Iir_Kind_Function_Call =>
             declare
-               Imp : constant Iir := Get_Implementation (Expr);
+               Imp : constant Node := Get_Implementation (Expr);
                Clk : Net;
                Edge : Net;
             begin
@@ -1034,7 +1034,7 @@ package body Synth.Expr is
       return null;
    end Synth_Expression_With_Type;
 
-   function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Iir)
+   function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Node)
                              return Value_Acc is
    begin
       return Synth_Expression_With_Type (Syn_Inst, Expr, Get_Type (Expr));

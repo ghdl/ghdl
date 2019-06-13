@@ -35,9 +35,9 @@ package Synth.Expr is
    function Bit_Extract (Val : Value_Acc; Off : Uns32) return Value_Acc;
 
    function Synth_Expression_With_Type
-     (Syn_Inst : Synth_Instance_Acc; Expr : Iir; Expr_Type : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Node)
      return Value_Acc;
 
-   function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Iir)
+   function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Node)
                              return Value_Acc;
 end Synth.Expr;
