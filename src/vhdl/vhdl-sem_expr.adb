@@ -2082,23 +2082,26 @@ package body Vhdl.Sem_Expr is
          --  The type of the context is constrained.
          Index_Type := Get_Index_Type (Lit_Type, 0);
          if Get_Type_Staticness (Index_Type) = Locally then
-            if Eval_Discrete_Type_Length (Index_Type) /= Int64 (Len) then
+            if Eval_Discrete_Type_Length (Index_Type) = Int64 (Len) then
+               return;
+            else
                Error_Msg_Sem (+Lit, "string length does not match that of %n",
                               +Index_Type);
+               --  Change the type.
             end if;
          else
             --  FIXME: emit a warning because of dubious construct (the type
             --  of the string is not locally constrained) ?
-            null;
+            return;
          end if;
-      else
-         -- Context type is not constained.  Set type of the string literal,
-         -- according to LRM93 7.3.2.2.
-         N_Type := Create_Unidim_Array_By_Length
-           (Lit_Base_Type, Int64 (Len), Lit);
-         Set_Type (Lit, N_Type);
-         Set_Literal_Subtype (Lit, N_Type);
       end if;
+
+      -- Context type is not constained.  Set type of the string literal,
+      -- according to LRM93 7.3.2.2.
+      N_Type := Create_Unidim_Array_By_Length
+        (Lit_Base_Type, Int64 (Len), Lit);
+      Set_Type (Lit, N_Type);
+      Set_Literal_Subtype (Lit, N_Type);
    end Sem_String_Literal;
 
    procedure Count_Choices (Info : out Choice_Info_Type;
