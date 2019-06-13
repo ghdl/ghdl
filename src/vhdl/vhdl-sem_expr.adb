@@ -2382,7 +2382,9 @@ package body Vhdl.Sem_Expr is
          begin
             for I in 1 .. Sel_Length loop
                Nbr := Nbr / Sel_El_Length;
-               if Nbr = 0 then
+               if Nbr = 0 and then Choice_Chain /= Null_Iir then
+                  --  An error has already been reported by parse if there is
+                  --  no choices.
                   Error_Msg_Sem (+Choice_Chain, "missing choice(s)");
                   exit;
                end if;
