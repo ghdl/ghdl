@@ -47,18 +47,18 @@ with Netlists.Builders; use Netlists.Builders;
 
 package body Synth.Stmts is
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
-                            Wf : Iir;
-                            Targ_Type : Iir) return Value_Acc is
+                            Wf : Node;
+                            Targ_Type : Node) return Value_Acc is
    begin
       if Get_Kind (Wf) = Iir_Kind_Unaffected_Waveform then
          --  TODO
          raise Internal_Error;
       end if;
-      if Get_Chain (Wf) /= Null_Iir then
+      if Get_Chain (Wf) /= Null_Node then
          --  Warning.
          null;
       end if;
-      if Get_Time (Wf) /= Null_Iir then
+      if Get_Time (Wf) /= Null_Node then
          --  Warning
          null;
       end if;
@@ -77,16 +77,16 @@ package body Synth.Stmts is
    end Synth_Assign;
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
-                               Target : Iir;
+                               Target : Node;
                                Val : Value_Acc);
 
    procedure Synth_Assignment_Aggregate (Syn_Inst : Synth_Instance_Acc;
-                                         Target : Iir;
+                                         Target : Node;
                                          Val : Value_Acc)
    is
-      Targ_Type : constant Iir := Get_Type (Target);
-      Choice : Iir;
-      Assoc : Iir;
+      Targ_Type : constant Node := Get_Type (Target);
+      Choice : Node;
+      Assoc : Node;
       Pos : Uns32;
    begin
       if Is_Vector_Type (Targ_Type) then
@@ -109,7 +109,7 @@ package body Synth.Stmts is
    end Synth_Assignment_Aggregate;
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
-                               Target : Iir;
+                               Target : Node;
                                Val : Value_Acc) is
    begin
       case Get_Kind (Target) is
@@ -128,9 +128,9 @@ package body Synth.Stmts is
 
    --  Concurrent or sequential simple signal assignment
    procedure Synth_Simple_Signal_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Target : constant Iir := Get_Target (Stmt);
+      Target : constant Node := Get_Target (Stmt);
       Val : Value_Acc;
    begin
       Val := Synth_Waveform
@@ -139,7 +139,7 @@ package body Synth.Stmts is
    end Synth_Simple_Signal_Assignment;
 
    procedure Synth_Conditional_Signal_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Target : constant Node := Get_Target (Stmt);
       Targ_Type : constant Node := Get_Type (Target);
@@ -170,9 +170,9 @@ package body Synth.Stmts is
    end Synth_Conditional_Signal_Assignment;
 
    procedure Synth_Variable_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Target : constant Iir := Get_Target (Stmt);
+      Target : constant Node := Get_Target (Stmt);
       Val : Value_Acc;
    begin
       Val := Synth_Expression_With_Type
@@ -181,13 +181,13 @@ package body Synth.Stmts is
    end Synth_Variable_Assignment;
 
    procedure Synth_Sequential_Statements
-     (Syn_Inst : Synth_Instance_Acc; Stmts : Iir);
+     (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
 
    procedure Synth_If_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Cond : constant Iir := Get_Condition (Stmt);
-      Els : constant Iir := Get_Else_Clause (Stmt);
+      Cond : constant Node := Get_Condition (Stmt);
+      Els : constant Node := Get_Else_Clause (Stmt);
       Cond_Val : Value_Acc;
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
@@ -219,9 +219,9 @@ package body Synth.Stmts is
       end if;
    end Synth_If_Statement;
 
-   procedure Convert_To_Uns64 (Expr : Iir; Val : out Uns64; Dc : out Uns64)
+   procedure Convert_Bv_To_Uns64 (Expr : Node; Val : out Uns64; Dc : out Uns64)
    is
-      El_Type : constant Iir :=
+      El_Type : constant Node :=
         Get_Base_Type (Get_Element_Subtype (Get_Type (Expr)));
    begin
       if El_Type = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
@@ -259,6 +259,23 @@ package body Synth.Stmts is
       else
          raise Internal_Error;
       end if;
+   end Convert_Bv_To_Uns64;
+
+   --  EXPR is a choice, so a locally static literal.
+   procedure Convert_To_Uns64 (Expr : Node; Val : out Uns64; Dc : out Uns64)
+   is
+      Expr_Type : constant Node := Get_Type (Expr);
+   begin
+      case Get_Kind (Expr_Type) is
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            Convert_Bv_To_Uns64 (Expr, Val, Dc);
+         when Iir_Kind_Enumeration_Type_Definition =>
+            Dc := 0;
+            Val := Uns64 (Get_Enum_Pos (Strip_Denoting_Name (Expr)));
+         when others =>
+            Error_Kind ("convert_to_uns64", Expr_Type);
+      end case;
    end Convert_To_Uns64;
 
    type Alternative_Index is new Int32;
@@ -469,14 +486,13 @@ package body Synth.Stmts is
       Res := Els (Els'First).Val;
    end Synth_Case;
 
-   procedure Synth_Case_Statement (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
+   procedure Synth_Case_Statement (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       use Vhdl.Sem_Expr;
 
-      Expr : constant Iir := Get_Expression (Stmt);
-      Expr_Type : constant Iir := Get_Type (Expr);
-      Choices : constant Iir := Get_Case_Statement_Alternative_Chain (Stmt);
-      Choice : Iir;
+      Expr : constant Node := Get_Expression (Stmt);
+      Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
+      Choice : Node;
 
       Case_Info : Choice_Info_Type;
       Annex_Arr : Annex_Array_Acc;
@@ -493,15 +509,6 @@ package body Synth.Stmts is
       Sel : Value_Acc;
       Sel_Net : Net;
    begin
-      --  TODO: handle enum, bit, integers...
-      if Get_Kind (Get_Base_Type (Expr_Type))
-        = Iir_Kind_Enumeration_Type_Definition
-        and then not Is_Bit_Type (Expr_Type)
-      then
-         --  State machine.
-         raise Internal_Error;
-      end if;
-
       --  Strategies to synthesize a case statement.  Assume the selector is
       --  a net of W bits
       --  - a large mux, with 2**W inputs
@@ -559,7 +566,8 @@ package body Synth.Stmts is
                Choice_Idx := Choice_Idx + 1;
                Annex_Arr (Choice_Idx) := Int32 (Alt_Idx);
                declare
-                  Choice_Expr : constant Iir := Get_Choice_Expression (Choice);
+                  Choice_Expr : constant Node :=
+                    Get_Choice_Expression (Choice);
                   Val, Dc : Uns64;
                begin
                   Convert_To_Uns64 (Choice_Expr, Val, Dc);
@@ -648,14 +656,14 @@ package body Synth.Stmts is
    procedure Synth_Subprogram_Association
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
-      Inter_Chain : Iir;
-      Assoc_Chain : Iir)
+      Inter_Chain : Node;
+      Assoc_Chain : Node)
    is
       use Simul.Annotations;
-      Inter : Iir;
-      Assoc : Iir;
-      Assoc_Inter : Iir;
-      Actual : Iir;
+      Inter : Node;
+      Assoc : Node;
+      Assoc_Inter : Node;
+      Actual : Node;
       Val : Value_Acc;
       Slot : Object_Slot_Type;
    begin
@@ -704,12 +712,12 @@ package body Synth.Stmts is
    procedure Synth_Subprogram_Back_Association
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
-      Inter_Chain : Iir;
-      Assoc_Chain : Iir)
+      Inter_Chain : Node;
+      Assoc_Chain : Node)
    is
-      Inter : Iir;
-      Assoc : Iir;
-      Assoc_Inter : Iir;
+      Inter : Node;
+      Assoc : Node;
+      Assoc_Inter : Node;
       Val : Value_Acc;
    begin
       Assoc := Assoc_Chain;
@@ -729,14 +737,14 @@ package body Synth.Stmts is
    end Synth_Subprogram_Back_Association;
 
    procedure Synth_Procedure_Call
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Call : constant Iir := Get_Procedure_Call (Stmt);
-      Imp  : constant Iir := Get_Implementation (Call);
-      Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Call);
-      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
-      Subprg_Body : constant Iir := Get_Subprogram_Body (Imp);
-      Decls_Chain : constant Iir := Get_Declaration_Chain (Subprg_Body);
+      Call : constant Node := Get_Procedure_Call (Stmt);
+      Imp  : constant Node := Get_Implementation (Call);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Subprg_Body : constant Node := Get_Subprogram_Body (Imp);
+      Decls_Chain : constant Node := Get_Declaration_Chain (Subprg_Body);
       Sub_Sim_Inst : Block_Instance_Acc;
       Sub_Syn_Inst : Synth_Instance_Acc;
    begin
@@ -773,9 +781,9 @@ package body Synth.Stmts is
    end Synth_Procedure_Call;
 
    procedure Synth_Sequential_Statements
-     (Syn_Inst : Synth_Instance_Acc; Stmts : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
-      Stmt : Iir;
+      Stmt : Node;
    begin
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
@@ -802,11 +810,12 @@ package body Synth.Stmts is
 
    Proc_Pool : aliased Areapools.Areapool;
 
-   procedure Synth_Process_Statement
-     (Syn_Inst : Synth_Instance_Acc; Sim_Inst : Block_Instance_Acc; Proc : Iir)
+   procedure Synth_Process_Statement (Syn_Inst : Synth_Instance_Acc;
+                                      Sim_Inst : Block_Instance_Acc;
+                                      Proc : Node)
    is
       use Areapools;
-      Decls_Chain : constant Iir := Get_Declaration_Chain (Proc);
+      Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
       Proc_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
    begin
@@ -831,10 +840,10 @@ package body Synth.Stmts is
    end Synth_Process_Statement;
 
    procedure Synth_Generate_Statement_Body
-     (Syn_Inst : Synth_Instance_Acc; Sim_Inst : Block_Instance_Acc; Bod : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Sim_Inst : Block_Instance_Acc; Bod : Node)
    is
       use Areapools;
-      Decls_Chain : constant Iir := Get_Declaration_Chain (Bod);
+      Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
       Bod_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
    begin
@@ -856,10 +865,10 @@ package body Synth.Stmts is
    end Synth_Generate_Statement_Body;
 
    procedure Synth_Concurrent_Statements
-     (Syn_Inst : Synth_Instance_Acc; Stmts : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
       Sim_Child : Block_Instance_Acc;
-      Stmt : Iir;
+      Stmt : Node;
    begin
       Sim_Child := Syn_Inst.Sim.Children;
       Stmt := Stmts;
