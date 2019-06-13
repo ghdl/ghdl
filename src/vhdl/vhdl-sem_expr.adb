@@ -1391,7 +1391,7 @@ package body Vhdl.Sem_Expr is
          --  during the transformation of iir_kind_parenthesis_name to
          --  iir_kind_function_call.
          Inter_List := Get_Implementation (Expr);
-         if Get_Kind (Inter_List) = Iir_Kind_Error then
+         if Is_Error (Inter_List) then
             return Null_Iir;
          elsif Is_Overload_List (Inter_List) then
             --  Subprogram name is overloaded.
@@ -4083,7 +4083,7 @@ package body Vhdl.Sem_Expr is
       else
          if not Is_Allocator_Type (A_Type, Expr) then
             if Get_Kind (A_Type) /= Iir_Kind_Access_Type_Definition then
-               if Get_Kind (A_Type) /= Iir_Kind_Error then
+               if not Is_Error (A_Type) then
                   Error_Msg_Sem (+Expr, "expected type is not an access type");
                end if;
             else
@@ -4576,7 +4576,10 @@ package body Vhdl.Sem_Expr is
             end;
 
          when Iir_Kind_Error =>
-            -- Always ok.
+            --  Always ok.
+            --  Use the error as a type.
+            Set_Type (Expr, Expr);
+            Set_Base_Type (Expr, Expr);
             return Expr;
 
          when others =>
@@ -4889,6 +4892,9 @@ package body Vhdl.Sem_Expr is
       --  above it.  In any case, that also makes sense: we need to deal with
       --  types, not with subtypes.
       Expr_Type := Get_Base_Type (Get_Type (Expr));
+      if Is_Error (Expr_Type) then
+         return;
+      end if;
 
       pragma Assert (Expr_Type /= Null_Iir);
       Result_Type := Compatible_Types_Intersect (Atype, Expr_Type);
