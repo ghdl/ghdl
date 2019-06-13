@@ -25,6 +25,7 @@ with PSL.Nodes;
 with PSL.Dump_Tree;
 with Vhdl.Disp_Tree;
 with Vhdl.Scanner;
+with Vhdl.Parse;
 with Vhdl.Back_End; use Vhdl.Back_End;
 with Flags; use Flags;
 with Files_Map;
@@ -144,6 +145,7 @@ package body Options is
          Mb_Comment := True;
       elsif Opt = "--force-analysis" then
          Flag_Force_Analysis := True;
+         Vhdl.Parse.Flag_Parse_Parenthesis := True;
       elsif Opt = "-fcaret-diagnostics" then
          Flag_Caret_Diagnostics := True;
       elsif Opt = "-fno-caret-diagnostics" then
