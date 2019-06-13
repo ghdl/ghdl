@@ -3711,6 +3711,18 @@ package body Vhdl.Parse is
       --  Skip ':'.
       Expect_Scan (Tok_Colon);
 
+      --  Skip unexpected mode, this could happen when the interface is
+      --  copied.
+      case Current_Token is
+         when Tok_In | Tok_Out | Tok_Inout | Tok_Buffer | Tok_Linkage =>
+            Error_Msg_Parse ("mode not allowed in object declaration");
+
+            --  Skip mode.
+            Scan;
+         when others =>
+            null;
+      end case;
+
       Object_Type := Parse_Subtype_Indication;
 
       if Kind = Iir_Kind_Signal_Declaration then
