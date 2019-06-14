@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-from distutils.core import setup, Extension
-import distutils.file_util
-import distutils.dir_util
+from distutils.core import setup
 from distutils.command.build import build
-import os
-import os.path
+from os.path import join
+from shutil import copy, copytree
 
 so_ext = "@SOEXT@"
 libghdl_version = "@libghdl_version@"
@@ -17,31 +15,27 @@ write tools like linters.
 """
 
 class GHDLBuild(build):
-    def my_copy_tree(self, src, dst):
-        """Tuned version of copy_tree: exclude .o files"""
-        distutils.dir_util.mkpath(dst, verbose=True)
-
-        for n in os.listdir(src):
-            src_name = os.path.join(src, n)
-            dst_name = os.path.join(dst, n)
-
-            if os.path.isdir(src_name):
-                self.my_copy_tree(src_name, dst_name)
-            elif not src_name.endswith(".o"):
-                distutils.file_util.copy_file(src_name, dst_name)
-
     def run(self):
         # Run original build code
         build.run(self)
 
-        # Copy VHDL libraries & shared library
-        dstdir = os.path.join(self.build_lib, 'libghdl')
+        dstdir = join(self.build_lib, 'libghdl')
         libghdl_filename = "libghdl-" + libghdl_version + so_ext
-        distutils.file_util.copy_file(libghdl_filename, dstdir)
-        with open(os.path.join(dstdir, "config.py"), 'w') as f:
+
+        with open(join(dstdir, "config.py"), 'w') as f:
             f.write('libghdl_filename="{}"\n'.format(libghdl_filename))
-        self.my_copy_tree(os.path.join("lib", "ghdl"),
-                          os.path.join(dstdir, "ghdl"))
+
+        # Copy shared library and VHDL libraries
+        copy(libghdl_filename, dstdir)
+
+        def ignore_function(_, lst):
+            return [item for item in lst if item.endswith('.o')]
+        copytree(
+            join("lib", "ghdl"),
+            join(dstdir, "ghdl"),
+            ignore=ignore_function
+        )
+
 
 setup (name='libghdl',
        version=ghdl_version,
