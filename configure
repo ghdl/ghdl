@@ -318,7 +318,7 @@ rm -f config.status
 	sed_opts=`echo $subst_vars | sed -e "s/\\([a-zA-Z_]*\\)/ -e \"s%@\1@%\$\1%g\"/g"`
 	subst_files="ghdl.gpr Makefile"
 	if [ "$enable_python" = true ]; then
-		subst_files="$subst_files setup.py"
+		subst_files="$subst_files setup.py libghdl_pkg.py"
 	fi
 	echo "for f in $subst_files; do"
 	echo '  echo "Creating $f"'

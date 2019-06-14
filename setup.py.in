@@ -1,51 +1,27 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
-from distutils.command.build import build
-from os.path import join
-from shutil import copy, copytree
 
-so_ext = "@SOEXT@"
-libghdl_version = "@libghdl_version@"
-ghdl_version = "@ghdl_version@"
 
-long_description = """GHDL is a vhdl simulator and libghdl provides a low-level
+setup(
+    name='libghdl',
+    version="@ghdl_version@",
+    description='Interface to ghdl, a VHDL analyzer',
+    long_description="""GHDL is a vhdl simulator and libghdl provides a low-level
 interface to the parser. This library gives access to the AST so that you can
 write tools like linters.
-"""
-
-class GHDLBuild(build):
-    def run(self):
-        # Run original build code
-        build.run(self)
-
-        dstdir = join(self.build_lib, 'libghdl')
-        libghdl_filename = "libghdl-" + libghdl_version + so_ext
-
-        with open(join(dstdir, "config.py"), 'w') as f:
-            f.write('libghdl_filename="{}"\n'.format(libghdl_filename))
-
-        # Copy shared library and VHDL libraries
-        copy(libghdl_filename, dstdir)
-
-        def ignore_function(_, lst):
-            return [item for item in lst if item.endswith('.o')]
-        copytree(
-            join("lib", "ghdl"),
-            join(dstdir, "ghdl"),
-            ignore=ignore_function
-        )
-
-
-setup (name='libghdl',
-       version=ghdl_version,
-       description = 'Interface to ghdl, a VHDL analyzer',
-       long_description = long_description,
-       author = 'Tristan Gingold',
-       author_email = 'tgingold@free.fr',
-       url = 'http://github.com/ghdl/ghdl',
-       license = 'GPL-2.0-or-later',
-       package_dir = {'libghdl' : 'src/vhdl/python/libghdl'},
-       packages = ['libghdl', 'libghdl.thin', 'libghdl.thin.vhdl'],
-       cmdclass = {
-           'build': GHDLBuild})
+""",
+    author='Tristan Gingold',
+    author_email='tgingold@free.fr',
+    url='http://github.com/ghdl/ghdl',
+    license='GPL-2.0-or-later',
+    package_dir={
+        'libghdl': './'
+    },
+    packages=[
+        'libghdl',
+        'libghdl.thin',
+        'libghdl.thin.vhdl'
+    ],
+    package_data={'libghdl': ['ghdl/*', 'libghdl-%s%s' % ('@libghdl_version@', '@SOEXT@')]},
+)
