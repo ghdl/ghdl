@@ -19,6 +19,7 @@
 with System;
 with Ada.Unchecked_Conversion;
 with GNAT.Debug_Utilities;
+with Types; use Types;
 with Simple_IO;
 with Name_Table;
 with Simul.Debugger; use Simul.Debugger;

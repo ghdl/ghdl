@@ -28,7 +28,6 @@ with Name_Table;
 with Simul.File_Operation;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
-with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration.AMS; use Simul.Elaboration.AMS;
 with Areapools; use Areapools;
 with Grt.Errors;
@@ -642,18 +641,18 @@ package body Simul.Elaboration is
                   Bounds := Execute_Bounds (Block, Decl);
                   Res := Bounds.Left;
                when Init_Value_Any =>
-                  case Iir_Value_Scalars
-                    (Get_Info (Get_Base_Type (Decl)).Scalar_Mode)
+                  case Kind_Scalar_Types (Get_Info (Get_Base_Type (Decl)).Kind)
                      is
-                     when Iir_Value_B1 =>
+                     when Kind_Bit_Type =>
                         Res := Create_B1_Value (False);
-                     when Iir_Value_E8 =>
+                     when Kind_E8_Type
+                       | Kind_Log_Type =>
                         Res := Create_E8_Value (0);
-                     when Iir_Value_E32 =>
+                     when Kind_E32_Type =>
                         Res := Create_E32_Value (0);
-                     when Iir_Value_I64 =>
+                     when Kind_I64_Type =>
                         Res := Create_I64_Value (0);
-                     when Iir_Value_F64 =>
+                     when Kind_F64_Type =>
                         Res := Create_F64_Value (0.0);
                   end case;
                when Init_Value_Signal =>
@@ -2478,6 +2477,17 @@ package body Simul.Elaboration is
       end case;
    end Elaborate_Branch_Quantity_Declaration;
 
+   procedure Elaborate_Declaration_Type
+     (Instance : Block_Instance_Acc; Decl: Iir)
+   is
+      Ind : constant Iir := Get_Subtype_Indication (Decl);
+   begin
+      if Ind = Null_Iir or else Get_Kind (Ind) in Iir_Kinds_Denoting_Name then
+         return;
+      end if;
+      Elaborate_Subtype_Indication (Instance, Ind);
+   end Elaborate_Declaration_Type;
+
    --  LRM93 §12.3.1  Elaboration of a declaration
    procedure Elaborate_Declaration (Instance : Block_Instance_Acc; Decl : Iir)
    is
@@ -2508,22 +2518,19 @@ package body Simul.Elaboration is
          when Iir_Kind_Subtype_Declaration =>
             Elaborate_Subtype_Indication (Instance, Get_Type (Decl));
          when Iir_Kind_Iterator_Declaration =>
-            Elaborate_Subtype_Indication_If_Anonymous
-              (Instance, Get_Type (Decl));
+            Elaborate_Declaration_Type (Instance, Decl);
             Val := Create_Value_For_Type
               (Instance, Get_Type (Decl), Init_Value_Default);
             Create_Object (Instance, Decl);
             Instance.Objects (Get_Info (Decl).Slot) :=
               Unshare (Val, Instance_Pool);
          when Iir_Kind_Signal_Declaration =>
-            Elaborate_Subtype_Indication_If_Anonymous
-              (Instance, Get_Type (Decl));
+            Elaborate_Declaration_Type (Instance, Decl);
             Val := Elaborate_Default_Value (Instance, Decl);
             Create_Signal (Instance, Decl);
             Elaborate_Signal (Instance, Decl, Val);
          when Iir_Kind_Variable_Declaration =>
-            Elaborate_Subtype_Indication_If_Anonymous
-              (Instance, Get_Type (Decl));
+            Elaborate_Declaration_Type (Instance, Decl);
             Val := Elaborate_Default_Value (Instance, Decl);
             Create_Object (Instance, Decl);
             Instance.Objects (Get_Info (Decl).Slot) :=
@@ -2538,8 +2545,7 @@ package body Simul.Elaboration is
                then
                   --  Create the object (except for full declaration of a
                   --  deferred constant).
-                  Elaborate_Subtype_Indication_If_Anonymous
-                    (Instance, Get_Type (Decl));
+                  Elaborate_Declaration_Type (Instance, Decl);
                   Create_Object (Instance, Decl);
                end if;
                --  Initialize the value (except for a deferred declaration).

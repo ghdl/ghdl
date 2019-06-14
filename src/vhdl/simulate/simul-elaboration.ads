@@ -19,6 +19,7 @@
 with Tables;
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Simul.Annotations; use Simul.Annotations;
 with Simul.Environments; use Simul.Environments;
 with Grt.Types; use Grt.Types;
 

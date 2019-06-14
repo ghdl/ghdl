@@ -16,10 +16,121 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Simul.Environments; use Simul.Environments;
 
 package Simul.Annotations is
+   type Object_Slot_Type is new Natural;
+
+   --  This slot is not used.
+   Invalid_Object_Slot : constant Object_Slot_Type := 0;
+
+   type Block_Instance_Id is new Natural;
+   No_Block_Instance_Id : constant Block_Instance_Id := 0;
+
+   --  For Kind_Extra: a number.  Kind_Extra is not used by annotations, and
+   --  is free for another pass like preelab.
+   type Extra_Slot_Type is new Natural;
+
+   -- The annotation depends on the kind of the node.
+   type Sim_Info_Kind is
+     (
+      Kind_Block, Kind_Process, Kind_Frame, Kind_Protected, Kind_Package,
+      Kind_Bit_Type, Kind_Log_Type,
+      Kind_E8_Type, Kind_E32_Type, Kind_I64_Type, Kind_F64_Type,
+      Kind_File_Type,
+      Kind_Object, Kind_Signal,
+      Kind_File,
+      Kind_Terminal, Kind_Quantity,
+      Kind_PSL,
+      Kind_Extra
+     );
+
+   subtype Kind_Scalar_Types is Sim_Info_Kind range
+     Kind_Bit_Type ..
+   --Kind_Log_Type
+   --Kind_E8_Type
+   --Kind_E32_Type
+   --Kind_I64_Type
+     Kind_F64_Type;
+
+   subtype Kind_Discrete_Types is Sim_Info_Kind range
+     Kind_Bit_Type ..
+   --Kind_Log_Type
+   --Kind_E8_Type
+   --Kind_E32_Type
+     Kind_I64_Type;
+
+   subtype Kind_Enum_Types is Sim_Info_Kind range
+     Kind_Bit_Type ..
+   --Kind_Log_Type
+   --Kind_E8_Type
+     Kind_E32_Type;
+
+   type Instance_Slot_Type is new Integer;
+   Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
+
+   type Sim_Info_Type (Kind : Sim_Info_Kind);
+   type Sim_Info_Acc is access all Sim_Info_Type;
+
+   -- Annotation for an iir node in order to be able to simulate it.
+   type Sim_Info_Type (Kind: Sim_Info_Kind) is record
+      --  Redundant, to be used only for debugging.
+      Ref : Iir;
+
+      case Kind is
+         when Kind_Block
+           | Kind_Frame
+           | Kind_Protected
+           | Kind_Process
+           | Kind_Package =>
+            --  Number of objects/signals.
+            Nbr_Objects : Object_Slot_Type;
+
+            case Kind is
+               when Kind_Block =>
+                  --  Slot number in the parent (for blocks).
+                  Inst_Slot : Instance_Slot_Type;
+
+                  --  Number of children (blocks, generate, instantiation).
+                  Nbr_Instances : Instance_Slot_Type;
+
+               when Kind_Package =>
+                  Pkg_Slot : Object_Slot_Type;
+                  Pkg_Parent : Sim_Info_Acc;
+
+               when others =>
+                  null;
+            end case;
+
+         when Kind_Object
+           | Kind_Signal
+           | Kind_File
+           | Kind_Terminal
+           | Kind_Quantity
+           | Kind_PSL =>
+            --  Block in which this object is declared in.
+            Obj_Scope : Sim_Info_Acc;
+
+            --  Variable index in the block.
+            Slot: Object_Slot_Type;
+
+         when Kind_Bit_Type
+           | Kind_Log_Type
+           | Kind_E8_Type
+           | Kind_E32_Type
+           | Kind_I64_Type
+           | Kind_F64_Type=>
+            Width : Uns32;
+
+         when Kind_File_Type =>
+            File_Signature : String_Acc;
+
+         when Kind_Extra =>
+            Extra_Slot : Extra_Slot_Type;
+      end case;
+   end record;
+
    --  Decorate the tree in order to be usable with the internal simulator.
    procedure Annotate (Unit : Iir_Design_Unit);
 

@@ -26,7 +26,6 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package;
 with Vhdl.Evaluation;
 with Vhdl.Utils; use Vhdl.Utils;
-with Simul.Annotations; use Simul.Annotations;
 with Name_Table;
 with Simul.File_Operation;
 with Simul.Debugger; use Simul.Debugger;
@@ -262,15 +261,15 @@ package body Simul.Execution is
                               return Iir_Value_Literal_Acc
    is
       Base_Type : constant Iir := Get_Base_Type (Etype);
-      Mode : constant Iir_Value_Kind :=
-        Get_Info (Base_Type).Scalar_Mode;
+      Kind : constant Kind_Enum_Types := Get_Info (Base_Type).Kind;
    begin
-      case Iir_Value_Enums (Mode) is
-         when Iir_Value_E8 =>
+      case Kind is
+         when Kind_E8_Type
+           | Kind_Log_Type =>
             return Create_E8_Value (Ghdl_E8 (Pos));
-         when Iir_Value_E32 =>
+         when Kind_E32_Type =>
             return Create_E32_Value (Ghdl_E32 (Pos));
-         when Iir_Value_B1 =>
+         when Kind_Bit_Type =>
             return Create_B1_Value (Ghdl_B1'Val (Pos));
       end case;
    end Create_Enum_Value;
@@ -1775,27 +1774,15 @@ package body Simul.Execution is
 
       Lit: Iir_Value_Literal_Acc;
       El : Iir_Value_Literal_Acc;
-      Element_Mode : Iir_Value_Scalars;
 
       Pos : Nat8;
    begin
-      Element_Mode := Get_Info (El_Btype).Scalar_Mode;
-
       Lit := Create_Array_Value (Len, 1);
 
       for I in Lit.Val_Array.V'Range loop
          -- FIXME: use literal from type ??
          Pos := Str_Table.Element_String8 (Id, Pos32 (I));
-         case Element_Mode is
-            when Iir_Value_B1 =>
-               El := Create_B1_Value (Ghdl_B1'Val (Pos));
-            when Iir_Value_E8 =>
-               El := Create_E8_Value (Ghdl_E8'Val (Pos));
-            when Iir_Value_E32 =>
-               El := Create_E32_Value (Ghdl_E32'Val (Pos));
-            when others =>
-               raise Internal_Error;
-         end case;
+         El := Create_Enum_Value (Natural (Pos), El_Btype);
          Lit.Val_Array.V (I) := El;
       end loop;
 
@@ -3046,8 +3033,8 @@ package body Simul.Execution is
                Lit_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
                Lit : constant Int64 := Get_Value (Expr);
             begin
-               case Get_Info (Lit_Type).Scalar_Mode is
-                  when Iir_Value_I64 =>
+               case Get_Info (Lit_Type).Kind is
+                  when Kind_I64_Type =>
                      return Create_I64_Value (Ghdl_I64 (Lit));
                   when others =>
                      raise Internal_Error;
@@ -3058,21 +3045,8 @@ package body Simul.Execution is
             return Create_F64_Value (Ghdl_F64 (Get_Fp_Value (Expr)));
 
          when Iir_Kind_Enumeration_Literal =>
-            declare
-               Lit_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
-               Lit : constant Iir_Int32 := Get_Enum_Pos (Expr);
-            begin
-               case Get_Info (Lit_Type).Scalar_Mode is
-                  when Iir_Value_B1 =>
-                     return Create_B1_Value (Ghdl_B1'Val (Lit));
-                  when Iir_Value_E8 =>
-                     return Create_E8_Value (Ghdl_E8'Val (Lit));
-                  when Iir_Value_E32 =>
-                     return Create_E32_Value (Ghdl_E32 (Lit));
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end;
+            return Create_Enum_Value (Natural (Get_Enum_Pos (Expr)),
+                                      Get_Type (Expr));
 
          when Iir_Kind_Physical_Int_Literal
            | Iir_Kind_Physical_Fp_Literal
@@ -3188,18 +3162,19 @@ package body Simul.Execution is
             declare
                Prefix_Type: constant Iir := Get_Type (Get_Prefix (Expr));
                Base_Type : constant Iir := Get_Base_Type (Prefix_Type);
-               Mode : constant Iir_Value_Kind :=
-                 Get_Info (Base_Type).Scalar_Mode;
+               Kind : constant Kind_Discrete_Types :=
+                 Get_Info (Base_Type).Kind;
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
-               case Iir_Value_Discrete (Mode) is
-                  when Iir_Value_I64 =>
+               case Kind is
+                  when Kind_I64_Type =>
                      null;
-                  when Iir_Value_E8 =>
+                  when Kind_E8_Type
+                    | Kind_Log_Type =>
                      Res := Create_E8_Value (Ghdl_E8 (Res.I64));
-                  when Iir_Value_E32 =>
+                  when Kind_E32_Type =>
                      Res := Create_E32_Value (Ghdl_E32 (Res.I64));
-                  when Iir_Value_B1 =>
+                  when Kind_Bit_Type =>
                      Res := Create_B1_Value (Ghdl_B1'Val (Res.I64));
                end case;
                Check_Constraints (Block, Res, Prefix_Type, Expr);
@@ -3211,20 +3186,21 @@ package body Simul.Execution is
                N_Res: Iir_Value_Literal_Acc;
                Prefix_Type: constant Iir := Get_Type (Get_Prefix (Expr));
                Base_Type : constant Iir := Get_Base_Type (Prefix_Type);
-               Mode : constant Iir_Value_Kind :=
-                 Get_Info (Base_Type).Scalar_Mode;
+               Mode : constant Kind_Discrete_Types :=
+                 Get_Info (Base_Type).Kind;
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
-               case Iir_Value_Discrete (Mode) is
-                  when Iir_Value_I64 =>
+               case Mode is
+                  when Kind_I64_Type =>
                      null;
-                  when Iir_Value_B1 =>
+                  when Kind_Bit_Type =>
                      N_Res := Create_I64_Value (Ghdl_B1'Pos (Res.B1));
                      Res := N_Res;
-                  when Iir_Value_E8 =>
+                  when Kind_E8_Type
+                    | Kind_Log_Type =>
                      N_Res := Create_I64_Value (Ghdl_I64 (Res.E8));
                      Res := N_Res;
-                  when Iir_Value_E32 =>
+                  when Kind_E32_Type =>
                      N_Res := Create_I64_Value (Ghdl_I64 (Res.E32));
                      Res := N_Res;
                end case;
@@ -4016,7 +3992,6 @@ package body Simul.Execution is
                                 Def: Iir;
                                 Expr: Iir)
    is
-      Base_Type : constant Iir := Get_Base_Type (Def);
       High, Low: Iir_Value_Literal_Acc;
       Bound : Iir_Value_Literal_Acc;
    begin
@@ -4034,7 +4009,7 @@ package body Simul.Execution is
                High := Bound.Left;
                Low := Bound.Right;
             end if;
-            case Iir_Value_Scalars (Get_Info (Base_Type).Scalar_Mode) is
+            case Iir_Value_Scalars (Value.Kind) is
                when Iir_Value_I64 =>
                   if Value.I64 in Low.I64 .. High.I64 then
                      return;
