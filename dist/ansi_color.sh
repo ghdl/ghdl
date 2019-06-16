@@ -1,5 +1,3 @@
-#!/bin/sh
-
 enable_color() {
   ENABLECOLOR='-c '
   ANSI_RED="\033[31m"
