@@ -19,7 +19,6 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
-with Simul.Environments; use Simul.Environments;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -28,9 +27,10 @@ package Synth.Expr is
    function Is_Const (Val : Value_Acc) return Boolean;
    function Get_Width (Val : Value_Acc) return Uns32;
 
-   procedure To_Logic (Lit : Iir_Value_Literal_Acc;
-                       Val : out Uns32;
-                       Zx  : out Uns32);
+   procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx  : out Uns32);
+   procedure From_Bit (Enum : Int64; Val : out Uns32);
+   procedure To_Logic
+     (Enum : Int64; Etype : Node; Val : out Uns32; Zx  : out Uns32);
 
    function Bit_Extract (Val : Value_Acc; Off : Uns32) return Value_Acc;
 
@@ -40,4 +40,14 @@ package Synth.Expr is
 
    function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Node)
                              return Value_Acc;
+
+   function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
+                                     Atype : Node) return Value_Bound_Acc;
+
+   function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
+                                Atype : Node;
+                                Dim : Natural) return Value_Bound_Acc;
+
+   function Synth_Range_Expression
+     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Value_Acc;
 end Synth.Expr;

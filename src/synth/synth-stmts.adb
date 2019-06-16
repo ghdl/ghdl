@@ -37,10 +37,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 
-with Simul.Environments; use Simul.Environments;
-with Simul.Annotations;
-with Simul.Execution;
-with Simul.Elaboration; use Simul.Elaboration;
+with Simul.Annotations; use Simul.Annotations;
 
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
@@ -66,11 +63,11 @@ package body Synth.Stmts is
         (Syn_Inst, Get_We_Value (Wf), Targ_Type);
    end Synth_Waveform;
 
-   procedure Synth_Assign (Dest : Value_Acc; Val : Value_Acc) is
+   procedure Synth_Assign (Dest : Value_Acc; Val : Value_Acc; Vtype : Node) is
    begin
       case Dest.Kind is
          when Value_Wire =>
-            Phi_Assign (Dest.W, Get_Net (Val));
+            Phi_Assign (Dest.W, Get_Net (Val, Vtype));
          when others =>
             raise Internal_Error;
       end case;
@@ -118,7 +115,8 @@ package body Synth.Stmts is
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration =>
-            Synth_Assign (Get_Value (Syn_Inst, Target), Val);
+            Synth_Assign (Get_Value (Syn_Inst, Target),
+                          Val, Get_Type (Target));
          when Iir_Kind_Aggregate =>
             Synth_Assignment_Aggregate (Syn_Inst, Target, Val);
          when others =>
@@ -215,7 +213,8 @@ package body Synth.Stmts is
          end if;
          Pop_Phi (Phi_False);
 
-         Merge_Phis (Build_Context, Get_Net (Cond_Val), Phi_True, Phi_False);
+         Merge_Phis (Build_Context, Get_Net (Cond_Val, Get_Type (Cond)),
+                     Phi_True, Phi_False);
       end if;
    end Synth_If_Statement;
 
@@ -604,7 +603,7 @@ package body Synth.Stmts is
       --    Build mux2/mux4 tree (group by 4)
       Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
 
-      Sel_Net := Get_Net (Sel);
+      Sel_Net := Get_Net (Sel, Get_Type (Expr));
 
       for I in Wires'Range loop
          declare
@@ -653,19 +652,16 @@ package body Synth.Stmts is
       Free_Alternative_Data_Array (Alts);
    end Synth_Case_Statement;
 
-   procedure Synth_Subprogram_Association
-     (Subprg_Inst : Synth_Instance_Acc;
-      Caller_Inst : Synth_Instance_Acc;
-      Inter_Chain : Node;
-      Assoc_Chain : Node)
+   procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
+                                           Caller_Inst : Synth_Instance_Acc;
+                                           Inter_Chain : Node;
+                                           Assoc_Chain : Node)
    is
-      use Simul.Annotations;
       Inter : Node;
       Assoc : Node;
       Assoc_Inter : Node;
       Actual : Node;
       Val : Value_Acc;
-      Slot : Object_Slot_Type;
    begin
       Assoc := Assoc_Chain;
       Assoc_Inter := Inter_Chain;
@@ -685,9 +681,9 @@ package body Synth.Stmts is
             when Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_Variable_Declaration =>
                --  FIXME: Arguments are passed by copy.
-               Simul.Elaboration.Create_Object (Subprg_Inst.Sim, Inter);
+               Create_Object (Subprg_Inst, Inter, null);
             when Iir_Kind_Interface_Signal_Declaration =>
-               Simul.Elaboration.Create_Signal (Subprg_Inst.Sim, Inter);
+               Create_Object (Subprg_Inst, Inter, null);
             when Iir_Kind_Interface_File_Declaration =>
                raise Internal_Error;
          end case;
@@ -696,8 +692,7 @@ package body Synth.Stmts is
             when Iir_In_Mode =>
                Val := Synth_Expression_With_Type
                  (Caller_Inst, Actual, Get_Type (Inter));
-               Slot := Get_Info (Inter).Slot;
-               Subprg_Inst.Objects (Slot) := Val;
+               Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Out_Mode =>
                Synth_Declaration (Subprg_Inst, Inter);
             when Iir_Inout_Mode =>
@@ -745,8 +740,8 @@ package body Synth.Stmts is
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Subprg_Body : constant Node := Get_Subprogram_Body (Imp);
       Decls_Chain : constant Node := Get_Declaration_Chain (Subprg_Body);
-      Sub_Sim_Inst : Block_Instance_Acc;
       Sub_Syn_Inst : Synth_Instance_Acc;
+      M : Areapools.Mark_Type;
    begin
       if Get_Implicit_Definition (Imp) in Iir_Predefined_Implicit then
          Error_Msg_Synth (+Stmt, "call to implicit %n is not supported", +Imp);
@@ -756,15 +751,13 @@ package body Synth.Stmts is
          return;
       end if;
 
-      Areapools.Mark (Syn_Inst.Sim.Marker, Instance_Pool.all);
-      Sub_Sim_Inst :=
-        Simul.Execution.Create_Subprogram_Instance (Syn_Inst.Sim, null, Imp);
-      Sub_Syn_Inst := Make_Instance (Sub_Sim_Inst);
+      Areapools.Mark (M, Instance_Pool.all);
+      Sub_Syn_Inst := Make_Instance (Syn_Inst, Get_Info (Imp));
 
       Synth_Subprogram_Association
         (Sub_Syn_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
-      Elaborate_Declarative_Part (Sub_Sim_Inst, Decls_Chain);
+      Synth_Declarations (Sub_Syn_Inst, Decls_Chain);
 
       if Is_Valid (Decls_Chain) then
          Sub_Syn_Inst.Name := New_Sname (Syn_Inst.Name, Get_Identifier (Imp));
@@ -778,6 +771,7 @@ package body Synth.Stmts is
         (Sub_Syn_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
       Free_Instance (Sub_Syn_Inst);
+      Areapools.Release (M, Instance_Pool.all);
    end Synth_Procedure_Call;
 
    procedure Synth_Sequential_Statements
@@ -811,20 +805,17 @@ package body Synth.Stmts is
    Proc_Pool : aliased Areapools.Areapool;
 
    procedure Synth_Process_Statement (Syn_Inst : Synth_Instance_Acc;
-                                      Sim_Inst : Block_Instance_Acc;
                                       Proc : Node)
    is
       use Areapools;
+      Info : constant Sim_Info_Acc := Get_Info (Proc);
       Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
       Proc_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
    begin
-      Proc_Inst := Make_Instance (Sim_Inst);
+      Proc_Inst := Make_Instance (Syn_Inst, Info);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
-
-      --  Processes were not elaborated.
-      Elaborate_Declarative_Part (Sim_Inst, Decls_Chain);
 
       if Is_Valid (Decls_Chain) then
          Proc_Inst.Name := New_Sname (Syn_Inst.Name, Get_Identifier (Proc));
@@ -840,14 +831,15 @@ package body Synth.Stmts is
    end Synth_Process_Statement;
 
    procedure Synth_Generate_Statement_Body
-     (Syn_Inst : Synth_Instance_Acc; Sim_Inst : Block_Instance_Acc; Bod : Node)
+     (Syn_Inst : Synth_Instance_Acc; Bod : Node)
    is
       use Areapools;
+      Info : constant Sim_Info_Acc := Get_Info (Bod);
       Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
       Bod_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
    begin
-      Bod_Inst := Make_Instance (Sim_Inst);
+      Bod_Inst := Make_Instance (Syn_Inst, Info);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
@@ -867,10 +859,8 @@ package body Synth.Stmts is
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
-      Sim_Child : Block_Instance_Acc;
       Stmt : Node;
    begin
-      Sim_Child := Syn_Inst.Sim.Children;
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
          Push_Phi;
@@ -880,30 +870,30 @@ package body Synth.Stmts is
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Sensitized_Process_Statement =>
-               pragma Assert (Sim_Child.Label = Stmt);
-               Synth_Process_Statement (Syn_Inst, Sim_Child, Stmt);
-               Sim_Child := Sim_Child.Brother;
+               Synth_Process_Statement (Syn_Inst, Stmt);
             when Iir_Kind_If_Generate_Statement =>
                declare
                   Gen : Node;
                   Bod : Node;
+                  Cond : Value_Acc;
                begin
                   Gen := Stmt;
-                  while Gen /= Null_Node loop
-                     Bod := Get_Generate_Statement_Body (Gen);
-                     if Sim_Child.Label = Bod then
-                        Synth_Generate_Statement_Body
-                          (Syn_Inst, Sim_Child, Bod);
-                        Sim_Child := Sim_Child.Brother;
+                  loop
+                     --  FIXME: else clause.
+                     Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
+                     pragma Assert (Cond.Kind = Value_Discrete);
+                     if Cond.Scal = 1 then
+                        Bod := Get_Generate_Statement_Body (Gen);
+                        Synth_Generate_Statement_Body (Syn_Inst, Bod);
                         exit;
                      end if;
                      Gen := Get_Generate_Else_Clause (Gen);
+                     exit when Gen = Null_Node;
                   end loop;
                end;
             when Iir_Kind_Component_Instantiation_Statement =>
                --  TODO.
                null;
-               Sim_Child := Sim_Child.Brother;
             when others =>
                Error_Kind ("synth_statements", Stmt);
          end case;

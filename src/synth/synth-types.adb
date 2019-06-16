@@ -22,11 +22,11 @@ with Types; use Types;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Utils; use Vhdl.Utils;
-
-with Simul.Environments; use Simul.Environments;
-with Simul.Annotations; use Simul.Annotations;
-with Simul.Execution;
 with Vhdl.Errors; use Vhdl.Errors;
+
+with Synth.Values; use Synth.Values;
+with Synth.Expr;
+with Simul.Annotations; use Simul.Annotations;
 
 package body Synth.Types is
    function Is_Bit_Type (Atype : Iir) return Boolean is
@@ -57,12 +57,10 @@ package body Synth.Types is
          when Iir_Kind_Array_Subtype_Definition =>
             if Is_Vector_Type (Btype) then
                declare
-                  Bnd : Iir_Value_Literal_Acc;
+                  Bnd : Value_Bound_Acc;
                begin
-                  Bnd := Simul.Execution.Execute_Bounds
-                    (Syn_Inst.Sim,
-                     Get_Nth_Element (Get_Index_Subtype_List (Atype), 0));
-                  return Width (Bnd.Length);
+                  Bnd := Expr.Synth_Array_Bounds (Syn_Inst, Atype, 0);
+                  return Bnd.Len;
                end;
             else
                raise Internal_Error;

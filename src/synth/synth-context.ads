@@ -20,7 +20,7 @@
 
 with Synth.Environment; use Synth.Environment;
 with Synth.Values; use Synth.Values;
-with Simul.Environments; use Simul.Environments;
+with Simul.Annotations; use Simul.Annotations;
 with Netlists; use Netlists;
 with Netlists.Builders;
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -30,6 +30,9 @@ package Synth.Context is
    --  Block_Instance_Type.
    type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
 
+   type Synth_Instance_Type;
+   type Synth_Instance_Acc is access Synth_Instance_Type;
+
    type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is record
       --  Module which owns gates created for this instance.
       M : Module;
@@ -37,29 +40,40 @@ package Synth.Context is
       --  Name prefix for declarations.
       Name : Sname;
 
-      --  The corresponding instance from simulation.
-      Sim : Block_Instance_Acc;
+      --  The corresponding info for this instance.
+      Block_Scope : Sim_Info_Acc;
+
+      --  Parent instance.
+      Up_Block : Synth_Instance_Acc;
+
+      Elab_Objects : Object_Slot_Type;
 
       --  Instance for synthesis.
       Objects : Objects_Array (1 .. Max_Objs);
    end record;
 
-   type Synth_Instance_Acc is access Synth_Instance_Type;
-
    type Instance_Map_Array is array (Block_Instance_Id range <>)
      of Synth_Instance_Acc;
    type Instance_Map_Array_Acc is access Instance_Map_Array;
 
-   --  Map between simulation instance and synthesis instance.
-   Instance_Map : Instance_Map_Array_Acc;
+   --  The instance corresponding to the global_info.  It contains the global
+   --  packages.
+   Global_Instance : Synth_Instance_Acc;
 
    --  Global context.
    Build_Context : Netlists.Builders.Context_Acc;
 
+   function Get_Instance_By_Scope
+     (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
+     return Synth_Instance_Acc;
+
    --  Create and free the corresponding synth instance.
-   function Make_Instance (Sim_Inst : Block_Instance_Acc)
+   function Make_Instance (Parent : Synth_Instance_Acc; Info : Sim_Info_Acc)
                           return Synth_Instance_Acc;
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
+
+   procedure Create_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
 
    --  Build the value for object OBJ.
    --  KIND must be Wire_Variable or Wire_Signal.
@@ -68,9 +82,13 @@ package Synth.Context is
                           Obj : Iir);
 
    --  Get the value of OBJ.
-   function Get_Value (Inst : Synth_Instance_Acc; Obj : Iir) return Value_Acc;
+   function Get_Value (Syn_Inst : Synth_Instance_Acc; Obj : Iir)
+                      return Value_Acc;
 
    --  Get a net from a scalar/vector value.  This will automatically create
    --  a net for literals.
-   function Get_Net (Val : Value_Acc) return Net;
+   function Get_Net (Val : Value_Acc; Vtype : Node) return Net;
+
+   function Create_Value_Instance (Inst : Synth_Instance_Acc)
+                                  return Value_Acc;
 end Synth.Context;

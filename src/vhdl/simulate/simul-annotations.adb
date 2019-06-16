@@ -69,8 +69,10 @@ package body Simul.Annotations is
                                        Ref => Obj,
                                        Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
-            --  Reserve one more slot for value, and initial driver value.
-            Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 2;
+            if not Flag_Synthesis then
+               --  Reserve one more slot for value, and initial driver value.
+               Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 2;
+            end if;
          when Kind_Terminal =>
             Info := new Sim_Info_Type'(Kind => Kind_Terminal,
                                        Ref => Obj,
@@ -118,22 +120,17 @@ package body Simul.Annotations is
    -- If EXPR has not a literal value, create one.
    -- This is necessary for subtype bounds.
    procedure Annotate_Range_Expression
-     (Block_Info: Sim_Info_Acc; Expr: Iir_Range_Expression)
-   is
+     (Block_Info: Sim_Info_Acc; Expr: Iir_Range_Expression) is
    begin
       if Get_Info (Expr) /= null then
          return;
       end if;
---       if Expr = null or else Get_Info (Expr) /= null then
---          return;
---       end if;
       Create_Object_Info (Block_Info, Expr);
    end Annotate_Range_Expression;
 
    --  Annotate type definition DEF only if it is anonymous.
    procedure Annotate_Anonymous_Type_Definition
-     (Block_Info: Sim_Info_Acc; Def: Iir)
-   is
+     (Block_Info: Sim_Info_Acc; Def: Iir) is
    begin
       if Is_Anonymous_Type_Definition (Def) then
          Annotate_Type_Definition (Block_Info, Def);
@@ -305,8 +302,10 @@ package body Simul.Annotations is
                   end if;
                end if;
                Set_Info (Def, Info);
-               Annotate_Range_Expression
-                 (Block_Info, Get_Range_Constraint (Def));
+               if not Flag_Synthesis then
+                  Annotate_Range_Expression
+                    (Block_Info, Get_Range_Constraint (Def));
+               end if;
             end;
 
          when Iir_Kind_Integer_Subtype_Definition
@@ -317,7 +316,9 @@ package body Simul.Annotations is
             if El /= Null_Iir then
                case Get_Kind (El) is
                   when Iir_Kind_Range_Expression =>
-                     Annotate_Range_Expression (Block_Info, El);
+                     if not Flag_Synthesis then
+                        Annotate_Range_Expression (Block_Info, El);
+                     end if;
                      --  A physical subtype may be defined by an integer range.
                      if Get_Kind (Def) = Iir_Kind_Physical_Subtype_Definition
                      then
@@ -331,6 +332,9 @@ package body Simul.Annotations is
                   when others =>
                      Error_Kind ("annotate_type_definition (rc)", El);
                end case;
+            end if;
+            if Flag_Synthesis then
+               Create_Object_Info (Block_Info, Def);
             end if;
             Annotate_Anonymous_Type_Definition
               (Block_Info, Get_Base_Type (Def));
@@ -355,14 +359,19 @@ package body Simul.Annotations is
             Annotate_Anonymous_Type_Definition (Block_Info, El);
 
          when Iir_Kind_Array_Subtype_Definition =>
-            declare
-               List : constant Iir_Flist := Get_Index_Subtype_List (Def);
-            begin
-               for I in Flist_First .. Flist_Last (List) loop
-                  El := Get_Index_Type (List, I);
-                  Annotate_Anonymous_Type_Definition (Block_Info, El);
-               end loop;
-            end;
+            if Flag_Synthesis then
+               --  For the bounds.
+               Create_Object_Info (Block_Info, Def);
+            else
+               declare
+                  List : constant Iir_Flist := Get_Index_Subtype_List (Def);
+               begin
+                  for I in Flist_First .. Flist_Last (List) loop
+                     El := Get_Index_Type (List, I);
+                     Annotate_Anonymous_Type_Definition (Block_Info, El);
+                  end loop;
+               end;
+            end if;
 
          when Iir_Kind_Record_Type_Definition =>
             declare
@@ -634,6 +643,16 @@ package body Simul.Annotations is
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
    end Annotate_Package_Body;
 
+   procedure Annotate_Declaration_Type (Block_Info: Sim_Info_Acc; Decl: Iir)
+   is
+      Ind : constant Iir := Get_Subtype_Indication (Decl);
+   begin
+      if Ind = Null_Iir or else Get_Kind (Ind) in Iir_Kinds_Denoting_Name then
+         return;
+      end if;
+      Annotate_Type_Definition (Block_Info, Ind);
+   end Annotate_Declaration_Type;
+
    procedure Annotate_Declaration (Block_Info: Sim_Info_Acc; Decl: Iir) is
    begin
       case Get_Kind (Decl) is
@@ -658,12 +677,12 @@ package body Simul.Annotations is
             end;
 
          when Iir_Kind_Signal_Declaration =>
-            Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
+            Annotate_Declaration_Type (Block_Info, Decl);
             Create_Signal_Info (Block_Info, Decl);
 
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Iterator_Declaration =>
-            Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
+            Annotate_Declaration_Type (Block_Info, Decl);
             Create_Object_Info (Block_Info, Decl);
 
          when Iir_Kind_Constant_Declaration =>
@@ -672,19 +691,18 @@ package body Simul.Annotations is
             then
                --  Create the slot only if the constant is not a full constant
                --  declaration.
-               Annotate_Anonymous_Type_Definition
-                 (Block_Info, Get_Type (Decl));
+               Annotate_Declaration_Type (Block_Info, Decl);
                Create_Object_Info (Block_Info, Decl);
             end if;
 
          when Iir_Kind_File_Declaration =>
-            Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
+            Annotate_Declaration_Type (Block_Info, Decl);
             Create_Object_Info (Block_Info, Decl, Kind_File);
 
          when Iir_Kind_Terminal_Declaration =>
             Add_Terminal_Info (Block_Info, Decl);
          when Iir_Kinds_Branch_Quantity_Declaration =>
-            Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
+            Annotate_Declaration_Type (Block_Info, Decl);
             Add_Quantity_Info (Block_Info, Decl);
 
          when Iir_Kind_Type_Declaration
@@ -726,8 +744,10 @@ package body Simul.Annotations is
             begin
                Value := Get_Attribute_Value_Spec_Chain (Decl);
                while Value /= Null_Iir loop
-                  Annotate_Anonymous_Type_Definition
-                    (Block_Info, Get_Type (Value));
+                  if not Flag_Synthesis then
+                     Annotate_Anonymous_Type_Definition
+                       (Block_Info, Get_Type (Value));
+                  end if;
                   Create_Object_Info (Block_Info, Value);
                   Value := Get_Spec_Chain (Value);
                end loop;
@@ -1047,24 +1067,17 @@ package body Simul.Annotations is
    is
       Entity_Info: Sim_Info_Acc;
    begin
-      Entity_Info :=
-        new Sim_Info_Type'(Kind => Kind_Block,
-                           Ref => Decl,
-                           Inst_Slot => Invalid_Instance_Slot,
-                           Nbr_Objects => 0,
-                           Nbr_Instances => 0);
+      Entity_Info := new Sim_Info_Type'(Kind => Kind_Block,
+                                        Ref => Decl,
+                                        Inst_Slot => Invalid_Instance_Slot,
+                                        Nbr_Objects => 0,
+                                        Nbr_Instances => 0);
       Set_Info (Decl, Entity_Info);
 
-      -- generic list.
       Annotate_Interface_List (Entity_Info, Get_Generic_Chain (Decl), True);
-
-      -- Port list.
       Annotate_Interface_List (Entity_Info, Get_Port_Chain (Decl), True);
 
-      -- declarations
       Annotate_Declaration_List (Entity_Info, Get_Declaration_Chain (Decl));
-
-      -- processes.
       Annotate_Concurrent_Statements_List
         (Entity_Info, Get_Concurrent_Statement_Chain (Decl));
    end Annotate_Entity;

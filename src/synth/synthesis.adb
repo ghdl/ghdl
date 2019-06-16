@@ -25,10 +25,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils;
 
 with Vhdl.Utils; use Vhdl.Utils;
-with Simul.Annotations;
-with Simul.Execution;
-with Simul.Environments; use Simul.Environments;
-with Simul.Elaboration; use Simul.Elaboration;
+with Simul.Annotations; use Simul.Annotations;
 
 with Synth.Environment; use Synth.Environment;
 with Synth.Values; use Synth.Values;
@@ -137,7 +134,7 @@ package body Synthesis is
    end Create_Output_Wire;
 
    function Synth_Entity
-     (Parent : Module; Arch : Iir; Sim_Inst : Block_Instance_Acc)
+     (Parent_Module : Module; Parent_Inst : Synth_Instance_Acc; Arch : Iir)
      return Synth_Instance_Acc
    is
       Entity : constant Iir := Get_Entity (Arch);
@@ -148,7 +145,8 @@ package body Synthesis is
       Nbr_Outputs : Port_Nbr;
       Num : Uns32;
    begin
-      Syn_Inst := Make_Instance (Sim_Inst);
+      Syn_Inst := Make_Instance (Parent_Inst, Get_Info (Arch));
+      Syn_Inst.Block_Scope := Get_Info (Entity);
       Syn_Inst.Name := New_Sname_User (Get_Identifier (Entity));
 
       --  Allocate values and count inputs and outputs
@@ -156,6 +154,7 @@ package body Synthesis is
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
+         Synth_Declaration_Type (Syn_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Make_Object (Syn_Inst, Wire_Input, Inter);
@@ -171,9 +170,9 @@ package body Synthesis is
       end loop;
 
       --  Declare module.
-      Syn_Inst.M :=
-        New_User_Module (Parent, New_Sname_User (Get_Identifier (Entity)),
-                         Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
+      Syn_Inst.M := New_User_Module
+        (Parent_Module, New_Sname_User (Get_Identifier (Entity)),
+         Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
 
       --  Add ports to module.
       declare
@@ -236,7 +235,7 @@ package body Synthesis is
       return Syn_Inst;
    end Synth_Entity;
 
-   procedure Synth_Dependencies (Unit : Iir)
+   procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node)
    is
       Dep_List : constant Iir_List := Get_Dependence_List (Unit);
       Dep_It : List_Iterator;
@@ -249,7 +248,7 @@ package body Synthesis is
          pragma Assert (Get_Kind (Dep) = Iir_Kind_Design_Unit);
          if not Get_Elab_Flag (Dep) then
             Set_Elab_Flag (Dep, True);
-            Synth_Dependencies (Dep);
+            Synth_Dependencies (Parent_Inst, Dep);
             Dep_Unit := Get_Library_Unit (Dep);
             case Iir_Kinds_Library_Unit (Get_Kind (Dep_Unit)) is
                when Iir_Kind_Entity_Declaration =>
@@ -261,16 +260,17 @@ package body Synthesis is
                when Iir_Kind_Package_Declaration =>
                   pragma Assert (not Is_Uninstantiated_Package (Dep_Unit));
                   declare
-                     Sim_Info : constant Sim_Info_Acc :=
-                       Simul.Annotations.Get_Info (Dep_Unit);
-                     Sim_Inst : constant Block_Instance_Acc :=
-                       Simul.Execution.Get_Instance_By_Scope
-                       (Global_Instances, Sim_Info);
-                     Bid : constant Block_Instance_Id := Sim_Inst.Id;
+                     Info : constant Sim_Info_Acc := Get_Info (Dep_Unit);
                      Syn_Inst : Synth_Instance_Acc;
+                     Val : Value_Acc;
                   begin
-                     pragma Assert (Instance_Map (Bid) = null);
-                     Syn_Inst := Make_Instance (Sim_Inst);
+                     Syn_Inst := Make_Instance (Parent_Inst, Info);
+                     Val := Create_Value_Instance (Syn_Inst);
+                     if Parent_Inst /= Global_Instance then
+                        Create_Object (Parent_Inst, Dep_Unit, Val);
+                     else
+                        Parent_Inst.Objects (Info.Pkg_Slot) := Val;
+                     end if;
                      Synth_Declarations
                        (Syn_Inst, Get_Declaration_Chain (Dep_Unit));
                   end;
@@ -305,16 +305,18 @@ package body Synthesis is
             Error_Kind ("synth_design", Unit);
       end case;
 
-      Instance_Map := new Instance_Map_Array (0 .. Nbr_Block_Instances);
-
       Des := New_Design (New_Sname_Artificial (Get_Identifier ("top")));
       Build_Context := Build_Builders (Des);
+      Instance_Pool := Global_Pool'Access;
+      Global_Instance := Make_Instance (null, Global_Info);
 
       --  Dependencies first.
-      Synth_Dependencies (Get_Design_Unit (Get_Entity (Arch)));
-      Synth_Dependencies (Get_Design_Unit (Arch));
+      Synth_Dependencies
+        (Global_Instance, Get_Design_Unit (Get_Entity (Arch)));
+      Synth_Dependencies
+        (Global_Instance, Get_Design_Unit (Arch));
 
-      Syn_Inst := Synth_Entity (Des, Arch, Top_Instance);
+      Syn_Inst := Synth_Entity (Des, Global_Instance, Arch);
 
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;

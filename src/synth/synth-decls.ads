@@ -22,6 +22,10 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Synth.Context; use Synth.Context;
 
 package Synth.Decls is
+   --  Elaborate the type of DECL.
+   procedure Synth_Declaration_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node);
+
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
    procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Node);

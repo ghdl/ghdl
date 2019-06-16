@@ -20,37 +20,37 @@
 
 with Ada.Unchecked_Conversion;
 with System;
-with Areapools;
 
 package body Synth.Values is
    function To_Value_Acc is new Ada.Unchecked_Conversion
      (System.Address, Value_Acc);
-   function To_Value_Range_Acc is new Ada.Unchecked_Conversion
-     (System.Address, Value_Range_Acc);
    function To_Value_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Values.Value_Array_Acc);
+   function To_Value_Bound_Acc is new Ada.Unchecked_Conversion
+     (System.Address, Value_Bound_Acc);
+   function To_Value_Bound_Array_Acc is new Ada.Unchecked_Conversion
+     (System.Address, Value_Bound_Array_Acc);
 
-   function Create_Value_Wire (W : Wire_Id; Rng : Value_Range_Acc)
+   function Create_Value_Wire (W : Wire_Id; Bnd : Value_Bound_Acc)
                               return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Wire);
    begin
-      return To_Value_Acc
-        (Alloc (Current_Pool,
-                (Kind => Value_Wire,
-                 W => W,
-                 W_Range => Rng)));
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Wire,
+                                   W => W,
+                                   W_Bound => Bnd)));
    end Create_Value_Wire;
 
-   function Create_Value_Net (N : Net; Rng : Value_Range_Acc) return Value_Acc
+   function Create_Value_Net (N : Net; Bnd : Value_Bound_Acc) return Value_Acc
    is
       subtype Value_Type_Net is Value_Type (Value_Net);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Net);
    begin
       return To_Value_Acc
         (Alloc (Current_Pool,
-                Value_Type_Net'(Kind => Value_Net, N => N, N_Range => Rng)));
+                Value_Type_Net'(Kind => Value_Net, N => N, N_Bound => Bnd)));
    end Create_Value_Net;
 
    function Create_Value_Mux2 (Cond : Value_Acc; T : Value_Acc; F : Value_Acc)
@@ -64,36 +64,38 @@ package body Synth.Values is
                 (Kind => Value_Mux2, M_Cond => Cond, M_T => T, M_F => F)));
    end Create_Value_Mux2;
 
-   function Create_Value_Lit (Val : Iir_Value_Literal_Acc; Typ : Iir)
-                             return Value_Acc
+   function Create_Value_Logic (Val, Zx : Uns32) return Value_Acc
    is
-      subtype Value_Type_Lit is Value_Type (Value_Lit);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Lit);
+      subtype Value_Type_Logic is Value_Type (Value_Logic);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Logic);
    begin
       return To_Value_Acc
         (Alloc (Current_Pool,
-                (Kind => Value_Lit, Lit => Val, Lit_Type => Typ)));
-   end Create_Value_Lit;
+                (Kind => Value_Logic, Log_Val => Val, Log_Zx => Zx)));
+   end Create_Value_Logic;
 
-   function Bounds_To_Nbr_Elements (Bounds : Value_Bounds_Array_Acc)
-                                   return Iir_Index32
+   function Create_Value_Discrete (Val : Int64) return Value_Acc
    is
-      Len : Iir_Index32;
+      subtype Value_Type_Discrete is Value_Type (Value_Discrete);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Discrete);
    begin
-      Len := 1;
-      for I in Bounds.D'Range loop
-         Len := Len * Bounds.D (I).Length;
-      end loop;
-      return Len;
-   end Bounds_To_Nbr_Elements;
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Discrete, Scal => Val)));
+   end Create_Value_Discrete;
 
-   procedure Create_Array_Data (Arr : Value_Acc)
+   function Create_Value_Float (Val : Fp64) return Value_Acc
+   is
+      subtype Value_Type_Float is Value_Type (Value_Float);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Float);
+   begin
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Float, Fp => Val)));
+   end Create_Value_Float;
+
+   function Create_Value_Array (Ndim : Iir_Index32) return Value_Array_Acc
    is
       use System;
-      use Areapools;
-      Len : constant Iir_Index32 := Bounds_To_Nbr_Elements (Arr.Bounds);
-
-      subtype Data_Type is Values.Value_Array_Type (Len);
+      subtype Data_Type is Values.Value_Array_Type (Ndim);
       Res : Address;
    begin
       --  Manually allocate the array to handle large arrays without
@@ -114,42 +116,166 @@ package body Synth.Values is
          null;
       end;
 
-      Arr.Arr := To_Value_Array_Acc (Res);
+      return To_Value_Array_Acc (Res);
+   end Create_Value_Array;
+
+   procedure Create_Array_Data (Arr : Value_Acc)
+   is
+      Len : Width;
+   begin
+      Len := 1;
+      for I in Arr.Bounds.D'Range loop
+         Len := Len * Arr.Bounds.D (I).Len;
+      end loop;
+
+      Arr.Arr := Create_Value_Array (Iir_Index32 (Len));
    end Create_Array_Data;
 
-   function Create_Array_Value (Bounds : Value_Bounds_Array_Acc)
+   function Create_Value_Array (Bounds : Value_Bound_Array_Acc)
                                return Value_Acc
    is
-      subtype Value_Type_Array is Value_Type (Values.Value_Array);
+      subtype Value_Type_Array is Value_Type (Value_Array);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Array);
 
       Res : Value_Acc;
    begin
-      Res := To_Value_Acc
-        (Alloc (Current_Pool,
-                (Kind => Values.Value_Array,
-                 Arr => null, Bounds => Bounds)));
+      Res := To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Array,
+                                   Arr => null, Bounds => Bounds)));
       Create_Array_Data (Res);
       return Res;
-   end Create_Array_Value;
+   end Create_Value_Array;
 
-   function Create_Range_Value (Rng : Value_Range) return Value_Range_Acc
+   function Create_Value_Bound_Array (Ndim : Iir_Index32)
+                                     return Value_Bound_Array_Acc
    is
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Range);
+      use System;
+      subtype Data_Type is Value_Bound_Array (Ndim);
+      Res : Address;
    begin
-      return To_Value_Range_Acc (Alloc (Current_Pool, Rng));
-   end Create_Range_Value;
+      --  Manually allocate the array to handle large arrays without
+      --  creating a large temporary value.
+      Areapools.Allocate
+        (Current_Pool.all, Res,
+         Data_Type'Size / Storage_Unit, Data_Type'Alignment);
 
-   function Bounds_To_Range (Val : Iir_Value_Literal_Acc)
-                            return Value_Range_Acc
+      declare
+         --  Discard the warnings for no pragma Import as we really want
+         --  to use the default initialization.
+         pragma Warnings (Off);
+         Addr1 : constant Address := Res;
+         Init : Data_Type;
+         for Init'Address use Addr1;
+         pragma Warnings (On);
+      begin
+         null;
+      end;
+
+      return To_Value_Bound_Array_Acc (Res);
+   end Create_Value_Bound_Array;
+
+   function Create_Value_Bounds (Bounds : Value_Bound_Array_Acc)
+                                return Value_Acc
    is
-      pragma Assert (Val.Kind = Iir_Value_Range);
-      pragma Assert (Val.Left.Kind = Iir_Value_I64);
-      pragma Assert (Val.Right.Kind = Iir_Value_I64);
+      subtype Value_Type_Bounds is Value_Type (Value_Bounds);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Bounds);
+
+      Res : Value_Acc;
    begin
-      return Create_Range_Value ((Dir => Val.Dir,
-                                  Len => Width (Val.Length),
-                                  Left => Int32 (Val.Left.I64),
-                                  Right => Int32 (Val.Right.I64)));
-   end Bounds_To_Range;
+      Res := To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Bounds,
+                                   Bnds => Bounds)));
+      return Res;
+   end Create_Value_Bounds;
+
+   function Create_Value_Instance (Inst : Instance_Id) return Value_Acc
+   is
+      subtype Value_Type_Instance is Value_Type (Value_Instance);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Instance);
+   begin
+      return To_Value_Acc
+        (Alloc (Current_Pool,
+                (Kind => Value_Instance, Instance => Inst)));
+   end Create_Value_Instance;
+
+   function Create_Value_Range (Rng : Value_Range_Type) return Value_Acc
+   is
+      subtype Value_Type_Range is Value_Type (Value_Range);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Range);
+   begin
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Range, Rng => Rng)));
+   end Create_Value_Range;
+
+   function Create_Value_Fp_Range (Rng : Value_Fp_Range_Type) return Value_Acc
+   is
+      subtype Value_Type_Fp_Range is Value_Type (Value_Fp_Range);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Fp_Range);
+   begin
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Fp_Range, Fp_Rng => Rng)));
+   end Create_Value_Fp_Range;
+
+   function Create_Value_Bound (Dir : Iir_Direction; Left, Right : Value_Acc)
+                               return Value_Bound_Acc is
+   begin
+      pragma Assert (Left.Kind = Right.Kind);
+      case Left.Kind is
+         when Value_Discrete =>
+            declare
+               Len : Int64;
+            begin
+               case Dir is
+                  when Iir_To =>
+                     Len := Right.Scal - Left.Scal + 1;
+                  when Iir_Downto =>
+                     Len := Left.Scal - Right.Scal + 1;
+               end case;
+               if Len < 0 then
+                  Len := 0;
+               end if;
+               return Create_Value_Bound
+                 ((Dir, Int32 (Left.Scal), Int32 (Right.Scal),
+                   Len => Uns32 (Len)));
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Create_Value_Bound;
+
+   function Create_Value_Bound (Bnd : Value_Bound_Type) return Value_Bound_Acc
+   is
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Bound_Type);
+   begin
+      return To_Value_Bound_Acc (Alloc (Current_Pool, Bnd));
+   end Create_Value_Bound;
+
+   function Copy (Src: in Value_Acc) return Value_Acc
+   is
+      Res: Value_Acc;
+   begin
+      case Src.Kind is
+         when Value_Range =>
+            Res := Create_Value_Range (Src.Rng);
+         when Value_Fp_Range =>
+            Res := Create_Value_Fp_Range (Src.Fp_Rng);
+         when Value_Wire =>
+            Res := Create_Value_Wire (Src.W, Src.W_Bound);
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Copy;
+
+   function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
+                    return Value_Acc
+   is
+      Prev_Pool : constant Areapool_Acc := Current_Pool;
+      Res : Value_Acc;
+   begin
+      Current_Pool := Pool;
+      Res := Copy (Src);
+      Current_Pool := Prev_Pool;
+      return Res;
+   end Unshare;
 end Synth.Values;

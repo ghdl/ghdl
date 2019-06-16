@@ -21,15 +21,10 @@
 with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
-with Grt.Types; use Grt.Types;
+with Tables;
 with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Utils;
-
+with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
-
-with Simul.Annotations; use Simul.Annotations;
-with Simul.Execution;
-
 with Netlists.Builders; use Netlists.Builders;
 
 with Synth.Types; use Synth.Types;
@@ -37,18 +32,24 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Expr; use Synth.Expr;
 
 package body Synth.Context is
-   function Make_Instance (Sim_Inst : Block_Instance_Acc)
+   package Packages_Table is new Tables
+     (Table_Component_Type => Synth_Instance_Acc,
+      Table_Index_Type => Instance_Id,
+      Table_Low_Bound => 1,
+      Table_Initial => 16);
+
+   function Make_Instance (Parent : Synth_Instance_Acc; Info : Sim_Info_Acc)
                           return Synth_Instance_Acc
    is
       Res : Synth_Instance_Acc;
    begin
-      Res := new Synth_Instance_Type'(Max_Objs => Sim_Inst.Max_Objs,
+      Res := new Synth_Instance_Type'(Max_Objs => Info.Nbr_Objects,
                                       M => No_Module,
                                       Name => No_Sname,
-                                      Sim => Sim_Inst,
-                                      Objects => (others => <>));
-      pragma Assert (Instance_Map (Sim_Inst.Id) = null);
-      Instance_Map (Sim_Inst.Id) := Res;
+                                      Block_Scope => Info,
+                                      Up_Block => Parent,
+                                      Elab_Objects => 0,
+                                      Objects => (others => null));
       return Res;
    end Make_Instance;
 
@@ -57,11 +58,17 @@ package body Synth.Context is
       procedure Deallocate is new Ada.Unchecked_Deallocation
         (Synth_Instance_Type, Synth_Instance_Acc);
    begin
-      Instance_Map (Synth_Inst.Sim.Id) := null;
       Deallocate (Synth_Inst);
    end Free_Instance;
 
-   function Alloc_Wire (Kind : Wire_Kind; Obj : Iir; Rng : Value_Range_Acc)
+   function Create_Value_Instance (Inst : Synth_Instance_Acc)
+                                  return Value_Acc is
+   begin
+      Packages_Table.Append (Inst);
+      return Create_Value_Instance (Packages_Table.Last);
+   end Create_Value_Instance;
+
+   function Alloc_Wire (Kind : Wire_Kind; Obj : Iir; Bnd : Value_Bound_Acc)
                        return Value_Acc is
    begin
       Wire_Id_Table.Append ((Kind => Kind,
@@ -69,73 +76,147 @@ package body Synth.Context is
                              Decl => Obj,
                              Gate => No_Net,
                              Cur_Assign => No_Assign));
-      return Create_Value_Wire (Wire_Id_Table.Last, Rng);
+      return Create_Value_Wire (Wire_Id_Table.Last, Bnd);
    end Alloc_Wire;
 
-   function Alloc_Object
-     (Kind : Wire_Kind; Obj : Iir; Val : Iir_Value_Literal_Acc)
-     return Value_Acc
+   function Alloc_Object (Kind : Wire_Kind;
+                          Syn_Inst : Synth_Instance_Acc;
+                          Obj : Iir)
+                         return Value_Acc
    is
       Obj_Type : constant Iir := Get_Type (Obj);
-      Btype : constant Iir := Get_Base_Type (Obj_Type);
    begin
-      case Get_Kind (Btype) is
-         when Iir_Kind_Enumeration_Type_Definition =>
+      case Get_Kind (Obj_Type) is
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
             declare
-               Info : constant Sim_Info_Acc := Get_Info (Btype);
-               Rng : Value_Range_Acc;
+               Info : constant Sim_Info_Acc :=
+                 Get_Info (Get_Base_Type (Obj_Type));
+               Rng : Value_Bound_Acc;
             begin
                if Info.Kind = Kind_Bit_Type then
                   Rng := null;
                else
-               Rng := Create_Range_Value ((Dir => Iir_Downto,
-                                           Len => Info.Width,
-                                           Left => Int32 (Info.Width - 1),
-                                           Right => 0));
+                  Rng := Create_Value_Bound
+                    ((Dir => Iir_Downto,
+                      Left => Int32 (Info.Width - 1),
+                      Right => 0,
+                      Len => Info.Width));
                end if;
                return Alloc_Wire (Kind, Obj, Rng);
             end;
-         when Iir_Kind_Array_Type_Definition =>
-            --  Well known array types.
-            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type
-              or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Vector_Type
-            then
-               return Alloc_Wire
-                 (Kind, Obj, Bounds_To_Range (Val.Bounds.D (1)));
-            end if;
-            if Is_Bit_Type (Get_Element_Subtype (Btype))
-              and then Vhdl.Utils.Get_Nbr_Dimensions (Btype) = 1
-            then
-               --  A vector of bits.
-               return Alloc_Wire
-                 (Kind, Obj, Bounds_To_Range (Val.Bounds.D (1)));
-            else
-               raise Internal_Error;
-            end if;
+         when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               El_Type : constant Node := Get_Element_Subtype (Obj_Type);
+               Bounds : Value_Bound_Acc;
+            begin
+               Bounds := Synth_Array_Bounds (Syn_Inst, Obj_Type, 0);
+               if Is_Bit_Type (El_Type) then
+                  return Alloc_Wire (Kind, Obj, Bounds);
+               else
+                  raise Internal_Error;
+               end if;
+            end;
          when others =>
             raise Internal_Error;
       end case;
    end Alloc_Object;
+
+   procedure Create_Object (Syn_Inst : Synth_Instance_Acc;
+                            Slot : Object_Slot_Type;
+                            Num : Object_Slot_Type := 1) is
+   begin
+      --  Check elaboration order.
+      --  Note: this is not done for package since objects from package are
+      --  commons (same scope), and package annotation order can be different
+      --  from package elaboration order (eg: body).
+      if Slot /= Syn_Inst.Elab_Objects + 1
+        or else Syn_Inst.Objects (Slot) /= null
+      then
+         Error_Msg_Elab ("bad elaboration order");
+         raise Internal_Error;
+      end if;
+      Syn_Inst.Elab_Objects := Slot + Num - 1;
+   end Create_Object;
+
+   procedure Create_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+   begin
+      Create_Object (Syn_Inst, Info.Slot, 1);
+      Syn_Inst.Objects (Info.Slot) := Val;
+   end Create_Object;
 
    procedure Make_Object (Syn_Inst : Synth_Instance_Acc;
                           Kind : Wire_Kind;
                           Obj : Iir)
    is
       Otype : constant Iir := Get_Type (Obj);
-      Slot : constant Object_Slot_Type := Get_Info (Obj).Slot;
       Val : Value_Acc;
    begin
-      Val := Alloc_Object (Kind, Obj, Syn_Inst.Sim.Objects (Slot));
+      Val := Alloc_Object (Kind, Syn_Inst, Obj);
       if Val = null then
          Error_Msg_Synth (+Obj, "%n is not supported", +Otype);
          return;
       end if;
 
-      pragma Assert (Syn_Inst.Objects (Slot) = null);
-      Syn_Inst.Objects (Slot) := Val;
+      Create_Object (Syn_Inst, Obj, Val);
    end Make_Object;
 
-   function Get_Net (Val : Value_Acc) return Net is
+   function Get_Instance_By_Scope
+     (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
+     return Synth_Instance_Acc is
+   begin
+      case Scope.Kind is
+         when Kind_Block
+           | Kind_Frame
+           | Kind_Process =>
+            declare
+               Current : Synth_Instance_Acc;
+            begin
+               Current := Syn_Inst;
+               while Current /= null loop
+                  if Current.Block_Scope = Scope then
+                     return Current;
+                  end if;
+                  Current := Current.Up_Block;
+               end loop;
+               raise Internal_Error;
+            end;
+         when Kind_Package =>
+            if Scope.Pkg_Parent = null then
+               --  This is a scope for an uninstantiated package.
+               raise Internal_Error;
+            else
+               --  Instantiated package.
+               declare
+                  Parent : Synth_Instance_Acc;
+                  Inst : Instance_Id;
+               begin
+                  Parent := Get_Instance_By_Scope (Syn_Inst, Scope.Pkg_Parent);
+                  Inst := Parent.Objects (Scope.Pkg_Slot).Instance;
+                  pragma Assert
+                    (Inst in Packages_Table.First .. Packages_Table.Last);
+                  return Packages_Table.Table (Inst);
+               end;
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Instance_By_Scope;
+
+   function Get_Value (Syn_Inst: Synth_Instance_Acc; Obj : Iir)
+                      return Value_Acc
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Obj);
+      Obj_Inst : Synth_Instance_Acc;
+   begin
+      Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Obj_Scope);
+      return Obj_Inst.Objects (Info.Slot);
+   end Get_Value;
+
+   function Get_Net (Val : Value_Acc; Vtype : Node) return Net is
    begin
       case Val.Kind is
          when Value_Wire =>
@@ -144,48 +225,50 @@ package body Synth.Context is
             return Val.N;
          when Value_Mux2 =>
             declare
-               Cond : constant Net := Get_Net (Val.M_Cond);
+               Cond : constant Net :=
+                 Get_Net (Val.M_Cond,
+                          Vhdl.Std_Package.Boolean_Type_Definition);
             begin
                return Build_Mux2 (Ctxt => Build_Context, Sel => Cond,
-                                  I0 => Get_Net (Val.M_F),
-                                  I1 => Get_Net (Val.M_T));
+                                  I0 => Get_Net (Val.M_F, Vtype),
+                                  I1 => Get_Net (Val.M_T, Vtype));
             end;
-         when Value_Lit =>
-            case Val.Lit.Kind is
-               when Iir_Value_E8
-                 | Iir_Value_B1 =>
-                  declare
-                     Info : constant Sim_Info_Acc :=
-                       Get_Info (Get_Base_Type (Val.Lit_Type));
-                  begin
-                     case Info.Kind is
-                        when Kind_Bit_Type =>
-                           declare
-                              V, Xz : Uns32;
-                           begin
-                              To_Logic (Val.Lit, V, Xz);
-                              if Xz = 0 then
-                                 return Build_Const_UB32
-                                   (Build_Context, V, 1);
-                              else
-                                 return Build_Const_UL32
-                                   (Build_Context, V, Xz, 1);
-                              end if;
-                           end;
-                        when Kind_Enum_Type =>
-                           --  State machine.
-                           return Build_Const_UB32
-                             (Build_Context, Uns32 (Val.Lit.E8), Info.Width);
-                        when others =>
-                           raise Internal_Error;
-                     end case;
-                  end;
-               when Iir_Value_I64 =>
-                  if Val.Lit.I64 >= 0 then
+         when Value_Logic =>
+            if Val.Log_Zx = 0 then
+               return Build_Const_UB32
+                 (Build_Context, Val.Log_Val, 1);
+            else
+               return Build_Const_UL32
+                 (Build_Context, Val.Log_Val, Val.Log_Zx, 1);
+            end if;
+         when Value_Discrete =>
+            declare
+               Btype : constant Node := Get_Base_Type (Vtype);
+               Va : Uns32;
+               Zx : Uns32;
+            begin
+               if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
+                  From_Std_Logic (Val.Scal, Va, Zx);
+                  if Zx = 0 then
+                     return Build_Const_UB32 (Build_Context, Va, 1);
+                  else
+                     return Build_Const_UL32 (Build_Context, Va, Zx, 1);
+                  end if;
+               elsif Btype = Vhdl.Std_Package.Boolean_Type_Definition
+                 or else Btype = Vhdl.Std_Package.Bit_Type_Definition
+               then
+                  From_Bit (Val.Scal, Va);
+                  return Build_Const_UB32 (Build_Context, Va, 1);
+               elsif Get_Kind (Btype) = Iir_Kind_Enumeration_Type_Definition
+               then
+                  return Build_Const_UB32 (Build_Context, Uns32 (Val.Scal),
+                                           Get_Info (Btype).Width);
+               else
+                  if Val.Scal >= 0 then
                      for I in 1 .. 32 loop
-                        if Val.Lit.I64 < (2**I) then
+                        if Val.Scal < (2**I) then
                            return Build_Const_UB32
-                             (Build_Context, Uns32 (Val.Lit.I64), Width (I));
+                             (Build_Context, Uns32 (Val.Scal), Width (I));
                         end if;
                      end loop;
                      --  Need Uconst64
@@ -194,56 +277,38 @@ package body Synth.Context is
                      --  Need Sconst32/Sconst64
                      raise Internal_Error;
                   end if;
-               when Iir_Value_Array =>
-                  if Is_Vector_Type (Val.Lit_Type) then
-                     if Val.Lit.Bounds.D (1).Length <= 32 then
-                        declare
-                           Len : constant Iir_Index32 := Val.Lit.Val_Array.Len;
-                           R_Val, R_Xz : Uns32;
-                           V, Xz : Uns32;
-                        begin
-                           R_Val := 0;
-                           R_Xz := 0;
-                           for I in 1 .. Len loop
-                              To_Logic (Val.Lit.Val_Array.V (I), V, Xz);
-                              R_Val :=
-                                R_Val or Shift_Left (V, Natural (Len - I));
-                              R_Xz :=
-                                R_Xz or Shift_Left (Xz, Natural (Len - I));
-                           end loop;
-                           if R_Xz = 0 then
-                              return Build_Const_UB32
-                                (Build_Context, R_Val, Uns32 (Len));
-                           else
-                              return Build_Const_UL32
-                                (Build_Context, R_Val, R_Xz, Uns32 (Len));
-                           end if;
-                        end;
-                     else
-                        --  Need Uconst64 / UconstBig
-                        raise Internal_Error;
-                     end if;
+               end if;
+            end;
+         when Value_Array =>
+            if Val.Bounds.D (1).Len <= 32 then
+               declare
+                  Len : constant Iir_Index32 :=
+                    Iir_Index32 (Val.Bounds.D (1).Len);
+                  Etype : constant Node := Get_Element_Subtype (Vtype);
+                  R_Val, R_Zx : Uns32;
+                  V, Zx : Uns32;
+               begin
+                  R_Val := 0;
+                  R_Zx := 0;
+                  for I in 1 .. Len loop
+                     To_Logic (Val.Arr.V (I).Scal, Etype, V, Zx);
+                     R_Val := R_Val or Shift_Left (V, Natural (Len - I));
+                     R_Zx := R_Zx or Shift_Left (Zx, Natural (Len - I));
+                  end loop;
+                  if R_Zx = 0 then
+                     return Build_Const_UB32
+                       (Build_Context, R_Val, Uns32 (Len));
                   else
-                     raise Internal_Error;
+                     return Build_Const_UL32
+                       (Build_Context, R_Val, R_Zx, Uns32 (Len));
                   end if;
-               when others =>
-                  raise Internal_Error;
-            end case;
+               end;
+            else
+               --  Need Uconst64 / UconstBig
+               raise Internal_Error;
+            end if;
          when others =>
             raise Internal_Error;
       end case;
    end Get_Net;
-
-   function Get_Value (Inst : Synth_Instance_Acc; Obj : Iir) return Value_Acc
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Obj);
-      Sim_Inst : constant Block_Instance_Acc :=
-        Simul.Execution.Get_Instance_By_Scope (Inst.Sim, Info.Obj_Scope);
-      Val : Value_Acc;
-   begin
-      Val := Instance_Map (Sim_Inst.Id).Objects (Info.Slot);
-      pragma Assert (Val /= null);
-      return Val;
-   end Get_Value;
-
 end Synth.Context;

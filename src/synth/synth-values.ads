@@ -20,9 +20,10 @@
 
 with Types; use Types;
 with Netlists; use Netlists;
-with Synth.Environment; use Synth.Environment;
-with Simul.Environments; use Simul.Environments;
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Synth.Environment; use Synth.Environment;
+with Areapools; use Areapools;
+
 
 package Synth.Values is
    --  Values is how signals and variables are decomposed.  This is similar to
@@ -40,14 +41,31 @@ package Synth.Values is
 
       Value_Mux2,
 
+      --  A bit/logic value (boolean, bit, std_logic)
+      Value_Logic,
+
+      --  A discrete value (integer or enumeration).
+      Value_Discrete,
+
+      Value_Float,
+
+      Value_Range,
+      Value_Fp_Range,
+
+      --  A range with a length.
+      Value_Bound,
+
+      --  A vector of bounds, for arrays.
+      Value_Bounds,
+
       --  A non-vector array.
       Value_Array,
 
       --  A record.
       Value_Record,
 
-      --  A known value (from simulation).
-      Value_Lit
+      --  A package.
+      Value_Instance
      );
 
    type Value_Type (Kind : Value_Kind);
@@ -62,66 +80,127 @@ package Synth.Values is
 
    type Value_Array_Acc is access Value_Array_Type;
 
-   type Value_Range is record
+   type Value_Range_Type is record
       Dir : Iir_Direction;
-      Len : Width;
-      Left : Int32;
-      Right : Int32;
+      Left : Int64;
+      Right : Int64;
    end record;
 
-   type Value_Range_Acc is access Value_Range;
-   No_Range : constant Value_Range_Acc := null;
+   type Value_Fp_Range_Type is record
+      Dir : Iir_Direction;
+      Left : Fp64;
+      Right : Fp64;
+   end record;
+
+   type Value_Bound_Type is record
+      Dir : Iir_Direction;
+      Left : Int32;
+      Right : Int32;
+      Len : Width;
+   end record;
+
+   type Value_Bound_Acc is access Value_Bound_Type;
+
+   No_Bound : constant Value_Bound_Acc := null;
+
+   type Value_Bound_Array_Type is array (Iir_Index32 range <>) of
+     Value_Bound_Acc;
+
+   type Value_Bound_Array (Len : Iir_Index32) is record
+      D : Value_Bound_Array_Type (1 .. Len);
+   end record;
+
+   type Value_Bound_Array_Acc is access Value_Bound_Array;
+
+   type Instance_Id is new Nat32;
 
    type Value_Type (Kind : Value_Kind) is record
       case Kind is
          when Value_Net =>
             N : Net;
-            N_Range : Value_Range_Acc;
+            N_Bound : Value_Bound_Acc;
          when Value_Wire =>
             W : Wire_Id;
-            W_Range : Value_Range_Acc;
+            W_Bound : Value_Bound_Acc;
          when Value_Mux2 =>
             M_Cond : Value_Acc;
             M_T : Value_Acc;
             M_F : Value_Acc;
-         when Value_Lit =>
-            Lit : Simul.Environments.Iir_Value_Literal_Acc;
-            Lit_Type : Iir;
+         when Value_Logic =>
+            Log_Val : Uns32;
+            Log_Zx  : Uns32;
+         when Value_Discrete =>
+            Scal : Int64;
+         when Value_Float =>
+            Fp : Fp64;
+         when Value_Range =>
+            Rng : Value_Range_Type;
+         when Value_Fp_Range =>
+            Fp_Rng : Value_Fp_Range_Type;
+         when Value_Bound =>
+            Bnd : Value_Bound_Acc;
+         when Value_Bounds =>
+            Bnds : Value_Bound_Array_Acc;
          when Value_Array =>
             Arr : Value_Array_Acc;
-            Bounds : Value_Bounds_Array_Acc;
+            Bounds : Value_Bound_Array_Acc;
          when Value_Record =>
-           Rec : Value_Array_Acc;
+            Rec : Value_Array_Acc;
+         when Value_Instance =>
+            Instance : Instance_Id;
       end case;
    end record;
 
+   Global_Pool : aliased Areapool;
+   Expr_Pool : aliased Areapool;
+
+   --  Areapool used by Create_*_Value
+   Current_Pool : Areapool_Acc := Expr_Pool'Access;
+
+   --  Pool for objects allocated in the current instance.
+   Instance_Pool : Areapool_Acc;
+
    --  Create a Value_Net.
-   function Create_Value_Net (N : Net; Rng : Value_Range_Acc) return Value_Acc;
+   function Create_Value_Net (N : Net; Bnd : Value_Bound_Acc) return Value_Acc;
 
    --  Create a Value_Wire.  For a bit wire, RNG must be null.
-   function Create_Value_Wire (W : Wire_Id; Rng : Value_Range_Acc)
+   function Create_Value_Wire (W : Wire_Id; Bnd : Value_Bound_Acc)
                               return Value_Acc;
 
    --  Create a mux2.
    function Create_Value_Mux2 (Cond : Value_Acc; T : Value_Acc; F : Value_Acc)
                               return Value_Acc;
 
-   --  Create a Value_Lit.
-   function Create_Value_Lit (Val : Iir_Value_Literal_Acc; Typ : Iir)
-                             return Value_Acc;
+   function Create_Value_Logic (Val, Zx : Uns32) return Value_Acc;
+   function Create_Value_Discrete (Val : Int64) return Value_Acc;
+
+   function Create_Value_Float (Val : Fp64) return Value_Acc;
+
+   function Create_Value_Array (Ndim : Iir_Index32) return Value_Array_Acc;
+   function Create_Value_Bound_Array (Ndim : Iir_Index32)
+                                     return Value_Bound_Array_Acc;
 
    --  Create a Value_Array.
-   function Create_Array_Value (Bounds : Value_Bounds_Array_Acc)
+   function Create_Value_Array (Bounds : Value_Bound_Array_Acc)
                                return Value_Acc;
+
+   function Create_Value_Bounds (Bounds : Value_Bound_Array_Acc)
+                                return Value_Acc;
 
    --  Allocate the ARR component of the Value_Type ARR, using BOUNDS.
    procedure Create_Array_Data (Arr : Value_Acc);
 
-   --  Allocate a Value_Range.
-   function Create_Range_Value (Rng : Value_Range) return Value_Range_Acc;
+   function Create_Value_Instance (Inst : Instance_Id) return Value_Acc;
 
-   --  Create a Value_Range from a simulation bound.
-   function Bounds_To_Range (Val : Iir_Value_Literal_Acc)
-                            return Value_Range_Acc;
+   function Create_Value_Bound (Bnd : Value_Bound_Type) return Value_Bound_Acc;
+
+   --  Allocate a Value_Range.
+   function Create_Value_Range (Rng : Value_Range_Type) return Value_Acc;
+   function Create_Value_Fp_Range (Rng : Value_Fp_Range_Type) return Value_Acc;
+   function Create_Value_Bound (Dir : Iir_Direction; Left, Right : Value_Acc)
+                               return Value_Bound_Acc;
+
+   function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
+                    return Value_Acc;
 
 end Synth.Values;

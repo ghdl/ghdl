@@ -21,11 +21,13 @@ with Ghdlcomp;
 with Ghdlmain; use Ghdlmain;
 with Ghdlsimul;
 
+with Simul.Annotations;
+
 with Libraries;
 with Flags;
 with Vhdl.Canon;
 
-with Simul.Elaboration;
+--  with Simul.Elaboration;
 
 with Synthesis;
 with Netlists.Dump;
@@ -88,6 +90,8 @@ package body Ghdlsynth is
          end if;
       end loop;
 
+      Simul.Annotations.Flag_Synthesis := True;
+
       Ghdlcomp.Hooks.Compile_Init.all (False);
       Flags.Flag_Elaborate_With_Outdated := False;
       Flags.Flag_Only_Elab_Warnings := True;
@@ -114,7 +118,7 @@ package body Ghdlsynth is
 
       --  Hooks.Set_Run_Options (Args (Opt_Arg .. Args'Last));
 
-      Simul.Elaboration.Elaborate_Design (Ghdlsimul.Get_Top_Config);
+      --  Simul.Elaboration.Elaborate_Design (Ghdlsimul.Get_Top_Config);
 
       return Synthesis.Synth_Design (Ghdlsimul.Get_Top_Config);
       --  Hooks.Run.all;
