@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
-
+from config import __version__
 
 setup(
     name='libghdl',
-    version="@ghdl_version@",
+    version=__version__,
     description='Interface to ghdl, a VHDL analyzer',
     long_description="""GHDL is a vhdl simulator and libghdl provides a low-level
 interface to the parser. This library gives access to the AST so that you can
@@ -22,6 +22,5 @@ write tools like linters.
         'libghdl',
         'libghdl.thin',
         'libghdl.thin.vhdl'
-    ],
-    package_data={'libghdl': ['ghdl/*', 'libghdl-%s%s' % ('@libghdl_version@', '@SOEXT@')]},
+    ]
 )

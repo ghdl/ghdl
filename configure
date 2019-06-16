@@ -44,7 +44,7 @@ build_mode=
 enable_werror=true
 enable_checks=true
 enable_openieee=unknown
-enable_python=false
+enable_libghdl=true
 default_pic=false
 EXEEXT=
 SOEXT=.so
@@ -53,7 +53,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_openieee enable_python libghdl_version ghdl_version"
+subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_openieee enable_libghdl libghdl_version ghdl_version"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -105,8 +105,8 @@ for opt do
 		--disable-checks)       enable_checks=false;;
 		--enable-openieee)      enable_openieee=true;;
 		--disable-openieee)     enable_openieee=false;;
-		--enable-python)        enable_python=true;;
-		--disable-python)       enable_python=false;;
+		--enable-libghdl)       enable_libghdl=true;;
+		--disable-libghdl)      enable_libghdl=false;;
 		--default-pic)          default_pic=true;;
 		--enable-coverage)      build_mode="coverage";;
 		-h|-help|--help)        show_help=yes;;
@@ -131,8 +131,8 @@ Options [defaults in brackets]:
 															backtrace on errors (only for llvm).
 	--disable-werror            warnings don't stop build
 	--disable-checks            disable internal checks
+	--disable-libghdl           do not build libghdl shared library
 	--enable-openieee           use gpl-compatible sources for ieee library
-	--enable-python             build python libghdl
 EOF
 	exit 0
 fi
@@ -293,6 +293,14 @@ if [ ! -d pic ]; then
 	fi
 fi
 
+if [ "$enable_libghdl" = true ]; then
+	cat > config.py <<-EOF
+__version__ = '${ghdl_version}'
+__libghdl_version__ = '${libghdl_version}'
+__libghdl__ = 'libghdl-${libghdl_version}${SOEXT}'
+EOF
+fi
+
 # Generate config.status
 rm -f config.status
 {
@@ -317,9 +325,6 @@ rm -f config.status
 	done
 	sed_opts=`echo $subst_vars | sed -e "s/\\([a-zA-Z_]*\\)/ -e \"s%@\1@%\$\1%g\"/g"`
 	subst_files="ghdl.gpr Makefile"
-	if [ "$enable_python" = true ]; then
-		subst_files="$subst_files setup.py libghdl_pkg.py"
-	fi
 	echo "for f in $subst_files; do"
 	echo '  echo "Creating $f"'
 	echo "  sed $sed_opts" '< $srcdir/${f}.in > $f'

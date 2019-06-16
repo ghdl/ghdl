@@ -10,8 +10,6 @@ echo "$0" "$@"
 # Stop in case of error
 set -e
 
-enable_python=false
-
 # Transform long options to short ones
 for arg in "$@"; do
   shift
@@ -20,19 +18,16 @@ for arg in "$@"; do
       "--build"|"-build")   set -- "$@" "-b";;
       "--pkg"|"-pkg")       set -- "$@" "-p";;
       "--gpl"|"-gpl")       set -- "$@" "-g";;
-      "--enable-python"|"-enable-python"|\
-      "--python"|"-python") set -- "$@" "-y";;
     *) set -- "$@" "$arg"
   esac
 done
 # Parse args
-while getopts ":b:p:cgy" opt; do
+while getopts ":b:p:cg" opt; do
   case $opt in
     c) enable_color;;
     b) BLD=$OPTARG ;;
     p) PKG_NAME=$OPTARG;;
     g) ISGPL=true;;
-    y) enable_python=true;;
     \?) printf "$ANSI_RED[GHDL - build] Invalid option: -$OPTARG $ANSI_NOCOLOR\n" >&2
         exit 1 ;;
     :)  printf "$ANSI_RED[GHDL - build] Option -$OPTARG requires an argument. $ANSI_NOCOLOR\n" >&2
@@ -126,10 +121,6 @@ case "$BLD" in
         exit 1;;
 esac
 
-if [ "x$enable_python" = "xtrue" ]; then
-    CONFIG_OPTS+=" --enable-python"
-fi
-
 if [ ! "$(echo $BLD | grep gcc)" ]; then
     echo "../configure --prefix=$prefix $CONFIG_OPTS"
     ../configure "--prefix=$prefix" $CONFIG_OPTS
@@ -148,14 +139,8 @@ travis_finish "make"
 
 travis_start "install" "$ANSI_YELLOW[GHDL - build] Install $ANSI_NOCOLOR"
 make install
-travis_finish "install"
-
-if [ "x$enable_python" = "xtrue" ]; then
-    python3 libghdl_pkg.py
-    tar -zcvf "../libghdl-py.tgz" -C "build-libghdl" .
-fi
-
 cd ..
+travis_finish "install"
 
 if [ "$(echo $BLD | grep gcc)" ]; then
     travis_start "make_ghdllib" "$ANSI_YELLOW[GHDL - build] Make ghdllib $ANSI_NOCOLOR"

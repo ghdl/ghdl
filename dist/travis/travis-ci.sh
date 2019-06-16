@@ -5,7 +5,7 @@ build_img_ghdl() {
     travis_start "build_run" "$ANSI_BLUE[DOCKER build] ghdl/ghdl:${IMAGE_TAG}$ANSI_NOCOLOR"
     docker build -t ghdl/ghdl:$IMAGE_TAG . -f-<<EOF
 FROM ghdl/run:$IMAGE_TAG
-ADD `ls | grep -oP 'ghdl-.*tgz'` /usr/local
+ADD `ls | grep '^ghdl.*\.tgz'` /usr/local
 EOF
     travis_finish "build_run"
 }
