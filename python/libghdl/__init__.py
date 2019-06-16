@@ -9,25 +9,29 @@ def _to_char_p(arg):
     return ctypes.c_char_p(arg), len(arg)
 
 
-#executable = environ.get("GHDL", "ghdl")
+def get_ghdl_path():
+    _dir = None
+    for envvar in [environ.get(item) for item in ['GHDL_BIN_PATH', 'VUNIT_GHDL_PATH']]:
+        if envvar:
+            _dir = envvar
+            break
+    if not _dir:
+        _dir = which(environ.get('GHDL', 'ghdl'))
+    if _dir:
+        _dir = join(dirname(_dir), '..', 'lib')
+    return _dir
 
-_basedir = which('ghdl')
-if _basedir is not None:
-    _basedir = join(dirname(_basedir), '..', 'lib')
+
+_basedir = get_ghdl_path() or dirname(__file__)
 
 libghdl = ctypes.CDLL(join(_basedir, __libghdl__))
 
-
-# Low-level initialization (elaboration).
 libghdl.libghdl_init()
-
-_set_option = libghdl.libghdl__set_option
-_analyze_file = libghdl.libghdl__analyze_file
 
 
 def set_option(opt):
     arg = _to_char_p(opt)
-    return _set_option(arg[0], arg[1])
+    return libghdl.libghdl__set_option(arg[0], arg[1])
 
 
 def analyze_init():
@@ -36,7 +40,7 @@ def analyze_init():
 
 def analyze_file(fname):
     arg = _to_char_p(fname)
-    return _analyze_file(arg[0], arg[1])
+    return libghdl.libghdl__analyze_file(arg[0], arg[1])
 
 
 _prefix = environ.get("LIBGHDL_PREFIX") or '--PREFIX=%s' % join(_basedir, 'ghdl')
