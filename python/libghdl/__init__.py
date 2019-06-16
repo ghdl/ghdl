@@ -1,5 +1,5 @@
 import ctypes
-#from os import environ
+from os import environ
 from os.path import dirname, join
 from shutil import which
 from libghdl.config import __libghdl__
@@ -39,6 +39,5 @@ def analyze_file(fname):
     return _analyze_file(arg[0], arg[1])
 
 
-# Set the default prefix.
-if True:
-    set_option(('--PREFIX=%s' % join(_basedir, 'ghdl')).encode('utf-8'))
+_prefix = environ.get("LIBGHDL_PREFIX") or '--PREFIX=%s' % join(_basedir, 'ghdl')
+set_option(_prefix.encode('utf-8'))
