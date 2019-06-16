@@ -58,7 +58,7 @@ travis_finish "opts"
 RUN="docker run --rm -t -e TRAVIS=$TRAVIS -e CONFIG_OPTS="$CONFIG_OPTS" -v $(pwd):/work -w /work"
 
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    bash -c "${scriptdir}/build.sh $BUILD_CMD_OPTS"
+    CONFIG_OPTS="--disable-libghdl" bash -c "${scriptdir}/build.sh $BUILD_CMD_OPTS"
 else
     # Assume linux
 
