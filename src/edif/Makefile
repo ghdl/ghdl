@@ -6,7 +6,7 @@ ortho_srcdir=../ortho
 GEN_SRCS=edif-nodes.adb edif-nodes_meta.ads edif-nodes_meta.adb
 CC=gcc
 
-PNODES=../xtools/pnodes.py
+PNODES=../../python/xtools/pnodes.py
 PNODES_ARGS=--field-file=edif-nodes.adb.in --kind-file=edif-nodes.ads --node-file=edif-nodes.ads --template-file=edif-nodes.adb.in --meta-basename=edif-nodes_meta --kind-type=Nkind --kind-range-prefix=Nkinds_ --kind-prefix=N_ --node-type=Node
 
 all: dump_edif
