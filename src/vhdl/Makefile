@@ -20,8 +20,8 @@
 # be committed and distribued with the sources, so that users don't need to
 # regenerate them (and don't need to have python installed).
 
-PNODES=../xtools/pnodes.py
-PNODESPY=python/pnodespy.py
+PNODES=../../python/xtools/pnodes.py
+PNODESPY=../../python/pnodes/pnodespy.py
 
 DEPS=vhdl-nodes.ads vhdl-nodes.adb.in $(PNODES)
 
