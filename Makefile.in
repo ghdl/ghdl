@@ -40,7 +40,7 @@ libghdl_version=@libghdl_version@
 enable_werror=@enable_werror@
 enable_checks=@enable_checks@
 enable_openieee=@enable_openieee@
-enable_python=@enable_python@
+enable_libghdl=@enable_libghdl@
 default_pic=@default_pic@
 
 INSTALL_PROGRAM=install -m 755
@@ -191,7 +191,7 @@ libs.vhdl.mcode: ghdl_mcode$(EXEEXT)
 install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_mcode$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
-install.mcode: install.mcode.program install.vhdllib install.vpi
+install.mcode: install.mcode.program install.vhdllib install.vpi install.libghdl
 
 oread-mcode$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/mcode/Makefile \
@@ -259,7 +259,7 @@ libs.vhdl.gcc:
 
 ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a
 
-install.gcc: install.vhdllib install.grt install.vpi
+install.gcc: install.vhdllib install.grt install.vpi install.libghdl
 
 #################### For gcc backend - development only (local build) ####
 
@@ -339,7 +339,7 @@ install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl1-llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 
-install.llvm: install.llvm.program install.vhdllib install.grt install.vpi
+install.llvm: install.llvm.program install.vhdllib install.grt install.vpi install.libghdl
 
 ################ For simul (no code generation, interpretation) ##########
 
@@ -359,7 +359,7 @@ install.simul: install.simul.program install.vhdllib
 
 ################ libghdl (library for the vhdl part) ####################
 
-LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/python -aI$(srcdir)/src/ghdldrv
+LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/libghdl -aI$(srcdir)/src/ghdldrv
 
 libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 
@@ -368,7 +368,17 @@ $(libghdl_name): $(GRT_SRC_DEPS) version.ads force
 
 all.libghdl.true: $(libghdl_name)
 all.libghdl.false:
-all.libghdl: all.libghdl.$(enable_python)
+all.libghdl: all.libghdl.$(enable_libghdl)
+
+install.libghdl.true:
+	$(INSTALL_PROGRAM) -p $(libghdl_name) $(DESTDIR)$(libdir)/
+	$(MKDIR) python
+	$(CP) -r $(srcdir)/python/libghdl python
+	$(MV) config.py python/libghdl/
+	tar -zcvf ../libghdl-py.tgz -C python/libghdl .
+
+install.libghdl.false:
+install.libghdl: install.libghdl.$(enable_libghdl)
 
 ################ ghdlsynth library ######################################
 

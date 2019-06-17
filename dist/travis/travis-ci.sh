@@ -5,7 +5,7 @@ build_img_ghdl() {
     travis_start "build_run" "$ANSI_BLUE[DOCKER build] ghdl/ghdl:${IMAGE_TAG}$ANSI_NOCOLOR"
     docker build -t ghdl/ghdl:$IMAGE_TAG . -f-<<EOF
 FROM ghdl/run:$IMAGE_TAG
-ADD `ls | grep -oP 'ghdl-.*tgz'` /usr/local
+ADD `ls | grep '^ghdl.*\.tgz'` /usr/local
 EOF
     travis_finish "build_run"
 }
@@ -58,7 +58,7 @@ travis_finish "opts"
 RUN="docker run --rm -t -e TRAVIS=$TRAVIS -e CONFIG_OPTS="$CONFIG_OPTS" -v $(pwd):/work -w /work"
 
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    bash -c "${scriptdir}/build.sh $BUILD_CMD_OPTS"
+    CONFIG_OPTS="--disable-libghdl" bash -c "${scriptdir}/build.sh $BUILD_CMD_OPTS"
 else
     # Assume linux
 
