@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
-from config import __version__
+from libghdl.config import __version__
 
 setup(
     name='libghdl',
@@ -16,7 +16,7 @@ write tools like linters.
     url='http://github.com/ghdl/ghdl',
     license='GPL-2.0-or-later',
     package_dir={
-        'libghdl': './'
+        'libghdl': './libghdl'
     },
     packages=[
         'libghdl',
