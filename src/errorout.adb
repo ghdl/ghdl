@@ -202,7 +202,7 @@ package body Errorout is
         and then New_Id = Msgid_Error
       then
          if Nbr_Errors = Max_Nbr_Errors then
-            --  Limit reached.  Emit a message.
+            --  Limit reached.  Emit a message on the first message.
             Report_Handler.Error_Start
               (Err => (Option, Msgid_Error,
                        No_Source_File_Entry, 0, 0, 0));

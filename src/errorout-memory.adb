@@ -115,7 +115,10 @@ package body Errorout.Memory is
          pragma Assert (Group /= Msg_Single);
          case Errors.Table (Errors.Last).Header.Group is
             when Msg_Single | Msg_Last =>
-               raise Internal_Error;
+               --  Check consistency until messages are discarded.
+               if Nbr_Errors <= Max_Nbr_Errors then
+                  raise Internal_Error;
+               end if;
             when Msg_Main =>
                Errors.Table (Errors.Last).Header.Group := Msg_Single;
             when Msg_Related =>
