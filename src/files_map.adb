@@ -909,7 +909,7 @@ package body Files_Map is
       pragma Assert (File <= Source_Files.Last);
       F : Source_File_Record renames Source_Files.Table (File);
    begin
-      return Source_Ptr (F.Last_Location - F.First_Location - 1);
+      return Source_Ptr (F.Last_Location - F.First_Location + 1);
    end Get_Buffer_Length;
 
    --  Return the name of the file.

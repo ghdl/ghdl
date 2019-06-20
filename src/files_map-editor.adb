@@ -393,6 +393,7 @@ package body Files_Map.Editor is
       Buf_Len : constant Source_Ptr := Get_Buffer_Length (File);
    begin
       if Text_Len + 2 > Buf_Len then
+         --  Buffer is too small!
          raise Constraint_Error;
       end if;
 
@@ -401,6 +402,8 @@ package body Files_Map.Editor is
            Text_Ptr (Source_Ptr_Org .. Source_Ptr_Org + Text_Len - 1);
       end if;
       Set_File_Length (File, Text_Len);
+
+      --  Move the gap after the two terminal EOT.
       Set_Gap (File, Text_Len + 2, Buf_Len - 1);
 
       --  Clear cache.

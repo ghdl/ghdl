@@ -108,7 +108,7 @@ package Files_Map is
    procedure Set_File_Length (File : Source_File_Entry; Length : Source_Ptr);
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
 
-   --  Get the length of the buffer, which includes the gap, but not the
+   --  Get the length of the buffer, which includes the gap and the
    --  two terminal EOT.
    function Get_Buffer_Length (File : Source_File_Entry) return Source_Ptr;
 
