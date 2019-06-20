@@ -2932,7 +2932,8 @@ package body Vhdl.Sem_Names is
          when Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Indexed_Name
-           | Iir_Kind_Slice_Name =>
+           | Iir_Kind_Slice_Name
+           | Iir_Kind_Selected_Element =>
             Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
                              & "an object subelement");
             return Error_Mark;
