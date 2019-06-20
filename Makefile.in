@@ -372,13 +372,15 @@ all.libghdl: all.libghdl.$(enable_libghdl)
 
 install.libghdl.true:
 	$(INSTALL_PROGRAM) -p $(libghdl_name) $(DESTDIR)$(libdir)/
-	$(MKDIR) python
-	$(CP) -r $(srcdir)/python/libghdl python
-	$(MV) config.py python/libghdl/
-	tar -zcvf ../libghdl-py.tgz -C python/libghdl .
 
 install.libghdl.false:
 install.libghdl: install.libghdl.$(enable_libghdl)
+
+libghdl-py.tgz:
+	[ -d pythonb ] || $(MKDIR) pythonb
+	$(CP) -r $(srcdir)/python/libghdl $(srcdir)/python/setup.py pythonb
+	$(CP) config.py pythonb/libghdl/
+	tar -zcvf $@ -C pythonb .
 
 ################ ghdlsynth library ######################################
 
