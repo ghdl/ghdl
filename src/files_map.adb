@@ -704,6 +704,7 @@ package body Files_Map is
      (Directory : Name_Id; Name: Name_Id; Length : Source_Ptr)
      return Source_File_Entry
    is
+      pragma Assert (Length >= 2);
       Res : Source_File_Entry;
    begin
       Res := Create_Source_File_Entry (Directory, Name);

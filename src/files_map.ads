@@ -49,6 +49,7 @@ package Files_Map is
                               return Source_File_Entry;
 
    --  Reserve an entry, but do not read any file.
+   --  The length should includes the two terminal EOT.
    function Reserve_Source_File
      (Directory : Name_Id; Name : Name_Id; Length : Source_Ptr)
      return Source_File_Entry;
@@ -102,11 +103,13 @@ package Files_Map is
    function Get_File_Buffer (File : Source_File_Entry) return File_Buffer_Ptr;
 
    --  Set/Get the length of the file (which is less than the size of the
-   --  file buffer).  Set also append two EOT at the end of the file.
+   --  file buffer).  The gap is not included in the length.
+   --  Set also append two EOT at the end of the file.
    procedure Set_File_Length (File : Source_File_Entry; Length : Source_Ptr);
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
 
-   --  Get the length of the buffer, which includes the gap.
+   --  Get the length of the buffer, which includes the gap, but not the
+   --  two terminal EOT.
    function Get_Buffer_Length (File : Source_File_Entry) return Source_Ptr;
 
    --  Return the name of the file.
