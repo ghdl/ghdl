@@ -183,6 +183,52 @@ package body Vhdl.Ieee.Numeric is
          Set_Implicit_Definition (Decl, Pats (Pkg, Arg1_Sign));
       end Handle_Unary;
 
+      procedure Handle_To_Unsigned is
+      begin
+         if Arg1_Kind = Arg_Scal and Arg1_Sign = Type_Unsigned then
+            if Arg2_Kind = Arg_Scal and Arg2_Sign = Type_Unsigned then
+               Set_Implicit_Definition
+                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns);
+            elsif Arg2_Kind = Arg_Vect and Arg2_Sign = Type_Unsigned then
+               Set_Implicit_Definition
+                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns);
+            else
+               raise Error;
+            end if;
+         else
+            raise Error;
+         end if;
+      end Handle_To_Unsigned;
+
+      procedure Handle_To_Signed is
+      begin
+         if Arg1_Kind = Arg_Scal and Arg1_Sign = Type_Signed then
+            if Arg2_Kind = Arg_Scal and Arg2_Sign = Type_Unsigned then
+               Set_Implicit_Definition
+                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn);
+            elsif Arg2_Kind = Arg_Vect and Arg2_Sign = Type_Signed then
+               Set_Implicit_Definition
+                 (Decl, Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn);
+            else
+               raise Error;
+            end if;
+         else
+            raise Error;
+         end if;
+      end Handle_To_Signed;
+
+      procedure Handle_To_Integer is
+      begin
+         if Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Unsigned then
+            Set_Implicit_Definition
+              (Decl, Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat);
+         elsif Arg1_Kind = Arg_Vect and Arg1_Sign = Type_Signed then
+            Set_Implicit_Definition
+              (Decl, Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int);
+         else
+            raise Error;
+         end if;
+      end Handle_To_Integer;
    begin
       Decl := Get_Declaration_Chain (Pkg_Decl);
 
@@ -263,6 +309,10 @@ package body Vhdl.Ieee.Numeric is
                        | Name_To_Ostring
                        | Name_To_Hstring =>
                         null;
+                     when Name_To_Unsigned =>
+                        Handle_To_Unsigned;
+                     when Name_To_Signed =>
+                        Handle_To_Signed;
                      when others =>
                         null;
                   end case;
@@ -271,6 +321,8 @@ package body Vhdl.Ieee.Numeric is
                   case Get_Identifier (Decl) is
                      when Name_Op_Minus =>
                         Handle_Unary (Neg_Patterns);
+                     when Name_To_Integer =>
+                        Handle_To_Integer;
                      when others =>
                         null;
                   end case;

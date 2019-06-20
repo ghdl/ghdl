@@ -4808,6 +4808,13 @@ package Vhdl.Nodes is
       --  Numeric_Std.
       --  Abbreviations:
       --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.
+      Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn,
+
       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,

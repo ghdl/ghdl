@@ -622,6 +622,9 @@ package body Std_Names is
       Def ("std_logic_signed",   Name_Std_Logic_Signed);
       Def ("std_logic_textio",   Name_Std_Logic_Textio);
       Def ("std_logic_unsigned", Name_Std_Logic_Unsigned);
+      Def ("to_integer",         Name_To_Integer);
+      Def ("to_unsigned",        Name_To_Unsigned);
+      Def ("to_signed",          Name_To_Signed);
 
       --  Verilog directives
       Def ("define",          Name_Define);
