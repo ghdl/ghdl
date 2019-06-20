@@ -1,8 +1,0 @@
-{
-  "files": [
-      { "name": "adder.vhdl", "language": "vhdl"},
-      { "name": "adder_tb.vhdl", "language": "vhdl"},
-      { "name": "heartbeat.vhdl", "language": "vhdl"},
-      { "name": "hello.vhdl", "language": "vhdl"}
-  ]
-}
