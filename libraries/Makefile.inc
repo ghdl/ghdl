@@ -77,7 +77,7 @@ IEEE08_BSRCS := \
   ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl
 
 IEEE87_BSRCS := $(addprefix ieee/v87/,$(IEEE_SRCS))
-IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS) $(MATH_SRCS))
+IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS)) $(addprefix ieee/,$(MATH_SRCS))
 
 else
 IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
@@ -86,12 +86,12 @@ IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
 MATH_SRCS := math_real.vhdl math_real-body.vhdl
 VITAL95_BSRCS :=
 VITAL2000_BSRCS :=
-IEEE08_BSRCS := openieee/std_logic_1164.v08 openieee/std_logic_1164-body.v08 \
- openieee/math_real.vhdl openieee/math_real-body.vhdl
+IEEE08_BSRCS := v08/std_logic_1164.vhdl v08/std_logic_1164-body.vhdl \
+ math_real.vhdl math_real-body.vhdl
 
 IEEE87_BSRCS := $(addprefix openieee/v87/,$(IEEE_SRCS))
-IEEE93_BSRCS := $(addprefix openieee/v93/,$(IEEE_SRCS) $(MATH_SRCS))
-
+IEEE93_BSRCS := $(addprefix openieee/v93/,$(IEEE_SRCS)) $(addprefix openieee/,$(MATH_SRCS))
+IEEE08_BSRCS := $(addprefix openieee/,$(IEEE08_BSRCS))
 endif
 
 ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
@@ -165,7 +165,7 @@ $(STD87_DIR)/std-obj87.cf: $(ANALYZE_DEP) $(STD87_SRCS)
 $(LIBDST_DIR)/src/ieee/v87/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V87) < $< > $@
 
-$(LIBDST_DIR)/src/openieee/v87/%.vhdl: $(LIBSRC_DIR)/openieee/%.v87
+$(LIBDST_DIR)/src/openieee/v87/%.vhdl: $(LIBSRC_DIR)/openieee/v87/%.vhdl
 	$(CP) $< $@
 
 $(LIBDST_DIR)/src/vital95/%.vhdl: $(LIBSRC_DIR)/vital95/%.vhdl
@@ -229,7 +229,7 @@ $(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
 $(LIBDST_DIR)/src/openieee/%.vhdl: $(LIBSRC_DIR)/openieee/%.vhdl
 	$(CP) $< $@
 
-$(LIBDST_DIR)/src/openieee/v93/%.vhdl: $(LIBSRC_DIR)/openieee/%.v93
+$(LIBDST_DIR)/src/openieee/v93/%.vhdl: $(LIBSRC_DIR)/openieee/v93/%.vhdl
 	$(CP) $< $@
 
 $(LIBDST_DIR)/src/vital2000/%.vhdl: $(LIBSRC_DIR)/vital2000/%.vhdl
@@ -307,7 +307,7 @@ $(STD08_DIR)/std-obj08.cf: $(ANALYZE_DEP) $(STD08_SRCS)
 $(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
 	$(CP) $< $@
 
-$(LIBDST_DIR)/src/openieee/v08/%.vhdl: $(LIBSRC_DIR)/openieee/%.v08
+$(LIBDST_DIR)/src/openieee/v08/%.vhdl: $(LIBSRC_DIR)/openieee/v08/%.vhdl
 	$(CP) $< $@
 
 ANALYZE_IEEE08=$(ANALYZE08) -P../.. --work=ieee

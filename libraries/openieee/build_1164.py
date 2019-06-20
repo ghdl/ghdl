@@ -506,7 +506,7 @@ pats = {'  @TAB\n' : disp_tables,
         '  @NORM\n': disp_all_norm_funcs,
         '  @ISX\n' : disp_all_isx_funcs }
 
-spec_file='std_logic_1164.vhdl'
+spec_file='std_logic_1164.proto'
 proto_file='std_logic_1164-body.proto'
 
 def gen_body(filename, version):
@@ -553,15 +553,15 @@ def copy_spec(dest, version):
     out.close()
 
 # Copy spec
-copy_spec('std_logic_1164.v87', V87)
-copy_spec('std_logic_1164.v93', V93)
-copy_spec('std_logic_1164.v08', V08)
+copy_spec('v87/std_logic_1164.vhdl', V87)
+copy_spec('v93/std_logic_1164.vhdl', V93)
+copy_spec('v08/std_logic_1164.vhdl', V08)
 
 # Generate bodies
-gen_body('std_logic_1164-body.v87', V87)
+gen_body('v87/std_logic_1164-body.vhdl', V87)
 
 binary_funcs.append("xnor")
-gen_body('std_logic_1164-body.v93', V93)
+gen_body('v93/std_logic_1164-body.vhdl', V93)
 
 vec_types = ['ulogic']
-gen_body('std_logic_1164-body.v08', V08)
+gen_body('v08/std_logic_1164-body.vhdl', V08)

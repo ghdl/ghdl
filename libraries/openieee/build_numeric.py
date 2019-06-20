@@ -1125,7 +1125,7 @@ def gen_body(proto_file):
 # Copy spec
 for log in logics:
     for std in ['87', '93']:
-        out=open('numeric_' + log + '.v' + std, 'w')
+        out=open('v' + std + '/numeric_' + log + '.vhdl', 'w')
         for line in open('numeric_' + log + '.proto'):
             if line == '  @COMMON\n':
                 for lcom in open('numeric_common.proto'):
@@ -1147,7 +1147,7 @@ for log in logics:
 v93=False
 for l in logics:
     logic = l
-    out=open('numeric_{0}-body.v87'.format(l), 'w')
+    out=open('v87/numeric_{0}-body.vhdl'.format(l), 'w')
     gen_body('numeric_{0}-body.proto'.format(l))
     out.close()
 
@@ -1155,6 +1155,6 @@ v93=True
 binary_funcs.append("xnor")
 for l in logics:
     logic = l
-    out=open('numeric_{0}-body.v93'.format(l), 'w')
+    out=open('v93/numeric_{0}-body.vhdl'.format(l), 'w')
     gen_body('numeric_{0}-body.proto'.format(l))
     out.close()
