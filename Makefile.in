@@ -130,6 +130,8 @@ install: install.$(backend)
 	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=93 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/standard.v93
 	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=08 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/standard.v08
 
+uninstall: uninstall.$(backend)
+
 check: check.$(backend)
 
 copy-sources: copy-sources.$(backend)
@@ -191,7 +193,12 @@ libs.vhdl.mcode: ghdl_mcode$(EXEEXT)
 install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_mcode$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
+uninstall.mcode.program:
+	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+
 install.mcode: install.mcode.program install.vhdllib install.vpi install.libghdl
+
+uninstall.mcode: uninstall.mcode.program uninstall.vhdllib uninstall.vpi uninstall.libghdl
 
 oread-mcode$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/mcode/Makefile \
@@ -260,6 +267,8 @@ libs.vhdl.gcc:
 ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a all.libghdl
 
 install.gcc: install.vhdllib install.grt install.vpi install.libghdl
+
+uninstall.gcc: uninstall.vhdllib uninstall.grt uninstall.vpi uninstall.libghdl
 
 #################### For gcc backend - development only (local build) ####
 
@@ -339,7 +348,13 @@ install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl1-llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 
+uninstall.llvm.program:
+	$(RM) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
+	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+
 install.llvm: install.llvm.program install.vhdllib install.grt install.vpi install.libghdl
+
+uninstall.llvm: uninstall.llvm.program uninstall.vhdllib uninstall.grt uninstall.vpi uninstall.libghdl
 
 ################ For simul (no code generation, interpretation) ##########
 
@@ -354,7 +369,12 @@ libs.vhdl.simul: ghdl_simul$(EXEEXT)
 install.simul.program: install.dirs ghdl_simul$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_simul$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
+uninstall.simul.program:
+	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+
 install.simul: install.simul.program install.vhdllib
+
+uninstall.simul: uninstall.simul.program uninstall.vhdllib
 
 
 ################ libghdl (library for the vhdl part) ####################
@@ -375,6 +395,9 @@ install.libghdl.true:
 
 install.libghdl.false:
 install.libghdl: install.libghdl.$(enable_libghdl)
+
+uninstall.libghdl:
+	$(RM) $(DESTDIR)$(libdir)/$(libghdl_name)
 
 libghdl-py.tgz:
 	[ -d pythonb ] || $(MKDIR) pythonb
@@ -433,6 +456,12 @@ install.grt: $(libdirsuffix)/libgrt.a $(libdirsuffix)/grt.lst install.dirs
 	test "x$(LIBBACKTRACE)" = x || test "x$(backend)" = xgcc || \
 	  $(INSTALL_DATA) $(LIBBACKTRACE) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
 
+uninstall.grt:
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
+
 ################ VPI #####################################################
 
 vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
@@ -447,6 +476,10 @@ all.vpi: libghdlvpi$(SOEXT)
 install.vpi: all.vpi install.dirs
 	$(INSTALL_PROGRAM) -p libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
+
+uninstall.vpi:
+	$(RM) -f $(DESTDIR)$(libdir)/libghdlvpi$(SOEXT)
+	$(RM) -f $(DESTDIR)$(incdir)/vpi_user.h
 
 install.vpi.local: all.vpi
 	$(MKDIR) -p include lib
@@ -499,6 +532,9 @@ install.vhdllib: install.dirs
 	    $(LIBSRC_DIR)/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
 	$(INSTALL_PROGRAM) -p \
 	    $(LIBSRC_DIR)/vendors/*.sh $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
+
+uninstall.vhdllib:
+	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)
 
 ####################### clean ############################################
 
