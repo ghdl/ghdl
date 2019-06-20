@@ -1217,9 +1217,14 @@ package body Synth.Expr is
                   Clk := Build_Monadic (Build_Context, Id_Not, Clk);
                   Edge := Build_Edge (Build_Context, Clk);
                   return Create_Value_Net (Edge, No_Bound);
+               elsif Get_Implicit_Definition (Imp) /= Iir_Predefined_None then
+                  Error_Msg_Synth
+                    (+Expr, "predefined function call to %i is not handled",
+                     +Imp);
+               else
+                  Error_Msg_Synth
+                    (+Expr, "user function call to %i is not handled", +Imp);
                end if;
-               Error_Msg_Synth
-                 (+Expr, "user function call to %i is not handled", +Imp);
             end;
          when Iir_Kind_Aggregate =>
             return Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
