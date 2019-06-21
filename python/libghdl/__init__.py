@@ -33,7 +33,7 @@ def _check_libghdl_bindir(bindir, basename):
 
 def _get_libghdl_path():
     """Locate the directory where the shared library is"""
-    basename = get_libghdl_name()
+    basename = _get_libghdl_name()
     # Try VUNIT_GHDL_PATH (path of the ghdl binary when using VUnit).
     r = _check_libghdl_bindir (os.environ.get('VUNIT_GHDL_PATH'), basename)
     if r is not None:
