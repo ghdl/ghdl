@@ -770,16 +770,21 @@ package body Synth.Expr is
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete (Left.Scal + Right.Scal);
             else
-               --  TODO: non-const.
-               raise Internal_Error;
+               return Synth_Vec_Dyadic (Id_Add);
             end if;
          when Iir_Predefined_Integer_Minus =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete (Left.Scal - Right.Scal);
             else
-               --  TODO: non-const.
-               raise Internal_Error;
+               return Synth_Vec_Dyadic (Id_Sub);
             end if;
+         when Iir_Predefined_Integer_Mul =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete (Left.Scal * Right.Scal);
+            else
+               return Synth_Vec_Dyadic (Id_Mul);
+            end if;
+
          when others =>
             Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
                                & Iir_Predefined_Functions'Image (Def));
@@ -1186,6 +1191,12 @@ package body Synth.Expr is
                   end if;
                end if;
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat =>
+            --  UNSIGNED to Natural.
+            return Create_Value_Net
+              (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1),
+                                       Get_Type (Inter_Chain)), 32),
+               null);
          when others =>
             Error_Msg_Synth
               (+Expr,

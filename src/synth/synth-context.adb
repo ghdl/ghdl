@@ -257,14 +257,9 @@ package body Synth.Context is
                                            Get_Info (Btype).Width);
                else
                   if Val.Scal >= 0 then
-                     for I in 1 .. 32 loop
-                        if Val.Scal < (2**I) then
-                           return Build_Const_UB32
-                             (Build_Context, Uns32 (Val.Scal), Width (I));
-                        end if;
-                     end loop;
-                     --  Need Uconst64
-                     raise Internal_Error;
+                     --  FIXME: check width.
+                     return Build_Const_UB32
+                       (Build_Context, Uns32 (Val.Scal), 32);
                   else
                      --  Need Sconst32/Sconst64
                      raise Internal_Error;
