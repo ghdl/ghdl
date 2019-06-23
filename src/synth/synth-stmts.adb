@@ -511,11 +511,16 @@ package body Synth.Stmts is
 
       Case_Info : Choice_Info_Type;
       Annex_Arr : Annex_Array_Acc;
+
+      --  Array of alternatives
       Alts : Alternative_Data_Acc;
       Alt_Idx : Alternative_Index;
+      Others_Alt_Idx : Alternative_Index;
+
+      --  Array of choices.  Contains tuple of (Value, Alternative).
       Choice_Data : Choice_Data_Array_Acc;
       Choice_Idx : Natural;
-      Others_Alt_Idx : Alternative_Index;
+
       Case_El : Case_Element_Array_Acc;
 
       Nbr_Wires : Natural;
@@ -540,7 +545,7 @@ package body Synth.Stmts is
       --       to 2**W (eg: a partially filled memory)
       --    - divide and conquier
 
-      --  Create a wire for the expression.
+      --  Create a net for the expression.
       Sel := Synth_Expression (Syn_Inst, Expr);
 
       --  Count choices and alternatives.
@@ -604,6 +609,7 @@ package body Synth.Stmts is
       end loop;
       pragma Assert (Choice_Idx = Choice_Data'Last);
 
+      --  Sort by order.
       Sort_String_Choices (Case_Info);
 
       --  Create list of wire_id, sort it.
@@ -621,12 +627,14 @@ package body Synth.Stmts is
 
       Sel_Net := Get_Net (Sel, Get_Type (Expr));
 
+      --  For each wire, compute the result.
       for I in Wires'Range loop
          declare
             Wi : constant Wire_Id := Wires (I);
             Last_Val : constant Net := Get_Last_Assigned_Value (Wi);
             Res : Net;
             Default : Net;
+            C : Natural;
          begin
             --  Extract the value for each alternative.
             for Alt of Alts.all loop
@@ -642,9 +650,10 @@ package body Synth.Stmts is
             end loop;
 
             --  Build the map between choices and values.
-            for J in Choice_Data'Range loop
-               Case_El (J) := (Sel => Choice_Data (J).Val,
-                               Val => Alts (Choice_Data (J).Alt).Val);
+            for J in Annex_Arr'Range loop
+               C := Natural (Annex_Arr (J));
+               Case_El (J) := (Sel => Choice_Data (C).Val,
+                               Val => Alts (Choice_Data (C).Alt).Val);
             end loop;
 
             --  Extract default value (for missing alternative).
