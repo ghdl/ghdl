@@ -1,3 +1,6 @@
+from os.path import dirname, join
+import json
+
 # Try to load JSON data from a file. If not found, use the argument as a tag name and retrieve the data from GitHub.
 def getJSON(tag='all'):
    f = tag
@@ -6,9 +9,8 @@ def getJSON(tag='all'):
       f = 'releases'
       tag = ''
 
-   import json
    try:
-      d = json.loads(open(f+'.json', 'r').read())
+      d = json.loads(open(join(dirname(__file__), f+'.json'), 'r').read())
    except:
       from urllib.request import urlopen
       d = json.loads(urlopen('https://api.github.com/repos/ghdl/ghdl/releases'+tag).read())
