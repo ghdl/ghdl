@@ -610,7 +610,11 @@ package body Synth.Stmts is
       pragma Assert (Choice_Idx = Choice_Data'Last);
 
       --  Sort by order.
-      Sort_String_Choices (Case_Info);
+      if Get_Kind (Get_Type (Expr)) in Iir_Kinds_Discrete_Type_Definition then
+         Sort_Discrete_Choices (Case_Info);
+      else
+         Sort_String_Choices (Case_Info);
+      end if;
 
       --  Create list of wire_id, sort it.
       Nbr_Wires := Count_Wires_In_Alternatives (Alts.all);

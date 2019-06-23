@@ -2196,12 +2196,12 @@ package body Vhdl.Sem_Expr is
    is
       --  Compare two elements of ARR.
       --  Return true iff OP1 < OP2.
-      function Lt (Op1, Op2 : Natural) return Boolean is
+      function Lt (Op1, Op2 : Natural) return Boolean
+      is
+         E1 : constant Iir := Get_Choice_Expression (Info.Arr (Op1));
+         E2 : constant Iir := Get_Choice_Expression (Info.Arr (Op2));
       begin
-         return Compare_String_Literals
-           (Get_Choice_Expression (Info.Arr (Op1)),
-            Get_Choice_Expression (Info.Arr (Op2)))
-           = Compare_Lt;
+         return Compare_String_Literals (E1, E2) = Compare_Lt;
       end Lt;
 
       procedure Swap (From : Natural; To : Natural) is
