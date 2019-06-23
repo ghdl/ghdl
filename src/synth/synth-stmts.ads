@@ -22,6 +22,11 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Synth.Context; use Synth.Context;
 
 package Synth.Stmts is
+   procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
+                                           Caller_Inst : Synth_Instance_Acc;
+                                           Inter_Chain : Node;
+                                           Assoc_Chain : Node);
+
    --  Generate netlists for concurrent statements STMTS.
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);

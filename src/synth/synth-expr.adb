@@ -27,10 +27,13 @@ with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
+
+with Areapools;
 with Simul.Annotations; use Simul.Annotations;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Types; use Synth.Types;
+with Synth.Stmts;
 
 with Netlists; use Netlists;
 with Netlists.Gates; use Netlists.Gates;
@@ -663,6 +666,7 @@ package body Synth.Expr is
            | Iir_Predefined_Ieee_1164_Scalar_Xor =>
             return Synth_Bit_Dyadic (Id_Xor);
          when Iir_Predefined_Bit_Or
+           | Iir_Predefined_Boolean_Or
            | Iir_Predefined_Ieee_1164_Scalar_Or =>
             return Synth_Bit_Dyadic (Id_Or);
          when Iir_Predefined_Ieee_1164_Vector_And =>
@@ -1125,6 +1129,75 @@ package body Synth.Expr is
       return Res;
    end Synth_String_Literal;
 
+   function Eval_To_Unsigned (Arg : Int64; Sz : Int64) return Value_Acc
+   is
+      Len : constant Iir_Index32 := Iir_Index32 (Sz);
+      Arr : Value_Array_Acc;
+      Bnds : Value_Bound_Array_Acc;
+   begin
+      Arr := Create_Value_Array (Len);
+      for I in 1 .. Len loop
+         Arr.V (Len - I + 1) := Create_Value_Discrete
+           ((Arg / 2 ** Natural (I - 1)) mod 2);
+      end loop;
+      Bnds := Create_Value_Bound_Array (1);
+      Bnds.D (1) := Create_Value_Bound
+        ((Dir => Iir_Downto, Left => Int32 (Len - 1), Right => 0,
+          Len => Uns32 (Len)));
+      return Create_Value_Array (Bnds, Arr);
+   end Eval_To_Unsigned;
+
+   function Synth_Predefined_Function_Call
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Expr);
+      Def : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Subprg_Inst : Synth_Instance_Acc;
+      M : Areapools.Mark_Type;
+   begin
+      Areapools.Mark (M, Instance_Pool.all);
+      Subprg_Inst := Make_Instance (Syn_Inst, Get_Info (Imp));
+
+      Stmts.Synth_Subprogram_Association
+        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+
+      case Def is
+         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns =>
+            declare
+               Arg : constant Value_Acc := Subprg_Inst.Objects (1);
+               Size : constant Value_Acc := Subprg_Inst.Objects (2);
+               Arg_Net : Net;
+            begin
+               if not Is_Const (Size) then
+                  Error_Msg_Synth (+Expr, "to_unsigned size must be constant");
+                  return Arg;
+               else
+                  --  FIXME: what if the arg is constant too ?
+                  if Is_Const (Arg) then
+                     return Eval_To_Unsigned (Arg.Scal, Size.Scal);
+                  else
+                     Arg_Net := Get_Net (Arg, Get_Type (Inter_Chain));
+                     return Create_Value_Net
+                       (Synth_Uresize (Arg_Net, Uns32 (Size.Scal)),
+                        Create_Res_Bound (Arg, Arg_Net));
+                  end if;
+               end if;
+            end;
+         when others =>
+            Error_Msg_Synth
+              (+Expr,
+               "unhandled function: " & Iir_Predefined_Functions'Image (Def));
+      end case;
+
+      Free_Instance (Subprg_Inst);
+      Areapools.Release (M, Instance_Pool.all);
+
+      return null;
+   end Synth_Predefined_Function_Call;
+
    function Synth_Expression_With_Type
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Node)
      return Value_Acc is
@@ -1218,9 +1291,7 @@ package body Synth.Expr is
                   Edge := Build_Edge (Build_Context, Clk);
                   return Create_Value_Net (Edge, No_Bound);
                elsif Get_Implicit_Definition (Imp) /= Iir_Predefined_None then
-                  Error_Msg_Synth
-                    (+Expr, "predefined function call to %i is not handled",
-                     +Imp);
+                  return Synth_Predefined_Function_Call (Syn_Inst, Expr);
                else
                   Error_Msg_Synth
                     (+Expr, "user function call to %i is not handled", +Imp);

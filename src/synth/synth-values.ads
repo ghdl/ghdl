@@ -176,11 +176,16 @@ package Synth.Values is
 
    function Create_Value_Float (Val : Fp64) return Value_Acc;
 
-   function Create_Value_Array (Ndim : Iir_Index32) return Value_Array_Acc;
+   function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc;
    function Create_Value_Bound_Array (Ndim : Iir_Index32)
                                      return Value_Bound_Array_Acc;
 
    --  Create a Value_Array.
+   function Create_Value_Array (Bounds : Value_Bound_Array_Acc;
+                                Arr : Value_Array_Acc)
+                               return Value_Acc;
+
+   --  Like the previous one but automatically build the array.
    function Create_Value_Array (Bounds : Value_Bound_Array_Acc)
                                return Value_Acc;
 

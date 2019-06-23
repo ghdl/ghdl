@@ -702,26 +702,23 @@ package body Synth.Stmts is
                raise Internal_Error;
          end case;
 
-         case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
-            when Iir_Kind_Interface_Constant_Declaration
-              | Iir_Kind_Interface_Variable_Declaration =>
-               --  FIXME: Arguments are passed by copy.
-               Create_Object (Subprg_Inst, Inter, null);
-            when Iir_Kind_Interface_Signal_Declaration =>
-               Create_Object (Subprg_Inst, Inter, null);
-            when Iir_Kind_Interface_File_Declaration =>
-               raise Internal_Error;
-         end case;
-
          case Iir_Parameter_Modes (Get_Mode (Inter)) is
             when Iir_In_Mode =>
                Val := Synth_Expression_With_Type
                  (Caller_Inst, Actual, Get_Type (Inter));
-               Create_Object (Subprg_Inst, Inter, Val);
-            when Iir_Out_Mode =>
-               Synth_Declaration (Subprg_Inst, Inter);
-            when Iir_Inout_Mode =>
+            when Iir_Out_Mode | Iir_Inout_Mode =>
                --  FIXME: todo
+               raise Internal_Error;
+         end case;
+
+         case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_Variable_Declaration =>
+               --  FIXME: Arguments are passed by copy.
+               Create_Object (Subprg_Inst, Inter, Val);
+            when Iir_Kind_Interface_Signal_Declaration =>
+               Create_Object (Subprg_Inst, Inter, Val);
+            when Iir_Kind_Interface_File_Declaration =>
                raise Internal_Error;
          end case;
 

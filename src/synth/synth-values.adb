@@ -92,10 +92,10 @@ package body Synth.Values is
                                   (Kind => Value_Float, Fp => Val)));
    end Create_Value_Float;
 
-   function Create_Value_Array (Ndim : Iir_Index32) return Value_Array_Acc
+   function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc
    is
       use System;
-      subtype Data_Type is Values.Value_Array_Type (Ndim);
+      subtype Data_Type is Values.Value_Array_Type (Len);
       Res : Address;
    begin
       --  Manually allocate the array to handle large arrays without
@@ -119,6 +119,21 @@ package body Synth.Values is
       return To_Value_Array_Acc (Res);
    end Create_Value_Array;
 
+   function Create_Value_Array (Bounds : Value_Bound_Array_Acc;
+                                Arr : Value_Array_Acc)
+                               return Value_Acc
+   is
+      subtype Value_Type_Array is Value_Type (Value_Array);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Array);
+
+      Res : Value_Acc;
+   begin
+      Res := To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Array,
+                                   Arr => Arr, Bounds => Bounds)));
+      return Res;
+   end Create_Value_Array;
+
    procedure Create_Array_Data (Arr : Value_Acc)
    is
       Len : Width;
@@ -131,17 +146,13 @@ package body Synth.Values is
       Arr.Arr := Create_Value_Array (Iir_Index32 (Len));
    end Create_Array_Data;
 
+
    function Create_Value_Array (Bounds : Value_Bound_Array_Acc)
                                return Value_Acc
    is
-      subtype Value_Type_Array is Value_Type (Value_Array);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Array);
-
       Res : Value_Acc;
    begin
-      Res := To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Array,
-                                   Arr => null, Bounds => Bounds)));
+      Res := Create_Value_Array (Bounds, null);
       Create_Array_Data (Res);
       return Res;
    end Create_Value_Array;
