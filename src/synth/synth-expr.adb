@@ -43,8 +43,7 @@ package body Synth.Expr is
    function Is_Const (Val : Value_Acc) return Boolean is
    begin
       case Val.Kind is
-         when Value_Logic
-           | Value_Discrete =>
+         when Value_Discrete =>
             return True;
          when Value_Net
            | Value_Wire
@@ -59,8 +58,6 @@ package body Synth.Expr is
    function Get_Width (Val : Value_Acc) return Uns32 is
    begin
       case Val.Kind is
-         when Value_Logic =>
-            return 1;
          when Value_Wire
            | Value_Net =>
             return Get_Width (Get_Net (Val, Null_Node));
@@ -69,12 +66,7 @@ package body Synth.Expr is
       end case;
    end Get_Width;
 
-   function Is_Logic (Val : Value_Acc) return Boolean is
-   begin
-      return Val.Kind = Value_Logic;
-   end Is_Logic;
-
-   procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx  : out Uns32) is
+   procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32) is
    begin
       case Enum is
          when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos
@@ -317,10 +309,10 @@ package body Synth.Expr is
             Off := 0;
             while Idx <= Val.Arr.Len
               and then Off < 32
-              and then Is_Logic (Val.Arr.V (Idx))
+              and then Is_Const (Val.Arr.V (Idx))
+              and then Is_Bit_Type (Etype)
             loop
-               B_Va := Val.Arr.V (Idx).Log_Val;
-               B_Zx := Val.Arr.V (Idx).Log_Zx;
+               To_Logic (Val.Arr.V (Idx).Scal, Etype, B_Va, B_Zx);
                W_Zx := W_Zx or Shift_Left (B_Zx, Off);
                W_Va := W_Va or Shift_Left (B_Va, Off);
                Off := Off + 1;

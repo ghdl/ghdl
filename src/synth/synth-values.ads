@@ -41,9 +41,6 @@ package Synth.Values is
 
       Value_Mux2,
 
-      --  A bit/logic value (boolean, bit, std_logic)
-      Value_Logic,
-
       --  A discrete value (integer or enumeration).
       Value_Discrete,
 
@@ -126,9 +123,6 @@ package Synth.Values is
             M_Cond : Value_Acc;
             M_T : Value_Acc;
             M_F : Value_Acc;
-         when Value_Logic =>
-            Log_Val : Uns32;
-            Log_Zx  : Uns32;
          when Value_Discrete =>
             Scal : Int64;
          when Value_Float =>
@@ -171,7 +165,6 @@ package Synth.Values is
    function Create_Value_Mux2 (Cond : Value_Acc; T : Value_Acc; F : Value_Acc)
                               return Value_Acc;
 
-   function Create_Value_Logic (Val, Zx : Uns32) return Value_Acc;
    function Create_Value_Discrete (Val : Int64) return Value_Acc;
 
    function Create_Value_Float (Val : Fp64) return Value_Acc;

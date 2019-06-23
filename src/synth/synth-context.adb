@@ -233,14 +233,6 @@ package body Synth.Context is
                                   I0 => Get_Net (Val.M_F, Vtype),
                                   I1 => Get_Net (Val.M_T, Vtype));
             end;
-         when Value_Logic =>
-            if Val.Log_Zx = 0 then
-               return Build_Const_UB32
-                 (Build_Context, Val.Log_Val, 1);
-            else
-               return Build_Const_UL32
-                 (Build_Context, Val.Log_Val, Val.Log_Zx, 1);
-            end if;
          when Value_Discrete =>
             declare
                Btype : constant Node := Get_Base_Type (Vtype);

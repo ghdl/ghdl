@@ -64,16 +64,6 @@ package body Synth.Values is
                 (Kind => Value_Mux2, M_Cond => Cond, M_T => T, M_F => F)));
    end Create_Value_Mux2;
 
-   function Create_Value_Logic (Val, Zx : Uns32) return Value_Acc
-   is
-      subtype Value_Type_Logic is Value_Type (Value_Logic);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Logic);
-   begin
-      return To_Value_Acc
-        (Alloc (Current_Pool,
-                (Kind => Value_Logic, Log_Val => Val, Log_Zx => Zx)));
-   end Create_Value_Logic;
-
    function Create_Value_Discrete (Val : Int64) return Value_Acc
    is
       subtype Value_Type_Discrete is Value_Type (Value_Discrete);
