@@ -26,9 +26,9 @@ General guidelines to edit the documentation
       The default role for
 
 	  .. code::
-	   
+
 		``code``
-		  
+
       is samp. ``:samp:`` is only required when you want to write italic text in code text.
 
 	  .. code::
@@ -90,17 +90,7 @@ Documentation configuration
 		:ghdl:option:`--ieee`
 		:option:`ghdl:--ieee`
 
-CSS
-***
-
-* The indentation of the elements in the side menu have been modified. They are fixed for levels 1, 2 and 3 (`#294 <https://github.com/ghdl/ghdl/pull/294#issuecomment-281555760>`_) and 4 (later).
-
-* The RTD menu (bottom-left) has been modified (`#294 <https://github.com/ghdl/ghdl/pull/294#issuecomment-281513494>`_):
-
-   * No headlines are shown. It is not possible to remove only one of them with CSS only (JS would be required). However, because the content in most of the lines is self-explained, it is preferred not to show any.
-   * The Search box is removed.
-
 Dist
 ****
-		
+
 * Ubuntu uses `dash` instead of `bash` when a shell script is run. As a result, some functionalities, such as arrays like ``array[1]``, are not supported. Therefore, build scripts in `dist/linux` should not use those functionalities unless they are sourced in a `bash` shell. That is, :file:`travis-ci.sh` uses arrays, since it is sourced in the Travis CI machine. But :file:`docker-buildtest.sh` and :file:`buildtest.sh` do not use any. The same applies to the scripts in `testsuite`.
