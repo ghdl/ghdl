@@ -4829,12 +4829,47 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int,
       Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn,
 
+      Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Lt_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Le_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Ge_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn,
+
       Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn,
       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int,
       Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Ne_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn,
 
       --  Unary functions for numeric_std
       Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
