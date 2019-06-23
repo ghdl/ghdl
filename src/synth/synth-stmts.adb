@@ -192,8 +192,24 @@ package body Synth.Stmts is
    begin
       Cond_Val := Synth_Expression (Syn_Inst, Cond);
       if Is_Const (Cond_Val) then
-         --  TODO
-         raise Internal_Error;
+         if Cond_Val.Scal = 1 then
+            --  True.
+            Synth_Sequential_Statements
+              (Syn_Inst, Get_Sequential_Statement_Chain (Stmt));
+         else
+            pragma Assert (Cond_Val.Scal = 0);
+            if Is_Valid (Els) then
+               --  Else part
+               if Is_Null (Get_Condition (Els)) then
+                  --  Final else part.
+                  Synth_Sequential_Statements
+                    (Syn_Inst, Get_Sequential_Statement_Chain (Els));
+               else
+                  --  Elsif.  Handled as a nested if.
+                  Synth_If_Statement (Syn_Inst, Els);
+               end if;
+            end if;
+         end if;
       else
          Push_Phi;
          Synth_Sequential_Statements
