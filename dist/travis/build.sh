@@ -90,31 +90,16 @@ case "$BLD" in
     ;;
     llvm)
         CXX="clang"
-        CONFIG_OPTS=" --with-llvm-config CXX=$CXX"
+        CONFIG_OPTS="--with-llvm-config CXX=$CXX"
     ;;
     llvm-3.5)
         CXX="clang++"
-        CONFIG_OPTS+=" --with-llvm-config=llvm-config-3.5 CXX=$CXX"
+        CONFIG_OPTS="--with-llvm-config=llvm-config-3.5 CXX=$CXX"
     ;;
-    llvm-3.8)
-        CXX="clang++-3.8"
-        CONFIG_OPTS+=" --with-llvm-config=llvm-config-3.8 CXX=$CXX"
-    ;;
-    llvm-3.9)
-        CXX="clang++-3.9"
-        CONFIG_OPTS+=" --with-llvm-config=llvm-config-3.9 CXX=$CXX"
-    ;;
-    llvm-4.0)
-        CXX="clang++-4.0"
-        CONFIG_OPTS+=" --with-llvm-config=llvm-config-4.0 CXX=$CXX"
-    ;;
-    llvm-5.0)
-        CXX="clang++-5.0"
-        CONFIG_OPTS+=" --with-llvm-config=llvm-config-5.0 CXX=$CXX"
-    ;;
-    llvm-6.0)
-        CXX="clang++-6.0"
-        CONFIG_OPTS+=" --with-llvm-config=llvm-config-6.0 CXX=$CXX"
+    llvm-*)
+        llvmver=$(echo $BLD | sed -e "s/llvm-//")
+        CXX="clang++-$llvmber"
+        CONFIG_OPTS="--with-llvm-config=llvm-config-$llvmver CXX=$CXX"
     ;;
     *)
         echo "$ANSI_RED[GHDL - build] Unknown build $BLD $ANSI_NOCOLOR"
