@@ -623,6 +623,26 @@ package body Synth.Expr is
             No_Bound);
       end Synth_Compare;
 
+      function Synth_Compare_Uns_Nat (Id : Compare_Module_Id)
+                                     return Value_Acc is
+      begin
+         return Create_Value_Net
+           (Build_Compare (Build_Context, Id,
+                           Get_Net (Left, Ltype),
+                           Synth_Uresize (Right, Rtype, Get_Width (Left))),
+            No_Bound);
+      end Synth_Compare_Uns_Nat;
+
+      function Synth_Compare_Uns_Uns (Id : Compare_Module_Id)
+                                     return Value_Acc is
+      begin
+         return Create_Value_Net
+           (Build_Compare (Build_Context, Id,
+                           Get_Net (Left, Ltype),
+                           Get_Net (Right, Rtype)),
+            No_Bound);
+      end Synth_Compare_Uns_Uns;
+
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
          L : constant Net := Get_Net (Left, Ltype);
@@ -650,6 +670,16 @@ package body Synth.Expr is
               (Build_Context, Id, Synth_Uresize (L, W), Synth_Uresize (R, W)),
             Rtype);
       end Synth_Dyadic_Uns;
+
+      function Synth_Dyadic_Uns_Nat (Id : Dyadic_Module_Id) return Value_Acc
+      is
+         L : constant Net := Get_Net (Left, Ltype);
+      begin
+         return Create_Value_Net
+           (Build_Dyadic (Build_Context, Id,
+                          L, Synth_Uresize (Right, Rtype, Get_Width (Left))),
+            Create_Res_Bound (Left, L));
+      end Synth_Dyadic_Uns_Nat;
    begin
       Left := Synth_Expression (Syn_Inst, Left_Expr);
       Right := Synth_Expression (Syn_Inst, Right_Expr);
@@ -703,46 +733,24 @@ package body Synth.Expr is
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
             --  "+" (Unsigned, Natural)
-            declare
-               L : constant Net := Get_Net (Left, Ltype);
-            begin
-               return Create_Value_Net
-                 (Build_Dyadic
-                    (Build_Context, Id_Add,
-                     L, Synth_Uresize (Right, Rtype, Get_Width (Left))),
-                  Create_Res_Bound (Left, L));
-            end;
+            return Synth_Dyadic_Uns_Nat (Id_Add);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Add, True);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
             --  "-" (Unsigned, Natural)
-            declare
-               L : constant Net := Get_Net (Left, Ltype);
-            begin
-               return Create_Value_Net
-                 (Build_Dyadic
-                    (Build_Context, Id_Sub,
-                     L, Synth_Uresize (Right, Rtype, Get_Width (Left))),
-                  Create_Res_Bound (Left, L));
-            end;
+            return Synth_Dyadic_Uns_Nat (Id_Sub);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Sub, True);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             --  "=" (Unsigned, Natural)
-            return Create_Value_Net
-              (Build_Compare (Build_Context, Id_Eq,
-                              Get_Net (Left, Ltype),
-                              Synth_Uresize (Right, Rtype, Get_Width (Left))),
-               No_Bound);
+            return Synth_Compare_Uns_Nat (Id_Eq);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns =>
             --  "=" (Unsigned, Unsigned)
-            return Create_Value_Net
-              (Build_Compare (Build_Context, Id_Eq,
-                              Get_Net (Left, Ltype),
-                              Get_Net (Right, Rtype)),
-               No_Bound);
+            return Synth_Compare_Uns_Uns (Id_Eq);
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
+            return Synth_Compare_Uns_Nat (Id_Ult);
          when Iir_Predefined_Array_Element_Concat =>
             declare
                L : constant Net := Get_Net (Left, Ltype);
