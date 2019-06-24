@@ -1,5 +1,6 @@
 import ctypes
 import os
+import sys
 from os.path import dirname, join, exists
 from shutil import which
 from libghdl.version import __version__
@@ -10,7 +11,7 @@ def _get_libghdl_name():
     ver = __version__.replace('-', '_').replace('.', '_')
     ext = {'win32': 'dll',
            'cygwin': 'dll',
-           'darwin': 'dylib'}.get(os.name, 'so')
+           'darwin': 'dylib'}.get(sys.platform, 'so')
     return 'libghdl-' + ver + '.' + ext
 
 
