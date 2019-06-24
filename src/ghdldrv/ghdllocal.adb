@@ -33,7 +33,6 @@ with Vhdl.Scanner;
 with Errorout;
 with Vhdl.Configuration;
 with Files_Map;
-with Options;
 with Vhdl.Utils; use Vhdl.Utils;
 
 package body Ghdllocal is
@@ -58,54 +57,44 @@ package body Ghdllocal is
       Compile_Init;
    end Init;
 
-   function Decode_Driver_Option (Opt : String) return Boolean
+   function Decode_Driver_Option (Opt : String) return Option_State
    is
       pragma Assert (Opt'First = 1);
    begin
       if Opt = "-v" and then Flag_Verbose = False then
          Flag_Verbose := True;
-         return True;
       elsif Opt'Length > 9 and then Opt (1 .. 9) = "--PREFIX=" then
          Switch_Prefix_Path := new String'(Opt (10 .. Opt'Last));
-         return True;
       elsif Opt = "--ieee=synopsys" then
          Flag_Ieee := Lib_Synopsys;
-         return True;
       elsif Opt = "--ieee=mentor" then
          Flag_Ieee := Lib_Mentor;
-         return True;
       elsif Opt = "--ieee=none" then
          Flag_Ieee := Lib_None;
-         return True;
       elsif Opt = "--ieee=standard" then
          Flag_Ieee := Lib_Standard;
-         return True;
       elsif Opt = "-m32" then
          Flag_32bit := True;
-         return True;
       elsif Opt'Length >= 2
         and then (Opt (2) = 'g' or Opt (2) = 'O')
       then
          --  Silently accept -g and -O.
-         return True;
+         null;
       else
          return Options.Parse_Option (Opt);
       end if;
+      return Option_Ok;
    end Decode_Driver_Option;
 
    procedure Decode_Option (Cmd : in out Command_Lib;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       pragma Unreferenced (Cmd);
       pragma Unreferenced (Arg);
    begin
-      if Decode_Driver_Option (Option) then
-         Res := Option_Ok;
-      else
-         Res := Option_Bad;
-      end if;
+      Res := Decode_Driver_Option (Option);
    end Decode_Option;
 
    procedure Disp_Long_Help (Cmd : Command_Lib)
@@ -761,7 +750,7 @@ package body Ghdllocal is
    procedure Decode_Option (Cmd : in out Command_Check_Syntax;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
    function Get_Short_Help (Cmd : Command_Check_Syntax) return String;
    procedure Perform_Action (Cmd : Command_Check_Syntax;
                              Args : Argument_List);
@@ -784,7 +773,7 @@ package body Ghdllocal is
    procedure Decode_Option (Cmd : in out Command_Check_Syntax;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       pragma Assert (Option'First = 1);
    begin
@@ -1610,19 +1599,23 @@ package body Ghdllocal is
       end Is_A_File_Name;
 
       Res : String_Access;
+      Err : Boolean;
    begin
       --  Try to identifier bad names (such as file names), so that
       --  friendly message can be displayed.
       if Is_Bad_Unit_Name then
-         Errorout.Error_Msg_Option_NR ("bad unit name '" & Name.all & "'");
+         Errorout.Error_Msg_Option ("bad unit name '" & Name.all & "'");
          if Is_A_File_Name then
-            Errorout.Error_Msg_Option_NR
+            Errorout.Error_Msg_Option
               ("(a unit name is required instead of a filename)");
          end if;
          raise Option_Error;
       end if;
       Res := new String'(Name.all);
-      Vhdl.Scanner.Convert_Identifier (Res.all);
+      Vhdl.Scanner.Convert_Identifier (Res.all, Err);
+      if Err then
+         raise Option_Error;
+      end if;
       return Res;
    end Convert_Name;
 

@@ -17,16 +17,17 @@
 --  02111-1307, USA.
 with System;
 with Interfaces.C_Streams;
+with GNAT.OS_Lib;
 
 with Types; use Types;
 with Name_Table;
 with Hash;
 with Interning;
-with Vhdl.Nodes; use Vhdl.Nodes;
+with Flags;
 with Libraries;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
-with Flags;
 with Vhdl.Configuration;
 with Translation;
 with Vhdl.Sem;
@@ -34,10 +35,9 @@ with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Errorout; use Errorout;
 with Errorout.Console;
 with Vhdl.Errors; use Vhdl.Errors;
-with GNAT.OS_Lib;
 with Bug;
 with Trans_Be;
-with Options;
+with Options; use Options;
 
 package body Ortho_Front is
    --  The action to be performed by the compiler.
@@ -232,13 +232,13 @@ package body Ortho_Front is
             subtype Str_Type is String (1 .. Opt'Last - 6);
          begin
             --  The option parameter must be normalized (starts at index 1).
-            if Options.Parse_Option (Str_Type (Opt (7 .. Opt'Last))) then
+            if Parse_Option (Str_Type (Opt (7 .. Opt'Last))) = Option_Ok then
                return 1;
             else
                return 0;
             end if;
          end;
-      elsif Options.Parse_Option (Opt.all) then
+      elsif Options.Parse_Option (Opt.all) = Option_Ok then
          return 1;
       else
          return 0;

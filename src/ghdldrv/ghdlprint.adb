@@ -25,6 +25,7 @@ with Flags;
 with Name_Table; use Name_Table;
 with Files_Map;
 with Libraries;
+with Options; use Options;
 with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -971,7 +972,7 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Reprint;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
    procedure Perform_Action (Cmd : Command_Reprint;
                              Args : Argument_List);
 
@@ -993,7 +994,7 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Reprint;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       pragma Assert (Option'First = 1);
    begin
@@ -1207,14 +1208,14 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    procedure Disp_Long_Help (Cmd : Command_Html);
 
    procedure Decode_Option (Cmd : in out Command_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res) is
+                            Res : out Option_State) is
    begin
       if Option = "--format=css" then
          Html_Format := Html_Css;
@@ -1307,7 +1308,7 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Xref_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
    procedure Disp_Long_Help (Cmd : Command_Xref_Html);
 
    procedure Perform_Action (Cmd : Command_Xref_Html;
@@ -1331,8 +1332,7 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Xref_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
-   is
+                            Res : out Option_State) is
    begin
       if Option = "-o" then
          if Arg = "" then

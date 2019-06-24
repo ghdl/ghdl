@@ -15,27 +15,27 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System;
 with Ada.Command_Line; use Ada.Command_Line;
+with Interfaces.C_Streams;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
+with Types; use Types;
 with Tables;
 with Dyn_Tables;
-with Simple_IO; use Simple_IO;
+with Files_Map;
 with Libraries;
+with Default_Paths;
+with Simple_IO; use Simple_IO;
 with Name_Table; use Name_Table;
 with Vhdl.Std_Package;
-with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Files_Map;
 with Vhdl.Configuration;
-with Default_Paths;
-with Interfaces.C_Streams;
-with System;
+with Options; use Options;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Errorout;
 with Version;
-with Options;
 
 package body Ghdldrv is
    --  Name of the tools used.
@@ -577,7 +577,7 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Comp;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    procedure Disp_Long_Help (Cmd : Command_Comp);
 
@@ -602,12 +602,12 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Comp;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       Opt : constant String (1 .. Option'Length) := Option;
       Str : String_Access;
    begin
-      Res := Option_Bad;
+      Res := Option_Unknown;
       if Opt = "-v" and then Flag_Verbose = False then
          --  Note: this is also decoded for command_lib, but we set
          --  Flag_Disp_Commands too.
@@ -655,7 +655,8 @@ package body Ghdldrv is
             Add_Arguments (Linker_Args, Opt);
          else
             Error ("unknown tool name in '-W" & Opt (3) & ",' option");
-            raise Option_Error;
+            Res := Option_Err;
+            return;
          end if;
          Res := Option_Ok;
       elsif Opt'Length >= 2 and then Opt (2) = 'g' then
@@ -682,37 +683,42 @@ package body Ghdldrv is
       elsif Opt = "--dyn-elab" then
          Elab_Mode := Elab_Dynamic;
          Res := Option_Ok;
-      elsif Options.Parse_Option (Opt) then
-         if Opt'Length > 2 and then Opt (1 .. 2) = "-P" then
-            --  Discard -Pxxx switches, as they are already added to
-            --  compiler_args.
-            null;
-         else
-            if Backend = Backend_Gcc then
-               --  Prefix options for gcc so that lang.opt does need to be
-               --  updated when a new option is added.
-               Str := new String'("--ghdl" & Opt);
-            else
-               Str := new String'(Opt);
-            end if;
-            Add_Argument (Compiler_Args, Str);
-         end if;
-         Res := Option_Ok;
       elsif Opt'Length > 18
         and then Opt (1 .. 18) = "--time-resolution="
       then
          Error ("option --time-resolution not supported by back-end");
-         raise Option_Error;
-      elsif Opt'Length >= 2
-        and then (Opt (2) = 'O' or Opt (2) = 'f')
-      then
-         --  Optimization option.
-         --  This is put after Flags.Parse_Option, since it may catch -fxxx
-         --  options.
-         Add_Argument (Compiler_Args, new String'(Opt));
-         Res := Option_Ok;
+         Res := Option_Err;
+         return;
       else
-         Decode_Option (Command_Lib (Cmd), Opt, Arg, Res);
+         Res := Options.Parse_Option (Opt);
+         if Res = Option_Ok then
+            if Opt'Length > 2 and then Opt (1 .. 2) = "-P" then
+               --  Discard -Pxxx switches, as they are already added to
+               --  compiler_args.
+               null;
+            else
+               if Backend = Backend_Gcc then
+                  --  Prefix options for gcc so that lang.opt does need to be
+                  --  updated when a new option is added.
+                  Str := new String'("--ghdl" & Opt);
+               else
+                  Str := new String'(Opt);
+               end if;
+               Add_Argument (Compiler_Args, Str);
+            end if;
+         elsif Res = Option_Unknown then
+            if Opt'Length >= 2
+              and then (Opt (2) = 'O' or Opt (2) = 'f')
+            then
+               --  Optimization option supported by gcc/llvm.
+               --  This is put after Flags.Parse_Option, since it may catch
+               --  -fxxx options.
+               Add_Argument (Compiler_Args, new String'(Opt));
+               Res := Option_Ok;
+            else
+               Decode_Option (Command_Lib (Cmd), Opt, Arg, Res);
+            end if;
+         end if;
       end if;
    end Decode_Option;
 
@@ -1316,7 +1322,7 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Anaelab;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    procedure Perform_Action (Cmd : Command_Anaelab;
                              Args : Argument_List);
@@ -1340,8 +1346,7 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Anaelab;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
-   is
+                            Res : out Option_State) is
    begin
       if Option = "-e" then
          Res := Option_End;
@@ -1397,7 +1402,7 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Make;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    function Get_Short_Help (Cmd : Command_Make) return String;
    procedure Disp_Long_Help (Cmd : Command_Make);
@@ -1440,7 +1445,7 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Make;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res) is
+                            Res : out Option_State) is
    begin
       if Option = "-b" then
          Cmd.Flag_Bind_Only := True;

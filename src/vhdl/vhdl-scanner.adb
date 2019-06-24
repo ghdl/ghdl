@@ -1451,7 +1451,7 @@ package body Vhdl.Scanner is
       Current_Token := Tok_Identifier;
    end Scan_Extended_Identifier;
 
-   procedure Convert_Identifier (Str : in out String)
+   procedure Convert_Identifier (Str : in out String; Err : out Boolean)
    is
       procedure Error_Bad is
       begin
@@ -1467,6 +1467,8 @@ package body Vhdl.Scanner is
       subtype Id_Subtype is String (1 .. Str'Length);
       Id : Id_Subtype renames Str;
    begin
+      Err := True;
+
       if Id'Length = 0 then
          Error_Msg_Option ("identifier required");
          return;
@@ -1505,6 +1507,7 @@ package body Vhdl.Scanner is
                   end if;
                when Invalid =>
                   Error_Bad;
+                  return;
             end case;
          end loop;
       else
@@ -1515,11 +1518,13 @@ package body Vhdl.Scanner is
                when Upper_Case_Letter =>
                   if Vhdl_Std = Vhdl_87 and C > 'Z' then
                      Error_8bit;
+                     return;
                   end if;
                   Id (I) := To_Lower_Map (C);
                when Lower_Case_Letter | Digit =>
                   if Vhdl_Std = Vhdl_87 and C > 'z' then
                      Error_8bit;
+                     return;
                   end if;
                when Special_Character =>
                   -- The current character is legal in an identifier.
@@ -1541,12 +1546,15 @@ package body Vhdl.Scanner is
                      end if;
                   else
                      Error_Bad;
+                     return;
                   end if;
                when others =>
                   Error_Bad;
+                  return;
             end case;
          end loop;
       end if;
+      Err := False;
    end Convert_Identifier;
 
    --  Internal scanner function: return True if C must be considered as a line

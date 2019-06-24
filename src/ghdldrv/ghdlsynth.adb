@@ -20,6 +20,7 @@ with Ghdllocal; use Ghdllocal;
 with Ghdlcomp;
 with Ghdlmain; use Ghdlmain;
 with Ghdlsimul;
+with Options; use Options;
 
 with Simul.Annotations;
 
@@ -44,7 +45,7 @@ package body Ghdlsynth is
    procedure Decode_Option (Cmd : in out Command_Synth;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
    procedure Perform_Action (Cmd : Command_Synth;
                              Args : Argument_List);
 
@@ -66,7 +67,7 @@ package body Ghdlsynth is
    procedure Decode_Option (Cmd : in out Command_Synth;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res) is
+                            Res : out Option_State) is
    begin
       if Option = "--disp-noinline" then
          Cmd.Disp_Inline := False;

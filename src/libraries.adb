@@ -21,6 +21,7 @@ with GNAT.OS_Lib;
 with Logging; use Logging;
 with Tables;
 with Errorout; use Errorout;
+with Options; use Options;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Scanner;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -671,6 +672,7 @@ package body Libraries is
         and then not Flags.Bootstrap
       then
          Error_Msg_Option ("cannot find ""std"" library");
+         raise Option_Error;
       end if;
 
       if Build_Standard then
@@ -693,7 +695,7 @@ package body Libraries is
       if Work_Library_Name = Name_Std then
          if not Flags.Bootstrap then
             Error_Msg_Option ("the WORK library cannot be STD");
-            return;
+            raise Option_Error;
          end if;
          Work_Library := Std_Library;
       else

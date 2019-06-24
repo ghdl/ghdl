@@ -39,14 +39,14 @@ package body Options is
       PSL.Dump_Tree.Dump_Hdl_Node := Vhdl.Disp_Tree.Disp_Tree_For_Psl'Access;
    end Initialize;
 
-   function Option_Warning (Opt: String; Val : Boolean) return Boolean is
+   function Option_Warning (Opt: String; Val : Boolean) return Option_State is
    begin
       --  Handle -Werror.
       if Opt = "error" then
          for I in Msgid_Warnings loop
             Warning_Error (I, Val);
          end loop;
-         return True;
+         return Option_Ok;
       end if;
 
       --  Handle -Werror=xxx
@@ -56,31 +56,33 @@ package body Options is
          for I in Msgid_Warnings loop
             if Warning_Image (I) = Opt (Opt'First + 6 .. Opt'Last) then
                Warning_Error (I, Val);
-               return True;
+               return Option_Ok;
             end if;
          end loop;
-         return False;
+         Error_Msg_Option ("unknown warning identifier");
+         return Option_Err;
       end if;
 
       --  Normal warnings.
       for I in Msgid_Warnings loop
          if Warning_Image (I) = Opt then
             Enable_Warning (I, Val);
-            return True;
+            return Option_Ok;
          end if;
       end loop;
 
       --  -Wreserved is an alias for -Wreserved-word.
       if Opt = "reserved" then
          Enable_Warning (Warnid_Reserved_Word, Val);
-         return True;
+         return Option_Ok;
       end if;
 
       --  Unknown warning.
-      return False;
+      Error_Msg_Option ("unknown warning identifier");
+      return Option_Err;
    end Option_Warning;
 
-   function Parse_Option (Opt : String) return Boolean
+   function Parse_Option (Opt : String) return Option_State
    is
       pragma Assert (Opt'First = 1);
    begin
@@ -97,24 +99,26 @@ package body Options is
             elsif Opt (7 .. 8) = "08" then
                Vhdl_Std := Vhdl_08;
             else
-               return False;
+               Error_Msg_Option ("unknown language standard");
+               return Option_Err;
             end if;
          elsif Opt'Length = 9 and then Opt (7 .. 9) = "93c" then
             Vhdl_Std := Vhdl_93c;
          else
-            return False;
+            Error_Msg_Option ("unknown language standard");
+            return Option_Err;
          end if;
       elsif Opt'Length = 5 and then Opt (1 .. 5) = "--ams" then
          AMS_Vhdl := True;
       elsif Opt'Length >= 2 and then Opt (1 .. 2) = "-P" then
          if Opt'Last = 2 then
             Error_Msg_Option ("missing directory after -P");
-            return True;
+            return Option_Err;
          end if;
          if Opt (3) = '=' then
             if Opt'Last = 3 then
                Error_Msg_Option ("missing directory after -P=");
-               return True;
+               return Option_Err;
             end if;
             Libraries.Add_Library_Path (Opt (4 .. Opt'Last));
          else
@@ -136,9 +140,13 @@ package body Options is
          declare
             use Name_Table;
             Name : String (1 .. Opt'Last - 8 + 1);
+            Err : Boolean;
          begin
             Name := Opt (8 .. Opt'Last);
-            Vhdl.Scanner.Convert_Identifier (Name);
+            Vhdl.Scanner.Convert_Identifier (Name, Err);
+            if Err then
+               return Option_Err;
+            end if;
             Libraries.Work_Library_Name := Get_Identifier (Name);
          end;
       elsif Opt = "-C" or else Opt = "--mb-comments" then
@@ -166,13 +174,13 @@ package body Options is
             V := Natural'Value (Opt (11 .. Opt'Last));
             if V not in Tab_Stop_Range then
                Error_Msg_Option ("incorrect value for -ftabstop");
-               return True;
+               return Option_Err;
             end if;
             Tab_Stop := V;
          exception
             when Constraint_Error =>
                Error_Msg_Option ("numeric value expected after -ftabstop=");
-               return True;
+               return Option_Err;
          end;
       elsif Opt = "--bootstrap" then
          Bootstrap := True;
@@ -224,9 +232,9 @@ package body Options is
       then
          null;
       else
-         return False;
+         return Option_Unknown;
       end if;
-      return True;
+      return Option_Ok;
    end Parse_Option;
 
    -- Disp help about these options.

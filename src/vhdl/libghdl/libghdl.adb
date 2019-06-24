@@ -19,6 +19,7 @@
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ghdllocal;
 with Ghdlcomp;
+with Options; use Options;
 with Errorout.Memory;
 with Files_Map.Editor;
 with Vhdl.Formatters;
@@ -29,7 +30,7 @@ pragma Unreferenced (Vhdl.Formatters);
 package body Libghdl is
    function Set_Option (Opt : Thin_String_Ptr; Len : Natural) return Integer is
    begin
-      if Ghdllocal.Decode_Driver_Option (Opt (1 .. Len)) then
+      if Ghdllocal.Decode_Driver_Option (Opt (1 .. Len)) = Option_Ok then
          --  Ok.
          return 0;
       else

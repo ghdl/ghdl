@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with GNAT.OS_Lib; use GNAT.OS_Lib;
-with Errorout;
+with Options; use Options;
 
 package Ghdlmain is
    type Command_Type;
@@ -34,20 +34,10 @@ package Ghdlmain is
    --  Initialize the command, before decoding actions.
    procedure Init (Cmd : in out Command_Type);
 
-   --  Option_OK: OPTION is handled.
-   --  Option_Bad: OPTION is unknown.
-   --  Option_Err: OPTION has an error (message was displayed).
-   --  Option_Arg_Req: OPTION requires an argument.  Must be set only when
-   --     ARG = "", the manager will recall Decode_Option.
-   --  Option_Arg: OPTION used the argument.
-   type Option_Res is
-     (Option_Bad, Option_Err,
-      Option_Ok, Option_Arg, Option_Arg_Req,
-      Option_End);
    procedure Decode_Option (Cmd : in out Command_Type;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    --  Get a one-line help for the command.
    --  If the first character is '!', the string is not displayed by --help
@@ -71,9 +61,6 @@ package Ghdlmain is
 
    --  Return the index of C in STR, or 0 if not found.
    function Index (Str : String; C : Character) return Natural;
-
-   --  May be raise by perform_action if the arguments are bad.
-   Option_Error : exception renames Errorout.Option_Error;
 
    --  Action failed.
    Compile_Error : exception;

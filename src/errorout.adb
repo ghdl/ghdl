@@ -388,15 +388,9 @@ package body Errorout is
       Report_Handler.Message_Group.all (False);
    end Report_End_Group;
 
-   procedure Error_Msg_Option_NR (Msg: String) is
+   procedure Error_Msg_Option (Msg: String) is
    begin
       Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg);
-   end Error_Msg_Option_NR;
-
-   procedure Error_Msg_Option (Msg: String; Args : Earg_Arr := No_Eargs) is
-   begin
-      Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg, Args);
-      raise Option_Error;
    end Error_Msg_Option;
 
    procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String) is

@@ -137,9 +137,9 @@ package Vhdl.Scanner is
    --  Lexical checks are performed.
    --  This procedure is not used by Scan, but should be used for identifiers
    --  given in the command line.
-   --  Errors are directly reported through error_msg_option.
+   --  Errors are directly reported through error_msg_option, and ERR set.
    --  Also, Vhdl_Std should be set.
-   procedure Convert_Identifier (Str : in out String);
+   procedure Convert_Identifier (Str : in out String; Err : out Boolean);
 
    --  Return TRUE iff C is a whitespace.
    --  LRM93 13.2 Lexical elements, separators, and delimiters

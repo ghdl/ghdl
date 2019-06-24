@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
+with Options; use Options;
 
 with Ada.Command_Line;
 
@@ -42,13 +43,13 @@ package body Ghdlcomp is
    procedure Decode_Option (Cmd : in out Command_Comp;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
    procedure Disp_Long_Help (Cmd : Command_Comp);
 
    procedure Decode_Option (Cmd : in out Command_Comp;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       pragma Assert (Option'First = 1);
    begin
@@ -159,7 +160,7 @@ package body Ghdlcomp is
    procedure Decode_Option (Cmd : in out Command_Compile;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
    procedure Perform_Action (Cmd : Command_Compile;
                              Args : Argument_List);
 
@@ -182,7 +183,7 @@ package body Ghdlcomp is
    procedure Decode_Option (Cmd : in out Command_Compile;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
    begin
       if Option = "-r" or else Option = "-e" then
@@ -348,6 +349,7 @@ package body Ghdlcomp is
       else
          if Run_Arg <= Args'Last then
             Error_Msg_Option ("options after unit are ignored");
+            raise Option_Error;
          end if;
       end if;
    end Perform_Action;
@@ -492,7 +494,7 @@ package body Ghdlcomp is
    procedure Decode_Option (Cmd : in out Command_Elab;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    procedure Perform_Action (Cmd : Command_Elab;
                              Args : Argument_List);
@@ -515,7 +517,7 @@ package body Ghdlcomp is
    procedure Decode_Option (Cmd : in out Command_Elab;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       pragma Assert (Option'First = 1);
    begin
@@ -529,10 +531,11 @@ package body Ghdlcomp is
             --  Silently accepted.
             Res := Option_Arg;
          end if;
-      elsif Option'Length >= 4
-        and then Option (1 .. 4) = "-Wl," then
+      elsif Option'Length >= 4 and then Option (1 .. 4) = "-Wl,"
+      then
          Error_Msg_Option ("option -Wl is not available when ghdl "
                              & "is not configured with gcc or llvm");
+         Res := Option_Err;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
@@ -553,6 +556,7 @@ package body Ghdlcomp is
       Hooks.Compile_Elab.all ("-e", Args, Run_Arg);
       if Run_Arg <= Args'Last then
          Error_Msg_Option ("options after unit are ignored");
+         raise Option_Error;
       end if;
       if Flag_Expect_Failure then
          raise Compilation_Error;
@@ -611,7 +615,7 @@ package body Ghdlcomp is
    begin
       if Args'Length /= 0 then
          Error ("--disp-config does not accept any argument");
-         raise Errorout.Option_Error;
+         raise Option_Error;
       end if;
       Put_Line ("command_name: " & Ada.Command_Line.Command_Name);
 

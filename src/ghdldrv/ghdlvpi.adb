@@ -19,6 +19,7 @@
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ada.Command_Line; use Ada.Command_Line;
 with Simple_IO; use Simple_IO;
+with Options; use Options;
 
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal;
@@ -211,13 +212,13 @@ package body Ghdlvpi is
    procedure Decode_Option (Cmd : in out Command_Spawn_Type;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
 
    procedure Decode_Option (Cmd : in out Command_Spawn_Type;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       pragma Unreferenced (Arg);
    begin
@@ -225,7 +226,7 @@ package body Ghdlvpi is
          Cmd.Flag_Verbose := True;
          Res := Option_Ok;
       else
-         Res := Option_Bad;
+         Res := Option_Unknown;
       end if;
    end Decode_Option;
 

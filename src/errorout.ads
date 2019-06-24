@@ -20,7 +20,6 @@ with Vhdl.Nodes;
 with Vhdl.Tokens;
 
 package Errorout is
-   Option_Error: exception;
    Compilation_Error: exception;
 
    --  The number of errors (ie, number of calls to error_msg*).
@@ -223,14 +222,10 @@ package Errorout is
    procedure Report_Start_Group;
    procedure Report_End_Group;
 
-   --  Disp an error, prepended with program name, and raise option_error.
+   --  Disp an error, prepended with program name.
    --  This is used for errors before initialisation, such as bad option or
    --  bad filename.
-   procedure Error_Msg_Option (Msg: String; Args : Earg_Arr := No_Eargs);
-   pragma No_Return (Error_Msg_Option);
-
-   --  Same as Error_Msg_Option but do not raise Option_Error.
-   procedure Error_Msg_Option_NR (Msg: String);
+   procedure Error_Msg_Option (Msg: String);
 
    --  Warn about an option.
    procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);

@@ -21,8 +21,8 @@ with Ada.Command_Line.Response_File;
 with Simple_IO;
 with Version;
 with Bug;
-with Options;
 with Types; use Types;
+with Errorout; use Errorout;
 with Errorout.Console;
 
 package body Ghdlmain is
@@ -36,13 +36,13 @@ package body Ghdlmain is
    procedure Decode_Option (Cmd : in out Command_Type;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       pragma Unreferenced (Cmd);
       pragma Unreferenced (Option);
       pragma Unreferenced (Arg);
    begin
-      Res := Option_Bad;
+      Res := Option_Unknown;
    end Decode_Option;
 
    procedure Disp_Long_Help (Cmd : Command_Type)
@@ -87,7 +87,7 @@ package body Ghdlmain is
    procedure Decode_Option (Cmd : in out Command_Help;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    function Get_Short_Help (Cmd : Command_Help) return String;
    procedure Perform_Action (Cmd : Command_Help; Args : Argument_List);
@@ -102,7 +102,7 @@ package body Ghdlmain is
    procedure Decode_Option (Cmd : in out Command_Help;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
       pragma Unreferenced (Cmd);
       pragma Unreferenced (Option);
@@ -249,16 +249,12 @@ package body Ghdlmain is
    end Perform_Action;
 
    --  Disp MSG on the standard output with the command name.
-   procedure Error (Msg : String)
-   is
-      use Errorout;
+   procedure Error (Msg : String)is
    begin
       Report_Msg (Msgid_Error, Option, No_Source_Coord, Msg);
    end Error;
 
-   procedure Warning (Msg : String)
-   is
-      use Errorout;
+   procedure Warning (Msg : String) is
    begin
       Report_Msg (Msgid_Warning, Option, No_Source_Coord, Msg);
    end Warning;
@@ -356,7 +352,7 @@ package body Ghdlmain is
       while Arg_Index <= Args'Last loop
          declare
             Arg : constant String_Access := Args (Arg_Index);
-            Res : Option_Res;
+            Res : Option_State;
          begin
             if Arg (1) = '-' then
                --  Argument is an option.
@@ -368,7 +364,7 @@ package body Ghdlmain is
 
                Decode_Option (Cmd.all, Arg.all, "", Res);
                case Res is
-                  when Option_Bad =>
+                  when Option_Unknown =>
                      Error ("unknown option '" & Arg.all & "' for command '"
                             & Cmd_Name.all & "'");
                      raise Option_Error;

@@ -18,6 +18,7 @@
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ghdlmain; use Ghdlmain;
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Options; use Options;
 
 package Ghdllocal is
    --  Init procedure for the functionnal interface.
@@ -25,7 +26,7 @@ package Ghdllocal is
 
    --  Handle:
    --  --std=xx, --work=xx, -Pxxx, --workdir=x, --ieee=x, -Px, and -v
-   function Decode_Driver_Option (Opt : String) return Boolean;
+   function Decode_Driver_Option (Opt : String) return Option_State;
 
    type Command_Lib is abstract new Command_Type with null record;
 
@@ -36,7 +37,7 @@ package Ghdllocal is
    procedure Decode_Option (Cmd : in out Command_Lib;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    --  Disp detailled help.
    procedure Disp_Long_Help (Cmd : Command_Lib);
