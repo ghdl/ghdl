@@ -98,7 +98,7 @@ case "$BLD" in
     ;;
     llvm-*)
         llvmver=$(echo $BLD | sed -e "s/llvm-//")
-        CXX="clang++-$llvmber"
+        CXX="clang++-$llvmver"
         CONFIG_OPTS="--with-llvm-config=llvm-config-$llvmver CXX=$CXX"
     ;;
     *)
