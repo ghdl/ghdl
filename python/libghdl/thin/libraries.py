@@ -15,3 +15,7 @@ Work_Library = c_int32.in_dll(libghdl, "libraries__work_library")
 Purge_Design_File = libghdl.libraries__purge_design_file
 
 Find_Entity_For_Component = libghdl.libraries__find_entity_for_component
+
+Get_Library_No_Create = libghdl.libraries__get_library_no_create
+
+Find_Primary_Unit = libghdl.libraries__find_primary_unit
