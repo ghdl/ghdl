@@ -50,4 +50,9 @@ package Synth.Expr is
 
    function Synth_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Value_Acc;
+
+   --  Convert index IDX in PFX to an offset.  LOC is used in case of error.
+   function Index_To_Offset (Pfx : Value_Acc; Idx : Int64; Loc : Node)
+                            return Uns32;
+
 end Synth.Expr;

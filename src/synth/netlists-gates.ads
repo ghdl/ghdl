@@ -103,6 +103,16 @@ package Netlists.Gates is
    --  Extract a bit or a slice at a constant offset.
    Id_Extract : constant Module_Id := 44;
 
+   Id_Dyn_Extract : constant Module_Id := 45;
+   Id_Step_Extract : constant Module_Id := 46;
+
+   --  This gate has two inputs A, B and one parameter POS.
+   --  It replaces bits POS + width(B) - 1 .. POS of A by B, ie:
+   --  T := A;
+   --  T (POS + width(B) - 1 .. POS) := B
+   --  OUT := T.
+   Id_Insert : constant Module_Id := 47;
+
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before
    --  the detector.

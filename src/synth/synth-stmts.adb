@@ -119,6 +119,36 @@ package body Synth.Stmts is
                           Val, Get_Type (Target));
          when Iir_Kind_Aggregate =>
             Synth_Assignment_Aggregate (Syn_Inst, Target, Val);
+         when Iir_Kind_Indexed_Name =>
+            declare
+               Pfx : constant Node := Get_Prefix (Target);
+               Targ : constant Value_Acc :=
+                 Get_Value (Syn_Inst, Get_Base_Name (Pfx));
+               Indexes : constant Node_Flist := Get_Index_List (Target);
+               N_Idx : Node;
+               Idx : Value_Acc;
+               V : Net;
+            begin
+               if Get_Nbr_Elements (Indexes) /= 1
+                 or else Targ.Kind /= Value_Wire
+               then
+                  --  Only support assignment of vector.
+                  raise Internal_Error;
+               end if;
+               N_Idx := Get_Nth_Element (Indexes, 0);
+               Idx := Synth_Expression_With_Type
+                 (Syn_Inst, N_Idx, Get_Type (N_Idx));
+               if Is_Const (Idx) then
+                  --  FIXME: check index.
+                  V := Build_Insert (Build_Context,
+                                     Get_Net (Targ, Get_Type (Pfx)),
+                                     Get_Net (Val, Get_Type (Target)),
+                                     Index_To_Offset (Targ, Idx.Scal, Target));
+               else
+                  raise Internal_Error;
+               end if;
+               Synth_Assign (Targ, Create_Value_Net (V, null), Get_Type (Pfx));
+            end;
          when others =>
             Error_Kind ("synth_assignment", Target);
       end case;

@@ -74,6 +74,9 @@ package Netlists.Builders is
    function Build_Extract_Bit
      (Ctxt : Context_Acc; I : Net; Off : Width) return Net;
 
+   function Build_Insert
+     (Ctxt : Context_Acc; I : Net; V : Net; Off : Width) return Net;
+
    function Build_Output (Ctxt : Context_Acc; W : Width) return Net;
    function Build_Signal (Ctxt : Context_Acc; Name : Sname; W : Width)
                          return Net;
@@ -122,5 +125,6 @@ private
       M_Truncate : Module_Arr (Truncate_Module_Id);
       M_Extend : Module_Arr (Extend_Module_Id);
       M_Extract : Module;
+      M_Insert : Module;
    end record;
 end Netlists.Builders;

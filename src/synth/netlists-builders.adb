@@ -161,6 +161,25 @@ package body Netlists.Builders is
                      Typ => Param_Uns32)));
    end Create_Extract_Module;
 
+   procedure Create_Insert_Module (Ctxt : Context_Acc)
+   is
+      Outputs : Port_Desc_Array (0 .. 0);
+      Inputs : Port_Desc_Array (0 .. 1);
+      Res : Module;
+   begin
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("insert")),
+         Id_Extract, 2, 1, 1);
+      Ctxt.M_Insert := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Inputs := (0 => Create_Input ("i"),
+                 1 => Create_Input ("v"));
+      Set_Port_Desc (Res, Inputs, Outputs);
+      Set_Param_Desc
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("index")),
+                     Typ => Param_Uns32)));
+   end Create_Insert_Module;
+
    procedure Create_Edge_Module (Ctxt : Context_Acc;
                                  Res : out Module;
                                  Name : Name_Id)
@@ -318,6 +337,7 @@ package body Netlists.Builders is
       Create_Const_Modules (Res);
 
       Create_Extract_Module (Res);
+      Create_Insert_Module (Res);
 
       Create_Monadic_Module (Design, Res.M_Truncate (Id_Utrunc),
                              Get_Identifier ("utrunc"), Id_Utrunc);
@@ -563,6 +583,24 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 0), I);
       return O;
    end Build_Extend;
+
+   function Build_Insert
+     (Ctxt : Context_Acc; I : Net; V : Net; Off : Width) return Net
+   is
+      Wd : constant Width := Get_Width (I);
+      pragma Assert (Off < Wd);
+      pragma Assert (Get_Width (V) + Off <= Wd);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Insert);
+      Connect (Get_Input (Inst, 0), I);
+      Connect (Get_Input (Inst, 1), V);
+      Set_Param_Uns32 (Inst, 0, Off);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      return O;
+   end Build_Insert;
 
    function Build_Object (Ctxt : Context_Acc; M : Module; W : Width) return Net
    is

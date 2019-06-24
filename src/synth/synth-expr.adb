@@ -863,6 +863,26 @@ package body Synth.Expr is
       end case;
    end In_Bounds;
 
+   function Index_To_Offset (Pfx : Value_Acc; Idx : Int64; Loc : Node)
+                            return Uns32
+   is
+      Rng : Value_Bound_Acc;
+   begin
+      Rng := Extract_Bound (Pfx);
+      if not In_Bounds (Rng, Int32 (Idx)) then
+         Error_Msg_Synth (+Loc, "index not within bounds");
+         return 0;
+      end if;
+
+      --  The offset is from the LSB (bit 0).  Bit 0 is the rightmost one.
+      case Rng.Dir is
+         when Iir_To =>
+            return Uns32 (Rng.Right - Int32 (Idx));
+         when Iir_Downto =>
+            return Uns32 (Int32 (Idx) - Rng.Right);
+      end case;
+   end Index_To_Offset;
+
    function Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                                return Value_Acc
    is
@@ -871,8 +891,7 @@ package body Synth.Expr is
       Indexes : constant Iir_Flist := Get_Index_List (Name);
       Idx_Val : constant Value_Acc :=
         Synth_Expression (Syn_Inst, Get_Nth_Element (Indexes, 0));
-      Rng : Value_Bound_Acc;
-      Off : Int32;
+      Off : Uns32;
    begin
       if Get_Nbr_Elements (Indexes) /= 1 then
          Error_Msg_Synth (+Name, "multi-dim arrays not supported");
@@ -884,20 +903,8 @@ package body Synth.Expr is
          return null;
       end if;
 
-      Rng := Extract_Bound (Pfx);
-      if not In_Bounds (Rng, Int32 (Idx_Val.Scal)) then
-         Error_Msg_Synth (+Name, "index not within bounds");
-         return null;
-      end if;
-
-      --  The offset is from the LSB (bit 0).  Bit 0 is the rightmost one.
-      case Rng.Dir is
-         when Iir_To =>
-            Off := Rng.Right - Int32 (Idx_Val.Scal);
-         when Iir_Downto =>
-            Off := Int32 (Idx_Val.Scal) - Rng.Right;
-      end case;
-      return Bit_Extract (Pfx, Uns32 (Off));
+      Off := Index_To_Offset (Pfx, Idx_Val.Scal, Name);
+      return Bit_Extract (Pfx, Off);
    end Synth_Indexed_Name;
 
    function Synth_Slice_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
