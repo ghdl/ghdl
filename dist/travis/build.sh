@@ -90,16 +90,16 @@ case "$BLD" in
     ;;
     llvm)
         CXX="clang"
-        CONFIG_OPTS="--with-llvm-config CXX=$CXX"
+        CONFIG_OPTS+=" --with-llvm-config CXX=$CXX"
     ;;
     llvm-3.5)
         CXX="clang++"
-        CONFIG_OPTS="--with-llvm-config=llvm-config-3.5 CXX=$CXX"
+        CONFIG_OPTS+=" --with-llvm-config=llvm-config-3.5 CXX=$CXX"
     ;;
     llvm-*)
         llvmver=$(echo $BLD | sed -e "s/llvm-//")
         CXX="clang++-$llvmver"
-        CONFIG_OPTS="--with-llvm-config=llvm-config-$llvmver CXX=$CXX"
+        CONFIG_OPTS+=" --with-llvm-config=llvm-config-$llvmver CXX=$CXX"
     ;;
     *)
         echo "$ANSI_RED[GHDL - build] Unknown build $BLD $ANSI_NOCOLOR"
