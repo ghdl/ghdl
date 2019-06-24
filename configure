@@ -178,6 +178,18 @@ if ! $CC -v 2> /dev/null; then
 	exit 1
 fi
 
+# Check the version of libghdl is correct.
+if [ "$enable_libghdl" = true ]; then
+    libghdl_version="$srcdir/python/libghdl/version.py"
+    if ! echo "__version__ = '${ghdl_version}'" | cmp "$libghdl_version" ; then
+	echo "Sorry, the version of $libghdl_version is not correct"
+	echo "update the version to: $ghdl_version"
+	echo "or use --disable-libghdl"
+	exit 1
+    fi
+fi
+
+
 # Default for enable_openieee
 if [ "$enable_openieee" = "unknown" ]; then
 	if test -d $srcdir/libraries/ieee ; then
@@ -292,12 +304,6 @@ if [ ! -d pic ]; then
 		echo "failed to create pic/"
 		exit 1;
 	fi
-fi
-
-if [ "$enable_libghdl" = true ]; then
-	cat > config.py <<-EOF
-__version__ = '${ghdl_version}'
-EOF
 fi
 
 # Generate config.status

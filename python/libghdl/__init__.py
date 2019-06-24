@@ -2,7 +2,7 @@ import ctypes
 import os
 from os.path import dirname, join, exists
 from shutil import which
-from libghdl.config import __version__
+from libghdl.version import __version__
 
 
 def _get_libghdl_name():
