@@ -107,6 +107,10 @@ package Libraries is
    function Find_Primary_Unit
      (Library: Iir_Library_Declaration; Name: Name_Id) return Iir_Design_Unit;
 
+   --  Get the library named IDENT.  Return Null_Iir if it doesn't exist.
+   function Get_Library_No_Create (Ident : Name_Id)
+                                  return Iir_Library_Declaration;
+
    --  Get or create a library from an identifier.
    --  LOC is used only to report errors.
    function Get_Library (Ident : Name_Id; Loc : Location_Type)

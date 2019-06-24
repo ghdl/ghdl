@@ -716,11 +716,8 @@ package body Libraries is
       Set_Visible_Flag (Work_Library, True);
    end Load_Work_Library;
 
-   -- Get or create a library from an identifier.
-   function Get_Library (Ident: Name_Id; Loc : Location_Type)
-                        return Iir_Library_Declaration
-   is
-      Library: Iir_Library_Declaration;
+   function Get_Library_No_Create (Ident : Name_Id)
+                                  return Iir_Library_Declaration is
    begin
       --  The library work is a little bit special.
       if Ident = Std_Names.Name_Work or else Ident = Work_Library_Name then
@@ -730,16 +727,23 @@ package body Libraries is
       end if;
 
       --  Check if the library has already been loaded.
-      Library := Vhdl.Utils.Find_Name_In_Chain (Libraries_Chain, Ident);
+      return Vhdl.Utils.Find_Name_In_Chain (Libraries_Chain, Ident);
+   end Get_Library_No_Create;
+
+   -- Get or create a library from an identifier.
+   function Get_Library (Ident: Name_Id; Loc : Location_Type)
+                        return Iir_Library_Declaration
+   is
+      Library: Iir_Library_Declaration;
+   begin
+      Library := Get_Library_No_Create (Ident);
       if Library /= Null_Iir then
          return Library;
       end if;
 
       --  This is a new library.
-      if Ident = Std_Names.Name_Std then
-         --  Load_std_library must have been called before.
-         raise Internal_Error;
-      end if;
+      --  Load_std_library must have been called before.
+      pragma Assert (Ident /= Std_Names.Name_Std);
 
       Library := Create_Iir (Iir_Kind_Library_Declaration);
       Set_Location (Library, Library_Location);
