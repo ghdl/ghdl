@@ -127,7 +127,7 @@ Note the :file:`c` library is always linked with an executable.
 .. _Starting_a_simulation_from_a_foreign_program:
 
 Wrapping and starting a GHDL simulation from a foreign program
-=================================================
+==============================================================
 
 You may run your design from an external program. You just have to call
 the ``ghdl_main`` function which can be defined:
@@ -182,7 +182,7 @@ design apex is ``design``.
   $ ghdl --bind design
 
 Finally, compile/bind your program and link it with your `VHDL`
-design::
+design:
 
 in C:
 
