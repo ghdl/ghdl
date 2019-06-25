@@ -201,4 +201,5 @@ package Synth.Values is
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
                     return Value_Acc;
 
+   function Extract_Bound (Val : Value_Acc) return Value_Bound_Acc;
 end Synth.Values;

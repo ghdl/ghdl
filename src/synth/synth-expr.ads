@@ -55,4 +55,9 @@ package Synth.Expr is
    function Index_To_Offset (Pfx : Value_Acc; Idx : Int64; Loc : Node)
                             return Uns32;
 
+   procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
+                                 Name : Node;
+                                 Pfx_Bnd : Value_Bound_Acc;
+                                 Res_Bnd : out Value_Bound_Acc;
+                                 Off : out Uns32);
 end Synth.Expr;

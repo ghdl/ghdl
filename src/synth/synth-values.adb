@@ -279,4 +279,16 @@ package body Synth.Values is
       Current_Pool := Prev_Pool;
       return Res;
    end Unshare;
+
+   function Extract_Bound (Val : Value_Acc) return Value_Bound_Acc is
+   begin
+      case Val.Kind is
+         when Value_Net =>
+            return Val.N_Bound;
+         when Value_Wire =>
+            return Val.W_Bound;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Extract_Bound;
 end Synth.Values;

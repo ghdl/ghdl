@@ -512,18 +512,6 @@ package body Synth.Expr is
       end if;
    end Synth_Bit_Eq_Const;
 
-   function Extract_Bound (Val : Value_Acc) return Value_Bound_Acc is
-   begin
-      case Val.Kind is
-         when Value_Net =>
-            return Val.N_Bound;
-         when Value_Wire =>
-            return Val.W_Bound;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Extract_Bound;
-
    --  Create the result range of an operator.  According to the ieee standard,
    --  the range is LEN-1 downto 0.
    function Create_Res_Bound (Prev : Value_Acc; N : Net) return Value_Bound_Acc
@@ -907,17 +895,19 @@ package body Synth.Expr is
       return Bit_Extract (Pfx, Off);
    end Synth_Indexed_Name;
 
-   function Synth_Slice_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                              return Value_Acc
+   procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
+                                 Name : Node;
+                                 Pfx_Bnd : Value_Bound_Acc;
+                                 Res_Bnd : out Value_Bound_Acc;
+                                 Off : out Uns32)
    is
-      Pfx : constant Value_Acc :=
-        Synth_Expression (Syn_Inst, Get_Prefix (Name));
       Expr : constant Node := Get_Suffix (Name);
-      Res_Bnd : Value_Bound_Acc;
       Left, Right : Value_Acc;
       Dir : Iir_Direction;
-      Bnd : Value_Bound_Acc;
    begin
+      Res_Bnd := null;
+      Off := 0;
+
       case Get_Kind (Expr) is
          when Iir_Kind_Range_Expression =>
             Left := Synth_Expression (Syn_Inst, Get_Left_Limit (Expr));
@@ -929,28 +919,27 @@ package body Synth.Expr is
 
       if Left.Kind /= Value_Discrete then
          Error_Msg_Synth (+Name, "non constant integer left not supported");
-         return null;
+         return;
       end if;
 
       if Right.Kind /= Value_Discrete then
          Error_Msg_Synth (+Name, "non constant integer right not supported");
-         return null;
+         return;
       end if;
 
-      Bnd := Extract_Bound (Pfx);
-      if Bnd.Dir /= Dir then
+      if Pfx_Bnd.Dir /= Dir then
          Error_Msg_Synth (+Name, "direction mismatch in slice");
-         return null;
+         return;
       end if;
 
-      if not In_Bounds (Bnd, Int32 (Left.Scal))
-        or else not In_Bounds (Bnd, Int32 (Right.Scal))
+      if not In_Bounds (Pfx_Bnd, Int32 (Left.Scal))
+        or else not In_Bounds (Pfx_Bnd, Int32 (Right.Scal))
       then
          Error_Msg_Synth (+Name, "index not within bounds");
-         return null;
+         return;
       end if;
 
-      case Bnd.Dir is
+      case Pfx_Bnd.Dir is
          when Iir_To =>
             Res_Bnd := Create_Value_Bound
               (Value_Bound_Type'
@@ -958,8 +947,7 @@ package body Synth.Expr is
                   Len => Width (Right.Scal - Left.Scal + 1),
                   Left => Int32 (Left.Scal),
                   Right => Int32 (Right.Scal)));
-            return Vec_Extract
-              (Pfx, Uns32 (Bnd.Right - Res_Bnd.Right), Res_Bnd);
+            Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right);
          when Iir_Downto =>
             Res_Bnd := Create_Value_Bound
               (Value_Bound_Type'
@@ -967,9 +955,22 @@ package body Synth.Expr is
                   Len => Width (Left.Scal - Right.Scal + 1),
                   Left => Int32 (Left.Scal),
                   Right => Int32 (Right.Scal)));
-            return Vec_Extract
-              (Pfx, Uns32 (Res_Bnd.Right - Bnd.Right), Res_Bnd);
+            Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right);
       end case;
+   end Synth_Slice_Suffix;
+
+   function Synth_Slice_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
+                              return Value_Acc
+   is
+      Pfx : constant Value_Acc :=
+        Synth_Expression (Syn_Inst, Get_Prefix (Name));
+      Bnd : Value_Bound_Acc;
+      Res_Bnd : Value_Bound_Acc;
+      Off : Uns32;
+   begin
+      Bnd := Extract_Bound (Pfx);
+      Synth_Slice_Suffix (Syn_Inst, Name, Bnd, Res_Bnd, Off);
+      return Vec_Extract (Pfx, Off, Res_Bnd);
    end Synth_Slice_Name;
 
    --  Match: clk_signal_name'event
