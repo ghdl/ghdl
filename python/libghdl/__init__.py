@@ -73,7 +73,8 @@ def _to_char_p(arg):
 
 
 def set_option(opt):
-    return libghdl.libghdl__set_option(*_to_char_p(opt))
+    "Set option OPT.  Return true iff the option is known and handled"
+    return libghdl.libghdl__set_option(*_to_char_p(opt)) == 0
 
 
 def analyze_init():
