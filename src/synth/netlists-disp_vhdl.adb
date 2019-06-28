@@ -19,10 +19,10 @@
 --  MA 02110-1301, USA.
 
 with Ada.Text_IO; use Ada.Text_IO;
-with Name_Table;
+with Name_Table; use Name_Table;
 --  with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
---  with Netlists.Gates; use Netlists.Gates;
+with Netlists.Gates; use Netlists.Gates;
 
 package body Netlists.Disp_Vhdl is
    --  Like Put, but without the leading space (if any).
@@ -46,9 +46,18 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Put_Type;
 
-   procedure Put_Name (N : Sname)
+   procedure Put_Id (N : Name_Id) is
+   begin
+      Put (Name_Table.Image (N));
+   end Put_Id;
+
+   procedure Put_Name_Version (N : Sname) is
+   begin
+      Put_Trim (Uns32'Image (Get_Sname_Version (N)));
+   end Put_Name_Version;
+
+   procedure Put_Name_1 (N : Sname)
    is
-      use Name_Table;
       Prefix : Sname;
    begin
       --  Do not crash on No_Name.
@@ -64,24 +73,58 @@ package body Netlists.Disp_Vhdl is
             if Prefix = No_Sname then
                Put ("\");
             else
-               Put_Name (Prefix);
+               Put_Name_1 (Prefix);
                Put (".");
             end if;
-            Put (Image (Get_Sname_Suffix (N)));
+            Put_Id (Get_Sname_Suffix (N));
          when Sname_Artificial =>
             if Prefix = No_Sname then
                Put ("$");
             else
-               Put_Name (Prefix);
+               Put_Name_1 (Prefix);
                Put (".");
             end if;
             Put (Image (Get_Sname_Suffix (N)));
          when Sname_Version =>
-            Put_Name (Prefix);
+            Put_Name_1 (Prefix);
             Put ("%");
-            Put_Trim (Uns32'Image (Get_Sname_Version (N)));
+            Put_Name_Version (N);
       end case;
+   end Put_Name_1;
+
+   procedure Put_Name (N : Sname) is
+   begin
+      --  Do not crash on No_Name.
+      if N = No_Sname then
+         Put ("*nil*");
+         return;
+      end if;
+
+      if Get_Sname_Kind (N) = Sname_User
+        and then Get_Sname_Prefix (N) = No_Sname
+      then
+         Put (Name_Table.Image (Get_Sname_Suffix (N)));
+      else
+         Put_Name_1 (N);
+      end if;
    end Put_Name;
+
+   procedure Put_Interface_Name (N : Sname) is
+   begin
+      --  Do not crash on No_Name.
+      if N = No_Sname then
+         Put ("*nil*");
+         return;
+      end if;
+
+      if Get_Sname_Kind (N) = Sname_Artificial
+        and then Get_Sname_Prefix (N) = No_Sname
+      then
+         Put (Name_Table.Image (Get_Sname_Suffix (N)));
+      else
+         Put ("*err*");
+      end if;
+   end Put_Interface_Name;
 
    procedure Disp_Entity (M : Module)
    is
@@ -133,21 +176,185 @@ package body Netlists.Disp_Vhdl is
          declare
             Inst : constant Instance := Get_Parent (N);
             Idx : constant Port_Idx := Get_Port_Idx (N);
+            Inst_Name : Sname;
+            Port_Name : Sname;
          begin
             if Is_Self_Instance (Inst) then
                Put_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
             else
-               Put_Name (Get_Name (Inst));
-               Put ('.');
-               Put_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
+               Inst_Name := Get_Name (Inst);
+               Port_Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
+               if Get_Sname_Kind (Inst_Name) = Sname_Version then
+                  Put ("net_");
+                  Put_Name_Version (Inst_Name);
+                  Put ("_");
+                  Put_Interface_Name (Port_Name);
+               else
+                  Put_Name (Inst_Name);
+                  Put ('.');
+                  Put_Name (Port_Name);
+               end if;
             end if;
          end;
       end if;
    end Disp_Net_Name;
 
-   procedure Disp_Architecture (M : Module)
+   procedure Disp_Instance_Gate (Inst : Instance)
    is
+      Imod : constant Module := Get_Module (Inst);
+      Idx : Port_Idx;
+      P_Idx : Param_Idx;
+      Name : Sname;
       First : Boolean;
+   begin
+      Put ("  ");
+      Name := Get_Name (Inst);
+      if Get_Sname_Kind (Name) = Sname_Version then
+         Put ("inst_");
+         Put_Name_Version (Name);
+      else
+         Put_Name (Name);
+      end if;
+      Put (" : gsynth.gate_");
+      --  Gate name
+      Name := Get_Name (Imod);
+      pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial
+                       and then Get_Sname_Prefix (Name) = No_Sname);
+      Put_Id (Get_Sname_Suffix (Name));
+
+      if Get_Nbr_Params (Imod) /= 0 then
+         Put_Line (" generic map (");
+         First := True;
+         Idx := 0;
+         for P in Params (Inst) loop
+            if First then
+               First := False;
+            else
+               Put_Line (",");
+            end if;
+            Put ("    ");
+            P_Idx := Get_Param_Idx (P);
+            Put_Interface_Name (Get_Param_Desc (Imod, P_Idx).Name);
+            Put (" => ");
+            Put_Trim (Uns32'Image (Get_Param_Uns32 (Inst, P_Idx)));
+         end loop;
+         Put_Line (")");
+         Put_Line ("    port map (");
+      else
+         Put_Line (" port map (");
+      end if;
+
+      First := True;
+      --  Inputs
+      Idx := 0;
+      for I of Inputs (Inst) loop
+         if First then
+            First := False;
+         else
+            Put_Line (",");
+         end if;
+         Put ("    ");
+         Put_Interface_Name (Get_Input_Desc (Imod, Idx).Name);
+         Idx := Idx + 1;
+         Put (" => ");
+         Disp_Net_Name (Get_Driver (I));
+      end loop;
+      --  Outputs
+      Idx := 0;
+      for O of Outputs (Inst) loop
+         if First then
+            First := False;
+         else
+            Put_Line (", ");
+         end if;
+         Put ("    ");
+         Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name);
+         Idx := Idx + 1;
+         Put (" => ");
+         Disp_Net_Name (O);
+      end loop;
+      Put_Line (");");
+   end Disp_Instance_Gate;
+
+   Bchar : constant array (Uns32 range 0 .. 1) of Character := "01";
+
+   procedure Disp_Instance_Inline (Inst : Instance)
+   is
+      Imod : constant Module := Get_Module (Inst);
+   begin
+      case Get_Id (Imod) is
+         when Id_Output =>
+            Put ("  ");
+            Disp_Net_Name (Get_Output (Inst, 0));
+            Put (" <= ");
+            Disp_Net_Name (Get_Driver (Get_Input (Inst, 0)));
+            Put_Line (";  -- (output)");
+         when Id_Not =>
+            Put ("  ");
+            Disp_Net_Name (Get_Output (Inst, 0));
+            Put (" <= not ");
+            Disp_Net_Name (Get_Driver (Get_Input (Inst, 0)));
+            Put_Line (";");
+         when Id_Const_UB32 =>
+            declare
+               O : constant Net := Get_Output (Inst, 0);
+               Wd : constant Width := Get_Width (O);
+               V : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+            begin
+               Put ("  ");
+               Disp_Net_Name (Get_Output (Inst, 0));
+               Put (" <= ");
+               if Wd = 1 then
+                  Put (''');
+                  Put (Bchar (V));
+                  Put (''');
+               else
+                  Put ('"');
+                  for I in 0 .. Wd - 1 loop
+                     Put (Bchar ((V / 2**Natural (I)) and 1));
+                  end loop;
+                  Put ('"');
+               end if;
+               Put_Line (";");
+            end;
+         when Id_Adff =>
+            declare
+               Clk : constant Net := Get_Driver (Get_Input (Inst, 0));
+               D : constant Net := Get_Driver (Get_Input (Inst, 1));
+               Rst : constant Net := Get_Driver (Get_Input (Inst, 2));
+               Rst_Val : constant Net := Get_Driver (Get_Input (Inst, 3));
+               O : constant Net := Get_Output (Inst, 0);
+            begin
+               Put ("  process (");
+               Disp_Net_Name (Clk);
+               Put (", ");
+               Disp_Net_Name (Rst);
+               Put_Line (")");
+               Put_Line ("  begin");
+               Put ("    if ");
+               Disp_Net_Name (Rst);
+               Put (" = '1'");
+               Put_Line (" then");
+               Put ("      ");
+               Disp_Net_Name (O);
+               Put (" <= ");
+               Disp_Net_Name (Rst_Val);
+               Put_Line (";");
+               Put_Line ("    else");
+               Put ("      ");
+               Disp_Net_Name (O);
+               Put (" <= ");
+               Disp_Net_Name (D);
+               Put_Line (";");
+               Put_Line ("    end if;");
+               Put_Line ("  end process;");
+            end;
+         when others =>
+            Disp_Instance_Gate (Inst);
+      end case;
+   end Disp_Instance_Inline;
+
+   procedure Disp_Architecture (M : Module) is
    begin
       Put ("architecture rtl of ");
       Put_Name (Get_Name (M));
@@ -190,84 +397,29 @@ package body Netlists.Disp_Vhdl is
       end;
 
       for Inst of Instances (M) loop
-         declare
-            Imod : constant Module := Get_Module (Inst);
-            Idx : Port_Idx;
-            P_Idx : Param_Idx;
-         begin
-            Put ("  ");
-            Put_Name (Get_Name (Inst));
-            Put (" : work.");
-            Put_Name (Get_Name (Imod));
-
-            if Get_Nbr_Params (Imod) /= 0 then
-               Put_Line (" generic map (");
-               First := True;
-               Idx := 0;
-               for P in Params (Inst) loop
-                  if First then
-                     First := False;
-                  else
-                     Put_Line (",");
-                  end if;
-                  Put ("    ");
-                  P_Idx := Get_Param_Idx (P);
-                  Put_Name (Get_Param_Desc (Imod, P_Idx).Name);
-                  Put (" => ");
-                  Put_Trim (Uns32'Image (Get_Param_Uns32 (Inst, P_Idx)));
-               end loop;
-               Put_Line (")");
-               Put_Line ("    port map (");
-            else
-               Put_Line (" port map (");
-            end if;
-
-            First := True;
-            --  Inputs
-            Idx := 0;
-            for I of Inputs (Inst) loop
-               if First then
-                  First := False;
-               else
-                  Put_Line (",");
-               end if;
-               Put ("    ");
-               Put_Name (Get_Input_Desc (Imod, Idx).Name);
-               Idx := Idx + 1;
-               Put (" => ");
-               Disp_Net_Name (Get_Driver (I));
-            end loop;
-            --  Outputs
-            Idx := 0;
-            for O of Outputs (Inst) loop
-               if First then
-                  First := False;
-               else
-                  Put_Line (", ");
-               end if;
-               Put ("    ");
-               Put_Name (Get_Output_Desc (Imod, Idx).Name);
-               Idx := Idx + 1;
-               Put (" => ");
-               Disp_Net_Name (O);
-            end loop;
-            Put_Line (");");
-         end;
+         Disp_Instance_Inline (Inst);
       end loop;
 
       Put_Line ("end rtl;");
       New_Line;
    end Disp_Architecture;
 
-   procedure Disp_Vhdl (M : Module) is
+   procedure Disp_Vhdl (M : Module; Is_Top : Boolean) is
    begin
       for S of Sub_Modules (M) loop
          if Get_Id (S) >= Id_User_None then
-            Disp_Vhdl (S);
+            Disp_Vhdl (S, False);
          end if;
       end loop;
 
-      Disp_Entity (M);
-      Disp_Architecture (M);
+      if not Is_Top then
+         Disp_Entity (M);
+         Disp_Architecture (M);
+      end if;
+   end Disp_Vhdl;
+
+   procedure Disp_Vhdl (M : Module) is
+   begin
+      Disp_Vhdl (M, True);
    end Disp_Vhdl;
 end Netlists.Disp_Vhdl;
