@@ -37,6 +37,7 @@ with Synth.Stmts;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Utils; use Netlists.Utils;
 
 package body Synth.Expr is
    function Is_Const (Val : Value_Acc) return Boolean is

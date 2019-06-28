@@ -69,6 +69,11 @@ package body Netlists.Utils is
       return Get_Output_Desc (M, I).Name;
    end Get_Output_Name;
 
+   function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net is
+   begin
+      return Get_Driver (Get_Input (Inst, Idx));
+   end Get_Input_Net;
+
    function Is_Connected (O : Net) return Boolean is
    begin
       return Get_First_Sink (O) /= No_Input;

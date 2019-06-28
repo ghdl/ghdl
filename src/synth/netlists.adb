@@ -461,11 +461,6 @@ package body Netlists is
       return Instances_Table.Table (Inst).First_Input + Input (Idx);
    end Get_Input;
 
-   function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net is
-   begin
-      return Get_Driver (Get_Input (Inst, Idx));
-   end Get_Input_Net;
-
    --  Nets
 
    function Is_Valid (N : Net) return Boolean is

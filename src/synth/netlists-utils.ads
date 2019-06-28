@@ -31,6 +31,8 @@ package Netlists.Utils is
    function Get_Input_Name (M : Module; I : Port_Idx) return Sname;
    function Get_Output_Name (M : Module; I : Port_Idx) return Sname;
 
+   function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net;
+
    --  Return True iff O has at least one sink (ie is connected to at least one
    --  input).
    function Is_Connected (O : Net) return Boolean;

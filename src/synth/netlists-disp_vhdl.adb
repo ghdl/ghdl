@@ -20,7 +20,7 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table; use Name_Table;
---  with Netlists.Utils; use Netlists.Utils;
+with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Gates; use Netlists.Gates;
 
