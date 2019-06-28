@@ -46,7 +46,11 @@ package body Netlists.Disp_Vhdl is
          Put ("std_logic");
       else
          Put ("std_logic_vector (");
-         Put_Uns32 (W - 1);
+         if W = 0 then
+            Put ("-1");
+         else
+            Put_Uns32 (W - 1);
+         end if;
          Put (" downto 0)");
       end if;
    end Put_Type;
@@ -136,6 +140,10 @@ package body Netlists.Disp_Vhdl is
       First : Boolean;
    begin
       --  Module id and name.
+      Put_Line ("library ieee;");
+      Put_Line ("use ieee.std_logic_1164.all;");
+      Put_Line ("use ieee.numeric_std.all;");
+      New_Line;
       Put ("entity ");
       Put_Name (Get_Name (M));
       Put_Line (" is");
@@ -189,16 +197,17 @@ package body Netlists.Disp_Vhdl is
             else
                Inst_Name := Get_Name (Inst);
                Port_Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
-               if Get_Sname_Kind (Inst_Name) = Sname_Version then
-                  Put ("net_");
-                  Put_Name_Version (Inst_Name);
-                  Put ("_");
-                  Put_Interface_Name (Port_Name);
-               else
-                  Put_Name (Inst_Name);
-                  Put ('.');
-                  Put_Name (Port_Name);
-               end if;
+               case Get_Sname_Kind (Inst_Name) is
+                  when Sname_Version =>
+                     Put ("net_");
+                     Put_Name_Version (Inst_Name);
+                     Put ("_");
+                     Put_Interface_Name (Port_Name);
+                  when Sname_User =>
+                     Put_Id (Get_Sname_Suffix (Inst_Name));
+                  when others =>
+                     raise Internal_Error;
+               end case;
             end if;
          end;
       end if;
@@ -281,7 +290,7 @@ package body Netlists.Disp_Vhdl is
       Put_Line (");");
    end Disp_Instance_Gate;
 
-   Bchar : constant array (Uns32 range 0 .. 1) of Character := "01";
+   Bchar : constant array (Uns32 range 0 .. 3) of Character := "01ZX";
 
    type Net_Array is array (Positive range <>) of Net;
    NL : constant Character := ASCII.LF;
@@ -305,23 +314,77 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Template;
 
+   procedure Disp_Template (S : String; Inst : Instance)
+   is
+      I : Positive;
+      C : Character;
+      Idx : Port_Idx;
+      N : Net;
+   begin
+      I := S'First;
+      while I <= S'Last loop
+         C := S (I);
+         if C = '\' then
+            Idx := Character'Pos (S (I + 2)) - Character'Pos ('0');
+            case S (I + 1) is
+               when 'o' =>
+                  N := Get_Output (Inst, Idx);
+               when 'i' =>
+                  N := Get_Input_Net (Inst, Idx);
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Disp_Net_Name (N);
+            I := I + 3;
+         else
+            Put (C);
+            I := I + 1;
+         end if;
+      end loop;
+   end Disp_Template;
+
+   function Get_Lit_Quote (Wd : Width) return Character is
+   begin
+      if Wd = 1 then
+         return ''';
+      else
+         return '"';
+      end if;
+   end Get_Lit_Quote;
+
+   procedure Disp_Binary_Lit (Va : Uns32; Zx : Uns32; Wd : Width)
+   is
+      W : constant Natural := Natural (Wd);
+      Q : constant Character := Get_Lit_Quote (Wd);
+   begin
+      Put (Q);
+      for I in 1 .. W loop
+         Put (Bchar (((Va / 2**(W - I)) and 1)
+                     + ((Zx / 2**(W - I)) and 1) * 2));
+      end loop;
+      Put (Q);
+   end Disp_Binary_Lit;
+
+   procedure Disp_X_Lit (W : Width)
+   is
+      Q : constant Character := Get_Lit_Quote (W);
+   begin
+      Put (Q);
+      Put ((1 .. Natural (W) => 'X'));
+      Put (Q);
+   end Disp_X_Lit;
+
    procedure Disp_Instance_Inline (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
    begin
       case Get_Id (Imod) is
          when Id_Output =>
-            Put ("  ");
-            Disp_Net_Name (Get_Output (Inst, 0));
-            Put (" <= ");
-            Disp_Net_Name (Get_Input_Net (Inst, 0));
-            Put_Line (";  -- (output)");
+            Disp_Template ("  \o0 <= \i0; -- (output)" & NL, Inst);
+         when Id_Signal =>
+            Disp_Template ("  \o0 <= \i0; -- (signal)" & NL, Inst);
          when Id_Not =>
-            Put ("  ");
-            Disp_Net_Name (Get_Output (Inst, 0));
-            Put (" <= not ");
-            Disp_Net_Name (Get_Input_Net (Inst, 0));
-            Put_Line (";");
+            Disp_Template ("  \o0 <= not \i0;" & NL, Inst);
          when Id_Extract =>
             declare
                O : constant Net := Get_Output (Inst, 0);
@@ -339,64 +402,92 @@ package body Netlists.Disp_Vhdl is
          when Id_Const_UB32 =>
             declare
                O : constant Net := Get_Output (Inst, 0);
-               Wd : constant Width := Get_Width (O);
-               V : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
                Put ("  ");
-               Disp_Net_Name (Get_Output (Inst, 0));
+               Disp_Net_Name (O);
                Put (" <= ");
-               if Wd = 1 then
-                  Put (''');
-                  Put (Bchar (V));
-                  Put (''');
-               else
-                  Put ('"');
-                  for I in 0 .. Wd - 1 loop
-                     Put (Bchar ((V / 2**Natural (I)) and 1));
-                  end loop;
-                  Put ('"');
-               end if;
+               Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O));
+               Put_Line (";");
+            end;
+         when Id_Const_UL32 =>
+            declare
+               O : constant Net := Get_Output (Inst, 0);
+            begin
+               Put ("  ");
+               Disp_Net_Name (O);
+               Put (" <= ");
+               Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
+                                Get_Param_Uns32 (Inst, 1),
+                                Get_Width (O));
                Put_Line (";");
             end;
          when Id_Adff =>
-            declare
-               Clk : constant Net := Get_Input_Net (Inst, 0);
-               D : constant Net := Get_Input_Net (Inst, 1);
-               Rst : constant Net := Get_Input_Net (Inst, 2);
-               Rst_Val : constant Net := Get_Input_Net (Inst, 3);
-               O : constant Net := Get_Output (Inst, 0);
-            begin
-               Disp_Template
-                 ("  process (\1, \3)" & NL &
-                  "  begin" & NL &
-                  "    if \3 = '1' then" & NL &
-                  "      \5 <= \4;" & NL &
-                  "    elsif rising_edge (\1) then" & NL &
-                  "      \5 <= \2;" & NL &
-                  "    end if;" & NL &
-                  "  end process;" & NL,
-                  (1 => Clk, 2 => D, 3 => Rst, 4 => Rst_Val, 5 => O));
-            end;
+            Disp_Template ("  process (\i0, \i2)" & NL &
+                           "  begin" & NL &
+                           "    if \i2 = '1' then" & NL &
+                           "      \o0 <= \i3;" & NL &
+                           "    elsif rising_edge (\i0) then" & NL &
+                           "      \o0 <= \i1;" & NL &
+                           "    end if;" & NL &
+                           "  end process;" & NL, Inst);
          when Id_Dff =>
-            declare
-               Clk : constant Net := Get_Input_Net (Inst, 0);
-               D : constant Net := Get_Input_Net (Inst, 1);
-               O : constant Net := Get_Output (Inst, 0);
-            begin
-               Disp_Template
-                 ("  process (\1)" & NL &
-                  "  begin" & NL &
-                  "    if rising_edge (\1) then" & NL &
-                  "      \3 <= \2;" & NL &
-                  "    end if;" & NL &
-                  "  end process;" & NL, (1 => Clk, 2 => D, 3 => O));
-            end;
+            Disp_Template ("  process (\i0)" & NL &
+                           "  begin" & NL &
+                           "    if rising_edge (\i0) then" & NL &
+                           "      \o0 <= \i1;" & NL &
+                           "    end if;" & NL &
+                           "  end process;" & NL, Inst);
          when Id_Mux2 =>
-            Disp_Template ("  \4 <= \2 when \1 = '0' else \3;" & NL,
-                           (1 => Get_Input_Net (Inst, 0),
-                            2 => Get_Input_Net (Inst, 1),
-                            3 => Get_Input_Net (Inst, 2),
-                            4 => Get_Output (Inst, 0)));
+            Disp_Template ("  \o0 <= \i1 when \i0 = '0' else \i2;" & NL, Inst);
+         when Id_Mux4 =>
+            Disp_Template ("  with \i0 select \o0 <=" & NL &
+                           "    \i1 when ""00""," & NL &
+                           "    \i2 when ""01""," & NL &
+                           "    \i3 when ""10""," & NL &
+                           "    \i4 when ""11""," & NL, Inst);
+            Put ("    ");
+            Disp_X_Lit (Get_Width (Get_Output (Inst, 0)));
+            Put_Line (" when others;");
+         when Id_Add =>
+            Disp_Template ("  \o0 <= std_logic_vector"
+                             & "(unsigned(\i0) + unsigned(\i1));" & NL,
+                           Inst);
+         when Id_Sub =>
+            Disp_Template ("  \o0 <= std_logic_vector"
+                             & "(unsigned(\i0) - unsigned(\i1));" & NL,
+                           Inst);
+         when Id_Ult =>
+            Disp_Template
+              ("  \o0 <= '1' when unsigned(\i0) < unsigned(\i1) else '0';"
+                 & NL, Inst);
+         when Id_Eq =>
+            Disp_Template ("  \o0 <= '1' when \i0 = \i1 else '0';" & NL, Inst);
+         when Id_Or =>
+            Disp_Template ("  \o0 <= \i0 or \i1;" & NL, Inst);
+         when Id_And =>
+            Disp_Template ("  \o0 <= \i0 and \i1;" & NL, Inst);
+         when Id_Concat2 =>
+            Disp_Template ("  \o0 <= \i0 & \i1;" & NL, Inst);
+         when Id_Concat4 =>
+            Disp_Template ("  \o0 <= \i0 & \i1 & \i2 & \i3;" & NL, Inst);
+         when Id_Utrunc
+           | Id_Strunc =>
+            declare
+               W : constant Width := Get_Width (Get_Output (Inst, 0));
+            begin
+               Disp_Template ("  \o0 <= \i0 (", Inst);
+               Put_Uns32 (W - 1);
+               Put_Line (" downto 0);");
+            end;
+         when Id_Uextend =>
+            declare
+               W : constant Width := Get_Width (Get_Output (Inst, 0));
+            begin
+               Disp_Template ("  \o0 <= std_logic_vector (resize "
+                                & "(unsigned (\i0), ", Inst);
+               Put_Uns32 (W);
+               Put_Line ("));");
+            end;
          when others =>
             Disp_Instance_Gate (Inst);
       end case;
@@ -439,7 +530,7 @@ package body Netlists.Disp_Vhdl is
             Put_Name (Get_Output_Desc (M, Idx).Name);
             Put (" <= ");
             Disp_Net_Name (Get_Driver (I));
-            New_Line;
+            Put_Line (";");
             Idx := Idx + 1;
          end loop;
       end;
