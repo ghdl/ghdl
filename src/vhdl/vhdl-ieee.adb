@@ -20,8 +20,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 
 package body Vhdl.Ieee is
-   function Skip_Copyright_Notice (Decl : Iir) return Iir
-   is
+   function Skip_Copyright_Notice (Decl : Iir) return Iir is
    begin
       if Decl /= Null_Iir
         and then Get_Kind (Decl) = Iir_Kind_Constant_Declaration
