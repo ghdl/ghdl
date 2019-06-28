@@ -278,6 +278,28 @@ package body Netlists.Disp_Vhdl is
 
    Bchar : constant array (Uns32 range 0 .. 1) of Character := "01";
 
+   type Net_Array is array (Positive range <>) of Net;
+   NL : constant Character := ASCII.LF;
+
+   procedure Disp_Template (S : String; N : Net_Array)
+   is
+      I : Positive;
+      C : Character;
+   begin
+      I := S'First;
+      while I <= S'Last loop
+         C := S (I);
+         if C = '\' then
+            I := I + 1;
+            C := S (I);
+            Disp_Net_Name (N (Character'Pos (C) - Character'Pos ('0')));
+         else
+            Put (C);
+         end if;
+         I := I + 1;
+      end loop;
+   end Disp_Template;
+
    procedure Disp_Instance_Inline (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -325,29 +347,30 @@ package body Netlists.Disp_Vhdl is
                Rst_Val : constant Net := Get_Driver (Get_Input (Inst, 3));
                O : constant Net := Get_Output (Inst, 0);
             begin
-               Put ("  process (");
-               Disp_Net_Name (Clk);
-               Put (", ");
-               Disp_Net_Name (Rst);
-               Put_Line (")");
-               Put_Line ("  begin");
-               Put ("    if ");
-               Disp_Net_Name (Rst);
-               Put (" = '1'");
-               Put_Line (" then");
-               Put ("      ");
-               Disp_Net_Name (O);
-               Put (" <= ");
-               Disp_Net_Name (Rst_Val);
-               Put_Line (";");
-               Put_Line ("    else");
-               Put ("      ");
-               Disp_Net_Name (O);
-               Put (" <= ");
-               Disp_Net_Name (D);
-               Put_Line (";");
-               Put_Line ("    end if;");
-               Put_Line ("  end process;");
+               Disp_Template
+                 ("  process (\1, \3)" & NL &
+                  "  begin" & NL &
+                  "    if \3 = '1' then" & NL &
+                  "      \5 <= \4;" & NL &
+                  "    elsif rising_edge (\1) then" & NL &
+                  "      \5 <= \2;" & NL &
+                  "    end if;" & NL &
+                  "  end process;" & NL,
+                  (1 => Clk, 2 => D, 3 => Rst, 4 => Rst_Val, 5 => O));
+            end;
+         when Id_Dff =>
+            declare
+               Clk : constant Net := Get_Driver (Get_Input (Inst, 0));
+               D : constant Net := Get_Driver (Get_Input (Inst, 1));
+               O : constant Net := Get_Output (Inst, 0);
+            begin
+               Disp_Template
+                 ("  process (\1)" & NL &
+                  "  begin" & NL &
+                  "    if rising_edge (\1) then" & NL &
+                  "      \3 <= \2;" & NL &
+                  "    end if;" & NL &
+                  "  end process;" & NL, (1 => Clk, 2 => D, 3 => O));
             end;
          when others =>
             Disp_Instance_Gate (Inst);
