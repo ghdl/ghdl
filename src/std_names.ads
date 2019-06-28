@@ -708,7 +708,10 @@ package Std_Names is
    Name_To_Integer         : constant Name_Id := Name_First_Ieee + 019;
    Name_To_Unsigned        : constant Name_Id := Name_First_Ieee + 020;
    Name_To_Signed          : constant Name_Id := Name_First_Ieee + 021;
-   Name_Last_Ieee          : constant Name_Id := Name_To_Signed;
+   Name_Math_Real          : constant Name_Id := Name_First_Ieee + 022;
+   Name_Ceil               : constant Name_Id := Name_First_Ieee + 023;
+   Name_Log2               : constant Name_Id := Name_First_Ieee + 024;
+   Name_Last_Ieee          : constant Name_Id := Name_Log2;
 
    --  Verilog Directives.
    Name_First_Directive : constant Name_Id := Name_Last_Ieee + 1;
