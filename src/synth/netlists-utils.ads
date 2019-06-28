@@ -33,6 +33,9 @@ package Netlists.Utils is
 
    function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net;
 
+   --  Return True iff ID describe a constant.
+   function Is_Const (Id : Module_Id) return Boolean;
+
    --  Return True iff O has at least one sink (ie is connected to at least one
    --  input).
    function Is_Connected (O : Net) return Boolean;

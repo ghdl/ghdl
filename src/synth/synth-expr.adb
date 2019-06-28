@@ -158,6 +158,13 @@ package body Synth.Expr is
    function Synth_Uresize (Val : Value_Acc; Vtype : Node; W : Width)
                           return Net is
    begin
+      if Is_Const (Val)
+        and then (Get_Kind (Get_Base_Type (Vtype))
+                    = Iir_Kind_Integer_Type_Definition)
+      then
+         return Build_Const_UB32
+           (Build_Context, Uns32 (Val.Scal), W);
+      end if;
       return Synth_Uresize (Get_Net (Val, Vtype), W);
    end Synth_Uresize;
 
