@@ -54,6 +54,11 @@ package body Synth.Expr is
       end case;
    end Is_Const;
 
+   function Is_Float (Val : Value_Acc) return Boolean is
+   begin
+      return Val.Kind = Value_Float;
+   end Is_Float;
+
    function Get_Width (Val : Value_Acc) return Uns32 is
    begin
       case Val.Kind is
@@ -1231,10 +1236,19 @@ package body Synth.Expr is
                                   return Value_Acc
    is
       Expr : constant Node := Get_Expression (Conv);
+      Conv_Type : constant Node := Get_Type (Conv);
       Val : Value_Acc;
    begin
       Val := Synth_Expression (Syn_Inst, Expr);
-      if Is_Vector_Type (Get_Type (Conv)) then
+      if Is_Float (Val) then
+         if Get_Kind (Conv_Type) = Iir_Kind_Integer_Subtype_Definition then
+            return Create_Value_Discrete (Int64 (Val.Fp));
+         else
+            Error_Msg_Synth (+Conv, "unhandled type conversion (from float)");
+            return null;
+         end if;
+      end if;
+      if Is_Vector_Type (Conv_Type) then
          return Val;
       else
          Error_Msg_Synth (+Conv, "unhandled type conversion");
@@ -1356,6 +1370,34 @@ package body Synth.Expr is
               (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1),
                                        Get_Type (Inter_Chain)), 32),
                null);
+         when Iir_Predefined_Ieee_Math_Real_Log2 =>
+            declare
+               V : constant Value_Acc := Subprg_Inst.Objects (1);
+
+               function Log2 (Arg : Fp64) return Fp64;
+               pragma Import (C, Log2);
+            begin
+               if not Is_Float (V) then
+                  Error_Msg_Synth
+                    (+Expr, "argument must be a float value");
+                  return null;
+               end if;
+               return Create_Value_Float (Log2 (V.Fp));
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Ceil =>
+            declare
+               V : constant Value_Acc := Subprg_Inst.Objects (1);
+
+               function Ceil (Arg : Fp64) return Fp64;
+               pragma Import (C, Ceil);
+            begin
+               if not Is_Float (V) then
+                  Error_Msg_Synth
+                    (+Expr, "argument must be a float value");
+                  return null;
+               end if;
+               return Create_Value_Float (Ceil (V.Fp));
+            end;
          when others =>
             Error_Msg_Synth
               (+Expr,
