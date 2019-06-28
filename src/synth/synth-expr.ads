@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Netlists; use Netlists;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -59,5 +60,8 @@ package Synth.Expr is
                                  Name : Node;
                                  Pfx_Bnd : Value_Bound_Acc;
                                  Res_Bnd : out Value_Bound_Acc;
-                                 Off : out Uns32);
+                                 Inp : out Net;
+                                 Step : out Uns32;
+                                 Off : out Uns32;
+                                 Wd : out Uns32);
 end Synth.Expr;

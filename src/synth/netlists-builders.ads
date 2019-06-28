@@ -69,10 +69,14 @@ package Netlists.Builders is
    function Build_Extend
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net;
 
-   function Build_Slice
+   function Build_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
    function Build_Extract_Bit
      (Ctxt : Context_Acc; I : Net; Off : Width) return Net;
+
+   function Build_Dyn_Extract
+     (Ctxt : Context_Acc;
+      I : Net; V : Net; Step : Uns32; Off : Uns32; W : Width) return Net;
 
    function Build_Insert
      (Ctxt : Context_Acc; I : Net; V : Net; Off : Width) return Net;
@@ -126,5 +130,6 @@ private
       M_Extend : Module_Arr (Extend_Module_Id);
       M_Extract : Module;
       M_Insert : Module;
+      M_Dyn_Extract : Module;
    end record;
 end Netlists.Builders;

@@ -156,14 +156,20 @@ package body Synth.Stmts is
                  Get_Value (Syn_Inst, Get_Base_Name (Pfx));
                V : Net;
                Res_Bnd : Value_Bound_Acc;
+               Inp : Net;
+               Step : Uns32;
                Off : Uns32;
+               Wd : Uns32;
             begin
                if Targ.Kind /= Value_Wire then
                   --  Only support assignment of vector.
                   raise Internal_Error;
                end if;
                Synth_Slice_Suffix (Syn_Inst, Target, Extract_Bound (Targ),
-                                   Res_Bnd, Off);
+                                   Res_Bnd, Inp, Step, Off, Wd);
+               if Step /= 0 then
+                  raise Internal_Error;
+               end if;
                V := Build_Insert (Build_Context,
                                   Get_Net (Targ, Get_Type (Pfx)),
                                   Get_Net (Val, Get_Type (Target)), Off);
@@ -485,8 +491,8 @@ package body Synth.Stmts is
 
       --  Handle SEL bits by 2, so group case_element by 4.
       for I in 1 .. Natural (Wd / 2) loop
-         Sub_Sel := Build_Slice (Build_Context,
-                                 Sel, Width (2 * (I - 1)), 2);
+         Sub_Sel := Build_Extract (Build_Context,
+                                   Sel, Width (2 * (I - 1)), 2);
          Mask := Shift_Left (not 0, Natural (2 * I));
          Iels := Els'First;
          Oels := Els'First;

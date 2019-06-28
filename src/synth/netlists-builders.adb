@@ -161,6 +161,27 @@ package body Netlists.Builders is
                      Typ => Param_Uns32)));
    end Create_Extract_Module;
 
+   procedure Create_Dyn_Extract_Module (Ctxt : Context_Acc)
+   is
+      Outputs : Port_Desc_Array (0 .. 0);
+      Inputs : Port_Desc_Array (0 .. 1);
+      Res : Module;
+   begin
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dyn_extract")),
+         Id_Extract, 2, 1, 2);
+      Ctxt.M_Dyn_Extract := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Inputs := (0 => Create_Input ("i"),
+                 1 => Create_Input ("v"));
+      Set_Port_Desc (Res, Inputs, Outputs);
+      Set_Param_Desc
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("step")),
+                     Typ => Param_Uns32),
+               1 => (New_Sname_Artificial (Get_Identifier ("offset")),
+                     Typ => Param_Uns32)));
+   end Create_Dyn_Extract_Module;
+
    procedure Create_Insert_Module (Ctxt : Context_Acc)
    is
       Outputs : Port_Desc_Array (0 .. 0);
@@ -337,6 +358,7 @@ package body Netlists.Builders is
       Create_Const_Modules (Res);
 
       Create_Extract_Module (Res);
+      Create_Dyn_Extract_Module (Res);
       Create_Insert_Module (Res);
 
       Create_Monadic_Module (Design, Res.M_Truncate (Id_Utrunc),
@@ -727,7 +749,7 @@ package body Netlists.Builders is
       return O;
    end Build_Iadff;
 
-   function Build_Slice
+   function Build_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net
    is
       Wd : constant Width := Get_Width (I);
@@ -743,12 +765,33 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 0), I);
       Set_Param_Uns32 (Inst, 0, Off);
       return O;
-   end Build_Slice;
+   end Build_Extract;
+
+   function Build_Dyn_Extract
+     (Ctxt : Context_Acc;
+      I : Net; V : Net; Step : Uns32; Off : Uns32; W : Width) return Net
+   is
+      Wd : constant Width := Get_Width (I);
+      pragma Assert (Wd /= No_Width);
+      pragma Assert (W > 0);
+      pragma Assert (W + Off <= Wd);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Dyn_Extract);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      Connect (Get_Input (Inst, 0), I);
+      Connect (Get_Input (Inst, 1), V);
+      Set_Param_Uns32 (Inst, 0, Step);
+      Set_Param_Uns32 (Inst, 1, Off);
+      return O;
+   end Build_Dyn_Extract;
 
    function Build_Extract_Bit
      (Ctxt : Context_Acc; I : Net; Off : Width) return Net is
    begin
-      return Build_Slice (Ctxt, I, Off, 1);
+      return Build_Extract (Ctxt, I, Off, 1);
    end Build_Extract_Bit;
 
 end Netlists.Builders;

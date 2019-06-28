@@ -101,10 +101,11 @@ package Netlists.Gates is
    subtype Extend_Module_Id is Module_Id range Id_Uextend .. Id_Sextend;
 
    --  Extract a bit or a slice at a constant offset.
+   --  OUT := IN0[OFF+WD-1:OFF]
    Id_Extract : constant Module_Id := 44;
 
+   --  OUT := IN0[IN1*STEP+OFF+WD-1:IN1*STEP+OFF]
    Id_Dyn_Extract : constant Module_Id := 45;
-   Id_Step_Extract : constant Module_Id := 46;
 
    --  This gate has two inputs A, B and one parameter POS.
    --  It replaces bits POS + width(B) - 1 .. POS of A by B, ie:

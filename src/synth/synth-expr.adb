@@ -35,7 +35,6 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Types; use Synth.Types;
 with Synth.Stmts;
 
-with Netlists; use Netlists;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 
@@ -136,20 +135,6 @@ package body Synth.Expr is
             raise Internal_Error;
       end case;
    end Bit_Extract;
-
-   function Vec_Extract (Val : Value_Acc; Off : Uns32; Bnd : Value_Bound_Acc)
-                        return Value_Acc is
-   begin
-      case Val.Kind is
-         when Value_Net
-           | Value_Wire =>
-            return Create_Value_Net
-              (Build_Slice (Build_Context,
-                            Get_Net (Val, Null_Node), Off, Bnd.Len), Bnd);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Vec_Extract;
 
    function Synth_Uresize (N : Net; W : Width) return Net
    is
@@ -895,11 +880,153 @@ package body Synth.Expr is
       return Bit_Extract (Pfx, Off);
    end Synth_Indexed_Name;
 
+   function Is_Const (N : Net) return Boolean is
+   begin
+      case Get_Id (Get_Module (Get_Parent (N))) is
+         when Id_Const_UB32 =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Const;
+
+   function To_Int32 is new Ada.Unchecked_Conversion
+     (Uns32, Int32);
+
+   function Get_Const (N : Net) return Int32
+   is
+      Inst : constant Instance := Get_Parent (N);
+   begin
+      case Get_Id (Get_Module (Inst)) is
+         when Id_Const_UB32 =>
+            return To_Int32 (Get_Param_Uns32 (Inst, 0));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Const;
+
+   procedure Decompose_Mul_Add (Val : Net;
+                                Inp : out Net;
+                                Factor : out Int32;
+                                Addend : out Int32)
+   is
+      Inst : Instance;
+      Val_I0, Val_I1 : Net;
+   begin
+      Factor := 1;
+      Addend := 0;
+      Inp := Val;
+
+      loop
+         Inst := Get_Parent (Inp);
+         if Get_Id (Get_Module (Inst)) = Id_Add then
+            Val_I0 := Get_Driver (Get_Input (Inst, 0));
+            Val_I1 := Get_Driver (Get_Input (Inst, 1));
+            if Is_Const (Val_I0) then
+               Addend := Addend + Get_Const (Val_I0) * Factor;
+               Inp := Val_I1;
+            elsif Is_Const (Val_I1) then
+               Addend := Addend + Get_Const (Val_I1) * Factor;
+               Inp := Val_I0;
+            else
+               --  It's an addition, but without any constant value.
+               return;
+            end if;
+         elsif Get_Id (Get_Module (Inst)) = Id_Sub then
+            Val_I0 := Get_Driver (Get_Input (Inst, 0));
+            Val_I1 := Get_Driver (Get_Input (Inst, 1));
+            if Is_Const (Val_I1) then
+               Addend := Addend - Get_Const (Val_I1) * Factor;
+               Inp := Val_I0;
+            else
+               --  It's a substraction, but without any constant value.
+               return;
+            end if;
+         elsif Get_Id (Get_Module (Inst)) = Id_Mul then
+            Val_I0 := Get_Driver (Get_Input (Inst, 0));
+            Val_I1 := Get_Driver (Get_Input (Inst, 1));
+            if Is_Const (Val_I0) then
+               Factor := Factor * Get_Const (Val_I0);
+               Inp := Val_I1;
+            elsif Is_Const (Val_I1) then
+               Factor := Factor * Get_Const (Val_I1);
+               Inp := Val_I0;
+            else
+               --  A mul but without any constant value.
+               return;
+            end if;
+         elsif Get_Id (Get_Module (Inst)) = Id_Uextend then
+            Inp := Get_Driver (Get_Input (Inst, 0));
+         else
+            --  Cannot decompose it.
+            return;
+         end if;
+      end loop;
+   end Decompose_Mul_Add;
+
+   procedure Synth_Extract_Dyn_Suffix (Loc : Node;
+                                       Pfx_Bnd : Value_Bound_Acc;
+                                       Left : Net;
+                                       Right : Net;
+                                       Inp : out Net;
+                                       Step : out Uns32;
+                                       Off : out Uns32;
+                                       Width : out Uns32)
+   is
+      L_Inp, R_Inp : Net;
+      L_Fac, R_Fac : Int32;
+      L_Add, R_Add : Int32;
+   begin
+      Inp := No_Net;
+      Step := 0;
+      Off := 0;
+      Width := 0;
+
+      if Left = Right then
+         L_Inp := Left;
+         R_Inp := Right;
+         L_Fac := 1;
+         R_Fac := 1;
+         L_Add := 0;
+         R_Add := 0;
+      else
+         Decompose_Mul_Add (Left, L_Inp, L_Fac, L_Add);
+         Decompose_Mul_Add (Right, R_Inp, R_Fac, R_Add);
+      end if;
+
+      if L_Inp /= R_Inp then
+         Error_Msg_Synth
+           (+Loc, "cannot extract same variable factor for dynamic slice");
+         return;
+      end if;
+      Inp := L_Inp;
+
+      if L_Fac /= R_Fac then
+         Error_Msg_Synth
+           (+Loc, "cannot extract same constant factor for dynamic slice");
+         return;
+      end if;
+      --  FIXME: what to do with negative values.
+      Step := Uns32 (L_Fac);
+
+      case Pfx_Bnd.Dir is
+         when Iir_To =>
+            Off := Uns32 (L_Add - Pfx_Bnd.Left);
+            Width := Uns32 (R_Add - L_Add + 1);
+         when Iir_Downto =>
+            Off := Uns32 (R_Add - Pfx_Bnd.Right);
+            Width := Uns32 (L_Add - R_Add + 1);
+      end case;
+   end Synth_Extract_Dyn_Suffix;
+
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Bnd : Value_Bound_Acc;
                                  Res_Bnd : out Value_Bound_Acc;
-                                 Off : out Uns32)
+                                 Inp : out Net;
+                                 Step : out Uns32;
+                                 Off : out Uns32;
+                                 Wd : out Uns32)
    is
       Expr : constant Node := Get_Suffix (Name);
       Left, Right : Value_Acc;
@@ -917,60 +1044,84 @@ package body Synth.Expr is
             Error_Msg_Synth (+Expr, "only range supported for slices");
       end case;
 
-      if Left.Kind /= Value_Discrete then
-         Error_Msg_Synth (+Name, "non constant integer left not supported");
-         return;
-      end if;
-
-      if Right.Kind /= Value_Discrete then
-         Error_Msg_Synth (+Name, "non constant integer right not supported");
-         return;
-      end if;
-
       if Pfx_Bnd.Dir /= Dir then
          Error_Msg_Synth (+Name, "direction mismatch in slice");
+         Step := 0;
+         Wd := 0;
          return;
       end if;
 
-      if not In_Bounds (Pfx_Bnd, Int32 (Left.Scal))
-        or else not In_Bounds (Pfx_Bnd, Int32 (Right.Scal))
-      then
-         Error_Msg_Synth (+Name, "index not within bounds");
-         return;
-      end if;
+      if not Is_Const (Left) or else not Is_Const (Right) then
+         if Left.Kind /= Value_Net and Right.Kind /= Value_Net then
+            Error_Msg_Synth
+              (+Name, "left and right bounds of a slice must be "
+                 & "either constant or dynamic");
+            return;
+         else
+            Synth_Extract_Dyn_Suffix (Name, Pfx_Bnd, Left.N, Right.N,
+                                      Inp, Step, Off, Wd);
+         end if;
+      else
+         Inp := No_Net;
+         Step := 0;
 
-      case Pfx_Bnd.Dir is
-         when Iir_To =>
-            Res_Bnd := Create_Value_Bound
-              (Value_Bound_Type'
-                 (Dir => Iir_To,
-                  Len => Width (Right.Scal - Left.Scal + 1),
-                  Left => Int32 (Left.Scal),
-                  Right => Int32 (Right.Scal)));
-            Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right);
-         when Iir_Downto =>
-            Res_Bnd := Create_Value_Bound
-              (Value_Bound_Type'
-                 (Dir => Iir_Downto,
-                  Len => Width (Left.Scal - Right.Scal + 1),
-                  Left => Int32 (Left.Scal),
-                  Right => Int32 (Right.Scal)));
-            Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right);
-      end case;
+         if not In_Bounds (Pfx_Bnd, Int32 (Left.Scal))
+           or else not In_Bounds (Pfx_Bnd, Int32 (Right.Scal))
+         then
+            Error_Msg_Synth (+Name, "index not within bounds");
+            Wd := 0;
+            Off := 0;
+            return;
+         end if;
+
+         case Pfx_Bnd.Dir is
+            when Iir_To =>
+               Wd := Width (Right.Scal - Left.Scal + 1);
+               Res_Bnd := Create_Value_Bound
+                 (Value_Bound_Type'(Dir => Iir_To,
+                                    Len => Wd,
+                                    Left => Int32 (Left.Scal),
+                                    Right => Int32 (Right.Scal)));
+               Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right);
+            when Iir_Downto =>
+               Wd := Width (Left.Scal - Right.Scal + 1);
+               Res_Bnd := Create_Value_Bound
+                 (Value_Bound_Type'(Dir => Iir_Downto,
+                                    Len => Wd,
+                                    Left => Int32 (Left.Scal),
+                                    Right => Int32 (Right.Scal)));
+               Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right);
+         end case;
+      end if;
    end Synth_Slice_Suffix;
 
    function Synth_Slice_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                               return Value_Acc
    is
-      Pfx : constant Value_Acc :=
-        Synth_Expression (Syn_Inst, Get_Prefix (Name));
+      Pfx_Node : constant Node := Get_Prefix (Name);
+      Pfx : constant Value_Acc := Synth_Expression (Syn_Inst, Pfx_Node);
       Bnd : Value_Bound_Acc;
       Res_Bnd : Value_Bound_Acc;
+      Inp : Net;
+      Step : Uns32;
       Off : Uns32;
+      Wd : Uns32;
    begin
       Bnd := Extract_Bound (Pfx);
-      Synth_Slice_Suffix (Syn_Inst, Name, Bnd, Res_Bnd, Off);
-      return Vec_Extract (Pfx, Off, Res_Bnd);
+      Synth_Slice_Suffix (Syn_Inst, Name, Bnd, Res_Bnd, Inp, Step, Off, Wd);
+      if Inp /= No_Net then
+         return Create_Value_Net
+           (Build_Dyn_Extract (Build_Context,
+                               Get_Net (Pfx, Get_Type (Pfx_Node)),
+                               Inp, Step, Off, Wd),
+            null);
+      else
+         return Create_Value_Net
+           (Build_Extract (Build_Context,
+                           Get_Net (Pfx, Get_Type (Pfx_Node)),
+                           Off, Wd),
+            Res_Bnd);
+      end if;
    end Synth_Slice_Name;
 
    --  Match: clk_signal_name'event
