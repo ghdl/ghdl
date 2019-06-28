@@ -920,8 +920,8 @@ package body Synth.Expr is
       loop
          Inst := Get_Parent (Inp);
          if Get_Id (Get_Module (Inst)) = Id_Add then
-            Val_I0 := Get_Driver (Get_Input (Inst, 0));
-            Val_I1 := Get_Driver (Get_Input (Inst, 1));
+            Val_I0 := Get_Input_Net (Inst, 0);
+            Val_I1 := Get_Input_Net (Inst, 1);
             if Is_Const (Val_I0) then
                Addend := Addend + Get_Const (Val_I0) * Factor;
                Inp := Val_I1;
@@ -933,8 +933,8 @@ package body Synth.Expr is
                return;
             end if;
          elsif Get_Id (Get_Module (Inst)) = Id_Sub then
-            Val_I0 := Get_Driver (Get_Input (Inst, 0));
-            Val_I1 := Get_Driver (Get_Input (Inst, 1));
+            Val_I0 := Get_Input_Net (Inst, 0);
+            Val_I1 := Get_Input_Net (Inst, 1);
             if Is_Const (Val_I1) then
                Addend := Addend - Get_Const (Val_I1) * Factor;
                Inp := Val_I0;
@@ -943,8 +943,8 @@ package body Synth.Expr is
                return;
             end if;
          elsif Get_Id (Get_Module (Inst)) = Id_Mul then
-            Val_I0 := Get_Driver (Get_Input (Inst, 0));
-            Val_I1 := Get_Driver (Get_Input (Inst, 1));
+            Val_I0 := Get_Input_Net (Inst, 0);
+            Val_I1 := Get_Input_Net (Inst, 1);
             if Is_Const (Val_I0) then
                Factor := Factor * Get_Const (Val_I0);
                Inp := Val_I1;
@@ -956,7 +956,7 @@ package body Synth.Expr is
                return;
             end if;
          elsif Get_Id (Get_Module (Inst)) = Id_Uextend then
-            Inp := Get_Driver (Get_Input (Inst, 0));
+            Inp := Get_Input_Net (Inst, 0);
          else
             --  Cannot decompose it.
             return;

@@ -82,7 +82,7 @@ package body Synth.Inference is
             --  Assume the condition is canonicalized, ie of the form:
             --  CLK and EXPR.
             --  FIXME: do it!
-            return Has_Clock (Get_Driver (Get_Input (Inst, 0)));
+            return Has_Clock (Get_Input_Net (Inst, 0));
          when others =>
             return False;
       end case;
@@ -154,7 +154,7 @@ package body Synth.Inference is
       case Get_Id (Inst) is
          when Id_Edge =>
             --  Get rid of the edge gate, just return the signal.
-            Clk := Get_Driver (Get_Input (Inst, 0));
+            Clk := Get_Input_Net (Inst, 0);
          when Id_And =>
             --  Assume the condition is canonicalized, ie of the form:
             --  CLK and EXPR.

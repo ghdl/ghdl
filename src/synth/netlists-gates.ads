@@ -79,11 +79,17 @@ package Netlists.Gates is
    --  A simple D flip-flop.  The D input is stored on a rising edge of CLK.
    --  Q is the output.  For falling edge dff, use a NOT gate on the CLK
    --  input.
+   --  Inputs: CLK, D
+   --  Output: Q
    Id_Dff   : constant Module_Id := 32;
+
    --  A DFF with an asynchronous reset.  Note that the asynchronous reset
    --  has priority over the clock.  When RST is asserted, the value is
-   --  set to RVAL.
+   --  set to RST_VAL.
+   --  Inputs: CLK, D, RST, RST_VAL
+   --  Output: Q
    Id_Adff  : constant Module_Id := 33;
+
    --  A simple DFF with an initial value (must be constant).  This is
    --  for FPGAs.
    Id_Idff  : constant Module_Id := 34;

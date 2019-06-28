@@ -235,6 +235,8 @@ package Netlists is
    function Get_Param_Uns32 (Inst : Instance; Param : Param_Idx) return Uns32;
    procedure Set_Param_Uns32 (Inst : Instance; Param : Param_Idx; Val : Uns32);
 
+   function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net;
+
    --  Input
    function Get_Input_Parent (I : Input) return Instance;
    function Get_Parent (I : Input) return Instance renames Get_Input_Parent;

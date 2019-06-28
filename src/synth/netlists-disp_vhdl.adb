@@ -309,13 +309,13 @@ package body Netlists.Disp_Vhdl is
             Put ("  ");
             Disp_Net_Name (Get_Output (Inst, 0));
             Put (" <= ");
-            Disp_Net_Name (Get_Driver (Get_Input (Inst, 0)));
+            Disp_Net_Name (Get_Input_Net (Inst, 0));
             Put_Line (";  -- (output)");
          when Id_Not =>
             Put ("  ");
             Disp_Net_Name (Get_Output (Inst, 0));
             Put (" <= not ");
-            Disp_Net_Name (Get_Driver (Get_Input (Inst, 0)));
+            Disp_Net_Name (Get_Input_Net (Inst, 0));
             Put_Line (";");
          when Id_Const_UB32 =>
             declare
@@ -341,10 +341,10 @@ package body Netlists.Disp_Vhdl is
             end;
          when Id_Adff =>
             declare
-               Clk : constant Net := Get_Driver (Get_Input (Inst, 0));
-               D : constant Net := Get_Driver (Get_Input (Inst, 1));
-               Rst : constant Net := Get_Driver (Get_Input (Inst, 2));
-               Rst_Val : constant Net := Get_Driver (Get_Input (Inst, 3));
+               Clk : constant Net := Get_Input_Net (Inst, 0);
+               D : constant Net := Get_Input_Net (Inst, 1);
+               Rst : constant Net := Get_Input_Net (Inst, 2);
+               Rst_Val : constant Net := Get_Input_Net (Inst, 3);
                O : constant Net := Get_Output (Inst, 0);
             begin
                Disp_Template
@@ -360,8 +360,8 @@ package body Netlists.Disp_Vhdl is
             end;
          when Id_Dff =>
             declare
-               Clk : constant Net := Get_Driver (Get_Input (Inst, 0));
-               D : constant Net := Get_Driver (Get_Input (Inst, 1));
+               Clk : constant Net := Get_Input_Net (Inst, 0);
+               D : constant Net := Get_Input_Net (Inst, 1);
                O : constant Net := Get_Output (Inst, 0);
             begin
                Disp_Template
