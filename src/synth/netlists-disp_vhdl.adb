@@ -35,13 +35,18 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Put_Trim;
 
+   procedure Put_Uns32 (V : Uns32) is
+   begin
+      Put_Trim (Uns32'Image (V));
+   end Put_Uns32;
+
    procedure Put_Type (W : Width) is
    begin
       if W = 1 then
          Put ("std_logic");
       else
          Put ("std_logic_vector (");
-         Put_Trim (Width'Image (W - 1));
+         Put_Uns32 (W - 1);
          Put (" downto 0)");
       end if;
    end Put_Type;
@@ -53,7 +58,7 @@ package body Netlists.Disp_Vhdl is
 
    procedure Put_Name_Version (N : Sname) is
    begin
-      Put_Trim (Uns32'Image (Get_Sname_Version (N)));
+      Put_Uns32 (Get_Sname_Version (N));
    end Put_Name_Version;
 
    procedure Put_Name_1 (N : Sname)
@@ -236,7 +241,7 @@ package body Netlists.Disp_Vhdl is
             P_Idx := Get_Param_Idx (P);
             Put_Interface_Name (Get_Param_Desc (Imod, P_Idx).Name);
             Put (" => ");
-            Put_Trim (Uns32'Image (Get_Param_Uns32 (Inst, P_Idx)));
+            Put_Uns32 (Get_Param_Uns32 (Inst, P_Idx));
          end loop;
          Put_Line (")");
          Put_Line ("    port map (");
@@ -317,6 +322,20 @@ package body Netlists.Disp_Vhdl is
             Put (" <= not ");
             Disp_Net_Name (Get_Input_Net (Inst, 0));
             Put_Line (";");
+         when Id_Extract =>
+            declare
+               O : constant Net := Get_Output (Inst, 0);
+               Wd : constant Width := Get_Width (O);
+               Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+            begin
+               Disp_Template ("  \1 <= \2 (", (O, Get_Input_Net (Inst, 0)));
+               if Wd > 1 then
+                  Put_Uns32 (Off + Wd - 1);
+                  Put (" downto ");
+               end if;
+               Put_Uns32 (Off);
+               Put_Line (");");
+            end;
          when Id_Const_UB32 =>
             declare
                O : constant Net := Get_Output (Inst, 0);
@@ -372,6 +391,12 @@ package body Netlists.Disp_Vhdl is
                   "    end if;" & NL &
                   "  end process;" & NL, (1 => Clk, 2 => D, 3 => O));
             end;
+         when Id_Mux2 =>
+            Disp_Template ("  \4 <= \2 when \1 = '0' else \3;" & NL,
+                           (1 => Get_Input_Net (Inst, 0),
+                            2 => Get_Input_Net (Inst, 1),
+                            3 => Get_Input_Net (Inst, 2),
+                            4 => Get_Output (Inst, 0)));
          when others =>
             Disp_Instance_Gate (Inst);
       end case;

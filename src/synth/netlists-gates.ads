@@ -65,7 +65,11 @@ package Netlists.Gates is
    Id_Split2 : constant Module_Id := 25;
    Id_Split3 : constant Module_Id := 26;
 
+   --  Inputs: s, i0, i1
+   --  Output: o
    Id_Mux2 : constant Module_Id := 27;
+   --  Inputs: s, i0, i1, s2, s3
+   --  Output: o
    Id_Mux4 : constant Module_Id := 28;
 
    --  Like a wire: the output is equal to the input, but could be elimited
