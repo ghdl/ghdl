@@ -15,22 +15,25 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Ada.Command_Line;
+
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Options; use Options;
 
-with Ada.Command_Line;
-
-with Simple_IO;
 with Types;
 with Flags;
+with Simple_IO;
+with Name_Table;
+with Files_Map;
+
+with Vhdl.Std_Package;
 with Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
-with Name_Table;
+with Vhdl.Utils;
+with Vhdl.Configuration;
 with Errorout; use Errorout;
 with Libraries;
-with Vhdl.Std_Package;
-with Files_Map;
 with Version;
 
 package body Ghdlcomp is
@@ -293,6 +296,56 @@ package body Ghdlcomp is
       Hooks.Set_Run_Options (No_Arg);
       Hooks.Run.all;
    end Compile_Run;
+
+   procedure Common_Compile_Init (Analyze_Only : Boolean) is
+   begin
+      if Analyze_Only then
+         Setup_Libraries (True);
+      else
+         Setup_Libraries (False);
+         Libraries.Load_Std_Library;
+         --  WORK library is not loaded.  FIXME: why ?
+      end if;
+
+      if Time_Resolution /= 'a' then
+         Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
+      end if;
+   end Common_Compile_Init;
+
+   procedure Common_Compile_Elab (Cmd_Name : String;
+                                  Args : Argument_List;
+                                  Opt_Arg : out Natural;
+                                  Config : out Iir)
+   is
+      use Types;
+      use Vhdl.Configuration;
+   begin
+      Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg);
+      if Sec_Name = null then
+         Sec_Name := new String'("");
+      end if;
+
+      Flags.Flag_Elaborate := True;
+
+      Config := Vhdl.Configuration.Configure (Prim_Name.all, Sec_Name.all);
+      if Config = Null_Iir then
+         raise Compilation_Error;
+      end if;
+
+      --  Check (and possibly abandon) if entity can be at the top of the
+      --  hierarchy.
+      declare
+         Conf_Unit : constant Iir := Get_Library_Unit (Config);
+         Arch : constant Iir := Get_Named_Entity
+           (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
+         Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
+      begin
+         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity);
+         if Nbr_Errors > 0 then
+            raise Compilation_Error;
+         end if;
+      end;
+   end Common_Compile_Elab;
 
    procedure Perform_Action (Cmd : Command_Compile;
                              Args : Argument_List)

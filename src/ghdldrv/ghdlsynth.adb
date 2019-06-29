@@ -17,18 +17,17 @@
 --  02111-1307, USA.
 
 with Ghdllocal; use Ghdllocal;
-with Ghdlcomp;
+with Ghdlcomp; use Ghdlcomp;
 with Ghdlmain; use Ghdlmain;
-with Ghdlsimul;
 with Options; use Options;
-
-with Simul.Annotations;
 
 with Libraries;
 with Flags;
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Std_Package;
 with Vhdl.Canon;
-
---  with Simul.Elaboration;
+with Vhdl.Configuration;
+with Simul.Annotations;
 
 with Synthesis;
 with Netlists.Dump;
@@ -79,8 +78,10 @@ package body Ghdlsynth is
 
    function Ghdl_Synth (Args : Argument_List) return Netlists.Module
    is
+      use Vhdl.Configuration;
       E_Opt : Integer;
       Opt_Arg : Natural;
+      Config : Iir;
    begin
       --  If the '-e' switch is present, there is a list of files.
       E_Opt := Args'First - 1;
@@ -93,7 +94,7 @@ package body Ghdlsynth is
 
       Simul.Annotations.Flag_Synthesis := True;
 
-      Ghdlcomp.Hooks.Compile_Init.all (False);
+      Common_Compile_Init (False);
       Flags.Flag_Elaborate_With_Outdated := False;
       Flags.Flag_Only_Elab_Warnings := True;
 
@@ -102,27 +103,26 @@ package body Ghdlsynth is
       --  Do not canon concurrent statements.
       Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
 
-      Vhdl.Canon.Canon_Flag_Add_Labels := True;
-
       --  Analyze files (if any)
       for I in Args'First .. E_Opt - 1 loop
          Ghdlcomp.Compile_Analyze_File (Args (I).all);
       end loop;
 
       --  Elaborate
-      Ghdlcomp.Hooks.Compile_Elab.all
-        ("--synth", Args (E_Opt + 1 .. Args'Last), Opt_Arg);
+      Common_Compile_Elab
+        ("--synth", Args (E_Opt + 1 .. Args'Last), Opt_Arg, Config);
 
       if Opt_Arg <= Args'Last then
          Ghdlmain.Error ("extra options ignored");
       end if;
 
-      --  Hooks.Set_Run_Options (Args (Opt_Arg .. Args'Last));
+      --  Annotate all units.
+      Simul.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
+      for I in Design_Units.First .. Design_Units.Last loop
+         Simul.Annotations.Annotate (Design_Units.Table (I));
+      end loop;
 
-      --  Simul.Elaboration.Elaborate_Design (Ghdlsimul.Get_Top_Config);
-
-      return Synthesis.Synth_Design (Ghdlsimul.Get_Top_Config);
-      --  Hooks.Run.all;
+      return Synthesis.Synth_Design (Config);
    end Ghdl_Synth;
 
    procedure Perform_Action (Cmd : Command_Synth;

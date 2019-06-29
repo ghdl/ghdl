@@ -28,27 +28,25 @@ with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Simple_IO; use Simple_IO;
 
-with Ortho_Jit;
-with Ortho_Nodes; use Ortho_Nodes;
-with Trans_Decls;
-with Vhdl.Nodes; use Vhdl.Nodes;
-with Vhdl.Std_Package;
-with Flags;
-with Errorout; use Errorout;
-with Vhdl.Errors; use Vhdl.Errors;
-with Libraries;
-with Vhdl.Canon;
-with Vhdl.Configuration;
-with Trans_Be;
-with Translation;
-with Vhdl.Ieee.Std_Logic_1164;
-
-with Vhdl.Lists;
 with Str_Table;
 with Hash;
 with Interning;
 with Files_Map;
 with Name_Table;
+with Flags;
+with Errorout; use Errorout;
+
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Std_Package;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Canon;
+with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Lists;
+with Ortho_Jit;
+with Ortho_Nodes; use Ortho_Nodes;
+with Trans_Decls;
+with Trans_Be;
+with Translation;
 
 with Grt.Main;
 with Grt.Modules;
@@ -119,18 +117,7 @@ package body Ghdlrun is
 
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
-      if Analyze_Only then
-         Setup_Libraries (True);
-      else
-         Setup_Libraries (False);
-         Libraries.Load_Std_Library;
-         --  WORK library is not loaded.  FIXME: why ?
-      end if;
-
-      if Time_Resolution /= 'a' then
-         Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
-      end if;
-
+      Common_Compile_Init (Analyze_Only);
       if Analyze_Only then
          return;
       end if;
@@ -160,17 +147,7 @@ package body Ghdlrun is
    is
       Config : Iir;
    begin
-      Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg);
-      if Sec_Name = null then
-         Sec_Name := new String'("");
-      end if;
-
-      Flags.Flag_Elaborate := True;
-
-      Config := Vhdl.Configuration.Configure (Prim_Name.all, Sec_Name.all);
-      if Config = Null_Iir then
-         raise Compilation_Error;
-      end if;
+      Common_Compile_Elab (Cmd_Name, Args, Opt_Arg, Config);
 
       if Time_Resolution = 'a' then
          Time_Resolution := Vhdl.Std_Package.Get_Minimal_Time_Resolution;

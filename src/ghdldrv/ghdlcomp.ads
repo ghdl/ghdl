@@ -81,6 +81,18 @@ package Ghdlcomp is
    -- hr => 'h'
    Time_Resolution: Character := 'f';
 
+   --  Common action to perform before analysis: library setup.
+   procedure Common_Compile_Init (Analyze_Only : Boolean);
+
+   --  Common action to perform before elaboration:
+   --  * extract PRIM_NAME and SEC_NAME from ARGS.
+   --  * configure
+   --  * Check top entity.
+   procedure Common_Compile_Elab (Cmd_Name : String;
+                                  Args : Argument_List;
+                                  Opt_Arg : out Natural;
+                                  Config : out Iir);
+
    --  Functionnal interface.
    --  Must be first initialized by Compile_Init
    procedure Compile_Analyze_Init (Load_Work : Boolean := True);

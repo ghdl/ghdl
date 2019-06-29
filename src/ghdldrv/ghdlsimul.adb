@@ -24,13 +24,9 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Simple_IO;
 with Types;
 with Flags;
-with Name_Table;
-with Errorout; use Errorout;
 with Vhdl.Std_Package;
-with Libraries;
 with Vhdl.Canon;
 with Vhdl.Configuration;
-with Vhdl.Utils;
 with Simul.Annotations;
 with Simul.Elaboration;
 with Simul.Simulation.Main;
@@ -52,23 +48,10 @@ package body Ghdlsimul is
 
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
-      if Analyze_Only then
-         Setup_Libraries (True);
-      else
-         Setup_Libraries (False);
-         Libraries.Load_Std_Library;
-         --  WORK library is not loaded.  FIXME: why ?
-      end if;
-
-      if Time_Resolution /= 'a' then
-         Vhdl.Std_Package.Set_Time_Resolution (Time_Resolution);
-      end if;
-
+      Common_Compile_Init (Analyze_Only);
       if Analyze_Only then
          return;
       end if;
-
-      Simul.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
 
       Vhdl.Canon.Canon_Flag_Add_Labels := True;
       Vhdl.Canon.Canon_Flag_Sequentials_Stmts := True;
@@ -79,49 +62,12 @@ package body Ghdlsimul is
    procedure Compile_Elab
      (Cmd_Name : String; Args : Argument_List; Opt_Arg : out Natural)
    is
-      use Name_Table;
-      use Types;
       use Vhdl.Configuration;
-
-      First_Id : Name_Id;
-      Sec_Id : Name_Id;
    begin
-      Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg);
-
-      Flags.Flag_Elaborate := True;
-      -- Translation.Chap12.Elaborate (Prim_Name.all, Sec_Name.all, "", True);
-
-      if Errorout.Nbr_Errors > 0 then
-         --  This may happen (bad entity for example).
-         raise Compilation_Error;
-      end if;
-
-      First_Id := Get_Identifier (Prim_Name.all);
-      if Sec_Name = null then
-         Sec_Id := Null_Identifier;
-      else
-         Sec_Id := Get_Identifier (Sec_Name.all);
-      end if;
-      Top_Conf := Vhdl.Configuration.Configure (First_Id, Sec_Id);
-      if Top_Conf = Null_Iir then
-         raise Compilation_Error;
-      end if;
-
-      --  Check (and possibly abandon) if entity can be at the top of the
-      --  hierarchy.
-      declare
-         Conf_Unit : constant Iir := Get_Library_Unit (Top_Conf);
-         Arch : constant Iir := Get_Named_Entity
-           (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
-         Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
-      begin
-         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity);
-         if Nbr_Errors > 0 then
-            raise Compilation_Error;
-         end if;
-      end;
+      Common_Compile_Elab (Cmd_Name, Args, Opt_Arg, Top_Conf);
 
       --  Annotate all units.
+      Simul.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
       for I in Design_Units.First .. Design_Units.Last loop
          Simul.Annotations.Annotate (Design_Units.Table (I));
       end loop;

@@ -21,19 +21,19 @@ with GNAT.Directory_Operations;
 
 with Simple_IO; use Simple_IO;
 with Types; use Types;
-with Libraries;
-with Vhdl.Sem_Lib;
-with Vhdl.Std_Package;
 with Flags;
 with Name_Table;
 with Std_Names;
-with Vhdl.Prints;
 with Default_Paths;
-with Vhdl.Scanner;
 with Errorout;
-with Vhdl.Configuration;
 with Files_Map;
+with Libraries;
+with Vhdl.Sem_Lib;
+with Vhdl.Std_Package;
+with Vhdl.Scanner;
+with Vhdl.Configuration;
 with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Prints;
 
 package body Ghdllocal is
    --  Version of the IEEE library to use.  This just change paths.
