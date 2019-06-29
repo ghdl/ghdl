@@ -22,6 +22,7 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Ieee.Vital_Timing;
 with Vhdl.Ieee.Numeric;
 with Vhdl.Ieee.Math_Real;
+with Vhdl.Ieee.Std_Logic_Unsigned;
 with Flags; use Flags;
 
 package body Vhdl.Post_Sems is
@@ -59,6 +60,8 @@ package body Vhdl.Post_Sems is
                   Vhdl.Ieee.Numeric.Extract_Std_Declarations (Lib_Unit);
                when Name_Math_Real =>
                   Vhdl.Ieee.Math_Real.Extract_Declarations (Lib_Unit);
+               when Name_Std_Logic_Unsigned =>
+                  Vhdl.Ieee.Std_Logic_Unsigned.Extract_Declarations (Lib_Unit);
                when others =>
                   null;
             end case;
