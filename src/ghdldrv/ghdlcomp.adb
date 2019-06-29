@@ -315,10 +315,7 @@ package body Ghdlcomp is
    procedure Common_Compile_Elab (Cmd_Name : String;
                                   Args : Argument_List;
                                   Opt_Arg : out Natural;
-                                  Config : out Iir)
-   is
-      use Types;
-      use Vhdl.Configuration;
+                                  Config : out Iir) is
    begin
       Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg);
       if Sec_Name = null then
