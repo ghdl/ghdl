@@ -18,7 +18,7 @@
 
 with Ada.Unchecked_Deallocation;
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 with Grt.Types; use Grt.Types;
 with Grt.Signals; use Grt.Signals;
 with Grt.Files;

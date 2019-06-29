@@ -30,7 +30,7 @@ with Vhdl.Std_Package;
 with Trans_Analyzes;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Ieee.Std_Logic_1164;
 with Grt.Main;
 with Simul.Debugger; use Simul.Debugger;

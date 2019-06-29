@@ -26,7 +26,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 
 with Synth.Values; use Synth.Values;
 with Synth.Expr;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 
 package body Synth.Types is
    function Is_Bit_Type (Atype : Iir) return Boolean is

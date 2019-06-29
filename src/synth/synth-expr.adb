@@ -29,7 +29,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 
 with Areapools;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Types; use Synth.Types;

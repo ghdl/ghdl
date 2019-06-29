@@ -23,7 +23,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164;
 
-package body Simul.Annotations is
+package body Vhdl.Annotations is
    procedure Annotate_Declaration_List
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir);
    procedure Annotate_Sequential_Statement_Chain
@@ -1312,4 +1312,4 @@ package body Simul.Annotations is
    begin
       return Info_Node.Table (Target);
    end Get_Info;
-end Simul.Annotations;
+end Vhdl.Annotations;

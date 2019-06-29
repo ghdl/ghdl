@@ -25,7 +25,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils;
 
 with Vhdl.Utils; use Vhdl.Utils;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Synth.Environment; use Synth.Environment;
 with Synth.Values; use Synth.Values;

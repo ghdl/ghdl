@@ -20,7 +20,7 @@
 
 with Synth.Environment; use Synth.Environment;
 with Synth.Values; use Synth.Values;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 with Netlists; use Netlists;
 with Netlists.Builders;
 with Vhdl.Nodes; use Vhdl.Nodes;

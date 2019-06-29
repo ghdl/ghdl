@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 with Simul.Execution; use Simul.Execution;
 with Simul.Debugger; use Simul.Debugger;
 with Simul.Grt_Interface; use Simul.Grt_Interface;

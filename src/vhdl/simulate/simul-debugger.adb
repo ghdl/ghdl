@@ -31,7 +31,7 @@ with Vhdl.Canon;
 with Std_Names;
 with Libraries;
 with Vhdl.Std_Package;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
 with Vhdl.Utils; use Vhdl.Utils;

@@ -27,7 +27,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Std_Package;
 with Vhdl.Canon;
 with Vhdl.Configuration;
-with Simul.Annotations;
+with Vhdl.Annotations;
 
 with Synthesis;
 with Netlists.Dump;
@@ -92,7 +92,7 @@ package body Ghdlsynth is
          end if;
       end loop;
 
-      Simul.Annotations.Flag_Synthesis := True;
+      Vhdl.Annotations.Flag_Synthesis := True;
 
       Common_Compile_Init (False);
       Flags.Flag_Elaborate_With_Outdated := False;
@@ -117,9 +117,9 @@ package body Ghdlsynth is
       end if;
 
       --  Annotate all units.
-      Simul.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
+      Vhdl.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
       for I in Design_Units.First .. Design_Units.Last loop
-         Simul.Annotations.Annotate (Design_Units.Table (I));
+         Vhdl.Annotations.Annotate (Design_Units.Table (I));
       end loop;
 
       return Synthesis.Synth_Design (Config);

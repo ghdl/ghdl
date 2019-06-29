@@ -27,7 +27,7 @@ with Flags;
 with Vhdl.Std_Package;
 with Vhdl.Canon;
 with Vhdl.Configuration;
-with Simul.Annotations;
+with Vhdl.Annotations;
 with Simul.Elaboration;
 with Simul.Simulation.Main;
 with Simul.Debugger;
@@ -67,9 +67,9 @@ package body Ghdlsimul is
       Common_Compile_Elab (Cmd_Name, Args, Opt_Arg, Top_Conf);
 
       --  Annotate all units.
-      Simul.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
+      Vhdl.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
       for I in Design_Units.First .. Design_Units.Last loop
-         Simul.Annotations.Annotate (Design_Units.Table (I));
+         Vhdl.Annotations.Annotate (Design_Units.Table (I));
       end loop;
    end Compile_Elab;
 

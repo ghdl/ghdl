@@ -28,7 +28,7 @@ with Synth.Types; use Synth.Types;
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Expr; use Synth.Expr;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 
 package body Synth.Decls is
    procedure Synth_Anonymous_Subtype_Indication

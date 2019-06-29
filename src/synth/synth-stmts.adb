@@ -37,7 +37,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;

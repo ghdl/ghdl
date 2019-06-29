@@ -19,7 +19,7 @@
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Simul.Annotations is
+package Vhdl.Annotations is
    --  If True, annotate for synthesis.
    Flag_Synthesis : Boolean := False;
 
@@ -155,4 +155,4 @@ package Simul.Annotations is
    --  Expand the annotation table.  This is automatically done by Annotate,
    --  to be used only by debugger.
    procedure Annotate_Expand_Table;
-end Simul.Annotations;
+end Vhdl.Annotations;

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Simul.Annotations; use Simul.Annotations;
+with Vhdl.Annotations; use Vhdl.Annotations;
 with Simul.Environments; use Simul.Environments;
 with Simul.Elaboration; use Simul.Elaboration;
 with Areapools; use Areapools;
