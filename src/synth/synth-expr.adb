@@ -724,7 +724,8 @@ package body Synth.Expr is
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             --  "=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Eq);
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
             --  "=" (Unsigned, Unsigned)
             return Synth_Compare_Uns_Uns (Id_Eq);
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
