@@ -11,7 +11,7 @@ end dff05;
 
 architecture behav of dff05 is
 begin
-  process (clk) is
+  process (clk, rst) is
   begin
     if rst = '1' then
       q <= x"00";

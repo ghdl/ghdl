@@ -103,7 +103,7 @@ elab_simulate_failure ()
 
 synth()
 {
-    echo "Synthesis of $@"
+    echo "Synthesis of $@" >&2
     "$GHDL" --synth $@
 }
 

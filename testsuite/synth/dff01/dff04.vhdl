@@ -11,7 +11,7 @@ end dff04;
 architecture behav of dff04 is
   signal q : std_logic_vector(7 downto 0);
 begin
-  process (clk) is
+  process (clk, q) is
   begin
     if rising_edge (clk) then
       q <= d;

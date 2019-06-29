@@ -11,7 +11,7 @@ end dff10;
 
 architecture behav of dff10 is
 begin
-  process (clk) is
+  process (clk, rst) is
     constant rval : std_logic_vector(7 downto 0) := x"55";
   begin
     if rst = '1' then
