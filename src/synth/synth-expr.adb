@@ -712,7 +712,8 @@ package body Synth.Expr is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
             --  "+" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Id_Add);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Add, True);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
