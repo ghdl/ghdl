@@ -611,16 +611,6 @@ package body Synth.Expr is
             No_Bound);
       end Synth_Compare_Uns_Nat;
 
-      function Synth_Compare_Uns_Uns (Id : Compare_Module_Id)
-                                     return Value_Acc is
-      begin
-         return Create_Value_Net
-           (Build_Compare (Build_Context, Id,
-                           Get_Net (Left, Ltype),
-                           Get_Net (Right, Rtype)),
-            No_Bound);
-      end Synth_Compare_Uns_Uns;
-
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
          L : constant Net := Get_Net (Left, Ltype);
@@ -648,6 +638,20 @@ package body Synth.Expr is
               (Build_Context, Id, Synth_Uresize (L, W), Synth_Uresize (R, W)),
             Rtype);
       end Synth_Dyadic_Uns;
+
+      function Synth_Compare_Uns_Uns (Id : Compare_Module_Id)
+                                     return Value_Acc
+      is
+         L : constant Net := Get_Net (Left, Ltype);
+         R : constant Net := Get_Net (Right, Rtype);
+         W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+      begin
+         return Create_Value_Net
+           (Build_Compare (Build_Context, Id,
+                           Synth_Uresize (L, W),
+                           Synth_Uresize (R, W)),
+            No_Bound);
+      end Synth_Compare_Uns_Uns;
 
       function Synth_Dyadic_Uns_Nat (Id : Dyadic_Module_Id) return Value_Acc
       is
@@ -704,6 +708,13 @@ package body Synth.Expr is
                end if;
             end if;
             return Synth_Compare (Id_Eq);
+         when Iir_Predefined_Enum_Inequality =>
+            if Is_Bit_Type (Ltype) then
+               pragma Assert (Is_Bit_Type (Rtype));
+               --  TODO
+               raise Internal_Error;
+            end if;
+            return Synth_Compare (Id_Ne);
 
          when Iir_Predefined_Array_Equality =>
             --  TODO: check size, handle non-vector.
@@ -727,10 +738,17 @@ package body Synth.Expr is
             return Synth_Compare_Uns_Nat (Id_Eq);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
-            --  "=" (Unsigned, Unsigned)
+            --  "=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Eq);
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
+            --  "<" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Ult);
+         when Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
+            --  "<" (Unsigned, Unsigned) [resize]
+            return Synth_Compare_Uns_Uns (Id_Ult);
+         when Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
+            --  "<=" (Unsigned, Unsigned) [resize]
+            return Synth_Compare_Uns_Uns (Id_Ule);
          when Iir_Predefined_Array_Element_Concat =>
             declare
                L : constant Net := Get_Net (Left, Ltype);
