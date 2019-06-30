@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in fsm_4s; do
+for t in fsm_2s fsm_4s; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
