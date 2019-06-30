@@ -526,7 +526,11 @@ package body Synth.Stmts is
 
       --  If the width is not a multiple of 2, handle the last level.
       if Wd mod 2 = 1 then
-         Sub_Sel := Build_Extract_Bit (Build_Context, Sel, Wd - 1);
+         if Wd = 1 then
+            Sub_Sel := Sel;
+         else
+            Sub_Sel := Build_Extract_Bit (Build_Context, Sel, Wd - 1);
+         end if;
          Iels := Els'First;
          Oels := Els'First;
          while Iels <= Lels loop
