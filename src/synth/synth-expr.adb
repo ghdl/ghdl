@@ -772,6 +772,25 @@ package body Synth.Expr is
                      Get_Index_Type (Get_Type (Expr), 0),
                      Iir_Index32 (Get_Width (R) + 1)));
             end;
+         when Iir_Predefined_Element_Element_Concat =>
+            return Create_Value_Net
+              (Build_Concat2 (Build_Context,
+                              Get_Net (Left, Ltype),
+                              Get_Net (Right, Rtype)),
+               Create_Bounds_From_Length
+                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2));
+         when Iir_Predefined_Array_Array_Concat =>
+            declare
+               L : constant Net := Get_Net (Left, Ltype);
+               R : constant Net := Get_Net (Right, Ltype);
+            begin
+               return Create_Value_Net
+                 (Build_Concat2 (Build_Context, L, R),
+                  Create_Bounds_From_Length
+                    (Syn_Inst,
+                     Get_Index_Type (Get_Type (Expr), 0),
+                     Iir_Index32 (Get_Width (L) + Get_Width (R))));
+            end;
          when Iir_Predefined_Integer_Plus =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete (Left.Scal + Right.Scal);
