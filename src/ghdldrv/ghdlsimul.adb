@@ -18,7 +18,7 @@
 
 with Ada.Command_Line;
 
-with Ghdllocal; use Ghdllocal;
+with Ghdllocal;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
 with Simple_IO;
