@@ -353,6 +353,8 @@ package body Netlists.Builders is
 
       Create_Compare_Module (Design, Res.M_Compare (Id_Ult),
                              Get_Identifier ("ult"), Id_Ult);
+      Create_Compare_Module (Design, Res.M_Compare (Id_Ule),
+                             Get_Identifier ("ule"), Id_Ule);
 
       Create_Concat_Modules (Res);
       Create_Const_Modules (Res);
@@ -403,6 +405,7 @@ package body Netlists.Builders is
       Wd : constant Width := Get_Width (L);
       pragma Assert (Wd /= No_Width);
       pragma Assert (Get_Width (R) = Wd);
+      pragma Assert (Ctxt.M_Dyadic (Id) /= No_Module);
       Inst : Instance;
       O : Net;
    begin
@@ -418,6 +421,7 @@ package body Netlists.Builders is
                            Id : Monadic_Module_Id;
                            Op : Net) return Net
    is
+      pragma Assert (Ctxt.M_Monadic (Id) /= No_Module);
       Inst : Instance;
       O : Net;
    begin
@@ -435,6 +439,7 @@ package body Netlists.Builders is
       Wd : constant Width := Get_Width (L);
       pragma Assert (Wd /= No_Width);
       pragma Assert (Get_Width (R) = Wd);
+      pragma Assert (Ctxt.M_Compare (Id) /= No_Module);
       Inst : Instance;
       O : Net;
    begin

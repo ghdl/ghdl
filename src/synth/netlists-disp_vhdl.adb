@@ -203,7 +203,7 @@ package body Netlists.Disp_Vhdl is
             Port_Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
             case Get_Sname_Kind (Inst_Name) is
                when Sname_Version =>
-                  Put ("net_");
+                  Put ("n");
                   Put_Name_Version (Inst_Name);
                   Put ("_");
                   Put_Interface_Name (Port_Name);
@@ -497,8 +497,14 @@ package body Netlists.Disp_Vhdl is
          when Id_Ult =>
             Disp_Template ("  \o0 <= '1' when \ui0 < \ui1 else '0';" & NL,
                            Inst);
+         when Id_Ule =>
+            Disp_Template ("  \o0 <= '1' when \ui0 <= \ui1 else '0';" & NL,
+                           Inst);
          when Id_Eq =>
             Disp_Template ("  \o0 <= '1' when \i0 = \i1 else '0';" & NL, Inst);
+         when Id_Ne =>
+            Disp_Template ("  \o0 <= '1' when \i0 /= \i1 else '0';" & NL,
+                           Inst);
          when Id_Or =>
             Disp_Template ("  \o0 <= \i0 or \i1;" & NL, Inst);
          when Id_And =>
