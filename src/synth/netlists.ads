@@ -21,6 +21,17 @@
 with Types; use Types;
 
 package Netlists is
+   --  Netlists.
+   --
+   --  A netlist is a graph of gates and nets.  This implementation has some
+   --  particularities:
+   --  * the nets are vectors of bits, and a net of one bit is in fact a
+   --    vector of net 1.  Vectors only have a width, their bounds are
+   --    from (width - 1 downto 0) or [width-1:0].
+   --  * there is no separate data structures for nets, so nets are in
+   --    fact the outputs of gates.  So there is no standalone nets, a gate
+   --    is needed to have a net.
+
    --  Names.
    --  As there are many artificial and hierarchical names in a netlist, names
    --  are not flat: it is possible to create a new name using an existing one
