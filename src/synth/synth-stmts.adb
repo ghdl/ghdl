@@ -503,6 +503,7 @@ package body Synth.Stmts is
                S_Group : constant Uns64 := Els (Iels).Sel and Mask;
                S_El : Uns64;
                El_Idx : Natural;
+               Rsel : Net;
             begin
                G := (others => Default);
                for K in 0 .. 3 loop
@@ -514,10 +515,29 @@ package body Synth.Stmts is
                   G (El_Idx) := Els (Iels).Val;
                   Iels := Iels + 1;
                end loop;
-               Els (Oels) :=
-                 (Sel => S_Group,
-                  Val => Build_Mux4 (Build_Context,
-                                     Sub_Sel, G (0), G (1), G (2), G (3)));
+               if G (3) /= No_Net then
+                  Rsel := Build_Mux4 (Build_Context,
+                                      Sub_Sel, G (0), G (1), G (2), G (3));
+               elsif G (2) /= No_Net then
+                  Rsel := Build_Mux2
+                    (Build_Context,
+                     Build_Extract_Bit (Build_Context,
+                                        Sel, Width (2 * (I - 1)) + 1),
+                     Build_Mux2 (Build_Context,
+                                 Build_Extract_Bit (Build_Context,
+                                                    Sel, Width (2 * (I - 1))),
+                                 G (0), G (1)),
+                     G (2));
+               elsif G (1) /= No_Net then
+                  Rsel := Build_Mux2
+                    (Build_Context,
+                     Build_Extract_Bit (Build_Context,
+                                        Sel, Width (2 * (I - 1))),
+                     G (0), G (1));
+               else
+                  Rsel := G (0);
+               end if;
+               Els (Oels) := (Sel => S_Group, Val => Rsel);
                Oels := Oels + 1;
             end;
          end loop;
