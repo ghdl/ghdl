@@ -887,8 +887,40 @@ package body Synth.Stmts is
 
    Proc_Pool : aliased Areapools.Areapool;
 
-   procedure Synth_Process_Statement (Syn_Inst : Synth_Instance_Acc;
-                                      Proc : Node)
+   --  Synthesis of statements of a non-sensitized process.
+   procedure Synth_Process_Sequential_Statements
+     (Syn_Inst : Synth_Instance_Acc; Proc : Node)
+   is
+      Stmt : Node;
+      Cond : Node;
+      Cond_Val : Value_Acc;
+      Phi_True : Phi_Type;
+      Phi_False : Phi_Type;
+   begin
+      Stmt := Get_Sequential_Statement_Chain (Proc);
+
+      --  The first statement must be a wait statement.
+      if Get_Kind (Stmt) /= Iir_Kind_Wait_Statement then
+         Error_Msg_Synth (+Stmt, "expect wait as the first statement");
+         return;
+      end if;
+
+      --  Handle the condition as an if.
+      Cond := Get_Condition_Clause (Stmt);
+      Cond_Val := Synth_Expression (Syn_Inst, Cond);
+
+      Push_Phi;
+      Synth_Sequential_Statements (Syn_Inst, Get_Chain (Stmt));
+      Pop_Phi (Phi_True);
+      Push_Phi;
+      Pop_Phi (Phi_False);
+
+      Merge_Phis (Build_Context, Get_Net (Cond_Val, Get_Type (Cond)),
+                  Phi_True, Phi_False);
+   end Synth_Process_Sequential_Statements;
+
+   procedure Synth_Process_Statement
+     (Syn_Inst : Synth_Instance_Acc; Proc : Node)
    is
       use Areapools;
       Info : constant Sim_Info_Acc := Get_Info (Proc);
@@ -905,8 +937,14 @@ package body Synth.Stmts is
          Synth_Declarations (Proc_Inst, Decls_Chain);
       end if;
 
-      Synth_Sequential_Statements
-        (Proc_Inst, Get_Sequential_Statement_Chain (Proc));
+      case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
+         when Iir_Kind_Sensitized_Process_Statement =>
+            Synth_Sequential_Statements
+              (Proc_Inst, Get_Sequential_Statement_Chain (Proc));
+            --  FIXME: check sensitivity list.
+         when Iir_Kind_Process_Statement =>
+            Synth_Process_Sequential_Statements (Proc_Inst, Proc);
+      end case;
 
       Free_Instance (Proc_Inst);
       Release (M, Proc_Pool);
@@ -952,7 +990,7 @@ package body Synth.Stmts is
                Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
-            when Iir_Kind_Sensitized_Process_Statement =>
+            when Iir_Kinds_Process_Statement =>
                Synth_Process_Statement (Syn_Inst, Stmt);
             when Iir_Kind_If_Generate_Statement =>
                declare
@@ -962,7 +1000,6 @@ package body Synth.Stmts is
                begin
                   Gen := Stmt;
                   loop
-                     --  FIXME: else clause.
                      Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
                      pragma Assert (Cond.Kind = Value_Discrete);
                      if Cond.Scal = 1 then
