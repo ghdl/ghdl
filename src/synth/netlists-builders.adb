@@ -18,6 +18,7 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
 with Std_Names; use Std_Names;
 

@@ -20,6 +20,7 @@
 
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
+with Types_Utils; use Types_Utils;
 with Std_Names;
 with Str_Table;
 with Vhdl.Ieee.Std_Logic_1164;
@@ -942,9 +943,6 @@ package body Synth.Expr is
             return False;
       end case;
    end Is_Const;
-
-   function To_Int32 is new Ada.Unchecked_Conversion
-     (Uns32, Int32);
 
    function Get_Const (N : Net) return Int32
    is
