@@ -377,13 +377,18 @@ package body Netlists.Disp_Vhdl is
 
    NL : constant Character := ASCII.LF;
 
-   procedure Disp_Template (S : String; Inst : Instance)
+   type Uns32_Array is array (Natural range <>) of Uns32;
+   No_Uns32_Arr : constant Uns32_Array := (1 .. 0 => 0);
+
+   procedure Disp_Template
+     (S : String; Inst : Instance; Val : Uns32_Array := No_Uns32_Arr)
    is
       I : Positive;
       C : Character;
-      Idx : Port_Idx;
+      Idx : Natural;
       N : Net;
       Conv : Conv_Type;
+      V : Uns32;
    begin
       I := S'First;
       while I <= S'Last loop
@@ -399,13 +404,18 @@ package body Netlists.Disp_Vhdl is
             Idx := Character'Pos (S (I + 1)) - Character'Pos ('0');
             case S (I) is
                when 'o' =>
-                  N := Get_Output (Inst, Idx);
+                  N := Get_Output (Inst, Port_Idx (Idx));
+                  Disp_Net_Expr (N, Conv);
                when 'i' =>
-                  N := Get_Input_Net (Inst, Idx);
+                  N := Get_Input_Net (Inst, Port_Idx (Idx));
+                  Disp_Net_Expr (N, Conv);
+               when 'n' =>
+                  V := Val (Idx);
+                  Put_Uns32 (V);
                when others =>
                   raise Internal_Error;
             end case;
-            Disp_Net_Expr (N, Conv);
+
             I := I + 2;
          else
             Put (C);
@@ -443,9 +453,7 @@ package body Netlists.Disp_Vhdl is
             declare
                O : constant Net := Get_Output (Inst, 0);
             begin
-               Put ("  ");
-               Disp_Net_Name (O);
-               Put (" <= ");
+               Disp_Template ("  \o0 <= ", Inst);
                Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O));
                Put_Line (";");
             end;
@@ -453,9 +461,7 @@ package body Netlists.Disp_Vhdl is
             declare
                O : constant Net := Get_Output (Inst, 0);
             begin
-               Put ("  ");
-               Disp_Net_Name (O);
-               Put (" <= ");
+               Disp_Template ("  \o0 <= ", Inst);
                Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
                                 Get_Param_Uns32 (Inst, 1),
                                 Get_Width (O));
@@ -494,6 +500,9 @@ package body Netlists.Disp_Vhdl is
          when Id_Sub =>
             Disp_Template ("  \o0 <= std_logic_vector (\ui0 - \ui1);" & NL,
                            Inst);
+         when Id_Mul =>
+            Disp_Template ("  \o0 <= std_logic_vector (\ui0 * \ui1);" & NL,
+                           Inst);
          when Id_Ult =>
             Disp_Template ("  \o0 <= '1' when \ui0 < \ui1 else '0';" & NL,
                            Inst);
@@ -518,9 +527,8 @@ package body Netlists.Disp_Vhdl is
             declare
                W : constant Width := Get_Width (Get_Output (Inst, 0));
             begin
-               Disp_Template ("  \o0 <= \i0 (", Inst);
-               Put_Uns32 (W - 1);
-               Put_Line (" downto 0);");
+               Disp_Template ("  \o0 <= \i0 (\n0 downto 0);",
+                              Inst, (0 => W - 1));
             end;
          when Id_Uextend =>
             declare
