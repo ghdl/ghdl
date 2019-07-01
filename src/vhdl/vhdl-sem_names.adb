@@ -1377,8 +1377,7 @@ package body Vhdl.Sem_Names is
       if not Are_Types_Closely_Related (Conv_Type, Get_Type (Expr)) then
          --  FIXME: should explain why the types are not closely related.
          Error_Msg_Sem
-           (+Conv,
-            "conversion not allowed between not closely related types");
+           (+Conv, "conversion allowed only between closely related types");
          --  Avoid error storm in evaluation.
          Set_Expr_Staticness (Conv, None);
       else
