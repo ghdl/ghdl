@@ -191,7 +191,7 @@ package body Netlists.Builders is
    begin
       Res := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("insert")),
-         Id_Extract, 2, 1, 1);
+         Id_Insert, 2, 1, 1);
       Ctxt.M_Insert := Res;
       Outputs := (0 => Create_Output ("o"));
       Inputs := (0 => Create_Input ("i"),
