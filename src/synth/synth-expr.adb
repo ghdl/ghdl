@@ -743,6 +743,10 @@ package body Synth.Expr is
             return Synth_Compare_Uns_Uns (Id_Eq);
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
             --  "<" (Unsigned, Natural)
+            if Is_Const (Right) and then Right.Scal = 0 then
+               --  Always false.
+               return Create_Value_Discrete (0);
+            end if;
             return Synth_Compare_Uns_Nat (Id_Ult);
          when Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
             --  "<" (Unsigned, Unsigned) [resize]
@@ -1006,14 +1010,37 @@ package body Synth.Expr is
                --  A mul but without any constant value.
                return;
             end if;
-         elsif Get_Id (Get_Module (Inst)) = Id_Uextend then
-            Inp := Get_Input_Net (Inst, 0);
          else
             --  Cannot decompose it.
             return;
          end if;
       end loop;
    end Decompose_Mul_Add;
+
+   function Is_Same (L, R : Net) return Boolean is
+   begin
+      if L = R then
+         return True;
+      end if;
+
+      if Get_Width (L) /= Get_Width (R) then
+         return False;
+      end if;
+
+      declare
+         Linst : constant Instance := Get_Parent (L);
+         Rinst : constant Instance := Get_Parent (R);
+      begin
+         if Get_Id (Linst) /= Get_Id (Rinst) then
+            return False;
+         end if;
+         if Get_Id (Linst) = Id_Uextend then
+            return Is_Same (Get_Input_Net (Linst, 0),
+                            Get_Input_Net (Rinst, 0));
+         end if;
+      end;
+      return False;
+   end Is_Same;
 
    procedure Synth_Extract_Dyn_Suffix (Loc : Node;
                                        Pfx_Bnd : Value_Bound_Acc;
@@ -1045,7 +1072,7 @@ package body Synth.Expr is
          Decompose_Mul_Add (Right, R_Inp, R_Fac, R_Add);
       end if;
 
-      if L_Inp /= R_Inp then
+      if not Is_Same (L_Inp, R_Inp) then
          Error_Msg_Synth
            (+Loc, "cannot extract same variable part for dynamic slice");
          return;
