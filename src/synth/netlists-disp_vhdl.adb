@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Ada.Text_IO; use Ada.Text_IO;
+with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
@@ -41,6 +42,11 @@ package body Netlists.Disp_Vhdl is
    begin
       Put_Trim (Uns32'Image (V));
    end Put_Uns32;
+
+   procedure Put_Int32 (V : Int32) is
+   begin
+      Put_Trim (Int32'Image (V));
+   end Put_Int32;
 
    procedure Put_Type (W : Width) is
    begin
@@ -342,7 +348,7 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Lit;
 
-   type Conv_Type is (Conv_None, Conv_Unsigned);
+   type Conv_Type is (Conv_None, Conv_Unsigned, Conv_Signed);
 
    procedure Disp_Net_Expr (N : Net; Conv : Conv_Type)
    is
@@ -362,6 +368,8 @@ package body Netlists.Disp_Vhdl is
                Put ("unsigned'(");
                Disp_Lit (Inst);
                Put (")");
+            when Conv_Signed =>
+               raise Internal_Error;
          end case;
       else
          case Conv is
@@ -371,6 +379,8 @@ package body Netlists.Disp_Vhdl is
                Put ("unsigned (");
                Disp_Net_Name (N);
                Put (")");
+            when Conv_Signed =>
+               raise Internal_Error;
          end case;
       end if;
    end Disp_Net_Expr;
@@ -398,6 +408,9 @@ package body Netlists.Disp_Vhdl is
             if S (I) = 'u' then
                Conv := Conv_Unsigned;
                I := I + 1;
+            elsif S (I) = 's' then
+               Conv := Conv_Signed;
+               I := I + 1;
             else
                Conv := Conv_None;
             end if;
@@ -412,6 +425,15 @@ package body Netlists.Disp_Vhdl is
                when 'n' =>
                   V := Val (Idx);
                   Put_Uns32 (V);
+               when 'p' =>
+                  V := Get_Param_Uns32 (Inst, Param_Idx (Idx));
+                  case Conv is
+                     when Conv_None
+                       | Conv_Unsigned =>
+                        Put_Uns32 (V);
+                     when Conv_Signed =>
+                        Put_Int32 (To_Int32 (V));
+                  end case;
                when others =>
                   raise Internal_Error;
             end case;
@@ -451,8 +473,6 @@ package body Netlists.Disp_Vhdl is
             end;
          when Id_Insert =>
             declare
-               O : constant Net := Get_Output (Inst, 0);
-               Ow : constant Width := Get_Width (O);
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
                Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
@@ -460,7 +480,7 @@ package body Netlists.Disp_Vhdl is
                  ("  process (\i0, \i1)" & NL &
                   "  begin" & NL &
                   "    \o0 <= \i0;" & NL,
-                  Inst, (0 => Ow - 1));
+                  Inst);
                if Iw > 1 then
                   Disp_Template ("    \o0 (\n0 downto \n1)", Inst,
                                  (0 => Off + Iw - 1, 1 => Off));
@@ -475,25 +495,18 @@ package body Netlists.Disp_Vhdl is
             declare
                --  I0: Input, I1: Value, I2: position
                --  P0: Step, P1: offset
-               O : constant Net := Get_Output (Inst, 0);
-               Ow : constant Width := Get_Width (O);
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
-               Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
                Disp_Template
                  ("  process (\i0, \i1)" & NL &
                   "  begin" & NL &
-                  "    \o0 <= \i0;" & NL,
-                  Inst, (0 => Ow - 1));
-               if Iw > 1 then
-                  Disp_Template ("    \o0 (\n0 downto \n1)", Inst,
-                                 (0 => Off + Iw - 1, 1 => Off));
-               else
-                  Disp_Template ("    \o0 (\n0)", Inst, (0 => Off));
-               end if;
-               Disp_Template
-                 (" <= \i1;" & NL &
-                  "  end process;" & NL, Inst);
+                  "    \o0 <= \i0;" & NL &
+                  "    \o0 (" &
+                  "to_integer (signed (\i2)) * \p0 + (\sp1 + \n0)" & NL &
+                  "         downto to_integer (signed (\i2)) * \p0 + (\sp1))" &
+                  " <= \i1;" & NL &
+                  "  end process;" & NL,
+                  Inst, (0 => Iw - 1));
             end;
          when Id_Const_UB32 =>
             declare
@@ -547,8 +560,9 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= std_logic_vector (\ui0 - \ui1);" & NL,
                            Inst);
          when Id_Mul =>
-            Disp_Template ("  \o0 <= std_logic_vector (\ui0 * \ui1);" & NL,
-                           Inst);
+            Disp_Template
+              ("  \o0 <= std_logic_vector (resize (\ui0 * \ui1, \n0));" & NL,
+               Inst, (0 => Get_Width (Get_Output (Inst, 0))));
          when Id_Ult =>
             Disp_Template ("  \o0 <= '1' when \ui0 < \ui1 else '0';" & NL,
                            Inst);
@@ -566,6 +580,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0 and \i1;" & NL, Inst);
          when Id_Concat2 =>
             Disp_Template ("  \o0 <= \i0 & \i1;" & NL, Inst);
+         when Id_Concat3 =>
+            Disp_Template ("  \o0 <= \i0 & \i1 & \i2;" & NL, Inst);
          when Id_Concat4 =>
             Disp_Template ("  \o0 <= \i0 & \i1 & \i2 & \i3;" & NL, Inst);
          when Id_Utrunc
