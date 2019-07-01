@@ -349,6 +349,9 @@ package body Netlists.Dump is
 
    pragma Unreferenced (Debug_Net);
 
+   Xdigits : constant array (Uns32 range 0 ..15) of Character :=
+     "0123456789abcdef";
+
    procedure Disp_Instance (Inst : Instance; With_Name : Boolean)
    is
       M : constant Module := Get_Module (Inst);
@@ -360,16 +363,15 @@ package body Netlists.Dump is
                declare
                   W : constant Width := Get_Width (Get_Output (Inst, 0));
                   V : Uns32;
+                  I : Natural;
                begin
                   Put_Trim (Width'Image (W));
-                  Put ("'ub");
+                  Put ("'uh");
                   V := Get_Param_Uns32 (Inst, 0);
-                  for I in reverse 0 .. W - 1 loop
-                     if (Shift_Right (V, Natural (I)) and 1) = 0 then
-                        Put ('0');
-                     else
-                        Put ('1');
-                     end if;
+                  I := (Natural (W) + 3) / 4;
+                  while I > 0 loop
+                     I := I - 1;
+                     Put (Xdigits (Shift_Right (V, I * 4) and 15));
                   end loop;
                end;
                return;
