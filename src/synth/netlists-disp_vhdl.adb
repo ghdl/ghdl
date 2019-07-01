@@ -449,6 +449,52 @@ package body Netlists.Disp_Vhdl is
                Put_Uns32 (Off);
                Put_Line (");");
             end;
+         when Id_Insert =>
+            declare
+               O : constant Net := Get_Output (Inst, 0);
+               Ow : constant Width := Get_Width (O);
+               Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
+               Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+            begin
+               Disp_Template
+                 ("  process (\i0, \i1)" & NL &
+                  "  begin" & NL &
+                  "    \o0 <= \i0;" & NL,
+                  Inst, (0 => Ow - 1));
+               if Iw > 1 then
+                  Disp_Template ("    \o0 (\n0 downto \n1)", Inst,
+                                 (0 => Off + Iw - 1, 1 => Off));
+               else
+                  Disp_Template ("    \o0 (\n0)", Inst, (0 => Off));
+               end if;
+               Disp_Template
+                 (" <= \i1;" & NL &
+                  "  end process;" & NL, Inst);
+            end;
+         when Id_Dyn_Insert =>
+            declare
+               --  I0: Input, I1: Value, I2: position
+               --  P0: Step, P1: offset
+               O : constant Net := Get_Output (Inst, 0);
+               Ow : constant Width := Get_Width (O);
+               Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
+               Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+            begin
+               Disp_Template
+                 ("  process (\i0, \i1)" & NL &
+                  "  begin" & NL &
+                  "    \o0 <= \i0;" & NL,
+                  Inst, (0 => Ow - 1));
+               if Iw > 1 then
+                  Disp_Template ("    \o0 (\n0 downto \n1)", Inst,
+                                 (0 => Off + Iw - 1, 1 => Off));
+               else
+                  Disp_Template ("    \o0 (\n0)", Inst, (0 => Off));
+               end if;
+               Disp_Template
+                 (" <= \i1;" & NL &
+                  "  end process;" & NL, Inst);
+            end;
          when Id_Const_UB32 =>
             declare
                O : constant Net := Get_Output (Inst, 0);

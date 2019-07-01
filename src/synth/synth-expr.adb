@@ -1021,7 +1021,7 @@ package body Synth.Expr is
                                        Right : Net;
                                        Inp : out Net;
                                        Step : out Uns32;
-                                       Off : out Uns32;
+                                       Off : out Int32;
                                        Width : out Uns32)
    is
       L_Inp, R_Inp : Net;
@@ -1047,7 +1047,7 @@ package body Synth.Expr is
 
       if L_Inp /= R_Inp then
          Error_Msg_Synth
-           (+Loc, "cannot extract same variable factor for dynamic slice");
+           (+Loc, "cannot extract same variable part for dynamic slice");
          return;
       end if;
       Inp := L_Inp;
@@ -1062,10 +1062,10 @@ package body Synth.Expr is
 
       case Pfx_Bnd.Dir is
          when Iir_To =>
-            Off := Uns32 (L_Add - Pfx_Bnd.Left);
+            Off := L_Add - Pfx_Bnd.Left;
             Width := Uns32 (R_Add - L_Add + 1);
          when Iir_Downto =>
-            Off := Uns32 (R_Add - Pfx_Bnd.Right);
+            Off := R_Add - Pfx_Bnd.Right;
             Width := Uns32 (L_Add - R_Add + 1);
       end case;
    end Synth_Extract_Dyn_Suffix;
@@ -1076,7 +1076,7 @@ package body Synth.Expr is
                                  Res_Bnd : out Value_Bound_Acc;
                                  Inp : out Net;
                                  Step : out Uns32;
-                                 Off : out Uns32;
+                                 Off : out Int32;
                                  Wd : out Uns32)
    is
       Expr : constant Node := Get_Suffix (Name);
@@ -1133,7 +1133,7 @@ package body Synth.Expr is
                                     Len => Wd,
                                     Left => Int32 (Left.Scal),
                                     Right => Int32 (Right.Scal)));
-               Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right);
+               Off := Pfx_Bnd.Right - Res_Bnd.Right;
             when Iir_Downto =>
                Wd := Width (Left.Scal - Right.Scal + 1);
                Res_Bnd := Create_Value_Bound
@@ -1141,7 +1141,7 @@ package body Synth.Expr is
                                     Len => Wd,
                                     Left => Int32 (Left.Scal),
                                     Right => Int32 (Right.Scal)));
-               Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right);
+               Off := Res_Bnd.Right - Pfx_Bnd.Right;
          end case;
       end if;
    end Synth_Slice_Suffix;
@@ -1155,7 +1155,7 @@ package body Synth.Expr is
       Res_Bnd : Value_Bound_Acc;
       Inp : Net;
       Step : Uns32;
-      Off : Uns32;
+      Off : Int32;
       Wd : Uns32;
    begin
       Bnd := Extract_Bound (Pfx);
@@ -1170,7 +1170,7 @@ package body Synth.Expr is
          return Create_Value_Net
            (Build_Extract (Build_Context,
                            Get_Net (Pfx, Get_Type (Pfx_Node)),
-                           Off, Wd),
+                           Uns32 (Off), Wd),
             Res_Bnd);
       end if;
    end Synth_Slice_Name;

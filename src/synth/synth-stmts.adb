@@ -154,12 +154,14 @@ package body Synth.Stmts is
                Pfx : constant Node := Get_Prefix (Target);
                Targ : constant Value_Acc :=
                  Get_Value (Syn_Inst, Get_Base_Name (Pfx));
-               V : Net;
                Res_Bnd : Value_Bound_Acc;
                Inp : Net;
                Step : Uns32;
-               Off : Uns32;
+               Off : Int32;
                Wd : Uns32;
+               I : Net;
+               V : Net;
+               Res : Net;
             begin
                if Targ.Kind /= Value_Wire then
                   --  Only support assignment of vector.
@@ -167,14 +169,16 @@ package body Synth.Stmts is
                end if;
                Synth_Slice_Suffix (Syn_Inst, Target, Extract_Bound (Targ),
                                    Res_Bnd, Inp, Step, Off, Wd);
-               if Step /= 0 then
-                  raise Internal_Error;
+               I := Get_Net (Targ, Get_Type (Pfx));
+               V := Get_Net (Val, Get_Type (Target));
+               if Inp /= No_Net then
+                  Res := Build_Dyn_Insert
+                    (Build_Context, I, V, Inp, Step, Off);
+               else
+                  Res := Build_Insert (Build_Context, I, V, Uns32 (Off));
                end if;
-               V := Build_Insert (Build_Context,
-                                  Get_Net (Targ, Get_Type (Pfx)),
-                                  Get_Net (Val, Get_Type (Target)), Off);
                Synth_Assign
-                 (Targ, Create_Value_Net (V, Res_Bnd), Get_Type (Pfx));
+                 (Targ, Create_Value_Net (Res, Res_Bnd), Get_Type (Pfx));
             end;
          when others =>
             Error_Kind ("synth_assignment", Target);

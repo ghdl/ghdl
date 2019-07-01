@@ -62,6 +62,6 @@ package Synth.Expr is
                                  Res_Bnd : out Value_Bound_Acc;
                                  Inp : out Net;
                                  Step : out Uns32;
-                                 Off : out Uns32;
+                                 Off : out Int32;
                                  Wd : out Uns32);
 end Synth.Expr;

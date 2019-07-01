@@ -117,12 +117,18 @@ package Netlists.Gates is
    --  OUT := IN0[IN1*STEP+OFF+WD-1:IN1*STEP+OFF]
    Id_Dyn_Extract : constant Module_Id := 47;
 
-   --  This gate has two inputs A, B and one parameter POS.
-   --  It replaces bits POS + width(B) - 1 .. POS of A by B, ie:
-   --  T := A;
-   --  T (POS + width(B) - 1 .. POS) := B
+   --  This gate has two inputs I, V and one parameter POS.
+   --  It replaces bits POS + width(V) - 1 .. POS of I by V, ie:
+   --  T := I;
+   --  T [POS+width(V)-1:POS] := V
    --  OUT := T.
    Id_Insert : constant Module_Id := 48;
+
+   --  Like Insert but for dynamic values.
+   --  T := IN0
+   --  T [IN2*STEP+OFF+WD-1:IN2*STEP+OFF] := IN1
+   --  OUT := T
+   Id_Dyn_Insert : constant Module_Id := 49;
 
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before

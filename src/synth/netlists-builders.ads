@@ -73,13 +73,15 @@ package Netlists.Builders is
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
    function Build_Extract_Bit
      (Ctxt : Context_Acc; I : Net; Off : Width) return Net;
-
    function Build_Dyn_Extract
      (Ctxt : Context_Acc;
-      I : Net; V : Net; Step : Uns32; Off : Uns32; W : Width) return Net;
+      I : Net; P : Net; Step : Uns32; Off : Int32; W : Width) return Net;
 
    function Build_Insert
      (Ctxt : Context_Acc; I : Net; V : Net; Off : Width) return Net;
+   function Build_Dyn_Insert
+     (Ctxt : Context_Acc; I : Net; V : Net; P : Net; Step : Uns32; Off : Int32)
+     return Net;
 
    function Build_Output (Ctxt : Context_Acc; W : Width) return Net;
    function Build_Signal (Ctxt : Context_Acc; Name : Sname; W : Width)
@@ -131,5 +133,6 @@ private
       M_Extract : Module;
       M_Insert : Module;
       M_Dyn_Extract : Module;
+      M_Dyn_Insert : Module;
    end record;
 end Netlists.Builders;
