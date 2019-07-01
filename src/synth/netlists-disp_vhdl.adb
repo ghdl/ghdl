@@ -524,12 +524,14 @@ package body Netlists.Disp_Vhdl is
             end;
          when Id_Uextend =>
             declare
-               W : constant Width := Get_Width (Get_Output (Inst, 0));
+               Ow : constant Width := Get_Width (Get_Output (Inst, 0));
+               Iw : constant Width := Get_Width (Get_Input_Net (Inst, 0));
             begin
-               Disp_Template ("  \o0 <= std_logic_vector (resize (\ui0, ",
-                              Inst);
-               Put_Uns32 (W);
-               Put_Line ("));");
+               pragma Assert (Iw > 0);
+               pragma Assert (Ow > Iw);
+               Disp_Template ("  \o0 <= """, Inst);
+               Put ((1 .. Natural (Ow - Iw) => '0'));
+               Disp_Template (""" & \i0;  --  uext" & NL, Inst);
             end;
          when others =>
             Disp_Instance_Gate (Inst);
