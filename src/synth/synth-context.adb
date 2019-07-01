@@ -133,7 +133,7 @@ package body Synth.Context is
       if Slot /= Syn_Inst.Elab_Objects + 1
         or else Syn_Inst.Objects (Slot) /= null
       then
-         Error_Msg_Elab ("bad elaboration order");
+         Error_Msg_Elab ("synth: bad elaboration order of objects");
          raise Internal_Error;
       end if;
       Syn_Inst.Elab_Objects := Slot + Num - 1;
@@ -147,6 +147,21 @@ package body Synth.Context is
       Create_Object (Syn_Inst, Info.Slot, 1);
       Syn_Inst.Objects (Info.Slot) := Val;
    end Create_Object;
+
+   procedure Destroy_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Iir)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Slot : constant Object_Slot_Type := Info.Slot;
+   begin
+      if Slot /= Syn_Inst.Elab_Objects
+        or else Info.Obj_Scope /= Syn_Inst.Block_Scope
+      then
+         Error_Msg_Elab ("synth: bad destroy order");
+      end if;
+      Syn_Inst.Objects (Slot) := null;
+      Syn_Inst.Elab_Objects := Slot - 1;
+   end Destroy_Object;
 
    procedure Make_Object (Syn_Inst : Synth_Instance_Acc;
                           Kind : Wire_Kind;

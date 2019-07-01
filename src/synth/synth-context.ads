@@ -75,6 +75,9 @@ package Synth.Context is
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
 
+   procedure Destroy_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Iir);
+
    --  Build the value for object OBJ.
    --  KIND must be Wire_Variable or Wire_Signal.
    procedure Make_Object (Syn_Inst : Synth_Instance_Acc;

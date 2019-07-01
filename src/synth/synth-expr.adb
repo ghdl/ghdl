@@ -716,6 +716,8 @@ package body Synth.Expr is
                raise Internal_Error;
             end if;
             return Synth_Compare (Id_Ne);
+         when Iir_Predefined_Enum_Less_Equal =>
+            return Synth_Compare (Id_Ult);
 
          when Iir_Predefined_Array_Equality =>
             --  TODO: check size, handle non-vector.

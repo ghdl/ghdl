@@ -901,9 +901,14 @@ package body Synth.Stmts is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       It_Rng : Value_Acc;
+      It_Type : Node;
       Val : Value_Acc;
    begin
-      Synth_Declaration_Type (Syn_Inst, Iterator);
+      It_Type := Get_Declaration_Type (Iterator);
+      if It_Type /= Null_Node then
+         Synth_Subtype_Indication (Syn_Inst, It_Type);
+      end if;
+
       --  Initial value.
       It_Rng := Get_Value (Syn_Inst, Get_Type (Iterator));
       Val := Create_Value_Discrete (It_Rng.Rng.Left);
@@ -918,7 +923,10 @@ package body Synth.Stmts is
                Val.Scal := Val.Scal - 1;
          end case;
       end loop;
-      --  Destroy ?
+      Destroy_Object (Syn_Inst, Iterator);
+      if It_Type /= Null_Node then
+         Destroy_Object (Syn_Inst, It_Type);
+      end if;
    end Synth_For_Loop_Statement;
 
    procedure Synth_Sequential_Statements

@@ -22,6 +22,13 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Synth.Context; use Synth.Context;
 
 package Synth.Decls is
+   --  Get the type of DECL iff it is standalone (not an already existing
+   --  subtype).
+   function Get_Declaration_Type (Decl : Node) return Node;
+
+   procedure Synth_Subtype_Indication
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node);
+
    --  Elaborate the type of DECL.
    procedure Synth_Declaration_Type
      (Syn_Inst : Synth_Instance_Acc; Decl : Node);

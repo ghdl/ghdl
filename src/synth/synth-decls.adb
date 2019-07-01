@@ -160,15 +160,14 @@ package body Synth.Decls is
       Synth_Subtype_Indication (Syn_Inst, Atype);
    end Synth_Anonymous_Subtype_Indication;
 
-   procedure Synth_Declaration_Type
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   function Get_Declaration_Type (Decl : Node) return Node
    is
       Ind : constant Node := Get_Subtype_Indication (Decl);
       Atype : Node;
    begin
       if Ind = Null_Node then
          --  No subtype indication; use the same type.
-         return;
+         return Null_Node;
       end if;
       Atype := Ind;
       loop
@@ -177,18 +176,28 @@ package body Synth.Decls is
                Atype := Get_Named_Entity (Atype);
             when Iir_Kind_Subtype_Declaration
               | Iir_Kind_Type_Declaration =>
-               return;
+               return Null_Node;
             when Iir_Kind_Array_Subtype_Definition
               | Iir_Kind_Integer_Subtype_Definition
               | Iir_Kind_Floating_Subtype_Definition
               | Iir_Kind_Physical_Subtype_Definition
               | Iir_Kind_Enumeration_Subtype_Definition =>
-               Synth_Subtype_Indication (Syn_Inst, Atype);
-               return;
+               return Atype;
             when others =>
-               Error_Kind ("synth_declaration_type", Atype);
+               Error_Kind ("get_declaration_type", Atype);
          end case;
       end loop;
+   end Get_Declaration_Type;
+
+   procedure Synth_Declaration_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Atype : constant Node := Get_Declaration_Type (Decl);
+   begin
+      if Atype = Null_Node then
+         return;
+      end if;
+      Synth_Subtype_Indication (Syn_Inst, Atype);
    end Synth_Declaration_Type;
 
    procedure Synth_Constant_Declaration
