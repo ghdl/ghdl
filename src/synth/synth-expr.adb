@@ -869,7 +869,8 @@ package body Synth.Expr is
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Constant_Declaration =>
+           | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Iterator_Declaration =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_Enumeration_Literal =>
             return Create_Value_Discrete (Int64 (Get_Enum_Pos (Name)));

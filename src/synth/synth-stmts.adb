@@ -881,6 +881,42 @@ package body Synth.Stmts is
       Areapools.Release (M, Instance_Pool.all);
    end Synth_Procedure_Call;
 
+   function In_Range (Rng : Value_Acc; V : Int64) return Boolean is
+   begin
+      case Rng.Rng.Dir is
+         when Iir_To =>
+            return V >= Rng.Rng.Left and then V <= Rng.Rng.Right;
+         when Iir_Downto =>
+            return V <= Rng.Rng.Left and then V >= Rng.Rng.Right;
+      end case;
+   end In_Range;
+
+   procedure Synth_For_Loop_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Iterator : constant Node := Get_Parameter_Specification (Stmt);
+      Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
+      It_Rng : Value_Acc;
+      Val : Value_Acc;
+   begin
+      Synth_Declaration_Type (Syn_Inst, Iterator);
+      --  Initial value.
+      It_Rng := Get_Value (Syn_Inst, Get_Type (Iterator));
+      Val := Create_Value_Discrete (It_Rng.Rng.Left);
+      Create_Object (Syn_Inst, Iterator, Val);
+
+      while In_Range (It_Rng, Val.Scal) loop
+         Synth_Sequential_Statements (Syn_Inst, Stmts);
+         case It_Rng.Rng.Dir is
+            when Iir_To =>
+               Val.Scal := Val.Scal + 1;
+            when Iir_Downto =>
+               Val.Scal := Val.Scal - 1;
+         end case;
+      end loop;
+      --  Destroy ?
+   end Synth_For_Loop_Statement;
+
    procedure Synth_Sequential_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
@@ -897,6 +933,8 @@ package body Synth.Stmts is
                Synth_Variable_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Case_Statement =>
                Synth_Case_Statement (Syn_Inst, Stmt);
+            when Iir_Kind_For_Loop_Statement =>
+               Synth_For_Loop_Statement (Syn_Inst, Stmt);
             when Iir_Kind_Null_Statement =>
                --  Easy
                null;
