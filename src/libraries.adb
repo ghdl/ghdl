@@ -709,6 +709,8 @@ package body Libraries is
             if Load_Library (Work_Library) = False then
                null;
             end if;
+         else
+            Set_Date (Work_Library, Date_Valid'First);
          end if;
 
          --  Add it to the list of libraries.

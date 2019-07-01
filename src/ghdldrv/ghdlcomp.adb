@@ -243,12 +243,14 @@ package body Ghdlcomp is
       Unit : Iir;
       Next_Unit : Iir;
    begin
+      --  Load file and parse.
       Design_File := Load_File_Name (Id);
       if Design_File = Null_Iir or else Errorout.Nbr_Errors > 0 then
          --  Stop now in case of error (file not found or parse error).
          return Design_File;
       end if;
 
+      --  Analyze and add to the work library.
       Unit := Get_First_Design_Unit (Design_File);
       while Unit /= Null_Iir loop
          Finish_Compilation (Unit, True);

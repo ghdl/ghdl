@@ -82,6 +82,8 @@ package body Ghdlsynth is
       E_Opt : Integer;
       Opt_Arg : Natural;
       Config : Iir;
+      R : Node;
+      pragma Unreferenced (R);
    begin
       --  If the '-e' switch is present, there is a list of files.
       E_Opt := Args'First - 1;
@@ -105,7 +107,7 @@ package body Ghdlsynth is
 
       --  Analyze files (if any)
       for I in Args'First .. E_Opt - 1 loop
-         Ghdlcomp.Compile_Analyze_File (Args (I).all);
+         R := Ghdlcomp.Compile_Analyze_File2 (Args (I).all);
       end loop;
 
       --  Elaborate
