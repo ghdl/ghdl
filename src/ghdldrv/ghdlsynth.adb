@@ -34,9 +34,12 @@ with Netlists.Dump;
 with Netlists.Disp_Vhdl;
 
 package body Ghdlsynth is
+   type Out_Format is (Format_Raw, Format_Vhdl);
+
    --  Command --synth
    type Command_Synth is new Command_Lib with record
       Disp_Inline : Boolean := True;
+      Oformat : Out_Format := Format_Vhdl;
    end record;
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean;
@@ -70,6 +73,12 @@ package body Ghdlsynth is
    begin
       if Option = "--disp-noinline" then
          Cmd.Disp_Inline := False;
+         Res := Option_Ok;
+      elsif Option = "--out=raw" then
+         Cmd.Oformat := Format_Raw;
+         Res := Option_Ok;
+      elsif Option = "--out=vhdl" then
+         Cmd.Oformat := Format_Vhdl;
          Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
@@ -133,12 +142,13 @@ package body Ghdlsynth is
       Res : Netlists.Module;
    begin
       Res := Ghdl_Synth (Args);
-      if False then
-         Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
-         Netlists.Dump.Disp_Module (Res);
-      else
-         Netlists.Disp_Vhdl.Disp_Vhdl (Res);
-      end if;
+      case Cmd.Oformat is
+         when Format_Raw =>
+            Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
+            Netlists.Dump.Disp_Module (Res);
+         when Format_Vhdl =>
+            Netlists.Disp_Vhdl.Disp_Vhdl (Res);
+      end case;
    end Perform_Action;
 
    procedure Register_Commands is
