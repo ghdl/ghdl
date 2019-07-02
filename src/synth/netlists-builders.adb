@@ -397,7 +397,7 @@ package body Netlists.Builders is
       Create_Monadic_Module (Design, Res.M_Extend (Id_Sextend),
                              Get_Identifier ("sextend"), Id_Sextend);
 
-      Create_Edge_Module (Res, Res.M_Edge, Name_Posedge);
+      Create_Edge_Module (Res, Res.M_Edge, Name_Edge);
 
       Create_Mux_Modules (Res);
       Create_Objects_Module (Res);

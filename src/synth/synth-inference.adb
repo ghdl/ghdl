@@ -160,19 +160,16 @@ package body Synth.Inference is
             --  CLK and EXPR.
             --  FIXME: do it!
             declare
-               I0 : constant Input := Get_Input (Inst, 0);
-               I1 : Input;
-               Drv : Net;
+               I0 : constant Net := Get_Input_Net (Inst, 0);
+               Inst0 : constant Instance := Get_Net_Parent (I0);
             begin
-               Drv := Get_Driver (I0);
-               if Get_Id (Get_Net_Parent (Drv)) = Id_Edge then
+               if Get_Id (Inst0) = Id_Edge then
                   --  INST is clearly not synthesizable (boolean operation on
                   --  an edge).  Will be removed at the end by
                   --  remove_unused_instances.  Do not remove it now as its
                   --  output may be used by other nets.
-                  Clk := Drv;
-                  I1 := Get_Input (Inst, 1);
-                  Enable := Get_Driver (I1);
+                  Clk := Get_Input_Net (Inst0, 0);
+                  Enable := Get_Input_Net (Inst, 1);
                end if;
             end;
          when others =>
