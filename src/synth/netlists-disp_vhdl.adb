@@ -578,6 +578,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0 or \i1;" & NL, Inst);
          when Id_And =>
             Disp_Template ("  \o0 <= \i0 and \i1;" & NL, Inst);
+         when Id_Xor =>
+            Disp_Template ("  \o0 <= \i0 xor \i1;" & NL, Inst);
          when Id_Concat2 =>
             Disp_Template ("  \o0 <= \i0 & \i1;" & NL, Inst);
          when Id_Concat3 =>
