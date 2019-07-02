@@ -18,9 +18,10 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Ghdlsynth;
-with Ghdlsimul;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+
+with Ghdlsynth;
+with Options; use Options;
 with Errorout.Console;
 
 package body Libghdlsynth is
@@ -29,6 +30,7 @@ package body Libghdlsynth is
       Args : Argument_List (1 .. Argc);
       Res : Module;
    begin
+      --  Create arguments list.
       for I in 0 .. Argc - 1 loop
          declare
             Arg : constant Ghdl_C_String := Argv (I);
@@ -36,14 +38,19 @@ package body Libghdlsynth is
             Args (I + 1) := new String'(Arg (1 .. strlen (Arg)));
          end;
       end loop;
+
+      --  Do the real work!
       Res := Ghdlsynth.Ghdl_Synth (Args);
 
       return Res;
+   exception
+      when Option_Error =>
+         return No_Module;
    end Synth;
 
    Gnat_Version : constant String := "unknown compiler version" & ASCII.NUL;
    pragma Export (C, Gnat_Version, "__gnat_version");
 begin
+   Options.Initialize;
    Errorout.Console.Install_Handler;
-   Ghdlsimul.Compile_Init;
 end Libghdlsynth;
