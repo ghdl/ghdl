@@ -710,11 +710,7 @@ package body Synth.Expr is
             end if;
             return Synth_Compare (Id_Eq);
          when Iir_Predefined_Enum_Inequality =>
-            if Is_Bit_Type (Ltype) then
-               pragma Assert (Is_Bit_Type (Rtype));
-               --  TODO
-               raise Internal_Error;
-            end if;
+            --  TODO: Optimize ?
             return Synth_Compare (Id_Ne);
          when Iir_Predefined_Enum_Less_Equal =>
             return Synth_Compare (Id_Ult);
