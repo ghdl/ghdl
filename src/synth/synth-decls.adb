@@ -275,8 +275,8 @@ package body Synth.Decls is
             begin
                Make_Object (Syn_Inst, Wire_Variable, Decl);
                if Is_Valid (Def) then
-                  --  TODO.
-                  raise Internal_Error;
+                  Init := Synth_Expression_With_Type
+                    (Syn_Inst, Def, Get_Type (Decl));
                else
                   Init := null;
                end if;
@@ -297,9 +297,8 @@ package body Synth.Decls is
             begin
                Make_Object (Syn_Inst, Wire_Signal, Decl);
                if Is_Valid (Def) then
-                  --  TODO.
-                  raise Internal_Error;
-                  --  Init := Syn_Inst.Sim.Objects (Slot + 1);
+                  Init := Synth_Expression_With_Type
+                    (Syn_Inst, Def, Get_Type (Decl));
                else
                   Init := null;
                end if;
