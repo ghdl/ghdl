@@ -1624,7 +1624,7 @@ package body Ghdllocal is
    is
    begin
       if Args'Length = 0 then
-         Error ("command '" & Cmd_Name & "' required an unit name");
+         Error ("command '" & Cmd_Name & "' requires an unit name");
          raise Option_Error;
       end if;
 
