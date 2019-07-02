@@ -89,6 +89,8 @@ package Netlists.Builders is
    function Build_Isignal (Ctxt : Context_Acc; Name : Sname; Init : Net)
                           return Net;
 
+   procedure Build_Assert (Ctxt : Context_Acc; Cond : Net);
+
    --  A simple flip-flop.
    function Build_Dff (Ctxt : Context_Acc;
                        Clk : Net;
@@ -134,5 +136,6 @@ private
       M_Insert : Module;
       M_Dyn_Extract : Module;
       M_Dyn_Insert : Module;
+      M_Assert : Module;
    end record;
 end Netlists.Builders;

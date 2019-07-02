@@ -135,6 +135,9 @@ package Netlists.Gates is
    --  the detector.
    Id_Edge : constant Module_Id := 50;
 
+   --  Input signal must always be true.
+   Id_Assert : constant Module_Id := 51;
+
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
    --  parameter, possibly signed or unsigned extended.  For large width

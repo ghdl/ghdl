@@ -605,6 +605,8 @@ package body Netlists.Disp_Vhdl is
                Put ((1 .. Natural (Ow - Iw) => '0'));
                Disp_Template (""" & \i0;  --  uext" & NL, Inst);
             end;
+         when Id_Assert =>
+            Disp_Template ("  assert \i0 = '1' severity error;" & NL, Inst);
          when others =>
             Disp_Instance_Gate (Inst);
       end case;

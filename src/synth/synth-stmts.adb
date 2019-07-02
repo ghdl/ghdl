@@ -1051,6 +1051,22 @@ package body Synth.Stmts is
       Instance_Pool := null;
    end Synth_Generate_Statement_Body;
 
+   procedure Synth_Concurrent_Assertion_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Cond : constant Node := Get_Assertion_Condition (Stmt);
+      Val : Value_Acc;
+   begin
+      Val := Synth_Expression (Syn_Inst, Cond);
+      if Is_Const (Val) then
+         if Val.Scal /= 1 then
+            raise Internal_Error;
+         end if;
+         return;
+      end if;
+      Build_Assert (Build_Context, Get_Net (Val, Get_Type (Cond)));
+   end Synth_Concurrent_Assertion_Statement;
+
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
@@ -1085,6 +1101,8 @@ package body Synth.Stmts is
                      exit when Gen = Null_Node;
                   end loop;
                end;
+            when Iir_Kind_Concurrent_Assertion_Statement =>
+               Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
             when Iir_Kind_Component_Instantiation_Statement =>
                --  TODO.
                null;

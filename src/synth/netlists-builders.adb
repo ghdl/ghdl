@@ -333,6 +333,17 @@ package body Netlists.Builders is
                      Outputs);
    end Create_Dff_Modules;
 
+   procedure Create_Assert (Ctxt : Context_Acc)
+   is
+      Outputs : Port_Desc_Array (1 .. 0);
+   begin
+      Ctxt.M_Assert := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Name_Assert), Id_Assert,
+         1, 0, 0);
+      Set_Port_Desc (Ctxt.M_Assert, (0 => Create_Input ("cond", 1)),
+                     Outputs);
+   end Create_Assert;
+
    function Build_Builders (Design : Module) return Context_Acc
    is
       Res : Context_Acc;
@@ -402,6 +413,8 @@ package body Netlists.Builders is
       Create_Mux_Modules (Res);
       Create_Objects_Module (Res);
       Create_Dff_Modules (Res);
+
+      Create_Assert (Res);
 
       return Res;
    end Build_Builders;
@@ -842,5 +855,13 @@ package body Netlists.Builders is
    begin
       return Build_Extract (Ctxt, I, Off, 1);
    end Build_Extract_Bit;
+
+   procedure Build_Assert (Ctxt : Context_Acc; Cond : Net)
+   is
+      Inst : Instance;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Assert);
+      Connect (Get_Input (Inst, 0), Cond);
+   end Build_Assert;
 
 end Netlists.Builders;
