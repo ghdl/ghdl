@@ -2773,6 +2773,7 @@ package body Vhdl.Sem_Names is
                            +Prefix);
 
          when Iir_Kinds_Process_Statement
+           | Iir_Kinds_Sequential_Statement
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Unit_Declaration
