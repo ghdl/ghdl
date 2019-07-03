@@ -614,6 +614,7 @@ package body Vhdl.Sem is
                         --  LRM08 6.5.6.3 Port clauses
                         Actual := Sem_Insert_Anonymous_Signal (Inter, Actual);
                         Set_Actual (Assoc, Actual);
+                        Set_Collapse_Signal_Flag (Assoc, True);
                      else
                         Error_Msg_Sem
                           (+Actual,

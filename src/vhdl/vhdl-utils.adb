@@ -364,7 +364,8 @@ package body Vhdl.Utils is
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kind_Constant_Declaration =>
+           | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration =>
             return Name;
 
          --  A loop of generate parameter.
@@ -463,6 +464,7 @@ package body Vhdl.Utils is
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kinds_Signal_Attribute =>
             return True;
          when Iir_Kind_Object_Alias_Declaration =>

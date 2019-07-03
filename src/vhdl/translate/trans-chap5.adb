@@ -361,7 +361,7 @@ package body Trans.Chap5 is
                                          Formal_Env : Map_Env;
                                          Actual_Env : Map_Env)
    is
-      Actual      : constant Iir := Get_Actual (Assoc);
+      Actual      : constant Iir := Strip_Reference_Name (Get_Actual (Assoc));
       Formal_Type : constant Iir := Get_Type (Formal);
       Actual_Type : constant Iir := Get_Type (Actual);
       Port        : constant Iir := Get_Interface_Of_Formal (Formal);
@@ -448,13 +448,7 @@ package body Trans.Chap5 is
             --  actual, but the type of the formal may be used by the actual.
             Set_Map_Env (Formal_Env);
             Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
-            if Get_Kind (Actual) = Iir_Kind_Reference_Name then
-               --  For vhdl08 association by expression.
-               Actual_En := Chap7.Translate_Expression
-                 (Get_Referenced_Name (Actual), Formal_Type);
-            else
-               Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
-            end if;
+            Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
             Actual_Sig := E2M (Actual_En, Get_Info (Formal_Type), Mode_Value);
             Mode := Connect_Value;
 --            raise Internal_Error;
