@@ -448,7 +448,13 @@ package body Trans.Chap5 is
             --  actual, but the type of the formal may be used by the actual.
             Set_Map_Env (Formal_Env);
             Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
-            Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
+            if Get_Kind (Actual) = Iir_Kind_Reference_Name then
+               --  For vhdl08 association by expression.
+               Actual_En := Chap7.Translate_Expression
+                 (Get_Referenced_Name (Actual), Formal_Type);
+            else
+               Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
+            end if;
             Actual_Sig := E2M (Actual_En, Get_Info (Formal_Type), Mode_Value);
             Mode := Connect_Value;
 --            raise Internal_Error;

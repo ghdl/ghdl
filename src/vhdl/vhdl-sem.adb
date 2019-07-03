@@ -462,6 +462,31 @@ package body Vhdl.Sem is
       Res := Sem_Generic_Association_Chain (Inter_Parent, Assoc_Parent);
    end Sem_Generic_Association_Chain;
 
+   --  LRM08 6.5.6.3 Port clauses
+   function Sem_Insert_Anonymous_Signal (Formal : Iir; Actual : Iir)
+                                        return Iir
+   is
+      Sig : Iir;
+      Res : Iir;
+   begin
+      --  Create the anonymous signal.
+      Sig := Create_Iir (Iir_Kind_Anonymous_Signal_Declaration);
+      Location_Copy (Sig, Actual);
+      Set_Expression (Sig, Actual);
+      Set_Type (Sig, Get_Type (Formal));
+
+      --  Declare it.
+      Add_Implicit_Declaration (Sig);
+
+      --  Return a reference to it.
+      --  FIXME: The referenced name is not a name.
+      Res := Create_Iir (Iir_Kind_Reference_Name);
+      Set_Referenced_Name (Res, Sig);
+      Set_Named_Entity (Res, Sig);
+      Set_Type (Res, Get_Type (Sig));
+      return Res;
+   end Sem_Insert_Anonymous_Signal;
+
    --  INTER_PARENT contains ports interfaces;
    --  ASSOC_PARENT constains ports map aspects.
    procedure Sem_Port_Association_Chain
@@ -577,18 +602,24 @@ package body Vhdl.Sem is
                           & "expression");
                   end if;
 
+                  --  Is it possible to have a globally static name that is
+                  --  not readable ?
+                  Check_Read (Actual);
+
                   --  LRM93 1.1.1.2 Ports
                   --  The actual, if an expression, must be a globally
                   --  static expression.
                   if Get_Expr_Staticness (Actual) < Globally then
-                     Error_Msg_Sem
-                       (+Actual,
-                        "actual expression must be globally static");
+                     if Flags.Vhdl_Std >= Vhdl_08 then
+                        --  LRM08 6.5.6.3 Port clauses
+                        Actual := Sem_Insert_Anonymous_Signal (Inter, Actual);
+                        Set_Actual (Assoc, Actual);
+                     else
+                        Error_Msg_Sem
+                          (+Actual,
+                           "actual expression must be globally static");
+                     end if;
                   end if;
-
-                  --  Is it possible to have a globally static name that is
-                  --  not readable ?
-                  Check_Read (Actual);
                else
                   Error_Msg_Sem
                     (+Assoc,

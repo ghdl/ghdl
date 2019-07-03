@@ -2209,6 +2209,8 @@ package body Vhdl.Prints is
                Disp_Attribute_Specification (Ctxt, Decl);
             when Iir_Kind_Signal_Attribute_Declaration =>
                null;
+            when Iir_Kind_Anonymous_Signal_Declaration =>
+               null;
             when Iir_Kind_Group_Template_Declaration =>
                Disp_Group_Template_Declaration (Ctxt, Decl);
             when Iir_Kind_Group_Declaration =>
@@ -3483,6 +3485,17 @@ package body Vhdl.Prints is
             Disp_Name_Of (Ctxt, Get_Named_Entity (Expr));
          when Iir_Kind_Implicit_Dereference =>
             Print (Ctxt, Get_Prefix (Expr));
+
+         when Iir_Kind_Anonymous_Signal_Declaration =>
+            declare
+               Act : constant Iir := Get_Expression (Expr);
+            begin
+               if Act /= Null_Iir then
+                  Print (Ctxt, Act);
+               else
+                  Disp_Identifier (Ctxt, Expr);
+               end if;
+            end;
 
          when Iir_Kind_Left_Type_Attribute =>
             Disp_Name_Attribute (Ctxt, Expr, Name_Left);

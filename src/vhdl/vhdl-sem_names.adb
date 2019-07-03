@@ -3345,6 +3345,8 @@ package body Vhdl.Sem_Names is
       Prefix : Iir;
    begin
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
+
+      --  Create the proper signal attribute node.
       Res := Create_Iir (Kind);
       Location_Copy (Res, Attr);
       if Kind = Iir_Kind_Delayed_Attribute then
@@ -3371,6 +3373,8 @@ package body Vhdl.Sem_Names is
                null;
          end case;
       end if;
+
+      --  Add a declaration for it.
       Sem_Decls.Add_Declaration_For_Implicit_Signal (Res);
       return Res;
    end Sem_Signal_Signal_Attribute;

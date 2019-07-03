@@ -229,7 +229,8 @@ package body Trans.Chap4 is
          when Iir_Kind_Signal_Declaration
             | Iir_Kind_Interface_Signal_Declaration =>
             Rtis.Generate_Signal_Rti (Decl);
-         when Iir_Kind_Guard_Signal_Declaration =>
+         when Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration =>
             --  No name created for guard signal.
             null;
          when others =>
@@ -1820,7 +1821,8 @@ package body Trans.Chap4 is
             | Iir_Kind_Constant_Declaration =>
             Create_Object (Decl);
 
-         when Iir_Kind_Signal_Declaration =>
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration =>
             Create_Signal (Decl);
 
          when Iir_Kind_Object_Alias_Declaration =>
@@ -2584,7 +2586,8 @@ package body Trans.Chap4 is
                   Need_Final := True;
                end if;
 
-            when Iir_Kind_Signal_Declaration =>
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration =>
                Elab_Signal_Declaration (Decl, Parent, False);
 
             when Iir_Kind_Object_Alias_Declaration =>

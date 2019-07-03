@@ -116,6 +116,9 @@ package body Vhdl.Sem_Decls is
       if Current_Signals_Region.Decls_Parent = Parent
         and then Current_Signals_Region.Implicit_Decl /= Null_Iir
       then
+         --  There are pending implicit declarations.  Can happen only
+         --  during analysis of declarations, therefore when declarations are
+         --  not fully analyzed.
          pragma Assert (not Current_Signals_Region.Decls_Analyzed);
 
          --  Add pending implicit declarations before the current one.
@@ -127,6 +130,22 @@ package body Vhdl.Sem_Decls is
          Current_Signals_Region.Last_Attribute_Signal := Null_Iir;
       end if;
    end Insert_Pending_Implicit_Declarations;
+
+   procedure Add_Implicit_Declaration (Sig : Iir) is
+   begin
+      --  Only for anonymous signals, which appear in instantiations (so
+      --  once the declarations have been analyzed).
+      pragma Assert (Get_Kind (Sig) = Iir_Kind_Anonymous_Signal_Declaration);
+      pragma Assert (Current_Signals_Region.Decls_Analyzed);
+
+      if Current_Signals_Region.Last_Decl = Null_Iir then
+         Set_Declaration_Chain (Current_Signals_Region.Decls_Parent, Sig);
+      else
+         Set_Chain (Current_Signals_Region.Last_Decl, Sig);
+      end if;
+      Current_Signals_Region.Last_Decl := Sig;
+      Set_Parent (Sig, Current_Signals_Region.Decls_Parent);
+   end Add_Implicit_Declaration;
 
    --  Mark the end of declaration analysis.  New implicit declarations will
    --  simply be appended to the last declaration.

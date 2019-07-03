@@ -40,13 +40,11 @@ package body Vhdl.Canon is
    --  Canonicalize the chain of declarations in Declaration_Chain of
    --  DECL_PARENT. PARENT must be the parent of the current statements chain,
    --  or NULL_IIR if DECL_PARENT has no corresponding current statments.
+   --  TOP is used to add dependencies (from binding indications).
    procedure Canon_Declarations (Top : Iir_Design_Unit;
                                  Decl_Parent : Iir;
                                  Parent : Iir);
-   function Canon_Declaration (Top : Iir_Design_Unit;
-                               Decl : Iir;
-                               Parent : Iir;
-                               Decl_Parent : Iir)
+   function Canon_Declaration (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir)
                               return Iir;
 
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir);
@@ -2101,8 +2099,7 @@ package body Vhdl.Canon is
                   Decl : constant Iir := Get_Parameter_Specification (El);
                   New_Decl : Iir;
                begin
-                  New_Decl := Canon_Declaration
-                    (Top, Decl, Null_Iir, Null_Iir);
+                  New_Decl := Canon_Declaration (Top, Decl, Null_Iir);
                   pragma Assert (New_Decl = Decl);
 
                   Canon_Generate_Statement_Body
@@ -2245,6 +2242,7 @@ package body Vhdl.Canon is
    end Add_Binding_Indication_Dependence;
 
    --  Canon the component_configuration or configuration_specification CFG.
+   --  TOP is used to add dependences.
    procedure Canon_Component_Configuration (Top : Iir_Design_Unit; Cfg : Iir)
    is
       --  True iff CFG is a component_configuration.
@@ -2622,7 +2620,7 @@ package body Vhdl.Canon is
 
    --  Replace ALL/OTHERS with the explicit list of signals.
    procedure Canon_Disconnection_Specification
-     (Dis : Iir_Disconnection_Specification; Decl_Parent : Iir)
+     (Dis : Iir_Disconnection_Specification)
    is
       Signal_List : Iir_Flist;
       Force : Boolean;
@@ -2648,7 +2646,7 @@ package body Vhdl.Canon is
          Dis_Type := Get_Type (Get_Type_Mark (Dis));
          N_List := Create_Iir_List;
          Set_Is_Ref (Dis, True);
-         El := Get_Declaration_Chain (Decl_Parent);
+         El := Get_Declaration_Chain (Get_Parent (Dis));
          while El /= Null_Iir loop
             if Get_Kind (El) = Iir_Kind_Signal_Declaration
               and then Get_Type (El) = Dis_Type
@@ -2739,9 +2737,8 @@ package body Vhdl.Canon is
       return Decl;
    end Canon_Package_Instantiation_Declaration;
 
-   function Canon_Declaration
-     (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir; Decl_Parent : Iir)
-     return Iir
+   function Canon_Declaration (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir)
+                              return Iir
    is
       Stmts : Iir;
    begin
@@ -2784,6 +2781,38 @@ package body Vhdl.Canon is
                Canon_Expression (Get_Default_Value (Decl));
             end if;
 
+         when Iir_Kind_Anonymous_Signal_Declaration =>
+            if Canon_Flag_Expressions then
+               Canon_Expression (Get_Expression (Decl));
+            end if;
+            --  Create a signal assignment.
+            declare
+               Parent : constant Node := Get_Parent (Decl);
+               Asgn : Iir;
+               We : Iir;
+               Name : Iir;
+            begin
+               Asgn := Create_Iir
+                 (Iir_Kind_Concurrent_Simple_Signal_Assignment);
+               Location_Copy (Asgn, Decl);
+               Set_Parent (Asgn, Parent);
+               Name := Build_Simple_Name (Decl, Decl);
+               Set_Type (Name, Get_Type (Decl));
+               Set_Target (Asgn, Name);
+               Set_Delay_Mechanism (Asgn, Iir_Inertial_Delay);
+
+               We := Create_Iir (Iir_Kind_Waveform_Element);
+               Location_Copy (We, Decl);
+               Set_We_Value (We, Get_Expression (Decl));
+               Set_Expression (Decl, Null_Iir);
+
+               Set_Waveform_Chain (Asgn, We);
+
+               --  Prepend.
+               Set_Chain (Asgn, Get_Concurrent_Statement_Chain (Parent));
+               Set_Concurrent_Statement_Chain (Parent, Asgn);
+            end;
+
          when Iir_Kind_Iterator_Declaration =>
             null;
 
@@ -2803,7 +2832,7 @@ package body Vhdl.Canon is
                Canon_Expression (Get_Expression (Decl));
             end if;
          when Iir_Kind_Disconnection_Specification =>
-            Canon_Disconnection_Specification (Decl, Decl_Parent);
+            Canon_Disconnection_Specification (Decl);
 
          when Iir_Kind_Group_Template_Declaration =>
             null;
@@ -2856,15 +2885,34 @@ package body Vhdl.Canon is
       Decl : Iir;
       Prev_Decl : Iir;
       New_Decl : Iir;
+      Anon_Label : Natural;
    begin
       if Parent /= Null_Iir then
          Clear_Instantiation_Configuration (Parent, True);
       end if;
 
+      Anon_Label := 0;
+
       Decl := Get_Declaration_Chain (Decl_Parent);
       Prev_Decl := Null_Iir;
       while Decl /= Null_Iir loop
-         New_Decl := Canon_Declaration (Top, Decl, Parent, Decl_Parent);
+         --  Give a name to anonymous signals.
+         --  Ideally it should be done in Canon_Declaration, but we need
+         --  a counter for all the declarations.
+         if Get_Kind (Decl) = Iir_Kind_Anonymous_Signal_Declaration then
+            declare
+               Str : String := "ANONYMOUS" & Natural'Image (Anon_Label);
+            begin
+               --  Note: the label starts with a capitalized
+               --  letter, to avoid any clash with user's
+               --  identifiers.
+               Str (10) := '_';
+               Set_Identifier (Decl, Name_Table.Get_Identifier (Str));
+               Anon_Label := Anon_Label + 1;
+            end;
+         end if;
+
+         New_Decl := Canon_Declaration (Top, Decl, Parent);
 
          if New_Decl /= Decl then
             --  Replace declaration

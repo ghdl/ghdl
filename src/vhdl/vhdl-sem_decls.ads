@@ -75,8 +75,13 @@ package Vhdl.Sem_Decls is
    procedure Pop_Signals_Declarative_Part
      (Cell: in Implicit_Signal_Declaration_Type);
 
-   --  Declare an implicit signal.
+   --  Declare an implicit signal.  This is called from sem_names when a
+   --  signal attribute is analyzed.
    procedure Add_Declaration_For_Implicit_Signal (Sig : Iir);
+
+   --  Append declaration SIG (for an anonymous signal) to the current
+   --  declarative part.
+   procedure Add_Implicit_Declaration (Sig : Iir);
 
 private
    type Implicit_Signal_Declaration_Type is record
@@ -92,10 +97,13 @@ private
 
       --  If True, declarations of DECLS_PARENT have already been analyzed.
       --  So implicit declarations are appended to the parent, and the last
-      --  declaration is LAST_DECL.
+      --  declaration is LAST_DECL.  This is the usual case when attribute
+      --  signals are used in statements.
       --  If False, declarations are being analyzed.  Implicit declarations
       --  are appended to IMPLICIT_DECL/LAST_ATTRIBUTE_SIGNAL and will be
-      --  inserted before the current declaration.
+      --  inserted before the current declaration.  This can happen if a
+      --  attribute signal is used in a declaration, the attribute signal
+      --  must be declared before it is used.
       Decls_Analyzed : Boolean;
 
       --  Last declaration in the region.  If an implicit_decl is createed, it

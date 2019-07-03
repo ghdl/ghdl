@@ -1933,7 +1933,8 @@ package body Trans.Rtis is
          Start_Record_Aggr (List, Ghdl_Rtin_Object);
          Mode := 0;
          case Get_Kind (Decl) is
-            when Iir_Kind_Signal_Declaration =>
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration =>
                Comm := Ghdl_Rtik_Signal;
                Var := Info.Signal_Sig;
             when Iir_Kind_Interface_Signal_Declaration =>
@@ -2140,7 +2141,8 @@ package body Trans.Rtis is
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Variable_Declaration
               | Iir_Kind_File_Declaration
-              | Iir_Kind_Signal_Attribute_Declaration =>
+              | Iir_Kind_Signal_Attribute_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration =>
                null;
             when Iir_Kind_Object_Alias_Declaration
                | Iir_Kind_Attribute_Declaration =>
@@ -2270,7 +2272,8 @@ package body Trans.Rtis is
                   Add_Rti_Node (Info.Object_Rti);
                end;
             when Iir_Kind_Signal_Declaration
-               | Iir_Kind_Interface_Signal_Declaration =>
+              | Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration =>
                declare
                   Info : constant Signal_Info_Acc := Get_Info (Decl);
                begin

@@ -1625,6 +1625,29 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Name_Staticness (State2)
 
+   -- Iir_Kind_Anonymous_Signal_Declaration (Short)
+   --
+   --  Anonymous signal created for vhdl 2008 port association with a non
+   --  globally static expression.
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --  Must be Null.
+   --   Get/Set_Default_Value (Field4)
+   --
+   --  The expression that is assigned to the signal.
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_After_Drivers_Flag (Flag5)
+   --
+   --   Get/Set_Is_Ref (Flag12)
+
    -- Iir_Kind_Signal_Attribute_Declaration (Short)
    --
    --  Chain of implicit signals created from signal attribute.  This is just
@@ -3701,6 +3724,8 @@ package Vhdl.Nodes is
    --  This doesn't correspond to a name in the sources.  This is an artificial
    --  name in the tree which is owned and reference another name.
    --
+   --   Get/Set_Type (Field1)
+   --
    --   Get/Set_Named_Entity (Field4)
    --
    --  The name from which the reference was created.  Can be Null_Iir if the
@@ -4237,6 +4262,7 @@ package Vhdl.Nodes is
       Iir_Kind_Interface_Function_Declaration, --         interface
       Iir_Kind_Interface_Procedure_Declaration, --        interface
 
+      Iir_Kind_Anonymous_Signal_Declaration,
       Iir_Kind_Signal_Attribute_Declaration,
 
    -- Expressions.

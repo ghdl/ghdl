@@ -163,7 +163,8 @@ package body Vhdl.Utils is
       end case;
    end Get_Operator_Name;
 
-   function Get_Longuest_Static_Prefix (Expr: Iir) return Iir is
+   function Get_Longuest_Static_Prefix (Expr: Iir) return Iir
+   is
       Adecl: Iir;
    begin
       Adecl := Expr;
@@ -177,6 +178,7 @@ package body Vhdl.Utils is
                return Adecl;
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Guard_Signal_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration
               | Iir_Kind_Interface_Signal_Declaration =>
                return Adecl;
             when Iir_Kind_Object_Alias_Declaration =>
@@ -297,6 +299,7 @@ package body Vhdl.Utils is
               | Iir_Kind_Scalar_Nature_Definition
               | Iir_Kind_Group_Template_Declaration
               | Iir_Kind_Group_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration
               | Iir_Kind_Signal_Attribute_Declaration
               | Iir_Kind_Unaffected_Waveform
               | Iir_Kind_Waveform_Element
