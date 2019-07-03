@@ -311,6 +311,8 @@ package body Synth.Decls is
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
             null;
+         when Iir_Kind_Non_Object_Alias_Declaration =>
+            null;
          when Iir_Kind_Attribute_Declaration =>
             --  Nothing to do: the type is a type_mark, not a subtype
             --  indication.
