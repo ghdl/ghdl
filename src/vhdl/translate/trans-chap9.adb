@@ -371,7 +371,7 @@ package body Trans.Chap9 is
    end Translate_Psl_Directive_Declarations;
 
    function Translate_Psl_Expr (Expr : PSL_Node; Eos : Boolean)
-                                   return O_Enode
+                               return O_Enode
    is
       use PSL.Nodes;
    begin
