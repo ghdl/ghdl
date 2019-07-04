@@ -751,6 +751,9 @@ package body Synth.Expr is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
             --  "=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Eq);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat =>
+            --  "/=" (Unsigned, Natural)
+            return Synth_Compare_Uns_Nat (Id_Ne);
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
             --  "<" (Unsigned, Natural)
             if Is_Const (Right) and then Right.Scal = 0 then
