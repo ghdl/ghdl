@@ -5805,6 +5805,10 @@ package body Vhdl.Parse is
          when Tok_Xnor =>
             return Build_Unary_Factor_08 (Iir_Kind_Reduction_Xnor_Operator);
 
+         when Tok_Exclam_Mark =>
+            Error_Msg_Parse ("'!' is not allowed here, replaced by 'not'");
+            return Build_Unary_Factor (Iir_Kind_Not_Operator);
+
          when others =>
             Left := Parse_Primary;
             if Current_Token = Tok_Double_Star then
