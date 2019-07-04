@@ -750,6 +750,21 @@ package body Vhdl.Sem_Psl is
       PSL.Subsets.Check_Simple (Seq);
    end Sem_Psl_Cover_Statement;
 
+   procedure Sem_Psl_Restrict_Directive (Stmt : Iir)
+   is
+      Seq : PSL_Node;
+   begin
+      Seq := Get_Psl_Sequence (Stmt);
+      Seq := Sem_Sequence (Seq);
+
+      --  Properties must be clocked.
+      Sem_Psl_Directive_Clock (Stmt, Seq);
+      Set_Psl_Sequence (Stmt, Seq);
+
+      --  Check simple subset restrictions.
+      PSL.Subsets.Check_Simple (Seq);
+   end Sem_Psl_Restrict_Directive;
+
    procedure Sem_Psl_Default_Clock (Stmt : Iir)
    is
       Expr : PSL_Node;

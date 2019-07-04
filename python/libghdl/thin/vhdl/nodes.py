@@ -132,6 +132,7 @@ class Iir_Kind:
     Interface_Package_Declaration = 117
     Interface_Function_Declaration = 118
     Interface_Procedure_Declaration = 119
+<<<<<<< HEAD
     Anonymous_Signal_Declaration = 120
     Signal_Attribute_Declaration = 121
     Identity_Operator = 122
@@ -200,6 +201,76 @@ class Iir_Kind:
     Concurrent_Procedure_Call_Statement = 185
     Psl_Assert_Statement = 186
     Psl_Cover_Statement = 187
+=======
+    Signal_Attribute_Declaration = 120
+    Identity_Operator = 121
+    Negation_Operator = 122
+    Absolute_Operator = 123
+    Not_Operator = 124
+    Implicit_Condition_Operator = 125
+    Condition_Operator = 126
+    Reduction_And_Operator = 127
+    Reduction_Or_Operator = 128
+    Reduction_Nand_Operator = 129
+    Reduction_Nor_Operator = 130
+    Reduction_Xor_Operator = 131
+    Reduction_Xnor_Operator = 132
+    And_Operator = 133
+    Or_Operator = 134
+    Nand_Operator = 135
+    Nor_Operator = 136
+    Xor_Operator = 137
+    Xnor_Operator = 138
+    Equality_Operator = 139
+    Inequality_Operator = 140
+    Less_Than_Operator = 141
+    Less_Than_Or_Equal_Operator = 142
+    Greater_Than_Operator = 143
+    Greater_Than_Or_Equal_Operator = 144
+    Match_Equality_Operator = 145
+    Match_Inequality_Operator = 146
+    Match_Less_Than_Operator = 147
+    Match_Less_Than_Or_Equal_Operator = 148
+    Match_Greater_Than_Operator = 149
+    Match_Greater_Than_Or_Equal_Operator = 150
+    Sll_Operator = 151
+    Sla_Operator = 152
+    Srl_Operator = 153
+    Sra_Operator = 154
+    Rol_Operator = 155
+    Ror_Operator = 156
+    Addition_Operator = 157
+    Substraction_Operator = 158
+    Concatenation_Operator = 159
+    Multiplication_Operator = 160
+    Division_Operator = 161
+    Modulus_Operator = 162
+    Remainder_Operator = 163
+    Exponentiation_Operator = 164
+    Function_Call = 165
+    Aggregate = 166
+    Parenthesis_Expression = 167
+    Qualified_Expression = 168
+    Type_Conversion = 169
+    Allocator_By_Expression = 170
+    Allocator_By_Subtype = 171
+    Selected_Element = 172
+    Dereference = 173
+    Implicit_Dereference = 174
+    Slice_Name = 175
+    Indexed_Name = 176
+    Psl_Expression = 177
+    Sensitized_Process_Statement = 178
+    Process_Statement = 179
+    Concurrent_Simple_Signal_Assignment = 180
+    Concurrent_Conditional_Signal_Assignment = 181
+    Concurrent_Selected_Signal_Assignment = 182
+    Concurrent_Assertion_Statement = 183
+    Concurrent_Procedure_Call_Statement = 184
+    Psl_Assert_Statement = 185
+    Psl_Cover_Statement = 186
+    Psl_Restrict_Directive = 187
+>>>>>>> vhdl: parse and analyze restrict directive.
     Block_Statement = 188
     If_Generate_Statement = 189
     Case_Generate_Statement = 190
@@ -457,7 +528,8 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
         Iir_Kind.Psl_Assert_Statement,
-        Iir_Kind.Psl_Cover_Statement]
+        Iir_Kind.Psl_Cover_Statement,
+        Iir_Kind.Psl_Restrict_Directive]
 
     Non_Alias_Object_Declaration = [
         Iir_Kind.File_Declaration,
@@ -649,6 +721,7 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Procedure_Call_Statement,
         Iir_Kind.Psl_Assert_Statement,
         Iir_Kind.Psl_Cover_Statement,
+        Iir_Kind.Psl_Restrict_Directive,
         Iir_Kind.Block_Statement,
         Iir_Kind.If_Generate_Statement,
         Iir_Kind.Case_Generate_Statement,

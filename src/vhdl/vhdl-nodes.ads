@@ -2923,6 +2923,34 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
+   -- Iir_Kind_Psl_Restrict_Directive (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Psl_Sequence (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --  The following fields are set by canon.
+   --   Get/Set_PSL_Clock (Field7)
+   --
+   --   Get/Set_PSL_NFA (Field8)
+   --
+   --  Number of states in the NFA.
+   --   Get/Set_PSL_Nbr_States (Field9)
+   --
+   --   Get/Set_PSL_Clock_Sensitivity (Field10)
+   --
+   --  True if at least one of the NFA edge has the EOS flag.
+   --   Get/Set_PSL_EOS_Flag (Flag1)
+   --
+   --   Get/Set_Postponed_Flag (Flag3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+
    -- Iir_Kind_Component_Instantiation_Statement (Medium)
    --
    --  LRM08 11.7 Component instantiation statements
@@ -4334,6 +4362,7 @@ package Vhdl.Nodes is
       Iir_Kind_Concurrent_Procedure_Call_Statement,
       Iir_Kind_Psl_Assert_Statement,
       Iir_Kind_Psl_Cover_Statement,
+      Iir_Kind_Psl_Restrict_Directive,
       Iir_Kind_Block_Statement,
       Iir_Kind_If_Generate_Statement,
       Iir_Kind_Case_Generate_Statement,
@@ -5506,6 +5535,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Psl_Assert_Statement
    --Iir_Kind_Psl_Cover_Statement
+   --Iir_Kind_Psl_Restrict_Directive
    --Iir_Kind_Block_Statement
    --Iir_Kind_If_Generate_Statement
    --Iir_Kind_Case_Generate_Statement
@@ -5522,7 +5552,8 @@ package Vhdl.Nodes is
    --Iir_Kind_Concurrent_Assertion_Statement
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Psl_Assert_Statement
-     Iir_Kind_Psl_Cover_Statement;
+   --Iir_Kind_Psl_Cover_Statement
+     Iir_Kind_Psl_Restrict_Directive;
 
    subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range
      Iir_Kind_Concurrent_Simple_Signal_Assignment ..

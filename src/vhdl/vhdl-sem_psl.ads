@@ -26,6 +26,7 @@ package Vhdl.Sem_Psl is
    function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir;
 
    procedure Sem_Psl_Cover_Statement (Stmt : Iir);
+   procedure Sem_Psl_Restrict_Directive (Stmt : Iir);
    procedure Sem_Psl_Default_Clock (Stmt : Iir);
    function Sem_Psl_Name (Name : Iir) return Iir;
 end Vhdl.Sem_Psl;

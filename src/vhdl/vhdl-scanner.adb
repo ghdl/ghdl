@@ -1306,6 +1306,10 @@ package body Vhdl.Scanner is
                Current_Token := Tok_Psl_Cover;
             when Std_Names.Name_Default =>
                Current_Token := Tok_Psl_Default;
+            when Std_Names.Name_Restrict =>
+               Current_Token := Tok_Psl_Restrict;
+            when Std_Names.Name_Restrict_Guarantee =>
+               Current_Token := Tok_Psl_Restrict_Guarantee;
             when Std_Names.Name_Inf =>
                Current_Token := Tok_Inf;
             when Std_Names.Name_Within =>

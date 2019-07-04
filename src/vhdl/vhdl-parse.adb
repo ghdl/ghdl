@@ -8600,7 +8600,7 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Psl_Assert_Statement;
 
-   function Parse_Psl_Cover_Statement return Iir
+   function Parse_Psl_Cover_Directive return Iir
    is
       Res : Iir;
    begin
@@ -8614,7 +8614,26 @@ package body Vhdl.Parse is
       Parse_Psl_Assert_Report_Severity (Res);
 
       return Res;
-   end Parse_Psl_Cover_Statement;
+   end Parse_Psl_Cover_Directive;
+
+   function Parse_Psl_Restrict_Directive return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Psl_Restrict_Directive);
+
+      --  Skip 'restrict'
+      Scan;
+
+      Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence (True));
+
+      --  No more PSL tokens after the sequence.
+      Vhdl.Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Scan_In_Comment := False;
+
+      Expect_Scan (Tok_Semi_Colon);
+      return Res;
+   end Parse_Psl_Restrict_Directive;
 
    --  precond : first token
    --  postcond: next token (end/else/when...)
@@ -8780,7 +8799,10 @@ package body Vhdl.Parse is
                Stmt := Parse_Psl_Declaration;
             when Tok_Psl_Cover =>
                Postponed_Not_Allowed;
-               Stmt := Parse_Psl_Cover_Statement;
+               Stmt := Parse_Psl_Cover_Directive;
+            when Tok_Psl_Restrict =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Psl_Restrict_Directive;
             when Tok_Wait
               | Tok_Loop
               | Tok_While =>

@@ -2021,6 +2021,8 @@ package body Vhdl.Sem_Stmts is
                New_El := Sem_Psl.Sem_Psl_Assert_Statement (El);
             when Iir_Kind_Psl_Cover_Statement =>
                Sem_Psl.Sem_Psl_Cover_Statement (El);
+            when Iir_Kind_Psl_Restrict_Directive =>
+               Sem_Psl.Sem_Psl_Restrict_Directive (El);
             when Iir_Kind_Psl_Default_Clock =>
                Sem_Psl.Sem_Psl_Default_Clock (El);
             when Iir_Kind_Simple_Simultaneous_Statement =>

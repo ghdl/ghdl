@@ -1237,6 +1237,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
+           | Iir_Kind_Psl_Restrict_Directive
            | Iir_Kind_Block_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement

@@ -344,6 +344,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
+           | Iir_Kind_Psl_Restrict_Directive
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement

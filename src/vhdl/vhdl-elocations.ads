@@ -406,6 +406,7 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Psl_Assert_Statement (None)
    -- Iir_Kind_Psl_Cover_Statement (None)
+   -- Iir_Kind_Psl_Restrict_Directive (None)
 
    -- Iir_Kind_Component_Instantiation_Statement (L3)
    --

@@ -1763,6 +1763,25 @@ package body Vhdl.Canon is
       Set_PSL_Clock_Sensitivity (Stmt, List);
    end Canon_Psl_Clocked_NFA;
 
+   procedure Canon_Psl_Sequence_Directive (Stmt : Iir)
+   is
+      Seq : PSL_Node;
+      Fa : PSL_NFA;
+   begin
+      Seq := Get_Psl_Sequence (Stmt);
+      Seq := PSL.Rewrites.Rewrite_SERE (Seq);
+      Set_Psl_Sequence (Stmt, Seq);
+
+      --  Generate the NFA.
+      Fa := PSL.Build.Build_SERE_FA (Seq);
+      Set_PSL_NFA (Stmt, Fa);
+
+      Canon_Psl_Clocked_NFA (Stmt);
+      if Canon_Flag_Expressions then
+         Canon_PSL_Expression (Get_PSL_Clock (Stmt));
+      end if;
+   end Canon_Psl_Sequence_Directive;
+
    procedure Canon_Psl_Directive (Stmt : Iir) is
    begin
       Canon_Psl_Clocked_NFA (Stmt);
@@ -2123,20 +2142,13 @@ package body Vhdl.Canon is
                end;
 
             when Iir_Kind_Psl_Cover_Statement =>
-               declare
-                  Seq : PSL_Node;
-                  Fa : PSL_NFA;
-               begin
-                  Seq := Get_Psl_Sequence (El);
-                  Seq := PSL.Rewrites.Rewrite_SERE (Seq);
-                  Set_Psl_Sequence (El, Seq);
-
-                  --  Generate the NFA.
-                  Fa := PSL.Build.Build_SERE_FA (Seq);
-                  Set_PSL_NFA (El, Fa);
-
-                  Canon_Psl_Directive (El);
-               end;
+               Canon_Psl_Sequence_Directive (El);
+               if Canon_Flag_Expressions then
+                  Canon_Expression (Get_Severity_Expression (El));
+                  Canon_Expression (Get_Report_Expression (El));
+               end if;
+            when Iir_Kind_Psl_Restrict_Directive =>
+               Canon_Psl_Sequence_Directive (El);
 
             when Iir_Kind_Psl_Default_Clock =>
                null;

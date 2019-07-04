@@ -424,6 +424,10 @@ package body Vhdl.Tokens is
             return "endpoint";
          when Tok_Psl_Cover =>
             return "cover";
+         when Tok_Psl_Restrict =>
+            return "restrict";
+         when Tok_Psl_Restrict_Guarantee =>
+            return "restrict_guarantee";
          when Tok_Psl_Const =>
             return "const";
          when Tok_Psl_Boolean =>

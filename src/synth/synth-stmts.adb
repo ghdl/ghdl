@@ -1107,6 +1107,8 @@ package body Synth.Stmts is
             when Iir_Kind_Component_Instantiation_Statement =>
                --  TODO.
                null;
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
             when others =>
                Error_Kind ("synth_statements", Stmt);
          end case;

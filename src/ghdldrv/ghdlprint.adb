@@ -396,6 +396,8 @@ package body Ghdlprint is
               | Tok_Psl_Sequence
               | Tok_Psl_Endpoint
               | Tok_Psl_Cover
+              | Tok_Psl_Restrict
+              | Tok_Psl_Restrict_Guarantee
               | Tok_Psl_Boolean
               | Tok_Psl_Const
               | Tok_Inf

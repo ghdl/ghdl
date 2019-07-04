@@ -3892,10 +3892,10 @@ package body Vhdl.Prints is
    procedure Disp_Psl_Cover_Statement
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
-      Start_Hbox (Ctxt);
       if Vhdl_Std < Vhdl_08 then
          OOB.Put ("--psl ");
       end if;
+      Start_Hbox (Ctxt);
       Disp_Label (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Psl_Cover);
       Print_Sequence (Ctxt, Get_Psl_Sequence (Stmt));
@@ -3903,6 +3903,21 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
    end Disp_Psl_Cover_Statement;
+
+   procedure Disp_Psl_Restrict_Directive
+     (Ctxt : in out Ctxt_Class; Stmt : Iir) is
+   begin
+      if Vhdl_Std < Vhdl_08 then
+         OOB.Put ("--psl ");
+      end if;
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Psl_Restrict);
+      Print_Sequence (Ctxt, Get_Psl_Sequence (Stmt));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
+      Disp_PSL_NFA (Get_PSL_NFA (Stmt));
+   end Disp_Psl_Restrict_Directive;
 
    procedure Disp_Simple_Simultaneous_Statement
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
@@ -3951,6 +3966,8 @@ package body Vhdl.Prints is
             Disp_Psl_Assert_Statement (Ctxt, Stmt);
          when Iir_Kind_Psl_Cover_Statement =>
             Disp_Psl_Cover_Statement (Ctxt, Stmt);
+         when Iir_Kind_Psl_Restrict_Directive =>
+            Disp_Psl_Restrict_Directive (Ctxt, Stmt);
          when Iir_Kind_Simple_Simultaneous_Statement =>
             Disp_Simple_Simultaneous_Statement (Ctxt, Stmt);
          when others =>
