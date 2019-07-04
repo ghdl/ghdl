@@ -359,6 +359,16 @@ package body Vhdl.Annotations is
             Annotate_Anonymous_Type_Definition (Block_Info, El);
 
          when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               El_Type : constant Iir := Get_Element_Subtype (Def);
+               Bel_Type : constant Iir :=
+                 Get_Element_Subtype (Get_Base_Type (Def));
+            begin
+               if El_Type /= Bel_Type then
+                  Annotate_Anonymous_Type_Definition
+                    (Block_Info, Get_Element_Subtype (Def));
+               end if;
+            end;
             if Flag_Synthesis then
                --  For the bounds.
                Create_Object_Info (Block_Info, Def);

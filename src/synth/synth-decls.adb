@@ -33,7 +33,6 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 package body Synth.Decls is
    procedure Synth_Anonymous_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node);
-   pragma Unreferenced (Synth_Anonymous_Subtype_Indication);
 
    procedure Create_Var_Wire
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Init : Value_Acc)
@@ -114,6 +113,8 @@ package body Synth.Decls is
             --  The elaboration of an index constraint consists of the
             --  declaration of each of the discrete ranges in the index
             --  constraint in some order that is not defined by the language.
+            Synth_Anonymous_Subtype_Indication
+              (Syn_Inst, Get_Element_Subtype (Atype));
             declare
                St_Indexes : constant Iir_Flist :=
                  Get_Index_Subtype_List (Atype);
