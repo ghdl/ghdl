@@ -531,7 +531,7 @@ package body Trans.Chap9 is
       Assocs     : O_Assoc_List;
    begin
       case Get_Kind (Stmt) is
-         when Iir_Kind_Psl_Cover_Statement =>
+         when Iir_Kind_Psl_Cover_Directive =>
             Translate_Psl_Report (Stmt, Base, Report_Proc);
          when others =>
             null;
@@ -556,7 +556,7 @@ package body Trans.Chap9 is
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       Init_Var (Var_I);
       case Get_Kind (Stmt) is
-         when Iir_Kind_Psl_Cover_Statement
+         when Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Endpoint_Declaration =>
             --  Sequences for cover or endpoints are detected on every cycle,
             --  so the start state is always active.
@@ -647,7 +647,7 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Assert_Statement =>
                Chap8.Translate_Report
                  (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
-            when Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Cover_Directive =>
                if Get_Report_Expression (Stmt) /= Null_Iir then
                   Start_Association (Assocs, Report_Proc);
                   New_Association (Assocs, New_Obj_Value (Instance));
@@ -742,7 +742,7 @@ package body Trans.Chap9 is
                Info.Psl_Proc_Final_Subprg := O_Dnode_Null;
             end if;
 
-         when Iir_Kind_Psl_Cover_Statement =>
+         when Iir_Kind_Psl_Cover_Directive =>
             Create_Psl_Final_Proc (Stmt, Base, Instance);
 
             Start_Subprogram_Body (Info.Psl_Proc_Final_Subprg);
@@ -975,7 +975,7 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Declarations (El);
             when Iir_Kind_Component_Instantiation_Statement =>
@@ -1123,7 +1123,7 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Statement (Stmt, Base_Info);
             when Iir_Kind_Component_Instantiation_Statement =>
@@ -2722,7 +2722,7 @@ package body Trans.Chap9 is
               | Iir_Kind_Psl_Endpoint_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
-               | Iir_Kind_Psl_Cover_Statement =>
+               | Iir_Kind_Psl_Cover_Directive =>
                null;
             when Iir_Kind_Component_Instantiation_Statement =>
                declare
@@ -2784,7 +2784,7 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Elab_Psl_Directive (Stmt, Base_Info);
             when Iir_Kind_Component_Instantiation_Statement =>

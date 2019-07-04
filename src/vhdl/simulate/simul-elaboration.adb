@@ -1898,7 +1898,7 @@ package body Simul.Elaboration is
               | Iir_Kind_Psl_Declaration =>
                null;
 
-            when Iir_Kind_Psl_Cover_Statement
+            when Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Assert_Statement
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Elaborate_Psl_Directive (Instance, Stmt);

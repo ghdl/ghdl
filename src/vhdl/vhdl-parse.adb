@@ -8608,7 +8608,7 @@ package body Vhdl.Parse is
    is
       Res : Iir;
    begin
-      Res := Create_Iir (Iir_Kind_Psl_Cover_Statement);
+      Res := Create_Iir (Iir_Kind_Psl_Cover_Directive);
 
       --  Skip 'cover'
       Scan;

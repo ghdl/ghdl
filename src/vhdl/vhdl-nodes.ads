@@ -2887,14 +2887,14 @@ package Vhdl.Nodes is
    --   Get/Set_Identifier (Alias Field3)
 
    -- Iir_Kind_Psl_Assert_Statement (Medium)
-   -- Iir_Kind_Psl_Cover_Statement (Medium)
+   -- Iir_Kind_Psl_Cover_Directive (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
    -- Only for Iir_Kind_Psl_Assert_Statement:
    --   Get/Set_Psl_Property (Field1)
    --
-   -- Only for Iir_Kind_Psl_Cover_Statement:
+   -- Only for Iir_Kind_Psl_Cover_Directive:
    --   Get/Set_Psl_Sequence (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -4361,7 +4361,7 @@ package Vhdl.Nodes is
       Iir_Kind_Concurrent_Assertion_Statement,
       Iir_Kind_Concurrent_Procedure_Call_Statement,
       Iir_Kind_Psl_Assert_Statement,
-      Iir_Kind_Psl_Cover_Statement,
+      Iir_Kind_Psl_Cover_Directive,
       Iir_Kind_Psl_Restrict_Directive,
       Iir_Kind_Block_Statement,
       Iir_Kind_If_Generate_Statement,
@@ -5534,7 +5534,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Concurrent_Assertion_Statement
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Psl_Assert_Statement
-   --Iir_Kind_Psl_Cover_Statement
+   --Iir_Kind_Psl_Cover_Directive
    --Iir_Kind_Psl_Restrict_Directive
    --Iir_Kind_Block_Statement
    --Iir_Kind_If_Generate_Statement
@@ -5552,7 +5552,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Concurrent_Assertion_Statement
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Psl_Assert_Statement
-   --Iir_Kind_Psl_Cover_Statement
+   --Iir_Kind_Psl_Cover_Directive
      Iir_Kind_Psl_Restrict_Directive;
 
    subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range

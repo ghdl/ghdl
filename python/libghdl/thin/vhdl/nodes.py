@@ -268,7 +268,7 @@ class Iir_Kind:
     Concurrent_Assertion_Statement = 183
     Concurrent_Procedure_Call_Statement = 184
     Psl_Assert_Statement = 185
-    Psl_Cover_Statement = 186
+    Psl_Cover_Directive = 186
     Psl_Restrict_Directive = 187
 >>>>>>> vhdl: parse and analyze restrict directive.
     Block_Statement = 188
@@ -528,7 +528,7 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
         Iir_Kind.Psl_Assert_Statement,
-        Iir_Kind.Psl_Cover_Statement,
+        Iir_Kind.Psl_Cover_Directive,
         Iir_Kind.Psl_Restrict_Directive]
 
     Non_Alias_Object_Declaration = [
@@ -720,7 +720,7 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
         Iir_Kind.Psl_Assert_Statement,
-        Iir_Kind.Psl_Cover_Statement,
+        Iir_Kind.Psl_Cover_Directive,
         Iir_Kind.Psl_Restrict_Directive,
         Iir_Kind.Block_Statement,
         Iir_Kind.If_Generate_Statement,

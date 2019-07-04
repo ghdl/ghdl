@@ -436,7 +436,7 @@ package body Simul.Simulation.Main is
       if V then
          Nvec := (others => False);
          case Get_Kind (E.Stmt) is
-            when Iir_Kind_Psl_Cover_Statement
+            when Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Nvec (0) := True;
             when others =>
@@ -483,7 +483,7 @@ package body Simul.Simulation.Main is
                     (E.Instance, "psl assertion", E.Stmt,
                      "assertion violation", 2);
                end if;
-            when Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Cover_Directive =>
                if Nvec (S_Num) then
                   if Get_Report_Expression (E.Stmt) /= Null_Iir then
                      Execute_Failed_Assertion
@@ -569,7 +569,7 @@ package body Simul.Simulation.Main is
                        (To_Instance_Acc (E'Address),
                         PSL_Assert_Finalizer'Access);
                   end if;
-               when Iir_Kind_Psl_Cover_Statement =>
+               when Iir_Kind_Psl_Cover_Directive =>
                   --  TODO
                   null;
                when others =>

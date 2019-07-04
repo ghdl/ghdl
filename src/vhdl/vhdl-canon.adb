@@ -2141,7 +2141,7 @@ package body Vhdl.Canon is
                   Canon_Psl_Directive (El);
                end;
 
-            when Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Cover_Directive =>
                Canon_Psl_Sequence_Directive (El);
                if Canon_Flag_Expressions then
                   Canon_Expression (Get_Severity_Expression (El));

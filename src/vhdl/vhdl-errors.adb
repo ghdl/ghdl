@@ -689,7 +689,7 @@ package body Vhdl.Errors is
             return Disp_Label (Node, "concurrent assertion");
          when Iir_Kind_Psl_Assert_Statement =>
             return Disp_Label (Node, "PSL assertion");
-         when Iir_Kind_Psl_Cover_Statement =>
+         when Iir_Kind_Psl_Cover_Directive =>
             return Disp_Label (Node, "PSL cover");
          when Iir_Kind_Psl_Restrict_Directive =>
             return "PSL restrict";

@@ -732,7 +732,7 @@ package body Vhdl.Sem_Psl is
       return Stmt;
    end Sem_Psl_Assert_Statement;
 
-   procedure Sem_Psl_Cover_Statement (Stmt : Iir)
+   procedure Sem_Psl_Cover_Directive (Stmt : Iir)
    is
       Seq : PSL_Node;
    begin
@@ -748,7 +748,7 @@ package body Vhdl.Sem_Psl is
 
       --  Check simple subset restrictions.
       PSL.Subsets.Check_Simple (Seq);
-   end Sem_Psl_Cover_Statement;
+   end Sem_Psl_Cover_Directive;
 
    procedure Sem_Psl_Restrict_Directive (Stmt : Iir)
    is
