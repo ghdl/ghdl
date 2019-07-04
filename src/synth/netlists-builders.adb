@@ -362,6 +362,7 @@ package body Netlists.Builders is
                           M_Compare => (others => No_Module),
                           M_Concat => (others => No_Module),
                           M_Truncate | M_Extend => (others => No_Module),
+                          M_Reduce => (others => No_Module),
                           others => No_Module);
 
       Create_Dyadic_Module (Design, Res.M_Dyadic (Id_And), Name_And, Id_And);
@@ -479,6 +480,21 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 0), Op);
       return O;
    end Build_Monadic;
+
+   function Build_Reduce (Ctxt : Context_Acc;
+                          Id : Reduce_Module_Id;
+                          Op : Net) return Net
+   is
+      pragma Assert (Ctxt.M_Reduce (Id) /= No_Module);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Reduce (Id));
+      O := Get_Output (Inst, 0);
+      Set_Width (O, 1);
+      Connect (Get_Input (Inst, 0), Op);
+      return O;
+   end Build_Reduce;
 
    function Build_Compare (Ctxt : Context_Acc;
                            Id : Compare_Module_Id;

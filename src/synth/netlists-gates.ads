@@ -56,6 +56,8 @@ package Netlists.Gates is
    Id_Red_And : constant Module_Id := 26;
    Id_Red_Or  : constant Module_Id := 27;
 
+   subtype Reduce_Module_Id is Module_Id range Id_Red_And .. Id_Red_Or;
+
    Id_Concat2 : constant Module_Id := 28;
    Id_Concat3 : constant Module_Id := 29;
    Id_Concat4 : constant Module_Id := 30;

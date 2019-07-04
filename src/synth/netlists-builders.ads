@@ -42,6 +42,10 @@ package Netlists.Builders is
                            Id : Compare_Module_Id;
                            L, R : Net) return Net;
 
+   function Build_Reduce (Ctxt : Context_Acc;
+                          Id : Reduce_Module_Id;
+                          Op : Net) return Net;
+
    function Build_Const_UB32 (Ctxt : Context_Acc;
                               Val : Uns32;
                               W : Width) return Net;
@@ -133,6 +137,7 @@ private
       M_Iadff : Module;
       M_Truncate : Module_Arr (Truncate_Module_Id);
       M_Extend : Module_Arr (Extend_Module_Id);
+      M_Reduce : Module_Arr (Reduce_Module_Id);
       M_Extract : Module;
       M_Insert : Module;
       M_Dyn_Extract : Module;
