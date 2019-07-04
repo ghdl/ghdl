@@ -384,6 +384,10 @@ package body Synth.Expr is
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
+            if not (Is_Const (L) and Is_Const (R)) then
+               Error_Msg_Synth (+Rng, "limits of range are not constant");
+               return null;
+            end if;
             Res := Create_Value_Range ((Get_Direction (Rng), L.Scal, R.Scal));
          when Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Floating_Subtype_Definition =>
