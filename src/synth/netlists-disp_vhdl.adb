@@ -446,6 +446,23 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Template;
 
+   procedure Disp_Constant_Inline (Inst : Instance)
+   is
+      Imod : constant Module := Get_Module (Inst);
+      O : constant Net := Get_Output (Inst, 0);
+   begin
+      case Get_Id (Imod) is
+         when Id_Const_UB32 =>
+            Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O));
+         when Id_Const_UL32 =>
+            Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
+                             Get_Param_Uns32 (Inst, 1),
+                             Get_Width (O));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Disp_Constant_Inline;
+
    procedure Disp_Instance_Inline (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -508,24 +525,11 @@ package body Netlists.Disp_Vhdl is
                   "  end process;" & NL,
                   Inst, (0 => Iw - 1));
             end;
-         when Id_Const_UB32 =>
-            declare
-               O : constant Net := Get_Output (Inst, 0);
-            begin
-               Disp_Template ("  \o0 <= ", Inst);
-               Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O));
-               Put_Line (";");
-            end;
-         when Id_Const_UL32 =>
-            declare
-               O : constant Net := Get_Output (Inst, 0);
-            begin
-               Disp_Template ("  \o0 <= ", Inst);
-               Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
-                                Get_Param_Uns32 (Inst, 1),
-                                Get_Width (O));
-               Put_Line (";");
-            end;
+         when Id_Const_UB32
+           | Id_Const_UL32 =>
+            Disp_Template ("  \o0 <= ", Inst);
+            Disp_Constant_Inline (Inst);
+            Put_Line (";");
          when Id_Adff =>
             Disp_Template ("  process (\i0, \i2)" & NL &
                            "  begin" & NL &
@@ -535,7 +539,8 @@ package body Netlists.Disp_Vhdl is
                            "      \o0 <= \i1;" & NL &
                            "    end if;" & NL &
                            "  end process;" & NL, Inst);
-         when Id_Dff =>
+         when Id_Dff
+           | Id_Idff =>
             Disp_Template ("  process (\i0)" & NL &
                            "  begin" & NL &
                            "    if rising_edge (\i0) then" & NL &
@@ -649,6 +654,14 @@ package body Netlists.Disp_Vhdl is
                Disp_Net_Name (N);
                Put (" : ");
                Put_Type (Get_Width (N));
+               case Get_Id (Inst) is
+                  when Id_Idff =>
+                     Put (" := ");
+                     Disp_Constant_Inline
+                       (Get_Parent (Get_Input_Net (Inst, 2)));
+                  when others =>
+                     null;
+               end case;
                Put_Line (";");
             end loop;
          end if;
