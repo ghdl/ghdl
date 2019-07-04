@@ -1540,7 +1540,8 @@ package body Synth.Expr is
                   raise Internal_Error;
                end if;
             end;
-         when Iir_Kind_Simple_Name =>
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Interface_Signal_Declaration =>  -- For PSL...
             return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Indexed_Name =>
             return Synth_Indexed_Name (Syn_Inst, Expr);

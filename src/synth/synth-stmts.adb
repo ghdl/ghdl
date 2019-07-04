@@ -25,10 +25,16 @@ with Grt.Algos;
 with Areapools;
 with Vhdl.Errors; use Vhdl.Errors;
 
+with Vhdl.Types;
 with Vhdl.Sem_Expr;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Evaluation;
+
+with PSL.Types;
+with PSL.Nodes;
+with PSL.NFAs;
+with PSL.Errors;
 
 with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
@@ -41,6 +47,7 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Gates;
 
 package body Synth.Stmts is
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
@@ -1068,6 +1075,106 @@ package body Synth.Stmts is
       Build_Assert (Build_Context, Get_Net (Val, Get_Type (Cond)));
    end Synth_Concurrent_Assertion_Statement;
 
+   function Synth_PSL_Expression
+     (Syn_Inst : Synth_Instance_Acc; Expr : PSL.Types.PSL_Node) return Net
+   is
+      use PSL.Nodes;
+   begin
+      case Get_Kind (Expr) is
+         when N_HDL_Expr =>
+            declare
+               E : constant Vhdl.Types.Vhdl_Node := Get_HDL_Node (Expr);
+            begin
+               return Get_Net (Synth_Expression (Syn_Inst, E), Get_Type (E));
+            end;
+         when N_Not_Bool =>
+            return Build_Monadic
+              (Build_Context, Netlists.Gates.Id_Not,
+               Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr)));
+         when others =>
+            PSL.Errors.Error_Kind ("translate_psl_expr", Expr);
+      end case;
+   end Synth_PSL_Expression;
+
+   function Synth_Psl_NFA (Syn_Inst : Synth_Instance_Acc;
+                           NFA : PSL.Types.PSL_NFA;
+                           Nbr_States : Int32;
+                           States : Net) return Net
+   is
+      use PSL.NFAs;
+      S : NFA_State;
+      S_Num : Int32;
+      D_Num : Int32;
+      I : Net;
+      Cond : Net;
+      E : NFA_Edge;
+      D_Arr : Net_Array_Acc;
+      Res : Net;
+   begin
+      D_Arr := new Net_Array'(0 .. Nbr_States - 1 => No_Net);
+      S := Get_First_State (NFA);
+      while S /= No_State loop
+         S_Num := Get_State_Label (S);
+         I := Build_Extract_Bit (Build_Context, States, Uns32 (S_Num));
+
+         E := Get_First_Src_Edge (S);
+         while E /= No_Edge loop
+            Cond := Build_Dyadic
+              (Build_Context, Netlists.Gates.Id_And,
+               I, Synth_PSL_Expression (Syn_Inst, Get_Edge_Expr (E)));
+
+            D_Num := Nbr_States - 1 - Get_State_Label (Get_Edge_Dest (E));
+            if D_Arr (D_Num) = No_Net then
+               D_Arr (D_Num) := Cond;
+            else
+               D_Arr (D_Num) := Build_Dyadic
+                 (Build_Context, Netlists.Gates.Id_Or, D_Arr (D_Num), Cond);
+            end if;
+
+            E := Get_Next_Src_Edge (E);
+         end loop;
+
+         S := Get_Next_State (S);
+      end loop;
+
+      if D_Arr (Nbr_States - 1) = No_Net then
+         D_Arr (Nbr_States - 1) := Build_Const_UB32 (Build_Context, 0, 1);
+      end if;
+
+      Res := Concat_Array (D_Arr);
+      Free_Net_Array (D_Arr);
+
+      return Res;
+   end Synth_Psl_NFA;
+
+   procedure Synth_Psl_Restrict_Directive
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
+      Init : Net;
+      Clk : Net;
+      States : Net;
+      Res : Net;
+   begin
+      --  create init net, clock net
+      pragma Assert (Nbr_States <= 32);
+      Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
+      Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
+
+      --  build idff
+      States := Build_Idff (Build_Context, Clk, No_Net, Init);
+
+      --  create update nets
+      --  For each state: if set, evaluate all outgoing edges.
+      Res := Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
+      Connect (Get_Input (Get_Parent (States), 1), Res);
+
+      --  build assume gate
+      Build_Assume (Build_Context,
+                    Build_Reduce (Build_Context,
+                                  Netlists.Gates.Id_Red_Or, States));
+   end Synth_Psl_Restrict_Directive;
+
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
@@ -1109,6 +1216,8 @@ package body Synth.Stmts is
                null;
             when Iir_Kind_Psl_Default_Clock =>
                null;
+            when Iir_Kind_Psl_Restrict_Directive =>
+               Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
             when others =>
                Error_Kind ("synth_statements", Stmt);
          end case;
