@@ -780,9 +780,9 @@ package body Netlists.Builders is
                         D : Net;
                         Init : Net) return Net
    is
-      Wd : constant Width := Get_Width (D);
+      Wd : constant Width := Get_Width (Init);
       pragma Assert (Wd /= No_Width);
-      pragma Assert (Get_Width (Init) = Wd);
+      pragma Assert (D = No_Net or else Get_Width (D) = Wd);
       pragma Assert (Get_Width (Clk) = 1);
       Inst : Instance;
       O : Net;
@@ -791,7 +791,9 @@ package body Netlists.Builders is
       O := Get_Output (Inst, 0);
       Set_Width (O, Wd);
       Connect (Get_Input (Inst, 0), Clk);
-      Connect (Get_Input (Inst, 1), D);
+      if D /= No_Net then
+         Connect (Get_Input (Inst, 1), D);
+      end if;
       Connect (Get_Input (Inst, 2), Init);
       return O;
    end Build_Idff;

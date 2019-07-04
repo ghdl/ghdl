@@ -101,6 +101,7 @@ package Netlists.Builders is
                        Clk : Net;
                        D : Net) return Net;
    --  A flip-flop with an initial value (only for fpga)
+   --  The width is derived from INIT and D can be No_Net.
    function Build_Idff (Ctxt : Context_Acc;
                         Clk : Net;
                         D : Net;
