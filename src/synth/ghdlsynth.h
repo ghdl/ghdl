@@ -19,8 +19,9 @@
 
 namespace GhdlSynth {
   //  Use struct wrappers for type safety.
+  //  Convention: W for wrapped, D for direct, B for boolean.
 #define GHDLSYNTH_ADA_PREFIX(N) netlists__##N
-#define GHDLSYNTH_ADA_WRAPPER_WD(NAME, RESTYPE, ARGTYPE) \
+#define GHDLSYNTH_ADA_WRAPPER_WW(NAME, RESTYPE, ARGTYPE) \
   extern "C" unsigned int GHDLSYNTH_ADA_PREFIX(NAME) (unsigned int); \
   inline RESTYPE NAME(ARGTYPE arg) { \
     RESTYPE res; \
@@ -67,8 +68,8 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_DW(get_sname_kind, Sname_Kind, Sname);
   inline bool is_valid(Sname l) { return l.id != 0; }
 
-  GHDLSYNTH_ADA_WRAPPER_WD(get_sname_prefix, Sname, Sname);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_sname_suffix, Name_Id, Sname);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_sname_prefix, Sname, Sname);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_sname_suffix, Name_Id, Sname);
 
   GHDLSYNTH_ADA_WRAPPER_DW(get_sname_version, unsigned int, Sname);
 
@@ -80,9 +81,9 @@ namespace GhdlSynth {
 
   struct Module { unsigned int id; };
   inline bool is_valid(Module m) { return m.id != 0; }
-  GHDLSYNTH_ADA_WRAPPER_WD(get_module_name, Sname, Module);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_first_sub_module, Module, Module);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_next_sub_module, Module, Module);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_module_name, Sname, Module);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_first_sub_module, Module, Module);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_next_sub_module, Module, Module);
   GHDLSYNTH_ADA_WRAPPER_DW(get_id, Module_Id, Module);
   GHDLSYNTH_ADA_WRAPPER_DW(get_nbr_outputs, unsigned int, Module);
   GHDLSYNTH_ADA_WRAPPER_DW(get_nbr_inputs, unsigned int, Module);
@@ -92,18 +93,18 @@ namespace GhdlSynth {
 
   struct Instance { unsigned int id; };
   inline bool is_valid(Instance inst) { return inst.id != 0; }
-  GHDLSYNTH_ADA_WRAPPER_WD(get_self_instance, Instance, Module);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_first_instance, Instance, Module);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_next_instance, Instance, Instance);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_instance_name, Sname, Instance);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_module, Module, Instance);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_net_parent, Instance, Net);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_self_instance, Instance, Module);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_first_instance, Instance, Module);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_next_instance, Instance, Instance);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_instance_name, Sname, Instance);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_module, Module, Instance);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_net_parent, Instance, Net);
   GHDLSYNTH_ADA_WRAPPER_DWD(get_param_uns32, unsigned int, Instance, Port_Idx);
 
   struct Input { unsigned int id; };
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input, Input, Instance, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_WWD(get_output, Net, Instance, Port_Idx);
-  GHDLSYNTH_ADA_WRAPPER_WD(get_driver, Net, Input);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_driver, Net, Input);
 
   //  Utils
 #undef GHDLSYNTH_ADA_PREFIX
@@ -112,6 +113,8 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input_name, Sname, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_WWD(get_output_name, Sname, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_BW(has_one_connection, Net);
+
+  GHDLSYNTH_ADA_WRAPPER_WWD(get_input_net, Net, Instance, Port_Idx);
 
   extern "C" unsigned int libghdlsynth__synth(int argc, const char **argv);
   inline Module ghdl_synth(int argc, const char **argv) {
