@@ -52,6 +52,9 @@ package body Libghdlsynth is
    exception
       when Option_Error =>
          return No_Module;
+      when others =>
+         --  Avoid possible issues with exceptions...
+         return No_Module;
    end Synth;
 
    Gnat_Version : constant String := "unknown compiler version" & ASCII.NUL;
