@@ -436,15 +436,21 @@ package body Netlists.Builders is
       Ctxt.Parent := Parent;
    end Set_Parent;
 
-   function New_Internal_Instance (Ctxt : Context_Acc; M : Module)
-                                  return Instance
+   function New_Internal_Name (Ctxt : Context_Acc) return Sname
    is
-      pragma Assert (M /= No_Module);
       Name : Sname;
    begin
       Name := New_Sname_Version (Get_Name (Ctxt.Parent), Ctxt.Num);
       Ctxt.Num := Ctxt.Num + 1;
-      return New_Instance (Ctxt.Parent, M, Name);
+      return Name;
+   end New_Internal_Name;
+
+   function New_Internal_Instance (Ctxt : Context_Acc; M : Module)
+                                  return Instance
+   is
+      pragma Assert (M /= No_Module);
+   begin
+      return New_Instance (Ctxt.Parent, M, New_Internal_Name (Ctxt));
    end New_Internal_Instance;
 
    function Build_Dyadic (Ctxt : Context_Acc;
