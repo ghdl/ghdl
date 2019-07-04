@@ -33,6 +33,7 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 package body Synth.Decls is
    procedure Synth_Anonymous_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node);
+   pragma Unreferenced (Synth_Anonymous_Subtype_Indication);
 
    procedure Create_Var_Wire
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Init : Value_Acc)
@@ -113,8 +114,6 @@ package body Synth.Decls is
             --  The elaboration of an index constraint consists of the
             --  declaration of each of the discrete ranges in the index
             --  constraint in some order that is not defined by the language.
-            Synth_Anonymous_Subtype_Indication
-              (Syn_Inst, Get_Element_Subtype (Atype));
             declare
                St_Indexes : constant Iir_Flist :=
                  Get_Index_Subtype_List (Atype);
@@ -134,7 +133,8 @@ package body Synth.Decls is
             end;
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
-           | Iir_Kind_Physical_Subtype_Definition =>
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
             declare
                Val : Value_Acc;
             begin
@@ -142,8 +142,6 @@ package body Synth.Decls is
                  (Syn_Inst, Get_Range_Constraint (Atype));
                Create_Object (Syn_Inst, Atype, Unshare (Val, Instance_Pool));
             end;
-         when Iir_Kind_Enumeration_Subtype_Definition =>
-            null;
          when others =>
             Error_Kind ("synth_subtype_indication", Atype);
       end case;
@@ -304,6 +302,9 @@ package body Synth.Decls is
                end if;
                Create_Var_Wire (Syn_Inst, Decl, Init);
             end;
+         when Iir_Kind_Anonymous_Signal_Declaration =>
+            Make_Object (Syn_Inst, Wire_Signal, Decl);
+            Create_Var_Wire (Syn_Inst, Decl, null);
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Declaration =>
             --  TODO: elaborate interfaces

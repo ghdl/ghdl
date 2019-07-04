@@ -114,7 +114,8 @@ package body Synth.Stmts is
             Synth_Assignment (Syn_Inst, Get_Named_Entity (Target), Val);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Signal_Declaration =>
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration =>
             Synth_Assign (Get_Value (Syn_Inst, Target),
                           Val, Get_Type (Target));
          when Iir_Kind_Aggregate =>

@@ -29,24 +29,35 @@ with Synth.Expr;
 with Vhdl.Annotations; use Vhdl.Annotations;
 
 package body Synth.Types is
-   function Is_Bit_Type (Atype : Iir) return Boolean is
+   function Is_Bit_Type (Atype : Node) return Boolean
+   is
+      Btype : Node;
    begin
-      return Atype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
+      if Atype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
         or else Atype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
         or else Atype = Vhdl.Std_Package.Boolean_Type_Definition
-        or else Atype = Vhdl.Std_Package.Bit_Type_Definition;
+        or else Atype = Vhdl.Std_Package.Bit_Type_Definition
+      then
+         return True;
+      end if;
+      Btype := Get_Base_Type (Atype);
+      if Btype = Atype then
+         return False;
+      else
+         return Is_Bit_Type (Btype);
+      end if;
    end Is_Bit_Type;
 
-   function Is_Vector_Type (Atype : Iir) return Boolean is
+   function Is_Vector_Type (Atype : Node) return Boolean is
    begin
       return Is_Bit_Type (Get_Element_Subtype (Atype))
         and then Get_Nbr_Dimensions (Atype) = 1;
    end Is_Vector_Type;
 
-   function Get_Width (Syn_Inst : Synth_Instance_Acc; Atype : Iir)
+   function Get_Width (Syn_Inst : Synth_Instance_Acc; Atype : Node)
                       return Width
    is
-      Btype : constant Iir := Get_Base_Type (Atype);
+      Btype : constant Node := Get_Base_Type (Atype);
    begin
       case Get_Kind (Atype) is
          when Iir_Kind_Enumeration_Type_Definition =>

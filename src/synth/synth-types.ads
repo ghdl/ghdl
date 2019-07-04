@@ -24,10 +24,10 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Types is
    --  All known enumeration type that are translated to a single bit.
-   function Is_Bit_Type (Atype : Iir) return Boolean;
+   function Is_Bit_Type (Atype : Node) return Boolean;
 
-   function Is_Vector_Type (Atype : Iir) return Boolean;
+   function Is_Vector_Type (Atype : Node) return Boolean;
 
-   function Get_Width (Syn_Inst : Synth_Instance_Acc; Atype : Iir)
+   function Get_Width (Syn_Inst : Synth_Instance_Acc; Atype : Node)
                       return Width;
 end Synth.Types;

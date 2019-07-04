@@ -312,6 +312,8 @@ package body Vhdl.Annotations is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
+            Annotate_Anonymous_Type_Definition
+              (Block_Info, Get_Base_Type (Def));
             El := Get_Range_Constraint (Def);
             if El /= Null_Iir then
                case Get_Kind (El) is
@@ -336,8 +338,6 @@ package body Vhdl.Annotations is
             if Flag_Synthesis then
                Create_Object_Info (Block_Info, Def);
             end if;
-            Annotate_Anonymous_Type_Definition
-              (Block_Info, Get_Base_Type (Def));
 
          when Iir_Kind_Integer_Type_Definition =>
             Set_Info (Def, new Sim_Info_Type'(Kind => Kind_I64_Type,
