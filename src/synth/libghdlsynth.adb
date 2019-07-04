@@ -20,6 +20,7 @@
 
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
+with Ghdlmain; use Ghdlmain;
 with Ghdlsynth;
 with Options; use Options;
 with Errorout.Console;
@@ -29,6 +30,8 @@ package body Libghdlsynth is
    is
       Args : Argument_List (1 .. Argc);
       Res : Module;
+      Cmd : Command_Acc;
+      First_Arg : Natural;
    begin
       --  Create arguments list.
       for I in 0 .. Argc - 1 loop
@@ -39,8 +42,11 @@ package body Libghdlsynth is
          end;
       end loop;
 
+      --  Find the command.  This is a little bit convoluted...
+      Decode_Command_Options ("--synth", Cmd, Args, First_Arg);
+
       --  Do the real work!
-      Res := Ghdlsynth.Ghdl_Synth (Args);
+      Res := Ghdlsynth.Ghdl_Synth (Args (First_Arg .. Args'Last));
 
       return Res;
    exception
@@ -51,6 +57,7 @@ package body Libghdlsynth is
    Gnat_Version : constant String := "unknown compiler version" & ASCII.NUL;
    pragma Export (C, Gnat_Version, "__gnat_version");
 begin
+   Ghdlsynth.Register_Commands;
    Options.Initialize;
    Errorout.Console.Install_Handler;
 end Libghdlsynth;

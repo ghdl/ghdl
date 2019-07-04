@@ -269,14 +269,86 @@ package body Ghdlmain is
       return 0;
    end Index;
 
+   --  Decode command CMD_NAME and options from ARGS.
+   --  Return the index of the first non-option argument.
+   procedure Decode_Command_Options (Cmd_Name : String;
+                                     Cmd : out Command_Acc;
+                                     Args : Argument_List;
+                                     First_Arg : out Natural)
+   is
+      Arg_Index : Natural;
+   begin
+      --  Decode command.
+      Cmd := Find_Command (Cmd_Name);
+      if Cmd = null then
+         Error ("unknown command '" & Cmd_Name & "', try --help");
+         raise Option_Error;
+      end if;
+
+      Init (Cmd.all);
+
+      --  Decode options.
+
+      First_Arg := 0;
+      Arg_Index := Args'First;
+      while Arg_Index <= Args'Last loop
+         declare
+            Arg : constant String_Access := Args (Arg_Index);
+            Res : Option_State;
+         begin
+            if Arg (1) = '-' then
+               --  Argument is an option.
+
+               if First_Arg > 0 then
+                  Error ("options after file");
+                  raise Option_Error;
+               end if;
+
+               Decode_Option (Cmd.all, Arg.all, "", Res);
+               case Res is
+                  when Option_Unknown =>
+                     Error ("unknown option '" & Arg.all & "' for command '"
+                            & Cmd_Name & "'");
+                     raise Option_Error;
+                  when Option_Err =>
+                     raise Option_Error;
+                  when Option_Ok =>
+                     Arg_Index := Arg_Index + 1;
+                  when Option_Arg_Req =>
+                     if Arg_Index + 1 > Args'Last then
+                        Error
+                          ("option '" & Arg.all & "' requires an argument");
+                        raise Option_Error;
+                     end if;
+                     Decode_Option
+                       (Cmd.all, Arg.all, Args (Arg_Index + 1).all, Res);
+                     if Res /= Option_Arg then
+                        raise Program_Error;
+                     end if;
+                     Arg_Index := Arg_Index + 2;
+                  when Option_Arg =>
+                     raise Program_Error;
+                  when Option_End =>
+                     First_Arg := Arg_Index;
+                     exit;
+               end case;
+            else
+               First_Arg := Arg_Index;
+               exit;
+            end if;
+         end;
+      end loop;
+
+      if First_Arg = 0 then
+         First_Arg := Args'Last + 1;
+      end if;
+   end Decode_Command_Options;
+
    procedure Main
    is
       use Ada.Command_Line;
-      Cmd : Command_Acc;
-      Cmd_Name : String_Access;
       Args : String_List_Access;
       Arg_Index : Natural;
-      First_Arg : Natural;
    begin
       --  Set program name for error message.
       Errorout.Console.Set_Program_Name (Command_Name);
@@ -334,85 +406,27 @@ package body Ghdlmain is
          end if;
       end loop;
 
-      --  Decode command.
-
-      Cmd_Name := Args (1);
-      Cmd := Find_Command (Cmd_Name.all);
-      if Cmd = null then
-         Error ("unknown command '" & Cmd_Name.all & "', try --help");
-         raise Option_Error;
-      end if;
-
-      Init (Cmd.all);
-
-      --  Decode options.
-
-      First_Arg := 0;
-      Arg_Index := 2;
-      while Arg_Index <= Args'Last loop
-         declare
-            Arg : constant String_Access := Args (Arg_Index);
-            Res : Option_State;
-         begin
-            if Arg (1) = '-' then
-               --  Argument is an option.
-
-               if First_Arg > 0 then
-                  Error ("options after file");
-                  raise Option_Error;
-               end if;
-
-               Decode_Option (Cmd.all, Arg.all, "", Res);
-               case Res is
-                  when Option_Unknown =>
-                     Error ("unknown option '" & Arg.all & "' for command '"
-                            & Cmd_Name.all & "'");
-                     raise Option_Error;
-                  when Option_Err =>
-                     raise Option_Error;
-                  when Option_Ok =>
-                     Arg_Index := Arg_Index + 1;
-                  when Option_Arg_Req =>
-                     if Arg_Index + 1 > Argument_Count then
-                        Error
-                          ("option '" & Arg.all & "' requires an argument");
-                        raise Option_Error;
-                     end if;
-                     Decode_Option
-                       (Cmd.all, Arg.all, Args (Arg_Index + 1).all, Res);
-                     if Res /= Option_Arg then
-                        raise Program_Error;
-                     end if;
-                     Arg_Index := Arg_Index + 2;
-                  when Option_Arg =>
-                     raise Program_Error;
-                  when Option_End =>
-                     First_Arg := Arg_Index;
-                     exit;
-               end case;
-            else
-               First_Arg := Arg_Index;
-               exit;
-            end if;
-         end;
-      end loop;
-
-      if First_Arg = 0 then
-         First_Arg := Argument_Count + 1;
-      end if;
-
-      --  Set before running the action, so that it can be changed.
-      Set_Exit_Status (Success);
-
       declare
-         Cmd_Args : Argument_List (1 .. Args'Last - First_Arg + 1);
+         Cmd : Command_Acc;
+         First_Arg : Natural;
       begin
-         for I in Cmd_Args'Range loop
-            Cmd_Args (I) := Args (First_Arg + I - 1);
-         end loop;
-         Perform_Action (Cmd.all, Cmd_Args);
+         Decode_Command_Options (Args (1).all, Cmd,
+                                 Args (2 .. Args'Last), First_Arg);
+
+         --  Set before running the action, so that it can be changed.
+         Set_Exit_Status (Success);
+
+         declare
+            Cmd_Args : Argument_List (1 .. Args'Last - First_Arg + 1);
+         begin
+            for I in Cmd_Args'Range loop
+               Cmd_Args (I) := Args (First_Arg + I - 1);
+            end loop;
+            Perform_Action (Cmd.all, Cmd_Args);
+         end;
       end;
 
+      --  Free args.
       for I in Args'Range loop
          Free (Args (I));
       end loop;
