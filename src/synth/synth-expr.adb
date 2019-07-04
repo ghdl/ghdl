@@ -19,7 +19,6 @@
 --  MA 02110-1301, USA.
 
 with Ada.Unchecked_Conversion;
-with Ada.Unchecked_Deallocation;
 with Types_Utils; use Types_Utils;
 with Std_Names;
 with Str_Table;
@@ -277,21 +276,57 @@ package body Synth.Expr is
       end loop;
    end Fill_Array_Aggregate;
 
-   type Net_Array is array (Iir_Index32 range <>) of Net;
-   type Net_Array_Acc is access Net_Array;
-   procedure Free_Net_Array is new Ada.Unchecked_Deallocation
-     (Net_Array, Net_Array_Acc);
+   procedure Concat_Array (Arr : in out Net_Array)
+   is
+      Last : Int32;
+      Idx, New_Idx : Int32;
+   begin
+      Last := Arr'Last;
+      while Last > Arr'First loop
+         Idx := Arr'First;
+         New_Idx := Arr'First - 1;
+         while Idx <= Last loop
+            --  Gather at most 4 nets.
+            New_Idx := New_Idx + 1;
+
+            if Idx = Last then
+               Arr (New_Idx) := Arr (Idx);
+               Idx := Idx + 1;
+            elsif Idx + 1 = Last then
+               Arr (New_Idx) := Build_Concat2
+                 (Build_Context, Arr (Idx), Arr (Idx + 1));
+               Idx := Idx + 2;
+            elsif Idx + 2 = Last then
+               Arr (New_Idx) := Build_Concat3
+                 (Build_Context, Arr (Idx), Arr (Idx + 1), Arr (Idx + 2));
+               Idx := Idx + 3;
+            else
+               Arr (New_Idx) := Build_Concat4
+                 (Build_Context,
+                  Arr (Idx), Arr (Idx + 1), Arr (Idx + 2), Arr (Idx + 3));
+               Idx := Idx + 4;
+            end if;
+         end loop;
+         Last := New_Idx;
+      end loop;
+   end Concat_Array;
+
+   function Concat_Array (Arr : Net_Array_Acc) return Net is
+   begin
+      Concat_Array (Arr.all);
+      return Arr (Arr'First);
+   end Concat_Array;
 
    --  Convert the one-dimension VAL to a net by concatenating.
    function Vectorize_Array (Val : Value_Acc; Etype : Node) return Value_Acc
    is
       Arr : Net_Array_Acc;
-      Len : Iir_Index32;
-      Idx, New_Idx : Iir_Index32;
+      Len : Int32;
+      Idx : Iir_Index32;
       Res : Value_Acc;
    begin
       --  Dynamically allocate ARR to handle large arrays.
-      Arr := new Net_Array (1 .. Val.Arr.Len);
+      Arr := new Net_Array (1 .. Int32 (Val.Arr.Len));
 
       --  Gather consecutive constant values.
       Idx := 1;
@@ -334,34 +369,7 @@ package body Synth.Expr is
          end;
       end loop;
 
-      while Len > 1 loop
-         Idx := 1;
-         New_Idx := 0;
-         while Idx <= Len loop
-            --  Gather at most 4 nets.
-            New_Idx := New_Idx + 1;
-
-            if Idx = Len then
-               Arr (New_Idx) := Arr (Idx);
-               Idx := Idx + 1;
-            elsif Idx + 1 = Len then
-               Arr (New_Idx) := Build_Concat2
-                 (Build_Context, Arr (Idx), Arr (Idx + 1));
-               Idx := Idx + 2;
-            elsif Idx + 2 = Len then
-               Arr (New_Idx) := Build_Concat3
-                 (Build_Context, Arr (Idx), Arr (Idx + 1), Arr (Idx + 2));
-               Idx := Idx + 3;
-            else
-               Arr (New_Idx) := Build_Concat4
-                 (Build_Context,
-                  Arr (Idx), Arr (Idx + 1), Arr (Idx + 2), Arr (Idx + 3));
-               Idx := Idx + 4;
-            end if;
-         end loop;
-         Len := New_Idx;
-      end loop;
-
+      Concat_Array (Arr (1 .. Len));
       Res := Create_Value_Net (Arr (1), Val.Bounds.D (1));
 
       Free_Net_Array (Arr);
