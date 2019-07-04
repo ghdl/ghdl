@@ -607,6 +607,9 @@ package body Netlists.Disp_Vhdl is
             end;
          when Id_Assert =>
             Disp_Template ("  assert \i0 = '1' severity error;" & NL, Inst);
+         when Id_Assume =>
+            Disp_Template
+              ("  assert \i0 = '1' severity warning; --  assume" & NL, Inst);
          when others =>
             Disp_Instance_Gate (Inst);
       end case;

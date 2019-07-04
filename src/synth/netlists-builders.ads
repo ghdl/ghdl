@@ -90,6 +90,7 @@ package Netlists.Builders is
                           return Net;
 
    procedure Build_Assert (Ctxt : Context_Acc; Cond : Net);
+   procedure Build_Assume (Ctxt : Context_Acc; Cond : Net);
 
    --  A simple flip-flop.
    function Build_Dff (Ctxt : Context_Acc;
@@ -137,5 +138,6 @@ private
       M_Dyn_Extract : Module;
       M_Dyn_Insert : Module;
       M_Assert : Module;
+      M_Assume : Module;
    end record;
 end Netlists.Builders;

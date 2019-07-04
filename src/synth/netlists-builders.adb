@@ -333,7 +333,7 @@ package body Netlists.Builders is
                      Outputs);
    end Create_Dff_Modules;
 
-   procedure Create_Assert (Ctxt : Context_Acc)
+   procedure Create_Assert_Assume (Ctxt : Context_Acc)
    is
       Outputs : Port_Desc_Array (1 .. 0);
    begin
@@ -342,7 +342,13 @@ package body Netlists.Builders is
          1, 0, 0);
       Set_Port_Desc (Ctxt.M_Assert, (0 => Create_Input ("cond", 1)),
                      Outputs);
-   end Create_Assert;
+
+      Ctxt.M_Assume := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Name_Assume), Id_Assume,
+         1, 0, 0);
+      Set_Port_Desc (Ctxt.M_Assume, (0 => Create_Input ("cond", 1)),
+                     Outputs);
+   end Create_Assert_Assume;
 
    function Build_Builders (Design : Module) return Context_Acc
    is
@@ -408,13 +414,18 @@ package body Netlists.Builders is
       Create_Monadic_Module (Design, Res.M_Extend (Id_Sextend),
                              Get_Identifier ("sextend"), Id_Sextend);
 
+      Create_Monadic_Module (Design, Res.M_Reduce (Id_Red_Or),
+                             Get_Identifier ("red_or"), Id_Red_Or);
+      Create_Monadic_Module (Design, Res.M_Reduce (Id_Red_And),
+                             Get_Identifier ("red_and"), Id_Red_And);
+
       Create_Edge_Module (Res, Res.M_Edge, Name_Edge);
 
       Create_Mux_Modules (Res);
       Create_Objects_Module (Res);
       Create_Dff_Modules (Res);
 
-      Create_Assert (Res);
+      Create_Assert_Assume (Res);
 
       return Res;
    end Build_Builders;
@@ -863,5 +874,13 @@ package body Netlists.Builders is
       Inst := New_Internal_Instance (Ctxt, Ctxt.M_Assert);
       Connect (Get_Input (Inst, 0), Cond);
    end Build_Assert;
+
+   procedure Build_Assume (Ctxt : Context_Acc; Cond : Net)
+   is
+      Inst : Instance;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Assume);
+      Connect (Get_Input (Inst, 0), Cond);
+   end Build_Assume;
 
 end Netlists.Builders;

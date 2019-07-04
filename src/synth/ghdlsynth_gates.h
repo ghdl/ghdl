@@ -54,6 +54,7 @@ enum Module_Id {
    Id_Dyn_Insert = 49,
    Id_Edge = 50,
    Id_Assert = 51,
+   Id_Assume = 52,
    Id_Const_UB32 = 56,
    Id_Const_SB32 = 57,
    Id_Const_UB64 = 58,
