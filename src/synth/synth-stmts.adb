@@ -1154,7 +1154,7 @@ package body Synth.Stmts is
       Init : Net;
       Clk : Net;
       States : Net;
-      Res : Net;
+      Next_States : Net;
    begin
       --  create init net, clock net
       pragma Assert (Nbr_States <= 32);
@@ -1166,13 +1166,16 @@ package body Synth.Stmts is
 
       --  create update nets
       --  For each state: if set, evaluate all outgoing edges.
-      Res := Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
-      Connect (Get_Input (Get_Parent (States), 1), Res);
+      Next_States :=
+        Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
+      Connect (Get_Input (Get_Parent (States), 1), Next_States);
 
-      --  build assume gate
+      --  Build assume gate.
+      --  Note: for synthesis, we assume the next state will be correct.
+      --  (If we assume on States, then the first cycle is ignored).
       Build_Assume (Build_Context,
                     Build_Reduce (Build_Context,
-                                  Netlists.Gates.Id_Red_Or, States));
+                                  Netlists.Gates.Id_Red_Or, Next_States));
    end Synth_Psl_Restrict_Directive;
 
    procedure Synth_Concurrent_Statements
