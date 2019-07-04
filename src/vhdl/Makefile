@@ -21,7 +21,7 @@
 # regenerate them (and don't need to have python installed).
 
 PNODES=../../python/xtools/pnodes.py
-PNODESPY=../../python/pnodes/pnodespy.py
+PNODESPY=../../python/xtools/pnodespy.py
 
 DEPS=vhdl-nodes.ads vhdl-nodes.adb.in $(PNODES)
 

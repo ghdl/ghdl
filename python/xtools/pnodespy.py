@@ -3,9 +3,6 @@
 """Like pnodes but output for python"""
 
 from __future__ import print_function
-import sys
-sys.path.append("../xtools")
-
 import pnodes
 import re
 
