@@ -27,6 +27,9 @@ package Synth.Stmts is
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node);
 
+   procedure Synth_Sequential_Statements
+     (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
+
    --  Generate netlists for concurrent statements STMTS.
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);

@@ -34,6 +34,7 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 with Synth.Errors; use Synth.Errors;
 with Synth.Types; use Synth.Types;
 with Synth.Stmts;
+with Synth.Decls;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
@@ -1334,20 +1335,33 @@ package body Synth.Expr is
       Val : Value_Acc;
    begin
       Val := Synth_Expression (Syn_Inst, Expr);
-      if Is_Float (Val) then
-         if Get_Kind (Conv_Type) = Iir_Kind_Integer_Subtype_Definition then
-            return Create_Value_Discrete (Int64 (Val.Fp));
-         else
-            Error_Msg_Synth (+Conv, "unhandled type conversion (from float)");
+      case Get_Kind (Conv_Type) is
+         when Iir_Kind_Integer_Subtype_Definition =>
+            if Is_Float (Val) then
+               return Create_Value_Discrete (Int64 (Val.Fp));
+            else
+               Error_Msg_Synth (+Conv, "unhandled type conversion (to int)");
+               return null;
+            end if;
+         when Iir_Kind_Floating_Subtype_Definition =>
+            if Is_Const (Val) then
+               return Create_Value_Float (Fp64 (Val.Scal));
+            else
+               Error_Msg_Synth (+Conv, "unhandled type conversion (to float)");
+               return null;
+            end if;
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            if Is_Vector_Type (Conv_Type) then
+               return Val;
+            else
+               Error_Msg_Synth (+Conv, "unhandled type conversion (to array)");
+               return Val;
+            end if;
+         when others =>
+            Error_Msg_Synth (+Conv, "unhandled type conversion");
             return null;
-         end if;
-      end if;
-      if Is_Vector_Type (Conv_Type) then
-         return Val;
-      else
-         Error_Msg_Synth (+Conv, "unhandled type conversion");
-         return Val;
-      end if;
+      end case;
    end Synth_Type_Conversion;
 
    function Synth_Assoc_In (Syn_Inst : Synth_Instance_Acc;
@@ -1418,6 +1432,38 @@ package body Synth.Expr is
           Len => Uns32 (Len)));
       return Create_Value_Array (Bnds, Arr);
    end Eval_To_Unsigned;
+
+   function Synth_User_Function_Call
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Expr);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Bod : constant Node := Get_Subprogram_Body (Imp);
+      Subprg_Inst : Synth_Instance_Acc;
+      M : Areapools.Mark_Type;
+      Res : Value_Acc;
+   begin
+      Areapools.Mark (M, Instance_Pool.all);
+      Subprg_Inst := Make_Instance (Syn_Inst, Get_Info (Bod));
+
+      Subprg_Inst.Name := New_Internal_Name (Build_Context);
+
+      Stmts.Synth_Subprogram_Association
+        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+
+      Decls.Synth_Declarations (Subprg_Inst, Get_Declaration_Chain (Bod));
+
+      Stmts.Synth_Sequential_Statements
+        (Subprg_Inst, Get_Sequential_Statement_Chain (Bod));
+
+      Res := Subprg_Inst.Return_Value;
+
+      Free_Instance (Subprg_Inst);
+      Areapools.Release (M, Instance_Pool.all);
+
+      return Res;
+   end Synth_User_Function_Call;
 
    function Synth_Predefined_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
@@ -1600,8 +1646,7 @@ package body Synth.Expr is
                elsif Get_Implicit_Definition (Imp) /= Iir_Predefined_None then
                   return Synth_Predefined_Function_Call (Syn_Inst, Expr);
                else
-                  Error_Msg_Synth
-                    (+Expr, "user function call to %i is not handled", +Imp);
+                  return Synth_User_Function_Call (Syn_Inst, Expr);
                end if;
             end;
          when Iir_Kind_Aggregate =>

@@ -48,6 +48,8 @@ package Synth.Context is
 
       Elab_Objects : Object_Slot_Type;
 
+      Return_Value : Value_Acc;
+
       --  Instance for synthesis.
       Objects : Objects_Array (1 .. Max_Objs);
    end record;

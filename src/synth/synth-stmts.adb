@@ -247,9 +247,6 @@ package body Synth.Stmts is
       Synth_Assignment (Syn_Inst, Target, Val);
    end Synth_Variable_Assignment;
 
-   procedure Synth_Sequential_Statements
-     (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
-
    procedure Synth_If_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -937,6 +934,24 @@ package body Synth.Stmts is
       end if;
    end Synth_For_Loop_Statement;
 
+   procedure Synth_Return_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Val : Value_Acc;
+      Expr : constant Node := Get_Expression (Stmt);
+   begin
+      if Expr = Null_Node then
+         --  TODO: return in procedure.
+         raise Internal_Error;
+      end if;
+      Val := Synth_Expression (Syn_Inst, Expr);
+      if Syn_Inst.Return_Value /= null then
+         --  TODO: multiple return
+         raise Internal_Error;
+      end if;
+      Syn_Inst.Return_Value := Val;
+   end Synth_Return_Statement;
+
    procedure Synth_Sequential_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
@@ -958,6 +973,9 @@ package body Synth.Stmts is
             when Iir_Kind_Null_Statement =>
                --  Easy
                null;
+            when Iir_Kind_Return_Statement =>
+               Synth_Return_Statement (Syn_Inst, Stmt);
+               exit;
             when Iir_Kind_Procedure_Call_Statement =>
                Synth_Procedure_Call (Syn_Inst, Stmt);
             when others =>

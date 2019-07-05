@@ -24,6 +24,8 @@ package Netlists.Builders is
    type Context is private;
    type Context_Acc is access Context;
 
+   function New_Internal_Name (Ctxt : Context_Acc) return Sname;
+
    --  Create a builder for Design.  Must be called once.
    function Build_Builders (Design : Module) return Context_Acc;
 
