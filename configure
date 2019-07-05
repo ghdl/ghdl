@@ -45,6 +45,7 @@ enable_werror=true
 enable_checks=true
 enable_openieee=unknown
 enable_libghdl=true
+enable_synth=false
 default_pic=false
 EXEEXT=
 SOEXT=.so
@@ -107,6 +108,8 @@ for opt do
 		--disable-openieee)     enable_openieee=false;;
 		--enable-libghdl)       enable_libghdl=true;;
 		--disable-libghdl)      enable_libghdl=false;;
+                --enable-synth)         enable_synth=true;;
+                --disable-synth)        enable_synth=false;;
 		--default-pic)          default_pic=true;;
 		--enable-coverage)      build_mode="coverage";;
 		-h|-help|--help)        show_help=yes;;
@@ -128,7 +131,7 @@ Options [defaults in brackets]:
 	--with-gcc=DIR              use gcc backend from DIR
 	--with-llvm-config=PATH     use llvm from PATH (needs llvm 3.5 - 3.9)
 	--with-backtrace-lib=LIB.a  link with libbacktrace LIB.a to display a
-															backtrace on errors (only for llvm).
+                                    backtrace on errors (only for llvm).
 	--disable-werror            warnings don't stop build
 	--disable-checks            disable internal checks
 	--disable-libghdl           do not build libghdl shared library
@@ -370,6 +373,16 @@ if test $backend = mcode; then
 		echo "package Elf_Arch renames Elf_Arch${mcode64:-32};"
 	} > elf_arch.ads
 fi
+
+# Generate ghdlsynth_maybe.ads
+echo "Generate ghdlsynth_maybe.ads"
+if [ "$enable_synth" = "true" ]; then
+    pkg_synth=Ghdlsynth
+else
+    pkg_synth=Ghdlnull
+fi
+echo "with $pkg_synth;" > ghdlsynth_maybe.ads
+echo "package Ghdlsynth_Maybe renames $pkg_synth;" >> ghdlsynth_maybe.ads
 
 # Generate default_paths.ads
 # Also update dist/windows/mcode/default_paths.ads if you change this

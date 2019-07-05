@@ -21,7 +21,7 @@ with Ghdlprint;
 with Ghdlxml;
 with Ghdlsimul;
 
-with Ghdlsynth;
+with Ghdlsynth_Maybe;
 
 procedure Ghdl_Simul is
 begin
@@ -29,7 +29,7 @@ begin
    --  used to display help).
    Ghdlmain.Version_String := new String'("interpretation");
    Ghdlsimul.Register_Commands;
-   Ghdlsynth.Register_Commands;
+   Ghdlsynth_Maybe.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
    Ghdlxml.Register_Commands;

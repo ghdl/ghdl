@@ -182,7 +182,7 @@ GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir
 ghdl_mcode$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
             memsegs_c.o chkstk.o version.ads force
-	$(GNATMAKE) -o $@ $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(GNAT_LARGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) -o $@ -gnat12 $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(GNAT_LARGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c $(OPT_FLAGS) -o $@ $<
@@ -219,10 +219,11 @@ all.gcc:
 copy-sources.gcc: version.ads
 	$(RM) -rf $(gcc_vhdl_dir)
 	$(MKDIR) $(gcc_vhdl_dir)
-	$(CP) -p version.ads $(gcc_vhdl_dir)
+	$(CP) -p version.ads ghdlsynth_maybe.ads $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/vhdl/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/vhdl/translate/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/synth/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/psl/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-types.ads $(gcc_vhdl_dir)
