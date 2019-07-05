@@ -827,6 +827,13 @@ package body Synth.Expr is
             else
                return Synth_Vec_Dyadic (Id_Mul);
             end if;
+         when Iir_Predefined_Integer_Div =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete (Left.Scal / Right.Scal);
+            else
+               Error_Msg_Synth (+Expr, "non-constant division not supported");
+               return null;
+            end if;
 
          when others =>
             Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
@@ -887,6 +894,7 @@ package body Synth.Expr is
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration =>
             return Get_Value (Syn_Inst, Name);

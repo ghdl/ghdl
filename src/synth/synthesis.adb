@@ -33,6 +33,7 @@ with Synth.Context; use Synth.Context;
 with Synth.Types; use Synth.Types;
 with Synth.Decls; use Synth.Decls;
 with Synth.Stmts; use Synth.Stmts;
+with Synth.Expr; use Synth.Expr;
 
 with Synth.Environment.Debug;
 pragma Unreferenced (Synth.Environment.Debug);
@@ -148,6 +149,20 @@ package body Synthesis is
       Syn_Inst := Make_Instance (Parent_Inst, Get_Info (Arch));
       Syn_Inst.Block_Scope := Get_Info (Entity);
       Syn_Inst.Name := New_Sname_User (Get_Identifier (Entity));
+
+      --  Compute generics.
+      Inter := Get_Generic_Chain (Entity);
+      while Is_Valid (Inter) loop
+         Synth_Declaration_Type (Syn_Inst, Inter);
+         declare
+            Val : Value_Acc;
+         begin
+            Val := Synth_Expression_With_Type
+              (Syn_Inst, Get_Default_Value (Inter), Get_Type (Inter));
+            Create_Object (Syn_Inst, Inter, Val);
+         end;
+         Inter := Get_Chain (Inter);
+      end loop;
 
       --  Allocate values and count inputs and outputs
       Inter := Get_Port_Chain (Entity);
