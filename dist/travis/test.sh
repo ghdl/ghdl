@@ -18,14 +18,16 @@ for arg in "$@"; do
   case "$arg" in
       "--color"|"-color")   set -- "$@" "-c";;
       "--gpl"|"-gpl")       set -- "$@" "-g";;
+      "--synth"|"-synth")   set -- "$@" "-s";;
     *) set -- "$@" "$arg"
   esac
 done
 # Parse args
-while getopts ":b:p:cg" opt; do
+while getopts ":b:p:cgs" opt; do
   case $opt in
     c) enable_color;;
     g) ISGPL=true;;
+    s) ISSYNTH=true;;
     \?) printf "$ANSI_RED[GHDL - test] Invalid option: -$OPTARG $ANSI_NOCOLOR\n" >&2
 	exit 1 ;;
     :)  printf "$ANSI_RED[GHDL - test] Option -$OPTARG requires an argument. $ANSI_NOCOLOR\n" >&2
@@ -36,7 +38,7 @@ done
 rm -f test_ok
 
 export ENABLECOLOR
-if [ "$GHDL" = "" ]; then
+if [ "x$GHDL" = "x" ]; then
     export GHDL="$prefix/bin/ghdl"
 fi
 cd testsuite
@@ -50,7 +52,7 @@ for d in [0-9]*; do
 	echo "sanity $d: ok"
 	# Don't disp log
     else
-	echo "${ANSI_RED}sanity $d: failed${ANSI_NOCOLOR}"
+	printf "${ANSI_RED}sanity $d: failed${ANSI_NOCOLOR}\n"
 	cat test.log
 	failures="$failures $d"
     fi
@@ -62,7 +64,7 @@ cd ..
 travis_finish "tests.sanity"
 [ "$failures" = "" ] || exit 1
 
-if [ "$ISGPL" != "true" ]; then
+if [ "x$ISGPL" != "xtrue" ]; then
     travis_start "tests.gna" "$ANSI_YELLOW[GHDL - test] gna $ANSI_NOCOLOR"
     cd gna
     dirs=`./testsuite.sh --list-tests`
@@ -72,7 +74,7 @@ if [ "$ISGPL" != "true" ]; then
 	    echo "gna $d: ok"
 	    # Don't disp log
 	else
-	    echo "${ANSI_RED}gna $d: failed${ANSI_NOCOLOR}"
+	    printf "${ANSI_RED}gna $d: failed${ANSI_NOCOLOR}\n"
 	    cat test.log
 	    failures="$failures $d"
 	fi
@@ -88,16 +90,32 @@ fi
 travis_start "tests.vests" "$ANSI_YELLOW[GHDL - test] vests $ANSI_NOCOLOR"
 cd vests
 if ./testsuite.sh > vests.log 2>&1 ; then
-    echo "${ANSI_GREEN}Vests is OK$ANSI_NOCOLOR"
+    printf "${ANSI_GREEN}Vests is OK$ANSI_NOCOLOR\n"
     wc -l vests.log
 else
     cat vests.log
-    echo "${ANSI_RED}Vests failure$ANSI_NOCOLOR"
+    printf "${ANSI_RED}Vests failure$ANSI_NOCOLOR\n"
     failures=vests
 fi
 cd ..
 travis_finish "tests.vests"
 [ "$failures" = "" ] || exit 1
+
+if [ "x$ISSYNTH" = "xtrue" ]; then
+    travis_start "tests.synth" "$ANSI_YELLOW[GHDL - test] synth $ANSI_NOCOLOR"
+    cd synth
+    if ./testsuite.sh > synth.log 2>&1 ; then
+        printf "${ANSI_GREEN}Synth is OK$ANSI_NOCOLOR\n"
+        wc -l synth.log
+    else
+        cat synth.log
+        printf "${ANSI_RED}Synth failure$ANSI_NOCOLOR\n"
+        failures="synth"
+    fi
+    cd ..
+    travis_finish "tests.synth"
+    [ "$failures" = "" ] || exit 1
+fi
 
 $GHDL --version
 cd ..

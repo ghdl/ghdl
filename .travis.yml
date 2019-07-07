@@ -3,15 +3,17 @@ dist: xenial
 services: docker
 language: minimal
 install: skip
-script: "./dist/travis/travis-ci.sh"
+script: ./dist/travis/travis-ci.sh
 
 # For each linux build, a different job/instance (with the constraints
 # above) is executed in parallel in stage 'test'.
 env:
   matrix:
     - IMAGE=stretch+mcode
-    - IMAGE=stretch+mcode+gpl
-#    - IMAGE=buster+mcode
+    - IMAGE=stretch+mcode
+      EXTRA=gpl
+    - IMAGE=buster+mcode
+      EXTRA=synth
 #    - IMAGE=buster+mcode+gpl
     - IMAGE=ubuntu14+mcode
     - IMAGE=ubuntu14+llvm-3.8
