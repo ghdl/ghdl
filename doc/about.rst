@@ -42,7 +42,10 @@ Several third party projects are supported: `VUnit <https://vunit.github.io/>`_,
 
 
 .. HINT::
-   Although synthesis is not supported yet, there is some experimental code. On the one hand, subcommand ``--synth`` is a proof-of-concept to generate a netlist (RTL) with GHDL. For now, it is a dump of an internal structure, so it is not very useful, except for debugging. In the future, it might be an EDIF or VHDL file. On the other hand, `ghdlsynth <https://github.com/tgingold/ghdlsynth-beta>`_ is a complementary repository that allows GHDL to be loaded by `yosys <http://www.clifford.at/yosys/>`_ as a module, which can be used to generate bitstreams for some FPGA devices.
+   Although synthesis is not supported yet, there is some experimental feature to generate RTL netlists (VHDL or EDIF) from synthesisable code. For subcommand ``--synth`` to be available, GHDL must be configured/built with option ``--enable-synth`` (GCC 8.1>= required, due to some new GNAT features which are only available in recent releases). Since this is a proof-of-concept, the output is mostly a dump of an internal structure for now. Therefore, it is not very useful, except for debugging.
+
+   Moreover, `ghdlsynth <https://github.com/tgingold/ghdlsynth-beta>`_ is a complementary repository that lets GHDL to be loaded by `yosys <http://www.clifford.at/yosys/>`_ as a frontend plugin module, in order to generate bitstreams for some FPGA devices.
+
 
 .. _INTRO:WHO:
 

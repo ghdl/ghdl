@@ -1,13 +1,28 @@
-[![Read the Docs](https://img.shields.io/readthedocs/ghdl.svg?longCache=true&style=flat-square&logo=read-the-docs&logoColor=e8ecef)](http://ghdl.readthedocs.io) [![Join the chat at https://gitter.im/ghdl1/Lobby](https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=4db797)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Linux/Mac boxes at Travis-CI](https://img.shields.io/travis/ghdl/ghdl/master.svg?longCache=true&style=flat-square&logo=travis)](https://travis-ci.org/ghdl/ghdl/branches) ![AppVeyor branch](https://img.shields.io/appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=aab2ab&style=flat-square) [![Docker Pulls](https://img.shields.io/docker/pulls/ghdl/ghdl.svg?style=flat-square)](https://github.com/ghdl/docker) [![Commits since latest release](https://img.shields.io/github/commits-since/ghdl/ghdl/latest.svg?longCache=true&style=flat-square)](https://github.com/ghdl/ghdl/releases)
 
-**A new GitHub organization was created (2017-12-20) and the main repo was moved from [github.com/tgingold/ghdl](https://github.com/tgingold/ghdl) to [github.com/ghdl/ghdl](https://github.com/ghdl/ghdl). Old refs will continue working, because permanent redirects are set up. However, we suggest every contributor to update the remote URLs in their local clones. See
+> **2017-12-20: the main repo was moved from [github.com/tgingold/ghdl](https://github.com/tgingold/ghdl) to [github.com/ghdl/ghdl](https://github.com/ghdl/ghdl). Old refs still work, because permanent redirects were set up. However, it is suggested to update the remote URLs in the local clones of every contributor. See
 [Changing a remote's URL](https://help.github.com/articles/changing-a-remote-s-url/).**
 
-# GHDL
+<p align="center">
+  <img src="./logo.png"/>
+</p>
 
-This directory contains the sources of GHDL, the open-source compiler and simulator for [VHDL](https://en.wikipedia.org/wiki/VHDL), a Hardware Description Language ([HDL](https://en.wikipedia.org/wiki/Hardware_description_language)). GHDL is not an interpreter: it allows you to analyse and elaborate sources to generate machine code from your design. Native program execution is the only way for high speed simulation.
+<p align="center">
+  <a title="Read the Docs" href="http://ghdl.readthedocs.io"><img src="https://img.shields.io/readthedocs/ghdl.svg?longCache=true&style=flat-square&logo=read-the-docs&logoColor=e8ecef"></a><!--
+  -->
+  <a title="Join the chat at https://gitter.im/ghdl1/Lobby" href="https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef"></a><!--
+  -->
+  <a title="Linux/Mac boxes at Travis-CI" href="https://travis-ci.org/ghdl/ghdl/branches"><img src="https://img.shields.io/travis/ghdl/ghdl/master.svg?longCache=true&style=flat-square&logo=travis-ci&logoColor=e8ecef"></a><!--
+  -->
+  <a title="AppVeyor branch" href="https://ci.appveyor.com/project/tgingold/ghdl-psgys/history"><img src="https://img.shields.io/appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=e8ecef&style=flat-square"></a><!--
+  -->
+  <a title="Docker Images" href="https://github.com/ghdl/docker"><img src="https://img.shields.io/docker/pulls/ghdl/ghdl.svg?logo=docker&logoColor=e8ecef&style=flat-square&label=docker"></a><!--
+  -->
+  <a title="Releases" href="https://github.com/ghdl/ghdl/releases"><img src="https://img.shields.io/github/commits-since/ghdl/ghdl/latest.svg?longCache=true&style=flat-square"></a>
+</p>
 
-## Main features
+This directory contains the sources of GHDL, the open-source analyzer, compiler and simulator for [VHDL](https://en.wikipedia.org/wiki/VHDL), a Hardware Description Language ([HDL](https://en.wikipedia.org/wiki/Hardware_description_language)). GHDL is not an interpreter: it allows you to analyse and elaborate sources to generate machine code from your design. Native program execution is the only way for high speed simulation.
+
+# Main features
 
 Full support for the [1987](http://ieeexplore.ieee.org/document/26487/), [1993](http://ieeexplore.ieee.org/document/392561/), [2002](http://ieeexplore.ieee.org/document/1003477/) versions of the [IEEE](www.ieee.org) [1076](http://standards.ieee.org/develop/wg/P1076.html) VHDL standard, and partial for the latest [2008](http://ieeexplore.ieee.org/document/4772740/) revision.
 
@@ -15,7 +30,7 @@ Partial support of [PSL](https://en.wikipedia.org/wiki/Property_Specification_La
 
 By using a code generator ([LLVM](http://llvm.org/), [GCC](http://gcc.gnu.org/) or, [x86_64](https://en.wikipedia.org/wiki/X86-64)/[i386](https://en.wikipedia.org/wiki/Intel_80386) only, a built-in one), it is much faster than any interpreted simulator. It can handle very large designs, such as [leon3/grlib](http://www.gaisler.com/index.php/downloads/leongrlib).
 
-GHDL runs on [GNU/Linux](http://en.wikipedia.org/wiki/Linux_distribution), [Windows](http://en.wikipedia.org/wiki/Microsoft_Windows) and [macOS](http://en.wikipedia.org/wiki/MacOS), both on `x86` and on `x86_64`. You can freely download a binary distribution for your OS, use [GHDL Docker images](https://github.com/ghdl/docker), or try to build it on your own machine (see *'Getting GHDL'* below).
+GHDL runs on [GNU/Linux](http://en.wikipedia.org/wiki/Linux_distribution), [Windows](http://en.wikipedia.org/wiki/Microsoft_Windows) and [macOS](http://en.wikipedia.org/wiki/MacOS); on `x86`, `x86_64`, `armv6/armv7/aarch32` and `aarch64`. You can freely [download](https://github.com/ghdl/ghdl/releases) a binary distribution for your OS, use [GHDL Docker images](https://github.com/ghdl/docker), or try to build it on your own machine (see *'Getting GHDL'* below).
 
 Can write waveforms to a [GHW](http://ghdl.readthedocs.io/en/latest/using/Simulation.html?highlight=GHW#cmdoption-wave), [VCD](https://en.wikipedia.org/wiki/Value_change_dump) or FST file. Combined with a [GUI](http://en.wikipedia.org/wiki/Graphical_user_interface)-based [waveform viewer](https://en.wikipedia.org/wiki/Waveform_viewer) and a good text editor, GHDL is a very powerful tool for writing, testing and simulating your code.
 
@@ -24,20 +39,20 @@ Supported third party projects: [VUnit](https://vunit.github.io), [UVVM](https:/
 GHDL is free software:
 
 - [![GNU General Public License 2](https://img.shields.io/badge/code%20license-GPLv2-bd0000.svg?longCache=true&style=flat-square&label=license&logo=gnu)](https://github.com/ghdl/ghdl/blob/master/COPYING.md)
-- [![Creative Commons Attribution-ShareAlike](https://img.shields.io/badge/doc%20license-Creative%20Commons%20Attribution--ShareAlike--4.0-aab2ab.svg?longCache=true&style=flat-square)](https://github.com/ghdl/ghdl/blob/master/doc/COPYING_DOC.md) available at [ghdl.readthedocs.io](https://ghdl.readthedocs.io)
+- [![Creative Commons Attribution-ShareAlike](https://img.shields.io/badge/doc%20license-Creative%20Commons%20Attribution--ShareAlike--4.0-aab2ab.svg?longCache=true&style=flat-square)](https://github.com/ghdl/ghdl/blob/master/doc/COPYING_DOC.md) available at [ghdl.readthedocs.io](https://ghdl.readthedocs.io).
 - Some of the runtime libraries, are under different terms; see the individual source files for details.
 
-## Getting GHDL
+# Getting GHDL
 
-### Pre-built releases
+## Pre-built releases
 
 Periodically (not regularly), several binary distributions are made available through the [releases](https://github.com/ghdl/ghdl/releases) tab. You may use [GHDL Docker images](https://github.com/ghdl/docker) in case your didn't find a suitable release, or build GHDL yourself!
 
-### Building GHDL
+## Building GHDL
 
-In order to follow the traditional way to `configure` and `make`, you need the GNU Ada compiler, GNAT GPL, 2014 (or later) for x86 (32 or 64 bits). GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/). Then, untar and run the *doinstall* script.
+In order to follow the traditional way to `configure` and `make`, you need the GNU Ada compiler, GNAT GPL (2014, or later; for x86, 32 or 64 bits). GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/). Then, untar and run the *doinstall* script.
 
-*Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)' for specific package names.*
+> Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)' for specific package names.
 
 In the GHDL base directory, configure and build:
 ```sh
@@ -45,7 +60,7 @@ $ ./configure --prefix=/usr/local
 $ make
 ```
 
-At that place, you can already use the 'ghdl_mcode' built in the directory. You can also install GHDL:
+At that place, you can already use the `ghdl_mcode` built in the directory. You can also install GHDL:
 
 ```sh
 $ make install
@@ -53,11 +68,11 @@ $ make install
 
 That's all!
 
-*The executable is installed as 'ghdl' in `/usr/local`. To install it to a different path, change the `--prefix` in the call to `configure`. For example, on Windows, you may want to set it to `--prefix=/c/Program Files (x86)/GHDL`.*
+> The executable is installed as 'ghdl' in `/usr/local`. To install it to a different path, change the `--prefix` in the call to `configure`. For example, on Windows, you may want to set it to `--prefix=/c/Program Files (x86)/GHDL`.
 
 ---
 
-Furthermore, each supported compiler has its pros and cons. Here is a short comparaison:
+Furthermore, each supported compiler has its pros and cons. Here is a short comparison:
 
 | | pros | cons | observations |
 |---|---|---|---|
@@ -70,3 +85,28 @@ Furthermore, each supported compiler has its pros and cons. Here is a short comp
 LLVM has the same pros/cons as GCC, but it is easier to build. However, coverage (`gcov`) is unique to GCC.
 
 You can find specific instructions for each of the options in '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)'.
+
+# Project structure
+
+## Regular users
+
+- The 'regular' tool allows analysis, compilation, simulation and (very experimental) synthesis of EDIF netlists. It is written in Ada and C, and three different backends are supported, which are sometimes named `ghdl_mcode`, `ghdl_gcc` and `ghdl_llvm`. This is the entrypoint for most users.
+
+- [ghdl-ls](https://github.com/ghdl/ghdl-language-server/tree/master/ghdl-ls) implements Language Server Protocol (LSP) in Python. VHDL analysis features provided by GHDL are accessed through `libghdl-py`. This can be integrated in text editors or IDES, such as, Vim, Emacs, Atom or Visual Studio Code.
+
+- [vscode-client](https://github.com/ghdl/ghdl-language-server/tree/master/vscode-client) is an extension for [Visual Studio Code (VSC)](https://code.visualstudio.com/) to provide language support for VHDL by interfacing `ghdl-ls`.
+
+
+## Advanced users
+
+- `libghdl` is a shared library that includes a subset of the regular features plus some features to be used by extension tools (i.e. `libghdl-py`). This is built along with the regular GHDL and it supports both non-synthesisable and synthesisable code. Nonetheless, this is not for users, but for tools built on top of the core.
+
+- [libghdl-py](python/libghdl) is a Python interface to `libghdl`. Currently, it is only used by `ghdl-ls`; however, it can be useful for advanced users which are willing to build Python utilities based on GHDL.
+
+## Experimental
+
+- `libghdlsynth` is a shared library that includes the analysis and synthesis features of the core GHDL, but not the pieces for compilation/simulation.
+
+- [ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdlsynth` library.
+
+- `ghdl_simul`, which supports interpreted simulation, is available for historical reasons and for development/debugging only. It is very slow compared to the 'regular' compiled simulation and not all the features are supported.
