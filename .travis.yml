@@ -51,7 +51,7 @@ jobs:
     # Optionally, more macos jobs can be added. See list of available versions at https://docs.travis-ci.com/user/reference/osx/#macos-version
 #   - <<: *osx
 #     osx_image: xcode10
-    - env: IMAGE=""
+    - env: IMAGE="man"
       script: ./dist/travis/man.sh
       deploy:
         - <<: *deploy-docker
