@@ -19,8 +19,8 @@ env:
     - IMAGE=ubuntu14+llvm-3.8
 #    - IMAGE=ubuntu18+mcode
 #    - IMAGE=ubuntu18+llvm-5.0
-    - IMAGE=fedora28+mcode
-    - IMAGE=fedora28+llvm
+    - IMAGE=fedora29+mcode
+    - IMAGE=fedora29+llvm
 
 deploy:
   - &deploy-docker
