@@ -9,12 +9,11 @@ script: ./dist/travis/travis-ci.sh
 # above) is executed in parallel in stage 'test'.
 env:
   matrix:
-    - IMAGE=stretch+mcode
-    - IMAGE=stretch+mcode
+    - IMAGE=buster+mcode
+    - IMAGE=buster+mcode
       EXTRA=gpl
     - IMAGE=buster+mcode
       EXTRA=synth
-#    - IMAGE=buster+mcode+gpl
     - IMAGE=ubuntu14+mcode
     - IMAGE=ubuntu14+llvm-3.8
 #    - IMAGE=ubuntu18+mcode
