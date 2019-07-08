@@ -85,6 +85,9 @@ def analyze_file(fname):
     return libghdl.libghdl__analyze_file(*_to_char_p(fname))
 
 
+def disp_config():
+    return libghdl.ghdllocal__disp_config_prefixes()
+
 if False:
     _prefix = os.environ.get("LIBGHDL_PREFIX") or '--PREFIX=%s' % join(dirname(_libghdl_path), 'ghdl')
     # print('ghdl prefix: {}'.format(_prefix))
