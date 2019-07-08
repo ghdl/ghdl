@@ -114,14 +114,13 @@ package Synth.Environment is
    --  first non-top level phi context.
    procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc);
 
+   --  Handle if statement.  According to SEL, the value of the wires are
+   --  those from T or from F.
    procedure Merge_Phis (Ctxt : Builders.Context_Acc;
                          Sel : Net;
                          T, F : Phi_Type);
 
    function Sort_Phi (P : Phi_Type) return Assign;
-
-   --  Add a new wire in the phi context.
-   procedure Phi_Insert_Assign (Asgn : Assign);
 
    --  In the current phi context, assign VAL to DEST.
    procedure Phi_Assign (Dest : Wire_Id; Val : Net);

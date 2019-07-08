@@ -252,6 +252,7 @@ package body Synth.Environment is
            or else (F_Asgns /= No_Assign
                       and then Get_Wire_Id (F_Asgns) < Get_Wire_Id (T_Asgns))
          then
+            --  Has an assignment only for the false branch.
             W := Get_Wire_Id (F_Asgns);
             Te := Get_Last_Assigned_Value (W);
             Fe := Get_Assign_Value (F_Asgns);
@@ -260,11 +261,13 @@ package body Synth.Environment is
            or else (T_Asgns /= No_Assign
                       and then Get_Wire_Id (T_Asgns) < Get_Wire_Id (F_Asgns))
          then
+            --  Has an assignment only for the true branch.
             W := Get_Wire_Id (T_Asgns);
             Te := Get_Assign_Value (T_Asgns);
             Fe := Get_Last_Assigned_Value (W);
             T_Asgns := Get_Assign_Chain (T_Asgns);
          else
+            --  Has assignments for both the true and the false branch.
             pragma Assert (Get_Wire_Id (F_Asgns) = Get_Wire_Id (T_Asgns));
             W := Get_Wire_Id (F_Asgns);
             Te := Get_Assign_Value (T_Asgns);
