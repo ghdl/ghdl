@@ -1664,7 +1664,7 @@ package body Simul.Elaboration is
             Arch : Iir;
             Config : Iir;
          begin
-            case Get_Kind (Aspect) is
+            case Iir_Kinds_Entity_Aspect (Get_Kind (Aspect)) is
                when Iir_Kind_Entity_Aspect_Entity =>
                   Arch := Get_Architecture (Aspect);
                   if Arch = Null_Iir then
@@ -1681,8 +1681,6 @@ package body Simul.Elaboration is
                     (Get_Block_Configuration (Config));
                when Iir_Kind_Entity_Aspect_Open =>
                   return;
-               when others =>
-                  raise Internal_Error;
             end case;
             Config := Get_Block_Configuration (Config);
 
