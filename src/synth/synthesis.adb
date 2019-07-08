@@ -88,7 +88,7 @@ package body Synthesis is
    end Make_Port_Desc;
 
    procedure Make_Port_Desc (Syn_Inst : Synth_Instance_Acc;
-                             Inter : Iir;
+                             Inter : Node;
                              Ports : in out Port_Desc_Array;
                              Idx : in out Port_Nbr;
                              Dir : Port_Kind)
@@ -135,13 +135,13 @@ package body Synthesis is
    end Create_Output_Wire;
 
    function Synth_Entity
-     (Parent_Module : Module; Parent_Inst : Synth_Instance_Acc; Arch : Iir)
+     (Parent_Module : Module; Parent_Inst : Synth_Instance_Acc; Arch : Node)
      return Synth_Instance_Acc
    is
-      Entity : constant Iir := Get_Entity (Arch);
+      Entity : constant Node := Get_Entity (Arch);
       Syn_Inst : Synth_Instance_Acc;
       Self_Inst : Instance;
-      Inter : Iir;
+      Inter : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
       Num : Uns32;
@@ -252,10 +252,10 @@ package body Synthesis is
 
    procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node)
    is
-      Dep_List : constant Iir_List := Get_Dependence_List (Unit);
+      Dep_List : constant Node_List := Get_Dependence_List (Unit);
       Dep_It : List_Iterator;
-      Dep : Iir;
-      Dep_Unit : Iir;
+      Dep : Node;
+      Dep_Unit : Node;
    begin
       Dep_It := List_Iterate (Dep_List);
       while Is_Valid (Dep_It) loop
@@ -301,10 +301,10 @@ package body Synthesis is
       end loop;
    end Synth_Dependencies;
 
-   function Synth_Design (Design : Iir) return Module
+   function Synth_Design (Design : Node) return Module
    is
-      Unit : constant Iir := Get_Library_Unit (Design);
-      Arch : Iir;
+      Unit : constant Node := Get_Library_Unit (Design);
+      Arch : Node;
 
       Des : Module;
       Syn_Inst : Synth_Instance_Acc;
