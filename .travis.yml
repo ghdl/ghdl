@@ -16,10 +16,8 @@ env:
       EXTRA=synth
     - IMAGE=ubuntu14+mcode
     - IMAGE=ubuntu14+llvm-3.8
-#    - IMAGE=ubuntu18+mcode
-#    - IMAGE=ubuntu18+llvm-5.0
-    - IMAGE=fedora29+mcode
-    - IMAGE=fedora29+llvm
+    - IMAGE=fedora30+mcode
+    - IMAGE=fedora30+llvm
 
 deploy:
   - &deploy-docker
