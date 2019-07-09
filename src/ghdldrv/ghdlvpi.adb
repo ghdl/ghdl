@@ -38,7 +38,7 @@ package body Ghdlvpi is
    function Get_Vpi_Include_Dir return String is
    begin
       --  Compute install path
-      Ghdllocal.Set_Exec_Prefix;
+      Ghdllocal.Set_Exec_Prefix_From_Program_Name;
 
       return Ghdllocal.Exec_Prefix.all & Directory_Separator & "include";
    end Get_Vpi_Include_Dir;
@@ -48,7 +48,7 @@ package body Ghdlvpi is
    begin
       if Ghdllocal.Exec_Prefix = null then
          --  Compute install path (only once).
-         Ghdllocal.Set_Exec_Prefix;
+         Ghdllocal.Set_Exec_Prefix_From_Program_Name;
       end if;
 
       return Ghdllocal.Exec_Prefix.all & Directory_Separator & "lib";

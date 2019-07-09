@@ -258,7 +258,7 @@ package body Ghdllocal is
    end Set_Prefix_From_Program_Path;
 
    --  Extract Exec_Prefix from executable name.
-   procedure Set_Exec_Prefix
+   procedure Set_Exec_Prefix_From_Program_Name
    is
       use GNAT.Directory_Operations;
       Prog_Path : constant String := Ada.Command_Line.Command_Name;
@@ -286,7 +286,7 @@ package body Ghdllocal is
          Set_Prefix_From_Program_Path (Exec_Path.all);
          Free (Exec_Path);
       end if;
-   end Set_Exec_Prefix;
+   end Set_Exec_Prefix_From_Program_Name;
 
    function Get_Version_Path return String
    is
@@ -336,7 +336,7 @@ package body Ghdllocal is
       end if;
 
       --  Compute Exec_Prefix.
-      Set_Exec_Prefix;
+      Set_Exec_Prefix_From_Program_Name;
 
       --  Set prefix path.
       --  If not set by command line, try environment variable.
@@ -406,14 +406,14 @@ package body Ghdllocal is
          Put_Line (Switch_Prefix_Path.all);
       end if;
 
+      Setup_Libraries (False);
+
       Put ("environment prefix (GHDL_PREFIX): ");
       if Prefix_Env = null then
          Put_Line ("(not set)");
       else
          Put_Line (Prefix_Env.all);
       end if;
-
-      Setup_Libraries (False);
 
       Put ("exec prefix (from program name): ");
       if Exec_Prefix = null then

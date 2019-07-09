@@ -117,7 +117,7 @@ package Ghdllocal is
    procedure Setup_Libraries (Load : Boolean);
 
    --  Set Exec_Prefix from program name.  Called by Setup_Libraries.
-   procedure Set_Exec_Prefix;
+   procedure Set_Exec_Prefix_From_Program_Name;
 
    --  Setup library, analyze FILES, and if SAVE_LIBRARY is set save the
    --  work library only
