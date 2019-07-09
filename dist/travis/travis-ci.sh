@@ -2,9 +2,9 @@
 # This script is executed in the travis-ci environment.
 
 build_img_ghdl() {
-    travis_start "build_run" "$ANSI_BLUE[DOCKER build] ghdl/ghdl:${IMAGE_TAG}$ANSI_NOCOLOR"
-    docker build -t ghdl/ghdl:$IMAGE_TAG . -f-<<EOF
-FROM ghdl/run:$IMAGE_TAG
+    travis_start "build_run" "$ANSI_BLUE[DOCKER build] ghdl/ghdl:${GHDL_IMAGE_TAG}$ANSI_NOCOLOR"
+    docker build -t ghdl/ghdl:$GHDL_IMAGE_TAG . -f-<<EOF
+FROM ghdl/run:$BUILD_IMAGE_TAG
 ADD `ls | grep '^ghdl.*\.tgz'` /usr/local
 EOF
     travis_finish "build_run"
@@ -71,14 +71,23 @@ else
     cp version.tmp src/version.in
     travis_finish "version"
 
-    IMAGE_TAG=`echo $IMAGE | sed -e 's/+/-/g'`
+    GHDL_IMAGE_TAG=`echo $IMAGE | sed -e 's/+/-/g'`
 
-    travis_start "pull" "$ANSI_YELLOW[GHDL - build] Docker pull ghdl/build:$IMAGE $ANSI_NOCOLOR"
-    docker pull ghdl/build:$IMAGE_TAG
+    case $IMAGE in
+      *gcc*)
+        BUILD_IMAGE_TAG="$(echo $IMAGE | sed 's#\(.*\)+gcc.*#\1-gcc#g')"
+      ;;
+      *)
+        BUILD_IMAGE_TAG="$GHDL_IMAGE_TAG"
+      ;;
+    esac
+
+    travis_start "pull" "$ANSI_YELLOW[GHDL - build] Docker pull ghdl/build:$BUILD_IMAGE_TAG $ANSI_NOCOLOR"
+    docker pull ghdl/build:$BUILD_IMAGE_TAG
     travis_finish "pull"
 
     # Run build in docker
-    $RUN "ghdl/build:$IMAGE_TAG" bash -c "${scriptdir}/build.sh $BUILD_CMD_OPTS"
+    $RUN "ghdl/build:$BUILD_IMAGE_TAG" bash -c "${scriptdir}/build.sh $BUILD_CMD_OPTS"
 fi
 
 if [ ! -f build_ok ]; then
@@ -91,10 +100,10 @@ fi
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     bash -c "prefix=$(realpath ./install-mcode) ${scriptdir}/test.sh $BUILD_CMD_OPTS"
 else
-    # Build ghdl/ghdl:$IMAGE_TAG image
+    # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
     build_img_ghdl
     # Run test in docker container
-    $RUN "ghdl/ghdl:$IMAGE_TAG" bash -c "GHDL=ghdl ${scriptdir}/test.sh $BUILD_CMD_OPTS"
+    $RUN "ghdl/ghdl:$GHDL_IMAGE_TAG" bash -c "GHDL=ghdl ${scriptdir}/test.sh $BUILD_CMD_OPTS"
 fi
 
 if [ ! -f test_ok ]; then
