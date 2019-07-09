@@ -150,12 +150,28 @@ package body Vhdl.Sem_Lib is
    procedure Free_Dependence_List (Design : Iir_Design_Unit)
    is
       List : Iir_List;
+      It : List_Iterator;
+      El : Iir;
    begin
       List := Get_Dependence_List (Design);
-      if List /= Null_Iir_List then
-         Free_Recursive_List (List);
-         Destroy_Iir_List (List);
+      if List = Null_Iir_List then
+         return;
       end if;
+
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
+         case Get_Kind (El) is
+            when Iir_Kind_Design_Unit =>
+               null;
+            when Iir_Kind_Entity_Aspect_Entity =>
+               Free_Recursive (El);
+            when others =>
+               Error_Kind ("free_dependence_list", El);
+         end case;
+         Next (It);
+      end loop;
+      Destroy_Iir_List (List);
    end Free_Dependence_List;
 
    procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
