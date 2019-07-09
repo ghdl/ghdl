@@ -15,7 +15,7 @@ set -e
 
 # This is the only place where test dirs are specified.  Do not duplicate this
 # line
-dirs="bug* sr* deb* ticket* issue*"
+dirs="bug* sr* deb* ticket* issue* gls*"
 
 failures=""
 full=n

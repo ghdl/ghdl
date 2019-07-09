@@ -8,7 +8,7 @@ import os
 import os.path
 import time
 
-DIRS=['bug*', 'sr*', 'deb*', 'ticket*', 'issue*']
+DIRS=['bug*', 'sr*', 'deb*', 'ticket*', 'issue*', 'gls*']
 NUMJOBS=4
 
 class Job(object):
