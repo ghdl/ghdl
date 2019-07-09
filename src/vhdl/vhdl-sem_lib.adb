@@ -182,6 +182,7 @@ package body Vhdl.Sem_Lib is
       Line, Off: Natural;
       Pos: Source_Ptr;
       Res: Iir;
+      Checksum : File_Checksum_Id;
    begin
       --  The unit must not be loaded.
       pragma Assert (Get_Date_State (Design_Unit) = Date_Disk);
@@ -198,9 +199,11 @@ package body Vhdl.Sem_Lib is
          end if;
          Set_Design_File_Source (Design_File, Fe);
 
-         --  Check if the file has changed.
-         if not Files_Map.Is_Eq
-           (Files_Map.Get_File_Checksum (Fe), Get_File_Checksum (Design_File))
+         --  Check if the file has changed (but only if it has a checksum).
+         Checksum := Get_File_Checksum (Design_File);
+         if Checksum /= No_File_Checksum_Id
+           and then
+           not Files_Map.Is_Eq (Files_Map.Get_File_Checksum (Fe), Checksum)
          then
             Error_Msg_Sem (+Loc, "file %i has changed and must be reanalysed",
                            +Get_Design_File_Filename (Design_File));
