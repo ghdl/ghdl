@@ -1189,11 +1189,9 @@ package body Vhdl.Sem_Specs is
       Entity_Aspect : Iir;
       Entity : Iir_Entity_Declaration;
    begin
-      if Bind = Null_Iir then
-         raise Internal_Error;
-      end if;
-
+      pragma Assert (Bind /= Null_Iir);
       Entity_Aspect := Get_Entity_Aspect (Bind);
+
       if Entity_Aspect /= Null_Iir then
          Entity := Sem_Entity_Aspect (Entity_Aspect);
 
@@ -1226,6 +1224,10 @@ package body Vhdl.Sem_Specs is
                   end case;
                end if;
             when Iir_Kind_Configuration_Specification =>
+               --  LRM08 7.3.2 Binding indication
+               --  When a binding indication is used in an explicit
+               --  configuration specification, it is an error if the entity
+               --  aspect is absent.
                Error_Msg_Sem
                  (+Bind,
                   "entity aspect required in a configuration specification");
@@ -1497,6 +1499,7 @@ package body Vhdl.Sem_Specs is
    is
       Primary_Entity_Aspect : Iir;
       Component : Iir;
+      Bind : Iir;
    begin
       Sem_Component_Specification (Parent_Stmts, Conf, Primary_Entity_Aspect);
       Component := Get_Component_Name (Conf);
@@ -1510,13 +1513,20 @@ package body Vhdl.Sem_Specs is
       if Get_Kind (Component) /= Iir_Kind_Component_Declaration then
          return;
       end if;
-      --  Extend scope of component interface declaration.
-      Sem_Scopes.Open_Scope_Extension;
-      Sem_Scopes.Add_Component_Declarations (Component);
-      Sem_Binding_Indication
-        (Get_Binding_Indication (Conf), Conf, Primary_Entity_Aspect);
-      --  FIXME: check default port and generic association.
-      Sem_Scopes.Close_Scope_Extension;
+      Bind := Get_Binding_Indication (Conf);
+      if Bind = Null_Iir then
+         --  LRM08 7.3.2 Binding indication
+         --  When a binding indication is used in an explicit configuration
+         --  specification, it is an error if the entity aspect is absent.
+         Error_Msg_Sem (+Conf, "binding indication required");
+      else
+         --  Extend scope of component interface declaration.
+         Sem_Scopes.Open_Scope_Extension;
+         Sem_Scopes.Add_Component_Declarations (Component);
+         Sem_Binding_Indication (Bind, Conf, Primary_Entity_Aspect);
+         --  FIXME: check default port and generic association.
+         Sem_Scopes.Close_Scope_Extension;
+      end if;
    end Sem_Configuration_Specification;
 
    function Sem_Create_Default_Binding_Indication
