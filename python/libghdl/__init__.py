@@ -1,9 +1,12 @@
 import ctypes
 import os
 import sys
-from os.path import dirname, join, exists
+from os.path import dirname, join, exists, normpath
 from shutil import which
 from libghdl.version import __version__
+
+def _to_char_p(arg):
+    return ctypes.c_char_p(arg), len(arg)
 
 
 def _get_libghdl_name():
@@ -29,12 +32,20 @@ def _check_libghdl_libdir(libdir, basename):
 def _check_libghdl_bindir(bindir, basename):
     if bindir is None:
         return None
-    return _check_libghdl_libdir(join(bindir, '..', 'lib'), basename)
+    return _check_libghdl_libdir(normpath(join(bindir, '..', 'lib')), basename)
 
 
 def _get_libghdl_path():
     """Locate the directory where the shared library is"""
     basename = _get_libghdl_name()
+    # Try GHDL_PREFIX
+    r = os.environ.get('GHDL_PREFIX')
+    if r is not None:
+        # GHDL_PREFIX is the prefix of the vhdl libraries, so remove the
+        # last path component.
+        r = _check_libghdl_libdir(dirname(r), basename)
+        if r is not None:
+            return r
     # Try VUNIT_GHDL_PATH (path of the ghdl binary when using VUnit).
     r = _check_libghdl_bindir (os.environ.get('VUNIT_GHDL_PATH'), basename)
     if r is not None:
@@ -52,7 +63,7 @@ def _get_libghdl_path():
     if r is not None:
         return r
     # Try when running from the build directory
-    r = join(dirname(__file__), '..', '..', 'lib')
+    r = normpath(join(dirname(__file__), '..', '..', 'lib'))
     r = _check_libghdl_libdir(r, basename)
     if r is not None:
         return r
@@ -67,10 +78,9 @@ libghdl = ctypes.CDLL(_libghdl_path)
 # Initialize it.
 libghdl.libghdl_init()
 
-
-def _to_char_p(arg):
-    return ctypes.c_char_p(arg), len(arg)
-
+# Set the prefix in order to locate the vhdl libraries.
+libghdl.libghdl__set_exec_prefix(
+    *_to_char_p(dirname(dirname(_libghdl_path)).encode('utf-8')))
 
 def set_option(opt):
     "Set option OPT.  Return true iff the option is known and handled"
@@ -87,8 +97,3 @@ def analyze_file(fname):
 
 def disp_config():
     return libghdl.ghdllocal__disp_config_prefixes()
-
-if False:
-    _prefix = os.environ.get("LIBGHDL_PREFIX") or '--PREFIX=%s' % join(dirname(_libghdl_path), 'ghdl')
-    # print('ghdl prefix: {}'.format(_prefix))
-    set_option(_prefix.encode('utf-8'))

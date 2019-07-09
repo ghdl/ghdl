@@ -25,6 +25,9 @@ package Libghdl is
    --  --ieee). Return 0 for success.
    function Set_Option (Opt : Thin_String_Ptr; Len : Natural) return Integer;
 
+   --  Set the prefix (used to locate libraries).
+   procedure Set_Exec_Prefix (Prefix : Thin_String_Ptr; Len : Natural);
+
    --  To be called before Analyze_File to initialize analysis.
    procedure Analyze_Init;
 

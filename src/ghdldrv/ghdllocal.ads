@@ -48,7 +48,7 @@ package Ghdllocal is
    --  getenv ("GHDL_PREFIX").  Set by Setup_Libraries.
    Prefix_Env : String_Access := null;
 
-   --  Installation prefix (deduced from executable path).
+   --  Installation prefix (deduced from executable path and without bin/).
    Exec_Prefix : String_Access;
 
    --  Path prefix for libraries.

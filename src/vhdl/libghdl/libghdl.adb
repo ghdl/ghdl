@@ -98,6 +98,11 @@ package body Libghdl is
       return Ghdlcomp.Compile_Analyze_File2 (File (1 .. Len));
    end Analyze_File;
 
+   procedure Set_Exec_Prefix (Prefix : Thin_String_Ptr; Len : Natural) is
+   begin
+      Ghdllocal.Exec_Prefix := new String'(Prefix (1 .. Len));
+   end Set_Exec_Prefix;
+
    Gnat_Version : constant String := "unknown compiler version" & ASCII.NUL;
    pragma Export (C, Gnat_Version, "__gnat_version");
 begin
