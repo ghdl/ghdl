@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 
 package Synth.Stmts is
@@ -26,6 +27,10 @@ package Synth.Stmts is
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node);
+
+   procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
+                               Target : Node;
+                               Val : Value_Acc);
 
    procedure Synth_Sequential_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);

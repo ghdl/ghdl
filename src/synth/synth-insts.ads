@@ -1,5 +1,5 @@
---  Synthesis.
---  Copyright (C) 2017 Tristan Gingold
+--  Instantiation synthesis.
+--  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
 --
@@ -18,13 +18,23 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Vhdl.Nodes; use Vhdl.Nodes;
+with Types; use Types;
 with Netlists; use Netlists;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
-package Synthesis is
-   function Synth_Design (Design : Iir) return Module;
+with Synth.Values; use Synth.Values;
+with Synth.Context; use Synth.Context;
 
-   Global_Module : Module;
+package Synth.Insts is
+   procedure Init;
+   procedure Synth_All_Instances;
 
-   Synth_Error : exception;
-end Synthesis;
+   function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind;
+   function Get_Nbr_Wire (Val : Value_Acc) return Uns32;
+
+   procedure Synth_Design_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+
+   procedure Synth_Component_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+end Synth.Insts;

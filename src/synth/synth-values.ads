@@ -154,6 +154,8 @@ package Synth.Values is
    --  Pool for objects allocated in the current instance.
    Instance_Pool : Areapool_Acc;
 
+   function Is_Equal (L, R : Value_Acc) return Boolean;
+
    --  Create a Value_Net.
    function Create_Value_Net (N : Net; Bnd : Value_Bound_Acc) return Value_Acc;
 

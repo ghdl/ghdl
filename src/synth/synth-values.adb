@@ -31,6 +31,15 @@ package body Synth.Values is
    function To_Value_Bound_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Value_Bound_Array_Acc);
 
+   function Is_Equal (L, R : Value_Acc) return Boolean is
+   begin
+      if L.Kind /= R.Kind then
+         return False;
+      end if;
+      --  TODO.
+      raise Internal_Error;
+   end Is_Equal;
+
    function Create_Value_Wire (W : Wire_Id; Bnd : Value_Bound_Acc)
                               return Value_Acc
    is

@@ -40,8 +40,8 @@ with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
 with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
-with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
+with Synth.Insts; use Synth.Insts;
 
 with Vhdl.Annotations; use Vhdl.Annotations;
 
@@ -79,10 +79,6 @@ package body Synth.Stmts is
             raise Internal_Error;
       end case;
    end Synth_Assign;
-
-   procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
-                               Target : Node;
-                               Val : Value_Acc);
 
    procedure Synth_Assignment_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                          Target : Node;
@@ -1233,8 +1229,11 @@ package body Synth.Stmts is
             when Iir_Kind_Concurrent_Assertion_Statement =>
                Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
             when Iir_Kind_Component_Instantiation_Statement =>
-               --  TODO.
-               null;
+               if Is_Component_Instantiation (Stmt) then
+                  Synth_Component_Instantiation_Statement (Syn_Inst, Stmt);
+               else
+                  Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
+               end if;
             when Iir_Kind_Psl_Default_Clock =>
                null;
             when Iir_Kind_Psl_Restrict_Directive =>

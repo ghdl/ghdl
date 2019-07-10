@@ -74,6 +74,8 @@ package Synth.Context is
                           return Synth_Instance_Acc;
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
 
+   function Alloc_Wire (Kind : Wire_Kind; Obj : Node) return Wire_Id;
+
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
 

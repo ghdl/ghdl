@@ -134,7 +134,7 @@ package body Netlists.Disp_Vhdl is
          return;
       end if;
 
-      if Get_Sname_Kind (N) = Sname_Artificial
+      if Get_Sname_Kind (N) in Sname_User .. Sname_Artificial
         and then Get_Sname_Prefix (N) = No_Sname
       then
          Put (Name_Table.Image (Get_Sname_Suffix (N)));
@@ -238,12 +238,17 @@ package body Netlists.Disp_Vhdl is
       else
          Put_Name (Name);
       end if;
-      Put (" : gsynth.gate_");
       --  Gate name
       Name := Get_Name (Imod);
-      pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial
-                       and then Get_Sname_Prefix (Name) = No_Sname);
-      Put_Id (Get_Sname_Suffix (Name));
+      if Get_Id (Imod) < Id_User_None then
+         Put (" : gsynth.gate_");
+         pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial
+                          and then Get_Sname_Prefix (Name) = No_Sname);
+         Put_Id (Get_Sname_Suffix (Name));
+      else
+         Put (" : entity work.");
+         Put_Name (Name);
+      end if;
 
       if Get_Nbr_Params (Imod) /= 0 then
          Put_Line (" generic map (");
@@ -633,8 +638,15 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Instance_Inline;
 
-   procedure Disp_Architecture (M : Module) is
+   procedure Disp_Architecture (M : Module)
+   is
+      Self_Inst : constant Instance := Get_Self_Instance (M);
    begin
+      if Self_Inst = No_Instance then
+         --  Not defined.
+         return;
+      end if;
+
       Put ("architecture rtl of ");
       Put_Name (Get_Name (M));
       Put_Line (" is");
@@ -671,11 +683,10 @@ package body Netlists.Disp_Vhdl is
 
       --  Output assignments.
       declare
-         Inst : constant Instance := Get_Self_Instance (M);
          Idx : Port_Idx;
       begin
          Idx := 0;
-         for I of Inputs (Inst) loop
+         for I of Inputs (Self_Inst) loop
             Put ("  ");
             Put_Name (Get_Output_Desc (M, Idx).Name);
             Put (" <= ");

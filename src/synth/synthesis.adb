@@ -34,6 +34,7 @@ with Synth.Types; use Synth.Types;
 with Synth.Decls; use Synth.Decls;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Expr; use Synth.Expr;
+with Synth.Insts; use Synth.Insts;
 
 with Synth.Environment.Debug;
 pragma Unreferenced (Synth.Environment.Debug);
@@ -42,31 +43,6 @@ with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 
 package body Synthesis is
-   function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is
-   begin
-      case Mode is
-         when Iir_In_Mode =>
-            return Port_In;
-         when Iir_Buffer_Mode
-           | Iir_Out_Mode
-           | Iir_Inout_Mode =>
-            return Port_Out;
-         when Iir_Linkage_Mode
-           | Iir_Unknown_Mode =>
-            raise Synth_Error;
-      end case;
-   end Mode_To_Port_Kind;
-
-   function Get_Nbr_Wire (Val : Value_Acc) return Uns32 is
-   begin
-      case Val.Kind is
-         when Value_Wire =>
-            return 1;
-         when others =>
-            raise Internal_Error;  --  TODO
-      end case;
-   end Get_Nbr_Wire;
-
    procedure Make_Port_Desc (Val : Value_Acc;
                              Name : Sname;
                              Wd : Width;
@@ -306,7 +282,6 @@ package body Synthesis is
       Unit : constant Node := Get_Library_Unit (Design);
       Arch : Node;
 
-      Des : Module;
       Syn_Inst : Synth_Instance_Acc;
    begin
       --  Extract architecture from design.
@@ -320,10 +295,12 @@ package body Synthesis is
             Error_Kind ("synth_design", Unit);
       end case;
 
-      Des := New_Design (New_Sname_Artificial (Get_Identifier ("top")));
-      Build_Context := Build_Builders (Des);
+      Global_Module :=
+        New_Design (New_Sname_Artificial (Get_Identifier ("top")));
+      Build_Context := Build_Builders (Global_Module);
       Instance_Pool := Global_Pool'Access;
       Global_Instance := Make_Instance (null, Global_Info);
+      Synth.Insts.Init;
 
       --  Dependencies first.
       Synth_Dependencies
@@ -331,13 +308,14 @@ package body Synthesis is
       Synth_Dependencies
         (Global_Instance, Get_Design_Unit (Arch));
 
-      Syn_Inst := Synth_Entity (Des, Global_Instance, Arch);
+      Syn_Inst := Synth_Entity (Global_Module, Global_Instance, Arch);
 
+      Synth_All_Instances;
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
       end if;
 
       pragma Unreferenced (Syn_Inst);
-      return Des;
+      return Global_Module;
    end Synth_Design;
 end Synthesis;
