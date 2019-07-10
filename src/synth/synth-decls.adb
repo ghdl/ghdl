@@ -113,8 +113,10 @@ package body Synth.Decls is
             --  The elaboration of an index constraint consists of the
             --  declaration of each of the discrete ranges in the index
             --  constraint in some order that is not defined by the language.
-            Synth_Anonymous_Subtype_Indication
-              (Syn_Inst, Get_Element_Subtype (Atype));
+            if Get_Array_Element_Constraint (Atype) /= Null_Node then
+               Synth_Subtype_Indication
+                 (Syn_Inst, Get_Element_Subtype (Atype));
+            end if;
             declare
                St_Indexes : constant Iir_Flist :=
                  Get_Index_Subtype_List (Atype);
@@ -158,6 +160,8 @@ package body Synth.Decls is
       end if;
       Synth_Subtype_Indication (Syn_Inst, Atype);
    end Synth_Anonymous_Subtype_Indication;
+
+   pragma Unreferenced (Synth_Anonymous_Subtype_Indication);
 
    function Get_Declaration_Type (Decl : Node) return Node
    is
