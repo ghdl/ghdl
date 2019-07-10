@@ -299,7 +299,24 @@ package body Netlists.Disp_Vhdl is
          Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name);
          Idx := Idx + 1;
          Put (" => ");
-         Disp_Net_Name (O);
+         declare
+            I : Input;
+            O_Inst : Instance;
+         begin
+            I := Get_First_Sink (O);
+            if I /= No_Input then
+               O_Inst := Get_Parent (I);
+            else
+               O_Inst := No_Instance;
+            end if;
+            if O_Inst /= No_Instance
+              and then Get_Id (O_Inst) = Id_Port
+            then
+               Disp_Net_Name (Get_Output (O_Inst, 0));
+            else
+               Disp_Net_Name (O);
+            end if;
+         end;
       end loop;
       Put_Line (");");
    end Disp_Instance_Gate;
@@ -477,6 +494,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0; -- (output)" & NL, Inst);
          when Id_Signal =>
             Disp_Template ("  \o0 <= \i0; -- (signal)" & NL, Inst);
+         when Id_Port =>
+            null;
          when Id_Not =>
             Disp_Template ("  \o0 <= not \i0;" & NL, Inst);
          when Id_Extract =>
@@ -660,6 +679,7 @@ package body Netlists.Disp_Vhdl is
       for Inst of Instances (M) loop
          if not Is_Self_Instance (Inst)
            and then not (Flag_Merge_Lit and then Is_Const (Get_Id (Inst)))
+           and then Get_Id (Inst) < Id_User_None
          then
             for N of Outputs (Inst) loop
                Put ("  signal ");

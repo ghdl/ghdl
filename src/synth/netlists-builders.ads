@@ -94,6 +94,7 @@ package Netlists.Builders is
                          return Net;
    function Build_Isignal (Ctxt : Context_Acc; Name : Sname; Init : Net)
                           return Net;
+   function Build_Port (Ctxt : Context_Acc; N : Net) return Net;
 
    procedure Build_Assert (Ctxt : Context_Acc; Cond : Net);
    procedure Build_Assume (Ctxt : Context_Acc; Cond : Net);
@@ -134,6 +135,7 @@ private
       M_Output : Module;
       M_Signal : Module;
       M_Isignal : Module;
+      M_Port : Module;
       M_Dff : Module;
       M_Idff : Module;
       M_Adff : Module;

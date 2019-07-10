@@ -79,6 +79,7 @@ package Netlists.Gates is
    Id_Signal  : constant Module_Id := 35;
    Id_Isignal : constant Module_Id := 36;
    Id_Output  : constant Module_Id := 37;
+   Id_Port    : constant Module_Id := 38;
 
    --  Note: initial values must be constant nets.
    --
@@ -87,70 +88,70 @@ package Netlists.Gates is
    --  input.
    --  Inputs: CLK, D
    --  Output: Q
-   Id_Dff   : constant Module_Id := 38;
+   Id_Dff   : constant Module_Id := 40;
 
    --  A DFF with an asynchronous reset.  Note that the asynchronous reset
    --  has priority over the clock.  When RST is asserted, the value is
    --  set to RST_VAL.
    --  Inputs: CLK, D, RST, RST_VAL
    --  Output: Q
-   Id_Adff  : constant Module_Id := 39;
+   Id_Adff  : constant Module_Id := 41;
 
    --  A simple DFF with an initial value (must be constant).  This is
    --  for FPGAs.
-   Id_Idff  : constant Module_Id := 40;
+   Id_Idff  : constant Module_Id := 42;
    --  A DFF with an asynchronous reset and an initial value.
-   Id_Iadff : constant Module_Id := 41;
+   Id_Iadff : constant Module_Id := 43;
 
    --  Width change: truncate or extend.  Sign is know in order to possibly
    --  detect loss of value.
-   Id_Utrunc : constant Module_Id := 42;
-   Id_Strunc : constant Module_Id := 43;
-   Id_Uextend : constant Module_Id := 44;
-   Id_Sextend : constant Module_Id := 45;
+   Id_Utrunc : constant Module_Id := 46;
+   Id_Strunc : constant Module_Id := 47;
+   Id_Uextend : constant Module_Id := 48;
+   Id_Sextend : constant Module_Id := 49;
 
    subtype Truncate_Module_Id is Module_Id range Id_Utrunc .. Id_Strunc;
    subtype Extend_Module_Id is Module_Id range Id_Uextend .. Id_Sextend;
 
    --  Extract a bit or a slice at a constant offset.
    --  OUT := IN0[OFF+WD-1:OFF]
-   Id_Extract : constant Module_Id := 46;
+   Id_Extract : constant Module_Id := 50;
 
    --  OUT := IN0[IN1*STEP+OFF+WD-1:IN1*STEP+OFF]
-   Id_Dyn_Extract : constant Module_Id := 47;
+   Id_Dyn_Extract : constant Module_Id := 51;
 
    --  This gate has two inputs I, V and one parameter POS.
    --  It replaces bits POS + width(V) - 1 .. POS of I by V, ie:
    --  T := I;
    --  T [POS+width(V)-1:POS] := V
    --  OUT := T.
-   Id_Insert : constant Module_Id := 48;
+   Id_Insert : constant Module_Id := 52;
 
    --  Like Insert but for dynamic values.
    --  T := IN0
    --  T [IN2*STEP+OFF+WD-1:IN2*STEP+OFF] := IN1
    --  OUT := T
-   Id_Dyn_Insert : constant Module_Id := 49;
+   Id_Dyn_Insert : constant Module_Id := 53;
 
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before
    --  the detector.
-   Id_Edge : constant Module_Id := 50;
+   Id_Edge : constant Module_Id := 55;
 
    --  Input signal must always be true.
-   Id_Assert : constant Module_Id := 51;
-   Id_Assume : constant Module_Id := 52;
+   Id_Assert : constant Module_Id := 56;
+   Id_Assume : constant Module_Id := 57;
 
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
    --  parameter, possibly signed or unsigned extended.  For large width
    --  (> 128), the value is stored in a table.
-   Id_Const_UB32 : constant Module_Id := 56;
-   Id_Const_SB32 : constant Module_Id := 57;
-   Id_Const_UB64 : constant Module_Id := 58;
-   Id_Const_SB64 : constant Module_Id := 59;
-   Id_Const_UB128 : constant Module_Id := 60;
-   Id_Const_SB128 : constant Module_Id := 61;
-   Id_Const_UL32 : constant Module_Id := 62;
-   Id_Const_SL32 : constant Module_Id := 63;
+   Id_Const_UB32 : constant Module_Id := 64;
+   Id_Const_SB32 : constant Module_Id := 65;
+   Id_Const_UB64 : constant Module_Id := 66;
+   Id_Const_SB64 : constant Module_Id := 67;
+   Id_Const_UB128 : constant Module_Id := 68;
+   Id_Const_SB128 : constant Module_Id := 69;
+   Id_Const_UL32 : constant Module_Id := 70;
+   Id_Const_SL32 : constant Module_Id := 71;
 end Netlists.Gates;

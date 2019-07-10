@@ -276,6 +276,7 @@ package body Synth.Insts is
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
          if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
+            --  TODO
             raise Internal_Error;
          end if;
          Synth_Declaration_Type (Sub_Inst, Inter);
@@ -315,6 +316,7 @@ package body Synth.Insts is
          Assoc : Node;
          Assoc_Inter : Node;
          Actual : Node;
+         Port : Net;
          O : Value_Acc;
       begin
          Assoc := Get_Port_Map_Aspect_Chain (Stmt);
@@ -343,8 +345,9 @@ package body Synth.Insts is
                   Nbr_Inputs := Nbr_Inputs + 1;
                when Port_Out
                  | Port_Inout =>
-                  O := Create_Value_Net (Get_Output (Inst, Nbr_Outputs),
-                                           null);
+                  Port := Get_Output (Inst, Nbr_Outputs);
+                  Port := Builders.Build_Port (Build_Context, Port);
+                  O := Create_Value_Net (Port, null);
                   Synth_Assignment (Syn_Inst, Actual, O);
                   Nbr_Outputs := Nbr_Outputs + 1;
             end case;

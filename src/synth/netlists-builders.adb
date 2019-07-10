@@ -272,15 +272,14 @@ package body Netlists.Builders is
       Outputs := (0 => Create_Output ("o"));
 
       Ctxt.M_Output := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("output")),
+        (Ctxt.Design, New_Sname_Artificial (Name_Output),
          Id_Output, 1, 1, 0);
       Set_Port_Desc (Ctxt.M_Output, Inputs, Outputs);
 
       Ctxt.M_Signal := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("signal")),
+        (Ctxt.Design, New_Sname_Artificial (Name_Signal),
          Id_Signal, 1, 1, 0);
       Set_Port_Desc (Ctxt.M_Signal, Inputs, Outputs);
-
 
       Inputs2 := (0 => Create_Input ("i"),
                   1 => Create_Input ("init"));
@@ -288,6 +287,11 @@ package body Netlists.Builders is
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("isignal")),
          Id_Isignal, 2, 1, 0);
       Set_Port_Desc (Ctxt.M_Isignal, Inputs2, Outputs);
+
+      Ctxt.M_Port := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Name_Port),
+         Id_Port, 1, 1, 0);
+      Set_Port_Desc (Ctxt.M_Port, Inputs, Outputs);
    end Create_Objects_Module;
 
    procedure Create_Dff_Modules (Ctxt : Context_Acc)
@@ -762,6 +766,20 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 1), Init);
       return O;
    end Build_Isignal;
+
+   function Build_Port (Ctxt : Context_Acc; N : Net) return Net
+   is
+      Wd : constant Width := Get_Width (N);
+      pragma Assert (Wd /= No_Width);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Port);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Connect (Get_Input (Inst, 0), N);
+      return O;
+   end Build_Port;
 
    function Build_Dff (Ctxt : Context_Acc;
                        Clk : Net;
