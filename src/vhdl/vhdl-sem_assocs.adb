@@ -2350,7 +2350,7 @@ package body Vhdl.Sem_Assocs is
                then
                   if Finish then
                      Error_Msg_Sem
-                       (+Assoc, "%n is not an interface name", +Inter);
+                       (+Formal, "%n is not an interface name", +Inter);
                   end if;
                   Match := Not_Compatible;
                   exit;
