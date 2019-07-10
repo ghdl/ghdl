@@ -49,7 +49,7 @@ fi
 
 # Get build command options
 travis_start "opts" "$ANSI_YELLOW[GHDL - build] Get build command options $ANSI_NOCOLOR"
-buildCmdOpts
+buildCmdOpts "$EXTRA"
 echo "build cmd: $BUILD_CMD_OPTS"
 travis_finish "opts"
 
@@ -71,16 +71,6 @@ else
     cp version.tmp src/version.in
     travis_finish "version"
 
-    GHDL_IMAGE_TAG=`echo $IMAGE | sed -e 's/+/-/g'`
-
-    case $IMAGE in
-      *gcc*)
-        BUILD_IMAGE_TAG="$(echo $IMAGE | sed 's#\(.*\)+gcc.*#\1-gcc#g')"
-      ;;
-      *)
-        BUILD_IMAGE_TAG="$GHDL_IMAGE_TAG"
-      ;;
-    esac
 
     travis_start "pull" "$ANSI_YELLOW[GHDL - build] Docker pull ghdl/build:$BUILD_IMAGE_TAG $ANSI_NOCOLOR"
     docker pull ghdl/build:$BUILD_IMAGE_TAG

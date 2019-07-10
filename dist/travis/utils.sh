@@ -48,6 +48,12 @@ fi
 #--
 
 buildCmdOpts () {
+  # Extract from IMAGE (defined in .travis.yml)
+  BUILD_ARG="$IMAGE"
+  if [ "x$1" != "x" ]; then
+    BUILD_ARG="$IMAGE+$1"
+  fi
+
   # Compute package name
   PKG_SHORTCOMMIT="$(printf $TRAVIS_COMMIT | cut -c1-10)"
   PKG_VER=`grep "ghdl_version=" configure | sed -e 's/.*"\(.*\)";/\1/'`
@@ -62,19 +68,37 @@ buildCmdOpts () {
       PKG_TAG="$TRAVIS_TAG"
   fi
 
-  # Extract from IMAGE (defined in .travis.yml)
-  IFS='+' read -ra REFS <<< "$IMAGE"
+  # Extract from BUILD_ARG
+  IFS='+' read -ra REFS <<< "$BUILD_ARG"
   DDIST=${REFS[0]}  # Linux distro (eg: ubuntuXX, fedoraXX)
   DBLD=${REFS[1]}   # Build/backend (eg: mcode, llvm)
-  DGPL=${REFS[2]}   # GPL or not
+  DEXT=${REFS[2]}   # Extra constraints: GPL, synth
 
   PKG_NAME="ghdl-${PKG_TAG}-${DDIST}-${DBLD}"
   BUILD_CMD_OPTS="$ENABLECOLOR -b $DBLD"
-  if [ "$DGPL" = "gpl" ]; then
+
+  if [ "x$DEXT" = "xgpl" ]; then
       BUILD_CMD_OPTS="$BUILD_CMD_OPTS --gpl"
-      PKG_NAME="ghdl-gpl-${PKG_TAG}"
+      PKG_NAME="ghdl-$DEXT-${PKG_TAG}"
+  fi
+  if [ "x$DEXT" = "xsynth" ]; then
+      BUILD_CMD_OPTS="$BUILD_CMD_OPTS --synth"
+      PKG_NAME="ghdl-$DEXT-${PKG_TAG}"
   fi
   export BUILD_CMD_OPTS="${BUILD_CMD_OPTS} -p $PKG_NAME"
+
+  GHDL_IMAGE_TAG="`echo $IMAGE | sed -e 's/+/-/g'`"
+  BUILD_IMAGE_TAG="$GHDL_IMAGE_TAG"
+
+  case $BUILD_ARG in
+    *gcc*)
+      BUILD_IMAGE_TAG="`echo $GHDL_IMAGE_TAG | sed 's#\(.*\)-gcc.*#\1-gcc#g'`"
+    ;;
+  esac
+
+  if [ "x$DEXT" != "x" ]; then
+    GHDL_IMAGE_TAG="$GHDL_IMAGE_TAG-$DEXT"
+  fi
 }
 
 #--

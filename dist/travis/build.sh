@@ -18,16 +18,18 @@ for arg in "$@"; do
       "--build"|"-build")   set -- "$@" "-b";;
       "--pkg"|"-pkg")       set -- "$@" "-p";;
       "--gpl"|"-gpl")       set -- "$@" "-g";;
+      "--synth"|"-synth")   set -- "$@" "-s";;
     *) set -- "$@" "$arg"
   esac
 done
 # Parse args
-while getopts ":b:p:cg" opt; do
+while getopts ":b:p:cgs" opt; do
   case $opt in
     c) enable_color;;
     b) BLD=$OPTARG ;;
     p) PKG_NAME=$OPTARG;;
     g) ISGPL=true;;
+    s) ISSYNTH=true;;
     \?) printf "$ANSI_RED[GHDL - build] Invalid option: -$OPTARG $ANSI_NOCOLOR\n" >&2
         exit 1 ;;
     :)  printf "$ANSI_RED[GHDL - build] Option -$OPTARG requires an argument. $ANSI_NOCOLOR\n" >&2
@@ -65,6 +67,10 @@ export prefix="$CDIR/install-$BLD"
 mkdir "$prefix"
 mkdir "build-$BLD"
 cd "build-$BLD"
+
+if [ "x$ISSYNTH" = "xtrue" ]; then
+  CONFIG_OPTS+=" --enable-synth"
+fi
 
 case "$BLD" in
     gcc*)
