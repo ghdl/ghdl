@@ -341,9 +341,6 @@ package body Netlists is
           First_Output => Outputs));
       Res := Instances_Table.Last;
 
-      --  Link instance
-      Append_Instance (Parent, Res);
-
       --  Setup inputs.
       if Nbr_Inputs > 0 then
          for I in 0 .. Nbr_Inputs - 1 loop
@@ -380,10 +377,16 @@ package body Netlists is
       Nbr_Inputs : constant Port_Nbr := Get_Nbr_Inputs (M);
       Nbr_Outputs : constant Port_Nbr := Get_Nbr_Outputs (M);
       Nbr_Params : constant Param_Nbr := Get_Nbr_Params (M);
+      Res : Instance;
    begin
-      return New_Instance_Internal
+      Res := New_Instance_Internal
         (Parent, M, Name, Nbr_Inputs, Nbr_Outputs, Nbr_Params,
          Get_Output_First_Desc (M));
+
+      --  Link instance
+      Append_Instance (Parent, Res);
+
+      return Res;
    end New_Instance;
 
    function Create_Self_Instance (M : Module) return Instance
@@ -392,11 +395,16 @@ package body Netlists is
       pragma Assert (Get_Self_Instance (M) = No_Instance);
       Nbr_Inputs : constant Port_Nbr := Get_Nbr_Inputs (M);
       Nbr_Outputs : constant Port_Nbr := Get_Nbr_Outputs (M);
+      Res : Instance;
    begin
       --  Swap inputs and outputs; no parameters.
-      return New_Instance_Internal
+      Res := New_Instance_Internal
         (M, M, Get_Name (M), Nbr_Outputs, Nbr_Inputs, 0,
          Get_Input_First_Desc (M));
+
+      Append_Instance (M, Res);
+
+      return Res;
    end Create_Self_Instance;
 
    function Is_Valid (I : Instance) return Boolean is

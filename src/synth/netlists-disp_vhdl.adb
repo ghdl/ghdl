@@ -708,11 +708,34 @@ package body Netlists.Disp_Vhdl is
 
    procedure Disp_Vhdl (M : Module; Is_Top : Boolean) is
    begin
-      for S of Sub_Modules (M) loop
-         if Get_Id (S) >= Id_User_None then
-            Disp_Vhdl (S, False);
-         end if;
-      end loop;
+      --  Disp in reverse order.
+      declare
+         Num : Natural;
+      begin
+         Num := 0;
+         for S of Sub_Modules (M) loop
+            if Get_Id (S) >= Id_User_None then
+               Num := Num + 1;
+            end if;
+         end loop;
+
+         declare
+            type Module_Array is array (1 .. Num) of Module;
+            Modules : Module_Array;
+         begin
+            Num := 0;
+            for S of Sub_Modules (M) loop
+               if Get_Id (S) >= Id_User_None then
+                  Num := Num + 1;
+                  Modules (Num) := S;
+               end if;
+            end loop;
+
+            for I in reverse Modules'Range loop
+               Disp_Vhdl (Modules (I), False);
+            end loop;
+         end;
+      end;
 
       if not Is_Top then
          Disp_Entity (M);
