@@ -18,19 +18,15 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Types; use Types;
-with Netlists; use Netlists;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 
 package Synth.Insts is
    procedure Init;
    procedure Synth_All_Instances;
 
-   function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind;
-   function Get_Nbr_Wire (Val : Value_Acc) return Uns32;
+   procedure Synth_Top_Entity (Arch : Node);
 
    procedure Synth_Design_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);

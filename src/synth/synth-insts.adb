@@ -18,17 +18,20 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Types; use Types;
 with Libraries;
 with Hash; use Hash;
 with Interning;
 with Synthesis; use Synthesis;
 
+with Netlists; use Netlists;
 with Netlists.Builders;
 with Netlists.Utils;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Annotations; use Vhdl.Annotations;
 
+with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Decls; use Synth.Decls;
@@ -36,6 +39,31 @@ with Synth.Types; use Synth.Types;
 with Synth.Expr; use Synth.Expr;
 
 package body Synth.Insts is
+   function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is
+   begin
+      case Mode is
+         when Iir_In_Mode =>
+            return Port_In;
+         when Iir_Buffer_Mode
+           | Iir_Out_Mode
+           | Iir_Inout_Mode =>
+            return Port_Out;
+         when Iir_Linkage_Mode
+           | Iir_Unknown_Mode =>
+            raise Synth_Error;
+      end case;
+   end Mode_To_Port_Kind;
+
+   function Get_Nbr_Wire (Val : Value_Acc) return Uns32 is
+   begin
+      case Val.Kind is
+         when Value_Wire =>
+            return 1;
+         when others =>
+            raise Internal_Error;  --  TODO
+      end case;
+   end Get_Nbr_Wire;
+
    procedure Make_Port_Desc (Val : Value_Acc;
                              Name : Sname;
                              Wd : Width;
@@ -201,31 +229,6 @@ package body Synth.Insts is
       Build => Build,
       Equal => Equal);
 
-   function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is
-   begin
-      case Mode is
-         when Iir_In_Mode =>
-            return Port_In;
-         when Iir_Buffer_Mode
-           | Iir_Out_Mode
-           | Iir_Inout_Mode =>
-            return Port_Out;
-         when Iir_Linkage_Mode
-           | Iir_Unknown_Mode =>
-            raise Synth_Error;
-      end case;
-   end Mode_To_Port_Kind;
-
-   function Get_Nbr_Wire (Val : Value_Acc) return Uns32 is
-   begin
-      case Val.Kind is
-         when Value_Wire =>
-            return 1;
-         when others =>
-            raise Internal_Error;  --  TODO
-      end case;
-   end Get_Nbr_Wire;
-
    procedure Synth_Design_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -378,6 +381,72 @@ package body Synth.Insts is
       --  Elaborate ports + map aspect for the outputs (entity then component)
       raise Internal_Error;
    end Synth_Component_Instantiation_Statement;
+
+   procedure Synth_Top_Entity (Arch : Node)
+   is
+      Config : constant Node := Null_Node; --  FIXME
+      Entity : constant Node := Get_Entity (Arch);
+      Syn_Inst : Synth_Instance_Acc;
+      Inter : Node;
+      Nbr_Inputs : Port_Nbr;
+      Nbr_Outputs : Port_Nbr;
+      Num : Uns32;
+      Inst_Obj : Inst_Object;
+   begin
+      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Arch));
+      Syn_Inst.Block_Scope := Get_Info (Entity);
+      Syn_Inst.Name := New_Sname_User (Get_Identifier (Entity));
+
+      --  Compute generics.
+      Inter := Get_Generic_Chain (Entity);
+      while Is_Valid (Inter) loop
+         Synth_Declaration_Type (Syn_Inst, Inter);
+         declare
+            Val : Value_Acc;
+         begin
+            Val := Synth_Expression_With_Type
+              (Syn_Inst, Get_Default_Value (Inter), Get_Type (Inter));
+            Create_Object (Syn_Inst, Inter, Val);
+         end;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      --  Elaborate port types.
+      --  FIXME: what about unconstrained ports ?  Get the type from the
+      --    association.
+      Inter := Get_Port_Chain (Entity);
+      Nbr_Inputs := 0;
+      Nbr_Outputs := 0;
+      while Is_Valid (Inter) loop
+         if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
+            --  TODO
+            raise Internal_Error;
+         end if;
+         Synth_Declaration_Type (Syn_Inst, Inter);
+         case Mode_To_Port_Kind (Get_Mode (Inter)) is
+            when Port_In =>
+               Make_Object (Syn_Inst, Wire_None, Inter);
+               Num := Get_Nbr_Wire (Get_Value (Syn_Inst, Inter));
+               Nbr_Inputs := Nbr_Inputs + Port_Nbr (Num);
+            when Port_Out
+              | Port_Inout =>
+               Make_Object (Syn_Inst, Wire_None, Inter);
+               Num := Get_Nbr_Wire (Get_Value (Syn_Inst, Inter));
+               Nbr_Outputs := Nbr_Outputs + Port_Nbr (Num);
+         end case;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      --  Search if corresponding module has already been used.
+      --  If not create a new module
+      --   * create a name from the generics and the library
+      --   * create inputs/outputs
+      --   * add it to the list of module to be synthesized.
+      Inst_Obj := Insts_Interning.Get ((Arch => Arch,
+                                        Config => Config,
+                                        Syn_Inst => Syn_Inst));
+      pragma Unreferenced (Inst_Obj);
+   end Synth_Top_Entity;
 
    procedure Create_Input_Wire (Self_Inst : Instance;
                                 Inter : Node;
