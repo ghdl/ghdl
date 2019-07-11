@@ -600,6 +600,22 @@ package Vhdl.Nodes is
 
    -- Iir_Kind_Block_Configuration (Short)
    --
+   --  LRM08 3.4.2 Block configuration
+   --  block_configuration ::=
+   --    FOR block_specification
+   --      { use_clause }
+   --      { configuration_item }
+   --    END FOR;
+   --
+   --  configuration_item ::=
+   --      block_configuration
+   --    | component_configuration
+   --
+   --  block_specification ::=
+   --      /architecture_/name
+   --    | /block_statement_/label
+   --    | /generate_statement_/label [ ( generate_specification ) ]
+   --
    --   Get/Set_Parent (Field0)
    --
    --  Only use_clause are allowed here.
