@@ -240,7 +240,6 @@ package body Synth.Insts is
       Inter : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
-      Num : Uns32;
       Inst_Obj : Inst_Object;
       Inst : Instance;
    begin
@@ -275,8 +274,6 @@ package body Synth.Insts is
       --  FIXME: what about unconstrained ports ?  Get the type from the
       --    association.
       Inter := Get_Port_Chain (Ent);
-      Nbr_Inputs := 0;
-      Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
          if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
             --  TODO
@@ -286,13 +283,9 @@ package body Synth.Insts is
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Make_Object (Sub_Inst, Wire_None, Inter);
-               Num := Get_Nbr_Wire (Get_Value (Sub_Inst, Inter));
-               Nbr_Inputs := Nbr_Inputs + Port_Nbr (Num);
             when Port_Out
               | Port_Inout =>
                Make_Object (Sub_Inst, Wire_None, Inter);
-               Num := Get_Nbr_Wire (Get_Value (Sub_Inst, Inter));
-               Nbr_Outputs := Nbr_Outputs + Port_Nbr (Num);
          end case;
          Inter := Get_Chain (Inter);
       end loop;
