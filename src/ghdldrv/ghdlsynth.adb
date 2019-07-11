@@ -106,6 +106,8 @@ package body Ghdlsynth is
       Vhdl.Annotations.Flag_Synthesis := True;
 
       Common_Compile_Init (False);
+      --  Will elaborate.
+      Flags.Flag_Elaborate := True;
       Flags.Flag_Elaborate_With_Outdated := False;
       Flags.Flag_Only_Elab_Warnings := True;
 

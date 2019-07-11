@@ -104,7 +104,7 @@ package Flags is
 
    --  If set to true, it means that analyze is done for elaboration.
    --  The purpose is to avoid spurious warning "will be checked
-   --  at elaboration"
+   --  at elaboration".  It will also create default binding.
    Flag_Elaborate : Boolean := False;
 
    --  If set, a default aspect entity aspect might be an outdated unit.
