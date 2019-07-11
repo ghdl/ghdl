@@ -335,12 +335,18 @@ package body Vhdl.Sem_Lib is
    -- Load, parse, analyze, back-end a design_unit if necessary.
    procedure Load_Design_Unit (Design_Unit : Iir_Design_Unit; Loc : Iir)
    is
+      Prev_Nbr_Errors : Natural;
       Warnings : Warnings_Setting;
    begin
       if Get_Date (Design_Unit) = Date_Replacing then
          Error_Msg_Sem (+Loc, "circular reference of %n", +Design_Unit);
          return;
       end if;
+
+      --  Save and clear Nbr_Errors so that the unit is fully analyzed even
+      --  if there were errors.
+      Prev_Nbr_Errors := Errorout.Nbr_Errors;
+      Errorout.Nbr_Errors := 0;
 
       if Get_Date_State (Design_Unit) = Date_Disk then
          Load_Parse_Design_Unit (Design_Unit, Loc);
@@ -375,9 +381,13 @@ package body Vhdl.Sem_Lib is
            and then Check_Obsolete_Dependence (Design_Unit, Loc)
          then
             Set_Date (Design_Unit, Date_Obsolete);
+            Errorout.Nbr_Errors := Prev_Nbr_Errors + Errorout.Nbr_Errors;
             return;
          end if;
       end if;
+
+      --  Restore nbr_errors (accumulate).
+      Errorout.Nbr_Errors := Prev_Nbr_Errors + Errorout.Nbr_Errors;
 
       case Get_Date (Design_Unit) is
          when Date_Parsed =>
