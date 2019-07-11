@@ -55,4 +55,7 @@ package Vhdl.Sem_Lib is
    --  Analyze UNIT.
    procedure Finish_Compilation
      (Unit : Iir_Design_Unit; Main : Boolean := False);
+
+   --  Free the dependence list of DESIGN.  For libghdl.
+   procedure Free_Dependence_List (Design : Iir_Design_Unit);
 end Vhdl.Sem_Lib;

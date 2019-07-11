@@ -172,6 +172,7 @@ package body Vhdl.Sem_Lib is
          Next (It);
       end loop;
       Destroy_Iir_List (List);
+      Set_Dependence_List (Design, Null_Iir_List);
    end Free_Dependence_List;
 
    procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
