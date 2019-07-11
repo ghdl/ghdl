@@ -556,7 +556,7 @@ package body Vhdl.Configuration is
             Inst := Strip_Denoting_Name (Inst);
             Report_Start_Group;
             Warning_Msg_Elab (Warnid_Binding, Conf,
-                              "%n of %n is not bound",
+                              "instance %i of component %i is not bound",
                               (+Inst, +Get_Instantiated_Unit (Inst)));
             Warning_Msg_Elab (Warnid_Binding, Current_Configuration,
                               "(in %n)", +Current_Configuration);
