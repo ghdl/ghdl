@@ -1305,17 +1305,14 @@ package body Vhdl.Utils is
    end Is_Operation_For_Type;
 
    -- From a block_specification, returns the block.
-   function Get_Block_From_Block_Specification (Block_Spec : Iir)
-     return Iir
+   function Get_Block_From_Block_Specification (Block_Spec : Iir) return Iir
    is
       Res : Iir;
    begin
       case Get_Kind (Block_Spec) is
          when Iir_Kind_Design_Unit =>
             Res := Get_Library_Unit (Block_Spec);
-            if Get_Kind (Res) /= Iir_Kind_Architecture_Body then
-               raise Internal_Error;
-            end if;
+            pragma Assert (Get_Kind (Res) = Iir_Kind_Architecture_Body);
             return Res;
          when Iir_Kind_Block_Statement
            | Iir_Kind_Architecture_Body

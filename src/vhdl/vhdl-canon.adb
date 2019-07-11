@@ -3001,7 +3001,8 @@ package body Vhdl.Canon is
             when Iir_Kind_Component_Configuration =>
                Canon_Component_Specification (El, Blk);
             when Iir_Kind_Block_Configuration =>
-               Sub_Blk := Strip_Denoting_Name (Get_Block_Specification (El));
+               Sub_Blk := Get_Block_From_Block_Specification
+                 (Get_Block_Specification (El));
                case Get_Kind (Sub_Blk) is
                   when Iir_Kind_Block_Statement =>
                      Set_Block_Block_Configuration (Sub_Blk, El);
@@ -3309,8 +3310,7 @@ package body Vhdl.Canon is
 
    --  Create a default configuration declaration for architecture ARCH.
    function Create_Default_Configuration_Declaration
-     (Arch : Iir_Architecture_Body)
-     return Iir_Design_Unit
+     (Arch : Iir_Architecture_Body) return Iir_Design_Unit
    is
       Loc : constant Location_Type := Get_Location (Arch);
       Config : Iir_Configuration_Declaration;
