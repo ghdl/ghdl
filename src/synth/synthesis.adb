@@ -92,6 +92,7 @@ package body Synthesis is
    is
       Unit : constant Node := Get_Library_Unit (Design);
       Arch : Node;
+      Config : Node;
 
       Syn_Inst : Synth_Instance_Acc;
    begin
@@ -99,7 +100,10 @@ package body Synthesis is
       case Get_Kind (Unit) is
          when Iir_Kind_Architecture_Body =>
             Arch := Unit;
+            Config := Get_Library_Unit
+              (Get_Default_Configuration_Declaration (Arch));
          when Iir_Kind_Configuration_Declaration =>
+            Config := Unit;
             Arch := Get_Named_Entity
               (Get_Block_Specification (Get_Block_Configuration (Unit)));
          when others =>
@@ -119,7 +123,7 @@ package body Synthesis is
       Synth_Dependencies
         (Global_Instance, Get_Design_Unit (Arch));
 
-      Synth_Top_Entity (Arch);
+      Synth_Top_Entity (Arch, Config);
       Synth_All_Instances;
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;

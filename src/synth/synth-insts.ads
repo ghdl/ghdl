@@ -26,7 +26,7 @@ package Synth.Insts is
    procedure Init;
    procedure Synth_All_Instances;
 
-   procedure Synth_Top_Entity (Arch : Node);
+   procedure Synth_Top_Entity (Arch : Node; Config : Node);
 
    procedure Synth_Design_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);

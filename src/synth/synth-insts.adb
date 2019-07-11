@@ -375,15 +375,11 @@ package body Synth.Insts is
       raise Internal_Error;
    end Synth_Component_Instantiation_Statement;
 
-   procedure Synth_Top_Entity (Arch : Node)
+   procedure Synth_Top_Entity (Arch : Node; Config : Node)
    is
-      Config : constant Node := Null_Node; --  FIXME
       Entity : constant Node := Get_Entity (Arch);
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
-      Nbr_Inputs : Port_Nbr;
-      Nbr_Outputs : Port_Nbr;
-      Num : Uns32;
       Inst_Obj : Inst_Object;
    begin
       Syn_Inst := Make_Instance (Global_Instance, Get_Info (Arch));
@@ -408,8 +404,6 @@ package body Synth.Insts is
       --  FIXME: what about unconstrained ports ?  Get the type from the
       --    association.
       Inter := Get_Port_Chain (Entity);
-      Nbr_Inputs := 0;
-      Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
          if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
             --  TODO
@@ -419,13 +413,9 @@ package body Synth.Insts is
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Make_Object (Syn_Inst, Wire_None, Inter);
-               Num := Get_Nbr_Wire (Get_Value (Syn_Inst, Inter));
-               Nbr_Inputs := Nbr_Inputs + Port_Nbr (Num);
             when Port_Out
               | Port_Inout =>
                Make_Object (Syn_Inst, Wire_None, Inter);
-               Num := Get_Nbr_Wire (Get_Value (Syn_Inst, Inter));
-               Nbr_Outputs := Nbr_Outputs + Port_Nbr (Num);
          end case;
          Inter := Get_Chain (Inter);
       end loop;
