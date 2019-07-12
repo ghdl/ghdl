@@ -1109,7 +1109,7 @@ package body Vhdl.Sem is
       end;
 
       --  VHDL 87: do not remove configuration specification in generate stmts.
-      Clear_Instantiation_Configuration (Block, False);
+      Clear_Instantiation_Configuration (Block);
 
       El := Get_Configuration_Item_Chain (Block_Conf);
       while El /= Null_Iir loop

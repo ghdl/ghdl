@@ -2900,7 +2900,7 @@ package body Vhdl.Canon is
       Anon_Label : Natural;
    begin
       if Parent /= Null_Iir then
-         Clear_Instantiation_Configuration (Parent, True);
+         Clear_Instantiation_Configuration (Parent);
       end if;
 
       Anon_Label := 0;
@@ -2976,7 +2976,7 @@ package body Vhdl.Canon is
 
       --  FIXME: handle indexed/sliced name?
 
-      Clear_Instantiation_Configuration (Blk, False);
+      Clear_Instantiation_Configuration (Blk);
 
       --  1) Configure instantiations with configuration specifications.
       --  TODO: merge.

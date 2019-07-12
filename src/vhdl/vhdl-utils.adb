@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Flags; use Flags;
 with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
@@ -645,38 +644,33 @@ package body Vhdl.Utils is
       end case;
    end Get_Unit_From_Dependence;
 
-   procedure Clear_Instantiation_Configuration_Vhdl87
-     (Parent : Iir; In_Generate : Boolean; Full : Boolean)
+   procedure Clear_Instantiation_Configuration (Parent : Iir)
    is
       El : Iir;
-      Prev : Iir;
    begin
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Component_Instantiation_Statement =>
-               if In_Generate and not Full then
-                  Prev := Get_Component_Configuration (El);
-                  if Prev /= Null_Iir then
-                     case Get_Kind (Prev) is
-                        when Iir_Kind_Configuration_Specification =>
-                           --  Keep it.
-                           null;
-                        when Iir_Kind_Component_Configuration =>
-                           Set_Component_Configuration (El, Null_Iir);
-                        when others =>
-                           Error_Kind
-                             ("clear_instantiation_configuration_vhdl87",
-                              Prev);
-                     end case;
-                  end if;
-               else
-                  Set_Component_Configuration (El, Null_Iir);
-               end if;
+               Set_Component_Configuration (El, Null_Iir);
             when Iir_Kind_For_Generate_Statement =>
-               Set_Generate_Block_Configuration (El, Null_Iir);
-               --  Clear inside a generate statement.
-               Clear_Instantiation_Configuration_Vhdl87 (El, True, Full);
+               declare
+                  Bod : constant Iir := Get_Generate_Statement_Body (El);
+               begin
+                  Set_Generate_Block_Configuration (Bod, Null_Iir);
+               end;
+            when Iir_Kind_If_Generate_Statement =>
+               declare
+                  Clause : Iir;
+                  Bod : Iir;
+               begin
+                  Clause := El;
+                  while Clause /= Null_Iir loop
+                     Bod := Get_Generate_Statement_Body (Clause);
+                     Set_Generate_Block_Configuration (Bod, Null_Iir);
+                     Clause := Get_Generate_Else_Clause (Clause);
+                  end loop;
+               end;
             when Iir_Kind_Block_Statement =>
                Set_Block_Block_Configuration (El, Null_Iir);
             when others =>
@@ -684,47 +678,6 @@ package body Vhdl.Utils is
          end case;
          El := Get_Chain (El);
       end loop;
-   end Clear_Instantiation_Configuration_Vhdl87;
-
-   procedure Clear_Instantiation_Configuration (Parent : Iir; Full : Boolean)
-   is
-      El : Iir;
-   begin
-      if False and then Flags.Vhdl_Std = Vhdl_87 then
-         Clear_Instantiation_Configuration_Vhdl87
-           (Parent, Get_Kind (Parent) = Iir_Kind_For_Generate_Statement, Full);
-      else
-         El := Get_Concurrent_Statement_Chain (Parent);
-         while El /= Null_Iir loop
-            case Get_Kind (El) is
-               when Iir_Kind_Component_Instantiation_Statement =>
-                  Set_Component_Configuration (El, Null_Iir);
-               when Iir_Kind_For_Generate_Statement =>
-                  declare
-                     Bod : constant Iir := Get_Generate_Statement_Body (El);
-                  begin
-                     Set_Generate_Block_Configuration (Bod, Null_Iir);
-                  end;
-               when Iir_Kind_If_Generate_Statement =>
-                  declare
-                     Clause : Iir;
-                     Bod : Iir;
-                  begin
-                     Clause := El;
-                     while Clause /= Null_Iir loop
-                        Bod := Get_Generate_Statement_Body (Clause);
-                        Set_Generate_Block_Configuration (Bod, Null_Iir);
-                        Clause := Get_Generate_Else_Clause (Clause);
-                     end loop;
-                  end;
-               when Iir_Kind_Block_Statement =>
-                  Set_Block_Block_Configuration (El, Null_Iir);
-               when others =>
-                  null;
-            end case;
-            El := Get_Chain (El);
-         end loop;
-      end if;
    end Clear_Instantiation_Configuration;
 
    --  Get identifier of NODE as a string.

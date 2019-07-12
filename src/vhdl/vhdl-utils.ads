@@ -126,7 +126,7 @@ package Vhdl.Utils is
 
    --  Clear configuration field of all component instantiation of
    --  the concurrent statements of PARENT.
-   procedure Clear_Instantiation_Configuration (Parent : Iir; Full : Boolean);
+   procedure Clear_Instantiation_Configuration (Parent : Iir);
 
    --  Free Node and its prefixes, if any.
    procedure Free_Name (Node : Iir);
