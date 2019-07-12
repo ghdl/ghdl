@@ -2304,9 +2304,9 @@ package body Simul.Elaboration is
                   El : Iir;
                   Info : Sim_Info_Acc;
                begin
-                  if List = Iir_Flist_All or else List = Iir_Flist_Others then
-                     raise Internal_Error;
-                  end if;
+                  --  The list has been expanded by canon.
+                  pragma Assert (List /= Iir_Flist_All
+                                   and then List /= Iir_Flist_Others);
                   for I in Flist_First .. Flist_Last (List) loop
                      El := Get_Nth_Element (List, I);
                      Info := Get_Info (Get_Named_Entity (El));
