@@ -30,6 +30,7 @@ with Netlists.Utils;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Annotations; use Vhdl.Annotations;
+with Vhdl.Errors;
 
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
@@ -155,6 +156,8 @@ package body Synth.Insts is
       Nbr_Outputs : Port_Nbr;
       Num : Uns32;
    begin
+      pragma Assert (Get_Kind (Params.Config) = Iir_Kind_Block_Configuration);
+
       --  Create the instance.
       Syn_Inst := Make_Instance (Global_Instance, Get_Info (Arch));
       Syn_Inst.Block_Scope := Get_Info (Entity);
@@ -229,6 +232,60 @@ package body Synth.Insts is
       Build => Build,
       Equal => Equal);
 
+   procedure Synth_Instantiate_Module (Syn_Inst : Synth_Instance_Acc;
+                                       Inst : Instance;
+                                       Ports : Node;
+                                       Ports_Assoc : Node)
+   is
+      --  Instantiate the module
+      --  Elaborate ports + map aspect for the inputs (component then entity)
+      --  Elaborate ports + map aspect for the outputs (entity then component)
+
+      Assoc : Node;
+      Assoc_Inter : Node;
+      Inter : Node;
+      Actual : Node;
+      Port : Net;
+      O : Value_Acc;
+      Nbr_Inputs : Port_Nbr;
+      Nbr_Outputs : Port_Nbr;
+   begin
+      Assoc := Ports_Assoc;
+      Assoc_Inter := Ports;
+      Nbr_Inputs := 0;
+      Nbr_Outputs := 0;
+      while Is_Valid (Assoc) loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_Open =>
+               Actual := Get_Default_Value (Inter);
+            when Iir_Kind_Association_Element_By_Expression =>
+               Actual := Get_Actual (Assoc);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         case Mode_To_Port_Kind (Get_Mode (Inter)) is
+            when Port_In =>
+               Connect
+                 (Get_Input (Inst, Nbr_Inputs),
+                  Get_Net (Synth_Expression_With_Type
+                             (Syn_Inst, Actual, Get_Type (Assoc_Inter)),
+                           Get_Type (Assoc_Inter)));
+               Nbr_Inputs := Nbr_Inputs + 1;
+            when Port_Out
+              | Port_Inout =>
+               Port := Get_Output (Inst, Nbr_Outputs);
+               Port := Builders.Build_Port (Build_Context, Port);
+               O := Create_Value_Net (Port, null);
+               Synth_Assignment (Syn_Inst, Actual, O);
+               Nbr_Outputs := Nbr_Outputs + 1;
+         end case;
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Synth_Instantiate_Module;
+
    procedure Synth_Design_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -238,8 +295,6 @@ package body Synth.Insts is
       Config : Node;
       Sub_Inst : Synth_Instance_Acc;
       Inter : Node;
-      Nbr_Inputs : Port_Nbr;
-      Nbr_Outputs : Port_Nbr;
       Inst_Obj : Inst_Object;
       Inst : Instance;
    begin
@@ -304,20 +359,168 @@ package body Synth.Insts is
       Inst := New_Instance (Syn_Inst.M, Inst_Obj.Syn_Inst.M,
                             New_Sname_User (Get_Identifier (Stmt)));
 
-      --  Instantiate the module
-      --  Elaborate ports + map aspect for the inputs (component then entity)
-      --  Elaborate ports + map aspect for the outputs (entity then component)
+      Synth_Instantiate_Module
+        (Syn_Inst, Inst,
+         Get_Port_Chain (Ent), Get_Port_Map_Aspect_Chain (Stmt));
+   end Synth_Design_Instantiation_Statement;
 
+   procedure Create_Component_Wire (Inter : Node; Val : Value_Acc)
+   is
+      Value : Net;
+   begin
+      case Val.Kind is
+         when Value_Wire =>
+            --  Create a gate for the output, so that it could be read.
+            Val.W := Alloc_Wire (Wire_Output, Inter);
+            Value := Builders.Build_Signal
+              (Build_Context, New_Sname (No_Sname, Get_Identifier (Inter)),
+               Val.W_Bound.Len);
+            Wire_Id_Table.Table (Val.W).Gate := Value;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Create_Component_Wire;
+
+   procedure Synth_Component_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Component : constant Node :=
+        Get_Named_Entity (Get_Instantiated_Unit (Stmt));
+      Config : constant Node := Get_Component_Configuration (Stmt);
+      Bind : constant Node := Get_Binding_Indication (Config);
+      Aspect : constant Node := Get_Entity_Aspect (Bind);
+      Comp_Inst : Synth_Instance_Acc;
+
+      Ent : Node;
+      Arch : Node;
+      Sub_Config : Node;
+      Sub_Inst : Synth_Instance_Acc;
+      Inst_Obj : Inst_Object;
+      Inst : Instance;
+   begin
+      pragma Assert (Get_Component_Configuration (Stmt) /= Null_Node);
+      pragma Assert (Get_Kind (Aspect) = Iir_Kind_Entity_Aspect_Entity);
+
+      --  Create the sub-instance for the component
+      --  Elaborate generic + map aspect
+      Comp_Inst := Make_Instance (Syn_Inst, Get_Info (Component));
+      Comp_Inst.Name := New_Sname_User (Get_Identifier (Component));
+      Synth_Subprogram_Association (Comp_Inst, Syn_Inst,
+                                    Get_Generic_Chain (Component),
+                                    Get_Generic_Map_Aspect_Chain (Stmt));
+
+      --  Assign inputs.
       declare
          Assoc : Node;
          Assoc_Inter : Node;
          Actual : Node;
-         Port : Net;
-         O : Value_Acc;
+         Inter : Node;
       begin
          Assoc := Get_Port_Map_Aspect_Chain (Stmt);
-         Assoc_Inter := Get_Port_Chain (Ent);
-         Nbr_Inputs := 0;
+         Assoc_Inter := Get_Port_Chain (Component);
+         while Is_Valid (Assoc) loop
+            Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+            case Get_Kind (Assoc) is
+               when Iir_Kind_Association_Element_Open =>
+                  Actual := Get_Default_Value (Inter);
+               when Iir_Kind_Association_Element_By_Expression =>
+                  Actual := Get_Actual (Assoc);
+               when others =>
+                  raise Internal_Error;
+            end case;
+
+            case Mode_To_Port_Kind (Get_Mode (Inter)) is
+               when Port_In =>
+                  Create_Object
+                    (Comp_Inst, Assoc_Inter,
+                     Synth_Expression_With_Type
+                       (Syn_Inst, Actual, Get_Type (Assoc_Inter)));
+               when Port_Out
+                 | Port_Inout =>
+                  Make_Object (Comp_Inst, Wire_None, Assoc_Inter);
+                  Create_Component_Wire
+                    (Assoc_Inter, Get_Value (Comp_Inst, Assoc_Inter));
+            end case;
+            Next_Association_Interface (Assoc, Assoc_Inter);
+         end loop;
+      end;
+
+      case Get_Kind (Aspect) is
+         when Iir_Kind_Entity_Aspect_Entity =>
+            Ent := Get_Entity (Aspect);
+            Arch := Get_Architecture (Aspect);
+         when others =>
+            Vhdl.Errors.Error_Kind
+              ("Synth_Component_Instantiation_Statement(2)", Aspect);
+      end case;
+
+      if Arch = Null_Node then
+         Arch := Libraries.Get_Latest_Architecture (Ent);
+         Sub_Config := Get_Library_Unit
+           (Get_Default_Configuration_Declaration (Arch));
+         Sub_Config := Get_Block_Configuration (Sub_Config);
+      else
+         raise Internal_Error;
+      end if;
+
+      --  Elaborate generic + map aspect
+      Sub_Inst := Make_Instance (Comp_Inst, Get_Info (Ent));
+      Sub_Inst.Name := New_Sname_User (Get_Identifier (Ent));
+      Synth_Subprogram_Association (Sub_Inst, Comp_Inst,
+                                    Get_Generic_Chain (Ent),
+                                    Get_Generic_Map_Aspect_Chain (Bind));
+
+      --  Elaborate port types.
+      --  FIXME: what about unconstrained ports ?  Get the type from the
+      --    association.
+      declare
+         Inter : Node;
+      begin
+         Inter := Get_Port_Chain (Ent);
+         while Is_Valid (Inter) loop
+            if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
+               --  TODO
+               raise Internal_Error;
+            end if;
+            Synth_Declaration_Type (Sub_Inst, Inter);
+            Inter := Get_Chain (Inter);
+         end loop;
+      end;
+
+      --  Search if corresponding module has already been used.
+      --  If not create a new module
+      --   * create a name from the generics and the library
+      --   * create inputs/outputs
+      --   * add it to the list of module to be synthesized.
+      Inst_Obj := Insts_Interning.Get ((Arch => Arch,
+                                        Config => Sub_Config,
+                                        Syn_Inst => Sub_Inst));
+
+      --  TODO: free sub_inst.
+
+      Inst := New_Instance (Syn_Inst.M, Inst_Obj.Syn_Inst.M,
+                            New_Sname_User (Get_Identifier (Stmt)));
+
+      Synth_Instantiate_Module
+        (Comp_Inst, Inst,
+         Get_Port_Chain (Ent), Get_Port_Map_Aspect_Chain (Bind));
+
+      --  Connect out from component to instance.
+      --  Instantiate the module
+      --  Elaborate ports + map aspect for the inputs (component then entity)
+      --  Elaborate ports + map aspect for the outputs (entity then component)
+      declare
+         Assoc : Node;
+         Assoc_Inter : Node;
+         Inter : Node;
+         Actual : Node;
+         Port : Net;
+         O : Value_Acc;
+         Nbr_Outputs : Port_Nbr;
+      begin
+         Assoc := Get_Port_Map_Aspect_Chain (Stmt);
+         Assoc_Inter := Get_Port_Chain (Component);
          Nbr_Outputs := 0;
          while Is_Valid (Assoc) loop
             Inter := Get_Association_Interface (Assoc, Assoc_Inter);
@@ -333,12 +536,7 @@ package body Synth.Insts is
 
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
-                  Connect
-                    (Get_Input (Inst, Nbr_Inputs),
-                     Get_Net (Synth_Expression_With_Type
-                                (Syn_Inst, Actual, Get_Type (Assoc_Inter)),
-                              Get_Type (Assoc_Inter)));
-                  Nbr_Inputs := Nbr_Inputs + 1;
+                  null;
                when Port_Out
                  | Port_Inout =>
                   Port := Get_Output (Inst, Nbr_Outputs);
@@ -350,29 +548,6 @@ package body Synth.Insts is
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
       end;
-   end Synth_Design_Instantiation_Statement;
-
-   procedure Synth_Component_Instantiation_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
-   is
-   begin
-      --  Create the sub-instance for the component
-      --  Elaborate generic + map aspect
-
-      --  Load configured entity + architecture
-      --  Elaborate generic + map aspect
-
-      --  Search if corresponding module has already been used.
-      --   * compare with generics value, ports size, configuration.
-      --  If not create a new module
-      --   * create a name from the generics, the library, the configuration
-      --   * create inputs/outputs
-      --   * add it to the list of module to be synthesized.
-
-      --  Instantiate the module
-      --  Elaborate ports + map aspect for the inputs (component then entity)
-      --  Elaborate ports + map aspect for the outputs (entity then component)
-      raise Internal_Error;
    end Synth_Component_Instantiation_Statement;
 
    procedure Synth_Top_Entity (Arch : Node; Config : Node)
@@ -415,7 +590,7 @@ package body Synth.Insts is
                Make_Object (Syn_Inst, Wire_None, Inter);
             when Port_Out
               | Port_Inout =>
-               Make_Object (Syn_Inst, Wire_None, Inter);
+               Make_Object (Syn_Inst, Wire_Output, Inter);
          end case;
          Inter := Get_Chain (Inter);
       end loop;
@@ -425,9 +600,10 @@ package body Synth.Insts is
       --   * create a name from the generics and the library
       --   * create inputs/outputs
       --   * add it to the list of module to be synthesized.
-      Inst_Obj := Insts_Interning.Get ((Arch => Arch,
-                                        Config => Config,
-                                        Syn_Inst => Syn_Inst));
+      Inst_Obj := Insts_Interning.Get
+        ((Arch => Arch,
+          Config => Get_Block_Configuration (Config),
+          Syn_Inst => Syn_Inst));
       pragma Unreferenced (Inst_Obj);
    end Synth_Top_Entity;
 
@@ -460,6 +636,7 @@ package body Synth.Insts is
             --  Create a gate for the output, so that it could be read.
             Val.W := Alloc_Wire (Wire_Output, Inter);
             W := Get_Output_Desc (Get_Module (Self_Inst), Idx).W;
+            pragma Assert (W = Val.W_Bound.Len);
             Value := Builders.Build_Output (Build_Context, W);
             Inp := Get_Input (Self_Inst, Idx);
             Connect (Inp, Value);
@@ -469,6 +646,43 @@ package body Synth.Insts is
             raise Internal_Error;
       end case;
    end Create_Output_Wire;
+
+   procedure Apply_Block_Configuration (Cfg : Node; Blk : Node)
+   is
+      Item : Node;
+   begin
+      pragma Assert (Get_Block_From_Block_Specification
+                       (Get_Block_Specification (Cfg)) = Blk);
+      Item := Get_Configuration_Item_Chain (Cfg);
+      while Item /= Null_Node loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Component_Configuration =>
+               declare
+                  List : constant Iir_Flist :=
+                    Get_Instantiation_List (Item);
+                  El : Node;
+                  Inst : Node;
+               begin
+                  for I in Flist_First .. Flist_Last (List) loop
+                     El := Get_Nth_Element (List, I);
+                     Inst := Get_Named_Entity (El);
+                     pragma Assert
+                       (Get_Kind (Inst)
+                          = Iir_Kind_Component_Instantiation_Statement);
+                     pragma Assert
+                       (Get_Component_Configuration (Inst) = Null_Node);
+                     Set_Component_Configuration (Inst, Item);
+                  end loop;
+               end;
+            when Iir_Kind_Block_Configuration =>
+               --  TODO
+               raise Internal_Error;
+            when others =>
+               Vhdl.Errors.Error_Kind ("apply_block_configuration", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+   end Apply_Block_Configuration;
 
    procedure Synth_Instance (Inst : Inst_Object)
    is
@@ -499,6 +713,12 @@ package body Synth.Insts is
          end case;
          Inter := Get_Chain (Inter);
       end loop;
+
+      --  Apply configuration.
+      --  FIXME: what about inner block configuration ?
+      pragma Assert (Get_Kind (Inst.Config) = Iir_Kind_Block_Configuration);
+      Apply_Block_Configuration (Inst.Config, Arch);
+
 
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
       Synth_Concurrent_Statements
