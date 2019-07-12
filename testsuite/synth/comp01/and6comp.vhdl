@@ -1,12 +1,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity and6comp is
+entity and6 is
   port (i0, i1, i2, i3, i4, i5 : std_logic;
         o : out std_logic);
-end and6comp;
+end and6;
 
-architecture behav of and6comp is
+architecture behav of and6 is
   component and3 is
     port (a, b, c : std_logic;
           o : out std_logic);
