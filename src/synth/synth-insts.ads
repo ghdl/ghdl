@@ -30,6 +30,8 @@ package Synth.Insts is
 
    procedure Synth_Design_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
+   procedure Synth_Blackbox_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
 
    procedure Synth_Component_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);

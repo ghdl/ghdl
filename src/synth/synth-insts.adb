@@ -99,13 +99,20 @@ package body Synth.Insts is
       Make_Port_Desc (Val, Name, Wd, Ports, Idx, Dir);
    end Make_Port_Desc;
 
+   --  Parameters that define an instance.
    type Inst_Params is record
+      --  Declaration: either the entity or the component.
+      Decl : Node;
+      --  Implementation: the architecture or Null_Node for black boxes.
       Arch : Node;
+      --  Configuration (Null_Node for black boxes).
       Config : Node;
+      --  Values of generics.
       Syn_Inst : Synth_Instance_Acc;
    end record;
 
    type Inst_Object is record
+      Decl : Node;
       Arch : Node;
       Config : Node;
       Syn_Inst : Synth_Instance_Acc;
@@ -115,7 +122,8 @@ package body Synth.Insts is
    is
       Res : Hash_Value_Type;
    begin
-      Res := Hash_Value_Type (Params.Arch);
+      Res := Hash_Value_Type (Params.Decl);
+      Res := Res xor Hash_Value_Type (Params.Arch);
       Res := Res xor Hash_Value_Type (Params.Config);
       --  TODO: hash generics
       return Res;
@@ -123,16 +131,15 @@ package body Synth.Insts is
 
    function Equal (Obj : Inst_Object; Params : Inst_Params) return Boolean
    is
-      Ent : Node;
       Inter : Node;
    begin
-      if Obj.Arch /= Params.Arch
+      if Obj.Decl /= Params.Decl
+        or else Obj.Arch /= Params.Arch
         or else Obj.Config /= Params.Config
       then
          return False;
       end if;
-      Ent := Get_Entity (Obj.Arch);
-      Inter := Get_Generic_Chain (Ent);
+      Inter := Get_Generic_Chain (Params.Decl);
       while Inter /= Null_Node loop
          if not Is_Equal (Get_Value (Obj.Syn_Inst, Inter),
                           Get_Value (Params.Syn_Inst, Inter))
@@ -148,30 +155,39 @@ package body Synth.Insts is
 
    function Build (Params : Inst_Params) return Inst_Object
    is
+      Decl : constant Node := Params.Decl;
       Arch : constant Node := Params.Arch;
-      Entity : constant Node := Get_Entity (Arch);
+      Imp : Node;
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
       Num : Uns32;
    begin
-      pragma Assert (Get_Kind (Params.Config) = Iir_Kind_Block_Configuration);
+      if Get_Kind (Params.Decl) = Iir_Kind_Component_Declaration then
+         pragma Assert (Params.Arch = Null_Node);
+         pragma Assert (Params.Config = Null_Node);
+         Imp := Params.Decl;
+      else
+         pragma Assert
+           (Get_Kind (Params.Config) = Iir_Kind_Block_Configuration);
+         Imp := Params.Arch;
+      end if;
 
       --  Create the instance.
-      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Arch));
-      Syn_Inst.Block_Scope := Get_Info (Entity);
-      Syn_Inst.Name := New_Sname_User (Get_Identifier (Entity));
+      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Imp));
+      Syn_Inst.Block_Scope := Get_Info (Decl);
+      Syn_Inst.Name := New_Sname_User (Get_Identifier (Decl));
 
       --  Copy values for generics.
-      Inter := Get_Generic_Chain (Entity);
+      Inter := Get_Generic_Chain (Decl);
       while Inter /= Null_Node loop
          Create_Object (Syn_Inst, Inter, Get_Value (Params.Syn_Inst, Inter));
          Inter := Get_Chain (Inter);
       end loop;
 
       --  Allocate values and count inputs and outputs
-      Inter := Get_Port_Chain (Entity);
+      Inter := Get_Port_Chain (Decl);
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
@@ -192,7 +208,7 @@ package body Synth.Insts is
 
       --  Declare module.
       Syn_Inst.M := New_User_Module
-        (Global_Module, New_Sname_User (Get_Identifier (Entity)),
+        (Global_Module, New_Sname_User (Get_Identifier (Decl)),
          Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
 
       --  Add ports to module.
@@ -200,7 +216,7 @@ package body Synth.Insts is
          Inports : Port_Desc_Array (1 .. Nbr_Inputs);
          Outports : Port_Desc_Array (1 .. Nbr_Outputs);
       begin
-         Inter := Get_Port_Chain (Entity);
+         Inter := Get_Port_Chain (Decl);
          Nbr_Inputs := 0;
          Nbr_Outputs := 0;
          while Is_Valid (Inter) loop
@@ -220,7 +236,8 @@ package body Synth.Insts is
          Set_Port_Desc (Syn_Inst.M, Inports, Outports);
       end;
 
-      return Inst_Object'(Arch => Arch,
+      return Inst_Object'(Decl => Decl,
+                          Arch => Arch,
                           Config => Params.Config,
                           Syn_Inst => Syn_Inst);
    end Build;
@@ -286,38 +303,18 @@ package body Synth.Insts is
       end loop;
    end Synth_Instantiate_Module;
 
-   procedure Synth_Design_Instantiation_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
-   is
-      Aspect : constant Iir := Get_Instantiated_Unit (Stmt);
-      Arch : Node;
+   procedure Synth_Direct_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc;
+      Stmt : Node;
       Ent : Node;
-      Config : Node;
+      Arch : Node;
+      Config : Node)
+   is
       Sub_Inst : Synth_Instance_Acc;
       Inter : Node;
       Inst_Obj : Inst_Object;
       Inst : Instance;
    begin
-      --  Load configured entity + architecture
-      case Iir_Kinds_Entity_Aspect (Get_Kind (Aspect)) is
-         when Iir_Kind_Entity_Aspect_Entity =>
-            Arch := Get_Architecture (Aspect);
-            if Arch = Null_Node then
-               Arch := Libraries.Get_Latest_Architecture (Get_Entity (Aspect));
-            else
-               Arch := Strip_Denoting_Name (Arch);
-            end if;
-            Config := Get_Library_Unit
-              (Get_Default_Configuration_Declaration (Arch));
-         when Iir_Kind_Entity_Aspect_Configuration =>
-            Config := Get_Configuration (Aspect);
-            Arch := Get_Block_Specification (Get_Block_Configuration (Config));
-         when Iir_Kind_Entity_Aspect_Open =>
-            return;
-      end case;
-      Config := Get_Block_Configuration (Config);
-      Ent := Get_Entity (Arch);
-
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance (Syn_Inst, Get_Info (Ent));
       Sub_Inst.Name := New_Sname_User (Get_Identifier (Ent));
@@ -350,7 +347,8 @@ package body Synth.Insts is
       --   * create a name from the generics and the library
       --   * create inputs/outputs
       --   * add it to the list of module to be synthesized.
-      Inst_Obj := Insts_Interning.Get ((Arch => Arch,
+      Inst_Obj := Insts_Interning.Get ((Decl => Ent,
+                                        Arch => Arch,
                                         Config => Config,
                                         Syn_Inst => Sub_Inst));
 
@@ -362,7 +360,49 @@ package body Synth.Insts is
       Synth_Instantiate_Module
         (Syn_Inst, Inst,
          Get_Port_Chain (Ent), Get_Port_Map_Aspect_Chain (Stmt));
+   end Synth_Direct_Instantiation_Statement;
+
+   procedure Synth_Design_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Aspect : constant Iir := Get_Instantiated_Unit (Stmt);
+      Arch : Node;
+      Ent : Node;
+      Config : Node;
+   begin
+      --  Load configured entity + architecture
+      case Iir_Kinds_Entity_Aspect (Get_Kind (Aspect)) is
+         when Iir_Kind_Entity_Aspect_Entity =>
+            Arch := Get_Architecture (Aspect);
+            if Arch = Null_Node then
+               Arch := Libraries.Get_Latest_Architecture (Get_Entity (Aspect));
+            else
+               Arch := Strip_Denoting_Name (Arch);
+            end if;
+            Config := Get_Library_Unit
+              (Get_Default_Configuration_Declaration (Arch));
+         when Iir_Kind_Entity_Aspect_Configuration =>
+            Config := Get_Configuration (Aspect);
+            Arch := Get_Block_Specification (Get_Block_Configuration (Config));
+         when Iir_Kind_Entity_Aspect_Open =>
+            return;
+      end case;
+      Config := Get_Block_Configuration (Config);
+      Ent := Get_Entity (Arch);
+
+      Synth_Direct_Instantiation_Statement
+        (Syn_Inst, Stmt, Ent, Arch, Config);
    end Synth_Design_Instantiation_Statement;
+
+   procedure Synth_Blackbox_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Comp : constant Node :=
+        Get_Named_Entity (Get_Instantiated_Unit (Stmt));
+   begin
+      Synth_Direct_Instantiation_Statement
+        (Syn_Inst, Stmt, Comp, Null_Node, Null_Node);
+   end Synth_Blackbox_Instantiation_Statement;
 
    procedure Create_Component_Wire (Inter : Node; Val : Value_Acc)
    is
@@ -493,7 +533,8 @@ package body Synth.Insts is
       --   * create a name from the generics and the library
       --   * create inputs/outputs
       --   * add it to the list of module to be synthesized.
-      Inst_Obj := Insts_Interning.Get ((Arch => Arch,
+      Inst_Obj := Insts_Interning.Get ((Decl => Ent,
+                                        Arch => Arch,
                                         Config => Sub_Config,
                                         Syn_Inst => Sub_Inst));
 
@@ -601,7 +642,8 @@ package body Synth.Insts is
       --   * create inputs/outputs
       --   * add it to the list of module to be synthesized.
       Inst_Obj := Insts_Interning.Get
-        ((Arch => Arch,
+        ((Decl => Entity,
+          Arch => Arch,
           Config => Get_Block_Configuration (Config),
           Syn_Inst => Syn_Inst));
       pragma Unreferenced (Inst_Obj);
@@ -686,14 +728,19 @@ package body Synth.Insts is
 
    procedure Synth_Instance (Inst : Inst_Object)
    is
-      Syn_Inst : constant Synth_Instance_Acc := Inst.Syn_Inst;
-      Entity : constant Node := Get_Entity (Inst.Arch);
+      Entity : constant Node := Inst.Decl;
       Arch : constant Node := Inst.Arch;
+      Syn_Inst : constant Synth_Instance_Acc := Inst.Syn_Inst;
       Self_Inst : Instance;
       Inter : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
    begin
+      if Arch = Null_Node then
+         --  Black box.
+         return;
+      end if;
+
       Self_Inst := Create_Self_Instance (Syn_Inst.M);
       Builders.Set_Parent (Build_Context, Syn_Inst.M);
 

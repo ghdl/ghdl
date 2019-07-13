@@ -1230,7 +1230,19 @@ package body Synth.Stmts is
                Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
             when Iir_Kind_Component_Instantiation_Statement =>
                if Is_Component_Instantiation (Stmt) then
-                  Synth_Component_Instantiation_Statement (Syn_Inst, Stmt);
+                  declare
+                     Comp_Config : constant Node :=
+                       Get_Component_Configuration (Stmt);
+                  begin
+                     if Get_Binding_Indication (Comp_Config) = Null_Node then
+                        --  Not bound.
+                        Synth_Blackbox_Instantiation_Statement
+                          (Syn_Inst, Stmt);
+                     else
+                        Synth_Component_Instantiation_Statement
+                          (Syn_Inst, Stmt);
+                     end if;
+                  end;
                else
                   Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
                end if;
