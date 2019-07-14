@@ -20,7 +20,6 @@ with Ada.Command_Line;
 with GNAT.Directory_Operations;
 
 with Simple_IO; use Simple_IO;
-with Types; use Types;
 with Flags;
 with Name_Table;
 with Std_Names;
@@ -1308,8 +1307,7 @@ package body Ghdllocal is
       end loop;
    end Check_No_Elab_Flag;
 
-   function Build_Dependence (Prim : String_Access; Sec : String_Access)
-     return Iir_List
+   function Build_Dependence (Prim : Name_Id; Sec : Name_Id) return Iir_List
    is
       procedure Build_Dependence_List (File : Iir_Design_File; List : Iir_List)
       is
@@ -1335,11 +1333,8 @@ package body Ghdllocal is
       end Build_Dependence_List;
 
       use Vhdl.Configuration;
-      use Name_Table;
 
       Top : Iir;
-      Primary_Id : Name_Id;
-      Secondary_Id : Name_Id;
 
       File : Iir_Design_File;
       Unit : Iir;
@@ -1347,13 +1342,6 @@ package body Ghdllocal is
       Files_List : Iir_List;
    begin
       Check_No_Elab_Flag (Libraries.Work_Library);
-
-      Primary_Id := Get_Identifier (Prim.all);
-      if Sec /= null then
-         Secondary_Id := Get_Identifier (Sec.all);
-      else
-         Secondary_Id := Null_Identifier;
-      end if;
 
       if True then
          --  Load the world.
@@ -1397,7 +1385,7 @@ package body Ghdllocal is
       Flag_Load_All_Design_Units := True;
       Flag_Build_File_Dependence := True;
 
-      Top := Configure (Primary_Id, Secondary_Id);
+      Top := Configure (Prim, Sec);
       if Top = Null_Iir then
          --  Error during configuration (primary unit not found).
          raise Option_Error;
@@ -1543,7 +1531,7 @@ package body Ghdllocal is
    end Is_File_Outdated;
 
    --  Convert NAME to lower cases, unless it is an extended identifier.
-   function Convert_Name (Name : String_Access) return String_Access
+   function Convert_Name (Name : String) return Name_Id
    is
       function Is_Bad_Unit_Name return Boolean is
       begin
@@ -1598,47 +1586,57 @@ package body Ghdllocal is
          return False;
       end Is_A_File_Name;
 
-      Res : String_Access;
       Err : Boolean;
    begin
       --  Try to identifier bad names (such as file names), so that
       --  friendly message can be displayed.
       if Is_Bad_Unit_Name then
-         Errorout.Error_Msg_Option ("bad unit name '" & Name.all & "'");
+         Errorout.Error_Msg_Option ("bad unit name '" & Name & "'");
          if Is_A_File_Name then
             Errorout.Error_Msg_Option
               ("(a unit name is required instead of a filename)");
          end if;
-         raise Option_Error;
+         return Null_Identifier;
       end if;
-      Res := new String'(Name.all);
-      Vhdl.Scanner.Convert_Identifier (Res.all, Err);
-      if Err then
-         raise Option_Error;
-      end if;
-      return Res;
+      declare
+         Res : String := Name;
+      begin
+         Vhdl.Scanner.Convert_Identifier (Res, Err);
+         if Err then
+            return Null_Identifier;
+         end if;
+         return Name_Table.Get_Identifier (Res);
+      end;
    end Convert_Name;
 
-   procedure Extract_Elab_Unit
-     (Cmd_Name : String; Args : Argument_List; Next_Arg : out Natural)
-   is
+   procedure Extract_Elab_Unit (Cmd_Name : String;
+                                Args : Argument_List;
+                                Next_Arg : out Natural;
+                                Prim_Id : out Name_Id;
+                                Sec_Id : out Name_Id) is
    begin
       if Args'Length = 0 then
          Error ("command '" & Cmd_Name & "' requires an unit name");
          raise Option_Error;
       end if;
 
-      Prim_Name := Convert_Name (Args (Args'First));
+      Prim_Id := Convert_Name (Args (Args'First).all);
+      if Prim_Id = Null_Identifier then
+         raise Option_Error;
+      end if;
       Next_Arg := Args'First + 1;
-      Sec_Name := null;
+      Sec_Id := Null_Identifier;
 
       if Args'Length >= 2 then
          declare
             Sec : constant String_Access := Args (Next_Arg);
          begin
             if Sec (Sec'First) /= '-' then
-               Sec_Name := Convert_Name (Sec);
+               Sec_Id := Convert_Name (Sec.all);
                Next_Arg := Args'First + 2;
+               if Sec_Id = Null_Identifier then
+                  raise Option_Error;
+               end if;
             end if;
          end;
       end if;

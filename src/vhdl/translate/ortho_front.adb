@@ -61,9 +61,9 @@ package body Ortho_Front is
    Action : Action_Type := Action_Compile;
 
    --  Name of the entity to elaborate.
-   Elab_Entity : String_Acc;
+   Elab_Entity : Name_Id;
    --  Name of the architecture to elaborate.
-   Elab_Architecture : String_Acc;
+   Elab_Architecture : Name_Id;
    --  Filename for the list of files to link.
    Elab_Filelist : String_Acc;
 
@@ -89,15 +89,15 @@ package body Ortho_Front is
       Options.Initialize;
 
       Elab_Filelist := null;
-      Elab_Entity := null;
-      Elab_Architecture := null;
+      Elab_Entity := Null_Identifier;
+      Elab_Architecture := Null_Identifier;
       Flag_Expect_Failure := False;
    end Init;
 
    function Decode_Elab_Option (Arg : String_Acc; Cmd : String)
                                return Natural is
    begin
-      Elab_Architecture := null;
+      Elab_Architecture := Null_Identifier;
       --  Entity (+ architecture) to elaborate
       if Arg = null then
          Error_Msg_Option
@@ -146,12 +146,14 @@ package body Ortho_Front is
                   P := P - 1;
                end if;
             end loop;
-            Elab_Architecture := new String'(Arg (P + 1 .. Arg'Last - 1));
-            Elab_Entity := new String'(Arg (Arg'First .. P - 1));
+            Elab_Architecture :=
+              Name_Table.Get_Identifier (Arg (P + 1 .. Arg'Last - 1));
+            Elab_Entity :=
+              Name_Table.Get_Identifier (Arg (Arg'First .. P - 1));
          end;
       else
-         Elab_Entity := new String'(Arg.all);
-         Elab_Architecture := new String'("");
+         Elab_Entity := Name_Table.Get_Identifier (Arg.all);
+         Elab_Architecture := Null_Identifier;
       end if;
       return 2;
    end Decode_Elab_Option;
@@ -552,7 +554,7 @@ package body Ortho_Front is
             Shlib_Interning.Init;
 
             Config := Vhdl.Configuration.Configure
-              (Elab_Entity.all, Elab_Architecture.all);
+              (Elab_Entity, Elab_Architecture);
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).
                raise Compilation_Error;
@@ -606,7 +608,7 @@ package body Ortho_Front is
             Flags.Flag_Elaborate := True;
             Flags.Flag_Only_Elab_Warnings := False;
             Config := Vhdl.Configuration.Configure
-              (Elab_Entity.all, Elab_Architecture.all);
+              (Elab_Entity, Elab_Architecture);
             Translation.Elaborate (Config, True);
 
             if Errorout.Nbr_Errors > 0 then

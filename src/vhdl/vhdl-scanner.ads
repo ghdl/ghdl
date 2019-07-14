@@ -132,7 +132,7 @@ package Vhdl.Scanner is
    --  location of a missing token.
    function Get_Prev_Location return Location_Type;
 
-   --  Convert (canonicalize) an identifier stored in name_buffer/name_length.
+   --  Convert (canonicalize) identifier STR.
    --  Upper case letters are converted into lower case.
    --  Lexical checks are performed.
    --  This procedure is not used by Scan, but should be used for identifiers

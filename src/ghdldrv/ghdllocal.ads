@@ -15,10 +15,12 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Types; use Types;
+with Options; use Options;
 with Ghdlmain; use Ghdlmain;
 with Vhdl.Nodes; use Vhdl.Nodes;
-with Options; use Options;
 
 package Ghdllocal is
    --  Init procedure for the functionnal interface.
@@ -129,8 +131,7 @@ package Ghdllocal is
    --  Raise errorout.compilation_error in case of error (parse error).
    procedure Load_All_Libraries_And_Files;
 
-   function Build_Dependence (Prim : String_Access; Sec : String_Access)
-     return Iir_List;
+   function Build_Dependence (Prim : Name_Id; Sec : Name_Id) return Iir_List;
 
    --  Return True iff file FILE has been modified (the file time stamp does
    --  no correspond to what was recorded in the library).
@@ -140,12 +141,12 @@ package Ghdllocal is
    --  has been analyzed more recently.
    function Is_File_Outdated (File : Iir_Design_File) return Boolean;
 
-   Prim_Name : String_Access;
-   Sec_Name : String_Access;
-
-   --  Set PRIM_NAME and SEC_NAME.
-   procedure Extract_Elab_Unit
-     (Cmd_Name : String; Args : Argument_List; Next_Arg : out Natural);
+   --  Extract PRIM_ID and SEC_ID from ARGS.
+   procedure Extract_Elab_Unit (Cmd_Name : String;
+                                Args : Argument_List;
+                                Next_Arg : out Natural;
+                                Prim_Id : out Name_Id;
+                                Sec_Id : out Name_Id);
 
    procedure Register_Commands;
 end Ghdllocal;
