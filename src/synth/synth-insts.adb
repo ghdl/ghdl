@@ -160,6 +160,7 @@ package body Synth.Insts is
       Imp : Node;
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
+      Inter_Type : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
       Num : Uns32;
@@ -182,6 +183,19 @@ package body Synth.Insts is
       --  Copy values for generics.
       Inter := Get_Generic_Chain (Decl);
       while Inter /= Null_Node loop
+         --  Bounds or range of the type.
+         Inter_Type := Get_Subtype_Indication (Inter);
+         if Inter_Type /= Null_Node then
+            case Get_Kind (Inter_Type) is
+               when Iir_Kind_Array_Subtype_Definition =>
+                  Create_Object (Syn_Inst, Inter_Type,
+                                 Get_Value (Params.Syn_Inst, Inter_Type));
+               when others =>
+                  null;
+            end case;
+         end if;
+
+         --  Object.
          Create_Object (Syn_Inst, Inter, Get_Value (Params.Syn_Inst, Inter));
          Inter := Get_Chain (Inter);
       end loop;
@@ -470,6 +484,7 @@ package body Synth.Insts is
                   raise Internal_Error;
             end case;
 
+            Synth_Declaration_Type (Comp_Inst, Inter);
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
                   Create_Object
