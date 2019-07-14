@@ -338,7 +338,7 @@ package body Ghdlcomp is
            (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
          Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
       begin
-         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity);
+         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, True);
          if Nbr_Errors > 0 then
             raise Compilation_Error;
          end if;

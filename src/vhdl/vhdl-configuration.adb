@@ -685,7 +685,8 @@ package body Vhdl.Configuration is
       return Top;
    end Configure;
 
-   procedure Check_Entity_Declaration_Top (Entity : Iir_Entity_Declaration)
+   procedure Check_Entity_Declaration_Top
+     (Entity : Iir_Entity_Declaration; Enable_Override : Boolean)
    is
       Has_Error : Boolean := False;
 
@@ -747,7 +748,7 @@ package body Vhdl.Configuration is
       El := Get_Generic_Chain (Entity);
       while El /= Null_Iir loop
          if Get_Default_Value (El) = Null_Iir then
-            if not Allow_Generic_Override (El) then
+            if not (Enable_Override and Allow_Generic_Override (El)) then
                Error (El, "(%n has no default value)", +El);
             end if;
          end if;

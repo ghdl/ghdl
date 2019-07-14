@@ -51,7 +51,8 @@ package Vhdl.Configuration is
    --  ENTITY has no generics or all generics have a default expression
    --  ENTITY has no ports or all ports type are constrained.
    --  If not, emit a elab error message.
-   procedure Check_Entity_Declaration_Top (Entity : Iir_Entity_Declaration);
+   procedure Check_Entity_Declaration_Top
+     (Entity : Iir_Entity_Declaration; Enable_Override : Boolean);
 
    --  Use heuritics to find the top entity in FROM (either a library or
    --  a design file): mark all instantiated units and return the unmarked

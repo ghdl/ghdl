@@ -544,7 +544,7 @@ package body Trans.Chap12 is
         (Get_Block_Specification (Get_Block_Configuration (Config_Lib)));
 
       --  Be sure the entity can be at the top of a design.
-      Check_Entity_Declaration_Top (Entity);
+      Check_Entity_Declaration_Top (Entity, True);
 
       --  If all design units are loaded, late semantic checks can be
       --  performed.

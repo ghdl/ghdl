@@ -31,6 +31,7 @@ with Vhdl.Std_Package;
 with Vhdl.Canon;
 with Vhdl.Configuration;
 with Vhdl.Annotations;
+with Vhdl.Utils;
 
 with Synthesis;
 with Netlists; use Netlists;
@@ -97,6 +98,9 @@ package body Ghdlsynth is
       E_Opt : Integer;
       Opt_Arg : Natural;
       Config : Iir;
+      Top : Iir;
+      Prim_Id : Name_Id;
+      Sec_Id : Name_Id;
    begin
       --  If the '-e' switch is present, there is a list of files.
       E_Opt := Args'First - 1;
@@ -128,27 +132,39 @@ package body Ghdlsynth is
       --  Elaborate
       if E_Opt = Args'Last then
          --  No unit.
-         declare
-            Top : Node;
-         begin
-            Top := Vhdl.Configuration.Find_Top_Entity (Libraries.Work_Library);
-            if Top = Null_Node then
-               Ghdlmain.Error ("no top unit found");
-               return No_Module;
-            end if;
-            Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
-                                 "top entity is %i", (1 => +Top));
-            Config := Vhdl.Configuration.Configure
-              (Get_Identifier (Top), Null_Identifier);
-         end;
+         Top := Vhdl.Configuration.Find_Top_Entity (Libraries.Work_Library);
+         if Top = Null_Node then
+            Ghdlmain.Error ("no top unit found");
+            return No_Module;
+         end if;
+         Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
+                              "top entity is %i", (1 => +Top));
+         Prim_Id := Get_Identifier (Top);
+         Sec_Id := Null_Identifier;
       else
-         Common_Compile_Elab
-           ("--synth", Args (E_Opt + 1 .. Args'Last), Opt_Arg, Config);
+         Extract_Elab_Unit ("--synth", Args (E_Opt + 1 .. Args'Last), Opt_Arg,
+                            Prim_Id, Sec_Id);
+         if Opt_Arg <= Args'Last then
+            Ghdlmain.Error ("extra options ignored");
+            return No_Module;
+         end if;
       end if;
 
-      if Opt_Arg <= Args'Last then
-         Ghdlmain.Error ("extra options ignored");
-      end if;
+      Config := Vhdl.Configuration.Configure (Prim_Id, Sec_Id);
+
+      --  Check (and possibly abandon) if entity can be at the top of the
+      --  hierarchy.
+      declare
+         Conf_Unit : constant Iir := Get_Library_Unit (Config);
+         Arch : constant Iir := Get_Named_Entity
+           (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
+         Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
+      begin
+         Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, False);
+         if Nbr_Errors > 0 then
+            raise Compilation_Error;
+         end if;
+      end;
 
       --  Annotate all units.
       Vhdl.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
