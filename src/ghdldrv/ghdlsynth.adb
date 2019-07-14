@@ -16,20 +16,24 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Types; use Types;
 with Ghdllocal; use Ghdllocal;
 with Ghdlcomp; use Ghdlcomp;
 with Ghdlmain; use Ghdlmain;
 with Options; use Options;
+with Errorout;
 
 with Libraries;
 with Flags;
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Errors;
 with Vhdl.Std_Package;
 with Vhdl.Canon;
 with Vhdl.Configuration;
 with Vhdl.Annotations;
 
 with Synthesis;
+with Netlists; use Netlists;
 with Netlists.Dump;
 with Netlists.Disp_Vhdl;
 
@@ -85,14 +89,14 @@ package body Ghdlsynth is
       end if;
    end Decode_Option;
 
-   function Ghdl_Synth (Args : Argument_List) return Netlists.Module
+   function Ghdl_Synth (Args : Argument_List) return Module
    is
+      use Vhdl.Errors;
       use Vhdl.Configuration;
+      use Errorout;
       E_Opt : Integer;
       Opt_Arg : Natural;
       Config : Iir;
-      R : Node;
-      pragma Unreferenced (R);
    begin
       --  If the '-e' switch is present, there is a list of files.
       E_Opt := Args'First - 1;
@@ -108,7 +112,7 @@ package body Ghdlsynth is
       Common_Compile_Init (False);
       --  Will elaborate.
       Flags.Flag_Elaborate := True;
-      Flags.Flag_Elaborate_With_Outdated := False;
+      Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;
       Flags.Flag_Only_Elab_Warnings := True;
 
       Libraries.Load_Work_Library (E_Opt >= Args'First);
@@ -118,12 +122,29 @@ package body Ghdlsynth is
 
       --  Analyze files (if any)
       for I in Args'First .. E_Opt - 1 loop
-         R := Ghdlcomp.Compile_Analyze_File2 (Args (I).all);
+         Ghdlcomp.Compile_Analyze_File (Args (I).all);
       end loop;
 
       --  Elaborate
-      Common_Compile_Elab
-        ("--synth", Args (E_Opt + 1 .. Args'Last), Opt_Arg, Config);
+      if E_Opt = Args'Last then
+         --  No unit.
+         declare
+            Top : Node;
+         begin
+            Top := Vhdl.Configuration.Find_Top_Entity (Libraries.Work_Library);
+            if Top = Null_Node then
+               Ghdlmain.Error ("no top unit found");
+               return No_Module;
+            end if;
+            Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
+                                 "top entity is %i", (1 => +Top));
+            Config := Vhdl.Configuration.Configure
+              (Get_Identifier (Top), Null_Identifier);
+         end;
+      else
+         Common_Compile_Elab
+           ("--synth", Args (E_Opt + 1 .. Args'Last), Opt_Arg, Config);
+      end if;
 
       if Opt_Arg <= Args'Last then
          Ghdlmain.Error ("extra options ignored");
@@ -141,9 +162,13 @@ package body Ghdlsynth is
    procedure Perform_Action (Cmd : Command_Synth;
                              Args : Argument_List)
    is
-      Res : Netlists.Module;
+      Res : Module;
    begin
       Res := Ghdl_Synth (Args);
+      if Res = No_Module then
+         raise Errorout.Compilation_Error;
+      end if;
+
       case Cmd.Oformat is
          when Format_Raw =>
             Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
