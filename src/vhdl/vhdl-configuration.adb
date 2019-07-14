@@ -792,12 +792,16 @@ package body Vhdl.Configuration is
    package body Top is
       use Nodes_Walk;
 
+      --  Add entities to the name table (so that they easily could be found).
       function Add_Entity_Cb (Design : Iir) return Walk_Status
       is
          Kind : constant Iir_Kind := Get_Kind (Get_Library_Unit (Design));
       begin
-         if Get_Date (Design) < Date_Analyzed then
-            return Walk_Continue;
+         if not Flags.Flag_Elaborate_With_Outdated then
+            --  Discard obsolete or non-analyzed units.
+            if Get_Date (Design) < Date_Analyzed then
+               return Walk_Continue;
+            end if;
          end if;
 
          case Iir_Kinds_Library_Unit (Kind) is
@@ -886,8 +890,10 @@ package body Vhdl.Configuration is
          Unit : constant Iir := Get_Library_Unit (Design);
          Status : Walk_Status;
       begin
-         if Get_Date (Design) < Date_Analyzed then
-            return Walk_Continue;
+         if not Flags.Flag_Elaborate_With_Outdated then
+            if Get_Date (Design) < Date_Analyzed then
+               return Walk_Continue;
+            end if;
          end if;
 
          case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
@@ -938,8 +944,13 @@ package body Vhdl.Configuration is
       begin
          if Get_Kind (Unit) = Iir_Kind_Entity_Declaration then
             if Get_Elab_Flag (Design) then
+               --  Clean elab flag.
                Set_Elab_Flag (Design, False);
             else
+               if Flags.Verbose then
+                  Report_Msg (Msgid_Note, Elaboration, +Unit,
+                              "candidate for top entity: %n", (1 => +Unit));
+               end if;
                Nbr_Top_Entities := Nbr_Top_Entities + 1;
                if Nbr_Top_Entities = 1 then
                   First_Top_Entity := Unit;

@@ -158,7 +158,10 @@ package body Vhdl.Nodes_Walk is
          case Iir_Kinds_Concurrent_Statement (Get_Kind (El)) is
             when Iir_Kinds_Simple_Concurrent_Statement
               | Iir_Kind_Component_Instantiation_Statement =>
-               return Cb.all (El);
+               Status := Cb.all (El);
+               if Status /= Walk_Continue then
+                  return Status;
+               end if;
             when Iir_Kind_Block_Statement =>
                Status := Cb.all (El);
                if Status /= Walk_Continue then
@@ -166,6 +169,14 @@ package body Vhdl.Nodes_Walk is
                end if;
                return Walk_Concurrent_Statements_Chain
                  (Get_Concurrent_Statement_Chain (El), Cb);
+            when Iir_Kind_For_Generate_Statement =>
+               Status := Cb.all (El);
+               if Status /= Walk_Continue then
+                  return Status;
+               end if;
+               return Walk_Concurrent_Statements_Chain
+                 (Get_Concurrent_Statement_Chain
+                    (Get_Generate_Statement_Body (El)), Cb);
             when others =>
                Error_Kind ("walk_concurrent_statements_chain", El);
          end case;
