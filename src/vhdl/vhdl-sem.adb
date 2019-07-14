@@ -481,6 +481,7 @@ package body Vhdl.Sem is
       --  Return a reference to it.
       --  FIXME: The referenced name is not a name.
       Res := Create_Iir (Iir_Kind_Reference_Name);
+      Location_Copy (Res, Actual);
       Set_Referenced_Name (Res, Sig);
       Set_Named_Entity (Res, Sig);
       Set_Type (Res, Get_Type (Sig));
