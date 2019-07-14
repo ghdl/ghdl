@@ -895,6 +895,7 @@ package body Synth.Expr is
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration =>
@@ -1600,6 +1601,8 @@ package body Synth.Expr is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Interface_Signal_Declaration =>  -- For PSL...
             return Synth_Name (Syn_Inst, Expr);
+         when Iir_Kind_Reference_Name =>
+            return Synth_Name (Syn_Inst, Get_Named_Entity (Expr));
          when Iir_Kind_Indexed_Name =>
             return Synth_Indexed_Name (Syn_Inst, Expr);
          when Iir_Kind_Slice_Name =>
