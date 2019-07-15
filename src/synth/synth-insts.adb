@@ -463,7 +463,7 @@ package body Synth.Insts is
                                     Get_Generic_Chain (Component),
                                     Get_Generic_Map_Aspect_Chain (Stmt));
 
-      --  Assign inputs.
+      --  Create objects for inputs and outputs, assign inputs.
       declare
          Assoc : Node;
          Assoc_Inter : Node;
@@ -501,6 +501,7 @@ package body Synth.Insts is
          end loop;
       end;
 
+      --  Extract entity/architecture instantiated by the component.
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
             Ent := Get_Entity (Aspect);
@@ -525,23 +526,6 @@ package body Synth.Insts is
       Synth_Subprogram_Association (Sub_Inst, Comp_Inst,
                                     Get_Generic_Chain (Ent),
                                     Get_Generic_Map_Aspect_Chain (Bind));
-
-      --  Elaborate port types.
-      --  FIXME: what about unconstrained ports ?  Get the type from the
-      --    association.
-      declare
-         Inter : Node;
-      begin
-         Inter := Get_Port_Chain (Ent);
-         while Is_Valid (Inter) loop
-            if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
-               --  TODO
-               raise Internal_Error;
-            end if;
-            Synth_Declaration_Type (Sub_Inst, Inter);
-            Inter := Get_Chain (Inter);
-         end loop;
-      end;
 
       --  Search if corresponding module has already been used.
       --  If not create a new module
