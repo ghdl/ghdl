@@ -18,6 +18,7 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
@@ -38,4 +39,9 @@ package Synth.Stmts is
    --  Generate netlists for concurrent statements STMTS.
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
+
+   --  For iterators.
+   function In_Range (Rng : Value_Acc; V : Int64) return Boolean;
+   procedure Update_Index (Rng : Value_Acc; Idx : in out Int64);
+
 end Synth.Stmts;

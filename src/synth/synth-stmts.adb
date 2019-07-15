@@ -20,7 +20,6 @@
 
 with Ada.Unchecked_Deallocation;
 
-with Types; use Types;
 with Grt.Algos;
 with Areapools;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -899,6 +898,16 @@ package body Synth.Stmts is
       end case;
    end In_Range;
 
+   procedure Update_Index (Rng : Value_Acc; Idx : in out Int64) is
+   begin
+      case Rng.Rng.Dir is
+         when Iir_To =>
+            Idx := Idx + 1;
+         when Iir_Downto =>
+            Idx := Idx - 1;
+      end case;
+   end Update_Index;
+
    procedure Synth_For_Loop_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -920,12 +929,7 @@ package body Synth.Stmts is
 
       while In_Range (It_Rng, Val.Scal) loop
          Synth_Sequential_Statements (Syn_Inst, Stmts);
-         case It_Rng.Rng.Dir is
-            when Iir_To =>
-               Val.Scal := Val.Scal + 1;
-            when Iir_Downto =>
-               Val.Scal := Val.Scal - 1;
-         end case;
+         Update_Index (It_Rng, Val.Scal);
       end loop;
       Destroy_Object (Syn_Inst, Iterator);
       if It_Type /= Null_Node then

@@ -33,7 +33,7 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Types; use Synth.Types;
-with Synth.Stmts;
+with Synth.Stmts; use Synth.Stmts;
 with Synth.Decls;
 
 with Netlists.Gates; use Netlists.Gates;
@@ -265,7 +265,18 @@ package body Synth.Expr is
                      end if;
                   end;
                when Iir_Kind_Choice_By_Range =>
-                  raise Internal_Error;
+                  declare
+                     Ch : constant Node := Get_Choice_Range (Assoc);
+                     Rng : Value_Acc;
+                     Val : Value_Acc;
+                  begin
+                     Rng := Synth_Range_Expression (Syn_Inst, Ch);
+                     Val := Create_Value_Discrete (Rng.Rng.Left);
+                     while In_Range (Rng, Val.Scal) loop
+                        Set_Elem (Get_Index_Offset (Val, Bound, Ch));
+                        Update_Index (Rng, Val.Scal);
+                     end loop;
+                  end;
                when others =>
                   Error_Msg_Synth
                     (+Assoc, "unhandled association form");
@@ -1450,12 +1461,12 @@ package body Synth.Expr is
 
       Subprg_Inst.Name := New_Internal_Name (Build_Context);
 
-      Stmts.Synth_Subprogram_Association
+      Synth_Subprogram_Association
         (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
       Decls.Synth_Declarations (Subprg_Inst, Get_Declaration_Chain (Bod));
 
-      Stmts.Synth_Sequential_Statements
+      Synth_Sequential_Statements
         (Subprg_Inst, Get_Sequential_Statement_Chain (Bod));
 
       Res := Subprg_Inst.Return_Value;
@@ -1480,7 +1491,7 @@ package body Synth.Expr is
       Areapools.Mark (M, Instance_Pool.all);
       Subprg_Inst := Make_Instance (Syn_Inst, Get_Info (Imp));
 
-      Stmts.Synth_Subprogram_Association
+      Synth_Subprogram_Association
         (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
       case Def is
