@@ -139,6 +139,10 @@ package body Ghdlsynth is
          end if;
          Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
                               "top entity is %i", (1 => +Top));
+         if Nbr_Errors > 0 then
+            --  No need to configure if there are missing units.
+            return No_Module;
+         end if;
          Prim_Id := Get_Identifier (Top);
          Sec_Id := Null_Identifier;
       else
@@ -152,6 +156,11 @@ package body Ghdlsynth is
 
       Config := Vhdl.Configuration.Configure (Prim_Id, Sec_Id);
 
+      if Nbr_Errors > 0 then
+         --  No need to configure if there are missing units.
+         return No_Module;
+      end if;
+
       --  Check (and possibly abandon) if entity can be at the top of the
       --  hierarchy.
       declare
@@ -162,7 +171,7 @@ package body Ghdlsynth is
       begin
          Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, False);
          if Nbr_Errors > 0 then
-            raise Compilation_Error;
+            return No_Module;
          end if;
       end;
 
