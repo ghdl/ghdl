@@ -1973,7 +1973,13 @@ package body Vhdl.Sem_Expr is
          Free_Iir (Overload);
          Overload := Get_Type (Expr);
          Free_Overload_List (Overload);
-         return Set_Uniq_Interpretation (Full_Compat);
+         if Full_Compat = Null_Iir then
+            Error_Msg_Sem (+Expr,
+                           "no matching function declarations for %n", +Expr);
+            return Null_Iir;
+         else
+            return Set_Uniq_Interpretation (Full_Compat);
+         end if;
       end if;
    end Sem_Operator;
 
