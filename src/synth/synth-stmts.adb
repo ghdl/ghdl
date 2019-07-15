@@ -1021,6 +1021,7 @@ package body Synth.Stmts is
       use Areapools;
       Info : constant Sim_Info_Acc := Get_Info (Proc);
       Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
+      Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       Proc_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
    begin
@@ -1044,7 +1045,7 @@ package body Synth.Stmts is
 
       Free_Instance (Proc_Inst);
       Release (M, Proc_Pool);
-      Instance_Pool := null;
+      Instance_Pool := Prev_Instance_Pool;
    end Synth_Process_Statement;
 
    procedure Synth_Generate_Statement_Body
@@ -1053,6 +1054,7 @@ package body Synth.Stmts is
       use Areapools;
       Info : constant Sim_Info_Acc := Get_Info (Bod);
       Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
+      Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       Bod_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
    begin
@@ -1070,7 +1072,7 @@ package body Synth.Stmts is
 
       Free_Instance (Bod_Inst);
       Release (M, Proc_Pool);
-      Instance_Pool := null;
+      Instance_Pool := Prev_Instance_Pool;
    end Synth_Generate_Statement_Body;
 
    procedure Synth_Concurrent_Assertion_Statement
