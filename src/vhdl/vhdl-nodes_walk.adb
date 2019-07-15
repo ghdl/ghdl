@@ -159,27 +159,38 @@ package body Vhdl.Nodes_Walk is
             when Iir_Kinds_Simple_Concurrent_Statement
               | Iir_Kind_Component_Instantiation_Statement =>
                Status := Cb.all (El);
-               if Status /= Walk_Continue then
-                  return Status;
-               end if;
             when Iir_Kind_Block_Statement =>
                Status := Cb.all (El);
-               if Status /= Walk_Continue then
-                  return Status;
+               if Status = Walk_Continue then
+                  Status := Walk_Concurrent_Statements_Chain
+                    (Get_Concurrent_Statement_Chain (El), Cb);
                end if;
-               return Walk_Concurrent_Statements_Chain
-                 (Get_Concurrent_Statement_Chain (El), Cb);
             when Iir_Kind_For_Generate_Statement =>
                Status := Cb.all (El);
-               if Status /= Walk_Continue then
-                  return Status;
+               if Status = Walk_Continue then
+                  Status := Walk_Concurrent_Statements_Chain
+                    (Get_Concurrent_Statement_Chain
+                       (Get_Generate_Statement_Body (El)), Cb);
                end if;
-               return Walk_Concurrent_Statements_Chain
-                 (Get_Concurrent_Statement_Chain
-                    (Get_Generate_Statement_Body (El)), Cb);
+            when Iir_Kind_If_Generate_Statement =>
+               declare
+                  Cl : Node;
+               begin
+                  Status := Cb.all (El);
+                  Cl := El;
+                  while Status = Walk_Continue and then Cl /= Null_Node loop
+                     Status := Walk_Concurrent_Statements_Chain
+                       (Get_Concurrent_Statement_Chain
+                          (Get_Generate_Statement_Body (Cl)), Cb);
+                     Cl := Get_Generate_Else_Clause (Cl);
+                  end loop;
+               end;
             when others =>
                Error_Kind ("walk_concurrent_statements_chain", El);
          end case;
+         if Status /= Walk_Continue then
+            return Status;
+         end if;
          El := Get_Chain (El);
       end loop;
 

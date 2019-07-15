@@ -814,7 +814,10 @@ package body Vhdl.Configuration is
          case Iir_Kinds_Entity_Aspect (Get_Kind (Aspect)) is
             when Iir_Kind_Entity_Aspect_Entity =>
                Unit := Get_Entity (Aspect);
-               Set_Elab_Flag (Get_Parent (Unit), True);
+               if Unit /= Null_Node then
+                  --  There may be an error (unit not found).
+                  Set_Elab_Flag (Get_Parent (Unit), True);
+               end if;
             when Iir_Kind_Entity_Aspect_Configuration
               | Iir_Kind_Entity_Aspect_Open =>
                null;
