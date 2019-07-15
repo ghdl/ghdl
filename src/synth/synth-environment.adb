@@ -44,6 +44,11 @@ package body Synth.Environment is
       Assign_Table.Table (Asgn).Chain := Chain;
    end Set_Assign_Chain;
 
+   function Current_Phi return Phi_Id is
+   begin
+      return Phis_Table.Last;
+   end Current_Phi;
+
    procedure Push_Phi is
    begin
       Phis_Table.Append ((First => No_Assign,
@@ -56,10 +61,12 @@ package body Synth.Environment is
       Cur_Phi : constant Phi_Id := Current_Phi;
       Asgn : Assign;
    begin
+      --  Pop.
       Phi := Phis_Table.Table (Cur_Phi);
       Phis_Table.Decrement_Last;
 
-      --  Point to previous wires.
+      --  Point to previous wires.  The current values are the ones before
+      --  the block.
       Asgn := Phi.First;
       while Asgn /= No_Assign loop
          pragma Assert (Assign_Table.Table (Asgn).Phi = Cur_Phi);
@@ -69,6 +76,8 @@ package body Synth.Environment is
       end loop;
    end Pop_Phi;
 
+   --  This procedure is called after each concurrent statement to assign
+   --  values to signals.
    procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc)
    is
       Phi : Phi_Type;
@@ -314,11 +323,6 @@ package body Synth.Environment is
          Assign_Table.Table (Cur_Asgn).Value := Val;
       end if;
    end Phi_Assign;
-
-   function Current_Phi return Phi_Id is
-   begin
-      return Phis_Table.Last;
-   end Current_Phi;
 begin
    Wire_Id_Table.Append ((Kind => Wire_None,
                           Mark_Flag => False,
