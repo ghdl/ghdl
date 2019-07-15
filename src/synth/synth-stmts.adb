@@ -783,19 +783,22 @@ package body Synth.Stmts is
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_Open =>
-               Actual := Get_Default_Value (Inter);
-            when Iir_Kind_Association_Element_By_Expression =>
-               Actual := Get_Actual (Assoc);
-            when others =>
-               raise Internal_Error;
-         end case;
+         Synth_Declaration_Type (Subprg_Inst, Inter);
 
          case Iir_Parameter_Modes (Get_Mode (Inter)) is
             when Iir_In_Mode =>
-               Val := Synth_Expression_With_Type
-                 (Caller_Inst, Actual, Get_Type (Inter));
+               case Get_Kind (Assoc) is
+                  when Iir_Kind_Association_Element_Open =>
+                     Actual := Get_Default_Value (Inter);
+                     Val := Synth_Expression_With_Type
+                       (Subprg_Inst, Actual, Get_Type (Inter));
+                  when Iir_Kind_Association_Element_By_Expression =>
+                     Actual := Get_Actual (Assoc);
+                     Val := Synth_Expression_With_Type
+                       (Caller_Inst, Actual, Get_Type (Inter));
+                  when others =>
+                     raise Internal_Error;
+               end case;
             when Iir_Out_Mode | Iir_Inout_Mode =>
                --  FIXME: todo
                raise Internal_Error;
