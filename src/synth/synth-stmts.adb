@@ -1066,6 +1066,8 @@ package body Synth.Stmts is
       M : Areapools.Mark_Type;
    begin
       Bod_Inst := Make_Instance (Syn_Inst, Info);
+      --  Same module.
+      Bod_Inst.M := Syn_Inst.M;
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
