@@ -732,8 +732,21 @@ package body Synth.Insts is
                   end loop;
                end;
             when Iir_Kind_Block_Configuration =>
-               --  TODO
-               raise Internal_Error;
+               declare
+                  Sub_Blk : constant Node := Get_Block_From_Block_Specification
+                    (Get_Block_Specification (Item));
+               begin
+                  case Get_Kind (Sub_Blk) is
+                     when Iir_Kind_Generate_Statement_Body =>
+                        -- Linked chain.
+                        Set_Prev_Block_Configuration
+                          (Item, Get_Generate_Block_Configuration (Sub_Blk));
+                        Set_Generate_Block_Configuration (Sub_Blk, Item);
+                     when others =>
+                        Vhdl.Errors.Error_Kind
+                          ("apply_block_configuration(blk)", Sub_Blk);
+                  end case;
+               end;
             when others =>
                Vhdl.Errors.Error_Kind ("apply_block_configuration", Item);
          end case;
