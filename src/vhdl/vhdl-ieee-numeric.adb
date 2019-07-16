@@ -127,6 +127,60 @@ package body Vhdl.Ieee.Numeric is
         (others =>
            (others => Iir_Predefined_None)));
 
+   Le_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Le_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Gt_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Ge_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Ge_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
    Neg_Patterns : constant Unary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
@@ -345,6 +399,12 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Binary (Ne_Patterns);
                      when Name_Op_Less =>
                         Handle_Binary (Lt_Patterns);
+                     when Name_Op_Less_Equal =>
+                        Handle_Binary (Le_Patterns);
+                     when Name_Op_Greater =>
+                        Handle_Binary (Gt_Patterns);
+                     when Name_Op_Greater_Equal =>
+                        Handle_Binary (Ge_Patterns);
                      when Name_To_Bstring
                        | Name_To_Ostring
                        | Name_To_Hstring =>
