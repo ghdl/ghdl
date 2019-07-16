@@ -773,12 +773,25 @@ package body Synth.Expr is
                return Create_Value_Discrete (0);
             end if;
             return Synth_Compare_Uns_Nat (Id_Ult);
-         when Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
             --  "<" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ult);
-         when Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
             --  "<=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ule);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
+            --  ">" (Unsigned, Natural)
+            return Synth_Compare_Uns_Nat (Id_Ugt);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv =>
+            --  ">" (Unsigned, Unsigned) [resize]
+            return Synth_Compare_Uns_Uns (Id_Ugt);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
+            --  ">=" (Unsigned, Unsigned) [resize]
+            return Synth_Compare_Uns_Uns (Id_Uge);
          when Iir_Predefined_Array_Element_Concat =>
             declare
                L : constant Net := Get_Net (Left, Ltype);

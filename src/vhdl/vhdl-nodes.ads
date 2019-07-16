@@ -4965,6 +4965,14 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Int,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Int_Slv,
 
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Int_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Int_Slv,
+
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Int,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv
