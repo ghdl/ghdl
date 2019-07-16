@@ -1759,6 +1759,9 @@ package body Vhdl.Sem_Stmts is
       Alt_Label : Name_Id;
    begin
       Alt_Label := Get_Alternative_Label (Bod);
+      --  LRM08 11.8 Generate statements
+      --  The alternative labels, if any, within an if generate statement or
+      --  a case generate statement shall all be distinct.
       if Alt_Label /= Null_Identifier then
          --  Declare label.  This doesn't appear in the LRM (bug ?), but
          --  used here to detect duplicated labels.
