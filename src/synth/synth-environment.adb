@@ -297,6 +297,7 @@ package body Synth.Environment is
       pragma Assert (Asgn_Rec.Chain = No_Assign);
       P : Phi_Type renames Phis_Table.Table (Phis_Table.Last);
    begin
+      --  Chain assignment in the current sequence.
       Asgn_Rec.Chain := P.First;
       P.First := Asgn;
       P.Nbr := P.Nbr + 1;

@@ -67,6 +67,7 @@ package Synth.Environment is
       --  The initial net for the wire.
       Gate : Net;
 
+      --  Current assignment (if there is one).
       Cur_Assign : Assign;
    end record;
 
