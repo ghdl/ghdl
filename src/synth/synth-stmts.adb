@@ -388,7 +388,7 @@ package body Synth.Stmts is
    is
       function Lt (Op1, Op2 : Natural) return Boolean is
       begin
-         return Arr (Op1) < Arr (Op2);
+         return Is_Lt (Arr (Op1), Arr (Op2));
       end Lt;
 
       procedure Swap (From : Natural; To : Natural)

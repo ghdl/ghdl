@@ -34,8 +34,10 @@ package Synth.Environment is
    --
    --  Each simple signal/variable is represented by a Wire_Id.  Synthesis
    --  deals only with these wires or group of them.
-   type Wire_Id is new Uns32;
-   No_Wire_Id : constant Wire_Id := 0;
+   type Wire_Id is private;
+   No_Wire_Id : constant Wire_Id;
+
+   function Is_Lt (L, R : Wire_Id) return Boolean;
 
    --  A Wire is either a signal, a variable or a port.  We need to know the
    --  nature of a wire as the assignment semantic is not the same (a variable
@@ -48,14 +50,11 @@ package Synth.Environment is
       Wire_Input, Wire_Output, Wire_Inout
      );
 
-   type Seq_Assign is new Uns32;
-   No_Seq_Assign : constant Seq_Assign := 0;
+   type Seq_Assign is private;
+   No_Seq_Assign : constant Seq_Assign;
 
-   type Conc_Assign is new Uns32;
-   No_Conc_Assign : constant Conc_Assign := 0;
-
-   --  A Wire_Id represents a bit or a vector.
-   type Wire_Id_Record is private;
+   type Conc_Assign is private;
+   No_Conc_Assign : constant Conc_Assign;
 
    function Alloc_Wire (Kind : Wire_Kind; Obj : Source.Syn_Src)
                        return Wire_Id;
@@ -75,25 +74,8 @@ package Synth.Environment is
    function Get_Wire_Mark (Wid : Wire_Id) return Boolean;
    procedure Set_Wire_Mark (Wid : Wire_Id; Mark : Boolean := True);
 
-   type Phi_Id is new Uns32;
-   No_Phi_Id : constant Phi_Id := 0;
-
-   type Seq_Assign_Record is record
-      --  Target of the assignment.
-      Id : Wire_Id;
-
-      --  Assignment is the previous phi context.
-      Prev : Seq_Assign;
-
-      --  Corresponding phi context for this wire.
-      Phi : Phi_Id;
-
-      --  Next wire in the phi context.
-      Chain : Seq_Assign;
-
-      --  Value assigned.
-      Value : Net;
-   end record;
+   type Phi_Id is private;
+   No_Phi_Id : constant Phi_Id;
 
    function Get_Wire_Id (W : Seq_Assign) return Wire_Id;
    function Get_Assign_Chain (Asgn : Seq_Assign) return Seq_Assign;
@@ -126,13 +108,21 @@ package Synth.Environment is
    function Current_Phi return Phi_Id;
    pragma Inline (Current_Phi);
 
-   package Assign_Table is new Tables
-     (Table_Component_Type => Seq_Assign_Record,
-      Table_Index_Type => Seq_Assign,
-      Table_Low_Bound => No_Seq_Assign,
-      Table_Initial => 1024);
-
 private
+   type Wire_Id is new Uns32;
+   No_Wire_Id : constant Wire_Id := 0;
+
+   function Is_Lt (L, R : Wire_Id) return Boolean renames "<";
+
+   type Seq_Assign is new Uns32;
+   No_Seq_Assign : constant Seq_Assign := 0;
+
+   type Conc_Assign is new Uns32;
+   No_Conc_Assign : constant Conc_Assign := 0;
+
+   type Phi_Id is new Uns32;
+   No_Phi_Id : constant Phi_Id := 0;
+
    type Wire_Id_Record is record
       --  Kind of wire: signal, variable...
       --  Set at initialization and cannot be changed.
@@ -152,6 +142,23 @@ private
       Cur_Assign : Seq_Assign;
    end record;
 
+   type Seq_Assign_Record is record
+      --  Target of the assignment.
+      Id : Wire_Id;
+
+      --  Assignment is the previous phi context.
+      Prev : Seq_Assign;
+
+      --  Corresponding phi context for this wire.
+      Phi : Phi_Id;
+
+      --  Next wire in the phi context.
+      Chain : Seq_Assign;
+
+      --  Value assigned.
+      Value : Net;
+   end record;
+
    type Phi_Type is record
       First : Seq_Assign;
       Nbr : Uns32;
@@ -167,5 +174,11 @@ private
      (Table_Component_Type => Wire_Id_Record,
       Table_Index_Type => Wire_Id,
       Table_Low_Bound => No_Wire_Id,
+      Table_Initial => 1024);
+
+   package Assign_Table is new Tables
+     (Table_Component_Type => Seq_Assign_Record,
+      Table_Index_Type => Seq_Assign,
+      Table_Low_Bound => No_Seq_Assign,
       Table_Initial => 1024);
 end Synth.Environment;
