@@ -24,6 +24,35 @@ with Netlists.Builders; use Netlists.Builders;
 with Synth.Inference;
 
 package body Synth.Environment is
+   procedure Set_Wire_Mark (Wid : Wire_Id; Mark : Boolean := True) is
+   begin
+      Wire_Id_Table.Table (Wid).Mark_Flag := Mark;
+   end Set_Wire_Mark;
+
+   function Get_Wire_Mark (Wid : Wire_Id) return Boolean is
+   begin
+      return Wire_Id_Table.Table (Wid).Mark_Flag;
+   end Get_Wire_Mark;
+
+   function Alloc_Wire (Kind : Wire_Kind; Obj : Source.Syn_Src)
+                       return Wire_Id is
+   begin
+      Wire_Id_Table.Append ((Kind => Kind,
+                             Mark_Flag => False,
+                             Decl => Obj,
+                             Gate => No_Net,
+                             Cur_Assign => No_Seq_Assign));
+      return Wire_Id_Table.Last;
+   end Alloc_Wire;
+
+   procedure Set_Wire_Gate (Wid : Wire_Id; Gate : Net) is
+   begin
+      --  Cannot override a gate.
+      pragma Assert (Wire_Id_Table.Table (Wid).Gate = No_Net);
+
+      Wire_Id_Table.Table (Wid).Gate := Gate;
+   end Set_Wire_Gate;
+
    function Get_Wire_Id (W : Seq_Assign) return Wire_Id is
    begin
       return Assign_Table.Table (W).Id;

@@ -418,9 +418,9 @@ package body Synth.Stmts is
          Asgn := Alts (I).Asgns;
          while Asgn /= No_Seq_Assign loop
             W := Get_Wire_Id (Asgn);
-            if not Wire_Id_Table.Table (W).Mark_Flag then
+            if not Get_Wire_Mark (W) then
                Res := Res + 1;
-               Wire_Id_Table.Table (W).Mark_Flag := True;
+               Set_Wire_Mark (W, True);
             end if;
             Asgn := Get_Assign_Chain (Asgn);
          end loop;
@@ -440,10 +440,10 @@ package body Synth.Stmts is
          Asgn := Alts (I).Asgns;
          while Asgn /= No_Seq_Assign loop
             W := Get_Wire_Id (Asgn);
-            if Wire_Id_Table.Table (W).Mark_Flag then
+            if Get_Wire_Mark (W) then
                Arr (Idx) := W;
                Idx := Idx + 1;
-               Wire_Id_Table.Table (W).Mark_Flag := False;
+               Set_Wire_Mark (W, False);
             end if;
             Asgn := Get_Assign_Chain (Asgn);
          end loop;

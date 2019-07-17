@@ -429,7 +429,7 @@ package body Synth.Insts is
             Value := Builders.Build_Signal
               (Build_Context, New_Sname (No_Sname, Get_Identifier (Inter)),
                Val.W_Bound.Len);
-            Wire_Id_Table.Table (Val.W).Gate := Value;
+            Set_Wire_Gate (Val.W, Value);
          when others =>
             raise Internal_Error;
       end case;
@@ -656,7 +656,7 @@ package body Synth.Insts is
       case Val.Kind is
          when Value_Wire =>
             Val.W := Alloc_Wire (Wire_Input, Inter);
-            Wire_Id_Table.Table (Val.W).Gate := Get_Output (Self_Inst, Idx);
+            Set_Wire_Gate (Val.W, Get_Output (Self_Inst, Idx));
             Idx := Idx + 1;
          when others =>
             raise Internal_Error;
@@ -681,7 +681,7 @@ package body Synth.Insts is
             Value := Builders.Build_Output (Build_Context, W);
             Inp := Get_Input (Self_Inst, Idx);
             Connect (Inp, Value);
-            Wire_Id_Table.Table (Val.W).Gate := Value;
+            Set_Wire_Gate (Val.W, Value);
             Idx := Idx + 1;
          when others =>
             raise Internal_Error;

@@ -51,25 +51,18 @@ package Synth.Environment is
    type Seq_Assign is new Uns32;
    No_Seq_Assign : constant Seq_Assign := 0;
 
+   type Conc_Assign is new Uns32;
+   No_Conc_Assign : constant Conc_Assign := 0;
+
    --  A Wire_Id represents a bit or a vector.
-   type Wire_Id_Record is record
-      --  Kind of wire: signal, variable...
-      --  Set at initialization and cannot be changed.
-      Kind : Wire_Kind;
+   type Wire_Id_Record is private;
 
-      --  Used in various algorithms: a flag on a wire.  This flag must be
-      --  cleared after usage.
-      Mark_Flag : Boolean;
+   function Alloc_Wire (Kind : Wire_Kind; Obj : Source.Syn_Src)
+                       return Wire_Id;
 
-      --  Source node that created the wire.
-      Decl : Source.Syn_Src;
-
-      --  The initial net for the wire.
-      Gate : Net;
-
-      --  Current assignment (if there is one).
-      Cur_Assign : Seq_Assign;
-   end record;
+   --  Set the gate for a wire.
+   --  The gate represent the current value.  It is usually an Id_Signal.
+   procedure Set_Wire_Gate (Wid : Wire_Id; Gate : Net);
 
    --  The current value of WID.  For variables, this is the last assigned
    --  value.  For signals, this is the initial value.
@@ -78,7 +71,9 @@ package Synth.Environment is
    --  The last assigned value to WID.
    function Get_Last_Assigned_Value (Wid : Wire_Id) return Net;
 
-   --
+   --  Read and write the mark flag.
+   function Get_Wire_Mark (Wid : Wire_Id) return Boolean;
+   procedure Set_Wire_Mark (Wid : Wire_Id; Mark : Boolean := True);
 
    type Phi_Id is new Uns32;
    No_Phi_Id : constant Phi_Id := 0;
@@ -131,12 +126,6 @@ package Synth.Environment is
    function Current_Phi return Phi_Id;
    pragma Inline (Current_Phi);
 
-   package Wire_Id_Table is new Tables
-     (Table_Component_Type => Wire_Id_Record,
-      Table_Index_Type => Wire_Id,
-      Table_Low_Bound => No_Wire_Id,
-      Table_Initial => 1024);
-
    package Assign_Table is new Tables
      (Table_Component_Type => Seq_Assign_Record,
       Table_Index_Type => Seq_Assign,
@@ -144,6 +133,25 @@ package Synth.Environment is
       Table_Initial => 1024);
 
 private
+   type Wire_Id_Record is record
+      --  Kind of wire: signal, variable...
+      --  Set at initialization and cannot be changed.
+      Kind : Wire_Kind;
+
+      --  Used in various algorithms: a flag on a wire.  This flag must be
+      --  cleared after usage.
+      Mark_Flag : Boolean;
+
+      --  Source node that created the wire.
+      Decl : Source.Syn_Src;
+
+      --  The initial net for the wire.
+      Gate : Net;
+
+      --  Current assignment (if there is one).
+      Cur_Assign : Seq_Assign;
+   end record;
+
    type Phi_Type is record
       First : Seq_Assign;
       Nbr : Uns32;
@@ -154,4 +162,10 @@ private
       Table_Index_Type => Phi_Id,
       Table_Low_Bound => No_Phi_Id,
       Table_Initial => 16);
+
+   package Wire_Id_Table is new Tables
+     (Table_Component_Type => Wire_Id_Record,
+      Table_Index_Type => Wire_Id,
+      Table_Low_Bound => No_Wire_Id,
+      Table_Initial => 1024);
 end Synth.Environment;

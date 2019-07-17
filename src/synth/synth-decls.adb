@@ -55,7 +55,7 @@ package body Synth.Decls is
             else
                Value := Build_Signal (Build_Context, Name, W);
             end if;
-            Wire_Id_Table.Table (Val.W).Gate := Value;
+            Set_Wire_Gate (Val.W, Value);
          when others =>
             raise Internal_Error;
       end case;

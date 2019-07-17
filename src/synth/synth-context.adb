@@ -69,17 +69,6 @@ package body Synth.Context is
       return Create_Value_Instance (Packages_Table.Last);
    end Create_Value_Instance;
 
-   function Alloc_Wire (Kind : Wire_Kind; Obj : Node) return Wire_Id is
-   begin
-      Wire_Id_Table.Append ((Kind => Kind,
-                             Mark_Flag => False,
-                             Decl => Obj,
-                             Gate => No_Net,
-                             Cur_Assign => No_Seq_Assign));
-      return Wire_Id_Table.Last;
-   end Alloc_Wire;
-
-
    function Alloc_Wire (Kind : Wire_Kind; Obj : Iir; Bnd : Value_Bound_Acc)
                        return Value_Acc
    is
