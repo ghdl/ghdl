@@ -75,7 +75,7 @@ package body Synth.Context is
                              Mark_Flag => False,
                              Decl => Obj,
                              Gate => No_Net,
-                             Cur_Assign => No_Assign));
+                             Cur_Assign => No_Seq_Assign));
       return Wire_Id_Table.Last;
    end Alloc_Wire;
 

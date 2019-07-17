@@ -370,7 +370,7 @@ package body Synth.Stmts is
      (Choice_Data_Array, Choice_Data_Array_Acc);
 
    type Alternative_Data_Type is record
-      Asgns : Assign;
+      Asgns : Seq_Assign;
       Val : Net;
    end record;
    type Alternative_Data_Array is
@@ -410,13 +410,13 @@ package body Synth.Stmts is
                                         return Natural
    is
       Res : Natural;
-      Asgn : Assign;
+      Asgn : Seq_Assign;
       W : Wire_Id;
    begin
       Res := 0;
       for I in Alts'Range loop
          Asgn := Alts (I).Asgns;
-         while Asgn /= No_Assign loop
+         while Asgn /= No_Seq_Assign loop
             W := Get_Wire_Id (Asgn);
             if not Wire_Id_Table.Table (W).Mark_Flag then
                Res := Res + 1;
@@ -432,13 +432,13 @@ package body Synth.Stmts is
                                  Alts : Alternative_Data_Array)
    is
       Idx : Natural;
-      Asgn : Assign;
+      Asgn : Seq_Assign;
       W : Wire_Id;
    begin
       Idx := Arr'First;
       for I in Alts'Range loop
          Asgn := Alts (I).Asgns;
-         while Asgn /= No_Assign loop
+         while Asgn /= No_Seq_Assign loop
             W := Get_Wire_Id (Asgn);
             if Wire_Id_Table.Table (W).Mark_Flag then
                Arr (Idx) := W;

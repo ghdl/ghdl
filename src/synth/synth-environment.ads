@@ -48,8 +48,8 @@ package Synth.Environment is
       Wire_Input, Wire_Output, Wire_Inout
      );
 
-   type Assign is new Uns32;
-   No_Assign : constant Assign := 0;
+   type Seq_Assign is new Uns32;
+   No_Seq_Assign : constant Seq_Assign := 0;
 
    --  A Wire_Id represents a bit or a vector.
    type Wire_Id_Record is record
@@ -68,7 +68,7 @@ package Synth.Environment is
       Gate : Net;
 
       --  Current assignment (if there is one).
-      Cur_Assign : Assign;
+      Cur_Assign : Seq_Assign;
    end record;
 
    --  The current value of WID.  For variables, this is the last assigned
@@ -83,26 +83,26 @@ package Synth.Environment is
    type Phi_Id is new Uns32;
    No_Phi_Id : constant Phi_Id := 0;
 
-   type Assign_Record is record
+   type Seq_Assign_Record is record
       --  Target of the assignment.
       Id : Wire_Id;
 
       --  Assignment is the previous phi context.
-      Prev : Assign;
+      Prev : Seq_Assign;
 
       --  Corresponding phi context for this wire.
       Phi : Phi_Id;
 
       --  Next wire in the phi context.
-      Chain : Assign;
+      Chain : Seq_Assign;
 
       --  Value assigned.
       Value : Net;
    end record;
 
-   function Get_Wire_Id (W : Assign) return Wire_Id;
-   function Get_Assign_Chain (Asgn : Assign) return Assign;
-   function Get_Assign_Value (Asgn : Assign) return Net;
+   function Get_Wire_Id (W : Seq_Assign) return Wire_Id;
+   function Get_Assign_Chain (Asgn : Seq_Assign) return Seq_Assign;
+   function Get_Assign_Value (Asgn : Seq_Assign) return Net;
 
    type Phi_Type is private;
 
@@ -121,7 +121,8 @@ package Synth.Environment is
                          Sel : Net;
                          T, F : Phi_Type);
 
-   function Sort_Phi (P : Phi_Type) return Assign;
+   --  Sort all seq assign of P by wire id.  Used to more easily merge them.
+   function Sort_Phi (P : Phi_Type) return Seq_Assign;
 
    --  In the current phi context, assign VAL to DEST.
    procedure Phi_Assign (Dest : Wire_Id; Val : Net);
@@ -137,14 +138,14 @@ package Synth.Environment is
       Table_Initial => 1024);
 
    package Assign_Table is new Tables
-     (Table_Component_Type => Assign_Record,
-      Table_Index_Type => Assign,
-      Table_Low_Bound => No_Assign,
+     (Table_Component_Type => Seq_Assign_Record,
+      Table_Index_Type => Seq_Assign,
+      Table_Low_Bound => No_Seq_Assign,
       Table_Initial => 1024);
 
 private
    type Phi_Type is record
-      First : Assign;
+      First : Seq_Assign;
       Nbr : Uns32;
    end record;
 

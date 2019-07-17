@@ -24,22 +24,22 @@ with Netlists.Builders; use Netlists.Builders;
 with Synth.Inference;
 
 package body Synth.Environment is
-   function Get_Wire_Id (W : Assign) return Wire_Id is
+   function Get_Wire_Id (W : Seq_Assign) return Wire_Id is
    begin
       return Assign_Table.Table (W).Id;
    end Get_Wire_Id;
 
-   function Get_Assign_Prev (Asgn : Assign) return Assign is
+   function Get_Assign_Prev (Asgn : Seq_Assign) return Seq_Assign is
    begin
       return Assign_Table.Table (Asgn).Prev;
    end Get_Assign_Prev;
 
-   function Get_Assign_Chain (Asgn : Assign) return Assign is
+   function Get_Assign_Chain (Asgn : Seq_Assign) return Seq_Assign is
    begin
       return Assign_Table.Table (Asgn).Chain;
    end Get_Assign_Chain;
 
-   procedure Set_Assign_Chain (Asgn : Assign; Chain : Assign) is
+   procedure Set_Assign_Chain (Asgn : Seq_Assign; Chain : Seq_Assign) is
    begin
       Assign_Table.Table (Asgn).Chain := Chain;
    end Set_Assign_Chain;
@@ -51,7 +51,7 @@ package body Synth.Environment is
 
    procedure Push_Phi is
    begin
-      Phis_Table.Append ((First => No_Assign,
+      Phis_Table.Append ((First => No_Seq_Assign,
                           Nbr => 0));
    end Push_Phi;
 
@@ -59,7 +59,7 @@ package body Synth.Environment is
    procedure Pop_Phi (Phi : out Phi_Type)
    is
       Cur_Phi : constant Phi_Id := Current_Phi;
-      Asgn : Assign;
+      Asgn : Seq_Assign;
    begin
       --  Pop.
       Phi := Phis_Table.Table (Cur_Phi);
@@ -68,7 +68,7 @@ package body Synth.Environment is
       --  Point to previous wires.  The current values are the ones before
       --  the block.
       Asgn := Phi.First;
-      while Asgn /= No_Assign loop
+      while Asgn /= No_Seq_Assign loop
          pragma Assert (Assign_Table.Table (Asgn).Phi = Cur_Phi);
          Wire_Id_Table.Table (Get_Wire_Id (Asgn)).Cur_Assign :=
            Get_Assign_Prev (Asgn);
@@ -81,14 +81,14 @@ package body Synth.Environment is
    procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc)
    is
       Phi : Phi_Type;
-      Asgn : Assign;
+      Asgn : Seq_Assign;
    begin
       Pop_Phi (Phi);
 
       Asgn := Phi.First;
-      while Asgn /= No_Assign loop
+      while Asgn /= No_Seq_Assign loop
          declare
-            Asgn_Rec : Assign_Record renames Assign_Table.Table (Asgn);
+            Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
             Outport : constant Net := Wire_Id_Table.Table (Asgn_Rec.Id).Gate;
             --  Must be connected to an Id_Output or Id_Signal
             pragma Assert (Outport /= No_Net);
@@ -140,23 +140,25 @@ package body Synth.Environment is
    --  (the one after LEN) is assigned to NEXT.  The chain headed by FIRST
    --  is truncated to LEN elements.
    --  Use a merge sort.
-   procedure Sort_Wires
-     (Asgn : Assign; Len : Uns32; First : out Assign; Next : out Assign)
+   procedure Sort_Wires (Asgn : Seq_Assign;
+                         Len : Uns32;
+                         First : out Seq_Assign;
+                         Next : out Seq_Assign)
    is
-      Left, Right : Assign;
-      Last : Assign;
-      El : Assign;
+      Left, Right : Seq_Assign;
+      Last : Seq_Assign;
+      El : Seq_Assign;
    begin
       if Len = 0 then
          --  Empty chain.
-         First := No_Assign;
+         First := No_Seq_Assign;
          Next := Asgn;
          return;
       elsif Len = 1 then
          --  Chain with one element.
          First := Asgn;
          Next := Get_Assign_Chain (First);
-         Set_Assign_Chain (First, No_Assign);
+         Set_Assign_Chain (First, No_Seq_Assign);
          return;
       else
          --  Divide.
@@ -164,45 +166,45 @@ package body Synth.Environment is
          Sort_Wires (Right, Len - Len / 2, Right, Next);
 
          --  Conquer: merge.
-         First := No_Assign;
-         Last := No_Assign;
+         First := No_Seq_Assign;
+         Last := No_Seq_Assign;
          for I in 1 .. Len loop
-            if Left /= No_Assign
-              and then (Right = No_Assign
+            if Left /= No_Seq_Assign
+              and then (Right = No_Seq_Assign
                           or else Get_Wire_Id (Left) <= Get_Wire_Id (Right))
             then
                El := Left;
                Left := Get_Assign_Chain (Left);
             else
-               pragma Assert (Right /= No_Assign);
+               pragma Assert (Right /= No_Seq_Assign);
                El := Right;
                Right := Get_Assign_Chain (Right);
             end if;
 
             --  Append
-            if First = No_Assign then
+            if First = No_Seq_Assign then
                First := El;
             else
                Set_Assign_Chain (Last, El);
             end if;
             Last := El;
          end loop;
-         Set_Assign_Chain (Last, No_Assign);
+         Set_Assign_Chain (Last, No_Seq_Assign);
       end if;
    end Sort_Wires;
 
-   function Sort_Phi (P : Phi_Type) return Assign
+   function Sort_Phi (P : Phi_Type) return Seq_Assign
    is
-      Res, Last : Assign;
+      Res, Last : Seq_Assign;
    begin
       Sort_Wires (P.First, P.Nbr, Res, Last);
-      pragma Assert (Last = No_Assign);
+      pragma Assert (Last = No_Seq_Assign);
       return Res;
    end Sort_Phi;
 
-   function Get_Assign_Value (Asgn : Assign) return Net
+   function Get_Assign_Value (Asgn : Seq_Assign) return Net
    is
-      Asgn_Rec : Assign_Record renames Assign_Table.Table (Asgn);
+      Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
    begin
       case Wire_Id_Table.Table (Asgn_Rec.Id).Kind is
          when Wire_Signal | Wire_Output | Wire_Inout | Wire_Variable =>
@@ -218,7 +220,7 @@ package body Synth.Environment is
    begin
       case Wid_Rec.Kind is
          when Wire_Variable =>
-            if Wid_Rec.Cur_Assign = No_Assign then
+            if Wid_Rec.Cur_Assign = No_Seq_Assign then
                return Wid_Rec.Gate;
             else
                return Assign_Table.Table (Wid_Rec.Cur_Assign).Value;
@@ -234,7 +236,7 @@ package body Synth.Environment is
    is
       Wid_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
    begin
-      if Wid_Rec.Cur_Assign = No_Assign then
+      if Wid_Rec.Cur_Assign = No_Seq_Assign then
          return Wid_Rec.Gate;
       else
          return Get_Assign_Value (Wid_Rec.Cur_Assign);
@@ -246,8 +248,8 @@ package body Synth.Environment is
                          Sel : Net;
                          T, F : Phi_Type)
    is
-      T_Asgns : Assign;
-      F_Asgns : Assign;
+      T_Asgns : Seq_Assign;
+      F_Asgns : Seq_Assign;
       W : Wire_Id;
       Te, Fe : Net;
       Res : Net;
@@ -255,10 +257,10 @@ package body Synth.Environment is
       T_Asgns := Sort_Phi (T);
       F_Asgns := Sort_Phi (F);
 
-      while T_Asgns /= No_Assign or F_Asgns /= No_Assign loop
+      while T_Asgns /= No_Seq_Assign or F_Asgns /= No_Seq_Assign loop
          --  Extract a wire.
-         if T_Asgns = No_Assign
-           or else (F_Asgns /= No_Assign
+         if T_Asgns = No_Seq_Assign
+           or else (F_Asgns /= No_Seq_Assign
                       and then Get_Wire_Id (F_Asgns) < Get_Wire_Id (T_Asgns))
          then
             --  Has an assignment only for the false branch.
@@ -266,8 +268,8 @@ package body Synth.Environment is
             Te := Get_Last_Assigned_Value (W);
             Fe := Get_Assign_Value (F_Asgns);
             F_Asgns := Get_Assign_Chain (F_Asgns);
-         elsif F_Asgns = No_Assign
-           or else (T_Asgns /= No_Assign
+         elsif F_Asgns = No_Seq_Assign
+           or else (T_Asgns /= No_Seq_Assign
                       and then Get_Wire_Id (T_Asgns) < Get_Wire_Id (F_Asgns))
          then
             --  Has an assignment only for the true branch.
@@ -289,12 +291,12 @@ package body Synth.Environment is
       end loop;
    end Merge_Phis;
 
-   procedure Phi_Insert_Assign (Asgn : Assign)
+   procedure Phi_Insert_Assign (Asgn : Seq_Assign)
    is
-      pragma Assert (Asgn /= No_Assign);
-      Asgn_Rec : Assign_Record renames Assign_Table.Table (Asgn);
+      pragma Assert (Asgn /= No_Seq_Assign);
+      Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
       pragma Assert (Asgn_Rec.Phi = Current_Phi);
-      pragma Assert (Asgn_Rec.Chain = No_Assign);
+      pragma Assert (Asgn_Rec.Chain = No_Seq_Assign);
       P : Phi_Type renames Phis_Table.Table (Phis_Table.Last);
    begin
       --  Chain assignment in the current sequence.
@@ -305,16 +307,16 @@ package body Synth.Environment is
 
    procedure Phi_Assign (Dest : Wire_Id; Val : Net)
    is
-      Cur_Asgn : constant Assign := Wire_Id_Table.Table (Dest).Cur_Assign;
+      Cur_Asgn : constant Seq_Assign := Wire_Id_Table.Table (Dest).Cur_Assign;
    begin
-      if Cur_Asgn = No_Assign
+      if Cur_Asgn = No_Seq_Assign
         or else Assign_Table.Table (Cur_Asgn).Phi < Current_Phi
       then
          --  Never assigned, or first assignment in that level
          Assign_Table.Append ((Phi => Current_Phi,
                               Id => Dest,
                               Prev => Cur_Asgn,
-                              Chain => No_Assign,
+                              Chain => No_Seq_Assign,
                               Value => Val));
          Wire_Id_Table.Table (Dest).Cur_Assign := Assign_Table.Last;
          Phi_Insert_Assign (Assign_Table.Last);
@@ -329,17 +331,17 @@ begin
                           Mark_Flag => False,
                           Decl => Source.No_Syn_Src,
                           Gate => No_Net,
-                          Cur_Assign => No_Assign));
+                          Cur_Assign => No_Seq_Assign));
    pragma Assert (Wire_Id_Table.Last = No_Wire_Id);
 
    Assign_Table.Append ((Phi => No_Phi_Id,
                         Id => No_Wire_Id,
-                        Prev => No_Assign,
-                        Chain => No_Assign,
+                        Prev => No_Seq_Assign,
+                        Chain => No_Seq_Assign,
                         Value => No_Net));
-   pragma Assert (Assign_Table.Last = No_Assign);
+   pragma Assert (Assign_Table.Last = No_Seq_Assign);
 
-   Phis_Table.Append ((First => No_Assign,
+   Phis_Table.Append ((First => No_Seq_Assign,
                        Nbr => 0));
    pragma Assert (Phis_Table.Last = No_Phi_Id);
 end Synth.Environment;

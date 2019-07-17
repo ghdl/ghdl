@@ -32,10 +32,10 @@ package body Synth.Environment.Debug is
       Put (" Init: ");
       Dump_Net_Name (W_Rec.Gate);
       New_Line;
-      Put_Line (" cur_assign:" & Assign'Image (W_Rec.Cur_Assign));
+      Put_Line (" cur_assign:" & Seq_Assign'Image (W_Rec.Cur_Assign));
    end Dump_Wire_Id;
 
-   procedure Dump_Assign (Asgn : Assign)
+   procedure Dump_Assign (Asgn : Seq_Assign)
    is
       procedure Dump_Value (N : Net) is
       begin
@@ -47,13 +47,13 @@ package body Synth.Environment.Debug is
             Put ("unassigned");
          end if;
       end Dump_Value;
-      Rec : Assign_Record renames Assign_Table.Table (Asgn);
+      Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
    begin
-      Put ("Assign" & Assign'Image (Asgn));
+      Put ("Assign" & Seq_Assign'Image (Asgn));
       Put (" Id:" & Wire_Id'Image (Rec.Id));
-      Put (", prev_assign:" & Assign'Image (Rec.Prev));
+      Put (", prev_assign:" & Seq_Assign'Image (Rec.Prev));
       Put (", phi:" & Phi_Id'Image (Rec.Phi));
-      Put (", chain:" & Assign'Image (Rec.Chain));
+      Put (", chain:" & Seq_Assign'Image (Rec.Chain));
       New_Line;
       Put (" value: ");
       Dump_Value (Rec.Value);
@@ -63,12 +63,12 @@ package body Synth.Environment.Debug is
    procedure Dump_Phi (Id : Phi_Id)
    is
       Phi : Phi_Type renames Phis_Table.Table (Id);
-      Asgn : Assign;
+      Asgn : Seq_Assign;
    begin
       Put ("phi_id:" & Phi_Id'Image (Id) & ", nbr:" & Uns32'Image (Phi.Nbr));
       New_Line;
       Asgn := Phi.First;
-      while Asgn /= No_Assign loop
+      while Asgn /= No_Seq_Assign loop
          Dump_Assign (Asgn);
          Asgn := Get_Assign_Chain (Asgn);
       end loop;
