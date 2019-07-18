@@ -1210,14 +1210,19 @@ package body Synth.Stmts is
    begin
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
-         Push_Phi;
          case Get_Kind (Stmt) is
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               Push_Phi;
                Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
+               Pop_And_Merge_Phi (Build_Context, Stmt);
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+               Push_Phi;
                Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
+               Pop_And_Merge_Phi (Build_Context, Stmt);
             when Iir_Kinds_Process_Statement =>
+               Push_Phi;
                Synth_Process_Statement (Syn_Inst, Stmt);
+               Pop_And_Merge_Phi (Build_Context, Stmt);
             when Iir_Kind_If_Generate_Statement =>
                declare
                   Gen : Node;
@@ -1237,9 +1242,8 @@ package body Synth.Stmts is
                      exit when Gen = Null_Node;
                   end loop;
                end;
-            when Iir_Kind_Concurrent_Assertion_Statement =>
-               Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
             when Iir_Kind_Component_Instantiation_Statement =>
+               Push_Phi;
                if Is_Component_Instantiation (Stmt) then
                   declare
                      Comp_Config : constant Node :=
@@ -1257,14 +1261,18 @@ package body Synth.Stmts is
                else
                   Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
                end if;
+               Pop_And_Merge_Phi (Build_Context, Stmt);
             when Iir_Kind_Psl_Default_Clock =>
                null;
             when Iir_Kind_Psl_Restrict_Directive =>
+               --  Passive statement.
                Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
+            when Iir_Kind_Concurrent_Assertion_Statement =>
+               --  Passive statement.
+               Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
             when others =>
                Error_Kind ("synth_statements", Stmt);
          end case;
-         Pop_And_Merge_Phi (Build_Context);
          Stmt := Get_Chain (Stmt);
       end loop;
    end Synth_Concurrent_Statements;

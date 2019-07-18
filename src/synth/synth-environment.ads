@@ -90,7 +90,8 @@ package Synth.Environment is
 
    --  Destroy the current phi context and merge it.  Can apply only for the
    --  first non-top level phi context.
-   procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc);
+   procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc;
+                                Stmt : Source.Syn_Src);
 
    --  Handle if statement.  According to SEL, the value of the wires are
    --  those from T or from F.
@@ -108,6 +109,7 @@ package Synth.Environment is
    function Current_Phi return Phi_Id;
    pragma Inline (Current_Phi);
 
+   procedure Finalize_Assignments (Ctxt : Builders.Context_Acc);
 private
    type Wire_Id is new Uns32;
    No_Wire_Id : constant Wire_Id := 0;
@@ -140,6 +142,12 @@ private
 
       --  Current assignment (if there is one).
       Cur_Assign : Seq_Assign;
+
+      --  Chain of concurrent assigns for this wire.
+      --  This is used to detect multiple collision and to handle partial
+      --  assignments.
+      Final_Assign : Conc_Assign;
+      Nbr_Final_Assign : Natural;
    end record;
 
    type Seq_Assign_Record is record
@@ -157,6 +165,17 @@ private
 
       --  Value assigned.
       Value : Net;
+   end record;
+
+   type Conc_Assign_Record is record
+      Next : Conc_Assign;
+
+      --  Concurrent assignment at OFFSET.  The width is set by value width.
+      Value : Net;
+      Offset : Uns32;
+
+      --  Source of the assignment.  Useful to report errors.
+      Stmt : Source.Syn_Src;
    end record;
 
    type Phi_Type is record
@@ -180,5 +199,11 @@ private
      (Table_Component_Type => Seq_Assign_Record,
       Table_Index_Type => Seq_Assign,
       Table_Low_Bound => No_Seq_Assign,
+      Table_Initial => 1024);
+
+   package Conc_Assign_Table is new Tables
+     (Table_Component_Type => Conc_Assign_Record,
+      Table_Index_Type => Conc_Assign,
+      Table_Low_Bound => No_Conc_Assign,
       Table_Initial => 1024);
 end Synth.Environment;

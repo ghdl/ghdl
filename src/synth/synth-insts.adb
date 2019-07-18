@@ -630,7 +630,7 @@ package body Synth.Insts is
                Make_Object (Syn_Inst, Wire_None, Inter);
             when Port_Out
               | Port_Inout =>
-               Make_Object (Syn_Inst, Wire_Output, Inter);
+               Make_Object (Syn_Inst, Wire_None, Inter);
          end case;
          Inter := Get_Chain (Inter);
       end loop;
@@ -778,7 +778,6 @@ package body Synth.Insts is
       pragma Assert (Get_Kind (Inst.Config) = Iir_Kind_Block_Configuration);
       Apply_Block_Configuration (Inst.Config, Arch);
 
-
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
       Synth_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
@@ -786,6 +785,8 @@ package body Synth.Insts is
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
       Synth_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+
+      Finalize_Assignments (Build_Context);
 
       --  Remove unused gates.  This is not only an optimization but also
       --  a correctness point: there might be some unsynthesizable gates, like

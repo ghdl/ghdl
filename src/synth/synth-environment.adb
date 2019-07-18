@@ -18,10 +18,14 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
-with Netlists.Builders; use Netlists.Builders;
+with Errorout; use Errorout;
 with Synth.Inference;
+with Synth.Errors; use Synth.Errors;
+with Vhdl.Nodes;
+with Vhdl.Errors; use Vhdl.Errors;
 
 package body Synth.Environment is
    procedure Set_Wire_Mark (Wid : Wire_Id; Mark : Boolean := True) is
@@ -41,7 +45,9 @@ package body Synth.Environment is
                              Mark_Flag => False,
                              Decl => Obj,
                              Gate => No_Net,
-                             Cur_Assign => No_Seq_Assign));
+                             Cur_Assign => No_Seq_Assign,
+                             Final_Assign => No_Conc_Assign,
+                             Nbr_Final_Assign => 0));
       return Wire_Id_Table.Last;
    end Alloc_Wire;
 
@@ -105,9 +111,62 @@ package body Synth.Environment is
       end loop;
    end Pop_Phi;
 
+   function Get_Conc_Offset (Asgn : Conc_Assign) return Uns32 is
+   begin
+      return Conc_Assign_Table.Table (Asgn).Offset;
+   end Get_Conc_Offset;
+
+   function Get_Conc_Value (Asgn : Conc_Assign) return Net is
+   begin
+      return Conc_Assign_Table.Table (Asgn).Value;
+   end Get_Conc_Value;
+
+   function Get_Conc_Chain (Asgn : Conc_Assign) return Conc_Assign is
+   begin
+      return Conc_Assign_Table.Table (Asgn).Next;
+   end Get_Conc_Chain;
+
+   procedure Set_Conc_Chain (Asgn : Conc_Assign; Chain : Conc_Assign) is
+   begin
+      Conc_Assign_Table.Table (Asgn).Next := Chain;
+   end Set_Conc_Chain;
+
+   procedure Add_Conc_Assign
+     (Wire_Rec : in out Wire_Id_Record; Val : Net; Stmt : Source.Syn_Src)
+   is
+      Inst : constant Instance := Get_Parent (Val);
+      V : Net;
+      Off : Uns32;
+      Inp : Input;
+   begin
+      --  Check for partial assignment.
+      if Get_Id (Inst) = Id_Insert
+        and then Get_Input_Net (Inst, 0) = Wire_Rec.Gate
+      then
+         --  TODO: handle multiple partial assignments
+         --    (like o (1) <= x; o (3) <= y;)
+         --  TODO: handle dyn assignment (like o (i) <= x;)
+         Inp := Get_Input (Inst, 1);
+         V := Get_Driver (Inp);
+         Off := Get_Param_Uns32 (Inst, 0);
+         Disconnect (Inp);
+         Free_Instance (Inst);
+      else
+         V := Val;
+         Off := 0;
+      end if;
+      Conc_Assign_Table.Append ((Next => Wire_Rec.Final_Assign,
+                                 Value => V,
+                                 Offset => Off,
+                                 Stmt => Stmt));
+      Wire_Rec.Final_Assign := Conc_Assign_Table.Last;
+      Wire_Rec.Nbr_Final_Assign := Wire_Rec.Nbr_Final_Assign + 1;
+   end Add_Conc_Assign;
+
    --  This procedure is called after each concurrent statement to assign
    --  values to signals.
-   procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc)
+   procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc;
+                                Stmt : Source.Syn_Src)
    is
       Phi : Phi_Type;
       Asgn : Seq_Assign;
@@ -118,42 +177,31 @@ package body Synth.Environment is
       while Asgn /= No_Seq_Assign loop
          declare
             Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
-            Outport : constant Net := Wire_Id_Table.Table (Asgn_Rec.Id).Gate;
+            Wid : constant Wire_Id := Asgn_Rec.Id;
+            Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+            Outport : constant Net := Wire_Rec.Gate;
             --  Must be connected to an Id_Output or Id_Signal
             pragma Assert (Outport /= No_Net);
             Gate_Inst : Instance;
             Gate_In : Input;
             Drv : Net;
-            New_Sig : Net;
          begin
             Gate_Inst := Get_Parent (Outport);
             Gate_In := Get_Input (Gate_Inst, 0);
             Drv := Get_Driver (Gate_In);
 
-            case Wire_Id_Table.Table (Asgn_Rec.Id).Kind is
+            case Wire_Rec.Kind is
                when Wire_Output
                  | Wire_Signal
                  | Wire_Variable =>
                   if Drv /= No_Net then
                      --  Output already assigned
                      raise Internal_Error;
-                  else
-                     Drv := Inference.Infere (Ctxt, Asgn_Rec.Value, Outport);
-
-                     if Get_Id (Gate_Inst) = Id_Isignal
-                       and then Get_Driver (Get_Input (Gate_Inst, 1)) = No_Net
-                     then
-                        --  Mutate Isignal to signal.
-                        New_Sig := Build_Signal
-                          (Ctxt, Get_Name (Gate_Inst), Get_Width (Outport));
-                        Connect (Get_Input (Get_Parent (New_Sig), 0), Drv);
-                        Redirect_Inputs (Outport, New_Sig);
-                        Wire_Id_Table.Table (Asgn_Rec.Id).Gate := New_Sig;
-                        Free_Instance (Gate_Inst);
-                     else
-                        Connect (Gate_In, Drv);
-                     end if;
                   end if;
+
+                  Drv := Inference.Infere (Ctxt, Asgn_Rec.Value, Outport);
+
+                  Add_Conc_Assign (Wire_Rec, Drv, Stmt);
                when others =>
                   raise Internal_Error;
             end case;
@@ -163,6 +211,201 @@ package body Synth.Environment is
       end loop;
       --  FIXME: free wires.
    end Pop_And_Merge_Phi;
+
+   --  Merge sort of conc_assign by offset.
+   procedure Sort_Conc_Assign (Chain : Conc_Assign;
+                               Len : Natural;
+                               First : out Conc_Assign;
+                               Next : out Conc_Assign)
+   is
+      Left, Right : Conc_Assign;
+      Last : Conc_Assign;
+      El : Conc_Assign;
+   begin
+      if Len = 0 then
+         First := No_Conc_Assign;
+         Next := Chain;
+      elsif Len = 1 then
+         First := Chain;
+         Next := Get_Conc_Chain (Chain);
+         Set_Conc_Chain (Chain, No_Conc_Assign);
+      else
+         --  Divide.
+         Sort_Conc_Assign (Chain, Len / 2, Left, Right);
+         Sort_Conc_Assign (Right, Len - Len / 2, Right, Next);
+
+         First := No_Conc_Assign;
+         Last := No_Conc_Assign;
+         for I in 1 .. Len loop
+            if Left /= No_Conc_Assign
+              and then
+              (Right = No_Conc_Assign
+                 or else Get_Conc_Offset (Left) <= Get_Conc_Offset (Right))
+            then
+               El := Left;
+               Left := Get_Conc_Chain (Left);
+            else
+               pragma Assert (Right /= No_Conc_Assign);
+               El := Right;
+               Right := Get_Conc_Chain (Right);
+            end if;
+            --  Append
+            if First = No_Conc_Assign then
+               First := El;
+            else
+               Set_Conc_Chain (Last, El);
+            end if;
+            Last := El;
+         end loop;
+         Set_Conc_Chain (Last, No_Conc_Assign);
+      end if;
+   end Sort_Conc_Assign;
+
+   procedure Finalize_Complex_Assignment (Ctxt : Builders.Context_Acc;
+                                          Wire_Rec : Wire_Id_Record;
+                                          Value : out Net)
+   is
+      First_Assign : Conc_Assign;
+      Asgn : Conc_Assign;
+      Last_Asgn : Conc_Assign;
+      New_Asgn : Conc_Assign;
+      Next_Off : Uns32;
+      Expected_Off : Uns32;
+      Last_Off : Uns32;
+      Nbr_Assign : Natural;
+   begin
+      Nbr_Assign := Wire_Rec.Nbr_Final_Assign;
+      --  Sort assignments by offset.
+      Asgn := Wire_Rec.Final_Assign;
+      Sort_Conc_Assign (Asgn, Nbr_Assign, Asgn, Last_Asgn);
+      First_Assign := Asgn;
+
+      --  Report overlaps and holes, count number of inputs
+      Last_Asgn := No_Conc_Assign;
+      Expected_Off := 0;
+      Last_Off := Get_Width (Wire_Rec.Gate);
+      while Expected_Off < Last_Off loop
+         if Asgn /= No_Conc_Assign then
+            Next_Off := Get_Conc_Offset (Asgn);
+         else
+            Next_Off := Last_Off;
+         end if;
+         if Next_Off = Expected_Off then
+            --  Normal case.
+            pragma Assert (Asgn /= No_Conc_Assign);
+            Expected_Off := Expected_Off + Get_Width (Get_Conc_Value (Asgn));
+            Last_Asgn := Asgn;
+            Asgn := Get_Conc_Chain (Asgn);
+         elsif Next_Off > Expected_Off then
+            if Next_Off = Expected_Off + 1 then
+               Warning_Msg_Synth
+                 (+Wire_Rec.Decl, "no assignment for offset %v",
+                  (1 => +Expected_Off));
+            else
+               Warning_Msg_Synth
+                 (+Wire_Rec.Decl, "no assignment for offsets %v:%v",
+                  (+Expected_Off, +(Next_Off - 1)));
+            end if;
+
+            --  Insert conc_assign with initial value.
+            --  FIXME: handle initial values.
+            Conc_Assign_Table.Append
+              ((Next => Asgn,
+                Value => Build_Const_Z (Ctxt, Next_Off - Expected_Off),
+                Offset => Expected_Off,
+                Stmt => Source.No_Syn_Src));
+            New_Asgn := Conc_Assign_Table.Last;
+            if Last_Asgn = No_Conc_Assign then
+               First_Assign := New_Asgn;
+            else
+               Set_Conc_Chain (Last_Asgn, New_Asgn);
+            end if;
+            Last_Asgn := New_Asgn;
+            Nbr_Assign := Nbr_Assign + 1;
+
+            Expected_Off := Next_Off;
+         else
+            pragma Assert (Next_Off < Expected_Off);
+            Error_Msg_Synth
+              (+Wire_Rec.Decl, "multiple assignments for offsets %v:%v",
+               (+Next_Off, +(Expected_Off - 1)));
+            --  TODO: insert resolver
+            pragma Assert (Asgn /= No_Conc_Assign);
+            Last_Asgn := Asgn;
+            Asgn := Get_Conc_Chain (Asgn);
+         end if;
+      end loop;
+
+      --  Create concat
+      --  Set concat inputs
+      if Nbr_Assign = 1 then
+         Value := Get_Conc_Value (First_Assign);
+      elsif Nbr_Assign = 2 then
+         Value := Build_Concat2 (Ctxt,
+                                 Get_Conc_Value (Last_Asgn),
+                                 Get_Conc_Value (First_Assign));
+      else
+         raise Internal_Error;
+      end if;
+   end Finalize_Complex_Assignment;
+
+   procedure Finalize_Assignment
+     (Ctxt : Builders.Context_Acc; Wire_Rec : Wire_Id_Record)
+   is
+      use Vhdl.Nodes;
+      Gate_Inst : constant Instance := Get_Parent (Wire_Rec.Gate);
+      Inp : constant Input := Get_Input (Gate_Inst, 0);
+      Value : Net;
+   begin
+      case Wire_Rec.Nbr_Final_Assign is
+         when 0 =>
+            --  TODO: use initial value ?
+            if Wire_Rec.Decl /= Null_Node
+              and then Wire_Rec.Kind = Wire_Output
+            then
+               Error_Msg_Synth
+                 (+Wire_Rec.Decl, "no assignment for %n", +Wire_Rec.Decl);
+            end if;
+            return;
+         when 1 =>
+            declare
+               Conc_Asgn : Conc_Assign_Record renames
+                 Conc_Assign_Table.Table (Wire_Rec.Final_Assign);
+            begin
+               if Conc_Asgn.Offset = 0
+                 and then (Get_Width (Conc_Asgn.Value)
+                             = Get_Width (Wire_Rec.Gate))
+               then
+                  --  Single and full assignment.
+                  Value := Conc_Asgn.Value;
+               else
+                  --  Partial or multiple assignments.
+                  Finalize_Complex_Assignment (Ctxt, Wire_Rec, Value);
+               end if;
+            end;
+         when others =>
+            Finalize_Complex_Assignment (Ctxt, Wire_Rec, Value);
+      end case;
+
+      Connect (Inp, Value);
+   end Finalize_Assignment;
+
+   procedure Finalize_Assignments (Ctxt : Builders.Context_Acc) is
+   begin
+      pragma Assert (Phis_Table.Last = No_Phi_Id);
+      --  pragma Assert (Assign_Table.Last = No_Seq_Assign);
+
+      for Wid in Wire_Id_Table.First + 1 .. Wire_Id_Table.Last loop
+         declare
+            Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+         begin
+            pragma Assert (Wire_Rec.Cur_Assign = No_Seq_Assign);
+            Finalize_Assignment (Ctxt, Wire_Rec);
+         end;
+      end loop;
+
+      Wire_Id_Table.Set_Last (No_Wire_Id);
+   end Finalize_Assignments;
 
    --  Sort the LEN first wires of chain W (linked by Chain) in Id increasing
    --  values.  The result is assigned to FIRST and the first non-sorted wire
@@ -360,7 +603,9 @@ begin
                           Mark_Flag => False,
                           Decl => Source.No_Syn_Src,
                           Gate => No_Net,
-                          Cur_Assign => No_Seq_Assign));
+                          Cur_Assign => No_Seq_Assign,
+                          Final_Assign => No_Conc_Assign,
+                          Nbr_Final_Assign => 0));
    pragma Assert (Wire_Id_Table.Last = No_Wire_Id);
 
    Assign_Table.Append ((Phi => No_Phi_Id,
@@ -373,4 +618,10 @@ begin
    Phis_Table.Append ((First => No_Seq_Assign,
                        Nbr => 0));
    pragma Assert (Phis_Table.Last = No_Phi_Id);
+
+   Conc_Assign_Table.Append ((Next => No_Conc_Assign,
+                              Value => No_Net,
+                              Offset => 0,
+                              Stmt => Source.No_Syn_Src));
+   pragma Assert (Conc_Assign_Table.Last = No_Conc_Assign);
 end Synth.Environment;
