@@ -115,6 +115,15 @@ package body Netlists.Builders is
          Id_Concat4, 4, 1, 0);
       Ctxt.M_Concat (Id_Concat4) := Res;
       Set_Port_Desc (Res, Inputs (0 .. 3), Outputs);
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("concatn")),
+         Id_Concatn, 0, 1, 1);
+      Ctxt.M_Concatn := Res;
+      Set_Port_Desc (Res, Inputs (1 .. 0), Outputs);
+      Set_Param_Desc
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("n")),
+                     Typ => Param_Uns32)));
    end Create_Concat_Modules;
 
    procedure Create_Const_Modules (Ctxt : Context_Acc)
@@ -680,6 +689,21 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 3), I3);
       return O;
    end Build_Concat4;
+
+   function Build_Concatn (Ctxt : Context_Acc; W : Width; Nbr_Inputs : Uns32)
+                          return Net
+   is
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Var_Instance (Ctxt.Parent, Ctxt.M_Concatn,
+                                New_Internal_Name (Ctxt),
+                                Port_Nbr (Nbr_Inputs), 1, 1);
+      Set_Param_Uns32 (Inst, 0, Nbr_Inputs);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      return O;
+   end Build_Concatn;
 
    function Build_Trunc
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net

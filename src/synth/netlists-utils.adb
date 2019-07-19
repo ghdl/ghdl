@@ -18,18 +18,23 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Netlists.Gates;
+with Netlists.Gates; use Netlists.Gates;
 
 package body Netlists.Utils is
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr
    is
       M : constant Module := Get_Module (Inst);
    begin
-      if Is_Self_Instance (Inst) then
-         return Get_Nbr_Outputs (M);
-      else
-         return Get_Nbr_Inputs (M);
-      end if;
+      case Get_Id (M) is
+         when Id_Concatn =>
+            return Port_Nbr (Get_Param_Uns32 (Inst, 0));
+         when others =>
+            if Is_Self_Instance (Inst) then
+               return Get_Nbr_Outputs (M);
+            else
+               return Get_Nbr_Inputs (M);
+            end if;
+      end case;
    end Get_Nbr_Inputs;
 
    function Get_Nbr_Outputs (Inst : Instance) return Port_Nbr
@@ -76,9 +81,7 @@ package body Netlists.Utils is
       return Get_Driver (Get_Input (Inst, Idx));
    end Get_Input_Net;
 
-   function Is_Const (Id : Module_Id) return Boolean
-   is
-      use Netlists.Gates;
+   function Is_Const (Id : Module_Id) return Boolean is
    begin
       case Id is
          when Id_Const_UB32

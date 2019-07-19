@@ -319,8 +319,7 @@ package body Netlists is
                                    Name : Sname;
                                    Nbr_Inputs : Port_Nbr;
                                    Nbr_Outputs : Port_Nbr;
-                                   Nbr_Params : Param_Nbr;
-                                   Outputs_Desc : Port_Desc_Idx)
+                                   Nbr_Params : Param_Nbr)
                                   return Instance
    is
       pragma Assert (Is_Valid (Parent));
@@ -331,14 +330,13 @@ package body Netlists is
       Params : constant Param_Idx :=
         Params_Table.Allocate (Natural (Nbr_Params));
    begin
-      Instances_Table.Append
-        ((Parent => Parent,
-          Next_Instance => No_Instance,
-          Klass => M,
-          Name => Name,
-          First_Param => Params,
-          First_Input => Inputs,
-          First_Output => Outputs));
+      Instances_Table.Append ((Parent => Parent,
+                               Next_Instance => No_Instance,
+                               Klass => M,
+                               Name => Name,
+                               First_Param => Params,
+                               First_Input => Inputs,
+                               First_Output => Outputs));
       Res := Instances_Table.Last;
 
       --  Setup inputs.
@@ -354,10 +352,9 @@ package body Netlists is
       --  Setup nets.
       if Nbr_Outputs > 0 then
          for I in 0 .. Nbr_Outputs - 1 loop
-            Nets_Table.Table (Outputs + Net (I)) :=
-              (Parent => Res,
-               First_Sink => No_Input,
-               W => Get_Port_Desc (Outputs_Desc + Port_Desc_Idx (I)).W);
+            Nets_Table.Table (Outputs + Net (I)) := (Parent => Res,
+                                                     First_Sink => No_Input,
+                                                     W => 0);
          end loop;
       end if;
 
@@ -371,6 +368,19 @@ package body Netlists is
       return Res;
    end New_Instance_Internal;
 
+   procedure Set_Outputs_Width_From_Desc (Inst : Instance;
+                                          Nbr_Outputs : Port_Nbr;
+                                          Outputs_Desc : Port_Desc_Idx) is
+   begin
+      if Nbr_Outputs > 0 then
+         for I in 0 .. Nbr_Outputs - 1 loop
+            Set_Width
+              (Get_Output (Inst, I),
+               Get_Port_Desc (Outputs_Desc + Port_Desc_Idx (I)).W);
+         end loop;
+      end if;
+   end Set_Outputs_Width_From_Desc;
+
    function New_Instance (Parent : Module; M : Module; Name : Sname)
                          return Instance
    is
@@ -380,14 +390,34 @@ package body Netlists is
       Res : Instance;
    begin
       Res := New_Instance_Internal
-        (Parent, M, Name, Nbr_Inputs, Nbr_Outputs, Nbr_Params,
-         Get_Output_First_Desc (M));
+        (Parent, M, Name, Nbr_Inputs, Nbr_Outputs, Nbr_Params);
+      Set_Outputs_Width_From_Desc
+        (Res, Nbr_Outputs, Get_Output_First_Desc (M));
 
       --  Link instance
       Append_Instance (Parent, Res);
 
       return Res;
    end New_Instance;
+
+   function New_Var_Instance (Parent : Module;
+                              M : Module;
+                              Name : Sname;
+                              Nbr_Inputs : Port_Nbr;
+                              Nbr_Outputs : Port_Nbr;
+                              Nbr_Params : Param_Nbr)
+                             return Instance
+   is
+      Res : Instance;
+   begin
+      Res := New_Instance_Internal
+        (Parent, M, Name, Nbr_Inputs, Nbr_Outputs, Nbr_Params);
+
+      --  Link instance
+      Append_Instance (Parent, Res);
+
+      return Res;
+   end New_Var_Instance;
 
    function Create_Self_Instance (M : Module) return Instance
    is
@@ -399,8 +429,9 @@ package body Netlists is
    begin
       --  Swap inputs and outputs; no parameters.
       Res := New_Instance_Internal
-        (M, M, Get_Name (M), Nbr_Outputs, Nbr_Inputs, 0,
-         Get_Input_First_Desc (M));
+        (M, M, Get_Name (M), Nbr_Outputs, Nbr_Inputs, 0);
+      Set_Outputs_Width_From_Desc
+        (Res, Nbr_Inputs, Get_Input_First_Desc (M));
 
       Append_Instance (M, Res);
 

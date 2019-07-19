@@ -226,6 +226,14 @@ package Netlists is
    --  Instance
    function New_Instance (Parent : Module; M : Module; Name : Sname)
                          return Instance;
+   --  For instances non-fixed number of inputs/outputs/params.
+   function New_Var_Instance (Parent : Module;
+                              M : Module;
+                              Name : Sname;
+                              Nbr_Inputs : Port_Nbr;
+                              Nbr_Outputs : Port_Nbr;
+                              Nbr_Params : Param_Nbr)
+                             return Instance;
 
    --  Mark INST as free, but keep it in the module.
    --  Use Remove_Free_Instances for a cleanup.

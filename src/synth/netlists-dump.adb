@@ -419,7 +419,7 @@ package body Netlists.Dump is
          Put (']');
       end if;
 
-      if Get_Nbr_Inputs (M) > 0 then
+      if Get_Nbr_Inputs (Inst) > 0 then
          declare
             First : Boolean;
          begin

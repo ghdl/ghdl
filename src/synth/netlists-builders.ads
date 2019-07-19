@@ -73,6 +73,10 @@ package Netlists.Builders is
    function Build_Concat3 (Ctxt : Context_Acc; I0, I1, I2 : Net) return Net;
    function Build_Concat4 (Ctxt : Context_Acc; I0, I1, I2, I3 : Net)
                           return Net;
+   --  NBR_INPUTS is the number of inputs ports, W is the width of the
+   --  output.
+   function Build_Concatn (Ctxt : Context_Acc; W : Width; Nbr_Inputs : Uns32)
+                          return Net;
 
    function Build_Trunc
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net;
@@ -131,6 +135,7 @@ private
       M_Monadic : Module_Arr (Monadic_Module_Id);
       M_Compare : Module_Arr (Compare_Module_Id);
       M_Concat : Module_Arr (Concat_Module_Id);
+      M_Concatn : Module;
       M_Const_UB32 : Module;
       M_Const_UL32 : Module;
       M_Const_Z : Module;

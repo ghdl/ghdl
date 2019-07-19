@@ -226,6 +226,7 @@ package body Netlists.Disp_Vhdl is
    is
       Imod : constant Module := Get_Module (Inst);
       Idx : Port_Idx;
+      Max_Idx : Port_Idx;
       P_Idx : Param_Idx;
       Name : Sname;
       First : Boolean;
@@ -275,6 +276,7 @@ package body Netlists.Disp_Vhdl is
       First := True;
       --  Inputs
       Idx := 0;
+      Max_Idx := Get_Nbr_Inputs (Imod);
       for I of Inputs (Inst) loop
          if First then
             First := False;
@@ -282,9 +284,11 @@ package body Netlists.Disp_Vhdl is
             Put_Line (",");
          end if;
          Put ("    ");
-         Put_Interface_Name (Get_Input_Desc (Imod, Idx).Name);
-         Idx := Idx + 1;
-         Put (" => ");
+         if Idx < Max_Idx then
+            Put_Interface_Name (Get_Input_Desc (Imod, Idx).Name);
+            Idx := Idx + 1;
+            Put (" => ");
+         end if;
          Disp_Net_Name (Get_Driver (I));
       end loop;
       --  Outputs
@@ -625,6 +629,13 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0 & \i1 & \i2;" & NL, Inst);
          when Id_Concat4 =>
             Disp_Template ("  \o0 <= \i0 & \i1 & \i2 & \i3;" & NL, Inst);
+         when Id_Concatn =>
+            Disp_Template ("  \o0 <= \i0", Inst);
+            for I in 1 .. Get_Nbr_Inputs (Inst) - 1 loop
+               Disp_Template (" & ", Inst);
+               Disp_Net_Expr (Get_Input_Net (Inst, I), Conv_None);
+            end loop;
+            Disp_Template(";" & NL, Inst);
          when Id_Utrunc
            | Id_Strunc =>
             declare

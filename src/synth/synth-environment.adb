@@ -345,7 +345,16 @@ package body Synth.Environment is
                                  Get_Conc_Value (Last_Asgn),
                                  Get_Conc_Value (First_Assign));
       else
-         raise Internal_Error;
+         Value := Build_Concatn (Ctxt, Last_Off, Uns32 (Nbr_Assign));
+         declare
+            Inst : constant Instance := Get_Parent (Value);
+         begin
+            Asgn := First_Assign;
+            for I in reverse 0 .. Nbr_Assign - 1 loop
+               Connect (Get_Input (Inst, Port_Idx (I)), Get_Conc_Value (Asgn));
+               Asgn := Get_Conc_Chain (Asgn);
+            end loop;
+         end;
       end if;
    end Finalize_Complex_Assignment;
 

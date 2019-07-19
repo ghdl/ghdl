@@ -156,4 +156,7 @@ package Netlists.Gates is
    Id_Const_SL32 : constant Module_Id := 71;
    Id_Const_Z : constant Module_Id := 72;
    Id_Const_0 : constant Module_Id := 73;
+
+   --  Concatenation with N inputs.
+   Id_Concatn : constant Module_Id := 80;
 end Netlists.Gates;
