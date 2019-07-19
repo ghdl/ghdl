@@ -134,6 +134,16 @@ package body Errorout is
       return (Kind => Earg_Char, Val_Char => V);
    end "+";
 
+   function "+" (V : Uns32) return Earg_Type is
+   begin
+      return (Kind => Earg_Uns32, Val_Uns32 => V);
+   end "+";
+
+   function "+" (V : Int32) return Earg_Type is
+   begin
+      return (Kind => Earg_Int32, Val_Int32 => V);
+   end "+";
+
    function "+" (V : String8_Len_Type) return Earg_Type is
    begin
       return (Kind => Earg_String8, Val_Str8 => V);
@@ -356,6 +366,23 @@ package body Errorout is
                               raise Internal_Error;
                         end case;
                         Report_Handler.Message ("""");
+                     end;
+                  when 'v' =>
+                     --  Numerical values
+                     declare
+                        Arg : Earg_Type renames Args (Argn);
+                     begin
+                        case Arg.Kind is
+                           when Earg_Uns32 =>
+                              declare
+                                 S : constant String :=
+                                   Uns32'Image (Arg.Val_Uns32);
+                              begin
+                                 Report_Handler.Message (S (2 .. S'Last));
+                              end;
+                           when others =>
+                              raise Internal_Error;
+                        end case;
                      end;
                   when others =>
                      --  Unknown format.

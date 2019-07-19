@@ -161,11 +161,14 @@ package Errorout is
    --  %l: location
    --  %n: node name
    --  %s: a string
+   --  %v: value
    --  TODO: %m: mode, %y: type of
    function "+" (V : Location_Type) return Earg_Type;
    function "+" (V : Name_Id) return Earg_Type;
    function "+" (V : Character) return Earg_Type;
    function "+" (V : String8_Len_Type) return Earg_Type;
+   function "+" (V : Uns32) return Earg_Type;
+   function "+" (V : Int32) return Earg_Type;
 
    --  Convert location.
    function "+" (L : Location_Type) return Source_Coord_Type;
@@ -235,7 +238,8 @@ package Errorout is
 private
    type Earg_Kind is
      (Earg_None,
-      Earg_Location, Earg_Id, Earg_Char, Earg_String8,
+      Earg_Location, Earg_Id,
+      Earg_Char, Earg_String8, Earg_Uns32, Earg_Int32,
       Earg_Vhdl_Node, Earg_Vhdl_Token);
 
    type Earg_Type (Kind : Earg_Kind := Earg_None) is record
@@ -250,6 +254,10 @@ private
             Val_Char : Character;
          when Earg_String8 =>
             Val_Str8 : String8_Len_Type;
+         when Earg_Uns32 =>
+            Val_Uns32 : Uns32;
+         when Earg_Int32 =>
+            Val_Int32 : Int32;
          when Earg_Vhdl_Node =>
             Val_Vhdl_Node : Vhdl.Nodes.Iir;
          when Earg_Vhdl_Token =>
