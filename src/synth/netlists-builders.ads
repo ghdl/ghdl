@@ -48,6 +48,9 @@ package Netlists.Builders is
                           Id : Reduce_Module_Id;
                           Op : Net) return Net;
 
+   function Build_Const_Z (Ctxt : Context_Acc;
+                           W : Width) return Net;
+
    function Build_Const_UB32 (Ctxt : Context_Acc;
                               Val : Uns32;
                               W : Width) return Net;
@@ -65,6 +68,7 @@ package Netlists.Builders is
                         Sel : Net;
                         I0, I1, I2, I3 : Net) return Net;
 
+   --  Build: I0 & I1 [ & I2 [ & I3 ]]
    function Build_Concat2 (Ctxt : Context_Acc; I0, I1 : Net) return Net;
    function Build_Concat3 (Ctxt : Context_Acc; I0, I1, I2 : Net) return Net;
    function Build_Concat4 (Ctxt : Context_Acc; I0, I1, I2, I3 : Net)
@@ -129,6 +133,7 @@ private
       M_Concat : Module_Arr (Concat_Module_Id);
       M_Const_UB32 : Module;
       M_Const_UL32 : Module;
+      M_Const_Z : Module;
       M_Edge : Module;
       M_Mux2 : Module;
       M_Mux4 : Module;

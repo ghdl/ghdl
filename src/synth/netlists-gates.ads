@@ -154,4 +154,6 @@ package Netlists.Gates is
    Id_Const_SB128 : constant Module_Id := 69;
    Id_Const_UL32 : constant Module_Id := 70;
    Id_Const_SL32 : constant Module_Id := 71;
+   Id_Const_Z : constant Module_Id := 72;
+   Id_Const_0 : constant Module_Id := 73;
 end Netlists.Gates;

@@ -480,6 +480,9 @@ package body Netlists.Disp_Vhdl is
             Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
                              Get_Param_Uns32 (Inst, 1),
                              Get_Width (O));
+         when Id_Const_Z =>
+            Disp_Template ("(\n0 downto 0 => 'Z')",
+                           Inst, (0 => Get_Width (O) - 1));
          when others =>
             raise Internal_Error;
       end case;
@@ -550,7 +553,8 @@ package body Netlists.Disp_Vhdl is
                   Inst, (0 => Iw - 1));
             end;
          when Id_Const_UB32
-           | Id_Const_UL32 =>
+           | Id_Const_UL32
+           | Id_Const_Z =>
             Disp_Template ("  \o0 <= ", Inst);
             Disp_Constant_Inline (Inst);
             Put_Line (";");

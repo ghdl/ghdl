@@ -142,6 +142,13 @@ package body Netlists.Builders is
                      Typ => Param_Uns32),
                1 => (New_Sname_Artificial (Get_Identifier ("xz")),
                      Typ => Param_Uns32)));
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_Z")),
+         Id_Const_Z, 0, 1, 0);
+      Ctxt.M_Const_Z := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
    end Create_Const_Modules;
 
    procedure Create_Extract_Module (Ctxt : Context_Acc)
@@ -529,11 +536,23 @@ package body Netlists.Builders is
       return O;
    end Build_Compare;
 
+   function Build_Const_Z (Ctxt : Context_Acc; W : Width) return Net
+   is
+      pragma Assert (W > 0);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Const_Z);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      return O;
+   end Build_Const_Z;
+
    function Build_Const_UB32 (Ctxt : Context_Acc;
                               Val : Uns32;
                               W : Width) return Net
    is
-      pragma Assert (W <= 32);
+      pragma Assert (W > 0 and W <= 32);
       Inst : Instance;
       O : Net;
    begin
@@ -549,7 +568,7 @@ package body Netlists.Builders is
                               Xz : Uns32;
                               W : Width) return Net
    is
-      pragma Assert (W <= 32);
+      pragma Assert (W > 0 and W <= 32);
       Inst : Instance;
       O : Net;
    begin
