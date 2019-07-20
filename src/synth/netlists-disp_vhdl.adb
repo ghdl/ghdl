@@ -508,16 +508,22 @@ package body Netlists.Disp_Vhdl is
          when Id_Extract =>
             declare
                O : constant Net := Get_Output (Inst, 0);
+               I : constant Net := Get_Input_Net (Inst, 0);
                Wd : constant Width := Get_Width (O);
                Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
-               Disp_Template ("  \o0 <= \i0 (", Inst);
-               if Wd > 1 then
-                  Put_Uns32 (Off + Wd - 1);
-                  Put (" downto ");
+               Disp_Template ("  \o0 <= \i0", Inst);
+               if Get_Width (I) > 1 then
+                  --  If width is 1, the signal is declared as a scalar and
+                  --  therefore cannot be indexed.
+                  if Wd > 1 then
+                     Disp_Template (" (\n0 downto \n1)", Inst,
+                                    (0 => Off + Wd - 1, 1 => Off));
+                  else
+                     Disp_Template (" (\n0)", Inst, (0 => Off));
+                  end if;
                end if;
-               Put_Uns32 (Off);
-               Put_Line (");");
+               Put_Line (";");
             end;
          when Id_Insert =>
             declare
