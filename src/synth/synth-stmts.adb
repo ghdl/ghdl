@@ -705,8 +705,6 @@ package body Synth.Stmts is
       Nbr_Wires := Count_Wires_In_Alternatives (Alts.all);
       Wires := new Wire_Id_Array (1 .. Nbr_Wires);
       Fill_Wire_Id_Array (Wires.all, Alts.all);
-
-      --  Sort Wires.
       Sort_Wire_Id_Array (Wires.all);
 
       --  Associate each choice with the assign node
@@ -765,6 +763,140 @@ package body Synth.Stmts is
       Free_Annex_Array (Annex_Arr);
       Free_Alternative_Data_Array (Alts);
    end Synth_Case_Statement;
+
+   procedure Synth_Selected_Signal_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      use Vhdl.Sem_Expr;
+
+      Targ : constant Node := Get_Target (Stmt);
+      Targ_Type : constant Node := Get_Type (Targ);
+
+      Expr : constant Node := Get_Expression (Stmt);
+      Choices : constant Node := Get_Selected_Waveform_Chain (Stmt);
+      Choice : Node;
+
+      Case_Info : Choice_Info_Type;
+      Annex_Arr : Annex_Array_Acc;
+
+      --  Array of alternatives
+      Alts : Alternative_Data_Acc;
+      Alt_Idx : Alternative_Index;
+      Others_Alt_Idx : Alternative_Index;
+
+      --  Array of choices.  Contains tuple of (Value, Alternative).
+      Choice_Data : Choice_Data_Array_Acc;
+      Choice_Idx : Natural;
+
+      Case_El : Case_Element_Array_Acc;
+
+      Sel : Value_Acc;
+      Sel_Net : Net;
+   begin
+      --  Create a net for the expression.
+      Sel := Synth_Expression (Syn_Inst, Expr);
+
+      --  Count choices and alternatives.
+      Count_Choices (Case_Info, Choices);
+      Fill_Choices_Array (Case_Info, Choices);
+
+      --  Allocate structures.
+      --  Because there is no 1-1 link between choices and alternatives,
+      --  create an array for the choices and an array for the alternatives.
+      Alts := new Alternative_Data_Array
+        (1 .. Alternative_Index (Case_Info.Nbr_Alternatives));
+      Choice_Data := new Choice_Data_Array (1 .. Case_Info.Nbr_Choices);
+      Annex_Arr := new Annex_Array (1 .. Case_Info.Nbr_Choices);
+      Case_Info.Annex_Arr := Annex_Arr;
+
+      --  Synth statements, extract choice value.
+      Alt_Idx := 0;
+      Others_Alt_Idx := 0;
+      Choice_Idx := 0;
+      Choice := Choices;
+      while Is_Valid (Choice) loop
+         if not Get_Same_Alternative_Flag (Choice) then
+            Alt_Idx := Alt_Idx + 1;
+
+            Alts (Alt_Idx).Val := Get_Net
+              (Synth_Waveform
+                 (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type),
+               Targ_Type);
+         end if;
+
+         case Get_Kind (Choice) is
+            when Iir_Kind_Choice_By_Expression =>
+               Choice_Idx := Choice_Idx + 1;
+               Annex_Arr (Choice_Idx) := Int32 (Alt_Idx);
+               declare
+                  Choice_Expr : constant Node :=
+                    Get_Choice_Expression (Choice);
+                  Val, Dc : Uns64;
+               begin
+                  Convert_To_Uns64 (Choice_Expr, Val, Dc);
+                  if Dc = 0 then
+                     Choice_Data (Choice_Idx) := (Val => Val,
+                                                  Alt => Alt_Idx);
+                  else
+                     Error_Msg_Synth (+Choice_Expr, "meta-values never match");
+                     Choice_Data (Choice_Idx) := (Val => 0,
+                                                  Alt => 0);
+                  end if;
+               end;
+            when Iir_Kind_Choice_By_Others =>
+               Others_Alt_Idx := Alt_Idx;
+            when others =>
+               raise Internal_Error;
+         end case;
+         Choice := Get_Chain (Choice);
+      end loop;
+      pragma Assert (Choice_Idx = Choice_Data'Last);
+
+      --  Sort by order.
+      if Get_Kind (Get_Type (Expr)) in Iir_Kinds_Discrete_Type_Definition then
+         Sort_Discrete_Choices (Case_Info);
+      else
+         Sort_String_Choices (Case_Info);
+      end if;
+
+      --  Associate each choice with the assign node
+      --  For each wire_id:
+      --    Build mux2/mux4 tree (group by 4)
+      Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
+
+      Sel_Net := Get_Net (Sel, Get_Type (Expr));
+
+      declare
+         Res : Net;
+         Default : Net;
+         C : Natural;
+      begin
+         --  Build the map between choices and values.
+         for J in Annex_Arr'Range loop
+            C := Natural (Annex_Arr (J));
+            Case_El (J) := (Sel => Choice_Data (C).Val,
+                            Val => Alts (Choice_Data (C).Alt).Val);
+         end loop;
+
+         --  Extract default value (for missing alternative).
+         if Others_Alt_Idx /= 0 then
+            Default := Alts (Others_Alt_Idx).Val;
+         else
+            Default := No_Net;
+         end if;
+
+         --  Generate the muxes tree.
+         Synth_Case (Sel_Net, Case_El.all, Default, Res);
+         Synth_Assignment (Syn_Inst, Get_Target (Stmt),
+                           Create_Value_Net (Res, null));
+      end;
+
+      --  free.
+      Free_Case_Element_Array (Case_El);
+      Free_Choice_Data_Array (Choice_Data);
+      Free_Annex_Array (Annex_Arr);
+      Free_Alternative_Data_Array (Alts);
+   end Synth_Selected_Signal_Assignment;
 
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
@@ -1271,6 +1403,10 @@ package body Synth.Stmts is
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                Push_Phi;
                Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
+               Pop_And_Merge_Phi (Build_Context, Stmt);
+            when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+               Push_Phi;
+               Synth_Selected_Signal_Assignment (Syn_Inst, Stmt);
                Pop_And_Merge_Phi (Build_Context, Stmt);
             when Iir_Kinds_Process_Statement =>
                Push_Phi;
