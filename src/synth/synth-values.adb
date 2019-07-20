@@ -296,6 +296,10 @@ package body Synth.Values is
             return Val.N_Bound;
          when Value_Wire =>
             return Val.W_Bound;
+         when Value_Array =>
+            --  For constants.
+            pragma Assert (Val.Bounds.Len = 1);
+            return Val.Bounds.D (1);
          when others =>
             raise Internal_Error;
       end case;
