@@ -72,6 +72,7 @@ package Synth.Values is
    type Value_Type_Array is array (Iir_Index32 range <>) of Value_Acc;
 
    type Value_Array_Type (Len : Iir_Index32) is record
+      --  Values are from left to right.  So V(1) is at index 'Left.
       V : Value_Type_Array (1 .. Len);
    end record;
 

@@ -341,9 +341,9 @@ package body Synth.Expr is
       Arr := new Net_Array (1 .. Int32 (Val.Arr.Len));
 
       --  Gather consecutive constant values.
-      Idx := 1;
+      Idx := Val.Arr.Len;
       Len := 0;
-      while Idx <= Val.Arr.Len loop
+      while Idx > 0 loop
          declare
             W_Zx, B_Zx : Uns32;
             W_Va, B_Va : Uns32;
@@ -353,7 +353,7 @@ package body Synth.Expr is
             W_Zx := 0;
             W_Va := 0;
             Off := 0;
-            while Idx <= Val.Arr.Len
+            while Idx > 0
               and then Off < 32
               and then Is_Const (Val.Arr.V (Idx))
               and then Is_Bit_Type (Etype)
@@ -362,11 +362,11 @@ package body Synth.Expr is
                W_Zx := W_Zx or Shift_Left (B_Zx, Off);
                W_Va := W_Va or Shift_Left (B_Va, Off);
                Off := Off + 1;
-               Idx := Idx + 1;
+               Idx := Idx - 1;
             end loop;
             if Off = 0 then
                E := Get_Net (Val.Arr.V (Idx), Etype);
-               Idx := Idx + 1;
+               Idx := Idx - 1;
             else
                if W_Zx = 0 then
                   E := Build_Const_UB32
