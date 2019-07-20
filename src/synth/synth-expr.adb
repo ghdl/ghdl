@@ -35,6 +35,7 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Types; use Synth.Types;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Decls;
+with Synth.Environment; use Synth.Environment;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
@@ -1477,12 +1478,16 @@ package body Synth.Expr is
       Synth_Subprogram_Association
         (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
+      Push_Phi;
+
       Decls.Synth_Declarations (Subprg_Inst, Get_Declaration_Chain (Bod));
 
       Synth_Sequential_Statements
         (Subprg_Inst, Get_Sequential_Statement_Chain (Bod));
 
       Res := Subprg_Inst.Return_Value;
+
+      Pop_And_Merge_Phi (Build_Context, Bod);
 
       Free_Instance (Subprg_Inst);
       Areapools.Release (M, Instance_Pool.all);
