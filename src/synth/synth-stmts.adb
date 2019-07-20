@@ -1055,35 +1055,6 @@ package body Synth.Stmts is
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Process_Statement;
 
-   procedure Synth_Generate_Statement_Body
-     (Syn_Inst : Synth_Instance_Acc; Bod : Node)
-   is
-      use Areapools;
-      Info : constant Sim_Info_Acc := Get_Info (Bod);
-      Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
-      Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
-      Bod_Inst : Synth_Instance_Acc;
-      M : Areapools.Mark_Type;
-   begin
-      Bod_Inst := Make_Instance (Syn_Inst, Info);
-      --  Same module.
-      Bod_Inst.M := Syn_Inst.M;
-      Mark (M, Proc_Pool);
-      Instance_Pool := Proc_Pool'Access;
-
-      if Is_Valid (Decls_Chain) then
-         Bod_Inst.Name := New_Sname (Syn_Inst.Name, Get_Identifier (Bod));
-         Synth_Declarations (Bod_Inst, Decls_Chain);
-      end if;
-
-      Synth_Concurrent_Statements
-        (Bod_Inst, Get_Concurrent_Statement_Chain (Bod));
-
-      Free_Instance (Bod_Inst);
-      Release (M, Proc_Pool);
-      Instance_Pool := Prev_Instance_Pool;
-   end Synth_Generate_Statement_Body;
-
    procedure Synth_Concurrent_Assertion_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -1203,6 +1174,88 @@ package body Synth.Stmts is
                                   Netlists.Gates.Id_Red_Or, Next_States));
    end Synth_Psl_Restrict_Directive;
 
+   procedure Synth_Generate_Statement_Body (Syn_Inst : Synth_Instance_Acc;
+                                            Bod : Node;
+                                            Iterator : Node := Null_Node;
+                                            Iterator_Val : Value_Acc := null)
+   is
+      use Areapools;
+      Info : constant Sim_Info_Acc := Get_Info (Bod);
+      Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
+      Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
+      Bod_Inst : Synth_Instance_Acc;
+      M : Areapools.Mark_Type;
+   begin
+      Bod_Inst := Make_Instance (Syn_Inst, Info);
+      --  Same module.
+      Bod_Inst.M := Syn_Inst.M;
+      Mark (M, Proc_Pool);
+      Instance_Pool := Proc_Pool'Access;
+
+      Bod_Inst.Name := New_Sname (Syn_Inst.Name, Get_Identifier (Bod));
+
+      if Iterator /= Null_Node then
+         --  Add the iterator (for for-generate).
+         Create_Object (Bod_Inst, Iterator, Iterator_Val);
+      end if;
+
+      Synth_Declarations (Bod_Inst, Decls_Chain);
+
+      Synth_Concurrent_Statements
+        (Bod_Inst, Get_Concurrent_Statement_Chain (Bod));
+
+      Free_Instance (Bod_Inst);
+      Release (M, Proc_Pool);
+      Instance_Pool := Prev_Instance_Pool;
+   end Synth_Generate_Statement_Body;
+
+   procedure Synth_For_Generate_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Iterator : constant Node := Get_Parameter_Specification (Stmt);
+      Bod : constant Node := Get_Generate_Statement_Body (Stmt);
+      Configs : constant Node := Get_Generate_Block_Configuration (Bod);
+      Config : Node;
+      It_Rng : Value_Acc;
+      It_Type : Node;
+      Val : Value_Acc;
+   begin
+      It_Type := Get_Declaration_Type (Iterator);
+      if It_Type /= Null_Node then
+         Synth_Subtype_Indication (Syn_Inst, It_Type);
+      end if;
+
+      --  Initial value.
+      It_Rng := Get_Value (Syn_Inst, Get_Type (Iterator));
+      Val := Create_Value_Discrete (It_Rng.Rng.Left);
+
+      while In_Range (It_Rng, Val.Scal) loop
+         --  Find and apply the config block.
+         declare
+            Spec : Node;
+         begin
+            Config := Configs;
+            while Config /= Null_Node loop
+               Spec := Get_Block_Specification (Config);
+               case Get_Kind (Spec) is
+                  when Iir_Kind_Simple_Name =>
+                     exit;
+                  when others =>
+                     Error_Kind ("synth_for_generate_statement", Spec);
+               end case;
+               Config := Get_Prev_Block_Configuration (Config);
+            end loop;
+            if Config = Null_Node then
+               raise Internal_Error;
+            end if;
+            Apply_Block_Configuration (Config, Bod);
+         end;
+
+         Synth_Generate_Statement_Body (Syn_Inst, Bod, Iterator, Val);
+         Update_Index (It_Rng, Val.Scal);
+      end loop;
+   end Synth_For_Generate_Statement;
+
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
@@ -1242,6 +1295,8 @@ package body Synth.Stmts is
                      exit when Gen = Null_Node;
                   end loop;
                end;
+            when Iir_Kind_For_Generate_Statement =>
+               Synth_For_Generate_Statement (Syn_Inst, Stmt);
             when Iir_Kind_Component_Instantiation_Statement =>
                Push_Phi;
                if Is_Component_Instantiation (Stmt) then

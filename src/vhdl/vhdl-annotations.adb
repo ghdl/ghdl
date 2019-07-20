@@ -942,7 +942,7 @@ package body Vhdl.Annotations is
       Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
 
       if It /= Null_Iir then
-         Annotate_Declaration (Info, It);
+         Create_Object_Info (Info, It);
       end if;
       Annotate_Declaration_List (Info, Get_Declaration_Chain (Bod));
       Annotate_Concurrent_Statements_List
@@ -963,12 +963,15 @@ package body Vhdl.Annotations is
    end Annotate_If_Generate_Statement;
 
    procedure Annotate_For_Generate_Statement
-     (Block_Info : Sim_Info_Acc; Stmt : Iir) is
+     (Block_Info : Sim_Info_Acc; Stmt : Iir)
+   is
+      Param : constant Iir := Get_Parameter_Specification (Stmt);
    begin
+      --  Elaborate the subtype in the current block.
+      Annotate_Declaration_Type (Block_Info, Param);
+
       Annotate_Generate_Statement_Body
-        (Block_Info,
-         Get_Generate_Statement_Body (Stmt),
-         Get_Parameter_Specification (Stmt));
+        (Block_Info, Get_Generate_Statement_Body (Stmt), Param);
    end Annotate_For_Generate_Statement;
 
    procedure Annotate_Case_Generate_Statement

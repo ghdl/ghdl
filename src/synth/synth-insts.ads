@@ -28,6 +28,11 @@ package Synth.Insts is
 
    procedure Synth_Top_Entity (Arch : Node; Config : Node);
 
+   --  Apply block configuration CFG to BLK.
+   --  Must be done before synthesis of BLK.
+   --  The synthesis of BLK will clear all configuration of it.
+   procedure Apply_Block_Configuration (Cfg : Node; Blk : Node);
+
    procedure Synth_Design_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node);
    procedure Synth_Blackbox_Instantiation_Statement
