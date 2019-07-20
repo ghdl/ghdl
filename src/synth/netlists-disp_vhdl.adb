@@ -297,7 +297,7 @@ package body Netlists.Disp_Vhdl is
          if First then
             First := False;
          else
-            Put_Line (", ");
+            Put_Line (",");
          end if;
          Put ("    ");
          Put_Interface_Name (Get_Output_Desc (Imod, Idx).Name);
@@ -522,22 +522,29 @@ package body Netlists.Disp_Vhdl is
          when Id_Insert =>
             declare
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
+               Ow : constant Width := Get_Width (Get_Output (Inst, 0));
                Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
-               Disp_Template
-                 ("  process (\i0, \i1)" & NL &
-                  "  begin" & NL &
-                  "    \o0 <= \i0;" & NL,
-                  Inst);
+               Disp_Template ("  \o0 <= ", Inst);
+               if Off + Iw + 1 = Ow then
+                  Disp_Template ("\i0 (\n0) & ", Inst, (0 => Ow - 1));
+               elsif Off + Iw < Ow then
+                  Disp_Template ("\i0 (\n0 downto \n1) & ", Inst,
+                                 (0 => Ow - 1, 1 => Off + Iw));
+               end if;
                if Iw > 1 then
-                  Disp_Template ("    \o0 (\n0 downto \n1)", Inst,
+                  Disp_Template ("\i1 (\n0 downto \n1)", Inst,
                                  (0 => Off + Iw - 1, 1 => Off));
                else
-                  Disp_Template ("    \o0 (\n0)", Inst, (0 => Off));
+                  Disp_Template ("\i1", Inst);
                end if;
-               Disp_Template
-                 (" <= \i1;" & NL &
-                  "  end process;" & NL, Inst);
+               if Off > 1 then
+                  Disp_Template (" & \i0 (\n0 downto 0)", Inst,
+                                 (0 => Off - 1));
+               elsif Off = 1 then
+                  Disp_Template (" & \i0 (0)", Inst);
+               end if;
+               Disp_Template (";" & NL, Inst);
             end;
          when Id_Dyn_Insert =>
             declare
