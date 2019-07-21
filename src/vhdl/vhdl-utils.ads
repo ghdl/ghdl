@@ -348,6 +348,10 @@ package Vhdl.Utils is
    --        if ASPECT is open, return Null_Iir;
    function Get_Entity_From_Entity_Aspect (Aspect : Iir) return Iir;
 
+   --  Return the corresponding entity declaration from top-level configuration
+   --  design unit CONFIG.
+   function Get_Entity_From_Configuration (Config : Iir) return Iir;
+
    --  Definition from LRM08 4.8 Package bodies
    --  True if PKG (a package declaration or a package body) is not a library
    --  unit.  Can be true only for vhdl08.

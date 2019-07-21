@@ -1570,6 +1570,16 @@ package body Vhdl.Utils is
       end case;
    end Get_Entity_From_Entity_Aspect;
 
+   function Get_Entity_From_Configuration (Config : Iir) return Iir
+   is
+      Conf_Unit : constant Iir := Get_Library_Unit (Config);
+      Arch : constant Iir := Get_Named_Entity
+        (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
+      Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
+   begin
+      return Entity;
+   end Get_Entity_From_Configuration;
+
    function Is_Nested_Package (Pkg : Iir) return Boolean is
    begin
       return Get_Kind (Get_Parent (Pkg)) /= Iir_Kind_Design_Unit;

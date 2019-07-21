@@ -90,7 +90,9 @@ package body Ghdlsynth is
       end if;
    end Decode_Option;
 
-   function Ghdl_Synth (Args : Argument_List) return Module
+   --  Init, analyze and configure.
+   --  Return the top configuration.
+   function Ghdl_Synth_Configure (Args : Argument_List) return Node
    is
       use Vhdl.Errors;
       use Vhdl.Configuration;
@@ -135,13 +137,13 @@ package body Ghdlsynth is
          Top := Vhdl.Configuration.Find_Top_Entity (Libraries.Work_Library);
          if Top = Null_Node then
             Ghdlmain.Error ("no top unit found");
-            return No_Module;
+            return Null_Iir;
          end if;
          Errorout.Report_Msg (Msgid_Note, Option, No_Source_Coord,
                               "top entity is %i", (1 => +Top));
          if Nbr_Errors > 0 then
             --  No need to configure if there are missing units.
-            return No_Module;
+            return Null_Iir;
          end if;
          Prim_Id := Get_Identifier (Top);
          Sec_Id := Null_Identifier;
@@ -150,7 +152,7 @@ package body Ghdlsynth is
                             Prim_Id, Sec_Id);
          if Opt_Arg <= Args'Last then
             Ghdlmain.Error ("extra options ignored");
-            return No_Module;
+            return Null_Iir;
          end if;
       end if;
 
@@ -158,20 +160,18 @@ package body Ghdlsynth is
 
       if Nbr_Errors > 0 then
          --  No need to configure if there are missing units.
-         return No_Module;
+         return Null_Iir;
       end if;
 
       --  Check (and possibly abandon) if entity can be at the top of the
       --  hierarchy.
       declare
-         Conf_Unit : constant Iir := Get_Library_Unit (Config);
-         Arch : constant Iir := Get_Named_Entity
-           (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
-         Entity : constant Iir := Vhdl.Utils.Get_Entity (Arch);
+         Entity : constant Iir :=
+           Vhdl.Utils.Get_Entity_From_Configuration (Config);
       begin
          Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, False);
          if Nbr_Errors > 0 then
-            return No_Module;
+            return Null_Iir;
          end if;
       end;
 
@@ -180,6 +180,19 @@ package body Ghdlsynth is
       for I in Design_Units.First .. Design_Units.Last loop
          Vhdl.Annotations.Annotate (Design_Units.Table (I));
       end loop;
+
+      return Config;
+   end Ghdl_Synth_Configure;
+
+   function Ghdl_Synth (Args : Argument_List) return Module
+   is
+      Config : Node;
+   begin
+      Config := Ghdl_Synth_Configure (Args);
+
+      if Config = Null_Iir then
+         return No_Module;
+      end if;
 
       return Synthesis.Synth_Design (Config);
    end Ghdl_Synth;
