@@ -112,6 +112,8 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_DW(get_id, Module_Id, Instance);
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input_name, Sname, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_WWD(get_output_name, Sname, Module, Port_Idx);
+  GHDLSYNTH_ADA_WRAPPER_DWD(get_input_width, Width, Module, Port_Idx);
+  GHDLSYNTH_ADA_WRAPPER_DWD(get_output_width, Width, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_BW(has_one_connection, Net);
 
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input_net, Net, Instance, Port_Idx);

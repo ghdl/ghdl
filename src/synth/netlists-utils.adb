@@ -76,6 +76,16 @@ package body Netlists.Utils is
       return Get_Output_Desc (M, I).Name;
    end Get_Output_Name;
 
+   function Get_Input_Width (M : Module; I : Port_Idx) return Width is
+   begin
+      return Get_Input_Desc (M, I).W;
+   end Get_Input_Width;
+
+   function Get_Output_Width (M : Module; I : Port_Idx) return Width is
+   begin
+      return Get_Output_Desc (M, I).W;
+   end Get_Output_Width;
+
    function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net is
    begin
       return Get_Driver (Get_Input (Inst, Idx));
