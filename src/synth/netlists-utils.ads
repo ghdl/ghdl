@@ -31,6 +31,9 @@ package Netlists.Utils is
    function Get_Input_Name (M : Module; I : Port_Idx) return Sname;
    function Get_Output_Name (M : Module; I : Port_Idx) return Sname;
 
+   function Get_Input_Width (M : Module; I : Port_Idx) return Width;
+   function Get_Output_Width (M : Module; I : Port_Idx) return Width;
+
    function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net;
 
    --  Return True iff ID describe a constant.

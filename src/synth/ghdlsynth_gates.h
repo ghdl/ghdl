@@ -64,4 +64,7 @@ enum Module_Id {
    Id_Const_SB128 = 69,
    Id_Const_UL32 = 70,
    Id_Const_SL32 = 71,
+   Id_Const_Z = 72,
+   Id_Const_0 = 73,
+   Id_Concatn = 80,
 };
