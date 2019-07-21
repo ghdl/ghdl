@@ -84,27 +84,18 @@ package body Netlists.Disp_Vhdl is
       end if;
 
       Prefix := Get_Sname_Prefix (N);
+      if Prefix /= No_Sname then
+         Put_Name_1 (Prefix);
+         Put ("_");
+      end if;
 
       case Get_Sname_Kind (N) is
          when Sname_User =>
-            if Prefix = No_Sname then
-               Put ("\");
-            else
-               Put_Name_1 (Prefix);
-               Put (".");
-            end if;
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Artificial =>
-            if Prefix = No_Sname then
-               Put ("$");
-            else
-               Put_Name_1 (Prefix);
-               Put (".");
-            end if;
             Put (Image (Get_Sname_Suffix (N)));
          when Sname_Version =>
-            Put_Name_1 (Prefix);
-            Put ("%");
+            Put ("n");
             Put_Name_Version (N);
       end case;
    end Put_Name_1;
@@ -206,15 +197,14 @@ package body Netlists.Disp_Vhdl is
             Put_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
          else
             Inst_Name := Get_Name (Inst);
-            Port_Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
+            Put_Name (Inst_Name);
             case Get_Sname_Kind (Inst_Name) is
                when Sname_Version =>
-                  Put ("n");
-                  Put_Name_Version (Inst_Name);
+                  Port_Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
                   Put ("_");
                   Put_Interface_Name (Port_Name);
                when Sname_User =>
-                  Put_Id (Get_Sname_Suffix (Inst_Name));
+                  null;
                when others =>
                   raise Internal_Error;
             end case;
@@ -501,6 +491,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0; -- (output)" & NL, Inst);
          when Id_Signal =>
             Disp_Template ("  \o0 <= \i0; -- (signal)" & NL, Inst);
+         when Id_Isignal =>
+            Disp_Template ("  \o0 <= \i0; -- (isignal)" & NL, Inst);
          when Id_Port =>
             null;
          when Id_Not =>

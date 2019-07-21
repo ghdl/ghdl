@@ -178,7 +178,7 @@ package body Synth.Insts is
       --  Create the instance.
       Syn_Inst := Make_Instance (Global_Instance, Get_Info (Imp));
       Syn_Inst.Block_Scope := Get_Info (Decl);
-      Syn_Inst.Name := New_Sname_User (Get_Identifier (Decl));
+      Syn_Inst.Name := No_Sname;
 
       --  Copy values for generics.
       Inter := Get_Generic_Chain (Decl);

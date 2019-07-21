@@ -71,7 +71,9 @@ package body Netlists.Dump is
             end if;
             Put (Image (Get_Sname_Suffix (N)));
          when Sname_Version =>
-            Dump_Name (Prefix);
+            if Prefix /= No_Sname then
+               Dump_Name (Prefix);
+            end if;
             Put ("%");
             Put_Trim (Uns32'Image (Get_Sname_Version (N)));
       end case;

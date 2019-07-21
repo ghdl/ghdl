@@ -1158,6 +1158,7 @@ package body Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Proc : Node)
    is
       use Areapools;
+      Label : constant Name_Id := Get_Identifier (Proc);
       Info : constant Sim_Info_Acc := Get_Info (Proc);
       Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
@@ -1169,7 +1170,11 @@ package body Synth.Stmts is
       Instance_Pool := Proc_Pool'Access;
 
       if Is_Valid (Decls_Chain) then
-         Proc_Inst.Name := New_Sname (Syn_Inst.Name, Get_Identifier (Proc));
+         if Label = Null_Identifier then
+            Proc_Inst.Name := New_Internal_Name (Build_Context, Syn_Inst.Name);
+         else
+            Proc_Inst.Name := New_Sname (Syn_Inst.Name, Label);
+         end if;
          Synth_Declarations (Proc_Inst, Decls_Chain);
       end if;
 

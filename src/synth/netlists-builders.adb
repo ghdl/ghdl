@@ -461,11 +461,12 @@ package body Netlists.Builders is
       Ctxt.Parent := Parent;
    end Set_Parent;
 
-   function New_Internal_Name (Ctxt : Context_Acc) return Sname
+   function New_Internal_Name (Ctxt : Context_Acc; Prefix : Sname := No_Sname)
+                              return Sname
    is
       Name : Sname;
    begin
-      Name := New_Sname_Version (Get_Name (Ctxt.Parent), Ctxt.Num);
+      Name := New_Sname_Version (Prefix, Ctxt.Num);
       Ctxt.Num := Ctxt.Num + 1;
       return Name;
    end New_Internal_Name;
