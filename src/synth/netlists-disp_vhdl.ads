@@ -20,4 +20,7 @@
 
 package Netlists.Disp_Vhdl is
    procedure Disp_Vhdl (M : Module);
+
+   --  Display only the ports (as vhdl) of M.
+   procedure Disp_Entity_Ports (M : Module);
 end Netlists.Disp_Vhdl;

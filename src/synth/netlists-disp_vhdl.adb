@@ -18,7 +18,7 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO; use Simple_IO;
 with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
 with Netlists.Utils; use Netlists.Utils;
@@ -133,52 +133,6 @@ package body Netlists.Disp_Vhdl is
          Put ("*err*");
       end if;
    end Put_Interface_Name;
-
-   procedure Disp_Entity (M : Module)
-   is
-      First : Boolean;
-   begin
-      --  Module id and name.
-      Put_Line ("library ieee;");
-      Put_Line ("use ieee.std_logic_1164.all;");
-      Put_Line ("use ieee.numeric_std.all;");
-      New_Line;
-      Put ("entity ");
-      Put_Name (Get_Name (M));
-      Put_Line (" is");
-
-      --  Ports.
-      First := True;
-      for P of Ports_Desc (M) loop
-         if First then
-            Put_Line ("  port (");
-            First := False;
-         else
-            Put_Line (";");
-         end if;
-         Put ("    ");
-         Put_Name (P.Name);
-         Put (" : ");
-         case P.Dir is
-            when Port_In =>
-               Put ("in");
-            when Port_Out =>
-               Put ("out");
-            when Port_Inout =>
-               Put ("inout");
-         end case;
-         Put (' ');
-         Put_Type (P.W);
-      end loop;
-      if not First then
-         Put_Line (");");
-      end if;
-
-      Put ("end entity ");
-      Put_Name (Get_Name (M));
-      Put_Line (";");
-      New_Line;
-   end Disp_Entity;
 
    procedure Disp_Net_Name (N : Net) is
    begin
@@ -751,6 +705,56 @@ package body Netlists.Disp_Vhdl is
       Put_Line ("end rtl;");
       New_Line;
    end Disp_Architecture;
+
+   procedure Disp_Entity_Ports (M : Module)
+   is
+      First : Boolean;
+   begin
+      First := True;
+      for P of Ports_Desc (M) loop
+         if First then
+            Put_Line ("  port (");
+            First := False;
+         else
+            Put_Line (";");
+         end if;
+         Put ("    ");
+         Put_Name (P.Name);
+         Put (" : ");
+         case P.Dir is
+            when Port_In =>
+               Put ("in");
+            when Port_Out =>
+               Put ("out");
+            when Port_Inout =>
+               Put ("inout");
+         end case;
+         Put (' ');
+         Put_Type (P.W);
+      end loop;
+      if not First then
+         Put_Line (");");
+      end if;
+   end Disp_Entity_Ports;
+
+   procedure Disp_Entity (M : Module) is
+   begin
+      --  Module id and name.
+      Put_Line ("library ieee;");
+      Put_Line ("use ieee.std_logic_1164.all;");
+      Put_Line ("use ieee.numeric_std.all;");
+      New_Line;
+      Put ("entity ");
+      Put_Name (Get_Name (M));
+      Put_Line (" is");
+
+      Disp_Entity_Ports (M);
+
+      Put ("end entity ");
+      Put_Name (Get_Name (M));
+      Put_Line (";");
+      New_Line;
+   end Disp_Entity;
 
    procedure Disp_Vhdl (M : Module; Is_Top : Boolean) is
    begin
