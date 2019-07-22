@@ -27,16 +27,14 @@ package body Netlists.Builders is
    begin
       return (Name => New_Sname_Artificial (Get_Identifier (Id)),
               W => W,
-              Dir => Port_In,
-              Left | Right => 0);
+              Dir => Port_In);
    end Create_Input;
 
    function Create_Output (Id : String; W : Width := 0) return Port_Desc is
    begin
       return (Name => New_Sname_Artificial (Get_Identifier (Id)),
               W => W,
-              Dir => Port_Out,
-              Left | Right => 0);
+              Dir => Port_Out);
    end Create_Output;
 
    procedure Create_Dyadic_Module (Design : Module;

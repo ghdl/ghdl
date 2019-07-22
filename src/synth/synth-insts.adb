@@ -78,8 +78,7 @@ package body Synth.Insts is
             Idx := Idx + 1;
             Ports (Idx) := (Name => Name,
                             W => Wd,
-                            Dir => Dir,
-                            Left | Right => 0);
+                            Dir => Dir);
          when others =>
             raise Internal_Error; --  TODO
       end case;

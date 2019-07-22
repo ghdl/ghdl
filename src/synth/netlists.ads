@@ -151,10 +151,6 @@ package Netlists is
 
       --  Direction.
       Dir : Port_Kind;
-
-      --  For a bus: left and right bounds of the bus, ie [L:R].
-      Left : Int32;
-      Right : Int32;
    end record;
 
    type Port_Desc_Array is array (Port_Idx range <>) of Port_Desc;

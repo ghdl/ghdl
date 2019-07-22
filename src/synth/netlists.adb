@@ -831,9 +831,7 @@ begin
 
    Port_Desc_Table.Append ((Name => No_Sname,
                             W => 0,
-                            Dir => Port_In,
-                            Left => 0,
-                            Right => 0));
+                            Dir => Port_In));
    pragma Assert (Port_Desc_Table.Last = No_Port_Desc_Idx);
 
    Param_Desc_Table.Append ((Name => No_Sname,
