@@ -1114,7 +1114,8 @@ package body Vhdl.Prints is
    end Disp_Interface_Mode_And_Type;
 
    --  Disp interfaces, followed by END_STR (';' in general).
-   procedure Disp_Interface_Chain (Ctxt : in out Ctxt_Class; Chain: Iir)
+   procedure Disp_Interface_Chain
+     (Ctxt : in out Ctxt_Class; Chain: Iir; With_Box : Boolean)
    is
       Inter: Iir;
       Next_Inter : Iir;
@@ -1125,11 +1126,20 @@ package body Vhdl.Prints is
       end if;
       Disp_Token (Ctxt, Tok_Left_Paren);
 
+      if With_Box then
+         Close_Hbox (Ctxt);
+         Start_Vbox (Ctxt);
+      end if;
+
       Inter := Chain;
       loop
          Next_Inter := Get_Chain (Inter);
 
          First_Inter := Inter;
+
+         if With_Box then
+            Start_Hbox (Ctxt);
+         end if;
 
          case Get_Kind (Inter) is
             when Iir_Kinds_Interface_Object_Declaration =>
@@ -1169,12 +1179,24 @@ package body Vhdl.Prints is
                Error_Kind ("disp_interface_chain", Inter);
          end case;
 
+         if Next_Inter /= Null_Iir then
+            Disp_Token (Ctxt, Tok_Semi_Colon);
+         end if;
+
+         if With_Box then
+            Close_Hbox (Ctxt);
+         end if;
+
          exit when Next_Inter = Null_Iir;
-         Disp_Token (Ctxt, Tok_Semi_Colon);
 
          Inter := Next_Inter;
          Next_Inter := Get_Chain (Inter);
       end loop;
+
+      if With_Box then
+         Close_Vbox (Ctxt);
+         Start_Hbox (Ctxt);
+      end if;
 
       Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Interface_Chain;
@@ -1186,7 +1208,7 @@ package body Vhdl.Prints is
       if Ports /= Null_Iir then
          Start_Hbox (Ctxt);
          Disp_Token (Ctxt, Tok_Port);
-         Disp_Interface_Chain (Ctxt, Ports);
+         Disp_Interface_Chain (Ctxt, Ports, True);
          Disp_Token (Ctxt, Tok_Semi_Colon);
          Close_Hbox (Ctxt);
       end if;
@@ -1199,7 +1221,7 @@ package body Vhdl.Prints is
       if Generics /= Null_Iir then
          Start_Hbox (Ctxt);
          Disp_Token (Ctxt, Tok_Generic);
-         Disp_Interface_Chain (Ctxt, Generics);
+         Disp_Interface_Chain (Ctxt, Generics, True);
          Disp_Token (Ctxt, Tok_Semi_Colon);
          Close_Hbox (Ctxt);
       end if;
@@ -1551,7 +1573,7 @@ package body Vhdl.Prints is
       end if;
 
       Inter := Get_Interface_Declaration_Chain (Subprg);
-      Disp_Interface_Chain (Ctxt, Inter);
+      Disp_Interface_Chain (Ctxt, Inter, False);
 
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration
