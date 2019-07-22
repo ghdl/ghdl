@@ -201,8 +201,15 @@ package body Ghdlsynth is
                              Args : Argument_List)
    is
       Res : Module;
+      Config : Iir;
    begin
-      Res := Ghdl_Synth (Args);
+      Config := Ghdl_Synth_Configure (Args);
+
+      if Config = Null_Iir then
+         raise Errorout.Compilation_Error;
+      end if;
+
+      Res := Synthesis.Synth_Design (Config);
       if Res = No_Module then
          raise Errorout.Compilation_Error;
       end if;
