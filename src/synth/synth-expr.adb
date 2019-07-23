@@ -742,7 +742,19 @@ package body Synth.Expr is
 
          when Iir_Predefined_Array_Equality =>
             --  TODO: check size, handle non-vector.
-            return Synth_Compare (Id_Eq);
+            if Is_Vector_Type (Ltype) then
+               return Synth_Compare (Id_Eq);
+            else
+               raise Internal_Error;
+            end if;
+         when Iir_Predefined_Array_Greater =>
+            --  TODO: check size, non-vector.
+            --  TODO: that's certainly not the correct operator.
+            if Is_Vector_Type (Ltype) then
+               return Synth_Compare (Id_Ugt);
+            else
+               raise Internal_Error;
+            end if;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
             --  "+" (Unsigned, Natural)
@@ -859,6 +871,27 @@ package body Synth.Expr is
             else
                Error_Msg_Synth (+Expr, "non-constant division not supported");
                return null;
+            end if;
+         when Iir_Predefined_Integer_Mod =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete (Left.Scal mod Right.Scal);
+            else
+               Error_Msg_Synth (+Expr, "non-constant mod not supported");
+               return null;
+            end if;
+         when Iir_Predefined_Integer_Less_Equal =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Boolean'Pos (Left.Scal <= Right.Scal));
+            else
+               return Synth_Compare (Id_Sle);
+            end if;
+         when Iir_Predefined_Integer_Equality =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Boolean'Pos (Left.Scal = Right.Scal));
+            else
+               return Synth_Compare (Id_Eq);
             end if;
 
          when others =>
