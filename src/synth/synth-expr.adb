@@ -22,7 +22,7 @@ with Ada.Unchecked_Conversion;
 with Types_Utils; use Types_Utils;
 with Std_Names;
 with Str_Table;
-with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -1450,7 +1450,7 @@ package body Synth.Expr is
       Arr := Create_Value_Array (Len);
       for I in 1 .. Len loop
          Arr.V (Len - I + 1) := Create_Value_Discrete
-           ((Arg / 2 ** Natural (I - 1)) mod 2);
+           (Std_Logic_0_Pos + (Arg / 2 ** Natural (I - 1)) mod 2);
       end loop;
       Bnds := Create_Value_Bound_Array (1);
       Bnds.D (1) := Create_Value_Bound
