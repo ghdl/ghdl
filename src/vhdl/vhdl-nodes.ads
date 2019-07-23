@@ -4886,6 +4886,11 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn,
       Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn,
 
+      Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn,
+
       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,

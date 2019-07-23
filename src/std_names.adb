@@ -625,6 +625,7 @@ package body Std_Names is
       Def ("to_integer",         Name_To_Integer);
       Def ("to_unsigned",        Name_To_Unsigned);
       Def ("to_signed",          Name_To_Signed);
+      Def ("resize",             Name_Resize);
       Def ("math_real",          Name_Math_Real);
       Def ("ceil",               Name_Ceil);
       Def ("log2",               Name_Log2);
