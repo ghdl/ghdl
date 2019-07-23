@@ -1573,6 +1573,21 @@ package body Synth.Expr is
               (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1),
                                        Get_Type (Inter_Chain)), 32),
                null);
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
+            declare
+               V : constant Value_Acc := Subprg_Inst.Objects (1);
+               Sz : constant Value_Acc := Subprg_Inst.Objects (2);
+               W : Width;
+            begin
+               if not Is_Const (Sz) then
+                  Error_Msg_Synth (+Expr, "size must be constant");
+                  return null;
+               end if;
+               W := Uns32 (Sz.Scal);
+               return Create_Value_Net
+                 (Synth_Uresize (Get_Net (V, Get_Type (Inter_Chain)), W),
+                  Create_Value_Bound ((Iir_Downto, Int32 (W) - 1, 0, W)));
+            end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                V : constant Value_Acc := Subprg_Inst.Objects (1);
