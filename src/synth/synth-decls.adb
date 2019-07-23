@@ -63,7 +63,6 @@ package body Synth.Decls is
 
    procedure Synth_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
-      pragma Unreferenced (Syn_Inst);
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
@@ -87,6 +86,17 @@ package body Synth.Decls is
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_File_Type_Definition =>
             null;
+         when Iir_Kind_Record_Type_Definition =>
+            declare
+               El_List : constant Node_Flist :=
+                 Get_Elements_Declaration_List (Def);
+               El : Node;
+            begin
+               for I in Flist_First .. Flist_Last (El_List) loop
+                  El := Get_Nth_Element (El_List, I);
+                  Synth_Declaration_Type (Syn_Inst, El);
+               end loop;
+            end;
          when others =>
             Error_Kind ("synth_type_definition", Def);
       end case;
