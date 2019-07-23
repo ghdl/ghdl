@@ -130,6 +130,7 @@ package body Synth.Stmts is
                Indexes : constant Node_Flist := Get_Index_List (Target);
                N_Idx : Node;
                Idx : Value_Acc;
+               Targ_Net : Net;
                V : Net;
             begin
                if Get_Nbr_Elements (Indexes) /= 1
@@ -143,8 +144,9 @@ package body Synth.Stmts is
                  (Syn_Inst, N_Idx, Get_Type (N_Idx));
                if Is_Const (Idx) then
                   --  FIXME: check index.
+                  Targ_Net := Get_Last_Assigned_Value (Targ.W);
                   V := Build_Insert (Build_Context,
-                                     Get_Net (Targ, Get_Type (Pfx)),
+                                     Targ_Net,
                                      Get_Net (Val, Get_Type (Target)),
                                      Index_To_Offset (Targ, Idx.Scal, Target));
                else
@@ -158,11 +160,11 @@ package body Synth.Stmts is
                Targ : constant Value_Acc :=
                  Get_Value (Syn_Inst, Get_Base_Name (Pfx));
                Res_Bnd : Value_Bound_Acc;
+               Targ_Net : Net;
                Inp : Net;
                Step : Uns32;
                Off : Int32;
                Wd : Uns32;
-               I : Net;
                V : Net;
                Res : Net;
             begin
@@ -172,13 +174,14 @@ package body Synth.Stmts is
                end if;
                Synth_Slice_Suffix (Syn_Inst, Target, Extract_Bound (Targ),
                                    Res_Bnd, Inp, Step, Off, Wd);
-               I := Get_Net (Targ, Get_Type (Pfx));
+               Targ_Net := Get_Last_Assigned_Value (Targ.W);
                V := Get_Net (Val, Get_Type (Target));
                if Inp /= No_Net then
                   Res := Build_Dyn_Insert
-                    (Build_Context, I, V, Inp, Step, Off);
+                    (Build_Context, Targ_Net, V, Inp, Step, Off);
                else
-                  Res := Build_Insert (Build_Context, I, V, Uns32 (Off));
+                  Res := Build_Insert
+                    (Build_Context, Targ_Net, V, Uns32 (Off));
                end if;
                Synth_Assign
                  (Targ, Create_Value_Net (Res, Res_Bnd), Get_Type (Pfx));
