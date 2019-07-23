@@ -637,23 +637,8 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Instance_Inline;
 
-   procedure Disp_Architecture (M : Module)
-   is
-      Self_Inst : constant Instance := Get_Self_Instance (M);
+   procedure Disp_Architecture_Declarations (M : Module) is
    begin
-      if Self_Inst = No_Instance then
-         --  Not defined.
-         return;
-      end if;
-
-      Put ("architecture rtl of ");
-      Put_Name (Get_Name (M));
-      Put_Line (" is");
-
-      --  Dummy display:
-      --  * generate one signal per net
-      --  * generate instances
-
       --  Display signal declarations.
       --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
@@ -678,9 +663,12 @@ package body Netlists.Disp_Vhdl is
             end loop;
          end if;
       end loop;
+   end Disp_Architecture_Declarations;
 
-      Put_Line ("begin");
-
+   procedure Disp_Architecture_Statements (M : Module)
+   is
+      Self_Inst : constant Instance := Get_Self_Instance (M);
+   begin
       --  Output assignments.
       declare
          Idx : Port_Idx;
@@ -701,6 +689,30 @@ package body Netlists.Disp_Vhdl is
             Disp_Instance_Inline (Inst);
          end if;
       end loop;
+   end Disp_Architecture_Statements;
+
+   procedure Disp_Architecture (M : Module)
+   is
+      Self_Inst : constant Instance := Get_Self_Instance (M);
+   begin
+      if Self_Inst = No_Instance then
+         --  Not defined.
+         return;
+      end if;
+
+      Put ("architecture rtl of ");
+      Put_Name (Get_Name (M));
+      Put_Line (" is");
+
+      --  Dummy display:
+      --  * generate one signal per net
+      --  * generate instances
+
+      Disp_Architecture_Declarations (M);
+
+      Put_Line ("begin");
+
+      Disp_Architecture_Statements (M);
 
       Put_Line ("end rtl;");
       New_Line;

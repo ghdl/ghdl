@@ -1,4 +1,4 @@
---  Disp a netlist in vhdl.
+--  Disp a netlist in vhdl using the original entity.
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -18,14 +18,10 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-package Netlists.Disp_Vhdl is
-   procedure Disp_Vhdl (M : Module);
+with Netlists; use Netlists;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
-   procedure Disp_Architecture_Declarations (M : Module);
-   procedure Disp_Architecture_Statements (M : Module);
-
-   procedure Put_Type (W : Width);
-   procedure Put_Name (N : Sname);
-
-   procedure Disp_Vhdl (M : Module; Is_Top : Boolean);
-end Netlists.Disp_Vhdl;
+package Synth.Disp_Vhdl is
+   --  Disp ENT (like the original text) and its content as a wrapper.
+   procedure Disp_Vhdl_Wrapper (Ent : Node; Top : Module);
+end Synth.Disp_Vhdl;

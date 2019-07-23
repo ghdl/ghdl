@@ -80,6 +80,12 @@ package body Netlists is
       return Snames_Table.Table (Name).Prefix;
    end Get_Sname_Prefix;
 
+   procedure Set_Sname_Prefix (Name : Sname; Prefix : Sname) is
+   begin
+      pragma Assert (Is_Valid (Name));
+      Snames_Table.Table (Name).Prefix := Prefix;
+   end Set_Sname_Prefix;
+
    function Get_Sname_Suffix (Name : Sname) return Name_Id
    is
       subtype Snames_Suffix is Sname_Kind range Sname_User .. Sname_Artificial;

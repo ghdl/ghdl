@@ -33,10 +33,12 @@ with Vhdl.Configuration;
 with Vhdl.Annotations;
 with Vhdl.Utils;
 
-with Synthesis;
 with Netlists; use Netlists;
 with Netlists.Dump;
 with Netlists.Disp_Vhdl;
+
+with Synthesis;
+with Synth.Disp_Vhdl;
 
 package body Ghdlsynth is
    type Out_Format is (Format_Raw, Format_Vhdl);
@@ -202,6 +204,7 @@ package body Ghdlsynth is
    is
       Res : Module;
       Config : Iir;
+      Ent : Iir;
    begin
       Config := Ghdl_Synth_Configure (Args);
 
@@ -219,7 +222,12 @@ package body Ghdlsynth is
             Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
             Netlists.Dump.Disp_Module (Res);
          when Format_Vhdl =>
-            Netlists.Disp_Vhdl.Disp_Vhdl (Res);
+            if True then
+               Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
+               Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res);
+            else
+               Netlists.Disp_Vhdl.Disp_Vhdl (Res);
+            end if;
       end case;
    end Perform_Action;
 

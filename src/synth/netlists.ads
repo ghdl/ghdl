@@ -67,6 +67,9 @@ package Netlists is
    function Get_Sname_Version (Name : Sname) return Uns32;
    function Get_Sname_Num (Name : Sname) return Uns32;
 
+   --  Modifies an Sname.
+   procedure Set_Sname_Prefix (Name : Sname; Prefix : Sname);
+
    --  TODO: procedure to free an Sname.
 
    --  Module.
