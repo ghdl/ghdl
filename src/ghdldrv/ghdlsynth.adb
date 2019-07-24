@@ -27,6 +27,7 @@ with Libraries;
 with Flags;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Errors;
+with Vhdl.Scanner;
 with Vhdl.Std_Package;
 with Vhdl.Canon;
 with Vhdl.Configuration;
@@ -116,6 +117,8 @@ package body Ghdlsynth is
       end loop;
 
       Vhdl.Annotations.Flag_Synthesis := True;
+      Vhdl.Scanner.Flag_Comment_Keyword := True;
+      Vhdl.Scanner.Flag_Pragma_Comment := True;
 
       Common_Compile_Init (False);
       --  Will elaborate.
