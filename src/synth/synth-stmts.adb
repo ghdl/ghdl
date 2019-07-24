@@ -498,6 +498,7 @@ package body Synth.Stmts is
 
       --  Handle SEL bits by 2, so group case_element by 4.
       for I in 1 .. Natural (Wd / 2) loop
+         --  Extract 2 bits from the selector.
          Sub_Sel := Build_Extract (Build_Context,
                                    Sel, Width (2 * (I - 1)), 2);
          Mask := Shift_Left (not 0, Natural (2 * I));
@@ -672,7 +673,7 @@ package body Synth.Stmts is
          case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_Expression =>
                Choice_Idx := Choice_Idx + 1;
-               Annex_Arr (Choice_Idx) := Int32 (Alt_Idx);
+               Annex_Arr (Choice_Idx) := Int32 (Choice_Idx);
                declare
                   Choice_Expr : constant Node :=
                     Get_Choice_Expression (Choice);
@@ -830,7 +831,7 @@ package body Synth.Stmts is
          case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_Expression =>
                Choice_Idx := Choice_Idx + 1;
-               Annex_Arr (Choice_Idx) := Int32 (Alt_Idx);
+               Annex_Arr (Choice_Idx) := Int32 (Choice_Idx);
                declare
                   Choice_Expr : constant Node :=
                     Get_Choice_Expression (Choice);
