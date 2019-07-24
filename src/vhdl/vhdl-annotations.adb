@@ -487,6 +487,7 @@ package body Vhdl.Annotations is
       while Decl /= Null_Iir loop
          if With_Types
            and then Get_Kind (Decl) in Iir_Kinds_Interface_Object_Declaration
+           and then Get_Subtype_Indication (Decl) /= Null_Iir
          then
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
          end if;
