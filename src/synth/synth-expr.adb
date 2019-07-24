@@ -1503,6 +1503,25 @@ package body Synth.Expr is
       M : Areapools.Mark_Type;
       Res : Value_Acc;
    begin
+      --  Is it a call to an ieee function ?
+      declare
+         Pkg : constant Node := Get_Parent (Imp);
+         Unit : Node;
+         Lib : Node;
+      begin
+         if Get_Kind (Pkg) = Iir_Kind_Package_Declaration then
+            Unit := Get_Parent (Pkg);
+            if Get_Kind (Unit) = Iir_Kind_Design_Unit then
+               Lib := Get_Library (Get_Design_File (Unit));
+               if Get_Identifier (Lib) = Std_Names.Name_Ieee then
+                  Error_Msg_Synth
+                    (+Expr, "unhandled call to an ieee function");
+                  raise Internal_Error;
+               end if;
+            end if;
+         end if;
+      end;
+
       Areapools.Mark (M, Instance_Pool.all);
       Subprg_Inst := Make_Instance (Syn_Inst, Get_Info (Bod));
 
