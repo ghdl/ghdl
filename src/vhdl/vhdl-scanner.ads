@@ -94,13 +94,16 @@ package Vhdl.Scanner is
    --  If true handle PSL embedded in comments: '--  psl' is ignored.
    Flag_Psl_Comment : Boolean := False;
 
+   --  If true, handle pragma translate_on/off.
+   Flag_Pragma_Comment : Boolean := False;
+
    --  If true, ignore '--'.  This is automatically set when Flag_Psl_Comment
    --  is true and a starting PSL keyword has been identified.
    --  Must be reset to false by the parser.
    Flag_Scan_In_Comment : Boolean := False;
 
    --  If true scan for keywords in comments.  Must be enabled if
-   --  Flag_Psl_Comment is true.
+   --  Flag_Psl_Comment or Flag_Pragma_Comment is true.
    Flag_Comment_Keyword : Boolean := False;
 
    --  If the next character is '!', eat it and return True, otherwise return

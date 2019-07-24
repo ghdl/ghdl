@@ -682,7 +682,10 @@ package Std_Names is
    Name_Item :                  constant Name_Id := Name_First_Misc + 033;
    Name_Uu_File_Uu :            constant Name_Id := Name_First_Misc + 034;
    Name_Uu_Line_Uu :            constant Name_Id := Name_First_Misc + 035;
-   Name_None :                  constant Name_Id := Name_First_Misc + 036;
+   Name_Synthesis :             constant Name_Id := Name_First_Misc + 036;
+   Name_Translate_Off :         constant Name_Id := Name_First_Misc + 037;
+   Name_Translate_On :          constant Name_Id := Name_First_Misc + 038;
+   Name_None :                  constant Name_Id := Name_First_Misc + 039;
    Name_Last_Misc :             constant Name_Id := Name_None;
 
    Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;

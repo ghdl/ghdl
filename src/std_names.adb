@@ -601,6 +601,9 @@ package body Std_Names is
       Def ("item",                  Name_Item);
       Def ("__FILE__",              Name_Uu_File_Uu);
       Def ("__LINE__",              Name_Uu_Line_Uu);
+      Def ("synthesis",             Name_Synthesis);
+      Def ("translate_off",         Name_Translate_Off);
+      Def ("translate_on",          Name_Translate_On);
       Def ("none",                  Name_None);
 
       Def ("ieee",               Name_Ieee);

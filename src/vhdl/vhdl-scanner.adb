@@ -152,6 +152,9 @@ package body Vhdl.Scanner is
       Token : Token_Type;
       Prev_Token : Token_Type;
 
+      --  Tokens are ignored because of 'translate_off'.
+      Translate_Off : Boolean;
+
       --  Additional values for the current token.
       Bit_Str_Base : Character;
       Bit_Str_Sign : Character;
@@ -175,6 +178,7 @@ package body Vhdl.Scanner is
                                      File_Len => 0,
                                      Token => Tok_Invalid,
                                      Prev_Token => Tok_Invalid,
+                                     Translate_Off => False,
                                      Identifier => Null_Identifier,
                                      Bit_Str_Base => ' ',
                                      Bit_Str_Sign => ' ',
@@ -350,6 +354,7 @@ package body Vhdl.Scanner is
                           File_Len => Get_File_Length (Source_File),
                           Token => Tok_Invalid,
                           Prev_Token => Tok_Invalid,
+                          Translate_Off => False,
                           Identifier => Null_Identifier,
                           Bit_Str_Base => ' ',
                           Bit_Str_Sign => ' ',
@@ -1594,7 +1599,7 @@ package body Vhdl.Scanner is
 
    --  Scan an identifier within a comment.  Only lower case letters are
    --  allowed.
-   procedure Scan_Comment_Identifier (Id : out Name_Id)
+   procedure Scan_Comment_Identifier (Id : out Name_Id; Create : Boolean)
    is
       use Name_Table;
       Buffer : String (1 .. Max_Name_Length);
@@ -1624,7 +1629,11 @@ package body Vhdl.Scanner is
          return;
       end if;
 
-      Id := Get_Identifier (Buffer (1 .. Len));
+      if Create then
+         Id := Get_Identifier (Buffer (1 .. Len));
+      else
+         Id := Get_Identifier_No_Create (Buffer (1 .. Len));
+      end if;
    end Scan_Comment_Identifier;
 
    package Directive_Protect is
@@ -1676,6 +1685,59 @@ package body Vhdl.Scanner is
       end if;
    end Scan_Tool_Directive;
 
+   --  Skip until new_line after translate_on/translate_off.
+   procedure Scan_Translate_On_Off (Id : Name_Id) is
+   begin
+      --  Expect new line.
+      Skip_Spaces;
+
+      if not Is_EOL (Source (Pos)) then
+         Warning_Msg_Scan (Warnid_Pragma, "garbage ignored after '%i'", +Id);
+         loop
+            Pos := Pos + 1;
+            exit when Is_EOL (Source (Pos));
+         end loop;
+      end if;
+   end Scan_Translate_On_Off;
+
+   procedure Scan_Translate_Off is
+   begin
+      --  'pragma translate_off' has just been scanned.
+      Scan_Translate_On_Off (Std_Names.Name_Translate_Off);
+
+      Current_Context.Translate_Off := True;
+
+      --  Recursive scan until 'translate_on' is scanned.
+      loop
+         Scan;
+         if not Current_Context.Translate_Off then
+            --  That token is discarded.
+            pragma Assert (Current_Token = Tok_Line_Comment);
+            Flag_Comment := False;
+            exit;
+         elsif Current_Token = Tok_Eof then
+            Warning_Msg_Scan (Warnid_Pragma,
+                              "unterminated 'translate_off'");
+            Current_Context.Translate_Off := False;
+            exit;
+         end if;
+      end loop;
+
+      --  The scanner is now at the EOL of the translate_on or at the EOF.
+      --  Continue scanning.
+   end Scan_Translate_Off;
+
+   procedure Scan_Translate_On is
+   begin
+      --  'pragma translate_off' has just been scanned.
+      Scan_Translate_On_Off (Std_Names.Name_Translate_On);
+
+      Current_Context.Translate_Off := False;
+
+      --  Return a token that will be discarded.
+      Flag_Comment := True;
+   end Scan_Translate_On;
+
    --  Scan tokens within a comment.  Return TRUE if Current_Token was set,
    --  return FALSE to discard the comment (ie treat it like a real comment).
    function Scan_Comment return Boolean
@@ -1683,7 +1745,7 @@ package body Vhdl.Scanner is
       use Std_Names;
       Id : Name_Id;
    begin
-      Scan_Comment_Identifier (Id);
+      Scan_Comment_Identifier (Id, False);
 
       if Id = Null_Identifier then
          return False;
@@ -1696,6 +1758,35 @@ package body Vhdl.Scanner is
                Flag_Psl := True;
                Flag_Scan_In_Comment := True;
                return True;
+            end if;
+         when Name_Pragma
+           | Name_Synthesis =>
+            if Flag_Pragma_Comment then
+               Scan_Comment_Identifier (Id, True);
+               case Id is
+                  when Null_Identifier =>
+                     Warning_Msg_Scan
+                       (Warnid_Pragma, "incomplete pragma directive ignored");
+                  when Name_Translate_Off =>
+                     if Current_Context.Translate_Off then
+                        Warning_Msg_Scan
+                          (Warnid_Pragma, "nested 'translate_off' ignored");
+                     else
+                        Scan_Translate_Off;
+                     end if;
+                  when Name_Translate_On =>
+                     if Current_Context.Translate_Off then
+                        Scan_Translate_On;
+                     else
+                        Warning_Msg_Scan
+                          (Warnid_Pragma, "'translate_on' without "
+                             & "coresponding 'translate_off'");
+                     end if;
+                  when others =>
+                     Warning_Msg_Scan
+                       (Warnid_Pragma, "unknown pragma %i ignored", +Id);
+               end case;
+               return False;
             end if;
          when others =>
             null;

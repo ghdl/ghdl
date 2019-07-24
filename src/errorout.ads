@@ -53,6 +53,9 @@ package Errorout is
       --  Vhdl93 reserved word is used as a vhdl87 identifier.
       Warnid_Reserved_Word,
 
+      --  Anything about pragma: unknown pragma, nested pragma...
+      Warnid_Pragma,
+
       --  Start of block comment ('/*') appears in a block comment.
       Warnid_Nested_Comment,
 
@@ -277,6 +280,7 @@ private
    Default_Warnings : constant Warnings_Setting :=
      (Warnid_Library | Warnid_Binding | Warnid_Port | Warnid_Shared
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
+        | Warnid_Pragma
         | Msgid_Warning  => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
 
