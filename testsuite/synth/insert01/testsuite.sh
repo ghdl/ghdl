@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in insert01; do
+for t in insert01 insert02; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
