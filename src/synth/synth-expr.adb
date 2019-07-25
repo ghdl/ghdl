@@ -784,6 +784,13 @@ package body Synth.Expr is
             else
                raise Internal_Error;
             end if;
+         when Iir_Predefined_Array_Inequality =>
+            --  TODO: check size, handle non-vector.
+            if Is_Vector_Type (Ltype) then
+               return Synth_Compare (Id_Ne);
+            else
+               raise Internal_Error;
+            end if;
          when Iir_Predefined_Array_Greater =>
             --  TODO: check size, non-vector.
             --  TODO: that's certainly not the correct operator.

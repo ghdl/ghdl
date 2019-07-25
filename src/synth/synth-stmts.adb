@@ -355,6 +355,10 @@ package body Synth.Stmts is
          when Iir_Kind_Enumeration_Type_Definition =>
             Dc := 0;
             Val := Uns64 (Get_Enum_Pos (Strip_Denoting_Name (Expr)));
+         when Iir_Kind_Integer_Type_Definition =>
+            --  TODO: signed values.
+            Dc := 0;
+            Val := Uns64 (Get_Value (Expr));
          when others =>
             Error_Kind ("convert_to_uns64", Expr_Type);
       end case;
