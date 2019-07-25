@@ -97,7 +97,7 @@ package body Synth.Context is
                  Get_Info (Get_Base_Type (Obj_Type));
                Rng : Value_Bound_Acc;
             begin
-               if Info.Kind = Kind_Bit_Type then
+               if Is_Bit_Type (Obj_Type) then
                   Rng := null;
                else
                   Rng := Create_Value_Bound

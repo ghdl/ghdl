@@ -420,14 +420,19 @@ package body Synth.Insts is
    procedure Create_Component_Wire (Inter : Node; Val : Value_Acc)
    is
       Value : Net;
+      W : Width;
    begin
       case Val.Kind is
          when Value_Wire =>
             --  Create a gate for the output, so that it could be read.
             Val.W := Alloc_Wire (Wire_Output, Inter);
+            if Val.W_Bound = null then
+               W := 1;
+            else
+               W := Val.W_Bound.Len;
+            end if;
             Value := Builders.Build_Signal
-              (Build_Context, New_Sname (No_Sname, Get_Identifier (Inter)),
-               Val.W_Bound.Len);
+              (Build_Context, New_Sname (No_Sname, Get_Identifier (Inter)), W);
             Set_Wire_Gate (Val.W, Value);
          when others =>
             raise Internal_Error;
@@ -676,7 +681,8 @@ package body Synth.Insts is
             --  Create a gate for the output, so that it could be read.
             Val.W := Alloc_Wire (Wire_Output, Inter);
             W := Get_Output_Desc (Get_Module (Self_Inst), Idx).W;
-            pragma Assert (W = Val.W_Bound.Len);
+            pragma Assert ((W = 1 and then Val.W_Bound = null)
+                           or else (W /= 1 and then W = Val.W_Bound.Len));
             Value := Builders.Build_Output (Build_Context, W);
             Set_Location (Value, Inter);
             Inp := Get_Input (Self_Inst, Idx);

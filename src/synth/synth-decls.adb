@@ -196,6 +196,7 @@ package body Synth.Decls is
                Atype := Get_Named_Entity (Atype);
             when Iir_Kind_Subtype_Declaration
               | Iir_Kind_Type_Declaration =>
+               --  Type already declared, so already handled.
                return Null_Node;
             when Iir_Kind_Array_Subtype_Definition
               | Iir_Kind_Integer_Subtype_Definition
