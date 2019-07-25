@@ -4980,7 +4980,11 @@ package Vhdl.Nodes is
 
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Int,
-      Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv
      );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.

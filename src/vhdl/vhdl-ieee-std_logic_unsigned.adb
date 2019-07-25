@@ -33,6 +33,12 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv,
       others => Iir_Predefined_None);
 
+   Ne_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv,
+      others => Iir_Predefined_None);
+
    Lt_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Int,
@@ -126,6 +132,8 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
             case Get_Identifier (Decl) is
                when Name_Op_Equality =>
                   Handle_Binary (Eq_Patterns);
+               when Name_Op_Inequality =>
+                  Handle_Binary (Ne_Patterns);
                when Name_Op_Less =>
                   Handle_Binary (Lt_Patterns);
                when Name_Op_Less_Equal =>
