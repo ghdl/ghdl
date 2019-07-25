@@ -29,12 +29,16 @@ package Synth.Expr is
    function Is_Const (Val : Value_Acc) return Boolean;
    function Get_Width (Val : Value_Acc) return Uns32;
 
+   procedure Set_Location (N : Net; Loc : Node);
+   pragma Inline (Set_Location);
+
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx  : out Uns32);
    procedure From_Bit (Enum : Int64; Val : out Uns32);
    procedure To_Logic
      (Enum : Int64; Etype : Node; Val : out Uns32; Zx  : out Uns32);
 
-   function Bit_Extract (Val : Value_Acc; Off : Uns32) return Value_Acc;
+   function Bit_Extract (Val : Value_Acc; Off : Uns32; Loc : Node)
+                        return Value_Acc;
 
    type Net_Array is array (Int32 range <>) of Net;
    type Net_Array_Acc is access Net_Array;

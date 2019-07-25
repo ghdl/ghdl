@@ -40,6 +40,7 @@ with Synth.Environment; use Synth.Environment;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils; use Netlists.Utils;
+with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Expr is
    function Is_Const (Val : Value_Acc) return Boolean is
@@ -72,6 +73,19 @@ package body Synth.Expr is
             raise Internal_Error; --  TODO
       end case;
    end Get_Width;
+
+   procedure Set_Location2 (N : Net; Loc : Node) is
+   begin
+      Set_Location (Get_Net_Parent (N), Get_Location (Loc));
+   end Set_Location2;
+
+   procedure Set_Location (N : Net; Loc : Node) is
+   begin
+      --  Short and compact code as it is inlined.
+      if Flag_Locations then
+         Set_Location2 (N, Loc);
+      end if;
+   end Set_Location;
 
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32) is
    begin
@@ -127,7 +141,10 @@ package body Synth.Expr is
       end if;
    end To_Logic;
 
-   function Bit_Extract (Val : Value_Acc; Off : Uns32) return Value_Acc is
+   function Bit_Extract (Val : Value_Acc; Off : Uns32; Loc : Node)
+                        return Value_Acc
+   is
+      N : Net;
    begin
       case Val.Kind is
          when Value_Array =>
@@ -135,10 +152,10 @@ package body Synth.Expr is
             return Val.Arr.V (Iir_Index32 (Val.Bounds.D (1).Len - Off));
          when Value_Net
            | Value_Wire =>
-            return Create_Value_Net
-              (Build_Extract_Bit
-                 (Build_Context, Get_Net (Val, Null_Node), Off),
-               No_Bound);
+            N := Build_Extract_Bit
+              (Build_Context, Get_Net (Val, Null_Node), Off);
+            Set_Location (N, Loc);
+            return Create_Value_Net (N, No_Bound);
          when others =>
             raise Internal_Error;
       end case;
@@ -518,21 +535,22 @@ package body Synth.Expr is
      (Cst : Value_Acc; Expr : Value_Acc; Etype : Node; Loc : Node)
      return Value_Acc
    is
-      pragma Unreferenced (Loc);
       Val : Uns32;
       Zx : Uns32;
+      N : Net;
    begin
       To_Logic (Cst.Scal, Etype, Val, Zx);
       if Zx /= 0 then
-         return Create_Value_Net
-           (Build_Const_UL32 (Build_Context, 0, 1, 1), No_Bound);
+         N := Build_Const_UL32 (Build_Context, 0, 1, 1);
+         Set_Location (N, Loc);
+         return Create_Value_Net (N, No_Bound);
       elsif Val = 1 then
          return Expr;
       else
          pragma Assert (Val = 0);
-         return Create_Value_Net
-           (Build_Monadic (Build_Context, Id_Not, Get_Net (Expr, Etype)),
-            No_Bound);
+         N := Build_Monadic (Build_Context, Id_Not, Get_Net (Expr, Etype));
+         Set_Location (N, Loc);
+         return Create_Value_Net (N, No_Bound);
       end if;
    end Synth_Bit_Eq_Const;
 
@@ -611,39 +629,46 @@ package body Synth.Expr is
       Left : Value_Acc;
       Right : Value_Acc;
 
-      function Synth_Bit_Dyadic (Id : Dyadic_Module_Id) return Value_Acc is
+      function Synth_Bit_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
+      is
+         N : Net;
       begin
-         return Create_Value_Net
-           (Build_Dyadic (Build_Context, Id,
-                          Get_Net (Left, Ltype), Get_Net (Right, Rtype)),
-            No_Bound);
+         N := Build_Dyadic (Build_Context, Id,
+                            Get_Net (Left, Ltype), Get_Net (Right, Rtype));
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, No_Bound);
       end Synth_Bit_Dyadic;
 
-      function Synth_Compare (Id : Compare_Module_Id) return Value_Acc is
+      function Synth_Compare (Id : Compare_Module_Id) return Value_Acc
+      is
+         N : Net;
       begin
-         return Create_Value_Net
-           (Build_Compare (Build_Context, Id,
-                           Get_Net (Left, Ltype), Get_Net (Right, Rtype)),
-            No_Bound);
+         N := Build_Compare (Build_Context, Id,
+                             Get_Net (Left, Ltype), Get_Net (Right, Rtype));
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, No_Bound);
       end Synth_Compare;
 
       function Synth_Compare_Uns_Nat (Id : Compare_Module_Id)
-                                     return Value_Acc is
+                                     return Value_Acc
+      is
+         N : Net;
       begin
-         return Create_Value_Net
-           (Build_Compare (Build_Context, Id,
-                           Get_Net (Left, Ltype),
-                           Synth_Uresize (Right, Rtype, Get_Width (Left))),
-            No_Bound);
+         N := Synth_Uresize (Right, Rtype, Get_Width (Left));
+         Set_Location (N, Expr);
+         N := Build_Compare (Build_Context, Id, Get_Net (Left, Ltype), N);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, No_Bound);
       end Synth_Compare_Uns_Nat;
 
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
          L : constant Net := Get_Net (Left, Ltype);
+         N : Net;
       begin
-         return Create_Value_Net
-           (Build_Dyadic (Build_Context, Id, L, Get_Net (Right, Rtype)),
-            Create_Res_Bound (Left, L));
+         N := Build_Dyadic (Build_Context, Id, L, Get_Net (Right, Rtype));
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Create_Res_Bound (Left, L));
       end Synth_Vec_Dyadic;
 
       function Synth_Dyadic_Uns (Id : Dyadic_Module_Id; Is_Res_Vec : Boolean)
@@ -653,16 +678,21 @@ package body Synth.Expr is
          R : constant Net := Get_Net (Right, Rtype);
          W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
          Rtype : Value_Bound_Acc;
+         L1, R1 : Net;
+         N : Net;
       begin
          if Is_Res_Vec then
             Rtype := Create_Value_Bound ((Iir_Downto, Int32 (W - 1), 0, W));
          else
             Rtype := No_Bound;
          end if;
-         return Create_Value_Net
-           (Build_Dyadic
-              (Build_Context, Id, Synth_Uresize (L, W), Synth_Uresize (R, W)),
-            Rtype);
+         L1 := Synth_Uresize (L, W);
+         Set_Location (L1, Expr);
+         R1 := Synth_Uresize (R, W);
+         Set_Location (R1, Expr);
+         N := Build_Dyadic (Build_Context, Id, L1, R1);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Rtype);
       end Synth_Dyadic_Uns;
 
       function Synth_Compare_Uns_Uns (Id : Compare_Module_Id)
@@ -671,22 +701,29 @@ package body Synth.Expr is
          L : constant Net := Get_Net (Left, Ltype);
          R : constant Net := Get_Net (Right, Rtype);
          W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+         L1, R1 : Net;
+         N : Net;
       begin
-         return Create_Value_Net
-           (Build_Compare (Build_Context, Id,
-                           Synth_Uresize (L, W),
-                           Synth_Uresize (R, W)),
-            No_Bound);
+         L1 := Synth_Uresize (L, W);
+         Set_Location (L1, Expr);
+         R1 := Synth_Uresize (R, W);
+         Set_Location (R1, Expr);
+         N := Build_Compare (Build_Context, Id, L1, R1);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, No_Bound);
       end Synth_Compare_Uns_Uns;
 
       function Synth_Dyadic_Uns_Nat (Id : Dyadic_Module_Id) return Value_Acc
       is
          L : constant Net := Get_Net (Left, Ltype);
+         R1 : Net;
+         N : Net;
       begin
-         return Create_Value_Net
-           (Build_Dyadic (Build_Context, Id,
-                          L, Synth_Uresize (Right, Rtype, Get_Width (Left))),
-            Create_Res_Bound (Left, L));
+         R1 := Synth_Uresize (Right, Rtype, Get_Width (Left));
+         Set_Location (R1, Expr);
+         N := Build_Dyadic (Build_Context, Id, L, R1);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Create_Res_Bound (Left, L));
       end Synth_Dyadic_Uns_Nat;
    begin
       Left := Synth_Expression (Syn_Inst, Left_Expr);
@@ -808,10 +845,12 @@ package body Synth.Expr is
          when Iir_Predefined_Array_Element_Concat =>
             declare
                L : constant Net := Get_Net (Left, Ltype);
+               N : Net;
             begin
+               N := Build_Concat2 (Build_Context, L, Get_Net (Right, Rtype));
+               Set_Location (N, Expr);
                return Create_Value_Net
-                 (Build_Concat2 (Build_Context, L,
-                                 Get_Net (Right, Rtype)),
+                 (N,
                   Create_Bounds_From_Length
                     (Syn_Inst,
                      Get_Index_Type (Get_Type (Expr), 0),
@@ -820,28 +859,40 @@ package body Synth.Expr is
          when Iir_Predefined_Element_Array_Concat =>
             declare
                R : constant Net := Get_Net (Right, Rtype);
+               N : Net;
             begin
+               N := Build_Concat2 (Build_Context, Get_Net (Left, Ltype), R);
+               Set_Location (N, Expr);
                return Create_Value_Net
-                 (Build_Concat2 (Build_Context, Get_Net (Left, Ltype), R),
+                 (N,
                   Create_Bounds_From_Length
                     (Syn_Inst,
                      Get_Index_Type (Get_Type (Expr), 0),
                      Iir_Index32 (Get_Width (R) + 1)));
             end;
          when Iir_Predefined_Element_Element_Concat =>
-            return Create_Value_Net
-              (Build_Concat2 (Build_Context,
-                              Get_Net (Left, Ltype),
-                              Get_Net (Right, Rtype)),
-               Create_Bounds_From_Length
-                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2));
+            declare
+               N : Net;
+            begin
+               N := Build_Concat2 (Build_Context,
+                                   Get_Net (Left, Ltype),
+                                   Get_Net (Right, Rtype));
+               Set_Location (N, Expr);
+               return Create_Value_Net
+                 (N,
+                  Create_Bounds_From_Length
+                    (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2));
+            end;
          when Iir_Predefined_Array_Array_Concat =>
             declare
                L : constant Net := Get_Net (Left, Ltype);
                R : constant Net := Get_Net (Right, Ltype);
+               N : Net;
             begin
+               N := Build_Concat2 (Build_Context, L, R);
+               Set_Location (N, Expr);
                return Create_Value_Net
-                 (Build_Concat2 (Build_Context, L, R),
+                 (N,
                   Create_Bounds_From_Length
                     (Syn_Inst,
                      Get_Index_Type (Get_Type (Expr), 0),
@@ -1016,7 +1067,7 @@ package body Synth.Expr is
       end if;
 
       Off := Index_To_Offset (Pfx, Idx_Val.Scal, Name);
-      return Bit_Extract (Pfx, Off);
+      return Bit_Extract (Pfx, Off, Name);
    end Synth_Indexed_Name;
 
    function Is_Const (N : Net) return Boolean is
@@ -1265,21 +1316,22 @@ package body Synth.Expr is
       Step : Uns32;
       Off : Int32;
       Wd : Uns32;
+      N : Net;
    begin
       Bnd := Extract_Bound (Pfx);
       Synth_Slice_Suffix (Syn_Inst, Name, Bnd, Res_Bnd, Inp, Step, Off, Wd);
       if Inp /= No_Net then
-         return Create_Value_Net
-           (Build_Dyn_Extract (Build_Context,
-                               Get_Net (Pfx, Get_Type (Pfx_Node)),
-                               Inp, Step, Off, Wd),
-            null);
+         N := Build_Dyn_Extract (Build_Context,
+                                 Get_Net (Pfx, Get_Type (Pfx_Node)),
+                                 Inp, Step, Off, Wd);
+         Set_Location (N, Name);
+         return Create_Value_Net (N, null);
       else
-         return Create_Value_Net
-           (Build_Extract (Build_Context,
-                           Get_Net (Pfx, Get_Type (Pfx_Node)),
-                           Uns32 (Off), Wd),
-            Res_Bnd);
+         N := Build_Extract (Build_Context,
+                             Get_Net (Pfx, Get_Type (Pfx_Node)),
+                             Uns32 (Off), Wd);
+         Set_Location (N, Name);
+         return Create_Value_Net (N, Res_Bnd);
       end if;
    end Synth_Slice_Name;
 

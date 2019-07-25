@@ -678,6 +678,7 @@ package body Synth.Insts is
             W := Get_Output_Desc (Get_Module (Self_Inst), Idx).W;
             pragma Assert (W = Val.W_Bound.Len);
             Value := Builders.Build_Output (Build_Context, W);
+            Set_Location (Value, Inter);
             Inp := Get_Input (Self_Inst, Idx);
             Connect (Inp, Value);
             Set_Wire_Gate (Val.W, Value);

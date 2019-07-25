@@ -21,9 +21,12 @@
 with Simple_IO; use Simple_IO;
 with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
+with Files_Map;
+
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Gates; use Netlists.Gates;
+with Netlists.Locations;
 
 package body Netlists.Disp_Vhdl is
    Flag_Merge_Lit : constant Boolean := True;
@@ -439,7 +442,24 @@ package body Netlists.Disp_Vhdl is
    procedure Disp_Instance_Inline (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
+      Loc : constant Location_Type := Locations.Get_Location (Inst);
    begin
+      if Loc /= No_Location then
+         declare
+            File : Name_Id;
+            Line : Positive;
+            Col : Natural;
+         begin
+            Files_Map.Location_To_Position (Loc, File, Line, Col);
+            Put ("  -- ");
+            Put_Id (File);
+            Put (':');
+            Put_Uns32 (Uns32 (Line));
+            Put (':');
+            Put_Uns32 (Uns32 (Col));
+            New_Line;
+         end;
+      end if;
       case Get_Id (Imod) is
          when Id_Output =>
             Disp_Template ("  \o0 <= \i0; -- (output)" & NL, Inst);

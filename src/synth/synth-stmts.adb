@@ -96,7 +96,8 @@ package body Synth.Stmts is
             case Get_Kind (Choice) is
                when Iir_Kind_Choice_By_None =>
                   Pos := Pos - 1;
-                  Synth_Assignment (Syn_Inst, Assoc, Bit_Extract (Val, Pos));
+                  Synth_Assignment
+                    (Syn_Inst, Assoc, Bit_Extract (Val, Pos, Target));
                when others =>
                   Error_Kind ("synth_assignment_aggregate", Choice);
             end case;
@@ -149,6 +150,7 @@ package body Synth.Stmts is
                                      Targ_Net,
                                      Get_Net (Val, Get_Type (Target)),
                                      Index_To_Offset (Targ, Idx.Scal, Target));
+                  Set_Location (V, Target);
                else
                   raise Internal_Error;
                end if;
@@ -183,6 +185,7 @@ package body Synth.Stmts is
                   Res := Build_Insert
                     (Build_Context, Targ_Net, V, Uns32 (Off));
                end if;
+               Set_Location (Res, Target);
                Synth_Assign
                  (Targ, Create_Value_Net (Res, Res_Bnd), Get_Type (Pfx));
             end;

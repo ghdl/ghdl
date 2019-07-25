@@ -55,6 +55,7 @@ package body Synth.Decls is
             else
                Value := Build_Signal (Build_Context, Name, W);
             end if;
+            Set_Location (Value, Decl);
             Set_Wire_Gate (Val.W, Value);
          when others =>
             raise Internal_Error;
