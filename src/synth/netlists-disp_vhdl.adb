@@ -484,12 +484,7 @@ package body Netlists.Disp_Vhdl is
                   Disp_Template ("\i0 (\n0 downto \n1) & ", Inst,
                                  (0 => Ow - 1, 1 => Off + Iw));
                end if;
-               if Iw > 1 then
-                  Disp_Template ("\i1 (\n0 downto \n1)", Inst,
-                                 (0 => Off + Iw - 1, 1 => Off));
-               else
-                  Disp_Template ("\i1", Inst);
-               end if;
+               Disp_Template ("\i1", Inst);
                if Off > 1 then
                   Disp_Template (" & \i0 (\n0 downto 0)", Inst,
                                  (0 => Off - 1));
