@@ -604,6 +604,11 @@ package body Std_Names is
       Def ("synthesis",             Name_Synthesis);
       Def ("translate_off",         Name_Translate_Off);
       Def ("translate_on",          Name_Translate_On);
+      Def ("label_applies_to",      Name_Label_Applies_To);
+      Def ("return_port_name",      Name_Return_Port_Name);
+      Def ("map_to_operator",       Name_Map_To_Operator);
+      Def ("type_function",         Name_Type_Function);
+      Def ("built_in",              Name_Built_In);
       Def ("none",                  Name_None);
 
       Def ("ieee",               Name_Ieee);

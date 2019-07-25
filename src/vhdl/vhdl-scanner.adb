@@ -1782,6 +1782,14 @@ package body Vhdl.Scanner is
                           (Warnid_Pragma, "'translate_on' without "
                              & "coresponding 'translate_off'");
                      end if;
+                  when Name_Label
+                    | Name_Label_Applies_To
+                    | Name_Return_Port_Name
+                    | Name_Map_To_Operator
+                    | Name_Type_Function
+                    | Name_Built_In =>
+                     --  Used by synopsys, discarded.
+                     Skip_Until_EOL;
                   when others =>
                      Warning_Msg_Scan
                        (Warnid_Pragma, "unknown pragma %i ignored", +Id);

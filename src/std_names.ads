@@ -685,7 +685,12 @@ package Std_Names is
    Name_Synthesis :             constant Name_Id := Name_First_Misc + 036;
    Name_Translate_Off :         constant Name_Id := Name_First_Misc + 037;
    Name_Translate_On :          constant Name_Id := Name_First_Misc + 038;
-   Name_None :                  constant Name_Id := Name_First_Misc + 039;
+   Name_Label_Applies_To :      constant Name_Id := Name_First_Misc + 039;
+   Name_Return_Port_Name :      constant Name_Id := Name_First_Misc + 040;
+   Name_Map_To_Operator :       constant Name_Id := Name_First_Misc + 041;
+   Name_Type_Function :         constant Name_Id := Name_First_Misc + 042;
+   Name_Built_In :              constant Name_Id := Name_First_Misc + 043;
+   Name_None :                  constant Name_Id := Name_First_Misc + 044;
    Name_Last_Misc :             constant Name_Id := Name_None;
 
    Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;
