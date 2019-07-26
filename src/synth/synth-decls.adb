@@ -46,7 +46,7 @@ package body Synth.Decls is
       case Val.Kind is
          when Value_Wire =>
             --  FIXME: get the width directly from the wire ?
-            W := Get_Width (Syn_Inst, Get_Type (Decl));
+            W := Get_Bound_Width (Val.W_Bound);
             Name := New_Sname (Syn_Inst.Name, Get_Identifier (Decl));
             if Init /= null then
                Ival := Get_Net (Init, Get_Type (Decl));

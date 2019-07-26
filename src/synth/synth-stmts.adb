@@ -84,13 +84,15 @@ package body Synth.Stmts is
                                          Val : Value_Acc)
    is
       Targ_Type : constant Node := Get_Type (Target);
+      Bnd : Value_Bound_Acc;
       Choice : Node;
       Assoc : Node;
       Pos : Uns32;
    begin
       if Is_Vector_Type (Targ_Type) then
+         Bnd := Expr.Synth_Array_Bounds (Syn_Inst, Targ_Type, 0);
          Choice := Get_Association_Choices_Chain (Target);
-         Pos := Get_Width (Syn_Inst, Targ_Type);
+         Pos := Bnd.Len;
          while Is_Valid (Choice) loop
             Assoc := Get_Associated_Expr (Choice);
             case Get_Kind (Choice) is

@@ -19,7 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Netlists; use Netlists;
-with Synth.Context; use Synth.Context;
+with Synth.Values; use Synth.Values;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Types is
@@ -28,6 +28,7 @@ package Synth.Types is
 
    function Is_Vector_Type (Atype : Node) return Boolean;
 
-   function Get_Width (Syn_Inst : Synth_Instance_Acc; Atype : Node)
-                      return Width;
+   --  Number of bits for RNG.
+   function Get_Range_Width (Rng : Value_Range_Type) return Width;
+
 end Synth.Types;

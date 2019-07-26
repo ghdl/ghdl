@@ -205,4 +205,6 @@ package Synth.Values is
                     return Value_Acc;
 
    function Extract_Bound (Val : Value_Acc) return Value_Bound_Acc;
+
+   function Get_Bound_Width (Bnd : Value_Bound_Acc) return Width;
 end Synth.Values;

@@ -36,7 +36,6 @@ with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Decls; use Synth.Decls;
-with Synth.Types; use Synth.Types;
 with Synth.Expr; use Synth.Expr;
 
 package body Synth.Insts is
@@ -67,17 +66,15 @@ package body Synth.Insts is
 
    procedure Make_Port_Desc (Val : Value_Acc;
                              Name : Sname;
-                             Wd : Width;
                              Ports : in out Port_Desc_Array;
                              Idx : in out Port_Nbr;
-                             Dir : Port_Kind)
-   is
+                             Dir : Port_Kind) is
    begin
       case Val.Kind is
          when Value_Wire =>
             Idx := Idx + 1;
             Ports (Idx) := (Name => Name,
-                            W => Wd,
+                            W => Get_Bound_Width (Val.W_Bound),
                             Dir => Dir);
          when others =>
             raise Internal_Error; --  TODO
@@ -91,11 +88,10 @@ package body Synth.Insts is
                              Dir : Port_Kind)
    is
       Val : constant Value_Acc := Get_Value (Syn_Inst, Inter);
-      Wd : constant Width := Get_Width (Syn_Inst, Get_Type (Inter));
       Name : Sname;
    begin
       Name :=  New_Sname_User (Get_Identifier (Inter));
-      Make_Port_Desc (Val, Name, Wd, Ports, Idx, Dir);
+      Make_Port_Desc (Val, Name, Ports, Idx, Dir);
    end Make_Port_Desc;
 
    --  Parameters that define an instance.

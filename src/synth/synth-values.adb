@@ -304,4 +304,13 @@ package body Synth.Values is
             raise Internal_Error;
       end case;
    end Extract_Bound;
+
+   function Get_Bound_Width (Bnd : Value_Bound_Acc) return Width is
+   begin
+      if Bnd = null then
+         return 1;
+      else
+         return Bnd.Len;
+      end if;
+   end Get_Bound_Width;
 end Synth.Values;

@@ -19,14 +19,10 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Mutils; use Mutils;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Utils; use Vhdl.Utils;
-with Vhdl.Errors; use Vhdl.Errors;
-
-with Synth.Values; use Synth.Values;
-with Synth.Expr;
-with Vhdl.Annotations; use Vhdl.Annotations;
 
 package body Synth.Types is
    function Is_Bit_Type (Atype : Node) return Boolean
@@ -54,31 +50,38 @@ package body Synth.Types is
         and then Get_Nbr_Dimensions (Atype) = 1;
    end Is_Vector_Type;
 
-   function Get_Width (Syn_Inst : Synth_Instance_Acc; Atype : Node)
-                      return Width
+   function Get_Range_Width (Rng : Value_Range_Type) return Width
    is
-      Btype : constant Node := Get_Base_Type (Atype);
+      Low : Int64;
+      High : Int64;
    begin
-      case Get_Kind (Atype) is
-         when Iir_Kind_Enumeration_Type_Definition =>
-            return Width (Get_Info (Atype).Width);
-         when Iir_Kind_Enumeration_Subtype_Definition =>
-            --  Tail call
-            return Get_Width (Syn_Inst, Btype);
-         when Iir_Kind_Array_Subtype_Definition =>
-            if Is_Vector_Type (Btype) then
-               declare
-                  Bnd : Value_Bound_Acc;
-               begin
-                  Bnd := Expr.Synth_Array_Bounds (Syn_Inst, Atype, 0);
-                  return Bnd.Len;
-               end;
-            else
-               raise Internal_Error;
-            end if;
-         when others =>
-            Error_Kind ("get_width", Atype);
+      case Rng.Dir is
+         when Iir_To =>
+            Low := Rng.Left;
+            High := Rng.Right;
+         when Iir_Downto =>
+            Low := Rng.Right;
+            High := Rng.Left;
       end case;
-   end Get_Width;
+      if Low > High then
+         return 0;
+      end if;
 
+      if Low >= 0 then
+         --  Positive.
+         return Width (Clog2 (Uns64 (High)));
+      elsif High < 0 then
+         --  Negative only.
+         --  FIXME: overflow.
+         return Width (Clog2 (Uns64 (-Low))) + 1;
+      else
+         declare
+            --  FIXME: overflow.
+            L : constant Width := Width (Clog2 (Uns64 (-Low)));
+            H : constant Width := Width (Clog2 (Uns64 (-High)));
+         begin
+            return Width'Max (L, H) + 1;
+         end;
+      end if;
+   end Get_Range_Width;
 end Synth.Types;
