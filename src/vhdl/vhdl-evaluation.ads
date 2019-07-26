@@ -66,6 +66,12 @@ package Vhdl.Evaluation is
    --  is locally static.
    function Eval_Expr_If_Static (Expr : Iir) return Iir;
 
+   --  Concatenate all the elements of OPERANDS.
+   --  The first element of OPERANDS is the rightest one, the last the
+   --  leftest one.  All the elements are concatenation operators.
+   --  All the elements are static.
+   function Eval_Concatenation (Operands : Iir_Array) return Iir;
+
    --  Evaluate a physical literal and return a normalized literal (using
    --  the primary unit as unit).
    function Eval_Physical_Literal (Expr : Iir) return Iir;

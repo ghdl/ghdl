@@ -997,126 +997,157 @@ package body Vhdl.Evaluation is
       return Build_Simple_Aggregate (Res_List, Origin, Get_Type (Left));
    end Eval_Shift_Operator;
 
-   --  Note: operands must be locally static.
-   function Eval_Concatenation
-     (Left, Right : Iir; Orig : Iir; Func : Iir_Predefined_Concat_Functions)
-     return Iir
+   --  Concatenate all the elements of OPERANDS.
+   --  The first element of OPERANDS is the rightest one, the last the
+   --  leftest one.  All the elements are concatenation operators.
+   --  All the elements are static.
+   function Eval_Concatenation (Operands : Iir_Array) return Iir
    is
+      pragma Assert (Operands'First = 1);
+      Orig : constant Iir := Operands (1);
+      Origin_Type : constant Iir := Get_Type (Orig);
+
+      Ops_Val : Iir_Array (Operands'Range);
+      Str_Lits : Iir_Array (Operands'Range);
+      Left_Op : Iir;
+      Left_Val : Iir;
+      Left_Lit : Iir;
       Res_List : Iir_Flist;
       Res_Len : Natural;
       Res_Type : Iir;
-      Origin_Type : Iir;
-      Left_Aggr, Right_Aggr : Iir;
-      Left_List, Right_List : Iir_Flist;
-      Left_Len, Right_Len : Natural;
-   begin
-      --  Compute length of the result.
-      --  Left:
-      case Func is
-         when Iir_Predefined_Element_Array_Concat
-           | Iir_Predefined_Element_Element_Concat =>
-            Left_Len := 1;
-         when Iir_Predefined_Array_Element_Concat
-           | Iir_Predefined_Array_Array_Concat =>
-            Left_Aggr := Eval_String_Literal (Left);
-            Left_List := Get_Simple_Aggregate_List (Left_Aggr);
-            Left_Len := Get_Nbr_Elements (Left_List);
-      end case;
-      --  Right:
-      case Func is
-         when Iir_Predefined_Array_Element_Concat
-           | Iir_Predefined_Element_Element_Concat =>
-            Right_Len := 1;
-         when Iir_Predefined_Element_Array_Concat
-           | Iir_Predefined_Array_Array_Concat =>
-            Right_Aggr := Eval_String_Literal (Right);
-            Right_List := Get_Simple_Aggregate_List (Right_Aggr);
-            Right_Len := Get_Nbr_Elements (Right_List);
-      end case;
+      Def, Left_Def : Iir_Predefined_Functions;
+      Op : Iir;
+      El : Iir;
+      El_List : Iir_Flist;
+      El_Len : Natural;
+      Err_Orig : Iir;
 
-      Res_Len := Left_Len + Right_Len;
+      --  To compute the index range of the result for vhdl87.
+      Leftest_Non_Null : Iir;
+      Bounds_From_Subtype : Boolean;
+   begin
+      --  Eval operands, compute length of the result.
+      Err_Orig := Null_Iir;
+      Res_Len := 0;
+      for I in Operands'Range loop
+         Op := Operands (I);
+         Def := Get_Implicit_Definition (Get_Implementation (Op));
+         if Get_Kind (Op) = Iir_Kind_Function_Call then
+            El := Get_Actual
+              (Get_Chain (Get_Parameter_Association_Chain (Op)));
+         else
+            El := Get_Right (Op);
+         end if;
+         Ops_Val (I) := Eval_Static_Expr (El);
+         if Get_Kind (Ops_Val (I)) = Iir_Kind_Overflow_Literal then
+            Err_Orig := El;
+         else
+            case Iir_Predefined_Concat_Functions (Def) is
+               when Iir_Predefined_Array_Element_Concat
+                 | Iir_Predefined_Element_Element_Concat =>
+                  Res_Len := Res_Len + 1;
+               when Iir_Predefined_Element_Array_Concat
+                 | Iir_Predefined_Array_Array_Concat =>
+                  Str_Lits (I) := Eval_String_Literal (Ops_Val (I));
+                  El_List := Get_Simple_Aggregate_List (Str_Lits (I));
+                  Res_Len := Res_Len + Get_Nbr_Elements (El_List);
+            end case;
+         end if;
+      end loop;
+
+      Op := Operands (Operands'Last);
+      if Get_Kind (Op) = Iir_Kind_Function_Call then
+         Left_Op := Get_Actual (Get_Parameter_Association_Chain (Op));
+      else
+         Left_Op := Get_Left (Op);
+      end if;
+      Left_Val := Eval_Static_Expr (Left_Op);
+      if Get_Kind (Left_Val) = Iir_Kind_Overflow_Literal then
+         Err_Orig := Left_Op;
+      else
+         Left_Def := Def;
+         case Iir_Predefined_Concat_Functions (Left_Def) is
+            when Iir_Predefined_Element_Array_Concat
+              | Iir_Predefined_Element_Element_Concat =>
+               Res_Len := Res_Len + 1;
+            when Iir_Predefined_Array_Element_Concat
+              | Iir_Predefined_Array_Array_Concat =>
+               Left_Lit := Eval_String_Literal (Left_Val);
+               El_List := Get_Simple_Aggregate_List (Left_Lit);
+               Res_Len := Res_Len + Get_Nbr_Elements (El_List);
+         end case;
+      end if;
+
+      --  Handle overflow.
+      if Err_Orig /= Null_Iir then
+         --  Free all.
+         for I in Ops_Val'Range loop
+            Free_Eval_Static_Expr (Ops_Val (I), Operands (I));
+         end loop;
+         Free_Eval_Static_Expr (Left_Val, Left_Op);
+
+         return Build_Overflow (Err_Orig);
+      end if;
+
       Res_List := Create_Iir_Flist (Res_Len);
+
       --  Do the concatenation.
       --  Left:
-      case Func is
+      Leftest_Non_Null := Null_Iir;
+      case Iir_Predefined_Concat_Functions (Left_Def) is
          when Iir_Predefined_Element_Array_Concat
            | Iir_Predefined_Element_Element_Concat =>
-            Set_Nth_Element (Res_List, 0, Left);
+            Set_Nth_Element (Res_List, 0, Left_Val);
+            Bounds_From_Subtype := True;
+            Res_Len := 1;
          when Iir_Predefined_Array_Element_Concat
            | Iir_Predefined_Array_Array_Concat =>
-            for I in 0 .. Left_Len - 1 loop
-               Set_Nth_Element (Res_List, I, Get_Nth_Element (Left_List, I));
+            El_List := Get_Simple_Aggregate_List (Left_Lit);
+            Res_Len := Get_Nbr_Elements (El_List);
+            for I in 0 .. Res_Len - 1 loop
+               Set_Nth_Element (Res_List, I, Get_Nth_Element (El_List, I));
             end loop;
-            Free_Eval_String_Literal (Left_Aggr, Left);
-      end case;
-      --  Right:
-      case Func is
-         when Iir_Predefined_Array_Element_Concat
-           | Iir_Predefined_Element_Element_Concat =>
-            Set_Nth_Element (Res_List, Left_Len, Right);
-         when Iir_Predefined_Element_Array_Concat
-           | Iir_Predefined_Array_Array_Concat =>
-            for I in 0 .. Right_Len - 1 loop
-               Set_Nth_Element
-                 (Res_List, Left_Len + I, Get_Nth_Element (Right_List, I));
-            end loop;
-            Free_Eval_String_Literal (Right_Aggr, Right);
+            Bounds_From_Subtype := Def = Iir_Predefined_Array_Element_Concat;
+            if Res_Len > 0 then
+               Leftest_Non_Null := Get_Type (Left_Lit);
+            end if;
+            Free_Eval_String_Literal (Left_Lit, Left_Val);
       end case;
 
+      --  Right:
+      for I in reverse Operands'Range loop
+         Def := Get_Implicit_Definition (Get_Implementation (Operands (I)));
+         case Iir_Predefined_Concat_Functions (Def) is
+            when Iir_Predefined_Array_Element_Concat
+              | Iir_Predefined_Element_Element_Concat =>
+               Set_Nth_Element (Res_List, Res_Len, Ops_Val (I));
+               Bounds_From_Subtype := True;
+               Res_Len := Res_Len + 1;
+            when Iir_Predefined_Element_Array_Concat
+              | Iir_Predefined_Array_Array_Concat =>
+               El_List := Get_Simple_Aggregate_List (Str_Lits (I));
+               El_Len := Get_Nbr_Elements (El_List);
+               for I in 0 .. El_Len - 1 loop
+                  Set_Nth_Element
+                    (Res_List, Res_Len + I, Get_Nth_Element (El_List, I));
+               end loop;
+               Bounds_From_Subtype := Bounds_From_Subtype
+                 or Def = Iir_Predefined_Element_Array_Concat;
+               if Leftest_Non_Null = Null_Iir and then El_Len /= 0 then
+                  Leftest_Non_Null := Get_Type (Ops_Val (I));
+               end if;
+               Free_Eval_String_Literal (Str_Lits (I), Ops_Val (I));
+               Res_Len := Res_Len + El_Len;
+         end case;
+      end loop;
+
       --  Compute subtype...
-      Origin_Type := Get_Type (Orig);
-      Res_Type := Null_Iir;
-      if Func = Iir_Predefined_Array_Array_Concat
-        and then Left_Len = 0
-      then
-         if Flags.Vhdl_Std = Vhdl_87 then
-            --  LRM87 7.2.3
-            --  [...], unless the left operand is a null array, in which case
-            --  the result of the concatenation is the right operand.
-            Res_Type := Get_Type (Right);
-         else
-            --  LRM93 7.2.4
-            --  If both operands are null arrays, then the result of the
-            --  concatenation is the right operand.
-            if Get_Nbr_Elements (Right_List) = 0 then
-               Res_Type := Get_Type (Right);
-            end if;
-         end if;
-      end if;
-      if Res_Type = Null_Iir then
-         if Flags.Vhdl_Std = Vhdl_87
-           and then (Func = Iir_Predefined_Array_Array_Concat
-                     or Func = Iir_Predefined_Array_Element_Concat)
-         then
-            --  LRM87 7.2.3
-            --  The left bound of the result is the left operand, [...]
-            --
-            --  LRM87 7.2.3
-            --  The direction of the result is the direction of the left
-            --  operand, [...]
-            declare
-               Left_Index : constant Iir :=
-                 Get_Index_Type (Get_Type (Left), 0);
-               Left_Range : constant Iir :=
-                 Get_Range_Constraint (Left_Index);
-               Ret_Type : constant Iir :=
-                 Get_Return_Type (Get_Implementation (Orig));
-               A_Range : Iir;
-               Index_Type : Iir;
-            begin
-               A_Range := Create_Iir (Iir_Kind_Range_Expression);
-               Set_Type (A_Range, Get_Index_Type (Ret_Type, 0));
-               Set_Expr_Staticness (A_Range, Locally);
-               Set_Left_Limit (A_Range, Get_Left_Limit (Left_Range));
-               Set_Direction (A_Range, Get_Direction (Left_Range));
-               Location_Copy (A_Range, Orig);
-               Set_Right_Limit_By_Length (A_Range, Int64 (Res_Len));
-               Index_Type := Create_Range_Subtype_From_Type
-                 (Left_Index, Get_Location (Orig));
-               Set_Range_Constraint (Index_Type, A_Range);
-               Res_Type := Create_Unidim_Array_From_Index
-                 (Origin_Type, Index_Type, Orig);
-            end;
+      if Flags.Vhdl_Std > Vhdl_87 then
+         --  LRM93 7.2.4
+         --  If both operands are null arrays, then the result of the
+         --  concatenation is the right operand.
+         if Res_Len = 0 then
+            Res_Type := Get_Type (Get_Right (Operands (1)));
          else
             --  LRM93 7.2.4
             --  Otherwise, the direction and bounds of the result are
@@ -1127,7 +1158,63 @@ package body Vhdl.Evaluation is
             Res_Type := Create_Unidim_Array_By_Length
               (Origin_Type, Int64 (Res_Len), Orig);
          end if;
+      else
+         --  LRM87 7.2.3
+         --  The left bound of the result is the left operand, [...]
+         --
+         --  LRM87 7.2.3
+         --  The direction of the result is the direction of the left
+         --  operand, [...]
+         --
+         --  LRM87 7.2.3
+         --  [...], unless the left operand is a null array, in which case
+         --  the result of the concatenation is the right operand.
+
+         --  Look for the first operand that is either an element or
+         --  a non-null array.  If it is an element, create the bounds
+         --  by length.  If it is an array, create the bounds from it.  If
+         --  there is no such operand, use the leftest operands for the
+         --  bounds.
+         if Bounds_From_Subtype then
+            --  There is at least one concatenation with an element.
+            Res_Type := Create_Unidim_Array_By_Length
+              (Origin_Type, Int64 (Res_Len), Orig);
+         else
+            if Res_Len = 0 then
+               Res_Type := Get_Type (Get_Right (Operands (1)));
+            else
+               declare
+                  Left_Index : constant Iir :=
+                    Get_Index_Type (Leftest_Non_Null, 0);
+                  Left_Range : constant Iir :=
+                    Get_Range_Constraint (Left_Index);
+                  Ret_Type : constant Iir :=
+                    Get_Return_Type (Get_Implementation (Orig));
+                  A_Range : Iir;
+                  Index_Type : Iir;
+               begin
+                  A_Range := Create_Iir (Iir_Kind_Range_Expression);
+                  Set_Type (A_Range, Get_Index_Type (Ret_Type, 0));
+                  Set_Expr_Staticness (A_Range, Locally);
+                  Set_Left_Limit (A_Range, Get_Left_Limit (Left_Range));
+                  Set_Direction (A_Range, Get_Direction (Left_Range));
+                  Location_Copy (A_Range, Orig);
+                  Set_Right_Limit_By_Length (A_Range, Int64 (Res_Len));
+                  Index_Type := Create_Range_Subtype_From_Type
+                    (Left_Index, Get_Location (Orig));
+                  Set_Range_Constraint (Index_Type, A_Range);
+                  Res_Type := Create_Unidim_Array_From_Index
+                    (Origin_Type, Index_Type, Orig);
+               end;
+            end if;
+         end if;
       end if;
+
+      for I in Ops_Val'Range loop
+         Free_Eval_Static_Expr (Ops_Val (I), Operands (I));
+      end loop;
+      Free_Eval_Static_Expr (Left_Val, Left_Op);
+
       --  FIXME: this is not necessarily a string, it may be an aggregate if
       --  element type is not a character type.
       return Build_Simple_Aggregate (Res_List, Orig, Res_Type, Res_Type);
@@ -1284,7 +1371,7 @@ package body Vhdl.Evaluation is
 
    --  ORIG is either a dyadic operator or a function call.
    function Eval_Dyadic_Operator (Orig : Iir; Imp : Iir; Left, Right : Iir)
-     return Iir
+                                 return Iir
    is
       pragma Unsuppress (Overflow_Check);
       Func : constant Iir_Predefined_Functions :=
@@ -1496,7 +1583,7 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_Array_Element_Concat
            | Iir_Predefined_Array_Array_Concat
            | Iir_Predefined_Element_Element_Concat =>
-            return Eval_Concatenation (Left, Right, Orig, Func);
+            raise Internal_Error;
 
          when Iir_Predefined_Enum_Equality
            | Iir_Predefined_Bit_Match_Equality =>
@@ -2631,21 +2718,27 @@ package body Vhdl.Evaluation is
             end;
          when Iir_Kinds_Dyadic_Operator =>
             declare
+               Imp : constant Iir := Get_Implementation (Expr);
                Left : constant Iir := Get_Left (Expr);
                Right : constant Iir := Get_Right (Expr);
                Left_Val, Right_Val : Iir;
                Res : Iir;
             begin
-               Left_Val := Eval_Static_Expr (Left);
-               Right_Val := Eval_Static_Expr (Right);
+               if (Get_Implicit_Definition (Imp)
+                     in Iir_Predefined_Concat_Functions)
+               then
+                  return Eval_Concatenation ((1 => Expr));
+               else
+                  Left_Val := Eval_Static_Expr (Left);
+                  Right_Val := Eval_Static_Expr (Right);
 
-               Res := Eval_Dyadic_Operator
-                 (Expr, Get_Implementation (Expr), Left_Val, Right_Val);
+                  Res := Eval_Dyadic_Operator (Expr, Imp, Left_Val, Right_Val);
 
-               Free_Eval_Static_Expr (Left_Val, Left);
-               Free_Eval_Static_Expr (Right_Val, Right);
+                  Free_Eval_Static_Expr (Left_Val, Left);
+                  Free_Eval_Static_Expr (Right_Val, Right);
 
-               return Res;
+                  return Res;
+               end if;
             end;
 
          when Iir_Kind_Attribute_Name =>
@@ -2874,16 +2967,22 @@ package body Vhdl.Evaluation is
                Imp : constant Iir := Get_Implementation (Expr);
                Left, Right : Iir;
             begin
-               --  Note: there can't be association by name.
-               Left := Get_Parameter_Association_Chain (Expr);
-               Right := Get_Chain (Left);
-
-               Left := Eval_Static_Expr (Get_Actual (Left));
-               if Right = Null_Iir then
-                  return Eval_Monadic_Operator (Expr, Left);
+               if (Get_Implicit_Definition (Imp)
+                     in Iir_Predefined_Concat_Functions)
+               then
+                  return Eval_Concatenation ((1 => Expr));
                else
-                  Right := Eval_Static_Expr (Get_Actual (Right));
-                  return Eval_Dyadic_Operator (Expr, Imp, Left, Right);
+                  --  Note: there can't be association by name.
+                  Left := Get_Parameter_Association_Chain (Expr);
+                  Right := Get_Chain (Left);
+
+                  Left := Eval_Static_Expr (Get_Actual (Left));
+                  if Right = Null_Iir then
+                     return Eval_Monadic_Operator (Expr, Left);
+                  else
+                     Right := Eval_Static_Expr (Get_Actual (Right));
+                     return Eval_Dyadic_Operator (Expr, Imp, Left, Right);
+                  end if;
                end if;
             end;
 
@@ -2982,7 +3081,7 @@ package body Vhdl.Evaluation is
    end Can_Eval_Value;
 
    --  For composite values.
-   --  Evluating a composite value is a trade-off: it can simplify the
+   --  Evaluating a composite value is a trade-off: it can simplify the
    --  generated code if the value is small enough, or it can be a bad idea if
    --  the value is very large.  It is very easy to create large static
    --  composite values (like: bit_vector'(1 to 10**4 => '0'))

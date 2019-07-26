@@ -1703,282 +1703,319 @@ package body Vhdl.Sem_Expr is
    --  Set when the -fexplicit option was adviced.
    Explicit_Advice_Given : Boolean := False;
 
-   function Sem_Operator (Expr : Iir; Res_Type : Iir; Arity : Positive)
-      return Iir
+   -- LEFT and RIGHT must be set.
+   function Set_Operator_Unique_Interpretation
+     (Expr : Iir; Decl : Iir) return Iir
    is
-      Operator : Name_Id;
-      Left, Right: Iir;
-      Interpretation : Name_Interpretation_Type;
-      Decl : Iir;
-      Overload_List : Iir_List;
-      Overload : Iir;
-      Res_Type_List : Iir;
-      Full_Compat : Iir;
-      It : List_Iterator;
-
-      -- LEFT and RIGHT must be set.
-      function Set_Uniq_Interpretation (Decl : Iir) return Iir
-      is
-         Interface_Chain : Iir;
-         Err : Boolean;
-      begin
-         Set_Type (Expr, Get_Return_Type (Decl));
-         Interface_Chain := Get_Interface_Declaration_Chain (Decl);
-         Err := False;
-         if Is_Overloaded (Left) then
-            Left := Sem_Expression_Ov
-              (Left, Get_Base_Type (Get_Type (Interface_Chain)));
-            if Left = Null_Iir then
+      Is_Dyadic : constant Boolean :=
+        Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator;
+      Interface_Chain : Iir;
+      Err : Boolean;
+      Left : Iir;
+      Right : Iir;
+   begin
+      Set_Type (Expr, Get_Return_Type (Decl));
+      Interface_Chain := Get_Interface_Declaration_Chain (Decl);
+      Err := False;
+      Left := Get_Left (Expr);
+      if Is_Overloaded (Left) then
+         Left := Sem_Expression_Ov
+           (Left, Get_Base_Type (Get_Type (Interface_Chain)));
+         if Left = Null_Iir then
+            Err := True;
+         else
+            Set_Left (Expr, Left);
+         end if;
+      end if;
+      Check_Read (Left);
+      if Is_Dyadic then
+         Right := Get_Right (Expr);
+         if Is_Overloaded (Right) then
+            Right := Sem_Expression_Ov
+              (Right, Get_Base_Type (Get_Type (Get_Chain (Interface_Chain))));
+            if Right = Null_Iir then
                Err := True;
             else
-               if Arity = 1 then
-                  Set_Operand (Expr, Left);
-               else
-                  Set_Left (Expr, Left);
-               end if;
+               Set_Right (Expr, Right);
             end if;
          end if;
-         Check_Read (Left);
-         if Arity = 2 then
-            if Is_Overloaded (Right) then
-               Right := Sem_Expression_Ov
-                 (Right,
-                  Get_Base_Type (Get_Type (Get_Chain (Interface_Chain))));
-               if Right = Null_Iir then
-                  Err := True;
-               else
-                  Set_Right (Expr, Right);
-               end if;
-            end if;
-            Check_Read (Right);
-         end if;
-         Destroy_Iir_List (Overload_List);
-         if not Err then
-            Set_Implementation (Expr, Decl);
-            Sem_Subprogram_Call_Finish (Expr, Decl);
-            return Eval_Expr_If_Static (Expr);
-         else
-            return Expr;
-         end if;
-      end Set_Uniq_Interpretation;
-
-      --  Note: operator and implementation node of expr must be set.
-      procedure Error_Operator_Overload (List : Iir_List) is
-      begin
-         Report_Start_Group;
-         Error_Msg_Sem (+Expr, "operator ""%i"" is overloaded", +Operator);
-         Disp_Overload_List (List, Expr);
-         Report_End_Group;
-      end Error_Operator_Overload;
-
-      Interface_Chain : Iir;
-   begin
-      if Arity = 1 then
-         Left := Get_Operand (Expr);
-         Right := Null_Iir;
-      else
-         Left := Get_Left (Expr);
-         Right := Get_Right (Expr);
+         Check_Read (Right);
       end if;
-      Operator := Utils.Get_Operator_Name (Expr);
+      if not Err then
+         Set_Implementation (Expr, Decl);
+         Sem_Subprogram_Call_Finish (Expr, Decl);
+         return Eval_Expr_If_Static (Expr);
+      else
+         return Expr;
+      end if;
+   end Set_Operator_Unique_Interpretation;
 
-      if Get_Type (Expr) = Null_Iir then
-         --  First pass.
-         --  Analyze operands.
-         --  FIXME: should try to analyze right operand even if analyze
-         --  of left operand has failed ??
-         if Get_Type (Left) = Null_Iir then
-            Left := Sem_Expression_Ov (Left, Null_Iir);
-            if Left = Null_Iir then
-               return Null_Iir;
-            end if;
-            if Arity = 1 then
-               Set_Operand (Expr, Left);
-            else
-               Set_Left (Expr, Left);
-            end if;
+   --  Display an error message for sem_operator.
+   procedure Error_Operator_Overload (Expr : Iir; List : Iir_List)
+   is
+      Operator : Name_Id;
+   begin
+      Operator := Utils.Get_Operator_Name (Expr);
+      Report_Start_Group;
+      Error_Msg_Sem (+Expr, "operator ""%i"" is overloaded", +Operator);
+      Disp_Overload_List (List, Expr);
+      Report_End_Group;
+   end Error_Operator_Overload;
+
+   --  Return False in case of error.
+   function Sem_Operator_Operands (Expr : Iir) return Boolean
+   is
+      Is_Dyadic : constant Boolean :=
+        Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator;
+      Left, Right: Iir;
+   begin
+      --  First pass.
+      --  Analyze operands.
+      --  FIXME: should try to analyze right operand even if analyze
+      --  of left operand has failed ??
+      Left := Get_Left (Expr);
+      if Get_Type (Left) = Null_Iir then
+         Left := Sem_Expression_Ov (Left, Null_Iir);
+         if Left = Null_Iir then
+            return False;
          end if;
-         if Arity = 2 and then Get_Type (Right) = Null_Iir then
+         Set_Left (Expr, Left);
+      end if;
+      if Is_Dyadic then
+         Right := Get_Right (Expr);
+         if Get_Type (Right) = Null_Iir then
             Right := Sem_Expression_Ov (Right, Null_Iir);
             if Right = Null_Iir then
-               return Null_Iir;
+               return False;
             end if;
             Set_Right (Expr, Right);
          end if;
+      end if;
+      return True;
+   end Sem_Operator_Operands;
 
-         Overload_List := Create_Iir_List;
+   function Sem_Operator_Pass1 (Expr : Iir; Res_Type : Iir) return Iir
+   is
+      Is_Dyadic : constant Boolean :=
+        Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator;
+      Operator : constant Name_Id := Utils.Get_Operator_Name (Expr);
+      Interpretation : Name_Interpretation_Type;
+      Decl : Iir;
+      Overload_List : Iir_List;
+      Res_Type_List : Iir;
+      It : List_Iterator;
 
-         --  Try to find an implementation among user defined function
-         Interpretation := Get_Interpretation (Operator);
-         while Valid_Interpretation (Interpretation) loop
-            Decl := Get_Non_Alias_Declaration (Interpretation);
+      Interfaces : Iir;
+   begin
+      --  First pass.
+      --  Analyze operands.
+      --  FIXME: should try to analyze right operand even if analyze
+      --  of left operand has failed ??
+      if not Sem_Operator_Operands (Expr) then
+         return Null_Iir;
+      end if;
 
-            --  It is compatible with operand types ?
-            pragma Assert (Is_Function_Declaration (Decl));
+      Overload_List := Create_Iir_List;
 
-            --  LRM08 12.3 Visibility
-            --  [...] or all visible declarations denote the same named entity.
+      --  Try to find an implementation among user defined function
+      Interpretation := Get_Interpretation (Operator);
+      while Valid_Interpretation (Interpretation) loop
+         Decl := Get_Non_Alias_Declaration (Interpretation);
+
+         --  It is compatible with operand types ?
+         pragma Assert (Is_Function_Declaration (Decl));
+
+         --  LRM08 12.3 Visibility
+         --  [...] or all visible declarations denote the same named entity.
+         --
+         --  GHDL: If DECL has already been seen, then skip it.
+         if Get_Seen_Flag (Decl) then
+            goto Continue;
+         end if;
+
+         --  Check return type.
+         if Res_Type /= Null_Iir
+           and then (Are_Types_Compatible (Res_Type, Get_Return_Type (Decl))
+                       = Not_Compatible)
+         then
+            goto Continue;
+         end if;
+
+         Interfaces := Get_Interface_Declaration_Chain (Decl);
+
+         --  Check arity.
+
+         --  LRM93 2.5.2 Operator overloading
+         --  The subprogram specification of a unary operator must have
+         --  a single parameter [...]
+         --  The subprogram specification of a binary operator must have
+         --  two parameters [...]
+         --
+         --  GHDL: So even in presence of default expression in a parameter,
+         --  a unary operation has to match with a binary operator.
+         if Get_Chain_Length (Interfaces) /= 1 + Boolean'Pos (Is_Dyadic) then
+            goto Continue;
+         end if;
+
+         -- Check operands.
+         if Is_Expr_Compatible (Get_Type (Interfaces), Get_Left (Expr))
+           = Not_Compatible
+         then
+            goto Continue;
+         end if;
+         if Is_Dyadic
+           and then (Is_Expr_Compatible (Get_Type (Get_Chain (Interfaces)),
+                                         Get_Right (Expr))
+                       = Not_Compatible)
+         then
+            goto Continue;
+         end if;
+
+         --  Match.
+         Set_Seen_Flag (Decl, True);
+         Append_Element (Overload_List, Decl);
+
+         << Continue >> null;
+         Interpretation := Get_Next_Interpretation (Interpretation);
+      end loop;
+
+      --  Clear seen_flags.
+      It := List_Iterate (Overload_List);
+      while Is_Valid (It) loop
+         Set_Seen_Flag (Get_Element (It), False);
+         Next (It);
+      end loop;
+
+      --  The list of possible implementations was computed.
+      case Get_Nbr_Elements (Overload_List) is
+         when 0 =>
+            if Get_Kind (Expr) = Iir_Kind_Implicit_Condition_Operator then
+               --  TODO: display expression type.
+               Error_Msg_Sem (+Expr, "cannot convert expression to boolean "
+                                & "(no ""??"" found)");
+            else
+               Error_Msg_Sem (+Expr,
+                              "no function declarations for %n", +Expr);
+            end if;
+            Destroy_Iir_List (Overload_List);
+            return Null_Iir;
+
+         when 1 =>
+            Decl := Get_First_Element (Overload_List);
+            Destroy_Iir_List (Overload_List);
+            return Set_Operator_Unique_Interpretation (Expr, Decl);
+
+         when others =>
+            --  Preference for universal operator.
+            --  This roughly corresponds to:
             --
-            --  GHDL: If DECL has already been seen, then skip it.
-            if Get_Seen_Flag (Decl) then
-               goto Continue;
+            --  LRM 7.3.5
+            --  An implicit conversion of a convertible universal operand
+            --  is applied if and only if the innermost complete context
+            --  determines a unique (numeric) target type for the implicit
+            --  conversion, and there is no legal interpretation of this
+            --  context without this conversion.
+            if Is_Dyadic then
+               Decl := Get_Non_Implicit_Subprogram (Overload_List);
+               if Decl /= Null_Iir then
+                  Destroy_Iir_List (Overload_List);
+                  return Set_Operator_Unique_Interpretation (Expr, Decl);
+               end if;
             end if;
 
-            --  Check return type.
-            if Res_Type /= Null_Iir
-              and then (Are_Types_Compatible (Res_Type, Get_Return_Type (Decl))
-                          = Not_Compatible)
+            Set_Implementation (Expr, Create_Overload_List (Overload_List));
+
+            --  Create the list of possible return types, if it is not yet
+            --  determined.
+            if Res_Type = Null_Iir then
+               Res_Type_List := Create_List_Of_Types (Overload_List);
+               if Is_Overload_List (Res_Type_List) then
+                  --  There are many possible return types.
+                  --  Try again.
+                  Set_Type (Expr, Res_Type_List);
+                  return Expr;
+               end if;
+            end if;
+
+            --  The return type is known.
+            --  Search for explicit subprogram.
+
+            --  It was impossible to find one solution.
+            Error_Operator_Overload (Expr, Overload_List);
+
+            --  Give an advice.
+            if not Flags.Flag_Explicit
+              and then not Explicit_Advice_Given
+              and then Flags.Vhdl_Std < Vhdl_08
             then
-               goto Continue;
-            end if;
-
-            Interface_Chain := Get_Interface_Declaration_Chain (Decl);
-
-            --  Check arity.
-
-            --  LRM93 2.5.2 Operator overloading
-            --  The subprogram specification of a unary operator must have
-            --  a single parameter [...]
-            --  The subprogram specification of a binary operator must have
-            --  two parameters [...]
-            --
-            --  GHDL: So even in presence of default expression in a parameter,
-            --  a unary operation has to match with a binary operator.
-            if Get_Chain_Length (Interface_Chain) /= Arity then
-               goto Continue;
-            end if;
-
-            -- Check operands.
-            if Is_Expr_Compatible (Get_Type (Interface_Chain), Left)
-              = Not_Compatible
-            then
-               goto Continue;
-            end if;
-            if Arity = 2 then
-               if Is_Expr_Compatible (Get_Type (Get_Chain (Interface_Chain)),
-                                      Right)
-                 = Not_Compatible
-               then
-                  goto Continue;
+               Decl := Get_Explicit_Subprogram (Overload_List);
+               if Decl /= Null_Iir then
+                  Error_Msg_Sem
+                    (+Expr, "(you may want to use the -fexplicit option)");
+                  Explicit_Advice_Given := True;
                end if;
             end if;
 
-            --  Match.
-            Set_Seen_Flag (Decl, True);
-            Append_Element (Overload_List, Decl);
+            return Null_Iir;
+      end case;
+   end Sem_Operator_Pass1;
 
-            << Continue >> null;
-            Interpretation := Get_Next_Interpretation (Interpretation);
-         end loop;
-
-         --  Clear seen_flags.
-         It := List_Iterate (Overload_List);
-         while Is_Valid (It) loop
-            Set_Seen_Flag (Get_Element (It), False);
-            Next (It);
-         end loop;
-
-         --  The list of possible implementations was computed.
-         case Get_Nbr_Elements (Overload_List) is
-            when 0 =>
-               if Get_Kind (Expr) = Iir_Kind_Implicit_Condition_Operator then
-                  --  TODO: display expression type.
-                  Error_Msg_Sem (+Expr, "cannot convert expression to boolean "
-                                   & "(no ""??"" found)");
-               else
-                  Error_Msg_Sem (+Expr,
-                                 "no function declarations for %n", +Expr);
-               end if;
-               Destroy_Iir_List (Overload_List);
+   function Sem_Operator_Pass2_Interpretation
+     (Expr : Iir; Res_Type : Iir) return Iir
+   is
+      Decl : Iir;
+      Overload : Iir;
+      Overload_List : Iir_List;
+      Full_Compat : Iir;
+      It : List_Iterator;
+   begin
+      --  Second pass
+      --  Find the uniq implementation for this call.
+      Overload := Get_Implementation (Expr);
+      Overload_List := Get_Overload_List (Overload);
+      Full_Compat := Null_Iir;
+      It := List_Iterate (Overload_List);
+      while Is_Valid (It) loop
+         Decl := Get_Element (It);
+         --  FIXME: wrong: compatibilty with return type and args.
+         if Are_Types_Compatible (Get_Return_Type (Decl), Res_Type)
+           /= Not_Compatible
+         then
+            if Full_Compat /= Null_Iir then
+               Error_Operator_Overload (Expr, Overload_List);
                return Null_Iir;
-
-            when 1 =>
-               Decl := Get_First_Element (Overload_List);
-               return Set_Uniq_Interpretation (Decl);
-
-            when others =>
-               --  Preference for universal operator.
-               --  This roughly corresponds to:
-               --
-               --  LRM 7.3.5
-               --  An implicit conversion of a convertible universal operand
-               --  is applied if and only if the innermost complete context
-               --  determines a unique (numeric) target type for the implicit
-               --  conversion, and there is no legal interpretation of this
-               --  context without this conversion.
-               if Arity = 2 then
-                  Decl := Get_Non_Implicit_Subprogram (Overload_List);
-                  if Decl /= Null_Iir then
-                     return Set_Uniq_Interpretation (Decl);
-                  end if;
-               end if;
-
-               Set_Implementation (Expr, Create_Overload_List (Overload_List));
-
-               --  Create the list of possible return types, if it is not yet
-               --  determined.
-               if Res_Type = Null_Iir then
-                  Res_Type_List := Create_List_Of_Types (Overload_List);
-                  if Is_Overload_List (Res_Type_List) then
-                     --  There are many possible return types.
-                     --  Try again.
-                     Set_Type (Expr, Res_Type_List);
-                     return Expr;
-                  end if;
-               end if;
-
-               --  The return type is known.
-               --  Search for explicit subprogram.
-
-               --  It was impossible to find one solution.
-               Error_Operator_Overload (Overload_List);
-
-               --  Give an advice.
-               if not Flags.Flag_Explicit
-                 and then not Explicit_Advice_Given
-                 and then Flags.Vhdl_Std < Vhdl_08
-               then
-                  Decl := Get_Explicit_Subprogram (Overload_List);
-                  if Decl /= Null_Iir then
-                     Error_Msg_Sem
-                       (+Expr, "(you may want to use the -fexplicit option)");
-                     Explicit_Advice_Given := True;
-                  end if;
-               end if;
-
-               return Null_Iir;
-         end case;
+            else
+               Full_Compat := Decl;
+            end if;
+         end if;
+         Next (It);
+      end loop;
+      Free_Iir (Overload);
+      Overload := Get_Type (Expr);
+      Free_Overload_List (Overload);
+      Destroy_Iir_List (Overload_List);
+      if Full_Compat = Null_Iir then
+         Error_Msg_Sem (+Expr,
+                        "no matching function declarations for %n", +Expr);
+         return Null_Iir;
       else
-         --  Second pass
-         --  Find the uniq implementation for this call.
-         Overload := Get_Implementation (Expr);
-         Overload_List := Get_Overload_List (Overload);
-         Full_Compat := Null_Iir;
-         It := List_Iterate (Overload_List);
-         while Is_Valid (It) loop
-            Decl := Get_Element (It);
-            --  FIXME: wrong: compatibilty with return type and args.
-            if Are_Types_Compatible (Get_Return_Type (Decl), Res_Type)
-              /= Not_Compatible
-            then
-               if Full_Compat /= Null_Iir then
-                  Error_Operator_Overload (Overload_List);
-                  return Null_Iir;
-               else
-                  Full_Compat := Decl;
-               end if;
-            end if;
-            Next (It);
-         end loop;
-         Free_Iir (Overload);
-         Overload := Get_Type (Expr);
-         Free_Overload_List (Overload);
-         if Full_Compat = Null_Iir then
-            Error_Msg_Sem (+Expr,
-                           "no matching function declarations for %n", +Expr);
+         Destroy_Iir_List (Overload_List);
+         return Full_Compat;
+      end if;
+   end Sem_Operator_Pass2_Interpretation;
+
+   function Sem_Operator (Expr : Iir; Res_Type : Iir) return Iir
+   is
+      Interpretation : Iir;
+   begin
+      if Get_Type (Expr) = Null_Iir then
+         return Sem_Operator_Pass1 (Expr, Res_Type);
+      else
+         Interpretation := Sem_Operator_Pass2_Interpretation (Expr, Res_Type);
+         if Interpretation = Null_Iir then
             return Null_Iir;
          else
-            return Set_Uniq_Interpretation (Full_Compat);
+            return Set_Operator_Unique_Interpretation (Expr, Interpretation);
          end if;
       end if;
    end Sem_Operator;
@@ -4372,6 +4409,138 @@ package body Vhdl.Sem_Expr is
       end if;
    end Check_Constant_Restriction;
 
+   function Sem_Dyadic_Operator (Expr : Iir; Atype : Iir) return Iir
+   is
+      Arr : Iir_Array (1 .. 128);
+      Len : Natural;
+   begin
+      --  Try to linearize the tree in order to reduce recursion depth
+      --  and also improve speed of evaluation.
+      --  This is particularly useful for repeated concatenations.
+      declare
+         Left : Iir;
+      begin
+         Len := 0;
+         Left := Expr;
+         while Len < Arr'Last
+           and then Get_Kind (Left) in Iir_Kinds_Dyadic_Operator
+         loop
+            Len := Len + 1;
+            Arr (Len) := Left;
+            Left := Get_Left (Left);
+         end loop;
+      end;
+
+      --  No possibility to linearize...
+      if Len = 1 then
+         return Sem_Operator (Expr, Atype);
+      end if;
+
+      if Get_Type (Expr) = Null_Iir then
+         --  First pass.
+         Arr (Len) := Sem_Operator_Pass1 (Arr (Len), Null_Iir);
+         if Arr (Len) = Null_Iir then
+            return Null_Iir;
+         end if;
+         for I in reverse 2 .. Len - 1 loop
+            Set_Left (Arr (I), Arr (I + 1));
+            Arr (I) := Sem_Operator_Pass1 (Arr (I), Null_Iir);
+            if Arr (I) = Null_Iir then
+               return Null_Iir;
+            end if;
+         end loop;
+         Set_Left (Arr (1), Arr (2));
+         Arr (1) := Sem_Operator_Pass1 (Arr (1), Atype);
+         return Arr (1);
+      else
+         --  Second pass.
+         declare
+            Op_Type : Iir;
+            Decl : Iir;
+            Interfaces : Iir;
+            Left, Right : Iir;
+            Is_All_Concat : Boolean;
+            Imp : Iir;
+            Err : Boolean;
+         begin
+            Op_Type := Atype;
+            Err := False;
+            for I in 1 .. Len loop
+               if not Is_Overloaded (Arr (I)) then
+                  pragma Assert (I > 1);
+                  exit;
+               end if;
+               Decl := Sem_Operator_Pass2_Interpretation
+                 (Arr (I), Op_Type);
+               if Decl = Null_Iir then
+                  --  Stop in case of error.
+                  return Null_Iir;
+               end if;
+               Set_Type (Arr (I), Get_Return_Type (Decl));
+               Set_Implementation (Arr (I), Decl);
+               Interfaces := Get_Interface_Declaration_Chain (Decl);
+               Op_Type := Get_Base_Type (Get_Type (Interfaces));
+
+               --  Right operand.
+               Right := Get_Right (Arr (I));
+               if Is_Overloaded (Right) then
+                  Right := Get_Right (Arr (I));
+                  Right := Sem_Expression_Ov
+                    (Right,
+                     Get_Base_Type (Get_Type (Get_Chain (Interfaces))));
+                  if Right = Null_Iir then
+                     Err := True;
+                  else
+                     Set_Right (Arr (I), Right);
+                  end if;
+               end if;
+               Check_Read (Right);
+            end loop;
+
+            Left := Get_Left (Arr (Len));
+            if Is_Overloaded (Left) then
+               Left := Sem_Expression_Ov
+                 (Left, Get_Base_Type (Get_Type (Interfaces)));
+               if Left = Null_Iir then
+                  Err := True;
+               else
+                  Set_Left (Arr (Len), Left);
+               end if;
+            end if;
+
+            --  Finish
+
+            if not Err then
+               Is_All_Concat := True;
+               for I in reverse 1 .. Len loop
+                  Imp := Get_Implementation (Arr (I));
+                  Sem_Subprogram_Call_Finish (Arr (I), Imp);
+                  Is_All_Concat := Is_All_Concat
+                    and then (Get_Implicit_Definition (Imp)
+                                in Iir_Predefined_Concat_Functions);
+               end loop;
+               if Get_Expr_Staticness (Arr (1)) = Locally then
+                  if Is_All_Concat
+                  then
+                     Arr (1) := Eval_Concatenation (Arr (1 .. Len));
+                  else
+                     Arr (1) := Eval_Expr_If_Static (Arr (1));
+                  end if;
+               else
+                  for I in reverse 1 .. Len loop
+                     exit when Get_Expr_Staticness (Arr (I)) /= Locally;
+                     Arr (I) := Eval_Expr_If_Static (Arr (I));
+                     if I > 1 then
+                        Set_Left (Arr (I - 1), Arr (I));
+                     end if;
+                  end loop;
+               end if;
+            end if;
+            return Arr (1);
+         end;
+      end if;
+   end Sem_Dyadic_Operator;
+
    -- Set semantic to EXPR.
    --  Replace simple_name with the referenced node,
    --  Set type to nodes,
@@ -4438,10 +4607,10 @@ package body Vhdl.Sem_Expr is
             return Expr;
 
          when Iir_Kinds_Monadic_Operator =>
-            return Sem_Operator (Expr, A_Type, 1);
+            return Sem_Operator (Expr, A_Type);
 
          when Iir_Kinds_Dyadic_Operator =>
-            return Sem_Operator (Expr, A_Type, 2);
+            return Sem_Dyadic_Operator (Expr, A_Type);
 
          when Iir_Kind_Enumeration_Literal
            | Iir_Kinds_Object_Declaration =>
@@ -5185,7 +5354,7 @@ package body Vhdl.Sem_Expr is
       Location_Copy (Op, Cond);
       Set_Operand (Op, Cond);
 
-      Res := Sem_Operator (Op, Boolean_Type_Definition, 1);
+      Res := Sem_Operator (Op, Boolean_Type_Definition);
       Check_Read (Res);
       return Res;
    end Insert_Condition_Operator;

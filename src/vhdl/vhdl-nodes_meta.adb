@@ -9692,7 +9692,19 @@ package body Vhdl.Nodes_Meta is
    function Has_Left (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_And_Operator
+         when Iir_Kind_Identity_Operator
+           | Iir_Kind_Negation_Operator
+           | Iir_Kind_Absolute_Operator
+           | Iir_Kind_Not_Operator
+           | Iir_Kind_Implicit_Condition_Operator
+           | Iir_Kind_Condition_Operator
+           | Iir_Kind_Reduction_And_Operator
+           | Iir_Kind_Reduction_Or_Operator
+           | Iir_Kind_Reduction_Nand_Operator
+           | Iir_Kind_Reduction_Nor_Operator
+           | Iir_Kind_Reduction_Xor_Operator
+           | Iir_Kind_Reduction_Xnor_Operator
+           | Iir_Kind_And_Operator
            | Iir_Kind_Or_Operator
            | Iir_Kind_Nand_Operator
            | Iir_Kind_Nor_Operator

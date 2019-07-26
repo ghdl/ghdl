@@ -3540,6 +3540,7 @@ package Vhdl.Nodes is
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Operand (Field2)
+   --   Get/Set_Left (Alias Field2)
    --
    --  Function declaration corresponding to the function to call.
    --   Get/Set_Implementation (Field3)
