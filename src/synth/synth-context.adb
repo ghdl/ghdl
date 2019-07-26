@@ -121,7 +121,7 @@ package body Synth.Context is
                end if;
             end;
          when others =>
-            raise Internal_Error;
+            Error_Kind ("alloc_object", Obj_Type);
       end case;
    end Alloc_Object;
 

@@ -492,37 +492,42 @@ package body Synth.Expr is
           Uns32 (Len)));
    end Synth_Bounds_From_Range;
 
+   function Synth_Aggregate_Array (Syn_Inst : Synth_Instance_Acc;
+                                   Aggr : Node;
+                                   Aggr_Type : Node) return Value_Acc
+   is
+      Ndims : constant Natural := Get_Nbr_Dimensions (Aggr_Type);
+      Bnds : Value_Bound_Array_Acc;
+      Res : Value_Acc;
+   begin
+      --  Allocate the result.
+      Bnds := Create_Value_Bound_Array (Iir_Index32 (Ndims));
+      for I in 1 .. Ndims loop
+         Bnds.D (Iir_Index32 (I)) :=
+           Synth_Array_Bounds (Syn_Inst, Aggr_Type, I - 1);
+      end loop;
+      Res := Create_Value_Array (Bnds);
+      Create_Array_Data (Res);
+
+      Fill_Array_Aggregate (Syn_Inst, Aggr, Res, 0);
+
+      if Is_Vector_Type (Aggr_Type) then
+         Res := Vectorize_Array (Res, Get_Element_Subtype (Aggr_Type));
+      end if;
+
+      return Res;
+   end Synth_Aggregate_Array;
+
+   --  Aggr_Type is the type from the context.
    function Synth_Aggregate (Syn_Inst : Synth_Instance_Acc;
                              Aggr : Node;
                              Aggr_Type : Node) return Value_Acc is
    begin
       case Get_Kind (Aggr_Type) is
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Array_Subtype_Definition =>
-            if not Is_Vector_Type (Aggr_Type) then
-               --  TODO: generalize, in particular multi-dim arrays.
-               raise Internal_Error;
-            end if;
-            declare
-               Bnd : Value_Bound_Acc;
-               Bnds : Value_Bound_Array_Acc;
-               Res : Value_Acc;
-            begin
-               --  Create bounds.
-               Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 0);
-               --  Allocate result
-               Bnds := Create_Value_Bound_Array (1);
-               Bnds.D (1) := Bnd;
-               Res := Create_Value_Array (Bnds);
-               Create_Array_Data (Res);
-               Fill_Array_Aggregate (Syn_Inst, Aggr, Res, 0);
-               if Is_Vector_Type (Aggr_Type) then
-                  --  Vectorize
-                  Res := Vectorize_Array
-                    (Res, Get_Element_Subtype (Aggr_Type));
-               end if;
-               return Res;
-            end;
+         when Iir_Kind_Array_Type_Definition =>
+            return Synth_Aggregate_Array (Syn_Inst, Aggr, Get_Type (Aggr));
+         when Iir_Kind_Array_Subtype_Definition =>
+            return Synth_Aggregate_Array (Syn_Inst, Aggr, Aggr_Type);
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             raise Internal_Error;
