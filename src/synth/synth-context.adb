@@ -122,15 +122,13 @@ package body Synth.Context is
          when Iir_Kind_Integer_Subtype_Definition =>
             declare
                Rng : Value_Acc;
-               W : Width;
                Bnd : Value_Bound_Acc;
             begin
                Rng := Get_Value (Syn_Inst, Obj_Type);
-               W := Get_Range_Width (Rng.Rng);
                Bnd := Create_Value_Bound ((Dir => Iir_Downto,
-                                           Left => Int32 (W - 1),
+                                           Left => Int32 (Rng.Rng.W - 1),
                                            Right => 0,
-                                           Len => W));
+                                           Len => Rng.Rng.W));
                return Alloc_Wire (Kind, Obj, Bnd);
             end;
          when others =>

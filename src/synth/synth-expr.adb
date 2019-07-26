@@ -22,6 +22,7 @@ with Ada.Unchecked_Conversion;
 with Types_Utils; use Types_Utils;
 with Std_Names;
 with Str_Table;
+with Mutils; use Mutils;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -426,7 +427,49 @@ package body Synth.Expr is
                Error_Msg_Synth (+Rng, "limits of range are not constant");
                return null;
             end if;
-            Res := Create_Value_Range ((Get_Direction (Rng), L.Scal, R.Scal));
+            declare
+               V : Value_Range_Type;
+               Lo, Hi : Int64;
+            begin
+               V.Dir := Get_Direction (Rng);
+               V.Left := L.Scal;
+               V.Right := R.Scal;
+
+               case V.Dir is
+                  when Iir_To =>
+                     Lo := V.Left;
+                     Hi := V.Right;
+                  when Iir_Downto =>
+                     Lo := V.Right;
+                     Hi := V.Left;
+               end case;
+               if Lo > Hi then
+                  --  Null range.
+                  V.Is_Signed := False;
+                  V.W := 0;
+               elsif Lo >= 0 then
+                  --  Positive.
+                  V.Is_Signed := False;
+                  V.W := Width (Clog2 (Uns64 (Hi)));
+               elsif Lo = Int64'First then
+                  --  Handle possible overflow.
+                  V.Is_Signed := True;
+                  V.W := 64;
+               elsif Hi < 0 then
+                  --  Negative only.
+                  V.Is_Signed := True;
+                  V.W := Width (Clog2 (Uns64 (-Lo))) + 1;
+               else
+                  declare
+                     Wl : constant Width := Width (Clog2 (Uns64 (-Lo)));
+                     Wh : constant Width := Width (Clog2 (Uns64 (Hi)));
+                  begin
+                     V.Is_Signed := True;
+                     V.W := Width'Max (Wl, Wh) + 1;
+                  end;
+               end if;
+               Res := Create_Value_Range (V);
+            end;
          when Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Floating_Subtype_Definition =>
             Res := Create_Value_Fp_Range ((Get_Direction (Rng), L.Fp, R.Fp));

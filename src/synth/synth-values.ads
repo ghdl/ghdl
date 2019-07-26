@@ -79,7 +79,13 @@ package Synth.Values is
    type Value_Array_Acc is access Value_Array_Type;
 
    type Value_Range_Type is record
+      --  An integer range.
       Dir : Iir_Direction;
+
+      --  Netlist representation: signed or unsigned, width of bus.
+      Is_Signed : Boolean;
+      W : Width;
+
       Left : Int64;
       Right : Int64;
    end record;

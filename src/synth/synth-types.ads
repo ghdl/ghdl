@@ -18,8 +18,6 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Netlists; use Netlists;
-with Synth.Values; use Synth.Values;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Types is
@@ -27,8 +25,4 @@ package Synth.Types is
    function Is_Bit_Type (Atype : Node) return Boolean;
 
    function Is_Vector_Type (Atype : Node) return Boolean;
-
-   --  Number of bits for RNG.
-   function Get_Range_Width (Rng : Value_Range_Type) return Width;
-
 end Synth.Types;
