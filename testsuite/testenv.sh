@@ -9,7 +9,7 @@
 
 # User defined variables (can be set to run the testsuite in some
 #  configuration, such as optimization or debugging):
-# GHDL_STD_FLAG
+# GHDL_STD_FLAGS
 # GHDL_FLAGS
 # GHDL_ELABFLAGS
 # GHDL_SIMFLAGS
