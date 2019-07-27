@@ -41,7 +41,7 @@ package Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
 
    --  For iterators.
-   function In_Range (Rng : Value_Acc; V : Int64) return Boolean;
-   procedure Update_Index (Rng : Value_Acc; Idx : in out Int64);
+   function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
+   procedure Update_Index (Rng : Discrete_Range_Type; Idx : in out Int64);
 
 end Synth.Stmts;

@@ -74,7 +74,7 @@ package body Synth.Insts is
          when Value_Wire =>
             Idx := Idx + 1;
             Ports (Idx) := (Name => Name,
-                            W => Get_Bound_Width (Val.W_Bound),
+                            W => Get_Type_Width (Val.Typ),
                             Dir => Dir);
          when others =>
             raise Internal_Error; --  TODO
@@ -297,8 +297,7 @@ package body Synth.Insts is
                Connect
                  (Get_Input (Inst, Nbr_Inputs),
                   Get_Net (Synth_Expression_With_Type
-                             (Syn_Inst, Actual, Get_Type (Assoc_Inter)),
-                           Get_Type (Assoc_Inter)));
+                             (Syn_Inst, Actual, Get_Type (Assoc_Inter))));
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
@@ -422,11 +421,7 @@ package body Synth.Insts is
          when Value_Wire =>
             --  Create a gate for the output, so that it could be read.
             Val.W := Alloc_Wire (Wire_Output, Inter);
-            if Val.W_Bound = null then
-               W := 1;
-            else
-               W := Val.W_Bound.Len;
-            end if;
+            W := Get_Type_Width (Val.Typ);
             Value := Builders.Build_Signal
               (Build_Context, New_Sname (No_Sname, Get_Identifier (Inter)), W);
             Set_Wire_Gate (Val.W, Value);
@@ -677,8 +672,7 @@ package body Synth.Insts is
             --  Create a gate for the output, so that it could be read.
             Val.W := Alloc_Wire (Wire_Output, Inter);
             W := Get_Output_Desc (Get_Module (Self_Inst), Idx).W;
-            pragma Assert ((W = 1 and then Val.W_Bound = null)
-                           or else (W /= 1 and then W = Val.W_Bound.Len));
+            pragma Assert (W = Get_Type_Width (Val.Typ));
             Value := Builders.Build_Output (Build_Context, W);
             Set_Location (Value, Inter);
             Inp := Get_Input (Self_Inst, Idx);

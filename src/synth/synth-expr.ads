@@ -32,10 +32,10 @@ package Synth.Expr is
    procedure Set_Location (N : Net; Loc : Node);
    pragma Inline (Set_Location);
 
-   procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx  : out Uns32);
+   procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32);
    procedure From_Bit (Enum : Int64; Val : out Uns32);
    procedure To_Logic
-     (Enum : Int64; Etype : Node; Val : out Uns32; Zx  : out Uns32);
+     (Enum : Int64; Etype : Type_Acc; Val : out Uns32; Zx : out Uns32);
 
    function Bit_Extract (Val : Value_Acc; Off : Uns32; Loc : Node)
                         return Value_Acc;
@@ -55,14 +55,18 @@ package Synth.Expr is
                              return Value_Acc;
 
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
-                                     Atype : Node) return Value_Bound_Acc;
+                                     Atype : Node) return Bound_Type;
 
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;
-                                Dim : Natural) return Value_Bound_Acc;
+                                Dim : Natural) return Bound_Type;
 
-   function Synth_Range_Expression
-     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Value_Acc;
+   function Synth_Discrete_Range_Expression
+     (L : Int64; R : Int64; Dir : Iir_Direction) return Discrete_Range_Type;
+   function Synth_Discrete_Range_Expression
+     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type;
+   function Synth_Float_Range_Expression
+     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type;
 
    --  Convert index IDX in PFX to an offset.  LOC is used in case of error.
    function Index_To_Offset (Pfx : Value_Acc; Idx : Int64; Loc : Node)
@@ -70,8 +74,8 @@ package Synth.Expr is
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
-                                 Pfx_Bnd : Value_Bound_Acc;
-                                 Res_Bnd : out Value_Bound_Acc;
+                                 Pfx_Bnd : Type_Acc;
+                                 Res_Bnd : out Type_Acc;
                                  Inp : out Net;
                                  Step : out Uns32;
                                  Off : out Int32;

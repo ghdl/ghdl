@@ -42,6 +42,7 @@ package Vhdl.Annotations is
       Kind_Bit_Type, Kind_Log_Type,
       Kind_E8_Type, Kind_E32_Type, Kind_I64_Type, Kind_F64_Type,
       Kind_File_Type,
+      Kind_Type,
       Kind_Object, Kind_Signal,
       Kind_File,
       Kind_Terminal, Kind_Quantity,
@@ -111,7 +112,8 @@ package Vhdl.Annotations is
            | Kind_File
            | Kind_Terminal
            | Kind_Quantity
-           | Kind_PSL =>
+           | Kind_PSL
+           | Kind_Type =>
             --  Block in which this object is declared in.
             Obj_Scope : Sim_Info_Acc;
 
@@ -123,7 +125,7 @@ package Vhdl.Annotations is
            | Kind_E8_Type
            | Kind_E32_Type
            | Kind_I64_Type
-           | Kind_F64_Type=>
+           | Kind_F64_Type =>
             Width : Uns32;
 
          when Kind_File_Type =>

@@ -89,10 +89,13 @@ package Synth.Context is
    --  Get the value of OBJ.
    function Get_Value (Syn_Inst : Synth_Instance_Acc; Obj : Iir)
                       return Value_Acc;
+   --  Wrapper around Get_Value for types.
+   function Get_Value_Type (Syn_Inst : Synth_Instance_Acc; Atype : Iir)
+                           return Type_Acc;
 
    --  Get a net from a scalar/vector value.  This will automatically create
    --  a net for literals.
-   function Get_Net (Val : Value_Acc; Vtype : Node) return Net;
+   function Get_Net (Val : Value_Acc) return Net;
 
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc;

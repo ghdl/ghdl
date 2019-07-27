@@ -23,8 +23,6 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Tables;
 with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Std_Package;
-with Vhdl.Ieee.Std_Logic_1164;
 with Netlists.Builders; use Netlists.Builders;
 
 with Synth.Types; use Synth.Types;
@@ -69,7 +67,7 @@ package body Synth.Context is
       return Create_Value_Instance (Packages_Table.Last);
    end Create_Value_Instance;
 
-   function Alloc_Wire (Kind : Wire_Kind; Obj : Iir; Bnd : Value_Bound_Acc)
+   function Alloc_Wire (Kind : Wire_Kind; Obj : Iir; Wtype : Type_Acc)
                        return Value_Acc
    is
       Wire : Wire_Id;
@@ -79,7 +77,7 @@ package body Synth.Context is
       else
          Wire := Alloc_Wire (Kind, Obj);
       end if;
-      return Create_Value_Wire (Wire, Bnd);
+      return Create_Value_Wire (Wire, Wtype);
    end Alloc_Wire;
 
    function Alloc_Object (Kind : Wire_Kind;
@@ -88,33 +86,20 @@ package body Synth.Context is
                          return Value_Acc
    is
       Obj_Type : constant Iir := Get_Type (Obj);
+      Otype : Type_Acc;
    begin
       case Get_Kind (Obj_Type) is
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
-            declare
-               Info : constant Sim_Info_Acc :=
-                 Get_Info (Get_Base_Type (Obj_Type));
-               Rng : Value_Bound_Acc;
-            begin
-               if Is_Bit_Type (Obj_Type) then
-                  Rng := null;
-               else
-                  Rng := Create_Value_Bound
-                    ((Dir => Iir_Downto,
-                      Left => Int32 (Info.Width - 1),
-                      Right => 0,
-                      Len => Info.Width));
-               end if;
-               return Alloc_Wire (Kind, Obj, Rng);
-            end;
+            Otype := Get_Value_Type (Syn_Inst, Get_Type (Obj));
+            return Alloc_Wire (Kind, Obj, Otype);
          when Iir_Kind_Array_Subtype_Definition =>
             declare
-               Bounds : Value_Bound_Acc;
+               Bnd : Value_Acc;
             begin
-               Bounds := Synth_Array_Bounds (Syn_Inst, Obj_Type, 0);
+               Bnd := Get_Value (Syn_Inst, Obj_Type);
                if Is_Vector_Type (Obj_Type) then
-                  return Alloc_Wire (Kind, Obj, Bounds);
+                  return Alloc_Wire (Kind, Obj, Bnd.Typ);
                else
                   raise Internal_Error;
                end if;
@@ -122,14 +107,9 @@ package body Synth.Context is
          when Iir_Kind_Integer_Subtype_Definition =>
             declare
                Rng : Value_Acc;
-               Bnd : Value_Bound_Acc;
             begin
                Rng := Get_Value (Syn_Inst, Obj_Type);
-               Bnd := Create_Value_Bound ((Dir => Iir_Downto,
-                                           Left => Int32 (Rng.Rng.W - 1),
-                                           Right => 0,
-                                           Len => Rng.Rng.W));
-               return Alloc_Wire (Kind, Obj, Bnd);
+               return Alloc_Wire (Kind, Obj, Rng.Typ);
             end;
          when others =>
             Error_Kind ("alloc_object", Obj_Type);
@@ -245,7 +225,16 @@ package body Synth.Context is
       return Obj_Inst.Objects (Info.Slot);
    end Get_Value;
 
-   function Get_Net (Val : Value_Acc; Vtype : Node) return Net is
+   function Get_Value_Type (Syn_Inst : Synth_Instance_Acc; Atype : Iir)
+                           return Type_Acc
+   is
+      Val : Value_Acc;
+   begin
+      Val := Get_Value (Syn_Inst, Atype);
+      return Val.Typ;
+   end Get_Value_Type;
+
+   function Get_Net (Val : Value_Acc) return Net is
    begin
       case Val.Kind is
          when Value_Wire =>
@@ -254,60 +243,44 @@ package body Synth.Context is
             return Val.N;
          when Value_Mux2 =>
             declare
-               Cond : constant Net :=
-                 Get_Net (Val.M_Cond,
-                          Vhdl.Std_Package.Boolean_Type_Definition);
+               Cond : constant Net := Get_Net (Val.M_Cond);
             begin
                return Build_Mux2 (Ctxt => Build_Context, Sel => Cond,
-                                  I0 => Get_Net (Val.M_F, Vtype),
-                                  I1 => Get_Net (Val.M_T, Vtype));
+                                  I0 => Get_Net (Val.M_F),
+                                  I1 => Get_Net (Val.M_T));
             end;
          when Value_Discrete =>
             declare
-               Btype : constant Node := Get_Base_Type (Vtype);
                Va : Uns32;
                Zx : Uns32;
             begin
-               if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
+               if Val.Typ = Logic_Type then
                   From_Std_Logic (Val.Scal, Va, Zx);
                   if Zx = 0 then
                      return Build_Const_UB32 (Build_Context, Va, 1);
                   else
                      return Build_Const_UL32 (Build_Context, Va, Zx, 1);
                   end if;
-               elsif Btype = Vhdl.Std_Package.Boolean_Type_Definition
-                 or else Btype = Vhdl.Std_Package.Bit_Type_Definition
-               then
+               elsif Val.Typ = Boolean_Type then
                   From_Bit (Val.Scal, Va);
                   return Build_Const_UB32 (Build_Context, Va, 1);
-               elsif Get_Kind (Btype) = Iir_Kind_Enumeration_Type_Definition
-               then
-                  return Build_Const_UB32 (Build_Context, Uns32 (Val.Scal),
-                                           Get_Info (Btype).Width);
                else
-                  if Val.Scal >= 0 then
-                     --  FIXME: check width.
-                     return Build_Const_UB32
-                       (Build_Context, Uns32 (Val.Scal), 32);
-                  else
-                     --  Need Sconst32/Sconst64
-                     raise Internal_Error;
-                  end if;
+                  return Build_Const_UB32
+                    (Build_Context, Uns32 (Val.Scal), Val.Typ.Drange.W);
                end if;
             end;
          when Value_Array =>
-            if Val.Bounds.D (1).Len <= 32 then
+            if Val.Typ.Vbound.Len <= 32 then
                declare
                   Len : constant Iir_Index32 :=
-                    Iir_Index32 (Val.Bounds.D (1).Len);
-                  Etype : constant Node := Get_Element_Subtype (Vtype);
+                    Iir_Index32 (Val.Typ.Vbound.Len);
                   R_Val, R_Zx : Uns32;
                   V, Zx : Uns32;
                begin
                   R_Val := 0;
                   R_Zx := 0;
                   for I in 1 .. Len loop
-                     To_Logic (Val.Arr.V (I).Scal, Etype, V, Zx);
+                     To_Logic (Val.Arr.V (I).Scal, Val.Typ.Vec_El, V, Zx);
                      R_Val := R_Val or Shift_Left (V, Natural (Len - I));
                      R_Zx := R_Zx or Shift_Left (Zx, Natural (Len - I));
                   end loop;

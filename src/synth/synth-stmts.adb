@@ -69,11 +69,11 @@ package body Synth.Stmts is
         (Syn_Inst, Get_We_Value (Wf), Targ_Type);
    end Synth_Waveform;
 
-   procedure Synth_Assign (Dest : Value_Acc; Val : Value_Acc; Vtype : Node) is
+   procedure Synth_Assign (Dest : Value_Acc; Val : Value_Acc) is
    begin
       case Dest.Kind is
          when Value_Wire =>
-            Phi_Assign (Dest.W, Get_Net (Val, Vtype));
+            Phi_Assign (Dest.W, Get_Net (Val));
          when others =>
             raise Internal_Error;
       end case;
@@ -84,7 +84,7 @@ package body Synth.Stmts is
                                          Val : Value_Acc)
    is
       Targ_Type : constant Node := Get_Type (Target);
-      Bnd : Value_Bound_Acc;
+      Bnd : Bound_Type;
       Choice : Node;
       Assoc : Node;
       Pos : Uns32;
@@ -121,8 +121,7 @@ package body Synth.Stmts is
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration =>
-            Synth_Assign (Get_Value (Syn_Inst, Target),
-                          Val, Get_Type (Target));
+            Synth_Assign (Get_Value (Syn_Inst, Target), Val);
          when Iir_Kind_Aggregate =>
             Synth_Assignment_Aggregate (Syn_Inst, Target, Val);
          when Iir_Kind_Indexed_Name =>
@@ -149,21 +148,20 @@ package body Synth.Stmts is
                   --  FIXME: check index.
                   Targ_Net := Get_Last_Assigned_Value (Targ.W);
                   V := Build_Insert (Build_Context,
-                                     Targ_Net,
-                                     Get_Net (Val, Get_Type (Target)),
+                                     Targ_Net, Get_Net (Val),
                                      Index_To_Offset (Targ, Idx.Scal, Target));
                   Set_Location (V, Target);
                else
                   raise Internal_Error;
                end if;
-               Synth_Assign (Targ, Create_Value_Net (V, null), Get_Type (Pfx));
+               Synth_Assign (Targ, Create_Value_Net (V, Targ.Typ));
             end;
          when Iir_Kind_Slice_Name =>
             declare
                Pfx : constant Node := Get_Prefix (Target);
                Targ : constant Value_Acc :=
                  Get_Value (Syn_Inst, Get_Base_Name (Pfx));
-               Res_Bnd : Value_Bound_Acc;
+               Res_Bnd : Type_Acc;
                Targ_Net : Net;
                Inp : Net;
                Step : Uns32;
@@ -179,7 +177,7 @@ package body Synth.Stmts is
                Synth_Slice_Suffix (Syn_Inst, Target, Extract_Bound (Targ),
                                    Res_Bnd, Inp, Step, Off, Wd);
                Targ_Net := Get_Last_Assigned_Value (Targ.W);
-               V := Get_Net (Val, Get_Type (Target));
+               V := Get_Net (Val);
                if Inp /= No_Net then
                   Res := Build_Dyn_Insert
                     (Build_Context, Targ_Net, V, Inp, Step, Off);
@@ -188,8 +186,7 @@ package body Synth.Stmts is
                     (Build_Context, Targ_Net, V, Uns32 (Off));
                end if;
                Set_Location (Res, Target);
-               Synth_Assign
-                 (Targ, Create_Value_Net (Res, Res_Bnd), Get_Type (Pfx));
+               Synth_Assign (Targ, Create_Value_Net (Res, Res_Bnd));
             end;
          when others =>
             Error_Kind ("synth_assignment", Target);
@@ -298,8 +295,7 @@ package body Synth.Stmts is
          end if;
          Pop_Phi (Phi_False);
 
-         Merge_Phis (Build_Context, Get_Net (Cond_Val, Get_Type (Cond)),
-                     Phi_True, Phi_False);
+         Merge_Phis (Build_Context, Get_Net (Cond_Val), Phi_True, Phi_False);
       end if;
    end Synth_If_Statement;
 
@@ -725,7 +721,7 @@ package body Synth.Stmts is
       --    Build mux2/mux4 tree (group by 4)
       Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
 
-      Sel_Net := Get_Net (Sel, Get_Type (Expr));
+      Sel_Net := Get_Net (Sel);
 
       --  For each wire, compute the result.
       for I in Wires'Range loop
@@ -833,8 +829,7 @@ package body Synth.Stmts is
 
             Alts (Alt_Idx).Val := Get_Net
               (Synth_Waveform
-                 (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type),
-               Targ_Type);
+                 (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type));
          end if;
 
          case Get_Kind (Choice) is
@@ -877,7 +872,7 @@ package body Synth.Stmts is
       --    Build mux2/mux4 tree (group by 4)
       Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
 
-      Sel_Net := Get_Net (Sel, Get_Type (Expr));
+      Sel_Net := Get_Net (Sel);
 
       declare
          Res : Net;
@@ -1033,19 +1028,19 @@ package body Synth.Stmts is
       Areapools.Release (M, Instance_Pool.all);
    end Synth_Procedure_Call;
 
-   function In_Range (Rng : Value_Acc; V : Int64) return Boolean is
+   function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean is
    begin
-      case Rng.Rng.Dir is
+      case Rng.Dir is
          when Iir_To =>
-            return V >= Rng.Rng.Left and then V <= Rng.Rng.Right;
+            return V >= Rng.Left and then V <= Rng.Right;
          when Iir_Downto =>
-            return V <= Rng.Rng.Left and then V >= Rng.Rng.Right;
+            return V <= Rng.Left and then V >= Rng.Right;
       end case;
    end In_Range;
 
-   procedure Update_Index (Rng : Value_Acc; Idx : in out Int64) is
+   procedure Update_Index (Rng : Discrete_Range_Type; Idx : in out Int64) is
    begin
-      case Rng.Rng.Dir is
+      case Rng.Dir is
          when Iir_To =>
             Idx := Idx + 1;
          when Iir_Downto =>
@@ -1058,23 +1053,22 @@ package body Synth.Stmts is
    is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
-      It_Rng : Value_Acc;
-      It_Type : Node;
+      It_Type : constant Node := Get_Declaration_Type (Iterator);
+      It_Rng : Type_Acc;
       Val : Value_Acc;
    begin
-      It_Type := Get_Declaration_Type (Iterator);
       if It_Type /= Null_Node then
          Synth_Subtype_Indication (Syn_Inst, It_Type);
       end if;
 
       --  Initial value.
-      It_Rng := Get_Value (Syn_Inst, Get_Type (Iterator));
-      Val := Create_Value_Discrete (It_Rng.Rng.Left);
+      It_Rng := Get_Value_Type (Syn_Inst, Get_Type (Iterator));
+      Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
       Create_Object (Syn_Inst, Iterator, Val);
 
-      while In_Range (It_Rng, Val.Scal) loop
+      while In_Range (It_Rng.Drange, Val.Scal) loop
          Synth_Sequential_Statements (Syn_Inst, Stmts);
-         Update_Index (It_Rng, Val.Scal);
+         Update_Index (It_Rng.Drange, Val.Scal);
       end loop;
       Destroy_Object (Syn_Inst, Iterator);
       if It_Type /= Null_Node then
@@ -1163,7 +1157,7 @@ package body Synth.Stmts is
       Push_Phi;
       Pop_Phi (Phi_False);
 
-      Merge_Phis (Build_Context, Get_Net (Cond_Val, Get_Type (Cond)),
+      Merge_Phis (Build_Context, Get_Net (Cond_Val),
                   Phi_True, Phi_False);
    end Synth_Process_Sequential_Statements;
 
@@ -1218,7 +1212,7 @@ package body Synth.Stmts is
          end if;
          return;
       end if;
-      Build_Assert (Build_Context, Get_Net (Val, Get_Type (Cond)));
+      Build_Assert (Build_Context, Get_Net (Val));
    end Synth_Concurrent_Assertion_Statement;
 
    function Synth_PSL_Expression
@@ -1231,7 +1225,7 @@ package body Synth.Stmts is
             declare
                E : constant Vhdl.Types.Vhdl_Node := Get_HDL_Node (Expr);
             begin
-               return Get_Net (Synth_Expression (Syn_Inst, E), Get_Type (E));
+               return Get_Net (Synth_Expression (Syn_Inst, E));
             end;
          when N_Not_Bool =>
             return Build_Monadic
@@ -1365,21 +1359,20 @@ package body Synth.Stmts is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
       Bod : constant Node := Get_Generate_Statement_Body (Stmt);
       Configs : constant Node := Get_Generate_Block_Configuration (Bod);
+      It_Type : constant Node := Get_Declaration_Type (Iterator);
       Config : Node;
-      It_Rng : Value_Acc;
-      It_Type : Node;
+      It_Rng : Type_Acc;
       Val : Value_Acc;
    begin
-      It_Type := Get_Declaration_Type (Iterator);
       if It_Type /= Null_Node then
          Synth_Subtype_Indication (Syn_Inst, It_Type);
       end if;
 
       --  Initial value.
-      It_Rng := Get_Value (Syn_Inst, Get_Type (Iterator));
-      Val := Create_Value_Discrete (It_Rng.Rng.Left);
+      It_Rng := Get_Value_Type (Syn_Inst, Get_Type (Iterator));
+      Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
 
-      while In_Range (It_Rng, Val.Scal) loop
+      while In_Range (It_Rng.Drange, Val.Scal) loop
          --  Find and apply the config block.
          declare
             Spec : Node;
@@ -1402,7 +1395,7 @@ package body Synth.Stmts is
          end;
 
          Synth_Generate_Statement_Body (Syn_Inst, Bod, Iterator, Val);
-         Update_Index (It_Rng, Val.Scal);
+         Update_Index (It_Rng.Drange, Val.Scal);
       end loop;
    end Synth_For_Generate_Statement;
 

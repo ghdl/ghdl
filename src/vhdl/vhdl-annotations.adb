@@ -54,6 +54,11 @@ package body Vhdl.Annotations is
    begin
       Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
       case Obj_Kind is
+         when Kind_Type =>
+            Info := new Sim_Info_Type'(Kind => Kind_Type,
+                                       Ref => Obj,
+                                       Obj_Scope => Block_Info,
+                                       Slot => Block_Info.Nbr_Objects);
          when Kind_Object =>
             Info := new Sim_Info_Type'(Kind => Kind_Object,
                                        Ref => Obj,
@@ -272,41 +277,45 @@ package body Vhdl.Annotations is
 
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            declare
-               Info : Sim_Info_Acc;
-               Nbr_Enums : Natural;
-            begin
-               if Def = Vhdl.Std_Package.Boolean_Type_Definition
-                 or else Def = Vhdl.Std_Package.Bit_Type_Definition
-               then
-                  Info := new Sim_Info_Type'(Kind => Kind_Bit_Type,
-                                             Ref => Def,
-                                             Width => 1);
-               elsif Def = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
-                 or else Def = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
-               then
-                  Info := new Sim_Info_Type'(Kind => Kind_Log_Type,
-                                             Ref => Def,
-                                             Width => 1);
-               else
-                  Nbr_Enums := Get_Nbr_Elements
-                    (Get_Enumeration_Literal_List (Def));
-                  if Nbr_Enums <= 256 then
-                     Info := new Sim_Info_Type'(Kind => Kind_E8_Type,
+            if Flag_Synthesis then
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            else
+               declare
+                  Info : Sim_Info_Acc;
+                  Nbr_Enums : Natural;
+               begin
+                  if Def = Vhdl.Std_Package.Boolean_Type_Definition
+                    or else Def = Vhdl.Std_Package.Bit_Type_Definition
+                  then
+                     Info := new Sim_Info_Type'(Kind => Kind_Bit_Type,
                                                 Ref => Def,
-                                                Width => 0);
+                                                Width => 1);
+                  elsif Def = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
+                    or else Def = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
+                  then
+                     Info := new Sim_Info_Type'(Kind => Kind_Log_Type,
+                                                Ref => Def,
+                                                Width => 1);
                   else
-                     Info := new Sim_Info_Type'(Kind => Kind_E32_Type,
-                                                Ref => Def,
-                                                Width => 0);
+                     Nbr_Enums := Get_Nbr_Elements
+                       (Get_Enumeration_Literal_List (Def));
+                     if Nbr_Enums <= 256 then
+                        Info := new Sim_Info_Type'(Kind => Kind_E8_Type,
+                                                   Ref => Def,
+                                                   Width => 0);
+                     else
+                        Info := new Sim_Info_Type'(Kind => Kind_E32_Type,
+                                                   Ref => Def,
+                                                   Width => 0);
+                     end if;
                   end if;
-               end if;
-               Set_Info (Def, Info);
-               if not Flag_Synthesis then
-                  Annotate_Range_Expression
-                    (Block_Info, Get_Range_Constraint (Def));
-               end if;
-            end;
+                  Set_Info (Def, Info);
+                  if not Flag_Synthesis then
+                     Annotate_Range_Expression
+                       (Block_Info, Get_Range_Constraint (Def));
+                  end if;
+               end;
+            end if;
 
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
@@ -336,23 +345,35 @@ package body Vhdl.Annotations is
                end case;
             end if;
             if Flag_Synthesis then
-               Create_Object_Info (Block_Info, Def);
+               Create_Object_Info (Block_Info, Def, Kind_Type);
             end if;
 
          when Iir_Kind_Integer_Type_Definition =>
-            Set_Info (Def, new Sim_Info_Type'(Kind => Kind_I64_Type,
-                                              Ref => Def,
-                                              Width => 0));
+            if Flag_Synthesis then
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            else
+               Set_Info (Def, new Sim_Info_Type'(Kind => Kind_I64_Type,
+                                                 Ref => Def,
+                                                 Width => 0));
+            end if;
 
          when Iir_Kind_Floating_Type_Definition =>
-            Set_Info (Def, new Sim_Info_Type'(Kind => Kind_F64_Type,
-                                              Ref => Def,
-                                              Width => 0));
+            if Flag_Synthesis then
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            else
+               Set_Info (Def, new Sim_Info_Type'(Kind => Kind_F64_Type,
+                                                 Ref => Def,
+                                                 Width => 0));
+            end if;
 
          when Iir_Kind_Physical_Type_Definition =>
-            Set_Info (Def, new Sim_Info_Type'(Kind => Kind_I64_Type,
-                                              Ref => Def,
-                                              Width => 0));
+            if Flag_Synthesis then
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            else
+               Set_Info (Def, new Sim_Info_Type'(Kind => Kind_I64_Type,
+                                                 Ref => Def,
+                                                 Width => 0));
+            end if;
 
          when Iir_Kind_Array_Type_Definition =>
             El := Get_Element_Subtype (Def);
@@ -365,7 +386,7 @@ package body Vhdl.Annotations is
             end if;
             if Flag_Synthesis then
                --  For the bounds.
-               Create_Object_Info (Block_Info, Def);
+               Create_Object_Info (Block_Info, Def, Kind_Type);
             else
                declare
                   List : constant Iir_Flist := Get_Index_Subtype_List (Def);
@@ -1253,7 +1274,7 @@ package body Vhdl.Annotations is
             Put_Line
               ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
 
-         when Kind_Object | Kind_Signal | Kind_File
+         when Kind_Type | Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal
            | Kind_Quantity
            | Kind_PSL =>
@@ -1290,7 +1311,7 @@ package body Vhdl.Annotations is
                when others =>
                   null;
             end case;
-         when Kind_Object | Kind_Signal | Kind_File
+         when Kind_Type | Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal | Kind_Quantity
            | Kind_PSL =>
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot));

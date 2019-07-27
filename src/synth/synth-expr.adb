@@ -69,7 +69,7 @@ package body Synth.Expr is
       case Val.Kind is
          when Value_Wire
            | Value_Net =>
-            return Get_Width (Get_Net (Val, Null_Node));
+            return Get_Width (Get_Net (Val));
          when others =>
             raise Internal_Error; --  TODO
       end case;
@@ -126,15 +126,11 @@ package body Synth.Expr is
    end From_Bit;
 
    procedure To_Logic
-     (Enum : Int64; Etype : Node; Val : out Uns32; Zx  : out Uns32)
-   is
-      Btype : constant Node := Get_Base_Type (Etype);
+     (Enum : Int64; Etype : Type_Acc; Val : out Uns32; Zx  : out Uns32) is
    begin
-      if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
+      if Etype = Logic_Type then
          From_Std_Logic (Enum, Val, Zx);
-      elsif Btype = Vhdl.Std_Package.Boolean_Type_Definition
-        or else Btype = Vhdl.Std_Package.Bit_Type_Definition
-      then
+      elsif Etype = Boolean_Type then
          From_Bit (Enum, Val);
          Zx := 0;
       else
@@ -149,18 +145,37 @@ package body Synth.Expr is
    begin
       case Val.Kind is
          when Value_Array =>
-            pragma Assert (Val.Bounds.D (1).Len >= Off);
-            return Val.Arr.V (Iir_Index32 (Val.Bounds.D (1).Len - Off));
+            pragma Assert (Val.Typ.Vbound.Len >= Off);
+            return Val.Arr.V (Iir_Index32 (Val.Typ.Vbound.Len - Off));
          when Value_Net
            | Value_Wire =>
-            N := Build_Extract_Bit
-              (Build_Context, Get_Net (Val, Null_Node), Off);
+            N := Build_Extract_Bit (Build_Context, Get_Net (Val), Off);
             Set_Location (N, Loc);
-            return Create_Value_Net (N, No_Bound);
+            return Create_Value_Net (N, Val.Typ.Vec_El);
          when others =>
             raise Internal_Error;
       end case;
    end Bit_Extract;
+
+   function Dyn_Bit_Extract (Val : Value_Acc; Off : Net; Loc : Node)
+                        return Value_Acc
+   is
+      N : Net;
+   begin
+      case Val.Kind is
+--         when Value_Array =>
+--            pragma Assert (Val.Bounds.D (1).Len >= Off);
+--            return Val.Arr.V (Iir_Index32 (Val.Bounds.D (1).Len - Off));
+         when Value_Net
+           | Value_Wire =>
+            N := Build_Dyn_Extract
+              (Build_Context, Get_Net (Val), Off, 1, 0, 1);
+            Set_Location (N, Loc);
+            return Create_Value_Net (N, Val.Typ.Vec_El);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Dyn_Bit_Extract;
 
    function Synth_Uresize (N : Net; W : Width) return Net
    is
@@ -185,13 +200,11 @@ package body Synth.Expr is
          return Build_Const_UB32
            (Build_Context, Uns32 (Val.Scal), W);
       end if;
-      return Synth_Uresize (Get_Net (Val, Vtype), W);
+      return Synth_Uresize (Get_Net (Val), W);
    end Synth_Uresize;
 
-   function Get_Index_Offset (Index: Value_Acc;
-                              Bounds: Value_Bound_Acc;
-                              Expr: Iir)
-                             return Uns32 is
+   function Get_Index_Offset
+     (Index : Value_Acc; Bounds : Bound_Type; Expr : Iir) return Uns32 is
    begin
       if Index.Kind = Value_Discrete then
          declare
@@ -223,7 +236,7 @@ package body Synth.Expr is
                                    Res : Value_Acc;
                                    Dim : Natural)
    is
-      Bound : constant Value_Bound_Acc := Res.Bounds.D (1);
+      Bound : constant Bound_Type := Res.Typ.Abounds.D (1);
       Aggr_Type : constant Node := Get_Type (Aggr);
       El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
       Nbr_Dims : constant Natural := Get_Nbr_Dimensions (Aggr_Type);
@@ -276,7 +289,7 @@ package body Synth.Expr is
                      Idx : Value_Acc;
                   begin
                      Idx := Synth_Expression_With_Type
-                       (Syn_Inst, Ch, Idx_Type);
+                       (Syn_Inst, Ch, Get_Base_Type (Idx_Type));
                      if not Is_Const (Idx) then
                         Error_Msg_Synth (+Ch, "choice is not static");
                      else
@@ -286,11 +299,13 @@ package body Synth.Expr is
                when Iir_Kind_Choice_By_Range =>
                   declare
                      Ch : constant Node := Get_Choice_Range (Assoc);
-                     Rng : Value_Acc;
+                     Rng : Discrete_Range_Type;
                      Val : Value_Acc;
                   begin
-                     Rng := Synth_Range_Expression (Syn_Inst, Ch);
-                     Val := Create_Value_Discrete (Rng.Rng.Left);
+                     Rng := Synth_Discrete_Range_Expression (Syn_Inst, Ch);
+                     Val := Create_Value_Discrete
+                       (Rng.Left,
+                        Get_Value_Type (Syn_Inst, Get_Type (Ch)));
                      while In_Range (Rng, Val.Scal) loop
                         Set_Elem (Get_Index_Offset (Val, Bound, Ch));
                         Update_Index (Rng, Val.Scal);
@@ -377,14 +392,14 @@ package body Synth.Expr is
               and then Is_Const (Val.Arr.V (Idx))
               and then Is_Bit_Type (Etype)
             loop
-               To_Logic (Val.Arr.V (Idx).Scal, Etype, B_Va, B_Zx);
+               To_Logic (Val.Arr.V (Idx).Scal, Val.Typ.Arr_El, B_Va, B_Zx);
                W_Zx := W_Zx or Shift_Left (B_Zx, Off);
                W_Va := W_Va or Shift_Left (B_Va, Off);
                Off := Off + 1;
                Idx := Idx - 1;
             end loop;
             if Off = 0 then
-               E := Get_Net (Val.Arr.V (Idx), Etype);
+               E := Get_Net (Val.Arr.V (Idx));
                Idx := Idx - 1;
             else
                if W_Zx = 0 then
@@ -401,100 +416,108 @@ package body Synth.Expr is
       end loop;
 
       Concat_Array (Arr (1 .. Len));
-      Res := Create_Value_Net (Arr (1), Val.Bounds.D (1));
+      Res := Create_Value_Net (Arr (1), Val.Typ);
 
       Free_Net_Array (Arr);
 
       return Res;
    end Vectorize_Array;
 
-   function Synth_Range_Expression
-     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Value_Acc
+   function Synth_Discrete_Range_Expression
+     (L : Int64; R : Int64; Dir : Iir_Direction) return Discrete_Range_Type
+   is
+      V : Discrete_Range_Type;
+      Lo, Hi : Int64;
+   begin
+      V.Dir := Dir;
+      V.Left := L;
+      V.Right := R;
+
+      case V.Dir is
+         when Iir_To =>
+            Lo := V.Left;
+            Hi := V.Right;
+         when Iir_Downto =>
+            Lo := V.Right;
+            Hi := V.Left;
+      end case;
+      if Lo > Hi then
+         --  Null range.
+         V.Is_Signed := False;
+         V.W := 0;
+      elsif Lo >= 0 then
+         --  Positive.
+         V.Is_Signed := False;
+         V.W := Width (Clog2 (Uns64 (Hi)));
+      elsif Lo = Int64'First then
+         --  Handle possible overflow.
+         V.Is_Signed := True;
+         V.W := 64;
+      elsif Hi < 0 then
+         --  Negative only.
+         V.Is_Signed := True;
+         V.W := Width (Clog2 (Uns64 (-Lo))) + 1;
+      else
+         declare
+            Wl : constant Width := Width (Clog2 (Uns64 (-Lo)));
+            Wh : constant Width := Width (Clog2 (Uns64 (Hi)));
+         begin
+            V.Is_Signed := True;
+            V.W := Width'Max (Wl, Wh) + 1;
+         end;
+      end if;
+      return V;
+   end Synth_Discrete_Range_Expression;
+
+   function Synth_Discrete_Range_Expression
+     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
    is
       L, R : Value_Acc;
-      Res : Value_Acc;
    begin
       L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng));
       R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng));
-      case Get_Kind (Get_Type (Rng)) is
-         when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Integer_Subtype_Definition
-           | Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Physical_Type_Definition
-           | Iir_Kind_Physical_Subtype_Definition =>
-            if not (Is_Const (L) and Is_Const (R)) then
-               Error_Msg_Synth (+Rng, "limits of range are not constant");
-               return null;
-            end if;
-            declare
-               V : Value_Range_Type;
-               Lo, Hi : Int64;
-            begin
-               V.Dir := Get_Direction (Rng);
-               V.Left := L.Scal;
-               V.Right := R.Scal;
 
-               case V.Dir is
-                  when Iir_To =>
-                     Lo := V.Left;
-                     Hi := V.Right;
-                  when Iir_Downto =>
-                     Lo := V.Right;
-                     Hi := V.Left;
-               end case;
-               if Lo > Hi then
-                  --  Null range.
-                  V.Is_Signed := False;
-                  V.W := 0;
-               elsif Lo >= 0 then
-                  --  Positive.
-                  V.Is_Signed := False;
-                  V.W := Width (Clog2 (Uns64 (Hi)));
-               elsif Lo = Int64'First then
-                  --  Handle possible overflow.
-                  V.Is_Signed := True;
-                  V.W := 64;
-               elsif Hi < 0 then
-                  --  Negative only.
-                  V.Is_Signed := True;
-                  V.W := Width (Clog2 (Uns64 (-Lo))) + 1;
-               else
-                  declare
-                     Wl : constant Width := Width (Clog2 (Uns64 (-Lo)));
-                     Wh : constant Width := Width (Clog2 (Uns64 (Hi)));
-                  begin
-                     V.Is_Signed := True;
-                     V.W := Width'Max (Wl, Wh) + 1;
-                  end;
-               end if;
-               Res := Create_Value_Range (V);
-            end;
-         when Iir_Kind_Floating_Type_Definition
-           | Iir_Kind_Floating_Subtype_Definition =>
-            Res := Create_Value_Fp_Range ((Get_Direction (Rng), L.Fp, R.Fp));
-         when others =>
-            Error_Kind ("synth_range_expression", Get_Type (Rng));
-      end case;
-      return Res;
-   end Synth_Range_Expression;
+      if not (Is_Const (L) and Is_Const (R)) then
+         Error_Msg_Synth (+Rng, "limits of range are not constant");
+         raise Internal_Error;
+      end if;
 
-   function Synth_Range (Syn_Inst : Synth_Instance_Acc; Bound : Node)
-                         return Value_Acc is
+      return Synth_Discrete_Range_Expression
+        (L.Scal, R.Scal, Get_Direction (Rng));
+   end Synth_Discrete_Range_Expression;
+
+   function Synth_Float_Range_Expression
+     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type
+   is
+      L, R : Value_Acc;
+   begin
+      L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng));
+      R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng));
+      return ((Get_Direction (Rng), L.Fp, R.Fp));
+   end Synth_Float_Range_Expression;
+
+   function Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc; Bound : Node)
+                                 return Discrete_Range_Type is
    begin
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
-            return Synth_Range_Expression (Syn_Inst, Bound);
+            return Synth_Discrete_Range_Expression (Syn_Inst, Bound);
          when Iir_Kind_Integer_Subtype_Definition =>
-            return Synth_Range (Syn_Inst, Get_Range_Constraint (Bound));
+            if Get_Type_Declarator (Bound) /= Null_Node then
+               --  This is a named subtype, so it has been evaluated.
+               return Get_Value_Type (Syn_Inst, Bound).Drange;
+            else
+               return Synth_Discrete_Range
+                 (Syn_Inst, Get_Range_Constraint (Bound));
+            end if;
          when others =>
-            Error_Kind ("synth_range", Bound);
+            Error_Kind ("synth_discrete_range", Bound);
       end case;
-   end Synth_Range;
+   end Synth_Discrete_Range;
 
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;
-                                Dim : Natural) return Value_Bound_Acc
+                                Dim : Natural) return Bound_Type
    is
       Info : constant Sim_Info_Acc := Get_Info (Atype);
    begin
@@ -509,30 +532,30 @@ package body Synth.Expr is
          declare
             Bnds : constant Value_Acc := Get_Value (Syn_Inst, Atype);
          begin
-            return Bnds.Bnds.D (Iir_Index32 (Dim) + 1);
+            return Bnds.Typ.Vbound;
          end;
       end if;
    end Synth_Array_Bounds;
 
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
-                                     Atype : Node) return Value_Bound_Acc
+                                     Atype : Node) return Bound_Type
    is
-      Rng : Value_Acc;
+      Rng : Discrete_Range_Type;
       Len : Int64;
    begin
-      Rng := Synth_Range (Syn_Inst, Atype);
-      case Rng.Rng.Dir is
+      Rng := Synth_Discrete_Range (Syn_Inst, Atype);
+      case Rng.Dir is
          when Iir_To =>
-            Len := Rng.Rng.Right - Rng.Rng.Left + 1;
+            Len := Rng.Right - Rng.Left + 1;
          when Iir_Downto =>
-            Len := Rng.Rng.Left - Rng.Rng.Right + 1;
+            Len := Rng.Left - Rng.Right + 1;
       end case;
       if Len < 0 then
          Len := 0;
       end if;
-      return Create_Value_Bound
-        ((Rng.Rng.Dir, Int32 (Rng.Rng.Left), Int32 (Rng.Rng.Right),
-          Uns32 (Len)));
+      return (Dir => Rng.Dir, W => Width (Clog2 (Uns64 (Len))),
+              Left => Int32 (Rng.Left), Right => Int32 (Rng.Right),
+              Len => Uns32 (Len));
    end Synth_Bounds_From_Range;
 
    function Synth_Aggregate_Array (Syn_Inst : Synth_Instance_Acc;
@@ -540,17 +563,20 @@ package body Synth.Expr is
                                    Aggr_Type : Node) return Value_Acc
    is
       Ndims : constant Natural := Get_Nbr_Dimensions (Aggr_Type);
-      Bnds : Value_Bound_Array_Acc;
+      El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
+      Bnds : Bound_Array_Acc;
+      Res_Type : Type_Acc;
       Res : Value_Acc;
    begin
       --  Allocate the result.
-      Bnds := Create_Value_Bound_Array (Iir_Index32 (Ndims));
+      Bnds := Create_Bound_Array (Iir_Index32 (Ndims));
       for I in 1 .. Ndims loop
          Bnds.D (Iir_Index32 (I)) :=
            Synth_Array_Bounds (Syn_Inst, Aggr_Type, I - 1);
       end loop;
-      Res := Create_Value_Array (Bnds);
-      Create_Array_Data (Res);
+      Res_Type := Create_Array_Type
+        (Bnds, Get_Value (Syn_Inst, El_Type).Typ);
+      Res := Create_Value_Array (Res_Type);
 
       Fill_Array_Aggregate (Syn_Inst, Aggr, Res, 0);
 
@@ -579,84 +605,74 @@ package body Synth.Expr is
       end case;
    end Synth_Aggregate;
 
-   function Synth_Bit_Eq_Const
-     (Cst : Value_Acc; Expr : Value_Acc; Etype : Node; Loc : Node)
-     return Value_Acc
+   function Synth_Bit_Eq_Const (Cst : Value_Acc; Expr : Value_Acc; Loc : Node)
+                               return Value_Acc
    is
       Val : Uns32;
       Zx : Uns32;
       N : Net;
    begin
-      To_Logic (Cst.Scal, Etype, Val, Zx);
+      To_Logic (Cst.Scal, Cst.Typ, Val, Zx);
       if Zx /= 0 then
          N := Build_Const_UL32 (Build_Context, 0, 1, 1);
          Set_Location (N, Loc);
-         return Create_Value_Net (N, No_Bound);
+         return Create_Value_Net (N, Boolean_Type);
       elsif Val = 1 then
          return Expr;
       else
          pragma Assert (Val = 0);
-         N := Build_Monadic (Build_Context, Id_Not, Get_Net (Expr, Etype));
+         N := Build_Monadic (Build_Context, Id_Not, Get_Net (Expr));
          Set_Location (N, Loc);
-         return Create_Value_Net (N, No_Bound);
+         return Create_Value_Net (N, Boolean_Type);
       end if;
    end Synth_Bit_Eq_Const;
 
    --  Create the result range of an operator.  According to the ieee standard,
    --  the range is LEN-1 downto 0.
-   function Create_Res_Bound (Prev : Value_Acc; N : Net) return Value_Bound_Acc
+   function Create_Res_Bound (Prev : Value_Acc; N : Net) return Type_Acc
    is
-      Res : Value_Bound_Acc;
+      Res : Type_Acc;
       Wd : Width;
    begin
-      case Prev.Kind is
-         when Value_Net
-           | Value_Wire =>
-            Res := Extract_Bound (Prev);
-         when others =>
-            raise Internal_Error;
-      end case;
+      Res := Prev.Typ;
 
-      if Res /= No_Bound
-        and then Res.Dir = Iir_Downto
-        and then Res.Right = 0
+      if Res.Vbound.Dir = Iir_Downto
+        and then Res.Vbound.Right = 0
       then
          --  Normalized range
          return Res;
       end if;
 
       Wd := Get_Width (N);
-      return Create_Value_Bound ((Dir => Iir_Downto,
-                                  Left => Int32 (Wd - 1),
-                                  Right => 0,
-                                  Len => Wd));
+      return Create_Vec_Type_By_Length (Wd, Res.Vec_El);
    end Create_Res_Bound;
 
    function Create_Bounds_From_Length
      (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)
-     return Value_Bound_Acc
+     return Bound_Type
    is
-      Res : Value_Bound_Acc;
-      Index_Bounds : Value_Acc;
+      Res : Bound_Type;
+      Index_Bounds : Discrete_Range_Type;
    begin
-      Index_Bounds := Synth_Range (Syn_Inst, Atype);
+      Index_Bounds := Synth_Discrete_Range (Syn_Inst, Atype);
 
-      Res := Create_Value_Bound ((Left => Int32 (Index_Bounds.Rng.Left),
-                                  Right => 0,
-                                  Dir => Index_Bounds.Rng.Dir,
-                                  Len => Uns32 (Len)));
+      Res := (Left => Int32 (Index_Bounds.Left),
+              Right => 0,
+              Dir => Index_Bounds.Dir,
+              W => Width (Len),
+              Len => Uns32 (Len));
 
       if Len = 0 then
          --  Special case.
          Res.Right := Res.Left;
-         case Index_Bounds.Rng.Dir is
+         case Index_Bounds.Dir is
             when Iir_To =>
                Res.Left := Res.Right + 1;
             when Iir_Downto =>
                Res.Left := Res.Right - 1;
          end case;
       else
-         case Index_Bounds.Rng.Dir is
+         case Index_Bounds.Dir is
             when Iir_To =>
                Res.Right := Res.Left + Int32 (Len - 1);
             when Iir_Downto =>
@@ -682,9 +698,9 @@ package body Synth.Expr is
          N : Net;
       begin
          N := Build_Dyadic (Build_Context, Id,
-                            Get_Net (Left, Ltype), Get_Net (Right, Rtype));
+                            Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
-         return Create_Value_Net (N, No_Bound);
+         return Create_Value_Net (N, Left.Typ);
       end Synth_Bit_Dyadic;
 
       function Synth_Compare (Id : Compare_Module_Id) return Value_Acc
@@ -692,9 +708,9 @@ package body Synth.Expr is
          N : Net;
       begin
          N := Build_Compare (Build_Context, Id,
-                             Get_Net (Left, Ltype), Get_Net (Right, Rtype));
+                             Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
-         return Create_Value_Net (N, No_Bound);
+         return Create_Value_Net (N, Boolean_Type);
       end Synth_Compare;
 
       function Synth_Compare_Uns_Nat (Id : Compare_Module_Id)
@@ -704,17 +720,17 @@ package body Synth.Expr is
       begin
          N := Synth_Uresize (Right, Rtype, Get_Width (Left));
          Set_Location (N, Expr);
-         N := Build_Compare (Build_Context, Id, Get_Net (Left, Ltype), N);
+         N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
          Set_Location (N, Expr);
-         return Create_Value_Net (N, No_Bound);
+         return Create_Value_Net (N, Boolean_Type);
       end Synth_Compare_Uns_Nat;
 
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
-         L : constant Net := Get_Net (Left, Ltype);
+         L : constant Net := Get_Net (Left);
          N : Net;
       begin
-         N := Build_Dyadic (Build_Context, Id, L, Get_Net (Right, Rtype));
+         N := Build_Dyadic (Build_Context, Id, L, Get_Net (Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left, L));
       end Synth_Vec_Dyadic;
@@ -722,17 +738,17 @@ package body Synth.Expr is
       function Synth_Dyadic_Uns (Id : Dyadic_Module_Id; Is_Res_Vec : Boolean)
                                 return Value_Acc
       is
-         L : constant Net := Get_Net (Left, Ltype);
-         R : constant Net := Get_Net (Right, Rtype);
+         L : constant Net := Get_Net (Left);
+         R : constant Net := Get_Net (Right);
          W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
-         Rtype : Value_Bound_Acc;
+         Rtype : Type_Acc;
          L1, R1 : Net;
          N : Net;
       begin
          if Is_Res_Vec then
-            Rtype := Create_Value_Bound ((Iir_Downto, Int32 (W - 1), 0, W));
+            Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
          else
-            Rtype := No_Bound;
+            Rtype := Left.Typ;
          end if;
          L1 := Synth_Uresize (L, W);
          Set_Location (L1, Expr);
@@ -746,8 +762,8 @@ package body Synth.Expr is
       function Synth_Compare_Uns_Uns (Id : Compare_Module_Id)
                                      return Value_Acc
       is
-         L : constant Net := Get_Net (Left, Ltype);
-         R : constant Net := Get_Net (Right, Rtype);
+         L : constant Net := Get_Net (Left);
+         R : constant Net := Get_Net (Right);
          W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
          L1, R1 : Net;
          N : Net;
@@ -758,12 +774,12 @@ package body Synth.Expr is
          Set_Location (R1, Expr);
          N := Build_Compare (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
-         return Create_Value_Net (N, No_Bound);
+         return Create_Value_Net (N, Boolean_Type);
       end Synth_Compare_Uns_Uns;
 
       function Synth_Dyadic_Uns_Nat (Id : Dyadic_Module_Id) return Value_Acc
       is
-         L : constant Net := Get_Net (Left, Ltype);
+         L : constant Net := Get_Net (Left);
          R1 : Net;
          N : Net;
       begin
@@ -813,9 +829,9 @@ package body Synth.Expr is
             if Is_Bit_Type (Ltype) then
                pragma Assert (Is_Bit_Type (Rtype));
                if Is_Const (Left) then
-                  return Synth_Bit_Eq_Const (Left, Right, Ltype, Expr);
+                  return Synth_Bit_Eq_Const (Left, Right, Expr);
                elsif Is_Const (Right) then
-                  return Synth_Bit_Eq_Const (Right, Left, Ltype, Expr);
+                  return Synth_Bit_Eq_Const (Right, Left, Expr);
                end if;
             end if;
             return Synth_Compare (Id_Eq);
@@ -878,7 +894,7 @@ package body Synth.Expr is
             --  "<" (Unsigned, Natural)
             if Is_Const (Right) and then Right.Scal = 0 then
                --  Always false.
-               return Create_Value_Discrete (0);
+               return Create_Value_Discrete (0, Boolean_Type);
             end if;
             return Synth_Compare_Uns_Nat (Id_Ult);
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns
@@ -902,88 +918,104 @@ package body Synth.Expr is
             return Synth_Compare_Uns_Uns (Id_Uge);
          when Iir_Predefined_Array_Element_Concat =>
             declare
-               L : constant Net := Get_Net (Left, Ltype);
+               L : constant Net := Get_Net (Left);
+               Bnd : Bound_Type;
                N : Net;
             begin
-               N := Build_Concat2 (Build_Context, L, Get_Net (Right, Rtype));
+               N := Build_Concat2 (Build_Context, L, Get_Net (Right));
                Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst,
+                  Get_Index_Type (Get_Type (Expr), 0),
+                  Iir_Index32 (Get_Width (L) + 1));
+
                return Create_Value_Net
-                 (N,
-                  Create_Bounds_From_Length
-                    (Syn_Inst,
-                     Get_Index_Type (Get_Type (Expr), 0),
-                     Iir_Index32 (Get_Width (L) + 1)));
+                 (N, Create_Vector_Type (Bnd, Right.Typ));
             end;
          when Iir_Predefined_Element_Array_Concat =>
             declare
-               R : constant Net := Get_Net (Right, Rtype);
+               R : constant Net := Get_Net (Right);
+               Bnd : Bound_Type;
                N : Net;
             begin
-               N := Build_Concat2 (Build_Context, Get_Net (Left, Ltype), R);
+               N := Build_Concat2 (Build_Context, Get_Net (Left), R);
                Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst,
+                  Get_Index_Type (Get_Type (Expr), 0),
+                  Iir_Index32 (Get_Width (R) + 1));
+
                return Create_Value_Net
-                 (N,
-                  Create_Bounds_From_Length
-                    (Syn_Inst,
-                     Get_Index_Type (Get_Type (Expr), 0),
-                     Iir_Index32 (Get_Width (R) + 1)));
+                 (N, Create_Vector_Type (Bnd, Left.Typ));
             end;
          when Iir_Predefined_Element_Element_Concat =>
             declare
                N : Net;
+               Bnd : Bound_Type;
             begin
-               N := Build_Concat2 (Build_Context,
-                                   Get_Net (Left, Ltype),
-                                   Get_Net (Right, Rtype));
+               N := Build_Concat2
+                 (Build_Context, Get_Net (Left), Get_Net (Right));
                Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2);
                return Create_Value_Net
-                 (N,
-                  Create_Bounds_From_Length
-                    (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2));
+                 (N, Create_Vector_Type (Bnd, Left.Typ));
             end;
          when Iir_Predefined_Array_Array_Concat =>
             declare
-               L : constant Net := Get_Net (Left, Ltype);
-               R : constant Net := Get_Net (Right, Ltype);
+               L : constant Net := Get_Net (Left);
+               R : constant Net := Get_Net (Right);
+               Bnd : Bound_Type;
                N : Net;
             begin
                N := Build_Concat2 (Build_Context, L, R);
                Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst,
+                  Get_Index_Type (Get_Type (Expr), 0),
+                  Iir_Index32 (Get_Width (L) + Get_Width (R)));
+
                return Create_Value_Net
-                 (N,
-                  Create_Bounds_From_Length
-                    (Syn_Inst,
-                     Get_Index_Type (Get_Type (Expr), 0),
-                     Iir_Index32 (Get_Width (L) + Get_Width (R))));
+                 (N, Create_Vector_Type (Bnd, Left.Typ.Vec_El));
             end;
          when Iir_Predefined_Integer_Plus =>
             if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete (Left.Scal + Right.Scal);
+               return Create_Value_Discrete
+                 (Left.Scal + Right.Scal,
+                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
                return Synth_Vec_Dyadic (Id_Add);
             end if;
          when Iir_Predefined_Integer_Minus =>
             if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete (Left.Scal - Right.Scal);
+               return Create_Value_Discrete
+                 (Left.Scal - Right.Scal,
+                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
                return Synth_Vec_Dyadic (Id_Sub);
             end if;
          when Iir_Predefined_Integer_Mul =>
             if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete (Left.Scal * Right.Scal);
+               return Create_Value_Discrete
+                 (Left.Scal * Right.Scal,
+                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
                return Synth_Vec_Dyadic (Id_Mul);
             end if;
          when Iir_Predefined_Integer_Div =>
             if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete (Left.Scal / Right.Scal);
+               return Create_Value_Discrete
+                 (Left.Scal / Right.Scal,
+                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
                Error_Msg_Synth (+Expr, "non-constant division not supported");
                return null;
             end if;
          when Iir_Predefined_Integer_Mod =>
             if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete (Left.Scal mod Right.Scal);
+               return Create_Value_Discrete
+                 (Left.Scal mod Right.Scal,
+                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
                Error_Msg_Synth (+Expr, "non-constant mod not supported");
                return null;
@@ -991,14 +1023,14 @@ package body Synth.Expr is
          when Iir_Predefined_Integer_Less_Equal =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal <= Right.Scal));
+                 (Boolean'Pos (Left.Scal <= Right.Scal), Boolean_Type);
             else
                return Synth_Compare (Id_Sle);
             end if;
          when Iir_Predefined_Integer_Equality =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal = Right.Scal));
+                 (Boolean'Pos (Left.Scal = Right.Scal), Boolean_Type);
             else
                return Synth_Compare (Id_Eq);
             end if;
@@ -1020,14 +1052,13 @@ package body Synth.Expr is
       function Synth_Bit_Monadic (Id : Monadic_Module_Id) return Value_Acc is
       begin
          return Create_Value_Net
-           (Build_Monadic (Build_Context, Id,
-                           Get_Net (Operand, Get_Type (Operand_Expr))),
-            No_Bound);
+           (Build_Monadic (Build_Context, Id, Get_Net (Operand)),
+            Operand.Typ);
       end Synth_Bit_Monadic;
 
       function Synth_Vec_Monadic (Id : Monadic_Module_Id) return Value_Acc
       is
-         Op: constant Net := Get_Net (Operand, Get_Type (Operand_Expr));
+         Op: constant Net := Get_Net (Operand);
       begin
          return Create_Value_Net
            (Build_Monadic (Build_Context, Id, Op),
@@ -1068,13 +1099,15 @@ package body Synth.Expr is
            | Iir_Kind_Iterator_Declaration =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_Enumeration_Literal =>
-            return Create_Value_Discrete (Int64 (Get_Enum_Pos (Name)));
+            return Create_Value_Discrete
+              (Int64 (Get_Enum_Pos (Name)),
+               Get_Value_Type (Syn_Inst, Get_Type (Name)));
          when others =>
             Error_Kind ("synth_name", Name);
       end case;
    end Synth_Name;
 
-   function In_Bounds (Bnd : Value_Bound_Acc; V : Int32) return Boolean is
+   function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean is
    begin
       case Bnd.Dir is
          when Iir_To =>
@@ -1087,45 +1120,79 @@ package body Synth.Expr is
    function Index_To_Offset (Pfx : Value_Acc; Idx : Int64; Loc : Node)
                             return Uns32
    is
-      Rng : Value_Bound_Acc;
+      Rng : Type_Acc;
    begin
       Rng := Extract_Bound (Pfx);
-      if not In_Bounds (Rng, Int32 (Idx)) then
+      if not In_Bounds (Rng.Vbound, Int32 (Idx)) then
          Error_Msg_Synth (+Loc, "index not within bounds");
          return 0;
       end if;
 
       --  The offset is from the LSB (bit 0).  Bit 0 is the rightmost one.
-      case Rng.Dir is
+      case Rng.Vbound.Dir is
          when Iir_To =>
-            return Uns32 (Rng.Right - Int32 (Idx));
+            return Uns32 (Rng.Vbound.Right - Int32 (Idx));
          when Iir_Downto =>
-            return Uns32 (Int32 (Idx) - Rng.Right);
+            return Uns32 (Int32 (Idx) - Rng.Vbound.Right);
       end case;
    end Index_To_Offset;
+
+   function Dyn_Index_To_Offset (Pfx : Value_Acc; Idx : Net; Loc : Node)
+                                return Net
+   is
+      Bnd : Type_Acc;
+      Off : Net;
+      Right : Net;
+   begin
+      Bnd := Extract_Bound (Pfx);
+
+      --  TODO: handle width.
+      Right := Build_Const_UB32
+        (Build_Context, To_Uns32 (Bnd.Vbound.Right), 32);
+      Set_Location (Right, Loc);
+      case Bnd.Vbound.Dir is
+         when Iir_To =>
+            --  L <= I <= R    -->   off = R - I
+            Off := Build_Dyadic (Build_Context, Id_Sub, Right, Idx);
+         when Iir_Downto =>
+            --  L >= I >= R    -->   off = I - R
+            Off := Build_Dyadic (Build_Context, Id_Sub, Idx, Right);
+      end case;
+      Set_Location (Off, Loc);
+      return Off;
+   end Dyn_Index_To_Offset;
 
    function Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                                return Value_Acc
    is
-      Pfx : constant Value_Acc :=
-        Synth_Expression (Syn_Inst, Get_Prefix (Name));
+      Pfx : constant Node := Get_Prefix (Name);
+      Pfx_Val : constant Value_Acc := Synth_Expression (Syn_Inst, Pfx);
       Indexes : constant Iir_Flist := Get_Index_List (Name);
       Idx_Val : constant Value_Acc :=
         Synth_Expression (Syn_Inst, Get_Nth_Element (Indexes, 0));
-      Off : Uns32;
    begin
       if Get_Nbr_Elements (Indexes) /= 1 then
          Error_Msg_Synth (+Name, "multi-dim arrays not supported");
          return null;
       end if;
 
-      if Idx_Val.Kind /= Value_Discrete then
-         Error_Msg_Synth (+Name, "non constant integer index not supported");
-         return null;
+      if Idx_Val.Kind = Value_Discrete then
+         declare
+            Off : Uns32;
+         begin
+            Off := Index_To_Offset (Pfx_Val, Idx_Val.Scal, Name);
+            return Bit_Extract (Pfx_Val, Off, Name);
+         end;
+      else
+         declare
+            Idx : Net;
+            Off : Net;
+         begin
+            Idx := Get_Net (Idx_Val);
+            Off := Dyn_Index_To_Offset (Pfx_Val, Idx, Name);
+            return Dyn_Bit_Extract (Pfx_Val, Off, Name);
+         end;
       end if;
-
-      Off := Index_To_Offset (Pfx, Idx_Val.Scal, Name);
-      return Bit_Extract (Pfx, Off, Name);
    end Synth_Indexed_Name;
 
    function Is_Const (N : Net) return Boolean is
@@ -1232,8 +1299,10 @@ package body Synth.Expr is
       return False;
    end Is_Same;
 
+   --  Identify LEFT to/downto RIGHT as:
+   --  INP * STEP + WIDTH - 1 + OFF to/downto INP * STEP + OFF
    procedure Synth_Extract_Dyn_Suffix (Loc : Node;
-                                       Pfx_Bnd : Value_Bound_Acc;
+                                       Pfx_Bnd : Type_Acc;
                                        Left : Net;
                                        Right : Net;
                                        Inp : out Net;
@@ -1277,20 +1346,20 @@ package body Synth.Expr is
       --  FIXME: what to do with negative values.
       Step := Uns32 (L_Fac);
 
-      case Pfx_Bnd.Dir is
+      case Pfx_Bnd.Vbound.Dir is
          when Iir_To =>
-            Off := L_Add - Pfx_Bnd.Left;
+            Off := L_Add - Pfx_Bnd.Vbound.Left;
             Width := Uns32 (R_Add - L_Add + 1);
          when Iir_Downto =>
-            Off := R_Add - Pfx_Bnd.Right;
+            Off := R_Add - Pfx_Bnd.Vbound.Right;
             Width := Uns32 (L_Add - R_Add + 1);
       end case;
    end Synth_Extract_Dyn_Suffix;
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
-                                 Pfx_Bnd : Value_Bound_Acc;
-                                 Res_Bnd : out Value_Bound_Acc;
+                                 Pfx_Bnd : Type_Acc;
+                                 Res_Bnd : out Type_Acc;
                                  Inp : out Net;
                                  Step : out Uns32;
                                  Off : out Int32;
@@ -1312,7 +1381,7 @@ package body Synth.Expr is
             Error_Msg_Synth (+Expr, "only range supported for slices");
       end case;
 
-      if Pfx_Bnd.Dir /= Dir then
+      if Pfx_Bnd.Vbound.Dir /= Dir then
          Error_Msg_Synth (+Name, "direction mismatch in slice");
          Step := 0;
          Wd := 0;
@@ -1333,8 +1402,8 @@ package body Synth.Expr is
          Inp := No_Net;
          Step := 0;
 
-         if not In_Bounds (Pfx_Bnd, Int32 (Left.Scal))
-           or else not In_Bounds (Pfx_Bnd, Int32 (Right.Scal))
+         if not In_Bounds (Pfx_Bnd.Vbound, Int32 (Left.Scal))
+           or else not In_Bounds (Pfx_Bnd.Vbound, Int32 (Right.Scal))
          then
             Error_Msg_Synth (+Name, "index not within bounds");
             Wd := 0;
@@ -1342,23 +1411,27 @@ package body Synth.Expr is
             return;
          end if;
 
-         case Pfx_Bnd.Dir is
+         case Pfx_Bnd.Vbound.Dir is
             when Iir_To =>
                Wd := Width (Right.Scal - Left.Scal + 1);
-               Res_Bnd := Create_Value_Bound
-                 (Value_Bound_Type'(Dir => Iir_To,
-                                    Len => Wd,
-                                    Left => Int32 (Left.Scal),
-                                    Right => Int32 (Right.Scal)));
-               Off := Pfx_Bnd.Right - Res_Bnd.Right;
+               Res_Bnd := Create_Vector_Type
+                 (Bound_Type'(Dir => Iir_To,
+                              W => Wd,
+                              Len => Wd,
+                              Left => Int32 (Left.Scal),
+                              Right => Int32 (Right.Scal)),
+                 Pfx_Bnd.Vec_El);
+               Off := Pfx_Bnd.Vbound.Right - Res_Bnd.Vbound.Right;
             when Iir_Downto =>
                Wd := Width (Left.Scal - Right.Scal + 1);
-               Res_Bnd := Create_Value_Bound
-                 (Value_Bound_Type'(Dir => Iir_Downto,
-                                    Len => Wd,
-                                    Left => Int32 (Left.Scal),
-                                    Right => Int32 (Right.Scal)));
-               Off := Res_Bnd.Right - Pfx_Bnd.Right;
+               Res_Bnd := Create_Vector_Type
+                 (Bound_Type'(Dir => Iir_Downto,
+                              W => Wd,
+                              Len => Wd,
+                              Left => Int32 (Left.Scal),
+                              Right => Int32 (Right.Scal)),
+                 Pfx_Bnd.Vec_El);
+               Off := Res_Bnd.Vbound.Right - Pfx_Bnd.Vbound.Right;
          end case;
       end if;
    end Synth_Slice_Suffix;
@@ -1368,8 +1441,8 @@ package body Synth.Expr is
    is
       Pfx_Node : constant Node := Get_Prefix (Name);
       Pfx : constant Value_Acc := Synth_Expression (Syn_Inst, Pfx_Node);
-      Bnd : Value_Bound_Acc;
-      Res_Bnd : Value_Bound_Acc;
+      Bnd : Type_Acc;
+      Res_Bnd : Type_Acc;
       Inp : Net;
       Step : Uns32;
       Off : Int32;
@@ -1379,15 +1452,12 @@ package body Synth.Expr is
       Bnd := Extract_Bound (Pfx);
       Synth_Slice_Suffix (Syn_Inst, Name, Bnd, Res_Bnd, Inp, Step, Off, Wd);
       if Inp /= No_Net then
-         N := Build_Dyn_Extract (Build_Context,
-                                 Get_Net (Pfx, Get_Type (Pfx_Node)),
+         N := Build_Dyn_Extract (Build_Context, Get_Net (Pfx),
                                  Inp, Step, Off, Wd);
          Set_Location (N, Name);
          return Create_Value_Net (N, null);
       else
-         N := Build_Extract (Build_Context,
-                             Get_Net (Pfx, Get_Type (Pfx_Node)),
-                             Uns32 (Off), Wd);
+         N := Build_Extract (Build_Context, Get_Net (Pfx), Uns32 (Off), Wd);
          Set_Location (N, Name);
          return Create_Value_Net (N, Res_Bnd);
       end if;
@@ -1427,7 +1497,7 @@ package body Synth.Expr is
       Lit : Node;
       Posedge : Boolean;
    begin
-      Clk := Get_Net (Synth_Name (Syn_Inst, Prefix), Get_Type (Prefix));
+      Clk := Get_Net (Synth_Name (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
          return Build_Edge (Build_Context, Clk);
@@ -1483,14 +1553,14 @@ package body Synth.Expr is
       Prefix := Extract_Event_Expr_Prefix (Left);
       if Is_Valid (Prefix) then
          return Create_Value_Net
-           (Extract_Clock_Level (Syn_Inst, Right, Prefix), No_Bound);
+           (Extract_Clock_Level (Syn_Inst, Right, Prefix), Boolean_Type);
       end if;
 
       --  Try with right.
       Prefix := Extract_Event_Expr_Prefix (Right);
       if Is_Valid (Prefix) then
          return Create_Value_Net
-           (Extract_Clock_Level (Syn_Inst, Left, Prefix), No_Bound);
+           (Extract_Clock_Level (Syn_Inst, Left, Prefix), Boolean_Type);
       end if;
 
       return null;
@@ -1507,14 +1577,16 @@ package body Synth.Expr is
       case Get_Kind (Conv_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
             if Is_Float (Val) then
-               return Create_Value_Discrete (Int64 (Val.Fp));
+               return Create_Value_Discrete
+                 (Int64 (Val.Fp), Get_Value_Type (Syn_Inst, Conv_Type));
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to int)");
                return null;
             end if;
          when Iir_Kind_Floating_Subtype_Definition =>
             if Is_Const (Val) then
-               return Create_Value_Float (Fp64 (Val.Scal));
+               return Create_Value_Float
+                 (Fp64 (Val.Scal), Get_Value_Type (Syn_Inst, Conv_Type));
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to float)");
                return null;
@@ -1565,41 +1637,41 @@ package body Synth.Expr is
       Id : constant String8_Id := Get_String8_Id (Str);
 
       Str_Type : constant Node := Get_Type (Str);
-      Bounds : Value_Bound_Acc;
-      Barr : Value_Bound_Array_Acc;
+      El_Type : Type_Acc;
+      Bounds : Bound_Type;
+      Res_Type : Type_Acc;
       Res : Value_Acc;
       Pos : Nat8;
    begin
       Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 0);
-      Barr := Create_Value_Bound_Array (1);
-      Barr.D (1) := Bounds;
-      Res := Create_Value_Array (Barr);
+      El_Type := Get_Value_Type (Syn_Inst, Get_Element_Subtype (Str_Type));
+      Res_Type := Create_Vector_Type (Bounds, El_Type);
 
+      Res := Create_Value_Array (Res_Type);
       for I in Res.Arr.V'Range loop
          -- FIXME: use literal from type ??
          Pos := Str_Table.Element_String8 (Id, Pos32 (I));
-         Res.Arr.V (I) := Create_Value_Discrete (Int64 (Pos));
+         Res.Arr.V (I) := Create_Value_Discrete (Int64 (Pos), El_Type);
       end loop;
 
       return Res;
    end Synth_String_Literal;
 
-   function Eval_To_Unsigned (Arg : Int64; Sz : Int64) return Value_Acc
+   function Eval_To_Unsigned (Arg : Int64; Sz : Int64; Res_Type : Type_Acc)
+                             return Value_Acc
    is
       Len : constant Iir_Index32 := Iir_Index32 (Sz);
       Arr : Value_Array_Acc;
-      Bnds : Value_Bound_Array_Acc;
+      Bnd : Type_Acc;
    begin
       Arr := Create_Value_Array (Len);
       for I in 1 .. Len loop
          Arr.V (Len - I + 1) := Create_Value_Discrete
-           (Std_Logic_0_Pos + (Arg / 2 ** Natural (I - 1)) mod 2);
+           (Std_Logic_0_Pos + (Arg / 2 ** Natural (I - 1)) mod 2,
+            Res_Type.Vec_El);
       end loop;
-      Bnds := Create_Value_Bound_Array (1);
-      Bnds.D (1) := Create_Value_Bound
-        ((Dir => Iir_Downto, Left => Int32 (Len - 1), Right => 0,
-          Len => Uns32 (Len)));
-      return Create_Value_Array (Bnds, Arr);
+      Bnd := Create_Vec_Type_By_Length (Width (Len), Res_Type.Vec_El);
+      return Create_Value_Array (Bnd, Arr);
    end Eval_To_Unsigned;
 
    function Synth_User_Function_Call
@@ -1687,9 +1759,11 @@ package body Synth.Expr is
                else
                   --  FIXME: what if the arg is constant too ?
                   if Is_Const (Arg) then
-                     return Eval_To_Unsigned (Arg.Scal, Size.Scal);
+                     return Eval_To_Unsigned
+                       (Arg.Scal, Size.Scal,
+                        Get_Value_Type (Syn_Inst, Get_Type (Imp)));
                   else
-                     Arg_Net := Get_Net (Arg, Get_Type (Inter_Chain));
+                     Arg_Net := Get_Net (Arg);
                      return Create_Value_Net
                        (Synth_Uresize (Arg_Net, Uns32 (Size.Scal)),
                         Create_Res_Bound (Arg, Arg_Net));
@@ -1699,8 +1773,7 @@ package body Synth.Expr is
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat =>
             --  UNSIGNED to Natural.
             return Create_Value_Net
-              (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1),
-                                       Get_Type (Inter_Chain)), 32),
+              (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1)), 32),
                null);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
             declare
@@ -1714,8 +1787,8 @@ package body Synth.Expr is
                end if;
                W := Uns32 (Sz.Scal);
                return Create_Value_Net
-                 (Synth_Uresize (Get_Net (V, Get_Type (Inter_Chain)), W),
-                  Create_Value_Bound ((Iir_Downto, Int32 (W) - 1, 0, W)));
+                 (Synth_Uresize (Get_Net (V), W),
+                  Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
@@ -1729,7 +1802,8 @@ package body Synth.Expr is
                     (+Expr, "argument must be a float value");
                   return null;
                end if;
-               return Create_Value_Float (Log2 (V.Fp));
+               return Create_Value_Float
+                 (Log2 (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
             end;
          when Iir_Predefined_Ieee_Math_Real_Ceil =>
             declare
@@ -1743,7 +1817,8 @@ package body Synth.Expr is
                     (+Expr, "argument must be a float value");
                   return null;
                end if;
-               return Create_Value_Float (Ceil (V.Fp));
+               return Create_Value_Float
+                 (Ceil (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
             end;
          when others =>
             Error_Msg_Synth
@@ -1817,11 +1892,15 @@ package body Synth.Expr is
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Named_Entity (Expr), Expr_Type);
          when Iir_Kind_Integer_Literal =>
-            return Create_Value_Discrete (Get_Value (Expr));
+            return Create_Value_Discrete
+              (Get_Value (Expr), Get_Value_Type (Syn_Inst, Expr_Type));
          when Iir_Kind_Floating_Point_Literal =>
-            return Create_Value_Float (Get_Fp_Value (Expr));
+            return Create_Value_Float
+              (Get_Fp_Value (Expr), Get_Value_Type (Syn_Inst, Expr_Type));
          when Iir_Kind_Physical_Int_Literal =>
-            return Create_Value_Discrete (Get_Physical_Value (Expr));
+            return Create_Value_Discrete
+              (Get_Physical_Value (Expr),
+               Get_Value_Type (Syn_Inst, Expr_Type));
          when Iir_Kind_String_Literal8 =>
             return Synth_String_Literal (Syn_Inst, Expr);
          when Iir_Kind_Enumeration_Literal =>
@@ -1840,18 +1919,16 @@ package body Synth.Expr is
                if Imp = Vhdl.Ieee.Std_Logic_1164.Rising_Edge then
                   Clk := Get_Net
                     (Synth_Assoc_In
-                       (Syn_Inst, Get_Parameter_Association_Chain (Expr)),
-                     Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type);
+                       (Syn_Inst, Get_Parameter_Association_Chain (Expr)));
                   Edge := Build_Edge (Build_Context, Clk);
-                  return Create_Value_Net (Edge, No_Bound);
+                  return Create_Value_Net (Edge, Boolean_Type);
                elsif Imp = Vhdl.Ieee.Std_Logic_1164.Falling_Edge then
                   Clk := Get_Net
                     (Synth_Assoc_In
-                       (Syn_Inst, Get_Parameter_Association_Chain (Expr)),
-                     Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type);
+                       (Syn_Inst, Get_Parameter_Association_Chain (Expr)));
                   Clk := Build_Monadic (Build_Context, Id_Not, Clk);
                   Edge := Build_Edge (Build_Context, Clk);
-                  return Create_Value_Net (Edge, No_Bound);
+                  return Create_Value_Net (Edge, Boolean_Type);
                elsif Get_Implicit_Definition (Imp) /= Iir_Predefined_None then
                   return Synth_Predefined_Function_Call (Syn_Inst, Expr);
                else

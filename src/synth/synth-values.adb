@@ -22,14 +22,16 @@ with Ada.Unchecked_Conversion;
 with System;
 
 package body Synth.Values is
+   function To_Bound_Array_Acc is new Ada.Unchecked_Conversion
+     (System.Address, Bound_Array_Acc);
+
+   function To_Type_Acc is new Ada.Unchecked_Conversion
+     (System.Address, Type_Acc);
+
    function To_Value_Acc is new Ada.Unchecked_Conversion
      (System.Address, Value_Acc);
    function To_Value_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Values.Value_Array_Acc);
-   function To_Value_Bound_Acc is new Ada.Unchecked_Conversion
-     (System.Address, Value_Bound_Acc);
-   function To_Value_Bound_Array_Acc is new Ada.Unchecked_Conversion
-     (System.Address, Value_Bound_Array_Acc);
 
    function Is_Equal (L, R : Value_Acc) return Boolean is
    begin
@@ -40,8 +42,93 @@ package body Synth.Values is
       raise Internal_Error;
    end Is_Equal;
 
-   function Create_Value_Wire (W : Wire_Id; Bnd : Value_Bound_Acc)
-                              return Value_Acc
+   function Create_Bit_Type return Type_Acc
+   is
+      subtype Bit_Type_Type is Type_Type (Type_Bit);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Bit_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit)));
+   end Create_Bit_Type;
+
+   function Create_Discrete_Type (Rng : Discrete_Range_Type) return Type_Acc
+   is
+      subtype Discrete_Type_Type is Type_Type (Type_Discrete);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Discrete_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Discrete,
+                                                Drange => Rng)));
+   end Create_Discrete_Type;
+
+   function Create_Float_Type (Rng : Float_Range_Type) return Type_Acc
+   is
+      subtype Float_Type_Type is Type_Type (Type_Float);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Float_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Float,
+                                                Frange => Rng)));
+   end Create_Float_Type;
+
+   function Create_Vector_Type (Bnd : Bound_Type; El_Type : Type_Acc)
+                               return Type_Acc
+   is
+      subtype Vector_Type_Type is Type_Type (Type_Vector);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Vector_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Vector,
+                                                Vbound => Bnd,
+                                                Vec_El => El_Type)));
+   end Create_Vector_Type;
+
+   function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
+                                      return Type_Acc is
+   begin
+      return Create_Vector_Type ((Dir => Iir_Downto,
+                                  W => 0,
+                                  Left => Int32 (Len) - 1,
+                                  Right => 0,
+                                  Len => Len),
+                                 El);
+   end Create_Vec_Type_By_Length;
+
+   function Create_Bound_Array (Ndims : Iir_Index32) return Bound_Array_Acc
+   is
+      use System;
+      subtype Data_Type is Bound_Array (Ndims);
+      Res : Address;
+   begin
+      --  Manually allocate the array to handle large arrays without
+      --  creating a large temporary value.
+      Areapools.Allocate
+        (Current_Pool.all, Res,
+         Data_Type'Size / Storage_Unit, Data_Type'Alignment);
+
+      declare
+         --  Discard the warnings for no pragma Import as we really want
+         --  to use the default initialization.
+         pragma Warnings (Off);
+         Addr1 : constant Address := Res;
+         Init : Data_Type;
+         for Init'Address use Addr1;
+         pragma Warnings (On);
+      begin
+         null;
+      end;
+
+      return To_Bound_Array_Acc (Res);
+   end Create_Bound_Array;
+
+   function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)
+                              return Type_Acc
+   is
+      subtype Array_Type_Type is Type_Type (Type_Array);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Array_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Array,
+                                                Abounds => Bnd,
+                                                Arr_El => El_Type)));
+   end Create_Array_Type;
+
+   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Wire);
@@ -49,17 +136,17 @@ package body Synth.Values is
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Wire,
                                    W => W,
-                                   W_Bound => Bnd)));
+                                   Typ => Wtype)));
    end Create_Value_Wire;
 
-   function Create_Value_Net (N : Net; Bnd : Value_Bound_Acc) return Value_Acc
+   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Net is Value_Type (Value_Net);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Net);
    begin
       return To_Value_Acc
         (Alloc (Current_Pool,
-                Value_Type_Net'(Kind => Value_Net, N => N, N_Bound => Bnd)));
+                Value_Type_Net'(Kind => Value_Net, N => N, Typ => Ntype)));
    end Create_Value_Net;
 
    function Create_Value_Mux2 (Cond : Value_Acc; T : Value_Acc; F : Value_Acc)
@@ -67,28 +154,35 @@ package body Synth.Values is
    is
       subtype Value_Type_Mux2 is Value_Type (Value_Mux2);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Mux2);
+      pragma Assert (T.Typ = F.Typ);
    begin
       return To_Value_Acc
         (Alloc (Current_Pool,
-                (Kind => Value_Mux2, M_Cond => Cond, M_T => T, M_F => F)));
+                (Kind => Value_Mux2,
+                 Typ => T.Typ,
+                 M_Cond => Cond, M_T => T, M_F => F)));
    end Create_Value_Mux2;
 
-   function Create_Value_Discrete (Val : Int64) return Value_Acc
+   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
+                                  return Value_Acc
    is
       subtype Value_Type_Discrete is Value_Type (Value_Discrete);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Discrete);
    begin
       return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Discrete, Scal => Val)));
+                                  (Kind => Value_Discrete, Scal => Val,
+                                   Typ => Vtype)));
    end Create_Value_Discrete;
 
-   function Create_Value_Float (Val : Fp64) return Value_Acc
+   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Float is Value_Type (Value_Float);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Float);
    begin
       return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Float, Fp => Val)));
+                                  (Kind => Value_Float,
+                                   Typ => Vtype,
+                                   Fp => Val)));
    end Create_Value_Float;
 
    function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc
@@ -118,8 +212,7 @@ package body Synth.Values is
       return To_Value_Array_Acc (Res);
    end Create_Value_Array;
 
-   function Create_Value_Array (Bounds : Value_Bound_Array_Acc;
-                                Arr : Value_Array_Acc)
+   function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
                                return Value_Acc
    is
       subtype Value_Type_Array is Value_Type (Value_Array);
@@ -129,7 +222,7 @@ package body Synth.Values is
    begin
       Res := To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Array,
-                                   Arr => Arr, Bounds => Bounds)));
+                                   Arr => Arr, Typ => Bounds)));
       return Res;
    end Create_Value_Array;
 
@@ -138,16 +231,22 @@ package body Synth.Values is
       Len : Width;
    begin
       Len := 1;
-      for I in Arr.Bounds.D'Range loop
-         Len := Len * Arr.Bounds.D (I).Len;
-      end loop;
+      case Arr.Typ.Kind is
+         when Type_Array =>
+            for I in Arr.Typ.Abounds.D'Range loop
+               Len := Len * Arr.Typ.Abounds.D (I).Len;
+            end loop;
+         when Type_Vector =>
+            Len := Arr.Typ.Vbound.Len;
+         when others =>
+            raise Internal_Error;
+      end case;
 
       Arr.Arr := Create_Value_Array (Iir_Index32 (Len));
    end Create_Array_Data;
 
 
-   function Create_Value_Array (Bounds : Value_Bound_Array_Acc)
-                               return Value_Acc
+   function Create_Value_Array (Bounds : Type_Acc) return Value_Acc
    is
       Res : Value_Acc;
    begin
@@ -156,48 +255,6 @@ package body Synth.Values is
       return Res;
    end Create_Value_Array;
 
-   function Create_Value_Bound_Array (Ndim : Iir_Index32)
-                                     return Value_Bound_Array_Acc
-   is
-      use System;
-      subtype Data_Type is Value_Bound_Array (Ndim);
-      Res : Address;
-   begin
-      --  Manually allocate the array to handle large arrays without
-      --  creating a large temporary value.
-      Areapools.Allocate
-        (Current_Pool.all, Res,
-         Data_Type'Size / Storage_Unit, Data_Type'Alignment);
-
-      declare
-         --  Discard the warnings for no pragma Import as we really want
-         --  to use the default initialization.
-         pragma Warnings (Off);
-         Addr1 : constant Address := Res;
-         Init : Data_Type;
-         for Init'Address use Addr1;
-         pragma Warnings (On);
-      begin
-         null;
-      end;
-
-      return To_Value_Bound_Array_Acc (Res);
-   end Create_Value_Bound_Array;
-
-   function Create_Value_Bounds (Bounds : Value_Bound_Array_Acc)
-                                return Value_Acc
-   is
-      subtype Value_Type_Bounds is Value_Type (Value_Bounds);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Bounds);
-
-      Res : Value_Acc;
-   begin
-      Res := To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Bounds,
-                                   Bnds => Bounds)));
-      return Res;
-   end Create_Value_Bounds;
-
    function Create_Value_Instance (Inst : Instance_Id) return Value_Acc
    is
       subtype Value_Type_Instance is Value_Type (Value_Instance);
@@ -205,72 +262,25 @@ package body Synth.Values is
    begin
       return To_Value_Acc
         (Alloc (Current_Pool,
-                (Kind => Value_Instance, Instance => Inst)));
+                (Kind => Value_Instance, Instance => Inst, Typ => null)));
    end Create_Value_Instance;
 
-   function Create_Value_Range (Rng : Value_Range_Type) return Value_Acc
+   function Create_Value_Subtype (Typ : Type_Acc) return Value_Acc
    is
-      subtype Value_Type_Range is Value_Type (Value_Range);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Range);
+      subtype Value_Type_Subtype is Value_Type (Value_Subtype);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Subtype);
    begin
       return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Range, Rng => Rng)));
-   end Create_Value_Range;
-
-   function Create_Value_Fp_Range (Rng : Value_Fp_Range_Type) return Value_Acc
-   is
-      subtype Value_Type_Fp_Range is Value_Type (Value_Fp_Range);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Fp_Range);
-   begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Fp_Range, Fp_Rng => Rng)));
-   end Create_Value_Fp_Range;
-
-   function Create_Value_Bound (Dir : Iir_Direction; Left, Right : Value_Acc)
-                               return Value_Bound_Acc is
-   begin
-      pragma Assert (Left.Kind = Right.Kind);
-      case Left.Kind is
-         when Value_Discrete =>
-            declare
-               Len : Int64;
-            begin
-               case Dir is
-                  when Iir_To =>
-                     Len := Right.Scal - Left.Scal + 1;
-                  when Iir_Downto =>
-                     Len := Left.Scal - Right.Scal + 1;
-               end case;
-               if Len < 0 then
-                  Len := 0;
-               end if;
-               return Create_Value_Bound
-                 ((Dir, Int32 (Left.Scal), Int32 (Right.Scal),
-                   Len => Uns32 (Len)));
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Create_Value_Bound;
-
-   function Create_Value_Bound (Bnd : Value_Bound_Type) return Value_Bound_Acc
-   is
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Bound_Type);
-   begin
-      return To_Value_Bound_Acc (Alloc (Current_Pool, Bnd));
-   end Create_Value_Bound;
+                                  (Kind => Value_Subtype, Typ => Typ)));
+   end Create_Value_Subtype;
 
    function Copy (Src: in Value_Acc) return Value_Acc
    is
       Res: Value_Acc;
    begin
       case Src.Kind is
-         when Value_Range =>
-            Res := Create_Value_Range (Src.Rng);
-         when Value_Fp_Range =>
-            Res := Create_Value_Fp_Range (Src.Fp_Rng);
          when Value_Wire =>
-            Res := Create_Value_Wire (Src.W, Src.W_Bound);
+            Res := Create_Value_Wire (Src.W, Src.Typ);
          when others =>
             raise Internal_Error;
       end case;
@@ -289,28 +299,30 @@ package body Synth.Values is
       return Res;
    end Unshare;
 
-   function Extract_Bound (Val : Value_Acc) return Value_Bound_Acc is
+   function Extract_Bound (Val : Value_Acc) return Type_Acc is
    begin
-      case Val.Kind is
-         when Value_Net =>
-            return Val.N_Bound;
-         when Value_Wire =>
-            return Val.W_Bound;
-         when Value_Array =>
-            --  For constants.
-            pragma Assert (Val.Bounds.Len = 1);
-            return Val.Bounds.D (1);
+      return Val.Typ;
+   end Extract_Bound;
+
+   function Get_Type_Width (Atype : Type_Acc) return Width is
+   begin
+      case Atype.Kind is
+         when Type_Bit =>
+            return 1;
+         when Type_Discrete =>
+            return Atype.Drange.W;
+         when Type_Vector =>
+            return Atype.Vbound.Len;
          when others =>
             raise Internal_Error;
       end case;
-   end Extract_Bound;
+   end Get_Type_Width;
 
-   function Get_Bound_Width (Bnd : Value_Bound_Acc) return Width is
+   procedure Init is
    begin
-      if Bnd = null then
-         return 1;
-      else
-         return Bnd.Len;
-      end if;
-   end Get_Bound_Width;
+      Instance_Pool := Global_Pool'Access;
+      Boolean_Type := Create_Bit_Type;
+      Logic_Type := Create_Bit_Type;
+      Bit_Type := Create_Bit_Type;
+   end Init;
 end Synth.Values;

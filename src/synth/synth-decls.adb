@@ -24,7 +24,8 @@ with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
-with Synth.Types; use Synth.Types;
+with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Std_Package;
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Expr; use Synth.Expr;
@@ -46,10 +47,10 @@ package body Synth.Decls is
       case Val.Kind is
          when Value_Wire =>
             --  FIXME: get the width directly from the wire ?
-            W := Get_Bound_Width (Val.W_Bound);
+            W := Get_Type_Width (Val.Typ);
             Name := New_Sname (Syn_Inst.Name, Get_Identifier (Decl));
             if Init /= null then
-               Ival := Get_Net (Init, Get_Type (Decl));
+               Ival := Get_Net (Init);
                pragma Assert (Get_Width (Ival) = W);
                Value := Build_Isignal (Build_Context, Name, Ival);
             else
@@ -64,25 +65,34 @@ package body Synth.Decls is
 
    procedure Synth_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
+      Typ : Type_Acc;
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            declare
-               Info : constant Sim_Info_Acc := Get_Info (Def);
-               Enum_List : constant Node_Flist :=
-                 Get_Enumeration_Literal_List (Def);
-            begin
-               if Is_Bit_Type (Def) then
-                  Info.Width := 1;
-               else
-                  Info.Width :=
-                    Uns32 (Clog2 (Uns64 (Get_Nbr_Elements (Enum_List))));
-               end if;
-            end;
-         when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Floating_Type_Definition
-           | Iir_Kind_Physical_Type_Definition
-           | Iir_Kind_Array_Type_Definition =>
+            if Def = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
+              or else Def = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
+            then
+               Typ := Logic_Type;
+            elsif Def = Vhdl.Std_Package.Boolean_Type_Definition then
+               Typ := Boolean_Type;
+            elsif Def = Vhdl.Std_Package.Bit_Type_Definition then
+               Typ := Bit_Type;
+            else
+               declare
+                  Nbr_El : constant Natural :=
+                    Get_Nbr_Elements (Get_Enumeration_Literal_List (Def));
+                  Rng : Discrete_Range_Type;
+               begin
+                  Rng := (Dir => Iir_Downto,
+                          Is_Signed => False,
+                          W => Uns32 (Clog2 (Uns64 (Nbr_El))),
+                          Left => Int64 (Nbr_El - 1),
+                          Right => 0);
+                  Typ := Create_Discrete_Type (Rng);
+               end;
+            end if;
+            Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
+         when Iir_Kind_Array_Type_Definition =>
             null;
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_File_Type_Definition =>
@@ -103,17 +113,66 @@ package body Synth.Decls is
       end case;
    end Synth_Type_Definition;
 
-   function Synth_Range_Constraint
-     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Value_Acc is
+   procedure Synth_Anonymous_Type_Definition
+     (Syn_Inst : Synth_Instance_Acc; Def : Node; St : Node)
+   is
+      Typ : Type_Acc;
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Physical_Type_Definition =>
+            declare
+               Cst : constant Node := Get_Range_Constraint (St);
+               L, R : Int64;
+               Rng : Discrete_Range_Type;
+            begin
+               L := Get_Value (Get_Left_Limit (Cst));
+               R := Get_Value (Get_Right_Limit (Cst));
+               Rng := Synth_Discrete_Range_Expression
+                 (L, R, Get_Direction (Cst));
+               Typ := Create_Discrete_Type (Rng);
+               Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
+            end;
+         when Iir_Kind_Floating_Type_Definition =>
+            declare
+               Cst : constant Node := Get_Range_Constraint (St);
+               L, R : Fp64;
+               Rng : Float_Range_Type;
+            begin
+               L := Get_Fp_Value (Get_Left_Limit (Cst));
+               R := Get_Fp_Value (Get_Right_Limit (Cst));
+               Rng := (Get_Direction (Cst), L, R);
+               Typ := Create_Float_Type (Rng);
+               Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
+            end;
+         when others =>
+            Error_Kind ("synth_anonymous_type_definition", Def);
+      end case;
+   end Synth_Anonymous_Type_Definition;
+
+   function Synth_Discrete_Range_Constraint
+     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type is
    begin
       case Get_Kind (Rng) is
          when Iir_Kind_Range_Expression =>
             --  FIXME: check range.
-            return Synth_Range_Expression (Syn_Inst, Rng);
+            return Synth_Discrete_Range_Expression (Syn_Inst, Rng);
          when others =>
-            Error_Kind ("synth_range_constraint", Rng);
+            Error_Kind ("synth_discrete_range_constraint", Rng);
       end case;
-   end Synth_Range_Constraint;
+   end Synth_Discrete_Range_Constraint;
+
+   function Synth_Float_Range_Constraint
+     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type is
+   begin
+      case Get_Kind (Rng) is
+         when Iir_Kind_Range_Expression =>
+            --  FIXME: check range.
+            return Synth_Float_Range_Expression (Syn_Inst, Rng);
+         when others =>
+            Error_Kind ("synth_float_range_constraint", Rng);
+      end case;
+   end Synth_Float_Range_Constraint;
 
    procedure Synth_Subtype_Indication_If_Anonymous
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
@@ -123,48 +182,76 @@ package body Synth.Decls is
       end if;
    end Synth_Subtype_Indication_If_Anonymous;
 
+   function Synth_Array_Subtype_Indication
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc
+   is
+      El_Type : constant Node := Get_Element_Subtype (Atype);
+      St_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Atype);
+      St_El : Iir;
+      Etyp : Type_Acc;
+      Bnds : Bound_Array_Acc;
+   begin
+      --  LRM93 12.3.1.3
+      --  The elaboration of an index constraint consists of the
+      --  declaration of each of the discrete ranges in the index
+      --  constraint in some order that is not defined by the language.
+      Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
+      Etyp := Get_Value_Type (Syn_Inst, El_Type);
+
+      if Is_One_Dimensional_Array_Type (Atype) then
+         St_El := Get_Index_Type (St_Indexes, 0);
+         return Create_Vector_Type
+           (Synth_Bounds_From_Range (Syn_Inst, St_El), Etyp);
+      else
+         --  FIXME: partially constrained arrays, subtype in indexes...
+         Bnds := Create_Bound_Array
+           (Iir_Index32 (Get_Nbr_Elements (St_Indexes)));
+         for I in Flist_First .. Flist_Last (St_Indexes) loop
+            St_El := Get_Index_Type (St_Indexes, I);
+            Bnds.D (Iir_Index32 (I + 1)) :=
+              Synth_Bounds_From_Range (Syn_Inst, St_El);
+         end loop;
+         return Create_Array_Type (Bnds, Etyp);
+      end if;
+   end Synth_Array_Subtype_Indication;
+
    procedure Synth_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node)
+   is
+      Typ : Type_Acc;
    begin
       case Get_Kind (Atype) is
          when Iir_Kind_Array_Subtype_Definition =>
-            --  LRM93 12.3.1.3
-            --  The elaboration of an index constraint consists of the
-            --  declaration of each of the discrete ranges in the index
-            --  constraint in some order that is not defined by the language.
-            Synth_Subtype_Indication_If_Anonymous
-              (Syn_Inst, Get_Element_Subtype (Atype));
-            declare
-               St_Indexes : constant Iir_Flist :=
-                 Get_Index_Subtype_List (Atype);
-               St_El : Iir;
-               Bnds : Value_Bound_Array_Acc;
-            begin
-               --  FIXME: partially constrained arrays, subtype in indexes...
-               Bnds := Create_Value_Bound_Array
-                 (Iir_Index32 (Get_Nbr_Elements (St_Indexes)));
-               for I in Flist_First .. Flist_Last (St_Indexes) loop
-                  St_El := Get_Index_Type (St_Indexes, I);
-                  Bnds.D (Iir_Index32 (I + 1)) :=
-                    Synth_Bounds_From_Range (Syn_Inst, St_El);
-               end loop;
-               Create_Object (Syn_Inst, Atype,
-                              Create_Value_Bounds (Bnds));
-            end;
+            Typ := Synth_Array_Subtype_Indication (Syn_Inst, Atype);
          when Iir_Kind_Integer_Subtype_Definition
-           | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
             declare
-               Val : Value_Acc;
+               Btype : constant Type_Acc :=
+                 Get_Value_Type (Syn_Inst, Get_Base_Type (Atype));
+               Rng : Discrete_Range_Type;
             begin
-               Val := Synth_Range_Constraint
+               if Btype.Kind = Type_Bit then
+                  --  A subtype of a bit type is still a bit.
+                  Typ := Btype;
+               else
+                  Rng := Synth_Discrete_Range_Constraint
+                    (Syn_Inst, Get_Range_Constraint (Atype));
+                  Typ := Create_Discrete_Type (Rng);
+               end if;
+            end;
+         when Iir_Kind_Floating_Subtype_Definition =>
+            declare
+               Rng : Float_Range_Type;
+            begin
+               Rng := Synth_Float_Range_Constraint
                  (Syn_Inst, Get_Range_Constraint (Atype));
-               Create_Object (Syn_Inst, Atype, Unshare (Val, Instance_Pool));
+               Typ := Create_Float_Type (Rng);
             end;
          when others =>
             Error_Kind ("synth_subtype_indication", Atype);
       end case;
+      Create_Object (Syn_Inst, Atype, Create_Value_Subtype (Typ));
    end Synth_Subtype_Indication;
 
    procedure Synth_Anonymous_Subtype_Indication
@@ -343,9 +430,12 @@ package body Synth.Decls is
             null;
          when Iir_Kind_Attribute_Specification =>
             Synth_Attribute_Specification (Syn_Inst, Decl);
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Anonymous_Type_Declaration =>
+         when Iir_Kind_Type_Declaration =>
             Synth_Type_Definition (Syn_Inst, Get_Type_Definition (Decl));
+         when Iir_Kind_Anonymous_Type_Declaration =>
+            Synth_Anonymous_Type_Definition
+              (Syn_Inst, Get_Type_Definition (Decl),
+               Get_Subtype_Definition (Decl));
          when  Iir_Kind_Subtype_Declaration =>
             Synth_Declaration_Type (Syn_Inst, Decl);
          when Iir_Kind_Component_Declaration =>

@@ -35,8 +35,43 @@ pragma Unreferenced (Synth.Environment.Debug);
 
 with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Std_Package;
 
 package body Synthesis is
+   procedure Synth_Convertible_Declarations (Syn_Inst : Synth_Instance_Acc)
+   is
+      use Vhdl.Std_Package;
+   begin
+      Create_Object
+        (Syn_Inst, Convertible_Integer_Type_Definition,
+         Get_Value (Syn_Inst, Universal_Integer_Type_Definition));
+      Create_Object
+        (Syn_Inst, Convertible_Real_Type_Definition,
+         Get_Value (Syn_Inst, Universal_Real_Type_Definition));
+   end Synth_Convertible_Declarations;
+
+   procedure Synth_Package_Declaration
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+   is
+      use Vhdl.Std_Package;
+      pragma Assert (not Is_Uninstantiated_Package (Pkg));
+      Info : constant Sim_Info_Acc := Get_Info (Pkg);
+      Syn_Inst : Synth_Instance_Acc;
+      Val : Value_Acc;
+   begin
+      Syn_Inst := Make_Instance (Parent_Inst, Info);
+      Val := Create_Value_Instance (Syn_Inst);
+      if Parent_Inst /= Global_Instance then
+         Create_Object (Parent_Inst, Pkg, Val);
+      else
+         Parent_Inst.Objects (Info.Pkg_Slot) := Val;
+      end if;
+      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
+      if Pkg = Vhdl.Std_Package.Standard_Package then
+         Synth_Convertible_Declarations (Syn_Inst);
+      end if;
+   end Synth_Package_Declaration;
+
    procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node)
    is
       Dep_List : constant Node_List := Get_Dependence_List (Unit);
@@ -60,22 +95,7 @@ package body Synthesis is
                when Iir_Kind_Context_Declaration =>
                   null;
                when Iir_Kind_Package_Declaration =>
-                  pragma Assert (not Is_Uninstantiated_Package (Dep_Unit));
-                  declare
-                     Info : constant Sim_Info_Acc := Get_Info (Dep_Unit);
-                     Syn_Inst : Synth_Instance_Acc;
-                     Val : Value_Acc;
-                  begin
-                     Syn_Inst := Make_Instance (Parent_Inst, Info);
-                     Val := Create_Value_Instance (Syn_Inst);
-                     if Parent_Inst /= Global_Instance then
-                        Create_Object (Parent_Inst, Dep_Unit, Val);
-                     else
-                        Parent_Inst.Objects (Info.Pkg_Slot) := Val;
-                     end if;
-                     Synth_Declarations
-                       (Syn_Inst, Get_Declaration_Chain (Dep_Unit));
-                  end;
+                  Synth_Package_Declaration (Parent_Inst, Dep_Unit);
                when Iir_Kind_Package_Instantiation_Declaration =>
                   null;
                when Iir_Kind_Package_Body =>
@@ -113,7 +133,7 @@ package body Synthesis is
       Global_Module :=
         New_Design (New_Sname_Artificial (Get_Identifier ("top")));
       Build_Context := Build_Builders (Global_Module);
-      Instance_Pool := Global_Pool'Access;
+      Synth.Values.Init;
       Global_Instance := Make_Instance (null, Global_Info);
       Synth.Insts.Init;
 
