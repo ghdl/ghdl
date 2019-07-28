@@ -165,6 +165,8 @@ package body Synth.Decls is
                Typ := Create_Float_Type (Rng);
                Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
             end;
+         when Iir_Kind_Array_Type_Definition =>
+            Synth_Array_Type_Definition (Syn_Inst, Def);
          when others =>
             Error_Kind ("synth_anonymous_type_definition", Def);
       end case;

@@ -174,7 +174,7 @@ package body Synth.Stmts is
                   --  Only support assignment of vector.
                   raise Internal_Error;
                end if;
-               Synth_Slice_Suffix (Syn_Inst, Target, Extract_Bound (Targ),
+               Synth_Slice_Suffix (Syn_Inst, Target, Targ.Typ,
                                    Res_Bnd, Inp, Step, Off, Wd);
                Targ_Net := Get_Last_Assigned_Value (Targ.W);
                V := Get_Net (Val);

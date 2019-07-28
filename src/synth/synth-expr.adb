@@ -1120,9 +1120,8 @@ package body Synth.Expr is
    function Index_To_Offset (Pfx : Value_Acc; Idx : Int64; Loc : Node)
                             return Uns32
    is
-      Rng : Type_Acc;
+      Rng : constant Type_Acc := Pfx.Typ;
    begin
-      Rng := Extract_Bound (Pfx);
       if not In_Bounds (Rng.Vbound, Int32 (Idx)) then
          Error_Msg_Synth (+Loc, "index not within bounds");
          return 0;
@@ -1140,12 +1139,10 @@ package body Synth.Expr is
    function Dyn_Index_To_Offset (Pfx : Value_Acc; Idx : Net; Loc : Node)
                                 return Net
    is
-      Bnd : Type_Acc;
+      Bnd : constant Type_Acc := Pfx.Typ;
       Off : Net;
       Right : Net;
    begin
-      Bnd := Extract_Bound (Pfx);
-
       --  TODO: handle width.
       Right := Build_Const_UB32
         (Build_Context, To_Uns32 (Bnd.Vbound.Right), 32);
@@ -1444,7 +1441,7 @@ package body Synth.Expr is
    is
       Pfx_Node : constant Node := Get_Prefix (Name);
       Pfx : constant Value_Acc := Synth_Expression (Syn_Inst, Pfx_Node);
-      Bnd : Type_Acc;
+      Bnd : constant Type_Acc := Pfx.Typ;
       Res_Bnd : Type_Acc;
       Inp : Net;
       Step : Uns32;
@@ -1452,7 +1449,6 @@ package body Synth.Expr is
       Wd : Uns32;
       N : Net;
    begin
-      Bnd := Extract_Bound (Pfx);
       Synth_Slice_Suffix (Syn_Inst, Name, Bnd, Res_Bnd, Inp, Step, Off, Wd);
       if Inp /= No_Net then
          N := Build_Dyn_Extract (Build_Context, Get_Net (Pfx),

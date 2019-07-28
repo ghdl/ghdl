@@ -328,11 +328,6 @@ package body Synth.Values is
       return Res;
    end Unshare;
 
-   function Extract_Bound (Val : Value_Acc) return Type_Acc is
-   begin
-      return Val.Typ;
-   end Extract_Bound;
-
    function Get_Type_Width (Atype : Type_Acc) return Width is
    begin
       case Atype.Kind is

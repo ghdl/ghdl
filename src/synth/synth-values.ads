@@ -237,8 +237,6 @@ package Synth.Values is
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
                     return Value_Acc;
 
-   function Extract_Bound (Val : Value_Acc) return Type_Acc;
-
    function Get_Type_Width (Atype : Type_Acc) return Width;
 
    procedure Init;
