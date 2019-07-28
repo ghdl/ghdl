@@ -1168,13 +1168,16 @@ package body Synth.Expr is
       Pfx : constant Node := Get_Prefix (Name);
       Pfx_Val : constant Value_Acc := Synth_Expression (Syn_Inst, Pfx);
       Indexes : constant Iir_Flist := Get_Index_List (Name);
-      Idx_Val : constant Value_Acc :=
-        Synth_Expression (Syn_Inst, Get_Nth_Element (Indexes, 0));
+      Idx_Expr : constant Node := Get_Nth_Element (Indexes, 0);
+      Idx_Val : Value_Acc;
    begin
       if Get_Nbr_Elements (Indexes) /= 1 then
          Error_Msg_Synth (+Name, "multi-dim arrays not supported");
          return null;
       end if;
+
+      Idx_Val := Synth_Expression_With_Type
+        (Syn_Inst, Idx_Expr, Get_Base_Type (Get_Type (Idx_Expr)));
 
       if Idx_Val.Kind = Value_Discrete then
          declare
@@ -1661,16 +1664,16 @@ package body Synth.Expr is
                              return Value_Acc
    is
       Len : constant Iir_Index32 := Iir_Index32 (Sz);
+      El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
       Arr : Value_Array_Acc;
       Bnd : Type_Acc;
    begin
       Arr := Create_Value_Array (Len);
       for I in 1 .. Len loop
          Arr.V (Len - I + 1) := Create_Value_Discrete
-           (Std_Logic_0_Pos + (Arg / 2 ** Natural (I - 1)) mod 2,
-            Res_Type.Vec_El);
+           (Std_Logic_0_Pos + (Arg / 2 ** Natural (I - 1)) mod 2, El_Type);
       end loop;
-      Bnd := Create_Vec_Type_By_Length (Width (Len), Res_Type.Vec_El);
+      Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
       return Create_Value_Array (Bnd, Arr);
    end Eval_To_Unsigned;
 

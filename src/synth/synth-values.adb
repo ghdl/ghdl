@@ -38,8 +38,14 @@ package body Synth.Values is
       if L.Kind /= R.Kind then
          return False;
       end if;
-      --  TODO.
-      raise Internal_Error;
+
+      case L.Kind is
+         when Value_Discrete =>
+            return L.Scal = R.Scal;
+         when others =>
+            --  TODO.
+            raise Internal_Error;
+      end case;
    end Is_Equal;
 
    function Create_Bit_Type return Type_Acc
@@ -128,6 +134,29 @@ package body Synth.Values is
                                                 Arr_El => El_Type)));
    end Create_Array_Type;
 
+   function Create_Unbounded_Array (El_Type : Type_Acc) return Type_Acc
+   is
+      subtype Unbounded_Type_Type is Type_Type (Type_Unbounded_Array);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Array,
+                                                Uarr_El => El_Type)));
+   end Create_Unbounded_Array;
+
+   function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc is
+   begin
+      case Arr_Type.Kind is
+         when Type_Vector =>
+            return Arr_Type.Vec_El;
+         when Type_Array =>
+            return Arr_Type.Arr_El;
+         when Type_Unbounded_Array =>
+            return Arr_Type.Uarr_El;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Array_Element;
+
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
@@ -154,7 +183,7 @@ package body Synth.Values is
    is
       subtype Value_Type_Mux2 is Value_Type (Value_Mux2);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Mux2);
-      pragma Assert (T.Typ = F.Typ);
+      pragma Assert (F = null or else T.Typ = F.Typ);
    begin
       return To_Value_Acc
         (Alloc (Current_Pool,

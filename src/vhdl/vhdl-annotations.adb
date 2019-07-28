@@ -378,6 +378,9 @@ package body Vhdl.Annotations is
          when Iir_Kind_Array_Type_Definition =>
             El := Get_Element_Subtype (Def);
             Annotate_Anonymous_Type_Definition (Block_Info, El);
+            if Flag_Synthesis then
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
             if Get_Array_Element_Constraint (Def) /= Null_Node then

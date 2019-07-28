@@ -63,6 +63,26 @@ package body Synth.Decls is
       end case;
    end Create_Var_Wire;
 
+   procedure Synth_Subtype_Indication_If_Anonymous
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
+   begin
+      if Get_Type_Declarator (Atype) = Null_Node then
+         Synth_Subtype_Indication (Syn_Inst, Atype);
+      end if;
+   end Synth_Subtype_Indication_If_Anonymous;
+
+   procedure Synth_Array_Type_Definition
+     (Syn_Inst : Synth_Instance_Acc; Def : Node)
+   is
+      El_Type : constant Node := Get_Element_Subtype (Def);
+      Typ : Type_Acc;
+   begin
+      Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
+      Typ := Create_Unbounded_Array
+        (Get_Value_Type (Syn_Inst, El_Type));
+      Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
+   end Synth_Array_Type_Definition;
+
    procedure Synth_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
       Typ : Type_Acc;
@@ -93,7 +113,7 @@ package body Synth.Decls is
             end if;
             Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
          when Iir_Kind_Array_Type_Definition =>
-            null;
+            Synth_Array_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_File_Type_Definition =>
             null;
@@ -173,14 +193,6 @@ package body Synth.Decls is
             Error_Kind ("synth_float_range_constraint", Rng);
       end case;
    end Synth_Float_Range_Constraint;
-
-   procedure Synth_Subtype_Indication_If_Anonymous
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
-   begin
-      if Get_Type_Declarator (Atype) = Null_Node then
-         Synth_Subtype_Indication (Syn_Inst, Atype);
-      end if;
-   end Synth_Subtype_Indication_If_Anonymous;
 
    function Synth_Array_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc

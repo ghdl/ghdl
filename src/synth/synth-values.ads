@@ -67,6 +67,7 @@ package Synth.Values is
       Type_Float,
       Type_Vector,
       Type_Array,
+      Type_Unbounded_Array,
       Type_Record
      );
 
@@ -95,6 +96,8 @@ package Synth.Values is
          when Type_Array =>
             Abounds : Bound_Array_Acc;
             Arr_El : Type_Acc;
+         when Type_Unbounded_Array =>
+            Uarr_El : Type_Acc;
          when Type_Record =>
             Rec : Type_Acc_Array_Acc;
       end case;
@@ -193,6 +196,10 @@ package Synth.Values is
    function Create_Bound_Array (Ndims : Iir_Index32) return Bound_Array_Acc;
    function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)
                               return Type_Acc;
+   function Create_Unbounded_Array (El_Type : Type_Acc) return Type_Acc;
+
+   --  Return the element of a vector/array/unbounded_array.
+   function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
    function Is_Equal (L, R : Value_Acc) return Boolean;
 
