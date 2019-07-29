@@ -30,7 +30,7 @@ package Synth.Values is
       --  An integer range.
       Dir : Iir_Direction;
 
-      --  Netlist representation: signed or unsigned, width of bus.
+      --  Netlist representation: signed or unsigned, width of vector.
       Is_Signed : Boolean;
       W : Width;
 
@@ -46,10 +46,18 @@ package Synth.Values is
 
    type Bound_Type is record
       Dir : Iir_Direction;
-      W : Width;
       Left : Int32;
       Right : Int32;
       Len : Width;
+
+      --  Width of length.  This is the number of address bits.
+      Wlen : Width;
+
+      --  Width of bounds.  This is the precision used to compute the
+      --  address.
+      --  If bounds are 1 to 128 (so left = 1, dir = to, right = 128),
+      --  Wlen = 7 and Wbounds = 8.
+      Wbounds : Width;
    end record;
 
    type Bound_Array_Type is array (Iir_Index32 range <>) of Bound_Type;

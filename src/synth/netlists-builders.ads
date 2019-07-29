@@ -60,6 +60,14 @@ package Netlists.Builders is
                               Xz : Uns32;
                               W : Width) return Net;
 
+   --  Large constants.
+   --  Bit means only 0 or 1.
+   --  Log means 0/1/Z/X.  Parameters 2N are aval, 2N+1 are bval.
+   function Build_Const_Bit (Ctxt : Context_Acc;
+                             W : Width) return Instance;
+   function Build_Const_Log (Ctxt : Context_Acc;
+                             W : Width) return Instance;
+
    function Build_Edge (Ctxt : Context_Acc; Src : Net) return Net;
 
    function Build_Mux2 (Ctxt : Context_Acc;
@@ -140,6 +148,8 @@ private
       M_Const_UB32 : Module;
       M_Const_UL32 : Module;
       M_Const_Z : Module;
+      M_Const_Bit : Module;
+      M_Const_Log : Module;
       M_Edge : Module;
       M_Mux2 : Module;
       M_Mux4 : Module;

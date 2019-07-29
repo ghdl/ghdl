@@ -52,7 +52,12 @@ package body Netlists.Utils is
    is
       M : constant Module := Get_Module (Inst);
    begin
-      return Get_Nbr_Params (M);
+      case Get_Id (M) is
+         when Id_Const_Bit =>
+            return Param_Nbr ((Get_Width (Get_Output (Inst, 0)) + 31) / 32);
+         when others =>
+            return Get_Nbr_Params (M);
+      end case;
    end Get_Nbr_Params;
 
    function Get_Param_Desc

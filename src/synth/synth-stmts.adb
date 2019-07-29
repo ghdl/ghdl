@@ -161,7 +161,8 @@ package body Synth.Stmts is
                Pfx : constant Node := Get_Prefix (Target);
                Targ : constant Value_Acc :=
                  Get_Value (Syn_Inst, Get_Base_Name (Pfx));
-               Res_Bnd : Type_Acc;
+               Res_Bnd : Bound_Type;
+               Res_Type : Type_Acc;
                Targ_Net : Net;
                Inp : Net;
                Step : Uns32;
@@ -174,7 +175,7 @@ package body Synth.Stmts is
                   --  Only support assignment of vector.
                   raise Internal_Error;
                end if;
-               Synth_Slice_Suffix (Syn_Inst, Target, Targ.Typ,
+               Synth_Slice_Suffix (Syn_Inst, Target, Targ.Typ.Vbound,
                                    Res_Bnd, Inp, Step, Off, Wd);
                Targ_Net := Get_Last_Assigned_Value (Targ.W);
                V := Get_Net (Val);
@@ -186,7 +187,8 @@ package body Synth.Stmts is
                     (Build_Context, Targ_Net, V, Uns32 (Off));
                end if;
                Set_Location (Res, Target);
-               Synth_Assign (Targ, Create_Value_Net (Res, Res_Bnd));
+               Res_Type := Create_Vector_Type (Res_Bnd, Targ.Typ.Vec_El);
+               Synth_Assign (Targ, Create_Value_Net (Res, Res_Type));
             end;
          when others =>
             Error_Kind ("synth_assignment", Target);

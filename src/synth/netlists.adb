@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Netlists.Utils; use Netlists.Utils;
+with Netlists.Gates;
 with Tables;
 
 package body Netlists is
@@ -664,11 +665,19 @@ package body Netlists is
 
    function Get_Param_Desc (M : Module; Param : Param_Idx) return Param_Desc
    is
+      use Netlists.Gates;
       pragma Assert (Is_Valid (M));
-      pragma Assert (Param < Get_Nbr_Params (M));
    begin
-      return Param_Desc_Table.Table
-        (Modules_Table.Table (M).First_Param_Desc + Param_Desc_Idx (Param));
+      case Get_Id (M) is
+         when Id_Const_Bit
+           | Id_Const_Log =>
+            return (No_Sname, Param_Uns32);
+         when others =>
+            pragma Assert (Param < Get_Nbr_Params (M));
+            return Param_Desc_Table.Table
+              (Modules_Table.Table (M).First_Param_Desc
+                 + Param_Desc_Idx (Param));
+      end case;
    end Get_Param_Desc;
 
    function Get_Param_Idx (Inst : Instance; Param : Param_Idx) return Param_Idx
@@ -683,7 +692,7 @@ package body Netlists is
    is
       pragma Assert (Is_Valid (Inst));
       M : constant Module := Get_Module (Inst);
-      pragma Assert (Param < Get_Nbr_Params (M));
+      pragma Assert (Param < Get_Nbr_Params (Inst));
       pragma Assert (Get_Param_Desc (M, Param).Typ = Param_Uns32);
    begin
       return Params_Table.Table (Get_Param_Idx (Inst, Param));
@@ -693,7 +702,7 @@ package body Netlists is
    is
       pragma Assert (Is_Valid (Inst));
       M : constant Module := Get_Module (Inst);
-      pragma Assert (Param < Get_Nbr_Params (M));
+      pragma Assert (Param < Get_Nbr_Params (Inst));
       pragma Assert (Get_Param_Desc (M, Param).Typ = Param_Uns32);
    begin
       Params_Table.Table (Get_Param_Idx (Inst, Param)) := Val;

@@ -193,9 +193,9 @@ package body Netlists.Dump is
    begin
       --  Module id and name.
       Put_Indent (Indent);
-      Put ("module (");
+      Put ("module @");
       Put_Trim (Module'Image (M));
-      Put (") ");
+      Put (" ");
       Dump_Name (Get_Name (M));
       New_Line;
 
@@ -392,7 +392,12 @@ package body Netlists.Dump is
 
       Dump_Name (Get_Name (M));
 
-      if Get_Nbr_Params (M) > 0 then
+      if True then
+         Put ('@');
+         Put_Trim (Instance'Image (Inst));
+      end if;
+
+      if Get_Nbr_Params (Inst) > 0 then
          declare
             First : Boolean;
          begin
@@ -413,12 +418,6 @@ package body Netlists.Dump is
       if With_Name then
          Put (' ');
          Dump_Name (Get_Name (Inst));
-      end if;
-
-      if True then
-         Put ('[');
-         Put_Trim (Instance'Image (Inst));
-         Put (']');
       end if;
 
       if Get_Nbr_Inputs (Inst) > 0 then

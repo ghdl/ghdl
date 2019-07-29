@@ -156,6 +156,20 @@ package body Netlists.Builders is
       Ctxt.M_Const_Z := Res;
       Outputs := (0 => Create_Output ("o"));
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_bit")),
+         Id_Const_Bit, 0, 1, 0);
+      Ctxt.M_Const_Bit := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_log")),
+         Id_Const_Log, 0, 1, 0);
+      Ctxt.M_Const_Log := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
    end Create_Const_Modules;
 
    procedure Create_Extract_Module (Ctxt : Context_Acc)
@@ -184,7 +198,7 @@ package body Netlists.Builders is
    begin
       Res := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dyn_extract")),
-         Id_Extract, 2, 1, 2);
+         Id_Dyn_Extract, 2, 1, 2);
       Ctxt.M_Dyn_Extract := Res;
       Outputs := (0 => Create_Output ("o"));
       Inputs := (0 => Create_Input ("i"),
@@ -587,6 +601,34 @@ package body Netlists.Builders is
       Set_Width (O, W);
       return O;
    end Build_Const_UL32;
+
+   function Build_Const_Bit (Ctxt : Context_Acc; W : Width)
+                            return Instance
+   is
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Var_Instance (Ctxt.Parent, Ctxt.M_Const_Bit,
+                                New_Internal_Name (Ctxt),
+                                0, 1, Param_Idx ((W + 31) / 32));
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      return Inst;
+   end Build_Const_Bit;
+
+   function Build_Const_Log (Ctxt : Context_Acc; W : Width)
+                            return Instance
+   is
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Var_Instance (Ctxt.Parent, Ctxt.M_Const_Log,
+                                New_Internal_Name (Ctxt),
+                                0, 1, 2 * Param_Idx ((W + 31) / 32));
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      return Inst;
+   end Build_Const_Log;
 
    function Build_Edge (Ctxt : Context_Acc; Src : Net) return Net
    is

@@ -234,6 +234,123 @@ package body Synth.Context is
       return Val.Typ;
    end Get_Value_Type;
 
+   function Vec2net (Val : Value_Acc) return Net is
+   begin
+      if Val.Typ.Vbound.Len <= 32 then
+         declare
+            Len : constant Iir_Index32 := Iir_Index32 (Val.Typ.Vbound.Len);
+            R_Val, R_Zx : Uns32;
+            V, Zx : Uns32;
+         begin
+            R_Val := 0;
+            R_Zx := 0;
+            for I in 1 .. Len loop
+               To_Logic (Val.Arr.V (I).Scal, Val.Typ.Vec_El, V, Zx);
+               R_Val := R_Val or Shift_Left (V, Natural (Len - I));
+               R_Zx := R_Zx or Shift_Left (Zx, Natural (Len - I));
+            end loop;
+            if R_Zx = 0 then
+               return Build_Const_UB32 (Build_Context, R_Val, Uns32 (Len));
+            else
+               return Build_Const_UL32
+                 (Build_Context, R_Val, R_Zx, Uns32 (Len));
+            end if;
+         end;
+      else
+         --  Need Uconst64 / UconstBig
+         raise Internal_Error;
+      end if;
+   end Vec2net;
+
+   pragma Unreferenced (Vec2net);
+
+   type Logic_32 is record
+      Val : Uns32;  --  AKA aval
+      Zx  : Uns32;  --  AKA bval
+   end record;
+
+   type Digit_Index is new Natural;
+   type Logvec_Array is array (Digit_Index range <>) of Logic_32;
+
+   --   type Logvec_Array_Acc is access Logvec_Array;
+
+   procedure Value2net (Val : Value_Acc;
+                        Vec : in out Logvec_Array;
+                        Off : in out Uns32;
+                        Has_Zx : in out Boolean) is
+   begin
+      case Val.Typ.Kind is
+         when Type_Bit =>
+            declare
+               Idx : constant Digit_Index := Digit_Index (Off / 32);
+               Pos : constant Natural := Natural (Off mod 32);
+               Va : Uns32;
+               Zx : Uns32;
+            begin
+               if Val.Typ = Logic_Type then
+                  From_Std_Logic (Val.Scal, Va, Zx);
+                  Has_Zx := Has_Zx or Zx /= 0;
+               else
+                  Va := Uns32 (Val.Scal);
+                  Zx := 0;
+               end if;
+               Va := Shift_Left (Va, Pos);
+               Zx := Shift_Left (Zx, Pos);
+               Vec (Idx).Val := Vec (Idx).Val or Va;
+               Vec (Idx).Zx := Vec (Idx).Zx or Zx;
+               Off := Off + 1;
+            end;
+         when Type_Vector =>
+            --  TODO: optimize off mod 32 = 0.
+            for I in reverse Val.Arr.V'Range loop
+               Value2net (Val.Arr.V (I), Vec, Off, Has_Zx);
+            end loop;
+         when Type_Array =>
+            for I in reverse Val.Arr.V'Range loop
+               Value2net (Val.Arr.V (I), Vec, Off, Has_Zx);
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Value2net;
+
+   procedure Value2net
+     (Val : Value_Acc; W : Width; Vec : in out Logvec_Array; Res : out Net)
+   is
+      Off : Uns32;
+      Has_Zx : Boolean;
+      Inst : Instance;
+   begin
+      Has_Zx := False;
+      Off := 0;
+      Value2net (Val, Vec, Off, Has_Zx);
+      if W <= 32 then
+         --  32 bit result.
+         if not Has_Zx then
+            Res := Build_Const_UB32 (Build_Context, Vec (0).Val, W);
+         else
+            Res := Build_Const_UL32
+              (Build_Context, Vec (0).Val, Vec (0).Zx, W);
+         end if;
+         return;
+      else
+         if not Has_Zx then
+            Inst := Build_Const_Bit (Build_Context, W);
+            for I in Vec'Range loop
+               Set_Param_Uns32 (Inst, Param_Idx (I), Vec (I).Val);
+            end loop;
+            Res := Get_Output (Inst, 0);
+         else
+            Inst := Build_Const_Log (Build_Context, W);
+            for I in Vec'Range loop
+               Set_Param_Uns32 (Inst, Param_Idx (2 * I), Vec (I).Val);
+               Set_Param_Uns32 (Inst, Param_Idx (2 * I + 1), Vec (I).Zx);
+            end loop;
+            Res := Get_Output (Inst, 0);
+         end if;
+      end if;
+   end Value2net;
+
    function Get_Net (Val : Value_Acc) return Net is
    begin
       case Val.Kind is
@@ -250,52 +367,37 @@ package body Synth.Context is
                                   I1 => Get_Net (Val.M_T));
             end;
          when Value_Discrete =>
-            declare
-               Va : Uns32;
-               Zx : Uns32;
-            begin
-               if Val.Typ = Logic_Type then
-                  From_Std_Logic (Val.Scal, Va, Zx);
-                  if Zx = 0 then
-                     return Build_Const_UB32 (Build_Context, Va, 1);
-                  else
-                     return Build_Const_UL32 (Build_Context, Va, Zx, 1);
-                  end if;
-               elsif Val.Typ = Boolean_Type then
-                  From_Bit (Val.Scal, Va);
-                  return Build_Const_UB32 (Build_Context, Va, 1);
-               else
-                  return Build_Const_UB32
-                    (Build_Context, Uns32 (Val.Scal), Val.Typ.Drange.W);
-               end if;
-            end;
-         when Value_Array =>
-            if Val.Typ.Vbound.Len <= 32 then
+            if Val.Typ.Kind = Type_Bit then
                declare
-                  Len : constant Iir_Index32 :=
-                    Iir_Index32 (Val.Typ.Vbound.Len);
-                  R_Val, R_Zx : Uns32;
-                  V, Zx : Uns32;
+                  V : Logvec_Array (0 .. 0) := (0 => (0, 0));
+                  Res : Net;
                begin
-                  R_Val := 0;
-                  R_Zx := 0;
-                  for I in 1 .. Len loop
-                     To_Logic (Val.Arr.V (I).Scal, Val.Typ.Vec_El, V, Zx);
-                     R_Val := R_Val or Shift_Left (V, Natural (Len - I));
-                     R_Zx := R_Zx or Shift_Left (Zx, Natural (Len - I));
-                  end loop;
-                  if R_Zx = 0 then
-                     return Build_Const_UB32
-                       (Build_Context, R_Val, Uns32 (Len));
-                  else
-                     return Build_Const_UL32
-                       (Build_Context, R_Val, R_Zx, Uns32 (Len));
-                  end if;
+                  Value2net (Val, 1, V, Res);
+                  return Res;
                end;
+            elsif Val.Typ.Drange.W <= 32 then
+               return Build_Const_UB32
+                 (Build_Context, Uns32 (Val.Scal), Val.Typ.Drange.W);
             else
-               --  Need Uconst64 / UconstBig
                raise Internal_Error;
             end if;
+         when Value_Array =>
+            declare
+               W : constant Width := Get_Type_Width (Val.Typ);
+               Nd : constant Digit_Index := Digit_Index ((W + 31) / 32);
+               Res : Net;
+            begin
+               if Nd > 64 then
+                  raise Internal_Error;
+               else
+                  declare
+                     Vec : Logvec_Array (0 .. Nd - 1) := (others => (0, 0));
+                  begin
+                     Value2net (Val, W, Vec, Res);
+                     return Res;
+                  end;
+               end if;
+            end;
          when others =>
             raise Internal_Error;
       end case;

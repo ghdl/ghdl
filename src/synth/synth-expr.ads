@@ -74,8 +74,8 @@ package Synth.Expr is
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
-                                 Pfx_Bnd : Type_Acc;
-                                 Res_Bnd : out Type_Acc;
+                                 Pfx_Bnd : Bound_Type;
+                                 Res_Bnd : out Bound_Type;
                                  Inp : out Net;
                                  Step : out Uns32;
                                  Off : out Int32;

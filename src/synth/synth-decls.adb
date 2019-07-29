@@ -209,7 +209,6 @@ package body Synth.Decls is
       --  The elaboration of an index constraint consists of the
       --  declaration of each of the discrete ranges in the index
       --  constraint in some order that is not defined by the language.
-      Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
       Etyp := Get_Value_Type (Syn_Inst, El_Type);
 
       if Is_One_Dimensional_Array_Type (Atype) then

@@ -20,6 +20,7 @@
 
 with Ada.Unchecked_Conversion;
 with System;
+with Mutils;
 
 package body Synth.Values is
    function To_Bound_Array_Acc is new Ada.Unchecked_Conversion
@@ -86,10 +87,13 @@ package body Synth.Values is
    end Create_Vector_Type;
 
    function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
-                                      return Type_Acc is
+                                      return Type_Acc
+   is
+      W : constant Width := Uns32 (Mutils.Clog2 (Uns64 (Len)));
    begin
       return Create_Vector_Type ((Dir => Iir_Downto,
-                                  W => 0,
+                                  Wlen => W,
+                                  Wbounds => W,
                                   Left => Int32 (Len) - 1,
                                   Right => 0,
                                   Len => Len),
@@ -337,6 +341,16 @@ package body Synth.Values is
             return Atype.Drange.W;
          when Type_Vector =>
             return Atype.Vbound.Len;
+         when Type_Array =>
+            declare
+               Res : Width;
+            begin
+               Res := Get_Type_Width (Atype.Arr_El);
+               for I in Atype.Abounds.D'Range loop
+                  Res := Res * Atype.Abounds.D (I).Len;
+               end loop;
+               return Res;
+            end;
          when others =>
             raise Internal_Error;
       end case;

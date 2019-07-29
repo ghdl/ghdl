@@ -283,18 +283,39 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Get_Lit_Quote;
 
-   procedure Disp_Binary_Lit (Va : Uns32; Zx : Uns32; Wd : Width)
-   is
-      W : constant Natural := Natural (Wd);
-      Q : constant Character := Get_Lit_Quote (Wd);
+   procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural) is
    begin
-      Put (Q);
       for I in 1 .. W loop
          Put (Bchar (((Va / 2**(W - I)) and 1)
                      + ((Zx / 2**(W - I)) and 1) * 2));
       end loop;
+   end Disp_Binary_Digits;
+
+   procedure Disp_Binary_Lit (Va : Uns32; Zx : Uns32; Wd : Width)
+   is
+      Q : constant Character := Get_Lit_Quote (Wd);
+   begin
+      Put (Q);
+      Disp_Binary_Digits (Va, Zx, Natural (Wd));
       Put (Q);
    end Disp_Binary_Lit;
+
+   procedure Disp_Const_Bit (Inst : Instance)
+   is
+      W : constant Width := Get_Width (Get_Output (Inst, 0));
+      Nd : constant Width := W / 32;
+      Ld : constant Natural := Natural (W mod 32);
+   begin
+      Put ('"');
+      if Ld > 0 then
+         Disp_Binary_Digits (Get_Param_Uns32 (Inst, Param_Idx (Nd)), 0, Ld);
+      end if;
+      for I in reverse 1 .. Nd loop
+         Disp_Binary_Digits
+           (Get_Param_Uns32 (Inst, Param_Idx (I - 1)), 0, 32);
+      end loop;
+      Put ('"');
+   end Disp_Const_Bit;
 
    procedure Disp_X_Lit (W : Width)
    is
@@ -491,6 +512,32 @@ package body Netlists.Disp_Vhdl is
                end if;
                Put_Line (";");
             end;
+         when Id_Dyn_Extract =>
+            declare
+               O : constant Net := Get_Output (Inst, 0);
+               Wd : constant Width := Get_Width (O);
+               Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+               Off : constant Uns32 := Get_Param_Uns32 (Inst, 1);
+            begin
+               Disp_Template ("  \o0 <= \i0 (to_integer (\ui1)", Inst);
+               if Step /= 1 then
+                  Disp_Template (" * \n0", Inst, (0 => Step));
+               end if;
+               if Off /= 0 then
+                  Disp_Template (" + \n0", Inst, (0 => Off));
+               end if;
+               if Wd > 1 then
+                  Disp_Template (" + \n0 - 1 downto to_integer (\ui1)",
+                                 Inst, (0 => Wd));
+                  if Step /= 1 then
+                     Disp_Template (" * \n0", Inst, (0 => Step));
+                  end if;
+                  if Off /= 0 then
+                     Disp_Template (" + \n0", Inst, (0 => Off));
+                  end if;
+               end if;
+               Put_Line (");");
+            end;
          when Id_Insert =>
             declare
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
@@ -536,6 +583,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= ", Inst);
             Disp_Constant_Inline (Inst);
             Put_Line (";");
+         when Id_Const_Bit =>
+            null;
          when Id_Adff =>
             Disp_Template ("  process (\i0, \i2)" & NL &
                            "  begin" & NL &
@@ -615,7 +664,7 @@ package body Netlists.Disp_Vhdl is
             declare
                W : constant Width := Get_Width (Get_Output (Inst, 0));
             begin
-               Disp_Template ("  \o0 <= \i0 (\n0 downto 0);",
+               Disp_Template ("  \o0 <= \i0 (\n0 downto 0);  --  trunc" & NL,
                               Inst, (0 => W - 1));
             end;
          when Id_Uextend =>
@@ -671,6 +720,9 @@ package body Netlists.Disp_Vhdl is
                      Put (" := ");
                      Disp_Constant_Inline
                        (Get_Parent (Get_Input_Net (Inst, 2)));
+                  when Id_Const_Bit =>
+                     Put (" := ");
+                     Disp_Const_Bit (Inst);
                   when others =>
                      null;
                end case;
