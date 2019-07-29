@@ -23,8 +23,10 @@ with Types; use Types;
 with Name_Table;
 
 with Vhdl.Prints;
+with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Disp_Vhdl; use Netlists.Disp_Vhdl;
@@ -64,8 +66,21 @@ package body Synth.Disp_Vhdl is
                Put_Line ("  wrap_" & Pfx & " <= " & Pfx & ";");
                Idx := Idx + 1;
             else
-               Error_Kind ("disp_in_converter(enum)", Ptype);
+               --  Any other enum.
+               --  TODO: width = 1
+               Put ("  wrap_" & Pfx & " <= std_logic_vector(to_unsigned(");
+               Put (Name_Table.Image (Get_Identifier
+                                        (Get_Type_Declarator (Ptype))));
+               Put ("'pos (" & Pfx & ")," & Width'Image (Desc.W) & "));");
+               New_Line;
+               Idx := Idx + 1;
             end if;
+         when Iir_Kind_Integer_Type_Definition =>
+            --  FIXME: signed or unsigned ?
+            Put ("  wrap_" & Pfx & " <= std_logic_vector(to_unsigned(");
+            Put (Pfx & "," & Width'Image (Desc.W) & "));");
+            New_Line;
+            Idx := Idx + 1;
          when Iir_Kind_Array_Type_Definition =>
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
                --  Nothing to do.
@@ -118,6 +133,34 @@ package body Synth.Disp_Vhdl is
                   Put (" (" & Pfx & "'left)");
                end if;
                Put_Line (" <= wrap_" & Pfx & ";");
+               Idx := Idx + 1;
+            elsif Btype = Vhdl.Std_Package.Bit_Vector_Type_Definition then
+               --  Nothing to do.
+               Put ("  " & Pfx);
+               if Desc.W = 1 then
+                  --  This is an array of length 1.  A scalar is used in the
+                  --  netlist.
+                  Put (" (" & Pfx & "'left) <= to_bit (wrap_" & Pfx & ");");
+               else
+                  Put (" <= to_bit_vector (wrap_" & Pfx & ");");
+               end if;
+               New_Line;
+               Idx := Idx + 1;
+            elsif Is_One_Dimensional_Array_Type (Btype)
+              and then (Get_Base_Type (Get_Element_Subtype (Btype))
+                          = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type)
+            then
+               --  unsigned, signed or a compatible array.
+               Put ("  " & Pfx);
+               if Desc.W = 1 then
+                  --  This is an array of length 1.  A scalar is used in the
+                  --  netlist.
+                  Put (" (" & Pfx & "'left)");
+               end if;
+               Put (" <= ");
+               Put (Name_Table.Image (Get_Identifier
+                                        (Get_Type_Declarator (Btype))));
+               Put_Line (" (wrap_" & Pfx & ");");
                Idx := Idx + 1;
             else
                Error_Kind ("disp_out_converter(arr)", Ptype);
