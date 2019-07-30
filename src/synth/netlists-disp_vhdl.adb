@@ -571,8 +571,8 @@ package body Netlists.Disp_Vhdl is
                   "  begin" & NL &
                   "    \o0 <= \i0;" & NL &
                   "    \o0 (" &
-                  "to_integer (signed (\i2)) * \p0 + (\sp1 + \n0)" & NL &
-                  "         downto to_integer (signed (\i2)) * \p0 + (\sp1))" &
+                  "to_integer (\ui2) * \p0 + (\sp1 + \n0)" & NL &
+                  "        downto to_integer (\ui2) * \p0 + (\sp1))" &
                   " <= \i1;" & NL &
                   "  end process;" & NL,
                   Inst, (0 => Iw - 1));
