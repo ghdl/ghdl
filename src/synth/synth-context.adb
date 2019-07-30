@@ -25,7 +25,6 @@ with Tables;
 with Vhdl.Errors; use Vhdl.Errors;
 with Netlists.Builders; use Netlists.Builders;
 
-with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
 with Synth.Expr; use Synth.Expr;
 
@@ -90,27 +89,11 @@ package body Synth.Context is
    begin
       case Get_Kind (Obj_Type) is
          when Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition =>
-            Otype := Get_Value_Type (Syn_Inst, Get_Type (Obj));
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Integer_Subtype_Definition =>
+            Otype := Get_Value_Type (Syn_Inst, Obj_Type);
             return Alloc_Wire (Kind, Obj, Otype);
-         when Iir_Kind_Array_Subtype_Definition =>
-            declare
-               Bnd : Value_Acc;
-            begin
-               Bnd := Get_Value (Syn_Inst, Obj_Type);
-               if Is_Vector_Type (Obj_Type) then
-                  return Alloc_Wire (Kind, Obj, Bnd.Typ);
-               else
-                  raise Internal_Error;
-               end if;
-            end;
-         when Iir_Kind_Integer_Subtype_Definition =>
-            declare
-               Rng : Value_Acc;
-            begin
-               Rng := Get_Value (Syn_Inst, Obj_Type);
-               return Alloc_Wire (Kind, Obj, Rng.Typ);
-            end;
          when others =>
             Error_Kind ("alloc_object", Obj_Type);
       end case;

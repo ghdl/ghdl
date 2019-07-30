@@ -110,9 +110,41 @@ package body Synth.Stmts is
       end if;
    end Synth_Assignment_Aggregate;
 
-   procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
-                               Target : Node;
-                               Val : Value_Acc) is
+   procedure Synth_Indexed_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Target : Node; Val : Value_Acc)
+   is
+      Pfx : constant Node := Get_Prefix (Target);
+      Targ : constant Value_Acc := Get_Value (Syn_Inst, Get_Base_Name (Pfx));
+      Targ_Net : Net;
+      V : Net;
+
+      Val_Net : Net;
+      Voff : Net;
+      Mul : Uns32;
+      Off : Uns32;
+      W : Width;
+   begin
+      Synth_Indexed_Name (Syn_Inst, Target, Targ.Typ, Voff, Mul, Off, W);
+
+      pragma Assert (Get_Type_Width (Val.Typ) = W);
+      Targ_Net := Get_Last_Assigned_Value (Targ.W);
+      Val_Net := Get_Net (Val);
+
+      if Voff = No_Net then
+         --  FIXME: check index.
+         pragma Assert (Mul = 0);
+         V := Build_Insert (Build_Context, Targ_Net, Val_Net, Off);
+         Set_Location (V, Target);
+      else
+         V := Build_Dyn_Insert
+           (Build_Context, Targ_Net, Val_Net, Voff, Mul, Int32 (Off));
+         Set_Location (V, Target);
+      end if;
+      Synth_Assign (Targ, Create_Value_Net (V, Targ.Typ));
+   end Synth_Indexed_Assignment;
+
+   procedure Synth_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Target : Node; Val : Value_Acc) is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Simple_Name =>
@@ -125,37 +157,7 @@ package body Synth.Stmts is
          when Iir_Kind_Aggregate =>
             Synth_Assignment_Aggregate (Syn_Inst, Target, Val);
          when Iir_Kind_Indexed_Name =>
-            declare
-               Pfx : constant Node := Get_Prefix (Target);
-               Targ : constant Value_Acc :=
-                 Get_Value (Syn_Inst, Get_Base_Name (Pfx));
-               Indexes : constant Node_Flist := Get_Index_List (Target);
-               N_Idx : Node;
-               Idx : Value_Acc;
-               Targ_Net : Net;
-               V : Net;
-            begin
-               if Get_Nbr_Elements (Indexes) /= 1
-                 or else Targ.Kind /= Value_Wire
-               then
-                  --  Only support assignment of vector.
-                  raise Internal_Error;
-               end if;
-               N_Idx := Get_Nth_Element (Indexes, 0);
-               Idx := Synth_Expression_With_Type
-                 (Syn_Inst, N_Idx, Get_Type (N_Idx));
-               if Is_Const (Idx) then
-                  --  FIXME: check index.
-                  Targ_Net := Get_Last_Assigned_Value (Targ.W);
-                  V := Build_Insert (Build_Context,
-                                     Targ_Net, Get_Net (Val),
-                                     Index_To_Offset (Targ, Idx.Scal, Target));
-                  Set_Location (V, Target);
-               else
-                  raise Internal_Error;
-               end if;
-               Synth_Assign (Targ, Create_Value_Net (V, Targ.Typ));
-            end;
+            Synth_Indexed_Assignment (Syn_Inst, Target, Val);
          when Iir_Kind_Slice_Name =>
             declare
                Pfx : constant Node := Get_Prefix (Target);

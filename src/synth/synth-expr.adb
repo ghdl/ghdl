@@ -1130,22 +1130,20 @@ package body Synth.Expr is
       end case;
    end In_Bounds;
 
-   function Index_To_Offset (Pfx : Value_Acc; Idx : Int64; Loc : Node)
-                            return Uns32
-   is
-      Rng : constant Type_Acc := Pfx.Typ;
+   function Index_To_Offset (Bnd : Bound_Type; Idx : Int64; Loc : Node)
+                            return Uns32 is
    begin
-      if not In_Bounds (Rng.Vbound, Int32 (Idx)) then
+      if not In_Bounds (Bnd, Int32 (Idx)) then
          Error_Msg_Synth (+Loc, "index not within bounds");
          return 0;
       end if;
 
       --  The offset is from the LSB (bit 0).  Bit 0 is the rightmost one.
-      case Rng.Vbound.Dir is
+      case Bnd.Dir is
          when Iir_To =>
-            return Uns32 (Rng.Vbound.Right - Int32 (Idx));
+            return Uns32 (Bnd.Right - Int32 (Idx));
          when Iir_Downto =>
-            return Uns32 (Int32 (Idx) - Rng.Vbound.Right);
+            return Uns32 (Int32 (Idx) - Bnd.Right);
       end case;
    end Index_To_Offset;
 
@@ -1175,61 +1173,75 @@ package body Synth.Expr is
       return Off;
    end Dyn_Index_To_Offset;
 
-   function Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                               return Value_Acc
+   procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
+                                 Name : Node;
+                                 Pfx_Type : Type_Acc;
+                                 Voff : out Net;
+                                 Mul : out Uns32;
+                                 Off : out Uns32;
+                                 W : out Width)
    is
       Indexes : constant Iir_Flist := Get_Index_List (Name);
       Idx_Expr : constant Node := Get_Nth_Element (Indexes, 0);
       Idx_Val : Value_Acc;
-      Pfx_Val : Value_Acc;
    begin
       if Get_Nbr_Elements (Indexes) /= 1 then
          Error_Msg_Synth (+Name, "multi-dim arrays not yet supported");
-         return null;
+         raise Internal_Error;
       end if;
-
-      Pfx_Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
 
       --  Use the base type as the subtype of the index is not synth-ed.
       Idx_Val := Synth_Expression_With_Type
         (Syn_Inst, Idx_Expr, Get_Base_Type (Get_Type (Idx_Expr)));
 
-      if Pfx_Val.Typ.Kind = Type_Vector then
+      if Pfx_Type.Kind = Type_Vector then
+         W := 1;
+         Mul := 0;
          if Idx_Val.Kind = Value_Discrete then
-            declare
-               Off : Uns32;
-            begin
-               Off := Index_To_Offset (Pfx_Val, Idx_Val.Scal, Name);
-               return Bit_Extract (Pfx_Val, Off, Name);
-            end;
+            Voff := No_Net;
+            Off := Index_To_Offset (Pfx_Type.Vbound, Idx_Val.Scal, Name);
          else
-            declare
-               Off : Net;
-               Res : Net;
-            begin
-               Off := Dyn_Index_To_Offset (Pfx_Val.Typ.Vbound, Idx_Val, Name);
-               Res := Build_Dyn_Extract
-                 (Build_Context, Get_Net (Pfx_Val), Off, 1, 0, 1);
-               Set_Location (Res, Name);
-               return Create_Value_Net (Res, Pfx_Val.Typ.Vec_El);
-            end;
+            Voff := Dyn_Index_To_Offset (Pfx_Type.Vbound, Idx_Val, Name);
+            Off := 0;
          end if;
-      elsif Pfx_Val.Typ.Kind = Type_Array then
-         declare
-            Off : Net;
-            Res : Net;
-            El_Width : Width;
-         begin
-            Off := Dyn_Index_To_Offset
-              (Pfx_Val.Typ.Abounds.D (1), Idx_Val, Name);
-            El_Width := Get_Type_Width (Pfx_Val.Typ.Arr_El);
-            Res := Build_Dyn_Extract
-              (Build_Context, Get_Net (Pfx_Val), Off, El_Width, 0, El_Width);
-            Set_Location (Res, Name);
-            return Create_Value_Net (Res, Pfx_Val.Typ.Arr_El);
-         end;
+      elsif Pfx_Type.Kind = Type_Array then
+         Voff := Dyn_Index_To_Offset (Pfx_Type.Abounds.D (1), Idx_Val, Name);
+         W := Get_Type_Width (Pfx_Type.Arr_El);
+         Mul := W;
+         Off := 0;
       else
          raise Internal_Error;
+      end if;
+   end Synth_Indexed_Name;
+
+   function Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
+                               return Value_Acc
+   is
+      Pfx_Val : Value_Acc;
+      Voff : Net;
+      Mul : Uns32;
+      Off : Uns32;
+      W : Width;
+      Res : Net;
+   begin
+      Pfx_Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
+
+      Synth_Indexed_Name (Syn_Inst, Name, Pfx_Val.Typ, Voff, Mul, Off, W);
+
+      if Voff = No_Net then
+         pragma Assert (Mul = 0);
+         if W = 1 and then Pfx_Val.Kind = Value_Array then
+            return Bit_Extract (Pfx_Val, Off, Name);
+         else
+            Res := Build_Extract (Build_Context, Get_Net (Pfx_Val), Off, W);
+            Set_Location (Res, Name);
+            return Create_Value_Net (Res, Get_Array_Element (Pfx_Val.Typ));
+         end if;
+      else
+         Res := Build_Dyn_Extract
+           (Build_Context, Get_Net (Pfx_Val), Voff, Mul, Int32 (Off), W);
+         Set_Location (Res, Name);
+         return Create_Value_Net (Res, Get_Array_Element (Pfx_Val.Typ));
       end if;
    end Synth_Indexed_Name;
 

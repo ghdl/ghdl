@@ -69,7 +69,7 @@ package Synth.Expr is
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type;
 
    --  Convert index IDX in PFX to an offset.  LOC is used in case of error.
-   function Index_To_Offset (Pfx : Value_Acc; Idx : Int64; Loc : Node)
+   function Index_To_Offset (Bnd : Bound_Type; Idx : Int64; Loc : Node)
                             return Uns32;
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
@@ -80,4 +80,12 @@ package Synth.Expr is
                                  Step : out Uns32;
                                  Off : out Int32;
                                  Wd : out Uns32);
+
+   procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
+                                 Name : Node;
+                                 Pfx_Type : Type_Acc;
+                                 Voff : out Net;
+                                 Mul : out Uns32;
+                                 Off : out Uns32;
+                                 W : out Width);
 end Synth.Expr;
