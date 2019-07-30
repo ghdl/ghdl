@@ -1162,12 +1162,16 @@ package body Synth.Expr is
       Off : Net;
       Right : Net;
    begin
-      --  TODO: handle width.
+      Idx2 := Synth_Resize (Idx_Val, Bnd.Wbounds, Loc);
+
+      if Bnd.Right = 0 and then Bnd.Dir = Iir_Downto then
+         --  Simple case without adjustments.
+         return Idx2;
+      end if;
+
       Right := Build_Const_UB32 (Build_Context, To_Uns32 (Bnd.Right),
                                  Bnd.Wbounds);
       Set_Location (Right, Loc);
-
-      Idx2 := Synth_Resize (Idx_Val, Bnd.Wbounds, Loc);
 
       case Bnd.Dir is
          when Iir_To =>
