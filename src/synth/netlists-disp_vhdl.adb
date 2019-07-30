@@ -567,7 +567,7 @@ package body Netlists.Disp_Vhdl is
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
             begin
                Disp_Template
-                 ("  process (\i0, \i1)" & NL &
+                 ("  process (\i0, \i1, \i2)" & NL &
                   "  begin" & NL &
                   "    \o0 <= \i0;" & NL &
                   "    \o0 (" &

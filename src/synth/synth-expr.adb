@@ -542,7 +542,15 @@ package body Synth.Expr is
          declare
             Bnds : constant Value_Acc := Get_Value (Syn_Inst, Atype);
          begin
-            return Bnds.Typ.Vbound;
+            case Bnds.Typ.Kind is
+               when Type_Vector =>
+                  pragma Assert (Dim = 0);
+                  return Bnds.Typ.Vbound;
+               when Type_Array =>
+                  return Bnds.Typ.Abounds.D (Iir_Index32 (Dim + 1));
+               when others =>
+                  raise Internal_Error;
+            end case;
          end;
       end if;
    end Synth_Array_Bounds;

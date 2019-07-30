@@ -211,7 +211,9 @@ package body Synth.Decls is
       --  constraint in some order that is not defined by the language.
       Etyp := Get_Value_Type (Syn_Inst, El_Type);
 
-      if Is_One_Dimensional_Array_Type (Atype) then
+      if Etyp.Kind = Type_Bit
+        and then Is_One_Dimensional_Array_Type (Atype)
+      then
          St_El := Get_Index_Type (St_Indexes, 0);
          return Create_Vector_Type
            (Synth_Bounds_From_Range (Syn_Inst, St_El), Etyp);
