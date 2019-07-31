@@ -1070,20 +1070,23 @@ package body Synth.Expr is
    is
       Operand : Value_Acc;
 
-      function Synth_Bit_Monadic (Id : Monadic_Module_Id) return Value_Acc is
+      function Synth_Bit_Monadic (Id : Monadic_Module_Id) return Value_Acc
+      is
+         N : Net;
       begin
-         return Create_Value_Net
-           (Build_Monadic (Build_Context, Id, Get_Net (Operand)),
-            Operand.Typ);
+         N := Build_Monadic (Build_Context, Id, Get_Net (Operand));
+         Set_Location (N, Loc);
+         return Create_Value_Net (N, Operand.Typ);
       end Synth_Bit_Monadic;
 
       function Synth_Vec_Monadic (Id : Monadic_Module_Id) return Value_Acc
       is
          Op: constant Net := Get_Net (Operand);
+         N : Net;
       begin
-         return Create_Value_Net
-           (Build_Monadic (Build_Context, Id, Op),
-            Create_Res_Bound (Operand, Op));
+         N := Build_Monadic (Build_Context, Id, Op);
+         Set_Location (N, Loc);
+         return Create_Value_Net (N, Create_Res_Bound (Operand, Op));
       end Synth_Vec_Monadic;
    begin
       Operand := Synth_Expression (Syn_Inst, Operand_Expr);
