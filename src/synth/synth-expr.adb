@@ -130,7 +130,7 @@ package body Synth.Expr is
    begin
       if Etype = Logic_Type then
          From_Std_Logic (Enum, Val, Zx);
-      elsif Etype = Boolean_Type then
+      elsif Etype = Boolean_Type or Etype = Bit_Type then
          From_Bit (Enum, Val);
          Zx := 0;
       else

@@ -258,9 +258,11 @@ package body Synth.Insts is
       Build => Build,
       Equal => Equal);
 
+   --  Subprogram used for instantiation (direct or by component).
+   --  PORTS_ASSOC belong to SYN_INST.
    procedure Synth_Instantiate_Module (Syn_Inst : Synth_Instance_Acc;
                                        Inst : Instance;
-                                       Ports : Node;
+                                       Inst_Obj : Inst_Object;
                                        Ports_Assoc : Node)
    is
       --  Instantiate the module
@@ -277,7 +279,7 @@ package body Synth.Insts is
       Nbr_Outputs : Port_Nbr;
    begin
       Assoc := Ports_Assoc;
-      Assoc_Inter := Ports;
+      Assoc_Inter := Get_Port_Chain (Inst_Obj.Decl);
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Assoc) loop
@@ -303,7 +305,8 @@ package body Synth.Insts is
               | Port_Inout =>
                Port := Get_Output (Inst, Nbr_Outputs);
                Port := Builders.Build_Port (Build_Context, Port);
-               O := Create_Value_Net (Port, null);
+               O := Create_Value_Net
+                 (Port, Get_Value_Type (Inst_Obj.Syn_Inst, Get_Type (Inter)));
                Synth_Assignment (Syn_Inst, Actual, O);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
@@ -366,8 +369,7 @@ package body Synth.Insts is
                             New_Sname_User (Get_Identifier (Stmt)));
 
       Synth_Instantiate_Module
-        (Syn_Inst, Inst,
-         Get_Port_Chain (Ent), Get_Port_Map_Aspect_Chain (Stmt));
+        (Syn_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Stmt));
    end Synth_Direct_Instantiation_Statement;
 
    procedure Synth_Design_Instantiation_Statement
@@ -538,8 +540,7 @@ package body Synth.Insts is
                             New_Sname_User (Get_Identifier (Stmt)));
 
       Synth_Instantiate_Module
-        (Comp_Inst, Inst,
-         Get_Port_Chain (Ent), Get_Port_Map_Aspect_Chain (Bind));
+        (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
 
       --  Connect out from component to instance.
       --  Instantiate the module
