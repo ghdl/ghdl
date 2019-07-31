@@ -1040,6 +1040,27 @@ package body Synth.Expr is
             else
                return Synth_Compare (Id_Sle);
             end if;
+         when Iir_Predefined_Integer_Less =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Boolean'Pos (Left.Scal < Right.Scal), Boolean_Type);
+            else
+               return Synth_Compare (Id_Slt);
+            end if;
+         when Iir_Predefined_Integer_Greater_Equal =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Boolean'Pos (Left.Scal >= Right.Scal), Boolean_Type);
+            else
+               return Synth_Compare (Id_Sge);
+            end if;
+         when Iir_Predefined_Integer_Greater =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Boolean'Pos (Left.Scal > Right.Scal), Boolean_Type);
+            else
+               return Synth_Compare (Id_Sgt);
+            end if;
          when Iir_Predefined_Integer_Equality =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete
