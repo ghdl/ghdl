@@ -434,6 +434,16 @@ package body Netlists.Builders is
       Create_Compare_Module (Design, Res.M_Compare (Id_Uge),
                              Get_Identifier ("uge"), Id_Uge);
 
+      Create_Compare_Module (Design, Res.M_Compare (Id_Slt),
+                             Get_Identifier ("slt"), Id_Slt);
+      Create_Compare_Module (Design, Res.M_Compare (Id_Sle),
+                             Get_Identifier ("sle"), Id_Sle);
+
+      Create_Compare_Module (Design, Res.M_Compare (Id_Sgt),
+                             Get_Identifier ("sgt"), Id_Sgt);
+      Create_Compare_Module (Design, Res.M_Compare (Id_Sge),
+                             Get_Identifier ("sge"), Id_Sge);
+
       Create_Concat_Modules (Res);
       Create_Const_Modules (Res);
 

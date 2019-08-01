@@ -635,6 +635,18 @@ package body Netlists.Disp_Vhdl is
          when Id_Uge =>
             Disp_Template ("  \o0 <= '1' when \ui0 >= \ui1 else '0';" & NL,
                            Inst);
+         when Id_Slt =>
+            Disp_Template ("  \o0 <= '1' when \si0 < \si1 else '0';" & NL,
+                           Inst);
+         when Id_Sle =>
+            Disp_Template ("  \o0 <= '1' when \si0 <= \si1 else '0';" & NL,
+                           Inst);
+         when Id_Sgt =>
+            Disp_Template ("  \o0 <= '1' when \si0 > \si1 else '0';" & NL,
+                           Inst);
+         when Id_Sge =>
+            Disp_Template ("  \o0 <= '1' when \si0 >= \si1 else '0';" & NL,
+                           Inst);
          when Id_Eq =>
             Disp_Template ("  \o0 <= '1' when \i0 = \i1 else '0';" & NL, Inst);
          when Id_Ne =>
