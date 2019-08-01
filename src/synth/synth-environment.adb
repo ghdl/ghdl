@@ -144,7 +144,8 @@ package body Synth.Environment is
       Wire_Rec.Nbr_Final_Assign := Wire_Rec.Nbr_Final_Assign + 1;
    end Add_Conc_Assign_Partial;
 
-   procedure Add_Conc_Assign (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src)
+   procedure Add_Conc_Assign_Comb
+     (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src)
    is
       Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
       Inst : constant Instance := Get_Parent (Val);
@@ -169,6 +170,12 @@ package body Synth.Environment is
          Off := 0;
       end if;
       Add_Conc_Assign_Partial (Wid, V, Off, Stmt);
+   end Add_Conc_Assign_Comb;
+
+   procedure Add_Conc_Assign
+     (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src) is
+   begin
+      Add_Conc_Assign_Partial (Wid, Val, 0, Stmt);
    end Add_Conc_Assign;
 
    --  This procedure is called after each concurrent statement to assign

@@ -334,12 +334,9 @@ package body Synth.Inference is
       Enable : Net;
    begin
       Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
-      if Len < 0 then
-         --  No logical loop
-         Add_Conc_Assign (Wid, Val, Stmt);
-      elsif Len = 0 then
-         --  Self assignment.
-         Add_Conc_Assign (Wid, Val, Stmt);
+      if Len <= 0 then
+         --  No logical loop or self assignment.
+         Add_Conc_Assign_Comb (Wid, Val, Stmt);
       else
          --  So there is a logical loop.
          Sel := Get_Mux2_Sel (Last_Mux);

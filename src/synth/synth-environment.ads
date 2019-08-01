@@ -110,6 +110,8 @@ package Synth.Environment is
    pragma Inline (Current_Phi);
 
    procedure Add_Conc_Assign (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src);
+   procedure Add_Conc_Assign_Comb
+     (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src);
 
    procedure Finalize_Assignments (Ctxt : Builders.Context_Acc);
 private
