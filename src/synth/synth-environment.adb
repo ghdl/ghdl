@@ -144,32 +144,89 @@ package body Synth.Environment is
       Wire_Rec.Nbr_Final_Assign := Wire_Rec.Nbr_Final_Assign + 1;
    end Add_Conc_Assign_Partial;
 
+   function Is_Partial_Assignment (Val : Net; Prev_Val : Net) return Boolean
+   is
+      Inst : Instance;
+      V : Net;
+   begin
+      if Val = Prev_Val then
+         --  This particular case is a loop.
+         return False;
+      end if;
+
+      V := Val;
+      loop
+         Inst := Get_Parent (V);
+         if Get_Id (Inst) = Id_Insert then
+            V := Get_Input_Net (Inst, 0);
+         else
+            return V = Prev_Val;
+         end if;
+      end loop;
+   end Is_Partial_Assignment;
+
    procedure Add_Conc_Assign_Comb
      (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src)
    is
       Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
-      Inst : constant Instance := Get_Parent (Val);
-      V : Net;
-      Off : Uns32;
-      Inp : Input;
    begin
       --  Check for partial assignment.
-      if Get_Id (Inst) = Id_Insert
-        and then Get_Input_Net (Inst, 0) = Wire_Rec.Gate
-      then
-         --  TODO: handle multiple partial assignments
-         --    (like o (1) <= x; o (3) <= y;)
-         --  TODO: handle dyn assignment (like o (i) <= x;)
-         Inp := Get_Input (Inst, 1);
-         V := Get_Driver (Inp);
-         Off := Get_Param_Uns32 (Inst, 0);
-         Disconnect (Inp);
-         Free_Instance (Inst);
+      if Is_Partial_Assignment (Val, Wire_Rec.Gate) then
+         declare
+            Wd : constant Width := Get_Width (Val);
+            Idx : Uns32;
+            Len : Width;
+            Inst : Instance;
+            V : Net;
+            Ins_Idx : Uns32;
+            Ins_Inp : Net;
+            Ins_Wd : Width;
+         begin
+            --  Sweep all the bits.
+            Idx := 0;
+            while Idx < Wd loop
+               --  We are interested in bits from Idx to the end.
+               Len := Wd - Idx;
+               V := Val;
+               loop
+                  Inst := Get_Parent (V);
+                  if Get_Id (Inst) = Id_Insert then
+                     Ins_Idx := Get_Param_Uns32 (Inst, 0);
+                     Ins_Inp := Get_Input_Net (Inst, 1);
+                     Ins_Wd := Get_Width (Ins_Inp);
+                     if Idx < Ins_Idx then
+                        --  Consider bits before this insert; continue.
+                        Len := Ins_Idx - Idx;
+                     elsif Idx >= Ins_Idx + Ins_Wd then
+                        --  Already handled; continue.
+                        null;
+                     else
+                        --  Partially handled.
+                        Len := Ins_Idx + Ins_Wd - Idx;
+                        if Len = Ins_Wd and then Idx = Ins_Idx then
+                           --  Fully convered by this insert.
+                           Add_Conc_Assign_Partial (Wid, Ins_Inp, Idx, Stmt);
+                        else
+                           --  TODO: extract bits from ins_inp.
+                           raise Internal_Error;
+                        end if;
+                        Idx := Idx + Len;
+                        exit;
+                     end if;
+                     --  Check with next insert gate.
+                     V := Get_Input_Net (Inst, 0);
+                  else
+                     --  Not assigned.
+                     pragma Assert (V = Wire_Rec.Gate);
+                     Idx := Idx + Len;
+                     exit;
+                  end if;
+               end loop;
+            end loop;
+         end;
       else
-         V := Val;
-         Off := 0;
+         Add_Conc_Assign_Partial (Wid, Val, 0, Stmt);
       end if;
-      Add_Conc_Assign_Partial (Wid, V, Off, Stmt);
    end Add_Conc_Assign_Comb;
 
    procedure Add_Conc_Assign
