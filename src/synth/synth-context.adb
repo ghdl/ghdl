@@ -358,11 +358,9 @@ package body Synth.Context is
                   Value2net (Val, 1, V, Res);
                   return Res;
                end;
-            elsif Val.Scal <= Int64(Uns32'Last) then
-               return Build_Const_UB32 (
-                 Build_Context,
-                 Uns32 (Val.Scal),
-                 Width'min(32, Val.Typ.Drange.W));
+            elsif Val.Typ.Drange.W <= 32 then
+               return Build_Const_UB32
+                 (Build_Context, Uns32 (Val.Scal), Val.Typ.Drange.W);
             else
                raise Internal_Error;
             end if;
