@@ -623,17 +623,29 @@ package body Netlists.Disp_Vhdl is
             Disp_Template
               ("  \o0 <= std_logic_vector (resize (\ui0 * \ui1, \n0));" & NL,
                Inst, (0 => Get_Width (Get_Output (Inst, 0))));
-         when Id_Ult | Id_Slt =>
+         when Id_Ult =>
             Disp_Template ("  \o0 <= '1' when \ui0 < \ui1 else '0';" & NL,
                            Inst);
-         when Id_Ule | Id_Sle =>
+         when Id_Ule =>
             Disp_Template ("  \o0 <= '1' when \ui0 <= \ui1 else '0';" & NL,
                            Inst);
-         when Id_Ugt | Id_Sgt =>
+         when Id_Ugt =>
             Disp_Template ("  \o0 <= '1' when \ui0 > \ui1 else '0';" & NL,
                            Inst);
-         when Id_Uge | Id_Sge =>
+         when Id_Uge =>
             Disp_Template ("  \o0 <= '1' when \ui0 >= \ui1 else '0';" & NL,
+                           Inst);
+         when Id_Slt =>
+            Disp_Template ("  \o0 <= '1' when \si0 < \si1 else '0';" & NL,
+                           Inst);
+         when Id_Sle =>
+            Disp_Template ("  \o0 <= '1' when \si0 <= \si1 else '0';" & NL,
+                           Inst);
+         when Id_Sgt =>
+            Disp_Template ("  \o0 <= '1' when \si0 > \si1 else '0';" & NL,
+                           Inst);
+         when Id_Sge =>
+            Disp_Template ("  \o0 <= '1' when \si0 >= \si1 else '0';" & NL,
                            Inst);
          when Id_Eq =>
             Disp_Template ("  \o0 <= '1' when \i0 = \i1 else '0';" & NL, Inst);
