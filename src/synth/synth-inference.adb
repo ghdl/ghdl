@@ -177,11 +177,13 @@ package body Synth.Inference is
       end case;
    end Extract_Clock;
 
-   function Infere_FF (Ctxt : Context_Acc;
-                       Prev_Val : Net;
-                       Last_Mux : Instance;
-                       Clk : Net;
-                       Enable : Net) return Net
+   procedure Infere_FF (Ctxt : Context_Acc;
+                        Wid : Wire_Id;
+                        Prev_Val : Net;
+                        Last_Mux : Instance;
+                        Clk : Net;
+                        Enable : Net;
+                        Stmt : Source.Syn_Src)
    is
       Sel : constant Input := Get_Mux2_Sel (Last_Mux);
       I0 : constant Input := Get_Mux2_I0 (Last_Mux);
@@ -196,6 +198,9 @@ package body Synth.Inference is
       Rst_Val : Net;
    begin
       --  Create and return the DFF.
+
+      --  1. Remove the mux that creates the loop (will be replaced by the
+      --     dff).
       Disconnect (Sel);
       if Get_Driver (I0) /= Prev_Val then
          --  There must be no 'else' part for clock expression.
@@ -206,6 +211,9 @@ package body Synth.Inference is
       Data := Get_Driver (I1);
       --  Don't try to free driver of I1 as it is reconnected.
       Disconnect (I1);
+      --  If there is a condition with the clock, that's an enable which
+      --  keep the previous value if the condition is false.  Add the mux
+      --  for it.
       if Enable /= No_Net then
          Data := Build_Mux2 (Ctxt, Enable, Prev_Val, Data);
       end if;
@@ -221,9 +229,10 @@ package body Synth.Inference is
          Init := No_Net;
       end if;
 
+      --  Look for asynchronous set/reset.  They are muxes after the loop
+      --  mux.  In theory, there can be many set/reset with a defined order.
       Rst_Val := No_Net;
       Rst := No_Net;
-
       declare
          Mux : Instance;
          Sel : Net;
@@ -276,6 +285,7 @@ package body Synth.Inference is
          end loop;
       end;
 
+      --  Create the FF.
       if Rst = No_Net then
          pragma Assert (Rst_Val = No_Net);
          if Init /= No_Net then
@@ -305,10 +315,15 @@ package body Synth.Inference is
       Redirect_Inputs (O, Res);
 
       Free_Instance (Last_Mux);
-      return Res;
+
+      Add_Conc_Assign (Wid, Res, Stmt);
    end Infere_FF;
 
-   function Infere (Ctxt : Context_Acc; Val : Net; Prev_Val : Net) return Net
+   procedure Infere (Ctxt : Context_Acc;
+                     Wid : Wire_Id;
+                     Val : Net;
+                     Prev_Val : Net;
+                     Stmt : Source.Syn_Src)
    is
       pragma Assert (Val /= No_Net);
       pragma Assert (Prev_Val /= No_Net);
@@ -321,19 +336,21 @@ package body Synth.Inference is
       Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
       if Len < 0 then
          --  No logical loop
-         return Val;
+         Add_Conc_Assign (Wid, Val, Stmt);
       elsif Len = 0 then
          --  Self assignment.
-         return Val;
-      end if;
-
-      Sel := Get_Mux2_Sel (Last_Mux);
-      Extract_Clock (Get_Driver (Sel), Clk, Enable);
-      if Clk = No_Net then
-         --  No clock -> latch
-         raise Internal_Error;
+         Add_Conc_Assign (Wid, Val, Stmt);
       else
-         return Infere_FF (Ctxt, Prev_Val, Last_Mux, Clk, Enable);
+         --  So there is a logical loop.
+         Sel := Get_Mux2_Sel (Last_Mux);
+         Extract_Clock (Get_Driver (Sel), Clk, Enable);
+         if Clk = No_Net then
+            --  No clock -> latch
+            raise Internal_Error;
+         else
+            --  Clock -> FF
+            Infere_FF (Ctxt, Wid, Prev_Val, Last_Mux, Clk, Enable, Stmt);
+         end if;
       end if;
    end Infere;
 end Synth.Inference;

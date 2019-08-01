@@ -131,9 +131,22 @@ package body Synth.Environment is
       Conc_Assign_Table.Table (Asgn).Next := Chain;
    end Set_Conc_Chain;
 
-   procedure Add_Conc_Assign
-     (Wire_Rec : in out Wire_Id_Record; Val : Net; Stmt : Source.Syn_Src)
+   procedure Add_Conc_Assign_Partial
+     (Wid : Wire_Id; Val : Net; Off : Uns32; Stmt : Source.Syn_Src)
    is
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+   begin
+      Conc_Assign_Table.Append ((Next => Wire_Rec.Final_Assign,
+                                 Value => Val,
+                                 Offset => Off,
+                                 Stmt => Stmt));
+      Wire_Rec.Final_Assign := Conc_Assign_Table.Last;
+      Wire_Rec.Nbr_Final_Assign := Wire_Rec.Nbr_Final_Assign + 1;
+   end Add_Conc_Assign_Partial;
+
+   procedure Add_Conc_Assign (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src)
+   is
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
       Inst : constant Instance := Get_Parent (Val);
       V : Net;
       Off : Uns32;
@@ -155,12 +168,7 @@ package body Synth.Environment is
          V := Val;
          Off := 0;
       end if;
-      Conc_Assign_Table.Append ((Next => Wire_Rec.Final_Assign,
-                                 Value => V,
-                                 Offset => Off,
-                                 Stmt => Stmt));
-      Wire_Rec.Final_Assign := Conc_Assign_Table.Last;
-      Wire_Rec.Nbr_Final_Assign := Wire_Rec.Nbr_Final_Assign + 1;
+      Add_Conc_Assign_Partial (Wid, V, Off, Stmt);
    end Add_Conc_Assign;
 
    --  This procedure is called after each concurrent statement to assign
@@ -199,9 +207,7 @@ package body Synth.Environment is
                      raise Internal_Error;
                   end if;
 
-                  Drv := Inference.Infere (Ctxt, Asgn_Rec.Value, Outport);
-
-                  Add_Conc_Assign (Wire_Rec, Drv, Stmt);
+                  Inference.Infere (Ctxt, Wid, Asgn_Rec.Value, Outport, Stmt);
                when others =>
                   raise Internal_Error;
             end case;
@@ -284,7 +290,7 @@ package body Synth.Environment is
       Last_Asgn := No_Conc_Assign;
       Expected_Off := 0;
       Last_Off := Get_Width (Wire_Rec.Gate);
-      while Expected_Off < Last_Off loop
+      while (Expected_Off < Last_Off) or Asgn /= No_Conc_Assign loop
          if Asgn /= No_Conc_Assign then
             Next_Off := Get_Conc_Offset (Asgn);
          else

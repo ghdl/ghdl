@@ -109,6 +109,8 @@ package Synth.Environment is
    function Current_Phi return Phi_Id;
    pragma Inline (Current_Phi);
 
+   procedure Add_Conc_Assign (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src);
+
    procedure Finalize_Assignments (Ctxt : Builders.Context_Acc);
 private
    type Wire_Id is new Uns32;
