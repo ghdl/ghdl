@@ -732,6 +732,25 @@ package body Vhdl.Sem_Psl is
       return Stmt;
    end Sem_Psl_Assert_Statement;
 
+   procedure Sem_Psl_Assume_Statement (Stmt : Iir)
+   is
+      Prop : PSL_Node;
+   begin
+      --  Sem report and severity expressions.
+      Sem_Report_Statement (Stmt);
+
+      Prop := Get_Psl_Property (Stmt);
+      Prop := Sem_Property (Prop, True);
+      Set_Psl_Property (Stmt, Prop);
+
+      --  Properties must be clocked.
+      Sem_Psl_Directive_Clock (Stmt, Prop);
+      Set_Psl_Property (Stmt, Prop);
+
+      --  Check simple subset restrictions.
+      PSL.Subsets.Check_Simple (Prop);
+   end Sem_Psl_Assume_Statement;
+
    procedure Sem_Psl_Cover_Directive (Stmt : Iir)
    is
       Seq : PSL_Node;

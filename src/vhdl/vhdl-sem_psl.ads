@@ -25,6 +25,7 @@ package Vhdl.Sem_Psl is
    --  May return a non-psl concurrent assertion statement.
    function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir;
 
+   procedure Sem_Psl_Assume_Statement (Stmt : Iir);
    procedure Sem_Psl_Cover_Directive (Stmt : Iir);
    procedure Sem_Psl_Restrict_Directive (Stmt : Iir);
    procedure Sem_Psl_Default_Clock (Stmt : Iir);
