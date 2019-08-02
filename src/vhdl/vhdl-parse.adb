@@ -8615,7 +8615,7 @@ package body Vhdl.Parse is
 
       Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
 
-      Parse_Psl_Assert_Report_Severity (Res);
+      Expect_Scan (Tok_Semi_Colon);
 
       return Res;
    end Parse_Psl_Assume_Statement;
