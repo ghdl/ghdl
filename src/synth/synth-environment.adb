@@ -283,6 +283,19 @@ package body Synth.Environment is
    end Pop_And_Merge_Phi;
 
    --  Merge sort of conc_assign by offset.
+   function Le_Conc_Assign (Left, Right : Conc_Assign) return Boolean is
+   begin
+      if Get_Conc_Offset (Left) < Get_Conc_Offset (Right) then
+         return True;
+      end if;
+      if Get_Conc_Offset (Left) = Get_Conc_Offset (Right) then
+         return (Get_Width (Get_Conc_Value (Left))
+                   < Get_Width (Get_Conc_Value (Right)));
+      else
+         return False;
+      end if;
+   end Le_Conc_Assign;
+
    procedure Sort_Conc_Assign (Chain : Conc_Assign;
                                Len : Natural;
                                First : out Conc_Assign;
@@ -307,10 +320,11 @@ package body Synth.Environment is
          First := No_Conc_Assign;
          Last := No_Conc_Assign;
          for I in 1 .. Len loop
-            if Left /= No_Conc_Assign
-              and then
-              (Right = No_Conc_Assign
-                 or else Get_Conc_Offset (Left) <= Get_Conc_Offset (Right))
+            pragma Assert (not (Left = No_Conc_Assign
+                                  and Right = No_Conc_Assign));
+            if Right = No_Conc_Assign
+              or else
+              (Left /= No_Conc_Assign and then Le_Conc_Assign (Left, Right))
             then
                El := Left;
                Left := Get_Conc_Chain (Left);
@@ -367,6 +381,7 @@ package body Synth.Environment is
             Last_Asgn := Asgn;
             Asgn := Get_Conc_Chain (Asgn);
          elsif Next_Off > Expected_Off then
+            --  There is an hole.
             if Next_Off = Expected_Off + 1 then
                Warning_Msg_Synth
                  (+Wire_Rec.Decl, "no assignment for offset %v",
@@ -401,6 +416,7 @@ package body Synth.Environment is
                (+Next_Off, +(Expected_Off - 1)));
             --  TODO: insert resolver
             pragma Assert (Asgn /= No_Conc_Assign);
+            Expected_Off := Expected_Off + Get_Width (Get_Conc_Value (Asgn));
             Last_Asgn := Asgn;
             Asgn := Get_Conc_Chain (Asgn);
          end if;
