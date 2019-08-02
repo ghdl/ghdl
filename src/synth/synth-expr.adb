@@ -191,7 +191,9 @@ package body Synth.Expr is
       Res : Net;
    begin
       if Is_Const (Val) then
-         raise Internal_Error;
+         if Wn /= W then
+            raise Internal_Error;
+         end if;
       end if;
 
       N := Get_Net (Val);
@@ -703,12 +705,39 @@ package body Synth.Expr is
       return Res;
    end Create_Bounds_From_Length;
 
+   --  Implicit conversion of literals.
+   function Synth_Implicit_Conv (Syn_Inst : Synth_Instance_Acc;
+                                 Val : Value_Acc;
+                                 Vtype : Node;
+                                 Rtype : Node) return Value_Acc
+   is
+      Vtyp : Type_Acc;
+      Rtyp : Type_Acc;
+   begin
+      if Rtype = Vtype or else Val.Kind /= Value_Discrete then
+         return Val;
+      end if;
+      if Vtype /= Vhdl.Std_Package.Convertible_Integer_Type_Definition then
+         raise Internal_Error;
+      end if;
+      Vtyp := Val.Typ;
+      Rtyp := Get_Value_Type (Syn_Inst, Rtype);
+      if Rtyp.Drange.W < Vtyp.Drange.W then
+         --  TODO: check bounds.
+         return Create_Value_Discrete (Val.Scal, Rtyp);
+      else
+         pragma Assert (Vtyp.Drange.W = Rtyp.Drange.W);
+         return Val;
+      end if;
+   end Synth_Implicit_Conv;
+
    function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                     Def : Iir_Predefined_Functions;
                                     Left_Expr : Node;
                                     Right_Expr : Node;
                                     Expr : Node) return Value_Acc
    is
+      Expr_Type : constant Node := Get_Type (Expr);
       Ltype : constant Node := Get_Type (Left_Expr);
       Rtype : constant Node := Get_Type (Right_Expr);
       Left : Value_Acc;
@@ -755,6 +784,22 @@ package body Synth.Expr is
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left, L));
       end Synth_Vec_Dyadic;
+
+      function Synth_Int_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
+      is
+         Etype : constant Type_Acc := Get_Value_Type (Syn_Inst, Expr_Type);
+         L, R : Net;
+         N : Net;
+      begin
+         Left := Synth_Implicit_Conv (Syn_Inst, Left, Ltype, Expr_Type);
+         Right := Synth_Implicit_Conv (Syn_Inst, Right, Rtype, Expr_Type);
+
+         L := Synth_Resize (Left, Etype.Drange.W, Expr);
+         R := Synth_Resize (Right, Etype.Drange.W, Expr);
+         N := Build_Dyadic (Build_Context, Id, L, R);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Etype);
+      end Synth_Int_Dyadic;
 
       function Synth_Dyadic_Uns (Id : Dyadic_Module_Id; Is_Res_Vec : Boolean)
                                 return Value_Acc
@@ -829,13 +874,6 @@ package body Synth.Expr is
            | Iir_Predefined_Boolean_Or
            | Iir_Predefined_Ieee_1164_Scalar_Or =>
             return Synth_Bit_Dyadic (Id_Or);
-         when Iir_Predefined_Ieee_1164_Vector_And =>
-            return Synth_Vec_Dyadic (Id_And);
-         when Iir_Predefined_Ieee_1164_Vector_Or =>
-            return Synth_Vec_Dyadic (Id_Or);
-         when Iir_Predefined_Ieee_1164_Vector_Xor =>
-            return Synth_Vec_Dyadic (Id_Xor);
-
          when Iir_Predefined_Bit_Nor
            | Iir_Predefined_Ieee_1164_Scalar_Nor =>
             return Synth_Bit_Dyadic (Id_Nor);
@@ -845,6 +883,13 @@ package body Synth.Expr is
          when Iir_Predefined_Bit_Xnor
            | Iir_Predefined_Ieee_1164_Scalar_Xnor =>
             return Synth_Bit_Dyadic (Id_Xnor);
+
+         when Iir_Predefined_Ieee_1164_Vector_And =>
+            return Synth_Vec_Dyadic (Id_And);
+         when Iir_Predefined_Ieee_1164_Vector_Or =>
+            return Synth_Vec_Dyadic (Id_Or);
+         when Iir_Predefined_Ieee_1164_Vector_Xor =>
+            return Synth_Vec_Dyadic (Id_Xor);
 
          when Iir_Predefined_Enum_Equality =>
             if Is_Bit_Type (Ltype) then
@@ -898,6 +943,7 @@ package body Synth.Expr is
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Sub, True);
+
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             --  "=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Eq);
@@ -905,12 +951,15 @@ package body Synth.Expr is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
             --  "=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Eq);
-         when Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv =>
+
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv =>
             --  "/=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ne);
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat =>
             --  "/=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Ne);
+
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
             --  "<" (Unsigned, Natural)
             if Is_Const (Right) and then Right.Scal = 0 then
@@ -922,10 +971,12 @@ package body Synth.Expr is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
             --  "<" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ult);
+
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
             --  "<=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ule);
+
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
             --  ">" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Ugt);
@@ -933,10 +984,12 @@ package body Synth.Expr is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv =>
             --  ">" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ugt);
+
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
             --  ">=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Uge);
+
          when Iir_Predefined_Array_Element_Concat =>
             declare
                L : constant Net := Get_Net (Left);
@@ -1005,7 +1058,7 @@ package body Synth.Expr is
                  (Left.Scal + Right.Scal,
                   Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
-               return Synth_Vec_Dyadic (Id_Add);
+               return Synth_Int_Dyadic (Id_Add);
             end if;
          when Iir_Predefined_Integer_Minus =>
             if Is_Const (Left) and then Is_Const (Right) then
@@ -1013,7 +1066,7 @@ package body Synth.Expr is
                  (Left.Scal - Right.Scal,
                   Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
-               return Synth_Vec_Dyadic (Id_Sub);
+               return Synth_Int_Dyadic (Id_Sub);
             end if;
          when Iir_Predefined_Integer_Mul =>
             if Is_Const (Left) and then Is_Const (Right) then
@@ -1021,7 +1074,7 @@ package body Synth.Expr is
                  (Left.Scal * Right.Scal,
                   Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
-               return Synth_Vec_Dyadic (Id_Mul);
+               return Synth_Int_Dyadic (Id_Mul);
             end if;
          when Iir_Predefined_Integer_Div =>
             if Is_Const (Left) and then Is_Const (Right) then

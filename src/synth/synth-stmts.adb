@@ -71,12 +71,8 @@ package body Synth.Stmts is
 
    procedure Synth_Assign (Dest : Value_Acc; Val : Value_Acc) is
    begin
-      case Dest.Kind is
-         when Value_Wire =>
-            Phi_Assign (Dest.W, Get_Net (Val));
-         when others =>
-            raise Internal_Error;
-      end case;
+      pragma Assert (Dest.Kind = Value_Wire);
+      Phi_Assign (Dest.W, Get_Net (Val));
    end Synth_Assign;
 
    procedure Synth_Assignment_Aggregate (Syn_Inst : Synth_Instance_Acc;
