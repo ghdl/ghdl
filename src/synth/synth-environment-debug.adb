@@ -73,4 +73,25 @@ package body Synth.Environment.Debug is
          Asgn := Get_Assign_Chain (Asgn);
       end loop;
    end Dump_Phi;
+
+   procedure Dump_Conc_Assigns (First : Conc_Assign)
+   is
+      Asgn : Conc_Assign;
+   begin
+      Asgn := First;
+      while Asgn /= No_Conc_Assign loop
+         Put ("conc_assign" & Conc_Assign'Image (Asgn));
+         declare
+            Arec : Conc_Assign_Record renames Conc_Assign_Table.Table (Asgn);
+         begin
+            Put (" off:" & Uns32'Image (Arec.Offset));
+            Put (", width:" & Width'Image (Get_Width (Arec.Value)));
+            New_Line;
+            Put ("  value: ");
+            Disp_Instance (Get_Parent (Arec.Value), False);
+            Asgn := Arec.Next;
+         end;
+         New_Line;
+      end loop;
+   end Dump_Conc_Assigns;
 end Synth.Environment.Debug;
