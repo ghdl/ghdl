@@ -1077,6 +1077,8 @@ package body Translation is
            ("__ghdl_ieee_assert_failed", Ghdl_Ieee_Assert_Failed);
          Create_Report_Subprg ("__ghdl_psl_assert_failed",
                                Ghdl_Psl_Assert_Failed);
+         Create_Report_Subprg ("__ghdl_psl_assume_failed",
+                               Ghdl_Psl_Assume_Failed);
          Create_Report_Subprg ("__ghdl_psl_cover", Ghdl_Psl_Cover);
          Create_Report_Subprg ("__ghdl_psl_cover_failed",
                                Ghdl_Psl_Cover_Failed);

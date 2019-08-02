@@ -470,6 +470,8 @@ package body Grt.Disp_Rti is
 
          when Ghdl_Rtik_Psl_Assert =>
             Put ("ghdl_rtik_psl_assert");
+         when Ghdl_Rtik_Psl_Assume =>
+            Put ("ghdl_rtik_psl_assume");
          when Ghdl_Rtik_Psl_Cover =>
             Put ("ghdl_rtik_psl_cover");
          when Ghdl_Rtik_Psl_Endpoint =>
@@ -1310,6 +1312,7 @@ package body Grt.Disp_Rti is
             Disp_Type_Protected
               (To_Ghdl_Rtin_Type_Scalar_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Psl_Cover
+           | Ghdl_Rtik_Psl_Assume
            | Ghdl_Rtik_Psl_Assert =>
             Disp_Psl_Directive (To_Ghdl_Rtin_Object_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Psl_Endpoint =>

@@ -40,6 +40,11 @@ package Grt.Lib is
       Severity : Integer;
       Loc : Ghdl_Location_Ptr);
 
+   procedure Ghdl_Psl_Assume_Failed
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr);
+
    --  Called when a sequence is covered (in a cover directive)
    procedure Ghdl_Psl_Cover
      (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
@@ -116,6 +121,7 @@ private
 
    pragma Export (C, Ghdl_Assert_Failed, "__ghdl_assert_failed");
    pragma Export (C, Ghdl_Ieee_Assert_Failed, "__ghdl_ieee_assert_failed");
+   pragma Export (C, Ghdl_Psl_Assume_Failed, "__ghdl_psl_assume_failed");
    pragma Export (C, Ghdl_Psl_Assert_Failed, "__ghdl_psl_assert_failed");
    pragma Export (C, Ghdl_Psl_Cover, "__ghdl_psl_cover");
    pragma Export (C, Ghdl_Psl_Cover_Failed, "__ghdl_psl_cover_failed");

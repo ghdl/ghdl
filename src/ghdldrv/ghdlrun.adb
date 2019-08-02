@@ -341,6 +341,8 @@ package body Ghdlrun is
            Grt.Lib.Ghdl_Ieee_Assert_Failed'Address);
       Def (Trans_Decls.Ghdl_Psl_Assert_Failed,
            Grt.Lib.Ghdl_Psl_Assert_Failed'Address);
+      Def (Trans_Decls.Ghdl_Psl_Assume_Failed,
+           Grt.Lib.Ghdl_Psl_Assume_Failed'Address);
       Def (Trans_Decls.Ghdl_Psl_Cover,
            Grt.Lib.Ghdl_Psl_Cover'Address);
       Def (Trans_Decls.Ghdl_Psl_Cover_Failed,

@@ -322,6 +322,9 @@ package body Trans.Rtis is
            (Constr, Get_Identifier ("__ghdl_rtik_psl_assert"),
             Ghdl_Rtik_Psl_Assert);
          New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_rtik_psl_assume"),
+            Ghdl_Rtik_Psl_Assume);
+         New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_psl_cover"),
             Ghdl_Rtik_Psl_Cover);
          New_Enum_Literal
@@ -2044,6 +2047,8 @@ package body Trans.Rtis is
             Kind := Ghdl_Rtik_Psl_Cover;
          when Iir_Kind_Psl_Assert_Directive =>
             Kind := Ghdl_Rtik_Psl_Assert;
+         when Iir_Kind_Psl_Assume_Directive =>
+            Kind := Ghdl_Rtik_Psl_Assume;
          when Iir_Kind_Psl_Endpoint_Declaration =>
             Kind := Ghdl_Rtik_Psl_Endpoint;
          when others =>
@@ -2423,6 +2428,7 @@ package body Trans.Rtis is
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive
               | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Generate_Psl_Directive (Stmt);
@@ -2995,6 +3001,7 @@ package body Trans.Rtis is
             | Iir_Kind_Sensitized_Process_Statement =>
             return Node_Info.Process_Rti_Const;
          when Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Endpoint_Declaration =>
             return Node_Info.Psl_Rti_Const;
@@ -3036,6 +3043,7 @@ package body Trans.Rtis is
             | Iir_Kind_Sensitized_Process_Statement =>
             Ref := Get_Instance_Ref (Node_Info.Process_Scope);
          when Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Endpoint_Declaration =>
             Ref := Get_Instance_Ref (Node_Info.Psl_Scope);
