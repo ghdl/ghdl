@@ -8615,6 +8615,9 @@ package body Vhdl.Parse is
 
       Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
 
+      Vhdl.Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Scan_In_Comment := False;
+
       Expect_Scan (Tok_Semi_Colon);
 
       return Res;
