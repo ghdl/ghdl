@@ -3893,7 +3893,7 @@ package body Vhdl.Prints is
       end if;
    end Disp_PSL_NFA;
 
-   procedure Disp_Psl_Assert_Statement
+   procedure Disp_Psl_Assert_Directive
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
       Start_Hbox (Ctxt);
@@ -3909,9 +3909,9 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
-   end Disp_Psl_Assert_Statement;
+   end Disp_Psl_Assert_Directive;
 
-   procedure Disp_Psl_Assume_Statement
+   procedure Disp_Psl_Assume_Directive
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
       Start_Hbox (Ctxt);
@@ -3927,7 +3927,7 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
-   end Disp_Psl_Assume_Statement;
+   end Disp_Psl_Assume_Directive;
 
    procedure Disp_Psl_Cover_Directive
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
@@ -4002,10 +4002,10 @@ package body Vhdl.Prints is
          when Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration =>
             Disp_Psl_Declaration (Ctxt, Stmt);
-         when Iir_Kind_Psl_Assert_Statement =>
-            Disp_Psl_Assert_Statement (Ctxt, Stmt);
-         when Iir_Kind_Psl_Assume_Statement =>
-            Disp_Psl_Assume_Statement (Ctxt, Stmt);
+         when Iir_Kind_Psl_Assert_Directive =>
+            Disp_Psl_Assert_Directive (Ctxt, Stmt);
+         when Iir_Kind_Psl_Assume_Directive =>
+            Disp_Psl_Assume_Directive (Ctxt, Stmt);
          when Iir_Kind_Psl_Cover_Directive =>
             Disp_Psl_Cover_Directive (Ctxt, Stmt);
          when Iir_Kind_Psl_Restrict_Directive =>

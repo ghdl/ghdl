@@ -2125,8 +2125,8 @@ package body Vhdl.Canon is
                     (Top, Get_Generate_Statement_Body (El));
                end;
 
-            when Iir_Kind_Psl_Assert_Statement
-               | Iir_Kind_Psl_Assume_Statement=>
+            when Iir_Kind_Psl_Assert_Directive
+               | Iir_Kind_Psl_Assume_Directive=>
                declare
                   Prop : PSL_Node;
                   Fa : PSL_NFA;

@@ -198,8 +198,8 @@ class Iir_Kind:
     Concurrent_Selected_Signal_Assignment = 183
     Concurrent_Assertion_Statement = 184
     Concurrent_Procedure_Call_Statement = 185
-    Psl_Assert_Statement = 186
-    Psl_Assume_Statement = 187
+    Psl_Assert_Directive = 186
+    Psl_Assume_Directive = 187
     Psl_Cover_Directive = 188
     Psl_Restrict_Directive = 189
     Block_Statement = 190
@@ -458,8 +458,8 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Selected_Signal_Assignment,
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
-        Iir_Kind.Psl_Assert_Statement,
-        Iir_Kind.Psl_Assume_Statement,
+        Iir_Kind.Psl_Assert_Directive,
+        Iir_Kind.Psl_Assume_Directive,
         Iir_Kind.Psl_Cover_Directive,
         Iir_Kind.Psl_Restrict_Directive]
 
@@ -651,8 +651,8 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Selected_Signal_Assignment,
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
-        Iir_Kind.Psl_Assert_Statement,
-        Iir_Kind.Psl_Assume_Statement,
+        Iir_Kind.Psl_Assert_Directive,
+        Iir_Kind.Psl_Assume_Directive,
         Iir_Kind.Psl_Cover_Directive,
         Iir_Kind.Psl_Restrict_Directive,
         Iir_Kind.Block_Statement,

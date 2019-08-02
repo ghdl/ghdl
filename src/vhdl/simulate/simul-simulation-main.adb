@@ -477,8 +477,8 @@ package body Simul.Simulation.Main is
          S_Num := Get_State_Label (S);
          pragma Assert (S_Num = Get_PSL_Nbr_States (E.Stmt) - 1);
          case Get_Kind (E.Stmt) is
-            when Iir_Kind_Psl_Assert_Statement
-               | Iir_Kind_Psl_Assume_Statement =>
+            when Iir_Kind_Psl_Assert_Directive
+               | Iir_Kind_Psl_Assume_Directive =>
                if Nvec (S_Num) then
                   Execute_Failed_Assertion
                     (E.Instance, "psl assertion", E.Stmt,
@@ -564,8 +564,8 @@ package body Simul.Simulation.Main is
               (E.Instance, Get_PSL_Clock_Sensitivity (E.Stmt));
 
             case Get_Kind (E.Stmt) is
-               when Iir_Kind_Psl_Assert_Statement
-                  | Iir_Kind_Psl_Assume_Statement =>
+               when Iir_Kind_Psl_Assert_Directive
+                  | Iir_Kind_Psl_Assume_Directive =>
                   if Get_PSL_EOS_Flag (E.Stmt) then
                      Grt.Processes.Ghdl_Finalize_Register
                        (To_Instance_Acc (E'Address),

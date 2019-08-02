@@ -1388,9 +1388,9 @@ package body Vhdl.Nodes_Meta is
             return "concurrent_assertion_statement";
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             return "concurrent_procedure_call_statement";
-         when Iir_Kind_Psl_Assert_Statement =>
+         when Iir_Kind_Psl_Assert_Directive =>
             return "psl_assert_statement";
-         when Iir_Kind_Psl_Assume_Statement =>
+         when Iir_Kind_Psl_Assume_Directive =>
             return "psl_assume_statement";
          when Iir_Kind_Psl_Cover_Directive =>
             return "psl_cover_directive";
@@ -3797,7 +3797,7 @@ package body Vhdl.Nodes_Meta is
       Field_Parent,
       Field_Procedure_Call,
       Field_Chain,
-      --  Iir_Kind_Psl_Assert_Statement
+      --  Iir_Kind_Psl_Assert_Directive
       Field_Psl_Property,
       Field_Label,
       Field_PSL_Clock,
@@ -3811,7 +3811,7 @@ package body Vhdl.Nodes_Meta is
       Field_Severity_Expression,
       Field_Report_Expression,
       Field_PSL_Clock_Sensitivity,
-      --  Iir_Kind_Psl_Assume_Statement
+      --  Iir_Kind_Psl_Assume_Directive
       Field_Psl_Property,
       Field_Label,
       Field_PSL_Clock,
@@ -4656,8 +4656,8 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Concurrent_Selected_Signal_Assignment => 1370,
       Iir_Kind_Concurrent_Assertion_Statement => 1378,
       Iir_Kind_Concurrent_Procedure_Call_Statement => 1385,
-      Iir_Kind_Psl_Assert_Statement => 1398,
-      Iir_Kind_Psl_Assume_Statement => 1411,
+      Iir_Kind_Psl_Assert_Directive => 1398,
+      Iir_Kind_Psl_Assume_Directive => 1411,
       Iir_Kind_Psl_Cover_Directive => 1424,
       Iir_Kind_Psl_Restrict_Directive => 1435,
       Iir_Kind_Block_Statement => 1449,
@@ -7410,8 +7410,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive
            | Iir_Kind_Block_Statement
@@ -8190,8 +8190,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive
            | Iir_Kind_Block_Statement
@@ -8242,8 +8242,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive
            | Iir_Kind_Block_Statement
@@ -8329,8 +8329,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive
            | Iir_Kind_Block_Statement
@@ -8798,8 +8798,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive =>
             return True;
@@ -9057,8 +9057,8 @@ package body Vhdl.Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement =>
@@ -9072,8 +9072,8 @@ package body Vhdl.Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement =>
@@ -9417,8 +9417,8 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive
            | Iir_Kind_Block_Statement
@@ -10785,8 +10785,8 @@ package body Vhdl.Nodes_Meta is
    function Has_Psl_Property (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement =>
+         when Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive =>
             return True;
          when others =>
             return False;
@@ -10830,8 +10830,8 @@ package body Vhdl.Nodes_Meta is
       case K is
          when Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive =>
             return True;
@@ -10845,8 +10845,8 @@ package body Vhdl.Nodes_Meta is
       case K is
          when Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive =>
             return True;
@@ -10859,8 +10859,8 @@ package body Vhdl.Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Psl_Endpoint_Declaration
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive =>
             return True;
@@ -10873,8 +10873,8 @@ package body Vhdl.Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Psl_Endpoint_Declaration
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive =>
             return True;
@@ -10887,8 +10887,8 @@ package body Vhdl.Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Psl_Endpoint_Declaration
-           | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Assume_Statement
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Restrict_Directive =>
             return True;

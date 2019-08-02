@@ -2042,7 +2042,7 @@ package body Trans.Rtis is
       case Get_Kind (Decl) is
          when Iir_Kind_Psl_Cover_Directive =>
             Kind := Ghdl_Rtik_Psl_Cover;
-         when Iir_Kind_Psl_Assert_Statement =>
+         when Iir_Kind_Psl_Assert_Directive =>
             Kind := Ghdl_Rtik_Psl_Assert;
          when Iir_Kind_Psl_Endpoint_Declaration =>
             Kind := Ghdl_Rtik_Psl_Endpoint;
@@ -2422,7 +2422,7 @@ package body Trans.Rtis is
                null;
             when Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Assert_Statement
+            when Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Generate_Psl_Directive (Stmt);
@@ -2994,7 +2994,7 @@ package body Trans.Rtis is
          when Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
             return Node_Info.Process_Rti_Const;
-         when Iir_Kind_Psl_Assert_Statement
+         when Iir_Kind_Psl_Assert_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Endpoint_Declaration =>
             return Node_Info.Psl_Rti_Const;
@@ -3035,7 +3035,7 @@ package body Trans.Rtis is
          when Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
             Ref := Get_Instance_Ref (Node_Info.Process_Scope);
-         when Iir_Kind_Psl_Assert_Statement
+         when Iir_Kind_Psl_Assert_Directive
            | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Endpoint_Declaration =>
             Ref := Get_Instance_Ref (Node_Info.Psl_Scope);

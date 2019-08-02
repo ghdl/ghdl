@@ -644,7 +644,7 @@ package body Trans.Chap9 is
          Start_If_Stmt (S_Blk, Cond);
          Open_Temp;
          case Get_Kind (Stmt) is
-            when Iir_Kind_Psl_Assert_Statement =>
+            when Iir_Kind_Psl_Assert_Directive =>
                Chap8.Translate_Report
                  (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
             when Iir_Kind_Psl_Cover_Directive =>
@@ -697,7 +697,7 @@ package body Trans.Chap9 is
 
       --  The finalizer.
       case Get_Kind (Stmt) is
-         when Iir_Kind_Psl_Assert_Statement =>
+         when Iir_Kind_Psl_Assert_Directive =>
             if Get_PSL_EOS_Flag (Stmt) then
                Create_Psl_Final_Proc (Stmt, Base, Instance);
 
@@ -974,7 +974,7 @@ package body Trans.Chap9 is
                null;
             when Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Assert_Statement
+            when Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Declarations (El);
@@ -1122,7 +1122,7 @@ package body Trans.Chap9 is
                null;
             when Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Assert_Statement
+            when Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Statement (Stmt, Base_Info);
@@ -2721,7 +2721,7 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Declaration
               | Iir_Kind_Psl_Endpoint_Declaration =>
                null;
-            when Iir_Kind_Psl_Assert_Statement
+            when Iir_Kind_Psl_Assert_Directive
                | Iir_Kind_Psl_Cover_Directive =>
                null;
             when Iir_Kind_Component_Instantiation_Statement =>
@@ -2783,7 +2783,7 @@ package body Trans.Chap9 is
                null;
             when Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Assert_Statement
+            when Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Elab_Psl_Directive (Stmt, Base_Info);
