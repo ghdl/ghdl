@@ -1898,6 +1898,7 @@ package body Simul.Elaboration is
 
             when Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Assume_Statement
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Elaborate_Psl_Directive (Instance, Stmt);
 
