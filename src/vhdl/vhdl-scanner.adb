@@ -1307,6 +1307,8 @@ package body Vhdl.Scanner is
                Current_Token := Tok_Psl_Property;
             when Std_Names.Name_Endpoint =>
                Current_Token := Tok_Psl_Endpoint;
+            when Std_Names.Name_Assume =>
+               Current_Token := Tok_Psl_Assume;
             when Std_Names.Name_Cover =>
                Current_Token := Tok_Psl_Cover;
             when Std_Names.Name_Default =>

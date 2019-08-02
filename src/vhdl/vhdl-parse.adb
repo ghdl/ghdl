@@ -8604,6 +8604,22 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Psl_Assert_Statement;
 
+   function Parse_Psl_Assume_Statement return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Psl_Assume_Statement);
+
+      --  Skip 'assume'
+      Scan;
+
+      Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
+
+      Parse_Psl_Assert_Report_Severity (Res);
+
+      return Res;
+   end Parse_Psl_Assume_Statement;
+
    function Parse_Psl_Cover_Directive return Iir
    is
       Res : Iir;
@@ -8801,6 +8817,9 @@ package body Vhdl.Parse is
                Postponed_Not_Allowed;
                Label_Not_Allowed;
                Stmt := Parse_Psl_Declaration;
+            when Tok_Psl_Assume =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Psl_Assume_Statement;
             when Tok_Psl_Cover =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Cover_Directive;

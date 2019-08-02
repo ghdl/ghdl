@@ -3911,6 +3911,24 @@ package body Vhdl.Prints is
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
    end Disp_Psl_Assert_Statement;
 
+   procedure Disp_Psl_Assume_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir) is
+   begin
+      Start_Hbox (Ctxt);
+      if Vhdl_Std < Vhdl_08 then
+         OOB.Put ("--psl ");
+      end if;
+      Disp_Label (Ctxt, Stmt);
+      Disp_Postponed (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Psl_Assume);
+      Disp_Psl_Expression (Ctxt, Get_Psl_Property (Stmt));
+      Disp_Report_Expression (Ctxt, Stmt);
+      Disp_Severity_Expression (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
+      Disp_PSL_NFA (Get_PSL_NFA (Stmt));
+   end Disp_Psl_Assume_Statement;
+
    procedure Disp_Psl_Cover_Directive
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
@@ -3986,6 +4004,8 @@ package body Vhdl.Prints is
             Disp_Psl_Declaration (Ctxt, Stmt);
          when Iir_Kind_Psl_Assert_Statement =>
             Disp_Psl_Assert_Statement (Ctxt, Stmt);
+         when Iir_Kind_Psl_Assume_Statement =>
+            Disp_Psl_Assume_Statement (Ctxt, Stmt);
          when Iir_Kind_Psl_Cover_Directive =>
             Disp_Psl_Cover_Directive (Ctxt, Stmt);
          when Iir_Kind_Psl_Restrict_Directive =>

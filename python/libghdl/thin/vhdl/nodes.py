@@ -199,90 +199,91 @@ class Iir_Kind:
     Concurrent_Assertion_Statement = 184
     Concurrent_Procedure_Call_Statement = 185
     Psl_Assert_Statement = 186
-    Psl_Cover_Directive = 187
-    Psl_Restrict_Directive = 188
-    Block_Statement = 189
-    If_Generate_Statement = 190
-    Case_Generate_Statement = 191
-    For_Generate_Statement = 192
-    Component_Instantiation_Statement = 193
-    Psl_Default_Clock = 194
-    Simple_Simultaneous_Statement = 195
-    Generate_Statement_Body = 196
-    If_Generate_Else_Clause = 197
-    Simple_Signal_Assignment_Statement = 198
-    Conditional_Signal_Assignment_Statement = 199
-    Selected_Waveform_Assignment_Statement = 200
-    Null_Statement = 201
-    Assertion_Statement = 202
-    Report_Statement = 203
-    Wait_Statement = 204
-    Variable_Assignment_Statement = 205
-    Conditional_Variable_Assignment_Statement = 206
-    Return_Statement = 207
-    For_Loop_Statement = 208
-    While_Loop_Statement = 209
-    Next_Statement = 210
-    Exit_Statement = 211
-    Case_Statement = 212
-    Procedure_Call_Statement = 213
-    If_Statement = 214
-    Elsif = 215
-    Character_Literal = 216
-    Simple_Name = 217
-    Selected_Name = 218
-    Operator_Symbol = 219
-    Reference_Name = 220
-    External_Constant_Name = 221
-    External_Signal_Name = 222
-    External_Variable_Name = 223
-    Selected_By_All_Name = 224
-    Parenthesis_Name = 225
-    Package_Pathname = 226
-    Absolute_Pathname = 227
-    Relative_Pathname = 228
-    Pathname_Element = 229
-    Base_Attribute = 230
-    Subtype_Attribute = 231
-    Element_Attribute = 232
-    Left_Type_Attribute = 233
-    Right_Type_Attribute = 234
-    High_Type_Attribute = 235
-    Low_Type_Attribute = 236
-    Ascending_Type_Attribute = 237
-    Image_Attribute = 238
-    Value_Attribute = 239
-    Pos_Attribute = 240
-    Val_Attribute = 241
-    Succ_Attribute = 242
-    Pred_Attribute = 243
-    Leftof_Attribute = 244
-    Rightof_Attribute = 245
-    Delayed_Attribute = 246
-    Stable_Attribute = 247
-    Quiet_Attribute = 248
-    Transaction_Attribute = 249
-    Event_Attribute = 250
-    Active_Attribute = 251
-    Last_Event_Attribute = 252
-    Last_Active_Attribute = 253
-    Last_Value_Attribute = 254
-    Driving_Attribute = 255
-    Driving_Value_Attribute = 256
-    Behavior_Attribute = 257
-    Structure_Attribute = 258
-    Simple_Name_Attribute = 259
-    Instance_Name_Attribute = 260
-    Path_Name_Attribute = 261
-    Left_Array_Attribute = 262
-    Right_Array_Attribute = 263
-    High_Array_Attribute = 264
-    Low_Array_Attribute = 265
-    Length_Array_Attribute = 266
-    Ascending_Array_Attribute = 267
-    Range_Array_Attribute = 268
-    Reverse_Range_Array_Attribute = 269
-    Attribute_Name = 270
+    Psl_Assume_Statement = 187
+    Psl_Cover_Directive = 188
+    Psl_Restrict_Directive = 189
+    Block_Statement = 190
+    If_Generate_Statement = 191
+    Case_Generate_Statement = 192
+    For_Generate_Statement = 193
+    Component_Instantiation_Statement = 194
+    Psl_Default_Clock = 195
+    Simple_Simultaneous_Statement = 196
+    Generate_Statement_Body = 197
+    If_Generate_Else_Clause = 198
+    Simple_Signal_Assignment_Statement = 199
+    Conditional_Signal_Assignment_Statement = 200
+    Selected_Waveform_Assignment_Statement = 201
+    Null_Statement = 202
+    Assertion_Statement = 203
+    Report_Statement = 204
+    Wait_Statement = 205
+    Variable_Assignment_Statement = 206
+    Conditional_Variable_Assignment_Statement = 207
+    Return_Statement = 208
+    For_Loop_Statement = 209
+    While_Loop_Statement = 210
+    Next_Statement = 211
+    Exit_Statement = 212
+    Case_Statement = 213
+    Procedure_Call_Statement = 214
+    If_Statement = 215
+    Elsif = 216
+    Character_Literal = 217
+    Simple_Name = 218
+    Selected_Name = 219
+    Operator_Symbol = 220
+    Reference_Name = 221
+    External_Constant_Name = 222
+    External_Signal_Name = 223
+    External_Variable_Name = 224
+    Selected_By_All_Name = 225
+    Parenthesis_Name = 226
+    Package_Pathname = 227
+    Absolute_Pathname = 228
+    Relative_Pathname = 229
+    Pathname_Element = 230
+    Base_Attribute = 231
+    Subtype_Attribute = 232
+    Element_Attribute = 233
+    Left_Type_Attribute = 234
+    Right_Type_Attribute = 235
+    High_Type_Attribute = 236
+    Low_Type_Attribute = 237
+    Ascending_Type_Attribute = 238
+    Image_Attribute = 239
+    Value_Attribute = 240
+    Pos_Attribute = 241
+    Val_Attribute = 242
+    Succ_Attribute = 243
+    Pred_Attribute = 244
+    Leftof_Attribute = 245
+    Rightof_Attribute = 246
+    Delayed_Attribute = 247
+    Stable_Attribute = 248
+    Quiet_Attribute = 249
+    Transaction_Attribute = 250
+    Event_Attribute = 251
+    Active_Attribute = 252
+    Last_Event_Attribute = 253
+    Last_Active_Attribute = 254
+    Last_Value_Attribute = 255
+    Driving_Attribute = 256
+    Driving_Value_Attribute = 257
+    Behavior_Attribute = 258
+    Structure_Attribute = 259
+    Simple_Name_Attribute = 260
+    Instance_Name_Attribute = 261
+    Path_Name_Attribute = 262
+    Left_Array_Attribute = 263
+    Right_Array_Attribute = 264
+    High_Array_Attribute = 265
+    Low_Array_Attribute = 266
+    Length_Array_Attribute = 267
+    Ascending_Array_Attribute = 268
+    Range_Array_Attribute = 269
+    Reverse_Range_Array_Attribute = 270
+    Attribute_Name = 271
 
 
 class Iir_Kinds:
@@ -458,6 +459,7 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
         Iir_Kind.Psl_Assert_Statement,
+        Iir_Kind.Psl_Assume_Statement,
         Iir_Kind.Psl_Cover_Directive,
         Iir_Kind.Psl_Restrict_Directive]
 
@@ -650,6 +652,7 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
         Iir_Kind.Psl_Assert_Statement,
+        Iir_Kind.Psl_Assume_Statement,
         Iir_Kind.Psl_Cover_Directive,
         Iir_Kind.Psl_Restrict_Directive,
         Iir_Kind.Block_Statement,
@@ -1129,6 +1132,9 @@ class Iir_Predefined:
     Ieee_Std_Logic_Unsigned_Eq_Slv_Slv = 265
     Ieee_Std_Logic_Unsigned_Eq_Slv_Int = 266
     Ieee_Std_Logic_Unsigned_Eq_Int_Slv = 267
+    Ieee_Std_Logic_Unsigned_Ne_Slv_Slv = 268
+    Ieee_Std_Logic_Unsigned_Ne_Slv_Int = 269
+    Ieee_Std_Logic_Unsigned_Ne_Int_Slv = 270
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location
