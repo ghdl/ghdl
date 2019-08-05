@@ -705,41 +705,95 @@ package body Synth.Expr is
       return Res;
    end Create_Bounds_From_Length;
 
-   --  Implicit conversion of literals.
-   function Synth_Implicit_Conv (Syn_Inst : Synth_Instance_Acc;
-                                 Val : Value_Acc;
-                                 Vtype : Node;
-                                 Rtype : Node) return Value_Acc
+   function Synth_Subtype_Conversion
+     (Val : Value_Acc; Dtype : Type_Acc; Loc : Source.Syn_Src)
+     return Value_Acc
    is
-      Vtyp : Type_Acc;
-      Rtyp : Type_Acc;
+      Vtype : constant Type_Acc := Val.Typ;
    begin
-      if Rtype = Vtype or else Val.Kind /= Value_Discrete then
-         return Val;
-      end if;
-      if Vtype /= Vhdl.Std_Package.Convertible_Integer_Type_Definition then
-         raise Internal_Error;
-      end if;
-      Vtyp := Val.Typ;
-      Rtyp := Get_Value_Type (Syn_Inst, Rtype);
-      if Rtyp.Drange.W < Vtyp.Drange.W then
-         --  TODO: check bounds.
-         return Create_Value_Discrete (Val.Scal, Rtyp);
-      else
-         pragma Assert (Vtyp.Drange.W = Rtyp.Drange.W);
-         return Val;
-      end if;
-   end Synth_Implicit_Conv;
+      case Dtype.Kind is
+         when Type_Bit =>
+            pragma Assert (Vtype.Kind = Type_Bit);
+            return Val;
+         when Type_Discrete =>
+            pragma Assert (Vtype.Kind = Type_Discrete);
+            declare
+               Vrng : Discrete_Range_Type renames Vtype.Drange;
+               Drng : Discrete_Range_Type renames Dtype.Drange;
+               N : Net;
+            begin
+               if Vrng.W > Drng.W then
+                  --  Truncate.
+                  --  TODO: check overflow.
+                  case Val.Kind is
+                     when Value_Net
+                       | Value_Wire =>
+                        N := Get_Net (Val);
+                        N := Build_Trunc (Build_Context, Id_Utrunc, N, Drng.W);
+                        Set_Location (N, Loc);
+                        return Create_Value_Net (N, Dtype);
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               elsif Vrng.W < Drng.W then
+                  --  Extend.
+                  case Val.Kind is
+                     when Value_Discrete =>
+                        return Create_Value_Discrete (Val.Scal, Dtype);
+                     when Value_Net
+                       | Value_Wire =>
+                        N := Get_Net (Val);
+                        if Vrng.Is_Signed then
+                           N := Build_Extend
+                             (Build_Context, Id_Sextend, N, Drng.W);
+                        else
+                           N := Build_Extend
+                             (Build_Context, Id_Uextend, N, Drng.W);
+                        end if;
+                        Set_Location (N, Loc);
+                        return Create_Value_Net (N, Dtype);
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               else
+                  --  TODO: check overflow if sign differ.
+                  return Val;
+               end if;
+            end;
+         when Type_Float =>
+            pragma Assert (Vtype.Kind = Type_Float);
+            --  TODO: check range
+            return Val;
+         when Type_Vector =>
+            --  TODO: check width
+            return Val;
+         when Type_Array =>
+            --  TODO: check bounds, handle elements
+            return Val;
+         when Type_Unbounded_Array =>
+            pragma Assert (Vtype.Kind = Type_Vector
+                             or else Vtype.Kind = Type_Array);
+            return Val;
+         when Type_Record =>
+            --  TODO: handle elements.
+            return Val;
+      end case;
+   end Synth_Subtype_Conversion;
 
+   --  Implicit conversion of literals.
    function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
-                                    Def : Iir_Predefined_Functions;
+                                    Imp : Node;
                                     Left_Expr : Node;
                                     Right_Expr : Node;
                                     Expr : Node) return Value_Acc
    is
+      Def : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
+      Inter_Chain : constant Node :=
+        Get_Interface_Declaration_Chain (Imp);
       Expr_Type : constant Node := Get_Type (Expr);
-      Ltype : constant Node := Get_Type (Left_Expr);
-      Rtype : constant Node := Get_Type (Right_Expr);
+      Left_Type : constant Node := Get_Type (Inter_Chain);
+      Right_Type : constant Node := Get_Type (Get_Chain (Inter_Chain));
       Left : Value_Acc;
       Right : Value_Acc;
 
@@ -768,7 +822,7 @@ package body Synth.Expr is
       is
          N : Net;
       begin
-         N := Synth_Uresize (Right, Rtype, Get_Width (Left));
+         N := Synth_Uresize (Right, Right_Type, Get_Width (Left));
          Set_Location (N, Expr);
          N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
          Set_Location (N, Expr);
@@ -788,15 +842,10 @@ package body Synth.Expr is
       function Synth_Int_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
          Etype : constant Type_Acc := Get_Value_Type (Syn_Inst, Expr_Type);
-         L, R : Net;
          N : Net;
       begin
-         Left := Synth_Implicit_Conv (Syn_Inst, Left, Ltype, Expr_Type);
-         Right := Synth_Implicit_Conv (Syn_Inst, Right, Rtype, Expr_Type);
-
-         L := Synth_Resize (Left, Etype.Drange.W, Expr);
-         R := Synth_Resize (Right, Etype.Drange.W, Expr);
-         N := Build_Dyadic (Build_Context, Id, L, R);
+         N := Build_Dyadic
+           (Build_Context, Id, Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Etype);
       end Synth_Int_Dyadic;
@@ -849,15 +898,15 @@ package body Synth.Expr is
          R1 : Net;
          N : Net;
       begin
-         R1 := Synth_Uresize (Right, Rtype, Get_Width (Left));
+         R1 := Synth_Uresize (Right, Right_Type, Get_Width (Left));
          Set_Location (R1, Expr);
          N := Build_Dyadic (Build_Context, Id, L, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left, L));
       end Synth_Dyadic_Uns_Nat;
    begin
-      Left := Synth_Expression (Syn_Inst, Left_Expr);
-      Right := Synth_Expression (Syn_Inst, Right_Expr);
+      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Type);
+      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Type);
 
       case Def is
          when Iir_Predefined_Error =>
@@ -892,8 +941,8 @@ package body Synth.Expr is
             return Synth_Vec_Dyadic (Id_Xor);
 
          when Iir_Predefined_Enum_Equality =>
-            if Is_Bit_Type (Ltype) then
-               pragma Assert (Is_Bit_Type (Rtype));
+            if Is_Bit_Type (Left_Type) then
+               pragma Assert (Is_Bit_Type (Right_Type));
                if Is_Const (Left) then
                   return Synth_Bit_Eq_Const (Left, Right, Expr);
                elsif Is_Const (Right) then
@@ -909,14 +958,14 @@ package body Synth.Expr is
 
          when Iir_Predefined_Array_Equality =>
             --  TODO: check size, handle non-vector.
-            if Is_Vector_Type (Ltype) then
+            if Is_Vector_Type (Left_Type) then
                return Synth_Compare (Id_Eq);
             else
                raise Internal_Error;
             end if;
          when Iir_Predefined_Array_Inequality =>
             --  TODO: check size, handle non-vector.
-            if Is_Vector_Type (Ltype) then
+            if Is_Vector_Type (Left_Type) then
                return Synth_Compare (Id_Ne);
             else
                raise Internal_Error;
@@ -924,7 +973,7 @@ package body Synth.Expr is
          when Iir_Predefined_Array_Greater =>
             --  TODO: check size, non-vector.
             --  TODO: that's certainly not the correct operator.
-            if Is_Vector_Type (Ltype) then
+            if Is_Vector_Type (Left_Type) then
                return Synth_Compare (Id_Ugt);
             else
                raise Internal_Error;
@@ -1979,7 +2028,9 @@ package body Synth.Expr is
 
    function Synth_Expression_With_Type
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Node)
-     return Value_Acc is
+     return Value_Acc
+   is
+      Res : Value_Acc;
    begin
       case Get_Kind (Expr) is
          when Iir_Kinds_Dyadic_Operator =>
@@ -2002,7 +2053,7 @@ package body Synth.Expr is
                  or else Def in Iir_Predefined_IEEE_Explicit
                then
                   return Synth_Dyadic_Operation
-                    (Syn_Inst, Def, Get_Left (Expr), Get_Right (Expr), Expr);
+                    (Syn_Inst, Imp, Get_Left (Expr), Get_Right (Expr), Expr);
                else
                   Error_Unknown_Operator (Imp, Expr);
                   raise Internal_Error;
@@ -2026,7 +2077,9 @@ package body Synth.Expr is
             end;
          when Iir_Kind_Simple_Name
            | Iir_Kind_Interface_Signal_Declaration =>  -- For PSL...
-            return Synth_Name (Syn_Inst, Expr);
+            Res := Synth_Name (Syn_Inst, Expr);
+            return Synth_Subtype_Conversion
+              (Res, Get_Value_Type (Syn_Inst, Expr_Type), Expr);
          when Iir_Kind_Reference_Name =>
             return Synth_Name (Syn_Inst, Get_Named_Entity (Expr));
          when Iir_Kind_Indexed_Name =>

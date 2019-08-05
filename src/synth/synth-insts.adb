@@ -307,7 +307,7 @@ package body Synth.Insts is
                Port := Builders.Build_Port (Build_Context, Port);
                O := Create_Value_Net
                  (Port, Get_Value_Type (Inst_Obj.Syn_Inst, Get_Type (Inter)));
-               Synth_Assignment (Syn_Inst, Actual, O);
+               Synth_Assignment (Syn_Inst, Actual, O, Assoc);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Next_Association_Interface (Assoc, Assoc_Inter);
@@ -577,8 +577,9 @@ package body Synth.Insts is
                  | Port_Inout =>
                   Port := Get_Output (Inst, Nbr_Outputs);
                   Port := Builders.Build_Port (Build_Context, Port);
-                  O := Create_Value_Net (Port, null);
-                  Synth_Assignment (Syn_Inst, Actual, O);
+                  O := Create_Value_Net
+                    (Port, Get_Value_Type (Syn_Inst, Get_Type (Inter)));
+                  Synth_Assignment (Syn_Inst, Actual, O, Assoc);
                   Nbr_Outputs := Nbr_Outputs + 1;
             end case;
             Next_Association_Interface (Assoc, Assoc_Inter);

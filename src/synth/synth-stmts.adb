@@ -41,6 +41,7 @@ with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
 with Synth.Environment; use Synth.Environment;
 with Synth.Insts; use Synth.Insts;
+with Synth.Source;
 
 with Vhdl.Annotations; use Vhdl.Annotations;
 
@@ -65,19 +66,27 @@ package body Synth.Stmts is
          --  Warning
          null;
       end if;
-      return Synth_Expression_With_Type
-        (Syn_Inst, Get_We_Value (Wf), Targ_Type);
+      if Targ_Type = Null_Node then
+         return Synth_Expression (Syn_Inst, Get_We_Value (Wf));
+      else
+         return Synth_Expression_With_Type
+           (Syn_Inst, Get_We_Value (Wf), Targ_Type);
+      end if;
    end Synth_Waveform;
 
-   procedure Synth_Assign (Dest : Value_Acc; Val : Value_Acc) is
+   procedure Synth_Assign
+     (Dest : Value_Acc; Val : Value_Acc; Loc : Source.Syn_Src) is
    begin
       pragma Assert (Dest.Kind = Value_Wire);
-      Phi_Assign (Dest.W, Get_Net (Val));
+      Phi_Assign
+        (Dest.W,
+         Get_Net (Synth_Subtype_Conversion (Val, Dest.Typ, Loc)));
    end Synth_Assign;
 
    procedure Synth_Assignment_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                          Target : Node;
-                                         Val : Value_Acc)
+                                         Val : Value_Acc;
+                                         Loc : Node)
    is
       Targ_Type : constant Node := Get_Type (Target);
       Bnd : Bound_Type;
@@ -95,7 +104,7 @@ package body Synth.Stmts is
                when Iir_Kind_Choice_By_None =>
                   Pos := Pos - 1;
                   Synth_Assignment
-                    (Syn_Inst, Assoc, Bit_Extract (Val, Pos, Target));
+                    (Syn_Inst, Assoc, Bit_Extract (Val, Pos, Target), Loc);
                when others =>
                   Error_Kind ("synth_assignment_aggregate", Choice);
             end case;
@@ -106,8 +115,10 @@ package body Synth.Stmts is
       end if;
    end Synth_Assignment_Aggregate;
 
-   procedure Synth_Indexed_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Target : Node; Val : Value_Acc)
+   procedure Synth_Indexed_Assignment (Syn_Inst : Synth_Instance_Acc;
+                                       Target : Node;
+                                       Val : Value_Acc;
+                                       Loc : Node)
    is
       Pfx : constant Node := Get_Prefix (Target);
       Targ : constant Value_Acc := Get_Value (Syn_Inst, Get_Base_Name (Pfx));
@@ -136,24 +147,26 @@ package body Synth.Stmts is
            (Build_Context, Targ_Net, Val_Net, Voff, Mul, Int32 (Off));
          Set_Location (V, Target);
       end if;
-      Synth_Assign (Targ, Create_Value_Net (V, Targ.Typ));
+      Synth_Assign (Targ, Create_Value_Net (V, Targ.Typ), Loc);
    end Synth_Indexed_Assignment;
 
-   procedure Synth_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Target : Node; Val : Value_Acc) is
+   procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
+                               Target : Node;
+                               Val : Value_Acc;
+                               Loc : Node) is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Simple_Name =>
-            Synth_Assignment (Syn_Inst, Get_Named_Entity (Target), Val);
+            Synth_Assignment (Syn_Inst, Get_Named_Entity (Target), Val, Loc);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration =>
-            Synth_Assign (Get_Value (Syn_Inst, Target), Val);
+            Synth_Assign (Get_Value (Syn_Inst, Target), Val, Loc);
          when Iir_Kind_Aggregate =>
-            Synth_Assignment_Aggregate (Syn_Inst, Target, Val);
+            Synth_Assignment_Aggregate (Syn_Inst, Target, Val, Loc);
          when Iir_Kind_Indexed_Name =>
-            Synth_Indexed_Assignment (Syn_Inst, Target, Val);
+            Synth_Indexed_Assignment (Syn_Inst, Target, Val, Loc);
          when Iir_Kind_Slice_Name =>
             declare
                Pfx : constant Node := Get_Prefix (Target);
@@ -186,7 +199,7 @@ package body Synth.Stmts is
                end if;
                Set_Location (Res, Target);
                Res_Type := Create_Vector_Type (Res_Bnd, Targ.Typ.Vec_El);
-               Synth_Assign (Targ, Create_Value_Net (Res, Res_Type));
+               Synth_Assign (Targ, Create_Value_Net (Res, Res_Type), Loc);
             end;
          when others =>
             Error_Kind ("synth_assignment", Target);
@@ -198,11 +211,17 @@ package body Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Target : constant Node := Get_Target (Stmt);
+      Wf_Type : Node;
       Val : Value_Acc;
    begin
-      Val := Synth_Waveform
-        (Syn_Inst, Get_Waveform_Chain (Stmt), Get_Type (Target));
-      Synth_Assignment (Syn_Inst, Target, Val);
+      --  FIXME: correctly handle target type when it is a slice.
+      if Get_Kind (Target) = Iir_Kind_Slice_Name then
+         Wf_Type := Null_Node;
+      else
+         Wf_Type := Get_Type (Target);
+      end if;
+      Val := Synth_Waveform (Syn_Inst, Get_Waveform_Chain (Stmt), Wf_Type);
+      Synth_Assignment (Syn_Inst, Target, Val, Stmt);
    end Synth_Simple_Signal_Assignment;
 
    procedure Synth_Conditional_Signal_Assignment
@@ -233,7 +252,7 @@ package body Synth.Stmts is
          Last := Val;
          Cwf := Get_Chain (Cwf);
       end loop;
-      Synth_Assignment (Syn_Inst, Target, First);
+      Synth_Assignment (Syn_Inst, Target, First, Stmt);
    end Synth_Conditional_Signal_Assignment;
 
    procedure Synth_Variable_Assignment
@@ -244,7 +263,7 @@ package body Synth.Stmts is
    begin
       Val := Synth_Expression_With_Type
         (Syn_Inst, Get_Expression (Stmt), Get_Type (Target));
-      Synth_Assignment (Syn_Inst, Target, Val);
+      Synth_Assignment (Syn_Inst, Target, Val, Stmt);
    end Synth_Variable_Assignment;
 
    procedure Synth_If_Statement
@@ -895,8 +914,10 @@ package body Synth.Stmts is
 
          --  Generate the muxes tree.
          Synth_Case (Sel_Net, Case_El.all, Default, Res);
-         Synth_Assignment (Syn_Inst, Get_Target (Stmt),
-                           Create_Value_Net (Res, null));
+         Synth_Assignment
+           (Syn_Inst, Get_Target (Stmt),
+            Create_Value_Net (Res, Get_Value_Type (Syn_Inst, Targ_Type)),
+            Stmt);
       end;
 
       --  free.
@@ -977,7 +998,7 @@ package body Synth.Stmts is
          if Get_Mode (Inter) = Iir_Out_Mode then
             Val := Synth_Expression_With_Type
               (Subprg_Inst, Inter, Get_Type (Inter));
-            Synth_Assignment (Caller_Inst, Get_Actual (Assoc), Val);
+            Synth_Assignment (Caller_Inst, Get_Actual (Assoc), Val, Assoc);
 
          end if;
 

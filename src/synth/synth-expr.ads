@@ -21,6 +21,7 @@
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Netlists; use Netlists;
+with Synth.Source;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -31,6 +32,10 @@ package Synth.Expr is
 
    procedure Set_Location (N : Net; Loc : Node);
    pragma Inline (Set_Location);
+
+   function Synth_Subtype_Conversion
+     (Val : Value_Acc; Dtype : Type_Acc; Loc : Source.Syn_Src)
+     return Value_Acc;
 
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32);
    procedure From_Bit (Enum : Int64; Val : out Uns32);

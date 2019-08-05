@@ -31,7 +31,8 @@ package Synth.Stmts is
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Node;
-                               Val : Value_Acc);
+                               Val : Value_Acc;
+                               Loc : Node);
 
    procedure Synth_Sequential_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
