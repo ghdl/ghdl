@@ -166,6 +166,7 @@ package body Synth.Values is
       subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Wire);
    begin
+      pragma Assert (Wtype /= null);
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Wire,
                                    W => W,
@@ -177,6 +178,7 @@ package body Synth.Values is
       subtype Value_Type_Net is Value_Type (Value_Net);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Net);
    begin
+      pragma Assert (Ntype /= null);
       return To_Value_Acc
         (Alloc (Current_Pool,
                 Value_Type_Net'(Kind => Value_Net, N => N, Typ => Ntype)));
@@ -202,6 +204,7 @@ package body Synth.Values is
       subtype Value_Type_Discrete is Value_Type (Value_Discrete);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Discrete);
    begin
+      pragma Assert (Vtype /= null);
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Discrete, Scal => Val,
                                    Typ => Vtype)));
@@ -212,6 +215,7 @@ package body Synth.Values is
       subtype Value_Type_Float is Value_Type (Value_Float);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Float);
    begin
+      pragma Assert (Vtype /= null);
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Float,
                                    Typ => Vtype,
@@ -253,6 +257,7 @@ package body Synth.Values is
 
       Res : Value_Acc;
    begin
+      pragma Assert (Bounds /= null);
       Res := To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Array,
                                    Arr => Arr, Typ => Bounds)));
