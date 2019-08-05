@@ -363,7 +363,9 @@ package body Netlists.Disp_Vhdl is
                Disp_Lit (Inst);
                Put (")");
             when Conv_Signed =>
-               raise Internal_Error;
+               Put ("signed'(");
+               Disp_Lit (Inst);
+               Put (")");
          end case;
       else
          case Conv is
@@ -374,7 +376,9 @@ package body Netlists.Disp_Vhdl is
                Disp_Net_Name (N);
                Put (")");
             when Conv_Signed =>
-               raise Internal_Error;
+               Put ("signed (");
+               Disp_Net_Name (N);
+               Put (")");
          end case;
       end if;
    end Disp_Net_Expr;
