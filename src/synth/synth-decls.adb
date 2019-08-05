@@ -205,10 +205,19 @@ package body Synth.Decls is
       Etyp : Type_Acc;
       Bnds : Bound_Array_Acc;
    begin
-      --  LRM93 12.3.1.3
-      --  The elaboration of an index constraint consists of the
-      --  declaration of each of the discrete ranges in the index
-      --  constraint in some order that is not defined by the language.
+      --  VHDL08
+      if Get_Array_Element_Constraint (Atype) /= Null_Node
+        or else
+        (Get_Resolution_Indication (Atype) /= Null_Node
+           and then
+           (Get_Kind (Get_Resolution_Indication (Atype))
+              = Iir_Kind_Array_Element_Resolution))
+      then
+         --  This subtype has created a new anonymous subtype for the
+         --  element.
+         Synth_Subtype_Indication (Syn_Inst, El_Type);
+      end if;
+
       Etyp := Get_Value_Type (Syn_Inst, El_Type);
 
       if Etyp.Kind = Type_Bit

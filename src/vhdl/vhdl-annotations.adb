@@ -383,7 +383,15 @@ package body Vhdl.Annotations is
             end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
-            if Get_Array_Element_Constraint (Def) /= Null_Node then
+            if Get_Array_Element_Constraint (Def) /= Null_Node
+              or else
+              (Get_Resolution_Indication (Def) /= Null_Node
+                 and then
+                 (Get_Kind (Get_Resolution_Indication (Def))
+                    = Iir_Kind_Array_Element_Resolution))
+            then
+               --  This subtype has created a new anonymous subtype for the
+               --  element.
                Annotate_Type_Definition
                  (Block_Info, Get_Element_Subtype (Def));
             end if;
