@@ -18,6 +18,10 @@ else
 
     elab_simulate --time-resolution=auto ent
 
+    analyze t3.vhdl
+    elab_simulate --time-resolution=ps t3
+    elab_simulate --time-resolution=auto t3
+
     analyze t87.vhdl
     elab_simulate --time-resolution=ps t87
     elab_simulate --time-resolution=auto t87
