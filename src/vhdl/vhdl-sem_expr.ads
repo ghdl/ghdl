@@ -116,8 +116,8 @@ package Vhdl.Sem_Expr is
    --  Analyze a discrete range.  If ANY_DIR is true, the range can't be a
    --  null range (slice vs subtype -- used in static evaluation). A_TYPE may
    --  be Null_Iir. Return Null_Iir in case of error.
-   function Sem_Discrete_Range_Expression
-     (Expr: Iir; A_Type: Iir; Any_Dir: Boolean) return Iir;
+   function Sem_Discrete_Range (Expr: Iir; A_Type: Iir; Any_Dir: Boolean)
+                               return Iir;
 
    --  Analyze a discrete range and convert to integer if both bounds are
    --  universal integer types, according to rules of LRM 3.2.1.1

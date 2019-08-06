@@ -1208,7 +1208,7 @@ package body Vhdl.Sem_Types is
             declare
                Res : Iir;
             begin
-               Res := Sem_Discrete_Range_Expression (Def, Null_Iir, True);
+               Res := Sem_Discrete_Range (Def, Null_Iir, True);
                if Res = Null_Iir then
                   return Null_Iir;
                end if;
@@ -1596,7 +1596,7 @@ package body Vhdl.Sem_Types is
 
             if I <= Subtype_Nbr_Dim then
                Subtype_Index := Get_Nth_Element (Subtype_Index_List, I - 1);
-               Subtype_Index := Sem_Discrete_Range_Expression
+               Subtype_Index := Sem_Discrete_Range
                  (Subtype_Index, Get_Index_Type (Type_Index), True);
                if Subtype_Index /= Null_Iir then
                   Subtype_Index :=

@@ -7650,6 +7650,9 @@ package body Vhdl.Parse is
                      Error_Msg_Parse ("multi-dimensional slice is forbidden");
                   end if;
 
+               when Tok_Range =>
+                  Actual := Parse_Subtype_Indication (Actual);
+
                when Tok_Double_Arrow =>
                   --  Check that FORMAL is a name and not an expression.
                   Formal := Check_Formal_Form (Actual);

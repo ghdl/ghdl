@@ -710,19 +710,20 @@ package body Vhdl.Sem_Names is
       Expr_Type : Iir;
       Staticness : Iir_Staticness;
       Prefix_Rng : Iir;
+      Suffix_Rng : Iir;
    begin
       Set_Base_Name (Name, Get_Base_Name (Prefix));
 
-      --  LRM93 §6.5: the prefix of an indexed name must be appropriate
+      --  LRM93 6.5: the prefix of an indexed name must be appropriate
       --  for an array type.
       if Get_Kind (Prefix_Bt) /= Iir_Kind_Array_Type_Definition then
          Error_Msg_Sem (+Name, "slice can only be applied to an array");
          return;
       end if;
 
-      -- LRM93 §6.5:
-      -- The prefix of a slice must be appropriate for a
-      -- one-dimensionnal array object.
+      --  LRM93 6.5:
+      --  The prefix of a slice must be appropriate for a
+      --  one-dimensionnal array object.
       Index_List := Get_Index_Subtype_List (Prefix_Type);
       if Get_Nbr_Elements (Index_List) /= 1 then
          Error_Msg_Sem
@@ -741,28 +742,46 @@ package body Vhdl.Sem_Names is
       --  LRM93 6.5
       --  The slice is a null slice if the discrete range is a null range.
 
-      -- LRM93 §6.5:
-      -- The bounds of the discrete range [...] must be of the
-      -- type of the index of the array.
-      Suffix := Sem_Discrete_Range_Expression
-        (Get_Suffix (Name), Index_Type, False);
+      --  LRM93 6.5:
+      --  The bounds of the discrete range [...] must be of the
+      --  type of the index of the array.
+      Suffix := Get_Suffix (Name);
+      Suffix := Sem_Discrete_Range (Suffix, Index_Type, False);
       if Suffix = Null_Iir then
          return;
       end if;
-      Suffix := Eval_Range_If_Static (Suffix);
+      case Get_Kind (Suffix) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
+            --  FIXME: what about the name ?
+            Suffix := Get_Type (Suffix);
+            Staticness := Get_Type_Staticness (Suffix);
+            Suffix_Rng := Get_Range_Constraint (Suffix);
+         when Iir_Kinds_Scalar_Subtype_Definition =>
+            Staticness := Get_Type_Staticness (Suffix);
+            Suffix_Rng := Get_Range_Constraint (Suffix);
+         when Iir_Kind_Range_Expression
+           | Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
+            Suffix := Eval_Range_If_Static (Suffix);
+            Suffix_Rng := Suffix;
+            Staticness := Get_Expr_Staticness (Suffix);
+         when others =>
+            Error_Kind ("finish_sem_slice_name", Suffix);
+      end case;
       Set_Suffix (Name, Suffix);
 
-      -- LRM93 §6.5:
-      -- It is an error if the direction of the discrete range is not
-      -- the same as that of the index range of the array denoted
-      -- by the prefix of the slice name.
+      --  LRM93 6.5:
+      --  It is an error if the direction of the discrete range is not
+      --  the same as that of the index range of the array denoted
+      --  by the prefix of the slice name.
 
-      -- Check this only if the type is a constrained type.
+      --  Check this only if the type is a constrained type.
       if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition
         and then Get_Index_Constraint_Flag (Prefix_Type)
-        and then Get_Expr_Staticness (Suffix) = Locally
+        and then Staticness = Locally
         and then Prefix_Rng /= Null_Iir
-        and then Get_Direction (Suffix) /= Get_Direction (Prefix_Rng)
+        and then Get_Direction (Suffix_Rng) /= Get_Direction (Prefix_Rng)
       then
          if False and then Flags.Vhdl_Std = Vhdl_87 then
             -- emit a warning for a null slice.
@@ -773,20 +792,8 @@ package body Vhdl.Sem_Names is
          Error_Msg_Sem (+Name, "direction of the range mismatch");
       end if;
 
-      --  LRM93 §7.4.1
+      --  LRM93 7.4.1
       --  A slice is never a locally static expression.
-      case Get_Kind (Suffix) is
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
-            Suffix := Get_Type (Suffix);
-            Staticness := Get_Type_Staticness (Suffix);
-         when Iir_Kind_Range_Expression
-           | Iir_Kind_Range_Array_Attribute
-           | Iir_Kind_Reverse_Range_Array_Attribute =>
-            Staticness := Get_Expr_Staticness (Suffix);
-         when others =>
-            Error_Kind ("finish_sem_slice_name", Suffix);
-      end case;
       Set_Expr_Staticness
         (Name, Min (Min (Staticness, Get_Expr_Staticness (Prefix)), Globally));
       Set_Name_Staticness
@@ -2395,7 +2402,7 @@ package body Vhdl.Sem_Names is
             Set_Index_List (Res, Create_Iir_Flist (1));
             Set_Nth_Element (Get_Index_List (Res), 0, Actual);
          when Iir_Kind_Slice_Name =>
-            Actual := Sem_Discrete_Range_Expression (Actual, Itype, False);
+            Actual := Sem_Discrete_Range (Actual, Itype, False);
             if Actual = Null_Iir then
                return Null_Iir;
             end if;
@@ -2652,12 +2659,11 @@ package body Vhdl.Sem_Names is
             end if;
             --  Decides between sliced or indexed name to actual.
             Slice_Index_Kind := Slice_Or_Index (Actual_Expr);
-         elsif Get_Kind (Actual) = Iir_Kind_Range_Expression then
+         elsif Get_Kind (Actual) = Iir_Kind_Range_Expression
+           or else Get_Kind (Actual) = Iir_Kind_Subtype_Definition
+         then
             --  This can only be a slice.
             Slice_Index_Kind := Iir_Kind_Slice_Name;
-            --  Actual_Expr :=
-            --    Sem_Discrete_Range_Expression (Actual, Null_Iir, False);
-            --  Set_Actual (Assoc_Chain, Actual_Expr);
          else
             --  Any other expression: an indexed name.
             Slice_Index_Kind := Iir_Kind_Indexed_Name;

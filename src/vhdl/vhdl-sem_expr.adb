@@ -748,9 +748,8 @@ package body Vhdl.Sem_Expr is
       return Res;
    end Sem_Range_Expression;
 
-   function Sem_Discrete_Range_Expression
-     (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
-     return Iir
+   function Sem_Discrete_Range (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
+                               return Iir
    is
       Res : Iir;
       Res_Type : Iir;
@@ -798,14 +797,14 @@ package body Vhdl.Sem_Expr is
       end if;
 
       return Res;
-   end Sem_Discrete_Range_Expression;
+   end Sem_Discrete_Range;
 
    function Sem_Discrete_Range_Integer (Expr: Iir) return Iir
    is
       Res : Iir;
       Range_Type : Iir;
    begin
-      Res := Sem_Discrete_Range_Expression (Expr, Null_Iir, True);
+      Res := Sem_Discrete_Range (Expr, Null_Iir, True);
       if Res = Null_Iir then
          return Null_Iir;
       end if;
@@ -2779,7 +2778,7 @@ package body Vhdl.Sem_Expr is
       begin
          if Get_Kind (El) = Iir_Kind_Choice_By_Range then
             Expr := Get_Choice_Range (El);
-            Expr := Sem_Discrete_Range_Expression (Expr, Choice_Type, True);
+            Expr := Sem_Discrete_Range (Expr, Choice_Type, True);
             if Expr = Null_Iir then
                return False;
             end if;
