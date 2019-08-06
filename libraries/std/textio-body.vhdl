@@ -287,9 +287,9 @@ package body textio is
     --  Note: we must start from unit, since all units are not a power of 10.
     --  Note: UN can be multiplied only after we know it is possible.  This
     --   is a to avoid overflow.
-    if un <= 0 fs then
+    if un <= 0 sec then
       assert false report "UNIT argument is not positive" severity error;
-      un := 1 ns;
+      un := ns;
     end if;
     while val / 10 >= un or val / 10 <= -un loop
       un := un * 10;
@@ -1034,7 +1034,7 @@ package body textio is
     is_neg := false;
     exp := 0;
     exp_neg := false;
-    res := 0 fs;
+    res := 0 sec;
 
     --  Look for exponent and unit name.
     --  Parse the string: this loop checks the correctness of the format, and
@@ -1199,7 +1199,7 @@ package body textio is
 	  end if;
 	when '0' to '9' =>
 	  --  Leading "0" are not significant.
-	  if l (i) /= '0' or res /= 0 fs then
+	  if l (i) /= '0' or res /= 0 sec then
 	    res := res + char_to_nat (l (i)) * unit;
 	    unit := unit / 10;
 	  end if;

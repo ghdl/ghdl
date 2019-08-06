@@ -17,15 +17,15 @@
 --  02111-1307, USA.
 
 with Grt.Algos;
-with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Errorout; use Errorout;
-with Vhdl.Errors; use Vhdl.Errors;
+with Name_Table;
+with Str_Table;
 with Flags; use Flags;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
 with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Vhdl.Sem;
-with Name_Table;
-with Str_Table;
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
@@ -4023,6 +4023,9 @@ package body Vhdl.Sem_Expr is
          end if;
          Set_Named_Entity (Unit_Name, Create_Error_Name (Unit_Name));
       else
+         --  Note: there is corresponding code for physical literal without
+         --  literal (so only the unit) in vhdl.sem_expr.name_to_expression.
+
          --  Physical unit is used.
          Set_Use_Flag (Unit, True);
 

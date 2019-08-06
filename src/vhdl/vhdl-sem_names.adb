@@ -15,12 +15,13 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Flags; use Flags;
+with Name_Table;
+with Libraries;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Utils; use Vhdl.Utils;
 with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
-with Flags; use Flags;
-with Name_Table;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Types; use Types;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
@@ -3959,6 +3960,21 @@ package body Vhdl.Sem_Names is
       end case;
    end Name_To_Analyzed_Name;
 
+   --  Return True iff the current design unit is package body textio.
+   function Is_Current_Design_Unit_Textio_Body return Boolean
+   is
+      Unit : constant Iir := Sem.Get_Current_Design_Unit;
+      Cur_Lib : constant Iir := Get_Library_Unit (Unit);
+   begin
+      if Get_Kind (Cur_Lib) /= Iir_Kind_Package_Body then
+         return False;
+      end if;
+      if Get_Library (Get_Design_File (Unit)) /= Libraries.Std_Library then
+         return False;
+      end if;
+      return Get_Identifier (Cur_Lib) = Std_Names.Name_Textio;
+   end Is_Current_Design_Unit_Textio_Body;
+
    --  Convert name EXPR to an expression (ie, create function call).
    --  A_TYPE is the expected type of the expression.
    --  Returns an Error node in case of error.
@@ -4113,13 +4129,22 @@ package body Vhdl.Sem_Names is
                --Set_Name_Staticness (Name, Get_Name_Staticness (Expr));
                --Set_Base_Name (Name, Get_Base_Name (Expr));
 
+               --  For time physical literal (without a literal), check for
+               --  resolution and mark the literal used.
+               --  Don't check for textio body, as it uses all units and
+               --  user code shouldn't be affected by it.
                if Get_Type (Expr) = Time_Type_Definition
-                 and then Get_Value (Get_Physical_Literal (Expr)) = 0
+                 and then not Is_Current_Design_Unit_Textio_Body
                then
+                  pragma Assert (Get_Kind (Expr) = Iir_Kind_Unit_Declaration);
+                  Set_Use_Flag (Expr, True);
+
                   --  See Sem_Physical_Literal.
-                  Error_Msg_Sem
-                    (+Res,
-                     "physical unit %i is below the time resolution", +Expr);
+                  if Get_Value (Get_Physical_Literal (Expr)) = 0 then
+                     Error_Msg_Sem
+                       (+Res, "physical unit %i is below the "
+                          & "time resolution", +Expr);
+                  end if;
                end if;
 
                return Res;
