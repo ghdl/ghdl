@@ -700,7 +700,8 @@ package body Trans.Chap9 is
 
       --  The finalizer.
       case Get_Kind (Stmt) is
-         when Iir_Kind_Psl_Assert_Directive =>
+         when Iir_Kind_Psl_Assert_Directive
+            | Iir_Kind_Psl_Assume_Directive =>
             if Get_PSL_EOS_Flag (Stmt) then
                Create_Psl_Final_Proc (Stmt, Base, Instance);
 
@@ -727,53 +728,13 @@ package body Trans.Chap9 is
                        (ON_And, Cond,
                         Translate_Psl_Expr (Get_Edge_Expr (E), True));
                      Start_If_Stmt (E_Blk, Cond);
-                     Chap8.Translate_Report
-                       (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
-                     New_Return_Stmt;
-                     Finish_If_Stmt (E_Blk);
-
-                     Close_Temp;
-                  end if;
-
-                  E := Get_Next_Dest_Edge (E);
-               end loop;
-
-               Clear_Scope (Base.Block_Scope);
-               Pop_Local_Factory;
-               Finish_Subprogram_Body;
-            else
-               Info.Psl_Proc_Final_Subprg := O_Dnode_Null;
-            end if;
-
-         when Iir_Kind_Psl_Assume_Directive =>
-            if Get_PSL_EOS_Flag (Stmt) then
-               Create_Psl_Final_Proc (Stmt, Base, Instance);
-
-               Start_Subprogram_Body (Info.Psl_Proc_Final_Subprg);
-               Push_Local_Factory;
-               --  Push scope for architecture declarations.
-               Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
-
-               S := Get_Final_State (NFA);
-               E := Get_First_Dest_Edge (S);
-               while E /= No_Edge loop
-                  Sd := Get_Edge_Src (E);
-
-                  if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
-
-                     S_Num := Get_State_Label (Sd);
-                     Open_Temp;
-
-                     Cond := New_Value
-                       (New_Indexed_Element
-                          (Get_Var (Info.Psl_Vect_Var),
-                           New_Lit (New_Index_Lit (Unsigned_64 (S_Num)))));
-                     Cond := New_Dyadic_Op
-                       (ON_And, Cond,
-                        Translate_Psl_Expr (Get_Edge_Expr (E), True));
-                     Start_If_Stmt (E_Blk, Cond);
-                     Chap8.Translate_Report
-                       (Stmt, Ghdl_Psl_Assume_Failed, Severity_Level_Error);
+                     if Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Directive then
+                        Chap8.Translate_Report
+                          (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+                     else
+                        Chap8.Translate_Report
+                          (Stmt, Ghdl_Psl_Assume_Failed, Severity_Level_Error);
+                     end if;
                      New_Return_Stmt;
                      Finish_If_Stmt (E_Blk);
 
