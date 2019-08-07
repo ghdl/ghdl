@@ -314,12 +314,12 @@ def read_methods(filename):
 # Read description for one node
 # LR is the line reader.  NAMES is the list of (node name, format)
 #  (one description may describe several nodes).
+# A comment start at column 2 or 4 or later.
 def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
     pat_only = re.compile('   -- Only for ' + prefix_name + '(\w+):\n')
     pat_only_bad = re.compile ('   -- *Only for.*\n')
     pat_field = re.compile('   --   Get/Set_(\w+) \((Alias )?([\w,]+)\)\n')
-    pat_comment = re.compile('   --.*\n')
-    pat_start = re.compile('   --   \w.*\n')
+    pat_comment = re.compile('   --(|  [^ ].*|    .*)\n')
 
     # Create nodes
     cur_nodes = []
@@ -330,54 +330,74 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
         nodes[nm] = n
         cur_nodes.append(n)
 
-    # Look for fields
-    only_nodes = cur_nodes
+    # Skip comments
     l = lr.l
+    while pat_comment.match(l):
+        l = lr.get()
+
+    # Look for fields
     while l != '\n':
-        # Handle 'Only ...'
-        while True:
-            m = pat_only.match(l)
-            if not m:
-                break
-            name = m.group(1)
-            if name not in [x.name for x in cur_nodes]:
-                raise ParseError(lr, 'node not currently described')
-            if only_nodes == cur_nodes:
-                only_nodes = []
-            only_nodes.append(nodes[name])
+        # Skip comments
+        while pat_comment.match(l):
             l = lr.get()
+
+        # Handle 'Only ...'
+        m = pat_only.match(l)
+        if m:
+            only_nodes = []
+            while True:
+                name = m.group(1)
+                n = nodes.get(name, None)
+                if n is None:
+                    raise ParseError(lr, 'node is unknown')
+                if n not in cur_nodes:
+                    raise ParseError(lr, 'node not currently described')
+                only_nodes.append(n)
+                l = lr.get()
+                m = pat_only.match(l)
+                if not m:
+                    break
+        else:
+            # By default a field applies to all nodes.
+            only_nodes = cur_nodes
+
+        # Skip comments
+        while pat_comment.match(l):
+            l = lr.get()
+
         # Handle field: '--  Get/Set_FUNC (Alias? FIELD)'
         m = pat_field.match(l)
-        if m:
-            # 1) Check the function exists
-            func = m.group(1)
-            alias = m.group(2)
-            fields = m.group(3).split(',')
-            if func not in funcs_dict:
-                raise ParseError(lr, 'unknown function')
-            func = funcs_dict[func]
-            if func.fields != fields:
-                raise ParseError(lr, 'fields mismatch')
-            for c in only_nodes:
+        if not m:
+            if pat_only_bad.match(l):
+                raise ParseError(lr, "misleading 'Only for' comment")
+            else:
+                raise ParseError(lr, 'bad line in node description')
+
+        func = m.group(1)
+        alias = m.group(2)
+        fields = m.group(3).split(',')
+
+        # Check the function exists and if the field is correct.
+        if func not in funcs_dict:
+            raise ParseError(lr, 'unknown function')
+        func = funcs_dict[func]
+        if func.fields != fields:
+            raise ParseError(lr, 'fields mismatch')
+
+        for c in only_nodes:
+            for f in fields:
+                if f not in c.fields:
+                    raise ParseError(
+                        lr, 'field ' + f + ' does not exist in node')
+            if not alias:
                 for f in fields:
-                    if f not in c.fields:
+                    if c.fields[f]:
                         raise ParseError(
-                            lr, 'field ' + f + ' does not exist in node')
-                if not alias:
-                    for f in fields:
-                        if c.fields[f]:
-                            raise ParseError(
-                                lr, 'field ' + f + ' already used')
-                        c.fields[f] = func
-                        c.order.append(f)
-                c.attrs[func.name] = func
-            only_nodes = cur_nodes
-        elif pat_start.match(l):
-            raise ParseError(lr, 'bad line in node description')
-        elif pat_only_bad.match(l):
-            raise ParseError(lr, "misleading 'Only for' comment")
-        elif not pat_comment.match(l):
-            raise ParseError(lr, 'bad line in node description')
+                            lr, 'field ' + f + ' already used')
+                    c.fields[f] = func
+                    c.order.append(f)
+            c.attrs[func.name] = func
+
         l = lr.get()
 
 
