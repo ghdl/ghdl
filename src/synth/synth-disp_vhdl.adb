@@ -77,9 +77,18 @@ package body Synth.Disp_Vhdl is
             end if;
          when Iir_Kind_Integer_Type_Definition =>
             --  FIXME: signed or unsigned ?
-            Put ("  wrap_" & Pfx & " <= std_logic_vector(to_unsigned(");
-            Put (Pfx & "," & Width'Image (Desc.W) & "));");
-            New_Line;
+            Put ("  wrap_" & Pfx & " <= ");
+            if Desc.W > 1 then
+               Put ("std_logic_vector(");
+            end if;
+            Put ("to_unsigned(");
+            Put (Pfx & "," & Width'Image (Desc.W) & ")");
+            if Desc.W > 1 then
+               Put (")");
+            elsif Desc.W = 1 then
+               Put ("(0)");
+            end if;
+            Put_Line (";");
             Idx := Idx + 1;
          when Iir_Kind_Array_Type_Definition =>
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then

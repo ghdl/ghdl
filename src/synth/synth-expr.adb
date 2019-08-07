@@ -460,7 +460,7 @@ package body Synth.Expr is
       elsif Lo >= 0 then
          --  Positive.
          V.Is_Signed := False;
-         V.W := Width (Clog2 (Uns64 (Hi)));
+         V.W := Width (Clog2 (Uns64 (Hi) + 1));
       elsif Lo = Int64'First then
          --  Handle possible overflow.
          V.Is_Signed := True;
