@@ -2905,54 +2905,28 @@ package Vhdl.Nodes is
    -- Iir_Kind_Psl_Assert_Directive (Medium)
    -- Iir_Kind_Psl_Assume_Directive (Medium)
    -- Iir_Kind_Psl_Cover_Directive (Medium)
-   --
-   --   Get/Set_Parent (Field0)
-   --
-   -- Only for Iir_Kind_Psl_Assert_Directive:
-   --   Get/Set_Psl_Property (Field1)
-   --
-   -- Only for Iir_Kind_Psl_Assume_Directive:
-   --   Get/Set_Psl_Property (Field1)
-   --
-   -- Only for Iir_Kind_Psl_Cover_Directive:
-   --   Get/Set_Psl_Sequence (Field1)
-   --
-   --   Get/Set_Chain (Field2)
-   --
-   --   Get/Set_Label (Field3)
-   --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Severity_Expression (Field4)
-   --
-   --   Get/Set_Report_Expression (Field5)
-   --
-   --  The following fields are set by canon.
-   --   Get/Set_PSL_Clock (Field7)
-   --
-   --   Get/Set_PSL_NFA (Field8)
-   --
-   --  Number of states in the NFA.
-   --   Get/Set_PSL_Nbr_States (Field9)
-   --
-   --   Get/Set_PSL_Clock_Sensitivity (Field10)
-   --
-   --  True if at least one of the NFA edge has the EOS flag.
-   --   Get/Set_PSL_EOS_Flag (Flag1)
-   --
-   --   Get/Set_Postponed_Flag (Flag3)
-   --
-   --   Get/Set_Visible_Flag (Flag4)
-
    -- Iir_Kind_Psl_Restrict_Directive (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
+   -- Only for Iir_Kind_Psl_Assert_Directive:
+   -- Only for Iir_Kind_Psl_Assume_Directive:
+   --   Get/Set_Psl_Property (Field1)
+   --
+   -- Only for Iir_Kind_Psl_Cover_Directive:
+   -- Only for Iir_Kind_Psl_Restrict_Directive:
    --   Get/Set_Psl_Sequence (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
+   --
+   -- Only for Iir_Kind_Psl_Assert_Directive:
+   --   Get/Set_Severity_Expression (Field4)
+   --
+   -- Only for Iir_Kind_Psl_Assert_Directive:
+   --   Get/Set_Report_Expression (Field5)
    --
    --  The following fields are set by canon.
    --   Get/Set_PSL_Clock (Field7)
