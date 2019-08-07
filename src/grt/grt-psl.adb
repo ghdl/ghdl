@@ -40,6 +40,8 @@ package body Grt.Psl is
    Is_First : Boolean := True;
    Nbr_Assert_Failed : Ghdl_U32 := 0;
    Nbr_Assert_Passed : Ghdl_U32 := 0;
+   Nbr_Assume_Failed : Ghdl_U32 := 0;
+   Nbr_Assume_Passed : Ghdl_U32 := 0;
    Nbr_Cover_Failed : Ghdl_U32 := 0;
    Nbr_Cover_Passed : Ghdl_U32 := 0;
 
@@ -96,6 +98,8 @@ package body Grt.Psl is
       case Ghdl_Rtiks_Psl (Rti.Kind) is
          when Ghdl_Rtik_Psl_Assert =>
             Put (F, """assertion""");
+         when Ghdl_Rtik_Psl_Assume =>
+            Put (F, """assumption""");
          when Ghdl_Rtik_Psl_Cover =>
             Put (F, """cover""");
       end case;
@@ -129,6 +133,14 @@ package body Grt.Psl is
             else
                Put (F, "failed");
                Inc (Nbr_Assert_Failed);
+            end if;
+         when Ghdl_Rtik_Psl_Assume =>
+            if Val = 0 then
+               Put (F, "passed");
+               Inc (Nbr_Assume_Passed);
+            else
+               Put (F, "failed");
+               Inc (Nbr_Assume_Failed);
             end if;
          when Ghdl_Rtik_Psl_Cover =>
             if Val = 0 then
@@ -184,6 +196,16 @@ package body Grt.Psl is
       Put_Line (F, ",");
       Put (F, "  ""assert-pass"": ");
       Put_U32 (F, Nbr_Assert_Passed);
+      Put_Line (F, ",");
+
+      Put (F, "  ""assume"": ");
+      Put_U32 (F, Nbr_Assume_Failed + Nbr_Assume_Passed);
+      Put_Line (F, ",");
+      Put (F, "  ""assume-failure"": ");
+      Put_U32 (F, Nbr_Assume_Failed);
+      Put_Line (F, ",");
+      Put (F, "  ""assume-pass"": ");
+      Put_U32 (F, Nbr_Assume_Passed);
       Put_Line (F, ",");
 
       Put (F, "  ""cover"": ");

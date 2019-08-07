@@ -8586,11 +8586,11 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Semi_Colon);
    end Parse_Psl_Assert_Report_Severity;
 
-   function Parse_Psl_Assert_Statement return Iir
+   function Parse_Psl_Assert_Directive return Iir
    is
       Res : Iir;
    begin
-      Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
+      Res := Create_Iir (Iir_Kind_Psl_Assert_Directive);
 
       --  Accept PSL tokens
       if Flags.Vhdl_Std >= Vhdl_08 then
@@ -8605,7 +8605,26 @@ package body Vhdl.Parse is
       Parse_Psl_Assert_Report_Severity (Res);
 
       return Res;
-   end Parse_Psl_Assert_Statement;
+   end Parse_Psl_Assert_Directive;
+
+   function Parse_Psl_Assume_Directive return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Psl_Assume_Directive);
+
+      --  Skip 'assume'
+      Scan;
+
+      Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
+
+      Vhdl.Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Scan_In_Comment := False;
+
+      Expect_Scan (Tok_Semi_Colon);
+
+      return Res;
+   end Parse_Psl_Assume_Directive;
 
    function Parse_Psl_Cover_Directive return Iir
    is
@@ -8758,7 +8777,7 @@ package body Vhdl.Parse is
                if Vhdl_Std >= Vhdl_08
                  or else (Flag_Psl_Comment and then Flag_Scan_In_Comment)
                then
-                  Stmt := Parse_Psl_Assert_Statement;
+                  Stmt := Parse_Psl_Assert_Directive;
                else
                   Stmt := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
                   Parse_Assertion (Stmt);
@@ -8804,6 +8823,9 @@ package body Vhdl.Parse is
                Postponed_Not_Allowed;
                Label_Not_Allowed;
                Stmt := Parse_Psl_Declaration;
+            when Tok_Psl_Assume =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Psl_Assume_Directive;
             when Tok_Psl_Cover =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Cover_Directive;

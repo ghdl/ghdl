@@ -2020,8 +2020,10 @@ package body Vhdl.Sem_Stmts is
                Sem_Psl.Sem_Psl_Declaration (El);
             when Iir_Kind_Psl_Endpoint_Declaration =>
                Sem_Psl.Sem_Psl_Endpoint_Declaration (El);
-            when Iir_Kind_Psl_Assert_Statement =>
-               New_El := Sem_Psl.Sem_Psl_Assert_Statement (El);
+            when Iir_Kind_Psl_Assert_Directive =>
+               New_El := Sem_Psl.Sem_Psl_Assert_Directive (El);
+            when Iir_Kind_Psl_Assume_Directive =>
+               Sem_Psl.Sem_Psl_Assume_Directive (El);
             when Iir_Kind_Psl_Cover_Directive =>
                Sem_Psl.Sem_Psl_Cover_Directive (El);
             when Iir_Kind_Psl_Restrict_Directive =>

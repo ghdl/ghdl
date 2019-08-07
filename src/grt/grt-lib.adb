@@ -116,6 +116,12 @@ package body Grt.Lib is
       Do_Report ("psl assertion", Str, "Assertion violation", Severity, Loc);
    end Ghdl_Psl_Assert_Failed;
 
+   procedure Ghdl_Psl_Assume_Failed
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
+   begin
+      Do_Report ("psl assumption", Str, "Assumption violation", Severity, Loc);
+   end Ghdl_Psl_Assume_Failed;
+
    procedure Ghdl_Psl_Cover
      (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
    begin

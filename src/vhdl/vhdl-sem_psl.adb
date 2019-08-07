@@ -695,12 +695,12 @@ package body Vhdl.Sem_Psl is
       Set_PSL_Clock (Stmt, Clk);
    end Sem_Psl_Directive_Clock;
 
-   function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir
+   function Sem_Psl_Assert_Directive (Stmt : Iir) return Iir
    is
       Prop : PSL_Node;
       Res : Iir;
    begin
-      pragma Assert (Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Statement);
+      pragma Assert (Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Directive);
 
       --  Sem report and severity expressions.
       Sem_Report_Statement (Stmt);
@@ -730,7 +730,26 @@ package body Vhdl.Sem_Psl is
       PSL.Subsets.Check_Simple (Prop);
 
       return Stmt;
-   end Sem_Psl_Assert_Statement;
+   end Sem_Psl_Assert_Directive;
+
+   procedure Sem_Psl_Assume_Directive (Stmt : Iir)
+   is
+      Prop : PSL_Node;
+   begin
+      --  Sem report and severity expressions.
+      Sem_Report_Statement (Stmt);
+
+      Prop := Get_Psl_Property (Stmt);
+      Prop := Sem_Property (Prop, True);
+      Set_Psl_Property (Stmt, Prop);
+
+      --  Properties must be clocked.
+      Sem_Psl_Directive_Clock (Stmt, Prop);
+      Set_Psl_Property (Stmt, Prop);
+
+      --  Check simple subset restrictions.
+      PSL.Subsets.Check_Simple (Prop);
+   end Sem_Psl_Assume_Directive;
 
    procedure Sem_Psl_Cover_Directive (Stmt : Iir)
    is

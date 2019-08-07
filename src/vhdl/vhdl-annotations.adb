@@ -1083,7 +1083,8 @@ package body Vhdl.Annotations is
                null;
 
             when Iir_Kind_Psl_Cover_Directive
-              | Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive
               | Iir_Kind_Psl_Restrict_Directive =>
                null;
             when Iir_Kind_Psl_Endpoint_Declaration =>

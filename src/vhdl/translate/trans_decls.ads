@@ -25,6 +25,7 @@ package Trans_Decls is
 
    Ghdl_Check_Stack_Allocation : O_Dnode;
 
+   Ghdl_Psl_Assume_Failed : O_Dnode;
    Ghdl_Psl_Cover : O_Dnode;
    Ghdl_Psl_Cover_Failed : O_Dnode;
    --  Procedure for report statement.

@@ -422,6 +422,8 @@ package body Vhdl.Tokens is
             return "sequence";
          when Tok_Psl_Endpoint =>
             return "endpoint";
+         when Tok_Psl_Assume =>
+            return "assume";
          when Tok_Psl_Cover =>
             return "cover";
          when Tok_Psl_Restrict =>
