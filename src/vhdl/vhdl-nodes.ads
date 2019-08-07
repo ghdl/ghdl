@@ -655,8 +655,8 @@ package Vhdl.Nodes is
    --  LRM08 7.3 Configuration specification
    --
    --  configuration_specification ::=
-   --     simple_configuration_specification
-   --   | compound_configuration_specification
+   --      simple_configuration_specification
+   --    | compound_configuration_specification
    --
    --  simple_configuration_specification ::=
    --     FOR component_specification binding_indication ;
@@ -672,9 +672,9 @@ package Vhdl.Nodes is
    --     instantiation_list : component_name
    --
    --  instantiation_list ::=
-   --     instantiation_label { , instantiation_label }
-   --   | OTHERS
-   --   | ALL
+   --      instantiation_label { , instantiation_label }
+   --    | OTHERS
+   --    | ALL
    --
    --  The location points to 'for'.
    --
@@ -1407,7 +1407,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Chain (Field2)
    --
-   -- For string, the identifier is the corresponding reserved word.
+   --  For string, the identifier is the corresponding reserved word.
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Subprogram_Hash (Field4)
@@ -1416,7 +1416,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Generic_Chain (Field6)
    --
-   --   --Get/Set_Generic_Map_Aspect_Chain (Field8)
+   --  --Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Implicit_Definition (Field7)
    --
@@ -1458,8 +1458,8 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Procedure_Declaration:
    --   Get/Set_Suspend_Flag (Flag11)
    --
-   -- For an explicit subprogram: true if the declaration is an homograph of
-   -- an implicit operation of a type.
+   --  For an explicit subprogram: true if the declaration is an homograph of
+   --  an implicit operation of a type.
    --   Get/Set_Hide_Implicit_Flag (Flag12)
    --
    --   Get/Set_Wait_State (State1)
@@ -1539,7 +1539,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Chain (Field2)
    --
-   -- For string, the identifier is the corresponding reserved word.
+   --  For string, the identifier is the corresponding reserved word.
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Subprogram_Hash (Field4)
@@ -1697,8 +1697,8 @@ package Vhdl.Nodes is
    --  declaration.
    --   Get/Set_Default_Value (Field4)
    --
-   -- Note that the type may be extracted from the default_value if the subtype
-   -- indication is unconstrained.
+   --  Note that the type may be extracted from the default_value if the
+   --  subtype indication is unconstrained.
    --   Get/Set_Type (Field1)
    --
    -- Only for Iir_Kind_Constant_Declaration:
@@ -2926,6 +2926,7 @@ package Vhdl.Nodes is
    --   Get/Set_Severity_Expression (Field4)
    --
    -- Only for Iir_Kind_Psl_Assert_Directive:
+   -- Only for Iir_Kind_Psl_Cover_Directive:
    --   Get/Set_Report_Expression (Field5)
    --
    --  The following fields are set by canon.
@@ -3664,8 +3665,8 @@ package Vhdl.Nodes is
    --  LRM08 9.3.7 Allocators
    --
    --  allocator ::=
-   --     NEW subtype_indication
-   --   | NEW qualified_expression
+   --      NEW subtype_indication
+   --    | NEW qualified_expression
    --
    --   Get/Set_Type (Field1)
    --
@@ -3871,7 +3872,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
-   -- The selected element.
+   --  The selected element.
    --   Get/Set_Named_Entity (Field4)
    --
    --   Get/Set_Base_Name (Field5)

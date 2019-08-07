@@ -507,6 +507,18 @@ package body Trans.Chap9 is
       Finish_Subprogram_Body;
    end Translate_Psl_Report;
 
+   procedure Call_Psl_Fail (Stmt : Iir; Subprg : O_Dnode)
+   is
+      Assocs  : O_Assoc_List;
+      Loc     : O_Dnode;
+   begin
+      Loc := Chap4.Get_Location (Stmt);
+      Start_Association (Assocs, Subprg);
+      New_Association (Assocs, New_Address (New_Obj (Loc),
+                                            Ghdl_Location_Ptr_Node));
+      New_Procedure_Call (Assocs);
+   end Call_Psl_Fail;
+
    procedure Translate_Psl_Directive_Statement
      (Stmt : Iir; Base : Block_Info_Acc)
    is
@@ -648,8 +660,7 @@ package body Trans.Chap9 is
                Chap8.Translate_Report
                  (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
             when Iir_Kind_Psl_Assume_Directive =>
-               Chap8.Translate_Report
-                 (Stmt, Ghdl_Psl_Assume_Failed, Severity_Level_Error);
+               Call_Psl_Fail (Stmt, Ghdl_Psl_Assume_Failed);
             when Iir_Kind_Psl_Cover_Directive =>
                if Get_Report_Expression (Stmt) /= Null_Iir then
                   Start_Association (Assocs, Report_Proc);
@@ -732,8 +743,7 @@ package body Trans.Chap9 is
                         Chap8.Translate_Report
                           (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
                      else
-                        Chap8.Translate_Report
-                          (Stmt, Ghdl_Psl_Assume_Failed, Severity_Level_Error);
+                        Call_Psl_Fail (Stmt, Ghdl_Psl_Assume_Failed);
                      end if;
                      New_Return_Stmt;
                      Finish_If_Stmt (E_Blk);

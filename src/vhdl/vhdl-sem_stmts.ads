@@ -33,6 +33,9 @@ package Vhdl.Sem_Stmts is
    --  This is used by processes and subprograms analyze.
    procedure Sem_Sequential_Statements (Decl : Iir; Body_Parent : Iir);
 
+   --  Analyze report expression of a PSL statement.
+   procedure Sem_Report_Expression (Stmt : Iir);
+
    --  Sem for concurrent and sequential assertion statements.
    procedure Sem_Report_Statement (Stmt : Iir);
 

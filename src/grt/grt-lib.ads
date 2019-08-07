@@ -36,14 +36,9 @@ package Grt.Lib is
      (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Psl_Assert_Failed
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr);
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
 
-   procedure Ghdl_Psl_Assume_Failed
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr);
+   procedure Ghdl_Psl_Assume_Failed (Loc : Ghdl_Location_Ptr);
 
    --  Called when a sequence is covered (in a cover directive)
    procedure Ghdl_Psl_Cover

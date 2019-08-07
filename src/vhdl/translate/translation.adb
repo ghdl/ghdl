@@ -1070,6 +1070,15 @@ package body Translation is
                                 Ghdl_Location_Ptr_Node);
             Finish_Subprogram_Decl (Interfaces, Subprg);
          end Create_Report_Subprg;
+
+         procedure Create_Fail_Subprg (Name : String; Subprg : out O_Dnode) is
+         begin
+            Start_Procedure_Decl
+              (Interfaces, Get_Identifier (Name), O_Storage_External);
+            New_Interface_Decl (Interfaces, Param, Get_Identifier ("location"),
+                                Ghdl_Location_Ptr_Node);
+            Finish_Subprogram_Decl (Interfaces, Subprg);
+         end Create_Fail_Subprg;
       begin
          Create_Report_Subprg
            ("__ghdl_assert_failed", Ghdl_Assert_Failed);
@@ -1077,12 +1086,13 @@ package body Translation is
            ("__ghdl_ieee_assert_failed", Ghdl_Ieee_Assert_Failed);
          Create_Report_Subprg ("__ghdl_psl_assert_failed",
                                Ghdl_Psl_Assert_Failed);
-         Create_Report_Subprg ("__ghdl_psl_assume_failed",
-                               Ghdl_Psl_Assume_Failed);
          Create_Report_Subprg ("__ghdl_psl_cover", Ghdl_Psl_Cover);
          Create_Report_Subprg ("__ghdl_psl_cover_failed",
                                Ghdl_Psl_Cover_Failed);
          Create_Report_Subprg ("__ghdl_report", Ghdl_Report);
+
+         Create_Fail_Subprg ("__ghdl_psl_assume_failed",
+                             Ghdl_Psl_Assume_Failed);
       end;
 
       --  procedure __ghdl_check_stack_allocation (size : __ghdl_index_type)

@@ -736,9 +736,6 @@ package body Vhdl.Sem_Psl is
    is
       Prop : PSL_Node;
    begin
-      --  Sem report and severity expressions.
-      Sem_Report_Statement (Stmt);
-
       Prop := Get_Psl_Property (Stmt);
       Prop := Sem_Property (Prop, True);
       Set_Psl_Property (Stmt, Prop);
@@ -751,13 +748,10 @@ package body Vhdl.Sem_Psl is
       PSL.Subsets.Check_Simple (Prop);
    end Sem_Psl_Assume_Directive;
 
-   procedure Sem_Psl_Cover_Directive (Stmt : Iir)
+   procedure Sem_Psl_Sequence (Stmt : Iir)
    is
       Seq : PSL_Node;
    begin
-      --  Sem report and severity expressions.
-      Sem_Report_Statement (Stmt);
-
       Seq := Get_Psl_Sequence (Stmt);
       Seq := Sem_Sequence (Seq);
 
@@ -767,21 +761,18 @@ package body Vhdl.Sem_Psl is
 
       --  Check simple subset restrictions.
       PSL.Subsets.Check_Simple (Seq);
+   end Sem_Psl_Sequence;
+
+   procedure Sem_Psl_Cover_Directive (Stmt : Iir) is
+   begin
+      Sem_Report_Expression (Stmt);
+
+      Sem_Psl_Sequence (Stmt);
    end Sem_Psl_Cover_Directive;
 
-   procedure Sem_Psl_Restrict_Directive (Stmt : Iir)
-   is
-      Seq : PSL_Node;
+   procedure Sem_Psl_Restrict_Directive (Stmt : Iir) is
    begin
-      Seq := Get_Psl_Sequence (Stmt);
-      Seq := Sem_Sequence (Seq);
-
-      --  Properties must be clocked.
-      Sem_Psl_Directive_Clock (Stmt, Seq);
-      Set_Psl_Sequence (Stmt, Seq);
-
-      --  Check simple subset restrictions.
-      PSL.Subsets.Check_Simple (Seq);
+      Sem_Psl_Sequence (Stmt);
    end Sem_Psl_Restrict_Directive;
 
    procedure Sem_Psl_Default_Clock (Stmt : Iir)

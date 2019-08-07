@@ -2112,10 +2112,10 @@ package body Vhdl.Prints is
 
    procedure Disp_Psl_Default_Clock (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
+      Start_Hbox (Ctxt);
       if Vhdl_Std < Vhdl_08 then
          OOB.Put ("--psl ");
       end if;
-      Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Psl_Default, Tok_Psl_Clock);
       Disp_Token (Ctxt, Tok_Is);
       Disp_Psl_Expression (Ctxt, Get_Psl_Boolean (Stmt));
@@ -3922,8 +3922,6 @@ package body Vhdl.Prints is
       Disp_Postponed (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Psl_Assume);
       Disp_Psl_Expression (Ctxt, Get_Psl_Property (Stmt));
-      Disp_Report_Expression (Ctxt, Stmt);
-      Disp_Severity_Expression (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
@@ -3932,13 +3930,14 @@ package body Vhdl.Prints is
    procedure Disp_Psl_Cover_Directive
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
+      Start_Hbox (Ctxt);
       if Vhdl_Std < Vhdl_08 then
          OOB.Put ("--psl ");
       end if;
-      Start_Hbox (Ctxt);
       Disp_Label (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Psl_Cover);
       Print_Sequence (Ctxt, Get_Psl_Sequence (Stmt));
+      Disp_Report_Expression (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
@@ -3947,10 +3946,10 @@ package body Vhdl.Prints is
    procedure Disp_Psl_Restrict_Directive
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
+      Start_Hbox (Ctxt);
       if Vhdl_Std < Vhdl_08 then
          OOB.Put ("--psl ");
       end if;
-      Start_Hbox (Ctxt);
       Disp_Label (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Psl_Restrict);
       Print_Sequence (Ctxt, Get_Psl_Sequence (Stmt));

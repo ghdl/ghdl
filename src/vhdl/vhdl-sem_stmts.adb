@@ -925,8 +925,7 @@ package body Vhdl.Sem_Stmts is
       end if;
    end Sem_Return_Statement;
 
-   -- Sem for concurrent and sequential assertion statements.
-   procedure Sem_Report_Statement (Stmt : Iir)
+   procedure Sem_Report_Expression (Stmt : Iir)
    is
       Expr : Iir;
    begin
@@ -937,6 +936,14 @@ package body Vhdl.Sem_Stmts is
          Expr := Eval_Expr_If_Static (Expr);
          Set_Report_Expression (Stmt, Expr);
       end if;
+   end Sem_Report_Expression;
+
+   -- Sem for concurrent and sequential assertion statements.
+   procedure Sem_Report_Statement (Stmt : Iir)
+   is
+      Expr : Iir;
+   begin
+      Sem_Report_Expression (Stmt);
 
       Expr := Get_Severity_Expression (Stmt);
       if Expr /= Null_Iir then
