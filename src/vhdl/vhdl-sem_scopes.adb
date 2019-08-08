@@ -427,6 +427,15 @@ package body Vhdl.Sem_Scopes is
          return;
       end if;
 
+      if Name_Table.Get_Name_Ptr (Get_Identifier (Decl))(1) = 'P' then
+         --  Do not warn for labels starting with 'P'.  These are canonicalized
+         --  process labels which are scoped.
+         --  This can happen as an architecture is canonicalized during
+         --  analysis and then its declarations are 'imported' by a
+         --  configuration.
+         return;
+      end if;
+
       Warning_Msg_Sem (Warnid_Hide, +Decl,
                        "declaration of %i hides %n", (+Decl, +Prev_Decl));
    end Warning_Hide;
