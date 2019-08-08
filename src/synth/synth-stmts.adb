@@ -215,11 +215,13 @@ package body Synth.Stmts is
       Val : Value_Acc;
    begin
       --  FIXME: correctly handle target type when it is a slice.
-      if Get_Kind (Target) = Iir_Kind_Slice_Name then
-         Wf_Type := Null_Node;
-      else
-         Wf_Type := Get_Type (Target);
-      end if;
+      case Get_Kind (Target) is
+         when Iir_Kind_Slice_Name
+           | Iir_Kind_Aggregate =>
+            Wf_Type := Null_Node;
+         when others =>
+            Wf_Type := Get_Type (Target);
+      end case;
       Val := Synth_Waveform (Syn_Inst, Get_Waveform_Chain (Stmt), Wf_Type);
       Synth_Assignment (Syn_Inst, Target, Val, Stmt);
    end Synth_Simple_Signal_Assignment;
