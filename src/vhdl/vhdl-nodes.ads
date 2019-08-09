@@ -541,9 +541,6 @@ package Vhdl.Nodes is
    --  associations have the same_alternative_flag set.
    --   Get/Set_Chain (Field2)
    --
-   --  Ordered position of the choice from 1 to N.  0 is reserved for others.
-   --   Get/Set_Choice_Order (Field1)
-   --
    --  Should be a simple_name.
    -- Only for Iir_Kind_Choice_By_Name:
    --   Get/Set_Choice_Name (Field5)
@@ -6353,10 +6350,6 @@ package Vhdl.Nodes is
    --  Field: Field3
    function Get_Time (We : Iir_Waveform_Element) return Iir;
    procedure Set_Time (We : Iir_Waveform_Element; An_Iir : Iir);
-
-   --  Field: Field1 (pos)
-   function Get_Choice_Order (Choice : Iir) return Int32;
-   procedure Set_Choice_Order (Choice : Iir; Pos : Int32);
 
    --  Node associated with a choice.
    --  Field: Field3

@@ -2247,22 +2247,6 @@ package body Vhdl.Nodes is
       Set_Field3 (We, An_Iir);
    end Set_Time;
 
-   function Get_Choice_Order (Choice : Iir) return Int32 is
-   begin
-      pragma Assert (Choice /= Null_Iir);
-      pragma Assert (Has_Choice_Order (Get_Kind (Choice)),
-                     "no field Choice_Order");
-      return Int32'Val (Get_Field1 (Choice));
-   end Get_Choice_Order;
-
-   procedure Set_Choice_Order (Choice : Iir; Pos : Int32) is
-   begin
-      pragma Assert (Choice /= Null_Iir);
-      pragma Assert (Has_Choice_Order (Get_Kind (Choice)),
-                     "no field Choice_Order");
-      Set_Field1 (Choice, Int32'Pos (Pos));
-   end Set_Choice_Order;
-
    function Get_Associated_Expr (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

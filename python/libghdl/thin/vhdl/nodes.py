@@ -1371,10 +1371,6 @@ Get_Time = libghdl.vhdl__nodes__get_time
 
 Set_Time = libghdl.vhdl__nodes__set_time
 
-Get_Choice_Order = libghdl.vhdl__nodes__get_choice_order
-
-Set_Choice_Order = libghdl.vhdl__nodes__set_choice_order
-
 Get_Associated_Expr = libghdl.vhdl__nodes__get_associated_expr
 
 Set_Associated_Expr = libghdl.vhdl__nodes__set_associated_expr

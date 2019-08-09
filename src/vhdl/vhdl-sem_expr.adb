@@ -2578,10 +2578,6 @@ package body Vhdl.Sem_Expr is
       Fill_Choices_Array (Info, Choice_Chain);
       Sort_Discrete_Choices (Info);
 
-      for I in Info.Arr'Range loop
-         Set_Choice_Order (Info.Arr (I), Int32 (I));
-      end loop;
-
       --  Set low and high bounds.
       if Info.Nbr_Choices > 0 then
          Low := Get_Assoc_Low (Info.Arr (Info.Arr'First));
