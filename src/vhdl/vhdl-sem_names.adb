@@ -753,10 +753,8 @@ package body Vhdl.Sem_Names is
       case Get_Kind (Suffix) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
-            --  FIXME: what about the name ?
-            Suffix := Get_Type (Suffix);
-            Staticness := Get_Type_Staticness (Suffix);
-            Suffix_Rng := Get_Range_Constraint (Suffix);
+            Staticness := Get_Type_Staticness (Get_Type (Suffix));
+            Suffix_Rng := Get_Range_Constraint (Get_Type (Suffix));
          when Iir_Kinds_Scalar_Subtype_Definition =>
             Staticness := Get_Type_Staticness (Suffix);
             Suffix_Rng := Get_Range_Constraint (Suffix);
@@ -799,37 +797,47 @@ package body Vhdl.Sem_Names is
       Set_Name_Staticness
         (Name, Min (Staticness, Get_Name_Staticness (Prefix)));
 
-      --  The type of the slice is a subtype of the base type whose
-      --  range contraint is the slice itself.
-      if Get_Kind (Suffix) in Iir_Kinds_Discrete_Type_Definition then
-         Slice_Type := Suffix;
-      else
-         case Get_Kind (Get_Base_Type (Index_Type)) is
-            when Iir_Kind_Integer_Type_Definition =>
-               Slice_Type := Create_Iir (Iir_Kind_Integer_Subtype_Definition);
-            when Iir_Kind_Enumeration_Type_Definition =>
-               Slice_Type :=
-                 Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
-            when others =>
-               Error_Kind ("sem_expr: slice_name", Get_Base_Type (Index_Type));
-         end case;
-         Set_Range_Constraint (Slice_Type, Suffix);
-         Set_Is_Ref (Slice_Type, True);
-         Set_Type_Staticness (Slice_Type, Staticness);
-         Set_Base_Type (Slice_Type, Get_Base_Type (Index_Type));
-         Set_Location (Slice_Type, Get_Location (Suffix));
-      end if;
-
       Expr_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Expr_Type, Get_Location (Suffix));
-      Set_Index_Subtype_List (Expr_Type, Create_Iir_Flist (1));
-      Set_Index_Constraint_List (Expr_Type,
-                                 Get_Index_Subtype_List (Expr_Type));
+
+      --  The type of the slice is a subtype of the base type whose
+      --  range contraint is the slice itself.
+      case Get_Kind (Suffix) is
+         when Iir_Kinds_Denoting_Name =>
+            Slice_Type := Get_Type (Suffix);
+         when Iir_Kinds_Scalar_Subtype_Definition =>
+            Slice_Type := Suffix;
+         when others =>
+            case Get_Kind (Get_Base_Type (Index_Type)) is
+               when Iir_Kind_Integer_Type_Definition =>
+                  Slice_Type :=
+                    Create_Iir (Iir_Kind_Integer_Subtype_Definition);
+               when Iir_Kind_Enumeration_Type_Definition =>
+                  Slice_Type :=
+                    Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
+               when others =>
+                  Error_Kind
+                    ("sem_expr: slice_name", Get_Base_Type (Index_Type));
+            end case;
+            Set_Range_Constraint (Slice_Type, Suffix_Rng);
+            Set_Is_Ref (Slice_Type, True);
+            Set_Type_Staticness (Slice_Type, Staticness);
+            Set_Base_Type (Slice_Type, Get_Base_Type (Index_Type));
+            Set_Location (Slice_Type, Get_Location (Suffix));
+
+            --  Attach the new index subtype to the array subtype.
+            Index_List := Create_Iir_Flist (1);
+            Set_Index_Constraint_List (Expr_Type, Index_List);
+            Set_Nth_Element (Index_List, 0, Slice_Type);
+      end case;
+
+      Index_List := Create_Iir_Flist (1);
+      Set_Index_Subtype_List (Expr_Type, Index_List);
+      Set_Nth_Element (Index_List, 0, Slice_Type);
       Prefix_Base_Type := Get_Base_Type (Prefix_Type);
       Set_Base_Type (Expr_Type, Prefix_Base_Type);
       Set_Signal_Type_Flag (Expr_Type,
                             Get_Signal_Type_Flag (Prefix_Base_Type));
-      Set_Nth_Element (Get_Index_Subtype_List (Expr_Type), 0, Slice_Type);
       Set_Element_Subtype (Expr_Type, Get_Element_Subtype (Prefix_Type));
       if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition then
          Set_Resolution_Indication
@@ -2383,6 +2391,9 @@ package body Vhdl.Sem_Names is
             Kind := Slice_Or_Index (Get_Named_Entity (Actual));
             --  FIXME: analyze to be finished.
             --Maybe_Finish_Sem_Name (Actual);
+         when Iir_Kind_Subtype_Definition
+           | Iir_Kind_Range_Expression =>
+            Kind := Iir_Kind_Slice_Name;
          when others =>
             Kind := Slice_Or_Index (Actual);
       end case;
@@ -2406,10 +2417,11 @@ package body Vhdl.Sem_Names is
             if Actual = Null_Iir then
                return Null_Iir;
             end if;
+            Set_Suffix (Res, Actual);
+            Actual := Get_Range_From_Discrete_Range (Actual);
             if Get_Expr_Staticness (Actual) < Globally then
                Error_Msg_Sem (+Name, "index must be a static expression");
             end if;
-            Set_Suffix (Res, Actual);
          when others =>
             raise Internal_Error;
       end case;
@@ -2647,27 +2659,26 @@ package body Vhdl.Sem_Names is
       Actual_Expr := Null_Iir;
       if Actual /= Null_Iir then
          --  Only one actual: can be a slice or an index
-         if Get_Kind (Actual) in Iir_Kinds_Name
-           or else Get_Kind (Actual) = Iir_Kind_Attribute_Name
-         then
-            --  Maybe a discrete range name.
-            Sem_Name (Actual);
-            Actual_Expr := Get_Named_Entity (Actual);
-            if Actual_Expr = Error_Mark then
-               Set_Named_Entity (Name, Actual_Expr);
-               return;
-            end if;
-            --  Decides between sliced or indexed name to actual.
-            Slice_Index_Kind := Slice_Or_Index (Actual_Expr);
-         elsif Get_Kind (Actual) = Iir_Kind_Range_Expression
-           or else Get_Kind (Actual) = Iir_Kind_Subtype_Definition
-         then
-            --  This can only be a slice.
-            Slice_Index_Kind := Iir_Kind_Slice_Name;
-         else
-            --  Any other expression: an indexed name.
-            Slice_Index_Kind := Iir_Kind_Indexed_Name;
-         end if;
+         case Get_Kind (Actual) is
+            when Iir_Kinds_Name
+              | Iir_Kind_Attribute_Name =>
+               --  Maybe a discrete range name.
+               Sem_Name (Actual);
+               Actual_Expr := Get_Named_Entity (Actual);
+               if Actual_Expr = Error_Mark then
+                  Set_Named_Entity (Name, Actual_Expr);
+                  return;
+               end if;
+               --  Decides between sliced or indexed name to actual.
+               Slice_Index_Kind := Slice_Or_Index (Actual_Expr);
+            when Iir_Kind_Range_Expression
+              | Iir_Kind_Subtype_Definition =>
+               --  This can only be a slice.
+               Slice_Index_Kind := Iir_Kind_Slice_Name;
+            when others =>
+               --  Any other expression: an indexed name.
+               Slice_Index_Kind := Iir_Kind_Indexed_Name;
+         end case;
       else
          --  More than one actual: an indexed name.
 

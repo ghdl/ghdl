@@ -1758,6 +1758,7 @@ package body Trans.Chap8 is
                H, L : Iir;
             begin
                Expr := Get_Choice_Range (Choice);
+               Expr := Get_Range_From_Discrete_Range (Expr);
                Get_Low_High_Limit (Expr, L, H);
                New_Range_Choice
                  (Blk,

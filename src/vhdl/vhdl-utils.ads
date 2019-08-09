@@ -310,6 +310,9 @@ package Vhdl.Utils is
    --  Return TRUE iff unanalyzed EXPR is a range attribute.
    function Is_Range_Attribute_Name (Expr : Iir) return Boolean;
 
+   --  Return range_expression or a range attribute from discrete range RNG.
+   function Get_Range_From_Discrete_Range (Rng : Iir) return Iir;
+
    --  Create an array subtype from array_type or array_subtype ARR_TYPE.
    --  All fields of the returned node are filled, except the index_list.
    --  The type_staticness is set with the type staticness of the element

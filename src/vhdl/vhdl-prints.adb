@@ -3599,6 +3599,8 @@ package body Vhdl.Prints is
 
          when Iir_Kind_Range_Expression =>
             Disp_Range (Ctxt, Expr);
+         when Iir_Kind_Subtype_Definition =>
+            Disp_Subtype_Indication (Ctxt, Expr);
 
          when Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Dereference =>

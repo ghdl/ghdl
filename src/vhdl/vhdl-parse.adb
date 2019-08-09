@@ -5152,6 +5152,9 @@ package body Vhdl.Parse is
       elsif Current_Token = Tok_To or else Current_Token = Tok_Downto then
          A_Choice := Create_Iir (Iir_Kind_Choice_By_Range);
          Set_Choice_Range (A_Choice, Parse_Range_Expression (Expr1));
+      elsif Current_Token = Tok_Range then
+         A_Choice := Create_Iir (Iir_Kind_Choice_By_Range);
+         Set_Choice_Range (A_Choice, Parse_Subtype_Indication (Expr1));
       else
          A_Choice := Create_Iir (Iir_Kind_Choice_By_Expression);
          Set_Choice_Expression (A_Choice, Expr1);

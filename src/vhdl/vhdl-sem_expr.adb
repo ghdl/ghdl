@@ -2150,7 +2150,6 @@ package body Vhdl.Sem_Expr is
                             Choice_Chain : Iir)
    is
       Choice : Iir;
-      S : Iir_Staticness;
    begin
       Info := (Nbr_Choices => 0,
                Nbr_Alternatives => 0,
@@ -2160,16 +2159,9 @@ package body Vhdl.Sem_Expr is
       Choice := Choice_Chain;
       while Is_Valid (Choice) loop
          case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
-            when Iir_Kind_Choice_By_Expression =>
-               S := Get_Expr_Staticness (Get_Choice_Expression (Choice));
-               pragma Assert (S = Get_Choice_Staticness (Choice));
-               if S = Locally then
-                  Info.Nbr_Choices := Info.Nbr_Choices + 1;
-               end if;
-            when Iir_Kind_Choice_By_Range =>
-               S := Get_Expr_Staticness (Get_Choice_Range (Choice));
-               pragma Assert (S = Get_Choice_Staticness (Choice));
-               if S = Locally then
+            when Iir_Kind_Choice_By_Expression
+              | Iir_Kind_Choice_By_Range =>
+               if Get_Choice_Staticness (Choice) = Locally then
                   Info.Nbr_Choices := Info.Nbr_Choices + 1;
                end if;
             when Iir_Kind_Choice_By_Others =>
@@ -2200,6 +2192,7 @@ package body Vhdl.Sem_Expr is
                Expr := Get_Choice_Expression (Choice);
             when Iir_Kind_Choice_By_Range =>
                Expr := Get_Choice_Range (Choice);
+               Expr := Get_Range_From_Discrete_Range (Expr);
             when Iir_Kind_Choice_By_Others =>
                Expr := Null_Iir;
          end case;
@@ -2452,6 +2445,7 @@ package body Vhdl.Sem_Expr is
             return Get_Choice_Expression (Assoc);
          when Iir_Kind_Choice_By_Range =>
             Expr := Get_Choice_Range (Assoc);
+            Expr := Get_Range_From_Discrete_Range (Expr);
             case Get_Kind (Expr) is
                when Iir_Kind_Range_Expression =>
                   return Get_Low_Limit (Expr);
@@ -2472,6 +2466,7 @@ package body Vhdl.Sem_Expr is
             return Get_Choice_Expression (Assoc);
          when Iir_Kind_Choice_By_Range =>
             Expr := Get_Choice_Range (Assoc);
+            Expr := Get_Range_From_Discrete_Range (Expr);
             case Get_Kind (Expr) is
                when Iir_Kind_Range_Expression =>
                   return Get_High_Limit (Expr);
@@ -2550,6 +2545,7 @@ package body Vhdl.Sem_Expr is
                      end if;
                   when Iir_Kind_Choice_By_Range =>
                      Expr := Get_Choice_Range (Choice);
+                     Expr := Get_Range_From_Discrete_Range (Expr);
                      if Get_Expr_Staticness (Expr) = Locally then
                         Ok := Eval_Is_Range_In_Bound (Expr, Choice_Type, True);
                      end if;
@@ -2778,7 +2774,17 @@ package body Vhdl.Sem_Expr is
             if Expr = Null_Iir then
                return False;
             end if;
-            Expr := Eval_Range_If_Static (Expr);
+            case Get_Kind (Expr) is
+               when Iir_Kind_Range_Expression
+                 | Iir_Kinds_Range_Attribute
+                 | Iir_Kinds_Denoting_Name =>
+                  Expr := Eval_Range_If_Static (Expr);
+                  Set_Choice_Staticness (El, Get_Expr_Staticness (Expr));
+               when Iir_Kinds_Scalar_Subtype_Definition =>
+                  Set_Choice_Staticness (El, Get_Type_Staticness (Expr));
+               when others =>
+                  Error_Kind ("sem_sime_choice(1)", Expr);
+            end case;
             Set_Choice_Range (El, Expr);
          else
             Expr := Get_Choice_Expression (El);
@@ -2820,8 +2826,8 @@ package body Vhdl.Sem_Expr is
             end if;
             Expr := Eval_Expr_If_Static (Expr);
             Set_Choice_Expression (El, Expr);
+            Set_Choice_Staticness (El, Get_Expr_Staticness (Expr));
          end if;
-         Set_Choice_Staticness (El, Get_Expr_Staticness (Expr));
          return True;
       end Sem_Simple_Choice;
    begin

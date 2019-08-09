@@ -1436,6 +1436,22 @@ package body Vhdl.Utils is
       return Id = Name_Range or Id = Name_Reverse_Range;
    end Is_Range_Attribute_Name;
 
+   function Get_Range_From_Discrete_Range (Rng : Iir) return Iir is
+   begin
+      case Get_Kind (Rng) is
+         when Iir_Kinds_Denoting_Name =>
+            return Get_Range_From_Discrete_Range (Get_Named_Entity (Rng));
+         when Iir_Kinds_Scalar_Subtype_Definition =>
+            return Get_Range_Constraint (Rng);
+         when Iir_Kind_Range_Expression =>
+            return Rng;
+         when Iir_Kinds_Range_Attribute =>
+            return Rng;
+         when others =>
+            Error_Kind ("get_range_from_discrete_range", Rng);
+      end case;
+   end Get_Range_From_Discrete_Range;
+
    function Create_Array_Subtype (Arr_Type : Iir; Loc : Location_Type)
      return Iir_Array_Subtype_Definition
    is
