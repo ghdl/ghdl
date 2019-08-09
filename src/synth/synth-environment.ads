@@ -132,6 +132,8 @@ private
    type Wire_Id_Record is record
       --  Kind of wire: signal, variable...
       --  Set at initialization and cannot be changed.
+      --  Used to know what is the current value of the wire (could be either
+      --  Gate when it is a signal or Cur_Assign when it is a variable).
       Kind : Wire_Kind;
 
       --  Used in various algorithms: a flag on a wire.  This flag must be
@@ -142,9 +144,12 @@ private
       Decl : Source.Syn_Src;
 
       --  The initial net for the wire.
+      --  This is a pseudo gate that is needed because the value of the wire
+      --  can be read before anything was assigned to it.
       Gate : Net;
 
       --  Current assignment (if there is one).
+      --  This is needed so that the current value (for variable) can be read.
       Cur_Assign : Seq_Assign;
 
       --  Chain of concurrent assigns for this wire.
@@ -158,7 +163,8 @@ private
       --  Target of the assignment.
       Id : Wire_Id;
 
-      --  Assignment is the previous phi context.
+      --  Assignment in the previous phi context.
+      --  Used to restore Cur_Assign of the wire when the phi context is poped.
       Prev : Seq_Assign;
 
       --  Corresponding phi context for this wire.
@@ -183,7 +189,9 @@ private
    end record;
 
    type Phi_Type is record
+      --  Chain of sequential assignments in the current phi context (BB).
       First : Seq_Assign;
+      --  Number of assignments.
       Nbr : Uns32;
    end record;
 
