@@ -4016,10 +4016,20 @@ package body Vhdl.Sem_Expr is
          return Create_Error_Expr (Res, Error_Mark);
       end if;
 
-      Unit_Name := Sem_Denoting_Name (Unit_Name);
-      Unit := Get_Named_Entity (Unit_Name);
-      if Get_Kind (Unit) /= Iir_Kind_Unit_Declaration then
-         if not Is_Error (Unit) then
+      case Get_Kind (Unit_Name) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
+            Unit_Name := Sem_Denoting_Name (Unit_Name);
+            Unit := Get_Named_Entity (Unit_Name);
+         when others =>
+            pragma Assert (Flags.Flag_Force_Analysis);
+            Unit := Null_Iir;
+      end case;
+
+      if Unit = Null_Iir
+        or else Get_Kind (Unit) /= Iir_Kind_Unit_Declaration
+      then
+         if Unit /= Null_Iir and then not Is_Error (Unit) then
             Error_Class_Match (Unit_Name, "unit");
          end if;
          Set_Named_Entity (Unit_Name, Create_Error_Name (Unit_Name));

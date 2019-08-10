@@ -5513,6 +5513,26 @@ package body Vhdl.Parse is
       end if;
    end Resize_Bit_String;
 
+   --  LRM93 3.1.3
+   --  /unit/_name
+   --
+   --  A unit name is a name, but it must designate a unit declaration.  As
+   --  a consequence, it can only be a simple_name or a selected name.
+   function Parse_Unit_Name return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Parse_Name (Allow_Indexes => False);
+      case Get_Kind (Res) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
+            null;
+         when others =>
+            Error_Msg_Parse ("invalid unit name");
+      end case;
+      return Res;
+   end Parse_Unit_Name;
+
    --  Precond : next token after tok_integer
    --  postcond: likewise
    --
@@ -5524,7 +5544,7 @@ package body Vhdl.Parse is
       if Current_Token = Tok_Identifier then
          -- physical literal
          Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-         Set_Unit_Name (Res, Parse_Name (Allow_Indexes => False));
+         Set_Unit_Name (Res, Parse_Unit_Name);
       else
          -- integer literal
          Res := Create_Iir (Iir_Kind_Integer_Literal);
@@ -5595,7 +5615,7 @@ package body Vhdl.Parse is
             if Current_Token = Tok_Identifier then
                -- physical literal
                Res := Create_Iir (Iir_Kind_Physical_Fp_Literal);
-               Set_Unit_Name (Res, Parse_Name (Allow_Indexes => False));
+               Set_Unit_Name (Res, Parse_Unit_Name);
             else
                -- real literal
                Res := Create_Iir (Iir_Kind_Floating_Point_Literal);
