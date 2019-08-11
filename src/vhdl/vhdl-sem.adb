@@ -469,6 +469,29 @@ package body Vhdl.Sem is
       Sig : Iir;
       Res : Iir;
    begin
+      --  LRM08 6.5.6.3 Port clauses
+      --  If a formal port of mode IN is associated with an expression that is
+      --  not globally static (see 9.4.1) and the formal is of an unconstrained
+      --  or partially constrained composite type requiring determination of
+      --  index ranges from the actual according to the rules of 5.3.2.2, then
+      --  the expression shall be one of the following:
+      --  - The name of an object whose subtype is globally static
+      --  - An indexed name whose prefix is one of the members of this list
+      --  - A slice name whose prefix is one of the members of this list and
+      --    whose discrete range is a globally static discrete range
+      --  - An aggregate, provided all choices are locally static and all
+      --    expressions in element associations are expressions described in
+      --    this list
+      --  - A function call whose return type mark denotes a globally static
+      --    subtype
+      --  - A qualified expression or type conversion whose type mark denotes
+      --    a globally static subtype
+      --  - An expression described in this list and enclosed in parentheses
+
+      --  GHDL: FIXME: could this be simplified simply by `subtype is globally
+      --  static` ?
+      --  FIXME: what about conversions ?
+
       --  Create the anonymous signal.
       Sig := Create_Iir (Iir_Kind_Anonymous_Signal_Declaration);
       Location_Copy (Sig, Actual);
@@ -613,7 +636,7 @@ package body Vhdl.Sem is
                   if Get_Expr_Staticness (Actual) < Globally then
                      if Flags.Vhdl_Std >= Vhdl_08 then
                         --  LRM08 6.5.6.3 Port clauses
-                        Actual := Sem_Insert_Anonymous_Signal (Inter, Actual);
+                        Actual := Sem_Insert_Anonymous_Signal (Formal, Actual);
                         Set_Actual (Assoc, Actual);
                         Set_Collapse_Signal_Flag (Assoc, True);
                      else
