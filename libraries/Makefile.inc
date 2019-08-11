@@ -82,7 +82,8 @@ IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS)) $(addprefix ieee/,$(MATH_SRC
 else
 IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
   numeric_bit.vhdl numeric_bit-body.vhdl \
-  numeric_std.vhdl numeric_std-body.vhdl
+  numeric_std.vhdl numeric_std-body.vhdl \
+  upf.vhdl upf-body.vhdl
 MATH_SRCS := math_real.vhdl math_real-body.vhdl
 VITAL95_BSRCS :=
 VITAL2000_BSRCS :=
