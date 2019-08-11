@@ -497,6 +497,7 @@ package body Vhdl.Sem is
       Location_Copy (Sig, Actual);
       Set_Expression (Sig, Actual);
       Set_Type (Sig, Get_Type (Formal));
+      Set_Expr_Staticness (Sig, None);
 
       --  Declare it.
       Add_Implicit_Declaration (Sig);
@@ -508,6 +509,7 @@ package body Vhdl.Sem is
       Set_Referenced_Name (Res, Sig);
       Set_Named_Entity (Res, Sig);
       Set_Type (Res, Get_Type (Sig));
+      Set_Expr_Staticness (Res, None);
       return Res;
    end Sem_Insert_Anonymous_Signal;
 

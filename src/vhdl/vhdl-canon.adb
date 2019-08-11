@@ -232,6 +232,7 @@ package body Vhdl.Canon is
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kinds_Signal_Attribute
            | Iir_Kind_External_Signal_Name =>
             --  LRM 8.1
@@ -308,7 +309,8 @@ package body Vhdl.Canon is
             end;
 
          when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
+           | Iir_Kind_Selected_Name
+           | Iir_Kind_Reference_Name =>
             Canon_Extract_Sensitivity
               (Get_Named_Entity (Expr), Sensitivity_List, Is_Target);
 
@@ -2799,32 +2801,40 @@ package body Vhdl.Canon is
                Canon_Expression (Get_Expression (Decl));
             end if;
             --  Create a signal assignment.
-            declare
-               Parent : constant Node := Get_Parent (Decl);
-               Asgn : Iir;
-               We : Iir;
-               Name : Iir;
-            begin
-               Asgn := Create_Iir
-                 (Iir_Kind_Concurrent_Simple_Signal_Assignment);
-               Location_Copy (Asgn, Decl);
-               Set_Parent (Asgn, Parent);
-               Name := Build_Simple_Name (Decl, Decl);
-               Set_Type (Name, Get_Type (Decl));
-               Set_Target (Asgn, Name);
-               Set_Delay_Mechanism (Asgn, Iir_Inertial_Delay);
+            if Canon_Flag_Associations then
+               declare
+                  Parent : constant Node := Get_Parent (Decl);
+                  Asgn : Iir;
+                  We : Iir;
+                  Name : Iir;
+               begin
+                  Asgn := Create_Iir
+                    (Iir_Kind_Concurrent_Simple_Signal_Assignment);
+                  Location_Copy (Asgn, Decl);
+                  Set_Parent (Asgn, Parent);
 
-               We := Create_Iir (Iir_Kind_Waveform_Element);
-               Location_Copy (We, Decl);
-               Set_We_Value (We, Get_Expression (Decl));
-               Set_Expression (Decl, Null_Iir);
+                  Name := Create_Iir (Iir_Kind_Reference_Name);
+                  Location_Copy (Name, Decl);
+                  Set_Referenced_Name (Name, Decl);
+                  Set_Named_Entity (Name, Decl);
+                  Set_Type (Name, Get_Type (Decl));
+                  Set_Expr_Staticness (Name, None);
 
-               Set_Waveform_Chain (Asgn, We);
+                  Set_Target (Asgn, Name);
+                  Set_Delay_Mechanism (Asgn, Iir_Inertial_Delay);
 
-               --  Prepend.
-               Set_Chain (Asgn, Get_Concurrent_Statement_Chain (Parent));
-               Set_Concurrent_Statement_Chain (Parent, Asgn);
-            end;
+                  We := Create_Iir (Iir_Kind_Waveform_Element);
+                  Location_Copy (We, Decl);
+                  Set_We_Value (We, Get_Expression (Decl));
+                  Set_Expression (Decl, Null_Iir);
+
+                  Set_Waveform_Chain (Asgn, We);
+
+                  --  Prepend.
+                  Set_Chain (Asgn, Get_Concurrent_Statement_Chain (Parent));
+                  Set_Concurrent_Statement_Chain (Parent, Asgn);
+               end;
+            end if;
 
          when Iir_Kind_Iterator_Declaration =>
             null;

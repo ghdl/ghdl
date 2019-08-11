@@ -3513,9 +3513,13 @@ package body Vhdl.Prints is
                Act : constant Iir := Get_Expression (Expr);
             begin
                if Act /= Null_Iir then
+                  --  There is still an expression, so the anonymous signal
+                  --  was not yet declared.
                   Print (Ctxt, Act);
                else
-                  Disp_Identifier (Ctxt, Expr);
+                  --  Cannot use Disp_Identifier as the identifier is not in
+                  --  the sources.
+                  Disp_Ident (Ctxt, Get_Identifier (Expr));
                end if;
             end;
 

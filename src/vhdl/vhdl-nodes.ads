@@ -1660,6 +1660,8 @@ package Vhdl.Nodes is
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_Signal_Attribute_Declaration (Short)
    --
@@ -3754,6 +3756,8 @@ package Vhdl.Nodes is
    --   Get/Set_Referenced_Name (Field2)
    --
    --   Get/Set_Is_Forward_Ref (Flag1)
+   --
+   --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_Selected_Name (Short)
    --
