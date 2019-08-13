@@ -18,16 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Ghdlsynth;
-with Options; use Options;
-with Errorout.Console;
-
 package body Libghdlsynth is
 
    Gnat_Version : constant String := "unknown compiler version" & ASCII.NUL;
    pragma Export (C, Gnat_Version, "__gnat_version");
-begin
-   Ghdlsynth.Register_Commands;
-   Options.Initialize;
-   Errorout.Console.Install_Handler;
 end Libghdlsynth;
