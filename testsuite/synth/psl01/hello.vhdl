@@ -24,5 +24,6 @@ begin
 
  --psl default clock is clk;
  --psl restrict {rst; (not rst)[*]};
- assert val /= 5 or rst = '1' severity error;
+ --psl assert always val /= 5 or rst = '1';
+ --psl assume always val < 50;
 end behav;
