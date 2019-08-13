@@ -1254,6 +1254,20 @@ package body Synth.Stmts is
             return Build_Monadic
               (Build_Context, Netlists.Gates.Id_Not,
                Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr)));
+         when N_And_Bool =>
+            return Build_Dyadic
+              (Build_Context, Netlists.Gates.Id_And,
+               Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
+               Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
+         when N_Or_Bool =>
+            return Build_Dyadic
+              (Build_Context, Netlists.Gates.Id_Or,
+               Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
+               Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
+         when N_True =>
+            return Build_Const_UB32 (Build_Context, 1, 1);
+         when N_False =>
+            return Build_Const_UB32 (Build_Context, 0, 1);
          when others =>
             PSL.Errors.Error_Kind ("translate_psl_expr", Expr);
       end case;
