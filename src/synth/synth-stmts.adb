@@ -1242,6 +1242,7 @@ package body Synth.Stmts is
    function Synth_PSL_Expression
      (Syn_Inst : Synth_Instance_Acc; Expr : PSL.Types.PSL_Node) return Net
    is
+      use PSL.Types;
       use PSL.Nodes;
    begin
       case Get_Kind (Expr) is
@@ -1256,10 +1257,25 @@ package body Synth.Stmts is
               (Build_Context, Netlists.Gates.Id_Not,
                Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr)));
          when N_And_Bool =>
-            return Build_Dyadic
-              (Build_Context, Netlists.Gates.Id_And,
-               Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
-               Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
+            declare
+               L : constant PSL_Node := Get_Left (Expr);
+               R : constant PSL_Node := Get_Right (Expr);
+               Edge : Net;
+            begin
+               --  Handle edge (as it can be in default clock).
+               if Get_Kind (L) = N_HDL_Expr and then Get_Kind (R) = N_HDL_Expr
+               then
+                  Edge := Synth_Clock_Edge
+                    (Syn_Inst, Get_HDL_Node (L), Get_HDL_Node (R));
+                  if Edge /= No_Net then
+                     return Edge;
+                  end if;
+               end if;
+               return Build_Dyadic
+                 (Build_Context, Netlists.Gates.Id_And,
+                  Synth_PSL_Expression (Syn_Inst, L),
+                  Synth_PSL_Expression (Syn_Inst, R));
+            end;
          when N_Or_Bool =>
             return Build_Dyadic
               (Build_Context, Netlists.Gates.Id_Or,

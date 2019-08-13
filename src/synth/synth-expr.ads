@@ -42,6 +42,12 @@ package Synth.Expr is
    procedure To_Logic
      (Enum : Int64; Etype : Type_Acc; Val : out Uns32; Zx : out Uns32);
 
+   --  Try to match: clk'event and clk = X
+   --            or: clk = X and clk'event
+   --  where X is '0' or '1'.
+   function Synth_Clock_Edge
+     (Syn_Inst : Synth_Instance_Acc; Left, Right : Node) return Net;
+
    function Bit_Extract (Val : Value_Acc; Off : Uns32; Loc : Node)
                         return Value_Acc;
 

@@ -1728,29 +1728,24 @@ package body Synth.Expr is
    --  Try to match: clk'event and clk = X
    --            or: clk = X and clk'event
    --  where X is '0' or '1'.
-   function Synth_Clock_Edge (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                             return Value_Acc
+   function Synth_Clock_Edge
+     (Syn_Inst : Synth_Instance_Acc; Left, Right : Node) return Net
    is
-      pragma Assert (Get_Kind (Expr) = Iir_Kind_And_Operator);
-      Left : constant Node := Get_Left (Expr);
-      Right : constant Node := Get_Right (Expr);
       Prefix : Node;
    begin
       --  Try with left.
       Prefix := Extract_Event_Expr_Prefix (Left);
       if Is_Valid (Prefix) then
-         return Create_Value_Net
-           (Extract_Clock_Level (Syn_Inst, Right, Prefix), Boolean_Type);
+         return Extract_Clock_Level (Syn_Inst, Right, Prefix);
       end if;
 
       --  Try with right.
       Prefix := Extract_Event_Expr_Prefix (Right);
       if Is_Valid (Prefix) then
-         return Create_Value_Net
-           (Extract_Clock_Level (Syn_Inst, Left, Prefix), Boolean_Type);
+         return Extract_Clock_Level (Syn_Inst, Left, Prefix);
       end if;
 
-      return null;
+      return No_Net;
    end Synth_Clock_Edge;
 
    function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc; Conv : Node)
@@ -2038,13 +2033,14 @@ package body Synth.Expr is
                Imp : constant Node := Get_Implementation (Expr);
                Def : constant Iir_Predefined_Functions :=
                  Get_Implicit_Definition (Imp);
-               Edge : Value_Acc;
+               Edge : Net;
             begin
                --  Match clock-edge
                if Def = Iir_Predefined_Boolean_And then
-                  Edge := Synth_Clock_Edge (Syn_Inst, Expr);
-                  if Edge /= null then
-                     return Edge;
+                  Edge := Synth_Clock_Edge (Syn_Inst,
+                                            Get_Left (Expr), Get_Right (Expr));
+                  if Edge /= No_Net then
+                     return Create_Value_Net (Edge, Boolean_Type);
                   end if;
                end if;
 
