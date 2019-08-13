@@ -18,6 +18,8 @@
 
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Ghdlsynth_Maybe;
+pragma Unreferenced (Ghdlsynth_Maybe);
 
 package Libghdl is
    --  Perform early initializations, and set hooks.

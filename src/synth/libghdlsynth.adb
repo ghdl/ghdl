@@ -18,44 +18,11 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with GNAT.OS_Lib; use GNAT.OS_Lib;
-
-with Ghdlmain; use Ghdlmain;
 with Ghdlsynth;
 with Options; use Options;
 with Errorout.Console;
 
 package body Libghdlsynth is
-   function Synth (Argc : Natural; Argv : C_String_Array_Acc) return Module
-   is
-      Args : Argument_List (1 .. Argc);
-      Res : Module;
-      Cmd : Command_Acc;
-      First_Arg : Natural;
-   begin
-      --  Create arguments list.
-      for I in 0 .. Argc - 1 loop
-         declare
-            Arg : constant Ghdl_C_String := Argv (I);
-         begin
-            Args (I + 1) := new String'(Arg (1 .. strlen (Arg)));
-         end;
-      end loop;
-
-      --  Find the command.  This is a little bit convoluted...
-      Decode_Command_Options ("--synth", Cmd, Args, First_Arg);
-
-      --  Do the real work!
-      Res := Ghdlsynth.Ghdl_Synth (Args (First_Arg .. Args'Last));
-
-      return Res;
-   exception
-      when Option_Error =>
-         return No_Module;
-      when others =>
-         --  Avoid possible issues with exceptions...
-         return No_Module;
-   end Synth;
 
    Gnat_Version : constant String := "unknown compiler version" & ASCII.NUL;
    pragma Export (C, Gnat_Version, "__gnat_version");

@@ -118,10 +118,10 @@ namespace GhdlSynth {
 
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input_net, Net, Instance, Port_Idx);
 
-  extern "C" unsigned int libghdlsynth__synth(int argc, const char **argv);
+  extern "C" unsigned int ghdlsynth__ghdl_synth(int argc, const char **argv);
   inline Module ghdl_synth(int argc, const char **argv) {
     Module res;
-    res.id = libghdlsynth__synth(argc, argv);
+    res.id = ghdlsynth__ghdl_synth(argc, argv);
     return res;
   }
 
@@ -129,6 +129,5 @@ namespace GhdlSynth {
   extern "C" void ghdlcomp__disp_config (void);
 
   // Initialize and finalize the whole library.
-  extern "C" void libghdlsynth_init (void);
-  extern "C" void libghdlsynth_final (void);
+  extern "C" void libghdl_init (void);
 };

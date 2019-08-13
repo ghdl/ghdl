@@ -16,12 +16,15 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with GNAT.OS_Lib; use GNAT.OS_Lib;
+
 with Types; use Types;
 with Ghdllocal; use Ghdllocal;
 with Ghdlcomp; use Ghdlcomp;
 with Ghdlmain; use Ghdlmain;
 with Options; use Options;
 with Errorout;
+with Errorout.Console;
 
 with Libraries;
 with Flags;
@@ -34,7 +37,6 @@ with Vhdl.Configuration;
 with Vhdl.Annotations;
 with Vhdl.Utils;
 
-with Netlists; use Netlists;
 with Netlists.Dump;
 with Netlists.Disp_Vhdl;
 
@@ -189,17 +191,42 @@ package body Ghdlsynth is
       return Config;
    end Ghdl_Synth_Configure;
 
-   function Ghdl_Synth (Args : Argument_List) return Module
+   function Ghdl_Synth (Argc : Natural; Argv : C_String_Array_Acc)
+                       return Module
    is
+      Args : Argument_List (1 .. Argc);
+      Res : Module;
+      Cmd : Command_Acc;
+      First_Arg : Natural;
       Config : Node;
    begin
-      Config := Ghdl_Synth_Configure (Args);
+      --  Create arguments list.
+      for I in 0 .. Argc - 1 loop
+         declare
+            Arg : constant Ghdl_C_String := Argv (I);
+         begin
+            Args (I + 1) := new String'(Arg (1 .. strlen (Arg)));
+         end;
+      end loop;
 
+      --  Find the command.  This is a little bit convoluted...
+      Decode_Command_Options ("--synth", Cmd, Args, First_Arg);
+
+      --  Do the real work!
+      Config := Ghdl_Synth_Configure (Args (First_Arg .. Args'Last));
       if Config = Null_Iir then
          return No_Module;
       end if;
 
-      return Synthesis.Synth_Design (Config);
+      Res := Synthesis.Synth_Design (Config);
+      return Res;
+
+   exception
+      when Option_Error =>
+         return No_Module;
+      when others =>
+         --  Avoid possible issues with exceptions...
+         return No_Module;
    end Ghdl_Synth;
 
    procedure Perform_Action (Cmd : Command_Synth;
@@ -225,7 +252,7 @@ package body Ghdlsynth is
             Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
             Netlists.Dump.Disp_Module (Res);
          when Format_Vhdl =>
-            if True then
+            if Boolean'(True) then
                Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
                Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res);
             else
@@ -238,4 +265,11 @@ package body Ghdlsynth is
    begin
       Ghdlmain.Register_Command (new Command_Synth);
    end Register_Commands;
+
+   procedure Init_For_Ghdl_Synth is
+   begin
+      Ghdlsynth.Register_Commands;
+      Options.Initialize;
+      Errorout.Console.Install_Handler;
+   end Init_For_Ghdl_Synth;
 end Ghdlsynth;

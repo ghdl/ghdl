@@ -380,19 +380,21 @@ uninstall.simul: uninstall.simul.program uninstall.vhdllib
 
 ################ libghdl (library for the vhdl part) ####################
 
-LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/libghdl -aI$(srcdir)/src/ghdldrv
+LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src/vhdl/libghdl -aI$(srcdir)/src/ghdldrv
 
 libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 
 $(libghdl_name): $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
 
 all.libghdl.true: $(libghdl_name)
 all.libghdl.false:
 all.libghdl: all.libghdl.$(enable_libghdl)
 
-install.libghdl.true:
+install.libghdl.lib:
 	$(INSTALL_PROGRAM) -p $(libghdl_name) $(DESTDIR)$(libdir)/
+
+install.libghdl.true: install.libghdl.lib
 
 install.libghdl.false:
 install.libghdl: install.libghdl.$(enable_libghdl)
