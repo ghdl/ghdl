@@ -3,8 +3,11 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--std=08
-synth -fpsl hello.vhdl -e hello > syn_hello.vhdl
-analyze syn_hello.vhdl
+
+for f in restrict1 assume1 assert1; do
+  synth -fpsl $f.vhdl -e $f > syn_$f.vhdl
+  analyze syn_$f.vhdl
+done
 clean
 
 echo "Test successful"

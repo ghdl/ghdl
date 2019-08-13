@@ -48,6 +48,7 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
+with Netlists.Utils;
 
 package body Synth.Stmts is
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
@@ -1324,12 +1325,15 @@ package body Synth.Stmts is
       return Res;
    end Synth_Psl_NFA;
 
-   procedure Synth_Psl_Assume_Directive
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   function Synth_Psl_Directive
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Net
    is
+      use Netlists.Utils;
+      use Netlists.Gates;
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
       Init : Net;
       Clk : Net;
+      Clk_Inst : Instance;
       States : Net;
       Next_States : Net;
    begin
@@ -1337,6 +1341,15 @@ package body Synth.Stmts is
       pragma Assert (Nbr_States <= 32);
       Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
       Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
+
+      --  Check the clock is an edge and extract it.
+      Clk_Inst := Get_Parent (Clk);
+      if Get_Id (Clk_Inst) /= Id_Edge then
+         Error_Msg_Synth (+Stmt, "clock is not an edge");
+         return No_Net;
+      end if;
+
+      Clk := Get_Input_Net (Clk_Inst, 0);
 
       --  build idff
       States := Build_Idff (Build_Context, Clk, No_Net, Init);
@@ -1347,43 +1360,37 @@ package body Synth.Stmts is
         Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
       Connect (Get_Input (Get_Parent (States), 1), Next_States);
 
+      --  The NFA state is correct as long as there is a 1.
+      return Build_Reduce (Build_Context,
+                           Netlists.Gates.Id_Red_Or, Next_States);
+   end Synth_Psl_Directive;
+
+   procedure Synth_Psl_Assume_Directive
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Res : Net;
+   begin
       --  Build assume gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
-      Build_Assume (Build_Context,
-                    Build_Reduce (Build_Context,
-                                  Netlists.Gates.Id_Red_Or, Next_States));
+      Res := Synth_Psl_Directive (Syn_Inst, Stmt);
+      if Res /= No_Net then
+         Build_Assume (Build_Context, Res);
+      end if;
    end Synth_Psl_Assume_Directive;
 
    procedure Synth_Psl_Assert_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
-      Init : Net;
-      Clk : Net;
-      States : Net;
-      Next_States : Net;
+      Res : Net;
    begin
-      --  create init net, clock net
-      pragma Assert (Nbr_States <= 32);
-      Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
-      Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
-
-      --  build idff
-      States := Build_Idff (Build_Context, Clk, No_Net, Init);
-
-      --  create update nets
-      --  For each state: if set, evaluate all outgoing edges.
-      Next_States :=
-        Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
-      Connect (Get_Input (Get_Parent (States), 1), Next_States);
-
       --  Build assert gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assert on States, then the first cycle is ignored).
-      Build_Assert (Build_Context,
-                    Build_Reduce (Build_Context,
-                                  Netlists.Gates.Id_Red_Or, Next_States));
+      Res := Synth_Psl_Directive (Syn_Inst, Stmt);
+      if Res /= No_Net then
+         Build_Assert (Build_Context, Res);
+      end if;
    end Synth_Psl_Assert_Directive;
 
    procedure Synth_Generate_Statement_Body (Syn_Inst : Synth_Instance_Acc;
