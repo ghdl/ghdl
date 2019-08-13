@@ -157,7 +157,8 @@ package body Vhdl.Nodes_Walk is
       while Is_Valid (El) loop
          case Iir_Kinds_Concurrent_Statement (Get_Kind (El)) is
             when Iir_Kinds_Simple_Concurrent_Statement
-              | Iir_Kind_Component_Instantiation_Statement =>
+              | Iir_Kind_Component_Instantiation_Statement
+              | Iir_Kind_Psl_Default_Clock =>
                Status := Cb.all (El);
             when Iir_Kind_Block_Statement =>
                Status := Cb.all (El);
