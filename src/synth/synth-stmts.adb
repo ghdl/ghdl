@@ -1310,7 +1310,7 @@ package body Synth.Stmts is
       return Res;
    end Synth_Psl_NFA;
 
-   procedure Synth_Psl_Restrict_Directive
+   procedure Synth_Psl_Assume_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
@@ -1339,7 +1339,38 @@ package body Synth.Stmts is
       Build_Assume (Build_Context,
                     Build_Reduce (Build_Context,
                                   Netlists.Gates.Id_Red_Or, Next_States));
-   end Synth_Psl_Restrict_Directive;
+   end Synth_Psl_Assume_Directive;
+
+   procedure Synth_Psl_Assert_Directive
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
+      Init : Net;
+      Clk : Net;
+      States : Net;
+      Next_States : Net;
+   begin
+      --  create init net, clock net
+      pragma Assert (Nbr_States <= 32);
+      Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
+      Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
+
+      --  build idff
+      States := Build_Idff (Build_Context, Clk, No_Net, Init);
+
+      --  create update nets
+      --  For each state: if set, evaluate all outgoing edges.
+      Next_States :=
+        Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
+      Connect (Get_Input (Get_Parent (States), 1), Next_States);
+
+      --  Build assert gate.
+      --  Note: for synthesis, we assume the next state will be correct.
+      --  (If we assert on States, then the first cycle is ignored).
+      Build_Assert (Build_Context,
+                    Build_Reduce (Build_Context,
+                                  Netlists.Gates.Id_Red_Or, Next_States));
+   end Synth_Psl_Assert_Directive;
 
    procedure Synth_Generate_Statement_Body (Syn_Inst : Synth_Instance_Acc;
                                             Bod : Node;
@@ -1489,9 +1520,13 @@ package body Synth.Stmts is
                Pop_And_Merge_Phi (Build_Context, Stmt);
             when Iir_Kind_Psl_Default_Clock =>
                null;
-            when Iir_Kind_Psl_Restrict_Directive =>
+            when Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Assume_Directive =>
                --  Passive statement.
-               Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
+               Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
+            when Iir_Kind_Psl_Assert_Directive =>
+               --  Passive statement.
+               Synth_Psl_Assert_Directive (Syn_Inst, Stmt);
             when Iir_Kind_Concurrent_Assertion_Statement =>
                --  Passive statement.
                Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
