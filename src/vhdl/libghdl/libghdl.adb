@@ -103,10 +103,12 @@ package body Libghdl is
       Ghdllocal.Exec_Prefix := new String'(Prefix (1 .. Len));
    end Set_Exec_Prefix;
 
+   procedure Set_Hooks_For_Analysis is
+   begin
+      Ghdllocal.Compile_Init;
+      Set_Hooks;
+   end Set_Hooks_For_Analysis;
+
    Gnat_Version : constant String := "unknown compiler version" & ASCII.NUL;
    pragma Export (C, Gnat_Version, "__gnat_version");
-begin
-   --  TODO: set program name.
-   Ghdllocal.Compile_Init;
-   Set_Hooks;
 end Libghdl;

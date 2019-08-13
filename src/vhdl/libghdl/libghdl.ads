@@ -20,6 +20,9 @@ with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Libghdl is
+   --  Perform early initializations, and set hooks.
+   procedure Set_Hooks_For_Analysis;
+
    --  To be called before Analyze_Init to set command line options.
    --  This decodes a driver option (so handle all analyzer options, and
    --  --ieee). Return 0 for success.

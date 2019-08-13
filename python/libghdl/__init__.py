@@ -77,6 +77,7 @@ libghdl = ctypes.CDLL(_libghdl_path)
 
 # Initialize it.
 libghdl.libghdl_init()
+libghdl.libghdl__set_hooks_for_analysis()
 
 # Set the prefix in order to locate the vhdl libraries.
 libghdl.libghdl__set_exec_prefix(
