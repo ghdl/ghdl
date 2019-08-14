@@ -34,6 +34,8 @@ if [ x"$GHDL" = x ]; then
     exit 4
 fi
 
+PYTHON=${PYTHON:-python3}
+
 # Analyze files (no error expected)
 analyze ()
 {
