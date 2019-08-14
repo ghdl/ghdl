@@ -82,17 +82,17 @@ IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS)) $(addprefix ieee/,$(MATH_SRC
 else
 IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
   numeric_bit.vhdl numeric_bit-body.vhdl \
-  numeric_std.vhdl numeric_std-body.vhdl \
-  upf.vhdl upf-body.vhdl
+  numeric_std.vhdl numeric_std-body.vhdl
+UPF_SRCS := openieee/upf.vhdl openieee/upf-body.vhdl
 MATH_SRCS := math_real.vhdl math_real-body.vhdl
 VITAL95_BSRCS :=
 VITAL2000_BSRCS :=
 IEEE08_BSRCS := v08/std_logic_1164.vhdl v08/std_logic_1164-body.vhdl \
  math_real.vhdl math_real-body.vhdl
 
-IEEE87_BSRCS := $(addprefix openieee/v87/,$(IEEE_SRCS))
-IEEE93_BSRCS := $(addprefix openieee/v93/,$(IEEE_SRCS)) $(addprefix openieee/,$(MATH_SRCS))
-IEEE08_BSRCS := $(addprefix openieee/,$(IEEE08_BSRCS))
+IEEE87_BSRCS := $(addprefix openieee/v87/,$(IEEE_SRCS)) $(UPF_SRCS)
+IEEE93_BSRCS := $(addprefix openieee/v93/,$(IEEE_SRCS)) $(addprefix openieee/,$(MATH_SRCS)) $(UPF_SRCS)
+IEEE08_BSRCS := $(addprefix openieee/,$(IEEE08_BSRCS)) $(UPF_SRCS)
 endif
 
 ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
