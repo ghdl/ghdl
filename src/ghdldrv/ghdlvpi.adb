@@ -32,7 +32,6 @@ package body Ghdlvpi is
    --  of tuning for another OS.
    Is_Unix : constant Boolean := Shared_Library_Extension = ".so";
    Is_Darwin : constant Boolean := Shared_Library_Extension = ".dylib";
-   Is_Windows : constant Boolean := Shared_Library_Extension = ".dll";
 
    --  Return the include directory.
    function Get_Vpi_Include_Dir return String is
@@ -56,28 +55,9 @@ package body Ghdlvpi is
 
    --  Return the lib directory, but unixify the path (for a unix shell in
    --  windows).
-   function Get_Vpi_Lib_Dir_Unix return String
-   is
-      Res : String := Get_Vpi_Lib_Dir;
+   function Get_Vpi_Lib_Dir_Unix return String is
    begin
-      if Is_Windows then
-         --  Convert path separators.
-         for I in Res'Range loop
-            if Res (I) = '\' then
-               Res (I) := '/';
-            end if;
-         end loop;
-         if Res'Length > 2
-           and then (Res (Res'First) in 'a' .. 'z'
-                       or else Res (Res'First) in 'A' .. 'Z')
-           and then Res (Res'First + 1) = ':'
-         then
-            Res (Res'First + 1) := '/';
-            return '/' & Res;
-         end if;
-      end if;
-
-      return Res;
+      return Convert_Path_To_Unix (Get_Vpi_Lib_Dir);
    end Get_Vpi_Lib_Dir_Unix;
 
    function Get_Vpi_Cflags return Argument_List

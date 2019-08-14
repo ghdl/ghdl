@@ -99,6 +99,11 @@ package Ghdlmain is
    type String_Cst_Acc is access constant String;
    Version_String : String_Cst_Acc := null;
 
+   --  On windows, convert PATH to a unix path, so that a unix shell will
+   --  convert it correctly to a windows path.
+   --  Return PATH on non-windows platforms.
+   function Convert_Path_To_Unix (Path : String) return String;
+
    --  Registers all commands in this package.
    procedure Register_Commands;
 end Ghdlmain;

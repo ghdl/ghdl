@@ -24,6 +24,7 @@ with Bug;
 with Types; use Types;
 with Errorout; use Errorout;
 with Errorout.Console;
+with Default_Paths;
 
 package body Ghdlmain is
    procedure Init (Cmd : in out Command_Type)
@@ -362,6 +363,37 @@ package body Ghdlmain is
          First_Arg := Args'Last + 1;
       end if;
    end Decode_Command_Options;
+
+   Is_Windows : constant Boolean :=
+     Default_Paths.Shared_Library_Extension = ".dll";
+
+   function Convert_Path_To_Unix (Path : String) return String is
+   begin
+      if Is_Windows then
+         declare
+            Res : String := Path;
+         begin
+            --  Convert path separators.
+            for I in Res'Range loop
+               if Res (I) = '\' then
+                  Res (I) := '/';
+               end if;
+            end loop;
+            --  Convert C: to /C/
+            if Res'Length > 2
+              and then (Res (Res'First) in 'a' .. 'z'
+                          or else Res (Res'First) in 'A' .. 'Z')
+              and then Res (Res'First + 1) = ':'
+            then
+               Res (Res'First + 1) := '/';
+               return '/' & Res;
+            end if;
+            return Res;
+         end;
+      else
+         return Path;
+      end if;
+   end Convert_Path_To_Unix;
 
    procedure Main
    is
