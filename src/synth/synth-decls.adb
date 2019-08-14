@@ -466,6 +466,9 @@ package body Synth.Decls is
             null;
          when Iir_Kind_File_Declaration =>
             null;
+         when Iir_Kind_Psl_Default_Clock =>
+            --  Ignored; directly used by PSL directives.
+            null;
          when others =>
             Error_Kind ("synth_declaration", Decl);
       end case;

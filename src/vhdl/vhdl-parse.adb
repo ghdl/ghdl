@@ -8632,6 +8632,9 @@ package body Vhdl.Parse is
    begin
       Res := Create_Iir (Iir_Kind_Psl_Assume_Directive);
 
+      --  Accept PSL tokens
+      Vhdl.Scanner.Flag_Psl := True;
+
       --  Skip 'assume'
       Scan;
 
@@ -8651,6 +8654,9 @@ package body Vhdl.Parse is
    begin
       Res := Create_Iir (Iir_Kind_Psl_Cover_Directive);
 
+      --  Accept PSL tokens
+      Vhdl.Scanner.Flag_Psl := True;
+
       --  Skip 'cover'
       Scan;
 
@@ -8666,6 +8672,9 @@ package body Vhdl.Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Psl_Restrict_Directive);
+
+      --  Accept PSL tokens
+      Vhdl.Scanner.Flag_Psl := True;
 
       --  Skip 'restrict'
       Scan;
