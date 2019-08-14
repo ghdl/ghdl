@@ -128,6 +128,9 @@ namespace GhdlSynth {
   //  Disp ghdl configuration.
   extern "C" void ghdlcomp__disp_config (void);
 
-  // Initialize and finalize the whole library.
+  // Initialize the whole library.
   extern "C" void libghdl_init (void);
+
+  // More initialization for synthesis.
+  extern "C" void ghdlsynth__init_for_ghdl_synth (void);
 };
