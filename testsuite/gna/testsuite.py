@@ -8,7 +8,6 @@ import os
 import os.path
 import time
 
-DIRS=['bug*', 'sr*', 'deb*', 'ticket*', 'issue*', 'gls*']
 NUMJOBS=4
 
 class Job(object):
@@ -31,9 +30,7 @@ class Job(object):
 
 def run(keep):
     # List of tests to run
-    tests = []
-    for d in DIRS:
-        tests.extend(glob.glob(d))
+    tests = glob.glob('*[0-9]')
 
     start_time = time.time()
     jobs = []
