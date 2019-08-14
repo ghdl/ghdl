@@ -52,6 +52,22 @@ package Ghdlmain is
    procedure Perform_Action (Cmd : Command_Type; Args : Argument_List)
      is abstract;
 
+   --  A command that accepts command and help strings.
+   type Command_Str_Type is abstract new Command_Type with record
+      Cmd_Str : String_Access;
+      Help_Str : String_Access;
+   end record;
+   function Decode_Command (Cmd : Command_Str_Type; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Str_Type) return String;
+
+   --  A command that display a string.
+   type String_Func is access function return String;
+   type Command_Str_Disp is new Command_Str_Type with record
+      Disp : String_Func;
+   end record;
+   procedure Perform_Action (Cmd : Command_Str_Disp; Args : Argument_List);
+
    --  Register a command.
    procedure Register_Command (Cmd : Command_Acc);
 

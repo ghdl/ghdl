@@ -81,6 +81,25 @@ package body Ghdlmain is
       return null;
    end Find_Command;
 
+   function Decode_Command (Cmd : Command_Str_Type; Name : String)
+                           return Boolean is
+   begin
+      return Name = Cmd.Cmd_Str.all;
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Str_Type) return String is
+   begin
+      return Cmd.Help_Str.all;
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : Command_Str_Disp; Args : Argument_List)
+   is
+      pragma Unreferenced (Args);
+   begin
+      Simple_IO.Put_Line (Cmd.Disp.all);
+   end Perform_Action;
+
+
    --  Command help.
    type Command_Help is new Command_Type with null record;
    function Decode_Command (Cmd : Command_Help; Name : String) return Boolean;

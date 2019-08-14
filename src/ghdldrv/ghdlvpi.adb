@@ -181,25 +181,6 @@ package body Ghdlvpi is
       Set_Exit_Status (Exit_Status (Status));
    end Spawn_Compile;
 
-   --  A command that accepts command and help strings.
-   type Command_Str_Type is abstract new Command_Type with record
-      Cmd_Str : String_Access;
-      Help_Str : String_Access;
-   end record;
-
-   function Get_Short_Help (Cmd : Command_Str_Type) return String;
-
-   function Decode_Command (Cmd : Command_Str_Type; Name : String)
-                           return Boolean is
-   begin
-      return Name = Cmd.Cmd_Str.all;
-   end Decode_Command;
-
-   function Get_Short_Help (Cmd : Command_Str_Type) return String is
-   begin
-      return Cmd.Help_Str.all;
-   end Get_Short_Help;
-
    --  A command that spawn with extra_args
    type Extra_Args_Func is access function return Argument_List;
    type Command_Spawn_Type is new Command_Str_Type with record
@@ -252,22 +233,6 @@ package body Ghdlvpi is
       Disp (Cmd.Flags.all);
    end Perform_Action;
 
-   --  A command that display a string.
-   type String_Func is access function return String;
-   type Command_Vpi_Disp is new Command_Str_Type with record
-      Disp : String_Func;
-   end record;
-   procedure Perform_Action (Cmd : Command_Vpi_Disp;
-                             Args : Argument_List);
-
-   procedure Perform_Action (Cmd : Command_Vpi_Disp;
-                             Args : Argument_List)
-   is
-      pragma Unreferenced (Args);
-   begin
-      Put_Line (Cmd.Disp.all);
-   end Perform_Action;
-
    procedure Register_Commands is
    begin
       Register_Command
@@ -307,7 +272,7 @@ package body Ghdlvpi is
             Flags => Get_Vpi_Ldflags'Access));
 
       Register_Command
-        (new Command_Vpi_Disp'
+        (new Command_Str_Disp'
            (Command_Type with
             Cmd_Str => new String'
               ("--vpi-include-dir"),
@@ -315,7 +280,7 @@ package body Ghdlvpi is
               ("--vpi-include-dir  Display VPI include directory"),
             Disp => Get_Vpi_Include_Dir'Access));
       Register_Command
-        (new Command_Vpi_Disp'
+        (new Command_Str_Disp'
            (Command_Type with
             Cmd_Str => new String'
               ("--vpi-library-dir"),
@@ -323,7 +288,7 @@ package body Ghdlvpi is
               ("--vpi-library-dir  Display VPI library directory"),
             Disp => Get_Vpi_Lib_Dir'Access));
       Register_Command
-        (new Command_Vpi_Disp'
+        (new Command_Str_Disp'
            (Command_Type with
             Cmd_Str => new String'
               ("--vpi-library-dir-unix"),
