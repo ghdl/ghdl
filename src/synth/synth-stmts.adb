@@ -1341,7 +1341,7 @@ package body Synth.Stmts is
       return Res;
    end Synth_Psl_NFA;
 
-   function Synth_Psl_Directive
+   function Synth_Psl_Sequence_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Net
    is
       use Netlists.Utils;
@@ -1379,7 +1379,65 @@ package body Synth.Stmts is
       --  The NFA state is correct as long as there is a 1.
       return Build_Reduce (Build_Context,
                            Netlists.Gates.Id_Red_Or, Next_States);
-   end Synth_Psl_Directive;
+   end Synth_Psl_Sequence_Directive;
+
+   procedure Synth_Psl_Restrict_Directive
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Res : Net;
+   begin
+      --  Build assume gate.
+      --  Note: for synthesis, we assume the next state will be correct.
+      --  (If we assume on States, then the first cycle is ignored).
+      Res := Synth_Psl_Sequence_Directive (Syn_Inst, Stmt);
+      if Res /= No_Net then
+         Build_Assume (Build_Context, Res);
+      end if;
+   end Synth_Psl_Restrict_Directive;
+
+   function Synth_Psl_Property_Directive
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Net
+   is
+      use PSL.Types;
+      use PSL.NFAs;
+      use Netlists.Utils;
+      use Netlists.Gates;
+      NFA : constant PSL_NFA := Get_PSL_NFA (Stmt);
+      Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
+      Init : Net;
+      Clk : Net;
+      Clk_Inst : Instance;
+      States : Net;
+      Next_States : Net;
+   begin
+      --  create init net, clock net
+      pragma Assert (Nbr_States <= 32);
+      Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
+      Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
+
+      --  Check the clock is an edge and extract it.
+      Clk_Inst := Get_Parent (Clk);
+      if Get_Id (Clk_Inst) /= Id_Edge then
+         Error_Msg_Synth (+Stmt, "clock is not an edge");
+         return No_Net;
+      end if;
+
+      Clk := Get_Input_Net (Clk_Inst, 0);
+
+      --  build idff
+      States := Build_Idff (Build_Context, Clk, No_Net, Init);
+
+      --  create update nets
+      --  For each state: if set, evaluate all outgoing edges.
+      Next_States := Synth_Psl_NFA (Syn_Inst, NFA, Nbr_States, States);
+      Connect (Get_Input (Get_Parent (States), 1), Next_States);
+
+      return Build_Monadic
+        (Build_Context, Netlists.Gates.Id_Not,
+         Build_Extract_Bit
+           (Build_Context, Next_States,
+            Uns32 (Get_State_Label (Get_Final_State (NFA)))));
+   end Synth_Psl_Property_Directive;
 
    procedure Synth_Psl_Assume_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
@@ -1389,7 +1447,7 @@ package body Synth.Stmts is
       --  Build assume gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
-      Res := Synth_Psl_Directive (Syn_Inst, Stmt);
+      Res := Synth_Psl_Property_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
          Build_Assume (Build_Context, Res);
       end if;
@@ -1403,7 +1461,7 @@ package body Synth.Stmts is
       --  Build assert gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assert on States, then the first cycle is ignored).
-      Res := Synth_Psl_Directive (Syn_Inst, Stmt);
+      Res := Synth_Psl_Property_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
          Build_Assert (Build_Context, Res);
       end if;
@@ -1557,8 +1615,9 @@ package body Synth.Stmts is
                Pop_And_Merge_Phi (Build_Context, Stmt);
             when Iir_Kind_Psl_Default_Clock =>
                null;
-            when Iir_Kind_Psl_Restrict_Directive
-               | Iir_Kind_Psl_Assume_Directive =>
+            when Iir_Kind_Psl_Restrict_Directive =>
+               Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
+            when Iir_Kind_Psl_Assume_Directive =>
                --  Passive statement.
                Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
             when Iir_Kind_Psl_Assert_Directive =>
