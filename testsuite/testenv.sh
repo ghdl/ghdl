@@ -106,7 +106,7 @@ elab_simulate_failure ()
 synth()
 {
     echo "Synthesis of $@" >&2
-    "$GHDL" --synth $@
+    "$GHDL" --synth $GHDL_STD_FLAGS $@
 }
 
 # Check if a feature is present
