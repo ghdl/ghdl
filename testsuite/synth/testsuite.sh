@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Driver for the synth testsuite.
+# Driver for a testsuite.
 
 set -e
 
@@ -29,7 +29,7 @@ done
 
 singlerun() {
   echo ""
-  echo "Synth dir $1:"
+  echo "dir $1:"
   cd $1
   if ! ./testsuite.sh; then
     echo "#################################################################"
