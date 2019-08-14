@@ -237,8 +237,15 @@ package Vhdl.Tokens is
       Tok_Protected,
 
    --  Added by vhdl 2008:
+      Tok_Assume,
       Tok_Context,
+      Tok_Cover,
+      Tok_Default,
       Tok_Parameter,
+      Tok_Property,
+      Tok_Restrict,
+      Tok_Restrict_Guarantee,
+      Tok_Sequence,
 
    --  AMS reserved words
       Tok_Across,
@@ -256,15 +263,8 @@ package Vhdl.Tokens is
       Tok_Tolerance,
 
    -- PSL words
-      Tok_Psl_Default,
       Tok_Psl_Clock,
-      Tok_Psl_Property,
-      Tok_Psl_Sequence,
       Tok_Psl_Endpoint,
-      Tok_Psl_Assume,
-      Tok_Psl_Cover,
-      Tok_Psl_Restrict,
-      Tok_Psl_Restrict_Guarantee,
 
       Tok_Psl_Const,
       Tok_Psl_Boolean,

@@ -352,10 +352,24 @@ package body Vhdl.Tokens is
             return "protected";
 
          --  VHDL 08
+         when Tok_Assume =>
+            return "assume";
          when Tok_Context =>
             return "context";
+         when Tok_Cover =>
+            return "cover";
+         when Tok_Default =>
+            return "default";
          when Tok_Parameter =>
             return "parameter";
+         when Tok_Property =>
+            return "property";
+         when Tok_Restrict =>
+            return "restrict";
+         when Tok_Restrict_Guarantee =>
+            return "restrict_guarantee";
+         when Tok_Sequence =>
+            return "sequence";
 
          --  AMS-VHDL
          when Tok_Across =>
@@ -412,24 +426,10 @@ package body Vhdl.Tokens is
          when Tok_Arobase =>
             return "@";
 
-         when Tok_Psl_Default =>
-            return "default";
          when Tok_Psl_Clock =>
             return "clock";
-         when Tok_Psl_Property =>
-            return "property";
-         when Tok_Psl_Sequence =>
-            return "sequence";
          when Tok_Psl_Endpoint =>
             return "endpoint";
-         when Tok_Psl_Assume =>
-            return "assume";
-         when Tok_Psl_Cover =>
-            return "cover";
-         when Tok_Psl_Restrict =>
-            return "restrict";
-         when Tok_Psl_Restrict_Guarantee =>
-            return "restrict_guarantee";
          when Tok_Psl_Const =>
             return "const";
          when Tok_Psl_Boolean =>

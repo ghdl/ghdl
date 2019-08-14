@@ -1255,13 +1255,37 @@ package body Vhdl.Scanner is
                end if;
             when Std_Names.Name_Id_Vhdl08_Reserved_Words =>
                if Vhdl_Std < Vhdl_08 then
-                  if Is_Warning_Enabled (Warnid_Reserved_Word) then
+                  --  Some vhdl08 reserved words are PSL keywords.
+                  if Flag_Psl then
+                     case Current_Identifier is
+                        when Std_Names.Name_Sequence =>
+                           Current_Token := Tok_Sequence;
+                        when Std_Names.Name_Property =>
+                           Current_Token := Tok_Property;
+                        when Std_Names.Name_Assume =>
+                           Current_Token := Tok_Assume;
+                        when Std_Names.Name_Cover =>
+                           Current_Token := Tok_Cover;
+                        when Std_Names.Name_Default =>
+                           Current_Token := Tok_Default;
+                        when Std_Names.Name_Restrict =>
+                           Current_Token := Tok_Restrict;
+                        when Std_Names.Name_Restrict_Guarantee =>
+                           Current_Token := Tok_Restrict_Guarantee;
+                        when others =>
+                           Current_Token := Tok_Identifier;
+                     end case;
+                  else
+                     Current_Token := Tok_Identifier;
+                  end if;
+                  if Is_Warning_Enabled (Warnid_Reserved_Word)
+                    and then Current_Token = Tok_Identifier
+                  then
                      Warning_Msg_Scan
                        (Warnid_Reserved_Word,
                         "using %i vhdl-2008 reserved word as an identifier",
                         +Current_Identifier);
                   end if;
-                  Current_Token := Tok_Identifier;
                end if;
             when Std_Names.Name_Id_Vhdl00_Reserved_Words =>
                if Vhdl_Std < Vhdl_00 then
@@ -1302,21 +1326,21 @@ package body Vhdl.Scanner is
             when Std_Names.Name_Boolean =>
                Current_Token := Tok_Psl_Boolean;
             when Std_Names.Name_Sequence =>
-               Current_Token := Tok_Psl_Sequence;
+               Current_Token := Tok_Sequence;
             when Std_Names.Name_Property =>
-               Current_Token := Tok_Psl_Property;
+               Current_Token := Tok_Property;
             when Std_Names.Name_Endpoint =>
                Current_Token := Tok_Psl_Endpoint;
             when Std_Names.Name_Assume =>
-               Current_Token := Tok_Psl_Assume;
+               Current_Token := Tok_Assume;
             when Std_Names.Name_Cover =>
-               Current_Token := Tok_Psl_Cover;
+               Current_Token := Tok_Cover;
             when Std_Names.Name_Default =>
-               Current_Token := Tok_Psl_Default;
+               Current_Token := Tok_Default;
             when Std_Names.Name_Restrict =>
-               Current_Token := Tok_Psl_Restrict;
+               Current_Token := Tok_Restrict;
             when Std_Names.Name_Restrict_Guarantee =>
-               Current_Token := Tok_Psl_Restrict_Guarantee;
+               Current_Token := Tok_Restrict_Guarantee;
             when Std_Names.Name_Inf =>
                Current_Token := Tok_Inf;
             when Std_Names.Name_Within =>

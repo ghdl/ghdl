@@ -36,7 +36,7 @@ package body Vhdl.Formatters is
                     or else Current_Token = Tok_Subtype)
       then
          null;
-      elsif (Tok = Tok_Psl_Default
+      elsif (Tok = Tok_Default
                or else Tok = Tok_Psl_Clock)
         and then Current_Token = Tok_Identifier
       then

@@ -2116,7 +2116,7 @@ package body Vhdl.Prints is
       if Vhdl_Std < Vhdl_08 then
          OOB.Put ("--psl ");
       end if;
-      Disp_Token (Ctxt, Tok_Psl_Default, Tok_Psl_Clock);
+      Disp_Token (Ctxt, Tok_Default, Tok_Psl_Clock);
       Disp_Token (Ctxt, Tok_Is);
       Disp_Psl_Expression (Ctxt, Get_Psl_Boolean (Stmt));
       Disp_Token (Ctxt, Tok_Semi_Colon);
@@ -2132,13 +2132,13 @@ package body Vhdl.Prints is
       end if;
       case Get_Kind (Decl) is
          when N_Property_Declaration =>
-            Disp_Token (Ctxt, Tok_Psl_Property);
+            Disp_Token (Ctxt, Tok_Property);
             Disp_Ident (Ctxt, Get_Identifier (Decl));
             Disp_Token (Ctxt, Tok_Is);
             Disp_Psl_Expression (Ctxt, Get_Property (Decl));
             Disp_Token (Ctxt, Tok_Semi_Colon);
          when N_Sequence_Declaration =>
-            Disp_Token (Ctxt, Tok_Psl_Sequence);
+            Disp_Token (Ctxt, Tok_Sequence);
             Disp_Ident (Ctxt, Get_Identifier (Decl));
             Disp_Token (Ctxt, Tok_Is);
             Print_Sequence (Ctxt, Get_Sequence (Decl));
@@ -3926,7 +3926,7 @@ package body Vhdl.Prints is
       end if;
       Disp_Label (Ctxt, Stmt);
       Disp_Postponed (Ctxt, Stmt);
-      Disp_Token (Ctxt, Tok_Psl_Assume);
+      Disp_Token (Ctxt, Tok_Assume);
       Disp_Psl_Expression (Ctxt, Get_Psl_Property (Stmt));
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
@@ -3941,7 +3941,7 @@ package body Vhdl.Prints is
          OOB.Put ("--psl ");
       end if;
       Disp_Label (Ctxt, Stmt);
-      Disp_Token (Ctxt, Tok_Psl_Cover);
+      Disp_Token (Ctxt, Tok_Cover);
       Print_Sequence (Ctxt, Get_Psl_Sequence (Stmt));
       Disp_Report_Expression (Ctxt, Stmt);
       Disp_Token (Ctxt, Tok_Semi_Colon);
@@ -3957,7 +3957,7 @@ package body Vhdl.Prints is
          OOB.Put ("--psl ");
       end if;
       Disp_Label (Ctxt, Stmt);
-      Disp_Token (Ctxt, Tok_Psl_Restrict);
+      Disp_Token (Ctxt, Tok_Restrict);
       Print_Sequence (Ctxt, Get_Psl_Sequence (Stmt));
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);

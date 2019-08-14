@@ -383,22 +383,15 @@ package body Ghdlprint is
                      Disp_Text;
                      Put ("</tt>");
                end case;
-            when Tok_Mod .. Tok_Parameter =>
+            when Tok_Mod .. Tok_Sequence =>
                Disp_Reserved;
             when Tok_Semi_Colon =>
                Disp_Spaces;
                Disp_Text;
             when Tok_Across .. Tok_Tolerance =>
                Disp_Reserved;
-            when Tok_Psl_Default
-              | Tok_Psl_Clock
-              | Tok_Psl_Property
-              | Tok_Psl_Sequence
+            when Tok_Psl_Clock
               | Tok_Psl_Endpoint
-              | Tok_Psl_Assume
-              | Tok_Psl_Cover
-              | Tok_Psl_Restrict
-              | Tok_Psl_Restrict_Guarantee
               | Tok_Psl_Boolean
               | Tok_Psl_Const
               | Tok_Inf

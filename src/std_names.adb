@@ -153,22 +153,29 @@ package body Std_Names is
 
       Def ("protected", Name_Protected);
 
-      Def ("context", Name_Context);
-      Def ("parameter", Name_Parameter);
+      Def ("assume",             Name_Assume);
+      Def ("context",            Name_Context);
+      Def ("cover",              Name_Cover);
+      Def ("default",            Name_Default);
+      Def ("parameter",          Name_Parameter);
+      Def ("property",           Name_Property);
+      Def ("restrict",           Name_Restrict);
+      Def ("restrict_guarantee", Name_Restrict_Guarantee);
+      Def ("sequence",           Name_Sequence);
 
-      Def ("across", Name_Across);
-      Def ("break", Name_Break);
-      Def ("limit", Name_Limit);
-      Def ("nature", Name_Nature);
-      Def ("noise", Name_Noise);
+      Def ("across",     Name_Across);
+      Def ("break",      Name_Break);
+      Def ("limit",      Name_Limit);
+      Def ("nature",     Name_Nature);
+      Def ("noise",      Name_Noise);
       Def ("procedural", Name_Procedural);
-      Def ("quantity", Name_Quantity);
-      Def ("reference", Name_Reference);
-      Def ("spectrum", Name_Spectrum);
-      Def ("subnature", Name_Subnature);
-      Def ("terminal", Name_Terminal);
-      Def ("through", Name_Through);
-      Def ("tolerance", Name_Tolerance);
+      Def ("quantity",   Name_Quantity);
+      Def ("reference",  Name_Reference);
+      Def ("spectrum",   Name_Spectrum);
+      Def ("subnature",  Name_Subnature);
+      Def ("terminal",   Name_Terminal);
+      Def ("through",    Name_Through);
+      Def ("tolerance",  Name_Tolerance);
 
       --  Verilog keywords
       Def ("always",       Name_Always);
@@ -180,7 +187,6 @@ package body Std_Names is
       Def ("casez",        Name_Casez);
       Def ("cmos",         Name_Cmos);
       Def ("deassign",     Name_Deassign);
-      Def ("default",      Name_Default);
       Def ("defparam",     Name_Defparam);
       Def ("disable",      Name_Disable);
       Def ("edge",         Name_Edge);
@@ -324,7 +330,6 @@ package body Std_Names is
       Def ("join_none",           Name_Join_None);
       Def ("local",               Name_Local);
       Def ("program",             Name_Program);
-      Def ("property",            Name_Property);
       Def ("rand",                Name_Rand);
       Def ("randc",               Name_Randc);
       Def ("ref",                 Name_Ref);
@@ -339,7 +344,6 @@ package body Std_Names is
       Def ("wait_order",          Name_Wait_Order);
 
       --  SystemVerilog 3.1a
-      Def ("assume",              Name_Assume);
       Def ("covergroup",          Name_Covergroup);
       Def ("coverpoint",          Name_Coverpoint);
       Def ("endgroup",            Name_Endgroup);
@@ -759,7 +763,6 @@ package body Std_Names is
       Def ("before",             Name_Before);
       Def ("clock",              Name_Clock);
       Def ("const",              Name_Const);
-      Def ("cover",              Name_Cover);
       Def ("e",                  Name_E);
       Def ("ef",                 Name_Ef);
       Def ("eg",                 Name_Eg);
@@ -780,10 +783,7 @@ package body Std_Names is
       Def ("next_event_e",       Name_Next_Event_E);
       Def ("property",           Name_Property);
       Def ("prev",               Name_Prev);
-      Def ("restrict",           Name_Restrict);
-      Def ("restrict_guarantee", Name_Restrict_Guarantee);
       Def ("rose",               Name_Rose);
-      Def ("sequence",           Name_Sequence);
       Def ("strong",             Name_Strong);
       Def ("union",              Name_Union);
       Def ("vmode",              Name_Vmode);

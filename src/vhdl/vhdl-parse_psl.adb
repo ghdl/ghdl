@@ -812,9 +812,9 @@ package body Vhdl.Parse_Psl is
       Kind : Nkind;
    begin
       case Tok is
-         when Tok_Psl_Property =>
+         when Tok_Property =>
             Kind := N_Property_Declaration;
-         when Tok_Psl_Sequence =>
+         when Tok_Sequence =>
             Kind := N_Sequence_Declaration;
          when Tok_Psl_Endpoint =>
             Kind := N_Endpoint_Declaration;
@@ -838,9 +838,9 @@ package body Vhdl.Parse_Psl is
                   Pkind := N_Const_Parameter;
                when Tok_Psl_Boolean =>
                   Pkind := N_Boolean_Parameter;
-               when Tok_Psl_Property =>
+               when Tok_Property =>
                   Pkind := N_Property_Parameter;
-               when Tok_Psl_Sequence =>
+               when Tok_Sequence =>
                   Pkind := N_Sequence_Parameter;
                when others =>
                   Error_Msg_Parse ("parameter type expected");

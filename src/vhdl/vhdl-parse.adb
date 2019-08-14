@@ -4981,38 +4981,34 @@ package body Vhdl.Parse is
                   --  Skip ';'.
                   Scan;
                end if;
-            when Tok_Identifier =>
-               if Vhdl_Std >= Vhdl_08
-                 and then Current_Identifier = Name_Default
-               then
-                  --  This identifier is a PSL keyword.
-                  Xrefs.Xref_Keyword (Get_Token_Location);
+            when Tok_Default =>
+               --  This identifier is a PSL keyword.
+               Xrefs.Xref_Keyword (Get_Token_Location);
 
-                  --  Check whether default clock are allowed in this region.
-                  case Get_Kind (Parent) is
-                     when Iir_Kind_Function_Body
-                       | Iir_Kind_Procedure_Body
-                       | Iir_Kinds_Process_Statement
-                       | Iir_Kind_Protected_Type_Body
-                       | Iir_Kind_Package_Declaration
-                       | Iir_Kind_Package_Body
-                       | Iir_Kind_Protected_Type_Declaration =>
-                        Error_Msg_Parse
-                          ("PSL default clock declaration not allowed here");
-                     when Iir_Kind_Entity_Declaration
-                       | Iir_Kind_Architecture_Body
-                       | Iir_Kind_Block_Statement
-                       | Iir_Kind_Generate_Statement_Body =>
-                        null;
-                     when others =>
-                        Error_Kind ("parse_declarative_part", Parent);
-                  end case;
-                  Decl := Parse_Psl_Default_Clock;
-               else
-                  Error_Msg_Parse
-                    ("object class keyword such as 'variable' is expected");
-                  Resync_To_End_Of_Declaration;
-               end if;
+               --  Check whether default clock are allowed in this region.
+               case Get_Kind (Parent) is
+                  when Iir_Kind_Function_Body
+                    | Iir_Kind_Procedure_Body
+                    | Iir_Kinds_Process_Statement
+                    | Iir_Kind_Protected_Type_Body
+                    | Iir_Kind_Package_Declaration
+                    | Iir_Kind_Package_Body
+                    | Iir_Kind_Protected_Type_Declaration =>
+                     Error_Msg_Parse
+                       ("PSL default clock declaration not allowed here");
+                  when Iir_Kind_Entity_Declaration
+                    | Iir_Kind_Architecture_Body
+                    | Iir_Kind_Block_Statement
+                    | Iir_Kind_Generate_Statement_Body =>
+                     null;
+                  when others =>
+                     Error_Kind ("parse_declarative_part", Parent);
+               end case;
+               Decl := Parse_Psl_Default_Clock;
+            when Tok_Identifier =>
+               Error_Msg_Parse
+                 ("object class keyword such as 'variable' is expected");
+               Resync_To_End_Of_Declaration;
             when Tok_Semi_Colon =>
                Error_Msg_Parse ("';' (semi colon) not allowed alone");
                Scan;
@@ -8836,23 +8832,23 @@ package body Vhdl.Parse is
                   Stmt := Parse_Component_Instantiation (Unit);
                   Set_Has_Component (Stmt, Has_Component);
                end;
-            when Tok_Psl_Default =>
+            when Tok_Default =>
                Postponed_Not_Allowed;
                Label_Not_Allowed;
                Stmt := Parse_Psl_Default_Clock;
-            when Tok_Psl_Property
-              | Tok_Psl_Sequence
+            when Tok_Property
+              | Tok_Sequence
               | Tok_Psl_Endpoint =>
                Postponed_Not_Allowed;
                Label_Not_Allowed;
                Stmt := Parse_Psl_Declaration;
-            when Tok_Psl_Assume =>
+            when Tok_Assume =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Assume_Directive;
-            when Tok_Psl_Cover =>
+            when Tok_Cover =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Cover_Directive;
-            when Tok_Psl_Restrict =>
+            when Tok_Restrict =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Restrict_Directive;
             when Tok_Wait
