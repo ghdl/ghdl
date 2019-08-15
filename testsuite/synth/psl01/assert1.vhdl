@@ -23,5 +23,5 @@ begin
  cnt <= val;
 
  --psl default clock is rising_edge(clk);
- --psl assert always val /= 5 or rst = '1';
+ --psl assert always val /= 5 abort rst;
 end behav;
