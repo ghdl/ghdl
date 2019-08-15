@@ -394,7 +394,7 @@ all.libghdl: all.libghdl.$(enable_libghdl)
 install.libghdl.lib:
 	$(INSTALL_PROGRAM) -p $(libghdl_name) $(DESTDIR)$(libdir)/
 
-install.libghdl.true: install.libghdl.lib
+install.libghdl.true: install.libghdl.lib install.libghdlsynth.include
 
 install.libghdl.false:
 install.libghdl: install.libghdl.$(enable_libghdl)
@@ -435,6 +435,11 @@ install.libghdlsynth: install.libghdlsynth.include install.libghdlsynth.static i
 install.libghdlsynth.include: install.dirs $(srcdir)/src/synth/ghdlsynth_gates.h
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth.h $(DESTDIR)$(incdir)/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth_gates.h $(DESTDIR)$(incdir)/
+
+install.libghdlsynth.local: $(srcdir)/src/synth/ghdlsynth_gates.h
+	$(MKDIR) -p include lib
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth.h include/
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth_gates.h include/
 
 install.libghdlsynth.static: libghdlsynth.a install.libghdlsynth.include
 	$(INSTALL_DATA) -p libghdlsynth.a $(DESTDIR)$(libdir)/
