@@ -22,8 +22,8 @@ begin
  end process;
  cnt <= val;
 
- --psl default clock is clk;
+ --psl default clock is rising_edge(clk);
  --psl restrict {rst; (not rst)[*]};
- --psl assert always val /= 5 or rst = '1';
- --psl assume always val < 50;
+ --psl assert always val /= 5 abort rst;
+ --psl assume always val < 10;
 end behav;

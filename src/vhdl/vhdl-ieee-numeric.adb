@@ -188,6 +188,85 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (others => Iir_Predefined_None));
 
+   Not_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Not_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Not_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
+
+   And_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns,
+            others        => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn,
+            others        => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Or_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns,
+            others        => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn,
+            others        => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Nand_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Uns,
+            others        => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Sgn,
+            others        => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Nor_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns,
+            others        => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn,
+            others        => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Xor_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns,
+            others        => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn,
+            others        => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Xnor_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns,
+            others        => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn,
+            others        => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg_Decl : Iir_Package_Declaration;
@@ -436,6 +515,18 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Binary (Gt_Patterns);
                      when Name_Op_Greater_Equal =>
                         Handle_Binary (Ge_Patterns);
+                     when Name_And =>
+                        Handle_Binary (And_Patterns);
+                     when Name_Or =>
+                        Handle_Binary (Or_Patterns);
+                     when Name_Nand =>
+                        Handle_Binary (Nand_Patterns);
+                     when Name_Nor =>
+                        Handle_Binary (Nor_Patterns);
+                     when Name_Xor =>
+                        Handle_Binary (Xor_Patterns);
+                     when Name_Xnor =>
+                        Handle_Binary (Xnor_Patterns);
                      when Name_To_Bstring
                        | Name_To_Ostring
                        | Name_To_Hstring =>
@@ -454,6 +545,8 @@ package body Vhdl.Ieee.Numeric is
                   case Get_Identifier (Decl) is
                      when Name_Op_Minus =>
                         Handle_Unary (Neg_Patterns);
+                     when Name_Not =>
+                        Handle_Unary (Not_Patterns);
                      when Name_To_Integer =>
                         Handle_To_Integer;
                      when others =>
