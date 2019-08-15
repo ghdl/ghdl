@@ -1236,7 +1236,9 @@ package body Synth.Expr is
             return null;
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Synth_Bit_Monadic (Id_Not);
-         when Iir_Predefined_Ieee_1164_Vector_Not =>
+         when Iir_Predefined_Ieee_1164_Vector_Not
+            | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
             return Synth_Vec_Monadic (Id_Not);
          when Iir_Predefined_Ieee_Numeric_Std_Neg_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
