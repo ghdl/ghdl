@@ -136,6 +136,8 @@ Options [defaults in brackets]:
 	--disable-checks            disable internal checks
 	--disable-libghdl           do not build libghdl shared library
 	--enable-openieee           use gpl-compatible sources for ieee library
+        --enable-libghdl            also build the libghdl shared library
+        --enable-synth              build with synthesis feature
 EOF
 	exit 0
 fi
