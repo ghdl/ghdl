@@ -4931,6 +4931,27 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int,
       Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn,
 
+      Iir_Predefined_Ieee_Numeric_Std_Not_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Not_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn,
+
       --  Unary functions for numeric_std
       Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn,

@@ -25,6 +25,7 @@ with Name_Table;
 with Vhdl.Prints;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Numeric;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
@@ -100,6 +101,15 @@ package body Synth.Disp_Vhdl is
                   Put (" (" & Pfx & "'left)");
                end if;
                Put_Line (";");
+               Idx := Idx + 1;
+            elsif Btype = Vhdl.Ieee.Numeric.Numeric_Std_Unsigned_Type then
+               Put ("  wrap_" & Pfx & " <= std_logic_vector(" & Pfx);
+               if Desc.W = 1 then
+                  --  This is an array of length 1.  A scalar is used in the
+                  --  netlist.
+                  Put (" (" & Pfx & "'left)");
+               end if;
+               Put_Line (");");
                Idx := Idx + 1;
             else
                Error_Kind ("disp_in_converter(arr)", Ptype);

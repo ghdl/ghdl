@@ -933,12 +933,30 @@ package body Synth.Expr is
            | Iir_Predefined_Ieee_1164_Scalar_Xnor =>
             return Synth_Bit_Dyadic (Id_Xnor);
 
-         when Iir_Predefined_Ieee_1164_Vector_And =>
+         when Iir_Predefined_Ieee_1164_Vector_And
+            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn =>
             return Synth_Vec_Dyadic (Id_And);
-         when Iir_Predefined_Ieee_1164_Vector_Or =>
+         when Iir_Predefined_Ieee_1164_Vector_Or
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn =>
             return Synth_Vec_Dyadic (Id_Or);
-         when Iir_Predefined_Ieee_1164_Vector_Xor =>
+         when Iir_Predefined_Ieee_1164_Vector_Nand
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn_Sgn =>
+            return Synth_Vec_Dyadic (Id_Nand);
+         when Iir_Predefined_Ieee_1164_Vector_Nor
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn =>
+            return Synth_Vec_Dyadic (Id_Nor);
+         when Iir_Predefined_Ieee_1164_Vector_Xor
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
             return Synth_Vec_Dyadic (Id_Xor);
+         when Iir_Predefined_Ieee_1164_Vector_Xnor
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn =>
+            return Synth_Vec_Dyadic (Id_Xnor);
 
          when Iir_Predefined_Enum_Equality =>
             if Is_Bit_Type (Left_Type) then
