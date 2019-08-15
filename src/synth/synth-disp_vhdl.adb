@@ -102,7 +102,8 @@ package body Synth.Disp_Vhdl is
                end if;
                Put_Line (";");
                Idx := Idx + 1;
-            elsif Btype = Vhdl.Ieee.Numeric.Numeric_Std_Unsigned_Type then
+            elsif Btype = Vhdl.Ieee.Numeric.Numeric_Std_Unsigned_Type
+               or Btype = Vhdl.Ieee.Numeric.Numeric_Std_Signed_Type then
                Put ("  wrap_" & Pfx & " <= std_logic_vector(" & Pfx);
                if Desc.W = 1 then
                   --  This is an array of length 1.  A scalar is used in the
