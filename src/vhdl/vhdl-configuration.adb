@@ -801,6 +801,7 @@ package body Vhdl.Configuration is
             when Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Instantiation_Declaration
               | Iir_Kind_Package_Body
+              | Iir_Kinds_Verification_Unit
               | Iir_Kind_Context_Declaration =>
                null;
          end case;
@@ -901,6 +902,7 @@ package body Vhdl.Configuration is
               | Iir_Kind_Package_Instantiation_Declaration
               | Iir_Kind_Package_Body
               | Iir_Kind_Entity_Declaration
+              | Iir_Kinds_Verification_Unit
               | Iir_Kind_Context_Declaration =>
                null;
          end case;

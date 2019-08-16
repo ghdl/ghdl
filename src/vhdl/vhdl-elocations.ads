@@ -177,6 +177,10 @@ package Vhdl.Elocations is
    --
    --   Get/Set_End_Location (Field2)
 
+   -- Iir_Kind_Vunit_Declaration (None)
+   -- Iir_Kind_Vmode_Declaration (None)
+   -- Iir_Kind_Vprop_Declaration (None)
+
    -- Iir_Kind_Library_Declaration (None)
 
    -- Iir_Kind_Component_Declaration (L6)

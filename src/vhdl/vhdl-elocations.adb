@@ -266,6 +266,9 @@ package body Vhdl.Elocations is
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Overload_List
+           | Iir_Kind_Vmode_Declaration
+           | Iir_Kind_Vprop_Declaration
+           | Iir_Kind_Vunit_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Unit_Declaration
@@ -469,9 +472,9 @@ package body Vhdl.Elocations is
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif =>
             return Format_L3;
-         when Iir_Kind_Type_Declaration
+         when Iir_Kind_Architecture_Body
+           | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Architecture_Body
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Sensitized_Process_Statement

@@ -512,6 +512,12 @@ package body Vhdl.Errors is
             return Disp_Identifier (Node, "context");
          when Iir_Kind_Package_Instantiation_Declaration =>
             return Disp_Identifier (Node, "instantiation package");
+         when Iir_Kind_Vmode_Declaration =>
+            return Disp_Identifier (Node, "vmode");
+         when Iir_Kind_Vprop_Declaration =>
+            return Disp_Identifier (Node, "vprop");
+         when Iir_Kind_Vunit_Declaration =>
+            return Disp_Identifier (Node, "vunit");
 
          when Iir_Kind_Package_Header =>
             return "package header";

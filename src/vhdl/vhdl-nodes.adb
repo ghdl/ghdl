@@ -1032,14 +1032,17 @@ package body Vhdl.Nodes is
            | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Wildcard_Type_Definition
            | Iir_Kind_Overload_List
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
+           | Iir_Kind_Vmode_Declaration
+           | Iir_Kind_Vprop_Declaration
+           | Iir_Kind_Vunit_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Context_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -2615,6 +2618,54 @@ package body Vhdl.Nodes is
                      "no field Need_Instance_Bodies");
       Set_Flag3 (Decl, Flag);
    end Set_Need_Instance_Bodies;
+
+   function Get_Hierarchical_Name (Vunit : Iir) return Iir is
+   begin
+      pragma Assert (Vunit /= Null_Iir);
+      pragma Assert (Has_Hierarchical_Name (Get_Kind (Vunit)),
+                     "no field Hierarchical_Name");
+      return Get_Field1 (Vunit);
+   end Get_Hierarchical_Name;
+
+   procedure Set_Hierarchical_Name (Vunit : Iir; Name : Iir) is
+   begin
+      pragma Assert (Vunit /= Null_Iir);
+      pragma Assert (Has_Hierarchical_Name (Get_Kind (Vunit)),
+                     "no field Hierarchical_Name");
+      Set_Field1 (Vunit, Name);
+   end Set_Hierarchical_Name;
+
+   function Get_Inherit_Spec_Chain (Vunit : Iir) return Iir is
+   begin
+      pragma Assert (Vunit /= Null_Iir);
+      pragma Assert (Has_Inherit_Spec_Chain (Get_Kind (Vunit)),
+                     "no field Inherit_Spec_Chain");
+      return Get_Field2 (Vunit);
+   end Get_Inherit_Spec_Chain;
+
+   procedure Set_Inherit_Spec_Chain (Vunit : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Vunit /= Null_Iir);
+      pragma Assert (Has_Inherit_Spec_Chain (Get_Kind (Vunit)),
+                     "no field Inherit_Spec_Chain");
+      Set_Field2 (Vunit, Chain);
+   end Set_Inherit_Spec_Chain;
+
+   function Get_Vunit_Item_Chain (Vunit : Iir) return Iir is
+   begin
+      pragma Assert (Vunit /= Null_Iir);
+      pragma Assert (Has_Vunit_Item_Chain (Get_Kind (Vunit)),
+                     "no field Vunit_Item_Chain");
+      return Get_Field4 (Vunit);
+   end Get_Vunit_Item_Chain;
+
+   procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Vunit /= Null_Iir);
+      pragma Assert (Has_Vunit_Item_Chain (Get_Kind (Vunit)),
+                     "no field Vunit_Item_Chain");
+      Set_Field4 (Vunit, Chain);
+   end Set_Vunit_Item_Chain;
 
    function Get_Block_Configuration (Target : Iir) return Iir is
    begin

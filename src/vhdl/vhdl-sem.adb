@@ -3364,6 +3364,9 @@ package body Vhdl.Sem is
                Sem_Package_Instantiation_Declaration (Library_Unit);
             when Iir_Kind_Context_Declaration =>
                Sem_Context_Declaration (Library_Unit);
+            when Iir_Kinds_Verification_Unit =>
+               --  TODO.
+               raise Internal_Error;
          end case;
       end if;
 

@@ -85,205 +85,208 @@ class Iir_Kind:
     Subtype_Definition = 70
     Scalar_Nature_Definition = 71
     Overload_List = 72
-    Type_Declaration = 73
-    Anonymous_Type_Declaration = 74
-    Subtype_Declaration = 75
-    Nature_Declaration = 76
-    Subnature_Declaration = 77
-    Entity_Declaration = 78
-    Configuration_Declaration = 79
-    Context_Declaration = 80
-    Package_Declaration = 81
-    Package_Instantiation_Declaration = 82
-    Package_Body = 83
-    Architecture_Body = 84
-    Package_Header = 85
-    Unit_Declaration = 86
-    Library_Declaration = 87
-    Component_Declaration = 88
-    Attribute_Declaration = 89
-    Group_Template_Declaration = 90
-    Group_Declaration = 91
-    Element_Declaration = 92
-    Non_Object_Alias_Declaration = 93
-    Psl_Declaration = 94
-    Psl_Endpoint_Declaration = 95
-    Terminal_Declaration = 96
-    Free_Quantity_Declaration = 97
-    Across_Quantity_Declaration = 98
-    Through_Quantity_Declaration = 99
-    Enumeration_Literal = 100
-    Function_Declaration = 101
-    Procedure_Declaration = 102
-    Function_Body = 103
-    Procedure_Body = 104
-    Object_Alias_Declaration = 105
-    File_Declaration = 106
-    Guard_Signal_Declaration = 107
-    Signal_Declaration = 108
-    Variable_Declaration = 109
-    Constant_Declaration = 110
-    Iterator_Declaration = 111
-    Interface_Constant_Declaration = 112
-    Interface_Variable_Declaration = 113
-    Interface_Signal_Declaration = 114
-    Interface_File_Declaration = 115
-    Interface_Type_Declaration = 116
-    Interface_Package_Declaration = 117
-    Interface_Function_Declaration = 118
-    Interface_Procedure_Declaration = 119
-    Anonymous_Signal_Declaration = 120
-    Signal_Attribute_Declaration = 121
-    Identity_Operator = 122
-    Negation_Operator = 123
-    Absolute_Operator = 124
-    Not_Operator = 125
-    Implicit_Condition_Operator = 126
-    Condition_Operator = 127
-    Reduction_And_Operator = 128
-    Reduction_Or_Operator = 129
-    Reduction_Nand_Operator = 130
-    Reduction_Nor_Operator = 131
-    Reduction_Xor_Operator = 132
-    Reduction_Xnor_Operator = 133
-    And_Operator = 134
-    Or_Operator = 135
-    Nand_Operator = 136
-    Nor_Operator = 137
-    Xor_Operator = 138
-    Xnor_Operator = 139
-    Equality_Operator = 140
-    Inequality_Operator = 141
-    Less_Than_Operator = 142
-    Less_Than_Or_Equal_Operator = 143
-    Greater_Than_Operator = 144
-    Greater_Than_Or_Equal_Operator = 145
-    Match_Equality_Operator = 146
-    Match_Inequality_Operator = 147
-    Match_Less_Than_Operator = 148
-    Match_Less_Than_Or_Equal_Operator = 149
-    Match_Greater_Than_Operator = 150
-    Match_Greater_Than_Or_Equal_Operator = 151
-    Sll_Operator = 152
-    Sla_Operator = 153
-    Srl_Operator = 154
-    Sra_Operator = 155
-    Rol_Operator = 156
-    Ror_Operator = 157
-    Addition_Operator = 158
-    Substraction_Operator = 159
-    Concatenation_Operator = 160
-    Multiplication_Operator = 161
-    Division_Operator = 162
-    Modulus_Operator = 163
-    Remainder_Operator = 164
-    Exponentiation_Operator = 165
-    Function_Call = 166
-    Aggregate = 167
-    Parenthesis_Expression = 168
-    Qualified_Expression = 169
-    Type_Conversion = 170
-    Allocator_By_Expression = 171
-    Allocator_By_Subtype = 172
-    Selected_Element = 173
-    Dereference = 174
-    Implicit_Dereference = 175
-    Slice_Name = 176
-    Indexed_Name = 177
-    Psl_Expression = 178
-    Sensitized_Process_Statement = 179
-    Process_Statement = 180
-    Concurrent_Simple_Signal_Assignment = 181
-    Concurrent_Conditional_Signal_Assignment = 182
-    Concurrent_Selected_Signal_Assignment = 183
-    Concurrent_Assertion_Statement = 184
-    Concurrent_Procedure_Call_Statement = 185
-    Psl_Assert_Directive = 186
-    Psl_Assume_Directive = 187
-    Psl_Cover_Directive = 188
-    Psl_Restrict_Directive = 189
-    Block_Statement = 190
-    If_Generate_Statement = 191
-    Case_Generate_Statement = 192
-    For_Generate_Statement = 193
-    Component_Instantiation_Statement = 194
-    Psl_Default_Clock = 195
-    Simple_Simultaneous_Statement = 196
-    Generate_Statement_Body = 197
-    If_Generate_Else_Clause = 198
-    Simple_Signal_Assignment_Statement = 199
-    Conditional_Signal_Assignment_Statement = 200
-    Selected_Waveform_Assignment_Statement = 201
-    Null_Statement = 202
-    Assertion_Statement = 203
-    Report_Statement = 204
-    Wait_Statement = 205
-    Variable_Assignment_Statement = 206
-    Conditional_Variable_Assignment_Statement = 207
-    Return_Statement = 208
-    For_Loop_Statement = 209
-    While_Loop_Statement = 210
-    Next_Statement = 211
-    Exit_Statement = 212
-    Case_Statement = 213
-    Procedure_Call_Statement = 214
-    If_Statement = 215
-    Elsif = 216
-    Character_Literal = 217
-    Simple_Name = 218
-    Selected_Name = 219
-    Operator_Symbol = 220
-    Reference_Name = 221
-    External_Constant_Name = 222
-    External_Signal_Name = 223
-    External_Variable_Name = 224
-    Selected_By_All_Name = 225
-    Parenthesis_Name = 226
-    Package_Pathname = 227
-    Absolute_Pathname = 228
-    Relative_Pathname = 229
-    Pathname_Element = 230
-    Base_Attribute = 231
-    Subtype_Attribute = 232
-    Element_Attribute = 233
-    Left_Type_Attribute = 234
-    Right_Type_Attribute = 235
-    High_Type_Attribute = 236
-    Low_Type_Attribute = 237
-    Ascending_Type_Attribute = 238
-    Image_Attribute = 239
-    Value_Attribute = 240
-    Pos_Attribute = 241
-    Val_Attribute = 242
-    Succ_Attribute = 243
-    Pred_Attribute = 244
-    Leftof_Attribute = 245
-    Rightof_Attribute = 246
-    Delayed_Attribute = 247
-    Stable_Attribute = 248
-    Quiet_Attribute = 249
-    Transaction_Attribute = 250
-    Event_Attribute = 251
-    Active_Attribute = 252
-    Last_Event_Attribute = 253
-    Last_Active_Attribute = 254
-    Last_Value_Attribute = 255
-    Driving_Attribute = 256
-    Driving_Value_Attribute = 257
-    Behavior_Attribute = 258
-    Structure_Attribute = 259
-    Simple_Name_Attribute = 260
-    Instance_Name_Attribute = 261
-    Path_Name_Attribute = 262
-    Left_Array_Attribute = 263
-    Right_Array_Attribute = 264
-    High_Array_Attribute = 265
-    Low_Array_Attribute = 266
-    Length_Array_Attribute = 267
-    Ascending_Array_Attribute = 268
-    Range_Array_Attribute = 269
-    Reverse_Range_Array_Attribute = 270
-    Attribute_Name = 271
+    Entity_Declaration = 73
+    Configuration_Declaration = 74
+    Context_Declaration = 75
+    Package_Declaration = 76
+    Package_Instantiation_Declaration = 77
+    Vmode_Declaration = 78
+    Vprop_Declaration = 79
+    Vunit_Declaration = 80
+    Package_Body = 81
+    Architecture_Body = 82
+    Type_Declaration = 83
+    Anonymous_Type_Declaration = 84
+    Subtype_Declaration = 85
+    Nature_Declaration = 86
+    Subnature_Declaration = 87
+    Package_Header = 88
+    Unit_Declaration = 89
+    Library_Declaration = 90
+    Component_Declaration = 91
+    Attribute_Declaration = 92
+    Group_Template_Declaration = 93
+    Group_Declaration = 94
+    Element_Declaration = 95
+    Non_Object_Alias_Declaration = 96
+    Psl_Declaration = 97
+    Psl_Endpoint_Declaration = 98
+    Terminal_Declaration = 99
+    Free_Quantity_Declaration = 100
+    Across_Quantity_Declaration = 101
+    Through_Quantity_Declaration = 102
+    Enumeration_Literal = 103
+    Function_Declaration = 104
+    Procedure_Declaration = 105
+    Function_Body = 106
+    Procedure_Body = 107
+    Object_Alias_Declaration = 108
+    File_Declaration = 109
+    Guard_Signal_Declaration = 110
+    Signal_Declaration = 111
+    Variable_Declaration = 112
+    Constant_Declaration = 113
+    Iterator_Declaration = 114
+    Interface_Constant_Declaration = 115
+    Interface_Variable_Declaration = 116
+    Interface_Signal_Declaration = 117
+    Interface_File_Declaration = 118
+    Interface_Type_Declaration = 119
+    Interface_Package_Declaration = 120
+    Interface_Function_Declaration = 121
+    Interface_Procedure_Declaration = 122
+    Anonymous_Signal_Declaration = 123
+    Signal_Attribute_Declaration = 124
+    Identity_Operator = 125
+    Negation_Operator = 126
+    Absolute_Operator = 127
+    Not_Operator = 128
+    Implicit_Condition_Operator = 129
+    Condition_Operator = 130
+    Reduction_And_Operator = 131
+    Reduction_Or_Operator = 132
+    Reduction_Nand_Operator = 133
+    Reduction_Nor_Operator = 134
+    Reduction_Xor_Operator = 135
+    Reduction_Xnor_Operator = 136
+    And_Operator = 137
+    Or_Operator = 138
+    Nand_Operator = 139
+    Nor_Operator = 140
+    Xor_Operator = 141
+    Xnor_Operator = 142
+    Equality_Operator = 143
+    Inequality_Operator = 144
+    Less_Than_Operator = 145
+    Less_Than_Or_Equal_Operator = 146
+    Greater_Than_Operator = 147
+    Greater_Than_Or_Equal_Operator = 148
+    Match_Equality_Operator = 149
+    Match_Inequality_Operator = 150
+    Match_Less_Than_Operator = 151
+    Match_Less_Than_Or_Equal_Operator = 152
+    Match_Greater_Than_Operator = 153
+    Match_Greater_Than_Or_Equal_Operator = 154
+    Sll_Operator = 155
+    Sla_Operator = 156
+    Srl_Operator = 157
+    Sra_Operator = 158
+    Rol_Operator = 159
+    Ror_Operator = 160
+    Addition_Operator = 161
+    Substraction_Operator = 162
+    Concatenation_Operator = 163
+    Multiplication_Operator = 164
+    Division_Operator = 165
+    Modulus_Operator = 166
+    Remainder_Operator = 167
+    Exponentiation_Operator = 168
+    Function_Call = 169
+    Aggregate = 170
+    Parenthesis_Expression = 171
+    Qualified_Expression = 172
+    Type_Conversion = 173
+    Allocator_By_Expression = 174
+    Allocator_By_Subtype = 175
+    Selected_Element = 176
+    Dereference = 177
+    Implicit_Dereference = 178
+    Slice_Name = 179
+    Indexed_Name = 180
+    Psl_Expression = 181
+    Sensitized_Process_Statement = 182
+    Process_Statement = 183
+    Concurrent_Simple_Signal_Assignment = 184
+    Concurrent_Conditional_Signal_Assignment = 185
+    Concurrent_Selected_Signal_Assignment = 186
+    Concurrent_Assertion_Statement = 187
+    Concurrent_Procedure_Call_Statement = 188
+    Psl_Assert_Directive = 189
+    Psl_Assume_Directive = 190
+    Psl_Cover_Directive = 191
+    Psl_Restrict_Directive = 192
+    Block_Statement = 193
+    If_Generate_Statement = 194
+    Case_Generate_Statement = 195
+    For_Generate_Statement = 196
+    Component_Instantiation_Statement = 197
+    Psl_Default_Clock = 198
+    Simple_Simultaneous_Statement = 199
+    Generate_Statement_Body = 200
+    If_Generate_Else_Clause = 201
+    Simple_Signal_Assignment_Statement = 202
+    Conditional_Signal_Assignment_Statement = 203
+    Selected_Waveform_Assignment_Statement = 204
+    Null_Statement = 205
+    Assertion_Statement = 206
+    Report_Statement = 207
+    Wait_Statement = 208
+    Variable_Assignment_Statement = 209
+    Conditional_Variable_Assignment_Statement = 210
+    Return_Statement = 211
+    For_Loop_Statement = 212
+    While_Loop_Statement = 213
+    Next_Statement = 214
+    Exit_Statement = 215
+    Case_Statement = 216
+    Procedure_Call_Statement = 217
+    If_Statement = 218
+    Elsif = 219
+    Character_Literal = 220
+    Simple_Name = 221
+    Selected_Name = 222
+    Operator_Symbol = 223
+    Reference_Name = 224
+    External_Constant_Name = 225
+    External_Signal_Name = 226
+    External_Variable_Name = 227
+    Selected_By_All_Name = 228
+    Parenthesis_Name = 229
+    Package_Pathname = 230
+    Absolute_Pathname = 231
+    Relative_Pathname = 232
+    Pathname_Element = 233
+    Base_Attribute = 234
+    Subtype_Attribute = 235
+    Element_Attribute = 236
+    Left_Type_Attribute = 237
+    Right_Type_Attribute = 238
+    High_Type_Attribute = 239
+    Low_Type_Attribute = 240
+    Ascending_Type_Attribute = 241
+    Image_Attribute = 242
+    Value_Attribute = 243
+    Pos_Attribute = 244
+    Val_Attribute = 245
+    Succ_Attribute = 246
+    Pred_Attribute = 247
+    Leftof_Attribute = 248
+    Rightof_Attribute = 249
+    Delayed_Attribute = 250
+    Stable_Attribute = 251
+    Quiet_Attribute = 252
+    Transaction_Attribute = 253
+    Event_Attribute = 254
+    Active_Attribute = 255
+    Last_Event_Attribute = 256
+    Last_Active_Attribute = 257
+    Last_Value_Attribute = 258
+    Driving_Attribute = 259
+    Driving_Value_Attribute = 260
+    Behavior_Attribute = 261
+    Structure_Attribute = 262
+    Simple_Name_Attribute = 263
+    Instance_Name_Attribute = 264
+    Path_Name_Attribute = 265
+    Left_Array_Attribute = 266
+    Right_Array_Attribute = 267
+    High_Array_Attribute = 268
+    Low_Array_Attribute = 269
+    Length_Array_Attribute = 270
+    Ascending_Array_Attribute = 271
+    Range_Array_Attribute = 272
+    Reverse_Range_Array_Attribute = 273
+    Attribute_Name = 274
 
 
 class Iir_Kinds:
@@ -306,6 +309,9 @@ class Iir_Kinds:
         Iir_Kind.Context_Declaration,
         Iir_Kind.Package_Declaration,
         Iir_Kind.Package_Instantiation_Declaration,
+        Iir_Kind.Vmode_Declaration,
+        Iir_Kind.Vprop_Declaration,
+        Iir_Kind.Vunit_Declaration,
         Iir_Kind.Package_Body,
         Iir_Kind.Architecture_Body]
 
@@ -336,13 +342,6 @@ class Iir_Kinds:
         Iir_Kind.Subtype_Declaration,
         Iir_Kind.Nature_Declaration,
         Iir_Kind.Subnature_Declaration,
-        Iir_Kind.Entity_Declaration,
-        Iir_Kind.Configuration_Declaration,
-        Iir_Kind.Context_Declaration,
-        Iir_Kind.Package_Declaration,
-        Iir_Kind.Package_Instantiation_Declaration,
-        Iir_Kind.Package_Body,
-        Iir_Kind.Architecture_Body,
         Iir_Kind.Package_Header,
         Iir_Kind.Unit_Declaration,
         Iir_Kind.Library_Declaration,
@@ -412,7 +411,10 @@ class Iir_Kinds:
         Iir_Kind.Configuration_Declaration,
         Iir_Kind.Context_Declaration,
         Iir_Kind.Package_Declaration,
-        Iir_Kind.Package_Instantiation_Declaration]
+        Iir_Kind.Package_Instantiation_Declaration,
+        Iir_Kind.Vmode_Declaration,
+        Iir_Kind.Vprop_Declaration,
+        Iir_Kind.Vunit_Declaration]
 
     Record_Choice = [
         Iir_Kind.Choice_By_Others,
@@ -422,6 +424,11 @@ class Iir_Kinds:
     Functions_And_Literals = [
         Iir_Kind.Enumeration_Literal,
         Iir_Kind.Function_Declaration]
+
+    Verification_Unit = [
+        Iir_Kind.Vmode_Declaration,
+        Iir_Kind.Vprop_Declaration,
+        Iir_Kind.Vunit_Declaration]
 
     Secondary_Unit = [
         Iir_Kind.Package_Body,
@@ -1476,6 +1483,18 @@ Set_Macro_Expanded_Flag = libghdl.vhdl__nodes__set_macro_expanded_flag
 Get_Need_Instance_Bodies = libghdl.vhdl__nodes__get_need_instance_bodies
 
 Set_Need_Instance_Bodies = libghdl.vhdl__nodes__set_need_instance_bodies
+
+Get_Hierarchical_Name = libghdl.vhdl__nodes__get_hierarchical_name
+
+Set_Hierarchical_Name = libghdl.vhdl__nodes__set_hierarchical_name
+
+Get_Inherit_Spec_Chain = libghdl.vhdl__nodes__get_inherit_spec_chain
+
+Set_Inherit_Spec_Chain = libghdl.vhdl__nodes__set_inherit_spec_chain
+
+Get_Vunit_Item_Chain = libghdl.vhdl__nodes__get_vunit_item_chain
+
+Set_Vunit_Item_Chain = libghdl.vhdl__nodes__set_vunit_item_chain
 
 Get_Block_Configuration = libghdl.vhdl__nodes__get_block_configuration
 

@@ -142,6 +142,9 @@ package Vhdl.Nodes_Meta is
       Field_Need_Body,
       Field_Macro_Expanded_Flag,
       Field_Need_Instance_Bodies,
+      Field_Hierarchical_Name,
+      Field_Inherit_Spec_Chain,
+      Field_Vunit_Item_Chain,
       Field_Block_Configuration,
       Field_Concurrent_Statement_Chain,
       Field_Chain,
@@ -670,6 +673,9 @@ package Vhdl.Nodes_Meta is
    function Has_Need_Body (K : Iir_Kind) return Boolean;
    function Has_Macro_Expanded_Flag (K : Iir_Kind) return Boolean;
    function Has_Need_Instance_Bodies (K : Iir_Kind) return Boolean;
+   function Has_Hierarchical_Name (K : Iir_Kind) return Boolean;
+   function Has_Inherit_Spec_Chain (K : Iir_Kind) return Boolean;
+   function Has_Vunit_Item_Chain (K : Iir_Kind) return Boolean;
    function Has_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Concurrent_Statement_Chain (K : Iir_Kind) return Boolean;
    function Has_Chain (K : Iir_Kind) return Boolean;

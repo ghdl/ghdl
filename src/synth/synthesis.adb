@@ -102,6 +102,8 @@ package body Synthesis is
                   null;
                when Iir_Kind_Architecture_Body =>
                   null;
+               when Iir_Kinds_Verification_Unit =>
+                  null;
             end case;
          end if;
          Next (Dep_It);

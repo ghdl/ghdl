@@ -4264,6 +4264,13 @@ package body Vhdl.Prints is
       Disp_End (Ctxt, Decl, Tok_Context);
    end Disp_Context_Declaration;
 
+   procedure Disp_Verification_Unit
+     (Ctxt : in out Ctxt_Class; Unit: Iir; Tok : Token_Type) is
+   begin
+      --  TODO.
+      null;
+   end Disp_Verification_Unit;
+
    procedure Disp_Design_Unit (Ctxt : in out Ctxt_Class; Unit: Iir_Design_Unit)
    is
       Decl: Iir;
@@ -4286,6 +4293,12 @@ package body Vhdl.Prints is
             Disp_Configuration_Declaration (Ctxt, Decl);
          when Iir_Kind_Context_Declaration =>
             Disp_Context_Declaration (Ctxt, Decl);
+         when Iir_Kind_Vunit_Declaration =>
+            Disp_Verification_Unit (Ctxt, Decl, Tok_Vunit);
+         when Iir_Kind_Vmode_Declaration =>
+            Disp_Verification_Unit (Ctxt, Decl, Tok_Vmode);
+         when Iir_Kind_Vprop_Declaration =>
+            Disp_Verification_Unit (Ctxt, Decl, Tok_Vprop);
       end case;
    end Disp_Design_Unit;
 
