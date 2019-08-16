@@ -44,6 +44,9 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Expr is
+   function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
+                       return Value_Acc;
+
    function Is_Const (Val : Value_Acc) return Boolean is
    begin
       case Val.Kind is
@@ -508,6 +511,26 @@ package body Synth.Expr is
       return ((Get_Direction (Rng), L.Fp, R.Fp));
    end Synth_Float_Range_Expression;
 
+   function Synth_Array_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
+                                  return Bound_Type
+   is
+      Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Attr));
+      Dim : constant Natural :=
+        Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
+      Res : Value_Acc;
+   begin
+      --  Prefix is an array object or an array subtype.
+      Res := Synth_Name (Syn_Inst, Prefix);
+      if Res.Typ.Kind = Type_Vector then
+         if Dim /= 1 then
+            raise Internal_Error;
+         end if;
+         return Res.Typ.Vbound;
+      else
+         return Res.Typ.Abounds.D (Iir_Index32 (Dim));
+      end if;
+   end Synth_Array_Attribute;
+
    function Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc; Bound : Node)
                                  return Discrete_Range_Type is
    begin
@@ -522,6 +545,17 @@ package body Synth.Expr is
                return Synth_Discrete_Range
                  (Syn_Inst, Get_Range_Constraint (Bound));
             end if;
+         when Iir_Kind_Range_Array_Attribute =>
+            declare
+               B : Bound_Type;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Bound);
+               return Discrete_Range_Type'(Dir => B.Dir,
+                                           Is_Signed => True,
+                                           W => B.Wbounds,
+                                           Left => Int64 (B.Left),
+                                           Right => Int64 (B.Right));
+            end;
          when others =>
             Error_Kind ("synth_discrete_range", Bound);
       end case;
@@ -2151,8 +2185,62 @@ package body Synth.Expr is
             end;
          when Iir_Kind_Aggregate =>
             return Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
+         when Iir_Kind_Left_Array_Attribute =>
+            declare
+               --  Use base type as the expression type is the index subtype.
+               Typ : constant Type_Acc :=
+                 Get_Value_Type (Syn_Inst, Get_Base_Type (Expr_Type));
+               B : Bound_Type;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Expr);
+               return Create_Value_Discrete (Int64 (B.Left), Typ);
+            end;
+         when Iir_Kind_Right_Array_Attribute =>
+            declare
+               --  Use base type as the expression type is the index subtype.
+               Typ : constant Type_Acc :=
+                 Get_Value_Type (Syn_Inst, Get_Base_Type (Expr_Type));
+               B : Bound_Type;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Expr);
+               return Create_Value_Discrete (Int64 (B.Right), Typ);
+            end;
+         when Iir_Kind_High_Array_Attribute =>
+            declare
+               --  Use base type as the expression type is the index subtype.
+               Typ : constant Type_Acc :=
+                 Get_Value_Type (Syn_Inst, Get_Base_Type (Expr_Type));
+               B : Bound_Type;
+               V : Int32;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Expr);
+               case B.Dir is
+                  when Iir_To =>
+                     V := B.Right;
+                  when Iir_Downto =>
+                     V := B.Left;
+               end case;
+               return Create_Value_Discrete (Int64 (V), Typ);
+            end;
+         when Iir_Kind_Low_Array_Attribute =>
+            declare
+               --  Use base type as the expression type is the index subtype.
+               Typ : constant Type_Acc :=
+                 Get_Value_Type (Syn_Inst, Get_Base_Type (Expr_Type));
+               B : Bound_Type;
+               V : Int32;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Expr);
+               case B.Dir is
+                  when Iir_To =>
+                     V := B.Left;
+                  when Iir_Downto =>
+                     V := B.Right;
+               end case;
+               return Create_Value_Discrete (Int64 (V), Typ);
+            end;
          when others =>
-            Error_Kind ("synth_expression", Expr);
+            Error_Kind ("synth_expression_with_type", Expr);
       end case;
       raise Fatal_Error;
       return null;

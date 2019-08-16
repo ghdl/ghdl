@@ -182,7 +182,8 @@ package body Synth.Insts is
          Inter_Type := Get_Subtype_Indication (Inter);
          if Inter_Type /= Null_Node then
             case Get_Kind (Inter_Type) is
-               when Iir_Kind_Array_Subtype_Definition =>
+               when Iir_Kind_Array_Subtype_Definition
+                 | Iir_Kind_Integer_Subtype_Definition =>
                   Create_Object (Syn_Inst, Inter_Type,
                                  Get_Value (Params.Syn_Inst, Inter_Type));
                when others =>
