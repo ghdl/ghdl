@@ -143,6 +143,16 @@ package body Synth.Disp_Vhdl is
                New_Line;
                Idx := Idx + 1;
             end if;
+         when Iir_Kind_Integer_Type_Definition =>
+            --  FIXME: signed or unsigned ?
+            Put ("  " & Pfx & " <= to_integer (unsigned");
+            if Desc.W = 1 then
+               Put ("'(0 => wrap_" & Pfx & ')');
+            else
+               Put (" (wrap_" & Pfx & ')');
+            end if;
+            Put_Line (");");
+            Idx := Idx + 1;
          when Iir_Kind_Array_Type_Definition =>
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
                --  Nothing to do.
