@@ -326,6 +326,7 @@ package body Vhdl.Utils is
               | Iir_Kind_Association_Element_Subprogram
               | Iir_Kinds_Choice
               | Iir_Kinds_Entity_Aspect
+              | Iir_Kind_Psl_Hierarchical_Name
               | Iir_Kind_If_Generate_Else_Clause
               | Iir_Kind_Elsif
               | Iir_Kind_Record_Element_Constraint

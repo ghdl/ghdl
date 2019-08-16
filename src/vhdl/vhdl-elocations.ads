@@ -79,6 +79,8 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Entity_Aspect_Configuration (None)
 
+   -- Iir_Kind_Psl_Hierarchical_Name (None)
+
    -- Iir_Kind_Block_Configuration (None)
 
    -- Iir_Kind_Binding_Indication (None)

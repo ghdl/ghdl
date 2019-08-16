@@ -2028,7 +2028,7 @@ package body Vhdl.Sem_Stmts is
             when Iir_Kind_Psl_Endpoint_Declaration =>
                Sem_Psl.Sem_Psl_Endpoint_Declaration (El);
             when Iir_Kind_Psl_Assert_Directive =>
-               New_El := Sem_Psl.Sem_Psl_Assert_Directive (El);
+               New_El := Sem_Psl.Sem_Psl_Assert_Directive (El, True);
             when Iir_Kind_Psl_Assume_Directive =>
                Sem_Psl.Sem_Psl_Assume_Directive (El);
             when Iir_Kind_Psl_Cover_Directive =>

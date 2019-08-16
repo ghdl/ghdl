@@ -1002,6 +1002,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Entity_Aspect_Entity
            | Iir_Kind_Entity_Aspect_Configuration
            | Iir_Kind_Entity_Aspect_Open
+           | Iir_Kind_Psl_Hierarchical_Name
            | Iir_Kind_Block_Configuration
            | Iir_Kind_Component_Configuration
            | Iir_Kind_Entity_Class
@@ -2656,7 +2657,7 @@ package body Vhdl.Nodes is
       pragma Assert (Vunit /= Null_Iir);
       pragma Assert (Has_Vunit_Item_Chain (Get_Kind (Vunit)),
                      "no field Vunit_Item_Chain");
-      return Get_Field4 (Vunit);
+      return Get_Field5 (Vunit);
    end Get_Vunit_Item_Chain;
 
    procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir) is
@@ -2664,7 +2665,7 @@ package body Vhdl.Nodes is
       pragma Assert (Vunit /= Null_Iir);
       pragma Assert (Has_Vunit_Item_Chain (Get_Kind (Vunit)),
                      "no field Vunit_Item_Chain");
-      Set_Field4 (Vunit, Chain);
+      Set_Field5 (Vunit, Chain);
    end Set_Vunit_Item_Chain;
 
    function Get_Block_Configuration (Target : Iir) return Iir is

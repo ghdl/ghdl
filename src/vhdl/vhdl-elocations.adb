@@ -231,6 +231,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Entity_Aspect_Entity
            | Iir_Kind_Entity_Aspect_Configuration
            | Iir_Kind_Entity_Aspect_Open
+           | Iir_Kind_Psl_Hierarchical_Name
            | Iir_Kind_Block_Configuration
            | Iir_Kind_Component_Configuration
            | Iir_Kind_Binding_Indication

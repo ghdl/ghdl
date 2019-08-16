@@ -595,6 +595,12 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Configuration_Name (Field1)
 
+   -- Iir_Kind_Psl_Hierarchical_Name (Short)
+   --
+   --   Get/Set_Entity_Name (Field2)
+   --
+   --   Get/Set_Architecture (Field3)
+
    -- Iir_Kind_Block_Configuration (Short)
    --
    --  LRM08 3.4.2 Block configuration
@@ -1031,6 +1037,31 @@ package Vhdl.Nodes is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
+   -- Iir_Kind_Vunit_Declaration (Short)
+   -- Iir_Kind_Vmode_Declaration (Short)
+   -- Iir_Kind_Vprop_Declaration (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --   Get/Set_Design_Unit (Alias Field0)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Hierarchical_Name (Field1)
+   --
+   --   Get/Set_Inherit_Spec_Chain (Field2)
+   --
+   --   Get/Set_Vunit_Item_Chain (Field5)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Has_Begin (Flag10)
+
    -- Iir_Kind_Library_Declaration (Short)
    --
    --  Design files in the library.
@@ -1051,31 +1082,6 @@ package Vhdl.Nodes is
    --   Get/Set_Elab_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
-
-   -- Iir_Kind_Vunit_Declaration (Short)
-   -- Iir_Kind_Vmode_Declaration (Short)
-   -- Iir_Kind_Vprop_Declaration (Short)
-   --
-   --   Get/Set_Parent (Field0)
-   --   Get/Set_Design_Unit (Alias Field0)
-   --
-   --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Hierarchical_Name (Field1)
-   --
-   --   Get/Set_Inherit_Spec_Chain (Field2)
-   --
-   --   Get/Set_Vunit_Item_Chain (Field4)
-   --
-   --   Get/Set_Visible_Flag (Flag4)
-   --
-   --   Get/Set_Is_Within_Flag (Flag5)
-   --
-   --   Get/Set_End_Has_Reserved_Id (Flag8)
-   --
-   --   Get/Set_End_Has_Identifier (Flag9)
-   --
-   --   Get/Set_Has_Begin (Flag10)
 
    -- Iir_Kind_Component_Declaration (Medium)
    --
@@ -4210,6 +4216,7 @@ package Vhdl.Nodes is
       Iir_Kind_Entity_Aspect_Entity,
       Iir_Kind_Entity_Aspect_Configuration,
       Iir_Kind_Entity_Aspect_Open,
+      Iir_Kind_Psl_Hierarchical_Name,
       Iir_Kind_Block_Configuration,
       Iir_Kind_Block_Header,
       Iir_Kind_Component_Configuration,
@@ -6544,7 +6551,7 @@ package Vhdl.Nodes is
    function Get_Inherit_Spec_Chain (Vunit : Iir) return Iir;
    procedure Set_Inherit_Spec_Chain (Vunit : Iir; Chain : Iir);
 
-   --  Field: Field4 Chain
+   --  Field: Field5 Chain
    function Get_Vunit_Item_Chain (Vunit : Iir) return Iir;
    procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir);
 

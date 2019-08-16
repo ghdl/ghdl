@@ -157,26 +157,6 @@ package body Vhdl.Parse is
       end if;
    end Expect_Scan;
 
-   -- Transform the current token into an iir literal.
-   -- The current token must be either a character or an identifier.
-   function Current_Text return Iir is
-      Res: Iir;
-   begin
-      case Current_Token is
-         when Tok_Identifier =>
-            Res := Create_Iir (Iir_Kind_Simple_Name);
-         when Tok_Character =>
-            Res := Create_Iir (Iir_Kind_Character_Literal);
-         when others =>
-            raise Internal_Error;
-      end case;
-      Set_Identifier (Res, Current_Identifier);
-      Invalidate_Current_Identifier;
-      Invalidate_Current_Token;
-      Set_Location (Res, Get_Token_Location);
-      return Res;
-   end Current_Text;
-
    --  Expect the identifier for node RES.
    procedure Scan_Identifier (Res : Iir) is
    begin
@@ -1346,6 +1326,24 @@ package body Vhdl.Parse is
       return Res;
    end Parse_External_Name;
 
+   --  LRM09 8.2 Simple names
+   --  simple_name ::= identifier
+   function Parse_Simple_Name return Iir
+   is
+      Res : Iir;
+   begin
+      Expect (Tok_Identifier);
+
+      Res := Create_Iir (Iir_Kind_Simple_Name);
+      Set_Identifier (Res, Current_Identifier);
+      Set_Location (Res);
+
+      --  Skip identifier
+      Scan;
+
+      return Res;
+   end Parse_Simple_Name;
+
    --  Precond: next token (identifier, string or '<<')
    --  Postcond: next token
    --
@@ -1366,12 +1364,7 @@ package body Vhdl.Parse is
    begin
       case Current_Token is
          when Tok_Identifier =>
-            Res := Create_Iir (Iir_Kind_Simple_Name);
-            Set_Identifier (Res, Current_Identifier);
-            Set_Location (Res);
-
-            --  Skip identifier
-            Scan;
+            Res := Parse_Simple_Name;
 
          when Tok_String =>
             --  For operator symbol, such as: "+" (A, B).
@@ -4415,7 +4408,8 @@ package body Vhdl.Parse is
    end Parse_Disconnection_Specification;
 
    --  Parse PSL clock_declaration at 'clock'.
-   function Parse_Psl_Default_Clock_Cont (Loc : Location_Type) return Iir
+   function Parse_Psl_Default_Clock_Cont
+     (Loc : Location_Type; Flag_Psl : Boolean) return Iir
    is
       Res : Iir;
    begin
@@ -4435,7 +4429,7 @@ package body Vhdl.Parse is
       Set_Psl_Boolean (Res, Parse_Psl.Parse_Psl_Boolean);
 
       Vhdl.Scanner.Flag_Scan_In_Comment := False;
-      Vhdl.Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Psl := Flag_Psl;
 
       Expect_Scan (Tok_Semi_Colon);
 
@@ -4444,7 +4438,7 @@ package body Vhdl.Parse is
 
    --  1850-2005 A.4.2 PSL declarations
    --  clock_declaration ::= DEFAULT CLOCK IS clock_expression ;
-   function Parse_Psl_Default_Clock return Iir
+   function Parse_Psl_Default_Clock (Flag_Psl : Boolean) return Iir
    is
       Loc : Location_Type;
    begin
@@ -4456,7 +4450,7 @@ package body Vhdl.Parse is
       --  Skip 'default'.
       Scan;
 
-      return Parse_Psl_Default_Clock_Cont (Loc);
+      return Parse_Psl_Default_Clock_Cont (Loc, Flag_Psl);
    end Parse_Psl_Default_Clock;
 
    function Parse_Psl_Declaration return Iir
@@ -5004,7 +4998,7 @@ package body Vhdl.Parse is
                   when others =>
                      Error_Kind ("parse_declarative_part", Parent);
                end case;
-               Decl := Parse_Psl_Default_Clock;
+               Decl := Parse_Psl_Default_Clock (False);
             when Tok_Identifier =>
                Error_Msg_Parse
                  ("object class keyword such as 'variable' is expected");
@@ -5633,8 +5627,13 @@ package body Vhdl.Parse is
             end if;
 
          when Tok_Character =>
-            Res := Current_Text;
+            Res := Create_Iir (Iir_Kind_Character_Literal);
+            Set_Identifier (Res, Current_Identifier);
+            Set_Location (Res);
+
+            --  Skip character.
             Scan;
+
             if Current_Token = Tok_Tick then
                Error_Msg_Parse
                  ("prefix of an attribute can't be a character literal");
@@ -7816,10 +7815,7 @@ package body Vhdl.Parse is
                Scan;
 
                if Current_Token = Tok_Identifier then
-                  Set_Architecture (Res, Current_Text);
-
-                  --  Skip identifier.
-                  Scan;
+                  Set_Architecture (Res, Parse_Simple_Name);
                else
                   Expect (Tok_Identifier, "identifier for architecture");
                end if;
@@ -8553,7 +8549,8 @@ package body Vhdl.Parse is
                Error_Msg_Parse (+Target, "PSL default clock is a declaration");
 
                Current_Token := Tok_Psl_Clock;
-               Res := Parse_Psl_Default_Clock_Cont (Get_Location (Target));
+               Res := Parse_Psl_Default_Clock_Cont
+                 (Get_Location (Target), False);
 
                return Res;
             end if;
@@ -8581,10 +8578,11 @@ package body Vhdl.Parse is
    end Parse_Concurrent_Assignment;
 
    --  Parse end of PSL assert/cover statement.
-   procedure Parse_Psl_Assert_Report_Severity (Stmt : Iir) is
+   procedure Parse_Psl_Assert_Report_Severity
+     (Stmt : Iir; Flag_Psl : Boolean) is
    begin
       --  No more PSL tokens after the property.
-      Vhdl.Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Psl := Flag_Psl;
 
       if Current_Token = Tok_Report then
          --  Skip 'report'
@@ -8605,7 +8603,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Semi_Colon);
    end Parse_Psl_Assert_Report_Severity;
 
-   function Parse_Psl_Assert_Directive return Iir
+   function Parse_Psl_Assert_Directive (Flag_Psl : Boolean) return Iir
    is
       Res : Iir;
    begin
@@ -8621,12 +8619,12 @@ package body Vhdl.Parse is
 
       Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
 
-      Parse_Psl_Assert_Report_Severity (Res);
+      Parse_Psl_Assert_Report_Severity (Res, Flag_Psl);
 
       return Res;
    end Parse_Psl_Assert_Directive;
 
-   function Parse_Psl_Assume_Directive return Iir
+   function Parse_Psl_Assume_Directive (Flag_Psl : Boolean) return Iir
    is
       Res : Iir;
    begin
@@ -8640,7 +8638,7 @@ package body Vhdl.Parse is
 
       Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
 
-      Vhdl.Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Psl := Flag_Psl;
       Vhdl.Scanner.Flag_Scan_In_Comment := False;
 
       Expect_Scan (Tok_Semi_Colon);
@@ -8648,7 +8646,7 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Psl_Assume_Directive;
 
-   function Parse_Psl_Cover_Directive return Iir
+   function Parse_Psl_Cover_Directive (Flag_Psl : Boolean) return Iir
    is
       Res : Iir;
    begin
@@ -8662,12 +8660,12 @@ package body Vhdl.Parse is
 
       Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence (True));
 
-      Parse_Psl_Assert_Report_Severity (Res);
+      Parse_Psl_Assert_Report_Severity (Res, Flag_Psl);
 
       return Res;
    end Parse_Psl_Cover_Directive;
 
-   function Parse_Psl_Restrict_Directive return Iir
+   function Parse_Psl_Restrict_Directive (Flag_Psl : Boolean) return Iir
    is
       Res : Iir;
    begin
@@ -8682,7 +8680,7 @@ package body Vhdl.Parse is
       Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence (True));
 
       --  No more PSL tokens after the sequence.
-      Vhdl.Scanner.Flag_Psl := False;
+      Vhdl.Scanner.Flag_Psl := Flag_Psl;
       Vhdl.Scanner.Flag_Scan_In_Comment := False;
 
       Expect_Scan (Tok_Semi_Colon);
@@ -8805,7 +8803,7 @@ package body Vhdl.Parse is
                if Vhdl_Std >= Vhdl_08
                  or else (Flag_Psl_Comment and then Flag_Scan_In_Comment)
                then
-                  Stmt := Parse_Psl_Assert_Directive;
+                  Stmt := Parse_Psl_Assert_Directive (False);
                else
                   Stmt := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
                   Parse_Assertion (Stmt);
@@ -8844,7 +8842,7 @@ package body Vhdl.Parse is
             when Tok_Default =>
                Postponed_Not_Allowed;
                Label_Not_Allowed;
-               Stmt := Parse_Psl_Default_Clock;
+               Stmt := Parse_Psl_Default_Clock (False);
             when Tok_Property
               | Tok_Sequence
               | Tok_Psl_Endpoint =>
@@ -8853,13 +8851,13 @@ package body Vhdl.Parse is
                Stmt := Parse_Psl_Declaration;
             when Tok_Assume =>
                Postponed_Not_Allowed;
-               Stmt := Parse_Psl_Assume_Directive;
+               Stmt := Parse_Psl_Assume_Directive (False);
             when Tok_Cover =>
                Postponed_Not_Allowed;
-               Stmt := Parse_Psl_Cover_Directive;
+               Stmt := Parse_Psl_Cover_Directive (False);
             when Tok_Restrict =>
                Postponed_Not_Allowed;
-               Stmt := Parse_Psl_Restrict_Directive;
+               Stmt := Parse_Psl_Restrict_Directive (False);
             when Tok_Wait
               | Tok_Loop
               | Tok_While =>
@@ -9088,9 +9086,7 @@ package body Vhdl.Parse is
          when Tok_Identifier =>
             Res := Create_Iir_List;
             loop
-               Append_Element (Res, Current_Text);
-               --  Skip identifier.
-               Scan;
+               Append_Element (Res, Parse_Simple_Name);
 
                exit when Current_Token /= Tok_Comma;
 
@@ -9155,10 +9151,7 @@ package body Vhdl.Parse is
          Scan;
 
          if Current_Token = Tok_Identifier then
-            Set_Architecture (Res, Current_Text);
-
-            --  Skip identifier.
-            Scan;
+            Set_Architecture (Res, Parse_Simple_Name);
          else
             Expect (Tok_Identifier);
          end if;
@@ -9385,10 +9378,7 @@ package body Vhdl.Parse is
             return Parse_Component_Configuration (Loc, Iir_Flist_Others);
 
          when Tok_Identifier =>
-            El := Current_Text;
-
-            --  Skip identifier.
-            Scan;
+            El := Parse_Simple_Name;
 
             case Current_Token is
                when Tok_Colon =>
@@ -9405,10 +9395,7 @@ package body Vhdl.Parse is
                      Scan;
 
                      if Current_Token = Tok_Identifier then
-                        Append_Element (List, Current_Text);
-
-                        --  Skip identifier.
-                        Scan;
+                        Append_Element (List, Parse_Simple_Name);
                      else
                         Expect (Tok_Identifier);
                         exit;
@@ -9779,6 +9766,84 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Package;
 
+   --  1850-2005 7.2 Verification units
+   --  verification_unit ::=
+   --    vunit_type PSL_Identifier [ ( hierachical_hdl_name ) ] {
+   --      { inherit_spec }
+   --      { vunit_item }
+   --    }
+   procedure Parse_Verification_Unit (Unit : Iir_Design_Unit)
+   is
+      Kind : constant Iir_Kind := Iir_Kind_Vunit_Declaration;
+      Hier_Name : Iir;
+      Res : Iir;
+      Item, Last_Item : Iir;
+   begin
+      Res := Create_Iir (Kind);
+      Set_Parent (Res, Unit);
+
+      --  Recognize PSL keywords.
+      Vhdl.Scanner.Flag_Psl := True;
+
+      --  Skip 'vunit'.
+      Scan;
+
+      --  Identifier.
+      Scan_Identifier (Res);
+
+      --  Hierarchical hdl name.
+      if Current_Token = Tok_Left_Paren then
+         --  Skip '('.
+         Scan;
+
+         Hier_Name := Create_Iir (Iir_Kind_Psl_Hierarchical_Name);
+         Set_Location (Hier_Name);
+         Set_Entity_Name (Hier_Name, Parse_Simple_Name);
+
+         Set_Hierarchical_Name (Res, Hier_Name);
+
+         --  Skip ')'
+         Expect_Scan (Tok_Right_Paren);
+      end if;
+
+      --  Skip '{'.
+      Expect_Scan (Tok_Left_Curly);
+
+      --  TODO: inherit spec.
+
+      --  Vunit items.
+      Last_Item := Null_Iir;
+      loop
+         --  Some parse subprograms clear the mode...
+         Vhdl.Scanner.Flag_Psl := True;
+
+         case Current_Token is
+            when Tok_Default =>
+               Item := Parse_Psl_Default_Clock (True);
+            when Tok_Assert =>
+               Item := Parse_Psl_Assert_Directive (True);
+            when others =>
+               exit;
+         end case;
+
+         Set_Parent (Item, Res);
+         if Last_Item = Null_Node then
+            Set_Vunit_Item_Chain (Res, Item);
+         else
+            Set_Chain (Last_Item, Item);
+         end if;
+         Last_Item := Item;
+      end loop;
+
+      --  Skip '}'.
+      Expect_Scan (Tok_Right_Curly);
+
+      --  Normal mode.
+      Vhdl.Scanner.Flag_Psl := False;
+
+      Set_Library_Unit (Unit, Res);
+   end Parse_Verification_Unit;
+
    procedure Parse_Context_Declaration_Or_Reference
      (Unit : Iir_Design_Unit; Clause : out Iir);
 
@@ -9979,6 +10044,8 @@ package body Vhdl.Parse is
                Set_Library_Unit (Res, Parse_Package (Res));
             when Tok_Configuration =>
                Parse_Configuration_Declaration (Res);
+            when Tok_Vunit =>
+               Parse_Verification_Unit (Res);
             when Tok_Identifier =>
                if Current_Identifier = Name_Context then
                   Error_Msg_Parse

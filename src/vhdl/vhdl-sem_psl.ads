@@ -22,12 +22,16 @@ package Vhdl.Sem_Psl is
    procedure Sem_Psl_Declaration (Stmt : Iir);
    procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir);
 
-   --  May return a non-psl concurrent assertion statement.
-   function Sem_Psl_Assert_Directive (Stmt : Iir) return Iir;
+   --  May return a non-psl concurrent assertion statement iff CAN_REWRITE is
+   --  true.
+   function Sem_Psl_Assert_Directive
+     (Stmt : Iir; Can_Rewrite : Boolean) return Iir;
 
    procedure Sem_Psl_Assume_Directive (Stmt : Iir);
    procedure Sem_Psl_Cover_Directive (Stmt : Iir);
    procedure Sem_Psl_Restrict_Directive (Stmt : Iir);
    procedure Sem_Psl_Default_Clock (Stmt : Iir);
    function Sem_Psl_Name (Name : Iir) return Iir;
+
+   procedure Sem_Psl_Verification_Unit (Unit : Iir);
 end Vhdl.Sem_Psl;

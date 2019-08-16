@@ -17,7 +17,9 @@
 --  02111-1307, USA.
 
 with Types; use Types;
+with Std_Names;
 with Errorout; use Errorout;
+
 with PSL.Types; use PSL.Types;
 with PSL.Nodes; use PSL.Nodes;
 with PSL.Subsets;
@@ -28,7 +30,7 @@ with Vhdl.Sem_Expr;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Names;
-with Std_Names;
+with Vhdl.Sem_Lib;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package;
@@ -695,7 +697,8 @@ package body Vhdl.Sem_Psl is
       Set_PSL_Clock (Stmt, Clk);
    end Sem_Psl_Directive_Clock;
 
-   function Sem_Psl_Assert_Directive (Stmt : Iir) return Iir
+   function Sem_Psl_Assert_Directive
+     (Stmt : Iir; Can_Rewrite : Boolean) return Iir
    is
       Prop : PSL_Node;
       Res : Iir;
@@ -709,7 +712,7 @@ package body Vhdl.Sem_Psl is
       Prop := Sem_Property (Prop, True);
       Set_Psl_Property (Stmt, Prop);
 
-      if Is_Boolean_Assertion (Prop) then
+      if Can_Rewrite and then Is_Boolean_Assertion (Prop) then
          --  This is a simple assertion.  Convert to a non-PSL statement, as
          --  the handling is simpler (and the assertion doesn't need a clock).
          Res := Rewrite_As_Concurrent_Assertion (Stmt);
@@ -883,5 +886,81 @@ package body Vhdl.Sem_Psl is
       end case;
       return Null_Iir;
    end Sem_Psl_Name;
+
+   procedure Sem_Hierarchical_Name (Hier_Name : Iir; Unit : Iir)
+   is
+      Entity_Name : Iir;
+      Entity : Iir;
+      Library : Iir_Library_Declaration;
+   begin
+      Entity_Name := Get_Entity_Name (Hier_Name);
+
+      Library := Get_Library (Get_Design_File (Get_Design_Unit (Unit)));
+
+      Entity := Sem_Lib.Load_Primary_Unit
+        (Library, Get_Identifier (Entity_Name), Entity_Name);
+      if Entity = Null_Iir then
+         Error_Msg_Sem (+Entity_Name,
+                        "entity %n was not analysed", +Entity_Name);
+         return;
+      end if;
+      Entity := Get_Library_Unit (Entity);
+
+      if Get_Kind (Entity) /= Iir_Kind_Entity_Declaration then
+         Error_Msg_Sem (+Entity_Name,
+                        "name %i does not denote an entity", +Entity_Name);
+         return;
+      end if;
+
+      Set_Named_Entity (Entity_Name, Entity);
+      Xrefs.Xref_Ref (Entity_Name, Entity);
+   end Sem_Hierarchical_Name;
+
+   procedure Sem_Psl_Verification_Unit (Unit : Iir)
+   is
+      Hier_Name : constant Iir := Get_Hierarchical_Name (Unit);
+      Entity : Iir;
+      Item : Iir;
+   begin
+      if Hier_Name = Null_Iir then
+         --  Hierarchical name is optional.
+         --  If the unit is not bound, the names are not bound too.
+         return;
+      end if;
+      Sem_Hierarchical_Name (Hier_Name, Unit);
+
+      --  Import declarations.
+      Entity := Get_Entity_Name (Hier_Name);
+      if Entity = Null_Iir then
+         return;
+      end if;
+      Entity := Get_Named_Entity (Entity);
+      if Entity = Null_Iir then
+         return;
+      end if;
+
+      Sem_Scopes.Add_Context_Clauses (Get_Design_Unit (Entity));
+
+      Sem_Scopes.Open_Declarative_Region;
+      Set_Is_Within_Flag (Entity, True);
+      Sem_Scopes.Add_Entity_Declarations (Entity);
+
+      Item := Get_Vunit_Item_Chain (Unit);
+      while Item /= Null_Iir loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Psl_Default_Clock =>
+               Sem_Psl_Default_Clock (Item);
+            when Iir_Kind_Psl_Assert_Directive =>
+               Item := Sem_Psl_Assert_Directive (Item, False);
+            when others =>
+               Error_Kind ("sem_psl_verification_unit", Item);
+         end case;
+
+         Item := Get_Chain (Item);
+      end loop;
+
+      Sem_Scopes.Close_Declarative_Region;
+      Set_Is_Within_Flag (Entity, False);
+   end Sem_Psl_Verification_Unit;
 
 end Vhdl.Sem_Psl;

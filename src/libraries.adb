@@ -507,21 +507,17 @@ package body Libraries is
                   else
                      Library_Unit := Create_Iir (Iir_Kind_Package_Declaration);
                   end if;
-               when Tok_With =>
-                  if Library_Unit = Null_Iir
-                    or else
-                    Get_Kind (Library_Unit) /= Iir_Kind_Architecture_Body
-                  then
-                     Log_Line ("load_library: invalid use of 'with'");
-                     raise Internal_Error;
-                  end if;
-                  Scan_Expect (Tok_Configuration);
-                  Scan_Expect (Tok_Colon);
-                  Scan;
-                  goto Next_Line;
                when Tok_Context =>
-                  Library_Unit :=
-                    Create_Iir (Iir_Kind_Context_Declaration);
+                  Library_Unit := Create_Iir (Iir_Kind_Context_Declaration);
+                  Scan;
+               when Tok_Vunit =>
+                  Library_Unit := Create_Iir (Iir_Kind_Vunit_Declaration);
+                  Scan;
+               when Tok_Vmode =>
+                  Library_Unit := Create_Iir (Iir_Kind_Vmode_Declaration);
+                  Scan;
+               when Tok_Vprop =>
+                  Library_Unit := Create_Iir (Iir_Kind_Vprop_Declaration);
                   Scan;
                when others =>
                   Log_Line
@@ -606,7 +602,6 @@ package body Libraries is
             Last_Design_Unit := Design_Unit;
             Set_Last_Design_Unit (Design_File, Design_Unit);
          end if;
-         << Next_Line >> null;
       end loop;
       Set_Date (Library, Max_Date);
 
@@ -1401,6 +1396,15 @@ package body Libraries is
                   WR (Image_Identifier (Library_Unit));
                when Iir_Kind_Context_Declaration =>
                   WR ("context ");
+                  WR (Image_Identifier (Library_Unit));
+               when Iir_Kind_Vunit_Declaration =>
+                  WR ("vunit ");
+                  WR (Image_Identifier (Library_Unit));
+               when Iir_Kind_Vprop_Declaration =>
+                  WR ("vprop ");
+                  WR (Image_Identifier (Library_Unit));
+               when Iir_Kind_Vmode_Declaration =>
+                  WR ("vmode ");
                   WR (Image_Identifier (Library_Unit));
                when others =>
                   Error_Kind ("save_library", Library_Unit);

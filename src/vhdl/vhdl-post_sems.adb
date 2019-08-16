@@ -39,7 +39,8 @@ package body Vhdl.Post_Sems is
       --  No checks on package bodies or context declaration
       case Get_Kind (Lib_Unit) is
          when Iir_Kind_Package_Body
-           | Iir_Kind_Context_Declaration =>
+           | Iir_Kind_Context_Declaration
+           | Iir_Kinds_Verification_Unit =>
             return;
          when others =>
             null;

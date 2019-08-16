@@ -378,6 +378,8 @@ package body Vhdl.Errors is
             return "configuration entity aspect";
          when Iir_Kind_Entity_Aspect_Open =>
             return "open entity aspect";
+         when Iir_Kind_Psl_Hierarchical_Name =>
+            return "hierarchical name";
 
          when Iir_Kinds_Monadic_Operator
            | Iir_Kinds_Dyadic_Operator =>

@@ -3267,6 +3267,8 @@ package body Vhdl.Canon is
             Set_Library_Unit (Unit, El);
          when Iir_Kind_Context_Declaration =>
             null;
+         when Iir_Kinds_Verification_Unit =>
+            null;
          when others =>
             Error_Kind ("canonicalize2", El);
       end case;

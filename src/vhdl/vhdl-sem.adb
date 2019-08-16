@@ -15,12 +15,16 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
 with Errorout; use Errorout;
+with Libraries;
+with Std_Names;
+with Flags; use Flags;
+with Str_Table;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
-with Libraries;
-with Std_Names;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
 with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
 with Vhdl.Sem_Names; use Vhdl.Sem_Names;
@@ -29,9 +33,8 @@ with Vhdl.Sem_Decls; use Vhdl.Sem_Decls;
 with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
 with Vhdl.Sem_Inst;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
+with Vhdl.Sem_Psl;
 with Vhdl.Utils; use Vhdl.Utils;
-with Flags; use Flags;
-with Str_Table;
 with Vhdl.Sem_Utils;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Vhdl.Nodes_Utils;
@@ -3365,8 +3368,7 @@ package body Vhdl.Sem is
             when Iir_Kind_Context_Declaration =>
                Sem_Context_Declaration (Library_Unit);
             when Iir_Kinds_Verification_Unit =>
-               --  TODO.
-               raise Internal_Error;
+               Sem_Psl.Sem_Psl_Verification_Unit (Library_Unit);
          end case;
       end if;
 
