@@ -3,6 +3,7 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--workdir=work1
+rm -rf work1
 mkdir work1
 analyze simple.vhdl
 elab_simulate simple
