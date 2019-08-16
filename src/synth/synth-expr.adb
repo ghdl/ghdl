@@ -766,6 +766,8 @@ package body Synth.Expr is
                         N := Build_Trunc (Build_Context, Id_Utrunc, N, Drng.W);
                         Set_Location (N, Loc);
                         return Create_Value_Net (N, Dtype);
+                     when Value_Discrete =>
+                        return Create_Value_Discrete (Val.Scal, Dtype);
                      when others =>
                         raise Internal_Error;
                   end case;
