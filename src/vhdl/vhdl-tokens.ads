@@ -246,6 +246,9 @@ package Vhdl.Tokens is
       Tok_Restrict,
       Tok_Restrict_Guarantee,
       Tok_Sequence,
+      Tok_Vmode,
+      Tok_Vprop,
+      Tok_Vunit,
 
    --  AMS reserved words
       Tok_Across,

@@ -162,6 +162,9 @@ package body Std_Names is
       Def ("restrict",           Name_Restrict);
       Def ("restrict_guarantee", Name_Restrict_Guarantee);
       Def ("sequence",           Name_Sequence);
+      Def ("vmode",              Name_Vmode);
+      Def ("vprop",              Name_Vprop);
+      Def ("vunit",              Name_Vunit);
 
       Def ("across",     Name_Across);
       Def ("break",      Name_Break);
@@ -786,9 +789,6 @@ package body Std_Names is
       Def ("rose",               Name_Rose);
       Def ("strong",             Name_Strong);
       Def ("union",              Name_Union);
-      Def ("vmode",              Name_Vmode);
-      Def ("vprop",              Name_Vprop);
-      Def ("vunit",              Name_Vunit);
       Def ("w",                  Name_W);
       Def ("whilenot",           Name_Whilenot);
       Def ("within",             Name_Within);

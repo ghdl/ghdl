@@ -1272,6 +1272,12 @@ package body Vhdl.Scanner is
                            Current_Token := Tok_Restrict;
                         when Std_Names.Name_Restrict_Guarantee =>
                            Current_Token := Tok_Restrict_Guarantee;
+                        when Std_Names.Name_Vmode =>
+                           Current_Token := Tok_Vmode;
+                        when Std_Names.Name_Vprop =>
+                           Current_Token := Tok_Vprop;
+                        when Std_Names.Name_Vunit =>
+                           Current_Token := Tok_Vunit;
                         when others =>
                            Current_Token := Tok_Identifier;
                      end case;

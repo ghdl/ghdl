@@ -383,7 +383,7 @@ package body Ghdlprint is
                      Disp_Text;
                      Put ("</tt>");
                end case;
-            when Tok_Mod .. Tok_Sequence =>
+            when Tok_Mod .. Tok_Vunit =>
                Disp_Reserved;
             when Tok_Semi_Colon =>
                Disp_Spaces;

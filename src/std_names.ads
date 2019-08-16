@@ -181,8 +181,11 @@ package Std_Names is
    Name_Restrict :           constant Name_Id := Name_First_Keyword + 104;
    Name_Restrict_Guarantee : constant Name_Id := Name_First_Keyword + 105;
    Name_Sequence :           constant Name_Id := Name_First_Keyword + 106;
+   Name_Vmode :              constant Name_Id := Name_First_Keyword + 107;
+   Name_Vprop :              constant Name_Id := Name_First_Keyword + 108;
+   Name_Vunit :              constant Name_Id := Name_First_Keyword + 109;
+   Name_Last_Vhdl08 :        constant Name_Id := Name_Vunit;
 
-   Name_Last_Vhdl08 :        constant Name_Id := Name_Sequence;
    subtype Name_Id_Vhdl08_Reserved_Words is
      Name_Id range Name_Assume .. Name_Last_Vhdl08;
 
@@ -899,10 +902,10 @@ package Std_Names is
    Name_Ef :                 constant Name_Id := Name_First_PSL + 09;
    Name_Eg :                 constant Name_Id := Name_First_PSL + 10;
    Name_Ex :                 constant Name_Id := Name_First_PSL + 11;
-   Name_Endpoint  :          constant Name_Id := Name_First_PSL + 12;
+   Name_Endpoint :           constant Name_Id := Name_First_PSL + 12;
    Name_Eventually :         constant Name_Id := Name_First_PSL + 13;
    Name_Fairness :           constant Name_Id := Name_First_PSL + 14;
-   Name_Fell  :              constant Name_Id := Name_First_PSL + 15;
+   Name_Fell :               constant Name_Id := Name_First_PSL + 15;
    Name_Forall :             constant Name_Id := Name_First_PSL + 16;
    Name_G :                  constant Name_Id := Name_First_PSL + 17;
    --  Name_In
@@ -927,13 +930,10 @@ package Std_Names is
    Name_Strong :             constant Name_Id := Name_First_PSL + 28;
    --   union
    --   until
-   Name_Vmode :              constant Name_Id := Name_First_PSL + 29;
-   Name_Vprop :              constant Name_Id := Name_First_PSL + 30;
-   Name_Vunit :              constant Name_Id := Name_First_PSL + 31;
-   Name_W :                  constant Name_Id := Name_First_PSL + 32;
-   Name_Whilenot :           constant Name_Id := Name_First_PSL + 33;
-   Name_Within :             constant Name_Id := Name_First_PSL + 34;
-   Name_X :                  constant Name_Id := Name_First_PSL + 35;
+   Name_W :                  constant Name_Id := Name_First_PSL + 29;
+   Name_Whilenot :           constant Name_Id := Name_First_PSL + 30;
+   Name_Within :             constant Name_Id := Name_First_PSL + 31;
+   Name_X :                  constant Name_Id := Name_First_PSL + 32;
    Name_Last_PSL :           constant Name_Id := Name_X;
 
    subtype Name_Id_PSL_Keywords is
