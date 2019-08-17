@@ -299,8 +299,7 @@ package body Synth.Insts is
             when Port_In =>
                Connect
                  (Get_Input (Inst, Nbr_Inputs),
-                  Get_Net (Synth_Expression_With_Type
-                             (Syn_Inst, Actual, Get_Type (Assoc_Inter))));
+                  Get_Net (Synth_Expression (Syn_Inst, Actual)));
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
