@@ -852,6 +852,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
+   --   Get/Set_Bound_Vunit_Chain (Field8)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
@@ -880,6 +882,8 @@ package Vhdl.Nodes is
    --
    --  The default configuration created by canon.  This is a design unit.
    --   Get/Set_Default_Configuration_Declaration (Field6)
+   --
+   --   Get/Set_Bound_Vunit_Chain (Field8)
    --
    --   Get/Set_Foreign_Flag (Flag3)
    --
@@ -1037,7 +1041,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
-   -- Iir_Kind_Vunit_Declaration (Short)
+   -- Iir_Kind_Vunit_Declaration (Medium)
    -- Iir_Kind_Vmode_Declaration (Short)
    -- Iir_Kind_Vprop_Declaration (Short)
    --
@@ -1051,6 +1055,9 @@ package Vhdl.Nodes is
    --   Get/Set_Inherit_Spec_Chain (Field2)
    --
    --   Get/Set_Vunit_Item_Chain (Field5)
+   --
+   -- Only for Iir_Kind_Vunit_Declaration:
+   --   Get/Set_Bound_Vunit_Chain (Field8)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -6554,6 +6561,11 @@ package Vhdl.Nodes is
    --  Field: Field5 Chain
    function Get_Vunit_Item_Chain (Vunit : Iir) return Iir;
    procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir);
+
+   --  Chain of vunit declarations bound to an entity or an architecture.
+   --  Field: Field8 Chain
+   function Get_Bound_Vunit_Chain (Unit : Iir) return Iir;
+   procedure Set_Bound_Vunit_Chain (Unit : Iir; Vunit : Iir);
 
    --  Field: Field5
    function Get_Block_Configuration (Target : Iir) return Iir;

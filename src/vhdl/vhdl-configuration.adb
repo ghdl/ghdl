@@ -138,7 +138,7 @@ package body Vhdl.Configuration is
       --  Lib_Unit may have changed.
       Lib_Unit := Get_Library_Unit (Unit);
 
-      case Get_Kind (Lib_Unit) is
+      case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
          when Iir_Kind_Package_Declaration =>
             --  Analyze the package declaration, so that Set_Package below
             --  will set the full package (and not a stub).
@@ -171,14 +171,11 @@ package body Vhdl.Configuration is
             --  find all entity/architecture/configuration instantiation
             Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Unit);
             Add_Design_Concurrent_Stmts (Lib_Unit);
-         when Iir_Kind_Entity_Declaration =>
+         when Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Body
+           | Iir_Kind_Context_Declaration
+           | Iir_Kinds_Verification_Unit =>
             null;
-         when Iir_Kind_Package_Body =>
-            null;
-         when Iir_Kind_Context_Declaration =>
-            null;
-         when others =>
-            Error_Kind ("add_design_unit", Lib_Unit);
       end case;
 
       --  Add it in the table, after the dependencies.
@@ -684,6 +681,64 @@ package body Vhdl.Configuration is
       Add_Design_Unit (Top, Null_Iir);
       return Top;
    end Configure;
+
+   procedure Add_Verification_Unit (Vunit : Iir)
+   is
+      Hier_Name : constant Iir := Get_Hierarchical_Name (Vunit);
+      Name : Iir;
+   begin
+      --  Not bound.
+      if Hier_Name = Null_Iir then
+         return;
+      end if;
+
+      Name := Get_Architecture (Hier_Name);
+      if Name /= Null_Node then
+         Name := Get_Named_Entity (Name);
+         pragma Assert (Get_Kind (Name) = Iir_Kind_Architecture_Body);
+      else
+         Name := Get_Entity_Name (Hier_Name);
+         Name := Get_Named_Entity (Name);
+         pragma Assert (Get_Kind (Name) = Iir_Kind_Entity_Declaration);
+      end if;
+
+      if not Get_Configuration_Mark_Flag (Get_Design_Unit (Name)) then
+         --  Not for a configured unit.
+         return;
+      end if;
+      Set_Bound_Vunit_Chain (Vunit, Get_Bound_Vunit_Chain (Name));
+      Set_Bound_Vunit_Chain (Name, Vunit);
+      Add_Design_Unit (Get_Design_Unit (Vunit), Vunit);
+   end Add_Verification_Unit;
+
+   procedure Add_Verification_Units
+   is
+      Library : Iir;
+      File : Iir;
+      Unit : Iir;
+      Lib : Iir;
+   begin
+      --  For each units:
+      Library := Libraries.Get_Libraries_Chain;
+      while Library /= Null_Iir loop
+         File := Get_Design_File_Chain (Library);
+         while File /= Null_Iir loop
+            Unit := Get_First_Design_Unit (File);
+            while Unit /= Null_Iir loop
+               Lib := Get_Library_Unit (Unit);
+               if Get_Kind (Lib) = Iir_Kind_Vunit_Declaration then
+                  --  Load it.
+                  Load_Design_Unit (Unit, Unit);
+
+                  Add_Verification_Unit (Get_Library_Unit (Unit));
+               end if;
+               Unit := Get_Chain (Unit);
+            end loop;
+            File := Get_Chain (File);
+         end loop;
+         Library := Get_Chain (Library);
+      end loop;
+   end Add_Verification_Units;
 
    procedure Check_Entity_Declaration_Top
      (Entity : Iir_Entity_Declaration; Enable_Override : Boolean)

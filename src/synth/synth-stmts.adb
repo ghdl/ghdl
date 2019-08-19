@@ -1618,10 +1618,8 @@ package body Synth.Stmts is
             when Iir_Kind_Psl_Restrict_Directive =>
                Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
             when Iir_Kind_Psl_Assume_Directive =>
-               --  Passive statement.
                Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
             when Iir_Kind_Psl_Assert_Directive =>
-               --  Passive statement.
                Synth_Psl_Assert_Directive (Syn_Inst, Stmt);
             when Iir_Kind_Concurrent_Assertion_Statement =>
                --  Passive statement.
@@ -1632,4 +1630,23 @@ package body Synth.Stmts is
          Stmt := Get_Chain (Stmt);
       end loop;
    end Synth_Concurrent_Statements;
+
+   procedure Synth_Verification_Unit
+     (Syn_Inst : Synth_Instance_Acc; Unit : Node)
+   is
+      Item : Node;
+   begin
+      Item := Get_Vunit_Item_Chain (Unit);
+      while Item /= Null_Node loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Assert_Directive =>
+               Synth_Psl_Assert_Directive (Syn_Inst, Item);
+            when others =>
+               Error_Kind ("synth_verification_unit", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+   end Synth_Verification_Unit;
 end Synth.Stmts;

@@ -41,6 +41,9 @@ package Vhdl.Configuration is
    --  Add design unit UNIT (with its dependences) in the design_units table.
    procedure Add_Design_Unit (Unit : Iir_Design_Unit; From : Iir);
 
+   --  Add all vunits that are bound to any configured entity architecture.
+   procedure Add_Verification_Units;
+
    --  If set, all design units (even package bodies) are loaded.
    Flag_Load_All_Design_Units : Boolean := True;
 

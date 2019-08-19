@@ -1497,6 +1497,10 @@ Get_Vunit_Item_Chain = libghdl.vhdl__nodes__get_vunit_item_chain
 
 Set_Vunit_Item_Chain = libghdl.vhdl__nodes__set_vunit_item_chain
 
+Get_Bound_Vunit_Chain = libghdl.vhdl__nodes__get_bound_vunit_chain
+
+Set_Bound_Vunit_Chain = libghdl.vhdl__nodes__set_bound_vunit_chain
+
 Get_Block_Configuration = libghdl.vhdl__nodes__get_block_configuration
 
 Set_Block_Configuration = libghdl.vhdl__nodes__set_block_configuration

@@ -172,6 +172,8 @@ package body Ghdlsynth is
          return Null_Iir;
       end if;
 
+      Vhdl.Configuration.Add_Verification_Units;
+
       --  Check (and possibly abandon) if entity can be at the top of the
       --  hierarchy.
       declare

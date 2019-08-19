@@ -1037,7 +1037,6 @@ package body Vhdl.Nodes is
            | Iir_Kind_Context_Declaration
            | Iir_Kind_Vmode_Declaration
            | Iir_Kind_Vprop_Declaration
-           | Iir_Kind_Vunit_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
@@ -1217,6 +1216,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Vunit_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration
@@ -2667,6 +2667,22 @@ package body Vhdl.Nodes is
                      "no field Vunit_Item_Chain");
       Set_Field5 (Vunit, Chain);
    end Set_Vunit_Item_Chain;
+
+   function Get_Bound_Vunit_Chain (Unit : Iir) return Iir is
+   begin
+      pragma Assert (Unit /= Null_Iir);
+      pragma Assert (Has_Bound_Vunit_Chain (Get_Kind (Unit)),
+                     "no field Bound_Vunit_Chain");
+      return Get_Field8 (Unit);
+   end Get_Bound_Vunit_Chain;
+
+   procedure Set_Bound_Vunit_Chain (Unit : Iir; Vunit : Iir) is
+   begin
+      pragma Assert (Unit /= Null_Iir);
+      pragma Assert (Has_Bound_Vunit_Chain (Get_Kind (Unit)),
+                     "no field Bound_Vunit_Chain");
+      Set_Field8 (Unit, Vunit);
+   end Set_Bound_Vunit_Chain;
 
    function Get_Block_Configuration (Target : Iir) return Iir is
    begin

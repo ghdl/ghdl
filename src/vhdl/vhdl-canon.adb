@@ -1765,6 +1765,25 @@ package body Vhdl.Canon is
       Set_PSL_Clock_Sensitivity (Stmt, List);
    end Canon_Psl_Clocked_NFA;
 
+   procedure Canon_Psl_Property_Directive (Stmt : Iir)
+   is
+      Prop : PSL_Node;
+      Fa : PSL_NFA;
+   begin
+      Prop := Get_Psl_Property (Stmt);
+      Prop := PSL.Rewrites.Rewrite_Property (Prop);
+      Set_Psl_Property (Stmt, Prop);
+
+      --  Generate the NFA.
+      Fa := PSL.Build.Build_FA (Prop);
+      Set_PSL_NFA (Stmt, Fa);
+
+      Canon_Psl_Clocked_NFA (Stmt);
+      if Canon_Flag_Expressions then
+         Canon_PSL_Expression (Get_PSL_Clock (Stmt));
+      end if;
+   end Canon_Psl_Property_Directive;
+
    procedure Canon_Psl_Sequence_Directive (Stmt : Iir)
    is
       Seq : PSL_Node;
@@ -1784,16 +1803,21 @@ package body Vhdl.Canon is
       end if;
    end Canon_Psl_Sequence_Directive;
 
-   procedure Canon_Psl_Directive (Stmt : Iir) is
+   procedure Canon_Psl_Assert_Directive (Stmt : Iir) is
    begin
-      Canon_Psl_Clocked_NFA (Stmt);
-
+      Canon_Psl_Property_Directive (Stmt);
       if Canon_Flag_Expressions then
-         Canon_PSL_Expression (Get_PSL_Clock (Stmt));
-         Canon_Expression (Get_Severity_Expression (Stmt));
          Canon_Expression (Get_Report_Expression (Stmt));
       end if;
-   end Canon_Psl_Directive;
+   end Canon_Psl_Assert_Directive;
+
+   procedure Canon_Psl_Cover_Directive (Stmt : Iir) is
+   begin
+      Canon_Psl_Sequence_Directive (Stmt);
+      if Canon_Flag_Expressions then
+         Canon_Expression (Get_Report_Expression (Stmt));
+      end if;
+   end Canon_Psl_Cover_Directive;
 
    procedure Canon_If_Case_Generate_Statement_Body
      (Bod : Iir; Alt_Num : in out Natural; Top : Iir_Design_Unit) is
@@ -2127,29 +2151,12 @@ package body Vhdl.Canon is
                     (Top, Get_Generate_Statement_Body (El));
                end;
 
-            when Iir_Kind_Psl_Assert_Directive
-               | Iir_Kind_Psl_Assume_Directive=>
-               declare
-                  Prop : PSL_Node;
-                  Fa : PSL_NFA;
-               begin
-                  Prop := Get_Psl_Property (El);
-                  Prop := PSL.Rewrites.Rewrite_Property (Prop);
-                  Set_Psl_Property (El, Prop);
-
-                  --  Generate the NFA.
-                  Fa := PSL.Build.Build_FA (Prop);
-                  Set_PSL_NFA (El, Fa);
-
-                  Canon_Psl_Directive (El);
-               end;
-
+            when Iir_Kind_Psl_Assert_Directive =>
+               Canon_Psl_Assert_Directive (El);
+            when Iir_Kind_Psl_Assume_Directive =>
+               Canon_Psl_Property_Directive (El);
             when Iir_Kind_Psl_Cover_Directive =>
-               Canon_Psl_Sequence_Directive (El);
-               if Canon_Flag_Expressions then
-                  Canon_Expression (Get_Severity_Expression (El));
-                  Canon_Expression (Get_Report_Expression (El));
-               end if;
+               Canon_Psl_Cover_Directive (El);
             when Iir_Kind_Psl_Restrict_Directive =>
                Canon_Psl_Sequence_Directive (El);
 
@@ -3221,6 +3228,24 @@ package body Vhdl.Canon is
       end if;
    end Canon_Interface_List;
 
+   procedure Canon_Psl_Verification_Unit (Decl : Iir)
+   is
+      Item : Iir;
+   begin
+      Item := Get_Vunit_Item_Chain (Decl);
+      while Item /= Null_Iir loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Assert_Directive =>
+               Canon_Psl_Assert_Directive (Item);
+            when others =>
+               Error_Kind ("canon_psl_verification_unit", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+   end Canon_Psl_Verification_Unit;
+
    procedure Canonicalize (Unit: Iir_Design_Unit)
    is
       El: Iir;
@@ -3244,7 +3269,7 @@ package body Vhdl.Canon is
       end if;
 
       El := Get_Library_Unit (Unit);
-      case Get_Kind (El) is
+      case Iir_Kinds_Library_Unit (Get_Kind (El)) is
          when Iir_Kind_Entity_Declaration =>
             Canon_Interface_List (Get_Generic_Chain (El));
             Canon_Interface_List (Get_Port_Chain (El));
@@ -3267,10 +3292,11 @@ package body Vhdl.Canon is
             Set_Library_Unit (Unit, El);
          when Iir_Kind_Context_Declaration =>
             null;
-         when Iir_Kinds_Verification_Unit =>
+         when Iir_Kind_Vunit_Declaration =>
+            Canon_Psl_Verification_Unit (El);
+         when Iir_Kind_Vmode_Declaration
+           | Iir_Kind_Vprop_Declaration =>
             null;
-         when others =>
-            Error_Kind ("canonicalize2", El);
       end case;
    end Canonicalize;
 

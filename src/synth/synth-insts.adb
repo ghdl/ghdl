@@ -736,6 +736,18 @@ package body Synth.Insts is
       end loop;
    end Apply_Block_Configuration;
 
+   procedure Synth_Verification_Units
+     (Syn_Inst : Synth_Instance_Acc; Parent : Node)
+   is
+      Unit : Node;
+   begin
+      Unit := Get_Bound_Vunit_Chain (Parent);
+      while Unit /= Null_Node loop
+         Synth_Verification_Unit (Syn_Inst, Unit);
+         Unit := Get_Bound_Vunit_Chain (Unit);
+      end loop;
+   end Synth_Verification_Units;
+
    procedure Synth_Instance (Inst : Inst_Object)
    is
       Entity : constant Node := Inst.Decl;
@@ -783,6 +795,9 @@ package body Synth.Insts is
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
       Synth_Concurrent_Statements
         (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+
+      Synth_Verification_Units (Syn_Inst, Entity);
+      Synth_Verification_Units (Syn_Inst, Arch);
 
       Finalize_Assignments (Build_Context);
 

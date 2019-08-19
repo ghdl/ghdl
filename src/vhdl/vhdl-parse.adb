@@ -8608,6 +8608,7 @@ package body Vhdl.Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Psl_Assert_Directive);
+      Set_Location (Res);
 
       --  Accept PSL tokens
       if Flags.Vhdl_Std >= Vhdl_08 then

@@ -41,6 +41,9 @@ package Synth.Stmts is
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
 
+   procedure Synth_Verification_Unit
+     (Syn_Inst : Synth_Instance_Acc; Unit : Node);
+
    --  For iterators.
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
    procedure Update_Index (Rng : Discrete_Range_Type; Idx : in out Int64);

@@ -1108,7 +1108,7 @@ package body Vhdl.Annotations is
       end loop;
    end Annotate_Concurrent_Statements_List;
 
-   procedure Annotate_Entity (Decl: Iir_Entity_Declaration)
+   procedure Annotate_Entity (Decl : Iir_Entity_Declaration)
    is
       Entity_Info: Sim_Info_Acc;
    begin
@@ -1147,6 +1147,32 @@ package body Vhdl.Annotations is
       Entity_Info.all := Saved_Info;
       Set_Info (Decl, Arch_Info);
    end Annotate_Architecture;
+
+   procedure Annotate_Vunit_Declaration (Decl : Iir)
+   is
+      Vunit_Info : Sim_Info_Acc;
+      Item : Iir;
+   begin
+      Vunit_Info := new Sim_Info_Type'(Kind => Kind_Block,
+                                       Ref => Decl,
+                                       Inst_Slot => Invalid_Instance_Slot,
+                                       Nbr_Objects => 0,
+                                       Nbr_Instances => 0);
+      Set_Info (Decl, Vunit_Info);
+
+      Item := Get_Vunit_Item_Chain (Decl);
+      while Item /= Null_Iir loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Assert_Directive =>
+               null;
+            when others =>
+               Error_Kind ("annotate_vunit_declaration", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+   end Annotate_Vunit_Declaration;
 
    procedure Annotate_Component_Configuration
      (Conf : Iir_Component_Configuration)
@@ -1259,6 +1285,8 @@ package body Vhdl.Annotations is
             Annotate_Package_Declaration (Global_Info, El);
          when Iir_Kind_Context_Declaration =>
             null;
+         when Iir_Kind_Vunit_Declaration =>
+            Annotate_Vunit_Declaration (El);
          when others =>
             Error_Kind ("annotate2", El);
       end case;
