@@ -2241,6 +2241,16 @@ package body Synth.Expr is
                end case;
                return Create_Value_Discrete (Int64 (V), Typ);
             end;
+         when Iir_Kind_Length_Array_Attribute =>
+            declare
+               --  Use base type as the expression type is the index subtype.
+               Typ : constant Type_Acc :=
+                 Get_Value_Type (Syn_Inst, Get_Base_Type (Expr_Type));
+               B : Bound_Type;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Expr);
+               return Create_Value_Discrete (Int64 (B.Len), Typ);
+            end;
          when others =>
             Error_Kind ("synth_expression_with_type", Expr);
       end case;
