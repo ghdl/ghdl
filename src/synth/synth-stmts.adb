@@ -49,6 +49,7 @@ with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
 with Netlists.Utils;
+with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Stmts is
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
@@ -1228,6 +1229,7 @@ package body Synth.Stmts is
    is
       Cond : constant Node := Get_Assertion_Condition (Stmt);
       Val : Value_Acc;
+      Inst : Instance;
    begin
       Val := Synth_Expression (Syn_Inst, Cond);
       if Is_Const (Val) then
@@ -1236,7 +1238,8 @@ package body Synth.Stmts is
          end if;
          return;
       end if;
-      Build_Assert (Build_Context, Get_Net (Val));
+      Inst := Build_Assert (Build_Context, Get_Net (Val));
+      Set_Location (Inst, Get_Location (Stmt));
    end Synth_Concurrent_Assertion_Statement;
 
    function Synth_PSL_Expression
@@ -1385,13 +1388,15 @@ package body Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Res : Net;
+      Inst : Instance;
    begin
       --  Build assume gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
       Res := Synth_Psl_Sequence_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
-         Build_Assume (Build_Context, Res);
+         Inst := Build_Assume (Build_Context, Res);
+         Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Restrict_Directive;
 
@@ -1443,13 +1448,15 @@ package body Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Res : Net;
+      Inst : Instance;
    begin
       --  Build assume gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
       Res := Synth_Psl_Property_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
-         Build_Assume (Build_Context, Res);
+         Inst := Build_Assume (Build_Context, Res);
+         Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Assume_Directive;
 
@@ -1457,13 +1464,15 @@ package body Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Res : Net;
+      Inst : Instance;
    begin
       --  Build assert gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assert on States, then the first cycle is ignored).
       Res := Synth_Psl_Property_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
-         Build_Assert (Build_Context, Res);
+         Inst := Build_Assert (Build_Context, Res);
+         Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Assert_Directive;
 

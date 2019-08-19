@@ -113,8 +113,8 @@ package Netlists.Builders is
                           return Net;
    function Build_Port (Ctxt : Context_Acc; N : Net) return Net;
 
-   procedure Build_Assert (Ctxt : Context_Acc; Cond : Net);
-   procedure Build_Assume (Ctxt : Context_Acc; Cond : Net);
+   function Build_Assert (Ctxt : Context_Acc; Cond : Net) return Instance;
+   function Build_Assume (Ctxt : Context_Acc; Cond : Net) return Instance;
 
    --  A simple flip-flop.
    function Build_Dff (Ctxt : Context_Acc;

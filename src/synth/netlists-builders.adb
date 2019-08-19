@@ -1008,20 +1008,22 @@ package body Netlists.Builders is
       return Build_Extract (Ctxt, I, Off, 1);
    end Build_Extract_Bit;
 
-   procedure Build_Assert (Ctxt : Context_Acc; Cond : Net)
+   function Build_Assert (Ctxt : Context_Acc; Cond : Net) return Instance
    is
       Inst : Instance;
    begin
       Inst := New_Internal_Instance (Ctxt, Ctxt.M_Assert);
       Connect (Get_Input (Inst, 0), Cond);
+      return Inst;
    end Build_Assert;
 
-   procedure Build_Assume (Ctxt : Context_Acc; Cond : Net)
+   function Build_Assume (Ctxt : Context_Acc; Cond : Net) return Instance
    is
       Inst : Instance;
    begin
       Inst := New_Internal_Instance (Ctxt, Ctxt.M_Assume);
       Connect (Get_Input (Inst, 0), Cond);
+      return Inst;
    end Build_Assume;
 
 end Netlists.Builders;
