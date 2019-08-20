@@ -707,6 +707,19 @@ package body Netlists.Disp_Vhdl is
                     ("  \o0 <= \i1; -- reduce or" & NL, Inst);
                end if;
             end;
+         when Id_Red_And =>
+            declare
+               Iw : constant Width := Get_Width (Get_Input_Net (Inst, 0));
+            begin
+               if Iw > 1 then
+                  Disp_Template
+                    ("  \o0 <= '1' when \i0 = (\n0 downto 0 => '1') else '0';"
+                       & NL, Inst, (0 => Iw - 1));
+               else
+                  Disp_Template
+                    ("  \o0 <= \i1; -- reduce or" & NL, Inst);
+               end if;
+            end;
          when Id_Assert =>
             Disp_Template ("  assert \i0 = '1' severity error;" & NL, Inst);
          when Id_Assume =>
