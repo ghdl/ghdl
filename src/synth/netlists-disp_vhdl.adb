@@ -432,6 +432,10 @@ package body Netlists.Disp_Vhdl is
                      when Conv_Signed =>
                         Put_Int32 (To_Int32 (V));
                   end case;
+               when 'l' =>
+                  pragma Assert (Idx = 0);
+                  pragma Assert (Conv = Conv_None);
+                  Put_Name (Get_Instance_Name (Inst));
                when others =>
                   raise Internal_Error;
             end case;
@@ -721,10 +725,12 @@ package body Netlists.Disp_Vhdl is
                end if;
             end;
          when Id_Assert =>
-            Disp_Template ("  assert \i0 = '1' severity error;" & NL, Inst);
+            Disp_Template
+              ("  \l0: assert \i0 = '1' severity error;" & NL, Inst);
          when Id_Assume =>
             Disp_Template
-              ("  assert \i0 = '1' severity warning; --  assume" & NL, Inst);
+              ("  \l0: assert \i0 = '1' severity warning; --  assume" & NL,
+               Inst);
          when others =>
             Disp_Instance_Gate (Inst);
       end case;

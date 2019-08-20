@@ -1010,6 +1010,17 @@ package body Synth.Stmts is
       end loop;
    end Synth_Subprogram_Back_Association;
 
+   function Synth_Label (Stmt : Node) return Sname
+   is
+      Label : constant Name_Id := Get_Label (Stmt);
+   begin
+      if Label = Null_Identifier then
+         return No_Sname;
+      else
+         return New_Sname_User (Label);
+      end if;
+   end Synth_Label;
+
    procedure Synth_Procedure_Call
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -1238,7 +1249,7 @@ package body Synth.Stmts is
          end if;
          return;
       end if;
-      Inst := Build_Assert (Build_Context, Get_Net (Val));
+      Inst := Build_Assert (Build_Context, Synth_Label (Stmt), Get_Net (Val));
       Set_Location (Inst, Get_Location (Stmt));
    end Synth_Concurrent_Assertion_Statement;
 
@@ -1395,7 +1406,7 @@ package body Synth.Stmts is
       --  (If we assume on States, then the first cycle is ignored).
       Res := Synth_Psl_Sequence_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
-         Inst := Build_Assume (Build_Context, Res);
+         Inst := Build_Assume (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Restrict_Directive;
@@ -1455,7 +1466,7 @@ package body Synth.Stmts is
       --  (If we assume on States, then the first cycle is ignored).
       Res := Synth_Psl_Property_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
-         Inst := Build_Assume (Build_Context, Res);
+         Inst := Build_Assume (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Assume_Directive;
@@ -1471,7 +1482,7 @@ package body Synth.Stmts is
       --  (If we assert on States, then the first cycle is ignored).
       Res := Synth_Psl_Property_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
-         Inst := Build_Assert (Build_Context, Res);
+         Inst := Build_Assert (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Assert_Directive;

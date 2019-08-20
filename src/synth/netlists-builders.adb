@@ -1008,20 +1008,33 @@ package body Netlists.Builders is
       return Build_Extract (Ctxt, I, Off, 1);
    end Build_Extract_Bit;
 
-   function Build_Assert (Ctxt : Context_Acc; Cond : Net) return Instance
+   function Name_Or_Internal (Name : Sname; Ctxt : Context_Acc) return Sname is
+   begin
+      if Name = No_Sname then
+         return New_Internal_Name (Ctxt);
+      else
+         return Name;
+      end if;
+   end Name_Or_Internal;
+
+   function Build_Assert (Ctxt : Context_Acc; Name : Sname; Cond : Net)
+                         return Instance
    is
       Inst : Instance;
    begin
-      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Assert);
+      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Assert,
+                            Name_Or_Internal (Name, Ctxt));
       Connect (Get_Input (Inst, 0), Cond);
       return Inst;
    end Build_Assert;
 
-   function Build_Assume (Ctxt : Context_Acc; Cond : Net) return Instance
+   function Build_Assume (Ctxt : Context_Acc; Name : Sname; Cond : Net)
+                         return Instance
    is
       Inst : Instance;
    begin
-      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Assume);
+      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Assume,
+                            Name_Or_Internal (Name, Ctxt));
       Connect (Get_Input (Inst, 0), Cond);
       return Inst;
    end Build_Assume;
