@@ -106,6 +106,7 @@ package body Ghdlsynth is
       use Errorout;
       E_Opt : Integer;
       Opt_Arg : Natural;
+      Design_File : Iir;
       Config : Iir;
       Top : Iir;
       Prim_Id : Name_Id;
@@ -137,8 +138,14 @@ package body Ghdlsynth is
 
       --  Analyze files (if any)
       for I in Args'First .. E_Opt - 1 loop
-         Ghdlcomp.Compile_Analyze_File (Args (I).all);
+         Design_File := Ghdlcomp.Compile_Analyze_File2 (Args (I).all);
       end loop;
+      pragma Unreferenced (Design_File);
+
+      if Nbr_Errors > 0 then
+         --  No need to configure if there are missing units.
+         return Null_Iir;
+      end if;
 
       --  Elaborate
       if E_Opt = Args'Last then
