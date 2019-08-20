@@ -19,6 +19,8 @@
 --  MA 02110-1301, USA.
 
 with Netlists.Gates; use Netlists.Gates;
+with Netlists.Locations; use Netlists.Locations;
+with Vhdl.Disp_Tree;
 
 package body Netlists.Utils is
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr
@@ -95,6 +97,17 @@ package body Netlists.Utils is
    begin
       return Get_Driver (Get_Input (Inst, Idx));
    end Get_Input_Net;
+
+   function Get_Source (Inst : Instance) return chars_ptr is
+      loc : constant Location_Type := Get_Location(Inst);
+      img : constant String := Vhdl.Disp_Tree.Image_Location_Type(loc);
+   begin
+      if loc = No_Location then
+         return New_String("");
+      else
+         return New_String(img);
+      end if;
+   end Get_Source;
 
    function Is_Const (Id : Module_Id) return Boolean is
    begin

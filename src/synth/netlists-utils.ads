@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Interfaces.C.Strings; use Interfaces.C.Strings;
+
 package Netlists.Utils is
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr;
    function Get_Nbr_Outputs (Inst : Instance) return Port_Nbr;
@@ -35,6 +37,8 @@ package Netlists.Utils is
    function Get_Output_Width (M : Module; I : Port_Idx) return Width;
 
    function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net;
+
+   function Get_Source (Inst : Instance) return chars_ptr;
 
    --  Return True iff ID describe a constant.
    function Is_Const (Id : Module_Id) return Boolean;
