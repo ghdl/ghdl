@@ -3239,6 +3239,8 @@ package body Vhdl.Canon is
                null;
             when Iir_Kind_Psl_Assert_Directive =>
                Canon_Psl_Assert_Directive (Item);
+            when Iir_Kind_Psl_Assume_Directive =>
+               Canon_Psl_Property_Directive (Item);
             when others =>
                Error_Kind ("canon_psl_verification_unit", Item);
          end case;

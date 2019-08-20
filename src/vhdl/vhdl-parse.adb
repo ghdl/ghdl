@@ -8630,6 +8630,7 @@ package body Vhdl.Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Psl_Assume_Directive);
+      Set_Location (Res);
 
       --  Accept PSL tokens
       Vhdl.Scanner.Flag_Psl := True;
@@ -9821,6 +9822,8 @@ package body Vhdl.Parse is
          case Current_Token is
             when Tok_Default =>
                Item := Parse_Psl_Default_Clock (True);
+            when Tok_Assume =>
+               Item := Parse_Psl_Assume_Directive (True);
             when Tok_Assert =>
                Item := Parse_Psl_Assert_Directive (True);
             when others =>

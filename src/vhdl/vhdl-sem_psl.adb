@@ -952,6 +952,8 @@ package body Vhdl.Sem_Psl is
                Sem_Psl_Default_Clock (Item);
             when Iir_Kind_Psl_Assert_Directive =>
                Item := Sem_Psl_Assert_Directive (Item, False);
+            when Iir_Kind_Psl_Assume_Directive =>
+               Sem_Psl_Assume_Directive (Item);
             when others =>
                Error_Kind ("sem_psl_verification_unit", Item);
          end case;

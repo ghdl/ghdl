@@ -1652,6 +1652,8 @@ package body Synth.Stmts is
                null;
             when Iir_Kind_Psl_Assert_Directive =>
                Synth_Psl_Assert_Directive (Syn_Inst, Item);
+            when Iir_Kind_Psl_Assume_Directive =>
+               Synth_Psl_Assume_Directive (Syn_Inst, Item);
             when others =>
                Error_Kind ("synth_verification_unit", Item);
          end case;

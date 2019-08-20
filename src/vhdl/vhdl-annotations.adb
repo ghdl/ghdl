@@ -1165,7 +1165,8 @@ package body Vhdl.Annotations is
          case Get_Kind (Item) is
             when Iir_Kind_Psl_Default_Clock =>
                null;
-            when Iir_Kind_Psl_Assert_Directive =>
+            when Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive =>
                null;
             when others =>
                Error_Kind ("annotate_vunit_declaration", Item);
