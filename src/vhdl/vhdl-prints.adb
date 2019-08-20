@@ -3954,6 +3954,7 @@ package body Vhdl.Prints is
      (Ctxt : in out Ctxt_Class; Unit: Iir; Tok : Token_Type)
    is
       Hier_Name : Iir;
+      Arch : Iir;
       Item : Iir;
    begin
       Start_Hbox (Ctxt);
@@ -3964,6 +3965,12 @@ package body Vhdl.Prints is
       if Hier_Name /= Null_Iir then
          Disp_Token (Ctxt, Tok_Left_Paren);
          Print (Ctxt, Get_Entity_Name (Hier_Name));
+         Arch := Get_Architecture (Hier_Name);
+         if Arch /= Null_Iir then
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Print (Ctxt, Arch);
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         end if;
          Disp_Token (Ctxt, Tok_Right_Paren);
       end if;
       Close_Hbox (Ctxt);
