@@ -1197,6 +1197,16 @@ package body Synth.Expr is
                Error_Msg_Synth (+Expr, "non-constant mod not supported");
                return null;
             end if;
+         when Iir_Predefined_Integer_Exp =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Left.Scal ** Natural (Right.Scal),
+                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
+            else
+               Error_Msg_Synth
+                 (+Expr, "non-constant exponentiation not supported");
+               return null;
+            end if;
          when Iir_Predefined_Integer_Less_Equal =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete
