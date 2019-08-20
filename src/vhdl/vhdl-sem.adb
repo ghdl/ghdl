@@ -1113,11 +1113,11 @@ package body Vhdl.Sem is
       --  a use clause that makes a homograph of the declaration potentially
       --  visible (see 10.4) appears in the corresponding configuration
       --  declaration, and if the scope of that use clause encompasses all or
-      --  part of those configuration items.  If such a use clase appears, then
-      --  the declaration will be directly visible within the corresponding
-      --  configuration items, except at hose places that fall within the scope
-      --  of the additional use clause.  At such places, neither name will be
-      --  directly visible.
+      --  part of those configuration items.  If such a use clause appears,
+      --  then the declaration will be directly visible within the
+      --  corresponding configuration items, except at hose places that fall
+      --  within the scope of the additional use clause.  At such places,
+      --  neither name will be directly visible.
       --  FIXME: handle use clauses.
       Sem_Scopes.Extend_Scope_Of_Block_Declarations (Block);
 

@@ -9800,9 +9800,19 @@ package body Vhdl.Parse is
 
          Hier_Name := Create_Iir (Iir_Kind_Psl_Hierarchical_Name);
          Set_Location (Hier_Name);
+         Set_Hierarchical_Name (Res, Hier_Name);
+
          Set_Entity_Name (Hier_Name, Parse_Simple_Name);
 
-         Set_Hierarchical_Name (Res, Hier_Name);
+         if Current_Token = Tok_Left_Paren then
+            --  Skip '('.
+            Scan;
+
+            Set_Architecture (Hier_Name, Parse_Simple_Name);
+
+            --  Skip ')'.
+            Expect_Scan (Tok_Right_Paren);
+         end if;
 
          --  Skip ')'
          Expect_Scan (Tok_Right_Paren);

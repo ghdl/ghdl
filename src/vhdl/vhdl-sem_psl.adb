@@ -890,36 +890,49 @@ package body Vhdl.Sem_Psl is
    procedure Sem_Hierarchical_Name (Hier_Name : Iir; Unit : Iir)
    is
       Entity_Name : Iir;
-      Entity : Iir;
+      Design_Entity : Iir;
+      Lib_Entity : Iir;
+      Arch_Name : Iir;
+      Arch : Iir;
       Library : Iir_Library_Declaration;
    begin
       Entity_Name := Get_Entity_Name (Hier_Name);
 
       Library := Get_Library (Get_Design_File (Get_Design_Unit (Unit)));
 
-      Entity := Sem_Lib.Load_Primary_Unit
+      Design_Entity := Sem_Lib.Load_Primary_Unit
         (Library, Get_Identifier (Entity_Name), Entity_Name);
-      if Entity = Null_Iir then
+      if Design_Entity = Null_Iir then
          Error_Msg_Sem (+Entity_Name,
                         "entity %n was not analysed", +Entity_Name);
          return;
       end if;
-      Entity := Get_Library_Unit (Entity);
+      Lib_Entity := Get_Library_Unit (Design_Entity);
 
-      if Get_Kind (Entity) /= Iir_Kind_Entity_Declaration then
+      if Get_Kind (Lib_Entity) /= Iir_Kind_Entity_Declaration then
          Error_Msg_Sem (+Entity_Name,
                         "name %i does not denote an entity", +Entity_Name);
          return;
       end if;
 
-      Set_Named_Entity (Entity_Name, Entity);
-      Xrefs.Xref_Ref (Entity_Name, Entity);
+      Set_Named_Entity (Entity_Name, Lib_Entity);
+      Xrefs.Xref_Ref (Entity_Name, Lib_Entity);
+
+      Arch_Name := Get_Architecture (Hier_Name);
+      if Arch_Name /= Null_Iir then
+         Arch := Sem_Lib.Load_Secondary_Unit
+           (Design_Entity, Get_Identifier (Arch_Name), Arch_Name);
+         if Arch /= Null_Iir then
+            Set_Named_Entity (Arch_Name, Get_Library_Unit (Arch));
+         end if;
+      end if;
    end Sem_Hierarchical_Name;
 
    procedure Sem_Psl_Verification_Unit (Unit : Iir)
    is
       Hier_Name : constant Iir := Get_Hierarchical_Name (Unit);
       Entity : Iir;
+      Arch : Iir;
       Item : Iir;
    begin
       if Hier_Name = Null_Iir then
@@ -939,11 +952,24 @@ package body Vhdl.Sem_Psl is
          return;
       end if;
 
+      Arch := Get_Architecture (Hier_Name);
+      if Arch /= Null_Iir then
+         Arch := Get_Named_Entity (Arch);
+         if Arch = Null_Iir then
+            return;
+         end if;
+      end if;
+
       Sem_Scopes.Add_Context_Clauses (Get_Design_Unit (Entity));
 
       Sem_Scopes.Open_Declarative_Region;
       Set_Is_Within_Flag (Entity, True);
       Sem_Scopes.Add_Entity_Declarations (Entity);
+
+      if Arch /= Null_Iir then
+         Sem_Scopes.Open_Scope_Extension;
+         Sem_Scopes.Extend_Scope_Of_Block_Declarations (Arch);
+      end if;
 
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Iir loop
@@ -960,6 +986,10 @@ package body Vhdl.Sem_Psl is
 
          Item := Get_Chain (Item);
       end loop;
+
+      if Arch /= Null_Iir then
+         Sem_Scopes.Close_Scope_Extension;
+      end if;
 
       Sem_Scopes.Close_Declarative_Region;
       Set_Is_Within_Flag (Entity, False);
