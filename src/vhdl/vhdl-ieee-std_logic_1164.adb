@@ -277,11 +277,24 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                   end case;
                   Set_Implicit_Definition (Decl, Predefined);
                end;
-            elsif Is_Vector_Function (Decl)
-              and then Get_Identifier (Decl) = Name_Not
-            then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_1164_Vector_Not);
+            elsif Is_Vector_Function (Decl) then
+               declare
+                  Predefined : Iir_Predefined_Functions;
+               begin
+                  case Get_Identifier (Decl) is
+                     when Name_Not =>
+                        Predefined := Iir_Predefined_Ieee_1164_Vector_Not;
+                     when Name_And =>
+                        Predefined :=
+                           Iir_Predefined_Ieee_1164_Vector_And_Reduce;
+                     when Name_Or =>
+                        Predefined :=
+                           Iir_Predefined_Ieee_1164_Vector_Or_Reduce;
+                     when others =>
+                        Predefined := Iir_Predefined_None;
+                  end case;
+                  Set_Implicit_Definition (Decl, Predefined);
+               end;
             end if;
          end if;
       end loop;

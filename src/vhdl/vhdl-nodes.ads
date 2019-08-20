@@ -4901,6 +4901,10 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_1164_Vector_Xnor,
       Iir_Predefined_Ieee_1164_Vector_Not,
 
+      -- VHDL-2008 unary logic operators
+      Iir_Predefined_Ieee_1164_Vector_And_Reduce,
+      Iir_Predefined_Ieee_1164_Vector_Or_Reduce,
+
       --  Numeric_Std.
       --  Abbreviations:
       --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.

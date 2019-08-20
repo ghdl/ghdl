@@ -1265,6 +1265,17 @@ package body Synth.Expr is
          Set_Location (N, Loc);
          return Create_Value_Net (N, Create_Res_Bound (Operand, Op));
       end Synth_Vec_Monadic;
+
+      function Synth_Vec_Reduce_Monadic (Id : Reduce_Module_Id)
+         return Value_Acc
+      is
+         Op: constant Net := Get_Net (Operand);
+         N : Net;
+      begin
+         N := Build_Reduce (Build_Context, Id, Op);
+         Set_Location (N, Loc);
+         return Create_Value_Net (N, Operand.Typ.Vec_El);
+      end Synth_Vec_Reduce_Monadic;
    begin
       Operand := Synth_Expression (Syn_Inst, Operand_Expr);
       case Def is
@@ -1279,6 +1290,10 @@ package body Synth.Expr is
          when Iir_Predefined_Ieee_Numeric_Std_Neg_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
             return Synth_Vec_Monadic (Id_Neg);
+         when Iir_Predefined_Ieee_1164_Vector_And_Reduce =>
+            return Synth_Vec_Reduce_Monadic(Id_Red_And);
+         when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
+            return Synth_Vec_Reduce_Monadic(Id_Red_Or);
          when others =>
             Error_Msg_Synth
               (+Loc,

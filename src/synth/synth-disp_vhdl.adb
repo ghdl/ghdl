@@ -92,7 +92,8 @@ package body Synth.Disp_Vhdl is
             Put_Line (";");
             Idx := Idx + 1;
          when Iir_Kind_Array_Type_Definition =>
-            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
+            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type
+            or Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Vector_Type then
                --  Nothing to do.
                Put ("  wrap_" & Pfx & " <= " & Pfx);
                if Desc.W = 1 then
