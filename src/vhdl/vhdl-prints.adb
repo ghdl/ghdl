@@ -227,6 +227,7 @@ package body Vhdl.Prints is
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
+           | Iir_Kinds_Verification_Unit
            | Iir_Kinds_Interface_Object_Declaration
            | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Constant_Declaration
@@ -3342,321 +3343,6 @@ package body Vhdl.Prints is
       end if;
    end Disp_String_Literal;
 
-   procedure Print (Ctxt : in out Ctxt_Class; Expr: Iir)
-   is
-      Orig : Iir;
-   begin
-      case Get_Kind (Expr) is
-         when Iir_Kind_Integer_Literal =>
-            Orig := Get_Literal_Origin (Expr);
-            if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Print (Ctxt, Orig);
-            else
-               if Get_Literal_Length (Expr) /= 0 then
-                  Disp_Literal_From_Source (Ctxt, Expr, Tok_Integer);
-               else
-                  Disp_Int64 (Ctxt, Get_Value (Expr));
-               end if;
-            end if;
-         when Iir_Kind_Floating_Point_Literal =>
-            Orig := Get_Literal_Origin (Expr);
-            if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Print (Ctxt, Orig);
-            else
-               if Get_Literal_Length (Expr) /= 0 then
-                  Disp_Literal_From_Source (Ctxt, Expr, Tok_Real);
-               else
-                  Disp_Fp64 (Ctxt, Get_Fp_Value (Expr));
-               end if;
-            end if;
-         when Iir_Kind_String_Literal8 =>
-            Orig := Get_Literal_Origin (Expr);
-            if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Print (Ctxt, Orig);
-            else
-               declare
-                  Expr_Type : constant Iir := Get_Type (Expr);
-                  El_Type : Iir;
-               begin
-                  if Expr_Type /= Null_Iir then
-                     El_Type := Get_Element_Subtype (Expr_Type);
-                  else
-                     El_Type := Null_Iir;
-                  end if;
-                  Disp_String_Literal (Ctxt, Expr, El_Type);
-                  if Flag_Disp_String_Literal_Type or Flags.List_Verbose then
-                     OOB.Put ("[type: ");
-                     Disp_Type (Ctxt, Expr_Type);
-                     OOB.Put ("]");
-                  end if;
-               end;
-            end if;
-         when Iir_Kind_Physical_Fp_Literal
-           | Iir_Kind_Physical_Int_Literal =>
-            Orig := Get_Literal_Origin (Expr);
-            if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Print (Ctxt, Orig);
-            else
-               Disp_Physical_Literal (Ctxt, Expr);
-            end if;
-         when Iir_Kind_Enumeration_Literal =>
-            Orig := Get_Literal_Origin (Expr);
-            if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Print (Ctxt, Orig);
-            else
-               Disp_Name_Of (Ctxt, Expr);
-            end if;
-         when Iir_Kind_Overflow_Literal =>
-            Orig := Get_Literal_Origin (Expr);
-            if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Print (Ctxt, Orig);
-            else
-               Start_Lit (Ctxt, Tok_Integer);
-               Disp_Str (Ctxt, "*OVERFLOW*");
-               Close_Lit (Ctxt);
-            end if;
-
-         when Iir_Kind_Object_Alias_Declaration =>
-            Disp_Name_Of (Ctxt, Expr);
-         when Iir_Kind_Aggregate =>
-            Disp_Aggregate (Ctxt, Expr);
-         when Iir_Kind_Null_Literal =>
-            Disp_Token (Ctxt, Tok_Null);
-         when Iir_Kind_Simple_Aggregate =>
-            Orig := Get_Literal_Origin (Expr);
-            if Dump_Origin_Flag and then Orig /= Null_Iir then
-               Print (Ctxt, Orig);
-            else
-               Disp_Simple_Aggregate (Ctxt, Expr);
-            end if;
-
-         when Iir_Kind_Attribute_Value =>
-            Disp_Attribute_Value (Ctxt, Expr);
-         when Iir_Kind_Attribute_Name =>
-            Disp_Attribute_Name (Ctxt, Expr);
-
-         when Iir_Kind_Element_Declaration =>
-            Disp_Name_Of (Ctxt, Expr);
-
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_File_Declaration
-           | Iir_Kind_Iterator_Declaration =>
-            Disp_Name_Of (Ctxt, Expr);
-            return;
-         when Iir_Kind_Reference_Name =>
-            declare
-               Name : constant Iir := Get_Referenced_Name (Expr);
-            begin
-               if Is_Valid (Name) then
-                  Print (Ctxt, Name);
-               else
-                  Print (Ctxt, Get_Named_Entity (Expr));
-               end if;
-            end;
-
-         when Iir_Kinds_Dyadic_Operator =>
-            Disp_Dyadic_Operator (Ctxt, Expr);
-         when Iir_Kinds_Monadic_Operator =>
-            Disp_Monadic_Operator (Ctxt, Expr);
-         when Iir_Kind_Function_Call =>
-            Disp_Function_Call (Ctxt, Expr);
-         when Iir_Kind_Parenthesis_Expression =>
-            Disp_Token (Ctxt, Tok_Left_Paren);
-            Print (Ctxt, Get_Expression (Expr));
-            Disp_Token (Ctxt, Tok_Right_Paren);
-         when Iir_Kind_Type_Conversion =>
-            Print (Ctxt, Get_Type_Mark (Expr));
-            Disp_Token (Ctxt, Tok_Left_Paren);
-            Print (Ctxt, Get_Expression (Expr));
-            Disp_Token (Ctxt, Tok_Right_Paren);
-         when Iir_Kind_Qualified_Expression =>
-            declare
-               Qexpr : constant Iir := Get_Expression (Expr);
-               Has_Paren : constant Boolean :=
-                 Get_Kind (Qexpr) = Iir_Kind_Parenthesis_Expression
-                 or else Get_Kind (Qexpr) = Iir_Kind_Aggregate;
-            begin
-               Print (Ctxt, Get_Type_Mark (Expr));
-               Disp_Token (Ctxt, Tok_Tick);
-               if not Has_Paren then
-                  Disp_Token (Ctxt, Tok_Left_Paren);
-               end if;
-               Print (Ctxt, Qexpr);
-               if not Has_Paren then
-                  Disp_Token (Ctxt, Tok_Right_Paren);
-               end if;
-            end;
-         when Iir_Kind_Allocator_By_Expression =>
-            Disp_Token (Ctxt, Tok_New);
-            Print (Ctxt, Get_Expression (Expr));
-         when Iir_Kind_Allocator_By_Subtype =>
-            Disp_Token (Ctxt, Tok_New);
-            Disp_Subtype_Indication (Ctxt, Get_Subtype_Indication (Expr));
-
-         when Iir_Kind_Indexed_Name =>
-            Disp_Indexed_Name (Ctxt, Expr);
-         when Iir_Kind_Slice_Name =>
-            Print (Ctxt, Get_Prefix (Expr));
-            Disp_Token (Ctxt, Tok_Left_Paren);
-            Disp_Range (Ctxt, Get_Suffix (Expr));
-            Disp_Token (Ctxt, Tok_Right_Paren);
-         when Iir_Kind_Selected_Element =>
-            Print (Ctxt, Get_Prefix (Expr));
-            Disp_Token (Ctxt, Tok_Dot);
-            Disp_Name_Of (Ctxt, Get_Named_Entity (Expr));
-         when Iir_Kind_Implicit_Dereference =>
-            Print (Ctxt, Get_Prefix (Expr));
-
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            declare
-               Act : constant Iir := Get_Expression (Expr);
-            begin
-               if Act /= Null_Iir then
-                  --  There is still an expression, so the anonymous signal
-                  --  was not yet declared.
-                  Print (Ctxt, Act);
-               else
-                  --  Cannot use Disp_Identifier as the identifier is not in
-                  --  the sources.
-                  Disp_Ident (Ctxt, Get_Identifier (Expr));
-               end if;
-            end;
-
-         when Iir_Kind_Left_Type_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Left);
-         when Iir_Kind_Right_Type_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Right);
-         when Iir_Kind_High_Type_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_High);
-         when Iir_Kind_Low_Type_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Low);
-         when Iir_Kind_Ascending_Type_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Ascending);
-
-         when Iir_Kind_Stable_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Stable, Expr);
-         when Iir_Kind_Quiet_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Quiet, Expr);
-         when Iir_Kind_Delayed_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Delayed, Expr);
-         when Iir_Kind_Transaction_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Transaction);
-         when Iir_Kind_Event_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Event);
-         when Iir_Kind_Active_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Active);
-         when Iir_Kind_Driving_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Driving);
-         when Iir_Kind_Driving_Value_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Driving_Value);
-         when Iir_Kind_Last_Value_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Value);
-         when Iir_Kind_Last_Active_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Active);
-         when Iir_Kind_Last_Event_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Event);
-
-         when Iir_Kind_Pos_Attribute =>
-            Disp_Parametered_Type_Attribute (Ctxt, Name_Pos, Expr);
-         when Iir_Kind_Val_Attribute =>
-            Disp_Parametered_Type_Attribute (Ctxt, Name_Val, Expr);
-         when Iir_Kind_Succ_Attribute =>
-            Disp_Parametered_Type_Attribute (Ctxt, Name_Succ, Expr);
-         when Iir_Kind_Pred_Attribute =>
-            Disp_Parametered_Type_Attribute (Ctxt, Name_Pred, Expr);
-         when Iir_Kind_Leftof_Attribute =>
-            Disp_Parametered_Type_Attribute (Ctxt, Name_Leftof, Expr);
-         when Iir_Kind_Rightof_Attribute =>
-            Disp_Parametered_Type_Attribute (Ctxt, Name_Rightof, Expr);
-
-         when Iir_Kind_Length_Array_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Length, Expr);
-         when Iir_Kind_Range_Array_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Range, Expr);
-         when Iir_Kind_Reverse_Range_Array_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Reverse_Range, Expr);
-         when Iir_Kind_Left_Array_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Left, Expr);
-         when Iir_Kind_Right_Array_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Right, Expr);
-         when Iir_Kind_Low_Array_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Low, Expr);
-         when Iir_Kind_High_Array_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_High, Expr);
-         when Iir_Kind_Ascending_Array_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Ascending, Expr);
-
-         when Iir_Kind_Image_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Image, Expr);
-         when Iir_Kind_Value_Attribute =>
-            Disp_Parametered_Attribute (Ctxt, Name_Value, Expr);
-         when Iir_Kind_Simple_Name_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Simple_Name);
-         when Iir_Kind_Instance_Name_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Instance_Name);
-         when Iir_Kind_Path_Name_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Path_Name);
-
-         when Iir_Kinds_Type_And_Subtype_Definition =>
-            Disp_Type (Ctxt, Expr);
-
-         when Iir_Kind_Range_Expression =>
-            Disp_Range (Ctxt, Expr);
-         when Iir_Kind_Subtype_Definition =>
-            Disp_Subtype_Indication (Ctxt, Expr);
-
-         when Iir_Kind_Selected_By_All_Name
-           | Iir_Kind_Dereference =>
-            Print (Ctxt, Get_Prefix (Expr));
-            Disp_Token (Ctxt, Tok_Dot, Tok_All);
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Character_Literal =>
-            Disp_Identifier (Ctxt, Expr);
-         when Iir_Kind_Operator_Symbol =>
-            Disp_Function_Name (Ctxt, Expr);
-         when Iir_Kind_Selected_Name =>
-            Print (Ctxt, Get_Prefix (Expr));
-            Disp_Token (Ctxt, Tok_Dot);
-            Disp_Function_Name (Ctxt, Expr);
-         when Iir_Kind_Parenthesis_Name =>
-            Print (Ctxt, Get_Prefix (Expr));
-            Disp_Association_Chain (Ctxt, Get_Association_Chain (Expr));
-         when Iir_Kind_Base_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Base);
-         when Iir_Kind_Subtype_Attribute =>
-            Disp_Name_Attribute (Ctxt, Expr, Name_Subtype);
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Unit_Declaration
-           | Iir_Kinds_Interface_Object_Declaration
-           | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Terminal_Declaration
-           | Iir_Kind_Component_Declaration
-           | Iir_Kind_Group_Template_Declaration =>
-            Disp_Name_Of (Ctxt, Expr);
-
-         when Iir_Kind_Signature =>
-            Disp_Signature (Ctxt, Expr);
-
-         when Iir_Kind_Error =>
-            declare
-               Orig : constant Iir := Get_Error_Origin (Expr);
-            begin
-               if Orig /= Null_Iir then
-                  Print (Ctxt, Orig);
-               else
-                  Error_Kind ("print/error", Expr);
-               end if;
-            end;
-         when others =>
-            Error_Kind ("print", Expr);
-      end case;
-   end Print;
-
    procedure Disp_Block_Header
      (Ctxt : in out Ctxt_Class; Header : Iir_Block_Header)
    is
@@ -4265,10 +3951,38 @@ package body Vhdl.Prints is
    end Disp_Context_Declaration;
 
    procedure Disp_Verification_Unit
-     (Ctxt : in out Ctxt_Class; Unit: Iir; Tok : Token_Type) is
+     (Ctxt : in out Ctxt_Class; Unit: Iir; Tok : Token_Type)
+   is
+      Hier_Name : Iir;
+      Item : Iir;
    begin
-      --  TODO.
-      null;
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok);
+      Disp_Name_Of (Ctxt, Unit);
+
+      Hier_Name := Get_Hierarchical_Name (Unit);
+      if Hier_Name /= Null_Iir then
+         Disp_Token (Ctxt, Tok_Left_Paren);
+         Print (Ctxt, Get_Entity_Name (Hier_Name));
+         Disp_Token (Ctxt, Tok_Right_Paren);
+      end if;
+      Close_Hbox (Ctxt);
+
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Left_Curly);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Item := Get_Vunit_Item_Chain (Unit);
+      while Item /= Null_Iir loop
+         Print (Ctxt, Item);
+         Item := Get_Chain (Item);
+      end loop;
+      Close_Vbox (Ctxt);
+
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Right_Curly);
+      Close_Hbox (Ctxt);
    end Disp_Verification_Unit;
 
    procedure Disp_Design_Unit (Ctxt : in out Ctxt_Class; Unit: Iir_Design_Unit)
@@ -4348,6 +4062,328 @@ package body Vhdl.Prints is
             Error_Kind ("disp", N);
       end case;
    end Disp_Vhdl;
+
+   procedure Print (Ctxt : in out Ctxt_Class; Expr: Iir)
+   is
+      Orig : Iir;
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kind_Integer_Literal =>
+            Orig := Get_Literal_Origin (Expr);
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
+               Print (Ctxt, Orig);
+            else
+               if Get_Literal_Length (Expr) /= 0 then
+                  Disp_Literal_From_Source (Ctxt, Expr, Tok_Integer);
+               else
+                  Disp_Int64 (Ctxt, Get_Value (Expr));
+               end if;
+            end if;
+         when Iir_Kind_Floating_Point_Literal =>
+            Orig := Get_Literal_Origin (Expr);
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
+               Print (Ctxt, Orig);
+            else
+               if Get_Literal_Length (Expr) /= 0 then
+                  Disp_Literal_From_Source (Ctxt, Expr, Tok_Real);
+               else
+                  Disp_Fp64 (Ctxt, Get_Fp_Value (Expr));
+               end if;
+            end if;
+         when Iir_Kind_String_Literal8 =>
+            Orig := Get_Literal_Origin (Expr);
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
+               Print (Ctxt, Orig);
+            else
+               declare
+                  Expr_Type : constant Iir := Get_Type (Expr);
+                  El_Type : Iir;
+               begin
+                  if Expr_Type /= Null_Iir then
+                     El_Type := Get_Element_Subtype (Expr_Type);
+                  else
+                     El_Type := Null_Iir;
+                  end if;
+                  Disp_String_Literal (Ctxt, Expr, El_Type);
+                  if Flag_Disp_String_Literal_Type or Flags.List_Verbose then
+                     OOB.Put ("[type: ");
+                     Disp_Type (Ctxt, Expr_Type);
+                     OOB.Put ("]");
+                  end if;
+               end;
+            end if;
+         when Iir_Kind_Physical_Fp_Literal
+           | Iir_Kind_Physical_Int_Literal =>
+            Orig := Get_Literal_Origin (Expr);
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
+               Print (Ctxt, Orig);
+            else
+               Disp_Physical_Literal (Ctxt, Expr);
+            end if;
+         when Iir_Kind_Enumeration_Literal =>
+            Orig := Get_Literal_Origin (Expr);
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
+               Print (Ctxt, Orig);
+            else
+               Disp_Name_Of (Ctxt, Expr);
+            end if;
+         when Iir_Kind_Overflow_Literal =>
+            Orig := Get_Literal_Origin (Expr);
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
+               Print (Ctxt, Orig);
+            else
+               Start_Lit (Ctxt, Tok_Integer);
+               Disp_Str (Ctxt, "*OVERFLOW*");
+               Close_Lit (Ctxt);
+            end if;
+
+         when Iir_Kind_Object_Alias_Declaration =>
+            Disp_Name_Of (Ctxt, Expr);
+         when Iir_Kind_Aggregate =>
+            Disp_Aggregate (Ctxt, Expr);
+         when Iir_Kind_Null_Literal =>
+            Disp_Token (Ctxt, Tok_Null);
+         when Iir_Kind_Simple_Aggregate =>
+            Orig := Get_Literal_Origin (Expr);
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
+               Print (Ctxt, Orig);
+            else
+               Disp_Simple_Aggregate (Ctxt, Expr);
+            end if;
+
+         when Iir_Kind_Attribute_Value =>
+            Disp_Attribute_Value (Ctxt, Expr);
+         when Iir_Kind_Attribute_Name =>
+            Disp_Attribute_Name (Ctxt, Expr);
+
+         when Iir_Kind_Element_Declaration =>
+            Disp_Name_Of (Ctxt, Expr);
+
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_File_Declaration
+           | Iir_Kind_Iterator_Declaration =>
+            Disp_Name_Of (Ctxt, Expr);
+            return;
+         when Iir_Kind_Reference_Name =>
+            declare
+               Name : constant Iir := Get_Referenced_Name (Expr);
+            begin
+               if Is_Valid (Name) then
+                  Print (Ctxt, Name);
+               else
+                  Print (Ctxt, Get_Named_Entity (Expr));
+               end if;
+            end;
+
+         when Iir_Kinds_Dyadic_Operator =>
+            Disp_Dyadic_Operator (Ctxt, Expr);
+         when Iir_Kinds_Monadic_Operator =>
+            Disp_Monadic_Operator (Ctxt, Expr);
+         when Iir_Kind_Function_Call =>
+            Disp_Function_Call (Ctxt, Expr);
+         when Iir_Kind_Parenthesis_Expression =>
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Print (Ctxt, Get_Expression (Expr));
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         when Iir_Kind_Type_Conversion =>
+            Print (Ctxt, Get_Type_Mark (Expr));
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Print (Ctxt, Get_Expression (Expr));
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         when Iir_Kind_Qualified_Expression =>
+            declare
+               Qexpr : constant Iir := Get_Expression (Expr);
+               Has_Paren : constant Boolean :=
+                 Get_Kind (Qexpr) = Iir_Kind_Parenthesis_Expression
+                 or else Get_Kind (Qexpr) = Iir_Kind_Aggregate;
+            begin
+               Print (Ctxt, Get_Type_Mark (Expr));
+               Disp_Token (Ctxt, Tok_Tick);
+               if not Has_Paren then
+                  Disp_Token (Ctxt, Tok_Left_Paren);
+               end if;
+               Print (Ctxt, Qexpr);
+               if not Has_Paren then
+                  Disp_Token (Ctxt, Tok_Right_Paren);
+               end if;
+            end;
+         when Iir_Kind_Allocator_By_Expression =>
+            Disp_Token (Ctxt, Tok_New);
+            Print (Ctxt, Get_Expression (Expr));
+         when Iir_Kind_Allocator_By_Subtype =>
+            Disp_Token (Ctxt, Tok_New);
+            Disp_Subtype_Indication (Ctxt, Get_Subtype_Indication (Expr));
+
+         when Iir_Kind_Indexed_Name =>
+            Disp_Indexed_Name (Ctxt, Expr);
+         when Iir_Kind_Slice_Name =>
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Token (Ctxt, Tok_Left_Paren);
+            Disp_Range (Ctxt, Get_Suffix (Expr));
+            Disp_Token (Ctxt, Tok_Right_Paren);
+         when Iir_Kind_Selected_Element =>
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Token (Ctxt, Tok_Dot);
+            Disp_Name_Of (Ctxt, Get_Named_Entity (Expr));
+         when Iir_Kind_Implicit_Dereference =>
+            Print (Ctxt, Get_Prefix (Expr));
+
+         when Iir_Kind_Anonymous_Signal_Declaration =>
+            declare
+               Act : constant Iir := Get_Expression (Expr);
+            begin
+               if Act /= Null_Iir then
+                  --  There is still an expression, so the anonymous signal
+                  --  was not yet declared.
+                  Print (Ctxt, Act);
+               else
+                  --  Cannot use Disp_Identifier as the identifier is not in
+                  --  the sources.
+                  Disp_Ident (Ctxt, Get_Identifier (Expr));
+               end if;
+            end;
+
+         when Iir_Kind_Left_Type_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Left);
+         when Iir_Kind_Right_Type_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Right);
+         when Iir_Kind_High_Type_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_High);
+         when Iir_Kind_Low_Type_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Low);
+         when Iir_Kind_Ascending_Type_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Ascending);
+
+         when Iir_Kind_Stable_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Stable, Expr);
+         when Iir_Kind_Quiet_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Quiet, Expr);
+         when Iir_Kind_Delayed_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Delayed, Expr);
+         when Iir_Kind_Transaction_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Transaction);
+         when Iir_Kind_Event_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Event);
+         when Iir_Kind_Active_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Active);
+         when Iir_Kind_Driving_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Driving);
+         when Iir_Kind_Driving_Value_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Driving_Value);
+         when Iir_Kind_Last_Value_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Value);
+         when Iir_Kind_Last_Active_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Active);
+         when Iir_Kind_Last_Event_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Last_Event);
+
+         when Iir_Kind_Pos_Attribute =>
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Pos, Expr);
+         when Iir_Kind_Val_Attribute =>
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Val, Expr);
+         when Iir_Kind_Succ_Attribute =>
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Succ, Expr);
+         when Iir_Kind_Pred_Attribute =>
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Pred, Expr);
+         when Iir_Kind_Leftof_Attribute =>
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Leftof, Expr);
+         when Iir_Kind_Rightof_Attribute =>
+            Disp_Parametered_Type_Attribute (Ctxt, Name_Rightof, Expr);
+
+         when Iir_Kind_Length_Array_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Length, Expr);
+         when Iir_Kind_Range_Array_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Range, Expr);
+         when Iir_Kind_Reverse_Range_Array_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Reverse_Range, Expr);
+         when Iir_Kind_Left_Array_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Left, Expr);
+         when Iir_Kind_Right_Array_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Right, Expr);
+         when Iir_Kind_Low_Array_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Low, Expr);
+         when Iir_Kind_High_Array_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_High, Expr);
+         when Iir_Kind_Ascending_Array_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Ascending, Expr);
+
+         when Iir_Kind_Image_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Image, Expr);
+         when Iir_Kind_Value_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Value, Expr);
+         when Iir_Kind_Simple_Name_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Simple_Name);
+         when Iir_Kind_Instance_Name_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Instance_Name);
+         when Iir_Kind_Path_Name_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Path_Name);
+
+         when Iir_Kinds_Type_And_Subtype_Definition =>
+            Disp_Type (Ctxt, Expr);
+
+         when Iir_Kind_Range_Expression =>
+            Disp_Range (Ctxt, Expr);
+         when Iir_Kind_Subtype_Definition =>
+            Disp_Subtype_Indication (Ctxt, Expr);
+
+         when Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Dereference =>
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Token (Ctxt, Tok_Dot, Tok_All);
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal =>
+            Disp_Identifier (Ctxt, Expr);
+         when Iir_Kind_Operator_Symbol =>
+            Disp_Function_Name (Ctxt, Expr);
+         when Iir_Kind_Selected_Name =>
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Token (Ctxt, Tok_Dot);
+            Disp_Function_Name (Ctxt, Expr);
+         when Iir_Kind_Parenthesis_Name =>
+            Print (Ctxt, Get_Prefix (Expr));
+            Disp_Association_Chain (Ctxt, Get_Association_Chain (Expr));
+         when Iir_Kind_Base_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Base);
+         when Iir_Kind_Subtype_Attribute =>
+            Disp_Name_Attribute (Ctxt, Expr, Name_Subtype);
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Unit_Declaration
+           | Iir_Kinds_Interface_Object_Declaration
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Terminal_Declaration
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Group_Template_Declaration =>
+            Disp_Name_Of (Ctxt, Expr);
+
+         when Iir_Kind_Signature =>
+            Disp_Signature (Ctxt, Expr);
+
+         when Iir_Kind_Psl_Default_Clock =>
+            Disp_Psl_Default_Clock (Ctxt, Expr);
+         when Iir_Kind_Psl_Assert_Directive =>
+            Disp_Psl_Assert_Directive (Ctxt, Expr);
+         when Iir_Kind_Psl_Assume_Directive =>
+            Disp_Psl_Assume_Directive (Ctxt, Expr);
+
+         when Iir_Kind_Error =>
+            declare
+               Orig : constant Iir := Get_Error_Origin (Expr);
+            begin
+               if Orig /= Null_Iir then
+                  Print (Ctxt, Orig);
+               else
+                  Error_Kind ("print/error", Expr);
+               end if;
+            end;
+         when others =>
+            Error_Kind ("print", Expr);
+      end case;
+   end Print;
 
    procedure Disp_Int_Trim (Ctxt : in out Ctxt_Class; Str : String) is
    begin
