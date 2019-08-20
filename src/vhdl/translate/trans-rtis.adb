@@ -2423,9 +2423,9 @@ package body Trans.Rtis is
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
                Generate_Instance (Stmt, Parent_Rti);
                Pop_Identifier_Prefix (Mark);
-            when Iir_Kind_Psl_Default_Clock =>
-               null;
-            when Iir_Kind_Psl_Declaration =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Assume_Directive

@@ -989,9 +989,9 @@ package body Trans.Chap9 is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement =>
                Translate_Process_Declarations (El);
-            when Iir_Kind_Psl_Default_Clock =>
-               null;
-            when Iir_Kind_Psl_Declaration =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Assume_Directive
@@ -1138,9 +1138,9 @@ package body Trans.Chap9 is
                if Flag_Direct_Drivers then
                   Chap9.Reset_Direct_Drivers (Stmt);
                end if;
-            when Iir_Kind_Psl_Default_Clock =>
-               null;
-            when Iir_Kind_Psl_Declaration =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Assume_Directive
@@ -2737,12 +2737,11 @@ package body Trans.Chap9 is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement =>
                null;
-            when Iir_Kind_Psl_Default_Clock =>
-               null;
-            when Iir_Kind_Psl_Declaration
-              | Iir_Kind_Psl_Endpoint_Declaration =>
-               null;
-            when Iir_Kind_Psl_Assert_Directive
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Declaration
+               | Iir_Kind_Psl_Endpoint_Declaration
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Assert_Directive
                | Iir_Kind_Psl_Assume_Directive
                | Iir_Kind_Psl_Cover_Directive =>
                null;
@@ -2801,9 +2800,9 @@ package body Trans.Chap9 is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement =>
                Elab_Process (Stmt, Base_Info);
-            when Iir_Kind_Psl_Default_Clock =>
-               null;
-            when Iir_Kind_Psl_Declaration =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Directive
               | Iir_Kind_Psl_Assume_Directive
