@@ -2026,7 +2026,7 @@ package body Vhdl.Prints is
             Print_Property (Ctxt, Get_Property (Prop), Prio);
             Disp_Token (Ctxt, Tok_Right_Paren);
          when N_Eventually =>
-            Disp_Token (Ctxt, Tok_Eventually, Tok_Left_Paren);
+            Disp_Token (Ctxt, Tok_Eventually_Em, Tok_Left_Paren);
             Print_Property (Ctxt, Get_Property (Prop), Prio);
             Disp_Token (Ctxt, Tok_Right_Paren);
          when N_Strong =>

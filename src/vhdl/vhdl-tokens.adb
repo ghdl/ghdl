@@ -464,18 +464,30 @@ package body Vhdl.Tokens is
             return "always";
          when Tok_Never =>
             return "never";
-         when Tok_Eventually =>
-            return "eventually";
+         when Tok_Eventually_Em =>
+            return "eventually!";
+         when Tok_Next_Em =>
+            return "next!";
          when Tok_Next_A =>
             return "next_a";
+         when Tok_Next_A_Em =>
+            return "next_a!";
          when Tok_Next_E =>
             return "next_e";
+         when Tok_Next_E_Em =>
+            return "next_e!";
          when Tok_Next_Event =>
             return "next_event";
+         when Tok_Next_Event_Em =>
+            return "next_event!";
          when Tok_Next_Event_A =>
             return "next_event_a";
+         when Tok_Next_Event_A_Em =>
+            return "next_event_a!";
          when Tok_Next_Event_E =>
             return "next_event_e";
+         when Tok_Next_Event_E_Em =>
+            return "next_event_e!";
       end case;
    end Image;
 

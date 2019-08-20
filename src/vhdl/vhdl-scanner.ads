@@ -106,14 +106,6 @@ package Vhdl.Scanner is
    --  Flag_Psl_Comment or Flag_Pragma_Comment is true.
    Flag_Comment_Keyword : Boolean := False;
 
-   --  If the next character is '!', eat it and return True, otherwise return
-   --  False (used by PSL).
-   function Scan_Exclam_Mark return Boolean;
-
-   --  If the next character is '_', eat it and return True, otherwise return
-   --  False (used by PSL).
-   function Scan_Underscore return Boolean;
-
    --  Get the current location, or the location of the current token.
    --  Since a token cannot spread over lines, file and line of the current
    --  token are the same as those of the current position.

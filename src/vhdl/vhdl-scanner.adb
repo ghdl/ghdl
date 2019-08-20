@@ -1090,8 +1090,7 @@ package body Vhdl.Scanner is
 
       if Source (P - 1) = '_' then
          if Allow_PSL then
-            --  Some PSL reserved words finish with '_'.  This case is handled
-            --  later by Scan_Underscore and Scan_Exclam_Mark.
+            --  Some PSL reserved words finish with '_'.
             P := P - 1;
             Len := Len - 1;
             C := '_';
@@ -1232,6 +1231,37 @@ package body Vhdl.Scanner is
       Current_Token := Tok_Identifier;
    end Scan_Identifier;
 
+   procedure Scan_Psl_Keyword_Em (Tok : Token_Type; Tok_Em : Token_Type) is
+   begin
+      if Source (Pos) = '!' then
+         Pos := Pos + 1;
+         Current_Token := Tok_Em;
+      else
+         Current_Token := Tok;
+      end if;
+   end Scan_Psl_Keyword_Em;
+   pragma Inline (Scan_Psl_Keyword_Em);
+
+   procedure Scan_Psl_Keyword_Em_Un
+     (Tok, Tok_Em, Tok_Un, Tok_Em_Un : Token_Type) is
+   begin
+      if Source (Pos) = '!' then
+         Pos := Pos + 1;
+         if Source (Pos) = '_' then
+            Pos := Pos + 1;
+            Current_Token := Tok_Em_Un;
+         else
+            Current_Token := Tok_Em;
+         end if;
+      elsif Source (Pos) = '_' then
+         Pos := Pos + 1;
+         Current_Token := Tok_Un;
+      else
+         Current_Token := Tok;
+      end if;
+   end Scan_Psl_Keyword_Em_Un;
+   pragma Inline (Scan_Psl_Keyword_Em_Un);
+
    procedure Identifier_To_Token is
    begin
       if Current_Identifier in Std_Names.Name_Id_Keywords then
@@ -1319,7 +1349,14 @@ package body Vhdl.Scanner is
                   Current_Token := Tok_Identifier;
                end if;
             when Std_Names.Name_Id_Vhdl87_Reserved_Words =>
-               null;
+               if Flag_Psl then
+                  if Current_Token = Tok_Until then
+                     Scan_Psl_Keyword_Em_Un (Tok_Until, Tok_Until_Em,
+                                             Tok_Until_Un, Tok_Until_Em_Un);
+                  elsif Current_Token = Tok_Next then
+                     Scan_Psl_Keyword_Em (Tok_Next, Tok_Next_Em);
+                  end if;
+               end if;
             when others =>
                raise Program_Error;
          end case;
@@ -1354,25 +1391,31 @@ package body Vhdl.Scanner is
             when Std_Names.Name_Abort =>
                Current_Token := Tok_Abort;
             when Std_Names.Name_Before =>
-               Current_Token := Tok_Before;
+               Scan_Psl_Keyword_Em_Un (Tok_Before, Tok_Before_Em,
+                                       Tok_Before_Un, Tok_Before_Em_Un);
             when Std_Names.Name_Always =>
                Current_Token := Tok_Always;
             when Std_Names.Name_Never =>
                Current_Token := Tok_Never;
             when Std_Names.Name_Eventually =>
-               Current_Token := Tok_Eventually;
+               if Source (Pos) = '!' then
+                  Pos := Pos + 1;
+               else
+                  Error_Msg_Scan ("'!' expected after 'eventually'");
+               end if;
+               Current_Token := Tok_Eventually_Em;
             when Std_Names.Name_Next_A =>
-               Current_Token := Tok_Next_A;
+               Scan_Psl_Keyword_Em (Tok_Next_A, Tok_Next_A_Em);
             when Std_Names.Name_Next_E =>
-               Current_Token := Tok_Next_E;
+               Scan_Psl_Keyword_Em (Tok_Next_E, Tok_Next_E_Em);
             when Std_Names.Name_Next_Event =>
-               Current_Token := Tok_Next_Event;
+               Scan_Psl_Keyword_Em (Tok_Next_Event, Tok_Next_Event_Em);
             when Std_Names.Name_Next_Event_A =>
-               Current_Token := Tok_Next_Event_A;
+               Scan_Psl_Keyword_Em (Tok_Next_Event_A, Tok_Next_Event_A_Em);
             when Std_Names.Name_Next_Event_E =>
-               Current_Token := Tok_Next_Event_E;
+               Scan_Psl_Keyword_Em (Tok_Next_Event_E, Tok_Next_Event_E_Em);
             when Std_Names.Name_Until =>
-               Current_Token := Tok_Until;
+               raise Internal_Error;
             when others =>
                Current_Token := Tok_Identifier;
                if Source (Pos - 1) = '_' then
@@ -1833,26 +1876,6 @@ package body Vhdl.Scanner is
       end case;
       return False;
    end Scan_Comment;
-
-   function Scan_Exclam_Mark return Boolean is
-   begin
-      if Source (Pos) = '!' then
-         Pos := Pos + 1;
-         return True;
-      else
-         return False;
-      end if;
-   end Scan_Exclam_Mark;
-
-   function Scan_Underscore return Boolean is
-   begin
-      if Source (Pos) = '_' then
-         Pos := Pos + 1;
-         return True;
-      else
-         return False;
-      end if;
-   end Scan_Underscore;
 
    --  The Scan_Next_Line procedure must be called after each end-of-line to
    --  register to next line number.  This is called by Scan_CR_Newline and

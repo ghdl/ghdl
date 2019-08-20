@@ -485,24 +485,27 @@ package body Vhdl.Parse_Psl is
       end if;
    end Parse_Parenthesis_FL_Property;
 
-   --  Parse [ '!' ] '[' finite_Range ']' '(' FL_Property ')'
-   function Parse_Range_Property (K : Nkind) return Node is
+   --  Parse '[' finite_Range ']' '(' FL_Property ')'
+   function Parse_Range_Property (K : Nkind; Strong : Boolean) return Node
+   is
       Res : Node;
    begin
       Res := Create_Node_Loc (K);
-      Set_Strong_Flag (Res, Scan_Exclam_Mark);
+      Set_Strong_Flag (Res, Strong);
       Scan;
       Parse_Bracket_Range (Res);
       Set_Property (Res, Parse_Parenthesis_FL_Property);
       return Res;
    end Parse_Range_Property;
 
-   --  Parse [ '!' ] '(' Boolean ')' '[' Range ']' '(' FL_Property ')'
-   function Parse_Boolean_Range_Property (K : Nkind) return Node is
+   --  Parse '(' Boolean ')' '[' Range ']' '(' FL_Property ')'
+   function Parse_Boolean_Range_Property (K : Nkind; Strong : Boolean)
+                                         return Node
+   is
       Res : Node;
    begin
       Res := Create_Node_Loc (K);
-      Set_Strong_Flag (Res, Scan_Exclam_Mark);
+      Set_Strong_Flag (Res, Strong);
       Scan;
       Set_Boolean (Res, Parse_Parenthesis_Boolean);
       Parse_Bracket_Range (Res);
@@ -524,11 +527,8 @@ package body Vhdl.Parse_Psl is
             Res := Create_Node_Loc (N_Never);
             Scan;
             Set_Property (Res, Parse_FL_Property (Prio_FL_Invariance));
-         when Tok_Eventually =>
+         when Tok_Eventually_Em =>
             Res := Create_Node_Loc (N_Eventually);
-            if not Scan_Exclam_Mark then
-               Error_Msg_Parse ("'eventually' must be followed by '!'");
-            end if;
             Scan;
             Set_Property (Res, Parse_FL_Property (Prio_FL_Occurence));
          when Tok_Next =>
@@ -541,9 +541,13 @@ package body Vhdl.Parse_Psl is
                Set_Property (Res, Parse_FL_Property (Prio_FL_Occurence));
             end if;
          when Tok_Next_A =>
-            Res := Parse_Range_Property (N_Next_A);
+            Res := Parse_Range_Property (N_Next_A, False);
+         when Tok_Next_A_Em =>
+            Res := Parse_Range_Property (N_Next_A, True);
          when Tok_Next_E =>
-            Res := Parse_Range_Property (N_Next_E);
+            Res := Parse_Range_Property (N_Next_E, False);
+         when Tok_Next_E_Em =>
+            Res := Parse_Range_Property (N_Next_E, True);
          when Tok_Next_Event =>
             Res := Create_Node_Loc (N_Next_Event);
             Scan;
@@ -553,9 +557,13 @@ package body Vhdl.Parse_Psl is
             end if;
             Set_Property (Res, Parse_Parenthesis_FL_Property);
          when Tok_Next_Event_A =>
-            Res := Parse_Boolean_Range_Property (N_Next_Event_A);
+            Res := Parse_Boolean_Range_Property (N_Next_Event_A, False);
+         when Tok_Next_Event_A_Em =>
+            Res := Parse_Boolean_Range_Property (N_Next_Event_A, True);
          when Tok_Next_Event_E =>
-            Res := Parse_Boolean_Range_Property (N_Next_Event_E);
+            Res := Parse_Boolean_Range_Property (N_Next_Event_E, False);
+         when Tok_Next_Event_E_Em =>
+            Res := Parse_Boolean_Range_Property (N_Next_Event_E, True);
          when Tok_Left_Paren =>
             return Parse_Parenthesis_FL_Property;
          when Tok_Left_Curly =>
@@ -576,12 +584,15 @@ package body Vhdl.Parse_Psl is
       return Res;
    end Parse_FL_Property_1;
 
-   function Parse_St_Binary_FL_Property (K : Nkind; Left : Node) return Node is
+   function Parse_St_Binary_FL_Property
+     (K : Nkind; Left : Node; Strong : Boolean; Inclusive : Boolean)
+     return Node
+   is
       Res : Node;
    begin
       Res := Create_Node_Loc (K);
-      Set_Strong_Flag (Res, Scan_Exclam_Mark);
-      Set_Inclusive_Flag (Res, Scan_Underscore);
+      Set_Strong_Flag (Res, Strong);
+      Set_Inclusive_Flag (Res, Inclusive);
       Scan;
       Set_Left (Res, Left);
       Set_Right (Res, Parse_FL_Property (Prio_FL_Bounding));
@@ -746,12 +757,43 @@ package body Vhdl.Parse_Psl is
                if Prio > Prio_FL_Bounding then
                   return Res;
                end if;
-               Res := Parse_St_Binary_FL_Property (N_Until, Res);
+               Res := Parse_St_Binary_FL_Property (N_Until, Res, False, False);
+            when Tok_Until_Em =>
+               if Prio > Prio_FL_Bounding then
+                  return Res;
+               end if;
+               Res := Parse_St_Binary_FL_Property (N_Until, Res, True, False);
+            when Tok_Until_Un =>
+               if Prio > Prio_FL_Bounding then
+                  return Res;
+               end if;
+               Res := Parse_St_Binary_FL_Property (N_Until, Res, False, True);
+            when Tok_Until_Em_Un =>
+               if Prio > Prio_FL_Bounding then
+                  return Res;
+               end if;
+               Res := Parse_St_Binary_FL_Property (N_Until, Res, True, True);
             when Tok_Before =>
                if Prio > Prio_FL_Bounding then
                   return Res;
                end if;
-               Res := Parse_St_Binary_FL_Property (N_Before, Res);
+               Res := Parse_St_Binary_FL_Property
+                 (N_Before, Res, False, False);
+            when Tok_Before_Em =>
+               if Prio > Prio_FL_Bounding then
+                  return Res;
+               end if;
+               Res := Parse_St_Binary_FL_Property (N_Before, Res, True, False);
+            when Tok_Before_Un =>
+               if Prio > Prio_FL_Bounding then
+                  return Res;
+               end if;
+               Res := Parse_St_Binary_FL_Property (N_Before, Res, False, True);
+            when Tok_Before_Em_Un =>
+               if Prio > Prio_FL_Bounding then
+                  return Res;
+               end if;
+               Res := Parse_St_Binary_FL_Property (N_Before, Res, True, True);
             when Tok_Or =>
                if Prio > Prio_Seq_Or then
                   return Res;

@@ -406,11 +406,17 @@ package body Ghdlprint is
               | Tok_Until_Em_Un
               | Tok_Always
               | Tok_Never
-              | Tok_Eventually
+              | Tok_Eventually_Em
+              | Tok_Next_Em
               | Tok_Next_A
+              | Tok_Next_A_Em
               | Tok_Next_E
+              | Tok_Next_E_Em
               | Tok_Next_Event
+              | Tok_Next_Event_Em
               | Tok_Next_Event_A
+              | Tok_Next_Event_A_Em
+              | Tok_Next_Event_E_Em
               | Tok_Next_Event_E =>
                Disp_Spaces;
                Disp_Text;
