@@ -48,7 +48,7 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
-with Netlists.Utils;
+with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Stmts is
@@ -76,13 +76,15 @@ package body Synth.Stmts is
       end if;
    end Synth_Waveform;
 
-   procedure Synth_Assign
-     (Dest : Value_Acc; Val : Value_Acc; Loc : Source.Syn_Src) is
+   procedure Synth_Assign (Dest : Value_Acc;
+                           Val : Value_Acc;
+                           Offset : Uns32;
+                           Loc : Source.Syn_Src) is
    begin
       pragma Assert (Dest.Kind = Value_Wire);
-      Phi_Assign
-        (Dest.W,
-         Get_Net (Synth_Subtype_Conversion (Val, Dest.Typ, Loc)));
+      Phi_Assign (Build_Context, Dest.W,
+                  Get_Net (Synth_Subtype_Conversion (Val, Dest.Typ, Loc)),
+                  Offset);
    end Synth_Assign;
 
    procedure Synth_Assignment_Aggregate (Syn_Inst : Synth_Instance_Acc;
@@ -136,20 +138,19 @@ package body Synth.Stmts is
       Synth_Indexed_Name (Syn_Inst, Target, Targ.Typ, Voff, Mul, Off, W);
 
       pragma Assert (Get_Type_Width (Val.Typ) = W);
-      Targ_Net := Get_Last_Assigned_Value (Targ.W);
-      Val_Net := Get_Net (Val);
 
       if Voff = No_Net then
          --  FIXME: check index.
          pragma Assert (Mul = 0);
-         V := Build_Insert (Build_Context, Targ_Net, Val_Net, Off);
-         Set_Location (V, Target);
+         Synth_Assign (Targ, Val, Off, Loc);
       else
+         Targ_Net := Get_Last_Assigned_Value (Build_Context, Targ.W);
+         Val_Net := Get_Net (Val);
          V := Build_Dyn_Insert
            (Build_Context, Targ_Net, Val_Net, Voff, Mul, Int32 (Off));
          Set_Location (V, Target);
+         Synth_Assign (Targ, Create_Value_Net (V, Targ.Typ), 0, Loc);
       end if;
-      Synth_Assign (Targ, Create_Value_Net (V, Targ.Typ), Loc);
    end Synth_Indexed_Assignment;
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
@@ -164,7 +165,7 @@ package body Synth.Stmts is
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration =>
-            Synth_Assign (Get_Value (Syn_Inst, Target), Val, Loc);
+            Synth_Assign (Get_Value (Syn_Inst, Target), Val, 0, Loc);
          when Iir_Kind_Aggregate =>
             Synth_Assignment_Aggregate (Syn_Inst, Target, Val, Loc);
          when Iir_Kind_Indexed_Name =>
@@ -190,18 +191,18 @@ package body Synth.Stmts is
                end if;
                Synth_Slice_Suffix (Syn_Inst, Target, Targ.Typ.Vbound,
                                    Res_Bnd, Inp, Step, Off, Wd);
-               Targ_Net := Get_Last_Assigned_Value (Targ.W);
-               V := Get_Net (Val);
                if Inp /= No_Net then
+                  Targ_Net := Get_Last_Assigned_Value (Build_Context, Targ.W);
+                  V := Get_Net (Val);
                   Res := Build_Dyn_Insert
                     (Build_Context, Targ_Net, V, Inp, Step, Off);
+                  Set_Location (Res, Target);
+                  Res_Type := Create_Vector_Type (Res_Bnd, Targ.Typ.Vec_El);
+                  Synth_Assign
+                    (Targ, Create_Value_Net (Res, Res_Type), 0, Loc);
                else
-                  Res := Build_Insert
-                    (Build_Context, Targ_Net, V, Uns32 (Off));
+                  Synth_Assign (Targ, Val, Uns32 (Off), Loc);
                end if;
-               Set_Location (Res, Target);
-               Res_Type := Create_Vector_Type (Res_Bnd, Targ.Typ.Vec_El);
-               Synth_Assign (Targ, Create_Value_Net (Res, Res_Type), Loc);
             end;
          when others =>
             Error_Kind ("synth_assignment", Target);
@@ -750,7 +751,8 @@ package body Synth.Stmts is
       for I in Wires'Range loop
          declare
             Wi : constant Wire_Id := Wires (I);
-            Last_Val : constant Net := Get_Last_Assigned_Value (Wi);
+            Last_Val : constant Net :=
+              Get_Last_Assigned_Value (Build_Context, Wi);
             Res : Net;
             Default : Net;
             C : Natural;
@@ -761,7 +763,7 @@ package body Synth.Stmts is
                --  value.  Otherwise, use Last_Val, ie the last assignment
                --  before the case.
                if Get_Wire_Id (Alt.Asgns) = Wi then
-                  Alt.Val := Get_Assign_Value (Alt.Asgns);
+                  Alt.Val := Get_Assign_Value (Build_Context, Alt.Asgns);
                   Alt.Asgns := Get_Assign_Chain (Alt.Asgns);
                else
                   Alt.Val := Last_Val;
@@ -784,7 +786,7 @@ package body Synth.Stmts is
 
             --  Generate the muxes tree.
             Synth_Case (Sel_Net, Case_El.all, Default, Res);
-            Phi_Assign (Wi, Res);
+            Phi_Assign (Build_Context, Wi, Res, 0);
          end;
       end loop;
 
@@ -1358,7 +1360,6 @@ package body Synth.Stmts is
    function Synth_Psl_Sequence_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Net
    is
-      use Netlists.Utils;
       use Netlists.Gates;
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
       Init : Net;
@@ -1416,7 +1417,6 @@ package body Synth.Stmts is
    is
       use PSL.Types;
       use PSL.NFAs;
-      use Netlists.Utils;
       use Netlists.Gates;
       NFA : constant PSL_NFA := Get_PSL_NFA (Stmt);
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);

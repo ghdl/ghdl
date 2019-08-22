@@ -18,6 +18,7 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Types; use Types;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Synth.Environment; use Synth.Environment;
@@ -30,6 +31,7 @@ package Synth.Inference is
    procedure Infere (Ctxt : Context_Acc;
                      Wid : Wire_Id;
                      Val : Net;
+                     Off : Uns32;
                      Prev_Val : Net;
                      Stmt : Source.Syn_Src);
 end Synth.Inference;

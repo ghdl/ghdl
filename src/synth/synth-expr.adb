@@ -40,7 +40,6 @@ with Synth.Environment; use Synth.Environment;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
-with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Expr is

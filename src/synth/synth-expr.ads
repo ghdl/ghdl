@@ -18,9 +18,11 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Ada.Unchecked_Deallocation;
 with Types; use Types;
+
 with Netlists; use Netlists;
+with Netlists.Utils; use Netlists.Utils;
+
 with Synth.Source;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
@@ -50,11 +52,6 @@ package Synth.Expr is
 
    function Bit_Extract (Val : Value_Acc; Off : Uns32; Loc : Node)
                         return Value_Acc;
-
-   type Net_Array is array (Int32 range <>) of Net;
-   type Net_Array_Acc is access Net_Array;
-   procedure Free_Net_Array is new Ada.Unchecked_Deallocation
-     (Net_Array, Net_Array_Acc);
 
    function Concat_Array (Arr : Net_Array_Acc) return Net;
 

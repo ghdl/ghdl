@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Dyn_Tables;
 with Tables;
 with Netlists; use Netlists;
 with Netlists.Builders;
@@ -65,10 +66,12 @@ package Synth.Environment is
 
    --  The current value of WID.  For variables, this is the last assigned
    --  value.  For signals, this is the initial value.
-   function Get_Current_Value (Wid : Wire_Id) return Net;
+   function Get_Current_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
+                              return Net;
 
    --  The last assigned value to WID.
-   function Get_Last_Assigned_Value (Wid : Wire_Id) return Net;
+   function Get_Last_Assigned_Value
+     (Ctxt : Builders.Context_Acc; Wid : Wire_Id) return Net;
 
    --  Read and write the mark flag.
    function Get_Wire_Mark (Wid : Wire_Id) return Boolean;
@@ -79,7 +82,9 @@ package Synth.Environment is
 
    function Get_Wire_Id (W : Seq_Assign) return Wire_Id;
    function Get_Assign_Chain (Asgn : Seq_Assign) return Seq_Assign;
-   function Get_Assign_Value (Asgn : Seq_Assign) return Net;
+
+   function Get_Assign_Value (Ctxt : Builders.Context_Acc; Asgn : Seq_Assign)
+                             return Net;
 
    type Phi_Type is private;
 
@@ -103,15 +108,15 @@ package Synth.Environment is
    function Sort_Phi (P : Phi_Type) return Seq_Assign;
 
    --  In the current phi context, assign VAL to DEST.
-   procedure Phi_Assign (Dest : Wire_Id; Val : Net);
+   procedure Phi_Assign
+     (Ctxt : Builders.Context_Acc; Dest : Wire_Id; Val : Net; Offset : Uns32);
 
    --  Get current phi context.
    function Current_Phi return Phi_Id;
    pragma Inline (Current_Phi);
 
-   procedure Add_Conc_Assign (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src);
-   procedure Add_Conc_Assign_Comb
-     (Wid : Wire_Id; Val : Net; Stmt : Source.Syn_Src);
+   procedure Add_Conc_Assign
+     (Wid : Wire_Id; Val : Net; Off : Uns32; Stmt : Source.Syn_Src);
 
    procedure Finalize_Assignments (Ctxt : Builders.Context_Acc);
 private
@@ -122,6 +127,11 @@ private
 
    type Seq_Assign is new Uns32;
    No_Seq_Assign : constant Seq_Assign := 0;
+
+   type Partial_Assign is new Uns32;
+   No_Partial_Assign : constant Partial_Assign := 0;
+
+   type Partial_Assign_Array is array (Int32 range <>) of Partial_Assign;
 
    type Conc_Assign is new Uns32;
    No_Conc_Assign : constant Conc_Assign := 0;
@@ -173,8 +183,16 @@ private
       --  Next wire in the phi context.
       Chain : Seq_Assign;
 
-      --  Value assigned.
+      --  Values assigned.
+      Asgns : Partial_Assign;
+   end record;
+
+   type Partial_Assign_Record is record
+      Next : Partial_Assign;
+
+      --  Assignment at OFFSET.  The width is set by the width of the value.
       Value : Net;
+      Offset : Uns32;
    end record;
 
    type Conc_Assign_Record is record
@@ -213,9 +231,21 @@ private
       Table_Low_Bound => No_Seq_Assign,
       Table_Initial => 1024);
 
+   package Partial_Assign_Table is new Tables
+     (Table_Component_Type => Partial_Assign_Record,
+      Table_Index_Type => Partial_Assign,
+      Table_Low_Bound => No_Partial_Assign,
+      Table_Initial => 1024);
+
    package Conc_Assign_Table is new Tables
      (Table_Component_Type => Conc_Assign_Record,
       Table_Index_Type => Conc_Assign,
       Table_Low_Bound => No_Conc_Assign,
       Table_Initial => 1024);
+
+   package Net_Tables is new Dyn_Tables
+     (Table_Component_Type => Net,
+      Table_Index_Type => Int32,
+      Table_Low_Bound => 1,
+      Table_Initial => 32);
 end Synth.Environment;

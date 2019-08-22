@@ -338,7 +338,7 @@ package body Synth.Context is
    begin
       case Val.Kind is
          when Value_Wire =>
-            return Get_Current_Value (Val.W);
+            return Get_Current_Value (Build_Context, Val.W);
          when Value_Net =>
             return Val.N;
          when Value_Mux2 =>

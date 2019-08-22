@@ -21,7 +21,6 @@
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Gates_Ports; use Netlists.Gates_Ports;
-with Types; use Types;
 
 package body Synth.Inference is
    --  DFF inference.
@@ -177,9 +176,32 @@ package body Synth.Inference is
       end case;
    end Extract_Clock;
 
+   procedure Check_FF_Else (Els : Net; Prev_Val : Net; Off : Uns32)
+   is
+      Inst : Instance;
+   begin
+      if Els = Prev_Val then
+         if Off /= 0 then
+            raise Internal_Error;
+         end if;
+         return;
+      end if;
+      Inst := Get_Parent (Els);
+      if Get_Id (Inst) /= Id_Extract then
+         raise Internal_Error;
+      end if;
+      if Get_Param_Uns32 (Inst, 0) /= Off then
+         raise Internal_Error;
+      end if;
+      if Get_Input_Net (Inst, 0) /= Prev_Val then
+         raise Internal_Error;
+      end if;
+   end Check_FF_Else;
+
    procedure Infere_FF (Ctxt : Context_Acc;
                         Wid : Wire_Id;
                         Prev_Val : Net;
+                        Off : Uns32;
                         Last_Mux : Instance;
                         Clk : Net;
                         Enable : Net;
@@ -202,10 +224,8 @@ package body Synth.Inference is
       --  1. Remove the mux that creates the loop (will be replaced by the
       --     dff).
       Disconnect (Sel);
-      if Get_Driver (I0) /= Prev_Val then
-         --  There must be no 'else' part for clock expression.
-         raise Internal_Error;
-      end if;
+      --  There must be no 'else' part for clock expression.
+      Check_FF_Else (Get_Driver (I0), Prev_Val, Off);
       --  Don't try to free driver of I0 as this is Prev_Val.
       Disconnect (I0);
       Data := Get_Driver (I1);
@@ -316,12 +336,13 @@ package body Synth.Inference is
 
       Free_Instance (Last_Mux);
 
-      Add_Conc_Assign (Wid, Res, Stmt);
+      Add_Conc_Assign (Wid, Res, Off, Stmt);
    end Infere_FF;
 
    procedure Infere (Ctxt : Context_Acc;
                      Wid : Wire_Id;
                      Val : Net;
+                     Off : Uns32;
                      Prev_Val : Net;
                      Stmt : Source.Syn_Src)
    is
@@ -336,7 +357,7 @@ package body Synth.Inference is
       Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
       if Len <= 0 then
          --  No logical loop or self assignment.
-         Add_Conc_Assign_Comb (Wid, Val, Stmt);
+         Add_Conc_Assign (Wid, Val, Off, Stmt);
       else
          --  So there is a logical loop.
          Sel := Get_Mux2_Sel (Last_Mux);
@@ -346,7 +367,7 @@ package body Synth.Inference is
             raise Internal_Error;
          else
             --  Clock -> FF
-            Infere_FF (Ctxt, Wid, Prev_Val, Last_Mux, Clk, Enable, Stmt);
+            Infere_FF (Ctxt, Wid, Prev_Val, Off, Last_Mux, Clk, Enable, Stmt);
          end if;
       end if;
    end Infere;

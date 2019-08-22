@@ -48,16 +48,28 @@ package body Synth.Environment.Debug is
          end if;
       end Dump_Value;
       Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
+      P : Partial_Assign;
    begin
       Put ("Assign" & Seq_Assign'Image (Asgn));
-      Put (" Id:" & Wire_Id'Image (Rec.Id));
+      Put (" Wire Id:" & Wire_Id'Image (Rec.Id));
       Put (", prev_assign:" & Seq_Assign'Image (Rec.Prev));
       Put (", phi:" & Phi_Id'Image (Rec.Phi));
       Put (", chain:" & Seq_Assign'Image (Rec.Chain));
       New_Line;
-      Put (" value: ");
-      Dump_Value (Rec.Value);
-      New_Line;
+      Put_Line (" value:");
+      P := Rec.Asgns;
+      while P /= No_Partial_Assign loop
+         declare
+            Pasgn : Partial_Assign_Record renames
+              Partial_Assign_Table.Table (P);
+         begin
+            Put (" off:" & Uns32'Image (Pasgn.Offset));
+            Put (", ");
+            Dump_Value (Pasgn.Value);
+            New_Line;
+            P := Pasgn.Next;
+         end;
+      end loop;
    end Dump_Assign;
 
    procedure Dump_Phi (Id : Phi_Id)

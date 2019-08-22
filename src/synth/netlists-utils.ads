@@ -17,8 +17,14 @@
 --  along with this program; if not, write to the Free Software
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
+with Ada.Unchecked_Deallocation;
 
 package Netlists.Utils is
+   type Net_Array is array (Int32 range <>) of Net;
+   type Net_Array_Acc is access Net_Array;
+   procedure Free_Net_Array is new Ada.Unchecked_Deallocation
+     (Net_Array, Net_Array_Acc);
+
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr;
    function Get_Nbr_Outputs (Inst : Instance) return Port_Nbr;
    function Get_Nbr_Params (Inst : Instance) return Param_Nbr;
@@ -55,4 +61,5 @@ package Netlists.Utils is
 
    --  Unlink all unused instances of M.
    procedure Remove_Unused_Instances (M : Module);
+
 end Netlists.Utils;
