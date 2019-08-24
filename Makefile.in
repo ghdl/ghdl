@@ -591,3 +591,12 @@ clean-pure-gpl:
 force:
 
 .PHONY: force clean distclean clean-c clean-pure-gpl
+
+# Most of the compilation is done through gnatmake, so using make -jX it not
+# very effective.
+# Hint: for parallel build use: make GNATMAKE="gnatmake -j8"
+# Parallel builds may fail with the llvm backend as it can start two gnatmake
+# in parallel: one for ghdl_llvm and the other for ghdl1-llvm. But they
+# share the same objects.
+# Any better fix is welcome!
+.NOTPARALLEL:
