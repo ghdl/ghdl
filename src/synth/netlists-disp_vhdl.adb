@@ -342,29 +342,62 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Lit;
 
+   function Need_Name (Inst : Instance) return Boolean
+   is
+      Id : constant Module_Id := Get_Id (Inst);
+   begin
+      case Id is
+         when Id_Extract
+           | Id_Dyn_Extract
+           | Id_Dyn_Insert =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Need_Name;
+
+   --  Return True if constant INST is connected to an instance that needs
+   --  a name.  In that case, a signal will be created and driven.
+   function Need_Signal (Inst : Instance) return Boolean
+   is
+      I : Input;
+   begin
+      I := Get_First_Sink (Get_Output (Inst, 0));
+      while I /= No_Input loop
+         if Need_Name (Get_Parent (I)) then
+            return True;
+         end if;
+         I := Get_Next_Sink (I);
+      end loop;
+      return False;
+   end Need_Signal;
+
    type Conv_Type is (Conv_None, Conv_Unsigned, Conv_Signed);
 
-   procedure Disp_Net_Expr (N : Net; Conv : Conv_Type)
+   procedure Disp_Net_Expr (N : Net; Inst : Instance; Conv : Conv_Type)
    is
-      Inst : Instance;
+      Net_Inst : Instance;
    begin
       if N = No_Net then
          Put ("<unassigned>");
          return;
       end if;
 
-      Inst := Get_Parent (N);
-      if Flag_Merge_Lit and then Is_Const (Get_Id (Inst)) then
+      Net_Inst := Get_Parent (N);
+      if Flag_Merge_Lit
+        and then Is_Const (Get_Id (Net_Inst))
+        and then not Need_Name (Inst)
+      then
          case Conv is
             when Conv_None =>
-               Disp_Lit (Inst);
+               Disp_Lit (Net_Inst);
             when Conv_Unsigned =>
                Put ("unsigned'(");
-               Disp_Lit (Inst);
+               Disp_Lit (Net_Inst);
                Put (")");
             when Conv_Signed =>
                Put ("signed'(");
-               Disp_Lit (Inst);
+               Disp_Lit (Net_Inst);
                Put (")");
          end case;
       else
@@ -401,8 +434,10 @@ package body Netlists.Disp_Vhdl is
       I := S'First;
       while I <= S'Last loop
          C := S (I);
+         --  Escape character.
          if C = '\' then
             I := I + 1;
+            --  Conversion (optional).
             if S (I) = 'u' then
                Conv := Conv_Unsigned;
                I := I + 1;
@@ -415,11 +450,12 @@ package body Netlists.Disp_Vhdl is
             Idx := Character'Pos (S (I + 1)) - Character'Pos ('0');
             case S (I) is
                when 'o' =>
+                  pragma Assert (Conv = Conv_None);
                   N := Get_Output (Inst, Port_Idx (Idx));
-                  Disp_Net_Expr (N, Conv);
+                  Disp_Net_Name (N);
                when 'i' =>
                   N := Get_Input_Net (Inst, Port_Idx (Idx));
-                  Disp_Net_Expr (N, Conv);
+                  Disp_Net_Expr (N, Inst, Conv);
                when 'n' =>
                   V := Val (Idx);
                   Put_Uns32 (V);
@@ -676,7 +712,7 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0", Inst);
             for I in 1 .. Get_Nbr_Inputs (Inst) - 1 loop
                Disp_Template (" & ", Inst);
-               Disp_Net_Expr (Get_Input_Net (Inst, I), Conv_None);
+               Disp_Net_Expr (Get_Input_Net (Inst, I), Inst, Conv_None);
             end loop;
             Disp_Template(";" & NL, Inst);
          when Id_Utrunc
@@ -742,7 +778,9 @@ package body Netlists.Disp_Vhdl is
       --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
          if not Is_Self_Instance (Inst)
-           and then not (Flag_Merge_Lit and then Is_Const (Get_Id (Inst)))
+           and then not (Flag_Merge_Lit
+                           and then Is_Const (Get_Id (Inst))
+                           and then not Need_Signal (Inst))
            and then Get_Id (Inst) < Id_User_None
          then
             for N of Outputs (Inst) loop
@@ -787,7 +825,10 @@ package body Netlists.Disp_Vhdl is
       end;
 
       for Inst of Instances (M) loop
-         if not (Flag_Merge_Lit and then Is_Const (Get_Id (Inst))) then
+         if not (Flag_Merge_Lit
+                   and then Is_Const (Get_Id (Inst))
+                   and then not Need_Signal (Inst))
+         then
             Disp_Instance_Inline (Inst);
          end if;
       end loop;
