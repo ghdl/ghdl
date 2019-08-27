@@ -872,6 +872,7 @@ package body Vhdl.Annotations is
                null;
             when Iir_Kind_Simple_Signal_Assignment_Statement
               | Iir_Kind_Selected_Waveform_Assignment_Statement
+              | Iir_Kind_Conditional_Signal_Assignment_Statement
               | Iir_Kind_Variable_Assignment_Statement =>
                null;
             when Iir_Kind_Procedure_Call_Statement =>

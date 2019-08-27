@@ -1144,6 +1144,8 @@ package body Synth.Stmts is
                Synth_If_Statement (Syn_Inst, Stmt);
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
                Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
+            when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Variable_Assignment_Statement =>
                Synth_Variable_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Case_Statement =>
