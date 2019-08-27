@@ -2,14 +2,13 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity asgn02 is
-  port (a : std_logic_vector (2 downto 0);
-        s0 : std_logic;
+  port (s0 : std_logic;
         r : out std_logic_vector (2 downto 0));
 end asgn02;
 
 architecture behav of asgn02 is
 begin
-  process (a, s0) is
+  process (s0) is
   begin
     r <= "000";
     if s0 = '1' then
