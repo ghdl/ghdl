@@ -1196,6 +1196,15 @@ package body Synth.Expr is
                Error_Msg_Synth (+Expr, "non-constant mod not supported");
                return null;
             end if;
+         when Iir_Predefined_Integer_Rem =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Left.Scal rem Right.Scal,
+                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
+            else
+               Error_Msg_Synth (+Expr, "non-constant rem not supported");
+               return null;
+            end if;
          when Iir_Predefined_Integer_Exp =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete
@@ -1240,6 +1249,13 @@ package body Synth.Expr is
                  (Boolean'Pos (Left.Scal = Right.Scal), Boolean_Type);
             else
                return Synth_Compare (Id_Eq);
+            end if;
+         when Iir_Predefined_Integer_Inequality =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Boolean'Pos (Left.Scal /= Right.Scal), Boolean_Type);
+            else
+               return Synth_Compare (Id_Ne);
             end if;
 
          when others =>
