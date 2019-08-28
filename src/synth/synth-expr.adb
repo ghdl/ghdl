@@ -1323,6 +1323,15 @@ package body Synth.Expr is
             else
                return Synth_Compare (Id_Ne);
             end if;
+         when Iir_Predefined_Physical_Physical_Div =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Left.Scal / Right.Scal,
+                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
+            else
+               Error_Msg_Synth (+Expr, "non-constant division not supported");
+               return null;
+            end if;
 
          when others =>
             Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
@@ -2269,7 +2278,8 @@ package body Synth.Expr is
          when Iir_Kind_Floating_Point_Literal =>
             return Create_Value_Float
               (Get_Fp_Value (Expr), Get_Value_Type (Syn_Inst, Expr_Type));
-         when Iir_Kind_Physical_Int_Literal =>
+         when Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal =>
             return Create_Value_Discrete
               (Get_Physical_Value (Expr),
                Get_Value_Type (Syn_Inst, Expr_Type));
