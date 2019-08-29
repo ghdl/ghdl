@@ -118,15 +118,32 @@ package body Synth.Decls is
            | Iir_Kind_File_Type_Definition =>
             null;
          when Iir_Kind_Record_Type_Definition =>
+            if not Is_Fully_Constrained_Type (Def) then
+               return;
+            end if;
             declare
                El_List : constant Node_Flist :=
                  Get_Elements_Declaration_List (Def);
+               Rec_Els : Rec_El_Array_Acc;
                El : Node;
+               El_Typ : Type_Acc;
+               Off : Uns32;
             begin
+               Rec_Els := Create_Rec_El_Array
+                 (Iir_Index32 (Get_Nbr_Elements (El_List)));
+               Typ := Create_Record_Type (Rec_Els, 0);
+               Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
+
+               Off := 0;
                for I in Flist_First .. Flist_Last (El_List) loop
                   El := Get_Nth_Element (El_List, I);
                   Synth_Declaration_Type (Syn_Inst, El);
+                  El_Typ := Get_Value_Type (Syn_Inst, Get_Type (El));
+                  Rec_Els.E (Iir_Index32 (I + 1)) := (Off => Off,
+                                                      Typ => El_Typ);
+                  Off := Off + Get_Type_Width (El_Typ);
                end loop;
+               Typ.Rec_W := Off;
             end;
          when others =>
             Error_Kind ("synth_type_definition", Def);
@@ -393,7 +410,6 @@ package body Synth.Decls is
          Value := Get_Spec_Chain (Value);
       end loop;
    end Synth_Attribute_Specification;
-
 
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Node) is
    begin

@@ -73,6 +73,11 @@ package Synth.Environment is
    function Get_Last_Assigned_Value
      (Ctxt : Builders.Context_Acc; Wid : Wire_Id) return Net;
 
+   function Get_Current_Assign_Value
+     (Ctxt : Builders.Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width)
+     return Net;
+
+
    --  Read and write the mark flag.
    function Get_Wire_Mark (Wid : Wire_Id) return Boolean;
    procedure Set_Wire_Mark (Wid : Wire_Id; Mark : Boolean := True);

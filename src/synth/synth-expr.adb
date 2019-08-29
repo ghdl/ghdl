@@ -257,6 +257,7 @@ package body Synth.Expr is
       Idx_Type : constant Node := Get_Index_Type (Aggr_Type, Dim);
       type Boolean_Array is array (Uns32 range <>) of Boolean;
       pragma Pack (Boolean_Array);
+      --  FIXME: test Res.Arr.V (I) instead.
       Is_Set : Boolean_Array (0 .. Bound.Len - 1);
       Value : Node;
       Assoc : Node;
@@ -335,6 +336,55 @@ package body Synth.Expr is
          end loop;
       end loop;
    end Fill_Array_Aggregate;
+
+   procedure Fill_Record_Aggregate (Syn_Inst : Synth_Instance_Acc;
+                                    Aggr : Node;
+                                    Res : Value_Acc)
+   is
+      El_List : constant Node_Flist :=
+        Get_Elements_Declaration_List (Get_Type (Aggr));
+      Value : Node;
+      Assoc : Node;
+      Pos : Natural;
+
+      procedure Set_Elem (Pos : Natural)
+      is
+         Val : Value_Acc;
+      begin
+         Val := Synth_Expression_With_Type
+           (Syn_Inst, Value, Get_Type (Get_Nth_Element (El_List, Pos)));
+         Res.Rec.V (Iir_Index32 (Pos + 1)) := Val;
+      end Set_Elem;
+   begin
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      Pos := 0;
+      Res.Rec.V := (others => null);
+      while Is_Valid (Assoc) loop
+         Value := Get_Associated_Expr (Assoc);
+         loop
+            case Get_Kind (Assoc) is
+               when Iir_Kind_Choice_By_None =>
+                  Set_Elem (Pos);
+                  Pos := Pos + 1;
+               when Iir_Kind_Choice_By_Others =>
+                  for I in Res.Rec.V'Range loop
+                     if Res.Rec.V (I) = null then
+                        Set_Elem (Natural (I - 1));
+                     end if;
+                  end loop;
+               when Iir_Kind_Choice_By_Name =>
+                  Pos := Natural (Get_Element_Position (Get_Name (Assoc)));
+                  Set_Elem (Pos);
+               when others =>
+                  Error_Msg_Synth
+                    (+Assoc, "unhandled association form");
+            end case;
+            Assoc := Get_Chain (Assoc);
+            exit when Is_Null (Assoc);
+            exit when not Get_Same_Alternative_Flag (Assoc);
+         end loop;
+      end loop;
+   end Fill_Record_Aggregate;
 
    procedure Concat_Array (Arr : in out Net_Array)
    is
@@ -635,12 +685,28 @@ package body Synth.Expr is
 
       Fill_Array_Aggregate (Syn_Inst, Aggr, Res, 0);
 
-      if Is_Vector_Type (Aggr_Type) then
+      if False and Is_Vector_Type (Aggr_Type) then
          Res := Vectorize_Array (Res, Get_Element_Subtype (Aggr_Type));
       end if;
 
       return Res;
    end Synth_Aggregate_Array;
+
+   function Synth_Aggregate_Record (Syn_Inst : Synth_Instance_Acc;
+                                    Aggr : Node;
+                                    Aggr_Type : Node) return Value_Acc
+   is
+      Res_Type : Type_Acc;
+      Res : Value_Acc;
+   begin
+      --  Allocate the result.
+      Res_Type := Get_Value_Type (Syn_Inst, Aggr_Type);
+      Res := Create_Value_Record (Res_Type);
+
+      Fill_Record_Aggregate (Syn_Inst, Aggr, Res);
+
+      return Res;
+   end Synth_Aggregate_Record;
 
    --  Aggr_Type is the type from the context.
    function Synth_Aggregate (Syn_Inst : Synth_Instance_Acc;
@@ -654,7 +720,7 @@ package body Synth.Expr is
             return Synth_Aggregate_Array (Syn_Inst, Aggr, Aggr_Type);
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
-            raise Internal_Error;
+            return Synth_Aggregate_Record (Syn_Inst, Aggr, Aggr_Type);
          when others =>
             Error_Kind ("synth_aggregate", Aggr_Type);
       end case;
@@ -2178,6 +2244,22 @@ package body Synth.Expr is
             return Synth_Indexed_Name (Syn_Inst, Expr);
          when Iir_Kind_Slice_Name =>
             return Synth_Slice_Name (Syn_Inst, Expr);
+         when Iir_Kind_Selected_Element =>
+            declare
+               Idx : constant Iir_Index32 :=
+                 Get_Element_Position (Get_Named_Entity (Expr));
+               Pfx : constant Node := Get_Prefix (Expr);
+               Res_Typ : Type_Acc;
+               N : Net;
+            begin
+               Res := Synth_Expression (Syn_Inst, Pfx);
+               Res_Typ := Res.Typ.Rec.E (Idx + 1).Typ;
+               --  FIXME: handle const.
+               N := Build_Extract
+                 (Build_Context, Get_Net (Res),
+                  Res.Typ.Rec.E (Idx + 1).Off, Get_Type_Width (Res_Typ));
+               return Create_Value_Net (N, Res_Typ);
+            end;
          when Iir_Kind_Character_Literal =>
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Named_Entity (Expr), Expr_Type);

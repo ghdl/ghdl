@@ -82,13 +82,17 @@ package Synth.Values is
    type Type_Type (Kind : Type_Kind);
    type Type_Acc is access Type_Type;
 
-   type Type_Acc_Array_Type is array (Iir_Index32 range <>) of Type_Acc;
-
-   type Type_Acc_Array (Len : Iir_Index32) is record
-      E : Type_Acc_Array_Type (1 .. Len);
+   type Rec_El_Type is record
+      Off : Uns32;
+      Typ : Type_Acc;
    end record;
 
-   type Type_Acc_Array_Acc is access Type_Acc_Array;
+   type Rec_El_Array_Type is array (Iir_Index32 range <>) of Rec_El_Type;
+   type Rec_El_Array (Len : Iir_Index32) is record
+      E : Rec_El_Array_Type (1 .. Len);
+   end record;
+
+   type Rec_El_Array_Acc is access Rec_El_Array;
 
    type Type_Type (Kind : Type_Kind) is record
       case Kind is
@@ -107,7 +111,8 @@ package Synth.Values is
          when Type_Unbounded_Array =>
             Uarr_El : Type_Acc;
          when Type_Record =>
-            Rec : Type_Acc_Array_Acc;
+            Rec_W : Width;
+            Rec : Rec_El_Array_Acc;
       end case;
    end record;
 
@@ -205,6 +210,10 @@ package Synth.Values is
    function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)
                               return Type_Acc;
    function Create_Unbounded_Array (El_Type : Type_Acc) return Type_Acc;
+   function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc;
+
+   function Create_Record_Type (Els : Rec_El_Array_Acc; W : Width)
+                               return Type_Acc;
 
    --  Return the element of a vector/array/unbounded_array.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
@@ -239,6 +248,8 @@ package Synth.Values is
 
    --  Allocate the ARR component of the Value_Type ARR, using BOUNDS.
    procedure Create_Array_Data (Arr : Value_Acc);
+
+   function Create_Value_Record (Typ : Type_Acc) return Value_Acc;
 
    function Create_Value_Instance (Inst : Instance_Id) return Value_Acc;
 

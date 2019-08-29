@@ -27,10 +27,6 @@ with Vhdl.Nodes;
 with Vhdl.Errors; use Vhdl.Errors;
 
 package body Synth.Environment is
-   function Get_Current_Assign_Value
-     (Ctxt : Builders.Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width)
-     return Net;
-
    procedure Set_Wire_Mark (Wid : Wire_Id; Mark : Boolean := True) is
    begin
       Wire_Id_Table.Table (Wid).Mark_Flag := Mark;

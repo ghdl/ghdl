@@ -22,6 +22,7 @@ with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
 with Tables;
+with Types_Utils; use Types_Utils;
 with Vhdl.Errors; use Vhdl.Errors;
 with Netlists.Builders; use Netlists.Builders;
 
@@ -91,7 +92,8 @@ package body Synth.Context is
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Integer_Subtype_Definition =>
+           | Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Record_Type_Definition =>
             Otype := Get_Value_Type (Syn_Inst, Obj_Type);
             return Alloc_Wire (Kind, Obj, Otype);
          when others =>
@@ -283,6 +285,19 @@ package body Synth.Context is
                Vec (Idx).Zx := Vec (Idx).Zx or Zx;
                Off := Off + 1;
             end;
+         when Type_Discrete =>
+            for I in reverse 0 .. Val.Typ.Drange.W - 1 loop
+               declare
+                  B : constant Uns32 :=
+                    Uns32 (Shift_Right (To_Uns64 (Val.Scal), Natural (I)))
+                    and 1;
+                  Idx : constant Digit_Index := Digit_Index (Off / 32);
+                  Pos : constant Natural := Natural (Off mod 32);
+               begin
+                  Vec (Idx).Val := Vec (Idx).Val or Shift_Left (B, Pos);
+               end;
+               Off := Off + 1;
+            end loop;
          when Type_Vector =>
             --  TODO: optimize off mod 32 = 0.
             for I in reverse Val.Arr.V'Range loop
@@ -291,6 +306,10 @@ package body Synth.Context is
          when Type_Array =>
             for I in reverse Val.Arr.V'Range loop
                Value2net (Val.Arr.V (I), Vec, Off, Has_Zx);
+            end loop;
+         when Type_Record =>
+            for I in Val.Rec.V'Range loop
+               Value2net (Val.Rec.V (I), Vec, Off, Has_Zx);
             end loop;
          when others =>
             raise Internal_Error;
@@ -364,13 +383,15 @@ package body Synth.Context is
             else
                raise Internal_Error;
             end if;
-         when Value_Array =>
+         when Value_Array
+           | Value_Record =>
             declare
                W : constant Width := Get_Type_Width (Val.Typ);
                Nd : constant Digit_Index := Digit_Index ((W + 31) / 32);
                Res : Net;
             begin
                if Nd > 64 then
+                  --  TODO: Alloc on the heap.
                   raise Internal_Error;
                else
                   declare

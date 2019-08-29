@@ -410,6 +410,10 @@ package body Vhdl.Annotations is
             end if;
 
          when Iir_Kind_Record_Type_Definition =>
+            if Flag_Synthesis then
+               --  For the offsets.
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            end if;
             declare
                List : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Def);

@@ -76,14 +76,14 @@ package body Synth.Stmts is
       end if;
    end Synth_Waveform;
 
-   procedure Synth_Assign (Dest : Value_Acc;
+   procedure Synth_Assign (Wid : Wire_Id;
+                           Typ : Type_Acc;
                            Val : Value_Acc;
                            Offset : Uns32;
                            Loc : Source.Syn_Src) is
    begin
-      pragma Assert (Dest.Kind = Value_Wire);
-      Phi_Assign (Build_Context, Dest.W,
-                  Get_Net (Synth_Subtype_Conversion (Val, Dest.Typ, Loc)),
+      Phi_Assign (Build_Context, Wid,
+                  Get_Net (Synth_Subtype_Conversion (Val, Typ, Loc)),
                   Offset);
    end Synth_Assign;
 
@@ -119,39 +119,68 @@ package body Synth.Stmts is
       end if;
    end Synth_Assignment_Aggregate;
 
-   procedure Synth_Indexed_Assignment (Syn_Inst : Synth_Instance_Acc;
-                                       Target : Node;
-                                       Val : Value_Acc;
-                                       Loc : Node)
-   is
-      Pfx : constant Node := Get_Prefix (Target);
-      Targ : constant Value_Acc := Get_Value (Syn_Inst, Get_Base_Name (Pfx));
-      Targ_Net : Net;
-      V : Net;
-
-      Val_Net : Net;
-      Voff : Net;
-      Mul : Uns32;
-      Off : Uns32;
-      W : Width;
+   procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Pfx : Node;
+                                      Loc : Node;
+                                      Dest_Wid : out Wire_Id;
+                                      Dest_Off : out Uns32;
+                                      Dest_Type : out Type_Acc) is
    begin
-      Synth_Indexed_Name (Syn_Inst, Target, Targ.Typ, Voff, Mul, Off, W);
+      case Get_Kind (Pfx) is
+         when Iir_Kind_Simple_Name =>
+            Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx), Loc,
+                                     Dest_Wid, Dest_Off, Dest_Type);
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration =>
+            declare
+               Targ : constant Value_Acc := Get_Value (Syn_Inst, Pfx);
+            begin
+               Dest_Wid := Targ.W;
+               Dest_Off := 0;
+               Dest_Type := Targ.Typ;
+            end;
+         when Iir_Kind_Indexed_Name =>
+            declare
+               Voff : Net;
+               Mul : Uns32;
+               Off : Uns32;
+               W : Width;
+            begin
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx), Loc,
+                                        Dest_Wid, Dest_Off, Dest_Type);
+               Synth_Indexed_Name
+                 (Syn_Inst, Pfx, Dest_Type, Voff, Mul, Off, W);
 
-      pragma Assert (Get_Type_Width (Val.Typ) = W);
+               if Voff /= No_Net then
+                  Error_Msg_Synth
+                    (+Pfx, "dynamic index must be the last suffix");
+                  return;
+               end if;
 
-      if Voff = No_Net then
-         --  FIXME: check index.
-         pragma Assert (Mul = 0);
-         Synth_Assign (Targ, Val, Off, Loc);
-      else
-         Targ_Net := Get_Last_Assigned_Value (Build_Context, Targ.W);
-         Val_Net := Get_Net (Val);
-         V := Build_Dyn_Insert
-           (Build_Context, Targ_Net, Val_Net, Voff, Mul, Int32 (Off));
-         Set_Location (V, Target);
-         Synth_Assign (Targ, Create_Value_Net (V, Targ.Typ), 0, Loc);
-      end if;
-   end Synth_Indexed_Assignment;
+               --  FIXME: check index.
+
+               pragma Assert (Mul = 0);
+               Dest_Off := Dest_Off + Off;
+               Dest_Type := Get_Array_Element (Dest_Type);
+            end;
+
+         when Iir_Kind_Selected_Element =>
+            declare
+               Idx : constant Iir_Index32 :=
+                 Get_Element_Position (Get_Named_Entity (Pfx));
+            begin
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx), Loc,
+                                        Dest_Wid, Dest_Off, Dest_Type);
+               Dest_Off := Dest_Off + Dest_Type.Rec.E (Idx + 1).Off;
+               Dest_Type := Dest_Type.Rec.E (Idx + 1).Typ;
+            end;
+
+         when others =>
+            Error_Kind ("synth_assignment_prefix", Pfx);
+      end case;
+   end Synth_Assignment_Prefix;
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Node;
@@ -159,49 +188,90 @@ package body Synth.Stmts is
                                Loc : Node) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Simple_Name =>
-            Synth_Assignment (Syn_Inst, Get_Named_Entity (Target), Val, Loc);
-         when Iir_Kind_Interface_Signal_Declaration
+         when Iir_Kind_Aggregate =>
+            Synth_Assignment_Aggregate (Syn_Inst, Target, Val, Loc);
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Element
+           | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration =>
-            Synth_Assign (Get_Value (Syn_Inst, Target), Val, 0, Loc);
-         when Iir_Kind_Aggregate =>
-            Synth_Assignment_Aggregate (Syn_Inst, Target, Val, Loc);
+            declare
+               Wid : Wire_Id;
+               Off : Uns32;
+               Typ : Type_Acc;
+            begin
+               Synth_Assignment_Prefix (Syn_Inst, Target, Loc, Wid, Off, Typ);
+               Synth_Assign (Wid, Typ, Val, Off, Loc);
+            end;
          when Iir_Kind_Indexed_Name =>
-            Synth_Indexed_Assignment (Syn_Inst, Target, Val, Loc);
+            declare
+               Wid : Wire_Id;
+               Off : Uns32;
+               Typ : Type_Acc;
+
+               Voff : Net;
+               Mul : Uns32;
+               Idx_Off : Uns32;
+               W : Width;
+
+               Targ_Net : Net;
+               V : Net;
+            begin
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target), Loc,
+                                        Wid, Off, Typ);
+               Synth_Indexed_Name (Syn_Inst, Target, Typ,
+                                   Voff, Mul, Idx_Off, W);
+
+               if Voff = No_Net then
+                  --  FIXME: check index.
+                  pragma Assert (Mul = 0);
+                  Synth_Assign (Wid, Get_Array_Element (Typ),
+                                Val, Off + Idx_Off, Loc);
+               else
+                  Targ_Net := Get_Current_Assign_Value
+                    (Build_Context, Wid, Off, Get_Type_Width (Typ));
+                  V := Build_Dyn_Insert
+                    (Build_Context, Targ_Net, Get_Net (Val),
+                     Voff, Mul, Int32 (Idx_Off));
+                  Set_Location (V, Target);
+                  Synth_Assign (Wid, Typ, Create_Value_Net (V, Typ), Off, Loc);
+               end if;
+            end;
          when Iir_Kind_Slice_Name =>
             declare
-               Pfx : constant Node := Get_Prefix (Target);
-               Targ : constant Value_Acc :=
-                 Get_Value (Syn_Inst, Get_Base_Name (Pfx));
+               Wid : Wire_Id;
+               Off : Uns32;
+               Typ : Type_Acc;
+
                Res_Bnd : Bound_Type;
-               Res_Type : Type_Acc;
-               Targ_Net : Net;
                Inp : Net;
                Step : Uns32;
-               Off : Int32;
+               Sl_Off : Int32;
                Wd : Uns32;
+
+               Targ_Net : Net;
+               Res_Type : Type_Acc;
                V : Net;
-               Res : Net;
             begin
-               if Targ.Kind /= Value_Wire then
-                  --  Only support assignment of vector.
-                  raise Internal_Error;
-               end if;
-               Synth_Slice_Suffix (Syn_Inst, Target, Targ.Typ.Vbound,
-                                   Res_Bnd, Inp, Step, Off, Wd);
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target), Loc,
+                                        Wid, Off, Typ);
+               Synth_Slice_Suffix (Syn_Inst, Target, Typ.Vbound,
+                                   Res_Bnd, Inp, Step, Sl_Off, Wd);
+
                if Inp /= No_Net then
-                  Targ_Net := Get_Last_Assigned_Value (Build_Context, Targ.W);
-                  V := Get_Net (Val);
-                  Res := Build_Dyn_Insert
-                    (Build_Context, Targ_Net, V, Inp, Step, Off);
-                  Set_Location (Res, Target);
-                  Res_Type := Create_Vector_Type (Res_Bnd, Targ.Typ.Vec_El);
+                  Targ_Net := Get_Current_Assign_Value
+                    (Build_Context, Wid, Off, Get_Type_Width (Typ));
+                  V := Build_Dyn_Insert
+                    (Build_Context, Targ_Net, Get_Net (Val),
+                     Inp, Step, Sl_Off);
+                  Set_Location (V, Target);
+                  Res_Type := Create_Vector_Type (Res_Bnd, Typ.Vec_El);
                   Synth_Assign
-                    (Targ, Create_Value_Net (Res, Res_Type), 0, Loc);
+                    (Wid, Res_Type, Create_Value_Net (V, Res_Type), Off, Loc);
                else
-                  Synth_Assign (Targ, Val, Uns32 (Off), Loc);
+                  --  FIXME: create slice type.
+                  Synth_Assign (Wid, Typ, Val, Off + Uns32 (Sl_Off), Loc);
                end if;
             end;
          when others =>

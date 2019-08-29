@@ -982,6 +982,16 @@ package body Netlists.Builders is
       return O;
    end Build_Extract;
 
+   function Build2_Extract
+     (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net is
+   begin
+      if Off = 0 and then W = Get_Width (I) then
+         return I;
+      else
+         return Build_Extract (Ctxt, I, Off, W);
+      end if;
+   end Build2_Extract;
+
    function Build_Dyn_Extract
      (Ctxt : Context_Acc;
       I : Net; P : Net; Step : Uns32; Off : Int32; W : Width) return Net

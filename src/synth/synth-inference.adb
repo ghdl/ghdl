@@ -215,7 +215,6 @@ package body Synth.Inference is
       Res : Net;
       Sig : Instance;
       Init : Net;
-      Init_Input : Input;
       Rst : Net;
       Rst_Val : Net;
    begin
@@ -238,13 +237,11 @@ package body Synth.Inference is
          Data := Build_Mux2 (Ctxt, Enable, Prev_Val, Data);
       end if;
 
-      --  If the signal declaration has an initial value, move it
-      --  to the dff.
+      --  If the signal declaration has an initial value, get it.
       Sig := Get_Parent (Prev_Val);
       if Get_Id (Get_Module (Sig)) = Id_Isignal then
-         Init_Input := Get_Input (Sig, 1);
-         Init := Get_Driver (Init_Input);
-         Disconnect (Init_Input);
+         Init := Get_Input_Net (Sig, 1);
+         Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O));
       else
          Init := No_Net;
       end if;

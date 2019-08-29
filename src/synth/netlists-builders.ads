@@ -94,6 +94,11 @@ package Netlists.Builders is
 
    function Build_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
+
+   --  Same as Build_Extract, but return I iff extract all the bits.
+   function Build2_Extract
+     (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
+
    function Build_Extract_Bit
      (Ctxt : Context_Acc; I : Net; Off : Width) return Net;
    function Build_Dyn_Extract

@@ -26,6 +26,9 @@ package body Synth.Values is
    function To_Bound_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Bound_Array_Acc);
 
+   function To_Rec_El_Array_Acc is new Ada.Unchecked_Conversion
+     (System.Address, Rec_El_Array_Acc);
+
    function To_Type_Acc is new Ada.Unchecked_Conversion
      (System.Address, Type_Acc);
 
@@ -161,6 +164,44 @@ package body Synth.Values is
       end case;
    end Get_Array_Element;
 
+   function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc
+   is
+      use System;
+      subtype Data_Type is Rec_El_Array (Nels);
+      Res : Address;
+   begin
+      --  Manually allocate the array to handle large arrays without
+      --  creating a large temporary value.
+      Areapools.Allocate
+        (Current_Pool.all, Res,
+         Data_Type'Size / Storage_Unit, Data_Type'Alignment);
+
+      declare
+         --  Discard the warnings for no pragma Import as we really want
+         --  to use the default initialization.
+         pragma Warnings (Off);
+         Addr1 : constant Address := Res;
+         Init : Data_Type;
+         for Init'Address use Addr1;
+         pragma Warnings (On);
+      begin
+         null;
+      end;
+
+      return To_Rec_El_Array_Acc (Res);
+   end Create_Rec_El_Array;
+
+   function Create_Record_Type (Els : Rec_El_Array_Acc; W : Width)
+                               return Type_Acc
+   is
+      subtype Record_Type_Type is Type_Type (Type_Record);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Record_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Record,
+                                                Rec_W => W,
+                                                Rec => Els)));
+   end Create_Record_Type;
+
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
@@ -293,6 +334,22 @@ package body Synth.Values is
       return Res;
    end Create_Value_Array;
 
+   function Create_Value_Record (Typ : Type_Acc) return Value_Acc
+   is
+      subtype Value_Type_Record is Value_Type (Value_Record);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Record);
+
+      Res : Value_Acc;
+      Rec_El : Value_Array_Acc;
+   begin
+      Rec_El := Create_Value_Array (Typ.Rec.Len);
+      Res := To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Record,
+                                   Typ => Typ,
+                                   Rec => Rec_El)));
+      return Res;
+   end Create_Value_Record;
+
    function Create_Value_Instance (Inst : Instance_Id) return Value_Acc
    is
       subtype Value_Type_Instance is Value_Type (Value_Instance);
@@ -356,6 +413,8 @@ package body Synth.Values is
                end loop;
                return Res;
             end;
+         when Type_Record =>
+            return Atype.Rec_W;
          when others =>
             raise Internal_Error;
       end case;
