@@ -1,9 +1,8 @@
 #! /bin/sh
 
-exit 0
 . ../../testenv.sh
 
-for t in forloop2; do
+for t in rec2; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
