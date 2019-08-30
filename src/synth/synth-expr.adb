@@ -373,7 +373,9 @@ package body Synth.Expr is
                      end if;
                   end loop;
                when Iir_Kind_Choice_By_Name =>
-                  Pos := Natural (Get_Element_Position (Get_Name (Assoc)));
+                  Pos := Natural (Get_Element_Position
+                                    (Get_Named_Entity
+                                       (Get_Choice_Name (Assoc))));
                   Set_Elem (Pos);
                when others =>
                   Error_Msg_Synth
