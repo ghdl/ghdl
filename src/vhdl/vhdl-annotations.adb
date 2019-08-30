@@ -487,7 +487,10 @@ package body Vhdl.Annotations is
               | Iir_Kind_Interface_Variable_Declaration
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
-               Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (El));
+               if Get_Subtype_Indication (El) /= Null_Iir then
+                  Annotate_Anonymous_Type_Definition
+                    (Block_Info, Get_Type (El));
+               end if;
             when others =>
                Error_Kind ("annotate_interface_list_subtype", El);
          end case;
