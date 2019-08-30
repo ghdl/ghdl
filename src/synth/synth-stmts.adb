@@ -1019,8 +1019,6 @@ package body Synth.Stmts is
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-         Synth_Declaration_Type (Subprg_Inst, Inter);
-
          case Iir_Parameter_Modes (Get_Mode (Inter)) is
             when Iir_In_Mode =>
                case Get_Kind (Assoc) is
