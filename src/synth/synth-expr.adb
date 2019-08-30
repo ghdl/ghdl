@@ -43,6 +43,10 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Expr is
+   --  As log2(3m) is directly referenced, the program must be linked with -lm
+   --  (math library) on unix systems.
+   pragma Linker_Options ("-lm");
+
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Value_Acc;
 
