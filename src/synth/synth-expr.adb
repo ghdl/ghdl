@@ -588,7 +588,8 @@ package body Synth.Expr is
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
             return Synth_Discrete_Range_Expression (Syn_Inst, Bound);
-         when Iir_Kind_Integer_Subtype_Definition =>
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
             if Get_Type_Declarator (Bound) /= Null_Node then
                --  This is a named subtype, so it has been evaluated.
                return Get_Value_Type (Syn_Inst, Bound).Drange;
