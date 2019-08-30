@@ -1230,6 +1230,8 @@ package body Synth.Stmts is
                exit;
             when Iir_Kind_Procedure_Call_Statement =>
                Synth_Procedure_Call (Syn_Inst, Stmt);
+            when Iir_Kind_Report_Statement =>
+               null;
             when others =>
                Error_Kind ("synth_sequential_statements", Stmt);
          end case;
