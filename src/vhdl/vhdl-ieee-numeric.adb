@@ -429,6 +429,36 @@ package body Vhdl.Ieee.Numeric is
             raise Error;
          end if;
       end Handle_Resize;
+
+      procedure Handle_Std_Match
+      is
+         Predefined : Iir_Predefined_Functions;
+      begin
+         if Arg1_Kind /= Arg2_Kind or else Arg1_Sign /= Arg2_Sign then
+            raise Error;
+         end if;
+
+         if Arg1_Kind = Arg_Scal and Arg1_Sign = Type_Log then
+            Predefined := Iir_Predefined_Ieee_Numeric_Std_Match_Log;
+         elsif Arg1_Kind = Arg_Vect then
+            case Arg1_Sign is
+               when Type_Unsigned =>
+                  Predefined := Iir_Predefined_Ieee_Numeric_Std_Match_Uns;
+               when Type_Signed =>
+                  Predefined := Iir_Predefined_Ieee_Numeric_Std_Match_Sgn;
+               when Type_Suv =>
+                  Predefined := Iir_Predefined_Ieee_Numeric_Std_Match_Suv;
+               when Type_Slv =>
+                  Predefined := Iir_Predefined_Ieee_Numeric_Std_Match_Slv;
+               when Type_Log =>
+                  raise Error;
+            end case;
+         else
+            raise Error;
+         end if;
+
+         Set_Implicit_Definition (Decl, Predefined);
+      end Handle_Std_Match;
    begin
       Decl := Get_Declaration_Chain (Pkg_Decl);
 
@@ -537,6 +567,8 @@ package body Vhdl.Ieee.Numeric is
                         Handle_To_Signed;
                      when Name_Resize =>
                         Handle_Resize;
+                     when Name_Std_Match =>
+                        Handle_Std_Match;
                      when others =>
                         null;
                   end case;

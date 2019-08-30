@@ -5005,6 +5005,13 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn,
 
+      --  Std_Match functions.
+      Iir_Predefined_Ieee_Numeric_Std_Match_Log,
+      Iir_Predefined_Ieee_Numeric_Std_Match_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Match_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Match_Slv,
+      Iir_Predefined_Ieee_Numeric_Std_Match_Suv,
+
       --  Math_Real
       Iir_Predefined_Ieee_Math_Real_Ceil,
       Iir_Predefined_Ieee_Math_Real_Log2,
