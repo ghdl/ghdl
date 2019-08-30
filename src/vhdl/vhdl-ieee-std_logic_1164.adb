@@ -250,11 +250,21 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                   end case;
                   Set_Implicit_Definition (Decl, Predefined);
                end;
-            elsif Is_Scalar_Function (Decl)
-              and then Get_Identifier (Decl) = Name_Not
-            then
-               Set_Implicit_Definition
-                 (Decl, Iir_Predefined_Ieee_1164_Scalar_Not);
+            elsif Is_Scalar_Function (Decl) then
+               declare
+                  Predefined : Iir_Predefined_Functions;
+               begin
+                  case Get_Identifier (Decl) is
+                     when Name_Not =>
+                        Predefined := Iir_Predefined_Ieee_1164_Scalar_Not;
+                     when Name_Op_Condition =>
+                        Predefined :=
+                          Iir_Predefined_Ieee_1164_Condition_Operator;
+                     when others =>
+                        Predefined := Iir_Predefined_None;
+                  end case;
+                  Set_Implicit_Definition (Decl, Predefined);
+               end;
             elsif Is_Vector_Vector_Function (Decl) then
                declare
                   Predefined : Iir_Predefined_Functions;

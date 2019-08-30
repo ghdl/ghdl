@@ -1388,6 +1388,8 @@ package body Synth.Expr is
             return Synth_Vec_Reduce_Monadic(Id_Red_And);
          when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
             return Synth_Vec_Reduce_Monadic(Id_Red_Or);
+         when Iir_Predefined_Ieee_1164_Condition_Operator =>
+            return Operand;
          when others =>
             Error_Msg_Synth
               (+Loc,

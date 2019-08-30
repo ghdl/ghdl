@@ -4905,6 +4905,8 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_1164_Vector_And_Reduce,
       Iir_Predefined_Ieee_1164_Vector_Or_Reduce,
 
+      Iir_Predefined_Ieee_1164_Condition_Operator,
+
       --  Numeric_Std.
       --  Abbreviations:
       --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.
