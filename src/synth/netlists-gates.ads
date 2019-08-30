@@ -144,16 +144,11 @@ package Netlists.Gates is
 
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
-   --  parameter, possibly signed or unsigned extended.  For large width
-   --  (> 128), the value is stored in a table.
+   --  parameter, possibly signed or unsigned extended.
    Id_Const_UB32 : constant Module_Id := 64;
    Id_Const_UL32 : constant Module_Id := 70;
-   Id_Const_SB32 : constant Module_Id := 65;
    Id_Const_UB64 : constant Module_Id := 66;
-   Id_Const_SB64 : constant Module_Id := 67;
-   Id_Const_UB128 : constant Module_Id := 68;
-   Id_Const_SB128 : constant Module_Id := 69;
-   Id_Const_SL32 : constant Module_Id := 71;
+   Id_Const_UL64 : constant Module_Id := 67;
    Id_Const_Z : constant Module_Id := 72;
    Id_Const_0 : constant Module_Id := 73;
 
