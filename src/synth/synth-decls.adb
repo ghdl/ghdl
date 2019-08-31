@@ -411,6 +411,18 @@ package body Synth.Decls is
       end loop;
    end Synth_Attribute_Specification;
 
+   procedure Synth_Subprogram_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Subprg : Node)
+   is
+      Inter : Node;
+   begin
+      Inter := Get_Interface_Declaration_Chain (Subprg);
+      while Inter /= Null_Node loop
+         Synth_Declaration_Type (Syn_Inst, Inter);
+         Inter := Get_Chain (Inter);
+      end loop;
+   end Synth_Subprogram_Declaration;
+
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Node) is
    begin
       case Get_Kind (Decl) is
@@ -457,8 +469,7 @@ package body Synth.Decls is
             Create_Var_Wire (Syn_Inst, Decl, null);
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Declaration =>
-            --  TODO: elaborate interfaces
-            null;
+            Synth_Subprogram_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
             null;
