@@ -27,6 +27,9 @@ with Vhdl.Nodes;
 with Vhdl.Errors; use Vhdl.Errors;
 
 package body Synth.Environment is
+   procedure Phi_Assign
+     (Ctxt : Builders.Context_Acc; Dest : Wire_Id; Pasgn : Partial_Assign);
+
    procedure Set_Wire_Mark (Wid : Wire_Id; Mark : Boolean := True) is
    begin
       Wire_Id_Table.Table (Wid).Mark_Flag := Mark;
@@ -83,6 +86,15 @@ package body Synth.Environment is
       return Assign_Table.Table (Asgn).Asgns;
    end Get_Assign_Partial;
 
+   function New_Partial_Assign (Val : Net; Offset : Uns32)
+                               return Partial_Assign is
+   begin
+      Partial_Assign_Table.Append ((Next => No_Partial_Assign,
+                                    Value => Val,
+                                    Offset => Offset));
+      return Partial_Assign_Table.Last;
+   end New_Partial_Assign;
+
    function Get_Partial_Offset (Asgn : Partial_Assign) return Uns32 is
    begin
       return Partial_Assign_Table.Table (Asgn).Offset;
@@ -97,6 +109,12 @@ package body Synth.Environment is
    begin
       return Partial_Assign_Table.Table (Asgn).Next;
    end Get_Partial_Next;
+
+   procedure Set_Partial_Next (Asgn : Partial_Assign;
+                               Chain : Partial_Assign) is
+   begin
+      Partial_Assign_Table.Table (Asgn).Next := Chain;
+   end Set_Partial_Next;
 
    function Current_Phi return Phi_Id is
    begin
@@ -665,6 +683,7 @@ package body Synth.Environment is
                                                Cur_Off, Cur_Wd));
                         exit;
                      end if;
+                     P := Get_Assign_Partial (Seq);
                   end if;
                end;
             end loop;
@@ -682,14 +701,14 @@ package body Synth.Environment is
             when 1 =>
                Res := Vec.Table (1);
             when 2 =>
-               Res := Build_Concat2 (Ctxt, Vec.Table (1), Vec.Table (2));
+               Res := Build_Concat2 (Ctxt, Vec.Table (2), Vec.Table (1));
             when 3 =>
                Res := Build_Concat3
-                 (Ctxt, Vec.Table (1), Vec.Table (2), Vec.Table (3));
+                 (Ctxt, Vec.Table (3), Vec.Table (2), Vec.Table (1));
             when 4 =>
                Res := Build_Concat4
                  (Ctxt,
-                  Vec.Table (1), Vec.Table (2), Vec.Table (3), Vec.Table (4));
+                  Vec.Table (4), Vec.Table (3), Vec.Table (2), Vec.Table (1));
             when 5 .. Int32'Last =>
                Res := Build_Concatn (Ctxt, Wd, Uns32 (Last));
                Inst := Get_Parent (Res);
@@ -715,8 +734,12 @@ package body Synth.Environment is
       Off : Uns32;
       Wd : Width;
       Res : Net;
+      First_Pasgn, Last_Pasgn : Partial_Assign;
+      Pasgn : Partial_Assign;
    begin
       P := (0 => F_Asgns, 1 => T_Asgns);
+      First_Pasgn := No_Partial_Assign;
+      Last_Pasgn := No_Partial_Assign;
 
       Min_Off := 0;
       loop
@@ -740,9 +763,7 @@ package body Synth.Environment is
          end loop;
 
          --  No more assignments.
-         if Off = Uns32'Last and Wd = Width'Last then
-            return;
-         end if;
+         exit when Off = Uns32'Last and Wd = Width'Last;
 
          --  Get the values for that offset/width.  Update lists.
          for I in P'Range loop
@@ -774,9 +795,27 @@ package body Synth.Environment is
 
          --  Build mux.
          Res := Netlists.Builders.Build_Mux2 (Ctxt, Sel, N (0), N (1));
-         Phi_Assign (Ctxt, W, Res, Off);
+
+         --  Keep the result in a list.
+         Pasgn := New_Partial_Assign (Res, Off);
+         if First_Pasgn = No_Partial_Assign then
+            First_Pasgn := Pasgn;
+         else
+            Set_Partial_Next (Last_Pasgn, Pasgn);
+         end if;
+         Last_Pasgn := Pasgn;
 
          Min_Off := Off + Wd;
+      end loop;
+
+      --  Do the assignments from the result list.
+      --  It cannot be done before because the assignments will overwrite the
+      --  last assignments which are read to create a partial assignment.
+      while First_Pasgn /= No_Partial_Assign loop
+         Pasgn := Get_Partial_Next (First_Pasgn);
+         Set_Partial_Next (First_Pasgn, No_Partial_Assign);
+         Phi_Assign (Ctxt, W, First_Pasgn);
+         First_Pasgn := Pasgn;
       end loop;
    end Merge_Assigns;
 
@@ -1016,16 +1055,10 @@ package body Synth.Environment is
    end Insert_Partial_Assign;
 
    procedure Phi_Assign
-     (Ctxt : Builders.Context_Acc; Dest : Wire_Id; Val : Net; Offset : Uns32)
+     (Ctxt : Builders.Context_Acc; Dest : Wire_Id; Pasgn : Partial_Assign)
    is
       Cur_Asgn : constant Seq_Assign := Wire_Id_Table.Table (Dest).Cur_Assign;
-      Pasgn : Partial_Assign;
    begin
-      Partial_Assign_Table.Append ((Next => No_Partial_Assign,
-                                    Value => Val,
-                                    Offset => Offset));
-      Pasgn := Partial_Assign_Table.Last;
-
       if Cur_Asgn = No_Seq_Assign
         or else Assign_Table.Table (Cur_Asgn).Phi < Current_Phi
       then
@@ -1041,6 +1074,16 @@ package body Synth.Environment is
          --  Overwrite.
          Insert_Partial_Assign (Ctxt, Cur_Asgn, Pasgn);
       end if;
+   end Phi_Assign;
+
+   procedure Phi_Assign
+     (Ctxt : Builders.Context_Acc; Dest : Wire_Id; Val : Net; Offset : Uns32)
+   is
+      Pasgn : Partial_Assign;
+   begin
+      Pasgn := New_Partial_Assign (Val, Offset);
+
+      Phi_Assign (Ctxt, Dest, Pasgn);
    end Phi_Assign;
 begin
    Wire_Id_Table.Append ((Kind => Wire_None,
