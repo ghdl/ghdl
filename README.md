@@ -62,13 +62,13 @@ GHDL currently supports three different back-ends (code generators). Each has it
 
 LLVM has the same pros/cons as GCC, but it is easier to build. However, coverage (`gcov`) is unique to GCC.
 
-You can find specific instructions for each of the options in '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)'.
+You can find specific instructions for each of the options in '[Building](https://ghdl.rtfd.io/en/latest/getting/)'.
 
 ### TL;DR
 
 In order to follow the traditional way to `configure` and `make`, you need the an Ada compiler. Most GNU/Linux package managers provide a package named `gcc-ada` or `gcc-gnat`. Alternatively, GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/) (2014, or later; for x86, 32 or 64 bits). Then, untar and run the *doinstall* script.
 
-> Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)' for specific package names.
+> Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](https://ghdl.rtfd.io/en/latest/getting/)' for specific package names.
 
 To use mcode backend (easiest to build), in the GHDL base directory, configure and build:
 
@@ -104,7 +104,7 @@ That's all!
 
 - [libghdl-py](python/libghdl) is a Python interface to `libghdl`. Currently, it is only used by `ghdl-ls`; however, it can be useful for advanced users which are willing to build Python utilities based on GHDL.
 
-- **[experimental]** [ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdlsynth` library.
+- **[experimental]** [ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdl` library (built with `--enable-synth`).
 
 - **[deprecated]** `libghdlsynth` is a shared library that includes the analysis and synthesis features of the core GHDL, but not the pieces for compilation/simulation.
 
