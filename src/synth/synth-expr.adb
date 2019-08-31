@@ -163,8 +163,9 @@ package body Synth.Expr is
       end case;
    end Bit_Extract;
 
-   function Synth_Uresize (N : Net; W : Width) return Net
+   function Synth_Uresize (N : Net; W : Width; Loc : Node) return Net
    is
+      pragma Unreferenced (Loc);
       Wn : constant Width := Get_Width (N);
    begin
       if Wn > W then
@@ -176,17 +177,21 @@ package body Synth.Expr is
       end if;
    end Synth_Uresize;
 
-   function Synth_Uresize (Val : Value_Acc; Vtype : Node; W : Width)
-                          return Net is
+   function Synth_Uresize (Val : Value_Acc; W : Width; Loc : Node) return Net
+   is
+      Res : Net;
    begin
-      if Is_Const (Val)
-        and then (Get_Kind (Get_Base_Type (Vtype))
-                    = Iir_Kind_Integer_Type_Definition)
-      then
-         return Build_Const_UB32
-           (Build_Context, Uns32 (Val.Scal), W);
+      if Is_Const (Val) and then Val.Typ.Kind = Type_Discrete then
+         if Val.Typ.Drange.Is_Signed then
+            --  TODO.
+            raise Internal_Error;
+         else
+            Res := Build2_Const_Uns (Build_Context, To_Uns64 (Val.Scal), W);
+         end if;
+         Set_Location (Res, Loc);
+         return Res;
       end if;
-      return Synth_Uresize (Get_Net (Val), W);
+      return Synth_Uresize (Get_Net (Val), W, Loc);
    end Synth_Uresize;
 
    --  Resize for a discrete value.
@@ -930,8 +935,7 @@ package body Synth.Expr is
       is
          N : Net;
       begin
-         N := Synth_Uresize (Right, Right_Type, Get_Width (Left));
-         Set_Location (N, Expr);
+         N := Synth_Uresize (Right, Get_Width (Left), Expr);
          N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Boolean_Type);
@@ -973,10 +977,8 @@ package body Synth.Expr is
          else
             Rtype := Left.Typ;
          end if;
-         L1 := Synth_Uresize (L, W);
-         Set_Location (L1, Expr);
-         R1 := Synth_Uresize (R, W);
-         Set_Location (R1, Expr);
+         L1 := Synth_Uresize (L, W, Expr);
+         R1 := Synth_Uresize (R, W, Expr);
          N := Build_Dyadic (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Rtype);
@@ -991,10 +993,8 @@ package body Synth.Expr is
          L1, R1 : Net;
          N : Net;
       begin
-         L1 := Synth_Uresize (L, W);
-         Set_Location (L1, Expr);
-         R1 := Synth_Uresize (R, W);
-         Set_Location (R1, Expr);
+         L1 := Synth_Uresize (L, W, Expr);
+         R1 := Synth_Uresize (R, W, Expr);
          N := Build_Compare (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Boolean_Type);
@@ -1006,8 +1006,7 @@ package body Synth.Expr is
          R1 : Net;
          N : Net;
       begin
-         R1 := Synth_Uresize (Right, Right_Type, Get_Width (Left));
-         Set_Location (R1, Expr);
+         R1 := Synth_Uresize (Right, Get_Width (Left), Expr);
          N := Build_Dyadic (Build_Context, Id, L, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left, L));
@@ -2127,7 +2126,7 @@ package body Synth.Expr is
                   else
                      Arg_Net := Get_Net (Arg);
                      return Create_Value_Net
-                       (Synth_Uresize (Arg_Net, Uns32 (Size.Scal)),
+                       (Synth_Uresize (Arg_Net, Uns32 (Size.Scal), Expr),
                         Create_Res_Bound (Arg, Arg_Net));
                   end if;
                end if;
@@ -2141,7 +2140,7 @@ package body Synth.Expr is
             begin
                return Create_Value_Net
                  (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1)),
-                                 Nat_Type.Drange.W),
+                                 Nat_Type.Drange.W, Expr),
                   Nat_Type);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
@@ -2156,7 +2155,7 @@ package body Synth.Expr is
                end if;
                W := Uns32 (Sz.Scal);
                return Create_Value_Net
-                 (Synth_Uresize (Get_Net (V), W),
+                 (Synth_Uresize (Get_Net (V), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>

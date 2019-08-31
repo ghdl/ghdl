@@ -60,6 +60,10 @@ package Netlists.Builders is
                               Xz : Uns32;
                               W : Width) return Net;
 
+   --  Build a const from VAL.  Result is either a Const_UB32 or a Const_Bit.
+   function Build2_Const_Uns (Ctxt : Context_Acc; Val : Uns64; W : Width)
+                             return Net;
+
    --  Large constants.
    --  Bit means only 0 or 1.
    --  Log means 0/1/Z/X.  Parameters 2N are aval, 2N+1 are bval.

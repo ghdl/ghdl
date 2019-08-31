@@ -584,7 +584,7 @@ package body Netlists.Builders is
                               Val : Uns32;
                               W : Width) return Net
    is
-      pragma Assert (W > 0 and W <= 32);
+      pragma Assert (W > 0);
       Inst : Instance;
       O : Net;
    begin
@@ -639,6 +639,27 @@ package body Netlists.Builders is
       Set_Width (O, W);
       return Inst;
    end Build_Const_Log;
+
+   function Build2_Const_Uns (Ctxt : Context_Acc; Val : Uns64; W : Width)
+                             return Net is
+   begin
+      if Val < 2**32 then
+         return Build_Const_UB32 (Ctxt, Uns32 (Val), W);
+      else
+         pragma Assert (W > 32);
+         declare
+            Inst : Instance;
+         begin
+            Inst := Build_Const_Bit (Ctxt, W);
+            Set_Param_Uns32 (Inst, 0, Uns32 (Val and 16#ffff_ffff#));
+            Set_Param_Uns32 (Inst, 1, Uns32 (Shift_Right (Val, 32)));
+            for I in 2 .. (W + 31) / 32 loop
+               Set_Param_Uns32 (Inst, Param_Idx (I), 0);
+            end loop;
+            return Get_Output (Inst, 0);
+         end;
+      end if;
+   end Build2_Const_Uns;
 
    function Build_Edge (Ctxt : Context_Acc; Src : Net) return Net
    is
