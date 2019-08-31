@@ -31,8 +31,7 @@ Downloading pre-built packages
       from helpers import printReleaseTab
       printReleaseTab('data', latex=True)
 
-Pre-built packages of older releases
-====================================
+.. rubric :: Pre-built packages of older releases
 
 .. only:: html
 
@@ -58,10 +57,9 @@ Downloading Source Files
 
 .. _RELEASE:Sources:Zip:
 
-Downloading from GitHub
-=======================
+.. rubric :: Tarball/zip-file
 
-GHDL can be downloaded as a zip-file from GitHub. See the following table, to
+GHDL can be downloaded as a zip-file or tarball from GitHub. See the following table, to
 choose your desired format/version:
 
 .. only:: html
@@ -84,20 +82,16 @@ choose your desired format/version:
 
 .. HINT::
 
-   To download a specific version of GHDL, use these alternative URL, where ``<format>`` is ``tar`` or ``zip``: ``https://api.github.com/repos/ghdl/ghdl/<format>ball/<tag>``.
+   To download a specific version of GHDL, use this alternative URL, where ``<format>`` is ``tar.gz`` or ``zip``: ``https://codeload.github.com/ghdl/ghdl/<format>/<tag>``.
 
 .. _RELEASE:Sources:GitClone:
 
-Downloading via ``git clone``
-=============================
+.. rubric :: git clone
 
 GHDL can be downloaded (cloned) with ``git clone`` from GitHub. GitHub offers
 the transfer protocols HTTPS and SSH. You should use SSH if you have a GitHub
 account and have already uploaded an OpenSSH public key to GitHub, otherwise
 use HTTPS if you have no account or you want to use login credentials.
-
-The created folder :file:`<GitRoot>\\ghdl` is used as :file:`<GHDLRoot>` in
-later instructions or on other pages in this documentation.
 
 +----------+----------------------------------------+
 | Protocol | GitHub Repository URL                  |
@@ -111,12 +105,7 @@ later instructions or on other pages in this documentation.
 
    Execute ``git checkout -b stable <tag>`` after ``git clone``, to checkout a specific version of GHDL.
 
-
-On Linux
---------
-
-Command line instructions to clone GHDL onto a Linux machine with HTTPS
-protocol:
+Command line instructions to clone GHDL with HTTPS protocol:
 
 .. code-block:: Bash
 
@@ -125,8 +114,7 @@ protocol:
    cd ghdl
    git remote rename origin github
 
-Command line instructions to clone GHDL onto a Linux machine machine with SSH
-protocol:
+Command line instructions to clone GHDL with SSH protocol:
 
 .. code-block:: Bash
 
@@ -134,41 +122,10 @@ protocol:
    git clone "ssh://git@github.com:ghdl/ghdl.git" ghdl
    cd ghdl
    git remote rename origin github
-
-
-On OS X
--------
-
-Please see the Linux instructions.
-
-
-On Windows
-----------
 
 .. NOTE::
 
-   All Windows command line instructions are intended for :program:`Windows PowerShell`,
-   if not marked otherwise. So executing the following instructions in Windows
-   Command Prompt (:program:`cmd.exe`) won't function or will result in errors!
-   :program:`Windows PowerShell` can be installed or upgraded to v5.1 by installing the
-   `Windows Management Framework <https://docs.microsoft.com/en-us/powershell/wmf/5.1/install-configure>`_.
-
-Command line instructions to clone GHDL onto a Windows machine with HTTPS
-protocol:
-
-.. code-block:: PowerShell
-
-   cd GitRoot
-   git clone "https://github.com/ghdl/ghdl.git" ghdl
-   cd ghdl
-   git remote rename origin github
-
-Command line instructions to clone GHDL onto a Windows machine with SSH
-protocol:
-
-.. code-block:: PowerShell
-
-   cd GitRoot
-   git clone "ssh://git@github.com:ghdl/ghdl.git" ghdl
-   cd ghdl
-   git remote rename origin github
+   Executing the following instructions in Windows Command Prompt (:program:`cmd.exe`)
+   won't function or will result in errors! All Windows command line instructions are
+   intended for :program:`Windows PowerShell`, if not marked otherwise. :program:`Windows PowerShell`
+   can be installed or upgraded to v5.1 by installing the `Windows Management Framework <https://docs.microsoft.com/en-us/powershell/wmf/5.1/install-configure>`_.
