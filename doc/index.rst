@@ -103,8 +103,8 @@ LRM) is a plus.
    :hidden:
 
    getting/Releases
-   Building GHDL <building/Building>
-   building/PrecompileVendorPrimitives
+   Building GHDL <getting/index>
+   getting/PrecompileVendorPrimitives
 
 .. raw:: latex
 

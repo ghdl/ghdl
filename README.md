@@ -50,11 +50,28 @@ Periodically (not regularly), several binary distributions are made available th
 
 ## Building GHDL
 
-In order to follow the traditional way to `configure` and `make`, you need the GNU Ada compiler, GNAT GPL (2014, or later; for x86, 32 or 64 bits). GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/). Then, untar and run the *doinstall* script.
+GHDL currently supports three different back-ends (code generators). Each has its pros and cons. Here is a short comparison:
+
+| | pros | cons | observations |
+|---|---|---|---|
+|mcode | very easy to build | x86_64/i386 only | no executable created from your design |
+| | very quick analysis time and can analyze very big designs | simulation is slower | |
+| GCC | generated code is faster | analyze can take time (particularly for big units) | the output is an executable |
+| | generated code can be debugged | build is more complex |
+| | many platforms (x86, x86_64, powerpc, sparc) | |
+
+LLVM has the same pros/cons as GCC, but it is easier to build. However, coverage (`gcov`) is unique to GCC.
+
+You can find specific instructions for each of the options in '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)'.
+
+### TL;DR
+
+In order to follow the traditional way to `configure` and `make`, you need the an Ada compiler. Most GNU/Linux package managers provide a package named `gcc-ada` or `gcc-gnat`. Alternatively, GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/) (2014, or later; for x86, 32 or 64 bits). Then, untar and run the *doinstall* script.
 
 > Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)' for specific package names.
 
-In the GHDL base directory, configure and build:
+To use mcode backend (easiest to build), in the GHDL base directory, configure and build:
+
 ```sh
 $ ./configure --prefix=/usr/local
 $ make
@@ -70,22 +87,6 @@ That's all!
 
 > The executable is installed as 'ghdl' in `/usr/local`. To install it to a different path, change the `--prefix` in the call to `configure`. For example, on Windows, you may want to set it to `--prefix=/c/Program Files (x86)/GHDL`.
 
----
-
-Furthermore, each supported compiler has its pros and cons. Here is a short comparison:
-
-| | pros | cons | observations |
-|---|---|---|---|
-|mcode | very easy to build | x86_64/i386 only | no executable created from your design |
-| | very quick analysis time and can analyze very big designs | simulation is slower | |
-| GCC | generated code is faster | analyze can take time (particularly for big units) | the output is an executable |
-| | generated code can be debugged | build is more complex |
-| | many platforms (x86, x86_64, powerpc, sparc) | |
-
-LLVM has the same pros/cons as GCC, but it is easier to build. However, coverage (`gcov`) is unique to GCC.
-
-You can find specific instructions for each of the options in '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)'.
-
 # Project structure
 
 ## Regular users
@@ -99,14 +100,12 @@ You can find specific instructions for each of the options in '[Building](http:/
 
 ## Advanced users
 
-- `libghdl` is a shared library that includes a subset of the regular features plus some features to be used by extension tools (i.e. `libghdl-py`). This is built along with the regular GHDL and it supports both non-synthesisable and synthesisable code. Nonetheless, this is not for users, but for tools built on top of the core.
+- `libghdl` is a shared library that includes a subset of the regular features plus some features to be used by extension tools (i.e. `libghdl-py`). This is built along with the regular GHDL and it supports both non-synthesisable and synthesisable code. Nonetheless, this is not for users, but for tools built on top of the core. When configured along with `--enable-synth`, this shared library includes **[experimental]** synthesis features too.
 
 - [libghdl-py](python/libghdl) is a Python interface to `libghdl`. Currently, it is only used by `ghdl-ls`; however, it can be useful for advanced users which are willing to build Python utilities based on GHDL.
 
-## Experimental
+- **[experimental]** [ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdlsynth` library.
 
-- `libghdlsynth` is a shared library that includes the analysis and synthesis features of the core GHDL, but not the pieces for compilation/simulation.
+- **[deprecated]** `libghdlsynth` is a shared library that includes the analysis and synthesis features of the core GHDL, but not the pieces for compilation/simulation.
 
-- [ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdlsynth` library.
-
-- `ghdl_simul`, which supports interpreted simulation, is available for historical reasons and for development/debugging only. It is very slow compared to the 'regular' compiled simulation and not all the features are supported.
+- **[deprecated]** `ghdl_simul`, which supports interpreted simulation, is available for historical reasons and for development/debugging only. It is very slow compared to the 'regular' compiled simulation and not all the features are supported.

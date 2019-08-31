@@ -1,6 +1,6 @@
 .. _BUILD:dir_structure:
 
-Directory Structure
+Directory structure
 ###################
 
 * ``src``: sources of GHDL, all of them in Ada.
