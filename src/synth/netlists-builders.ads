@@ -109,8 +109,6 @@ package Netlists.Builders is
      (Ctxt : Context_Acc;
       I : Net; P : Net; Step : Uns32; Off : Int32; W : Width) return Net;
 
-   function Build_Insert
-     (Ctxt : Context_Acc; I : Net; V : Net; Off : Width) return Net;
    function Build_Dyn_Insert
      (Ctxt : Context_Acc; I : Net; V : Net; P : Net; Step : Uns32; Off : Int32)
      return Net;
@@ -176,7 +174,6 @@ private
       M_Extend : Module_Arr (Extend_Module_Id);
       M_Reduce : Module_Arr (Reduce_Module_Id);
       M_Extract : Module;
-      M_Insert : Module;
       M_Dyn_Extract : Module;
       M_Dyn_Insert : Module;
       M_Assert : Module;

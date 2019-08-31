@@ -582,28 +582,6 @@ package body Netlists.Disp_Vhdl is
                end if;
                Put_Line (");");
             end;
-         when Id_Insert =>
-            declare
-               Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
-               Ow : constant Width := Get_Width (Get_Output (Inst, 0));
-               Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-            begin
-               Disp_Template ("  \o0 <= ", Inst);
-               if Off + Iw + 1 = Ow then
-                  Disp_Template ("\i0 (\n0) & ", Inst, (0 => Ow - 1));
-               elsif Off + Iw < Ow then
-                  Disp_Template ("\i0 (\n0 downto \n1) & ", Inst,
-                                 (0 => Ow - 1, 1 => Off + Iw));
-               end if;
-               Disp_Template ("\i1", Inst);
-               if Off > 1 then
-                  Disp_Template (" & \i0 (\n0 downto 0)", Inst,
-                                 (0 => Off - 1));
-               elsif Off = 1 then
-                  Disp_Template (" & \i0 (0)", Inst);
-               end if;
-               Disp_Template (";" & NL, Inst);
-            end;
          when Id_Dyn_Insert =>
             declare
                --  I0: Input, I1: Value, I2: position

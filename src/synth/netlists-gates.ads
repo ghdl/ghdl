@@ -120,13 +120,6 @@ package Netlists.Gates is
    --  OUT := IN0[IN1*STEP+OFF+WD-1:IN1*STEP+OFF]
    Id_Dyn_Extract : constant Module_Id := 51;
 
-   --  This gate has two inputs I, V and one parameter POS.
-   --  It replaces bits POS + width(V) - 1 .. POS of I by V, ie:
-   --  T := I;
-   --  T [POS+width(V)-1:POS] := V
-   --  OUT := T.
-   Id_Insert : constant Module_Id := 52;
-
    --  Like Insert but for dynamic values.
    --  T := IN0
    --  T [IN2*STEP+OFF+WD-1:IN2*STEP+OFF] := IN1
