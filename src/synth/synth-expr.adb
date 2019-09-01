@@ -165,17 +165,41 @@ package body Synth.Expr is
 
    function Synth_Uresize (N : Net; W : Width; Loc : Node) return Net
    is
-      pragma Unreferenced (Loc);
       Wn : constant Width := Get_Width (N);
+      Res : Net;
    begin
-      if Wn > W then
-         return Build_Trunc (Build_Context, Id_Utrunc, N, W);
-      elsif Wn < W then
-         return Build_Extend (Build_Context, Id_Uextend, N, W);
-      else
+      if Wn = W then
          return N;
+      else
+         if Wn > W then
+            Res := Build_Trunc (Build_Context, Id_Utrunc, N, W);
+         else
+            pragma Assert (Wn < W);
+            Res := Build_Extend (Build_Context, Id_Uextend, N, W);
+         end if;
+         Set_Location (Res, Loc);
+         return Res;
       end if;
    end Synth_Uresize;
+
+   function Synth_Sresize (N : Net; W : Width; Loc : Node) return Net
+   is
+      Wn : constant Width := Get_Width (N);
+      Res : Net;
+   begin
+      if Wn = W then
+         return N;
+      else
+         if Wn > W then
+            Res := Build_Trunc (Build_Context, Id_Strunc, N, W);
+         else
+            pragma Assert (Wn < W);
+            Res := Build_Extend (Build_Context, Id_Sextend, N, W);
+         end if;
+         Set_Location (Res, Loc);
+         return Res;
+      end if;
+   end Synth_Sresize;
 
    function Synth_Uresize (Val : Value_Acc; W : Width; Loc : Node) return Net
    is
@@ -224,7 +248,6 @@ package body Synth.Expr is
          return N;
       end if;
    end Synth_Resize;
-
 
    function Get_Index_Offset
      (Index : Value_Acc; Bounds : Bound_Type; Expr : Iir) return Uns32 is
@@ -984,6 +1007,28 @@ package body Synth.Expr is
          return Create_Value_Net (N, Rtype);
       end Synth_Dyadic_Uns;
 
+      function Synth_Dyadic_Sgn (Id : Dyadic_Module_Id; Is_Res_Vec : Boolean)
+                                return Value_Acc
+      is
+         L : constant Net := Get_Net (Left);
+         R : constant Net := Get_Net (Right);
+         W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+         Rtype : Type_Acc;
+         L1, R1 : Net;
+         N : Net;
+      begin
+         if Is_Res_Vec then
+            Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
+         else
+            Rtype := Left.Typ;
+         end if;
+         L1 := Synth_Sresize (L, W, Expr);
+         R1 := Synth_Sresize (R, W, Expr);
+         N := Build_Dyadic (Build_Context, Id, L1, R1);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Rtype);
+      end Synth_Dyadic_Sgn;
+
       function Synth_Compare_Uns_Uns (Id : Compare_Module_Id)
                                      return Value_Acc
       is
@@ -1108,9 +1153,13 @@ package body Synth.Expr is
             --  "+" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Id_Add);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Add, True);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn =>
+            --  "+" (Signed, Signed)
+            return Synth_Dyadic_Sgn (Id_Add, True);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
             --  "-" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Id_Sub);

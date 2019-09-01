@@ -43,8 +43,8 @@ package body Vhdl.Ieee.Numeric is
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
             Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
             Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,
-            Arg_Vect_Log  => Iir_Predefined_None,
-            Arg_Log_Vect  => Iir_Predefined_None),
+            Arg_Vect_Log  => Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log,
+            Arg_Log_Vect  => Iir_Predefined_Ieee_Numeric_Std_Add_Log_Uns),
          Type_Signed =>
            (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn,
             Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int,
