@@ -2021,9 +2021,9 @@ Get_Expression = libghdl.vhdl__nodes__get_expression
 
 Set_Expression = libghdl.vhdl__nodes__set_expression
 
-Get_Conditional_Expression = libghdl.vhdl__nodes__get_conditional_expression
+Get_Conditional_Expression_Chain = libghdl.vhdl__nodes__get_conditional_expression_chain
 
-Set_Conditional_Expression = libghdl.vhdl__nodes__set_conditional_expression
+Set_Conditional_Expression_Chain = libghdl.vhdl__nodes__set_conditional_expression_chain
 
 Get_Allocator_Designated_Type = libghdl.vhdl__nodes__get_allocator_designated_type
 

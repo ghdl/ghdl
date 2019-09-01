@@ -2397,7 +2397,7 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
    end Disp_Variable_Assignment;
 
-   procedure Disp_Conditional_Expression
+   procedure Disp_Conditional_Expression_Chain
      (Ctxt : in out Ctxt_Class; Exprs : Iir)
    is
       Expr : Iir;
@@ -2415,7 +2415,7 @@ package body Vhdl.Prints is
          exit when Expr = Null_Iir;
          Disp_Token (Ctxt, Tok_Else);
       end loop;
-   end Disp_Conditional_Expression;
+   end Disp_Conditional_Expression_Chain;
 
    procedure Disp_Conditional_Variable_Assignment
      (Ctxt : in out Ctxt_Class; Stmt: Iir) is
@@ -2424,7 +2424,8 @@ package body Vhdl.Prints is
       Disp_Label (Ctxt, Stmt);
       Print (Ctxt, Get_Target (Stmt));
       Disp_Token (Ctxt, Tok_Assign);
-      Disp_Conditional_Expression (Ctxt, Get_Conditional_Expression (Stmt));
+      Disp_Conditional_Expression_Chain
+        (Ctxt, Get_Conditional_Expression_Chain (Stmt));
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
    end Disp_Conditional_Variable_Assignment;

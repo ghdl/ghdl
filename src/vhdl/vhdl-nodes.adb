@@ -4746,21 +4746,21 @@ package body Vhdl.Nodes is
       Set_Field5 (Target, Expr);
    end Set_Expression;
 
-   function Get_Conditional_Expression (Target : Iir) return Iir is
+   function Get_Conditional_Expression_Chain (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Conditional_Expression (Get_Kind (Target)),
-                     "no field Conditional_Expression");
+      pragma Assert (Has_Conditional_Expression_Chain (Get_Kind (Target)),
+                     "no field Conditional_Expression_Chain");
       return Get_Field5 (Target);
-   end Get_Conditional_Expression;
+   end Get_Conditional_Expression_Chain;
 
-   procedure Set_Conditional_Expression (Target : Iir; Expr : Iir) is
+   procedure Set_Conditional_Expression_Chain (Target : Iir; Chain : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Conditional_Expression (Get_Kind (Target)),
-                     "no field Conditional_Expression");
-      Set_Field5 (Target, Expr);
-   end Set_Conditional_Expression;
+      pragma Assert (Has_Conditional_Expression_Chain (Get_Kind (Target)),
+                     "no field Conditional_Expression_Chain");
+      Set_Field5 (Target, Chain);
+   end Set_Conditional_Expression_Chain;
 
    function Get_Allocator_Designated_Type (Target : Iir) return Iir is
    begin

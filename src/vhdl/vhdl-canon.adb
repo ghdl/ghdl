@@ -1107,7 +1107,7 @@ package body Vhdl.Canon is
       Res : Iir;
       El, N_El : Iir;
    begin
-      Cond_Expr := Get_Conditional_Expression (Stmt);
+      Cond_Expr := Get_Conditional_Expression_Chain (Stmt);
       Res := Create_Iir (Iir_Kind_If_Statement);
       Set_Label (Res, Get_Label (Stmt));
       Set_Suspend_Flag (Res, False);

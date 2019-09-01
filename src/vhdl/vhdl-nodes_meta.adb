@@ -231,7 +231,7 @@ package body Vhdl.Nodes_Meta is
       Field_Default_Binding_Indication => Type_Iir,
       Field_Default_Configuration_Declaration => Type_Iir,
       Field_Expression => Type_Iir,
-      Field_Conditional_Expression => Type_Iir,
+      Field_Conditional_Expression_Chain => Type_Iir,
       Field_Allocator_Designated_Type => Type_Iir,
       Field_Selected_Waveform_Chain => Type_Iir,
       Field_Conditional_Waveform_Chain => Type_Iir,
@@ -783,8 +783,8 @@ package body Vhdl.Nodes_Meta is
             return "default_configuration_declaration";
          when Field_Expression =>
             return "expression";
-         when Field_Conditional_Expression =>
-            return "conditional_expression";
+         when Field_Conditional_Expression_Chain =>
+            return "conditional_expression_chain";
          when Field_Allocator_Designated_Type =>
             return "allocator_designated_type";
          when Field_Selected_Waveform_Chain =>
@@ -2007,7 +2007,7 @@ package body Vhdl.Nodes_Meta is
             return Attr_None;
          when Field_Expression =>
             return Attr_None;
-         when Field_Conditional_Expression =>
+         when Field_Conditional_Expression_Chain =>
             return Attr_Chain;
          when Field_Allocator_Designated_Type =>
             return Attr_Ref;
@@ -4075,7 +4075,7 @@ package body Vhdl.Nodes_Meta is
       Field_Parent,
       Field_Target,
       Field_Chain,
-      Field_Conditional_Expression,
+      Field_Conditional_Expression_Chain,
       --  Iir_Kind_Return_Statement
       Field_Label,
       Field_Visible_Flag,
@@ -5452,8 +5452,8 @@ package body Vhdl.Nodes_Meta is
             return Get_Default_Configuration_Declaration (N);
          when Field_Expression =>
             return Get_Expression (N);
-         when Field_Conditional_Expression =>
-            return Get_Conditional_Expression (N);
+         when Field_Conditional_Expression_Chain =>
+            return Get_Conditional_Expression_Chain (N);
          when Field_Allocator_Designated_Type =>
             return Get_Allocator_Designated_Type (N);
          when Field_Selected_Waveform_Chain =>
@@ -5854,8 +5854,8 @@ package body Vhdl.Nodes_Meta is
             Set_Default_Configuration_Declaration (N, V);
          when Field_Expression =>
             Set_Expression (N, V);
-         when Field_Conditional_Expression =>
-            Set_Conditional_Expression (N, V);
+         when Field_Conditional_Expression_Chain =>
+            Set_Conditional_Expression_Chain (N, V);
          when Field_Allocator_Designated_Type =>
             Set_Allocator_Designated_Type (N, V);
          when Field_Selected_Waveform_Chain =>
@@ -9283,10 +9283,10 @@ package body Vhdl.Nodes_Meta is
       end case;
    end Has_Expression;
 
-   function Has_Conditional_Expression (K : Iir_Kind) return Boolean is
+   function Has_Conditional_Expression_Chain (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Conditional_Variable_Assignment_Statement;
-   end Has_Conditional_Expression;
+   end Has_Conditional_Expression_Chain;
 
    function Has_Allocator_Designated_Type (K : Iir_Kind) return Boolean is
    begin

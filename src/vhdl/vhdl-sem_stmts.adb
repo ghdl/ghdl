@@ -780,7 +780,8 @@ package body Vhdl.Sem_Stmts is
       end case;
    end Sem_Signal_Assignment;
 
-   procedure Sem_Conditional_Expression (Cond_Expr : Iir; Atype : in out Iir)
+   procedure Sem_Conditional_Expression_Chain
+     (Cond_Expr : Iir; Atype : in out Iir)
    is
       El : Iir;
       Expr : Iir;
@@ -812,7 +813,7 @@ package body Vhdl.Sem_Stmts is
 
          El := Get_Chain (El);
       end loop;
-   end Sem_Conditional_Expression;
+   end Sem_Conditional_Expression_Chain;
 
    procedure Sem_Variable_Assignment (Stmt: Iir)
    is
@@ -874,8 +875,8 @@ package body Vhdl.Sem_Stmts is
                end if;
 
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
-               Expr := Get_Conditional_Expression (Stmt);
-               Sem_Conditional_Expression (Expr, Stmt_Type);
+               Expr := Get_Conditional_Expression_Chain (Stmt);
+               Sem_Conditional_Expression_Chain (Expr, Stmt_Type);
          end case;
 
          exit when Done;

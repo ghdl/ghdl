@@ -3412,7 +3412,8 @@ package Vhdl.Nodes is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Conditional_Expression (Field5)
+   --  Chain of conditional_expressions.
+   --   Get/Set_Conditional_Expression_Chain (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -7250,8 +7251,8 @@ package Vhdl.Nodes is
    --  A conditional expression.
    --  Node kind is a Iir_Kind_Conditional_Expression.
    --  Field: Field5 Chain
-   function Get_Conditional_Expression (Target : Iir) return Iir;
-   procedure Set_Conditional_Expression (Target : Iir; Expr : Iir);
+   function Get_Conditional_Expression_Chain (Target : Iir) return Iir;
+   procedure Set_Conditional_Expression_Chain (Target : Iir; Chain : Iir);
 
    --  Set to the designated type (either the type of the expression or the
    --  subtype) when the expression is analyzed.

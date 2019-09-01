@@ -6758,7 +6758,7 @@ package body Vhdl.Parse is
    --      expression WHEN condition
    --    { ELSE expression WHEN condition }
    --    [ ELSE expression ]
-   function Parse_Conditional_Expression (Expr : Iir) return Iir
+   function Parse_Conditional_Expression_Chain (Expr : Iir) return Iir
    is
       Res : Iir;
       El, N_El : Iir;
@@ -6790,7 +6790,7 @@ package body Vhdl.Parse is
       end loop;
 
       return Res;
-   end Parse_Conditional_Expression;
+   end Parse_Conditional_Expression_Chain;
 
    --  precond:  ':='
    --  postcond: next token
@@ -6820,8 +6820,8 @@ package body Vhdl.Parse is
            Create_Iir (Iir_Kind_Conditional_Variable_Assignment_Statement);
          Set_Location (Stmt, Loc);
          Set_Target (Stmt, Target);
-         Set_Conditional_Expression
-           (Stmt, Parse_Conditional_Expression (Expr));
+         Set_Conditional_Expression_Chain
+           (Stmt, Parse_Conditional_Expression_Chain (Expr));
       else
          Stmt := Create_Iir (Iir_Kind_Variable_Assignment_Statement);
          Set_Location (Stmt, Loc);

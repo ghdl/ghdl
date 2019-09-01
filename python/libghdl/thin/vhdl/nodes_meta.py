@@ -273,7 +273,7 @@ class fields:
     Default_Binding_Indication = 209
     Default_Configuration_Declaration = 210
     Expression = 211
-    Conditional_Expression = 212
+    Conditional_Expression_Chain = 212
     Allocator_Designated_Type = 213
     Selected_Waveform_Chain = 214
     Conditional_Waveform_Chain = 215
@@ -1092,8 +1092,8 @@ Has_Default_Configuration_Declaration =\
 Has_Expression =\
     libghdl.vhdl__nodes_meta__has_expression
 
-Has_Conditional_Expression =\
-    libghdl.vhdl__nodes_meta__has_conditional_expression
+Has_Conditional_Expression_Chain =\
+    libghdl.vhdl__nodes_meta__has_conditional_expression_chain
 
 Has_Allocator_Designated_Type =\
     libghdl.vhdl__nodes_meta__has_allocator_designated_type
