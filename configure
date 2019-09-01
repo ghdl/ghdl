@@ -186,6 +186,7 @@ fi
 # Check the version of libghdl is correct.
 if [ "$enable_libghdl" = true ]; then
     libghdl_version="$srcdir/python/libghdl/version.py"
+    # Compare a fixed number of bytes (-n), to avoid false positives due to LF/CRLF mismatch.
     if ! echo "__version__ = '${ghdl_version}'" | cmp -n "${#ghdl_version}" "$libghdl_version" ; then
 	echo "Sorry, the version of $libghdl_version is not correct"
 	echo "update the version to: $ghdl_version"
