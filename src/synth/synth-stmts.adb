@@ -341,6 +341,38 @@ package body Synth.Stmts is
       Synth_Assignment (Syn_Inst, Target, Val, Stmt);
    end Synth_Variable_Assignment;
 
+   procedure Synth_Conditional_Variable_Assignment
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Target : constant Node := Get_Target (Stmt);
+      Targ_Type : constant Node := Get_Type (Target);
+      Cond : Node;
+      Ce : Node;
+      Val, Cond_Val : Value_Acc;
+      First, Last : Value_Acc;
+   begin
+      Last := null;
+      Ce := Get_Conditional_Expression_Chain (Stmt);
+      while Ce /= Null_Node loop
+         Val := Synth_Expression_With_Type
+           (Syn_Inst, Get_Expression (Ce), Targ_Type);
+         Cond := Get_Condition (Ce);
+         if Cond /= Null_Node then
+            Cond_Val := Synth_Expression (Syn_Inst, Cond);
+            Val := Create_Value_Mux2 (Cond_Val, Val, null);
+         end if;
+
+         if Last /= null then
+            Last.M_F := Val;
+         else
+            First := Val;
+         end if;
+         Last := Val;
+         Ce := Get_Chain (Ce);
+      end loop;
+      Synth_Assignment (Syn_Inst, Target, First, Stmt);
+   end Synth_Conditional_Variable_Assignment;
+
    procedure Synth_If_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -1216,6 +1248,8 @@ package body Synth.Stmts is
                Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Variable_Assignment_Statement =>
                Synth_Variable_Assignment (Syn_Inst, Stmt);
+            when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               Synth_Conditional_Variable_Assignment (Syn_Inst, Stmt);
             when Iir_Kind_Case_Statement =>
                Synth_Case_Statement (Syn_Inst, Stmt);
             when Iir_Kind_For_Loop_Statement =>
