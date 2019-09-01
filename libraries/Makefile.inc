@@ -48,6 +48,7 @@ SYNOPSYS_BSRCS := std_logic_arith.vhdl \
 SYNOPSYS_V_BSRCS := std_logic_misc.vhdl std_logic_misc-body.vhdl
 SYNOPSYS8793_BSRCS := std_logic_textio.vhdl
 MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith-body.vhdl
+UPF_SRCS := openieee/upf.vhdl openieee/upf-body.vhdl
 
 ifeq ($(enable_openieee),false)
 IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
@@ -74,16 +75,16 @@ IEEE08_BSRCS := \
   ieee2008/fixed_pkg.vhdl \
   ieee2008/float_generic_pkg.vhdl ieee2008/float_generic_pkg-body.vhdl \
   ieee2008/float_pkg.vhdl \
-  ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl
+  ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl \
+  $(UPF_SRCS)
 
-IEEE87_BSRCS := $(addprefix ieee/v87/,$(IEEE_SRCS))
-IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS)) $(addprefix ieee/,$(MATH_SRCS))
+IEEE87_BSRCS := $(addprefix ieee/v87/,$(IEEE_SRCS)) $(UPF_SRCS)
+IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS)) $(addprefix ieee/,$(MATH_SRCS)) $(UPF_SRCS)
 
 else
 IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
   numeric_bit.vhdl numeric_bit-body.vhdl \
   numeric_std.vhdl numeric_std-body.vhdl
-UPF_SRCS := openieee/upf.vhdl openieee/upf-body.vhdl
 MATH_SRCS := math_real.vhdl math_real-body.vhdl
 VITAL95_BSRCS :=
 VITAL2000_BSRCS :=
