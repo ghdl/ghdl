@@ -164,6 +164,11 @@ if ! grep $pat $srcdir/configure > /dev/null 2>&1; then
   exit 1
 fi
 
+if ! `cmp --help > /dev/null 2>&1`; then
+  echo "Sorry, you need 'cmp' to configure GHDL.";
+  exit 1
+fi
+
 if ! cmp $srcdir/configure $abs_srcdir/configure > /dev/null 2>&1; then
   echo "Cannot compute absolute source dir (or incorrect srcdir)"
   echo "srcdir=$srcdir"
