@@ -146,12 +146,11 @@ fi
 case $srcdir in
   /*) abs_srcdir=$srcdir;;
   *)
-    # Use a Windows path when not on MSYS2/MINGW.
-    if [ -z "$MSYSTEM" ]; then
-      curdir=`pwd -W 2>/dev/null || pwd`
-    else
-      curdir=`pwd`
-    fi
+    # Use a Windows path on windows.
+    case "$OS" in
+      Windows_NT) curdir=`pwd -W 2>/dev/null || pwd` ;;
+      *) curdir=`pwd` ;;
+    esac
     abs_srcdir=$curdir/$srcdir
     ;;
 esac
