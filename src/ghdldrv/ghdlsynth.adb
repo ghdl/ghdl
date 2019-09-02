@@ -44,6 +44,7 @@ with Netlists.Disp_Vhdl;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
+with Synth.Context; use Synth.Context;
 
 package body Ghdlsynth is
    type Out_Format is (Format_Raw, Format_Vhdl);
@@ -210,6 +211,7 @@ package body Ghdlsynth is
       Cmd : Command_Acc;
       First_Arg : Natural;
       Config : Node;
+      Inst : Synth_Instance_Acc;
    begin
       --  Create arguments list.
       for I in 0 .. Argc - 1 loop
@@ -229,7 +231,7 @@ package body Ghdlsynth is
          return No_Module;
       end if;
 
-      Res := Synthesis.Synth_Design (Config);
+      Synthesis.Synth_Design (Config, Res, Inst);
       return Res;
 
    exception
@@ -244,6 +246,7 @@ package body Ghdlsynth is
                              Args : Argument_List)
    is
       Res : Module;
+      Inst : Synth_Instance_Acc;
       Config : Iir;
       Ent : Iir;
    begin
@@ -253,7 +256,7 @@ package body Ghdlsynth is
          raise Errorout.Compilation_Error;
       end if;
 
-      Res := Synthesis.Synth_Design (Config);
+      Synthesis.Synth_Design (Config, Res, Inst);
       if Res = No_Module then
          raise Errorout.Compilation_Error;
       end if;
@@ -265,7 +268,7 @@ package body Ghdlsynth is
          when Format_Vhdl =>
             if Boolean'(True) then
                Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
-               Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res);
+               Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res, Inst);
             else
                Netlists.Disp_Vhdl.Disp_Vhdl (Res);
             end if;

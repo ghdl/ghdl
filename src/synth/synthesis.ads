@@ -20,9 +20,11 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Netlists; use Netlists;
+with Synth.Context; use Synth.Context;
 
 package Synthesis is
-   function Synth_Design (Design : Iir) return Module;
+   procedure Synth_Design
+     (Design : Iir; M : out Module; Inst : out Synth_Instance_Acc);
 
    Global_Module : Module;
 

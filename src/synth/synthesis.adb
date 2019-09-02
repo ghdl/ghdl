@@ -26,7 +26,6 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Synth.Values; use Synth.Values;
-with Synth.Context; use Synth.Context;
 with Synth.Decls; use Synth.Decls;
 with Synth.Insts; use Synth.Insts;
 
@@ -110,13 +109,12 @@ package body Synthesis is
       end loop;
    end Synth_Dependencies;
 
-   function Synth_Design (Design : Node) return Module
+   procedure Synth_Design
+     (Design : Node; M : out Module; Inst : out Synth_Instance_Acc)
    is
       Unit : constant Node := Get_Library_Unit (Design);
       Arch : Node;
       Config : Node;
-
-      Syn_Inst : Synth_Instance_Acc;
    begin
       --  Extract architecture from design.
       case Get_Kind (Unit) is
@@ -145,13 +143,12 @@ package body Synthesis is
       Synth_Dependencies
         (Global_Instance, Get_Design_Unit (Arch));
 
-      Synth_Top_Entity (Arch, Config);
+      Synth_Top_Entity (Arch, Config, Inst);
       Synth_All_Instances;
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
       end if;
 
-      pragma Unreferenced (Syn_Inst);
-      return Global_Module;
+      M := Global_Module;
    end Synth_Design;
 end Synthesis;

@@ -587,7 +587,8 @@ package body Synth.Insts is
       end;
    end Synth_Component_Instantiation_Statement;
 
-   procedure Synth_Top_Entity (Arch : Node; Config : Node)
+   procedure Synth_Top_Entity
+     (Arch : Node; Config : Node; Inst : out Synth_Instance_Acc)
    is
       Entity : constant Node := Get_Entity (Arch);
       Syn_Inst : Synth_Instance_Acc;
@@ -642,7 +643,7 @@ package body Synth.Insts is
           Arch => Arch,
           Config => Get_Block_Configuration (Config),
           Syn_Inst => Syn_Inst));
-      pragma Unreferenced (Inst_Obj);
+      Inst := Inst_Obj.Syn_Inst;
    end Synth_Top_Entity;
 
    procedure Create_Input_Wire (Self_Inst : Instance;

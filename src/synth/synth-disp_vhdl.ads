@@ -20,8 +20,10 @@
 
 with Netlists; use Netlists;
 with Vhdl.Nodes; use Vhdl.Nodes;
+with Synth.Context; use Synth.Context;
 
 package Synth.Disp_Vhdl is
    --  Disp ENT (like the original text) and its content as a wrapper.
-   procedure Disp_Vhdl_Wrapper (Ent : Node; Top : Module);
+   procedure Disp_Vhdl_Wrapper
+     (Ent : Node; Top : Module; Inst : Synth_Instance_Acc);
 end Synth.Disp_Vhdl;
