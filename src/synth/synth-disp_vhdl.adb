@@ -183,11 +183,22 @@ package body Synth.Disp_Vhdl is
       Disp_In_Converter (Port_Name, Port_Name, 0, Port_Type, Typ, True);
    end Disp_Input_Port_Converter;
 
-   procedure Disp_Out_Converter
-     (M : Module; Idx : in out Port_Idx; Pfx : String; Ptype : Node)
+   procedure Disp_Out_Rhs
+     (Mname : String; Off : Uns32; W : Width; Full : Boolean) is
+   begin
+      Put ("wrap_" & Mname);
+      Disp_Pfx (Off, W, Full);
+   end Disp_Out_Rhs;
+
+   procedure Disp_Out_Converter (Mname : String;
+                                 Pfx : String;
+                                 Off : Uns32;
+                                 Ptype : Node;
+                                 Typ : Type_Acc;
+                                 Full : Boolean)
    is
       Btype : constant Node := Get_Base_Type (Ptype);
-      Desc : constant Port_Desc := Get_Output_Desc (M, Idx);
+      W : Width;
    begin
       case Get_Kind (Btype) is
          when Iir_Kind_Enumeration_Type_Definition =>
@@ -195,73 +206,101 @@ package body Synth.Disp_Vhdl is
               or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
             then
                --  Nothing to do.
-               Put_Line ("  " & Pfx & " <= wrap_" & Pfx & ";");
-               Idx := Idx + 1;
+               Put ("  " & Pfx & " <= ");
+               Disp_Out_Rhs (Mname, Off, 1, Full);
+               Put_Line (";");
             else
                --  Any other enum.
+               W := Typ.Drange.W;
                Put ("  " & Pfx & " <= ");
                Put (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Ptype))));
-               Put ("'val (to_integer(unsigned(wrap_" & Pfx & ")));");
-               New_Line;
-               Idx := Idx + 1;
+               Put ("'val (to_integer(unsigned(");
+               Disp_Out_Rhs (Mname, Off, W, Full);
+               Put_Line (")));");
             end if;
          when Iir_Kind_Integer_Type_Definition =>
             --  FIXME: signed or unsigned ?
+            W := Typ.Drange.W;
             Put ("  " & Pfx & " <= to_integer (unsigned");
-            if Desc.W = 1 then
-               Put ("'(0 => wrap_" & Pfx & ')');
+            if W = 1 then
+               Put ("'(0 => ");
             else
-               Put (" (wrap_" & Pfx & ')');
+               Put (" (");
             end if;
-            Put_Line (");");
-            Idx := Idx + 1;
+            Disp_Out_Rhs (Mname, Off, W, Full);
+            Put_Line ("));");
          when Iir_Kind_Array_Type_Definition =>
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
                --  Nothing to do.
-               Put ("  " & Pfx);
-               if Desc.W = 1 then
-                  --  This is an array of length 1.  A scalar is used in the
-                  --  netlist.
-                  Put (" (" & Pfx & "'left)");
-               end if;
-               Put_Line (" <= wrap_" & Pfx & ";");
-               Idx := Idx + 1;
+               W := Typ.Vbound.Len;
+               Put ("  " & Pfx & " <= ");
+               Disp_Out_Rhs (Mname, Off, W, Full);
+               Put_Line (";");
             elsif Btype = Vhdl.Std_Package.Bit_Vector_Type_Definition then
                --  Nothing to do.
-               Put ("  " & Pfx);
-               if Desc.W = 1 then
+               W := Typ.Vbound.Len;
+               Put ("  " & Pfx & " <= ");
+               if W = 1 then
                   --  This is an array of length 1.  A scalar is used in the
                   --  netlist.
-                  Put (" (" & Pfx & "'left) <= to_bit (wrap_" & Pfx & ");");
+                  Put ("(0 => to_bit (");
                else
-                  Put (" <= to_bit_vector (wrap_" & Pfx & ");");
+                  Put (" to_bitvector (");
                end if;
-               New_Line;
-               Idx := Idx + 1;
+               Disp_Out_Rhs (Mname, Off, W, Full);
+               if W = 1 then
+                  Put (')');
+               end if;
+               Put_Line (");");
             elsif Is_One_Dimensional_Array_Type (Btype)
               and then (Get_Base_Type (Get_Element_Subtype (Btype))
                           = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type)
             then
                --  unsigned, signed or a compatible array.
-               Put ("  " & Pfx);
-               if Desc.W = 1 then
-                  --  This is an array of length 1.  A scalar is used in the
-                  --  netlist.
-                  Put (" (" & Pfx & "'left)");
-               end if;
-               Put (" <= ");
+               W := Typ.Vbound.Len;
+               Put ("  " & Pfx & " <= ");
                Put (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Btype))));
-               Put_Line (" (wrap_" & Pfx & ");");
-               Idx := Idx + 1;
+               Put ("(");
+               Disp_Out_Rhs (Mname, Off, W, Full);
+               Put_Line (");");
             else
                Error_Kind ("disp_out_converter(arr)", Ptype);
             end if;
+         when Iir_Kind_Record_Type_Definition =>
+            declare
+               Els : constant Node_Flist :=
+                 Get_Elements_Declaration_List (Ptype);
+            begin
+               for I in Flist_First .. Flist_Last (Els) loop
+                  declare
+                     El : constant Node := Get_Nth_Element (Els, I);
+                     Et : Rec_El_Type renames
+                       Typ.Rec.E (Iir_Index32 (I + 1));
+                  begin
+                     Disp_Out_Converter
+                       (Mname,
+                        Pfx & '.' & Name_Table.Image (Get_Identifier (El)),
+                        Off + Et.Off, Get_Type (El), Et.Typ, False);
+                  end;
+               end loop;
+            end;
          when others =>
             Error_Kind ("disp_out_converter", Ptype);
       end case;
    end Disp_Out_Converter;
+
+   procedure Disp_Output_Port_Converter (Inst : Synth_Instance_Acc;
+                                        Port : Node)
+   is
+      Port_Name : constant String :=
+        Name_Table.Image (Get_Identifier (Port));
+      Port_Type : constant Node := Get_Type (Port);
+      Typ : constant Type_Acc := Get_Value_Type (Inst, Port_Type);
+   begin
+      Disp_Out_Converter (Port_Name, Port_Name, 0, Port_Type, Typ, True);
+   end Disp_Output_Port_Converter;
 
    procedure Disp_Vhdl_Wrapper
      (Ent : Node; Top : Module; Inst : Synth_Instance_Acc)
@@ -337,7 +376,6 @@ package body Synth.Disp_Vhdl is
       end if;
 
       declare
-         Idx : Port_Idx;
          Port : Node;
       begin
          Port := Get_Port_Chain (Ent);
@@ -349,16 +387,12 @@ package body Synth.Disp_Vhdl is
          end loop;
 
          Port := Get_Port_Chain (Ent);
-         Idx := 0;
          while Port /= Null_Node loop
             if Get_Mode (Port) = Iir_Out_Mode then
-               Disp_Out_Converter
-                 (Main, Idx,
-                  Name_Table.Image (Get_Identifier (Port)), Get_Type (Port));
+               Disp_Output_Port_Converter (Inst, Port);
             end if;
             Port := Get_Chain (Port);
          end loop;
-         pragma Assert (Idx = Get_Nbr_Outputs (Main));
       end;
 
       Disp_Architecture_Statements (Main);
