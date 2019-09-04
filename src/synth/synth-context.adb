@@ -256,8 +256,10 @@ package body Synth.Context is
 
    type Digit_Index is new Natural;
    type Logvec_Array is array (Digit_Index range <>) of Logic_32;
+   type Logvec_Array_Acc is access Logvec_Array;
 
-   --   type Logvec_Array_Acc is access Logvec_Array;
+   procedure Free_Logvec_Array is new Ada.Unchecked_Deallocation
+     (Logvec_Array, Logvec_Array_Acc);
 
    procedure Value2net (Val : Value_Acc;
                         Vec : in out Logvec_Array;
@@ -391,8 +393,14 @@ package body Synth.Context is
                Res : Net;
             begin
                if Nd > 64 then
-                  --  TODO: Alloc on the heap.
-                  raise Internal_Error;
+                  declare
+                     Vecp : Logvec_Array_Acc;
+                  begin
+                     Vecp := new Logvec_Array'(0 .. Nd - 1 => (0, 0));
+                     Value2net (Val, W, Vecp.all, Res);
+                     Free_Logvec_Array (Vecp);
+                     return Res;
+                  end;
                else
                   declare
                      Vec : Logvec_Array (0 .. Nd - 1) := (others => (0, 0));
