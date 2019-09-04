@@ -499,6 +499,10 @@ package body Netlists.Disp_Vhdl is
          when Id_Const_Z =>
             Disp_Template ("(\n0 downto 0 => 'Z')",
                            Inst, (0 => Get_Width (O) - 1));
+         when Id_Const_Bit =>
+            Disp_Const_Bit (Inst);
+         when Id_Const_Log =>
+            raise Internal_Error;
          when others =>
             raise Internal_Error;
       end case;
