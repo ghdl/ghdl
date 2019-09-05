@@ -138,6 +138,7 @@ package Synth.Values is
 
       --  An array.
       Value_Array,
+      Value_Const_Array,
 
       --  A record.
       Value_Record,
@@ -181,7 +182,8 @@ package Synth.Values is
             Fp : Fp64;
          when Value_Subtype =>
             null;
-         when Value_Array =>
+         when Value_Array
+           | Value_Const_Array =>
             Arr : Value_Array_Acc;
          when Value_Record =>
             Rec : Value_Array_Acc;
@@ -242,6 +244,8 @@ package Synth.Values is
    --  Create a Value_Array.
    function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
                                return Value_Acc;
+   function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
+                                     return Value_Acc;
 
    --  Like the previous one but automatically build the array.
    function Create_Value_Array (Bounds : Type_Acc) return Value_Acc;
@@ -255,6 +259,10 @@ package Synth.Values is
 
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
                     return Value_Acc;
+
+   --  Get the number of indexes in array type TYP without counting
+   --  sub-elements.
+   function Get_Array_Flat_Length (Typ : Type_Acc) return Width;
 
    function Get_Type_Width (Atype : Type_Acc) return Width;
 

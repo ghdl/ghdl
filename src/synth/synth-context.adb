@@ -385,7 +385,7 @@ package body Synth.Context is
             else
                raise Internal_Error;
             end if;
-         when Value_Array
+         when Value_Const_Array
            | Value_Record =>
             declare
                W : constant Width := Get_Type_Width (Val.Typ);

@@ -59,6 +59,8 @@ package body Synth.Expr is
            | Value_Wire
            | Value_Mux2 =>
             return False;
+         when Value_Const_Array =>
+            return True;
          when others =>
             --  TODO.
             raise Internal_Error;
@@ -279,17 +281,19 @@ package body Synth.Expr is
 
    procedure Fill_Array_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node;
-                                   Res : Value_Acc;
-                                   Dim : Natural)
+                                   Res : Value_Array_Acc;
+                                   Typ : Type_Acc;
+                                   Dim : Natural;
+                                   Const_P : out Boolean)
    is
-      Bound : constant Bound_Type := Res.Typ.Abounds.D (1);
+      Bound : Bound_Type renames Typ.Abounds.D (1);
       Aggr_Type : constant Node := Get_Type (Aggr);
       El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
       Nbr_Dims : constant Natural := Get_Nbr_Dimensions (Aggr_Type);
       Idx_Type : constant Node := Get_Index_Type (Aggr_Type, Dim);
       type Boolean_Array is array (Uns32 range <>) of Boolean;
       pragma Pack (Boolean_Array);
-      --  FIXME: test Res.Arr.V (I) instead.
+      --  FIXME: test Res.V (I) instead.
       Is_Set : Boolean_Array (0 .. Bound.Len - 1);
       Value : Node;
       Assoc : Node;
@@ -301,9 +305,12 @@ package body Synth.Expr is
       begin
          if Dim = Nbr_Dims - 1 then
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type);
-            Res.Arr.V (Iir_Index32 (Pos + 1)) := Val;
+            Res.V (Iir_Index32 (Pos + 1)) := Val;
             pragma Assert (not Is_Set (Pos));
             Is_Set (Pos) := True;
+            if Const_P and then not Is_Const (Val) then
+               Const_P := False;
+            end if;
          else
             Error_Msg_Synth (+Assoc, "multi-dim aggregate not handled");
          end if;
@@ -312,6 +319,7 @@ package body Synth.Expr is
       Assoc := Get_Association_Choices_Chain (Aggr);
       Pos := 0;
       Is_Set := (others => False);
+      Const_P := True;
       while Is_Valid (Assoc) loop
          Value := Get_Associated_Expr (Assoc);
          loop
@@ -706,7 +714,9 @@ package body Synth.Expr is
       El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
       Bnds : Bound_Array_Acc;
       Res_Type : Type_Acc;
+      Arr : Value_Array_Acc;
       Res : Value_Acc;
+      Const_P : Boolean;
    begin
       --  Allocate the result.
       Bnds := Create_Bound_Array (Iir_Index32 (Ndims));
@@ -716,9 +726,16 @@ package body Synth.Expr is
       end loop;
       Res_Type := Create_Array_Type
         (Bnds, Get_Value (Syn_Inst, El_Type).Typ);
-      Res := Create_Value_Array (Res_Type);
+      Arr := Create_Value_Array
+        (Iir_Index32 (Get_Array_Flat_Length (Res_Type)));
 
-      Fill_Array_Aggregate (Syn_Inst, Aggr, Res, 0);
+      Fill_Array_Aggregate (Syn_Inst, Aggr, Arr, Res_Type, 0, Const_P);
+
+      if Const_P then
+         Res := Create_Value_Const_Array (Res_Type, Arr);
+      else
+         Res := Create_Value_Array (Res_Type, Arr);
+      end if;
 
       if False and Is_Vector_Type (Aggr_Type) then
          Res := Vectorize_Array (Res, Get_Element_Subtype (Aggr_Type));
@@ -2056,19 +2073,21 @@ package body Synth.Expr is
       Bounds : Bound_Type;
       Res_Type : Type_Acc;
       Res : Value_Acc;
+      Arr : Value_Array_Acc;
       Pos : Nat8;
    begin
       Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 0);
       El_Type := Get_Value_Type (Syn_Inst, Get_Element_Subtype (Str_Type));
       Res_Type := Create_Vector_Type (Bounds, El_Type);
+      Arr := Create_Value_Array (Iir_Index32 (Bounds.Len));
 
-      Res := Create_Value_Array (Res_Type);
-      for I in Res.Arr.V'Range loop
+      for I in Arr.V'Range loop
          -- FIXME: use literal from type ??
          Pos := Str_Table.Element_String8 (Id, Pos32 (I));
-         Res.Arr.V (I) := Create_Value_Discrete (Int64 (Pos), El_Type);
+         Arr.V (I) := Create_Value_Discrete (Int64 (Pos), El_Type);
       end loop;
 
+      Res := Create_Value_Const_Array (Res_Type, Arr);
       return Res;
    end Synth_String_Literal;
 
@@ -2086,7 +2105,7 @@ package body Synth.Expr is
            (Std_Logic_0_Pos + (Arg / 2 ** Natural (I - 1)) mod 2, El_Type);
       end loop;
       Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
-      return Create_Value_Array (Bnd, Arr);
+      return Create_Value_Const_Array (Bnd, Arr);
    end Eval_To_Unsigned;
 
    function Synth_User_Function_Call

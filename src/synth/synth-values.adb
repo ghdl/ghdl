@@ -305,16 +305,40 @@ package body Synth.Values is
       return Res;
    end Create_Value_Array;
 
-   procedure Create_Array_Data (Arr : Value_Acc)
+   function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
+                               return Value_Acc
+   is
+      subtype Value_Type_Const_Array is Value_Type (Value_Const_Array);
+      function Alloc is
+         new Areapools.Alloc_On_Pool_Addr (Value_Type_Const_Array);
+
+      Res : Value_Acc;
+   begin
+      pragma Assert (Bounds /= null);
+      Res := To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Const_Array,
+                                   Arr => Arr, Typ => Bounds)));
+      return Res;
+   end Create_Value_Const_Array;
+
+   function Get_Array_Flat_Length (Typ : Type_Acc) return Width
    is
       Len : Width;
    begin
       Len := 1;
+      for I in Typ.Abounds.D'Range loop
+         Len := Len * Typ.Abounds.D (I).Len;
+      end loop;
+      return Len;
+   end Get_Array_Flat_Length;
+
+   procedure Create_Array_Data (Arr : Value_Acc)
+   is
+      Len : Width;
+   begin
       case Arr.Typ.Kind is
          when Type_Array =>
-            for I in Arr.Typ.Abounds.D'Range loop
-               Len := Len * Arr.Typ.Abounds.D (I).Len;
-            end loop;
+            Len := Get_Array_Flat_Length (Arr.Typ);
          when Type_Vector =>
             Len := Arr.Typ.Vbound.Len;
          when others =>
@@ -323,7 +347,6 @@ package body Synth.Values is
 
       Arr.Arr := Create_Value_Array (Iir_Index32 (Len));
    end Create_Array_Data;
-
 
    function Create_Value_Array (Bounds : Type_Acc) return Value_Acc
    is
