@@ -270,7 +270,8 @@ package body Trans.Chap5 is
                when Type_Mode_E32 =>
                   Subprg := Ghdl_Signal_Associate_E32;
                   Conv := Ghdl_I32_Type;
-               when Type_Mode_I32 =>
+               when Type_Mode_I32
+                 | Type_Mode_P32 =>
                   Subprg := Ghdl_Signal_Associate_I32;
                   Conv := Ghdl_I32_Type;
                when Type_Mode_P64 =>
