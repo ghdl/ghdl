@@ -20,6 +20,7 @@
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils; use Netlists.Utils;
+with Netlists.Concats;
 with Errorout; use Errorout;
 with Synth.Inference;
 with Synth.Errors; use Synth.Errors;
@@ -620,17 +621,15 @@ package body Synth.Environment is
 
       --  Build a vector
       declare
-         Vec : Net_Tables.Instance;
+         use Netlists.Concats;
+         Vec : Concat_Type;
          Seq : Seq_Assign;
          P : Partial_Assign;
          Cur_Off : Uns32;
          Cur_Wd : Width;
 
-         Last : Int32;
-         Inst : Instance;
          Res : Net;
       begin
-         Net_Tables.Init (Vec);
          Cur_Off := Off;
          Cur_Wd := Wd;
          pragma Assert (Wd > 0);
@@ -651,11 +650,11 @@ package body Synth.Environment is
                      --  Found.
                      if Pr.Offset = Cur_Off and then Pw = Cur_Wd then
                         --  No need to extract.
-                        Net_Tables.Append (Vec, Pr.Value);
+                        Append (Vec, Pr.Value);
                      else
                         Cur_Wd := Width'Min
                           (Cur_Wd, Pw - (Cur_Off - Pr.Offset));
-                        Net_Tables.Append
+                        Append
                           (Vec, Build_Extract (Ctxt, Pr.Value,
                                                Cur_Off - Pr.Offset, Cur_Wd));
                      end if;
@@ -678,7 +677,7 @@ package body Synth.Environment is
                      Seq := Get_Assign_Prev (Seq);
                      if Seq = No_Seq_Assign then
                         --  Extract from gate.
-                        Net_Tables.Append
+                        Append
                           (Vec, Build_Extract (Ctxt, Wire.Gate,
                                                Cur_Off, Cur_Wd));
                         exit;
@@ -694,30 +693,7 @@ package body Synth.Environment is
          end loop;
 
          --  Concat
-         Last := Net_Tables.Last (Vec);
-         case Last is
-            when Int32'First .. 0 =>
-               raise Internal_Error;
-            when 1 =>
-               Res := Vec.Table (1);
-            when 2 =>
-               Res := Build_Concat2 (Ctxt, Vec.Table (2), Vec.Table (1));
-            when 3 =>
-               Res := Build_Concat3
-                 (Ctxt, Vec.Table (3), Vec.Table (2), Vec.Table (1));
-            when 4 =>
-               Res := Build_Concat4
-                 (Ctxt,
-                  Vec.Table (4), Vec.Table (3), Vec.Table (2), Vec.Table (1));
-            when 5 .. Int32'Last =>
-               Res := Build_Concatn (Ctxt, Wd, Uns32 (Last));
-               Inst := Get_Parent (Res);
-               for I in Net_Tables.First .. Last loop
-                  Connect (Get_Input (Inst, Port_Idx (I - 1)), Vec.Table (I));
-               end loop;
-         end case;
-         --  Free the vector and return it.
-         Net_Tables.Free (Vec);
+         Build (Ctxt, Vec, Res);
          return Res;
       end;
    end Get_Current_Assign_Value;
