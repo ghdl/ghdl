@@ -24,7 +24,9 @@ with Types; use Types;
 with Tables;
 with Types_Utils; use Types_Utils;
 with Vhdl.Errors; use Vhdl.Errors;
+
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Concats;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Expr; use Synth.Expr;
@@ -409,6 +411,18 @@ package body Synth.Context is
                      return Res;
                   end;
                end if;
+            end;
+         when Value_Array =>
+            declare
+               use Netlists.Concats;
+               C : Concat_Type;
+               Res : Net;
+            begin
+               for I in Val.Arr.V'Range loop
+                  Append (C, Get_Net (Val.Arr.V (I)));
+               end loop;
+               Build (Build_Context, C, Res);
+               return Res;
             end;
          when others =>
             raise Internal_Error;

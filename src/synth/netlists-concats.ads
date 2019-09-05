@@ -24,7 +24,7 @@ with Netlists.Builders; use Netlists.Builders;
 package Netlists.Concats is
    type Concat_Type is limited private;
 
-   --  Append net N to C.
+   --  Append net N to C.  The first net appended will be at offset 0.
    procedure Append (C : in out Concat_Type; N : Net);
 
    --  Get the concatenation of all nets in C.  Reset C.
