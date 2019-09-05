@@ -357,21 +357,30 @@ package body Synth.Values is
       return Res;
    end Create_Value_Array;
 
-   function Create_Value_Record (Typ : Type_Acc) return Value_Acc
+   function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
+                                return Value_Acc
    is
       subtype Value_Type_Record is Value_Type (Value_Record);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Record);
-
-      Res : Value_Acc;
-      Rec_El : Value_Array_Acc;
    begin
-      Rec_El := Create_Value_Array (Typ.Rec.Len);
-      Res := To_Value_Acc (Alloc (Current_Pool,
+      return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Record,
                                    Typ => Typ,
-                                   Rec => Rec_El)));
-      return Res;
+                                   Rec => Els)));
    end Create_Value_Record;
+
+   function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
+                                      return Value_Acc
+   is
+      subtype Value_Type_Const_Record is Value_Type (Value_Const_Record);
+      function Alloc is
+         new Areapools.Alloc_On_Pool_Addr (Value_Type_Const_Record);
+   begin
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Const_Record,
+                                   Typ => Typ,
+                                   Rec => Els)));
+   end Create_Value_Const_Record;
 
    function Create_Value_Instance (Inst : Instance_Id) return Value_Acc
    is

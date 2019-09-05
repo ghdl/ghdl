@@ -136,12 +136,13 @@ package Synth.Values is
 
       Value_Float,
 
-      --  An array.
+      --  An array (const if all elements are constants).
       Value_Array,
       Value_Const_Array,
 
-      --  A record.
+      --  A record (const if all elements are constants).
       Value_Record,
+      Value_Const_Record,
 
       --  A package.
       Value_Instance,
@@ -185,7 +186,8 @@ package Synth.Values is
          when Value_Array
            | Value_Const_Array =>
             Arr : Value_Array_Acc;
-         when Value_Record =>
+         when Value_Record
+           | Value_Const_Record =>
             Rec : Value_Array_Acc;
          when Value_Instance =>
             Instance : Instance_Id;
@@ -253,7 +255,10 @@ package Synth.Values is
    --  Allocate the ARR component of the Value_Type ARR, using BOUNDS.
    procedure Create_Array_Data (Arr : Value_Acc);
 
-   function Create_Value_Record (Typ : Type_Acc) return Value_Acc;
+   function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
+                                return Value_Acc;
+   function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
+                                      return Value_Acc;
 
    function Create_Value_Instance (Inst : Instance_Id) return Value_Acc;
 

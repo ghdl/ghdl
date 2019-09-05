@@ -59,8 +59,12 @@ package body Synth.Expr is
            | Value_Wire
            | Value_Mux2 =>
             return False;
-         when Value_Const_Array =>
+         when Value_Const_Array
+           | Value_Const_Record =>
             return True;
+         when Value_Array
+           | Value_Record =>
+            return False;
          when others =>
             --  TODO.
             raise Internal_Error;
@@ -379,7 +383,8 @@ package body Synth.Expr is
 
    procedure Fill_Record_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                     Aggr : Node;
-                                    Res : Value_Acc)
+                                    Rec : Value_Array_Acc;
+                                    Const_P : out Boolean)
    is
       El_List : constant Node_Flist :=
         Get_Elements_Declaration_List (Get_Type (Aggr));
@@ -393,12 +398,16 @@ package body Synth.Expr is
       begin
          Val := Synth_Expression_With_Type
            (Syn_Inst, Value, Get_Type (Get_Nth_Element (El_List, Pos)));
-         Res.Rec.V (Iir_Index32 (Pos + 1)) := Val;
+         Rec.V (Iir_Index32 (Pos + 1)) := Val;
+         if Const_P and not Is_Const (Val) then
+            Const_P := False;
+         end if;
       end Set_Elem;
    begin
       Assoc := Get_Association_Choices_Chain (Aggr);
       Pos := 0;
-      Res.Rec.V := (others => null);
+      Const_P := True;
+      Rec.V := (others => null);
       while Is_Valid (Assoc) loop
          Value := Get_Associated_Expr (Assoc);
          loop
@@ -407,8 +416,8 @@ package body Synth.Expr is
                   Set_Elem (Pos);
                   Pos := Pos + 1;
                when Iir_Kind_Choice_By_Others =>
-                  for I in Res.Rec.V'Range loop
-                     if Res.Rec.V (I) = null then
+                  for I in Rec.V'Range loop
+                     if Rec.V (I) = null then
                         Set_Elem (Natural (I - 1));
                      end if;
                   end loop;
@@ -749,13 +758,21 @@ package body Synth.Expr is
                                     Aggr_Type : Node) return Value_Acc
    is
       Res_Type : Type_Acc;
+      Arr : Value_Array_Acc;
       Res : Value_Acc;
+      Const_P : Boolean;
    begin
       --  Allocate the result.
       Res_Type := Get_Value_Type (Syn_Inst, Aggr_Type);
-      Res := Create_Value_Record (Res_Type);
+      Arr := Create_Value_Array (Res_Type.Rec.Len);
 
-      Fill_Record_Aggregate (Syn_Inst, Aggr, Res);
+      Fill_Record_Aggregate (Syn_Inst, Aggr, Arr, Const_P);
+
+      if Const_P then
+         Res := Create_Value_Const_Record (Res_Type, Arr);
+      else
+         Res := Create_Value_Record (Res_Type, Arr);
+      end if;
 
       return Res;
    end Synth_Aggregate_Record;

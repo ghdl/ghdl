@@ -388,7 +388,7 @@ package body Synth.Context is
                raise Internal_Error;
             end if;
          when Value_Const_Array
-           | Value_Record =>
+           | Value_Const_Record =>
             declare
                W : constant Width := Get_Type_Width (Val.Typ);
                Nd : constant Digit_Index := Digit_Index ((W + 31) / 32);
@@ -420,6 +420,18 @@ package body Synth.Context is
             begin
                for I in Val.Arr.V'Range loop
                   Append (C, Get_Net (Val.Arr.V (I)));
+               end loop;
+               Build (Build_Context, C, Res);
+               return Res;
+            end;
+         when Value_Record =>
+            declare
+               use Netlists.Concats;
+               C : Concat_Type;
+               Res : Net;
+            begin
+               for I in Val.Rec.V'Range loop
+                  Append (C, Get_Net (Val.Rec.V (I)));
                end loop;
                Build (Build_Context, C, Res);
                return Res;
