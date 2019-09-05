@@ -1,6 +1,5 @@
 #! /bin/sh
 
-exit 0
 . ../../testenv.sh
 
 for t in forloop2; do
