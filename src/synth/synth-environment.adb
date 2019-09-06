@@ -698,6 +698,109 @@ package body Synth.Environment is
       end;
    end Get_Current_Assign_Value;
 
+   --  P is an array of Partial_Assign.  Each element is a list
+   --  of partial assign from a different basic block.
+   --  Extract the value to nets N of the maximal partial assignment starting
+   --  at offset OFF for all partial assignments.  Fully handled partial
+   --  assignments are poped.  Set the offset and width to OFF and WD of the
+   --  result.
+   procedure Extract_Merge_Partial_Assigns (Ctxt : Builders.Context_Acc;
+                                            P : in out Partial_Assign_Array;
+                                            N : out Net_Array;
+                                            Off : in out Uns32;
+                                            Wd : out Width)
+   is
+      Min_Off : Uns32;
+   begin
+      Min_Off := Off;
+
+      --  Look for the partial assign with the least offset (but still
+      --  greather than Min_Off).  Also extract the least width.
+      Off := Uns32'Last;
+      Wd := Width'Last;
+      for I in P'Range loop
+         if P (I) /= No_Partial_Assign then
+            declare
+               Pa : Partial_Assign_Record
+                 renames Partial_Assign_Table.Table (P (I));
+            begin
+               if Pa.Offset <= Off then
+                  Off := Uns32'Max (Pa.Offset, Min_Off);
+                  Wd := Width'Min
+                    (Wd, Get_Width (Pa.Value) - (Off - Pa.Offset));
+               end if;
+            end;
+         end if;
+      end loop;
+
+      --  No more assignments.
+      if Off = Uns32'Last and Wd = Width'Last then
+         return;
+      end if;
+
+      --  Get the values for that offset/width.  Update lists.
+      for I in P'Range loop
+         if P (I) /= No_Partial_Assign
+           and then Get_Partial_Offset (P (I)) <= Off
+         then
+            declare
+               Val : constant Net := Get_Partial_Value (P (I));
+               P_W : constant Width := Get_Width (Val);
+               P_Off : constant Uns32 := Get_Partial_Offset (P (I));
+            begin
+               --  There is a partial assignment.
+               if P_Off = Off and then P_W = Wd then
+                  --  Full covered.
+                  N (I) := Val;
+                  P (I) := Get_Partial_Next (P (I));
+               else
+                  N (I) := Build_Extract (Ctxt, Val, Off - P_Off, Wd);
+                  if P_Off + P_W = Off + Wd then
+                     P (I) := Get_Partial_Next (P (I));
+                  end if;
+               end if;
+            end;
+         else
+            --  No partial assignment.  Get extract previous value.
+            N (I) := No_Net;
+         end if;
+      end loop;
+   end Extract_Merge_Partial_Assigns;
+
+   type Partial_Assign_List is record
+      First, Last : Partial_Assign;
+   end record;
+
+   procedure Partial_Assign_Init (List : out Partial_Assign_List) is
+   begin
+      List := (First | Last => No_Partial_Assign);
+   end Partial_Assign_Init;
+
+   procedure Partial_Assign_Append (List : in out Partial_Assign_List;
+                                    Pasgn : Partial_Assign) is
+   begin
+      if List.First = No_Partial_Assign then
+         List.First := Pasgn;
+      else
+         Set_Partial_Next (List.Last, Pasgn);
+      end if;
+      List.Last := Pasgn;
+   end Partial_Assign_Append;
+
+   procedure Merge_Partial_Assigns (Ctxt : Builders.Context_Acc;
+                                    W : Wire_Id;
+                                    List : in out Partial_Assign_List)
+   is
+      Pasgn : Partial_Assign;
+   begin
+      while List.First /= No_Partial_Assign loop
+         Pasgn := Get_Partial_Next (List.First);
+         Set_Partial_Next (List.First, No_Partial_Assign);
+         Phi_Assign (Ctxt, W, List.First);
+         List.First := Pasgn;
+      end loop;
+   end Merge_Partial_Assigns;
+
    procedure Merge_Assigns (Ctxt : Builders.Context_Acc;
                             W : Wire_Id;
                             Sel : Net;
@@ -710,60 +813,22 @@ package body Synth.Environment is
       Off : Uns32;
       Wd : Width;
       Res : Net;
-      First_Pasgn, Last_Pasgn : Partial_Assign;
+      List : Partial_Assign_List;
       Pasgn : Partial_Assign;
    begin
       P := (0 => F_Asgns, 1 => T_Asgns);
-      First_Pasgn := No_Partial_Assign;
-      Last_Pasgn := No_Partial_Assign;
+      Partial_Assign_Init (List);
 
       Min_Off := 0;
       loop
-         --  Look for the partial assign with the least offset (but still
-         --  greather than Min_Off).  Also extract the least width.
-         Off := Uns32'Last;
-         Wd := Width'Last;
-         for I in P'Range loop
-            if P (I) /= No_Partial_Assign then
-               declare
-                  Pa : Partial_Assign_Record
-                    renames Partial_Assign_Table.Table (P (I));
-               begin
-                  if Pa.Offset <= Off then
-                     Off := Uns32'Max (Pa.Offset, Min_Off);
-                     Wd := Width'Min
-                       (Wd, Get_Width (Pa.Value) - (Off - Pa.Offset));
-                  end if;
-               end;
-            end if;
-         end loop;
+         Off := Min_Off;
+         Extract_Merge_Partial_Assigns (Ctxt, P, N, Off, Wd);
 
          --  No more assignments.
          exit when Off = Uns32'Last and Wd = Width'Last;
 
-         --  Get the values for that offset/width.  Update lists.
-         for I in P'Range loop
-            if P (I) /= No_Partial_Assign
-              and then Get_Partial_Offset (P (I)) <= Off
-            then
-               declare
-                  Val : constant Net := Get_Partial_Value (P (I));
-                  P_W : constant Width := Get_Width (Val);
-                  P_Off : constant Uns32 := Get_Partial_Offset (P (I));
-               begin
-                  --  There is a partial assignment.
-                  if P_Off = Off and then P_W = Wd then
-                     --  Full covered.
-                     N (I) := Val;
-                     P (I) := Get_Partial_Next (P (I));
-                  else
-                     N (I) := Build_Extract (Ctxt, Val, Off - P_Off, Wd);
-                     if P_Off + P_W = Off + Wd then
-                        P (I) := Get_Partial_Next (P (I));
-                     end if;
-                  end if;
-               end;
-            else
+         for I in N'Range loop
+            if N (I) = No_Net then
                --  No partial assignment.  Get extract previous value.
                N (I) := Get_Current_Assign_Value (Ctxt, W, Off, Wd);
             end if;
@@ -774,12 +839,7 @@ package body Synth.Environment is
 
          --  Keep the result in a list.
          Pasgn := New_Partial_Assign (Res, Off);
-         if First_Pasgn = No_Partial_Assign then
-            First_Pasgn := Pasgn;
-         else
-            Set_Partial_Next (Last_Pasgn, Pasgn);
-         end if;
-         Last_Pasgn := Pasgn;
+         Partial_Assign_Append (List, Pasgn);
 
          Min_Off := Off + Wd;
       end loop;
@@ -787,12 +847,7 @@ package body Synth.Environment is
       --  Do the assignments from the result list.
       --  It cannot be done before because the assignments will overwrite the
       --  last assignments which are read to create a partial assignment.
-      while First_Pasgn /= No_Partial_Assign loop
-         Pasgn := Get_Partial_Next (First_Pasgn);
-         Set_Partial_Next (First_Pasgn, No_Partial_Assign);
-         Phi_Assign (Ctxt, W, First_Pasgn);
-         First_Pasgn := Pasgn;
-      end loop;
+      Merge_Partial_Assigns (Ctxt, W, List);
    end Merge_Assigns;
 
    --  Add muxes for two lists T and F of assignments.
