@@ -569,6 +569,7 @@ package body Vhdl.Sem_Names is
             return;
          end if;
          Set_Method_Object (Call, Obj);
+         Set_Use_Flag (Obj, True);
       end if;
    end Name_To_Method_Object;
 
