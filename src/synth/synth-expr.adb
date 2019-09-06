@@ -156,7 +156,8 @@ package body Synth.Expr is
       N : Net;
    begin
       case Val.Kind is
-         when Value_Array =>
+         when Value_Array
+           | Value_Const_Array =>
             pragma Assert (Val.Typ.Vbound.Len >= Off);
             return Val.Arr.V (Iir_Index32 (Val.Typ.Vbound.Len - Off));
          when Value_Net
