@@ -29,9 +29,10 @@ package Netlists.Gates is
 
    Id_Add : constant Module_Id := 9;
    Id_Sub : constant Module_Id := 10;
-   Id_Mul : constant Module_Id := 11;
+   Id_Umul : constant Module_Id := 11;
+   Id_Smul : constant Module_Id := 12;
 
-   subtype Dyadic_Module_Id is Module_Id range Id_And .. Id_Mul;
+   subtype Dyadic_Module_Id is Module_Id range Id_And .. Id_Smul;
 
    Id_Buf : constant Module_Id := 13;
    Id_Not : constant Module_Id := 14;
@@ -139,6 +140,7 @@ package Netlists.Gates is
    --  kind of constant gates: for small width, the value is stored as a
    --  parameter, possibly signed or unsigned extended.
    Id_Const_UB32 : constant Module_Id := 64;
+   Id_Const_SB32 : constant Module_Id := 65;
    Id_Const_UL32 : constant Module_Id := 70;
    Id_Const_UB64 : constant Module_Id := 66;
    Id_Const_UL64 : constant Module_Id := 67;

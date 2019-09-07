@@ -60,8 +60,16 @@ package Netlists.Builders is
                               Xz : Uns32;
                               W : Width) return Net;
 
+   function Build_Const_SB32 (Ctxt : Context_Acc;
+                              Val : Int32;
+                              W : Width) return Net;
+
    --  Build a const from VAL.  Result is either a Const_UB32 or a Const_Bit.
    function Build2_Const_Uns (Ctxt : Context_Acc; Val : Uns64; W : Width)
+                             return Net;
+
+   --  Build a const from VAL.  Result is either a Const_SB32 or a Const_Bit.
+   function Build2_Const_Int (Ctxt : Context_Acc; Val : Int64; W : Width)
                              return Net;
 
    --  Large constants.
@@ -155,6 +163,7 @@ private
       M_Concat : Module_Arr (Concat_Module_Id);
       M_Concatn : Module;
       M_Const_UB32 : Module;
+      M_Const_SB32 : Module;
       M_Const_UL32 : Module;
       M_Const_Z : Module;
       M_Const_Bit : Module;

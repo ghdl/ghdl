@@ -140,6 +140,16 @@ package body Netlists.Builders is
                      Typ => Param_Uns32)));
 
       Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_SB32")),
+         Id_Const_SB32, 0, 1, 1);
+      Ctxt.M_Const_SB32 := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
+      Set_Param_Desc
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("val")),
+                     Typ => Param_Uns32)));
+
+      Res := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_UL32")),
          Id_Const_UL32, 0, 1, 2);
       Ctxt.M_Const_UL32 := Res;
@@ -393,8 +403,10 @@ package body Netlists.Builders is
                             Get_Identifier ("add"), Id_Add);
       Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Sub),
                             Get_Identifier ("sub"), Id_Sub);
-      Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Mul),
-                            Get_Identifier ("mul"), Id_Mul);
+      Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Smul),
+                            Get_Identifier ("smul"), Id_Smul);
+      Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Umul),
+                            Get_Identifier ("umul"), Id_Umul);
 
       Create_Monadic_Module (Design, Res.M_Monadic (Id_Not), Name_Not, Id_Not);
       Create_Monadic_Module (Design, Res.M_Monadic (Id_Neg),
@@ -575,6 +587,21 @@ package body Netlists.Builders is
       return O;
    end Build_Const_UB32;
 
+   function Build_Const_SB32 (Ctxt : Context_Acc;
+                              Val : Int32;
+                              W : Width) return Net
+   is
+      pragma Assert (W > 0);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Const_SB32);
+      O := Get_Output (Inst, 0);
+      Set_Param_Uns32 (Inst, 0, To_Uns32 (Val));
+      Set_Width (O, W);
+      return O;
+   end Build_Const_SB32;
+
    function Build_Const_UL32 (Ctxt : Context_Acc;
                               Val : Uns32;
                               Xz : Uns32;
@@ -640,6 +667,30 @@ package body Netlists.Builders is
          end;
       end if;
    end Build2_Const_Uns;
+
+   function Build2_Const_Int (Ctxt : Context_Acc; Val : Int64; W : Width)
+                             return Net is
+   begin
+      if Val in -2**31 .. 2**31 - 1 then
+         return Build_Const_SB32 (Ctxt, Int32 (Val), W);
+      else
+         pragma Assert (W > 32);
+         declare
+            V : constant Uns64 := To_Uns64 (Val);
+            S : constant Uns32 :=
+              Uns32 (Shift_Right_Arithmetic (V, 63) and 16#ffff_ffff#);
+            Inst : Instance;
+         begin
+            Inst := Build_Const_Bit (Ctxt, W);
+            Set_Param_Uns32 (Inst, 0, Uns32 (V and 16#ffff_ffff#));
+            Set_Param_Uns32 (Inst, 1, Uns32 (Shift_Right (V, 32)));
+            for I in 2 .. (W + 31) / 32 loop
+               Set_Param_Uns32 (Inst, Param_Idx (I), S);
+            end loop;
+            return Get_Output (Inst, 0);
+         end;
+      end if;
+   end Build2_Const_Int;
 
    function Build_Edge (Ctxt : Context_Acc; Src : Net) return Net
    is

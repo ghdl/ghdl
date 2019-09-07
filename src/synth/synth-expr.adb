@@ -234,7 +234,14 @@ package body Synth.Expr is
    begin
       if Is_Const (Val) then
          if Wn /= W then
-            raise Internal_Error;
+            pragma Assert (Val.Kind = Value_Discrete);
+            if Val.Typ.Drange.Is_Signed then
+               Res := Build2_Const_Int (Build_Context, Val.Scal, W);
+            else
+               Res := Build2_Const_Uns (Build_Context, To_Uns64 (Val.Scal), W);
+            end if;
+            Set_Location (Res, Loc);
+            return Res;
          end if;
       end if;
 
@@ -1207,6 +1214,20 @@ package body Synth.Expr is
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Sub, True);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
+            declare
+               L : constant Net := Get_Net (Left);
+               R : constant Net := Get_Net (Right);
+               W : constant Width := Get_Width (L) + Get_Width (R);
+               Rtype : Type_Acc;
+               N : Net;
+            begin
+               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
+               N := Build_Dyadic (Build_Context, Id_Smul, L, R);
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Rtype);
+            end;
+
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             --  "=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Eq);
@@ -1337,7 +1358,7 @@ package body Synth.Expr is
                  (Left.Scal * Right.Scal,
                   Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
-               return Synth_Int_Dyadic (Id_Mul);
+               return Synth_Int_Dyadic (Id_Smul);
             end if;
          when Iir_Predefined_Integer_Div =>
             if Is_Const (Left) and then Is_Const (Right) then
@@ -1611,10 +1632,18 @@ package body Synth.Expr is
             Off := 0;
          end if;
       elsif Pfx_Type.Kind = Type_Array then
-         Voff := Dyn_Index_To_Offset (Pfx_Type.Abounds.D (1), Idx_Val, Name);
          W := Get_Type_Width (Pfx_Type.Arr_El);
-         Mul := W;
-         Off := 0;
+         if Idx_Val.Kind = Value_Discrete then
+            Voff := No_Net;
+            Off := Index_To_Offset
+              (Pfx_Type.Abounds.D (1), Idx_Val.Scal, Name);
+            Mul := 0;
+         else
+            Voff := Dyn_Index_To_Offset
+              (Pfx_Type.Abounds.D (1), Idx_Val, Name);
+            Mul := W;
+            Off := 0;
+         end if;
       else
          raise Internal_Error;
       end if;
@@ -1710,7 +1739,7 @@ package body Synth.Expr is
                --  It's a substraction, but without any constant value.
                return;
             end if;
-         elsif Get_Id (Get_Module (Inst)) = Id_Mul then
+         elsif Get_Id (Get_Module (Inst)) = Id_Smul then
             Val_I0 := Get_Input_Net (Inst, 0);
             Val_I1 := Get_Input_Net (Inst, 1);
             if Is_Const (Val_I0) then
