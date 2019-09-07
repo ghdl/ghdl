@@ -19,7 +19,6 @@
 --  MA 02110-1301, USA.
 
 with Netlists.Builders; use Netlists.Builders;
-with Netlists.Utils; use Netlists.Utils;
 with Netlists.Concats;
 with Errorout; use Errorout;
 with Synth.Inference;
@@ -574,18 +573,6 @@ package body Synth.Environment is
       end case;
    end Get_Current_Value;
 
-   function Get_Last_Assigned_Value
-     (Ctxt : Builders.Context_Acc; Wid : Wire_Id) return Net
-   is
-      Wid_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
-   begin
-      if Wid_Rec.Cur_Assign = No_Seq_Assign then
-         return Wid_Rec.Gate;
-      else
-         return Get_Assign_Value (Ctxt, Wid_Rec.Cur_Assign);
-      end if;
-   end Get_Last_Assigned_Value;
-
    --  Get the current value of W for WD bits at offset OFF.
    function Get_Current_Assign_Value
      (Ctxt : Builders.Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width)
@@ -766,10 +753,6 @@ package body Synth.Environment is
          end if;
       end loop;
    end Extract_Merge_Partial_Assigns;
-
-   type Partial_Assign_List is record
-      First, Last : Partial_Assign;
-   end record;
 
    procedure Partial_Assign_Init (List : out Partial_Assign_List) is
    begin

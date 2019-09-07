@@ -22,6 +22,7 @@ with Types; use Types;
 with Dyn_Tables;
 with Tables;
 with Netlists; use Netlists;
+with Netlists.Utils; use Netlists.Utils;
 with Netlists.Builders;
 with Synth.Source;
 
@@ -68,10 +69,6 @@ package Synth.Environment is
    --  value.  For signals, this is the initial value.
    function Get_Current_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
                               return Net;
-
-   --  The last assigned value to WID.
-   function Get_Last_Assigned_Value
-     (Ctxt : Builders.Context_Acc; Wid : Wire_Id) return Net;
 
    function Get_Current_Assign_Value
      (Ctxt : Builders.Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width)
@@ -124,6 +121,38 @@ package Synth.Environment is
      (Wid : Wire_Id; Val : Net; Off : Uns32; Stmt : Source.Syn_Src);
 
    procedure Finalize_Assignments (Ctxt : Builders.Context_Acc);
+
+   --  For low-level phi merge.
+   type Partial_Assign is private;
+   No_Partial_Assign : constant Partial_Assign;
+
+   function Get_Assign_Partial (Asgn : Seq_Assign) return Partial_Assign;
+
+   function New_Partial_Assign (Val : Net; Offset : Uns32)
+                               return Partial_Assign;
+
+   type Partial_Assign_Array is array (Int32 range <>) of Partial_Assign;
+
+   type Partial_Assign_List is limited private;
+
+   procedure Partial_Assign_Init (List : out Partial_Assign_List);
+   procedure Partial_Assign_Append (List : in out Partial_Assign_List;
+                                    Pasgn : Partial_Assign);
+   procedure Merge_Partial_Assigns (Ctxt : Builders.Context_Acc;
+                                    W : Wire_Id;
+                                    List : in out Partial_Assign_List);
+
+   --  P is an array of Partial_Assign.  Each element is a list
+   --  of partial assign from a different basic block.
+   --  Extract the value to nets N of the maximal partial assignment starting
+   --  at offset OFF for all partial assignments.  Fully handled partial
+   --  assignments are poped.  Set the offset and width to OFF and WD of the
+   --  result.
+   procedure Extract_Merge_Partial_Assigns (Ctxt : Builders.Context_Acc;
+                                            P : in out Partial_Assign_Array;
+                                            N : out Net_Array;
+                                            Off : in out Uns32;
+                                            Wd : out Width);
 private
    type Wire_Id is new Uns32;
    No_Wire_Id : constant Wire_Id := 0;
@@ -136,7 +165,9 @@ private
    type Partial_Assign is new Uns32;
    No_Partial_Assign : constant Partial_Assign := 0;
 
-   type Partial_Assign_Array is array (Int32 range <>) of Partial_Assign;
+   type Partial_Assign_List is record
+      First, Last : Partial_Assign;
+   end record;
 
    type Conc_Assign is new Uns32;
    No_Conc_Assign : constant Conc_Assign := 0;

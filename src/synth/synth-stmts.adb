@@ -721,6 +721,10 @@ package body Synth.Stmts is
       Res := Els (Els'First).Val;
    end Synth_Case;
 
+   type Partial_Assign_Array_Acc is access Partial_Assign_Array;
+   procedure Free_Partial_Assign_Array is new Ada.Unchecked_Deallocation
+     (Partial_Assign_Array, Partial_Assign_Array_Acc);
+
    procedure Synth_Case_Statement (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       use Vhdl.Sem_Expr;
@@ -742,6 +746,8 @@ package body Synth.Stmts is
       Choice_Idx : Natural;
 
       Case_El : Case_Element_Array_Acc;
+      Pasgns : Partial_Assign_Array_Acc;
+      Nets : Net_Array_Acc;
 
       Nbr_Wires : Natural;
       Wires : Wire_Id_Array_Acc;
@@ -847,48 +853,77 @@ package body Synth.Stmts is
       --    Build mux2/mux4 tree (group by 4)
       Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
 
+      Pasgns := new Partial_Assign_Array (1 .. Int32 (Alts'Last));
+      Nets := new Net_Array (1 .. Int32 (Alts'Last));
+
       Sel_Net := Get_Net (Sel);
 
       --  For each wire, compute the result.
       for I in Wires'Range loop
          declare
             Wi : constant Wire_Id := Wires (I);
-            Last_Val : constant Net :=
-              Get_Last_Assigned_Value (Build_Context, Wi);
+            Last_Val : Net;
             Res : Net;
             Default : Net;
             C : Natural;
+            Min_Off, Off : Uns32;
+            Wd : Width;
+            List : Partial_Assign_List;
          begin
             --  Extract the value for each alternative.
-            for Alt of Alts.all loop
+            for I in Alts'Range loop
                --  If there is an assignment to Wi in Alt, it will define the
                --  value.  Otherwise, use Last_Val, ie the last assignment
                --  before the case.
-               if Get_Wire_Id (Alt.Asgns) = Wi then
-                  Alt.Val := Get_Assign_Value (Build_Context, Alt.Asgns);
-                  Alt.Asgns := Get_Assign_Chain (Alt.Asgns);
+               if Get_Wire_Id (Alts (I).Asgns) = Wi then
+                  Pasgns (Int32 (I)) := Get_Assign_Partial (Alts (I).Asgns);
+                  Alts (I).Asgns := Get_Assign_Chain (Alts (I).Asgns);
                else
-                  Alt.Val := Last_Val;
+                  Pasgns (Int32 (I)) := No_Partial_Assign;
                end if;
             end loop;
 
-            --  Build the map between choices and values.
-            for J in Annex_Arr'Range loop
-               C := Natural (Annex_Arr (J));
-               Case_El (J) := (Sel => Choice_Data (C).Val,
-                               Val => Alts (Choice_Data (C).Alt).Val);
+            Partial_Assign_Init (List);
+            Min_Off := 0;
+            loop
+               Off := Min_Off;
+               Extract_Merge_Partial_Assigns
+                 (Build_Context, Pasgns.all, Nets.all, Off, Wd);
+               exit when Off = Uns32'Last and Wd = Width'Last;
+
+               Last_Val := No_Net;
+               for I in Nets'Range loop
+                  if Nets (I) = No_Net then
+                     if Last_Val = No_Net then
+                        Last_Val := Get_Current_Assign_Value
+                          (Build_Context, Wi, Off, Wd);
+                     end if;
+                     Nets (I) := Last_Val;
+                  end if;
+               end loop;
+
+               --  Build the map between choices and values.
+               for J in Annex_Arr'Range loop
+                  C := Natural (Annex_Arr (J));
+                  Case_El (J) := (Sel => Choice_Data (C).Val,
+                                  Val => Nets (Int32 (Choice_Data (C).Alt)));
+               end loop;
+
+               --  Extract default value (for missing alternative).
+               if Others_Alt_Idx /= 0 then
+                  Default := Nets (Int32 (Others_Alt_Idx));
+               else
+                  Default := No_Net;
+               end if;
+
+               --  Generate the muxes tree.
+               Synth_Case (Sel_Net, Case_El.all, Default, Res);
+
+               Partial_Assign_Append (List, New_Partial_Assign (Res, Off));
+               Min_Off := Off + Wd;
             end loop;
 
-            --  Extract default value (for missing alternative).
-            if Others_Alt_Idx /= 0 then
-               Default := Alts (Others_Alt_Idx).Val;
-            else
-               Default := No_Net;
-            end if;
-
-            --  Generate the muxes tree.
-            Synth_Case (Sel_Net, Case_El.all, Default, Res);
-            Phi_Assign (Build_Context, Wi, Res, 0);
+            Merge_Partial_Assigns (Build_Context, Wi, List);
          end;
       end loop;
 
@@ -898,6 +933,8 @@ package body Synth.Stmts is
       Free_Choice_Data_Array (Choice_Data);
       Free_Annex_Array (Annex_Arr);
       Free_Alternative_Data_Array (Alts);
+      Free_Partial_Assign_Array (Pasgns);
+      Free_Net_Array (Nets);
    end Synth_Case_Statement;
 
    procedure Synth_Selected_Signal_Assignment
