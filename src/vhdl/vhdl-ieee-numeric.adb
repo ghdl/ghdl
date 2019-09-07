@@ -477,6 +477,8 @@ package body Vhdl.Ieee.Numeric is
 
          Set_Implicit_Definition (Decl, Predefined);
       end Handle_Std_Match;
+
+      Res : Iir_Predefined_Functions;
    begin
       Decl := Get_Declaration_Chain (Pkg_Decl);
 
@@ -589,6 +591,23 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Resize;
                      when Name_Std_Match =>
                         Handle_Std_Match;
+                     when Name_Shift_Left =>
+                        if Arg1_Kind = Arg_Vect
+                          and then Arg2_Kind = Arg_Scal
+                          and then Arg2_Sign = Type_Unsigned
+                        then
+                           case Arg1_Sign is
+                              when Type_Signed =>
+                                 Res :=
+                                   Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat;
+                              when Type_Unsigned =>
+                                 Res :=
+                                   Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat;
+                              when others =>
+                                 Res := Iir_Predefined_None;
+                           end case;
+                           Set_Implicit_Definition (Decl, Res);
+                        end if;
                      when others =>
                         null;
                   end case;

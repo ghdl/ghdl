@@ -723,9 +723,11 @@ package Std_Names is
    Name_To_Signed          : constant Name_Id := Name_First_Ieee + 021;
    Name_Resize             : constant Name_Id := Name_First_Ieee + 022;
    Name_Std_Match          : constant Name_Id := Name_First_Ieee + 023;
-   Name_Math_Real          : constant Name_Id := Name_First_Ieee + 024;
-   Name_Ceil               : constant Name_Id := Name_First_Ieee + 025;
-   Name_Log2               : constant Name_Id := Name_First_Ieee + 026;
+   Name_Shift_Left         : constant Name_Id := Name_First_Ieee + 024;
+   Name_Shift_Right        : constant Name_Id := Name_First_Ieee + 025;
+   Name_Math_Real          : constant Name_Id := Name_First_Ieee + 026;
+   Name_Ceil               : constant Name_Id := Name_First_Ieee + 027;
+   Name_Log2               : constant Name_Id := Name_First_Ieee + 028;
    Name_Last_Ieee          : constant Name_Id := Name_Log2;
 
    --  Verilog Directives.
