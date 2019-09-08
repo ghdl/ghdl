@@ -53,7 +53,7 @@ with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Stmts is
    procedure Synth_Sequential_Statements
-     (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
+     (C : in out Seq_Context; Stmts : Node);
 
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
                             Wf : Node;
@@ -398,8 +398,7 @@ package body Synth.Stmts is
       Synth_Assignment (Syn_Inst, Target, First, Stmt);
    end Synth_Conditional_Variable_Assignment;
 
-   procedure Synth_If_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Synth_If_Statement (C : in out Seq_Context; Stmt : Node)
    is
       Cond : constant Node := Get_Condition (Stmt);
       Els : constant Node := Get_Else_Clause (Stmt);
@@ -407,12 +406,12 @@ package body Synth.Stmts is
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
    begin
-      Cond_Val := Synth_Expression (Syn_Inst, Cond);
+      Cond_Val := Synth_Expression (C.Inst, Cond);
       if Is_Const (Cond_Val) then
          if Cond_Val.Scal = 1 then
             --  True.
             Synth_Sequential_Statements
-              (Syn_Inst, Get_Sequential_Statement_Chain (Stmt));
+              (C, Get_Sequential_Statement_Chain (Stmt));
          else
             pragma Assert (Cond_Val.Scal = 0);
             if Is_Valid (Els) then
@@ -420,17 +419,17 @@ package body Synth.Stmts is
                if Is_Null (Get_Condition (Els)) then
                   --  Final else part.
                   Synth_Sequential_Statements
-                    (Syn_Inst, Get_Sequential_Statement_Chain (Els));
+                    (C, Get_Sequential_Statement_Chain (Els));
                else
                   --  Elsif.  Handled as a nested if.
-                  Synth_If_Statement (Syn_Inst, Els);
+                  Synth_If_Statement (C, Els);
                end if;
             end if;
          end if;
       else
          Push_Phi;
          Synth_Sequential_Statements
-           (Syn_Inst, Get_Sequential_Statement_Chain (Stmt));
+           (C, Get_Sequential_Statement_Chain (Stmt));
          Pop_Phi (Phi_True);
 
          Push_Phi;
@@ -438,10 +437,10 @@ package body Synth.Stmts is
             if Is_Null (Get_Condition (Els)) then
                --  Final else part.
                Synth_Sequential_Statements
-                 (Syn_Inst, Get_Sequential_Statement_Chain (Els));
+                 (C, Get_Sequential_Statement_Chain (Els));
             else
                --  Elsif.  Handled as a nested if.
-               Synth_If_Statement (Syn_Inst, Els);
+               Synth_If_Statement (C, Els);
             end if;
          end if;
          Pop_Phi (Phi_False);
@@ -750,7 +749,7 @@ package body Synth.Stmts is
    procedure Free_Partial_Assign_Array is new Ada.Unchecked_Deallocation
      (Partial_Assign_Array, Partial_Assign_Array_Acc);
 
-   procedure Synth_Case_Statement (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Synth_Case_Statement (C : in out Seq_Context; Stmt : Node)
    is
       use Vhdl.Sem_Expr;
 
@@ -797,7 +796,7 @@ package body Synth.Stmts is
       --    - divide and conquier
 
       --  Create a net for the expression.
-      Sel := Synth_Expression (Syn_Inst, Expr);
+      Sel := Synth_Expression (C.Inst, Expr);
 
       --  Count choices and alternatives.
       Count_Choices (Case_Info, Choices);
@@ -825,8 +824,7 @@ package body Synth.Stmts is
                Phi : Phi_Type;
             begin
                Push_Phi;
-               Synth_Sequential_Statements
-                 (Syn_Inst, Get_Associated_Chain (Choice));
+               Synth_Sequential_Statements (C, Get_Associated_Chain (Choice));
                Pop_Phi (Phi);
                Alts (Alt_Idx).Asgns := Sort_Phi (Phi);
             end;
@@ -1185,8 +1183,7 @@ package body Synth.Stmts is
       end if;
    end Synth_Label;
 
-   procedure Synth_Procedure_Call
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Synth_Procedure_Call (C : in out Seq_Context; Stmt : Node)
    is
       Call : constant Node := Get_Procedure_Call (Stmt);
       Imp  : constant Node := Get_Implementation (Call);
@@ -1194,7 +1191,7 @@ package body Synth.Stmts is
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Subprg_Body : constant Node := Get_Subprogram_Body (Imp);
       Decls_Chain : constant Node := Get_Declaration_Chain (Subprg_Body);
-      Sub_Syn_Inst : Synth_Instance_Acc;
+      Sub_C : Seq_Context;
       M : Areapools.Mark_Type;
    begin
       if Get_Implicit_Definition (Imp) in Iir_Predefined_Implicit then
@@ -1206,25 +1203,25 @@ package body Synth.Stmts is
       end if;
 
       Areapools.Mark (M, Instance_Pool.all);
-      Sub_Syn_Inst := Make_Instance (Syn_Inst, Get_Info (Imp));
+      Sub_C.Inst := Make_Instance (C.Inst, Get_Info (Imp));
 
       Synth_Subprogram_Association
-        (Sub_Syn_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+        (Sub_C.Inst, C.Inst, Inter_Chain, Assoc_Chain);
 
-      Synth_Declarations (Sub_Syn_Inst, Decls_Chain);
+      Synth_Declarations (Sub_C.Inst, Decls_Chain);
 
       if Is_Valid (Decls_Chain) then
-         Sub_Syn_Inst.Name := New_Sname (Syn_Inst.Name, Get_Identifier (Imp));
-         Synth_Declarations (Sub_Syn_Inst, Decls_Chain);
+         Sub_C.Inst.Name := New_Sname (C.Inst.Name, Get_Identifier (Imp));
+         Synth_Declarations (Sub_C.Inst, Decls_Chain);
       end if;
 
       Synth_Sequential_Statements
-        (Sub_Syn_Inst, Get_Sequential_Statement_Chain (Subprg_Body));
+        (Sub_C, Get_Sequential_Statement_Chain (Subprg_Body));
 
       Synth_Subprogram_Back_Association
-        (Sub_Syn_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+        (Sub_C.Inst, C.Inst, Inter_Chain, Assoc_Chain);
 
-      Free_Instance (Sub_Syn_Inst);
+      Free_Instance (Sub_C.Inst);
       Areapools.Release (M, Instance_Pool.all);
    end Synth_Procedure_Call;
 
@@ -1248,8 +1245,7 @@ package body Synth.Stmts is
       end case;
    end Update_Index;
 
-   procedure Synth_For_Loop_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Synth_For_Loop_Statement (C : in out Seq_Context; Stmt : Node)
    is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
@@ -1258,26 +1254,25 @@ package body Synth.Stmts is
       Val : Value_Acc;
    begin
       if It_Type /= Null_Node then
-         Synth_Subtype_Indication (Syn_Inst, It_Type);
+         Synth_Subtype_Indication (C.Inst, It_Type);
       end if;
 
       --  Initial value.
-      It_Rng := Get_Value_Type (Syn_Inst, Get_Type (Iterator));
+      It_Rng := Get_Value_Type (C.Inst, Get_Type (Iterator));
       Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
-      Create_Object (Syn_Inst, Iterator, Val);
+      Create_Object (C.Inst, Iterator, Val);
 
       while In_Range (It_Rng.Drange, Val.Scal) loop
-         Synth_Sequential_Statements (Syn_Inst, Stmts);
+         Synth_Sequential_Statements (C, Stmts);
          Update_Index (It_Rng.Drange, Val.Scal);
       end loop;
-      Destroy_Object (Syn_Inst, Iterator);
+      Destroy_Object (C.Inst, Iterator);
       if It_Type /= Null_Node then
-         Destroy_Object (Syn_Inst, It_Type);
+         Destroy_Object (C.Inst, It_Type);
       end if;
    end Synth_For_Loop_Statement;
 
-   procedure Synth_Return_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Synth_Return_Statement (C : in out Seq_Context; Stmt : Node)
    is
       Val : Value_Acc;
       Expr : constant Node := Get_Expression (Stmt);
@@ -1286,16 +1281,16 @@ package body Synth.Stmts is
          --  TODO: return in procedure.
          raise Internal_Error;
       end if;
-      Val := Synth_Expression (Syn_Inst, Expr);
-      if Syn_Inst.Return_Value /= null then
+      Val := Synth_Expression (C.Inst, Expr);
+      if C.Inst.Return_Value /= null then
          --  TODO: multiple return
          raise Internal_Error;
       end if;
-      Syn_Inst.Return_Value := Val;
+      C.Inst.Return_Value := Val;
    end Synth_Return_Statement;
 
    procedure Synth_Sequential_Statements
-     (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
+     (C : in out Seq_Context; Stmts : Node)
    is
       Stmt : Node;
    begin
@@ -1303,27 +1298,27 @@ package body Synth.Stmts is
       while Is_Valid (Stmt) loop
          case Get_Kind (Stmt) is
             when Iir_Kind_If_Statement =>
-               Synth_If_Statement (Syn_Inst, Stmt);
+               Synth_If_Statement (C, Stmt);
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
-               Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
+               Synth_Simple_Signal_Assignment (C.Inst, Stmt);
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
-               Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
+               Synth_Conditional_Signal_Assignment (C.Inst, Stmt);
             when Iir_Kind_Variable_Assignment_Statement =>
-               Synth_Variable_Assignment (Syn_Inst, Stmt);
+               Synth_Variable_Assignment (C.Inst, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
-               Synth_Conditional_Variable_Assignment (Syn_Inst, Stmt);
+               Synth_Conditional_Variable_Assignment (C.Inst, Stmt);
             when Iir_Kind_Case_Statement =>
-               Synth_Case_Statement (Syn_Inst, Stmt);
+               Synth_Case_Statement (C, Stmt);
             when Iir_Kind_For_Loop_Statement =>
-               Synth_For_Loop_Statement (Syn_Inst, Stmt);
+               Synth_For_Loop_Statement (C, Stmt);
             when Iir_Kind_Null_Statement =>
                --  Easy
                null;
             when Iir_Kind_Return_Statement =>
-               Synth_Return_Statement (Syn_Inst, Stmt);
+               Synth_Return_Statement (C, Stmt);
                exit;
             when Iir_Kind_Procedure_Call_Statement =>
-               Synth_Procedure_Call (Syn_Inst, Stmt);
+               Synth_Procedure_Call (C, Stmt);
             when Iir_Kind_Report_Statement
               | Iir_Kind_Assertion_Statement =>
                --  TODO ?
@@ -1339,7 +1334,7 @@ package body Synth.Stmts is
 
    --  Synthesis of statements of a non-sensitized process.
    procedure Synth_Process_Sequential_Statements
-     (Syn_Inst : Synth_Instance_Acc; Proc : Node)
+     (C : in out Seq_Context; Proc : Node)
    is
       Stmt : Node;
       Cond : Node;
@@ -1357,10 +1352,10 @@ package body Synth.Stmts is
 
       --  Handle the condition as an if.
       Cond := Get_Condition_Clause (Stmt);
-      Cond_Val := Synth_Expression (Syn_Inst, Cond);
+      Cond_Val := Synth_Expression (C.Inst, Cond);
 
       Push_Phi;
-      Synth_Sequential_Statements (Syn_Inst, Get_Chain (Stmt));
+      Synth_Sequential_Statements (C, Get_Chain (Stmt));
       Pop_Phi (Phi_True);
       Push_Phi;
       Pop_Phi (Phi_False);
@@ -1377,32 +1372,32 @@ package body Synth.Stmts is
       Info : constant Sim_Info_Acc := Get_Info (Proc);
       Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
-      Proc_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
+      C : Seq_Context;
    begin
-      Proc_Inst := Make_Instance (Syn_Inst, Info);
+      C.Inst := Make_Instance (Syn_Inst, Info);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
       if Is_Valid (Decls_Chain) then
          if Label = Null_Identifier then
-            Proc_Inst.Name := New_Internal_Name (Build_Context, Syn_Inst.Name);
+            C.Inst.Name := New_Internal_Name (Build_Context, Syn_Inst.Name);
          else
-            Proc_Inst.Name := New_Sname (Syn_Inst.Name, Label);
+            C.Inst.Name := New_Sname (Syn_Inst.Name, Label);
          end if;
-         Synth_Declarations (Proc_Inst, Decls_Chain);
+         Synth_Declarations (C.Inst, Decls_Chain);
       end if;
 
       case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
          when Iir_Kind_Sensitized_Process_Statement =>
             Synth_Sequential_Statements
-              (Proc_Inst, Get_Sequential_Statement_Chain (Proc));
+              (C, Get_Sequential_Statement_Chain (Proc));
             --  FIXME: check sensitivity list.
          when Iir_Kind_Process_Statement =>
-            Synth_Process_Sequential_Statements (Proc_Inst, Proc);
+            Synth_Process_Sequential_Statements (C, Proc);
       end case;
 
-      Free_Instance (Proc_Inst);
+      Free_Instance (C.Inst);
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Process_Statement;
@@ -1414,9 +1409,9 @@ package body Synth.Stmts is
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Bod : constant Node := Get_Subprogram_Body (Imp);
-      Subprg_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
       Res : Value_Acc;
+      C : Seq_Context;
    begin
       --  Is it a call to an ieee function ?
       declare
@@ -1438,25 +1433,24 @@ package body Synth.Stmts is
       end;
 
       Areapools.Mark (M, Instance_Pool.all);
-      Subprg_Inst := Make_Instance (Syn_Inst, Get_Info (Bod));
-
-      Subprg_Inst.Name := New_Internal_Name (Build_Context);
+      C.Inst := Make_Instance (Syn_Inst, Get_Info (Bod));
+      C.Inst.Name := New_Internal_Name (Build_Context);
 
       Synth_Subprogram_Association
-        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+        (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
       Push_Phi;
 
-      Decls.Synth_Declarations (Subprg_Inst, Get_Declaration_Chain (Bod));
+      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod));
 
       Synth_Sequential_Statements
-        (Subprg_Inst, Get_Sequential_Statement_Chain (Bod));
+        (C, Get_Sequential_Statement_Chain (Bod));
 
-      Res := Subprg_Inst.Return_Value;
+      Res := C.Inst.Return_Value;
 
       Pop_And_Merge_Phi (Build_Context, Bod);
 
-      Free_Instance (Subprg_Inst);
+      Free_Instance (C.Inst);
       Areapools.Release (M, Instance_Pool.all);
 
       return Res;

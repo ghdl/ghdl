@@ -55,4 +55,29 @@ package Synth.Stmts is
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
    procedure Update_Index (Rng : Discrete_Range_Type; Idx : in out Int64);
 
+private
+   --  Context for sequential statements.
+   type Seq_Context is record
+      Inst : Synth_Instance_Acc;
+
+      --  Control statements execution.
+      --  If True: statements are always executed.
+      --  If False: statements are not executed.
+      --  If Unknown: execution is controlled by W_En.
+      T_En : Tri_State_Type;
+
+      W_En : Wire_Id;
+
+      --  If set, condition of the next statement.
+      W_Next : Wire_Id;
+      --  If set, condition of the exit statement.
+      W_Exit : Wire_Id;
+      --  If set, condition of the return statement.
+      W_Ret : Wire_Id;
+
+      --  Return value.
+      W_Val : Wire_Id;
+
+      Ret_Value : Value_Acc;
+   end record;
 end Synth.Stmts;
