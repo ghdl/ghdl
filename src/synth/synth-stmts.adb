@@ -22,8 +22,9 @@ with Ada.Unchecked_Deallocation;
 
 with Grt.Algos;
 with Areapools;
-with Vhdl.Errors; use Vhdl.Errors;
+with Std_Names;
 
+with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Types;
 with Vhdl.Sem_Expr;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -51,6 +52,9 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Stmts is
+   procedure Synth_Sequential_Statements
+     (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
+
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
                             Wf : Node;
                             Targ_Type : Node) return Value_Acc is
@@ -1402,6 +1406,61 @@ package body Synth.Stmts is
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Process_Statement;
+
+   function Synth_User_Function_Call
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Expr);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Bod : constant Node := Get_Subprogram_Body (Imp);
+      Subprg_Inst : Synth_Instance_Acc;
+      M : Areapools.Mark_Type;
+      Res : Value_Acc;
+   begin
+      --  Is it a call to an ieee function ?
+      declare
+         Pkg : constant Node := Get_Parent (Imp);
+         Unit : Node;
+         Lib : Node;
+      begin
+         if Get_Kind (Pkg) = Iir_Kind_Package_Declaration then
+            Unit := Get_Parent (Pkg);
+            if Get_Kind (Unit) = Iir_Kind_Design_Unit then
+               Lib := Get_Library (Get_Design_File (Unit));
+               if Get_Identifier (Lib) = Std_Names.Name_Ieee then
+                  Error_Msg_Synth
+                    (+Expr, "unhandled call to an ieee function");
+                  raise Internal_Error;
+               end if;
+            end if;
+         end if;
+      end;
+
+      Areapools.Mark (M, Instance_Pool.all);
+      Subprg_Inst := Make_Instance (Syn_Inst, Get_Info (Bod));
+
+      Subprg_Inst.Name := New_Internal_Name (Build_Context);
+
+      Synth_Subprogram_Association
+        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+
+      Push_Phi;
+
+      Decls.Synth_Declarations (Subprg_Inst, Get_Declaration_Chain (Bod));
+
+      Synth_Sequential_Statements
+        (Subprg_Inst, Get_Sequential_Statement_Chain (Bod));
+
+      Res := Subprg_Inst.Return_Value;
+
+      Pop_And_Merge_Phi (Build_Context, Bod);
+
+      Free_Instance (Subprg_Inst);
+      Areapools.Release (M, Instance_Pool.all);
+
+      return Res;
+   end Synth_User_Function_Call;
 
    procedure Synth_Concurrent_Assertion_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)

@@ -41,8 +41,8 @@ package Synth.Stmts is
                                Val : Value_Acc;
                                Loc : Node);
 
-   procedure Synth_Sequential_Statements
-     (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
+   function Synth_User_Function_Call
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
 
    --  Generate netlists for concurrent statements STMTS.
    procedure Synth_Concurrent_Statements
