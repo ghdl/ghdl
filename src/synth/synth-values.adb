@@ -20,7 +20,7 @@
 
 with Ada.Unchecked_Conversion;
 with System;
-with Mutils;
+with Mutils; use Mutils;
 
 package body Synth.Values is
    function To_Bound_Array_Acc is new Ada.Unchecked_Conversion
@@ -52,20 +52,58 @@ package body Synth.Values is
       end case;
    end Is_Equal;
 
+   function Discrete_Range_Width (Rng : Discrete_Range_Type) return Width
+   is
+      Lo, Hi : Int64;
+      W : Width;
+   begin
+      case Rng.Dir is
+         when Iir_To =>
+            Lo := Rng.Left;
+            Hi := Rng.Right;
+         when Iir_Downto =>
+            Lo := Rng.Right;
+            Hi := Rng.Left;
+      end case;
+      if Lo > Hi then
+         --  Null range.
+         W := 0;
+      elsif Lo >= 0 then
+         --  Positive.
+         W := Width (Clog2 (Uns64 (Hi) + 1));
+      elsif Lo = Int64'First then
+         --  Handle possible overflow.
+         W := 64;
+      elsif Hi < 0 then
+         --  Negative only.
+         W := Width (Clog2 (Uns64 (-Lo))) + 1;
+      else
+         declare
+            Wl : constant Width := Width (Clog2 (Uns64 (-Lo)));
+            Wh : constant Width := Width (Clog2 (Uns64 (Hi)));
+         begin
+            W := Width'Max (Wl, Wh) + 1;
+         end;
+      end if;
+      return W;
+   end Discrete_Range_Width;
+
    function Create_Bit_Type return Type_Acc
    is
       subtype Bit_Type_Type is Type_Type (Type_Bit);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Bit_Type_Type);
    begin
-      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit)));
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit, W => 1)));
    end Create_Bit_Type;
 
-   function Create_Discrete_Type (Rng : Discrete_Range_Type) return Type_Acc
+   function Create_Discrete_Type (Rng : Discrete_Range_Type; W : Width)
+                                 return Type_Acc
    is
       subtype Discrete_Type_Type is Type_Type (Type_Discrete);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Discrete_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Discrete,
+                                                W => W,
                                                 Drange => Rng)));
    end Create_Discrete_Type;
 
@@ -75,6 +113,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Float_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Float,
+                                                W => 64,
                                                 Frange => Rng)));
    end Create_Float_Type;
 
@@ -85,6 +124,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Vector_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Vector,
+                                                W => Bnd.Len,
                                                 Vbound => Bnd,
                                                 Vec_El => El_Type)));
    end Create_Vector_Type;
@@ -92,7 +132,7 @@ package body Synth.Values is
    function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
                                       return Type_Acc
    is
-      W : constant Width := Uns32 (Mutils.Clog2 (Uns64 (Len)));
+      W : constant Width := Uns32 (Clog2 (Uns64 (Len)));
    begin
       return Create_Vector_Type ((Dir => Iir_Downto,
                                   Wlen => W,
@@ -135,8 +175,14 @@ package body Synth.Values is
    is
       subtype Array_Type_Type is Type_Type (Type_Array);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Array_Type_Type);
+      W : Width;
    begin
+      W := El_Type.W;
+      for I in Bnd.D'Range loop
+         W := W * Bnd.D (I).Len;
+      end loop;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Array,
+                                                W => W,
                                                 Abounds => Bnd,
                                                 Arr_El => El_Type)));
    end Create_Array_Type;
@@ -147,6 +193,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Array,
+                                                W => 0,
                                                 Uarr_El => El_Type)));
    end Create_Unbounded_Array;
 
@@ -198,7 +245,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Record_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Record,
-                                                Rec_W => W,
+                                                W => W,
                                                 Rec => Els)));
    end Create_Record_Type;
 
@@ -441,28 +488,8 @@ package body Synth.Values is
 
    function Get_Type_Width (Atype : Type_Acc) return Width is
    begin
-      case Atype.Kind is
-         when Type_Bit =>
-            return 1;
-         when Type_Discrete =>
-            return Atype.Drange.W;
-         when Type_Vector =>
-            return Atype.Vbound.Len;
-         when Type_Array =>
-            declare
-               Res : Width;
-            begin
-               Res := Get_Type_Width (Atype.Arr_El);
-               for I in Atype.Abounds.D'Range loop
-                  Res := Res * Atype.Abounds.D (I).Len;
-               end loop;
-               return Res;
-            end;
-         when Type_Record =>
-            return Atype.Rec_W;
-         when others =>
-            raise Internal_Error;
-      end case;
+      pragma Assert (Atype.Kind /= Type_Unbounded_Array);
+      return Atype.W;
    end Get_Type_Width;
 
    procedure Init is

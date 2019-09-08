@@ -290,7 +290,7 @@ package body Synth.Context is
                Off := Off + 1;
             end;
          when Type_Discrete =>
-            for I in reverse 0 .. Val.Typ.Drange.W - 1 loop
+            for I in reverse 0 .. Val.Typ.W - 1 loop
                declare
                   B : constant Uns32 :=
                     Uns32 (Shift_Right (To_Uns64 (Val.Scal), Natural (I)))
@@ -381,9 +381,9 @@ package body Synth.Context is
                   Value2net (Val, 1, V, Res);
                   return Res;
                end;
-            elsif Val.Typ.Drange.W <= 32 then
+            elsif Val.Typ.W <= 32 then
                return Build_Const_UB32
-                 (Build_Context, Uns32 (Val.Scal), Val.Typ.Drange.W);
+                 (Build_Context, Uns32 (Val.Scal), Val.Typ.W);
             else
                raise Internal_Error;
             end if;

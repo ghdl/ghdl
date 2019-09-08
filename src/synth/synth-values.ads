@@ -32,11 +32,13 @@ package Synth.Values is
 
       --  Netlist representation: signed or unsigned, width of vector.
       Is_Signed : Boolean;
-      W : Width;
 
       Left : Int64;
       Right : Int64;
    end record;
+
+   --  Return the width of RNG.
+   function Discrete_Range_Width (Rng : Discrete_Range_Type) return Width;
 
    type Float_Range_Type is record
       Dir : Iir_Direction;
@@ -95,6 +97,7 @@ package Synth.Values is
    type Rec_El_Array_Acc is access Rec_El_Array;
 
    type Type_Type (Kind : Type_Kind) is record
+      W : Width;
       case Kind is
          when Type_Bit =>
             null;
@@ -111,7 +114,6 @@ package Synth.Values is
          when Type_Unbounded_Array =>
             Uarr_El : Type_Acc;
          when Type_Record =>
-            Rec_W : Width;
             Rec : Rec_El_Array_Acc;
       end case;
    end record;
@@ -210,7 +212,8 @@ package Synth.Values is
    Instance_Pool : Areapool_Acc;
 
    --  Types.
-   function Create_Discrete_Type (Rng : Discrete_Range_Type) return Type_Acc;
+   function Create_Discrete_Type (Rng : Discrete_Range_Type; W : Width)
+                                 return Type_Acc;
    function Create_Float_Type (Rng : Float_Range_Type) return Type_Acc;
    function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
                                       return Type_Acc;

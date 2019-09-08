@@ -228,7 +228,7 @@ package body Synth.Expr is
    --  Resize for a discrete value.
    function Synth_Resize (Val : Value_Acc; W : Width; Loc : Node) return Net
    is
-      Wn : constant Width := Val.Typ.Drange.W;
+      Wn : constant Width := Val.Typ.W;
       N : Net;
       Res : Net;
    begin
@@ -547,49 +547,12 @@ package body Synth.Expr is
    end Vectorize_Array;
 
    function Synth_Discrete_Range_Expression
-     (L : Int64; R : Int64; Dir : Iir_Direction) return Discrete_Range_Type
-   is
-      V : Discrete_Range_Type;
-      Lo, Hi : Int64;
+     (L : Int64; R : Int64; Dir : Iir_Direction) return Discrete_Range_Type is
    begin
-      V.Dir := Dir;
-      V.Left := L;
-      V.Right := R;
-
-      case V.Dir is
-         when Iir_To =>
-            Lo := V.Left;
-            Hi := V.Right;
-         when Iir_Downto =>
-            Lo := V.Right;
-            Hi := V.Left;
-      end case;
-      if Lo > Hi then
-         --  Null range.
-         V.Is_Signed := False;
-         V.W := 0;
-      elsif Lo >= 0 then
-         --  Positive.
-         V.Is_Signed := False;
-         V.W := Width (Clog2 (Uns64 (Hi) + 1));
-      elsif Lo = Int64'First then
-         --  Handle possible overflow.
-         V.Is_Signed := True;
-         V.W := 64;
-      elsif Hi < 0 then
-         --  Negative only.
-         V.Is_Signed := True;
-         V.W := Width (Clog2 (Uns64 (-Lo))) + 1;
-      else
-         declare
-            Wl : constant Width := Width (Clog2 (Uns64 (-Lo)));
-            Wh : constant Width := Width (Clog2 (Uns64 (Hi)));
-         begin
-            V.Is_Signed := True;
-            V.W := Width'Max (Wl, Wh) + 1;
-         end;
-      end if;
-      return V;
+      return (Dir => Dir,
+              Left => L,
+              Right => R,
+              Is_Signed => L < 0 or R < 0);
    end Synth_Discrete_Range_Expression;
 
    function Synth_Discrete_Range_Expression
@@ -605,8 +568,10 @@ package body Synth.Expr is
          raise Internal_Error;
       end if;
 
-      return Synth_Discrete_Range_Expression
-        (L.Scal, R.Scal, Get_Direction (Rng));
+      return (Dir => Get_Direction (Rng),
+              Left => L.Scal,
+              Right => R.Scal,
+              Is_Signed => L.Scal < 0 or R.Scal < 0);
    end Synth_Discrete_Range_Expression;
 
    function Synth_Float_Range_Expression
@@ -639,31 +604,40 @@ package body Synth.Expr is
       end if;
    end Synth_Array_Attribute;
 
-   function Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc; Bound : Node)
-                                 return Discrete_Range_Type is
+   procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
+                                   Bound : Node;
+                                   Rng : out Discrete_Range_Type;
+                                   W : out Width) is
    begin
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
-            return Synth_Discrete_Range_Expression (Syn_Inst, Bound);
+            Rng := Synth_Discrete_Range_Expression (Syn_Inst, Bound);
+            W := Discrete_Range_Width (Rng);
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
             if Get_Type_Declarator (Bound) /= Null_Node then
-               --  This is a named subtype, so it has been evaluated.
-               return Get_Value_Type (Syn_Inst, Bound).Drange;
+               declare
+                  Typ : Type_Acc;
+               begin
+                  --  This is a named subtype, so it has been evaluated.
+                  Typ := Get_Value_Type (Syn_Inst, Bound);
+                  Rng := Typ.Drange;
+                  W := Typ.W;
+               end;
             else
-               return Synth_Discrete_Range
-                 (Syn_Inst, Get_Range_Constraint (Bound));
+               Synth_Discrete_Range
+                 (Syn_Inst, Get_Range_Constraint (Bound), Rng, W);
             end if;
          when Iir_Kind_Range_Array_Attribute =>
             declare
                B : Bound_Type;
             begin
                B := Synth_Array_Attribute (Syn_Inst, Bound);
-               return Discrete_Range_Type'(Dir => B.Dir,
+               Rng := Discrete_Range_Type'(Dir => B.Dir,
                                            Is_Signed => True,
-                                           W => B.Wbounds,
                                            Left => Int64 (B.Left),
                                            Right => Int64 (B.Right));
+               W := B.Wbounds;
             end;
          when others =>
             Error_Kind ("synth_discrete_range", Bound);
@@ -704,9 +678,10 @@ package body Synth.Expr is
                                      Atype : Node) return Bound_Type
    is
       Rng : Discrete_Range_Type;
+      W : Width;
       Len : Int64;
    begin
-      Rng := Synth_Discrete_Range (Syn_Inst, Atype);
+      Synth_Discrete_Range (Syn_Inst, Atype, Rng, W);
       case Rng.Dir is
          when Iir_To =>
             Len := Rng.Right - Rng.Left + 1;
@@ -718,7 +693,7 @@ package body Synth.Expr is
       end if;
       return (Dir => Rng.Dir,
               Wlen => Width (Clog2 (Uns64 (Len))),
-              Wbounds => Rng.W,
+              Wbounds => W,
               Left => Int32 (Rng.Left), Right => Int32 (Rng.Right),
               Len => Uns32 (Len));
    end Synth_Bounds_From_Range;
@@ -851,13 +826,14 @@ package body Synth.Expr is
    is
       Res : Bound_Type;
       Index_Bounds : Discrete_Range_Type;
+      W : Width;
    begin
-      Index_Bounds := Synth_Discrete_Range (Syn_Inst, Atype);
+      Synth_Discrete_Range (Syn_Inst, Atype, Index_Bounds, W);
 
       Res := (Left => Int32 (Index_Bounds.Left),
               Right => 0,
               Dir => Index_Bounds.Dir,
-              Wbounds => Index_Bounds.W,
+              Wbounds => W,
               Wlen => Width (Clog2 (Uns64 (Len))),
               Len => Uns32 (Len));
 
@@ -894,18 +870,17 @@ package body Synth.Expr is
          when Type_Discrete =>
             pragma Assert (Vtype.Kind = Type_Discrete);
             declare
-               Vrng : Discrete_Range_Type renames Vtype.Drange;
-               Drng : Discrete_Range_Type renames Dtype.Drange;
                N : Net;
             begin
-               if Vrng.W > Drng.W then
+               if Vtype.W > Dtype.W then
                   --  Truncate.
                   --  TODO: check overflow.
                   case Val.Kind is
                      when Value_Net
                        | Value_Wire =>
                         N := Get_Net (Val);
-                        N := Build_Trunc (Build_Context, Id_Utrunc, N, Drng.W);
+                        N := Build_Trunc
+                          (Build_Context, Id_Utrunc, N, Dtype.W);
                         Set_Location (N, Loc);
                         return Create_Value_Net (N, Dtype);
                      when Value_Discrete =>
@@ -913,7 +888,7 @@ package body Synth.Expr is
                      when others =>
                         raise Internal_Error;
                   end case;
-               elsif Vrng.W < Drng.W then
+               elsif Vtype.W < Dtype.W then
                   --  Extend.
                   case Val.Kind is
                      when Value_Discrete =>
@@ -921,12 +896,12 @@ package body Synth.Expr is
                      when Value_Net
                        | Value_Wire =>
                         N := Get_Net (Val);
-                        if Vrng.Is_Signed then
+                        if Vtype.Drange.Is_Signed then
                            N := Build_Extend
-                             (Build_Context, Id_Sextend, N, Drng.W);
+                             (Build_Context, Id_Sextend, N, Dtype.W);
                         else
                            N := Build_Extend
-                             (Build_Context, Id_Uextend, N, Drng.W);
+                             (Build_Context, Id_Uextend, N, Dtype.W);
                         end if;
                         Set_Location (N, Loc);
                         return Create_Value_Net (N, Dtype);
@@ -2261,7 +2236,7 @@ package body Synth.Expr is
             begin
                return Create_Value_Net
                  (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1)),
-                                 Nat_Type.Drange.W, Expr),
+                                 Nat_Type.W, Expr),
                   Nat_Type);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>

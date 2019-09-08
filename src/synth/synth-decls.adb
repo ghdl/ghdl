@@ -105,13 +105,14 @@ package body Synth.Decls is
                   Nbr_El : constant Natural :=
                     Get_Nbr_Elements (Get_Enumeration_Literal_List (Def));
                   Rng : Discrete_Range_Type;
+                  W : Width;
                begin
+                  W := Uns32 (Clog2 (Uns64 (Nbr_El)));
                   Rng := (Dir => Iir_Downto,
                           Is_Signed => False,
-                          W => Uns32 (Clog2 (Uns64 (Nbr_El))),
                           Left => Int64 (Nbr_El - 1),
                           Right => 0);
-                  Typ := Create_Discrete_Type (Rng);
+                  Typ := Create_Discrete_Type (Rng, W);
                end;
             end if;
             Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
@@ -146,7 +147,7 @@ package body Synth.Decls is
                                                       Typ => El_Typ);
                   Off := Off + Get_Type_Width (El_Typ);
                end loop;
-               Typ.Rec_W := Off;
+               Typ.W := Off;
             end;
          when others =>
             Error_Kind ("synth_type_definition", Def);
@@ -165,12 +166,14 @@ package body Synth.Decls is
                Cst : constant Node := Get_Range_Constraint (St);
                L, R : Int64;
                Rng : Discrete_Range_Type;
+               W : Width;
             begin
                L := Get_Value (Get_Left_Limit (Cst));
                R := Get_Value (Get_Right_Limit (Cst));
                Rng := Synth_Discrete_Range_Expression
                  (L, R, Get_Direction (Cst));
-               Typ := Create_Discrete_Type (Rng);
+               W := Discrete_Range_Width (Rng);
+               Typ := Create_Discrete_Type (Rng, W);
                Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
             end;
          when Iir_Kind_Floating_Type_Definition =>
@@ -274,6 +277,7 @@ package body Synth.Decls is
                Btype : constant Type_Acc :=
                  Get_Value_Type (Syn_Inst, Get_Base_Type (Atype));
                Rng : Discrete_Range_Type;
+               W : Width;
             begin
                if Btype.Kind = Type_Bit then
                   --  A subtype of a bit type is still a bit.
@@ -281,7 +285,8 @@ package body Synth.Decls is
                else
                   Rng := Synth_Discrete_Range_Constraint
                     (Syn_Inst, Get_Range_Constraint (Atype));
-                  Typ := Create_Discrete_Type (Rng);
+                  W := Discrete_Range_Width (Rng);
+                  Typ := Create_Discrete_Type (Rng, W);
                end if;
             end;
          when Iir_Kind_Floating_Subtype_Definition =>

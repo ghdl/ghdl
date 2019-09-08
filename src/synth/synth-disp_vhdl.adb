@@ -97,7 +97,7 @@ package body Synth.Disp_Vhdl is
             else
                --  Any other enum.
                --  TODO: width = 1
-               W := Typ.Drange.W;
+               W := Typ.W;
                Disp_In_Lhs (Mname, Off, W, Full);
                Put ("std_logic_vector(to_unsigned(");
                Put (Name_Table.Image (Get_Identifier
@@ -107,7 +107,7 @@ package body Synth.Disp_Vhdl is
             end if;
          when Iir_Kind_Integer_Type_Definition =>
             --  FIXME: signed or unsigned ?
-            W := Typ.Drange.W;
+            W := Typ.W;
             Disp_In_Lhs (Mname, Off, W, Full);
             if W > 1 then
                Put ("std_logic_vector(");
@@ -211,7 +211,7 @@ package body Synth.Disp_Vhdl is
                Put_Line (";");
             else
                --  Any other enum.
-               W := Typ.Drange.W;
+               W := Typ.W;
                Put ("  " & Pfx & " <= ");
                Put (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Ptype))));
@@ -221,7 +221,7 @@ package body Synth.Disp_Vhdl is
             end if;
          when Iir_Kind_Integer_Type_Definition =>
             --  FIXME: signed or unsigned ?
-            W := Typ.Drange.W;
+            W := Typ.W;
             Put ("  " & Pfx & " <= to_integer (unsigned");
             if W = 1 then
                Put ("'(0 => ");
