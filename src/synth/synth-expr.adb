@@ -1695,46 +1695,50 @@ package body Synth.Expr is
 
       loop
          Inst := Get_Parent (Inp);
-         if Get_Id (Get_Module (Inst)) = Id_Add then
-            Val_I0 := Get_Input_Net (Inst, 0);
-            Val_I1 := Get_Input_Net (Inst, 1);
-            if Is_Const (Val_I0) then
-               Addend := Addend + Get_Const (Val_I0) * Factor;
-               Inp := Val_I1;
-            elsif Is_Const (Val_I1) then
-               Addend := Addend + Get_Const (Val_I1) * Factor;
-               Inp := Val_I0;
-            else
-               --  It's an addition, but without any constant value.
+         case Get_Id (Get_Module (Inst)) is
+            when Id_Add =>
+               Val_I0 := Get_Input_Net (Inst, 0);
+               Val_I1 := Get_Input_Net (Inst, 1);
+               if Is_Const (Val_I0) then
+                  Addend := Addend + Get_Const (Val_I0) * Factor;
+                  Inp := Val_I1;
+               elsif Is_Const (Val_I1) then
+                  Addend := Addend + Get_Const (Val_I1) * Factor;
+                  Inp := Val_I0;
+               else
+                  --  It's an addition, but without any constant value.
+                  return;
+               end if;
+            when Id_Sub =>
+               Val_I0 := Get_Input_Net (Inst, 0);
+               Val_I1 := Get_Input_Net (Inst, 1);
+               if Is_Const (Val_I1) then
+                  Addend := Addend - Get_Const (Val_I1) * Factor;
+                  Inp := Val_I0;
+               else
+                  --  It's a substraction, but without any constant value.
+                  return;
+               end if;
+            when Id_Smul =>
+               Val_I0 := Get_Input_Net (Inst, 0);
+               Val_I1 := Get_Input_Net (Inst, 1);
+               if Is_Const (Val_I0) then
+                  Factor := Factor * Get_Const (Val_I0);
+                  Inp := Val_I1;
+               elsif Is_Const (Val_I1) then
+                  Factor := Factor * Get_Const (Val_I1);
+                  Inp := Val_I0;
+               else
+                  --  A mul but without any constant value.
+                  return;
+               end if;
+            when Id_Utrunc
+              | Id_Uextend =>
+               Inp := Get_Input_Net (Inst, 0);
+            when others =>
+               --  Cannot decompose it.
                return;
-            end if;
-         elsif Get_Id (Get_Module (Inst)) = Id_Sub then
-            Val_I0 := Get_Input_Net (Inst, 0);
-            Val_I1 := Get_Input_Net (Inst, 1);
-            if Is_Const (Val_I1) then
-               Addend := Addend - Get_Const (Val_I1) * Factor;
-               Inp := Val_I0;
-            else
-               --  It's a substraction, but without any constant value.
-               return;
-            end if;
-         elsif Get_Id (Get_Module (Inst)) = Id_Smul then
-            Val_I0 := Get_Input_Net (Inst, 0);
-            Val_I1 := Get_Input_Net (Inst, 1);
-            if Is_Const (Val_I0) then
-               Factor := Factor * Get_Const (Val_I0);
-               Inp := Val_I1;
-            elsif Is_Const (Val_I1) then
-               Factor := Factor * Get_Const (Val_I1);
-               Inp := Val_I0;
-            else
-               --  A mul but without any constant value.
-               return;
-            end if;
-         else
-            --  Cannot decompose it.
-            return;
-         end if;
+         end case;
       end loop;
    end Decompose_Mul_Add;
 
@@ -1851,17 +1855,7 @@ package body Synth.Expr is
          return;
       end if;
 
-      if not Is_Const (Left) or else not Is_Const (Right) then
-         if Left.Kind /= Value_Net and Right.Kind /= Value_Net then
-            Error_Msg_Synth
-              (+Name, "left and right bounds of a slice must be "
-                 & "either constant or dynamic");
-            return;
-         else
-            Synth_Extract_Dyn_Suffix (Name, Pfx_Bnd, Left.N, Right.N,
-                                      Inp, Step, Off, Wd);
-         end if;
-      else
+      if Is_Const (Left) and then Is_Const (Right) then
          Inp := No_Net;
          Step := 0;
 
@@ -1894,6 +1888,16 @@ package body Synth.Expr is
                            Right => Int32 (Right.Scal));
                Off := Res_Bnd.Right - Pfx_Bnd.Right;
          end case;
+      else
+         if Is_Const (Left) or else Is_Const (Right) then
+            Error_Msg_Synth
+              (+Name, "left and right bounds of a slice must be "
+                 & "either constant or dynamic");
+            return;
+         end if;
+         Synth_Extract_Dyn_Suffix
+           (Name, Pfx_Bnd, Get_Net (Left), Get_Net (Right),
+            Inp, Step, Off, Wd);
       end if;
    end Synth_Slice_Suffix;
 
