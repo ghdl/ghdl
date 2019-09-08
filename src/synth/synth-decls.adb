@@ -22,14 +22,17 @@ with Types; use Types;
 with Mutils; use Mutils;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
+
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
-with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
+with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Annotations; use Vhdl.Annotations;
+
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Expr; use Synth.Expr;
-with Vhdl.Annotations; use Vhdl.Annotations;
+with Synth.Stmts;
 
 package body Synth.Decls is
    procedure Synth_Anonymous_Subtype_Indication
@@ -463,6 +466,18 @@ package body Synth.Decls is
                   Init := null;
                end if;
                Create_Var_Wire (Syn_Inst, Decl, Init);
+            end;
+         when Iir_Kind_Object_Alias_Declaration =>
+            Synth_Declaration_Type (Syn_Inst, Decl);
+            declare
+               Wid : Wire_Id;
+               Off : Uns32;
+               Typ : Type_Acc;
+            begin
+               Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
+                                              Wid, Off, Typ);
+               Create_Object (Syn_Inst, Decl,
+                              Create_Value_Alias (Wid, Off, Typ));
             end;
          when Iir_Kind_Anonymous_Signal_Declaration =>
             Make_Object (Syn_Inst, Wire_Signal, Decl);

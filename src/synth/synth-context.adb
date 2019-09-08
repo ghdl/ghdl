@@ -436,6 +436,14 @@ package body Synth.Context is
                Build (Build_Context, C, Res);
                return Res;
             end;
+         when Value_Alias =>
+            declare
+               Res : Net;
+            begin
+               Res := Get_Current_Value (Build_Context, Val.A_Wid);
+               return Build_Extract (Build_Context, Res, Val.A_Off,
+                                     Get_Type_Width (Val.Typ));
+            end;
          when others =>
             raise Internal_Error;
       end case;

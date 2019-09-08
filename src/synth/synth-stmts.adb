@@ -39,7 +39,6 @@ with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
 with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
-with Synth.Environment; use Synth.Environment;
 with Synth.Insts; use Synth.Insts;
 with Synth.Source;
 
@@ -121,14 +120,13 @@ package body Synth.Stmts is
 
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
-                                      Loc : Node;
                                       Dest_Wid : out Wire_Id;
                                       Dest_Off : out Uns32;
                                       Dest_Type : out Type_Acc) is
    begin
       case Get_Kind (Pfx) is
          when Iir_Kind_Simple_Name =>
-            Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx), Loc,
+            Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx),
                                      Dest_Wid, Dest_Off, Dest_Type);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
@@ -148,7 +146,7 @@ package body Synth.Stmts is
                Off : Uns32;
                W : Width;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx), Loc,
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
                                         Dest_Wid, Dest_Off, Dest_Type);
                Synth_Indexed_Name
                  (Syn_Inst, Pfx, Dest_Type, Voff, Mul, Off, W);
@@ -171,10 +169,33 @@ package body Synth.Stmts is
                Idx : constant Iir_Index32 :=
                  Get_Element_Position (Get_Named_Entity (Pfx));
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx), Loc,
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
                                         Dest_Wid, Dest_Off, Dest_Type);
                Dest_Off := Dest_Off + Dest_Type.Rec.E (Idx + 1).Off;
                Dest_Type := Dest_Type.Rec.E (Idx + 1).Typ;
+            end;
+
+         when Iir_Kind_Slice_Name =>
+            declare
+               Res_Bnd : Bound_Type;
+               Inp : Net;
+               Step : Uns32;
+               Sl_Off : Int32;
+               Wd : Uns32;
+            begin
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
+                                        Dest_Wid, Dest_Off, Dest_Type);
+               Synth_Slice_Suffix (Syn_Inst, Pfx, Dest_Type.Vbound,
+                                   Res_Bnd, Inp, Step, Sl_Off, Wd);
+
+               if Inp /= No_Net then
+                  Error_Msg_Synth
+                    (+Pfx, "dynamic index must be the last suffix");
+                  return;
+               end if;
+
+               Dest_Type := Create_Vector_Type (Res_Bnd, Dest_Type.Vec_El);
+               Dest_Off := Dest_Off + Uns32 (Sl_Off);
             end;
 
          when others =>
@@ -201,7 +222,7 @@ package body Synth.Stmts is
                Off : Uns32;
                Typ : Type_Acc;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Target, Loc, Wid, Off, Typ);
+               Synth_Assignment_Prefix (Syn_Inst, Target, Wid, Off, Typ);
                Synth_Assign (Wid, Typ, Val, Off, Loc);
             end;
          when Iir_Kind_Indexed_Name =>
@@ -218,7 +239,7 @@ package body Synth.Stmts is
                Targ_Net : Net;
                V : Net;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target), Loc,
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
                                         Wid, Off, Typ);
                Synth_Indexed_Name (Syn_Inst, Target, Typ,
                                    Voff, Mul, Idx_Off, W);
@@ -254,7 +275,7 @@ package body Synth.Stmts is
                Res_Type : Type_Acc;
                V : Net;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target), Loc,
+               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
                                         Wid, Off, Typ);
                Synth_Slice_Suffix (Syn_Inst, Target, Typ.Vbound,
                                    Res_Bnd, Inp, Step, Sl_Off, Wd);

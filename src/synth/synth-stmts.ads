@@ -22,12 +22,19 @@ with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
+with Synth.Environment; use Synth.Environment;
 
 package Synth.Stmts is
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node);
+
+   procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Pfx : Node;
+                                      Dest_Wid : out Wire_Id;
+                                      Dest_Off : out Uns32;
+                                      Dest_Type : out Type_Acc);
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Node;

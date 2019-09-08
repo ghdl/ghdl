@@ -401,6 +401,19 @@ package body Synth.Values is
                                   (Kind => Value_Subtype, Typ => Typ)));
    end Create_Value_Subtype;
 
+   function Create_Value_Alias (Wid : Wire_Id; Off : Uns32; Typ : Type_Acc)
+                               return Value_Acc
+   is
+      subtype Value_Type_Alias is Value_Type (Value_Alias);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Alias);
+   begin
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Alias,
+                                   A_Wid => Wid,
+                                   A_Off => Off,
+                                   Typ => Typ)));
+   end Create_Value_Alias;
+
    function Copy (Src: in Value_Acc) return Value_Acc
    is
       Res: Value_Acc;

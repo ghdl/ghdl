@@ -147,7 +147,10 @@ package Synth.Values is
       --  A package.
       Value_Instance,
 
-      --  A subtype.
+      --  An alias
+      Value_Alias,
+
+      --  A subtype.  Contains only a type.
       Value_Subtype
      );
 
@@ -191,6 +194,9 @@ package Synth.Values is
             Rec : Value_Array_Acc;
          when Value_Instance =>
             Instance : Instance_Id;
+         when Value_Alias =>
+            A_Wid : Wire_Id;
+            A_Off : Uns32;
       end case;
    end record;
 
@@ -261,6 +267,9 @@ package Synth.Values is
                                       return Value_Acc;
 
    function Create_Value_Instance (Inst : Instance_Id) return Value_Acc;
+
+   function Create_Value_Alias (Wid : Wire_Id; Off : Uns32; Typ : Type_Acc)
+                               return Value_Acc;
 
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
                     return Value_Acc;

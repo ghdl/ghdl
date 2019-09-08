@@ -1532,7 +1532,8 @@ package body Synth.Expr is
            | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Iterator_Declaration =>
+           | Iir_Kind_Iterator_Declaration
+           | Iir_Kind_Object_Alias_Declaration =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_Enumeration_Literal =>
             return Create_Value_Discrete
