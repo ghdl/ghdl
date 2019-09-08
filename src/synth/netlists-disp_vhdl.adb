@@ -649,6 +649,10 @@ package body Netlists.Disp_Vhdl is
             Disp_Template
               ("  \o0 <= std_logic_vector (resize (\ui0 * \ui1, \n0));" & NL,
                Inst, (0 => Get_Width (Get_Output (Inst, 0))));
+         when Id_Smul =>
+            Disp_Template
+              ("  \o0 <= std_logic_vector (resize (\si0 * \si1, \n0));" & NL,
+               Inst, (0 => Get_Width (Get_Output (Inst, 0))));
          when Id_Ult =>
             Disp_Template ("  \o0 <= '1' when \ui0 < \ui1 else '0';" & NL,
                            Inst);

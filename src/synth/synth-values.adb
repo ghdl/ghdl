@@ -129,6 +129,16 @@ package body Synth.Values is
                                                 Vec_El => El_Type)));
    end Create_Vector_Type;
 
+   function Create_Slice_Type (W : Width; El_Type : Type_Acc) return Type_Acc
+   is
+      subtype Slice_Type_Type is Type_Type (Type_Slice);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Slice_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Slice,
+                                                W => W,
+                                                Slice_El => El_Type)));
+   end Create_Slice_Type;
+
    function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
                                       return Type_Acc
    is

@@ -920,6 +920,9 @@ package body Synth.Expr is
          when Type_Vector =>
             --  TODO: check width
             return Val;
+         when Type_Slice =>
+            --  TODO: check width
+            return Val;
          when Type_Array =>
             --  TODO: check bounds, handle elements
             return Val;
@@ -1914,7 +1917,8 @@ package body Synth.Expr is
                                  Inp, Step, Off, Wd);
          Set_Location (N, Name);
          --  TODO: the bounds cannot be created as they are not known.
-         return Create_Value_Net (N, null);
+         Res_Type := Create_Slice_Type (Wd, Pfx.Typ.Vec_El);
+         return Create_Value_Net (N, Res_Type);
       else
          N := Build_Extract (Build_Context, Get_Net (Pfx), Uns32 (Off), Wd);
          Set_Location (N, Name);
