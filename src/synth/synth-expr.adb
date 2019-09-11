@@ -2205,6 +2205,21 @@ package body Synth.Expr is
                  (Synth_Uresize (Get_Net (V), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
+            declare
+               V : constant Value_Acc := Subprg_Inst.Objects (1);
+               Sz : constant Value_Acc := Subprg_Inst.Objects (2);
+               W : Width;
+            begin
+               if not Is_Const (Sz) then
+                  Error_Msg_Synth (+Expr, "size must be constant");
+                  return null;
+               end if;
+               W := Uns32 (Sz.Scal);
+               return Create_Value_Net
+                 (Synth_Sresize (Get_Net (V), W, Expr),
+                  Create_Vec_Type_By_Length (W, Logic_Type));
+            end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                V : constant Value_Acc := Subprg_Inst.Objects (1);
