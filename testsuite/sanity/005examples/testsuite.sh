@@ -8,6 +8,12 @@ if ! python -V > /dev/null 2>&1; then
   exit 0
 fi
 
+# Skip the test if ../../../doc is not available.
+if [ ! -d ../../../doc ]; then
+  echo "test skipped, '../../../doc' not found"
+  exit 0
+fi
+
 # Extract examples
 python extract_vhdl.py hello.vhdl heartbeat.vhdl adder.vhdl adder_tb.vhdl < ../../../doc/using/QuickStartGuide.rst
 
