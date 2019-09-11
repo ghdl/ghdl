@@ -2268,6 +2268,13 @@ package body Synth.Expr is
             begin
                return Synth_Shift (Id_Lsl, L, R, Expr);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat =>
+            declare
+               L : constant Value_Acc := Subprg_Inst.Objects (1);
+               R : constant Value_Acc := Subprg_Inst.Objects (2);
+            begin
+               return Synth_Shift (Id_Lsr, L, R, Expr);
+            end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                V : constant Value_Acc := Subprg_Inst.Objects (1);
