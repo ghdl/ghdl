@@ -49,6 +49,8 @@ package Netlists.Builders is
                           Id : Reduce_Module_Id;
                           Op : Net) return Net;
 
+   function Build_Const_X (Ctxt : Context_Acc;
+                           W : Width) return Net;
    function Build_Const_Z (Ctxt : Context_Acc;
                            W : Width) return Net;
 
@@ -165,6 +167,7 @@ private
       M_Const_UB32 : Module;
       M_Const_SB32 : Module;
       M_Const_UL32 : Module;
+      M_Const_X : Module;
       M_Const_Z : Module;
       M_Const_Bit : Module;
       M_Const_Log : Module;

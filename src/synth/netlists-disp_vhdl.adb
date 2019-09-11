@@ -499,6 +499,9 @@ package body Netlists.Disp_Vhdl is
          when Id_Const_Z =>
             Disp_Template ("(\n0 downto 0 => 'Z')",
                            Inst, (0 => Get_Width (O) - 1));
+         when Id_Const_X =>
+            Disp_Template ("(\n0 downto 0 => 'X')",
+                           Inst, (0 => Get_Width (O) - 1));
          when Id_Const_Bit =>
             Disp_Const_Bit (Inst);
          when Id_Const_Log =>
@@ -605,7 +608,8 @@ package body Netlists.Disp_Vhdl is
             end;
          when Id_Const_UB32
            | Id_Const_UL32
-           | Id_Const_Z =>
+           | Id_Const_Z
+           | Id_Const_X =>
             Disp_Template ("  \o0 <= ", Inst);
             Disp_Constant_Inline (Inst);
             Put_Line (";");

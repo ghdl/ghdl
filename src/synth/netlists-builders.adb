@@ -168,6 +168,13 @@ package body Netlists.Builders is
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
 
       Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_X")),
+         Id_Const_X, 0, 1, 0);
+      Ctxt.M_Const_X := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
+
+      Res := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_bit")),
          Id_Const_Bit, 0, 1, 0);
       Ctxt.M_Const_Bit := Res;
@@ -559,6 +566,17 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 1), R);
       return O;
    end Build_Compare;
+
+   function Build_Const_X (Ctxt : Context_Acc; W : Width) return Net
+   is
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Const_X);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      return O;
+   end Build_Const_X;
 
    function Build_Const_Z (Ctxt : Context_Acc; W : Width) return Net
    is
