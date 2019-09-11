@@ -1,12 +1,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity ret02 is
+entity ret03 is
   port (di : std_logic_vector (7 downto 0);
         res : out integer);
-end ret02;
+end ret03;
 
-architecture behav of ret02 is
+architecture behav of ret03 is
   function ffs (v : std_logic_vector (7 downto 0)) return integer is
   begin
     for i in v'range loop
