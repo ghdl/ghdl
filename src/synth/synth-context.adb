@@ -49,7 +49,6 @@ package body Synth.Context is
                                       Block_Scope => Info,
                                       Up_Block => Parent,
                                       Elab_Objects => 0,
-                                      Return_Value => null,
                                       Objects => (others => null));
       return Res;
    end Make_Instance;

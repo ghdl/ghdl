@@ -20,6 +20,9 @@
 
 with Types; use Types;
 with Vhdl.Nodes; use Vhdl.Nodes;
+
+with Netlists; use Netlists;
+
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 with Synth.Environment; use Synth.Environment;
@@ -68,16 +71,16 @@ private
 
       W_En : Wire_Id;
 
-      --  If set, condition of the next statement.
-      W_Next : Wire_Id;
-      --  If set, condition of the exit statement.
-      W_Exit : Wire_Id;
       --  If set, condition of the return statement.
       W_Ret : Wire_Id;
 
       --  Return value.
       W_Val : Wire_Id;
 
+      Ret_Init : Net;
+
       Ret_Value : Value_Acc;
+      Ret_Typ : Type_Acc;
+      Nbr_Ret : Int32;
    end record;
 end Synth.Stmts;

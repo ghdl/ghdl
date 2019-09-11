@@ -238,6 +238,8 @@ package Synth.Values is
    --  Return the element of a vector/array/unbounded_array.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
+   function Is_Bounded_Type (Typ : Type_Acc) return Boolean;
+
    function Is_Equal (L, R : Value_Acc) return Boolean;
 
    --  Create a Value_Net.

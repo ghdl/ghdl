@@ -37,6 +37,22 @@ package body Synth.Values is
    function To_Value_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Values.Value_Array_Acc);
 
+   function Is_Bounded_Type (Typ : Type_Acc) return Boolean is
+   begin
+      case Typ.Kind is
+         when Type_Bit
+           | Type_Discrete
+           | Type_Float
+           | Type_Vector
+           | Type_Slice
+           | Type_Array
+           | Type_Record =>
+            return True;
+         when Type_Unbounded_Array =>
+            return False;
+      end case;
+   end Is_Bounded_Type;
+
    function Is_Equal (L, R : Value_Acc) return Boolean is
    begin
       if L.Kind /= R.Kind then

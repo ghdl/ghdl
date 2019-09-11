@@ -61,6 +61,11 @@ package body Synth.Environment is
       Wire_Id_Table.Table (Wid).Gate := Gate;
    end Set_Wire_Gate;
 
+   function Get_Wire_Gate (Wid : Wire_Id) return Net is
+   begin
+      return Wire_Id_Table.Table (Wid).Gate;
+   end Get_Wire_Gate;
+
    function Get_Wire_Id (W : Seq_Assign) return Wire_Id is
    begin
       return Assign_Table.Table (W).Id;

@@ -45,7 +45,6 @@ with Synth.Source;
 
 with Vhdl.Annotations; use Vhdl.Annotations;
 
-with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
@@ -405,6 +404,7 @@ package body Synth.Stmts is
       Cond_Val : Value_Acc;
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
+      En_Prev, En_T, En_F : Tri_State_Type;
    begin
       Cond_Val := Synth_Expression (C.Inst, Cond);
       if Is_Const (Cond_Val) then
@@ -427,11 +427,15 @@ package body Synth.Stmts is
             end if;
          end if;
       else
+         En_Prev := C.T_En;
+         pragma Assert (En_Prev /= False);
          Push_Phi;
          Synth_Sequential_Statements
            (C, Get_Sequential_Statement_Chain (Stmt));
          Pop_Phi (Phi_True);
+         En_T := C.T_En;
 
+         C.T_En := En_Prev;
          Push_Phi;
          if Is_Valid (Els) then
             if Is_Null (Get_Condition (Els)) then
@@ -444,8 +448,14 @@ package body Synth.Stmts is
             end if;
          end if;
          Pop_Phi (Phi_False);
+         En_F := C.T_En;
 
          Merge_Phis (Build_Context, Get_Net (Cond_Val), Phi_True, Phi_False);
+         if En_T = En_F then
+            C.T_En := En_T;
+         else
+            C.T_En := Unknown;
+         end if;
       end if;
    end Synth_If_Statement;
 
@@ -1277,25 +1287,46 @@ package body Synth.Stmts is
       Val : Value_Acc;
       Expr : constant Node := Get_Expression (Stmt);
    begin
-      if Expr = Null_Node then
-         --  TODO: return in procedure.
-         raise Internal_Error;
+      if Expr /= Null_Node then
+         --  Return in function.
+         Val := Synth_Expression (C.Inst, Expr);
+         Val := Synth_Subtype_Conversion (Val, C.Ret_Typ, Stmt);
+
+         if C.Nbr_Ret = 0 then
+            C.Ret_Value := Val;
+            if not Is_Bounded_Type (C.Ret_Typ) then
+               --  The function was declared with an unconstrained return type.
+               --  Now that a value has been returned, we know the subtype of
+               --  the returned values.  So adjust it.
+               --  All the returned values must have the same length.
+               C.Ret_Typ := Val.Typ;
+               Set_Width (Get_Wire_Gate (C.W_Val), C.Ret_Typ.W);
+               Set_Width (C.Ret_Init, C.Ret_Typ.W);
+            end if;
+         end if;
+         Phi_Assign (Build_Context, C.W_Val, Get_Net (Val), 0);
       end if;
-      Val := Synth_Expression (C.Inst, Expr);
-      if C.Inst.Return_Value /= null then
-         --  TODO: multiple return
-         raise Internal_Error;
-      end if;
-      C.Inst.Return_Value := Val;
+
+      --  The subprogram has returned.  Do not execute further statements.
+      Phi_Assign (Build_Context, C.W_Ret,
+                  Build_Const_UB32 (Build_Context, 1, 1), 0);
+      C.Nbr_Ret := C.Nbr_Ret + 1;
+      C.T_En := False;
    end Synth_Return_Statement;
 
    procedure Synth_Sequential_Statements
      (C : in out Seq_Context; Stmts : Node)
    is
       Stmt : Node;
+      Phi_T, Phi_F : Phi_Type;
+      Has_Phi : Boolean;
    begin
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
+         Has_Phi := C.T_En = Unknown;
+         if Has_Phi then
+            Push_Phi;
+         end if;
          case Get_Kind (Stmt) is
             when Iir_Kind_If_Statement =>
                Synth_If_Statement (C, Stmt);
@@ -1316,7 +1347,6 @@ package body Synth.Stmts is
                null;
             when Iir_Kind_Return_Statement =>
                Synth_Return_Statement (C, Stmt);
-               exit;
             when Iir_Kind_Procedure_Call_Statement =>
                Synth_Procedure_Call (C, Stmt);
             when Iir_Kind_Report_Statement
@@ -1326,6 +1356,17 @@ package body Synth.Stmts is
             when others =>
                Error_Kind ("synth_sequential_statements", Stmt);
          end case;
+         if Has_Phi then
+            Pop_Phi (Phi_T);
+            Push_Phi;
+            Pop_Phi (Phi_F);
+            Merge_Phis (Build_Context,
+                        Get_Current_Value (Build_Context, C.W_Ret),
+                        Phi_F, Phi_T);
+         end if;
+         if C.T_En = False then
+            return;
+         end if;
          Stmt := Get_Chain (Stmt);
       end loop;
    end Synth_Sequential_Statements;
@@ -1433,7 +1474,15 @@ package body Synth.Stmts is
       end;
 
       Areapools.Mark (M, Instance_Pool.all);
-      C.Inst := Make_Instance (Syn_Inst, Get_Info (Bod));
+      C := (Inst => Make_Instance (Syn_Inst, Get_Info (Bod)),
+            T_En => True,
+            W_En => No_Wire_Id,
+            W_Ret => Alloc_Wire (Wire_Variable, Imp),
+            W_Val => Alloc_Wire (Wire_Variable, Imp),
+            Ret_Init => No_Net,
+            Ret_Value => null,
+            Ret_Typ => null,
+            Nbr_Ret => 0);
       C.Inst.Name := New_Internal_Name (Build_Context);
 
       Synth_Subprogram_Association
@@ -1441,17 +1490,40 @@ package body Synth.Stmts is
 
       Push_Phi;
 
+      --  Set a default value for the return.
+      C.Ret_Typ := Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
+      Set_Wire_Gate (C.W_Val, Build_Signal (Build_Context,
+                                            New_Internal_Name (Build_Context),
+                                            C.Ret_Typ.W));
+      C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
+      Phi_Assign (Build_Context, C.W_Val, C.Ret_Init, 0);
+
+      Set_Wire_Gate (C.W_Ret, Build_Signal (Build_Context,
+                                            New_Internal_Name (Build_Context),
+                                            1));
+      Phi_Assign (Build_Context, C.W_Ret,
+                  Build_Const_UB32 (Build_Context, 0, 1), 0);
+
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod));
 
       Synth_Sequential_Statements
         (C, Get_Sequential_Statement_Chain (Bod));
 
-      Res := C.Inst.Return_Value;
-
       Pop_And_Merge_Phi (Build_Context, Bod);
+
+      if C.Nbr_Ret = 0 then
+         raise Internal_Error;
+      elsif C.Nbr_Ret = 1 then
+         Res := C.Ret_Value;
+      else
+         Res := Create_Value_Net (Get_Current_Value (Build_Context, C.W_Val),
+                                  C.Ret_Value.Typ);
+      end if;
 
       Free_Instance (C.Inst);
       Areapools.Release (M, Instance_Pool.all);
+
+      --  TODO: free wires.
 
       return Res;
    end Synth_User_Function_Call;
