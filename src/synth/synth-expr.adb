@@ -783,8 +783,14 @@ package body Synth.Expr is
       Zx : Uns32;
       N : Net;
    begin
+      if Is_Const (Expr) then
+         return Create_Value_Discrete (Boolean'Pos (Cst.Scal = Expr.Scal),
+                                       Boolean_Type);
+      end if;
+
       To_Logic (Cst.Scal, Cst.Typ, Val, Zx);
       if Zx /= 0 then
+         --  Equal unknown -> return X
          N := Build_Const_UL32 (Build_Context, 0, 1, 1);
          Set_Location (N, Loc);
          return Create_Value_Net (N, Boolean_Type);
