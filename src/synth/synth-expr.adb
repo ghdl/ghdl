@@ -1085,6 +1085,23 @@ package body Synth.Expr is
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left, L));
       end Synth_Dyadic_Uns_Nat;
+
+      function Synth_Compare_Sgn_Sgn (Id : Compare_Module_Id)
+                                     return Value_Acc
+      is
+         L : constant Net := Get_Net (Left);
+         R : constant Net := Get_Net (Right);
+         W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+         L1, R1 : Net;
+         N : Net;
+      begin
+         L1 := Synth_Sresize (L, W, Expr);
+         R1 := Synth_Sresize (R, W, Expr);
+         N := Build_Compare (Build_Context, Id, L1, R1);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Boolean_Type);
+      end Synth_Compare_Sgn_Sgn;
+
    begin
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Type);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Type);
@@ -1237,6 +1254,9 @@ package body Synth.Expr is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
             --  "<" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ult);
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn =>
+            --  "<" (Signed, Signed) [resize]
+            return Synth_Compare_Sgn_Sgn (Id_Slt);
 
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
@@ -1250,6 +1270,9 @@ package body Synth.Expr is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv =>
             --  ">" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ugt);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn =>
+            --  ">" (Signed, Signed) [resize]
+            return Synth_Compare_Sgn_Sgn (Id_Sgt);
 
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
