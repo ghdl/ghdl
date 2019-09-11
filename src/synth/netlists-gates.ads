@@ -34,53 +34,60 @@ package Netlists.Gates is
 
    subtype Dyadic_Module_Id is Module_Id range Id_And .. Id_Smul;
 
-   Id_Buf : constant Module_Id := 13;
-   Id_Not : constant Module_Id := 14;
+   --  Logical and arithmetic shifts.
+   Id_Lsl : constant Module_Id := 13;
+   Id_Lsr : constant Module_Id := 14;
+   Id_Asr : constant Module_Id := 15;
 
-   Id_Neg : constant Module_Id := 15;
+   subtype Shift_Module_Id is Module_Id range Id_Lsl .. Id_Asr;
+
+   Id_Buf : constant Module_Id := 16;
+   Id_Not : constant Module_Id := 17;
+
+   Id_Neg : constant Module_Id := 18;
 
    subtype Monadic_Module_Id is Module_Id range Id_Buf .. Id_Neg;
 
-   Id_Eq  : constant Module_Id := 16;
-   Id_Ne  : constant Module_Id := 17;
-   Id_Ule : constant Module_Id := 18;
-   Id_Sle : constant Module_Id := 19;
-   Id_Ult : constant Module_Id := 20;
-   Id_Slt : constant Module_Id := 21;
-   Id_Uge : constant Module_Id := 22;
-   Id_Sge : constant Module_Id := 23;
-   Id_Ugt : constant Module_Id := 24;
-   Id_Sgt : constant Module_Id := 25;
+   Id_Eq  : constant Module_Id := 20;
+   Id_Ne  : constant Module_Id := 21;
+   Id_Ule : constant Module_Id := 22;
+   Id_Sle : constant Module_Id := 23;
+   Id_Ult : constant Module_Id := 24;
+   Id_Slt : constant Module_Id := 25;
+   Id_Uge : constant Module_Id := 26;
+   Id_Sge : constant Module_Id := 27;
+   Id_Ugt : constant Module_Id := 28;
+   Id_Sgt : constant Module_Id := 29;
 
    subtype Compare_Module_Id is Module_Id range Id_Eq .. Id_Sgt;
 
-   Id_Red_And : constant Module_Id := 26;
-   Id_Red_Or  : constant Module_Id := 27;
+   Id_Red_And : constant Module_Id := 30;
+   Id_Red_Or  : constant Module_Id := 31;
 
    subtype Reduce_Module_Id is Module_Id range Id_Red_And .. Id_Red_Or;
 
-   Id_Concat2 : constant Module_Id := 28;
-   Id_Concat3 : constant Module_Id := 29;
-   Id_Concat4 : constant Module_Id := 30;
+   Id_Concat2 : constant Module_Id := 32;
+   Id_Concat3 : constant Module_Id := 33;
+   Id_Concat4 : constant Module_Id := 34;
 
    subtype Concat_Module_Id is Module_Id range Id_Concat2 .. Id_Concat4;
 
-   Id_Split2 : constant Module_Id := 31;
-   Id_Split3 : constant Module_Id := 32;
+   --  Concatenation with N inputs.
+   Id_Concatn : constant Module_Id := 35;
 
    --  Inputs: s, i0, i1
    --  Output: o
-   Id_Mux2 : constant Module_Id := 33;
+   Id_Mux2 : constant Module_Id := 36;
    --  Inputs: s, i0, i1, s2, s3
    --  Output: o
-   Id_Mux4 : constant Module_Id := 34;
+   Id_Mux4 : constant Module_Id := 37;
 
    --  Like a wire: the output is equal to the input, but could be elimited
    --  at any time.  Isignal has an initial value.
-   Id_Signal  : constant Module_Id := 35;
-   Id_Isignal : constant Module_Id := 36;
-   Id_Output  : constant Module_Id := 37;
-   Id_Port    : constant Module_Id := 38;
+   Id_Signal  : constant Module_Id := 38;
+   Id_Isignal : constant Module_Id := 39;
+   Id_Output  : constant Module_Id := 40;
+   Id_Port    : constant Module_Id := 41;
 
    --  Note: initial values must be constant nets.
    --
@@ -89,69 +96,66 @@ package Netlists.Gates is
    --  input.
    --  Inputs: CLK, D
    --  Output: Q
-   Id_Dff   : constant Module_Id := 40;
+   Id_Dff   : constant Module_Id := 50;
 
    --  A DFF with an asynchronous reset.  Note that the asynchronous reset
    --  has priority over the clock.  When RST is asserted, the value is
    --  set to RST_VAL.
    --  Inputs: CLK, D, RST, RST_VAL
    --  Output: Q
-   Id_Adff  : constant Module_Id := 41;
+   Id_Adff  : constant Module_Id := 51;
 
    --  A simple DFF with an initial value (must be constant).  This is
    --  for FPGAs.
-   Id_Idff  : constant Module_Id := 42;
+   Id_Idff  : constant Module_Id := 52;
    --  A DFF with an asynchronous reset and an initial value.
-   Id_Iadff : constant Module_Id := 43;
+   Id_Iadff : constant Module_Id := 53;
 
    --  Width change: truncate or extend.  Sign is know in order to possibly
    --  detect loss of value.
-   Id_Utrunc : constant Module_Id := 46;
-   Id_Strunc : constant Module_Id := 47;
-   Id_Uextend : constant Module_Id := 48;
-   Id_Sextend : constant Module_Id := 49;
+   Id_Utrunc : constant Module_Id := 64;
+   Id_Strunc : constant Module_Id := 65;
+   Id_Uextend : constant Module_Id := 66;
+   Id_Sextend : constant Module_Id := 67;
 
    subtype Truncate_Module_Id is Module_Id range Id_Utrunc .. Id_Strunc;
    subtype Extend_Module_Id is Module_Id range Id_Uextend .. Id_Sextend;
 
    --  Extract a bit or a slice at a constant offset.
    --  OUT := IN0[OFF+WD-1:OFF]
-   Id_Extract : constant Module_Id := 50;
+   Id_Extract : constant Module_Id := 68;
 
    --  OUT := IN0[IN1*STEP+OFF+WD-1:IN1*STEP+OFF]
-   Id_Dyn_Extract : constant Module_Id := 51;
+   Id_Dyn_Extract : constant Module_Id := 69;
 
    --  Like Insert but for dynamic values.
    --  T := IN0
    --  T [IN2*STEP+OFF+WD-1:IN2*STEP+OFF] := IN1
    --  OUT := T
-   Id_Dyn_Insert : constant Module_Id := 53;
+   Id_Dyn_Insert : constant Module_Id := 70;
 
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before
    --  the detector.
-   Id_Edge : constant Module_Id := 55;
+   Id_Edge : constant Module_Id := 71;
 
    --  Input signal must always be true.
-   Id_Assert : constant Module_Id := 56;
-   Id_Assume : constant Module_Id := 57;
+   Id_Assert : constant Module_Id := 72;
+   Id_Assume : constant Module_Id := 73;
 
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
    --  parameter, possibly signed or unsigned extended.
-   Id_Const_UB32 : constant Module_Id := 64;
-   Id_Const_SB32 : constant Module_Id := 65;
-   Id_Const_UL32 : constant Module_Id := 70;
-   Id_Const_UB64 : constant Module_Id := 66;
-   Id_Const_UL64 : constant Module_Id := 67;
-   Id_Const_X : constant Module_Id := 71;
-   Id_Const_Z : constant Module_Id := 72;
-   Id_Const_0 : constant Module_Id := 73;
+   Id_Const_UB32 : constant Module_Id := 96;
+   Id_Const_SB32 : constant Module_Id := 97;
+   Id_Const_UL32 : constant Module_Id := 98;
+   Id_Const_UB64 : constant Module_Id := 99;
+   Id_Const_UL64 : constant Module_Id := 100;
+   Id_Const_X : constant Module_Id := 101;
+   Id_Const_Z : constant Module_Id := 102;
+   Id_Const_0 : constant Module_Id := 103;
 
    --  Large width.
-   Id_Const_Bit : constant Module_Id := 74;
-   Id_Const_Log : constant Module_Id := 75;
-
-   --  Concatenation with N inputs.
-   Id_Concatn : constant Module_Id := 80;
+   Id_Const_Bit : constant Module_Id := 104;
+   Id_Const_Log : constant Module_Id := 105;
 end Netlists.Gates;

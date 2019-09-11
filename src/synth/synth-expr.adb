@@ -2166,6 +2166,18 @@ package body Synth.Expr is
       return Create_Value_Const_Array (Bnd, Arr);
    end Eval_To_Unsigned;
 
+   function Synth_Shift (Id : Shift_Module_Id;
+                         Left, Right : Value_Acc;
+                         Expr : Node) return Value_Acc
+   is
+      L : constant Net := Get_Net (Left);
+      N : Net;
+   begin
+      N := Build_Shift (Build_Context, Id, L, Get_Net (Right));
+      Set_Location (N, Expr);
+      return Create_Value_Net (N, Create_Res_Bound (Left, L));
+   end Synth_Shift;
+
    function Synth_Predefined_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
    is
@@ -2210,14 +2222,14 @@ package body Synth.Expr is
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat =>
             --  UNSIGNED to Natural.
             declare
-               Nat_Type : constant Type_Acc :=
+               Int_Type : constant Type_Acc :=
                  Get_Value_Type (Syn_Inst,
-                                 Vhdl.Std_Package.Natural_Subtype_Definition);
+                                 Vhdl.Std_Package.Integer_Subtype_Definition);
             begin
                return Create_Value_Net
                  (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1)),
-                                 Nat_Type.W, Expr),
-                  Nat_Type);
+                                 Int_Type.W, Expr),
+                  Int_Type);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
             declare
@@ -2248,6 +2260,13 @@ package body Synth.Expr is
                return Create_Value_Net
                  (Synth_Sresize (Get_Net (V), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat =>
+            declare
+               L : constant Value_Acc := Subprg_Inst.Objects (1);
+               R : constant Value_Acc := Subprg_Inst.Objects (2);
+            begin
+               return Synth_Shift (Id_Lsl, L, R, Expr);
             end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
