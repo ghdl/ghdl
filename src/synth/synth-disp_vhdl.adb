@@ -222,7 +222,12 @@ package body Synth.Disp_Vhdl is
          when Iir_Kind_Integer_Type_Definition =>
             --  FIXME: signed or unsigned ?
             W := Typ.W;
-            Put ("  " & Pfx & " <= to_integer (unsigned");
+            Put ("  " & Pfx & " <= to_integer (");
+            if Typ.Drange.Is_Signed then
+               Put ("signed");
+            else
+               Put ("unsigned");
+            end if;
             if W = 1 then
                Put ("'(0 => ");
             else

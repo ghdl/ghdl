@@ -373,20 +373,29 @@ package body Synth.Context is
                                   I1 => Get_Net (Val.M_T));
             end;
          when Value_Discrete =>
-            if Val.Typ.Kind = Type_Bit then
-               declare
-                  V : Logvec_Array (0 .. 0) := (0 => (0, 0));
-                  Res : Net;
-               begin
-                  Value2net (Val, 1, V, Res);
-                  return Res;
-               end;
-            elsif Val.Typ.W <= 32 then
-               return Build_Const_UB32
-                 (Build_Context, Uns32 (Val.Scal), Val.Typ.W);
-            else
-               raise Internal_Error;
-            end if;
+            case Val.Typ.Kind is
+               when Type_Bit =>
+                  declare
+                     V : Logvec_Array (0 .. 0) := (0 => (0, 0));
+                     Res : Net;
+                  begin
+                     Value2net (Val, 1, V, Res);
+                     return Res;
+                  end;
+               when Type_Discrete =>
+                  if Val.Typ.W <= 32 then
+                     declare
+                        V : Uns32;
+                     begin
+                        V := Uns32 (To_Uns64 (Val.Scal) and 16#ffff_ffff#);
+                        return Build_Const_UB32 (Build_Context, V, Val.Typ.W);
+                     end;
+                  else
+                     raise Internal_Error;
+                  end if;
+               when others =>
+                  raise Internal_Error;
+            end case;
          when Value_Const_Array
            | Value_Const_Record =>
             declare
