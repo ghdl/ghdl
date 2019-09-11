@@ -37,6 +37,9 @@ package body Vhdl.Ieee.Numeric is
    type Unary_Pattern_Type is array (Pkg_Kind, Sign_Num_Kind)
      of Iir_Predefined_Functions;
 
+   type Shift_Pattern_Type is array (Type_Signed .. Type_Unsigned)
+     of Iir_Predefined_Functions;
+
    Add_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned =>
@@ -285,6 +288,14 @@ package body Vhdl.Ieee.Numeric is
         (others =>
            (others => Iir_Predefined_None)));
 
+   Shl_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat);
+
+   Shr_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat);
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg_Decl : Iir_Package_Declaration;
@@ -478,7 +489,23 @@ package body Vhdl.Ieee.Numeric is
          Set_Implicit_Definition (Decl, Predefined);
       end Handle_Std_Match;
 
-      Res : Iir_Predefined_Functions;
+      procedure Handle_Shift (Pats : Shift_Pattern_Type)
+      is
+         Res : Iir_Predefined_Functions;
+      begin
+         if Arg1_Kind = Arg_Vect
+           and then Arg2_Kind = Arg_Scal
+           and then Arg2_Sign = Type_Unsigned
+         then
+            case Arg1_Sign is
+               when Type_Signed | Type_Unsigned =>
+                  Res := Pats (Arg1_Sign);
+               when others =>
+                  Res := Iir_Predefined_None;
+            end case;
+            Set_Implicit_Definition (Decl, Res);
+         end if;
+      end Handle_Shift;
    begin
       Decl := Get_Declaration_Chain (Pkg_Decl);
 
@@ -592,22 +619,9 @@ package body Vhdl.Ieee.Numeric is
                      when Name_Std_Match =>
                         Handle_Std_Match;
                      when Name_Shift_Left =>
-                        if Arg1_Kind = Arg_Vect
-                          and then Arg2_Kind = Arg_Scal
-                          and then Arg2_Sign = Type_Unsigned
-                        then
-                           case Arg1_Sign is
-                              when Type_Signed =>
-                                 Res :=
-                                   Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat;
-                              when Type_Unsigned =>
-                                 Res :=
-                                   Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat;
-                              when others =>
-                                 Res := Iir_Predefined_None;
-                           end case;
-                           Set_Implicit_Definition (Decl, Res);
-                        end if;
+                        Handle_Shift (Shl_Patterns);
+                     when Name_Shift_Right =>
+                        Handle_Shift (Shr_Patterns);
                      when others =>
                         null;
                   end case;
