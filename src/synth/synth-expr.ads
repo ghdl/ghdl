@@ -29,7 +29,6 @@ with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Expr is
-   function Is_Const (Val : Value_Acc) return Boolean;
    function Get_Width (Val : Value_Acc) return Uns32;
 
    procedure Set_Location (N : Net; Loc : Node);
@@ -75,6 +74,11 @@ package Synth.Expr is
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type;
    function Synth_Float_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type;
+
+   procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
+                                   Bound : Node;
+                                   Rng : out Discrete_Range_Type;
+                                   W : out Width);
 
    --  Convert index IDX in PFX to an offset.  LOC is used in case of error.
    function Index_To_Offset (Bnd : Bound_Type; Idx : Int64; Loc : Node)

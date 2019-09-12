@@ -240,6 +240,9 @@ package Synth.Values is
 
    function Is_Bounded_Type (Typ : Type_Acc) return Boolean;
 
+   function Is_Const (Val : Value_Acc) return Boolean;
+   function Is_Float (Val : Value_Acc) return Boolean;
+
    function Is_Equal (L, R : Value_Acc) return Boolean;
 
    --  Create a Value_Net.
