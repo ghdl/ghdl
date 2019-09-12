@@ -399,7 +399,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Literal_Origin (Field2)
    --
-   --  List of elements
+   --  List of elements (Index 0 is for the leftest element).
    --   Get/Set_Simple_Aggregate_List (Field4)
    --
    --   Get/Set_Type (Field1)
