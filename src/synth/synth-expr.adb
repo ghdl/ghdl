@@ -776,6 +776,45 @@ package body Synth.Expr is
       end case;
    end Synth_Aggregate;
 
+   function Synth_Simple_Aggregate (Syn_Inst : Synth_Instance_Acc;
+                                    Aggr : Node) return Value_Acc
+   is
+      Aggr_Type : constant Node := Get_Type (Aggr);
+      pragma Assert (Get_Nbr_Dimensions (Aggr_Type) = 1);
+      El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
+      El_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, El_Type);
+      Els : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
+      Last : constant Natural := Flist_Last (Els);
+      Bnd : Bound_Type;
+      Bnds : Bound_Array_Acc;
+      Res_Type : Type_Acc;
+      Arr : Value_Array_Acc;
+      Val : Value_Acc;
+   begin
+      --  Allocate the result.
+      Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 0);
+      pragma Assert (Bnd.Len = Uns32 (Last + 1));
+
+      if El_Typ.Kind = Type_Bit then
+         Res_Type := Create_Vector_Type (Bnd, El_Typ);
+      else
+         Bnds := Create_Bound_Array (1);
+         Bnds.D (1) := Bnd;
+         Res_Type := Create_Array_Type (Bnds, El_Typ);
+      end if;
+
+      Arr := Create_Value_Array (Iir_Index32 (Last + 1));
+
+      for I in Flist_First .. Last loop
+         Val := Synth_Expression_With_Type
+           (Syn_Inst, Get_Nth_Element (Els, I), El_Type);
+         pragma Assert (Is_Const (Val));
+         Arr.V (Iir_Index32 (Last - I + 1)) := Val;
+      end loop;
+
+      return Create_Value_Const_Array (Res_Type, Arr);
+   end Synth_Simple_Aggregate;
+
    function Synth_Bit_Eq_Const (Cst : Value_Acc; Expr : Value_Acc; Loc : Node)
                                return Value_Acc
    is
@@ -2444,6 +2483,8 @@ package body Synth.Expr is
             end;
          when Iir_Kind_Aggregate =>
             return Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
+         when Iir_Kind_Simple_Aggregate =>
+            return Synth_Simple_Aggregate (Syn_Inst, Expr);
          when Iir_Kind_Left_Array_Attribute =>
             declare
                --  Use base type as the expression type is the index subtype.
