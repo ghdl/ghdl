@@ -620,7 +620,6 @@ package body Netlists.Builders is
                               Val : Uns32;
                               W : Width) return Net
    is
-      pragma Assert (W > 0);
       Inst : Instance;
       O : Net;
    begin

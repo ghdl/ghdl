@@ -329,7 +329,10 @@ package body Synth.Context is
       Has_Zx := False;
       Off := 0;
       Value2net (Val, Vec, Off, Has_Zx);
-      if W <= 32 then
+      if W = 0 then
+         --  For null range (like the null string literal "")
+         Res := Build_Const_UB32 (Build_Context, 0, 0);
+      elsif W <= 32 then
          --  32 bit result.
          if not Has_Zx then
             Res := Build_Const_UB32 (Build_Context, Vec (0).Val, W);
