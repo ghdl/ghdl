@@ -29,8 +29,6 @@ with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Expr is
-   function Get_Width (Val : Value_Acc) return Uns32;
-
    procedure Set_Location (N : Net; Loc : Node);
    pragma Inline (Set_Location);
 

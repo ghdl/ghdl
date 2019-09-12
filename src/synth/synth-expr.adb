@@ -44,17 +44,6 @@ package body Synth.Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Value_Acc;
 
-   function Get_Width (Val : Value_Acc) return Uns32 is
-   begin
-      case Val.Kind is
-         when Value_Wire
-           | Value_Net =>
-            return Get_Width (Get_Net (Val));
-         when others =>
-            raise Internal_Error; --  TODO
-      end case;
-   end Get_Width;
-
    procedure Set_Location2 (N : Net; Loc : Node) is
    begin
       Set_Location (Get_Net_Parent (N), Get_Location (Loc));

@@ -230,7 +230,7 @@ package body Synth.Oper is
       is
          N : Net;
       begin
-         N := Synth_Uresize (Right, Get_Width (Left), Expr);
+         N := Synth_Uresize (Right, Left.Typ.W, Expr);
          N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Boolean_Type);
@@ -323,7 +323,7 @@ package body Synth.Oper is
          R1 : Net;
          N : Net;
       begin
-         R1 := Synth_Uresize (Right, Get_Width (Left), Expr);
+         R1 := Synth_Uresize (Right, Left.Typ.W, Expr);
          N := Build_Dyadic (Build_Context, Id, L, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left, L));
