@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in func03; do
+for t in func01 func02 func03 func04 func05 func06; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
