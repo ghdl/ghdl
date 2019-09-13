@@ -1416,7 +1416,15 @@ package body Synth.Stmts is
       M : Areapools.Mark_Type;
       C : Seq_Context;
    begin
-      C.Inst := Make_Instance (Syn_Inst, Info);
+      C := (Inst => Make_Instance (Syn_Inst, Info),
+            T_En => True,
+            W_En => No_Wire_Id,
+            W_Ret => No_Wire_Id,
+            W_Val => No_Wire_Id,
+            Ret_Init => No_Net,
+            Ret_Value => null,
+            Ret_Typ => null,
+            Nbr_Ret => 0);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
