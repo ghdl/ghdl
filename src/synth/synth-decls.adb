@@ -431,7 +431,8 @@ package body Synth.Decls is
       end loop;
    end Synth_Subprogram_Declaration;
 
-   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Node) is
+   procedure Synth_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
@@ -449,6 +450,10 @@ package body Synth.Decls is
                   Init := null;
                end if;
                Create_Var_Wire (Syn_Inst, Decl, Init);
+               if Is_Subprg and then Init /= null then
+                  Phi_Assign (Build_Context, Get_Value (Syn_Inst, Decl).W,
+                              Get_Net (Init), 0);
+               end if;
             end;
          when Iir_Kind_Interface_Variable_Declaration =>
             --  Ignore default value.
@@ -521,13 +526,14 @@ package body Synth.Decls is
       end case;
    end Synth_Declaration;
 
-   procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Iir)
+   procedure Synth_Declarations
+     (Syn_Inst : Synth_Instance_Acc; Decls : Iir; Is_Subprg : Boolean := False)
    is
       Decl : Iir;
    begin
       Decl := Decls;
       while Is_Valid (Decl) loop
-         Synth_Declaration (Syn_Inst, Decl);
+         Synth_Declaration (Syn_Inst, Decl, Is_Subprg);
 
          Decl := Get_Chain (Decl);
       end loop;

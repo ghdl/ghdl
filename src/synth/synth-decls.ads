@@ -33,7 +33,7 @@ package Synth.Decls is
    procedure Synth_Declaration_Type
      (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
-   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Node);
-
-   procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Node);
+   procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                 Decls : Iir;
+                                 Is_Subprg : Boolean := False);
 end Synth.Decls;

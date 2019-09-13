@@ -1504,7 +1504,7 @@ package body Synth.Stmts is
       Phi_Assign (Build_Context, C.W_Ret,
                   Build_Const_UB32 (Build_Context, 0, 1), 0);
 
-      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod));
+      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
 
       Synth_Sequential_Statements
         (C, Get_Sequential_Statement_Chain (Bod));

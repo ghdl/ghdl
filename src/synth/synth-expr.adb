@@ -95,7 +95,7 @@ package body Synth.Expr is
    end From_Bit;
 
    procedure To_Logic
-     (Enum : Int64; Etype : Type_Acc; Val : out Uns32; Zx  : out Uns32) is
+     (Enum : Int64; Etype : Type_Acc; Val : out Uns32; Zx : out Uns32) is
    begin
       if Etype = Logic_Type then
          From_Std_Logic (Enum, Val, Zx);
