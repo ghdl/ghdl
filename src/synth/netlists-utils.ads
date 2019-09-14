@@ -19,6 +19,8 @@
 --  MA 02110-1301, USA.
 with Ada.Unchecked_Deallocation;
 
+with Interfaces.C.Strings; use Interfaces.C.Strings;
+
 package Netlists.Utils is
    type Net_Array is array (Int32 range <>) of Net;
    type Net_Array_Acc is access Net_Array;
@@ -41,6 +43,8 @@ package Netlists.Utils is
    function Get_Output_Width (M : Module; I : Port_Idx) return Width;
 
    function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net;
+
+   function Get_Source (Inst : Instance) return chars_ptr;
 
    --  Return True iff ID describe a constant.
    function Is_Const (Id : Module_Id) return Boolean;
