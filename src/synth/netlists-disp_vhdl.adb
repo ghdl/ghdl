@@ -326,21 +326,34 @@ package body Netlists.Disp_Vhdl is
       Put (Q);
    end Disp_X_Lit;
 
-   procedure Disp_Lit (Inst : Instance)
+   procedure Disp_Constant_Inline (Inst : Instance)
    is
+      Imod : constant Module := Get_Module (Inst);
       O : constant Net := Get_Output (Inst, 0);
    begin
-      case Get_Id (Inst) is
+      case Get_Id (Imod) is
          when Id_Const_UB32 =>
             Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O));
          when Id_Const_UL32 =>
             Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
                              Get_Param_Uns32 (Inst, 1),
                              Get_Width (O));
+         when Id_Const_Z =>
+            Put ('(');
+            Put_Uns32 (Get_Width (O) - 1);
+            Put (" downto 0 => 'Z')");
+         when Id_Const_X =>
+            Put ('(');
+            Put_Uns32 (Get_Width (O) - 1);
+            Put (" downto 0 => 'X')");
+         when Id_Const_Bit =>
+            Disp_Const_Bit (Inst);
+         when Id_Const_Log =>
+            raise Internal_Error;
          when others =>
             raise Internal_Error;
       end case;
-   end Disp_Lit;
+   end Disp_Constant_Inline;
 
    function Need_Name (Inst : Instance) return Boolean
    is
@@ -385,19 +398,19 @@ package body Netlists.Disp_Vhdl is
 
       Net_Inst := Get_Parent (N);
       if Flag_Merge_Lit
-        and then Is_Const (Get_Id (Net_Inst))
+        and then Is_Const_Module (Get_Id (Net_Inst))
         and then not Need_Name (Inst)
       then
          case Conv is
             when Conv_None =>
-               Disp_Lit (Net_Inst);
+               Disp_Constant_Inline (Net_Inst);
             when Conv_Unsigned =>
                Put ("unsigned'(");
-               Disp_Lit (Net_Inst);
+               Disp_Constant_Inline (Net_Inst);
                Put (")");
             when Conv_Signed =>
                Put ("signed'(");
-               Disp_Lit (Net_Inst);
+               Disp_Constant_Inline (Net_Inst);
                Put (")");
          end case;
       else
@@ -483,33 +496,6 @@ package body Netlists.Disp_Vhdl is
          end if;
       end loop;
    end Disp_Template;
-
-   procedure Disp_Constant_Inline (Inst : Instance)
-   is
-      Imod : constant Module := Get_Module (Inst);
-      O : constant Net := Get_Output (Inst, 0);
-   begin
-      case Get_Id (Imod) is
-         when Id_Const_UB32 =>
-            Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O));
-         when Id_Const_UL32 =>
-            Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
-                             Get_Param_Uns32 (Inst, 1),
-                             Get_Width (O));
-         when Id_Const_Z =>
-            Disp_Template ("(\n0 downto 0 => 'Z')",
-                           Inst, (0 => Get_Width (O) - 1));
-         when Id_Const_X =>
-            Disp_Template ("(\n0 downto 0 => 'X')",
-                           Inst, (0 => Get_Width (O) - 1));
-         when Id_Const_Bit =>
-            Disp_Const_Bit (Inst);
-         when Id_Const_Log =>
-            raise Internal_Error;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Disp_Constant_Inline;
 
    procedure Disp_Instance_Inline (Inst : Instance)
    is
@@ -769,7 +755,7 @@ package body Netlists.Disp_Vhdl is
       for Inst of Instances (M) loop
          if not Is_Self_Instance (Inst)
            and then not (Flag_Merge_Lit
-                           and then Is_Const (Get_Id (Inst))
+                           and then Is_Const_Module (Get_Id (Inst))
                            and then not Need_Signal (Inst))
            and then Get_Id (Inst) < Id_User_None
          then
@@ -816,7 +802,7 @@ package body Netlists.Disp_Vhdl is
 
       for Inst of Instances (M) loop
          if not (Flag_Merge_Lit
-                   and then Is_Const (Get_Id (Inst))
+                   and then Is_Const_Module (Get_Id (Inst))
                    and then not Need_Signal (Inst))
          then
             Disp_Instance_Inline (Inst);

@@ -19,6 +19,10 @@
 --  MA 02110-1301, USA.
 
 package Netlists.Gates is
+   --  Id 0 is None
+   --  Id 1 is Free
+   --  Id 2 is top design
+
    --  Dyadic gates.  Inputs and output have the same width.
    Id_And  : constant Module_Id := 3;
    Id_Or   : constant Module_Id := 4;
@@ -155,7 +159,12 @@ package Netlists.Gates is
    Id_Const_Z : constant Module_Id := 102;
    Id_Const_0 : constant Module_Id := 103;
 
+   --  Should we keep them ?
+   pragma Unreferenced (Id_Const_UB64, Id_Const_UL64);
+
    --  Large width.
    Id_Const_Bit : constant Module_Id := 104;
    Id_Const_Log : constant Module_Id := 105;
+
+   --  Id 128 is the first user id.
 end Netlists.Gates;

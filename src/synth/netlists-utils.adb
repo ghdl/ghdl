@@ -96,16 +96,22 @@ package body Netlists.Utils is
       return Get_Driver (Get_Input (Inst, Idx));
    end Get_Input_Net;
 
-   function Is_Const (Id : Module_Id) return Boolean is
+   function Is_Const_Module (Id : Module_Id) return Boolean is
    begin
       case Id is
          when Id_Const_UB32
-           | Id_Const_UL32 =>
+           | Id_Const_SB32
+           | Id_Const_UL32
+           | Id_Const_X
+           | Id_Const_Z
+           | Id_Const_0
+           | Id_Const_Bit
+           | Id_Const_Log =>
             return True;
          when others =>
             return False;
       end case;
-   end Is_Const;
+   end Is_Const_Module;
 
    function Is_Connected (O : Net) return Boolean is
    begin
