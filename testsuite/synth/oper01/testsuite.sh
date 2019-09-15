@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in cmp01; do
+for t in cmp01 match01; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t --ieee-asserts=disable-at-0
     clean
