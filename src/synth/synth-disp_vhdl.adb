@@ -25,7 +25,6 @@ with Name_Table;
 with Vhdl.Prints;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
-with Vhdl.Ieee.Numeric;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
@@ -76,6 +75,13 @@ package body Synth.Disp_Vhdl is
       Put (" <= ");
    end Disp_In_Lhs;
 
+   function Is_Std_Logic_Array (Btype : Node) return Boolean is
+   begin
+      return Is_One_Dimensional_Array_Type (Btype)
+        and then (Get_Base_Type (Get_Element_Subtype (Btype))
+                    = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type);
+   end Is_Std_Logic_Array;
+
    procedure Disp_In_Converter (Mname : String;
                                 Pfx : String;
                                 Off : Uns32;
@@ -88,9 +94,7 @@ package body Synth.Disp_Vhdl is
    begin
       case Get_Kind (Btype) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
-              or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
-            then
+            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                --  Nothing to do.
                Disp_In_Lhs (Mname, Off, 1, Full);
                Put_Line (Pfx & ";");
@@ -121,9 +125,7 @@ package body Synth.Disp_Vhdl is
             end if;
             Put_Line (";");
          when Iir_Kind_Array_Type_Definition =>
-            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type
-              or Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Vector_Type
-            then
+            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
                --  Nothing to do.
                W := Typ.Vbound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
@@ -134,9 +136,7 @@ package body Synth.Disp_Vhdl is
                   Put (" (" & Pfx & "'left)");
                end if;
                Put_Line (";");
-            elsif Btype = Vhdl.Ieee.Numeric.Numeric_Std_Unsigned_Type
-              or Btype = Vhdl.Ieee.Numeric.Numeric_Std_Signed_Type
-            then
+            elsif Is_Std_Logic_Array (Btype) then
                W := Typ.Vbound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
                Put ("std_logic_vector(" & Pfx);
@@ -202,13 +202,15 @@ package body Synth.Disp_Vhdl is
    begin
       case Get_Kind (Btype) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type
-              or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Logic_Type
-            then
+            if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                --  Nothing to do.
                Put ("  " & Pfx & " <= ");
                Disp_Out_Rhs (Mname, Off, 1, Full);
                Put_Line (";");
+            elsif Btype = Vhdl.Std_Package.Boolean_Type_Definition then
+               Put ("  " & Pfx & " <= ");
+               Disp_Out_Rhs (Mname, Off, 1, Full);
+               Put_Line (" = '1';");
             else
                --  Any other enum.
                W := Typ.W;
@@ -258,10 +260,7 @@ package body Synth.Disp_Vhdl is
                   Put (')');
                end if;
                Put_Line (");");
-            elsif Is_One_Dimensional_Array_Type (Btype)
-              and then (Get_Base_Type (Get_Element_Subtype (Btype))
-                          = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type)
-            then
+            elsif Is_Std_Logic_Array (Btype) then
                --  unsigned, signed or a compatible array.
                W := Typ.Vbound.Len;
                Put ("  " & Pfx & " <= ");
