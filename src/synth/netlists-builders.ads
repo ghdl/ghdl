@@ -18,11 +18,17 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Ada.Unchecked_Deallocation;
 with Netlists.Gates; use Netlists.Gates;
 
 package Netlists.Builders is
    type Context is private;
    type Context_Acc is access Context;
+
+   type Uns32_Arr is array (Natural range <>) of Uns32;
+   type Uns32_Arr_Acc is access Uns32_Arr;
+   procedure Unchecked_Deallocate is new Ada.Unchecked_Deallocation
+     (Uns32_Arr, Uns32_Arr_Acc);
 
    function New_Internal_Name (Ctxt : Context_Acc; Prefix : Sname := No_Sname)
                               return Sname;
@@ -76,6 +82,9 @@ package Netlists.Builders is
 
    --  Build a const from VAL.  Result is either a Const_SB32 or a Const_Bit.
    function Build2_Const_Int (Ctxt : Context_Acc; Val : Int64; W : Width)
+                             return Net;
+
+   function Build2_Const_Vec (Ctxt : Context_Acc; W : Width; V : Uns32_Arr)
                              return Net;
 
    --  Large constants.

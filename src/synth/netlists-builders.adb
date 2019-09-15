@@ -711,6 +711,24 @@ package body Netlists.Builders is
       end if;
    end Build2_Const_Uns;
 
+   function Build2_Const_Vec (Ctxt : Context_Acc; W : Width; V : Uns32_Arr)
+                             return Net is
+   begin
+      if W <= 32 then
+         return Build_Const_UB32 (Ctxt, V (V'First), W);
+      else
+         declare
+            Inst : Instance;
+         begin
+            Inst := Build_Const_Bit (Ctxt, W);
+            for I in V'Range loop
+               Set_Param_Uns32 (Inst, Param_Idx (I - V'First), V (I));
+            end loop;
+            return Get_Output (Inst, 0);
+         end;
+      end if;
+   end Build2_Const_Vec;
+
    function Build2_Const_Int (Ctxt : Context_Acc; Val : Int64; W : Width)
                              return Net is
    begin
