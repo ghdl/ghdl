@@ -237,13 +237,13 @@ Options
 
   Specify the standard to use. By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax. For details on ``STANDARD`` values see section :ref:`VHDL_standards`.
 
-.. option:: --ieee=<IEEE_VER>
+.. option:: --ieee=<IEEE_VAR>
 
   .. index:: ieee library
   .. index:: synopsys library
   .. index:: mentor library
 
-  Select the ``IEEE`` library to use. ``IEEE_VER`` must be one of:
+  Select the ``IEEE`` library to use. ``IEEE_VAR`` must be one of:
 
   none
     Do not supply an `IEEE` library. Any library clause with the ``IEEE``

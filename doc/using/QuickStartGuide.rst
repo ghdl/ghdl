@@ -236,7 +236,7 @@ tips are:
 
 * Use ``--work=LIB_NAME`` to analyze files into the ``LIB_NAME`` library.
   If you analyze other files from a different directory, give the path
-  of the ``LIB_NAME`` library using ``-P/PATH/TO/NAME/DIRECTORY/``.
+  of the ``LIB_NAME`` library using ``-P/path/to/name/directory/``.
 
 * Use ``--ieee=synopsys`` if your design depends on the non-standard
   ieee library.
