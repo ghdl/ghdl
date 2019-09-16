@@ -234,9 +234,9 @@ tips are:
   rules.  Use ``--std=08`` for VHDL-2008 (albeit not fully
   implemented).  All the units must be analyzed with the same standard.
 
-* Use ``--work=NAME`` to analyze files into the ``NAME`` library.
+* Use ``--work=LIB_NAME`` to analyze files into the ``LIB_NAME`` library.
   If you analyze other files from a different directory, give the path
-  of the ``NAME`` library using ``-P/PATH/TO/NAME/DIRECTORY/``.
+  of the ``LIB_NAME`` library using ``-P/PATH/TO/NAME/DIRECTORY/``.
 
 * Use ``--ieee=synopsys`` if your design depends on the non-standard
   ieee library.
