@@ -72,8 +72,7 @@ The latest version is 2008. Many features have been added, and GHDL
 doesn't implement all of them.
 
 You can select the VHDL standard expected by GHDL with the
-``--std=<STANDARD>`` option, where ``<STANDARD>`` is one of the left column of the
-table below:
+``--std=<STANDARD>`` option, where ``<STANDARD>`` is one of the list below:
 
 
 87
