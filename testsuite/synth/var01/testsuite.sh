@@ -4,7 +4,7 @@
 
 GHDL_STD_FLAGS=--std=08
 
-for t in var01 var02 var03 var05; do
+for t in var01 var02 var03 var04 var05 var06; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
