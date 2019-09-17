@@ -137,8 +137,6 @@ package Synth.Values is
       --  into a net.
       Value_Wire,
 
-      Value_Mux2,
-
       --  A discrete value (integer or enumeration).
       Value_Discrete,
 
@@ -184,10 +182,6 @@ package Synth.Values is
             N : Net;
          when Value_Wire =>
             W : Wire_Id;
-         when Value_Mux2 =>
-            M_Cond : Value_Acc;
-            M_T : Value_Acc;
-            M_F : Value_Acc;
          when Value_Discrete =>
             Scal : Int64;
          when Value_Float =>
@@ -252,10 +246,6 @@ package Synth.Values is
 
    --  Create a Value_Wire.  For a bit wire, RNG must be null.
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc;
-
-   --  Create a mux2.
-   function Create_Value_Mux2 (Cond : Value_Acc; T : Value_Acc; F : Value_Acc)
-                              return Value_Acc;
 
    function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
                                   return Value_Acc;

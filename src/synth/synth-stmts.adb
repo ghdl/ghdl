@@ -331,27 +331,33 @@ package body Synth.Stmts is
       Cond : Node;
       Cwf : Node;
       Val, Cond_Val : Value_Acc;
-      First, Last : Value_Acc;
+      First, Last : Net;
+      V : Net;
    begin
-      Last := null;
+      Last := No_Net;
       Cwf := Get_Conditional_Waveform_Chain (Stmt);
       while Cwf /= Null_Node loop
          Val := Synth_Waveform (Syn_Inst, Get_Waveform_Chain (Cwf), Targ_Type);
+         V := Get_Net (Val);
          Cond := Get_Condition (Cwf);
          if Cond /= Null_Node then
             Cond_Val := Synth_Expression (Syn_Inst, Cond);
-            Val := Create_Value_Mux2 (Cond_Val, Val, null);
+            V := Build_Mux2 (Build_Context,
+                             Get_Net (Cond_Val),
+                             No_Net, V);
+            Set_Location (V, Cwf);
          end if;
 
-         if Last /= null then
-            Last.M_F := Val;
+         if Last /= No_Net then
+            Connect (Get_Input (Get_Net_Parent (Last), 1), V);
          else
-            First := Val;
+            First := V;
          end if;
-         Last := Val;
+         Last := V;
          Cwf := Get_Chain (Cwf);
       end loop;
-      Synth_Assignment (Syn_Inst, Target, First, Stmt);
+      Val := Create_Value_Net (First, Get_Value_Type (Syn_Inst, Targ_Type));
+      Synth_Assignment (Syn_Inst, Target, Val, Stmt);
    end Synth_Conditional_Signal_Assignment;
 
    procedure Synth_Variable_Assignment
@@ -373,28 +379,32 @@ package body Synth.Stmts is
       Cond : Node;
       Ce : Node;
       Val, Cond_Val : Value_Acc;
-      First, Last : Value_Acc;
+      V : Net;
+      First, Last : Net;
    begin
-      Last := null;
+      Last := No_Net;
       Ce := Get_Conditional_Expression_Chain (Stmt);
       while Ce /= Null_Node loop
          Val := Synth_Expression_With_Type
            (Syn_Inst, Get_Expression (Ce), Targ_Type);
+         V := Get_Net (Val);
          Cond := Get_Condition (Ce);
          if Cond /= Null_Node then
             Cond_Val := Synth_Expression (Syn_Inst, Cond);
-            Val := Create_Value_Mux2 (Cond_Val, Val, null);
+            V := Build_Mux2 (Build_Context, Get_Net (Cond_Val), No_Net, V);
+            Set_Location (V, Ce);
          end if;
 
-         if Last /= null then
-            Last.M_F := Val;
+         if Last /= No_Net then
+            Connect (Get_Input (Get_Net_Parent (Last), 1), V);
          else
-            First := Val;
+            First := V;
          end if;
-         Last := Val;
+         Last := V;
          Ce := Get_Chain (Ce);
       end loop;
-      Synth_Assignment (Syn_Inst, Target, First, Stmt);
+      Val := Create_Value_Net (First, Get_Value_Type (Syn_Inst, Targ_Type));
+      Synth_Assignment (Syn_Inst, Target, Val, Stmt);
    end Synth_Conditional_Variable_Assignment;
 
    procedure Synth_If_Statement (C : in out Seq_Context; Stmt : Node)

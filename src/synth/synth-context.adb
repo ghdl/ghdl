@@ -366,14 +366,6 @@ package body Synth.Context is
             return Get_Current_Value (Build_Context, Val.W);
          when Value_Net =>
             return Val.N;
-         when Value_Mux2 =>
-            declare
-               Cond : constant Net := Get_Net (Val.M_Cond);
-            begin
-               return Build_Mux2 (Ctxt => Build_Context, Sel => Cond,
-                                  I0 => Get_Net (Val.M_F),
-                                  I1 => Get_Net (Val.M_T));
-            end;
          when Value_Discrete =>
             case Val.Typ.Kind is
                when Type_Bit =>

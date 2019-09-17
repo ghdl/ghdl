@@ -46,8 +46,7 @@ package body Synth.Values is
            | Value_Float =>
             return True;
          when Value_Net
-           | Value_Wire
-           | Value_Mux2 =>
+           | Value_Wire =>
             return False;
          when Value_Const_Array
            | Value_Const_Record =>
@@ -73,8 +72,6 @@ package body Synth.Values is
             return Netlists.Utils.Is_Const_Net (Val.N);
          when Value_Wire =>
             return Is_Const_Wire (Val.W);
-         when Value_Mux2 =>
-            return False;
          when Value_Const_Array
            | Value_Const_Record =>
             return True;
@@ -349,20 +346,6 @@ package body Synth.Values is
         (Alloc (Current_Pool,
                 Value_Type_Net'(Kind => Value_Net, N => N, Typ => Ntype)));
    end Create_Value_Net;
-
-   function Create_Value_Mux2 (Cond : Value_Acc; T : Value_Acc; F : Value_Acc)
-                              return Value_Acc
-   is
-      subtype Value_Type_Mux2 is Value_Type (Value_Mux2);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Mux2);
-      pragma Assert (F = null or else T.Typ = F.Typ);
-   begin
-      return To_Value_Acc
-        (Alloc (Current_Pool,
-                (Kind => Value_Mux2,
-                 Typ => T.Typ,
-                 M_Cond => Cond, M_T => T, M_F => F)));
-   end Create_Value_Mux2;
 
    function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
                                   return Value_Acc
