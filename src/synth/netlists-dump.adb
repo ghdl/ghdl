@@ -379,11 +379,20 @@ package body Netlists.Dump is
                return;
 
             when Id_Extract =>
-               Disp_Driver (Get_Input_Net (Inst, 0));
-               Put ('[');
-               Put_Trim (Uns32'Image (Get_Param_Uns32 (Inst, 0)));
-               Put (']');
-               return;
+               declare
+                  W : constant Width := Get_Width (Get_Output (Inst, 0));
+                  Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+               begin
+                  Disp_Driver (Get_Input_Net (Inst, 0));
+                  Put ('[');
+                  if W > 1 then
+                     Put_Trim (Uns32'Image (Off + W - 1));
+                     Put (':');
+                  end if;
+                  Put_Trim (Uns32'Image (Off));
+                  Put (']');
+                  return;
+               end;
 
             when others =>
                null;
