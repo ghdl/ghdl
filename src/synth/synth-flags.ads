@@ -20,4 +20,6 @@
 
 package Synth.Flags is
    Flag_Debug_Noinference : Boolean := False;
+
+   Flag_Debug_Nocleanup : Boolean := False;
 end Synth.Flags;

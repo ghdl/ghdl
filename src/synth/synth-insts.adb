@@ -32,6 +32,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Errors;
 
+with Synth.Flags;
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Stmts; use Synth.Stmts;
@@ -805,7 +806,9 @@ package body Synth.Insts is
       --  Remove unused gates.  This is not only an optimization but also
       --  a correctness point: there might be some unsynthesizable gates, like
       --  the one created for 'rising_egde (clk) and not rst'.
-      Netlists.Utils.Remove_Unused_Instances (Syn_Inst.M);
+      if not Flags.Flag_Debug_Nocleanup then
+         Netlists.Utils.Remove_Unused_Instances (Syn_Inst.M);
+      end if;
    end Synth_Instance;
 
    procedure Synth_All_Instances

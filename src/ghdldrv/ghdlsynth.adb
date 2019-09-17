@@ -97,6 +97,9 @@ package body Ghdlsynth is
       elsif Option = "-di" then
          Flag_Debug_Noinference := True;
          Res := Option_Ok;
+      elsif Option = "-dc" then
+         Flag_Debug_Nocleanup := True;
+         Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
