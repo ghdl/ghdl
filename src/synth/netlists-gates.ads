@@ -86,6 +86,8 @@ package Netlists.Gates is
    --  Output: o
    Id_Mux4 : constant Module_Id := 37;
 
+   subtype Mux_Module_Id is Module_Id range Id_Mux2 .. Id_Mux4;
+
    --  Like a wire: the output is equal to the input, but could be elimited
    --  at any time.  Isignal has an initial value.
    Id_Signal  : constant Module_Id := 38;

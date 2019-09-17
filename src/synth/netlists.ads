@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Hash; use Hash;
 
 package Netlists is
    --  Netlists.
@@ -102,6 +103,9 @@ package Netlists is
    --  connected.
    type Instance is private;
    No_Instance : constant Instance;
+
+   --  Hash INST (simply return its index).
+   function Hash (Inst : Instance) return Hash_Value_Type;
 
    --  A net is an output of a gate or a sub-circuit.  A net can be connected
    --  to several inputs.

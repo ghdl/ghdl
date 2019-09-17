@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Dyn_Interning;
+
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Gates_Ports; use Netlists.Gates_Ports;
@@ -338,6 +340,111 @@ package body Synth.Inference is
       Add_Conc_Assign (Wid, Res, Off, Stmt);
    end Infere_FF;
 
+   function Id_Instance (Param : Instance) return Instance is
+   begin
+      return Param;
+   end Id_Instance;
+
+   package Inst_Interning is new Dyn_Interning
+     (Params_Type => Instance,
+      Object_Type => Instance,
+      Hash => Netlists.Hash,
+      Build => Id_Instance,
+      Equal => "=");
+
+   --  Detect false combinational loop.  They can easily appear when variables
+   --  are only used in one branch:
+   --    process (all)
+   --      variable a : std_logic;
+   --    begin
+   --      r <= '1';
+   --      if sel = '1' then
+   --        a := '1';
+   --        r <= '0';
+   --      end if;
+   --    end process;
+   --  There is a combinational path from 'a' to 'a' as
+   --    a := (sel = '1') ? '1' : a;
+   --  But this is a false loop because the value of 'a' is never used.  In
+   --  that case, 'a' is assigned to 'x' and all the unused logic will be
+   --  removed during clean-up.
+   --
+   --  Detection is very simple: the closure of readers of 'a' must be only
+   --  muxes (which were inserted by controls).
+   function Is_False_Loop (Prev_Val : Net) return Boolean
+   is
+      use Inst_Interning;
+      T : Inst_Interning.Instance;
+
+      function Add_From_Net (N : Net) return Boolean
+      is
+         Inst : Netlists.Instance;
+         Inp : Input;
+      begin
+         Inp := Get_First_Sink (N);
+         while Inp /= No_Input loop
+            Inst := Get_Input_Parent (Inp);
+            if Get_Id (Inst) not in Mux_Module_Id then
+               return False;
+            end if;
+
+            --  Add to T (if not already).
+            Get (T, Inst, Inst);
+
+            Inp := Get_Next_Sink (Inp);
+         end loop;
+
+         return True;
+      end Add_From_Net;
+
+      function Walk_Nets (N : Net) return Boolean
+      is
+         Inst : Netlists.Instance;
+      begin
+         --  Put gates that read the value.
+         if not Add_From_Net (N) then
+            return False;
+         end if;
+
+         --  Follow the outputs.
+         for I in First_Index .. Index_Type'Last loop
+            exit when I > Inst_Interning.Last_Index (T);
+            Inst := Get_By_Index (T, I);
+            if not Add_From_Net (Get_Output (Inst, 0)) then
+               return False;
+            end if;
+         end loop;
+
+         --  No external readers.
+         return True;
+      end Walk_Nets;
+
+      Res : Boolean;
+   begin
+      Inst_Interning.Init (T);
+
+      Res := Walk_Nets (Prev_Val);
+
+      Inst_Interning.Free (T);
+
+      return Res;
+   end Is_False_Loop;
+
+   procedure Infere_Latch (Ctxt : Context_Acc; Val : Net; Prev_Val : Net)
+   is
+      X : Net;
+   begin
+      --  In case of false loop, do not close the loop but assign X.
+      if Is_False_Loop (Prev_Val) then
+         X := Build_Const_X (Ctxt, Get_Width (Val));
+         Connect (Get_Input (Get_Net_Parent (Prev_Val), 0), X);
+         return;
+      end if;
+
+      --  Latch or combinational loop.
+      raise Internal_Error;
+   end Infere_Latch;
+
    procedure Infere (Ctxt : Context_Acc;
                      Wid : Wire_Id;
                      Val : Net;
@@ -364,8 +471,8 @@ package body Synth.Inference is
          Sel := Get_Mux2_Sel (Last_Mux);
          Extract_Clock (Get_Driver (Sel), Clk, Enable);
          if Clk = No_Net then
-            --  No clock -> latch
-            raise Internal_Error;
+            --  No clock -> latch or combinational loop
+            Infere_Latch (Ctxt, Val, Prev_Val);
          else
             --  Clock -> FF
             Infere_FF (Ctxt, Wid, Prev_Val, Off, Last_Mux, Clk, Enable, Stmt);

@@ -297,6 +297,11 @@ package body Netlists is
       Table_Low_Bound => No_Param_Idx,
       Table_Initial => 256);
 
+   function Hash (Inst : Instance) return Hash_Value_Type is
+   begin
+      return Hash_Value_Type (Inst);
+   end Hash;
+
    procedure Extract_All_Instances (M : Module; First_Instance : out Instance)
    is
       pragma Assert (Is_Valid (M));
