@@ -22,6 +22,8 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Gates_Ports; use Netlists.Gates_Ports;
 
+with Synth.Flags;
+
 package body Synth.Inference is
    --  DFF inference.
    --  As an initial implementation, the following 'styles' must be
@@ -352,7 +354,9 @@ package body Synth.Inference is
       Enable : Net;
    begin
       Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
-      if Len <= 0 then
+      if Len <= 0
+        or else Flags.Flag_Debug_Noinference
+      then
          --  No logical loop or self assignment.
          Add_Conc_Assign (Wid, Val, Off, Stmt);
       else

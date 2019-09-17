@@ -45,6 +45,7 @@ with Netlists.Disp_Vhdl;
 with Synthesis;
 with Synth.Disp_Vhdl;
 with Synth.Context; use Synth.Context;
+with Synth.Flags; use Synth.Flags;
 
 package body Ghdlsynth is
    type Out_Format is (Format_Raw, Format_Vhdl);
@@ -92,6 +93,9 @@ package body Ghdlsynth is
          Res := Option_Ok;
       elsif Option = "--out=vhdl" then
          Cmd.Oformat := Format_Vhdl;
+         Res := Option_Ok;
+      elsif Option = "-di" then
+         Flag_Debug_Noinference := True;
          Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
