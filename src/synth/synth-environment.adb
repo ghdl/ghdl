@@ -591,11 +591,7 @@ package body Synth.Environment is
 
       --  If no seq assign, return current value.
       if First_Seq = No_Seq_Assign then
-         if Off = 0 and then Wd = Get_Width (Wire.Gate) then
-            return Wire.Gate;
-         else
-            return Build_Extract (Ctxt, Wire.Gate, Off, Wd);
-         end if;
+         return Build2_Extract (Ctxt, Wire.Gate, Off, Wd);
       end if;
 
       --  If the range is the same as the seq assign, return the value.
@@ -640,9 +636,10 @@ package body Synth.Environment is
                     and then Pr.Offset + Pw > Cur_Off
                   then
                      --  Found.
-                     if Pr.Offset = Cur_Off and then Pw = Cur_Wd then
+                     if Pr.Offset = Cur_Off and then Pw <= Cur_Wd then
                         --  No need to extract.
                         Append (Vec, Pr.Value);
+                        Cur_Wd := Pw;
                      else
                         Cur_Wd := Width'Min
                           (Cur_Wd, Pw - (Cur_Off - Pr.Offset));
@@ -652,7 +649,7 @@ package body Synth.Environment is
                      end if;
                      exit;
                   end if;
-                  if Pr.Offset + Pw < Cur_Off then
+                  if Pr.Offset + Pw <= Cur_Off then
                      --  Next partial;
                      P := Pr.Next;
                   elsif Pr.Offset > Cur_Off
