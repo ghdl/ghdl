@@ -113,6 +113,11 @@ package body Netlists.Utils is
       end case;
    end Is_Const_Module;
 
+   function Is_Const_Net (N : Net) return Boolean is
+   begin
+      return Is_Const_Module (Get_Id (Get_Net_Parent (N)));
+   end Is_Const_Net;
+
    function Is_Connected (O : Net) return Boolean is
    begin
       return Get_First_Sink (O) /= No_Input;

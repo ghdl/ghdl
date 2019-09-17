@@ -36,6 +36,8 @@ package Synth.Expr is
      (Val : Value_Acc; Dtype : Type_Acc; Loc : Source.Syn_Src)
      return Value_Acc;
 
+   function Get_Const_Discrete (V : Value_Acc) return Int64;
+
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32);
    procedure From_Bit (Enum : Int64; Val : out Uns32);
    procedure To_Logic

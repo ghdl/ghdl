@@ -44,6 +44,7 @@ package Netlists.Utils is
 
    --  Return True iff ID describe a constant.
    function Is_Const_Module (Id : Module_Id) return Boolean;
+   function Is_Const_Net (N : Net) return Boolean;
 
    --  Return True iff O has at least one sink (ie is connected to at least one
    --  input).

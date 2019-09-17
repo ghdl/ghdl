@@ -154,6 +154,14 @@ package Synth.Environment is
                                             N : out Net_Array;
                                             Off : in out Uns32;
                                             Wd : out Width);
+
+   --  A const wire is a wire_signal which has one whole (same width as the
+   --  wire) assignment and whose assignment value is a const net.
+   --  That's rather restrictive but still efficient.
+   function Is_Const_Wire (Wid : Wire_Id) return Boolean;
+
+   --  Return the corresponding net for a constant wire.
+   function Get_Const_Wire (Wid : Wire_Id) return Net;
 private
    type Wire_Id is new Uns32;
    No_Wire_Id : constant Wire_Id := 0;

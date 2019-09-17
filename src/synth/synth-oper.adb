@@ -585,9 +585,9 @@ package body Synth.Oper is
                  (N, Create_Vector_Type (Bnd, Left.Typ.Vec_El));
             end;
          when Iir_Predefined_Integer_Plus =>
-            if Is_Const (Left) and then Is_Const (Right) then
+            if Is_Const_Val (Left) and then Is_Const_Val (Right) then
                return Create_Value_Discrete
-                 (Left.Scal + Right.Scal,
+                 (Get_Const_Discrete (Left) + Get_Const_Discrete (Right),
                   Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
                return Synth_Int_Dyadic (Id_Add);
@@ -995,7 +995,7 @@ package body Synth.Oper is
                function Log2 (Arg : Fp64) return Fp64;
                pragma Import (C, Log2);
             begin
-               if not Is_Float (V) then
+               if V.Typ.Kind /= Type_Float then
                   Error_Msg_Synth
                     (+Expr, "argument must be a float value");
                   return null;
@@ -1010,7 +1010,7 @@ package body Synth.Oper is
                function Ceil (Arg : Fp64) return Fp64;
                pragma Import (C, Ceil);
             begin
-               if not Is_Float (V) then
+               if V.Typ.Kind /= Type_Float then
                   Error_Msg_Synth
                     (+Expr, "argument must be a float value");
                   return null;

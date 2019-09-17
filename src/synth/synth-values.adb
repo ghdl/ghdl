@@ -22,6 +22,8 @@ with Ada.Unchecked_Conversion;
 with System;
 with Mutils; use Mutils;
 
+with Netlists.Utils;
+
 package body Synth.Values is
    function To_Bound_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Bound_Array_Acc);
@@ -40,7 +42,8 @@ package body Synth.Values is
    function Is_Const (Val : Value_Acc) return Boolean is
    begin
       case Val.Kind is
-         when Value_Discrete =>
+         when Value_Discrete
+           | Value_Float =>
             return True;
          when Value_Net
            | Value_Wire
@@ -52,16 +55,39 @@ package body Synth.Values is
          when Value_Array
            | Value_Record =>
             return False;
-         when others =>
-            --  TODO.
+         when Value_Instance
+           | Value_Subtype
+           | Value_Alias =>
+            --  Not really a value.
             raise Internal_Error;
       end case;
    end Is_Const;
 
-   function Is_Float (Val : Value_Acc) return Boolean is
+   function Is_Const_Val (Val : Value_Acc) return Boolean is
    begin
-      return Val.Kind = Value_Float;
-   end Is_Float;
+      case Val.Kind is
+         when Value_Discrete
+           | Value_Float =>
+            return True;
+         when Value_Net =>
+            return Netlists.Utils.Is_Const_Net (Val.N);
+         when Value_Wire =>
+            return Is_Const_Wire (Val.W);
+         when Value_Mux2 =>
+            return False;
+         when Value_Const_Array
+           | Value_Const_Record =>
+            return True;
+         when Value_Array
+           | Value_Record =>
+            return False;
+         when Value_Instance
+           | Value_Subtype
+           | Value_Alias =>
+            --  Not really a value.
+            raise Internal_Error;
+      end case;
+   end Is_Const_Val;
 
    function Is_Bounded_Type (Typ : Type_Acc) return Boolean is
    begin

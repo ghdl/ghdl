@@ -1104,6 +1104,51 @@ package body Synth.Environment is
 
       Phi_Assign (Ctxt, Dest, Pasgn);
    end Phi_Assign;
+
+   --  Return the net driving WID when it is known to be possibly constant.
+   --  Return No_Net is not constant.
+   function Get_Const_Net_Maybe (Wid : Wire_Id) return Net
+   is
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+      Pasgn : Partial_Assign;
+      N : Net;
+   begin
+      if Wire_Rec.Kind /= Wire_Variable then
+         return No_Net;
+      end if;
+      if Wire_Rec.Cur_Assign = No_Seq_Assign then
+         return No_Net;
+      end if;
+      Pasgn := Get_Assign_Partial (Wire_Rec.Cur_Assign);
+      pragma Assert (Pasgn /= No_Partial_Assign);
+      if Get_Partial_Offset (Pasgn) /= 0 then
+         return No_Net;
+      end if;
+      N := Get_Partial_Value (Pasgn);
+      if Get_Width (N) /= Get_Width (Wire_Rec.Gate) then
+         return No_Net;
+      end if;
+      return N;
+   end Get_Const_Net_Maybe;
+
+   function Is_Const_Wire (Wid : Wire_Id) return Boolean
+   is
+      N : constant Net := Get_Const_Net_Maybe (Wid);
+   begin
+      if N = No_Net then
+         return False;
+      else
+         return Is_Const_Net (N);
+      end if;
+   end Is_Const_Wire;
+
+   function Get_Const_Wire (Wid : Wire_Id) return Net
+   is
+      N : constant Net := Get_Const_Net_Maybe (Wid);
+   begin
+      pragma Assert (N /= No_Net);
+      return N;
+   end Get_Const_Wire;
 begin
    Wire_Id_Table.Append ((Kind => Wire_None,
                           Mark_Flag => False,

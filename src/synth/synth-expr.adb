@@ -31,14 +31,15 @@ with Vhdl.Evaluation; use Vhdl.Evaluation;
 
 with Vhdl.Annotations; use Vhdl.Annotations;
 
-with Synth.Errors; use Synth.Errors;
-with Synth.Types; use Synth.Types;
-with Synth.Stmts; use Synth.Stmts;
-with Synth.Oper; use Synth.Oper;
-
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Locations; use Netlists.Locations;
+
+with Synth.Types; use Synth.Types;
+with Synth.Errors; use Synth.Errors;
+with Synth.Environment;
+with Synth.Stmts; use Synth.Stmts;
+with Synth.Oper; use Synth.Oper;
 
 package body Synth.Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
@@ -56,6 +57,37 @@ package body Synth.Expr is
          Set_Location2 (N, Loc);
       end if;
    end Set_Location;
+
+   function Get_Const_Discrete (V : Value_Acc) return Int64
+   is
+      N : Net;
+      Inst : Instance;
+   begin
+      case V.Kind is
+         when Value_Discrete =>
+            return V.Scal;
+         when Value_Net =>
+            N := V.N;
+         when Value_Wire =>
+            N := Synth.Environment.Get_Const_Wire (V.W);
+         when others =>
+            raise Internal_Error;
+      end case;
+      Inst := Get_Net_Parent (N);
+      case Get_Id (Inst) is
+         when Id_Const_UB32 =>
+            declare
+               Va : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+               Wd : constant Natural := Natural (Get_Width (N));
+               T : Uns64;
+            begin
+               T := Shift_Left (Uns64 (Va), 64 - Wd);
+               return To_Int64 (Shift_Right_Arithmetic (T, 64 - Wd));
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Const_Discrete;
 
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32) is
    begin
@@ -1155,39 +1187,44 @@ package body Synth.Expr is
          return;
       end if;
 
-      if Is_Const (Left) and then Is_Const (Right) then
-         Inp := No_Net;
-         Step := 0;
+      if Is_Const_Val (Left) and then Is_Const_Val (Right) then
+         declare
+            L : constant Int64 := Get_Const_Discrete (Left);
+            R : constant Int64 := Get_Const_Discrete (Right);
+         begin
+            Inp := No_Net;
+            Step := 0;
 
-         if not In_Bounds (Pfx_Bnd, Int32 (Left.Scal))
-           or else not In_Bounds (Pfx_Bnd, Int32 (Right.Scal))
-         then
-            Error_Msg_Synth (+Name, "index not within bounds");
-            Wd := 0;
-            Off := 0;
-            return;
-         end if;
+            if not In_Bounds (Pfx_Bnd, Int32 (L))
+              or else not In_Bounds (Pfx_Bnd, Int32 (R))
+            then
+               Error_Msg_Synth (+Name, "index not within bounds");
+               Wd := 0;
+               Off := 0;
+               return;
+            end if;
 
-         case Pfx_Bnd.Dir is
-            when Iir_To =>
-               Wd := Width (Right.Scal - Left.Scal + 1);
-               Res_Bnd := (Dir => Iir_To,
-                           Wlen => Wd,
-                           Wbounds => Wd,
-                           Len => Wd,
-                           Left => Int32 (Left.Scal),
-                           Right => Int32 (Right.Scal));
-               Off := Pfx_Bnd.Right - Res_Bnd.Right;
-            when Iir_Downto =>
-               Wd := Width (Left.Scal - Right.Scal + 1);
-               Res_Bnd := (Dir => Iir_Downto,
-                           Wlen => Wd,
-                           Wbounds => Wd,
-                           Len => Wd,
-                           Left => Int32 (Left.Scal),
-                           Right => Int32 (Right.Scal));
-               Off := Res_Bnd.Right - Pfx_Bnd.Right;
-         end case;
+            case Pfx_Bnd.Dir is
+               when Iir_To =>
+                  Wd := Width (R - L + 1);
+                  Res_Bnd := (Dir => Iir_To,
+                              Wlen => Wd,
+                              Wbounds => Wd,
+                              Len => Wd,
+                              Left => Int32 (L),
+                              Right => Int32 (R));
+                  Off := Pfx_Bnd.Right - Res_Bnd.Right;
+               when Iir_Downto =>
+                  Wd := Width (L - R + 1);
+                  Res_Bnd := (Dir => Iir_Downto,
+                              Wlen => Wd,
+                              Wbounds => Wd,
+                              Len => Wd,
+                              Left => Int32 (L),
+                              Right => Int32 (R));
+                  Off := Res_Bnd.Right - Pfx_Bnd.Right;
+            end case;
+         end;
       else
          if Is_Const (Left) or else Is_Const (Right) then
             Error_Msg_Synth
@@ -1339,7 +1376,7 @@ package body Synth.Expr is
       Val := Synth_Expression (Syn_Inst, Expr);
       case Get_Kind (Conv_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
-            if Is_Float (Val) then
+            if Val.Typ.Kind = Type_Float then
                return Create_Value_Discrete
                  (Int64 (Val.Fp), Get_Value_Type (Syn_Inst, Conv_Type));
             else
