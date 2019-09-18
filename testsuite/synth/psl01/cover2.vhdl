@@ -2,13 +2,14 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity hello is
+entity cover2 is
  port (clk, rst: std_logic;
        cnt : out unsigned(3 downto 0));
-end hello;
+end cover2;
 
-architecture behav of hello is
+architecture behav of cover2 is
  signal val : unsigned (3 downto 0);
+ default clock is rising_edge(clk);
 begin
  process(clk)
  begin
@@ -22,9 +23,5 @@ begin
  end process;
  cnt <= val;
 
- --psl default clock is rising_edge(clk);
- --psl restrict {rst; (not rst)[*]};
- --psl assert always val /= 5 abort rst;
- --psl assume always val < 10;
- --psl cover {val = 10};
+ cover {val = 10};
 end behav;
