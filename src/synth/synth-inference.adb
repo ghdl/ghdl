@@ -23,6 +23,7 @@ with Dyn_Interning;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Gates_Ports; use Netlists.Gates_Ports;
+with Netlists.Locations; use Netlists.Locations;
 
 with Synth.Flags;
 
@@ -239,6 +240,7 @@ package body Synth.Inference is
       --  for it.
       if Enable /= No_Net then
          Data := Build_Mux2 (Ctxt, Enable, Prev_Val, Data);
+         Copy_Location (Data, Enable);
       end if;
 
       --  If the signal declaration has an initial value, get it.
@@ -324,6 +326,7 @@ package body Synth.Inference is
                                Rst => Rst, Rst_Val => Rst_Val);
          end if;
       end if;
+      Copy_Location (Res, Last_Mux);
 
       --  The output of the mux may be read later in the process,
       --  like this:

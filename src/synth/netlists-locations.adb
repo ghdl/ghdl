@@ -64,6 +64,31 @@ package body Netlists.Locations is
          return No_Location;
       end if;
    end Get_Location;
+
+   procedure Copy_Location1 (Dest : Net; Src : Instance) is
+   begin
+      Set_Location (Get_Parent (Dest), Get_Location (Src));
+   end Copy_Location1;
+
+   procedure Copy_Location1 (Dest : Net; Src : Net) is
+   begin
+      Set_Location (Get_Parent (Dest), Get_Location (Get_Parent (Src)));
+   end Copy_Location1;
+
+   procedure Copy_Location (Dest : Net; Src : Net) is
+   begin
+      if Flag_Locations then
+         Copy_Location1 (Dest, Src);
+      end if;
+   end Copy_Location;
+
+   procedure Copy_Location (Dest : Net; Src : Instance) is
+   begin
+      if Flag_Locations then
+         Copy_Location1 (Dest, Src);
+      end if;
+   end Copy_Location;
+
 begin
    Loc_Table.Append (No_Location);
 end Netlists.Locations;

@@ -18,9 +18,14 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Netlists;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Source is
    subtype Syn_Src is Iir;
    No_Syn_Src : constant Syn_Src := Null_Iir;
+
+   procedure Set_Location (N : Netlists.Net; Src : Syn_Src);
+   pragma Inline (Set_Location);
 end Synth.Source;

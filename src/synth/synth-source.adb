@@ -1,4 +1,4 @@
---  Locations for instances.
+--  Source/origin of synthesis.
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -18,19 +18,14 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-package Netlists.Locations is
-   --  If True, locations are enabled.
-   Flag_Locations : Boolean := True;
+with Netlists; use Netlists;
+with Netlists.Locations; use Netlists.Locations;
 
-   --  Save location LOC for INST.  Noop if locations are not enabled.
-   procedure Set_Location (Inst : Instance; Loc : Location_Type);
-
-   --  Get the previously saved location for INST.
-   --  Return Null_Location if no location set or locations are disabled.
-   function Get_Location (Inst : Instance) return Location_Type;
-
-   --  Utilities.
-   procedure Copy_Location (Dest : Net; Src : Net);
-   procedure Copy_Location (Dest : Net; Src : Instance);
-   pragma Inline (Copy_Location);
-end Netlists.Locations;
+package body Synth.Source is
+   procedure Set_Location (N : Net; Src : Syn_Src) is
+   begin
+      if Flag_Locations then
+         Set_Location (Get_Parent (N), Get_Location (Src));
+      end if;
+   end Set_Location;
+end Synth.Source;

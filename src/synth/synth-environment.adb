@@ -21,8 +21,11 @@
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
 with Errorout; use Errorout;
+
 with Synth.Inference;
 with Synth.Errors; use Synth.Errors;
+with Synth.Source; use Synth.Source;
+
 with Vhdl.Nodes;
 with Vhdl.Errors; use Vhdl.Errors;
 
@@ -790,7 +793,8 @@ package body Synth.Environment is
                             W : Wire_Id;
                             Sel : Net;
                             F_Asgns : Partial_Assign;
-                            T_Asgns : Partial_Assign)
+                            T_Asgns : Partial_Assign;
+                            Stmt : Source.Syn_Src)
    is
       P : Partial_Assign_Array (0 .. 1);
       N : Net_Array (0 .. 1);
@@ -821,6 +825,7 @@ package body Synth.Environment is
 
          --  Build mux.
          Res := Netlists.Builders.Build_Mux2 (Ctxt, Sel, N (0), N (1));
+         Set_Location (Res, Stmt);
 
          --  Keep the result in a list.
          Pasgn := New_Partial_Assign (Res, Off);
@@ -838,7 +843,8 @@ package body Synth.Environment is
    --  Add muxes for two lists T and F of assignments.
    procedure Merge_Phis (Ctxt : Builders.Context_Acc;
                          Sel : Net;
-                         T, F : Phi_Type)
+                         T, F : Phi_Type;
+                         Stmt : Source.Syn_Src)
    is
       T_Asgns : Seq_Assign;
       F_Asgns : Seq_Assign;
@@ -877,7 +883,7 @@ package body Synth.Environment is
             T_Asgns := Get_Assign_Chain (T_Asgns);
             F_Asgns := Get_Assign_Chain (F_Asgns);
          end if;
-         Merge_Assigns (Ctxt, W, Sel, Fp, Tp);
+         Merge_Assigns (Ctxt, W, Sel, Fp, Tp, Stmt);
 
       end loop;
    end Merge_Phis;

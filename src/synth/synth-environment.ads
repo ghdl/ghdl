@@ -105,7 +105,8 @@ package Synth.Environment is
    --  those from T or from F.
    procedure Merge_Phis (Ctxt : Builders.Context_Acc;
                          Sel : Net;
-                         T, F : Phi_Type);
+                         T, F : Phi_Type;
+                         Stmt : Source.Syn_Src);
 
    --  Sort all seq assign of P by wire id.  Used to more easily merge them.
    function Sort_Phi (P : Phi_Type) return Seq_Assign;

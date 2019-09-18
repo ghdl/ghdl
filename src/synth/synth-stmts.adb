@@ -460,7 +460,8 @@ package body Synth.Stmts is
          Pop_Phi (Phi_False);
          En_F := C.T_En;
 
-         Merge_Phis (Build_Context, Get_Net (Cond_Val), Phi_True, Phi_False);
+         Merge_Phis (Build_Context,
+                     Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
          if En_T = En_F then
             C.T_En := En_T;
          else
@@ -1372,7 +1373,7 @@ package body Synth.Stmts is
             Pop_Phi (Phi_F);
             Merge_Phis (Build_Context,
                         Get_Current_Value (Build_Context, C.W_Ret),
-                        Phi_F, Phi_T);
+                        Phi_F, Phi_T, Stmt);
          end if;
          if C.T_En = False then
             return;
@@ -1412,7 +1413,7 @@ package body Synth.Stmts is
       Pop_Phi (Phi_False);
 
       Merge_Phis (Build_Context, Get_Net (Cond_Val),
-                  Phi_True, Phi_False);
+                  Phi_True, Phi_False, Stmt);
    end Synth_Process_Sequential_Statements;
 
    procedure Synth_Process_Statement
