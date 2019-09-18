@@ -88,15 +88,23 @@ fi
 # Test
 
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    bash -c "prefix=$(realpath ./install-mcode) ${scriptdir}/test.sh $BUILD_CMD_OPTS"
+    bash -c "prefix=$(realpath ./install-mcode) ${scriptdir}/../../testsuite/testsuite.sh sanity gna vests"
 else
     # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
     build_img_ghdl
     # Run test in docker container
-    $RUN "ghdl/ghdl:$GHDL_IMAGE_TAG" bash -c "GHDL=ghdl ${scriptdir}/test.sh $BUILD_CMD_OPTS"
+    tests="sanity"
+    if [ "x$EXTRA" != "xgpl" ]; then
+      tests="$tests gna"
+    fi
+    tests="$tests vests"
+    if [ "x$ISEXTRA" = "xsynth" ]; then
+      tests="$tests synth"
+    fi
+    $RUN "ghdl/ghdl:$GHDL_IMAGE_TAG" bash -c "GHDL=ghdl ${scriptdir}/../../testsuite/testsuite.sh $tests"
 fi
 
-if [ ! -f test_ok ]; then
+if [ ! -f "${scriptdir}/../../testsuite/test_ok" ]; then
     printf "$ANSI_RED[TRAVIS] TEST failed $ANSI_NOCOLOR\n"
     exit 1
 fi
