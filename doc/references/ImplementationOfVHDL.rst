@@ -72,8 +72,7 @@ The latest version is 2008. Many features have been added, and GHDL
 doesn't implement all of them.
 
 You can select the VHDL standard expected by GHDL with the
-``--std=VER`` option, where ``VER`` is one of the left column of the
-table below:
+``--std=<STANDARD>`` option, where ``<STANDARD>`` is one of the list below:
 
 
 87
@@ -101,9 +100,21 @@ table below:
 08
   Select VHDL-2008 standard (partially implemented).
 
-The 93, 93c, 00 and 02 standards are considered compatible: you can
-elaborate a design mixing these standards. However, 87, 93 and 08 are
-not compatible.
+Multiple standards can be used in a design:
+
++-----+----------------+
+|GROUP|  VHDL Standard |
++=====+================+
+|  87 |       87       |
++-----+----------------+
+|  93 | 93, 93c, 00, 02|
++-----+----------------+
+|  08 |       08       |
++-----+----------------+
+
+.. note::
+
+   The standards in each group are considered compatible: you can elaborate a design mixing these standards. However, standards of different groups are not compatible.
 
 .. _psl_implementation:
 
@@ -177,12 +188,14 @@ Library database
 
 Each design unit analyzed is placed into a design library. By default,
 the name of this design library is ``work``; however, this can be
-changed with the :option:`--work=NAME` option of GHDL.
+changed with the :option:`--work=<LIB_NAME>` option of GHDL.
 
 To keep the list of design units in a design library, GHDL creates
-library files. The name of these files is :file:`NAME-objVER.cf`, where
-`NAME` is the name of the library, and `VER` the VHDL version (87,
+library files. The name of these files is :file:`<LIB_NAME>-obj<GROUP>.cf`, where
+`<LIB_NAME>` is the name of the library, and `<GROUP>` the VHDL version (87,
 93 or 08) used to analyze the design units.
+
+For details on ``GROUP`` values see section :ref:`VHDL_standards`.
 
 You don't have to know how to read a library file. You can display it
 using the *-d* of `ghdl`. The file contains the name of the

@@ -219,7 +219,7 @@ Options
 
 .. index:: WORK library
 
-.. option:: --work=<NAME>
+.. option:: --work=<LIB_NAME>
 
   Specify the name of the ``WORK`` library. Analyzed units are always placed in the library logically named ``WORK``. With this option, you can set its name. By default, the name is ``work``.
 
@@ -233,17 +233,17 @@ Options
 
   Use option :option:`-P` to specify where libraries other than ``WORK`` are placed.
 
-.. option:: --std=<STD>
+.. option:: --std=<STANDARD>
 
-  Specify the standard to use. By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax. For details on ``STD`` values see section :ref:`VHDL_standards`.
+  Specify the standard to use. By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax. For details on ``STANDARD`` values see section :ref:`VHDL_standards`.
 
-.. option:: --ieee=<VER>
+.. option:: --ieee=<IEEE_VAR>
 
   .. index:: ieee library
   .. index:: synopsys library
   .. index:: mentor library
 
-  Select the ``IEEE`` library to use. ``VER`` must be one of:
+  Select the ``IEEE`` library to use. ``IEEE_VAR`` must be one of:
 
   none
     Do not supply an `IEEE` library. Any library clause with the ``IEEE``
