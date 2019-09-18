@@ -11,6 +11,8 @@
   -->
   <a title="Join the chat at https://gitter.im/ghdl1/Lobby" href="https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef"></a><!--
   -->
+  <a title="CII Best Practices" href="https://bestpractices.coreinfrastructure.org/en/projects/3157"><img src="https://img.shields.io/cii/percentage/3157??longCache=true&style=flat-square"></a><!--
+  -->
   <a title="Linux/Mac boxes at Travis-CI" href="https://travis-ci.org/ghdl/ghdl/branches"><img src="https://img.shields.io/travis/ghdl/ghdl/master.svg?longCache=true&style=flat-square&logo=travis-ci&logoColor=e8ecef"></a><!--
   -->
   <a title="AppVeyor branch" href="https://ci.appveyor.com/project/tgingold/ghdl-psgys/history"><img src="https://img.shields.io/appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=e8ecef&style=flat-square"></a><!--
