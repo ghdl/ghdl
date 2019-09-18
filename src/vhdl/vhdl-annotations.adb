@@ -410,10 +410,6 @@ package body Vhdl.Annotations is
             end if;
 
          when Iir_Kind_Record_Type_Definition =>
-            if Flag_Synthesis then
-               --  For the offsets.
-               Create_Object_Info (Block_Info, Def, Kind_Type);
-            end if;
             declare
                List : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Def);
@@ -424,9 +420,16 @@ package body Vhdl.Annotations is
                     (Block_Info, Get_Type (El));
                end loop;
             end;
+            if Flag_Synthesis then
+               --  For the offsets.
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            end if;
 
          when Iir_Kind_Record_Subtype_Definition =>
-            null;
+            if Flag_Synthesis then
+               --  For the offsets.
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            end if;
 
          when Iir_Kind_Access_Type_Definition =>
             Annotate_Anonymous_Type_Definition

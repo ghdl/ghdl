@@ -94,7 +94,8 @@ package body Synth.Context is
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
-           | Iir_Kind_Record_Type_Definition =>
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
             Otype := Get_Value_Type (Syn_Inst, Obj_Type);
             return Alloc_Wire (Kind, Obj, Otype);
          when others =>

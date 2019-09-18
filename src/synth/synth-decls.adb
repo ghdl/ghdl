@@ -74,8 +74,8 @@ package body Synth.Decls is
       end if;
    end Synth_Subtype_Indication_If_Anonymous;
 
-   procedure Synth_Array_Type_Definition
-     (Syn_Inst : Synth_Instance_Acc; Def : Node)
+   function Synth_Array_Type_Definition
+     (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
       El_Type : constant Node := Get_Element_Subtype (Def);
       Typ : Type_Acc;
@@ -83,8 +83,39 @@ package body Synth.Decls is
       Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
       Typ := Create_Unbounded_Array
         (Get_Value_Type (Syn_Inst, El_Type));
-      Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
+      return Typ;
    end Synth_Array_Type_Definition;
+
+   function Synth_Record_Type_Definition
+     (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
+   is
+      El_List : constant Node_Flist := Get_Elements_Declaration_List (Def);
+      Rec_Els : Rec_El_Array_Acc;
+      El : Node;
+      El_Typ : Type_Acc;
+      Off : Uns32;
+      Typ : Type_Acc;
+   begin
+      if not Is_Fully_Constrained_Type (Def) then
+         return null;
+      end if;
+      Rec_Els := Create_Rec_El_Array
+        (Iir_Index32 (Get_Nbr_Elements (El_List)));
+      Typ := Create_Record_Type (Rec_Els, 0);
+
+      Off := 0;
+      for I in Flist_First .. Flist_Last (El_List) loop
+         El := Get_Nth_Element (El_List, I);
+         Synth_Declaration_Type (Syn_Inst, El);
+         El_Typ := Get_Value_Type (Syn_Inst, Get_Type (El));
+         Rec_Els.E (Iir_Index32 (I + 1)) := (Off => Off,
+                                             Typ => El_Typ);
+         Off := Off + Get_Type_Width (El_Typ);
+      end loop;
+      Typ.W := Off;
+
+      return Typ;
+   end Synth_Record_Type_Definition;
 
    procedure Synth_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
@@ -115,43 +146,19 @@ package body Synth.Decls is
                   Typ := Create_Discrete_Type (Rng, W);
                end;
             end if;
-            Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
          when Iir_Kind_Array_Type_Definition =>
-            Synth_Array_Type_Definition (Syn_Inst, Def);
+            Typ := Synth_Array_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_File_Type_Definition =>
-            null;
+            Typ := null;
          when Iir_Kind_Record_Type_Definition =>
-            if not Is_Fully_Constrained_Type (Def) then
-               return;
-            end if;
-            declare
-               El_List : constant Node_Flist :=
-                 Get_Elements_Declaration_List (Def);
-               Rec_Els : Rec_El_Array_Acc;
-               El : Node;
-               El_Typ : Type_Acc;
-               Off : Uns32;
-            begin
-               Rec_Els := Create_Rec_El_Array
-                 (Iir_Index32 (Get_Nbr_Elements (El_List)));
-               Typ := Create_Record_Type (Rec_Els, 0);
-               Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
-
-               Off := 0;
-               for I in Flist_First .. Flist_Last (El_List) loop
-                  El := Get_Nth_Element (El_List, I);
-                  Synth_Declaration_Type (Syn_Inst, El);
-                  El_Typ := Get_Value_Type (Syn_Inst, Get_Type (El));
-                  Rec_Els.E (Iir_Index32 (I + 1)) := (Off => Off,
-                                                      Typ => El_Typ);
-                  Off := Off + Get_Type_Width (El_Typ);
-               end loop;
-               Typ.W := Off;
-            end;
+            Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
          when others =>
             Error_Kind ("synth_type_definition", Def);
       end case;
+      if Typ /= null then
+         Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
+      end if;
    end Synth_Type_Definition;
 
    procedure Synth_Anonymous_Type_Definition
@@ -174,7 +181,6 @@ package body Synth.Decls is
                  (L, R, Get_Direction (Cst));
                W := Discrete_Range_Width (Rng);
                Typ := Create_Discrete_Type (Rng, W);
-               Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
             end;
          when Iir_Kind_Floating_Type_Definition =>
             declare
@@ -186,13 +192,13 @@ package body Synth.Decls is
                R := Get_Fp_Value (Get_Right_Limit (Cst));
                Rng := (Get_Direction (Cst), L, R);
                Typ := Create_Float_Type (Rng);
-               Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
             end;
          when Iir_Kind_Array_Type_Definition =>
-            Synth_Array_Type_Definition (Syn_Inst, Def);
+            Typ := Synth_Array_Type_Definition (Syn_Inst, Def);
          when others =>
             Error_Kind ("synth_anonymous_type_definition", Def);
       end case;
+      Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
    end Synth_Anonymous_Type_Definition;
 
    function Synth_Discrete_Range_Constraint
@@ -267,9 +273,15 @@ package body Synth.Decls is
    is
       Typ : Type_Acc;
    begin
+      --  TODO: handle aliases directly.
       case Get_Kind (Atype) is
          when Iir_Kind_Array_Subtype_Definition =>
             Typ := Synth_Array_Subtype_Indication (Syn_Inst, Atype);
+         when Iir_Kind_Record_Subtype_Definition =>
+            Typ := Synth_Record_Type_Definition (Syn_Inst, Atype);
+            if Typ = null then
+               return;
+            end if;
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
@@ -335,6 +347,7 @@ package body Synth.Decls is
                --  Type already declared, so already handled.
                return Null_Node;
             when Iir_Kind_Array_Subtype_Definition
+              | Iir_Kind_Record_Subtype_Definition
               | Iir_Kind_Integer_Subtype_Definition
               | Iir_Kind_Floating_Subtype_Definition
               | Iir_Kind_Physical_Subtype_Definition
