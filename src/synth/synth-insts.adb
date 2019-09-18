@@ -304,11 +304,14 @@ package body Synth.Insts is
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
-               Port := Get_Output (Inst, Nbr_Outputs);
-               Port := Builders.Build_Port (Build_Context, Port);
-               O := Create_Value_Net
-                 (Port, Get_Value_Type (Inst_Obj.Syn_Inst, Get_Type (Inter)));
-               Synth_Assignment (Syn_Inst, Actual, O, Assoc);
+               if Actual /= Null_Iir then
+                  Port := Get_Output (Inst, Nbr_Outputs);
+                  Port := Builders.Build_Port (Build_Context, Port);
+                  O := Create_Value_Net
+                    (Port, Get_Value_Type (Inst_Obj.Syn_Inst,
+                                           Get_Type (Inter)));
+                  Synth_Assignment (Syn_Inst, Actual, O, Assoc);
+               end if;
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Next_Association_Interface (Assoc, Assoc_Inter);
