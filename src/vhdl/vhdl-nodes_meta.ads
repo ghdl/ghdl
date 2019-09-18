@@ -296,6 +296,8 @@ package Vhdl.Nodes_Meta is
       Field_Parameter_Specification,
       Field_Parent,
       Field_Loop_Label,
+      Field_Exit_Flag,
+      Field_Next_Flag,
       Field_Component_Name,
       Field_Instantiation_List,
       Field_Entity_Aspect,
@@ -832,6 +834,8 @@ package Vhdl.Nodes_Meta is
    function Has_Parameter_Specification (K : Iir_Kind) return Boolean;
    function Has_Parent (K : Iir_Kind) return Boolean;
    function Has_Loop_Label (K : Iir_Kind) return Boolean;
+   function Has_Exit_Flag (K : Iir_Kind) return Boolean;
+   function Has_Next_Flag (K : Iir_Kind) return Boolean;
    function Has_Component_Name (K : Iir_Kind) return Boolean;
    function Has_Instantiation_List (K : Iir_Kind) return Boolean;
    function Has_Entity_Aspect (K : Iir_Kind) return Boolean;

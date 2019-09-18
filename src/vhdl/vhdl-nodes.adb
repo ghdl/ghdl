@@ -5115,6 +5115,38 @@ package body Vhdl.Nodes is
       Set_Field5 (Target, Stmt);
    end Set_Loop_Label;
 
+   function Get_Exit_Flag (Stmt : Iir) return Boolean is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Exit_Flag (Get_Kind (Stmt)),
+                     "no field Exit_Flag");
+      return Get_Flag1 (Stmt);
+   end Get_Exit_Flag;
+
+   procedure Set_Exit_Flag (Stmt : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Exit_Flag (Get_Kind (Stmt)),
+                     "no field Exit_Flag");
+      Set_Flag1 (Stmt, Flag);
+   end Set_Exit_Flag;
+
+   function Get_Next_Flag (Stmt : Iir) return Boolean is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Next_Flag (Get_Kind (Stmt)),
+                     "no field Next_Flag");
+      return Get_Flag2 (Stmt);
+   end Get_Next_Flag;
+
+   procedure Set_Next_Flag (Stmt : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Next_Flag (Get_Kind (Stmt)),
+                     "no field Next_Flag");
+      Set_Flag2 (Stmt, Flag);
+   end Set_Next_Flag;
+
    function Get_Component_Name (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

@@ -681,6 +681,10 @@ class Iir_Kinds:
         Iir_Kind.Anonymous_Type_Declaration,
         Iir_Kind.Subtype_Declaration]
 
+    Next_Exit_Statement = [
+        Iir_Kind.Next_Statement,
+        Iir_Kind.Exit_Statement]
+
     Association_Element = [
         Iir_Kind.Association_Element_By_Expression,
         Iir_Kind.Association_Element_By_Individual,
@@ -2122,6 +2126,14 @@ Set_Parent = libghdl.vhdl__nodes__set_parent
 Get_Loop_Label = libghdl.vhdl__nodes__get_loop_label
 
 Set_Loop_Label = libghdl.vhdl__nodes__set_loop_label
+
+Get_Exit_Flag = libghdl.vhdl__nodes__get_exit_flag
+
+Set_Exit_Flag = libghdl.vhdl__nodes__set_exit_flag
+
+Get_Next_Flag = libghdl.vhdl__nodes__get_next_flag
+
+Set_Next_Flag = libghdl.vhdl__nodes__set_next_flag
 
 Get_Component_Name = libghdl.vhdl__nodes__get_component_name
 

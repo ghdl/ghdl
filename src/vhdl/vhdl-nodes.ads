@@ -3291,6 +3291,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Within_Flag (Flag5)
    --
+   --   Get/Set_Exit_Flag (Flag1)
+   --
+   --   Get/Set_Next_Flag (Flag2)
+   --
    --   Get/Set_End_Has_Identifier (Flag9)
    --
    --   Get/Set_Suspend_Flag (Flag11)
@@ -3309,6 +3313,10 @@ package Vhdl.Nodes is
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Exit_Flag (Flag1)
+   --
+   --   Get/Set_Next_Flag (Flag2)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
    --
@@ -5707,6 +5715,10 @@ package Vhdl.Nodes is
    --Iir_Kind_Procedure_Call_Statement
      Iir_Kind_If_Statement;
 
+   subtype Iir_Kinds_Next_Exit_Statement is Iir_Kind range
+     Iir_Kind_Next_Statement ..
+     Iir_Kind_Exit_Statement;
+
    subtype Iir_Kinds_Variable_Assignment_Statement is Iir_Kind range
      Iir_Kind_Variable_Assignment_Statement ..
      Iir_Kind_Conditional_Variable_Assignment_Statement;
@@ -7371,6 +7383,16 @@ package Vhdl.Nodes is
    --  Field: Field5
    function Get_Loop_Label (Target : Iir) return Iir;
    procedure Set_Loop_Label (Target : Iir; Stmt : Iir);
+
+   --  True if there is an exit statement targetting this loop statement.
+   --  Field: Flag1
+   function Get_Exit_Flag (Stmt : Iir) return Boolean;
+   procedure Set_Exit_Flag (Stmt : Iir; Flag : Boolean);
+
+   --  True if there is a next statement targetting this loop statement.
+   --  Field: Flag2
+   function Get_Next_Flag (Stmt : Iir) return Boolean;
+   procedure Set_Next_Flag (Stmt : Iir; Flag : Boolean);
 
    --  Component name for a component_configuration or
    --  a configuration_specification.

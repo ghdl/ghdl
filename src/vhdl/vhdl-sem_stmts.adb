@@ -1308,12 +1308,14 @@ package body Vhdl.Sem_Stmts is
       Loop_Stmt: Iir;
       P : Iir;
    begin
+      --  Analyze condition (if present).
       Cond := Get_Condition (Stmt);
       if Cond /= Null_Iir then
          Cond := Sem_Condition (Cond);
          Set_Condition (Stmt, Cond);
       end if;
 
+      --  Analyze label.
       Loop_Label := Get_Loop_Label (Stmt);
       if Loop_Label /= Null_Iir then
          Loop_Label := Sem_Denoting_Name (Loop_Label);
@@ -1339,6 +1341,12 @@ package body Vhdl.Sem_Stmts is
             when Iir_Kind_While_Loop_Statement
               | Iir_Kind_For_Loop_Statement =>
                if Loop_Stmt = Null_Iir or else P = Loop_Stmt then
+                  case Iir_Kinds_Next_Exit_Statement (Get_Kind (Stmt)) is
+                     when Iir_Kind_Next_Statement =>
+                        Set_Next_Flag (P, True);
+                     when Iir_Kind_Exit_Statement =>
+                        Set_Exit_Flag (P, True);
+                  end case;
                   exit;
                end if;
             when Iir_Kind_If_Statement
