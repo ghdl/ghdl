@@ -1722,6 +1722,22 @@ package body Synth.Stmts is
       end if;
    end Synth_Psl_Restrict_Directive;
 
+   procedure Synth_Psl_Cover_Directive
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Res : Net;
+      Inst : Instance;
+   begin
+      --  Build cover gate.
+      --  Note: for synthesis, we assume the next state will be correct.
+      --  (If we assume on States, then the first cycle is ignored).
+      Res := Synth_Psl_Sequence_Directive (Syn_Inst, Stmt);
+      if Res /= No_Net then
+         Inst := Build_Cover (Build_Context, Synth_Label (Stmt), Res);
+         Set_Location (Inst, Get_Location (Stmt));
+      end if;
+   end Synth_Psl_Cover_Directive;
+
    function Synth_Psl_Property_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Net
    is
@@ -1949,6 +1965,8 @@ package body Synth.Stmts is
                Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
             when Iir_Kind_Psl_Assume_Directive =>
                Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
+            when Iir_Kind_Psl_Cover_Directive =>
+               Synth_Psl_Cover_Directive (Syn_Inst, Stmt);
             when Iir_Kind_Psl_Assert_Directive =>
                Synth_Psl_Assert_Directive (Syn_Inst, Stmt);
             when Iir_Kind_Concurrent_Assertion_Statement =>
@@ -1975,6 +1993,8 @@ package body Synth.Stmts is
                Synth_Psl_Assert_Directive (Syn_Inst, Item);
             when Iir_Kind_Psl_Assume_Directive =>
                Synth_Psl_Assume_Directive (Syn_Inst, Item);
+            when Iir_Kind_Psl_Cover_Directive =>
+               Synth_Psl_Cover_Directive (Syn_Inst, Item);
             when others =>
                Error_Kind ("synth_verification_unit", Item);
          end case;

@@ -363,7 +363,7 @@ package body Netlists.Builders is
                      Outputs);
    end Create_Dff_Modules;
 
-   procedure Create_Assert_Assume (Ctxt : Context_Acc)
+   procedure Create_Assert_Assume_Cover (Ctxt : Context_Acc)
    is
       Outputs : Port_Desc_Array (1 .. 0);
    begin
@@ -378,7 +378,13 @@ package body Netlists.Builders is
          1, 0, 0);
       Set_Port_Desc (Ctxt.M_Assume, (0 => Create_Input ("cond", 1)),
                      Outputs);
-   end Create_Assert_Assume;
+
+      Ctxt.M_Cover := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Name_Cover), Id_Cover,
+         1, 0, 0);
+      Set_Port_Desc (Ctxt.M_Cover, (0 => Create_Input ("cond", 1)),
+                     Outputs);
+   end Create_Assert_Assume_Cover;
 
    function Build_Builders (Design : Module) return Context_Acc
    is
@@ -479,7 +485,7 @@ package body Netlists.Builders is
       Create_Objects_Module (Res);
       Create_Dff_Modules (Res);
 
-      Create_Assert_Assume (Res);
+      Create_Assert_Assume_Cover (Res);
 
       return Res;
    end Build_Builders;
@@ -1145,5 +1151,16 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 0), Cond);
       return Inst;
    end Build_Assume;
+
+   function Build_Cover (Ctxt : Context_Acc; Name : Sname; Cond : Net)
+                         return Instance
+   is
+      Inst : Instance;
+   begin
+      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Cover,
+                            Name_Or_Internal (Name, Ctxt));
+      Connect (Get_Input (Inst, 0), Cond);
+      return Inst;
+   end Build_Cover;
 
 end Netlists.Builders;

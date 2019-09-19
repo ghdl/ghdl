@@ -148,6 +148,7 @@ package Netlists.Gates is
    --  Input signal must always be true.
    Id_Assert : constant Module_Id := 72;
    Id_Assume : constant Module_Id := 73;
+   Id_Cover : constant Module_Id := 74;
 
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
