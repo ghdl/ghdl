@@ -38,14 +38,16 @@ package body Synth.Context is
       Table_Low_Bound => 1,
       Table_Initial => 16);
 
-   function Make_Instance (Parent : Synth_Instance_Acc; Info : Sim_Info_Acc)
+   function Make_Instance (Parent : Synth_Instance_Acc;
+                           Info : Sim_Info_Acc;
+                           Name : Sname := No_Sname)
                           return Synth_Instance_Acc
    is
       Res : Synth_Instance_Acc;
    begin
       Res := new Synth_Instance_Type'(Max_Objs => Info.Nbr_Objects,
                                       M => No_Module,
-                                      Name => No_Sname,
+                                      Name => Name,
                                       Block_Scope => Info,
                                       Up_Block => Parent,
                                       Elab_Objects => 0,
@@ -60,6 +62,27 @@ package body Synth.Context is
    begin
       Deallocate (Synth_Inst);
    end Free_Instance;
+
+   procedure Set_Module (Inst : Synth_Instance_Acc; M : Module) is
+   begin
+      Inst.M := M;
+   end Set_Module;
+
+   function Get_Module (Inst : Synth_Instance_Acc) return Module is
+   begin
+      return Inst.M;
+   end Get_Module;
+
+   function Get_Sname (Inst : Synth_Instance_Acc) return Sname is
+   begin
+      return Inst.Name;
+   end Get_Sname;
+
+   procedure Set_Block_Scope
+     (Inst : Synth_Instance_Acc; Scope : Sim_Info_Acc) is
+   begin
+      Inst.Block_Scope := Scope;
+   end Set_Block_Scope;
 
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc is
@@ -120,14 +143,34 @@ package body Synth.Context is
       Syn_Inst.Elab_Objects := Slot + Num - 1;
    end Create_Object;
 
+   procedure Create_Object_Force
+     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+   begin
+      pragma Assert (Syn_Inst.Objects (Info.Slot) = null);
+      Syn_Inst.Objects (Info.Slot) := Val;
+   end Create_Object_Force;
+
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
-      Create_Object (Syn_Inst, Info.Slot, 1);
-      Syn_Inst.Objects (Info.Slot) := Val;
+      if Syn_Inst /= Global_Instance then
+         Create_Object (Syn_Inst, Info.Slot, 1);
+      end if;
+      Create_Object_Force (Syn_Inst, Decl, Val);
    end Create_Object;
+
+   procedure Create_Package_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+   begin
+      pragma Assert (Syn_Inst.Objects (Info.Pkg_Slot) = null);
+      Syn_Inst.Objects (Info.Pkg_Slot) := Val;
+   end Create_Package_Object;
 
    procedure Destroy_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir)

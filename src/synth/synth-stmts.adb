@@ -1213,6 +1213,7 @@ package body Synth.Stmts is
       Subprg_Body : constant Node := Get_Subprogram_Body (Imp);
       Decls_Chain : constant Node := Get_Declaration_Chain (Subprg_Body);
       Sub_C : Seq_Context;
+      Sub_Sname : Sname;
       M : Areapools.Mark_Type;
    begin
       if Get_Implicit_Definition (Imp) in Iir_Predefined_Implicit then
@@ -1224,7 +1225,8 @@ package body Synth.Stmts is
       end if;
 
       Areapools.Mark (M, Instance_Pool.all);
-      Sub_C.Inst := Make_Instance (C.Inst, Get_Info (Imp));
+      Sub_Sname := New_Sname (Get_Sname (C.Inst), Get_Identifier (Imp));
+      Sub_C.Inst := Make_Instance (C.Inst, Get_Info (Imp), Sub_Sname);
 
       Synth_Subprogram_Association
         (Sub_C.Inst, C.Inst, Inter_Chain, Assoc_Chain);
@@ -1232,7 +1234,6 @@ package body Synth.Stmts is
       Synth_Declarations (Sub_C.Inst, Decls_Chain);
 
       if Is_Valid (Decls_Chain) then
-         Sub_C.Inst.Name := New_Sname (C.Inst.Name, Get_Identifier (Imp));
          Synth_Declarations (Sub_C.Inst, Decls_Chain);
       end if;
 
@@ -1425,9 +1426,15 @@ package body Synth.Stmts is
       Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       M : Areapools.Mark_Type;
+      C_Sname : Sname;
       C : Seq_Context;
    begin
-      C := (Inst => Make_Instance (Syn_Inst, Info),
+      if Label = Null_Identifier then
+         C_Sname := New_Internal_Name (Build_Context, Get_Sname (Syn_Inst));
+      else
+         C_Sname := New_Sname (Get_Sname (Syn_Inst), Label);
+      end if;
+      C := (Inst => Make_Instance (Syn_Inst, Info, C_Sname),
             T_En => True,
             W_En => No_Wire_Id,
             W_Ret => No_Wire_Id,
@@ -1436,15 +1443,12 @@ package body Synth.Stmts is
             Ret_Value => null,
             Ret_Typ => null,
             Nbr_Ret => 0);
+
+
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
       if Is_Valid (Decls_Chain) then
-         if Label = Null_Identifier then
-            C.Inst.Name := New_Internal_Name (Build_Context, Syn_Inst.Name);
-         else
-            C.Inst.Name := New_Sname (Syn_Inst.Name, Label);
-         end if;
          Synth_Declarations (C.Inst, Decls_Chain);
       end if;
 
@@ -1493,7 +1497,8 @@ package body Synth.Stmts is
       end;
 
       Areapools.Mark (M, Instance_Pool.all);
-      C := (Inst => Make_Instance (Syn_Inst, Get_Info (Bod)),
+      C := (Inst => Make_Instance (Syn_Inst, Get_Info (Bod),
+                                   New_Internal_Name (Build_Context)),
             T_En => True,
             W_En => No_Wire_Id,
             W_Ret => Alloc_Wire (Wire_Variable, Imp),
@@ -1502,7 +1507,6 @@ package body Synth.Stmts is
             Ret_Value => null,
             Ret_Typ => null,
             Nbr_Ret => 0);
-      C.Inst.Name := New_Internal_Name (Build_Context);
 
       Synth_Subprogram_Association
         (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
@@ -1823,15 +1827,15 @@ package body Synth.Stmts is
       Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       Bod_Inst : Synth_Instance_Acc;
+      Bod_Sname : Sname;
       M : Areapools.Mark_Type;
    begin
-      Bod_Inst := Make_Instance (Syn_Inst, Info);
+      Bod_Sname := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Bod));
+      Bod_Inst := Make_Instance (Syn_Inst, Info, Bod_Sname);
       --  Same module.
-      Bod_Inst.M := Syn_Inst.M;
+      Set_Module (Bod_Inst, Get_Module (Syn_Inst));
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
-
-      Bod_Inst.Name := New_Sname (Syn_Inst.Name, Get_Identifier (Bod));
 
       if Iterator /= Null_Node then
          --  Add the iterator (for for-generate).

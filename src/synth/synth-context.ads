@@ -30,27 +30,8 @@ package Synth.Context is
    --  Block_Instance_Type.
    type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
 
-   type Synth_Instance_Type;
+   type Synth_Instance_Type (<>) is private;
    type Synth_Instance_Acc is access Synth_Instance_Type;
-
-   type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is record
-      --  Module which owns gates created for this instance.
-      M : Module;
-
-      --  Name prefix for declarations.
-      Name : Sname;
-
-      --  The corresponding info for this instance.
-      Block_Scope : Sim_Info_Acc;
-
-      --  Parent instance.
-      Up_Block : Synth_Instance_Acc;
-
-      Elab_Objects : Object_Slot_Type;
-
-      --  Instance for synthesis.
-      Objects : Objects_Array (1 .. Max_Objs);
-   end record;
 
    type Instance_Map_Array is array (Block_Instance_Id range <>)
      of Synth_Instance_Acc;
@@ -68,11 +49,31 @@ package Synth.Context is
      return Synth_Instance_Acc;
 
    --  Create and free the corresponding synth instance.
-   function Make_Instance (Parent : Synth_Instance_Acc; Info : Sim_Info_Acc)
+   function Make_Instance (Parent : Synth_Instance_Acc;
+                           Info : Sim_Info_Acc;
+                           Name : Sname := No_Sname)
                           return Synth_Instance_Acc;
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
 
+   function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
+   pragma Inline (Get_Sname);
+
+   procedure Set_Module (Inst : Synth_Instance_Acc; M : Module);
+   function Get_Module (Inst : Synth_Instance_Acc) return Module;
+   pragma Inline (Set_Module, Get_Module);
+
+   procedure Set_Block_Scope
+     (Inst : Synth_Instance_Acc; Scope : Sim_Info_Acc);
+
    procedure Create_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
+
+   procedure Create_Package_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
+
+   --  Force the value of DECL, without checking for elaboration order.
+   --  It is for deferred constants.
+   procedure Create_Object_Force
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
 
    procedure Destroy_Object
@@ -97,4 +98,23 @@ package Synth.Context is
 
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc;
+private
+   type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is record
+      --  Module which owns gates created for this instance.
+      M : Module;
+
+      --  Name prefix for declarations.
+      Name : Sname;
+
+      --  The corresponding info for this instance.
+      Block_Scope : Sim_Info_Acc;
+
+      --  Parent instance.
+      Up_Block : Synth_Instance_Acc;
+
+      Elab_Objects : Object_Slot_Type;
+
+      --  Instance for synthesis.
+      Objects : Objects_Array (1 .. Max_Objs);
+   end record;
 end Synth.Context;

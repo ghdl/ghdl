@@ -27,7 +27,6 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
-with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
@@ -51,7 +50,7 @@ package body Synth.Decls is
          when Value_Wire =>
             --  FIXME: get the width directly from the wire ?
             W := Get_Type_Width (Val.Typ);
-            Name := New_Sname (Syn_Inst.Name, Get_Identifier (Decl));
+            Name := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Decl));
             if Init /= null then
                Ival := Get_Net (Init);
                pragma Assert (Get_Width (Ival) = W);
@@ -396,7 +395,7 @@ package body Synth.Decls is
       if First_Decl /= Null_Node then
          Val := Synth_Expression_With_Type
            (Syn_Inst, Get_Default_Value (Decl), Get_Type (Decl));
-         Syn_Inst.Objects (Get_Info (First_Decl).Slot) := Val;
+         Create_Object_Force (Syn_Inst, First_Decl, Val);
       end if;
    end Synth_Constant_Declaration;
 

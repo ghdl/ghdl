@@ -884,6 +884,8 @@ package body Synth.Oper is
         Get_Implicit_Definition (Imp);
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Param1 : Node;
+      Param2 : Node;
       Subprg_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
    begin
@@ -893,11 +895,18 @@ package body Synth.Oper is
       Synth_Subprogram_Association
         (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
+      Param1 := Inter_Chain;
+      if Param1 /= Null_Node then
+         Param2 := Get_Chain (Inter_Chain);
+      else
+         Param2 := Null_Node;
+      end if;
+
       case Def is
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns =>
             declare
-               Arg : constant Value_Acc := Subprg_Inst.Objects (1);
-               Size : constant Value_Acc := Subprg_Inst.Objects (2);
+               Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               Size : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
                Arg_Net : Net;
             begin
                if not Is_Const (Size) then
@@ -925,14 +934,14 @@ package body Synth.Oper is
                                  Vhdl.Std_Package.Integer_Subtype_Definition);
             begin
                return Create_Value_Net
-                 (Synth_Uresize (Get_Net (Subprg_Inst.Objects (1)),
+                 (Synth_Uresize (Get_Net (Get_Value (Subprg_Inst, Param1)),
                                  Int_Type.W, Expr),
                   Int_Type);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
             declare
-               V : constant Value_Acc := Subprg_Inst.Objects (1);
-               Sz : constant Value_Acc := Subprg_Inst.Objects (2);
+               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               Sz : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
                W : Width;
             begin
                if not Is_Const (Sz) then
@@ -946,8 +955,8 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
             declare
-               V : constant Value_Acc := Subprg_Inst.Objects (1);
-               Sz : constant Value_Acc := Subprg_Inst.Objects (2);
+               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               Sz : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
                W : Width;
             begin
                if not Is_Const (Sz) then
@@ -961,22 +970,22 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat =>
             declare
-               L : constant Value_Acc := Subprg_Inst.Objects (1);
-               R : constant Value_Acc := Subprg_Inst.Objects (2);
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
             begin
                return Synth_Shift (Id_Lsl, L, R, Expr);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat =>
             declare
-               L : constant Value_Acc := Subprg_Inst.Objects (1);
-               R : constant Value_Acc := Subprg_Inst.Objects (2);
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
             begin
                return Synth_Shift (Id_Lsr, L, R, Expr);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Match_Suv =>
             declare
-               L : constant Value_Acc := Subprg_Inst.Objects (1);
-               R : constant Value_Acc := Subprg_Inst.Objects (2);
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
             begin
                if Is_Const (L) then
                   return Synth_Std_Match (L, R, Expr);
@@ -990,7 +999,7 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
-               V : constant Value_Acc := Subprg_Inst.Objects (1);
+               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
 
                function Log2 (Arg : Fp64) return Fp64;
                pragma Import (C, Log2);
@@ -1005,7 +1014,7 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Ieee_Math_Real_Ceil =>
             declare
-               V : constant Value_Acc := Subprg_Inst.Objects (1);
+               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
 
                function Ceil (Arg : Fp64) return Fp64;
                pragma Import (C, Ceil);

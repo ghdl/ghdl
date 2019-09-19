@@ -172,9 +172,9 @@ package body Synth.Insts is
       end if;
 
       --  Create the instance.
-      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Imp));
-      Syn_Inst.Block_Scope := Get_Info (Decl);
-      Syn_Inst.Name := No_Sname;
+      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Imp), No_Sname);
+      --  Make the entity reachable.
+      Set_Block_Scope (Syn_Inst, Get_Info (Decl));
 
       --  Copy values for generics.
       Inter := Get_Generic_Chain (Decl);
@@ -218,9 +218,10 @@ package body Synth.Insts is
       end loop;
 
       --  Declare module.
-      Syn_Inst.M := New_User_Module
-        (Global_Module, New_Sname_User (Get_Identifier (Decl)),
-         Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
+      Set_Module (Syn_Inst,
+                  New_User_Module
+                    (Global_Module, New_Sname_User (Get_Identifier (Decl)),
+                     Id_User_None, Nbr_Inputs, Nbr_Outputs, 0));
 
       --  Add ports to module.
       declare
@@ -244,7 +245,7 @@ package body Synth.Insts is
          end loop;
          pragma Assert (Nbr_Inputs = Inports'Last);
          pragma Assert (Nbr_Outputs = Outports'Last);
-         Set_Port_Desc (Syn_Inst.M, Inports, Outports);
+         Set_Port_Desc (Get_Module (Syn_Inst), Inports, Outports);
       end;
 
       return Inst_Object'(Decl => Decl,
@@ -331,8 +332,8 @@ package body Synth.Insts is
       Inst : Instance;
    begin
       --  Elaborate generic + map aspect
-      Sub_Inst := Make_Instance (Syn_Inst, Get_Info (Ent));
-      Sub_Inst.Name := New_Sname_User (Get_Identifier (Ent));
+      Sub_Inst := Make_Instance
+        (Syn_Inst, Get_Info (Ent), New_Sname_User (Get_Identifier (Ent)));
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst,
                                     Get_Generic_Chain (Ent),
                                     Get_Generic_Map_Aspect_Chain (Stmt));
@@ -369,8 +370,9 @@ package body Synth.Insts is
 
       --  TODO: free sub_inst.
 
-      Inst := New_Instance (Syn_Inst.M, Inst_Obj.Syn_Inst.M,
-                            New_Sname_User (Get_Identifier (Stmt)));
+      Inst := New_Instance
+        (Get_Module (Syn_Inst), Get_Module (Inst_Obj.Syn_Inst),
+         New_Sname_User (Get_Identifier (Stmt)));
 
       Synth_Instantiate_Module
         (Syn_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Stmt));
@@ -458,8 +460,8 @@ package body Synth.Insts is
 
       --  Create the sub-instance for the component
       --  Elaborate generic + map aspect
-      Comp_Inst := Make_Instance (Syn_Inst, Get_Info (Component));
-      Comp_Inst.Name := New_Sname_User (Get_Identifier (Component));
+      Comp_Inst := Make_Instance (Syn_Inst, Get_Info (Component),
+                                  New_Sname_User (Get_Identifier (Component)));
       Synth_Subprogram_Association (Comp_Inst, Syn_Inst,
                                     Get_Generic_Chain (Component),
                                     Get_Generic_Map_Aspect_Chain (Stmt));
@@ -522,8 +524,8 @@ package body Synth.Insts is
       end if;
 
       --  Elaborate generic + map aspect
-      Sub_Inst := Make_Instance (Comp_Inst, Get_Info (Ent));
-      Sub_Inst.Name := New_Sname_User (Get_Identifier (Ent));
+      Sub_Inst := Make_Instance
+        (Comp_Inst, Get_Info (Ent), New_Sname_User (Get_Identifier (Ent)));
       Synth_Subprogram_Association (Sub_Inst, Comp_Inst,
                                     Get_Generic_Chain (Ent),
                                     Get_Generic_Map_Aspect_Chain (Bind));
@@ -540,8 +542,9 @@ package body Synth.Insts is
 
       --  TODO: free sub_inst.
 
-      Inst := New_Instance (Syn_Inst.M, Inst_Obj.Syn_Inst.M,
-                            New_Sname_User (Get_Identifier (Stmt)));
+      Inst := New_Instance
+        (Get_Module (Syn_Inst), Get_Module (Inst_Obj.Syn_Inst),
+         New_Sname_User (Get_Identifier (Stmt)));
 
       Synth_Instantiate_Module
         (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
@@ -599,9 +602,10 @@ package body Synth.Insts is
       Inter : Node;
       Inst_Obj : Inst_Object;
    begin
-      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Arch));
-      Syn_Inst.Block_Scope := Get_Info (Entity);
-      Syn_Inst.Name := New_Sname_User (Get_Identifier (Entity));
+      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Arch),
+                                 New_Sname_User (Get_Identifier (Entity)));
+      --  Make the entity visible.
+      Set_Block_Scope (Syn_Inst, Get_Info (Entity));
 
       --  Compute generics.
       Inter := Get_Generic_Chain (Entity);
@@ -768,8 +772,8 @@ package body Synth.Insts is
          return;
       end if;
 
-      Self_Inst := Create_Self_Instance (Syn_Inst.M);
-      Builders.Set_Parent (Build_Context, Syn_Inst.M);
+      Self_Inst := Create_Self_Instance (Get_Module (Syn_Inst));
+      Builders.Set_Parent (Build_Context, Get_Module (Syn_Inst));
 
       --  Create wires for inputs and outputs.
       Inter := Get_Port_Chain (Entity);
@@ -810,7 +814,7 @@ package body Synth.Insts is
       --  a correctness point: there might be some unsynthesizable gates, like
       --  the one created for 'rising_egde (clk) and not rst'.
       if not Flags.Flag_Debug_Nocleanup then
-         Netlists.Utils.Remove_Unused_Instances (Syn_Inst.M);
+         Netlists.Utils.Remove_Unused_Instances (Get_Module (Syn_Inst));
       end if;
    end Synth_Instance;
 

@@ -63,7 +63,7 @@ package body Synthesis is
       if Parent_Inst /= Global_Instance then
          Create_Object (Parent_Inst, Pkg, Val);
       else
-         Parent_Inst.Objects (Info.Pkg_Slot) := Val;
+         Create_Package_Object (Parent_Inst, Pkg, Val);
       end if;
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
       if Pkg = Vhdl.Std_Package.Standard_Package then
