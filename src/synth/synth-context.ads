@@ -30,12 +30,8 @@ package Synth.Context is
    --  Block_Instance_Type.
    type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
 
-   type Synth_Instance_Type (<>) is private;
+   type Synth_Instance_Type (<>) is limited private;
    type Synth_Instance_Acc is access Synth_Instance_Type;
-
-   type Instance_Map_Array is array (Block_Instance_Id range <>)
-     of Synth_Instance_Acc;
-   type Instance_Map_Array_Acc is access Instance_Map_Array;
 
    --  The instance corresponding to the global_info.  It contains the global
    --  packages.
@@ -99,7 +95,7 @@ package Synth.Context is
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc;
 private
-   type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is record
+   type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is limited record
       --  Module which owns gates created for this instance.
       M : Module;
 
