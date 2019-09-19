@@ -26,7 +26,5 @@ package Synthesis is
    procedure Synth_Design
      (Design : Iir; M : out Module; Inst : out Synth_Instance_Acc);
 
-   Global_Module : Module;
-
    Synth_Error : exception;
 end Synthesis;

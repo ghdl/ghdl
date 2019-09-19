@@ -23,6 +23,8 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Tables;
 with Types_Utils; use Types_Utils;
+with Name_Table; use Name_Table;
+
 with Vhdl.Errors; use Vhdl.Errors;
 
 with Netlists.Builders; use Netlists.Builders;
@@ -37,6 +39,24 @@ package body Synth.Context is
       Table_Index_Type => Instance_Id,
       Table_Low_Bound => 1,
       Table_Initial => 16);
+
+   function Make_Base_Instance return Synth_Instance_Acc
+   is
+      Global_Module : Module;
+      Res : Synth_Instance_Acc;
+   begin
+      Global_Module :=
+        New_Design (New_Sname_Artificial (Get_Identifier ("top")));
+      Build_Context := Build_Builders (Global_Module);
+      Res := new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
+                                      M => Global_Module,
+                                      Name => No_Sname,
+                                      Block_Scope => Global_Info,
+                                      Up_Block => null,
+                                      Elab_Objects => 0,
+                                      Objects => (others => null));
+      return Res;
+   end Make_Base_Instance;
 
    function Make_Instance (Parent : Synth_Instance_Acc;
                            Info : Sim_Info_Acc;
@@ -157,9 +177,7 @@ package body Synth.Context is
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
-      if Syn_Inst /= Global_Instance then
-         Create_Object (Syn_Inst, Info.Slot, 1);
-      end if;
+      Create_Object (Syn_Inst, Info.Slot, 1);
       Create_Object_Force (Syn_Inst, Decl, Val);
    end Create_Object;
 

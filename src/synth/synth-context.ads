@@ -33,16 +33,14 @@ package Synth.Context is
    type Synth_Instance_Type (<>) is limited private;
    type Synth_Instance_Acc is access Synth_Instance_Type;
 
-   --  The instance corresponding to the global_info.  It contains the global
-   --  packages.
-   Global_Instance : Synth_Instance_Acc;
-
    --  Global context.
    Build_Context : Netlists.Builders.Context_Acc;
 
    function Get_Instance_By_Scope
      (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
      return Synth_Instance_Acc;
+
+   function Make_Base_Instance return Synth_Instance_Acc;
 
    --  Create and free the corresponding synth instance.
    function Make_Instance (Parent : Synth_Instance_Acc;

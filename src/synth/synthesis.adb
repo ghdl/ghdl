@@ -18,10 +18,6 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Name_Table; use Name_Table;
-
-with Netlists.Builders; use Netlists.Builders;
-
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Annotations; use Vhdl.Annotations;
 
@@ -60,10 +56,10 @@ package body Synthesis is
    begin
       Syn_Inst := Make_Instance (Parent_Inst, Info);
       Val := Create_Value_Instance (Syn_Inst);
-      if Parent_Inst /= Global_Instance then
-         Create_Object (Parent_Inst, Pkg, Val);
-      else
+      if Get_Kind (Get_Parent (Pkg)) = Iir_Kind_Design_Unit then
          Create_Package_Object (Parent_Inst, Pkg, Val);
+      else
+         Create_Object (Parent_Inst, Pkg, Val);
       end if;
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
       if Pkg = Vhdl.Std_Package.Standard_Package then
@@ -115,6 +111,7 @@ package body Synthesis is
       Unit : constant Node := Get_Library_Unit (Design);
       Arch : Node;
       Config : Node;
+      Global_Instance : Synth_Instance_Acc;
    begin
       --  Extract architecture from design.
       case Get_Kind (Unit) is
@@ -130,11 +127,9 @@ package body Synthesis is
             Error_Kind ("synth_design", Unit);
       end case;
 
-      Global_Module :=
-        New_Design (New_Sname_Artificial (Get_Identifier ("top")));
-      Build_Context := Build_Builders (Global_Module);
+      Global_Instance := Make_Base_Instance;
+
       Synth.Values.Init;
-      Global_Instance := Make_Instance (null, Global_Info);
       Synth.Insts.Init;
 
       --  Dependencies first.
@@ -143,12 +138,12 @@ package body Synthesis is
       Synth_Dependencies
         (Global_Instance, Get_Design_Unit (Arch));
 
-      Synth_Top_Entity (Arch, Config, Inst);
+      Synth_Top_Entity (Global_Instance, Arch, Config, Inst);
       Synth_All_Instances;
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
       end if;
 
-      M := Global_Module;
+      M := Get_Module (Global_Instance);
    end Synth_Design;
 end Synthesis;

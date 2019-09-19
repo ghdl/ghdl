@@ -40,6 +40,8 @@ with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
 
 package body Synth.Insts is
+   Root_Instance : Synth_Instance_Acc;
+
    function Mode_To_Port_Kind (Mode : Iir_Mode) return Port_Kind is
    begin
       case Mode is
@@ -172,7 +174,7 @@ package body Synth.Insts is
       end if;
 
       --  Create the instance.
-      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Imp), No_Sname);
+      Syn_Inst := Make_Instance (Root_Instance, Get_Info (Imp), No_Sname);
       --  Make the entity reachable.
       Set_Block_Scope (Syn_Inst, Get_Info (Decl));
 
@@ -220,7 +222,8 @@ package body Synth.Insts is
       --  Declare module.
       Set_Module (Syn_Inst,
                   New_User_Module
-                    (Global_Module, New_Sname_User (Get_Identifier (Decl)),
+                    (Get_Module (Root_Instance),
+                     New_Sname_User (Get_Identifier (Decl)),
                      Id_User_None, Nbr_Inputs, Nbr_Outputs, 0));
 
       --  Add ports to module.
@@ -594,14 +597,18 @@ package body Synth.Insts is
       end;
    end Synth_Component_Instantiation_Statement;
 
-   procedure Synth_Top_Entity
-     (Arch : Node; Config : Node; Inst : out Synth_Instance_Acc)
+   procedure Synth_Top_Entity (Global_Instance : Synth_Instance_Acc;
+                               Arch : Node;
+                               Config : Node;
+                               Inst : out Synth_Instance_Acc)
    is
       Entity : constant Node := Get_Entity (Arch);
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
       Inst_Obj : Inst_Object;
    begin
+      Root_Instance := Global_Instance;
+
       Syn_Inst := Make_Instance (Global_Instance, Get_Info (Arch),
                                  New_Sname_User (Get_Identifier (Entity)));
       --  Make the entity visible.
