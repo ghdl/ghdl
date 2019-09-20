@@ -43,8 +43,6 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Insts; use Synth.Insts;
 with Synth.Source;
 
-with Vhdl.Annotations; use Vhdl.Annotations;
-
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
@@ -1226,7 +1224,7 @@ package body Synth.Stmts is
 
       Areapools.Mark (M, Instance_Pool.all);
       Sub_Sname := New_Sname (Get_Sname (C.Inst), Get_Identifier (Imp));
-      Sub_C.Inst := Make_Instance (C.Inst, Get_Info (Imp), Sub_Sname);
+      Sub_C.Inst := Make_Instance (C.Inst, Imp, Sub_Sname);
 
       Synth_Subprogram_Association
         (Sub_C.Inst, C.Inst, Inter_Chain, Assoc_Chain);
@@ -1422,7 +1420,6 @@ package body Synth.Stmts is
    is
       use Areapools;
       Label : constant Name_Id := Get_Identifier (Proc);
-      Info : constant Sim_Info_Acc := Get_Info (Proc);
       Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       M : Areapools.Mark_Type;
@@ -1434,7 +1431,7 @@ package body Synth.Stmts is
       else
          C_Sname := New_Sname (Get_Sname (Syn_Inst), Label);
       end if;
-      C := (Inst => Make_Instance (Syn_Inst, Info, C_Sname),
+      C := (Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
             T_En => True,
             W_En => No_Wire_Id,
             W_Ret => No_Wire_Id,
@@ -1497,7 +1494,7 @@ package body Synth.Stmts is
       end;
 
       Areapools.Mark (M, Instance_Pool.all);
-      C := (Inst => Make_Instance (Syn_Inst, Get_Info (Bod),
+      C := (Inst => Make_Instance (Syn_Inst, Bod,
                                    New_Internal_Name (Build_Context)),
             T_En => True,
             W_En => No_Wire_Id,
@@ -1823,7 +1820,6 @@ package body Synth.Stmts is
                                             Iterator_Val : Value_Acc := null)
    is
       use Areapools;
-      Info : constant Sim_Info_Acc := Get_Info (Bod);
       Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       Bod_Inst : Synth_Instance_Acc;
@@ -1831,7 +1827,7 @@ package body Synth.Stmts is
       M : Areapools.Mark_Type;
    begin
       Bod_Sname := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Bod));
-      Bod_Inst := Make_Instance (Syn_Inst, Info, Bod_Sname);
+      Bod_Inst := Make_Instance (Syn_Inst, Bod, Bod_Sname);
       --  Same module.
       Set_Module (Bod_Inst, Get_Module (Syn_Inst));
       Mark (M, Proc_Pool);

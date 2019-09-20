@@ -29,7 +29,6 @@ with Netlists.Builders;
 with Netlists.Utils;
 
 with Vhdl.Utils; use Vhdl.Utils;
-with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Errors;
 
 with Synth.Flags;
@@ -174,9 +173,7 @@ package body Synth.Insts is
       end if;
 
       --  Create the instance.
-      Syn_Inst := Make_Instance (Root_Instance, Get_Info (Imp), No_Sname);
-      --  Make the entity reachable.
-      Set_Block_Scope (Syn_Inst, Get_Info (Decl));
+      Syn_Inst := Make_Instance (Root_Instance, Imp, No_Sname);
 
       --  Copy values for generics.
       Inter := Get_Generic_Chain (Decl);
@@ -336,7 +333,7 @@ package body Synth.Insts is
    begin
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance
-        (Syn_Inst, Get_Info (Ent), New_Sname_User (Get_Identifier (Ent)));
+        (Syn_Inst, Ent, New_Sname_User (Get_Identifier (Ent)));
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst,
                                     Get_Generic_Chain (Ent),
                                     Get_Generic_Map_Aspect_Chain (Stmt));
@@ -463,7 +460,7 @@ package body Synth.Insts is
 
       --  Create the sub-instance for the component
       --  Elaborate generic + map aspect
-      Comp_Inst := Make_Instance (Syn_Inst, Get_Info (Component),
+      Comp_Inst := Make_Instance (Syn_Inst, Component,
                                   New_Sname_User (Get_Identifier (Component)));
       Synth_Subprogram_Association (Comp_Inst, Syn_Inst,
                                     Get_Generic_Chain (Component),
@@ -528,7 +525,7 @@ package body Synth.Insts is
 
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance
-        (Comp_Inst, Get_Info (Ent), New_Sname_User (Get_Identifier (Ent)));
+        (Comp_Inst, Ent, New_Sname_User (Get_Identifier (Ent)));
       Synth_Subprogram_Association (Sub_Inst, Comp_Inst,
                                     Get_Generic_Chain (Ent),
                                     Get_Generic_Map_Aspect_Chain (Bind));
@@ -609,10 +606,8 @@ package body Synth.Insts is
    begin
       Root_Instance := Global_Instance;
 
-      Syn_Inst := Make_Instance (Global_Instance, Get_Info (Arch),
+      Syn_Inst := Make_Instance (Global_Instance, Arch,
                                  New_Sname_User (Get_Identifier (Entity)));
-      --  Make the entity visible.
-      Set_Block_Scope (Syn_Inst, Get_Info (Entity));
 
       --  Compute generics.
       Inter := Get_Generic_Chain (Entity);

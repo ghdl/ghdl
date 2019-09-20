@@ -28,7 +28,6 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
 with Areapools;
-with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Netlists; use Netlists;
 with Netlists.Gates; use Netlists.Gates;
@@ -890,7 +889,7 @@ package body Synth.Oper is
       M : Areapools.Mark_Type;
    begin
       Areapools.Mark (M, Instance_Pool.all);
-      Subprg_Inst := Make_Instance (Syn_Inst, Get_Info (Imp));
+      Subprg_Inst := Make_Instance (Syn_Inst, Imp);
 
       Synth_Subprogram_Association
         (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);

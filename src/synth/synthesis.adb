@@ -19,7 +19,6 @@
 --  MA 02110-1301, USA.
 
 with Vhdl.Utils; use Vhdl.Utils;
-with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Synth.Values; use Synth.Values;
 with Synth.Decls; use Synth.Decls;
@@ -50,11 +49,10 @@ package body Synthesis is
    is
       use Vhdl.Std_Package;
       pragma Assert (not Is_Uninstantiated_Package (Pkg));
-      Info : constant Sim_Info_Acc := Get_Info (Pkg);
       Syn_Inst : Synth_Instance_Acc;
       Val : Value_Acc;
    begin
-      Syn_Inst := Make_Instance (Parent_Inst, Info);
+      Syn_Inst := Make_Instance (Parent_Inst, Pkg);
       Val := Create_Value_Instance (Syn_Inst);
       if Get_Kind (Get_Parent (Pkg)) = Iir_Kind_Design_Unit then
          Create_Package_Object (Parent_Inst, Pkg, Val);

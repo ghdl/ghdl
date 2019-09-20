@@ -26,6 +26,7 @@ with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
 
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
@@ -59,16 +60,25 @@ package body Synth.Context is
    end Make_Base_Instance;
 
    function Make_Instance (Parent : Synth_Instance_Acc;
-                           Info : Sim_Info_Acc;
+                           Blk : Node;
                            Name : Sname := No_Sname)
                           return Synth_Instance_Acc
    is
+      Info : constant Sim_Info_Acc := Get_Info (Blk);
+      Scope : Sim_Info_Acc;
       Res : Synth_Instance_Acc;
    begin
+      if Get_Kind (Blk) = Iir_Kind_Architecture_Body then
+         --  Architectures are extensions of entities.
+         Scope := Get_Info (Vhdl.Utils.Get_Entity (Blk));
+      else
+         Scope := Info;
+      end if;
+
       Res := new Synth_Instance_Type'(Max_Objs => Info.Nbr_Objects,
                                       M => No_Module,
                                       Name => Name,
-                                      Block_Scope => Info,
+                                      Block_Scope => Scope,
                                       Up_Block => Parent,
                                       Elab_Objects => 0,
                                       Objects => (others => null));
@@ -97,12 +107,6 @@ package body Synth.Context is
    begin
       return Inst.Name;
    end Get_Sname;
-
-   procedure Set_Block_Scope
-     (Inst : Synth_Instance_Acc; Scope : Sim_Info_Acc) is
-   begin
-      Inst.Block_Scope := Scope;
-   end Set_Block_Scope;
 
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc is

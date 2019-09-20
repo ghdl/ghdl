@@ -43,7 +43,7 @@ package Synth.Context is
 
    --  Create and free the corresponding synth instance.
    function Make_Instance (Parent : Synth_Instance_Acc;
-                           Info : Sim_Info_Acc;
+                           Blk : Node;
                            Name : Sname := No_Sname)
                           return Synth_Instance_Acc;
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
@@ -54,9 +54,6 @@ package Synth.Context is
    procedure Set_Module (Inst : Synth_Instance_Acc; M : Module);
    function Get_Module (Inst : Synth_Instance_Acc) return Module;
    pragma Inline (Set_Module, Get_Module);
-
-   procedure Set_Block_Scope
-     (Inst : Synth_Instance_Acc; Scope : Sim_Info_Acc);
 
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
