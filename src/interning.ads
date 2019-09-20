@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Types; use Types;
 with Hash; use Hash;
+with Dyn_Interning;
 
 --  This generic package provides a factory to build unique objects.
 --  Get will return an existing object or create a new one.
@@ -39,6 +39,22 @@ generic
    with function Equal (Obj : Object_Type; Params : Params_Type)
                        return Boolean;
 package Interning is
+   package Implementation is new Dyn_Interning
+     (Params_Type => Params_Type,
+      Object_Type => Object_Type,
+      Hash => Hash,
+      Build => Build,
+      Equal => Equal);
+
+   subtype Index_Type is Implementation.Index_Type;
+
+   --  Re-export (some) operators of Index_Type.
+   --  FIXME: is there a better way to do this ?
+   function "<=" (L, R : Index_Type) return Boolean
+     renames Implementation."<=";
+   function "+" (L, R : Index_Type) return Index_Type
+     renames Implementation."+";
+
    --  Initialize.  Required before any other operation.
    procedure Init;
 
@@ -46,14 +62,13 @@ package Interning is
    --  Otherwise create it.
    function Get (Params : Params_Type) return Object_Type;
 
-   type Index_Type is new Uns32;
-   No_Index : constant Index_Type := 0;
-   First_Index : constant Index_Type := 1;
-
    --  Get the number of elements in the table.
    function Last_Index return Index_Type;
 
    --  Get an element by index.  The index has no real meaning, but the
    --  current implementation allocates index incrementally.
    function Get_By_Index (Index : Index_Type) return Object_Type;
+
+   No_Index : constant Index_Type := Implementation.No_Index;
+   First_Index : constant Index_Type := Implementation.First_Index;
 end Interning;
