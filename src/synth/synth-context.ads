@@ -28,7 +28,6 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 package Synth.Context is
    --  Values are stored into Synth_Instance, which is parallel to simulation
    --  Block_Instance_Type.
-   type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
 
    type Synth_Instance_Type (<>) is limited private;
    type Synth_Instance_Acc is access Synth_Instance_Type;
@@ -93,6 +92,8 @@ package Synth.Context is
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc;
 private
+   type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
+
    type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is limited record
       --  Module which owns gates created for this instance.
       M : Module;
