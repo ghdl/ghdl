@@ -307,7 +307,7 @@ package body Synth.Insts is
               | Port_Inout =>
                if Actual /= Null_Iir then
                   Port := Get_Output (Inst, Nbr_Outputs);
-                  Port := Builders.Build_Port (Build_Context, Port);
+                  Port := Builders.Build_Port (Get_Build (Syn_Inst), Port);
                   O := Create_Value_Net
                     (Port, Get_Value_Type (Inst_Obj.Syn_Inst,
                                            Get_Type (Inter)));
@@ -583,7 +583,7 @@ package body Synth.Insts is
                when Port_Out
                  | Port_Inout =>
                   Port := Get_Output (Inst, Nbr_Outputs);
-                  Port := Builders.Build_Port (Build_Context, Port);
+                  Port := Builders.Build_Port (Get_Build (Syn_Inst), Port);
                   O := Create_Value_Net
                     (Port, Get_Value_Type (Syn_Inst, Get_Type (Inter)));
                   Synth_Assignment (Syn_Inst, Actual, O, Assoc);
@@ -775,7 +775,8 @@ package body Synth.Insts is
       end if;
 
       Self_Inst := Create_Self_Instance (Get_Instance_Module (Syn_Inst));
-      Builders.Set_Parent (Build_Context, Get_Instance_Module (Syn_Inst));
+      Builders.Set_Parent (Get_Build (Syn_Inst),
+                           Get_Instance_Module (Syn_Inst));
 
       --  Create wires for inputs and outputs.
       Inter := Get_Port_Chain (Entity);
@@ -810,7 +811,7 @@ package body Synth.Insts is
       Synth_Verification_Units (Syn_Inst, Entity);
       Synth_Verification_Units (Syn_Inst, Arch);
 
-      Finalize_Assignments (Build_Context);
+      Finalize_Assignments (Get_Build (Syn_Inst));
 
       --  Remove unused gates.  This is not only an optimization but also
       --  a correctness point: there might be some unsynthesizable gates, like

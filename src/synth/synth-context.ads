@@ -51,6 +51,10 @@ package Synth.Context is
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
    pragma Inline (Get_Sname);
 
+   function Get_Build (Inst : Synth_Instance_Acc)
+                      return Netlists.Builders.Context_Acc;
+   pragma Inline (Get_Build);
+
    function Get_Top_Module (Inst : Synth_Instance_Acc) return Module;
 
    procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module);

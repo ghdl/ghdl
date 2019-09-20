@@ -49,6 +49,7 @@ package body Synth.Context is
    begin
       Top_Module :=
         New_Design (New_Sname_Artificial (Get_Identifier ("top")));
+      pragma Assert (Build_Context = null);
       Build_Context := Build_Builders (Top_Module);
 
       Base := new Base_Instance_Type'(Builder => Build_Context,
@@ -128,6 +129,12 @@ package body Synth.Context is
    begin
       return Inst.Name;
    end Get_Sname;
+
+   function Get_Build (Inst : Synth_Instance_Acc)
+                      return Netlists.Builders.Context_Acc is
+   begin
+      return Inst.Base.Builder;
+   end Get_Build;
 
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc is

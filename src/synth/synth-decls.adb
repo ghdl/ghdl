@@ -54,9 +54,9 @@ package body Synth.Decls is
             if Init /= null then
                Ival := Get_Net (Init);
                pragma Assert (Get_Width (Ival) = W);
-               Value := Build_Isignal (Build_Context, Name, Ival);
+               Value := Build_Isignal (Get_Build (Syn_Inst), Name, Ival);
             else
-               Value := Build_Signal (Build_Context, Name, W);
+               Value := Build_Signal (Get_Build (Syn_Inst), Name, W);
             end if;
             Set_Location (Value, Decl);
             Set_Wire_Gate (Val.W, Value);
@@ -463,8 +463,8 @@ package body Synth.Decls is
                end if;
                Create_Var_Wire (Syn_Inst, Decl, Init);
                if Is_Subprg and then Init /= null then
-                  Phi_Assign (Build_Context, Get_Value (Syn_Inst, Decl).W,
-                              Get_Net (Init), 0);
+                  Phi_Assign (Get_Build (Syn_Inst),
+                              Get_Value (Syn_Inst, Decl).W, Get_Net (Init), 0);
                end if;
             end;
          when Iir_Kind_Interface_Variable_Declaration =>
