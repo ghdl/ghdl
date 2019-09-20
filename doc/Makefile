@@ -2,22 +2,16 @@ SRCS= \
 conf.py ../src/version.in \
 prolog.inc shields.json shieldswho.json \
 about.rst \
-appendix/Meta.rst appendix/Roadmap.rst \
-building/Building.rst \
-building/Directories.rst \
-building/gcc/GNULinux-GNAT.rst \
-building/gcc/index.rst \
-building/gcc/Windows-MinGW-GNAT.rst \
-building/llvm/GNULinux-GNAT.rst \
-building/llvm/index.rst \
-building/llvm/Windows-MinGW-GNAT.rst \
-building/mcode/GNULinux-GNAT.rst \
-building/mcode/index.rst \
-building/mcode/Windows-GNATGPL.rst \
-building/mcode/Windows-MinGW-GNAT.rst \
-building/PrecompileVendorPrimitives.rst \
+appendix/Meta.rst \
+appendix/Roadmap.rst \
 contribute.rst \
 genindex.rst \
+getting/Directories.rst \
+getting/GCC.rst \
+getting/index.rst \
+getting/LLVM.rst \
+getting/mcode.rst \
+getting/PrecompileVendorPrimitives.rst \
 getting/Releases.rst \
 index.rst \
 licenses.rst \
@@ -25,6 +19,7 @@ references/CodingStyle.rst \
 references/CommandReference.rst \
 references/ImplementationOfVHDL.rst \
 references/ImplementationOfVITAL.rst \
+using/Foreign.rst \
 using/InvokingGHDL.rst \
 using/QuickStartGuide.rst \
 using/Simulation.rst
