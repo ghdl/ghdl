@@ -51,9 +51,9 @@ package Synth.Context is
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
    pragma Inline (Get_Sname);
 
-   procedure Set_Module (Inst : Synth_Instance_Acc; M : Module);
-   function Get_Module (Inst : Synth_Instance_Acc) return Module;
-   pragma Inline (Set_Module, Get_Module);
+   procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module);
+   function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module;
+   pragma Inline (Get_Instance_Module);
 
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);

@@ -142,6 +142,6 @@ package body Synthesis is
          raise Compilation_Error;
       end if;
 
-      M := Get_Module (Global_Instance);
+      M := Get_Instance_Module (Global_Instance);
    end Synth_Design;
 end Synthesis;

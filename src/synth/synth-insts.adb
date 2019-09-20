@@ -217,11 +217,10 @@ package body Synth.Insts is
       end loop;
 
       --  Declare module.
-      Set_Module (Syn_Inst,
-                  New_User_Module
-                    (Get_Module (Root_Instance),
-                     New_Sname_User (Get_Identifier (Decl)),
-                     Id_User_None, Nbr_Inputs, Nbr_Outputs, 0));
+      Set_Instance_Module
+        (Syn_Inst, New_User_Module (Get_Instance_Module (Root_Instance),
+                                    New_Sname_User (Get_Identifier (Decl)),
+                                    Id_User_None, Nbr_Inputs, Nbr_Outputs, 0));
 
       --  Add ports to module.
       declare
@@ -245,7 +244,7 @@ package body Synth.Insts is
          end loop;
          pragma Assert (Nbr_Inputs = Inports'Last);
          pragma Assert (Nbr_Outputs = Outports'Last);
-         Set_Port_Desc (Get_Module (Syn_Inst), Inports, Outports);
+         Set_Port_Desc (Get_Instance_Module (Syn_Inst), Inports, Outports);
       end;
 
       return Inst_Object'(Decl => Decl,
@@ -370,9 +369,9 @@ package body Synth.Insts is
 
       --  TODO: free sub_inst.
 
-      Inst := New_Instance
-        (Get_Module (Syn_Inst), Get_Module (Inst_Obj.Syn_Inst),
-         New_Sname_User (Get_Identifier (Stmt)));
+      Inst := New_Instance (Get_Instance_Module (Syn_Inst),
+                            Get_Instance_Module (Inst_Obj.Syn_Inst),
+                            New_Sname_User (Get_Identifier (Stmt)));
 
       Synth_Instantiate_Module
         (Syn_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Stmt));
@@ -542,9 +541,9 @@ package body Synth.Insts is
 
       --  TODO: free sub_inst.
 
-      Inst := New_Instance
-        (Get_Module (Syn_Inst), Get_Module (Inst_Obj.Syn_Inst),
-         New_Sname_User (Get_Identifier (Stmt)));
+      Inst := New_Instance (Get_Instance_Module (Syn_Inst),
+                            Get_Instance_Module (Inst_Obj.Syn_Inst),
+                            New_Sname_User (Get_Identifier (Stmt)));
 
       Synth_Instantiate_Module
         (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
@@ -774,8 +773,8 @@ package body Synth.Insts is
          return;
       end if;
 
-      Self_Inst := Create_Self_Instance (Get_Module (Syn_Inst));
-      Builders.Set_Parent (Build_Context, Get_Module (Syn_Inst));
+      Self_Inst := Create_Self_Instance (Get_Instance_Module (Syn_Inst));
+      Builders.Set_Parent (Build_Context, Get_Instance_Module (Syn_Inst));
 
       --  Create wires for inputs and outputs.
       Inter := Get_Port_Chain (Entity);
@@ -816,7 +815,8 @@ package body Synth.Insts is
       --  a correctness point: there might be some unsynthesizable gates, like
       --  the one created for 'rising_egde (clk) and not rst'.
       if not Flags.Flag_Debug_Nocleanup then
-         Netlists.Utils.Remove_Unused_Instances (Get_Module (Syn_Inst));
+         Netlists.Utils.Remove_Unused_Instances
+           (Get_Instance_Module (Syn_Inst));
       end if;
    end Synth_Instance;
 

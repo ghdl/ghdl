@@ -1828,8 +1828,6 @@ package body Synth.Stmts is
    begin
       Bod_Sname := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Bod));
       Bod_Inst := Make_Instance (Syn_Inst, Bod, Bod_Sname);
-      --  Same module.
-      Set_Module (Bod_Inst, Get_Module (Syn_Inst));
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 

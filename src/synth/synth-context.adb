@@ -93,15 +93,15 @@ package body Synth.Context is
       Deallocate (Synth_Inst);
    end Free_Instance;
 
-   procedure Set_Module (Inst : Synth_Instance_Acc; M : Module) is
+   procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module) is
    begin
       Inst.M := M;
-   end Set_Module;
+   end Set_Instance_Module;
 
-   function Get_Module (Inst : Synth_Instance_Acc) return Module is
+   function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module is
    begin
       return Inst.M;
-   end Get_Module;
+   end Get_Instance_Module;
 
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname is
    begin
