@@ -161,6 +161,7 @@ package body Synth.Insts is
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
       Num : Uns32;
+      Cur_Module : Module;
    begin
       if Get_Kind (Params.Decl) = Iir_Kind_Component_Declaration then
          pragma Assert (Params.Arch = Null_Node);
@@ -217,10 +218,10 @@ package body Synth.Insts is
       end loop;
 
       --  Declare module.
-      Set_Instance_Module
-        (Syn_Inst, New_User_Module (Get_Instance_Module (Root_Instance),
-                                    New_Sname_User (Get_Identifier (Decl)),
-                                    Id_User_None, Nbr_Inputs, Nbr_Outputs, 0));
+      Cur_Module := New_User_Module (Get_Top_Module (Root_Instance),
+                                     New_Sname_User (Get_Identifier (Decl)),
+                                     Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
+      Set_Instance_Module (Syn_Inst, Cur_Module);
 
       --  Add ports to module.
       declare
@@ -244,7 +245,7 @@ package body Synth.Insts is
          end loop;
          pragma Assert (Nbr_Inputs = Inports'Last);
          pragma Assert (Nbr_Outputs = Outports'Last);
-         Set_Port_Desc (Get_Instance_Module (Syn_Inst), Inports, Outports);
+         Set_Port_Desc (Cur_Module, Inports, Outports);
       end;
 
       return Inst_Object'(Decl => Decl,

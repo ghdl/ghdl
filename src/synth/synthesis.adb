@@ -109,7 +109,7 @@ package body Synthesis is
       Unit : constant Node := Get_Library_Unit (Design);
       Arch : Node;
       Config : Node;
-      Global_Instance : Synth_Instance_Acc;
+      Top_Instance : Synth_Instance_Acc;
    begin
       --  Extract architecture from design.
       case Get_Kind (Unit) is
@@ -125,23 +125,21 @@ package body Synthesis is
             Error_Kind ("synth_design", Unit);
       end case;
 
-      Global_Instance := Make_Base_Instance;
+      Top_Instance := Make_Base_Instance;
 
       Synth.Values.Init;
       Synth.Insts.Init;
 
       --  Dependencies first.
-      Synth_Dependencies
-        (Global_Instance, Get_Design_Unit (Get_Entity (Arch)));
-      Synth_Dependencies
-        (Global_Instance, Get_Design_Unit (Arch));
+      Synth_Dependencies (Top_Instance, Get_Design_Unit (Get_Entity (Arch)));
+      Synth_Dependencies (Top_Instance, Get_Design_Unit (Arch));
 
-      Synth_Top_Entity (Global_Instance, Arch, Config, Inst);
+      Synth_Top_Entity (Top_Instance, Arch, Config, Inst);
       Synth_All_Instances;
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
       end if;
 
-      M := Get_Instance_Module (Global_Instance);
+      M := Get_Top_Module (Top_Instance);
    end Synth_Design;
 end Synthesis;

@@ -43,14 +43,22 @@ package body Synth.Context is
 
    function Make_Base_Instance return Synth_Instance_Acc
    is
-      Global_Module : Module;
+      Base : Base_Instance_Acc;
+      Top_Module : Module;
       Res : Synth_Instance_Acc;
    begin
-      Global_Module :=
+      Top_Module :=
         New_Design (New_Sname_Artificial (Get_Identifier ("top")));
-      Build_Context := Build_Builders (Global_Module);
+      Build_Context := Build_Builders (Top_Module);
+
+      Base := new Base_Instance_Type'(Builder => Build_Context,
+                                      Top_Module => Top_Module,
+                                      Cur_Module => No_Module,
+                                      Bit0 => No_Net,
+                                      Bit1 => No_Net);
+
       Res := new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
-                                      M => Global_Module,
+                                      Base => Base,
                                       Name => No_Sname,
                                       Block_Scope => Global_Info,
                                       Up_Block => null,
@@ -76,7 +84,7 @@ package body Synth.Context is
       end if;
 
       Res := new Synth_Instance_Type'(Max_Objs => Info.Nbr_Objects,
-                                      M => No_Module,
+                                      Base => Parent.Base,
                                       Name => Name,
                                       Block_Scope => Scope,
                                       Up_Block => Parent,
@@ -93,15 +101,28 @@ package body Synth.Context is
       Deallocate (Synth_Inst);
    end Free_Instance;
 
-   procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module) is
+   procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module)
+   is
+      Prev_Base : constant Base_Instance_Acc := Inst.Base;
+      Base : Base_Instance_Acc;
    begin
-      Inst.M := M;
+      Base := new Base_Instance_Type'(Builder => Prev_Base.Builder,
+                                      Top_Module => Prev_Base.Top_Module,
+                                      Cur_Module => M,
+                                      Bit0 => No_Net,
+                                      Bit1 => No_Net);
+      Inst.Base := Base;
    end Set_Instance_Module;
 
    function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module is
    begin
-      return Inst.M;
+      return Inst.Base.Cur_Module;
    end Get_Instance_Module;
+
+   function Get_Top_Module (Inst : Synth_Instance_Acc) return Module is
+   begin
+      return Inst.Base.Top_Module;
+   end Get_Top_Module;
 
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname is
    begin

@@ -51,6 +51,8 @@ package Synth.Context is
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
    pragma Inline (Get_Sname);
 
+   function Get_Top_Module (Inst : Synth_Instance_Acc) return Module;
+
    procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module);
    function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module;
    pragma Inline (Get_Instance_Module);
@@ -91,9 +93,19 @@ package Synth.Context is
 private
    type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
 
+   type Base_Instance_Type is limited record
+      Builder : Netlists.Builders.Context_Acc;
+      Top_Module : Module;
+
+      Cur_Module : Module;
+      Bit0 : Net;
+      Bit1 : Net;
+   end record;
+
+   type Base_Instance_Acc is access Base_Instance_Type;
+
    type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is limited record
-      --  Module which owns gates created for this instance.
-      M : Module;
+      Base : Base_Instance_Acc;
 
       --  Name prefix for declarations.
       Name : Sname;
