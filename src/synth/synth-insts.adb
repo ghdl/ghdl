@@ -56,34 +56,17 @@ package body Synth.Insts is
       end case;
    end Mode_To_Port_Kind;
 
-   procedure Make_Port_Desc (Val : Value_Acc;
-                             Name : Sname;
-                             Ports : in out Port_Desc_Array;
-                             Idx : in out Port_Nbr;
-                             Dir : Port_Kind) is
-   begin
-      case Val.Kind is
-         when Value_Wire =>
-            Idx := Idx + 1;
-            Ports (Idx) := (Name => Name,
-                            W => Get_Type_Width (Val.Typ),
-                            Dir => Dir);
-         when others =>
-            raise Internal_Error; --  TODO
-      end case;
-   end Make_Port_Desc;
-
-   procedure Make_Port_Desc (Syn_Inst : Synth_Instance_Acc;
-                             Inter : Node;
-                             Ports : in out Port_Desc_Array;
-                             Idx : in out Port_Nbr;
-                             Dir : Port_Kind)
+   function Make_Port_Desc (Syn_Inst : Synth_Instance_Acc;
+                            Inter : Node;
+                            Dir : Port_Kind) return Port_Desc
    is
       Val : constant Value_Acc := Get_Value (Syn_Inst, Inter);
       Name : Sname;
    begin
       Name :=  New_Sname_User (Get_Identifier (Inter));
-      Make_Port_Desc (Val, Name, Ports, Idx, Dir);
+      return (Name => Name,
+              W => Get_Type_Width (Val.Typ),
+              Dir => Dir);
    end Make_Port_Desc;
 
    --  Parameters that define an instance.
@@ -223,12 +206,14 @@ package body Synth.Insts is
          while Is_Valid (Inter) loop
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
-                  Make_Port_Desc
-                    (Syn_Inst, Inter, Inports, Nbr_Inputs, Port_In);
+                  Nbr_Inputs := Nbr_Inputs + 1;
+                  Inports (Nbr_Inputs) :=
+                    Make_Port_Desc (Syn_Inst, Inter, Port_In);
                when Port_Out
                  | Port_Inout =>
-                  Make_Port_Desc
-                    (Syn_Inst, Inter, Outports, Nbr_Outputs, Port_Out);
+                  Nbr_Outputs := Nbr_Outputs + 1;
+                  Outports (Nbr_Outputs) :=
+                    Make_Port_Desc (Syn_Inst, Inter, Port_Out);
             end case;
             Inter := Get_Chain (Inter);
          end loop;
