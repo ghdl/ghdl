@@ -167,9 +167,11 @@ package body Netlists.Dump is
       if Get_Nbr_Outputs (Inst) > 0 then
          Put_Indent (Indent + 1);
          Put ("outputs");
-         for I of Outputs (Inst) loop
+         for O of Outputs (Inst) loop
             Put (' ');
-            Dump_Net_Name (I, True);
+            Dump_Net_Name (O, True);
+            Put (':');
+            Put_Trim (Width'Image (Get_Width (O)));
          end loop;
          New_Line;
       end if;
