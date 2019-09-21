@@ -326,6 +326,8 @@ package body Netlists.Disp_Vhdl is
       Put (Q);
    end Disp_X_Lit;
 
+   procedure Disp_Extract (Inst : Instance);
+
    procedure Disp_Constant_Inline (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -350,6 +352,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Const_Bit (Inst);
          when Id_Const_Log =>
             raise Internal_Error;
+         when Id_Extract =>
+            Disp_Extract (Inst);
          when others =>
             raise Internal_Error;
       end case;
@@ -497,6 +501,26 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Template;
 
+   procedure Disp_Extract (Inst : Instance)
+   is
+      O : constant Net := Get_Output (Inst, 0);
+      I : constant Net := Get_Input_Net (Inst, 0);
+      Wd : constant Width := Get_Width (O);
+      Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+   begin
+      Disp_Template ("\i0", Inst);
+      if Get_Width (I) > 1 then
+         --  If width is 1, the signal is declared as a scalar and
+         --  therefore cannot be indexed.
+         if Wd > 1 then
+            Disp_Template (" (\n0 downto \n1)", Inst,
+                           (0 => Off + Wd - 1, 1 => Off));
+         else
+            Disp_Template (" (\n0)", Inst, (0 => Off));
+         end if;
+      end if;
+   end Disp_Extract;
+
    procedure Disp_Instance_Inline (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -530,25 +554,9 @@ package body Netlists.Disp_Vhdl is
          when Id_Not =>
             Disp_Template ("  \o0 <= not \i0;" & NL, Inst);
          when Id_Extract =>
-            declare
-               O : constant Net := Get_Output (Inst, 0);
-               I : constant Net := Get_Input_Net (Inst, 0);
-               Wd : constant Width := Get_Width (O);
-               Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-            begin
-               Disp_Template ("  \o0 <= \i0", Inst);
-               if Get_Width (I) > 1 then
-                  --  If width is 1, the signal is declared as a scalar and
-                  --  therefore cannot be indexed.
-                  if Wd > 1 then
-                     Disp_Template (" (\n0 downto \n1)", Inst,
-                                    (0 => Off + Wd - 1, 1 => Off));
-                  else
-                     Disp_Template (" (\n0)", Inst, (0 => Off));
-                  end if;
-               end if;
-               Put_Line (";");
-            end;
+            Disp_Template ("  \o0 <= ", Inst);
+            Disp_Extract (Inst);
+            Put_Line (";");
          when Id_Dyn_Extract =>
             declare
                O : constant Net := Get_Output (Inst, 0);
@@ -579,11 +587,29 @@ package body Netlists.Disp_Vhdl is
             declare
                --  I0: Input, I1: Value, I2: position
                --  P0: Step, P1: offset
+               I0 : constant Net := Get_Input_Net (Inst, 0);
+               I1 : constant Net := Get_Input_Net (Inst, 1);
+               I2 : constant Net := Get_Input_Net (Inst, 2);
+               Iarr : constant Net_Array (0 .. 2) := (I0, I1, I2);
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 1));
+               First : Boolean;
             begin
+               Put ("  process (");
+               First := True;
+               for I in Iarr'Range loop
+                  if Get_Id (Get_Parent (Iarr (I))) not in Constant_Module_Id
+                  then
+                     if First then
+                        First := False;
+                     else
+                        Put (", ");
+                     end if;
+                     Disp_Net_Name (Iarr (I));
+                  end if;
+               end loop;
+               Put (")" & NL);
                Disp_Template
-                 ("  process (\i0, \i1, \i2)" & NL &
-                  "  begin" & NL &
+                 ("  begin" & NL &
                   "    \o0 <= \i0;" & NL &
                   "    \o0 (" &
                   "to_integer (\ui2) * \p0 + (\sp1 + \n0)" & NL &
@@ -752,30 +778,37 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Instance_Inline;
 
-   procedure Disp_Architecture_Declarations (M : Module) is
+   procedure Disp_Architecture_Declarations (M : Module)
+   is
+      Id : Module_Id;
    begin
       --  Display signal declarations.
       --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
+         Id := Get_Id (Inst);
          if not Is_Self_Instance (Inst)
            and then not (Flag_Merge_Lit
-                           and then Is_Const_Module (Get_Id (Inst))
+                           and then Id in Constant_Module_Id
                            and then not Need_Signal (Inst))
-           and then Get_Id (Inst) < Id_User_None
+           and then Id < Id_User_None
          then
             for N of Outputs (Inst) loop
-               Put ("  signal ");
+               if Id in Constant_Module_Id then
+                  Put ("  constant ");
+               else
+                  Put ("  signal ");
+               end if;
                Disp_Net_Name (N);
                Put (" : ");
                Put_Type (Get_Width (N));
-               case Get_Id (Inst) is
+               case Id is
                   when Id_Idff =>
                      Put (" := ");
                      Disp_Constant_Inline
                        (Get_Parent (Get_Input_Net (Inst, 2)));
-                  when Id_Const_Bit =>
+                  when Constant_Module_Id =>
                      Put (" := ");
-                     Disp_Const_Bit (Inst);
+                     Disp_Constant_Inline (Inst);
                   when others =>
                      null;
                end case;
@@ -806,8 +839,7 @@ package body Netlists.Disp_Vhdl is
 
       for Inst of Instances (M) loop
          if not (Flag_Merge_Lit
-                   and then Is_Const_Module (Get_Id (Inst))
-                   and then not Need_Signal (Inst))
+                   and then Is_Const_Module (Get_Id (Inst)))
          then
             Disp_Instance_Inline (Inst);
          end if;

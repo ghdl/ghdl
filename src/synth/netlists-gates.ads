@@ -169,5 +169,7 @@ package Netlists.Gates is
    Id_Const_Bit : constant Module_Id := 104;
    Id_Const_Log : constant Module_Id := 105;
 
+   subtype Constant_Module_Id is Module_Id range Id_Const_UB32 .. Id_Const_Log;
+
    --  Id 128 is the first user id.
 end Netlists.Gates;
