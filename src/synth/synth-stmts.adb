@@ -412,7 +412,6 @@ package body Synth.Stmts is
       Cond_Val : Value_Acc;
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
-      En_Prev, En_T, En_F : Tri_State_Type;
    begin
       Cond_Val := Synth_Expression (C.Inst, Cond);
       if Is_Const (Cond_Val) then
@@ -435,15 +434,11 @@ package body Synth.Stmts is
             end if;
          end if;
       else
-         En_Prev := C.T_En;
-         pragma Assert (En_Prev /= False);
          Push_Phi;
          Synth_Sequential_Statements
            (C, Get_Sequential_Statement_Chain (Stmt));
          Pop_Phi (Phi_True);
-         En_T := C.T_En;
 
-         C.T_En := En_Prev;
          Push_Phi;
          if Is_Valid (Els) then
             if Is_Null (Get_Condition (Els)) then
@@ -456,15 +451,9 @@ package body Synth.Stmts is
             end if;
          end if;
          Pop_Phi (Phi_False);
-         En_F := C.T_En;
 
          Merge_Phis (Build_Context,
                      Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
-         if En_T = En_F then
-            C.T_En := En_T;
-         else
-            C.T_En := Unknown;
-         end if;
       end if;
    end Synth_If_Statement;
 
@@ -1318,9 +1307,8 @@ package body Synth.Stmts is
       end if;
 
       --  The subprogram has returned.  Do not execute further statements.
-      Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit1 (C.Inst), 0);
+      Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit0 (C.Inst), 0);
       C.Nbr_Ret := C.Nbr_Ret + 1;
-      C.T_En := False;
    end Synth_Return_Statement;
 
    procedure Synth_Sequential_Statements
@@ -1329,10 +1317,13 @@ package body Synth.Stmts is
       Stmt : Node;
       Phi_T, Phi_F : Phi_Type;
       Has_Phi : Boolean;
+      En : Net;
    begin
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
-         Has_Phi := C.T_En = Unknown;
+         En := Get_Current_Value (null, C.W_En);
+         pragma Assert (En /= Get_Inst_Bit0 (C.Inst));
+         Has_Phi := En /= Get_Inst_Bit1 (C.Inst);
          if Has_Phi then
             Push_Phi;
          end if;
@@ -1370,10 +1361,10 @@ package body Synth.Stmts is
             Push_Phi;
             Pop_Phi (Phi_F);
             Merge_Phis (Build_Context,
-                        Get_Current_Value (Build_Context, C.W_Ret),
-                        Phi_F, Phi_T, Stmt);
+                        Get_Current_Value (Build_Context, C.W_En),
+                        Phi_T, Phi_F, Stmt);
          end if;
-         if C.T_En = False then
+         if Get_Current_Value (null, C.W_En) = Get_Inst_Bit0 (C.Inst) then
             return;
          end if;
          Stmt := Get_Chain (Stmt);
@@ -1431,9 +1422,7 @@ package body Synth.Stmts is
          C_Sname := New_Sname (Get_Sname (Syn_Inst), Label);
       end if;
       C := (Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
-            T_En => True,
-            W_En => No_Wire_Id,
-            W_Ret => No_Wire_Id,
+            W_En => Alloc_Wire (Wire_Variable, Proc),
             W_Val => No_Wire_Id,
             Ret_Init => No_Net,
             Ret_Value => null,
@@ -1448,6 +1437,11 @@ package body Synth.Stmts is
          Synth_Declarations (C.Inst, Decls_Chain);
       end if;
 
+      Set_Wire_Gate (C.W_En, Build_Signal (Build_Context,
+                                           New_Internal_Name (Build_Context),
+                                           1));
+      Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+
       case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
          when Iir_Kind_Sensitized_Process_Statement =>
             Synth_Sequential_Statements
@@ -1456,6 +1450,8 @@ package body Synth.Stmts is
          when Iir_Kind_Process_Statement =>
             Synth_Process_Sequential_Statements (C, Proc);
       end case;
+
+      --  FIXME: free W_En ?
 
       Free_Instance (C.Inst);
       Release (M, Proc_Pool);
@@ -1495,9 +1491,7 @@ package body Synth.Stmts is
       Areapools.Mark (M, Instance_Pool.all);
       C := (Inst => Make_Instance (Syn_Inst, Bod,
                                    New_Internal_Name (Build_Context)),
-            T_En => True,
-            W_En => No_Wire_Id,
-            W_Ret => Alloc_Wire (Wire_Variable, Imp),
+            W_En => Alloc_Wire (Wire_Variable, Imp),
             W_Val => Alloc_Wire (Wire_Variable, Imp),
             Ret_Init => No_Net,
             Ret_Value => null,
@@ -1517,10 +1511,10 @@ package body Synth.Stmts is
       C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
       Phi_Assign (Build_Context, C.W_Val, C.Ret_Init, 0);
 
-      Set_Wire_Gate (C.W_Ret, Build_Signal (Build_Context,
+      Set_Wire_Gate (C.W_En, Build_Signal (Build_Context,
                                             New_Internal_Name (Build_Context),
                                             1));
-      Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit0 (Syn_Inst), 0);
+      Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
 
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
 
