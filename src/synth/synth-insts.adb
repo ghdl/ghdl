@@ -56,16 +56,6 @@ package body Synth.Insts is
       end case;
    end Mode_To_Port_Kind;
 
-   function Get_Nbr_Wire (Val : Value_Acc) return Uns32 is
-   begin
-      case Val.Kind is
-         when Value_Wire =>
-            return 1;
-         when others =>
-            raise Internal_Error;  --  TODO
-      end case;
-   end Get_Nbr_Wire;
-
    procedure Make_Port_Desc (Val : Value_Acc;
                              Name : Sname;
                              Ports : in out Port_Desc_Array;
@@ -161,7 +151,6 @@ package body Synth.Insts is
       Inter_Type : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
-      Num : Uns32;
       Cur_Module : Module;
    begin
       if Get_Kind (Params.Decl) = Iir_Kind_Component_Declaration then
@@ -207,13 +196,11 @@ package body Synth.Insts is
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Make_Object (Syn_Inst, Wire_None, Inter);
-               Num := Get_Nbr_Wire (Get_Value (Syn_Inst, Inter));
-               Nbr_Inputs := Nbr_Inputs + Port_Nbr (Num);
+               Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
                Make_Object (Syn_Inst, Wire_None, Inter);
-               Num := Get_Nbr_Wire (Get_Value (Syn_Inst, Inter));
-               Nbr_Outputs := Nbr_Outputs + Port_Nbr (Num);
+               Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Inter := Get_Chain (Inter);
       end loop;
