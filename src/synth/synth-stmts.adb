@@ -1318,8 +1318,7 @@ package body Synth.Stmts is
       end if;
 
       --  The subprogram has returned.  Do not execute further statements.
-      Phi_Assign (Build_Context, C.W_Ret,
-                  Build_Const_UB32 (Build_Context, 1, 1), 0);
+      Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit1 (C.Inst), 0);
       C.Nbr_Ret := C.Nbr_Ret + 1;
       C.T_En := False;
    end Synth_Return_Statement;
@@ -1521,13 +1520,11 @@ package body Synth.Stmts is
       Set_Wire_Gate (C.W_Ret, Build_Signal (Build_Context,
                                             New_Internal_Name (Build_Context),
                                             1));
-      Phi_Assign (Build_Context, C.W_Ret,
-                  Build_Const_UB32 (Build_Context, 0, 1), 0);
+      Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit0 (Syn_Inst), 0);
 
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
 
-      Synth_Sequential_Statements
-        (C, Get_Sequential_Statement_Chain (Bod));
+      Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
 
       Pop_And_Merge_Phi (Build_Context, Bod);
 

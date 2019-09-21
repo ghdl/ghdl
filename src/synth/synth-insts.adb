@@ -113,6 +113,7 @@ package body Synth.Insts is
       Arch : Node;
       Config : Node;
       Syn_Inst : Synth_Instance_Acc;
+      M : Module;
    end record;
 
    function Hash (Params : Inst_Params) return Hash_Value_Type
@@ -162,6 +163,7 @@ package body Synth.Insts is
       Nbr_Outputs : Port_Nbr;
       Num : Uns32;
       Cur_Module : Module;
+      Self_Inst : Instance;
    begin
       if Get_Kind (Params.Decl) = Iir_Kind_Component_Declaration then
          pragma Assert (Params.Arch = Null_Node);
@@ -221,7 +223,6 @@ package body Synth.Insts is
       Cur_Module := New_User_Module (Get_Top_Module (Root_Instance),
                                      New_Sname_User (Get_Identifier (Decl)),
                                      Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
-      Set_Instance_Module (Syn_Inst, Cur_Module);
 
       --  Add ports to module.
       declare
@@ -248,10 +249,14 @@ package body Synth.Insts is
          Set_Port_Desc (Cur_Module, Inports, Outports);
       end;
 
+      Self_Inst := Create_Self_Instance (Cur_Module);
+      pragma Unreferenced (Self_Inst);
+
       return Inst_Object'(Decl => Decl,
                           Arch => Arch,
                           Config => Params.Config,
-                          Syn_Inst => Syn_Inst);
+                          Syn_Inst => Syn_Inst,
+                          M => Cur_Module);
    end Build;
 
    package Insts_Interning is new Interning
@@ -371,7 +376,7 @@ package body Synth.Insts is
       --  TODO: free sub_inst.
 
       Inst := New_Instance (Get_Instance_Module (Syn_Inst),
-                            Get_Instance_Module (Inst_Obj.Syn_Inst),
+                            Inst_Obj.M,
                             New_Sname_User (Get_Identifier (Stmt)));
 
       Synth_Instantiate_Module
@@ -543,7 +548,7 @@ package body Synth.Insts is
       --  TODO: free sub_inst.
 
       Inst := New_Instance (Get_Instance_Module (Syn_Inst),
-                            Get_Instance_Module (Inst_Obj.Syn_Inst),
+                            Inst_Obj.M,
                             New_Sname_User (Get_Identifier (Stmt)));
 
       Synth_Instantiate_Module
@@ -764,7 +769,7 @@ package body Synth.Insts is
       Entity : constant Node := Inst.Decl;
       Arch : constant Node := Inst.Arch;
       Syn_Inst : constant Synth_Instance_Acc := Inst.Syn_Inst;
-      Self_Inst : Instance;
+      Self_Inst : constant Instance := Get_Self_Instance (Inst.M);
       Inter : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
@@ -774,9 +779,7 @@ package body Synth.Insts is
          return;
       end if;
 
-      Self_Inst := Create_Self_Instance (Get_Instance_Module (Syn_Inst));
-      Builders.Set_Parent (Get_Build (Syn_Inst),
-                           Get_Instance_Module (Syn_Inst));
+      Set_Instance_Module (Syn_Inst, Inst.M);
 
       --  Create wires for inputs and outputs.
       Inter := Get_Port_Chain (Entity);

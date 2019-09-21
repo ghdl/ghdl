@@ -61,6 +61,12 @@ package Synth.Context is
    function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module;
    pragma Inline (Get_Instance_Module);
 
+   --  Each base instance creates bit0 and bit1, which are used for control
+   --  flow.
+   function Get_Inst_Bit0 (Inst : Synth_Instance_Acc) return Net;
+   function Get_Inst_Bit1 (Inst : Synth_Instance_Acc) return Net;
+   pragma Inline (Get_Inst_Bit0, Get_Inst_Bit1);
+
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
 

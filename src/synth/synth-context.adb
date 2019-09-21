@@ -112,6 +112,9 @@ package body Synth.Context is
                                       Cur_Module => M,
                                       Bit0 => No_Net,
                                       Bit1 => No_Net);
+      Builders.Set_Parent (Base.Builder, M);
+      Base.Bit0 := Build_Const_UB32 (Base.Builder, 0, 1);
+      Base.Bit1 := Build_Const_UB32 (Base.Builder, 1, 1);
       Inst.Base := Base;
    end Set_Instance_Module;
 
@@ -135,6 +138,16 @@ package body Synth.Context is
    begin
       return Inst.Base.Builder;
    end Get_Build;
+
+   function Get_Inst_Bit0 (Inst : Synth_Instance_Acc) return Net is
+   begin
+      return Inst.Base.Bit0;
+   end Get_Inst_Bit0;
+
+   function Get_Inst_Bit1 (Inst : Synth_Instance_Acc) return Net is
+   begin
+      return Inst.Base.Bit1;
+   end Get_Inst_Bit1;
 
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc is
