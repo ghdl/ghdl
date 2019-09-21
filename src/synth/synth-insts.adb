@@ -163,7 +163,6 @@ package body Synth.Insts is
       Nbr_Outputs : Port_Nbr;
       Num : Uns32;
       Cur_Module : Module;
-      Self_Inst : Instance;
    begin
       if Get_Kind (Params.Decl) = Iir_Kind_Component_Declaration then
          pragma Assert (Params.Arch = Null_Node);
@@ -220,6 +219,8 @@ package body Synth.Insts is
       end loop;
 
       --  Declare module.
+      --  Build it now because it may be referenced for instantiations before
+      --  being synthetized.
       Cur_Module := New_User_Module (Get_Top_Module (Root_Instance),
                                      New_Sname_User (Get_Identifier (Decl)),
                                      Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
@@ -248,9 +249,6 @@ package body Synth.Insts is
          pragma Assert (Nbr_Outputs = Outports'Last);
          Set_Port_Desc (Cur_Module, Inports, Outports);
       end;
-
-      Self_Inst := Create_Self_Instance (Cur_Module);
-      pragma Unreferenced (Self_Inst);
 
       return Inst_Object'(Decl => Decl,
                           Arch => Arch,
@@ -769,7 +767,7 @@ package body Synth.Insts is
       Entity : constant Node := Inst.Decl;
       Arch : constant Node := Inst.Arch;
       Syn_Inst : constant Synth_Instance_Acc := Inst.Syn_Inst;
-      Self_Inst : constant Instance := Get_Self_Instance (Inst.M);
+      Self_Inst : Instance;
       Inter : Node;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
@@ -780,6 +778,7 @@ package body Synth.Insts is
       end if;
 
       Set_Instance_Module (Syn_Inst, Inst.M);
+      Self_Inst := Get_Self_Instance (Inst.M);
 
       --  Create wires for inputs and outputs.
       Inter := Get_Port_Chain (Entity);

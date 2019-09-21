@@ -106,6 +106,7 @@ package body Synth.Context is
    is
       Prev_Base : constant Base_Instance_Acc := Inst.Base;
       Base : Base_Instance_Acc;
+      Self_Inst : Instance;
    begin
       Base := new Base_Instance_Type'(Builder => Prev_Base.Builder,
                                       Top_Module => Prev_Base.Top_Module,
@@ -113,6 +114,10 @@ package body Synth.Context is
                                       Bit0 => No_Net,
                                       Bit1 => No_Net);
       Builders.Set_Parent (Base.Builder, M);
+
+      Self_Inst := Create_Self_Instance (M);
+      pragma Unreferenced (Self_Inst);
+
       Base.Bit0 := Build_Const_UB32 (Base.Builder, 0, 1);
       Base.Bit1 := Build_Const_UB32 (Base.Builder, 1, 1);
       Inst.Base := Base;

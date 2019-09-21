@@ -57,7 +57,6 @@ package Synth.Context is
 
    function Get_Top_Module (Inst : Synth_Instance_Acc) return Module;
 
-   procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module);
    function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module;
    pragma Inline (Get_Instance_Module);
 
@@ -66,6 +65,9 @@ package Synth.Context is
    function Get_Inst_Bit0 (Inst : Synth_Instance_Acc) return Net;
    function Get_Inst_Bit1 (Inst : Synth_Instance_Acc) return Net;
    pragma Inline (Get_Inst_Bit0, Get_Inst_Bit1);
+
+   --  Start the definition of module M (using INST).
+   procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module);
 
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
