@@ -736,6 +736,10 @@ package body Netlists.Disp_Vhdl is
                Put ((1 .. Natural (Ow - Iw) => '0'));
                Disp_Template (""" & \i0;  --  uext" & NL, Inst);
             end;
+         when Id_Lsr =>
+            Disp_Template
+              ("  \o0 <= std_logic_vector "
+                 & "(shift_right (\ui0, to_integer(\ui1)));" & NL, Inst);
          when Id_Red_Or =>
             declare
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 0));
