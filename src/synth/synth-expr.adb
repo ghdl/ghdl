@@ -1510,7 +1510,8 @@ package body Synth.Expr is
                end if;
             end;
          when Iir_Kind_Simple_Name
-           | Iir_Kind_Interface_Signal_Declaration =>  -- For PSL...
+           | Iir_Kind_Interface_Signal_Declaration --  For PSL.
+           | Iir_Kind_Signal_Declaration =>  -- For PSL.
             Res := Synth_Name (Syn_Inst, Expr);
             return Synth_Subtype_Conversion
               (Res, Get_Value_Type (Syn_Inst, Expr_Type), Expr);
