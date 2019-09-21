@@ -921,7 +921,8 @@ package body Synth.Oper is
                      Arg_Net := Get_Net (Arg);
                      return Create_Value_Net
                        (Synth_Uresize (Arg_Net, Uns32 (Size.Scal), Expr),
-                        Create_Res_Bound (Arg, Arg_Net));
+                        Create_Vec_Type_By_Length (Uns32 (Size.Scal),
+                                                   Logic_Type));
                   end if;
                end if;
             end;
