@@ -43,9 +43,9 @@ package Netlists.Builders is
                           Id : Dyadic_Module_Id;
                           L, R : Net) return Net;
 
-   function Build_Shift (Ctxt : Context_Acc;
-                         Id : Shift_Module_Id;
-                         L, R : Net) return Net;
+   function Build_Shift_Rotate (Ctxt : Context_Acc;
+                                Id : Shift_Rotate_Module_Id;
+                                L, R : Net) return Net;
 
    function Build_Monadic (Ctxt : Context_Acc;
                            Id : Monadic_Module_Id;
@@ -175,7 +175,7 @@ private
       Parent : Module;
       Num : Uns32;
       M_Dyadic : Module_Arr (Dyadic_Module_Id);
-      M_Shift : Module_Arr (Shift_Module_Id);
+      M_Shift_Rotate : Module_Arr (Shift_Rotate_Module_Id);
       M_Monadic : Module_Arr (Monadic_Module_Id);
       M_Compare : Module_Arr (Compare_Module_Id);
       M_Concat : Module_Arr (Concat_Module_Id);

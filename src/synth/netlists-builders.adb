@@ -394,7 +394,7 @@ package body Netlists.Builders is
                           Parent => No_Module,
                           Num => 0,
                           M_Dyadic => (others => No_Module),
-                          M_Shift => (others => No_Module),
+                          M_Shift_Rotate => (others => No_Module),
                           M_Monadic => (others => No_Module),
                           M_Compare => (others => No_Module),
                           M_Concat => (others => No_Module),
@@ -421,12 +421,16 @@ package body Netlists.Builders is
                             Get_Identifier ("smul"), Id_Smul);
       Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Umul),
                             Get_Identifier ("umul"), Id_Umul);
-      Create_Dyadic_Module (Design, Res.M_Shift (Id_Lsl),
+      Create_Dyadic_Module (Design, Res.M_Shift_Rotate (Id_Lsl),
                             Get_Identifier ("lsl"), Id_Lsl);
-      Create_Dyadic_Module (Design, Res.M_Shift (Id_Lsr),
+      Create_Dyadic_Module (Design, Res.M_Shift_Rotate (Id_Lsr),
                             Get_Identifier ("lsr"), Id_Lsr);
-      Create_Dyadic_Module (Design, Res.M_Shift (Id_Asr),
+      Create_Dyadic_Module (Design, Res.M_Shift_Rotate (Id_Asr),
                             Get_Identifier ("asr"), Id_Asr);
+      Create_Dyadic_Module (Design, Res.M_Shift_Rotate (Id_Rol),
+                            Name_Rol, Id_Rol);
+      Create_Dyadic_Module (Design, Res.M_Shift_Rotate (Id_Ror),
+                            Name_Ror, Id_Ror);
 
       Create_Monadic_Module (Design, Res.M_Monadic (Id_Not), Name_Not, Id_Not);
       Create_Monadic_Module (Design, Res.M_Monadic (Id_Neg),
@@ -532,24 +536,24 @@ package body Netlists.Builders is
       return O;
    end Build_Dyadic;
 
-   function Build_Shift (Ctxt : Context_Acc;
-                         Id : Shift_Module_Id;
-                         L, R : Net) return Net
+   function Build_Shift_Rotate (Ctxt : Context_Acc;
+                                Id : Shift_Rotate_Module_Id;
+                                L, R : Net) return Net
    is
       Wd : constant Width := Get_Width (L);
       pragma Assert (Wd /= No_Width);
       pragma Assert (Get_Width (R) /= No_Width);
-      pragma Assert (Ctxt.M_Shift (Id) /= No_Module);
+      pragma Assert (Ctxt.M_Shift_Rotate (Id) /= No_Module);
       Inst : Instance;
       O : Net;
    begin
-      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Shift (Id));
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Shift_Rotate (Id));
       O := Get_Output (Inst, 0);
       Set_Width (O, Wd);
       Connect (Get_Input (Inst, 0), L);
       Connect (Get_Input (Inst, 1), R);
       return O;
-   end Build_Shift;
+   end Build_Shift_Rotate;
 
    function Build_Monadic (Ctxt : Context_Acc;
                            Id : Monadic_Module_Id;

@@ -767,17 +767,17 @@ package body Synth.Oper is
       end case;
    end Synth_Monadic_Operation;
 
-   function Synth_Shift (Id : Shift_Module_Id;
+   function Synth_Shift_Rotate (Id : Shift_Rotate_Module_Id;
                          Left, Right : Value_Acc;
                          Expr : Node) return Value_Acc
    is
       L : constant Net := Get_Net (Left);
       N : Net;
    begin
-      N := Build_Shift (Build_Context, Id, L, Get_Net (Right));
+      N := Build_Shift_Rotate (Build_Context, Id, L, Get_Net (Right));
       Set_Location (N, Expr);
       return Create_Value_Net (N, Create_Res_Bound (Left, L));
-   end Synth_Shift;
+   end Synth_Shift_Rotate;
 
    function Synth_Std_Match (Cst : Value_Acc;
                              Oper : Value_Acc;
@@ -973,14 +973,28 @@ package body Synth.Oper is
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
                R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
             begin
-               return Synth_Shift (Id_Lsl, L, R, Expr);
+               return Synth_Shift_Rotate (Id_Lsl, L, R, Expr);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat =>
             declare
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
                R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
             begin
-               return Synth_Shift (Id_Lsr, L, R, Expr);
+               return Synth_Shift_Rotate (Id_Lsr, L, R, Expr);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat =>
+            declare
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
+            begin
+               return Synth_Shift_Rotate (Id_Rol, L, R, Expr);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat =>
+            declare
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
+            begin
+               return Synth_Shift_Rotate (Id_Ror, L, R, Expr);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Match_Suv =>
             declare
