@@ -296,6 +296,14 @@ package body Vhdl.Ieee.Numeric is
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat);
 
+   Rol_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Nat,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat);
+
+   Ror_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Nat,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat);
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg_Decl : Iir_Package_Declaration;
@@ -622,6 +630,10 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Shift (Shl_Patterns);
                      when Name_Shift_Right =>
                         Handle_Shift (Shr_Patterns);
+                     when Name_Rotate_Left =>
+                        Handle_Shift (Rol_Patterns);
+                     when Name_Rotate_Right =>
+                        Handle_Shift (Ror_Patterns);
                      when others =>
                         null;
                   end case;
