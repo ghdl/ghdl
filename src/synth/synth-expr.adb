@@ -751,10 +751,13 @@ package body Synth.Expr is
       return Create_Value_Const_Array (Res_Type, Arr);
    end Synth_Simple_Aggregate;
 
-   function Synth_Subtype_Conversion
-     (Val : Value_Acc; Dtype : Type_Acc; Loc : Source.Syn_Src)
-     return Value_Acc
+   function Synth_Subtype_Conversion (Val : Value_Acc;
+                                      Dtype : Type_Acc;
+                                      Bounds : Boolean;
+                                      Loc : Source.Syn_Src)
+                                     return Value_Acc
    is
+      pragma Unreferenced (Bounds);
       Vtype : constant Type_Acc := Val.Typ;
    begin
       case Dtype.Kind is
@@ -812,12 +815,14 @@ package body Synth.Expr is
             --  TODO: check range
             return Val;
          when Type_Vector =>
+            --  pragma Assert (Vtype.Kind = Type_Vector);
             --  TODO: check width
             return Val;
          when Type_Slice =>
             --  TODO: check width
             return Val;
          when Type_Array =>
+            pragma Assert (Vtype.Kind = Type_Array);
             --  TODO: check bounds, handle elements
             return Val;
          when Type_Unbounded_Array =>
@@ -1514,7 +1519,7 @@ package body Synth.Expr is
            | Iir_Kind_Signal_Declaration =>  -- For PSL.
             Res := Synth_Name (Syn_Inst, Expr);
             return Synth_Subtype_Conversion
-              (Res, Get_Value_Type (Syn_Inst, Expr_Type), Expr);
+              (Res, Get_Value_Type (Syn_Inst, Expr_Type), False, Expr);
          when Iir_Kind_Reference_Name =>
             return Synth_Name (Syn_Inst, Get_Named_Entity (Expr));
          when Iir_Kind_Indexed_Name =>

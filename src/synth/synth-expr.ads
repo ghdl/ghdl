@@ -32,9 +32,12 @@ package Synth.Expr is
    procedure Set_Location (N : Net; Loc : Node);
    pragma Inline (Set_Location);
 
-   function Synth_Subtype_Conversion
-     (Val : Value_Acc; Dtype : Type_Acc; Loc : Source.Syn_Src)
-     return Value_Acc;
+   --  Perform a subtype conversion.  Check constraints.
+   function Synth_Subtype_Conversion (Val : Value_Acc;
+                                      Dtype : Type_Acc;
+                                      Bounds : Boolean;
+                                      Loc : Source.Syn_Src)
+                                     return Value_Acc;
 
    function Get_Const_Discrete (V : Value_Acc) return Int64;
 

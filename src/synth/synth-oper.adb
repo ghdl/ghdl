@@ -217,8 +217,8 @@ package body Synth.Oper is
       begin
          pragma Assert (Left_Type = Right_Type);
          Typ := Get_Value_Type (Syn_Inst, Left_Type);
-         L := Synth_Subtype_Conversion (Left, Typ, Expr);
-         R := Synth_Subtype_Conversion (Right, Typ, Expr);
+         L := Synth_Subtype_Conversion (Left, Typ, False, Expr);
+         R := Synth_Subtype_Conversion (Right, Typ, False, Expr);
          N := Build_Compare (Build_Context, Id, Get_Net (L), Get_Net (R));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Boolean_Type);

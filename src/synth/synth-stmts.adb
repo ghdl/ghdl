@@ -83,7 +83,7 @@ package body Synth.Stmts is
                            Loc : Source.Syn_Src) is
    begin
       Phi_Assign (Build_Context, Wid,
-                  Get_Net (Synth_Subtype_Conversion (Val, Typ, Loc)),
+                  Get_Net (Synth_Subtype_Conversion (Val, Typ, False, Loc)),
                   Offset);
    end Synth_Assign;
 
@@ -1109,6 +1109,7 @@ package body Synth.Stmts is
                                            Assoc_Chain : Node)
    is
       Inter : Node;
+      Inter_Type : Node;
       Assoc : Node;
       Assoc_Inter : Node;
       Actual : Node;
@@ -1118,6 +1119,7 @@ package body Synth.Stmts is
       Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         Inter_Type := Get_Type (Inter);
 
          case Iir_Parameter_Modes (Get_Mode (Inter)) is
             when Iir_In_Mode =>
@@ -1125,11 +1127,11 @@ package body Synth.Stmts is
                   when Iir_Kind_Association_Element_Open =>
                      Actual := Get_Default_Value (Inter);
                      Val := Synth_Expression_With_Type
-                       (Subprg_Inst, Actual, Get_Type (Inter));
+                       (Subprg_Inst, Actual, Inter_Type);
                   when Iir_Kind_Association_Element_By_Expression =>
                      Actual := Get_Actual (Assoc);
                      Val := Synth_Expression_With_Type
-                       (Caller_Inst, Actual, Get_Type (Inter));
+                       (Caller_Inst, Actual, Inter_Type);
                   when others =>
                      raise Internal_Error;
                end case;
@@ -1137,6 +1139,9 @@ package body Synth.Stmts is
                --  FIXME: todo
                raise Internal_Error;
          end case;
+
+         Val := Synth_Subtype_Conversion
+           (Val, Get_Value_Type (Subprg_Inst, Inter_Type), True, Assoc);
 
          case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
             when Iir_Kind_Interface_Constant_Declaration
@@ -1446,7 +1451,7 @@ package body Synth.Stmts is
       if Expr /= Null_Node then
          --  Return in function.
          Val := Synth_Expression (C.Inst, Expr);
-         Val := Synth_Subtype_Conversion (Val, C.Ret_Typ, Stmt);
+         Val := Synth_Subtype_Conversion (Val, C.Ret_Typ, False, Stmt);
 
          if C.Nbr_Ret = 0 then
             C.Ret_Value := Val;
