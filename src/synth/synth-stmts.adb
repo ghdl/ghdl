@@ -1254,6 +1254,147 @@ package body Synth.Stmts is
       end case;
    end Update_Index;
 
+   procedure Loop_Control_Init (C : Seq_Context; Stmt : Node)
+   is
+      Lc : constant Loop_Context_Acc := C.Cur_Loop;
+
+   begin
+      if (Lc.Prev_Loop /= null and then Lc.Prev_Loop.Need_Quit) then
+         Lc.W_Quit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
+         Set_Wire_Gate
+           (Lc.W_Quit, Build_Signal (Get_Build (C.Inst),
+                                     New_Internal_Name (Build_Context), 1));
+         Phi_Assign (Get_Build (C.Inst), Lc.W_Quit, Get_Inst_Bit1 (C.Inst), 0);
+      end if;
+
+      if Get_Exit_Flag (Stmt) or else Get_Next_Flag (Stmt) then
+         Lc.Saved_En := Get_Current_Value (null, C.W_En);
+         Lc.Need_Quit := True;
+      end if;
+
+      if Get_Exit_Flag (Stmt) then
+         --  Exit statement for this loop.
+         Lc.W_Exit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
+         Set_Wire_Gate
+           (Lc.W_Exit, Build_Signal (Get_Build (C.Inst),
+                                     New_Internal_Name (Build_Context), 1));
+         Phi_Assign (Get_Build (C.Inst), Lc.W_Exit, Get_Inst_Bit1 (C.Inst), 0);
+      end if;
+   end Loop_Control_Init;
+
+   procedure Loop_Control_Update (C : Seq_Context)
+   is
+      Lc : constant Loop_Context_Acc := C.Cur_Loop;
+      Res : Net;
+   begin
+      --  Execution continue iff:
+      --  1. Loop was enabled (Lc.Saved_En)
+      Res := Lc.Saved_En;
+      if Res = No_Net then
+         --  No loop control.
+         return;
+      end if;
+
+      --  2. No return (C.W_Ret)
+      if C.W_Ret /= No_Wire_Id then
+         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
+                              Res, Get_Current_Value (null, C.W_Ret));
+      end if;
+
+      --  3. No exit.
+      if Lc.W_Exit /= No_Wire_Id then
+         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
+                              Res, Get_Current_Value (null, Lc.W_Exit));
+      end if;
+
+      --  4. No quit.
+      if Lc.W_Quit /= No_Wire_Id then
+         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
+                              Res, Get_Current_Value (null, Lc.W_Quit));
+      end if;
+
+      Phi_Assign (Get_Build (C.Inst), C.W_En, Res, 0);
+   end Loop_Control_Update;
+
+   procedure Loop_Control_Finish (C : Seq_Context)
+   is
+      Lc : constant Loop_Context_Acc := C.Cur_Loop;
+      Res : Net;
+   begin
+      --  Execute continue iff:
+      --  1. Loop was enabled (Lc.Saved_En)
+      Res := Lc.Saved_En;
+      if Res = No_Net then
+         --  No loop control.
+         return;
+      end if;
+
+      --  2. No return (C.W_Ret)
+      if C.W_Ret /= No_Wire_Id then
+         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
+                              Res, Get_Current_Value (null, C.W_Ret));
+      end if;
+
+      --  3. No quit (C.W_Quit)
+      if Lc.W_Quit /= No_Wire_Id then
+         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
+                              Res, Get_Current_Value (null, Lc.W_Quit));
+      end if;
+
+      Phi_Assign (Get_Build (C.Inst), C.W_En, Res, 0);
+   end Loop_Control_Finish;
+
+   procedure Synth_Exit_Next_Statement (C : in out Seq_Context; Stmt : Node)
+   is
+      Cond : constant Node := Get_Condition (Stmt);
+      Is_Exit : constant Boolean := Get_Kind (Stmt) = Iir_Kind_Exit_Statement;
+      Loop_Label : Node;
+      Lc : Loop_Context_Acc;
+      Cond_Val : Value_Acc;
+      Phi_True : Phi_Type;
+      Phi_False : Phi_Type;
+   begin
+
+      if Cond /= Null_Node then
+         Cond_Val := Synth_Expression (C.Inst, Cond);
+         Push_Phi;
+      end if;
+
+      --  Execution is suspended.
+      Phi_Assign (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+
+      Lc := C.Cur_Loop;
+
+      Loop_Label := Get_Loop_Label (Stmt);
+      if Loop_Label = Null_Node then
+         Loop_Label := Lc.Loop_Stmt;
+      else
+         Loop_Label := Get_Named_Entity (Loop_Label);
+      end if;
+
+      loop
+         if Lc.Loop_Stmt = Loop_Label then
+            if Is_Exit then
+               Phi_Assign (Get_Build (C.Inst), Lc.W_Exit,
+                           Get_Inst_Bit0 (C.Inst), 0);
+            end if;
+            exit;
+         else
+            Phi_Assign (Get_Build (C.Inst), Lc.W_Quit,
+                        Get_Inst_Bit0 (C.Inst), 0);
+         end if;
+         Lc := Lc.Prev_Loop;
+      end loop;
+
+      if Cond /= Null_Node then
+         Pop_Phi (Phi_True);
+         Push_Phi;
+         Pop_Phi (Phi_False);
+         Merge_Phis (Build_Context,
+                     Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
+      end if;
+   end Synth_Exit_Next_Statement;
+
    procedure Synth_For_Loop_Statement (C : in out Seq_Context; Stmt : Node)
    is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
@@ -1261,7 +1402,18 @@ package body Synth.Stmts is
       It_Type : constant Node := Get_Declaration_Type (Iterator);
       It_Rng : Type_Acc;
       Val : Value_Acc;
+      Lc : aliased Loop_Context;
    begin
+      Lc := (Prev_Loop => C.Cur_Loop,
+             Loop_Stmt => Stmt,
+             Need_Quit => False,
+             Saved_En => No_Net,
+             W_Exit => No_Wire_Id,
+             W_Quit => No_Wire_Id);
+      C.Cur_Loop := Lc'Unrestricted_Access;
+
+      Loop_Control_Init (C, Stmt);
+
       if It_Type /= Null_Node then
          Synth_Subtype_Indication (C.Inst, It_Type);
       end if;
@@ -1274,11 +1426,16 @@ package body Synth.Stmts is
       while In_Range (It_Rng.Drange, Val.Scal) loop
          Synth_Sequential_Statements (C, Stmts);
          Update_Index (It_Rng.Drange, Val.Scal);
+         Loop_Control_Update (C);
       end loop;
+      Loop_Control_Finish (C);
+
       Destroy_Object (C.Inst, Iterator);
       if It_Type /= Null_Node then
          Destroy_Object (C.Inst, It_Type);
       end if;
+
+      C.Cur_Loop := Lc.Prev_Loop;
    end Synth_For_Loop_Statement;
 
    procedure Synth_Return_Statement (C : in out Seq_Context; Stmt : Node)
@@ -1303,11 +1460,16 @@ package body Synth.Stmts is
                Set_Width (C.Ret_Init, C.Ret_Typ.W);
             end if;
          end if;
-         Phi_Assign (Build_Context, C.W_Val, Get_Net (Val), 0);
+         Phi_Assign (Get_Build (C.Inst), C.W_Val, Get_Net (Val), 0);
       end if;
 
       --  The subprogram has returned.  Do not execute further statements.
-      Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+      Phi_Assign (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+
+      if C.W_Ret /= No_Wire_Id then
+         Phi_Assign (Get_Build (C.Inst), C.W_Ret, Get_Inst_Bit0 (C.Inst), 0);
+      end if;
+
       C.Nbr_Ret := C.Nbr_Ret + 1;
    end Synth_Return_Statement;
 
@@ -1353,6 +1515,9 @@ package body Synth.Stmts is
               | Iir_Kind_Assertion_Statement =>
                --  TODO ?
                null;
+            when Iir_Kind_Exit_Statement
+              | Iir_Kind_Next_Statement =>
+               Synth_Exit_Next_Statement (C, Stmt);
             when others =>
                Error_Kind ("synth_sequential_statements", Stmt);
          end case;
@@ -1422,7 +1587,9 @@ package body Synth.Stmts is
          C_Sname := New_Sname (Get_Sname (Syn_Inst), Label);
       end if;
       C := (Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
+            Cur_Loop => null,
             W_En => Alloc_Wire (Wire_Variable, Proc),
+            W_Ret => No_Wire_Id,
             W_Val => No_Wire_Id,
             Ret_Init => No_Net,
             Ret_Value => null,
@@ -1491,7 +1658,9 @@ package body Synth.Stmts is
       Areapools.Mark (M, Instance_Pool.all);
       C := (Inst => Make_Instance (Syn_Inst, Bod,
                                    New_Internal_Name (Build_Context)),
+            Cur_Loop => null,
             W_En => Alloc_Wire (Wire_Variable, Imp),
+            W_Ret => Alloc_Wire (Wire_Variable, Imp),
             W_Val => Alloc_Wire (Wire_Variable, Imp),
             Ret_Init => No_Net,
             Ret_Value => null,
@@ -1511,10 +1680,15 @@ package body Synth.Stmts is
       C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
       Phi_Assign (Build_Context, C.W_Val, C.Ret_Init, 0);
 
-      Set_Wire_Gate (C.W_En, Build_Signal (Build_Context,
-                                            New_Internal_Name (Build_Context),
-                                            1));
+      Set_Wire_Gate
+        (C.W_En,
+         Build_Signal (Build_Context, New_Internal_Name (Build_Context), 1));
       Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+
+      Set_Wire_Gate
+        (C.W_Ret,
+         Build_Signal (Build_Context, New_Internal_Name (Build_Context), 1));
+      Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
 
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
 

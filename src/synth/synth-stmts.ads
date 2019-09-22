@@ -59,12 +59,40 @@ package Synth.Stmts is
    procedure Update_Index (Rng : Discrete_Range_Type; Idx : in out Int64);
 
 private
+   type Loop_Context;
+   type Loop_Context_Acc is access all Loop_Context;
+
+   type Loop_Context is record
+      Prev_Loop : Loop_Context_Acc;
+      Loop_Stmt : Node;
+
+      --  Set to true so that inner loops have to declare W_Quit.
+      Need_Quit : Boolean;
+
+      --  Value of W_En at the entry of the loop.
+      Saved_En : Net;
+
+      --  Set to 0 in case of exit for the loop.
+      --  Set to 0 in case of exit/next for outer loop.
+      --  Initialized to 1.
+      W_Exit : Wire_Id;
+
+      --  Set to 0 if this loop has to be quited because of an exit/next for
+      --  an outer loop.
+      --  Initialized to 1.
+      W_Quit : Wire_Id;
+   end record;
+
    --  Context for sequential statements.
    type Seq_Context is record
       Inst : Synth_Instance_Acc;
 
+      Cur_Loop : Loop_Context_Acc;
+
       --  Enable execution.
       W_En : Wire_Id;
+
+      W_Ret : Wire_Id;
 
       --  Return value.
       W_Val : Wire_Id;
