@@ -97,7 +97,8 @@ package body Synth.Values is
            | Type_Array
            | Type_Record =>
             return True;
-         when Type_Unbounded_Array =>
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector =>
             return False;
       end case;
    end Is_Bounded_Type;
@@ -272,6 +273,16 @@ package body Synth.Values is
                                                 Uarr_El => El_Type)));
    end Create_Unbounded_Array;
 
+   function Create_Unbounded_Vector (El_Type : Type_Acc) return Type_Acc
+   is
+      subtype Unbounded_Type_Type is Type_Type (Type_Unbounded_Vector);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Vector,
+                                                W => 0,
+                                                Uvec_El => El_Type)));
+   end Create_Unbounded_Vector;
+
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc is
    begin
       case Arr_Type.Kind is
@@ -429,15 +440,24 @@ package body Synth.Values is
       return Res;
    end Create_Value_Const_Array;
 
-   function Get_Array_Flat_Length (Typ : Type_Acc) return Width
-   is
-      Len : Width;
+   function Get_Array_Flat_Length (Typ : Type_Acc) return Width is
    begin
-      Len := 1;
-      for I in Typ.Abounds.D'Range loop
-         Len := Len * Typ.Abounds.D (I).Len;
-      end loop;
-      return Len;
+      case Typ.Kind is
+         when Type_Vector =>
+            return Typ.Vbound.Len;
+         when Type_Array =>
+            declare
+               Len : Width;
+            begin
+               Len := 1;
+               for I in Typ.Abounds.D'Range loop
+                  Len := Len * Typ.Abounds.D (I).Len;
+               end loop;
+               return Len;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
    end Get_Array_Flat_Length;
 
    procedure Create_Array_Data (Arr : Value_Acc)

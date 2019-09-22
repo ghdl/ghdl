@@ -76,6 +76,7 @@ package Synth.Values is
       Type_Discrete,
       Type_Float,
       Type_Vector,
+      Type_Unbounded_Vector,
 
       --  A slice is for a slice of vector with dynamic bounds.  So the bounds
       --  of the result aren't known, but its width is.
@@ -112,6 +113,8 @@ package Synth.Values is
          when Type_Vector =>
             Vbound : Bound_Type;
             Vec_El : Type_Acc;
+         when Type_Unbounded_Vector =>
+            Uvec_El : Type_Acc;
          when Type_Slice =>
             Slice_El : Type_Acc;
          when Type_Array =>
@@ -219,6 +222,7 @@ package Synth.Values is
                                       return Type_Acc;
    function Create_Vector_Type (Bnd : Bound_Type; El_Type : Type_Acc)
                                return Type_Acc;
+   function Create_Unbounded_Vector (El_Type : Type_Acc) return Type_Acc;
    function Create_Slice_Type (W : Width; El_Type : Type_Acc) return Type_Acc;
    function Create_Bound_Array (Ndims : Iir_Index32) return Bound_Array_Acc;
    function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)

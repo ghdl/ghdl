@@ -77,11 +77,19 @@ package body Synth.Decls is
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
       El_Type : constant Node := Get_Element_Subtype (Def);
+      El_Typ : Type_Acc;
       Typ : Type_Acc;
    begin
       Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
-      Typ := Create_Unbounded_Array
-        (Get_Value_Type (Syn_Inst, El_Type));
+      El_Typ := Get_Value_Type (Syn_Inst, El_Type);
+
+      if El_Typ.Kind = Type_Bit
+        and then Is_One_Dimensional_Array_Type (Def)
+      then
+         Typ := Create_Unbounded_Vector (El_Typ);
+      else
+         Typ := Create_Unbounded_Array (El_Typ);
+      end if;
       return Typ;
    end Synth_Array_Type_Definition;
 
@@ -230,6 +238,7 @@ package body Synth.Decls is
       El_Type : constant Node := Get_Element_Subtype (Atype);
       St_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       St_El : Iir;
+      Btyp : Type_Acc;
       Etyp : Type_Acc;
       Bnds : Bound_Array_Acc;
    begin
@@ -246,16 +255,15 @@ package body Synth.Decls is
          Synth_Subtype_Indication (Syn_Inst, El_Type);
       end if;
 
-      Etyp := Get_Value_Type (Syn_Inst, El_Type);
+      Btyp := Get_Value_Type (Syn_Inst, Get_Base_Type (Atype));
 
-      if Etyp.Kind = Type_Bit
-        and then Is_One_Dimensional_Array_Type (Atype)
-      then
+      if Btyp.Kind = Type_Unbounded_Vector then
          St_El := Get_Index_Type (St_Indexes, 0);
          return Create_Vector_Type
-           (Synth_Bounds_From_Range (Syn_Inst, St_El), Etyp);
+           (Synth_Bounds_From_Range (Syn_Inst, St_El), Btyp.Uvec_El);
       else
          --  FIXME: partially constrained arrays, subtype in indexes...
+         Etyp := Get_Value_Type (Syn_Inst, El_Type);
          Bnds := Create_Bound_Array
            (Iir_Index32 (Get_Nbr_Elements (St_Indexes)));
          for I in Flist_First .. Flist_Last (St_Indexes) loop

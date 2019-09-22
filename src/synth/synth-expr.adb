@@ -225,6 +225,20 @@ package body Synth.Expr is
       return 0;
    end Get_Index_Offset;
 
+   function Get_Array_Bound (Typ : Type_Acc; Dim : Natural)
+                            return Bound_Type is
+   begin
+      case Typ.Kind is
+         when Type_Vector =>
+            pragma Assert (Dim = 0);
+            return Typ.Vbound;
+         when Type_Array =>
+            return Typ.Abounds.D (Iir_Index32 (Dim + 1));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Array_Bound;
+
    procedure Fill_Array_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node;
                                    Res : Value_Array_Acc;
@@ -232,7 +246,7 @@ package body Synth.Expr is
                                    Dim : Natural;
                                    Const_P : out Boolean)
    is
-      Bound : Bound_Type renames Typ.Abounds.D (1);
+      Bound : constant Bound_Type := Get_Array_Bound (Typ, Dim);
       Aggr_Type : constant Node := Get_Type (Aggr);
       El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
       Nbr_Dims : constant Natural := Get_Nbr_Dimensions (Aggr_Type);
@@ -638,20 +652,35 @@ package body Synth.Expr is
    is
       Ndims : constant Natural := Get_Nbr_Dimensions (Aggr_Type);
       El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
-      Bnds : Bound_Array_Acc;
+      El_Typ : Type_Acc;
       Res_Type : Type_Acc;
       Arr : Value_Array_Acc;
       Res : Value_Acc;
       Const_P : Boolean;
    begin
+      El_Typ := Get_Value_Type (Syn_Inst, El_Type);
+
       --  Allocate the result.
-      Bnds := Create_Bound_Array (Iir_Index32 (Ndims));
-      for I in 1 .. Ndims loop
-         Bnds.D (Iir_Index32 (I)) :=
-           Synth_Array_Bounds (Syn_Inst, Aggr_Type, I - 1);
-      end loop;
-      Res_Type := Create_Array_Type
-        (Bnds, Get_Value (Syn_Inst, El_Type).Typ);
+      if Is_Vector_Type (Aggr_Type) then
+         declare
+            Bnd : Bound_Type;
+         begin
+            Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 0);
+            Res_Type := Create_Vector_Type (Bnd, El_Typ);
+         end;
+      else
+         declare
+            Bnds : Bound_Array_Acc;
+         begin
+            Bnds := Create_Bound_Array (Iir_Index32 (Ndims));
+            for I in 1 .. Ndims loop
+               Bnds.D (Iir_Index32 (I)) :=
+                 Synth_Array_Bounds (Syn_Inst, Aggr_Type, I - 1);
+            end loop;
+            Res_Type := Create_Array_Type (Bnds, El_Typ);
+         end;
+      end if;
+
       Arr := Create_Value_Array
         (Iir_Index32 (Get_Array_Flat_Length (Res_Type)));
 
@@ -828,6 +857,9 @@ package body Synth.Expr is
          when Type_Unbounded_Array =>
             pragma Assert (Vtype.Kind = Type_Vector
                              or else Vtype.Kind = Type_Array);
+            return Val;
+         when Type_Unbounded_Vector =>
+            pragma Assert (Vtype.Kind = Type_Vector);
             return Val;
          when Type_Record =>
             --  TODO: handle elements.
