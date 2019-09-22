@@ -780,13 +780,29 @@ package body Synth.Expr is
       return Create_Value_Const_Array (Res_Type, Arr);
    end Synth_Simple_Aggregate;
 
+   function Reshape_Value (Val : Value_Acc; Ntype : Type_Acc)
+                          return Value_Acc is
+   begin
+      case Val.Kind is
+         when Value_Array =>
+            return Create_Value_Array (Ntype, Val.Arr);
+         when Value_Const_Array =>
+            return Create_Value_Const_Array (Ntype, Val.Arr);
+         when Value_Wire =>
+            return Create_Value_Wire (Val.W, Ntype);
+         when Value_Net =>
+            return Create_Value_Net (Val.N, Ntype);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Reshape_Value;
+
    function Synth_Subtype_Conversion (Val : Value_Acc;
                                       Dtype : Type_Acc;
                                       Bounds : Boolean;
                                       Loc : Source.Syn_Src)
                                      return Value_Acc
    is
-      pragma Unreferenced (Bounds);
       Vtype : constant Type_Acc := Val.Typ;
    begin
       case Dtype.Kind is
@@ -844,9 +860,17 @@ package body Synth.Expr is
             --  TODO: check range
             return Val;
          when Type_Vector =>
-            --  pragma Assert (Vtype.Kind = Type_Vector);
-            --  TODO: check width
-            return Val;
+            pragma Assert (Vtype.Kind = Type_Vector
+                             or Vtype.Kind = Type_Slice);
+            if Dtype.W /= Vtype.W then
+               --  TODO: bad width.
+               raise Internal_Error;
+            end if;
+            if Bounds then
+               return Reshape_Value (Val, Dtype);
+            else
+               return Val;
+            end if;
          when Type_Slice =>
             --  TODO: check width
             return Val;
@@ -855,8 +879,7 @@ package body Synth.Expr is
             --  TODO: check bounds, handle elements
             return Val;
          when Type_Unbounded_Array =>
-            pragma Assert (Vtype.Kind = Type_Vector
-                             or else Vtype.Kind = Type_Array);
+            pragma Assert (Vtype.Kind = Type_Array);
             return Val;
          when Type_Unbounded_Vector =>
             pragma Assert (Vtype.Kind = Type_Vector);

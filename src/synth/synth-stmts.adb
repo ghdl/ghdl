@@ -280,7 +280,7 @@ package body Synth.Stmts is
                                         Wid, Off, Typ);
                Synth_Slice_Suffix (Syn_Inst, Target, Typ.Vbound,
                                    Res_Bnd, Inp, Step, Sl_Off, Wd);
-
+               Res_Type := Create_Vector_Type (Res_Bnd, Typ.Vec_El);
                if Inp /= No_Net then
                   Targ_Net := Get_Current_Assign_Value
                     (Build_Context, Wid, Off, Get_Type_Width (Typ));
@@ -288,12 +288,10 @@ package body Synth.Stmts is
                     (Build_Context, Targ_Net, Get_Net (Val),
                      Inp, Step, Sl_Off);
                   Set_Location (V, Target);
-                  Res_Type := Create_Vector_Type (Res_Bnd, Typ.Vec_El);
                   Synth_Assign
                     (Wid, Res_Type, Create_Value_Net (V, Res_Type), Off, Loc);
                else
-                  --  FIXME: create slice type.
-                  Synth_Assign (Wid, Typ, Val, Off + Uns32 (Sl_Off), Loc);
+                  Synth_Assign (Wid, Res_Type, Val, Off + Uns32 (Sl_Off), Loc);
                end if;
             end;
          when others =>
