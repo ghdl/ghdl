@@ -780,6 +780,7 @@ package body Synth.Expr is
       return Create_Value_Const_Array (Res_Type, Arr);
    end Synth_Simple_Aggregate;
 
+   --  Change the bounds of VAL.
    function Reshape_Value (Val : Value_Acc; Ntype : Type_Acc)
                           return Value_Acc is
    begin
