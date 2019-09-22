@@ -463,10 +463,12 @@ package body Synth.Inference is
       Clk : Net;
       Enable : Net;
    begin
-      Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
-      if Len <= 0
-        or else Flags.Flag_Debug_Noinference
-      then
+      if not Flags.Flag_Debug_Noinference then
+         Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
+      else
+         Len := -1;
+      end if;
+      if Len <= 0 then
          --  No logical loop or self assignment.
          Add_Conc_Assign (Wid, Val, Off, Stmt);
       else
