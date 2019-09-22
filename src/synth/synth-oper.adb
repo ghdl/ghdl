@@ -454,6 +454,9 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Sub, True);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>
+            --  "-" (Signed, Signed)
+            return Synth_Dyadic_Sgn (Id_Sub, True);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
             declare
@@ -581,7 +584,7 @@ package body Synth.Oper is
                   Iir_Index32 (Get_Width (L) + Get_Width (R)));
 
                return Create_Value_Net
-                 (N, Create_Vector_Type (Bnd, Left.Typ.Vec_El));
+                 (N, Create_Vector_Type (Bnd, Get_Array_Element (Left.Typ)));
             end;
          when Iir_Predefined_Integer_Plus =>
             if Is_Const_Val (Left) and then Is_Const_Val (Right) then
@@ -968,7 +971,8 @@ package body Synth.Oper is
                  (Synth_Sresize (Get_Net (V), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat
+           | Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat =>
             declare
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
                R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
@@ -981,6 +985,13 @@ package body Synth.Oper is
                R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
             begin
                return Synth_Shift_Rotate (Id_Lsr, L, R, Expr);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat =>
+            declare
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
+            begin
+               return Synth_Shift_Rotate (Id_Asr, L, R, Expr);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat =>
             declare
