@@ -464,7 +464,13 @@ package body Synth.Inference is
       Enable : Net;
    begin
       if not Flags.Flag_Debug_Noinference then
-         Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
+         if Get_First_Sink (Prev_Val) = No_Input then
+            --  PREV_VAL is never read, so there cannot be any loop.
+            --  This is an important optimization for control signals.
+            Len := -1;
+         else
+            Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
+         end if;
       else
          Len := -1;
       end if;
