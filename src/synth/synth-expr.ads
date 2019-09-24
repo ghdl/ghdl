@@ -58,11 +58,16 @@ package Synth.Expr is
    function Concat_Array (Arr : Net_Array_Acc) return Net;
 
    function Synth_Expression_With_Type
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Node)
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Type_Acc)
      return Value_Acc;
 
    function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Node)
                              return Value_Acc;
+
+   --  Use base type of EXPR to synthesize EXPR.  Useful when the type of
+   --  EXPR is defined by itself or a range.
+   function Synth_Expression_With_Basetype
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
 
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
                                      Atype : Node) return Bound_Type;

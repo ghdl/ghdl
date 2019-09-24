@@ -923,7 +923,9 @@ package body Netlists.Builders is
       O := Get_Output (Inst, 0);
       Set_Width (O, Wd);
       Connect (Get_Input (Inst, 0), I);
-      Connect (Get_Input (Inst, 1), V);
+      if V /= No_Net then
+         Connect (Get_Input (Inst, 1), V);
+      end if;
       Connect (Get_Input (Inst, 2), P);
       Set_Param_Uns32 (Inst, 0, Step);
       Set_Param_Uns32 (Inst, 1, To_Uns32 (Off));

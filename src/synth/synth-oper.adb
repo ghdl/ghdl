@@ -345,8 +345,10 @@ package body Synth.Oper is
       end Synth_Compare_Sgn_Sgn;
 
    begin
-      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Type);
-      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Type);
+      Left := Synth_Expression_With_Type
+        (Syn_Inst, Left_Expr, Get_Value_Type (Syn_Inst, Left_Type));
+      Right := Synth_Expression_With_Type
+        (Syn_Inst, Right_Expr, Get_Value_Type (Syn_Inst, Right_Type));
 
       case Def is
          when Iir_Predefined_Error =>

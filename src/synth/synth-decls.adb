@@ -28,7 +28,6 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 
-with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Expr; use Synth.Expr;
 with Synth.Stmts;
@@ -382,7 +381,9 @@ package body Synth.Decls is
    is
       Deferred_Decl : constant Node := Get_Deferred_Declaration (Decl);
       First_Decl : Node;
+      Decl_Type : Node;
       Val : Value_Acc;
+      Obj_Type : Type_Acc;
    begin
       if Deferred_Decl = Null_Node
         or else Get_Deferred_Declaration_Flag (Decl)
@@ -401,8 +402,17 @@ package body Synth.Decls is
          First_Decl := Null_Node;
       end if;
       if First_Decl /= Null_Node then
+         --  Use the type of the declaration.  The type of the constant may
+         --  be derived from the value.
+         --  FIXME: what about multiple declarations ?
+         Decl_Type := Get_Subtype_Indication (Decl);
+         if Get_Kind (Decl_Type) in Iir_Kinds_Denoting_Name then
+            --  Type mark.
+            Decl_Type := Get_Type (Get_Named_Entity (Decl_Type));
+         end if;
+         Obj_Type := Get_Value_Type (Syn_Inst, Decl_Type);
          Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Default_Value (Decl), Get_Type (Decl));
+           (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
          Create_Object_Force (Syn_Inst, First_Decl, Val);
       end if;
    end Synth_Constant_Declaration;
@@ -412,6 +422,7 @@ package body Synth.Decls is
    is
       Value : Iir_Attribute_Value;
       Val : Value_Acc;
+      Val_Type : Type_Acc;
    begin
       Value := Get_Attribute_Value_Spec_Chain (Decl);
       while Value /= Null_Iir loop
@@ -423,8 +434,9 @@ package body Synth.Decls is
          --     subtype conversion is first performed on the value,
          --     unless the attribute's subtype indication denotes an
          --     unconstrained array type.
+         Val_Type := Get_Value_Type (Syn_Inst, Get_Type (Value));
          Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Expression (Decl), Get_Type (Value));
+           (Syn_Inst, Get_Expression (Decl), Val_Type);
          --  Check_Constraints (Instance, Val, Attr_Type, Decl);
 
          --  3. A new instance of the designated attribute is created
@@ -461,11 +473,12 @@ package body Synth.Decls is
                Def : constant Iir := Get_Default_Value (Decl);
                --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
                Init : Value_Acc;
+               Obj_Type : Type_Acc;
             begin
                Make_Object (Syn_Inst, Wire_Variable, Decl);
                if Is_Valid (Def) then
-                  Init := Synth_Expression_With_Type
-                    (Syn_Inst, Def, Get_Type (Decl));
+                  Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
+                  Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Type);
                else
                   Init := null;
                end if;
@@ -487,11 +500,12 @@ package body Synth.Decls is
                Def : constant Iir := Get_Default_Value (Decl);
                --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
                Init : Value_Acc;
+               Obj_Type : Type_Acc;
             begin
                Make_Object (Syn_Inst, Wire_Signal, Decl);
                if Is_Valid (Def) then
-                  Init := Synth_Expression_With_Type
-                    (Syn_Inst, Def, Get_Type (Decl));
+                  Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
+                  Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Type);
                else
                   Init := null;
                end if;

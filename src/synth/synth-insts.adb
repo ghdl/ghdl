@@ -447,6 +447,7 @@ package body Synth.Insts is
          Assoc_Inter : Node;
          Actual : Node;
          Inter : Node;
+         Inter_Type : Type_Acc;
       begin
          Assoc := Get_Port_Map_Aspect_Chain (Stmt);
          Assoc_Inter := Get_Port_Chain (Component);
@@ -465,10 +466,11 @@ package body Synth.Insts is
             Synth_Declaration_Type (Comp_Inst, Inter);
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
-                  Create_Object
-                    (Comp_Inst, Assoc_Inter,
-                     Synth_Expression_With_Type
-                       (Syn_Inst, Actual, Get_Type (Assoc_Inter)));
+                  Inter_Type :=
+                    Get_Value_Type (Comp_Inst, Get_Type (Assoc_Inter));
+                  Create_Object (Comp_Inst, Assoc_Inter,
+                                 Synth_Expression_With_Type
+                                   (Syn_Inst, Actual, Inter_Type));
                when Port_Out
                  | Port_Inout =>
                   Make_Object (Comp_Inst, Wire_None, Assoc_Inter);
@@ -590,9 +592,11 @@ package body Synth.Insts is
          Synth_Declaration_Type (Syn_Inst, Inter);
          declare
             Val : Value_Acc;
+            Inter_Type : Type_Acc;
          begin
+            Inter_Type := Get_Value_Type (Syn_Inst, Get_Type (Inter));
             Val := Synth_Expression_With_Type
-              (Syn_Inst, Get_Default_Value (Inter), Get_Type (Inter));
+              (Syn_Inst, Get_Default_Value (Inter), Inter_Type);
             Create_Object (Syn_Inst, Inter, Val);
          end;
          Inter := Get_Chain (Inter);
