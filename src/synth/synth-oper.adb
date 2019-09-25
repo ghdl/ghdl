@@ -749,7 +749,9 @@ package body Synth.Oper is
       case Def is
          when Iir_Predefined_Error =>
             return null;
-         when Iir_Predefined_Ieee_1164_Scalar_Not =>
+         when Iir_Predefined_Ieee_1164_Scalar_Not
+           | Iir_Predefined_Boolean_Not
+           | Iir_Predefined_Bit_Not =>
             return Synth_Bit_Monadic (Id_Not);
          when Iir_Predefined_Ieee_1164_Vector_Not
             | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
