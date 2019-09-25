@@ -158,7 +158,6 @@ package body Netlists is
                             return Module
    is
       pragma Assert (Is_Valid (Parent));
-      pragma Assert (Nbr_Inputs + Nbr_Outputs > 0);
       Parent_Rec : Module_Record renames Modules_Table.Table (Parent);
       Res : Module;
    begin
