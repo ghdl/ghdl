@@ -2,10 +2,6 @@
 
 . ../../testenv.sh
 
-#! /bin/sh
-
-. ../../testenv.sh
-
 # Direct instance
 analyze and3.vhdl and6.vhdl tb_and6.vhdl
 elab_simulate tb_and6

@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in case01; do
+for t in case01 case02; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
