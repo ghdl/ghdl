@@ -155,6 +155,11 @@ package body Synth.Disp_Vhdl is
                   Put (" (" & Pfx & "'left)");
                end if;
                Put_Line (");");
+            elsif Btype = Vhdl.Std_Package.Bit_Vector_Type_Definition then
+               W := Typ.Vbound.Len;
+               Disp_In_Lhs (Mname, Off, W, Full);
+               Put ("to_stdlogicvector (" & Pfx & ")");
+               Put_Line (";");
             else
                Error_Kind ("disp_in_converter(arr)", Ptype);
             end if;
