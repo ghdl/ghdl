@@ -886,7 +886,7 @@ package body Synth.Stmts is
       --    - divide and conquier
 
       --  Create a net for the expression.
-      Sel := Synth_Expression (C.Inst, Expr);
+      Sel := Synth_Expression_With_Basetype (C.Inst, Expr);
 
       --  Count choices and alternatives.
       Count_Choices (Case_Info, Choices);
