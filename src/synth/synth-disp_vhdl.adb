@@ -103,10 +103,19 @@ package body Synth.Disp_Vhdl is
                --  TODO: width = 1
                W := Typ.W;
                Disp_In_Lhs (Mname, Off, W, Full);
-               Put ("std_logic_vector(to_unsigned(");
+               if W = 1 then
+                  Put ("'0' when ");
+               else
+                  Put ("std_logic_vector(to_unsigned(");
+               end if;
                Put (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Ptype))));
-               Put ("'pos (" & Pfx & ")," & Width'Image (W) & "));");
+               Put ("'pos (" & Pfx & ")");
+               if W = 1 then
+                  Put (" = 0 else '1';");
+               else
+                  Put ("," & Width'Image (W) & "));");
+               end if;
                New_Line;
             end if;
          when Iir_Kind_Integer_Type_Definition =>
@@ -202,19 +211,21 @@ package body Synth.Disp_Vhdl is
    begin
       case Get_Kind (Btype) is
          when Iir_Kind_Enumeration_Type_Definition =>
+            Put ("  " & Pfx & " <= ");
             if Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                --  Nothing to do.
-               Put ("  " & Pfx & " <= ");
                Disp_Out_Rhs (Mname, Off, 1, Full);
                Put_Line (";");
             elsif Btype = Vhdl.Std_Package.Boolean_Type_Definition then
-               Put ("  " & Pfx & " <= ");
                Disp_Out_Rhs (Mname, Off, 1, Full);
                Put_Line (" = '1';");
+            elsif Btype = Vhdl.Std_Package.Bit_Type_Definition then
+               Put ("to_bit (");
+               Disp_Out_Rhs (Mname, Off, 1, Full);
+               Put_Line (");");
             else
                --  Any other enum.
                W := Typ.W;
-               Put ("  " & Pfx & " <= ");
                Put (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Ptype))));
                Put ("'val (to_integer(unsigned(");
@@ -383,6 +394,7 @@ package body Synth.Disp_Vhdl is
       end loop;
 
       Put_Line ("library ieee;");
+      Put_Line ("use ieee.std_logic_1164.all;");
       Put_Line ("use ieee.numeric_std.all;");
       New_Line;
       Put ("architecture rtl of ");
