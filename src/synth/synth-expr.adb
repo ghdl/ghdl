@@ -1351,7 +1351,7 @@ package body Synth.Expr is
       Conv_Type : constant Node := Get_Type (Conv);
       Val : Value_Acc;
    begin
-      Val := Synth_Expression (Syn_Inst, Expr);
+      Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
       case Get_Kind (Conv_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
             if Val.Typ.Kind = Type_Float then
@@ -1534,8 +1534,7 @@ package body Synth.Expr is
          when Iir_Kind_Qualified_Expression =>
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Expression (Expr),
-               Get_Value_Type (Syn_Inst, Get_Type (Get_Named_Entity
-                                                     (Get_Type_Mark (Expr)))));
+               Get_Value_Type (Syn_Inst, Get_Type (Get_Type_Mark (Expr))));
          when Iir_Kind_Function_Call =>
             declare
                Imp : constant Node := Get_Implementation (Expr);

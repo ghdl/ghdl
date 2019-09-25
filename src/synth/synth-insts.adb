@@ -309,6 +309,13 @@ package body Synth.Insts is
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance
         (Syn_Inst, Ent, New_Sname_User (Get_Identifier (Ent)));
+
+      Inter := Get_Generic_Chain (Ent);
+      while Is_Valid (Inter) loop
+         Synth_Declaration_Type (Sub_Inst, Inter);
+         Inter := Get_Chain (Inter);
+      end loop;
+
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst,
                                     Get_Generic_Chain (Ent),
                                     Get_Generic_Map_Aspect_Chain (Stmt));

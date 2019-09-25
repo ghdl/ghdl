@@ -418,13 +418,16 @@ package body Synth.Decls is
    end Synth_Constant_Declaration;
 
    procedure Synth_Attribute_Specification
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+     (Syn_Inst : Synth_Instance_Acc; Spec : Node)
    is
+      Decl : constant Node := Get_Attribute_Designator (Spec);
       Value : Iir_Attribute_Value;
       Val : Value_Acc;
       Val_Type : Type_Acc;
    begin
-      Value := Get_Attribute_Value_Spec_Chain (Decl);
+      Val_Type := Get_Value_Type
+        (Syn_Inst, Get_Type (Get_Named_Entity (Decl)));
+      Value := Get_Attribute_Value_Spec_Chain (Spec);
       while Value /= Null_Iir loop
          --  2. The expression is evaluated to determine the value
          --     of the attribute.
@@ -434,9 +437,8 @@ package body Synth.Decls is
          --     subtype conversion is first performed on the value,
          --     unless the attribute's subtype indication denotes an
          --     unconstrained array type.
-         Val_Type := Get_Value_Type (Syn_Inst, Get_Type (Value));
          Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Expression (Decl), Val_Type);
+           (Syn_Inst, Get_Expression (Spec), Val_Type);
          --  Check_Constraints (Instance, Val, Attr_Type, Decl);
 
          --  3. A new instance of the designated attribute is created

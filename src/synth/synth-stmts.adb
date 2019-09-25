@@ -1531,7 +1531,7 @@ package body Synth.Stmts is
    begin
       if Expr /= Null_Node then
          --  Return in function.
-         Val := Synth_Expression (C.Inst, Expr);
+         Val := Synth_Expression_With_Type (C.Inst, Expr, C.Ret_Typ);
          Val := Synth_Subtype_Conversion (Val, C.Ret_Typ, False, Stmt);
 
          if C.Nbr_Ret = 0 then
