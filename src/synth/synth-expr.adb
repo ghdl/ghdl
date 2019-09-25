@@ -1220,7 +1220,8 @@ package body Synth.Expr is
                               return Value_Acc
    is
       Pfx_Node : constant Node := Get_Prefix (Name);
-      Pfx : constant Value_Acc := Synth_Expression (Syn_Inst, Pfx_Node);
+      Pfx : constant Value_Acc :=
+        Synth_Expression_With_Basetype (Syn_Inst, Pfx_Node);
       Res_Bnd : Bound_Type;
       Res_Type : Type_Acc;
       Inp : Net;
