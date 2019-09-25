@@ -1417,6 +1417,7 @@ package body Synth.Expr is
       Str_Type : constant Node := Get_Type (Str);
       El_Type : Type_Acc;
       Bounds : Bound_Type;
+      Bnds : Bound_Array_Acc;
       Res_Type : Type_Acc;
       Res : Value_Acc;
       Arr : Value_Array_Acc;
@@ -1424,7 +1425,13 @@ package body Synth.Expr is
    begin
       Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 0);
       El_Type := Get_Value_Type (Syn_Inst, Get_Element_Subtype (Str_Type));
-      Res_Type := Create_Vector_Type (Bounds, El_Type);
+      if El_Type.Kind = Type_Bit then
+         Res_Type := Create_Vector_Type (Bounds, El_Type);
+      else
+         Bnds := Create_Bound_Array (1);
+         Bnds.D (1) := Bounds;
+         Res_Type := Create_Array_Type (Bnds, El_Type);
+      end if;
       Arr := Create_Value_Array (Iir_Index32 (Bounds.Len));
 
       for I in Arr.V'Range loop

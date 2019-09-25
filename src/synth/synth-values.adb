@@ -112,6 +112,16 @@ package body Synth.Values is
       case L.Kind is
          when Value_Discrete =>
             return L.Scal = R.Scal;
+         when Value_Const_Array =>
+            if L.Arr.Len /= R.Arr.Len then
+               return False;
+            end if;
+            for I in L.Arr.V'Range loop
+               if not Is_Equal (L.Arr.V (I), R.Arr.V (I)) then
+                  return False;
+               end if;
+            end loop;
+            return True;
          when others =>
             --  TODO.
             raise Internal_Error;

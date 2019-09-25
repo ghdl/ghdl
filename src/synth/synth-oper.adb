@@ -418,6 +418,10 @@ package body Synth.Oper is
 
          when Iir_Predefined_Array_Equality =>
             --  TODO: check size, handle non-vector.
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Boolean'Pos (Is_Equal (Left, Right)), Boolean_Type);
+            end if;
             if Is_Vector_Type (Left_Type) then
                return Synth_Compare (Id_Eq);
             else
