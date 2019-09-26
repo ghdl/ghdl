@@ -611,12 +611,19 @@ package body Netlists.Disp_Vhdl is
                Disp_Template
                  ("  begin" & NL &
                   "    \o0 <= \i0;" & NL &
-                  "    \o0 (" &
-                  "to_integer (\ui2) * \p0 + (\sp1 + \n0)" & NL &
-                  "        downto to_integer (\ui2) * \p0 + (\sp1))" &
+                  "    \o0 (",
+                  Inst);
+               if Iw > 1 then
+                  Disp_Template
+                    ("to_integer (\ui2) * \p0 + (\sp1 + \n0)" & NL &
+                       "        downto ",
+                     Inst, (0 => Iw - 1));
+               end if;
+               Disp_Template
+                 ("to_integer (\ui2) * \p0 + (\sp1))" &
                   " <= \i1;" & NL &
                   "  end process;" & NL,
-                  Inst, (0 => Iw - 1));
+                  Inst);
             end;
          when Id_Const_UB32
            | Id_Const_UL32

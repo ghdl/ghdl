@@ -910,13 +910,14 @@ package body Synth.Expr is
 
       if Pfx_Type.Kind = Type_Vector then
          W := 1;
-         Mul := 0;
          if Idx_Val.Kind = Value_Discrete then
             Voff := No_Net;
+            Mul := 0;
             Off := Index_To_Offset (Pfx_Type.Vbound, Idx_Val.Scal, Name);
          else
             Voff := Dyn_Index_To_Offset (Pfx_Type.Vbound, Idx_Val, Name);
             Off := 0;
+            Mul := 1;
          end if;
       elsif Pfx_Type.Kind = Type_Array then
          W := Get_Type_Width (Pfx_Type.Arr_El);
