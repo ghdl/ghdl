@@ -1521,7 +1521,8 @@ package body Synth.Expr is
                N := Build_Extract
                  (Build_Context, Get_Net (Res),
                   Res.Typ.Rec.E (Idx + 1).Off, Get_Type_Width (Res_Typ));
-               return Create_Value_Net (N, Res_Typ);
+               Res := Create_Value_Net (N, Res_Typ);
+               return Synth_Subtype_Conversion (Res, Expr_Type, False, Expr);
             end;
          when Iir_Kind_Character_Literal =>
             return Synth_Expression_With_Type
