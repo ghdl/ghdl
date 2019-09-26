@@ -1499,8 +1499,7 @@ package body Synth.Expr is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Interface_Signal_Declaration --  For PSL.
            | Iir_Kind_Signal_Declaration =>  -- For PSL.
-            Res := Synth_Name (Syn_Inst, Expr);
-            return Synth_Subtype_Conversion (Res, Expr_Type, False, Expr);
+            return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Reference_Name =>
             return Synth_Name (Syn_Inst, Get_Named_Entity (Expr));
          when Iir_Kind_Indexed_Name =>
@@ -1521,8 +1520,7 @@ package body Synth.Expr is
                N := Build_Extract
                  (Build_Context, Get_Net (Res),
                   Res.Typ.Rec.E (Idx + 1).Off, Get_Type_Width (Res_Typ));
-               Res := Create_Value_Net (N, Res_Typ);
-               return Synth_Subtype_Conversion (Res, Expr_Type, False, Expr);
+               return Create_Value_Net (N, Res_Typ);
             end;
          when Iir_Kind_Character_Literal =>
             return Synth_Expression_With_Type

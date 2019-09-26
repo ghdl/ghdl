@@ -196,6 +196,8 @@ package body Synth.Oper is
       Expr_Type : constant Node := Get_Type (Expr);
       Left_Type : constant Node := Get_Type (Inter_Chain);
       Right_Type : constant Node := Get_Type (Get_Chain (Inter_Chain));
+      Left_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Left_Type);
+      Right_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Right_Type);
       Left : Value_Acc;
       Right : Value_Acc;
 
@@ -212,14 +214,10 @@ package body Synth.Oper is
       function Synth_Compare (Id : Compare_Module_Id) return Value_Acc
       is
          N : Net;
-         L, R : Value_Acc;
-         Typ : Type_Acc;
       begin
          pragma Assert (Left_Type = Right_Type);
-         Typ := Get_Value_Type (Syn_Inst, Left_Type);
-         L := Synth_Subtype_Conversion (Left, Typ, False, Expr);
-         R := Synth_Subtype_Conversion (Right, Typ, False, Expr);
-         N := Build_Compare (Build_Context, Id, Get_Net (L), Get_Net (R));
+         N := Build_Compare
+           (Build_Context, Id, Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Boolean_Type);
       end Synth_Compare;
@@ -343,12 +341,11 @@ package body Synth.Oper is
          Set_Location (N, Expr);
          return Create_Value_Net (N, Boolean_Type);
       end Synth_Compare_Sgn_Sgn;
-
    begin
-      Left := Synth_Expression_With_Type
-        (Syn_Inst, Left_Expr, Get_Value_Type (Syn_Inst, Left_Type));
-      Right := Synth_Expression_With_Type
-        (Syn_Inst, Right_Expr, Get_Value_Type (Syn_Inst, Right_Type));
+      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
+      Left := Synth_Subtype_Conversion (Left, Left_Typ, False, Expr);
+      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
+      Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
 
       case Def is
          when Iir_Predefined_Error =>
