@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in dpram1; do
+for t in dpram1 ram3; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
