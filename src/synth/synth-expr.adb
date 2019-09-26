@@ -706,6 +706,8 @@ package body Synth.Expr is
             return Create_Value_Wire (Val.W, Ntype);
          when Value_Net =>
             return Create_Value_Net (Val.N, Ntype);
+         when Value_Alias =>
+            return Create_Value_Alias (Val.A_Wid, Val.A_Off, Ntype);
          when others =>
             raise Internal_Error;
       end case;
