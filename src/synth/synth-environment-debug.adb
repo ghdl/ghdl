@@ -29,10 +29,11 @@ package body Synth.Environment.Debug is
       Put ("Wire:" & Wire_Id'Image (Id));
       Put_Line ("  kind: " & Wire_Kind'Image (W_Rec.Kind));
       Put_Line (" decl:" & Source.Syn_Src'Image (W_Rec.Decl));
-      Put (" Init: ");
+      Put (" gate: ");
       Dump_Net_Name (W_Rec.Gate);
       New_Line;
       Put_Line (" cur_assign:" & Seq_Assign'Image (W_Rec.Cur_Assign));
+      Put_Line (" conc_assign:" & Conc_Assign'Image(W_Rec.Final_Assign));
    end Dump_Wire_Id;
 
    procedure Dump_Assign (Asgn : Seq_Assign)
