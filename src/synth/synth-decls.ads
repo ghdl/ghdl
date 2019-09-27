@@ -40,4 +40,8 @@ package Synth.Decls is
    procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc;
                                  Decls : Iir;
                                  Is_Subprg : Boolean := False);
+
+   procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                    Decls : Iir;
+                                    Is_Subprg : Boolean := False);
 end Synth.Decls;

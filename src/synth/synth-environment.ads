@@ -58,8 +58,25 @@ package Synth.Environment is
    type Conc_Assign is private;
    No_Conc_Assign : constant Conc_Assign;
 
+   --  Create a wire.
    function Alloc_Wire (Kind : Wire_Kind; Obj : Source.Syn_Src)
                        return Wire_Id;
+
+   --  Mark the wire as free.
+   procedure Free_Wire (Wid : Wire_Id);
+
+   --  Simple mark & release.  This is a very simple mechanism (will free
+   --  all wires allocated after the mark), but efficient and working well
+   --  for the stack based allocation.
+   procedure Mark (M : out Wire_Id);
+   procedure Release (M : in out Wire_Id);
+
+   --  Check that all the wires have been released.
+   procedure All_Released;
+
+   --  Remove wires WID1 and WID2 from current phi.
+   --  Used for internal wires (exit/quit) when exiting their scope.
+   procedure Phi_Discard_Wires (Wid1 : Wire_Id; Wid2 : Wire_Id);
 
    --  Set the gate for a wire.
    --  The gate represent the current value.  It is usually an Id_Signal.

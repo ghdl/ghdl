@@ -81,6 +81,9 @@ private
       --  an outer loop.
       --  Initialized to 1.
       W_Quit : Wire_Id;
+
+      --  Mark to release wires.
+      Wire_Mark : Wire_Id;
    end record;
 
    --  Context for sequential statements.

@@ -582,4 +582,69 @@ package body Synth.Decls is
          Decl := Get_Chain (Decl);
       end loop;
    end Synth_Declarations;
+
+   procedure Finalize_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean)
+   is
+      Val : Value_Acc;
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Variable_Declaration =>
+            Val := Get_Value (Syn_Inst, Decl);
+            Free_Wire (Val.W);
+         when Iir_Kind_Interface_Variable_Declaration =>
+            Val := Get_Value (Syn_Inst, Decl);
+            Free_Wire (Val.W);
+         when Iir_Kind_Constant_Declaration =>
+            null;
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration =>
+            pragma Assert (not Is_Subprg);
+            Val := Get_Value (Syn_Inst, Decl);
+            Free_Wire (Val.W);
+         when Iir_Kind_Object_Alias_Declaration =>
+            null;
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Function_Declaration =>
+            null;
+         when Iir_Kind_Procedure_Body
+           | Iir_Kind_Function_Body =>
+            null;
+         when Iir_Kind_Non_Object_Alias_Declaration =>
+            null;
+         when Iir_Kind_Attribute_Declaration =>
+            null;
+         when Iir_Kind_Attribute_Specification =>
+            null;
+         when Iir_Kind_Type_Declaration =>
+            null;
+         when Iir_Kind_Anonymous_Type_Declaration =>
+            null;
+         when  Iir_Kind_Subtype_Declaration =>
+            null;
+         when Iir_Kind_Component_Declaration =>
+            null;
+         when Iir_Kind_File_Declaration =>
+            null;
+         when Iir_Kind_Psl_Default_Clock =>
+            --  Ignored; directly used by PSL directives.
+            null;
+         when others =>
+            Error_Kind ("finalize_declaration", Decl);
+      end case;
+   end Finalize_Declaration;
+
+   procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                    Decls : Iir;
+                                    Is_Subprg : Boolean := False)
+   is
+      Decl : Iir;
+   begin
+      Decl := Decls;
+      while Is_Valid (Decl) loop
+         Finalize_Declaration (Syn_Inst, Decl, Is_Subprg);
+
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Finalize_Declarations;
 end Synth.Decls;

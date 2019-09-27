@@ -1345,6 +1345,8 @@ package body Synth.Stmts is
       Lc : constant Loop_Context_Acc := C.Cur_Loop;
 
    begin
+      Mark (C.Cur_Loop.Wire_Mark);
+
       if (Lc.Prev_Loop /= null and then Lc.Prev_Loop.Need_Quit) then
          Lc.W_Quit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
          Set_Wire_Gate
@@ -1427,6 +1429,18 @@ package body Synth.Stmts is
                               Res, Get_Current_Value (null, Lc.W_Quit));
       end if;
 
+      Phi_Discard_Wires (Lc.W_Quit, Lc.W_Exit);
+
+      if Lc.W_Quit /= No_Wire_Id then
+         Free_Wire (Lc.W_Quit);
+      end if;
+
+      if Lc.W_Exit /= No_Wire_Id then
+         Free_Wire (Lc.W_Exit);
+      end if;
+
+      Release (C.Cur_Loop.Wire_Mark);
+
       Phi_Assign (Get_Build (C.Inst), C.W_En, Res, 0);
    end Loop_Control_Finish;
 
@@ -1495,7 +1509,8 @@ package body Synth.Stmts is
              Need_Quit => False,
              Saved_En => No_Net,
              W_Exit => No_Wire_Id,
-             W_Quit => No_Wire_Id);
+             W_Quit => No_Wire_Id,
+             Wire_Mark => No_Wire_Id);
       C.Cur_Loop := Lc'Unrestricted_Access;
 
       Loop_Control_Init (C, Stmt);
@@ -1718,9 +1733,11 @@ package body Synth.Stmts is
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Bod : constant Node := Get_Subprogram_Body (Imp);
-      M : Areapools.Mark_Type;
+      Area_Mark : Areapools.Mark_Type;
       Res : Value_Acc;
       C : Seq_Context;
+      Wire_Mark : Wire_Id;
+      Subprg_Phi : Phi_Type;
    begin
       --  Is it a call to an ieee function ?
       declare
@@ -1741,7 +1758,8 @@ package body Synth.Stmts is
          end if;
       end;
 
-      Areapools.Mark (M, Instance_Pool.all);
+      Mark (Wire_Mark);
+      Areapools.Mark (Area_Mark, Instance_Pool.all);
       C := (Inst => Make_Instance (Syn_Inst, Bod,
                                    New_Internal_Name (Build_Context)),
             Cur_Loop => null,
@@ -1780,21 +1798,29 @@ package body Synth.Stmts is
 
       Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
 
-      Pop_And_Merge_Phi (Build_Context, Bod);
 
       if C.Nbr_Ret = 0 then
          raise Internal_Error;
-      elsif C.Nbr_Ret = 1 then
+      elsif C.Nbr_Ret = 1 and then Is_Const (C.Ret_Value) then
          Res := C.Ret_Value;
       else
          Res := Create_Value_Net (Get_Current_Value (Build_Context, C.W_Val),
                                   C.Ret_Value.Typ);
       end if;
 
-      Free_Instance (C.Inst);
-      Areapools.Release (M, Instance_Pool.all);
+      Pop_Phi (Subprg_Phi);
 
-      --  TODO: free wires.
+      Decls.Finalize_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+
+      --  Free wires.
+      Free_Wire (C.W_En);
+      Free_Wire (C.W_Ret);
+      Free_Wire (C.W_Val);
+
+      Free_Instance (C.Inst);
+      Areapools.Release (Area_Mark, Instance_Pool.all);
+
+      Release (Wire_Mark);
 
       return Res;
    end Synth_User_Function_Call;
