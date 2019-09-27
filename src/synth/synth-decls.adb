@@ -208,15 +208,13 @@ package body Synth.Decls is
    end Synth_Anonymous_Type_Definition;
 
    function Synth_Discrete_Range_Constraint
-     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type is
+     (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
+   is
+      W : Width;
+      Res : Discrete_Range_Type;
    begin
-      case Get_Kind (Rng) is
-         when Iir_Kind_Range_Expression =>
-            --  FIXME: check range.
-            return Synth_Discrete_Range_Expression (Syn_Inst, Rng);
-         when others =>
-            Error_Kind ("synth_discrete_range_constraint", Rng);
-      end case;
+      Synth_Discrete_Range (Syn_Inst, Rng, Res, W);
+      return Res;
    end Synth_Discrete_Range_Constraint;
 
    function Synth_Float_Range_Constraint
@@ -257,20 +255,28 @@ package body Synth.Decls is
       Btyp := Get_Value_Type (Syn_Inst, Get_Base_Type (Atype));
 
       if Btyp.Kind = Type_Unbounded_Vector then
-         St_El := Get_Index_Type (St_Indexes, 0);
-         return Create_Vector_Type
-           (Synth_Bounds_From_Range (Syn_Inst, St_El), Btyp.Uvec_El);
+         if Get_Index_Constraint_Flag (Atype) then
+            St_El := Get_Index_Type (St_Indexes, 0);
+            return Create_Vector_Type
+              (Synth_Bounds_From_Range (Syn_Inst, St_El), Btyp.Uvec_El);
+         else
+            return Btyp;
+         end if;
       else
          --  FIXME: partially constrained arrays, subtype in indexes...
          Etyp := Get_Value_Type (Syn_Inst, El_Type);
-         Bnds := Create_Bound_Array
-           (Iir_Index32 (Get_Nbr_Elements (St_Indexes)));
-         for I in Flist_First .. Flist_Last (St_Indexes) loop
-            St_El := Get_Index_Type (St_Indexes, I);
-            Bnds.D (Iir_Index32 (I + 1)) :=
-              Synth_Bounds_From_Range (Syn_Inst, St_El);
-         end loop;
-         return Create_Array_Type (Bnds, Etyp);
+         if Get_Index_Constraint_Flag (Atype) then
+            Bnds := Create_Bound_Array
+              (Iir_Index32 (Get_Nbr_Elements (St_Indexes)));
+            for I in Flist_First .. Flist_Last (St_Indexes) loop
+               St_El := Get_Index_Type (St_Indexes, I);
+               Bnds.D (Iir_Index32 (I + 1)) :=
+                 Synth_Bounds_From_Range (Syn_Inst, St_El);
+            end loop;
+            return Create_Array_Type (Bnds, Etyp);
+         else
+            raise Internal_Error;
+         end if;
       end if;
    end Synth_Array_Subtype_Indication;
 
