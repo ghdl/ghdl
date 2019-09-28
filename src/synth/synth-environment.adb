@@ -20,6 +20,9 @@
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
+with Netlists.Gates;
+with Netlists.Gates_Ports;
+
 with Errorout; use Errorout;
 
 with Synth.Inference;
@@ -872,6 +875,8 @@ package body Synth.Environment is
                             T_Asgns : Partial_Assign;
                             Stmt : Source.Syn_Src)
    is
+      use Netlists.Gates;
+      use Netlists.Gates_Ports;
       P : Partial_Assign_Array (0 .. 1);
       N : Net_Array (0 .. 1);
       Min_Off : Uns32;
@@ -880,6 +885,7 @@ package body Synth.Environment is
       Res : Net;
       List : Partial_Assign_List;
       Pasgn : Partial_Assign;
+      N1_Inst : Instance;
    begin
       P := (0 => F_Asgns, 1 => T_Asgns);
       Partial_Assign_Init (List);
@@ -899,8 +905,28 @@ package body Synth.Environment is
             end if;
          end loop;
 
+         --  Possible optimizations:
+         --  if C1 then            _          _                 _
+         --    if C2 then      R0-|0\     R0-|0\           R0 -|0\
+         --      R := V;   ==>    |  |--+    |  |- R   ==>     |  |- R
+         --    end if;          V-|_/   +----|_/             V-|_/
+         --  end if;               C1        C2                C1.C2
+         --
+         --  This really helps inference as the net R0 doesn't have to be
+         --  walked twice (in absence of memoization).
+
          --  Build mux.
-         Res := Netlists.Builders.Build_Mux2 (Ctxt, Sel, N (0), N (1));
+         N1_Inst := Get_Net_Parent (N (1));
+         if Get_Id (N1_Inst) = Id_Mux2
+           and then Get_Driver (Get_Mux2_I0 (N1_Inst)) = N (0)
+         then
+            Res := Build_Mux2
+              (Ctxt, Build_Dyadic (Ctxt, Id_And,
+                                   Sel, Get_Driver (Get_Mux2_Sel (N1_Inst))),
+               N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
+         else
+            Res := Build_Mux2 (Ctxt, Sel, N (0), N (1));
+         end if;
          Set_Location (Res, Stmt);
 
          --  Keep the result in a list.
