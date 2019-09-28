@@ -306,6 +306,10 @@ package body Netlists.Dump is
       else
          Disp_Net_Name (N);
          Disp_Width (Get_Width (N));
+
+         Put ('{');
+         Put_Trim (Net'Image (N));
+         Put ('}');
       end if;
    end Dump_Net_Name_And_Width;
 
@@ -434,6 +438,7 @@ package body Netlists.Dump is
       if Get_Nbr_Inputs (Inst) > 0 then
          declare
             First : Boolean;
+            Drv : Net;
          begin
             First := True;
             Put (" (");
@@ -442,7 +447,14 @@ package body Netlists.Dump is
                      Put (", ");
                end if;
                First := False;
-               Disp_Driver (Get_Driver (I));
+
+               Drv := Get_Driver (I);
+
+               Put ('{');
+               Put_Trim (Net'Image (Drv));
+               Put ('}');
+
+               Disp_Driver (Drv);
             end loop;
             Put (')');
          end;
