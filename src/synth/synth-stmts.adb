@@ -1370,6 +1370,20 @@ package body Synth.Stmts is
       end if;
    end Loop_Control_Init;
 
+   function Loop_Control_And (C : Seq_Context; L, R : Net) return Net
+   is
+      B1 : constant Net := Get_Inst_Bit1 (C.Inst);
+   begin
+      --  Optimize common cases.
+      if L = B1 then
+         return R;
+      elsif R = B1 then
+         return L;
+      else
+         return Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And, L, R);
+      end if;
+   end Loop_Control_And;
+
    procedure Loop_Control_Update (C : Seq_Context)
    is
       Lc : constant Loop_Context_Acc := C.Cur_Loop;
@@ -1385,20 +1399,17 @@ package body Synth.Stmts is
 
       --  2. No return (C.W_Ret)
       if C.W_Ret /= No_Wire_Id then
-         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
-                              Res, Get_Current_Value (null, C.W_Ret));
+         Res := Loop_Control_And (C, Res, Get_Current_Value (null, C.W_Ret));
       end if;
 
       --  3. No exit.
       if Lc.W_Exit /= No_Wire_Id then
-         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
-                              Res, Get_Current_Value (null, Lc.W_Exit));
+         Res := Loop_Control_And (C, Res, Get_Current_Value (null, Lc.W_Exit));
       end if;
 
       --  4. No quit.
       if Lc.W_Quit /= No_Wire_Id then
-         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
-                              Res, Get_Current_Value (null, Lc.W_Quit));
+         Res := Loop_Control_And (C, Res, Get_Current_Value (null, Lc.W_Quit));
       end if;
 
       Phi_Assign (Get_Build (C.Inst), C.W_En, Res, 0);
@@ -1419,14 +1430,12 @@ package body Synth.Stmts is
 
       --  2. No return (C.W_Ret)
       if C.W_Ret /= No_Wire_Id then
-         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
-                              Res, Get_Current_Value (null, C.W_Ret));
+         Res := Loop_Control_And (C, Res, Get_Current_Value (null, C.W_Ret));
       end if;
 
       --  3. No quit (C.W_Quit)
       if Lc.W_Quit /= No_Wire_Id then
-         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And,
-                              Res, Get_Current_Value (null, Lc.W_Quit));
+         Res := Loop_Control_And (C, Res, Get_Current_Value (null, Lc.W_Quit));
       end if;
 
       Phi_Discard_Wires (Lc.W_Quit, Lc.W_Exit);
