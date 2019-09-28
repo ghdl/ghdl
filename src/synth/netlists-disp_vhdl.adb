@@ -321,9 +321,15 @@ package body Netlists.Disp_Vhdl is
    is
       Q : constant Character := Get_Lit_Quote (W);
    begin
-      Put (Q);
-      Put ((1 .. Natural (W) => 'X'));
-      Put (Q);
+      if W <= 8 then
+         Put (Q);
+         Put ((1 .. Natural (W) => 'X'));
+         Put (Q);
+      else
+         Put ('(');
+         Put_Trim (Uns32'Image (W - 1));
+         Put (" downto 0 => 'X')");
+      end if;
    end Disp_X_Lit;
 
    procedure Disp_Extract (Inst : Instance);
