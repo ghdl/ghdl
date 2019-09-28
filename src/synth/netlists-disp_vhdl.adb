@@ -773,6 +773,9 @@ package body Netlists.Disp_Vhdl is
                     ("  \o0 <= \i1; -- reduce and" & NL, Inst);
                end if;
             end;
+         when Id_Edge =>
+            Disp_Template
+              ("  \o0 <= '1' when rising_edge (\i0) else '0';" & NL, Inst);
          when Id_Assert =>
             Disp_Template
               ("  \l0: assert \i0 = '1' severity error;" & NL, Inst);
