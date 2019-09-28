@@ -35,46 +35,48 @@ package Netlists.Gates is
    Id_Sub : constant Module_Id := 10;
    Id_Umul : constant Module_Id := 11;
    Id_Smul : constant Module_Id := 12;
+   Id_Umod : constant Module_Id := 13;
+   Id_Smod : constant Module_Id := 14;
 
-   subtype Dyadic_Module_Id is Module_Id range Id_And .. Id_Smul;
+   subtype Dyadic_Module_Id is Module_Id range Id_And .. Id_Smod;
 
    --  Logical and arithmetic shifts.
    --  FIXME: clarify right operand: width, large values
-   Id_Lsl : constant Module_Id := 13;
-   Id_Lsr : constant Module_Id := 14;
-   Id_Asr : constant Module_Id := 15;
+   Id_Lsl : constant Module_Id := 20;
+   Id_Lsr : constant Module_Id := 21;
+   Id_Asr : constant Module_Id := 22;
 
    subtype Shift_Module_Id is Module_Id range Id_Lsl .. Id_Asr;
 
    --  Rotations.
    --  FIXME: clarify right operand.
-   Id_Rol : constant Module_Id := 16;
-   Id_Ror : constant Module_Id := 17;
+   Id_Rol : constant Module_Id := 23;
+   Id_Ror : constant Module_Id := 24;
 
    subtype Rotate_Module_Id is Module_Id range Id_Lsl .. Id_Asr;
 
    subtype Shift_Rotate_Module_Id is Module_Id range Id_Lsl .. Id_Ror;
 
-   Id_Not : constant Module_Id := 18;
-   Id_Neg : constant Module_Id := 19;
+   Id_Not : constant Module_Id := 25;
+   Id_Neg : constant Module_Id := 26;
 
    subtype Monadic_Module_Id is Module_Id range Id_Not .. Id_Neg;
 
-   Id_Eq  : constant Module_Id := 21;
-   Id_Ne  : constant Module_Id := 22;
-   Id_Ule : constant Module_Id := 23;
-   Id_Sle : constant Module_Id := 24;
-   Id_Ult : constant Module_Id := 25;
-   Id_Slt : constant Module_Id := 26;
-   Id_Uge : constant Module_Id := 27;
-   Id_Sge : constant Module_Id := 28;
-   Id_Ugt : constant Module_Id := 29;
-   Id_Sgt : constant Module_Id := 30;
+   Id_Eq  : constant Module_Id := 27;
+   Id_Ne  : constant Module_Id := 28;
+   Id_Ule : constant Module_Id := 29;
+   Id_Sle : constant Module_Id := 30;
+   Id_Ult : constant Module_Id := 31;
+   Id_Slt : constant Module_Id := 32;
+   Id_Uge : constant Module_Id := 33;
+   Id_Sge : constant Module_Id := 34;
+   Id_Ugt : constant Module_Id := 35;
+   Id_Sgt : constant Module_Id := 36;
 
    subtype Compare_Module_Id is Module_Id range Id_Eq .. Id_Sgt;
 
-   Id_Red_And : constant Module_Id := 31;
-   Id_Red_Or  : constant Module_Id := 32;
+   Id_Red_And : constant Module_Id := 37;
+   Id_Red_Or  : constant Module_Id := 38;
 
    subtype Reduce_Module_Id is Module_Id range Id_Red_And .. Id_Red_Or;
 
