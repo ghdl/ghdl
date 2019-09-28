@@ -137,6 +137,14 @@ package body Synth.Stmts is
                Dest_Off := 0;
                Dest_Type := Targ.Typ;
             end;
+         when Iir_Kind_Object_Alias_Declaration =>
+            declare
+               Targ : constant Value_Acc := Get_Value (Syn_Inst, Pfx);
+            begin
+               Dest_Wid := Targ.A_Wid;
+               Dest_Off := Targ.A_Off;
+               Dest_Type := Targ.Typ;
+            end;
          when Iir_Kind_Indexed_Name =>
             declare
                Voff : Net;
