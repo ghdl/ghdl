@@ -1587,6 +1587,43 @@ package body Synth.Stmts is
       C.Cur_Loop := Lc.Prev_Loop;
    end Synth_For_Loop_Statement;
 
+   procedure Synth_While_Loop_Statement (C : in out Seq_Context; Stmt : Node)
+   is
+      Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
+      Cond : constant Node := Get_Condition (Stmt);
+      Val : Value_Acc;
+      Lc : aliased Loop_Context;
+   begin
+      Lc := (Prev_Loop => C.Cur_Loop,
+             Loop_Stmt => Stmt,
+             Need_Quit => False,
+             Saved_En => No_Net,
+             W_Exit => No_Wire_Id,
+             W_Quit => No_Wire_Id,
+             Wire_Mark => No_Wire_Id);
+      C.Cur_Loop := Lc'Unrestricted_Access;
+
+      Loop_Control_Init (C, Stmt);
+
+      loop
+         if Cond /= Null_Node then
+            Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
+            if not Is_Const (Val) then
+               Error_Msg_Synth (+Cond, "loop condition must be static");
+               exit;
+            end if;
+            exit when Val.Scal = 0;
+         end if;
+
+         Synth_Sequential_Statements (C, Stmts);
+
+         Loop_Control_Update (C);
+      end loop;
+      Loop_Control_Finish (C);
+
+      C.Cur_Loop := Lc.Prev_Loop;
+   end Synth_While_Loop_Statement;
+
    procedure Synth_Return_Statement (C : in out Seq_Context; Stmt : Node)
    is
       Val : Value_Acc;
@@ -1653,6 +1690,8 @@ package body Synth.Stmts is
                Synth_Case_Statement (C, Stmt);
             when Iir_Kind_For_Loop_Statement =>
                Synth_For_Loop_Statement (C, Stmt);
+            when Iir_Kind_While_Loop_Statement =>
+               Synth_While_Loop_Statement (C, Stmt);
             when Iir_Kind_Null_Statement =>
                --  Easy
                null;
