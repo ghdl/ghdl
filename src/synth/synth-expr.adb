@@ -1075,12 +1075,22 @@ package body Synth.Expr is
          if Get_Id (Linst) /= Get_Id (Rinst) then
             return False;
          end if;
-         if Get_Id (Linst) = Id_Uextend then
-            return Is_Same (Get_Input_Net (Linst, 0),
-                            Get_Input_Net (Rinst, 0));
-         end if;
+         case Get_Id (Linst) is
+            when Id_Uextend =>
+               --  When index is extended from a subtype.
+               return Is_Same (Get_Input_Net (Linst, 0),
+                               Get_Input_Net (Rinst, 0));
+            when Id_Extract =>
+               --  When index is extracted from a record.
+               if Get_Param_Uns32 (Linst, 0) /= Get_Param_Uns32 (Rinst, 0) then
+                  return False;
+               end if;
+               return Is_Same (Get_Input_Net (Linst, 0),
+                               Get_Input_Net (Rinst, 0));
+            when others =>
+               return False;
+         end case;
       end;
-      return False;
    end Is_Same;
 
    --  Identify LEFT to/downto RIGHT as:
