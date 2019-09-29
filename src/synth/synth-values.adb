@@ -54,9 +54,10 @@ package body Synth.Values is
          when Value_Array
            | Value_Record =>
             return False;
+         when Value_Alias =>
+            return Is_Const (Val.A_Obj);
          when Value_Instance
-           | Value_Subtype
-           | Value_Alias =>
+           | Value_Subtype =>
             --  Not really a value.
             raise Internal_Error;
       end case;
