@@ -311,6 +311,8 @@ package body Synth.Values is
             return Arr_Type.Arr_El;
          when Type_Unbounded_Array =>
             return Arr_Type.Uarr_El;
+         when Type_Unbounded_Vector =>
+            return Arr_Type.Uvec_El;
          when others =>
             raise Internal_Error;
       end case;
