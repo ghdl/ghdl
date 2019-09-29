@@ -35,7 +35,7 @@ package Synth.Stmts is
 
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
-                                      Dest_Wid : out Wire_Id;
+                                      Dest_Obj : out Value_Acc;
                                       Dest_Off : out Uns32;
                                       Dest_Type : out Type_Acc);
 

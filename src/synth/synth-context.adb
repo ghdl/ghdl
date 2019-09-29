@@ -563,9 +563,14 @@ package body Synth.Context is
             declare
                Res : Net;
             begin
-               Res := Get_Current_Value (Build_Context, Val.A_Wid);
-               return Build_Extract (Build_Context, Res, Val.A_Off,
-                                     Get_Type_Width (Val.Typ));
+               if Val.A_Obj.Kind = Value_Wire then
+                  Res := Get_Current_Value (Build_Context, Val.A_Obj.W);
+                  return Build_Extract (Build_Context, Res, Val.A_Off,
+                                        Get_Type_Width (Val.Typ));
+               else
+                  pragma Assert (Val.A_Off = 0);
+                  return Get_Net (Val.A_Obj);
+               end if;
             end;
          when others =>
             raise Internal_Error;

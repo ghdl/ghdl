@@ -524,14 +524,14 @@ package body Synth.Decls is
          when Iir_Kind_Object_Alias_Declaration =>
             Synth_Declaration_Type (Syn_Inst, Decl);
             declare
-               Wid : Wire_Id;
+               Obj : Value_Acc;
                Off : Uns32;
                Typ : Type_Acc;
             begin
                Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
-                                              Wid, Off, Typ);
+                                              Obj, Off, Typ);
                Create_Object (Syn_Inst, Decl,
-                              Create_Value_Alias (Wid, Off, Typ));
+                              Create_Value_Alias (Obj, Off, Typ));
             end;
          when Iir_Kind_Anonymous_Signal_Declaration =>
             Make_Object (Syn_Inst, Wire_Signal, Decl);

@@ -204,7 +204,7 @@ package Synth.Values is
          when Value_Instance =>
             Instance : Instance_Id;
          when Value_Alias =>
-            A_Wid : Wire_Id;
+            A_Obj : Value_Acc;
             A_Off : Uns32;
       end case;
    end record;
@@ -283,7 +283,7 @@ package Synth.Values is
 
    function Create_Value_Instance (Inst : Instance_Id) return Value_Acc;
 
-   function Create_Value_Alias (Wid : Wire_Id; Off : Uns32; Typ : Type_Acc)
+   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
                                return Value_Acc;
 
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)

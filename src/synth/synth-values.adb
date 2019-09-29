@@ -548,7 +548,7 @@ package body Synth.Values is
                                   (Kind => Value_Subtype, Typ => Typ)));
    end Create_Value_Subtype;
 
-   function Create_Value_Alias (Wid : Wire_Id; Off : Uns32; Typ : Type_Acc)
+   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
                                return Value_Acc
    is
       subtype Value_Type_Alias is Value_Type (Value_Alias);
@@ -556,7 +556,7 @@ package body Synth.Values is
    begin
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Alias,
-                                   A_Wid => Wid,
+                                   A_Obj => Obj,
                                    A_Off => Off,
                                    Typ => Typ)));
    end Create_Value_Alias;

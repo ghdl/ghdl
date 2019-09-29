@@ -709,7 +709,7 @@ package body Synth.Expr is
          when Value_Net =>
             return Create_Value_Net (Val.N, Ntype);
          when Value_Alias =>
-            return Create_Value_Alias (Val.A_Wid, Val.A_Off, Ntype);
+            return Create_Value_Alias (Val.A_Obj, Val.A_Off, Ntype);
          when others =>
             raise Internal_Error;
       end case;
