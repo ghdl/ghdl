@@ -540,11 +540,15 @@ package body Synth.Decls is
                Obj : Value_Acc;
                Off : Uns32;
                Typ : Type_Acc;
+               Res : Value_Acc;
+               Obj_Type : Type_Acc;
             begin
+               Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
                Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
                                               Obj, Off, Typ);
-               Create_Object (Syn_Inst, Decl,
-                              Create_Value_Alias (Obj, Off, Typ));
+               Res := Create_Value_Alias (Obj, Off, Typ);
+               Res := Synth_Subtype_Conversion (Res, Obj_Type, True, Decl);
+               Create_Object (Syn_Inst, Decl, Res);
             end;
          when Iir_Kind_Anonymous_Signal_Declaration =>
             Make_Object (Syn_Inst, Wire_Signal, Decl);
