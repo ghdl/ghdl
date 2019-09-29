@@ -90,6 +90,7 @@ package body Synth.Values is
    begin
       case Typ.Kind is
          when Type_Bit
+           | Type_Logic
            | Type_Discrete
            | Type_Float
            | Type_Vector
@@ -171,6 +172,14 @@ package body Synth.Values is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit, W => 1)));
    end Create_Bit_Type;
+
+   function Create_Logic_Type return Type_Acc
+   is
+      subtype Logic_Type_Type is Type_Type (Type_Logic);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Logic_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Logic, W => 1)));
+   end Create_Logic_Type;
 
    function Create_Discrete_Type (Rng : Discrete_Range_Type; W : Width)
                                  return Type_Acc
@@ -587,7 +596,7 @@ package body Synth.Values is
    begin
       Instance_Pool := Global_Pool'Access;
       Boolean_Type := Create_Bit_Type;
-      Logic_Type := Create_Bit_Type;
+      Logic_Type := Create_Logic_Type;
       Bit_Type := Create_Bit_Type;
    end Init;
 end Synth.Values;

@@ -82,7 +82,7 @@ package body Synth.Decls is
       Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
       El_Typ := Get_Value_Type (Syn_Inst, El_Type);
 
-      if El_Typ.Kind = Type_Bit
+      if El_Typ.Kind in Type_Nets
         and then Is_One_Dimensional_Array_Type (Def)
       then
          Typ := Create_Unbounded_Vector (El_Typ);
@@ -303,8 +303,8 @@ package body Synth.Decls is
                Rng : Discrete_Range_Type;
                W : Width;
             begin
-               if Btype.Kind = Type_Bit then
-                  --  A subtype of a bit type is still a bit.
+               if Btype.Kind in Type_Nets then
+                  --  A subtype of a bit/logic type is still a bit/logic.
                   Typ := Btype;
                else
                   Rng := Synth_Discrete_Range_Constraint

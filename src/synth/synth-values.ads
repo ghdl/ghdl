@@ -73,6 +73,7 @@ package Synth.Values is
    type Type_Kind is
      (
       Type_Bit,
+      Type_Logic,
       Type_Discrete,
       Type_Float,
       Type_Vector,
@@ -85,6 +86,8 @@ package Synth.Values is
       Type_Unbounded_Array,
       Type_Record
      );
+
+   subtype Type_Nets is Type_Kind range Type_Bit .. Type_Logic;
 
    type Type_Type (Kind : Type_Kind);
    type Type_Acc is access Type_Type;
@@ -104,7 +107,8 @@ package Synth.Values is
    type Type_Type (Kind : Type_Kind) is record
       W : Width;
       case Kind is
-         when Type_Bit =>
+         when Type_Bit
+           | Type_Logic =>
             null;
          when Type_Discrete =>
             Drange : Discrete_Range_Type;

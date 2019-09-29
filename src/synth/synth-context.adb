@@ -385,15 +385,22 @@ package body Synth.Context is
                Idx : constant Digit_Index := Digit_Index (Off / 32);
                Pos : constant Natural := Natural (Off mod 32);
                Va : Uns32;
+            begin
+               Va := Uns32 (Val.Scal);
+               Va := Shift_Left (Va, Pos);
+               Vec (Idx).Val := Vec (Idx).Val or Va;
+               Vec (Idx).Zx := 0;
+               Off := Off + 1;
+            end;
+         when Type_Logic =>
+            declare
+               Idx : constant Digit_Index := Digit_Index (Off / 32);
+               Pos : constant Natural := Natural (Off mod 32);
+               Va : Uns32;
                Zx : Uns32;
             begin
-               if Val.Typ = Logic_Type then
-                  From_Std_Logic (Val.Scal, Va, Zx);
-                  Has_Zx := Has_Zx or Zx /= 0;
-               else
-                  Va := Uns32 (Val.Scal);
-                  Zx := 0;
-               end if;
+               From_Std_Logic (Val.Scal, Va, Zx);
+               Has_Zx := Has_Zx or Zx /= 0;
                Va := Shift_Left (Va, Pos);
                Zx := Shift_Left (Zx, Pos);
                Vec (Idx).Val := Vec (Idx).Val or Va;
@@ -480,7 +487,8 @@ package body Synth.Context is
             return Val.N;
          when Value_Discrete =>
             case Val.Typ.Kind is
-               when Type_Bit =>
+               when Type_Bit
+                 | Type_Logic =>
                   declare
                      V : Logvec_Array (0 .. 0) := (0 => (0, 0));
                      Res : Net;

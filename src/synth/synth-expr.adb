@@ -131,8 +131,10 @@ package body Synth.Expr is
      (Enum : Int64; Etype : Type_Acc; Val : out Uns32; Zx : out Uns32) is
    begin
       if Etype = Logic_Type then
+         pragma Assert (Etype.Kind = Type_Logic);
          From_Std_Logic (Enum, Val, Zx);
       elsif Etype = Boolean_Type or Etype = Bit_Type then
+         pragma Assert (Etype.Kind = Type_Bit);
          From_Bit (Enum, Val);
          Zx := 0;
       else
@@ -673,7 +675,7 @@ package body Synth.Expr is
       Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 0);
       pragma Assert (Bnd.Len = Uns32 (Last + 1));
 
-      if El_Typ.Kind = Type_Bit then
+      if El_Typ.Kind in Type_Nets then
          Res_Type := Create_Vector_Type (Bnd, El_Typ);
       else
          Bnds := Create_Bound_Array (1);
@@ -724,6 +726,9 @@ package body Synth.Expr is
       case Dtype.Kind is
          when Type_Bit =>
             pragma Assert (Vtype.Kind = Type_Bit);
+            return Val;
+         when Type_Logic =>
+            pragma Assert (Vtype.Kind = Type_Logic);
             return Val;
          when Type_Discrete =>
             pragma Assert (Vtype.Kind = Type_Discrete);
@@ -1429,7 +1434,7 @@ package body Synth.Expr is
    begin
       Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 0);
       El_Type := Get_Value_Type (Syn_Inst, Get_Element_Subtype (Str_Type));
-      if El_Type.Kind = Type_Bit then
+      if El_Type.Kind in Type_Nets then
          Res_Type := Create_Vector_Type (Bounds, El_Type);
       else
          Bnds := Create_Bound_Array (1);

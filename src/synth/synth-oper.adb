@@ -398,7 +398,7 @@ package body Synth.Oper is
             return Synth_Vec_Dyadic (Id_Xnor);
 
          when Iir_Predefined_Enum_Equality =>
-            if Is_Bit_Type (Left_Type) then
+            if Left_Typ.Kind = Type_Bit then
                pragma Assert (Is_Bit_Type (Right_Type));
                if Is_Const (Left) then
                   return Synth_Bit_Eq_Const (Left, Right, Expr);
