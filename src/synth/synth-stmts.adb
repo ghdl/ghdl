@@ -360,6 +360,25 @@ package body Synth.Stmts is
       end case;
    end Synth_Target;
 
+   procedure Assign_Value (Targ : Value_Acc; Val : Value_Acc; Loc : Node) is
+   begin
+      case Targ.Kind is
+         when Value_Discrete =>
+            Targ.Scal := Val.Scal;
+         when Value_Array =>
+            declare
+               Len : constant Iir_Index32 := Val.Arr.Len;
+            begin
+               for I in 1 .. Len loop
+                  Assign_Value (Targ.Arr.V (Targ.Arr.Len - Len + I),
+                                Val.Arr.V (I), Loc);
+               end loop;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Assign_Value;
+
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Target_Info;
                                Val : Value_Acc;
@@ -370,8 +389,13 @@ package body Synth.Stmts is
             Synth_Assignment_Aggregate
               (Syn_Inst, Target.Aggr, Target.Targ_Type, Val, Loc);
          when Target_Simple =>
-            Synth_Assign (Target.Obj.W, Target.Targ_Type,
-                          Val, Target.Off, Loc);
+            if Target.Obj.Kind = Value_Wire then
+               Synth_Assign (Target.Obj.W, Target.Targ_Type,
+                             Val, Target.Off, Loc);
+            else
+               pragma Assert (Target.Off = 0);
+               Assign_Value (Target.Obj, Val, Loc);
+            end if;
          when Target_Memory =>
             declare
                Inst : constant Instance := Get_Net_Parent (Target.Mem_Val);
@@ -1207,6 +1231,8 @@ package body Synth.Stmts is
       Actual : Node;
       Val : Value_Acc;
    begin
+      Set_Instance_Const (Subprg_Inst, True);
+
       Assoc := Assoc_Chain;
       Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
@@ -1233,6 +1259,10 @@ package body Synth.Stmts is
          end case;
 
          Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
+
+         if Get_Instance_Const (Subprg_Inst) and then not Is_Const (Val) then
+            Set_Instance_Const (Subprg_Inst, False);
+         end if;
 
          case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
             when Iir_Kind_Interface_Constant_Declaration

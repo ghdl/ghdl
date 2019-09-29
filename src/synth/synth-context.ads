@@ -69,6 +69,9 @@ package Synth.Context is
    --  Start the definition of module M (using INST).
    procedure Set_Instance_Module (Inst : Synth_Instance_Acc; M : Module);
 
+   function Get_Instance_Const (Inst : Synth_Instance_Acc) return Boolean;
+   procedure Set_Instance_Const (Inst : Synth_Instance_Acc; Val : Boolean);
+
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
 
@@ -117,6 +120,8 @@ private
    type Base_Instance_Acc is access Base_Instance_Type;
 
    type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is limited record
+      Is_Const : Boolean;
+
       Base : Base_Instance_Acc;
 
       --  Name prefix for declarations.

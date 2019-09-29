@@ -59,6 +59,7 @@ package body Synth.Context is
                                       Bit1 => No_Net);
 
       Res := new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
+                                      Is_Const => False,
                                       Base => Base,
                                       Name => No_Sname,
                                       Block_Scope => Global_Info,
@@ -85,6 +86,7 @@ package body Synth.Context is
       end if;
 
       Res := new Synth_Instance_Type'(Max_Objs => Info.Nbr_Objects,
+                                      Is_Const => False,
                                       Base => Parent.Base,
                                       Name => Name,
                                       Block_Scope => Scope,
@@ -153,6 +155,17 @@ package body Synth.Context is
    begin
       return Inst.Base.Bit1;
    end Get_Inst_Bit1;
+
+   function Get_Instance_Const (Inst : Synth_Instance_Acc) return Boolean is
+   begin
+      return Inst.Is_Const;
+   end Get_Instance_Const;
+
+   procedure Set_Instance_Const (Inst : Synth_Instance_Acc; Val : Boolean) is
+   begin
+      pragma Assert (not Val or else Inst.Elab_Objects = 0);
+      Inst.Is_Const := Val;
+   end Set_Instance_Const;
 
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc is

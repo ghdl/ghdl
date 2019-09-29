@@ -419,6 +419,9 @@ package body Synth.Decls is
          Obj_Type := Get_Value_Type (Syn_Inst, Decl_Type);
          Val := Synth_Expression_With_Type
            (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
+         --  For constant functions, the value must be constant.
+         pragma Assert (not Get_Instance_Const (Syn_Inst)
+                          or else Is_Const (Val));
          Create_Object_Force (Syn_Inst, First_Decl, Val);
       end if;
    end Synth_Constant_Declaration;
@@ -483,19 +486,29 @@ package body Synth.Decls is
                Init : Value_Acc;
                Obj_Type : Type_Acc;
             begin
-               Make_Object (Syn_Inst, Wire_Variable, Decl);
+               Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
                if Is_Valid (Def) then
-                  Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
                   Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Type);
                   Init := Synth_Subtype_Conversion
                     (Init, Obj_Type, False, Decl);
                else
-                  Init := null;
+                  if Get_Instance_Const (Syn_Inst) then
+                     Init := Create_Value_Default (Obj_Type);
+                  else
+                     Init := null;
+                  end if;
                end if;
-               Create_Var_Wire (Syn_Inst, Decl, Init);
-               if Is_Subprg and then Init /= null then
-                  Phi_Assign (Get_Build (Syn_Inst),
-                              Get_Value (Syn_Inst, Decl).W, Get_Net (Init), 0);
+               if Get_Instance_Const (Syn_Inst) then
+                  pragma Assert (Init /= null);
+                  Create_Object (Syn_Inst, Decl, Init);
+               else
+                  Make_Object (Syn_Inst, Wire_Variable, Decl);
+                  Create_Var_Wire (Syn_Inst, Decl, Init);
+                  if Is_Subprg and then Init /= null then
+                     Phi_Assign
+                       (Get_Build (Syn_Inst),
+                        Get_Value (Syn_Inst, Decl).W, Get_Net (Init), 0);
+                  end if;
                end if;
             end;
          when Iir_Kind_Interface_Variable_Declaration =>
@@ -589,12 +602,12 @@ package body Synth.Decls is
       Val : Value_Acc;
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Variable_Declaration =>
-            Val := Get_Value (Syn_Inst, Decl);
-            Free_Wire (Val.W);
-         when Iir_Kind_Interface_Variable_Declaration =>
-            Val := Get_Value (Syn_Inst, Decl);
-            Free_Wire (Val.W);
+         when Iir_Kind_Variable_Declaration
+           | Iir_Kind_Interface_Variable_Declaration =>
+            if not Get_Instance_Const (Syn_Inst) then
+               Val := Get_Value (Syn_Inst, Decl);
+               Free_Wire (Val.W);
+            end if;
          when Iir_Kind_Constant_Declaration =>
             null;
          when Iir_Kind_Signal_Declaration

@@ -592,6 +592,59 @@ package body Synth.Values is
       return Atype.W;
    end Get_Type_Width;
 
+   function Create_Value_Default (Typ : Type_Acc) return Value_Acc is
+   begin
+      case Typ.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            --  FIXME: what about subtype ?
+            return Create_Value_Discrete (0, Typ);
+         when Type_Discrete =>
+            return Create_Value_Discrete (Typ.Drange.Left, Typ);
+         when Type_Float =>
+            return Create_Value_Float (Typ.Frange.Left, Typ);
+         when Type_Vector =>
+            declare
+               El_Typ : constant Type_Acc := Typ.Vec_El;
+               Arr : Value_Array_Acc;
+            begin
+               Arr := Create_Value_Array (Iir_Index32 (Typ.Vbound.Len));
+               for I in Arr.V'Range loop
+                  Arr.V (I) := Create_Value_Default (El_Typ);
+               end loop;
+               return Create_Value_Array (Typ, Arr);
+            end;
+         when Type_Unbounded_Vector =>
+            raise Internal_Error;
+         when Type_Slice =>
+            raise Internal_Error;
+         when Type_Array =>
+            declare
+               El_Typ : constant Type_Acc := Typ.Vec_El;
+               Arr : Value_Array_Acc;
+            begin
+               Arr := Create_Value_Array
+                 (Iir_Index32 (Get_Array_Flat_Length (Typ)));
+               for I in Arr.V'Range loop
+                  Arr.V (I) := Create_Value_Default (El_Typ);
+               end loop;
+               return Create_Value_Array (Typ, Arr);
+            end;
+         when Type_Unbounded_Array =>
+            raise Internal_Error;
+         when Type_Record =>
+            declare
+               Els : Value_Array_Acc;
+            begin
+               Els := Create_Value_Array (Typ.Rec.Len);
+               for I in Els.V'Range loop
+                  Els.V (I) := Create_Value_Default (Typ.Rec.E (I).Typ);
+               end loop;
+               return Create_Value_Record (Typ, Els);
+            end;
+      end case;
+   end Create_Value_Default;
+
    procedure Init is
    begin
       Instance_Pool := Global_Pool'Access;

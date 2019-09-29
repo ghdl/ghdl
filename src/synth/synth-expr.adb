@@ -803,7 +803,8 @@ package body Synth.Expr is
             pragma Assert (Vtype.Kind = Type_Array);
             return Val;
          when Type_Unbounded_Vector =>
-            pragma Assert (Vtype.Kind = Type_Vector);
+            pragma Assert (Vtype.Kind = Type_Vector
+                             or else Vtype.Kind = Type_Slice);
             return Val;
          when Type_Record =>
             --  TODO: handle elements.

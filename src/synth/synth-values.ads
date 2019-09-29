@@ -295,6 +295,9 @@ package Synth.Values is
 
    function Get_Type_Width (Atype : Type_Acc) return Width;
 
+   --  Create a default initial value for TYP.
+   function Create_Value_Default (Typ : Type_Acc) return Value_Acc;
+
    procedure Init;
 
    --  Set by Init.
