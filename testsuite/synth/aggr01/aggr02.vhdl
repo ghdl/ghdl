@@ -17,4 +17,3 @@ architecture behav of aggr02 is
 begin
   b <= a and gen_mask (8);
 end behav;
-    
