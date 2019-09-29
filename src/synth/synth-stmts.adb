@@ -160,12 +160,12 @@ package body Synth.Stmts is
                if Voff /= No_Net then
                   Error_Msg_Synth
                     (+Pfx, "dynamic index must be the last suffix");
-                  return;
+               else
+                  --  FIXME: check index.
+                  pragma Assert (Mul = 0);
+                  null;
                end if;
 
-               --  FIXME: check index.
-
-               pragma Assert (Mul = 0);
                Dest_Off := Dest_Off + Off;
                Dest_Type := Get_Array_Element (Dest_Type);
             end;
