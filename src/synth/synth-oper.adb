@@ -419,11 +419,13 @@ package body Synth.Oper is
                return Create_Value_Discrete
                  (Boolean'Pos (Is_Equal (Left, Right)), Boolean_Type);
             end if;
-            if Is_Vector_Type (Left_Type) then
-               return Synth_Compare (Id_Eq);
-            else
-               raise Internal_Error;
+            if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
+               Warning_Msg_Synth
+                 (+Expr,
+                  "length of '=' operands doesn't match, result is false");
+               return Create_Value_Discrete (0, Boolean_Type);
             end if;
+            return Synth_Compare (Id_Eq);
          when Iir_Predefined_Array_Inequality =>
             --  TODO: check size, handle non-vector.
             if Is_Vector_Type (Left_Type) then

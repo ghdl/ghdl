@@ -293,6 +293,8 @@ package Synth.Values is
    --  sub-elements.
    function Get_Array_Flat_Length (Typ : Type_Acc) return Width;
 
+   function Is_Matching_Bounds (L, R : Type_Acc) return Boolean;
+
    function Get_Type_Width (Atype : Type_Acc) return Width;
 
    --  Create a default initial value for TYP.

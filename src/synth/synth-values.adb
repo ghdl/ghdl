@@ -595,6 +595,54 @@ package body Synth.Values is
       return Atype.W;
    end Get_Type_Width;
 
+   function Get_Bound_Length (L : Type_Acc; Dim : Iir_Index32) return Width is
+   begin
+      case L.Kind is
+         when Type_Vector =>
+            if Dim /= 1 then
+               raise Internal_Error;
+            end if;
+            return L.Vbound.Len;
+         when Type_Slice =>
+            if Dim /= 1 then
+               raise Internal_Error;
+            end if;
+            return L.W;
+         when Type_Array =>
+            return L.Abounds.D (Dim).Len;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Bound_Length;
+
+   function Is_Matching_Bounds (L, R : Type_Acc) return Boolean is
+   begin
+      case L.Kind is
+         when Type_Bit
+           | Type_Logic
+           | Type_Discrete
+           | Type_Float =>
+            pragma Assert (L.Kind = R.Kind);
+            return True;
+         when Type_Vector
+           | Type_Slice =>
+            return Get_Bound_Length (L, 1) = Get_Bound_Length (R, 1);
+         when Type_Array =>
+            for I in L.Abounds.D'Range loop
+               if Get_Bound_Length (L, I) /= Get_Bound_Length (R, I) then
+                  return False;
+               end if;
+            end loop;
+            return True;
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector =>
+            raise Internal_Error;
+         when Type_Record =>
+            --  FIXME: handle vhdl-08
+            return True;
+      end case;
+   end Is_Matching_Bounds;
+
    function Create_Value_Default (Typ : Type_Acc) return Value_Acc is
    begin
       case Typ.Kind is
