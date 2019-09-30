@@ -476,6 +476,42 @@ package body Synth.Oper is
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
+            declare
+               L : constant Net := Get_Net (Left);
+               R : constant Net := Get_Net (Right);
+               Lw : constant Width := Get_Width (L);
+               W : constant Width := 2 * Lw;
+               L1, R1 : Net;
+               Rtype : Type_Acc;
+               N : Net;
+            begin
+               L1 := Synth_Uresize (L, W, Expr);
+               R1 := Synth_Uresize (R, W, Expr);
+               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
+               N := Build_Dyadic (Build_Context, Id_Umul, L1, R1);
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Rtype);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
+            declare
+               L : constant Net := Get_Net (Left);
+               R : constant Net := Get_Net (Right);
+               Lw : constant Width := Get_Width (L);
+               W : constant Width := Width'Max (Lw, Get_Width (R));
+               L1, R1 : Net;
+               Rtype : Type_Acc;
+               N : Net;
+            begin
+               L1 := Synth_Uresize (L, W, Expr);
+               R1 := Synth_Uresize (R, W, Expr);
+               Rtype := Create_Vec_Type_By_Length (Lw, Left.Typ.Vec_El);
+               N := Build_Dyadic (Build_Context, Id_Udiv, L1, R1);
+               Set_Location (N, Expr);
+               N := Synth_Uresize (N, Lw, Expr);
+               return Create_Value_Net (N, Rtype);
+            end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             --  "=" (Unsigned, Natural)

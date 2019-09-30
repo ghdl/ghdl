@@ -35,8 +35,10 @@ package Netlists.Gates is
    Id_Sub : constant Module_Id := 10;
    Id_Umul : constant Module_Id := 11;
    Id_Smul : constant Module_Id := 12;
-   Id_Umod : constant Module_Id := 13;
-   Id_Smod : constant Module_Id := 14;
+   Id_Udiv : constant Module_Id := 13;
+   Id_Sdiv : constant Module_Id := 14;
+   Id_Umod : constant Module_Id := 15;
+   Id_Smod : constant Module_Id := 16;
 
    subtype Dyadic_Module_Id is Module_Id range Id_And .. Id_Smod;
 
