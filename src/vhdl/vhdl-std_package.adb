@@ -88,6 +88,7 @@ package body Vhdl.Std_Package is
          raise Internal_Error;
       end if;
       Set_Location (Error_Mark, Std_Location);
+      Set_Signal_Type_Flag (Error_Mark, True);
 
       Create_Known_Iir (Iir_Kind_Integer_Type_Definition,
                         Universal_Integer_Type_Definition);
