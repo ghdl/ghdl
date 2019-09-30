@@ -135,6 +135,7 @@ package body Synth.Insts is
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
       Cur_Module : Module;
+      Val : Value_Acc;
    begin
       if Get_Kind (Params.Decl) = Iir_Kind_Component_Declaration then
          pragma Assert (Params.Arch = Null_Node);
@@ -178,7 +179,9 @@ package body Synth.Insts is
          Synth_Declaration_Type (Syn_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Create_Wire_Object (Syn_Inst, Wire_None, Inter);
+               Val := Create_Value_Net
+                 (No_Net, Get_Value_Type (Syn_Inst, Get_Type (Inter)));
+               Create_Object (Syn_Inst, Inter, Val);
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
@@ -307,6 +310,7 @@ package body Synth.Insts is
       Inter : Node;
       Inst_Obj : Inst_Object;
       Inst : Instance;
+      Val : Value_Acc;
    begin
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance
@@ -334,7 +338,9 @@ package body Synth.Insts is
          Synth_Declaration_Type (Sub_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Create_Wire_Object (Sub_Inst, Wire_None, Inter);
+               Val := Create_Value_Net
+                 (No_Net, Get_Value_Type (Sub_Inst, Get_Type (Inter)));
+               Create_Object (Sub_Inst, Inter, Val);
             when Port_Out
               | Port_Inout =>
                Create_Wire_Object (Sub_Inst, Wire_None, Inter);
@@ -589,6 +595,7 @@ package body Synth.Insts is
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
       Inst_Obj : Inst_Object;
+      Val : Value_Acc;
    begin
       Root_Instance := Global_Instance;
 
@@ -623,7 +630,9 @@ package body Synth.Insts is
          Synth_Declaration_Type (Syn_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Create_Wire_Object (Syn_Inst, Wire_None, Inter);
+               Val := Create_Value_Net
+                 (No_Net, Get_Value_Type (Syn_Inst, Get_Type (Inter)));
+               Create_Object (Syn_Inst, Inter, Val);
             when Port_Out
               | Port_Inout =>
                Create_Wire_Object (Syn_Inst, Wire_None, Inter);
@@ -653,6 +662,8 @@ package body Synth.Insts is
          when Value_Wire =>
             Val.W := Alloc_Wire (Wire_Input, Inter);
             Set_Wire_Gate (Val.W, Get_Output (Self_Inst, Idx));
+         when Value_Net =>
+            Val.N := Get_Output (Self_Inst, Idx);
          when others =>
             raise Internal_Error;
       end case;
