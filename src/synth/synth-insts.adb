@@ -132,6 +132,7 @@ package body Synth.Insts is
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
       Inter_Type : Node;
+      Inter_Typ : Type_Acc;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
       Cur_Module : Module;
@@ -177,17 +178,17 @@ package body Synth.Insts is
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
          Synth_Declaration_Type (Syn_Inst, Inter);
+         Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Val := Create_Value_Net
-                 (No_Net, Get_Value_Type (Syn_Inst, Get_Type (Inter)));
-               Create_Object (Syn_Inst, Inter, Val);
+               Val := Create_Value_Net (No_Net, Inter_Typ);
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
-               Create_Wire_Object (Syn_Inst, Wire_None, Inter);
+               Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
+         Create_Object (Syn_Inst, Inter, Val);
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -308,6 +309,7 @@ package body Synth.Insts is
    is
       Sub_Inst : Synth_Instance_Acc;
       Inter : Node;
+      Inter_Typ : Type_Acc;
       Inst_Obj : Inst_Object;
       Inst : Instance;
       Val : Value_Acc;
@@ -336,15 +338,15 @@ package body Synth.Insts is
             raise Internal_Error;
          end if;
          Synth_Declaration_Type (Sub_Inst, Inter);
+         Inter_Typ := Get_Value_Type (Sub_Inst, Get_Type (Inter));
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Val := Create_Value_Net
-                 (No_Net, Get_Value_Type (Sub_Inst, Get_Type (Inter)));
-               Create_Object (Sub_Inst, Inter, Val);
+               Val := Create_Value_Net (No_Net, Inter_Typ);
             when Port_Out
               | Port_Inout =>
-               Create_Wire_Object (Sub_Inst, Wire_None, Inter);
+               Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
          end case;
+         Create_Object (Sub_Inst, Inter, Val);
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -594,6 +596,7 @@ package body Synth.Insts is
       Entity : constant Node := Get_Entity (Arch);
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
+      Inter_Typ : Type_Acc;
       Inst_Obj : Inst_Object;
       Val : Value_Acc;
    begin
@@ -628,15 +631,15 @@ package body Synth.Insts is
             raise Internal_Error;
          end if;
          Synth_Declaration_Type (Syn_Inst, Inter);
+         Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Val := Create_Value_Net
-                 (No_Net, Get_Value_Type (Syn_Inst, Get_Type (Inter)));
-               Create_Object (Syn_Inst, Inter, Val);
+               Val := Create_Value_Net (No_Net, Inter_Typ);
             when Port_Out
               | Port_Inout =>
-               Create_Wire_Object (Syn_Inst, Wire_None, Inter);
+               Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
          end case;
+         Create_Object (Syn_Inst, Inter, Val);
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -654,19 +657,11 @@ package body Synth.Insts is
    end Synth_Top_Entity;
 
    procedure Create_Input_Wire (Self_Inst : Instance;
-                                Inter : Node;
                                 Idx : Port_Idx;
                                 Val : Value_Acc) is
    begin
-      case Val.Kind is
-         when Value_Wire =>
-            Val.W := Alloc_Wire (Wire_Input, Inter);
-            Set_Wire_Gate (Val.W, Get_Output (Self_Inst, Idx));
-         when Value_Net =>
-            Val.N := Get_Output (Self_Inst, Idx);
-         when others =>
-            raise Internal_Error;
-      end case;
+      pragma Assert (Val.Kind = Value_Net);
+      Val.N := Get_Output (Self_Inst, Idx);
    end Create_Input_Wire;
 
    procedure Create_Output_Wire (Self_Inst : Instance;
@@ -678,20 +673,17 @@ package body Synth.Insts is
       Inp : Input;
       W : Width;
    begin
-      case Val.Kind is
-         when Value_Wire =>
-            --  Create a gate for the output, so that it could be read.
-            Val.W := Alloc_Wire (Wire_Output, Inter);
-            W := Get_Output_Desc (Get_Module (Self_Inst), Idx).W;
-            pragma Assert (W = Get_Type_Width (Val.Typ));
-            Value := Builders.Build_Output (Build_Context, W);
-            Set_Location (Value, Inter);
-            Inp := Get_Input (Self_Inst, Idx);
-            Connect (Inp, Value);
-            Set_Wire_Gate (Val.W, Value);
-         when others =>
-            raise Internal_Error;
-      end case;
+      pragma Assert (Val.Kind = Value_Wire);
+
+      --  Create a gate for the output, so that it could be read.
+      Val.W := Alloc_Wire (Wire_Output, Inter);
+      W := Get_Output_Desc (Get_Module (Self_Inst), Idx).W;
+      pragma Assert (W = Get_Type_Width (Val.Typ));
+      Value := Builders.Build_Output (Build_Context, W);
+      Set_Location (Value, Inter);
+      Inp := Get_Input (Self_Inst, Idx);
+      Connect (Inp, Value);
+      Set_Wire_Gate (Val.W, Value);
    end Create_Output_Wire;
 
    procedure Apply_Block_Configuration (Cfg : Node; Blk : Node)
@@ -763,6 +755,7 @@ package body Synth.Insts is
       Syn_Inst : constant Synth_Instance_Acc := Inst.Syn_Inst;
       Self_Inst : Instance;
       Inter : Node;
+      Val : Value_Acc;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
    begin
@@ -779,15 +772,14 @@ package body Synth.Insts is
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
+         Val := Get_Value (Syn_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Create_Input_Wire
-                 (Self_Inst, Inter, Nbr_Inputs, Get_Value (Syn_Inst, Inter));
+               Create_Input_Wire (Self_Inst, Nbr_Inputs, Val);
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
-               Create_Output_Wire
-                 (Self_Inst, Inter, Nbr_Outputs, Get_Value (Syn_Inst, Inter));
+               Create_Output_Wire (Self_Inst, Inter, Nbr_Outputs, Val);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Inter := Get_Chain (Inter);
