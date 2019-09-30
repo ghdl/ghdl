@@ -905,6 +905,7 @@ package body Synth.Expr is
       Idx_Expr : constant Node := Get_Nth_Element (Indexes, 0);
       Idx_Val : Value_Acc;
       Idx_Type : Type_Acc;
+      Bnd : Bound_Type;
    begin
       if Get_Nbr_Elements (Indexes) /= 1 then
          Error_Msg_Synth (+Name, "multi-dim arrays not yet supported");
@@ -916,32 +917,25 @@ package body Synth.Expr is
         (Syn_Inst, Get_Base_Type (Get_Type (Idx_Expr)));
       Idx_Val := Synth_Expression_With_Type (Syn_Inst, Idx_Expr, Idx_Type);
 
-      if Pfx_Type.Kind = Type_Vector then
-         W := 1;
-         if Idx_Val.Kind = Value_Discrete then
-            Voff := No_Net;
-            Mul := 0;
-            Off := Index_To_Offset (Pfx_Type.Vbound, Idx_Val.Scal, Name);
-         else
-            Voff := Dyn_Index_To_Offset (Pfx_Type.Vbound, Idx_Val, Name);
-            Off := 0;
-            Mul := 1;
-         end if;
-      elsif Pfx_Type.Kind = Type_Array then
-         W := Get_Type_Width (Pfx_Type.Arr_El);
-         if Idx_Val.Kind = Value_Discrete then
-            Voff := No_Net;
-            Off := Index_To_Offset
-              (Pfx_Type.Abounds.D (1), Idx_Val.Scal, Name);
-            Mul := 0;
-         else
-            Voff := Dyn_Index_To_Offset
-              (Pfx_Type.Abounds.D (1), Idx_Val, Name);
-            Mul := W;
-            Off := 0;
-         end if;
+      case Pfx_Type.Kind is
+         when Type_Vector =>
+            W := 1;
+            Bnd := Pfx_Type.Vbound;
+         when Type_Array =>
+            W := Get_Type_Width (Pfx_Type.Arr_El);
+            Bnd := Pfx_Type.Abounds.D (1);
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      if Idx_Val.Kind = Value_Discrete then
+         Voff := No_Net;
+         Mul := 0;
+         Off := Index_To_Offset (Bnd, Idx_Val.Scal, Name);
       else
-         raise Internal_Error;
+         Voff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
+         Off := 0;
+         Mul := W;
       end if;
    end Synth_Indexed_Name;
 
