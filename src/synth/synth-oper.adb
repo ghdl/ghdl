@@ -512,6 +512,9 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
             --  "<=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ule);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
+            --  "<=" (Unsigned, Natural)
+            return Synth_Compare_Uns_Nat (Id_Ule);
 
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
             --  ">" (Unsigned, Natural)
@@ -528,6 +531,9 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
             --  ">=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Uge);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat =>
+            --  ">=" (Unsigned, Natural)
+            return Synth_Compare_Uns_Nat (Id_Uge);
 
          when Iir_Predefined_Array_Element_Concat =>
             declare
