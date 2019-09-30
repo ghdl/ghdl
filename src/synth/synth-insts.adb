@@ -178,11 +178,11 @@ package body Synth.Insts is
          Synth_Declaration_Type (Syn_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Make_Object (Syn_Inst, Wire_None, Inter);
+               Create_Wire_Object (Syn_Inst, Wire_None, Inter);
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
-               Make_Object (Syn_Inst, Wire_None, Inter);
+               Create_Wire_Object (Syn_Inst, Wire_None, Inter);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Inter := Get_Chain (Inter);
@@ -274,18 +274,20 @@ package body Synth.Insts is
 
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Connect
-                 (Get_Input (Inst, Nbr_Inputs),
-                  Get_Net (Synth_Expression (Syn_Inst, Actual)));
+               --  Connect the net to the input.
+               Connect (Get_Input (Inst, Nbr_Inputs),
+                        Get_Net (Synth_Expression (Syn_Inst, Actual)));
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
                if Actual /= Null_Iir then
+                  --  Create a port gate (so that is has a name).
                   Port := Get_Output (Inst, Nbr_Outputs);
                   Port := Builders.Build_Port (Get_Build (Syn_Inst), Port);
                   O := Create_Value_Net
                     (Port, Get_Value_Type (Inst_Obj.Syn_Inst,
                                            Get_Type (Inter)));
+                  --  Assign the port output to the actual (a net).
                   Synth_Assignment (Syn_Inst, Actual, O, Assoc);
                end if;
                Nbr_Outputs := Nbr_Outputs + 1;
@@ -332,10 +334,10 @@ package body Synth.Insts is
          Synth_Declaration_Type (Sub_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Make_Object (Sub_Inst, Wire_None, Inter);
+               Create_Wire_Object (Sub_Inst, Wire_None, Inter);
             when Port_Out
               | Port_Inout =>
-               Make_Object (Sub_Inst, Wire_None, Inter);
+               Create_Wire_Object (Sub_Inst, Wire_None, Inter);
          end case;
          Inter := Get_Chain (Inter);
       end loop;
@@ -480,7 +482,7 @@ package body Synth.Insts is
                                    (Syn_Inst, Actual, Inter_Type));
                when Port_Out
                  | Port_Inout =>
-                  Make_Object (Comp_Inst, Wire_None, Assoc_Inter);
+                  Create_Wire_Object (Comp_Inst, Wire_None, Assoc_Inter);
                   Create_Component_Wire
                     (Assoc_Inter, Get_Value (Comp_Inst, Assoc_Inter));
             end case;
@@ -621,10 +623,10 @@ package body Synth.Insts is
          Synth_Declaration_Type (Syn_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Make_Object (Syn_Inst, Wire_None, Inter);
+               Create_Wire_Object (Syn_Inst, Wire_None, Inter);
             when Port_Out
               | Port_Inout =>
-               Make_Object (Syn_Inst, Wire_None, Inter);
+               Create_Wire_Object (Syn_Inst, Wire_None, Inter);
          end case;
          Inter := Get_Chain (Inter);
       end loop;

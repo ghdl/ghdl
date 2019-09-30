@@ -518,7 +518,7 @@ package body Synth.Decls is
                   pragma Assert (Init /= null);
                   Create_Object (Syn_Inst, Decl, Init);
                else
-                  Make_Object (Syn_Inst, Wire_Variable, Decl);
+                  Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
                   Create_Var_Wire (Syn_Inst, Decl, Init);
                   if Is_Subprg and then Init /= null then
                      Phi_Assign
@@ -529,7 +529,7 @@ package body Synth.Decls is
             end;
          when Iir_Kind_Interface_Variable_Declaration =>
             --  Ignore default value.
-            Make_Object (Syn_Inst, Wire_Variable, Decl);
+            Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
             Create_Var_Wire (Syn_Inst, Decl, null);
          when Iir_Kind_Constant_Declaration =>
             Synth_Constant_Declaration (Syn_Inst, Decl);
@@ -541,7 +541,7 @@ package body Synth.Decls is
                Init : Value_Acc;
                Obj_Type : Type_Acc;
             begin
-               Make_Object (Syn_Inst, Wire_Signal, Decl);
+               Create_Wire_Object (Syn_Inst, Wire_Signal, Decl);
                if Is_Valid (Def) then
                   Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
                   Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Type);
@@ -567,7 +567,7 @@ package body Synth.Decls is
                Create_Object (Syn_Inst, Decl, Res);
             end;
          when Iir_Kind_Anonymous_Signal_Declaration =>
-            Make_Object (Syn_Inst, Wire_Signal, Decl);
+            Create_Wire_Object (Syn_Inst, Wire_Signal, Decl);
             Create_Var_Wire (Syn_Inst, Decl, null);
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Declaration =>

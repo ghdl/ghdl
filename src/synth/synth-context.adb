@@ -31,7 +31,6 @@ with Vhdl.Utils;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
 
-with Synth.Errors; use Synth.Errors;
 with Synth.Expr; use Synth.Expr;
 
 package body Synth.Context is
@@ -174,41 +173,6 @@ package body Synth.Context is
       return Create_Value_Instance (Packages_Table.Last);
    end Create_Value_Instance;
 
-   function Alloc_Wire (Kind : Wire_Kind; Obj : Iir; Wtype : Type_Acc)
-                       return Value_Acc
-   is
-      Wire : Wire_Id;
-   begin
-      if Kind = Wire_None then
-         Wire := No_Wire_Id;
-      else
-         Wire := Alloc_Wire (Kind, Obj);
-      end if;
-      return Create_Value_Wire (Wire, Wtype);
-   end Alloc_Wire;
-
-   function Alloc_Object (Kind : Wire_Kind;
-                          Syn_Inst : Synth_Instance_Acc;
-                          Obj : Iir)
-                         return Value_Acc
-   is
-      Obj_Type : constant Iir := Get_Type (Obj);
-      Otype : Type_Acc;
-   begin
-      case Get_Kind (Obj_Type) is
-         when Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Integer_Subtype_Definition
-           | Iir_Kind_Record_Type_Definition
-           | Iir_Kind_Record_Subtype_Definition =>
-            Otype := Get_Value_Type (Syn_Inst, Obj_Type);
-            return Alloc_Wire (Kind, Obj, Otype);
-         when others =>
-            Error_Kind ("alloc_object", Obj_Type);
-      end case;
-   end Alloc_Object;
-
    procedure Create_Object (Syn_Inst : Synth_Instance_Acc;
                             Slot : Object_Slot_Type;
                             Num : Object_Slot_Type := 1) is
@@ -227,7 +191,7 @@ package body Synth.Context is
    end Create_Object;
 
    procedure Create_Object_Force
-     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc)
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
@@ -236,7 +200,7 @@ package body Synth.Context is
    end Create_Object_Force;
 
    procedure Create_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc)
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
@@ -245,7 +209,7 @@ package body Synth.Context is
    end Create_Object;
 
    procedure Create_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc)
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
@@ -254,7 +218,7 @@ package body Synth.Context is
    end Create_Package_Object;
 
    procedure Destroy_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Iir)
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
       Slot : constant Object_Slot_Type := Info.Slot;
@@ -268,21 +232,24 @@ package body Synth.Context is
       Syn_Inst.Elab_Objects := Slot - 1;
    end Destroy_Object;
 
-   procedure Make_Object (Syn_Inst : Synth_Instance_Acc;
-                          Kind : Wire_Kind;
-                          Obj : Iir)
+   procedure Create_Wire_Object (Syn_Inst : Synth_Instance_Acc;
+                                 Kind : Wire_Kind;
+                                 Obj : Node)
    is
-      Otype : constant Iir := Get_Type (Obj);
+      Obj_Type : constant Node := Get_Type (Obj);
+      Otyp : constant Type_Acc := Get_Value_Type (Syn_Inst, Obj_Type);
       Val : Value_Acc;
+      Wid : Wire_Id;
    begin
-      Val := Alloc_Object (Kind, Syn_Inst, Obj);
-      if Val = null then
-         Error_Msg_Synth (+Obj, "%n is not supported", +Otype);
-         return;
+      if Kind = Wire_None then
+         Wid := No_Wire_Id;
+      else
+         Wid := Alloc_Wire (Kind, Obj);
       end if;
+      Val := Create_Value_Wire (Wid, Otyp);
 
       Create_Object (Syn_Inst, Obj, Val);
-   end Make_Object;
+   end Create_Wire_Object;
 
    function Get_Instance_By_Scope
      (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
@@ -326,7 +293,7 @@ package body Synth.Context is
       end case;
    end Get_Instance_By_Scope;
 
-   function Get_Value (Syn_Inst: Synth_Instance_Acc; Obj : Iir)
+   function Get_Value (Syn_Inst: Synth_Instance_Acc; Obj : Node)
                       return Value_Acc
    is
       Info : constant Sim_Info_Acc := Get_Info (Obj);
@@ -336,7 +303,7 @@ package body Synth.Context is
       return Obj_Inst.Objects (Info.Slot);
    end Get_Value;
 
-   function Get_Value_Type (Syn_Inst : Synth_Instance_Acc; Atype : Iir)
+   function Get_Value_Type (Syn_Inst : Synth_Instance_Acc; Atype : Node)
                            return Type_Acc
    is
       Val : Value_Acc;

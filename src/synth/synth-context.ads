@@ -73,30 +73,30 @@ package Synth.Context is
    procedure Set_Instance_Const (Inst : Synth_Instance_Acc; Val : Boolean);
 
    procedure Create_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc);
 
    procedure Create_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc);
 
    --  Force the value of DECL, without checking for elaboration order.
    --  It is for deferred constants.
    procedure Create_Object_Force
-     (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Val : Value_Acc);
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc);
 
    procedure Destroy_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Iir);
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
    --  Build the value for object OBJ.
    --  KIND must be Wire_Variable or Wire_Signal.
-   procedure Make_Object (Syn_Inst : Synth_Instance_Acc;
-                          Kind : Wire_Kind;
-                          Obj : Iir);
+   procedure Create_Wire_Object (Syn_Inst : Synth_Instance_Acc;
+                                 Kind : Wire_Kind;
+                                 Obj : Node);
 
    --  Get the value of OBJ.
-   function Get_Value (Syn_Inst : Synth_Instance_Acc; Obj : Iir)
+   function Get_Value (Syn_Inst : Synth_Instance_Acc; Obj : Node)
                       return Value_Acc;
    --  Wrapper around Get_Value for types.
-   function Get_Value_Type (Syn_Inst : Synth_Instance_Acc; Atype : Iir)
+   function Get_Value_Type (Syn_Inst : Synth_Instance_Acc; Atype : Node)
                            return Type_Acc;
 
    --  Get a net from a scalar/vector value.  This will automatically create
