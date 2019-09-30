@@ -233,8 +233,9 @@ package body Synth.Decls is
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc
    is
       El_Type : constant Node := Get_Element_Subtype (Atype);
-      St_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Atype);
-      St_El : Iir;
+      St_Indexes : constant Node_Flist := Get_Index_Subtype_List (Atype);
+      Ptype : Node;
+      St_El : Node;
       Btyp : Type_Acc;
       Etyp : Type_Acc;
       Bnds : Bound_Array_Acc;
@@ -252,32 +253,47 @@ package body Synth.Decls is
          Synth_Subtype_Indication (Syn_Inst, El_Type);
       end if;
 
-      Btyp := Get_Value_Type (Syn_Inst, Get_Base_Type (Atype));
-
-      if Btyp.Kind = Type_Unbounded_Vector then
-         if Get_Index_Constraint_Flag (Atype) then
-            St_El := Get_Index_Type (St_Indexes, 0);
-            return Create_Vector_Type
-              (Synth_Bounds_From_Range (Syn_Inst, St_El), Btyp.Uvec_El);
-         else
-            return Btyp;
-         end if;
-      else
-         --  FIXME: partially constrained arrays, subtype in indexes...
-         Etyp := Get_Value_Type (Syn_Inst, El_Type);
-         if Get_Index_Constraint_Flag (Atype) then
-            Bnds := Create_Bound_Array
-              (Iir_Index32 (Get_Nbr_Elements (St_Indexes)));
-            for I in Flist_First .. Flist_Last (St_Indexes) loop
-               St_El := Get_Index_Type (St_Indexes, I);
-               Bnds.D (Iir_Index32 (I + 1)) :=
-                 Synth_Bounds_From_Range (Syn_Inst, St_El);
-            end loop;
-            return Create_Array_Type (Bnds, Etyp);
-         else
-            raise Internal_Error;
+      if not Get_Index_Constraint_Flag (Atype) then
+         Ptype := Get_Type (Get_Subtype_Type_Mark (Atype));
+         if Get_Element_Subtype (Ptype) = Get_Element_Subtype (Atype) then
+            --  That's an alias.
+            --  FIXME: maybe a resolution function was added?
+            --  FIXME: also handle resolution added in element subtype.
+            return Get_Value_Type (Syn_Inst, Ptype);
          end if;
       end if;
+
+      Btyp := Get_Value_Type (Syn_Inst, Get_Base_Type (Atype));
+      case Btyp.Kind is
+         when Type_Unbounded_Vector =>
+            if Get_Index_Constraint_Flag (Atype) then
+               St_El := Get_Index_Type (St_Indexes, 0);
+               return Create_Vector_Type
+                 (Synth_Bounds_From_Range (Syn_Inst, St_El), Btyp.Uvec_El);
+            else
+               --  An alias.
+               --  Handle vhdl08 definition of std_logic_vector from
+               --  std_ulogic_vector.
+               return Btyp;
+            end if;
+         when Type_Unbounded_Array =>
+            --  FIXME: partially constrained arrays, subtype in indexes...
+            Etyp := Get_Value_Type (Syn_Inst, El_Type);
+            if Get_Index_Constraint_Flag (Atype) then
+               Bnds := Create_Bound_Array
+                 (Iir_Index32 (Get_Nbr_Elements (St_Indexes)));
+               for I in Flist_First .. Flist_Last (St_Indexes) loop
+                  St_El := Get_Index_Type (St_Indexes, I);
+                  Bnds.D (Iir_Index32 (I + 1)) :=
+                    Synth_Bounds_From_Range (Syn_Inst, St_El);
+               end loop;
+               return Create_Array_Type (Bnds, Etyp);
+            else
+               raise Internal_Error;
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
    end Synth_Array_Subtype_Indication;
 
    procedure Synth_Subtype_Indication
