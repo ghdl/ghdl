@@ -161,8 +161,8 @@ package body Synth.Inference is
             Clk := Get_Input_Net (Inst, 0);
          when Id_And =>
             --  Assume the condition is canonicalized, ie of the form:
-            --  CLK and EXPR.
-            --  FIXME: do it!
+            --  CLK and EXPR
+            --  EXPR and CLK
             declare
                I0 : constant Net := Get_Input_Net (Inst, 0);
                Inst0 : constant Instance := Get_Net_Parent (I0);
@@ -174,6 +174,21 @@ package body Synth.Inference is
                   --  output may be used by other nets.
                   Clk := Get_Input_Net (Inst0, 0);
                   Enable := Get_Input_Net (Inst, 1);
+                  return;
+               end if;
+            end;
+            declare
+               I1 : constant Net := Get_Input_Net (Inst, 1);
+               Inst1 : constant Instance := Get_Net_Parent (I1);
+            begin
+               if Get_Id (Inst1) = Id_Edge then
+                  --  INST is clearly not synthesizable (boolean operation on
+                  --  an edge).  Will be removed at the end by
+                  --  remove_unused_instances.  Do not remove it now as its
+                  --  output may be used by other nets.
+                  Clk := Get_Input_Net (Inst1, 0);
+                  Enable := Get_Input_Net (Inst, 0);
+                  return;
                end if;
             end;
          when others =>
