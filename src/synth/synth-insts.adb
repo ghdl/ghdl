@@ -644,14 +644,13 @@ package body Synth.Insts is
 
    procedure Create_Input_Wire (Self_Inst : Instance;
                                 Inter : Node;
-                                Idx : in out Port_Idx;
+                                Idx : Port_Idx;
                                 Val : Value_Acc) is
    begin
       case Val.Kind is
          when Value_Wire =>
             Val.W := Alloc_Wire (Wire_Input, Inter);
             Set_Wire_Gate (Val.W, Get_Output (Self_Inst, Idx));
-            Idx := Idx + 1;
          when others =>
             raise Internal_Error;
       end case;
@@ -659,7 +658,7 @@ package body Synth.Insts is
 
    procedure Create_Output_Wire (Self_Inst : Instance;
                                  Inter : Node;
-                                 Idx : in out Port_Idx;
+                                 Idx : Port_Idx;
                                  Val : Value_Acc)
    is
       Value : Net;
@@ -677,7 +676,6 @@ package body Synth.Insts is
             Inp := Get_Input (Self_Inst, Idx);
             Connect (Inp, Value);
             Set_Wire_Gate (Val.W, Value);
-            Idx := Idx + 1;
          when others =>
             raise Internal_Error;
       end case;
@@ -772,10 +770,12 @@ package body Synth.Insts is
             when Port_In =>
                Create_Input_Wire
                  (Self_Inst, Inter, Nbr_Inputs, Get_Value (Syn_Inst, Inter));
+               Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
                Create_Output_Wire
                  (Self_Inst, Inter, Nbr_Outputs, Get_Value (Syn_Inst, Inter));
+               Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Inter := Get_Chain (Inter);
       end loop;
