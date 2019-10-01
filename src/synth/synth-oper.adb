@@ -682,8 +682,7 @@ package body Synth.Oper is
                  (Left.Scal rem Right.Scal,
                   Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
-               Error_Msg_Synth (+Expr, "non-constant rem not supported");
-               return null;
+               return Synth_Int_Dyadic (Id_Srem);
             end if;
          when Iir_Predefined_Integer_Exp =>
             if Is_Const (Left) and then Is_Const (Right) then

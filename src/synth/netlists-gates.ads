@@ -39,8 +39,9 @@ package Netlists.Gates is
    Id_Sdiv : constant Module_Id := 14;
    Id_Umod : constant Module_Id := 15;
    Id_Smod : constant Module_Id := 16;
+   Id_Srem : constant Module_Id := 17;
 
-   subtype Dyadic_Module_Id is Module_Id range Id_And .. Id_Smod;
+   subtype Dyadic_Module_Id is Module_Id range Id_And .. Id_Srem;
 
    --  Logical and arithmetic shifts.
    --  FIXME: clarify right operand: width, large values

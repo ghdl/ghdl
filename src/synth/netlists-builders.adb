@@ -432,6 +432,9 @@ package body Netlists.Builders is
       Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Smod),
                             Get_Identifier ("smod"), Id_Smod);
 
+      Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Srem),
+                            Get_Identifier ("srem"), Id_Srem);
+
       Create_Dyadic_Module (Design, Res.M_Shift_Rotate (Id_Lsl),
                             Get_Identifier ("lsl"), Id_Lsl);
       Create_Dyadic_Module (Design, Res.M_Shift_Rotate (Id_Lsr),
