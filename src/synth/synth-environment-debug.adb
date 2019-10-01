@@ -36,29 +36,22 @@ package body Synth.Environment.Debug is
       Put_Line (" conc_assign:" & Conc_Assign'Image(W_Rec.Final_Assign));
    end Dump_Wire_Id;
 
-   procedure Dump_Assign (Asgn : Seq_Assign)
+   procedure Dump_Partial_Assign (Pasgn : Partial_Assign)
    is
       procedure Dump_Value (N : Net) is
       begin
          if N /= No_Net then
             Dump_Net_Name (N);
+            Put ("{w=" & Uns32'Image (Get_Width (N)) & '}');
             Put (" := ");
             Disp_Instance (Get_Parent (N), False);
          else
             Put ("unassigned");
          end if;
       end Dump_Value;
-      Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
       P : Partial_Assign;
    begin
-      Put ("Assign" & Seq_Assign'Image (Asgn));
-      Put (" Wire Id:" & Wire_Id'Image (Rec.Id));
-      Put (", prev_assign:" & Seq_Assign'Image (Rec.Prev));
-      Put (", phi:" & Phi_Id'Image (Rec.Phi));
-      Put (", chain:" & Seq_Assign'Image (Rec.Chain));
-      New_Line;
-      Put_Line (" value:");
-      P := Rec.Asgns;
+      P := Pasgn;
       while P /= No_Partial_Assign loop
          declare
             Pasgn : Partial_Assign_Record renames
@@ -71,6 +64,20 @@ package body Synth.Environment.Debug is
             P := Pasgn.Next;
          end;
       end loop;
+   end Dump_Partial_Assign;
+
+   procedure Dump_Assign (Asgn : Seq_Assign)
+   is
+      Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
+   begin
+      Put ("Assign" & Seq_Assign'Image (Asgn));
+      Put (" Wire Id:" & Wire_Id'Image (Rec.Id));
+      Put (", prev_assign:" & Seq_Assign'Image (Rec.Prev));
+      Put (", phi:" & Phi_Id'Image (Rec.Phi));
+      Put (", chain:" & Seq_Assign'Image (Rec.Chain));
+      New_Line;
+      Put_Line (" value:");
+      Dump_Partial_Assign (Rec.Asgns);
    end Dump_Assign;
 
    procedure Dump_Phi (Id : Phi_Id)
