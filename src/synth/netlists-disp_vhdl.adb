@@ -374,6 +374,8 @@ package body Netlists.Disp_Vhdl is
            | Id_Dyn_Extract
            | Id_Dyn_Insert =>
             return True;
+         when Id_User_None .. Module_Id'Last =>
+            return True;
          when others =>
             return False;
       end case;
