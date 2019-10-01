@@ -321,7 +321,8 @@ package body Synth.Expr is
                      Rng := Synth_Discrete_Range_Expression (Syn_Inst, Ch);
                      Val := Create_Value_Discrete
                        (Rng.Left,
-                        Get_Value_Type (Syn_Inst, Get_Type (Ch)));
+                        Get_Value_Type (Syn_Inst,
+                                        Get_Base_Type (Get_Type (Ch))));
                      while In_Range (Rng, Val.Scal) loop
                         Set_Elem (Get_Index_Offset (Val, Bound, Ch));
                         Update_Index (Rng, Val.Scal);
