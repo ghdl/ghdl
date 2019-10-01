@@ -797,8 +797,13 @@ package body Synth.Environment is
             begin
                if Pa.Offset <= Off then
                   Off := Uns32'Max (Pa.Offset, Min_Off);
+                  --  FIXME: May increase the width.
                   Wd := Width'Min
                     (Wd, Get_Width (Pa.Value) - (Off - Pa.Offset));
+               elsif Pa.Offset < Off + Wd then
+                  --  Reduce the width when there is an assignment after
+                  --  the current offset.
+                  Wd := Pa.Offset - Off;
                end if;
             end;
          end if;

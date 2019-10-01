@@ -1015,11 +1015,10 @@ package body Synth.Stmts is
             Wd : Width;
             List : Partial_Assign_List;
          begin
-            --  Extract the value for each alternative.
+            --  Extract the value for each branch.
             for I in Alts'Range loop
                --  If there is an assignment to Wi in Alt, it will define the
-               --  value.  Otherwise, use Last_Val, ie the last assignment
-               --  before the case.
+               --  value.
                if Get_Wire_Id (Alts (I).Asgns) = Wi then
                   Pasgns (Int32 (I)) := Get_Assign_Partial (Alts (I).Asgns);
                   Alts (I).Asgns := Get_Assign_Chain (Alts (I).Asgns);
@@ -1032,10 +1031,13 @@ package body Synth.Stmts is
             Min_Off := 0;
             loop
                Off := Min_Off;
+
+               -- Extract value of partial assignments to NETS.
                Extract_Merge_Partial_Assigns
                  (Build_Context, Pasgns.all, Nets.all, Off, Wd);
                exit when Off = Uns32'Last and Wd = Width'Last;
 
+               --  If a branch has no value, use the value before the case.
                Last_Val := No_Net;
                for I in Nets'Range loop
                   if Nets (I) = No_Net then
