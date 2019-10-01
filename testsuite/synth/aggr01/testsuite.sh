@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in aggr01 aggr02; do
+for t in aggr01 aggr02 aggr03; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
