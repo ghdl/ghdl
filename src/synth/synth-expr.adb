@@ -1574,11 +1574,14 @@ package body Synth.Expr is
             begin
                Res := Synth_Expression (Syn_Inst, Pfx);
                Res_Typ := Res.Typ.Rec.E (Idx + 1).Typ;
-               --  FIXME: handle const.
-               N := Build_Extract
-                 (Build_Context, Get_Net (Res),
-                  Res.Typ.Rec.E (Idx + 1).Off, Get_Type_Width (Res_Typ));
-               return Create_Value_Net (N, Res_Typ);
+               if Res.Kind = Value_Const_Record then
+                  return Res.Rec.V (Idx + 1);
+               else
+                  N := Build_Extract
+                    (Build_Context, Get_Net (Res),
+                     Res.Typ.Rec.E (Idx + 1).Off, Get_Type_Width (Res_Typ));
+                  return Create_Value_Net (N, Res_Typ);
+               end if;
             end;
          when Iir_Kind_Character_Literal =>
             return Synth_Expression_With_Type
