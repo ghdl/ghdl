@@ -922,7 +922,7 @@ package body Netlists.Builders is
 
    function Build_Dyn_Insert
      (Ctxt : Context_Acc;
-      I : Net; V : Net; P : Net; Step : Uns32; Off : Int32)
+      I : Net; V : Net; P : Net; Step : Uns32; Off : Uns32)
      return Net
    is
       Wd : constant Width := Get_Width (I);
@@ -939,7 +939,7 @@ package body Netlists.Builders is
       end if;
       Connect (Get_Input (Inst, 2), P);
       Set_Param_Uns32 (Inst, 0, Step);
-      Set_Param_Uns32 (Inst, 1, To_Uns32 (Off));
+      Set_Param_Uns32 (Inst, 1, Off);
       return O;
    end Build_Dyn_Insert;
 
@@ -1114,7 +1114,7 @@ package body Netlists.Builders is
 
    function Build_Dyn_Extract
      (Ctxt : Context_Acc;
-      I : Net; P : Net; Step : Uns32; Off : Int32; W : Width) return Net
+      I : Net; P : Net; Step : Uns32; Off : Uns32; W : Width) return Net
    is
       Wd : constant Width := Get_Width (I);
       pragma Assert (Wd /= No_Width);
@@ -1128,7 +1128,7 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 0), I);
       Connect (Get_Input (Inst, 1), P);
       Set_Param_Uns32 (Inst, 0, Step);
-      Set_Param_Uns32 (Inst, 1, To_Uns32 (Off));
+      Set_Param_Uns32 (Inst, 1, Off);
       return O;
    end Build_Dyn_Extract;
 

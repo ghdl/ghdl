@@ -283,13 +283,15 @@ package body Synth.Values is
                                                 Arr_El => El_Type)));
    end Create_Array_Type;
 
-   function Create_Unbounded_Array (El_Type : Type_Acc) return Type_Acc
+   function Create_Unbounded_Array (Ndim : Iir_Index32; El_Type : Type_Acc)
+                                   return Type_Acc
    is
       subtype Unbounded_Type_Type is Type_Type (Type_Unbounded_Array);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Array,
                                                 W => 0,
+                                                Uarr_Ndim => Ndim,
                                                 Uarr_El => El_Type)));
    end Create_Unbounded_Array;
 

@@ -585,7 +585,7 @@ package body Synth.Oper is
                   Iir_Index32 (Get_Width (L) + 1));
 
                return Create_Value_Net
-                 (N, Create_Vector_Type (Bnd, Right.Typ));
+                 (N, Create_Onedimensional_Array_Subtype (Left_Typ, Bnd));
             end;
          when Iir_Predefined_Element_Array_Concat =>
             declare
@@ -601,10 +601,12 @@ package body Synth.Oper is
                   Iir_Index32 (Get_Width (R) + 1));
 
                return Create_Value_Net
-                 (N, Create_Vector_Type (Bnd, Left.Typ));
+                 (N, Create_Onedimensional_Array_Subtype (Right_Typ, Bnd));
             end;
          when Iir_Predefined_Element_Element_Concat =>
             declare
+               Ret_Typ : constant Type_Acc :=
+                 Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
                N : Net;
                Bnd : Bound_Type;
             begin
@@ -614,7 +616,7 @@ package body Synth.Oper is
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2);
                return Create_Value_Net
-                 (N, Create_Vector_Type (Bnd, Left.Typ));
+                 (N, Create_Onedimensional_Array_Subtype (Ret_Typ, Bnd));
             end;
          when Iir_Predefined_Array_Array_Concat =>
             declare

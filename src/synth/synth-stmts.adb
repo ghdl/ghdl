@@ -186,7 +186,7 @@ package body Synth.Stmts is
                Res_Bnd : Bound_Type;
                Inp : Net;
                Step : Uns32;
-               Sl_Off : Int32;
+               Sl_Off : Uns32;
                Wd : Uns32;
             begin
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
@@ -201,7 +201,7 @@ package body Synth.Stmts is
                end if;
 
                Dest_Type := Create_Vector_Type (Res_Bnd, Dest_Type.Vec_El);
-               Dest_Off := Dest_Off + Uns32 (Sl_Off);
+               Dest_Off := Dest_Off + Sl_Off;
             end;
 
          when others =>
@@ -305,8 +305,7 @@ package body Synth.Stmts is
                   Targ_Net := Get_Current_Assign_Value
                     (Build_Context, Obj.W, Off, Get_Type_Width (Typ));
                   V := Build_Dyn_Insert
-                    (Build_Context, Targ_Net, No_Net,
-                     Voff, Mul, Int32 (Idx_Off));
+                    (Build_Context, Targ_Net, No_Net, Voff, Mul, Idx_Off);
                   Set_Location (V, Target);
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => El_Typ,
@@ -324,7 +323,7 @@ package body Synth.Stmts is
                Res_Bnd : Bound_Type;
                Inp : Net;
                Step : Uns32;
-               Sl_Off : Int32;
+               Sl_Off : Uns32;
                Wd : Uns32;
 
                Targ_Net : Net;
@@ -352,7 +351,7 @@ package body Synth.Stmts is
                   return Target_Info'(Kind => Target_Simple,
                                       Targ_Type => Res_Type,
                                       Obj => Obj,
-                                      Off => Off + Uns32 (Sl_Off));
+                                      Off => Off + Sl_Off);
                end if;
             end;
          when others =>

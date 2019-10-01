@@ -125,6 +125,7 @@ package Synth.Values is
             Abounds : Bound_Array_Acc;
             Arr_El : Type_Acc;
          when Type_Unbounded_Array =>
+            Uarr_Ndim : Iir_Index32;
             Uarr_El : Type_Acc;
          when Type_Record =>
             Rec : Rec_El_Array_Acc;
@@ -231,7 +232,8 @@ package Synth.Values is
    function Create_Bound_Array (Ndims : Iir_Index32) return Bound_Array_Acc;
    function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)
                               return Type_Acc;
-   function Create_Unbounded_Array (El_Type : Type_Acc) return Type_Acc;
+   function Create_Unbounded_Array (Ndim : Iir_Index32; El_Type : Type_Acc)
+                                   return Type_Acc;
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc;
 
    function Create_Record_Type (Els : Rec_El_Array_Acc; W : Width)

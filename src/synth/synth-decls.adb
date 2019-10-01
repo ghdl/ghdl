@@ -76,18 +76,17 @@ package body Synth.Decls is
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
       El_Type : constant Node := Get_Element_Subtype (Def);
+      Ndims : constant Natural := Get_Nbr_Dimensions (Def);
       El_Typ : Type_Acc;
       Typ : Type_Acc;
    begin
       Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
       El_Typ := Get_Value_Type (Syn_Inst, El_Type);
 
-      if El_Typ.Kind in Type_Nets
-        and then Is_One_Dimensional_Array_Type (Def)
-      then
+      if El_Typ.Kind in Type_Nets and then Ndims = 1 then
          Typ := Create_Unbounded_Vector (El_Typ);
       else
-         Typ := Create_Unbounded_Array (El_Typ);
+         Typ := Create_Unbounded_Array (Iir_Index32 (Ndims), El_Typ);
       end if;
       return Typ;
    end Synth_Array_Type_Definition;

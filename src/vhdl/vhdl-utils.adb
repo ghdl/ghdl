@@ -1043,6 +1043,14 @@ package body Vhdl.Utils is
       return Get_Nbr_Elements (Get_Index_Subtype_List (Array_Type));
    end Get_Nbr_Dimensions;
 
+   function Is_One_Dimensional_Array_Type (A_Type : Iir) return Boolean
+   is
+      Base_Type : constant Iir := Get_Base_Type (A_Type);
+   begin
+      return Get_Kind (Base_Type) = Iir_Kind_Array_Type_Definition
+        and then Get_Nbr_Dimensions (Base_Type) = 1;
+   end Is_One_Dimensional_Array_Type;
+
    function Are_Array_Indexes_Locally_Static (Array_Type : Iir) return Boolean
    is
       Indexes : constant Iir_Flist := Get_Index_Subtype_List (Array_Type);
@@ -1406,19 +1414,6 @@ package body Vhdl.Utils is
             return Get_Left_Limit (Arange);
       end case;
    end Get_High_Limit;
-
-   function Is_One_Dimensional_Array_Type (A_Type : Iir) return Boolean
-   is
-      Base_Type : constant Iir := Get_Base_Type (A_Type);
-   begin
-      if Get_Kind (Base_Type) = Iir_Kind_Array_Type_Definition
-        and then Get_Nbr_Elements (Get_Index_Subtype_List (Base_Type)) = 1
-      then
-         return True;
-      else
-         return False;
-      end if;
-   end Is_One_Dimensional_Array_Type;
 
    function Is_Range_Attribute_Name (Expr : Iir) return Boolean
    is

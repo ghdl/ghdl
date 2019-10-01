@@ -41,6 +41,9 @@ package Synth.Expr is
 
    function Get_Const_Discrete (V : Value_Acc) return Int64;
 
+   function Create_Onedimensional_Array_Subtype
+     (Btyp : Type_Acc; Bnd : Bound_Type) return Type_Acc;
+
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32);
    procedure From_Bit (Enum : Int64; Val : out Uns32);
    procedure To_Logic
@@ -98,7 +101,7 @@ package Synth.Expr is
                                  Res_Bnd : out Bound_Type;
                                  Inp : out Net;
                                  Step : out Uns32;
-                                 Off : out Int32;
+                                 Off : out Uns32;
                                  Wd : out Uns32);
 
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
