@@ -1469,7 +1469,8 @@ package body Synth.Expr is
       end if;
    end Error_Unknown_Operator;
 
-   function Synth_String_Literal (Syn_Inst : Synth_Instance_Acc; Str : Node)
+   function Synth_String_Literal
+     (Syn_Inst : Synth_Instance_Acc; Str : Node; Str_Typ : Type_Acc)
                                  return Value_Acc
    is
       pragma Assert (Get_Kind (Str) = Iir_Kind_String_Literal8);
@@ -1484,7 +1485,18 @@ package body Synth.Expr is
       Arr : Value_Array_Acc;
       Pos : Nat8;
    begin
-      Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 0);
+      case Str_Typ.Kind is
+         when Type_Vector =>
+            Bounds := Str_Typ.Vbound;
+         when Type_Array =>
+            Bounds := Str_Typ.Abounds.D (1);
+         when Type_Unbounded_Vector
+           | Type_Unbounded_Array =>
+            Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 0);
+         when others =>
+            raise Internal_Error;
+      end case;
+
       El_Type := Get_Value_Type (Syn_Inst, Get_Element_Subtype (Str_Type));
       if El_Type.Kind in Type_Nets then
          Res_Type := Create_Vector_Type (Bounds, El_Type);
@@ -1596,7 +1608,7 @@ package body Synth.Expr is
             return Create_Value_Discrete
               (Get_Physical_Value (Expr), Expr_Type);
          when Iir_Kind_String_Literal8 =>
-            return Synth_String_Literal (Syn_Inst, Expr);
+            return Synth_String_Literal (Syn_Inst, Expr, Expr_Type);
          when Iir_Kind_Enumeration_Literal =>
             return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Type_Conversion =>

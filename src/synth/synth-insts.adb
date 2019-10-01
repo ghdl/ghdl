@@ -259,6 +259,7 @@ package body Synth.Insts is
       O : Value_Acc;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
+      Formal_Typ : Type_Acc;
    begin
       Assoc := Ports_Assoc;
       Assoc_Inter := Get_Port_Chain (Inst_Obj.Decl);
@@ -276,11 +277,13 @@ package body Synth.Insts is
                raise Internal_Error;
          end case;
 
+         Formal_Typ := Get_Value_Type (Inst_Obj.Syn_Inst, Get_Type (Inter));
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                --  Connect the net to the input.
                Connect (Get_Input (Inst, Nbr_Inputs),
-                        Get_Net (Synth_Expression (Syn_Inst, Actual)));
+                        Get_Net (Synth_Expression_With_Type
+                                   (Syn_Inst, Actual, Formal_Typ)));
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
@@ -288,9 +291,7 @@ package body Synth.Insts is
                   --  Create a port gate (so that is has a name).
                   Port := Get_Output (Inst, Nbr_Outputs);
                   Port := Builders.Build_Port (Get_Build (Syn_Inst), Port);
-                  O := Create_Value_Net
-                    (Port, Get_Value_Type (Inst_Obj.Syn_Inst,
-                                           Get_Type (Inter)));
+                  O := Create_Value_Net (Port, Formal_Typ);
                   --  Assign the port output to the actual (a net).
                   Synth_Assignment (Syn_Inst, Actual, O, Assoc);
                end if;
