@@ -228,8 +228,11 @@ package body Synth.Stmts is
          when Target_Memory =>
             --  For a memory: the destination is known.
             Mem_Wid : Wire_Id;
+            --  The width of the whole mrmory.
+            Mem_Width : Width;
+            --  The dynamic offset.
+            Mem_Voff : Net;
             Mem_Off : Uns32;
-            Mem_Val : Net;
       end case;
    end record;
 
@@ -283,14 +286,10 @@ package body Synth.Stmts is
                Voff : Net;
                Idx_Off : Uns32;
                W : Width;
-
-               Targ_Net : Net;
-               V : Net;
             begin
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
                                         Obj, Off, Typ);
-               Synth_Indexed_Name (Syn_Inst, Target, Typ,
-                                   Voff, Idx_Off, W);
+               Synth_Indexed_Name (Syn_Inst, Target, Typ, Voff, Idx_Off, W);
                El_Typ := Get_Array_Element (Typ);
 
                if Voff = No_Net then
@@ -300,16 +299,12 @@ package body Synth.Stmts is
                                       Obj => Obj,
                                       Off => Off + Idx_Off);
                else
-                  Targ_Net := Get_Current_Assign_Value
-                    (Build_Context, Obj.W, Off, Get_Type_Width (Typ));
-                  V := Build_Dyn_Insert
-                    (Build_Context, Targ_Net, No_Net, Voff, Idx_Off);
-                  Set_Location (V, Target);
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => El_Typ,
                                       Mem_Wid => Obj.W,
-                                      Mem_Off => Off,
-                                      Mem_Val => V);
+                                      Mem_Width => Typ.W,
+                                      Mem_Voff => Voff,
+                                      Mem_Off => Off + Idx_Off);
                end if;
             end;
          when Iir_Kind_Slice_Name =>
@@ -325,9 +320,7 @@ package body Synth.Stmts is
                Sl_Off : Uns32;
                Wd : Uns32;
 
-               Targ_Net : Net;
                Res_Type : Type_Acc;
-               V : Net;
             begin
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
                                         Obj, Off, Typ);
@@ -338,16 +331,12 @@ package body Synth.Stmts is
                                    Res_Bnd, Inp, Sl_Off, Wd);
                Res_Type := Create_Vector_Type (Res_Bnd, El_Typ);
                if Inp /= No_Net then
-                  Targ_Net := Get_Current_Assign_Value
-                    (Build_Context, Obj.W, Off, Get_Type_Width (Typ));
-                  V := Build_Dyn_Insert
-                    (Build_Context, Targ_Net, No_Net, Inp, Sl_Off);
-                  Set_Location (V, Target);
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => Res_Type,
                                       Mem_Wid => Obj.W,
-                                      Mem_Off => Off,
-                                      Mem_Val => V);
+                                      Mem_Width => Typ.W,
+                                      Mem_Voff => Inp,
+                                      Mem_Off => Off + Sl_Off);
                else
                   return Target_Info'(Kind => Target_Simple,
                                       Targ_Type => Res_Type,
@@ -398,13 +387,17 @@ package body Synth.Stmts is
             end if;
          when Target_Memory =>
             declare
-               Inst : constant Instance := Get_Net_Parent (Target.Mem_Val);
+               V : Net;
             begin
-               Connect (Get_Input (Inst, 1), Get_Net (Val));
+               V := Get_Current_Assign_Value
+                 (Get_Build (Syn_Inst), Target.Mem_Wid, Target.Mem_Off,
+                  Target.Mem_Width);
+               V := Build_Dyn_Insert (Get_Build (Syn_Inst), V, Get_Net (Val),
+                  Target.Mem_Voff, Target.Mem_Off);
+               Set_Location (V, Loc);
                Synth_Assign
                  (Target.Mem_Wid, Target.Targ_Type,
-                  Create_Value_Net (Target.Mem_Val, Target.Targ_Type),
-                  Target.Mem_Off, Loc);
+                  Create_Value_Net (V, Target.Targ_Type), Target.Mem_Off, Loc);
             end;
       end case;
    end Synth_Assignment;
