@@ -794,12 +794,22 @@ package body Synth.Environment is
             declare
                Pa : Partial_Assign_Record
                  renames Partial_Assign_Table.Table (P (I));
+               N_Wd : Width;
+               N_Off : Uns32;
             begin
-               if Pa.Offset <= Off then
-                  Off := Uns32'Max (Pa.Offset, Min_Off);
-                  --  FIXME: May increase the width.
-                  Wd := Width'Min
-                    (Wd, Get_Width (Pa.Value) - (Off - Pa.Offset));
+               if Pa.Offset < Off and then Min_Off < Off then
+                  --  There is an assignment for an offset before the
+                  --  current one.  Handle it.
+                  pragma Assert (Off >= Min_Off);
+                  N_Off := Uns32'Max (Pa.Offset, Min_Off);
+                  N_Wd := Get_Width (Pa.Value) - (N_Off - Pa.Offset);
+                  Wd := Width'Min (N_Wd, Off - N_Off);
+                  Off := N_Off;
+               elsif Pa.Offset = Off
+                 or else (Off = Min_Off and then Pa.Offset < Off)
+               then
+                  --  Reduce the width if the assignment is shorter.
+                  Wd := Width'Min (Wd, Get_Width (Pa.Value));
                elsif Pa.Offset < Off + Wd then
                   --  Reduce the width when there is an assignment after
                   --  the current offset.
