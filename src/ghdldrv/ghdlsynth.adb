@@ -27,6 +27,7 @@ with Errorout;
 with Errorout.Console;
 with Version;
 with Default_Paths;
+with Bug;
 
 with Libraries;
 with Flags;
@@ -244,8 +245,9 @@ package body Ghdlsynth is
    exception
       when Option_Error =>
          return No_Module;
-      when others =>
+      when E: others =>
          --  Avoid possible issues with exceptions...
+         Bug.Disp_Bug_Box (E);
          return No_Module;
    end Ghdl_Synth;
 
