@@ -234,7 +234,7 @@ package body Netlists.Builders is
    begin
       Res := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dyn_insert")),
-         Id_Dyn_Insert, 3, 1, 2);
+         Id_Dyn_Insert, 3, 1, 1);
       Ctxt.M_Dyn_Insert := Res;
       Outputs := (0 => Create_Output ("o"));
       Inputs := (0 => Create_Input ("i"),
@@ -242,9 +242,7 @@ package body Netlists.Builders is
                  2 => Create_Input ("p"));
       Set_Port_Desc (Res, Inputs, Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("step")),
-                     Typ => Param_Uns32),
-               1 => (New_Sname_Artificial (Get_Identifier ("offset")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset")),
                      Typ => Param_Uns32)));
    end Create_Dyn_Insert_Module;
 
@@ -957,9 +955,7 @@ package body Netlists.Builders is
    end Build_Extend;
 
    function Build_Dyn_Insert
-     (Ctxt : Context_Acc;
-      I : Net; V : Net; P : Net; Step : Uns32; Off : Uns32)
-     return Net
+     (Ctxt : Context_Acc; I : Net; V : Net; P : Net; Off : Uns32) return Net
    is
       Wd : constant Width := Get_Width (I);
       pragma Assert (Wd /= No_Width);
@@ -974,8 +970,7 @@ package body Netlists.Builders is
          Connect (Get_Input (Inst, 1), V);
       end if;
       Connect (Get_Input (Inst, 2), P);
-      Set_Param_Uns32 (Inst, 0, Step);
-      Set_Param_Uns32 (Inst, 1, Off);
+      Set_Param_Uns32 (Inst, 0, Off);
       return O;
    end Build_Dyn_Insert;
 

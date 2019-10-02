@@ -149,7 +149,7 @@ package Netlists.Gates is
 
    --  Like Insert but for dynamic values.
    --  T := IN0
-   --  T [IN2*STEP+OFF+WD-1:IN2*STEP+OFF] := IN1
+   --  T [IN2+OFF+WD-1:IN2+OFF] := IN1
    --  OUT := T
    Id_Dyn_Insert : constant Module_Id := 70;
 

@@ -623,7 +623,7 @@ package body Netlists.Disp_Vhdl is
          when Id_Dyn_Insert =>
             declare
                --  I0: Input, I1: Value, I2: position
-               --  P0: Step, P1: offset
+               --  P0: offset
                I0 : constant Net := Get_Input_Net (Inst, 0);
                I1 : constant Net := Get_Input_Net (Inst, 1);
                I2 : constant Net := Get_Input_Net (Inst, 2);
@@ -652,12 +652,12 @@ package body Netlists.Disp_Vhdl is
                   Inst);
                if Iw > 1 then
                   Disp_Template
-                    ("to_integer (\ui2) * \p0 + (\sp1 + \n0)" & NL &
+                    ("to_integer (\ui2) + (\sp0 + \n0)" & NL &
                        "        downto ",
                      Inst, (0 => Iw - 1));
                end if;
                Disp_Template
-                 ("to_integer (\ui2) * \p0 + (\sp1))" &
+                 ("to_integer (\ui2) + (\sp0))" &
                   " <= \i1;" & NL &
                   "  end process;" & NL,
                   Inst);

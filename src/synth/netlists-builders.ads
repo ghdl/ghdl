@@ -132,8 +132,7 @@ package Netlists.Builders is
      (Ctxt : Context_Acc; I : Net; P : Net; Off : Uns32; W : Width) return Net;
 
    function Build_Dyn_Insert
-     (Ctxt : Context_Acc; I : Net; V : Net; P : Net; Step : Uns32; Off : Uns32)
-     return Net;
+     (Ctxt : Context_Acc; I : Net; V : Net; P : Net; Off : Uns32) return Net;
 
    function Build_Memidx1
      (Ctxt : Context_Acc;

@@ -303,7 +303,7 @@ package body Synth.Stmts is
                   Targ_Net := Get_Current_Assign_Value
                     (Build_Context, Obj.W, Off, Get_Type_Width (Typ));
                   V := Build_Dyn_Insert
-                    (Build_Context, Targ_Net, No_Net, Voff, 1, Idx_Off);
+                    (Build_Context, Targ_Net, No_Net, Voff, Idx_Off);
                   Set_Location (V, Target);
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => El_Typ,
@@ -341,8 +341,7 @@ package body Synth.Stmts is
                   Targ_Net := Get_Current_Assign_Value
                     (Build_Context, Obj.W, Off, Get_Type_Width (Typ));
                   V := Build_Dyn_Insert
-                    (Build_Context, Targ_Net, No_Net,
-                     Inp, 1, Sl_Off);
+                    (Build_Context, Targ_Net, No_Net, Inp, Sl_Off);
                   Set_Location (V, Target);
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => Res_Type,
