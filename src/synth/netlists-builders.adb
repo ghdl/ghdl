@@ -215,16 +215,14 @@ package body Netlists.Builders is
    begin
       Res := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dyn_extract")),
-         Id_Dyn_Extract, 2, 1, 2);
+         Id_Dyn_Extract, 2, 1, 1);
       Ctxt.M_Dyn_Extract := Res;
       Outputs := (0 => Create_Output ("o"));
       Inputs := (0 => Create_Input ("i"),
                  1 => Create_Input ("v"));
       Set_Port_Desc (Res, Inputs, Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("step")),
-                     Typ => Param_Uns32),
-               1 => (New_Sname_Artificial (Get_Identifier ("offset")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset")),
                      Typ => Param_Uns32)));
    end Create_Dyn_Extract_Module;
 
@@ -1191,8 +1189,7 @@ package body Netlists.Builders is
    end Build2_Extract;
 
    function Build_Dyn_Extract
-     (Ctxt : Context_Acc;
-      I : Net; P : Net; Step : Uns32; Off : Uns32; W : Width) return Net
+     (Ctxt : Context_Acc; I : Net; P : Net; Off : Uns32; W : Width) return Net
    is
       Wd : constant Width := Get_Width (I);
       pragma Assert (Wd /= No_Width);
@@ -1205,8 +1202,7 @@ package body Netlists.Builders is
       Set_Width (O, W);
       Connect (Get_Input (Inst, 0), I);
       Connect (Get_Input (Inst, 1), P);
-      Set_Param_Uns32 (Inst, 0, Step);
-      Set_Param_Uns32 (Inst, 1, Off);
+      Set_Param_Uns32 (Inst, 0, Off);
       return O;
    end Build_Dyn_Extract;
 

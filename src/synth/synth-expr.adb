@@ -1002,7 +1002,7 @@ package body Synth.Expr is
       else
          pragma Assert (Off = 0);
          Res := Build_Dyn_Extract (Build_Context, Get_Net (Pfx_Val),
-                                   Voff, 1, Off, W);
+                                   Voff, Off, W);
          Set_Location (Res, Name);
          return Create_Value_Net (Res, El_Typ);
       end if;
@@ -1293,8 +1293,7 @@ package body Synth.Expr is
       Synth_Slice_Suffix (Syn_Inst, Name, Pfx_Bnd, El_Typ.W,
                           Res_Bnd, Inp, Off, Wd);
       if Inp /= No_Net then
-         N := Build_Dyn_Extract (Build_Context,
-                                 Get_Net (Pfx), Inp, 1, Off, Wd);
+         N := Build_Dyn_Extract (Build_Context, Get_Net (Pfx), Inp, Off, Wd);
          Set_Location (N, Name);
          --  TODO: the bounds cannot be created as they are not known.
          Res_Type := Create_Slice_Type (Wd, El_Typ);

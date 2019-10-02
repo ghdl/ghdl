@@ -605,22 +605,15 @@ package body Netlists.Disp_Vhdl is
             declare
                O : constant Net := Get_Output (Inst, 0);
                Wd : constant Width := Get_Width (O);
-               Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-               Off : constant Uns32 := Get_Param_Uns32 (Inst, 1);
+               Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
                Disp_Template ("  \o0 <= \i0 (to_integer (\ui1)", Inst);
-               if Step /= 1 then
-                  Disp_Template (" * \n0", Inst, (0 => Step));
-               end if;
                if Off /= 0 then
                   Disp_Template (" + \n0", Inst, (0 => Off));
                end if;
                if Wd > 1 then
                   Disp_Template (" + \n0 - 1 downto to_integer (\ui1)",
                                  Inst, (0 => Wd));
-                  if Step /= 1 then
-                     Disp_Template (" * \n0", Inst, (0 => Step));
-                  end if;
                   if Off /= 0 then
                      Disp_Template (" + \n0", Inst, (0 => Off));
                   end if;

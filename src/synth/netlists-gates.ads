@@ -144,7 +144,7 @@ package Netlists.Gates is
    --  OUT := IN0[OFF+WD-1:OFF]
    Id_Extract : constant Module_Id := 68;
 
-   --  OUT := IN0[IN1*STEP+OFF+WD-1:IN1*STEP+OFF]
+   --  OUT := IN0[IN1+OFF+WD-1:IN1+OFF]
    Id_Dyn_Extract : constant Module_Id := 69;
 
    --  Like Insert but for dynamic values.
