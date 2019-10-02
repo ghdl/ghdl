@@ -104,11 +104,12 @@ package Synth.Expr is
                                  Off : out Uns32;
                                  Wd : out Uns32);
 
+   --  If VOFF is No_Net then OFF is valid, if VOFF is not No_Net then
+   --  OFF is 0.
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Type : Type_Acc;
                                  Voff : out Net;
-                                 Mul : out Uns32;
                                  Off : out Uns32;
                                  W : out Width);
 end Synth.Expr;

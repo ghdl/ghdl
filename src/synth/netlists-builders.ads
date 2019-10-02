@@ -137,10 +137,11 @@ package Netlists.Builders is
      return Net;
 
    function Build_Memidx1
-     (Ctxt : Context_Acc; I : Net; Step : Uns32; Max : Uns32) return Net;
+     (Ctxt : Context_Acc;
+      I : Net; Step : Uns32; Max : Uns32; W : Width) return Net;
    function Build_Memidx2
-     (Ctxt : Context_Acc; I : Net; Add : Net; Step : Uns32; Max : Uns32)
-     return Net;
+     (Ctxt : Context_Acc;
+      I : Net; Add : Net; Step : Uns32; Max : Uns32; W : Width) return Net;
 
    function Build_Output (Ctxt : Context_Acc; W : Width) return Net;
    function Build_Signal (Ctxt : Context_Acc; Name : Sname; W : Width)

@@ -148,21 +148,18 @@ package body Synth.Stmts is
          when Iir_Kind_Indexed_Name =>
             declare
                Voff : Net;
-               Mul : Uns32;
                Off : Uns32;
                W : Width;
             begin
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
                                         Dest_Obj, Dest_Off, Dest_Type);
-               Synth_Indexed_Name
-                 (Syn_Inst, Pfx, Dest_Type, Voff, Mul, Off, W);
+               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Type, Voff, Off, W);
 
                if Voff /= No_Net then
                   Error_Msg_Synth
                     (+Pfx, "dynamic index must be the last suffix");
                else
                   --  FIXME: check index.
-                  pragma Assert (Mul = 0);
                   null;
                end if;
 
@@ -281,7 +278,6 @@ package body Synth.Stmts is
                El_Typ : Type_Acc;
 
                Voff : Net;
-               Mul : Uns32;
                Idx_Off : Uns32;
                W : Width;
 
@@ -291,12 +287,11 @@ package body Synth.Stmts is
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
                                         Obj, Off, Typ);
                Synth_Indexed_Name (Syn_Inst, Target, Typ,
-                                   Voff, Mul, Idx_Off, W);
+                                   Voff, Idx_Off, W);
                El_Typ := Get_Array_Element (Typ);
 
                if Voff = No_Net then
                   --  FIXME: check index.
-                  pragma Assert (Mul = 0);
                   return Target_Info'(Kind => Target_Simple,
                                       Targ_Type => El_Typ,
                                       Obj => Obj,
@@ -305,7 +300,7 @@ package body Synth.Stmts is
                   Targ_Net := Get_Current_Assign_Value
                     (Build_Context, Obj.W, Off, Get_Type_Width (Typ));
                   V := Build_Dyn_Insert
-                    (Build_Context, Targ_Net, No_Net, Voff, Mul, Idx_Off);
+                    (Build_Context, Targ_Net, No_Net, Voff, 1, Idx_Off);
                   Set_Location (V, Target);
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => El_Typ,

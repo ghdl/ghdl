@@ -586,6 +586,21 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= ", Inst);
             Disp_Extract (Inst);
             Put_Line (";");
+         when Id_Memidx1 =>
+            declare
+               O : constant Net := Get_Output (Inst, 0);
+               Wd : constant Width := Get_Width (O);
+               Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+            begin
+               if Step /= 1 then
+                  Disp_Template
+                    ("  \o0 <= std_logic_vector "
+                       & "(resize (resize (\ui0, \n0) * \up0, \n0));"
+                       & NL, Inst, (0 => Wd));
+               else
+                  Disp_Template ("  \o0 <= \i0;" & NL, Inst);
+               end if;
+            end;
          when Id_Dyn_Extract =>
             declare
                O : constant Net := Get_Output (Inst, 0);

@@ -942,7 +942,6 @@ package body Synth.Expr is
                                  Name : Node;
                                  Pfx_Type : Type_Acc;
                                  Voff : out Net;
-                                 Mul : out Uns32;
                                  Off : out Uns32;
                                  W : out Width)
    is
@@ -968,12 +967,12 @@ package body Synth.Expr is
 
       if Idx_Val.Kind = Value_Discrete then
          Voff := No_Net;
-         Mul := 0;
          Off := Index_To_Offset (Bnd, Idx_Val.Scal, Name) * W;
       else
          Voff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
+         Voff := Build_Memidx1 (Get_Build (Syn_Inst), Voff, W, Bnd.Len,
+                                Width (Clog2 (Uns64 (W * Bnd.Len))));
          Off := 0;
-         Mul := W;
       end if;
    end Synth_Indexed_Name;
 
@@ -982,7 +981,6 @@ package body Synth.Expr is
    is
       Pfx_Val : Value_Acc;
       Voff : Net;
-      Mul : Uns32;
       Off : Uns32;
       W : Width;
       El_Typ : Type_Acc;
@@ -990,11 +988,10 @@ package body Synth.Expr is
    begin
       Pfx_Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
 
-      Synth_Indexed_Name (Syn_Inst, Name, Pfx_Val.Typ, Voff, Mul, Off, W);
+      Synth_Indexed_Name (Syn_Inst, Name, Pfx_Val.Typ, Voff, Off, W);
       El_Typ := Get_Array_Element (Pfx_Val.Typ);
 
       if Voff = No_Net then
-         pragma Assert (Mul = 0);
          if W = 1 and then Pfx_Val.Kind = Value_Array then
             return Bit_Extract (Pfx_Val, Off, Name);
          else
@@ -1005,7 +1002,7 @@ package body Synth.Expr is
       else
          pragma Assert (Off = 0);
          Res := Build_Dyn_Extract (Build_Context, Get_Net (Pfx_Val),
-                                   Voff, Mul, Off, W);
+                                   Voff, 1, Off, W);
          Set_Location (Res, Name);
          return Create_Value_Net (Res, El_Typ);
       end if;

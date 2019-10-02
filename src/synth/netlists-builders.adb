@@ -982,10 +982,10 @@ package body Netlists.Builders is
    end Build_Dyn_Insert;
 
    function Build_Memidx1
-     (Ctxt : Context_Acc; I : Net; Step : Uns32; Max : Uns32) return Net
+     (Ctxt : Context_Acc;
+      I : Net; Step : Uns32; Max : Uns32; W : Width) return Net
    is
-      W : constant Width := Get_Width (I);
-      pragma Assert (W /= No_Width);
+      pragma Assert (Get_Width (I) /= No_Width);
       pragma Assert (Step > 0);
       pragma Assert (W > 0);
       Inst : Instance;
@@ -1001,12 +1001,10 @@ package body Netlists.Builders is
    end Build_Memidx1;
 
    function Build_Memidx2
-     (Ctxt : Context_Acc; I : Net; Add : Net; Step : Uns32; Max : Uns32)
-     return Net
+     (Ctxt : Context_Acc;
+      I : Net; Add : Net; Step : Uns32; Max : Uns32; W : Width) return Net
    is
-      W : constant Width := Get_Width (I);
-      pragma Assert (W /= No_Width);
-      pragma Assert (Get_Width (Add) = W);
+      pragma Assert (Get_Width (I) /= No_Width);
       pragma Assert (Get_Width (Add) /= No_Width);
       pragma Assert (Step > 0);
       pragma Assert (W > 0);
