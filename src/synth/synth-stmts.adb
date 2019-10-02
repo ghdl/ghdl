@@ -180,16 +180,19 @@ package body Synth.Stmts is
 
          when Iir_Kind_Slice_Name =>
             declare
+               Pfx_Bnd : Bound_Type;
+               El_Typ : Type_Acc;
                Res_Bnd : Bound_Type;
                Inp : Net;
-               Step : Uns32;
                Sl_Off : Uns32;
                Wd : Uns32;
             begin
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
                                         Dest_Obj, Dest_Off, Dest_Type);
-               Synth_Slice_Suffix (Syn_Inst, Pfx, Dest_Type.Vbound,
-                                   Res_Bnd, Inp, Step, Sl_Off, Wd);
+
+               Get_Onedimensional_Array_Bounds (Dest_Type, Pfx_Bnd, El_Typ);
+               Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ.W,
+                                   Res_Bnd, Inp, Sl_Off, Wd);
 
                if Inp /= No_Net then
                   Error_Msg_Synth
@@ -314,10 +317,11 @@ package body Synth.Stmts is
                Obj : Value_Acc;
                Off : Uns32;
                Typ : Type_Acc;
+               Pfx_Bnd : Bound_Type;
+               El_Typ : Type_Acc;
 
                Res_Bnd : Bound_Type;
                Inp : Net;
-               Step : Uns32;
                Sl_Off : Uns32;
                Wd : Uns32;
 
@@ -327,15 +331,18 @@ package body Synth.Stmts is
             begin
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
                                         Obj, Off, Typ);
-               Synth_Slice_Suffix (Syn_Inst, Target, Typ.Vbound,
-                                   Res_Bnd, Inp, Step, Sl_Off, Wd);
-               Res_Type := Create_Vector_Type (Res_Bnd, Typ.Vec_El);
+
+               Get_Onedimensional_Array_Bounds (Typ, Pfx_Bnd, El_Typ);
+
+               Synth_Slice_Suffix (Syn_Inst, Target, Pfx_Bnd, El_Typ.W,
+                                   Res_Bnd, Inp, Sl_Off, Wd);
+               Res_Type := Create_Vector_Type (Res_Bnd, El_Typ);
                if Inp /= No_Net then
                   Targ_Net := Get_Current_Assign_Value
                     (Build_Context, Obj.W, Off, Get_Type_Width (Typ));
                   V := Build_Dyn_Insert
                     (Build_Context, Targ_Net, No_Net,
-                     Inp, Step, Sl_Off);
+                     Inp, 1, Sl_Off);
                   Set_Location (V, Target);
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => Res_Type,

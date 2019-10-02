@@ -1186,15 +1186,16 @@ package body Synth.Expr is
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Bnd : Bound_Type;
+                                 El_Wd : Width;
                                  Res_Bnd : out Bound_Type;
                                  Inp : out Net;
-                                 Step : out Uns32;
                                  Off : out Uns32;
-                                 Wd : out Uns32)
+                                 Wd : out Width)
    is
       Expr : constant Node := Get_Suffix (Name);
       Left, Right : Value_Acc;
       Dir : Iir_Direction;
+      Step : Uns32;
    begin
       Off := 0;
 
@@ -1211,7 +1212,6 @@ package body Synth.Expr is
 
       if Pfx_Bnd.Dir /= Dir then
          Error_Msg_Synth (+Name, "direction mismatch in slice");
-         Step := 0;
          Wd := 0;
          return;
       end if;
@@ -1220,9 +1220,9 @@ package body Synth.Expr is
          declare
             L : constant Int64 := Get_Const_Discrete (Left);
             R : constant Int64 := Get_Const_Discrete (Right);
+            Len : Uns32;
          begin
             Inp := No_Net;
-            Step := 0;
 
             if not In_Bounds (Pfx_Bnd, Int32 (L))
               or else not In_Bounds (Pfx_Bnd, Int32 (R))
@@ -1235,24 +1235,25 @@ package body Synth.Expr is
 
             case Pfx_Bnd.Dir is
                when Iir_To =>
-                  Wd := Width (R - L + 1);
+                  Len := Uns32 (R - L + 1);
                   Res_Bnd := (Dir => Iir_To,
-                              Wlen => Wd,
-                              Wbounds => Wd,
-                              Len => Wd,
+                              Wlen => Len,
+                              Wbounds => Pfx_Bnd.Wbounds,
+                              Len => Len,
                               Left => Int32 (L),
                               Right => Int32 (R));
-                  Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right);
+                  Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right) * El_Wd;
                when Iir_Downto =>
-                  Wd := Width (L - R + 1);
+                  Len := Uns32 (L - R + 1);
                   Res_Bnd := (Dir => Iir_Downto,
-                              Wlen => Wd,
-                              Wbounds => Wd,
-                              Len => Wd,
+                              Wlen => Len,
+                              Wbounds => Pfx_Bnd.Wbounds,
+                              Len => Len,
                               Left => Int32 (L),
                               Right => Int32 (R));
-                  Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right);
+                  Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right) * El_Wd;
             end case;
+            Wd := Len * El_Wd;
          end;
       else
          if Is_Const (Left) or else Is_Const (Right) then
@@ -1264,6 +1265,11 @@ package body Synth.Expr is
          Synth_Extract_Dyn_Suffix
            (Name, Pfx_Bnd, Get_Net (Left), Get_Net (Right),
             Inp, Step, Off, Wd);
+         Inp := Build_Memidx1
+           (Get_Build (Syn_Inst),
+            Inp, Step * El_Wd, 0,
+            Get_Width (Inp) + Width (Clog2 (Uns64 (Step * El_Wd))));
+         Wd := Wd * El_Wd;
       end if;
    end Synth_Slice_Suffix;
 
@@ -1278,26 +1284,23 @@ package body Synth.Expr is
       Res_Bnd : Bound_Type;
       Res_Type : Type_Acc;
       Inp : Net;
-      Step : Uns32;
       Off : Uns32;
       Wd : Uns32;
       N : Net;
    begin
       Get_Onedimensional_Array_Bounds (Pfx.Typ, Pfx_Bnd, El_Typ);
 
-      Synth_Slice_Suffix
-        (Syn_Inst, Name, Pfx_Bnd, Res_Bnd, Inp, Step, Off, Wd);
+      Synth_Slice_Suffix (Syn_Inst, Name, Pfx_Bnd, El_Typ.W,
+                          Res_Bnd, Inp, Off, Wd);
       if Inp /= No_Net then
-         N := Build_Dyn_Extract (Build_Context, Get_Net (Pfx),
-                                 Inp, Step * El_Typ.W, Off * El_Typ.W,
-                                 Wd * El_Typ.W);
+         N := Build_Dyn_Extract (Build_Context,
+                                 Get_Net (Pfx), Inp, 1, Off, Wd);
          Set_Location (N, Name);
          --  TODO: the bounds cannot be created as they are not known.
          Res_Type := Create_Slice_Type (Wd, El_Typ);
          return Create_Value_Net (N, Res_Type);
       else
-         N := Build_Extract (Build_Context, Get_Net (Pfx),
-                             Off * El_Typ.W, Wd * El_Typ.W);
+         N := Build_Extract (Build_Context, Get_Net (Pfx), Off, Wd);
          Set_Location (N, Name);
          Res_Type := Create_Onedimensional_Array_Subtype (Pfx.Typ, Res_Bnd);
          return Create_Value_Net (N, Res_Type);

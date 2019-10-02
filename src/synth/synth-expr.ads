@@ -41,6 +41,11 @@ package Synth.Expr is
 
    function Get_Const_Discrete (V : Value_Acc) return Int64;
 
+   --  Return the bounds of a one dimensional array/vector type and the
+   --  width of the element.
+   procedure Get_Onedimensional_Array_Bounds
+     (Typ : Type_Acc; Bnd : out Bound_Type; El_Typ : out Type_Acc);
+
    function Create_Onedimensional_Array_Subtype
      (Btyp : Type_Acc; Bnd : Bound_Type) return Type_Acc;
 
@@ -98,11 +103,11 @@ package Synth.Expr is
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Bnd : Bound_Type;
+                                 El_Wd : Width;
                                  Res_Bnd : out Bound_Type;
                                  Inp : out Net;
-                                 Step : out Uns32;
                                  Off : out Uns32;
-                                 Wd : out Uns32);
+                                 Wd : out Width);
 
    --  If VOFF is No_Net then OFF is valid, if VOFF is not No_Net then
    --  OFF is 0.
