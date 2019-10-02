@@ -153,15 +153,21 @@ package Netlists.Gates is
    --  OUT := T
    Id_Dyn_Insert : constant Module_Id := 70;
 
+   --  OUT := IN0 * STEP,  IN0 < MAX
+   Id_Memidx1 : constant Module_Id := 71;
+
+   --  OUT := IN0 * STEP + IN1,  IN0 < MAX
+   Id_Memidx2 : constant Module_Id := 72;
+
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before
    --  the detector.
-   Id_Edge : constant Module_Id := 71;
+   Id_Edge : constant Module_Id := 80;
 
    --  Input signal must always be true.
-   Id_Assert : constant Module_Id := 72;
-   Id_Assume : constant Module_Id := 73;
-   Id_Cover : constant Module_Id := 74;
+   Id_Assert : constant Module_Id := 81;
+   Id_Assume : constant Module_Id := 82;
+   Id_Cover : constant Module_Id := 83;
 
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a

@@ -136,6 +136,12 @@ package Netlists.Builders is
      (Ctxt : Context_Acc; I : Net; V : Net; P : Net; Step : Uns32; Off : Uns32)
      return Net;
 
+   function Build_Memidx1
+     (Ctxt : Context_Acc; I : Net; Step : Uns32; Max : Uns32) return Net;
+   function Build_Memidx2
+     (Ctxt : Context_Acc; I : Net; Add : Net; Step : Uns32; Max : Uns32)
+     return Net;
+
    function Build_Output (Ctxt : Context_Acc; W : Width) return Net;
    function Build_Signal (Ctxt : Context_Acc; Name : Sname; W : Width)
                          return Net;
@@ -204,6 +210,8 @@ private
       M_Extract : Module;
       M_Dyn_Extract : Module;
       M_Dyn_Insert : Module;
+      M_Memidx1 : Module;
+      M_Memidx2 : Module;
       M_Assert : Module;
       M_Assume : Module;
       M_Cover : Module;

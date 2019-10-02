@@ -250,6 +250,40 @@ package body Netlists.Builders is
                      Typ => Param_Uns32)));
    end Create_Dyn_Insert_Module;
 
+   procedure Create_Memidx_Module (Ctxt : Context_Acc)
+   is
+      Outputs : Port_Desc_Array (0 .. 0);
+      Inputs : Port_Desc_Array (0 .. 1);
+      Res : Module;
+   begin
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memidx1")),
+         Id_Memidx1, 1, 1, 2);
+      Ctxt.M_Memidx1 := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Inputs (0) := Create_Input ("i");
+      Set_Port_Desc (Res, Inputs (0 .. 0), Outputs);
+      Set_Param_Desc
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("step")),
+                     Typ => Param_Uns32),
+               1 => (New_Sname_Artificial (Get_Identifier ("max")),
+                     Typ => Param_Uns32)));
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memidx2")),
+         Id_Memidx2, 2, 1, 2);
+      Ctxt.M_Memidx2 := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Inputs := (0 => Create_Input ("i"),
+                 1 => Create_Input ("add"));
+      Set_Port_Desc (Res, Inputs, Outputs);
+      Set_Param_Desc
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("step")),
+                     Typ => Param_Uns32),
+               1 => (New_Sname_Artificial (Get_Identifier ("max")),
+                     Typ => Param_Uns32)));
+   end Create_Memidx_Module;
+
    procedure Create_Edge_Module (Ctxt : Context_Acc;
                                  Res : out Module;
                                  Name : Name_Id)
@@ -481,6 +515,7 @@ package body Netlists.Builders is
       Create_Extract_Module (Res);
       Create_Dyn_Extract_Module (Res);
       Create_Dyn_Insert_Module (Res);
+      Create_Memidx_Module (Res);
 
       Create_Monadic_Module (Design, Res.M_Truncate (Id_Utrunc),
                              Get_Identifier ("utrunc"), Id_Utrunc);
@@ -945,6 +980,48 @@ package body Netlists.Builders is
       Set_Param_Uns32 (Inst, 1, Off);
       return O;
    end Build_Dyn_Insert;
+
+   function Build_Memidx1
+     (Ctxt : Context_Acc; I : Net; Step : Uns32; Max : Uns32) return Net
+   is
+      W : constant Width := Get_Width (I);
+      pragma Assert (W /= No_Width);
+      pragma Assert (Step > 0);
+      pragma Assert (W > 0);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memidx1);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      Connect (Get_Input (Inst, 0), I);
+      Set_Param_Uns32 (Inst, 0, Step);
+      Set_Param_Uns32 (Inst, 1, Max);
+      return O;
+   end Build_Memidx1;
+
+   function Build_Memidx2
+     (Ctxt : Context_Acc; I : Net; Add : Net; Step : Uns32; Max : Uns32)
+     return Net
+   is
+      W : constant Width := Get_Width (I);
+      pragma Assert (W /= No_Width);
+      pragma Assert (Get_Width (Add) = W);
+      pragma Assert (Get_Width (Add) /= No_Width);
+      pragma Assert (Step > 0);
+      pragma Assert (W > 0);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memidx2);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      Connect (Get_Input (Inst, 0), I);
+      Connect (Get_Input (Inst, 1), Add);
+      Set_Param_Uns32 (Inst, 0, Step);
+      Set_Param_Uns32 (Inst, 1, Max);
+      return O;
+   end Build_Memidx2;
 
    function Build_Object (Ctxt : Context_Acc; M : Module; W : Width) return Net
    is
