@@ -317,6 +317,27 @@ package body Netlists.Disp_Vhdl is
       Put ('"');
    end Disp_Const_Bit;
 
+   procedure Disp_Const_Log (Inst : Instance)
+   is
+      W : constant Width := Get_Width (Get_Output (Inst, 0));
+      Nd : constant Width := W / 32;
+      Ld : constant Natural := Natural (W mod 32);
+   begin
+      Put ('"');
+      if Ld > 0 then
+         Disp_Binary_Digits (Get_Param_Uns32 (Inst, Param_Idx (2 * Nd)),
+                             Get_Param_Uns32 (Inst, Param_Idx (2 * Nd + 1)),
+                             Ld);
+      end if;
+      for I in reverse 1 .. Nd loop
+         Disp_Binary_Digits
+           (Get_Param_Uns32 (Inst, Param_Idx (2 * (I - 1))),
+            Get_Param_Uns32 (Inst, Param_Idx (2 * (I - 1)) + 1),
+            32);
+      end loop;
+      Put ('"');
+   end Disp_Const_Log;
+
    procedure Disp_X_Lit (W : Width)
    is
       Q : constant Character := Get_Lit_Quote (W);
@@ -357,7 +378,7 @@ package body Netlists.Disp_Vhdl is
          when Id_Const_Bit =>
             Disp_Const_Bit (Inst);
          when Id_Const_Log =>
-            raise Internal_Error;
+            Disp_Const_Log (Inst);
          when Id_Extract =>
             Disp_Extract (Inst);
          when others =>

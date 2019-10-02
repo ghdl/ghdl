@@ -55,6 +55,9 @@ package body Netlists.Utils is
       case Get_Id (M) is
          when Id_Const_Bit =>
             return Param_Nbr ((Get_Width (Get_Output (Inst, 0)) + 31) / 32);
+         when Id_Const_Log =>
+            return Param_Nbr
+              (2 * ((Get_Width (Get_Output (Inst, 0)) + 31) / 32));
          when others =>
             return Get_Nbr_Params (M);
       end case;

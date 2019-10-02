@@ -179,6 +179,9 @@ package Netlists.Gates is
    pragma Unreferenced (Id_Const_UB64, Id_Const_UL64);
 
    --  Large width.
+   --  For Const_Bit: param N is for bits 32*N .. 32*N+31
+   --  For Const_Log: param 2*N   is for 0/1 of bits 32*N .. 32*N+31
+   --                 param 2*N+1 is for Z/X of bits 32*N .. 32*N+31
    Id_Const_Bit : constant Module_Id := 104;
    Id_Const_Log : constant Module_Id := 105;
 
