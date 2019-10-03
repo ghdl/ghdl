@@ -218,6 +218,7 @@ package body Synth.Inference is
       end if;
    end Check_FF_Else;
 
+   --  LAST_MUX is the mux whose input 0 is the loop.
    procedure Infere_FF (Ctxt : Context_Acc;
                         Wid : Wire_Id;
                         Prev_Val : Net;
@@ -286,16 +287,18 @@ package body Synth.Inference is
                raise Internal_Error;
             end if;
 
+            --  The parent must be a mux (it's a chain of muxes).
             Mux := Get_Parent (Get_First_Sink (Last_Out));
             if Get_Id (Mux) /= Id_Mux2 then
                raise Internal_Error;
             end if;
 
+            --  Extract the reset condition and the reset value.
             Sel := Get_Driver (Get_Mux2_Sel (Mux));
-            if Get_Driver (Get_Mux2_I0 (Mux)) = O then
+            if Get_Driver (Get_Mux2_I0 (Mux)) = Last_Out then
                Mux_Rst_Val := Get_Driver (Get_Mux2_I1 (Mux));
                Mux_Rst := Sel;
-            elsif Get_Driver (Get_Mux2_I1 (Mux)) = O then
+            elsif Get_Driver (Get_Mux2_I1 (Mux)) = Last_Out then
                Mux_Rst_Val := Get_Driver (Get_Mux2_I0 (Mux));
                Mux_Rst := Build_Monadic (Ctxt, Id_Not, Sel);
             else
@@ -306,7 +309,7 @@ package body Synth.Inference is
             Last_Out := Get_Output (Mux, 0);
 
             if Rst = No_Net then
-               --  Remove the last mux.
+               --  Remove the last mux.  Dedicated inputs on the FF are used.
                Disconnect (Get_Mux2_I0 (Mux));
                Disconnect (Get_Mux2_I1 (Mux));
                Disconnect (Get_Mux2_Sel (Mux));
@@ -316,6 +319,7 @@ package body Synth.Inference is
 
                Rst := Mux_Rst;
                Rst_Val := Mux_Rst_Val;
+               Last_Out := Mux_Rst_Val;
             else
                Rst := Build_Dyadic (Ctxt, Id_Or, Mux_Rst, Rst);
                Rst_Val := Last_Out;
