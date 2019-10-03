@@ -37,6 +37,8 @@ package Synth.Stmts is
                                       Pfx : Node;
                                       Dest_Obj : out Value_Acc;
                                       Dest_Off : out Uns32;
+                                      Dest_Voff : out Net;
+                                      Dest_Rdwd : out Width;
                                       Dest_Type : out Type_Acc);
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;

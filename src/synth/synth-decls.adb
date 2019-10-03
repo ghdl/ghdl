@@ -554,13 +554,16 @@ package body Synth.Decls is
             declare
                Obj : Value_Acc;
                Off : Uns32;
+               Voff : Net;
+               Rdwd : Width;
                Typ : Type_Acc;
                Res : Value_Acc;
                Obj_Type : Type_Acc;
             begin
                Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
                Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
-                                              Obj, Off, Typ);
+                                              Obj, Off, Voff, Rdwd, Typ);
+               pragma Assert (Voff = No_Net);
                Res := Create_Value_Alias (Obj, Off, Typ);
                Res := Synth_Subtype_Conversion (Res, Obj_Type, True, Decl);
                Create_Object (Syn_Inst, Decl, Res);

@@ -594,11 +594,36 @@ package body Netlists.Disp_Vhdl is
             begin
                if Step /= 1 then
                   Disp_Template
-                    ("  \o0 <= std_logic_vector "
-                       & "(resize (resize (\ui0, \n0) * \up0, \n0));"
-                       & NL, Inst, (0 => Wd));
+                    ("  \o0 <= std_logic_vector (resize (resize (", Inst);
+                  if Get_Width (Get_Input_Net (Inst, 0)) = 1 then
+                     Disp_Template ("unsigned'(0 => \i0)", Inst);
+                  else
+                     Disp_Template ("\ui0", Inst);
+                  end if;
+                  Disp_Template
+                    (", \n0) * \up0, \n0));" & NL, Inst, (0 => Wd));
                else
                   Disp_Template ("  \o0 <= \i0;" & NL, Inst);
+               end if;
+            end;
+         when Id_Addidx =>
+            declare
+               W0 : constant Width := Get_Width (Get_Input_Net (Inst, 0));
+               W1 : constant Width := Get_Width (Get_Input_Net (Inst, 1));
+            begin
+               if W0 > W1 then
+                  Disp_Template
+                    ("  \o0 <= std_logic_vector (\ui0 + resize(\ui1, \n0));"
+                       & NL, Inst, (0 => W0));
+               elsif W0 < W1 then
+                  Disp_Template
+                    ("  \o0 <= std_logic_vector (resize (\ui0, \n0) + \ui1);"
+                       & NL, Inst, (0 => W1));
+               else
+                  pragma Assert (W0 = W1);
+                  Disp_Template
+                    ("  \o0 <= std_logic_vector (\ui0 + \ui1);"
+                       & NL, Inst);
                end if;
             end;
          when Id_Dyn_Extract =>

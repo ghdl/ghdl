@@ -120,12 +120,15 @@ package body Synth.Stmts is
                                       Pfx : Node;
                                       Dest_Obj : out Value_Acc;
                                       Dest_Off : out Uns32;
+                                      Dest_Voff : out Net;
+                                      Dest_Rdwd : out Width;
                                       Dest_Type : out Type_Acc) is
    begin
       case Get_Kind (Pfx) is
          when Iir_Kind_Simple_Name =>
             Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx),
-                                     Dest_Obj, Dest_Off, Dest_Type);
+                                     Dest_Obj, Dest_Off,
+                                     Dest_Voff, Dest_Rdwd, Dest_Type);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
@@ -135,6 +138,8 @@ package body Synth.Stmts is
             begin
                Dest_Obj := Targ;
                Dest_Off := 0;
+               Dest_Voff := No_Net;
+               Dest_Rdwd := 0;
                Dest_Type := Targ.Typ;
             end;
          when Iir_Kind_Object_Alias_Declaration =>
@@ -143,6 +148,8 @@ package body Synth.Stmts is
             begin
                Dest_Obj := Targ.A_Obj;
                Dest_Off := Targ.A_Off;
+               Dest_Voff := No_Net;
+               Dest_Rdwd := 0;
                Dest_Type := Targ.Typ;
             end;
          when Iir_Kind_Indexed_Name =>
@@ -150,21 +157,26 @@ package body Synth.Stmts is
                Voff : Net;
                Off : Uns32;
                W : Width;
+               Dest_W : Width;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
-                                        Dest_Obj, Dest_Off, Dest_Type);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Get_Prefix (Pfx),
+                  Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
+               Dest_W := Dest_Type.W;
                Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Type, Voff, Off, W);
-
-               if Voff /= No_Net then
-                  Error_Msg_Synth
-                    (+Pfx, "dynamic index must be the last suffix");
-               else
-                  --  FIXME: check index.
-                  null;
-               end if;
 
                Dest_Off := Dest_Off + Off;
                Dest_Type := Get_Array_Element (Dest_Type);
+
+               if Voff /= No_Net then
+                  if Dest_Voff = No_Net then
+                     Dest_Voff := Voff;
+                     Dest_Rdwd := Dest_W;
+                  else
+                     raise Internal_Error;
+                  end if;
+               end if;
+
             end;
 
          when Iir_Kind_Selected_Element =>
@@ -172,8 +184,9 @@ package body Synth.Stmts is
                Idx : constant Iir_Index32 :=
                  Get_Element_Position (Get_Named_Entity (Pfx));
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
-                                        Dest_Obj, Dest_Off, Dest_Type);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Get_Prefix (Pfx),
+                  Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
                Dest_Off := Dest_Off + Dest_Type.Rec.E (Idx + 1).Off;
                Dest_Type := Dest_Type.Rec.E (Idx + 1).Typ;
             end;
@@ -187,8 +200,9 @@ package body Synth.Stmts is
                Sl_Off : Uns32;
                Wd : Uns32;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Pfx),
-                                        Dest_Obj, Dest_Off, Dest_Type);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Get_Prefix (Pfx),
+                  Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
 
                Get_Onedimensional_Array_Bounds (Dest_Type, Pfx_Bnd, El_Typ);
                Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ.W,
@@ -268,9 +282,13 @@ package body Synth.Stmts is
             declare
                Obj : Value_Acc;
                Off : Uns32;
+               Voff : Net;
+               Rdwd : Width;
                Typ : Type_Acc;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Target, Obj, Off, Typ);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Target, Obj, Off, Voff, Rdwd, Typ);
+               pragma Assert (Voff = No_Net);
                return Target_Info'(Kind => Target_Simple,
                                    Targ_Type => Typ,
                                    Obj => Obj,
@@ -284,11 +302,13 @@ package body Synth.Stmts is
                El_Typ : Type_Acc;
 
                Voff : Net;
+               Rdwd : Width;
                Idx_Off : Uns32;
                W : Width;
             begin
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
-                                        Obj, Off, Typ);
+                                        Obj, Off, Voff, Rdwd, Typ);
+               pragma Assert (Voff = No_Net);
                Synth_Indexed_Name (Syn_Inst, Target, Typ, Voff, Idx_Off, W);
                El_Typ := Get_Array_Element (Typ);
 
@@ -311,33 +331,43 @@ package body Synth.Stmts is
             declare
                Obj : Value_Acc;
                Off : Uns32;
+               Voff : Net;
+               Rdwd : Width;
                Typ : Type_Acc;
                Pfx_Bnd : Bound_Type;
                El_Typ : Type_Acc;
 
                Res_Bnd : Bound_Type;
-               Inp : Net;
+               Sl_Voff : Net;
                Sl_Off : Uns32;
                Wd : Uns32;
 
                Res_Type : Type_Acc;
             begin
                Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
-                                        Obj, Off, Typ);
+                                        Obj, Off, Voff, Rdwd, Typ);
 
                Get_Onedimensional_Array_Bounds (Typ, Pfx_Bnd, El_Typ);
 
                Synth_Slice_Suffix (Syn_Inst, Target, Pfx_Bnd, El_Typ.W,
-                                   Res_Bnd, Inp, Sl_Off, Wd);
+                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
                Res_Type := Create_Vector_Type (Res_Bnd, El_Typ);
-               if Inp /= No_Net then
+               if Sl_Voff /= No_Net then
+                  if Voff /= No_Net then
+                     Sl_Voff := Build_Addidx
+                       (Get_Build (Syn_Inst), Voff, Sl_Voff);
+                  else
+                     Rdwd := Typ.W;
+                  end if;
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => Res_Type,
                                       Mem_Wid => Obj.W,
-                                      Mem_Width => Typ.W,
-                                      Mem_Voff => Inp,
+                                      Mem_Width => Rdwd,
+                                      Mem_Voff => Sl_Voff,
                                       Mem_Off => Off + Sl_Off);
                else
+                  pragma Assert (Voff = No_Net);
+
                   return Target_Info'(Kind => Target_Simple,
                                       Targ_Type => Res_Type,
                                       Obj => Obj,

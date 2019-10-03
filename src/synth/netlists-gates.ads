@@ -156,8 +156,8 @@ package Netlists.Gates is
    --  OUT := IN0 * STEP,  IN0 < MAX
    Id_Memidx1 : constant Module_Id := 71;
 
-   --  OUT := IN0 * STEP + IN1,  IN0 < MAX, size extension.
-   Id_Memidx2 : constant Module_Id := 72;
+   --  OUT := IN0 + IN1, size extension.
+   Id_Addidx : constant Module_Id := 72;
 
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before
