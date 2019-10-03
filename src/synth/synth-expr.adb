@@ -969,8 +969,8 @@ package body Synth.Expr is
          Off := Index_To_Offset (Bnd, Idx_Val.Scal, Name) * W;
       else
          Voff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
-         Voff := Build_Memidx1 (Get_Build (Syn_Inst), Voff, W, Bnd.Len,
-                                Width (Clog2 (Uns64 (W * Bnd.Len))));
+         Voff := Build_Memidx (Get_Build (Syn_Inst), Voff, W, Bnd.Len,
+                               Width (Clog2 (Uns64 (W * Bnd.Len))));
          Off := 0;
       end if;
    end Synth_Indexed_Name;
@@ -1262,7 +1262,7 @@ package body Synth.Expr is
          Synth_Extract_Dyn_Suffix
            (Name, Pfx_Bnd, Get_Net (Left), Get_Net (Right),
             Inp, Step, Off, Wd);
-         Inp := Build_Memidx1
+         Inp := Build_Memidx
            (Get_Build (Syn_Inst),
             Inp, Step * El_Wd, 0,
             Get_Width (Inp) + Width (Clog2 (Uns64 (Step * El_Wd))));

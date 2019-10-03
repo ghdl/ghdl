@@ -253,9 +253,9 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memidx1")),
-         Id_Memidx1, 1, 1, 2);
-      Ctxt.M_Memidx1 := Res;
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memidx")),
+         Id_Memidx, 1, 1, 2);
+      Ctxt.M_Memidx := Res;
       Outputs := (0 => Create_Output ("o"));
       Inputs (0) := Create_Input ("i");
       Set_Port_Desc (Res, Inputs (0 .. 0), Outputs);
@@ -977,7 +977,7 @@ package body Netlists.Builders is
       return O;
    end Build_Dyn_Insert;
 
-   function Build_Memidx1
+   function Build_Memidx
      (Ctxt : Context_Acc;
       I : Net; Step : Uns32; Max : Uns32; W : Width) return Net
    is
@@ -987,14 +987,14 @@ package body Netlists.Builders is
       Inst : Instance;
       O : Net;
    begin
-      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memidx1);
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memidx);
       O := Get_Output (Inst, 0);
       Set_Width (O, W);
       Connect (Get_Input (Inst, 0), I);
       Set_Param_Uns32 (Inst, 0, Step);
       Set_Param_Uns32 (Inst, 1, Max);
       return O;
-   end Build_Memidx1;
+   end Build_Memidx;
 
    function Build_Addidx (Ctxt : Context_Acc; L, R : Net) return Net
    is

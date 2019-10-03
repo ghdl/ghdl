@@ -586,7 +586,7 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= ", Inst);
             Disp_Extract (Inst);
             Put_Line (";");
-         when Id_Memidx1 =>
+         when Id_Memidx =>
             declare
                O : constant Net := Get_Output (Inst, 0);
                Wd : constant Width := Get_Width (O);

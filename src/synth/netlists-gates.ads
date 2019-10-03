@@ -154,7 +154,7 @@ package Netlists.Gates is
    Id_Dyn_Insert : constant Module_Id := 70;
 
    --  OUT := IN0 * STEP,  IN0 < MAX
-   Id_Memidx1 : constant Module_Id := 71;
+   Id_Memidx : constant Module_Id := 71;
 
    --  OUT := IN0 + IN1, size extension.
    Id_Addidx : constant Module_Id := 72;
