@@ -61,7 +61,7 @@ enum Module_Id {
    Id_Extract = 68,
    Id_Dyn_Extract = 69,
    Id_Dyn_Insert = 70,
-   Id_Memidx1 = 71,
+   Id_Memidx = 71,
    Id_Addidx = 72,
    Id_Edge = 80,
    Id_Assert = 81,
