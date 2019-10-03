@@ -33,7 +33,7 @@ package Synth.Oper is
                                     Expr : Node) return Value_Acc;
 
    function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
-                                     Def : Iir_Predefined_Functions;
+                                     Imp : Node;
                                      Operand_Expr : Node;
                                      Loc : Node) return Value_Acc;
 end Synth.Oper;

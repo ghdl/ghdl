@@ -1557,7 +1557,7 @@ package body Synth.Expr is
                  or else Def in Iir_Predefined_IEEE_Explicit
                then
                   return Synth_Monadic_Operation
-                    (Syn_Inst, Def, Get_Operand (Expr), Expr);
+                    (Syn_Inst, Imp, Get_Operand (Expr), Expr);
                else
                   Error_Unknown_Operator (Imp, Expr);
                   raise Internal_Error;

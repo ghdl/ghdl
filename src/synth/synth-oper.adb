@@ -751,10 +751,16 @@ package body Synth.Oper is
    end Synth_Dyadic_Operation;
 
    function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
-                                     Def : Iir_Predefined_Functions;
+                                     Imp : Node;
                                      Operand_Expr : Node;
                                      Loc : Node) return Value_Acc
    is
+      Def : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
+      Inter_Chain : constant Node :=
+        Get_Interface_Declaration_Chain (Imp);
+      Oper_Type : constant Node := Get_Type (Inter_Chain);
+      Oper_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Oper_Type);
       Operand : Value_Acc;
 
       function Synth_Bit_Monadic (Id : Monadic_Module_Id) return Value_Acc
@@ -787,7 +793,9 @@ package body Synth.Oper is
          return Create_Value_Net (N, Operand.Typ.Vec_El);
       end Synth_Vec_Reduce_Monadic;
    begin
-      Operand := Synth_Expression (Syn_Inst, Operand_Expr);
+      Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
+      Operand := Synth_Subtype_Conversion (Operand, Oper_Typ, False, Loc);
+
       case Def is
          when Iir_Predefined_Error =>
             return null;
