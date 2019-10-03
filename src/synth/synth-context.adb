@@ -160,9 +160,20 @@ package body Synth.Context is
       return Inst.Is_Const;
    end Get_Instance_Const;
 
+   function Check_Set_Instance_Const (Inst : Synth_Instance_Acc)
+                                     return Boolean is
+   begin
+      for I in 1 .. Inst.Elab_Objects loop
+         if Inst.Objects (I).Kind /= Value_Subtype then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Check_Set_Instance_Const;
+
    procedure Set_Instance_Const (Inst : Synth_Instance_Acc; Val : Boolean) is
    begin
-      pragma Assert (not Val or else Inst.Elab_Objects = 0);
+      pragma Assert (not Val or else Check_Set_Instance_Const (Inst));
       Inst.Is_Const := Val;
    end Set_Instance_Const;
 
