@@ -52,13 +52,10 @@ package Synth.Values is
       Right : Int32;
       Len : Width;
 
-      --  Width of length.  This is the number of address bits.
-      Wlen : Width;
-
       --  Width of bounds.  This is the precision used to compute the
       --  address.
       --  If bounds are 1 to 128 (so left = 1, dir = to, right = 128),
-      --  Wlen = 7 and Wbounds = 8.
+      --  Wbounds = 8.
       Wbounds : Width;
    end record;
 

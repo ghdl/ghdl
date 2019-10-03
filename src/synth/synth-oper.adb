@@ -21,7 +21,6 @@
 with Ada.Unchecked_Conversion;
 with Types; use Types;
 with Types_Utils; use Types_Utils;
-with Mutils; use Mutils;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -160,7 +159,6 @@ package body Synth.Oper is
               Right => 0,
               Dir => Index_Bounds.Dir,
               Wbounds => W,
-              Wlen => Width (Clog2 (Uns64 (Len))),
               Len => Uns32 (Len));
 
       if Len = 0 then

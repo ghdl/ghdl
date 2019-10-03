@@ -584,7 +584,6 @@ package body Synth.Expr is
          Len := 0;
       end if;
       return (Dir => Rng.Dir,
-              Wlen => Width (Clog2 (Uns64 (Len))),
               Wbounds => W,
               Left => Int32 (Rng.Left), Right => Int32 (Rng.Right),
               Len => Uns32 (Len));
@@ -1237,7 +1236,6 @@ package body Synth.Expr is
                when Iir_To =>
                   Len := Uns32 (R - L + 1);
                   Res_Bnd := (Dir => Iir_To,
-                              Wlen => Len,
                               Wbounds => Pfx_Bnd.Wbounds,
                               Len => Len,
                               Left => Int32 (L),
@@ -1246,7 +1244,6 @@ package body Synth.Expr is
                when Iir_Downto =>
                   Len := Uns32 (L - R + 1);
                   Res_Bnd := (Dir => Iir_Downto,
-                              Wlen => Len,
                               Wbounds => Pfx_Bnd.Wbounds,
                               Len => Len,
                               Left => Int32 (L),

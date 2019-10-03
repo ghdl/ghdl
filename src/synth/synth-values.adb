@@ -231,7 +231,6 @@ package body Synth.Values is
       W : constant Width := Uns32 (Clog2 (Uns64 (Len)));
    begin
       return Create_Vector_Type ((Dir => Iir_Downto,
-                                  Wlen => W,
                                   Wbounds => W,
                                   Left => Int32 (Len) - 1,
                                   Right => 0,
