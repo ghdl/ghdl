@@ -251,13 +251,6 @@ package body Synth.Inference is
       Data := Get_Driver (I1);
       --  Don't try to free driver of I1 as it is reconnected.
       Disconnect (I1);
-      --  If there is a condition with the clock, that's an enable which
-      --  keep the previous value if the condition is false.  Add the mux
-      --  for it.
-      if Enable /= No_Net then
-         Data := Build_Mux2 (Ctxt, Enable, Prev_Val, Data);
-         Copy_Location (Data, Enable);
-      end if;
 
       --  If the signal declaration has an initial value, get it.
       Sig := Get_Parent (Prev_Val);
@@ -289,9 +282,7 @@ package body Synth.Inference is
 
             --  The parent must be a mux (it's a chain of muxes).
             Mux := Get_Parent (Get_First_Sink (Last_Out));
-            if Get_Id (Mux) /= Id_Mux2 then
-               raise Internal_Error;
-            end if;
+            pragma Assert (Get_Id (Mux) = Id_Mux2);
 
             --  Extract the reset condition and the reset value.
             Sel := Get_Driver (Get_Mux2_Sel (Mux));
@@ -326,6 +317,14 @@ package body Synth.Inference is
             end if;
          end loop;
       end;
+
+      --  If there is a condition with the clock, that's an enable which
+      --  keep the previous value if the condition is false.  Add the mux
+      --  for it.
+      if Enable /= No_Net then
+         Data := Build_Mux2 (Ctxt, Enable, Prev_Val, Data);
+         Copy_Location (Data, Enable);
+      end if;
 
       --  Create the FF.
       if Rst = No_Net then
