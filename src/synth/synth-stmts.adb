@@ -196,7 +196,7 @@ package body Synth.Stmts is
                Pfx_Bnd : Bound_Type;
                El_Typ : Type_Acc;
                Res_Bnd : Bound_Type;
-               Inp : Net;
+               Sl_Voff : Net;
                Sl_Off : Uns32;
                Wd : Uns32;
             begin
@@ -206,16 +206,22 @@ package body Synth.Stmts is
 
                Get_Onedimensional_Array_Bounds (Dest_Type, Pfx_Bnd, El_Typ);
                Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ.W,
-                                   Res_Bnd, Inp, Sl_Off, Wd);
+                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
 
-               if Inp /= No_Net then
-                  Error_Msg_Synth
-                    (+Pfx, "dynamic index must be the last suffix");
-                  return;
-               end if;
-
-               Dest_Type := Create_Vector_Type (Res_Bnd, Dest_Type.Vec_El);
                Dest_Off := Dest_Off + Sl_Off;
+
+               if Sl_Voff /= No_Net then
+                  if Dest_Voff /= No_Net then
+                     Dest_Voff := Build_Addidx
+                       (Get_Build (Syn_Inst), Dest_Voff, Sl_Voff);
+                  else
+                     Dest_Rdwd := Dest_Type.W;
+                     Dest_Voff := Sl_Voff;
+                  end if;
+                  Dest_Type := Create_Slice_Type (Wd, El_Typ);
+               else
+                  Dest_Type := Create_Vector_Type (Res_Bnd, El_Typ);
+               end if;
             end;
 
          when others =>
@@ -278,100 +284,32 @@ package body Synth.Stmts is
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
-            declare
-               Obj : Value_Acc;
-               Off : Uns32;
-               Voff : Net;
-               Rdwd : Width;
-               Typ : Type_Acc;
-            begin
-               Synth_Assignment_Prefix
-                 (Syn_Inst, Target, Obj, Off, Voff, Rdwd, Typ);
-               pragma Assert (Voff = No_Net);
-               return Target_Info'(Kind => Target_Simple,
-                                   Targ_Type => Typ,
-                                   Obj => Obj,
-                                   Off => Off);
-            end;
-         when Iir_Kind_Indexed_Name =>
+           | Iir_Kind_Anonymous_Signal_Declaration
+           | Iir_Kind_Indexed_Name
+           | Iir_Kind_Slice_Name =>
             declare
                Obj : Value_Acc;
                Off : Uns32;
                Typ : Type_Acc;
-               El_Typ : Type_Acc;
 
                Voff : Net;
                Rdwd : Width;
-               Idx_Off : Uns32;
-               W : Width;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
+               Synth_Assignment_Prefix (Syn_Inst, Target,
                                         Obj, Off, Voff, Rdwd, Typ);
-               pragma Assert (Voff = No_Net);
-               Synth_Indexed_Name (Syn_Inst, Target, Typ, Voff, Idx_Off, W);
-               El_Typ := Get_Array_Element (Typ);
-
                if Voff = No_Net then
                   --  FIXME: check index.
                   return Target_Info'(Kind => Target_Simple,
-                                      Targ_Type => El_Typ,
+                                      Targ_Type => Typ,
                                       Obj => Obj,
-                                      Off => Off + Idx_Off);
+                                      Off => Off);
                else
                   return Target_Info'(Kind => Target_Memory,
-                                      Targ_Type => El_Typ,
-                                      Mem_Wid => Obj.W,
-                                      Mem_Width => Typ.W,
-                                      Mem_Voff => Voff,
-                                      Mem_Off => Off + Idx_Off);
-               end if;
-            end;
-         when Iir_Kind_Slice_Name =>
-            declare
-               Obj : Value_Acc;
-               Off : Uns32;
-               Voff : Net;
-               Rdwd : Width;
-               Typ : Type_Acc;
-               Pfx_Bnd : Bound_Type;
-               El_Typ : Type_Acc;
-
-               Res_Bnd : Bound_Type;
-               Sl_Voff : Net;
-               Sl_Off : Uns32;
-               Wd : Uns32;
-
-               Res_Type : Type_Acc;
-            begin
-               Synth_Assignment_Prefix (Syn_Inst, Get_Prefix (Target),
-                                        Obj, Off, Voff, Rdwd, Typ);
-
-               Get_Onedimensional_Array_Bounds (Typ, Pfx_Bnd, El_Typ);
-
-               Synth_Slice_Suffix (Syn_Inst, Target, Pfx_Bnd, El_Typ.W,
-                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
-               Res_Type := Create_Vector_Type (Res_Bnd, El_Typ);
-               if Sl_Voff /= No_Net then
-                  if Voff /= No_Net then
-                     Sl_Voff := Build_Addidx
-                       (Get_Build (Syn_Inst), Voff, Sl_Voff);
-                  else
-                     Rdwd := Typ.W;
-                  end if;
-                  return Target_Info'(Kind => Target_Memory,
-                                      Targ_Type => Res_Type,
+                                      Targ_Type => Typ,
                                       Mem_Wid => Obj.W,
                                       Mem_Width => Rdwd,
-                                      Mem_Voff => Sl_Voff,
-                                      Mem_Off => Off + Sl_Off);
-               else
-                  pragma Assert (Voff = No_Net);
-
-                  return Target_Info'(Kind => Target_Simple,
-                                      Targ_Type => Res_Type,
-                                      Obj => Obj,
-                                      Off => Off + Sl_Off);
+                                      Mem_Voff => Voff,
+                                      Mem_Off => Off);
                end if;
             end;
          when others =>
