@@ -250,7 +250,7 @@ package body Synth.Stmts is
             Aggr : Node;
          when Target_Memory =>
             --  For a memory: the destination is known.
-            Mem_Wid : Wire_Id;
+            Mem_Obj : Value_Acc;
             --  The width of the whole mrmory.
             Mem_Width : Width;
             --  The dynamic offset.
@@ -258,6 +258,8 @@ package body Synth.Stmts is
             Mem_Off : Uns32;
       end case;
    end record;
+
+   type Target_Info_Array is array (Natural range <>) of Target_Info;
 
    function Synth_Target (Syn_Inst : Synth_Instance_Acc;
                           Target : Node) return Target_Info is
@@ -309,7 +311,7 @@ package body Synth.Stmts is
                else
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => Typ,
-                                      Mem_Wid => Obj.W,
+                                      Mem_Obj => Obj,
                                       Mem_Width => Rdwd,
                                       Mem_Voff => Voff,
                                       Mem_Off => Off);
@@ -361,13 +363,13 @@ package body Synth.Stmts is
                V : Net;
             begin
                V := Get_Current_Assign_Value
-                 (Get_Build (Syn_Inst), Target.Mem_Wid, Target.Mem_Off,
+                 (Get_Build (Syn_Inst), Target.Mem_Obj.W, Target.Mem_Off,
                   Target.Mem_Width);
                V := Build_Dyn_Insert (Get_Build (Syn_Inst), V, Get_Net (Val),
                   Target.Mem_Voff, Target.Mem_Off);
                Set_Location (V, Loc);
                Synth_Assign
-                 (Target.Mem_Wid, Target.Targ_Type,
+                 (Target.Mem_Obj.W, Target.Targ_Type,
                   Create_Value_Net (V, Target.Targ_Type), Target.Mem_Off, Loc);
             end;
       end case;
@@ -397,6 +399,10 @@ package body Synth.Stmts is
          N := Build_Dyn_Extract
            (Get_Build (Syn_Inst), Get_Net (Obj), Voff, Off, Typ.W);
       else
+         if Off = 0 and then Typ.W = Obj.Typ.W then
+            --  Nothing to do if extracting the whole object.
+            return Obj;
+         end if;
          N := Build_Extract (Get_Build (Syn_Inst), Get_Net (Obj), Off, Typ.W);
       end if;
       Set_Location (N, Loc);
@@ -1207,17 +1213,21 @@ package body Synth.Stmts is
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
-                                           Assoc_Chain : Node)
+                                           Assoc_Chain : Node;
+                                           Infos : out Target_Info_Array)
    is
+      pragma Assert (Infos'First = 1);
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
       Assoc_Inter : Node;
       Actual : Node;
       Val : Value_Acc;
+      Nbr_Inout : Natural;
    begin
       Set_Instance_Const (Subprg_Inst, True);
 
+      Nbr_Inout := 0;
       Assoc := Assoc_Chain;
       Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
@@ -1239,8 +1249,25 @@ package body Synth.Stmts is
                      raise Internal_Error;
                end case;
             when Iir_Out_Mode | Iir_Inout_Mode =>
-               --  FIXME: todo
-               raise Internal_Error;
+               Nbr_Inout := Nbr_Inout + 1;
+               Actual := Get_Actual (Assoc);
+               Infos (Nbr_Inout) := Synth_Target (Caller_Inst, Actual);
+               declare
+                  Info : Target_Info renames Infos (Nbr_Inout);
+               begin
+                  case Info.Kind is
+                     when Target_Aggregate =>
+                        raise Internal_Error;
+                     when Target_Simple =>
+                        Val := Synth_Read_Memory
+                          (Caller_Inst, Info.Obj, Info.Off, No_Net,
+                           Info.Targ_Type, Assoc);
+                     when Target_Memory =>
+                        Val := Synth_Read_Memory
+                          (Caller_Inst, Info.Mem_Obj, Info.Mem_Off,
+                           Info.Mem_Voff, Info.Targ_Type, Assoc);
+                  end case;
+               end;
          end case;
 
          Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
@@ -1250,10 +1277,13 @@ package body Synth.Stmts is
          end if;
 
          case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
-            when Iir_Kind_Interface_Constant_Declaration
-              | Iir_Kind_Interface_Variable_Declaration =>
+            when Iir_Kind_Interface_Constant_Declaration =>
+               --  Pass by reference.
+               Create_Object (Subprg_Inst, Inter, Val);
+            when Iir_Kind_Interface_Variable_Declaration =>
                --  FIXME: Arguments are passed by copy.
                Create_Object (Subprg_Inst, Inter, Val);
+               raise Internal_Error;
             when Iir_Kind_Interface_Signal_Declaration =>
                Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_File_Declaration =>
@@ -1264,30 +1294,50 @@ package body Synth.Stmts is
       end loop;
    end Synth_Subprogram_Association;
 
+   procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
+                                           Caller_Inst : Synth_Instance_Acc;
+                                           Inter_Chain : Node;
+                                           Assoc_Chain : Node)
+   is
+      Infos : Target_Info_Array (1 .. 0);
+      pragma Unreferenced (Infos);
+   begin
+      Synth_Subprogram_Association
+        (Subprg_Inst, Caller_Inst, Inter_Chain, Assoc_Chain, Infos);
+   end Synth_Subprogram_Association;
+
    procedure Synth_Subprogram_Back_Association
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
       Inter_Chain : Node;
-      Assoc_Chain : Node)
+      Assoc_Chain : Node;
+      Infos : Target_Info_Array)
    is
+      pragma Assert (Infos'First = 1);
       Inter : Node;
       Assoc : Node;
       Assoc_Inter : Node;
       Val : Value_Acc;
+      Nbr_Inout : Natural;
    begin
+      Nbr_Inout := 0;
       Assoc := Assoc_Chain;
       Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-         if Get_Mode (Inter) = Iir_Out_Mode then
-            Val := Synth_Expression (Subprg_Inst, Inter);
-            Synth_Assignment (Caller_Inst, Get_Actual (Assoc), Val, Assoc);
-
-         end if;
+         case Iir_Parameter_Modes (Get_Mode (Inter)) is
+            when Iir_In_Mode =>
+               null;
+            when Iir_Out_Mode | Iir_Inout_Mode =>
+               Nbr_Inout := Nbr_Inout + 1;
+               Val := Synth_Expression (Subprg_Inst, Inter);
+               Synth_Assignment (Caller_Inst, Infos (Nbr_Inout), Val, Assoc);
+         end case;
 
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
+      pragma Assert (Nbr_Inout = Infos'Last);
    end Synth_Subprogram_Back_Association;
 
    function Synth_Label (Stmt : Node) return Sname
@@ -1301,17 +1351,141 @@ package body Synth.Stmts is
       end if;
    end Synth_Label;
 
+   procedure Count_Associations
+     (Inter_Chain : Node; Assoc_Chain : Node; Nbr_Inout : out Natural)
+   is
+      Assoc : Node;
+      Assoc_Inter : Node;
+      Inter : Node;
+   begin
+      Nbr_Inout := 0;
+
+      Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
+      while Is_Valid (Assoc) loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+         case Iir_Parameter_Modes (Get_Mode (Inter)) is
+            when Iir_In_Mode =>
+               null;
+            when Iir_Out_Mode | Iir_Inout_Mode =>
+               Nbr_Inout := Nbr_Inout + 1;
+         end case;
+
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Count_Associations;
+
+   function Synth_Subprogram_Call
+     (Syn_Inst : Synth_Instance_Acc; Call : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Call);
+      Is_Func : constant Boolean := Is_Function_Declaration (Imp);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Bod : constant Node := Get_Subprogram_Body (Imp);
+      Area_Mark : Areapools.Mark_Type;
+      Res : Value_Acc;
+      C : Seq_Context;
+      Wire_Mark : Wire_Id;
+      Subprg_Phi : Phi_Type;
+      Nbr_Inout : Natural;
+   begin
+      Mark (Wire_Mark);
+      Areapools.Mark (Area_Mark, Instance_Pool.all);
+      C := (Inst => Make_Instance (Syn_Inst, Bod,
+                                   New_Internal_Name (Build_Context)),
+            Cur_Loop => null,
+            W_En => Alloc_Wire (Wire_Variable, Imp),
+            W_Ret => Alloc_Wire (Wire_Variable, Imp),
+            W_Val => No_Wire_Id,
+            Ret_Init => No_Net,
+            Ret_Value => null,
+            Ret_Typ => null,
+            Nbr_Ret => 0);
+
+      if Is_Func then
+         C.W_Val := Alloc_Wire (Wire_Variable, Imp);
+      end if;
+
+      Count_Associations (Inter_Chain, Assoc_Chain, Nbr_Inout);
+
+      declare
+         Infos : Target_Info_Array (1 .. Nbr_Inout);
+      begin
+         Synth_Subprogram_Association
+           (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+
+         Push_Phi;
+
+         if Is_Func then
+            --  Set a default value for the return.
+            C.Ret_Typ := Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
+            Set_Wire_Gate (C.W_Val,
+                           Build_Signal (Build_Context,
+                                         New_Internal_Name (Build_Context),
+                                         C.Ret_Typ.W));
+            C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
+            Phi_Assign (Build_Context, C.W_Val, C.Ret_Init, 0);
+         end if;
+
+         Set_Wire_Gate
+           (C.W_En, Build_Signal (Build_Context,
+                                  New_Internal_Name (Build_Context), 1));
+         Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+
+         Set_Wire_Gate
+           (C.W_Ret, Build_Signal (Build_Context,
+                                   New_Internal_Name (Build_Context), 1));
+         Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
+
+         Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+
+         Synth_Sequential_Statements
+           (C, Get_Sequential_Statement_Chain (Bod));
+
+         if Is_Func then
+            if C.Nbr_Ret = 0 then
+               raise Internal_Error;
+            elsif C.Nbr_Ret = 1 and then Is_Const (C.Ret_Value) then
+               Res := C.Ret_Value;
+            else
+               Res := Create_Value_Net
+                 (Get_Current_Value (Build_Context, C.W_Val), C.Ret_Value.Typ);
+            end if;
+         else
+            Res := null;
+            Synth_Subprogram_Back_Association
+              (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+         end if;
+
+         Pop_Phi (Subprg_Phi);
+
+         Decls.Finalize_Declarations
+           (C.Inst, Get_Declaration_Chain (Bod), True);
+         pragma Unreferenced (Infos);
+      end;
+
+      --  Free wires.
+      Free_Wire (C.W_En);
+      Free_Wire (C.W_Ret);
+      if Is_Func then
+         Free_Wire (C.W_Val);
+      end if;
+
+      Free_Instance (C.Inst);
+      Areapools.Release (Area_Mark, Instance_Pool.all);
+
+      Release (Wire_Mark);
+
+      return Res;
+   end Synth_Subprogram_Call;
+
    procedure Synth_Procedure_Call (C : in out Seq_Context; Stmt : Node)
    is
       Call : constant Node := Get_Procedure_Call (Stmt);
       Imp  : constant Node := Get_Implementation (Call);
-      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
-      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
-      Subprg_Body : constant Node := Get_Subprogram_Body (Imp);
-      Decls_Chain : constant Node := Get_Declaration_Chain (Subprg_Body);
-      Sub_C : Seq_Context;
-      Sub_Sname : Sname;
-      M : Areapools.Mark_Type;
+      Res : Value_Acc;
    begin
       if Get_Implicit_Definition (Imp) in Iir_Predefined_Implicit then
          Error_Msg_Synth (+Stmt, "call to implicit %n is not supported", +Imp);
@@ -1321,27 +1495,8 @@ package body Synth.Stmts is
          return;
       end if;
 
-      Areapools.Mark (M, Instance_Pool.all);
-      Sub_Sname := New_Sname (Get_Sname (C.Inst), Get_Identifier (Imp));
-      Sub_C.Inst := Make_Instance (C.Inst, Imp, Sub_Sname);
-
-      Synth_Subprogram_Association
-        (Sub_C.Inst, C.Inst, Inter_Chain, Assoc_Chain);
-
-      Synth_Declarations (Sub_C.Inst, Decls_Chain);
-
-      if Is_Valid (Decls_Chain) then
-         Synth_Declarations (Sub_C.Inst, Decls_Chain);
-      end if;
-
-      Synth_Sequential_Statements
-        (Sub_C, Get_Sequential_Statement_Chain (Subprg_Body));
-
-      Synth_Subprogram_Back_Association
-        (Sub_C.Inst, C.Inst, Inter_Chain, Assoc_Chain);
-
-      Free_Instance (Sub_C.Inst);
-      Areapools.Release (M, Instance_Pool.all);
+      Res := Synth_Subprogram_Call (C.Inst, Call);
+      pragma Assert (Res = null);
    end Synth_Procedure_Call;
 
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean is
@@ -1799,20 +1954,11 @@ package body Synth.Stmts is
    end Synth_Process_Statement;
 
    function Synth_User_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
-   is
-      Imp  : constant Node := Get_Implementation (Expr);
-      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
-      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
-      Bod : constant Node := Get_Subprogram_Body (Imp);
-      Area_Mark : Areapools.Mark_Type;
-      Res : Value_Acc;
-      C : Seq_Context;
-      Wire_Mark : Wire_Id;
-      Subprg_Phi : Phi_Type;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc is
    begin
       --  Is it a call to an ieee function ?
       declare
+         Imp  : constant Node := Get_Implementation (Expr);
          Pkg : constant Node := Get_Parent (Imp);
          Unit : Node;
          Lib : Node;
@@ -1830,71 +1976,7 @@ package body Synth.Stmts is
          end if;
       end;
 
-      Mark (Wire_Mark);
-      Areapools.Mark (Area_Mark, Instance_Pool.all);
-      C := (Inst => Make_Instance (Syn_Inst, Bod,
-                                   New_Internal_Name (Build_Context)),
-            Cur_Loop => null,
-            W_En => Alloc_Wire (Wire_Variable, Imp),
-            W_Ret => Alloc_Wire (Wire_Variable, Imp),
-            W_Val => Alloc_Wire (Wire_Variable, Imp),
-            Ret_Init => No_Net,
-            Ret_Value => null,
-            Ret_Typ => null,
-            Nbr_Ret => 0);
-
-      Synth_Subprogram_Association
-        (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
-
-      Push_Phi;
-
-      --  Set a default value for the return.
-      C.Ret_Typ := Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
-      Set_Wire_Gate (C.W_Val, Build_Signal (Build_Context,
-                                            New_Internal_Name (Build_Context),
-                                            C.Ret_Typ.W));
-      C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
-      Phi_Assign (Build_Context, C.W_Val, C.Ret_Init, 0);
-
-      Set_Wire_Gate
-        (C.W_En,
-         Build_Signal (Build_Context, New_Internal_Name (Build_Context), 1));
-      Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
-
-      Set_Wire_Gate
-        (C.W_Ret,
-         Build_Signal (Build_Context, New_Internal_Name (Build_Context), 1));
-      Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
-
-      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
-
-      Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
-
-
-      if C.Nbr_Ret = 0 then
-         raise Internal_Error;
-      elsif C.Nbr_Ret = 1 and then Is_Const (C.Ret_Value) then
-         Res := C.Ret_Value;
-      else
-         Res := Create_Value_Net (Get_Current_Value (Build_Context, C.W_Val),
-                                  C.Ret_Value.Typ);
-      end if;
-
-      Pop_Phi (Subprg_Phi);
-
-      Decls.Finalize_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
-
-      --  Free wires.
-      Free_Wire (C.W_En);
-      Free_Wire (C.W_Ret);
-      Free_Wire (C.W_Val);
-
-      Free_Instance (C.Inst);
-      Areapools.Release (Area_Mark, Instance_Pool.all);
-
-      Release (Wire_Mark);
-
-      return Res;
+      return Synth_Subprogram_Call (Syn_Inst, Expr);
    end Synth_User_Function_Call;
 
    procedure Synth_Concurrent_Assertion_Statement
