@@ -975,38 +975,6 @@ package body Synth.Expr is
       end if;
    end Synth_Indexed_Name;
 
-   function Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                               return Value_Acc
-   is
-      Pfx_Val : Value_Acc;
-      Voff : Net;
-      Off : Uns32;
-      W : Width;
-      El_Typ : Type_Acc;
-      Res : Net;
-   begin
-      Pfx_Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
-
-      Synth_Indexed_Name (Syn_Inst, Name, Pfx_Val.Typ, Voff, Off, W);
-      El_Typ := Get_Array_Element (Pfx_Val.Typ);
-
-      if Voff = No_Net then
-         if W = 1 and then Pfx_Val.Kind = Value_Array then
-            return Bit_Extract (Pfx_Val, Off, Name);
-         else
-            Res := Build_Extract (Build_Context, Get_Net (Pfx_Val), Off, W);
-            Set_Location (Res, Name);
-            return Create_Value_Net (Res, El_Typ);
-         end if;
-      else
-         pragma Assert (Off = 0);
-         Res := Build_Dyn_Extract (Build_Context, Get_Net (Pfx_Val),
-                                   Voff, Off, W);
-         Set_Location (Res, Name);
-         return Create_Value_Net (Res, El_Typ);
-      end if;
-   end Synth_Indexed_Name;
-
    function Is_Const (N : Net) return Boolean is
    begin
       case Get_Id (Get_Module (Get_Parent (N))) is
@@ -1269,39 +1237,6 @@ package body Synth.Expr is
          Wd := Wd * El_Wd;
       end if;
    end Synth_Slice_Suffix;
-
-   function Synth_Slice_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                              return Value_Acc
-   is
-      Pfx_Node : constant Node := Get_Prefix (Name);
-      Pfx : constant Value_Acc :=
-        Synth_Expression_With_Basetype (Syn_Inst, Pfx_Node);
-      Pfx_Bnd : Bound_Type;
-      El_Typ : Type_Acc;
-      Res_Bnd : Bound_Type;
-      Res_Type : Type_Acc;
-      Inp : Net;
-      Off : Uns32;
-      Wd : Uns32;
-      N : Net;
-   begin
-      Get_Onedimensional_Array_Bounds (Pfx.Typ, Pfx_Bnd, El_Typ);
-
-      Synth_Slice_Suffix (Syn_Inst, Name, Pfx_Bnd, El_Typ.W,
-                          Res_Bnd, Inp, Off, Wd);
-      if Inp /= No_Net then
-         N := Build_Dyn_Extract (Build_Context, Get_Net (Pfx), Inp, Off, Wd);
-         Set_Location (N, Name);
-         --  TODO: the bounds cannot be created as they are not known.
-         Res_Type := Create_Slice_Type (Wd, El_Typ);
-         return Create_Value_Net (N, Res_Type);
-      else
-         N := Build_Extract (Build_Context, Get_Net (Pfx), Off, Wd);
-         Set_Location (N, Name);
-         Res_Type := Create_Onedimensional_Array_Subtype (Pfx.Typ, Res_Bnd);
-         return Create_Value_Net (N, Res_Type);
-      end if;
-   end Synth_Slice_Name;
 
    --  Match: clk_signal_name'event
    --  and return clk_signal_name.
@@ -1569,10 +1504,20 @@ package body Synth.Expr is
             return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Reference_Name =>
             return Synth_Name (Syn_Inst, Get_Named_Entity (Expr));
-         when Iir_Kind_Indexed_Name =>
-            return Synth_Indexed_Name (Syn_Inst, Expr);
-         when Iir_Kind_Slice_Name =>
-            return Synth_Slice_Name (Syn_Inst, Expr);
+         when Iir_Kind_Indexed_Name
+           | Iir_Kind_Slice_Name =>
+            declare
+               Obj : Value_Acc;
+               Off : Uns32;
+               Typ : Type_Acc;
+
+               Voff : Net;
+               Rdwd : Width;
+            begin
+               Synth_Assignment_Prefix (Syn_Inst, Expr,
+                                        Obj, Off, Voff, Rdwd, Typ);
+               return Synth_Read_Memory (Syn_Inst, Obj, Off, Voff, Typ, Expr);
+            end;
          when Iir_Kind_Selected_Element =>
             declare
                Idx : constant Iir_Index32 :=
@@ -1711,5 +1656,4 @@ package body Synth.Expr is
       Basetype := Get_Value_Type (Syn_Inst, Get_Base_Type (Get_Type (Expr)));
       return Synth_Expression_With_Type (Syn_Inst, Expr, Basetype);
    end Synth_Expression_With_Basetype;
-
 end Synth.Expr;

@@ -46,6 +46,13 @@ package Synth.Stmts is
                                Val : Value_Acc;
                                Loc : Node);
 
+   function Synth_Read_Memory (Syn_Inst : Synth_Instance_Acc;
+                               Obj : Value_Acc;
+                               Off : Uns32;
+                               Voff : Net;
+                               Typ : Type_Acc;
+                               Loc : Node) return Value_Acc;
+
    function Synth_User_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
 

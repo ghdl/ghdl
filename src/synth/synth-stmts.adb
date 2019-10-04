@@ -132,7 +132,9 @@ package body Synth.Stmts is
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
+           | Iir_Kind_Anonymous_Signal_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Constant_Declaration =>
             declare
                Targ : constant Value_Acc := Get_Value (Syn_Inst, Pfx);
             begin
@@ -173,10 +175,10 @@ package body Synth.Stmts is
                      Dest_Voff := Voff;
                      Dest_Rdwd := Dest_W;
                   else
-                     raise Internal_Error;
+                     Dest_Voff := Build_Addidx
+                       (Get_Build (Syn_Inst), Dest_Voff, Voff);
                   end if;
                end if;
-
             end;
 
          when Iir_Kind_Selected_Element =>
@@ -220,7 +222,8 @@ package body Synth.Stmts is
                   end if;
                   Dest_Type := Create_Slice_Type (Wd, El_Typ);
                else
-                  Dest_Type := Create_Vector_Type (Res_Bnd, El_Typ);
+                  Dest_Type :=
+                    Create_Onedimensional_Array_Subtype (Dest_Type, Res_Bnd);
                end if;
             end;
 
@@ -380,6 +383,25 @@ package body Synth.Stmts is
       Info := Synth_Target (Syn_Inst, Target);
       Synth_Assignment (Syn_Inst, Info, Val, Loc);
    end Synth_Assignment;
+
+   function Synth_Read_Memory (Syn_Inst : Synth_Instance_Acc;
+                               Obj : Value_Acc;
+                               Off : Uns32;
+                               Voff : Net;
+                               Typ : Type_Acc;
+                               Loc : Node) return Value_Acc
+   is
+      N : Net;
+   begin
+      if Voff /= No_Net then
+         N := Build_Dyn_Extract
+           (Get_Build (Syn_Inst), Get_Net (Obj), Voff, Off, Typ.W);
+      else
+         N := Build_Extract (Get_Build (Syn_Inst), Get_Net (Obj), Off, Typ.W);
+      end if;
+      Set_Location (N, Loc);
+      return Create_Value_Net (N, Typ);
+   end Synth_Read_Memory;
 
    --  Concurrent or sequential simple signal assignment
    procedure Synth_Simple_Signal_Assignment
