@@ -519,6 +519,10 @@ package body Synth.Oper is
             --  "=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Eq);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
+            --  "=" (Signed, Signed) [resize]
+            return Synth_Compare_Sgn_Sgn (Id_Eq);
+
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv =>
             --  "/=" (Unsigned, Unsigned) [resize]
