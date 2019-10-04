@@ -782,7 +782,19 @@ package body Netlists.Disp_Vhdl is
          when Id_Xor =>
             Disp_Template ("  \o0 <= \i0 xor \i1;" & NL, Inst);
          when Id_Concat2 =>
-            Disp_Template ("  \o0 <= \i0 & \i1;" & NL, Inst);
+            declare
+               Wd : constant Width := Get_Width (Get_Output (Inst, 0));
+            begin
+               if Wd = 1 then
+                  if Get_Width (Get_Input_Net (Inst, 0)) = 0 then
+                     Disp_Template ("  \o0 <= \i1;  --  concat" & NL, Inst);
+                  else
+                     Disp_Template ("  \o0 <= \i0;  --  concat" & NL, Inst);
+                  end if;
+               else
+                  Disp_Template ("  \o0 <= \i0 & \i1;" & NL, Inst);
+               end if;
+            end;
          when Id_Concat3 =>
             Disp_Template ("  \o0 <= \i0 & \i1 & \i2;" & NL, Inst);
          when Id_Concat4 =>
@@ -812,6 +824,23 @@ package body Netlists.Disp_Vhdl is
                Disp_Template ("  \o0 <= """, Inst);
                Put ((1 .. Natural (Ow - Iw) => '0'));
                Disp_Template (""" & \i0;  --  uext" & NL, Inst);
+            end;
+         when Id_Sextend =>
+            declare
+               Ow : constant Width := Get_Width (Get_Output (Inst, 0));
+               Iw : constant Width := Get_Width (Get_Input_Net (Inst, 0));
+            begin
+               pragma Assert (Iw > 0);
+               pragma Assert (Ow > Iw);
+               Disp_Template ("  \o0 <= ", Inst);
+               if Iw = 1 then
+                  Disp_Template ("(\n0 downto 0 => \i0); -- sext" & NL,
+                                 Inst, (0 => Ow));
+               else
+                  Disp_Template
+                    ("std_logic_vector (resize (\si0, \n0));  --  sext" & NL,
+                     Inst, (0 => Ow));
+               end if;
             end;
          when Id_Lsr =>
             Disp_Template
