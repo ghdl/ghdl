@@ -764,6 +764,19 @@ package body Netlists.Disp_Vhdl is
          when Id_Srem =>
             Disp_Template
               ("  \o0 <= std_logic_vector (\si0 rem \si1);" & NL, Inst);
+         when Id_Lsl =>
+            Disp_Template
+              ("  \o0 <= std_logic_vector "
+                 & "(shift_left (\ui0, to_integer (\ui1)));" & NL, Inst);
+         when Id_Asr =>
+            Disp_Template
+              ("  \o0 <= std_logic_vector "
+                 & "(shift_left (\si0, to_integer (\ui1)));" & NL, Inst);
+         when Id_Rol =>
+            Disp_Template
+              ("  \o0 <= std_logic_vector "
+                 & "(rotate_left (\ui0, to_integer (\ui1)));" & NL, Inst);
+
          when Id_Ult =>
             Disp_Template ("  \o0 <= '1' when \ui0 < \ui1 else '0';" & NL,
                            Inst);
@@ -800,6 +813,11 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0 and \i1;" & NL, Inst);
          when Id_Xor =>
             Disp_Template ("  \o0 <= \i0 xor \i1;" & NL, Inst);
+         when Id_Nor =>
+            Disp_Template ("  \o0 <= \i0 nor \i1;" & NL, Inst);
+         when Id_Nand =>
+            Disp_Template ("  \o0 <= \i0 nand \i1;" & NL, Inst);
+
          when Id_Concat2 =>
             declare
                Wd : constant Width := Get_Width (Get_Output (Inst, 0));
