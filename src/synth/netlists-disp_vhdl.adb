@@ -418,7 +418,7 @@ package body Netlists.Disp_Vhdl is
       return False;
    end Need_Signal;
 
-   type Conv_Type is (Conv_None, Conv_Unsigned, Conv_Signed);
+   type Conv_Type is (Conv_None, Conv_Slv, Conv_Unsigned, Conv_Signed);
 
    procedure Disp_Net_Expr (N : Net; Inst : Instance; Conv : Conv_Type)
    is
@@ -437,6 +437,14 @@ package body Netlists.Disp_Vhdl is
          case Conv is
             when Conv_None =>
                Disp_Constant_Inline (Net_Inst);
+            when Conv_Slv =>
+               if Get_Width (N) = 1 then
+                  Put ("std_logic'(");
+               else
+                  Put ("std_logic_vector'(");
+               end if;
+               Disp_Constant_Inline (Net_Inst);
+               Put (")");
             when Conv_Unsigned =>
                Put ("unsigned'(");
                Disp_Constant_Inline (Net_Inst);
@@ -448,7 +456,8 @@ package body Netlists.Disp_Vhdl is
          end case;
       else
          case Conv is
-            when Conv_None =>
+            when Conv_None
+              | Conv_Slv =>
                Disp_Net_Name (N);
             when Conv_Unsigned =>
                Put ("unsigned (");
@@ -467,6 +476,11 @@ package body Netlists.Disp_Vhdl is
    type Uns32_Array is array (Natural range <>) of Uns32;
    No_Uns32_Arr : constant Uns32_Array := (1 .. 0 => 0);
 
+   --  Template:
+   --  \[C]AN
+   --   C: conversion  u: unsigned, s: signed, f: force logic
+   --   A: argument    o: output, i: input, n: value, p: parameter, l: label
+   --   N: argument number (0-9)
    procedure Disp_Template
      (S : String; Inst : Instance; Val : Uns32_Array := No_Uns32_Arr)
    is
@@ -490,6 +504,9 @@ package body Netlists.Disp_Vhdl is
             elsif S (I) = 's' then
                Conv := Conv_Signed;
                I := I + 1;
+            elsif S (I) = 'f' then
+               Conv := Conv_Slv;
+               I := I + 1;
             else
                Conv := Conv_None;
             end if;
@@ -509,7 +526,8 @@ package body Netlists.Disp_Vhdl is
                   V := Get_Param_Uns32 (Inst, Param_Idx (Idx));
                   case Conv is
                      when Conv_None
-                       | Conv_Unsigned =>
+                       | Conv_Unsigned
+                       | Conv_Slv =>
                         Put_Uns32 (V);
                      when Conv_Signed =>
                         Put_Int32 (To_Int32 (V));
@@ -771,9 +789,10 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= '1' when \si0 >= \si1 else '0';" & NL,
                            Inst);
          when Id_Eq =>
-            Disp_Template ("  \o0 <= '1' when \i0 = \i1 else '0';" & NL, Inst);
+            Disp_Template ("  \o0 <= '1' when \fi0 = \i1 else '0';" & NL,
+                           Inst);
          when Id_Ne =>
-            Disp_Template ("  \o0 <= '1' when \i0 /= \i1 else '0';" & NL,
+            Disp_Template ("  \o0 <= '1' when \fi0 /= \i1 else '0';" & NL,
                            Inst);
          when Id_Or =>
             Disp_Template ("  \o0 <= \i0 or \i1;" & NL, Inst);
