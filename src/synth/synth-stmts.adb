@@ -1106,7 +1106,7 @@ package body Synth.Stmts is
    begin
       Targ_Type := Get_Value_Type (Syn_Inst, Get_Type (Targ));
       --  Create a net for the expression.
-      Sel := Synth_Expression (Syn_Inst, Expr);
+      Sel := Synth_Expression_With_Basetype (Syn_Inst, Expr);
 
       --  Count choices and alternatives.
       Count_Choices (Case_Info, Choices);
