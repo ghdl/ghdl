@@ -1999,6 +1999,11 @@ package body Synth.Stmts is
 
    procedure Synth_Block_Statement (Syn_Inst : Synth_Instance_Acc; Blk : Node)
    is
+      use Areapools;
+      Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
+      Blk_Inst : Synth_Instance_Acc;
+      Blk_Sname : Sname;
+      M : Areapools.Mark_Type;
    begin
       --  No support for guard or header.
       if Get_Block_Header (Blk) /= Null_Node
@@ -2007,9 +2012,18 @@ package body Synth.Stmts is
          raise Internal_Error;
       end if;
 
-      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Blk));
+      Blk_Sname := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Blk));
+      Blk_Inst := Make_Instance (Syn_Inst, Blk, Blk_Sname);
+      Mark (M, Proc_Pool);
+      Instance_Pool := Proc_Pool'Access;
+
+      Synth_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
       Synth_Concurrent_Statements
-        (Syn_Inst, Get_Concurrent_Statement_Chain (Blk));
+        (Blk_Inst, Get_Concurrent_Statement_Chain (Blk));
+
+      Free_Instance (Blk_Inst);
+      Release (M, Proc_Pool);
+      Instance_Pool := Prev_Instance_Pool;
    end Synth_Block_Statement;
 
    function Synth_PSL_Expression
