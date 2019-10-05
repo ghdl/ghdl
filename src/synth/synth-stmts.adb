@@ -1997,6 +1997,21 @@ package body Synth.Stmts is
       Set_Location (Inst, Get_Location (Stmt));
    end Synth_Concurrent_Assertion_Statement;
 
+   procedure Synth_Block_Statement (Syn_Inst : Synth_Instance_Acc; Blk : Node)
+   is
+   begin
+      --  No support for guard or header.
+      if Get_Block_Header (Blk) /= Null_Node
+        or else Get_Guard_Decl (Blk) /= Null_Node
+      then
+         raise Internal_Error;
+      end if;
+
+      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Blk));
+      Synth_Concurrent_Statements
+        (Syn_Inst, Get_Concurrent_Statement_Chain (Blk));
+   end Synth_Block_Statement;
+
    function Synth_PSL_Expression
      (Syn_Inst : Synth_Instance_Acc; Expr : PSL.Types.PSL_Node) return Net
    is
@@ -2388,6 +2403,8 @@ package body Synth.Stmts is
                   Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
                end if;
                Pop_And_Merge_Phi (Build_Context, Stmt);
+            when Iir_Kind_Block_Statement =>
+               Synth_Block_Statement (Syn_Inst, Stmt);
             when Iir_Kind_Psl_Default_Clock =>
                null;
             when Iir_Kind_Psl_Restrict_Directive =>

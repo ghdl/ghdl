@@ -725,6 +725,8 @@ package body Synth.Insts is
                         Set_Prev_Block_Configuration
                           (Item, Get_Generate_Block_Configuration (Sub_Blk));
                         Set_Generate_Block_Configuration (Sub_Blk, Item);
+                     when Iir_Kind_Block_Statement =>
+                        Set_Block_Block_Configuration (Sub_Blk, Item);
                      when others =>
                         Vhdl.Errors.Error_Kind
                           ("apply_block_configuration(blk)", Sub_Blk);
