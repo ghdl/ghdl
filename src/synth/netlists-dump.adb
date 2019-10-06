@@ -307,7 +307,7 @@ package body Netlists.Dump is
          Disp_Net_Name (N);
          Disp_Width (Get_Width (N));
 
-         Put ('{');
+         Put ("{n");
          Put_Trim (Net'Image (N));
          Put ('}');
       end if;
@@ -408,8 +408,9 @@ package body Netlists.Dump is
       Dump_Name (Get_Module_Name (M));
 
       if True then
-         Put ('@');
+         Put ("{i");
          Put_Trim (Instance'Image (Inst));
+         Put ('}');
       end if;
 
       if Get_Nbr_Params (Inst) > 0 then
@@ -450,7 +451,7 @@ package body Netlists.Dump is
 
                Drv := Get_Driver (I);
 
-               Put ('{');
+               Put ("{n");
                Put_Trim (Net'Image (Drv));
                Put ('}');
 
@@ -521,7 +522,7 @@ package body Netlists.Dump is
                if False then
                   Disp_Driver (Get_Driver (I));
                else
-                  Disp_Net_Name (Get_Driver (I));
+                  Dump_Net_Name_And_Width (Get_Driver (I));
                end if;
                New_Line;
             end loop;
