@@ -68,7 +68,7 @@ package body Netlists.Errors is
       Inst : constant Instance := Instance (Val);
    begin
       if Format = 'n' then
-         Output_Name_1 (Get_Name (Inst));
+         Output_Name_1 (Get_Instance_Name (Inst));
       else
          raise Internal_Error;
       end if;

@@ -153,7 +153,7 @@ package body Netlists.Disp_Vhdl is
          if Is_Self_Instance (Inst) then
             Put_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
          else
-            Inst_Name := Get_Name (Inst);
+            Inst_Name := Get_Instance_Name (Inst);
             Put_Name (Inst_Name);
             case Get_Sname_Kind (Inst_Name) is
                when Sname_Version =>
@@ -179,7 +179,7 @@ package body Netlists.Disp_Vhdl is
       First : Boolean;
    begin
       Put ("  ");
-      Name := Get_Name (Inst);
+      Name := Get_Instance_Name (Inst);
       if Get_Sname_Kind (Name) = Sname_Version then
          Put ("inst_");
          Put_Name_Version (Name);

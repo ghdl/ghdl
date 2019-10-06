@@ -493,7 +493,7 @@ package body Synth.Inference is
             end loop;
          end;
       else
-         Name := Get_Name (Get_Net_Parent (Prev_Val));
+         Name := Get_Instance_Name (Get_Net_Parent (Prev_Val));
       end if;
       Error_Msg_Synth (+Stmt, "latch infered for net %n", +Name);
 

@@ -246,7 +246,6 @@ package Netlists is
    function Is_Self_Instance (I : Instance) return Boolean;
    function Get_Module (Inst : Instance) return Module;
    function Get_Instance_Name (Inst : Instance) return Sname;
-   function Get_Name (Inst : Instance) return Sname renames Get_Instance_Name;
    function Get_Instance_Parent (Inst : Instance) return Module;
    function Get_Parent (Inst : Instance) return Module
      renames Get_Instance_Parent;

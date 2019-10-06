@@ -84,7 +84,7 @@ package body Netlists.Dump is
       Inst : constant Instance := Get_Parent (I);
       Idx : constant Port_Idx := Get_Port_Idx (I);
    begin
-      Dump_Name (Get_Name (Inst));
+      Dump_Name (Get_Instance_Name (Inst));
       Put ('.');
       if Is_Self_Instance (Inst) then
          Dump_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
@@ -103,7 +103,7 @@ package body Netlists.Dump is
       Inst : constant Instance := Get_Parent (N);
       Idx : constant Port_Idx := Get_Port_Idx (N);
    begin
-      Dump_Name (Get_Name (Inst));
+      Dump_Name (Get_Instance_Name (Inst));
       Put ('.');
       if Is_Self_Instance (Inst) then
          Dump_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
@@ -135,7 +135,7 @@ package body Netlists.Dump is
    begin
       Put_Indent (Indent);
       Put ("instance ");
-      Dump_Name (Get_Name (Inst));
+      Dump_Name (Get_Instance_Name (Inst));
       Put (" {i");
       Put_Trim (Instance'Image (Inst));
       Put ('}');
@@ -291,7 +291,7 @@ package body Netlists.Dump is
             if Is_Self_Instance (Inst) then
                Dump_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
             else
-               Dump_Name (Get_Name (Inst));
+               Dump_Name (Get_Instance_Name (Inst));
                Put ('.');
                Dump_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
             end if;
@@ -432,7 +432,7 @@ package body Netlists.Dump is
 
       if With_Name then
          Put (' ');
-         Dump_Name (Get_Name (Inst));
+         Dump_Name (Get_Instance_Name (Inst));
       end if;
 
       if Get_Nbr_Inputs (Inst) > 0 then
