@@ -999,4 +999,60 @@ package body Vhdl.Errors is
       end case;
    end Get_Mode_Name;
 
+   function "+" (V : Iir) return Earg_Type is
+   begin
+      return Make_Earg_Vhdl_Node (Uns32 (V));
+   end "+";
+
+   function "+" (V : Vhdl.Tokens.Token_Type) return Earg_Type is
+   begin
+      return Make_Earg_Vhdl_Token (Vhdl.Tokens.Token_Type'Pos (V));
+   end "+";
+
+   procedure Vhdl_Node_Handler
+     (Format : Character; Err : Error_Record; Val : Uns32)
+   is
+      N : constant Iir := Iir (Val);
+   begin
+      case Format is
+         when 'i' =>
+            Output_Identifier (Get_Identifier (N));
+         when 'l' =>
+            Output_Location (Err, Get_Location (N));
+         when 'n' =>
+            Output_Message (Disp_Node (N));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Vhdl_Node_Handler;
+
+   procedure Vhdl_Token_Handler
+     (Format : Character; Err : Error_Record; Val : Uns32)
+   is
+      pragma Unreferenced (Err);
+      use Vhdl.Tokens;
+      Tok : constant Token_Type := Token_Type'Val (Val);
+   begin
+      case Format is
+         when 't' =>
+            case Tok is
+               when Tok_Identifier =>
+                  Output_Message ("an identifier");
+               when Tok_Eof =>
+                  Output_Message ("end of file");
+               when others =>
+                  Output_Message ("'");
+                  Output_Message (Image (Tok));
+                  Output_Message ("'");
+            end case;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Vhdl_Token_Handler;
+
+   procedure Initialize is
+   begin
+      Register_Earg_Handler (Earg_Vhdl_Node, Vhdl_Node_Handler'Access);
+      Register_Earg_Handler (Earg_Vhdl_Token, Vhdl_Token_Handler'Access);
+   end Initialize;
 end Vhdl.Errors;

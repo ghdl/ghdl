@@ -26,6 +26,7 @@ with PSL.Dump_Tree;
 with Vhdl.Disp_Tree;
 with Vhdl.Scanner;
 with Vhdl.Parse;
+with Vhdl.Errors;
 with Vhdl.Back_End; use Vhdl.Back_End;
 with Flags; use Flags;
 with Files_Map;
@@ -37,6 +38,7 @@ package body Options is
       Libraries.Init_Paths;
       PSL.Nodes.Init;
       PSL.Dump_Tree.Dump_Hdl_Node := Vhdl.Disp_Tree.Disp_Tree_For_Psl'Access;
+      Vhdl.Errors.Initialize;
    end Initialize;
 
    function Option_Warning (Opt: String; Val : Boolean) return Option_State is

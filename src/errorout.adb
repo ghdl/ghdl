@@ -20,8 +20,6 @@ with Name_Table;
 with Files_Map; use Files_Map;
 with Str_Table;
 
-with Vhdl.Errors; use Vhdl.Errors;
-
 package body Errorout is
    --  Messages in a group.
    --  Set to 0 for individual messages,
@@ -158,21 +156,85 @@ package body Errorout is
       return Res;
    end "+";
 
-   procedure Report_Vhdl_Token (Tok : Vhdl.Tokens.Token_Type)
-   is
-      use Vhdl.Tokens;
+   procedure Output_Identifier (Id : Name_Id) is
    begin
-      case Tok is
-         when Tok_Identifier =>
-            Report_Handler.Message ("an identifier");
-         when Tok_Eof =>
-            Report_Handler.Message ("end of file");
-         when others =>
-            Report_Handler.Message ("'");
-            Report_Handler.Message (Image (Tok));
-            Report_Handler.Message ("'");
-      end case;
-   end Report_Vhdl_Token;
+      Report_Handler.Message ("""");
+      Report_Handler.Message (Name_Table.Image (Id));
+      Report_Handler.Message ("""");
+   end Output_Identifier;
+
+   procedure Output_Character (C : Character) is
+   begin
+      Report_Handler.Message ("'");
+      Report_Handler.Message ((1 => C));
+      Report_Handler.Message ("'");
+   end Output_Character;
+
+   procedure Location_To_Position (Location : Location_Type;
+                                   File : out Source_File_Entry;
+                                   Line : out Natural;
+                                   Col : out Natural)
+   is
+      Name : Name_Id;
+      Line_Pos : Source_Ptr;
+      Offset : Natural;
+   begin
+      Location_To_Coord (Location, File, Line_Pos, Line, Offset);
+      Coord_To_Position (File, Line_Pos, Offset, Name, Col);
+   end Location_To_Position;
+
+   procedure Output_Location (Err : Error_Record; Loc : Location_Type)
+   is
+      Arg_File : Source_File_Entry;
+      Arg_Line : Natural;
+      Arg_Col : Natural;
+   begin
+      Location_To_Position (Loc, Arg_File, Arg_Line, Arg_Col);
+
+      --  Do not print the filename if in the same file as
+      --  the error location.
+      if Arg_File = Err.File then
+         Report_Handler.Message ("line ");
+      else
+         Report_Handler.Message (Name_Table.Image (Get_File_Name (Arg_File)));
+         Report_Handler.Message (":");
+      end if;
+      Report_Handler.Message (Natural_Image (Arg_Line));
+      Report_Handler.Message (":");
+      Report_Handler.Message (Natural_Image (Arg_Col));
+   end Output_Location;
+
+   procedure Output_Uns32 (V : Uns32)
+   is
+      S : constant String := Uns32'Image (V);
+   begin
+      Report_Handler.Message (S (2 .. S'Last));
+   end Output_Uns32;
+
+   procedure Output_String8 (Str : String8_Len_Type) is
+   begin
+      Report_Handler.Message ("""");
+      Report_Handler.Message (Str_Table.String_String8 (Str.Str, Str.Len));
+      Report_Handler.Message ("""");
+   end Output_String8;
+
+   procedure Output_Message (S : String) is
+   begin
+      Report_Handler.Message (S);
+   end Output_Message;
+
+   type Handlers_Array is array (Earg_Lang_Kind) of Earg_Handler;
+   Lang_Handlers : Handlers_Array := (others => null);
+
+   procedure Register_Earg_Handler
+     (Kind : Earg_Kind; Handler : Earg_Handler) is
+   begin
+      if Lang_Handlers (Kind) /= null then
+         --  Cannot change handler.
+         raise Internal_Error;
+      end if;
+      Lang_Handlers (Kind) := Handler;
+   end Register_Earg_Handler;
 
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
@@ -180,20 +242,8 @@ package body Errorout is
                          Msg : String;
                          Args : Earg_Arr := No_Eargs)
    is
-      procedure Location_To_Position (Location : Location_Type;
-                                      File : out Source_File_Entry;
-                                      Line : out Natural;
-                                      Col : out Natural)
-      is
-         Name : Name_Id;
-         Line_Pos : Source_Ptr;
-         Offset : Natural;
-      begin
-         Location_To_Coord (Location, File, Line_Pos, Line, Offset);
-         Coord_To_Position (File, Line_Pos, Offset, Name, Col);
-      end Location_To_Position;
-
       New_Id : Msgid_Type;
+      Err : Error_Record;
    begin
       --  Discard warnings that aren't enabled.
       if Id in Msgid_Warnings and then not Is_Warning_Enabled (Id) then
@@ -228,9 +278,8 @@ package body Errorout is
          return;
       end if;
 
-      Report_Handler.Error_Start
-        (Err => (Origin, New_Id,
-                 Loc.File, Loc.Line, Loc.Offset, 0));
+      Err := (Origin, New_Id, Loc.File, Loc.Line, Loc.Offset, 0);
+      Report_Handler.Error_Start (Err);
 
       if In_Group > 0 then
          In_Group := In_Group + 1;
@@ -240,6 +289,7 @@ package body Errorout is
       declare
          First, N : Positive;
          Argn : Integer;
+         Format : Character;
       begin
          N := Msg'First;
          First := N;
@@ -250,145 +300,60 @@ package body Errorout is
                First := N + 2;
                pragma Assert (N < Msg'Last);
                N := N + 1;
-               case Msg (N) is
-                  when '%' =>
-                     Report_Handler.Message ("%");
-                     Argn := Argn - 1;
-                  when 'i' =>
-                     --  Identifier.
-                     declare
-                        Arg : Earg_Type renames Args (Argn);
-                        Id : Name_Id;
-                     begin
-                        Report_Handler.Message ("""");
-                        case Arg.Kind is
-                           when Earg_Vhdl_Node =>
-                              Id := Vhdl.Nodes.Get_Identifier
-                                (Arg.Val_Vhdl_Node);
-                           when Earg_Id =>
-                              Id := Arg.Val_Id;
-                           when others =>
-                              --  Invalid conversion to identifier.
+               Format := Msg (N);
+               if Format = '%' then
+                  --  Special case because there is no argument for the
+                  --  escape format.
+                  Report_Handler.Message ("%");
+               else
+                  declare
+                     Arg : Earg_Type renames Args (Argn);
+                  begin
+                     case Arg.Kind is
+                        when Earg_None =>
+                           raise Internal_Error;
+                        when Earg_Location =>
+                           if Format = 'l' then
+                              Output_Location (Err, Arg.Val_Loc);
+                           else
                               raise Internal_Error;
-                        end case;
-                        Report_Handler.Message (Name_Table.Image (Id));
-                        Report_Handler.Message ("""");
-                     end;
-                  when 'c' =>
-                     --  Character
-                     declare
-                        Arg : Earg_Type renames Args (Argn);
-                     begin
-                        Report_Handler.Message ("'");
-                        case Arg.Kind is
-                           when Earg_Char =>
-                              Report_Handler.Message ((1 => Arg.Val_Char));
-                           when others =>
-                              --  Invalid conversion to character.
+                           end if;
+                        when Earg_Id =>
+                           if Format = 'i' then
+                              Output_Identifier (Arg.Val_Id);
+                           else
                               raise Internal_Error;
-                        end case;
-                        Report_Handler.Message ("'");
-                     end;
-                  when 't' =>
-                     --  A token
-                     declare
-                        Arg : Earg_Type renames Args (Argn);
-                     begin
-                        case Arg.Kind is
-                           when Earg_Vhdl_Token =>
-                              Report_Vhdl_Token (Arg.Val_Vhdl_Tok);
-                           when others =>
-                              --  Invalid conversion to character.
+                           end if;
+                        when Earg_Char =>
+                           if Format = 'c' then
+                              Output_Character (Arg.Val_Char);
+                           else
                               raise Internal_Error;
-                        end case;
-                     end;
-                  when 'l' =>
-                     --  Location
-                     declare
-                        Arg : Earg_Type renames Args (Argn);
-                        Arg_Loc : Location_Type;
-                        Arg_File : Source_File_Entry;
-                        Arg_Line : Natural;
-                        Arg_Col : Natural;
-                     begin
-                        case Arg.Kind is
-                           when Earg_Location =>
-                              Arg_Loc := Arg.Val_Loc;
-                           when Earg_Vhdl_Node =>
-                              Arg_Loc := Vhdl.Nodes.Get_Location
-                                (Arg.Val_Vhdl_Node);
-                           when others =>
+                           end if;
+                        when Earg_String8 =>
+                           if Format = 's' then
+                              Output_String8 (Arg.Val_Str8);
+                           else
                               raise Internal_Error;
-                        end case;
-                        Location_To_Position
-                          (Arg_Loc, Arg_File, Arg_Line, Arg_Col);
-
-                        --  Do not print the filename if in the same file as
-                        --  the error location.
-                        if Arg_File = Loc.File then
-                           Report_Handler.Message ("line ");
-                        else
-                           Report_Handler.Message
-                             (Name_Table.Image (Get_File_Name (Arg_File)));
-                           Report_Handler.Message (":");
-                        end if;
-                        Report_Handler.Message (Natural_Image (Arg_Line));
-                        Report_Handler.Message (":");
-                        Report_Handler.Message (Natural_Image (Arg_Col));
-                     end;
-                  when 'n' =>
-                     --  Node
-                     declare
-                        Arg : Earg_Type renames Args (Argn);
-                     begin
-                        case Arg.Kind is
-                           when Earg_Vhdl_Node =>
-                              Report_Handler.Message
-                                (Disp_Node (Arg.Val_Vhdl_Node));
-                           when others =>
-                              --  Invalid conversion to node.
+                           end if;
+                        when Earg_Uns32 =>
+                           if Format = 'v' then
+                              Output_Uns32 (Arg.Val_Uns32);
+                           else
                               raise Internal_Error;
-                        end case;
-                     end;
-                  when 's' =>
-                     --  String
-                     declare
-                        Arg : Earg_Type renames Args (Argn);
-                     begin
-                        Report_Handler.Message ("""");
-                        case Arg.Kind is
-                           when Earg_String8 =>
-                              Report_Handler.Message
-                                (Str_Table.String_String8
-                                   (Arg.Val_Str8.Str, Arg.Val_Str8.Len));
-                           when others =>
-                              --  Invalid conversion to character.
+                           end if;
+                        when Earg_Int32 =>
+                           raise Internal_Error;
+                        when Earg_Lang_Kind =>
+                           if Lang_Handlers (Arg.Kind) = null then
                               raise Internal_Error;
-                        end case;
-                        Report_Handler.Message ("""");
-                     end;
-                  when 'v' =>
-                     --  Numerical values
-                     declare
-                        Arg : Earg_Type renames Args (Argn);
-                     begin
-                        case Arg.Kind is
-                           when Earg_Uns32 =>
-                              declare
-                                 S : constant String :=
-                                   Uns32'Image (Arg.Val_Uns32);
-                              begin
-                                 Report_Handler.Message (S (2 .. S'Last));
-                              end;
-                           when others =>
-                              raise Internal_Error;
-                        end case;
-                     end;
-                  when others =>
-                     --  Unknown format.
-                     raise Internal_Error;
-               end case;
-               Argn := Argn + 1;
+                           end if;
+                           Lang_Handlers (Arg.Kind)
+                             (Format, Err, Arg.Val_Lang);
+                     end case;
+                  end;
+                  Argn := Argn + 1;
+               end if;
             end if;
             N := N + 1;
          end loop;
@@ -425,14 +390,13 @@ package body Errorout is
       Report_Msg (Id, Option, No_Source_Coord, Msg);
    end Warning_Msg_Option;
 
-   function Make_Earg_Vhdl_Node (V : Vhdl.Nodes.Iir) return Earg_Type is
+   function Make_Earg_Vhdl_Node (V : Uns32) return Earg_Type is
    begin
-      return (Kind => Earg_Vhdl_Node, Val_Vhdl_Node => V);
+      return (Kind => Earg_Vhdl_Node, Val_Lang => V);
    end Make_Earg_Vhdl_Node;
 
-   function Make_Earg_Vhdl_Token (V : Vhdl.Tokens.Token_Type)
-                                 return Earg_Type is
+   function Make_Earg_Vhdl_Token (V : Uns32) return Earg_Type is
    begin
-      return (Kind => Earg_Vhdl_Token, Val_Vhdl_Tok => V);
+      return (Kind => Earg_Vhdl_Token, Val_Lang => V);
    end Make_Earg_Vhdl_Token;
 end Errorout;

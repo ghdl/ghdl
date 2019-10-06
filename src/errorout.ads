@@ -16,8 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
-with Vhdl.Nodes;
-with Vhdl.Tokens;
 
 package Errorout is
    Compilation_Error: exception;
@@ -180,6 +178,31 @@ package Errorout is
    type Report_Origin is
      (Option, Library, Scan, Parse, Semantic, Elaboration);
 
+   --  Generic report message.
+   --  If ORIGIN is Option or Library, LOC must be No_Source_Coord and the
+   --  program name is displayed.
+   procedure Report_Msg (Id : Msgid_Type;
+                         Origin : Report_Origin;
+                         Loc : Source_Coord_Type;
+                         Msg : String;
+                         Args : Earg_Arr := No_Eargs);
+
+   --  Group several messages (for multi-lines messages).
+   --  Report_Start_Group must be called before the first Report_Msg call,
+   --  and Report_End_Group after the last one.
+   procedure Report_Start_Group;
+   procedure Report_End_Group;
+
+   --  Disp an error, prepended with program name.
+   --  This is used for errors before initialisation, such as bad option or
+   --  bad filename.
+   procedure Error_Msg_Option (Msg: String);
+
+   --  Warn about an option.
+   procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);
+
+   --  Low level part.
+
    type Error_Record is record
       Origin : Report_Origin;
       Id : Msgid_Type;
@@ -213,37 +236,26 @@ package Errorout is
 
    procedure Set_Report_Handler (Handler : Report_Msg_Handler);
 
-   --  Generic report message.
-   --  If ORIGIN is Option or Library, LOC must be No_Source_Coord and the
-   --  program name is displayed.
-   procedure Report_Msg (Id : Msgid_Type;
-                         Origin : Report_Origin;
-                         Loc : Source_Coord_Type;
-                         Msg : String;
-                         Args : Earg_Arr := No_Eargs);
-
-   --  Group several messages (for multi-lines messages).
-   --  Report_Start_Group must be called before the first Report_Msg call,
-   --  and Report_End_Group after the last one.
-   procedure Report_Start_Group;
-   procedure Report_End_Group;
-
-   --  Disp an error, prepended with program name.
-   --  This is used for errors before initialisation, such as bad option or
-   --  bad filename.
-   procedure Error_Msg_Option (Msg: String);
-
-   --  Warn about an option.
-   procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);
-
-   function Make_Earg_Vhdl_Node (V : Vhdl.Nodes.Iir) return Earg_Type;
-   function Make_Earg_Vhdl_Token (V : Vhdl.Tokens.Token_Type) return Earg_Type;
-private
    type Earg_Kind is
      (Earg_None,
       Earg_Location, Earg_Id,
       Earg_Char, Earg_String8, Earg_Uns32, Earg_Int32,
       Earg_Vhdl_Node, Earg_Vhdl_Token);
+
+   subtype Earg_Lang_Kind is Earg_Kind range Earg_Vhdl_Node .. Earg_Kind'Last;
+
+   type Earg_Handler is
+     access procedure (Format : Character; Err : Error_Record; Val : Uns32);
+
+   procedure Register_Earg_Handler (Kind : Earg_Kind; Handler : Earg_Handler);
+
+   procedure Output_Identifier (Id : Name_Id);
+   procedure Output_Location (Err : Error_Record; Loc : Location_Type);
+   procedure Output_Message (S : String);
+
+   function Make_Earg_Vhdl_Node (V : Uns32) return Earg_Type;
+   function Make_Earg_Vhdl_Token (V : Uns32) return Earg_Type;
+private
 
    type Earg_Type (Kind : Earg_Kind := Earg_None) is record
       case Kind is
@@ -261,10 +273,8 @@ private
             Val_Uns32 : Uns32;
          when Earg_Int32 =>
             Val_Int32 : Int32;
-         when Earg_Vhdl_Node =>
-            Val_Vhdl_Node : Vhdl.Nodes.Iir;
-         when Earg_Vhdl_Token =>
-            Val_Vhdl_Tok : Vhdl.Tokens.Token_Type;
+         when Earg_Lang_Kind =>
+            Val_Lang : Uns32;
       end case;
    end record;
 

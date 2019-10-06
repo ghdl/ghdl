@@ -21,16 +21,17 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Tokens;
 
 package Vhdl.Errors is
+   --  Register handlers so that errors can be handled.
+   procedure Initialize;
+
    --  This kind can't be handled.
    procedure Error_Kind (Msg: String; N : Iir);
    procedure Error_Kind (Msg: String; Def : Iir_Predefined_Functions);
    pragma No_Return (Error_Kind);
 
    --  Conversions
-   function "+" (V : Iir) return Earg_Type
-     renames Errorout.Make_Earg_Vhdl_Node;
-   function "+" (V : Vhdl.Tokens.Token_Type) return Earg_Type
-     renames Errorout.Make_Earg_Vhdl_Token;
+   function "+" (V : Iir) return Earg_Type;
+   function "+" (V : Vhdl.Tokens.Token_Type) return Earg_Type;
 
    --  Convert location.
    function "+" (L : Iir) return Location_Type;
