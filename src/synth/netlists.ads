@@ -246,8 +246,6 @@ package Netlists is
    function Get_Module (Inst : Instance) return Module;
    function Get_Instance_Name (Inst : Instance) return Sname;
    function Get_Instance_Parent (Inst : Instance) return Module;
-   function Get_Parent (Inst : Instance) return Module
-     renames Get_Instance_Parent;
    function Get_Output (Inst : Instance; Idx : Port_Idx) return Net;
    function Get_Input (Inst : Instance; Idx : Port_Idx) return Input;
    function Get_Next_Instance (Inst : Instance) return Instance;
