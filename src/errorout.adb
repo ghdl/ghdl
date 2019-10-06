@@ -229,7 +229,9 @@ package body Errorout is
    procedure Register_Earg_Handler
      (Kind : Earg_Kind; Handler : Earg_Handler) is
    begin
-      if Lang_Handlers (Kind) /= null then
+      if Lang_Handlers (Kind) /= null
+        and then Lang_Handlers (Kind) /= Handler
+      then
          --  Cannot change handler.
          raise Internal_Error;
       end if;

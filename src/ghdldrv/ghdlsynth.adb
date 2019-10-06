@@ -42,6 +42,7 @@ with Vhdl.Utils;
 
 with Netlists.Dump;
 with Netlists.Disp_Vhdl;
+with Netlists.Errors;
 
 with Synthesis;
 with Synth.Disp_Vhdl;
@@ -350,5 +351,6 @@ package body Ghdlsynth is
       Ghdlsynth.Register_Commands;
       Options.Initialize;
       Errorout.Console.Install_Handler;
+      Netlists.Errors.Initialize;
    end Init_For_Ghdl_Synth;
 end Ghdlsynth;

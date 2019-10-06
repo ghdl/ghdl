@@ -20,7 +20,6 @@
 
 with Vhdl.Utils; use Vhdl.Utils;
 
-with Netlists.Errors;
 with Synth.Values; use Synth.Values;
 with Synth.Decls; use Synth.Decls;
 with Synth.Insts; use Synth.Insts;
@@ -128,7 +127,6 @@ package body Synthesis is
 
       Top_Instance := Make_Base_Instance;
 
-      Netlists.Errors.Initialize;
       Synth.Values.Init;
       Synth.Insts.Init;
 
