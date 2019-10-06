@@ -399,4 +399,19 @@ package body Errorout is
    begin
       return (Kind => Earg_Vhdl_Token, Val_Lang => V);
    end Make_Earg_Vhdl_Token;
+
+   function Make_Earg_Synth_Instance (V : Uns32) return Earg_Type is
+   begin
+      return (Kind => Earg_Synth_Instance, Val_Lang => V);
+   end Make_Earg_Synth_Instance;
+
+   function Make_Earg_Synth_Net (V : Uns32) return Earg_Type is
+   begin
+      return (Kind => Earg_Synth_Net, Val_Lang => V);
+   end Make_Earg_Synth_Net;
+
+   function Make_Earg_Synth_Name (V : Uns32) return Earg_Type is
+   begin
+      return (Kind => Earg_Synth_Name, Val_Lang => V);
+   end Make_Earg_Synth_Name;
 end Errorout;

@@ -240,7 +240,8 @@ package Errorout is
      (Earg_None,
       Earg_Location, Earg_Id,
       Earg_Char, Earg_String8, Earg_Uns32, Earg_Int32,
-      Earg_Vhdl_Node, Earg_Vhdl_Token);
+      Earg_Vhdl_Node, Earg_Vhdl_Token,
+      Earg_Synth_Instance, Earg_Synth_Net, Earg_Synth_Name);
 
    subtype Earg_Lang_Kind is Earg_Kind range Earg_Vhdl_Node .. Earg_Kind'Last;
 
@@ -252,9 +253,13 @@ package Errorout is
    procedure Output_Identifier (Id : Name_Id);
    procedure Output_Location (Err : Error_Record; Loc : Location_Type);
    procedure Output_Message (S : String);
+   procedure Output_Uns32 (V : Uns32);
 
    function Make_Earg_Vhdl_Node (V : Uns32) return Earg_Type;
    function Make_Earg_Vhdl_Token (V : Uns32) return Earg_Type;
+   function Make_Earg_Synth_Instance (V : Uns32) return Earg_Type;
+   function Make_Earg_Synth_Net (V : Uns32) return Earg_Type;
+   function Make_Earg_Synth_Name (V : Uns32) return Earg_Type;
 private
 
    type Earg_Type (Kind : Earg_Kind := Earg_None) is record
