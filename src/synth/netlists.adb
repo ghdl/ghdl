@@ -440,7 +440,7 @@ package body Netlists is
    begin
       --  Swap inputs and outputs; no parameters.
       Res := New_Instance_Internal
-        (M, M, Get_Name (M), Nbr_Outputs, Nbr_Inputs, 0);
+        (M, M, Get_Module_Name (M), Nbr_Outputs, Nbr_Inputs, 0);
       Set_Outputs_Width_From_Desc
         (Res, Nbr_Inputs, Get_Input_First_Desc (M));
 

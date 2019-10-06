@@ -187,7 +187,7 @@ package body Netlists.Disp_Vhdl is
          Put_Name (Name);
       end if;
       --  Gate name
-      Name := Get_Name (Imod);
+      Name := Get_Module_Name (Imod);
       if Get_Id (Imod) < Id_User_None then
          Put (" : gsynth.gate_");
          pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial
@@ -1006,7 +1006,7 @@ package body Netlists.Disp_Vhdl is
       end if;
 
       Put ("architecture rtl of ");
-      Put_Name (Get_Name (M));
+      Put_Name (Get_Module_Name (M));
       Put_Line (" is");
 
       --  Dummy display:
@@ -1062,13 +1062,13 @@ package body Netlists.Disp_Vhdl is
       Put_Line ("use ieee.numeric_std.all;");
       New_Line;
       Put ("entity ");
-      Put_Name (Get_Name (M));
+      Put_Name (Get_Module_Name (M));
       Put_Line (" is");
 
       Disp_Entity_Ports (M);
 
       Put ("end entity ");
-      Put_Name (Get_Name (M));
+      Put_Name (Get_Module_Name (M));
       Put_Line (";");
       New_Line;
    end Disp_Entity;

@@ -140,7 +140,7 @@ package body Netlists.Dump is
       Put_Trim (Instance'Image (Inst));
       Put ('}');
       Put (": ");
-      Dump_Name (Get_Name (Get_Module (Inst)));
+      Dump_Name (Get_Module_Name (Get_Module (Inst)));
       New_Line;
 
       if Get_Nbr_Params (Inst) > 0 then
@@ -198,7 +198,7 @@ package body Netlists.Dump is
       Put ("module {m");
       Put_Trim (Module'Image (M));
       Put ("} ");
-      Dump_Name (Get_Name (M));
+      Dump_Name (Get_Module_Name (M));
       New_Line;
 
       --  Parameters.
@@ -405,7 +405,7 @@ package body Netlists.Dump is
          end case;
       end if;
 
-      Dump_Name (Get_Name (M));
+      Dump_Name (Get_Module_Name (M));
 
       if True then
          Put ('@');

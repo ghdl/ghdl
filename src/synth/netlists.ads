@@ -205,7 +205,6 @@ package Netlists is
    function Create_Self_Instance (M : Module) return Instance;
 
    function Get_Module_Name (M : Module) return Sname;
-   function Get_Name (M : Module) return Sname renames Get_Module_Name;
    function Get_Id (M : Module) return Module_Id;
 
    function Get_Nbr_Inputs (M : Module) return Port_Nbr;
