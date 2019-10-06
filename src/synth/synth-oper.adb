@@ -412,7 +412,6 @@ package body Synth.Oper is
             return Synth_Compare (Id_Ult);
 
          when Iir_Predefined_Array_Equality =>
-            --  TODO: check size, handle non-vector.
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete
                  (Boolean'Pos (Is_Equal (Left, Right)), Boolean_Type);
@@ -425,12 +424,17 @@ package body Synth.Oper is
             end if;
             return Synth_Compare (Id_Eq);
          when Iir_Predefined_Array_Inequality =>
-            --  TODO: check size, handle non-vector.
-            if Is_Vector_Type (Left_Type) then
-               return Synth_Compare (Id_Ne);
-            else
-               raise Internal_Error;
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Discrete
+                 (Boolean'Pos (not Is_Equal (Left, Right)), Boolean_Type);
             end if;
+            if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
+               Warning_Msg_Synth
+                 (+Expr,
+                  "length of '/=' operands doesn't match, result is true");
+               return Create_Value_Discrete (1, Boolean_Type);
+            end if;
+            return Synth_Compare (Id_Ne);
          when Iir_Predefined_Array_Greater =>
             --  TODO: check size, non-vector.
             --  TODO: that's certainly not the correct operator.
