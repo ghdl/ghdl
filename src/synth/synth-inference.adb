@@ -284,7 +284,7 @@ package body Synth.Inference is
             end if;
 
             --  The parent must be a mux (it's a chain of muxes).
-            Mux := Get_Parent (Get_First_Sink (Last_Out));
+            Mux := Get_Input_Parent (Get_First_Sink (Last_Out));
             pragma Assert (Get_Id (Mux) = Id_Mux2);
 
             --  Extract the reset condition and the reset value.

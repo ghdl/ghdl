@@ -257,7 +257,6 @@ package Netlists is
 
    --  Input
    function Get_Input_Parent (I : Input) return Instance;
-   function Get_Parent (I : Input) return Instance renames Get_Input_Parent;
    function Get_Port_Idx (I : Input) return Port_Idx;
    function Get_Driver (I : Input) return Net;
    function Get_Next_Sink (I : Input) return Input;

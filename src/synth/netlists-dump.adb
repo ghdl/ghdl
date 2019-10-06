@@ -81,7 +81,7 @@ package body Netlists.Dump is
 
    procedure Dump_Input_Name (I : Input; With_Id : Boolean := False)
    is
-      Inst : constant Instance := Get_Parent (I);
+      Inst : constant Instance := Get_Input_Parent (I);
       Idx : constant Port_Idx := Get_Port_Idx (I);
    begin
       Dump_Name (Get_Instance_Name (Inst));

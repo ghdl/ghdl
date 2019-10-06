@@ -256,7 +256,7 @@ package body Netlists.Disp_Vhdl is
          begin
             I := Get_First_Sink (O);
             if I /= No_Input then
-               O_Inst := Get_Parent (I);
+               O_Inst := Get_Input_Parent (I);
             else
                O_Inst := No_Instance;
             end if;
@@ -410,7 +410,7 @@ package body Netlists.Disp_Vhdl is
    begin
       I := Get_First_Sink (Get_Output (Inst, 0));
       while I /= No_Input loop
-         if Need_Name (Get_Parent (I)) then
+         if Need_Name (Get_Input_Parent (I)) then
             return True;
          end if;
          I := Get_Next_Sink (I);
