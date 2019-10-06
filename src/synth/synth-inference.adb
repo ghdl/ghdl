@@ -101,7 +101,7 @@ package body Synth.Inference is
    procedure Find_Longest_Loop
      (Val : Net; Prev_Val : Net; Res : out Instance; Dist : out Integer)
    is
-      Inst : constant Instance := Get_Parent (Val);
+      Inst : constant Instance := Get_Net_Parent (Val);
    begin
       if Get_Id (Inst) = Id_Mux2 then
          declare
@@ -209,7 +209,7 @@ package body Synth.Inference is
          end if;
          return;
       end if;
-      Inst := Get_Parent (Els);
+      Inst := Get_Net_Parent (Els);
       if Get_Id (Inst) /= Id_Extract then
          raise Internal_Error;
       end if;
@@ -256,7 +256,7 @@ package body Synth.Inference is
       Disconnect (I1);
 
       --  If the signal declaration has an initial value, get it.
-      Sig := Get_Parent (Prev_Val);
+      Sig := Get_Net_Parent (Prev_Val);
       if Get_Id (Get_Module (Sig)) = Id_Isignal then
          Init := Get_Input_Net (Sig, 1);
          Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O));
@@ -472,7 +472,7 @@ package body Synth.Inference is
       end if;
 
       --  Latch or combinational loop.
-      if Get_Id (Get_Parent (Prev_Val)) = Id_Output then
+      if Get_Id (Get_Net_Parent (Prev_Val)) = Id_Output then
          --  Outputs are connected to a port.  The port is the first connection
          --  made, so it is the last sink.  Be more tolerant and look for
          --  the (only) port connected to the output.

@@ -264,7 +264,6 @@ package Netlists is
 
    --  Net (Output)
    function Get_Net_Parent (O : Net) return Instance;
-   function Get_Parent (O : Net) return Instance renames Get_Net_Parent;
    function Get_Port_Idx (O : Net) return Port_Idx;
    function Get_First_Sink (O : Net) return Input;
    function Get_Width (N : Net) return Width;

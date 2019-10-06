@@ -25,7 +25,7 @@ package body Synth.Source is
    procedure Set_Location (N : Net; Src : Syn_Src) is
    begin
       if Flag_Locations then
-         Set_Location (Get_Parent (N), Get_Location (Src));
+         Set_Location (Get_Net_Parent (N), Get_Location (Src));
       end if;
    end Set_Location;
 end Synth.Source;

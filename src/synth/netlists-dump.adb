@@ -100,7 +100,7 @@ package body Netlists.Dump is
 
    procedure Dump_Net_Name (N : Net; With_Id : Boolean := False)
    is
-      Inst : constant Instance := Get_Parent (N);
+      Inst : constant Instance := Get_Net_Parent (N);
       Idx : constant Port_Idx := Get_Port_Idx (N);
    begin
       Dump_Name (Get_Instance_Name (Inst));
@@ -285,7 +285,7 @@ package body Netlists.Dump is
          Put ("?");
       else
          declare
-            Inst : constant Instance := Get_Parent (N);
+            Inst : constant Instance := Get_Net_Parent (N);
             Idx : constant Port_Idx := Get_Port_Idx (N);
          begin
             if Is_Self_Instance (Inst) then
@@ -335,7 +335,7 @@ package body Netlists.Dump is
       if Drv = No_Net then
          Put ('?');
       else
-         Drv_Inst := Get_Parent (Drv);
+         Drv_Inst := Get_Net_Parent (Drv);
          if Flag_Disp_Inline and then Can_Inline (Drv_Inst) then
             Disp_Instance (Drv_Inst, False);
          else
@@ -350,7 +350,7 @@ package body Netlists.Dump is
       if N = No_Net then
          Put ('?');
       else
-         Disp_Instance (Get_Parent (N), False);
+         Disp_Instance (Get_Net_Parent (N), False);
       end if;
       New_Line;
    end Debug_Net;

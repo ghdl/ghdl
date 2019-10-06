@@ -62,7 +62,7 @@ package body Netlists.Concats is
             end loop;
 
             N := Build_Concatn (Ctxt, Wd, Uns32 (C.Len));
-            Inst := Get_Parent (N);
+            Inst := Get_Net_Parent (N);
             for I in 1 .. C.Len loop
                Connect (Get_Input (Inst, Port_Idx (I - 1)), C.Sarr (I));
             end loop;
@@ -74,7 +74,7 @@ package body Netlists.Concats is
             end loop;
 
             N := Build_Concatn (Ctxt, Wd, Uns32 (C.Len));
-            Inst := Get_Parent (N);
+            Inst := Get_Net_Parent (N);
             for I in Net_Tables.First .. C.Len loop
                Connect (Get_Input (Inst, Port_Idx (I - 1)), C.Darr.Table (I));
             end loop;

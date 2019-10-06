@@ -527,7 +527,7 @@ package body Netlists is
    function Get_Port_Idx (O : Net) return Port_Idx
    is
       pragma Assert (Is_Valid (O));
-      Parent : constant Instance := Get_Parent (O);
+      Parent : constant Instance := Get_Net_Parent (O);
    begin
       return Port_Idx (O - Instances_Table.Table (Parent).First_Output);
    end Get_Port_Idx;

@@ -977,7 +977,7 @@ package body Synth.Expr is
 
    function Is_Const (N : Net) return Boolean is
    begin
-      case Get_Id (Get_Module (Get_Parent (N))) is
+      case Get_Id (Get_Module (Get_Net_Parent (N))) is
          when Id_Const_UB32 =>
             return True;
          when others =>
@@ -987,7 +987,7 @@ package body Synth.Expr is
 
    function Get_Const (N : Net) return Int32
    is
-      Inst : constant Instance := Get_Parent (N);
+      Inst : constant Instance := Get_Net_Parent (N);
    begin
       case Get_Id (Get_Module (Inst)) is
          when Id_Const_UB32 =>
@@ -1010,7 +1010,7 @@ package body Synth.Expr is
       Inp := Val;
 
       loop
-         Inst := Get_Parent (Inp);
+         Inst := Get_Net_Parent (Inp);
          case Get_Id (Get_Module (Inst)) is
             when Id_Add =>
                Val_I0 := Get_Input_Net (Inst, 0);
@@ -1069,8 +1069,8 @@ package body Synth.Expr is
       end if;
 
       declare
-         Linst : constant Instance := Get_Parent (L);
-         Rinst : constant Instance := Get_Parent (R);
+         Linst : constant Instance := Get_Net_Parent (L);
+         Rinst : constant Instance := Get_Net_Parent (R);
       begin
          if Get_Id (Linst) /= Get_Id (Rinst) then
             return False;

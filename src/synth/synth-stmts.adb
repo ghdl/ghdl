@@ -2145,7 +2145,7 @@ package body Synth.Stmts is
       Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
 
       --  Check the clock is an edge and extract it.
-      Clk_Inst := Get_Parent (Clk);
+      Clk_Inst := Get_Net_Parent (Clk);
       if Get_Id (Clk_Inst) /= Id_Edge then
          Error_Msg_Synth (+Stmt, "clock is not an edge");
          return No_Net;
@@ -2160,7 +2160,7 @@ package body Synth.Stmts is
       --  For each state: if set, evaluate all outgoing edges.
       Next_States :=
         Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
-      Connect (Get_Input (Get_Parent (States), 1), Next_States);
+      Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
 
       --  The NFA state is correct as long as there is a 1.
       return Build_Reduce (Build_Context,
@@ -2219,7 +2219,7 @@ package body Synth.Stmts is
       Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
 
       --  Check the clock is an edge and extract it.
-      Clk_Inst := Get_Parent (Clk);
+      Clk_Inst := Get_Net_Parent (Clk);
       if Get_Id (Clk_Inst) /= Id_Edge then
          Error_Msg_Synth (+Stmt, "clock is not an edge");
          return No_Net;
@@ -2233,7 +2233,7 @@ package body Synth.Stmts is
       --  create update nets
       --  For each state: if set, evaluate all outgoing edges.
       Next_States := Synth_Psl_NFA (Syn_Inst, NFA, Nbr_States, States);
-      Connect (Get_Input (Get_Parent (States), 1), Next_States);
+      Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
 
       return Build_Monadic
         (Build_Context, Netlists.Gates.Id_Not,

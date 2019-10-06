@@ -67,12 +67,13 @@ package body Netlists.Locations is
 
    procedure Copy_Location1 (Dest : Net; Src : Instance) is
    begin
-      Set_Location (Get_Parent (Dest), Get_Location (Src));
+      Set_Location (Get_Net_Parent (Dest), Get_Location (Src));
    end Copy_Location1;
 
    procedure Copy_Location1 (Dest : Net; Src : Net) is
    begin
-      Set_Location (Get_Parent (Dest), Get_Location (Get_Parent (Src)));
+      Set_Location (Get_Net_Parent (Dest),
+                    Get_Location (Get_Net_Parent (Src)));
    end Copy_Location1;
 
    procedure Copy_Location (Dest : Net; Src : Net) is

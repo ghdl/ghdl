@@ -292,7 +292,7 @@ package body Synth.Environment is
                  | Wire_Variable =>
                   --  Check output is not already assigned.
                   pragma Assert
-                    (Get_Input_Net (Get_Parent (Outport), 0) = No_Net);
+                    (Get_Input_Net (Get_Net_Parent (Outport), 0) = No_Net);
 
                when others =>
                   raise Internal_Error;
@@ -468,7 +468,7 @@ package body Synth.Environment is
       else
          Value := Build_Concatn (Ctxt, Last_Off, Uns32 (Nbr_Assign));
          declare
-            Inst : constant Instance := Get_Parent (Value);
+            Inst : constant Instance := Get_Net_Parent (Value);
          begin
             Asgn := First_Assign;
             for I in reverse 0 .. Nbr_Assign - 1 loop
@@ -483,7 +483,7 @@ package body Synth.Environment is
      (Ctxt : Builders.Context_Acc; Wire_Rec : Wire_Id_Record)
    is
       use Vhdl.Nodes;
-      Gate_Inst : constant Instance := Get_Parent (Wire_Rec.Gate);
+      Gate_Inst : constant Instance := Get_Net_Parent (Wire_Rec.Gate);
       Inp : constant Input := Get_Input (Gate_Inst, 0);
       Value : Net;
    begin

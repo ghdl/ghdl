@@ -145,7 +145,7 @@ package body Netlists.Disp_Vhdl is
       end if;
 
       declare
-         Inst : constant Instance := Get_Parent (N);
+         Inst : constant Instance := Get_Net_Parent (N);
          Idx : constant Port_Idx := Get_Port_Idx (N);
          Inst_Name : Sname;
          Port_Name : Sname;
@@ -429,7 +429,7 @@ package body Netlists.Disp_Vhdl is
          return;
       end if;
 
-      Net_Inst := Get_Parent (N);
+      Net_Inst := Get_Net_Parent (N);
       if Flag_Merge_Lit
         and then Is_Const_Module (Get_Id (Net_Inst))
         and then not Need_Name (Inst)
@@ -679,7 +679,8 @@ package body Netlists.Disp_Vhdl is
                Put ("  process (");
                First := True;
                for I in Iarr'Range loop
-                  if Get_Id (Get_Parent (Iarr (I))) not in Constant_Module_Id
+                  if (Get_Id (Get_Net_Parent (Iarr (I)))
+                        not in Constant_Module_Id)
                   then
                      if First then
                         First := False;
@@ -955,7 +956,7 @@ package body Netlists.Disp_Vhdl is
                   when Id_Idff =>
                      Put (" := ");
                      Disp_Constant_Inline
-                       (Get_Parent (Get_Input_Net (Inst, 2)));
+                       (Get_Net_Parent (Get_Input_Net (Inst, 2)));
                   when Constant_Module_Id =>
                      Put (" := ");
                      Disp_Constant_Inline (Inst);
