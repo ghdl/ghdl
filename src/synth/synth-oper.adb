@@ -970,7 +970,7 @@ package body Synth.Oper is
       Subprg_Inst := Make_Instance (Syn_Inst, Imp);
 
       Synth_Subprogram_Association
-        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+        (Subprg_Inst, Syn_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
       Param1 := Inter_Chain;
       if Param1 /= Null_Node then

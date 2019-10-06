@@ -1211,6 +1211,7 @@ package body Synth.Stmts is
    end Synth_Selected_Signal_Assignment;
 
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
+                                           Inter_Inst  : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node;
@@ -1232,7 +1233,7 @@ package body Synth.Stmts is
       Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-         Inter_Type := Get_Value_Type (Subprg_Inst, Get_Type (Inter));
+         Inter_Type := Get_Value_Type (Inter_Inst, Get_Type (Inter));
 
          case Iir_Parameter_Modes (Get_Mode (Inter)) is
             when Iir_In_Mode =>
@@ -1295,6 +1296,7 @@ package body Synth.Stmts is
    end Synth_Subprogram_Association;
 
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
+                                           Inter_Inst  : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node)
@@ -1302,8 +1304,8 @@ package body Synth.Stmts is
       Infos : Target_Info_Array (1 .. 0);
       pragma Unreferenced (Infos);
    begin
-      Synth_Subprogram_Association
-        (Subprg_Inst, Caller_Inst, Inter_Chain, Assoc_Chain, Infos);
+      Synth_Subprogram_Association (Subprg_Inst, Inter_Inst, Caller_Inst,
+                                    Inter_Chain, Assoc_Chain, Infos);
    end Synth_Subprogram_Association;
 
    procedure Synth_Subprogram_Back_Association
@@ -1414,7 +1416,7 @@ package body Synth.Stmts is
          Infos : Target_Info_Array (1 .. Nbr_Inout);
       begin
          Synth_Subprogram_Association
-           (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+           (C.Inst, Syn_Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
 
          Push_Phi;
 

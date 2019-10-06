@@ -301,6 +301,48 @@ package body Synth.Insts is
       end loop;
    end Synth_Instantiate_Module;
 
+   procedure Synth_Generics_Association (Sub_Inst : Synth_Instance_Acc;
+                                         Syn_Inst : Synth_Instance_Acc;
+                                         Inter_Chain : Node;
+                                         Assoc_Chain : Node)
+   is
+      Inter : Node;
+      Inter_Type : Type_Acc;
+      Assoc : Node;
+      Assoc_Inter : Node;
+      Actual : Node;
+      Val : Value_Acc;
+   begin
+      Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
+      while Is_Valid (Assoc) loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+         Synth_Declaration_Type (Sub_Inst, Inter);
+         Inter_Type := Get_Value_Type (Sub_Inst, Get_Type (Inter));
+
+         pragma Assert (Iir_Parameter_Modes (Get_Mode (Inter)) = Iir_In_Mode);
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_Open =>
+               Actual := Get_Default_Value (Inter);
+               Val := Synth_Expression_With_Type
+                 (Sub_Inst, Actual, Inter_Type);
+            when Iir_Kind_Association_Element_By_Expression =>
+               Actual := Get_Actual (Assoc);
+               Val := Synth_Expression_With_Type
+                 (Syn_Inst, Actual, Inter_Type);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
+
+         Create_Object (Sub_Inst, Inter, Val);
+
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Synth_Generics_Association;
+
    procedure Synth_Direct_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc;
       Stmt : Node;
@@ -319,15 +361,9 @@ package body Synth.Insts is
       Sub_Inst := Make_Instance
         (Syn_Inst, Ent, New_Sname_User (Get_Identifier (Ent)));
 
-      Inter := Get_Generic_Chain (Ent);
-      while Is_Valid (Inter) loop
-         Synth_Declaration_Type (Sub_Inst, Inter);
-         Inter := Get_Chain (Inter);
-      end loop;
-
-      Synth_Subprogram_Association (Sub_Inst, Syn_Inst,
-                                    Get_Generic_Chain (Ent),
-                                    Get_Generic_Map_Aspect_Chain (Stmt));
+      Synth_Generics_Association (Sub_Inst, Syn_Inst,
+                                  Get_Generic_Chain (Ent),
+                                  Get_Generic_Map_Aspect_Chain (Stmt));
 
       --  Elaborate port types.
       --  FIXME: what about unconstrained ports ?  Get the type from the
@@ -455,9 +491,10 @@ package body Synth.Insts is
       --  Elaborate generic + map aspect
       Comp_Inst := Make_Instance (Syn_Inst, Component,
                                   New_Sname_User (Get_Identifier (Component)));
-      Synth_Subprogram_Association (Comp_Inst, Syn_Inst,
-                                    Get_Generic_Chain (Component),
-                                    Get_Generic_Map_Aspect_Chain (Stmt));
+
+      Synth_Generics_Association (Comp_Inst, Syn_Inst,
+                                  Get_Generic_Chain (Component),
+                                  Get_Generic_Map_Aspect_Chain (Stmt));
 
       --  Create objects for inputs and outputs, assign inputs.
       declare
@@ -521,9 +558,9 @@ package body Synth.Insts is
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance
         (Comp_Inst, Ent, New_Sname_User (Get_Identifier (Ent)));
-      Synth_Subprogram_Association (Sub_Inst, Comp_Inst,
-                                    Get_Generic_Chain (Ent),
-                                    Get_Generic_Map_Aspect_Chain (Bind));
+      Synth_Generics_Association (Sub_Inst, Comp_Inst,
+                                  Get_Generic_Chain (Ent),
+                                  Get_Generic_Map_Aspect_Chain (Bind));
 
       --  Search if corresponding module has already been used.
       --  If not create a new module
