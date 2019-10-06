@@ -30,7 +30,6 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 
 with Vhdl.Nodes;
-with Vhdl.Errors; use Vhdl.Errors;
 
 package body Synth.Environment is
    procedure Phi_Assign

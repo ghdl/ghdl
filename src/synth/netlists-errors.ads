@@ -1,4 +1,4 @@
---  Source/origin of synthesis.
+--  Error handling for synthesis.
 --  Copyright (C) 2017 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -18,21 +18,12 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Types; use Types;
-with Errorout;
+with Errorout; use Errorout;
 
-with Netlists;
+package Netlists.Errors is
+   function "+" (N : Instance) return Earg_Type;
+   function "+" (N : Net) return Earg_Type;
+   function "+" (N : Sname) return Earg_Type;
 
-with Vhdl.Nodes; use Vhdl.Nodes;
-with Vhdl.Errors;
-
-package Synth.Source is
-   subtype Syn_Src is Node;
-   No_Syn_Src : constant Syn_Src := Null_Node;
-
-   function "+" (N : Node) return Location_Type renames Vhdl.Errors."+";
-   function "+" (N : Node) return Errorout.Earg_Type renames Vhdl.Errors."+";
-
-   procedure Set_Location (N : Netlists.Net; Src : Syn_Src);
-   pragma Inline (Set_Location);
-end Synth.Source;
+   procedure Initialize;
+end Netlists.Errors;

@@ -24,8 +24,11 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Gates_Ports; use Netlists.Gates_Ports;
 with Netlists.Locations; use Netlists.Locations;
+with Netlists.Errors; use Netlists.Errors;
 
 with Synth.Flags;
+with Synth.Source; use Synth.Source;
+with Synth.Errors; use Synth.Errors;
 
 package body Synth.Inference is
    --  DFF inference.
@@ -451,9 +454,15 @@ package body Synth.Inference is
       return Res;
    end Is_False_Loop;
 
-   procedure Infere_Latch (Ctxt : Context_Acc; Val : Net; Prev_Val : Net)
+   procedure Infere_Latch (Ctxt : Context_Acc;
+                           Wid : Wire_Id;
+                           Val : Net;
+                           Off : Uns32;
+                           Prev_Val : Net;
+                           Stmt : Source.Syn_Src)
    is
       X : Net;
+      Name : Sname;
    begin
       --  In case of false loop, do not close the loop but assign X.
       if Is_False_Loop (Prev_Val) then
@@ -463,7 +472,32 @@ package body Synth.Inference is
       end if;
 
       --  Latch or combinational loop.
-      raise Internal_Error;
+      if Get_Id (Get_Parent (Prev_Val)) = Id_Output then
+         --  Outputs are connected to a port.  The port is the first connection
+         --  made, so it is the last sink.  Be more tolerant and look for
+         --  the (only) port connected to the output.
+         declare
+            Inp : Input;
+            Inst : Instance;
+         begin
+            Inp := Get_First_Sink (Prev_Val);
+            loop
+               pragma Assert (Inp /= No_Input);
+               Inst := Get_Input_Parent (Inp);
+               if Get_Id (Inst) >= Id_User_None then
+                  Name := Get_Output_Desc (Get_Module (Inst),
+                                           Get_Port_Idx (Inp)).Name;
+                  exit;
+               end if;
+               Inp := Get_Next_Sink (Inp);
+            end loop;
+         end;
+      else
+         Name := Get_Name (Get_Net_Parent (Prev_Val));
+      end if;
+      Error_Msg_Synth (+Stmt, "latch infered for net %n", +Name);
+
+      Add_Conc_Assign (Wid, Val, Off, Stmt);
    end Infere_Latch;
 
    procedure Infere (Ctxt : Context_Acc;
@@ -501,7 +535,7 @@ package body Synth.Inference is
          Extract_Clock (Get_Driver (Sel), Clk, Enable);
          if Clk = No_Net then
             --  No clock -> latch or combinational loop
-            Infere_Latch (Ctxt, Val, Prev_Val);
+            Infere_Latch (Ctxt, Wid, Val, Off, Prev_Val, Stmt);
          else
             --  Clock -> FF
             Infere_FF (Ctxt, Wid, Prev_Val, Off, Last_Mux, Clk, Enable, Stmt);
