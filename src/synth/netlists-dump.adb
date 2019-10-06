@@ -92,9 +92,9 @@ package body Netlists.Dump is
          Dump_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
       end if;
       if With_Id then
-         Put ('(');
+         Put ("{p");
          Put_Trim (Input'Image (I));
-         Put (')');
+         Put ('}');
       end if;
    end Dump_Input_Name;
 
@@ -111,9 +111,9 @@ package body Netlists.Dump is
          Dump_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
       end if;
       if With_Id then
-         Put ('(');
+         Put ("{n");
          Put_Trim (Net'Image (N));
-         Put (')');
+         Put ('}');
       end if;
    end Dump_Net_Name;
 
@@ -136,9 +136,9 @@ package body Netlists.Dump is
       Put_Indent (Indent);
       Put ("instance ");
       Dump_Name (Get_Name (Inst));
-      Put (" (");
+      Put (" {i");
       Put_Trim (Instance'Image (Inst));
-      Put (')');
+      Put ('}');
       Put (": ");
       Dump_Name (Get_Name (Get_Module (Inst)));
       New_Line;
@@ -195,9 +195,9 @@ package body Netlists.Dump is
    begin
       --  Module id and name.
       Put_Indent (Indent);
-      Put ("module @");
+      Put ("module {m");
       Put_Trim (Module'Image (M));
-      Put (" ");
+      Put ("} ");
       Dump_Name (Get_Name (M));
       New_Line;
 
