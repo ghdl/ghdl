@@ -820,6 +820,19 @@ package body Synth.Oper is
             return Synth_Vec_Reduce_Monadic(Id_Red_Or);
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             return Operand;
+         when Iir_Predefined_Integer_Negation =>
+            if Is_Const (Operand) then
+               return Create_Value_Discrete (-Operand.Scal, Operand.Typ);
+            else
+               declare
+                  N : Net;
+               begin
+                  N := Build_Monadic
+                    (Build_Context, Id_Neg, Get_Net (Operand));
+                  Set_Location (N, Loc);
+                  return Create_Value_Net (N, Operand.Typ);
+               end;
+            end if;
          when others =>
             Error_Msg_Synth
               (+Loc,
