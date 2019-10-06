@@ -317,6 +317,33 @@ package body Synth.Environment is
       --  FIXME: free wires.
    end Pop_And_Merge_Phi;
 
+   procedure Propagate_Phi_Until_Mark (Ctxt : Builders.Context_Acc;
+                                       Phi : Phi_Type;
+                                       Mark : Wire_Id)
+   is
+      Asgn : Seq_Assign;
+   begin
+      Asgn := Phi.First;
+      while Asgn /= No_Seq_Assign loop
+         declare
+            Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
+            Wid : constant Wire_Id := Asgn_Rec.Id;
+            Pasgn, Next_Pasgn : Partial_Assign;
+         begin
+            if Wid <= Mark then
+               Pasgn := Asgn_Rec.Asgns;
+               while Pasgn /= No_Partial_Assign loop
+                  Next_Pasgn := Get_Partial_Next (Pasgn);
+                  Set_Partial_Next (Pasgn, No_Partial_Assign);
+                  Phi_Assign (Ctxt, Wid, Pasgn);
+                  Pasgn := Next_Pasgn;
+               end loop;
+            end if;
+            Asgn := Asgn_Rec.Chain;
+         end;
+      end loop;
+   end Propagate_Phi_Until_Mark;
+
    --  Merge sort of conc_assign by offset.
    function Le_Conc_Assign (Left, Right : Conc_Assign) return Boolean is
    begin

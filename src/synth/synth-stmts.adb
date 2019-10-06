@@ -1270,6 +1270,7 @@ package body Synth.Stmts is
                end;
          end case;
 
+         --  FIXME: conversion only for constants, reshape for all.
          Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
 
          if Get_Instance_Const (Subprg_Inst) and then not Is_Const (Val) then
@@ -1331,8 +1332,11 @@ package body Synth.Stmts is
                null;
             when Iir_Out_Mode | Iir_Inout_Mode =>
                Nbr_Inout := Nbr_Inout + 1;
-               Val := Synth_Expression (Subprg_Inst, Inter);
-               Synth_Assignment (Caller_Inst, Infos (Nbr_Inout), Val, Assoc);
+               if False then
+                  Val := Synth_Expression (Subprg_Inst, Inter);
+                  Synth_Assignment
+                    (Caller_Inst, Infos (Nbr_Inout), Val, Assoc);
+               end if;
          end case;
 
          Next_Association_Interface (Assoc, Assoc_Inter);
@@ -1464,6 +1468,9 @@ package body Synth.Stmts is
          Decls.Finalize_Declarations
            (C.Inst, Get_Declaration_Chain (Bod), True);
          pragma Unreferenced (Infos);
+
+         --  Propagate assignments.
+         Propagate_Phi_Until_Mark (Get_Build (C.Inst), Subprg_Phi, Wire_Mark);
       end;
 
       --  Free wires.

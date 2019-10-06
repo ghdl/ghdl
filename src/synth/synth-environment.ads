@@ -118,6 +118,13 @@ package Synth.Environment is
    procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc;
                                 Stmt : Source.Syn_Src);
 
+   --  All assignments in PHI to wires below MARK are propagated to the
+   --  current phi.  Used to propagate assignments to wires defined out of
+   --  a subprogram when leaving a subprogram.
+   procedure Propagate_Phi_Until_Mark (Ctxt : Builders.Context_Acc;
+                                       Phi : Phi_Type;
+                                       Mark : Wire_Id);
+
    --  Handle if statement.  According to SEL, the value of the wires are
    --  those from T or from F.
    procedure Merge_Phis (Ctxt : Builders.Context_Acc;
