@@ -28,9 +28,7 @@ with Synth.Context; use Synth.Context;
 with Synth.Environment; use Synth.Environment;
 
 package Synth.Stmts is
-   --  INTER_INST is the instance for the types of the formals.
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
-                                           Inter_Inst  : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node);
