@@ -1488,7 +1488,7 @@ package body Synth.Stmts is
       return Res;
    end Synth_Subprogram_Call;
 
-   procedure Synth_Procedure_Call (C : in out Seq_Context; Stmt : Node)
+   procedure Synth_Procedure_Call (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Call : constant Node := Get_Procedure_Call (Stmt);
       Imp  : constant Node := Get_Implementation (Call);
@@ -1502,7 +1502,7 @@ package body Synth.Stmts is
          return;
       end if;
 
-      Res := Synth_Subprogram_Call (C.Inst, Call);
+      Res := Synth_Subprogram_Call (Syn_Inst, Call);
       pragma Assert (Res = null);
    end Synth_Procedure_Call;
 
@@ -1845,7 +1845,7 @@ package body Synth.Stmts is
             when Iir_Kind_Return_Statement =>
                Synth_Return_Statement (C, Stmt);
             when Iir_Kind_Procedure_Call_Statement =>
-               Synth_Procedure_Call (C, Stmt);
+               Synth_Procedure_Call (C.Inst, Stmt);
             when Iir_Kind_Report_Statement
               | Iir_Kind_Assertion_Statement =>
                --  TODO ?
@@ -2378,6 +2378,10 @@ package body Synth.Stmts is
             when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
                Push_Phi;
                Synth_Selected_Signal_Assignment (Syn_Inst, Stmt);
+               Pop_And_Merge_Phi (Build_Context, Stmt);
+            when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+               Push_Phi;
+               Synth_Procedure_Call (Syn_Inst, Stmt);
                Pop_And_Merge_Phi (Build_Context, Stmt);
             when Iir_Kinds_Process_Statement =>
                Push_Phi;

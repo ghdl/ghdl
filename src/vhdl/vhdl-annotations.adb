@@ -1108,7 +1108,8 @@ package body Vhdl.Annotations is
             when Iir_Kind_Concurrent_Simple_Signal_Assignment
               | Iir_Kind_Concurrent_Selected_Signal_Assignment
               | Iir_Kind_Concurrent_Conditional_Signal_Assignment
-              | Iir_Kind_Concurrent_Assertion_Statement =>
+              | Iir_Kind_Concurrent_Assertion_Statement
+              | Iir_Kind_Concurrent_Procedure_Call_Statement =>
                --  In case concurrent signal assignemnts were not
                --  canonicalized (for synthesis).
                null;
