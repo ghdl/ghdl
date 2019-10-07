@@ -47,4 +47,6 @@ package Synth.Decls is
 
    procedure Synth_Package_Declaration
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
+   procedure Synth_Package_Body
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
 end Synth.Decls;

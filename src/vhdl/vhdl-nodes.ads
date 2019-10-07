@@ -939,6 +939,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
+   --  The package body (not the unit).
    --   Get/Set_Package_Body (Field5)
    --
    --   Get/Set_Package_Origin (Field7)

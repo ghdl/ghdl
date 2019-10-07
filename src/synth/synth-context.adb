@@ -184,6 +184,13 @@ package body Synth.Context is
       return Create_Value_Instance (Packages_Table.Last);
    end Create_Value_Instance;
 
+   function Get_Value_Instance (Inst : Instance_Id)
+                               return Synth_Instance_Acc is
+   begin
+      pragma Assert (Inst in Packages_Table.First .. Packages_Table.Last);
+      return Packages_Table.Table (Inst);
+   end Get_Value_Instance;
+
    procedure Create_Object (Syn_Inst : Synth_Instance_Acc;
                             Slot : Object_Slot_Type;
                             Num : Object_Slot_Type := 1) is
@@ -227,6 +234,21 @@ package body Synth.Context is
       pragma Assert (Syn_Inst.Objects (Info.Pkg_Slot) = null);
       Syn_Inst.Objects (Info.Pkg_Slot) := Val;
    end Create_Package_Object;
+
+   function Get_Package_Object
+     (Syn_Inst : Synth_Instance_Acc; Info : Sim_Info_Acc) return Value_Acc
+   is
+      Parent : Synth_Instance_Acc;
+   begin
+      Parent := Get_Instance_By_Scope (Syn_Inst, Info.Pkg_Parent);
+      return Parent.Objects (Info.Pkg_Slot);
+   end Get_Package_Object;
+
+   function Get_Package_Object
+     (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Value_Acc is
+   begin
+      return Get_Package_Object (Syn_Inst, Get_Info (Pkg));
+   end Get_Package_Object;
 
    procedure Destroy_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
@@ -289,14 +311,10 @@ package body Synth.Context is
             else
                --  Instantiated package.
                declare
-                  Parent : Synth_Instance_Acc;
-                  Inst : Instance_Id;
+                  Inst : Value_Acc;
                begin
-                  Parent := Get_Instance_By_Scope (Syn_Inst, Scope.Pkg_Parent);
-                  Inst := Parent.Objects (Scope.Pkg_Slot).Instance;
-                  pragma Assert
-                    (Inst in Packages_Table.First .. Packages_Table.Last);
-                  return Packages_Table.Table (Inst);
+                  Inst := Get_Package_Object (Syn_Inst, Scope);
+                  return Get_Value_Instance (Inst.Instance);
                end;
             end if;
          when others =>

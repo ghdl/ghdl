@@ -504,7 +504,6 @@ package body Synth.Decls is
    procedure Synth_Package_Declaration
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
    is
-      use Vhdl.Std_Package;
       pragma Assert (not Is_Uninstantiated_Package (Pkg));
       Syn_Inst : Synth_Instance_Acc;
       Val : Value_Acc;
@@ -512,8 +511,10 @@ package body Synth.Decls is
       Syn_Inst := Make_Instance (Parent_Inst, Pkg);
       Val := Create_Value_Instance (Syn_Inst);
       if Get_Kind (Get_Parent (Pkg)) = Iir_Kind_Design_Unit then
+         --  Global package: in no particular order.
          Create_Package_Object (Parent_Inst, Pkg, Val);
       else
+         --  Local package: check elaboration order.
          Create_Object (Parent_Inst, Pkg, Val);
       end if;
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
@@ -521,6 +522,20 @@ package body Synth.Decls is
          Synth_Convertible_Declarations (Syn_Inst);
       end if;
    end Synth_Package_Declaration;
+
+   procedure Synth_Package_Body
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node)
+   is
+      Val : Value_Acc;
+   begin
+      if Get_Kind (Get_Parent (Pkg)) = Iir_Kind_Design_Unit then
+         Val := Get_Package_Object (Parent_Inst, Pkg);
+      else
+         Val := Get_Value (Parent_Inst, Pkg);
+      end if;
+      Synth_Declarations (Get_Value_Instance (Val.Instance),
+                          Get_Declaration_Chain (Bod));
+   end Synth_Package_Body;
 
    procedure Synth_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean) is

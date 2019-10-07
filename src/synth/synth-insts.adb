@@ -23,6 +23,7 @@ with Libraries;
 with Hash; use Hash;
 with Interning;
 with Synthesis; use Synthesis;
+with Std_Names;
 
 with Netlists; use Netlists;
 with Netlists.Builders;
@@ -651,7 +652,26 @@ package body Synth.Insts is
                when Iir_Kind_Context_Declaration =>
                   null;
                when Iir_Kind_Package_Declaration =>
-                  Synth_Package_Declaration (Parent_Inst, Dep_Unit);
+                  declare
+                     Bod : constant Node := Get_Package_Body (Dep_Unit);
+                     Bod_Unit : Node;
+                  begin
+                     Synth_Package_Declaration (Parent_Inst, Dep_Unit);
+                     if Bod /= Null_Node then
+                        Bod_Unit := Get_Design_Unit (Bod);
+                        --  Do not translate bodies of ieee packages.
+                        case (Get_Identifier
+                                (Get_Library (Get_Design_File (Bod_Unit))))
+                        is
+                           when Std_Names.Name_Ieee
+                             | Std_Names.Name_Std =>
+                              null;
+                           when others =>
+                              Synth_Dependencies (Parent_Inst, Bod_Unit);
+                              Synth_Package_Body (Parent_Inst, Dep_Unit, Bod);
+                        end case;
+                     end if;
+                  end;
                when Iir_Kind_Package_Instantiation_Declaration =>
                   null;
                when Iir_Kind_Package_Body =>

@@ -28,6 +28,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Types;
 with Vhdl.Sem_Expr;
 with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Evaluation;
 

@@ -105,6 +105,10 @@ package Synth.Context is
 
    function Create_Value_Instance (Inst : Synth_Instance_Acc)
                                   return Value_Acc;
+   function Get_Value_Instance (Inst : Instance_Id) return Synth_Instance_Acc;
+
+   function Get_Package_Object
+     (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Value_Acc;
 private
    type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
 
