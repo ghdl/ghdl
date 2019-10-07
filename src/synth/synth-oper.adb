@@ -97,6 +97,23 @@ package body Synth.Oper is
       return Synth_Uresize (Get_Net (Val), W, Loc);
    end Synth_Uresize;
 
+   function Synth_Sresize (Val : Value_Acc; W : Width; Loc : Node) return Net
+   is
+      Res : Net;
+   begin
+      if Is_Const (Val) and then Val.Typ.Kind = Type_Discrete then
+         if Val.Typ.Drange.Is_Signed then
+            Res := Build2_Const_Int (Build_Context, Val.Scal, W);
+         else
+            --  TODO.
+            raise Internal_Error;
+         end if;
+         Set_Location (Res, Loc);
+         return Res;
+      end if;
+      return Synth_Sresize (Get_Net (Val), W, Loc);
+   end Synth_Sresize;
+
    function Synth_Bit_Eq_Const (Cst : Value_Acc; Expr : Value_Acc; Loc : Node)
                                return Value_Acc
    is
@@ -231,6 +248,17 @@ package body Synth.Oper is
          return Create_Value_Net (N, Boolean_Type);
       end Synth_Compare_Uns_Nat;
 
+      function Synth_Compare_Sgn_Int (Id : Compare_Module_Id)
+                                     return Value_Acc
+      is
+         N : Net;
+      begin
+         N := Synth_Sresize (Right, Left.Typ.W, Expr);
+         N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Boolean_Type);
+      end Synth_Compare_Sgn_Int;
+
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
          L : constant Net := Get_Net (Left);
@@ -324,6 +352,18 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Left, L));
       end Synth_Dyadic_Uns_Nat;
 
+      function Synth_Dyadic_Sgn_Int (Id : Dyadic_Module_Id) return Value_Acc
+      is
+         L : constant Net := Get_Net (Left);
+         R1 : Net;
+         N : Net;
+      begin
+         R1 := Synth_Sresize (Right, Left.Typ.W, Expr);
+         N := Build_Dyadic (Build_Context, Id, L, R1);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Create_Res_Bound (Left, L));
+      end Synth_Dyadic_Sgn_Int;
+
       function Synth_Compare_Sgn_Sgn (Id : Compare_Module_Id)
                                      return Value_Acc
       is
@@ -364,6 +404,7 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_1164_Scalar_Nor =>
             return Synth_Bit_Dyadic (Id_Nor);
          when Iir_Predefined_Bit_Nand
+           | Iir_Predefined_Boolean_Nand
            | Iir_Predefined_Ieee_1164_Scalar_Nand =>
             return Synth_Bit_Dyadic (Id_Nand);
          when Iir_Predefined_Bit_Xnor
@@ -452,15 +493,22 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Add, True);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
+            --  "+" (Signed, Integer)
+            return Synth_Dyadic_Sgn_Int (Id_Add);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn =>
             --  "+" (Signed, Signed)
             return Synth_Dyadic_Sgn (Id_Add, True);
+
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
             --  "-" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Id_Sub);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Sub, True);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int =>
+            --  "-" (Signed, Integer)
+            return Synth_Dyadic_Sgn_Int (Id_Sub);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>
             --  "-" (Signed, Signed)
             return Synth_Dyadic_Sgn (Id_Sub, True);
@@ -522,7 +570,9 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
             --  "=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Eq);
-
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int =>
+            --  "=" (Signed, Integer)
+            return Synth_Compare_Sgn_Int (Id_Eq);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
             --  "=" (Signed, Signed) [resize]
             return Synth_Compare_Sgn_Sgn (Id_Eq);
