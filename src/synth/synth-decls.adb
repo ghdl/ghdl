@@ -489,6 +489,39 @@ package body Synth.Decls is
       end loop;
    end Synth_Subprogram_Declaration;
 
+   procedure Synth_Convertible_Declarations (Syn_Inst : Synth_Instance_Acc)
+   is
+      use Vhdl.Std_Package;
+   begin
+      Create_Object
+        (Syn_Inst, Convertible_Integer_Type_Definition,
+         Get_Value (Syn_Inst, Universal_Integer_Type_Definition));
+      Create_Object
+        (Syn_Inst, Convertible_Real_Type_Definition,
+         Get_Value (Syn_Inst, Universal_Real_Type_Definition));
+   end Synth_Convertible_Declarations;
+
+   procedure Synth_Package_Declaration
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+   is
+      use Vhdl.Std_Package;
+      pragma Assert (not Is_Uninstantiated_Package (Pkg));
+      Syn_Inst : Synth_Instance_Acc;
+      Val : Value_Acc;
+   begin
+      Syn_Inst := Make_Instance (Parent_Inst, Pkg);
+      Val := Create_Value_Instance (Syn_Inst);
+      if Get_Kind (Get_Parent (Pkg)) = Iir_Kind_Design_Unit then
+         Create_Package_Object (Parent_Inst, Pkg, Val);
+      else
+         Create_Object (Parent_Inst, Pkg, Val);
+      end if;
+      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
+      if Pkg = Vhdl.Std_Package.Standard_Package then
+         Synth_Convertible_Declarations (Syn_Inst);
+      end if;
+   end Synth_Package_Declaration;
+
    procedure Synth_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean) is
    begin

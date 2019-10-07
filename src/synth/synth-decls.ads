@@ -44,4 +44,7 @@ package Synth.Decls is
    procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
                                     Decls : Iir;
                                     Is_Subprg : Boolean := False);
+
+   procedure Synth_Package_Declaration
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
 end Synth.Decls;

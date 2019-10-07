@@ -628,6 +628,44 @@ package body Synth.Insts is
       end;
    end Synth_Component_Instantiation_Statement;
 
+   procedure Synth_Dependencies (Parent_Inst : Synth_Instance_Acc; Unit : Node)
+   is
+      Dep_List : constant Node_List := Get_Dependence_List (Unit);
+      Dep_It : List_Iterator;
+      Dep : Node;
+      Dep_Unit : Node;
+   begin
+      Dep_It := List_Iterate (Dep_List);
+      while Is_Valid (Dep_It) loop
+         Dep := Get_Element (Dep_It);
+         pragma Assert (Get_Kind (Dep) = Iir_Kind_Design_Unit);
+         if not Get_Elab_Flag (Dep) then
+            Set_Elab_Flag (Dep, True);
+            Synth_Dependencies (Parent_Inst, Dep);
+            Dep_Unit := Get_Library_Unit (Dep);
+            case Iir_Kinds_Library_Unit (Get_Kind (Dep_Unit)) is
+               when Iir_Kind_Entity_Declaration =>
+                  null;
+               when Iir_Kind_Configuration_Declaration =>
+                  null;
+               when Iir_Kind_Context_Declaration =>
+                  null;
+               when Iir_Kind_Package_Declaration =>
+                  Synth_Package_Declaration (Parent_Inst, Dep_Unit);
+               when Iir_Kind_Package_Instantiation_Declaration =>
+                  null;
+               when Iir_Kind_Package_Body =>
+                  null;
+               when Iir_Kind_Architecture_Body =>
+                  null;
+               when Iir_Kinds_Verification_Unit =>
+                  null;
+            end case;
+         end if;
+         Next (Dep_It);
+      end loop;
+   end Synth_Dependencies;
+
    procedure Synth_Top_Entity (Global_Instance : Synth_Instance_Acc;
                                Arch : Node;
                                Config : Node;
@@ -641,6 +679,10 @@ package body Synth.Insts is
       Val : Value_Acc;
    begin
       Root_Instance := Global_Instance;
+
+      --  Dependencies first.
+      Synth_Dependencies (Global_Instance, Get_Design_Unit (Entity));
+      Synth_Dependencies (Global_Instance, Get_Design_Unit (Arch));
 
       Syn_Inst := Make_Instance (Global_Instance, Arch,
                                  New_Sname_User (Get_Identifier (Entity)));
@@ -805,6 +847,8 @@ package body Synth.Insts is
          --  Black box.
          return;
       end if;
+
+      Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 
       Set_Instance_Module (Syn_Inst, Inst.M);
       Self_Inst := Get_Self_Instance (Inst.M);
