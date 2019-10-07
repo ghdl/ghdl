@@ -269,6 +269,8 @@ package body Ghdlsynth is
          raise Errorout.Compilation_Error;
       end if;
 
+      Netlists.Errors.Initialize;
+
       Synthesis.Synth_Design (Config, Res, Inst);
       if Res = No_Module then
          raise Errorout.Compilation_Error;
