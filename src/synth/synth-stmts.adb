@@ -599,6 +599,29 @@ package body Synth.Stmts is
                end case;
             end loop;
          end;
+      elsif El_Type = Vhdl.Std_Package.Bit_Type_Definition then
+         declare
+            use Vhdl.Evaluation.String_Utils;
+
+            Info : constant Str_Info := Get_Str_Info (Expr);
+         begin
+            if Info.Len > 64 then
+               raise Internal_Error;
+            end if;
+            Val := 0;
+            Dc := 0;
+            for I in 0 .. Info.Len - 1 loop
+               Val := Shift_Left (Val, 1);
+               case Get_Pos (Info, I) is
+                  when 0 =>
+                     Val := Val or 0;
+                  when 1 =>
+                     Val := Val or 1;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end loop;
+         end;
       else
          raise Internal_Error;
       end if;
