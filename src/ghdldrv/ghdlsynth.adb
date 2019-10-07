@@ -50,7 +50,7 @@ with Synth.Context; use Synth.Context;
 with Synth.Flags; use Synth.Flags;
 
 package body Ghdlsynth is
-   type Out_Format is (Format_Raw, Format_Vhdl);
+   type Out_Format is (Format_Raw, Format_Dump, Format_Vhdl);
 
    --  Command --synth
    type Command_Synth is new Command_Lib with record
@@ -92,6 +92,9 @@ package body Ghdlsynth is
          Res := Option_Ok;
       elsif Option = "--out=raw" then
          Cmd.Oformat := Format_Raw;
+         Res := Option_Ok;
+      elsif Option = "--out=dump" then
+         Cmd.Oformat := Format_Dump;
          Res := Option_Ok;
       elsif Option = "--out=vhdl" then
          Cmd.Oformat := Format_Vhdl;
@@ -275,6 +278,9 @@ package body Ghdlsynth is
          when Format_Raw =>
             Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
             Netlists.Dump.Disp_Module (Res);
+         when Format_Dump =>
+            Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
+            Netlists.Dump.Dump_Module (Res);
          when Format_Vhdl =>
             if Boolean'(True) then
                Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
