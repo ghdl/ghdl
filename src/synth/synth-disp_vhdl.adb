@@ -100,7 +100,6 @@ package body Synth.Disp_Vhdl is
                Put_Line (Pfx & ";");
             else
                --  Any other enum.
-               --  TODO: width = 1
                W := Typ.W;
                Disp_In_Lhs (Mname, Off, W, Full);
                if W = 1 then
@@ -233,7 +232,12 @@ package body Synth.Disp_Vhdl is
                W := Typ.W;
                Put (Name_Table.Image (Get_Identifier
                                         (Get_Type_Declarator (Ptype))));
-               Put ("'val (to_integer(unsigned(");
+               Put ("'val (to_integer(unsigned");
+               if W = 1 then
+                  Put ("'(0 => ");
+               else
+                  Put ('(');
+               end if;
                Disp_Out_Rhs (Mname, Off, W, Full);
                Put_Line (")));");
             end if;
