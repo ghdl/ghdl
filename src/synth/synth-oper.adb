@@ -144,10 +144,9 @@ package body Synth.Oper is
 
    --  Create the result range of an operator.  According to the ieee standard,
    --  the range is LEN-1 downto 0.
-   function Create_Res_Bound (Prev : Value_Acc; N : Net) return Type_Acc
+   function Create_Res_Bound (Prev : Value_Acc) return Type_Acc
    is
       Res : Type_Acc;
-      Wd : Width;
    begin
       Res := Prev.Typ;
 
@@ -158,8 +157,7 @@ package body Synth.Oper is
          return Res;
       end if;
 
-      Wd := Get_Width (N);
-      return Create_Vec_Type_By_Length (Wd, Res.Vec_El);
+      return Create_Vec_Type_By_Length (Res.W, Res.Vec_El);
    end Create_Res_Bound;
 
    function Create_Bounds_From_Length
@@ -266,7 +264,7 @@ package body Synth.Oper is
       begin
          N := Build_Dyadic (Build_Context, Id, L, Get_Net (Right));
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Create_Res_Bound (Left, L));
+         return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Vec_Dyadic;
 
       function Synth_Int_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
@@ -349,7 +347,7 @@ package body Synth.Oper is
          R1 := Synth_Uresize (Right, Left.Typ.W, Expr);
          N := Build_Dyadic (Build_Context, Id, L, R1);
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Create_Res_Bound (Left, L));
+         return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Dyadic_Uns_Nat;
 
       function Synth_Dyadic_Sgn_Int (Id : Dyadic_Module_Id) return Value_Acc
@@ -361,7 +359,7 @@ package body Synth.Oper is
          R1 := Synth_Sresize (Right, Left.Typ.W, Expr);
          N := Build_Dyadic (Build_Context, Id, L, R1);
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Create_Res_Bound (Left, L));
+         return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Dyadic_Sgn_Int;
 
       function Synth_Compare_Sgn_Sgn (Id : Compare_Module_Id)
@@ -837,7 +835,7 @@ package body Synth.Oper is
       begin
          N := Build_Monadic (Build_Context, Id, Op);
          Set_Location (N, Loc);
-         return Create_Value_Net (N, Create_Res_Bound (Operand, Op));
+         return Create_Value_Net (N, Create_Res_Bound (Operand));
       end Synth_Vec_Monadic;
 
       function Synth_Vec_Reduce_Monadic (Id : Reduce_Module_Id)
@@ -904,7 +902,7 @@ package body Synth.Oper is
    begin
       N := Build_Shift_Rotate (Build_Context, Id, L, Get_Net (Right));
       Set_Location (N, Expr);
-      return Create_Value_Net (N, Create_Res_Bound (Left, L));
+      return Create_Value_Net (N, Create_Res_Bound (Left));
    end Synth_Shift_Rotate;
 
    function Synth_Std_Match (Cst : Value_Acc;
@@ -1030,6 +1028,17 @@ package body Synth.Oper is
       end if;
 
       case Def is
+         when Iir_Predefined_Ieee_1164_To_Bitvector =>
+            declare
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
+               pragma Unreferenced (R);
+            begin
+               if Is_Const (L) then
+                  raise Internal_Error;
+               end if;
+               return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns =>
             declare
                Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
