@@ -122,6 +122,7 @@ package body Vhdl.Ieee.Std_Logic_1164 is
 
       Decl : Iir;
       Def : Iir;
+      Predefined : Iir_Predefined_Functions;
    begin
       Std_Logic_1164_Pkg := Pkg;
 
@@ -224,88 +225,78 @@ package body Vhdl.Ieee.Std_Logic_1164 is
          exit when Decl = Null_Iir;
 
          if Get_Kind (Decl) = Iir_Kind_Function_Declaration then
-            if Get_Identifier (Decl) = Name_Rising_Edge then
-               Rising_Edge := Decl;
-            elsif Get_Identifier (Decl) = Name_Falling_Edge then
-               Falling_Edge := Decl;
-            elsif Is_Scalar_Scalar_Function (Decl) then
-               declare
-                  Predefined : Iir_Predefined_Functions;
-               begin
-                  case Get_Identifier (Decl) is
-                     when Name_And =>
-                        Predefined := Iir_Predefined_Ieee_1164_Scalar_And;
-                     when Name_Nand =>
-                        Predefined := Iir_Predefined_Ieee_1164_Scalar_Nand;
-                     when Name_Or =>
-                        Predefined := Iir_Predefined_Ieee_1164_Scalar_Or;
-                     when Name_Nor =>
-                        Predefined := Iir_Predefined_Ieee_1164_Scalar_Nor;
-                     when Name_Xor =>
-                        Predefined := Iir_Predefined_Ieee_1164_Scalar_Xor;
-                     when Name_Xnor =>
-                        Predefined := Iir_Predefined_Ieee_1164_Scalar_Xnor;
-                     when others =>
-                        Predefined := Iir_Predefined_None;
-                  end case;
+            case Get_Identifier (Decl) is
+               when Name_Rising_Edge =>
+                  Rising_Edge := Decl;
+               when Name_Falling_Edge =>
+                  Falling_Edge := Decl;
+               when Name_To_Bitvector =>
+                  Predefined := Iir_Predefined_Ieee_1164_To_Bitvector;
                   Set_Implicit_Definition (Decl, Predefined);
-               end;
-            elsif Is_Scalar_Function (Decl) then
-               declare
-                  Predefined : Iir_Predefined_Functions;
-               begin
-                  case Get_Identifier (Decl) is
-                     when Name_Not =>
-                        Predefined := Iir_Predefined_Ieee_1164_Scalar_Not;
-                     when Name_Op_Condition =>
-                        Predefined :=
-                          Iir_Predefined_Ieee_1164_Condition_Operator;
-                     when others =>
-                        Predefined := Iir_Predefined_None;
-                  end case;
-                  Set_Implicit_Definition (Decl, Predefined);
-               end;
-            elsif Is_Vector_Vector_Function (Decl) then
-               declare
-                  Predefined : Iir_Predefined_Functions;
-               begin
-                  case Get_Identifier (Decl) is
-                     when Name_And =>
-                        Predefined := Iir_Predefined_Ieee_1164_Vector_And;
-                     when Name_Nand =>
-                        Predefined := Iir_Predefined_Ieee_1164_Vector_Nand;
-                     when Name_Or =>
-                        Predefined := Iir_Predefined_Ieee_1164_Vector_Or;
-                     when Name_Nor =>
-                        Predefined := Iir_Predefined_Ieee_1164_Vector_Nor;
-                     when Name_Xor =>
-                        Predefined := Iir_Predefined_Ieee_1164_Vector_Xor;
-                     when Name_Xnor =>
-                        Predefined := Iir_Predefined_Ieee_1164_Vector_Xnor;
-                     when others =>
-                        Predefined := Iir_Predefined_None;
-                  end case;
-                  Set_Implicit_Definition (Decl, Predefined);
-               end;
-            elsif Is_Vector_Function (Decl) then
-               declare
-                  Predefined : Iir_Predefined_Functions;
-               begin
-                  case Get_Identifier (Decl) is
-                     when Name_Not =>
-                        Predefined := Iir_Predefined_Ieee_1164_Vector_Not;
-                     when Name_And =>
-                        Predefined :=
-                           Iir_Predefined_Ieee_1164_Vector_And_Reduce;
-                     when Name_Or =>
-                        Predefined :=
-                           Iir_Predefined_Ieee_1164_Vector_Or_Reduce;
-                     when others =>
-                        Predefined := Iir_Predefined_None;
-                  end case;
-                  Set_Implicit_Definition (Decl, Predefined);
-               end;
-            end if;
+               when others =>
+                  if Is_Scalar_Scalar_Function (Decl) then
+                     case Get_Identifier (Decl) is
+                        when Name_And =>
+                           Predefined := Iir_Predefined_Ieee_1164_Scalar_And;
+                        when Name_Nand =>
+                           Predefined := Iir_Predefined_Ieee_1164_Scalar_Nand;
+                        when Name_Or =>
+                           Predefined := Iir_Predefined_Ieee_1164_Scalar_Or;
+                        when Name_Nor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Scalar_Nor;
+                        when Name_Xor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Scalar_Xor;
+                        when Name_Xnor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Scalar_Xnor;
+                        when others =>
+                           Predefined := Iir_Predefined_None;
+                     end case;
+                     Set_Implicit_Definition (Decl, Predefined);
+                  elsif Is_Scalar_Function (Decl) then
+                     case Get_Identifier (Decl) is
+                        when Name_Not =>
+                           Predefined := Iir_Predefined_Ieee_1164_Scalar_Not;
+                        when Name_Op_Condition =>
+                           Predefined :=
+                             Iir_Predefined_Ieee_1164_Condition_Operator;
+                        when others =>
+                           Predefined := Iir_Predefined_None;
+                     end case;
+                     Set_Implicit_Definition (Decl, Predefined);
+                  elsif Is_Vector_Vector_Function (Decl) then
+                     case Get_Identifier (Decl) is
+                        when Name_And =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_And;
+                        when Name_Nand =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Nand;
+                        when Name_Or =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Or;
+                        when Name_Nor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Nor;
+                        when Name_Xor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Xor;
+                        when Name_Xnor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Xnor;
+                        when others =>
+                           Predefined := Iir_Predefined_None;
+                     end case;
+                     Set_Implicit_Definition (Decl, Predefined);
+                  elsif Is_Vector_Function (Decl) then
+                     case Get_Identifier (Decl) is
+                        when Name_Not =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Not;
+                        when Name_And =>
+                           Predefined :=
+                             Iir_Predefined_Ieee_1164_Vector_And_Reduce;
+                        when Name_Or =>
+                           Predefined :=
+                             Iir_Predefined_Ieee_1164_Vector_Or_Reduce;
+                        when others =>
+                           Predefined := Iir_Predefined_None;
+                     end case;
+                     Set_Implicit_Definition (Decl, Predefined);
+                  end if;
+            end case;
          end if;
       end loop;
 
