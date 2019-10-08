@@ -166,6 +166,7 @@ package body Synth.Disp_Vhdl is
             declare
                Els : constant Node_Flist :=
                  Get_Elements_Declaration_List (Ptype);
+               Rec_Full : constant Boolean := Full and Typ.W = 1;
             begin
                for I in Flist_First .. Flist_Last (Els) loop
                   declare
@@ -176,7 +177,7 @@ package body Synth.Disp_Vhdl is
                      Disp_In_Converter
                        (Mname,
                         Pfx & '.' & Name_Table.Image (Get_Identifier (El)),
-                        Off + Et.Off, Get_Type (El), Et.Typ, False);
+                        Off + Et.Off, Get_Type (El), Et.Typ, Rec_Full);
                   end;
                end loop;
             end;
@@ -185,6 +186,7 @@ package body Synth.Disp_Vhdl is
       end case;
    end Disp_In_Converter;
 
+   --  Disp conversion for output port (so in the form wrap_i <= i).
    procedure Disp_Input_Port_Converter (Inst : Synth_Instance_Acc;
                                         Port : Node)
    is
