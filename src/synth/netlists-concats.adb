@@ -56,6 +56,7 @@ package body Netlists.Concats is
             N := Build_Concat4
               (Ctxt, C.Sarr (4), C.Sarr (3), C.Sarr (2), C.Sarr (1));
          when 5 .. Static_Last =>
+            --  Compute length.
             Wd := 0;
             for I in 1 .. C.Len loop
                Wd := Wd + Get_Width (C.Sarr (I));
@@ -64,9 +65,10 @@ package body Netlists.Concats is
             N := Build_Concatn (Ctxt, Wd, Uns32 (C.Len));
             Inst := Get_Net_Parent (N);
             for I in 1 .. C.Len loop
-               Connect (Get_Input (Inst, Port_Idx (I - 1)), C.Sarr (I));
+               Connect (Get_Input (Inst, Port_Idx (C.Len - I)), C.Sarr (I));
             end loop;
          when Static_Last + 1 .. Int32'Last =>
+            --  Compute length.
             pragma Assert (C.Len = Net_Tables.Last (C.Darr));
             Wd := 0;
             for I in 1 .. C.Len loop
@@ -76,7 +78,8 @@ package body Netlists.Concats is
             N := Build_Concatn (Ctxt, Wd, Uns32 (C.Len));
             Inst := Get_Net_Parent (N);
             for I in Net_Tables.First .. C.Len loop
-               Connect (Get_Input (Inst, Port_Idx (I - 1)), C.Darr.Table (I));
+               Connect (Get_Input (Inst, Port_Idx (C.Len - I)),
+                        C.Darr.Table (I));
             end loop;
             --  Free the vector.
             Net_Tables.Free (C.Darr);

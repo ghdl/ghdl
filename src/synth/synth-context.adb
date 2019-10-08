@@ -550,7 +550,7 @@ package body Synth.Context is
                C : Concat_Type;
                Res : Net;
             begin
-               for I in Val.Arr.V'Range loop
+               for I in reverse Val.Arr.V'Range loop
                   Append (C, Get_Net (Val.Arr.V (I)));
                end loop;
                Build (Build_Context, C, Res);
