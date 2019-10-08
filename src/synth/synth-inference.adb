@@ -221,19 +221,16 @@ package body Synth.Inference is
       end if;
    end Check_FF_Else;
 
-   --  LAST_MUX is the mux whose input 0 is the loop.
+   --  LAST_MUX is the mux whose input 0 is the loop and clock for selector.
    procedure Infere_FF (Ctxt : Context_Acc;
                         Wid : Wire_Id;
                         Prev_Val : Net;
                         Off : Uns32;
                         Last_Mux : Instance;
                         Clk : Net;
-                        Enable : Net;
+                        Clk_Enable : Net;
                         Stmt : Source.Syn_Src)
    is
-      Sel : constant Input := Get_Mux2_Sel (Last_Mux);
-      I0 : constant Input := Get_Mux2_I0 (Last_Mux);
-      I1 : constant Input := Get_Mux2_I1 (Last_Mux);
       O : constant Net := Get_Output (Last_Mux, 0);
       Data : Net;
       Res : Net;
@@ -241,19 +238,27 @@ package body Synth.Inference is
       Init : Net;
       Rst : Net;
       Rst_Val : Net;
+      Enable : Net;
    begin
       --  Create and return the DFF.
 
       --  1. Remove the mux that creates the loop (will be replaced by the
       --     dff).
-      Disconnect (Sel);
-      --  There must be no 'else' part for clock expression.
-      Check_FF_Else (Get_Driver (I0), Prev_Val, Off);
-      --  Don't try to free driver of I0 as this is Prev_Val.
-      Disconnect (I0);
-      Data := Get_Driver (I1);
-      --  Don't try to free driver of I1 as it is reconnected.
-      Disconnect (I1);
+      declare
+         Sel : constant Input := Get_Mux2_Sel (Last_Mux);
+         I0 : constant Input := Get_Mux2_I0 (Last_Mux);
+         I1 : constant Input := Get_Mux2_I1 (Last_Mux);
+      begin
+         Disconnect (Sel);
+         --  There must be no 'else' part for clock expression.
+         Check_FF_Else (Get_Driver (I0), Prev_Val, Off);
+         --  Don't try to free driver of I0 as this is Prev_Val or a selection
+         --  of it.
+         Disconnect (I0);
+         Data := Get_Driver (I1);
+         --  Don't try to free driver of I1 as it is reconnected.
+         Disconnect (I1);
+      end;
 
       --  If the signal declaration has an initial value, get it.
       Sig := Get_Net_Parent (Prev_Val);
@@ -264,6 +269,8 @@ package body Synth.Inference is
          Init := No_Net;
       end if;
 
+      Enable := Clk_Enable;
+
       --  Look for asynchronous set/reset.  They are muxes after the loop
       --  mux.  In theory, there can be many set/reset with a defined order.
       Rst_Val := No_Net;
@@ -272,6 +279,7 @@ package body Synth.Inference is
          Mux : Instance;
          Sel : Net;
          Last_Out : Net;
+         Mux_Not_Rst : Net;
          Mux_Rst : Net;
          Mux_Rst_Val : Net;
       begin
@@ -302,21 +310,53 @@ package body Synth.Inference is
 
             Last_Out := Get_Output (Mux, 0);
 
-            if Rst = No_Net then
-               --  Remove the last mux.  Dedicated inputs on the FF are used.
+            if Mux_Rst_Val = Prev_Val then
+               --  The mux is like an enable.  Like in this example, q2 is not
+               --  assigned when RST is true:
+               --    if rst then
+               --      q1 <= '0';
+               --    elsif rising_edge(clk) then
+               --      q2 <= d2;
+               --      q1 <= d1;
+               --    end if;
+
+               --  Remove the mux
                Disconnect (Get_Mux2_I0 (Mux));
                Disconnect (Get_Mux2_I1 (Mux));
                Disconnect (Get_Mux2_Sel (Mux));
 
-               Redirect_Inputs (Last_Out, Mux_Rst_Val);
-               Free_Instance (Mux);
-
-               Rst := Mux_Rst;
-               Rst_Val := Mux_Rst_Val;
-               Last_Out := Mux_Rst_Val;
+               --  Add the negation of the condition to the enable signal.
+               --  Negate the condition for the current reset.
+               Mux_Not_Rst := Build_Monadic (Ctxt, Id_Not, Mux_Rst);
+               if Rst /= No_Net then
+                  Rst := Build_Dyadic (Ctxt, Id_And, Rst, Mux_Not_Rst);
+               end if;
+               if Enable = No_Net then
+                  Enable := Mux_Not_Rst;
+               else
+                  Enable := Build_Dyadic (Ctxt, Id_And, Enable, Mux_Not_Rst);
+               end if;
             else
-               Rst := Build_Dyadic (Ctxt, Id_Or, Mux_Rst, Rst);
-               Rst_Val := Last_Out;
+               --  Assume this is a reset value.
+               --  FIXME: check for no logical loop.
+
+               if Rst = No_Net then
+                  --  Remove the last mux.  Dedicated inputs on the FF
+                  --  are used.
+                  Disconnect (Get_Mux2_I0 (Mux));
+                  Disconnect (Get_Mux2_I1 (Mux));
+                  Disconnect (Get_Mux2_Sel (Mux));
+
+                  Redirect_Inputs (Last_Out, Mux_Rst_Val);
+                  Free_Instance (Mux);
+
+                  Rst := Mux_Rst;
+                  Rst_Val := Mux_Rst_Val;
+                  Last_Out := Mux_Rst_Val;
+               else
+                  Rst := Build_Dyadic (Ctxt, Id_Or, Mux_Rst, Rst);
+                  Rst_Val := Last_Out;
+               end if;
             end if;
          end loop;
       end;
