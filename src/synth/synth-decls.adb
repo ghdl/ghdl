@@ -617,7 +617,15 @@ package body Synth.Decls is
                Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
                                               Obj, Off, Voff, Rdwd, Typ);
                pragma Assert (Voff = No_Net);
-               Res := Create_Value_Alias (Obj, Off, Typ);
+               if Obj.Kind = Value_Net then
+                  --  Object is a net if it is not writable.  Extract the
+                  --  bits for the alias.
+                  Res := Create_Value_Net
+                    (Build2_Extract (Get_Build (Syn_Inst), Obj.N, Off, Typ.W),
+                     Typ);
+               else
+                  Res := Create_Value_Alias (Obj, Off, Typ);
+               end if;
                Res := Synth_Subtype_Conversion (Res, Obj_Type, True, Decl);
                Create_Object (Syn_Inst, Decl, Res);
             end;
