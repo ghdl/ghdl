@@ -482,6 +482,11 @@ package body Synth.Decls is
    is
       Inter : Node;
    begin
+      if Is_Second_Subprogram_Specification (Subprg) then
+         --  Already handled.
+         return;
+      end if;
+
       Inter := Get_Interface_Declaration_Chain (Subprg);
       while Inter /= Null_Node loop
          Synth_Declaration_Type (Syn_Inst, Inter);
