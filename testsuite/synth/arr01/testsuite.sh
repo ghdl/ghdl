@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in arr01 arr02 arr04; do
+for t in arr01 arr02 arr04 arr05 arr06 arr07; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
