@@ -259,10 +259,10 @@ package body Synth.Oper is
 
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
-         L : constant Net := Get_Net (Left);
          N : Net;
       begin
-         N := Build_Dyadic (Build_Context, Id, L, Get_Net (Right));
+         N := Build_Dyadic (Build_Context, Id,
+                            Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Vec_Dyadic;
@@ -513,16 +513,16 @@ package body Synth.Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
             declare
-               L : constant Net := Get_Net (Left);
-               R : constant Net := Get_Net (Right);
-               W : constant Width := Get_Width (L) + Get_Width (R);
-               Rtype : Type_Acc;
+               W : constant Width := Left.Typ.W + Right.Typ.W;
+               L, R : Net;
                N : Net;
             begin
-               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
+               L := Synth_Sresize (Left, W, Left_Expr);
+               R := Synth_Sresize (Right, W, Right_Expr);
                N := Build_Dyadic (Build_Context, Id_Smul, L, R);
                Set_Location (N, Expr);
-               return Create_Value_Net (N, Rtype);
+               return Create_Value_Net
+                 (N, Create_Vec_Type_By_Length (W, Left.Typ.Vec_El));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
             declare
