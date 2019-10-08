@@ -135,25 +135,22 @@ package body Synth.Stmts is
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Constant_Declaration =>
+           | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Object_Alias_Declaration =>
             declare
                Targ : constant Value_Acc := Get_Value (Syn_Inst, Pfx);
             begin
-               Dest_Obj := Targ;
-               Dest_Off := 0;
                Dest_Voff := No_Net;
                Dest_Rdwd := 0;
                Dest_Type := Targ.Typ;
-            end;
-         when Iir_Kind_Object_Alias_Declaration =>
-            declare
-               Targ : constant Value_Acc := Get_Value (Syn_Inst, Pfx);
-            begin
-               Dest_Obj := Targ.A_Obj;
-               Dest_Off := Targ.A_Off;
-               Dest_Voff := No_Net;
-               Dest_Rdwd := 0;
-               Dest_Type := Targ.Typ;
+
+               if Targ.Kind = Value_Alias then
+                  Dest_Obj := Targ.A_Obj;
+                  Dest_Off := Targ.A_Off;
+               else
+                  Dest_Obj := Targ;
+                  Dest_Off := 0;
+               end if;
             end;
          when Iir_Kind_Indexed_Name =>
             declare
@@ -1279,17 +1276,25 @@ package body Synth.Stmts is
                declare
                   Info : Target_Info renames Infos (Nbr_Inout);
                begin
-                  case Info.Kind is
-                     when Target_Aggregate =>
+                  if Info.Kind /= Target_Simple then
+                     raise Internal_Error;
+                  end if;
+                  case Iir_Kinds_Interface_Object_Declaration
+                    (Get_Kind (Inter))
+                  is
+                     when Iir_Kind_Interface_Constant_Declaration =>
                         raise Internal_Error;
-                     when Target_Simple =>
+                     when Iir_Kind_Interface_Variable_Declaration =>
+                        --  Always pass by value.
                         Val := Synth_Read_Memory
                           (Caller_Inst, Info.Obj, Info.Off, No_Net,
                            Info.Targ_Type, Assoc);
-                     when Target_Memory =>
-                        Val := Synth_Read_Memory
-                          (Caller_Inst, Info.Mem_Obj, Info.Mem_Off,
-                           Info.Mem_Voff, Info.Targ_Type, Assoc);
+                     when Iir_Kind_Interface_Signal_Declaration =>
+                        --  Always pass by reference (use an alias).
+                        Val := Create_Value_Alias
+                          (Info.Obj, Info.Off, Info.Targ_Type);
+                     when Iir_Kind_Interface_File_Declaration =>
+                        raise Internal_Error;
                   end case;
                end;
          end case;
