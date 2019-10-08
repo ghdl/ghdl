@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in rec01 rec02 rec03 rec04 rec05 rec06 rec07 rec08; do
+for t in rec01 rec02 rec03 rec04 rec05 rec06 rec07 rec08 rec09 rec10; do
     analyze pkg_$t.vhdl $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
