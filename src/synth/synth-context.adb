@@ -417,7 +417,7 @@ package body Synth.Context is
                Off := Off + 1;
             end;
          when Type_Discrete =>
-            for I in reverse 0 .. Val.Typ.W - 1 loop
+            for I in 0 .. Val.Typ.W - 1 loop
                declare
                   B : constant Uns32 :=
                     Uns32 (Shift_Right (To_Uns64 (Val.Scal), Natural (I)))
