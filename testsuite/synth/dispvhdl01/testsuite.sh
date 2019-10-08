@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in vhd01; do
+for t in vhd01 vhd02; do
     analyze pkg.vhdl $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
