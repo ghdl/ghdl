@@ -403,7 +403,8 @@ package body Synth.Insts is
 
       Inst := New_Instance (Get_Instance_Module (Syn_Inst),
                             Inst_Obj.M,
-                            New_Sname_User (Get_Identifier (Stmt)));
+                            New_Sname (Get_Sname (Syn_Inst),
+                                       Get_Identifier (Stmt)));
       Set_Location (Inst, Stmt);
 
       Synth_Instantiate_Module

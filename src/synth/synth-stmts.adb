@@ -2315,6 +2315,7 @@ package body Synth.Stmts is
 
    procedure Synth_Generate_Statement_Body (Syn_Inst : Synth_Instance_Acc;
                                             Bod : Node;
+                                            Name : Sname;
                                             Iterator : Node := Null_Node;
                                             Iterator_Val : Value_Acc := null)
    is
@@ -2322,11 +2323,9 @@ package body Synth.Stmts is
       Decls_Chain : constant Node := Get_Declaration_Chain (Bod);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       Bod_Inst : Synth_Instance_Acc;
-      Bod_Sname : Sname;
       M : Areapools.Mark_Type;
    begin
-      Bod_Sname := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Bod));
-      Bod_Inst := Make_Instance (Syn_Inst, Bod, Bod_Sname);
+      Bod_Inst := Make_Instance (Syn_Inst, Bod, Name);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
@@ -2355,6 +2354,8 @@ package body Synth.Stmts is
       Config : Node;
       It_Rng : Type_Acc;
       Val : Value_Acc;
+      Name : Sname;
+      Lname : Sname;
    begin
       if It_Type /= Null_Node then
          Synth_Subtype_Indication (Syn_Inst, It_Type);
@@ -2363,6 +2364,8 @@ package body Synth.Stmts is
       --  Initial value.
       It_Rng := Get_Value_Type (Syn_Inst, Get_Type (Iterator));
       Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
+
+      Name := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Stmt));
 
       while In_Range (It_Rng.Drange, Val.Scal) loop
          --  Find and apply the config block.
@@ -2386,7 +2389,10 @@ package body Synth.Stmts is
             Apply_Block_Configuration (Config, Bod);
          end;
 
-         Synth_Generate_Statement_Body (Syn_Inst, Bod, Iterator, Val);
+         --  FIXME: get position ?
+         Lname := New_Sname_Version (Name, Uns32 (Val.Scal));
+
+         Synth_Generate_Statement_Body (Syn_Inst, Bod, Lname, Iterator, Val);
          Update_Index (It_Rng.Drange, Val.Scal);
       end loop;
    end Synth_For_Generate_Statement;
@@ -2424,14 +2430,17 @@ package body Synth.Stmts is
                   Gen : Node;
                   Bod : Node;
                   Cond : Value_Acc;
+                  Name : Sname;
                begin
                   Gen := Stmt;
+                  Name := New_Sname (Get_Sname (Syn_Inst),
+                                     Get_Identifier (Stmt));
                   loop
                      Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
                      pragma Assert (Cond.Kind = Value_Discrete);
                      if Cond.Scal = 1 then
                         Bod := Get_Generate_Statement_Body (Gen);
-                        Synth_Generate_Statement_Body (Syn_Inst, Bod);
+                        Synth_Generate_Statement_Body (Syn_Inst, Bod, Name);
                         exit;
                      end if;
                      Gen := Get_Generate_Else_Clause (Gen);
