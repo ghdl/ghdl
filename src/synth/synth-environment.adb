@@ -835,7 +835,8 @@ package body Synth.Environment is
                  or else (Off = Min_Off and then Pa.Offset < Off)
                then
                   --  Reduce the width if the assignment is shorter.
-                  Wd := Width'Min (Wd, Get_Width (Pa.Value));
+                  Wd := Width'Min
+                    (Wd, Get_Width (Pa.Value) - (Off - Pa.Offset));
                elsif Pa.Offset < Off + Wd then
                   --  Reduce the width when there is an assignment after
                   --  the current offset.
