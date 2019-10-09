@@ -361,7 +361,8 @@ package body Netlists.Disp_Vhdl is
       O : constant Net := Get_Output (Inst, 0);
    begin
       case Get_Id (Imod) is
-         when Id_Const_UB32 =>
+         when Id_Const_UB32
+           | Id_Const_SB32 =>
             Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0), 0,  Get_Width (O));
          when Id_Const_UL32 =>
             Disp_Binary_Lit (Get_Param_Uns32 (Inst, 0),
