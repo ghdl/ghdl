@@ -404,6 +404,7 @@ package body Synth.Insts is
       Inst := New_Instance (Get_Instance_Module (Syn_Inst),
                             Inst_Obj.M,
                             New_Sname_User (Get_Identifier (Stmt)));
+      Set_Location (Inst, Stmt);
 
       Synth_Instantiate_Module
         (Syn_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Stmt));
