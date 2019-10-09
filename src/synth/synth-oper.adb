@@ -36,11 +36,15 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Types; use Synth.Types;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Expr; use Synth.Expr;
+with Synth.Source;
 
 package body Synth.Oper is
    --  As log2(3m) is directly referenced, the program must be linked with -lm
    --  (math library) on unix systems.
    pragma Linker_Options ("-lm");
+
+   procedure Set_Location (N : Net; Loc : Node)
+     renames Synth.Source.Set_Location;
 
    function Synth_Uresize (N : Net; W : Width; Loc : Node) return Net
    is

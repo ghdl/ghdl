@@ -29,9 +29,6 @@ with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Expr is
-   procedure Set_Location (N : Net; Loc : Node);
-   pragma Inline (Set_Location);
-
    --  Perform a subtype conversion.  Check constraints.
    function Synth_Subtype_Conversion (Val : Value_Acc;
                                       Dtype : Type_Acc;

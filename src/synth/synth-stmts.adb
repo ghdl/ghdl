@@ -52,6 +52,9 @@ package body Synth.Stmts is
    procedure Synth_Sequential_Statements
      (C : in out Seq_Context; Stmts : Node);
 
+   procedure Set_Location (N : Net; Loc : Node)
+     renames Synth.Source.Set_Location;
+
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
                             Wf : Node;
                             Targ_Type : Type_Acc) return Value_Acc is

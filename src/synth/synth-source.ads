@@ -35,4 +35,7 @@ package Synth.Source is
 
    procedure Set_Location (N : Netlists.Net; Src : Syn_Src);
    pragma Inline (Set_Location);
+
+   procedure Set_Location (Inst : Netlists.Instance; Src : Syn_Src);
+   pragma Inline (Set_Location);
 end Synth.Source;

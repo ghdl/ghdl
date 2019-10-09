@@ -38,6 +38,7 @@ with Synth.Environment; use Synth.Environment;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
+with Synth.Source; use Synth.Source;
 
 package body Synth.Insts is
    Root_Instance : Synth_Instance_Acc;

@@ -33,7 +33,6 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
-with Netlists.Locations; use Netlists.Locations;
 
 with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
@@ -46,18 +45,8 @@ package body Synth.Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Value_Acc;
 
-   procedure Set_Location2 (N : Net; Loc : Node) is
-   begin
-      Set_Location (Get_Net_Parent (N), Get_Location (Loc));
-   end Set_Location2;
-
-   procedure Set_Location (N : Net; Loc : Node) is
-   begin
-      --  Short and compact code as it is inlined.
-      if Flag_Locations then
-         Set_Location2 (N, Loc);
-      end if;
-   end Set_Location;
+   procedure Set_Location (N : Net; Loc : Node)
+     renames Synth.Source.Set_Location;
 
    function Get_Const_Discrete (V : Value_Acc) return Int64
    is

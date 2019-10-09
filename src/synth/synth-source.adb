@@ -22,10 +22,29 @@ with Netlists; use Netlists;
 with Netlists.Locations; use Netlists.Locations;
 
 package body Synth.Source is
+   procedure Set_Location2 (N : Net; Loc : Node) is
+   begin
+      Set_Location (Get_Net_Parent (N), Get_Location (Loc));
+   end Set_Location2;
+
+   procedure Set_Location2 (Inst : Instance; Loc : Node) is
+   begin
+      Set_Location (Inst, Get_Location (Loc));
+   end Set_Location2;
+
    procedure Set_Location (N : Net; Src : Syn_Src) is
    begin
+      --  Short and compact code as it is inlined.
       if Flag_Locations then
-         Set_Location (Get_Net_Parent (N), Get_Location (Src));
+         Set_Location2 (N, Src);
+      end if;
+   end Set_Location;
+
+   procedure Set_Location (Inst : Instance; Src : Syn_Src) is
+   begin
+      --  Short and compact code as it is inlined.
+      if Flag_Locations then
+         Set_Location2 (Inst, Src);
       end if;
    end Set_Location;
 end Synth.Source;

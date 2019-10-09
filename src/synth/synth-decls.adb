@@ -31,6 +31,7 @@ with Vhdl.Ieee.Std_Logic_1164;
 with Synth.Environment; use Synth.Environment;
 with Synth.Expr; use Synth.Expr;
 with Synth.Stmts;
+with Synth.Source; use Synth.Source;
 
 package body Synth.Decls is
    procedure Synth_Anonymous_Subtype_Indication
