@@ -770,10 +770,14 @@ package body Netlists.Disp_Vhdl is
             Disp_Template
               ("  \o0 <= std_logic_vector "
                  & "(shift_left (\ui0, to_integer (\ui1)));" & NL, Inst);
+         when Id_Lsr =>
+            Disp_Template
+              ("  \o0 <= std_logic_vector "
+                 & "(shift_right (\ui0, to_integer(\ui1)));" & NL, Inst);
          when Id_Asr =>
             Disp_Template
               ("  \o0 <= std_logic_vector "
-                 & "(shift_left (\si0, to_integer (\ui1)));" & NL, Inst);
+                 & "(shift_right (\si0, to_integer (\ui1)));" & NL, Inst);
          when Id_Rol =>
             Disp_Template
               ("  \o0 <= std_logic_vector "
@@ -881,10 +885,6 @@ package body Netlists.Disp_Vhdl is
                      Inst, (0 => Ow));
                end if;
             end;
-         when Id_Lsr =>
-            Disp_Template
-              ("  \o0 <= std_logic_vector "
-                 & "(shift_right (\ui0, to_integer(\ui1)));" & NL, Inst);
          when Id_Red_Or =>
             declare
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 0));
