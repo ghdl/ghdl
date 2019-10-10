@@ -1194,6 +1194,10 @@ class Iir_Predefined:
     Ieee_Std_Logic_Unsigned_Ne_Slv_Slv = 315
     Ieee_Std_Logic_Unsigned_Ne_Slv_Int = 316
     Ieee_Std_Logic_Unsigned_Ne_Int_Slv = 317
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Int = 318
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Uns = 319
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn = 320
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Log = 321
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location

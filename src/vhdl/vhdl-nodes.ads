@@ -5085,7 +5085,13 @@ package Vhdl.Nodes is
 
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int,
-      Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv,
+
+      --  std_logic_arith (synopsys extention).
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Log
      );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.
