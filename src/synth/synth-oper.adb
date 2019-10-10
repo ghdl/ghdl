@@ -487,12 +487,14 @@ package body Synth.Oper is
                raise Internal_Error;
             end if;
 
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
             --  "+" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Id_Add);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Add, True);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
@@ -1043,7 +1045,8 @@ package body Synth.Oper is
                end if;
                return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             declare
                Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
                Size : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
