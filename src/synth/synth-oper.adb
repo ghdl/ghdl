@@ -89,7 +89,7 @@ package body Synth.Oper is
       Res : Net;
    begin
       if Is_Const (Val) and then Val.Typ.Kind = Type_Discrete then
-         if Val.Typ.Drange.Is_Signed then
+         if Val.Typ.Drange.Is_Signed and then Val.Scal < 0 then
             --  TODO.
             raise Internal_Error;
          else
