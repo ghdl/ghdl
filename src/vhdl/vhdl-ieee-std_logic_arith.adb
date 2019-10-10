@@ -82,6 +82,13 @@ package body Vhdl.Ieee.Std_Logic_Arith is
    begin
       Decl := Get_Declaration_Chain (Pkg);
 
+      if Decl /= Null_Iir
+        and then Get_Kind (Decl) = Iir_Kind_Use_Clause
+      then
+         --  Mentor version.  Don't extract and don't crash.
+         return;
+      end if;
+
       --  The first declaration should be type Unsigned.
       if not (Decl /= Null_Iir
                 and then Get_Kind (Decl) = Iir_Kind_Type_Declaration
