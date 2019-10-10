@@ -320,7 +320,9 @@ private
       --  Sub-module brother.
       Next_Sub_Module : Module;
 
+      --  List of instances.
       --  The self instance is the first instance.
+      --  FIXME: use an array instead ?
       First_Instance : Instance;
       Last_Instance : Instance;
    end record;
@@ -337,6 +339,9 @@ private
    type Instance_Record is record
       --  The instance is instantiated in Parent.
       Parent : Module;
+
+      --  Instances are in a doubly-linked list.
+      Prev_Instance : Instance;
       Next_Instance : Instance;
 
       --  For a self-instance, Klass is equal to Parent, and Name is No_Sname.
@@ -348,6 +353,9 @@ private
       First_Output : Net;
    end record;
 
+   procedure Set_Next_Instance (Inst : Instance; Next : Instance);
+   procedure Set_Prev_Instance (Inst : Instance; Prev : Instance);
+
    --  Procedures to rewrite the list of instances of a module:
    --  * first extract the chain of instances from module M (and reset the
    --    list of instances - so there is none),
@@ -355,6 +363,11 @@ private
    --  The list of instances is walked by using Get_Next_Instance.
    procedure Extract_All_Instances (M : Module; First_Instance : out Instance);
    procedure Append_Instance (M : Module; Inst : Instance);
+
+   --  Extract INST from the list of instance of its module.
+   --  Will still be connected, but won't appear anymore in the list of
+   --  instances.
+   procedure Extract_Instance (Inst : Instance);
 
    type Input is new Uns32;
    No_Input : constant Input := 0;

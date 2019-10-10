@@ -56,11 +56,4 @@ package Netlists.Utils is
    --  Disconnect input I.  If the driver of I has no output(s) connected,
    --  disconnect and free it.
    procedure Disconnect_And_Free (I : Input);
-
-   --  Unlink all free instances of M.
-   procedure Remove_Free_Instances (M : Module);
-
-   --  Unlink all unused instances of M.
-   procedure Remove_Unused_Instances (M : Module);
-
 end Netlists.Utils;

@@ -322,8 +322,34 @@ package body Netlists is
       else
          Instances_Table.Table (M_Ent.Last_Instance).Next_Instance := Inst;
       end if;
+      Instances_Table.Table (Inst).Prev_Instance := M_Ent.Last_Instance;
       M_Ent.Last_Instance := Inst;
    end Append_Instance;
+
+   procedure Extract_Instance (Inst : Instance)
+   is
+      pragma Assert (Is_Valid (Inst));
+      Inst_Ent : Instance_Record renames Instances_Table.Table (Inst);
+      M : constant Module := Inst_Ent.Parent;
+      M_Ent : Module_Record renames Modules_Table.Table (M);
+   begin
+      if Inst_Ent.Prev_Instance /= No_Instance then
+         Set_Next_Instance (Inst_Ent.Prev_Instance, Inst_Ent.Next_Instance);
+      else
+         pragma Assert (M_Ent.First_Instance = Inst);
+         M_Ent.First_Instance := Inst_Ent.Next_Instance;
+      end if;
+
+      if Inst_Ent.Next_Instance /= No_Instance then
+         Set_Prev_Instance (Inst_Ent.Next_Instance, Inst_Ent.Prev_Instance);
+      else
+         pragma Assert (M_Ent.Last_Instance = Inst);
+         M_Ent.Last_Instance := Inst_Ent.Prev_Instance;
+      end if;
+
+      Inst_Ent.Prev_Instance := No_Instance;
+      Inst_Ent.Next_Instance := No_Instance;
+   end Extract_Instance;
 
    function New_Instance_Internal (Parent : Module;
                                    M : Module;
@@ -343,6 +369,7 @@ package body Netlists is
    begin
       Instances_Table.Append ((Parent => Parent,
                                Next_Instance => No_Instance,
+                               Prev_Instance => No_Instance,
                                Klass => M,
                                Name => Name,
                                First_Param => Params,
@@ -490,6 +517,18 @@ package body Netlists is
       pragma Assert (Is_Valid (Inst));
       return Instances_Table.Table (Inst).Next_Instance;
    end Get_Next_Instance;
+
+   procedure Set_Next_Instance (Inst : Instance; Next : Instance) is
+   begin
+      pragma Assert (Is_Valid (Inst));
+      Instances_Table.Table (Inst).Next_Instance := Next;
+   end Set_Next_Instance;
+
+   procedure Set_Prev_Instance (Inst : Instance; Prev : Instance) is
+   begin
+      pragma Assert (Is_Valid (Inst));
+      Instances_Table.Table (Inst).Prev_Instance := Prev;
+   end Set_Prev_Instance;
 
    function Get_First_Output (Inst : Instance) return Net is
    begin
@@ -831,6 +870,7 @@ begin
 
    Instances_Table.Append ((Parent => No_Module,
                             Next_Instance => No_Instance,
+                            Prev_Instance => No_Instance,
                             Klass => No_Module,
                             Name => No_Sname,
                             First_Param => No_Param_Idx,

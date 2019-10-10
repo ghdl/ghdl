@@ -27,7 +27,7 @@ with Std_Names;
 
 with Netlists; use Netlists;
 with Netlists.Builders;
-with Netlists.Utils;
+with Netlists.Cleanup;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
@@ -916,7 +916,7 @@ package body Synth.Insts is
       --  a correctness point: there might be some unsynthesizable gates, like
       --  the one created for 'rising_egde (clk) and not rst'.
       if not Flags.Flag_Debug_Nocleanup then
-         Netlists.Utils.Remove_Unused_Instances
+         Netlists.Cleanup.Remove_Unconnected_Instances
            (Get_Instance_Module (Syn_Inst));
       end if;
    end Synth_Instance;
