@@ -1156,7 +1156,7 @@ package body Libraries is
                   end if;
                   Warning_Msg_Sem
                     (Warnid_Library, +Unit,
-                     "library unit %i was also defined in file %i",
+                     "%n was also defined in file %i",
                      (+Library_Unit, +Get_Design_File_Filename (Design_File)));
                end if;
             end if;
