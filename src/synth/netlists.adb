@@ -18,9 +18,11 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Std_Names;
+with Tables;
+
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
-with Tables;
 
 package body Netlists is
 
@@ -854,7 +856,7 @@ begin
    pragma Assert (Modules_Table.Last = No_Module);
 
    Modules_Table.Append ((Parent => No_Module,
-                          Name => No_Sname,
+                          Name => New_Sname_Artificial (Std_Names.Name_None),
                           Id => Id_Free,
                           First_Port_Desc => No_Port_Desc_Idx,
                           Nbr_Inputs => 0,
