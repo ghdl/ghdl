@@ -18,13 +18,12 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Dyn_Interning;
-
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Gates_Ports; use Netlists.Gates_Ports;
 with Netlists.Locations; use Netlists.Locations;
 with Netlists.Errors; use Netlists.Errors;
+with Netlists.Internings;
 
 with Synth.Flags;
 with Synth.Source; use Synth.Source;
@@ -404,18 +403,6 @@ package body Synth.Inference is
       Add_Conc_Assign (Wid, Res, Off, Stmt);
    end Infere_FF;
 
-   function Id_Instance (Param : Instance) return Instance is
-   begin
-      return Param;
-   end Id_Instance;
-
-   package Inst_Interning is new Dyn_Interning
-     (Params_Type => Instance,
-      Object_Type => Instance,
-      Hash => Netlists.Hash,
-      Build => Id_Instance,
-      Equal => "=");
-
    --  Detect false combinational loop.  They can easily appear when variables
    --  are only used in one branch:
    --    process (all)
@@ -437,6 +424,8 @@ package body Synth.Inference is
    --  muxes (which were inserted by controls).
    function Is_False_Loop (Prev_Val : Net) return Boolean
    is
+      package Inst_Interning renames
+        Netlists.Internings.Dyn_Instance_Interning;
       use Inst_Interning;
       T : Inst_Interning.Instance;
 
