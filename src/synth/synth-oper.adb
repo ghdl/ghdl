@@ -33,7 +33,6 @@ with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 
 with Synth.Errors; use Synth.Errors;
-with Synth.Types; use Synth.Types;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Expr; use Synth.Expr;
 with Synth.Source;
@@ -485,7 +484,7 @@ package body Synth.Oper is
          when Iir_Predefined_Array_Greater =>
             --  TODO: check size, non-vector.
             --  TODO: that's certainly not the correct operator.
-            if Is_Vector_Type (Left_Type) then
+            if Left.Typ.Kind = Type_Vector then
                return Synth_Compare (Id_Ugt);
             else
                raise Internal_Error;

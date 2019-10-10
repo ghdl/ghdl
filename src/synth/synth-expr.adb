@@ -34,7 +34,6 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 
-with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
 with Synth.Environment;
 with Synth.Decls;
@@ -1330,34 +1329,36 @@ package body Synth.Expr is
    is
       Expr : constant Node := Get_Expression (Conv);
       Conv_Type : constant Node := Get_Type (Conv);
+      Conv_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Conv_Type);
       Val : Value_Acc;
    begin
       Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
       case Get_Kind (Conv_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
             if Val.Typ.Kind = Type_Float then
-               return Create_Value_Discrete
-                 (Int64 (Val.Fp), Get_Value_Type (Syn_Inst, Conv_Type));
+               return Create_Value_Discrete (Int64 (Val.Fp), Conv_Typ);
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to int)");
                return null;
             end if;
          when Iir_Kind_Floating_Subtype_Definition =>
             if Is_Const (Val) then
-               return Create_Value_Float
-                 (Fp64 (Val.Scal), Get_Value_Type (Syn_Inst, Conv_Type));
+               return Create_Value_Float (Fp64 (Val.Scal), Conv_Typ);
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to float)");
                return null;
             end if;
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
-            if Is_Vector_Type (Conv_Type) then
-               return Val;
-            else
-               Error_Msg_Synth (+Conv, "unhandled type conversion (to array)");
-               return Val;
-            end if;
+            case Conv_Typ.Kind is
+               when Type_Vector
+                 | Type_Unbounded_Vector =>
+                  return Val;
+               when others =>
+                  Error_Msg_Synth
+                    (+Conv, "unhandled type conversion (to array)");
+                  return Val;
+            end case;
          when others =>
             Error_Msg_Synth (+Conv, "unhandled type conversion");
             return null;
