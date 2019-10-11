@@ -1213,6 +1213,10 @@ class Iir_Predefined:
     Ieee_Std_Logic_Arith_Conv_Unsigned_Uns = 334
     Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn = 335
     Ieee_Std_Logic_Arith_Conv_Unsigned_Log = 336
+    Ieee_Std_Logic_Arith_Conv_Integer_Int = 337
+    Ieee_Std_Logic_Arith_Conv_Integer_Uns = 338
+    Ieee_Std_Logic_Arith_Conv_Integer_Sgn = 339
+    Ieee_Std_Logic_Arith_Conv_Integer_Log = 340
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location

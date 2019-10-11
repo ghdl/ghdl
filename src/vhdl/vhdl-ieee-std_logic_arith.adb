@@ -27,8 +27,23 @@ package body Vhdl.Ieee.Std_Logic_Arith is
    Unsigned_Type : Iir := Null_Iir;
    Signed_Type : Iir := Null_Iir;
 
-   type Arg_Kind is (Type_Signed, Type_Unsigned, Type_Int,
-                     Type_Log, Type_Slv);
+   type Arg_Kind is (Type_Signed, Type_Unsigned, Type_Int, Type_Log, Type_Slv);
+
+   subtype Conv_Arg_Kind is Arg_Kind range Type_Signed .. Type_Log;
+   type Conv_Pattern_Type is
+     array (Conv_Arg_Kind) of Iir_Predefined_Functions;
+
+   Conv_Uns_Patterns : constant Conv_Pattern_Type :=
+     (Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Log);
+
+   Conv_Int_Patterns : constant Conv_Pattern_Type :=
+     (Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Int,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log);
 
    Error : exception;
 
@@ -59,24 +74,14 @@ package body Vhdl.Ieee.Std_Logic_Arith is
       Arg1, Arg2 : Iir;
       Arg1_Kind, Arg2_Kind : Arg_Kind;
 
-      function Handle_Conv_Unsigned return Iir_Predefined_Functions is
+      function Handle_Conv (Pats : Conv_Pattern_Type)
+                           return Iir_Predefined_Functions is
       begin
          if Arg2_Kind /= Type_Int then
             raise Error;
          end if;
-         case Arg1_Kind is
-            when Type_Int =>
-               return Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int;
-            when Type_Unsigned =>
-               return Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Uns;
-            when Type_Signed =>
-               return Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn;
-            when Type_Log =>
-               return Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Log;
-            when others =>
-               raise Error;
-         end case;
-      end Handle_Conv_Unsigned;
+         return Pats (Arg1_Kind);
+      end Handle_Conv;
 
       Def : Iir_Predefined_Functions;
    begin
@@ -146,13 +151,15 @@ package body Vhdl.Ieee.Std_Logic_Arith is
 
                   case Get_Identifier (Decl) is
                      when Name_Conv_Unsigned =>
-                        Def := Handle_Conv_Unsigned;
+                        Def := Handle_Conv (Conv_Uns_Patterns);
                      when others =>
                         null;
                   end case;
                else
                   --  Monadic function.
                   case Get_Identifier (Decl) is
+                     when Name_Conv_Integer =>
+                        Def := Conv_Int_Patterns (Arg1_Kind);
                      when others =>
                         null;
                   end case;

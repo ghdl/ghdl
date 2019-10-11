@@ -1075,7 +1075,8 @@ package body Synth.Oper is
                   end if;
                end if;
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns =>
             --  UNSIGNED to Natural.
             declare
                Int_Type : constant Type_Acc :=

@@ -647,7 +647,9 @@ package body Std_Names is
       Def ("rotate_left",        Name_Rotate_Left);
       Def ("rotate_right",       Name_Rotate_Right);
       Def ("to_bitvector",       Name_To_Bitvector);
+      Def ("conv_signed",        Name_Conv_Signed);
       Def ("conv_unsigned",      Name_Conv_Unsigned);
+      Def ("conv_integer",       Name_Conv_Integer);
       Def ("math_real",          Name_Math_Real);
       Def ("ceil",               Name_Ceil);
       Def ("log2",               Name_Log2);
