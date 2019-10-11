@@ -716,8 +716,8 @@ package Std_Names is
    Name_Unresolved_Signed  : constant Name_Id := Name_First_Ieee + 014;
    Name_Std_Logic_Arith    : constant Name_Id := Name_First_Ieee + 015;
    Name_Std_Logic_Signed   : constant Name_Id := Name_First_Ieee + 016;
-   Name_Std_Logic_Textio   : constant Name_Id := Name_First_Ieee + 017;
-   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 018;
+   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 017;
+   Name_Std_Logic_Textio   : constant Name_Id := Name_First_Ieee + 018;
    Name_To_Integer         : constant Name_Id := Name_First_Ieee + 019;
    Name_To_Unsigned        : constant Name_Id := Name_First_Ieee + 020;
    Name_To_Signed          : constant Name_Id := Name_First_Ieee + 021;

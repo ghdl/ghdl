@@ -514,7 +514,8 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Sub, True);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
+           | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
             --  "-" (Signed, Integer)
             return Synth_Dyadic_Sgn_Int (Id_Sub);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>

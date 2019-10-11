@@ -5093,6 +5093,19 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv,
 
+      --  Std_Logic_Signed (synopsys extension).
+      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Int_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Sl,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Sl_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Int_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Sl,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Sl_Slv,
+
       --  std_logic_arith (synopsys extention).
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Uns,

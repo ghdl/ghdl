@@ -63,7 +63,11 @@ package body Vhdl.Post_Sems is
                when Name_Math_Real =>
                   Vhdl.Ieee.Math_Real.Extract_Declarations (Lib_Unit);
                when Name_Std_Logic_Unsigned =>
-                  Vhdl.Ieee.Std_Logic_Unsigned.Extract_Declarations (Lib_Unit);
+                  Vhdl.Ieee.Std_Logic_Unsigned.Extract_Declarations
+                    (Lib_Unit, Vhdl.Ieee.Std_Logic_Unsigned.Pkg_Unsigned);
+               when Name_Std_Logic_Signed =>
+                  Vhdl.Ieee.Std_Logic_Unsigned.Extract_Declarations
+                    (Lib_Unit, Vhdl.Ieee.Std_Logic_Unsigned.Pkg_Signed);
                when Name_Std_Logic_Arith =>
                   Vhdl.Ieee.Std_Logic_Arith.Extract_Declarations (Lib_Unit);
                when others =>

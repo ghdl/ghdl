@@ -1199,10 +1199,20 @@ class Iir_Predefined:
     Ieee_Std_Logic_Unsigned_Ne_Slv_Slv = 320
     Ieee_Std_Logic_Unsigned_Ne_Slv_Int = 321
     Ieee_Std_Logic_Unsigned_Ne_Int_Slv = 322
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Int = 323
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Uns = 324
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn = 325
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Log = 326
+    Ieee_Std_Logic_Signed_Add_Slv_Slv = 323
+    Ieee_Std_Logic_Signed_Add_Slv_Int = 324
+    Ieee_Std_Logic_Signed_Add_Int_Slv = 325
+    Ieee_Std_Logic_Signed_Add_Slv_Sl = 326
+    Ieee_Std_Logic_Signed_Add_Sl_Slv = 327
+    Ieee_Std_Logic_Signed_Sub_Slv_Slv = 328
+    Ieee_Std_Logic_Signed_Sub_Slv_Int = 329
+    Ieee_Std_Logic_Signed_Sub_Int_Slv = 330
+    Ieee_Std_Logic_Signed_Sub_Slv_Sl = 331
+    Ieee_Std_Logic_Signed_Sub_Sl_Slv = 332
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Int = 333
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Uns = 334
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn = 335
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Log = 336
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location

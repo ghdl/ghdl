@@ -1,4 +1,4 @@
---  Nodes recognizer for ieee.std_logic_unsigned
+--  Nodes recognizer for ieee.std_logic_unsigned and ieee.std_logic_signed.
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -17,6 +17,9 @@
 --  02111-1307, USA.
 
 package Vhdl.Ieee.Std_Logic_Unsigned is
+   type Sign_Kind is (Pkg_Unsigned, Pkg_Signed);
+
    --  Extract declarations from PKG .
-   procedure Extract_Declarations (Pkg : Iir_Package_Declaration);
+   procedure Extract_Declarations
+     (Pkg : Iir_Package_Declaration; Sign : Sign_Kind);
 end Vhdl.Ieee.Std_Logic_Unsigned;

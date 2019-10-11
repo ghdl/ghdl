@@ -583,8 +583,8 @@ class Name:
     Unresolved_Signed = 797
     Std_Logic_Arith = 798
     Std_Logic_Signed = 799
-    Std_Logic_Textio = 800
-    Std_Logic_Unsigned = 801
+    Std_Logic_Unsigned = 800
+    Std_Logic_Textio = 801
     To_Integer = 802
     To_Unsigned = 803
     To_Signed = 804
