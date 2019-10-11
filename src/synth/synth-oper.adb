@@ -507,7 +507,8 @@ package body Synth.Oper is
             --  "+" (Signed, Signed)
             return Synth_Dyadic_Sgn (Id_Add, True);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int =>
             --  "-" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Id_Sub);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>

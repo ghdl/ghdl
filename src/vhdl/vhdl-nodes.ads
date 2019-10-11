@@ -5063,6 +5063,12 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Sl_Slv,
 
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Int_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Sl,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Sl_Slv,
+
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Int,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Int_Slv,
