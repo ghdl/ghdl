@@ -316,9 +316,7 @@ package body Netlists.Iterators is
                Inst := Get_Next_Instance (Inst);
                exit when Inst = No_Instance;
                Num := Get_Nbr_Outputs (Inst);
-               if Num = 0 then
-                  pragma Assert (Get_Id (Get_Module (Inst)) = Id_Free);
-               else
+               if Num /= 0 then
                   return Nets_Cursor'(Inst => Inst,
                                       N => Get_First_Output (Inst),
                                       Num => Num);
