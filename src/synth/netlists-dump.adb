@@ -40,6 +40,11 @@ package body Netlists.Dump is
       end if;
    end Put_Trim;
 
+   procedure Put_Width (W : Width) is
+   begin
+      Put_Trim (Width'Image (W));
+   end Put_Width;
+
    procedure Dump_Name (N : Sname)
    is
       use Name_Table;
@@ -83,13 +88,18 @@ package body Netlists.Dump is
    is
       Inst : constant Instance := Get_Input_Parent (I);
       Idx : constant Port_Idx := Get_Port_Idx (I);
+      M : constant Module := Get_Module (Inst);
    begin
       Dump_Name (Get_Instance_Name (Inst));
       Put ('.');
       if Is_Self_Instance (Inst) then
-         Dump_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
+         Dump_Name (Get_Output_Desc (M, Idx).Name);
       else
-         Dump_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
+         if Idx < Get_Nbr_Inputs (M) then
+            Dump_Name (Get_Input_Desc (M, Idx).Name);
+         else
+            Put_Trim (Port_Nbr'Image (Idx));
+         end if;
       end if;
       if With_Id then
          Put ("{p");
@@ -155,13 +165,22 @@ package body Netlists.Dump is
       end if;
 
       if Get_Nbr_Inputs (Inst) > 0 then
-         Put_Indent (Indent + 1);
-         Put ("inputs");
          for I of Inputs (Inst) loop
-            Put (' ');
+            Put_Indent (Indent + 1);
+            Put ("input ");
             Dump_Input_Name (I, True);
+            Put (" <- ");
+            declare
+               N : constant Net := Get_Driver (I);
+            begin
+               if N /= No_Net then
+                  Dump_Net_Name (N, True);
+                  Put (':');
+                  Put_Width (Get_Width (N));
+               end if;
+            end;
+            New_Line;
          end loop;
-         New_Line;
       end if;
 
       if Get_Nbr_Outputs (Inst) > 0 then
@@ -171,7 +190,7 @@ package body Netlists.Dump is
             Put (' ');
             Dump_Net_Name (O, True);
             Put (':');
-            Put_Trim (Width'Image (Get_Width (O)));
+            Put_Width (Get_Width (O));
          end loop;
          New_Line;
       end if;
@@ -184,7 +203,7 @@ package body Netlists.Dump is
          if W = 0 then
             Put ('?');
          else
-            Put_Trim (Width'Image (W - 1));
+            Put_Width (W - 1);
             Put (":0");
          end if;
          Put (']');
@@ -373,7 +392,7 @@ package body Netlists.Dump is
                   V : Uns32;
                   I : Natural;
                begin
-                  Put_Trim (Width'Image (W));
+                  Put_Width (W);
                   Put ("'uh");
                   V := Get_Param_Uns32 (Inst, 0);
                   I := (Natural (W) + 3) / 4;
