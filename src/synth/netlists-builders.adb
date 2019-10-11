@@ -218,8 +218,8 @@ package body Netlists.Builders is
          Id_Dyn_Extract, 2, 1, 1);
       Ctxt.M_Dyn_Extract := Res;
       Outputs := (0 => Create_Output ("o"));
-      Inputs := (0 => Create_Input ("i"),
-                 1 => Create_Input ("v"));
+      Inputs := (0 => Create_Input ("v"),
+                 1 => Create_Input ("i"));
       Set_Port_Desc (Res, Inputs, Outputs);
       Set_Param_Desc
         (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset")),
