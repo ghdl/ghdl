@@ -1367,7 +1367,10 @@ package body Synth.Expr is
       Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
       case Get_Kind (Conv_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
-            if Val.Typ.Kind = Type_Float then
+            if Val.Typ.Kind = Type_Discrete then
+               --  Int to int.
+               return Val;
+            elsif Val.Typ.Kind = Type_Float then
                return Create_Value_Discrete (Int64 (Val.Fp), Conv_Typ);
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to int)");
