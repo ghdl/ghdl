@@ -539,6 +539,19 @@ package body Synth.Oper is
                return Create_Value_Net
                  (N, Create_Vec_Type_By_Length (W, Left.Typ.Vec_El));
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
+            declare
+               W : constant Width := Left.Typ.W + Right.Typ.W;
+               L, R : Net;
+               N : Net;
+            begin
+               L := Synth_Uresize (Left, W, Left_Expr);
+               R := Synth_Uresize (Right, W, Right_Expr);
+               N := Build_Dyadic (Build_Context, Id_Umul, L, R);
+               Set_Location (N, Expr);
+               return Create_Value_Net
+                 (N, Create_Vec_Type_By_Length (W, Left.Typ.Vec_El));
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
             declare
                L : constant Net := Get_Net (Left);
