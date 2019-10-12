@@ -513,7 +513,9 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int =>
             --  "-" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Id_Sub);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Sl =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Sub, True);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
@@ -1078,7 +1080,8 @@ package body Synth.Oper is
                end if;
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns =>
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
             declare
                Int_Type : constant Type_Acc :=

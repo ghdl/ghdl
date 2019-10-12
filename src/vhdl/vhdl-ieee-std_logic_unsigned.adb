@@ -184,6 +184,11 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
          else
             --  Monadic function.
             case Get_Identifier (Decl) is
+               when Name_Conv_Integer =>
+                  if Sign = Pkg_Unsigned then
+                     Res :=
+                       Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer;
+                  end if;
                when others =>
                   null;
             end case;
