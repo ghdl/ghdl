@@ -1138,6 +1138,54 @@ package body Synth.Expr is
       end case;
    end Synth_Extract_Dyn_Suffix;
 
+   procedure Synth_Slice_Const_Suffix (Name : Node;
+                                       Pfx_Bnd : Bound_Type;
+                                       L, R : Int64;
+                                       Dir : Iir_Direction;
+                                       El_Wd : Width;
+                                       Res_Bnd : out Bound_Type;
+                                       Off : out Uns32;
+                                       Wd : out Width)
+   is
+      Len : Uns32;
+   begin
+      if Pfx_Bnd.Dir /= Dir then
+         Error_Msg_Synth (+Name, "direction mismatch in slice");
+         Off := 0;
+         Wd := 0;
+         return;
+      end if;
+
+      if not In_Bounds (Pfx_Bnd, Int32 (L))
+        or else not In_Bounds (Pfx_Bnd, Int32 (R))
+      then
+         Error_Msg_Synth (+Name, "index not within bounds");
+         Wd := 0;
+         Off := 0;
+         return;
+      end if;
+
+      case Pfx_Bnd.Dir is
+         when Iir_To =>
+            Len := Uns32 (R - L + 1);
+            Res_Bnd := (Dir => Iir_To,
+                        Wbounds => Pfx_Bnd.Wbounds,
+                        Len => Len,
+                        Left => Int32 (L),
+                        Right => Int32 (R));
+            Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right) * El_Wd;
+         when Iir_Downto =>
+            Len := Uns32 (L - R + 1);
+            Res_Bnd := (Dir => Iir_Downto,
+                        Wbounds => Pfx_Bnd.Wbounds,
+                        Len => Len,
+                        Left => Int32 (L),
+                        Right => Int32 (R));
+            Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right) * El_Wd;
+      end case;
+      Wd := Len * El_Wd;
+   end Synth_Slice_Const_Suffix;
+
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Bnd : Bound_Type;
@@ -1161,54 +1209,38 @@ package body Synth.Expr is
             Right := Synth_Expression_With_Basetype
               (Syn_Inst, Get_Right_Limit (Expr));
             Dir := Get_Direction (Expr);
+         when Iir_Kind_Range_Array_Attribute =>
+            declare
+               Rng : Discrete_Range_Type;
+               W : Width;
+            begin
+               Synth_Discrete_Range (Syn_Inst, Expr, Rng, W);
+               Inp := No_Net;
+               Synth_Slice_Const_Suffix (Name, Pfx_Bnd,
+                                         Rng.Left, Rng.Right, Rng.Dir,
+                                         El_Wd, Res_Bnd, Off, Wd);
+               return;
+            end;
          when others =>
-            Error_Msg_Synth (+Expr, "only range supported for slices");
+            Error_Msg_Synth
+              (+Expr, "only range expression supported for slices");
       end case;
 
-      if Pfx_Bnd.Dir /= Dir then
-         Error_Msg_Synth (+Name, "direction mismatch in slice");
-         Wd := 0;
-         return;
-      end if;
-
       if Is_Const_Val (Left) and then Is_Const_Val (Right) then
-         declare
-            L : constant Int64 := Get_Const_Discrete (Left);
-            R : constant Int64 := Get_Const_Discrete (Right);
-            Len : Uns32;
-         begin
-            Inp := No_Net;
-
-            if not In_Bounds (Pfx_Bnd, Int32 (L))
-              or else not In_Bounds (Pfx_Bnd, Int32 (R))
-            then
-               Error_Msg_Synth (+Name, "index not within bounds");
-               Wd := 0;
-               Off := 0;
-               return;
-            end if;
-
-            case Pfx_Bnd.Dir is
-               when Iir_To =>
-                  Len := Uns32 (R - L + 1);
-                  Res_Bnd := (Dir => Iir_To,
-                              Wbounds => Pfx_Bnd.Wbounds,
-                              Len => Len,
-                              Left => Int32 (L),
-                              Right => Int32 (R));
-                  Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right) * El_Wd;
-               when Iir_Downto =>
-                  Len := Uns32 (L - R + 1);
-                  Res_Bnd := (Dir => Iir_Downto,
-                              Wbounds => Pfx_Bnd.Wbounds,
-                              Len => Len,
-                              Left => Int32 (L),
-                              Right => Int32 (R));
-                  Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right) * El_Wd;
-            end case;
-            Wd := Len * El_Wd;
-         end;
+         Inp := No_Net;
+         Synth_Slice_Const_Suffix
+           (Name, Pfx_Bnd,
+            Get_Const_Discrete (Left), Get_Const_Discrete (Right), Dir,
+            El_Wd, Res_Bnd, Off, Wd);
       else
+         if Pfx_Bnd.Dir /= Dir then
+            Error_Msg_Synth (+Name, "direction mismatch in slice");
+            Inp := No_Net;
+            Off := 0;
+            Wd := 0;
+            return;
+         end if;
+
          if Is_Const (Left) or else Is_Const (Right) then
             Error_Msg_Synth
               (+Name, "left and right bounds of a slice must be "
