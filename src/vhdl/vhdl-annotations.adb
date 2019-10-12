@@ -416,8 +416,10 @@ package body Vhdl.Annotations is
             begin
                for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  Annotate_Anonymous_Type_Definition
-                    (Block_Info, Get_Type (El));
+                  if Get_Subtype_Indication (El) /= Null_Iir then
+                     Annotate_Anonymous_Type_Definition
+                       (Block_Info, Get_Type (El));
+                  end if;
                end loop;
             end;
             if Flag_Synthesis then
