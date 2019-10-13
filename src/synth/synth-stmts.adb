@@ -1234,6 +1234,74 @@ package body Synth.Stmts is
       Free_Alternative_Data_Array (Alts);
    end Synth_Selected_Signal_Assignment;
 
+   type Association_Iterator is record
+      Inter : Node;
+      First_Named_Assoc : Node;
+      Next_Assoc : Node;
+   end record;
+
+   procedure Association_Iterate_Init (Iterator : out Association_Iterator;
+                                       Inter_Chain : Node;
+                                       Assoc_Chain : Node) is
+   begin
+      Iterator := (Inter => Inter_Chain,
+                   First_Named_Assoc => Null_Node,
+                   Next_Assoc => Assoc_Chain);
+   end Association_Iterate_Init;
+
+   procedure Association_Iterate_Next (Iterator : in out Association_Iterator;
+                                       Inter : out Node;
+                                       Assoc : out Node)
+   is
+      Formal : Node;
+   begin
+      Inter := Iterator.Inter;
+      if Inter = Null_Node then
+         --  End of iterator.
+         Assoc := Null_Node;
+         return;
+      else
+         --  Advance to the next interface for the next call.
+         Iterator.Inter := Get_Chain (Iterator.Inter);
+      end if;
+
+      if Iterator.First_Named_Assoc = Null_Node then
+         Assoc := Iterator.Next_Assoc;
+         if Assoc = Null_Node then
+            --  No more association: open association.
+            return;
+         end if;
+         Formal := Get_Formal (Assoc);
+         if Formal = Null_Node then
+            --  Association by position.
+            --  Update for the next call.
+            Iterator.Next_Assoc := Get_Chain (Assoc);
+            return;
+         end if;
+         Iterator.First_Named_Assoc := Assoc;
+      end if;
+
+      --  Search by name.
+      Assoc := Iterator.First_Named_Assoc;
+      while Assoc /= Null_Node loop
+         Formal := Get_Formal (Assoc);
+         pragma Assert (Formal /= Null_Node);
+         Formal := Get_Interface_Of_Formal (Formal);
+         if Formal = Inter then
+            --  Found.
+            --  Optimize in case assocs are in order.
+            if Assoc = Iterator.First_Named_Assoc then
+               Iterator.First_Named_Assoc := Get_Chain (Assoc);
+            end if;
+            return;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      --  Not found: open association.
+      return;
+   end Association_Iterate_Next;
+
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
@@ -1244,34 +1312,41 @@ package body Synth.Stmts is
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
-      Assoc_Inter : Node;
       Actual : Node;
       Val : Value_Acc;
       Nbr_Inout : Natural;
+      Iterator : Association_Iterator;
    begin
       Set_Instance_Const (Subprg_Inst, True);
 
       Nbr_Inout := 0;
-      Assoc := Assoc_Chain;
-      Assoc_Inter := Inter_Chain;
-      while Is_Valid (Assoc) loop
-         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+      --  Process in INTER order.
+      Association_Iterate_Init (Iterator, Inter_Chain, Assoc_Chain);
+      loop
+         Association_Iterate_Next (Iterator, Inter, Assoc);
+         exit when Inter = Null_Node;
+
          Inter_Type := Get_Value_Type (Caller_Inst, Get_Type (Inter));
 
          case Iir_Parameter_Modes (Get_Mode (Inter)) is
             when Iir_In_Mode =>
-               case Get_Kind (Assoc) is
-                  when Iir_Kind_Association_Element_Open =>
-                     Actual := Get_Default_Value (Inter);
-                     Val := Synth_Expression_With_Type
-                       (Subprg_Inst, Actual, Inter_Type);
-                  when Iir_Kind_Association_Element_By_Expression =>
-                     Actual := Get_Actual (Assoc);
-                     Val := Synth_Expression_With_Type
-                       (Caller_Inst, Actual, Inter_Type);
-                  when others =>
-                     raise Internal_Error;
-               end case;
+               if Assoc = Null_Node
+                 or else Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
+               then
+                  Actual := Get_Default_Value (Inter);
+                  Val := Synth_Expression_With_Type
+                    (Subprg_Inst, Actual, Inter_Type);
+               else
+                  case Get_Kind (Assoc) is
+                     when Iir_Kind_Association_Element_By_Expression =>
+                        Actual := Get_Actual (Assoc);
+                        Val := Synth_Expression_With_Type
+                          (Caller_Inst, Actual, Inter_Type);
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               end if;
             when Iir_Out_Mode | Iir_Inout_Mode =>
                Nbr_Inout := Nbr_Inout + 1;
                Actual := Get_Actual (Assoc);
@@ -1322,8 +1397,6 @@ package body Synth.Stmts is
             when Iir_Kind_Interface_File_Declaration =>
                raise Internal_Error;
          end case;
-
-         Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
    end Synth_Subprogram_Association;
 
