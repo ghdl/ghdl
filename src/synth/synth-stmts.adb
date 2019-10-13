@@ -405,8 +405,11 @@ package body Synth.Stmts is
          N := Build_Dyn_Extract
            (Get_Build (Syn_Inst), Get_Net (Obj), Voff, Off, Typ.W);
       else
-         if Off = 0 and then Typ.W = Obj.Typ.W then
-            --  Nothing to do if extracting the whole object.
+         if Off = 0
+           and then Typ.W = Obj.Typ.W
+           and then Typ /= Get_Array_Element (Obj.Typ)
+         then
+            --  Nothing to do if extracting the whole object as a slice.
             return Obj;
          end if;
          N := Build_Extract (Get_Build (Syn_Inst), Get_Net (Obj), Off, Typ.W);
