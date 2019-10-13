@@ -179,6 +179,11 @@ package body Synth.Stmts is
                      Dest_Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Voff, Voff);
                   end if;
+               elsif Dest_Obj.Kind = Value_Const_Array then
+                  Dest_Obj := Dest_Obj.Arr.V
+                    (Iir_Index32 ((Dest_W - Dest_Off) / W));
+                  Dest_Off := 0;
+                  Dest_W := W;
                end if;
             end;
 
