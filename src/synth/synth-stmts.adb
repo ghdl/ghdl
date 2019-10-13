@@ -1925,6 +1925,10 @@ package body Synth.Stmts is
 
       --  Handle the condition as an if.
       Cond := Get_Condition_Clause (Stmt);
+      if Cond = Null_Node then
+         Error_Msg_Synth (+Stmt, "expect wait condition");
+         return;
+      end if;
       Cond_Val := Synth_Expression (C.Inst, Cond);
 
       Push_Phi;
