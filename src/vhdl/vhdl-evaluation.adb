@@ -647,6 +647,9 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_Bit_Not =>
             return Build_Enumeration (Get_Enum_Pos (Operand) = 0, Orig);
 
+         when Iir_Predefined_Bit_Condition =>
+            return Build_Enumeration (Get_Enum_Pos (Operand) = 1, Orig);
+
          when Iir_Predefined_TF_Array_Not =>
             declare
                Lit_Val : Iir;
