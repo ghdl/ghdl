@@ -238,6 +238,32 @@ package body Synth.Oper is
          return Create_Value_Net (N, Boolean_Type);
       end Synth_Compare;
 
+      function Synth_Compare_Array (Id, Id_Eq : Compare_Module_Id)
+                                   return Value_Acc
+      is
+         pragma Unreferenced (Id_Eq);
+         N : Net;
+      begin
+         if Left.Typ.Kind = Type_Vector then
+            Warning_Msg_Synth
+              (+Expr, "comparing non-numeric vector is unexpected");
+            if Left.Typ.W = Right.Typ.W then
+               N := Build_Compare
+                 (Get_Build (Syn_Inst), Id, Get_Net (Left), Get_Net (Right));
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Boolean_Type);
+            elsif Left.Typ.W < Right.Typ.W then
+               --  TODO: truncate right, compare using id_eq.
+               raise Internal_Error;
+            else
+               --  TODO: truncate left, compare using id.
+               raise Internal_Error;
+            end if;
+         else
+            raise Internal_Error;
+         end if;
+      end Synth_Compare_Array;
+
       function Synth_Compare_Uns_Nat (Id : Compare_Module_Id)
                                      return Value_Acc
       is
@@ -484,13 +510,9 @@ package body Synth.Oper is
             end if;
             return Synth_Compare (Id_Ne);
          when Iir_Predefined_Array_Greater =>
-            --  TODO: check size, non-vector.
-            --  TODO: that's certainly not the correct operator.
-            if Left.Typ.Kind = Type_Vector then
-               return Synth_Compare (Id_Ugt);
-            else
-               raise Internal_Error;
-            end if;
+            return Synth_Compare_Array (Id_Ugt, Id_Uge);
+         when Iir_Predefined_Array_Less =>
+            return Synth_Compare_Array (Id_Ult, Id_Ule);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
@@ -822,6 +844,16 @@ package body Synth.Oper is
                return Create_Value_Discrete
                  (Left.Scal / Right.Scal,
                   Get_Value_Type (Syn_Inst, Get_Type (Expr)));
+            else
+               Error_Msg_Synth (+Expr, "non-constant division not supported");
+               return null;
+            end if;
+
+         when Iir_Predefined_Floating_Div =>
+            if Is_Const (Left) and then Is_Const (Right) then
+               return Create_Value_Float
+                 (Left.Fp / Right.Fp,
+                  Get_Value_Type (Syn_Inst, Get_Type (Imp)));
             else
                Error_Msg_Synth (+Expr, "non-constant division not supported");
                return null;
