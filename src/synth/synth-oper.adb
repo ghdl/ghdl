@@ -956,7 +956,21 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
             return Synth_Vec_Reduce_Monadic(Id_Red_Or);
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
-            return Operand;
+            if Operand.Typ.Kind = Type_Logic
+              and then Operand.Kind = Value_Discrete
+            then
+               --  Constant std_logic: need to convert.
+               declare
+                  Val : Uns32;
+                  Zx : Uns32;
+               begin
+                  From_Std_Logic (Operand.Scal, Val, Zx);
+                  return Create_Value_Discrete
+                    (Boolean'Pos (Val = 1 and Zx = 0), Boolean_Type);
+               end;
+            else
+               return Operand;
+            end if;
          when Iir_Predefined_Integer_Negation =>
             if Is_Const (Operand) then
                return Create_Value_Discrete (-Operand.Scal, Operand.Typ);

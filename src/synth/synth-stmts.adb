@@ -405,6 +405,7 @@ package body Synth.Stmts is
          N := Build_Dyn_Extract
            (Get_Build (Syn_Inst), Get_Net (Obj), Voff, Off, Typ.W);
       else
+         pragma Assert (not Is_Const (Obj));
          if Off = 0
            and then Typ.W = Obj.Typ.W
            and then Typ /= Get_Array_Element (Obj.Typ)

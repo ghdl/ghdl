@@ -1541,6 +1541,10 @@ package body Synth.Expr is
             begin
                Synth_Assignment_Prefix (Syn_Inst, Expr,
                                         Obj, Off, Voff, Rdwd, Typ);
+               if Voff = No_Net and then Is_Const (Obj) then
+                  pragma Assert (Off = 0);
+                  return Obj;
+               end if;
                return Synth_Read_Memory (Syn_Inst, Obj, Off, Voff, Typ, Expr);
             end;
          when Iir_Kind_Selected_Element =>
