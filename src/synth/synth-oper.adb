@@ -457,7 +457,8 @@ package body Synth.Oper is
          when Iir_Predefined_Enum_Less_Equal =>
             return Synth_Compare (Id_Ult);
 
-         when Iir_Predefined_Array_Equality =>
+         when Iir_Predefined_Array_Equality
+            | Iir_Predefined_Record_Equality =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete
                  (Boolean'Pos (Is_Equal (Left, Right)), Boolean_Type);
@@ -469,7 +470,8 @@ package body Synth.Oper is
                return Create_Value_Discrete (0, Boolean_Type);
             end if;
             return Synth_Compare (Id_Eq);
-         when Iir_Predefined_Array_Inequality =>
+         when Iir_Predefined_Array_Inequality
+            | Iir_Predefined_Record_Inequality =>
             if Is_Const (Left) and then Is_Const (Right) then
                return Create_Value_Discrete
                  (Boolean'Pos (not Is_Equal (Left, Right)), Boolean_Type);
