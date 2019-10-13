@@ -915,9 +915,8 @@ package body Synth.Insts is
       --  Remove unused gates.  This is not only an optimization but also
       --  a correctness point: there might be some unsynthesizable gates, like
       --  the one created for 'rising_egde (clk) and not rst'.
-      if not Flags.Flag_Debug_Nocleanup then
-         Netlists.Cleanup.Remove_Unconnected_Instances
-           (Get_Instance_Module (Syn_Inst));
+      if not Synth.Flags.Flag_Debug_Nocleanup then
+         Netlists.Cleanup.Remove_Unconnected_Instances (Inst.M);
       end if;
    end Synth_Instance;
 
