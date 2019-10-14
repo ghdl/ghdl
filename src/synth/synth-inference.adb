@@ -364,8 +364,14 @@ package body Synth.Inference is
       --  keep the previous value if the condition is false.  Add the mux
       --  for it.
       if Enable /= No_Net then
-         Data := Build_Mux2 (Ctxt, Enable, Prev_Val, Data);
-         Copy_Location (Data, Enable);
+         declare
+            Prev : Net;
+         begin
+            Prev := Build2_Extract (Ctxt, Prev_Val, Off, Get_Width (Data));
+
+            Data := Build_Mux2 (Ctxt, Enable, Prev, Data);
+            Copy_Location (Data, Enable);
+         end;
       end if;
 
       --  Create the FF.
@@ -529,6 +535,7 @@ package body Synth.Inference is
       Add_Conc_Assign (Wid, Val, Off, Stmt);
    end Infere_Latch;
 
+   --  Note: PREV_VAL is the wire gate, so with full width and no offset.
    procedure Infere (Ctxt : Context_Acc;
                      Wid : Wire_Id;
                      Val : Net;
