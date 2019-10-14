@@ -148,7 +148,7 @@ package body Synth.Inference is
       end if;
    end Find_Longest_Loop;
 
-   procedure Extract_Clock_And (Inst : Instance)
+   procedure Extract_Clock_And (Ctxt : Context_Acc; Inst : Instance)
    is
    begin
       pragma Assert (Get_Id (Inst) = Id_And);
@@ -162,7 +162,7 @@ package body Synth.Inference is
             when Id_Edge =>
                null;
             when Id_And =>
-               Extract_Clock_And (Inst0);
+               Extract_Clock_And (Ctxt, Inst0);
 
                --  If we have:       AND      convert to:     AND
                --                    / \                      / \
@@ -176,20 +176,28 @@ package body Synth.Inference is
                begin
                   if Get_Id (Inst3) = Id_Edge then
                      declare
+                        Can_Rotate : constant Boolean :=
+                          Has_One_Connection (N0);
                         I2 : constant Input := Get_Input (Inst0, 1);
                         N2 : constant Net := Get_Driver (I2);
                         I1 : constant Input := Get_Input (Inst, 1);
                         N1 : constant Net := Get_Driver (I1);
+                        N4 : Net;
                      begin
                         Disconnect (I0);
-                        Disconnect (I2);
                         Disconnect (I1);
-                        Disconnect (I3);
-
                         Connect (I0, N3);
-                        Connect (I1, N0);
-                        Connect (I3, N2);
-                        Connect (I2, N1);
+                        if Can_Rotate then
+                           Disconnect (I2);
+                           Disconnect (I3);
+
+                           Connect (I1, N0);
+                           Connect (I3, N2);
+                           Connect (I2, N1);
+                        else
+                           N4 := Build_Dyadic (Ctxt, Id_And, N2, N1);
+                           Connect (I1, N4);
+                        end if;
                      end;
                   end if;
                end;
@@ -216,7 +224,7 @@ package body Synth.Inference is
                   Connect (I0, N1);
                end;
             when Id_And =>
-               Extract_Clock_And (Inst0);
+               Extract_Clock_And (Ctxt, Inst0);
 
                --  If we have:       AND      convert to:     AND
                --                    / \                      / \
@@ -229,14 +237,22 @@ package body Synth.Inference is
                begin
                   if Get_Id (Get_Net_Parent (N3)) = Id_Edge then
                      declare
+                        Can_Rotate : constant Boolean :=
+                          Has_One_Connection (N0);
                         I1 : constant Input := Get_Input (Inst, 0);
                         N1 : constant Net := Get_Driver (I1);
+                        N4 : Net;
                      begin
                         Disconnect (I3);
                         Disconnect (I1);
-
                         Connect (I1, N3);
-                        Connect (I3, N1);
+                        if Can_Rotate then
+                           Connect (I3, N1);
+                        else
+                           N4 := Build_Dyadic
+                             (Ctxt, Id_And, N1, Get_Input_Net (Inst0, 1));
+                           Connect (I3, N4);
+                        end if;
                      end;
                   end if;
                end;
@@ -248,7 +264,8 @@ package body Synth.Inference is
 
    --  Walk the And-net N, and extract clock (posedge/negedge) if found.
    --  ENABLE is N without the clock.
-   procedure Extract_Clock (N : Net; Clk : out Net; Enable : out Net)
+   procedure Extract_Clock
+     (Ctxt : Context_Acc; N : Net; Clk : out Net; Enable : out Net)
    is
       Inst : constant Instance := Get_Net_Parent (N);
    begin
@@ -261,7 +278,7 @@ package body Synth.Inference is
             Clk := Get_Input_Net (Inst, 0);
          when Id_And =>
             --  Canonicalize conditions.
-            Extract_Clock_And (Inst);
+            Extract_Clock_And (Ctxt, Inst);
 
             --  Condition should be in the form: CLK and EXPR
             declare
@@ -653,7 +670,7 @@ package body Synth.Inference is
       else
          --  So there is a logical loop.
          Sel := Get_Mux2_Sel (Last_Mux);
-         Extract_Clock (Get_Driver (Sel), Clk, Enable);
+         Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
          if Clk = No_Net then
             --  No clock -> latch or combinational loop
             Infere_Latch (Ctxt, Wid, Val, Off, Prev_Val, Stmt);
