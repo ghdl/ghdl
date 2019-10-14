@@ -131,8 +131,12 @@ package body Netlists.Dump is
    is
       Desc : constant Param_Desc := Get_Param_Desc (Inst, Idx);
    begin
-      Dump_Name (Desc.Name);
-      Put ('=');
+      if Desc.Name /= No_Sname then
+         --  Const_Bit/Log gates have anonymous parameters.
+         Dump_Name (Desc.Name);
+         Put ('=');
+      end if;
+
       case Desc.Typ is
          when Param_Invalid =>
             Put ("invalid");
