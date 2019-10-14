@@ -148,6 +148,104 @@ package body Synth.Inference is
       end if;
    end Find_Longest_Loop;
 
+   procedure Extract_Clock_And (Inst : Instance)
+   is
+   begin
+      pragma Assert (Get_Id (Inst) = Id_And);
+
+      declare
+         I0 : constant Input := Get_Input (Inst, 0);
+         N0 : constant Net := Get_Driver (I0);
+         Inst0 : constant Instance := Get_Net_Parent (N0);
+      begin
+         case Get_Id (Inst0) is
+            when Id_Edge =>
+               null;
+            when Id_And =>
+               Extract_Clock_And (Inst0);
+
+               --  If we have:       AND      convert to:     AND
+               --                    / \                      / \
+               --                  N1  AND0       ==>     AND0   EDGE
+               --                      /  \               /  \
+               --                     N2  EDGE           N1   N2
+               declare
+                  I3 : constant Input := Get_Input (Inst0, 0);
+                  N3 : constant Net := Get_Driver (I3);
+                  Inst3 : constant Instance := Get_Net_Parent (N3);
+               begin
+                  if Get_Id (Inst3) = Id_Edge then
+                     declare
+                        I2 : constant Input := Get_Input (Inst0, 1);
+                        N2 : constant Net := Get_Driver (I2);
+                        I1 : constant Input := Get_Input (Inst, 1);
+                        N1 : constant Net := Get_Driver (I1);
+                     begin
+                        Disconnect (I0);
+                        Disconnect (I2);
+                        Disconnect (I1);
+                        Disconnect (I3);
+
+                        Connect (I0, N3);
+                        Connect (I1, N0);
+                        Connect (I3, N2);
+                        Connect (I2, N1);
+                     end;
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+      end;
+
+      declare
+         I0 : constant Input := Get_Input (Inst, 1);
+         N0 : constant Net := Get_Driver (I0);
+         Inst0 : constant Instance := Get_Net_Parent (N0);
+      begin
+         case Get_Id (Inst0) is
+            when Id_Edge =>
+               --  Swap inputs 0 and 1.
+               declare
+                  I1 : constant Input := Get_Input (Inst, 0);
+                  N1 : constant Net := Get_Driver (I1);
+               begin
+                  Disconnect (I0);
+                  Disconnect (I1);
+                  Connect (I1, N0);
+                  Connect (I0, N1);
+               end;
+            when Id_And =>
+               Extract_Clock_And (Inst0);
+
+               --  If we have:       AND      convert to:     AND
+               --                    / \                      / \
+               --                 AND0  N1     ==>         AND0  EDGE
+               --                 /  \                     /  \
+               --                N2  EDGE                N2   N1
+               declare
+                  I3 : constant Input := Get_Input (Inst0, 0);
+                  N3 : constant Net := Get_Driver (I3);
+               begin
+                  if Get_Id (Get_Net_Parent (N3)) = Id_Edge then
+                     declare
+                        I1 : constant Input := Get_Input (Inst, 0);
+                        N1 : constant Net := Get_Driver (I1);
+                     begin
+                        Disconnect (I3);
+                        Disconnect (I1);
+
+                        Connect (I1, N3);
+                        Connect (I3, N1);
+                     end;
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+      end;
+   end Extract_Clock_And;
+
    --  Walk the And-net N, and extract clock (posedge/negedge) if found.
    --  ENABLE is N without the clock.
    procedure Extract_Clock (N : Net; Clk : out Net; Enable : out Net)
@@ -162,9 +260,10 @@ package body Synth.Inference is
             --  Get rid of the edge gate, just return the signal.
             Clk := Get_Input_Net (Inst, 0);
          when Id_And =>
-            --  Assume the condition is canonicalized, ie of the form:
-            --  CLK and EXPR
-            --  EXPR and CLK
+            --  Canonicalize conditions.
+            Extract_Clock_And (Inst);
+
+            --  Condition should be in the form: CLK and EXPR
             declare
                I0 : constant Net := Get_Input_Net (Inst, 0);
                Inst0 : constant Instance := Get_Net_Parent (I0);
@@ -176,20 +275,6 @@ package body Synth.Inference is
                   --  output may be used by other nets.
                   Clk := Get_Input_Net (Inst0, 0);
                   Enable := Get_Input_Net (Inst, 1);
-                  return;
-               end if;
-            end;
-            declare
-               I1 : constant Net := Get_Input_Net (Inst, 1);
-               Inst1 : constant Instance := Get_Net_Parent (I1);
-            begin
-               if Get_Id (Inst1) = Id_Edge then
-                  --  INST is clearly not synthesizable (boolean operation on
-                  --  an edge).  Will be removed at the end by
-                  --  remove_unused_instances.  Do not remove it now as its
-                  --  output may be used by other nets.
-                  Clk := Get_Input_Net (Inst1, 0);
-                  Enable := Get_Input_Net (Inst, 0);
                   return;
                end if;
             end;
