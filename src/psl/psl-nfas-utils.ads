@@ -33,6 +33,10 @@ package PSL.NFAs.Utils is
    --  N must be a boolean expression.
    function Has_EOS (N : Node) return Boolean;
 
+   --  Ensure there is an edge from init state to itself, for the implicit
+   --  [*] of cover directive.
+   procedure Set_Init_Loop (N : NFA);
+
    --  Raise Program_Error if N is not internally coherent.
    procedure Check_NFA (N : NFA);
 end PSL.NFAs.Utils;

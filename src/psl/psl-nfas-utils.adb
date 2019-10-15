@@ -347,4 +347,30 @@ package body PSL.NFAs.Utils is
       end case;
    end Has_EOS;
 
+   procedure Set_Init_Loop (N : NFA)
+   is
+      Start : constant NFA_State := Get_Start_State (N);
+      E : NFA_Edge;
+      Expr : Node;
+   begin
+      --  Look for existing edge.
+      E := Get_First_Src_Edge (Start);
+      while E /= No_Edge loop
+         if Get_Edge_Dest (E) = Start then
+            Expr := Get_Edge_Expr (E);
+            if Get_Kind (Expr) = N_True then
+               return;
+            end if;
+            Expr := Create_Node (N_True);
+            Set_Edge_Expr (E, Expr);
+            return;
+         end if;
+         E := Get_Next_Src_Edge (E);
+      end loop;
+
+      --  No existing edge.  Create one.
+      Expr := Create_Node (N_True);
+      Add_Edge (Start, Start, Expr);
+   end Set_Init_Loop;
+
 end PSL.NFAs.Utils;

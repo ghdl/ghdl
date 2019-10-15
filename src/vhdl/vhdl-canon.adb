@@ -1795,6 +1795,13 @@ package body Vhdl.Canon is
 
       --  Generate the NFA.
       Fa := PSL.Build.Build_SERE_FA (Seq);
+
+      --  IEEE1850-2005 PSL 7.1.6
+      --  cover {r} is semantically equivalent to cover {[*]; r}.  That is,
+      --  there is an implicit [*] starting the sequence.
+      if Get_Kind (Stmt) = Iir_Kind_Psl_Cover_Directive then
+         PSL.NFAs.Utils.Set_Init_Loop (Fa);
+      end if;
       Set_PSL_NFA (Stmt, Fa);
 
       Canon_Psl_Clocked_NFA (Stmt);
