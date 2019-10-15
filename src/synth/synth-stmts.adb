@@ -2591,6 +2591,8 @@ package body Synth.Stmts is
                Synth_Psl_Assert_Directive (Syn_Inst, Item);
             when Iir_Kind_Psl_Assume_Directive =>
                Synth_Psl_Assume_Directive (Syn_Inst, Item);
+            when Iir_Kind_Psl_Restrict_Directive =>
+               Synth_Psl_Restrict_Directive (Syn_Inst, Item);
             when Iir_Kind_Psl_Cover_Directive =>
                Synth_Psl_Cover_Directive (Syn_Inst, Item);
             when others =>

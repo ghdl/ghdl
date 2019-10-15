@@ -9836,6 +9836,10 @@ package body Vhdl.Parse is
                Item := Parse_Psl_Assume_Directive (True);
             when Tok_Assert =>
                Item := Parse_Psl_Assert_Directive (True);
+            when Tok_Restrict =>
+               Item := Parse_Psl_Restrict_Directive (True);
+            when Tok_Cover =>
+               Item := Parse_Psl_Cover_Directive (True);
             when others =>
                exit;
          end case;

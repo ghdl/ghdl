@@ -980,6 +980,10 @@ package body Vhdl.Sem_Psl is
                Item := Sem_Psl_Assert_Directive (Item, False);
             when Iir_Kind_Psl_Assume_Directive =>
                Sem_Psl_Assume_Directive (Item);
+            when Iir_Kind_Psl_Restrict_Directive =>
+               Sem_Psl_Restrict_Directive (Item);
+            when Iir_Kind_Psl_Cover_Directive =>
+               Sem_Psl_Cover_Directive (Item);
             when others =>
                Error_Kind ("sem_psl_verification_unit", Item);
          end case;
