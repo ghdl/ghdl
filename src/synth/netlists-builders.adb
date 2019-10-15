@@ -237,9 +237,9 @@ package body Netlists.Builders is
          Id_Dyn_Insert, 3, 1, 1);
       Ctxt.M_Dyn_Insert := Res;
       Outputs := (0 => Create_Output ("o"));
-      Inputs := (0 => Create_Input ("i"),
-                 1 => Create_Input ("v"),
-                 2 => Create_Input ("p"));
+      Inputs := (0 => Create_Input ("v"),
+                 1 => Create_Input ("d"),
+                 2 => Create_Input ("i"));
       Set_Port_Desc (Res, Inputs, Outputs);
       Set_Param_Desc
         (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset")),
@@ -281,6 +281,61 @@ package body Netlists.Builders is
                  1 => Create_Input ("i1"));
       Set_Port_Desc (Res, Inputs, Outputs);
    end Create_Addidx_Module;
+
+   procedure Create_Memory_Modules (Ctxt : Context_Acc)
+   is
+      Outputs : Port_Desc_Array (0 .. 1);
+      Inputs : Port_Desc_Array (0 .. 4);
+      Res : Module;
+   begin
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memory")),
+         Id_Memory, 0, 1, 0);
+      Ctxt.M_Memory := Res;
+      Outputs (0 .. 0) := (0 => Create_Output ("ports"));
+      Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs (0 .. 0));
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memory_init")),
+         Id_Memory_Init, 1, 1, 0);
+      Ctxt.M_Memory_Init := Res;
+      Outputs (0 .. 0) := (0 => Create_Output ("ports"));
+      Inputs (0 .. 0) := (0 => Create_Input ("init"));
+      Set_Port_Desc (Res, Inputs (0 .. 0), Outputs (0 .. 0));
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mem_rd")),
+         Id_Mem_Rd, 2, 2, 0);
+      Ctxt.M_Mem_Rd := Res;
+      Inputs (0 .. 1) := (0 => Create_Input ("pport"),
+                          1 => Create_Input ("addr"));
+      Outputs (0 .. 1) := (0 => Create_Output ("nport"),
+                           1 => Create_Output ("data"));
+      Set_Port_Desc (Res, Inputs (0 .. 1), Outputs (0 .. 1));
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mem_rd_sync")),
+         Id_Mem_Rd_Sync, 3, 2, 0);
+      Ctxt.M_Mem_Rd_Sync := Res;
+      Inputs (0 .. 2) := (0 => Create_Input ("pport"),
+                          1 => Create_Input ("addr"),
+                          2 => Create_Input ("clk"));
+      Outputs (0 .. 1) := (0 => Create_Output ("nport"),
+                           1 => Create_Output ("data"));
+      Set_Port_Desc (Res, Inputs (0 .. 2), Outputs (0 .. 1));
+
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mem_wr_sync")),
+         Id_Mem_Wr_Sync, 5, 1, 0);
+      Ctxt.M_Mem_Wr_Sync := Res;
+      Inputs := (0 => Create_Input ("pport"),
+                 1 => Create_Input ("addr"),
+                 2 => Create_Input ("clk"),
+                 3 => Create_Input ("en"),
+                 4 => Create_Input ("data"));
+      Outputs (0 .. 0) := (0 => Create_Output ("nport"));
+      Set_Port_Desc (Res, Inputs (0 .. 4), Outputs (0 .. 0));
+   end Create_Memory_Modules;
 
    procedure Create_Edge_Module (Ctxt : Context_Acc;
                                  Res : out Module;
@@ -515,6 +570,8 @@ package body Netlists.Builders is
       Create_Dyn_Insert_Module (Res);
       Create_Memidx_Module (Res);
       Create_Addidx_Module (Res);
+
+      Create_Memory_Modules (Res);
 
       Create_Monadic_Module (Design, Res.M_Truncate (Id_Utrunc),
                              Get_Identifier ("utrunc"), Id_Utrunc);
@@ -1012,6 +1069,105 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 1), R);
       return O;
    end Build_Addidx;
+
+   function Build_Memory (Ctxt : Context_Acc; W : Width) return Net
+   is
+      pragma Assert (W > 0);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memory);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      return O;
+   end Build_Memory;
+
+   function Build_Memory_Init (Ctxt : Context_Acc; W : Width; Init : Net)
+                              return Net
+   is
+      pragma Assert (W > 0);
+      pragma Assert (Get_Width (Init) = W);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memory_Init);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      Connect (Get_Input (Inst, 0), Init);
+      return O;
+   end Build_Memory_Init;
+
+   function Build_Mem_Rd (Ctxt : Context_Acc; Pport : Net; Addr : Net)
+                         return Instance
+   is
+      Mem_W : constant Width := Get_Width (Pport);
+      pragma Assert (Mem_W > 0);
+      Addr_W : constant Width := Get_Width (Addr);
+      pragma Assert (Addr_W > 0);
+      Data_W : constant Width := Mem_W / Addr_W;
+      pragma Assert (Data_W * Addr_W = Mem_W);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Rd);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Data_W);
+      Connect (Get_Input (Inst, 0), Pport);
+      Connect (Get_Input (Inst, 1), Addr);
+      return Inst;
+   end Build_Mem_Rd;
+
+   function Build_Mem_Rd_Sync
+     (Ctxt : Context_Acc; Pport : Net; Addr : Net; Clk : Net)
+     return Instance
+   is
+      Mem_W : constant Width := Get_Width (Pport);
+      pragma Assert (Mem_W > 0);
+      Addr_W : constant Width := Get_Width (Addr);
+      pragma Assert (Addr_W > 0);
+      Data_W : constant Width := Mem_W / Addr_W;
+      pragma Assert (Data_W * Addr_W = Mem_W);
+      pragma Assert (Get_Width (Clk) = 1);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Rd_Sync);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Data_W);
+      Connect (Get_Input (Inst, 0), Pport);
+      Connect (Get_Input (Inst, 1), Addr);
+      Connect (Get_Input (Inst, 2), Clk);
+      return Inst;
+   end Build_Mem_Rd_Sync;
+
+   function Build_Mem_Wr_Sync (Ctxt : Context_Acc;
+                               Pport : Net;
+                               Addr : Net;
+                               Clk : Net;
+                               En : Net;
+                               Data : Net) return Instance
+   is
+      Mem_W : constant Width := Get_Width (Pport);
+      pragma Assert (Mem_W > 0);
+      Addr_W : constant Width := Get_Width (Addr);
+      pragma Assert (Addr_W > 0);
+      Data_W : constant Width := Get_Width (Data);
+      pragma Assert (Data_W * Addr_W = Mem_W);
+      pragma Assert (Get_Width (Clk) = 1);
+      pragma Assert (Get_Width (En) = 1);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Wr_Sync);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Data_W);
+      Connect (Get_Input (Inst, 0), Pport);
+      Connect (Get_Input (Inst, 1), Addr);
+      Connect (Get_Input (Inst, 2), Clk);
+      Connect (Get_Input (Inst, 3), En);
+      Connect (Get_Input (Inst, 4), Data);
+      return Inst;
+   end Build_Mem_Wr_Sync;
 
    function Build_Object (Ctxt : Context_Acc; M : Module; W : Width) return Net
    is

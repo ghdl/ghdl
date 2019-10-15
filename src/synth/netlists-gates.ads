@@ -159,6 +159,42 @@ package Netlists.Gates is
    --  OUT := IN0 + IN1, size extension.
    Id_Addidx : constant Module_Id := 72;
 
+   --  Represent a memory with a fixed size.
+   --  This is not a regular gate as it has only one output, PORTS.
+   --  The width of the output is the size (in bits) of the memory.
+   --  The PORTS links to the first read or write port.  There must be only
+   --  one connection.  The order is important as it defines the order of
+   --  actions.
+   --  Outputs: PORTS
+   Id_Memory : constant Module_Id := 73;
+
+   --  Same as Id_Memory but with an initial value.
+   Id_Memory_Init : constant Module_Id := 74;
+
+   --  Asynchronous memory read port.
+   --  Inputs:  PPORT  (previous memory port)
+   --           ADDR
+   --  Outputs: NPORT  (next memory port)
+   --           DATA
+   Id_Mem_Rd : constant Module_Id := 75;
+
+   --  Synchronous memory read port.
+   --  Inputs:  PPORT (previous memory port)
+   --           ADDR
+   --           CLK
+   --  Outputs: NPORT (next memory port)
+   --           DATA
+   Id_Mem_Rd_Sync : constant Module_Id := 76;
+
+   --  Synchronous memory write port
+   --  Inputs:  PPORT (previous memory port)
+   --           ADDR
+   --           CLK
+   --           EN
+   --           DATA
+   --  Outputs: NPORT (next memory port)
+   Id_Mem_Wr_Sync : constant Module_Id := 77;
+
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before
    --  the detector.

@@ -139,6 +139,21 @@ package Netlists.Builders is
       I : Net; Step : Uns32; Max : Uns32; W : Width) return Net;
    function Build_Addidx (Ctxt : Context_Acc; L, R : Net) return Net;
 
+   function Build_Memory (Ctxt : Context_Acc; W : Width) return Net;
+   function Build_Memory_Init (Ctxt : Context_Acc; W : Width; Init : Net)
+                              return Net;
+   function Build_Mem_Rd (Ctxt : Context_Acc; Pport : Net; Addr : Net)
+                         return Instance;
+   function Build_Mem_Rd_Sync
+     (Ctxt : Context_Acc; Pport : Net; Addr : Net; Clk : Net)
+     return Instance;
+   function Build_Mem_Wr_Sync (Ctxt : Context_Acc;
+                               Pport : Net;
+                               Addr : Net;
+                               Clk : Net;
+                               En : Net;
+                               Data : Net) return Instance;
+
    function Build_Output (Ctxt : Context_Acc; W : Width) return Net;
    function Build_Signal (Ctxt : Context_Acc; Name : Sname; W : Width)
                          return Net;
@@ -209,6 +224,11 @@ private
       M_Dyn_Insert : Module;
       M_Memidx : Module;
       M_Addidx : Module;
+      M_Memory : Module;
+      M_Memory_Init : Module;
+      M_Mem_Rd : Module;
+      M_Mem_Rd_Sync : Module;
+      M_Mem_Wr_Sync : Module;
       M_Assert : Module;
       M_Assume : Module;
       M_Cover : Module;
