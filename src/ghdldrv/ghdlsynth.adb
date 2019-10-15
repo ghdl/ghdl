@@ -145,7 +145,6 @@ package body Ghdlsynth is
       --  Will elaborate.
       Flags.Flag_Elaborate := True;
       Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;
-      Flags.Flag_Only_Elab_Warnings := True;
 
       --  Load content only if there are no files.
       Libraries.Load_Work_Library (E_Opt >= Args'First);
