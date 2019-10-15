@@ -2218,17 +2218,22 @@ package body Synth.Stmts is
       Res : Net;
    begin
       D_Arr := new Net_Array'(0 .. Nbr_States - 1 => No_Net);
+
+      --  For each state:
       S := Get_First_State (NFA);
       while S /= No_State loop
          S_Num := Get_State_Label (S);
          I := Build_Extract_Bit (Build_Context, States, Uns32 (S_Num));
 
+         --  For each edge:
          E := Get_First_Src_Edge (S);
          while E /= No_Edge loop
+            --  Edge condition.
             Cond := Build_Dyadic
               (Build_Context, Netlists.Gates.Id_And,
                I, Synth_PSL_Expression (Syn_Inst, Get_Edge_Expr (E)));
 
+            --  Reverse order for final concatenation.
             D_Num := Nbr_States - 1 - Get_State_Label (Get_Edge_Dest (E));
             if D_Arr (D_Num) = No_Net then
                D_Arr (D_Num) := Cond;
@@ -2287,9 +2292,7 @@ package body Synth.Stmts is
         Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
       Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
 
-      --  The NFA state is correct as long as there is a 1.
-      return Build_Reduce (Build_Context,
-                           Netlists.Gates.Id_Red_Or, Next_States);
+      return Next_States;
    end Synth_Psl_Sequence_Directive;
 
    procedure Synth_Psl_Restrict_Directive
@@ -2303,6 +2306,9 @@ package body Synth.Stmts is
       --  (If we assume on States, then the first cycle is ignored).
       Res := Synth_Psl_Sequence_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
+         --  The restriction holds as long as there is a 1 in the NFA state.
+         Res := Build_Reduce (Build_Context,
+                              Netlists.Gates.Id_Red_Or, Res);
          Inst := Build_Assume (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
@@ -2311,14 +2317,19 @@ package body Synth.Stmts is
    procedure Synth_Psl_Cover_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      use PSL.NFAs;
       Res : Net;
       Inst : Instance;
+      S_Num : Int32;
    begin
       --  Build cover gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
       Res := Synth_Psl_Sequence_Directive (Syn_Inst, Stmt);
       if Res /= No_Net then
+         --  The sequence is covered as soon as the final state is reached.
+         S_Num := Get_State_Label (Get_Final_State (Get_PSL_NFA (Stmt)));
+         Res := Build_Extract_Bit (Get_Build (Syn_Inst), Res, Uns32 (S_Num));
          Inst := Build_Cover (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
