@@ -160,7 +160,9 @@ package body Ghdlsynth is
             pragma Assert (Arg'First = 1);
          begin
             if Arg'Last > 7 and then Arg (1 .. 7) = "--work=" then
-               if not Libraries.Decode_Work_Option (Arg, True, False) then
+               if Libraries.Decode_Work_Option (Arg) then
+                  Libraries.Load_Work_Library (True);
+               else
                   return Null_Iir;
                end if;
             else

@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 
 with Simple_IO;
-with Name_Table;
 with Errorout; use Errorout;
 with Libraries;
 with Std_Names;
@@ -139,18 +138,9 @@ package body Options is
       elsif Opt'Length > 2 and then Opt (1 .. 2) = "-W" then
          return Option_Warning (Opt (3 .. Opt'Last), True);
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--work=" then
-         declare
-            use Name_Table;
-            Name : String (1 .. Opt'Last - 8 + 1);
-            Err : Boolean;
-         begin
-            Name := Opt (8 .. Opt'Last);
-            Vhdl.Scanner.Convert_Identifier (Name, Err);
-            if Err then
-               return Option_Err;
-            end if;
-            Libraries.Work_Library_Name := Get_Identifier (Name);
-         end;
+         if not Libraries.Decode_Work_Option (Opt) then
+            return Option_Err;
+         end if;
       elsif Opt = "-C" or else Opt = "--mb-comments" then
          Mb_Comment := True;
       elsif Opt = "--force-analysis" then

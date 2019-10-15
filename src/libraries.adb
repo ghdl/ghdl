@@ -1642,8 +1642,7 @@ package body Libraries is
       return Libraries_Chain;
    end Get_Libraries_Chain;
 
-   function Decode_Work_Option
-     (Opt : String; Immediate : Boolean; Load_Lib : Boolean) return Boolean
+   function Decode_Work_Option (Opt : String) return Boolean
    is
       pragma Assert (Opt'First = 1);
       Name : String (1 .. Opt'Last - 8 + 1);
@@ -1655,9 +1654,6 @@ package body Libraries is
          return False;
       end if;
       Libraries.Work_Library_Name := Get_Identifier (Name);
-      if Immediate then
-         Libraries.Load_Work_Library (not Load_Lib);
-      end if;
       return True;
    end Decode_Work_Option;
 end Libraries;
