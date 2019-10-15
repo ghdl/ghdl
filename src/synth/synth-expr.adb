@@ -305,8 +305,9 @@ package body Synth.Expr is
                      Ch : constant Node := Get_Choice_Range (Assoc);
                      Rng : Discrete_Range_Type;
                      Val : Value_Acc;
+                     W_Rng : Width;
                   begin
-                     Rng := Synth_Discrete_Range_Expression (Syn_Inst, Ch);
+                     Synth_Discrete_Range (Syn_Inst, Ch, Rng, W_Rng);
                      Val := Create_Value_Discrete
                        (Rng.Left,
                         Get_Value_Type (Syn_Inst,
