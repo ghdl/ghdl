@@ -694,6 +694,14 @@ package body Libraries is
          end if;
          Work_Library := Std_Library;
       else
+         --  If the library is already known, just switch to it.  This is used
+         --  for --work= option in the middle of files.
+         Work_Library := Vhdl.Utils.Find_Name_In_Chain
+           (Libraries_Chain, Work_Library_Name);
+         if Work_Library /= Null_Iir then
+            return;
+         end if;
+
          Work_Library := Create_Iir (Iir_Kind_Library_Declaration);
          Set_Location (Work_Library, Library_Location);
          Set_Library_Directory (Work_Library, Work_Directory);
@@ -1633,4 +1641,23 @@ package body Libraries is
    begin
       return Libraries_Chain;
    end Get_Libraries_Chain;
+
+   function Decode_Work_Option
+     (Opt : String; Immediate : Boolean; Load_Lib : Boolean) return Boolean
+   is
+      pragma Assert (Opt'First = 1);
+      Name : String (1 .. Opt'Last - 8 + 1);
+      Err : Boolean;
+   begin
+      Name := Opt (8 .. Opt'Last);
+      Vhdl.Scanner.Convert_Identifier (Name, Err);
+      if Err then
+         return False;
+      end if;
+      Libraries.Work_Library_Name := Get_Identifier (Name);
+      if Immediate then
+         Libraries.Load_Work_Library (not Load_Lib);
+      end if;
+      return True;
+   end Decode_Work_Option;
 end Libraries;

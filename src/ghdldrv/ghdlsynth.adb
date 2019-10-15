@@ -147,6 +147,7 @@ package body Ghdlsynth is
       Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;
       Flags.Flag_Only_Elab_Warnings := True;
 
+      --  Load content only if there are no files.
       Libraries.Load_Work_Library (E_Opt >= Args'First);
 
       --  Do not canon concurrent statements.
@@ -154,7 +155,18 @@ package body Ghdlsynth is
 
       --  Analyze files (if any)
       for I in Args'First .. E_Opt - 1 loop
-         Design_File := Ghdlcomp.Compile_Analyze_File2 (Args (I).all);
+         declare
+            Arg : String renames Args (I).all;
+            pragma Assert (Arg'First = 1);
+         begin
+            if Arg'Last > 7 and then Arg (1 .. 7) = "--work=" then
+               if not Libraries.Decode_Work_Option (Arg, True, False) then
+                  return Null_Iir;
+               end if;
+            else
+               Design_File := Ghdlcomp.Compile_Analyze_File2 (Arg);
+            end if;
+         end;
       end loop;
       pragma Unreferenced (Design_File);
 
