@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in dff06 dff08; do
+for t in dff05 dff06 dff08; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
