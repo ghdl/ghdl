@@ -642,8 +642,9 @@ package body Synth.Insts is
       Dep_It := List_Iterate (Dep_List);
       while Is_Valid (Dep_It) loop
          Dep := Get_Element (Dep_It);
-         pragma Assert (Get_Kind (Dep) = Iir_Kind_Design_Unit);
-         if not Get_Elab_Flag (Dep) then
+         if Get_Kind (Dep) = Iir_Kind_Design_Unit
+           and then not Get_Elab_Flag (Dep)
+         then
             Set_Elab_Flag (Dep, True);
             Synth_Dependencies (Parent_Inst, Dep);
             Dep_Unit := Get_Library_Unit (Dep);
