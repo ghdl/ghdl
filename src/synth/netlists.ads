@@ -369,6 +369,9 @@ private
    --  instances.
    procedure Extract_Instance (Inst : Instance);
 
+   --  Remove and free the unconnected instance INST.
+   procedure Remove_Instance (Inst : Instance);
+
    type Input is new Uns32;
    No_Input : constant Input := 0;
 

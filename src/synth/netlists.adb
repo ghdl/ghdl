@@ -353,6 +353,38 @@ package body Netlists is
       Inst_Ent.Next_Instance := No_Instance;
    end Extract_Instance;
 
+   function Check_Connected (Inst : Instance) return Boolean
+   is
+      Nbr_Outputs : constant Port_Idx := Get_Nbr_Outputs (Inst);
+      Nbr_Inputs : constant Port_Idx := Get_Nbr_Inputs (Inst);
+   begin
+      --  Check that all outputs are unused.
+      if Nbr_Outputs > 1 then
+         for K in 0 .. Nbr_Outputs - 1 loop
+            if Is_Connected (Get_Output (Inst, K)) then
+               return True;
+            end if;
+         end loop;
+      end if;
+
+      --  First disconnect inputs.
+      if Nbr_Inputs > 0 then
+         for K in 0 .. Nbr_Inputs - 1 loop
+            if Get_Driver (Get_Input (Inst, K)) /= No_Net then
+               return True;
+            end if;
+         end loop;
+      end if;
+
+      return False;
+   end Check_Connected;
+
+   procedure Remove_Instance (Inst : Instance) is
+   begin
+      pragma Assert (not Check_Connected (Inst));
+      Extract_Instance (Inst);
+   end Remove_Instance;
+
    function New_Instance_Internal (Parent : Module;
                                    M : Module;
                                    Name : Sname;
