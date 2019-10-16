@@ -8660,7 +8660,7 @@ package body Vhdl.Parse is
       --  Skip 'cover'
       Scan;
 
-      Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence (True));
+      Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence);
 
       Parse_Psl_Assert_Report_Severity (Res, Flag_Psl);
 
@@ -8679,7 +8679,7 @@ package body Vhdl.Parse is
       --  Skip 'restrict'
       Scan;
 
-      Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence (True));
+      Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence);
 
       --  No more PSL tokens after the sequence.
       Vhdl.Scanner.Flag_Psl := Flag_Psl;

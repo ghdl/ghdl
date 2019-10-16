@@ -758,6 +758,20 @@ package body Vhdl.Sem_Psl is
       Seq := Get_Psl_Sequence (Stmt);
       Seq := Sem_Sequence (Seq);
 
+      --  Expect a pure sequence.
+      case Get_Kind (Seq) is
+         when N_Sequence_Instance
+           |  N_Star_Repeat_Seq
+           |  N_Goto_Repeat_Seq
+           |  N_Plus_Repeat_Seq
+           |  N_Equal_Repeat_Seq
+           |  N_Braced_SERE
+           |  N_Clocked_SERE =>
+            null;
+         when others =>
+            Error_Msg_Sem (+Seq, "sequence expected here");
+      end case;
+
       --  Properties must be clocked.
       Sem_Psl_Directive_Clock (Stmt, Seq);
       Set_Psl_Sequence (Stmt, Seq);

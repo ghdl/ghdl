@@ -127,6 +127,7 @@ package body Vhdl.Parse_Psl is
       return Res;
    end Vhdl_To_Psl;
 
+   function Parse_Psl_Sequence_Or_SERE (Full_Hdl_Expr : Boolean) return Node;
    function Parse_FL_Property (Prio : Priority) return Node;
    function Parse_Parenthesis_Boolean return Node;
    function Parse_Boolean (Parent_Prio : Priority) return Node;
@@ -238,7 +239,7 @@ package body Vhdl.Parse_Psl is
       Kind : Nkind;
       Op_Prio : Priority;
    begin
-      Left := Parse_Psl_Sequence (True);
+      Left := Parse_Psl_Sequence_Or_SERE (True);
       loop
          case Current_Token is
             when Tok_Semi_Colon =>
@@ -303,7 +304,8 @@ package body Vhdl.Parse_Psl is
    end Parse_Braced_SERE;
 
    --  Parse [ Count ] ']'
-   function Parse_Maybe_Count (Kind : Nkind; Seq : Node) return Node is
+   function Parse_Maybe_Count (Kind : Nkind; Seq : Node) return Node
+   is
       N : Node;
    begin
       N := Create_Node_Loc (Kind);
@@ -341,7 +343,8 @@ package body Vhdl.Parse_Psl is
       end if;
    end Parse_Bracket_Range;
 
-   function Parse_Bracket_Number return Node is
+   function Parse_Bracket_Number return Node
+   is
       Res : Node;
    begin
       if Current_Token /= Tok_Left_Bracket then
@@ -359,7 +362,8 @@ package body Vhdl.Parse_Psl is
       end if;
    end Parse_Bracket_Number;
 
-   function Parse_Psl_Sequence (Full_Hdl_Expr : Boolean) return Node is
+   function Parse_Psl_Sequence_Or_SERE (Full_Hdl_Expr : Boolean) return Node
+   is
       Res, N : Node;
    begin
       case Current_Token is
@@ -431,9 +435,45 @@ package body Vhdl.Parse_Psl is
                end if;
                Res := N;
             when others =>
-               return Res;
+               exit;
          end case;
       end loop;
+
+      return Res;
+   end Parse_Psl_Sequence_Or_SERE;
+
+   --  IEEE1850 A.4.7 Sequences
+   --  Sequence ::=
+   --      Sequence_Instance
+   --    | Repeated_SERE
+   --    | Braced_SERE
+   --    | Clocked_SERE
+   function Parse_Psl_Sequence return Node
+   is
+      Res : Node;
+   begin
+      Res := Parse_Psl_Sequence_Or_SERE (True);
+
+      --  May not be a sequence!
+      --  This test is also performed in sem_psl in order to fully handle
+      --  sequence_instance.
+      case Get_Kind (Res) is
+         when N_Star_Repeat_Seq
+           |  N_Goto_Repeat_Seq
+           |  N_Plus_Repeat_Seq
+           |  N_Equal_Repeat_Seq
+           |  N_Braced_SERE
+           |  N_Clocked_SERE =>
+            null;
+         when N_HDL_Expr =>
+            --  Need to be checked later: can be a sequence instance or a
+            --  boolean.
+            null;
+         when others =>
+            Error_Msg_Parse ("sequence expected here");
+      end case;
+
+      return Res;
    end Parse_Psl_Sequence;
 
    --  precond:  '('
@@ -567,7 +607,7 @@ package body Vhdl.Parse_Psl is
          when Tok_Left_Paren =>
             return Parse_Parenthesis_FL_Property;
          when Tok_Left_Curly =>
-            Res := Parse_Psl_Sequence (True);
+            Res := Parse_Psl_Sequence_Or_SERE (True);
             if Get_Kind (Res) = N_Braced_SERE
               and then Current_Token = Tok_Left_Paren
             then
@@ -579,7 +619,7 @@ package body Vhdl.Parse_Psl is
                Res := Tmp;
             end if;
          when others =>
-            Res := Parse_Psl_Sequence (False);
+            Res := Parse_Psl_Sequence_Or_SERE (False);
       end case;
       return Res;
    end Parse_FL_Property_1;
@@ -927,7 +967,7 @@ package body Vhdl.Parse_Psl is
             Set_Property (Res, Parse_Psl_Property);
          when N_Sequence_Declaration
            | N_Endpoint_Declaration =>
-            Set_Sequence (Res, Parse_Psl_Sequence (True));
+            Set_Sequence (Res, Parse_Psl_Sequence);
          when others =>
             raise Internal_Error;
       end case;
