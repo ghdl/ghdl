@@ -68,12 +68,11 @@ package body Dyn_Interning is
       Deallocate (Old_Hash_Table);
    end Expand;
 
-   procedure Get
-     (Inst : in out Instance; Params : Params_Type; Res : out Object_Type)
+   procedure Get_Index
+     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type)
    is
       Hash_Value : Hash_Value_Type;
       Hash_Index : Hash_Value_Type;
-      Idx : Index_Type;
    begin
       --  Check if the package was initialized.
       pragma Assert (Inst.Hash_Table /= null);
@@ -87,7 +86,6 @@ package body Dyn_Interning is
             E : Element_Wrapper renames Inst.Els.Table (Idx);
          begin
             if E.Hash = Hash_Value and then Equal (E.Obj, Params) then
-               Res := E.Obj;
                return;
             end if;
             Idx := E.Next;
@@ -102,14 +100,29 @@ package body Dyn_Interning is
          Hash_Index := Hash_Value and (Inst.Size - 1);
       end if;
 
-      Res := Build (Params);
+      declare
+         Res : Object_Type;
+      begin
+         Res := Build (Params);
 
-      --  Insert.
-      Wrapper_Tables.Append (Inst.Els,
-                             (Hash => Hash_Value,
-                              Next => Inst.Hash_Table (Hash_Index),
-                              Obj => Res));
-      Inst.Hash_Table (Hash_Index) := Wrapper_Tables.Last (Inst.Els);
+         --  Insert.
+         Wrapper_Tables.Append (Inst.Els,
+                                (Hash => Hash_Value,
+                                 Next => Inst.Hash_Table (Hash_Index),
+                                 Obj => Res));
+         Inst.Hash_Table (Hash_Index) := Wrapper_Tables.Last (Inst.Els);
+      end;
+
+      Idx := Wrapper_Tables.Last (Inst.Els);
+   end Get_Index;
+
+   procedure Get
+     (Inst : in out Instance; Params : Params_Type; Res : out Object_Type)
+   is
+      Idx : Index_Type;
+   begin
+      Get_Index (Inst, Params, Idx);
+      Res := Get_By_Index (Inst, Idx);
    end Get;
 
    function Last_Index (Inst : Instance) return Index_Type is

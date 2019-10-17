@@ -47,14 +47,18 @@ package Dyn_Interning is
 
    procedure Free (Inst : in out Instance);
 
+   type Index_Type is new Uns32;
+   No_Index : constant Index_Type := 0;
+   First_Index : constant Index_Type := 1;
+
    --  If there is already an existing object for PARAMS, return it.
    --  Otherwise create it.
    procedure Get
      (Inst : in out Instance; Params : Params_Type; Res : out Object_Type);
 
-   type Index_Type is new Uns32;
-   No_Index : constant Index_Type := 0;
-   First_Index : constant Index_Type := 1;
+   --  Likewise, but return its index.
+   procedure Get_Index
+     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type);
 
    --  Get the number of elements in the table.
    function Last_Index (Inst : Instance) return Index_Type;
