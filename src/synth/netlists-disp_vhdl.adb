@@ -569,6 +569,82 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Disp_Extract;
 
+   procedure Disp_Memory (Mem : Instance)
+   is
+      Ports : constant Net := Get_Output (Mem, 0);
+      Port : Net;
+      Port_Inst : Instance;
+      S : Net;
+      Data_W : Width;
+      Depth : Uns32;
+   begin
+      --  Display a process, with as sensitivity elements:
+      --    * write clocks
+      --    * read address
+      --  As statements:
+      Data_W := 0;
+      Put ("  process (");
+      Port := Ports;
+      loop
+         Port_Inst := Get_Input_Parent (Get_First_Sink (Port));
+         case Get_Id (Port_Inst) is
+            when Id_Mem_Wr_Sync =>
+               S := Get_Input_Net (Port_Inst, 2);
+               Data_W := Get_Width (Get_Input_Net (Port_Inst, 4));
+            when Id_Mem_Rd =>
+               S := Get_Input_Net (Port_Inst, 1);
+               Data_W := Get_Width (Get_Output (Port_Inst, 1));
+            when others =>
+               raise Internal_Error;
+         end case;
+         Disp_Net_Name (S);
+         Port := Get_Output (Port_Inst, 0);
+         if Is_Connected (Port) then
+            Put (", ");
+         else
+            exit;
+         end if;
+      end loop;
+      Put_Line (") is");
+
+      Depth := Get_Width (Ports) / Data_W;
+
+      --  Declare the memory.
+      Disp_Template ("    type \o0_type is array (0 to \n0)" & NL,
+                     Mem, (0 => Depth - 1));
+      Disp_Template ("      of std_logic_vector (\n0 downto 0);" & NL,
+                     Mem, (0 => Data_W - 1));
+      Disp_Template ("    variable \o0 : \o0_type", Mem);
+      if Get_Id (Mem) = Id_Memory_Init then
+         Disp_Template (" := \i0", Mem);
+      end if;
+      Put_Line (";");
+
+      Put_Line ("  begin");
+      Port := Ports;
+      loop
+         Port_Inst := Get_Input_Parent (Get_First_Sink (Port));
+         case Get_Id (Port_Inst) is
+            when Id_Mem_Wr_Sync =>
+               Disp_Template
+                 ("    if rising_edge(\i2) and (\fi3 = '1') then" & NL,
+                  Port_Inst);
+               Disp_Template ("      \o0 (", Mem);
+               Disp_Template ("to_integer (\ui1)) := \i4;" & NL, Port_Inst);
+               Put_Line ("    end if;");
+            when Id_Mem_Rd =>
+               Disp_Template ("    \o1 <= ", Port_Inst);
+               Disp_Template ("\o0", Mem);
+               Disp_Template ("(to_integer (\ui1));" & NL, Port_Inst);
+            when others =>
+               raise Internal_Error;
+         end case;
+         Port := Get_Output (Port_Inst, 0);
+         exit when not Is_Connected (Port);
+      end loop;
+      Put_Line ("  end process;");
+   end Disp_Memory;
+
    procedure Disp_Instance_Inline (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -591,6 +667,12 @@ package body Netlists.Disp_Vhdl is
          end;
       end if;
       case Get_Id (Imod) is
+         when Id_Memory
+           |  Id_Memory_Init =>
+            Disp_Memory (Inst);
+         when Id_Mem_Rd
+           | Id_Mem_Wr_Sync =>
+            null;
          when Id_Output =>
             Disp_Template ("  \o0 <= \i0; -- (output)" & NL, Inst);
          when Id_Signal =>
@@ -938,7 +1020,21 @@ package body Netlists.Disp_Vhdl is
       --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
          Id := Get_Id (Inst);
-         if not Is_Self_Instance (Inst)
+         if Id = Id_Memory or Id = Id_Memory_Init then
+            null;
+         elsif Id = Id_Mem_Wr_Sync then
+            null;
+         elsif Id = Id_Mem_Rd then
+            declare
+               N : constant Net := Get_Output (Inst, 1);
+            begin
+               Put ("  signal ");
+               Disp_Net_Name (N);
+               Put (" : ");
+               Put_Type (Get_Width (N));
+               Put_Line (";");
+            end;
+         elsif not Is_Self_Instance (Inst)
            and then not (Flag_Merge_Lit
                            and then Id in Constant_Module_Id
                            and then not Need_Signal (Inst))
