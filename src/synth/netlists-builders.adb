@@ -1097,43 +1097,40 @@ package body Netlists.Builders is
       return O;
    end Build_Memory_Init;
 
-   function Build_Mem_Rd (Ctxt : Context_Acc; Pport : Net; Addr : Net)
-                         return Instance
-   is
-      Mem_W : constant Width := Get_Width (Pport);
-      pragma Assert (Mem_W > 0);
-      Addr_W : constant Width := Get_Width (Addr);
-      pragma Assert (Addr_W > 0);
-      Data_W : constant Width := Mem_W / Addr_W;
-      pragma Assert (Data_W * Addr_W = Mem_W);
-      Inst : Instance;
-      O : Net;
-   begin
-      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Rd);
-      O := Get_Output (Inst, 0);
-      Set_Width (O, Data_W);
-      Connect (Get_Input (Inst, 0), Pport);
-      Connect (Get_Input (Inst, 1), Addr);
-      return Inst;
-   end Build_Mem_Rd;
-
-   function Build_Mem_Rd_Sync
-     (Ctxt : Context_Acc; Pport : Net; Addr : Net; Clk : Net)
+   function Build_Mem_Rd
+     (Ctxt : Context_Acc; Pport : Net; Addr : Net; Data_W : Width)
      return Instance
    is
       Mem_W : constant Width := Get_Width (Pport);
       pragma Assert (Mem_W > 0);
       Addr_W : constant Width := Get_Width (Addr);
       pragma Assert (Addr_W > 0);
-      Data_W : constant Width := Mem_W / Addr_W;
-      pragma Assert (Data_W * Addr_W = Mem_W);
+      pragma Assert (Data_W * (2**Natural(Addr_W)) >= Mem_W);
+      Inst : Instance;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Rd);
+      Set_Width (Get_Output (Inst, 0), Mem_W);
+      Set_Width (Get_Output (Inst, 1), Data_W);
+      Connect (Get_Input (Inst, 0), Pport);
+      Connect (Get_Input (Inst, 1), Addr);
+      return Inst;
+   end Build_Mem_Rd;
+
+   function Build_Mem_Rd_Sync
+     (Ctxt : Context_Acc; Pport : Net; Addr : Net; Clk : Net; Data_W : Width)
+     return Instance
+   is
+      Mem_W : constant Width := Get_Width (Pport);
+      pragma Assert (Mem_W > 0);
+      Addr_W : constant Width := Get_Width (Addr);
+      pragma Assert (Addr_W > 0);
+      pragma Assert (Data_W * (2**Natural(Addr_W)) >= Mem_W);
       pragma Assert (Get_Width (Clk) = 1);
       Inst : Instance;
-      O : Net;
    begin
       Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Rd_Sync);
-      O := Get_Output (Inst, 0);
-      Set_Width (O, Data_W);
+      Set_Width (Get_Output (Inst, 0), Mem_W);
+      Set_Width (Get_Output (Inst, 1), Data_W);
       Connect (Get_Input (Inst, 0), Pport);
       Connect (Get_Input (Inst, 1), Addr);
       Connect (Get_Input (Inst, 2), Clk);
@@ -1152,7 +1149,7 @@ package body Netlists.Builders is
       Addr_W : constant Width := Get_Width (Addr);
       pragma Assert (Addr_W > 0);
       Data_W : constant Width := Get_Width (Data);
-      pragma Assert (Data_W * Addr_W = Mem_W);
+      pragma Assert (Data_W * (2**Natural(Addr_W)) >= Mem_W);
       pragma Assert (Get_Width (Clk) = 1);
       pragma Assert (Get_Width (En) = 1);
       Inst : Instance;
@@ -1160,7 +1157,7 @@ package body Netlists.Builders is
    begin
       Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Wr_Sync);
       O := Get_Output (Inst, 0);
-      Set_Width (O, Data_W);
+      Set_Width (O, Mem_W);
       Connect (Get_Input (Inst, 0), Pport);
       Connect (Get_Input (Inst, 1), Addr);
       Connect (Get_Input (Inst, 2), Clk);

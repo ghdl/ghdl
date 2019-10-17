@@ -28,6 +28,7 @@ with Std_Names;
 with Netlists; use Netlists;
 with Netlists.Builders;
 with Netlists.Cleanup;
+with Netlists.Memories;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
@@ -918,6 +919,10 @@ package body Synth.Insts is
       --  the one created for 'rising_egde (clk) and not rst'.
       if not Synth.Flags.Flag_Debug_Nocleanup then
          Netlists.Cleanup.Remove_Unconnected_Instances (Inst.M);
+      end if;
+
+      if not Synth.Flags.Flag_Debug_Nomemory then
+         Netlists.Memories.Extract_Memories (Get_Build (Syn_Inst), Inst.M);
       end if;
    end Synth_Instance;
 

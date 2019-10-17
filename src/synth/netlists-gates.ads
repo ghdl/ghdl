@@ -169,6 +169,7 @@ package Netlists.Gates is
    Id_Memory : constant Module_Id := 73;
 
    --  Same as Id_Memory but with an initial value.
+   --  Input: INIT
    Id_Memory_Init : constant Module_Id := 74;
 
    --  Asynchronous memory read port.

@@ -108,6 +108,9 @@ package body Ghdlsynth is
       elsif Option = "-dc" then
          Flag_Debug_Nocleanup := True;
          Res := Option_Ok;
+      elsif Option = "-dm" then
+         Flag_Debug_Nomemory := True;
+         Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;

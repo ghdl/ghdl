@@ -1,4 +1,4 @@
---  Flags for synthesis.
+--  Extract memories.
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -18,10 +18,9 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-package Synth.Flags is
-   Flag_Debug_Noinference : Boolean := False;
+with Netlists.Builders; use Netlists.Builders;
 
-   Flag_Debug_Nocleanup : Boolean := False;
-
-   Flag_Debug_Nomemory : Boolean := True;
-end Synth.Flags;
+package Netlists.Memories is
+   --  Try to convert dyn_insert/dyn_extract to memory ports.
+   procedure Extract_Memories (Ctxt : Context_Acc; M : Module);
+end Netlists.Memories;
