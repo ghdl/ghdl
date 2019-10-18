@@ -2183,6 +2183,10 @@ package body Synth.Stmts is
                      return Edge;
                   end if;
                end if;
+               if Get_Kind (R) = N_EOS then
+                  --  It is never EOS!
+                  return Build_Const_UB32 (Build_Context, 0, 1);
+               end if;
                return Build_Dyadic
                  (Build_Context, Netlists.Gates.Id_And,
                   Synth_PSL_Expression (Syn_Inst, L),
@@ -2195,7 +2199,8 @@ package body Synth.Stmts is
                Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
          when N_True =>
             return Build_Const_UB32 (Build_Context, 1, 1);
-         when N_False =>
+         when N_False
+           | N_EOS =>
             return Build_Const_UB32 (Build_Context, 0, 1);
          when others =>
             PSL.Errors.Error_Kind ("translate_psl_expr", Expr);
@@ -2232,6 +2237,8 @@ package body Synth.Stmts is
             Cond := Build_Dyadic
               (Build_Context, Netlists.Gates.Id_And,
                I, Synth_PSL_Expression (Syn_Inst, Get_Edge_Expr (E)));
+
+            --  TODO: if EOS is present, then this is a live state.
 
             --  Reverse order for final concatenation.
             D_Num := Nbr_States - 1 - Get_State_Label (Get_Edge_Dest (E));
