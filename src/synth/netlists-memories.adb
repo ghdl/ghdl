@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Errorout; use Errorout;
+
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
@@ -39,6 +41,148 @@ package body Netlists.Memories is
             return False;
       end case;
    end Is_A_Memory;
+
+   --  Follow signal from ORIG to discover memory ports size.
+   --  Should be the same.
+   procedure Check_Memory_Ports (Orig : Instance;
+                                 Data_W : out Width;
+                                 Size : out Width)
+   is
+      Orig_Net : constant Net := Get_Output (Orig, 0);
+      Orig_Loc : constant Location_Type := Get_Location (Orig);
+      Mem_Sz : Width;
+      W : Width;
+      Dff : Net;
+      Dff_Inst : Instance;
+      Data : Net;
+      Data_Inst : Instance;
+      Data_Inp : Input;
+   begin
+      --  By default, error.
+      Data_W := 0;
+      Size := 0;
+
+      --  The memory must come from signal/isignal.
+      case Get_Id (Orig) is
+         when Id_Isignal
+           | Id_Signal =>
+            null;
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      --  The driver of the signal must be a dff/idff.
+      Dff := Get_Input_Net (Orig, 0);
+      Dff_Inst := Get_Net_Parent (Dff);
+
+      case Get_Id (Dff_Inst) is
+         when Id_Idff
+           | Id_Dff =>
+            Mem_Sz := Get_Width (Dff);
+         when others =>
+            Warning_Msg_Synth
+              (Orig_Loc,
+               "write to memory %n is not synchronous", (1 => +Orig));
+            return;
+      end case;
+
+      --  Check write ports.
+      Data_Inp := Get_Input (Dff_Inst, 1);
+      Data := Get_Driver (Data_Inp);
+      loop
+         Data_Inst := Get_Net_Parent (Data);
+
+         --  Skip muxes (that's enables).
+         while Get_Id (Data_Inst) = Id_Mux2 loop
+            declare
+               I0_Inp : constant Input := Get_Input (Data_Inst, 1);
+               I1_Inp : constant Input := Get_Input (Data_Inst, 2);
+            begin
+               if Get_Driver (I0_Inp) = Orig_Net then
+                  Data := Get_Driver (I1_Inp);
+               elsif Get_Driver (I1_Inp) = Orig_Net then
+                  Data := Get_Driver (I0_Inp);
+               else
+                  raise Internal_Error;
+               end if;
+               Data_Inst := Get_Net_Parent (Data);
+            end;
+         end loop;
+
+         if Get_Id (Data_Inst) = Id_Dyn_Insert then
+            --  Write port.
+            W := Get_Width (Get_Input_Net (Data_Inst, 1));
+            if Data_W = 0 then
+               Data_W := W;
+            elsif Data_W /= W then
+               --  Different size.
+               Warning_Msg_Synth (Get_Location (Data_Inst),
+                                  "write to memory %n with different size",
+                                  (1 => +Orig));
+               Data_W := 0;
+               return;
+            end if;
+
+            Data := Get_Input_Net (Data_Inst, 0);
+         elsif Data = Orig_Net then
+            exit;
+         else
+            Warning_Msg_Synth (Get_Location (Data_Inst),
+                               "full write to memory %n", (1 => +Orig));
+            Data_W := 0;
+            return;
+         end if;
+      end loop;
+
+      --  Check readers.
+      declare
+         Inp : Input;
+         Extr_Inst : Instance;
+      begin
+         Inp := Get_First_Sink (Orig_Net);
+         while Inp /= No_Input loop
+            Extr_Inst := Get_Input_Parent (Inp);
+            case Get_Id (Extr_Inst) is
+               when Id_Dyn_Extract =>
+                  --  Check offset
+                  if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
+                     Warning_Msg_Synth (Get_Location (Extr_Inst),
+                                        "partial read from memory %n",
+                                        (1 => +Orig));
+                     Data_W := 0;
+                     return;
+                  end if;
+                  --  Check data width.
+                  W := Get_Width (Get_Output (Extr_Inst, 0));
+                  if Data_W = 0 then
+                     Data_W := W;
+                  elsif Data_W /= W then
+                     Warning_Msg_Synth
+                       (Get_Location (Extr_Inst),
+                        "read from memory %n with different size",
+                        (1 => +Orig));
+                     Data_W := 0;
+                     return;
+                  end if;
+               when Id_Dyn_Insert
+                 |  Id_Mux2 =>
+                  --  Probably a writer.
+                  --  FIXME: check it has already been seen above.
+                  null;
+               when others =>
+                  Warning_Msg_Synth
+                    (Get_Location (Extr_Inst),
+                     "full read from memory %n", (1 => +Orig));
+                  Data_W := 0;
+                  return;
+            end case;
+
+            Inp := Get_Next_Sink (Inp);
+         end loop;
+      end;
+
+      Size := Mem_Sz / Data_W;
+   end Check_Memory_Ports;
 
    --  Count the number of memidx in a memory address.
    function Count_Memidx (Addr : Net) return Natural
@@ -220,7 +364,6 @@ package body Netlists.Memories is
    procedure Replace_RAM_Memory (Ctxt : Context_Acc; Orig : Instance)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
-      Orig_Loc : constant Location_Type := Get_Location (Orig);
       Dff : Net;
       Dff_Inst : Instance;
       En : Net;
@@ -229,8 +372,6 @@ package body Netlists.Memories is
       Last : Net;
       Data_Inp : Input;
    begin
-      Warning_Msg_Synth (Orig_Loc, "found memory for %n", (1 => +Orig));
-
       --  The memory must come from signal/isignal.
       case Get_Id (Orig) is
          when Id_Isignal
@@ -246,6 +387,8 @@ package body Netlists.Memories is
 
       case Get_Id (Dff_Inst) is
          when Id_Idff =>
+            --  Disconnect the init input to isignal.
+            Disconnect (Get_Input (Orig, 1));
             declare
                Init_Inp : constant Input := Get_Input (Dff_Inst, 2);
                Init_Net : constant Net := Get_Driver (Init_Inp);
@@ -426,7 +569,7 @@ package body Netlists.Memories is
 
       Inst := Get_First_Instance (M);
       while Inst /= No_Instance loop
-      --  Walk all the instances of M:
+         --  Walk all the instances of M:
          case Get_Id (Inst) is
             when Id_Dyn_Insert =>
                --  * For dyn_insert gates:
@@ -490,9 +633,20 @@ package body Netlists.Memories is
       for I in First_Index .. Inst_Interning.Last_Index (Memories) loop
          --  INST is the memorizing instance, ie isignal/signal.
          Inst := Get_By_Index (Memories, I);
-         if Get_Id (Inst) /= Id_Const_Bit then
-            Replace_RAM_Memory (Ctxt, Inst);
-         end if;
+         declare
+            Data_W : Width;
+            Size : Width;
+         begin
+            Check_Memory_Ports (Inst, Data_W, Size);
+            if Data_W /= 0 then
+               Warning_Msg_Synth (Get_Location (Inst),
+                                  "found memory %n, width: %v bits, depth: %v",
+                                  (1 => +Inst, 2 => +Data_W, 3 => +Size));
+               if Get_Id (Inst) /= Id_Const_Bit then
+                  Replace_RAM_Memory (Ctxt, Inst);
+               end if;
+            end if;
+         end;
       end loop;
 
       Inst_Interning.Free (Memories);
