@@ -1841,13 +1841,17 @@ package body Vhdl.Prints is
             Disp_Token (Ctxt, Tok_Exclam_Mark);
             Print_Expr (Ctxt, Get_Boolean (N), Prio);
          when N_And_Bool =>
+            Disp_Token (Ctxt, Tok_Left_Paren);
             Print_Expr (Ctxt, Get_Left (N), Prio);
             Disp_Token (Ctxt, Tok_And);
             Print_Expr (Ctxt, Get_Right (N), Prio);
+            Disp_Token (Ctxt, Tok_Right_Paren);
          when N_Or_Bool =>
+            Disp_Token (Ctxt, Tok_Left_Paren);
             Print_Expr (Ctxt, Get_Left (N), Prio);
             Disp_Token (Ctxt, Tok_Or);
             Print_Expr (Ctxt, Get_Right (N), Prio);
+            Disp_Token (Ctxt, Tok_Right_Paren);
          when N_Imp_Bool =>
             Print_Expr (Ctxt, Get_Left (N), Prio);
             Disp_Token (Ctxt, Tok_Minus_Greater);
