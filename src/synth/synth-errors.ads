@@ -34,4 +34,7 @@ package Synth.Errors is
    procedure Warning_Msg_Synth (Loc : Location_Type;
                                 Msg : String;
                                 Args : Earg_Arr := No_Eargs);
+   procedure Info_Msg_Synth (Loc : Location_Type;
+                             Msg : String;
+                             Args : Earg_Arr := No_Eargs);
 end Synth.Errors;

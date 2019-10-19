@@ -80,7 +80,7 @@ package body Netlists.Memories is
            | Id_Dff =>
             Mem_Sz := Get_Width (Dff);
          when others =>
-            Warning_Msg_Synth
+            Info_Msg_Synth
               (Orig_Loc,
                "write to memory %n is not synchronous", (1 => +Orig));
             return;
@@ -116,9 +116,9 @@ package body Netlists.Memories is
                Data_W := W;
             elsif Data_W /= W then
                --  Different size.
-               Warning_Msg_Synth (Get_Location (Data_Inst),
-                                  "write to memory %n with different size",
-                                  (1 => +Orig));
+               Info_Msg_Synth
+                 (+Data_Inst, "write to memory %n with different size",
+                  (1 => +Orig));
                Data_W := 0;
                return;
             end if;
@@ -127,8 +127,8 @@ package body Netlists.Memories is
          elsif Data = Orig_Net then
             exit;
          else
-            Warning_Msg_Synth (Get_Location (Data_Inst),
-                               "full write to memory %n", (1 => +Orig));
+            Info_Msg_Synth
+              (+Data_Inst, "full write to memory %n", (1 => +Orig));
             Data_W := 0;
             return;
          end if;
@@ -146,9 +146,9 @@ package body Netlists.Memories is
                when Id_Dyn_Extract =>
                   --  Check offset
                   if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
-                     Warning_Msg_Synth (Get_Location (Extr_Inst),
-                                        "partial read from memory %n",
-                                        (1 => +Orig));
+                     Info_Msg_Synth
+                       (+Extr_Inst, "partial read from memory %n",
+                        (1 => +Orig));
                      Data_W := 0;
                      return;
                   end if;
@@ -157,9 +157,8 @@ package body Netlists.Memories is
                   if Data_W = 0 then
                      Data_W := W;
                   elsif Data_W /= W then
-                     Warning_Msg_Synth
-                       (Get_Location (Extr_Inst),
-                        "read from memory %n with different size",
+                     Info_Msg_Synth
+                       (+Extr_Inst, "read from memory %n with different size",
                         (1 => +Orig));
                      Data_W := 0;
                      return;
@@ -170,9 +169,8 @@ package body Netlists.Memories is
                   --  FIXME: check it has already been seen above.
                   null;
                when others =>
-                  Warning_Msg_Synth
-                    (Get_Location (Extr_Inst),
-                     "full read from memory %n", (1 => +Orig));
+                  Info_Msg_Synth
+                    (+Extr_Inst, "full read from memory %n", (1 => +Orig));
                   Data_W := 0;
                   return;
             end case;
@@ -399,9 +397,8 @@ package body Netlists.Memories is
          when Id_Dff =>
             Last := Build_Memory (Ctxt, Get_Width (Dff));
          when others =>
-            Error_Msg_Synth
-              (Get_Location (Orig), "write to memory %n is not synchronous",
-               (1 => +Orig));
+            Info_Msg_Synth
+              (+Orig, "write to memory %n is not synchronous", (1 => +Orig));
             return;
       end case;
 
@@ -581,12 +578,10 @@ package body Netlists.Memories is
                --  If the data input is a memory:
                --    * Save the memory, and the insert.
                if not Is_A_Memory (Data) then
-                  Warning_Msg_Synth
-                    (Get_Location (Inst), "dynamic write to a non-memory");
+                  Info_Msg_Synth (+Inst, "dynamic write to a non-memory");
                elsif Get_Param_Uns32 (Inst, 0) /= 0 then
                   --  Write from offset /= 0.
-                  Warning_Msg_Synth
-                    (Get_Location (Inst), "complex memory not handled");
+                  Info_Msg_Synth (+Inst, "complex memory not handled");
                else
                   Get (Memories, Data, Data);
                end if;
@@ -620,8 +615,7 @@ package body Netlists.Memories is
                end loop;
 
                if not Is_A_Memory (Data) then
-                  Warning_Msg_Synth
-                    (Get_Location (Inst), "dynamic read from a non-memory");
+                  Info_Msg_Synth (+Inst, "dynamic read from a non-memory");
                end if;
 
             when others =>
@@ -639,9 +633,9 @@ package body Netlists.Memories is
          begin
             Check_Memory_Ports (Inst, Data_W, Size);
             if Data_W /= 0 then
-               Warning_Msg_Synth (Get_Location (Inst),
-                                  "found memory %n, width: %v bits, depth: %v",
-                                  (1 => +Inst, 2 => +Data_W, 3 => +Size));
+               Info_Msg_Synth
+                 (+Inst, "found memory %n, width: %v bits, depth: %v",
+                  (1 => +Inst, 2 => +Data_W, 3 => +Size));
                if Get_Id (Inst) /= Id_Const_Bit then
                   Replace_RAM_Memory (Ctxt, Inst);
                end if;

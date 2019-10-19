@@ -19,11 +19,13 @@
 --  MA 02110-1301, USA.
 
 with Errorout; use Errorout;
+with Netlists.Locations;
 
 package Netlists.Errors is
    function "+" (N : Instance) return Earg_Type;
    function "+" (N : Net) return Earg_Type;
    function "+" (N : Sname) return Earg_Type;
-
+   function "+" (N : Instance) return Location_Type
+     renames Netlists.Locations.Get_Location;
    procedure Initialize;
 end Netlists.Errors;

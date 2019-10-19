@@ -50,4 +50,11 @@ package body Synth.Errors is
       Report_Msg (Msgid_Warning, Errorout.Elaboration, +Loc, Msg, Args);
    end Warning_Msg_Synth;
 
+   procedure Info_Msg_Synth (Loc : Location_Type;
+                             Msg : String;
+                             Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Msgid_Note, Errorout.Elaboration, +Loc, Msg, Args);
+   end Info_Msg_Synth;
+
 end Synth.Errors;
