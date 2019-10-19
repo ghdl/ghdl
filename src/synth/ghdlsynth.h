@@ -105,6 +105,10 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input, Input, Instance, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_WWD(get_output, Net, Instance, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_WW(get_driver, Net, Input);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_input_parent, Instance, Input);
+
+  GHDLSYNTH_ADA_WRAPPER_WW(get_first_sink, Input, Net);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_next_sink, Input, Input);
 
   //  Utils
 #undef GHDLSYNTH_ADA_PREFIX
