@@ -409,8 +409,10 @@ package body Synth.Oper is
    begin
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
       Left := Synth_Subtype_Conversion (Left, Left_Typ, False, Expr);
+      Strip_Const (Left);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
       Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
+      Strip_Const (Right);
 
       case Def is
          when Iir_Predefined_Error =>
@@ -936,6 +938,7 @@ package body Synth.Oper is
    begin
       Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
       Operand := Synth_Subtype_Conversion (Operand, Oper_Typ, False, Loc);
+      Strip_Const (Operand);
 
       case Def is
          when Iir_Predefined_Error =>

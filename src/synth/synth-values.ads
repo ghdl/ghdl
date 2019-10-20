@@ -19,11 +19,14 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
-with Netlists; use Netlists;
-with Vhdl.Nodes; use Vhdl.Nodes;
-with Synth.Environment; use Synth.Environment;
 with Areapools; use Areapools;
 
+with Netlists; use Netlists;
+
+with Vhdl.Nodes; use Vhdl.Nodes;
+
+with Synth.Environment; use Synth.Environment;
+with Synth.Source; use Synth.Source;
 
 package Synth.Values is
    type Discrete_Range_Type is record
@@ -158,7 +161,12 @@ package Synth.Values is
       --  A package.
       Value_Instance,
 
-      --  An alias
+      --  A constant.  This is a named value.  One purpose is to avoid to
+      --  create many times the same net for the same value.
+      Value_Const,
+
+      --  An alias.  This is a reference to another value with a different
+      --  (but compatible) type.
       Value_Alias,
 
       --  A subtype.  Contains only a type.
@@ -201,6 +209,10 @@ package Synth.Values is
             Rec : Value_Array_Acc;
          when Value_Instance =>
             Instance : Instance_Id;
+         when Value_Const =>
+            C_Val : Value_Acc;
+            C_Loc : Syn_Src;
+            C_Net : Net;
          when Value_Alias =>
             A_Obj : Value_Acc;
             A_Off : Uns32;
@@ -284,6 +296,11 @@ package Synth.Values is
 
    function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
                                return Value_Acc;
+   function Create_Value_Const (Val : Value_Acc; Loc : Syn_Src)
+                               return Value_Acc;
+
+   --  If VAL is a const, replace it by its value.
+   procedure Strip_Const (Val : in out Value_Acc);
 
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
                     return Value_Acc;

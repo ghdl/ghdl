@@ -405,6 +405,7 @@ package body Synth.Decls is
       First_Decl : Node;
       Decl_Type : Node;
       Val : Value_Acc;
+      Cst : Value_Acc;
       Obj_Type : Type_Acc;
    begin
       if Deferred_Decl = Null_Node
@@ -438,7 +439,8 @@ package body Synth.Decls is
          --  For constant functions, the value must be constant.
          pragma Assert (not Get_Instance_Const (Syn_Inst)
                           or else Is_Const (Val));
-         Create_Object_Force (Syn_Inst, First_Decl, Val);
+         Cst := Create_Value_Const (Val, Decl);
+         Create_Object_Force (Syn_Inst, First_Decl, Cst);
       end if;
    end Synth_Constant_Declaration;
 

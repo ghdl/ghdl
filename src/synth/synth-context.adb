@@ -32,6 +32,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
 
 with Synth.Expr; use Synth.Expr;
+with Netlists.Locations;
 
 package body Synth.Context is
    package Packages_Table is new Tables
@@ -581,6 +582,13 @@ package body Synth.Context is
                   return Get_Net (Val.A_Obj);
                end if;
             end;
+         when Value_Const =>
+            if Val.C_Net = No_Net then
+               Val.C_Net := Get_Net (Val.C_Val);
+               Locations.Set_Location (Get_Net_Parent (Val.C_Net),
+                                       Get_Location (Val.C_Loc));
+            end if;
+            return Val.C_Net;
          when others =>
             raise Internal_Error;
       end case;

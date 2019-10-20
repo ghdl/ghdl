@@ -1558,6 +1558,7 @@ package body Synth.Expr is
                N : Net;
             begin
                Res := Synth_Expression (Syn_Inst, Pfx);
+               Strip_Const (Res);
                Res_Typ := Res.Typ.Rec.E (Idx + 1).Typ;
                if Res.Kind = Value_Const_Record then
                   return Res.Rec.V (Idx + 1);

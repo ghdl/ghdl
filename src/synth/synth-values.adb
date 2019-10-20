@@ -56,6 +56,8 @@ package body Synth.Values is
             return False;
          when Value_Alias =>
             return Is_Const (Val.A_Obj);
+         when Value_Const =>
+            return True;
          when Value_Instance
            | Value_Subtype =>
             --  Not really a value.
@@ -79,6 +81,8 @@ package body Synth.Values is
          when Value_Array
            | Value_Record =>
             return False;
+         when Value_Const =>
+            return True;
          when Value_Instance
            | Value_Subtype
            | Value_Alias =>
@@ -564,6 +568,27 @@ package body Synth.Values is
                                    A_Off => Off,
                                    Typ => Typ)));
    end Create_Value_Alias;
+
+   function Create_Value_Const (Val : Value_Acc; Loc : Syn_Src)
+                               return Value_Acc
+   is
+      subtype Value_Type_Const is Value_Type (Value_Const);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Const);
+   begin
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Const,
+                                   C_Val => Val,
+                                   C_Loc => Loc,
+                                   C_Net => No_Net,
+                                   Typ => Val.Typ)));
+   end Create_Value_Const;
+
+   procedure Strip_Const (Val : in out Value_Acc) is
+   begin
+      if Val.Kind = Value_Const then
+         Val := Val.C_Val;
+      end if;
+   end Strip_Const;
 
    function Copy (Src: in Value_Acc) return Value_Acc
    is

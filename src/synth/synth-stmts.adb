@@ -179,11 +179,14 @@ package body Synth.Stmts is
                      Dest_Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Voff, Voff);
                   end if;
-               elsif Dest_Obj.Kind = Value_Const_Array then
-                  Dest_Obj := Dest_Obj.Arr.V
-                    (Iir_Index32 ((Dest_W - Dest_Off) / W));
-                  Dest_Off := 0;
-                  Dest_W := W;
+               else
+                  Strip_Const (Dest_Obj);
+                  if Dest_Obj.Kind = Value_Const_Array then
+                     Dest_Obj := Dest_Obj.Arr.V
+                       (Iir_Index32 ((Dest_W - Dest_Off) / W));
+                     Dest_Off := 0;
+                     Dest_W := W;
+                  end if;
                end if;
             end;
 
@@ -195,6 +198,7 @@ package body Synth.Stmts is
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
+               Strip_Const (Dest_Obj);
                Dest_Off := Dest_Off + Dest_Type.Rec.E (Idx + 1).Off;
                Dest_Type := Dest_Type.Rec.E (Idx + 1).Typ;
             end;
