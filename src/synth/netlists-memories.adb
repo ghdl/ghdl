@@ -334,6 +334,7 @@ package body Netlists.Memories is
             Inst : constant Instance := Indexes (I).Inst;
             Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             Sub_Addr : constant Net := Get_Input_Net (Inst, 0);
+            Addr_W : constant Width := Get_Width (Sub_Addr);
             Max : Uns32;
          begin
             --  Check max
@@ -346,10 +347,13 @@ package body Netlists.Memories is
             end if;
 
             --  Check addr width.
-            if Get_Width (Sub_Addr) > 31 then
+            if Addr_W > 31 then
                raise Internal_Error;
             end if;
-            if 2**Natural (Get_Width (Sub_Addr)) > Max then
+            if Addr_W = 0 then
+               raise Internal_Error;
+            end if;
+            if 2**Natural (Addr_W - 1) > Max then
                --  Need to truncate.
                raise Internal_Error;
             end if;
@@ -421,50 +425,51 @@ package body Netlists.Memories is
       Last := Mem_Link;
 
       --  Convert readers.
-      loop
-         declare
-            Inp : constant Input := Get_First_Sink (Orig_Net);
-            Extr_Inst : Instance;
-            Addr_Inp : Input;
-            Addr : Net;
-            Val : Net;
-            Val_W : Width;
-            Dest : Input;
-            Port_Inst : Instance;
-         begin
-            exit when Inp = No_Input;
-
+      declare
+         Inp : Input;
+         Extr_Inst : Instance;
+         Addr_Inp : Input;
+         Addr : Net;
+         Val : Net;
+         Val_W : Width;
+         Port_Inst : Instance;
+      begin
+         Inp := Get_First_Sink (Orig_Net);
+         while Inp /= No_Input loop
             Extr_Inst := Get_Input_Parent (Inp);
-            pragma Assert (Get_Id (Extr_Inst) = Id_Dyn_Extract);
-            Disconnect (Inp);
+            case Get_Id (Extr_Inst) is
+               when Id_Memory_Init =>
+                  null;
+               when Id_Dyn_Extract =>
+                  Disconnect (Inp);
 
-            --  Check offset
-            if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
-               raise Internal_Error;
-            end if;
+                  --  Check offset
+                  if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
+                     raise Internal_Error;
+                  end if;
 
-            --  Convert memidx.
-            Addr_Inp := Get_Input (Extr_Inst, 1);
-            Addr := Get_Driver (Addr_Inp);
-            Disconnect (Addr_Inp);
-            Val := Get_Output (Extr_Inst, 0);
-            Val_W := Get_Width (Val);
-            Convert_Memidx (Ctxt, Orig, Addr, Val_W);
+                  --  Convert memidx.
+                  Addr_Inp := Get_Input (Extr_Inst, 1);
+                  Addr := Get_Driver (Addr_Inp);
+                  Disconnect (Addr_Inp);
+                  Val := Get_Output (Extr_Inst, 0);
+                  Val_W := Get_Width (Val);
+                  Convert_Memidx (Ctxt, Orig, Addr, Val_W);
 
-            --  Replace Dyn_Extract with mem_rd.
-            Port_Inst := Build_Mem_Rd (Ctxt, Last, Addr, Val_W);
+                  --  Replace Dyn_Extract with mem_rd.
+                  Port_Inst := Build_Mem_Rd (Ctxt, Last, Addr, Val_W);
 
-            if not Has_One_Connection (Val) then
-               raise Internal_Error;
-            end if;
-            Dest := Get_First_Sink (Val);
-            Disconnect (Dest);
-            Connect (Dest, Get_Output (Port_Inst, 1));
-            Remove_Instance (Extr_Inst);
+                  Redirect_Inputs (Val, Get_Output (Port_Inst, 1));
 
-            Last := Get_Output (Port_Inst, 0);
-         end;
-      end loop;
+                  Remove_Instance (Extr_Inst);
+
+                  Last := Get_Output (Port_Inst, 0);
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Inp := Get_Next_Sink (Inp);
+         end loop;
+      end;
    end Replace_Read_Ports;
 
    --  ORIG (the memory) must be signal/isignal.
@@ -711,14 +716,12 @@ package body Netlists.Memories is
                      Replace_RAM_Memory (Ctxt, Inst);
                   end if;
                when Id_Const_Bit =>
-                  if False then
-                     Check_Memory_Read_Ports (Inst, Data_W, Size);
-                     if Data_W /= 0 then
-                        Info_Msg_Synth
-                          (+Inst, "found ROM %n, width: %v bits, depth: %v",
-                           (1 => +Inst, 2 => +Data_W, 3 => +Size));
-                        Replace_ROM_Memory (Ctxt, Inst);
-                     end if;
+                  Check_Memory_Read_Ports (Inst, Data_W, Size);
+                  if Data_W /= 0 then
+                     Info_Msg_Synth
+                       (+Inst, "found ROM %n, width: %v bits, depth: %v",
+                        (1 => +Inst, 2 => +Data_W, 3 => +Size));
+                     Replace_ROM_Memory (Ctxt, Inst);
                   end if;
                when others =>
                   raise Internal_Error;
