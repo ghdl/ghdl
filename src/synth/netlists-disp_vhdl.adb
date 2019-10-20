@@ -387,6 +387,48 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Constant_Inline;
 
+   procedure Disp_Const_Bit (Cst : Net; Off : Uns32)
+   is
+      Inst : constant Instance := Get_Net_Parent (Cst);
+      Val : Uns32;
+      Zx : Uns32;
+   begin
+      case Get_Id (Inst) is
+         when Id_Const_Bit =>
+            Zx := 0;
+            Val := Get_Param_Uns32 (Inst, Param_Idx (Off / 32));
+            Val := Shift_Right (Val, Natural (Off mod 32)) and 1;
+         when others =>
+            raise Internal_Error;
+      end case;
+      Put (Bchar (Zx * 2 + Val));
+   end Disp_Const_Bit;
+
+   procedure Disp_Memory_Init (Val : Net; W : Width; Depth : Width)
+   is
+      Q : constant Character := Get_Lit_Quote (W);
+   begin
+      for I in 0 .. Depth - 1 loop
+         if I = 0 then
+            Put ("      (");
+         else
+            Put ("       ");
+         end if;
+         Put_Uns32 (I);
+         Put (" => ");
+         Put (Q);
+         for J in reverse 0 .. W - 1 loop
+            Disp_Const_Bit (Val, I * W + J);
+         end loop;
+         Put (Q);
+         if I /= Depth - 1 then
+            Put_Line (",");
+         else
+            Put_Line (");");
+         end if;
+      end loop;
+   end Disp_Memory_Init;
+
    function Need_Name (Inst : Instance) return Boolean
    is
       Id : constant Module_Id := Get_Id (Inst);
@@ -616,9 +658,11 @@ package body Netlists.Disp_Vhdl is
                      Mem, (0 => Data_W - 1));
       Disp_Template ("    variable \o0 : \o0_type", Mem);
       if Get_Id (Mem) = Id_Memory_Init then
-         Disp_Template (" := \i0", Mem);
+         Put_Line (" :=");
+         Disp_Memory_Init (Get_Input_Net (Mem, 0), Data_W, Depth);
+      else
+         Put_Line (";");
       end if;
-      Put_Line (";");
 
       Put_Line ("  begin");
       Port := Ports;
