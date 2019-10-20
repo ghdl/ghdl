@@ -55,6 +55,8 @@ package body Synth.Expr is
       case V.Kind is
          when Value_Discrete =>
             return V.Scal;
+         when Value_Const =>
+            return V.C_Val.Scal;
          when Value_Net =>
             N := V.N;
          when Value_Wire =>
@@ -737,6 +739,8 @@ package body Synth.Expr is
                         return Create_Value_Net (N, Dtype);
                      when Value_Discrete =>
                         return Create_Value_Discrete (Val.Scal, Dtype);
+                     when Value_Const =>
+                        return Create_Value_Discrete (Val.C_Val.Scal, Dtype);
                      when others =>
                         raise Internal_Error;
                   end case;
@@ -745,6 +749,8 @@ package body Synth.Expr is
                   case Val.Kind is
                      when Value_Discrete =>
                         return Create_Value_Discrete (Val.Scal, Dtype);
+                     when Value_Const =>
+                        return Create_Value_Discrete (Val.C_Val.Scal, Dtype);
                      when Value_Net
                        | Value_Wire =>
                         N := Get_Net (Val);

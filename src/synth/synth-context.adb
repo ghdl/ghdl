@@ -389,6 +389,11 @@ package body Synth.Context is
                         Off : in out Uns32;
                         Has_Zx : in out Boolean) is
    begin
+      if Val.Kind = Value_Const then
+         Value2net (Val.C_Val, Vec, Off, Has_Zx);
+         return;
+      end if;
+
       case Val.Typ.Kind is
          when Type_Bit =>
             declare
