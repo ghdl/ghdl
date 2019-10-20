@@ -2486,7 +2486,9 @@ package body Vhdl.Scanner is
             return;
          when 'A' .. 'Z' | 'a' .. 'z' =>
             Scan_Identifier (Flag_Psl);
-            Identifier_To_Token;
+            if Current_Token = Tok_Identifier then
+               Identifier_To_Token;
+            end if;
             return;
          when UC_A_Grave .. UC_O_Diaeresis
            | UC_O_Oblique_Stroke .. UC_Icelandic_Thorn
