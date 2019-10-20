@@ -877,6 +877,7 @@ package body Synth.Insts is
 
       Set_Instance_Module (Syn_Inst, Inst.M);
       Self_Inst := Get_Self_Instance (Inst.M);
+      Set_Location (Self_Inst, Entity);
 
       --  Create wires for inputs and outputs.
       Inter := Get_Port_Chain (Entity);

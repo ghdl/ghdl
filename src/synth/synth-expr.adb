@@ -960,6 +960,7 @@ package body Synth.Expr is
          Voff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
          Voff := Build_Memidx (Get_Build (Syn_Inst), Voff, W, Bnd.Len,
                                Width (Clog2 (Uns64 (W * Bnd.Len))));
+         Set_Location (Voff, Name);
          Off := 0;
       end if;
    end Synth_Indexed_Name;
