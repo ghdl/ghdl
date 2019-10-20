@@ -18,11 +18,14 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO; use Simple_IO;
 with Name_Table;
+with Files_Map;
+
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Gates; use Netlists.Gates;
+with Netlists.Locations;
 
 package body Netlists.Dump is
    procedure Put_Indent (Indent : Natural) is
@@ -39,6 +42,11 @@ package body Netlists.Dump is
          Put (S);
       end if;
    end Put_Trim;
+
+   procedure Put_Uns32 (V : Uns32) is
+   begin
+      Put_Trim (Uns32'Image (V));
+   end Put_Uns32;
 
    procedure Put_Width (W : Width) is
    begin
@@ -80,7 +88,7 @@ package body Netlists.Dump is
                Dump_Name (Prefix);
             end if;
             Put ("%");
-            Put_Trim (Uns32'Image (Get_Sname_Version (N)));
+            Put_Uns32 (Get_Sname_Version (N));
       end case;
    end Dump_Name;
 
@@ -141,12 +149,32 @@ package body Netlists.Dump is
          when Param_Invalid =>
             Put ("invalid");
          when Param_Uns32 =>
-            Put_Trim (Uns32'Image (Get_Param_Uns32 (Inst, Idx)));
+            Put_Uns32 (Get_Param_Uns32 (Inst, Idx));
       end case;
    end Dump_Parameter;
 
-   procedure Dump_Instance (Inst : Instance; Indent : Natural := 0) is
+   procedure Dump_Instance (Inst : Instance; Indent : Natural := 0)
+   is
+      Loc : constant Location_Type := Locations.Get_Location (Inst);
    begin
+      if Loc /= No_Location then
+         declare
+            File : Name_Id;
+            Line : Positive;
+            Col : Natural;
+         begin
+            Put_Indent (Indent);
+            Put ("# ");
+            Files_Map.Location_To_Position (Loc, File, Line, Col);
+            Put (Name_Table.Image (File));
+            Put (':');
+            Put_Uns32 (Uns32 (Line));
+            Put (':');
+            Put_Uns32 (Uns32 (Col));
+            New_Line;
+         end;
+      end if;
+
       Put_Indent (Indent);
       Put ("instance ");
       Dump_Name (Get_Instance_Name (Inst));
@@ -415,10 +443,10 @@ package body Netlists.Dump is
                   Disp_Driver (Get_Input_Net (Inst, 0));
                   Put ('[');
                   if W > 1 then
-                     Put_Trim (Uns32'Image (Off + W - 1));
+                     Put_Uns32 (Off + W - 1);
                      Put (':');
                   end if;
-                  Put_Trim (Uns32'Image (Off));
+                  Put_Uns32 (Off);
                   Put (']');
                   return;
                end;
