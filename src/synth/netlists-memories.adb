@@ -44,9 +44,68 @@ package body Netlists.Memories is
 
    --  Follow signal from ORIG to discover memory ports size.
    --  Should be the same.
-   procedure Check_Memory_Ports (Orig : Instance;
-                                 Data_W : out Width;
-                                 Size : out Width)
+   procedure Check_Memory_Read_Ports (Orig : Instance;
+                                      Data_W : out Width;
+                                      Size : out Width)
+   is
+      Orig_Net : constant Net := Get_Output (Orig, 0);
+      W : Width;
+   begin
+      --  By default, error.
+      Data_W := 0;
+      Size := 0;
+
+      --  Check readers.
+      declare
+         Inp : Input;
+         Extr_Inst : Instance;
+      begin
+         Inp := Get_First_Sink (Orig_Net);
+         while Inp /= No_Input loop
+            Extr_Inst := Get_Input_Parent (Inp);
+            case Get_Id (Extr_Inst) is
+               when Id_Dyn_Extract =>
+                  --  Check offset
+                  if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
+                     Info_Msg_Synth
+                       (+Extr_Inst, "partial read from memory %n",
+                        (1 => +Orig));
+                     Data_W := 0;
+                     return;
+                  end if;
+                  --  Check data width.
+                  W := Get_Width (Get_Output (Extr_Inst, 0));
+                  if Data_W = 0 then
+                     Data_W := W;
+                  elsif Data_W /= W then
+                     Info_Msg_Synth
+                       (+Extr_Inst, "read from memory %n with different size",
+                        (1 => +Orig));
+                     Data_W := 0;
+                     return;
+                  end if;
+               when Id_Dyn_Insert
+                 |  Id_Mux2 =>
+                  --  Probably a writer.
+                  --  FIXME: check it has already been by writes.
+                  null;
+               when others =>
+                  Info_Msg_Synth
+                    (+Extr_Inst, "full read from memory %n", (1 => +Orig));
+                  Data_W := 0;
+                  return;
+            end case;
+
+            Inp := Get_Next_Sink (Inp);
+         end loop;
+      end;
+
+      Size := Get_Width (Orig_Net) / Data_W;
+   end Check_Memory_Read_Ports;
+
+   procedure Check_Memory_Write_Ports (Orig : Instance;
+                                       Data_W : out Width;
+                                       Size : out Width)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
       Orig_Loc : constant Location_Type := Get_Location (Orig);
@@ -134,53 +193,46 @@ package body Netlists.Memories is
          end if;
       end loop;
 
-      --  Check readers.
-      declare
-         Inp : Input;
-         Extr_Inst : Instance;
-      begin
-         Inp := Get_First_Sink (Orig_Net);
-         while Inp /= No_Input loop
-            Extr_Inst := Get_Input_Parent (Inp);
-            case Get_Id (Extr_Inst) is
-               when Id_Dyn_Extract =>
-                  --  Check offset
-                  if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
-                     Info_Msg_Synth
-                       (+Extr_Inst, "partial read from memory %n",
-                        (1 => +Orig));
-                     Data_W := 0;
-                     return;
-                  end if;
-                  --  Check data width.
-                  W := Get_Width (Get_Output (Extr_Inst, 0));
-                  if Data_W = 0 then
-                     Data_W := W;
-                  elsif Data_W /= W then
-                     Info_Msg_Synth
-                       (+Extr_Inst, "read from memory %n with different size",
-                        (1 => +Orig));
-                     Data_W := 0;
-                     return;
-                  end if;
-               when Id_Dyn_Insert
-                 |  Id_Mux2 =>
-                  --  Probably a writer.
-                  --  FIXME: check it has already been seen above.
-                  null;
-               when others =>
-                  Info_Msg_Synth
-                    (+Extr_Inst, "full read from memory %n", (1 => +Orig));
-                  Data_W := 0;
-                  return;
-            end case;
-
-            Inp := Get_Next_Sink (Inp);
-         end loop;
-      end;
-
       Size := Mem_Sz / Data_W;
-   end Check_Memory_Ports;
+   end Check_Memory_Write_Ports;
+
+   procedure Check_RAM_Ports (Orig : Instance;
+                              Data_W : out Width;
+                              Size : out Width)
+   is
+      Write_Dw : Width;
+      Write_Size : Width;
+
+      Read_Dw : Width;
+      Read_Size : Width;
+   begin
+      --  By default, error.
+      Data_W := 0;
+      Size := 0;
+
+      Check_Memory_Write_Ports (Orig, Write_Dw, Write_Size);
+      if Write_Dw = 0 then
+         return;
+      end if;
+
+      Check_Memory_Read_Ports (Orig, Read_Dw, Read_Size);
+      if Read_Dw = 0 then
+         return;
+      end if;
+      if Read_Dw /= Write_Dw then
+         Info_Msg_Synth (+Orig, "different read/write width for memory %n",
+                         (1 => +Orig));
+         return;
+      end if;
+      if Read_Size /= Write_Size then
+         Info_Msg_Synth (+Orig, "different read/write size for memory %n",
+                         (1 => +Orig));
+         return;
+      end if;
+
+      Data_W := Write_Dw;
+      Size := Write_Size;
+   end Check_RAM_Ports;
 
    --  Count the number of memidx in a memory address.
    function Count_Memidx (Addr : Net) return Natural
@@ -359,6 +411,63 @@ package body Netlists.Memories is
       Addr := Low_Addr;
    end Convert_Memidx;
 
+   --  MEM_LINK is the link from the last port (or from the memory).
+   procedure Replace_Read_Ports
+     (Ctxt : Context_Acc; Orig : Instance; Mem_Link : Net)
+   is
+      Orig_Net : constant Net := Get_Output (Orig, 0);
+      Last : Net;
+   begin
+      Last := Mem_Link;
+
+      --  Convert readers.
+      loop
+         declare
+            Inp : constant Input := Get_First_Sink (Orig_Net);
+            Extr_Inst : Instance;
+            Addr_Inp : Input;
+            Addr : Net;
+            Val : Net;
+            Val_W : Width;
+            Dest : Input;
+            Port_Inst : Instance;
+         begin
+            exit when Inp = No_Input;
+
+            Extr_Inst := Get_Input_Parent (Inp);
+            pragma Assert (Get_Id (Extr_Inst) = Id_Dyn_Extract);
+            Disconnect (Inp);
+
+            --  Check offset
+            if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
+               raise Internal_Error;
+            end if;
+
+            --  Convert memidx.
+            Addr_Inp := Get_Input (Extr_Inst, 1);
+            Addr := Get_Driver (Addr_Inp);
+            Disconnect (Addr_Inp);
+            Val := Get_Output (Extr_Inst, 0);
+            Val_W := Get_Width (Val);
+            Convert_Memidx (Ctxt, Orig, Addr, Val_W);
+
+            --  Replace Dyn_Extract with mem_rd.
+            Port_Inst := Build_Mem_Rd (Ctxt, Last, Addr, Val_W);
+
+            if not Has_One_Connection (Val) then
+               raise Internal_Error;
+            end if;
+            Dest := Get_First_Sink (Val);
+            Disconnect (Dest);
+            Connect (Dest, Get_Output (Port_Inst, 1));
+            Remove_Instance (Extr_Inst);
+
+            Last := Get_Output (Port_Inst, 0);
+         end;
+      end loop;
+   end Replace_Read_Ports;
+
+   --  ORIG (the memory) must be signal/isignal.
    procedure Replace_RAM_Memory (Ctxt : Context_Acc; Orig : Instance)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
@@ -370,15 +479,6 @@ package body Netlists.Memories is
       Last : Net;
       Data_Inp : Input;
    begin
-      --  The memory must come from signal/isignal.
-      case Get_Id (Orig) is
-         when Id_Isignal
-           | Id_Signal =>
-            null;
-         when others =>
-            raise Internal_Error;
-      end case;
-
       --  The driver of the signal must be a dff/idff.
       Dff := Get_Input_Net (Orig, 0);
       Dff_Inst := Get_Net_Parent (Dff);
@@ -502,54 +602,21 @@ package body Netlists.Memories is
 
       Remove_Instance (Dff_Inst);
 
-      --  Convert readers.
-      loop
-         declare
-            Inp : constant Input := Get_First_Sink (Orig_Net);
-            Extr_Inst : Instance;
-            Addr_Inp : Input;
-            Addr : Net;
-            Val : Net;
-            Val_W : Width;
-            Dest : Input;
-            Port_Inst : Instance;
-         begin
-            exit when Inp = No_Input;
-
-            Extr_Inst := Get_Input_Parent (Inp);
-            pragma Assert (Get_Id (Extr_Inst) = Id_Dyn_Extract);
-            Disconnect (Inp);
-
-            --  Check offset
-            if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
-               raise Internal_Error;
-            end if;
-
-            --  Convert memidx.
-            Addr_Inp := Get_Input (Extr_Inst, 1);
-            Addr := Get_Driver (Addr_Inp);
-            Disconnect (Addr_Inp);
-            Val := Get_Output (Extr_Inst, 0);
-            Val_W := Get_Width (Val);
-            Convert_Memidx (Ctxt, Orig, Addr, Val_W);
-
-            --  Replace Dyn_Extract with mem_rd.
-            Port_Inst := Build_Mem_Rd (Ctxt, Last, Addr, Val_W);
-
-            if not Has_One_Connection (Val) then
-               raise Internal_Error;
-            end if;
-            Dest := Get_First_Sink (Val);
-            Disconnect (Dest);
-            Connect (Dest, Get_Output (Port_Inst, 1));
-            Remove_Instance (Extr_Inst);
-
-            Last := Get_Output (Port_Inst, 0);
-         end;
-      end loop;
+      Replace_Read_Ports (Ctxt, Orig, Last);
 
       Remove_Instance (Orig);
    end Replace_RAM_Memory;
+
+   --  ORIG (the memory) must be Const.
+   procedure Replace_ROM_Memory (Ctxt : Context_Acc; Orig : Instance)
+   is
+      Orig_Net : constant Net := Get_Output (Orig, 0);
+      Last : Net;
+   begin
+      Last := Build_Memory_Init (Ctxt, Get_Width (Orig_Net), Orig_Net);
+
+      Replace_Read_Ports (Ctxt, Orig, Last);
+   end Replace_ROM_Memory;
 
    procedure Extract_Memories (Ctxt : Context_Acc; M : Module)
    is
@@ -616,6 +683,8 @@ package body Netlists.Memories is
 
                if not Is_A_Memory (Data) then
                   Info_Msg_Synth (+Inst, "dynamic read from a non-memory");
+               else
+                  Get (Memories, Data, Data);
                end if;
 
             when others =>
@@ -631,15 +700,29 @@ package body Netlists.Memories is
             Data_W : Width;
             Size : Width;
          begin
-            Check_Memory_Ports (Inst, Data_W, Size);
-            if Data_W /= 0 then
-               Info_Msg_Synth
-                 (+Inst, "found memory %n, width: %v bits, depth: %v",
-                  (1 => +Inst, 2 => +Data_W, 3 => +Size));
-               if Get_Id (Inst) /= Id_Const_Bit then
-                  Replace_RAM_Memory (Ctxt, Inst);
-               end if;
-            end if;
+            case Get_Id (Inst) is
+               when Id_Isignal
+                 | Id_Signal =>
+                  Check_RAM_Ports (Inst, Data_W, Size);
+                  if Data_W /= 0 then
+                     Info_Msg_Synth
+                       (+Inst, "found RAM %n, width: %v bits, depth: %v",
+                        (1 => +Inst, 2 => +Data_W, 3 => +Size));
+                     Replace_RAM_Memory (Ctxt, Inst);
+                  end if;
+               when Id_Const_Bit =>
+                  if False then
+                     Check_Memory_Read_Ports (Inst, Data_W, Size);
+                     if Data_W /= 0 then
+                        Info_Msg_Synth
+                          (+Inst, "found ROM %n, width: %v bits, depth: %v",
+                           (1 => +Inst, 2 => +Data_W, 3 => +Size));
+                        Replace_ROM_Memory (Ctxt, Inst);
+                     end if;
+                  end if;
+               when others =>
+                  raise Internal_Error;
+            end case;
          end;
       end loop;
 
