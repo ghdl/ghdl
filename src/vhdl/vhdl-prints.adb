@@ -4381,6 +4381,8 @@ package body Vhdl.Prints is
             Disp_Psl_Assert_Directive (Ctxt, Expr);
          when Iir_Kind_Psl_Assume_Directive =>
             Disp_Psl_Assume_Directive (Ctxt, Expr);
+         when Iir_Kind_Psl_Restrict_Directive =>
+            Disp_Psl_Restrict_Directive (Ctxt, Expr);
 
          when Iir_Kind_Error =>
             declare
