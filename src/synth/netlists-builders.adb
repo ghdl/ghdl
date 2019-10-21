@@ -471,6 +471,12 @@ package body Netlists.Builders is
          1, 0, 0);
       Set_Port_Desc (Ctxt.M_Cover, (0 => Create_Input ("cond", 1)),
                      Outputs);
+
+      Ctxt.M_Assert_Cover := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("assert_cover")),
+         Id_Assert_Cover, 1, 0, 0);
+      Set_Port_Desc (Ctxt.M_Assert_Cover, (0 => Create_Input ("cond", 1)),
+                     Outputs);
    end Create_Assert_Assume_Cover;
 
    function Build_Builders (Design : Module) return Context_Acc
@@ -1368,37 +1374,40 @@ package body Netlists.Builders is
       end if;
    end Name_Or_Internal;
 
-   function Build_Assert (Ctxt : Context_Acc; Name : Sname; Cond : Net)
-                         return Instance
+   function Build_Formal
+     (Ctxt : Context_Acc; Gate : Module; Name : Sname; Cond : Net)
+     return Instance
    is
       Inst : Instance;
    begin
-      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Assert,
+      Inst := New_Instance (Ctxt.Parent, Gate,
                             Name_Or_Internal (Name, Ctxt));
       Connect (Get_Input (Inst, 0), Cond);
       return Inst;
+   end Build_Formal;
+
+   function Build_Assert (Ctxt : Context_Acc; Name : Sname; Cond : Net)
+                         return Instance is
+   begin
+      return Build_Formal (Ctxt, Ctxt.M_Assert, Name, Cond);
    end Build_Assert;
 
    function Build_Assume (Ctxt : Context_Acc; Name : Sname; Cond : Net)
-                         return Instance
-   is
-      Inst : Instance;
+                         return Instance is
    begin
-      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Assume,
-                            Name_Or_Internal (Name, Ctxt));
-      Connect (Get_Input (Inst, 0), Cond);
-      return Inst;
+      return Build_Formal (Ctxt, Ctxt.M_Assume, Name, Cond);
    end Build_Assume;
 
    function Build_Cover (Ctxt : Context_Acc; Name : Sname; Cond : Net)
-                         return Instance
-   is
-      Inst : Instance;
+                         return Instance is
    begin
-      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Cover,
-                            Name_Or_Internal (Name, Ctxt));
-      Connect (Get_Input (Inst, 0), Cond);
-      return Inst;
+      return Build_Formal (Ctxt, Ctxt.M_Cover, Name, Cond);
    end Build_Cover;
+
+   function Build_Assert_Cover (Ctxt : Context_Acc; Name : Sname; Cond : Net)
+                         return Instance is
+   begin
+      return Build_Formal (Ctxt, Ctxt.M_Assert_Cover, Name, Cond);
+   end Build_Assert_Cover;
 
 end Netlists.Builders;

@@ -168,6 +168,8 @@ package Netlists.Builders is
                          return Instance;
    function Build_Cover (Ctxt : Context_Acc; Name : Sname; Cond : Net)
                         return Instance;
+   function Build_Assert_Cover (Ctxt : Context_Acc; Name : Sname; Cond : Net)
+                         return Instance;
 
    --  A simple flip-flop.
    function Build_Dff (Ctxt : Context_Acc;
@@ -233,5 +235,6 @@ private
       M_Assert : Module;
       M_Assume : Module;
       M_Cover : Module;
+      M_Assert_Cover : Module;
    end record;
 end Netlists.Builders;

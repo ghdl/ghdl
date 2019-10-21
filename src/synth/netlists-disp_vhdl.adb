@@ -1051,6 +1051,10 @@ package body Netlists.Disp_Vhdl is
             Disp_Template
               ("  \l0: assert \i0 = '1' severity note; --  cover" & NL,
                Inst);
+         when Id_Assert_Cover =>
+            Disp_Template
+              ("  \l0: assert \i0 = '1' severity note; --  assert_cover" & NL,
+               Inst);
          when others =>
             Disp_Instance_Gate (Inst);
       end case;

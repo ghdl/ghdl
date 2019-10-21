@@ -2276,16 +2276,16 @@ package body Synth.Stmts is
       return Res;
    end Synth_Psl_NFA;
 
-   function Synth_Psl_Sequence_Directive
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Net
+   procedure Synth_Psl_Dff (Syn_Inst : Synth_Instance_Acc;
+                            Stmt : Node;
+                            Next_States : out Net)
    is
       use Netlists.Gates;
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
+      States : Net;
       Init : Net;
       Clk : Net;
       Clk_Inst : Instance;
-      States : Net;
-      Next_States : Net;
    begin
       --  create init net, clock net
       pragma Assert (Nbr_States <= 32);
@@ -2296,7 +2296,8 @@ package body Synth.Stmts is
       Clk_Inst := Get_Net_Parent (Clk);
       if Get_Id (Clk_Inst) /= Id_Edge then
          Error_Msg_Synth (+Stmt, "clock is not an edge");
-         return No_Net;
+         Next_States := No_Net;
+         return;
       end if;
 
       Clk := Get_Input_Net (Clk_Inst, 0);
@@ -2309,24 +2310,44 @@ package body Synth.Stmts is
       Next_States :=
         Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
       Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
+   end Synth_Psl_Dff;
 
-      return Next_States;
-   end Synth_Psl_Sequence_Directive;
+   function Synth_Psl_Final
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node; Next_States : Net) return Net
+   is
+      use PSL.Types;
+      use PSL.NFAs;
+      NFA : constant PSL_NFA := Get_PSL_NFA (Stmt);
+   begin
+      return Build_Extract_Bit
+        (Get_Build (Syn_Inst), Next_States,
+         Uns32 (Get_State_Label (Get_Final_State (NFA))));
+   end Synth_Psl_Final;
+
+   function Synth_Psl_Not_Final
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node; Next_States : Net)
+     return Net is
+   begin
+      return Build_Monadic
+        (Get_Build (Syn_Inst), Netlists.Gates.Id_Not,
+         Synth_Psl_Final (Syn_Inst, Stmt, Next_States));
+   end Synth_Psl_Not_Final;
 
    procedure Synth_Psl_Restrict_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Next_States : Net;
       Res : Net;
       Inst : Instance;
    begin
       --  Build assume gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
-      Res := Synth_Psl_Sequence_Directive (Syn_Inst, Stmt);
-      if Res /= No_Net then
+      Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
+      if Next_States /= No_Net then
          --  The restriction holds as long as there is a 1 in the NFA state.
          Res := Build_Reduce (Build_Context,
-                              Netlists.Gates.Id_Red_Or, Res);
+                              Netlists.Gates.Id_Red_Or, Next_States);
          Inst := Build_Assume (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
@@ -2335,79 +2356,36 @@ package body Synth.Stmts is
    procedure Synth_Psl_Cover_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      use PSL.NFAs;
+      Next_States : Net;
       Res : Net;
       Inst : Instance;
-      S_Num : Int32;
    begin
       --  Build cover gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
-      Res := Synth_Psl_Sequence_Directive (Syn_Inst, Stmt);
-      if Res /= No_Net then
+      Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
+      if Next_States /= No_Net then
          --  The sequence is covered as soon as the final state is reached.
-         S_Num := Get_State_Label (Get_Final_State (Get_PSL_NFA (Stmt)));
-         Res := Build_Extract_Bit (Get_Build (Syn_Inst), Res, Uns32 (S_Num));
+         Res := Synth_Psl_Final (Syn_Inst, Stmt, Next_States);
          Inst := Build_Cover (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Cover_Directive;
 
-   function Synth_Psl_Property_Directive
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) return Net
-   is
-      use PSL.Types;
-      use PSL.NFAs;
-      use Netlists.Gates;
-      NFA : constant PSL_NFA := Get_PSL_NFA (Stmt);
-      Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
-      Init : Net;
-      Clk : Net;
-      Clk_Inst : Instance;
-      States : Net;
-      Next_States : Net;
-   begin
-      --  create init net, clock net
-      pragma Assert (Nbr_States <= 32);
-      Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
-      Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
-
-      --  Check the clock is an edge and extract it.
-      Clk_Inst := Get_Net_Parent (Clk);
-      if Get_Id (Clk_Inst) /= Id_Edge then
-         Error_Msg_Synth (+Stmt, "clock is not an edge");
-         return No_Net;
-      end if;
-
-      Clk := Get_Input_Net (Clk_Inst, 0);
-
-      --  build idff
-      States := Build_Idff (Build_Context, Clk, No_Net, Init);
-
-      --  create update nets
-      --  For each state: if set, evaluate all outgoing edges.
-      Next_States := Synth_Psl_NFA (Syn_Inst, NFA, Nbr_States, States);
-      Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
-
-      return Build_Monadic
-        (Build_Context, Netlists.Gates.Id_Not,
-         Build_Extract_Bit
-           (Build_Context, Next_States,
-            Uns32 (Get_State_Label (Get_Final_State (NFA)))));
-   end Synth_Psl_Property_Directive;
-
    procedure Synth_Psl_Assume_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Res : Net;
+      Next_States : Net;
       Inst : Instance;
    begin
       --  Build assume gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
-      Res := Synth_Psl_Property_Directive (Syn_Inst, Stmt);
-      if Res /= No_Net then
-         Inst := Build_Assume (Build_Context, Synth_Label (Stmt), Res);
+      Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
+      if Next_States /= No_Net then
+         Inst := Build_Assume
+           (Build_Context, Synth_Label (Stmt),
+            Synth_Psl_Not_Final (Syn_Inst, Stmt, Next_States));
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Assume_Directive;
@@ -2415,16 +2393,37 @@ package body Synth.Stmts is
    procedure Synth_Psl_Assert_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
-      Res : Net;
+      use PSL.Types;
+      use PSL.NFAs;
+      NFA : constant PSL_NFA := Get_PSL_NFA (Stmt);
+      Active : NFA_State;
+      Next_States : Net;
       Inst : Instance;
+      Lab : Sname;
    begin
       --  Build assert gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assert on States, then the first cycle is ignored).
-      Res := Synth_Psl_Property_Directive (Syn_Inst, Stmt);
-      if Res /= No_Net then
-         Inst := Build_Assert (Build_Context, Synth_Label (Stmt), Res);
+      Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
+      if Next_States /= No_Net then
+         Lab := Synth_Label (Stmt);
+
+         Inst := Build_Assert
+           (Build_Context, Lab,
+            Synth_Psl_Not_Final (Syn_Inst, Stmt, Next_States));
          Set_Location (Inst, Get_Location (Stmt));
+
+         Active := Get_Active_State (NFA);
+         if Active /= No_State then
+            if Lab /= No_Sname then
+               Lab := New_Sname (Lab, Std_Names.Name_Cover);
+            end if;
+            Inst := Build_Assert_Cover
+              (Get_Build (Syn_Inst), Lab,
+               Build_Extract_Bit (Get_Build (Syn_Inst), Next_States,
+                                  Uns32 (Get_State_Label (Active))));
+            Set_Location (Inst, Get_Location (Stmt));
+         end if;
       end if;
    end Synth_Psl_Assert_Directive;
 
