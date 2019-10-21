@@ -2057,6 +2057,9 @@ package body Vhdl.Sem_Decls is
       --  If IS_GLOBAL is set, then declarations may be seen outside of unit.
       --  This must be set for entities and packages (except when
       --   Flags.Flag_Whole_Analyze is set).
+      --  This controls whether a type is used for a signal.
+      --  When Flag_Whole_Analyze is false, we are conservative and assume
+      --  that any global type is used for a signal (when allowed).
       Is_Global : Boolean;
    begin
       case Get_Kind (Parent) is
