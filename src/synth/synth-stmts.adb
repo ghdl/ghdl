@@ -782,7 +782,8 @@ package body Synth.Stmts is
    procedure Synth_Case (Sel : Net;
                          Els : in out Case_Element_Array;
                          Default : Net;
-                         Res : out Net)
+                         Res : out Net;
+                         Sel_Loc : Source.Syn_Src)
    is
       Wd : constant Width := Get_Width (Sel);
       Mask : Uns64;
@@ -805,6 +806,7 @@ package body Synth.Stmts is
          --  Extract 2 bits from the selector.
          Sub_Sel := Build_Extract (Build_Context,
                                    Sel, Width (2 * (I - 1)), 2);
+         Set_Location (Sub_Sel, Sel_Loc);
          Mask := Shift_Left (not 0, Natural (2 * I));
          Iels := Els'First;
          Oels := Els'First;
@@ -830,6 +832,7 @@ package body Synth.Stmts is
                if G (3) /= No_Net then
                   Rsel := Build_Mux4 (Build_Context,
                                       Sub_Sel, G (0), G (1), G (2), G (3));
+                  Set_Location (Rsel, Sel_Loc);
                elsif G (2) /= No_Net then
                   Rsel := Build_Mux2
                     (Build_Context,
@@ -840,12 +843,14 @@ package body Synth.Stmts is
                                                     Sel, Width (2 * (I - 1))),
                                  G (0), G (1)),
                      G (2));
+                  Set_Location (Rsel, Sel_Loc);
                elsif G (1) /= No_Net then
                   Rsel := Build_Mux2
                     (Build_Context,
                      Build_Extract_Bit (Build_Context,
                                         Sel, Width (2 * (I - 1))),
                      G (0), G (1));
+                  Set_Location (Rsel, Sel_Loc);
                else
                   Rsel := G (0);
                end if;
@@ -862,6 +867,7 @@ package body Synth.Stmts is
             Sub_Sel := Sel;
          else
             Sub_Sel := Build_Extract_Bit (Build_Context, Sel, Wd - 1);
+            Set_Location (Sub_Sel, Sel_Loc);
          end if;
          Iels := Els'First;
          Oels := Els'First;
@@ -872,6 +878,7 @@ package body Synth.Stmts is
                S_Group : constant Uns64 := Els (Iels).Sel and Mask;
                S_El : Uns64;
                El_Idx : Natural;
+               Rsel : Net;
             begin
                G := (others => Default);
                for K in 0 .. 1 loop
@@ -882,9 +889,9 @@ package body Synth.Stmts is
                   G (El_Idx) := Els (Iels).Val;
                   Iels := Iels + 1;
                end loop;
-               Els (Oels) :=
-                 (Sel => S_Group,
-                  Val => Build_Mux2 (Build_Context, Sub_Sel, G (0), G (1)));
+               Rsel := Build_Mux2 (Build_Context, Sub_Sel, G (0), G (1));
+               Set_Location (Rsel, Sel_Loc);
+               Els (Oels) := (Sel => S_Group, Val => Rsel);
                Oels := Oels + 1;
             end;
          end loop;
@@ -1091,7 +1098,7 @@ package body Synth.Stmts is
                end if;
 
                --  Generate the muxes tree.
-               Synth_Case (Sel_Net, Case_El.all, Default, Res);
+               Synth_Case (Sel_Net, Case_El.all, Default, Res, Expr);
 
                Partial_Assign_Append (List, New_Partial_Assign (Res, Off));
                Min_Off := Off + Wd;
@@ -1234,7 +1241,7 @@ package body Synth.Stmts is
          end if;
 
          --  Generate the muxes tree.
-         Synth_Case (Sel_Net, Case_El.all, Default, Res);
+         Synth_Case (Sel_Net, Case_El.all, Default, Res, Expr);
          Synth_Assignment (Syn_Inst, Get_Target (Stmt),
                            Create_Value_Net (Res, Targ_Type),
                            Stmt);
