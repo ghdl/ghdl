@@ -36,15 +36,15 @@ package body PSL.Optimize is
 
    procedure Remove_Unreachable_States (N : NFA)
    is
+      Start : constant NFA_State := Get_Start_State (N);
+      Final : constant NFA_State := Get_Final_State (N);
+      Active : constant NFA_State := Get_Active_State (N);
       Head : NFA_State;
-      Start, Final : NFA_State;
       E : NFA_Edge;
       S, N_S : NFA_State;
    begin
       --  Remove unreachable states, ie states that can't be reached from
       --  start state.
-      Start := Get_Start_State (N);
-      Final := Get_Final_State (N);
 
       Head := No_State;
 
@@ -76,6 +76,10 @@ package body PSL.Optimize is
          elsif S = Final then
             --  Do not remove final state!
             --  FIXME: deconnect state?
+            null;
+         elsif S = Active then
+            --  Do not remove the active state, so that user can see that's
+            --  vacuous.
             null;
          else
             Remove_State (N, S);
@@ -114,6 +118,9 @@ package body PSL.Optimize is
          elsif S = Start then
             --  Do not remove start state!
             --  FIXME: deconnect state?
+            null;
+         elsif S = Active then
+            --  The active state is not expected to be reach the final state.
             null;
          else
             Remove_State (N, S);

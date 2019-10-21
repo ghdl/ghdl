@@ -30,6 +30,8 @@ package body PSL.NFAs is
       Start : NFA_State;
       Final : NFA_State;
 
+      Active : NFA_State;
+
       --  If true there is an epsilon transition between the start and
       --  the final state.
       Epsilon : Boolean;
@@ -208,7 +210,7 @@ package body PSL.NFAs is
       --  Fill it.
       Nfat.Table (Res) := (First_State => No_State,
                            Last_State => No_State,
-                           Start => No_State, Final => No_State,
+                           Start | Final | Active => No_State,
                            Epsilon => False);
       return Res;
    end Create_NFA;
@@ -314,6 +316,16 @@ package body PSL.NFAs is
    begin
       Nfat.Table (N).Final := S;
    end Set_Final_State;
+
+   function Get_Active_State (N : NFA) return NFA_State is
+   begin
+      return Nfat.Table (N).Active;
+   end Get_Active_State;
+
+   procedure Set_Active_State (N : NFA; S : NFA_State) is
+   begin
+      Nfat.Table (N).Active := S;
+   end Set_Active_State;
 
    function Get_Next_Src_Edge (N : NFA_Edge) return NFA_Edge is
    begin

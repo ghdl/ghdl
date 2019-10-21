@@ -3570,6 +3570,13 @@ package body Vhdl.Prints is
          Disp_State (Get_Start_State (N));
          OOB.Put (", final: ");
          Disp_State (Get_Final_State (N));
+         OOB.Put (", active: ");
+         S := Get_Active_State (N);
+         if S = No_State then
+            OOB.Put ("-");
+         else
+            Disp_State (S);
+         end if;
          OOB.New_Line;
 
          S := Get_First_State (N);
