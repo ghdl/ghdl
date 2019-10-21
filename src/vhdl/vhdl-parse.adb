@@ -9768,6 +9768,31 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Package;
 
+   --  1850-2005 7.1 Verification directives
+   --  verification_directive ::=
+   --      assert_directive
+   --    | assume_directive
+   --    | assume_guarantee_directive
+   --    | restrict_directive
+   --    | restrive_guarantee_directive
+   --    | cover_directive
+   --    | fairness_directive
+   function Parse_Psl_Verification_Directive return Node is
+   begin
+      case Current_Token is
+         when Tok_Assume =>
+            return Parse_Psl_Assume_Directive (True);
+         when Tok_Assert =>
+            return Parse_Psl_Assert_Directive (True);
+         when Tok_Restrict =>
+            return Parse_Psl_Restrict_Directive (True);
+         when Tok_Cover =>
+            return Parse_Psl_Cover_Directive (True);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Parse_Psl_Verification_Directive;
+
    --  1850-2005 7.2 Verification units
    --  verification_unit ::=
    --    vunit_type PSL_Identifier [ ( hierachical_hdl_name ) ] {
@@ -9832,14 +9857,43 @@ package body Vhdl.Parse is
          case Current_Token is
             when Tok_Default =>
                Item := Parse_Psl_Default_Clock (True);
-            when Tok_Assume =>
-               Item := Parse_Psl_Assume_Directive (True);
-            when Tok_Assert =>
-               Item := Parse_Psl_Assert_Directive (True);
-            when Tok_Restrict =>
-               Item := Parse_Psl_Restrict_Directive (True);
-            when Tok_Cover =>
-               Item := Parse_Psl_Cover_Directive (True);
+            when Tok_Assume
+              | Tok_Assert
+              | Tok_Restrict
+              | Tok_Cover =>
+               Item := Parse_Psl_Verification_Directive;
+            when Tok_Identifier =>
+               declare
+                  Label : Name_Id;
+                  Loc : Location_Type;
+               begin
+                  Label := Current_Identifier;
+                  Loc := Get_Token_Location;
+
+                  --  Skip label.
+                  Scan;
+
+                  if Current_Token /= Tok_Colon then
+                     Error_Msg_Parse ("':' expected after label");
+                  else
+                     --  Skip ':'.
+                     Scan;
+                  end if;
+
+                  case Current_Token is
+                     when Tok_Assume
+                       | Tok_Assert
+                       | Tok_Restrict
+                       | Tok_Cover =>
+                        Item := Parse_Psl_Verification_Directive;
+                        Set_Label (Item, Label);
+                        Set_Location (Item, Loc);
+                     when others =>
+                        Error_Msg_Parse
+                          ("verification directive expected after label");
+                        Item := Null_Iir;
+                  end case;
+               end;
             when others =>
                exit;
          end case;
