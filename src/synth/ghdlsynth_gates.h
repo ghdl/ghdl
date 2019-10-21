@@ -72,6 +72,7 @@ enum Module_Id {
    Id_Assert = 81,
    Id_Assume = 82,
    Id_Cover = 83,
+   Id_Assert_Cover = 84,
    Id_Const_UB32 = 96,
    Id_Const_SB32 = 97,
    Id_Const_UL32 = 98,
