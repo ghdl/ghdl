@@ -162,7 +162,10 @@ package body Netlists.Memories is
                elsif Get_Driver (I1_Inp) = Orig_Net then
                   Data := Get_Driver (I0_Inp);
                else
-                  raise Internal_Error;
+                  Info_Msg_Synth
+                    (+Data_Inst, "write to a non memory %n", (1 => +Orig));
+                  Data_W := 0;
+                  return;
                end if;
                Data_Inst := Get_Net_Parent (Data);
             end;
