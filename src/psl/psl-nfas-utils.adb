@@ -361,16 +361,14 @@ package body PSL.NFAs.Utils is
             if Get_Kind (Expr) = N_True then
                return;
             end if;
-            Expr := Create_Node (N_True);
-            Set_Edge_Expr (E, Expr);
+            Set_Edge_Expr (E, True_Node);
             return;
          end if;
          E := Get_Next_Src_Edge (E);
       end loop;
 
       --  No existing edge.  Create one.
-      Expr := Create_Node (N_True);
-      Add_Edge (Start, Start, Expr);
+      Add_Edge (Start, Start, True_Node);
    end Set_Init_Loop;
 
 end PSL.NFAs.Utils;
