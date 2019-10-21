@@ -68,7 +68,7 @@ package body Vhdl.Parse is
    function Parse_Binding_Indication return Iir_Binding_Indication;
    function Parse_Aggregate return Iir;
    function Parse_Signature return Iir_Signature;
-   procedure Parse_Declarative_Part (Parent : Iir);
+   procedure Parse_Declarative_Part (Parent : Iir; Package_Parent : Iir);
    function Parse_Tolerance_Aspect_Opt return Iir;
    function Parse_Package (Parent : Iir) return Iir;
 
@@ -2670,7 +2670,7 @@ package body Vhdl.Parse is
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
 
-      Parse_Declarative_Part (Res);
+      Parse_Declarative_Part (Res, Res);
 
       --  Eat 'end'.
       Expect_Scan (Tok_End);
@@ -4495,30 +4495,6 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Psl_Declaration;
 
-   --  Return the parent of a nested package.  Used to check if some
-   --  declarations are allowed in a package.
-   function Get_Package_Parent (Decl : Iir) return Iir
-   is
-      Res : Iir;
-      Parent : Iir;
-   begin
-      Res := Decl;
-      loop
-         case Get_Kind (Res) is
-            when Iir_Kind_Package_Declaration
-              | Iir_Kind_Package_Body =>
-               Parent := Get_Parent (Res);
-               if Get_Kind (Parent) = Iir_Kind_Design_Unit then
-                  return Res;
-               else
-                  Res := Parent;
-               end if;
-            when others =>
-               return Res;
-         end case;
-      end loop;
-   end Get_Package_Parent;
-
    --  precond : next token
    --  postcond: next token
    --
@@ -4710,306 +4686,308 @@ package body Vhdl.Parse is
    --
    --  (*): block means block_declarative_item, ie: block_statement,
    --       architecture_body and generate_statement)
-   procedure Parse_Declarative_Part (Parent : Iir)
+   --
+   --  PACKAGE_PARENT is the parent for nested packages.
+   function Parse_Declaration (Parent : Iir; Package_Parent : Iir) return Iir
+   is
+      Decl : Iir;
+   begin
+      Decl := Null_Iir;
+      case Current_Token is
+         when Tok_Invalid =>
+            raise Internal_Error;
+         when Tok_Type =>
+            Decl := Parse_Type_Declaration (Parent);
+
+            --  LRM 2.5  Package declarations
+            --  If a package declarative item is a type declaration that is
+            --  a full type declaration whose type definition is a
+            --  protected_type definition, then that protected type
+            --  definition must not be a protected type body.
+            if Decl /= Null_Iir
+              and then Get_Kind (Decl) = Iir_Kind_Protected_Type_Body
+            then
+               case Get_Kind (Parent) is
+                  when Iir_Kind_Package_Declaration =>
+                     Error_Msg_Parse (+Decl, "protected type body not "
+                                        & "allowed in package declaration");
+                  when others =>
+                     null;
+               end case;
+            end if;
+         when Tok_Subtype =>
+            Decl := Parse_Subtype_Declaration (Parent);
+         when Tok_Nature =>
+            Decl := Parse_Nature_Declaration;
+         when Tok_Terminal =>
+            Decl := Parse_Terminal_Declaration (Parent);
+         when Tok_Quantity =>
+            Decl := Parse_Quantity_Declaration (Parent);
+         when Tok_Signal =>
+            --  LRM08 4.7 Package declarations
+            --  For package declaration that appears in a subprogram body,
+            --  a process statement, or a protected type body, [...]
+            --  Moreover, it is an eror if [...] a signal declaration [...]
+            --  appears as a package declarative item of such a package
+            --  declaration.
+            case Get_Kind (Package_Parent) is
+               when Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body =>
+                  Error_Msg_Parse
+                    ("signal declaration not allowed in subprogram body");
+               when Iir_Kinds_Process_Statement =>
+                  Error_Msg_Parse
+                    ("signal declaration not allowed in process");
+               when Iir_Kind_Protected_Type_Body
+                 | Iir_Kind_Protected_Type_Declaration =>
+                  Error_Msg_Parse
+                    ("signal declaration not allowed in protected type");
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Architecture_Body
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Generate_Statement_Body
+                 | Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Vunit_Declaration =>
+                  if Get_Kind (Parent) = Iir_Kind_Package_Body then
+                     Error_Msg_Parse
+                       ("signal declaration not allowed in package body");
+                  end if;
+               when others =>
+                  Error_Kind ("parse_declarative_part", Package_Parent);
+            end case;
+            Decl := Parse_Object_Declaration (Parent);
+         when Tok_Constant =>
+            Decl := Parse_Object_Declaration (Parent);
+         when Tok_Variable =>
+            --  LRM93 4.3.1.3  Variable declarations
+            --  Variable declared immediatly within entity declarations,
+            --  architectures bodies, packages, packages bodies, and blocks
+            --  must be shared variable.
+            --  Variables declared immediatly within subprograms and
+            --  processes must not be shared variables.
+            --  Variables may appear in protected type bodies; such
+            --  variables, which must not be shared variables, represent
+            --  shared data.
+            case Get_Kind (Package_Parent) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Architecture_Body
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Generate_Statement_Body
+                 | Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Protected_Type_Declaration =>
+                  --  FIXME: replace HERE with the kind of declaration
+                  --  ie: "not allowed in a package" rather than "here".
+                  Error_Msg_Parse
+                    ("non-shared variable declaration not allowed here");
+               when Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body
+                 | Iir_Kinds_Process_Statement
+                 | Iir_Kind_Protected_Type_Body =>
+                  null;
+               when others =>
+                  Error_Kind ("parse_declarative_part", Package_Parent);
+            end case;
+            Decl := Parse_Object_Declaration (Parent);
+         when Tok_Shared =>
+            if Flags.Vhdl_Std <= Vhdl_87 then
+               Error_Msg_Parse ("shared variable not allowed in vhdl 87");
+            end if;
+            --  LRM08 4.7 Package declarations
+            --  For package declaration that appears in a subprogram body,
+            --  a process statement, or a protected type body, it is an
+            --  error if a variable declaration in the package declaratie
+            --  part of the package declaration declares a shared variable.
+
+            --  LRM08 4.8 Package bodies
+            --  For a package body that appears in a subprogram body, a
+            --  process statement or a protected type body, it is an error
+            --  if a variable declaration in the package body declarative
+            --  part of the package body declares a shared variable.
+
+            --  LRM93 4.3.1.3  Variable declarations
+            --  Variable declared immediatly within entity declarations,
+            --  architectures bodies, packages, packages bodies, and blocks
+            --  must be shared variable.
+            --  Variables declared immediatly within subprograms and
+            --  processes must not be shared variables.
+            --  Variables may appear in proteted type bodies; such
+            --  variables, which must not be shared variables, represent
+            --  shared data.
+            case Get_Kind (Package_Parent) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Architecture_Body
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Generate_Statement_Body
+                 | Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Protected_Type_Declaration =>
+                  null;
+               when Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body
+                 | Iir_Kinds_Process_Statement
+                 | Iir_Kind_Protected_Type_Body =>
+                  Error_Msg_Parse
+                    ("shared variable declaration not allowed here");
+               when others =>
+                  Error_Kind ("parse_declarative_part", Package_Parent);
+            end case;
+            Decl := Parse_Object_Declaration (Parent);
+         when Tok_File =>
+            Decl := Parse_Object_Declaration (Parent);
+         when Tok_Function
+           | Tok_Procedure
+           | Tok_Pure
+           | Tok_Impure =>
+            Decl := Parse_Subprogram_Declaration;
+            if Decl /= Null_Iir
+              and then Get_Subprogram_Body (Decl) /= Null_Iir
+            then
+               if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
+                  Error_Msg_Parse
+                    (+Decl, "subprogram body not allowed in a package");
+               end if;
+            end if;
+         when Tok_Alias =>
+            Decl := Parse_Alias_Declaration;
+         when Tok_Component =>
+            case Get_Kind (Parent) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Procedure_Body
+                 | Iir_Kind_Function_Body
+                 | Iir_Kinds_Process_Statement
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Protected_Type_Body
+                 | Iir_Kind_Protected_Type_Declaration =>
+                  Error_Msg_Parse
+                    ("component declaration are not allowed here");
+               when Iir_Kind_Architecture_Body
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Generate_Statement_Body
+                 | Iir_Kind_Package_Declaration =>
+                  null;
+               when others =>
+                  Error_Kind ("parse_declarative_part", Parent);
+            end case;
+            Decl := Parse_Component_Declaration;
+         when Tok_For =>
+            case Get_Kind (Parent) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body
+                 | Iir_Kinds_Process_Statement
+                 | Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Protected_Type_Body
+                 | Iir_Kind_Protected_Type_Declaration =>
+                  Error_Msg_Parse
+                    ("configuration specification not allowed here");
+               when Iir_Kind_Architecture_Body
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Generate_Statement_Body =>
+                  null;
+               when others =>
+                  Error_Kind ("parse_declarative_part", Parent);
+            end case;
+            Decl := Parse_Configuration_Specification;
+         when Tok_Attribute =>
+            Decl := Parse_Attribute;
+         when Tok_Disconnect =>
+            --  LRM08 4.7 Package declarations
+            --  For package declaration that appears in a subprogram body,
+            --  a process statement, or a protected type body, [...]
+            --  Moreover, it is an eror if [...] a disconnection
+            --  specification [...] appears as a package declarative item
+            --  of such a package declaration.
+            case Get_Kind (Parent) is
+               when Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body
+                 | Iir_Kinds_Process_Statement
+                 | Iir_Kind_Protected_Type_Body
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Protected_Type_Declaration =>
+                  Error_Msg_Parse
+                    ("disconnect specification not allowed here");
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Architecture_Body
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Generate_Statement_Body
+                 | Iir_Kind_Package_Declaration =>
+                  null;
+               when others =>
+                  Error_Kind ("parse_declarative_part", Parent);
+            end case;
+            Decl := Parse_Disconnection_Specification;
+         when Tok_Use =>
+            Decl := Parse_Use_Clause;
+         when Tok_Group =>
+            Decl := Parse_Group;
+         when Tok_Package =>
+            if Vhdl_Std < Vhdl_08 then
+               Error_Msg_Parse ("nested package not allowed before vhdl 2008");
+            end if;
+            Decl := Parse_Package (Parent);
+            if Decl /= Null_Iir
+              and then Get_Kind (Decl) = Iir_Kind_Package_Body
+            then
+               if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
+                  Error_Msg_Parse
+                    (+Decl, "package body not allowed in a package");
+               end if;
+            end if;
+
+            if Current_Token = Tok_Semi_Colon then
+               --  Skip ';'.
+               Scan;
+            end if;
+         when Tok_Default =>
+            --  This identifier is a PSL keyword.
+            Xrefs.Xref_Keyword (Get_Token_Location);
+
+            --  Check whether default clock are allowed in this region.
+            case Get_Kind (Parent) is
+               when Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body
+                 | Iir_Kinds_Process_Statement
+                 | Iir_Kind_Protected_Type_Body
+                 | Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Protected_Type_Declaration =>
+                  Error_Msg_Parse
+                    ("PSL default clock declaration not allowed here");
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Architecture_Body
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Generate_Statement_Body =>
+                  null;
+               when others =>
+                  Error_Kind ("parse_declarative_part", Parent);
+            end case;
+            Decl := Parse_Psl_Default_Clock (False);
+         when Tok_Identifier =>
+            Error_Msg_Parse
+              ("object class keyword such as 'variable' is expected");
+            Resync_To_End_Of_Declaration;
+         when Tok_Semi_Colon =>
+            Error_Msg_Parse ("';' (semi colon) not allowed alone");
+            Scan;
+         when others =>
+            null;
+      end case;
+      return Decl;
+   end Parse_Declaration;
+
+   procedure Parse_Declarative_Part (Parent : Iir; Package_Parent : Iir)
    is
       Last_Decl : Iir;
       Decl : Iir;
-      Package_Parent_Cache : Iir;
-
-      function Package_Parent return Iir is
-      begin
-         if Package_Parent_Cache = Null_Iir then
-            Package_Parent_Cache := Get_Package_Parent (Parent);
-         end if;
-         return Package_Parent_Cache;
-      end Package_Parent;
    begin
-      Package_Parent_Cache := Null_Iir;
       Last_Decl := Null_Iir;
       loop
-         Decl := Null_Iir;
-         case Current_Token is
-            when Tok_Invalid =>
-               raise Internal_Error;
-            when Tok_Type =>
-               Decl := Parse_Type_Declaration (Parent);
-
-               --  LRM 2.5  Package declarations
-               --  If a package declarative item is a type declaration that is
-               --  a full type declaration whose type definition is a
-               --  protected_type definition, then that protected type
-               --  definition must not be a protected type body.
-               if Decl /= Null_Iir
-                 and then Get_Kind (Decl) = Iir_Kind_Protected_Type_Body
-               then
-                  case Get_Kind (Parent) is
-                     when Iir_Kind_Package_Declaration =>
-                        Error_Msg_Parse (+Decl, "protected type body not "
-                                           & "allowed in package declaration");
-                     when others =>
-                        null;
-                  end case;
-               end if;
-            when Tok_Subtype =>
-               Decl := Parse_Subtype_Declaration (Parent);
-            when Tok_Nature =>
-               Decl := Parse_Nature_Declaration;
-            when Tok_Terminal =>
-               Decl := Parse_Terminal_Declaration (Parent);
-            when Tok_Quantity =>
-               Decl := Parse_Quantity_Declaration (Parent);
-            when Tok_Signal =>
-               --  LRM08 4.7 Package declarations
-               --  For package declaration that appears in a subprogram body,
-               --  a process statement, or a protected type body, [...]
-               --  Moreover, it is an eror if [...] a signal declaration [...]
-               --  appears as a package declarative item of such a package
-               --  declaration.
-               case Get_Kind (Package_Parent) is
-                  when Iir_Kind_Function_Body
-                    | Iir_Kind_Procedure_Body =>
-                     Error_Msg_Parse
-                       ("signal declaration not allowed in subprogram body");
-                  when Iir_Kinds_Process_Statement =>
-                     Error_Msg_Parse
-                       ("signal declaration not allowed in process");
-                  when Iir_Kind_Protected_Type_Body
-                    | Iir_Kind_Protected_Type_Declaration =>
-                     Error_Msg_Parse
-                       ("signal declaration not allowed in protected type");
-                  when Iir_Kind_Package_Body =>
-                     Error_Msg_Parse
-                       ("signal declaration not allowed in package body");
-                  when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Architecture_Body
-                    | Iir_Kind_Block_Statement
-                    | Iir_Kind_Generate_Statement_Body
-                    | Iir_Kind_Package_Declaration =>
-                     null;
-                  when others =>
-                     Error_Kind ("parse_declarative_part", Package_Parent);
-               end case;
-               Decl := Parse_Object_Declaration (Parent);
-            when Tok_Constant =>
-               Decl := Parse_Object_Declaration (Parent);
-            when Tok_Variable =>
-               --  LRM93 4.3.1.3  Variable declarations
-               --  Variable declared immediatly within entity declarations,
-               --  architectures bodies, packages, packages bodies, and blocks
-               --  must be shared variable.
-               --  Variables declared immediatly within subprograms and
-               --  processes must not be shared variables.
-               --  Variables may appear in protected type bodies; such
-               --  variables, which must not be shared variables, represent
-               --  shared data.
-               case Get_Kind (Package_Parent) is
-                  when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Architecture_Body
-                    | Iir_Kind_Block_Statement
-                    | Iir_Kind_Generate_Statement_Body
-                    | Iir_Kind_Package_Declaration
-                    | Iir_Kind_Package_Body
-                    | Iir_Kind_Protected_Type_Declaration =>
-                     --  FIXME: replace HERE with the kind of declaration
-                     --  ie: "not allowed in a package" rather than "here".
-                     Error_Msg_Parse
-                       ("non-shared variable declaration not allowed here");
-                  when Iir_Kind_Function_Body
-                    | Iir_Kind_Procedure_Body
-                    | Iir_Kinds_Process_Statement
-                    | Iir_Kind_Protected_Type_Body =>
-                     null;
-                  when others =>
-                     Error_Kind ("parse_declarative_part", Package_Parent);
-               end case;
-               Decl := Parse_Object_Declaration (Parent);
-            when Tok_Shared =>
-               if Flags.Vhdl_Std <= Vhdl_87 then
-                  Error_Msg_Parse ("shared variable not allowed in vhdl 87");
-               end if;
-               --  LRM08 4.7 Package declarations
-               --  For package declaration that appears in a subprogram body,
-               --  a process statement, or a protected type body, it is an
-               --  error if a variable declaration in the package declaratie
-               --  part of the package declaration declares a shared variable.
-
-               --  LRM08 4.8 Package bodies
-               --  For a package body that appears in a subprogram body, a
-               --  process statement or a protected type body, it is an error
-               --  if a variable declaration in the package body declarative
-               --  part of the package body declares a shared variable.
-
-               --  LRM93 4.3.1.3  Variable declarations
-               --  Variable declared immediatly within entity declarations,
-               --  architectures bodies, packages, packages bodies, and blocks
-               --  must be shared variable.
-               --  Variables declared immediatly within subprograms and
-               --  processes must not be shared variables.
-               --  Variables may appear in proteted type bodies; such
-               --  variables, which must not be shared variables, represent
-               --  shared data.
-               case Get_Kind (Package_Parent) is
-                  when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Architecture_Body
-                    | Iir_Kind_Block_Statement
-                    | Iir_Kind_Generate_Statement_Body
-                    | Iir_Kind_Package_Declaration
-                    | Iir_Kind_Package_Body
-                    | Iir_Kind_Protected_Type_Declaration =>
-                     null;
-                  when Iir_Kind_Function_Body
-                    | Iir_Kind_Procedure_Body
-                    | Iir_Kinds_Process_Statement
-                    | Iir_Kind_Protected_Type_Body =>
-                     Error_Msg_Parse
-                       ("shared variable declaration not allowed here");
-                  when others =>
-                     Error_Kind ("parse_declarative_part", Package_Parent);
-               end case;
-               Decl := Parse_Object_Declaration (Parent);
-            when Tok_File =>
-               Decl := Parse_Object_Declaration (Parent);
-            when Tok_Function
-              | Tok_Procedure
-              | Tok_Pure
-              | Tok_Impure =>
-               Decl := Parse_Subprogram_Declaration;
-               if Decl /= Null_Iir
-                 and then Get_Subprogram_Body (Decl) /= Null_Iir
-               then
-                  if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
-                     Error_Msg_Parse
-                       (+Decl, "subprogram body not allowed in a package");
-                  end if;
-               end if;
-            when Tok_Alias =>
-               Decl := Parse_Alias_Declaration;
-            when Tok_Component =>
-               case Get_Kind (Parent) is
-                  when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Procedure_Body
-                    | Iir_Kind_Function_Body
-                    | Iir_Kinds_Process_Statement
-                    | Iir_Kind_Package_Body
-                    | Iir_Kind_Protected_Type_Body
-                    | Iir_Kind_Protected_Type_Declaration =>
-                     Error_Msg_Parse
-                       ("component declaration are not allowed here");
-                  when Iir_Kind_Architecture_Body
-                    | Iir_Kind_Block_Statement
-                    | Iir_Kind_Generate_Statement_Body
-                    | Iir_Kind_Package_Declaration =>
-                     null;
-                  when others =>
-                     Error_Kind ("parse_declarative_part", Package_Parent);
-               end case;
-               Decl := Parse_Component_Declaration;
-            when Tok_For =>
-               case Get_Kind (Parent) is
-                  when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Function_Body
-                    | Iir_Kind_Procedure_Body
-                    | Iir_Kinds_Process_Statement
-                    | Iir_Kind_Package_Declaration
-                    | Iir_Kind_Package_Body
-                    | Iir_Kind_Protected_Type_Body
-                    | Iir_Kind_Protected_Type_Declaration =>
-                     Error_Msg_Parse
-                       ("configuration specification not allowed here");
-                  when Iir_Kind_Architecture_Body
-                    | Iir_Kind_Block_Statement
-                    | Iir_Kind_Generate_Statement_Body =>
-                     null;
-                  when others =>
-                     Error_Kind ("parse_declarative_part", Package_Parent);
-               end case;
-               Decl := Parse_Configuration_Specification;
-            when Tok_Attribute =>
-               Decl := Parse_Attribute;
-            when Tok_Disconnect =>
-               --  LRM08 4.7 Package declarations
-               --  For package declaration that appears in a subprogram body,
-               --  a process statement, or a protected type body, [...]
-               --  Moreover, it is an eror if [...] a disconnection
-               --  specification [...] appears as a package declarative item
-               --  of such a package declaration.
-               case Get_Kind (Parent) is
-                  when Iir_Kind_Function_Body
-                    | Iir_Kind_Procedure_Body
-                    | Iir_Kinds_Process_Statement
-                    | Iir_Kind_Protected_Type_Body
-                    | Iir_Kind_Package_Body
-                    | Iir_Kind_Protected_Type_Declaration =>
-                     Error_Msg_Parse
-                       ("disconnect specification not allowed here");
-                  when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Architecture_Body
-                    | Iir_Kind_Block_Statement
-                    | Iir_Kind_Generate_Statement_Body
-                    | Iir_Kind_Package_Declaration =>
-                     null;
-                  when others =>
-                     Error_Kind ("parse_declarative_part", Parent);
-               end case;
-               Decl := Parse_Disconnection_Specification;
-            when Tok_Use =>
-               Decl := Parse_Use_Clause;
-            when Tok_Group =>
-               Decl := Parse_Group;
-            when Tok_Package =>
-               if Vhdl_Std < Vhdl_08 then
-                  Error_Msg_Parse
-                    ("nested package not allowed before vhdl 2008");
-               end if;
-               Decl := Parse_Package (Parent);
-               if Decl /= Null_Iir
-                 and then Get_Kind (Decl) = Iir_Kind_Package_Body
-               then
-                  if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
-                     Error_Msg_Parse
-                       (+Decl, "package body not allowed in a package");
-                  end if;
-               end if;
-
-               if Current_Token = Tok_Semi_Colon then
-                  --  Skip ';'.
-                  Scan;
-               end if;
-            when Tok_Default =>
-               --  This identifier is a PSL keyword.
-               Xrefs.Xref_Keyword (Get_Token_Location);
-
-               --  Check whether default clock are allowed in this region.
-               case Get_Kind (Parent) is
-                  when Iir_Kind_Function_Body
-                    | Iir_Kind_Procedure_Body
-                    | Iir_Kinds_Process_Statement
-                    | Iir_Kind_Protected_Type_Body
-                    | Iir_Kind_Package_Declaration
-                    | Iir_Kind_Package_Body
-                    | Iir_Kind_Protected_Type_Declaration =>
-                     Error_Msg_Parse
-                       ("PSL default clock declaration not allowed here");
-                  when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Architecture_Body
-                    | Iir_Kind_Block_Statement
-                    | Iir_Kind_Generate_Statement_Body =>
-                     null;
-                  when others =>
-                     Error_Kind ("parse_declarative_part", Parent);
-               end case;
-               Decl := Parse_Psl_Default_Clock (False);
-            when Tok_Identifier =>
-               Error_Msg_Parse
-                 ("object class keyword such as 'variable' is expected");
-               Resync_To_End_Of_Declaration;
-            when Tok_Semi_Colon =>
-               Error_Msg_Parse ("';' (semi colon) not allowed alone");
-               Scan;
-            when others =>
-               exit;
-         end case;
-         while Decl /= Null_Iir loop
+         Decl := Parse_Declaration (Parent, Package_Parent);
+         exit when Decl = Null_Iir;
+         loop
             Set_Parent (Decl, Parent);
             if Last_Decl = Null_Iir then
                Set_Declaration_Chain (Parent, Decl);
@@ -5018,6 +4996,7 @@ package body Vhdl.Parse is
             end if;
             Last_Decl := Decl;
             Decl := Get_Chain (Decl);
+            exit when Decl = Null_Iir;
          end loop;
       end loop;
    end Parse_Declarative_Part;
@@ -5066,7 +5045,7 @@ package body Vhdl.Parse is
 
       Parse_Generic_Port_Clauses (Res);
 
-      Parse_Declarative_Part (Res);
+      Parse_Declarative_Part (Res, Res);
 
       if Current_Token = Tok_Begin then
          Begin_Loc := Get_Token_Location;
@@ -7375,7 +7354,7 @@ package body Vhdl.Parse is
       Set_Subprogram_Specification (Subprg_Body, Subprg);
       Set_Chain (Subprg, Subprg_Body);
 
-      Parse_Declarative_Part (Subprg_Body);
+      Parse_Declarative_Part (Subprg_Body, Subprg_Body);
 
       --  Skip 'begin'.
       Begin_Loc := Get_Token_Location;
@@ -7514,7 +7493,7 @@ package body Vhdl.Parse is
       end if;
 
       -- declarative part.
-      Parse_Declarative_Part (Res);
+      Parse_Declarative_Part (Res, Res);
 
       --  Skip 'begin'.
       Begin_Loc := Get_Token_Location;
@@ -7960,7 +7939,7 @@ package body Vhdl.Parse is
          Set_Block_Header (Res, Parse_Block_Header);
       end if;
       if Current_Token /= Tok_Begin then
-         Parse_Declarative_Part (Res);
+         Parse_Declarative_Part (Res, Res);
       end if;
 
       Begin_Loc := Get_Token_Location;
@@ -8075,7 +8054,7 @@ package body Vhdl.Parse is
                Error_Msg_Parse
                  ("declarations not allowed in a generate in vhdl87");
             end if;
-            Parse_Declarative_Part (Bod);
+            Parse_Declarative_Part (Bod, Bod);
             Expect (Tok_Begin);
             Set_Has_Begin (Bod, True);
 
@@ -9023,7 +9002,7 @@ package body Vhdl.Parse is
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
 
-      Parse_Declarative_Part (Res);
+      Parse_Declarative_Part (Res, Res);
 
       --  Skip 'begin'.
       Begin_Loc := Get_Token_Location;
@@ -9543,6 +9522,30 @@ package body Vhdl.Parse is
       end if;
    end Parse_Configuration_Declaration;
 
+   --  Return the parent of a nested package.  Used to check if some
+   --  declarations are allowed in a package.
+   function Get_Package_Parent (Decl : Iir) return Iir
+   is
+      Res : Iir;
+      Parent : Iir;
+   begin
+      Res := Decl;
+      loop
+         case Get_Kind (Res) is
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
+               Parent := Get_Parent (Res);
+               if Get_Kind (Parent) = Iir_Kind_Design_Unit then
+                  return Res;
+               else
+                  Res := Parent;
+               end if;
+            when others =>
+               return Res;
+         end case;
+      end loop;
+   end Get_Package_Parent;
+
    --  precond : generic
    --  postcond: next token
    --
@@ -9592,7 +9595,7 @@ package body Vhdl.Parse is
          Set_Package_Header (Res, Parse_Package_Header);
       end if;
 
-      Parse_Declarative_Part (Res);
+      Parse_Declarative_Part (Res, Get_Package_Parent (Res));
 
       End_Loc := Get_Token_Location;
 
@@ -9642,7 +9645,7 @@ package body Vhdl.Parse is
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
 
-      Parse_Declarative_Part (Res);
+      Parse_Declarative_Part (Res, Get_Package_Parent (Res));
 
       End_Loc := Get_Token_Location;
 
@@ -9862,6 +9865,25 @@ package body Vhdl.Parse is
               | Tok_Restrict
               | Tok_Cover =>
                Item := Parse_Psl_Verification_Directive;
+            when Tok_Type
+              | Tok_Subtype
+              | Tok_Signal
+              | Tok_Constant
+              | Tok_Variable
+              | Tok_Shared
+              | Tok_File
+              | Tok_Function
+              | Tok_Pure
+              | Tok_Impure
+              | Tok_Procedure
+              | Tok_Alias
+              | Tok_For
+              | Tok_Attribute
+              | Tok_Disconnect
+              | Tok_Use
+              | Tok_Group
+              | Tok_Package =>
+               Item := Parse_Declaration (Res, Res);
             when Tok_Identifier =>
                declare
                   Label : Name_Id;
@@ -9898,13 +9920,16 @@ package body Vhdl.Parse is
                exit;
          end case;
 
-         Set_Parent (Item, Res);
-         if Last_Item = Null_Node then
-            Set_Vunit_Item_Chain (Res, Item);
-         else
-            Set_Chain (Last_Item, Item);
-         end if;
-         Last_Item := Item;
+         while Item /= Null_Iir loop
+            Set_Parent (Item, Res);
+            if Last_Item = Null_Node then
+               Set_Vunit_Item_Chain (Res, Item);
+            else
+               Set_Chain (Last_Item, Item);
+            end if;
+            Last_Item := Item;
+            Item := Get_Chain (Item);
+         end loop;
       end loop;
 
       --  Skip '}'.
