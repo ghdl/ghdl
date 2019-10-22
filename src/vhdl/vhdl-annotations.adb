@@ -1185,6 +1185,12 @@ package body Vhdl.Annotations is
                | Iir_Kind_Psl_Cover_Directive
                | Iir_Kind_Psl_Restrict_Directive =>
                null;
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body =>
+               Annotate_Declaration (Vunit_Info, Item);
             when others =>
                Error_Kind ("annotate_vunit_declaration", Item);
          end case;
