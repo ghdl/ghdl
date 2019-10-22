@@ -850,7 +850,7 @@ package body Vhdl.Sem_Decls is
 
    --  LAST_DECL is set only if DECL is part of a list of declarations (they
    --  share the same type and the same default value).
-   procedure Sem_Object_Declaration (Decl: Iir; Parent : Iir; Last_Decl : Iir)
+   procedure Sem_Object_Declaration (Decl: Iir; Last_Decl : Iir)
    is
       Deferred_Const : constant Iir := Get_Deferred_Constant (Decl);
       Atype: Iir;
@@ -969,7 +969,8 @@ package body Vhdl.Sem_Decls is
                else
                   Set_Deferred_Declaration_Flag (Decl, True);
                end if;
-               if Get_Kind (Parent) /= Iir_Kind_Package_Declaration then
+               if Get_Kind (Get_Parent (Decl)) /= Iir_Kind_Package_Declaration
+               then
                   Error_Msg_Sem
                     (+Decl, "a constant must have a default value");
                end if;
@@ -1019,6 +1020,7 @@ package body Vhdl.Sem_Decls is
             --  parse.
             if Flags.Vhdl_Std >= Vhdl_00 then
                declare
+                  Parent : constant Iir := Get_Parent (Decl);
                   Base_Type : constant Iir := Get_Base_Type (Atype);
                   Is_Protected : constant Boolean :=
                     Get_Kind (Base_Type) = Iir_Kind_Protected_Type_Declaration;
@@ -1168,10 +1170,9 @@ package body Vhdl.Sem_Decls is
       --  Note: this check is also performed when a file is referenced.
       --    But a file can be declared without being explicitly referenced.
       declare
-         Parent : Iir;
+         Parent : constant Iir := Get_Parent (Decl);
          Spec : Iir;
       begin
-         Parent := Get_Parent (Decl);
          case Get_Kind (Parent) is
             when Iir_Kind_Function_Body =>
                Spec := Get_Subprogram_Specification (Parent);
@@ -2045,14 +2046,12 @@ package body Vhdl.Sem_Decls is
    --  PREV_DECL is the previous one (used for declaration like
    --    signal a, b : mytype; ) to get type and default value from the
    --  previous declaration.
-   --  PARENT is the parent node (useful ?)
    --  IS_GLOBAL must be true when the declaration can be used by an external
    --   file (so for package and entities).
    --  ATTR_SPEC_CHAIN is the chain of attribute specifications, used to
    --   handle the 'others' case.
    procedure Sem_Declaration (Decl : in out Iir;
                               Prev_Decl : in out Iir;
-                              Parent : Iir;
                               Is_Global : Boolean;
                               Attr_Spec_Chain : in out Iir) is
    begin
@@ -2065,13 +2064,13 @@ package body Vhdl.Sem_Decls is
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Variable_Declaration =>
-            Sem_Object_Declaration (Decl, Parent, Prev_Decl);
+            Sem_Object_Declaration (Decl, Prev_Decl);
          when Iir_Kind_File_Declaration =>
             Sem_File_Declaration (Decl, Prev_Decl);
          when Iir_Kind_Attribute_Declaration =>
             Sem_Attribute_Declaration (Decl);
          when Iir_Kind_Attribute_Specification =>
-            Sem_Attribute_Specification (Decl, Parent);
+            Sem_Attribute_Specification (Decl);
             if Get_Entity_Name_List (Decl) in Iir_Flists_All_Others then
                Set_Attribute_Specification_Chain (Decl, Attr_Spec_Chain);
                Attr_Spec_Chain := Decl;
@@ -2150,7 +2149,7 @@ package body Vhdl.Sem_Decls is
 
       --  Insert *before* DECL pending implicit signal declarations created
       --  for DECL after LAST_DECL.  This updates LAST_DECL.
-      Insert_Pending_Implicit_Declarations (Parent, Prev_Decl);
+      Insert_Pending_Implicit_Declarations (Get_Parent (Decl), Prev_Decl);
    end Sem_Declaration;
 
    procedure Sem_Declaration_Chain (Parent : Iir)
@@ -2187,7 +2186,7 @@ package body Vhdl.Sem_Decls is
 
       while Decl /= Null_Iir loop
 
-         Sem_Declaration (Decl, Last_Decl, Parent, Is_Global, Attr_Spec_Chain);
+         Sem_Declaration (Decl, Last_Decl, Is_Global, Attr_Spec_Chain);
 
          if Last_Decl = Null_Iir then
             --  Append now to handle expand names.

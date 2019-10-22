@@ -9433,6 +9433,7 @@ package body Vhdl.Parse is
                      Error_Msg_Parse
                        ("attribute declaration not allowed here");
                   end if;
+                  Set_Parent (El, Parent);
                   Chain_Append (First, Last, El);
                end if;
             when Tok_Group =>
@@ -9442,6 +9443,7 @@ package body Vhdl.Parse is
                      Error_Msg_Parse
                        ("group template declaration not allowed here");
                   end if;
+                  Set_Parent (El, Parent);
                   Chain_Append (First, Last, El);
                end if;
             when others =>

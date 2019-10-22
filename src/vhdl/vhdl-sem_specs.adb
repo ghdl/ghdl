@@ -707,9 +707,10 @@ package body Vhdl.Sem_Specs is
       Attribute_A_Decl (Name, Attr, True, True);
    end Sem_Signature_Entity_Designator;
 
-   procedure Sem_Attribute_Specification
-     (Spec : Iir_Attribute_Specification; Scope : Iir)
+   procedure Sem_Attribute_Specification (Spec : Iir_Attribute_Specification)
    is
+      Scope : constant Iir := Get_Parent (Spec);
+
       --  Emit an error message when NAME is not found.
       procedure Error_Attribute_Specification (Name : Iir)
       is

@@ -31,8 +31,7 @@ package Vhdl.Sem_Specs is
 
    function Get_Entity_Class_Kind (Decl : Iir) return Vhdl.Tokens.Token_Type;
 
-   procedure Sem_Attribute_Specification
-     (Spec : Iir_Attribute_Specification; Scope : Iir);
+   procedure Sem_Attribute_Specification (Spec : Iir_Attribute_Specification);
 
    --  Check declarations following an ALL/OTHERS attribute specification.
    --  ATTR_SPEC_CHAIN is the linked list of all attribute specifications whith

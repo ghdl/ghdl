@@ -22,6 +22,22 @@ package Vhdl.Sem_Decls is
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type);
 
+   --  Analyze declaration DECL.
+   --  This is a sub-procedure of Sem_Declaration_Chain used only for
+   --  PSL verification units.
+   --
+   --  PREV_DECL is the previous one (used for declaration like
+   --    signal a, b : mytype; ) to get type and default value from the
+   --  previous declaration.
+   --  IS_GLOBAL must be true when the declaration can be used by an external
+   --   file (so for package and entities).
+   --  ATTR_SPEC_CHAIN is the chain of attribute specifications, used to
+   --   handle the 'others' case.
+   procedure Sem_Declaration (Decl : in out Iir;
+                              Prev_Decl : in out Iir;
+                              Is_Global : Boolean;
+                              Attr_Spec_Chain : in out Iir);
+
    --  Analyze declarations of PARENT.
    procedure Sem_Declaration_Chain (Parent : Iir);
 
