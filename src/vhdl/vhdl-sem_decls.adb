@@ -869,7 +869,7 @@ package body Vhdl.Sem_Decls is
 
       --  Analyze type and default value:
       Atype := Get_Subtype_Indication (Decl);
-      if Last_Decl = Null_Iir then
+      if Atype /= Null_Iir then
          Atype := Sem_Subtype_Indication (Atype);
          Set_Subtype_Indication (Decl, Atype);
          Atype := Get_Type_Of_Subtype_Indication (Atype);
@@ -888,7 +888,8 @@ package body Vhdl.Sem_Decls is
             Default_Value := Eval_Expr_Check_If_Static (Default_Value, Atype);
          end if;
       else
-         pragma Assert (Atype = Null_Iir);
+         pragma Assert (Get_Kind (Last_Decl) = Get_Kind (Decl));
+         pragma Assert (Get_Has_Identifier_List (Last_Decl));
          Default_Value := Get_Default_Value (Last_Decl);
          if Is_Valid (Default_Value) then
             Set_Is_Ref (Decl, True);
@@ -2040,19 +2041,128 @@ package body Vhdl.Sem_Decls is
       Sem_Scopes.Name_Visible (Decl);
    end Sem_Branch_Quantity_Declaration;
 
+   --  Analyze declaration DECL.
+   --  PREV_DECL is the previous one (used for declaration like
+   --    signal a, b : mytype; ) to get type and default value from the
+   --  previous declaration.
+   --  PARENT is the parent node (useful ?)
+   --  IS_GLOBAL must be true when the declaration can be used by an external
+   --   file (so for package and entities).
+   --  ATTR_SPEC_CHAIN is the chain of attribute specifications, used to
+   --   handle the 'others' case.
+   procedure Sem_Declaration (Decl : in out Iir;
+                              Prev_Decl : in out Iir;
+                              Parent : Iir;
+                              Is_Global : Boolean;
+                              Attr_Spec_Chain : in out Iir) is
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Anonymous_Type_Declaration =>
+            Sem_Type_Declaration (Decl, Is_Global);
+         when Iir_Kind_Subtype_Declaration =>
+            Sem_Subtype_Declaration (Decl, Is_Global);
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Variable_Declaration =>
+            Sem_Object_Declaration (Decl, Parent, Prev_Decl);
+         when Iir_Kind_File_Declaration =>
+            Sem_File_Declaration (Decl, Prev_Decl);
+         when Iir_Kind_Attribute_Declaration =>
+            Sem_Attribute_Declaration (Decl);
+         when Iir_Kind_Attribute_Specification =>
+            Sem_Attribute_Specification (Decl, Parent);
+            if Get_Entity_Name_List (Decl) in Iir_Flists_All_Others then
+               Set_Attribute_Specification_Chain (Decl, Attr_Spec_Chain);
+               Attr_Spec_Chain := Decl;
+            end if;
+         when Iir_Kind_Component_Declaration =>
+            Sem_Component_Declaration (Decl);
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            if Is_Implicit_Subprogram (Decl) then
+               Sem_Scopes.Add_Name (Decl);
+               --  Implicit subprogram are already visible.
+            else
+               Sem_Subprogram_Declaration (Decl);
+               if Is_Global
+                 and then Get_Kind (Decl) = Iir_Kind_Function_Declaration
+                 and then Is_A_Resolution_Function (Decl, Null_Iir)
+               then
+                  Set_Resolution_Function_Flag (Decl, True);
+               end if;
+            end if;
+         when Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body =>
+            Sem_Subprogram_Body (Decl);
+         when Iir_Kind_Non_Object_Alias_Declaration =>
+            --  Added by Sem_Alias_Declaration.  Need to check that no
+            --  existing attribute specification apply to them.
+            null;
+         when Iir_Kind_Object_Alias_Declaration =>
+            Decl := Sem_Alias_Declaration (Decl);
+            --  An alias may add new alias declarations. Do not skip
+            --  them: check that no existing attribute specifications
+            --  apply to them.
+         when Iir_Kind_Use_Clause =>
+            Sem_Use_Clause (Decl);
+         when Iir_Kind_Configuration_Specification =>
+            null;
+         when Iir_Kind_Disconnection_Specification =>
+            Sem_Disconnection_Specification (Decl);
+         when Iir_Kind_Group_Template_Declaration =>
+            Sem_Group_Template_Declaration (Decl);
+         when Iir_Kind_Group_Declaration =>
+            Sem_Group_Declaration (Decl);
+         when Iir_Kinds_Signal_Attribute =>
+            --  Added by sem, so nothing to do.
+            null;
+         when Iir_Kind_Protected_Type_Body =>
+            Sem_Protected_Type_Body (Decl);
+
+         when Iir_Kind_Package_Declaration =>
+            Sem_Package_Declaration (Decl);
+         when Iir_Kind_Package_Body =>
+            Sem_Package_Body (Decl);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Sem_Package_Instantiation_Declaration (Decl);
+
+         when Iir_Kind_Nature_Declaration =>
+            Sem_Nature_Declaration (Decl);
+         when Iir_Kind_Terminal_Declaration =>
+            Sem_Terminal_Declaration (Decl, Prev_Decl);
+         when Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration =>
+            Sem_Branch_Quantity_Declaration (Decl, Prev_Decl);
+
+         when Iir_Kind_Psl_Declaration =>
+            Sem_Psl.Sem_Psl_Declaration (Decl);
+         when Iir_Kind_Psl_Default_Clock =>
+            Sem_Psl.Sem_Psl_Default_Clock (Decl);
+
+         when others =>
+            Error_Kind ("sem_declaration_chain", Decl);
+      end case;
+
+      if Attr_Spec_Chain /= Null_Iir then
+         Check_Post_Attribute_Specification (Attr_Spec_Chain, Decl);
+      end if;
+
+      --  Insert *before* DECL pending implicit signal declarations created
+      --  for DECL after LAST_DECL.  This updates LAST_DECL.
+      Insert_Pending_Implicit_Declarations (Parent, Prev_Decl);
+   end Sem_Declaration;
+
    procedure Sem_Declaration_Chain (Parent : Iir)
    is
       Decl : Iir;
-      Kind : Iir_Kind;
+      --  Chain of attribute specifications, to check that no declaration
+      --  appears after an 'others' entity_name_list.
       Attr_Spec_Chain : Iir;
 
       --  New declaration chain (declarations like implicit signals may be
       --  added, some like aliases may mutate).
       Last_Decl : Iir;
-
-      --  Used for list of identifiers in object declarations to get the type
-      --  and default value for the following declarations.
-      Last_Obj_Decl : Iir;
 
       --  If IS_GLOBAL is set, then declarations may be seen outside of unit.
       --  This must be set for entities and packages (except when
@@ -2074,123 +2184,10 @@ package body Vhdl.Sem_Decls is
       Decl := Get_Declaration_Chain (Parent);
       Last_Decl := Null_Iir;
       Attr_Spec_Chain := Null_Iir;
-      Last_Obj_Decl := Null_Iir;
 
       while Decl /= Null_Iir loop
-         Kind := Get_Kind (Decl);
-         case Kind is
-            when Iir_Kind_Type_Declaration
-              | Iir_Kind_Anonymous_Type_Declaration =>
-               Sem_Type_Declaration (Decl, Is_Global);
-            when Iir_Kind_Subtype_Declaration =>
-               Sem_Subtype_Declaration (Decl, Is_Global);
-            when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Constant_Declaration
-              | Iir_Kind_Variable_Declaration =>
-               Sem_Object_Declaration (Decl, Parent, Last_Obj_Decl);
-            when Iir_Kind_File_Declaration =>
-               Sem_File_Declaration (Decl, Last_Obj_Decl);
-            when Iir_Kind_Attribute_Declaration =>
-               Sem_Attribute_Declaration (Decl);
-            when Iir_Kind_Attribute_Specification =>
-               Sem_Attribute_Specification (Decl, Parent);
-               if Get_Entity_Name_List (Decl) in Iir_Flists_All_Others then
-                  Set_Attribute_Specification_Chain (Decl, Attr_Spec_Chain);
-                  Attr_Spec_Chain := Decl;
-               end if;
-            when Iir_Kind_Component_Declaration =>
-               Sem_Component_Declaration (Decl);
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration =>
-               if Is_Implicit_Subprogram (Decl) then
-                  Sem_Scopes.Add_Name (Decl);
-                  --  Implicit subprogram are already visible.
-               else
-                  Sem_Subprogram_Declaration (Decl);
-                  if Is_Global
-                    and then Get_Kind (Decl) = Iir_Kind_Function_Declaration
-                    and then Is_A_Resolution_Function (Decl, Null_Iir)
-                  then
-                     Set_Resolution_Function_Flag (Decl, True);
-                  end if;
-               end if;
-            when Iir_Kind_Function_Body
-              | Iir_Kind_Procedure_Body =>
-               Sem_Subprogram_Body (Decl);
-            when Iir_Kind_Non_Object_Alias_Declaration =>
-               --  Added by Sem_Alias_Declaration.  Need to check that no
-               --  existing attribute specification apply to them.
-               null;
-            when Iir_Kind_Object_Alias_Declaration =>
-               Decl := Sem_Alias_Declaration (Decl);
-               --  An alias may add new alias declarations. Do not skip
-               --  them: check that no existing attribute specifications
-               --  apply to them.
-            when Iir_Kind_Use_Clause =>
-               Sem_Use_Clause (Decl);
-            when Iir_Kind_Configuration_Specification =>
-               null;
-            when Iir_Kind_Disconnection_Specification =>
-               Sem_Disconnection_Specification (Decl);
-            when Iir_Kind_Group_Template_Declaration =>
-               Sem_Group_Template_Declaration (Decl);
-            when Iir_Kind_Group_Declaration =>
-               Sem_Group_Declaration (Decl);
-            when Iir_Kinds_Signal_Attribute =>
-               --  Added by sem, so nothing to do.
-               null;
-            when Iir_Kind_Protected_Type_Body =>
-               Sem_Protected_Type_Body (Decl);
 
-            when Iir_Kind_Package_Declaration =>
-               Sem_Package_Declaration (Decl);
-            when Iir_Kind_Package_Body =>
-               Sem_Package_Body (Decl);
-            when Iir_Kind_Package_Instantiation_Declaration =>
-               Sem_Package_Instantiation_Declaration (Decl);
-
-            when Iir_Kind_Nature_Declaration =>
-               Sem_Nature_Declaration (Decl);
-            when Iir_Kind_Terminal_Declaration =>
-               Sem_Terminal_Declaration (Decl, Last_Obj_Decl);
-            when Iir_Kind_Across_Quantity_Declaration
-              | Iir_Kind_Through_Quantity_Declaration =>
-               Sem_Branch_Quantity_Declaration (Decl, Last_Obj_Decl);
-
-            when Iir_Kind_Psl_Declaration =>
-               Sem_Psl.Sem_Psl_Declaration (Decl);
-            when Iir_Kind_Psl_Default_Clock =>
-               Sem_Psl.Sem_Psl_Default_Clock (Decl);
-
-            when others =>
-               Error_Kind ("sem_declaration_chain", Decl);
-         end case;
-
-         --  For object declarations, set Last_Obj_Decl; otherwise clear it.
-         case Kind is
-            when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Constant_Declaration
-              | Iir_Kind_Variable_Declaration
-              | Iir_Kind_File_Declaration
-              | Iir_Kind_Terminal_Declaration
-              | Iir_Kind_Across_Quantity_Declaration
-              | Iir_Kind_Through_Quantity_Declaration =>
-               if Get_Has_Identifier_List (Decl) then
-                  Last_Obj_Decl := Decl;
-               else
-                  Last_Obj_Decl := Null_Iir;
-               end if;
-            when others =>
-               Last_Obj_Decl := Null_Iir;
-         end case;
-
-         if Attr_Spec_Chain /= Null_Iir then
-            Check_Post_Attribute_Specification (Attr_Spec_Chain, Decl);
-         end if;
-
-         --  Insert *before* DECL pending implicit signal declarations created
-         --  for DECL after LAST_DECL.  This updates LAST_DECL.
-         Insert_Pending_Implicit_Declarations (Parent, Last_Decl);
+         Sem_Declaration (Decl, Last_Decl, Parent, Is_Global, Attr_Spec_Chain);
 
          if Last_Decl = Null_Iir then
             --  Append now to handle expand names.
