@@ -3235,10 +3235,13 @@ package body Vhdl.Canon is
       end if;
    end Canon_Interface_List;
 
-   procedure Canon_Psl_Verification_Unit (Decl : Iir)
+   procedure Canon_Psl_Verification_Unit (Unit : Iir_Design_Unit)
    is
+      Decl : constant Iir := Get_Library_Unit (Unit);
       Item : Iir;
+      Prev_Item : Iir;
    begin
+      Prev_Item := Null_Iir;
       Item := Get_Vunit_Item_Chain (Decl);
       while Item /= Null_Iir loop
          case Get_Kind (Item) is
@@ -3252,9 +3255,22 @@ package body Vhdl.Canon is
                Canon_Psl_Sequence_Directive (Item);
             when Iir_Kind_Psl_Cover_Directive =>
                Canon_Psl_Cover_Directive (Item);
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body =>
+               Item := Canon_Declaration (Unit, Item, Null_Iir);
             when others =>
                Error_Kind ("canon_psl_verification_unit", Item);
          end case;
+
+         if Prev_Item = Null_Iir then
+            Set_Vunit_Item_Chain (Decl, Item);
+         else
+            Set_Chain (Prev_Item, Item);
+         end if;
+         Prev_Item := Item;
          Item := Get_Chain (Item);
       end loop;
    end Canon_Psl_Verification_Unit;
@@ -3306,7 +3322,7 @@ package body Vhdl.Canon is
          when Iir_Kind_Context_Declaration =>
             null;
          when Iir_Kind_Vunit_Declaration =>
-            Canon_Psl_Verification_Unit (El);
+            Canon_Psl_Verification_Unit (Unit);
          when Iir_Kind_Vmode_Declaration
            | Iir_Kind_Vprop_Declaration =>
             null;
