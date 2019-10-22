@@ -31,6 +31,7 @@ with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Names;
 with Vhdl.Sem_Lib;
+with Vhdl.Sem_Decls;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package;
@@ -948,6 +949,8 @@ package body Vhdl.Sem_Psl is
       Entity : Iir;
       Arch : Iir;
       Item : Iir;
+      Prev_Item : Iir;
+      Attr_Spec_Chain : Iir;
    begin
       if Hier_Name = Null_Iir then
          --  Hierarchical name is optional.
@@ -985,6 +988,8 @@ package body Vhdl.Sem_Psl is
          Sem_Scopes.Extend_Scope_Of_Block_Declarations (Arch);
       end if;
 
+      Attr_Spec_Chain := Null_Iir;
+      Prev_Item := Null_Iir;
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Iir loop
          case Get_Kind (Item) is
@@ -998,10 +1003,23 @@ package body Vhdl.Sem_Psl is
                Sem_Psl_Restrict_Directive (Item);
             when Iir_Kind_Psl_Cover_Directive =>
                Sem_Psl_Cover_Directive (Item);
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body =>
+               Sem_Decls.Sem_Declaration
+                 (Item, Prev_Item, False, Attr_Spec_Chain);
             when others =>
                Error_Kind ("sem_psl_verification_unit", Item);
          end case;
 
+         if Prev_Item = Null_Iir then
+            Set_Vunit_Item_Chain (Unit, Item);
+         else
+            Set_Chain (Prev_Item, Item);
+         end if;
+         Prev_Item := Item;
          Item := Get_Chain (Item);
       end loop;
 
