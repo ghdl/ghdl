@@ -2608,25 +2608,45 @@ package body Synth.Stmts is
    procedure Synth_Verification_Unit
      (Syn_Inst : Synth_Instance_Acc; Unit : Node)
    is
+      use Areapools;
+      Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
+      Unit_Inst : Synth_Instance_Acc;
+      Unit_Sname : Sname;
+      M : Areapools.Mark_Type;
       Item : Node;
    begin
+      Unit_Sname := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Unit));
+      Unit_Inst := Make_Instance (Syn_Inst, Unit, Unit_Sname);
+      Mark (M, Proc_Pool);
+      Instance_Pool := Proc_Pool'Access;
+
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Node loop
          case Get_Kind (Item) is
             when Iir_Kind_Psl_Default_Clock =>
                null;
             when Iir_Kind_Psl_Assert_Directive =>
-               Synth_Psl_Assert_Directive (Syn_Inst, Item);
+               Synth_Psl_Assert_Directive (Unit_Inst, Item);
             when Iir_Kind_Psl_Assume_Directive =>
-               Synth_Psl_Assume_Directive (Syn_Inst, Item);
+               Synth_Psl_Assume_Directive (Unit_Inst, Item);
             when Iir_Kind_Psl_Restrict_Directive =>
-               Synth_Psl_Restrict_Directive (Syn_Inst, Item);
+               Synth_Psl_Restrict_Directive (Unit_Inst, Item);
             when Iir_Kind_Psl_Cover_Directive =>
-               Synth_Psl_Cover_Directive (Syn_Inst, Item);
+               Synth_Psl_Cover_Directive (Unit_Inst, Item);
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body =>
+               Synth_Declaration (Unit_Inst, Item, False);
             when others =>
                Error_Kind ("synth_verification_unit", Item);
          end case;
          Item := Get_Chain (Item);
       end loop;
+
+      Free_Instance (Unit_Inst);
+      Release (M, Proc_Pool);
+      Instance_Pool := Prev_Instance_Pool;
    end Synth_Verification_Unit;
 end Synth.Stmts;
