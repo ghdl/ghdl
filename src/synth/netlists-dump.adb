@@ -504,6 +504,8 @@ package body Netlists.Dump is
 
                Put ("{n");
                Put_Trim (Net'Image (Drv));
+               Put ('w');
+               Put_Trim (Width'Image (Get_Width (Drv)));
                Put ('}');
 
                Disp_Driver (Drv);
