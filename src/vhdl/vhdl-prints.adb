@@ -4379,6 +4379,10 @@ package body Vhdl.Prints is
            | Iir_Kind_Group_Template_Declaration =>
             Disp_Name_Of (Ctxt, Expr);
 
+         when Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body =>
+            Disp_Subprogram_Body (Ctxt, Expr);
+
          when Iir_Kind_Signature =>
             Disp_Signature (Ctxt, Expr);
 
