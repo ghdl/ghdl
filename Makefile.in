@@ -132,8 +132,6 @@ install: install.$(backend)
 
 uninstall: uninstall.$(backend)
 
-check: check.$(backend)
-
 copy-sources: copy-sources.$(backend)
 
 libs: libs.vhdl.$(backend)
