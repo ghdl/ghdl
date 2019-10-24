@@ -360,7 +360,10 @@ if ! sh ./config.status; then
 fi
 
 # Create dirs
-$MAKE create-dirs
+if ! $MAKE create-dirs; then
+    echo "$progname: cannot execute $MAKE create-dirs"
+    exit 1
+fi
 
 # Generate ortho_code-x86-flags
 if test $backend = mcode; then
