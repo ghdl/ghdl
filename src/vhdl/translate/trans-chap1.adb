@@ -954,6 +954,10 @@ package body Trans.Chap1 is
       Push_Architecture_Scope (Arch, Config_Info.Config_Instance);
 
       if Get_Kind (Config) = Iir_Kind_Configuration_Declaration then
+         --  The configuration may depend on packages.  Be sure they are
+         --  elaborated.
+         Chap2.Elab_Dependence (Get_Design_Unit (Config));
+
          Open_Temp;
          Chap4.Elab_Declaration_Chain (Config, Final);
          Close_Temp;
