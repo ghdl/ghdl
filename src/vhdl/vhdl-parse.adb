@@ -9885,7 +9885,11 @@ package body Vhdl.Parse is
               | Tok_Use
               | Tok_Group
               | Tok_Package =>
+               --  Do not recognize PSL keywords.  This is required for
+               --  'boolean' which is a PSL keyword.
+               Vhdl.Scanner.Flag_Psl := False;
                Item := Parse_Declaration (Res, Res);
+               Vhdl.Scanner.Flag_Psl := True;
             when Tok_Identifier =>
                declare
                   Label : Name_Id;
