@@ -8556,6 +8556,19 @@ package body Vhdl.Parse is
       end case;
    end Parse_Concurrent_Assignment;
 
+   function Parse_Concurrent_Assignment_With_Name
+     (Name : Name_Id; Loc : Location_Type) return Iir
+   is
+      Target : Iir;
+   begin
+      Target := Create_Iir (Iir_Kind_Simple_Name);
+      Set_Location (Target, Loc);
+      Set_Identifier (Target, Name);
+      Target := Parse_Name_Suffix (Target);
+
+      return Parse_Concurrent_Assignment (Target);
+   end Parse_Concurrent_Assignment_With_Name;
+
    --  Parse end of PSL assert/cover statement.
    procedure Parse_Psl_Assert_Report_Severity
      (Stmt : Iir; Flag_Psl : Boolean) is
@@ -8728,13 +8741,8 @@ package body Vhdl.Parse is
                Scan;
             else
                --  This is not a label.  Assume a concurrent assignment.
-               Target := Create_Iir (Iir_Kind_Simple_Name);
-               Set_Location (Target, Loc);
-               Set_Identifier (Target, Label);
+               Stmt := Parse_Concurrent_Assignment_With_Name (Label, Loc);
                Label := Null_Identifier;
-               Target := Parse_Name_Suffix (Target);
-
-               Stmt := Parse_Concurrent_Assignment (Target);
                goto Has_Stmt;
             end if;
          end if;
@@ -9782,7 +9790,7 @@ package body Vhdl.Parse is
    --    | restrive_guarantee_directive
    --    | cover_directive
    --    | fairness_directive
-   function Parse_Psl_Verification_Directive return Node is
+   function Parse_Psl_Directive_Or_Stmt return Node is
    begin
       case Current_Token is
          when Tok_Assume =>
@@ -9796,7 +9804,7 @@ package body Vhdl.Parse is
          when others =>
             raise Internal_Error;
       end case;
-   end Parse_Psl_Verification_Directive;
+   end Parse_Psl_Directive_Or_Stmt;
 
    --  1850-2005 7.2 Verification units
    --  verification_unit ::=
@@ -9866,7 +9874,7 @@ package body Vhdl.Parse is
               | Tok_Assert
               | Tok_Restrict
               | Tok_Cover =>
-               Item := Parse_Psl_Verification_Directive;
+               Item := Parse_Psl_Directive_Or_Stmt;
             when Tok_Type
               | Tok_Subtype
               | Tok_Signal
@@ -9901,26 +9909,17 @@ package body Vhdl.Parse is
                   --  Skip label.
                   Scan;
 
-                  if Current_Token /= Tok_Colon then
-                     Error_Msg_Parse ("':' expected after label");
-                  else
+                  if Current_Token = Tok_Colon then
                      --  Skip ':'.
                      Scan;
-                  end if;
 
-                  case Current_Token is
-                     when Tok_Assume
-                       | Tok_Assert
-                       | Tok_Restrict
-                       | Tok_Cover =>
-                        Item := Parse_Psl_Verification_Directive;
-                        Set_Label (Item, Label);
-                        Set_Location (Item, Loc);
-                     when others =>
-                        Error_Msg_Parse
-                          ("verification directive expected after label");
-                        Item := Null_Iir;
-                  end case;
+                     Item := Parse_Psl_Directive_Or_Stmt;
+                     Set_Label (Item, Label);
+                     Set_Location (Item, Loc);
+                  else
+                     Item := Parse_Concurrent_Assignment_With_Name
+                       (Label, Loc);
+                  end if;
                end;
             when others =>
                exit;

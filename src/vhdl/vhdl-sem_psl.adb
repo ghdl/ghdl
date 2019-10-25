@@ -666,6 +666,9 @@ package body Vhdl.Sem_Psl is
       Set_Severity_Expression (Res, Get_Severity_Expression (Stmt));
       Set_Report_Expression (Res, Get_Report_Expression (Stmt));
       Set_Postponed_Flag (Res, Get_Postponed_Flag (Stmt));
+
+      Set_Parent (Res, Get_Parent (Stmt));
+      Set_Chain (Res, Get_Chain (Stmt));
       return Res;
    end Rewrite_As_Concurrent_Assertion;
 
@@ -1010,6 +1013,8 @@ package body Vhdl.Sem_Psl is
               | Iir_Kind_Procedure_Body =>
                Sem_Decls.Sem_Declaration
                  (Item, Prev_Item, False, Attr_Spec_Chain);
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               Sem_Stmts.Sem_Concurrent_Statement (Item, False);
             when others =>
                Error_Kind ("sem_psl_verification_unit", Item);
          end case;

@@ -23,6 +23,10 @@ package Vhdl.Sem_Stmts is
    --  a block_statement or a generate_statement_body.
    procedure Sem_Block (Blk: Iir);
 
+   --  Analyze concurrent statement STMT.  Used only by PSL.
+   procedure Sem_Concurrent_Statement
+     (Stmt : in out Iir; Is_Passive : Boolean);
+
    --  Analyze the concurrent statements of PARENT.
    procedure Sem_Concurrent_Statement_Chain (Parent : Iir);
 

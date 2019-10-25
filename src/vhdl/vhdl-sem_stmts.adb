@@ -1619,6 +1619,7 @@ package body Vhdl.Sem_Stmts is
             Label := Get_Label (Stmt);
             Set_Label (N_Stmt, Label);
             Set_Parent (N_Stmt, Get_Parent (Stmt));
+            Set_Chain (N_Stmt, Get_Chain (Stmt));
             Set_Instantiated_Unit (N_Stmt, Finish_Sem_Name (Imp));
             Location_Copy (N_Stmt, Stmt);
 
@@ -1964,113 +1965,107 @@ package body Vhdl.Sem_Stmts is
       --  FIXME: check for nature type...
    end Simple_Simultaneous_Statement;
 
-   procedure Sem_Concurrent_Statement_Chain (Parent : Iir)
+   procedure Sem_Concurrent_Statement (Stmt : in out Iir; Is_Passive : Boolean)
    is
-      Is_Passive : constant Boolean :=
-        Get_Kind (Parent) = Iir_Kind_Entity_Declaration;
-      El: Iir;
-      New_El : Iir;
-      Next_El : Iir;
+      Prev_Concurrent_Statement : constant Iir := Current_Concurrent_Statement;
 
       procedure No_Generate_Statement is
       begin
          if Is_Passive then
-            Error_Msg_Sem (+El, "generate statement forbidden in entity");
+            Error_Msg_Sem (+Stmt, "generate statement forbidden in entity");
          end if;
       end No_Generate_Statement;
-
-      Prev_El : Iir;
-      Prev_Concurrent_Statement : Iir;
    begin
-      Prev_Concurrent_Statement := Current_Concurrent_Statement;
+      Current_Concurrent_Statement := Stmt;
 
-      El := Get_Concurrent_Statement_Chain (Parent);
-      Prev_El := Null_Iir;
-      while El /= Null_Iir loop
-         Current_Concurrent_Statement := El;
-         New_El := El;
-         Next_El := Get_Chain (El);
-
-         case Get_Kind (El) is
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment
-              | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
-               if Is_Passive then
-                  Error_Msg_Sem (+El, "signal assignment forbidden in entity");
-               end if;
-               Sem_Signal_Assignment (El);
-            when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
-               if Is_Passive then
-                  Error_Msg_Sem (+El, "signal assignment forbidden in entity");
-               end if;
-               Sem_Concurrent_Selected_Signal_Assignment (El);
-            when Iir_Kind_Sensitized_Process_Statement =>
-               Set_Passive_Flag (El, Is_Passive);
-               Sem_Sensitized_Process_Statement (El);
-            when Iir_Kind_Process_Statement =>
-               Set_Passive_Flag (El, Is_Passive);
-               Sem_Process_Statement (El);
-            when Iir_Kind_Component_Instantiation_Statement =>
-               Sem_Component_Instantiation_Statement (El, Is_Passive);
-            when Iir_Kind_Concurrent_Assertion_Statement =>
-               --  FIXME: must check assertion expressions does not contain
-               --  non-passive subprograms ??
-               Sem_Assertion_Statement (El);
-            when Iir_Kind_Block_Statement =>
-               if Is_Passive then
-                  Error_Msg_Sem (+El, "block forbidden in entity");
-               end if;
-               Sem_Block_Statement (El);
-            when Iir_Kind_If_Generate_Statement =>
-               No_Generate_Statement;
-               Sem_If_Generate_Statement (El);
-            when Iir_Kind_For_Generate_Statement =>
-               No_Generate_Statement;
-               Sem_For_Generate_Statement (El);
-            when Iir_Kind_Case_Generate_Statement =>
-               No_Generate_Statement;
-               Sem_Case_Generate_Statement (El);
-            when Iir_Kind_Concurrent_Procedure_Call_Statement =>
-               New_El := Sem_Concurrent_Procedure_Call_Statement
-                 (El, Is_Passive);
-            when Iir_Kind_Psl_Declaration =>
-               Sem_Psl.Sem_Psl_Declaration (El);
-            when Iir_Kind_Psl_Endpoint_Declaration =>
-               Sem_Psl.Sem_Psl_Endpoint_Declaration (El);
-            when Iir_Kind_Psl_Assert_Directive =>
-               New_El := Sem_Psl.Sem_Psl_Assert_Directive (El, True);
-            when Iir_Kind_Psl_Assume_Directive =>
-               Sem_Psl.Sem_Psl_Assume_Directive (El);
-            when Iir_Kind_Psl_Cover_Directive =>
-               Sem_Psl.Sem_Psl_Cover_Directive (El);
-            when Iir_Kind_Psl_Restrict_Directive =>
-               Sem_Psl.Sem_Psl_Restrict_Directive (El);
-            when Iir_Kind_Psl_Default_Clock =>
-               Sem_Psl.Sem_Psl_Default_Clock (El);
-            when Iir_Kind_Simple_Simultaneous_Statement =>
-               Simple_Simultaneous_Statement (El);
-            when others =>
-               Error_Kind ("sem_concurrent_statement_chain", El);
-         end case;
-
-         if New_El /= El then
-            --  Replace this node.
-            if Prev_El = Null_Iir then
-               Set_Concurrent_Statement_Chain (Parent, New_El);
-            else
-               Set_Chain (Prev_El, New_El);
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Concurrent_Simple_Signal_Assignment
+           | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+            if Is_Passive then
+               Error_Msg_Sem (+Stmt, "signal assignment forbidden in entity");
             end if;
-            Set_Chain (New_El, Next_El);
-            Set_Parent (New_El, Parent);
-            Prev_El := New_El;
-         else
-            Prev_El := El;
-            pragma Assert (Get_Parent (El) = Parent);
-         end if;
-
-         El := Next_El;
-      end loop;
+            Sem_Signal_Assignment (Stmt);
+         when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+            if Is_Passive then
+               Error_Msg_Sem (+Stmt, "signal assignment forbidden in entity");
+            end if;
+            Sem_Concurrent_Selected_Signal_Assignment (Stmt);
+         when Iir_Kind_Sensitized_Process_Statement =>
+            Set_Passive_Flag (Stmt, Is_Passive);
+            Sem_Sensitized_Process_Statement (Stmt);
+         when Iir_Kind_Process_Statement =>
+            Set_Passive_Flag (Stmt, Is_Passive);
+            Sem_Process_Statement (Stmt);
+         when Iir_Kind_Component_Instantiation_Statement =>
+            Sem_Component_Instantiation_Statement (Stmt, Is_Passive);
+         when Iir_Kind_Concurrent_Assertion_Statement =>
+            --  FIXME: must check assertion expressions does not contain
+            --  non-passive subprograms ??
+            Sem_Assertion_Statement (Stmt);
+         when Iir_Kind_Block_Statement =>
+            if Is_Passive then
+               Error_Msg_Sem (+Stmt, "block forbidden in entity");
+            end if;
+            Sem_Block_Statement (Stmt);
+         when Iir_Kind_If_Generate_Statement =>
+            No_Generate_Statement;
+            Sem_If_Generate_Statement (Stmt);
+         when Iir_Kind_For_Generate_Statement =>
+            No_Generate_Statement;
+            Sem_For_Generate_Statement (Stmt);
+         when Iir_Kind_Case_Generate_Statement =>
+            No_Generate_Statement;
+            Sem_Case_Generate_Statement (Stmt);
+         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            Stmt :=
+              Sem_Concurrent_Procedure_Call_Statement (Stmt, Is_Passive);
+         when Iir_Kind_Psl_Declaration =>
+            Sem_Psl.Sem_Psl_Declaration (Stmt);
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            Sem_Psl.Sem_Psl_Endpoint_Declaration (Stmt);
+         when Iir_Kind_Psl_Assert_Directive =>
+            Stmt := Sem_Psl.Sem_Psl_Assert_Directive (Stmt, True);
+         when Iir_Kind_Psl_Assume_Directive =>
+            Sem_Psl.Sem_Psl_Assume_Directive (Stmt);
+         when Iir_Kind_Psl_Cover_Directive =>
+            Sem_Psl.Sem_Psl_Cover_Directive (Stmt);
+         when Iir_Kind_Psl_Restrict_Directive =>
+            Sem_Psl.Sem_Psl_Restrict_Directive (Stmt);
+         when Iir_Kind_Psl_Default_Clock =>
+            Sem_Psl.Sem_Psl_Default_Clock (Stmt);
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            Simple_Simultaneous_Statement (Stmt);
+         when others =>
+            Error_Kind ("sem_concurrent_statement", Stmt);
+      end case;
 
       Current_Concurrent_Statement := Prev_Concurrent_Statement;
+   end Sem_Concurrent_Statement;
+
+   procedure Sem_Concurrent_Statement_Chain (Parent : Iir)
+   is
+      Is_Passive : constant Boolean :=
+        Get_Kind (Parent) = Iir_Kind_Entity_Declaration;
+
+      Stmt : Iir;
+      Prev_Stmt : Iir;
+   begin
+      Stmt := Get_Concurrent_Statement_Chain (Parent);
+      Prev_Stmt := Null_Iir;
+      while Stmt /= Null_Iir loop
+         Sem_Concurrent_Statement (Stmt, Is_Passive);
+
+         pragma Assert (Get_Parent (Stmt) = Parent);
+
+         --  Replace this node.
+         if Prev_Stmt = Null_Iir then
+            Set_Concurrent_Statement_Chain (Parent, Stmt);
+         else
+            Set_Chain (Prev_Stmt, Stmt);
+         end if;
+         Prev_Stmt := Stmt;
+         Stmt := Get_Chain (Stmt);
+      end loop;
    end Sem_Concurrent_Statement_Chain;
 
    --  Put labels in declarative region.
