@@ -1197,6 +1197,8 @@ package body Vhdl.Annotations is
               | Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                Annotate_Declaration (Vunit_Info, Item);
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               Annotate_Concurrent_Statement (Vunit_Info, Item);
             when others =>
                Error_Kind ("annotate_vunit_declaration", Item);
          end case;

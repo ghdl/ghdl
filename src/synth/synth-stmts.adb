@@ -2511,6 +2511,92 @@ package body Synth.Stmts is
       end loop;
    end Synth_For_Generate_Statement;
 
+   procedure Synth_Concurrent_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) is
+   begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            Push_Phi;
+            Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
+            Pop_And_Merge_Phi (Build_Context, Stmt);
+         when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+            Push_Phi;
+            Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
+            Pop_And_Merge_Phi (Build_Context, Stmt);
+         when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+            Push_Phi;
+            Synth_Selected_Signal_Assignment (Syn_Inst, Stmt);
+            Pop_And_Merge_Phi (Build_Context, Stmt);
+         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            Push_Phi;
+            Synth_Procedure_Call (Syn_Inst, Stmt);
+            Pop_And_Merge_Phi (Build_Context, Stmt);
+         when Iir_Kinds_Process_Statement =>
+            Push_Phi;
+            Synth_Process_Statement (Syn_Inst, Stmt);
+            Pop_And_Merge_Phi (Build_Context, Stmt);
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Gen : Node;
+               Bod : Node;
+               Cond : Value_Acc;
+               Name : Sname;
+            begin
+               Gen := Stmt;
+               Name := New_Sname (Get_Sname (Syn_Inst),
+                                  Get_Identifier (Stmt));
+               loop
+                  Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
+                  pragma Assert (Cond.Kind = Value_Discrete);
+                  if Cond.Scal = 1 then
+                     Bod := Get_Generate_Statement_Body (Gen);
+                     Synth_Generate_Statement_Body (Syn_Inst, Bod, Name);
+                     exit;
+                  end if;
+                  Gen := Get_Generate_Else_Clause (Gen);
+                  exit when Gen = Null_Node;
+               end loop;
+            end;
+         when Iir_Kind_For_Generate_Statement =>
+            Synth_For_Generate_Statement (Syn_Inst, Stmt);
+         when Iir_Kind_Component_Instantiation_Statement =>
+            Push_Phi;
+            if Is_Component_Instantiation (Stmt) then
+               declare
+                  Comp_Config : constant Node :=
+                    Get_Component_Configuration (Stmt);
+               begin
+                  if Get_Binding_Indication (Comp_Config) = Null_Node then
+                     --  Not bound.
+                     Synth_Blackbox_Instantiation_Statement (Syn_Inst, Stmt);
+                  else
+                     Synth_Component_Instantiation_Statement (Syn_Inst, Stmt);
+                  end if;
+               end;
+            else
+               Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
+            end if;
+            Pop_And_Merge_Phi (Build_Context, Stmt);
+         when Iir_Kind_Block_Statement =>
+            Synth_Block_Statement (Syn_Inst, Stmt);
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
+         when Iir_Kind_Psl_Restrict_Directive =>
+            Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
+         when Iir_Kind_Psl_Assume_Directive =>
+            Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
+         when Iir_Kind_Psl_Cover_Directive =>
+            Synth_Psl_Cover_Directive (Syn_Inst, Stmt);
+         when Iir_Kind_Psl_Assert_Directive =>
+            Synth_Psl_Assert_Directive (Syn_Inst, Stmt);
+         when Iir_Kind_Concurrent_Assertion_Statement =>
+            --  Passive statement.
+            Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
+         when others =>
+            Error_Kind ("synth_concurrent_statement", Stmt);
+      end case;
+   end Synth_Concurrent_Statement;
+
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node)
    is
@@ -2518,89 +2604,7 @@ package body Synth.Stmts is
    begin
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
-         case Get_Kind (Stmt) is
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
-               Push_Phi;
-               Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
-               Pop_And_Merge_Phi (Build_Context, Stmt);
-            when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
-               Push_Phi;
-               Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
-               Pop_And_Merge_Phi (Build_Context, Stmt);
-            when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
-               Push_Phi;
-               Synth_Selected_Signal_Assignment (Syn_Inst, Stmt);
-               Pop_And_Merge_Phi (Build_Context, Stmt);
-            when Iir_Kind_Concurrent_Procedure_Call_Statement =>
-               Push_Phi;
-               Synth_Procedure_Call (Syn_Inst, Stmt);
-               Pop_And_Merge_Phi (Build_Context, Stmt);
-            when Iir_Kinds_Process_Statement =>
-               Push_Phi;
-               Synth_Process_Statement (Syn_Inst, Stmt);
-               Pop_And_Merge_Phi (Build_Context, Stmt);
-            when Iir_Kind_If_Generate_Statement =>
-               declare
-                  Gen : Node;
-                  Bod : Node;
-                  Cond : Value_Acc;
-                  Name : Sname;
-               begin
-                  Gen := Stmt;
-                  Name := New_Sname (Get_Sname (Syn_Inst),
-                                     Get_Identifier (Stmt));
-                  loop
-                     Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
-                     pragma Assert (Cond.Kind = Value_Discrete);
-                     if Cond.Scal = 1 then
-                        Bod := Get_Generate_Statement_Body (Gen);
-                        Synth_Generate_Statement_Body (Syn_Inst, Bod, Name);
-                        exit;
-                     end if;
-                     Gen := Get_Generate_Else_Clause (Gen);
-                     exit when Gen = Null_Node;
-                  end loop;
-               end;
-            when Iir_Kind_For_Generate_Statement =>
-               Synth_For_Generate_Statement (Syn_Inst, Stmt);
-            when Iir_Kind_Component_Instantiation_Statement =>
-               Push_Phi;
-               if Is_Component_Instantiation (Stmt) then
-                  declare
-                     Comp_Config : constant Node :=
-                       Get_Component_Configuration (Stmt);
-                  begin
-                     if Get_Binding_Indication (Comp_Config) = Null_Node then
-                        --  Not bound.
-                        Synth_Blackbox_Instantiation_Statement
-                          (Syn_Inst, Stmt);
-                     else
-                        Synth_Component_Instantiation_Statement
-                          (Syn_Inst, Stmt);
-                     end if;
-                  end;
-               else
-                  Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
-               end if;
-               Pop_And_Merge_Phi (Build_Context, Stmt);
-            when Iir_Kind_Block_Statement =>
-               Synth_Block_Statement (Syn_Inst, Stmt);
-            when Iir_Kind_Psl_Default_Clock =>
-               null;
-            when Iir_Kind_Psl_Restrict_Directive =>
-               Synth_Psl_Restrict_Directive (Syn_Inst, Stmt);
-            when Iir_Kind_Psl_Assume_Directive =>
-               Synth_Psl_Assume_Directive (Syn_Inst, Stmt);
-            when Iir_Kind_Psl_Cover_Directive =>
-               Synth_Psl_Cover_Directive (Syn_Inst, Stmt);
-            when Iir_Kind_Psl_Assert_Directive =>
-               Synth_Psl_Assert_Directive (Syn_Inst, Stmt);
-            when Iir_Kind_Concurrent_Assertion_Statement =>
-               --  Passive statement.
-               Synth_Concurrent_Assertion_Statement (Syn_Inst, Stmt);
-            when others =>
-               Error_Kind ("synth_statements", Stmt);
-         end case;
+         Synth_Concurrent_Statement (Syn_Inst, Stmt);
          Stmt := Get_Chain (Stmt);
       end loop;
    end Synth_Concurrent_Statements;
@@ -2639,6 +2643,8 @@ package body Synth.Stmts is
               | Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                Synth_Declaration (Unit_Inst, Item, False);
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               Synth_Concurrent_Statement (Unit_Inst, Item);
             when others =>
                Error_Kind ("synth_verification_unit", Item);
          end case;
