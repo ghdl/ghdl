@@ -234,7 +234,15 @@ package body Vhdl.Parse_Psl is
       end if;
    end Parse_Parenthesis_Boolean;
 
-   function Parse_SERE (Prio : Priority) return Node is
+   --  A.4.5 Sequential Extended Regular Expressions (SEREs)
+   --  SERE ::=
+   --      Boolean
+   --    | Sequence
+   --    | SERE ; SERE
+   --    | SERE : SERE
+   --    | Compound_SERE
+   function Parse_SERE (Prio : Priority) return Node
+   is
       Left, Res : Node;
       Kind : Nkind;
       Op_Prio : Priority;
@@ -281,6 +289,10 @@ package body Vhdl.Parse_Psl is
       end loop;
    end Parse_SERE;
 
+   --  A.4.7 Sequences
+   --  Braced_SERE ::=
+   --    { SERE }
+   --
    --  precond : '{'
    --  postcond: next token after '}'
    function Parse_Braced_SERE return Node is
@@ -666,6 +678,14 @@ package body Vhdl.Parse_Psl is
       Res : Node;
    begin
       case Get_Kind (N) is
+         when N_Sequence_Instance
+           | N_Star_Repeat_Seq
+           | N_Plus_Repeat_Seq
+           | N_Equal_Repeat_Seq
+           | N_Goto_Repeat_Seq
+           | N_Braced_SERE
+           | N_Clocked_SERE =>
+            return N;
          when N_And_Prop =>
             Res := Create_Node (N_And_Seq);
             Rewrite_Binary (Res, N);
@@ -701,17 +721,12 @@ package body Vhdl.Parse_Psl is
          when N_Const_Parameter
            | N_Boolean_Parameter
            | N_Sequence_Parameter
-           | N_Sequence_Instance
            | N_Actual
            | N_And_Seq
            | N_Or_Seq
            | N_Imp_Seq
            | N_Overlap_Imp_Seq
            | N_Match_And_Seq
-           | N_Star_Repeat_Seq
-           | N_Goto_Repeat_Seq
-           | N_Equal_Repeat_Seq
-           | N_Plus_Repeat_Seq
            | N_Imp_Bool
            | N_Or_Bool
            | N_And_Bool
@@ -720,10 +735,8 @@ package body Vhdl.Parse_Psl is
            | N_Fusion_SERE
            | N_HDL_Expr
            | N_Hdl_Mod_Name
-           | N_Braced_SERE
            | N_Concat_SERE
            | N_Within_SERE
-           | N_Clocked_SERE
            | N_False
            | N_True
            | N_Number
@@ -743,6 +756,52 @@ package body Vhdl.Parse_Psl is
       end case;
    end Property_To_Sequence;
 
+   --  A.4.4 PSL properties
+   --  FL_Property::=
+   --      Boolean
+   --    | ( FL_Property )
+   --    | Sequence [ ! ]
+   --    | FL_property_name [ ( Actual_Parameter_List ) ]
+   --    | FL_Property @ Clock_Expression
+   --    | FL_Property abort Boolean
+   --    | FL_Property async_abort Boolean
+   --    | FL_Property sync_abort Boolean
+   --    | Parameterized_Property
+   --    | NOT_OP FL_Property
+   --    | FL_Property AND_OP FL_Property
+   --    | FL_Property OR_OP FL_Property
+   --    | FL_Property -> FL_Property
+   --    | FL_Property <-> FL_Property
+   --    | always FL_Property
+   --    | never FL_Property
+   --    | next FL_Property
+   --    | next! FL_Property
+   --    | eventually! FL_Property
+   --    | FL_Property until! FL_Property
+   --    | FL_Property until FL_Property
+   --    | FL_Property until!_ FL_Property
+   --    | FL_Property until_ FL_Property
+   --    | FL_Property before! FL_Property
+   --    | FL_Property before FL_Property
+   --    | FL_Property before!_ FL_Property
+   --    | FL_Property before_ FL_Property
+   --    | next [ Number ] ( FL_Property )
+   --    | next! [ Number ] ( FL_Property )
+   --    | next_a [ finite_Range ] ( FL_Property )
+   --    | next_a! [ finite_Range ] ( FL_Property )
+   --    | next_e [ finite_Range ] ( FL_Property )
+   --    | next_e! [ finite_Range ] ( FL_Property )
+   --    | next_event! ( Boolean ) ( FL_Property )
+   --    | next_event ( Boolean ) ( FL_Property )
+   --    | next_event! ( Boolean ) [ positive_Number ] ( FL_Property )
+   --    | next_event ( Boolean ) [ positive_Number ] ( FL_Property )
+   --    | next_event_a! ( Boolean ) [ finite_positive_Range ] ( FL_Property )
+   --    | next_event_a ( Boolean ) [ finite_positive_Range ] ( FL_Property )
+   --    | next_event_e! ( Boolean ) [ finite_positive_Range ] ( FL_Property )
+   --    | next_event_e ( Boolean ) [ finite_positive_Range ] ( FL_Property )
+   --    | { SERE } ( FL_Property )
+   --    | Sequence |-> FL_Property
+   --    | Sequence |=> FL_Property
    function Parse_FL_Property (Prio : Priority) return Node
    is
       Res : Node;
@@ -872,6 +931,10 @@ package body Vhdl.Parse_Psl is
       end loop;
    end Parse_FL_Property;
 
+   --  A.4.4 PSL properties
+   --  Property ::=
+   --      FL_Property
+   --    | ...
    function Parse_Psl_Property return PSL_Node is
    begin
       return Parse_FL_Property (Prio_Lowest);
