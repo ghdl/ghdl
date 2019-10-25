@@ -1898,6 +1898,30 @@ package body Vhdl.Canon is
       return Proc;
    end Canon_Concurrent_Assertion_Statement;
 
+   procedure Canon_Concurrent_Label (Stmt : Iir; Proc_Num : in out Natural) is
+   begin
+      --  Add a label if required.
+      if Canon_Flag_Add_Labels then
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Endpoint_Declaration =>
+               null;
+            when others =>
+               if Get_Label (Stmt) = Null_Identifier then
+                  declare
+                     Str : String := Natural'Image (Proc_Num);
+                  begin
+                     --  Note: the label starts with a capitalized letter,
+                     --  to avoid any clash with user's identifiers.
+                     Str (1) := 'P';
+                     Set_Label (Stmt, Name_Table.Get_Identifier (Str));
+                  end;
+                  Proc_Num := Proc_Num + 1;
+               end if;
+         end case;
+      end if;
+   end Canon_Concurrent_Label;
+
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir)
    is
       --  Current element in the chain of concurrent statements.
@@ -1925,26 +1949,7 @@ package body Vhdl.Canon is
       Prev_El := Null_Iir;
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
-         --  Add a label if required.
-         if Canon_Flag_Add_Labels then
-            case Get_Kind (El) is
-               when Iir_Kind_Psl_Declaration
-                 | Iir_Kind_Psl_Endpoint_Declaration =>
-                  null;
-               when others =>
-                  if Get_Label (El) = Null_Identifier then
-                     declare
-                        Str : String := Natural'Image (Proc_Num);
-                     begin
-                        --  Note: the label starts with a capitalized letter,
-                        --  to avoid any clash with user's identifiers.
-                        Str (1) := 'P';
-                        Set_Label (El, Name_Table.Get_Identifier (Str));
-                     end;
-                     Proc_Num := Proc_Num + 1;
-                  end if;
-            end case;
-         end if;
+         Canon_Concurrent_Label (El, Proc_Num);
 
          case Get_Kind (El) is
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
