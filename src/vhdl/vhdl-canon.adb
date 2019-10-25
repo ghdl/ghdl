@@ -1324,6 +1324,7 @@ package body Vhdl.Canon is
       Proc := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
       Location_Copy (Proc, Stmt);
       Set_Parent (Proc, Get_Parent (Stmt));
+      Set_Chain (Proc, Get_Chain (Stmt));
       Sensitivity_List := Create_Iir_List;
       Set_Sensitivity_List (Proc, Sensitivity_List);
       Set_Is_Ref (Proc, True);
@@ -1432,6 +1433,7 @@ package body Vhdl.Canon is
       end if;
       Location_Copy (Proc, Conc_Stmt);
       Set_Parent (Proc, Get_Parent (Conc_Stmt));
+      Set_Chain (Proc, Get_Chain (Conc_Stmt));
       Set_Process_Origin (Proc, Conc_Stmt);
       Set_Procedure_Call (Conc_Stmt, Null_Iir);
 
@@ -1858,6 +1860,7 @@ package body Vhdl.Canon is
       Proc := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
       Location_Copy (Proc, Stmt);
       Set_Parent (Proc, Get_Parent (Stmt));
+      Set_Chain (Proc, Get_Chain (Stmt));
       Set_Process_Origin (Proc, Stmt);
 
       --  LRM93 9.4
@@ -1922,312 +1925,304 @@ package body Vhdl.Canon is
       end if;
    end Canon_Concurrent_Label;
 
+   procedure Canon_Concurrent_Statement
+     (Stmt : in out Iir; Top : Iir_Design_Unit)
+   is
+      Sub_Chain : Iir;
+      Proc : Iir;
+   begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            if Canon_Flag_Expressions then
+               Canon_Expression (Get_Target (Stmt));
+               Canon_Waveform_Expression (Get_Waveform_Chain (Stmt));
+            end if;
+
+            if Canon_Flag_Concurrent_Stmts then
+               Canon_Concurrent_Signal_Assignment (Stmt, Proc, Sub_Chain);
+               Canon_Concurrent_Simple_Signal_Assignment
+                 (Stmt, Proc, Sub_Chain);
+               Stmt := Proc;
+            end if;
+
+         when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+            if Canon_Flag_Expressions then
+               Canon_Expression (Get_Target (Stmt));
+               Canon_Conditional_Signal_Assignment_Expression (Stmt);
+            end if;
+
+            if Canon_Flag_Concurrent_Stmts then
+               Canon_Concurrent_Signal_Assignment (Stmt, Proc, Sub_Chain);
+               Canon_Concurrent_Conditional_Signal_Assignment
+                 (Stmt, Proc, Sub_Chain);
+               Stmt := Proc;
+            end if;
+
+         when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+            if Canon_Flag_Expressions then
+               Canon_Expression (Get_Target (Stmt));
+               Canon_Selected_Signal_Assignment_Expression (Stmt);
+            end if;
+
+            if Canon_Flag_Concurrent_Stmts then
+               Canon_Concurrent_Signal_Assignment (Stmt, Proc, Sub_Chain);
+               Canon_Concurrent_Selected_Signal_Assignment
+                 (Stmt, Proc, Sub_Chain);
+               Stmt := Proc;
+            end if;
+
+         when Iir_Kind_Concurrent_Assertion_Statement =>
+            if Canon_Flag_Expressions then
+               Canon_Expression (Get_Assertion_Condition (Stmt));
+               Canon_Expression_If_Valid (Get_Report_Expression (Stmt));
+               Canon_Expression_If_Valid (Get_Severity_Expression (Stmt));
+            end if;
+
+            if Canon_Flag_Concurrent_Stmts then
+               Stmt := Canon_Concurrent_Assertion_Statement (Stmt);
+            end if;
+
+         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            declare
+               Call : constant Iir_Procedure_Call :=
+                 Get_Procedure_Call (Stmt);
+               Imp : constant Iir := Get_Implementation (Call);
+               Assoc_Chain : Iir;
+            begin
+               Assoc_Chain := Canon_Association_Chain_And_Actuals
+                 (Get_Interface_Declaration_Chain (Imp),
+                  Get_Parameter_Association_Chain (Call),
+                  Call);
+               Set_Parameter_Association_Chain (Call, Assoc_Chain);
+            end;
+
+            if Canon_Flag_Concurrent_Stmts then
+               Stmt := Canon_Concurrent_Procedure_Call (Stmt);
+            end if;
+
+         when Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement =>
+            Canon_Declarations (Top, Stmt, Null_Iir);
+            if Canon_Flag_Sequentials_Stmts then
+               declare
+                  Stmts : Iir;
+               begin
+                  Stmts := Get_Sequential_Statement_Chain (Stmt);
+                  Stmts := Canon_Sequential_Stmts (Stmts);
+                  Set_Sequential_Statement_Chain (Stmt, Stmts);
+               end;
+            end if;
+            if Canon_Flag_All_Sensitivity
+              and then Canon_Flag_Sequentials_Stmts
+              and then Get_Kind (Stmt) = Iir_Kind_Sensitized_Process_Statement
+              and then Get_Sensitivity_List (Stmt) = Iir_List_All
+            then
+               Set_Sensitivity_List
+                 (Stmt, Canon_Extract_Process_Sensitivity (Stmt));
+            end if;
+
+         when Iir_Kind_Component_Instantiation_Statement =>
+            declare
+               Inst : Iir;
+               Assoc_Chain : Iir;
+            begin
+               Inst := Get_Instantiated_Unit (Stmt);
+               Inst := Get_Entity_From_Entity_Aspect (Inst);
+               Assoc_Chain := Canon_Association_Chain_And_Actuals
+                 (Get_Generic_Chain (Inst),
+                  Get_Generic_Map_Aspect_Chain (Stmt),
+                  Stmt);
+               Set_Generic_Map_Aspect_Chain (Stmt, Assoc_Chain);
+
+               Assoc_Chain := Canon_Association_Chain_And_Actuals
+                 (Get_Port_Chain (Inst),
+                  Get_Port_Map_Aspect_Chain (Stmt),
+                  Stmt);
+               Set_Port_Map_Aspect_Chain (Stmt, Assoc_Chain);
+            end;
+
+         when Iir_Kind_Block_Statement =>
+            declare
+               Header : constant Iir_Block_Header := Get_Block_Header (Stmt);
+               Guard : constant Iir_Guard_Signal_Declaration :=
+                 Get_Guard_Decl (Stmt);
+               Chain : Iir;
+               Expr : Iir;
+            begin
+               if Guard /= Null_Iir then
+                  Expr := Get_Guard_Expression (Guard);
+                  Set_Guard_Sensitivity_List (Guard, Create_Iir_List);
+                  Canon_Extract_Sensitivity
+                    (Expr, Get_Guard_Sensitivity_List (Guard), False);
+                  if Canon_Flag_Expressions then
+                     Canon_Expression (Stmt);
+                  end if;
+               end if;
+               if Header /= Null_Iir then
+                  --  Generics.
+                  Chain := Get_Generic_Map_Aspect_Chain (Header);
+                  if Chain /= Null_Iir then
+                     Chain := Canon_Association_Chain_And_Actuals
+                       (Get_Generic_Chain (Header), Chain, Chain);
+                  else
+                     Chain := Canon_Default_Association_Chain
+                       (Get_Generic_Chain (Header));
+                  end if;
+                  Set_Generic_Map_Aspect_Chain (Header, Chain);
+
+                  --  Ports.
+                  Chain := Get_Port_Map_Aspect_Chain (Header);
+                  if Chain /= Null_Iir then
+                     Chain := Canon_Association_Chain_And_Actuals
+                       (Get_Port_Chain (Header), Chain, Chain);
+                  else
+                     Chain := Canon_Default_Association_Chain
+                       (Get_Port_Chain (Header));
+                  end if;
+                  Set_Port_Map_Aspect_Chain (Header, Chain);
+               end if;
+               Canon_Declarations (Top, Stmt, Stmt);
+               Canon_Concurrent_Stmts (Top, Stmt);
+            end;
+
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Clause : Iir;
+               Alt_Num : Natural;
+            begin
+               Clause := Stmt;
+               Alt_Num := 1;
+               while Clause /= Null_Iir loop
+                  if Canon_Flag_Expressions then
+                     Canon_Expression_If_Valid (Get_Condition (Stmt));
+                  end if;
+
+                  Canon_If_Case_Generate_Statement_Body
+                    (Get_Generate_Statement_Body (Clause), Alt_Num, Top);
+
+                  Clause := Get_Generate_Else_Clause (Clause);
+               end loop;
+            end;
+
+         when Iir_Kind_Case_Generate_Statement =>
+            declare
+               Alt : Iir;
+               Alt_Num : Natural;
+            begin
+               Alt_Num := 1;
+               if Canon_Flag_Expressions then
+                  Canon_Expression (Get_Expression (Stmt));
+               end if;
+               Alt := Get_Case_Statement_Alternative_Chain (Stmt);
+               while Alt /= Null_Iir loop
+                  if not Get_Same_Alternative_Flag (Alt) then
+                     Canon_If_Case_Generate_Statement_Body
+                       (Get_Associated_Block (Alt), Alt_Num, Top);
+                  end if;
+
+                  Alt := Get_Chain (Alt);
+               end loop;
+            end;
+
+         when Iir_Kind_For_Generate_Statement =>
+            declare
+               Decl : constant Iir := Get_Parameter_Specification (Stmt);
+               New_Decl : Iir;
+            begin
+               New_Decl := Canon_Declaration (Top, Decl, Null_Iir);
+               pragma Assert (New_Decl = Decl);
+
+               Canon_Generate_Statement_Body
+                 (Top, Get_Generate_Statement_Body (Stmt));
+            end;
+
+         when Iir_Kind_Psl_Assert_Directive =>
+            Canon_Psl_Assert_Directive (Stmt);
+         when Iir_Kind_Psl_Assume_Directive =>
+            Canon_Psl_Property_Directive (Stmt);
+         when Iir_Kind_Psl_Cover_Directive =>
+            Canon_Psl_Cover_Directive (Stmt);
+         when Iir_Kind_Psl_Restrict_Directive =>
+            Canon_Psl_Sequence_Directive (Stmt);
+
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
+         when Iir_Kind_Psl_Declaration =>
+            declare
+               use PSL.Nodes;
+               Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
+               Prop : PSL_Node;
+               Fa : PSL_NFA;
+            begin
+               case Get_Kind (Decl) is
+                  when N_Property_Declaration =>
+                     Prop := Get_Property (Decl);
+                     Prop := PSL.Rewrites.Rewrite_Property (Prop);
+                     Set_Property (Decl, Prop);
+                     if Get_Parameter_List (Decl) = Null_PSL_Node then
+                        --  Generate the NFA.
+                        Fa := PSL.Build.Build_FA (Prop);
+                        Set_PSL_NFA (Stmt, Fa);
+                     end if;
+                  when N_Sequence_Declaration
+                    | N_Endpoint_Declaration =>
+                     Prop := Get_Sequence (Decl);
+                     Prop := PSL.Rewrites.Rewrite_SERE (Prop);
+                     Set_Sequence (Decl, Prop);
+                  when others =>
+                     Error_Kind ("canon psl_declaration", Decl);
+               end case;
+            end;
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            declare
+               use PSL.Nodes;
+               Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
+               Seq : PSL_Node;
+               Fa : PSL_NFA;
+            begin
+               pragma Assert (Get_Parameter_List (Decl) = Null_PSL_Node);
+               Seq := Get_Sequence (Decl);
+               Seq := PSL.Rewrites.Rewrite_SERE (Seq);
+               Set_Sequence (Decl, Seq);
+               --  Generate the NFA.
+               Fa := PSL.Build.Build_SERE_FA (Seq);
+               Set_PSL_NFA (Stmt, Fa);
+               Canon_Psl_Clocked_NFA (Stmt);
+            end;
+
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            if Canon_Flag_Expressions then
+               Canon_Expression (Get_Simultaneous_Left (Stmt));
+               Canon_Expression (Get_Simultaneous_Right (Stmt));
+            end if;
+
+         when others =>
+            Error_Kind ("canon_concurrent_statement", Stmt);
+      end case;
+   end Canon_Concurrent_Statement;
+
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir)
    is
       --  Current element in the chain of concurrent statements.
-      El: Iir;
-      --  Previous element or NULL_IIR if EL is the first element.
-      --  This is used to make Replace_Stmt efficient.
-      Prev_El : Iir;
+      Stmt : Iir;
+      Prev_Stmt : Iir;
 
-      --  Replace in the chain EL by N_STMT.
-      procedure Replace_Stmt (N_Stmt : Iir) is
-      begin
-         if Prev_El = Null_Iir then
-            Set_Concurrent_Statement_Chain (Parent, N_Stmt);
-         else
-            Set_Chain (Prev_El, N_Stmt);
-         end if;
-         Set_Chain (N_Stmt, Get_Chain (El));
-      end Replace_Stmt;
-
-      Proc: Iir;
-      Sub_Chain : Iir;
-      Expr: Iir;
       Proc_Num : Natural := 0;
    begin
-      Prev_El := Null_Iir;
-      El := Get_Concurrent_Statement_Chain (Parent);
-      while El /= Null_Iir loop
-         Canon_Concurrent_Label (El, Proc_Num);
+      Prev_Stmt := Null_Iir;
+      Stmt := Get_Concurrent_Statement_Chain (Parent);
+      while Stmt /= Null_Iir loop
+         Canon_Concurrent_Label (Stmt, Proc_Num);
 
-         case Get_Kind (El) is
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
-               if Canon_Flag_Expressions then
-                  Canon_Expression (Get_Target (El));
-                  Canon_Waveform_Expression (Get_Waveform_Chain (El));
-               end if;
+         Canon_Concurrent_Statement (Stmt, Top);
 
-               if Canon_Flag_Concurrent_Stmts then
-                  Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
-                  Canon_Concurrent_Simple_Signal_Assignment
-                    (El, Proc, Sub_Chain);
-                  Replace_Stmt (Proc);
-                  El := Proc;
-               end if;
-
-            when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
-               if Canon_Flag_Expressions then
-                  Canon_Expression (Get_Target (El));
-                  Canon_Conditional_Signal_Assignment_Expression (El);
-               end if;
-
-               if Canon_Flag_Concurrent_Stmts then
-                  Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
-                  Canon_Concurrent_Conditional_Signal_Assignment
-                    (El, Proc, Sub_Chain);
-                  Replace_Stmt (Proc);
-                  El := Proc;
-               end if;
-
-            when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
-               if Canon_Flag_Expressions then
-                  Canon_Expression (Get_Target (El));
-                  Canon_Selected_Signal_Assignment_Expression (El);
-               end if;
-
-               if Canon_Flag_Concurrent_Stmts then
-                  Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
-                  Canon_Concurrent_Selected_Signal_Assignment
-                    (El, Proc, Sub_Chain);
-                  Replace_Stmt (Proc);
-                  El := Proc;
-               end if;
-
-            when Iir_Kind_Concurrent_Assertion_Statement =>
-               if Canon_Flag_Expressions then
-                  Canon_Expression (Get_Assertion_Condition (El));
-                  Canon_Expression_If_Valid (Get_Report_Expression (El));
-                  Canon_Expression_If_Valid (Get_Severity_Expression (El));
-               end if;
-
-               if Canon_Flag_Concurrent_Stmts then
-                  Proc := Canon_Concurrent_Assertion_Statement (El);
-                  Replace_Stmt (Proc);
-                  El := Proc;
-               end if;
-
-            when Iir_Kind_Concurrent_Procedure_Call_Statement =>
-               declare
-                  Call : constant Iir_Procedure_Call :=
-                    Get_Procedure_Call (El);
-                  Imp : constant Iir := Get_Implementation (Call);
-                  Assoc_Chain : Iir;
-               begin
-                  Assoc_Chain := Canon_Association_Chain_And_Actuals
-                    (Get_Interface_Declaration_Chain (Imp),
-                     Get_Parameter_Association_Chain (Call),
-                     Call);
-                  Set_Parameter_Association_Chain (Call, Assoc_Chain);
-               end;
-
-               if Canon_Flag_Concurrent_Stmts then
-                  Proc := Canon_Concurrent_Procedure_Call (El);
-                  Replace_Stmt (Proc);
-                  El := Proc;
-               end if;
-
-            when Iir_Kind_Sensitized_Process_Statement
-              | Iir_Kind_Process_Statement =>
-               Canon_Declarations (Top, El, Null_Iir);
-               if Canon_Flag_Sequentials_Stmts then
-                  declare
-                     Stmts : Iir;
-                  begin
-                     Stmts := Get_Sequential_Statement_Chain (El);
-                     Stmts := Canon_Sequential_Stmts (Stmts);
-                     Set_Sequential_Statement_Chain (El, Stmts);
-                  end;
-               end if;
-               if Canon_Flag_All_Sensitivity
-                 and then Canon_Flag_Sequentials_Stmts
-                 and then Get_Kind (El) = Iir_Kind_Sensitized_Process_Statement
-                 and then Get_Sensitivity_List (El) = Iir_List_All
-               then
-                  Set_Sensitivity_List
-                    (El, Canon_Extract_Process_Sensitivity (El));
-               end if;
-
-            when Iir_Kind_Component_Instantiation_Statement =>
-               declare
-                  Inst : Iir;
-                  Assoc_Chain : Iir;
-               begin
-                  Inst := Get_Instantiated_Unit (El);
-                  Inst := Get_Entity_From_Entity_Aspect (Inst);
-                  Assoc_Chain := Canon_Association_Chain_And_Actuals
-                    (Get_Generic_Chain (Inst),
-                     Get_Generic_Map_Aspect_Chain (El),
-                     El);
-                  Set_Generic_Map_Aspect_Chain (El, Assoc_Chain);
-
-                  Assoc_Chain := Canon_Association_Chain_And_Actuals
-                    (Get_Port_Chain (Inst),
-                     Get_Port_Map_Aspect_Chain (El),
-                     El);
-                  Set_Port_Map_Aspect_Chain (El, Assoc_Chain);
-               end;
-
-            when Iir_Kind_Block_Statement =>
-               declare
-                  Header : Iir_Block_Header;
-                  Chain : Iir;
-                  Guard : Iir_Guard_Signal_Declaration;
-               begin
-                  Guard := Get_Guard_Decl (El);
-                  if Guard /= Null_Iir then
-                     Expr := Get_Guard_Expression (Guard);
-                     Set_Guard_Sensitivity_List (Guard, Create_Iir_List);
-                     Canon_Extract_Sensitivity
-                       (Expr, Get_Guard_Sensitivity_List (Guard), False);
-                     if Canon_Flag_Expressions then
-                        Canon_Expression (Expr);
-                     end if;
-                  end if;
-                  Header := Get_Block_Header (El);
-                  if Header /= Null_Iir then
-                     --  Generics.
-                     Chain := Get_Generic_Map_Aspect_Chain (Header);
-                     if Chain /= Null_Iir then
-                        Chain := Canon_Association_Chain_And_Actuals
-                          (Get_Generic_Chain (Header), Chain, Chain);
-                     else
-                        Chain := Canon_Default_Association_Chain
-                          (Get_Generic_Chain (Header));
-                     end if;
-                     Set_Generic_Map_Aspect_Chain (Header, Chain);
-
-                     --  Ports.
-                     Chain := Get_Port_Map_Aspect_Chain (Header);
-                     if Chain /= Null_Iir then
-                        Chain := Canon_Association_Chain_And_Actuals
-                          (Get_Port_Chain (Header), Chain, Chain);
-                     else
-                        Chain := Canon_Default_Association_Chain
-                          (Get_Port_Chain (Header));
-                     end if;
-                     Set_Port_Map_Aspect_Chain (Header, Chain);
-                  end if;
-                  Canon_Declarations (Top, El, El);
-                  Canon_Concurrent_Stmts (Top, El);
-               end;
-
-            when Iir_Kind_If_Generate_Statement =>
-               declare
-                  Clause : Iir;
-                  Alt_Num : Natural;
-               begin
-                  Clause := El;
-                  Alt_Num := 1;
-                  while Clause /= Null_Iir loop
-                     if Canon_Flag_Expressions then
-                        Canon_Expression_If_Valid (Get_Condition (El));
-                     end if;
-
-                     Canon_If_Case_Generate_Statement_Body
-                       (Get_Generate_Statement_Body (Clause), Alt_Num, Top);
-
-                     Clause := Get_Generate_Else_Clause (Clause);
-                  end loop;
-               end;
-
-            when Iir_Kind_Case_Generate_Statement =>
-               declare
-                  Alt : Iir;
-                  Alt_Num : Natural;
-               begin
-                  Alt_Num := 1;
-                  if Canon_Flag_Expressions then
-                     Canon_Expression (Get_Expression (El));
-                  end if;
-                  Alt := Get_Case_Statement_Alternative_Chain (El);
-                  while Alt /= Null_Iir loop
-                     if not Get_Same_Alternative_Flag (Alt) then
-                        Canon_If_Case_Generate_Statement_Body
-                          (Get_Associated_Block (Alt), Alt_Num, Top);
-                     end if;
-
-                     Alt := Get_Chain (Alt);
-                  end loop;
-               end;
-
-            when Iir_Kind_For_Generate_Statement =>
-               declare
-                  Decl : constant Iir := Get_Parameter_Specification (El);
-                  New_Decl : Iir;
-               begin
-                  New_Decl := Canon_Declaration (Top, Decl, Null_Iir);
-                  pragma Assert (New_Decl = Decl);
-
-                  Canon_Generate_Statement_Body
-                    (Top, Get_Generate_Statement_Body (El));
-               end;
-
-            when Iir_Kind_Psl_Assert_Directive =>
-               Canon_Psl_Assert_Directive (El);
-            when Iir_Kind_Psl_Assume_Directive =>
-               Canon_Psl_Property_Directive (El);
-            when Iir_Kind_Psl_Cover_Directive =>
-               Canon_Psl_Cover_Directive (El);
-            when Iir_Kind_Psl_Restrict_Directive =>
-               Canon_Psl_Sequence_Directive (El);
-
-            when Iir_Kind_Psl_Default_Clock =>
-               null;
-            when Iir_Kind_Psl_Declaration =>
-               declare
-                  use PSL.Nodes;
-                  Decl : constant PSL_Node := Get_Psl_Declaration (El);
-                  Prop : PSL_Node;
-                  Fa : PSL_NFA;
-               begin
-                  case Get_Kind (Decl) is
-                     when N_Property_Declaration =>
-                        Prop := Get_Property (Decl);
-                        Prop := PSL.Rewrites.Rewrite_Property (Prop);
-                        Set_Property (Decl, Prop);
-                        if Get_Parameter_List (Decl) = Null_PSL_Node then
-                           --  Generate the NFA.
-                           Fa := PSL.Build.Build_FA (Prop);
-                           Set_PSL_NFA (El, Fa);
-                        end if;
-                     when N_Sequence_Declaration
-                       | N_Endpoint_Declaration =>
-                        Prop := Get_Sequence (Decl);
-                        Prop := PSL.Rewrites.Rewrite_SERE (Prop);
-                        Set_Sequence (Decl, Prop);
-                     when others =>
-                        Error_Kind ("canon psl_declaration", Decl);
-                  end case;
-               end;
-            when Iir_Kind_Psl_Endpoint_Declaration =>
-               declare
-                  use PSL.Nodes;
-                  Decl : constant PSL_Node := Get_Psl_Declaration (El);
-                  Seq : PSL_Node;
-                  Fa : PSL_NFA;
-               begin
-                  pragma Assert (Get_Parameter_List (Decl) = Null_PSL_Node);
-                  Seq := Get_Sequence (Decl);
-                  Seq := PSL.Rewrites.Rewrite_SERE (Seq);
-                  Set_Sequence (Decl, Seq);
-                  --  Generate the NFA.
-                  Fa := PSL.Build.Build_SERE_FA (Seq);
-                  Set_PSL_NFA (El, Fa);
-                  Canon_Psl_Clocked_NFA (El);
-               end;
-
-            when Iir_Kind_Simple_Simultaneous_Statement =>
-               if Canon_Flag_Expressions then
-                  Canon_Expression (Get_Simultaneous_Left (El));
-                  Canon_Expression (Get_Simultaneous_Right (El));
-               end if;
-
-            when others =>
-               Error_Kind ("canon_concurrent_stmts", El);
-         end case;
-         Prev_El := El;
-         El := Get_Chain (El);
+         if Prev_Stmt = Null_Iir then
+            Set_Concurrent_Statement_Chain (Parent, Stmt);
+         else
+            Set_Chain (Prev_Stmt, Stmt);
+         end if;
+         Prev_Stmt := Stmt;
+         Stmt := Get_Chain (Stmt);
       end loop;
    end Canon_Concurrent_Stmts;
 
@@ -3245,6 +3240,7 @@ package body Vhdl.Canon is
       Decl : constant Iir := Get_Library_Unit (Unit);
       Item : Iir;
       Prev_Item : Iir;
+      Proc_Num : Natural := 0;
    begin
       Prev_Item := Null_Iir;
       Item := Get_Vunit_Item_Chain (Decl);
@@ -3266,6 +3262,9 @@ package body Vhdl.Canon is
               | Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                Item := Canon_Declaration (Unit, Item, Null_Iir);
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               Canon_Concurrent_Label (Item, Proc_Num);
+               Canon_Concurrent_Statement (Item, Unit);
             when others =>
                Error_Kind ("canon_psl_verification_unit", Item);
          end case;
