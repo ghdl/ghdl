@@ -28,7 +28,7 @@ package body Vhdl.Annotations is
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir);
    procedure Annotate_Sequential_Statement_Chain
      (Block_Info: Sim_Info_Acc; Stmt_Chain: Iir);
-   procedure Annotate_Concurrent_Statements_List
+   procedure Annotate_Concurrent_Statements_Chain
      (Block_Info: Sim_Info_Acc; Stmt_Chain: Iir);
    procedure Annotate_Block_Configuration
      (Block : Iir_Block_Configuration);
@@ -970,7 +970,7 @@ package body Vhdl.Annotations is
          Annotate_Interface_List (Info, Get_Port_Chain (Header), True);
       end if;
       Annotate_Declaration_List (Info, Get_Declaration_Chain (Block));
-      Annotate_Concurrent_Statements_List
+      Annotate_Concurrent_Statements_Chain
         (Info, Get_Concurrent_Statement_Chain (Block));
    end Annotate_Block_Statement;
 
@@ -992,7 +992,7 @@ package body Vhdl.Annotations is
          Create_Object_Info (Info, It);
       end if;
       Annotate_Declaration_List (Info, Get_Declaration_Chain (Bod));
-      Annotate_Concurrent_Statements_List
+      Annotate_Concurrent_Statements_Chain
         (Info, Get_Concurrent_Statement_Chain (Bod));
    end Annotate_Generate_Statement_Body;
 
@@ -1067,7 +1067,7 @@ package body Vhdl.Annotations is
         (Info, Get_Sequential_Statement_Chain (Stmt));
    end Annotate_Process_Statement;
 
-   procedure Annotate_Concurrent_Statements_List
+   procedure Annotate_Concurrent_Statements_Chain
      (Block_Info: Sim_Info_Acc; Stmt_Chain : Iir)
    is
       El : Iir;
@@ -1117,11 +1117,11 @@ package body Vhdl.Annotations is
                null;
 
             when others =>
-               Error_Kind ("annotate_concurrent_statements_list", El);
+               Error_Kind ("annotate_concurrent_statements_chain", El);
          end case;
          El := Get_Chain (El);
       end loop;
-   end Annotate_Concurrent_Statements_List;
+   end Annotate_Concurrent_Statements_Chain;
 
    procedure Annotate_Entity (Decl : Iir_Entity_Declaration)
    is
@@ -1138,7 +1138,7 @@ package body Vhdl.Annotations is
       Annotate_Interface_List (Entity_Info, Get_Port_Chain (Decl), True);
 
       Annotate_Declaration_List (Entity_Info, Get_Declaration_Chain (Decl));
-      Annotate_Concurrent_Statements_List
+      Annotate_Concurrent_Statements_Chain
         (Entity_Info, Get_Concurrent_Statement_Chain (Decl));
    end Annotate_Entity;
 
@@ -1155,7 +1155,7 @@ package body Vhdl.Annotations is
       --  the scope of the entity, and the entity is the reference.
 
       Annotate_Declaration_List (Entity_Info, Get_Declaration_Chain (Decl));
-      Annotate_Concurrent_Statements_List
+      Annotate_Concurrent_Statements_Chain
         (Entity_Info, Get_Concurrent_Statement_Chain (Decl));
 
       Arch_Info := new Sim_Info_Type'(Entity_Info.all);
