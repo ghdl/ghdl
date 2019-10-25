@@ -1067,59 +1067,65 @@ package body Vhdl.Annotations is
         (Info, Get_Sequential_Statement_Chain (Stmt));
    end Annotate_Process_Statement;
 
+   procedure Annotate_Concurrent_Statement
+     (Block_Info: Sim_Info_Acc; Stmt : Iir) is
+   begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement =>
+            Annotate_Process_Statement (Block_Info, Stmt);
+
+         when Iir_Kind_Component_Instantiation_Statement =>
+            Annotate_Component_Instantiation_Statement (Block_Info, Stmt);
+
+         when Iir_Kind_Block_Statement =>
+            Annotate_Block_Statement (Block_Info, Stmt);
+
+         when Iir_Kind_If_Generate_Statement =>
+            Annotate_If_Generate_Statement (Block_Info, Stmt);
+         when Iir_Kind_For_Generate_Statement =>
+            Annotate_For_Generate_Statement (Block_Info, Stmt);
+         when Iir_Kind_Case_Generate_Statement =>
+            Annotate_Case_Generate_Statement (Block_Info, Stmt);
+
+         when Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Psl_Declaration =>
+            null;
+
+         when Iir_Kind_Psl_Cover_Directive
+           | Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
+           | Iir_Kind_Psl_Restrict_Directive =>
+            null;
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            Create_Object_Info (Block_Info, Stmt, Kind_PSL);
+
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            null;
+
+         when Iir_Kind_Concurrent_Simple_Signal_Assignment
+           | Iir_Kind_Concurrent_Selected_Signal_Assignment
+           | Iir_Kind_Concurrent_Conditional_Signal_Assignment
+           | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            --  In case concurrent signal assignemnts were not
+            --  canonicalized (for synthesis).
+            null;
+
+         when others =>
+            Error_Kind ("annotate_concurrent_statement", Stmt);
+      end case;
+   end Annotate_Concurrent_Statement;
+
    procedure Annotate_Concurrent_Statements_Chain
      (Block_Info: Sim_Info_Acc; Stmt_Chain : Iir)
    is
-      El : Iir;
+      Stmt : Iir;
    begin
-      El := Stmt_Chain;
-      while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Sensitized_Process_Statement
-              | Iir_Kind_Process_Statement =>
-               Annotate_Process_Statement (Block_Info, El);
-
-            when Iir_Kind_Component_Instantiation_Statement =>
-               Annotate_Component_Instantiation_Statement (Block_Info, El);
-
-            when Iir_Kind_Block_Statement =>
-               Annotate_Block_Statement (Block_Info, El);
-
-            when Iir_Kind_If_Generate_Statement =>
-               Annotate_If_Generate_Statement (Block_Info, El);
-            when Iir_Kind_For_Generate_Statement =>
-               Annotate_For_Generate_Statement (Block_Info, El);
-            when Iir_Kind_Case_Generate_Statement =>
-               Annotate_Case_Generate_Statement (Block_Info, El);
-
-            when Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Declaration =>
-               null;
-
-            when Iir_Kind_Psl_Cover_Directive
-              | Iir_Kind_Psl_Assert_Directive
-              | Iir_Kind_Psl_Assume_Directive
-              | Iir_Kind_Psl_Restrict_Directive =>
-               null;
-            when Iir_Kind_Psl_Endpoint_Declaration =>
-               Create_Object_Info (Block_Info, El, Kind_PSL);
-
-            when Iir_Kind_Simple_Simultaneous_Statement =>
-               null;
-
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment
-              | Iir_Kind_Concurrent_Selected_Signal_Assignment
-              | Iir_Kind_Concurrent_Conditional_Signal_Assignment
-              | Iir_Kind_Concurrent_Assertion_Statement
-              | Iir_Kind_Concurrent_Procedure_Call_Statement =>
-               --  In case concurrent signal assignemnts were not
-               --  canonicalized (for synthesis).
-               null;
-
-            when others =>
-               Error_Kind ("annotate_concurrent_statements_chain", El);
-         end case;
-         El := Get_Chain (El);
+      Stmt := Stmt_Chain;
+      while Stmt /= Null_Iir loop
+         Annotate_Concurrent_Statement (Block_Info, Stmt);
+         Stmt := Get_Chain (Stmt);
       end loop;
    end Annotate_Concurrent_Statements_Chain;
 
