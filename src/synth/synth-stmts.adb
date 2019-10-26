@@ -47,6 +47,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
+with Netlists.Butils; use Netlists.Butils;
 
 package body Synth.Stmts is
    procedure Synth_Sequential_Statements
@@ -758,149 +759,6 @@ package body Synth.Stmts is
       pragma Assert (Idx = Arr'Last + 1);
    end Fill_Wire_Id_Array;
 
-   type Case_Element is record
-      Sel : Uns64;
-      Val : Net;
-   end record;
-
-   type Case_Element_Array is array (Natural range <>) of Case_Element;
-   type Case_Element_Array_Acc is access Case_Element_Array;
-   procedure Free_Case_Element_Array is new Ada.Unchecked_Deallocation
-     (Case_Element_Array, Case_Element_Array_Acc);
-
-   --  Generate a netlist for a 'big' mux selected by SEL.  The inputs are
-   --  described by ELS: E.Val must be selected when SEL = E.Sel; if there
-   --  is no E in Els for a value, DEFAULT is selected.
-   --  The result of the netlist is stored in RES.
-   --
-   --  A tree of MUX4 is built.
-   --
-   --  ELS must be sorted by SEL values.
-   --  ELS is overwritten/modified so after the call it contains garbage.  The
-   --  reason is that ELS might be large, so temporary arrays are not allocated
-   --  on the stack, and ELS is expected to be built only for this subprogram.
-   procedure Synth_Case (Sel : Net;
-                         Els : in out Case_Element_Array;
-                         Default : Net;
-                         Res : out Net;
-                         Sel_Loc : Source.Syn_Src)
-   is
-      Wd : constant Width := Get_Width (Sel);
-      Mask : Uns64;
-      Sub_Sel : Net;
-      Lels : Natural;
-      Iels : Natural;
-      Oels : Natural;
-   begin
-      Lels := Els'Last;
-      Iels := Els'First;
-
-      if Lels < Iels then
-         --  No choices
-         Res := Default;
-         return;
-      end if;
-
-      --  Handle SEL bits by 2, so group case_element by 4.
-      for I in 1 .. Natural (Wd / 2) loop
-         --  Extract 2 bits from the selector.
-         Sub_Sel := Build_Extract (Build_Context,
-                                   Sel, Width (2 * (I - 1)), 2);
-         Set_Location (Sub_Sel, Sel_Loc);
-         Mask := Shift_Left (not 0, Natural (2 * I));
-         Iels := Els'First;
-         Oels := Els'First;
-         while Iels <= Lels loop
-            declare
-               type Net4 is array (0 .. 3) of Net;
-               G : Net4;
-               S_Group : constant Uns64 := Els (Iels).Sel and Mask;
-               S_El : Uns64;
-               El_Idx : Natural;
-               Rsel : Net;
-            begin
-               G := (others => Default);
-               for K in 0 .. 3 loop
-                  exit when Iels > Lels;
-                  S_El := Els (Iels).Sel;
-                  exit when (S_El and Mask) /= S_Group;
-                  El_Idx := Natural
-                    (Shift_Right (S_El, Natural (2 * (I - 1))) and 3);
-                  G (El_Idx) := Els (Iels).Val;
-                  Iels := Iels + 1;
-               end loop;
-               if G (3) /= No_Net then
-                  Rsel := Build_Mux4 (Build_Context,
-                                      Sub_Sel, G (0), G (1), G (2), G (3));
-                  Set_Location (Rsel, Sel_Loc);
-               elsif G (2) /= No_Net then
-                  Rsel := Build_Mux2
-                    (Build_Context,
-                     Build_Extract_Bit (Build_Context,
-                                        Sel, Width (2 * (I - 1)) + 1),
-                     Build_Mux2 (Build_Context,
-                                 Build_Extract_Bit (Build_Context,
-                                                    Sel, Width (2 * (I - 1))),
-                                 G (0), G (1)),
-                     G (2));
-                  Set_Location (Rsel, Sel_Loc);
-               elsif G (1) /= No_Net then
-                  Rsel := Build_Mux2
-                    (Build_Context,
-                     Build_Extract_Bit (Build_Context,
-                                        Sel, Width (2 * (I - 1))),
-                     G (0), G (1));
-                  Set_Location (Rsel, Sel_Loc);
-               else
-                  Rsel := G (0);
-               end if;
-               Els (Oels) := (Sel => S_Group, Val => Rsel);
-               Oels := Oels + 1;
-            end;
-         end loop;
-         Lels := Oels - 1;
-      end loop;
-
-      --  If the width is not a multiple of 2, handle the last level.
-      if Wd mod 2 = 1 then
-         if Wd = 1 then
-            Sub_Sel := Sel;
-         else
-            Sub_Sel := Build_Extract_Bit (Build_Context, Sel, Wd - 1);
-            Set_Location (Sub_Sel, Sel_Loc);
-         end if;
-         Iels := Els'First;
-         Oels := Els'First;
-         while Iels <= Lels loop
-            declare
-               type Net2 is array (0 .. 1) of Net;
-               G : Net2;
-               S_Group : constant Uns64 := Els (Iels).Sel and Mask;
-               S_El : Uns64;
-               El_Idx : Natural;
-               Rsel : Net;
-            begin
-               G := (others => Default);
-               for K in 0 .. 1 loop
-                  exit when Iels > Lels;
-                  S_El := Els (Iels).Sel;
-                  El_Idx := Natural
-                    (Shift_Right (S_El, Natural (Wd - 1)) and 1);
-                  G (El_Idx) := Els (Iels).Val;
-                  Iels := Iels + 1;
-               end loop;
-               Rsel := Build_Mux2 (Build_Context, Sub_Sel, G (0), G (1));
-               Set_Location (Rsel, Sel_Loc);
-               Els (Oels) := (Sel => S_Group, Val => Rsel);
-               Oels := Oels + 1;
-            end;
-         end loop;
-         Lels := Oels - 1;
-      end if;
-      pragma Assert (Lels = Els'First);
-      Res := Els (Els'First).Val;
-   end Synth_Case;
-
    type Partial_Assign_Array_Acc is access Partial_Assign_Array;
    procedure Free_Partial_Assign_Array is new Ada.Unchecked_Deallocation
      (Partial_Assign_Array, Partial_Assign_Array_Acc);
@@ -1044,7 +902,7 @@ package body Synth.Stmts is
             Last_Val : Net;
             Res : Net;
             Default : Net;
-            C : Natural;
+            Ch : Natural;
             Min_Off, Off : Uns32;
             Wd : Width;
             List : Partial_Assign_List;
@@ -1085,9 +943,9 @@ package body Synth.Stmts is
 
                --  Build the map between choices and values.
                for J in Annex_Arr'Range loop
-                  C := Natural (Annex_Arr (J));
-                  Case_El (J) := (Sel => Choice_Data (C).Val,
-                                  Val => Nets (Int32 (Choice_Data (C).Alt)));
+                  Ch := Natural (Annex_Arr (J));
+                  Case_El (J) := (Sel => Choice_Data (Ch).Val,
+                                  Val => Nets (Int32 (Choice_Data (Ch).Alt)));
                end loop;
 
                --  Extract default value (for missing alternative).
@@ -1098,7 +956,8 @@ package body Synth.Stmts is
                end if;
 
                --  Generate the muxes tree.
-               Synth_Case (Sel_Net, Case_El.all, Default, Res, Expr);
+               Synth_Case (Get_Build (C.Inst),
+                           Sel_Net, Case_El.all, Default, Res, Expr);
 
                Partial_Assign_Append (List, New_Partial_Assign (Res, Off));
                Min_Off := Off + Wd;
@@ -1241,7 +1100,8 @@ package body Synth.Stmts is
          end if;
 
          --  Generate the muxes tree.
-         Synth_Case (Sel_Net, Case_El.all, Default, Res, Expr);
+         Synth_Case (Get_Build (Syn_Inst),
+                     Sel_Net, Case_El.all, Default, Res, Expr);
          Synth_Assignment (Syn_Inst, Get_Target (Stmt),
                            Create_Value_Net (Res, Targ_Type),
                            Stmt);
