@@ -1,4 +1,4 @@
-vunit verif2 (assert2(behav))
+vunit verif3 (assert2(behav))
 {
   default clock is rising_edge(clk);
   assume always val < 10;
