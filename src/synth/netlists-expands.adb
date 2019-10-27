@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Mutils; use Mutils;
+
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Butils; use Netlists.Butils;
@@ -172,6 +174,8 @@ package body Netlists.Expands is
       --  2. compute number of cells.
       Nbr_Els : constant Natural := Count_Nbr_Elements (Addr_Net);
 
+      Addr_Len : Uns32;
+
       Els : Case_Element_Array_Acc;
       Idx : Positive;
       Off : Uns32;
@@ -189,6 +193,12 @@ package body Netlists.Expands is
 
       --  3. build mux tree
       Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
+      Addr_Len := Uns32 (Clog2 (Uns64 (Nbr_Els)));
+      if Get_Width (Addr) > Addr_Len then
+         --  Truncate the address.  This is requied so that synth_case doesn't
+         --  use default value.
+         Addr := Build_Trunc (Ctxt, Id_Utrunc, Addr, Addr_Len);
+      end if;
       Def := No_Net;
       Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
 
