@@ -22,7 +22,6 @@ with Types; use Types;
 with Dyn_Tables;
 with Tables;
 with Netlists; use Netlists;
-with Netlists.Utils; use Netlists.Utils;
 with Netlists.Builders;
 with Synth.Source;
 

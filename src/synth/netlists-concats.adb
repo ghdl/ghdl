@@ -38,49 +38,17 @@ package body Netlists.Concats is
    end Append;
 
    --  Get the concatenation of all nets in C.  Reset C.
-   procedure Build (Ctxt : Context_Acc; C : in out Concat_Type; N : out Net)
-   is
-      Inst : Instance;
-      Wd : Width;
+   procedure Build (Ctxt : Context_Acc; C : in out Concat_Type; N : out Net) is
    begin
       case C.Len is
          when Int32'First .. 0 =>
             raise Internal_Error;
-         when 1 =>
-            N := C.Sarr (1);
-         when 2 =>
-            N := Build_Concat2 (Ctxt, C.Sarr (2), C.Sarr (1));
-         when 3 =>
-            N := Build_Concat3 (Ctxt, C.Sarr (3), C.Sarr (2), C.Sarr (1));
-         when 4 =>
-            N := Build_Concat4
-              (Ctxt, C.Sarr (4), C.Sarr (3), C.Sarr (2), C.Sarr (1));
-         when 5 .. Static_Last =>
-            --  Compute length.
-            Wd := 0;
-            for I in 1 .. C.Len loop
-               Wd := Wd + Get_Width (C.Sarr (I));
-            end loop;
-
-            N := Build_Concatn (Ctxt, Wd, Uns32 (C.Len));
-            Inst := Get_Net_Parent (N);
-            for I in 1 .. C.Len loop
-               Connect (Get_Input (Inst, Port_Idx (C.Len - I)), C.Sarr (I));
-            end loop;
+         when 1 .. Static_Last =>
+            N := Build2_Concat (Ctxt, Net_Array (C.Sarr (1 .. C.Len)));
          when Static_Last + 1 .. Int32'Last =>
             --  Compute length.
             pragma Assert (C.Len = Net_Tables.Last (C.Darr));
-            Wd := 0;
-            for I in 1 .. C.Len loop
-               Wd := Wd + Get_Width (C.Darr.Table (I));
-            end loop;
-
-            N := Build_Concatn (Ctxt, Wd, Uns32 (C.Len));
-            Inst := Get_Net_Parent (N);
-            for I in Net_Tables.First .. C.Len loop
-               Connect (Get_Input (Inst, Port_Idx (C.Len - I)),
-                        C.Darr.Table (I));
-            end loop;
+            N := Build2_Concat (Ctxt, Net_Array (C.Darr.Table (1 .. C.Len)));
             --  Free the vector.
             Net_Tables.Free (C.Darr);
       end case;

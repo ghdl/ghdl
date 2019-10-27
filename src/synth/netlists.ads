@@ -112,6 +112,9 @@ package Netlists is
    type Net is private;
    No_Net : constant Net;
 
+   --  So pervasive that it is worth defining this array here.
+   type Net_Array is array (Int32 range <>) of Net;
+
    type Input is private;
    No_Input : constant Input;
 

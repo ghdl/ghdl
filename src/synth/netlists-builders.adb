@@ -992,6 +992,42 @@ package body Netlists.Builders is
       return O;
    end Build_Concatn;
 
+   function Build2_Concat (Ctxt : Context_Acc; Els : Net_Array) return Net
+   is
+      F : constant Int32 := Els'First;
+      Len : constant Natural := Els'Length;
+      Wd : Width;
+      Inst : Instance;
+      N : Net;
+   begin
+      case Len is
+         when 0 =>
+            raise Internal_Error;
+         when 1 =>
+            N := Els (F);
+         when 2 =>
+            N := Build_Concat2 (Ctxt, Els (F + 1), Els (F));
+         when 3 =>
+            N := Build_Concat3 (Ctxt, Els (F + 2), Els (F + 1), Els (F));
+         when 4 =>
+            N := Build_Concat4
+              (Ctxt, Els (F + 3), Els (F + 2), Els (F + 1), Els (F));
+         when 5 .. Natural'Last =>
+            --  Compute length.
+            Wd := 0;
+            for I in Els'Range loop
+               Wd := Wd + Get_Width (Els (I));
+            end loop;
+
+            N := Build_Concatn (Ctxt, Wd, Uns32 (Len));
+            Inst := Get_Net_Parent (N);
+            for I in Els'Range loop
+               Connect (Get_Input (Inst, Port_Idx (Els'Last - I)), Els (I));
+            end loop;
+      end case;
+      return N;
+   end Build2_Concat;
+
    function Build_Trunc
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net
    is

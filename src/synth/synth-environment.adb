@@ -22,6 +22,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
 with Netlists.Gates;
 with Netlists.Gates_Ports;
+with Netlists.Utils; use Netlists.Utils;
 
 with Errorout; use Errorout;
 

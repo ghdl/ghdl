@@ -114,6 +114,10 @@ package Netlists.Builders is
    function Build_Concatn (Ctxt : Context_Acc; W : Width; Nbr_Inputs : Uns32)
                           return Net;
 
+   --  Concatenate nets of ELS in reverse order.  So if ELS(L .. R), then
+   --  ELS(L) will be at offset 0.
+   function Build2_Concat (Ctxt : Context_Acc; Els : Net_Array) return Net;
+
    function Build_Trunc
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net;
    function Build_Extend

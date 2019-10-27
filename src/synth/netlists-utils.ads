@@ -20,7 +20,6 @@
 with Ada.Unchecked_Deallocation;
 
 package Netlists.Utils is
-   type Net_Array is array (Int32 range <>) of Net;
    type Net_Array_Acc is access Net_Array;
    procedure Free_Net_Array is new Ada.Unchecked_Deallocation
      (Net_Array, Net_Array_Acc);
