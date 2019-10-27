@@ -957,7 +957,8 @@ package body Synth.Stmts is
 
                --  Generate the muxes tree.
                Synth_Case (Get_Build (C.Inst),
-                           Sel_Net, Case_El.all, Default, Res, Expr);
+                           Sel_Net, Case_El.all, Default, Res,
+                           Get_Location (Expr));
 
                Partial_Assign_Append (List, New_Partial_Assign (Res, Off));
                Min_Off := Off + Wd;
@@ -1101,7 +1102,8 @@ package body Synth.Stmts is
 
          --  Generate the muxes tree.
          Synth_Case (Get_Build (Syn_Inst),
-                     Sel_Net, Case_El.all, Default, Res, Expr);
+                     Sel_Net, Case_El.all, Default, Res,
+                     Get_Location (Expr));
          Synth_Assignment (Syn_Inst, Get_Target (Stmt),
                            Create_Value_Net (Res, Targ_Type),
                            Stmt);

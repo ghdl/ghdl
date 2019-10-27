@@ -30,6 +30,7 @@ package Netlists.Locations is
    function Get_Location (Inst : Instance) return Location_Type;
 
    --  Utilities.
+   procedure Set_Location (Dest : Net; Loc : Location_Type);
    procedure Copy_Location (Dest : Net; Src : Net);
    procedure Copy_Location (Dest : Net; Src : Instance);
    pragma Inline (Copy_Location);

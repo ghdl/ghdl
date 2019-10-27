@@ -22,8 +22,6 @@ with Ada.Unchecked_Deallocation;
 
 with Netlists.Builders; use Netlists.Builders;
 
-with Synth.Source; use Synth.Source;
-
 package Netlists.Butils is
    type Case_Element is record
       Sel : Uns64;
@@ -51,5 +49,5 @@ package Netlists.Butils is
                          Els : in out Case_Element_Array;
                          Default : Net;
                          Res : out Net;
-                         Sel_Loc : Syn_Src);
+                         Sel_Loc : Location_Type);
 end Netlists.Butils;

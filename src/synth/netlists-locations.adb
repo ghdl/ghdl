@@ -40,10 +40,22 @@ package body Netlists.Locations is
       Loc_Table.Table (Inst) := Loc;
    end Set_Location1;
 
+   procedure Set_Location2 (N : Net; Loc : Location_Type) is
+   begin
+      Set_Location (Get_Net_Parent (N), Loc);
+   end Set_Location2;
+
    procedure Set_Location (Inst : Instance; Loc : Location_Type) is
    begin
       if Flag_Locations then
          Set_Location1 (Inst, Loc);
+      end if;
+   end Set_Location;
+
+   procedure Set_Location (Dest : Net; Loc : Location_Type) is
+   begin
+      if Flag_Locations then
+         Set_Location2 (Dest, Loc);
       end if;
    end Set_Location;
 

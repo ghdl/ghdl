@@ -18,13 +18,15 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Netlists.Locations; use Netlists.Locations;
+
 package body Netlists.Butils is
    procedure Synth_Case (Ctxt : Context_Acc;
                          Sel : Net;
                          Els : in out Case_Element_Array;
                          Default : Net;
                          Res : out Net;
-                         Sel_Loc : Syn_Src)
+                         Sel_Loc : Location_Type)
    is
       Wd : constant Width := Get_Width (Sel);
       Mask : Uns64;
