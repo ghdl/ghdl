@@ -1207,6 +1207,7 @@ package body Synth.Expr is
       Left, Right : Value_Acc;
       Dir : Iir_Direction;
       Step : Uns32;
+      Max : Uns32;
    begin
       Off := 0;
 
@@ -1258,9 +1259,11 @@ package body Synth.Expr is
          Synth_Extract_Dyn_Suffix
            (Name, Pfx_Bnd, Get_Net (Left), Get_Net (Right),
             Inp, Step, Off, Wd);
+         --  FIXME: convert range to offset.
+         Max := (Pfx_Bnd.Len - Off) / Step;
          Inp := Build_Memidx
            (Get_Build (Syn_Inst),
-            Inp, Step * El_Wd, 0,
+            Inp, Step * El_Wd, Max,
             Get_Width (Inp) + Width (Clog2 (Uns64 (Step * El_Wd))));
          Wd := Wd * El_Wd;
       end if;
