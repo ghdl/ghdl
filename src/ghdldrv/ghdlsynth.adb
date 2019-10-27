@@ -111,6 +111,9 @@ package body Ghdlsynth is
       elsif Option = "-dm" then
          Flag_Debug_Nomemory := True;
          Res := Option_Ok;
+      elsif Option = "-de" then
+         Flag_Debug_Noexpand := True;
+         Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
