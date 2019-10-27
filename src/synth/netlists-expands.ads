@@ -1,4 +1,4 @@
---  Flags for synthesis.
+--  Expand dyn gates.
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -18,12 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-package Synth.Flags is
-   Flag_Debug_Noinference : Boolean := False;
+with Netlists.Builders; use Netlists.Builders;
 
-   Flag_Debug_Nocleanup : Boolean := False;
-
-   Flag_Debug_Nomemory : Boolean := False;
-
-   Flag_Debug_Noexpand : Boolean := True;
-end Synth.Flags;
+package Netlists.Expands is
+   procedure Expand_Gates (Ctxt : Context_Acc; M : Module);
+end Netlists.Expands;
