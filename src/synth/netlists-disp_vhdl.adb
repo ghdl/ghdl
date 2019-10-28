@@ -436,7 +436,9 @@ package body Netlists.Disp_Vhdl is
       case Id is
          when Id_Extract
            | Id_Dyn_Extract
-           | Id_Dyn_Insert =>
+           | Id_Dyn_Insert
+           | Id_Utrunc
+           | Id_Strunc =>
             return True;
          when Id_User_None .. Module_Id'Last =>
             return True;
