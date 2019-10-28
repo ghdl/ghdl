@@ -27,43 +27,14 @@ with Netlists.Locations; use Netlists.Locations;
 with Netlists.Memories; use Netlists.Memories;
 
 package body Netlists.Expands is
-   function Count_Nbr_Elements (Addr : Net) return Natural
-   is
-      N : Net;
-      Inst, Inst1 : Instance;
-      Res : Natural;
-      Max : Uns32;
-   begin
-      N := Addr;
-      Res := 1;
-      loop
-         Inst := Get_Net_Parent (N);
-         case Get_Id (Inst) is
-            when Id_Memidx =>
-               Inst1 := Inst;
-            when Id_Addidx =>
-               Inst1 := Get_Net_Parent (Get_Input_Net (Inst, 1));
-               pragma Assert (Get_Id (Inst1) = Id_Memidx);
-
-               N := Get_Input_Net (Inst, 0);
-            when others =>
-               raise Internal_Error;
-         end case;
-
-         Max := Get_Param_Uns32 (Inst1, 1);
-         pragma Assert (Max /= 0);
-         Res := Res * Natural (Max + 1);
-
-         exit when Inst1 = Inst;
-      end loop;
-
-      return Res;
-   end Count_Nbr_Elements;
+   type Memidx_Array_Type is array (Natural range <>) of Instance;
 
    --  IDX is the next index to be fill in ELS.
    --  OFF is offset for extraction from VAL.
    --  ADDR_OFF is the address offset.
    procedure Fill_Els (Ctxt : Context_Acc;
+                       Memidx_Arr : Memidx_Array_Type;
+                       Arr_Idx : Natural;
                        Val : Net;
                        Els : Case_Element_Array_Acc;
                        Idx : in out Positive;
@@ -72,46 +43,23 @@ package body Netlists.Expands is
                        W : Width;
                        Sel : in out Uns64)
    is
-      Inst : Instance;
-      Sub_Inst : Instance;
+      Inst : constant Instance := Memidx_Arr (Arr_Idx);
+      Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+      Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
    begin
-      --  Extract memidx.
-      Inst := Get_Net_Parent (Addr);
-      case Get_Id (Inst) is
-         when Id_Memidx =>
-            --  Found.
-            Sub_Inst := No_Instance;
-            null;
-         when Id_Addidx =>
-            --  Will recurse.
-            Sub_Inst := Get_Net_Parent (Get_Input_Net (Inst, 0));
-
-            Inst := Get_Net_Parent (Get_Input_Net (Inst, 1));
-            pragma Assert (Get_Id (Inst) = Id_Memidx);
-
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      declare
-         Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-         Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
-      begin
-         pragma Assert (Max /= 0);
-
-         for I in 0 .. Max loop
-            if Sub_Inst /= No_Instance then
-               --  recurse.
-               raise Internal_Error;
-            else
-               Els (Idx) := (Sel => Sel,
-                             Val => Build_Extract (Ctxt, Val, Off, W));
-               Idx := Idx + 1;
-               Sel := Sel + 1;
-               Off := Off + Step;
-            end if;
-         end loop;
-      end;
+      for I in 0 .. Max loop
+         if Arr_Idx < Memidx_Arr'Last then
+            --  Recurse.
+            Fill_Els (Ctxt, Memidx_Arr, Arr_Idx + 1,
+                      Val, Els, Idx, Addr, Off, W, Sel);
+         else
+            Els (Idx) := (Sel => Sel,
+                          Val => Build_Extract (Ctxt, Val, Off, W));
+            Idx := Idx + 1;
+            Sel := Sel + 1;
+            Off := Off + Step;
+         end if;
+      end loop;
    end Fill_Els;
 
    --  Extract address from memidx/addidx and remove those gates.
@@ -124,7 +72,7 @@ package body Netlists.Expands is
       Inp : Input;
       N : Net;
    begin
-      P := Res_Arr'Last;
+      P := 1;
       N := Addr_Net;
       loop
          Inst := Get_Net_Parent (N);
@@ -151,14 +99,14 @@ package body Netlists.Expands is
          --  INST1 is a memidx.
          Inp := Get_Input (Inst1, 0);
          Res_Arr (P) := Get_Driver (Inp);
-         P := P - 1;
+         P := P + 1;
 
          Disconnect (Inp);
          Remove_Instance (Inst1);
 
          exit when Inst1 = Inst;
       end loop;
-      pragma Assert (P = 0);
+      pragma Assert (P = Res_Arr'Last + 1);
 
       Addr := Build2_Concat (Ctxt, Res_Arr);
    end Extract_Address;
@@ -171,25 +119,66 @@ package body Netlists.Expands is
       W : constant Width := Get_Width (Get_Output (Inst, 0));
       --  1. compute number of dims, check order.
       Ndims : constant Natural := Count_Memidx (Addr_Net);
-      --  2. compute number of cells.
-      Nbr_Els : constant Natural := Count_Nbr_Elements (Addr_Net);
+      Nbr_Els : Natural;
+
+      Memidx_Arr : Memidx_Array_Type (1 .. Ndims);
 
       Addr_Len : Uns32;
 
       Els : Case_Element_Array_Acc;
-      Idx : Positive;
-      Off : Uns32;
-      Sel : Uns64;
       Res : Net;
       Addr : Net;
       Def : Net;
    begin
+      --  1.1  Fill memidx_arr.
+      --  2. compute number of cells.
+      declare
+         N : Net;
+         P : Natural;
+         Ninst : Instance;
+         Memidx : Instance;
+         Max : Uns32;
+      begin
+         N := Addr_Net;
+         Nbr_Els := 1;
+         P := Memidx_Arr'Last;
+         loop
+            Ninst := Get_Net_Parent (N);
+            case Get_Id (Ninst) is
+               when Id_Memidx =>
+                  Memidx := Ninst;
+               when Id_Addidx =>
+                  --  Extract memidx.
+                  Memidx := Get_Net_Parent (Get_Input_Net (Ninst, 1));
+                  pragma Assert (Get_Id (Memidx) = Id_Memidx);
+                  N := Get_Input_Net (Ninst, 0);
+               when others =>
+                  raise Internal_Error;
+            end case;
+
+            Memidx_Arr (P) := Memidx;
+            P := P - 1;
+
+            Max := Get_Param_Uns32 (Memidx, 1);
+            pragma Assert (Max /= 0);
+            Nbr_Els := Nbr_Els * Natural (Max + 1);
+
+            exit when Memidx = Ninst;
+         end loop;
+      end;
+
       --  2. build extract gates
       Els := new Case_Element_Array (1 .. Nbr_Els);
-      Idx := 1;
-      Off := Get_Param_Uns32 (Inst, 0);
-      Sel := 0;
-      Fill_Els (Ctxt, Val, Els, Idx, Addr_Net, Off, W, Sel);
+      declare
+         Idx : Positive;
+         Off : Uns32;
+         Sel : Uns64;
+      begin
+         Idx := 1;
+         Off := Get_Param_Uns32 (Inst, 0);
+         Sel := 0;
+         Fill_Els (Ctxt, Memidx_Arr, 1, Val, Els, Idx, Addr_Net, Off, W, Sel);
+      end;
 
       --  3. build mux tree
       Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
