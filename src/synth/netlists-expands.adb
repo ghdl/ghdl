@@ -52,7 +52,7 @@ package body Netlists.Expands is
 
          Max := Get_Param_Uns32 (Inst1, 1);
          pragma Assert (Max /= 0);
-         Res := Res * Natural (Max);
+         Res := Res * Natural (Max + 1);
 
          exit when Inst1 = Inst;
       end loop;
@@ -99,7 +99,7 @@ package body Netlists.Expands is
       begin
          pragma Assert (Max /= 0);
 
-         for I in 0 .. Max - 1 loop
+         for I in 0 .. Max loop
             if Sub_Inst /= No_Instance then
                --  recurse.
                raise Internal_Error;

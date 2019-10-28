@@ -342,10 +342,8 @@ package body Netlists.Memories is
          begin
             --  Check max
             Max := Get_Param_Uns32 (Inst, 1);
-            if Max = 0 then
-               Max := Last_Size / Step;
-            end if;
-            if Max * Step /= Last_Size then
+            pragma Assert (Max /= 0);
+            if (Max + 1) * Step /= Last_Size then
                raise Internal_Error;
             end if;
 

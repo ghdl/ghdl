@@ -964,7 +964,7 @@ package body Synth.Expr is
          Off := Index_To_Offset (Bnd, Idx_Val.Scal, Name) * W;
       else
          Voff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
-         Voff := Build_Memidx (Get_Build (Syn_Inst), Voff, W, Bnd.Len,
+         Voff := Build_Memidx (Get_Build (Syn_Inst), Voff, W, Bnd.Len - 1,
                                Width (Clog2 (Uns64 (W * Bnd.Len))));
          Set_Location (Voff, Name);
          Off := 0;
@@ -1260,7 +1260,11 @@ package body Synth.Expr is
            (Name, Pfx_Bnd, Get_Net (Left), Get_Net (Right),
             Inp, Step, Off, Wd);
          --  FIXME: convert range to offset.
-         Max := (Pfx_Bnd.Len - Off) / Step;
+         --  example: len=128  wd=8  step=8  => max=16
+         --           len=8    wd=4  step=1  => max=4
+         --  max so that max*step+wd <= len - off
+         --              max <= (len - off - wd) / step
+         Max := (Pfx_Bnd.Len - Off - Wd) / Step;
          Inp := Build_Memidx
            (Get_Build (Syn_Inst),
             Inp, Step * El_Wd, Max,
