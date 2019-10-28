@@ -118,19 +118,13 @@ Multiple standards can be used in a design:
 
 .. _psl_implementation:
 
-PSL implementation
+PSL support
 ==================
 
-GHDL understands embedded PSL annotations in VHDL files, but not in
-separate files.
+GHDL implements a subset of :wikipedia:`PSL <Property_Specification_Language>`.
 
-As PSL annotations are embedded within comments, you must analyze and elaborate
-your design with option *-fpsl* to enable PSL annotations.
-
-A PSL assertion statement must appear within a comment that starts
-with the `psl` keyword. The keyword must be followed (on the
-same line) by a PSL keyword such as `assert` or `default`.
-To continue a PSL statement on the next line, just start a new comment.
+PSL implementation
+-----------------
 
 A PSL statement is considered a process, so it's not allowed within
 a process.
@@ -142,20 +136,95 @@ You can either use a default clock like this:
 
 .. code-block:: VHDL
 
-    -- psl default clock is rising_edge (CLK);
-    -- psl assert always
-    --   a -> eventually! b;
+    default clock is rising_edge (CLK);
+    assert always
+      a -> eventually! b;
 
 or use a clocked expression (note the use of parentheses):
 
 .. code-block:: VHDL
 
-    -- psl assert (always a -> next[3](b)) @rising_edge (clk);
+    assert (always a -> next[3](b)) @rising_edge(clk);
 
 
 Of course only the simple subset of PSL is allowed.
 
-Currently the built-in functions are not implemented.
+Currently the built-in functions are not implemented, see `issue #662 <https://github.com/ghdl/ghdl/issues/662>`_.
+
+PSL usage
+-----------------
+
+PSL annotations embedded in comments
+  GHDL understands embedded PSL annotations in VHDL files:
+
+  .. code-block:: VHDL
+
+        -- psl default clock is rising_edge (CLK);
+        -- psl assert always
+        --   a -> eventually! b;
+      end architecture rtl;
+
+  * A PSL assertion statement must appear within a comment that starts
+    with the `psl` keyword. The keyword must be followed (on the
+    same line) by a PSL keyword such as `assert` or `default`.
+    To continue a PSL statement on the next line, just start a new comment.
+
+  .. HINT::
+     As PSL annotations are embedded within comments, you must analyze
+     your design with option ``-fpsl`` to enable PSL annotations.
+
+     .. code-block:: bash
+
+         ghdl -a -fpsl vhdl_design.vhd
+         ghdl -e vhdl_design
+
+PSL annotations (VHDL-2008 only)
+  Since VHDL-2008 PSL is integrated in the VHDL language. You can use
+  PSL in a VHDL(-2008) design without embedding it in comments.
+
+  .. code-block:: VHDL
+
+        default clock is rising_edge (CLK);
+        assert always
+          a -> eventually! b;
+      end architecture rtl;
+
+  .. HINT::
+     You have to use the ``--std=08`` option
+
+     .. code-block:: bash
+
+         ghdl -a --std=08 vhdl_design.vhd
+         ghdl -e --std=08 vhdl_design
+
+PSL vunit files
+  GHDL supports vunit (Verification Unit) files.
+
+  .. code-block:: VHDL
+
+      vunit vunit_name (design_name)
+      {
+        default clock is rising_edge(clk);
+        assert always cnt /= 5 abort rst;
+      }
+
+  * A vunit can contain PSL and VHDL code.
+
+  * It is bound to a VHDL entity or an instance of it.
+
+  * The PSL vunit is in the same scope as the VHDL design it is bound
+    to. You have access to all objects (ports, types, signals) of the
+    VHDL design.
+
+  .. HINT::
+     The PSL vunit file has to be analyzed/elaborated together with the VHDL design file, for example:
+
+     .. code-block:: bash
+
+         ghdl -a --std=08 vhdl_design.vhd vunit.psl
+         ghdl -e --std=08 vhdl_design
+
+
 
 Source representation
 =====================
