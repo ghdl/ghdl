@@ -23,6 +23,7 @@ with Ada.Unchecked_Deallocation;
 with Grt.Algos;
 with Areapools;
 with Std_Names;
+with Errorout; use Errorout;
 
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Types;
@@ -2471,6 +2472,86 @@ package body Synth.Stmts is
       end loop;
    end Synth_Concurrent_Statements;
 
+   procedure Synth_Attribute_Formal (Syn_Inst : Synth_Instance_Acc;
+                                     Val : Node;
+                                     Id : Netlists.Gates.Formal_Module_Id)
+   is
+      Spec : constant Node := Get_Attribute_Specification (Val);
+      Sig : constant Node := Get_Designated_Entity (Val);
+      V : Value_Acc;
+      Targ : Value_Acc;
+   begin
+      --  The type must be boolean
+      if (Get_Base_Type (Get_Type (Val)) /=
+            Vhdl.Std_Package.Boolean_Type_Definition)
+      then
+         Error_Msg_Synth (+Val, "type of attribute %i must be boolean",
+                          (1 => +Get_Attribute_Designator (Spec)));
+         return;
+      end if;
+
+      --  The designated entity must be a signal.
+      if Get_Kind (Sig) /= Iir_Kind_Signal_Declaration then
+         Error_Msg_Synth (+Val, "attribute %i only applies to signals",
+                          (1 => +Get_Attribute_Designator (Spec)));
+         return;
+      end if;
+
+      --  The value must be true
+      V := Synth_Expression_With_Type
+        (Syn_Inst, Get_Expression (Spec), Boolean_Type);
+      if V.Scal /= 1 then
+         return;
+      end if;
+
+      declare
+         Off : Uns32;
+         Voff : Net;
+         Wd : Width;
+         Typ : Type_Acc;
+         N : Net;
+      begin
+         Synth_Assignment_Prefix (Syn_Inst, Sig, Targ, Off, Voff, Wd, Typ);
+         pragma Assert (Off = 0);
+         pragma Assert (Voff = No_Net);
+         pragma Assert (Targ.Kind = Value_Wire);
+
+         N := Build_Formal_Input (Get_Build (Syn_Inst), Id, Typ.W);
+         Add_Conc_Assign (Targ.W, N, 0, Val);
+      end;
+
+   end Synth_Attribute_Formal;
+
+   procedure Synth_Attribute_Values
+     (Syn_Inst : Synth_Instance_Acc; Unit : Node)
+   is
+      use Std_Names;
+      use Netlists.Gates;
+
+      Val : Node;
+      Spec : Node;
+      Id : Name_Id;
+   begin
+      Val := Get_Attribute_Value_Chain (Unit);
+      while Val /= Null_Node loop
+         Spec := Get_Attribute_Specification (Val);
+         Id := Get_Identifier (Get_Attribute_Designator (Spec));
+         case Id is
+            when Name_Allconst =>
+               Synth_Attribute_Formal (Syn_Inst, Val, Id_Allconst);
+            when Name_Allseq =>
+               Synth_Attribute_Formal (Syn_Inst, Val, Id_Allseq);
+            when Name_Anyconst =>
+               Synth_Attribute_Formal (Syn_Inst, Val, Id_Anyconst);
+            when Name_Anyseq =>
+               Synth_Attribute_Formal (Syn_Inst, Val, Id_Anyseq);
+            when others =>
+               Warning_Msg_Synth (+Spec, "unhandled attribute %i", (1 => +Id));
+         end case;
+         Val := Get_Value_Chain (Val);
+      end loop;
+   end Synth_Attribute_Values;
+
    procedure Synth_Verification_Unit
      (Syn_Inst : Synth_Instance_Acc; Unit : Node)
    is
@@ -2503,7 +2584,9 @@ package body Synth.Stmts is
               | Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration
               | Iir_Kind_Function_Body
-              | Iir_Kind_Procedure_Body =>
+              | Iir_Kind_Procedure_Body
+              | Iir_Kind_Attribute_Declaration
+              | Iir_Kind_Attribute_Specification =>
                Synth_Declaration (Unit_Inst, Item, False);
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
                Synth_Concurrent_Statement (Unit_Inst, Item);
@@ -2512,6 +2595,8 @@ package body Synth.Stmts is
          end case;
          Item := Get_Chain (Item);
       end loop;
+
+      Synth_Attribute_Values (Unit_Inst, Unit);
 
       Free_Instance (Unit_Inst);
       Release (M, Proc_Pool);
