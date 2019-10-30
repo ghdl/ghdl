@@ -1055,6 +1055,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Inherit_Spec_Chain (Field2)
    --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
    --   Get/Set_Vunit_Item_Chain (Field5)
    --
    -- Only for Iir_Kind_Vunit_Declaration:

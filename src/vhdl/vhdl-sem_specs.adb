@@ -654,6 +654,8 @@ package body Vhdl.Sem_Specs is
            | Iir_Kind_Procedure_Body =>
             Sem_Named_Entity_Chain (Get_Declaration_Chain (Scope));
             Sem_Named_Entity_Chain (Get_Sequential_Statement_Chain (Scope));
+         when Iir_Kind_Vunit_Declaration =>
+            Sem_Named_Entity_Chain (Get_Vunit_Item_Chain (Scope));
          when others =>
             Error_Kind ("sem_named_entities", Scope);
       end case;

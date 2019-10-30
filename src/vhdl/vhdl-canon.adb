@@ -3260,7 +3260,9 @@ package body Vhdl.Canon is
               | Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration
               | Iir_Kind_Function_Body
-              | Iir_Kind_Procedure_Body =>
+              | Iir_Kind_Procedure_Body
+              | Iir_Kind_Attribute_Declaration
+              | Iir_Kind_Attribute_Specification =>
                Item := Canon_Declaration (Unit, Item, Null_Iir);
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
                Canon_Concurrent_Label (Item, Proc_Num);
