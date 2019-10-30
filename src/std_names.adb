@@ -654,6 +654,11 @@ package body Std_Names is
       Def ("ceil",               Name_Ceil);
       Def ("log2",               Name_Log2);
 
+      Def ("allconst",           Name_Allconst);
+      Def ("allseq",             Name_Allseq);
+      Def ("anyconst",           Name_Anyconst);
+      Def ("anyseq",             Name_Anyseq);
+
       --  Verilog directives
       Def ("define",          Name_Define);
       Def ("endif",           Name_Endif);
