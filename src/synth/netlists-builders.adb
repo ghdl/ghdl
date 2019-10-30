@@ -479,6 +479,19 @@ package body Netlists.Builders is
                      Outputs);
    end Create_Assert_Assume_Cover;
 
+   procedure Create_Formal_Input
+     (Ctxt : Context_Acc; Id : Formal_Module_Id; Name : Name_Id)
+   is
+      Outputs : Port_Desc_Array (0 .. 0);
+      Res : Module;
+   begin
+      Res := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Name), Id, 0, 1, 0);
+      Ctxt.M_Formal_Input (Id) := Res;
+      Outputs := (0 => Create_Output ("o"));
+      Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
+   end Create_Formal_Input;
+
    function Build_Builders (Design : Module) return Context_Acc
    is
       Res : Context_Acc;
@@ -493,6 +506,7 @@ package body Netlists.Builders is
                           M_Concat => (others => No_Module),
                           M_Truncate | M_Extend => (others => No_Module),
                           M_Reduce => (others => No_Module),
+                          M_Formal_Input => (others => No_Module),
                           others => No_Module);
 
       Create_Dyadic_Module (Design, Res.M_Dyadic (Id_And), Name_And, Id_And);
@@ -601,6 +615,11 @@ package body Netlists.Builders is
       Create_Dff_Modules (Res);
 
       Create_Assert_Assume_Cover (Res);
+
+      Create_Formal_Input (Res, Id_Allconst, Name_Allconst);
+      Create_Formal_Input (Res, Id_Anyconst, Name_Anyconst);
+      Create_Formal_Input (Res, Id_Allseq, Name_Allseq);
+      Create_Formal_Input (Res, Id_Anyseq, Name_Anyseq);
 
       return Res;
    end Build_Builders;
@@ -1445,5 +1464,18 @@ package body Netlists.Builders is
    begin
       return Build_Formal (Ctxt, Ctxt.M_Assert_Cover, Name, Cond);
    end Build_Assert_Cover;
+
+   function Build_Formal_Input
+     (Ctxt : Context_Acc; Id : Formal_Module_Id; W : Width) return Net
+   is
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Instance (Ctxt.Parent, Ctxt.M_Formal_Input (Id),
+                            New_Internal_Name (Ctxt));
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      return O;
+   end Build_Formal_Input;
 
 end Netlists.Builders;

@@ -175,6 +175,9 @@ package Netlists.Builders is
    function Build_Assert_Cover (Ctxt : Context_Acc; Name : Sname; Cond : Net)
                          return Instance;
 
+   function Build_Formal_Input
+     (Ctxt : Context_Acc; Id : Formal_Module_Id; W : Width) return Net;
+
    --  A simple flip-flop.
    function Build_Dff (Ctxt : Context_Acc;
                        Clk : Net;
@@ -240,5 +243,6 @@ private
       M_Assume : Module;
       M_Cover : Module;
       M_Assert_Cover : Module;
+      M_Formal_Input : Module_Arr (Formal_Module_Id);
    end record;
 end Netlists.Builders;

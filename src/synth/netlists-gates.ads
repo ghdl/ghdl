@@ -210,6 +210,14 @@ package Netlists.Gates is
    --  Use to cover the precedent of an assertion.
    Id_Assert_Cover : constant Module_Id := 84;
 
+   --  Formal gates.
+   Id_Allconst : constant Module_Id := 90;
+   Id_Anyconst : constant Module_Id := 91;
+   Id_Allseq : constant Module_Id := 92;
+   Id_Anyseq : constant Module_Id := 93;
+
+   subtype Formal_Module_Id is Module_Id range Id_Allconst .. Id_Anyseq;
+
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
    --  parameter, possibly signed or unsigned extended.
