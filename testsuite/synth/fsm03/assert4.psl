@@ -1,0 +1,10 @@
+vunit assert3 (ent)
+{
+  default clock is rising_edge(clk);
+  function get_nval (v : std_logic) return std_logic is
+  begin
+    return not v;
+  end get_nval;
+  --  signal nval : std_logic;
+  my_cond: assert always {get_nval (val); req} |=> eventually! ack;
+}
