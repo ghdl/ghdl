@@ -202,6 +202,11 @@ package body PSL.NFAs.Utils is
       Set_First_Edge (S, First_E);
       Set_First_Edge (S1, No_Edge);
 
+      --  Move the active state if it is deleted.
+      if Get_Active_State (N) = S1 then
+         Set_Active_State (N, S);
+      end if;
+
       Remove_State (N, S1);
    end Merge_State;
 
