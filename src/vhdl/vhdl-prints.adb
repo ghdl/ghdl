@@ -4383,6 +4383,11 @@ package body Vhdl.Prints is
            | Iir_Kind_Procedure_Body =>
             Disp_Subprogram_Body (Ctxt, Expr);
 
+         when Iir_Kind_Attribute_Declaration =>
+            Disp_Attribute_Declaration (Ctxt, Expr);
+         when Iir_Kind_Attribute_Specification =>
+            Disp_Attribute_Specification (Ctxt, Expr);
+
          when Iir_Kind_Signature =>
             Disp_Signature (Ctxt, Expr);
 
