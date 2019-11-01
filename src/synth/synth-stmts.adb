@@ -2321,6 +2321,32 @@ package body Synth.Stmts is
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Generate_Statement_Body;
 
+   procedure Synth_If_Generate_Statement
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Gen : Node;
+      Bod : Node;
+      Cond : Value_Acc;
+      Name : Sname;
+   begin
+      Gen := Stmt;
+      Name := New_Sname (Get_Sname (Syn_Inst),
+                         Get_Identifier (Stmt));
+      loop
+         Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
+         pragma Assert (Cond.Kind = Value_Discrete);
+         if Cond.Scal = 1 then
+            Bod := Get_Generate_Statement_Body (Gen);
+            Apply_Block_Configuration
+              (Get_Generate_Block_Configuration (Bod), Bod);
+            Synth_Generate_Statement_Body (Syn_Inst, Bod, Name);
+            exit;
+         end if;
+         Gen := Get_Generate_Else_Clause (Gen);
+         exit when Gen = Null_Node;
+      end loop;
+   end Synth_If_Generate_Statement;
+
    procedure Synth_For_Generate_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -2399,27 +2425,7 @@ package body Synth.Stmts is
             Synth_Process_Statement (Syn_Inst, Stmt);
             Pop_And_Merge_Phi (Build_Context, Stmt);
          when Iir_Kind_If_Generate_Statement =>
-            declare
-               Gen : Node;
-               Bod : Node;
-               Cond : Value_Acc;
-               Name : Sname;
-            begin
-               Gen := Stmt;
-               Name := New_Sname (Get_Sname (Syn_Inst),
-                                  Get_Identifier (Stmt));
-               loop
-                  Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
-                  pragma Assert (Cond.Kind = Value_Discrete);
-                  if Cond.Scal = 1 then
-                     Bod := Get_Generate_Statement_Body (Gen);
-                     Synth_Generate_Statement_Body (Syn_Inst, Bod, Name);
-                     exit;
-                  end if;
-                  Gen := Get_Generate_Else_Clause (Gen);
-                  exit when Gen = Null_Node;
-               end loop;
-            end;
+            Synth_If_Generate_Statement (Syn_Inst, Stmt);
          when Iir_Kind_For_Generate_Statement =>
             Synth_For_Generate_Statement (Syn_Inst, Stmt);
          when Iir_Kind_Component_Instantiation_Statement =>

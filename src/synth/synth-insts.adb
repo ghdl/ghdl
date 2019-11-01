@@ -798,8 +798,10 @@ package body Synth.Insts is
    is
       Item : Node;
    begin
+      --  Be sure CFG applies to BLK.
       pragma Assert (Get_Block_From_Block_Specification
                        (Get_Block_Specification (Cfg)) = Blk);
+
       Item := Get_Configuration_Item_Chain (Cfg);
       while Item /= Null_Node loop
          case Get_Kind (Item) is
