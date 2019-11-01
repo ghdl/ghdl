@@ -148,6 +148,9 @@ package Netlists.Gates is
    Id_Dyn_Extract : constant Module_Id := 69;
 
    --  Like Insert but for dynamic values.
+   --  Input0: the memory
+   --  Input1: the value to insert
+   --  Input2: the index.
    --  T := IN0
    --  T [IN2+OFF+WD-1:IN2+OFF] := IN1
    --  OUT := T

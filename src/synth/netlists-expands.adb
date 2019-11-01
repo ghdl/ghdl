@@ -25,6 +25,7 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Butils; use Netlists.Butils;
 with Netlists.Locations; use Netlists.Locations;
 with Netlists.Memories; use Netlists.Memories;
+with Netlists.Concats; use Netlists.Concats;
 
 package body Netlists.Expands is
    type Memidx_Array_Type is array (Natural range <>) of Instance;
@@ -111,6 +112,57 @@ package body Netlists.Expands is
       Addr := Build2_Concat (Ctxt, Res_Arr);
    end Extract_Address;
 
+   procedure Truncate_Address
+     (Ctxt : Context_Acc; Addr : in out Net; Nbr_Els : Natural)
+   is
+      Addr_Len : Width;
+   begin
+      Addr_Len := Uns32 (Clog2 (Uns64 (Nbr_Els)));
+      if Get_Width (Addr) > Addr_Len then
+         --  Truncate the address.  This is requied so that synth_case doesn't
+         --  use default value.
+         Addr := Build_Trunc (Ctxt, Id_Utrunc, Addr, Addr_Len);
+      end if;
+   end Truncate_Address;
+
+   procedure Gather_Memidx (Addr_Net : Net;
+                            Memidx_Arr : out Memidx_Array_Type;
+                            Nbr_Els : out Natural)
+   is
+      N : Net;
+      P : Natural;
+      Ninst : Instance;
+      Memidx : Instance;
+      Max : Uns32;
+   begin
+      N := Addr_Net;
+      Nbr_Els := 1;
+      P := Memidx_Arr'Last;
+      loop
+         Ninst := Get_Net_Parent (N);
+         case Get_Id (Ninst) is
+            when Id_Memidx =>
+               Memidx := Ninst;
+            when Id_Addidx =>
+               --  Extract memidx.
+               Memidx := Get_Net_Parent (Get_Input_Net (Ninst, 1));
+               pragma Assert (Get_Id (Memidx) = Id_Memidx);
+               N := Get_Input_Net (Ninst, 0);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         Memidx_Arr (P) := Memidx;
+         P := P - 1;
+
+         Max := Get_Param_Uns32 (Memidx, 1);
+         pragma Assert (Max /= 0);
+         Nbr_Els := Nbr_Els * Natural (Max + 1);
+
+         exit when Memidx = Ninst;
+      end loop;
+   end Gather_Memidx;
+
    procedure Expand_Dyn_Extract (Ctxt : Context_Acc; Inst : Instance)
    is
       Val : constant Net := Get_Input_Net (Inst, 0);
@@ -123,8 +175,6 @@ package body Netlists.Expands is
 
       Memidx_Arr : Memidx_Array_Type (1 .. Ndims);
 
-      Addr_Len : Uns32;
-
       Els : Case_Element_Array_Acc;
       Res : Net;
       Addr : Net;
@@ -132,40 +182,7 @@ package body Netlists.Expands is
    begin
       --  1.1  Fill memidx_arr.
       --  2. compute number of cells.
-      declare
-         N : Net;
-         P : Natural;
-         Ninst : Instance;
-         Memidx : Instance;
-         Max : Uns32;
-      begin
-         N := Addr_Net;
-         Nbr_Els := 1;
-         P := Memidx_Arr'Last;
-         loop
-            Ninst := Get_Net_Parent (N);
-            case Get_Id (Ninst) is
-               when Id_Memidx =>
-                  Memidx := Ninst;
-               when Id_Addidx =>
-                  --  Extract memidx.
-                  Memidx := Get_Net_Parent (Get_Input_Net (Ninst, 1));
-                  pragma Assert (Get_Id (Memidx) = Id_Memidx);
-                  N := Get_Input_Net (Ninst, 0);
-               when others =>
-                  raise Internal_Error;
-            end case;
-
-            Memidx_Arr (P) := Memidx;
-            P := P - 1;
-
-            Max := Get_Param_Uns32 (Memidx, 1);
-            pragma Assert (Max /= 0);
-            Nbr_Els := Nbr_Els * Natural (Max + 1);
-
-            exit when Memidx = Ninst;
-         end loop;
-      end;
+      Gather_Memidx (Addr_Net, Memidx_Arr, Nbr_Els);
 
       --  2. build extract gates
       Els := new Case_Element_Array (1 .. Nbr_Els);
@@ -182,12 +199,7 @@ package body Netlists.Expands is
 
       --  3. build mux tree
       Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
-      Addr_Len := Uns32 (Clog2 (Uns64 (Nbr_Els)));
-      if Get_Width (Addr) > Addr_Len then
-         --  Truncate the address.  This is requied so that synth_case doesn't
-         --  use default value.
-         Addr := Build_Trunc (Ctxt, Id_Utrunc, Addr, Addr_Len);
-      end if;
+      Truncate_Address (Ctxt, Addr, Nbr_Els);
       Def := No_Net;
       Synth_Case (Ctxt, Addr, Els.all, Def, Res, Loc);
 
@@ -200,6 +212,120 @@ package body Netlists.Expands is
       Free_Case_Element_Array (Els);
    end Expand_Dyn_Extract;
 
+   procedure Generate_Decoder
+     (Ctxt : Context_Acc; Addr : Net; Net_Arr : out Net_Array)
+   is
+      W : constant Width := Get_Width (Addr);
+      V0, V1 : Net;
+      V : Net;
+      J : Int32;
+      Step : Int32;
+   begin
+      for I in reverse 0 .. W - 1 loop
+         V1 := Build_Extract_Bit (Ctxt, Addr, I);
+         V0 := Build_Monadic (Ctxt, Id_Not, V1);
+         Step := 2**Natural (I);
+         if I = W - 1 then
+            Net_Arr (0) := V0;
+            Net_Arr (Step) := V1;
+         else
+            J := 0;
+            loop
+               V := Net_Arr (J);
+               Net_Arr (J) := Build_Dyadic (Ctxt, Id_And, V, V0);
+               J := J + Step;
+               exit when J > Net_Arr'Last;
+               Net_Arr (J) := Build_Dyadic (Ctxt, Id_And, V, V1);
+               J := J + Step;
+               exit when J > Net_Arr'Last;
+            end loop;
+         end if;
+      end loop;
+   end Generate_Decoder;
+
+   procedure Generate_Muxes (Ctxt : Context_Acc;
+                             Concat : in out Concat_Type;
+                             Mem : Net;
+                             Off : in out Uns32;
+                             Dat : Net;
+                             Memidx_Arr : Memidx_Array_Type;
+                             Arr_Idx : Natural;
+                             Net_Arr : Net_Array;
+                             Sel : in out Int32)
+   is
+      Inst : constant Instance := Memidx_Arr (Arr_Idx);
+      Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+      Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
+      V : Net;
+   begin
+      for I in 0 .. Max loop
+         if Arr_Idx < Memidx_Arr'Last then
+            --  Recurse.
+            Generate_Muxes (Ctxt, Concat, Mem, Off, Dat,
+                            Memidx_Arr, Arr_Idx + 1, Net_Arr, Sel);
+         else
+            V := Build_Extract (Ctxt, Mem, Off, Get_Width (Dat));
+            V := Build_Mux2 (Ctxt, Net_Arr (Sel), V, Dat);
+            Append (Concat, V);
+            Off := Off + Step;
+            Sel := Sel + 1;
+         end if;
+      end loop;
+   end Generate_Muxes;
+
+   procedure Expand_Dyn_Insert (Ctxt : Context_Acc; Inst : Instance)
+   is
+      Mem : constant Net := Get_Input_Net (Inst, 0);
+      Dat : constant Net := Get_Input_Net (Inst, 1);
+      Addr_Net : constant Net := Get_Input_Net (Inst, 2);
+      --  Loc : constant Location_Type := Get_Location (Inst);
+      --  W : constant Width := Get_Width (Get_Output (Inst, 0));
+      --  1. compute number of dims, check order.
+      Ndims : constant Natural := Count_Memidx (Addr_Net);
+      Nbr_Els : Natural;
+
+      Memidx_Arr : Memidx_Array_Type (1 .. Ndims);
+
+      Net_Arr : Net_Array_Acc;
+
+      Addr : Net;
+
+      Concat : Concat_Type;
+      Res : Net;
+   begin
+      Gather_Memidx (Addr_Net, Memidx_Arr, Nbr_Els);
+
+      --  Generate decoder.
+      Net_Arr := new Net_Array(0 .. Int32 (Nbr_Els - 1));
+      Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
+      Truncate_Address (Ctxt, Addr, Nbr_Els);
+      Generate_Decoder (Ctxt, Addr, Net_Arr.all);
+
+      --  Build muxes
+      declare
+         Off : Uns32;
+         Sel : Int32;
+      begin
+         Off := Get_Param_Uns32 (Inst, 0);
+         if Off /= 0 then
+            Append (Concat, Build_Extract (Ctxt, Mem, 0, Off));
+         end if;
+         Sel := 0;
+         Generate_Muxes (Ctxt, Concat, Mem, Off, Dat,
+                         Memidx_Arr, 1, Net_Arr.all, Sel);
+      end;
+      Build (Ctxt, Concat, Res);
+
+      Free_Net_Array (Net_Arr);
+
+      --  Replace gate.
+      Redirect_Inputs (Get_Output (Inst, 0), Res);
+      Disconnect (Get_Input (Inst, 0));
+      Disconnect (Get_Input (Inst, 1));
+      Disconnect (Get_Input (Inst, 2));
+      Remove_Instance (Inst);
+   end Expand_Dyn_Insert;
+
    procedure Expand_Gates (Ctxt : Context_Acc; M : Module)
    is
       Inst : Instance;
@@ -210,6 +336,9 @@ package body Netlists.Expands is
          case Get_Id (Inst) is
             when Id_Dyn_Extract =>
                Expand_Dyn_Extract (Ctxt, Inst);
+
+            when Id_Dyn_Insert =>
+               Expand_Dyn_Insert (Ctxt, Inst);
 
             when others =>
                null;
