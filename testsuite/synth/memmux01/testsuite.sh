@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in memmux02 memmux03; do
+for t in memmux01 memmux02 memmux03; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
