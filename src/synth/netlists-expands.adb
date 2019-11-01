@@ -340,10 +340,12 @@ package body Netlists.Expands is
    procedure Expand_Gates (Ctxt : Context_Acc; M : Module)
    is
       Inst : Instance;
+      Ninst : Instance;
    begin
       Inst := Get_First_Instance (M);
       while Inst /= No_Instance loop
          --  Walk all the instances of M:
+         Ninst := Get_Next_Instance (Inst);
          case Get_Id (Inst) is
             when Id_Dyn_Extract =>
                Expand_Dyn_Extract (Ctxt, Inst);
@@ -355,7 +357,7 @@ package body Netlists.Expands is
                null;
          end case;
 
-         Inst := Get_Next_Instance (Inst);
+         Inst := Ninst;
       end loop;
    end Expand_Gates;
 end Netlists.Expands;
