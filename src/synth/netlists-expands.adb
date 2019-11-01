@@ -30,6 +30,55 @@ with Netlists.Concats; use Netlists.Concats;
 package body Netlists.Expands is
    type Memidx_Array_Type is array (Natural range <>) of Instance;
 
+   --  Extract Memidx from ADDR_NET and return the number of elements NBR_ELS
+   --  (which is usually 2**width(ADDR_NET)).
+   --  Memidx are ordered from the one with the largest step to the one with
+   --   the smallest step.
+   procedure Gather_Memidx (Addr_Net : Net;
+                            Memidx_Arr : out Memidx_Array_Type;
+                            Nbr_Els : out Natural)
+   is
+      N : Net;
+      P : Natural;
+      Ninst : Instance;
+      Memidx : Instance;
+      Max : Uns32;
+   begin
+      N := Addr_Net;
+      Nbr_Els := 1;
+      P := Memidx_Arr'Last;
+      loop
+         Ninst := Get_Net_Parent (N);
+         case Get_Id (Ninst) is
+            when Id_Memidx =>
+               Memidx := Ninst;
+            when Id_Addidx =>
+               --  Extract memidx.
+               Memidx := Get_Net_Parent (Get_Input_Net (Ninst, 1));
+               pragma Assert (Get_Id (Memidx) = Id_Memidx);
+               N := Get_Input_Net (Ninst, 0);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         Memidx_Arr (P) := Memidx;
+
+         --  Check memidx are ordered by decreasing step.
+         pragma Assert
+           (P = Memidx_Arr'Last
+              or else (Get_Param_Uns32 (Memidx, 0)
+                         >= Get_Param_Uns32 (Memidx_Arr (P + 1), 0)));
+
+         P := P - 1;
+
+         Max := Get_Param_Uns32 (Memidx, 1);
+         pragma Assert (Max /= 0);
+         Nbr_Els := Nbr_Els * Natural (Max + 1);
+
+         exit when Memidx = Ninst;
+      end loop;
+   end Gather_Memidx;
+
    --  IDX is the next index to be fill in ELS.
    --  OFF is offset for extraction from VAL.
    --  ADDR_OFF is the address offset.
@@ -124,44 +173,6 @@ package body Netlists.Expands is
          Addr := Build_Trunc (Ctxt, Id_Utrunc, Addr, Addr_Len);
       end if;
    end Truncate_Address;
-
-   procedure Gather_Memidx (Addr_Net : Net;
-                            Memidx_Arr : out Memidx_Array_Type;
-                            Nbr_Els : out Natural)
-   is
-      N : Net;
-      P : Natural;
-      Ninst : Instance;
-      Memidx : Instance;
-      Max : Uns32;
-   begin
-      N := Addr_Net;
-      Nbr_Els := 1;
-      P := Memidx_Arr'Last;
-      loop
-         Ninst := Get_Net_Parent (N);
-         case Get_Id (Ninst) is
-            when Id_Memidx =>
-               Memidx := Ninst;
-            when Id_Addidx =>
-               --  Extract memidx.
-               Memidx := Get_Net_Parent (Get_Input_Net (Ninst, 1));
-               pragma Assert (Get_Id (Memidx) = Id_Memidx);
-               N := Get_Input_Net (Ninst, 0);
-            when others =>
-               raise Internal_Error;
-         end case;
-
-         Memidx_Arr (P) := Memidx;
-         P := P - 1;
-
-         Max := Get_Param_Uns32 (Memidx, 1);
-         pragma Assert (Max /= 0);
-         Nbr_Els := Nbr_Els * Natural (Max + 1);
-
-         exit when Memidx = Ninst;
-      end loop;
-   end Gather_Memidx;
 
    procedure Expand_Dyn_Extract (Ctxt : Context_Acc; Inst : Instance)
    is

@@ -674,11 +674,13 @@ package body Netlists.Memories is
                   end if;
 
                   --  Merge id_dyn_extract.
+                  --  The order for Addix is important: from larger steps
+                  --  to smaller ones.
                   Disconnect (Get_Input (Inst, 0));
                   Connect (Get_Input (Inst, 0), Get_Input_Net (Data, 0));
                   Disconnect (Get_Input (Data, 0));
                   Add := Build_Addidx
-                    (Ctxt, Get_Input_Net (Inst, 1), Get_Input_Net (Data, 1));
+                    (Ctxt, Get_Input_Net (Data, 1), Get_Input_Net (Inst, 1));
                   Disconnect (Get_Input (Data, 1));
                   Disconnect (Get_Input (Inst, 1));
                   Connect (Get_Input (Inst, 1), Add);
