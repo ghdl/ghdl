@@ -114,6 +114,9 @@ package body Synth.Values is
       if L.Kind /= R.Kind then
          return False;
       end if;
+      if L = R then
+         return True;
+      end if;
 
       case L.Kind is
          when Value_Discrete =>
@@ -128,6 +131,8 @@ package body Synth.Values is
                end if;
             end loop;
             return True;
+         when Value_Const =>
+            return Is_Equal (L.C_Val, R.C_Val);
          when others =>
             --  TODO.
             raise Internal_Error;
