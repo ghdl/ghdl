@@ -137,6 +137,7 @@ package body Synth.Stmts is
                                      Dest_Voff, Dest_Rdwd, Dest_Type);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Interface_Constant_Declaration
@@ -1272,9 +1273,8 @@ package body Synth.Stmts is
                --  Pass by reference.
                Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_Variable_Declaration =>
-               --  FIXME: Arguments are passed by copy.
-               Create_Object (Subprg_Inst, Inter, Val);
-               raise Internal_Error;
+               --  Arguments are passed by copy.
+               Create_Object (Subprg_Inst, Inter, Unshare (Val, Current_Pool));
             when Iir_Kind_Interface_Signal_Declaration =>
                Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_File_Declaration =>

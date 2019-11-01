@@ -815,6 +815,7 @@ package body Synth.Expr is
             return Synth_Name (Syn_Inst, Get_Named_Entity (Name));
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Interface_Constant_Declaration
