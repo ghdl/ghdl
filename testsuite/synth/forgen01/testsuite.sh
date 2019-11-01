@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in forgen01 forgen02; do
+for t in forgen01 forgen02 forgen03; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
