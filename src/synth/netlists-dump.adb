@@ -350,17 +350,22 @@ package body Netlists.Dump is
       end if;
    end Disp_Net_Name;
 
+   procedure Put_Net_Width (N : Net) is
+   begin
+      Put ("{n");
+      Put_Trim (Net'Image (N));
+      Put ('w');
+      Put_Trim (Width'Image (Get_Width (N)));
+      Put ('}');
+   end Put_Net_Width;
+
    procedure Dump_Net_Name_And_Width (N : Net) is
    begin
       if N = No_Net then
          Put ("?");
       else
          Disp_Net_Name (N);
-         Disp_Width (Get_Width (N));
-
-         Put ("{n");
-         Put_Trim (Net'Image (N));
-         Put ('}');
+         Put_Net_Width (N);
       end if;
    end Dump_Net_Name_And_Width;
 
@@ -502,11 +507,7 @@ package body Netlists.Dump is
 
                Drv := Get_Driver (I);
 
-               Put ("{n");
-               Put_Trim (Net'Image (Drv));
-               Put ('w');
-               Put_Trim (Width'Image (Get_Width (Drv)));
-               Put ('}');
+               Put_Net_Width (Drv);
 
                Disp_Driver (Drv);
             end loop;
