@@ -21,6 +21,7 @@
 with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
 with Std_Names; use Std_Names;
+with Netlists.Locations;
 
 package body Netlists.Builders is
    function Create_Input (Id : String; W : Width := 0) return Port_Desc is
@@ -1074,6 +1075,29 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 0), I);
       return O;
    end Build_Extend;
+
+   function Build2_Uresize (Ctxt : Context_Acc;
+                            I : Net;
+                            W : Width;
+                            Loc : Location_Type := No_Location)
+                           return Net
+   is
+      Wn : constant Width := Get_Width (I);
+      Res : Net;
+   begin
+      if Wn = W then
+         return I;
+      else
+         if Wn > W then
+            Res := Build_Trunc (Ctxt, Id_Utrunc, I, W);
+         else
+            pragma Assert (Wn < W);
+            Res := Build_Extend (Ctxt, Id_Uextend, I, W);
+         end if;
+         Locations.Set_Location (Res, Loc);
+         return Res;
+      end if;
+   end Build2_Uresize;
 
    function Build_Dyn_Insert
      (Ctxt : Context_Acc; I : Net; V : Net; P : Net; Off : Uns32) return Net

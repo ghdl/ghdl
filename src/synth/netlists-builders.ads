@@ -123,6 +123,13 @@ package Netlists.Builders is
    function Build_Extend
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net;
 
+   --  Zero extend, noop or truncate I so that its width is W.
+   function Build2_Uresize (Ctxt : Context_Acc;
+                            I : Net;
+                            W : Width;
+                            Loc : Location_Type := No_Location)
+                           return Net;
+
    function Build_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
 
