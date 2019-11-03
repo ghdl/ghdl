@@ -1209,6 +1209,7 @@ package body Synth.Expr is
       Dir : Iir_Direction;
       Step : Uns32;
       Max : Uns32;
+      Inp_W : Width;
    begin
       Off := 0;
 
@@ -1260,16 +1261,22 @@ package body Synth.Expr is
          Synth_Extract_Dyn_Suffix
            (Name, Pfx_Bnd, Get_Net (Left), Get_Net (Right),
             Inp, Step, Off, Wd);
+         Inp_W := Get_Width (Inp);
          --  FIXME: convert range to offset.
+         --  Extract max from the range.
          --  example: len=128  wd=8  step=8  => max=16
          --           len=8    wd=4  step=1  => max=4
          --  max so that max*step+wd <= len - off
          --              max <= (len - off - wd) / step
          Max := (Pfx_Bnd.Len - Off - Wd) / Step;
+         if Clog2 (Uns64 (Max)) > Natural (Inp_W) then
+            --  The width of Inp limits the max.
+            Max := 2**Natural (Inp_W) - 1;
+         end if;
          Inp := Build_Memidx
            (Get_Build (Syn_Inst),
             Inp, Step * El_Wd, Max,
-            Get_Width (Inp) + Width (Clog2 (Uns64 (Step * El_Wd))));
+            Inp_W + Width (Clog2 (Uns64 (Step * El_Wd))));
          Wd := Wd * El_Wd;
       end if;
    end Synth_Slice_Suffix;
