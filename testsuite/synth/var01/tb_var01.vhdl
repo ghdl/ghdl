@@ -29,7 +29,7 @@ begin
     mask <= x"f";
     val <= x"12_34_56_78";
     pulse;
-    assert res = x"12_34_56_78" severity failure;
+    assert res = x"12_34_56_78" report "res=" & to_hstring (res) severity failure;
     
     mask <= x"8";
     val <= x"9a_00_00_00";
