@@ -428,6 +428,7 @@ package body Netlists.Memories is
       --  Convert readers.
       declare
          Inp : Input;
+         Next_Inp : Input;
          Extr_Inst : Instance;
          Addr_Inp : Input;
          Addr : Net;
@@ -437,6 +438,7 @@ package body Netlists.Memories is
       begin
          Inp := Get_First_Sink (Orig_Net);
          while Inp /= No_Input loop
+            Next_Inp := Get_Next_Sink (Inp);
             Extr_Inst := Get_Input_Parent (Inp);
             case Get_Id (Extr_Inst) is
                when Id_Memory_Init =>
@@ -468,7 +470,7 @@ package body Netlists.Memories is
                when others =>
                   raise Internal_Error;
             end case;
-            Inp := Get_Next_Sink (Inp);
+            Inp := Next_Inp;
          end loop;
       end;
    end Replace_Read_Ports;
