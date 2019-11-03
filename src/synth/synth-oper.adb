@@ -45,23 +45,9 @@ package body Synth.Oper is
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
 
-   function Synth_Uresize (N : Net; W : Width; Loc : Node) return Net
-   is
-      Wn : constant Width := Get_Width (N);
-      Res : Net;
+   function Synth_Uresize (N : Net; W : Width; Loc : Node) return Net is
    begin
-      if Wn = W then
-         return N;
-      else
-         if Wn > W then
-            Res := Build_Trunc (Build_Context, Id_Utrunc, N, W);
-         else
-            pragma Assert (Wn < W);
-            Res := Build_Extend (Build_Context, Id_Uextend, N, W);
-         end if;
-         Set_Location (Res, Loc);
-         return Res;
-      end if;
+      return Build2_Uresize (Build_Context, N, W, Get_Location (Loc));
    end Synth_Uresize;
 
    function Synth_Sresize (N : Net; W : Width; Loc : Node) return Net
