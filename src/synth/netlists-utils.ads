@@ -55,4 +55,6 @@ package Netlists.Utils is
    --  Disconnect input I.  If the driver of I has no output(s) connected,
    --  disconnect and free it.
    procedure Disconnect_And_Free (I : Input);
+
+   function Clog2 (W : Width) return Width;
 end Netlists.Utils;

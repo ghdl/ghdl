@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Netlists.Gates; use Netlists.Gates;
+with Mutils;
 
 package body Netlists.Utils is
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr
@@ -175,4 +176,9 @@ package body Netlists.Utils is
       --  Free Inst
       Free_Instance (Inst);
    end Disconnect_And_Free;
+
+   function Clog2 (W : Width) return Width is
+   begin
+      return Uns32 (Mutils.Clog2 (Uns64 (W)));
+   end Clog2;
 end Netlists.Utils;
