@@ -2,7 +2,8 @@
 
 . ../../testenv.sh
 
-for t in memmux01 memmux02 memmux03 memmux04; do
+GHDL_STD_FLAGS=--std=08
+for t in memmux01 memmux02 memmux03 memmux04 memmux05; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
