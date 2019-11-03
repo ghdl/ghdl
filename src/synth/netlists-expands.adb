@@ -415,6 +415,32 @@ package body Netlists.Expands is
       Remove_Instance (Inst);
    end Expand_Dyn_Insert;
 
+   procedure Expand_Rol (Ctxt : Context_Acc; Inst : Instance)
+   is
+      Val : constant Input := Get_Input (Inst, 0);
+      Amt : constant Input := Get_Input (Inst, 1);
+      Val_N : constant Net := Get_Driver (Val);
+      Amt_N : constant Net := Get_Driver (Amt);
+      W_Val : constant Width := Get_Width (Val_N);
+      W_Amt : constant Width := Clog2 (W_Val);
+      Shl : Net;
+      R_Amt : Net;
+      Shr : Net;
+      Res : Net;
+   begin
+      Shl := Build_Shift_Rotate (Ctxt, Id_Lsl, Val_N, Amt_N);
+      R_Amt := Build_Dyadic (Ctxt, Id_Sub,
+                             Build_Const_UB32 (Ctxt, W_Val, W_Amt),
+                             Build2_Uresize (Ctxt, Amt_N, W_Amt));
+      Shr := Build_Shift_Rotate (Ctxt, Id_Lsr, Val_N, R_Amt);
+      Res := Build_Dyadic (Ctxt, Id_Or, Shl, Shr);
+
+      Redirect_Inputs (Get_Output (Inst, 0), Res);
+      Disconnect (Val);
+      Disconnect (Amt);
+      Remove_Instance (Inst);
+   end Expand_Rol;
+
    procedure Expand_Gates (Ctxt : Context_Acc; M : Module)
    is
       Inst : Instance;
@@ -430,6 +456,10 @@ package body Netlists.Expands is
 
             when Id_Dyn_Insert =>
                Expand_Dyn_Insert (Ctxt, Inst);
+
+            when Id_Rol =>
+               --  a rol b == shl (a, b) | shr (a, l - b)
+               Expand_Rol (Ctxt, Inst);
 
             when others =>
                null;
