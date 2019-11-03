@@ -260,27 +260,106 @@ package body Netlists.Expands is
                              Off : in out Uns32;
                              Dat : Net;
                              Memidx_Arr : Memidx_Array_Type;
-                             Arr_Idx : Natural;
-                             Net_Arr : Net_Array;
-                             Sel : in out Int32)
+                             Net_Arr : Net_Array)
    is
-      Inst : constant Instance := Memidx_Arr (Arr_Idx);
-      Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-      Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
+      Dat_W : constant Width := Get_Width (Dat);
+      type Count_Type is record
+         Step : Uns32;
+         Max : Uns32;
+         Val : Uns32;
+      end record;
+      type Count_Array is array (Memidx_Arr'Range) of Count_Type;
+      Count : Count_Array;
+
       V : Net;
+      Sel : Int32;
+      Next_Off : Uns32;
+      Prev_Net : Net;
+      Step : Uns32;
    begin
-      for I in 0 .. Max loop
-         if Arr_Idx < Memidx_Arr'Last then
-            --  Recurse.
-            Generate_Muxes (Ctxt, Concat, Mem, Off, Dat,
-                            Memidx_Arr, Arr_Idx + 1, Net_Arr, Sel);
-         else
-            V := Build_Extract (Ctxt, Mem, Off, Get_Width (Dat));
+      --  Initialize count.
+      for I in Memidx_Arr'Range loop
+         declare
+            Inst : constant Instance := Memidx_Arr (I);
+         begin
+            Count (I) := (Step => Get_Param_Uns32 (Inst, 0),
+                          Max => Get_Param_Uns32 (Inst, 1),
+                          Val => 0);
+         end;
+      end loop;
+
+      Sel := 0;
+
+      Prev_Net := No_Net;
+      Next_Off := 0;
+
+      if Off /= 0 then
+         Append (Concat, Build_Extract (Ctxt, Mem, 0, Off));
+         Next_Off := Off;
+      end if;
+
+      loop
+         if Next_Off > Off then
+            --  Partial overlap.
+            --  Append previous net partially, extract from previous net and
+            --  mem.
+            --
+            --  |<----------- Dat_W ------------>|
+            --  |<- Step ->|
+            --             Off                    Next_Off
+            --  +----------+----------+----------++
+            --  | Prev                           |
+            --  +----------+----------+----------+
+            --  +----------+----------+----------+----------+
+            --  | Mem                                       |
+            --  +----------+----------+----------+----------+
+            --             +----------+----------+----------+
+            --             | Dat                            |
+            --             +----------+----------+----------+
+            Step := Dat_W - (Next_Off - Off);
+            Append (Concat, Build_Extract (Ctxt, Prev_Net, 0, Step));
+            V := Build_Concat2
+              (Ctxt,
+               Build_Extract (Ctxt, Mem, Next_Off, Step),
+               Build_Extract (Ctxt, Prev_Net, Step, Dat_W - Step));
             V := Build_Mux2 (Ctxt, Net_Arr (Sel), V, Dat);
-            Append (Concat, V);
-            Off := Off + Step;
-            Sel := Sel + 1;
+            Prev_Net := V;
+            Next_Off := Off + Dat_W;
+         elsif Next_Off = Off then
+            --  No overlap, no gap
+            if Prev_Net /= No_Net then
+               Append (Concat, Prev_Net);
+            end if;
+            V := Build_Extract (Ctxt, Mem, Off, Dat_W);
+            V := Build_Mux2 (Ctxt, Net_Arr (Sel), V, Dat);
+            Prev_Net := V;
+            Next_Off := Off + Dat_W;
+         else
+            pragma Assert (Next_Off < Off);
+            --  Gap.
+            raise Internal_Error;
          end if;
+
+         Sel := Sel + 1;
+
+         --  Increase Off.
+         for I in reverse Memidx_Arr'Range loop
+            declare
+               C : Count_Type renames Count (I);
+            begin
+               C.Val := C.Val + C.Step;
+               Off := Off + C.Step;
+               exit when C.Val <= C.Max * C.Step;
+               if I = Memidx_Arr'First then
+                  --  End.
+                  Append (Concat, Prev_Net);
+                  Off := Next_Off;
+                  return;
+               end if;
+               Count (I).Val := 0;
+               Off := Count (I - 1).Val;
+            end;
+         end loop;
       end loop;
    end Generate_Muxes;
 
@@ -290,7 +369,8 @@ package body Netlists.Expands is
       Dat : constant Net := Get_Input_Net (Inst, 1);
       Addr_Net : constant Net := Get_Input_Net (Inst, 2);
       --  Loc : constant Location_Type := Get_Location (Inst);
-      --  W : constant Width := Get_Width (Get_Output (Inst, 0));
+      O : constant Net := Get_Output (Inst, 0);
+      O_W : constant Width := Get_Width (O);
       --  1. compute number of dims, check order.
       Ndims : constant Natural := Count_Memidx (Addr_Net);
       Nbr_Els : Natural;
@@ -315,22 +395,20 @@ package body Netlists.Expands is
       --  Build muxes
       declare
          Off : Uns32;
-         Sel : Int32;
       begin
          Off := Get_Param_Uns32 (Inst, 0);
-         if Off /= 0 then
-            Append (Concat, Build_Extract (Ctxt, Mem, 0, Off));
+         Generate_Muxes (Ctxt, Concat, Mem, Off, Dat, Memidx_Arr, Net_Arr.all);
+         if Off < O_W then
+            Append (Concat, Build_Extract (Ctxt, Mem, Off, O_W - Off));
          end if;
-         Sel := 0;
-         Generate_Muxes (Ctxt, Concat, Mem, Off, Dat,
-                         Memidx_Arr, 1, Net_Arr.all, Sel);
       end;
       Build (Ctxt, Concat, Res);
+      pragma Assert (Get_Width (Res) = O_W);
 
       Free_Net_Array (Net_Arr);
 
       --  Replace gate.
-      Redirect_Inputs (Get_Output (Inst, 0), Res);
+      Redirect_Inputs (O, Res);
       Disconnect (Get_Input (Inst, 0));
       Disconnect (Get_Input (Inst, 1));
       Disconnect (Get_Input (Inst, 2));
