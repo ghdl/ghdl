@@ -532,6 +532,8 @@ package body Synth.Expr is
    begin
       L := Synth_Expression_With_Basetype (Syn_Inst, Get_Left_Limit (Rng));
       R := Synth_Expression_With_Basetype (Syn_Inst, Get_Right_Limit (Rng));
+      Strip_Const (L);
+      Strip_Const (R);
 
       if not (Is_Const (L) and Is_Const (R)) then
          Error_Msg_Synth (+Rng, "limits of range are not constant");
