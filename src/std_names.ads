@@ -687,15 +687,12 @@ package Std_Names is
    Name_Item :                  constant Name_Id := Name_First_Misc + 033;
    Name_Uu_File_Uu :            constant Name_Id := Name_First_Misc + 034;
    Name_Uu_Line_Uu :            constant Name_Id := Name_First_Misc + 035;
-   Name_Synthesis :             constant Name_Id := Name_First_Misc + 036;
-   Name_Translate_Off :         constant Name_Id := Name_First_Misc + 037;
-   Name_Translate_On :          constant Name_Id := Name_First_Misc + 038;
-   Name_Label_Applies_To :      constant Name_Id := Name_First_Misc + 039;
-   Name_Return_Port_Name :      constant Name_Id := Name_First_Misc + 040;
-   Name_Map_To_Operator :       constant Name_Id := Name_First_Misc + 041;
-   Name_Type_Function :         constant Name_Id := Name_First_Misc + 042;
-   Name_Built_In :              constant Name_Id := Name_First_Misc + 043;
-   Name_None :                  constant Name_Id := Name_First_Misc + 044;
+   Name_Label_Applies_To :      constant Name_Id := Name_First_Misc + 036;
+   Name_Return_Port_Name :      constant Name_Id := Name_First_Misc + 037;
+   Name_Map_To_Operator :       constant Name_Id := Name_First_Misc + 038;
+   Name_Type_Function :         constant Name_Id := Name_First_Misc + 039;
+   Name_Built_In :              constant Name_Id := Name_First_Misc + 040;
+   Name_None :                  constant Name_Id := Name_First_Misc + 041;
    Name_Last_Misc :             constant Name_Id := Name_None;
 
    Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;
@@ -895,7 +892,11 @@ package Std_Names is
    Name_First_Comment :  constant Name_Id := Name_Last_BSV + 1;
    Name_Psl :            constant Name_Id := Name_First_Comment + 0;
    Name_Pragma :         constant Name_Id := Name_First_Comment + 1;
-   Name_Last_Comment :   constant Name_Id := Name_First_Comment + 1;
+   Name_Synthesis :      constant Name_Id := Name_First_Comment + 2;
+   Name_Synopsys :       constant Name_Id := Name_First_Comment + 3;
+   Name_Translate_Off :  constant Name_Id := Name_First_Comment + 4;
+   Name_Translate_On :   constant Name_Id := Name_First_Comment + 5;
+   Name_Last_Comment :   constant Name_Id := Name_Translate_On;
 
    --  PSL words.
    Name_First_PSL :          constant Name_Id := Name_Last_Comment + 1;

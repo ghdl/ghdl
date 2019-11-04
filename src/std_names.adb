@@ -608,9 +608,6 @@ package body Std_Names is
       Def ("item",                  Name_Item);
       Def ("__FILE__",              Name_Uu_File_Uu);
       Def ("__LINE__",              Name_Uu_Line_Uu);
-      Def ("synthesis",             Name_Synthesis);
-      Def ("translate_off",         Name_Translate_Off);
-      Def ("translate_on",          Name_Translate_On);
       Def ("label_applies_to",      Name_Label_Applies_To);
       Def ("return_port_name",      Name_Return_Port_Name);
       Def ("map_to_operator",       Name_Map_To_Operator);
@@ -766,8 +763,12 @@ package body Std_Names is
       Def ("valueOf",        Name_uValueof);
 
       --  VHDL special comments
-      Def ("psl",    Name_Psl);
-      Def ("pragma", Name_Pragma);
+      Def ("psl",                   Name_Psl);
+      Def ("pragma",                Name_Pragma);
+      Def ("synthesis",             Name_Synthesis);
+      Def ("synopsys",              Name_Synopsys);
+      Def ("translate_off",         Name_Translate_Off);
+      Def ("translate_on",          Name_Translate_On);
 
       --  PSL keywords
       Def ("a",                  Name_A);

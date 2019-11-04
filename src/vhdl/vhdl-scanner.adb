@@ -1835,7 +1835,8 @@ package body Vhdl.Scanner is
                return True;
             end if;
          when Name_Pragma
-           | Name_Synthesis =>
+           | Name_Synthesis
+           | Name_Synopsys =>
             if Flag_Pragma_Comment then
                Scan_Comment_Identifier (Id, True);
                case Id is
