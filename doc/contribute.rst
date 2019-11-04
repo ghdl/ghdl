@@ -106,7 +106,7 @@ write access to our repositories, the project is hosted at GitHub, which follows
 .. TIP::
   * It is recommended to read `A successful Git branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_ for a reference on how maintainers expect to handle multiple branches. However, our actual model is not as exhaustive as explained there.
   * Some commit messages can `automatically close <https://help.github.com/articles/closing-issues-via-commit-messages/>`_ issues. This is a very useful feature, which you are not required to use. However beware that using `fix` anywhere in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it's closed) so that maintainers can check it.
-  * It is recommended to read :ref:`REF:Style` before contributing modifications to Ada sources.
+  * It is recommended to read :ref:`DEV:Style` before contributing modifications to Ada sources.
 
 Related interesting projects
 ============================

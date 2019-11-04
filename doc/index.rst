@@ -6,16 +6,6 @@
 
    |SHIELD:gh-logo| |SHIELD:gitter| |SHIELD:code-lic| |SHIELD:doc-lic| |SHIELD:travis-ci| |SHIELD:appveyor| |SHIELD:release|
 
-------------------------------------
-
-GHDL Documentation
-##################
-
-This manual is the user and reference manual for GHDL. It does not contain an
-introduction to VHDL. Thus, the reader should have at least a basic knowledge
-of VHDL. A good knowledge of VHDL language reference manual (usually called
-LRM) is a plus.
-
 .. only:: html
 
    News
@@ -67,12 +57,6 @@ LRM) is a plus.
 
    .. rubric:: 23.10.2015 - GHDL 0.33 was released.
 
-.. |docdate| date:: %b %d, %Y - %H:%M
-
-.. container:: lastdocbuilddate
-
-   This document was generated on |docdate|.
-
 .. toctree::
    :caption: Introduction
    :hidden:
@@ -80,19 +64,6 @@ LRM) is a plus.
    about
    contribute
    licenses
-
-.. raw:: latex
-
-   \part{GHDL usage}
-
-.. toctree::
-   :caption: GHDL usage
-   :hidden:
-
-   using/QuickStartGuide
-   using/InvokingGHDL
-   using/Simulation
-   using/Foreign
 
 .. raw:: latex
 
@@ -108,25 +79,28 @@ LRM) is a plus.
 
 .. raw:: latex
 
-   \part{References}
+   \part{GHDL usage}
 
 .. toctree::
-   :caption: Implementation References
+   :caption: GHDL usage
    :hidden:
 
-   references/CommandReference
-   references/CodingStyle
-   references/ImplementationOfVHDL
-   references/ImplementationOfVITAL
+   using/Examples
+   using/InvokingGHDL
+   using/Simulation
+   using/Foreign
+   using/CommandReference
+   using/ImplementationOfVHDL
+   using/ImplementationOfVITAL
 
 .. raw:: latex
 
-   \part{Appendix}
+   \part{Development}
 
 .. toctree::
-   :caption: Appendix
+   :caption: Development
    :hidden:
 
-   appendix/Roadmap
-   appendix/Meta
    genindex
+   development/CodingStyle
+   development/Roadmap
