@@ -929,10 +929,15 @@ package body Synth.Oper is
       case Def is
          when Iir_Predefined_Error =>
             return null;
-         when Iir_Predefined_Ieee_1164_Scalar_Not
-           | Iir_Predefined_Boolean_Not
-           | Iir_Predefined_Bit_Not =>
+         when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Synth_Bit_Monadic (Id_Not);
+         when Iir_Predefined_Boolean_Not
+           | Iir_Predefined_Bit_Not =>
+            if Is_Const (Operand) then
+               return Create_Value_Discrete (1 - Operand.Scal, Oper_Typ);
+            else
+               return Synth_Bit_Monadic (Id_Not);
+            end if;
          when Iir_Predefined_Ieee_1164_Vector_Not
             | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
