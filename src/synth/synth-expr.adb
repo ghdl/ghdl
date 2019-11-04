@@ -191,31 +191,35 @@ package body Synth.Expr is
    end Synth_Resize;
 
    function Get_Index_Offset
+     (Index : Int64; Bounds : Bound_Type; Expr : Iir) return Uns32
+   is
+      Left : constant Int64 := Int64 (Bounds.Left);
+      Right : constant Int64 := Int64 (Bounds.Right);
+   begin
+      case Bounds.Dir is
+         when Iir_To =>
+            if Index >= Left and then Index <= Right then
+               -- to
+               return Uns32 (Index - Left);
+            end if;
+         when Iir_Downto =>
+            if Index <= Left and then Index >= Right then
+               -- downto
+               return Uns32 (Left - Index);
+            end if;
+      end case;
+      Error_Msg_Synth (+Expr, "index out of bounds");
+      return 0;
+   end Get_Index_Offset;
+
+   function Get_Index_Offset
      (Index : Value_Acc; Bounds : Bound_Type; Expr : Iir) return Uns32 is
    begin
       if Index.Kind = Value_Discrete then
-         declare
-            Left : constant Int64 := Int64 (Bounds.Left);
-            Right : constant Int64 := Int64 (Bounds.Right);
-         begin
-            case Bounds.Dir is
-               when Iir_To =>
-                  if Index.Scal >= Left and then Index.Scal <= Right then
-                     -- to
-                     return Uns32 (Index.Scal - Left);
-                  end if;
-               when Iir_Downto =>
-                  if Index.Scal <= Left and then Index.Scal >= Right then
-                     -- downto
-                     return Uns32 (Left - Index.Scal);
-                  end if;
-            end case;
-         end;
+         return Get_Index_Offset (Index.Scal, Bounds, Expr);
       else
          raise Internal_Error;
       end if;
-      Error_Msg_Synth (+Expr, "index out of bounds");
-      return 0;
    end Get_Index_Offset;
 
    function Get_Array_Bound (Typ : Type_Acc; Dim : Natural)
@@ -232,6 +236,23 @@ package body Synth.Expr is
       end case;
    end Get_Array_Bound;
 
+   function Get_Range_Length (Rng : Discrete_Range_Type) return Uns32
+   is
+      Len : Int64;
+   begin
+      case Rng.Dir is
+         when Iir_To =>
+            Len := Rng.Right - Rng.Left + 1;
+         when Iir_Downto =>
+            Len := Rng.Left - Rng.Right + 1;
+      end case;
+      if Len < 0 then
+         return 0;
+      else
+         return Uns32 (Len);
+      end if;
+   end Get_Range_Length;
+
    procedure Fill_Array_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node;
                                    Res : Value_Array_Acc;
@@ -246,7 +267,7 @@ package body Synth.Expr is
       type Boolean_Array is array (Uns32 range <>) of Boolean;
       pragma Pack (Boolean_Array);
       --  FIXME: test Res.V (I) instead.
-      Is_Set : Boolean_Array (0 .. Bound.Len - 1);
+      Is_Set : Boolean_Array (1 .. Bound.Len);
       Value : Node;
       Assoc : Node;
       Pos : Uns32;
@@ -258,8 +279,8 @@ package body Synth.Expr is
          if Dim = Nbr_Dims - 1 then
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
             Res.V (Iir_Index32 (Pos + 1)) := Val;
-            pragma Assert (not Is_Set (Pos));
-            Is_Set (Pos) := True;
+            pragma Assert (not Is_Set (Pos + 1));
+            Is_Set (Pos + 1) := True;
             if Const_P and then not Is_Const (Val) then
                Const_P := False;
             end if;
@@ -267,6 +288,47 @@ package body Synth.Expr is
             Error_Msg_Synth (+Assoc, "multi-dim aggregate not handled");
          end if;
       end Set_Elem;
+
+      procedure Set_Vector (Pos : Uns32; Len : Uns32; Val : Value_Acc) is
+      begin
+         pragma Assert (Dim = Nbr_Dims - 1);
+         if Len = 0 then
+            return;
+         end if;
+         --  FIXME: factorize with bit_extract ?
+         case Val.Kind is
+            when Value_Array
+              | Value_Const_Array =>
+               declare
+                  E : Value_Acc;
+               begin
+                  for I in 1 .. Len loop
+                     E := Val.Arr.V (Iir_Index32 (Len - I));
+                     Res.V (Iir_Index32 (Pos + I)) := E;
+                     Is_Set (Pos + I) := True;
+                  end loop;
+                  Const_P := Const_P and then Val.Kind = Value_Const_Array;
+               end;
+            when Value_Net
+              | Value_Wire =>
+               declare
+                  N : Net;
+                  E : Net;
+               begin
+                  N := Get_Net (Val);
+                  for I in 1 .. Len loop
+                     E := Build_Extract
+                       (Build_Context, N, (Len - I) * El_Typ.W, El_Typ.W);
+                     Res.V (Iir_Index32 (Pos + I)) :=
+                       Create_Value_Net (E, El_Typ);
+                     Is_Set (Pos + I) := True;
+                  end loop;
+                  Const_P := False;
+               end;
+            when others =>
+               raise Internal_Error;
+         end case;
+      end Set_Vector;
    begin
       Assoc := Get_Association_Choices_Chain (Aggr);
       Pos := 0;
@@ -277,20 +339,25 @@ package body Synth.Expr is
          loop
             case Get_Kind (Assoc) is
                when Iir_Kind_Choice_By_None =>
+                  if not Get_Element_Type_Flag (Assoc) then
+                     raise Internal_Error;
+                  end if;
                   if Pos >= Bound.Len then
                      Error_Msg_Synth (+Assoc, "element out of array bound");
                   else
                      Set_Elem (Pos);
+                     Pos := Pos + 1;
                   end if;
-                  Pos := Pos + 1;
                when Iir_Kind_Choice_By_Others =>
+                  pragma Assert (Get_Element_Type_Flag (Assoc));
                   while Pos < Bound.Len loop
-                     if not Is_Set (Pos) then
+                     if not Is_Set (Pos + 1) then
                         Set_Elem (Pos);
                      end if;
                      Pos := Pos + 1;
                   end loop;
                when Iir_Kind_Choice_By_Expression =>
+                  pragma Assert (Get_Element_Type_Flag (Assoc));
                   declare
                      Ch : constant Node := Get_Choice_Expression (Assoc);
                      Idx : Value_Acc;
@@ -308,16 +375,36 @@ package body Synth.Expr is
                      Rng : Discrete_Range_Type;
                      Val : Value_Acc;
                      W_Rng : Width;
+                     Rng_Len : Width;
                   begin
                      Synth_Discrete_Range (Syn_Inst, Ch, Rng, W_Rng);
-                     Val := Create_Value_Discrete
-                       (Rng.Left,
-                        Get_Value_Type (Syn_Inst,
-                                        Get_Base_Type (Get_Type (Ch))));
-                     while In_Range (Rng, Val.Scal) loop
-                        Set_Elem (Get_Index_Offset (Val, Bound, Ch));
-                        Update_Index (Rng, Val.Scal);
-                     end loop;
+                     if Get_Element_Type_Flag (Assoc) then
+                        Val := Create_Value_Discrete
+                          (Rng.Left,
+                           Get_Value_Type (Syn_Inst,
+                                           Get_Base_Type (Get_Type (Ch))));
+                        while In_Range (Rng, Val.Scal) loop
+                           Set_Elem (Get_Index_Offset (Val, Bound, Ch));
+                           Update_Index (Rng, Val.Scal);
+                        end loop;
+                     else
+                        --  The direction must be the same.
+                        if Rng.Dir /= Bound.Dir then
+                           Error_Msg_Synth
+                             (+Assoc, "direction of range does not match "
+                                & "direction of array");
+                        end if;
+                        --  FIXME: can the expression be unbounded ?
+                        Val := Synth_Expression (Syn_Inst, Value);
+                        --  The length must match the range.
+                        Rng_Len := Get_Range_Length (Rng);
+                        if Get_Bound_Length (Val.Typ, 1) /= Rng_Len then
+                           Error_Msg_Synth
+                             (+Value, "length doesn't match range");
+                        end if;
+                        Set_Vector (Get_Index_Offset (Rng.Left, Bound, Ch),
+                                    Rng_Len, Val);
+                     end if;
                   end;
                when others =>
                   Error_Msg_Synth
@@ -562,22 +649,12 @@ package body Synth.Expr is
    is
       Rng : Discrete_Range_Type;
       W : Width;
-      Len : Int64;
    begin
       Synth_Discrete_Range (Syn_Inst, Atype, Rng, W);
-      case Rng.Dir is
-         when Iir_To =>
-            Len := Rng.Right - Rng.Left + 1;
-         when Iir_Downto =>
-            Len := Rng.Left - Rng.Right + 1;
-      end case;
-      if Len < 0 then
-         Len := 0;
-      end if;
       return (Dir => Rng.Dir,
               Wbounds => W,
               Left => Int32 (Rng.Left), Right => Int32 (Rng.Right),
-              Len => Uns32 (Len));
+              Len => Get_Range_Length (Rng));
    end Synth_Bounds_From_Range;
 
    function Synth_Aggregate_Array (Syn_Inst : Synth_Instance_Acc;

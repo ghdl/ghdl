@@ -626,21 +626,21 @@ package body Synth.Values is
       return Atype.W;
    end Get_Type_Width;
 
-   function Get_Bound_Length (L : Type_Acc; Dim : Iir_Index32) return Width is
+   function Get_Bound_Length (T : Type_Acc; Dim : Iir_Index32) return Width is
    begin
-      case L.Kind is
+      case T.Kind is
          when Type_Vector =>
             if Dim /= 1 then
                raise Internal_Error;
             end if;
-            return L.Vbound.Len;
+            return T.Vbound.Len;
          when Type_Slice =>
             if Dim /= 1 then
                raise Internal_Error;
             end if;
-            return L.W;
+            return T.W;
          when Type_Array =>
-            return L.Abounds.D (Dim).Len;
+            return T.Abounds.D (Dim).Len;
          when others =>
             raise Internal_Error;
       end case;
