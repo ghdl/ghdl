@@ -309,6 +309,9 @@ package Synth.Values is
    --  sub-elements.
    function Get_Array_Flat_Length (Typ : Type_Acc) return Width;
 
+   --  Return length of dimension DIM of type T.
+   function Get_Bound_Length (T : Type_Acc; Dim : Iir_Index32) return Width;
+
    function Is_Matching_Bounds (L, R : Type_Acc) return Boolean;
 
    function Get_Type_Width (Atype : Type_Acc) return Width;
