@@ -85,7 +85,7 @@
    :caption: GHDL usage
    :hidden:
 
-   using/Examples
+   examples/quick_start/README
    using/InvokingGHDL
    using/Simulation
    using/Foreign
