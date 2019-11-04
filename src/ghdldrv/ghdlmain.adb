@@ -487,10 +487,7 @@ package body Ghdlmain is
          end;
       end;
 
-      --  Free args.
-      for I in Args'Range loop
-         Free (Args (I));
-      end loop;
+      --  Free args.  This frees both the array and the strings.
       Free (Args);
 
       --if Flags.Dump_Stats then
