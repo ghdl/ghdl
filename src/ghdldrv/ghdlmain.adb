@@ -430,6 +430,8 @@ package body Ghdlmain is
                Rsp_Arg : constant String_Access := Args (Arg_Index);
                Rsp_File : constant String := Rsp_Arg (2 .. Rsp_Arg'Last);
             begin
+               --  Need a second declare block so that the exception handler
+               --  can use Rsp_File.
                declare
                   Exp_Args : constant GNAT.OS_Lib.Argument_List :=
                     Response_File.Arguments_From (Rsp_File);
@@ -438,12 +440,20 @@ package body Ghdlmain is
                begin
                   New_Args :=
                     new String_List (1 .. Args'Last + Exp_Length - 1);
+
+                  --  Copy arguments from the response file.
                   New_Args (1 .. Arg_Index - 1) := Args (1 .. Arg_Index - 1);
                   New_Args (Arg_Index .. Arg_Index + Exp_Length - 1) :=
                     Exp_Args;
                   New_Args (Arg_Index + Exp_Length .. New_Args'Last) :=
                     Args (Arg_Index + 1 .. Args'Last);
+
+                  --  Free array.  Note: Free deallocates both the array and
+                  --  its elements.  But we need to keep the elements.
+                  Args.all := (others => null);
+                  Args (Arg_Index) := Rsp_Arg;
                   Free (Args);
+
                   Args := New_Args;
                   Arg_Index := Arg_Index + Exp_Length;
                end;
