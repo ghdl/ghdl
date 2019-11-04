@@ -92,6 +92,7 @@
    using/CommandReference
    using/ImplementationOfVHDL
    using/ImplementationOfVITAL
+   examples/README
 
 .. raw:: latex
 
