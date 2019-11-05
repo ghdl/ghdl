@@ -163,7 +163,7 @@ package body Netlists.Memories is
                   Data := Get_Driver (I0_Inp);
                else
                   Info_Msg_Synth
-                    (+Data_Inst, "write to a non memory %n", (1 => +Orig));
+                    (+Data_Inst, "write to a non-memory %n", (1 => +Orig));
                   Data_W := 0;
                   return;
                end if;
