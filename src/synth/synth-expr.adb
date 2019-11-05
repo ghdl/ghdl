@@ -51,7 +51,6 @@ package body Synth.Expr is
    function Get_Const_Discrete (V : Value_Acc) return Int64
    is
       N : Net;
-      Inst : Instance;
    begin
       case V.Kind is
          when Value_Discrete =>
@@ -65,20 +64,7 @@ package body Synth.Expr is
          when others =>
             raise Internal_Error;
       end case;
-      Inst := Get_Net_Parent (N);
-      case Get_Id (Inst) is
-         when Id_Const_UB32 =>
-            declare
-               Va : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-               Wd : constant Natural := Natural (Get_Width (N));
-               T : Uns64;
-            begin
-               T := Shift_Left (Uns64 (Va), 64 - Wd);
-               return To_Int64 (Shift_Right_Arithmetic (T, 64 - Wd));
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
+      return Get_Net_Int64 (N);
    end Get_Const_Discrete;
 
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32) is
@@ -806,43 +792,25 @@ package body Synth.Expr is
             declare
                N : Net;
             begin
-               if Vtype.W > Dtype.W then
+               if Vtype.W /= Dtype.W then
                   --  Truncate.
                   --  TODO: check overflow.
                   case Val.Kind is
                      when Value_Net
                        | Value_Wire =>
                         N := Get_Net (Val);
-                        N := Build_Trunc
-                          (Build_Context, Id_Utrunc, N, Dtype.W);
-                        Set_Location (N, Loc);
-                        return Create_Value_Net (N, Dtype);
-                     when Value_Discrete =>
-                        return Create_Value_Discrete (Val.Scal, Dtype);
-                     when Value_Const =>
-                        return Create_Value_Discrete (Val.C_Val.Scal, Dtype);
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-               elsif Vtype.W < Dtype.W then
-                  --  Extend.
-                  case Val.Kind is
-                     when Value_Discrete =>
-                        return Create_Value_Discrete (Val.Scal, Dtype);
-                     when Value_Const =>
-                        return Create_Value_Discrete (Val.C_Val.Scal, Dtype);
-                     when Value_Net
-                       | Value_Wire =>
-                        N := Get_Net (Val);
                         if Vtype.Drange.Is_Signed then
-                           N := Build_Extend
-                             (Build_Context, Id_Sextend, N, Dtype.W);
+                           N := Build2_Sresize
+                             (Build_Context, N, Dtype.W, Get_Location (Loc));
                         else
-                           N := Build_Extend
-                             (Build_Context, Id_Uextend, N, Dtype.W);
+                           N := Build2_Uresize
+                             (Build_Context, N, Dtype.W, Get_Location (Loc));
                         end if;
-                        Set_Location (N, Loc);
                         return Create_Value_Net (N, Dtype);
+                     when Value_Discrete =>
+                        return Create_Value_Discrete (Val.Scal, Dtype);
+                     when Value_Const =>
+                        return Create_Value_Discrete (Val.C_Val.Scal, Dtype);
                      when others =>
                         raise Internal_Error;
                   end case;

@@ -21,6 +21,7 @@
 with Types_Utils; use Types_Utils;
 
 with Netlists.Gates; use Netlists.Gates;
+with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations;
 
 package body Netlists.Folds is
@@ -136,11 +137,29 @@ package body Netlists.Folds is
       if Wn = W then
          return I;
       else
-         if Wn > W then
-            Res := Build_Trunc (Ctxt, Id_Utrunc, I, W);
+         if W <= 64 and then Is_Const_Net (I) then
+            declare
+               V : Uns64;
+            begin
+               V := Get_Net_Uns64 (I);
+               if Wn < W then
+                  --  Extend.
+                  pragma Assert (Shift_Right (V, Natural (Wn)) = 0);
+                  null;
+               else
+                  --  Truncate
+                  V := Shift_Left (V, Natural (64 - Wn));
+                  V := Shift_Right (V, Natural (64 - Wn));
+               end if;
+               Res := Build2_Const_Uns (Ctxt, V, W);
+            end;
          else
-            pragma Assert (Wn < W);
-            Res := Build_Extend (Ctxt, Id_Uextend, I, W);
+            if Wn > W then
+               Res := Build_Trunc (Ctxt, Id_Utrunc, I, W);
+            else
+               pragma Assert (Wn < W);
+               Res := Build_Extend (Ctxt, Id_Uextend, I, W);
+            end if;
          end if;
          Locations.Set_Location (Res, Loc);
          return Res;
@@ -159,11 +178,23 @@ package body Netlists.Folds is
       if Wn = W then
          return I;
       else
-         if Wn > W then
-            Res := Build_Trunc (Ctxt, Id_Strunc, I, W);
+         if W <= 64 and then Is_Const_Net (I) then
+            declare
+               V : Uns64;
+               Sh : constant Natural := Natural (Width'Min (Wn, W));
+            begin
+               V := Get_Net_Uns64 (I);
+               V := Shift_Left (V, 64 - Sh);
+               V := Shift_Right_Arithmetic (V, 64 - Sh);
+               Res := Build2_Const_Int (Ctxt, To_Int64 (V), W);
+            end;
          else
-            pragma Assert (Wn < W);
-            Res := Build_Extend (Ctxt, Id_Sextend, I, W);
+            if Wn > W then
+               Res := Build_Trunc (Ctxt, Id_Strunc, I, W);
+            else
+               pragma Assert (Wn < W);
+               Res := Build_Extend (Ctxt, Id_Sextend, I, W);
+            end if;
          end if;
          Locations.Set_Location (Res, Loc);
          return Res;

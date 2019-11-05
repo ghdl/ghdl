@@ -45,6 +45,12 @@ package Netlists.Utils is
    function Is_Const_Module (Id : Module_Id) return Boolean;
    function Is_Const_Net (N : Net) return Boolean;
 
+   --  Assuming than N is a const net, return the value (for small values).
+   function Get_Net_Uns64 (N : Net) return Uns64;
+
+   function Get_Net_Int64 (N : Net) return Int64;
+   pragma Inline (Get_Net_Int64);
+
    --  Return True iff O has at least one sink (ie is connected to at least one
    --  input).
    function Is_Connected (O : Net) return Boolean;

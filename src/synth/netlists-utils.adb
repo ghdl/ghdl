@@ -18,8 +18,11 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Netlists.Gates; use Netlists.Gates;
 with Mutils;
+with Types_Utils; use Types_Utils;
+
+with Netlists.Gates; use Netlists.Gates;
+
 
 package body Netlists.Utils is
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr
@@ -121,6 +124,30 @@ package body Netlists.Utils is
    begin
       return Is_Const_Module (Get_Id (Get_Net_Parent (N)));
    end Is_Const_Net;
+
+   function Get_Net_Uns64 (N : Net) return Uns64
+   is
+      Inst : constant Instance := Get_Net_Parent (N);
+   begin
+      case Get_Id (Inst) is
+         when Id_Const_UB32 =>
+            declare
+               Va : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+               Wd : constant Width := Get_Width (N);
+            begin
+               --  There must not be any garbage.
+               pragma Assert (Shift_Right (Va, Natural (Wd)) = 0);
+               return Uns64 (Va);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Net_Uns64;
+
+   function Get_Net_Int64 (N : Net) return Int64 is
+   begin
+      return To_Int64 (Get_Net_Uns64 (N));
+   end Get_Net_Int64;
 
    function Is_Connected (O : Net) return Boolean is
    begin
