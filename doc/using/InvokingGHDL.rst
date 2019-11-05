@@ -190,8 +190,8 @@ Make [``-m``]
 
 Analyze automatically outdated files and elaborate a design. The primary unit denoted by the ``primary`` argument must already be known by the system, either because you have already analyzed it (even if you have modified it) or because you have imported it. A file may be outdated because it has been modified (e.g. you have just edited it), or because a design unit contained in the file depends on a unit which is outdated. This rule is of course recursive.
 
-* With option :option:`--bind`, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL and you're linking GHDL object files into a foreign program.
-* With option :option:`-f` (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Outdated units are recompiled. This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the *-g* debugging option).
+* With option ``--bind``, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL and you're linking GHDL object files into a foreign program.
+* With option ``-f`` (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Outdated units are recompiled. This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the ``-g`` debugging option).
 
 The make command will only re-analyze design units in the work library. GHDL fails if it has to analyze an outdated unit from another library.
 
@@ -234,8 +234,6 @@ Options
 .. index:: 1164
 .. index:: IEEE 1076.3
 .. index:: 1076.3
-
-.. HINT:: Besides the options described below, `GHDL` passes any debugging options (those that begin with ``-g``) and optimizations options (those that begin with ``-O`` or ``-f``) to `GCC`. Refer to the `GCC` manual for details.
 
 .. index:: WORK library
 

@@ -102,5 +102,6 @@
    :hidden:
 
    genindex
+   development/Debugging
    development/CodingStyle
    development/Roadmap
