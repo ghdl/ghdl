@@ -51,11 +51,6 @@ package body Synth.Oper is
       return Build2_Uresize (Build_Context, N, W, Get_Location (Loc));
    end Synth_Uresize;
 
-   function Synth_Sresize (N : Net; W : Width; Loc : Node) return Net is
-   begin
-      return Build2_Sresize (Build_Context, N, W, Get_Location (Loc));
-   end Synth_Sresize;
-
    function Synth_Uresize (Val : Value_Acc; W : Width; Loc : Node) return Net
    is
       Res : Net;
@@ -87,7 +82,8 @@ package body Synth.Oper is
          Set_Location (Res, Loc);
          return Res;
       end if;
-      return Synth_Sresize (Get_Net (Val), W, Loc);
+      return Build2_Sresize (Build_Context, Get_Net (Val), W,
+                             Get_Location (Loc));
    end Synth_Sresize;
 
    function Synth_Bit_Eq_Const (Cst : Value_Acc; Expr : Value_Acc; Loc : Node)
@@ -1173,7 +1169,8 @@ package body Synth.Oper is
                end if;
                W := Uns32 (Sz.Scal);
                return Create_Value_Net
-                 (Synth_Sresize (Get_Net (V), W, Expr),
+                 (Build2_Sresize (Get_Build (Syn_Inst), Get_Net (V), W,
+                                  Get_Location (Expr)),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat
