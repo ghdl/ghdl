@@ -44,7 +44,7 @@ package body Synth.Environment.Debug is
             Dump_Net_Name (N);
             Put ("{w=" & Uns32'Image (Get_Width (N)) & '}');
             Put (" := ");
-            Disp_Instance (Get_Net_Parent (N), False);
+            Disp_Instance (Get_Net_Parent (N), False, 0);
          else
             Put ("unassigned");
          end if;
@@ -108,7 +108,7 @@ package body Synth.Environment.Debug is
             Put (", width:" & Width'Image (Get_Width (Arec.Value)));
             New_Line;
             Put ("  value: ");
-            Disp_Instance (Get_Net_Parent (Arec.Value), False);
+            Disp_Instance (Get_Net_Parent (Arec.Value), False, 0);
             Asgn := Arec.Next;
          end;
          New_Line;

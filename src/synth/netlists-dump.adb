@@ -384,7 +384,7 @@ package body Netlists.Dump is
         and then Has_One_Connection (Get_Output (Inst, 0));
    end Can_Inline;
 
-   procedure Disp_Driver (Drv : Net)
+   procedure Disp_Driver (Drv : Net; Indent : Natural)
    is
       Drv_Inst : Instance;
    begin
@@ -393,7 +393,7 @@ package body Netlists.Dump is
       else
          Drv_Inst := Get_Net_Parent (Drv);
          if Flag_Disp_Inline and then Can_Inline (Drv_Inst) then
-            Disp_Instance (Drv_Inst, False);
+            Disp_Instance (Drv_Inst, False, Indent);
          else
             Disp_Net_Name (Drv);
          end if;
@@ -406,7 +406,7 @@ package body Netlists.Dump is
       if N = No_Net then
          Put ('?');
       else
-         Disp_Instance (Get_Net_Parent (N), False);
+         Disp_Instance (Get_Net_Parent (N), False, 0);
       end if;
       New_Line;
    end Debug_Net;
@@ -416,7 +416,8 @@ package body Netlists.Dump is
    Xdigits : constant array (Uns32 range 0 ..15) of Character :=
      "0123456789abcdef";
 
-   procedure Disp_Instance (Inst : Instance; With_Name : Boolean)
+   procedure Disp_Instance
+     (Inst : Instance; With_Name : Boolean; Indent : Natural)
    is
       M : constant Module := Get_Module (Inst);
    begin
@@ -445,7 +446,7 @@ package body Netlists.Dump is
                   W : constant Width := Get_Width (Get_Output (Inst, 0));
                   Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
                begin
-                  Disp_Driver (Get_Input_Net (Inst, 0));
+                  Disp_Driver (Get_Input_Net (Inst, 0), Indent);
                   Put ('[');
                   if W > 1 then
                      Put_Uns32 (Off + W - 1);
@@ -501,15 +502,17 @@ package body Netlists.Dump is
             Put (" (");
             for I of Inputs (Inst) loop
                if not First then
-                     Put (", ");
+                     Put (",");
                end if;
                First := False;
+               New_Line;
+               Put_Indent (Indent);
 
                Drv := Get_Driver (I);
 
                Put_Net_Width (Drv);
 
-               Disp_Driver (Drv);
+               Disp_Driver (Drv, Indent + 1);
             end loop;
             Put (')');
          end;
@@ -542,7 +545,7 @@ package body Netlists.Dump is
             end;
       end case;
 
-      Disp_Instance (Inst, False);
+      Disp_Instance (Inst, False, Indent + 1);
       New_Line;
    end Disp_Instance_Assign;
 
@@ -574,7 +577,7 @@ package body Netlists.Dump is
                Dump_Name (Get_Output_Desc (M, Get_Port_Idx (I)).Name);
                Put (" := ");
                if False then
-                  Disp_Driver (Get_Driver (I));
+                  Disp_Driver (Get_Driver (I), 0);
                else
                   Dump_Net_Name_And_Width (Get_Driver (I));
                end if;
