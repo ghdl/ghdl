@@ -171,10 +171,17 @@ package body Synth.Stmts is
                Dest_W := Dest_Type.W;
                Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Type, Voff, Off, W);
 
-               Dest_Off := Dest_Off + Off;
                Dest_Type := Get_Array_Element (Dest_Type);
 
                if Voff /= No_Net then
+                  if Dest_Off /= 0 then
+                     --  TODO: add addidx (addoff ?)
+                     if Off /= 0 or else Dest_Type.W /= 1 then
+                        raise Internal_Error;
+                     end if;
+                  else
+                     Dest_Off := Off;
+                  end if;
                   if Dest_Voff = No_Net then
                      Dest_Voff := Voff;
                      Dest_Rdwd := Dest_W;
@@ -183,12 +190,22 @@ package body Synth.Stmts is
                        (Get_Build (Syn_Inst), Dest_Voff, Voff);
                   end if;
                else
-                  Strip_Const (Dest_Obj);
-                  if Dest_Obj.Kind = Value_Const_Array then
-                     Dest_Obj := Dest_Obj.Arr.V
-                       (Iir_Index32 ((Dest_W - Dest_Off) / W));
-                     Dest_Off := 0;
-                     Dest_W := W;
+                  if Dest_Voff = No_Net then
+                     Dest_Off := Dest_Off + Off;
+
+                     Strip_Const (Dest_Obj);
+                     if Dest_Obj.Kind = Value_Const_Array then
+                        Dest_Obj := Dest_Obj.Arr.V
+                          (Iir_Index32 ((Dest_W - Dest_Off) / W));
+                        Dest_Off := 0;
+                        Dest_W := W;
+                     end if;
+                  else
+                     if Dest_Off /= 0 then
+                        --  TODO.
+                        raise Internal_Error;
+                     end if;
+                     Dest_Off := Dest_Off + Off;
                   end if;
                end if;
             end;
@@ -201,6 +218,10 @@ package body Synth.Stmts is
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
+               if Dest_Off /= 0 and then Dest_Voff /= No_Net then
+                  --  TODO.
+                  raise Internal_Error;
+               end if;
                Strip_Const (Dest_Obj);
                Dest_Off := Dest_Off + Dest_Type.Rec.E (Idx + 1).Off;
                Dest_Type := Dest_Type.Rec.E (Idx + 1).Typ;
@@ -223,9 +244,11 @@ package body Synth.Stmts is
                Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ.W,
                                    Res_Bnd, Sl_Voff, Sl_Off, Wd);
 
-               Dest_Off := Dest_Off + Sl_Off;
-
                if Sl_Voff /= No_Net then
+                  if Dest_Off /= 0 then
+                     raise Internal_Error;
+                  end if;
+                  Dest_Off := Dest_Off + Sl_Off;
                   if Dest_Voff /= No_Net then
                      Dest_Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Voff, Sl_Voff);
@@ -235,6 +258,16 @@ package body Synth.Stmts is
                   end if;
                   Dest_Type := Create_Slice_Type (Wd, El_Typ);
                else
+                  if Dest_Voff /= No_Net then
+                     --  Slice of a memory.
+                     if Dest_Off /= 0 then
+                        raise Internal_Error;
+                     end if;
+                     Dest_Off := Sl_Off;
+                  else
+                     --  Slice of a vector.
+                     Dest_Off := Dest_Off + Sl_Off;
+                  end if;
                   Dest_Type :=
                     Create_Onedimensional_Array_Subtype (Dest_Type, Res_Bnd);
                end if;
@@ -264,11 +297,14 @@ package body Synth.Stmts is
          when Target_Memory =>
             --  For a memory: the destination is known.
             Mem_Obj : Value_Acc;
-            --  The width of the whole mrmory.
-            Mem_Width : Width;
             --  The dynamic offset.
             Mem_Voff : Net;
-            Mem_Off : Uns32;
+            --  Offset of the memory in the wire (usually 0).
+            Mem_Moff : Uns32;
+            --  Width of the whole memory
+            Mem_Mwidth : Width;
+            --  Offset of the data to be accessed from the memory.
+            Mem_Doff : Uns32;
       end case;
    end record;
 
@@ -325,9 +361,10 @@ package body Synth.Stmts is
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => Typ,
                                       Mem_Obj => Obj,
-                                      Mem_Width => Rdwd,
+                                      Mem_Mwidth => Rdwd,
+                                      Mem_Moff => 0,
                                       Mem_Voff => Voff,
-                                      Mem_Off => Off);
+                                      Mem_Doff => Off);
                end if;
             end;
          when others =>
@@ -376,14 +413,15 @@ package body Synth.Stmts is
                V : Net;
             begin
                V := Get_Current_Assign_Value
-                 (Get_Build (Syn_Inst), Target.Mem_Obj.W, Target.Mem_Off,
-                  Target.Mem_Width);
+                 (Get_Build (Syn_Inst), Target.Mem_Obj.W, Target.Mem_Moff,
+                  Target.Mem_Mwidth);
                V := Build_Dyn_Insert (Get_Build (Syn_Inst), V, Get_Net (Val),
-                  Target.Mem_Voff, Target.Mem_Off);
+                  Target.Mem_Voff, Target.Mem_Doff);
                Set_Location (V, Loc);
                Synth_Assign
                  (Target.Mem_Obj.W, Target.Targ_Type,
-                  Create_Value_Net (V, Target.Targ_Type), Target.Mem_Off, Loc);
+                  Create_Value_Net (V, Target.Targ_Type),
+                  Target.Mem_Moff, Loc);
             end;
       end case;
    end Synth_Assignment;
