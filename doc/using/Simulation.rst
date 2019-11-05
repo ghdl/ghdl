@@ -35,7 +35,7 @@ all options available, including the debugging ones.
      This is currently a run option; but in the future it will be deprecated to
      become an elaboration option only.
 
-.. option:: --assert-level<=LEVEL>
+.. option:: --assert-level=<LEVEL>
 
   Select the assertion level at which an assertion violation stops the
   simulation. `LEVEL` is the name from the `severity_level`
@@ -50,10 +50,10 @@ all options available, including the debugging ones.
   stop simulation, but the assertion violation at the ``note`` severity
   level would only display a message.
 
-  Option :option:`--assert-level=none` prevents any assertion violation from stopping
+  Option :option:`--assert-level=none <--assert-level>` prevents any assertion violation from stopping
   simulation.
 
-.. option:: --ieee-asserts<=POLICY>
+.. option:: --ieee-asserts=<POLICY>
 
   Select how the assertions from ``ieee`` units are
   handled. `POLICY` can be ``enable`` (the default),
@@ -63,7 +63,7 @@ all options available, including the debugging ones.
   This option can be useful to avoid assertion messages from
   ``ieee.numeric_std`` (and other ``ieee`` packages).
 
-.. option:: --stop-time<=TIME>
+.. option:: --stop-time=<TIME>
 
   Stop the simulation after ``TIME``. ``TIME`` is expressed as a time
   value, *without* any space. The time is the simulation time, not
@@ -74,7 +74,7 @@ all options available, including the debugging ones.
     $ ./my_design --stop-time=10ns
     $ ./my_design --stop-time=ps
 
-.. option:: --stop-delta<=N>
+.. option:: --stop-delta=<N>
 
   Stop the simulation after `N` delta cycles in the same current
   time.  The default is 5000.
@@ -89,12 +89,12 @@ all options available, including the debugging ones.
 
   Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
 
-.. option:: --max-stack-alloc<=N>
+.. option:: --max-stack-alloc=<N>
 
   Emit an error message in case of allocation on the stack of an
   object larger than `N` KB.  Use 0 to disable these checks.
 
-.. option:: --sdf<=PATH=FILENAME>
+.. option:: --sdf=<PATH=FILENAME>
 
   Do VITAL annotation on `PATH` with SDF file :file:`FILENAME`.
 
@@ -115,11 +115,11 @@ all options available, including the debugging ones.
 
   See section :ref:`Backannotation`, for more details.
 
-.. option:: --vpi<=FILENAME>
+.. option:: --vpi=<FILENAME>
 
   Load VPI module.
 
-.. option:: --vpi-trace<=FILE>
+.. option:: --vpi-trace=<FILE>
 
   Trace vpi calls to FILE.
 
@@ -171,9 +171,9 @@ Export waveforms
   the design. Otherwise throws an error, because it won't erase an existing
   file.
 
-.. option:: --vcd<=FILENAME>
+.. option:: --vcd=<FILENAME>
 
-.. option:: --vcdgz<=FILENAME>
+.. option:: --vcdgz=<FILENAME>
 
   .. index:: vcd
 
@@ -186,7 +186,7 @@ Export waveforms
   then the standard output is used, otherwise a file is created or
   overwritten.
 
-  The :option:`--vcdgz` option is the same as the *--vcd* option,
+  The :option:`--vcdgz` option is the same as the :option:`--vcd` option,
   but the output is compressed using the `zlib` (`gzip`
   compression). However, you can't use the ``-`` filename.
   Furthermore, only one VCD file can be written.
@@ -224,13 +224,13 @@ Export waveforms
 
   Do not write date in the VCD file.
 
-.. option:: --fst<=FILENAME>
+.. option:: --fst=<FILENAME>
 
   Write the waveforms into an `fst` file that can be displayed by
   `gtkwave`. The `fst` files are much smaller than VCD or
   `GHW` files, but it handles only the same signals as the VCD format.
 
-.. option:: --wave<=FILENAME>
+.. option:: --wave=<FILENAME>
 
   Write the waveforms into a `ghw` (GHdl Waveform) file. Currently, all
   the signals are dumped into the waveform file, you cannot select a hierarchy
@@ -244,7 +244,7 @@ Export waveforms
 Export hierarchy and references
 ===============================
 
-.. option:: --disp-tree<[=KIND]>
+.. option:: --disp-tree=<KIND>
 
   .. index:: display design hierarchy
 
@@ -266,17 +266,17 @@ Export hierarchy and references
 
   Stop the simulation before the first cycle. This may be used with :option:`--disp-tree` to display the tree without simulating the whole design. This option actually elaborates the design, so it will catch any bound error in port maps.
 
-.. option:: --xref-html <[options] file...>
+.. option:: --xref-html [options] files...
 
-  To easily navigate through your sources, you may generate cross-references. This command generates an html file for each ``file`` given in the command line, with syntax highlighting and full cross-reference: every identifier is a link to its declaration. An index of the files is created too.
+  To easily navigate through your sources, you may generate cross-references. This command generates an html file for
+  each ``file`` given in the command line, with syntax highlighting and full cross-reference: every identifier is a
+  link to its declaration. An index of the files is created too.
 
-  The set of ``file`` are analyzed, and then, if the analysis is successful, html files are generated in the directory specified by the :option:`-o <dir>` option, or :file:`html/` directory by default.
+  The set of ``files`` are analyzed, and then, if the analysis is successful, html files are generated in the directory
+  specified by the ``-o <DIR>`` option, or :file:`html/` directory by default. The style of the html file can be
+  modified with the :option:`--format` option.
 
-  * If the option :option:`--format=html2` is specified, then the generated html files follow the HTML 2.0 standard, and colours are specified with `<FONT>` tags. However, colours are hard-coded.
-
-  * If the option :option:`--format=css` is specified, then the generated html files follow the HTML 4.0 standard, and use the CSS-1 file :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more information.
-
-.. option:: --psl-report<=FILENAME>
+.. option:: --psl-report=<FILENAME>
 
   Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but is still human readable.
 
@@ -330,7 +330,7 @@ Debugging
 
   Do internal checks after each process run.
 
-.. option:: --activity<=LEVEL>
+.. option:: --activity=<LEVEL>
 
   Watch activity of LEVEL signals: LEVEL is ``all``, ``min`` (default) or ``none`` (unsafe).
 

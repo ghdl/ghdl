@@ -55,7 +55,7 @@ GNAT GPL: Windows
 
 .. rubric:: `compile.ps1`
 
-.. code-block:: plain
+.. code-block::
 
    Commands          Description
    --------------------------------------------------------------------

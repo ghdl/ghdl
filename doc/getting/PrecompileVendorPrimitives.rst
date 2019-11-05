@@ -57,7 +57,7 @@ Supported Simulation and Verification Libraries
 * OSVVM (for VHDL-2008)
 
   * osvvm
-  
+
 * UVVM (for VHDL-2008)
 
   * uvvm-utilities
@@ -101,17 +101,18 @@ Compiling on Linux
 ==================
 
 * **Step 0 - Configure the scripts (optional)**
+
     See the next section for how to configure `config.sh`.
 
 * **Step 1 - Browse to your simulation working directory**
-    
+
   .. code-block:: Bash
 
     $ cd <MySimulationFolder>
     ```
 
 * **Step 2 - Start the compilation script(s)**
-    
+
   .. code-block:: Bash
 
     $ /usr/local/lib/ghdl/vendors/compile-altera.sh --all
@@ -121,15 +122,16 @@ Compiling on Linux
     $ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-uvvm.sh --all
     ```
-    
+
     In most cases GHDL is installed into `/usr/local/`. The scripts are
     installed into the `lib` directory.
 
 * **Step 3 - Viewing the result**
+
     This creates vendor directories in your current working directory and
     compiles the vendor files into them.
 
-    
+
   .. code-block:: Bash
 
     $ ls -ahl
@@ -149,16 +151,17 @@ Compiling on Windows
 ====================
 
 * **Step 0 - Configure the scripts (optional)**
+
     See the next section for how to configure `config.psm1`.
 
 * **Step 1 - Browse to your simulation working directory**
-    
+
   .. code-block:: PowerShell
 
      PS> cd <MySimulationFolder>
 
 * **Step 2 - Start the compilation script(s)**
-    
+
   .. code-block:: PowerShell
 
      PS> <GHDL>\libraries\vendors\compile-altera.ps1 -All
@@ -169,6 +172,7 @@ Compiling on Windows
      PS> <GHDL>\libraries\vendors\compile-uvvm.ps1 -All
 
 * **Step 3 - Viewing the result**
+
     This creates vendor directories in your current working directory and
     compiles the vendor files into them.
 
@@ -202,7 +206,7 @@ directories. Use an empty string `""` for not installed tools.
 `config.sh`:
 
 .. code-block:: Bash
-   
+
    declare -A InstallationDirectory
    InstallationDirectory[AlteraQuartus]="/opt/Altera/17.1"
    InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.9_x64"
@@ -237,7 +241,7 @@ Selectable Options for the Bash Scripts:
 ----------------------------------------
 
 * Common parameters to most scripts:
-  
+
   .. code-block:: none
 
      --help, -h            Print the embedded help page(s).
@@ -250,7 +254,7 @@ Selectable Options for the Bash Scripts:
 * `compile-altera.sh`
 
   Selectable libraries:
-  
+
   .. code-block:: none
 
      --all, -a             Compile all libraries, including common libraries, packages and device libraries.
@@ -261,18 +265,18 @@ Selectable Options for the Bash Scripts:
      --stratix             Compile device libraries for Stratix FPGAs
 
   Compile options:
-  
+
   .. code-block:: none
-	
+
      --vhdl93              Compile selected libraries with VHDL-93 (default).
      --vhdl2008            Compile selected libraries with VHDL-2008.
 
 * `compile-xilinx-ise.sh`
 
   Selectable libraries:
-  
+
   .. code-block:: none
-	
+
      --all, -a             Compile all libraries, including common libraries, packages and device libraries.
      --unisim              Compile the unisim primitives
      --unimacro            Compile the unimacro macros
@@ -281,45 +285,45 @@ Selectable Options for the Bash Scripts:
      --secureip            Compile the secureip primitives
 
   Compile options:
-  
+
   .. code-block:: none
-	
+
      --vhdl93              Compile selected libraries with VHDL-93 (default).
      --vhdl2008            Compile selected libraries with VHDL-2008.
 
 * `compile-xilinx-vivado.sh`
 
   Selectable libraries:
-  
+
   .. code-block:: none
-	
+
      --all, -a             Compile all libraries, including common libraries, packages and device libraries.
      --unisim              Compile the unisim primitives
      --unimacro            Compile the unimacro macros
      --secureip            Compile the secureip primitives
 
   Compile options:
-  
+
   .. code-block:: none
-	
+
      --vhdl93              Compile selected libraries with VHDL-93 (default).
      --vhdl2008            Compile selected libraries with VHDL-2008.
 
 * `compile-osvvm.sh`
 
   Selectable libraries:
-  
+
   .. code-block:: none
-	
+
      --all, -a             Compile all.
      --osvvm               Compile the OSVVM library.
 
 * `compile-uvvm.sh`
 
   Selectable libraries:
-  
+
   .. code-block:: none
-	
+
      --all, -a             Compile all.
      --uvvm                Compile the UVVM libraries.
 
@@ -328,9 +332,9 @@ Selectable Options for the PowerShell Scripts:
 ----------------------------------------------
 
 * Common parameters to all scripts:
-  
+
   .. code-block:: none
-	
+
      -Help                 Print the embedded help page(s).
      -Clean                Cleanup directory before analyzing.
      -SuppressWarnings     Don't show warnings. Report errors only.
@@ -338,9 +342,9 @@ Selectable Options for the PowerShell Scripts:
 * `compile-altera.ps1`
 
   Selectable libraries:
-  
+
   .. code-block:: none
-	
+
      -All                  Compile all libraries, including common libraries, packages and device libraries.
      -Altera               Compile base libraries like 'altera' and 'altera_mf'
      -Max                  Compile device libraries for Max CPLDs
@@ -349,7 +353,7 @@ Selectable Options for the PowerShell Scripts:
      -Stratix              Compile device libraries for Stratix FPGAs
 
   Compile options:
-		
+
   .. code-block:: none
 
      -VHDL93               Compile selected libraries with VHDL-93 (default).
@@ -358,7 +362,7 @@ Selectable Options for the PowerShell Scripts:
 * `compile-xilinx-ise.ps1`
 
   Selectable libraries:
-  
+
   .. code-block:: none
 
      -All                  Compile all libraries, including common libraries, packages and device libraries.
@@ -369,7 +373,7 @@ Selectable Options for the PowerShell Scripts:
      -Secureip             Compile the secureip primitives
 
   Compile options:
-  
+
   .. code-block:: none
 
      -VHDL93               Compile selected libraries with VHDL-93 (default).
@@ -378,7 +382,7 @@ Selectable Options for the PowerShell Scripts:
 * `compile-xilinx-vivado.ps1`
 
   Selectable libraries:
-  
+
   .. code-block:: none
 
      -All                  Compile all libraries, including common libraries, packages and device libraries.
@@ -387,7 +391,7 @@ Selectable Options for the PowerShell Scripts:
      -Secureip             Compile the secureip primitives
 
   Compile options:
-  
+
   .. code-block:: none
 
      -VHDL93               Compile selected libraries with VHDL-93 (default).
@@ -396,7 +400,7 @@ Selectable Options for the PowerShell Scripts:
 * `compile-osvvm.ps1`
 
   Selectable libraries:
-  
+
   .. code-block:: none
 
      -All                  Compile all.
@@ -405,7 +409,7 @@ Selectable Options for the PowerShell Scripts:
 * `compile-uvvm.ps1`
 
   Selectable libraries:
-  
+
   .. code-block:: none
 
      -All                  Compile all.
