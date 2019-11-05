@@ -22,6 +22,7 @@ with Types; use Types;
 with Mutils; use Mutils;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Folds; use Netlists.Folds;
 
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;

@@ -24,6 +24,7 @@ with Netlists.Gates_Ports; use Netlists.Gates_Ports;
 with Netlists.Locations; use Netlists.Locations;
 with Netlists.Errors; use Netlists.Errors;
 with Netlists.Internings;
+with Netlists.Folds; use Netlists.Folds;
 
 with Synth.Flags;
 with Synth.Source; use Synth.Source;

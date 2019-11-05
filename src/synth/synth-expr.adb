@@ -23,16 +23,17 @@ with Types_Utils; use Types_Utils;
 with Std_Names;
 with Str_Table;
 with Mutils; use Mutils;
+
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
-
 with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Folds; use Netlists.Folds;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Environment;

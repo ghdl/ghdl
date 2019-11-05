@@ -26,6 +26,7 @@ with Netlists.Butils; use Netlists.Butils;
 with Netlists.Locations; use Netlists.Locations;
 with Netlists.Memories; use Netlists.Memories;
 with Netlists.Concats; use Netlists.Concats;
+with Netlists.Folds; use Netlists.Folds;
 
 package body Netlists.Expands is
    type Memidx_Array_Type is array (Natural range <>) of Instance;

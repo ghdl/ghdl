@@ -31,6 +31,7 @@ with Areapools;
 with Netlists; use Netlists;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Folds; use Netlists.Folds;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Stmts; use Synth.Stmts;

@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Netlists.Folds; use Netlists.Folds;
+
 package body Netlists.Concats is
    procedure Append (C : in out Concat_Type; N : Net) is
    begin

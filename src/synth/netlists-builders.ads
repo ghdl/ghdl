@@ -76,17 +76,6 @@ package Netlists.Builders is
                               Val : Int32;
                               W : Width) return Net;
 
-   --  Build a const from VAL.  Result is either a Const_UB32 or a Const_Bit.
-   function Build2_Const_Uns (Ctxt : Context_Acc; Val : Uns64; W : Width)
-                             return Net;
-
-   --  Build a const from VAL.  Result is either a Const_SB32 or a Const_Bit.
-   function Build2_Const_Int (Ctxt : Context_Acc; Val : Int64; W : Width)
-                             return Net;
-
-   function Build2_Const_Vec (Ctxt : Context_Acc; W : Width; V : Uns32_Arr)
-                             return Net;
-
    --  Large constants.
    --  Bit means only 0 or 1.
    --  Log means 0/1/Z/X.  Parameters 2N are aval, 2N+1 are bval.
@@ -114,27 +103,12 @@ package Netlists.Builders is
    function Build_Concatn (Ctxt : Context_Acc; W : Width; Nbr_Inputs : Uns32)
                           return Net;
 
-   --  Concatenate nets of ELS in reverse order.  So if ELS(L .. R), then
-   --  ELS(L) will be at offset 0.
-   function Build2_Concat (Ctxt : Context_Acc; Els : Net_Array) return Net;
-
    function Build_Trunc
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net;
    function Build_Extend
      (Ctxt : Context_Acc; Id : Module_Id; I : Net; W : Width) return Net;
 
-   --  Zero extend, noop or truncate I so that its width is W.
-   function Build2_Uresize (Ctxt : Context_Acc;
-                            I : Net;
-                            W : Width;
-                            Loc : Location_Type := No_Location)
-                           return Net;
-
    function Build_Extract
-     (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
-
-   --  Same as Build_Extract, but return I iff extract all the bits.
-   function Build2_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
 
    function Build_Extract_Bit
