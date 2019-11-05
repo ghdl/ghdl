@@ -51,23 +51,9 @@ package body Synth.Oper is
       return Build2_Uresize (Build_Context, N, W, Get_Location (Loc));
    end Synth_Uresize;
 
-   function Synth_Sresize (N : Net; W : Width; Loc : Node) return Net
-   is
-      Wn : constant Width := Get_Width (N);
-      Res : Net;
+   function Synth_Sresize (N : Net; W : Width; Loc : Node) return Net is
    begin
-      if Wn = W then
-         return N;
-      else
-         if Wn > W then
-            Res := Build_Trunc (Build_Context, Id_Strunc, N, W);
-         else
-            pragma Assert (Wn < W);
-            Res := Build_Extend (Build_Context, Id_Sextend, N, W);
-         end if;
-         Set_Location (Res, Loc);
-         return Res;
-      end if;
+      return Build2_Sresize (Build_Context, N, W, Get_Location (Loc));
    end Synth_Sresize;
 
    function Synth_Uresize (Val : Value_Acc; W : Width; Loc : Node) return Net
@@ -297,9 +283,7 @@ package body Synth.Oper is
       function Synth_Dyadic_Uns (Id : Dyadic_Module_Id; Is_Res_Vec : Boolean)
                                 return Value_Acc
       is
-         L : constant Net := Get_Net (Left);
-         R : constant Net := Get_Net (Right);
-         W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+         W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          Rtype : Type_Acc;
          L1, R1 : Net;
          N : Net;
@@ -309,8 +293,8 @@ package body Synth.Oper is
          else
             Rtype := Left.Typ;
          end if;
-         L1 := Synth_Uresize (L, W, Expr);
-         R1 := Synth_Uresize (R, W, Expr);
+         L1 := Synth_Uresize (Left, W, Expr);
+         R1 := Synth_Uresize (Right, W, Expr);
          N := Build_Dyadic (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Rtype);
@@ -319,9 +303,7 @@ package body Synth.Oper is
       function Synth_Dyadic_Sgn (Id : Dyadic_Module_Id; Is_Res_Vec : Boolean)
                                 return Value_Acc
       is
-         L : constant Net := Get_Net (Left);
-         R : constant Net := Get_Net (Right);
-         W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+         W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          Rtype : Type_Acc;
          L1, R1 : Net;
          N : Net;
@@ -331,8 +313,8 @@ package body Synth.Oper is
          else
             Rtype := Left.Typ;
          end if;
-         L1 := Synth_Sresize (L, W, Expr);
-         R1 := Synth_Sresize (R, W, Expr);
+         L1 := Synth_Sresize (Left, W, Expr);
+         R1 := Synth_Sresize (Right, W, Expr);
          N := Build_Dyadic (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Rtype);
@@ -341,14 +323,12 @@ package body Synth.Oper is
       function Synth_Compare_Uns_Uns (Id : Compare_Module_Id)
                                      return Value_Acc
       is
-         L : constant Net := Get_Net (Left);
-         R : constant Net := Get_Net (Right);
-         W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+         W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          L1, R1 : Net;
          N : Net;
       begin
-         L1 := Synth_Uresize (L, W, Expr);
-         R1 := Synth_Uresize (R, W, Expr);
+         L1 := Synth_Uresize (Left, W, Expr);
+         R1 := Synth_Uresize (Right, W, Expr);
          N := Build_Compare (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Boolean_Type);
@@ -381,14 +361,12 @@ package body Synth.Oper is
       function Synth_Compare_Sgn_Sgn (Id : Compare_Module_Id)
                                      return Value_Acc
       is
-         L : constant Net := Get_Net (Left);
-         R : constant Net := Get_Net (Right);
-         W : constant Width := Width'Max (Get_Width (L), Get_Width (R));
+         W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          L1, R1 : Net;
          N : Net;
       begin
-         L1 := Synth_Sresize (L, W, Expr);
-         R1 := Synth_Sresize (R, W, Expr);
+         L1 := Synth_Sresize (Left, W, Expr);
+         R1 := Synth_Sresize (Right, W, Expr);
          N := Build_Compare (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Boolean_Type);
@@ -565,16 +543,14 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
             declare
-               L : constant Net := Get_Net (Left);
-               R : constant Net := Get_Net (Right);
-               Lw : constant Width := Get_Width (L);
+               Lw : constant Width := Left.Typ.W;
                W : constant Width := 2 * Lw;
                L1, R1 : Net;
                Rtype : Type_Acc;
                N : Net;
             begin
-               L1 := Synth_Uresize (L, W, Expr);
-               R1 := Synth_Uresize (R, W, Expr);
+               L1 := Synth_Uresize (Left, W, Expr);
+               R1 := Synth_Uresize (Right, W, Expr);
                Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
                N := Build_Dyadic (Build_Context, Id_Umul, L1, R1);
                Set_Location (N, Expr);
@@ -583,16 +559,14 @@ package body Synth.Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
             declare
-               L : constant Net := Get_Net (Left);
-               R : constant Net := Get_Net (Right);
-               Lw : constant Width := Get_Width (L);
-               W : constant Width := Width'Max (Lw, Get_Width (R));
+               Lw : constant Width := Left.Typ.W;
+               W : constant Width := Width'Max (Lw, Right.Typ.W);
                L1, R1 : Net;
                Rtype : Type_Acc;
                N : Net;
             begin
-               L1 := Synth_Uresize (L, W, Expr);
-               R1 := Synth_Uresize (R, W, Expr);
+               L1 := Synth_Uresize (Left, W, Expr);
+               R1 := Synth_Uresize (Right, W, Expr);
                Rtype := Create_Vec_Type_By_Length (Lw, Left.Typ.Vec_El);
                N := Build_Dyadic (Build_Context, Id_Udiv, L1, R1);
                Set_Location (N, Expr);

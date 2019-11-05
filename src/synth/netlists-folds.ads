@@ -42,7 +42,15 @@ package Netlists.Folds is
                             W : Width;
                             Loc : Location_Type := No_Location)
                            return Net;
-   --  Same as Build_Extract, but return I iff extract all the bits.
+
+   --  Sign extend, noop or truncate I so that its width is W.
+   function Build2_Sresize (Ctxt : Context_Acc;
+                            I : Net;
+                            W : Width;
+                            Loc : Location_Type := No_Location)
+                           return Net;
+
+--  Same as Build_Extract, but return I iff extract all the bits.
    function Build2_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
 end Netlists.Folds;

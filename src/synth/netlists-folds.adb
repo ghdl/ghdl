@@ -147,6 +147,29 @@ package body Netlists.Folds is
       end if;
    end Build2_Uresize;
 
+   function Build2_Sresize (Ctxt : Context_Acc;
+                            I : Net;
+                            W : Width;
+                            Loc : Location_Type := No_Location)
+                           return Net
+   is
+      Wn : constant Width := Get_Width (I);
+      Res : Net;
+   begin
+      if Wn = W then
+         return I;
+      else
+         if Wn > W then
+            Res := Build_Trunc (Ctxt, Id_Strunc, I, W);
+         else
+            pragma Assert (Wn < W);
+            Res := Build_Extend (Ctxt, Id_Sextend, I, W);
+         end if;
+         Locations.Set_Location (Res, Loc);
+         return Res;
+      end if;
+   end Build2_Sresize;
+
    function Build2_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net is
    begin
