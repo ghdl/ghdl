@@ -982,8 +982,13 @@ package body Netlists.Disp_Vhdl is
             declare
                W : constant Width := Get_Width (Get_Output (Inst, 0));
             begin
-               Disp_Template ("  \o0 <= \i0 (\n0 downto 0);  --  trunc" & NL,
-                              Inst, (0 => W - 1));
+               Disp_Template ("  \o0 <= \i0 ", Inst);
+               if W = 1 then
+                  Disp_Template ("(0)", Inst);
+               else
+                  Disp_Template ("(\n0 downto 0)", Inst, (0 => W - 1));
+               end if;
+               Disp_Template (";  --  trunc" & NL, Inst);
             end;
          when Id_Uextend =>
             declare
