@@ -338,27 +338,27 @@ package body Netlists.Memories is
             Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             Sub_Addr : constant Net := Get_Input_Net (Inst, 0);
             Addr_W : constant Width := Get_Width (Sub_Addr);
-            Max : Uns32;
+            Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
+            Max_W : constant Width := Clog2 (Max + 1);
+            Sub_Addr1 : Net;
          begin
             --  Check max
-            Max := Get_Param_Uns32 (Inst, 1);
             pragma Assert (Max /= 0);
             if (Max + 1) * Step /= Last_Size then
                raise Internal_Error;
             end if;
 
             --  Check addr width.
-            if Addr_W > 31 then
-               raise Internal_Error;
-            end if;
             if Addr_W = 0 then
                raise Internal_Error;
             end if;
-            if 2**Natural (Addr_W - 1) > Max then
+            if Addr_W > Max_W then
                --  Need to truncate.
-               raise Internal_Error;
+               Sub_Addr1 := Build_Trunc (Ctxt, Id_Utrunc, Sub_Addr, Max_W);
+            else
+               Sub_Addr1 := Sub_Addr;
             end if;
-            Indexes (I).Addr := Sub_Addr;
+            Indexes (I).Addr := Sub_Addr1;
 
             if I = Indexes'Last then
                if Step /= Val_Wd then
@@ -374,13 +374,11 @@ package body Netlists.Memories is
          use Netlists.Concats;
          Concat : Concat_Type;
          Inp : Input;
-         Idx : Net;
       begin
          for I in Indexes'Range loop
             Inp := Get_Input (Indexes (I).Inst, 0);
-            Idx := Get_Driver (Inp);
             Disconnect (Inp);
-            Append (Concat, Idx);
+            Append (Concat, Indexes (I).Addr);
          end loop;
 
          Build (Ctxt, Concat, Low_Addr);
