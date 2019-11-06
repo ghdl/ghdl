@@ -510,9 +510,12 @@ package body Netlists.Dump is
 
                Drv := Get_Driver (I);
 
-               Put_Net_Width (Drv);
-
-               Disp_Driver (Drv, Indent + 1);
+               if Drv = No_Net then
+                  Put ('?');
+               else
+                  Put_Net_Width (Drv);
+                  Disp_Driver (Drv, Indent + 1);
+               end if;
             end loop;
             Put (')');
          end;
