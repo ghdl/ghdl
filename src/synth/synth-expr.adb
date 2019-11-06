@@ -1472,16 +1472,6 @@ package body Synth.Expr is
       end case;
    end Synth_Type_Conversion;
 
-   function Synth_Assoc_In (Syn_Inst : Synth_Instance_Acc;
-                            Assoc : Node) return Value_Acc is
-   begin
-      if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression then
-         return Synth_Expression (Syn_Inst, Get_Actual (Assoc));
-      else
-         Error_Kind ("synth_assoc_in", Assoc);
-      end if;
-   end Synth_Assoc_In;
-
    procedure Error_Unknown_Operator (Imp : Node; Loc : Node) is
    begin
       if Get_Kind (Get_Parent (Imp)) = Iir_Kind_Package_Declaration
@@ -1664,23 +1654,8 @@ package body Synth.Expr is
          when Iir_Kind_Function_Call =>
             declare
                Imp : constant Node := Get_Implementation (Expr);
-               Clk : Net;
-               Edge : Net;
             begin
-               if Imp = Vhdl.Ieee.Std_Logic_1164.Rising_Edge then
-                  Clk := Get_Net
-                    (Synth_Assoc_In
-                       (Syn_Inst, Get_Parameter_Association_Chain (Expr)));
-                  Edge := Build_Edge (Build_Context, Clk);
-                  return Create_Value_Net (Edge, Boolean_Type);
-               elsif Imp = Vhdl.Ieee.Std_Logic_1164.Falling_Edge then
-                  Clk := Get_Net
-                    (Synth_Assoc_In
-                       (Syn_Inst, Get_Parameter_Association_Chain (Expr)));
-                  Clk := Build_Monadic (Build_Context, Id_Not, Clk);
-                  Edge := Build_Edge (Build_Context, Clk);
-                  return Create_Value_Net (Edge, Boolean_Type);
-               elsif Get_Implicit_Definition (Imp) /= Iir_Predefined_None then
+               if Get_Implicit_Definition (Imp) /= Iir_Predefined_None then
                   return Synth_Predefined_Function_Call (Syn_Inst, Expr);
                else
                   return Synth_User_Function_Call (Syn_Inst, Expr);

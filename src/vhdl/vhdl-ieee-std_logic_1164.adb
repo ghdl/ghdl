@@ -120,6 +120,9 @@ package body Vhdl.Ieee.Std_Logic_1164 is
    is
       Error : exception;
 
+      Rising_Edge : Iir_Function_Declaration := Null_Iir;
+      Falling_Edge : Iir_Function_Declaration := Null_Iir;
+
       Decl : Iir;
       Def : Iir;
       Predefined : Iir_Predefined_Functions;
@@ -234,7 +237,7 @@ package body Vhdl.Ieee.Std_Logic_1164 is
             case Get_Identifier (Decl) is
                when Name_Rising_Edge =>
                   Rising_Edge := Decl;
-                  Predefined := Iir_Predefined_Ieee_1164_Falling_Edge;
+                  Predefined := Iir_Predefined_Ieee_1164_Rising_Edge;
                when Name_Falling_Edge =>
                   Falling_Edge := Decl;
                   Predefined := Iir_Predefined_Ieee_1164_Falling_Edge;
@@ -333,7 +336,5 @@ package body Vhdl.Ieee.Std_Logic_1164 is
          Std_Logic_Vector_Type := Null_Iir;
          Std_Ulogic_0 := Null_Iir;
          Std_Ulogic_1 := Null_Iir;
-         Rising_Edge := Null_Iir;
-         Falling_Edge := Null_Iir;
    end Extract_Declarations;
 end Vhdl.Ieee.Std_Logic_1164;

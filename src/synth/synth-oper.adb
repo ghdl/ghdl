@@ -1092,6 +1092,25 @@ package body Synth.Oper is
       end if;
 
       case Def is
+         when Iir_Predefined_Ieee_1164_Rising_Edge =>
+            declare
+               Clk : Net;
+               Edge : Net;
+            begin
+               Clk := Get_Net (Get_Value (Subprg_Inst, Param1));
+               Edge := Build_Edge (Build_Context, Clk);
+               return Create_Value_Net (Edge, Boolean_Type);
+            end;
+         when Iir_Predefined_Ieee_1164_Falling_Edge =>
+            declare
+               Clk : Net;
+               Edge : Net;
+            begin
+               Clk := Get_Net (Get_Value (Subprg_Inst, Param1));
+               Clk := Build_Monadic (Build_Context, Id_Not, Clk);
+               Edge := Build_Edge (Build_Context, Clk);
+               return Create_Value_Net (Edge, Boolean_Type);
+            end;
          when Iir_Predefined_Ieee_1164_To_Bitvector =>
             declare
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);

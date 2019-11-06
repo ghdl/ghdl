@@ -26,8 +26,6 @@ package Vhdl.Ieee.Std_Logic_1164 is
    Std_Logic_Type : Iir_Enumeration_Subtype_Definition := Null_Iir;
    Std_Logic_Vector_Type : Iir_Array_Type_Definition := Null_Iir;
    Resolved : Iir_Function_Declaration := Null_Iir;
-   Rising_Edge : Iir_Function_Declaration := Null_Iir;
-   Falling_Edge : Iir_Function_Declaration := Null_Iir;
 
    --  Position of literals (D represents '-' ie dont-care).
    Std_Logic_U_Pos : constant := 0;
