@@ -40,6 +40,11 @@ package Files_Map.Editor is
                             Text_Ptr   : File_Buffer_Ptr;
                             Text_Len   : Source_Ptr);
 
+   --  Copy content of SRC to DEST.  The size of DEST must be large enough.
+   --  Clear lines table of DEST.
+   procedure Copy_Source_File (Dest : Source_File_Entry;
+                               Src : Source_File_Entry);
+
    --  Recompute lines number.
    procedure Compute_Lines (File : Source_File_Entry);
 

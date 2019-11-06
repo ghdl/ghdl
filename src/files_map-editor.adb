@@ -418,6 +418,45 @@ package body Files_Map.Editor is
       File_Add_Line_Number (File, 1, Source_Ptr_Org);
    end Fill_Text_Ptr;
 
+   procedure Copy_Source_File (Dest : Source_File_Entry;
+                               Src : Source_File_Entry)
+   is
+      pragma Assert (Src <= Source_Files.Last);
+      pragma Assert (Dest <= Source_Files.Last);
+      S : Source_File_Record renames Source_Files.Table (Src);
+      D : Source_File_Record renames Source_Files.Table (Dest);
+      S_Cont_Len : constant Source_Ptr := Get_Content_Length (Src);
+      D_Buf_Len : constant Source_Ptr := Get_Buffer_Length (Dest);
+   begin
+      if S_Cont_Len + 2 > D_Buf_Len then
+         --  Buffer is too small!
+         raise Constraint_Error;
+      end if;
+
+      if S.Gap_Start < S.File_Length then
+         pragma Assert (Source_Ptr_Org = 0);
+         D.Source (0 .. S.Gap_Start - 1) :=
+           S.Source (0 .. S.Gap_Start - 1);
+         D.Source (S.Gap_Start .. S_Cont_Len - 1) :=
+           S.Source (S.Gap_Last + 1 .. S.File_Length - 1);
+      else
+         pragma Assert (S.Gap_Start = S_Cont_Len);
+         D.Source (Source_Ptr_Org .. Source_Ptr_Org + S_Cont_Len - 1) :=
+           S.Source (Source_Ptr_Org .. Source_Ptr_Org + S_Cont_Len - 1);
+      end if;
+
+      Set_File_Length (Dest, S_Cont_Len);
+
+      --  Move the gap after the two terminal EOT.
+      Set_Gap (Dest, S_Cont_Len + 2, D_Buf_Len - 1);
+
+      --  Clear cache.
+      D.Cache_Line := 1;
+      D.Cache_Pos := Source_Ptr_Org;
+
+      Compute_Lines (Dest);
+   end Copy_Source_File;
+
    procedure Check_Buffer_Content (File : Source_File_Entry;
                                    Str : File_Buffer_Ptr;
                                    Str_Len : Source_Ptr)
