@@ -572,7 +572,7 @@ package body Synth.Decls is
                end if;
                if Get_Instance_Const (Syn_Inst) then
                   pragma Assert (Init /= null);
-                  Create_Object (Syn_Inst, Decl, Init);
+                  Create_Object (Syn_Inst, Decl, Unshare (Init, Current_Pool));
                else
                   Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
                   Create_Var_Wire (Syn_Inst, Decl, Init);

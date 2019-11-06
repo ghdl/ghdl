@@ -595,14 +595,52 @@ package body Synth.Values is
       end if;
    end Strip_Const;
 
-   function Copy (Src: in Value_Acc) return Value_Acc
+   function Copy (Src : Value_Acc) return Value_Acc;
+
+   function Copy_Array (Arr : Value_Array_Acc) return Value_Array_Acc
    is
-      Res: Value_Acc;
+      Res : Value_Array_Acc;
+   begin
+      Res := Create_Value_Array (Arr.Len);
+      for I in Res.V'Range loop
+         Res.V (I) := Copy (Arr.V (I));
+      end loop;
+      return Res;
+   end Copy_Array;
+
+   function Copy (Src : Value_Acc) return Value_Acc
+   is
+      Res : Value_Acc;
+      Arr : Value_Array_Acc;
    begin
       case Src.Kind is
+         when Value_Net =>
+            Res := Create_Value_Net (Src.N, Src.Typ);
          when Value_Wire =>
             Res := Create_Value_Wire (Src.W, Src.Typ);
-         when others =>
+         when Value_Discrete =>
+            Res := Create_Value_Discrete (Src.Scal, Src.Typ);
+         when Value_Float =>
+            Res := Create_Value_Float (Src.Fp, Src.Typ);
+         when Value_Subtype =>
+            Res := Create_Value_Subtype (Src.Typ);
+         when Value_Array =>
+            Arr := Copy_Array (Src.Arr);
+            Res := Create_Value_Array (Src.Typ, Arr);
+         when Value_Const_Array =>
+            Arr := Copy_Array (Src.Arr);
+            Res := Create_Value_Const_Array (Src.Typ, Arr);
+         when Value_Record =>
+            Arr := Copy_Array (Src.Rec);
+            Res := Create_Value_Record (Src.Typ, Arr);
+         when Value_Const_Record =>
+            Arr := Copy_Array (Src.Rec);
+            Res := Create_Value_Const_Record (Src.Typ, Arr);
+         when Value_Instance =>
+            raise Internal_Error;
+         when Value_Const =>
+            raise Internal_Error;
+         when Value_Alias =>
             raise Internal_Error;
       end case;
       return Res;
