@@ -423,7 +423,8 @@ package body Synth.Expr is
          El_Type := Get_Value_Type
            (Syn_Inst, Get_Type (Get_Nth_Element (El_List, Pos)));
          Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type);
-         Rec.V (Iir_Index32 (Pos + 1)) := Val;
+         Rec.V (Iir_Index32 (Pos + 1)) := Synth_Subtype_Conversion
+           (Val, El_Type, False, Value);
          if Const_P and not Is_Const (Val) then
             Const_P := False;
          end if;
