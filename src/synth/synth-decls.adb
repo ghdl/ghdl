@@ -440,7 +440,11 @@ package body Synth.Decls is
          --  For constant functions, the value must be constant.
          pragma Assert (not Get_Instance_Const (Syn_Inst)
                           or else Is_Const (Val));
-         Cst := Create_Value_Const (Val, Decl);
+         if Val.Kind = Value_Const then
+            Cst := Val;
+         else
+            Cst := Create_Value_Const (Val, Decl);
+         end if;
          Create_Object_Force (Syn_Inst, First_Decl, Cst);
       end if;
    end Synth_Constant_Declaration;

@@ -580,6 +580,7 @@ package body Synth.Values is
       subtype Value_Type_Const is Value_Type (Value_Const);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Const);
    begin
+      pragma Assert (Val = null or else Val.Kind /= Value_Const);
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Const,
                                    C_Val => Val,
