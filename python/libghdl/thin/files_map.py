@@ -38,4 +38,7 @@ Read_Source_File = libghdl.files_map__read_source_file
 
 Reserve_Source_File = libghdl.files_map__reserve_source_file
 
+Discard_Source_File = libghdl.files_map__discard_source_file
+Free_Source_File = libghdl.files_map__free_source_file
+
 Get_Last_Source_File_Entry = libghdl.files_map__get_last_source_file_entry

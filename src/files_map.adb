@@ -823,6 +823,15 @@ package body Files_Map is
       return Res;
    end Read_Source_File;
 
+   procedure Discard_Source_File (File : Source_File_Entry)
+   is
+      pragma Assert (File <= Source_Files.Last);
+      F : Source_File_Record renames Source_Files.Table (File);
+   begin
+      F.File_Name := Null_Identifier;
+      F.Directory := Null_Identifier;
+   end Discard_Source_File;
+
    procedure Free_Source_File (File : Source_File_Entry)
    is
       procedure Free is new Ada.Unchecked_Deallocation
@@ -903,6 +912,18 @@ package body Files_Map is
       Check_File (File);
       return Source_Files.Table (File).File_Length;
    end Get_File_Length;
+
+   function Get_Content_Length (File : Source_File_Entry) return Source_Ptr
+   is
+      pragma Assert (File <= Source_Files.Last);
+      F : Source_File_Record renames Source_Files.Table (File);
+   begin
+      if F.Gap_Start >= F.File_Length then
+         return F.File_Length;
+      else
+         return F.File_Length - (F.Gap_Last - F.Gap_Start + 1);
+      end if;
+   end Get_Content_Length;
 
    function Get_Buffer_Length (File : Source_File_Entry) return Source_Ptr
    is
@@ -1161,8 +1182,12 @@ package body Files_Map is
             end if;
             case F.Kind is
                when Source_File_File =>
-                  Log (" buf:" & Source_Ptr'Image (F.Source'First)
-                         & " -" & Source_Ptr'Image (F.Source'Last));
+                  if F.Source = null then
+                     Log (" no buf");
+                  else
+                     Log (" buf:" & Source_Ptr'Image (F.Source'First)
+                            & " -" & Source_Ptr'Image (F.Source'Last));
+                  end if;
                   Log_Line;
                   Log (" nbr lines:"
                          & Natural'Image (Lines_Tables.Last (F.Lines)));

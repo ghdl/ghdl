@@ -80,6 +80,14 @@ package Files_Map is
    --  carefully used as the corresponding locations will be reused.
    procedure Unload_Last_Source_File (File : Source_File_Entry);
 
+   --  Mark FILE as unavailable: clear the name and directory.
+   --  This is needed before creating a new source file with the same name.
+   procedure Discard_Source_File (File : Source_File_Entry);
+
+   --  Free resources used by FILE, but keep the entry.
+   --  (It could be recycled for files that could fit - not implemented).
+   procedure Free_Source_File (File : Source_File_Entry);
+
    --  Relocate location LOC (which must be in the reference of INST_FILE)
    --  for instrnace INST_FILE.
    function Instance_Relocate
@@ -102,13 +110,19 @@ package Files_Map is
    --  Likewise but return a pointer.  To be used only from non-Ada code.
    function Get_File_Buffer (File : Source_File_Entry) return File_Buffer_Ptr;
 
-   --  Set/Get the length of the file (which is less than the size of the
-   --  file buffer).  The gap is not included in the length.
+   --  Set the length of the file (which is less than the size of the
+   --  file buffer).
    --  Set also append two EOT at the end of the file.
    procedure Set_File_Length (File : Source_File_Entry; Length : Source_Ptr);
+
+   --  Get the position of the first EOT character.
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
 
-   --  Get the length of the buffer, which includes the gap and the
+   --  Get the length of the content; this is the file length minus the gap,
+   --  if the gap is before the end.
+   function Get_Content_Length (File : Source_File_Entry) return Source_Ptr;
+
+   --  Get the length of the buffer, which always includes the gap and the
    --  two terminal EOT.
    function Get_Buffer_Length (File : Source_File_Entry) return Source_Ptr;
 
