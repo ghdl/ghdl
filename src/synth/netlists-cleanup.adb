@@ -64,6 +64,8 @@ package body Netlists.Cleanup is
       List := No_Instance;
 
       Inst := Get_First_Instance (M);
+      --  But keep the self-instance.
+      Inst := Get_Next_Instance (Inst);
       while Inst /= No_Instance loop
          Next_Inst := Get_Next_Instance (Inst);
          Extract_If_Unused (Inst, List);
