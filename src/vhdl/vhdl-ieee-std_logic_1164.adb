@@ -120,9 +120,6 @@ package body Vhdl.Ieee.Std_Logic_1164 is
    is
       Error : exception;
 
-      Rising_Edge : Iir_Function_Declaration := Null_Iir;
-      Falling_Edge : Iir_Function_Declaration := Null_Iir;
-
       Decl : Iir;
       Def : Iir;
       Predefined : Iir_Predefined_Functions;
@@ -236,11 +233,17 @@ package body Vhdl.Ieee.Std_Logic_1164 is
 
             case Get_Identifier (Decl) is
                when Name_Rising_Edge =>
-                  Rising_Edge := Decl;
                   Predefined := Iir_Predefined_Ieee_1164_Rising_Edge;
+                  --  Since rising_edge does not read activity of its
+                  --  parameter, clear the flag to allow more optimizations.
+                  Set_Has_Active_Flag
+                    (Get_Interface_Declaration_Chain (Decl), False);
                when Name_Falling_Edge =>
-                  Falling_Edge := Decl;
                   Predefined := Iir_Predefined_Ieee_1164_Falling_Edge;
+                  --  Since falling_edge does not read activity of its
+                  --  parameter, clear the flag to allow more optimizations.
+                  Set_Has_Active_Flag
+                    (Get_Interface_Declaration_Chain (Decl), False);
                when Name_To_Bitvector =>
                   Predefined := Iir_Predefined_Ieee_1164_To_Bitvector;
                when others =>
@@ -308,22 +311,6 @@ package body Vhdl.Ieee.Std_Logic_1164 is
             Set_Implicit_Definition (Decl, Predefined);
          end if;
       end loop;
-
-      --  Since rising_edge and falling_edge do not read activity of its
-      --  parameter, clear the flag to allow more optimizations.
-      if Rising_Edge /= Null_Iir then
-         Set_Has_Active_Flag
-           (Get_Interface_Declaration_Chain (Rising_Edge), False);
-      else
-         raise Error;
-      end if;
-      if Falling_Edge /= Null_Iir then
-         Set_Has_Active_Flag
-           (Get_Interface_Declaration_Chain (Falling_Edge), False);
-      else
-         raise Error;
-      end if;
-
    exception
       when Error =>
          Error_Msg_Sem (+Pkg, "package ieee.std_logic_1164 is ill-formed");
