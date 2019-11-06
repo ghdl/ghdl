@@ -248,12 +248,12 @@ package body Files_Map.Editor is
       return Res;
    end Count_Newlines;
 
-   procedure Replace_Text (File : Source_File_Entry;
-                           Start_Line : Positive;
-                           Start_Off  : Natural;
-                           End_Line   : Positive;
-                           End_Off    : Natural;
-                           Text       : File_Buffer)
+   function Replace_Text (File : Source_File_Entry;
+                          Start_Line : Positive;
+                          Start_Off  : Natural;
+                          End_Line   : Positive;
+                          End_Off    : Natural;
+                          Text       : File_Buffer) return Boolean
    is
       pragma Assert (File <= Source_Files.Last);
       F : Source_File_Record renames Source_Files.Table (File);
@@ -276,7 +276,7 @@ package body Files_Map.Editor is
 
          --  Check there is enough space.
          if Text_Len > Gap_Size + Range_Size then
-            raise Constraint_Error;
+            return False;
          end if;
 
          --  Replace text, handle new lines.
@@ -323,7 +323,7 @@ package body Files_Map.Editor is
          begin
             --  No change in newlines.
             if Text_Lines = 0 and then Orig_Lines = 0 then
-               return;
+               return True;
             end if;
 
             --  Make room for lines table.
@@ -359,18 +359,20 @@ package body Files_Map.Editor is
             Check_Buffer_Lines (File);
          end;
       end;
+
+      return True;
    end Replace_Text;
 
-   procedure Replace_Text_Ptr (File : Source_File_Entry;
-                               Start_Line : Positive;
-                               Start_Off  : Natural;
-                               End_Line   : Positive;
-                               End_Off    : Natural;
-                               Text_Ptr   : File_Buffer_Ptr;
-                               Text_Len   : Source_Ptr) is
+   function Replace_Text_Ptr (File : Source_File_Entry;
+                              Start_Line : Positive;
+                              Start_Off  : Natural;
+                              End_Line   : Positive;
+                              End_Off    : Natural;
+                              Text_Ptr   : File_Buffer_Ptr;
+                              Text_Len   : Source_Ptr) return Boolean is
    begin
-      Replace_Text (File, Start_Line, Start_Off, End_Line, End_Off,
-                    Text_Ptr (0 .. Text_Len - 1));
+      return Replace_Text (File, Start_Line, Start_Off, End_Line, End_Off,
+                           Text_Ptr (0 .. Text_Len - 1));
    end Replace_Text_Ptr;
 
    procedure Set_Gap (File : Source_File_Entry;

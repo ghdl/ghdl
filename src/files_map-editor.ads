@@ -17,20 +17,23 @@
 --  02111-1307, USA.
 
 package Files_Map.Editor is
-   procedure Replace_Text (File : Source_File_Entry;
-                           Start_Line : Positive;
-                           Start_Off  : Natural;
-                           End_Line   : Positive;
-                           End_Off    : Natural;
-                           Text       : File_Buffer);
+   --  Replace [START; END) by TEXT.  Return True in case of success, False
+   --  in case of failure (the gap is too small).
+   function Replace_Text (File : Source_File_Entry;
+                          Start_Line : Positive;
+                          Start_Off  : Natural;
+                          End_Line   : Positive;
+                          End_Off    : Natural;
+                          Text       : File_Buffer) return Boolean;
 
-   procedure Replace_Text_Ptr (File : Source_File_Entry;
-                               Start_Line : Positive;
-                               Start_Off  : Natural;
-                               End_Line   : Positive;
-                               End_Off    : Natural;
-                               Text_Ptr   : File_Buffer_Ptr;
-                               Text_Len   : Source_Ptr);
+   --  Likewise, but with pointer + length string.
+   function Replace_Text_Ptr (File : Source_File_Entry;
+                              Start_Line : Positive;
+                              Start_Off  : Natural;
+                              End_Line   : Positive;
+                              End_Off    : Natural;
+                              Text_Ptr   : File_Buffer_Ptr;
+                              Text_Len   : Source_Ptr) return Boolean;
 
    --  Replace the content of FILE with TEXT.
    procedure Fill_Text_Ptr (File : Source_File_Entry;
