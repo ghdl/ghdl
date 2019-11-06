@@ -224,15 +224,22 @@ package body Vhdl.Ieee.Std_Logic_1164 is
          Decl := Get_Chain (Decl);
          exit when Decl = Null_Iir;
 
-         if Get_Kind (Decl) = Iir_Kind_Function_Declaration then
+         --  Recognize not-predefined functions.
+         if Get_Kind (Decl) = Iir_Kind_Function_Declaration
+           and then Get_Implicit_Definition (Decl) = Iir_Predefined_None
+         then
+            --  Useless assignment ?
+            Predefined := Iir_Predefined_None;
+
             case Get_Identifier (Decl) is
                when Name_Rising_Edge =>
                   Rising_Edge := Decl;
+                  Predefined := Iir_Predefined_Ieee_1164_Falling_Edge;
                when Name_Falling_Edge =>
                   Falling_Edge := Decl;
+                  Predefined := Iir_Predefined_Ieee_1164_Falling_Edge;
                when Name_To_Bitvector =>
                   Predefined := Iir_Predefined_Ieee_1164_To_Bitvector;
-                  Set_Implicit_Definition (Decl, Predefined);
                when others =>
                   if Is_Scalar_Scalar_Function (Decl) then
                      case Get_Identifier (Decl) is
@@ -251,7 +258,6 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;
-                     Set_Implicit_Definition (Decl, Predefined);
                   elsif Is_Scalar_Function (Decl) then
                      case Get_Identifier (Decl) is
                         when Name_Not =>
@@ -262,7 +268,6 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;
-                     Set_Implicit_Definition (Decl, Predefined);
                   elsif Is_Vector_Vector_Function (Decl) then
                      case Get_Identifier (Decl) is
                         when Name_And =>
@@ -280,7 +285,6 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;
-                     Set_Implicit_Definition (Decl, Predefined);
                   elsif Is_Vector_Function (Decl) then
                      case Get_Identifier (Decl) is
                         when Name_Not =>
@@ -294,9 +298,11 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;
-                     Set_Implicit_Definition (Decl, Predefined);
+                  else
+                     Predefined := Iir_Predefined_None;
                   end if;
             end case;
+            Set_Implicit_Definition (Decl, Predefined);
          end if;
       end loop;
 
