@@ -386,6 +386,10 @@ package body Synth.Stmts is
                                 Val.Arr.V (I), Loc);
                end loop;
             end;
+         when Value_Record =>
+            for I in Targ.Rec.V'Range loop
+               Assign_Value (Targ.Rec.V (I), Val.Rec.V (I), Loc);
+            end loop;
          when others =>
             raise Internal_Error;
       end case;
