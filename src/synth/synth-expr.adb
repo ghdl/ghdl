@@ -1535,6 +1535,30 @@ package body Synth.Expr is
       return Res;
    end Synth_String_Literal;
 
+   function Synth_Short_Circuit_And (Syn_Inst : Synth_Instance_Acc;
+                                     Left_Expr : Node;
+                                     Right_Expr : Node;
+                                     Typ : Type_Acc;
+                                     Expr : Node) return Value_Acc
+   is
+      Left : Value_Acc;
+      Right : Value_Acc;
+      N : Net;
+   begin
+      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Typ);
+      if Is_Const_Val (Left) and then Get_Const_Discrete (Left) = 0 then
+         return Create_Value_Discrete (0, Boolean_Type);
+      end if;
+      Strip_Const (Left);
+      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Typ);
+      Strip_Const (Right);
+
+      N := Build_Dyadic (Build_Context, Id_And,
+                         Get_Net (Left), Get_Net (Right));
+      Set_Location (N, Expr);
+      return Create_Value_Net (N, Boolean_Type);
+   end Synth_Short_Circuit_And;
+
    function Synth_Expression_With_Type
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Type_Acc)
      return Value_Acc
@@ -1559,15 +1583,20 @@ package body Synth.Expr is
                end if;
 
                --  FIXME: short-circuit operators ?
-               if Def in Iir_Predefined_Implicit
-                 or else Def in Iir_Predefined_IEEE_Explicit
-               then
-                  return Synth_Dyadic_Operation
-                    (Syn_Inst, Imp, Get_Left (Expr), Get_Right (Expr), Expr);
-               else
-                  Error_Unknown_Operator (Imp, Expr);
-                  raise Internal_Error;
-               end if;
+               case Def is
+                  when Iir_Predefined_Boolean_And =>
+                     return Synth_Short_Circuit_And
+                       (Syn_Inst, Get_Left (Expr), Get_Right (Expr),
+                        Boolean_Type, Expr);
+                  when Iir_Predefined_Bit_And =>
+                     return Synth_Short_Circuit_And
+                       (Syn_Inst, Get_Left (Expr), Get_Right (Expr),
+                        Bit_Type, Expr);
+                  when others =>
+                     return Synth_Dyadic_Operation
+                       (Syn_Inst, Imp,
+                        Get_Left (Expr), Get_Right (Expr), Expr);
+               end case;
             end;
          when Iir_Kinds_Monadic_Operator =>
             declare
