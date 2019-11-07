@@ -1535,29 +1535,42 @@ package body Synth.Expr is
       return Res;
    end Synth_String_Literal;
 
-   function Synth_Short_Circuit_And (Syn_Inst : Synth_Instance_Acc;
-                                     Left_Expr : Node;
-                                     Right_Expr : Node;
-                                     Typ : Type_Acc;
-                                     Expr : Node) return Value_Acc
+   subtype And_Or_Module_Id is Module_Id range Id_And .. Id_Or;
+
+   function Synth_Short_Circuit (Syn_Inst : Synth_Instance_Acc;
+                                 Id : And_Or_Module_Id;
+                                 Left_Expr : Node;
+                                 Right_Expr : Node;
+                                 Typ : Type_Acc;
+                                 Expr : Node) return Value_Acc
    is
       Left : Value_Acc;
       Right : Value_Acc;
+      Val : Int64;
       N : Net;
    begin
+      --  The short-circuit value.
+      case Id is
+         when Id_And =>
+            Val := 0;
+         when Id_Or =>
+            Val := 1;
+      end case;
+
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Typ);
-      if Is_Const_Val (Left) and then Get_Const_Discrete (Left) = 0 then
-         return Create_Value_Discrete (0, Boolean_Type);
+      if Is_Const_Val (Left) and then Get_Const_Discrete (Left) = Val then
+         return Create_Value_Discrete (Val, Boolean_Type);
       end if;
+
       Strip_Const (Left);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Typ);
       Strip_Const (Right);
 
-      N := Build_Dyadic (Build_Context, Id_And,
+      N := Build_Dyadic (Build_Context, Id,
                          Get_Net (Left), Get_Net (Right));
       Set_Location (N, Expr);
       return Create_Value_Net (N, Boolean_Type);
-   end Synth_Short_Circuit_And;
+   end Synth_Short_Circuit;
 
    function Synth_Expression_With_Type
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Type_Acc)
@@ -1582,15 +1595,23 @@ package body Synth.Expr is
                   end if;
                end if;
 
-               --  FIXME: short-circuit operators ?
+               --  Specially handle short-circuit operators.
                case Def is
                   when Iir_Predefined_Boolean_And =>
-                     return Synth_Short_Circuit_And
-                       (Syn_Inst, Get_Left (Expr), Get_Right (Expr),
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_And, Get_Left (Expr), Get_Right (Expr),
+                        Boolean_Type, Expr);
+                  when Iir_Predefined_Boolean_Or =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
                         Boolean_Type, Expr);
                   when Iir_Predefined_Bit_And =>
-                     return Synth_Short_Circuit_And
-                       (Syn_Inst, Get_Left (Expr), Get_Right (Expr),
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_And, Get_Left (Expr), Get_Right (Expr),
+                        Bit_Type, Expr);
+                  when Iir_Predefined_Bit_Or =>
+                     return Synth_Short_Circuit
+                       (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
                         Bit_Type, Expr);
                   when others =>
                      return Synth_Dyadic_Operation
