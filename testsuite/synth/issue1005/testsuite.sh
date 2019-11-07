@@ -3,9 +3,10 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--std=08
-t=test
-synth $t.vhdl -e $t > syn_$t.vhdl
-analyze syn_$t.vhdl
+for t in test test2; do
+  synth $t.vhdl -e $t > syn_$t.vhdl
+  analyze syn_$t.vhdl
+done
 
 clean
 
