@@ -918,6 +918,8 @@ package body Synth.Insts is
 
       Finalize_Assignments (Get_Build (Syn_Inst));
 
+      Finalize_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
+
       --  Remove unused gates.  This is not only an optimization but also
       --  a correctness point: there might be some unsynthesizable gates, like
       --  the one created for 'rising_egde (clk) and not rst'.

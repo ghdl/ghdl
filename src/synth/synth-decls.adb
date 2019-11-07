@@ -23,8 +23,10 @@ with Mutils; use Mutils;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
+with Netlists.Utils; use Netlists.Utils;
+with Netlists.Gates;
 
-with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Ieee.Std_Logic_1164;
@@ -33,6 +35,7 @@ with Synth.Environment; use Synth.Environment;
 with Synth.Expr; use Synth.Expr;
 with Synth.Stmts;
 with Synth.Source; use Synth.Source;
+with Synth.Errors; use Synth.Errors;
 
 package body Synth.Decls is
    procedure Synth_Anonymous_Subtype_Indication
@@ -161,7 +164,7 @@ package body Synth.Decls is
          when Iir_Kind_Record_Type_Definition =>
             Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
          when others =>
-            Error_Kind ("synth_type_definition", Def);
+            Vhdl.Errors.Error_Kind ("synth_type_definition", Def);
       end case;
       if Typ /= null then
          Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
@@ -203,7 +206,7 @@ package body Synth.Decls is
          when Iir_Kind_Array_Type_Definition =>
             Typ := Synth_Array_Type_Definition (Syn_Inst, Def);
          when others =>
-            Error_Kind ("synth_anonymous_type_definition", Def);
+            Vhdl.Errors.Error_Kind ("synth_anonymous_type_definition", Def);
       end case;
       Create_Object (Syn_Inst, Def, Create_Value_Subtype (Typ));
    end Synth_Anonymous_Type_Definition;
@@ -226,7 +229,7 @@ package body Synth.Decls is
             --  FIXME: check range.
             return Synth_Float_Range_Expression (Syn_Inst, Rng);
          when others =>
-            Error_Kind ("synth_float_range_constraint", Rng);
+            Vhdl.Errors.Error_Kind ("synth_float_range_constraint", Rng);
       end case;
    end Synth_Float_Range_Constraint;
 
@@ -339,7 +342,7 @@ package body Synth.Decls is
                Typ := Create_Float_Type (Rng);
             end;
          when others =>
-            Error_Kind ("synth_subtype_indication", Atype);
+            Vhdl.Errors.Error_Kind ("synth_subtype_indication", Atype);
       end case;
       Create_Object (Syn_Inst, Atype, Create_Value_Subtype (Typ));
    end Synth_Subtype_Indication;
@@ -383,7 +386,7 @@ package body Synth.Decls is
               | Iir_Kind_Enumeration_Subtype_Definition =>
                return Atype;
             when others =>
-               Error_Kind ("get_declaration_type", Atype);
+               Vhdl.Errors.Error_Kind ("get_declaration_type", Atype);
          end case;
       end loop;
    end Get_Declaration_Type;
@@ -672,7 +675,7 @@ package body Synth.Decls is
          when Iir_Kind_Use_Clause =>
             null;
          when others =>
-            Error_Kind ("synth_declaration", Decl);
+            Vhdl.Errors.Error_Kind ("synth_declaration", Decl);
       end case;
    end Synth_Declaration;
 
@@ -689,25 +692,58 @@ package body Synth.Decls is
       end loop;
    end Synth_Declarations;
 
-   procedure Finalize_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean)
+   procedure Finalize_Object (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
+      use Netlists.Gates;
       Val : Value_Acc;
+      Gate_Net : Net;
+      Gate : Instance;
+      Drv : Net;
+      Def_Val : Net;
+   begin
+      Val := Get_Value (Syn_Inst, Decl);
+      Gate_Net := Get_Wire_Gate (Val.W);
+      Gate := Get_Net_Parent (Gate_Net);
+      case Get_Id (Gate) is
+         when Id_Signal =>
+            Drv := Get_Input_Net (Gate, 0);
+            Def_Val := No_Net;
+         when Id_Isignal =>
+            Drv := Get_Input_Net (Gate, 0);
+            Def_Val := Get_Input_Net (Gate, 1);
+         when others =>
+            --  Todo: output ?
+            raise Internal_Error;
+      end case;
+      if Drv = No_Net then
+         if Def_Val = No_Net then
+            Warning_Msg_Synth
+              (+Decl, "%n is never assigned and has no default value",
+               (1 => +Decl));
+         else
+            Warning_Msg_Synth (+Decl, "%n is never assigned", (1 => +Decl));
+            Connect (Get_Input (Gate, 0), Def_Val);
+         end if;
+      end if;
+
+      Free_Wire (Val.W);
+   end Finalize_Object;
+
+   procedure Finalize_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Variable_Declaration =>
             if not Get_Instance_Const (Syn_Inst) then
-               Val := Get_Value (Syn_Inst, Decl);
-               Free_Wire (Val.W);
+               Finalize_Object (Syn_Inst, Decl);
             end if;
          when Iir_Kind_Constant_Declaration =>
             null;
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration =>
             pragma Assert (not Is_Subprg);
-            Val := Get_Value (Syn_Inst, Decl);
-            Free_Wire (Val.W);
+            Finalize_Object (Syn_Inst, Decl);
          when Iir_Kind_Object_Alias_Declaration =>
             null;
          when Iir_Kind_Procedure_Declaration
@@ -736,7 +772,7 @@ package body Synth.Decls is
             --  Ignored; directly used by PSL directives.
             null;
          when others =>
-            Error_Kind ("finalize_declaration", Decl);
+            Vhdl.Errors.Error_Kind ("finalize_declaration", Decl);
       end case;
    end Finalize_Declaration;
 

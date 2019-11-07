@@ -519,6 +519,7 @@ package body Synth.Environment is
       case Wire_Rec.Nbr_Final_Assign is
          when 0 =>
             --  TODO: use initial value ?
+            --  TODO: fix that in synth-decls.finalize_object.
             if Wire_Rec.Decl /= Null_Node
               and then Wire_Rec.Kind = Wire_Output
             then
