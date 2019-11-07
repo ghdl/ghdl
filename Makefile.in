@@ -384,6 +384,12 @@ libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 
 $(libghdl_name): $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
+#       On windows, gnatmake (via Osint.Executable_Name) always appends .exe
+#       Adjust.  (Other solution: use gnatmake for compilation and binding,
+#       then use gnatlink directly for linking).
+ifeq ($(SOEXT),.dll)
+	-mv $(libghdl_name).exe $(libghdl_name)
+endif
 
 all.libghdl.true: $(libghdl_name)
 all.libghdl.false:
