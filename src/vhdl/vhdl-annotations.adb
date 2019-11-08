@@ -436,6 +436,10 @@ package body Vhdl.Annotations is
          when Iir_Kind_Access_Type_Definition =>
             Annotate_Anonymous_Type_Definition
               (Block_Info, Get_Designated_Type (Def));
+            if Flag_Synthesis then
+               --  For the designated type.
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            end if;
 
          when Iir_Kind_Access_Subtype_Definition =>
             null;

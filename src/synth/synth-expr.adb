@@ -853,6 +853,8 @@ package body Synth.Expr is
          when Type_Record =>
             --  TODO: handle elements.
             return Val;
+         when Type_Access =>
+            return Val;
       end case;
    end Synth_Subtype_Conversion;
 

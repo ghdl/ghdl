@@ -84,7 +84,9 @@ package Synth.Values is
       Type_Slice,
       Type_Array,
       Type_Unbounded_Array,
-      Type_Record
+      Type_Record,
+
+      Type_Access
      );
 
    subtype Type_Nets is Type_Kind range Type_Bit .. Type_Logic;
@@ -129,6 +131,8 @@ package Synth.Values is
             Uarr_El : Type_Acc;
          when Type_Record =>
             Rec : Rec_El_Array_Acc;
+         when Type_Access =>
+            Acc_Acc : Type_Acc;
       end case;
    end record;
 
@@ -157,6 +161,8 @@ package Synth.Values is
       --  A record (const if all elements are constants).
       Value_Record,
       Value_Const_Record,
+
+      Value_Access,
 
       --  A package.
       Value_Instance,
@@ -188,6 +194,9 @@ package Synth.Values is
 
    type Instance_Id is new Nat32;
 
+   type Heap_Index is new Uns32;
+   Null_Heap_Index : constant Heap_Index := 0;
+
    type Value_Type (Kind : Value_Kind) is record
       Typ : Type_Acc;
       case Kind is
@@ -207,6 +216,8 @@ package Synth.Values is
          when Value_Record
            | Value_Const_Record =>
             Rec : Value_Array_Acc;
+         when Value_Access =>
+            Acc : Heap_Index;
          when Value_Instance =>
             Instance : Instance_Id;
          when Value_Const =>
@@ -248,6 +259,8 @@ package Synth.Values is
    function Create_Record_Type (Els : Rec_El_Array_Acc; W : Width)
                                return Type_Acc;
 
+   function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc;
+
    --  Return the element of a vector/array/unbounded_array.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
@@ -270,6 +283,9 @@ package Synth.Values is
                                   return Value_Acc;
 
    function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Value_Acc;
+
+   function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
+                                return Value_Acc;
 
    function Create_Value_Subtype (Typ : Type_Acc) return Value_Acc;
 

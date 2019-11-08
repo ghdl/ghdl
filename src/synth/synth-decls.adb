@@ -127,6 +127,20 @@ package body Synth.Decls is
       return Typ;
    end Synth_Record_Type_Definition;
 
+   function Synth_Access_Type_Definition
+     (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
+   is
+      Des_Type : constant Node := Get_Designated_Type (Def);
+      Des_Typ : Type_Acc;
+      Typ : Type_Acc;
+   begin
+      Synth_Subtype_Indication_If_Anonymous (Syn_Inst, Des_Type);
+      Des_Typ := Get_Value_Type (Syn_Inst, Des_Type);
+
+      Typ := Create_Access_Type (Des_Typ);
+      return Typ;
+   end Synth_Access_Type_Definition;
+
    procedure Synth_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
       Typ : Type_Acc;
@@ -158,8 +172,9 @@ package body Synth.Decls is
             end if;
          when Iir_Kind_Array_Type_Definition =>
             Typ := Synth_Array_Type_Definition (Syn_Inst, Def);
-         when Iir_Kind_Access_Type_Definition
-           | Iir_Kind_File_Type_Definition =>
+         when Iir_Kind_Access_Type_Definition =>
+            Typ := Synth_Access_Type_Definition (Syn_Inst, Def);
+         when Iir_Kind_File_Type_Definition =>
             Typ := null;
          when Iir_Kind_Record_Type_Definition =>
             Typ := Synth_Record_Type_Definition (Syn_Inst, Def);

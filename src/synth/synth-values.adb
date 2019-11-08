@@ -54,6 +54,8 @@ package body Synth.Values is
          when Value_Array
            | Value_Record =>
             return False;
+         when Value_Access =>
+            return False;
          when Value_Alias =>
             return Is_Const (Val.A_Obj);
          when Value_Const =>
@@ -81,6 +83,8 @@ package body Synth.Values is
          when Value_Array
            | Value_Record =>
             return False;
+         when Value_Access =>
+            return False;
          when Value_Const =>
             return True;
          when Value_Instance
@@ -101,7 +105,8 @@ package body Synth.Values is
            | Type_Vector
            | Type_Slice
            | Type_Array
-           | Type_Record =>
+           | Type_Record
+           | Type_Access =>
             return True;
          when Type_Unbounded_Array
            | Type_Unbounded_Vector =>
@@ -367,6 +372,16 @@ package body Synth.Values is
                                                 Rec => Els)));
    end Create_Record_Type;
 
+   function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc
+   is
+      subtype Access_Type_Type is Type_Type (Type_Access);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Access_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
+                                                W => 32,
+                                                Acc_Acc => Acc_Type)));
+   end Create_Access_Type;
+
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
@@ -413,6 +428,20 @@ package body Synth.Values is
                                    Typ => Vtype,
                                    Fp => Val)));
    end Create_Value_Float;
+
+   function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
+                                return Value_Acc
+   is
+      subtype Value_Type_Access is Value_Type (Value_Access);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Access);
+   begin
+      pragma Assert (Vtype /= null);
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_Access,
+                                   Typ => Vtype,
+                                   Acc => Acc)));
+   end Create_Value_Access;
+
 
    function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc
    is
@@ -637,6 +666,8 @@ package body Synth.Values is
          when Value_Const_Record =>
             Arr := Copy_Array (Src.Rec);
             Res := Create_Value_Const_Record (Src.Typ, Arr);
+         when Value_Access =>
+            Res := Create_Value_Access (Src.Typ, Src.Acc);
          when Value_Instance =>
             raise Internal_Error;
          when Value_Const =>
@@ -710,6 +741,8 @@ package body Synth.Values is
          when Type_Record =>
             --  FIXME: handle vhdl-08
             return True;
+         when Type_Access =>
+            return True;
       end case;
    end Is_Matching_Bounds;
 
@@ -763,6 +796,8 @@ package body Synth.Values is
                end loop;
                return Create_Value_Record (Typ, Els);
             end;
+         when Type_Access =>
+            return Create_Value_Access (Typ, Null_Heap_Index);
       end case;
    end Create_Value_Default;
 
