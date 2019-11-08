@@ -337,7 +337,7 @@ ci_run () {
 
   RUN="docker run --rm -t -e CI=$CI -v $(pwd):/work -w /work"
   if [ "$GITHUB_OS" = "macOS" ]; then
-      CONFIG_OPTS="--disable-libghdl" bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+      CC=clang CONFIG_OPTS="--disable-libghdl" bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
   else
       # Assume linux
 
@@ -366,7 +366,7 @@ ci_run () {
   # Test
 
   if [ "$GITHUB_OS" = "macOS" ]; then
-      prefix="$(cd ./install-mcode; pwd)" ./testsuite/testsuite.sh sanity gna vests
+      CC=clang prefix="$(cd ./install-mcode; pwd)" ./testsuite/testsuite.sh sanity gna vests
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
