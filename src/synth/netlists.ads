@@ -256,6 +256,11 @@ package Netlists is
    function Get_Param_Uns32 (Inst : Instance; Param : Param_Idx) return Uns32;
    procedure Set_Param_Uns32 (Inst : Instance; Param : Param_Idx; Val : Uns32);
 
+   --  Each instance has a mark flag available for any algorithm.
+   --  Please leave this flag clean for the next user.
+   function Get_Mark_Flag (Inst : Instance) return Boolean;
+   procedure Set_Mark_Flag (Inst : Instance; Flag : Boolean);
+
    --  Input
    function Get_Input_Parent (I : Input) return Instance;
    function Get_Port_Idx (I : Input) return Port_Idx;
@@ -306,6 +311,12 @@ private
    type Param_Desc_Idx is new Uns32;
    No_Param_Desc_Idx : constant Param_Desc_Idx := 0;
 
+   type Input is new Uns32;
+   No_Input : constant Input := 0;
+
+   type Net is new Uns32;
+   No_Net : constant Net := 0;
+
    type Module_Record is record
       Parent : Module;
       Name : Sname;
@@ -350,11 +361,15 @@ private
       --  For a self-instance, Klass is equal to Parent, and Name is No_Sname.
       Klass : Module;
       Name : Sname;
+      Flag_Mark : Boolean;
+      Flag2 : Boolean;
 
       First_Param : Param_Idx;
       First_Input : Input;
       First_Output : Net;
    end record;
+   pragma Pack (Instance_Record);
+   for Instance_Record'Size use 8*32;
 
    procedure Set_Next_Instance (Inst : Instance; Next : Instance);
    procedure Set_Prev_Instance (Inst : Instance; Prev : Instance);
@@ -375,17 +390,11 @@ private
    --  Remove and free the unconnected instance INST.
    procedure Remove_Instance (Inst : Instance);
 
-   type Input is new Uns32;
-   No_Input : constant Input := 0;
-
    type Input_Record is record
       Parent : Instance;
       Driver : Net;
       Next_Sink : Input;
    end record;
-
-   type Net is new Uns32;
-   No_Net : constant Net := 0;
 
    function Is_Valid (N : Net) return Boolean;
 

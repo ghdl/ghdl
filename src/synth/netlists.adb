@@ -405,6 +405,8 @@ package body Netlists is
                                Next_Instance => No_Instance,
                                Prev_Instance => No_Instance,
                                Klass => M,
+                               Flag_Mark => False,
+                               Flag2 => False,
                                Name => Name,
                                First_Param => Params,
                                First_Input => Inputs,
@@ -757,6 +759,20 @@ package body Netlists is
       end case;
    end Get_Param_Desc;
 
+   function Get_Mark_Flag (Inst : Instance) return Boolean
+   is
+      pragma Assert (Is_Valid (Inst));
+   begin
+      return Instances_Table.Table (Inst).Flag_Mark;
+   end Get_Mark_Flag;
+
+   procedure Set_Mark_Flag (Inst : Instance; Flag : Boolean)
+   is
+      pragma Assert (Is_Valid (Inst));
+   begin
+      Instances_Table.Table (Inst).Flag_Mark := Flag;
+   end Set_Mark_Flag;
+
    function Get_Param_Idx (Inst : Instance; Param : Param_Idx) return Param_Idx
    is
       pragma Assert (Is_Valid (Inst));
@@ -906,6 +922,8 @@ begin
                             Next_Instance => No_Instance,
                             Prev_Instance => No_Instance,
                             Klass => No_Module,
+                            Flag_Mark => False,
+                            Flag2 => False,
                             Name => No_Sname,
                             First_Param => No_Param_Idx,
                             First_Input => No_Input,
