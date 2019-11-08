@@ -71,6 +71,10 @@ package Netlists.Utils is
    package Net_Tables is new Dyn_Tables
      (Table_Component_Type => Net,
       Table_Index_Type => Int32,
-      Table_Low_Bound => 1,
-      Table_Initial => 32);
+      Table_Low_Bound => 1);
+
+   package Instance_Tables is new Dyn_Tables
+     (Table_Component_Type => Instance,
+      Table_Index_Type => Int32,
+      Table_Low_Bound => 1);
 end Netlists.Utils;

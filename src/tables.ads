@@ -39,8 +39,7 @@ generic
 package Tables is
    package Dyn_Table is new Dyn_Tables (Table_Component_Type,
                                         Table_Index_Type,
-                                        Table_Low_Bound,
-                                        Table_Initial);
+                                        Table_Low_Bound);
 
    T : Dyn_Table.Instance;
 

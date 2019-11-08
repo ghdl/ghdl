@@ -51,7 +51,7 @@ package body Files_Map.Editor is
       P : Source_Ptr;
       Nl : Natural;
    begin
-      Lines_Tables.Init (F.Lines);
+      Lines_Tables.Init (F.Lines, Lines_Table_Init);
 
       L := 1;
       P := Source_Ptr_Org;
@@ -414,7 +414,7 @@ package body Files_Map.Editor is
 
       --  Reset line table.
       Lines_Tables.Free (F.Lines);
-      Lines_Tables.Init (F.Lines);
+      Lines_Tables.Init (F.Lines, Lines_Table_Init);
       File_Add_Line_Number (File, 1, Source_Ptr_Org);
    end Fill_Text_Ptr;
 

@@ -32,7 +32,7 @@ package body Netlists.Concats is
       else
          --  Switch to the dynamic array.
          C.Len := C.Len + 1;
-         Net_Tables.Init (C.Darr);
+         Net_Tables.Init (C.Darr, 2 * Static_Last);
          Net_Tables.Set_Last (C.Darr, C.Len);
          C.Darr.Table (C.Sarr'Range) := C.Sarr;
          C.Darr.Table (C.Len) := N;

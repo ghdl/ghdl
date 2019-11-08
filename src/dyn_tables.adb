@@ -105,7 +105,7 @@ package body Dyn_Tables is
       end if;
    end Set_Last;
 
-   procedure Init (T : in out Instance)
+   procedure Init (T : in out Instance; Table_Initial : Positive)
    is
       --  Direct interface to malloc.
       function Cmalloc (Size : size_t) return Table_Thin_Ptr;

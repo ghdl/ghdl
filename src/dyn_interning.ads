@@ -77,8 +77,7 @@ private
    package Wrapper_Tables is new Dyn_Tables
      (Table_Index_Type => Index_Type,
       Table_Component_Type => Element_Wrapper,
-      Table_Low_Bound => No_Index + 1,
-      Table_Initial => 128);
+      Table_Low_Bound => No_Index + 1);
 
    type Hash_Array is array (Hash_Value_Type range <>) of Index_Type;
    type Hash_Array_Acc is access Hash_Array;

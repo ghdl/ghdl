@@ -265,11 +265,12 @@ package Files_Map is
    procedure Initialize;
 
 private
+   Lines_Table_Init : Natural := 64;
+
    package Lines_Tables is new Dyn_Tables
      (Table_Component_Type => Source_Ptr,
       Table_Index_Type => Natural,
-      Table_Low_Bound => 1,
-      Table_Initial => 64);
+      Table_Low_Bound => 1);
 
    --  There are several kinds of source file.
    type Source_File_Kind is

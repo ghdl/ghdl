@@ -580,7 +580,7 @@ package body Files_Map is
                                    Cache_Line => 1,
                                    Gap_Start => Source_Ptr_Last,
                                    Gap_Last => Source_Ptr_Last);
-      Lines_Tables.Init (Source_Files.Table (Res).Lines);
+      Lines_Tables.Init (Source_Files.Table (Res).Lines, Lines_Table_Init);
       File_Add_Line_Number (Res, 1, Source_Ptr_Org);
       return Res;
    end Create_Source_File_Entry;

@@ -26,7 +26,7 @@ package body Dyn_Interning is
    begin
       Inst.Size := Initial_Size;
       Inst.Hash_Table := new Hash_Array'(0 .. Initial_Size - 1 => No_Index);
-      Wrapper_Tables.Init (Inst.Els);
+      Wrapper_Tables.Init (Inst.Els, 128);
       pragma Assert (Wrapper_Tables.Last (Inst.Els) = No_Index);
    end Init;
 

@@ -30,7 +30,7 @@ package Netlists.Concats is
    --  Get the concatenation of all nets in C.  Reset C.
    procedure Build (Ctxt : Context_Acc; C : in out Concat_Type; N : out Net);
 private
-   Static_Last : constant Int32 := 16;
+   Static_Last : constant := 16;
 
    package Net_Tables renames Netlists.Utils.Net_Tables;
 
