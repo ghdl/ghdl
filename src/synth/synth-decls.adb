@@ -727,7 +727,7 @@ package body Synth.Decls is
       end loop;
    end Synth_Declarations;
 
-   procedure Finalize_Object (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   procedure Finalize_Signal (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
       use Netlists.Gates;
       Val : Value_Acc;
@@ -762,7 +762,7 @@ package body Synth.Decls is
       end if;
 
       Free_Wire (Val.W);
-   end Finalize_Object;
+   end Finalize_Signal;
 
    procedure Finalize_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean) is
@@ -771,14 +771,18 @@ package body Synth.Decls is
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Variable_Declaration =>
             if not Get_Instance_Const (Syn_Inst) then
-               Finalize_Object (Syn_Inst, Decl);
+               declare
+                  Val : constant Value_Acc := Get_Value (Syn_Inst, Decl);
+               begin
+                  Free_Wire (Val.W);
+               end;
             end if;
          when Iir_Kind_Constant_Declaration =>
             null;
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration =>
             pragma Assert (not Is_Subprg);
-            Finalize_Object (Syn_Inst, Decl);
+            Finalize_Signal (Syn_Inst, Decl);
          when Iir_Kind_Object_Alias_Declaration =>
             null;
          when Iir_Kind_Procedure_Declaration
