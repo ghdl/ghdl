@@ -445,33 +445,39 @@ package body Vhdl.Annotations is
             null;
 
          when Iir_Kind_File_Type_Definition =>
-            declare
-               Type_Name : constant Iir := Get_Type (Get_File_Type_Mark (Def));
-               Res : String_Acc;
-            begin
-               if Get_Text_File_Flag (Def)
-                 or else
-                 (Get_Kind (Type_Name)
-                    in Iir_Kinds_Scalar_Type_And_Subtype_Definition)
-               then
-                  Res := null;
-               else
-                  declare
-                     Sig : String
-                       (1 .. Get_File_Signature_Length (Type_Name) + 2);
-                     Off : Natural := Sig'First;
-                  begin
-                     Get_File_Signature (Type_Name, Sig, Off);
-                     Sig (Off + 0) := '.';
-                     Sig (Off + 1) := ASCII.NUL;
-                     Res := new String'(Sig);
-                  end;
-               end if;
-               Set_Info (Def,
-                         new Sim_Info_Type'(Kind => Kind_File_Type,
-                                            Ref => Def,
-                                            File_Signature => Res));
-            end;
+            if Flag_Synthesis then
+               --  For the File type.
+               Create_Object_Info (Block_Info, Def, Kind_Type);
+            else
+               declare
+                  Type_Name : constant Iir :=
+                    Get_Type (Get_File_Type_Mark (Def));
+                  Res : String_Acc;
+               begin
+                  if Get_Text_File_Flag (Def)
+                    or else
+                    (Get_Kind (Type_Name)
+                       in Iir_Kinds_Scalar_Type_And_Subtype_Definition)
+                  then
+                     Res := null;
+                  else
+                     declare
+                        Sig : String
+                          (1 .. Get_File_Signature_Length (Type_Name) + 2);
+                        Off : Natural := Sig'First;
+                     begin
+                        Get_File_Signature (Type_Name, Sig, Off);
+                        Sig (Off + 0) := '.';
+                        Sig (Off + 1) := ASCII.NUL;
+                        Res := new String'(Sig);
+                     end;
+                  end if;
+                  Set_Info (Def,
+                            new Sim_Info_Type'(Kind => Kind_File_Type,
+                                               Ref => Def,
+                                               File_Signature => Res));
+               end;
+            end if;
 
          when Iir_Kind_Protected_Type_Declaration =>
             Annotate_Protected_Type_Declaration (Block_Info, Def);

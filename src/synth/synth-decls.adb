@@ -141,6 +141,19 @@ package body Synth.Decls is
       return Typ;
    end Synth_Access_Type_Definition;
 
+   function Synth_File_Type_Definition
+     (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
+   is
+      File_Type : constant Node := Get_Type (Get_File_Type_Mark (Def));
+      File_Typ : Type_Acc;
+      Typ : Type_Acc;
+   begin
+      File_Typ := Get_Value_Type (Syn_Inst, File_Type);
+
+      Typ := Create_File_Type (File_Typ);
+      return Typ;
+   end Synth_File_Type_Definition;
+
    procedure Synth_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
       Typ : Type_Acc;
@@ -175,7 +188,7 @@ package body Synth.Decls is
          when Iir_Kind_Access_Type_Definition =>
             Typ := Synth_Access_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_File_Type_Definition =>
-            Typ := null;
+            Typ := Synth_File_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Record_Type_Definition =>
             Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
          when others =>
@@ -683,7 +696,14 @@ package body Synth.Decls is
          when Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>
-            null;
+            declare
+               Res : Value_Acc;
+               Obj_Typ : Type_Acc;
+            begin
+               Obj_Typ := Get_Value_Type (Syn_Inst, Get_Type (Decl));
+               Res := Create_Value_File (Obj_Typ, 0);
+               Create_Object (Syn_Inst, Decl, Res);
+            end;
          when Iir_Kind_Psl_Default_Clock =>
             --  Ignored; directly used by PSL directives.
             null;

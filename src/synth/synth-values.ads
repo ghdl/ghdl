@@ -86,7 +86,8 @@ package Synth.Values is
       Type_Unbounded_Array,
       Type_Record,
 
-      Type_Access
+      Type_Access,
+      Type_File
      );
 
    subtype Type_Nets is Type_Kind range Type_Bit .. Type_Logic;
@@ -133,6 +134,8 @@ package Synth.Values is
             Rec : Rec_El_Array_Acc;
          when Type_Access =>
             Acc_Acc : Type_Acc;
+         when Type_File =>
+            File_Typ : Type_Acc;
       end case;
    end record;
 
@@ -163,6 +166,7 @@ package Synth.Values is
       Value_Const_Record,
 
       Value_Access,
+      Value_File,
 
       --  A package.
       Value_Instance,
@@ -197,6 +201,8 @@ package Synth.Values is
    type Heap_Index is new Uns32;
    Null_Heap_Index : constant Heap_Index := 0;
 
+   type File_Index is new Nat32;
+
    type Value_Type (Kind : Value_Kind) is record
       Typ : Type_Acc;
       case Kind is
@@ -218,6 +224,8 @@ package Synth.Values is
             Rec : Value_Array_Acc;
          when Value_Access =>
             Acc : Heap_Index;
+         when Value_File =>
+            File : File_Index;
          when Value_Instance =>
             Instance : Instance_Id;
          when Value_Const =>
@@ -261,6 +269,8 @@ package Synth.Values is
 
    function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc;
 
+   function Create_File_Type (File_Type : Type_Acc) return Type_Acc;
+
    --  Return the element of a vector/array/unbounded_array.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
@@ -286,6 +296,9 @@ package Synth.Values is
 
    function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
                                 return Value_Acc;
+
+   function Create_Value_File (Vtype : Type_Acc; File : File_Index)
+                              return Value_Acc;
 
    function Create_Value_Subtype (Typ : Type_Acc) return Value_Acc;
 

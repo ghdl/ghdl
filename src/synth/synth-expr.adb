@@ -855,6 +855,8 @@ package body Synth.Expr is
             return Val;
          when Type_Access =>
             return Val;
+         when Type_File =>
+            raise Internal_Error;
       end case;
    end Synth_Subtype_Conversion;
 

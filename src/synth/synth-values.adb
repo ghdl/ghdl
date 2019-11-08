@@ -54,7 +54,8 @@ package body Synth.Values is
          when Value_Array
            | Value_Record =>
             return False;
-         when Value_Access =>
+         when Value_Access
+           | Value_File =>
             return False;
          when Value_Alias =>
             return Is_Const (Val.A_Obj);
@@ -83,7 +84,8 @@ package body Synth.Values is
          when Value_Array
            | Value_Record =>
             return False;
-         when Value_Access =>
+         when Value_Access
+           | Value_File =>
             return False;
          when Value_Const =>
             return True;
@@ -106,7 +108,8 @@ package body Synth.Values is
            | Type_Slice
            | Type_Array
            | Type_Record
-           | Type_Access =>
+           | Type_Access
+           | Type_File =>
             return True;
          when Type_Unbounded_Array
            | Type_Unbounded_Vector =>
@@ -382,6 +385,16 @@ package body Synth.Values is
                                                 Acc_Acc => Acc_Type)));
    end Create_Access_Type;
 
+   function Create_File_Type (File_Type : Type_Acc) return Type_Acc
+   is
+      subtype File_Type_Type is Type_Type (Type_File);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (File_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_File,
+                                                W => 32,
+                                                File_Typ => File_Type)));
+   end Create_File_Type;
+
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
@@ -442,6 +455,18 @@ package body Synth.Values is
                                    Acc => Acc)));
    end Create_Value_Access;
 
+   function Create_Value_File (Vtype : Type_Acc; File : File_Index)
+                              return Value_Acc
+   is
+      subtype Value_Type_File is Value_Type (Value_File);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_File);
+   begin
+      pragma Assert (Vtype /= null);
+      return To_Value_Acc (Alloc (Current_Pool,
+                                  (Kind => Value_File,
+                                   Typ => Vtype,
+                                   File => File)));
+   end Create_Value_File;
 
    function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc
    is
@@ -668,6 +693,8 @@ package body Synth.Values is
             Res := Create_Value_Const_Record (Src.Typ, Arr);
          when Value_Access =>
             Res := Create_Value_Access (Src.Typ, Src.Acc);
+         when Value_File =>
+            Res := Create_Value_File (Src.Typ, Src.File);
          when Value_Instance =>
             raise Internal_Error;
          when Value_Const =>
@@ -743,6 +770,8 @@ package body Synth.Values is
             return True;
          when Type_Access =>
             return True;
+         when Type_File =>
+            raise Internal_Error;
       end case;
    end Is_Matching_Bounds;
 
@@ -798,6 +827,8 @@ package body Synth.Values is
             end;
          when Type_Access =>
             return Create_Value_Access (Typ, Null_Heap_Index);
+         when Type_File =>
+            raise Internal_Error;
       end case;
    end Create_Value_Default;
 
