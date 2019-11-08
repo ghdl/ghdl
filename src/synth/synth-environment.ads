@@ -19,10 +19,11 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
-with Dyn_Tables;
 with Tables;
+
 with Netlists; use Netlists;
 with Netlists.Builders;
+
 with Synth.Source;
 
 package Synth.Environment is
@@ -311,10 +312,4 @@ private
       Table_Index_Type => Conc_Assign,
       Table_Low_Bound => No_Conc_Assign,
       Table_Initial => 1024);
-
-   package Net_Tables is new Dyn_Tables
-     (Table_Component_Type => Net,
-      Table_Index_Type => Int32,
-      Table_Low_Bound => 1,
-      Table_Initial => 32);
 end Synth.Environment;

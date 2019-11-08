@@ -18,7 +18,7 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Dyn_Tables;
+with Netlists.Utils;
 with Netlists.Builders; use Netlists.Builders;
 
 package Netlists.Concats is
@@ -32,11 +32,7 @@ package Netlists.Concats is
 private
    Static_Last : constant Int32 := 16;
 
-   package Net_Tables is new Dyn_Tables
-     (Table_Component_Type => Net,
-      Table_Index_Type => Int32,
-      Table_Low_Bound => 1,
-      Table_Initial => Integer (Static_Last * 2));
+   package Net_Tables renames Netlists.Utils.Net_Tables;
 
    type Concat_Type is limited record
       Len : Int32 := 0;

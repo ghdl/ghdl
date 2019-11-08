@@ -17,7 +17,10 @@
 --  along with this program; if not, write to the Free Software
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
+
 with Ada.Unchecked_Deallocation;
+
+with Dyn_Tables;
 
 package Netlists.Utils is
    type Net_Array_Acc is access Net_Array;
@@ -63,4 +66,11 @@ package Netlists.Utils is
    procedure Disconnect_And_Free (I : Input);
 
    function Clog2 (W : Width) return Width;
+
+   --  Used at many places.
+   package Net_Tables is new Dyn_Tables
+     (Table_Component_Type => Net,
+      Table_Index_Type => Int32,
+      Table_Low_Bound => 1,
+      Table_Initial => 32);
 end Netlists.Utils;
