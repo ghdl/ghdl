@@ -114,10 +114,15 @@ package Netlists.Builders is
    function Build_Extract_Bit
      (Ctxt : Context_Acc; I : Net; Off : Width) return Net;
    function Build_Dyn_Extract
-     (Ctxt : Context_Acc; I : Net; P : Net; Off : Uns32; W : Width) return Net;
+     (Ctxt : Context_Acc; Mem : Net; Idx : Net; Off : Uns32; W : Width)
+     return Net;
 
    function Build_Dyn_Insert
-     (Ctxt : Context_Acc; I : Net; V : Net; P : Net; Off : Uns32) return Net;
+     (Ctxt : Context_Acc; Mem : Net; V : Net; Idx : Net; Off : Uns32)
+     return Net;
+   function Build_Dyn_Insert_En
+     (Ctxt : Context_Acc; Mem : Net; V : Net; Idx : Net; En : Net; Off : Uns32)
+     return Net;
 
    function Build_Memidx
      (Ctxt : Context_Acc;
@@ -213,6 +218,7 @@ private
       M_Extract : Module;
       M_Dyn_Extract : Module;
       M_Dyn_Insert : Module;
+      M_Dyn_Insert_En : Module;
       M_Memidx : Module;
       M_Addidx : Module;
       M_Memory : Module;

@@ -156,11 +156,15 @@ package Netlists.Gates is
    --  OUT := T
    Id_Dyn_Insert : constant Module_Id := 70;
 
+   --  Like Dyn_Insert but with an enable input.
+   --  Input3: enable
+   Id_Dyn_Insert_En : constant Module_Id := 71;
+
    --  OUT := IN0 * STEP,  IN0 < MAX
-   Id_Memidx : constant Module_Id := 71;
+   Id_Memidx : constant Module_Id := 72;
 
    --  OUT := IN0 + IN1, size extension.
-   Id_Addidx : constant Module_Id := 72;
+   Id_Addidx : constant Module_Id := 73;
 
    --  Represent a memory with a fixed size.
    --  This is not a regular gate as it has only one output, PORTS.
@@ -169,18 +173,18 @@ package Netlists.Gates is
    --  one connection.  The order is important as it defines the order of
    --  actions.
    --  Outputs: PORTS
-   Id_Memory : constant Module_Id := 73;
+   Id_Memory : constant Module_Id := 74;
 
    --  Same as Id_Memory but with an initial value.
    --  Input: INIT
-   Id_Memory_Init : constant Module_Id := 74;
+   Id_Memory_Init : constant Module_Id := 75;
 
    --  Asynchronous memory read port.
    --  Inputs:  PPORT  (previous memory port)
    --           ADDR
    --  Outputs: NPORT  (next memory port)
    --           DATA
-   Id_Mem_Rd : constant Module_Id := 75;
+   Id_Mem_Rd : constant Module_Id := 76;
 
    --  Synchronous memory read port.
    --  Inputs:  PPORT (previous memory port)
@@ -188,7 +192,7 @@ package Netlists.Gates is
    --           CLK
    --  Outputs: NPORT (next memory port)
    --           DATA
-   Id_Mem_Rd_Sync : constant Module_Id := 76;
+   Id_Mem_Rd_Sync : constant Module_Id := 77;
 
    --  Synchronous memory write port
    --  Inputs:  PPORT (previous memory port)
@@ -197,7 +201,7 @@ package Netlists.Gates is
    --           EN
    --           DATA
    --  Outputs: NPORT (next memory port)
-   Id_Mem_Wr_Sync : constant Module_Id := 77;
+   Id_Mem_Wr_Sync : constant Module_Id := 78;
 
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before
@@ -224,14 +228,14 @@ package Netlists.Gates is
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
    --  parameter, possibly signed or unsigned extended.
-   Id_Const_UB32 : constant Module_Id := 96;
-   Id_Const_SB32 : constant Module_Id := 97;
-   Id_Const_UL32 : constant Module_Id := 98;
-   Id_Const_UB64 : constant Module_Id := 99;
-   Id_Const_UL64 : constant Module_Id := 100;
-   Id_Const_X : constant Module_Id := 101;
-   Id_Const_Z : constant Module_Id := 102;
-   Id_Const_0 : constant Module_Id := 103;
+   Id_Const_UB32 : constant Module_Id := 112;
+   Id_Const_SB32 : constant Module_Id := 113;
+   Id_Const_UL32 : constant Module_Id := 114;
+   Id_Const_UB64 : constant Module_Id := 115;
+   Id_Const_UL64 : constant Module_Id := 116;
+   Id_Const_X : constant Module_Id := 117;
+   Id_Const_Z : constant Module_Id := 118;
+   Id_Const_0 : constant Module_Id := 119;
 
    --  Should we keep them ?
    pragma Unreferenced (Id_Const_UB64, Id_Const_UL64);
@@ -240,8 +244,8 @@ package Netlists.Gates is
    --  For Const_Bit: param N is for bits 32*N .. 32*N+31
    --  For Const_Log: param 2*N   is for 0/1 of bits 32*N .. 32*N+31
    --                 param 2*N+1 is for Z/X of bits 32*N .. 32*N+31
-   Id_Const_Bit : constant Module_Id := 104;
-   Id_Const_Log : constant Module_Id := 105;
+   Id_Const_Bit : constant Module_Id := 120;
+   Id_Const_Log : constant Module_Id := 121;
 
    subtype Constant_Module_Id is Module_Id range Id_Const_UB32 .. Id_Const_Log;
 
