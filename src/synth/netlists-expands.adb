@@ -323,23 +323,23 @@ package body Netlists.Expands is
               (Ctxt,
                Build_Extract (Ctxt, Mem, Next_Off, Step),
                Build_Extract (Ctxt, Prev_Net, Step, Dat_W - Step));
-            V := Build_Mux2 (Ctxt, Net_Arr (Sel), V, Dat);
-            Prev_Net := V;
-            Next_Off := Off + Dat_W;
-         elsif Next_Off = Off then
-            --  No overlap, no gap
+         else
+            --  No overlap.
             if Prev_Net /= No_Net then
                Append (Concat, Prev_Net);
             end if;
+
+            if Next_Off < Off then
+               --  But there is a gap.
+               Append (Concat, Build_Extract (Ctxt, Mem, Next_Off,
+                                              Off - Next_Off));
+            end if;
             V := Build_Extract (Ctxt, Mem, Off, Dat_W);
-            V := Build_Mux2 (Ctxt, Net_Arr (Sel), V, Dat);
-            Prev_Net := V;
-            Next_Off := Off + Dat_W;
-         else
-            pragma Assert (Next_Off < Off);
-            --  Gap.
-            raise Internal_Error;
          end if;
+
+         V := Build_Mux2 (Ctxt, Net_Arr (Sel), V, Dat);
+         Prev_Net := V;
+         Next_Off := Off + Dat_W;
 
          Sel := Sel + 1;
 
