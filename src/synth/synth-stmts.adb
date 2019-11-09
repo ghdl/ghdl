@@ -615,7 +615,7 @@ package body Synth.Stmts is
          end if;
          Pop_Phi (Phi_False);
 
-         Merge_Phis (Build_Context,
+         Merge_Phis (Get_Build (C.Inst),
                      Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
       end if;
    end Synth_If_Statement;

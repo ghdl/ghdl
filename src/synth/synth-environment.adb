@@ -179,6 +179,58 @@ package body Synth.Environment is
                           Nbr => 0));
    end Push_Phi;
 
+   procedure Merge_Partial_Assignments
+     (Ctxt : Context_Acc; Head : Partial_Assign)
+   is
+      use Netlists.Concats;
+      First : Partial_Assign;
+      Next : Partial_Assign;
+      Concat : Concat_Type;
+      Expected_Next_Off : Uns32;
+      Next_Off : Uns32;
+      Next_Val : Net;
+   begin
+      First := Head;
+      loop
+         exit when First = No_Partial_Assign;
+
+         Next := Get_Partial_Next (First);
+         exit when Next = No_Partial_Assign;
+         Expected_Next_Off := Get_Partial_Offset (First)
+           + Get_Width (Get_Partial_Value (First));
+         Next_Off := Get_Partial_Offset (Next);
+         if Expected_Next_Off = Next_Off then
+            --  Merge First and Next.
+            Next_Val := Get_Partial_Value (Next);
+            Append (Concat, Get_Partial_Value (First));
+            Append (Concat, Next_Val);
+            Expected_Next_Off := Next_Off + Get_Width (Next_Val);
+            --  Merge as long as possible.
+            loop
+               Next := Get_Partial_Next (Next);
+               exit when Next = No_Partial_Assign;
+
+               Next_Off := Get_Partial_Offset (Next);
+               Next_Val := Get_Partial_Value (Next);
+               exit when  Next_Off /= Expected_Next_Off;
+               Append (Concat, Next_Val);
+               Expected_Next_Off := Next_Off + Get_Width (Next_Val);
+            end loop;
+
+            --  Replace.
+            declare
+               First_Record : Partial_Assign_Record renames
+                 Partial_Assign_Table.Table (First);
+            begin
+               Build (Ctxt, Concat, First_Record.Value);
+               First_Record.Next := Next;
+
+            end;
+         end if;
+         First := Next;
+      end loop;
+   end Merge_Partial_Assignments;
+
    --  Get list of assignments for this current block.
    procedure Pop_Phi (Phi : out Phi_Type)
    is
@@ -1030,6 +1082,10 @@ package body Synth.Environment is
             T_Asgns := Get_Assign_Chain (T_Asgns);
             F_Asgns := Get_Assign_Chain (F_Asgns);
          end if;
+         --  Merge partial assigns as much as possible.  This reduce
+         --  propagation of splits.
+         Merge_Partial_Assignments (Ctxt, Fp);
+         Merge_Partial_Assignments (Ctxt, Tp);
          Merge_Assigns (Ctxt, W, Sel, Fp, Tp, Stmt);
 
       end loop;
