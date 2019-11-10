@@ -431,8 +431,9 @@ package body Synth.Oper is
                return Create_Value_Discrete
                  (Boolean'Pos (Left.Scal = Right.Scal), Boolean_Type);
             end if;
-            if Left_Typ.Kind = Type_Bit then
-               pragma Assert (Right.Typ.Kind = Type_Bit);
+            if Left_Typ = Bit_Type
+              or else Left_Typ = Logic_Type
+            then
                if Is_Const (Left) then
                   return Synth_Bit_Eq_Const (Left, Right, Expr);
                elsif Is_Const (Right) then
