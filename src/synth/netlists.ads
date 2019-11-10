@@ -210,6 +210,9 @@ package Netlists is
    function Get_Module_Name (M : Module) return Sname;
    function Get_Id (M : Module) return Module_Id;
 
+   --  Number of fixed inputs/outputs.
+   --  For gates with variable number of inputs (like Concatn), use the
+   --  functions from Netlists.Utils.
    function Get_Nbr_Inputs (M : Module) return Port_Nbr;
    function Get_Nbr_Outputs (M : Module) return Port_Nbr;
 

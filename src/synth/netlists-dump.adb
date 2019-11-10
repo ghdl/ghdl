@@ -493,21 +493,35 @@ package body Netlists.Dump is
          Dump_Name (Get_Instance_Name (Inst));
       end if;
 
-      if Get_Nbr_Inputs (Inst) > 0 then
-         declare
-            First : Boolean;
-            Drv : Net;
-         begin
-            First := True;
+      declare
+         Nbr_Inputs : constant Port_Nbr := Get_Nbr_Inputs (Inst);
+         M : constant Module := Get_Module (Inst);
+         Nbr_Fixed_Inputs : constant Port_Nbr := Get_Nbr_Inputs (M);
+         Drv : Net;
+         I : Input;
+         Desc : Port_Desc;
+      begin
+         if Nbr_Inputs > 0 then
             Put (" (");
-            for I of Inputs (Inst) loop
-               if not First then
-                     Put (",");
+            for Idx in 0 .. Nbr_Inputs - 1 loop
+               I := Get_Input (Inst, Idx);
+               if Idx > 0 then
+                  Put (",");
                end if;
-               First := False;
                New_Line;
                Put_Indent (Indent);
 
+               --  Input name.
+               if Idx < Nbr_Fixed_Inputs then
+                  Desc := Get_Input_Desc (M, Idx);
+                  if Desc.Name /= No_Sname then
+                     Put ('.');
+                     Dump_Name (Desc.Name);
+                     Put (": ");
+                  end if;
+               end if;
+
+               --  Input value.
                Drv := Get_Driver (I);
 
                if Drv = No_Net then
@@ -518,8 +532,8 @@ package body Netlists.Dump is
                end if;
             end loop;
             Put (')');
-         end;
-      end if;
+         end if;
+      end;
    end Disp_Instance;
 
    procedure Disp_Instance_Assign (Inst : Instance; Indent : Natural := 0) is
