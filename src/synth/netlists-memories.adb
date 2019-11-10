@@ -26,6 +26,7 @@ with Netlists.Locations; use Netlists.Locations;
 with Netlists.Internings;
 with Netlists.Errors; use Netlists.Errors;
 with Netlists.Concats;
+with Netlists.Folds; use Netlists.Folds;
 
 with Synth.Errors; use Synth.Errors;
 
@@ -354,7 +355,8 @@ package body Netlists.Memories is
             end if;
             if Addr_W > Max_W then
                --  Need to truncate.
-               Sub_Addr1 := Build_Trunc (Ctxt, Id_Utrunc, Sub_Addr, Max_W);
+               Sub_Addr1 := Build2_Trunc
+                 (Ctxt, Id_Utrunc, Sub_Addr, Max_W, No_Location);
             else
                Sub_Addr1 := Sub_Addr;
             end if;

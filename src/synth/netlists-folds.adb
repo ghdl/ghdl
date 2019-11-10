@@ -22,7 +22,7 @@ with Types_Utils; use Types_Utils;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
-with Netlists.Locations;
+with Netlists.Locations; use Netlists.Locations;
 
 package body Netlists.Folds is
 
@@ -125,6 +125,53 @@ package body Netlists.Folds is
       return N;
    end Build2_Concat;
 
+   function Build2_Trunc (Ctxt : Context_Acc;
+                          Id : Module_Id;
+                          I : Net;
+                          W : Width;
+                          Loc : Location_Type)
+                         return Net
+   is
+      I_Inst : constant Instance := Get_Net_Parent (I);
+      I_Id : constant Module_Id := Get_Id (I_Inst);
+      Res : Net;
+   begin
+      if I_Id not in Extend_Module_Id then
+         Res := Build_Trunc (Ctxt, Id, I, W);
+         Set_Location (Res, Loc);
+         return Res;
+      end if;
+
+      --  So there are 3 widths:
+      --    W: the width of the result
+      --    Iw : the width of the input
+      --    Vw : the width of the original value.
+      --  And we have:
+      --    Iw > W (as we truncate)
+      --    Iw > Vw  (as V was extended)
+      declare
+         Iw : constant Width := Get_Width (I);
+         V : constant Net := Get_Input_Net (I_Inst, 0);
+         Vw : constant Width := Get_Width (V);
+         pragma Assert (Iw > W);
+         pragma Assert (Iw > Vw);
+      begin
+         if W = Vw then
+            --  Truncation of an extension with no size change -> no-op.
+            return V;
+         elsif W < Vw then
+            --  At the end, the initial value is truncated.
+            Res := Build_Trunc (Ctxt, Id, V, W);
+         else
+            pragma Assert (W > Vw);
+            --  Just extend less.
+            Res := Build_Extend (Ctxt, I_Id, V, W);
+         end if;
+         Set_Location (Res, Loc);
+         return Res;
+      end;
+   end Build2_Trunc;
+
    function Build2_Uresize (Ctxt : Context_Acc;
                             I : Net;
                             W : Width;
@@ -155,7 +202,7 @@ package body Netlists.Folds is
             end;
          else
             if Wn > W then
-               Res := Build_Trunc (Ctxt, Id_Utrunc, I, W);
+               return Build2_Trunc (Ctxt, Id_Utrunc, I, W, Loc);
             else
                pragma Assert (Wn < W);
                Res := Build_Extend (Ctxt, Id_Uextend, I, W);
@@ -190,13 +237,13 @@ package body Netlists.Folds is
             end;
          else
             if Wn > W then
-               Res := Build_Trunc (Ctxt, Id_Strunc, I, W);
+               return Build2_Trunc (Ctxt, Id_Strunc, I, W, Loc);
             else
                pragma Assert (Wn < W);
                Res := Build_Extend (Ctxt, Id_Sextend, I, W);
             end if;
          end if;
-         Locations.Set_Location (Res, Loc);
+         Set_Location (Res, Loc);
          return Res;
       end if;
    end Build2_Sresize;

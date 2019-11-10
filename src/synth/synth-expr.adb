@@ -161,9 +161,8 @@ package body Synth.Expr is
 
       N := Get_Net (Val);
       if Wn > W then
-         Res := Build_Trunc (Build_Context, Id_Utrunc, N, W);
-         Set_Location (Res, Loc);
-         return Res;
+         return Build2_Trunc (Build_Context, Id_Utrunc, N, W,
+                              Get_Location (Loc));
       elsif Wn < W then
          if Val.Typ.Drange.Is_Signed then
             Res := Build_Extend (Build_Context, Id_Sextend, N, W);

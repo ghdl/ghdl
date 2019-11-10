@@ -36,6 +36,14 @@ package Netlists.Folds is
    --  ELS(L) will be at offset 0.
    function Build2_Concat (Ctxt : Context_Acc; Els : Net_Array) return Net;
 
+   --  Truncate I to width W.  Merge if the input is an extend.
+   function Build2_Trunc (Ctxt : Context_Acc;
+                          Id : Module_Id;
+                          I : Net;
+                          W : Width;
+                          Loc : Location_Type)
+                         return Net;
+
    --  Zero extend, noop or truncate I so that its width is W.
    function Build2_Uresize (Ctxt : Context_Acc;
                             I : Net;
