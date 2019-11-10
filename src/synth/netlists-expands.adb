@@ -261,7 +261,8 @@ package body Netlists.Expands is
                              Off : in out Uns32;
                              Dat : Net;
                              Memidx_Arr : Memidx_Array_Type;
-                             Net_Arr : Net_Array)
+                             Net_Arr : Net_Array;
+                             En : Net := No_Net)
    is
       Dat_W : constant Width := Get_Width (Dat);
       type Count_Type is record
@@ -277,6 +278,7 @@ package body Netlists.Expands is
       Next_Off : Uns32;
       Prev_Net : Net;
       Step : Uns32;
+      S : Net;
    begin
       --  Initialize count.
       for I in Memidx_Arr'Range loop
@@ -337,7 +339,12 @@ package body Netlists.Expands is
             V := Build_Extract (Ctxt, Mem, Off, Dat_W);
          end if;
 
-         V := Build_Mux2 (Ctxt, Net_Arr (Sel), V, Dat);
+         S := Net_Arr (Sel);
+         if En /= No_Net then
+            S := Build_Dyadic (Ctxt, Id_And, S, En);
+         end if;
+
+         V := Build_Mux2 (Ctxt, S, V, Dat);
          Prev_Net := V;
          Next_Off := Off + Dat_W;
 
@@ -364,7 +371,8 @@ package body Netlists.Expands is
       end loop;
    end Generate_Muxes;
 
-   procedure Expand_Dyn_Insert (Ctxt : Context_Acc; Inst : Instance)
+   procedure Expand_Dyn_Insert
+     (Ctxt : Context_Acc; Inst : Instance; En : Net)
    is
       Mem : constant Net := Get_Input_Net (Inst, 0);
       Dat : constant Net := Get_Input_Net (Inst, 1);
@@ -413,6 +421,9 @@ package body Netlists.Expands is
       Disconnect (Get_Input (Inst, 0));
       Disconnect (Get_Input (Inst, 1));
       Disconnect (Get_Input (Inst, 2));
+      if En /= No_Net then
+         Disconnect (Get_Input (Inst, 3));
+      end if;
       Remove_Instance (Inst);
    end Expand_Dyn_Insert;
 
@@ -456,7 +467,9 @@ package body Netlists.Expands is
                Expand_Dyn_Extract (Ctxt, Inst);
 
             when Id_Dyn_Insert =>
-               Expand_Dyn_Insert (Ctxt, Inst);
+               Expand_Dyn_Insert (Ctxt, Inst, No_Net);
+            when Id_Dyn_Insert_En =>
+               Expand_Dyn_Insert (Ctxt, Inst, Get_Input_Net (Inst, 3));
 
             when Id_Rol =>
                --  a rol b == shl (a, b) | shr (a, l - b)

@@ -827,6 +827,7 @@ package body Netlists.Disp_Vhdl is
                   "    \o0 <= \i0;" & NL,
                   Inst);
                if Id = Id_Dyn_Insert_En then
+                  --  TODO: fix indentation.
                   Disp_Template ("    if \i3 = '1' then" & NL, Inst);
                end if;
                Disp_Template
