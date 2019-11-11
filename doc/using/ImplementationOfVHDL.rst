@@ -1,10 +1,7 @@
 .. _REF:ImplVHDL:
 
-***************************
 Implementation of VHDL
-***************************
-
-This chapter describes several implementation defined aspects of VHDL in GHDL.
+######################
 
 .. _VHDL_standards:
 
@@ -72,7 +69,7 @@ The latest version is 2008. Many features have been added, and GHDL
 doesn't implement all of them.
 
 You can select the VHDL standard expected by GHDL with the
-``--std=<STANDARD>`` option, where ``<STANDARD>`` is one of the list below:
+:option:`--std=STANDARD <--std>` option, where ``STANDARD`` is one of the list below:
 
 
 87
@@ -119,12 +116,12 @@ Multiple standards can be used in a design:
 .. _psl_implementation:
 
 PSL support
-==================
+===========
 
 GHDL implements a subset of :wikipedia:`PSL <Property_Specification_Language>`.
 
 PSL implementation
------------------
+------------------
 
 A PSL statement is considered a process, so it's not allowed within
 a process.
@@ -152,78 +149,86 @@ Of course only the simple subset of PSL is allowed.
 Currently the built-in functions are not implemented, see `issue #662 <https://github.com/ghdl/ghdl/issues/662>`_.
 
 PSL usage
------------------
+---------
 
 PSL annotations embedded in comments
-  GHDL understands embedded PSL annotations in VHDL files:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  .. code-block:: VHDL
+GHDL understands embedded PSL annotations in VHDL files:
 
-        -- psl default clock is rising_edge (CLK);
-        -- psl assert always
-        --   a -> eventually! b;
-      end architecture rtl;
+.. code-block:: VHDL
 
-  * A PSL assertion statement must appear within a comment that starts
-    with the `psl` keyword. The keyword must be followed (on the
-    same line) by a PSL keyword such as `assert` or `default`.
-    To continue a PSL statement on the next line, just start a new comment.
+      -- psl default clock is rising_edge (CLK);
+      -- psl assert always
+      --   a -> eventually! b;
+    end architecture rtl;
 
-  .. HINT::
-     As PSL annotations are embedded within comments, you must analyze
-     your design with option ``-fpsl`` to enable PSL annotations.
+* A PSL assertion statement must appear within a comment that starts
+  with the `psl` keyword. The keyword must be followed (on the
+  same line) by a PSL keyword such as `assert` or `default`.
+  To continue a PSL statement on the next line, just start a new comment.
 
-     .. code-block:: bash
+.. HINT::
 
-         ghdl -a -fpsl vhdl_design.vhd
-         ghdl -e vhdl_design
+   As PSL annotations are embedded within comments, you must analyze
+   your design with option :option:`-fpsl` to enable PSL annotations:
+
+   .. code-block:: bash
+
+       ghdl -a -fpsl vhdl_design.vhdl
+       ghdl -e vhdl_design
 
 PSL annotations (VHDL-2008 only)
-  Since VHDL-2008 PSL is integrated in the VHDL language. You can use
-  PSL in a VHDL(-2008) design without embedding it in comments.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  .. code-block:: VHDL
+Since VHDL-2008 PSL is integrated in the VHDL language. You can use
+PSL in a VHDL(-2008) design without embedding it in comments.
 
-        default clock is rising_edge (CLK);
-        assert always
-          a -> eventually! b;
-      end architecture rtl;
+.. code-block:: VHDL
 
-  .. HINT::
-     You have to use the ``--std=08`` option
+      default clock is rising_edge (CLK);
+      assert always
+        a -> eventually! b;
+    end architecture rtl;
 
-     .. code-block:: bash
+.. HINT::
 
-         ghdl -a --std=08 vhdl_design.vhd
-         ghdl -e --std=08 vhdl_design
+   You have to use the :option:`--std=08 <--std>` option:
+
+   .. code-block:: bash
+
+       ghdl -a --std=08 vhdl_design.vhdl
+       ghdl -e --std=08 vhdl_design
 
 PSL vunit files
-  GHDL supports vunit (Verification Unit) files.
+^^^^^^^^^^^^^^^
 
-  .. code-block:: VHDL
+GHDL supports vunit (Verification Unit) files.
 
-      vunit vunit_name (design_name)
-      {
-        default clock is rising_edge(clk);
-        assert always cnt /= 5 abort rst;
-      }
+.. code-block:: VHDL
 
-  * A vunit can contain PSL and VHDL code.
+    vunit vunit_name (design_name)
+    {
+      default clock is rising_edge(clk);
+      assert always cnt /= 5 abort rst;
+    }
 
-  * It is bound to a VHDL entity or an instance of it.
+* A vunit can contain PSL and VHDL code.
 
-  * The PSL vunit is in the same scope as the VHDL design it is bound
-    to. You have access to all objects (ports, types, signals) of the
-    VHDL design.
+* It is bound to a VHDL entity or an instance of it.
 
-  .. HINT::
-     The PSL vunit file has to be analyzed/elaborated together with the VHDL design file, for example:
+* The PSL vunit is in the same scope as the VHDL design it is bound
+  to. You have access to all objects (ports, types, signals) of the
+  VHDL design.
 
-     .. code-block:: bash
+.. HINT::
 
-         ghdl -a --std=08 vhdl_design.vhd vunit.psl
-         ghdl -e --std=08 vhdl_design
+   The PSL vunit file has to be analyzed/elaborated together with the VHDL design file, for example:
 
+   .. code-block:: bash
+
+       ghdl -a --std=08 vhdl_design.vhdl vunit.psl
+       ghdl -e --std=08 vhdl_design
 
 
 Source representation
@@ -257,7 +262,7 @@ Library database
 
 Each design unit analyzed is placed into a design library. By default,
 the name of this design library is ``work``; however, this can be
-changed with the :option:`--work=<LIB_NAME>` option of GHDL.
+changed with the :option:`--work` option of GHDL.
 
 To keep the list of design units in a design library, GHDL creates
 library files. The name of these files is :file:`<LIB_NAME>-obj<GROUP>.cf`, where
@@ -287,11 +292,8 @@ hierarchy:
 Using vendor libraries
 ======================
 
-Many vendors libraries have been analyzed with GHDL. There are
-usually no problems. Be sure to use the :option:`--work=` option.
-However, some problems have been encountered.
-
-GHDL follows the VHDL LRM (the manual which defines VHDL) more
-strictly than other VHDL tools. You could try to relax the
-restrictions by using the :option:`--std=93c`, :option:`-fexplicit`,
-:option:`-frelaxed-rules` and :option:`--warn-no-vital-generic`.
+Many vendors libraries have been analyzed with `GHDL`. There are usually no problems. Be sure to use the
+:option:`--work` option. However, some problems have been encountered. `GHDL` follows the `VHDL` LRM (the manual which
+defines `VHDL`) more strictly than other `VHDL` tools. You could try to relax the restrictions by using the
+:option:`--std=93c <--std>`, :option:`-fexplicit`, :option:`-frelaxed-rules` and
+:option:`--warn-no-vital-generic <--warn-vital-generic>`.
