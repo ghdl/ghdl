@@ -1320,7 +1320,7 @@ package body Synth.Stmts is
             when Iir_Kind_Interface_Signal_Declaration =>
                Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_File_Declaration =>
-               raise Internal_Error;
+               Create_Object (Subprg_Inst, Inter, Val);
          end case;
       end loop;
    end Synth_Subprogram_Association;
