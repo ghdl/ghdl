@@ -160,6 +160,9 @@ package Netlists.Gates is
    --  Input3: enable
    Id_Dyn_Insert_En : constant Module_Id := 71;
 
+   subtype Dyn_Insert_Module_Id is
+     Module_Id range Id_Dyn_Insert .. Id_Dyn_Insert_En;
+
    --  OUT := IN0 * STEP,  IN0 < MAX
    Id_Memidx : constant Module_Id := 72;
 

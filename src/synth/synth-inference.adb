@@ -265,6 +265,7 @@ package body Synth.Inference is
 
    --  Walk the And-net N, and extract clock (posedge/negedge) if found.
    --  ENABLE is N without the clock.
+   --  If not found, CLK and ENABLE are set to No_Net.
    procedure Extract_Clock
      (Ctxt : Context_Acc; N : Net; Clk : out Net; Enable : out Net)
    is

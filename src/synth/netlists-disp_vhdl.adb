@@ -695,6 +695,7 @@ package body Netlists.Disp_Vhdl is
    is
       Imod : constant Module := Get_Module (Inst);
       Loc : constant Location_Type := Locations.Get_Location (Inst);
+      Id : constant Module_Id := Get_Id (Imod);
    begin
       if Loc /= No_Location then
          declare
@@ -712,7 +713,7 @@ package body Netlists.Disp_Vhdl is
             New_Line;
          end;
       end if;
-      case Get_Id (Imod) is
+      case Id is
          when Id_Memory
            |  Id_Memory_Init =>
             Disp_Memory (Inst);
@@ -794,7 +795,8 @@ package body Netlists.Disp_Vhdl is
                end if;
                Put_Line (");");
             end;
-         when Id_Dyn_Insert =>
+         when Id_Dyn_Insert
+           | Id_Dyn_Insert_En =>
             declare
                --  I0: Input, I1: Value, I2: position
                --  P0: offset
@@ -822,9 +824,13 @@ package body Netlists.Disp_Vhdl is
                Put (")" & NL);
                Disp_Template
                  ("  begin" & NL &
-                  "    \o0 <= \i0;" & NL &
-                  "    \o0 (",
+                  "    \o0 <= \i0;" & NL,
                   Inst);
+               if Id = Id_Dyn_Insert_En then
+                  Disp_Template ("    if \i3 = '1' then" & NL, Inst);
+               end if;
+               Disp_Template
+                 ("    \o0 (", Inst);
                if Iw > 1 then
                   Disp_Template
                     ("to_integer (\ui2) + (\sp0 + \n0)" & NL &
@@ -833,8 +839,13 @@ package body Netlists.Disp_Vhdl is
                end if;
                Disp_Template
                  ("to_integer (\ui2) + (\sp0))" &
-                  " <= \i1;" & NL &
-                  "  end process;" & NL,
+                  " <= \i1;" & NL,
+                  Inst);
+               if Id = Id_Dyn_Insert_En then
+                  Disp_Template ("    end if;" & NL, Inst);
+               end if;
+               Disp_Template
+                 ("  end process;" & NL,
                   Inst);
             end;
          when Id_Const_UB32
