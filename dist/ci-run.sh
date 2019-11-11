@@ -1,6 +1,6 @@
 #! /bin/bash
 
-scriptdir=$(dirname $0)
+scriptdir=`dirname $0`
 
 if [ -n "$GITHUB_EVENT_PATH" ]; then
   export CI=true
@@ -24,20 +24,57 @@ gend () {
   :
 }
 
-[ -n "$CI" ] && {
-  echo "INFO: set 'gstart' and 'gend' for CI"
+if [ -n "$TRAVIS" ]; then
+  echo "INFO: set 'gstart' and 'gend' for TRAVIS"
+  # This is a trimmed down copy of https://github.com/travis-ci/travis-build/blob/master/lib/travis/build/bash/*
+  travis_time_start() {
+    # `date +%N` returns the date in nanoseconds. It is used as a replacement for $RANDOM, which is only available in bash.
+    travis_timer_id=`date +%N`
+    travis_start_time=`travis_nanoseconds`
+    echo "travis_time:start:$travis_timer_id"
+  }
+  travis_time_finish() {
+    travis_end_time=`travis_nanoseconds`
+    local duration=$(($travis_end_time-$travis_start_time))
+    echo "travis_time:end:$travis_timer_id:start=$travis_start_time,finish=$travis_end_time,duration=$duration"
+  }
+
+  if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    travis_nanoseconds() {
+      date -u '+%s000000000'
+    }
+  else
+    travis_nanoseconds() {
+      date -u '+%s%N'
+    }
+  fi
+
   gstart () {
-    printf '::group::'
+    echo "travis_fold:start:group"
+    travis_time_start
     print_start "$@"
-    SECONDS=0
   }
 
   gend () {
-    duration=$SECONDS
-    echo '::endgroup::'
-    printf "${ANSI_GRAY}took $(($duration / 60)) min $(($duration % 60)) sec.${ANSI_NOCOLOR}\n"
+    travis_time_finish
+    echo "travis_fold:end:group"
   }
-} || echo "INFO: not in CI"
+else
+  if [ -n "$CI" ]; then
+    echo "INFO: set 'gstart' and 'gend' for CI"
+    gstart () {
+      printf '::group::'
+      print_start "$@"
+      SECONDS=0
+    }
+
+    gend () {
+      duration=$SECONDS
+      echo '::endgroup::'
+      printf "${ANSI_GRAY}took $(($duration / 60)) min $(($duration % 60)) sec.${ANSI_NOCOLOR}\n"
+    }
+  fi
+fi
 
 echo "cliargs: $0 $@"
 
@@ -81,35 +118,61 @@ shift $((OPTIND -1))
 # Build command options
 #
 
+notag() {
+  # No tag: use date + commit id
+  echo "`git log -1 --date=short --pretty=format:%cd | sed 's/-//g'`-$PKG_SHA"
+}
+
+vertag() {
+  if expr "$1" : 'v[0-9].*' > /dev/null; then
+    # Remove leading 'v' in tags in the filenames.
+    echo $1 | cut -c2-
+    # Check version defined in configure.
+    if [ "x$1" != "x`grep "^ghdl_version=" configure | sed -e 's/.*"\(.*\)";/\1/'`" ]; then
+      printf "${ANSI_RED}Tag '$1' does not match 'ghdl_version'!${ANSI_NOCOLOR}\n" 1>&2;
+      exit 1
+    fi
+  else
+    # Regular tag (like snapshots), nothing to change.
+    echo "$2"
+  fi
+}
+
 buildCmdOpts () {
   BUILD_ARG="$1"
 
   # Get short commit SHA
-  if [ -z "$GITHUB_SHA" ]; then
-    GITHUB_SHA="$(git rev-parse --verify HEAD)"
+  if [ -n "$TRAVIS_COMMIT" ]; then
+    GIT_SHA="$TRAVIS_COMMIT"
   fi
-  PKG_SHA="$(printf $GITHUB_SHA | cut -c1-10)"
+  if [ -n "$GITHUB_SHA" ]; then
+    GIT_SHA="$GITHUB_SHA"
+  fi
+  if [ -z "$GIT_SHA" ]; then
+    GIT_SHA="`git rev-parse --verify HEAD`"
+  fi
+  PKG_SHA="`printf $GIT_SHA | cut -c1-10`"
+
+  echo "TRAVIS_COMMIT: $TRAVIS_COMMIT"
+  echo "TRAVIS_TAG: $TRAVIS_TAG"
+  echo "GITHUB_SHA: $GITHUB_SHA"
+  echo "GITHUB_REF: $GITHUB_REF"
+  echo "GIT_SHA: $GIT_SHA"
 
   # Compute package name
   case "$GITHUB_REF" in
     *tags*)
-      PKG_TAG="$(echo "$GITHUB_REF" | sed 's#^refs/tags/\(.*\)#\1#g')"
-      if expr "$PKG_TAG" : 'v[0-9].*' > /dev/null; then
-        # Remove leading 'v' in tags in the filenames.
-        PKG_TAG="$(echo $PKG_TAG | cut -c2-)"
-        # Check version defined in configure.
-        if [ "x$PKG_TAG" != x`grep "ghdl_version=" configure | sed -e 's/.*"\(.*\)";/\1/'` ]; then
-          echo "Tag '$PKG_TAG' does not match 'ghdl_version'!"
-          exit 1
-        fi
-      else
-        # Regular tag (like snapshots), nothing to change.
-        PKG_TAG="$GITHUB_REF"
-      fi
+      PKG_TAG="$(vertag "`echo "$GITHUB_REF" | sed 's#^refs/tags/\(.*\)#\1#g'`" "$GITHUB_REF")"
     ;;
-    *heads*|*pull*|"")
-      # No tag: use date + commit id
-      PKG_TAG="$(git log -1 --date=short --pretty=format:%cd | sed 's/-//g')-$PKG_SHA"
+    *heads*|*pull*)
+      PKG_TAG="`notag`"
+    ;;
+    "")
+      if [ -z "$TRAVIS_TAG" ]; then
+        PKG_TAG="`notag`"
+      else
+        PKG_TAG="`vertag "$TRAVIS_TAG" "$TRAVIS_TAG"`"
+      fi
     ;;
     *)
       PKG_TAG="$GITHUB_REF"
@@ -151,6 +214,11 @@ buildCmdOpts () {
   GHDL_IMAGE_TAG="${GHDL_IMAGE_TAG}$DEXT"
 }
 
+run_cmd() {
+  echo "$@"
+  "$@"
+}
+
 #
 # Build ghdl
 #
@@ -179,7 +247,7 @@ build () {
 
   #--- Configure
 
-  CDIR=$(pwd)
+  CDIR=`pwd`
   export prefix="$CDIR/install-$BACK"
   mkdir "$prefix"
   mkdir "build-$BACK"
@@ -192,20 +260,24 @@ build () {
   case "$BACK" in
       gcc*)
           gstart "[GHDL - build] Get gcc sources"
-          echo "https://github.com/gcc-mirror/gcc/archive/$(echo ${BACK} | sed -e 's/\./_/g')-release.tar.gz"
+          echo "https://github.com/gcc-mirror/gcc/archive/`echo ${BACK} | sed -e 's/\./_/g'`-release.tar.gz"
           mkdir gcc-srcs
-          curl -L "https://github.com/gcc-mirror/gcc/archive/$(echo ${BACK} | sed -e 's/\./_/g')-release.tar.gz" | tar -xz -C gcc-srcs --strip-components=1
+          curl -L "https://github.com/gcc-mirror/gcc/archive/`echo ${BACK} | sed -e 's/\./_/g'`-release.tar.gz" | tar -xz -C gcc-srcs --strip-components=1
           cd gcc-srcs
           sed -i.bak s/ftp:/http:/g ./contrib/download_prerequisites
           ./contrib/download_prerequisites
           cd ..
           gend
 
-          gstart "[GHDL - build] Configure gcc"
-          ../configure --with-gcc=gcc-srcs --prefix="$prefix"
+          gstart "[GHDL - build] Configure ghdl"
+          run_cmd ../configure --with-gcc=gcc-srcs --prefix="$prefix" $CONFIG_OPTS
+          gend
+          gstart "[GHDL - build] Copy sources"
           make copy-sources
           mkdir gcc-objs; cd gcc-objs
-          ../gcc-srcs/configure --prefix="$prefix" --enable-languages=c,vhdl --disable-bootstrap --disable-lto --disable-multilib --disable-libssp --disable-libgomp --disable-libquadmath "`gcc -v 2>&1 | grep -o -- --enable-default-pie`"
+          gend
+          gstart "[GHDL - build] Configure gcc"
+          run_cmd ../gcc-srcs/configure --prefix="$prefix" --enable-languages=c,vhdl --disable-bootstrap --disable-lto --disable-multilib --disable-libssp --disable-libgomp --disable-libquadmath "`gcc -v 2>&1 | grep -o -- --enable-default-pie`"
           gend
       ;;
       mcode)
@@ -220,19 +292,18 @@ build () {
           CONFIG_OPTS+=" --with-llvm-config=llvm-config-3.5 CXX=$CXX"
       ;;
       llvm-*)
-          llvmver=$(echo $BACK | sed -e "s/llvm-//")
+          llvmver=`echo $BACK | sed -e "s/llvm-//"`
           CXX="clang++-$llvmver"
           CONFIG_OPTS+=" --with-llvm-config=llvm-config-$llvmver CXX=$CXX"
       ;;
       *)
-          echo "$ANSI_RED[GHDL - build] Unknown build $BACK $ANSI_NOCOLOR"
+          printf "$ANSI_RED[GHDL - build] Unknown build $BACK $ANSI_NOCOLOR\n"
           exit 1;;
   esac
 
-  if [ ! "$(echo $BACK | grep gcc)" ]; then
+  if [ ! "`echo $BACK | grep gcc`" ]; then
       gstart "[GHDL - build] Configure"
-      echo "../configure --prefix=$prefix $CONFIG_OPTS"
-      ../configure "--prefix=$prefix" $CONFIG_OPTS
+      run_cmd ../configure "--prefix=$prefix" $CONFIG_OPTS
       gend
   fi
 
@@ -240,7 +311,7 @@ build () {
 
   gstart "[GHDL - build] Make"
   set +e
-  make LIB_CFLAGS="$LIB_CFLAGS" OPT_FLAGS="$OPT_FLAGS" -j$(nproc) 2>make_err.log
+  make LIB_CFLAGS="$LIB_CFLAGS" OPT_FLAGS="$OPT_FLAGS" -j`nproc` 2>make_err.log
   tail -1000 make_err.log
   set -e
   gend
@@ -250,7 +321,7 @@ build () {
   cd ..
   gend
 
-  if [ "$(echo $BACK | grep gcc)" ]; then
+  if [ "`echo $BACK | grep gcc`" ]; then
       gstart "[GHDL - build] Make ghdllib"
       make ghdllib
       gend
@@ -304,7 +375,7 @@ EOF
 ci_run () {
   if [ "x$TASK" = "x" ]; then
     if [ "x$1" = "x" ]; then
-      echo "TASK not defined"
+      printf "${ANSI_RED}TASK not defined${ANSI_NOCOLOR}\n"
       exit 1
     else
       TASK="$1"
@@ -317,15 +388,13 @@ ci_run () {
   git fetch --unshallow || true
   gend
 
-
-  if [ "$GITHUB_OS" = "macOS" ]; then
+  if [ "x$IS_MACOS" = "xtrue" ]; then
       gstart "[CI] Install gnat compiler (use cache) and set CPATH" "$ANSI_BLUE"
       ./dist/macosx/install-ada.sh || exit 1
       PATH=$PWD/gnat/bin:$PATH
-      export CPATH="$CPATH:$(xcrun --show-sdk-path)/usr/include"
+      export CPATH="$CPATH:`xcrun --show-sdk-path`/usr/include"
       gend
   fi
-
 
   # Get build command options
   gstart "[CI] Get build command options" "$ANSI_BLUE"
@@ -335,8 +404,8 @@ ci_run () {
 
   # Build
 
-  RUN="docker run --rm -t -e CI=$CI -v $(pwd):/work -w /work"
-  if [ "$GITHUB_OS" = "macOS" ]; then
+  RUN="docker run --rm -t -e CI -e TRAVIS -v `pwd`:/work -w /work"
+  if [ "x$IS_MACOS" = "xtrue" ]; then
       CC=clang CONFIG_OPTS="--disable-libghdl" bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
   else
       # Assume linux
@@ -365,8 +434,8 @@ ci_run () {
 
   # Test
 
-  if [ "$GITHUB_OS" = "macOS" ]; then
-      CC=clang prefix="$(cd ./install-mcode; pwd)" ./testsuite/testsuite.sh sanity gna vests
+  if [ "x$IS_MACOS" = "xtrue" ]; then
+      CC=clang prefix="`cd ./install-mcode; pwd`" ./testsuite/testsuite.sh sanity gna vests
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
@@ -391,6 +460,11 @@ ci_run () {
 #---
 
 echo "command: $0 $@"
+
+unset IS_MACOS
+if [ "$GITHUB_OS" = "macOS" ] || [ "$TRAVIS_OS_NAME" = "osx" ]; then
+  IS_MACOS="true"
+fi
 
 case "$1" in
   build)

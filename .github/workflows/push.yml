@@ -13,11 +13,10 @@ jobs:
       max-parallel: 2
       matrix:
         task: [
-          { backend: mcode,     args: "" },
           { backend: mcode,     args: "--gpl" },
           { backend: mcode,     args: "--synth" },
-          { backend: llvm-7,    args: "" },
-          { backend: gcc-8.3.0, args: "" },
+          { backend: llvm-7,    args: "--synth" },
+          { backend: gcc-8.3.0, args: "--synth" },
         ]
     runs-on: ubuntu-latest
     steps:
