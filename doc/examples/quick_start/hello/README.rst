@@ -11,7 +11,13 @@ a file named :file:`hello.vhdl`:
 
 .. TIP::
 
-   * Both ``.vhdl`` and ``.vhd`` extensions are used for VHDL source files, while ``.v`` is used for Verilog.
+   * Both ``.vhdl`` and ``.vhd`` extensions are used for `VHDL` source files, while ``.v`` is used for Verilog.
+
+      * Since, extension ``.vhd`` is also interpreted as a `Virtual Hard Disk <https://en.wikipedia.org/wiki/VHD_(file_format)>`_
+        file format, some users prefer ``.vhdl``, to avoid ambiguity. This is the case with `GHDL`'s codebase. However, in order
+        to maintain `backward-compatibility <https://en.wikipedia.org/wiki/8.3_filename>`_ with legacy DOS systems,
+        other users prefer ``.vhd``.
+
    * Unless you use especial characters, either `UTF-8` or `ISO-8859-1` encodings can be used. However, if you do, the
      latter should be used. The standard defines ASCII (7-bit encoding) or ISO Latin-1 (ISO-8859-1) as default.
      However, GHDL has a relaxing option, :option:`--mb-comments` (multi byte), to allow UTF-8 or other encodings in
