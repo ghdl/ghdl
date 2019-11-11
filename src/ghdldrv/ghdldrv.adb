@@ -95,8 +95,7 @@ package body Ghdldrv is
    package Argument_Table_Pkg is new Dyn_Tables
      (Table_Component_Type => String_Access,
       Table_Index_Type => Integer,
-      Table_Low_Bound => 1,
-      Table_Initial => 4);
+      Table_Low_Bound => 1);
    use Argument_Table_Pkg;
 
    --  Arguments for tools.
@@ -592,10 +591,10 @@ package body Ghdldrv is
       Output_File := null;
 
       --  Initialize argument tables.
-      Init (Compiler_Args);
-      Init (Postproc_Args);
-      Init (Assembler_Args);
-      Init (Linker_Args);
+      Init (Compiler_Args, 4);
+      Init (Postproc_Args, 4);
+      Init (Assembler_Args, 4);
+      Init (Linker_Args, 4);
       Init (Command_Lib (Cmd));
    end Init;
 
