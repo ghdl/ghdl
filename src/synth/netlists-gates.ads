@@ -126,8 +126,11 @@ package Netlists.Gates is
 
    --  A simple DFF with an initial value (must be constant).  This is
    --  for FPGAs.
+   --  Input 0: Clock
+   --  Input 1: Data
    Id_Idff  : constant Module_Id := 52;
    --  A DFF with an asynchronous reset and an initial value.
+   --  Input 2: Initial value.
    Id_Iadff : constant Module_Id := 53;
 
    --  Width change: truncate or extend.  Sign is know in order to possibly
