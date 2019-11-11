@@ -1,4 +1,3 @@
-.. program:: ghdl
 .. _REF:Command:
 
 Command Reference

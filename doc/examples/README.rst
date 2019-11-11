@@ -1,4 +1,3 @@
-.. program:: ghdl
 .. _USING:Examples:
 
 Examples

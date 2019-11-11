@@ -1,4 +1,3 @@
-.. program:: ghdl
 .. _USING:QuickStart:
 
 Quick Start Guide

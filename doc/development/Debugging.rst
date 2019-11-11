@@ -1,4 +1,3 @@
-.. program:: ghdl
 .. _DEV:Debugging:
 
 Debugging

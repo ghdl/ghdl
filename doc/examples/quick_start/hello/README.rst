@@ -1,4 +1,3 @@
-.. program:: ghdl
 .. _QuickStart:hello:
 
 `Hello world` program
