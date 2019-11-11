@@ -109,6 +109,7 @@ test () {
     env | grep MINGW
   gend
 
+  export PATH=$PATH:"$(cd $(dirname $(which ghdl))/../lib; pwd)"
   GHDL=ghdl ../../testsuite/testsuite.sh
 }
 
