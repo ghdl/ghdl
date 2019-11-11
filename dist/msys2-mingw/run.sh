@@ -40,14 +40,14 @@ gend () {
 [ -n "$CI" ] && {
   echo "INFO: set 'gstart' and 'gend' for CI"
   gstart () {
-    printf '::[group]'
+    printf '::group::'
     print_start "$@"
     SECONDS=0
   }
 
   gend () {
     duration=$SECONDS
-    echo '::[endgroup]'
+    echo '::endgroup::'
     printf "${ANSI_GRAY}took $(($duration / 60)) min $(($duration % 60)) sec.${ANSI_NOCOLOR}\n"
   }
 } || echo "INFO: not in CI"
