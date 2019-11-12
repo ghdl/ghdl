@@ -733,9 +733,9 @@ package body Synth.Oper is
                return Synth_Int_Dyadic (Id_Add);
             end if;
          when Iir_Predefined_Integer_Minus =>
-            if Is_Const (Left) and then Is_Const (Right) then
+            if Is_Const_Val (Left) and then Is_Const_Val (Right) then
                return Create_Value_Discrete
-                 (Left.Scal - Right.Scal,
+                 (Get_Const_Discrete (Left) - Get_Const_Discrete (Right),
                   Get_Value_Type (Syn_Inst, Get_Type (Expr)));
             else
                return Synth_Int_Dyadic (Id_Sub);
