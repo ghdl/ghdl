@@ -185,8 +185,14 @@ package body Synth.Insts is
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
+         --  Elaborate the type...
          Synth_Declaration_Type (Syn_Inst, Inter);
          Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
+         if not Is_Bounded_Type (Inter_Typ) then
+            --  ... but get it from the template (so that unbounded types
+            --  are bounded).
+            Inter_Typ := Get_Value (Params.Syn_Inst, Inter).Typ;
+         end if;
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Val := Create_Value_Net (No_Net, Inter_Typ);
@@ -461,7 +467,7 @@ package body Synth.Insts is
             return;
       end case;
 
-      Formal_Typ := Get_Value_Type (Inter_Inst, Get_Type (Inter));
+      Formal_Typ := Get_Value (Inter_Inst, Inter).Typ;
 
       --  Create a port gate (so that is has a name).
       Port := Builders.Build_Port (Get_Build (Syn_Inst), Outp);
@@ -556,6 +562,27 @@ package body Synth.Insts is
       end loop;
    end Synth_Generics_Association;
 
+   --  Return the type of EXPR without evaluating it.
+   --  FIXME: how dubious is it ?
+   function Synth_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
+                                 return Type_Acc is
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Signal_Declaration =>
+            declare
+               Val : constant Value_Acc := Get_Value (Syn_Inst, Expr);
+            begin
+               return Val.Typ;
+            end;
+         when Iir_Kind_Simple_Name =>
+            return Synth_Type_Of_Object (Syn_Inst, Get_Named_Entity (Expr));
+         when others =>
+            Vhdl.Errors.Error_Kind ("synth_type_of_object", Expr);
+      end case;
+      return null;
+   end Synth_Type_Of_Object;
+
    procedure Synth_Direct_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc;
       Stmt : Node;
@@ -585,10 +612,30 @@ package body Synth.Insts is
       while Is_Valid (Inter) loop
          if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
             --  TODO
-            raise Internal_Error;
+            --  Find the association for this interface
+            --  * if individual assoc: get type
+            --  * if whole assoc: get type from object.
+            declare
+               Assoc : Node;
+            begin
+               Assoc := Find_First_Association_For_Interface
+                 (Get_Port_Map_Aspect_Chain (Stmt), Get_Port_Chain (Ent),
+                  Inter);
+               if Assoc = Null_Node then
+                  raise Internal_Error;
+               end if;
+               case Get_Kind (Assoc) is
+                  when Iir_Kind_Association_Element_By_Expression =>
+                     Inter_Typ := Synth_Type_Of_Object
+                       (Syn_Inst, Get_Actual (Assoc));
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end;
+         else
+            Synth_Declaration_Type (Sub_Inst, Inter);
+            Inter_Typ := Get_Value_Type (Sub_Inst, Get_Type (Inter));
          end if;
-         Synth_Declaration_Type (Sub_Inst, Inter);
-         Inter_Typ := Get_Value_Type (Sub_Inst, Get_Type (Inter));
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Val := Create_Value_Net (No_Net, Inter_Typ);
