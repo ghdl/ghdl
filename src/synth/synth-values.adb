@@ -811,7 +811,7 @@ package body Synth.Values is
                for I in Arr.V'Range loop
                   Arr.V (I) := Create_Value_Default (El_Typ);
                end loop;
-               return Create_Value_Array (Typ, Arr);
+               return Create_Value_Const_Array (Typ, Arr);
             end;
          when Type_Unbounded_Array =>
             raise Internal_Error;
@@ -823,7 +823,7 @@ package body Synth.Values is
                for I in Els.V'Range loop
                   Els.V (I) := Create_Value_Default (Typ.Rec.E (I).Typ);
                end loop;
-               return Create_Value_Record (Typ, Els);
+               return Create_Value_Const_Record (Typ, Els);
             end;
          when Type_Access =>
             return Create_Value_Access (Typ, Null_Heap_Index);

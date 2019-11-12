@@ -416,7 +416,8 @@ package body Synth.Stmts is
       case Targ.Kind is
          when Value_Discrete =>
             Targ.Scal := Val.Scal;
-         when Value_Array =>
+         when Value_Const_Array
+           | Value_Array =>
             declare
                Len : constant Iir_Index32 := Val.Arr.Len;
             begin
@@ -425,7 +426,8 @@ package body Synth.Stmts is
                                 Val.Arr.V (I), Loc);
                end loop;
             end;
-         when Value_Record =>
+         when Value_Const_Record
+           | Value_Record =>
             for I in Targ.Rec.V'Range loop
                Assign_Value (Targ.Rec.V (I), Val.Rec.V (I), Loc);
             end loop;
