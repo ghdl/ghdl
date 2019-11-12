@@ -262,9 +262,11 @@ package body Synth.Environment is
       First := No_Seq_Assign;
       Last := No_Seq_Assign;
       Asgn := Phi.First;
+      Phi.Nbr := 0;
       while Asgn /= No_Seq_Assign loop
          pragma Assert (Assign_Table.Table (Asgn).Phi = Current_Phi);
          Next_Asgn := Get_Assign_Chain (Asgn);
+         Set_Assign_Chain (Asgn, No_Seq_Assign);
 
          Wid := Get_Wire_Id (Asgn);
          if Wid = Wid1 or Wid = Wid2 then
@@ -278,6 +280,7 @@ package body Synth.Environment is
             else
                Set_Assign_Chain (Last, Asgn);
             end if;
+            Phi.Nbr := Phi.Nbr + 1;
             Last := Asgn;
          end if;
          Asgn := Next_Asgn;
