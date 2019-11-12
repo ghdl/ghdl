@@ -1,3 +1,4 @@
+.. program:: ghdl
 .. _USING:Simulation:
 
 Simulation and runtime
