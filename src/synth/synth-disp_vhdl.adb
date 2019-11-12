@@ -160,7 +160,26 @@ package body Synth.Disp_Vhdl is
                Put ("to_stdlogicvector (" & Pfx & ")");
                Put_Line (";");
             else
-               Error_Kind ("disp_in_converter(arr)", Ptype);
+               --  Any array.
+               declare
+                  Bnd : Bound_Type renames Typ.Abounds.D (1);
+                  El_Type : constant Node := Get_Element_Subtype (Ptype);
+                  El_W : constant Width := Get_Type_Width (Typ.Arr_El);
+                  Idx : Int32;
+               begin
+                  for I in 0 .. Bnd.Len - 1 loop
+                     case Bnd.Dir is
+                        when Iir_To =>
+                           Idx := Bnd.Left + Int32 (I);
+                        when Iir_Downto =>
+                           Idx := Bnd.Left - Int32 (I);
+                     end case;
+                     Disp_In_Converter
+                       (Mname,
+                        Pfx & " (" & Int32'Image (Idx) & ")",
+                        Off + I * El_W, El_Type, Typ.Arr_El, False);
+                  end loop;
+               end;
             end if;
          when Iir_Kind_Record_Type_Definition =>
             declare
