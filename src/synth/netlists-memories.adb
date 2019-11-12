@@ -723,9 +723,12 @@ package body Netlists.Memories is
                when Id_Const_Bit =>
                   Check_Memory_Read_Ports (Inst, Data_W, Size);
                   if Data_W /= 0 then
-                     Info_Msg_Synth
-                       (+Inst, "found ROM %n, width: %v bits, depth: %v",
-                        (1 => +Inst, 2 => +Data_W, 3 => +Size));
+                     if Get_Location (Inst) /= No_Location then
+                        --  Not all Const_Bit have a location...
+                        Info_Msg_Synth
+                          (+Inst, "found ROM %n, width: %v bits, depth: %v",
+                           (1 => +Inst, 2 => +Data_W, 3 => +Size));
+                     end if;
                      Replace_ROM_Memory (Ctxt, Inst);
                   end if;
                when others =>
