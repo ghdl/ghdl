@@ -1,3 +1,4 @@
+.. program:: ghdl
 .. _QuickStart:adder:
 
 `Full adder` module and testbench

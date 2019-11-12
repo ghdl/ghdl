@@ -1,3 +1,4 @@
+.. program:: ghdl
 .. _QuickStart:DLX:
 
 Working with non-trivial designs

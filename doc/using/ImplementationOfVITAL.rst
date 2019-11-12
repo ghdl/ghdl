@@ -1,3 +1,4 @@
+.. program:: ghdl
 .. _REF:ImplVITAL:
 
 ****************************
@@ -28,7 +29,7 @@ requirements of VITAL: VITAL 1995 requires the models follow the VHDL
 1987 standard, while VITAL 2000 requires the models follow VHDL 1993.
 
 The VITAL 2000 packages were slightly modified so that they conform to
-the VHDL 1993 standard (a few functions are made pure and a few 
+the VHDL 1993 standard (a few functions are made pure and a few
 impure).
 
 .. _vhdl_restrictions_for_vital:

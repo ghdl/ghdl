@@ -1,3 +1,4 @@
+.. program:: ghdl
 .. FOREIGN:
 
 Interfacing to other languages
