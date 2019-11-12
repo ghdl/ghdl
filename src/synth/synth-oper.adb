@@ -1127,13 +1127,15 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             declare
                Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-               Size : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
+               Size : Value_Acc;
                Arg_Net : Net;
             begin
+               Size := Get_Value (Subprg_Inst, Param2);
                if not Is_Const (Size) then
                   Error_Msg_Synth (+Expr, "to_unsigned size must be constant");
                   return Arg;
                else
+                  Strip_Const (Size);
                   --  FIXME: what if the arg is constant too ?
                   if Is_Const (Arg) then
                      return Eval_To_Unsigned
