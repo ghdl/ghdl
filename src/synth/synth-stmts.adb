@@ -169,6 +169,7 @@ package body Synth.Stmts is
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
+               Strip_Const (Dest_Obj);
                Dest_W := Dest_Type.W;
                Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Type, Voff, Off, W);
 
@@ -245,6 +246,7 @@ package body Synth.Stmts is
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
+               Strip_Const (Dest_Obj);
 
                Get_Onedimensional_Array_Bounds (Dest_Type, Pfx_Bnd, El_Typ);
                Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ.W,
