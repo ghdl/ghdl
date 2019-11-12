@@ -21,15 +21,19 @@
 with Types; use Types;
 with Libraries;
 with Hash; use Hash;
+with Dyn_Tables;
 with Interning;
 with Synthesis; use Synthesis;
 with Std_Names;
+
+with Grt.Algos;
 
 with Netlists; use Netlists;
 with Netlists.Builders;
 with Netlists.Cleanup;
 with Netlists.Memories;
 with Netlists.Expands;
+with Netlists.Concats;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
@@ -244,6 +248,228 @@ package body Synth.Insts is
       Build => Build,
       Equal => Equal);
 
+   procedure Synth_Individual_Prefix (Syn_Inst : Synth_Instance_Acc;
+                                      Inter_Inst : Synth_Instance_Acc;
+                                      Formal : Node;
+                                      Off : out Uns32;
+                                      Typ : out Type_Acc) is
+   begin
+      case Get_Kind (Formal) is
+         when Iir_Kind_Interface_Signal_Declaration =>
+            Off := 0;
+            Typ := Get_Value_Type (Inter_Inst, Get_Type (Formal));
+         when Iir_Kind_Simple_Name =>
+            Synth_Individual_Prefix
+              (Syn_Inst, Inter_Inst, Get_Named_Entity (Formal), Off, Typ);
+         when Iir_Kind_Selected_Element =>
+            declare
+               Idx : constant Iir_Index32 :=
+                 Get_Element_Position (Get_Named_Entity (Formal));
+            begin
+               Synth_Individual_Prefix
+                 (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
+               Off := Off + Typ.Rec.E (Idx + 1).Off;
+               Typ := Typ.Rec.E (Idx + 1).Typ;
+            end;
+         when Iir_Kind_Indexed_Name =>
+            declare
+               Voff : Net;
+               Arr_Off : Uns32;
+               W : Width;
+            begin
+               Synth_Individual_Prefix
+                 (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
+               Synth_Indexed_Name
+                 (Syn_Inst, Formal, Typ, Voff, Arr_Off, W);
+               if Voff /= No_Net then
+                  raise Internal_Error;
+               end if;
+               Off := Off + Arr_Off;
+               Typ := Get_Array_Element (Typ);
+            end;
+         when others =>
+            Vhdl.Errors.Error_Kind ("synth_individual_prefix", Formal);
+      end case;
+   end Synth_Individual_Prefix;
+
+   type Value_Offset_Record is record
+      Off : Uns32;
+      Val : Value_Acc;
+   end record;
+
+   package Value_Offset_Tables is new Dyn_Tables
+     (Table_Component_Type => Value_Offset_Record,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1);
+
+   procedure Sort_Value_Offset (Els : Value_Offset_Tables.Instance)
+   is
+      function Lt (Op1, Op2 : Natural) return Boolean is
+      begin
+         return Els.Table (Op1).Off < Els.Table (Op2).Off;
+      end Lt;
+
+      procedure Swap (From : Natural; To : Natural)
+      is
+         T : constant Value_Offset_Record := Els.Table (From);
+      begin
+         Els.Table (From) := Els.Table (To);
+         Els.Table (To) := T;
+      end Swap;
+
+      procedure Heap_Sort is new Grt.Algos.Heap_Sort (Lt => Lt, Swap => Swap);
+   begin
+      Heap_Sort (Value_Offset_Tables.Last (Els));
+   end Sort_Value_Offset;
+
+   procedure Synth_Individual_Input_Assoc (Inp : Input;
+                                           Syn_Inst : Synth_Instance_Acc;
+                                           Assoc : Node;
+                                           Inter_Inst : Synth_Instance_Acc)
+   is
+      use Netlists.Concats;
+      Iassoc : Node;
+      V : Value_Acc;
+      Off : Uns32;
+      Typ : Type_Acc;
+      Els : Value_Offset_Tables.Instance;
+      Concat : Concat_Type;
+      N_Off : Uns32;
+      N : Net;
+   begin
+      Value_Offset_Tables.Init (Els, 16);
+
+      Iassoc := Get_Chain (Assoc);
+      while Iassoc /= Null_Node
+        and then not Get_Whole_Association_Flag (Iassoc)
+      loop
+         --  For each individual assoc:
+         --   1. compute type and offset
+         Synth_Individual_Prefix
+           (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Off, Typ);
+
+         --   2. synth expression
+         V := Synth_Expression_With_Type (Syn_Inst, Get_Actual (Iassoc), Typ);
+
+         --   3. save in a table
+         Value_Offset_Tables.Append (Els, (Off, V));
+
+         Iassoc := Get_Chain (Iassoc);
+      end loop;
+
+      --  Then:
+      --   1. sort table by offset
+      Sort_Value_Offset (Els);
+
+      --   2. concat
+      N_Off := 0;
+      for I in Value_Offset_Tables.First .. Value_Offset_Tables.Last (Els)
+      loop
+         pragma Assert (N_Off = Els.Table (I).Off);
+         V := Els.Table (I).Val;
+         N_Off := N_Off + V.Typ.W;
+         Append (Concat, Get_Net (V));
+      end loop;
+      Value_Offset_Tables.Free (Els);
+
+      --   3. connect
+      Build (Get_Build (Syn_Inst), Concat, N);
+      Connect (Inp, N);
+   end Synth_Individual_Input_Assoc;
+
+   procedure Synth_Input_Assoc (Inp : Input;
+                                Syn_Inst : Synth_Instance_Acc;
+                                Assoc : Node;
+                                Inter_Inst : Synth_Instance_Acc;
+                                Inter : Node)
+   is
+      Actual : Node;
+      Formal_Typ : Type_Acc;
+   begin
+      case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+         when Iir_Kind_Association_Element_Open =>
+            Actual := Get_Default_Value (Inter);
+         when Iir_Kind_Association_Element_By_Expression =>
+            Actual := Get_Actual (Assoc);
+         when Iir_Kind_Association_Element_By_Individual =>
+            Synth_Individual_Input_Assoc (Inp, Syn_Inst, Assoc, Inter_Inst);
+            return;
+      end case;
+
+      Formal_Typ := Get_Value_Type (Inter_Inst, Get_Type (Inter));
+
+      Connect (Inp,
+               Get_Net (Synth_Expression_With_Type
+                          (Syn_Inst, Actual, Formal_Typ)));
+   end Synth_Input_Assoc;
+
+   procedure Synth_Individual_Output_Assoc (Outp : Net;
+                                            Syn_Inst : Synth_Instance_Acc;
+                                            Assoc : Node;
+                                            Inter_Inst : Synth_Instance_Acc)
+   is
+      use Netlists.Builders;
+      Iassoc : Node;
+      V : Value_Acc;
+      Off : Uns32;
+      Typ : Type_Acc;
+      O : Net;
+      Port : Net;
+   begin
+      Port := Builders.Build_Port (Get_Build (Syn_Inst), Outp);
+
+      Iassoc := Get_Chain (Assoc);
+      while Iassoc /= Null_Node
+        and then not Get_Whole_Association_Flag (Iassoc)
+      loop
+         --  For each individual assoc:
+         --   1. compute type and offset
+         Synth_Individual_Prefix
+           (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Off, Typ);
+
+         --   2. Extract the value.
+         O := Build_Extract (Get_Build (Syn_Inst), Port, Off, Typ.W);
+         V := Create_Value_Net (O, Typ);
+
+         --   3. Assign.
+         Synth_Assignment (Syn_Inst, Get_Actual (Iassoc), V, Iassoc);
+
+         Iassoc := Get_Chain (Iassoc);
+      end loop;
+   end Synth_Individual_Output_Assoc;
+
+   procedure Synth_Output_Assoc (Outp : Net;
+                                 Syn_Inst : Synth_Instance_Acc;
+                                 Assoc : Node;
+                                 Inter_Inst : Synth_Instance_Acc;
+                                 Inter : Node)
+   is
+      Actual : Node;
+      Formal_Typ : Type_Acc;
+      Port : Net;
+      O : Value_Acc;
+   begin
+      case Get_Kind (Assoc) is
+         when Iir_Kind_Association_Element_Open =>
+            --  Not connected.
+            return;
+         when Iir_Kind_Association_Element_By_Expression =>
+            Actual := Get_Actual (Assoc);
+         when others =>
+            Synth_Individual_Output_Assoc
+              (Outp, Syn_Inst, Assoc, Inter_Inst);
+            return;
+      end case;
+
+      Formal_Typ := Get_Value_Type (Inter_Inst, Get_Type (Inter));
+
+      --  Create a port gate (so that is has a name).
+      Port := Builders.Build_Port (Get_Build (Syn_Inst), Outp);
+      O := Create_Value_Net (Port, Formal_Typ);
+      --  Assign the port output to the actual (a net).
+      Synth_Assignment (Syn_Inst, Actual, O, Assoc);
+   end Synth_Output_Assoc;
+
    --  Subprogram used for instantiation (direct or by component).
    --  PORTS_ASSOC belong to SYN_INST.
    procedure Synth_Instantiate_Module (Syn_Inst : Synth_Instance_Acc;
@@ -258,49 +484,32 @@ package body Synth.Insts is
       Assoc : Node;
       Assoc_Inter : Node;
       Inter : Node;
-      Actual : Node;
-      Port : Net;
-      O : Value_Acc;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
-      Formal_Typ : Type_Acc;
    begin
       Assoc := Ports_Assoc;
       Assoc_Inter := Get_Port_Chain (Inst_Obj.Decl);
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Assoc) loop
-         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         if Get_Whole_Association_Flag (Assoc) then
+            Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_Open =>
-               Actual := Get_Default_Value (Inter);
-            when Iir_Kind_Association_Element_By_Expression =>
-               Actual := Get_Actual (Assoc);
-            when others =>
-               raise Internal_Error;
-         end case;
-
-         Formal_Typ := Get_Value_Type (Inst_Obj.Syn_Inst, Get_Type (Inter));
-         case Mode_To_Port_Kind (Get_Mode (Inter)) is
-            when Port_In =>
-               --  Connect the net to the input.
-               Connect (Get_Input (Inst, Nbr_Inputs),
-                        Get_Net (Synth_Expression_With_Type
-                                   (Syn_Inst, Actual, Formal_Typ)));
-               Nbr_Inputs := Nbr_Inputs + 1;
-            when Port_Out
-              | Port_Inout =>
-               if Actual /= Null_Iir then
-                  --  Create a port gate (so that is has a name).
-                  Port := Get_Output (Inst, Nbr_Outputs);
-                  Port := Builders.Build_Port (Get_Build (Syn_Inst), Port);
-                  O := Create_Value_Net (Port, Formal_Typ);
-                  --  Assign the port output to the actual (a net).
-                  Synth_Assignment (Syn_Inst, Actual, O, Assoc);
-               end if;
-               Nbr_Outputs := Nbr_Outputs + 1;
-         end case;
+            case Mode_To_Port_Kind (Get_Mode (Inter)) is
+               when Port_In =>
+                  --  Connect the net to the input.
+                  Synth_Input_Assoc
+                    (Get_Input (Inst, Nbr_Inputs),
+                     Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter);
+                  Nbr_Inputs := Nbr_Inputs + 1;
+               when Port_Out
+                 | Port_Inout =>
+                  Synth_Output_Assoc
+                    (Get_Output (Inst, Nbr_Outputs),
+                     Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter);
+                  Nbr_Outputs := Nbr_Outputs + 1;
+            end case;
+         end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
    end Synth_Instantiate_Module;
