@@ -214,8 +214,6 @@ package Synth.Values is
             Scal : Int64;
          when Value_Float =>
             Fp : Fp64;
-         when Value_Subtype =>
-            null;
          when Value_Array
            | Value_Const_Array =>
             Arr : Value_Array_Acc;
@@ -228,6 +226,8 @@ package Synth.Values is
             File : File_Index;
          when Value_Instance =>
             Instance : Instance_Id;
+         when Value_Subtype =>
+            null;
          when Value_Const =>
             C_Val : Value_Acc;
             C_Loc : Syn_Src;

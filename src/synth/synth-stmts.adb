@@ -151,6 +151,7 @@ package body Synth.Stmts is
                Dest_Type := Targ.Typ;
 
                if Targ.Kind = Value_Alias then
+                  --  Replace alias by the aliased name.
                   Dest_Obj := Targ.A_Obj;
                   Dest_Off := Targ.A_Off;
                else
@@ -194,7 +195,7 @@ package body Synth.Stmts is
                      Dest_Off := Dest_Off + Off;
 
                      Strip_Const (Dest_Obj);
-                     if Dest_Obj.Kind = Value_Const_Array then
+                     if Dest_Obj.Kind in Value_Array .. Value_Const_Array then
                         Dest_Obj := Dest_Obj.Arr.V
                           (Iir_Index32 ((Dest_W - Dest_Off) / W));
                         Dest_Off := 0;
@@ -275,7 +276,7 @@ package body Synth.Stmts is
                      end if;
                      Dest_Off := Sl_Off;
                   else
-                     if Dest_Obj.Kind = Value_Const_Array then
+                     if Dest_Obj.Kind in Value_Array .. Value_Const_Array then
                         declare
                            Arr : Value_Array_Acc;
                            Off : Iir_Index32;
@@ -286,15 +287,20 @@ package body Synth.Stmts is
                            case Pfx_Bnd.Dir is
                               when Iir_To =>
                                  Off := Iir_Index32
-                                   (Pfx_Bnd.Right - Res_Bnd.Right);
+                                   (Res_Bnd.Left - Pfx_Bnd.Left);
                               when Iir_Downto =>
                                  Off := Iir_Index32
-                                   (Res_Bnd.Right - Pfx_Bnd.Right);
+                                   (Pfx_Bnd.Left - Res_Bnd.Left);
                            end case;
                            Arr.V := Dest_Obj.Arr.V
-                             (Off .. Off + Iir_Index32 (Res_Bnd.Len) - 1);
-                           Dest_Obj := Create_Value_Const_Array
-                             (Dest_Type, Arr);
+                             (Off + 1 .. Off + Iir_Index32 (Res_Bnd.Len));
+                           if Dest_Obj.Kind = Value_Array then
+                              Dest_Obj := Create_Value_Array
+                                (Dest_Type, Arr);
+                           else
+                              Dest_Obj := Create_Value_Const_Array
+                                (Dest_Type, Arr);
+                           end if;
                         end;
                      else
                         --  Slice of a vector.

@@ -803,7 +803,7 @@ package body Synth.Values is
             raise Internal_Error;
          when Type_Array =>
             declare
-               El_Typ : constant Type_Acc := Typ.Vec_El;
+               El_Typ : constant Type_Acc := Get_Array_Element (Typ);
                Arr : Value_Array_Acc;
             begin
                Arr := Create_Value_Array
