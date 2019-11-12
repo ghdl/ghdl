@@ -767,6 +767,8 @@ package body Synth.Expr is
             return Create_Value_Net (Val.N, Ntype);
          when Value_Alias =>
             return Create_Value_Alias (Val.A_Obj, Val.A_Off, Ntype);
+         when Value_Const =>
+            return Reshape_Value (Val.C_Val, Ntype);
          when others =>
             raise Internal_Error;
       end case;
