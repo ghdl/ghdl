@@ -223,7 +223,12 @@ package body Synth.Stmts is
                   raise Internal_Error;
                end if;
                Strip_Const (Dest_Obj);
-               Dest_Off := Dest_Off + Dest_Type.Rec.E (Idx + 1).Off;
+               if Dest_Obj.Kind = Value_Const_Record then
+                  pragma Assert (Dest_Off = 0);
+                  Dest_Obj := Dest_Obj.Rec.V (Idx + 1);
+               else
+                  Dest_Off := Dest_Off + Dest_Type.Rec.E (Idx + 1).Off;
+               end if;
                Dest_Type := Dest_Type.Rec.E (Idx + 1).Typ;
             end;
 
@@ -245,7 +250,9 @@ package body Synth.Stmts is
                                    Res_Bnd, Sl_Voff, Sl_Off, Wd);
 
                if Sl_Voff /= No_Net then
+                  --  Variable slice.
                   if Dest_Off /= 0 then
+                     --  Offset before slice is not yet handled.
                      raise Internal_Error;
                   end if;
                   Dest_Off := Dest_Off + Sl_Off;
@@ -258,6 +265,9 @@ package body Synth.Stmts is
                   end if;
                   Dest_Type := Create_Slice_Type (Wd, El_Typ);
                else
+                  --  Fixed slice.
+                  Dest_Type :=
+                    Create_Onedimensional_Array_Subtype (Dest_Type, Res_Bnd);
                   if Dest_Voff /= No_Net then
                      --  Slice of a memory.
                      if Dest_Off /= 0 then
@@ -265,11 +275,32 @@ package body Synth.Stmts is
                      end if;
                      Dest_Off := Sl_Off;
                   else
-                     --  Slice of a vector.
-                     Dest_Off := Dest_Off + Sl_Off;
+                     if Dest_Obj.Kind = Value_Const_Array then
+                        declare
+                           Arr : Value_Array_Acc;
+                           Off : Iir_Index32;
+                        begin
+                           pragma Assert (Dest_Off = 0);
+                           Arr := Create_Value_Array
+                             (Iir_Index32 (Res_Bnd.Len));
+                           case Pfx_Bnd.Dir is
+                              when Iir_To =>
+                                 Off := Iir_Index32
+                                   (Pfx_Bnd.Right - Res_Bnd.Right);
+                              when Iir_Downto =>
+                                 Off := Iir_Index32
+                                   (Res_Bnd.Right - Pfx_Bnd.Right);
+                           end case;
+                           Arr.V := Dest_Obj.Arr.V
+                             (Off .. Off + Iir_Index32 (Res_Bnd.Len) - 1);
+                           Dest_Obj := Create_Value_Const_Array
+                             (Dest_Type, Arr);
+                        end;
+                     else
+                        --  Slice of a vector.
+                        Dest_Off := Dest_Off + Sl_Off;
+                     end if;
                   end if;
-                  Dest_Type :=
-                    Create_Onedimensional_Array_Subtype (Dest_Type, Res_Bnd);
                end if;
             end;
 
