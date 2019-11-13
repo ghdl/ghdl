@@ -1794,8 +1794,12 @@ package body Synth.Stmts is
 
       while In_Range (It_Rng.Drange, Val.Scal) loop
          Synth_Sequential_Statements (C, Stmts);
+
          Update_Index (It_Rng.Drange, Val.Scal);
          Loop_Control_Update (C);
+
+         --  Constant exit.
+         exit when Get_Current_Value (null, C.W_En) = Get_Inst_Bit0 (C.Inst);
       end loop;
       Loop_Control_Finish (C);
 
