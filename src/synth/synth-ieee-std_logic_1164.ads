@@ -35,6 +35,9 @@ package Synth.Ieee.Std_Logic_1164 is
       '-'   --  Don't care.
      );
 
+   --  Vector of logic state.
+   type Std_Logic_Vector is array (Natural range <>) of Std_Ulogic;
+
    -- type Table_1d is array (Std_Ulogic) of Std_Ulogic;
    type Table_2d is array (Std_Ulogic, Std_Ulogic) of Std_Ulogic;
 

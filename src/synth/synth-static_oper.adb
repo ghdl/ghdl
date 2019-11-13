@@ -23,7 +23,8 @@ with Types; use Types;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 with Synth.Expr; use Synth.Expr;
-with Synth.Ieee.Std_Logic_1164;
+with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
+with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
 
 package body Synth.Static_Oper is
    --  From openiee:
@@ -43,7 +44,6 @@ package body Synth.Static_Oper is
    function Synth_Vector_And (L, R : Value_Acc; Loc : Syn_Src)
                              return Value_Acc
    is
-      use Synth.Ieee.Std_Logic_1164;
       El_Typ : constant Type_Acc := L.Typ.Vec_El;
       Arr : Value_Array_Acc;
    begin
@@ -65,8 +65,48 @@ package body Synth.Static_Oper is
          end;
       end loop;
 
-      return Create_Value_Array (Create_Res_Bound (L.Typ), Arr);
+      return Create_Value_Const_Array (Create_Res_Bound (L.Typ), Arr);
    end Synth_Vector_And;
+
+   procedure To_Std_Logic_Vector
+     (Val : Value_Acc; Arr : out Std_Logic_Vector) is
+   begin
+      for I in Val.Arr.V'Range loop
+         Arr (Natural (I)) := Std_Ulogic'Val (Val.Arr.V (I).Scal);
+      end loop;
+   end To_Std_Logic_Vector;
+
+   function To_Value_Acc (Vec : Std_Logic_Vector; El_Typ : Type_Acc)
+                         return Value_Acc
+   is
+      pragma Assert (Vec'First = 1);
+      Res_Typ : Type_Acc;
+      Arr : Value_Array_Acc;
+   begin
+      Res_Typ := Create_Vec_Type_By_Length (Uns32 (Vec'Last), El_Typ);
+      Arr := Create_Value_Array (Iir_Index32 (Vec'Last));
+      for I in Vec'Range loop
+         Arr.V (Iir_Index32 (I)) :=
+           Create_Value_Discrete (Std_Ulogic'Pos (Vec (I)), El_Typ);
+      end loop;
+      return Create_Value_Const_Array (Res_Typ, Arr);
+   end To_Value_Acc;
+
+   function Synth_Add_Uns_Uns (L, R : Value_Acc; Loc : Syn_Src)
+                              return Value_Acc
+   is
+      pragma Unreferenced (Loc);
+      L_Arr : Std_Logic_Vector (1 .. Natural (L.Arr.Len));
+      R_Arr : Std_Logic_Vector (1 .. Natural (R.Arr.Len));
+   begin
+      To_Std_Logic_Vector (L, L_Arr);
+      To_Std_Logic_Vector (R, R_Arr);
+      declare
+         Res_Arr : constant Std_Logic_Vector := Add_Uns_Uns (L_Arr, R_Arr);
+      begin
+         return To_Value_Acc (Res_Arr, L.Typ.Vec_El);
+      end;
+   end Synth_Add_Uns_Uns;
 
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
@@ -148,6 +188,9 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Ieee_1164_Vector_And =>
             return Synth_Vector_And (Left, Right, Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
+            return Synth_Add_Uns_Uns (Left, Right, Expr);
 
          when others =>
             Error_Msg_Synth
