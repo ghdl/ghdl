@@ -57,7 +57,7 @@ package body Synth.Oper is
    is
       Res : Net;
    begin
-      if Is_Const (Val) and then Val.Typ.Kind = Type_Discrete then
+      if Is_Static (Val) and then Val.Typ.Kind = Type_Discrete then
          if Val.Typ.Drange.Is_Signed and then Val.Scal < 0 then
             --  TODO.
             raise Internal_Error;
@@ -74,7 +74,7 @@ package body Synth.Oper is
    is
       Res : Net;
    begin
-      if Is_Const (Val) and then Val.Typ.Kind = Type_Discrete then
+      if Is_Static (Val) and then Val.Typ.Kind = Type_Discrete then
          if Val.Typ.Drange.Is_Signed then
             Res := Build2_Const_Int (Build_Context, Val.Scal, W);
          else
@@ -95,7 +95,7 @@ package body Synth.Oper is
       Zx : Uns32;
       N : Net;
    begin
-      if Is_Const (Expr) then
+      if Is_Static (Expr) then
          return Create_Value_Discrete (Boolean'Pos (Cst.Scal = Expr.Scal),
                                        Boolean_Type);
       end if;
@@ -378,7 +378,7 @@ package body Synth.Oper is
       Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
       Strip_Const (Right);
 
-      if Is_Const_Val (Left) and Is_Const_Val (Right) then
+      if Is_Static_Val (Left) and Is_Static_Val (Right) then
          return Synth_Static_Dyadic_Predefined
            (Syn_Inst, Imp, Left, Right, Expr);
       end if;
@@ -438,9 +438,9 @@ package body Synth.Oper is
             if Left_Typ = Bit_Type
               or else Left_Typ = Logic_Type
             then
-               if Is_Const (Left) then
+               if Is_Static (Left) then
                   return Synth_Bit_Eq_Const (Left, Right, Expr);
-               elsif Is_Const (Right) then
+               elsif Is_Static (Right) then
                   return Synth_Bit_Eq_Const (Right, Left, Expr);
                end if;
             end if;
@@ -591,7 +591,7 @@ package body Synth.Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
             --  "<" (Unsigned, Natural)
-            if Is_Const (Right) and then Right.Scal = 0 then
+            if Is_Static (Right) and then Right.Scal = 0 then
                --  Always false.
                return Create_Value_Discrete (0, Boolean_Type);
             end if;
@@ -679,7 +679,7 @@ package body Synth.Oper is
                  (N, Create_Onedimensional_Array_Subtype (Ret_Typ, Bnd));
             end;
          when Iir_Predefined_Array_Array_Concat =>
-            if Is_Const (Left) and then Is_Const (Right) then
+            if Is_Static (Left) and then Is_Static (Right) then
                declare
                   Ret_Typ : constant Type_Acc :=
                     Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
@@ -817,7 +817,7 @@ package body Synth.Oper is
             return Synth_Bit_Monadic (Id_Not);
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Bit_Not =>
-            if Is_Const (Operand) then
+            if Is_Static (Operand) then
                return Create_Value_Discrete (1 - Operand.Scal, Oper_Typ);
             else
                return Synth_Bit_Monadic (Id_Not);
@@ -850,7 +850,7 @@ package body Synth.Oper is
                return Operand;
             end if;
          when Iir_Predefined_Integer_Negation =>
-            if Is_Const (Operand) then
+            if Is_Static (Operand) then
                return Create_Value_Discrete (-Operand.Scal, Operand.Typ);
             else
                declare
@@ -1038,7 +1038,7 @@ package body Synth.Oper is
                R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
                pragma Unreferenced (R);
             begin
-               if Is_Const (L) then
+               if Is_Static (L) then
                   raise Internal_Error;
                end if;
                return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
@@ -1051,13 +1051,13 @@ package body Synth.Oper is
                Arg_Net : Net;
             begin
                Size := Get_Value (Subprg_Inst, Param2);
-               if not Is_Const (Size) then
+               if not Is_Static (Size) then
                   Error_Msg_Synth (+Expr, "to_unsigned size must be constant");
                   return Arg;
                else
                   Strip_Const (Size);
                   --  FIXME: what if the arg is constant too ?
-                  if Is_Const (Arg) then
+                  if Is_Static (Arg) then
                      return Eval_To_Unsigned
                        (Arg.Scal, Size.Scal,
                         Get_Value_Type (Syn_Inst, Get_Type (Imp)));
@@ -1090,7 +1090,7 @@ package body Synth.Oper is
                Sz : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
                W : Width;
             begin
-               if not Is_Const (Sz) then
+               if not Is_Static (Sz) then
                   Error_Msg_Synth (+Expr, "size must be constant");
                   return null;
                end if;
@@ -1105,7 +1105,7 @@ package body Synth.Oper is
                Sz : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
                W : Width;
             begin
-               if not Is_Const (Sz) then
+               if not Is_Static (Sz) then
                   Error_Msg_Synth (+Expr, "size must be constant");
                   return null;
                end if;
@@ -1156,9 +1156,9 @@ package body Synth.Oper is
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
                R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
             begin
-               if Is_Const (L) then
+               if Is_Static (L) then
                   return Synth_Std_Match (L, R, Expr);
-               elsif Is_Const (R) then
+               elsif Is_Static (R) then
                   return Synth_Std_Match (R, L, Expr);
                else
                   Error_Msg_Synth

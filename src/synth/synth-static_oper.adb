@@ -129,15 +129,15 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Integer_Plus =>
             return Create_Value_Discrete
-              (Get_Const_Discrete (Left) + Get_Const_Discrete (Right),
+              (Get_Static_Discrete (Left) + Get_Static_Discrete (Right),
                Res_Typ);
          when Iir_Predefined_Integer_Minus =>
             return Create_Value_Discrete
-              (Get_Const_Discrete (Left) - Get_Const_Discrete (Right),
+              (Get_Static_Discrete (Left) - Get_Static_Discrete (Right),
                Res_Typ);
          when Iir_Predefined_Integer_Mul =>
             return Create_Value_Discrete
-              (Get_Const_Discrete (Left) * Get_Const_Discrete (Right),
+              (Get_Static_Discrete (Left) * Get_Static_Discrete (Right),
                Res_Typ);
          when Iir_Predefined_Integer_Div =>
             return Create_Value_Discrete
@@ -165,12 +165,12 @@ package body Synth.Static_Oper is
               (Boolean'Pos (Left.Scal > Right.Scal), Boolean_Type);
          when Iir_Predefined_Integer_Equality =>
             return Create_Value_Discrete
-              (Boolean'Pos (Get_Const_Discrete (Left)
-                              = Get_Const_Discrete (Right)), Boolean_Type);
+              (Boolean'Pos (Get_Static_Discrete (Left)
+                              = Get_Static_Discrete (Right)), Boolean_Type);
          when Iir_Predefined_Integer_Inequality =>
             return Create_Value_Discrete
-              (Boolean'Pos (Get_Const_Discrete (Left)
-                              /= Get_Const_Discrete (Right)), Boolean_Type);
+              (Boolean'Pos (Get_Static_Discrete (Left)
+                              /= Get_Static_Discrete (Right)), Boolean_Type);
          when Iir_Predefined_Physical_Physical_Div =>
             return Create_Value_Discrete
               (Left.Scal / Right.Scal, Res_Typ);

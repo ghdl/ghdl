@@ -278,10 +278,11 @@ package Synth.Values is
 
    function Is_Bounded_Type (Typ : Type_Acc) return Boolean;
 
-   function Is_Const (Val : Value_Acc) return Boolean;
+   --  True if VAL is static, ie contains neither nets nor wires.
+   function Is_Static (Val : Value_Acc) return Boolean;
 
    --  Can also return true for nets and wires.
-   function Is_Const_Val (Val : Value_Acc) return Boolean;
+   function Is_Static_Val (Val : Value_Acc) return Boolean;
 
    function Is_Equal (L, R : Value_Acc) return Boolean;
 

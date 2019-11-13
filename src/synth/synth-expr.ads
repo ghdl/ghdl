@@ -36,7 +36,7 @@ package Synth.Expr is
                                       Loc : Source.Syn_Src)
                                      return Value_Acc;
 
-   function Get_Const_Discrete (V : Value_Acc) return Int64;
+   function Get_Static_Discrete (V : Value_Acc) return Int64;
 
    --  Return the bounds of a one dimensional array/vector type and the
    --  width of the element.

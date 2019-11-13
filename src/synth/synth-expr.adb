@@ -48,7 +48,7 @@ package body Synth.Expr is
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
 
-   function Get_Const_Discrete (V : Value_Acc) return Int64
+   function Get_Static_Discrete (V : Value_Acc) return Int64
    is
       N : Net;
    begin
@@ -65,7 +65,7 @@ package body Synth.Expr is
             raise Internal_Error;
       end case;
       return Get_Net_Int64 (N);
-   end Get_Const_Discrete;
+   end Get_Static_Discrete;
 
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32) is
    begin
@@ -146,7 +146,7 @@ package body Synth.Expr is
       N : Net;
       Res : Net;
    begin
-      if Is_Const (Val) then
+      if Is_Static (Val) then
          if Wn /= W then
             pragma Assert (Val.Kind = Value_Discrete);
             if Val.Typ.Drange.Is_Signed then
@@ -267,7 +267,7 @@ package body Synth.Expr is
             Res.V (Iir_Index32 (Pos + 1)) := Val;
             pragma Assert (not Is_Set (Pos + 1));
             Is_Set (Pos + 1) := True;
-            if Const_P and then not Is_Const (Val) then
+            if Const_P and then not Is_Static (Val) then
                Const_P := False;
             end if;
          else
@@ -349,7 +349,7 @@ package body Synth.Expr is
                      Idx : Value_Acc;
                   begin
                      Idx := Synth_Expression (Syn_Inst, Ch);
-                     if not Is_Const (Idx) then
+                     if not Is_Static (Idx) then
                         Error_Msg_Synth (+Ch, "choice is not static");
                      else
                         Set_Elem (Get_Index_Offset (Idx, Bound, Ch));
@@ -424,7 +424,7 @@ package body Synth.Expr is
          Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type);
          Rec.V (Iir_Index32 (Pos + 1)) := Synth_Subtype_Conversion
            (Val, El_Type, False, Value);
-         if Const_P and not Is_Const (Val) then
+         if Const_P and not Is_Static (Val) then
             Const_P := False;
          end if;
       end Set_Elem;
@@ -522,7 +522,7 @@ package body Synth.Expr is
       Strip_Const (L);
       Strip_Const (R);
 
-      if not (Is_Const (L) and Is_Const (R)) then
+      if not (Is_Static (L) and Is_Static (R)) then
          Error_Msg_Synth (+Rng, "limits of range are not constant");
          raise Internal_Error;
       end if;
@@ -745,7 +745,7 @@ package body Synth.Expr is
       for I in Flist_First .. Last loop
          Val := Synth_Expression_With_Type
            (Syn_Inst, Get_Nth_Element (Els, I), El_Typ);
-         pragma Assert (Is_Const (Val));
+         pragma Assert (Is_Static (Val));
          Arr.V (Iir_Index32 (Last - I + 1)) := Val;
       end loop;
 
@@ -1028,7 +1028,7 @@ package body Synth.Expr is
       end if;
    end Synth_Indexed_Name;
 
-   function Is_Const (N : Net) return Boolean is
+   function Is_Static (N : Net) return Boolean is
    begin
       case Get_Id (Get_Module (Get_Net_Parent (N))) is
          when Id_Const_UB32 =>
@@ -1036,7 +1036,7 @@ package body Synth.Expr is
          when others =>
             return False;
       end case;
-   end Is_Const;
+   end Is_Static;
 
    function Get_Const (N : Net) return Int32
    is
@@ -1068,10 +1068,10 @@ package body Synth.Expr is
             when Id_Add =>
                Val_I0 := Get_Input_Net (Inst, 0);
                Val_I1 := Get_Input_Net (Inst, 1);
-               if Is_Const (Val_I0) then
+               if Is_Static (Val_I0) then
                   Addend := Addend + Get_Const (Val_I0) * Factor;
                   Inp := Val_I1;
-               elsif Is_Const (Val_I1) then
+               elsif Is_Static (Val_I1) then
                   Addend := Addend + Get_Const (Val_I1) * Factor;
                   Inp := Val_I0;
                else
@@ -1081,7 +1081,7 @@ package body Synth.Expr is
             when Id_Sub =>
                Val_I0 := Get_Input_Net (Inst, 0);
                Val_I1 := Get_Input_Net (Inst, 1);
-               if Is_Const (Val_I1) then
+               if Is_Static (Val_I1) then
                   Addend := Addend - Get_Const (Val_I1) * Factor;
                   Inp := Val_I0;
                else
@@ -1091,10 +1091,10 @@ package body Synth.Expr is
             when Id_Smul =>
                Val_I0 := Get_Input_Net (Inst, 0);
                Val_I1 := Get_Input_Net (Inst, 1);
-               if Is_Const (Val_I0) then
+               if Is_Static (Val_I0) then
                   Factor := Factor * Get_Const (Val_I0);
                   Inp := Val_I1;
-               elsif Is_Const (Val_I1) then
+               elsif Is_Static (Val_I1) then
                   Factor := Factor * Get_Const (Val_I1);
                   Inp := Val_I0;
                else
@@ -1293,11 +1293,11 @@ package body Synth.Expr is
               (+Expr, "only range expression supported for slices");
       end case;
 
-      if Is_Const_Val (Left) and then Is_Const_Val (Right) then
+      if Is_Static_Val (Left) and then Is_Static_Val (Right) then
          Inp := No_Net;
          Synth_Slice_Const_Suffix
            (Name, Pfx_Bnd,
-            Get_Const_Discrete (Left), Get_Const_Discrete (Right), Dir,
+            Get_Static_Discrete (Left), Get_Static_Discrete (Right), Dir,
             El_Wd, Res_Bnd, Off, Wd);
       else
          if Pfx_Bnd.Dir /= Dir then
@@ -1308,7 +1308,7 @@ package body Synth.Expr is
             return;
          end if;
 
-         if Is_Const (Left) or else Is_Const (Right) then
+         if Is_Static (Left) or else Is_Static (Right) then
             Error_Msg_Synth
               (+Name, "left and right bounds of a slice must be "
                  & "either constant or dynamic");
@@ -1456,7 +1456,7 @@ package body Synth.Expr is
                return null;
             end if;
          when Iir_Kind_Floating_Subtype_Definition =>
-            if Is_Const (Val) then
+            if Is_Static (Val) then
                return Create_Value_Float (Fp64 (Val.Scal), Conv_Typ);
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to float)");
@@ -1565,7 +1565,7 @@ package body Synth.Expr is
       end case;
 
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Typ);
-      if Is_Const_Val (Left) and then Get_Const_Discrete (Left) = Val then
+      if Is_Static_Val (Left) and then Get_Static_Discrete (Left) = Val then
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
@@ -1575,8 +1575,8 @@ package body Synth.Expr is
 
       --  Return a static value if both operands are static.
       --  Note: we know the value of left if it is not constant.
-      if Is_Const_Val (Left) and then Is_Const_Val (Right) then
-         Val := Get_Const_Discrete (Right);
+      if Is_Static_Val (Left) and then Is_Static_Val (Right) then
+         Val := Get_Static_Discrete (Right);
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
@@ -1667,7 +1667,7 @@ package body Synth.Expr is
             begin
                Synth_Assignment_Prefix (Syn_Inst, Expr,
                                         Obj, Off, Voff, Rdwd, Typ);
-               if Voff = No_Net and then Is_Const (Obj) then
+               if Voff = No_Net and then Is_Static (Obj) then
                   pragma Assert (Off = 0);
                   return Obj;
                end if;

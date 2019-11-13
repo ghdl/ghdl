@@ -451,7 +451,7 @@ package body Synth.Stmts is
                Synth_Assign (Target.Obj.W, Target.Targ_Type,
                              Val, Target.Off, Loc);
             else
-               if not Is_Const (Val) then
+               if not Is_Static (Val) then
                   --  Maybe the error message is too cryptic ?
                   Error_Msg_Synth
                     (+Loc, "cannot assign a net to a static value");
@@ -502,7 +502,7 @@ package body Synth.Stmts is
          N := Build_Dyn_Extract
            (Get_Build (Syn_Inst), Get_Net (Obj), Voff, Off, Typ.W);
       else
-         pragma Assert (not Is_Const (Obj));
+         pragma Assert (not Is_Static (Obj));
          if Off = 0
            and then Typ.W = Obj.Typ.W
            and then Typ /= Get_Array_Element (Obj.Typ)
@@ -625,7 +625,7 @@ package body Synth.Stmts is
       Phi_False : Phi_Type;
    begin
       Cond_Val := Synth_Expression (C.Inst, Cond);
-      if Is_Const (Cond_Val) then
+      if Is_Static (Cond_Val) then
          if Cond_Val.Scal = 1 then
             --  True.
             Synth_Sequential_Statements
@@ -1356,7 +1356,7 @@ package body Synth.Stmts is
          --  FIXME: conversion only for constants, reshape for all.
          Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
 
-         if Get_Instance_Const (Subprg_Inst) and then not Is_Const (Val) then
+         if Get_Instance_Const (Subprg_Inst) and then not Is_Static (Val) then
             Set_Instance_Const (Subprg_Inst, False);
          end if;
 
@@ -1537,7 +1537,7 @@ package body Synth.Stmts is
          if Is_Func then
             if C.Nbr_Ret = 0 then
                raise Internal_Error;
-            elsif C.Nbr_Ret = 1 and then Is_Const (C.Ret_Value) then
+            elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value) then
                Res := C.Ret_Value;
             else
                Res := Create_Value_Net
@@ -1845,7 +1845,7 @@ package body Synth.Stmts is
       loop
          if Cond /= Null_Node then
             Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
-            if not Is_Const (Val) then
+            if not Is_Static (Val) then
                Error_Msg_Synth (+Cond, "loop condition must be static");
                exit;
             end if;
@@ -2088,7 +2088,7 @@ package body Synth.Stmts is
       Inst : Instance;
    begin
       Val := Synth_Expression (Syn_Inst, Cond);
-      if Is_Const (Val) then
+      if Is_Static (Val) then
          if Val.Scal /= 1 then
             raise Internal_Error;
          end if;

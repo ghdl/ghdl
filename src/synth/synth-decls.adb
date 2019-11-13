@@ -472,7 +472,7 @@ package body Synth.Decls is
            (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
          --  For constant functions, the value must be constant.
          pragma Assert (not Get_Instance_Const (Syn_Inst)
-                          or else Is_Const (Val));
+                          or else Is_Static (Val));
          if Val.Kind = Value_Const then
             Cst := Val;
          else

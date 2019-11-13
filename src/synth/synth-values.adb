@@ -39,7 +39,7 @@ package body Synth.Values is
    function To_Value_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Values.Value_Array_Acc);
 
-   function Is_Const (Val : Value_Acc) return Boolean is
+   function Is_Static (Val : Value_Acc) return Boolean is
    begin
       case Val.Kind is
          when Value_Discrete
@@ -58,7 +58,7 @@ package body Synth.Values is
            | Value_File =>
             return False;
          when Value_Alias =>
-            return Is_Const (Val.A_Obj);
+            return Is_Static (Val.A_Obj);
          when Value_Const =>
             return True;
          when Value_Instance
@@ -66,9 +66,9 @@ package body Synth.Values is
             --  Not really a value.
             raise Internal_Error;
       end case;
-   end Is_Const;
+   end Is_Static;
 
-   function Is_Const_Val (Val : Value_Acc) return Boolean is
+   function Is_Static_Val (Val : Value_Acc) return Boolean is
    begin
       case Val.Kind is
          when Value_Discrete
@@ -96,7 +96,7 @@ package body Synth.Values is
             --  Not really a value.
             raise Internal_Error;
       end case;
-   end Is_Const_Val;
+   end Is_Static_Val;
 
    function Is_Bounded_Type (Typ : Type_Acc) return Boolean is
    begin
