@@ -1500,6 +1500,12 @@ package body Synth.Stmts is
          Synth_Subprogram_Association
            (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
 
+         if not Is_Func then
+            if Get_Purity_State (Imp) /= Pure then
+               Set_Instance_Const (C.Inst, False);
+            end if;
+         end if;
+
          Push_Phi;
 
          if Is_Func then
