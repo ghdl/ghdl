@@ -42,7 +42,7 @@ package Synth.Ieee.Std_Logic_1164 is
    type Table_2d is array (Std_Ulogic, Std_Ulogic) of Std_Ulogic;
 
    And_Table : constant Table_2d :=
-     --  UX01ZWLH-
+   --  UX01ZWLH-
      ("UU0UUU0UU",   -- U
       "UX0XXX0XX",   -- X
       "000000000",   -- 0
@@ -52,6 +52,19 @@ package Synth.Ieee.Std_Logic_1164 is
       "000000000",   -- L
       "UX01XX01X",   -- H
       "UX0XXX0XX"    -- -
+     );
+
+   Or_Table : constant Table_2d :=
+   --  UX01ZWLH-
+     ("UUU1UUU1U",   -- U
+      "UXX1XXX1X",   -- X
+      "UX01XX01X",   -- 0
+      "111111111",   -- 1
+      "UXX1XXX1X",   -- Z
+      "UXX1XXX1X",   -- W
+      "UX01XX01X",   -- L
+      "111111111",   -- H
+      "UXX1XXX1X"    -- -
      );
 
 end Synth.Ieee.Std_Logic_1164;

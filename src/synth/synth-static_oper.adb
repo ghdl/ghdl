@@ -41,8 +41,8 @@ package body Synth.Static_Oper is
       return Create_Vec_Type_By_Length (Prev.W, Prev.Vec_El);
    end Create_Res_Bound;
 
-   function Synth_Vector_And (L, R : Value_Acc; Loc : Syn_Src)
-                             return Value_Acc
+   function Synth_Vector_Dyadic
+     (L, R : Value_Acc; Op : Table_2d; Loc : Syn_Src) return Value_Acc
    is
       El_Typ : constant Type_Acc := L.Typ.Vec_El;
       Arr : Value_Array_Acc;
@@ -59,14 +59,14 @@ package body Synth.Static_Oper is
               Std_Ulogic'Val (L.Arr.V (I).Scal);
             Rs : constant Std_Ulogic :=
               Std_Ulogic'Val (R.Arr.V (I).Scal);
-            V : constant Std_Ulogic := And_Table (Ls, Rs);
+            V : constant Std_Ulogic := Op (Ls, Rs);
          begin
             Arr.V (I) := Create_Value_Discrete (Std_Ulogic'Pos (V), El_Typ);
          end;
       end loop;
 
       return Create_Value_Const_Array (Create_Res_Bound (L.Typ), Arr);
-   end Synth_Vector_And;
+   end Synth_Vector_Dyadic;
 
    procedure To_Std_Logic_Vector
      (Val : Value_Acc; Arr : out Std_Logic_Vector) is
@@ -187,7 +187,10 @@ package body Synth.Static_Oper is
               (Boolean'Pos (not Is_Equal (Left, Right)), Boolean_Type);
 
          when Iir_Predefined_Ieee_1164_Vector_And =>
-            return Synth_Vector_And (Left, Right, Expr);
+            return Synth_Vector_Dyadic (Left, Right, And_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Vector_Or =>
+            return Synth_Vector_Dyadic (Left, Right, Or_Table, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
             return Synth_Add_Uns_Uns (Left, Right, Expr);
