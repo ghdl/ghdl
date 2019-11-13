@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Vhdl.Nodes; use Vhdl.Nodes;
+
 with Synth.Context; use Synth.Context;
 with Synth.Values; use Synth.Values;
 

@@ -20,6 +20,7 @@
 
 with Types; use Types;
 with Mutils; use Mutils;
+
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
@@ -36,6 +37,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Stmts;
 with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
+with Synth.Files_Operations;
 
 package body Synth.Decls is
    procedure Synth_Anonymous_Subtype_Indication
@@ -697,11 +699,14 @@ package body Synth.Decls is
             null;
          when Iir_Kind_File_Declaration =>
             declare
+               F : File_Index;
                Res : Value_Acc;
                Obj_Typ : Type_Acc;
             begin
+               F := Synth.Files_Operations.Elaborate_File_Declaration
+                 (Syn_Inst, Decl);
                Obj_Typ := Get_Value_Type (Syn_Inst, Get_Type (Decl));
-               Res := Create_Value_File (Obj_Typ, 0);
+               Res := Create_Value_File (Obj_Typ, F);
                Create_Object (Syn_Inst, Decl, Res);
             end;
          when Iir_Kind_Psl_Default_Clock =>

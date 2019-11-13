@@ -21,6 +21,8 @@
 with Types; use Types;
 with Areapools; use Areapools;
 
+with Grt.Files_Operations;
+
 with Netlists; use Netlists;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -201,7 +203,7 @@ package Synth.Values is
    type Heap_Index is new Uns32;
    Null_Heap_Index : constant Heap_Index := 0;
 
-   type File_Index is new Nat32;
+   subtype File_Index is Grt.Files_Operations.Ghdl_File_Index;
 
    type Value_Type (Kind : Value_Kind) is record
       Typ : Type_Acc;
