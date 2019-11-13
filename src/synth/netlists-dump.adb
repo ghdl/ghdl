@@ -131,6 +131,8 @@ package body Netlists.Dump is
       if With_Id then
          Put ("{n");
          Put_Trim (Net'Image (N));
+         Put ('w');
+         Put_Width (Get_Width (N));
          Put ('}');
       end if;
    end Dump_Net_Name;
@@ -207,8 +209,6 @@ package body Netlists.Dump is
             begin
                if N /= No_Net then
                   Dump_Net_Name (N, True);
-                  Put (':');
-                  Put_Width (Get_Width (N));
                end if;
             end;
             New_Line;
@@ -221,8 +221,6 @@ package body Netlists.Dump is
          for O of Outputs (Inst) loop
             Put (' ');
             Dump_Net_Name (O, True);
-            Put (':');
-            Put_Width (Get_Width (O));
          end loop;
          New_Line;
       end if;
