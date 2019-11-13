@@ -21,6 +21,9 @@
 with Netlists.Utils; use Netlists.Utils;
 
 package body Netlists.Cleanup is
+   --  Return False iff INST has no outputs (and INST is not Id_Free).
+   --  Return True iff all outputs of INST are unconnected.
+   --  Return False otherwise.
    function Is_Unused_Instance (Inst : Instance) return Boolean
    is
       Nbr_Outputs : constant Port_Idx := Get_Nbr_Outputs (Inst);
@@ -43,6 +46,7 @@ package body Netlists.Cleanup is
       return True;
    end Is_Unused_Instance;
 
+   --  Move INST on LIST iff INST is unused.
    procedure Extract_If_Unused (Inst : Instance; List : in out Instance) is
    begin
       if Is_Unused_Instance (Inst) then
@@ -92,8 +96,10 @@ package body Netlists.Cleanup is
                   Inp := Get_Input (Inst, K);
                   Drv := Get_Driver (Inp);
                   if Drv /= No_Net then
-                     --  The input was already unconnected.
+                     --  Disconnect the input.
                      Disconnect (Inp);
+                     --  Possibly consider the driver as unconnected if was
+                     --  the last input connected.
                      if Get_First_Sink (Drv) = No_Input then
                         Inst2 := Get_Net_Parent (Drv);
                         Extract_If_Unused (Inst2, List);
