@@ -451,8 +451,14 @@ package body Synth.Stmts is
                Synth_Assign (Target.Obj.W, Target.Targ_Type,
                              Val, Target.Off, Loc);
             else
-               pragma Assert (Target.Off = 0);
-               Assign_Value (Target.Obj, Val, Loc);
+               if not Is_Const (Val) then
+                  --  Maybe the error message is too cryptic ?
+                  Error_Msg_Synth
+                    (+Loc, "cannot assign a net to a static value");
+               else
+                  pragma Assert (Target.Off = 0);
+                  Assign_Value (Target.Obj, Val, Loc);
+               end if;
             end if;
          when Target_Memory =>
             declare

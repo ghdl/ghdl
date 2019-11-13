@@ -89,9 +89,10 @@ package body Synth.Values is
             return False;
          when Value_Const =>
             return True;
+         when Value_Alias =>
+            return False;
          when Value_Instance
-           | Value_Subtype
-           | Value_Alias =>
+           | Value_Subtype =>
             --  Not really a value.
             raise Internal_Error;
       end case;

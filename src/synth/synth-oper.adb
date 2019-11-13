@@ -38,6 +38,7 @@ with Synth.Stmts; use Synth.Stmts;
 with Synth.Expr; use Synth.Expr;
 with Synth.Source;
 with Synth.Files_Operations;
+with Synth.Static_Oper; use Synth.Static_Oper;
 
 package body Synth.Oper is
    --  As log2(3m) is directly referenced, the program must be linked with -lm
@@ -260,6 +261,7 @@ package body Synth.Oper is
       is
          N : Net;
       begin
+         --  FIXME: check same length.
          N := Build_Dyadic (Build_Context, Id,
                             Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
@@ -376,6 +378,11 @@ package body Synth.Oper is
       Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
       Strip_Const (Right);
 
+      if Is_Const_Val (Left) and Is_Const_Val (Right) then
+         return Synth_Static_Dyadic_Predefined
+           (Syn_Inst, Imp, Left, Right, Expr);
+      end if;
+
       case Def is
          when Iir_Predefined_Error =>
             return null;
@@ -428,10 +435,6 @@ package body Synth.Oper is
             return Synth_Vec_Dyadic (Id_Xnor);
 
          when Iir_Predefined_Enum_Equality =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal = Right.Scal), Boolean_Type);
-            end if;
             if Left_Typ = Bit_Type
               or else Left_Typ = Logic_Type
             then
@@ -450,10 +453,6 @@ package body Synth.Oper is
 
          when Iir_Predefined_Array_Equality
             | Iir_Predefined_Record_Equality =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (Is_Equal (Left, Right)), Boolean_Type);
-            end if;
             if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
                Warning_Msg_Synth
                  (+Expr,
@@ -463,10 +462,6 @@ package body Synth.Oper is
             return Synth_Compare (Id_Eq);
          when Iir_Predefined_Array_Inequality
             | Iir_Predefined_Record_Inequality =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (not Is_Equal (Left, Right)), Boolean_Type);
-            end if;
             if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
                Warning_Msg_Synth
                  (+Expr,
@@ -726,124 +721,40 @@ package body Synth.Oper is
                end;
             end if;
          when Iir_Predefined_Integer_Plus =>
-            if Is_Const_Val (Left) and then Is_Const_Val (Right) then
-               return Create_Value_Discrete
-                 (Get_Const_Discrete (Left) + Get_Const_Discrete (Right),
-                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
-            else
-               return Synth_Int_Dyadic (Id_Add);
-            end if;
+            return Synth_Int_Dyadic (Id_Add);
          when Iir_Predefined_Integer_Minus =>
-            if Is_Const_Val (Left) and then Is_Const_Val (Right) then
-               return Create_Value_Discrete
-                 (Get_Const_Discrete (Left) - Get_Const_Discrete (Right),
-                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
-            else
-               return Synth_Int_Dyadic (Id_Sub);
-            end if;
+            return Synth_Int_Dyadic (Id_Sub);
          when Iir_Predefined_Integer_Mul =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Left.Scal * Right.Scal,
-                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
-            else
-               return Synth_Int_Dyadic (Id_Smul);
-            end if;
+            return Synth_Int_Dyadic (Id_Smul);
          when Iir_Predefined_Integer_Div =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Left.Scal / Right.Scal,
-                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
-            else
-               return Synth_Int_Dyadic (Id_Sdiv);
-            end if;
+            return Synth_Int_Dyadic (Id_Sdiv);
          when Iir_Predefined_Integer_Mod =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Left.Scal mod Right.Scal,
-                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
-            else
-               return Synth_Int_Dyadic (Id_Smod);
-            end if;
+            return Synth_Int_Dyadic (Id_Smod);
          when Iir_Predefined_Integer_Rem =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Left.Scal rem Right.Scal,
-                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
-            else
-               return Synth_Int_Dyadic (Id_Srem);
-            end if;
+            return Synth_Int_Dyadic (Id_Srem);
          when Iir_Predefined_Integer_Exp =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Left.Scal ** Natural (Right.Scal),
-                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
-            else
-               Error_Msg_Synth
-                 (+Expr, "non-constant exponentiation not supported");
-               return null;
-            end if;
+            Error_Msg_Synth
+              (+Expr, "non-constant exponentiation not supported");
+            return null;
          when Iir_Predefined_Integer_Less_Equal =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal <= Right.Scal), Boolean_Type);
-            else
-               return Synth_Compare (Id_Sle);
-            end if;
+            return Synth_Compare (Id_Sle);
          when Iir_Predefined_Integer_Less =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal < Right.Scal), Boolean_Type);
-            else
-               return Synth_Compare (Id_Slt);
-            end if;
+            return Synth_Compare (Id_Slt);
          when Iir_Predefined_Integer_Greater_Equal =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal >= Right.Scal), Boolean_Type);
-            else
-               return Synth_Compare (Id_Sge);
-            end if;
+            return Synth_Compare (Id_Sge);
          when Iir_Predefined_Integer_Greater =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal > Right.Scal), Boolean_Type);
-            else
-               return Synth_Compare (Id_Sgt);
-            end if;
+            return Synth_Compare (Id_Sgt);
          when Iir_Predefined_Integer_Equality =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal = Right.Scal), Boolean_Type);
-            else
-               return Synth_Compare (Id_Eq);
-            end if;
+            return Synth_Compare (Id_Eq);
          when Iir_Predefined_Integer_Inequality =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Boolean'Pos (Left.Scal /= Right.Scal), Boolean_Type);
-            else
-               return Synth_Compare (Id_Ne);
-            end if;
+            return Synth_Compare (Id_Ne);
          when Iir_Predefined_Physical_Physical_Div =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Discrete
-                 (Left.Scal / Right.Scal,
-                  Get_Value_Type (Syn_Inst, Get_Type (Expr)));
-            else
-               Error_Msg_Synth (+Expr, "non-constant division not supported");
-               return null;
-            end if;
+            Error_Msg_Synth (+Expr, "non-constant division not supported");
+            return null;
 
          when Iir_Predefined_Floating_Div =>
-            if Is_Const (Left) and then Is_Const (Right) then
-               return Create_Value_Float
-                 (Left.Fp / Right.Fp,
-                  Get_Value_Type (Syn_Inst, Get_Type (Imp)));
-            else
-               Error_Msg_Synth (+Expr, "non-constant division not supported");
-               return null;
-            end if;
+            Error_Msg_Synth (+Expr, "non-constant division not supported");
+            return null;
 
          when others =>
             Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
