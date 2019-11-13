@@ -26,7 +26,6 @@ with Grt.Files_Operations; use Grt.Files_Operations;
 with Vhdl.Annotations;
 
 with Synth.Expr; use Synth.Expr;
-with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
 
 package body Synth.Files_Operations is
@@ -34,11 +33,14 @@ package body Synth.Files_Operations is
    --  Representation of file name compatible with C (so NUL terminated).
    subtype C_File_Name is String (1 .. 1025);
 
+   procedure File_Error (Loc : Node; Status : Op_Status);
+   pragma No_Return (File_Error);
+
    procedure File_Error (Loc : Node; Status : Op_Status) is
    begin
       pragma Assert (Status /= Op_Ok);
       Error_Msg_Synth (+Loc, "file operation failed");
-      raise Internal_Error;
+      raise File_Execution_Error;
    end File_Error;
 
    --  VAL represents a string, so an array of characters.
@@ -148,7 +150,7 @@ package body Synth.Files_Operations is
          if Status = Op_Name_Error then
             Error_Msg_Synth
               (+Decl, "cannot open file: " & C_Name (1 .. C_Name_Len));
-            raise Internal_Error;
+            raise File_Execution_Error;
          else
             File_Error (Decl, Status);
          end if;
@@ -156,4 +158,19 @@ package body Synth.Files_Operations is
 
       return F;
    end Elaborate_File_Declaration;
+
+   function Endfile (F : File_Index; Loc : Syn_Src) return Boolean
+   is
+      Status : Op_Status;
+   begin
+      Ghdl_File_Endfile (F, Status);
+
+      if Status = Op_Ok then
+         return False;
+      elsif Status = Op_End_Of_File then
+         return True;
+      else
+         File_Error (Loc, Status);
+      end if;
+   end Endfile;
 end Synth.Files_Operations;

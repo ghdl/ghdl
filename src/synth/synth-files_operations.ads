@@ -20,10 +20,16 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Synth.Source; use Synth.Source;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 
 package Synth.Files_Operations is
+   --  Raised in case of un-recoverable error.
+   File_Execution_Error : exception;
+
    function Elaborate_File_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index;
+
+   function Endfile (F : File_Index; Loc : Syn_Src) return Boolean;
 end Synth.Files_Operations;

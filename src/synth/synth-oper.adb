@@ -37,6 +37,7 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Expr; use Synth.Expr;
 with Synth.Source;
+with Synth.Files_Operations;
 
 package body Synth.Oper is
    --  As log2(3m) is directly referenced, the program must be linked with -lm
@@ -1093,6 +1094,14 @@ package body Synth.Oper is
       end if;
 
       case Def is
+         when Iir_Predefined_Endfile =>
+            declare
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               Res : Boolean;
+            begin
+               Res := Synth.Files_Operations.Endfile (L.File, Expr);
+               return Create_Value_Discrete (Boolean'Pos (Res), Boolean_Type);
+            end;
          when Iir_Predefined_Ieee_1164_Rising_Edge =>
             declare
                Clk : Net;
