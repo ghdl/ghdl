@@ -188,6 +188,13 @@ package body Synth.Static_Oper is
             return Create_Value_Discrete
               (Boolean'Pos (not Is_Equal (Left, Right)), Boolean_Type);
 
+         when Iir_Predefined_Access_Equality =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Acc = Right.Acc), Boolean_Type);
+         when Iir_Predefined_Access_Inequality =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Acc /= Right.Acc), Boolean_Type);
+
          when Iir_Predefined_Ieee_1164_Vector_And
            | Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn =>

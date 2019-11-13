@@ -877,7 +877,8 @@ package body Synth.Expr is
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_File_Declaration =>
+           | Iir_Kind_File_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_Enumeration_Literal =>
             return Create_Value_Discrete
@@ -1778,6 +1779,8 @@ package body Synth.Expr is
                B := Synth_Array_Attribute (Syn_Inst, Expr);
                return Create_Value_Discrete (Int64 (B.Len), Expr_Type);
             end;
+         when Iir_Kind_Null_Literal =>
+            return Create_Value_Access (Expr_Type, Null_Heap_Index);
          when Iir_Kind_Overflow_Literal =>
             declare
                N : Net;

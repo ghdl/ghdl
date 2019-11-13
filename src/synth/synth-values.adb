@@ -56,7 +56,7 @@ package body Synth.Values is
             return False;
          when Value_Access
            | Value_File =>
-            return False;
+            return True;
          when Value_Alias =>
             return Is_Static (Val.A_Obj);
          when Value_Const =>
@@ -86,7 +86,7 @@ package body Synth.Values is
             return False;
          when Value_Access
            | Value_File =>
-            return False;
+            return True;
          when Value_Const =>
             return True;
          when Value_Alias =>

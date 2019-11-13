@@ -1339,16 +1339,22 @@ package body Synth.Stmts is
                         raise Internal_Error;
                      when Iir_Kind_Interface_Variable_Declaration =>
                         --  Always pass by value.
-                        Val := Synth_Read_Memory
-                          (Caller_Inst, Info.Obj, Info.Off, No_Net,
-                           Info.Targ_Type, Assoc);
+                        if Is_Static (Info.Obj) then
+                           if Info.Off /= 0 then
+                              raise Internal_Error;
+                           end if;
+                           Val := Info.Obj;
+                        else
+                           Val := Synth_Read_Memory
+                             (Caller_Inst, Info.Obj, Info.Off, No_Net,
+                              Info.Targ_Type, Assoc);
+                        end if;
                      when Iir_Kind_Interface_Signal_Declaration =>
                         --  Always pass by reference (use an alias).
                         Val := Create_Value_Alias
                           (Info.Obj, Info.Off, Info.Targ_Type);
                      when Iir_Kind_Interface_File_Declaration =>
-                        Val := Create_Value_File
-                          (Info.Targ_Type, Info.Obj.File);
+                        Val := Info.Obj;
                   end case;
                end;
          end case;
