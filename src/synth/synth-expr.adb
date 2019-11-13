@@ -1573,6 +1573,13 @@ package body Synth.Expr is
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Typ);
       Strip_Const (Right);
 
+      --  Return a static value if both operands are static.
+      --  Note: we know the value of left if it is not constant.
+      if Is_Const_Val (Left) and then Is_Const_Val (Right) then
+         Val := Get_Const_Discrete (Right);
+         return Create_Value_Discrete (Val, Boolean_Type);
+      end if;
+
       N := Build_Dyadic (Build_Context, Id,
                          Get_Net (Left), Get_Net (Right));
       Set_Location (N, Expr);

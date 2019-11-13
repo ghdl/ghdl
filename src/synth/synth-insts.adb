@@ -556,6 +556,8 @@ package body Synth.Insts is
 
          Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
 
+         pragma Assert (Is_Const (Val));
+
          Create_Object (Sub_Inst, Inter, Val);
 
          Next_Association_Interface (Assoc, Assoc_Inter);
@@ -980,6 +982,7 @@ package body Synth.Insts is
             Inter_Type := Get_Value_Type (Syn_Inst, Get_Type (Inter));
             Val := Synth_Expression_With_Type
               (Syn_Inst, Get_Default_Value (Inter), Inter_Type);
+            pragma Assert (Is_Const (Val));
             Create_Object (Syn_Inst, Inter, Val);
          end;
          Inter := Get_Chain (Inter);
