@@ -142,6 +142,7 @@ package body Synth.Stmts is
            | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
+           | Iir_Kind_File_Declaration
            | Iir_Kind_Object_Alias_Declaration =>
             declare
                Targ : constant Value_Acc := Get_Value (Syn_Inst, Pfx);
@@ -1339,7 +1340,8 @@ package body Synth.Stmts is
                         Val := Create_Value_Alias
                           (Info.Obj, Info.Off, Info.Targ_Type);
                      when Iir_Kind_Interface_File_Declaration =>
-                        raise Internal_Error;
+                        Val := Create_Value_File
+                          (Info.Targ_Type, Info.Obj.File);
                   end case;
                end;
          end case;
