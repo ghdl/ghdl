@@ -28,7 +28,7 @@
    set rights.
 */
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || !defined(MREMAP_MAYMOVE)
 #define MAP_ANONYMOUS MAP_ANON
 #else
 #define HAVE_MREMAP
