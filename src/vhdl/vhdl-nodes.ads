@@ -4892,6 +4892,11 @@ package Vhdl.Nodes is
       --  A not predefined and not known function.  User function.
       Iir_Predefined_None,
 
+      --  Intrinsic foreign subprograms.
+      Iir_Predefined_Foreign_Untruncated_Text_Read,
+      Iir_Predefined_Foreign_Textio_Read_Real,
+      Iir_Predefined_Foreign_Textio_Write_Real,
+
       --  Defined in package ieee.std_logic_1164
 
       --  Std_Ulogic operations.

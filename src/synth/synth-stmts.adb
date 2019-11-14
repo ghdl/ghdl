@@ -1586,16 +1586,19 @@ package body Synth.Stmts is
       Imp  : constant Node := Get_Implementation (Call);
       Res : Value_Acc;
    begin
-      if Get_Implicit_Definition (Imp) in Iir_Predefined_Implicit then
-         Error_Msg_Synth (+Stmt, "call to implicit %n is not supported", +Imp);
-         return;
-      elsif Get_Foreign_Flag (Imp) then
-         Error_Msg_Synth (+Stmt, "call to foreign %n is not supported", +Imp);
-         return;
-      end if;
-
-      Res := Synth_Subprogram_Call (Syn_Inst, Call);
-      pragma Assert (Res = null);
+      case Get_Implicit_Definition (Imp) is
+         when Iir_Predefined_None =>
+            if Get_Foreign_Flag (Imp) then
+               Error_Msg_Synth
+                 (+Stmt, "call to foreign %n is not supported", +Imp);
+            else
+               Res := Synth_Subprogram_Call (Syn_Inst, Call);
+               pragma Assert (Res = null);
+            end if;
+         when others =>
+            Error_Msg_Synth
+              (+Stmt, "call to implicit %n is not supported", +Imp);
+      end case;
    end Synth_Procedure_Call;
 
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean is
