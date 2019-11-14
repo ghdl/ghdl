@@ -56,7 +56,7 @@ else
     GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
   endif
   ifeq ($(filter-out netbsd freebsd% dragonfly%,$(osys)),)
-    GRT_EXTRA_LIB=-lm $(GRT_ELF_OPTS)
+    GRT_EXTRA_LIB=-lm
   endif
   ifeq ($(filter-out solaris%,$(osys)),)
     GRT_EXTRA_LIB=-ldl -lm
