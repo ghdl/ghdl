@@ -22,11 +22,9 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with Grt.Errors; use Grt.Errors;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Table;
-with Grt.Options;
 with System; use System;
 pragma Elaborate_All (Grt.Table);
 
@@ -177,13 +175,6 @@ package body Grt.Files_Operations is
       end if;
    end Destroy_File;
 
-   procedure File_Error (File : Ghdl_File_Index)
-   is
-      pragma Unreferenced (File);
-   begin
-      Internal_Error ("file: IO error");
-   end File_Error;
-
    function Ghdl_Text_File_Elaborate return Ghdl_File_Index is
    begin
       return Create_File (True, ' ', null);
@@ -319,9 +310,9 @@ package body Grt.Files_Operations is
             Status := Op_Name_Error;
             return;
          end if;
-         if Grt.Options.Unbuffered_Writes and Mode /= Read_Mode then
-            setbuf (F, NULL_voids);
-         end if;
+         -- if Grt.Options.Unbuffered_Writes and Mode /= Read_Mode then
+         --    setbuf (F, NULL_voids);
+         -- end if;
       end if;
 
       Sig := Files_Table.Table (File).Signature;
@@ -332,12 +323,14 @@ package body Grt.Files_Operations is
                if fwrite (Sig_Header'Address, 1, Sig_Header'Length, F)
                  /= Sig_Header'Length
                then
-                  File_Error (File);
+                  Status := Op_Write_Error;
+                  return;
                end if;
                if fwrite (Sig (1)'Address, 1, size_t (Sig_Len), F)
                  /= size_t (Sig_Len)
                then
-                  File_Error (File);
+                  Status := Op_Write_Error;
+                  return;
                end if;
             when Read_Mode =>
                declare
@@ -345,18 +338,22 @@ package body Grt.Files_Operations is
                   Sig_Buf : String (1 .. Sig_Len);
                begin
                   if fread (Hdr'Address, 1, Hdr'Length, F) /= Hdr'Length then
-                     File_Error (File);
+                     Status := Op_Read_Error;
+                     return;
                   end if;
                   if Hdr /= Sig_Header then
-                     File_Error (File);
+                     Status := Op_Signature_Error;
+                     return;
                   end if;
                   if fread (Sig_Buf'Address, 1, Sig_Buf'Length, F)
                     /= Sig_Buf'Length
                   then
-                     File_Error (File);
+                     Status := Op_Read_Error;
+                     return;
                   end if;
                   if Sig_Buf /= Sig (1 .. Sig_Len) then
-                     File_Error (File);
+                     Status := Op_Signature_Error;
+                     return;
                   end if;
                end;
             when Append_Mode =>

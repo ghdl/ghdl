@@ -83,7 +83,11 @@ package Grt.Files_Operations is
       Op_Close_Error,
 
       --  Incorrect file name (too long).
-      Op_Filename_Error
+      Op_Filename_Error,
+
+      --  Incorrect file type.
+      Op_Signature_Error
+
      );
 
    --  General files.
