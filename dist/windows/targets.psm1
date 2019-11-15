@@ -233,7 +233,7 @@ function Invoke-CompileCFiles
 
 	# list all files to be compiled; add additional CFlags if needed
 	$SourceFiles = @()
-	$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cbinding.c";			CFlags=@()}
+	$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cstdio.c";		  	CFlags=@()}
 	$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cvpi.c";					CFlags=@()}
 	$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cdynload.c";		  CFlags=@()}
 	$SourceFiles += New-Object PSObject -Property @{File="grt\config\clock.c";			CFlags=@()}
@@ -312,7 +312,7 @@ function Invoke-CompileGHDLAdaFiles
 
 	# append linker parameters
 	$Parameters += '-largs'
-	$Parameters += 'grt-cbinding.o'
+	$Parameters += 'grt-cstdio.o'
 	$Parameters += 'clock.o'
 	$Parameters += 'grt-cvpi.o'
 	$Parameters += 'grt-cdynload.o'

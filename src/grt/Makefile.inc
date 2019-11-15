@@ -70,9 +70,8 @@ endif
 GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 
 # Additionnal object files (C or asm files).
-GRT_BASE_C_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o
+GRT_BASE_C_OBJS:=$(GRT_TARGET_OBJS) grt-cstdio.o grt-cgnatrts.o
 GRT_ADD_OBJS:=$(GRT_BASE_C_OBJS) grt-cvpi.o grt-cdynload.o $(GRT_FST_OBJS)
-GRT_ADD_SHOBJS:=$(patsubst %, pic/%, $(GRT_ADD_OBJS))
 
 # Source files create by grt.
 GRT_SRC_DEPS:=grt-backtraces-impl.ads
@@ -152,10 +151,16 @@ pic/times.o : $(GRTSRCDIR)/config/times.c
 clock.o : $(GRTSRCDIR)/config/clock.c
 	$(GRT_C_COMPILE)
 
-grt-cbinding.o: $(GRTSRCDIR)/grt-cbinding.c
+grt-cstdio.o: $(GRTSRCDIR)/grt-cstdio.c
 	$(GRT_C_COMPILE)
 
-pic/grt-cbinding.o: $(GRTSRCDIR)/grt-cbinding.c
+pic/grt-cstdio.o: $(GRTSRCDIR)/grt-cstdio.c
+	$(GRT_C_COMPILE_PIC)
+
+grt-cgnatrts.o: $(GRTSRCDIR)/grt-cgnatrts.c
+	$(GRT_C_COMPILE)
+
+pic/grt-cgnatrts.o: $(GRTSRCDIR)/grt-cgnatrts.c
 	$(GRT_C_COMPILE_PIC)
 
 grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
