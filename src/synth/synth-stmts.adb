@@ -1580,6 +1580,16 @@ package body Synth.Stmts is
       return Res;
    end Synth_Subprogram_Call;
 
+   procedure Synth_Implicit_Procedure_Call
+     (Syn_Inst : Synth_Instance_Acc; Call : Node)
+   is
+      pragma Unreferenced (Syn_Inst);
+      Imp  : constant Node := Get_Implementation (Call);
+   begin
+      Error_Msg_Synth
+        (+Call, "call to implicit %n is not supported", +Imp);
+   end Synth_Implicit_Procedure_Call;
+
    procedure Synth_Procedure_Call (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       Call : constant Node := Get_Procedure_Call (Stmt);
@@ -1596,8 +1606,7 @@ package body Synth.Stmts is
                pragma Assert (Res = null);
             end if;
          when others =>
-            Error_Msg_Synth
-              (+Stmt, "call to implicit %n is not supported", +Imp);
+            Synth_Implicit_Procedure_Call (Syn_Inst, Call);
       end case;
    end Synth_Procedure_Call;
 
