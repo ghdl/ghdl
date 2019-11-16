@@ -154,6 +154,22 @@ package body Synth.Static_Oper is
       end;
    end Synth_Mul_Uns_Uns;
 
+   function Synth_Mul_Sgn_Sgn (L, R : Value_Acc; Loc : Syn_Src)
+                              return Value_Acc
+   is
+      pragma Unreferenced (Loc);
+      L_Arr : Std_Logic_Vector (1 .. Natural (L.Arr.Len));
+      R_Arr : Std_Logic_Vector (1 .. Natural (R.Arr.Len));
+   begin
+      To_Std_Logic_Vector (L, L_Arr);
+      To_Std_Logic_Vector (R, R_Arr);
+      declare
+         Res_Arr : constant Std_Logic_Vector := Mul_Sgn_Sgn (L_Arr, R_Arr);
+      begin
+         return To_Value_Acc (Res_Arr, L.Typ.Vec_El);
+      end;
+   end Synth_Mul_Sgn_Sgn;
+
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
                                             Left : Value_Acc;
@@ -260,6 +276,9 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
             return Synth_Mul_Uns_Uns (Left, Right, Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
+            return Synth_Mul_Sgn_Sgn (Left, Right, Expr);
 
          when others =>
             Error_Msg_Synth

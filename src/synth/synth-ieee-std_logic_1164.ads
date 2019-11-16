@@ -38,7 +38,7 @@ package Synth.Ieee.Std_Logic_1164 is
    --  Vector of logic state.
    type Std_Logic_Vector is array (Natural range <>) of Std_Ulogic;
 
-   -- type Table_1d is array (Std_Ulogic) of Std_Ulogic;
+   type Table_1d is array (Std_Ulogic) of Std_Ulogic;
    type Table_2d is array (Std_Ulogic, Std_Ulogic) of Std_Ulogic;
 
    And_Table : constant Table_2d :=
@@ -79,4 +79,9 @@ package Synth.Ieee.Std_Logic_1164 is
       "UX10XX10X",   -- H
       "UXXXXXXXX"    -- -
      );
+
+   Not_Table : constant Table_1d :=
+   --  UX01ZWLH-
+      "UX10XX10X";
+
 end Synth.Ieee.Std_Logic_1164;

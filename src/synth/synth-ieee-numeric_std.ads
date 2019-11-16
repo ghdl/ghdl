@@ -33,4 +33,6 @@ package Synth.Ieee.Numeric_Std is
                         return Std_Logic_Vector;
 
    function Mul_Uns_Uns (L, R : Std_Logic_Vector) return Std_Logic_Vector;
+
+   function Mul_Sgn_Sgn (L, R : Std_Logic_Vector) return Std_Logic_Vector;
 end Synth.Ieee.Numeric_Std;

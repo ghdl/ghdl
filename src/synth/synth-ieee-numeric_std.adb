@@ -183,4 +183,59 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Mul_Uns_Uns;
 
+   function Mul_Sgn_Sgn (L, R : Std_Logic_Vector) return Std_Logic_Vector
+   is
+      pragma Assert (L'First = 1);
+      pragma Assert (R'First = 1);
+      Res : Std_Logic_Vector (1 .. L'Last + R'Last);
+      Lb, Rb, Vb, Carry : Sl_X01;
+   begin
+      if L'Last < 1 or R'Last < 1 then
+         return Null_Vec;
+      end if;
+      Res := (others => '0');
+      --  Shift and add L, do not consider (yet) the sign bit of R.
+      for I in 0 .. R'Last - 2 loop
+         Rb := Sl_To_X01 (R (R'Last - I));
+         if Rb = '1' then
+            --  Compute res := res + shift_left (l, i).
+            Carry := '0';
+            for J in 0 .. L'Last - 1 loop
+               Lb := L (L'Last - J);
+               Vb := Res (Res'Last - (I + J));
+               Res (Res'Last - (I + J)) := Compute_Sum (Carry, Vb, Lb);
+               Carry := Compute_Carry (Carry, Vb, Lb);
+            end loop;
+            --  Sign extend and propagate carry.
+            Lb := R (1);
+            for J in I + L'Last .. Res'Last - 1 loop
+               Vb := Res (Res'Last - J);
+               Res (Res'Last - J) := Compute_Sum (Carry, Vb, Lb);
+               Carry := Compute_Carry (Carry, Vb, Lb);
+            end loop;
+         elsif Rb = 'X' then
+            null;
+            -- assert NO_WARNING
+            --  report "NUMERIC_STD.""*"": non logical value detected"
+            --  severity warning;
+         end if;
+      end loop;
+      if R (1) = '1' then
+         --  R is a negative number.  It is considered as:
+         --   -2**n + (Rn-1 Rn-2 ... R0).
+         --  Compute res := res - 2**n * l.
+         Carry := '1';
+         for I in 0 .. L'Last - 1 loop
+            Vb := Res (Res'Last - (R'Last - 1 + I));
+            Lb := Not_Table (L (L'Last - I));
+            Res (Res'Last - (R'Last - 1 + I)) := Compute_Sum (Carry, Vb, Lb);
+            Carry := Compute_Carry (Carry, Vb, Lb);
+         end loop;
+         Vb := Res (1);
+         Lb := Not_Table (L (1));
+         Res (1) := Compute_Sum (Carry, Vb, Lb);
+      end if;
+      return Res;
+   end Mul_Sgn_Sgn;
+
 end Synth.Ieee.Numeric_Std;
