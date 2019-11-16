@@ -528,14 +528,14 @@ package body Grt.Files_Operations is
       Status := Op_Ok;
    end Ghdl_Text_Read_Length;
 
-   procedure Ghdl_Untruncated_Text_Read
-     (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : out Std_Integer;
-                                                    Status : out Op_Status)
+   procedure Ghdl_Untruncated_Text_Read (File : Ghdl_File_Index;
+                                         Buf : Ghdl_C_String;
+                                         Len : in out Std_Integer;
+                                         Status : out Op_Status)
    is
       Stream : C_Files;
       Max_Len : int;
    begin
-      Len := 0;
       Get_File (File, Stream, Status);
       if Status /= Op_Ok then
          return;
@@ -545,19 +545,14 @@ package body Grt.Files_Operations is
          return;
       end if;
 
-      Max_Len := int (Str.Bounds.Dim_1.Length);
-      if fgets (Str.Base (0)'Address, Max_Len, Stream) = Null_Address then
+      Max_Len := int (Len);
+      if fgets (To_Address (Buf), Max_Len, Stream) = Null_Address then
          Status := Op_End_Of_File;
          return;
       end if;
 
       --  Compute the length.
-      for I in Ghdl_Index_Type loop
-         if Str.Base (I) = NUL then
-            Len := Std_Integer (I);
-            exit;
-         end if;
-      end loop;
+      Len := Std_Integer (strlen (Buf));
       Status := Op_Ok;
    end Ghdl_Untruncated_Text_Read;
 

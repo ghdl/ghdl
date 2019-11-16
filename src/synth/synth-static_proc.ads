@@ -1,5 +1,5 @@
---  Create declarations for synthesis.
---  Copyright (C) 2017 Tristan Gingold
+--  Predefined procedures
+--  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
 --
@@ -18,22 +18,11 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Synth.Source; use Synth.Source;
-with Synth.Values; use Synth.Values;
-with Synth.Context; use Synth.Context;
-
-package Synth.Files_Operations is
-   --  Raised in case of un-recoverable error.
-   File_Execution_Error : exception;
-
-   function Elaborate_File_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index;
-
-   function Endfile (F : File_Index; Loc : Syn_Src) return Boolean;
-
-   procedure Synth_Untruncated_Text_Read (Syn_Inst : Synth_Instance_Acc;
-                                          Imp : Node;
-                                          Loc : Node);
-end Synth.Files_Operations;
+package Synth.Static_Proc is
+   procedure Synth_Static_Procedure (Syn_Inst : Synth_Instance_Acc;
+                                     Imp : Node;
+                                     Loc : Node);
+end Synth.Static_Proc;

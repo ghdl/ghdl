@@ -1,5 +1,5 @@
---  Create declarations for synthesis.
---  Copyright (C) 2017 Tristan Gingold
+--  Predefined procedures
+--  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
 --
@@ -18,22 +18,23 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Errors; use Vhdl.Errors;
 
-with Synth.Source; use Synth.Source;
-with Synth.Values; use Synth.Values;
-with Synth.Context; use Synth.Context;
+with Synth.Errors; use Synth.Errors;
+with Synth.Files_Operations; use Synth.Files_Operations;
 
-package Synth.Files_Operations is
-   --  Raised in case of un-recoverable error.
-   File_Execution_Error : exception;
+package body Synth.Static_Proc is
 
-   function Elaborate_File_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index;
-
-   function Endfile (F : File_Index; Loc : Syn_Src) return Boolean;
-
-   procedure Synth_Untruncated_Text_Read (Syn_Inst : Synth_Instance_Acc;
-                                          Imp : Node;
-                                          Loc : Node);
-end Synth.Files_Operations;
+   procedure Synth_Static_Procedure (Syn_Inst : Synth_Instance_Acc;
+                                     Imp : Node;
+                                     Loc : Node) is
+   begin
+      case Get_Implicit_Definition (Imp) is
+         when Iir_Predefined_Foreign_Untruncated_Text_Read =>
+            Synth_Untruncated_Text_Read (Syn_Inst, Imp, Loc);
+         when others =>
+            Error_Msg_Synth
+              (+Loc, "call to implicit %n is not supported", +Imp);
+      end case;
+   end Synth_Static_Procedure;
+end Synth.Static_Proc;

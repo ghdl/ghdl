@@ -133,8 +133,8 @@ package Grt.Files_Operations is
                                     Length : out Std_Integer);
 
    procedure Ghdl_Untruncated_Text_Read (File : Ghdl_File_Index;
-                                         Str : Std_String_Ptr;
-                                         Len : out Std_Integer;
+                                         Buf : Ghdl_C_String;
+                                         Len : in out Std_Integer;
                                          Status : out Op_Status);
 
    procedure Ghdl_Text_File_Close (File : Ghdl_File_Index;

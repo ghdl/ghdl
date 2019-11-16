@@ -20,7 +20,7 @@
 
 with Types; use Types;
 
-with Grt.Types;
+with Grt.Types; use Grt.Types;
 with Grt.Files_Operations; use Grt.Files_Operations;
 
 with Vhdl.Annotations;
@@ -82,7 +82,6 @@ package body Synth.Files_Operations is
    function Elaborate_File_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index
    is
-      use Grt.Types;
       File_Type : constant Node := Get_Type (Decl);
       External_Name : constant Node := Get_File_Logical_Name (Decl);
       Open_Kind : constant Node := Get_File_Open_Kind (Decl);
@@ -173,4 +172,36 @@ package body Synth.Files_Operations is
          File_Error (Loc, Status);
       end if;
    end Endfile;
+
+   --  Declaration:
+   --  procedure untruncated_text_read                              --!V87
+   --    (file f : text; str : out string; len : out natural);      --!V87
+   procedure Synth_Untruncated_Text_Read (Syn_Inst : Synth_Instance_Acc;
+                                          Imp : Node;
+                                          Loc : Node)
+   is
+      Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
+      File : constant File_Index := Get_Value (Syn_Inst, Inters).File;
+      Param2 : constant Node := Get_Chain (Inters);
+      Str : constant Value_Acc := Get_Value (Syn_Inst, Param2);
+      Param3 : constant Node := Get_Chain (Param2);
+      Param_Len : constant Value_Acc := Get_Value (Syn_Inst, Param3);
+      Buf : String (1 .. Natural (Str.Arr.Len));
+      Len : Std_Integer;
+      Status : Op_Status;
+   begin
+      Len := Std_Integer (Buf'Last);
+      Ghdl_Untruncated_Text_Read
+        (File, To_Ghdl_C_String (Buf'Address), Len, Status);
+      if Status /= Op_Ok then
+         File_Error (Loc, Status);
+      end if;
+
+      for I in 1 .. Natural (Len) loop
+         Str.Arr.V (Iir_Index32 (I)).Scal := Character'Pos (Buf (I));
+      end loop;
+
+      Param_Len.Scal := Int64 (Len);
+   end Synth_Untruncated_Text_Read;
+
 end Synth.Files_Operations;
