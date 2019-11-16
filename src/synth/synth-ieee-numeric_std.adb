@@ -58,16 +58,16 @@ package body Synth.Ieee.Numeric_Std is
          return Null_Vec;
       end if;
       Carry := '0';
-      for I in 1 .. Len loop
-         if I > L'Last then
+      for I in 0 .. Len - 1 loop
+         if I >= L'Last then
             Lb := '0';
          else
-            Lb := Sl_To_X01 (L (I));
+            Lb := Sl_To_X01 (L (L'Last - I));
          end if;
-         if I > R'Last then
+         if I >= R'Last then
             Rb := '0';
          else
-            Rb := Sl_To_X01 (R (I));
+            Rb := Sl_To_X01 (R (R'Last - I));
          end if;
          if Lb = 'X' or Rb = 'X' then
             --assert NO_WARNING
@@ -76,7 +76,7 @@ package body Synth.Ieee.Numeric_Std is
             Res := (others => 'X');
             exit;
          end if;
-         Res (I) := Compute_Sum (Carry, Rb, Lb);
+         Res (Res'Last - I) := Compute_Sum (Carry, Rb, Lb);
          Carry := Compute_Carry (Carry, Rb, Lb);
       end loop;
       return Res;
@@ -86,9 +86,8 @@ package body Synth.Ieee.Numeric_Std is
                         return Std_Logic_Vector
    is
       pragma Assert (L'First = 1);
-      subtype Res_Type is Std_Logic_Vector (1 .. L'Last);
+      Res : Std_Logic_Vector (1 .. L'Last);
       V : Uns64;
-      Res : Res_Type;
       Lb, Rb, Carry : Sl_X01;
    begin
       if L'Last < 1 then
@@ -96,7 +95,7 @@ package body Synth.Ieee.Numeric_Std is
       end if;
       V := To_Uns64 (R);
       Carry := '0';
-      for I in Res'Range loop
+      for I in reverse Res'Range loop
          Lb := Sl_To_X01 (L (I));
          Rb := Uns_To_01 (V and 1);
          if Lb = 'X' then
@@ -117,9 +116,8 @@ package body Synth.Ieee.Numeric_Std is
                         return Std_Logic_Vector
    is
       pragma Assert (L'First = 1);
-      subtype Res_Type is Std_Logic_Vector (1 .. L'Last);
+      Res : Std_Logic_Vector (1 .. L'Last);
       V : Uns64;
-      Res : Res_Type;
       Lb, Rb, Carry : Sl_X01;
    begin
       if L'Last < 1 then
@@ -127,7 +125,7 @@ package body Synth.Ieee.Numeric_Std is
       end if;
       V := R;
       Carry := '0';
-      for I in Res'Range loop
+      for I in reverse Res'Range loop
          Lb := Sl_To_X01 (L (I));
          Rb := Uns_To_01 (V and 1);
          if Lb = 'X' then
@@ -143,4 +141,46 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
       return Res;
    end Add_Uns_Nat;
+
+   function Mul_Uns_Uns (L, R : Std_Logic_Vector) return Std_Logic_Vector
+   is
+      pragma Assert (L'First = 1);
+      pragma Assert (R'First = 1);
+      Len : constant Integer := L'Last + R'Last;
+      Res : Std_Logic_Vector (1 .. Len);
+      Lb, Rb, Vb, Carry : Sl_X01;
+   begin
+      if L'Last < 1 or R'Last < 1 then
+         return Null_Vec;
+      end if;
+      Res := (others => '0');
+      --  Shift and add L.
+      for I in 0 .. R'Last - 1 loop
+         Rb := Sl_To_X01 (R (R'Last - I));
+         if Rb = '1' then
+            --  Compute res := res + shift_left (l, i).
+            Carry := '0';
+            for J in 0 .. L'Last - 1 loop
+               Lb := L (L'Last - J);
+               Vb := Res (Len - (I + J));
+               Res (Len - (I + J)) := Compute_Sum (Carry, Vb, Lb);
+               Carry := Compute_Carry (Carry, Vb, Lb);
+            end loop;
+            --  Propagate carry.
+            for J in I + L'Last .. Res'Last loop
+               exit when Carry = '0';
+               Vb := Res (Len - J);
+               Res (Len - J) := Xor_Table (Carry, Vb);
+               Carry := And_Table (Carry, Vb);
+            end loop;
+         elsif Rb = 'X' then
+            null;
+            -- assert NO_WARNING
+            --  report "NUMERIC_STD.""*"": non logical value detected"
+            --  severity warning;
+         end if;
+      end loop;
+      return Res;
+   end Mul_Uns_Uns;
+
 end Synth.Ieee.Numeric_Std;

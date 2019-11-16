@@ -67,4 +67,16 @@ package Synth.Ieee.Std_Logic_1164 is
       "UXX1XXX1X"    -- -
      );
 
+   Xor_Table : constant Table_2d :=
+   --  UX01ZWLH-
+     ("UUUUUUUUU",   -- U
+      "UXXXXXXXX",   -- X
+      "UX01XX01X",   -- 0
+      "UX10XX10X",   -- 1
+      "UXXXXXXXX",   -- Z
+      "UXXXXXXXX",   -- W
+      "UX01XX01X",   -- L
+      "UX10XX10X",   -- H
+      "UXXXXXXXX"    -- -
+     );
 end Synth.Ieee.Std_Logic_1164;

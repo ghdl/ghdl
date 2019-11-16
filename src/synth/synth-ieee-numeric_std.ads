@@ -23,10 +23,14 @@ with Types; use Types;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
 package Synth.Ieee.Numeric_Std is
+   --  Reminder: vectors elements are from left to right.
+
    function Add_Uns_Uns (L, R : Std_Logic_Vector) return Std_Logic_Vector;
 
    function Add_Sgn_Int (L : Std_Logic_Vector; R : Int64)
                         return Std_Logic_Vector;
    function Add_Uns_Nat (L : Std_Logic_Vector; R : Uns64)
                         return Std_Logic_Vector;
+
+   function Mul_Uns_Uns (L, R : Std_Logic_Vector) return Std_Logic_Vector;
 end Synth.Ieee.Numeric_Std;
