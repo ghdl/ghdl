@@ -1211,6 +1211,52 @@ package body Synth.Stmts is
       Free_Alternative_Data_Array (Alts);
    end Synth_Selected_Signal_Assignment;
 
+   function Synth_Label (Stmt : Node) return Sname
+   is
+      Label : constant Name_Id := Get_Label (Stmt);
+   begin
+      if Label = Null_Identifier then
+         return No_Sname;
+      else
+         return New_Sname_User (Label);
+      end if;
+   end Synth_Label;
+
+   function Is_Copyback_Interface (Inter : Node) return Boolean is
+   begin
+      case Iir_Parameter_Modes (Get_Mode (Inter)) is
+         when Iir_In_Mode =>
+            return False;
+         when Iir_Out_Mode | Iir_Inout_Mode =>
+            return Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration;
+      end case;
+   end Is_Copyback_Interface;
+
+   function Count_Associations (Inter_Chain : Node; Assoc_Chain : Node)
+                               return Natural
+   is
+      Assoc : Node;
+      Assoc_Inter : Node;
+      Inter : Node;
+      Nbr_Inout : Natural;
+   begin
+      Nbr_Inout := 0;
+
+      Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
+      while Is_Valid (Assoc) loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+         if Is_Copyback_Interface (Inter) then
+            Nbr_Inout := Nbr_Inout + 1;
+         end if;
+
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+
+      return Nbr_Inout;
+   end Count_Associations;
+
    type Association_Iterator is record
       Inter : Node;
       First_Named_Assoc : Node;
@@ -1293,6 +1339,7 @@ package body Synth.Stmts is
       Val : Value_Acc;
       Nbr_Inout : Natural;
       Iterator : Association_Iterator;
+      Info : Target_Info;
    begin
       Set_Instance_Const (Subprg_Inst, True);
 
@@ -1325,40 +1372,37 @@ package body Synth.Stmts is
                   end case;
                end if;
             when Iir_Out_Mode | Iir_Inout_Mode =>
-               Nbr_Inout := Nbr_Inout + 1;
                Actual := Get_Actual (Assoc);
-               Infos (Nbr_Inout) := Synth_Target (Caller_Inst, Actual);
-               declare
-                  Info : Target_Info renames Infos (Nbr_Inout);
-               begin
-                  if Info.Kind /= Target_Simple then
-                     raise Internal_Error;
-                  end if;
-                  case Iir_Kinds_Interface_Object_Declaration
-                    (Get_Kind (Inter))
+               Info := Synth_Target (Caller_Inst, Actual);
+
+               if Info.Kind /= Target_Simple then
+                  raise Internal_Error;
+               end if;
+               case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter))
                   is
-                     when Iir_Kind_Interface_Constant_Declaration =>
-                        raise Internal_Error;
-                     when Iir_Kind_Interface_Variable_Declaration =>
-                        --  Always pass by value.
-                        if Is_Static (Info.Obj) then
-                           if Info.Off /= 0 then
-                              raise Internal_Error;
-                           end if;
-                           Val := Info.Obj;
-                        else
-                           Val := Synth_Read_Memory
-                             (Caller_Inst, Info.Obj, Info.Off, No_Net,
-                              Info.Targ_Type, Assoc);
+                  when Iir_Kind_Interface_Constant_Declaration =>
+                     raise Internal_Error;
+                  when Iir_Kind_Interface_Variable_Declaration =>
+                     --  Always pass by value.
+                     Nbr_Inout := Nbr_Inout + 1;
+                     Infos (Nbr_Inout) := Info;
+                     if Is_Static (Info.Obj) then
+                        if Info.Off /= 0 then
+                           raise Internal_Error;
                         end if;
-                     when Iir_Kind_Interface_Signal_Declaration =>
-                        --  Always pass by reference (use an alias).
-                        Val := Create_Value_Alias
-                          (Info.Obj, Info.Off, Info.Targ_Type);
-                     when Iir_Kind_Interface_File_Declaration =>
                         Val := Info.Obj;
-                  end case;
-               end;
+                     else
+                        Val := Synth_Read_Memory
+                          (Caller_Inst, Info.Obj, Info.Off, No_Net,
+                           Info.Targ_Type, Assoc);
+                     end if;
+                  when Iir_Kind_Interface_Signal_Declaration =>
+                     --  Always pass by reference (use an alias).
+                     Val := Create_Value_Alias
+                       (Info.Obj, Info.Off, Info.Targ_Type);
+                  when Iir_Kind_Interface_File_Declaration =>
+                     Val := Info.Obj;
+               end case;
          end case;
 
          --  FIXME: conversion only for constants, reshape for all.
@@ -1415,61 +1459,19 @@ package body Synth.Stmts is
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-         case Iir_Parameter_Modes (Get_Mode (Inter)) is
-            when Iir_In_Mode =>
-               null;
-            when Iir_Out_Mode | Iir_Inout_Mode =>
-               Nbr_Inout := Nbr_Inout + 1;
-               if False then
-                  Val := Synth_Expression (Subprg_Inst, Inter);
-                  Synth_Assignment
-                    (Caller_Inst, Infos (Nbr_Inout), Val, Assoc);
-               end if;
-         end case;
+         if Is_Copyback_Interface (Inter) then
+            if not Get_Whole_Association_Flag (Assoc) then
+               raise Internal_Error;
+            end if;
+            Nbr_Inout := Nbr_Inout + 1;
+            Val := Get_Value (Subprg_Inst, Inter);
+            Synth_Assignment (Caller_Inst, Infos (Nbr_Inout), Val, Assoc);
+         end if;
 
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
       pragma Assert (Nbr_Inout = Infos'Last);
    end Synth_Subprogram_Back_Association;
-
-   function Synth_Label (Stmt : Node) return Sname
-   is
-      Label : constant Name_Id := Get_Label (Stmt);
-   begin
-      if Label = Null_Identifier then
-         return No_Sname;
-      else
-         return New_Sname_User (Label);
-      end if;
-   end Synth_Label;
-
-   function Count_Associations (Inter_Chain : Node; Assoc_Chain : Node)
-                               return Natural
-   is
-      Assoc : Node;
-      Assoc_Inter : Node;
-      Inter : Node;
-      Nbr_Inout : Natural;
-   begin
-      Nbr_Inout := 0;
-
-      Assoc := Assoc_Chain;
-      Assoc_Inter := Inter_Chain;
-      while Is_Valid (Assoc) loop
-         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-
-         case Iir_Parameter_Modes (Get_Mode (Inter)) is
-            when Iir_In_Mode =>
-               null;
-            when Iir_Out_Mode | Iir_Inout_Mode =>
-               Nbr_Inout := Nbr_Inout + 1;
-         end case;
-
-         Next_Association_Interface (Assoc, Assoc_Inter);
-      end loop;
-
-      return Nbr_Inout;
-   end Count_Associations;
 
    function Synth_Subprogram_Call
      (Syn_Inst : Synth_Instance_Acc; Call : Node) return Value_Acc
