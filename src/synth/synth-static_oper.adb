@@ -123,6 +123,21 @@ package body Synth.Static_Oper is
       end;
    end Synth_Add_Sgn_Int;
 
+   function Synth_Add_Uns_Nat (L, R : Value_Acc; Loc : Syn_Src)
+                              return Value_Acc
+   is
+      pragma Unreferenced (Loc);
+      L_Arr : Std_Logic_Vector (1 .. Natural (L.Arr.Len));
+      R_Val : constant Uns64 := Uns64 (R.Scal);
+   begin
+      To_Std_Logic_Vector (L, L_Arr);
+      declare
+         Res_Arr : constant Std_Logic_Vector := Add_Uns_Nat (L_Arr, R_Val);
+      begin
+         return To_Value_Acc (Res_Arr, L.Typ.Vec_El);
+      end;
+   end Synth_Add_Uns_Nat;
+
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
                                             Left : Value_Acc;
@@ -223,6 +238,9 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
             return Synth_Add_Sgn_Int (Left, Right, Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
+            return Synth_Add_Uns_Nat (Left, Right, Expr);
 
          when others =>
             Error_Msg_Synth

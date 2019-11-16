@@ -112,4 +112,35 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
       return Res;
    end Add_Sgn_Int;
+
+   function Add_Uns_Nat (L : Std_Logic_Vector; R : Uns64)
+                        return Std_Logic_Vector
+   is
+      pragma Assert (L'First = 1);
+      subtype Res_Type is Std_Logic_Vector (1 .. L'Last);
+      V : Uns64;
+      Res : Res_Type;
+      Lb, Rb, Carry : Sl_X01;
+   begin
+      if L'Last < 1 then
+         return Null_Vec;
+      end if;
+      V := R;
+      Carry := '0';
+      for I in Res'Range loop
+         Lb := Sl_To_X01 (L (I));
+         Rb := Uns_To_01 (V and 1);
+         if Lb = 'X' then
+            --assert NO_WARNING
+            --  report "NUMERIC_STD.""+"": non logical value detected"
+            --  severity warning;
+            Res := (others => 'X');
+            exit;
+         end if;
+         Res (I) := Compute_Sum (Carry, Rb, Lb);
+         Carry := Compute_Carry (Carry, Rb, Lb);
+         V := Shift_Right (V, 1);
+      end loop;
+      return Res;
+   end Add_Uns_Nat;
 end Synth.Ieee.Numeric_Std;

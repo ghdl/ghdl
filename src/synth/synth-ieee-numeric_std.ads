@@ -27,4 +27,6 @@ package Synth.Ieee.Numeric_Std is
 
    function Add_Sgn_Int (L : Std_Logic_Vector; R : Int64)
                         return Std_Logic_Vector;
+   function Add_Uns_Nat (L : Std_Logic_Vector; R : Uns64)
+                        return Std_Logic_Vector;
 end Synth.Ieee.Numeric_Std;
