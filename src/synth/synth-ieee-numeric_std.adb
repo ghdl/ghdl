@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Types_Utils; use Types_Utils;
+
 package body Synth.Ieee.Numeric_Std is
    Null_Vec : constant Std_Logic_Vector (1 .. 0) := (others => '0');
 
@@ -39,6 +41,9 @@ package body Synth.Ieee.Numeric_Std is
    type Sl_To_X01_Array is array (Std_Ulogic) of Sl_X01;
    Sl_To_X01 : constant Sl_To_X01_Array :=
      ('0' | 'L' => '0', '1' | 'H' => '1', others => 'X');
+
+   type Uns_To_01_Array is array (Uns64 range 0 .. 1) of Sl_X01;
+   Uns_To_01 : constant Uns_To_01_Array := (0 => '0', 1 => '1');
 
    function Add_Uns_Uns (L, R : Std_Logic_Vector) return Std_Logic_Vector
    is
@@ -76,4 +81,35 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
       return Res;
    end Add_Uns_Uns;
+
+   function Add_Sgn_Int (L : Std_Logic_Vector; R : Int64)
+                        return Std_Logic_Vector
+   is
+      pragma Assert (L'First = 1);
+      subtype Res_Type is Std_Logic_Vector (1 .. L'Last);
+      V : Uns64;
+      Res : Res_Type;
+      Lb, Rb, Carry : Sl_X01;
+   begin
+      if L'Last < 1 then
+         return Null_Vec;
+      end if;
+      V := To_Uns64 (R);
+      Carry := '0';
+      for I in Res'Range loop
+         Lb := Sl_To_X01 (L (I));
+         Rb := Uns_To_01 (V and 1);
+         if Lb = 'X' then
+            --assert NO_WARNING
+            --  report "NUMERIC_STD.""+"": non logical value detected"
+            --  severity warning;
+            Res := (others => 'X');
+            exit;
+         end if;
+         Res (I) := Compute_Sum (Carry, Rb, Lb);
+         Carry := Compute_Carry (Carry, Rb, Lb);
+         V := Shift_Right_Arithmetic (V, 1);
+      end loop;
+      return Res;
+   end Add_Sgn_Int;
 end Synth.Ieee.Numeric_Std;

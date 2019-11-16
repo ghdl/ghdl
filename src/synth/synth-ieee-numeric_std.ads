@@ -18,8 +18,13 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Types; use Types;
+
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
 package Synth.Ieee.Numeric_Std is
    function Add_Uns_Uns (L, R : Std_Logic_Vector) return Std_Logic_Vector;
+
+   function Add_Sgn_Int (L : Std_Logic_Vector; R : Int64)
+                        return Std_Logic_Vector;
 end Synth.Ieee.Numeric_Std;
