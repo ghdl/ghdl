@@ -206,7 +206,8 @@ package body Synth.Static_Oper is
               (Left.Scal / Right.Scal, Res_Typ);
          when Iir_Predefined_Integer_Mod =>
             return Create_Value_Discrete
-              (Left.Scal mod Right.Scal, Res_Typ);
+              (Get_Static_Discrete (Left) mod Get_Static_Discrete (Right),
+               Res_Typ);
          when Iir_Predefined_Integer_Rem =>
             return Create_Value_Discrete
               (Left.Scal rem Right.Scal, Res_Typ);
