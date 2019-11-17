@@ -138,6 +138,9 @@ package Types is
    --  This is used by all packages that display vhdl code or informations.
    Indentation : constant := 2;
 
+   --  For array dimensions.  First dimension is 1.
+   type Dim_Type is new Pos32;
+
    --  String representing a date/time (format is YYYYMMDDHHmmSS.sss).
    subtype Time_Stamp_String is String (1 .. 18);
    type Time_Stamp_Id is new String8_Id;

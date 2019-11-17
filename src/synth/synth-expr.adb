@@ -240,45 +240,72 @@ package body Synth.Expr is
       end if;
    end Get_Range_Length;
 
+   type Stride_Array is array (Dim_Type range <>) of Iir_Index32;
+
+   function Fill_Stride (Typ : Type_Acc) return Stride_Array is
+   begin
+      case Typ.Kind is
+         when Type_Vector =>
+            return (1 => 1);
+         when Type_Array =>
+            declare
+               Bnds : constant Bound_Array_Acc := Typ.Abounds;
+               Res : Stride_Array (1 .. Dim_Type (Bnds.Len));
+               Stride : Iir_Index32;
+            begin
+               Stride := 1;
+               for I in reverse 2 .. Bnds.Len loop
+                  Res (Dim_Type (I)) := Stride;
+                  Stride := Stride * Iir_Index32 (Bnds.D (I).Len);
+               end loop;
+               Res (1) := Stride;
+               return Res;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Fill_Stride;
+
    procedure Fill_Array_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node;
                                    Res : Value_Array_Acc;
                                    Typ : Type_Acc;
-                                   Dim : Natural;
+                                   First_Pos : Iir_Index32;
+                                   Strides : Stride_Array;
+                                   Dim : Dim_Type;
                                    Const_P : out Boolean)
    is
-      Bound : constant Bound_Type := Get_Array_Bound (Typ, Dim);
-      Aggr_Type : constant Node := Get_Type (Aggr);
+      Bound : constant Bound_Type := Get_Array_Bound (Typ, Natural (Dim - 1));
       El_Typ : constant Type_Acc := Get_Array_Element (Typ);
-      Nbr_Dims : constant Natural := Get_Nbr_Dimensions (Aggr_Type);
-      type Boolean_Array is array (Uns32 range <>) of Boolean;
-      pragma Pack (Boolean_Array);
-      --  FIXME: test Res.V (I) instead.
-      Is_Set : Boolean_Array (1 .. Bound.Len);
+      Stride : constant Iir_Index32 := Strides (Dim);
       Value : Node;
       Assoc : Node;
-      Pos : Uns32;
 
-      procedure Set_Elem (Pos : Uns32)
+      procedure Set_Elem (Pos : Iir_Index32)
       is
+         Sub_Const : Boolean;
          Val : Value_Acc;
       begin
-         if Dim = Nbr_Dims - 1 then
+         if Dim = Strides'Last then
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
-            Res.V (Iir_Index32 (Pos + 1)) := Val;
-            pragma Assert (not Is_Set (Pos + 1));
-            Is_Set (Pos + 1) := True;
+            pragma Assert (Res.V (Pos) = null);
+            Res.V (Pos) := Val;
             if Const_P and then not Is_Static (Val) then
                Const_P := False;
             end if;
          else
-            Error_Msg_Synth (+Assoc, "multi-dim aggregate not handled");
+            Fill_Array_Aggregate
+              (Syn_Inst, Value, Res, Typ, Pos, Strides, Dim + 1, Sub_Const);
+            if not Sub_Const then
+               Const_P := False;
+            end if;
          end if;
       end Set_Elem;
 
-      procedure Set_Vector (Pos : Uns32; Len : Uns32; Val : Value_Acc) is
+      procedure Set_Vector
+        (Pos : Iir_Index32; Len : Iir_Index32; Val : Value_Acc) is
       begin
-         pragma Assert (Dim = Nbr_Dims - 1);
+         pragma Assert (Dim = Strides'Last);
          if Len = 0 then
             return;
          end if;
@@ -290,9 +317,8 @@ package body Synth.Expr is
                   E : Value_Acc;
                begin
                   for I in 1 .. Len loop
-                     E := Val.Arr.V (Iir_Index32 (Len - I));
-                     Res.V (Iir_Index32 (Pos + I)) := E;
-                     Is_Set (Pos + I) := True;
+                     E := Val.Arr.V (Len - I);
+                     Res.V (Pos + I - 1) := E;
                   end loop;
                   Const_P := Const_P and then Val.Kind = Value_Const_Array;
                end;
@@ -304,11 +330,9 @@ package body Synth.Expr is
                begin
                   N := Get_Net (Val);
                   for I in 1 .. Len loop
-                     E := Build_Extract
-                       (Build_Context, N, (Len - I) * El_Typ.W, El_Typ.W);
-                     Res.V (Iir_Index32 (Pos + I)) :=
-                       Create_Value_Net (E, El_Typ);
-                     Is_Set (Pos + I) := True;
+                     E := Build_Extract (Build_Context, N,
+                                         Uns32 (Len - I) * El_Typ.W, El_Typ.W);
+                     Res.V (Pos + I - 1) := Create_Value_Net (E, El_Typ);
                   end loop;
                   Const_P := False;
                end;
@@ -316,10 +340,11 @@ package body Synth.Expr is
                raise Internal_Error;
          end case;
       end Set_Vector;
+
+      Pos : Iir_Index32;
    begin
       Assoc := Get_Association_Choices_Chain (Aggr);
-      Pos := 0;
-      Is_Set := (others => False);
+      Pos := First_Pos;
       Const_P := True;
       while Is_Valid (Assoc) loop
          Value := Get_Associated_Expr (Assoc);
@@ -329,31 +354,38 @@ package body Synth.Expr is
                   if not Get_Element_Type_Flag (Assoc) then
                      raise Internal_Error;
                   end if;
-                  if Pos >= Bound.Len then
+                  if Pos >= First_Pos + Stride * Iir_Index32 (Bound.Len) then
                      Error_Msg_Synth (+Assoc, "element out of array bound");
                   else
                      Set_Elem (Pos);
-                     Pos := Pos + 1;
+                     Pos := Pos + Stride;
                   end if;
                when Iir_Kind_Choice_By_Others =>
                   pragma Assert (Get_Element_Type_Flag (Assoc));
-                  while Pos < Bound.Len loop
-                     if not Is_Set (Pos + 1) then
-                        Set_Elem (Pos);
-                     end if;
-                     Pos := Pos + 1;
-                  end loop;
+                  declare
+                     Last_Pos : constant Iir_Index32 :=
+                       First_Pos + Iir_Index32 (Bound.Len) * Stride;
+                  begin
+                     while Pos < Last_Pos loop
+                        if Res.V (Pos) = null then
+                           Set_Elem (Pos);
+                        end if;
+                        Pos := Pos + Stride;
+                     end loop;
+                  end;
                when Iir_Kind_Choice_By_Expression =>
                   pragma Assert (Get_Element_Type_Flag (Assoc));
                   declare
                      Ch : constant Node := Get_Choice_Expression (Assoc);
                      Idx : Value_Acc;
+                     Off : Iir_Index32;
                   begin
                      Idx := Synth_Expression (Syn_Inst, Ch);
                      if not Is_Static (Idx) then
                         Error_Msg_Synth (+Ch, "choice is not static");
                      else
-                        Set_Elem (Get_Index_Offset (Idx, Bound, Ch));
+                        Off := Iir_Index32 (Get_Index_Offset (Idx, Bound, Ch));
+                        Set_Elem (First_Pos + Off * Stride);
                      end if;
                   end;
                when Iir_Kind_Choice_By_Range =>
@@ -363,6 +395,7 @@ package body Synth.Expr is
                      Val : Value_Acc;
                      W_Rng : Width;
                      Rng_Len : Width;
+                     Off : Iir_Index32;
                   begin
                      Synth_Discrete_Range (Syn_Inst, Ch, Rng, W_Rng);
                      if Get_Element_Type_Flag (Assoc) then
@@ -371,7 +404,9 @@ package body Synth.Expr is
                            Get_Value_Type (Syn_Inst,
                                            Get_Base_Type (Get_Type (Ch))));
                         while In_Range (Rng, Val.Scal) loop
-                           Set_Elem (Get_Index_Offset (Val, Bound, Ch));
+                           Off := Iir_Index32
+                             (Get_Index_Offset (Val, Bound, Ch));
+                           Set_Elem (First_Pos + Off * Stride);
                            Update_Index (Rng, Val.Scal);
                         end loop;
                      else
@@ -389,8 +424,11 @@ package body Synth.Expr is
                            Error_Msg_Synth
                              (+Value, "length doesn't match range");
                         end if;
-                        Set_Vector (Get_Index_Offset (Rng.Left, Bound, Ch),
-                                    Rng_Len, Val);
+                        pragma Assert (Stride = 1);
+                        Off := Iir_Index32
+                          (Get_Index_Offset (Rng.Left, Bound, Ch));
+                        Set_Vector (First_Pos + Off,
+                                    Iir_Index32 (Rng_Len), Val);
                      end if;
                   end;
                when others =>
@@ -651,6 +689,7 @@ package body Synth.Expr is
                                    Aggr : Node;
                                    Aggr_Type : Type_Acc) return Value_Acc
    is
+      Strides : constant Stride_Array := Fill_Stride (Aggr_Type);
       Arr : Value_Array_Acc;
       Res : Value_Acc;
       Const_P : Boolean;
@@ -658,7 +697,8 @@ package body Synth.Expr is
       Arr := Create_Value_Array
         (Iir_Index32 (Get_Array_Flat_Length (Aggr_Type)));
 
-      Fill_Array_Aggregate (Syn_Inst, Aggr, Arr, Aggr_Type, 0, Const_P);
+      Fill_Array_Aggregate
+        (Syn_Inst, Aggr, Arr, Aggr_Type, 1, Strides, 1, Const_P);
 
       if Const_P then
          Res := Create_Value_Const_Array (Aggr_Type, Arr);
