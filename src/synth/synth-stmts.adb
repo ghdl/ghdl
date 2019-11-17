@@ -320,7 +320,8 @@ package body Synth.Stmts is
                end if;
             end;
 
-         when Iir_Kind_Implicit_Dereference =>
+         when Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Dereference =>
             Synth_Assignment_Prefix
               (Syn_Inst, Get_Prefix (Pfx),
                Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
@@ -397,7 +398,8 @@ package body Synth.Stmts is
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Indexed_Name
-           | Iir_Kind_Slice_Name =>
+           | Iir_Kind_Slice_Name
+           | Iir_Kind_Dereference =>
             declare
                Obj : Value_Acc;
                Off : Uns32;

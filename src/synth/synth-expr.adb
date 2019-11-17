@@ -885,6 +885,18 @@ package body Synth.Expr is
             return Create_Value_Discrete
               (Int64 (Get_Enum_Pos (Name)),
                Get_Value_Type (Syn_Inst, Get_Type (Name)));
+         when Iir_Kind_Unit_Declaration =>
+            return Create_Value_Discrete
+              (Vhdl.Evaluation.Get_Physical_Value (Name),
+               Get_Value_Type (Syn_Inst, Get_Type (Name)));
+         when Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Dereference =>
+            declare
+               Val : Value_Acc;
+            begin
+               Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
+               return Heap.Synth_Dereference (Val.Acc);
+            end;
          when others =>
             Error_Kind ("synth_name", Name);
       end case;
