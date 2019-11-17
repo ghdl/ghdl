@@ -1779,6 +1779,7 @@ package body Synth.Stmts is
    is
       Cond : constant Node := Get_Condition (Stmt);
       Is_Exit : constant Boolean := Get_Kind (Stmt) = Iir_Kind_Exit_Statement;
+      Static_Cond : Boolean;
       Loop_Label : Node;
       Lc : Loop_Context_Acc;
       Cond_Val : Value_Acc;
@@ -1788,7 +1789,15 @@ package body Synth.Stmts is
 
       if Cond /= Null_Node then
          Cond_Val := Synth_Expression (C.Inst, Cond);
-         Push_Phi;
+         Static_Cond := Is_Static_Val (Cond_Val);
+         if Static_Cond then
+            if Get_Static_Discrete (Cond_Val) = 0 then
+               --  Not executed.
+               return;
+            end if;
+         else
+            Push_Phi;
+         end if;
       end if;
 
       --  Execution is suspended.
@@ -1817,7 +1826,7 @@ package body Synth.Stmts is
          Lc := Lc.Prev_Loop;
       end loop;
 
-      if Cond /= Null_Node then
+      if Cond /= Null_Node and not Static_Cond then
          Pop_Phi (Phi_True);
          Push_Phi;
          Pop_Phi (Phi_False);
@@ -1905,6 +1914,15 @@ package body Synth.Stmts is
          Synth_Sequential_Statements (C, Stmts);
 
          Loop_Control_Update (C);
+
+         --  Exit from the loop if W_Exit = 0
+         if Lc.W_Exit /= No_Wire_Id
+           and then
+           Get_Current_Value (null, Lc.W_Exit) = Get_Inst_Bit0 (C.Inst)
+         then
+            exit;
+         end if;
+         --  FIXME: W_Quit = 0, W_Ret = 0 ??
       end loop;
       Loop_Control_Finish (C);
 
