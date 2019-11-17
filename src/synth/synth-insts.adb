@@ -24,7 +24,6 @@ with Hash; use Hash;
 with Dyn_Tables;
 with Interning;
 with Synthesis; use Synthesis;
-with Std_Names;
 
 with Grt.Algos;
 
@@ -37,6 +36,7 @@ with Netlists.Concats;
 
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
+with Vhdl.Ieee.Math_Real;
 
 with Synth.Flags;
 with Synth.Values; use Synth.Values;
@@ -921,19 +921,15 @@ package body Synth.Insts is
                      Bod_Unit : Node;
                   begin
                      Synth_Package_Declaration (Parent_Inst, Dep_Unit);
-                     if Bod /= Null_Node then
+                     --  Do not try to elaborate math_real body: there are
+                     --  functions with loop.  Currently, try create signals,
+                     --  which is not possible during package elaboration.
+                     if Bod /= Null_Node
+                       and then Dep_Unit /= Vhdl.Ieee.Math_Real.Math_Real_Pkg
+                     then
                         Bod_Unit := Get_Design_Unit (Bod);
-                        --  Do not translate bodies of ieee packages.
-                        case (Get_Identifier
-                                (Get_Library (Get_Design_File (Bod_Unit))))
-                        is
-                           when Std_Names.Name_Ieee
-                             | Std_Names.Name_Std =>
-                              null;
-                           when others =>
-                              Synth_Dependencies (Parent_Inst, Bod_Unit);
-                              Synth_Package_Body (Parent_Inst, Dep_Unit, Bod);
-                        end case;
+                        Synth_Dependencies (Parent_Inst, Bod_Unit);
+                        Synth_Package_Body (Parent_Inst, Dep_Unit, Bod);
                      end if;
                   end;
                when Iir_Kind_Package_Instantiation_Declaration =>
