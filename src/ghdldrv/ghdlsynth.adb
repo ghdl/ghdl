@@ -114,6 +114,9 @@ package body Ghdlsynth is
       elsif Option = "-de" then
          Flag_Debug_Noexpand := True;
          Res := Option_Ok;
+      elsif Option = "-t" then
+         Flag_Trace_Statements := True;
+         Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
