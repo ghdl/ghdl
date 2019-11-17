@@ -796,7 +796,7 @@ package body Synth.Values is
                for I in Arr.V'Range loop
                   Arr.V (I) := Create_Value_Default (El_Typ);
                end loop;
-               return Create_Value_Array (Typ, Arr);
+               return Create_Value_Const_Array (Typ, Arr);
             end;
          when Type_Unbounded_Vector =>
             raise Internal_Error;
