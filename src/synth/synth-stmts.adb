@@ -1891,6 +1891,7 @@ package body Synth.Stmts is
 
    procedure Synth_While_Loop_Statement (C : in out Seq_Context; Stmt : Node)
    is
+      Bit0 : constant Net := Get_Inst_Bit0 (C.Inst);
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       Cond : constant Node := Get_Condition (Stmt);
       Val : Value_Acc;
@@ -1921,14 +1922,22 @@ package body Synth.Stmts is
 
          Loop_Control_Update (C);
 
-         --  Exit from the loop if W_Exit = 0
+         --  Exit from the loop if W_Exit/W_Ret/W_Quit = 0
          if Lc.W_Exit /= No_Wire_Id
-           and then
-           Get_Current_Value (null, Lc.W_Exit) = Get_Inst_Bit0 (C.Inst)
+           and then Get_Current_Value (null, Lc.W_Exit) = Bit0
          then
             exit;
          end if;
-         --  FIXME: W_Quit = 0, W_Ret = 0 ??
+         if C.W_Ret /= No_Wire_Id
+           and then Get_Current_Value (null, C.W_Ret) = Bit0
+         then
+            exit;
+         end if;
+         if Lc.W_Quit /= No_Wire_Id
+           and then Get_Current_Value (null, Lc.W_Quit) = Bit0
+         then
+            exit;
+         end if;
       end loop;
       Loop_Control_Finish (C);
 
