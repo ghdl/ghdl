@@ -40,6 +40,7 @@ with Synth.Environment;
 with Synth.Decls;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Oper; use Synth.Oper;
+with Synth.Heap; use Synth.Heap;
 
 package body Synth.Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
@@ -1781,6 +1782,16 @@ package body Synth.Expr is
             end;
          when Iir_Kind_Null_Literal =>
             return Create_Value_Access (Expr_Type, Null_Heap_Index);
+         when Iir_Kind_Allocator_By_Subtype =>
+            declare
+               T : Type_Acc;
+               Acc : Heap_Index;
+            begin
+               T := Synth.Decls.Synth_Subtype_Indication
+                 (Syn_Inst, Get_Subtype_Indication (Expr));
+               Acc := Allocate_By_Type (T);
+               return Create_Value_Access (Expr_Type, Acc);
+            end;
          when Iir_Kind_Overflow_Literal =>
             declare
                N : Net;

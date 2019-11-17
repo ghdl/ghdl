@@ -20,10 +20,21 @@
 
 with Vhdl.Errors; use Vhdl.Errors;
 
+with Synth.Values; use Synth.Values;
 with Synth.Errors; use Synth.Errors;
 with Synth.Files_Operations; use Synth.Files_Operations;
+with Synth.Heap;
 
 package body Synth.Static_Proc is
+
+   procedure Synth_Deallocate (Syn_Inst : Synth_Instance_Acc; Imp : Node)
+   is
+      Inter : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Param : constant Value_Acc := Get_Value (Syn_Inst, Inter);
+   begin
+      Synth.Heap.Synth_Deallocate (Param.Acc);
+      Param.Acc := Null_Heap_Index;
+   end Synth_Deallocate;
 
    procedure Synth_Static_Procedure (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
@@ -32,6 +43,8 @@ package body Synth.Static_Proc is
       case Get_Implicit_Definition (Imp) is
          when Iir_Predefined_Foreign_Untruncated_Text_Read =>
             Synth_Untruncated_Text_Read (Syn_Inst, Imp, Loc);
+         when Iir_Predefined_Deallocate =>
+            Synth_Deallocate (Syn_Inst, Imp);
          when others =>
             Error_Msg_Synth
               (+Loc, "call to implicit %n is not supported", +Imp);

@@ -44,6 +44,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Insts; use Synth.Insts;
 with Synth.Source;
 with Synth.Static_Proc;
+with Synth.Heap;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
@@ -315,6 +316,16 @@ package body Synth.Stmts is
                end if;
             end;
 
+         when Iir_Kind_Implicit_Dereference =>
+            Synth_Assignment_Prefix
+              (Syn_Inst, Get_Prefix (Pfx),
+               Dest_Obj, Dest_Off, Dest_Voff, Dest_Rdwd, Dest_Type);
+            if Dest_Off /= 0 and then Dest_Voff /= No_Net then
+               raise Internal_Error;
+            end if;
+            Dest_Obj := Heap.Synth_Dereference (Dest_Obj.Acc);
+            Dest_Type := Dest_Obj.Typ;
+
          when others =>
             Error_Kind ("synth_assignment_prefix", Pfx);
       end case;
@@ -419,6 +430,8 @@ package body Synth.Stmts is
       case Targ.Kind is
          when Value_Discrete =>
             Targ.Scal := Val.Scal;
+         when Value_Access =>
+            Targ.Acc := Val.Acc;
          when Value_Const_Array
            | Value_Array =>
             declare

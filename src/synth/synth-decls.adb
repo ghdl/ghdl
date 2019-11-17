@@ -330,20 +330,15 @@ package body Synth.Decls is
       end case;
    end Synth_Array_Subtype_Indication;
 
-   procedure Synth_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node)
-   is
-      Typ : Type_Acc;
+   function Synth_Subtype_Indication
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc is
    begin
       --  TODO: handle aliases directly.
       case Get_Kind (Atype) is
          when Iir_Kind_Array_Subtype_Definition =>
-            Typ := Synth_Array_Subtype_Indication (Syn_Inst, Atype);
+            return Synth_Array_Subtype_Indication (Syn_Inst, Atype);
          when Iir_Kind_Record_Subtype_Definition =>
-            Typ := Synth_Record_Type_Definition (Syn_Inst, Atype);
-            if Typ = null then
-               return;
-            end if;
+            return Synth_Record_Type_Definition (Syn_Inst, Atype);
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
@@ -355,12 +350,13 @@ package body Synth.Decls is
             begin
                if Btype.Kind in Type_Nets then
                   --  A subtype of a bit/logic type is still a bit/logic.
-                  Typ := Btype;
+                  --  FIXME: bounds.
+                  return Btype;
                else
                   Rng := Synth_Discrete_Range_Constraint
                     (Syn_Inst, Get_Range_Constraint (Atype));
                   W := Discrete_Range_Width (Rng);
-                  Typ := Create_Discrete_Type (Rng, W);
+                  return Create_Discrete_Type (Rng, W);
                end if;
             end;
          when Iir_Kind_Floating_Subtype_Definition =>
@@ -369,11 +365,20 @@ package body Synth.Decls is
             begin
                Rng := Synth_Float_Range_Constraint
                  (Syn_Inst, Get_Range_Constraint (Atype));
-               Typ := Create_Float_Type (Rng);
+               return Create_Float_Type (Rng);
             end;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_subtype_indication", Atype);
       end case;
+   end Synth_Subtype_Indication;
+
+   procedure Synth_Subtype_Indication
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node)
+   is
+      Typ : Type_Acc;
+   begin
+      Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
+      pragma Assert (Typ /= null);
       Create_Object (Syn_Inst, Atype, Create_Value_Subtype (Typ));
    end Synth_Subtype_Indication;
 

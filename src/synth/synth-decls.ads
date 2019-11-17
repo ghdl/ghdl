@@ -33,6 +33,8 @@ package Synth.Decls is
 
    procedure Synth_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node);
+   function Synth_Subtype_Indication
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc;
 
    --  Elaborate the type of DECL.
    procedure Synth_Declaration_Type
