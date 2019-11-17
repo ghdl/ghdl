@@ -22,8 +22,11 @@ with Ada.Unchecked_Deallocation;
 
 with Grt.Algos;
 with Areapools;
+with Name_Table;
 with Std_Names;
 with Errorout; use Errorout;
+with Files_Map;
+with Simple_IO;
 
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Types;
@@ -45,6 +48,7 @@ with Synth.Insts; use Synth.Insts;
 with Synth.Source;
 with Synth.Static_Proc;
 with Synth.Heap;
+with Synth.Flags;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
@@ -1980,6 +1984,21 @@ package body Synth.Stmts is
          if Has_Phi then
             Push_Phi;
          end if;
+
+         if Flags.Flag_Trace_Statements then
+            declare
+               Name : Name_Id;
+               Line : Natural;
+               Col : Natural;
+            begin
+               Files_Map.Location_To_Position
+                 (Get_Location (Stmt), Name, Line, Col);
+               Simple_IO.Put_Line ("Execute statement at "
+                                     & Name_Table.Image (Name)
+                                     & Natural'Image (Line));
+            end;
+         end if;
+
          case Get_Kind (Stmt) is
             when Iir_Kind_If_Statement =>
                Synth_If_Statement (C, Stmt);

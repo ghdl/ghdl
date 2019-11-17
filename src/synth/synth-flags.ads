@@ -26,4 +26,6 @@ package Synth.Flags is
    Flag_Debug_Nomemory : Boolean := False;
 
    Flag_Debug_Noexpand : Boolean := False;
+
+   Flag_Trace_Statements : Boolean := False;
 end Synth.Flags;
