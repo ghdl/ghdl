@@ -20,6 +20,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 FILE *
 __ghdl_get_stdout (void)
 {
@@ -85,5 +89,9 @@ int
 feof_unlocked (FILE *stream)
 {
   return feof (stream);
+}
+#endif
+
+#ifdef __cplusplus
 }
 #endif
