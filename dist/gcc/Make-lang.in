@@ -110,11 +110,14 @@ vhdl/default_paths.ads: Makefile
 	echo "end Default_Paths;" >> tmp-dpaths.ads
 	$(srcdir)/../move-if-change tmp-dpaths.ads $@
 
+GHDL_GRT_OBJS=vhdl/grt-cstdio.o
+
 # The driver for ghdl.  Depends on ghdl1 to use object files in vhdl/ subdir.
-ghdl$(exeext): ghdl1$(exeext) vhdl/default_paths.ads force
+ghdl$(exeext): ghdl1$(exeext) $(GHDL_GRT_OBJS) vhdl/default_paths.ads force
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aI$(srcdir)/vhdl/ghdldrv \
 	 -aIvhdl -aOvhdl ghdl_gcc \
-	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) -largs $(LIBS)
+	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) \
+         -largs $(GHDL_GRT_OBJS) $(LIBS)
 
 # Build hooks:
 

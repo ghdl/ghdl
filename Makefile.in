@@ -232,6 +232,7 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/src/grt/grt-fcvt.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-algos.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-vstrings.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-cstdio.c $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-stdio.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-table.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-files_operations.ad? $(gcc_vhdl_dir)
