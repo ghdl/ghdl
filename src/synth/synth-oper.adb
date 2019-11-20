@@ -107,8 +107,13 @@ package body Synth.Oper is
          Set_Location (N, Loc);
          return Create_Value_Net (N, Boolean_Type);
       elsif Val = 1 then
-         --  The result type is a boolean.
-         return Create_Value_Discrete (1, Boolean_Type);
+         --  The result type is a boolean; convert if needed.
+         if Expr.Typ.Kind = Type_Logic then
+            return Create_Value_Net (Get_Net (Expr), Boolean_Type);
+         else
+            pragma Assert (Expr.Typ.Kind = Type_Bit);
+            return Expr;
+         end if;
       else
          pragma Assert (Val = 0);
          N := Build_Monadic (Build_Context, Id_Not, Get_Net (Expr));
