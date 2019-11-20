@@ -98,7 +98,7 @@ else
       tests="$tests gna"
     fi
     tests="$tests vests"
-    if [ "x$ISEXTRA" = "xsynth" ]; then
+    if [ "x$EXTRA" = "xsynth" ]; then
       tests="$tests synth"
     fi
     $RUN "ghdl/ghdl:$GHDL_IMAGE_TAG" bash -c "GHDL=ghdl ${scriptdir}/../../testsuite/testsuite.sh $tests"
