@@ -49,6 +49,7 @@ with Synth.Source;
 with Synth.Static_Proc;
 with Synth.Heap;
 with Synth.Flags;
+with Synth.Debugger;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Gates;
@@ -2008,6 +2009,9 @@ package body Synth.Stmts is
                                      & Name_Table.Image (Name)
                                      & Natural'Image (Line));
             end;
+         end if;
+         if Synth.Debugger.Flag_Need_Debug then
+            Synth.Debugger.Debug_Break (C.Inst, Stmt);
          end if;
 
          case Get_Kind (Stmt) is

@@ -117,6 +117,9 @@ package body Ghdlsynth is
       elsif Option = "-t" then
          Flag_Trace_Statements := True;
          Res := Option_Ok;
+      elsif Option = "-i" then
+         Flag_Debug_Init := True;
+         Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;

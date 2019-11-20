@@ -45,6 +45,7 @@ with Synth.Stmts; use Synth.Stmts;
 with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
 with Synth.Source; use Synth.Source;
+with Synth.Debugger;
 
 package body Synth.Insts is
    Root_Instance : Synth_Instance_Acc;
@@ -959,6 +960,10 @@ package body Synth.Insts is
       Val : Value_Acc;
    begin
       Root_Instance := Global_Instance;
+
+      if Flags.Flag_Debug_Init then
+         Synth.Debugger.Debug_Init;
+      end if;
 
       --  Dependencies first.
       Synth_Dependencies (Global_Instance, Get_Design_Unit (Entity));

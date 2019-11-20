@@ -1,4 +1,4 @@
---  Flags for synthesis.
+--  Debugging during synthesis (not enabled).
 --  Copyright (C) 2019 Tristan Gingold
 --
 --  This file is part of GHDL.
@@ -18,16 +18,16 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-package Synth.Flags is
-   Flag_Debug_Noinference : Boolean := False;
+with Types; use Types;
 
-   Flag_Debug_Nocleanup : Boolean := False;
+package body Synth.Debugger is
+   procedure Debug_Init is
+   begin
+      null;
+   end Debug_Init;
 
-   Flag_Debug_Nomemory : Boolean := False;
-
-   Flag_Debug_Noexpand : Boolean := False;
-
-   Flag_Trace_Statements : Boolean := False;
-
-   Flag_Debug_Init : Boolean := False;
-end Synth.Flags;
+   procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node) is
+   begin
+      raise Internal_Error;
+   end Debug_Break;
+end Synth.Debugger;
