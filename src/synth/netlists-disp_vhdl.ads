@@ -19,8 +19,6 @@
 --  MA 02110-1301, USA.
 
 package Netlists.Disp_Vhdl is
-   procedure Put_Uns32 (V : Uns32);
-
    procedure Disp_Vhdl (M : Module);
 
    procedure Disp_Architecture_Declarations (M : Module);

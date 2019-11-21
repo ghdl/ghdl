@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Simple_IO; use Simple_IO;
+with Utils_IO; use Utils_IO;
 with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
 with Files_Map;
@@ -30,26 +31,6 @@ with Netlists.Locations;
 
 package body Netlists.Disp_Vhdl is
    Flag_Merge_Lit : constant Boolean := True;
-
-   --  Like Put, but without the leading space (if any).
-   procedure Put_Trim (S : String) is
-   begin
-      if S'First <= S'Last and then S (S'First) = ' ' then
-         Put (S (S'First + 1 .. S'Last));
-      else
-         Put (S);
-      end if;
-   end Put_Trim;
-
-   procedure Put_Uns32 (V : Uns32) is
-   begin
-      Put_Trim (Uns32'Image (V));
-   end Put_Uns32;
-
-   procedure Put_Int32 (V : Int32) is
-   begin
-      Put_Trim (Int32'Image (V));
-   end Put_Int32;
 
    procedure Put_Type (W : Width) is
    begin

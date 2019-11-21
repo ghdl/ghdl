@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Simple_IO; use Simple_IO;
+with Utils_IO; use Utils_IO;
 with Name_Table;
 with Files_Map;
 
@@ -28,26 +29,6 @@ with Netlists.Gates; use Netlists.Gates;
 with Netlists.Locations;
 
 package body Netlists.Dump is
-   procedure Put_Indent (Indent : Natural) is
-   begin
-      Put (String'(1 .. Indent * 2 => ' '));
-   end Put_Indent;
-
-   --  Like Put, but without the leading space (if any).
-   procedure Put_Trim (S : String) is
-   begin
-      if S'First <= S'Last and then S (S'First) = ' ' then
-         Put (S (S'First + 1 .. S'Last));
-      else
-         Put (S);
-      end if;
-   end Put_Trim;
-
-   procedure Put_Uns32 (V : Uns32) is
-   begin
-      Put_Trim (Uns32'Image (V));
-   end Put_Uns32;
-
    procedure Put_Width (W : Width) is
    begin
       Put_Trim (Width'Image (W));

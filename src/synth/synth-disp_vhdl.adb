@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Simple_IO; use Simple_IO;
+with Utils_IO; use Utils_IO;
 with Types; use Types;
 with Name_Table;
 
