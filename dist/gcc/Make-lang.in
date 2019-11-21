@@ -65,7 +65,8 @@ ghdl1$(exeext): force $(GHDL1_OBJS) $(BACKEND) $(LIBDEPS)
 	$(GNATMAKE) -c -aI$(srcdir)/vhdl --subdirs=vhdl ortho_gcc-main \
 	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
-	 -bargs -E -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
+         -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
+	 -bargs -E \
 	 -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GHDL1_OBJS) \
 	 $(filter-out main.o,$(BACKEND)) $(LIBS) $(BACKENDLIBS)
 
@@ -116,8 +117,10 @@ GHDL_GRT_OBJS=vhdl/grt-cstdio.o
 ghdl$(exeext): ghdl1$(exeext) $(GHDL_GRT_OBJS) vhdl/default_paths.ads force
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aI$(srcdir)/vhdl/ghdldrv \
 	 -aIvhdl -aOvhdl ghdl_gcc \
-	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) \
-         -largs $(GHDL_GRT_OBJS) $(LIBS)
+	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
+	 -bargs -E \
+         -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) \
+           $(GHDL_GRT_OBJS) $(LIBS)
 
 # Build hooks:
 
