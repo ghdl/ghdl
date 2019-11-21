@@ -2,8 +2,12 @@
 
 . ../../testenv.sh
 
-gcc -c -fPIC getrand.c
-gcc -o getrand.so --shared getrand.o
+if [ -z $CC ]; then
+  CC="gcc"
+fi
+
+$CC -c -fPIC getrand.c
+$CC -o getrand.so --shared getrand.o
 
 analyze tb.vhdl
 elab_simulate tb

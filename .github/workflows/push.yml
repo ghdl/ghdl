@@ -1,0 +1,76 @@
+name: 'push'
+
+on: [push, pull_request]
+
+env:
+  CI: true
+
+jobs:
+
+  linux:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        task: [
+          { backend: mcode,     args: "--gpl" },
+          { backend: mcode,     args: "--synth" },
+          { backend: llvm-7,    args: "--synth" },
+          { backend: gcc-8.3.0, args: "--synth" },
+        ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - run: ./dist/ci-run.sh -c $TARGS
+      env:
+        TASK: buster+${{ matrix.task.backend }}
+        TARGS: ${{ matrix.task.args }}
+
+  osx:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - run: ./dist/ci-run.sh -c
+      env:
+        TASK: macosx+mcode
+        GITHUB_OS: ${{ runner.os }}
+
+  win:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        task: [
+          {installs: "MINGW32", pkg: "mcode"},
+          #{installs: "MINGW32", pkg: "llvm"},  ! Not yet functional
+          #{installs: "MINGW64", pkg: "mcode"}, ! mcode is not yet supported on win64
+          {installs: "MINGW64", pkg: "llvm"},
+        ]
+    runs-on: windows-latest
+    env:
+      MINGW_INSTALLS: ${{ matrix.task.installs }}
+      TARGET: ${{ matrix.task.pkg }}
+    steps:
+    - uses: numworks/setup-msys2@v1
+      with:
+        msystem: MSYS
+    - run: msys2do pacman -Syu --noconfirm
+    - uses: actions/checkout@v1
+    - name: Build and (hopefully) install package
+      run: |
+        msys2do ./dist/msys2-mingw/run.sh -b
+    - name: Test package
+      run: msys2do ./dist/msys2-mingw/run.sh -t
+      env:
+        MSYSTEM: ${{ matrix.task.installs }}
+
+#---
+
+# TODO:
+# - Cache
+#  - 'gnat' directory in macOS job
+#
+# - Re-package a MINGW/MSYS2 package to provide a 'standalone' tarball/zipfile.
+#  - https://github.com/ghdl/ghdl/issues/318#issuecomment-286246287
+#
+# - Add GNAT GPL 32-bit build job with mcode backend

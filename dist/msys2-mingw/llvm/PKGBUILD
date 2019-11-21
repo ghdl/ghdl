@@ -1,0 +1,28 @@
+_realname=ghdl-llvm
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=ci
+pkgrel=1
+pkgdesc="GHDL: the open-source analyzer, compiler and simulator for VHDL (LLVM backend) (mingw-w64)"
+arch=('any')
+#depends=()
+makedepends=("${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-gcc-ada")
+#source=(
+#  "ghdl::git://github.com/ghdl/ghdl.git#branch=master"
+#)
+#sha512sums=(
+#  'SKIP'
+#)
+
+build() {
+  mkdir "${srcdir}/builddir"
+  cd "${srcdir}/builddir"
+  ../../../../../configure --prefix=${MINGW_PREFIX} --with-llvm-config LDFLAGS=-static --enable-libghdl --enable-synth
+  make GNATMAKE="gnatmake -j$(nproc)"
+}
+
+package() {
+  cd "${srcdir}/builddir"
+  mkdir -p "${pkgdir}${MINGW_PREFIX}/lib"
+  make DESTDIR="${pkgdir}" install
+}

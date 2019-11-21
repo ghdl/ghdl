@@ -3,21 +3,21 @@ dist: xenial
 services: docker
 language: minimal
 install: skip
-script: ./dist/travis/travis-ci.sh
+script: ./dist/ci-run.sh -c $TARGS
 
 # For each linux build, a different job/instance (with the constraints
 # above) is executed in parallel in stage 'test'.
 env:
   matrix:
-    - IMAGE=buster+mcode
-    - IMAGE=buster+mcode
-      EXTRA=gpl
-    - IMAGE=buster+mcode
-      EXTRA=synth
-    - IMAGE=ubuntu14+mcode
-    - IMAGE=ubuntu14+llvm-3.8
-    - IMAGE=fedora30+mcode
-    - IMAGE=fedora30+llvm
+    - TASK=buster+mcode
+    - TASK=buster+mcode
+      TARGS=--gpl
+    - TASK=buster+mcode
+      TARGS=--synth
+    - TASK=ubuntu14+mcode
+    - TASK=ubuntu14+llvm-3.8
+    - TASK=fedora30+mcode
+    - TASK=fedora30+llvm
 
 deploy:
   - &deploy-docker
@@ -44,12 +44,12 @@ jobs:
       cache:
         directories:
           - gnat
-      env: IMAGE=macosx+mcode
+      env: TASK=macosx+mcode
     # Optionally, more macos jobs can be added. See list of available versions at https://docs.travis-ci.com/user/reference/osx/#macos-version
 #   - <<: *osx
 #     osx_image: xcode10
-    - env: IMAGE="man"
-      script: ./dist/travis/man.sh
+    - env: TASK="man"
+      script: ./dist/man.sh
       deploy:
         - <<: *deploy-docker
           file: "doc/_build/man/ghdl.1"

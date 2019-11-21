@@ -1,5 +1,7 @@
 #! /bin/bash
 
+cd $(dirname $0)/..
+
 rm -rf doc/_build/man/*
 
 set -e
