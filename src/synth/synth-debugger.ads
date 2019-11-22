@@ -28,4 +28,8 @@ package Synth.Debugger is
 
    procedure Debug_Init;
    procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node);
+
+   --  To be called in case of execution error, like:
+   --  * index out of bounds.
+   procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node);
 end Synth.Debugger;

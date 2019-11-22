@@ -30,4 +30,9 @@ package body Synth.Debugger is
    begin
       raise Internal_Error;
    end Debug_Break;
+
+   procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node) is
+   begin
+      null;
+   end Debug_Error;
 end Synth.Debugger;

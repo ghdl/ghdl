@@ -41,6 +41,7 @@ with Synth.Decls;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Oper; use Synth.Oper;
 with Synth.Heap; use Synth.Heap;
+with Synth.Debugger;
 
 package body Synth.Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
@@ -952,11 +953,15 @@ package body Synth.Expr is
       end case;
    end In_Bounds;
 
-   function Index_To_Offset (Bnd : Bound_Type; Idx : Int64; Loc : Node)
-                            return Uns32 is
+   --  Convert index IDX in PFX to an offset.
+   --  SYN_INST and LOC are used in case of error.
+   function Index_To_Offset
+     (Syn_Inst : Synth_Instance_Acc; Bnd : Bound_Type; Idx : Int64; Loc : Node)
+     return Uns32 is
    begin
       if not In_Bounds (Bnd, Int32 (Idx)) then
          Error_Msg_Synth (+Loc, "index not within bounds");
+         Synth.Debugger.Debug_Error (Syn_Inst, Loc);
          return 0;
       end if;
 
@@ -1072,7 +1077,7 @@ package body Synth.Expr is
 
       if Idx_Val.Kind = Value_Discrete then
          Voff := No_Net;
-         Off := Index_To_Offset (Bnd, Idx_Val.Scal, Name) * W;
+         Off := Index_To_Offset (Syn_Inst, Bnd, Idx_Val.Scal, Name) * W;
       else
          Voff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
          Voff := Build_Memidx (Get_Build (Syn_Inst), Voff, W, Bnd.Len - 1,
@@ -1257,7 +1262,9 @@ package body Synth.Expr is
       end case;
    end Synth_Extract_Dyn_Suffix;
 
-   procedure Synth_Slice_Const_Suffix (Name : Node;
+   procedure Synth_Slice_Const_Suffix (Syn_Inst: Synth_Instance_Acc;
+                                       Expr : Node;
+                                       Name : Node;
                                        Pfx_Bnd : Bound_Type;
                                        L, R : Int64;
                                        Dir : Iir_Direction;
@@ -1279,6 +1286,7 @@ package body Synth.Expr is
         or else not In_Bounds (Pfx_Bnd, Int32 (R))
       then
          Error_Msg_Synth (+Name, "index not within bounds");
+         Synth.Debugger.Debug_Error (Syn_Inst, Expr);
          Wd := 0;
          Off := 0;
          return;
@@ -1337,7 +1345,8 @@ package body Synth.Expr is
             begin
                Synth_Discrete_Range (Syn_Inst, Expr, Rng, W);
                Inp := No_Net;
-               Synth_Slice_Const_Suffix (Name, Pfx_Bnd,
+               Synth_Slice_Const_Suffix (Syn_Inst, Expr,
+                                         Name, Pfx_Bnd,
                                          Rng.Left, Rng.Right, Rng.Dir,
                                          El_Wd, Res_Bnd, Off, Wd);
                return;
@@ -1350,7 +1359,8 @@ package body Synth.Expr is
       if Is_Static_Val (Left) and then Is_Static_Val (Right) then
          Inp := No_Net;
          Synth_Slice_Const_Suffix
-           (Name, Pfx_Bnd,
+           (Syn_Inst, Expr,
+            Name, Pfx_Bnd,
             Get_Static_Discrete (Left), Get_Static_Discrete (Right), Dir,
             El_Wd, Res_Bnd, Off, Wd);
       else
