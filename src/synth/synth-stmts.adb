@@ -878,7 +878,8 @@ package body Synth.Stmts is
    procedure Free_Partial_Assign_Array is new Ada.Unchecked_Deallocation
      (Partial_Assign_Array, Partial_Assign_Array_Acc);
 
-   procedure Synth_Case_Statement (C : in out Seq_Context; Stmt : Node)
+   procedure Synth_Case_Statement_Dynamic
+     (C : in out Seq_Context; Stmt : Node; Sel : Value_Acc)
    is
       use Vhdl.Sem_Expr;
 
@@ -905,7 +906,6 @@ package body Synth.Stmts is
       Nbr_Wires : Natural;
       Wires : Wire_Id_Array_Acc;
 
-      Sel : Value_Acc;
       Sel_Net : Net;
    begin
       --  Strategies to synthesize a case statement.  Assume the selector is
@@ -923,9 +923,6 @@ package body Synth.Stmts is
       --    - large number of choices, densily grouped but sparsed compared
       --       to 2**W (eg: a partially filled memory)
       --    - divide and conquier
-
-      --  Create a net for the expression.
-      Sel := Synth_Expression_With_Basetype (C.Inst, Expr);
 
       --  Count choices and alternatives.
       Count_Choices (Case_Info, Choices);
@@ -1091,6 +1088,85 @@ package body Synth.Stmts is
       Free_Alternative_Data_Array (Alts);
       Free_Partial_Assign_Array (Pasgns);
       Free_Net_Array (Nets);
+   end Synth_Case_Statement_Dynamic;
+
+   procedure Synth_Case_Statement_Static_Scalar
+     (C : in out Seq_Context; Stmt : Node; Sel : Int64)
+   is
+      use Vhdl.Sem_Expr;
+
+      Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
+      Choice : Node;
+      Stmts : Node;
+      Sel_Expr : Node;
+   begin
+      --  Synth statements, extract choice value.
+      Stmts := Null_Node;
+      Choice := Choices;
+      loop
+         pragma Assert (Is_Valid (Choice));
+         if not Get_Same_Alternative_Flag (Choice) then
+            Stmts := Get_Associated_Chain (Choice);
+         end if;
+
+         case Get_Kind (Choice) is
+            when Iir_Kind_Choice_By_Expression =>
+               Sel_Expr := Get_Choice_Expression (Choice);
+               if Vhdl.Evaluation.Eval_Pos (Sel_Expr) = Sel then
+                  Synth_Sequential_Statements (C, Stmts);
+                  exit;
+               end if;
+            when Iir_Kind_Choice_By_Others =>
+               Synth_Sequential_Statements (C, Stmts);
+               exit;
+            when Iir_Kind_Choice_By_Range =>
+               declare
+                  Bnd : Discrete_Range_Type;
+                  W : Width;
+                  pragma Unreferenced (W);
+                  Is_In : Boolean;
+               begin
+                  Synth_Discrete_Range
+                    (C.Inst, Get_Choice_Range (Choice), Bnd, W);
+                  case Bnd.Dir is
+                     when Iir_To =>
+                        Is_In := Sel >= Bnd.Left and Sel <= Bnd.Right;
+                     when Iir_Downto =>
+                        Is_In := Sel <= Bnd.Left and Sel >= Bnd.Right;
+                  end case;
+                  if Is_In then
+                     Synth_Sequential_Statements (C, Stmts);
+                     exit;
+                  end if;
+               end;
+            when others =>
+               raise Internal_Error;
+         end case;
+         Choice := Get_Chain (Choice);
+      end loop;
+   end Synth_Case_Statement_Static_Scalar;
+
+   procedure Synth_Case_Statement (C : in out Seq_Context; Stmt : Node)
+   is
+      use Vhdl.Sem_Expr;
+
+      Expr : constant Node := Get_Expression (Stmt);
+      Sel : Value_Acc;
+   begin
+      Sel := Synth_Expression_With_Basetype (C.Inst, Expr);
+      if Is_Static (Sel) then
+         case Sel.Typ.Kind is
+            when Type_Bit
+              | Type_Logic
+              | Type_Discrete =>
+               Synth_Case_Statement_Static_Scalar (C, Stmt, Sel.Scal);
+            when others =>
+               --  TODO: support vector/array/slice
+               raise Internal_Error;
+         end case;
+      else
+         Synth_Case_Statement_Dynamic (C, Stmt, Sel);
+      end if;
    end Synth_Case_Statement;
 
    procedure Synth_Selected_Signal_Assignment
