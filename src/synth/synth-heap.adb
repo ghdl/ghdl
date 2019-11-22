@@ -66,10 +66,36 @@ package body Synth.Heap is
       return Heap_Table.Last;
    end Allocate_By_Type;
 
+   function Allocate_By_Value (V : Value_Acc) return Value_Acc is
+   begin
+      case V.Kind is
+         when Value_Net
+           | Value_Wire =>
+            raise Internal_Error;
+         when Value_Discrete =>
+            return new Value_Type'
+              (Kind => Value_Discrete, Typ => V.Typ, Scal => V.Scal);
+         when Value_Array
+           | Value_Const_Array =>
+            declare
+               Arr : Value_Array_Acc;
+            begin
+               Arr := new Value_Array_Type (V.Arr.Len);
+               for I in Arr.V'Range loop
+                  Arr.V (I) := Allocate_By_Value (V.Arr.V (I));
+               end loop;
+               return new Value_Type'
+                 (Kind => Value_Const_Array, Typ => V.Typ, Arr => Arr);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Allocate_By_Value;
+
    function Allocate_By_Value (V : Value_Acc) return Heap_Index is
    begin
-      raise Internal_Error;
-      return Null_Heap_Index;
+      Heap_Table.Append (Allocate_By_Value (V));
+      return Heap_Table.Last;
    end Allocate_By_Value;
 
    function Synth_Dereference (Idx : Heap_Index) return Value_Acc is

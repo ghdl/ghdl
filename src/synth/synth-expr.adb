@@ -1844,6 +1844,16 @@ package body Synth.Expr is
                Acc := Allocate_By_Type (T);
                return Create_Value_Access (Expr_Type, Acc);
             end;
+         when Iir_Kind_Allocator_By_Expression =>
+            declare
+               V : Value_Acc;
+               Acc : Heap_Index;
+            begin
+               V := Synth_Expression_With_Type
+                 (Syn_Inst, Get_Expression (Expr), Expr_Type.Acc_Acc);
+               Acc := Allocate_By_Value (V);
+               return Create_Value_Access (Expr_Type, Acc);
+            end;
          when Iir_Kind_Overflow_Literal =>
             declare
                N : Net;
