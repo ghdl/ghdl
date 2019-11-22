@@ -1093,8 +1093,6 @@ package body Synth.Stmts is
    procedure Synth_Case_Statement_Static_Scalar
      (C : in out Seq_Context; Stmt : Node; Sel : Int64)
    is
-      use Vhdl.Sem_Expr;
-
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
       Choice : Node;
       Stmts : Node;
@@ -1148,8 +1146,6 @@ package body Synth.Stmts is
 
    procedure Synth_Case_Statement (C : in out Seq_Context; Stmt : Node)
    is
-      use Vhdl.Sem_Expr;
-
       Expr : constant Node := Get_Expression (Stmt);
       Sel : Value_Acc;
    begin
