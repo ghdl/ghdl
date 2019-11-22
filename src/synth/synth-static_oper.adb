@@ -263,7 +263,9 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn =>
             return Synth_Vector_Dyadic (Left, Right, And_Table, Expr);
 
-         when Iir_Predefined_Ieee_1164_Vector_Or =>
+         when Iir_Predefined_Ieee_1164_Vector_Or
+           | Iir_Predefined_Ieee_Numeric_Std_Or_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn =>
             return Synth_Vector_Dyadic (Left, Right, Or_Table, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
