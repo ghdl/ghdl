@@ -15,21 +15,23 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Flags; use Flags;
+with Std_Names;
+with Str_Table;
+with Libraries;
+with Errorout; use Errorout;
+
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Sem_Expr; use Vhdl.Sem_Expr;
 with Vhdl.Sem_Names; use Vhdl.Sem_Names;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Sem; use Vhdl.Sem;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
 with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
-with Libraries;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
-with Flags; use Flags;
-with Std_Names;
 with Vhdl.Sem_Decls;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
 with Vhdl.Back_End;
@@ -176,6 +178,49 @@ package body Vhdl.Sem_Specs is
       end loop;
       return Null_Iir;
    end Find_Attribute_Value;
+
+   --  Called for 'Foreign attribute ATTR on procedure DECL.
+   --  Handle intrinsic subprograms.
+   procedure Attribute_Foreign_Procedure (Decl : Iir; Attr : Iir)
+   is
+      Expr : constant Iir := Get_Expression (Attr);
+      Intrinsic_Str : constant String := "GHDL intrinsic";
+      Str_Id : String8_Id;
+   begin
+      --  Intrinsic must use a simple string literal.
+      if Get_Kind (Expr) /= Iir_Kind_String_Literal8 then
+         return;
+      end if;
+
+      --  Compare with the string.
+      if Get_String_Length (Expr) /= Intrinsic_Str'Length then
+         return;
+      end if;
+      Str_Id := Get_String8_Id (Expr);
+      if Str_Table.String_String8 (Str_Id, Intrinsic_Str'Length)
+        /= Intrinsic_Str
+      then
+         return;
+      end if;
+
+      pragma Assert (Get_Implicit_Definition (Decl) = Iir_Predefined_None);
+      declare
+         use Std_Names;
+         Predefined : Iir_Predefined_Functions;
+      begin
+         case Get_Identifier (Decl) is
+            when Name_Untruncated_Text_Read =>
+               Predefined := Iir_Predefined_Foreign_Untruncated_Text_Read;
+            when Name_Textio_Read_Real =>
+               Predefined := Iir_Predefined_Foreign_Textio_Read_Real;
+            when Name_Textio_Write_Real =>
+               Predefined := Iir_Predefined_Foreign_Textio_Write_Real;
+            when others =>
+               Predefined := Iir_Predefined_None;
+         end case;
+         Set_Implicit_Definition (Decl, Predefined);
+      end;
+   end Attribute_Foreign_Procedure;
 
    --  Decorate DECL with attribute ATTR.
    --  If CHECK_CLASS is true, class of DECL must be class of ATTR, otherwise
@@ -355,6 +400,8 @@ package body Vhdl.Sem_Specs is
          --  consequence they cannot be suspended.
          if Get_Kind (Decl) = Iir_Kind_Procedure_Declaration then
             Set_Suspend_Flag (Decl, False);
+
+            Attribute_Foreign_Procedure (Decl, Attr);
          end if;
 
          declare

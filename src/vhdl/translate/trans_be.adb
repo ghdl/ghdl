@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 
 with Simple_IO;
-with Std_Names;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Back_End;
 
@@ -38,26 +37,6 @@ package body Trans_Be is
       end case;
       --  Let it generate error messages.
       Fi := Translate_Foreign_Id (Decl);
-
-      if Fi.Kind = Foreign_Intrinsic then
-         pragma Assert (Get_Implicit_Definition (Decl) = Iir_Predefined_None);
-         declare
-            use Std_Names;
-            Predefined : Iir_Predefined_Functions;
-         begin
-            case Get_Identifier (Decl) is
-               when Name_Untruncated_Text_Read =>
-                  Predefined := Iir_Predefined_Foreign_Untruncated_Text_Read;
-               when Name_Textio_Read_Real =>
-                  Predefined := Iir_Predefined_Foreign_Textio_Read_Real;
-               when Name_Textio_Write_Real =>
-                  Predefined := Iir_Predefined_Foreign_Textio_Write_Real;
-               when others =>
-                  Predefined := Iir_Predefined_None;
-            end case;
-            Set_Implicit_Definition (Decl, Predefined);
-         end;
-      end if;
 
       if Sem_Foreign_Hook /= null then
          Sem_Foreign_Hook.all (Decl, Fi);
