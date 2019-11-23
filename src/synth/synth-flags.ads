@@ -29,5 +29,9 @@ package Synth.Flags is
 
    Flag_Trace_Statements : Boolean := False;
 
+   --  True to start debugger at elaboration.
    Flag_Debug_Init : Boolean := False;
+
+   --  True to start debugger on error.
+   Flag_Debug_Enable : Boolean := True;
 end Synth.Flags;

@@ -64,6 +64,7 @@ package body Synth.Context is
                                       Name => No_Sname,
                                       Block_Scope => Global_Info,
                                       Up_Block => null,
+                                      Source_Scope => Null_Node,
                                       Elab_Objects => 0,
                                       Objects => (others => null));
       return Res;
@@ -91,6 +92,7 @@ package body Synth.Context is
                                       Name => Name,
                                       Block_Scope => Scope,
                                       Up_Block => Parent,
+                                      Source_Scope => Blk,
                                       Elab_Objects => 0,
                                       Objects => (others => null));
       return Res;
@@ -129,6 +131,11 @@ package body Synth.Context is
    begin
       return Inst.Base.Cur_Module;
    end Get_Instance_Module;
+
+   function Get_Source_Scope (Inst : Synth_Instance_Acc) return Node is
+   begin
+      return Inst.Source_Scope;
+   end Get_Source_Scope;
 
    function Get_Top_Module (Inst : Synth_Instance_Acc) return Module is
    begin

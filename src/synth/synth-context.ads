@@ -72,6 +72,9 @@ package Synth.Context is
    function Get_Instance_Const (Inst : Synth_Instance_Acc) return Boolean;
    procedure Set_Instance_Const (Inst : Synth_Instance_Acc; Val : Boolean);
 
+   --  Get the corresponding source for the scope of the instance.
+   function Get_Source_Scope (Inst : Synth_Instance_Acc) return Node;
+
    procedure Create_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc);
 
@@ -131,11 +134,14 @@ private
       --  Name prefix for declarations.
       Name : Sname;
 
-      --  The corresponding info for this instance.
+      --  The corresponding info for this instance.  This is used for lookup.
       Block_Scope : Sim_Info_Acc;
 
-      --  Parent instance.
+      --  Instance of the parent scope.
       Up_Block : Synth_Instance_Acc;
+
+      --  Source construct corresponding to this instance/
+      Source_Scope : Node;
 
       Elab_Objects : Object_Slot_Type;
 
