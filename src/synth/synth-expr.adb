@@ -1273,6 +1273,7 @@ package body Synth.Expr is
                                        Off : out Uns32;
                                        Wd : out Width)
    is
+      Is_Null : Boolean;
       Len : Uns32;
    begin
       if Pfx_Bnd.Dir /= Dir then
@@ -1282,34 +1283,41 @@ package body Synth.Expr is
          return;
       end if;
 
-      if not In_Bounds (Pfx_Bnd, Int32 (L))
-        or else not In_Bounds (Pfx_Bnd, Int32 (R))
-      then
-         Error_Msg_Synth (+Name, "index not within bounds");
-         Synth.Debugger.Debug_Error (Syn_Inst, Expr);
-         Wd := 0;
-         Off := 0;
-         return;
-      end if;
-
+      --  Might be a null slice.
       case Pfx_Bnd.Dir is
          when Iir_To =>
-            Len := Uns32 (R - L + 1);
-            Res_Bnd := (Dir => Iir_To,
-                        Wbounds => Pfx_Bnd.Wbounds,
-                        Len => Len,
-                        Left => Int32 (L),
-                        Right => Int32 (R));
-            Off := Uns32 (Pfx_Bnd.Right - Res_Bnd.Right) * El_Wd;
+            Is_Null := L > R;
          when Iir_Downto =>
-            Len := Uns32 (L - R + 1);
-            Res_Bnd := (Dir => Iir_Downto,
-                        Wbounds => Pfx_Bnd.Wbounds,
-                        Len => Len,
-                        Left => Int32 (L),
-                        Right => Int32 (R));
-            Off := Uns32 (Res_Bnd.Right - Pfx_Bnd.Right) * El_Wd;
+            Is_Null := L < R;
       end case;
+      if Is_Null then
+         Len := 0;
+         Off := 0;
+      else
+         if not In_Bounds (Pfx_Bnd, Int32 (L))
+           or else not In_Bounds (Pfx_Bnd, Int32 (R))
+         then
+            Error_Msg_Synth (+Name, "index not within bounds");
+            Synth.Debugger.Debug_Error (Syn_Inst, Expr);
+            Wd := 0;
+            Off := 0;
+            return;
+         end if;
+
+         case Pfx_Bnd.Dir is
+            when Iir_To =>
+               Len := Uns32 (R - L + 1);
+               Off := Uns32 (Pfx_Bnd.Right - Int32 (R)) * El_Wd;
+            when Iir_Downto =>
+               Len := Uns32 (L - R + 1);
+               Off := Uns32 (Int32 (R) - Pfx_Bnd.Right) * El_Wd;
+         end case;
+      end if;
+      Res_Bnd := (Dir => Pfx_Bnd.Dir,
+                  Wbounds => Pfx_Bnd.Wbounds,
+                  Len => Len,
+                  Left => Int32 (L),
+                  Right => Int32 (R));
       Wd := Len * El_Wd;
    end Synth_Slice_Const_Suffix;
 
