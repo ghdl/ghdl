@@ -841,7 +841,8 @@ package body Synth.Expr is
                   --  TODO: check overflow.
                   case Val.Kind is
                      when Value_Net
-                       | Value_Wire =>
+                       | Value_Wire
+                       | Value_Alias =>
                         N := Get_Net (Val);
                         if Vtype.Drange.Is_Signed then
                            N := Build2_Sresize
