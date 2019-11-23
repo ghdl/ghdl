@@ -1071,6 +1071,7 @@ package body Synth.Expr is
       Idx_Type := Get_Value_Type
         (Syn_Inst, Get_Base_Type (Get_Type (Idx_Expr)));
       Idx_Val := Synth_Expression_With_Type (Syn_Inst, Idx_Expr, Idx_Type);
+      Strip_Const (Idx_Val);
 
       Get_Onedimensional_Array_Bounds (Pfx_Type, Bnd, El_Typ);
       W := El_Typ.W;
