@@ -234,7 +234,8 @@ package body Synth.Static_Oper is
             return Create_Value_Discrete
               (Boolean'Pos (Get_Static_Discrete (Left)
                               /= Get_Static_Discrete (Right)), Boolean_Type);
-         when Iir_Predefined_Physical_Physical_Div =>
+         when Iir_Predefined_Physical_Physical_Div
+           | Iir_Predefined_Physical_Integer_Div =>
             return Create_Value_Discrete
               (Left.Scal / Right.Scal, Res_Typ);
 
