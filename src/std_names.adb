@@ -650,6 +650,8 @@ package body Std_Names is
       Def ("math_real",          Name_Math_Real);
       Def ("ceil",               Name_Ceil);
       Def ("log2",               Name_Log2);
+      Def ("sin",                Name_Sin);
+      Def ("cos",                Name_Cos);
 
       Def ("allconst",           Name_Allconst);
       Def ("allseq",             Name_Allseq);

@@ -44,6 +44,10 @@ package body Vhdl.Ieee.Math_Real is
                      Predef := Iir_Predefined_Ieee_Math_Real_Ceil;
                   when Name_Log2 =>
                      Predef := Iir_Predefined_Ieee_Math_Real_Log2;
+                  when Name_Sin =>
+                     Predef := Iir_Predefined_Ieee_Math_Real_Sin;
+                  when Name_Cos =>
+                     Predef := Iir_Predefined_Ieee_Math_Real_Cos;
                   when others =>
                      null;
                end case;
