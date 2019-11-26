@@ -1180,8 +1180,7 @@ package body Synth.Oper is
                pragma Import (C, Log2);
             begin
                if V.Typ.Kind /= Type_Float then
-                  Error_Msg_Synth
-                    (+Expr, "argument must be a float value");
+                  Error_Msg_Synth (+Expr, "argument must be a float value");
                   return null;
                end if;
                return Create_Value_Float
@@ -1195,12 +1194,39 @@ package body Synth.Oper is
                pragma Import (C, Ceil);
             begin
                if V.Typ.Kind /= Type_Float then
-                  Error_Msg_Synth
-                    (+Expr, "argument must be a float value");
+                  Error_Msg_Synth(+Expr, "argument must be a float value");
                   return null;
                end if;
                return Create_Value_Float
                  (Ceil (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Sin =>
+            declare
+               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+
+               function Sin (Arg : Fp64) return Fp64;
+               pragma Import (C, Sin);
+            begin
+               if V.Typ.Kind /= Type_Float then
+                  Error_Msg_Synth (+Expr, "argument must be a float value");
+                  return null;
+               end if;
+               return Create_Value_Float
+                 (Sin (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Cos =>
+            declare
+               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+
+               function Cos (Arg : Fp64) return Fp64;
+               pragma Import (C, Cos);
+            begin
+               if V.Typ.Kind /= Type_Float then
+                  Error_Msg_Synth (+Expr, "argument must be a float value");
+                  return null;
+               end if;
+               return Create_Value_Float
+                 (Cos (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
             end;
          when others =>
             Error_Msg_Synth
