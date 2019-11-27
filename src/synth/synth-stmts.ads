@@ -68,51 +68,70 @@ package Synth.Stmts is
    procedure Update_Index (Rng : Discrete_Range_Type; Idx : in out Int64);
 
 private
-   type Loop_Context;
+   --  There are 2 execution mode:
+   --  * static: it is like simulation, all the inputs are known, neither
+   --    gates nor signals are generated.  This mode is used during
+   --    elaboration and when all inputs of a subprogram are known.
+   --  * dynamic: inputs can be wires so gates are generated.  But many types
+   --    (like file or access) cannot be handled.
+   type Mode_Type is (Mode_Static, Mode_Dynamic);
+
+   type Loop_Context (Mode : Mode_Type);
    type Loop_Context_Acc is access all Loop_Context;
 
-   type Loop_Context is record
+   type Loop_Context (Mode : Mode_Type) is record
       Prev_Loop : Loop_Context_Acc;
       Loop_Stmt : Node;
 
-      --  Set to true so that inner loops have to declare W_Quit.
-      Need_Quit : Boolean;
+      case Mode is
+         when Mode_Dynamic =>
+            --  Set to true so that inner loops have to declare W_Quit.
+            Need_Quit : Boolean;
 
-      --  Value of W_En at the entry of the loop.
-      Saved_En : Net;
+            --  Value of W_En at the entry of the loop.
+            Saved_En : Net;
 
-      --  Set to 0 in case of exit for the loop.
-      --  Set to 0 in case of exit/next for outer loop.
-      --  Initialized to 1.
-      W_Exit : Wire_Id;
+            --  Set to 0 in case of exit for the loop.
+            --  Set to 0 in case of exit/next for outer loop.
+            --  Initialized to 1.
+            W_Exit : Wire_Id;
 
-      --  Set to 0 if this loop has to be quited because of an exit/next for
-      --  an outer loop.
-      --  Initialized to 1.
-      W_Quit : Wire_Id;
+            --  Set to 0 if this loop has to be quited because of an
+            --  exit/next for an outer loop.  Initialized to 1.
+            W_Quit : Wire_Id;
 
-      --  Mark to release wires.
-      Wire_Mark : Wire_Id;
+            --  Mark to release wires.
+            Wire_Mark : Wire_Id;
+         when Mode_Static =>
+            S_Exit : Boolean;
+            S_Quit : Boolean;
+      end case;
    end record;
 
    --  Context for sequential statements.
-   type Seq_Context is record
+   type Seq_Context (Mode : Mode_Type) is record
       Inst : Synth_Instance_Acc;
 
       Cur_Loop : Loop_Context_Acc;
 
-      --  Enable execution.
-      W_En : Wire_Id;
-
-      W_Ret : Wire_Id;
-
-      --  Return value.
-      W_Val : Wire_Id;
-
-      Ret_Init : Net;
-
       Ret_Value : Value_Acc;
       Ret_Typ : Type_Acc;
       Nbr_Ret : Int32;
+
+      case Mode is
+         when Mode_Dynamic =>
+            --  Enable execution.
+            W_En : Wire_Id;
+
+            W_Ret : Wire_Id;
+
+            --  Return value.
+            W_Val : Wire_Id;
+
+            Ret_Init : Net;
+
+         when Mode_Static =>
+            S_En : Boolean;
+      end case;
    end record;
 end Synth.Stmts;

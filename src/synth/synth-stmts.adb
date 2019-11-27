@@ -1565,47 +1565,39 @@ package body Synth.Stmts is
       pragma Assert (Nbr_Inout = Infos'Last);
    end Synth_Subprogram_Back_Association;
 
-   function Synth_Subprogram_Call
-     (Syn_Inst : Synth_Instance_Acc; Call : Node) return Value_Acc
+   function Synth_Dynamic_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
+                                           Sub_Inst : Synth_Instance_Acc;
+                                           Call : Node;
+                                           Infos : Target_Info_Array)
+                                          return Value_Acc
    is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Bod : constant Node := Get_Subprogram_Body (Imp);
-      Nbr_Inout : constant Natural :=
-        Count_Associations (Inter_Chain, Assoc_Chain);
-      Infos : Target_Info_Array (1 .. Nbr_Inout);
-      Area_Mark : Areapools.Mark_Type;
       Res : Value_Acc;
-      C : Seq_Context;
+      C : Seq_Context (Mode_Dynamic);
       Wire_Mark : Wire_Id;
       Subprg_Phi : Phi_Type;
    begin
       Mark (Wire_Mark);
-      Areapools.Mark (Area_Mark, Instance_Pool.all);
-      C := (Inst => Make_Instance (Syn_Inst, Bod,
-                                   New_Internal_Name (Build_Context)),
+      C := (Mode => Mode_Dynamic,
+            Inst => Sub_Inst,
             Cur_Loop => null,
-            W_En => Alloc_Wire (Wire_Variable, Imp),
-            W_Ret => Alloc_Wire (Wire_Variable, Imp),
+            W_En => No_Wire_Id,
+            W_Ret => No_Wire_Id,
             W_Val => No_Wire_Id,
             Ret_Init => No_Net,
             Ret_Value => null,
             Ret_Typ => null,
             Nbr_Ret => 0);
 
+      C.W_En := Alloc_Wire (Wire_Variable, Imp);
+      C.W_Ret := Alloc_Wire (Wire_Variable, Imp);
+
       if Is_Func then
          C.W_Val := Alloc_Wire (Wire_Variable, Imp);
-      end if;
-
-      Synth_Subprogram_Association
-        (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
-
-      if not Is_Func then
-         if Get_Purity_State (Imp) /= Pure then
-            Set_Instance_Const (C.Inst, False);
-         end if;
       end if;
 
       Push_Phi;
@@ -1613,6 +1605,7 @@ package body Synth.Stmts is
       if Is_Func then
          --  Set a default value for the return.
          C.Ret_Typ := Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
+
          Set_Wire_Gate (C.W_Val,
                         Build_Signal (Build_Context,
                                       New_Internal_Name (Build_Context),
@@ -1665,10 +1658,99 @@ package body Synth.Stmts is
          Free_Wire (C.W_Val);
       end if;
 
-      Free_Instance (C.Inst);
-      Areapools.Release (Area_Mark, Instance_Pool.all);
-
       Release (Wire_Mark);
+
+      return Res;
+   end Synth_Dynamic_Subprogram_Call;
+
+   function Synth_Static_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
+                                          Sub_Inst : Synth_Instance_Acc;
+                                          Call : Node;
+                                          Infos : Target_Info_Array)
+                                         return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Call);
+      Is_Func : constant Boolean := Is_Function_Declaration (Imp);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Bod : constant Node := Get_Subprogram_Body (Imp);
+      Res : Value_Acc;
+      C : Seq_Context (Mode_Static);
+   begin
+      C := (Mode_Static,
+            Inst => Sub_Inst,
+            Cur_Loop => null,
+            S_En => True,
+            Ret_Value => null,
+            Ret_Typ => null,
+            Nbr_Ret => 0);
+
+      if Is_Func then
+         --  Set a default value for the return.
+         C.Ret_Typ := Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
+      end if;
+
+      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+
+      Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
+
+      if Is_Func then
+         if C.Nbr_Ret = 0 then
+            raise Internal_Error;
+         elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value) then
+            Res := C.Ret_Value;
+         else
+            raise Internal_Error;
+         end if;
+      else
+         Res := null;
+         Synth_Subprogram_Back_Association
+           (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+      end if;
+
+      Decls.Finalize_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+      pragma Unreferenced (Infos);
+
+      return Res;
+   end Synth_Static_Subprogram_Call;
+
+   function Synth_Subprogram_Call
+     (Syn_Inst : Synth_Instance_Acc; Call : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Call);
+      Is_Func : constant Boolean := Is_Function_Declaration (Imp);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Bod : constant Node := Get_Subprogram_Body (Imp);
+      Nbr_Inout : constant Natural :=
+        Count_Associations (Inter_Chain, Assoc_Chain);
+      Infos : Target_Info_Array (1 .. Nbr_Inout);
+      Area_Mark : Areapools.Mark_Type;
+      Res : Value_Acc;
+      Sub_Inst : Synth_Instance_Acc;
+   begin
+      Areapools.Mark (Area_Mark, Instance_Pool.all);
+      Sub_Inst :=  Make_Instance (Syn_Inst, Bod,
+                                  New_Internal_Name (Build_Context));
+      Synth_Subprogram_Association
+        (Sub_Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+
+      if not Is_Func then
+         if Get_Purity_State (Imp) /= Pure then
+            Set_Instance_Const (Sub_Inst, False);
+         end if;
+      end if;
+
+      if Get_Instance_Const (Sub_Inst) then
+         Res := Synth_Static_Subprogram_Call
+           (Syn_Inst, Sub_Inst, Call, Infos);
+      else
+         Res := Synth_Dynamic_Subprogram_Call
+           (Syn_Inst, Sub_Inst, Call, Infos);
+      end if;
+
+      Free_Instance (Sub_Inst);
+      Areapools.Release (Area_Mark, Instance_Pool.all);
 
       return Res;
    end Synth_Subprogram_Call;
@@ -1854,7 +1936,8 @@ package body Synth.Stmts is
       Phi_Assign (Get_Build (C.Inst), C.W_En, Res, 0);
    end Loop_Control_Finish;
 
-   procedure Synth_Exit_Next_Statement (C : in out Seq_Context; Stmt : Node)
+   procedure Synth_Dynamic_Exit_Next_Statement
+     (C : in out Seq_Context; Stmt : Node)
    is
       Cond : constant Node := Get_Condition (Stmt);
       Is_Exit : constant Boolean := Get_Kind (Stmt) = Iir_Kind_Exit_Statement;
@@ -1912,18 +1995,92 @@ package body Synth.Stmts is
          Merge_Phis (Build_Context,
                      Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
       end if;
-   end Synth_Exit_Next_Statement;
+   end Synth_Dynamic_Exit_Next_Statement;
 
-   procedure Synth_For_Loop_Statement (C : in out Seq_Context; Stmt : Node)
+   procedure Synth_Static_Exit_Next_Statement
+     (C : in out Seq_Context; Stmt : Node)
+   is
+      Cond : constant Node := Get_Condition (Stmt);
+      Is_Exit : constant Boolean := Get_Kind (Stmt) = Iir_Kind_Exit_Statement;
+      Loop_Label : Node;
+      Lc : Loop_Context_Acc;
+      Cond_Val : Value_Acc;
+   begin
+
+      if Cond /= Null_Node then
+         Cond_Val := Synth_Expression (C.Inst, Cond);
+         pragma Assert (Is_Static_Val (Cond_Val));
+         if Get_Static_Discrete (Cond_Val) = 0 then
+            --  Not executed.
+            return;
+         end if;
+      end if;
+
+      --  Execution is suspended.
+      C.S_En := False;
+
+      Lc := C.Cur_Loop;
+
+      Loop_Label := Get_Loop_Label (Stmt);
+      if Loop_Label = Null_Node then
+         Loop_Label := Lc.Loop_Stmt;
+      else
+         Loop_Label := Get_Named_Entity (Loop_Label);
+      end if;
+
+      loop
+         if Lc.Loop_Stmt = Loop_Label then
+            if Is_Exit then
+               Lc.S_Exit := True;
+            end if;
+            exit;
+         else
+            Lc.S_Quit := True;
+         end if;
+         Lc := Lc.Prev_Loop;
+      end loop;
+   end Synth_Static_Exit_Next_Statement;
+
+   procedure Init_For_Loop_Statement (C : in out Seq_Context;
+                                      Stmt : Node;
+                                      It_Rng : out Type_Acc;
+                                      Val : out Value_Acc)
    is
       Iterator : constant Node := Get_Parameter_Specification (Stmt);
-      Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       It_Type : constant Node := Get_Declaration_Type (Iterator);
+   begin
+      if It_Type /= Null_Node then
+         Synth_Subtype_Indication (C.Inst, It_Type);
+      end if;
+
+      --  Initial value.
+      It_Rng := Get_Value_Type (C.Inst, Get_Type (Iterator));
+      Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
+      Create_Object (C.Inst, Iterator, Val);
+   end Init_For_Loop_Statement;
+
+   procedure Finish_For_Loop_Statement (C : in out Seq_Context;
+                                        Stmt : Node)
+   is
+      Iterator : constant Node := Get_Parameter_Specification (Stmt);
+      It_Type : constant Node := Get_Declaration_Type (Iterator);
+   begin
+      Destroy_Object (C.Inst, Iterator);
+      if It_Type /= Null_Node then
+         Destroy_Object (C.Inst, It_Type);
+      end if;
+   end Finish_For_Loop_Statement;
+
+   procedure Synth_Dynamic_For_Loop_Statement
+     (C : in out Seq_Context; Stmt : Node)
+   is
+      Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       It_Rng : Type_Acc;
       Val : Value_Acc;
-      Lc : aliased Loop_Context;
+      Lc : aliased Loop_Context (Mode_Dynamic);
    begin
-      Lc := (Prev_Loop => C.Cur_Loop,
+      Lc := (Mode => Mode_Dynamic,
+             Prev_Loop => C.Cur_Loop,
              Loop_Stmt => Stmt,
              Need_Quit => False,
              Saved_En => No_Net,
@@ -1934,14 +2091,7 @@ package body Synth.Stmts is
 
       Loop_Control_Init (C, Stmt);
 
-      if It_Type /= Null_Node then
-         Synth_Subtype_Indication (C.Inst, It_Type);
-      end if;
-
-      --  Initial value.
-      It_Rng := Get_Value_Type (C.Inst, Get_Type (Iterator));
-      Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
-      Create_Object (C.Inst, Iterator, Val);
+      Init_For_Loop_Statement (C, Stmt, It_Rng, Val);
 
       while In_Range (It_Rng.Drange, Val.Scal) loop
          Synth_Sequential_Statements (C, Stmts);
@@ -1950,27 +2100,59 @@ package body Synth.Stmts is
          Loop_Control_Update (C);
 
          --  Constant exit.
-         exit when Get_Current_Value (null, C.W_En) = Get_Inst_Bit0 (C.Inst);
+         exit when (Get_Current_Value (null, C.W_En) = Get_Inst_Bit0 (C.Inst));
+
+         --  FIXME: dynamic exits.
       end loop;
       Loop_Control_Finish (C);
 
-      Destroy_Object (C.Inst, Iterator);
-      if It_Type /= Null_Node then
-         Destroy_Object (C.Inst, It_Type);
-      end if;
+      Finish_For_Loop_Statement (C, Stmt);
 
       C.Cur_Loop := Lc.Prev_Loop;
-   end Synth_For_Loop_Statement;
+   end Synth_Dynamic_For_Loop_Statement;
 
-   procedure Synth_While_Loop_Statement (C : in out Seq_Context; Stmt : Node)
+   procedure Synth_Static_For_Loop_Statement
+     (C : in out Seq_Context; Stmt : Node)
+   is
+      Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
+      It_Rng : Type_Acc;
+      Val : Value_Acc;
+      Lc : aliased Loop_Context (Mode_Static);
+   begin
+      Lc := (Mode_Static,
+             Prev_Loop => C.Cur_Loop,
+             Loop_Stmt => Stmt,
+             S_Exit => False,
+             S_Quit => False);
+      C.Cur_Loop := Lc'Unrestricted_Access;
+
+      Init_For_Loop_Statement (C, Stmt, It_Rng, Val);
+
+      while In_Range (It_Rng.Drange, Val.Scal) loop
+         Synth_Sequential_Statements (C, Stmts);
+         C.S_En := True;
+
+         Update_Index (It_Rng.Drange, Val.Scal);
+
+         exit when Lc.S_Exit or Lc.S_Quit or C.Nbr_Ret > 0;
+      end loop;
+
+      Finish_For_Loop_Statement (C, Stmt);
+
+      C.Cur_Loop := Lc.Prev_Loop;
+   end Synth_Static_For_Loop_Statement;
+
+   procedure Synth_Dynamic_While_Loop_Statement
+     (C : in out Seq_Context; Stmt : Node)
    is
       Bit0 : constant Net := Get_Inst_Bit0 (C.Inst);
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       Cond : constant Node := Get_Condition (Stmt);
       Val : Value_Acc;
-      Lc : aliased Loop_Context;
+      Lc : aliased Loop_Context (Mode_Dynamic);
    begin
-      Lc := (Prev_Loop => C.Cur_Loop,
+      Lc := (Mode => Mode_Dynamic,
+             Prev_Loop => C.Cur_Loop,
              Loop_Stmt => Stmt,
              Need_Quit => False,
              Saved_En => No_Net,
@@ -2015,10 +2197,43 @@ package body Synth.Stmts is
       Loop_Control_Finish (C);
 
       C.Cur_Loop := Lc.Prev_Loop;
-   end Synth_While_Loop_Statement;
+   end Synth_Dynamic_While_Loop_Statement;
+
+   procedure Synth_Static_While_Loop_Statement
+     (C : in out Seq_Context; Stmt : Node)
+   is
+      Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
+      Cond : constant Node := Get_Condition (Stmt);
+      Val : Value_Acc;
+      Lc : aliased Loop_Context (Mode_Static);
+   begin
+      Lc := (Mode => Mode_Static,
+             Prev_Loop => C.Cur_Loop,
+             Loop_Stmt => Stmt,
+             S_Exit => False,
+             S_Quit => False);
+      C.Cur_Loop := Lc'Unrestricted_Access;
+
+      loop
+         if Cond /= Null_Node then
+            Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
+            pragma Assert (Is_Static (Val));
+            exit when Val.Scal = 0;
+         end if;
+
+         Synth_Sequential_Statements (C, Stmts);
+         C.S_En := True;
+
+         --  Exit from the loop if S_Exit/S_Quit
+         exit when Lc.S_Exit or Lc.S_Quit or C.Nbr_Ret > 0;
+      end loop;
+
+      C.Cur_Loop := Lc.Prev_Loop;
+   end Synth_Static_While_Loop_Statement;
 
    procedure Synth_Return_Statement (C : in out Seq_Context; Stmt : Node)
    is
+      Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
       Val : Value_Acc;
       Expr : constant Node := Get_Expression (Stmt);
    begin
@@ -2035,18 +2250,25 @@ package body Synth.Stmts is
                --  the returned values.  So adjust it.
                --  All the returned values must have the same length.
                C.Ret_Typ := Val.Typ;
-               Set_Width (Get_Wire_Gate (C.W_Val), C.Ret_Typ.W);
-               Set_Width (C.Ret_Init, C.Ret_Typ.W);
+               if Is_Dyn then
+                  Set_Width (Get_Wire_Gate (C.W_Val), C.Ret_Typ.W);
+                  Set_Width (C.Ret_Init, C.Ret_Typ.W);
+               end if;
             end if;
          end if;
-         Phi_Assign (Get_Build (C.Inst), C.W_Val, Get_Net (Val), 0);
+         if Is_Dyn then
+            Phi_Assign (Get_Build (C.Inst), C.W_Val, Get_Net (Val), 0);
+         end if;
       end if;
 
-      --  The subprogram has returned.  Do not execute further statements.
-      Phi_Assign (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+      if Is_Dyn then
+         --  The subprogram has returned.  Do not execute further statements.
+         Phi_Assign (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
 
-      if C.W_Ret /= No_Wire_Id then
-         Phi_Assign (Get_Build (C.Inst), C.W_Ret, Get_Inst_Bit0 (C.Inst), 0);
+         if C.W_Ret /= No_Wire_Id then
+            Phi_Assign (Get_Build (C.Inst), C.W_Ret,
+                        Get_Inst_Bit0 (C.Inst), 0);
+         end if;
       end if;
 
       C.Nbr_Ret := C.Nbr_Ret + 1;
@@ -2055,6 +2277,7 @@ package body Synth.Stmts is
    procedure Synth_Sequential_Statements
      (C : in out Seq_Context; Stmts : Node)
    is
+      Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
       Stmt : Node;
       Phi_T, Phi_F : Phi_Type;
       Has_Phi : Boolean;
@@ -2062,11 +2285,13 @@ package body Synth.Stmts is
    begin
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
-         En := Get_Current_Value (null, C.W_En);
-         pragma Assert (En /= Get_Inst_Bit0 (C.Inst));
-         Has_Phi := En /= Get_Inst_Bit1 (C.Inst);
-         if Has_Phi then
-            Push_Phi;
+         if Is_Dyn then
+            En := Get_Current_Value (null, C.W_En);
+            pragma Assert (En /= Get_Inst_Bit0 (C.Inst));
+            Has_Phi := En /= Get_Inst_Bit1 (C.Inst);
+            if Has_Phi then
+               Push_Phi;
+            end if;
          end if;
 
          if Flags.Flag_Trace_Statements then
@@ -2100,9 +2325,17 @@ package body Synth.Stmts is
             when Iir_Kind_Case_Statement =>
                Synth_Case_Statement (C, Stmt);
             when Iir_Kind_For_Loop_Statement =>
-               Synth_For_Loop_Statement (C, Stmt);
+               if Is_Dyn then
+                  Synth_Dynamic_For_Loop_Statement (C, Stmt);
+               else
+                  Synth_Static_For_Loop_Statement (C, Stmt);
+               end if;
             when Iir_Kind_While_Loop_Statement =>
-               Synth_While_Loop_Statement (C, Stmt);
+               if Is_Dyn then
+                  Synth_Dynamic_While_Loop_Statement (C, Stmt);
+               else
+                  Synth_Static_While_Loop_Statement (C, Stmt);
+               end if;
             when Iir_Kind_Null_Statement =>
                --  Easy
                null;
@@ -2116,20 +2349,30 @@ package body Synth.Stmts is
                null;
             when Iir_Kind_Exit_Statement
               | Iir_Kind_Next_Statement =>
-               Synth_Exit_Next_Statement (C, Stmt);
+               if Is_Dyn then
+                  Synth_Dynamic_Exit_Next_Statement (C, Stmt);
+               else
+                  Synth_Static_Exit_Next_Statement (C, Stmt);
+               end if;
             when others =>
                Error_Kind ("synth_sequential_statements", Stmt);
          end case;
-         if Has_Phi then
-            Pop_Phi (Phi_T);
-            Push_Phi;
-            Pop_Phi (Phi_F);
-            Merge_Phis (Build_Context,
-                        Get_Current_Value (Build_Context, C.W_En),
-                        Phi_T, Phi_F, Stmt);
-         end if;
-         if Get_Current_Value (null, C.W_En) = Get_Inst_Bit0 (C.Inst) then
-            return;
+         if Is_Dyn then
+            if Has_Phi then
+               Pop_Phi (Phi_T);
+               Push_Phi;
+               Pop_Phi (Phi_F);
+               Merge_Phis (Build_Context,
+                           Get_Current_Value (Build_Context, C.W_En),
+                           Phi_T, Phi_F, Stmt);
+            end if;
+            if Get_Current_Value (null, C.W_En) = Get_Inst_Bit0 (C.Inst) then
+               return;
+            end if;
+         else
+            if not C.S_En or C.Nbr_Ret /= 0 then
+               return;
+            end if;
          end if;
          Stmt := Get_Chain (Stmt);
       end loop;
@@ -2182,14 +2425,15 @@ package body Synth.Stmts is
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
       M : Areapools.Mark_Type;
       C_Sname : Sname;
-      C : Seq_Context;
+      C : Seq_Context (Mode_Dynamic);
    begin
       if Label = Null_Identifier then
          C_Sname := New_Internal_Name (Build_Context, Get_Sname (Syn_Inst));
       else
          C_Sname := New_Sname (Get_Sname (Syn_Inst), Label);
       end if;
-      C := (Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
+      C := (Mode => Mode_Dynamic,
+            Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
             Cur_Loop => null,
             W_En => Alloc_Wire (Wire_Variable, Proc),
             W_Ret => No_Wire_Id,
