@@ -1090,6 +1090,42 @@ package body Synth.Stmts is
       Free_Net_Array (Nets);
    end Synth_Case_Statement_Dynamic;
 
+   procedure Synth_Case_Statement_Static_Array
+     (C : in out Seq_Context; Stmt : Node; Sel : Value_Acc)
+   is
+      Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
+      Choice : Node;
+      Stmts : Node;
+      Sel_Expr : Node;
+      Sel_Val : Value_Acc;
+   begin
+      --  Synth statements, extract choice value.
+      Stmts := Null_Node;
+      Choice := Choices;
+      loop
+         pragma Assert (Is_Valid (Choice));
+         if not Get_Same_Alternative_Flag (Choice) then
+            Stmts := Get_Associated_Chain (Choice);
+         end if;
+
+         case Get_Kind (Choice) is
+            when Iir_Kind_Choice_By_Expression =>
+               Sel_Expr := Get_Choice_Expression (Choice);
+               Sel_Val := Synth_Expression_With_Basetype (C.Inst, Sel_Expr);
+               if Is_Equal (Sel_Val, Sel) then
+                  Synth_Sequential_Statements (C, Stmts);
+                  exit;
+               end if;
+            when Iir_Kind_Choice_By_Others =>
+               Synth_Sequential_Statements (C, Stmts);
+               exit;
+            when others =>
+               raise Internal_Error;
+         end case;
+         Choice := Get_Chain (Choice);
+      end loop;
+   end Synth_Case_Statement_Static_Array;
+
    procedure Synth_Case_Statement_Static_Scalar
      (C : in out Seq_Context; Stmt : Node; Sel : Int64)
    is
@@ -1156,8 +1192,10 @@ package body Synth.Stmts is
               | Type_Logic
               | Type_Discrete =>
                Synth_Case_Statement_Static_Scalar (C, Stmt, Sel.Scal);
+            when Type_Vector
+              | Type_Array =>
+               Synth_Case_Statement_Static_Array (C, Stmt, Sel);
             when others =>
-               --  TODO: support vector/array/slice
                raise Internal_Error;
          end case;
       else
