@@ -34,31 +34,23 @@ package body Netlists is
       Table_Low_Bound => 0,
       Table_Initial => 1024);
 
-   function New_Sname_User (Id : Name_Id) return Sname is
+   function New_Sname_User (Id : Name_Id; Prefix : Sname) return Sname is
    begin
       Snames_Table.Append ((Kind => Sname_User,
-                            Prefix => No_Sname,
+                            Prefix => Prefix,
                             Suffix => Uns32 (Id)));
       return Snames_Table.Last;
    end New_Sname_User;
 
-   function New_Sname_Artificial (Id : Name_Id) return Sname is
+   function New_Sname_Artificial (Id : Name_Id; Prefix : Sname) return Sname is
    begin
       Snames_Table.Append ((Kind => Sname_Artificial,
-                            Prefix => No_Sname,
+                            Prefix => Prefix,
                             Suffix => Uns32 (Id)));
       return Snames_Table.Last;
    end New_Sname_Artificial;
 
-   function New_Sname (Prefix : Sname; Suffix : Name_Id) return Sname is
-   begin
-      Snames_Table.Append ((Kind => Sname_User,
-                            Prefix => Prefix,
-                            Suffix => Uns32 (Suffix)));
-      return Snames_Table.Last;
-   end New_Sname;
-
-   function New_Sname_Version (Prefix : Sname; Ver : Uns32) return Sname is
+   function New_Sname_Version (Ver : Uns32; Prefix : Sname) return Sname is
    begin
       Snames_Table.Append ((Kind => Sname_Version,
                             Prefix => Prefix,
@@ -897,7 +889,8 @@ begin
    pragma Assert (Modules_Table.Last = No_Module);
 
    Modules_Table.Append ((Parent => No_Module,
-                          Name => New_Sname_Artificial (Std_Names.Name_None),
+                          Name => New_Sname_Artificial (Std_Names.Name_None,
+                                                        No_Sname),
                           Id => Id_Free,
                           First_Port_Desc => No_Port_Desc_Idx,
                           Nbr_Inputs => 0,

@@ -72,7 +72,7 @@ package body Synth.Insts is
       Val : constant Value_Acc := Get_Value (Syn_Inst, Inter);
       Name : Sname;
    begin
-      Name :=  New_Sname_User (Get_Identifier (Inter));
+      Name :=  New_Sname_User (Get_Identifier (Inter), No_Sname);
       return (Name => Name,
               W => Get_Type_Width (Val.Typ),
               Dir => Dir);
@@ -210,9 +210,10 @@ package body Synth.Insts is
       --  Declare module.
       --  Build it now because it may be referenced for instantiations before
       --  being synthetized.
-      Cur_Module := New_User_Module (Get_Top_Module (Root_Instance),
-                                     New_Sname_User (Get_Identifier (Decl)),
-                                     Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
+      Cur_Module := New_User_Module
+        (Get_Top_Module (Root_Instance),
+         New_Sname_User (Get_Identifier (Decl), No_Sname),
+         Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
 
       --  Add ports to module.
       declare
@@ -602,7 +603,7 @@ package body Synth.Insts is
    begin
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance
-        (Syn_Inst, Ent, New_Sname_User (Get_Identifier (Ent)));
+        (Syn_Inst, Ent, New_Sname_User (Get_Identifier (Ent), No_Sname));
 
       Synth_Generics_Association (Sub_Inst, Syn_Inst,
                                   Get_Generic_Chain (Ent),
@@ -662,10 +663,10 @@ package body Synth.Insts is
 
       --  TODO: free sub_inst.
 
-      Inst := New_Instance (Get_Instance_Module (Syn_Inst),
-                            Inst_Obj.M,
-                            New_Sname (Get_Sname (Syn_Inst),
-                                       Get_Identifier (Stmt)));
+      Inst := New_Instance
+        (Get_Instance_Module (Syn_Inst),
+         Inst_Obj.M,
+         New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst)));
       Set_Location (Inst, Stmt);
 
       Synth_Instantiate_Module
@@ -725,7 +726,8 @@ package body Synth.Insts is
             Val.W := Alloc_Wire (Wire_Output, Inter);
             W := Get_Type_Width (Val.Typ);
             Value := Builders.Build_Signal
-              (Build_Context, New_Sname (No_Sname, Get_Identifier (Inter)), W);
+              (Build_Context,
+               New_Sname_User (Get_Identifier (Inter), No_Sname), W);
             Set_Wire_Gate (Val.W, Value);
          when others =>
             raise Internal_Error;
@@ -754,8 +756,9 @@ package body Synth.Insts is
 
       --  Create the sub-instance for the component
       --  Elaborate generic + map aspect
-      Comp_Inst := Make_Instance (Syn_Inst, Component,
-                                  New_Sname_User (Get_Identifier (Component)));
+      Comp_Inst := Make_Instance
+        (Syn_Inst, Component,
+         New_Sname_User (Get_Identifier (Component), No_Sname));
 
       Synth_Generics_Association (Comp_Inst, Syn_Inst,
                                   Get_Generic_Chain (Component),
@@ -822,7 +825,7 @@ package body Synth.Insts is
 
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance
-        (Comp_Inst, Ent, New_Sname_User (Get_Identifier (Ent)));
+        (Comp_Inst, Ent, New_Sname_User (Get_Identifier (Ent), No_Sname));
       Synth_Generics_Association (Sub_Inst, Comp_Inst,
                                   Get_Generic_Chain (Ent),
                                   Get_Generic_Map_Aspect_Chain (Bind));
@@ -841,7 +844,7 @@ package body Synth.Insts is
 
       Inst := New_Instance (Get_Instance_Module (Syn_Inst),
                             Inst_Obj.M,
-                            New_Sname_User (Get_Identifier (Stmt)));
+                            New_Sname_User (Get_Identifier (Stmt), No_Sname));
 
       Synth_Instantiate_Module
         (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
@@ -969,8 +972,9 @@ package body Synth.Insts is
       Synth_Dependencies (Global_Instance, Get_Design_Unit (Entity));
       Synth_Dependencies (Global_Instance, Get_Design_Unit (Arch));
 
-      Syn_Inst := Make_Instance (Global_Instance, Arch,
-                                 New_Sname_User (Get_Identifier (Entity)));
+      Syn_Inst := Make_Instance
+        (Global_Instance, Arch,
+         New_Sname_User (Get_Identifier (Entity), No_Sname));
 
       --  Compute generics.
       Inter := Get_Generic_Chain (Entity);

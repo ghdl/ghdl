@@ -429,7 +429,7 @@ package body Synth.Disp_Vhdl is
       Name_Wrap := Name_Table.Get_Identifier ("wrap");
       for P of Ports_Desc (Main) loop
          pragma Assert (Get_Sname_Prefix (P.Name) = No_Sname);
-         Set_Sname_Prefix (P.Name, New_Sname_User (Name_Wrap));
+         Set_Sname_Prefix (P.Name, New_Sname_User (Name_Wrap, No_Sname));
       end loop;
 
       Put_Line ("library ieee;");

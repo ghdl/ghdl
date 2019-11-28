@@ -48,7 +48,7 @@ package body Synth.Context is
       Res : Synth_Instance_Acc;
    begin
       Top_Module :=
-        New_Design (New_Sname_Artificial (Get_Identifier ("top")));
+        New_Design (New_Sname_Artificial (Get_Identifier ("top"), No_Sname));
       pragma Assert (Build_Context = null);
       Build_Context := Build_Builders (Top_Module);
 

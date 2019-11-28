@@ -56,10 +56,9 @@ package Netlists is
    --  There is no unification: these routines always create a new name.  There
    --  is no check that the name already exists, so these routines may create
    --  a duplicate name.  Callers must ensure they create uniq names.
-   function New_Sname_User (Id : Name_Id) return Sname;
-   function New_Sname_Artificial (Id : Name_Id) return Sname;
-   function New_Sname (Prefix : Sname; Suffix : Name_Id) return Sname;
-   function New_Sname_Version (Prefix : Sname; Ver : Uns32) return Sname;
+   function New_Sname_User (Id : Name_Id; Prefix : Sname) return Sname;
+   function New_Sname_Artificial (Id : Name_Id; Prefix : Sname) return Sname;
+   function New_Sname_Version (Ver : Uns32; Prefix : Sname) return Sname;
 
    --  Read the content of an Sname.
    function Get_Sname_Kind (Name : Sname) return Sname_Kind;

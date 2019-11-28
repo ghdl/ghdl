@@ -56,7 +56,8 @@ package body Synth.Decls is
          when Value_Wire =>
             --  FIXME: get the width directly from the wire ?
             W := Get_Type_Width (Val.Typ);
-            Name := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Decl));
+            Name := New_Sname_User (Get_Identifier (Decl),
+                                    Get_Sname (Syn_Inst));
             if Init /= null then
                Ival := Get_Net (Init);
                pragma Assert (Get_Width (Ival) = W);

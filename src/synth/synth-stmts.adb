@@ -1348,7 +1348,7 @@ package body Synth.Stmts is
       if Label = Null_Identifier then
          return No_Sname;
       else
-         return New_Sname_User (Label);
+         return New_Sname_User (Label, No_Sname);
       end if;
    end Synth_Label;
 
@@ -2468,7 +2468,7 @@ package body Synth.Stmts is
       if Label = Null_Identifier then
          C_Sname := New_Internal_Name (Build_Context, Get_Sname (Syn_Inst));
       else
-         C_Sname := New_Sname (Get_Sname (Syn_Inst), Label);
+         C_Sname := New_Sname_User (Label, Get_Sname (Syn_Inst));
       end if;
       C := (Mode => Mode_Dynamic,
             Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
@@ -2569,7 +2569,7 @@ package body Synth.Stmts is
          raise Internal_Error;
       end if;
 
-      Blk_Sname := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Blk));
+      Blk_Sname := New_Sname_User (Get_Identifier (Blk), Get_Sname (Syn_Inst));
       Blk_Inst := Make_Instance (Syn_Inst, Blk, Blk_Sname);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
@@ -2837,7 +2837,7 @@ package body Synth.Stmts is
          Active := Get_Active_State (NFA);
          if Active /= No_State then
             if Lab /= No_Sname then
-               Lab := New_Sname (Lab, Std_Names.Name_Cover);
+               Lab := New_Sname_User (Std_Names.Name_Cover, Lab);
             end if;
             Inst := Build_Assert_Cover
               (Get_Build (Syn_Inst), Lab,
@@ -2888,8 +2888,7 @@ package body Synth.Stmts is
       Name : Sname;
    begin
       Gen := Stmt;
-      Name := New_Sname (Get_Sname (Syn_Inst),
-                         Get_Identifier (Stmt));
+      Name := New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst));
       loop
          Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
          pragma Assert (Cond.Kind = Value_Discrete);
@@ -2926,7 +2925,7 @@ package body Synth.Stmts is
       It_Rng := Get_Value_Type (Syn_Inst, Get_Type (Iterator));
       Val := Create_Value_Discrete (It_Rng.Drange.Left, It_Rng);
 
-      Name := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Stmt));
+      Name := New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst));
 
       while In_Range (It_Rng.Drange, Val.Scal) loop
          --  Find and apply the config block.
@@ -2951,7 +2950,7 @@ package body Synth.Stmts is
          end;
 
          --  FIXME: get position ?
-         Lname := New_Sname_Version (Name, Uns32 (Val.Scal));
+         Lname := New_Sname_Version (Uns32 (Val.Scal), Name);
 
          Synth_Generate_Statement_Body (Syn_Inst, Bod, Lname, Iterator, Val);
          Update_Index (It_Rng.Drange, Val.Scal);
@@ -3126,7 +3125,8 @@ package body Synth.Stmts is
       M : Areapools.Mark_Type;
       Item : Node;
    begin
-      Unit_Sname := New_Sname (Get_Sname (Syn_Inst), Get_Identifier (Unit));
+      Unit_Sname := New_Sname_User (Get_Identifier (Unit),
+                                    Get_Sname (Syn_Inst));
       Unit_Inst := Make_Instance (Syn_Inst, Unit, Unit_Sname);
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;

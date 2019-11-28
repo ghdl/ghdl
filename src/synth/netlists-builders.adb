@@ -25,14 +25,14 @@ with Std_Names; use Std_Names;
 package body Netlists.Builders is
    function Create_Input (Id : String; W : Width := 0) return Port_Desc is
    begin
-      return (Name => New_Sname_Artificial (Get_Identifier (Id)),
+      return (Name => New_Sname_Artificial (Get_Identifier (Id), No_Sname),
               W => W,
               Dir => Port_In);
    end Create_Input;
 
    function Create_Output (Id : String; W : Width := 0) return Port_Desc is
    begin
-      return (Name => New_Sname_Artificial (Get_Identifier (Id)),
+      return (Name => New_Sname_Artificial (Get_Identifier (Id), No_Sname),
               W => W,
               Dir => Port_Out);
    end Create_Output;
@@ -45,7 +45,7 @@ package body Netlists.Builders is
       Inputs : Port_Desc_Array (0 .. 1);
       Outputs : Port_Desc_Array (0 .. 0);
    begin
-      Res := New_User_Module (Design, New_Sname_Artificial (Name),
+      Res := New_User_Module (Design, New_Sname_Artificial (Name, No_Sname),
                               Id, 2, 1, 0);
       Inputs := (0 => Create_Input ("a"),
                  1 => Create_Input ("b"));
@@ -61,7 +61,7 @@ package body Netlists.Builders is
       Inputs : Port_Desc_Array (0 .. 0);
       Outputs : Port_Desc_Array (0 .. 0);
    begin
-      Res := New_User_Module (Design, New_Sname_Artificial (Name),
+      Res := New_User_Module (Design, New_Sname_Artificial (Name, No_Sname),
                               Id, 1, 1, 0);
       Inputs := (0 => Create_Input ("i"));
       Outputs := (0 => Create_Output ("o"));
@@ -76,7 +76,7 @@ package body Netlists.Builders is
       Inputs : Port_Desc_Array (0 .. 1);
       Outputs : Port_Desc_Array (0 .. 0);
    begin
-      Res := New_User_Module (Design, New_Sname_Artificial (Name),
+      Res := New_User_Module (Design, New_Sname_Artificial (Name, No_Sname),
                               Id, 2, 1, 0);
       Inputs := (0 => Create_Input ("a"),
                  1 => Create_Input ("b"));
@@ -97,30 +97,34 @@ package body Netlists.Builders is
       Outputs := (0 => Create_Output ("o"));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("concat2")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("concat2"), No_Sname),
          Id_Concat2, 2, 1, 0);
       Ctxt.M_Concat (Id_Concat2) := Res;
       Set_Port_Desc (Res, Inputs (0 .. 1), Outputs);
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("concat3")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("concat3"), No_Sname),
          Id_Concat3, 3, 1, 0);
       Ctxt.M_Concat (Id_Concat3) := Res;
       Set_Port_Desc (Res, Inputs (0 .. 2), Outputs);
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("concat4")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("concat4"), No_Sname),
          Id_Concat4, 4, 1, 0);
       Ctxt.M_Concat (Id_Concat4) := Res;
       Set_Port_Desc (Res, Inputs (0 .. 3), Outputs);
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("concatn")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("concatn"), No_Sname),
          Id_Concatn, 0, 1, 1);
       Ctxt.M_Concatn := Res;
       Set_Port_Desc (Res, Inputs (1 .. 0), Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("n")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("n"), No_Sname),
                      Typ => Param_Uns32)));
    end Create_Concat_Modules;
 
@@ -130,59 +134,66 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_UB32")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("const_UB32"), No_Sname),
          Id_Const_UB32, 0, 1, 1);
       Ctxt.M_Const_UB32 := Res;
       Outputs := (0 => Create_Output ("o"));
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("val")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("val"), No_Sname),
                      Typ => Param_Uns32)));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_SB32")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("const_SB32"), No_Sname),
          Id_Const_SB32, 0, 1, 1);
       Ctxt.M_Const_SB32 := Res;
       Outputs := (0 => Create_Output ("o"));
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("val")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("val"), No_Sname),
                      Typ => Param_Uns32)));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_UL32")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("const_UL32"), No_Sname),
          Id_Const_UL32, 0, 1, 2);
       Ctxt.M_Const_UL32 := Res;
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("val")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("val"), No_Sname),
                      Typ => Param_Uns32),
-               1 => (New_Sname_Artificial (Get_Identifier ("xz")),
+               1 => (New_Sname_Artificial (Get_Identifier ("xz"), No_Sname),
                      Typ => Param_Uns32)));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_Z")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("const_Z"), No_Sname),
          Id_Const_Z, 0, 1, 0);
       Ctxt.M_Const_Z := Res;
       Outputs := (0 => Create_Output ("o"));
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_X")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("const_X"), No_Sname),
          Id_Const_X, 0, 1, 0);
       Ctxt.M_Const_X := Res;
       Outputs := (0 => Create_Output ("o"));
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_bit")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("const_bit"), No_Sname),
          Id_Const_Bit, 0, 1, 0);
       Ctxt.M_Const_Bit := Res;
       Outputs := (0 => Create_Output ("o"));
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("const_log")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("const_log"), No_Sname),
          Id_Const_Log, 0, 1, 0);
       Ctxt.M_Const_Log := Res;
       Outputs := (0 => Create_Output ("o"));
@@ -196,14 +207,16 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("extract")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("extract"), No_Sname),
          Id_Extract, 1, 1, 1);
       Ctxt.M_Extract := Res;
       Outputs := (0 => Create_Output ("o"));
       Inputs := (0 => Create_Input ("i"));
       Set_Port_Desc (Res, Inputs, Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset"),
+                                           No_Sname),
                      Typ => Param_Uns32)));
    end Create_Extract_Module;
 
@@ -214,7 +227,8 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dyn_extract")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("dyn_extract"), No_Sname),
          Id_Dyn_Extract, 2, 1, 1);
       Ctxt.M_Dyn_Extract := Res;
       Outputs := (0 => Create_Output ("o"));
@@ -222,7 +236,8 @@ package body Netlists.Builders is
                  1 => Create_Input ("i"));
       Set_Port_Desc (Res, Inputs, Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset"),
+                                           No_Sname),
                      Typ => Param_Uns32)));
    end Create_Dyn_Extract_Module;
 
@@ -233,7 +248,8 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dyn_insert")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("dyn_insert"), No_Sname),
          Id_Dyn_Insert, 3, 1, 1);
       Ctxt.M_Dyn_Insert := Res;
       Outputs := (0 => Create_Output ("o"));
@@ -243,16 +259,19 @@ package body Netlists.Builders is
                  3 => Create_Input ("en"));
       Set_Port_Desc (Res, Inputs (0 .. 2), Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset"),
+                                           No_Sname),
                      Typ => Param_Uns32)));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dyn_insert_en")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("dyn_insert_en"), No_Sname),
          Id_Dyn_Insert_En, 4, 1, 1);
       Ctxt.M_Dyn_Insert_En := Res;
       Set_Port_Desc (Res, Inputs (0 .. 3), Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("offset"),
+                                           No_Sname),
                      Typ => Param_Uns32)));
    end Create_Dyn_Insert_Modules;
 
@@ -263,16 +282,17 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memidx")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("memidx"), No_Sname),
          Id_Memidx, 1, 1, 2);
       Ctxt.M_Memidx := Res;
       Outputs := (0 => Create_Output ("o"));
       Inputs (0) := Create_Input ("i");
       Set_Port_Desc (Res, Inputs (0 .. 0), Outputs);
       Set_Param_Desc
-        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("step")),
+        (Res, (0 => (New_Sname_Artificial (Get_Identifier ("step"), No_Sname),
                      Typ => Param_Uns32),
-               1 => (New_Sname_Artificial (Get_Identifier ("max")),
+               1 => (New_Sname_Artificial (Get_Identifier ("max"), No_Sname),
                      Typ => Param_Uns32)));
    end Create_Memidx_Module;
 
@@ -283,7 +303,8 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("addidx")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("addidx"), No_Sname),
          Id_Addidx, 2, 1, 0);
       Ctxt.M_Addidx := Res;
       Outputs := (0 => Create_Output ("o"));
@@ -299,14 +320,16 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memory")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("memory"), No_Sname),
          Id_Memory, 0, 1, 0);
       Ctxt.M_Memory := Res;
       Outputs (0 .. 0) := (0 => Create_Output ("ports"));
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs (0 .. 0));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("memory_init")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("memory_init"), No_Sname),
          Id_Memory_Init, 1, 1, 0);
       Ctxt.M_Memory_Init := Res;
       Outputs (0 .. 0) := (0 => Create_Output ("ports"));
@@ -314,7 +337,8 @@ package body Netlists.Builders is
       Set_Port_Desc (Res, Inputs (0 .. 0), Outputs (0 .. 0));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mem_rd")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("mem_rd"), No_Sname),
          Id_Mem_Rd, 2, 2, 0);
       Ctxt.M_Mem_Rd := Res;
       Inputs (0 .. 1) := (0 => Create_Input ("pport"),
@@ -324,7 +348,8 @@ package body Netlists.Builders is
       Set_Port_Desc (Res, Inputs (0 .. 1), Outputs (0 .. 1));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mem_rd_sync")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("mem_rd_sync"), No_Sname),
          Id_Mem_Rd_Sync, 3, 2, 0);
       Ctxt.M_Mem_Rd_Sync := Res;
       Inputs (0 .. 2) := (0 => Create_Input ("pport"),
@@ -335,7 +360,8 @@ package body Netlists.Builders is
       Set_Port_Desc (Res, Inputs (0 .. 2), Outputs (0 .. 1));
 
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mem_wr_sync")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("mem_wr_sync"), No_Sname),
          Id_Mem_Wr_Sync, 5, 1, 0);
       Ctxt.M_Mem_Wr_Sync := Res;
       Inputs := (0 => Create_Input ("pport"),
@@ -356,7 +382,7 @@ package body Netlists.Builders is
       Inputs : Port_Desc_Array (0 .. 0);
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name), Id_Edge, 1, 1, 0);
+        (Ctxt.Design, New_Sname_Artificial (Name, No_Sname), Id_Edge, 1, 1, 0);
       Inputs := (0 => Create_Input ("i", 1));
       Outputs := (0 => Create_Output ("o", 1));
       Set_Port_Desc (Res, Inputs, Outputs);
@@ -375,13 +401,14 @@ package body Netlists.Builders is
       Outputs := (0 => Create_Output ("o"));
 
       Ctxt.M_Mux2 := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mux2")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("mux2"), No_Sname),
          Id_Mux2, 3, 1, 0);
       Set_Port_Desc (Ctxt.M_Mux2, Inputs (0 .. 2), Outputs);
 
       Inputs (0).W := 2;
       Ctxt.M_Mux4 := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mux4")),
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mux4"), No_Sname),
          Id_Mux4, 5, 1, 0);
       Set_Port_Desc (Ctxt.M_Mux4, Inputs (0 .. 4), Outputs);
    end Create_Mux_Modules;
@@ -396,24 +423,25 @@ package body Netlists.Builders is
       Outputs := (0 => Create_Output ("o"));
 
       Ctxt.M_Output := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name_Output),
+        (Ctxt.Design, New_Sname_Artificial (Name_Output, No_Sname),
          Id_Output, 1, 1, 0);
       Set_Port_Desc (Ctxt.M_Output, Inputs, Outputs);
 
       Ctxt.M_Signal := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name_Signal),
+        (Ctxt.Design, New_Sname_Artificial (Name_Signal, No_Sname),
          Id_Signal, 1, 1, 0);
       Set_Port_Desc (Ctxt.M_Signal, Inputs, Outputs);
 
       Inputs2 := (0 => Create_Input ("i"),
                   1 => Create_Input ("init"));
       Ctxt.M_Isignal := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("isignal")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("isignal"), No_Sname),
          Id_Isignal, 2, 1, 0);
       Set_Port_Desc (Ctxt.M_Isignal, Inputs2, Outputs);
 
       Ctxt.M_Port := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name_Port),
+        (Ctxt.Design, New_Sname_Artificial (Name_Port, No_Sname),
          Id_Port, 1, 1, 0);
       Set_Port_Desc (Ctxt.M_Port, Inputs, Outputs);
    end Create_Objects_Module;
@@ -423,7 +451,7 @@ package body Netlists.Builders is
       Outputs : Port_Desc_Array (0 .. 0);
    begin
       Ctxt.M_Dff := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dff")),
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("dff"), No_Sname),
          Id_Dff, 2, 1, 0);
       Outputs := (0 => Create_Output ("q"));
       Set_Port_Desc (Ctxt.M_Dff, (0 => Create_Input ("clk", 1),
@@ -431,7 +459,7 @@ package body Netlists.Builders is
                      Outputs);
 
       Ctxt.M_Idff := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("idff")),
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("idff"), No_Sname),
          Id_Idff, 3, 1, 0);
       Set_Port_Desc (Ctxt.M_Idff, (0 => Create_Input ("clk", 1),
                                    1 => Create_Input ("d"),
@@ -440,7 +468,8 @@ package body Netlists.Builders is
 
 
       Ctxt.M_Adff := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("adff")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("adff"), No_Sname),
          Id_Adff, 4, 1, 0);
       Outputs := (0 => Create_Output ("q"));
       Set_Port_Desc (Ctxt.M_Adff, (0 => Create_Input ("clk", 1),
@@ -450,7 +479,8 @@ package body Netlists.Builders is
                      Outputs);
 
       Ctxt.M_Iadff := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("iadff")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("iadff"), No_Sname),
          Id_Iadff, 5, 1, 0);
       Outputs := (0 => Create_Output ("q"));
       Set_Port_Desc (Ctxt.M_Iadff, (0 => Create_Input ("clk", 1),
@@ -466,25 +496,26 @@ package body Netlists.Builders is
       Outputs : Port_Desc_Array (1 .. 0);
    begin
       Ctxt.M_Assert := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name_Assert), Id_Assert,
+        (Ctxt.Design, New_Sname_Artificial (Name_Assert, No_Sname), Id_Assert,
          1, 0, 0);
       Set_Port_Desc (Ctxt.M_Assert, (0 => Create_Input ("cond", 1)),
                      Outputs);
 
       Ctxt.M_Assume := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name_Assume), Id_Assume,
+        (Ctxt.Design, New_Sname_Artificial (Name_Assume, No_Sname), Id_Assume,
          1, 0, 0);
       Set_Port_Desc (Ctxt.M_Assume, (0 => Create_Input ("cond", 1)),
                      Outputs);
 
       Ctxt.M_Cover := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name_Cover), Id_Cover,
+        (Ctxt.Design, New_Sname_Artificial (Name_Cover, No_Sname), Id_Cover,
          1, 0, 0);
       Set_Port_Desc (Ctxt.M_Cover, (0 => Create_Input ("cond", 1)),
                      Outputs);
 
       Ctxt.M_Assert_Cover := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("assert_cover")),
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("assert_cover"), No_Sname),
          Id_Assert_Cover, 1, 0, 0);
       Set_Port_Desc (Ctxt.M_Assert_Cover, (0 => Create_Input ("cond", 1)),
                      Outputs);
@@ -497,7 +528,7 @@ package body Netlists.Builders is
       Res : Module;
    begin
       Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name), Id, 0, 1, 0);
+        (Ctxt.Design, New_Sname_Artificial (Name, No_Sname), Id, 0, 1, 0);
       Ctxt.M_Formal_Input (Id) := Res;
       Outputs := (0 => Create_Output ("o"));
       Set_Port_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs);
@@ -650,7 +681,7 @@ package body Netlists.Builders is
    is
       Name : Sname;
    begin
-      Name := New_Sname_Version (Prefix, Ctxt.Num);
+      Name := New_Sname_Version (Ctxt.Num, Prefix);
       Ctxt.Num := Ctxt.Num + 1;
       return Name;
    end New_Internal_Name;
