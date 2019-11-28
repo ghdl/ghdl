@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Ada.Unchecked_Deallocation;
+
 with Types; use Types;
 
 with Netlists; use Netlists;
@@ -110,4 +112,23 @@ package Synth.Expr is
                                  Voff : out Net;
                                  Off : out Uns32;
                                  W : out Width);
+
+   --  Conversion to logic vector.
+
+   type Logic_32 is record
+      Val : Uns32;  --  AKA aval
+      Zx  : Uns32;  --  AKA bval
+   end record;
+
+   type Digit_Index is new Natural;
+   type Logvec_Array is array (Digit_Index range <>) of Logic_32;
+   type Logvec_Array_Acc is access Logvec_Array;
+
+   procedure Free_Logvec_Array is new Ada.Unchecked_Deallocation
+     (Logvec_Array, Logvec_Array_Acc);
+
+   procedure Value2logvec (Val : Value_Acc;
+                           Vec : in out Logvec_Array;
+                           Off : in out Uns32;
+                           Has_Zx : in out Boolean);
 end Synth.Expr;

@@ -121,6 +121,76 @@ package body Synth.Expr is
       end if;
    end To_Logic;
 
+
+   procedure Value2logvec (Val : Value_Acc;
+                           Vec : in out Logvec_Array;
+                           Off : in out Uns32;
+                           Has_Zx : in out Boolean) is
+   begin
+      if Val.Kind = Value_Const then
+         Value2logvec (Val.C_Val, Vec, Off, Has_Zx);
+         return;
+      end if;
+
+      case Val.Typ.Kind is
+         when Type_Bit =>
+            declare
+               Idx : constant Digit_Index := Digit_Index (Off / 32);
+               Pos : constant Natural := Natural (Off mod 32);
+               Va : Uns32;
+            begin
+               Va := Uns32 (Val.Scal);
+               Va := Shift_Left (Va, Pos);
+               Vec (Idx).Val := Vec (Idx).Val or Va;
+               Vec (Idx).Zx := 0;
+               Off := Off + 1;
+            end;
+         when Type_Logic =>
+            declare
+               Idx : constant Digit_Index := Digit_Index (Off / 32);
+               Pos : constant Natural := Natural (Off mod 32);
+               Va : Uns32;
+               Zx : Uns32;
+            begin
+               From_Std_Logic (Val.Scal, Va, Zx);
+               Has_Zx := Has_Zx or Zx /= 0;
+               Va := Shift_Left (Va, Pos);
+               Zx := Shift_Left (Zx, Pos);
+               Vec (Idx).Val := Vec (Idx).Val or Va;
+               Vec (Idx).Zx := Vec (Idx).Zx or Zx;
+               Off := Off + 1;
+            end;
+         when Type_Discrete =>
+            for I in 0 .. Val.Typ.W - 1 loop
+               declare
+                  B : constant Uns32 :=
+                    Uns32 (Shift_Right (To_Uns64 (Val.Scal), Natural (I)))
+                    and 1;
+                  Idx : constant Digit_Index := Digit_Index (Off / 32);
+                  Pos : constant Natural := Natural (Off mod 32);
+               begin
+                  Vec (Idx).Val := Vec (Idx).Val or Shift_Left (B, Pos);
+               end;
+               Off := Off + 1;
+            end loop;
+         when Type_Vector =>
+            --  TODO: optimize off mod 32 = 0.
+            for I in reverse Val.Arr.V'Range loop
+               Value2logvec (Val.Arr.V (I), Vec, Off, Has_Zx);
+            end loop;
+         when Type_Array =>
+            for I in reverse Val.Arr.V'Range loop
+               Value2logvec (Val.Arr.V (I), Vec, Off, Has_Zx);
+            end loop;
+         when Type_Record =>
+            for I in Val.Rec.V'Range loop
+               Value2logvec (Val.Rec.V (I), Vec, Off, Has_Zx);
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Value2logvec;
+
    function Bit_Extract (Val : Value_Acc; Off : Uns32; Loc : Node)
                         return Value_Acc
    is

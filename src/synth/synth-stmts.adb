@@ -33,7 +33,6 @@ with Vhdl.Types;
 with Vhdl.Sem_Expr;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
-with Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Evaluation;
 
 with PSL.Types;
@@ -690,91 +689,24 @@ package body Synth.Stmts is
       end if;
    end Synth_If_Statement;
 
-   procedure Convert_Bv_To_Uns64 (Expr : Node; Val : out Uns64; Dc : out Uns64)
-   is
-      El_Type : constant Node :=
-        Get_Base_Type (Get_Element_Subtype (Get_Type (Expr)));
-   begin
-      if El_Type = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
-         declare
-            use Vhdl.Evaluation.String_Utils;
-
-            Info : constant Str_Info := Get_Str_Info (Expr);
-         begin
-            if Info.Len > 64 then
-               raise Internal_Error;
-            end if;
-            Val := 0;
-            Dc := 0;
-            for I in 0 .. Info.Len - 1 loop
-               Val := Shift_Left (Val, 1);
-               Dc := Shift_Left (Dc, 1);
-               case Get_Pos (Info, I) is
-                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos =>
-                     Val := Val or 0;
-                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos =>
-                     Val := Val or 1;
-                  when Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
-                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
-                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
-                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos
-                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos
-                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_L_Pos
-                    |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
-                     Dc := Dc or 1;
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end loop;
-         end;
-      elsif El_Type = Vhdl.Std_Package.Bit_Type_Definition then
-         declare
-            use Vhdl.Evaluation.String_Utils;
-
-            Info : constant Str_Info := Get_Str_Info (Expr);
-         begin
-            if Info.Len > 64 then
-               raise Internal_Error;
-            end if;
-            Val := 0;
-            Dc := 0;
-            for I in 0 .. Info.Len - 1 loop
-               Val := Shift_Left (Val, 1);
-               case Get_Pos (Info, I) is
-                  when 0 =>
-                     Val := Val or 0;
-                  when 1 =>
-                     Val := Val or 1;
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end loop;
-         end;
-      else
-         raise Internal_Error;
-      end if;
-   end Convert_Bv_To_Uns64;
-
    --  EXPR is a choice, so a locally static literal.
-   procedure Convert_To_Uns64 (Expr : Node; Val : out Uns64; Dc : out Uns64)
+   function Convert_To_Uns64 (Syn_Inst : Synth_Instance_Acc; Expr : Node)
+                             return Uns64
    is
-      Expr_Type : constant Node := Get_Type (Expr);
+      Expr_Val : Value_Acc;
+      Vec : Logvec_Array (0 .. 1);
+      Off : Uns32;
+      Has_Zx : Boolean;
    begin
-      case Get_Kind (Expr_Type) is
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Array_Subtype_Definition =>
-            Convert_Bv_To_Uns64 (Expr, Val, Dc);
-         when Iir_Kind_Enumeration_Type_Definition =>
-            Dc := 0;
-            Val := Uns64 (Get_Enum_Pos (Strip_Denoting_Name (Expr)));
-         when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Integer_Subtype_Definition =>
-            --  TODO: signed values.
-            Dc := 0;
-            Val := Uns64 (Get_Value (Expr));
-         when others =>
-            Error_Kind ("convert_to_uns64", Expr_Type);
-      end case;
+      Expr_Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
+      Off := 0;
+      Has_Zx := False;
+      Vec := (others => (0, 0));
+      Value2logvec (Expr_Val, Vec, Off, Has_Zx);
+      if Has_Zx then
+         Error_Msg_Synth (+Expr, "meta-values never match");
+      end if;
+      return Uns64 (Vec (0).Val) or Shift_Left (Uns64 (Vec (1).Val), 32);
    end Convert_To_Uns64;
 
    type Alternative_Index is new Int32;
@@ -960,21 +892,10 @@ package body Synth.Stmts is
             when Iir_Kind_Choice_By_Expression =>
                Choice_Idx := Choice_Idx + 1;
                Annex_Arr (Choice_Idx) := Int32 (Choice_Idx);
-               declare
-                  Choice_Expr : constant Node :=
-                    Get_Choice_Expression (Choice);
-                  Val, Dc : Uns64;
-               begin
-                  Convert_To_Uns64 (Choice_Expr, Val, Dc);
-                  if Dc = 0 then
-                     Choice_Data (Choice_Idx) := (Val => Val,
-                                                  Alt => Alt_Idx);
-                  else
-                     Error_Msg_Synth (+Choice_Expr, "meta-values never match");
-                     Choice_Data (Choice_Idx) := (Val => 0,
-                                                  Alt => 0);
-                  end if;
-               end;
+               Choice_Data (Choice_Idx) :=
+                 (Val => Convert_To_Uns64 (C.Inst,
+                                           Get_Choice_Expression (Choice)),
+                  Alt => Alt_Idx);
             when Iir_Kind_Choice_By_Others =>
                Others_Alt_Idx := Alt_Idx;
             when others =>
@@ -1268,21 +1189,10 @@ package body Synth.Stmts is
             when Iir_Kind_Choice_By_Expression =>
                Choice_Idx := Choice_Idx + 1;
                Annex_Arr (Choice_Idx) := Int32 (Choice_Idx);
-               declare
-                  Choice_Expr : constant Node :=
-                    Get_Choice_Expression (Choice);
-                  Val, Dc : Uns64;
-               begin
-                  Convert_To_Uns64 (Choice_Expr, Val, Dc);
-                  if Dc = 0 then
-                     Choice_Data (Choice_Idx) := (Val => Val,
-                                                  Alt => Alt_Idx);
-                  else
-                     Error_Msg_Synth (+Choice_Expr, "meta-values never match");
-                     Choice_Data (Choice_Idx) := (Val => 0,
-                                                  Alt => 0);
-                  end if;
-               end;
+               Choice_Data (Choice_Idx) :=
+                 (Val => Convert_To_Uns64 (Syn_Inst,
+                                           Get_Choice_Expression (Choice)),
+                  Alt => Alt_Idx);
             when Iir_Kind_Choice_By_Others =>
                Others_Alt_Idx := Alt_Idx;
             when others =>

@@ -379,87 +379,6 @@ package body Synth.Context is
 
    pragma Unreferenced (Vec2net);
 
-   type Logic_32 is record
-      Val : Uns32;  --  AKA aval
-      Zx  : Uns32;  --  AKA bval
-   end record;
-
-   type Digit_Index is new Natural;
-   type Logvec_Array is array (Digit_Index range <>) of Logic_32;
-   type Logvec_Array_Acc is access Logvec_Array;
-
-   procedure Free_Logvec_Array is new Ada.Unchecked_Deallocation
-     (Logvec_Array, Logvec_Array_Acc);
-
-   procedure Value2net (Val : Value_Acc;
-                        Vec : in out Logvec_Array;
-                        Off : in out Uns32;
-                        Has_Zx : in out Boolean) is
-   begin
-      if Val.Kind = Value_Const then
-         Value2net (Val.C_Val, Vec, Off, Has_Zx);
-         return;
-      end if;
-
-      case Val.Typ.Kind is
-         when Type_Bit =>
-            declare
-               Idx : constant Digit_Index := Digit_Index (Off / 32);
-               Pos : constant Natural := Natural (Off mod 32);
-               Va : Uns32;
-            begin
-               Va := Uns32 (Val.Scal);
-               Va := Shift_Left (Va, Pos);
-               Vec (Idx).Val := Vec (Idx).Val or Va;
-               Vec (Idx).Zx := 0;
-               Off := Off + 1;
-            end;
-         when Type_Logic =>
-            declare
-               Idx : constant Digit_Index := Digit_Index (Off / 32);
-               Pos : constant Natural := Natural (Off mod 32);
-               Va : Uns32;
-               Zx : Uns32;
-            begin
-               From_Std_Logic (Val.Scal, Va, Zx);
-               Has_Zx := Has_Zx or Zx /= 0;
-               Va := Shift_Left (Va, Pos);
-               Zx := Shift_Left (Zx, Pos);
-               Vec (Idx).Val := Vec (Idx).Val or Va;
-               Vec (Idx).Zx := Vec (Idx).Zx or Zx;
-               Off := Off + 1;
-            end;
-         when Type_Discrete =>
-            for I in 0 .. Val.Typ.W - 1 loop
-               declare
-                  B : constant Uns32 :=
-                    Uns32 (Shift_Right (To_Uns64 (Val.Scal), Natural (I)))
-                    and 1;
-                  Idx : constant Digit_Index := Digit_Index (Off / 32);
-                  Pos : constant Natural := Natural (Off mod 32);
-               begin
-                  Vec (Idx).Val := Vec (Idx).Val or Shift_Left (B, Pos);
-               end;
-               Off := Off + 1;
-            end loop;
-         when Type_Vector =>
-            --  TODO: optimize off mod 32 = 0.
-            for I in reverse Val.Arr.V'Range loop
-               Value2net (Val.Arr.V (I), Vec, Off, Has_Zx);
-            end loop;
-         when Type_Array =>
-            for I in reverse Val.Arr.V'Range loop
-               Value2net (Val.Arr.V (I), Vec, Off, Has_Zx);
-            end loop;
-         when Type_Record =>
-            for I in Val.Rec.V'Range loop
-               Value2net (Val.Rec.V (I), Vec, Off, Has_Zx);
-            end loop;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Value2net;
-
    procedure Value2net
      (Val : Value_Acc; W : Width; Vec : in out Logvec_Array; Res : out Net)
    is
@@ -469,7 +388,7 @@ package body Synth.Context is
    begin
       Has_Zx := False;
       Off := 0;
-      Value2net (Val, Vec, Off, Has_Zx);
+      Value2logvec (Val, Vec, Off, Has_Zx);
       if W = 0 then
          --  For null range (like the null string literal "")
          Res := Build_Const_UB32 (Build_Context, 0, 0);
