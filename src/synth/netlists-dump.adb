@@ -212,6 +212,21 @@ package body Netlists.Dump is
       end if;
    end Disp_Width;
 
+   procedure Dump_Module_Port (Desc : Port_Desc; Dir : Port_Kind) is
+   begin
+      case Dir is
+         when Port_In =>
+            Put ("input");
+         when Port_Out =>
+            Put ("output");
+      end case;
+      Put (' ');
+      Dump_Name (Desc.Name);
+      Disp_Width (Desc.W);
+      Put (';');
+      New_Line;
+   end Dump_Module_Port;
+
    procedure Dump_Module_Header (M : Module; Indent : Natural := 0) is
    begin
       --  Module id and name.
@@ -239,19 +254,13 @@ package body Netlists.Dump is
       end loop;
 
       --  Ports.
-      for P of Ports_Desc (M) loop
+      for I in 1 .. Get_Nbr_Inputs (M) loop
          Put_Indent (Indent + 1);
-         case P.Dir is
-            when Port_In =>
-               Put ("input");
-            when Port_Out =>
-               Put ("output");
-         end case;
-         Put (' ');
-         Dump_Name (P.Name);
-         Disp_Width (P.W);
-         Put (';');
-         New_Line;
+         Dump_Module_Port (Get_Input_Desc (M, I - 1), Port_In);
+      end loop;
+      for I in 1 .. Get_Nbr_Outputs (M) loop
+         Put_Indent (Indent + 1);
+         Dump_Module_Port (Get_Output_Desc (M, I - 1), Port_Out);
       end loop;
    end Dump_Module_Header;
 

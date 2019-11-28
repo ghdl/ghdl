@@ -66,16 +66,14 @@ package body Synth.Insts is
    end Mode_To_Port_Kind;
 
    function Make_Port_Desc (Syn_Inst : Synth_Instance_Acc;
-                            Inter : Node;
-                            Dir : Port_Kind) return Port_Desc
+                            Inter : Node) return Port_Desc
    is
       Val : constant Value_Acc := Get_Value (Syn_Inst, Inter);
       Name : Sname;
    begin
       Name :=  New_Sname_User (Get_Identifier (Inter), No_Sname);
       return (Name => Name,
-              W => Get_Type_Width (Val.Typ),
-              Dir => Dir);
+              W => Get_Type_Width (Val.Typ));
    end Make_Port_Desc;
 
    --  Parameters that define an instance.
@@ -226,18 +224,16 @@ package body Synth.Insts is
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
                   Nbr_Inputs := Nbr_Inputs + 1;
-                  Inports (Nbr_Inputs) :=
-                    Make_Port_Desc (Syn_Inst, Inter, Port_In);
+                  Inports (Nbr_Inputs) := Make_Port_Desc (Syn_Inst, Inter);
                when Port_Out =>
                   Nbr_Outputs := Nbr_Outputs + 1;
-                  Outports (Nbr_Outputs) :=
-                    Make_Port_Desc (Syn_Inst, Inter, Port_Out);
+                  Outports (Nbr_Outputs) := Make_Port_Desc (Syn_Inst, Inter);
             end case;
             Inter := Get_Chain (Inter);
          end loop;
          pragma Assert (Nbr_Inputs = Inports'Last);
          pragma Assert (Nbr_Outputs = Outports'Last);
-         Set_Port_Desc (Cur_Module, Inports, Outports);
+         Set_Ports_Desc (Cur_Module, Inports, Outports);
       end;
 
       return Inst_Object'(Decl => Decl,

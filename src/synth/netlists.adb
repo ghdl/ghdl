@@ -106,6 +106,12 @@ package body Netlists is
       Table_Low_Bound => No_Module,
       Table_Initial => 1024);
 
+   package Port_Desc_Table is new Tables
+     (Table_Component_Type => Port_Desc,
+      Table_Index_Type => Port_Desc_Idx,
+      Table_Low_Bound => No_Port_Desc_Idx,
+      Table_Initial => 1024);
+
    function New_Design (Name : Sname) return Module
    is
       Res : Module;
@@ -146,13 +152,19 @@ package body Netlists is
    is
       pragma Assert (Is_Valid (Parent));
       Parent_Rec : Module_Record renames Modules_Table.Table (Parent);
+      Ports_Desc : Port_Desc_Idx;
       Res : Module;
    begin
+      Ports_Desc := Port_Desc_Table.Last + 1;
+      for I in 1 .. Nbr_Inputs + Nbr_Outputs loop
+         Port_Desc_Table.Append ((Name => No_Sname, W => 0));
+      end loop;
+
       Modules_Table.Append
         ((Parent => Parent,
           Name => Name,
           Id => Id,
-          First_Port_Desc => No_Port_Desc_Idx,
+          First_Port_Desc => Ports_Desc,
           Nbr_Inputs => Nbr_Inputs,
           Nbr_Outputs => Nbr_Outputs,
           First_Param_Desc => No_Param_Desc_Idx,
@@ -652,23 +664,22 @@ package body Netlists is
 
    --  Port_Desc
 
-   package Port_Desc_Table is new Tables
-     (Table_Component_Type => Port_Desc,
-      Table_Index_Type => Port_Desc_Idx,
-      Table_Low_Bound => No_Port_Desc_Idx,
-      Table_Initial => 1024);
-
    function Get_Port_Desc (Idx : Port_Desc_Idx) return Port_Desc is
    begin
       return Port_Desc_Table.Table (Idx);
    end Get_Port_Desc;
+
+   procedure Set_Port_Desc (Idx : Port_Desc_Idx; Desc : Port_Desc) is
+   begin
+      Port_Desc_Table.Table (Idx) := Desc;
+   end Set_Port_Desc;
 
    function Get_Input_Desc (M : Module; I : Port_Idx) return Port_Desc
    is
       F : constant Port_Desc_Idx := Get_Input_First_Desc (M);
       pragma Assert (I < Get_Nbr_Inputs (M));
    begin
-      return Port_Desc_Table.Table (F + Port_Desc_Idx (I));
+      return Get_Port_Desc (F + Port_Desc_Idx (I));
    end Get_Input_Desc;
 
    function Get_Output_Desc (M : Module; O : Port_Idx) return Port_Desc
@@ -676,32 +687,45 @@ package body Netlists is
       F : constant Port_Desc_Idx := Get_Output_First_Desc (M);
       pragma Assert (O < Get_Nbr_Outputs (M));
    begin
-      return Port_Desc_Table.Table (F + Port_Desc_Idx (O));
+      return Get_Port_Desc (F + Port_Desc_Idx (O));
    end Get_Output_Desc;
 
-   procedure Set_Port_Desc (M : Module;
-                            Input_Descs : Port_Desc_Array;
-                            Output_Descs : Port_Desc_Array)
+   procedure Set_Input_Desc (M : Module; I : Port_Idx; Desc : Port_Desc)
+   is
+      F : constant Port_Desc_Idx := Get_Input_First_Desc (M);
+      pragma Assert (I < Get_Nbr_Inputs (M));
+      Idx : constant Port_Desc_Idx := F + Port_Desc_Idx (I);
+   begin
+      pragma Assert (Get_Port_Desc (Idx).Name = No_Sname);
+      Set_Port_Desc (Idx, Desc);
+   end Set_Input_Desc;
+
+   procedure Set_Output_Desc (M : Module; O : Port_Idx; Desc : Port_Desc)
+   is
+      F : constant Port_Desc_Idx := Get_Output_First_Desc (M);
+      pragma Assert (O < Get_Nbr_Outputs (M));
+      Idx : constant Port_Desc_Idx := F + Port_Desc_Idx (O);
+   begin
+      pragma Assert (Get_Port_Desc (Idx).Name = No_Sname);
+      Set_Port_Desc (Idx, Desc);
+   end Set_Output_Desc;
+
+   procedure Set_Ports_Desc (M : Module;
+                             Input_Descs : Port_Desc_Array;
+                             Output_Descs : Port_Desc_Array)
    is
       pragma Assert (Is_Valid (M));
       pragma Assert (Input_Descs'Length = Get_Nbr_Inputs (M));
       pragma Assert (Output_Descs'Length = Get_Nbr_Outputs (M));
    begin
-      pragma Assert
-        (Modules_Table.Table (M).First_Port_Desc = No_Port_Desc_Idx);
-
-      Modules_Table.Table (M).First_Port_Desc := Port_Desc_Table.Last + 1;
-
-      for I of Input_Descs loop
-         pragma Assert (I.Dir = Port_In);
-         Port_Desc_Table.Append (I);
+      for I in Input_Descs'Range loop
+         Set_Input_Desc (M, I - Input_Descs'First, Input_Descs (I));
       end loop;
 
-      for O of Output_Descs loop
-         pragma Assert (O.Dir = Port_Out);
-         Port_Desc_Table.Append (O);
+      for O in Output_Descs'Range loop
+         Set_Output_Desc (M, O - Output_Descs'First, Output_Descs (O));
       end loop;
-   end Set_Port_Desc;
+   end Set_Ports_Desc;
 
    --  Param_Desc
 
@@ -711,8 +735,8 @@ package body Netlists is
       Table_Low_Bound => No_Param_Desc_Idx,
       Table_Initial => 256);
 
-   procedure Set_Param_Desc (M : Module;
-                             Params : Param_Desc_Array)
+   procedure Set_Params_Desc (M : Module;
+                              Params : Param_Desc_Array)
    is
       pragma Assert (Is_Valid (M));
       pragma Assert (Params'Length = Get_Nbr_Params (M));
@@ -725,7 +749,7 @@ package body Netlists is
       for P of Params loop
          Param_Desc_Table.Append (P);
       end loop;
-   end Set_Param_Desc;
+   end Set_Params_Desc;
 
    function Get_Param_Desc (M : Module; Param : Param_Idx) return Param_Desc
    is
@@ -927,8 +951,7 @@ begin
    pragma Assert (Inputs_Table.Last = No_Input);
 
    Port_Desc_Table.Append ((Name => No_Sname,
-                            W => 0,
-                            Dir => Port_In));
+                            W => 0));
    pragma Assert (Port_Desc_Table.Last = No_Port_Desc_Idx);
 
    Param_Desc_Table.Append ((Name => No_Sname,

@@ -1176,29 +1176,38 @@ package body Netlists.Disp_Vhdl is
       New_Line;
    end Disp_Architecture;
 
+   procedure Disp_Entity_Port
+     (Desc : Port_Desc; Dir : Port_Kind; First : in out Boolean) is
+   begin
+      if First then
+         Put_Line ("  port (");
+         First := False;
+      else
+         Put_Line (";");
+      end if;
+      Put ("    ");
+      Put_Name (Desc.Name);
+      Put (" : ");
+      case Dir is
+         when Port_In =>
+            Put ("in");
+         when Port_Out =>
+            Put ("out");
+      end case;
+      Put (' ');
+      Put_Type (Desc.W);
+   end Disp_Entity_Port;
+
    procedure Disp_Entity_Ports (M : Module)
    is
       First : Boolean;
    begin
       First := True;
-      for P of Ports_Desc (M) loop
-         if First then
-            Put_Line ("  port (");
-            First := False;
-         else
-            Put_Line (";");
-         end if;
-         Put ("    ");
-         Put_Name (P.Name);
-         Put (" : ");
-         case P.Dir is
-            when Port_In =>
-               Put ("in");
-            when Port_Out =>
-               Put ("out");
-         end case;
-         Put (' ');
-         Put_Type (P.W);
+      for I in 1 .. Get_Nbr_Inputs (M) loop
+         Disp_Entity_Port (Get_Input_Desc (M, I - 1), Port_In, First);
+      end loop;
+      for I in 1 .. Get_Nbr_Outputs (M) loop
+         Disp_Entity_Port (Get_Output_Desc (M, I - 1), Port_Out, First);
       end loop;
       if not First then
          Put_Line (");");

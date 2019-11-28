@@ -153,10 +153,8 @@ package Netlists is
 
       --  Port width (number of bits).
       W : Width;
-
-      --  Direction.
-      Dir : Port_Kind;
    end record;
+   pragma Convention (C, Port_Desc);
 
    type Port_Desc_Array is array (Port_Idx range <>) of Port_Desc;
 
@@ -192,11 +190,13 @@ package Netlists is
                              Nbr_Outputs : Port_Nbr;
                              Nbr_Params : Param_Nbr := 0)
                             return Module;
-   procedure Set_Port_Desc (M : Module;
-                            Input_Descs : Port_Desc_Array;
-                            Output_Descs : Port_Desc_Array);
-   procedure Set_Param_Desc (M : Module;
-                             Params : Param_Desc_Array);
+   procedure Set_Input_Desc (M : Module; I : Port_Idx; Desc : Port_Desc);
+   procedure Set_Output_Desc (M : Module; O : Port_Idx; Desc : Port_Desc);
+   procedure Set_Ports_Desc (M : Module;
+                             Input_Descs : Port_Desc_Array;
+                             Output_Descs : Port_Desc_Array);
+   procedure Set_Params_Desc (M : Module;
+                              Params : Param_Desc_Array);
 
    --  Create the self instance, once ports are defined.  This is required if
    --  the internal netlist will be defined.
