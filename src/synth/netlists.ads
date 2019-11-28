@@ -198,6 +198,10 @@ package Netlists is
    procedure Set_Params_Desc (M : Module;
                               Params : Param_Desc_Array);
 
+   --  Be sure the record is passed by reference.
+   pragma Convention (C, Set_Input_Desc);
+   pragma Convention (C, Set_Output_Desc);
+
    --  Create the self instance, once ports are defined.  This is required if
    --  the internal netlist will be defined.
    function Create_Self_Instance (M : Module) return Instance;
