@@ -67,11 +67,15 @@ package body Netlists.Errors is
       pragma Unreferenced (Err);
       Inst : constant Instance := Instance (Val);
    begin
-      if Format = 'n' then
-         Output_Name_1 (Get_Instance_Name (Inst));
-      else
-         raise Internal_Error;
-      end if;
+      case Format is
+         when 'n' =>
+            Output_Name_1 (Get_Instance_Name (Inst));
+         when 'i' =>
+            Output_Message ("i");
+            Output_Uns32 (Uns32 (Inst));
+         when others =>
+            raise Internal_Error;
+      end case;
    end Synth_Instance_Handler;
 
    procedure Synth_Net_Handler
@@ -80,20 +84,23 @@ package body Netlists.Errors is
       pragma Unreferenced (Err);
       N : constant Net := Net (Val);
    begin
-      if Format = 'n' then
-         declare
-            Inst : constant Instance := Get_Net_Parent (N);
-            Idx : constant Port_Idx := Get_Port_Idx (N);
-         begin
-            if Is_Self_Instance (Inst) then
-               Output_Name_1 (Get_Input_Desc (Get_Module (Inst), Idx).Name);
-            else
-               Output_Name_1 (Get_Output_Desc (Get_Module (Inst), Idx).Name);
-            end if;
-         end;
-      else
-         raise Internal_Error;
-      end if;
+      case Format is
+         when 'n' =>
+            declare
+               Inst : constant Instance := Get_Net_Parent (N);
+               Idx : constant Port_Idx := Get_Port_Idx (N);
+               Name : Sname;
+            begin
+               if Is_Self_Instance (Inst) then
+                  Name := Get_Input_Desc (Get_Module (Inst), Idx).Name;
+               else
+                  Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
+               end if;
+               Output_Name_1 (Name);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
    end Synth_Net_Handler;
 
    procedure Synth_Name_Handler

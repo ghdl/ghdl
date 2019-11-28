@@ -22,7 +22,11 @@ with Errorout; use Errorout;
 with Netlists.Locations;
 
 package Netlists.Errors is
+   --  For instances:
+   --  %n : name
+   --  %i : instance number
    function "+" (N : Instance) return Earg_Type;
+
    function "+" (N : Net) return Earg_Type;
    function "+" (N : Sname) return Earg_Type;
    function "+" (N : Instance) return Location_Type
