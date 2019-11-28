@@ -123,10 +123,7 @@ package Netlists is
    subtype Width is Uns32;
    No_Width : constant Width := 0;
 
-   type Port_Kind is (Port_In, Port_Out, Port_Inout);
-
-   --  Inout are considered as output.
-   subtype Port_Outs is Port_Kind range Port_Out .. Port_Inout;
+   type Port_Kind is (Port_In, Port_Out);
 
    --  Each module has a numeric identifier that can be used to easily identify
    --  a module.  Gates (and, or, ...) have reserved identifiers.

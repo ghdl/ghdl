@@ -246,8 +246,6 @@ package body Netlists.Dump is
                Put ("input");
             when Port_Out =>
                Put ("output");
-            when Port_Inout =>
-               Put ("inout");
          end case;
          Put (' ');
          Dump_Name (P.Name);

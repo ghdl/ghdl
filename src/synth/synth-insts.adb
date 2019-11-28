@@ -198,8 +198,7 @@ package body Synth.Insts is
             when Port_In =>
                Val := Create_Value_Net (No_Net, Inter_Typ);
                Nbr_Inputs := Nbr_Inputs + 1;
-            when Port_Out
-              | Port_Inout =>
+            when Port_Out =>
                Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
@@ -229,8 +228,7 @@ package body Synth.Insts is
                   Nbr_Inputs := Nbr_Inputs + 1;
                   Inports (Nbr_Inputs) :=
                     Make_Port_Desc (Syn_Inst, Inter, Port_In);
-               when Port_Out
-                 | Port_Inout =>
+               when Port_Out =>
                   Nbr_Outputs := Nbr_Outputs + 1;
                   Outports (Nbr_Outputs) :=
                     Make_Port_Desc (Syn_Inst, Inter, Port_Out);
@@ -510,8 +508,7 @@ package body Synth.Insts is
                     (Get_Input (Inst, Nbr_Inputs),
                      Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter);
                   Nbr_Inputs := Nbr_Inputs + 1;
-               when Port_Out
-                 | Port_Inout =>
+               when Port_Out =>
                   Synth_Output_Assoc
                     (Get_Output (Inst, Nbr_Outputs),
                      Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter);
@@ -643,8 +640,7 @@ package body Synth.Insts is
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Val := Create_Value_Net (No_Net, Inter_Typ);
-            when Port_Out
-              | Port_Inout =>
+            when Port_Out =>
                Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
          end case;
          Create_Object (Sub_Inst, Inter, Val);
@@ -794,8 +790,7 @@ package body Synth.Insts is
                   Create_Object (Comp_Inst, Assoc_Inter,
                                  Synth_Expression_With_Type
                                    (Syn_Inst, Actual, Inter_Type));
-               when Port_Out
-                 | Port_Inout =>
+               when Port_Out =>
                   Create_Wire_Object (Comp_Inst, Wire_None, Assoc_Inter);
                   Create_Component_Wire
                     (Assoc_Inter, Get_Value (Comp_Inst, Assoc_Inter));
@@ -880,8 +875,7 @@ package body Synth.Insts is
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
                   null;
-               when Port_Out
-                 | Port_Inout =>
+               when Port_Out =>
                   if Actual /= Null_Node then
                      Port := Get_Output (Inst, Nbr_Outputs);
                      Port := Builders.Build_Port (Get_Build (Syn_Inst), Port);
@@ -1007,8 +1001,7 @@ package body Synth.Insts is
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Val := Create_Value_Net (No_Net, Inter_Typ);
-            when Port_Out
-              | Port_Inout =>
+            when Port_Out =>
                Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
          end case;
          Create_Object (Syn_Inst, Inter, Val);
@@ -1156,8 +1149,7 @@ package body Synth.Insts is
             when Port_In =>
                Create_Input_Wire (Self_Inst, Nbr_Inputs, Val);
                Nbr_Inputs := Nbr_Inputs + 1;
-            when Port_Out
-              | Port_Inout =>
+            when Port_Out =>
                Create_Output_Wire (Self_Inst, Inter, Nbr_Outputs, Val);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;

@@ -1196,8 +1196,6 @@ package body Netlists.Disp_Vhdl is
                Put ("in");
             when Port_Out =>
                Put ("out");
-            when Port_Inout =>
-               Put ("inout");
          end case;
          Put (' ');
          Put_Type (P.W);

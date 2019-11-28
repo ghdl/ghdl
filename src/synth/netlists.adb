@@ -698,7 +698,7 @@ package body Netlists is
       end loop;
 
       for O of Output_Descs loop
-         pragma Assert (O.Dir in Port_Outs);
+         pragma Assert (O.Dir = Port_Out);
          Port_Desc_Table.Append (O);
       end loop;
    end Set_Port_Desc;
