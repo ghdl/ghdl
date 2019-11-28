@@ -865,7 +865,8 @@ package body Netlists.Disp_Vhdl is
                            "    end if;" & NL &
                            "  end process;" & NL, Inst);
          when Id_Mux2 =>
-            Disp_Template ("  \o0 <= \i1 when \i0 = '0' else \i2;" & NL, Inst);
+            Disp_Template
+              ("  \o0 <= \i1 when \fi0 = '0' else \i2;" & NL, Inst);
          when Id_Mux4 =>
             Disp_Template ("  with \i0 select \o0 <=" & NL &
                            "    \i1 when ""00""," & NL &
