@@ -46,28 +46,19 @@ package body Netlists.Dump is
       end if;
 
       Prefix := Get_Sname_Prefix (N);
+      if Prefix /= No_Sname then
+         Dump_Name (Prefix);
+         Put (".");
+      end if;
 
       case Get_Sname_Kind (N) is
          when Sname_User =>
-            if Prefix = No_Sname then
-               Put ("\");
-            else
-               Dump_Name (Prefix);
-               Put (".");
-            end if;
+            Put ("\");
             Put (Image (Get_Sname_Suffix (N)));
          when Sname_Artificial =>
-            if Prefix = No_Sname then
-               Put ("$");
-            else
-               Dump_Name (Prefix);
-               Put (".");
-            end if;
+            Put ("$");
             Put (Image (Get_Sname_Suffix (N)));
          when Sname_Version =>
-            if Prefix /= No_Sname then
-               Dump_Name (Prefix);
-            end if;
             Put ("%");
             Put_Uns32 (Get_Sname_Version (N));
       end case;
@@ -322,7 +313,7 @@ package body Netlists.Dump is
                Dump_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
             else
                Dump_Name (Get_Instance_Name (Inst));
-               Put ('.');
+               Put (':');
                Dump_Name (Get_Output_Desc (Get_Module (Inst), Idx).Name);
             end if;
          end;
