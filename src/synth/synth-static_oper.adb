@@ -239,6 +239,25 @@ package body Synth.Static_Oper is
             return Create_Value_Discrete
               (Left.Scal / Right.Scal, Res_Typ);
 
+         when Iir_Predefined_Floating_Less =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Fp < Right.Fp), Boolean_Type);
+         when Iir_Predefined_Floating_Less_Equal =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Fp <= Right.Fp), Boolean_Type);
+         when Iir_Predefined_Floating_Equality =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Fp = Right.Fp), Boolean_Type);
+         when Iir_Predefined_Floating_Inequality =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Fp /= Right.Fp), Boolean_Type);
+         when Iir_Predefined_Floating_Greater =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Fp > Right.Fp), Boolean_Type);
+         when Iir_Predefined_Floating_Greater_Equal =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Fp >= Right.Fp), Boolean_Type);
+
          when Iir_Predefined_Floating_Div =>
             return Create_Value_Float
               (Left.Fp / Right.Fp, Res_Typ);
