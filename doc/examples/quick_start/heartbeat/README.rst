@@ -30,7 +30,7 @@ through the use of dumpfiles'*. Therefore, you should first simulate your design
 
 .. code-block:: shell
 
-   ghdl -r --wave=wave.ghw heartbeat
+   ghdl -r heartbeat --wave=wave.ghw
 
 Then, you can view the dump:
 
