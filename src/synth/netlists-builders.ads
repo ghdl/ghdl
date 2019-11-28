@@ -36,6 +36,8 @@ package Netlists.Builders is
    --  Create a builder for Design.  Must be called once.
    function Build_Builders (Design : Module) return Context_Acc;
 
+   function Get_Design (Ctxt : Context_Acc) return Module;
+
    --  Set the parent for the new instances.
    procedure Set_Parent (Ctxt : Context_Acc; Parent : Module);
 

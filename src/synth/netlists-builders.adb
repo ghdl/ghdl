@@ -379,6 +379,7 @@ package body Netlists.Builders is
          Id_Mux2, 3, 1, 0);
       Set_Port_Desc (Ctxt.M_Mux2, Inputs (0 .. 2), Outputs);
 
+      Inputs (0).W := 2;
       Ctxt.M_Mux4 := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mux4")),
          Id_Mux4, 5, 1, 0);
@@ -638,6 +639,11 @@ package body Netlists.Builders is
    begin
       Ctxt.Parent := Parent;
    end Set_Parent;
+
+   function Get_Design (Ctxt : Context_Acc) return Module is
+   begin
+      return Ctxt.Design;
+   end Get_Design;
 
    function New_Internal_Name (Ctxt : Context_Acc; Prefix : Sname := No_Sname)
                               return Sname
