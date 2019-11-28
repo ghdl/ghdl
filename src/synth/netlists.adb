@@ -105,13 +105,6 @@ package body Netlists is
       return Snames_Table.Table (Name).Suffix;
    end Get_Sname_Version;
 
-   function Get_Sname_Num (Name : Sname) return Uns32 is
-   begin
-      pragma Assert (Is_Valid (Name));
-      pragma Assert (Get_Sname_Kind (Name) = Sname_Artificial);
-      return Snames_Table.Table (Name).Suffix;
-   end Get_Sname_Num;
-
 
    --  Modules
 
