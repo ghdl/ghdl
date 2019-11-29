@@ -36,4 +36,9 @@ package Synth.Oper is
                                      Imp : Node;
                                      Operand_Expr : Node;
                                      Loc : Node) return Value_Acc;
+
+   function Create_Bounds_From_Length
+     (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)
+     return Bound_Type;
+
 end Synth.Oper;

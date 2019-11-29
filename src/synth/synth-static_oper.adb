@@ -20,9 +20,12 @@
 
 with Types; use Types;
 
+with Vhdl.Utils; use Vhdl.Utils;
+
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 with Synth.Expr; use Synth.Expr;
+with Synth.Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
 
@@ -266,6 +269,29 @@ package body Synth.Static_Oper is
             return Create_Value_Float (Left.Fp * Right.Fp, Res_Typ);
          when Iir_Predefined_Floating_Div =>
             return Create_Value_Float (Left.Fp / Right.Fp, Res_Typ);
+
+         when Iir_Predefined_Array_Array_Concat =>
+            declare
+               Ret_Typ : constant Type_Acc :=
+                 Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
+               Bnd : Bound_Type;
+               Res_Typ : Type_Acc;
+               Arr : Value_Array_Acc;
+            begin
+               Bnd := Oper.Create_Bounds_From_Length
+                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0),
+                  Left.Arr.Len + Right.Arr.Len);
+               Res_Typ := Create_Onedimensional_Array_Subtype
+                 (Ret_Typ, Bnd);
+               Arr := Create_Value_Array (Left.Arr.Len + Right.Arr.Len);
+               for I in Left.Arr.V'Range loop
+                  Arr.V (I) := Left.Arr.V (I);
+               end loop;
+               for I in Right.Arr.V'Range loop
+                  Arr.V (Left.Arr.Len + I) := Right.Arr.V (I);
+               end loop;
+               return Create_Value_Const_Array (Res_Typ, Arr);
+            end;
 
          when Iir_Predefined_Array_Equality
            | Iir_Predefined_Record_Equality =>

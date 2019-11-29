@@ -685,47 +685,22 @@ package body Synth.Oper is
                  (N, Create_Onedimensional_Array_Subtype (Ret_Typ, Bnd));
             end;
          when Iir_Predefined_Array_Array_Concat =>
-            if Is_Static (Left) and then Is_Static (Right) then
-               declare
-                  Ret_Typ : constant Type_Acc :=
-                    Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
-                  Bnd : Bound_Type;
-                  Res_Typ : Type_Acc;
-                  Arr : Value_Array_Acc;
-               begin
-                  Bnd := Create_Bounds_From_Length
-                    (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0),
-                     Left.Arr.Len + Right.Arr.Len);
-                  Res_Typ := Create_Onedimensional_Array_Subtype
-                    (Ret_Typ, Bnd);
-                  Arr := Create_Value_Array (Left.Arr.Len + Right.Arr.Len);
-                  for I in Left.Arr.V'Range loop
-                     Arr.V (I) := Left.Arr.V (I);
-                  end loop;
-                  for I in Right.Arr.V'Range loop
-                     Arr.V (Left.Arr.Len + I) := Right.Arr.V (I);
-                  end loop;
-                  return Create_Value_Const_Array (Res_Typ, Arr);
-               end;
-            else
-               declare
-                  L : constant Net := Get_Net (Left);
-                  R : constant Net := Get_Net (Right);
-                  Bnd : Bound_Type;
-                  N : Net;
-               begin
-                  N := Build_Concat2 (Build_Context, L, R);
-                  Set_Location (N, Expr);
-                  Bnd := Create_Bounds_From_Length
-                    (Syn_Inst,
-                     Get_Index_Type (Get_Type (Expr), 0),
-                     Iir_Index32 (Get_Width (L) + Get_Width (R)));
+            declare
+               L : constant Net := Get_Net (Left);
+               R : constant Net := Get_Net (Right);
+               Bnd : Bound_Type;
+               N : Net;
+            begin
+               N := Build_Concat2 (Build_Context, L, R);
+               Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst,
+                  Get_Index_Type (Get_Type (Expr), 0),
+                  Iir_Index32 (Get_Width (L) + Get_Width (R)));
 
-                  return Create_Value_Net
-                    (N,
-                     Create_Vector_Type (Bnd, Get_Array_Element (Left.Typ)));
-               end;
-            end if;
+               return Create_Value_Net
+                 (N, Create_Vector_Type (Bnd, Get_Array_Element (Left.Typ)));
+            end;
          when Iir_Predefined_Integer_Plus =>
             return Synth_Int_Dyadic (Id_Add);
          when Iir_Predefined_Integer_Minus =>
