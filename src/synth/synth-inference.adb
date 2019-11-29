@@ -389,7 +389,9 @@ package body Synth.Inference is
          Last_Out := O;
 
          while Is_Connected (Last_Out) loop
-            if not Has_One_Connection (Last_Out) then
+            if not Has_One_Connection (Last_Out)
+              and then not Is_Const_Net (Last_Out)
+            then
                --  TODO.
                raise Internal_Error;
             end if;
