@@ -341,4 +341,92 @@ package body Synth.Static_Oper is
             raise Internal_Error;
       end case;
    end Synth_Static_Dyadic_Predefined;
+
+   function Synth_Vector_Monadic
+     (Vec : Value_Acc; Op : Table_1d) return Value_Acc
+   is
+      El_Typ : constant Type_Acc := Vec.Typ.Vec_El;
+      Arr : Value_Array_Acc;
+   begin
+      Arr := Create_Value_Array (Vec.Arr.Len);
+      for I in Arr.V'Range loop
+         declare
+            V : constant Std_Ulogic := Std_Ulogic'Val (Vec.Arr.V (I).Scal);
+         begin
+            Arr.V (I) :=
+              Create_Value_Discrete (Std_Ulogic'Pos (Op (V)), El_Typ);
+         end;
+      end loop;
+
+      return Create_Value_Const_Array (Create_Res_Bound (Vec.Typ), Arr);
+   end Synth_Vector_Monadic;
+
+   function Synth_Vector_Reduce
+     (Init : Std_Ulogic; Vec : Value_Acc; Op : Table_2d) return Value_Acc
+   is
+      El_Typ : constant Type_Acc := Vec.Typ.Vec_El;
+      Res : Std_Ulogic;
+   begin
+      Res := Init;
+      for I in Vec.Arr.V'Range loop
+         declare
+            V : constant Std_Ulogic :=
+              Std_Ulogic'Val (Vec.Arr.V (I).Scal);
+         begin
+            Res := Op (Res, V);
+         end;
+      end loop;
+
+      return Create_Value_Discrete (Std_Ulogic'Pos (Res), El_Typ);
+   end Synth_Vector_Reduce;
+
+   function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
+                                             Imp : Node;
+                                             Operand : Value_Acc;
+                                             Expr : Node) return Value_Acc
+   is
+      Def : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
+      Inter_Chain : constant Node :=
+        Get_Interface_Declaration_Chain (Imp);
+      Oper_Type : constant Node := Get_Type (Inter_Chain);
+      Oper_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Oper_Type);
+      --  Res_Typ : constant Type_Acc :=
+      --    Get_Value_Type (Syn_Inst, Get_Type (Expr));
+   begin
+      case Def is
+         when Iir_Predefined_Boolean_Not
+           | Iir_Predefined_Bit_Not =>
+            return Create_Value_Discrete (1 - Operand.Scal, Oper_Typ);
+
+         when Iir_Predefined_Integer_Negation =>
+            return Create_Value_Discrete (-Operand.Scal, Oper_Typ);
+
+         when Iir_Predefined_Floating_Negation =>
+            return Create_Value_Float (-Operand.Fp, Oper_Typ);
+
+         when Iir_Predefined_Ieee_1164_Condition_Operator =>
+            --  Constant std_logic: need to convert.
+            declare
+               Val : Uns32;
+               Zx : Uns32;
+            begin
+               From_Std_Logic (Operand.Scal, Val, Zx);
+               return Create_Value_Discrete
+                 (Boolean'Pos (Val = 1 and Zx = 0), Boolean_Type);
+            end;
+
+         when Iir_Predefined_Ieee_1164_Vector_Not =>
+            return Synth_Vector_Monadic (Operand, Not_Table);
+
+         when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
+            return Synth_Vector_Reduce ('0', Operand, Or_Table);
+
+         when others =>
+            Error_Msg_Synth
+              (+Expr, "synth_static_monadic_predefined: unhandled "
+                 & Iir_Predefined_Functions'Image (Def));
+            raise Internal_Error;
+      end case;
+   end Synth_Static_Monadic_Predefined;
 end Synth.Static_Oper;

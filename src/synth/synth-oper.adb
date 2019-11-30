@@ -791,6 +791,11 @@ package body Synth.Oper is
       Operand := Synth_Subtype_Conversion (Operand, Oper_Typ, False, Loc);
       Strip_Const (Operand);
 
+      if Is_Static_Val (Operand) then
+         return Synth_Static_Monadic_Predefined
+           (Syn_Inst, Imp, Operand, Loc);
+      end if;
+
       case Def is
          when Iir_Predefined_Error =>
             return null;
@@ -798,11 +803,7 @@ package body Synth.Oper is
             return Synth_Bit_Monadic (Id_Not);
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Bit_Not =>
-            if Is_Static (Operand) then
-               return Create_Value_Discrete (1 - Operand.Scal, Oper_Typ);
-            else
-               return Synth_Bit_Monadic (Id_Not);
-            end if;
+            return Synth_Bit_Monadic (Id_Not);
          when Iir_Predefined_Ieee_1164_Vector_Not
             | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
@@ -815,34 +816,15 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
             return Synth_Vec_Reduce_Monadic(Id_Red_Or);
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
-            if Operand.Typ.Kind = Type_Logic
-              and then Operand.Kind = Value_Discrete
-            then
-               --  Constant std_logic: need to convert.
-               declare
-                  Val : Uns32;
-                  Zx : Uns32;
-               begin
-                  From_Std_Logic (Operand.Scal, Val, Zx);
-                  return Create_Value_Discrete
-                    (Boolean'Pos (Val = 1 and Zx = 0), Boolean_Type);
-               end;
-            else
-               return Operand;
-            end if;
+            return Operand;
          when Iir_Predefined_Integer_Negation =>
-            if Is_Static (Operand) then
-               return Create_Value_Discrete (-Operand.Scal, Operand.Typ);
-            else
-               declare
-                  N : Net;
-               begin
-                  N := Build_Monadic
-                    (Build_Context, Id_Neg, Get_Net (Operand));
-                  Set_Location (N, Loc);
-                  return Create_Value_Net (N, Operand.Typ);
-               end;
-            end if;
+            declare
+               N : Net;
+            begin
+               N := Build_Monadic (Build_Context, Id_Neg, Get_Net (Operand));
+               Set_Location (N, Loc);
+               return Create_Value_Net (N, Operand.Typ);
+            end;
          when others =>
             Error_Msg_Synth
               (+Loc,

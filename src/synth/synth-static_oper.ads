@@ -28,4 +28,8 @@ package Synth.Static_Oper is
                                             Left : Value_Acc;
                                             Right : Value_Acc;
                                             Expr : Node) return Value_Acc;
+   function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
+                                             Imp : Node;
+                                             Operand : Value_Acc;
+                                             Expr : Node) return Value_Acc;
 end Synth.Static_Oper;
