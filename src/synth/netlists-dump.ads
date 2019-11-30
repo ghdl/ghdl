@@ -22,6 +22,9 @@ package Netlists.Dump is
    --  If set, compact print.
    Flag_Disp_Inline : Boolean := True;
 
+   --  If set, print nets/instances/modules identifier.
+   Flag_Disp_Id : Boolean := True;
+
    procedure Dump_Net_Name (N : Net; With_Id : Boolean := False);
    procedure Disp_Driver (Drv : Net; Indent : Natural);
    procedure Disp_Instance

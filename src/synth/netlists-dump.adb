@@ -152,9 +152,11 @@ package body Netlists.Dump is
       Put_Indent (Indent);
       Put ("instance ");
       Dump_Name (Get_Instance_Name (Inst));
-      Put (" {i");
-      Put_Trim (Instance'Image (Inst));
-      Put ('}');
+      if Flag_Disp_Id then
+         Put (" {i");
+         Put_Trim (Instance'Image (Inst));
+         Put ('}');
+      end if;
       Put (": ");
       Dump_Name (Get_Module_Name (Get_Module (Inst)));
       New_Line;
@@ -231,9 +233,12 @@ package body Netlists.Dump is
    begin
       --  Module id and name.
       Put_Indent (Indent);
-      Put ("module {m");
-      Put_Trim (Module'Image (M));
-      Put ("} ");
+      Put ("module ");
+      if Flag_Disp_Id then
+         Put ("{m");
+         Put_Trim (Module'Image (M));
+         Put ("} ");
+      end if;
       Dump_Name (Get_Module_Name (M));
       New_Line;
 
@@ -332,19 +337,33 @@ package body Netlists.Dump is
       Put ("{n");
       Put_Trim (Net'Image (N));
       Put ('w');
-      Put_Trim (Width'Image (Get_Width (N)));
+      Put_Uns32 (Get_Width (N));
       Put ('}');
    end Put_Net_Width;
 
-   procedure Dump_Net_Name_And_Width (N : Net) is
+   procedure Dump_Net_Name_And_Width (N : Net)
+   is
+      W : Width;
    begin
       if N = No_Net then
          Put ("?");
       else
          Disp_Net_Name (N);
-         Put_Net_Width (N);
+
+         W := Get_Width (N);
+         if W /= 1 then
+            Put ('[');
+            Put_Uns32 (W);
+            Put (']');
+         end if;
+
+         if Flag_Disp_Id then
+            Put_Net_Width (N);
+         end if;
       end if;
    end Dump_Net_Name_And_Width;
+
+   procedure Disp_Instance_Assign (Inst : Instance; Indent : Natural := 0);
 
    function Can_Inline (Inst : Instance) return Boolean is
    begin
@@ -370,9 +389,12 @@ package body Netlists.Dump is
       else
          Drv_Inst := Get_Net_Parent (Drv);
          if Flag_Disp_Inline and then Can_Inline (Drv_Inst) then
-            Disp_Instance (Drv_Inst, False, Indent);
+            Disp_Instance_Assign (Drv_Inst, Indent);
          else
             Disp_Net_Name (Drv);
+            if Flag_Disp_Id then
+               Put_Net_Width (Drv);
+            end if;
          end if;
       end if;
    end Disp_Driver;
@@ -441,7 +463,7 @@ package body Netlists.Dump is
 
       Dump_Name (Get_Module_Name (M));
 
-      if True then
+      if Flag_Disp_Id then
          Put ("{i");
          Put_Trim (Instance'Image (Inst));
          Put ('}');
@@ -504,7 +526,6 @@ package body Netlists.Dump is
                if Drv = No_Net then
                   Put ('?');
                else
-                  Put_Net_Width (Drv);
                   Disp_Driver (Drv, Indent + 1);
                end if;
             end loop;
@@ -515,7 +536,6 @@ package body Netlists.Dump is
 
    procedure Disp_Instance_Assign (Inst : Instance; Indent : Natural := 0) is
    begin
-      Put_Indent (Indent);
       case Get_Nbr_Outputs (Inst) is
          when 0 =>
             null;
@@ -540,7 +560,6 @@ package body Netlists.Dump is
       end case;
 
       Disp_Instance (Inst, False, Indent + 1);
-      New_Line;
    end Disp_Instance_Assign;
 
    procedure Disp_Module (M : Module; Indent : Natural := 0) is
@@ -557,23 +576,30 @@ package body Netlists.Dump is
 
       for Inst of Instances (M) loop
          if not (Flag_Disp_Inline and then Can_Inline (Inst)) then
+            Put_Indent (Indent + 1);
             Disp_Instance_Assign (Inst, Indent + 1);
+            New_Line;
          end if;
       end loop;
 
       --  Assignments to outputs.
       declare
          Self : constant Instance := Get_Self_Instance (M);
+         Drv : Net;
       begin
          if Self /= No_Instance then
             for I of Inputs (Self) loop
                Put_Indent (Indent + 1);
                Dump_Name (Get_Output_Desc (M, Get_Port_Idx (I)).Name);
                Put (" := ");
+               Drv := Get_Driver (I);
                if False then
-                  Disp_Driver (Get_Driver (I), 0);
+                  Disp_Driver (Drv, 0);
                else
-                  Dump_Net_Name_And_Width (Get_Driver (I));
+                  Disp_Net_Name (Drv);
+                  if Flag_Disp_Id and Drv /= No_Net then
+                     Put_Net_Width (Drv);
+                  end if;
                end if;
                New_Line;
             end loop;

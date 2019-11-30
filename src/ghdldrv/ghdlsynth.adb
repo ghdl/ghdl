@@ -55,6 +55,7 @@ package body Ghdlsynth is
    --  Command --synth
    type Command_Synth is new Command_Lib with record
       Disp_Inline : Boolean := True;
+      Disp_Id : Boolean := True;
       Oformat : Out_Format := Format_Vhdl;
    end record;
    function Decode_Command (Cmd : Command_Synth; Name : String)
@@ -89,6 +90,9 @@ package body Ghdlsynth is
    begin
       if Option = "--disp-noinline" then
          Cmd.Disp_Inline := False;
+         Res := Option_Ok;
+      elsif Option = "--disp-noid" then
+         Cmd.Disp_Id := False;
          Res := Option_Ok;
       elsif Option = "--out=raw" then
          Cmd.Oformat := Format_Raw;
@@ -309,6 +313,7 @@ package body Ghdlsynth is
             null;
          when Format_Raw =>
             Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
+            Netlists.Dump.Flag_Disp_Id := Cmd.Disp_Id;
             Netlists.Dump.Disp_Module (Res);
          when Format_Dump =>
             Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
