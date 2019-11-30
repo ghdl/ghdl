@@ -2909,6 +2909,8 @@ package body Synth.Stmts is
                      Synth_Component_Instantiation_Statement (Syn_Inst, Stmt);
                   end if;
                end;
+               --  Un-apply configuration.
+               Set_Component_Configuration (Stmt, Null_Node);
             else
                Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
             end if;
