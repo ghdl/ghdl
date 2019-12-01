@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Standard multivalue logic package
 --             :  (STD_LOGIC_1164 package body)
@@ -49,18 +52,18 @@
 -- --------------------------------------------------------------------
 
 package body std_logic_1164 is
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- local types
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   type stdlogic_1d is array (STD_ULOGIC) of STD_ULOGIC;
   type stdlogic_table is array(STD_ULOGIC, STD_ULOGIC) of STD_ULOGIC;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- resolution function
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   constant resolution_table : stdlogic_table := (
     --      ---------------------------------------------------------
-    --      |  U    X    0    1    Z    W    L    H    -        |   |  
+    --      |  U    X    0    1    Z    W    L    H    -        |   |
     --      ---------------------------------------------------------
              ('U', 'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U'),  -- | U |
              ('U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'),  -- | X |
@@ -89,14 +92,14 @@ package body std_logic_1164 is
     return result;
   end function resolved;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- tables for logical operations
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
 
   -- truth table for "and" function
   constant and_table : stdlogic_table := (
     --      ----------------------------------------------------
-    --      |  U    X    0    1    Z    W    L    H    -         |   |  
+    --      |  U    X    0    1    Z    W    L    H    -         |   |
     --      ----------------------------------------------------
              ('U', 'U', '0', 'U', 'U', 'U', '0', 'U', 'U'),  -- | U |
              ('U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X'),  -- | X |
@@ -112,7 +115,7 @@ package body std_logic_1164 is
   -- truth table for "or" function
   constant or_table : stdlogic_table := (
     --      ----------------------------------------------------
-    --      |  U    X    0    1    Z    W    L    H    -         |   |  
+    --      |  U    X    0    1    Z    W    L    H    -         |   |
     --      ----------------------------------------------------
              ('U', 'U', 'U', '1', 'U', 'U', 'U', '1', 'U'),  -- | U |
              ('U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X'),  -- | X |
@@ -128,7 +131,7 @@ package body std_logic_1164 is
   -- truth table for "xor" function
   constant xor_table : stdlogic_table := (
     --      ----------------------------------------------------
-    --      |  U    X    0    1    Z    W    L    H    -         |   |  
+    --      |  U    X    0    1    Z    W    L    H    -         |   |
     --      ----------------------------------------------------
              ('U', 'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U'),  -- | U |
              ('U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'),  -- | X |
@@ -148,9 +151,9 @@ package body std_logic_1164 is
     --  -------------------------------------------------
           ('U', 'X', '1', '0', 'X', 'X', '1', '0', 'X');
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- overloaded logical operators ( with optimizing hints )
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
 
   function "and" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01 is
   begin
@@ -177,7 +180,7 @@ package body std_logic_1164 is
     return (xor_table(l, r));
   end function "xor";
 
-  function "xnor" (l : STD_ULOGIC; r : STD_ULOGIC) return ux01 is
+  function "xnor" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01 is
   begin
     return not_table(xor_table(l, r));
   end function "xnor";
@@ -187,9 +190,9 @@ package body std_logic_1164 is
     return (not_table(l));
   end function "not";
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- and
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function "and" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
     alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
@@ -207,9 +210,9 @@ package body std_logic_1164 is
     end if;
     return result;
   end function "and";
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- nand
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function "nand" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
     alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
@@ -227,9 +230,9 @@ package body std_logic_1164 is
     end if;
     return result;
   end function "nand";
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- or
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function "or" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
     alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
@@ -247,9 +250,9 @@ package body std_logic_1164 is
     end if;
     return result;
   end function "or";
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- nor
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function "nor" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
     alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
@@ -269,7 +272,7 @@ package body std_logic_1164 is
   end function "nor";
   ---------------------------------------------------------------------
   -- xor
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function "xor" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
     alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
@@ -287,9 +290,9 @@ package body std_logic_1164 is
     end if;
     return result;
   end function "xor";
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- xnor
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function "xnor" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
     alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
@@ -307,9 +310,9 @@ package body std_logic_1164 is
     end if;
     return result;
   end function "xnor";
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- not
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function "not" (l : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
     variable result : STD_ULOGIC_VECTOR (1 to l'length) := (others => 'X');
@@ -630,9 +633,9 @@ package body std_logic_1164 is
     return result;
   end function "ror";
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- conversion tables
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   type logic_x01_table is array (STD_ULOGIC'low to STD_ULOGIC'high) of X01;
   type logic_x01z_table is array (STD_ULOGIC'low to STD_ULOGIC'high) of X01Z;
   type logic_ux01_table is array (STD_ULOGIC'low to STD_ULOGIC'high) of UX01;
@@ -643,7 +646,7 @@ package body std_logic_1164 is
   --        in  :  std_ulogic  -- some logic value
   -- returns    :  x01         -- state value of logic value
   -- purpose    :  to convert state-strength to state only
-  --                  
+  --
   -- example    : if (cvt_to_x01 (input_signal) = '1' ) then ...
   --
   ----------------------------------------------------------
@@ -666,7 +669,7 @@ package body std_logic_1164 is
   --        in  :  std_ulogic  -- some logic value
   -- returns    :  x01z        -- state value of logic value
   -- purpose    :  to convert state-strength to state only
-  --                  
+  --
   -- example    : if (cvt_to_x01z (input_signal) = '1' ) then ...
   --
   ----------------------------------------------------------
@@ -689,7 +692,7 @@ package body std_logic_1164 is
   --        in  :  std_ulogic  -- some logic value
   -- returns    :  ux01        -- state value of logic value
   -- purpose    :  to convert state-strength to state only
-  --                  
+  --
   -- example    : if (cvt_to_ux01 (input_signal) = '1' ) then ...
   --
   ----------------------------------------------------------
@@ -705,9 +708,9 @@ package body std_logic_1164 is
     'X'                                 -- '-'
     );
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- conversion functions
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function To_bit (s : STD_ULOGIC; xmap : BIT := '0') return BIT is
   begin
     case s is
@@ -795,11 +798,11 @@ package body std_logic_1164 is
     return result;
   end function To_StdULogicVector;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- strength strippers and type convertors
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- to_01
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function TO_01 (s : STD_ULOGIC_VECTOR; xmap : STD_ULOGIC := '0')
     return STD_ULOGIC_VECTOR
   is
@@ -816,12 +819,12 @@ package body std_logic_1164 is
     end loop;
     if BAD_ELEMENT then
       for I in RESULT'range loop
-        RESULT(I) := XMAP;              -- standard fixup
+        RESULT(I) := xmap;              -- standard fixup
       end loop;
     end if;
     return RESULT;
   end function TO_01;
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function TO_01 (s : STD_ULOGIC; xmap : STD_ULOGIC := '0') return STD_ULOGIC is
   begin
     case s is
@@ -830,7 +833,7 @@ package body std_logic_1164 is
       when others    => return xmap;
     end case;
   end function TO_01;
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function TO_01 (s : BIT_VECTOR; xmap : STD_ULOGIC := '0')
     return STD_ULOGIC_VECTOR
   is
@@ -845,7 +848,7 @@ package body std_logic_1164 is
     end loop;
     return RESULT;
   end function TO_01;
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function TO_01 (s : BIT; xmap : STD_ULOGIC := '0') return STD_ULOGIC is
   begin
     case s is
@@ -853,9 +856,9 @@ package body std_logic_1164 is
       when '1' => RETURN '1';
     end case;
   end function TO_01;
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- to_x01
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function To_X01 (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias sv        : STD_ULOGIC_VECTOR (1 to s'length) is s;
     variable result : STD_ULOGIC_VECTOR (1 to s'length);
@@ -893,7 +896,7 @@ package body std_logic_1164 is
   end function To_X01;
   --------------------------------------------------------------------
   -- to_x01z
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function To_X01Z (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias sv        : STD_ULOGIC_VECTOR (1 to s'length) is s;
     variable result : STD_ULOGIC_VECTOR (1 to s'length);
@@ -931,7 +934,7 @@ package body std_logic_1164 is
   end function To_X01Z;
   --------------------------------------------------------------------
   -- to_ux01
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function To_UX01 (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
     alias sv        : STD_ULOGIC_VECTOR (1 to s'length) is s;
     variable result : STD_ULOGIC_VECTOR (1 to s'length);
@@ -973,9 +976,9 @@ package body std_logic_1164 is
     return l = '1' or l = 'H';
   end function "??";
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- edge detection
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function rising_edge (signal s : STD_ULOGIC) return BOOLEAN is
   begin
     return (s'event and (To_X01(s) = '1') and
@@ -988,9 +991,9 @@ package body std_logic_1164 is
             (To_X01(s'last_value) = '1'));
   end function falling_edge;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- object contains an unknown
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function Is_X (s : STD_ULOGIC_VECTOR) return BOOLEAN is
   begin
     for i in s'range loop
@@ -1015,7 +1018,7 @@ package body std_logic_1164 is
   -- string conversion and write operations
   -------------------------------------------------------------------
 
-  function to_ostring (value : STD_ULOGIC_VECTOR) return STRING is
+  function TO_OSTRING (value : STD_ULOGIC_VECTOR) return STRING is
     constant result_length : NATURAL := (value'length+2)/3;
     variable pad           : STD_ULOGIC_VECTOR(1 to result_length*3 - value'length);
     variable padded_value  : STD_ULOGIC_VECTOR(1 to result_length*3);
@@ -1044,9 +1047,9 @@ package body std_logic_1164 is
       end case;
     end loop;
     return result;
-  end function to_ostring;
+  end function TO_OSTRING;
 
-  function to_hstring (value : STD_ULOGIC_VECTOR) return STRING is
+  function TO_HSTRING (value : STD_ULOGIC_VECTOR) return STRING is
     constant result_length : NATURAL := (value'length+3)/4;
     variable pad           : STD_ULOGIC_VECTOR(1 to result_length*4 - value'length);
     variable padded_value  : STD_ULOGIC_VECTOR(1 to result_length*4);
@@ -1083,9 +1086,9 @@ package body std_logic_1164 is
       end case;
     end loop;
     return result;
-  end function to_hstring;
+  end function TO_HSTRING;
 
-  -- Type and constant definitions used to map STD_ULOGIC values 
+  -- Type and constant definitions used to map STD_ULOGIC values
   -- into/from character values.
   type MVL9plus is ('U', 'X', '0', '1', 'Z', 'W', 'L', 'H', '-', error);
   type char_indexed_by_MVL9 is array (STD_ULOGIC) of CHARACTER;
@@ -1104,13 +1107,14 @@ package body std_logic_1164 is
   -- purpose: Skips white space
   procedure skip_whitespace (
     L : inout LINE) is
-    variable readOk : BOOLEAN;
     variable c : CHARACTER;
+    variable left : positive;
   begin
     while L /= null and L.all'length /= 0 loop
-      c := l (l'left);
-      if c = ' ' or c = NBSP or c = HT then
-        read (l, c, readOk);
+      left := L.all'left;
+      c := L.all(left);
+      if (c = ' ' or c = NBSP or c = HT) then
+        read (L, c);
       else
         exit;
       end if;
@@ -1123,23 +1127,22 @@ package body std_logic_1164 is
     variable readOk : BOOLEAN;
   begin
     VALUE := 'U';                       -- initialize to a "U"
-    Skip_whitespace (L);
-    read (l, c, readOk);
+    skip_whitespace (L);
+    read (L, c, readOk);
     if not readOk then
-      good := false;
+      GOOD := false;
     else
       if char_to_MVL9plus(c) = error then
-        good := false;
+        GOOD := false;
       else
         VALUE := char_to_MVL9(c);
-        good  := true;
+        GOOD  := true;
       end if;
     end if;
   end procedure READ;
 
   procedure READ (L    : inout LINE; VALUE : out STD_ULOGIC_VECTOR;
                   GOOD : out   BOOLEAN) is
-    variable m      : STD_ULOGIC;
     variable c      : CHARACTER;
     variable mv     : STD_ULOGIC_VECTOR(0 to VALUE'length-1);
     variable readOk : BOOLEAN;
@@ -1147,27 +1150,27 @@ package body std_logic_1164 is
     variable lastu  : BOOLEAN := false;       -- last character was an "_"
   begin
     VALUE := (VALUE'range => 'U'); -- initialize to a "U"
-    Skip_whitespace (L);
+    skip_whitespace (L);
     if VALUE'length > 0 then
-      read (l, c, readOk);
+      read (L, c, readOk);
       i := 0;
-      good := true;
+      GOOD := true;
       while i < VALUE'length loop
         if not readOk then     -- Bail out if there was a bad read
-          good := false;
+          GOOD := false;
           return;
         elsif c = '_' then
           if i = 0 then
-            good := false;                -- Begins with an "_"
+            GOOD := false;                -- Begins with an "_"
             return;
           elsif lastu then
-            good := false;                -- "__" detected
+            GOOD := false;                -- "__" detected
             return;
           else
             lastu := true;
           end if;
         elsif (char_to_MVL9plus(c) = error) then
-          good := false;                  -- Illegal character
+          GOOD := false;                  -- Illegal character
           return;
         else
           mv(i) := char_to_MVL9(c);
@@ -1181,7 +1184,7 @@ package body std_logic_1164 is
         read(L, c, readOk);
       end loop;
     else
-      good := true;                   -- read into a null array
+      GOOD := true;                   -- read into a null array
     end if;
   end procedure READ;
 
@@ -1190,8 +1193,8 @@ package body std_logic_1164 is
     variable readOk : BOOLEAN;
   begin
     VALUE := 'U';                       -- initialize to a "U"
-    Skip_whitespace (L);
-    read (l, c, readOk);
+    skip_whitespace (L);
+    read (L, c, readOk);
     if not readOk then
       report "STD_LOGIC_1164.READ(STD_ULOGIC) "
         & "End of string encountered"
@@ -1208,7 +1211,6 @@ package body std_logic_1164 is
   end procedure READ;
 
   procedure READ (L : inout LINE; VALUE : out STD_ULOGIC_VECTOR) is
-    variable m      : STD_ULOGIC;
     variable c      : CHARACTER;
     variable readOk : BOOLEAN;
     variable mv     : STD_ULOGIC_VECTOR(0 to VALUE'length-1);
@@ -1216,9 +1218,9 @@ package body std_logic_1164 is
     variable lastu  : BOOLEAN := false;       -- last character was an "_"
   begin
     VALUE := (VALUE'range => 'U'); -- initialize to a "U"
-    Skip_whitespace (L);
+    skip_whitespace (L);
     if VALUE'length > 0 then            -- non Null input string
-      read (l, c, readOk);
+      read (L, c, readOk);
       i := 0;
       while i < VALUE'length loop
         if readOk = false then              -- Bail out if there was a bad read
@@ -1262,7 +1264,7 @@ package body std_logic_1164 is
   procedure WRITE (L         : inout LINE; VALUE : in STD_ULOGIC;
                    JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
   begin
-    write(l, MVL9_to_char(VALUE), justified, field);
+    write(L, MVL9_to_char(VALUE), JUSTIFIED, FIELD);
   end procedure WRITE;
 
   procedure WRITE (L         : inout LINE; VALUE : in STD_ULOGIC_VECTOR;
@@ -1273,7 +1275,7 @@ package body std_logic_1164 is
     for i in 1 to VALUE'length loop
       s(i) := MVL9_to_char(m(i));
     end loop;
-    write(l, s, justified, field);
+    write(L, s, JUSTIFIED, FIELD);
   end procedure WRITE;
 
   procedure Char2TriBits (C           : in  CHARACTER;
@@ -1281,24 +1283,24 @@ package body std_logic_1164 is
                           GOOD        : out BOOLEAN;
                           ISSUE_ERROR : in  BOOLEAN) is
   begin
-    case c is
-      when '0' => result := o"0"; good := true;
-      when '1' => result := o"1"; good := true;
-      when '2' => result := o"2"; good := true;
-      when '3' => result := o"3"; good := true;
-      when '4' => result := o"4"; good := true;
-      when '5' => result := o"5"; good := true;
-      when '6' => result := o"6"; good := true;
-      when '7' => result := o"7"; good := true;
-      when 'Z' => result := "ZZZ"; good := true;
-      when 'X' => result := "XXX"; good := true;
+    case C is
+      when '0' => RESULT := o"0"; GOOD := true;
+      when '1' => RESULT := o"1"; GOOD := true;
+      when '2' => RESULT := o"2"; GOOD := true;
+      when '3' => RESULT := o"3"; GOOD := true;
+      when '4' => RESULT := o"4"; GOOD := true;
+      when '5' => RESULT := o"5"; GOOD := true;
+      when '6' => RESULT := o"6"; GOOD := true;
+      when '7' => RESULT := o"7"; GOOD := true;
+      when 'Z' => RESULT := "ZZZ"; GOOD := true;
+      when 'X' => RESULT := "XXX"; GOOD := true;
       when others =>
         assert not ISSUE_ERROR
           report
-          "STD_LOGIC_1164.OREAD Error: Read a '" & c &
+          "STD_LOGIC_1164.OREAD Error: Read a '" & C &
           "', expected an Octal character (0-7)."
           severity error;
-        good := false;
+        GOOD := false;
     end case;
   end procedure Char2TriBits;
 
@@ -1313,21 +1315,21 @@ package body std_logic_1164 is
     variable lastu  : BOOLEAN := false;       -- last character was an "_"
   begin
     VALUE := (VALUE'range => 'U'); -- initialize to a "U"
-    Skip_whitespace (L);
+    skip_whitespace (L);
     if VALUE'length > 0 then
-      read (l, c, ok);
+      read (L, c, ok);
       i := 0;
       while i < ne loop
         -- Bail out if there was a bad read
         if not ok then
-          good := false;
+          GOOD := false;
           return;
         elsif c = '_' then
           if i = 0 then
-            good := false;                -- Begins with an "_"
+            GOOD := false;                -- Begins with an "_"
             return;
           elsif lastu then
-            good := false;                -- "__" detected
+            GOOD := false;                -- "__" detected
             return;
           else
             lastu := true;
@@ -1335,7 +1337,7 @@ package body std_logic_1164 is
         else
           Char2TriBits(c, sv(3*i to 3*i+2), ok, false);
           if not ok then
-            good := false;
+            GOOD := false;
             return;
           end if;
           i := i + 1;
@@ -1346,13 +1348,13 @@ package body std_logic_1164 is
         end if;
       end loop;
       if or (sv (0 to pad-1)) = '1' then
-        good := false;                           -- vector was truncated.
+        GOOD := false;                           -- vector was truncated.
       else
-        good  := true;
+        GOOD  := true;
         VALUE := sv (pad to sv'high);
       end if;
     else
-      good := true;                  -- read into a null array
+      GOOD := true;                  -- read into a null array
     end if;
   end procedure OREAD;
 
@@ -1366,9 +1368,9 @@ package body std_logic_1164 is
     variable lastu  : BOOLEAN := false;       -- last character was an "_"
   begin
     VALUE := (VALUE'range => 'U'); -- initialize to a "U"
-    Skip_whitespace (L);
+    skip_whitespace (L);
     if VALUE'length > 0 then
-      read (l, c, ok);
+      read (L, c, ok);
       i := 0;
       while i < ne loop
         -- Bail out if there was a bad read
@@ -1416,32 +1418,32 @@ package body std_logic_1164 is
                            GOOD        : out BOOLEAN;
                            ISSUE_ERROR : in  BOOLEAN) is
   begin
-    case c is
-      when '0'       => result := x"0"; good := true;
-      when '1'       => result := x"1"; good := true;
-      when '2'       => result := x"2"; good := true;
-      when '3'       => result := x"3"; good := true;
-      when '4'       => result := x"4"; good := true;
-      when '5'       => result := x"5"; good := true;
-      when '6'       => result := x"6"; good := true;
-      when '7'       => result := x"7"; good := true;
-      when '8'       => result := x"8"; good := true;
-      when '9'       => result := x"9"; good := true;
-      when 'A' | 'a' => result := x"A"; good := true;
-      when 'B' | 'b' => result := x"B"; good := true;
-      when 'C' | 'c' => result := x"C"; good := true;
-      when 'D' | 'd' => result := x"D"; good := true;
-      when 'E' | 'e' => result := x"E"; good := true;
-      when 'F' | 'f' => result := x"F"; good := true;
-      when 'Z'       => result := "ZZZZ"; good := true;
-      when 'X'       => result := "XXXX"; good := true;
+    case C is
+      when '0'       => RESULT := x"0"; GOOD := true;
+      when '1'       => RESULT := x"1"; GOOD := true;
+      when '2'       => RESULT := x"2"; GOOD := true;
+      when '3'       => RESULT := x"3"; GOOD := true;
+      when '4'       => RESULT := x"4"; GOOD := true;
+      when '5'       => RESULT := x"5"; GOOD := true;
+      when '6'       => RESULT := x"6"; GOOD := true;
+      when '7'       => RESULT := x"7"; GOOD := true;
+      when '8'       => RESULT := x"8"; GOOD := true;
+      when '9'       => RESULT := x"9"; GOOD := true;
+      when 'A' | 'a' => RESULT := x"A"; GOOD := true;
+      when 'B' | 'b' => RESULT := x"B"; GOOD := true;
+      when 'C' | 'c' => RESULT := x"C"; GOOD := true;
+      when 'D' | 'd' => RESULT := x"D"; GOOD := true;
+      when 'E' | 'e' => RESULT := x"E"; GOOD := true;
+      when 'F' | 'f' => RESULT := x"F"; GOOD := true;
+      when 'Z'       => RESULT := "ZZZZ"; GOOD := true;
+      when 'X'       => RESULT := "XXXX"; GOOD := true;
       when others =>
         assert not ISSUE_ERROR
           report
-          "STD_LOGIC_1164.HREAD Error: Read a '" & c &
+          "STD_LOGIC_1164.HREAD Error: Read a '" & C &
           "', expected a Hex character (0-F)."
           severity error;
-        good := false;
+        GOOD := false;
     end case;
   end procedure Char2QuadBits;
 
@@ -1456,21 +1458,21 @@ package body std_logic_1164 is
     variable lastu  : BOOLEAN := false;       -- last character was an "_"
   begin
     VALUE := (VALUE'range => 'U'); -- initialize to a "U"
-    Skip_whitespace (L);
+    skip_whitespace (L);
     if VALUE'length > 0 then
-      read (l, c, ok);
+      read (L, c, ok);
       i := 0;
       while i < ne loop
         -- Bail out if there was a bad read
         if not ok then
-          good := false;
+          GOOD := false;
           return;
         elsif c = '_' then
           if i = 0 then
-            good := false;                -- Begins with an "_"
+            GOOD := false;                -- Begins with an "_"
             return;
           elsif lastu then
-            good := false;                -- "__" detected
+            GOOD := false;                -- "__" detected
             return;
           else
             lastu := true;
@@ -1478,7 +1480,7 @@ package body std_logic_1164 is
         else
           Char2QuadBits(c, sv(4*i to 4*i+3), ok, false);
           if not ok then
-            good := false;
+            GOOD := false;
             return;
           end if;
           i := i + 1;
@@ -1489,13 +1491,13 @@ package body std_logic_1164 is
         end if;
       end loop;
       if or (sv (0 to pad-1)) = '1' then
-        good := false;                           -- vector was truncated.
+        GOOD := false;                           -- vector was truncated.
       else
-        good  := true;
+        GOOD  := true;
         VALUE := sv (pad to sv'high);
       end if;
     else
-      good := true;                     -- Null input string, skips whitespace
+      GOOD := true;                     -- Null input string, skips whitespace
     end if;
   end procedure HREAD;
 
@@ -1509,9 +1511,9 @@ package body std_logic_1164 is
     variable lastu  : BOOLEAN := false;       -- last character was an "_"
   begin
     VALUE := (VALUE'range => 'U'); -- initialize to a "U"
-    Skip_whitespace (L);
+    skip_whitespace (L);
     if VALUE'length > 0 then           -- non Null input string
-      read (l, c, ok);
+      read (L, c, ok);
       i := 0;
       while i < ne loop
         -- Bail out if there was a bad read
@@ -1558,13 +1560,13 @@ package body std_logic_1164 is
   procedure OWRITE (L         : inout LINE; VALUE : in STD_ULOGIC_VECTOR;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
   begin
-    write (L, to_ostring(VALUE), JUSTIFIED, FIELD);
+    write (L, TO_OSTRING(VALUE), JUSTIFIED, FIELD);
   end procedure OWRITE;
 
   procedure HWRITE (L         : inout LINE; VALUE : in STD_ULOGIC_VECTOR;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
   begin
-    write (L, to_hstring (VALUE), JUSTIFIED, FIELD);
+    write (L, TO_HSTRING (VALUE), JUSTIFIED, FIELD);
   end procedure HWRITE;
 
 end package body std_logic_1164;

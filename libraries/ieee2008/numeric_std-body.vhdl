@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Standard VHDL Synthesis Packages
 --             :  (NUMERIC_STD package body)
@@ -346,7 +349,6 @@ package body NUMERIC_STD is
   -- Id: A.2
   function "-" (ARG : UNRESOLVED_SIGNED) return UNRESOLVED_SIGNED is
     constant ARG_LEFT       : INTEGER   := ARG'length-1;
-    alias XARG              : UNRESOLVED_SIGNED(ARG_LEFT downto 0) is ARG;
     variable RESULT, XARG01 : UNRESOLVED_SIGNED(ARG_LEFT downto 0);
     variable CBIT           : STD_LOGIC := '1';
   begin
@@ -2223,7 +2225,7 @@ package body NUMERIC_STD is
           return 'X';
         end if;
       end loop;
-      if Is_X(L) or Is_X(R) then
+      if IS_X(L) or IS_X(R) then
         return 'X';
       elsif L > R then
         return '1';
@@ -2256,7 +2258,7 @@ package body NUMERIC_STD is
           return 'X';
         end if;
       end loop;
-      if Is_X(L) or Is_X(R) then
+      if IS_X(L) or IS_X(R) then
         return 'X';
       elsif L > R then
         return '1';
@@ -2315,7 +2317,7 @@ package body NUMERIC_STD is
           return 'X';
         end if;
       end loop;
-      if Is_X(L) or Is_X(R) then
+      if IS_X(L) or IS_X(R) then
         return 'X';
       elsif L < R then
         return '1';
@@ -2348,7 +2350,7 @@ package body NUMERIC_STD is
           return 'X';
         end if;
       end loop;
-      if Is_X(L) or Is_X(R) then
+      if IS_X(L) or IS_X(R) then
         return 'X';
       elsif L < R then
         return '1';
@@ -2407,7 +2409,7 @@ package body NUMERIC_STD is
           return 'X';
         end if;
       end loop;
-      if Is_X(L) or Is_X(R) then
+      if IS_X(L) or IS_X(R) then
         return 'X';
       elsif L <= R then
         return '1';
@@ -2440,7 +2442,7 @@ package body NUMERIC_STD is
           return 'X';
         end if;
       end loop;
-      if Is_X(L) or Is_X(R) then
+      if IS_X(L) or IS_X(R) then
         return 'X';
       elsif L <= R then
         return '1';
@@ -2499,7 +2501,7 @@ package body NUMERIC_STD is
           return 'X';
         end if;
       end loop;
-      if Is_X(L) or Is_X(R) then
+      if IS_X(L) or IS_X(R) then
         return 'X';
       elsif L >= R then
         return '1';
@@ -2532,7 +2534,7 @@ package body NUMERIC_STD is
           return 'X';
         end if;
       end loop;
-      if Is_X(L) or Is_X(R) then
+      if IS_X(L) or IS_X(R) then
         return 'X';
       elsif L >= R then
         return '1';
@@ -3321,70 +3323,70 @@ package body NUMERIC_STD is
     return RESULT;
   end function "xnor";
 
-  -- Id: L.15 
+  -- Id: L.15
   function "and" (L : STD_ULOGIC; R : UNRESOLVED_UNSIGNED)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (L and STD_ULOGIC_VECTOR(R));
   end function "and";
 
-  -- Id: L.16 
+  -- Id: L.16
   function "and" (L : UNRESOLVED_UNSIGNED; R : STD_ULOGIC)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (STD_ULOGIC_VECTOR(L) and R);
   end function "and";
 
-  -- Id: L.17 
+  -- Id: L.17
   function "or" (L : STD_ULOGIC; R : UNRESOLVED_UNSIGNED)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (L or STD_ULOGIC_VECTOR(R));
   end function "or";
 
-  -- Id: L.18 
+  -- Id: L.18
   function "or" (L : UNRESOLVED_UNSIGNED; R : STD_ULOGIC)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (STD_ULOGIC_VECTOR(L) or R);
   end function "or";
 
-  -- Id: L.19 
+  -- Id: L.19
   function "nand" (L : STD_ULOGIC; R : UNRESOLVED_UNSIGNED)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (L nand STD_ULOGIC_VECTOR(R));
   end function "nand";
 
-  -- Id: L.20 
+  -- Id: L.20
   function "nand" (L : UNRESOLVED_UNSIGNED; R : STD_ULOGIC)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (STD_ULOGIC_VECTOR(L) nand R);
   end function "nand";
 
-  -- Id: L.21 
+  -- Id: L.21
   function "nor" (L : STD_ULOGIC; R : UNRESOLVED_UNSIGNED)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (L nor STD_ULOGIC_VECTOR(R));
   end function "nor";
 
-  -- Id: L.22 
+  -- Id: L.22
   function "nor" (L : UNRESOLVED_UNSIGNED; R : STD_ULOGIC)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (STD_ULOGIC_VECTOR(L) nor R);
   end function "nor";
 
-  -- Id: L.23 
+  -- Id: L.23
   function "xor" (L : STD_ULOGIC; R : UNRESOLVED_UNSIGNED)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (L xor STD_ULOGIC_VECTOR(R));
   end function "xor";
 
-  -- Id: L.24 
+  -- Id: L.24
   function "xor" (L : UNRESOLVED_UNSIGNED; R : STD_ULOGIC)
     return UNRESOLVED_UNSIGNED is
   begin
@@ -3395,7 +3397,7 @@ package body NUMERIC_STD is
   -- Note: Function L.25 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.25 
+  -- Id: L.25
   function "xnor" (L : STD_ULOGIC; R : UNRESOLVED_UNSIGNED)
     return UNRESOLVED_UNSIGNED is
   begin
@@ -3406,77 +3408,77 @@ package body NUMERIC_STD is
   -- Note: Function L.26 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.26 
+  -- Id: L.26
   function "xnor" (L : UNRESOLVED_UNSIGNED; R : STD_ULOGIC)
     return UNRESOLVED_UNSIGNED is
   begin
     return UNRESOLVED_UNSIGNED (STD_ULOGIC_VECTOR(L) xnor R);
   end function "xnor";
 
-  -- Id: L.27 
+  -- Id: L.27
   function "and" (L : STD_ULOGIC; R : UNRESOLVED_SIGNED)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (L and STD_ULOGIC_VECTOR(R));
   end function "and";
 
-  -- Id: L.28 
+  -- Id: L.28
   function "and" (L : UNRESOLVED_SIGNED; R : STD_ULOGIC)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (STD_ULOGIC_VECTOR(L) and R);
   end function "and";
 
-  -- Id: L.29 
+  -- Id: L.29
   function "or" (L : STD_ULOGIC; R : UNRESOLVED_SIGNED)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (L or STD_ULOGIC_VECTOR(R));
   end function "or";
 
-  -- Id: L.30 
+  -- Id: L.30
   function "or" (L : UNRESOLVED_SIGNED; R : STD_ULOGIC)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (STD_ULOGIC_VECTOR(L) or R);
   end function "or";
 
-  -- Id: L.31 
+  -- Id: L.31
   function "nand" (L : STD_ULOGIC; R : UNRESOLVED_SIGNED)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (L nand STD_ULOGIC_VECTOR(R));
   end function "nand";
 
-  -- Id: L.32 
+  -- Id: L.32
   function "nand" (L : UNRESOLVED_SIGNED; R : STD_ULOGIC)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (STD_ULOGIC_VECTOR(L) nand R);
   end function "nand";
 
-  -- Id: L.33 
+  -- Id: L.33
   function "nor" (L : STD_ULOGIC; R : UNRESOLVED_SIGNED)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (L nor STD_ULOGIC_VECTOR(R));
   end function "nor";
 
-  -- Id: L.34 
+  -- Id: L.34
   function "nor" (L : UNRESOLVED_SIGNED; R : STD_ULOGIC)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (STD_ULOGIC_VECTOR(L) nor R);
   end function "nor";
 
-  -- Id: L.35 
+  -- Id: L.35
   function "xor" (L : STD_ULOGIC; R : UNRESOLVED_SIGNED)
     return UNRESOLVED_SIGNED is
   begin
     return UNRESOLVED_SIGNED (L xor STD_ULOGIC_VECTOR(R));
   end function "xor";
 
-  -- Id: L.36 
+  -- Id: L.36
   function "xor" (L : UNRESOLVED_SIGNED; R : STD_ULOGIC)
     return UNRESOLVED_SIGNED is
   begin
@@ -3487,7 +3489,7 @@ package body NUMERIC_STD is
   -- Note: Function L.37 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.37 
+  -- Id: L.37
   function "xnor" (L : STD_ULOGIC; R : UNRESOLVED_SIGNED)
     return UNRESOLVED_SIGNED is
   begin
@@ -3498,7 +3500,7 @@ package body NUMERIC_STD is
   -- Note: Function L.38 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.38 
+  -- Id: L.38
   function "xnor" (L : UNRESOLVED_SIGNED; R : STD_ULOGIC)
     return UNRESOLVED_SIGNED is
   begin
@@ -3660,7 +3662,6 @@ package body NUMERIC_STD is
 
   -- Id: M.1
   function STD_MATCH (L, R : STD_ULOGIC) return BOOLEAN is
-    variable VALUE : STD_ULOGIC;
   begin
     return MATCH_TABLE(L, R);
   end function STD_MATCH;
@@ -3827,19 +3828,19 @@ package body NUMERIC_STD is
   -- ============================================================================
   -- string conversion and write operations
   -- ============================================================================
-  function to_ostring (value : UNRESOLVED_UNSIGNED) return STRING is
+  function TO_OSTRING (value : UNRESOLVED_UNSIGNED) return STRING is
   begin
-    return to_ostring(STD_ULOGIC_VECTOR (value));
-  end function to_ostring;
+    return TO_OSTRING(STD_ULOGIC_VECTOR (value));
+  end function TO_OSTRING;
 
-  function to_ostring (value : UNRESOLVED_SIGNED) return STRING is
+  function TO_OSTRING (value : UNRESOLVED_SIGNED) return STRING is
     constant result_length : INTEGER := (value'length+2)/3;
     constant pad           : STD_ULOGIC_VECTOR(1 to (result_length*3 -
                                                      value'length))
       := (others => value (value'left));  -- Extend sign bit
   begin
-    return to_ostring(pad & STD_ULOGIC_VECTOR (value));
-  end function to_ostring;
+    return TO_OSTRING(pad & STD_ULOGIC_VECTOR (value));
+  end function TO_OSTRING;
 
   function to_hstring (value : UNRESOLVED_UNSIGNED) return STRING is
   begin
@@ -3857,7 +3858,7 @@ package body NUMERIC_STD is
 
   procedure READ (L    : inout LINE; VALUE : out UNRESOLVED_UNSIGNED;
                   GOOD : out BOOLEAN) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     READ (L     => L,
           VALUE => ivalue,
@@ -3866,7 +3867,7 @@ package body NUMERIC_STD is
   end procedure READ;
 
   procedure READ (L : inout LINE; VALUE : out UNRESOLVED_UNSIGNED) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     READ (L      => L,
            VALUE => ivalue);
@@ -3875,7 +3876,7 @@ package body NUMERIC_STD is
 
   procedure READ (L    : inout LINE; VALUE : out UNRESOLVED_SIGNED;
                   GOOD : out BOOLEAN) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     READ (L     => L,
           VALUE => ivalue,
@@ -3884,7 +3885,7 @@ package body NUMERIC_STD is
   end procedure READ;
 
   procedure READ (L : inout LINE; VALUE : out UNRESOLVED_SIGNED) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     READ (L      => L,
            VALUE => ivalue);
@@ -3893,7 +3894,7 @@ package body NUMERIC_STD is
 
   procedure WRITE (L         : inout LINE; VALUE : in UNRESOLVED_UNSIGNED;
                    JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     ivalue := STD_ULOGIC_VECTOR (VALUE);
     WRITE (L          => L,
@@ -3904,7 +3905,7 @@ package body NUMERIC_STD is
 
   procedure WRITE (L         : inout LINE; VALUE : in UNRESOLVED_SIGNED;
                    JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     ivalue := STD_ULOGIC_VECTOR (VALUE);
     WRITE (L          => L,
@@ -3915,7 +3916,7 @@ package body NUMERIC_STD is
 
   procedure OREAD (L    : inout LINE; VALUE : out UNRESOLVED_UNSIGNED;
                    GOOD : out BOOLEAN) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     OREAD (L     => L,
            VALUE => ivalue,
@@ -3925,8 +3926,8 @@ package body NUMERIC_STD is
 
   procedure OREAD (L    : inout LINE; VALUE : out UNRESOLVED_SIGNED;
                    GOOD : out BOOLEAN) is
-    constant ne               : INTEGER := (value'length+2)/3;
-    constant pad              : INTEGER := ne*3 - value'length;
+    constant ne               : INTEGER := (VALUE'length+2)/3;
+    constant pad              : INTEGER := ne*3 - VALUE'length;
     variable ivalue           : STD_ULOGIC_VECTOR(0 to ne*3-1);
     variable ok               : BOOLEAN;
     variable expected_padding : STD_ULOGIC_VECTOR(0 to pad-1);
@@ -3949,7 +3950,7 @@ package body NUMERIC_STD is
   end procedure OREAD;
 
   procedure OREAD (L : inout LINE; VALUE : out UNRESOLVED_UNSIGNED) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     OREAD (L     => L,
            VALUE => ivalue);
@@ -3957,8 +3958,8 @@ package body NUMERIC_STD is
   end procedure OREAD;
 
   procedure OREAD (L : inout LINE; VALUE : out UNRESOLVED_SIGNED) is
-    constant ne               : INTEGER := (value'length+2)/3;
-    constant pad              : INTEGER := ne*3 - value'length;
+    constant ne               : INTEGER := (VALUE'length+2)/3;
+    constant pad              : INTEGER := ne*3 - VALUE'length;
     variable ivalue           : STD_ULOGIC_VECTOR(0 to ne*3-1);
     variable expected_padding : STD_ULOGIC_VECTOR(0 to pad-1);
   begin
@@ -3976,7 +3977,7 @@ package body NUMERIC_STD is
 
   procedure HREAD (L    : inout LINE; VALUE : out UNRESOLVED_UNSIGNED;
                    GOOD : out BOOLEAN) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     HREAD (L     => L,
            VALUE => ivalue,
@@ -3986,8 +3987,8 @@ package body NUMERIC_STD is
 
   procedure HREAD (L    : inout LINE; VALUE : out UNRESOLVED_SIGNED;
                    GOOD : out BOOLEAN) is
-    constant ne               : INTEGER := (value'length+3)/4;
-    constant pad              : INTEGER := ne*4 - value'length;
+    constant ne               : INTEGER := (VALUE'length+3)/4;
+    constant pad              : INTEGER := ne*4 - VALUE'length;
     variable ivalue           : STD_ULOGIC_VECTOR(0 to ne*4-1);
     variable ok               : BOOLEAN;
     variable expected_padding : STD_ULOGIC_VECTOR(0 to pad-1);
@@ -4009,7 +4010,7 @@ package body NUMERIC_STD is
   end procedure HREAD;
 
   procedure HREAD (L : inout LINE; VALUE : out UNRESOLVED_UNSIGNED) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     HREAD (L     => L,
            VALUE => ivalue);
@@ -4017,8 +4018,8 @@ package body NUMERIC_STD is
   end procedure HREAD;
 
   procedure HREAD (L : inout LINE; VALUE : out UNRESOLVED_SIGNED) is
-    constant ne               : INTEGER := (value'length+3)/4;
-    constant pad              : INTEGER := ne*4 - value'length;
+    constant ne               : INTEGER := (VALUE'length+3)/4;
+    constant pad              : INTEGER := ne*4 - VALUE'length;
     variable ivalue           : STD_ULOGIC_VECTOR(0 to ne*4-1);
     variable expected_padding : STD_ULOGIC_VECTOR(0 to pad-1);
   begin
@@ -4036,7 +4037,7 @@ package body NUMERIC_STD is
 
   procedure OWRITE (L         : inout LINE; VALUE : in UNRESOLVED_UNSIGNED;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     ivalue := STD_ULOGIC_VECTOR (VALUE);
     OWRITE (L         => L,
@@ -4050,7 +4051,7 @@ package body NUMERIC_STD is
     constant ne  : INTEGER := (VALUE'length+2)/3;
     constant pad : STD_ULOGIC_VECTOR(0 to (ne*3 - VALUE'length) - 1)
       := (others => VALUE (VALUE'left));
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     ivalue := STD_ULOGIC_VECTOR (VALUE);
     OWRITE (L         => L,
@@ -4061,7 +4062,7 @@ package body NUMERIC_STD is
 
   procedure HWRITE (L         : inout LINE; VALUE : in UNRESOLVED_UNSIGNED;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
   begin
     ivalue := STD_ULOGIC_VECTOR (VALUE);
     HWRITE (L         => L,
@@ -4072,9 +4073,9 @@ package body NUMERIC_STD is
 
   procedure HWRITE (L         : inout LINE; VALUE : in UNRESOLVED_SIGNED;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : STD_ULOGIC_VECTOR(value'range);
-    constant ne     : INTEGER := (value'length+3)/4;
-    constant pad    : STD_ULOGIC_VECTOR(0 to (ne*4 - value'length) - 1)
+    variable ivalue : STD_ULOGIC_VECTOR(VALUE'range);
+    constant ne     : INTEGER := (VALUE'length+3)/4;
+    constant pad    : STD_ULOGIC_VECTOR(0 to (ne*4 - VALUE'length) - 1)
       := (others => VALUE(VALUE'left));
   begin
     ivalue := STD_ULOGIC_VECTOR (VALUE);

@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Standard VHDL Synthesis Packages
 --             :  (NUMERIC_BIT package body)
@@ -335,8 +338,6 @@ package body NUMERIC_BIT is
 
   -- Id: A.3
   function "+" (L, R : UNSIGNED) return UNSIGNED is
-    constant L_LEFT : INTEGER := L'length-1;
-    constant R_LEFT : INTEGER := R'length-1;
     constant SIZE   : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then return NAU;
@@ -362,8 +363,6 @@ package body NUMERIC_BIT is
 
   -- Id: A.4
   function "+" (L, R : SIGNED) return SIGNED is
-    constant L_LEFT : INTEGER := L'length-1;
-    constant R_LEFT : INTEGER := R'length-1;
     constant SIZE   : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then return NAS;
@@ -415,8 +414,6 @@ package body NUMERIC_BIT is
 
   -- Id: A.9
   function "-" (L, R : UNSIGNED) return UNSIGNED is
-    constant L_LEFT : INTEGER := L'length-1;
-    constant R_LEFT : INTEGER := R'length-1;
     constant SIZE   : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then return NAU;
@@ -444,8 +441,6 @@ package body NUMERIC_BIT is
 
   -- Id: A.10
   function "-" (L, R : SIGNED) return SIGNED is
-    constant L_LEFT : INTEGER := L'length-1;
-    constant R_LEFT : INTEGER := R'length-1;
     constant SIZE   : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then return NAS;
@@ -955,7 +950,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.1
   function ">" (L, R : UNSIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -968,7 +963,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.2
   function ">" (L, R : SIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1039,7 +1034,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.7
   function "<" (L, R : UNSIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1052,7 +1047,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.8
   function "<" (L, R : SIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1123,7 +1118,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.13
   function "<=" (L, R : UNSIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1136,7 +1131,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.14
   function "<=" (L, R : SIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1207,7 +1202,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.19
   function ">=" (L, R : UNSIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1220,7 +1215,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.20
   function ">=" (L, R : SIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1291,7 +1286,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.25
   function "=" (L, R : UNSIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1304,7 +1299,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.26
   function "=" (L, R : SIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1375,7 +1370,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.31
   function "/=" (L, R : UNSIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -1388,7 +1383,7 @@ package body NUMERIC_BIT is
 
   -- Id: C.32
   function "/=" (L, R : SIGNED) return BOOLEAN is
-    variable SIZE : NATURAL := MAXIMUM(L'length, R'length);
+    constant SIZE : NATURAL := MAXIMUM(L'length, R'length);
   begin
     if ((L'length < 1) or (R'length < 1)) then
       assert NO_WARNING
@@ -2447,61 +2442,61 @@ package body NUMERIC_BIT is
     return RESULT;
   end function "xnor";
 
-  -- Id: L.15 
+  -- Id: L.15
   function "and" (L : BIT; R : UNSIGNED) return UNSIGNED is
   begin
     return UNSIGNED (L and BIT_VECTOR(R));
   end function "and";
 
-  -- Id: L.16 
+  -- Id: L.16
   function "and" (L : UNSIGNED; R : BIT) return UNSIGNED is
   begin
     return UNSIGNED (BIT_VECTOR(L) and R);
   end function "and";
 
-  -- Id: L.17 
+  -- Id: L.17
   function "or" (L : BIT; R : UNSIGNED) return UNSIGNED is
   begin
     return UNSIGNED (L or BIT_VECTOR(R));
   end function "or";
 
-  -- Id: L.18 
+  -- Id: L.18
   function "or" (L : UNSIGNED; R : BIT) return UNSIGNED is
   begin
     return UNSIGNED (BIT_VECTOR(L) or R);
   end function "or";
 
-  -- Id: L.19 
+  -- Id: L.19
   function "nand" (L : BIT; R : UNSIGNED) return UNSIGNED is
   begin
     return UNSIGNED (L nand BIT_VECTOR(R));
   end function "nand";
 
-  -- Id: L.20 
+  -- Id: L.20
   function "nand" (L : UNSIGNED; R : BIT) return UNSIGNED is
   begin
     return UNSIGNED (BIT_VECTOR(L) nand R);
   end function "nand";
 
-  -- Id: L.21 
+  -- Id: L.21
   function "nor" (L : BIT; R : UNSIGNED) return UNSIGNED is
   begin
     return UNSIGNED (L nor BIT_VECTOR(R));
   end function "nor";
 
-  -- Id: L.22 
+  -- Id: L.22
   function "nor" (L : UNSIGNED; R : BIT) return UNSIGNED is
   begin
     return UNSIGNED (BIT_VECTOR(L) nor R);
   end function "nor";
 
-  -- Id: L.23 
+  -- Id: L.23
   function "xor" (L : BIT; R : UNSIGNED) return UNSIGNED is
   begin
     return UNSIGNED (L xor BIT_VECTOR(R));
   end function "xor";
 
-  -- Id: L.24 
+  -- Id: L.24
   function "xor" (L : UNSIGNED; R : BIT) return UNSIGNED is
   begin
     return UNSIGNED (BIT_VECTOR(L) xor R);
@@ -2511,7 +2506,7 @@ package body NUMERIC_BIT is
   -- Note: Function L.25 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.25 
+  -- Id: L.25
   function "xnor" (L : BIT; R : UNSIGNED) return UNSIGNED is
   begin
     return UNSIGNED (L xnor BIT_VECTOR(R));
@@ -2521,67 +2516,67 @@ package body NUMERIC_BIT is
   -- Note: Function L.26 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.26 
+  -- Id: L.26
   function "xnor" (L : UNSIGNED; R : BIT) return UNSIGNED is
   begin
     return UNSIGNED (BIT_VECTOR(L) xnor R);
   end function "xnor";
 
-  -- Id: L.27 
+  -- Id: L.27
   function "and" (L : BIT; R : SIGNED) return SIGNED is
   begin
     return SIGNED (L and BIT_VECTOR(R));
   end function "and";
 
-  -- Id: L.28 
+  -- Id: L.28
   function "and" (L : SIGNED; R : BIT) return SIGNED is
   begin
     return SIGNED (BIT_VECTOR(L) and R);
   end function "and";
 
-  -- Id: L.29 
+  -- Id: L.29
   function "or" (L : BIT; R : SIGNED) return SIGNED is
   begin
     return SIGNED (L or BIT_VECTOR(R));
   end function "or";
 
-  -- Id: L.30 
+  -- Id: L.30
   function "or" (L : SIGNED; R : BIT) return SIGNED is
   begin
     return SIGNED (BIT_VECTOR(L) or R);
   end function "or";
 
-  -- Id: L.31 
+  -- Id: L.31
   function "nand" (L : BIT; R : SIGNED) return SIGNED is
   begin
     return SIGNED (L nand BIT_VECTOR(R));
   end function "nand";
 
-  -- Id: L.32 
+  -- Id: L.32
   function "nand" (L : SIGNED; R : BIT) return SIGNED is
   begin
     return SIGNED (BIT_VECTOR(L) nand R);
   end function "nand";
 
-  -- Id: L.33 
+  -- Id: L.33
   function "nor" (L : BIT; R : SIGNED) return SIGNED is
   begin
     return SIGNED (L nor BIT_VECTOR(R));
   end function "nor";
 
-  -- Id: L.34 
+  -- Id: L.34
   function "nor" (L : SIGNED; R : BIT) return SIGNED is
   begin
     return SIGNED (BIT_VECTOR(L) nor R);
   end function "nor";
 
-  -- Id: L.35 
+  -- Id: L.35
   function "xor" (L : BIT; R : SIGNED) return SIGNED is
   begin
     return SIGNED (L xor BIT_VECTOR(R));
   end function "xor";
 
-  -- Id: L.36 
+  -- Id: L.36
   function "xor" (L : SIGNED; R : BIT) return SIGNED is
   begin
     return SIGNED (BIT_VECTOR(L) xor R);
@@ -2591,7 +2586,7 @@ package body NUMERIC_BIT is
   -- Note: Function L.37 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.37 
+  -- Id: L.37
   function "xnor" (L : BIT; R : SIGNED) return SIGNED is
   begin
     return SIGNED (L xnor BIT_VECTOR(R));
@@ -2601,7 +2596,7 @@ package body NUMERIC_BIT is
   -- Note: Function L.38 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.38 
+  -- Id: L.38
   function "xnor" (L : SIGNED; R : BIT) return SIGNED is
   begin
     return SIGNED (BIT_VECTOR(L) xnor R);
@@ -2742,18 +2737,18 @@ package body NUMERIC_BIT is
   -- ============================================================================
   -- string conversion and write operations
   -- ============================================================================
-  function to_ostring (value : UNSIGNED) return STRING is
+  function TO_OSTRING (value : UNSIGNED) return STRING is
   begin
-    return to_ostring(BIT_VECTOR (value));
-  end function to_ostring;
+    return TO_OSTRING(BIT_VECTOR (value));
+  end function TO_OSTRING;
 
-  function to_ostring (value : SIGNED) return STRING is
+  function TO_OSTRING (value : SIGNED) return STRING is
     constant result_length : INTEGER := (value'length+2)/3;
     constant pad           : BIT_VECTOR(1 to (result_length*3 - value'length))
       := (others => value (value'left));  -- Extend sign bit
   begin
-    return to_ostring(pad & BIT_VECTOR (value));
-  end function to_ostring;
+    return TO_OSTRING(pad & BIT_VECTOR (value));
+  end function TO_OSTRING;
 
   function to_hstring (value : UNSIGNED) return STRING is
   begin
@@ -2769,7 +2764,7 @@ package body NUMERIC_BIT is
   end function to_hstring;
 
   procedure READ(L : inout LINE; VALUE : out UNSIGNED; GOOD : out BOOLEAN) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     READ (L     => L,
           VALUE => ivalue,
@@ -2778,7 +2773,7 @@ package body NUMERIC_BIT is
   end procedure READ;
 
   procedure READ(L : inout LINE; VALUE : out UNSIGNED) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     READ (L      => L,
            VALUE => ivalue);
@@ -2786,7 +2781,7 @@ package body NUMERIC_BIT is
   end procedure READ;
 
   procedure READ(L : inout LINE; VALUE : out SIGNED; GOOD : out BOOLEAN) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     READ (L     => L,
           VALUE => ivalue,
@@ -2795,7 +2790,7 @@ package body NUMERIC_BIT is
   end procedure READ;
 
   procedure READ(L : inout LINE; VALUE : out SIGNED) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     READ (L      => L,
            VALUE => ivalue);
@@ -2804,7 +2799,7 @@ package body NUMERIC_BIT is
 
   procedure WRITE (L         : inout LINE; VALUE : in UNSIGNED;
                    JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     ivalue := BIT_VECTOR (VALUE);
     WRITE (L          => L,
@@ -2815,7 +2810,7 @@ package body NUMERIC_BIT is
 
   procedure WRITE (L         : inout LINE; VALUE : in SIGNED;
                    JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     ivalue := BIT_VECTOR (VALUE);
     WRITE (L          => L,
@@ -2825,7 +2820,7 @@ package body NUMERIC_BIT is
   end procedure WRITE;
 
   procedure OREAD (L : inout LINE; VALUE : out UNSIGNED; GOOD : out BOOLEAN) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     OREAD (L     => L,
            VALUE => ivalue,
@@ -2834,8 +2829,8 @@ package body NUMERIC_BIT is
   end procedure OREAD;
 
   procedure OREAD (L : inout LINE; VALUE : out SIGNED; GOOD : out BOOLEAN) is
-    constant ne     : INTEGER := (value'length+2)/3;
-    constant pad    : INTEGER := ne*3 - value'length;
+    constant ne     : INTEGER := (VALUE'length+2)/3;
+    constant pad    : INTEGER := ne*3 - VALUE'length;
     variable ivalue : BIT_VECTOR(0 to ne*3-1);
     variable ok     : BOOLEAN;
   begin
@@ -2844,33 +2839,33 @@ package body NUMERIC_BIT is
             good  => ok);
     -- Bail out if there was a bad read
     if not ok then
-      good := false;
+      GOOD := false;
       return;
     end if;
     if (pad > 0) then
       if (ivalue(0) = '0') then         -- positive
         if ivalue(0) = or (ivalue(0 to pad)) then
           VALUE := SIGNED (ivalue (pad to ivalue'high));
-          good  := true;
+          GOOD  := true;
         else
-          good := false;
+          GOOD := false;
         end if;
       else                              -- negative
         if ivalue(0) = and (ivalue(0 to pad)) then
           VALUE := SIGNED (ivalue (pad to ivalue'high));
-          good  := true;
+          GOOD  := true;
         else
-          good := false;
+          GOOD := false;
         end if;
       end if;
     else
-      good  := true;
+      GOOD  := true;
       VALUE := SIGNED (ivalue);
     end if;
   end procedure OREAD;
 
   procedure OREAD (L : inout LINE; VALUE : out UNSIGNED) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     OREAD (L     => L,
            VALUE => ivalue);
@@ -2878,8 +2873,8 @@ package body NUMERIC_BIT is
   end procedure OREAD;
 
   procedure OREAD (L : inout LINE; VALUE : out SIGNED) is
-    constant ne     : INTEGER := (value'length+2)/3;
-    constant pad    : INTEGER := ne*3 - value'length;
+    constant ne     : INTEGER := (VALUE'length+2)/3;
+    constant pad    : INTEGER := ne*3 - VALUE'length;
     variable ivalue : BIT_VECTOR(0 to ne*3-1);
   begin
     OREAD (L      => L,
@@ -2908,7 +2903,7 @@ package body NUMERIC_BIT is
   end procedure OREAD;
 
   procedure HREAD (L : inout LINE; VALUE : out UNSIGNED; GOOD : out BOOLEAN) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     HREAD (L     => L,
            VALUE => ivalue,
@@ -2917,8 +2912,8 @@ package body NUMERIC_BIT is
   end procedure HREAD;
 
   procedure HREAD (L : inout LINE; VALUE : out SIGNED; GOOD : out BOOLEAN) is
-    constant ne     : INTEGER := (value'length+3)/4;
-    constant pad    : INTEGER := ne*4 - value'length;
+    constant ne     : INTEGER := (VALUE'length+3)/4;
+    constant pad    : INTEGER := ne*4 - VALUE'length;
     variable ivalue : BIT_VECTOR(0 to ne*4-1);
     variable ok     : BOOLEAN;
   begin
@@ -2926,7 +2921,7 @@ package body NUMERIC_BIT is
             VALUE => ivalue,            -- Read padded STRING
             good  => ok);
     if not ok then
-      good := false;
+      GOOD := false;
       return;
     end if;
     if (pad > 0) then
@@ -2952,7 +2947,7 @@ package body NUMERIC_BIT is
   end procedure HREAD;
 
   procedure HREAD (L : inout LINE; VALUE : out UNSIGNED) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     HREAD (L     => L,
            VALUE => ivalue);
@@ -2960,8 +2955,8 @@ package body NUMERIC_BIT is
   end procedure HREAD;
 
   procedure HREAD (L : inout LINE; VALUE : out SIGNED) is
-    constant ne     : INTEGER := (value'length+3)/4;
-    constant pad    : INTEGER := ne*4 - value'length;
+    constant ne     : INTEGER := (VALUE'length+3)/4;
+    constant pad    : INTEGER := ne*4 - VALUE'length;
     variable ivalue : BIT_VECTOR(0 to ne*4-1);
   begin
     HREAD (L      => L,
@@ -2991,7 +2986,7 @@ package body NUMERIC_BIT is
 
   procedure OWRITE (L         : inout LINE; VALUE : in UNSIGNED;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     ivalue := BIT_VECTOR (VALUE);
     OWRITE (L         => L,
@@ -3005,7 +3000,7 @@ package body NUMERIC_BIT is
     constant ne  : INTEGER := (VALUE'length+2)/3;
     constant pad : BIT_VECTOR(0 to (ne*3 - VALUE'length) - 1)
       := (others => VALUE (VALUE'left));
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     ivalue := BIT_VECTOR (VALUE);
     OWRITE (L         => L,
@@ -3016,7 +3011,7 @@ package body NUMERIC_BIT is
 
   procedure HWRITE (L         : inout LINE; VALUE : in UNSIGNED;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : BIT_VECTOR(value'range);
+    variable ivalue : BIT_VECTOR(VALUE'range);
   begin
     ivalue := BIT_VECTOR (VALUE);
     HWRITE (L         => L,
@@ -3027,9 +3022,9 @@ package body NUMERIC_BIT is
 
   procedure HWRITE (L         : inout LINE; VALUE : in SIGNED;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0) is
-    variable ivalue : BIT_VECTOR(value'range);
-    constant ne     : INTEGER := (value'length+3)/4;
-    constant pad    : BIT_VECTOR(0 to (ne*4 - value'length) - 1)
+    variable ivalue : BIT_VECTOR(VALUE'range);
+    constant ne     : INTEGER := (VALUE'length+3)/4;
+    constant pad    : BIT_VECTOR(0 to (ne*4 - VALUE'length) - 1)
       := (others => VALUE(VALUE'left));
   begin
     ivalue := BIT_VECTOR (VALUE);

@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Floating-point package (Generic package declaration)
 --             :
@@ -67,7 +70,7 @@ package float_generic_pkg is
 
   -- Author David Bishop (dbishop@vhdl.org)
   constant CopyRightNotice : STRING :=
-    "Copyright 2008 by IEEE. All rights reserved.";
+    "Copyright IEEE P1076 WG. Licensed Apache 2.0";
 
   use fixed_pkg.all;
 
@@ -805,7 +808,7 @@ package float_generic_pkg is
   -- Returns y * 2**n for integral values of N without computing 2**n
   function Scalb (
     y                    : UNRESOLVED_float;  -- floating point input
-    N                    : INTEGER;     -- exponent to add    
+    N                    : INTEGER;     -- exponent to add
     constant round_style : round_type := float_round_style;  -- rounding option
     constant check_error : BOOLEAN    := float_check_error;  -- check for errors
     constant denormalize : BOOLEAN    := float_denormalize)  -- Use IEEE extended FP
@@ -814,7 +817,7 @@ package float_generic_pkg is
   -- Returns y * 2**n for integral values of N without computing 2**n
   function Scalb (
     y                    : UNRESOLVED_float;  -- floating point input
-    N                    : UNRESOLVED_SIGNED;      -- exponent to add    
+    N                    : UNRESOLVED_SIGNED;      -- exponent to add
     constant round_style : round_type := float_round_style;  -- rounding option
     constant check_error : BOOLEAN    := float_check_error;  -- check for errors
     constant denormalize : BOOLEAN    := float_denormalize)  -- Use IEEE extended FP
@@ -900,8 +903,8 @@ package float_generic_pkg is
   alias BREAD is READ [LINE, UNRESOLVED_float, BOOLEAN];
   alias BREAD is READ [LINE, UNRESOLVED_float];
   alias BWRITE is WRITE [LINE, UNRESOLVED_float, SIDE, WIDTH];
-  alias BINARY_READ is READ [LINE, UNRESOLVED_FLOAT, BOOLEAN];
-  alias BINARY_READ is READ [LINE, UNRESOLVED_FLOAT];
+  alias BINARY_READ is READ [LINE, UNRESOLVED_float, BOOLEAN];
+  alias BINARY_READ is READ [LINE, UNRESOLVED_float];
   alias BINARY_WRITE is WRITE [LINE, UNRESOLVED_float, SIDE, WIDTH];
 
   procedure OWRITE (
@@ -914,9 +917,9 @@ package float_generic_pkg is
   procedure OREAD (L    : inout LINE; VALUE : out UNRESOLVED_float);
   procedure OREAD (L    : inout LINE; VALUE : out UNRESOLVED_float;
                    GOOD : out   BOOLEAN);
-  alias OCTAL_READ is OREAD [LINE, UNRESOLVED_FLOAT, BOOLEAN];
-  alias OCTAL_READ is OREAD [LINE, UNRESOLVED_FLOAT];
-  alias OCTAL_WRITE is OWRITE [LINE, UNRESOLVED_FLOAT, SIDE, WIDTH];
+  alias OCTAL_READ is OREAD [LINE, UNRESOLVED_float, BOOLEAN];
+  alias OCTAL_READ is OREAD [LINE, UNRESOLVED_float];
+  alias OCTAL_WRITE is OWRITE [LINE, UNRESOLVED_float, SIDE, WIDTH];
 
   -- Hex write with padding, no separators
   procedure HWRITE (
@@ -929,22 +932,22 @@ package float_generic_pkg is
   procedure HREAD (L : inout LINE; VALUE : out UNRESOLVED_float);
   procedure HREAD (L    : inout LINE; VALUE : out UNRESOLVED_float;
                    GOOD : out   BOOLEAN);
-  alias HEX_READ is HREAD [LINE, UNRESOLVED_FLOAT, BOOLEAN];
-  alias HEX_READ is HREAD [LINE, UNRESOLVED_FLOAT];
-  alias HEX_WRITE is HWRITE [LINE, UNRESOLVED_FLOAT, SIDE, WIDTH];
+  alias HEX_READ is HREAD [LINE, UNRESOLVED_float, BOOLEAN];
+  alias HEX_READ is HREAD [LINE, UNRESOLVED_float];
+  alias HEX_WRITE is HWRITE [LINE, UNRESOLVED_float, SIDE, WIDTH];
 
   -- returns "S:EEEE:FFFFFFFF"
   function to_string (value : UNRESOLVED_float) return STRING;
-  alias TO_BSTRING is TO_STRING [UNRESOLVED_FLOAT return STRING];
-  alias TO_BINARY_STRING is TO_STRING [UNRESOLVED_FLOAT return STRING];
+  alias TO_BSTRING is TO_STRING [UNRESOLVED_float return STRING];
+  alias TO_BINARY_STRING is TO_STRING [UNRESOLVED_float return STRING];
 
   -- Returns a HEX string, with padding
   function to_hstring (value : UNRESOLVED_float) return STRING;
-  alias TO_HEX_STRING is TO_HSTRING [UNRESOLVED_FLOAT return STRING];
+  alias TO_HEX_STRING is to_hstring [UNRESOLVED_float return STRING];
 
   -- Returns and octal string, with padding
   function to_ostring (value : UNRESOLVED_float) return STRING;
-  alias TO_OCTAL_STRING is TO_OSTRING [UNRESOLVED_FLOAT return STRING];
+  alias TO_OCTAL_STRING is to_ostring [UNRESOLVED_float return STRING];
 
   function from_string (
     bstring                 : STRING;   -- binary string
@@ -973,7 +976,7 @@ package float_generic_pkg is
 
   function from_string (
     bstring  : STRING;                  -- binary string
-    size_res : UNRESOLVED_float)        -- used for sizing only 
+    size_res : UNRESOLVED_float)        -- used for sizing only
     return UNRESOLVED_float;
   alias from_bstring is from_string [STRING, UNRESOLVED_float
                                      return UNRESOLVED_float];
@@ -982,14 +985,14 @@ package float_generic_pkg is
 
   function from_ostring (
     ostring  : STRING;                  -- Octal string
-    size_res : UNRESOLVED_float)        -- used for sizing only 
+    size_res : UNRESOLVED_float)        -- used for sizing only
     return UNRESOLVED_float;
   alias from_octal_string is from_ostring [STRING, UNRESOLVED_float
                                            return UNRESOLVED_float];
 
   function from_hstring (
     hstring  : STRING;                  -- hex string
-    size_res : UNRESOLVED_float)        -- used for sizing only 
+    size_res : UNRESOLVED_float)        -- used for sizing only
     return UNRESOLVED_float;
   alias from_hex_string is from_hstring [STRING, UNRESOLVED_float
                                          return UNRESOLVED_float];

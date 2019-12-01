@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Fixed-point package (Generic package declaration)
 --             :
@@ -57,7 +60,7 @@ package fixed_generic_pkg is
 
   -- Author David Bishop (dbishop@vhdl.org)
   constant CopyRightNotice : STRING :=
-    "Copyright 2008 by IEEE. All rights reserved.";
+    "Copyright IEEE P1076 WG. Licensed Apache 2.0";
 
   -- base Unsigned fixed point type, downto direction assumed
   type UNRESOLVED_ufixed is array (INTEGER range <>) of STD_ULOGIC;
@@ -435,7 +438,7 @@ package fixed_generic_pkg is
   function "<=" (l : NATURAL; r : UNRESOLVED_ufixed) return BOOLEAN;
   function ">"  (l : NATURAL; r : UNRESOLVED_ufixed) return BOOLEAN;
   function "<"  (l : NATURAL; r : UNRESOLVED_ufixed) return BOOLEAN;
-  
+
   function "?="  (l : UNRESOLVED_ufixed; r : NATURAL) return STD_ULOGIC;
   function "?/=" (l : UNRESOLVED_ufixed; r : NATURAL) return STD_ULOGIC;
   function "?>=" (l : UNRESOLVED_ufixed; r : NATURAL) return STD_ULOGIC;
@@ -719,7 +722,7 @@ package fixed_generic_pkg is
   -- In saturate mode, if the number overflows then the largest possible
   -- representable number is returned.  If wrap mode, then the upper bits
   -- of the number are truncated.
-  
+
   function resize (
     arg                     : UNRESOLVED_ufixed;  -- input
     constant left_index     : INTEGER;  -- integer portion
@@ -945,17 +948,17 @@ package fixed_generic_pkg is
                         operation                 : CHARACTER := 'X';
                         left_index2, right_index2 : INTEGER   := 0)
     return INTEGER;
-  
+
   function ufixed_low (left_index, right_index   : INTEGER;
                        operation                 : CHARACTER := 'X';
                        left_index2, right_index2 : INTEGER   := 0)
     return INTEGER;
-  
+
   function sfixed_high (left_index, right_index   : INTEGER;
                         operation                 : CHARACTER := 'X';
                         left_index2, right_index2 : INTEGER   := 0)
     return INTEGER;
-  
+
   function sfixed_low (left_index, right_index   : INTEGER;
                        operation                 : CHARACTER := 'X';
                        left_index2, right_index2 : INTEGER   := 0)
@@ -965,22 +968,22 @@ package fixed_generic_pkg is
   -- signal uf1multuf2 : ufixed (ufixed_high (uf1, '*', uf2) downto
   --                             ufixed_low (uf1, '*', uf2));
   -- uf1multuf2 <= uf1 * uf2;
-  -- 
+  --
   function ufixed_high (size_res  : UNRESOLVED_ufixed;
                         operation : CHARACTER := 'X';
                         size_res2 : UNRESOLVED_ufixed)
     return INTEGER;
-  
+
   function ufixed_low (size_res  : UNRESOLVED_ufixed;
                        operation : CHARACTER := 'X';
                        size_res2 : UNRESOLVED_ufixed)
     return INTEGER;
-  
+
   function sfixed_high (size_res  : UNRESOLVED_sfixed;
                         operation : CHARACTER := 'X';
                         size_res2 : UNRESOLVED_sfixed)
     return INTEGER;
-  
+
   function sfixed_low (size_res  : UNRESOLVED_sfixed;
                        operation : CHARACTER := 'X';
                        size_res2 : UNRESOLVED_sfixed)
@@ -1035,7 +1038,7 @@ package fixed_generic_pkg is
   -- These functions are here so that a std_logic_vector can be
   -- converted to and from sfixed and ufixed.  Note that you can
   -- not convert these vectors because of their negative index.
-  
+
   function to_slv (
     arg : UNRESOLVED_ufixed)            -- fixed point vector
     return STD_LOGIC_VECTOR;
@@ -1119,12 +1122,12 @@ package fixed_generic_pkg is
   -- Where "11" is the width of xxx (xxx'length),
   -- and 3 is the lower bound (abs (xxx'low))
   -- In a pure VHDL environment use "ufixed_high" and "ufixed_low"
-  
+
   function UFix_high (width, fraction   : NATURAL;
                       operation         : CHARACTER := 'X';
                       width2, fraction2 : NATURAL   := 0)
     return INTEGER;
-  
+
   function UFix_low (width, fraction   : NATURAL;
                      operation         : CHARACTER := 'X';
                      width2, fraction2 : NATURAL   := 0)
@@ -1133,12 +1136,12 @@ package fixed_generic_pkg is
   -- Same as above but for signed fixed point.  Note that the width
   -- of a signed fixed point number ignores the sign bit, thus
   -- width = sxxx'length-1
-  
+
   function SFix_high (width, fraction   : NATURAL;
                       operation         : CHARACTER := 'X';
                       width2, fraction2 : NATURAL   := 0)
     return INTEGER;
-  
+
   function SFix_low (width, fraction   : NATURAL;
                      operation         : CHARACTER := 'X';
                      width2, fraction2 : NATURAL   := 0)
@@ -1257,26 +1260,26 @@ package fixed_generic_pkg is
   alias HEX_WRITE is HWRITE [LINE, UNRESOLVED_sfixed, SIDE, WIDTH];
 
   -- returns a string, useful for:
-  -- assert (x = y) report "error found " & to_string(x) severity error;
-  function to_string (value : UNRESOLVED_ufixed) return STRING;
+  -- assert (x = y) report "error found " & TO_STRING(x) severity error;
+  function TO_STRING (value : UNRESOLVED_ufixed) return STRING;
 
-  alias to_bstring is to_string [UNRESOLVED_ufixed return STRING];
+  alias TO_BSTRING is TO_STRING [UNRESOLVED_ufixed return STRING];
   alias TO_BINARY_STRING is TO_STRING [UNRESOLVED_ufixed return STRING];
 
-  function to_ostring (value : UNRESOLVED_ufixed) return STRING;
+  function TO_OSTRING (value : UNRESOLVED_ufixed) return STRING;
   alias TO_OCTAL_STRING is TO_OSTRING [UNRESOLVED_ufixed return STRING];
 
-  function to_hstring (value : UNRESOLVED_ufixed) return STRING;
+  function TO_HSTRING (value : UNRESOLVED_ufixed) return STRING;
   alias TO_HEX_STRING is TO_HSTRING [UNRESOLVED_ufixed return STRING];
 
-  function to_string (value : UNRESOLVED_sfixed) return STRING;
-  alias to_bstring is to_string [UNRESOLVED_sfixed return STRING];
+  function TO_STRING (value : UNRESOLVED_sfixed) return STRING;
+  alias TO_BSTRING is TO_STRING [UNRESOLVED_sfixed return STRING];
   alias TO_BINARY_STRING is TO_STRING [UNRESOLVED_sfixed return STRING];
 
-  function to_ostring (value : UNRESOLVED_sfixed) return STRING;
+  function TO_OSTRING (value : UNRESOLVED_sfixed) return STRING;
   alias TO_OCTAL_STRING is TO_OSTRING [UNRESOLVED_sfixed return STRING];
 
-  function to_hstring (value : UNRESOLVED_sfixed) return STRING;
+  function TO_HSTRING (value : UNRESOLVED_sfixed) return STRING;
   alias TO_HEX_STRING is TO_HSTRING [UNRESOLVED_sfixed return STRING];
 
   -- From string functions allow you to convert a string into a fixed
@@ -1286,7 +1289,7 @@ package fixed_generic_pkg is
   -- The "." is optional in this syntax, however it exist and is
   -- in the wrong location an error is produced.  Overflow will
   -- result in saturation.
-  
+
   function from_string (
     bstring              : STRING;      -- binary string
     constant left_index  : INTEGER;
@@ -1300,7 +1303,7 @@ package fixed_generic_pkg is
   -- Octal and hex conversions work as follows:
   -- uf1 <= from_hstring ("6.8", 3, -3); -- 6.5 (bottom zeros dropped)
   -- uf1 <= from_ostring ("06.4", 3, -3); -- 6.5 (top zeros dropped)
-  
+
   function from_ostring (
     ostring              : STRING;      -- Octal string
     constant left_index  : INTEGER;
@@ -1395,7 +1398,7 @@ package fixed_generic_pkg is
   --  uf1 <= from_string ("0110.100"); -- 6.5
   -- In this case the "." is not optional, and the size of
   -- the output must match exactly.
-  
+
   function from_string (
     bstring : STRING)                   -- binary string
     return UNRESOLVED_ufixed;
@@ -1406,7 +1409,7 @@ package fixed_generic_pkg is
   -- the string lengths must match.  Example:
   -- signal sf1 := sfixed (5 downto -3);
   -- sf1 <= from_ostring ("71.4") -- -6.5
-  
+
   function from_ostring (
     ostring : STRING)                   -- Octal string
     return UNRESOLVED_ufixed;
