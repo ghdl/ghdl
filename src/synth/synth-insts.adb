@@ -835,7 +835,8 @@ package body Synth.Insts is
 
       Inst := New_Instance (Get_Instance_Module (Syn_Inst),
                             Inst_Obj.M,
-                            New_Sname_User (Get_Identifier (Stmt), No_Sname));
+                            New_Sname_User (Get_Identifier (Stmt),
+                                            Get_Sname (Syn_Inst)));
 
       Synth_Instantiate_Module
         (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
