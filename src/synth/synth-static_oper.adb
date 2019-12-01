@@ -269,6 +269,9 @@ package body Synth.Static_Oper is
             return Create_Value_Float (Left.Fp * Right.Fp, Res_Typ);
          when Iir_Predefined_Floating_Div =>
             return Create_Value_Float (Left.Fp / Right.Fp, Res_Typ);
+         when Iir_Predefined_Floating_Exp =>
+            return Create_Value_Float
+              (Left.Fp ** Natural (Right.Scal), Res_Typ);
 
          when Iir_Predefined_Array_Array_Concat =>
             declare
@@ -404,6 +407,10 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Floating_Negation =>
             return Create_Value_Float (-Operand.Fp, Oper_Typ);
+         when Iir_Predefined_Floating_Identity =>
+            return Operand;
+         when Iir_Predefined_Floating_Absolute =>
+            return Create_Value_Float (abs Operand.Fp, Oper_Typ);
 
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             --  Constant std_logic: need to convert.
