@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Ada.Unchecked_Deallocation;
+
 with Tables;
 with Simple_IO;
 with Vhdl.Std_Package;
@@ -1336,6 +1338,32 @@ package body Vhdl.Annotations is
             Error_Kind ("annotate2", El);
       end case;
    end Annotate;
+
+   procedure Initialize_Annotate is
+   begin
+      Info_Node.Init;
+   end Initialize_Annotate;
+
+   procedure Finalize_Annotate
+   is
+      procedure Free is new Ada.Unchecked_Deallocation
+        (Sim_Info_Type, Sim_Info_Acc);
+   begin
+      Free (Global_Info);
+      for I in Info_Node.First .. Info_Node.Last loop
+         case Get_Kind (I) is
+            when Iir_Kind_Package_Body
+              | Iir_Kind_Function_Body
+              | Iir_Kind_Procedure_Body
+              | Iir_Kind_Protected_Type_Body =>
+               --  Info is shared with the spec.
+               null;
+            when others =>
+               Free (Info_Node.Table (I));
+         end case;
+      end loop;
+      Info_Node.Free;
+   end Finalize_Annotate;
 
    -- Disp annotations for an iir node.
    procedure Disp_Vhdl_Info (Node: Iir)

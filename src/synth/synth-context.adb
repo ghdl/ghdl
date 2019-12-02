@@ -70,6 +70,13 @@ package body Synth.Context is
       return Res;
    end Make_Base_Instance;
 
+   procedure Free_Base_Instance is
+   begin
+      --  TODO: really free.
+      Build_Context := null;
+      Packages_Table.Init;
+   end Free_Base_Instance;
+
    function Make_Instance (Parent : Synth_Instance_Acc;
                            Blk : Node;
                            Name : Sname := No_Sname)

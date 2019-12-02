@@ -136,6 +136,11 @@ package Vhdl.Annotations is
       end case;
    end record;
 
+   --  The first initialization is done automatically, but must be done again
+   --  after finalization.
+   procedure Initialize_Annotate;
+   procedure Finalize_Annotate;
+
    --  Decorate the tree in order to be usable with the internal simulator.
    procedure Annotate (Unit : Iir_Design_Unit);
 

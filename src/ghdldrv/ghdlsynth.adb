@@ -131,7 +131,8 @@ package body Ghdlsynth is
 
    --  Init, analyze and configure.
    --  Return the top configuration.
-   function Ghdl_Synth_Configure (Args : Argument_List) return Node
+   function Ghdl_Synth_Configure (Init : Boolean; Args : Argument_List)
+                                 return Node
    is
       use Vhdl.Errors;
       use Vhdl.Configuration;
@@ -153,20 +154,23 @@ package body Ghdlsynth is
          end if;
       end loop;
 
-      Vhdl.Annotations.Flag_Synthesis := True;
-      Vhdl.Scanner.Flag_Comment_Keyword := True;
-      Vhdl.Scanner.Flag_Pragma_Comment := True;
+      if Init then
+         Vhdl.Annotations.Flag_Synthesis := True;
+         Vhdl.Scanner.Flag_Comment_Keyword := True;
+         Vhdl.Scanner.Flag_Pragma_Comment := True;
 
-      Common_Compile_Init (False);
-      --  Will elaborate.
-      Flags.Flag_Elaborate := True;
+         Common_Compile_Init (False);
+         --  Will elaborate.
+         Flags.Flag_Elaborate := True;
+
+         --  Load content only if there are no files.
+         Libraries.Load_Work_Library (E_Opt >= Args'First);
+
+         --  Do not canon concurrent statements.
+         Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+      end if;
+
       Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;
-
-      --  Load content only if there are no files.
-      Libraries.Load_Work_Library (E_Opt >= Args'First);
-
-      --  Do not canon concurrent statements.
-      Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
 
       --  Analyze files (if any)
       for I in Args'First .. E_Opt - 1 loop
@@ -239,6 +243,7 @@ package body Ghdlsynth is
       end;
 
       --  Annotate all units.
+      Vhdl.Annotations.Initialize_Annotate;
       Vhdl.Annotations.Annotate (Vhdl.Std_Package.Std_Standard_Unit);
       for I in Design_Units.First .. Design_Units.Last loop
          Vhdl.Annotations.Annotate (Design_Units.Table (I));
@@ -247,9 +252,11 @@ package body Ghdlsynth is
       return Config;
    end Ghdl_Synth_Configure;
 
-   function Ghdl_Synth (Argc : Natural; Argv : C_String_Array_Acc)
-                       return Module
+   function Ghdl_Synth
+     (Init : Natural; Argc : Natural; Argv : C_String_Array_Acc)
+     return Module
    is
+      use Vhdl.Configuration;
       Args : Argument_List (1 .. Argc);
       Res : Module;
       Cmd : Command_Acc;
@@ -270,12 +277,20 @@ package body Ghdlsynth is
       Decode_Command_Options ("--synth", Cmd, Args, First_Arg);
 
       --  Do the real work!
-      Config := Ghdl_Synth_Configure (Args (First_Arg .. Args'Last));
+      Config := Ghdl_Synth_Configure
+        (Init /= 0, Args (First_Arg .. Args'Last));
       if Config = Null_Iir then
          return No_Module;
       end if;
 
       Synthesis.Synth_Design (Config, Res, Inst);
+
+      for I in Design_Units.First .. Design_Units.Last loop
+         Set_Elab_Flag (Design_Units.Table (I), False);
+      end loop;
+
+      Vhdl.Annotations.Finalize_Annotate;
+      Synth.Context.Free_Base_Instance;
       return Res;
 
    exception
@@ -295,7 +310,7 @@ package body Ghdlsynth is
       Config : Iir;
       Ent : Iir;
    begin
-      Config := Ghdl_Synth_Configure (Args);
+      Config := Ghdl_Synth_Configure (True, Args);
 
       if Config = Null_Iir then
          raise Errorout.Compilation_Error;

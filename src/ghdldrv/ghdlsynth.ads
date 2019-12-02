@@ -28,6 +28,7 @@ package Ghdlsynth is
    type C_String_Array is array (Natural) of Ghdl_C_String;
    type C_String_Array_Acc is access C_String_Array;
 
-   function Ghdl_Synth (Argc : Natural; Argv : C_String_Array_Acc)
-                       return Module;
+   function Ghdl_Synth
+     (Init : Natural; Argc : Natural; Argv : C_String_Array_Acc)
+     return Module;
 end Ghdlsynth;

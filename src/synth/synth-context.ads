@@ -39,7 +39,11 @@ package Synth.Context is
      (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
      return Synth_Instance_Acc;
 
+   --  Create the first instance.
    function Make_Base_Instance return Synth_Instance_Acc;
+
+   --  Free the first instance.
+   procedure Free_Base_Instance;
 
    --  Create and free the corresponding synth instance.
    function Make_Instance (Parent : Synth_Instance_Acc;

@@ -122,10 +122,11 @@ namespace GhdlSynth {
 
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input_net, Net, Instance, Port_Idx);
 
-  extern "C" unsigned int ghdlsynth__ghdl_synth(int argc, const char **argv);
-  inline Module ghdl_synth(int argc, const char **argv) {
+  extern "C" unsigned int ghdlsynth__ghdl_synth(int init,
+                                                int argc, const char **argv);
+  inline Module ghdl_synth(int init, int argc, const char **argv) {
     Module res;
-    res.id = ghdlsynth__ghdl_synth(argc, argv);
+    res.id = ghdlsynth__ghdl_synth(init, argc, argv);
     return res;
   }
 
