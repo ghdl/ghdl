@@ -423,6 +423,18 @@ package body Synth.Static_Oper is
                  (Boolean'Pos (Val = 1 and Zx = 0), Boolean_Type);
             end;
 
+         when Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
+            declare
+               Op_Arr : Std_Logic_Vector (1 .. Natural (Operand.Arr.Len));
+            begin
+               To_Std_Logic_Vector (Operand, Op_Arr);
+               declare
+                  Res_Arr : constant Std_Logic_Vector := Neg_Sgn (Op_Arr);
+               begin
+                  return To_Value_Acc (Res_Arr, Operand.Typ.Vec_El);
+               end;
+            end;
+
          when Iir_Predefined_Ieee_1164_Vector_Not =>
             return Synth_Vector_Monadic (Operand, Not_Table);
 
