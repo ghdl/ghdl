@@ -18,7 +18,11 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with GNAT.SHA1;
+
 with Types; use Types;
+with Types_Utils; use Types_Utils;
+with Name_Table;
 with Libraries;
 with Hash; use Hash;
 with Dyn_Tables;
@@ -131,6 +135,151 @@ package body Synth.Insts is
       return True;
    end Equal;
 
+   procedure Hash_Uns64 (C : in out GNAT.SHA1.Context; Val : Uns64)
+   is
+      V : Uns64;
+      S : String (1 .. 8);
+   begin
+      --  Store to S using little endianness.
+      V := Val;
+      for I in S'Range loop
+         S (I) := Character'Val (V and 16#ff#);
+         V := Shift_Right (V, 8);
+      end loop;
+
+      GNAT.SHA1.Update (C, S);
+   end Hash_Uns64;
+
+   procedure Hash_Bound (C : in out GNAT.SHA1.Context; B : Bound_Type) is
+   begin
+      Hash_Uns64 (C, Iir_Direction'Pos (B.Dir));
+      Hash_Uns64 (C, To_Uns64 (Int64 (B.Left)));
+      Hash_Uns64 (C, To_Uns64 (Int64 (B.Right)));
+   end Hash_Bound;
+
+   procedure Hash_Bounds (C : in out GNAT.SHA1.Context; Typ : Type_Acc) is
+   begin
+      case Typ.Kind is
+         when Type_Vector =>
+            Hash_Bound (C, Typ.Vbound);
+         when Type_Array =>
+            for I in Typ.Abounds.D'Range loop
+               Hash_Bound (C, Typ.Abounds.D (I));
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Hash_Bounds;
+
+   procedure Hash_Const (C : in out GNAT.SHA1.Context; Val : Value_Acc) is
+   begin
+      case Val.Kind is
+         when Value_Discrete =>
+            Hash_Uns64 (C, To_Uns64 (Val.Scal));
+         when Value_Float =>
+            Hash_Uns64 (C, To_Uns64 (Val.Fp));
+         when Value_Const_Array =>
+            --  Bounds.
+            Hash_Bounds (C, Val.Typ);
+            --  Values.
+            for I in Val.Arr.V'Range loop
+               Hash_Const (C, Val.Arr.V (I));
+            end loop;
+         when Value_Const_Record =>
+            for I in Val.Rec.V'Range loop
+               Hash_Const (C, Val.Rec.V (I));
+            end loop;
+         when Value_Const =>
+            Hash_Const (C, Val.C_Val);
+         when Value_Net
+           | Value_Wire
+           | Value_Array
+           | Value_Record
+           | Value_Access
+           | Value_File
+           | Value_Instance
+           | Value_Alias
+           | Value_Subtype =>
+            raise Internal_Error;
+      end case;
+   end Hash_Const;
+
+   function Create_Module_Name (Params : Inst_Params) return Sname
+   is
+      use GNAT.SHA1;
+      Decl : constant Node := Params.Decl;
+      Id : constant Name_Id := Get_Identifier (Decl);
+      Generics : constant Node := Get_Generic_Chain (Decl);
+      Gen_Decl : Node;
+      Gen : Value_Acc;
+      Ctxt : GNAT.SHA1.Context;
+      Has_Hash : Boolean;
+   begin
+      --  Easy case: no generics, so simply use the name of the entity.
+      --  TODO: what about two entities with the same identifier but declared
+      --   in two different libraries ?
+      --  TODO: what about extended identifiers ?
+      if Generics = Null_Node then
+         return New_Sname_User (Id, No_Sname);
+      end if;
+
+      --  Create a buffer, store the entity name.
+      --  For each generic:
+      --  * write the value for integers.
+      --  * write the identifier for enumerated type with only non-extended
+      --    identifiers.
+      --  * hash all other values
+      --  Append the hash if any.
+      declare
+         use Name_Table;
+         Id_Len : constant Natural := Get_Name_Length (Id);
+         Str_Len : constant Natural := Id_Len + 512;
+         pragma Assert (GNAT.SHA1.Hash_Length = 20);
+         Str : String (1 .. Str_Len + 41);
+         Len : Natural;
+      begin
+         Len := Id_Len;
+         Str (1 .. Len) := Get_Name_Ptr (Id) (1 .. Len);
+
+         Has_Hash := False;
+         Ctxt := GNAT.SHA1.Initial_Context;
+
+         Gen_Decl := Generics;
+         while Gen_Decl /= Null_Node loop
+            Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
+            case Gen.Kind is
+               when Value_Discrete =>
+                  declare
+                     S : constant String := Uns64'Image (To_Uns64 (Gen.Scal));
+                  begin
+                     if Len + S'Length > Str_Len then
+                        Has_Hash := True;
+                        Hash_Const (Ctxt, Gen);
+                     else
+                        Str (Len + 1 .. Len + S'Length) := S;
+                        pragma Assert (Str (Len + 1) = ' ');
+                        Str (Len + 1) := '_';  --  Overwrite the space.
+                        Len := Len + S'Length;
+                     end if;
+                  end;
+               when others =>
+                  Has_Hash := True;
+                  Hash_Const (Ctxt, Gen);
+            end case;
+            Gen_Decl := Get_Chain (Gen_Decl);
+         end loop;
+
+         if Has_Hash then
+            Str (Len + 1) := '_';
+            Len := Len + 1;
+            Str (Len + 1 .. Len + 40) := GNAT.SHA1.Digest (Ctxt);
+            Len := Len + 40;
+         end if;
+
+         return New_Sname_User (Get_Identifier (Str (1 .. Len)), No_Sname);
+      end;
+   end Create_Module_Name;
+
    function Build (Params : Inst_Params) return Inst_Object
    is
       Decl : constant Node := Params.Decl;
@@ -207,10 +356,9 @@ package body Synth.Insts is
       --  Declare module.
       --  Build it now because it may be referenced for instantiations before
       --  being synthetized.
-      Cur_Module := New_User_Module
-        (Get_Top_Module (Root_Instance),
-         New_Sname_User (Get_Identifier (Decl), No_Sname),
-         Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
+      Cur_Module := New_User_Module (Get_Top_Module (Root_Instance),
+                                     Create_Module_Name (Params),
+                                     Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
 
       --  Add ports to module.
       declare

@@ -32,4 +32,7 @@ package Types_Utils is
 
    function To_Int64 is new Ada.Unchecked_Conversion
      (Uns64, Int64);
+
+   function To_Uns64 is new Ada.Unchecked_Conversion
+     (Fp64, Uns64);
 end Types_Utils;
