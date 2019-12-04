@@ -236,17 +236,17 @@ package body Netlists.Disp_Vhdl is
             O_Inst : Instance;
          begin
             I := Get_First_Sink (O);
-            if I /= No_Input then
+            if I = No_Input then
+               Put ("open");
+            else
                O_Inst := Get_Input_Parent (I);
-            else
-               O_Inst := No_Instance;
-            end if;
-            if O_Inst /= No_Instance
-              and then Get_Id (O_Inst) = Id_Port
-            then
-               Disp_Net_Name (Get_Output (O_Inst, 0));
-            else
-               Disp_Net_Name (O);
+               if O_Inst /= No_Instance
+                 and then Get_Id (O_Inst) = Id_Port
+               then
+                  Disp_Net_Name (Get_Output (O_Inst, 0));
+               else
+                  Disp_Net_Name (O);
+               end if;
             end if;
          end;
       end loop;
