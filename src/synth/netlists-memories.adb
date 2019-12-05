@@ -165,6 +165,7 @@ package body Netlists.Memories is
                   --  Check data width.
                   W := Get_Width (Get_Output (Extr_Inst, 0));
                   if Data_W = 0 then
+                     pragma Assert (W /= 0);
                      Data_W := W;
                   elsif Data_W /= W then
                      Info_Msg_Synth
@@ -190,7 +191,12 @@ package body Netlists.Memories is
          end loop;
       end;
 
-      Size := Get_Width (Orig_Net) / Data_W;
+      if Data_W = 0 then
+         Info_Msg_Synth (+Orig, "memory %n is never read", (1 => +Orig));
+         Data_W := 0;
+      else
+         Size := Get_Width (Orig_Net) / Data_W;
+      end if;
    end Check_Memory_Read_Ports;
 
    procedure Check_Memory_Write_Ports (Orig : Instance;
