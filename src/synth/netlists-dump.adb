@@ -365,7 +365,10 @@ package body Netlists.Dump is
 
    procedure Disp_Instance_Assign (Inst : Instance; Indent : Natural := 0);
 
-   function Can_Inline (Inst : Instance) return Boolean is
+   function Can_Inline (Inst : Instance) return Boolean
+   is
+      O : Net;
+      Inp : Input;
    begin
       case Get_Id (Inst) is
          when Id_Signal
@@ -375,9 +378,22 @@ package body Netlists.Dump is
          when others =>
             null;
       end case;
-      return not Is_Self_Instance (Inst)
-        and then Get_Nbr_Outputs (Inst) = 1
-        and then Has_One_Connection (Get_Output (Inst, 0));
+      if Is_Self_Instance (Inst) then
+         return False;
+      end if;
+      if Get_Nbr_Outputs (Inst) /= 1 then
+         return False;
+      end if;
+      O := Get_Output (Inst, 0);
+      Inp := Get_First_Sink (O);
+      if Inp = No_Input or else Get_Next_Sink (Inp) /= No_Input then
+         return False;
+      end if;
+      if Is_Self_Instance (Get_Input_Parent (Inp)) then
+         return False;
+      end if;
+
+      return True;
    end Can_Inline;
 
    procedure Disp_Driver (Drv : Net; Indent : Natural)
