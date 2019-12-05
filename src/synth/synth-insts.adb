@@ -1329,7 +1329,7 @@ package body Synth.Insts is
       end if;
 
       if not Synth.Flags.Flag_Debug_Nomemory then
-         Netlists.Memories.Extract_Memories (Get_Build (Syn_Inst), Inst.M);
+         Netlists.Memories.Extract_Memories2 (Get_Build (Syn_Inst), Inst.M);
       end if;
 
       if not Synth.Flags.Flag_Debug_Noexpand then

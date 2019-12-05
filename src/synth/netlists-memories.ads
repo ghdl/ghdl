@@ -23,6 +23,7 @@ with Netlists.Builders; use Netlists.Builders;
 package Netlists.Memories is
    --  Try to convert dyn_insert/dyn_extract to memory ports.
    procedure Extract_Memories (Ctxt : Context_Acc; M : Module);
+   procedure Extract_Memories2 (Ctxt : Context_Acc; M : Module);
 
    --  Count the number of memidx in a memory address.
    function Count_Memidx (Addr : Net) return Natural;
