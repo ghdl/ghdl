@@ -23,4 +23,7 @@ package Netlists.Cleanup is
    --  Their inputs will be deconnected, which can result in new instances
    --  that are also removed.
    procedure Remove_Unconnected_Instances (M : Module);
+
+   --  Remove Id_Output gates.
+   procedure Remove_Output_Gates (M : Module);
 end Netlists.Cleanup;

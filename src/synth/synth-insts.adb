@@ -1326,6 +1326,7 @@ package body Synth.Insts is
       --  the one created for 'rising_egde (clk) and not rst'.
       if not Synth.Flags.Flag_Debug_Nocleanup then
          Netlists.Cleanup.Remove_Unconnected_Instances (Inst.M);
+         Netlists.Cleanup.Remove_Output_Gates (Inst.M);
       end if;
 
       if not Synth.Flags.Flag_Debug_Nomemory then

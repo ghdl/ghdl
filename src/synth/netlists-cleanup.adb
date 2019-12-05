@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Netlists.Utils; use Netlists.Utils;
+with Netlists.Gates;
 
 package body Netlists.Cleanup is
    --  Return False iff INST has no outputs (and INST is not Id_Free).
@@ -112,4 +113,30 @@ package body Netlists.Cleanup is
          Free_Instance (Inst);
       end loop;
    end Remove_Unconnected_Instances;
+
+   procedure Remove_Output_Gates (M : Module)
+   is
+      use Netlists.Gates;
+      Inst : Instance;
+      Next_Inst : Instance;
+      Inp : Input;
+      O : Net;
+   begin
+      Inst := Get_First_Instance (M);
+      while Inst /= No_Instance loop
+         Next_Inst := Get_Next_Instance (Inst);
+
+         if Get_Id (Inst) = Id_Output then
+            Inp := Get_Input (Inst, 0);
+            O := Get_Driver (Inp);
+            Disconnect (Inp);
+
+            Redirect_Inputs (Get_Output (Inst, 0), O);
+            Remove_Instance (Inst);
+         end if;
+
+         Inst := Next_Inst;
+      end loop;
+   end Remove_Output_Gates;
+
 end Netlists.Cleanup;
