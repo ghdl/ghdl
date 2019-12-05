@@ -348,14 +348,15 @@ package body Netlists.Builders is
       Res := New_User_Module
         (Ctxt.Design,
          New_Sname_Artificial (Get_Identifier ("mem_rd_sync"), No_Sname),
-         Id_Mem_Rd_Sync, 3, 2, 0);
+         Id_Mem_Rd_Sync, 4, 2, 0);
       Ctxt.M_Mem_Rd_Sync := Res;
-      Inputs (0 .. 2) := (0 => Create_Input ("pport"),
+      Inputs (0 .. 3) := (0 => Create_Input ("pport"),
                           1 => Create_Input ("addr"),
-                          2 => Create_Input ("clk"));
+                          2 => Create_Input ("clk"),
+                          3 => Create_Input ("en"));
       Outputs (0 .. 1) := (0 => Create_Output ("nport"),
                            1 => Create_Output ("data"));
-      Set_Ports_Desc (Res, Inputs (0 .. 2), Outputs (0 .. 1));
+      Set_Ports_Desc (Res, Inputs (0 .. 3), Outputs (0 .. 1));
 
       Res := New_User_Module
         (Ctxt.Design,
@@ -1145,9 +1146,13 @@ package body Netlists.Builders is
       return Inst;
    end Build_Mem_Rd;
 
-   function Build_Mem_Rd_Sync
-     (Ctxt : Context_Acc; Pport : Net; Addr : Net; Clk : Net; Data_W : Width)
-     return Instance
+   function Build_Mem_Rd_Sync (Ctxt : Context_Acc;
+                               Pport : Net;
+                               Addr : Net;
+                               Clk : Net;
+                               En : Net;
+                               Data_W : Width)
+                              return Instance
    is
       Mem_W : constant Width := Get_Width (Pport);
       pragma Assert (Mem_W > 0);
@@ -1155,6 +1160,7 @@ package body Netlists.Builders is
       pragma Assert (Addr_W > 0);
       pragma Assert (Data_W * (2**Natural(Addr_W)) >= Mem_W);
       pragma Assert (Get_Width (Clk) = 1);
+      pragma Assert (Get_Width (En) = 1);
       Inst : Instance;
    begin
       Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Rd_Sync);
@@ -1163,6 +1169,7 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 0), Pport);
       Connect (Get_Input (Inst, 1), Addr);
       Connect (Get_Input (Inst, 2), Clk);
+      Connect (Get_Input (Inst, 3), En);
       return Inst;
    end Build_Mem_Rd_Sync;
 

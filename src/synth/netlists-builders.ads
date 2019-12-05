@@ -137,9 +137,12 @@ package Netlists.Builders is
    function Build_Mem_Rd
      (Ctxt : Context_Acc; Pport : Net; Addr : Net; Data_W : Width)
      return Instance;
-   function Build_Mem_Rd_Sync
-     (Ctxt : Context_Acc; Pport : Net; Addr : Net; Clk : Net; Data_W : Width)
-     return Instance;
+   function Build_Mem_Rd_Sync (Ctxt : Context_Acc;
+                               Pport : Net;
+                               Addr : Net;
+                               Clk : Net;
+                               En : Net;
+                               Data_W : Width) return Instance;
    function Build_Mem_Wr_Sync (Ctxt : Context_Acc;
                                Pport : Net;
                                Addr : Net;
