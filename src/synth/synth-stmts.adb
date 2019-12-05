@@ -520,8 +520,9 @@ package body Synth.Stmts is
       N : Net;
    begin
       if Voff /= No_Net then
-         N := Build_Dyn_Extract
-           (Get_Build (Syn_Inst), Get_Net (Obj), Voff, Off, Typ.W);
+         N := Get_Net (Obj);
+         Synth.Source.Set_Location_Maybe (N, Loc);
+         N := Build_Dyn_Extract (Get_Build (Syn_Inst), N, Voff, Off, Typ.W);
       else
          pragma Assert (not Is_Static (Obj));
          if Off = 0
