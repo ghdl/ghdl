@@ -902,11 +902,19 @@ package body Netlists.Disp_Vhdl is
             Disp_X_Lit (Get_Width (Get_Output (Inst, 0)));
             Put_Line (" when others;");
          when Id_Add =>
-            Disp_Template ("  \o0 <= std_logic_vector (\ui0 + \ui1);" & NL,
-                           Inst);
+            if Get_Width (Get_Output (Inst, 0)) = 1 then
+               Disp_Template ("  \o0 <= \i0 xor \i1;  --  add" & NL, Inst);
+            else
+               Disp_Template ("  \o0 <= std_logic_vector (\ui0 + \ui1);" & NL,
+                              Inst);
+            end if;
          when Id_Sub =>
-            Disp_Template ("  \o0 <= std_logic_vector (\ui0 - \ui1);" & NL,
-                           Inst);
+            if Get_Width (Get_Output (Inst, 0)) = 1 then
+               Disp_Template ("  \o0 <= \i0 xor \i1;  --  sub" & NL, Inst);
+            else
+               Disp_Template ("  \o0 <= std_logic_vector (\ui0 - \ui1);" & NL,
+                              Inst);
+            end if;
          when Id_Umul =>
             Disp_Template
               ("  \o0 <= std_logic_vector (resize (\ui0 * \ui1, \n0));" & NL,
