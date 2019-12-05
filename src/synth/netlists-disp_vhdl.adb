@@ -655,8 +655,18 @@ package body Netlists.Disp_Vhdl is
                      Mem, (0 => Data_W - 1));
       Disp_Template ("    variable \o0 : \o0_type", Mem);
       if Get_Id (Mem) = Id_Memory_Init then
-         Put_Line (" :=");
-         Disp_Memory_Init (Get_Input_Net (Mem, 0), Data_W, Depth);
+         declare
+            Val : Net;
+            Val_Inst : Instance;
+         begin
+            Val := Get_Input_Net (Mem, 0);
+            Val_Inst := Get_Net_Parent (Val);
+            if Get_Id (Val_Inst) = Id_Isignal then
+               Val := Get_Input_Net (Val_Inst, 1);
+            end if;
+            Put_Line (" :=");
+            Disp_Memory_Init (Val, Data_W, Depth);
+         end;
       else
          Put_Line (";");
       end if;
