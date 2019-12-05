@@ -622,10 +622,16 @@ package body Netlists.Disp_Vhdl is
          Port_Inst := Get_Input_Parent (Get_First_Sink (Port));
          case Get_Id (Port_Inst) is
             when Id_Mem_Wr_Sync =>
+               --  Clock
                S := Get_Input_Net (Port_Inst, 2);
                Data_W := Get_Width (Get_Input_Net (Port_Inst, 4));
             when Id_Mem_Rd =>
+               --  Address
                S := Get_Input_Net (Port_Inst, 1);
+               Data_W := Get_Width (Get_Output (Port_Inst, 1));
+            when Id_Mem_Rd_Sync =>
+               --  Clock
+               S := Get_Input_Net (Port_Inst, 2);
                Data_W := Get_Width (Get_Output (Port_Inst, 1));
             when others =>
                raise Internal_Error;
@@ -671,6 +677,14 @@ package body Netlists.Disp_Vhdl is
                Disp_Template ("    \o1 <= ", Port_Inst);
                Disp_Template ("\o0", Mem);
                Disp_Template ("(to_integer (\ui1));" & NL, Port_Inst);
+            when Id_Mem_Rd_Sync =>
+               Disp_Template
+                 ("    if rising_edge(\i2) and (\fi3 = '1') then" & NL,
+                  Port_Inst);
+               Disp_Template ("      \o1 <= ", Port_Inst);
+               Disp_Template ("\o0", Mem);
+               Disp_Template ("(to_integer (\ui1));" & NL, Port_Inst);
+               Put_Line ("    end if;");
             when others =>
                raise Internal_Error;
          end case;
@@ -707,6 +721,7 @@ package body Netlists.Disp_Vhdl is
            |  Id_Memory_Init =>
             Disp_Memory (Inst);
          when Id_Mem_Rd
+           | Id_Mem_Rd_Sync
            | Id_Mem_Wr_Sync =>
             null;
          when Id_Output =>
