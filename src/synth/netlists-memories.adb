@@ -1102,7 +1102,7 @@ package body Netlists.Memories is
       Validate_RAM_Signal,
 
       --  An element was recognized.
-      Validate_RAM_OK,
+      Validate_RAM_Ok,
 
       --  Error in the netlist: invalid gate.
       Validate_RAM_Error,
@@ -1119,7 +1119,7 @@ package body Netlists.Memories is
       case Res is
          when Validate_RAM_Signal =>
             Sig : Instance;
-         when Validate_RAM_OK =>
+         when Validate_RAM_Ok =>
             Outp : Instance;
          when Validate_RAM_Error =>
             Err : Instance;
@@ -1188,6 +1188,9 @@ package body Netlists.Memories is
          if Nbr_Muxes = 1 then
             return Validate_RAM_Type'
               (Res => Validate_RAM_Mux, Mux => Last_Mux);
+         elsif Nbr_Muxes = 0 then
+            --  No insert, no muxes.  Just a normal dynamic extraction/mux.
+            return Validate_RAM_Type'(Res => Validate_RAM_None);
          end if;
          --  Invalide shape.
          return Validate_RAM_Type'(Res => Validate_RAM_None);
@@ -1195,7 +1198,7 @@ package body Netlists.Memories is
 
       if Nbr_Muxes = 0 and Nbr_Inserts = 1 then
          --  First case.
-         return Validate_RAM_Type'(Res => Validate_RAM_OK, Outp => Res);
+         return Validate_RAM_Type'(Res => Validate_RAM_Ok, Outp => Res);
       end if;
 
       --  Multiple muxes and/or multiple inserts.
@@ -1224,7 +1227,7 @@ package body Netlists.Memories is
                            Nbr_Muxes := Nbr_Muxes + 1;
                            Muxes (Nbr_Muxes) := El.Mux;
                            exit;
-                        when Validate_RAM_OK =>
+                        when Validate_RAM_Ok =>
                            --  Continue.
                            Inst := El.Outp;
                         when Validate_RAM_Signal =>
@@ -1251,7 +1254,7 @@ package body Netlists.Memories is
                   if Nbr_Muxes = 1 then
                      --  This was the last one.
                      return Validate_RAM_Type'
-                       (Res => Validate_RAM_OK, Outp => Inst);
+                       (Res => Validate_RAM_Ok, Outp => Inst);
                   end if;
                   N := Get_Output (Inst, 0);
                   if not Has_One_Connection (N) then
@@ -1297,7 +1300,7 @@ package body Netlists.Memories is
                raise Internal_Error;
             end if;
             return True;
-         when Validate_RAM_OK =>
+         when Validate_RAM_Ok =>
             return True;
          when Validate_RAM_Mux =>
             Info_Msg_Synth (+Sig, "RAM is written in whole with mux %n",
@@ -1452,6 +1455,20 @@ package body Netlists.Memories is
       end loop;
    end Merge_RAM_Muxes;
 
+   function Is_Const_Input (Inst : Instance) return Boolean is
+   begin
+      case Get_Id (Inst) is
+         when Id_Const_Bit =>
+            return True;
+         when Id_Signal
+           | Id_Isignal =>
+            return Is_Const_Input (Get_Net_Parent (Get_Input_Net (Inst, 0)));
+         when others =>
+            --  FIXME: handle other consts ?
+            return False;
+      end case;
+   end Is_Const_Input;
+
    procedure Extract_Memories2 (Ctxt : Context_Acc; M : Module)
    is
       Dyns : Instance_Tables.Instance;
@@ -1536,30 +1553,35 @@ package body Netlists.Memories is
          begin
             case Get_Id (Inst) is
                when Id_Isignal
-                 | Id_Signal =>
-                  if False then
-                     Merge_RAM_Muxes (Ctxt, Inst);
-                  end if;
-                  if Validate_RAM (Inst) then
-                     Check_RAM_Ports (Inst, Data_W, Size);
-                     if Data_W /= 0 then
-                        Info_Msg_Synth
-                          (+Inst, "found RAM %n, width: %v bits, depth: %v",
-                           (1 => +Inst, 2 => +Data_W, 3 => +Size));
-                        Replace_RAM_Memory (Ctxt, Inst);
-                     end if;
-                  end if;
-               when Id_Const_Bit =>
-                  Check_Memory_Read_Ports (Inst, Data_W, Size);
-                  if Data_W /= 0 then
-                     Info_Msg_Synth
-                       (+Inst, "found ROM %n, width: %v bits, depth: %v",
-                        (1 => +Inst, 2 => +Data_W, 3 => +Size));
-                     Replace_ROM_Memory (Ctxt, Inst);
-                  end if;
+                 | Id_Signal
+                 | Id_Const_Bit =>
+                  null;
                when others =>
                   raise Internal_Error;
             end case;
+
+            if False then
+               Merge_RAM_Muxes (Ctxt, Inst);
+            end if;
+            if Is_Const_Input (Inst) then
+               Check_Memory_Read_Ports (Inst, Data_W, Size);
+               if Data_W /= 0 then
+                  Info_Msg_Synth
+                    (+Inst, "found ROM %n, width: %v bits, depth: %v",
+                     (1 => +Inst, 2 => +Data_W, 3 => +Size));
+                  Replace_ROM_Memory (Ctxt, Inst);
+               end if;
+            else
+               if Validate_RAM (Inst) then
+                  Check_RAM_Ports (Inst, Data_W, Size);
+                  if Data_W /= 0 then
+                     Info_Msg_Synth
+                       (+Inst, "found RAM %n, width: %v bits, depth: %v",
+                        (1 => +Inst, 2 => +Data_W, 3 => +Size));
+                     Replace_RAM_Memory (Ctxt, Inst);
+                  end if;
+               end if;
+            end if;
          end;
       end loop;
 
