@@ -285,9 +285,13 @@ package body Ghdlsynth is
 
       Synthesis.Synth_Design (Config, Res, Inst);
 
+      --  De-elaborate all packages, so that they could be re-used for
+      --  synthesis of a second design.
+      --  FIXME: move to vhdl.configure ?
       for I in Design_Units.First .. Design_Units.Last loop
          Set_Elab_Flag (Design_Units.Table (I), False);
       end loop;
+      Set_Elab_Flag (Vhdl.Std_Package.Std_Standard_Unit, False);
 
       Vhdl.Annotations.Finalize_Annotate;
       Synth.Context.Free_Base_Instance;
