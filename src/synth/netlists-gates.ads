@@ -103,6 +103,11 @@ package Netlists.Gates is
 
    --  Like a wire: the output is equal to the input, but could be elimited
    --  at any time.  Isignal has an initial value.
+   --
+   --  Id_Output are inserted at the beginning because a module output cannot
+   --  be read.  At the end, this is not an issue because an output is driven
+   --  by a gate (and thus the value of the output could be read), but that
+   --  driving value may not be available early enough.
    Id_Signal  : constant Module_Id := 46;
    Id_Isignal : constant Module_Id := 47;
    Id_Output  : constant Module_Id := 48;
@@ -113,14 +118,18 @@ package Netlists.Gates is
    --  A simple D flip-flop.  The D input is stored on a rising edge of CLK.
    --  Q is the output.  For falling edge dff, use a NOT gate on the CLK
    --  input.
-   --  Inputs: CLK, D
-   --  Output: Q
+   --  Inputs:  0: CLK
+   --           1: D
+   --  Output:  0: Q
    Id_Dff   : constant Module_Id := 50;
 
    --  A DFF with an asynchronous reset.  Note that the asynchronous reset
    --  has priority over the clock.  When RST is asserted, the value is
    --  set to RST_VAL.
-   --  Inputs: CLK, D, RST, RST_VAL
+   --  Inputs:  0: CLK
+   --           1: D
+   --           2: RST
+   --           3: RST_VAL
    --  Output: Q
    Id_Adff  : constant Module_Id := 51;
 
@@ -196,6 +205,7 @@ package Netlists.Gates is
    --  Inputs:  PPORT (previous memory port)
    --           ADDR
    --           CLK
+   --           EN
    --  Outputs: NPORT (next memory port)
    --           DATA
    Id_Mem_Rd_Sync : constant Module_Id := 77;
