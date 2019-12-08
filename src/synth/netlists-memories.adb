@@ -18,7 +18,6 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Dyn_Tables;
 with Errorout; use Errorout;
 
 with Netlists.Gates; use Netlists.Gates;
@@ -930,106 +929,6 @@ package body Netlists.Memories is
       end loop;
    end Walk_From_Extract;
 
-   --  FIRST_INST is a dyn_instance gate.
-   function Maybe_Add_Enable_To_Dyn_Insert
-     (Ctxt : Context_Acc; First_Inst : Instance) return Instance
-   is
-      --  Maybe transform as Dyn_Insert_En.
-      O : constant Net := Get_Output (First_Inst, 0);
-      O_Inp : constant Input := Get_First_Sink (O);
-      Mux_Inst : constant Instance := Get_Input_Parent (O_Inp);
-      Mem : constant Net := Get_Input_Net (First_Inst, 0);
-      Mux_Sel, Mux_I0, Mux_I1 : Input;
-      Sel : Net;
-      New_Inst : Instance;
-      New_Net : Net;
-   begin
-      if Get_Id (Mux_Inst) /= Id_Mux2 then
-         --  Not followed by mux2
-         return First_Inst;
-      end if;
-
-      if Get_Next_Sink (O_Inp) /= No_Input then
-         --  Multiple outputs after the dyn_insert.
-         return First_Inst;
-      end if;
-
-      Mux_Sel := Get_Input (Mux_Inst, 0);
-      Mux_I0 := Get_Input (Mux_Inst, 1);
-      Mux_I1 := Get_Input (Mux_Inst, 2);
-      Sel := Get_Driver (Mux_Sel);
-      if Get_Driver (Mux_I0) = Mem then
-         pragma Assert (Get_Driver (Mux_I1) = O);
-         null;
-      elsif Get_Driver (Mux_I1) = Mem then
-         pragma Assert (Get_Driver (Mux_I0) = O);
-         Sel := Build_Monadic (Ctxt, Id_Not, Sel);
-      else
-         --  Does not by-pass the dyn_insert.
-         return First_Inst;
-      end if;
-
-      --  Replace
-      declare
-         In_V : constant Input := Get_Input (First_Inst, 1);
-         In_Idx : constant Input := Get_Input (First_Inst, 2);
-         Off : constant Uns32 := Get_Param_Uns32 (First_Inst, 0);
-      begin
-         New_Net := Build_Dyn_Insert_En
-           (Ctxt, Mem, Get_Driver (In_V), Get_Driver (In_Idx), Sel, Off);
-         New_Inst := Get_Net_Parent (New_Net);
-         Set_Location (New_Inst, Get_Location (First_Inst));
-
-         Disconnect (Get_Input (First_Inst, 0));
-         Disconnect (In_V);
-         Disconnect (In_Idx);
-         Disconnect (Mux_Sel);
-         Disconnect (Mux_I0);
-         Disconnect (Mux_I1);
-         Redirect_Inputs (Get_Output (Mux_Inst, 0), New_Net);
-
-         Remove_Instance (Mux_Inst);
-         Remove_Instance (First_Inst);
-      end;
-
-      return New_Inst;
-   end Maybe_Add_Enable_To_Dyn_Insert;
-
-   procedure Append_If_Not_Marked (Els : in out Instance_Tables.Instance;
-                                   Inst : Instance) is
-   begin
-      if not Get_Mark_Flag (Inst) then
-         Set_Mark_Flag (Inst, True);
-         Instance_Tables.Append (Els, Inst);
-      end if;
-   end Append_If_Not_Marked;
-
-   procedure Append_If_Not_Marked (Els : in out Instance_Tables.Instance;
-                                   N : Net) is
-   begin
-      Append_If_Not_Marked (Els, Get_Net_Parent (N));
-   end Append_If_Not_Marked;
-
-   --  Append the gate which owns INP if not marked.
-   procedure Append_If_Not_Marked (Els : in out Instance_Tables.Instance;
-                                   Inp : Input) is
-   begin
-      Append_If_Not_Marked (Els, Get_Input_Parent (Inp));
-   end Append_If_Not_Marked;
-
-   --  Append all non-marked gates that are driven by net N.
-   procedure Append_Driven_If_Not_Marked
-     (Els : in out Instance_Tables.Instance; N : Net)
-   is
-      Inp : Input;
-   begin
-      Inp := Get_First_Sink (N);
-      while Inp /= No_Input loop
-         Append_If_Not_Marked (Els, Inp);
-         Inp := Get_Next_Sink (Inp);
-      end loop;
-   end Append_Driven_If_Not_Marked;
-
    procedure Unmark_Table (Els : Instance_Tables.Instance)
    is
       Inst : Instance;
@@ -1039,67 +938,6 @@ package body Netlists.Memories is
          Set_Mark_Flag (Inst, False);
       end loop;
    end Unmark_Table;
-
-   --  INST is signal/isignal.  Check that the logical loop is composed of
-   --  dyn + muxes.
-   function Validate_RAM0 (Sig : Instance) return Boolean
-   is
-      Els : Instance_Tables.Instance;
-      Inst : Instance;
-      Last : Nat32;
-      Ok : Boolean;
-   begin
-      Instance_Tables.Init (Els, 16);
-      Set_Mark_Flag (Sig, True);
-      Instance_Tables.Append (Els, Sig);
-
-      Ok := True;
-      Last := 0;
-      while Instance_Tables.Last (Els) > Last loop
-         Last := Last + 1;
-         Inst := Els.Table (Last);
-         case Get_Id (Inst) is
-            when Id_Mux2 =>
-               Append_If_Not_Marked (Els, Get_Input_Net (Inst, 1));
-               Append_If_Not_Marked (Els, Get_Input_Net (Inst, 2));
-               Append_Driven_If_Not_Marked (Els, Get_Output (Inst, 0));
-            when Id_Isignal
-              | Id_Signal =>
-               Append_Driven_If_Not_Marked (Els, Get_Output (Inst, 0));
-               Append_If_Not_Marked (Els, Get_Input_Net (Inst, 0));
-            when Id_Dyn_Insert
-              | Id_Dyn_Insert_En =>
-               Append_Driven_If_Not_Marked (Els, Get_Output (Inst, 0));
-               Append_If_Not_Marked (Els, Get_Input_Net (Inst, 0));
-            when Id_Dyn_Extract =>
-               Append_If_Not_Marked (Els, Get_Input_Net (Inst, 0));
-            when Id_Dff
-              | Id_Idff =>
-               Append_Driven_If_Not_Marked (Els, Get_Output (Inst, 0));
-               Append_If_Not_Marked (Els, Get_Input_Net (Inst, 1));
-            when others =>
-               Info_Msg_Synth
-                 (+Sig, "gate %i cannot be part of a memory", (1 => +Inst));
-               Ok := False;
-               exit;
-         end case;
-      end loop;
-
-      --  Clear all mark flags.
-      Unmark_Table (Els);
-
-      --  Free.
-      Instance_Tables.Free (Els);
-
-      return Ok;
-   end Validate_RAM0;
-
-   pragma Unreferenced (Validate_RAM0);
-
-   package Input_Tables is new Dyn_Tables
-     (Table_Component_Type => Input,
-      Table_Index_Type => Int32,
-      Table_Low_Bound => 1);
 
    type Validate_RAM_Result is
      (
@@ -1549,145 +1387,6 @@ package body Netlists.Memories is
       end loop;
    end Reduce_Muxes;
 
-   function Find_First_Dyn_Insert (Stack : Input_Tables.Instance;
-                                   N : Net) return Int32
-   is
-      Inp : Input;
-      Inst : Instance;
-   begin
-      for I in reverse Input_Tables.First + 1 .. Input_Tables.Last (Stack) loop
-         Inp := Stack.Table (I);
-         Inst := Get_Net_Parent (Get_Driver (Inp));
-         pragma Assert (Get_Id (Inst) in Dyn_Insert_Module_Id);
-         if Get_Input_Net (Inst, 0) = N then
-            return I;
-         end if;
-      end loop;
-      return 0;
-   end Find_First_Dyn_Insert;
-
-   procedure Add_Enable_To_Dyn_Insert (Ctxt : Context_Acc;
-                                       Stack : in out Input_Tables.Instance;
-                                       First : Int32;
-                                       En : Net)
-   is
-      Cur_Inp : Input;
-      Cur_Inst : Instance;
-   begin
-      for I in reverse First .. Input_Tables.Last (Stack) loop
-         Cur_Inp := Stack.Table (I);
-         Cur_Inst := Get_Input_Parent (Cur_Inp);
-
-         case Get_Id (Cur_Inst) is
-            when Id_Dyn_Insert_En =>
-               declare
-                  Inp : constant Input := Get_Input (Cur_Inst, 3);
-                  Prev : Net;
-               begin
-                  Prev := Get_Driver (Inp);
-                  Prev := Build_Dyadic (Ctxt, Id_And, Prev, En);
-                  Disconnect (Inp);
-                  Connect (Inp, Prev);
-               end;
-            when Id_Dyn_Insert =>
-               raise Internal_Error;
-            when others =>
-               raise Internal_Error;
-         end case;
-      end loop;
-   end Add_Enable_To_Dyn_Insert;
-
-   --  SIG is a signal/isignal.
-   procedure Merge_RAM_Muxes (Ctxt : Context_Acc; Sig : Instance)
-   is
-      Sig_Out : constant Net := Get_Output (Sig, 0);
-      --  Stack is a table of inputs of dyn_insert* gates.  The first one is
-      --  driven by SIG.
-      Stack : Input_Tables.Instance;
-      Last : Int32;
-      Inp : Input;
-      Inst : Instance;
-   begin
-      --  Gor forward, skip dyn_extract
-      Input_Tables.Init (Stack, 16);
-      Input_Tables.Append (Stack, Get_First_Sink (Sig_Out));
-
-      loop
-         Last := Input_Tables.Last (Stack);
-         exit when Last < Input_Tables.First;
-         Inp := Stack.Table (Last);
-
-         Inst := Get_Input_Parent (Inp);
-         case Get_Id (Inst) is
-            when Id_Dyn_Extract =>
-               --  Skip.
-               raise Internal_Error;  -- TODO
-            when Id_Dyn_Insert =>
-               --  Continue with the output.
-               Input_Tables.Append
-                 (Stack, Get_First_Sink (Get_Output (Inst, 0)));
-               Set_Mark_Flag (Inst, True);
-            when Id_Mux2 =>
-               declare
-                  Sel : Net;
-                  Prev : Net;
-               begin
-                  Sel := Get_Input_Net (Inst, 0);
-                  if Get_Input (Inst, 1) = Inp then
-                     --  Comes from input 1, so selected when Sel = 0.
-                     Sel := Build_Monadic (Ctxt, Id_Not, Sel);
-                     Prev := Get_Input_Net (Inst, 2);
-                  else
-                     pragma Assert (Get_Input (Inst, 2) = Inp);
-                     --  Comes from input 2, so selected when sel = 1.
-                     Prev := Get_Input_Net (Inst, 1);
-                  end if;
-
-                  --  If Prev is a marked Dyn_Insert then:
-                  --    Look in Stack for the Dyn_Insert using Prev as input.
-                  --    If found:
-                  --      Append Sel to the enables to all Dyn_Insert from the
-                  --      one found.
-                  --    If not found:
-                  --      side dyn_insert that has been handled.
-                  --  If Prev is a mux or a not marked Dyn_Insert
-                  --    Side dyn_insert not yet handled.
-                  declare
-                     Prev_Inst : Instance;
-                     First : Int32;
-                  begin
-                     if Prev = Sig_Out then
-                        First := Input_Tables.First;
-                     else
-                        Prev_Inst := Get_Net_Parent (Prev);
-                        if Get_Id (Prev_Inst) not in Dyn_Insert_Module_Id then
-                           raise Internal_Error;
-                        end if;
-                        if not Get_Mark_Flag (Prev_Inst) then
-                           raise Internal_Error;
-                        end if;
-                        First := Find_First_Dyn_Insert (Stack, Prev);
-                        if First = 0 then
-                           --  Not found.
-                           raise Internal_Error;
-                        end if;
-                     end if;
-
-                     --  Add enable to all dyn_insert.
-                     for I in First .. Last loop
-                        Add_Enable_To_Dyn_Insert (Ctxt, Stack, First, Sel);
-                     end loop;
-
-                     --  Continue with the new input.
-                  end;
-               end;
-            when others =>
-               --  Cannot happen.
-               raise Internal_Error;
-         end case;
-      end loop;
-   end Merge_RAM_Muxes;
-
    function Is_Const_Input (Inst : Instance) return Boolean is
    begin
       case Get_Id (Inst) is
@@ -1729,20 +1428,6 @@ package body Netlists.Memories is
          --  No dyn gates so no memory.  Early return.
          Instance_Tables.Free (Dyns);
          return;
-      end if;
-
-      --  Try to merge dyn_insert with their enable mux.
-      --  Must be done before extracting memories to simplify the walk.
-      if False then
-         for I in Instance_Tables.First .. Instance_Tables.Last (Dyns) loop
-            Inst := Dyns.Table (I);
-            if Get_Id (Inst) = Id_Dyn_Insert then
-               --  Maybe transform as Dyn_Insert_En.
-               --  Cannot be done before as it changes the list of gates.
-               Inst := Maybe_Add_Enable_To_Dyn_Insert (Ctxt, Inst);
-               Dyns.Table (I) := Inst;
-            end if;
-         end loop;
       end if;
 
       Instance_Tables.Init (Mems, 16);
@@ -1793,9 +1478,6 @@ package body Netlists.Memories is
                   raise Internal_Error;
             end case;
 
-            if False then
-               Merge_RAM_Muxes (Ctxt, Inst);
-            end if;
             if Is_Const_Input (Inst) then
                Check_Memory_Read_Ports (Inst, Data_W, Size);
                if Data_W /= 0 then
