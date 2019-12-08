@@ -1174,6 +1174,16 @@ package body Netlists.Memories is
               | Id_Isignal =>
                Res := Inst;
                Nbr_Sig := Nbr_Sig + 1;
+            when Id_Dff =>
+               if Get_Next_Sink (Inp) = No_Input
+                 and then Get_First_Sink (First) = Inp
+               then
+                  --  The dff has only one output, hopefully a signal.
+                  return Validate_RAM_Element (Get_Output (Inst, 0));
+               else
+                  return Validate_RAM_Type'
+                    (Res => Validate_RAM_Error, Err => Inst);
+               end if;
             when others =>
                --  The whole content of the RAM is directly used.
                return Validate_RAM_Type'
@@ -1274,7 +1284,8 @@ package body Netlists.Memories is
                               --  Continue.
                               Inst := El.Outp;
                            when Validate_RAM_Signal =>
-                              raise Internal_Error;
+                              --  Continue.
+                              Inst := El.Sig;
                         end case;
                      when Id_Dff =>
                         declare
@@ -1295,6 +1306,12 @@ package body Netlists.Memories is
                   end case;
                end loop;
             end loop;
+
+            if Nbr_Muxes = 1 then
+               --  So reduced to only one mux.  Return it.
+               return Validate_RAM_Type'
+                 (Res => Validate_RAM_Mux, Mux => Muxes (1));
+            end if;
 
             --  Each muxes that appear twice are removed from muxes list,
             --  moved to the reduce list.
@@ -1388,6 +1405,149 @@ package body Netlists.Memories is
             return False;
       end case;
    end Validate_RAM;
+
+   function Add_Enable_To_Dyn_Insert
+     (Ctxt : Context_Acc; Inst : Instance; Sel : Net) return Instance
+   is
+      In_Mem : constant Input := Get_Input (Inst, 0);
+      In_V : constant Input := Get_Input (Inst, 1);
+      In_Idx : constant Input := Get_Input (Inst, 2);
+      Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+      Dest : constant Input := Get_First_Sink (Get_Output (Inst, 0));
+      pragma Assert (Has_One_Connection (Get_Output (Inst, 0)));
+      Res : Net;
+   begin
+      Res := Build_Dyn_Insert_En
+        (Ctxt, Get_Driver (In_Mem), Get_Driver (In_V), Get_Driver (In_Idx),
+         Sel, Off);
+      Set_Location (Res, Get_Location (Inst));
+
+      Disconnect (In_Mem);
+      Disconnect (In_V);
+      Disconnect (In_Idx);
+      Disconnect (Dest);
+      Connect (Dest, Res);
+
+      Remove_Instance (Inst);
+
+      return Get_Net_Parent (Res);
+   end Add_Enable_To_Dyn_Insert;
+
+   --  Remove the mux2 MUX (by adding enable to dyn_insert).
+   --  Return the new head.
+   function Reduce_Muxes_Mux2 (Ctxt : Context_Acc; Mux : Instance)
+                              return Instance
+   is
+      Dest : constant Input := Get_First_Sink (Get_Output (Mux, 0));
+      Sel_Inp : constant Input := Get_Input (Mux, 0);
+      In0 : constant Input := Get_Input (Mux, 1);
+      In1 : constant Input := Get_Input (Mux, 2);
+      Sel : Net;
+      Drv0 : Net;
+      Drv1 : Net;
+      Drv : Net;
+      Src : Net;
+      Res : Instance;
+      Inst : Instance;
+   begin
+      Drv0 := Get_Driver (In0);
+      Drv1 := Get_Driver (In1);
+      Sel := Get_Driver (Sel_Inp);
+
+      if Has_One_Connection (Drv0) and then not Has_One_Connection (Drv1) then
+         Disconnect (In0);
+         Disconnect (In1);
+         Disconnect (Sel_Inp);
+         Disconnect (Dest);
+         Connect (Dest, Drv0);
+         Drv := Drv0;
+         Src := Drv1;
+         Sel := Build_Monadic (Ctxt, Id_Not, Sel);
+      elsif Has_One_Connection (Drv1) and then not Has_One_Connection (Drv0)
+      then
+         Disconnect (In0);
+         Disconnect (In1);
+         Disconnect (Sel_Inp);
+         Disconnect (Dest);
+         Connect (Dest, Drv1);
+         Drv := Drv1;
+         Src := Drv0;
+      else
+         --  Not an enable mux.
+         raise Internal_Error;
+      end if;
+
+      Remove_Instance (Mux);
+
+      --  Reduce Drv until Src
+      Res := No_Instance;
+      while Drv /= Src loop
+         Inst := Get_Net_Parent (Drv);
+         case Get_Id (Inst) is
+            when Id_Mux2 =>
+               Inst := Reduce_Muxes_Mux2 (Ctxt, Inst);
+               Drv := Get_Output (Inst, 0);
+            when Id_Dyn_Insert =>
+               Inst := Add_Enable_To_Dyn_Insert (Ctxt, Inst, Sel);
+               if Res = No_Instance then
+                  Res := Inst;
+               end if;
+               Drv := Get_Input_Net (Inst, 0);
+            when Id_Dyn_Insert_En =>
+               declare
+                  En_Inp : constant Input := Get_Input (Inst, 3);
+                  En : Net;
+               begin
+                  En := Get_Driver (En_Inp);
+                  Disconnect (En_Inp);
+                  En := Build_Dyadic (Ctxt, Id_And, En, Sel);
+                  Connect (En_Inp, En);
+               end;
+               if Res = No_Instance then
+                  Res := Inst;
+               end if;
+               Drv := Get_Input_Net (Inst, 0);
+            when others =>
+               raise Internal_Error;
+         end case;
+      end loop;
+
+      return Res;
+   end Reduce_Muxes_Mux2;
+
+   procedure Reduce_Muxes (Ctxt : Context_Acc; Sig : Instance)
+   is
+      Inst : Instance;
+   begin
+      Inst := Get_Net_Parent (Get_Input_Net (Sig, 0));
+
+      --  Skip dff/idff
+      case Get_Id (Inst) is
+         when Id_Dff
+           | Id_Idff =>
+            Inst := Get_Net_Parent (Get_Input_Net (Inst, 1));
+         when others =>
+            null;
+      end case;
+
+      loop
+         case Get_Id (Inst) is
+            when Id_Mux2 =>
+               Inst := Reduce_Muxes_Mux2 (Ctxt, Inst);
+            when Id_Dyn_Insert
+              | Id_Dyn_Insert_En =>
+               Inst := Get_Net_Parent (Get_Input_Net (Inst, 0));
+            when Id_Signal
+              | Id_Isignal =>
+               if Inst /= Sig then
+                  raise Internal_Error;
+               end if;
+               return;
+            when others =>
+               raise Internal_Error;
+         end case;
+      end loop;
+   end Reduce_Muxes;
 
    function Find_First_Dyn_Insert (Stack : Input_Tables.Instance;
                                    N : Net) return Int32
@@ -1646,6 +1806,7 @@ package body Netlists.Memories is
                end if;
             else
                if Validate_RAM (Inst) then
+                  Reduce_Muxes (Ctxt, Inst);
                   Check_RAM_Ports (Inst, Data_W, Size);
                   if Data_W /= 0 then
                      Info_Msg_Synth
