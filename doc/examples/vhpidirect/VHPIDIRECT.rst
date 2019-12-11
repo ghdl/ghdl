@@ -3,6 +3,13 @@
 Data exchange through VHPIDIRECT
 ################################
 
+.. toctree::
+   :hidden:
+
+   demo/README
+
+See :ref:`Examples:VHPIDIRECT:Demo` for a demo about how to pass different types of data to/from VHDL and C through VHPIDIRECT.
+
 VUnit
 =====
 

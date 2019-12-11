@@ -9,4 +9,4 @@ or interaction with third-party projects. It is suggested for users who are new 
 
 .. toctree::
 
-   ../examples/VHPIDIRECT
+   ./vhpidirect/VHPIDIRECT
