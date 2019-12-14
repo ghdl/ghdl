@@ -112,12 +112,6 @@ package body Grt.Main is
       --  They may insert hooks.
       Grt.Modules.Register_Modules;
 
-      --  If the time resolution is to be set by the user, select a default
-      --  resolution.  Options may override it.
-      if Flag_String (5) = '?' then
-         Set_Time_Resolution ('n');
-      end if;
-
       --  Decode options.
       Grt.Options.Decode (Stop);
 

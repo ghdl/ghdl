@@ -1,0 +1,14 @@
+[options]
+mode bmc
+depth 100
+
+[engines]
+smtbmc
+
+[script]
+plugin -i ghdl
+ghdl -fpsl recv.vhdl -e recv
+prep -top recv
+
+[files]
+recv.vhdl

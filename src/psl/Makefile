@@ -20,7 +20,7 @@
 # be committed and distribued with the sources, so that users don't need to
 # regenerate them (and don't need to have python installed).
 
-PNODES=../xtools/pnodes.py
+PNODES=../../python/xtools/pnodes.py
 
 DEPS=psl-nodes.ads psl-nodes.adb.in $(PNODES)
 

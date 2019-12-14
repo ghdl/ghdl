@@ -20,6 +20,7 @@
 
 package Synth.Environment.Debug is
    procedure Dump_Wire_Id (Id : Wire_Id);
-   procedure Dump_Assign (Asgn : Assign);
+   procedure Dump_Assign (Asgn : Seq_Assign);
    procedure Dump_Phi (Id : Phi_Id);
+   procedure Dump_Conc_Assigns (First : Conc_Assign);
 end Synth.Environment.Debug;

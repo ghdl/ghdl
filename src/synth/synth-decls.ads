@@ -18,11 +18,41 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
+
+with Synth.Context; use Synth.Context;
 with Synth.Values; use Synth.Values;
 
 package Synth.Decls is
-   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc; Decl : Iir);
+   --  Get the type of DECL iff it is standalone (not an already existing
+   --  subtype).
+   function Get_Declaration_Type (Decl : Node) return Node;
 
-   procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc; Decls : Iir);
+   function Synth_Array_Subtype_Indication
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc;
+
+   procedure Synth_Subtype_Indication
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node);
+   function Synth_Subtype_Indication
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc;
+
+   --  Elaborate the type of DECL.
+   procedure Synth_Declaration_Type
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node);
+
+   procedure Synth_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean);
+
+   procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                 Decls : Iir;
+                                 Is_Subprg : Boolean := False);
+
+   procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                    Decls : Iir;
+                                    Is_Subprg : Boolean := False);
+
+   procedure Synth_Package_Declaration
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
+   procedure Synth_Package_Body
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
 end Synth.Decls;

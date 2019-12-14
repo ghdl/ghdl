@@ -18,11 +18,13 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Netlists; use Netlists;
+with Synth.Context; use Synth.Context;
 
 package Synthesis is
-   function Synth_Design (Design : Iir) return Module;
+   procedure Synth_Design
+     (Design : Iir; M : out Module; Inst : out Synth_Instance_Acc);
 
    Synth_Error : exception;
 end Synthesis;

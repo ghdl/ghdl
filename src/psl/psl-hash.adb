@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Tables;
+with PSL.Types; use PSL.Types;
 
 package body PSL.Hash is
 

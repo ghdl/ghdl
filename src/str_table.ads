@@ -61,4 +61,3 @@ package Str_Table is
    --  Free all the memory and reinitialize the package.
    procedure Initialize;
 end Str_Table;
-

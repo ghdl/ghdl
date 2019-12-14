@@ -16,7 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
-with Nodes;
+with Tables;
+with Dyn_Tables;
+with Vhdl.Types;
 
 --  Source file handling
 
@@ -46,6 +48,12 @@ package Files_Map is
    function Read_Source_File (Directory : Name_Id; Name : Name_Id)
                               return Source_File_Entry;
 
+   --  Reserve an entry, but do not read any file.
+   --  The length should includes the two terminal EOT.
+   function Reserve_Source_File
+     (Directory : Name_Id; Name : Name_Id; Length : Source_Ptr)
+     return Source_File_Entry;
+
    --  Each file in memory has two terminal EOT.
    EOT : constant Character := Character'Val (4);
 
@@ -63,13 +71,22 @@ package Files_Map is
    --  location LOC).  The content of this file is the same as REF, but with
    --  new locations so that it is possible to retrieve the instance from
    --  the new locations.
-   function Create_Instance_Source_File
-     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Nodes.Node_Type)
-     return Source_File_Entry;
+   function Create_Instance_Source_File (Ref : Source_File_Entry;
+                                         Loc : Location_Type;
+                                         Inst : Vhdl.Types.Vhdl_Node)
+                                        return Source_File_Entry;
 
    --  Unload last source file.  Works only with the last one.  Must be
    --  carefully used as the corresponding locations will be reused.
    procedure Unload_Last_Source_File (File : Source_File_Entry);
+
+   --  Mark FILE as unavailable: clear the name and directory.
+   --  This is needed before creating a new source file with the same name.
+   procedure Discard_Source_File (File : Source_File_Entry);
+
+   --  Free resources used by FILE, but keep the entry.
+   --  (It could be recycled for files that could fit - not implemented).
+   procedure Free_Source_File (File : Source_File_Entry);
 
    --  Relocate location LOC (which must be in the reference of INST_FILE)
    --  for instrnace INST_FILE.
@@ -83,21 +100,37 @@ package Files_Map is
    function Location_Instance_To_Location
      (Loc : Location_Type) return Location_Type;
 
+   --  If POS points to the start of the gap of FILE, it will be updated
+   --  to the next character after the gap.
+   procedure Skip_Gap (File : Source_File_Entry; Pos : in out Source_Ptr);
+
    --  Return a buffer (access to the contents of the file) for a file entry.
    function Get_File_Source (File : Source_File_Entry) return File_Buffer_Acc;
 
    --  Likewise but return a pointer.  To be used only from non-Ada code.
    function Get_File_Buffer (File : Source_File_Entry) return File_Buffer_Ptr;
 
-   --  Return the length of the file (which is the size of the file buffer).
+   --  Set the length of the file (which is less than the size of the
+   --  file buffer).
+   --  Set also append two EOT at the end of the file.
+   procedure Set_File_Length (File : Source_File_Entry; Length : Source_Ptr);
+
+   --  Get the position of the first EOT character.
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
+
+   --  Get the length of the content; this is the file length minus the gap,
+   --  if the gap is before the end.
+   function Get_Content_Length (File : Source_File_Entry) return Source_Ptr;
+
+   --  Get the length of the buffer, which always includes the gap and the
+   --  two terminal EOT.
+   function Get_Buffer_Length (File : Source_File_Entry) return Source_Ptr;
 
    --  Return the name of the file.
    function Get_File_Name (File : Source_File_Entry) return Name_Id;
 
    --  Return the directory of the file.
-   function Get_Source_File_Directory (File : Source_File_Entry)
-                                      return Name_Id;
+   function Get_Directory_Name (File : Source_File_Entry) return Name_Id;
 
    --  Return the entry of the last known file.
    --  This allow the user to create a table of Source_File_Entry.
@@ -128,7 +161,7 @@ package Files_Map is
    --  Add a new entry in the lines_table.
    --  The new entry must be the next one after the last entry.
    procedure File_Add_Line_Number
-     (File : Source_File_Entry; Line : Natural; Pos : Source_Ptr);
+     (File : Source_File_Entry; Line : Positive; Pos : Source_Ptr);
 
    --  Convert LOCATION to a source file.  Return No_Source_File_Entry if
    --  LOCATION is incorrect.
@@ -141,11 +174,16 @@ package Files_Map is
 
    --  Convert LOCATION and FILE to a line number.
    function Location_File_To_Line
-     (Location : Location_Type; File : Source_File_Entry) return Natural;
+     (Location : Location_Type; File : Source_File_Entry) return Positive;
+
+   --  Get the offset in the line LINE of LOC.
+   function Location_File_Line_To_Offset
+     (Loc : Location_Type; File : Source_File_Entry; Line : Positive)
+     return Natural;
 
    --  Get logical column (with HT expanded) from LOC, FILE and LINE.
    function Location_File_Line_To_Col
-     (Loc : Location_Type; File : Source_File_Entry; Line : Natural)
+     (Loc : Location_Type; File : Source_File_Entry; Line : Positive)
      return Natural;
 
    --  Convert LOCATION into a source file FILE and an offset POS in the
@@ -159,13 +197,12 @@ package Files_Map is
                                  return Location_Type;
 
    --  Convert a FILE into a location.
-   function Source_File_To_Location (File : Source_File_Entry)
-                                    return Location_Type;
+   function File_To_Location (File : Source_File_Entry) return Location_Type;
 
    --  Convert a FILE+LINE into a position.
    --  Return Source_Ptr_Bad in case of error (LINE out of bounds).
-   function Line_To_Position (File : Source_File_Entry; Line : Natural)
-                             return Source_Ptr;
+   function File_Line_To_Position (File : Source_File_Entry; Line : Positive)
+                                  return Source_Ptr;
 
    --  Translate LOCATION into coordinate (physical position).
    --  FILE identifies the filename.
@@ -176,8 +213,25 @@ package Files_Map is
    procedure Location_To_Coord (Location : Location_Type;
                                 File : out Source_File_Entry;
                                 Line_Pos : out Source_Ptr;
-                                Line : out Natural;
+                                Line : out Positive;
                                 Offset : out Natural);
+
+   --  Convert FILE and POS to coordinate.
+   procedure File_Pos_To_Coord (File : Source_File_Entry;
+                                Pos : Source_Ptr;
+                                Line_Pos : out Source_Ptr;
+                                Line : out Positive;
+                                Offset : out Natural);
+
+   --  Convert a physical column to a logical column.
+   --  A physical column is the offset in byte from the first byte of the line.
+   --  A logical column is the position of the character when displayed.
+   --  A HT (tabulation) moves the cursor to the next position multiple of the
+   --  tab stop.
+   --  The first character is at position 1 and at offset 0.
+   function Coord_To_Col (File : Source_File_Entry;
+                          Line_Pos : Source_Ptr;
+                          Offset : Natural) return Natural;
 
    --  Translate coordinate into logical position.
    --  NAME is the name of the file,
@@ -193,14 +247,14 @@ package Files_Map is
    --  It is like to two procedures above.
    procedure Location_To_Position (Location : Location_Type;
                                    Name : out Name_Id;
-                                   Line : out Natural;
+                                   Line : out Positive;
                                    Col : out Natural);
 
    --  Return the line LINE from FILE (without end of line).  The line is
    --  expanded: tabs are replaced by spaces according to Tab_Stop.  This
    --  function is slow.
    function Extract_Expanded_Line (File : Source_File_Entry;
-                                   Line : Natural) return String;
+                                   Line : Positive) return String;
 
    --  Return the image of LOC using the "FILENAME:LINE:COL" format or
    --  "LINE:COL" format if FILENAME is false;
@@ -211,6 +265,83 @@ package Files_Map is
    procedure Initialize;
 
 private
+   Lines_Table_Init : Natural := 64;
+
+   package Lines_Tables is new Dyn_Tables
+     (Table_Component_Type => Source_Ptr,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1);
+
+   --  There are several kinds of source file.
+   type Source_File_Kind is
+     (
+      --  A *real* source file, read from the filesystem.
+      Source_File_File,
+
+      --  A virtual source file, created from a string.
+      Source_File_String,
+
+      --  A duplicated source file (there is no copy however), created by
+      --  an instantiation.
+      Source_File_Instance
+     );
+
+   --  Data associed with a file.
+   type Source_File_Record (Kind : Source_File_Kind := Source_File_File) is
+      record
+      --  All location between first and last belong to this file.
+      First_Location : Location_Type;
+      Last_Location : Location_Type;
+
+      --  The name_id that identify this file.
+      --  FIXME: what about file aliasing (links) ?
+      File_Name : Name_Id;
+
+      Directory : Name_Id;
+
+      --  The buffer containing the file.
+      Source : File_Buffer_Acc;
+
+      --  Position of the EOT character after the file.  Also the length of
+      --  the file + 1, unless there is a gap.
+      File_Length : Source_Ptr;
+
+      Checksum : File_Checksum_Id;
+
+      case Kind is
+         when Source_File_File =>
+            --  Line table
+
+            Lines : Lines_Tables.Instance;
+
+            --  Cache for line table.
+            Cache_Line : Positive;
+            Cache_Pos : Source_Ptr;
+
+            --  Gap
+            Gap_Start : Source_Ptr;
+            Gap_Last : Source_Ptr;
+
+         when Source_File_String =>
+            --  There is only one line.
+            null;
+
+         when Source_File_Instance =>
+            --  The instance was created from REF.
+            Ref : Source_File_Entry;
+            --  The ultimate non-instance is BASE.
+            Base : Source_File_Entry;
+
+            Instance_Loc : Location_Type;
+      end case;
+   end record;
+
+   package Source_Files is new Tables
+     (Table_Index_Type => Source_File_Entry,
+      Table_Component_Type => Source_File_Record,
+      Table_Low_Bound => No_Source_File_Entry + 1,
+      Table_Initial => 16);
+
    --  Debug procedures.
 
    --  Disp info about all source files

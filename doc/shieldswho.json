@@ -1,0 +1,34 @@
+{
+    "gh-poc": {
+    "src":    "badge/-VLSI--EDA/PoC-323131.svg?logo=github",
+    "target": "gh:VLSI-EDA/PoC",
+    "alt":    "Source Code on GitHub" },
+    "rtd-poc": {
+    "src":    "badge/-poc--library-2980b9.svg?logo=read-the-docs",
+    "target": "http://poc-library.readthedocs.io/en/latest/?badge=latest",
+    "alt":    "Documentation on ReadTheDocs" },
+    "gh-vunit": {
+    "src":    "badge/-VUnit/vunit-323131.svg?logo=github",
+    "target": "gh:VUnit/vunit",
+    "alt":    "Source Code on GitHub" },
+    "doc-vunit": {
+    "src":    "badge/doc-vunit.github.io-blue.svg?",
+    "target": "https://vunit.github.io/documentation",
+    "alt":    "Documentation on vunit.github.io" },
+    "gl-p1076": {
+    "src":    "badge/-IEEE--P1076-323131.svg?logo=gitlab",
+    "target": "https://gitlab.com/IEEE-P1076",
+    "alt":    "Source Code on GitLab" },
+    "tw-p1076": {
+    "src":    "badge/-eda--twiki.org-critical.svg?logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABmJLR0QA%2FwD%2FAP%2BgvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4QIWAhImtwMY5AAAAB1pVFh0Q29tbWVudAAAAAAAQ3JlYXRlZCB3aXRoIEdJTVBkLmUHAAACwUlEQVRYw%2B1XTWgTQRT%2BZpOokURDg6GiaAwoCEX8QQpevFTQHgTBY8FrERSstKLePVSleLSH3qUFRSx48CR4CIJU8BC0WKqVULQiJsZmZ94%2BD83GJPOTDR68dGHZXYb3vu99882bWWDz%2Bs%2BXCF%2F408Au%2BD9GoaqXoIICFAQUAAWAGk%2FXTQCkAFSwhiAxD94%2BJS6vLEQiwOULp1B5Og9JGS2xbCEgDcDheOcYxQhb%2BibF2NdbTgL8%2BWQOv98sQlJaSyQ7qpeW6k0kQkWyR86Jq2%2Bf2wh4qK%2BMdgWXBnBpeaoWMpKB1dIztwKl9BL8Sl4DF6lXkMGyltT%2BruCrs%2FD9nJYre%2FCMuP3hhYlAHH5tvz5%2FAJL5B%2BL0u9leHM13My8h%2FZyWq1ot2KdAsdACFAAVxHpeUzZ%2F1Nc9BwHD3IXf%2F0og9A4Ja0jcCC4B8PfjPJuqNsfFtkUx8q3UlJvZw730eRBUI2YdvuzTTBrmdRIggwfqq%2BNQGG%2BuBtAkgBstsTHUfz1ur5j1FSEBJBBBAW2Nc8d0cKBFh4BdO6SLADk6XOs392A61YsCUcBVD6YzKeAwtOfs%2FW1O7kJAWjYtW6zmAVcFBCBwEJBdPKCimpAcVQkLARlxu3YSkBZg6pLAthWbVHWakAwHj04fmJopORSI2FXNCpBBjaBHBWQEBTf6gAdQ4PaATQFlUa6TmE9sJ4DkEmTlgBOcABD385XUMZAQUGBcP5To2v3CnIE3DOAhXxwUYq7I7QeS6d038bN8xwm%2B0QsYBO4Y89o2Hd%2BigAQwMDgl5opjeiOKZ6fBW9esFfxtRAISXgPUawO3kW7N97p4jQ%2FvfMQjw%2Fv0U%2FHM0X6U339BreZZk5gAQol9B7huygB7CvfFwseJ9v%2BCmaEMlosTUBhCfMcJqJY2TQ7DKccyNHVUBcAPgESSsDf%2FZPPXbPP6A13nhms8bYukAAAAAElFTkSuQmCC",
+    "target": "http://www.eda-twiki.org/cgi-bin/view.cgi/P1076/WebHome",
+    "alt":    "Documentation on eda-twiki.org" },
+    "gh-tce": {
+    "src":    "badge/-TCE-323131.svg?logo=github",
+    "target": "gh:cpc/tce",
+    "alt":    "Source Code on GitHub" },
+    "doc-tce": {
+    "src":    "badge/doc-openasip.org-blue.svg?",
+    "target": "http://openasip.org/documentation.html",
+    "alt":    "Documentation on openasip.org" }
+}

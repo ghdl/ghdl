@@ -1,53 +1,61 @@
-.. include:: shields.inc
-
 .. only:: html
 
+   .. exec::
+      from helpers import createShields
+      createShields()
+
    |SHIELD:gh-logo| |SHIELD:gitter| |SHIELD:code-lic| |SHIELD:doc-lic| |SHIELD:travis-ci| |SHIELD:appveyor| |SHIELD:release|
-
-------------------------------------
-
-GHDL Documentation
-##################
-
-This manual is the user and reference manual for GHDL. It does not contain an
-introduction to VHDL. Thus, the reader should have at least a basic knowledge
-of VHDL. A good knowledge of VHDL language reference manual (usually called
-LRM) is a plus.
 
 .. only:: html
 
    News
    ****
 
+   03.03.2019 - GHDL v0.36 was released.
+   =========================================
+
+   23.02.2019 - GHDL v0.36-rc1 was released.
+   =========================================
+
+   The major improvements are:
+
+      * more support of unbounded arrays and records
+      * support of UVVM and Vunit
+
+   29.11.2018 - GHDL 20181129 was released.
+   ========================================
+
    20.12.2017 - A new GitHub organization was created.
    ===================================================
 
-   A new GitHub organization is created and the main repo is moved from github.com/tgingold/ghdl to
-   github.com/ghdl/ghdl. Old refs will continue working, because permanent redirects are set up. However, we suggest
+   A new GitHub organization is created and the main repo is moved from `github.com/tgingold/ghdl <https://github.com/tgingold/ghdl>`_ to
+   `github.com/ghdl/ghdl <https://github.com/ghdl/ghdl>`_. Old refs will continue working, because permanent redirects are set up. However, we suggest
    every contributor to update the remote URLs in their local clones.
 
    14.12.2017 - `GHDL 0.35 was released <https://github.com/ghdl/ghdl/milestone/3?closed=1>`_.
-   ====================================
+   ===========================================================================================
 
    15.08.2017 - `GHDL 0.34 was released <https://github.com/ghdl/ghdl/milestone/1?closed=1>`_.
-   ====================================
+   ===========================================================================================
 
    23.10.2015 - GHDL 0.33 was released.
    ====================================
 
 .. only:: latex
 
-   .. rubric:: 20.12.2017 - GHDL 0.35 was released.
+   .. rubric:: 03.03.2019 - GHDL v0.36 was released.
+
+   .. rubric:: 23.02.2019 - GHDL v0.36-rc1 was released.
+
+   .. rubric:: 29.11.2018 - GHDL 20181129 was released.
+
+   .. rubric:: 20.12.2017 - A new GitHub organization was created.
+
+   .. rubric:: 14.12.2017 - GHDL 0.35 was released.
 
    .. rubric:: 15.08.2017 - GHDL 0.34 was released.
 
    .. rubric:: 23.10.2015 - GHDL 0.33 was released.
-
-.. |docdate| date:: %b %d, %Y - %H:%M
-
-.. container:: lastdocbuilddate
-
-   This document was generated on |docdate|.
 
 .. toctree::
    :caption: Introduction
@@ -59,18 +67,6 @@ LRM) is a plus.
 
 .. raw:: latex
 
-   \part{GHDL usage}
-
-.. toctree::
-   :caption: GHDL usage
-   :hidden:
-
-   using/QuickStartGuide
-   using/InvokingGHDL
-   using/Simulation
-
-.. raw:: latex
-
    \part{Getting GHDL}
 
 .. toctree::
@@ -78,30 +74,36 @@ LRM) is a plus.
    :hidden:
 
    getting/Releases
-   Building GHDL <building/Building>
-   building/PrecompileVendorPrimitives
+   Building GHDL <getting/index>
+   getting/PrecompileVendorPrimitives
 
 .. raw:: latex
 
-   \part{References}
+   \part{GHDL usage}
 
 .. toctree::
-   :caption: Implementation References
+   :caption: GHDL usage
    :hidden:
 
-   references/CommandReference
-   references/CodingStyle
-   references/ImplementationOfVHDL
-   references/ImplementationOfVITAL
+   examples/quick_start/README
+   using/InvokingGHDL
+   using/Simulation
+   using/Foreign
+   using/CommandReference
+   using/ImplementationOfVHDL
+   using/ImplementationOfVITAL
+   examples/README
 
 .. raw:: latex
 
-   \part{Appendix}
+   \part{Development}
 
 .. toctree::
-   :caption: Appendix
+   :caption: Development
    :hidden:
 
-   appendix/Roadmap
-   appendix/Meta
    genindex
+   development/Synthesis
+   development/Debugging
+   development/CodingStyle
+   development/Roadmap

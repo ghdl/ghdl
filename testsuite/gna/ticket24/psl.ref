@@ -21,6 +21,9 @@
   "assert": 2,
   "assert-failure": 0,
   "assert-pass": 2,
+  "assume": 0,
+  "assume-failure": 0,
+  "assume-pass": 0,
   "cover": 1,
   "cover-failure": 0,
   "cover-pass": 1}

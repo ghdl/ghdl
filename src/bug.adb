@@ -15,9 +15,10 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO; use Ada.Text_IO;
+
 with Ada.Command_Line; use Ada.Command_Line;
 with GNAT.Directory_Operations;
+with Simple_IO; use Simple_IO;
 with Version; use Version;
 
 package body Bug is
@@ -63,19 +64,15 @@ package body Bug is
    is
       Id : Exception_Id;
    begin
-      New_Line (Standard_Error);
-      Put_Line
-        (Standard_Error,
-         "******************** GHDL Bug occurred ***************************");
-      Put_Line
-        (Standard_Error,
-         "Please report this bug on https://github.com/ghdl/ghdl/issues");
-      Put_Line (Standard_Error,
-                "GHDL release: " & Ghdl_Ver & ' ' & Ghdl_Release);
-      Put_Line (Standard_Error, "Compiled with " & Get_Gnat_Version);
-      Put_Line (Standard_Error, "Target: " & Standard'Target_Name);
-      Put_Line (Standard_Error, "In directory: " &
-                GNAT.Directory_Operations.Get_Current_Dir);
+      New_Line_Err;
+      Put_Line_Err
+        ("******************** GHDL Bug occurred ***************************");
+      Put_Line_Err
+        ("Please report this bug on https://github.com/ghdl/ghdl/issues");
+      Put_Line_Err ("GHDL release: " & Ghdl_Ver & ' ' & Ghdl_Release);
+      Put_Line_Err ("Compiled with " & Get_Gnat_Version);
+      Put_Line_Err ("Target: " & Standard'Target_Name);
+      Put_Line_Err (GNAT.Directory_Operations.Get_Current_Dir);
       --Put_Line
       --  ("Program name: " & Command_Name);
       --Put_Line
@@ -83,24 +80,21 @@ package body Bug is
       --for I in 1 .. Argument_Count loop
       --   Put_Line ("  " & Argument (I));
       --end loop;
-      Put_Line (Standard_Error, "Command line:");
-      Put (Standard_Error, Command_Name);
+      Put_Line_Err ("Command line:");
+      Put_Err (Command_Name);
       for I in 1 .. Argument_Count loop
-         Put (Standard_Error, ' ');
-         Put (Standard_Error, Argument (I));
+         Put_Err (' ');
+         Put_Err (Argument (I));
       end loop;
-      New_Line (Standard_Error);
+      New_Line_Err;
       Id := Exception_Identity (Except);
       if Id /= Null_Id then
-         Put_Line (Standard_Error,
-                   "Exception " & Exception_Name (Id) & " raised");
+         Put_Line_Err ("Exception " & Exception_Name (Id) & " raised");
          --Put_Line ("exception message: " & Exception_Message (Except));
-         Put_Line (Standard_Error,
-                   "Exception information:");
-         Put (Standard_Error, Exception_Information (Except));
+         Put_Line_Err ("Exception information:");
+         Put_Err (Exception_Information (Except));
       end if;
-      Put_Line
-        (Standard_Error,
-         "******************************************************************");
+      Put_Line_Err
+        ("******************************************************************");
    end Disp_Bug_Box;
 end Bug;

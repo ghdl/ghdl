@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Ada.Text_IO;
+with PSL.Types; use PSL.Types;
 with PSL.Prints;
 with Types; use Types;
 

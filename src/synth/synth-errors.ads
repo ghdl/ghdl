@@ -26,5 +26,15 @@ package Synth.Errors is
                               Msg : String;
                               Arg1 : Earg_Type);
    procedure Error_Msg_Synth (Loc : Location_Type;
-                              Msg : String);
+                              Msg : String;
+                              Args : Earg_Arr := No_Eargs);
+   procedure Warning_Msg_Synth (Loc : Location_Type;
+                                Msg : String;
+                                Arg1 : Earg_Type);
+   procedure Warning_Msg_Synth (Loc : Location_Type;
+                                Msg : String;
+                                Args : Earg_Arr := No_Eargs);
+   procedure Info_Msg_Synth (Loc : Location_Type;
+                             Msg : String;
+                             Args : Earg_Arr := No_Eargs);
 end Synth.Errors;

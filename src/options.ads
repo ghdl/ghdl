@@ -17,14 +17,38 @@
 --  02111-1307, USA.
 
 package Options is
+   --  How an option was handled by Parse_Option.
+   type Option_State is
+     (
+      --  Option correctly parsed.
+      Option_Ok,
+
+      --  Option is unknown.
+      Option_Unknown,
+
+      --  Option has an error (message was displayed).
+      Option_Err,
+
+      --  Option_Arg_Req: OPTION requires an argument.  Must be set only when
+      --     ARG = "", the manager will recall Decode_Option.
+      Option_Arg_Req,
+
+      --  Option_Arg: OPTION used the argument.
+      Option_Arg,
+
+      Option_End
+     );
+
    -- Return true if opt is recognize by flags.
    --  Note: std_names.std_names_initialize and files_map.init_paths must have
    --  been called before this subprogram.
-   function Parse_Option (Option : String) return Boolean;
+   function Parse_Option (Opt : String) return Option_State;
 
    -- Disp help about these options.
    procedure Disp_Options_Help;
 
    --  Front-end intialization.
    procedure Initialize;
+
+   Option_Error: exception;
 end Options;

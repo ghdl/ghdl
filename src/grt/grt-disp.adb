@@ -25,6 +25,7 @@
 with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Stdio; use Grt.Stdio;
 --with Grt.Errors; use Grt.Errors;
 
@@ -54,14 +55,12 @@ package body Grt.Disp is
    --   Put_Str_Len (Stream, Type_Desc.E32.Values (Natural (E32)));
    --end Put_E32;
 
-   procedure Put_Sig_Index (Sig : Sig_Table_Index)
-   is
+   procedure Put_Sig_Index (Sig : Sig_Table_Index) is
    begin
       Put_I32 (stdout, Ghdl_I32 (Sig));
    end Put_Sig_Index;
 
-   procedure Put_Sig_Range (Sig : Sig_Table_Range)
-   is
+   procedure Put_Sig_Range (Sig : Sig_Table_Range) is
    begin
       Put_Sig_Index (Sig.First);
       if Sig.Last /= Sig.First then
@@ -70,8 +69,7 @@ package body Grt.Disp is
       end if;
    end Put_Sig_Range;
 
-   procedure Disp_Now
-   is
+   procedure Disp_Now is
    begin
       Put ("Now is ");
       Put_Time (stdout, Current_Time);
@@ -80,8 +78,7 @@ package body Grt.Disp is
       New_Line;
    end Disp_Now;
 
-   procedure Disp_Propagation_Kind (Kind : Propagation_Kind_Type)
-   is
+   procedure Disp_Propagation_Kind (Kind : Propagation_Kind_Type) is
    begin
       case Kind is
          when Drv_One_Driver =>
@@ -184,8 +181,7 @@ package body Grt.Disp is
       end loop;
    end Disp_Signals_Order;
 
-   procedure Disp_Mode (Mode : Mode_Type)
-   is
+   procedure Disp_Mode (Mode : Mode_Type) is
    begin
       case Mode is
          when Mode_B1 =>

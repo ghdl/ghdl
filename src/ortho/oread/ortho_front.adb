@@ -432,42 +432,164 @@ package body Ortho_Front is
    --  Previous token.
    Tok_Previous : Token_Type;
 
-   function Scan_Number (First_Char : Character) return Token_Type
+   function To_Digit (C : Character) return Integer is
+   begin
+      case C is
+         when '0' .. '9' =>
+            return Character'Pos (C) - Character'Pos ('0');
+         when 'A' .. 'F' =>
+            return Character'Pos (C) - Character'Pos ('A') + 10;
+         when 'a' .. 'f' =>
+            return Character'Pos (C) - Character'Pos ('a') + 10;
+         when others =>
+            return -1;
+      end case;
+   end To_Digit;
+
+   function Is_Digit (C : Character) return Boolean is
+   begin
+      case C is
+         when '0' .. '9'
+           | 'A' .. 'F'
+           | 'a' .. 'f' =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Digit;
+
+   function Scan_Hex_Number return Token_Type
    is
-      function To_Digit (C : Character) return Integer is
-      begin
-         case C is
-            when '0' .. '9' =>
-               return Character'Pos (C) - Character'Pos ('0');
-            when 'A' .. 'F' =>
-               return Character'Pos (C) - Character'Pos ('A') + 10;
-            when 'a' .. 'f' =>
-               return Character'Pos (C) - Character'Pos ('a') + 10;
-            when others =>
-               return -1;
-         end case;
-      end To_Digit;
+      C : Character;
+      Exp : Integer;
+      Exp_Neg : Boolean;
+      After_Point : Natural;
+   begin
+      Token_Number := 0;
+      C := Get_Char;
+      if not Is_Digit (C) then
+         Scan_Error ("digit expected after '0x'");
+      end if;
+      loop
+         Token_Number := Token_Number * 16 + Unsigned_64 (To_Digit (C));
+         C := Get_Char;
+         exit when not Is_Digit (C);
+      end loop;
 
-      function Is_Digit (C : Character) return Boolean is
-      begin
-         case C is
-            when '0' .. '9'
-              | 'A' .. 'F'
-              | 'a' .. 'f' =>
-               return True;
-            when others =>
-               return False;
-         end case;
-      end Is_Digit;
+      After_Point := 0;
+      if C = '.' then
+         loop
+            C := Get_Char;
+            exit when not Is_Digit (C);
+            if Shift_Right (Token_Number, 60) = 0 then
+               Token_Number := Token_Number * 16 + Unsigned_64 (To_Digit (C));
+               After_Point := After_Point + 4;
+            end if;
+         end loop;
 
+         Exp := 0;
+         if C = 'p' or C = 'P' then
+            -- A real number.
+            C := Get_Char;
+            Exp_Neg := False;
+            if C = '-' then
+               Exp_Neg := True;
+               C := Get_Char;
+            elsif C = '+' then
+               C := Get_Char;
+            end if;
+            if not Is_Digit (C) then
+               Scan_Error ("digit expected after 'p'");
+            end if;
+            loop
+               Exp := Exp * 10 + To_Digit (C);
+               C := Get_Char;
+               exit when not Is_Digit (C);
+            end loop;
+            if Exp_Neg then
+               Exp := -Exp;
+            end if;
+         end if;
+         Exp := Exp - After_Point;
+         Unget_Char;
+         Token_Float :=
+           IEEE_Float_64'Scaling (IEEE_Float_64 (Token_Number), Exp);
+         return Tok_Float_Num;
+      else
+         Unget_Char;
+         return Tok_Num;
+      end if;
+   end Scan_Hex_Number;
+
+   function Scan_Fp_Number return Token_Type
+   is
       After_Point : Integer;
       C : Character;
       Exp : Integer;
       Exp_Neg : Boolean;
+   begin
+      -- A real number.
+      After_Point := 0;
+      Token_Float := IEEE_Float_64 (Token_Number);
+      loop
+         C := Get_Char;
+         exit when C not in '0' .. '9';
+         Token_Float := Token_Float * 10.0 + IEEE_Float_64 (To_Digit (C));
+         After_Point := After_Point + 1;
+      end loop;
+      if C = 'e' or C = 'E' then
+         Exp := 0;
+         C := Get_Char;
+         Exp_Neg := False;
+         if C = '-' then
+            Exp_Neg := True;
+            C := Get_Char;
+         elsif C = '+' then
+            C := Get_Char;
+         elsif not Is_Digit (C) then
+            Scan_Error ("digit expected");
+         end if;
+         while Is_Digit (C) loop
+            Exp := Exp * 10 + To_Digit (C);
+            C := Get_Char;
+         end loop;
+         if Exp_Neg then
+            Exp := -Exp;
+         end if;
+         Exp := Exp - After_Point;
+      else
+         Exp := - After_Point;
+      end if;
+      Unget_Char;
+      Token_Float := Token_Float * 10.0 ** Exp;
+      if Token_Float > IEEE_Float_64'Last then
+         Token_Float := IEEE_Float_64'Last;
+      end if;
+      return Tok_Float_Num;
+   end Scan_Fp_Number;
+
+   function Scan_Number (First_Char : Character) return Token_Type
+   is
+      C : Character;
       Base : Unsigned_64;
    begin
-      Token_Number := 0;
       C := First_Char;
+      Token_Number := 0;
+
+      --  Handle '0x' prefix.
+      if C = '0' then
+         --  '0' can be discarded.
+         C := Get_Char;
+         if C = 'x' or C = 'X' then
+            return Scan_Hex_Number;
+         elsif C = '.' then
+            return Scan_Fp_Number;
+         elsif not Is_Digit (C) then
+            Unget_Char;
+            return Tok_Num;
+         end if;
+      end if;
+
       loop
          Token_Number := Token_Number * 10 + Unsigned_64 (To_Digit (C));
          C := Get_Char;
@@ -488,44 +610,7 @@ package body Ortho_Front is
          return Tok_Num;
       end if;
       if C = '.' then
-         -- A real number.
-         After_Point := 0;
-         Token_Float := IEEE_Float_64 (Token_Number);
-         loop
-            C := Get_Char;
-            exit when C not in '0' .. '9';
-            Token_Float := Token_Float * 10.0 + IEEE_Float_64 (To_Digit (C));
-            After_Point := After_Point + 1;
-         end loop;
-         if C = 'e' or C = 'E' then
-            Exp := 0;
-            C := Get_Char;
-            Exp_Neg := False;
-            if C = '-' then
-               Exp_Neg := True;
-               C := Get_Char;
-            elsif C = '+' then
-               C := Get_Char;
-            elsif not Is_Digit (C) then
-               Scan_Error ("digit expected");
-            end if;
-            while Is_Digit (C) loop
-               Exp := Exp * 10 + To_Digit (C);
-               C := Get_Char;
-            end loop;
-            if Exp_Neg then
-               Exp := -Exp;
-            end if;
-            Exp := Exp - After_Point;
-         else
-            Exp := - After_Point;
-         end if;
-         Unget_Char;
-         Token_Float := Token_Float * 10.0 ** Exp;
-         if Token_Float > IEEE_Float_64'Last then
-            Token_Float := IEEE_Float_64'Last;
-         end if;
-         return Tok_Float_Num;
+         return Scan_Fp_Number;
       else
          Unget_Char;
          return Tok_Num;
@@ -1457,6 +1542,21 @@ package body Ortho_Front is
       return Res;
    end Parse_Alignof;
 
+   function Parse_Minus_Num (Atype : Node_Acc) return O_Cnode
+   is
+      Res : O_Cnode;
+      V : Integer_64;
+   begin
+      if Token_Number = Unsigned_64 (Integer_64'Last) + 1 then
+         V := Integer_64'First;
+      else
+         V := -Integer_64 (Token_Number);
+      end if;
+      Res := New_Signed_Literal (Atype.Type_Onode, V);
+      Next_Token;
+      return Res;
+   end Parse_Minus_Num;
+
    --  Parse a literal whose type is ATYPE.
    function Parse_Typed_Literal (Atype : Node_Acc) return O_Cnode
    is
@@ -1478,16 +1578,7 @@ package body Ortho_Front is
             Next_Token;
             case Tok is
                when Tok_Num =>
-                  declare
-                     V : Integer_64;
-                  begin
-                     if Token_Number = Unsigned_64 (Integer_64'Last) + 1 then
-                        V := Integer_64'First;
-                     else
-                        V := -Integer_64 (Token_Number);
-                     end if;
-                     Res := New_Signed_Literal (Atype.Type_Onode, V);
-                  end;
+                  return Parse_Minus_Num (Atype);
                when Tok_Float_Num =>
                   Res := New_Float_Literal (Atype.Type_Onode, -Token_Float);
                when others =>
@@ -1737,14 +1828,21 @@ package body Ortho_Front is
    --  Parse '-' EXPR, 'not' EXPR, 'abs' EXPR or EXPR.
    procedure Parse_Unary_Expression (Atype : Node_Acc;
                                      Res : out O_Enode;
-                                     Res_Type : out Node_Acc)
-   is
+                                     Res_Type : out Node_Acc) is
    begin
       case Tok is
          when Tok_Minus =>
             Next_Token;
-            Parse_Primary_Expression (Atype, Res, Res_Type);
-            Res := New_Monadic_Op (ON_Neg_Ov, Res);
+            if Tok = Tok_Num then
+               if Atype = null then
+                  Parse_Error ("numeric literal without type context");
+               end if;
+               Res := New_Lit (Parse_Minus_Num (Atype));
+               Res_Type := Atype;
+            else
+               Parse_Unary_Expression (Atype, Res, Res_Type);
+               Res := New_Monadic_Op (ON_Neg_Ov, Res);
+            end if;
          when Tok_Not =>
             Next_Token;
             Parse_Unary_Expression (Atype, Res, Res_Type);
@@ -1842,9 +1940,15 @@ package body Ortho_Front is
       end case;
    end Parse_Expression;
 
+   procedure Check_Selected_Prefix (N_Type : Node_Acc) is
+   begin
+      if N_Type.Kind /= Type_Record and N_Type.Kind /= Type_Union then
+         Parse_Error ("type of prefix is neither a record nor an union");
+      end if;
+   end Check_Selected_Prefix;
+
    --  Expect and leave: next token
-   procedure Parse_Lvalue (N : in out O_Lnode; N_Type : in out Node_Acc)
-   is
+   procedure Parse_Lvalue (N : in out O_Lnode; N_Type : in out Node_Acc) is
    begin
       loop
          case Tok is
@@ -1858,11 +1962,7 @@ package body Ortho_Front is
                   N_Type := N_Type.Access_Dtype;
                   Next_Token;
                elsif Tok = Tok_Ident then
-                  if N_Type.Kind /= Type_Record and N_Type.Kind /= Type_Union
-                  then
-                     Parse_Error
-                       ("type of prefix is neither a record nor an union");
-                  end if;
+                  Check_Selected_Prefix (N_Type);
                   declare
                      Field : Node_Acc;
                   begin
@@ -2501,12 +2601,50 @@ package body Ortho_Front is
       return Res;
    end Parse_Address;
 
+   procedure Parse_Global_Name (Prefix : Node_Acc;
+                                Name : out O_Gnode; N_Type : out Node_Acc)
+   is
+   begin
+      case Prefix.Kind is
+         when Node_Object =>
+            Name := New_Global (Prefix.Obj_Node);
+            N_Type := Prefix.Decl_Dtype;
+         when others =>
+            Parse_Error ("invalid name");
+      end case;
+
+      loop
+         case Tok is
+            when Tok_Dot =>
+               Next_Token;
+               if Tok = Tok_Ident then
+                  Check_Selected_Prefix (N_Type);
+                  declare
+                     Field : Node_Acc;
+                  begin
+                     Field := Find_Field_By_Name (N_Type);
+                     Name := New_Global_Selected_Element (Name,
+                                                          Field.Field_Fnode);
+                     N_Type := Field.Field_Type;
+                     Next_Token;
+                  end;
+               else
+                  Parse_Error ("'.' must be followed by a field name");
+               end if;
+            when others =>
+               return;
+         end case;
+      end loop;
+   end Parse_Global_Name;
+
    function Parse_Constant_Address (Prefix : Node_Acc) return O_Cnode
    is
       Pfx : Node_Acc;
       Res : O_Cnode;
       Attr : Syment_Acc;
       T : O_Tnode;
+      N : O_Gnode;
+      N_Type : Node_Acc;
    begin
       Attr := Token_Sym;
       Next_Expect (Tok_Left_Paren);
@@ -2523,10 +2661,11 @@ package body Ortho_Front is
          Next_Token;
       else
          Next_Token;
+         Parse_Global_Name (Pfx, N, N_Type);
          if Attr = Id_Address then
-            Res := New_Global_Address (Pfx.Obj_Node, T);
+            Res := New_Global_Address (N, T);
          elsif Attr = Id_Unchecked_Address then
-            Res := New_Global_Unchecked_Address (Pfx.Obj_Node, T);
+            Res := New_Global_Unchecked_Address (N, T);
          else
             Parse_Error ("address attribute expected");
          end if;

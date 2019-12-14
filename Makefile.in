@@ -40,7 +40,8 @@ libghdl_version=@libghdl_version@
 enable_werror=@enable_werror@
 enable_checks=@enable_checks@
 enable_openieee=@enable_openieee@
-enable_python=@enable_python@
+enable_libghdl=@enable_libghdl@
+default_pic=@default_pic@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -60,9 +61,9 @@ VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 
 ifeq "$(enable_checks)" "true"
  # Debug + checks
- OPT_FLAGS=-g
- ADA_FLAGS=-gnata
- LIB_CFLAGS=
+ OPT_FLAGS+=-g
+ ADA_FLAGS+=-gnata
+ LIB_CFLAGS+=
 else
  # Optimize + no checks
  ADA_FLAGS+=-gnatpn
@@ -79,8 +80,12 @@ ifeq "$(build_mode)" "coverage"
 OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
-GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
+GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)
+
+ifeq "$(default_pic)" "true"
+GRT_FLAGS+=$(PIC_FLAGS)
+endif
 
 WARN_CFLAGS=-Wall
 
@@ -117,11 +122,18 @@ LIBVHDL_FLAGS_TO_PASS=\
  enable_openieee="$(enable_openieee)" \
  LN="$(LN)" CP="$(CP)" MKDIR="$(MKDIR)"
 
-all: Makefile all.$(backend) all.libghdl.$(enable_python)
+# Object files from grt for the synthesis.
+GRT_SYNTH_OBJS=grt-cstdio.o
+
+all: Makefile all.$(backend) all.libghdl
 
 install: install.$(backend)
+#       Generate std.standard package VHDL source
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=87 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v87/standard.vhdl
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=93 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v93/standard.vhdl
+	$(DESTDIR)$(bindir)/ghdl$(EXEEXT) --disp-standard --std=08 > $(DESTDIR)$(VHDL_LIB_DIR)/src/std/v08/standard.vhdl
 
-check: check.$(backend)
+uninstall: uninstall.$(backend)
 
 copy-sources: copy-sources.$(backend)
 
@@ -137,6 +149,9 @@ libs: libs.vhdl.$(backend)
 	fi
 
 Makefile: $(srcdir)/Makefile.in ./config.status
+	./config.status
+
+setup.py: $(srcdir)/setup.py.in ./config.status
 	./config.status
 
 GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/grt -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
@@ -163,12 +178,12 @@ version.ads: version.tmp
 
 all.mcode: ghdl_mcode$(EXEEXT) libs.vhdl.mcode all.vpi
 
-GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/mcode
+GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/mcode -aI$(srcdir)/src/synth
 
 ghdl_mcode$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
             memsegs_c.o chkstk.o version.ads force
-	$(GNATMAKE) -o $@ $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(GNAT_LARGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) -o $@ -gnat12 $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GRT_ADD_OBJS) $(LDFLAGS) $(GNAT_LARGS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c $(OPT_FLAGS) -o $@ $<
@@ -179,12 +194,17 @@ libs.vhdl.mcode: ghdl_mcode$(EXEEXT)
 install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_mcode$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
-install.mcode: install.mcode.program install.vhdllib install.vpi
+uninstall.mcode.program:
+	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+
+install.mcode: install.mcode.program install.vhdllib install.vpi install.libghdl
+
+uninstall.mcode: uninstall.mcode.program uninstall.vhdllib uninstall.vpi uninstall.libghdl
 
 oread-mcode$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/mcode/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
+	 GNATFLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
 
 #################### For gcc backend ##############################
 
@@ -200,13 +220,22 @@ all.gcc:
 copy-sources.gcc: version.ads
 	$(RM) -rf $(gcc_vhdl_dir)
 	$(MKDIR) $(gcc_vhdl_dir)
-	$(CP) -p version.ads $(gcc_vhdl_dir)
+	$(CP) -p version.ads ghdlsynth_maybe.ads $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/vhdl/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/vhdl/translate/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/synth/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/psl/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-types.ads $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-c.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/grt/grt-fcvt.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-algos.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-vstrings.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-cstdio.c $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-stdio.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-table.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-files_operations.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.c $(gcc_vhdl_dir)
@@ -217,8 +246,10 @@ copy-sources.gcc: version.ads
 	 5.*)      gcc_ortho_lang=ortho-lang-5.c ;; \
 	 6 | 6.*)  gcc_ortho_lang=ortho-lang-6.c ;; \
 	 7.*)      gcc_ortho_lang=ortho-lang-7.c ;; \
+	 8.*)      gcc_ortho_lang=ortho-lang-8.c ;; \
+	 9.*)      gcc_ortho_lang=ortho-lang-9.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
-	    echo "Need gcc version 4.9.x, 5.x, 6.x or 7.x"; \
+	    echo "Need gcc version 4.9.x, 5.x, 6.x, 7.x, 8.x or 9.x"; \
 	    exit 1 ;; \
 	esac; \
 	$(CP) -p $(srcdir)/src/ortho/gcc/$$gcc_ortho_lang \
@@ -239,9 +270,11 @@ GHDL1_GCC_BIN=  # --GHDL1=/path/to/ghdl1
 libs.vhdl.gcc:
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL="$(GHDL_GCC_BIN)" GHDL_FLAGS="$(GHDL1_GCC_BIN) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
-ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a
+ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a all.libghdl
 
-install.gcc: install.vhdllib install.grt install.vpi
+install.gcc: install.vhdllib install.grt install.vpi install.libghdl
+
+uninstall.gcc: uninstall.vhdllib uninstall.grt uninstall.vpi uninstall.libghdl
 
 #################### For gcc backend - development only (local build) ####
 
@@ -250,11 +283,12 @@ GHDL_GCC_INCFLAGS=$(GHDL_COMMON_INCFLAGS)
 ghdl1-gcc$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" all
+	 GNATFLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" all
 
-ghdl_gcc$(EXEEXT): version.ads force
+ghdl_gcc$(EXEEXT): version.ads $(GRT_SYNTH_OBJS) force
 	$(GNATMAKE) $(GHDL_GCC_INCFLAGS) -aI$(srcdir)/src/ghdldrv \
-	 $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
+	 $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) \
+         -largs $(GRT_SYNTH_OBJS) $(GNAT_LARGS)
 
 libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_gcc$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-gcc$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
@@ -262,17 +296,17 @@ libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
 ghdl1-debug$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/debug/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" \
+	 GNATFLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" \
 	 GNATMAKE="$(GNATMAKE)" all
 
 oread-gcc$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
+	 GNATFLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
 
 #################### For llvm backend ##############################
 
-GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/$(llvm_be)
+GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/$(llvm_be) -aI$(srcdir)/src/synth
 
 all.llvm: ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT) grt-all libs.vhdl.llvm all.vpi
 
@@ -296,14 +330,19 @@ libs.vhdl.llvmjit: ghdl_llvm_jit$(EXEEXT)
 libs.vhdl.llvm: ghdl_llvm$(EXEEXT) ghdl1-llvm$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-llvm$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
-ghdl_llvm$(EXEEXT): version.ads force
-	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) -aI$(srcdir)/src/ghdldrv $(GNATFLAGS)\
-	 ghdl_llvm $(GNAT_BARGS) -largs $(LDFLAGS) $(GNAT_LARGS)
+libs.vhdl.debug-llvm: ghdl_llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-debug$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
+
+ghdl_llvm$(EXEEXT): version.ads $(GRT_SYNTH_OBJS) force
+	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) \
+         -aI$(srcdir)/src/ghdldrv $(GNATFLAGS) \
+	 ghdl_llvm $(GNAT_BARGS) \
+         -largs $(LDFLAGS) $(GRT_SYNTH_OBJS) $(GNAT_LARGS)
 
 ghdl1-llvm$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	 GNATFLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)" GNATMAKE="$(GNATMAKE)" \
 	 all
 
@@ -311,14 +350,20 @@ oread-llvm$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNATMAKE="$(GNATMAKE)" \
-	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" \
+	 GNATFLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)"
 
 install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl1-llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 
-install.llvm: install.llvm.program install.vhdllib install.grt install.vpi
+uninstall.llvm.program:
+	$(RM) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
+	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+
+install.llvm: install.llvm.program install.vhdllib install.grt install.vpi install.libghdl
+
+uninstall.llvm: uninstall.llvm.program uninstall.vhdllib uninstall.grt uninstall.vpi uninstall.libghdl
 
 ################ For simul (no code generation, interpretation) ##########
 
@@ -333,42 +378,84 @@ libs.vhdl.simul: ghdl_simul$(EXEEXT)
 install.simul.program: install.dirs ghdl_simul$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_simul$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
+uninstall.simul.program:
+	$(RM) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+
 install.simul: install.simul.program install.vhdllib
+
+uninstall.simul: uninstall.simul.program uninstall.vhdllib
 
 
 ################ libghdl (library for the vhdl part) ####################
 
-LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/python -aI$(srcdir)/src/ghdldrv
+LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src/vhdl/libghdl -aI$(srcdir)/src/ghdldrv
 
 libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 
-$(libghdl_name): $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat05 $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
+LIBGHDL_GRT_OBJS= pic/grt-cstdio.o
+
+$(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS) $(LIBGHDL_GRT_OBJS)
+#       On windows, gnatmake (via Osint.Executable_Name) always appends .exe
+#       Adjust.  (Other solution: use gnatmake for compilation and binding,
+#       then use gnatlink directly for linking).
+ifeq ($(SOEXT),.dll)
+	-mv $(libghdl_name).exe $(libghdl_name)
+endif
 
 all.libghdl.true: $(libghdl_name)
 all.libghdl.false:
+all.libghdl: all.libghdl.$(enable_libghdl)
+
+install.libghdl.lib:
+	$(INSTALL_PROGRAM) -p $(libghdl_name) $(DESTDIR)$(libdir)/
+
+install.libghdl.true: install.libghdl.lib install.libghdlsynth.include
+
+install.libghdl.false:
+install.libghdl: install.libghdl.$(enable_libghdl)
+
+uninstall.libghdl:
+	$(RM) $(DESTDIR)$(libdir)/$(libghdl_name)
+
+libghdl-py.tgz:
+	[ -d pythonb ] || $(MKDIR) pythonb
+	$(CP) -r $(srcdir)/python/libghdl $(srcdir)/python/setup.py pythonb
+	tar -zcvf $@ -C pythonb .
 
 ################ ghdlsynth library ######################################
 
-GHDL_SYNTHLIB_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate
+GHDL_SYNTHLIB_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src/ghdldrv
 
-libghdlsynth.a: $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
+libghdlsynth.a: $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -c libghdlsynth $(GNATFLAGS) -gnat12 $(GHDL_SYNTHLIB_INCFLAGS)
 	gnatbind -Llibghdlsynth_ libghdlsynth.ali -O > ghdlsynth.files
 #	Extract link options, be sure to link statically with libgnat
 	gnatbind -Llibghdlsynth_ libghdlsynth.ali -K -Z | sed -e '\@adalib/$$@s/-L//' -e '\@adalib/@s@adalib/@adalib/libgnat.a@' -e '/-lgnat/d' > ghdlsynth.link
 	$(GNATMAKE) -c b~libghdlsynth.adb
 	$(RM) -f $@
-	ar rc $@ b~libghdlsynth.o `cat ghdlsynth.files` $(GRT_ADD_OBJS)
+	ar rc $@ b~libghdlsynth.o `cat ghdlsynth.files`
 
-libghdlsynth$(SOEXT): $(GRT_ADD_SHOBJS) $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) -I- -aI. -D pic -z libghdlsynth -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat12 $(GHDL_SYNTHLIB_INCFLAGS) -bargs -shared -Llibghdlsynth_ -largs -shared $(GRT_ADD_SHOBJS) $(SHLIB_FLAGS)
+libghdlsynth$(SOEXT): $(GRT_SRC_DEPS) version.ads force
+	$(GNATMAKE) -I- -aI. -D pic -z libghdlsynth -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat12 $(GHDL_SYNTHLIB_INCFLAGS) -bargs -shared -Llibghdlsynth_ -largs -shared $(SHLIB_FLAGS)
+
+$(srcdir)/src/synth/ghdlsynth_gates.h: $(srcdir)/src/synth/netlists.ads $(srcdir)/src/synth/netlists-gates.ads
+	echo "/* DO NOT MODIFY" > $@
+	echo "   This file is automatically generated by Makefile.  */" >> $@
+	echo "enum Module_Id {" >> $@
+	grep -h "constant Module_Id :=" $^ | sed -e '/constant Module_Id :=/s/:.*://' -e 's/;/,/' -e 's/ *--.*//' >> $@
+	echo "};" >> $@
 
 install.libghdlsynth: install.libghdlsynth.include install.libghdlsynth.static install.libghdlsynth.shared
 
-install.libghdlsynth.include: install.dirs
+install.libghdlsynth.include: install.dirs $(srcdir)/src/synth/ghdlsynth_gates.h
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth.h $(DESTDIR)$(incdir)/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth_gates.h $(DESTDIR)$(incdir)/
+
+install.libghdlsynth.local: $(srcdir)/src/synth/ghdlsynth_gates.h
+	$(MKDIR) -p include lib
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth.h include/
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth_gates.h include/
 
 install.libghdlsynth.static: libghdlsynth.a install.libghdlsynth.include
 	$(INSTALL_DATA) -p libghdlsynth.a $(DESTDIR)$(libdir)/
@@ -399,6 +486,12 @@ install.grt: $(libdirsuffix)/libgrt.a $(libdirsuffix)/grt.lst install.dirs
 	test "x$(LIBBACKTRACE)" = x || test "x$(backend)" = xgcc || \
 	  $(INSTALL_DATA) $(LIBBACKTRACE) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
 
+uninstall.grt:
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
+
 ################ VPI #####################################################
 
 vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
@@ -414,6 +507,10 @@ install.vpi: all.vpi install.dirs
 	$(INSTALL_PROGRAM) -p libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
 
+uninstall.vpi:
+	$(RM) -f $(DESTDIR)$(libdir)/libghdlvpi$(SOEXT)
+	$(RM) -f $(DESTDIR)$(incdir)/vpi_user.h
+
 install.vpi.local: all.vpi
 	$(MKDIR) -p include lib
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/
@@ -424,19 +521,22 @@ install.vpi.local: all.vpi
 LIBSRC_DIR:=$(srcdir)/libraries
 LIBDST_DIR:=$(libdirsuffix)
 
-VHDLLIB_SUBDIRS_COMMON= src/std src/synopsys src/openieee \
+VHDLLIB_SUBDIRS_COMMON= src/std src/std/v87 src/std/v93 src/std/v08 \
+  src/synopsys src/synopsys/v08 \
   std/v87 ieee/v87 synopsys/v87 \
   std/v93 ieee/v93 synopsys/v93 \
-  std/v08
+  std/v08 ieee/v08 \
+  src/openieee
 
 VHDLLIB_SUBDIRS_FULL= src/ieee src/vital95 src/vital2000 src/mentor \
-  src/ieee2008 \
-  mentor/v93 ieee/v08 synopsys/v08
+  src/ieee/v87 src/ieee/v93 src/ieee2008 \
+  mentor/v93 synopsys/v08
 
 ifeq ($(enable_openieee),false)
 VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON) $(VHDLLIB_SUBDIRS_FULL)
 else
-VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON)
+VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON) \
+  src/openieee/v87 src/openieee/v93 src/openieee/v08
 endif
 
 install.dirs:
@@ -464,6 +564,9 @@ install.vhdllib: install.dirs
 	$(INSTALL_PROGRAM) -p \
 	    $(LIBSRC_DIR)/vendors/*.sh $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
 
+uninstall.vhdllib:
+	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)
+
 ####################### clean ############################################
 
 clean: force
@@ -481,9 +584,13 @@ distclean: clean
 	$(RM) -f Makefile config.status ghdl.gpr
 
 clean-c: force
-	$(RM) -f memsegs_c.o chkstk.o jumps.o times.o grt-cbinding.o grt-cvpi.o
+	$(RM) -f memsegs_c.o chkstk.o jumps.o times.o
+	$(RM) -f grt-cstdio.o grt-cgnatrts.o grt-modules.o
+	$(RM) -f grt-cvpi.o grt-cdynload.o
 	$(RM) -f fstapi.o fastlz.o lz4.o
 	$(RM) -f pic/times.o pic/grt-cvpi.o pic/jumps.o
+	$(RM) -f pic/grt-cstdio.o pic/grt-cgnatrts.o pic/grt-modules.o
+	$(RM) -f pic/grt-cdynload.o
 
 create-dirs: force
 	for d in $(VHDLLIB_SUBDIRS); do \
@@ -503,3 +610,12 @@ clean-pure-gpl:
 force:
 
 .PHONY: force clean distclean clean-c clean-pure-gpl
+
+# Most of the compilation is done through gnatmake, so using make -jX it not
+# very effective.
+# Hint: for parallel build use: make GNATMAKE="gnatmake -j8"
+# Parallel builds may fail with the llvm backend as it can start two gnatmake
+# in parallel: one for ghdl_llvm and the other for ghdl1-llvm. But they
+# share the same objects.
+# Any better fix is welcome!
+.NOTPARALLEL:

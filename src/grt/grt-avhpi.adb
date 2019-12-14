@@ -25,6 +25,7 @@
 with Grt.Errors; use Grt.Errors;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
+with Grt.To_Strings;
 
 package body Grt.Avhpi is
    procedure Get_Root_Inst (Res : out VhpiHandleT) is
@@ -151,10 +152,12 @@ package body Grt.Avhpi is
                      Bt : constant Ghdl_Rtin_Type_Array_Acc :=
                        To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
                      Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
+                     Layout : Address;
                   begin
+                     Layout :=
+                       Loc_To_Addr (St.Common.Depth, St.Layout, Res.Ctxt);
                      Bound_To_Range
-                       (Loc_To_Addr (St.Common.Depth, St.Bounds, Res.Ctxt),
-                        Bt, Rngs);
+                       (Array_Layout_To_Bounds (Layout), Bt, Rngs);
                      Res.N_Idx := Ranges_To_Length (Rngs, Bt.Indexes);
                   end;
                when others =>
@@ -176,7 +179,6 @@ package body Grt.Avhpi is
                        El_Type : Ghdl_Rti_Access;
                        Off : Ghdl_Index_Type) return Address
    is
-      pragma Unreferenced (Ctxt);
       Is_Sig : Boolean;
       El_Size : Ghdl_Index_Type;
       El_Type1 : Ghdl_Rti_Access;
@@ -202,13 +204,20 @@ package body Grt.Avhpi is
                El_Size := Ghdl_I64'Size / Storage_Unit;
             end if;
          when Ghdl_Rtik_Subtype_Array =>
-            if Is_Sig then
-               El_Size := Ghdl_Index_Type
-                 (To_Ghdl_Rtin_Subtype_Composite_Acc (El_Type1).Sigsize);
-            else
-               El_Size := Ghdl_Index_Type
-                 (To_Ghdl_Rtin_Subtype_Composite_Acc (El_Type1).Valsize);
-            end if;
+            declare
+               Sizes : Ghdl_Indexes_Ptr;
+            begin
+               Sizes := To_Ghdl_Indexes_Ptr
+                 (Loc_To_Addr
+                    (El_Type1.Depth,
+                     To_Ghdl_Rtin_Subtype_Composite_Acc (El_Type1).Layout,
+                     Ctxt));
+               if Is_Sig then
+                  El_Size := Sizes.Signal;
+               else
+                  El_Size := Sizes.Value;
+               end if;
+            end;
          when others =>
             Internal_Error ("add_index");
       end case;
@@ -735,7 +744,7 @@ package body Grt.Avhpi is
                      end if;
                      case Iter_Type.Kind is
                         when Ghdl_Rtik_Type_I32 =>
-                           To_String (Buf, Buf_Len, Vptr.I32);
+                           Grt.To_Strings.To_String (Buf, Buf_Len, Vptr.I32);
                            Add (Buf (Buf_Len .. Buf'Last));
 --                         when Ghdl_Rtik_Type_E8 =>
 --                            Disp_Enum_Value
@@ -1003,6 +1012,7 @@ package body Grt.Avhpi is
                           To_Ghdl_Rtin_Type_Array_Acc (Arr_Subtype.Basetype);
                         Idx : constant Ghdl_Index_Type :=
                           Ghdl_Index_Type (Index);
+                        Layout : Address;
                         Bounds : Ghdl_Range_Array (0 .. Basetype.Nbr_Dim - 1);
                         Range_Basetype : Ghdl_Rti_Access;
                      begin
@@ -1012,10 +1022,10 @@ package body Grt.Avhpi is
                            return;
                         end if;
                         --  constraint type is basetype.indexes (idx - 1)
+                        Layout := Loc_To_Addr (Arr_Subtype.Common.Depth,
+                                               Arr_Subtype.Layout, Ref.Ctxt);
                         Bound_To_Range
-                          (Loc_To_Addr (Arr_Subtype.Common.Depth,
-                                        Arr_Subtype.Bounds, Ref.Ctxt),
-                           Basetype, Bounds);
+                          (Array_Layout_To_Bounds (Layout), Basetype, Bounds);
                         Res := (Kind => VhpiIntRangeK,
                                 Ctxt => Ref.Ctxt,
                                 Rng_Type => Basetype.Indexes (Idx - 1),

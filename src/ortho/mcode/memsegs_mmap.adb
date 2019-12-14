@@ -15,6 +15,9 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
+with System.Storage_Elements;
+
 package body Memsegs_Mmap is
    function Mmap_Malloc (Size : Natural) return Address;
    pragma Import (C, Mmap_Malloc, "mmap_malloc");
@@ -56,9 +59,11 @@ package body Memsegs_Mmap is
       Seg.Size := 0;
    end Delete;
 
-   procedure Set_Rx (Seg : in out Memseg_Type) is
+   procedure Set_Rx (Seg : in out Memseg_Type;
+                     Offset : Natural; Size : Natural)
+   is
+      use System.Storage_Elements;
    begin
-      Mmap_Rx (Seg.Base, Seg.Size);
+      Mmap_Rx (Seg.Base + Storage_Offset (Offset), Size);
    end Set_Rx;
 end Memsegs_Mmap;
-

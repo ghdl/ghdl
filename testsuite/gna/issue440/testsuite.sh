@@ -9,6 +9,8 @@ elab_simulate e3
 analyze e2.vhdl
 elab_simulate e2
 
+analyze_failure ent.vhdl
+
 # Not yet fixed
 # analyze e.vhdl
 

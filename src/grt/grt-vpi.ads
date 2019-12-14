@@ -30,50 +30,64 @@ with Grt.Callbacks;
 
 package Grt.Vpi is
 
-   -- properties, see vpi_user.h
-   vpiUndefined:     constant integer := -1;
-   vpiType:          constant integer :=  1;
-   vpiName:          constant integer :=  2;
-   vpiFullName:      constant integer :=  3;
-   vpiSize:          constant integer :=  4;
-   vpiTimePrecision: constant integer := 12;
+   --  Properties, see vpi_user.h
+   vpiUndefined :     constant Integer := -1;
+   vpiType :          constant Integer :=  1;
+   vpiName :          constant Integer :=  2;
+   vpiFullName :      constant Integer :=  3;
+   vpiSize :          constant Integer :=  4;
+   vpiFile :          constant Integer :=  5;
+   vpiLineNo :        constant Integer :=  6;
 
-   vpiScalar:        constant integer := 17;
-   vpiVector:        constant integer := 18;
+   vpiDefName :       constant Integer :=  9;
+   vpiTimePrecision : constant Integer := 12;
+   vpiDefFile :       constant Integer := 15;
+
+   vpiScalar :        constant Integer := 17;
+   vpiVector :        constant Integer := 18;
 
    -- object codes, see vpi_user.h
-   vpiModule:        constant integer := 32;
-   vpiNet:           constant integer := 36;
-   vpiParameter:     constant integer := 41;
-   vpiLeftRange:     constant integer := 79;
-   vpiRightRange:    constant integer := 83;
-   vpiScope:         constant integer := 84;
-   vpiInternalScope: constant integer := 92;
+   vpiModule :        constant Integer := 32;
+   vpiNet :           constant Integer := 36;
+   vpiPort :          constant Integer := 44;
+   --
+   vpiDirection :     constant Integer := 20;
+   vpiInput :         constant Integer :=  1;
+   vpiOutput :        constant Integer :=  2;
+   vpiInout :         constant Integer :=  3;
+   vpiMixedIO :       constant Integer :=  4;
+   vpiNoDirection :   constant Integer :=  5;
 
-   vpiStop   : constant := 66;
-   vpiFinish : constant := 67;
-   vpiReset  : constant := 68;
+   vpiParameter :     constant Integer := 41;
+   vpiLeftRange :     constant Integer := 79;
+   vpiRightRange :    constant Integer := 83;
+   vpiScope :         constant Integer := 84;
+   vpiInternalScope : constant Integer := 92;
+
+   vpiStop :          constant := 66;
+   vpiFinish :        constant := 67;
+   vpiReset :         constant := 68;
 
    --  Additionnal constants.
    vpiCallback :     constant Integer := 200;
 
    -- codes for the format tag of the vpi_value structure
-   vpiBinStrVal:     constant integer :=  1;
-   vpiOctStrVal:     constant integer :=  2;
-   vpiDecStrVal:     constant integer :=  3;
-   vpiHexStrVal:     constant integer :=  4;
-   vpiScalarVal:     constant integer :=  5;
-   vpiIntVal:        constant integer :=  6;
-   vpiRealVal:       constant integer :=  7;
-   vpiStringVal:     constant integer :=  8;
-   vpiVectorVal:     constant integer :=  9;
-   vpiStrengthVal:   constant integer := 10;
-   vpiTimeVal:       constant integer := 11;
-   vpiObjTypeVal:    constant integer := 12;
-   vpiSuppressVal:   constant integer := 13;
+   vpiBinStrVal:     constant Integer :=  1;
+   vpiOctStrVal:     constant Integer :=  2;
+   vpiDecStrVal:     constant Integer :=  3;
+   vpiHexStrVal:     constant Integer :=  4;
+   vpiScalarVal:     constant Integer :=  5;
+   vpiIntVal:        constant Integer :=  6;
+   vpiRealVal:       constant Integer :=  7;
+   vpiStringVal:     constant Integer :=  8;
+   vpiVectorVal:     constant Integer :=  9;
+   vpiStrengthVal:   constant Integer := 10;
+   vpiTimeVal:       constant Integer := 11;
+   vpiObjTypeVal:    constant Integer := 12;
+   vpiSuppressVal:   constant Integer := 13;
 
    -- codes for type tag of vpi_time structure
-   vpiSimTime:       constant integer :=  2;
+   vpiSimTime:       constant Integer :=  2;
 
    -- codes for the reason tag of cb_data structure
    cbValueChange       : constant := 1;
@@ -99,6 +113,7 @@ package Grt.Vpi is
 
    type struct_vpiHandle (<>) is private;
    type vpiHandle is access struct_vpiHandle;
+   pragma No_Strict_Aliasing (vpiHandle);
 
    -- typedef struct t_vpi_time {
    --   int type;
@@ -128,7 +143,7 @@ package Grt.Vpi is
    --           char*misc;
    --   } value;
    -- } s_vpi_value, *p_vpi_value;
-   type s_vpi_value (Format : integer) is record
+   type s_vpi_value (Format : Integer) is record
       case Format is
          when vpiBinStrVal
            | vpiOctStrVal
@@ -199,7 +214,7 @@ package Grt.Vpi is
    pragma Export (C, vpi_get_str, "vpi_get_str");
 
    -- vpiHandle  vpi_handle(int type, vpiHandle ref)
-   function vpi_handle (aType: integer; Ref: vpiHandle)
+   function vpi_handle (aType: Integer; Ref: vpiHandle)
                        return vpiHandle;
    pragma Export (C, vpi_handle, "vpi_handle");
 
@@ -220,7 +235,7 @@ package Grt.Vpi is
 -------------------------------------------------------------------------------
 
    -- int vpi_free_object(vpiHandle ref)
-   function vpi_free_object(aRef: vpiHandle) return integer;
+   function vpi_free_object(aRef: vpiHandle) return Integer;
    pragma Export (C, vpi_free_object, "vpi_free_object");
 
    type s_vpi_vlog_info is record
@@ -235,12 +250,12 @@ package Grt.Vpi is
    pragma Convention (C, p_vpi_vlog_info);
 
    -- int vpi_get_vlog_info(p_vpi_vlog_info vlog_info_p)
-   function vpi_get_vlog_info(info : p_vpi_vlog_info) return integer;
+   function vpi_get_vlog_info(info : p_vpi_vlog_info) return Integer;
    pragma Export (C, vpi_get_vlog_info, "vpi_get_vlog_info");
 
 
    -- vpiHandle vpi_handle_by_index(vpiHandle ref, int index)
-   function vpi_handle_by_index(aRef: vpiHandle; aIndex: integer)
+   function vpi_handle_by_index(aRef: vpiHandle; aIndex: Integer)
                                return vpiHandle;
    pragma Export (C, vpi_handle_by_index, "vpi_handle_by_index");
 
@@ -265,7 +280,7 @@ package Grt.Vpi is
    function vpi_put_value (aObj : vpiHandle;
                            aValue : p_vpi_value;
                            aWhen : p_vpi_time;
-                           aFlags : integer)
+                           aFlags : Integer)
                           return vpiHandle;
    pragma Export (C, vpi_put_value, "vpi_put_value");
 
@@ -274,7 +289,7 @@ package Grt.Vpi is
    pragma Export (C, vpi_register_systf, "vpi_register_systf");
 
    -- int vpi_remove_cb(vpiHandle ref)
-   function vpi_remove_cb (Ref : vpiHandle) return integer;
+   function vpi_remove_cb (Ref : vpiHandle) return Integer;
    pragma Export (C, vpi_remove_cb, "vpi_remove_cb");
 
    --  typedef struct t_vpi_error_info

@@ -178,6 +178,13 @@ private
 
    O_Lnode_Null : constant O_Lnode := (False, Null_ValueRef, O_Tnode_Null);
 
+   type O_Gnode is record
+      LLVM : ValueRef;
+      Ltype : O_Tnode;
+   end record;
+
+   O_Gnode_Null : constant O_Gnode := (Null_ValueRef, O_Tnode_Null);
+
    type O_Snode is record
       --  First BB in the loop body.
       Bb_Entry : BasicBlockRef;

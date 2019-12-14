@@ -273,18 +273,18 @@ package body Ortho_Code.Disps is
             begin
                Op := Get_Expr_Operand (Expr);
                case Get_Expr_Kind (Op) is
-                  when OE_Addrg
+                  when OE_Addrd
                     | OE_Addrl =>
-                     Decls.Disp_Decl_Name (Get_Addr_Object (Op));
+                     Decls.Disp_Decl_Name (Get_Addr_Decl (Op));
                   when others =>
                      --Put ("*");
                      Disp_Expr (Op);
                end case;
             end;
          when OE_Addrl
-           | OE_Addrg =>
+           | OE_Addrd =>
             -- Put ('@');
-            Decls.Disp_Decl_Name (Get_Addr_Object (Expr));
+            Decls.Disp_Decl_Name (Get_Addr_Decl (Expr));
          when OE_Call =>
             Disp_Call (Expr);
          when OE_Alloca =>

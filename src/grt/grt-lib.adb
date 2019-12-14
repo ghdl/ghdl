@@ -51,39 +51,40 @@ package body Grt.Lib is
       Level : constant Integer := Severity mod 256;
       Bt : Backtrace_Addrs;
    begin
-      Report_H;
-      Report_C (Loc.Filename);
-      Report_C (":");
-      Report_C (Loc.Line);
-      Report_C (":");
-      Report_C (Loc.Col);
-      Report_C (":@");
-      Report_Now_C;
-      Report_C (":(");
-      Report_C (Msg);
-      Report_C (" ");
+      Report_S;
+      Diag_C (Loc.Filename);
+      Diag_C (':');
+      Diag_C (Loc.Line);
+      Diag_C (':');
+      Diag_C (Loc.Col);
+      Diag_C (":@");
+      Diag_C_Now;
+      Diag_C (":(");
+      Diag_C (Msg);
+      Diag_C (" ");
       case Level is
          when Note_Severity =>
-            Report_C ("note");
+            Diag_C ("note");
          when Warning_Severity =>
-            Report_C ("warning");
+            Diag_C ("warning");
          when Error_Severity =>
-            Report_C ("error");
+            Diag_C ("error");
          when Failure_Severity =>
-            Report_C ("failure");
+            Diag_C ("failure");
          when others =>
-            Report_C ("???");
+            Diag_C ("???");
       end case;
-      Report_C ("): ");
+      Diag_C ("): ");
       if Str /= null then
-         Report_E (Str);
+         Diag_C (Str);
       else
-         Report_E (Default_Str);
+         Diag_C (Default_Str);
       end if;
+      Report_E;
       if Level >= Grt.Options.Severity_Level then
          Save_Backtrace (Bt, 2);
-         Error_C (Msg);
-         Error_C (" failed");
+         Error_S (Msg);
+         Diag_C (" failed");
          Error_E_Call_Stack (Bt);
       end if;
    end Do_Report;
@@ -115,6 +116,12 @@ package body Grt.Lib is
       Do_Report ("psl assertion", Str, "Assertion violation", Severity, Loc);
    end Ghdl_Psl_Assert_Failed;
 
+   procedure Ghdl_Psl_Assume_Failed (Loc : Ghdl_Location_Ptr) is
+   begin
+      Do_Report ("psl assumption", null, "Assumption violation",
+                 Error_Severity, Loc);
+   end Ghdl_Psl_Assume_Failed;
+
    procedure Ghdl_Psl_Cover
      (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
    begin
@@ -139,29 +146,29 @@ package body Grt.Lib is
 
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
                                  Line : Ghdl_I32;
-                                 Code : Ghdl_Index_Type)
-   is
+                                 Code : Ghdl_Index_Type) is
    begin
+      Error_S;
       case Code is
          when 1 =>
-            Error_C ("missing return in function");
+            Diag_C ("missing return in function");
          when 2 =>
-            Error_C ("block already configured");
+            Diag_C ("block already configured");
          when 3 =>
-            Error_C ("bad configuration");
+            Diag_C ("bad configuration");
          when others =>
-            Error_C ("unknown error code ");
-            Error_C (Integer (Code));
+            Diag_C ("unknown error code ");
+            Diag_C (Integer (Code));
       end case;
-      Error_C (" at ");
+      Diag_C (" at ");
       if Filename = null then
-         Error_C ("*unknown*");
+         Diag_C ("*unknown*");
       else
-         Error_C (Filename);
+         Diag_C (Filename);
       end if;
-      Error_C (":");
-      Error_C (Integer(Line));
-      Error_E ("");
+      Diag_C (":");
+      Diag_C (Line);
+      Error_E;
    end Ghdl_Program_Error;
 
    procedure Ghdl_Bound_Check_Failed (Filename : Ghdl_C_String;
@@ -170,10 +177,10 @@ package body Grt.Lib is
       Bt : Backtrace_Addrs;
    begin
       Save_Backtrace (Bt, 1);
-      Error_C ("bound check failure at ");
-      Error_C (Filename);
-      Error_C (":");
-      Error_C (Integer (Line));
+      Error_S ("bound check failure at ");
+      Diag_C (Filename);
+      Diag_C (":");
+      Diag_C (Line);
       Error_E_Call_Stack (Bt);
    end Ghdl_Bound_Check_Failed;
 
@@ -183,22 +190,59 @@ package body Grt.Lib is
       Bt : Backtrace_Addrs;
    begin
       Save_Backtrace (Bt, 1);
-      Error_C ("slice direction doesn't match index direction at ");
-      Error_C (Filename);
-      Error_C (":");
-      Error_C (Integer (Line));
+      Error_S ("slice direction doesn't match index direction at ");
+      Diag_C (Filename);
+      Diag_C (":");
+      Diag_C (Line);
       Error_E_Call_Stack (Bt);
    end Ghdl_Direction_Check_Failed;
 
-   function Ghdl_Integer_Exp (V : Ghdl_I32; E : Ghdl_I32)
-     return Ghdl_I32
-   is
-      pragma Suppress (Overflow_Check);
+   function Hi (V : Ghdl_I64) return Ghdl_U32 is
+   begin
+      return Ghdl_U32 (Shift_Right (To_Ghdl_U64 (V), 32) and 16#ffff_ffff#);
+   end Hi;
 
-      R : Ghdl_I32;
-      Res : Ghdl_I32;
-      P : Ghdl_I32;
+   function Lo (V : Ghdl_I64) return Ghdl_U32 is
+   begin
+      return Ghdl_U32 (To_Ghdl_U64 (V) and 16#ffff_ffff#);
+   end Lo;
+
+   procedure Mul_I32_Ovf (L, R : Ghdl_I32;
+                          Res : out Ghdl_I32;
+                          Ovf : out Boolean)
+   is
       T : Ghdl_I64;
+   begin
+      T := Ghdl_I64 (L) * Ghdl_I64 (R);
+      if Hi (T) /= Shift_Right_Arithmetic (Lo (T), 31) then
+         Ovf := True;
+      else
+         Ovf := False;
+         Res := Ghdl_I32 (T);
+      end if;
+   end Mul_I32_Ovf;
+
+   procedure Mul_I64_Ovf (L, R : Ghdl_I64;
+                          Res : out Ghdl_I64;
+                          Ovf : out Boolean) is
+   begin
+      --  TODO: check overflow.
+      Res := L * R;
+      Ovf := False;
+   end Mul_I64_Ovf;
+
+   generic
+      type T is range <>;
+      with procedure Mul_Ovf (L, R : T; Res : out T; Ovf : out Boolean);
+   function Gen_Ixx_Exp (V : T; E : Std_Integer) return T;
+   pragma Convention (C, Gen_Ixx_Exp);
+
+   function Gen_Ixx_Exp (V : T; E : Std_Integer) return T
+   is
+      R : Std_Integer;
+      Res : T;
+      P : T;
+      Ovf : Boolean;
    begin
       if E < 0 then
          Error ("negative exponent");
@@ -208,18 +252,52 @@ package body Grt.Lib is
       R := E;
       loop
          if R mod 2 = 1 then
-            T := Ghdl_I64 (Res) * Ghdl_I64 (P);
-            Res := Ghdl_I32 (T);
-            if Ghdl_I64 (Res) /= T then
+            Mul_Ovf (Res, P, Res, Ovf);
+            if Ovf then
                Error ("overflow in exponentiation");
             end if;
          end if;
          R := R / 2;
          exit when R = 0;
-         P := P * P;
+         Mul_Ovf (P, P, P, Ovf);
+         if Ovf then
+            Error ("overflow in exponentiation");
+         end if;
       end loop;
       return Res;
-   end Ghdl_Integer_Exp;
+   end Gen_Ixx_Exp;
+
+   function Ghdl_I32_Exp_1 is new Gen_Ixx_Exp (Ghdl_I32, Mul_I32_Ovf);
+
+   function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32 is
+   begin
+      return Ghdl_I32_Exp_1 (V, E);
+   end Ghdl_I32_Exp;
+
+   function Ghdl_I64_Exp_1 is new Gen_Ixx_Exp (Ghdl_I64, Mul_I64_Ovf);
+
+   function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64 is
+   begin
+      return Ghdl_I64_Exp_1 (V, E);
+   end Ghdl_I64_Exp;
+
+   procedure Ghdl_Check_Stack_Allocation (Size : Ghdl_Index_Type)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      if Max_Stack_Allocation = 0 then
+         return;
+      end if;
+      if Size > Max_Stack_Allocation then
+         Save_Backtrace (Bt, 1);
+         Error_S ("declaration of a too large object (");
+         Diag_C (Natural (Size / 1024));
+         Diag_C (" > --max-stack-alloc=");
+         Diag_C (Natural (Max_Stack_Allocation / 1024));
+         Diag_C (" KB)");
+         Error_E_Call_Stack (Bt);
+      end if;
+   end Ghdl_Check_Stack_Allocation;
 
    function C_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr;
    pragma Import (C, C_Malloc, "malloc");
@@ -320,21 +398,21 @@ package body Grt.Lib is
    procedure Ghdl_Control_Simulation
      (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer) is
    begin
-      Report_H;
+      Report_S;
       --  Report_C (Grt.Options.Progname);
-      Report_C ("simulation ");
+      Diag_C ("simulation ");
       if Stop then
-         Report_C ("stopped");
+         Diag_C ("stopped");
       else
-         Report_C ("finished");
+         Diag_C ("finished");
       end if;
-      Report_C (" @");
-      Report_Now_C;
+      Diag_C (" @");
+      Diag_C_Now;
       if Has_Status then
-         Report_C (" with status ");
-         Report_C (Integer (Status));
+         Diag_C (" with status ");
+         Diag_C (Integer (Status));
       end if;
-      Report_E ("");
+      Report_E;
       if Has_Status then
          Exit_Status := Integer (Status);
       end if;

@@ -1,5 +1,19 @@
-#formats:
-#  - pdf
-requirements_file: doc/requirements.txt
+version: 2
+
+formats: # Use 'all' to include all formats
+  - htmlzip
+  - pdf
+#  - epub
+
 python:
-  version: 3
+  version: 3.7
+  install:
+    - requirements: doc/requirements.txt
+
+build:
+  image: latest
+
+sphinx:
+  builder: html
+  configuration: doc/conf.py
+  fail_on_warning: false

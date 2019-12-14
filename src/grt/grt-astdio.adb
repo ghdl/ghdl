@@ -100,20 +100,6 @@ package body Grt.Astdio is
       New_Line;
    end Put_Line;
 
-   procedure Put_Str_Len (Stream : FILEs; Str : Ghdl_Str_Len_Type)
-   is
-      S : String (1 .. 3);
-   begin
-      if Str.Str = null then
-         S (1) := ''';
-         S (2) := Character'Val (Str.Len);
-         S (3) := ''';
-         Put (Stream, S);
-      else
-         Put (Stream, Str.Str (1 .. Str.Len));
-      end if;
-   end Put_Str_Len;
-
    generic
       type Ntype is range <>;
       Max_Len : Natural;
@@ -198,40 +184,5 @@ package body Grt.Astdio is
       end loop;
       Put (Stream, Res);
    end Put;
-
-   procedure Put_Dir (Stream : FILEs; Dir : Ghdl_Dir_Type) is
-   begin
-      case Dir is
-         when Dir_To =>
-            Put (Stream, " to ");
-         when Dir_Downto =>
-            Put (Stream, " downto ");
-      end case;
-   end Put_Dir;
-
-   procedure Put_Time (Stream : FILEs; Time : Std_Time) is
-   begin
-      if Time = Std_Time'First then
-         Put (Stream, "-Inf");
-      else
-         --  Do not bother with sec, min, and hr.
-         if (Time mod 1_000_000_000_000) = 0 then
-            Put_I64 (Stream, Ghdl_I64 (Time / 1_000_000_000_000));
-            Put (Stream, "ms");
-         elsif (Time mod 1_000_000_000) = 0 then
-            Put_I64 (Stream, Ghdl_I64 (Time / 1_000_000_000));
-            Put (Stream, "us");
-         elsif (Time mod 1_000_000) = 0 then
-            Put_I64 (Stream, Ghdl_I64 (Time / 1_000_000));
-            Put (Stream, "ns");
-         elsif (Time mod 1_000) = 0 then
-            Put_I64 (Stream, Ghdl_I64 (Time / 1_000));
-            Put (Stream, "ps");
-         else
-            Put_I64 (Stream, Ghdl_I64 (Time));
-            Put (Stream, "fs");
-         end if;
-      end if;
-   end Put_Time;
 
 end Grt.Astdio;

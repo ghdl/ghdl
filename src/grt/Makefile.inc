@@ -52,7 +52,7 @@ ifeq ($(filter-out mingw32 mingw64,$(osys)),)
   GRT_EXTRA_LIB=-ldbghelp
 else
   GRT_TARGET_OBJS=jumps.o times.o
-  ifeq ($(filter-out linux,$(osys)),)
+  ifeq ($(filter-out linux%,$(osys)),)
     GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
   endif
   ifeq ($(filter-out netbsd freebsd% dragonfly%,$(osys)),)
@@ -70,9 +70,8 @@ endif
 GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 
 # Additionnal object files (C or asm files).
-GRT_BASE_C_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o
-GRT_ADD_OBJS:=$(GRT_BASE_C_OBJS) grt-cvpi.o $(GRT_FST_OBJS)
-GRT_ADD_SHOBJS:=$(patsubst %, pic/%, $(GRT_BASE_C_OBJS))
+GRT_BASE_C_OBJS:=$(GRT_TARGET_OBJS) grt-cstdio.o grt-cgnatrts.o
+GRT_ADD_OBJS:=$(GRT_BASE_C_OBJS) grt-cvpi.o grt-cdynload.o $(GRT_FST_OBJS)
 
 # Source files create by grt.
 GRT_SRC_DEPS:=grt-backtraces-impl.ads
@@ -98,7 +97,7 @@ MSYS2_ARG=MSYS2_ARG_CONV_EXCL="-aI;-gnatec"
 
 # Configuration pragmas.
 # -gnatdY is required to force the use of __gnat_last_chance_handler.
-GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05 -gnatdY
+GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnatdY
 
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(GNATMAKE) -u -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG)
@@ -152,16 +151,28 @@ pic/times.o : $(GRTSRCDIR)/config/times.c
 clock.o : $(GRTSRCDIR)/config/clock.c
 	$(GRT_C_COMPILE)
 
-grt-cbinding.o: $(GRTSRCDIR)/grt-cbinding.c
+grt-cstdio.o: $(GRTSRCDIR)/grt-cstdio.c
 	$(GRT_C_COMPILE)
 
-pic/grt-cbinding.o: $(GRTSRCDIR)/grt-cbinding.c
+pic/grt-cstdio.o: $(GRTSRCDIR)/grt-cstdio.c
+	$(GRT_C_COMPILE_PIC)
+
+grt-cgnatrts.o: $(GRTSRCDIR)/grt-cgnatrts.c
+	$(GRT_C_COMPILE)
+
+pic/grt-cgnatrts.o: $(GRTSRCDIR)/grt-cgnatrts.c
 	$(GRT_C_COMPILE_PIC)
 
 grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
 	$(GRT_C_COMPILE)
 
 pic/grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
+	$(GRT_C_COMPILE_PIC)
+
+grt-cdynload.o: $(GRTSRCDIR)/grt-cdynload.c
+	$(GRT_C_COMPILE)
+
+pic/grt-cdynload.o: $(GRTSRCDIR)/grt-cdynload.c
 	$(GRT_C_COMPILE_PIC)
 
 grt-cthreads.o: $(GRTSRCDIR)/grt-cthreads.c

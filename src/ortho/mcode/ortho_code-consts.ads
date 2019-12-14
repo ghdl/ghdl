@@ -24,6 +24,8 @@ package Ortho_Code.Consts is
                     OC_Subprg_Address, OC_Address,
                     OC_Sizeof, OC_Alignof);
 
+   type OG_Kind is (OG_Decl, OG_Record_Ref);
+
    function Get_Const_Kind (Cst : O_Cnode) return OC_Kind;
 
    function Get_Const_Type (Cst : O_Cnode) return O_Tnode;
@@ -54,8 +56,11 @@ package Ortho_Code.Consts is
    function Get_Const_Union_Field (Cst : O_Cnode) return O_Fnode;
    function Get_Const_Union_Value (Cst : O_Cnode) return O_Cnode;
 
-   --  Declaration for an address.
+   --  Declaration for a subprogram address.
    function Get_Const_Decl (Cst : O_Cnode) return O_Dnode;
+
+   --  Object for a global object address.
+   function Get_Const_Global (Cst : O_Cnode) return O_Gnode;
 
    --  Get the type from an OC_Sizeof node.
    function Get_Sizeof_Type (Cst : O_Cnode) return O_Tnode;
@@ -77,13 +82,21 @@ package Ortho_Code.Consts is
 
    --  Create a null access literal.
    function New_Null_Access (Ltype : O_Tnode) return O_Cnode;
-   function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
-                                         return O_Cnode;
    function New_Default_Value (Ltype : O_Tnode) return O_Cnode;
-   function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode)
+   function New_Global_Unchecked_Address (Lvalue : O_Gnode; Atype : O_Tnode)
+                                         return O_Cnode;
+   function New_Global_Address (Lvalue : O_Gnode; Atype : O_Tnode)
                                return O_Cnode;
    function New_Subprogram_Address (Subprg : O_Dnode; Atype : O_Tnode)
                                    return O_Cnode;
+
+   function New_Global (Decl : O_Dnode) return O_Gnode;
+
+   function New_Global_Selected_Element (Rec : O_Gnode; El : O_Fnode)
+                                        return O_Gnode;
+
+   procedure Get_Global_Decl_Offset (Global : O_Gnode;
+                                     Decl : out O_Dnode; Off : out Uns32);
 
    function New_Named_Literal
      (Atype : O_Tnode; Id : O_Ident; Val : Uns32; Prev : O_Cnode)

@@ -1,0 +1,338 @@
+--  EDIF nodes. This is in fact -*- Ada -*-
+--  Copyright (C) 2019 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+with Ada.Unchecked_Conversion;
+with Tables;
+with Edif.Nodes_Meta; use Edif.Nodes_Meta;
+
+package body Edif.Nodes is
+   type Format_Type is
+     (
+      Format_X1,
+      Format_X2,
+      Format_X4
+     );
+
+   -- Common fields are:
+   --   Nkind : Kind_Type
+   --   State1 : Bit2_Type
+   --   Flag1 : Boolean
+   --   Flag2 : Boolean
+   --   Flag3 : Boolean
+   --   Flag4 : Boolean
+   --   Flag5 : Boolean
+   --   Flag6 : Boolean
+   --   Flag7 : Boolean
+   --   Flag8 : Boolean
+   --   Flag9 : Boolean
+   --   Flag10 : Boolean
+   --   Flag11 : Boolean
+   --   Flag12 : Boolean
+   --   Flag13 : Boolean
+   --   Flag14 : Boolean
+   --   Field0 : Node
+   --   Field1 : Node
+   --   Field2 : Node
+
+   -- Fields of Format_X1:
+
+   -- Fields of Format_X2:
+   --   Field3 : Node
+   --   Field4 : Node
+   --   Field5 : Node
+
+   -- Fields of Format_X4:
+   --   Field3 : Node
+   --   Field4 : Node
+   --   Field5 : Node
+   --   Field6 : Node
+   --   Field7 : Node
+   --   Field8 : Node
+   --   Field9 : Node
+   --   Field10 : Node
+   --   Field11 : Node
+
+   type Bit2_Type is range 0 .. 2 ** 2 - 1;
+
+   type Node_Record is record
+      Kind : Nkind;      --  8 bits
+      State1 : Bit2_Type;
+      Flag1 : Boolean;
+      Flag2 : Boolean;
+      Flag3 : Boolean;
+      Flag4 : Boolean;
+      Flag5 : Boolean;
+      Flag6 : Boolean;
+      Flag7 : Boolean;
+      Flag8 : Boolean;
+      Flag9 : Boolean;
+      Flag10 : Boolean;
+      Flag11 : Boolean;
+      Flag12 : Boolean;
+      Flag13 : Boolean;
+      Flag14 : Boolean;
+      Flag15 : Boolean;
+      Flag16 : Boolean;
+      Flag17 : Boolean;
+      Flag18 : Boolean;
+      Flag19 : Boolean;
+      Flag20 : Boolean;
+      Flag21 : Boolean;
+      Flag22 : Boolean;
+
+      Field0 : Node;
+      Field1 : Node;
+      Field2 : Node;
+   end record;
+   pragma Pack (Node_Record);
+   for Node_Record'Size use 4 * 32;
+
+   package Nodet is new Tables
+     (Table_Component_Type => Node_Record,
+      Table_Index_Type => Node,
+      Table_Low_Bound => 2,
+      Table_Initial => 1024);
+
+   Init_Node : constant Node_Record :=
+     (Kind => N_Error,
+      Flag1 | Flag2 | Flag3 | Flag4 | Flag5 | Flag6 | Flag7 | Flag8 => False,
+      Flag9 | Flag10 | Flag11 | Flag12 | Flag13 | Flag14 | Flag15 => False,
+      Flag16 | Flag17 | Flag18 | Flag19 | Flag20 | Flag21 | Flag22 => False,
+      State1 => 0,
+      Field0 | Field1 | Field2 => 0);
+
+   Free_Nodes : Node := Null_Node;
+
+
+   function Get_Last_Node return Node is
+   begin
+      return Nodet.Last;
+   end Get_Last_Node;
+
+   function Node_To_Uns32 is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Uns32);
+   function Uns32_To_Node is new Ada.Unchecked_Conversion
+     (Source => Uns32, Target => Node);
+
+   function Node_To_Int32 is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Int32);
+   function Int32_To_Node is new Ada.Unchecked_Conversion
+     (Source => Int32, Target => Node);
+
+   function Bit2_Type_To_Direction_Type is new Ada.Unchecked_Conversion
+     (Bit2_Type, Direction_Type);
+   function Direction_Type_To_Bit2_Type is new Ada.Unchecked_Conversion
+     (Direction_Type, Bit2_Type);
+
+
+   function Node_To_Location_Type (N : Node) return Location_Type is
+   begin
+      return Location_Type (N);
+   end Node_To_Location_Type;
+
+   function Location_Type_To_Node (L : Location_Type) return Node is
+   begin
+      return Node (L);
+   end Location_Type_To_Node;
+
+
+   procedure Set_Kind (N : Node; K : Nkind) is
+   begin
+      Nodet.Table (N).Kind := K;
+   end Set_Kind;
+
+   function Get_Kind (N : Node) return Nkind is
+   begin
+      pragma Assert (N /= Null_Node, "get_kind: null node");
+      return Nodet.Table (N).Kind;
+   end Get_Kind;
+
+   procedure Set_State1 (N : Node; State : Bit2_Type) is
+   begin
+      Nodet.Table (N).State1 := State;
+   end Set_State1;
+
+   function Get_State1 (N : Node) return Bit2_Type is
+   begin
+      return Nodet.Table (N).State1;
+   end Get_State1;
+
+
+   procedure Set_Flag1 (N : Node; Flag : Boolean) is
+   begin
+      Nodet.Table (N).Flag1 := Flag;
+   end Set_Flag1;
+
+   function Get_Flag1 (N : Node) return Boolean is
+   begin
+      return Nodet.Table (N).Flag1;
+   end Get_Flag1;
+
+
+   procedure Set_Field0 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field0 := V;
+   end Set_Field0;
+
+   function Get_Field0 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field0;
+   end Get_Field0;
+
+
+   procedure Set_Field1 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field1 := V;
+   end Set_Field1;
+
+   function Get_Field1 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field1;
+   end Get_Field1;
+
+
+   procedure Set_Field2 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N).Field2 := V;
+   end Set_Field2;
+
+   function Get_Field2 (N : Node) return Node is
+   begin
+      return Nodet.Table (N).Field2;
+   end Get_Field2;
+
+
+   procedure Set_Field3 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field0 := V;
+   end Set_Field3;
+
+   function Get_Field3 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field0;
+   end Get_Field3;
+
+
+   procedure Set_Field4 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field1 := V;
+   end Set_Field4;
+
+   function Get_Field4 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field1;
+   end Get_Field4;
+
+
+   procedure Set_Field5 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 1).Field2 := V;
+   end Set_Field5;
+
+   function Get_Field5 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 1).Field2;
+   end Get_Field5;
+
+
+   procedure Set_Field6 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 2).Field0 := V;
+   end Set_Field6;
+
+   function Get_Field6 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 2).Field0;
+   end Get_Field6;
+
+
+   procedure Set_Field7 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 2).Field1 := V;
+   end Set_Field7;
+
+   function Get_Field7 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 2).Field1;
+   end Get_Field7;
+
+
+   procedure Set_Field8 (N : Node; V : Node) is
+   begin
+      Nodet.Table (N + 2).Field2 := V;
+   end Set_Field8;
+
+   function Get_Field8 (N : Node) return Node is
+   begin
+      return Nodet.Table (N + 2).Field2;
+   end Get_Field8;
+
+
+   function Get_Format (Kind : Nkind) return Format_Type;
+
+   function Create_Node (Kind : Nkind) return Node
+   is
+      Res : Node;
+   begin
+      case Get_Format (Kind) is
+         when Format_X1 =>
+            if Free_Nodes /= Null_Node then
+               Res := Free_Nodes;
+               Free_Nodes := Get_Field1 (Res);
+            else
+               Nodet.Increment_Last;
+               Res := Nodet.Last;
+            end if;
+         when Format_X2 =>
+            Res := Nodet.Allocate (2);
+            Nodet.Table (Res + 1) := Init_Node;
+         when Format_X4 =>
+            Res := Nodet.Allocate (4);
+            Nodet.Table (Res + 1) := Init_Node;
+            Nodet.Table (Res + 2) := Init_Node;
+            Nodet.Table (Res + 3) := Init_Node;
+      end case;
+      Nodet.Table (Res) := Init_Node;
+      Set_Kind (Res, Kind);
+      return Res;
+   end Create_Node;
+
+   procedure Free_Node (N : Node)
+   is
+   begin
+      --  FIXME: handle extended nodes.
+      Set_Kind (N, N_Error);
+      Set_Field1 (N, Free_Nodes);
+      Free_Nodes := N;
+   end Free_Node;
+
+   function Get_Location (N : Node) return Location_Type is
+   begin
+      return Node_To_Location_Type (Get_Field0 (N));
+   end Get_Location;
+
+   procedure Set_Location (N : Node; Loc : Location_Type) is
+   begin
+      Set_Field0 (N, Location_Type_To_Node (Loc));
+   end Set_Location;
+
+   pragma Unreferenced (Get_Last_Node);
+
+   --  Subprograms
+
+end Edif.Nodes;

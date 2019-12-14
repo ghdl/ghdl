@@ -51,10 +51,6 @@ package Grt.Rtis_Addr is
    function To_Addr_Acc is new Ada.Unchecked_Conversion
      (Source => Address, Target => Addr_Acc);
 
-   type Ghdl_Index_Acc is access Ghdl_Index_Type;
-   function To_Ghdl_Index_Acc is new Ada.Unchecked_Conversion
-     (Source => Address, Target => Ghdl_Index_Acc);
-
    --  Get the parent context of CTXT.
    --  The parent of an architecture is its entity.
    function Get_Parent_Context (Ctxt : Rti_Context) return Rti_Context;
@@ -90,6 +86,8 @@ package Grt.Rtis_Addr is
    procedure Extract_Range (Bounds : in out Address;
                             Def : Ghdl_Rti_Access;
                             Rng : out Ghdl_Range_Ptr);
+
+   function Array_Layout_To_Bounds (Layout : Address) return Address;
 
    --  Extract range of every dimension from bounds.
    procedure Bound_To_Range (Bounds_Addr : Address;

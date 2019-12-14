@@ -44,7 +44,7 @@ package body Tables is
 
    procedure Init is
    begin
-      Dyn_Table.Init (T);
+      Dyn_Table.Init (T, Table_Initial);
    end Init;
 
    function Last return Table_Index_Type is

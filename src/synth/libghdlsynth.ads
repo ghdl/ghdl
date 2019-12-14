@@ -18,12 +18,6 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Grt.Types; use Grt.Types;
-with Netlists; use Netlists;
-
 package Libghdlsynth is
-   type C_String_Array is array (Natural) of Ghdl_C_String;
-   type C_String_Array_Acc is access C_String_Array;
-
-   function Synth (Argc : Natural; Argv : C_String_Array_Acc) return Module;
+   pragma Elaborate_Body;
 end Libghdlsynth;

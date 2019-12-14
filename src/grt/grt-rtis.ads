@@ -94,6 +94,7 @@ package Grt.Rtis is
       Ghdl_Rtik_Attribute_Stable,
 
       Ghdl_Rtik_Psl_Assert,
+      Ghdl_Rtik_Psl_Assume,
       Ghdl_Rtik_Psl_Cover,
       Ghdl_Rtik_Psl_Endpoint,
 
@@ -120,6 +121,8 @@ package Grt.Rtis is
       --    bit 0: set for complex type
       --    bit 1: set for anonymous type definition
       --    bit 2: set only for physical type with non-static units (time)
+      --  * record elements:
+      --    bit 0: set for complex type (copy of the type complex bit).
       --  * signals:
       --    bit 0-3: mode (1: linkage, 2: buffer, 3 : out, 4 : inout, 5: in)
       --    bit 4-5: kind (0 : none, 1 : register, 2 : bus)
@@ -311,9 +314,7 @@ package Grt.Rtis is
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
       Basetype : Ghdl_Rti_Access;
-      Bounds : Ghdl_Rti_Loc;
-      Valsize : Ghdl_Rti_Loc;
-      Sigsize : Ghdl_Rti_Loc;
+      Layout : Ghdl_Rti_Loc;
    end record;
    pragma Convention (C, Ghdl_Rtin_Subtype_Composite);
    type Ghdl_Rtin_Subtype_Composite_Acc is access Ghdl_Rtin_Subtype_Composite;
@@ -332,12 +333,22 @@ package Grt.Rtis is
    function To_Ghdl_Rtin_Type_Fileacc_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Type_Fileacc_Acc);
 
+   --  Set in the mode field to know what Val_Off and Sig_Off are relative to.
+   --  This could also be extrated from the element type.
+   Ghdl_Rti_Element_Static : constant Ghdl_Rti_U8 := 0;
+   Ghdl_Rti_Element_Complex : constant Ghdl_Rti_U8 := 1;
+   Ghdl_Rti_Element_Unbounded : constant Ghdl_Rti_U8 := 2;
+
    type Ghdl_Rtin_Element is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
       Eltype : Ghdl_Rti_Access;
+      --  For static element: offset in the record.
+      --  For complex element: offset in the type layout or object layout.
       Val_Off : Ghdl_Index_Type;
       Sig_Off : Ghdl_Index_Type;
+      --  For unbounded records: element layout offset in the layout.
+      Layout_Off : Ghdl_Index_Type;
    end record;
    pragma Convention (C, Ghdl_Rtin_Element);
    type Ghdl_Rtin_Element_Acc is access Ghdl_Rtin_Element;
@@ -349,6 +360,8 @@ package Grt.Rtis is
       Name : Ghdl_C_String;
       Nbrel : Ghdl_Index_Type;
       Elements : Ghdl_Rti_Arr_Acc;
+      --  Layout variable for the record, if it is complex.
+      Layout : Ghdl_Rti_Loc;
    end record;
    pragma Convention (C, Ghdl_Rtin_Type_Record);
    type Ghdl_Rtin_Type_Record_Acc is access Ghdl_Rtin_Type_Record;

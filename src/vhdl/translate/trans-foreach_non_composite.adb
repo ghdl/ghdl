@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Trans.Chap3;
 with Trans.Chap6;
 
@@ -37,7 +37,6 @@ begin
             Var_El         : Mnode;
             El_Base        : Mnode;
             Var_Array      : Mnode;
-            Var_Base       : Mnode;
             Var_Length     : O_Dnode;
             Var_I          : O_Dnode;
             Label          : O_Snode;
@@ -47,7 +46,6 @@ begin
             Open_Temp;
             Var_Array := Stabilize (Targ);
             Var_Length := Create_Temp (Ghdl_Index_Type);
-            Var_Base := Stabilize (Chap3.Get_Composite_Base (Var_Array));
             New_Assign_Stmt
               (New_Obj (Var_Length),
                Chap3.Get_Array_Length (Var_Array, Targ_Type));
@@ -70,8 +68,8 @@ begin
                                       Ghdl_Bool_Type));
             Sub_Data := Update_Data_Array
               (Composite_Data, Targ_Type, Var_I);
-            El_Base := Chap3.Index_Base (Var_Base, Targ_Type,
-                                         New_Value (New_Obj (Var_I)));
+            El_Base := Chap3.Index_Array (Var_Array, Targ_Type,
+                                          New_Value (New_Obj (Var_I)));
             Foreach_Non_Composite
               (Chap3.Assign_Maybe_Fat_Array_Element (Var_El, El_Base),
                El_Type, Sub_Data);

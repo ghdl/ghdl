@@ -17,11 +17,11 @@
 --  02111-1307, USA.
 
 with Std_Names;
-with Std_Package; use Std_Package;
-with Errorout; use Errorout;
-with Sem_Inst;
-with Nodes_Meta;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Sem_Inst;
+with Vhdl.Nodes_Meta;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap5;
@@ -656,6 +656,9 @@ package body Trans.Chap2 is
 
       Chap4.Elab_Declaration_Chain (Subprg, Final);
 
+      if not Has_Suspend then
+         Stack2_Release;
+      end if;
       --  If finalization is required and if the subprogram is a function,
       --  create a variable for the result.
       if (Final or Is_Prot) and Is_Ortho_Func then
@@ -1021,8 +1024,7 @@ package body Trans.Chap2 is
             --  instantiated due to generate statements).
             Start_Association (Constr, Ghdl_Rti_Add_Package);
             New_Association
-              (Constr,
-               New_Lit (Rtis.New_Rti_Address (Info.Package_Rti_Const)));
+              (Constr, Rtis.New_Rti_Address (Info.Package_Rti_Const));
             New_Procedure_Call (Constr);
          end if;
 
@@ -1157,7 +1159,12 @@ package body Trans.Chap2 is
             null;
          when Kind_Type_Array
            | Kind_Type_Record =>
-            null;
+            B.Builder (Mode_Value).Builder_Instance :=
+              Instantiate_Subprg_Instance
+              (Orig.Builder (Mode_Value).Builder_Instance);
+            B.Builder (Mode_Signal).Builder_Instance :=
+              Instantiate_Subprg_Instance
+              (Orig.Builder (Mode_Signal).Builder_Instance);
          when Kind_Type_File =>
             null;
          when Kind_Type_Protected =>
@@ -1184,7 +1191,7 @@ package body Trans.Chap2 is
             Res.Range_Var := Instantiate_Var (Src.Range_Var);
          when Kind_Type_Array
            | Kind_Type_Record =>
-            Res.Composite_Bounds := Instantiate_Var (Src.Composite_Bounds);
+            Res.Composite_Layout := Instantiate_Var (Src.Composite_Layout);
          when Kind_Type_File =>
             null;
          when Kind_Type_Protected =>
@@ -1203,45 +1210,13 @@ package body Trans.Chap2 is
                          Type_Incomplete => Src.Type_Incomplete,
                          Type_Locally_Constrained =>
                             Src.Type_Locally_Constrained,
-                         C => null,
                          Ortho_Type => Src.Ortho_Type,
                          Ortho_Ptr_Type => Src.Ortho_Ptr_Type,
                          B => Src.B,
                          S => Copy_Info_Subtype (Src.S),
                          Type_Rti => Src.Type_Rti);
             Adjust_Info_Basetype (Dest.B'Unrestricted_Access,
-                                 Src.B'Unrestricted_Access);
-            if Src.C /= null then
-               Dest.C := new Complex_Type_Arr_Info'
-                 (Mode_Value =>
-                    (Mark => False,
-                     Size_Var => Instantiate_Var
-                       (Src.C (Mode_Value).Size_Var),
-                     Builder_Need_Func =>
-                       Src.C (Mode_Value).Builder_Need_Func,
-                     Builder_Instance => Instantiate_Subprg_Instance
-                       (Src.C (Mode_Value).Builder_Instance),
-                     Builder_Base_Param =>
-                       Src.C (Mode_Value).Builder_Base_Param,
-                     Builder_Bound_Param =>
-                       Src.C (Mode_Value).Builder_Bound_Param,
-                     Builder_Func =>
-                       Src.C (Mode_Value).Builder_Func),
-                  Mode_Signal =>
-                    (Mark => False,
-                     Size_Var => Instantiate_Var
-                       (Src.C (Mode_Signal).Size_Var),
-                     Builder_Need_Func =>
-                       Src.C (Mode_Signal).Builder_Need_Func,
-                     Builder_Instance => Instantiate_Subprg_Instance
-                       (Src.C (Mode_Signal).Builder_Instance),
-                     Builder_Base_Param =>
-                       Src.C (Mode_Signal).Builder_Base_Param,
-                     Builder_Bound_Param =>
-                       Src.C (Mode_Signal).Builder_Bound_Param,
-                     Builder_Func =>
-                       Src.C (Mode_Signal).Builder_Func));
-            end if;
+                                  Src.B'Unrestricted_Access);
          when Kind_Object =>
             Dest.all :=
               (Kind => Kind_Object,
@@ -1308,10 +1283,10 @@ package body Trans.Chap2 is
             Dest.all := (Kind => Kind_Index,
                          Mark => False,
                          Index_Field => Src.Index_Field);
-         when Kind_Expr =>
-            Dest.all := (Kind => Kind_Expr,
+         when Kind_Enum_Lit =>
+            Dest.all := (Kind => Kind_Enum_Lit,
                          Mark => False,
-                         Expr_Node => Src.Expr_Node);
+                         Lit_Node => Src.Lit_Node);
          when Kind_Package_Instance =>
             Dest.all :=
               (Kind => Kind_Package_Instance,
@@ -1398,11 +1373,11 @@ package body Trans.Chap2 is
       end if;
 
       declare
-         use Nodes_Meta;
+         use Vhdl.Nodes_Meta;
          Kind      : constant Iir_Kind := Get_Kind (N);
          Fields    : constant Fields_Array := Get_Fields (Kind);
          F         : Fields_Enum;
-         Orig      : constant Iir := Sem_Inst.Get_Origin (N);
+         Orig      : constant Iir := Vhdl.Sem_Inst.Get_Origin (N);
          pragma Assert (Orig /= Null_Iir);
          Orig_Info : constant Ortho_Info_Acc := Get_Info (Orig);
          Info      : Ortho_Info_Acc;
@@ -1480,7 +1455,7 @@ package body Trans.Chap2 is
                   | Type_Iir_Constraint
                   | Type_Iir_Mode
                   | Type_Iir_Index32
-                  | Type_Iir_Int64
+                  | Type_Int64
                   | Type_Boolean
                   | Type_Iir_Staticness
                   | Type_Iir_All_Sensitized
@@ -1492,7 +1467,7 @@ package body Trans.Chap2 is
                   | Type_Iir_Direction
                   | Type_Iir_Int32
                   | Type_Int32
-                  | Type_Iir_Fp64
+                  | Type_Fp64
                   | Type_Token_Type
                   | Type_Name_Id =>
                   null;
@@ -1514,7 +1489,7 @@ package body Trans.Chap2 is
    begin
       Inter := Chain;
       while Inter /= Null_Iir loop
-         Orig := Sem_Inst.Get_Origin (Inter);
+         Orig := Vhdl.Sem_Inst.Get_Origin (Inter);
          Orig_Info := Get_Info (Orig);
 
          Info := Add_Info (Inter, Orig_Info.Kind);
@@ -1577,7 +1552,7 @@ package body Trans.Chap2 is
          --  Generate code for the body.
          if Global_Storage /= O_Storage_External then
             declare
-               Bod : constant Iir := Get_Package_Body (Inst);
+               Bod : constant Iir := Get_Instance_Package_Body (Inst);
             begin
                if Is_Valid (Bod) then
                   Translate_Package_Body (Bod);

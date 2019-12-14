@@ -37,6 +37,8 @@ package Flags is
    --  Some flags (such as vhdl version) must be the same for every design
    --  units of a hierarchy.
    --  The Flag_String is a signature of all these flags.
+   --  Note: Flag_String (5) (time resolution) is directly overwritten in
+   --   ghdlrun.
    Flag_String : String (1 .. 5);
    procedure Create_Flag_String;
 
@@ -102,7 +104,7 @@ package Flags is
 
    --  If set to true, it means that analyze is done for elaboration.
    --  The purpose is to avoid spurious warning "will be checked
-   --  at elaboration"
+   --  at elaboration".  It will also create default binding.
    Flag_Elaborate : Boolean := False;
 
    --  If set, a default aspect entity aspect might be an outdated unit.
@@ -122,17 +124,10 @@ package Flags is
    --  If set, performs VITAL checks.
    Flag_Vital_Checks : Boolean := True;
 
-   -- --time-resolution=X
-   -- Where X corresponds to:
-   -- fs => 'f'
-   -- ps => 'p'
-   -- ns => 'n'
-   -- us => 'u'
-   -- ms => 'm'
-   -- sec => 's'
-   -- min => 'M'
-   -- hr => 'h'
-   Time_Resolution: Character := 'f';
+   --  Set if analysis is done even after parsing errors.  The analysis code
+   --  that handles and tolerates incorrect parse tree should check that this
+   --  flag is set.
+   Flag_Force_Analysis : Boolean := False;
 
    --  Integer and time types can be either 32 bits or 64 bits values.
    --  The default is 32 bits for Integer and 64 bits for Time.
@@ -155,10 +150,6 @@ package Flags is
 
    -- --warn-undriven
    --Warn_Undriven : Boolean := False;
-
-   --  --warn-error
-   --  Turns warnings into errors.
-   Warn_Error : Boolean := False;
 
    --  If True, disp original source line and a caret indicating the column.
    Flag_Caret_Diagnostics : Boolean := False;

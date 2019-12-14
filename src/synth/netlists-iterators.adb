@@ -301,10 +301,12 @@ package body Netlists.Iterators is
       pragma Unreferenced (It);
    begin
       if Cur.Num > 1 then
+         --  Next net for the instance.
          return Nets_Cursor'(Inst => Cur.Inst,
                              N => Cur.N + 1,
                              Num => Cur.Num - 1);
       else
+         --  Next instance.
          declare
             Inst : Instance;
             Num : Port_Nbr;
@@ -314,10 +316,11 @@ package body Netlists.Iterators is
                Inst := Get_Next_Instance (Inst);
                exit when Inst = No_Instance;
                Num := Get_Nbr_Outputs (Inst);
-               pragma Assert (Num > 0);
-               return Nets_Cursor'(Inst => Inst,
-                                   N => Get_First_Output (Inst),
-                                   Num => Num);
+               if Num /= 0 then
+                  return Nets_Cursor'(Inst => Inst,
+                                      N => Get_First_Output (Inst),
+                                      Num => Num);
+               end if;
             end loop;
          end;
          return Nets_Cursor'(Inst => No_Instance,

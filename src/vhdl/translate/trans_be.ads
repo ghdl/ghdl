@@ -15,7 +15,15 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Translation;
+
 package Trans_Be is
+   type Sem_Foreign_Hook_Type is access
+     procedure (Decl : Iir; Info : Translation.Foreign_Info_Type);
+
+   --  Hook called by Sem_Foreign.
+   Sem_Foreign_Hook : Sem_Foreign_Hook_Type := null;
+
    procedure Register_Translation_Back_End;
 end Trans_Be;
-

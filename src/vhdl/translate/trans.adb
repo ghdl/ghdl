@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Name_Table; -- use Name_Table;
-with Nodes;
+with Vhdl.Nodes_Priv;
 with Tables;
 with Trans_Decls; use Trans_Decls;
 
@@ -1133,6 +1133,24 @@ package body Trans is
       end Instantiate_Var_Scope;
    end Chap10;
 
+   function Align_Val (Algn : Alignment_Type) return O_Cnode is
+   begin
+      case Algn is
+         when Align_Undef =>
+            raise Internal_Error;
+         when Align_8 =>
+            return Ghdl_Index_1;
+         when Align_16 =>
+            return Ghdl_Index_2;
+         when Align_32 =>
+            return Ghdl_Index_4;
+         when Align_Ptr =>
+            return Ghdl_Index_Ptr_Align;
+         when Align_64 =>
+            return Ghdl_Index_8;
+      end case;
+   end Align_Val;
+
    function Get_Object_Kind (M : Mnode) return Object_Kind_Type is
    begin
       return M.M1.K;
@@ -1350,11 +1368,11 @@ package body Trans is
 
    procedure Update_Node_Infos
    is
-      use Nodes;
+      use Vhdl.Nodes_Priv;
       F, L : Iir;
    begin
       F := Node_Infos.Last;
-      L := Nodes.Get_Last_Node;
+      L := Get_Last_Node;
       Node_Infos.Set_Last (L);
       Node_Infos.Table (F + 1 .. L) := (others => null);
    end Update_Node_Infos;
@@ -1401,24 +1419,13 @@ package body Trans is
 
    procedure Free_Type_Info (Info : in out Type_Info_Acc) is
    begin
-      if Info.C /= null then
-         Free_Complex_Type_Info (Info.C);
-      end if;
       Unchecked_Deallocation (Info);
    end Free_Type_Info;
 
-   procedure Set_Ortho_Expr (Target : Iir; Expr : O_Cnode)
-   is
-      Info : Ortho_Info_Acc;
+   function Get_Ortho_Literal (Target : Iir) return O_Cnode is
    begin
-      Info := Add_Info (Target, Kind_Expr);
-      Info.Expr_Node := Expr;
-   end Set_Ortho_Expr;
-
-   function Get_Ortho_Expr (Target : Iir) return O_Cnode is
-   begin
-      return Get_Info (Target).Expr_Node;
-   end Get_Ortho_Expr;
+      return Get_Info (Target).Lit_Node;
+   end Get_Ortho_Literal;
 
    function Get_Ortho_Type (Target : Iir; Is_Sig : Object_Kind_Type)
                             return O_Tnode is
@@ -1433,7 +1440,26 @@ package body Trans is
 
    function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean is
    begin
-      return Tinfo.C /= null;
+      case Tinfo.Type_Mode is
+         when Type_Mode_Non_Composite =>
+            return False;
+         when Type_Mode_Static_Record
+           | Type_Mode_Static_Array =>
+            return False;
+         when Type_Mode_Complex_Record
+           | Type_Mode_Complex_Array =>
+            return True;
+         when Type_Mode_Unbounded_Record
+           | Type_Mode_Unbounded_Array =>
+            return False;
+         when Type_Mode_Protected =>
+            --  Considered as a complex type, as its size is known only in
+            --  the body.
+            --  Shouldn't be used.
+            raise Internal_Error;
+         when Type_Mode_Unknown =>
+            return False;
+      end case;
    end Is_Complex_Type;
 
    function Is_Static_Type (Tinfo : Type_Info_Acc) return Boolean is
@@ -1480,13 +1506,6 @@ package body Trans is
                Clear_Info (I);
             else
                Info.Mark := True;
-               if Info.Kind = Kind_Type and then Info.C /= null then
-                  if Info.C (Mode_Value).Mark then
-                     Info.C := null;
-                  else
-                     Info.C (Mode_Value).Mark := True;
-                  end if;
-               end if;
             end if;
          end if;
       end loop;
@@ -2124,6 +2143,13 @@ package body Trans is
       begin
          return Create_Temp_Init (Atype, New_Address (Name, Atype));
       end Create_Temp_Ptr;
+
+      function Create_Temp_Bounds (Tinfo : Type_Info_Acc) return Mnode is
+      begin
+         return Dv2M (Create_Temp (Tinfo.B.Bounds_Type),
+                      Tinfo, Mode_Value,
+                      Tinfo.B.Bounds_Type, Tinfo.B.Bounds_Ptr_Type);
+      end Create_Temp_Bounds;
 
       --  Return a ghdl_index_type literal for NUM.
       function New_Index_Lit (Num : Unsigned_64) return O_Cnode is

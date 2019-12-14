@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Standard multivalue logic package
 --             :  (STD_LOGIC_1164 package declaration)
@@ -44,73 +47,73 @@
 --             :  the terms of Clause 16 of this standard.
 --             :
 -- --------------------------------------------------------------------
--- $Revision: 1220 $
--- $Date: 2008-04-10 17:16:09 +0930 (Thu, 10 Apr 2008) $
+-- $Revision: 1228 $
+-- $Date: 2008-04-30 10:04:53 +0930 (Wed, 30 Apr 2008) $
 -- --------------------------------------------------------------------
 
 use STD.TEXTIO.all;
 
 package std_logic_1164 is
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- logic state system  (unresolved)
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   type STD_ULOGIC is ( 'U',             -- Uninitialized
                        'X',             -- Forcing  Unknown
                        '0',             -- Forcing  0
                        '1',             -- Forcing  1
-                       'Z',             -- High Impedance   
+                       'Z',             -- High Impedance
                        'W',             -- Weak     Unknown
-                       'L',             -- Weak     0       
-                       'H',             -- Weak     1       
+                       'L',             -- Weak     0
+                       'H',             -- Weak     1
                        '-'              -- Don't care
                        );
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- unconstrained array of std_ulogic for use with the resolution function
   -- and for use in declaring signal arrays of unresolved elements
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   type STD_ULOGIC_VECTOR is array (NATURAL range <>) of STD_ULOGIC;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- resolution function
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function resolved (s : STD_ULOGIC_VECTOR) return STD_ULOGIC;
 
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- logic state system  (resolved)
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   subtype STD_LOGIC is resolved STD_ULOGIC;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- unconstrained array of resolved std_ulogic for use in declaring
   -- signal arrays of resolved elements
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   subtype STD_LOGIC_VECTOR is (resolved) STD_ULOGIC_VECTOR;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- common subtypes
-  -------------------------------------------------------------------    
-  subtype X01 is resolved STD_ULOGIC range 'X' to '1';    -- ('X','0','1') 
-  subtype X01Z is resolved STD_ULOGIC range 'X' to 'Z';   -- ('X','0','1','Z') 
-  subtype UX01 is resolved STD_ULOGIC range 'U' to '1';   -- ('U','X','0','1') 
-  subtype UX01Z is resolved STD_ULOGIC range 'U' to 'Z';  -- ('U','X','0','1','Z') 
+  -------------------------------------------------------------------
+  subtype X01 is resolved STD_ULOGIC range 'X' to '1';    -- ('X','0','1')
+  subtype X01Z is resolved STD_ULOGIC range 'X' to 'Z';   -- ('X','0','1','Z')
+  subtype UX01 is resolved STD_ULOGIC range 'U' to '1';   -- ('U','X','0','1')
+  subtype UX01Z is resolved STD_ULOGIC range 'U' to 'Z';  -- ('U','X','0','1','Z')
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- overloaded logical operators
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
 
   function "and"  (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
   function "nand" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
   function "or"   (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
   function "nor"  (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
   function "xor"  (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
-  function "xnor" (l : STD_ULOGIC; r : STD_ULOGIC) return ux01;
+  function "xnor" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
   function "not"  (l : STD_ULOGIC) return UX01;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- vectorized overloaded logical operators
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function "and"  (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
   function "nand" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
   function "or"   (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
@@ -169,7 +172,7 @@ package std_logic_1164 is
     To_bitvector[STD_ULOGIC_VECTOR, BIT return BIT_VECTOR];
   alias To_BV is
     To_bitvector[STD_ULOGIC_VECTOR, BIT return BIT_VECTOR];
-  
+
   alias To_Std_Logic_Vector is
     To_StdLogicVector[BIT_VECTOR return STD_LOGIC_VECTOR];
   alias To_SLV is
@@ -190,9 +193,9 @@ package std_logic_1164 is
   alias To_SULV is
     To_StdULogicVector[STD_LOGIC_VECTOR return STD_ULOGIC_VECTOR];
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- strength strippers and type convertors
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
 
   function TO_01 (s : STD_ULOGIC_VECTOR; xmap : STD_ULOGIC := '0')
     return STD_ULOGIC_VECTOR;
@@ -220,15 +223,15 @@ package std_logic_1164 is
 
   function "??" (l : STD_ULOGIC) return BOOLEAN;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- edge detection
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function rising_edge  (signal s : STD_ULOGIC) return BOOLEAN;
   function falling_edge (signal s : STD_ULOGIC) return BOOLEAN;
 
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   -- object contains an unknown
-  -------------------------------------------------------------------    
+  -------------------------------------------------------------------
   function Is_X (s : STD_ULOGIC_VECTOR) return BOOLEAN;
   function Is_X (s : STD_ULOGIC) return BOOLEAN;
 
@@ -247,14 +250,14 @@ package std_logic_1164 is
   --  function "?<=" (l, r : STD_ULOGIC) return STD_ULOGIC;
   --  function "?>" (l, r  : STD_ULOGIC) return STD_ULOGIC;
   --  function "?>=" (l, r : STD_ULOGIC) return STD_ULOGIC;
-  
+
   -------------------------------------------------------------------
   -- string conversion and write operations
   -------------------------------------------------------------------
   -- the following operations are predefined
 
-  -- function to_string (value : STD_ULOGIC) return STRING;
-  -- function to_string (value : STD_ULOGIC_VECTOR) return STRING;
+  -- function TO_STRING (value : STD_ULOGIC) return STRING;
+  -- function TO_STRING (value : STD_ULOGIC_VECTOR) return STRING;
 
   -- explicitly defined operations
 
@@ -294,11 +297,11 @@ package std_logic_1164 is
 
   alias BWRITE is WRITE [LINE, STD_ULOGIC_VECTOR, SIDE, WIDTH];
   alias BINARY_WRITE is WRITE [LINE, STD_ULOGIC_VECTOR, SIDE, WIDTH];
-  
+
   procedure OWRITE (L         : inout LINE; VALUE : in STD_ULOGIC_VECTOR;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0);
   alias OCTAL_WRITE is OWRITE [LINE, STD_ULOGIC_VECTOR, SIDE, WIDTH];
-  
+
   procedure HWRITE (L         : inout LINE; VALUE : in STD_ULOGIC_VECTOR;
                     JUSTIFIED : in    SIDE := right; FIELD : in WIDTH := 0);
   alias HEX_WRITE is HWRITE [LINE, STD_ULOGIC_VECTOR, SIDE, WIDTH];

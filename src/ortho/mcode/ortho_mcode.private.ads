@@ -40,9 +40,11 @@ private
    type O_Enode is new Ortho_Code.O_Enode;
    type O_Fnode is new Ortho_Code.O_Fnode;
    type O_Lnode is new Ortho_Code.O_Lnode;
+   type O_Gnode is new Ortho_Code.O_Gnode;
    type O_Snode is new Ortho_Code.Exprs.O_Snode;
 
    O_Lnode_Null : constant O_Lnode := O_Lnode (Ortho_Code.O_Lnode_Null);
+   O_Gnode_Null : constant O_Gnode := O_Gnode (Ortho_Code.O_Gnode_Null);
    O_Cnode_Null : constant O_Cnode := O_Cnode (Ortho_Code.O_Cnode_Null);
    O_Dnode_Null : constant O_Dnode := O_Dnode (Ortho_Code.O_Dnode_Null);
    O_Enode_Null : constant O_Enode := O_Enode (Ortho_Code.O_Enode_Null);

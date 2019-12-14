@@ -24,6 +24,7 @@
 --  covered by the GNU Public License.
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Options; use Grt.Options;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Backtraces;
@@ -85,25 +86,51 @@ package body Grt.Errors is
       end if;
    end Fatal_Error;
 
-   procedure Put_Err (Str : String) is
+   procedure Diag_C (Str : String) is
    begin
       Put (Error_Stream, Str);
-   end Put_Err;
+   end Diag_C;
 
-   procedure Put_Err (C : Character) is
-   begin
-      Put (Error_Stream, C);
-   end Put_Err;
-
-   procedure Put_Err (Str : Ghdl_C_String) is
-   begin
-      Put (Error_Stream, Str);
-   end Put_Err;
-
-   procedure Put_Err (N : Integer) is
+   procedure Diag_C (N : Integer) is
    begin
       Put_I32 (Error_Stream, Ghdl_I32 (N));
-   end Put_Err;
+   end Diag_C;
+
+   procedure Diag_C (N : Ghdl_I32) is
+   begin
+      Put_I32 (Error_Stream, N);
+   end Diag_C;
+
+   procedure Diag_C (Str : Ghdl_C_String) is
+   begin
+      Put (Error_Stream, Str);
+   end Diag_C;
+
+   procedure Diag_C_Std (Str : Std_String_Uncons)
+   is
+      subtype Str_Subtype is String (1 .. Str'Length);
+   begin
+      Put (Error_Stream, Str_Subtype (Str));
+   end Diag_C_Std;
+
+   procedure Diag_C (Str : Std_String_Ptr)
+   is
+      subtype Ada_Str is String (1 .. Natural (Str.Bounds.Dim_1.Length));
+   begin
+      if Ada_Str'Length > 0 then
+         Diag_C (Ada_Str (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
+      end if;
+   end Diag_C;
+
+   procedure Diag_C (C : Character) is
+   begin
+      Put (Error_Stream, C);
+   end Diag_C;
+
+   procedure Diag_C_Now is
+   begin
+      Put_Time (Error_Stream, Grt.Types.Current_Time);
+   end Diag_C_Now;
 
    procedure Newline_Err is
    begin
@@ -124,157 +151,80 @@ package body Grt.Errors is
 --       end if;
 --    end Put_Err;
 
-   procedure Report_H (Str : String := "") is
+   procedure Report_S (Str : String := "") is
    begin
-      Put_Err (Str);
-   end Report_H;
+      Diag_C (Str);
+   end Report_S;
 
-   procedure Report_C (Str : String) is
+   procedure Report_E is
    begin
-      Put_Err (Str);
-   end Report_C;
-
-   procedure Report_C (Str : Ghdl_C_String)
-   is
-      Len : constant Natural := strlen (Str);
-   begin
-      Put_Err (Str (1 .. Len));
-   end Report_C;
-
-   procedure Report_C (N : Integer)
-     renames Put_Err;
-
-   procedure Report_Now_C is
-   begin
-      Put_Time (Error_Stream, Grt.Types.Current_Time);
-   end Report_Now_C;
-
-   procedure Report_E (Str : String) is
-   begin
-      Put_Err (Str);
       Newline_Err;
    end Report_E;
 
-   procedure Report_E (N : Integer) is
+   procedure Warning_S (Str : String := "") is
    begin
-      Put_Err (N);
-      Newline_Err;
-   end Report_E;
+      Put_Err ("warning: ");
+      Diag_C (Str);
+   end Warning_S;
 
-   procedure Report_E (Str : Std_String_Ptr)
-   is
-      subtype Ada_Str is String (1 .. Natural (Str.Bounds.Dim_1.Length));
+   procedure Warning_E is
    begin
-      if Ada_Str'Length > 0 then
-         Put_Err (Ada_Str (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
-      end if;
       Newline_Err;
-   end Report_E;
+   end Warning_E;
 
-   procedure Error_H is
+   procedure Error_S (Str : String := "") is
    begin
       Put_Err (Progname);
       Put_Err (":error: ");
-   end Error_H;
 
-   Cont : Boolean := False;
-
-   procedure Error_C (Str : String) is
-   begin
-      if not Cont then
-         Error_H;
-         Cont := True;
-      end if;
-      Put_Err (Str);
-   end Error_C;
-
-   procedure Error_C (Str : Ghdl_C_String)
-   is
-      Len : constant Natural := strlen (Str);
-   begin
-      if not Cont then
-         Error_H;
-         Cont := True;
-      end if;
-      Put_Err (Str (1 .. Len));
-   end Error_C;
-
-   procedure Error_C (N : Integer) is
-   begin
-      if not Cont then
-         Error_H;
-         Cont := True;
-      end if;
-      Put_Err (N);
-   end Error_C;
-
---    procedure Error_C (Inst : Ghdl_Instance_Name_Acc)
---    is
---    begin
---       if not Cont then
---          Error_H;
---          Cont := True;
---       end if;
---       if Inst.Parent /= null then
---          Error_C (Inst.Parent);
---          Put_Err (".");
---       end if;
---       case Inst.Kind is
---          when Ghdl_Name_Architecture =>
---             Put_Err ("(");
---             Put_Err (Inst.Name.all);
---             Put_Err (")");
---          when others =>
---             if Inst.Name /= null then
---                Put_Err (Inst.Name.all);
---             end if;
---       end case;
---    end Error_C;
+      Diag_C (Str);
+   end Error_S;
 
    procedure Error_E (Str : String := "") is
    begin
-      Put_Err (Str);
+      Diag_C (Str);
       Newline_Err;
-      Cont := False;
       Fatal_Error;
    end Error_E;
 
-   procedure Error_C_Std (Str : Std_String_Uncons)
-   is
-      subtype Str_Subtype is String (1 .. Str'Length);
-   begin
-      Error_C (Str_Subtype (Str));
-   end Error_C_Std;
-
    procedure Error (Str : String) is
    begin
-      Error_H;
-      Put_Err (Str);
-      Newline_Err;
-      Fatal_Error;
+      Error_S (Str);
+      Error_E;
    end Error;
+
+   procedure Error_Call_Stack (Str : String; Skip : Natural)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      Save_Backtrace (Bt, Skip + 1);
+      Diag_C (Str);
+      Error_E_Call_Stack (Bt);
+   end Error_Call_Stack;
 
    procedure Error (Str : String;
                     Filename : Ghdl_C_String;
                     Line : Ghdl_I32) is
    begin
-      Error_H;
-      Put_Err (Str);
-      Put_Err (" at ");
-      Put_Err (Filename);
-      Put_Err (" line ");
-      Put_I32 (Error_Stream, Line);
-      Newline_Err;
-      Fatal_Error;
+      Error_S (Str);
+      Diag_C (" at ");
+      Diag_C (Filename);
+      Diag_C (" line ");
+      Diag_C (Line);
+      Error_E;
    end Error;
 
-   procedure Info (Str : String) is
+   procedure Info_S (Str : String := "") is
    begin
       Put_Err (Progname);
       Put_Err (":info: ");
-      Put_Err (Str);
+      Diag_C (Str);
+   end Info_S;
+
+   procedure Info_E is
+   begin
       Newline_Err;
-   end Info;
+   end Info_E;
 
    procedure Warning (Str : String) is
    begin
@@ -299,7 +249,7 @@ package body Grt.Errors is
 
       Grt.Backtraces.Put_Err_Backtrace (Bt);
 
-      Cont := False;
+      --  Should be able to call Error_E, but we don't want the newline.
       Fatal_Error;
    end Error_E_Call_Stack;
 
@@ -314,13 +264,13 @@ package body Grt.Errors is
 
    procedure Grt_Overflow_Error (Bt : Backtrace_Addrs_Acc) is
    begin
-      Error_C ("overflow detected");
+      Error_S ("overflow detected");
       Error_E_Call_Stack (Bt);
    end Grt_Overflow_Error;
 
    procedure Grt_Null_Access_Error (Bt : Backtrace_Addrs_Acc) is
    begin
-      Error_C ("NULL access dereferenced");
+      Error_S ("NULL access dereferenced");
       Error_E_Call_Stack (Bt);
    end Grt_Null_Access_Error;
 end Grt.Errors;

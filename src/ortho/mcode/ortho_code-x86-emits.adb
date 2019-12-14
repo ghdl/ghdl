@@ -277,8 +277,8 @@ package body Ortho_Code.X86.Emits is
          Off := Off + To_Int32 (Get_Expr_Low (C));
          P := S;
       end loop;
-      pragma Assert (Get_Expr_Kind (P) = OE_Addrg);
-      Sym := Get_Decl_Symbol (Get_Addr_Object (P));
+      pragma Assert (Get_Expr_Kind (P) = OE_Addrd);
+      Sym := Get_Decl_Symbol (Get_Addr_Decl (P));
       Gen_Abs (Sym, Integer_32 (Off));
    end Gen_Imm_Addr;
 
@@ -303,7 +303,7 @@ package body Ortho_Code.X86.Emits is
                   Gen_32 (Unsigned_32 (Get_Expr_Low (N)));
             end case;
          when OE_Add
-           | OE_Addrg =>
+           | OE_Addrd =>
             --  Only for 32-bit immediat.
             pragma Assert (Sz = Sz_32);
             Gen_Imm_Addr (N);
@@ -470,11 +470,11 @@ package body Ortho_Code.X86.Emits is
                   Rm_Base := Get_Expr_Reg (Frame);
                end if;
             end;
-            Rm_Offset := Rm_Offset + Get_Local_Offset (Get_Addr_Object (N));
-         when OE_Addrg =>
+            Rm_Offset := Rm_Offset + Get_Local_Offset (Get_Addr_Decl (N));
+         when OE_Addrd =>
             --  Cannot add two symbols.
             pragma Assert (Rm_Sym = Null_Symbol);
-            Rm_Sym := Get_Decl_Symbol (Get_Addr_Object (N));
+            Rm_Sym := Get_Decl_Symbol (Get_Addr_Decl (N));
          when OE_Add =>
             Fill_Sib (Get_Expr_Left (N));
             Fill_Sib (Get_Expr_Right (N));
@@ -2525,10 +2525,10 @@ package body Ortho_Code.X86.Emits is
                --  Result is in eflags.
                pragma Assert (Get_Expr_Reg (Stmt) in Regs_Cc);
             end;
-         when OE_Addrg =>
+         when OE_Addrd =>
             pragma Assert (Mode = Abi.Mode_Ptr);
             if Flags.M64
-              and then not Insns.Is_External_Object (Get_Addr_Object (Stmt))
+              and then not Insns.Is_External_Object (Get_Addr_Decl (Stmt))
             then
                --  Use RIP relative to load an address.
                Emit_Lea (Stmt);
@@ -3163,8 +3163,15 @@ package body Ortho_Code.X86.Emits is
                when others =>
                   raise Program_Error;
             end case;
-         when OC_Address
-           | OC_Subprg_Address =>
+         when OC_Address =>
+            declare
+               Decl : O_Dnode;
+               Off : Uns32;
+            begin
+               Get_Global_Decl_Offset (Get_Const_Global (Val), Decl, Off);
+               Gen_Abs (Get_Decl_Symbol (Decl), Integer_32 (To_Int32 (Off)));
+            end;
+         when OC_Subprg_Address =>
             Gen_Abs (Get_Decl_Symbol (Get_Const_Decl (Val)), 0);
          when OC_Array =>
             for I in 0 .. Get_Const_Aggr_Length (Val) - 1 loop

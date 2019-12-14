@@ -32,6 +32,7 @@
 
 #include "vpi_user.h"
 #include "vpi_thunk.h"
+#include "grt-cdynload.h"
 
 /* Extension of a shared library.  */
 #if defined (WINNT)
@@ -76,59 +77,6 @@ static vpi_thunk __ghdl_vpi_thunk_v1 =
 
 //-----------------------------------------------------------------------------
 // VPI module load & startup
-static void * module_open (const char *path);
-static void * module_symbol (void *handle, const char *symbol);
-static const char *module_error (void);
-
-#if defined(__WIN32__)
-#include <windows.h>
-static void *
-module_open (const char *path)
-{
-  return (void *)LoadLibrary (path);
-}
-
-static void *
-module_symbol (void *handle, const char *symbol)
-{
-  return (void *)GetProcAddress ((HMODULE)handle, symbol);
-}
-
-static const char *
-module_error (void)
-{
-  static char msg[256];
-
-  FormatMessage
-    (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-     NULL,
-     GetLastError (),
-     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-     (LPTSTR) &msg,
-     sizeof (msg) - 1,
-     NULL);
-  return msg;
-}
-#else
-#include <dlfcn.h>
-static void *
-module_open (const char *path)
-{
-  return dlopen (path, RTLD_LAZY);
-}
-
-static void *
-module_symbol (void *handle, const char *symbol)
-{
-  return dlsym (handle, symbol);
-}
-
-static const char *
-module_error (void)
-{
-  return dlerror ();
-}
-#endif
 
 #if defined (__APPLE__)
 /* On Darwin: look in rpath.  */
@@ -153,11 +101,11 @@ loadVpiModule (const char* modulename)
      - exec path\lib => see windows_default_path
   */
 
-  vpimod = module_open (modulename);
+  vpimod = grt_dynload_open (modulename);
 
   if (vpimod == NULL)
     {
-      const char *msg = module_error ();
+      const char *msg = grt_dynload_error ();
 
       fprintf (stderr, "%s\n", msg == NULL ? "unknown dlopen error" : msg);
       return -1;
@@ -167,14 +115,15 @@ loadVpiModule (const char* modulename)
      No need to load the library several times.  */
   if (libghdlvpi_mod == NULL)
     {
-      libghdlvpi_mod = module_open (libghdlvpi_name);
+      libghdlvpi_mod = grt_dynload_open (libghdlvpi_name);
       if (libghdlvpi_mod != NULL)
 	{
 	  vpi_thunk **vpi_thunk_ptr;
 
 	  for (i = 0; i < 2; i++)
 	    {
-	      vpi_thunk_ptr = module_symbol (libghdlvpi_mod, &"_VPI_THUNK"[i]);
+	      vpi_thunk_ptr =
+		grt_dynload_symbol (libghdlvpi_mod, &"_VPI_THUNK"[i]);
 
 	      if (vpi_thunk_ptr != NULL)
 		{
@@ -190,7 +139,8 @@ loadVpiModule (const char* modulename)
 
   for (i = 0; i < 2; i++) // try with and w/o leading underscores
     {
-      void *vpitable = module_symbol (vpimod, &"_vlog_startup_routines"[i]);
+      void *vpitable =
+	grt_dynload_symbol (vpimod, &"_vlog_startup_routines"[i]);
 
       if (vpitable)
 	{

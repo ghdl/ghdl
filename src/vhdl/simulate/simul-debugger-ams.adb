@@ -16,9 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Iirs_Utils; use Iirs_Utils;
-with Ada.Text_IO; use Ada.Text_IO;
-with Disp_Vhdl;
+with Simple_IO; use Simple_IO;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Prints;
 
 package body Simul.Debugger.AMS is
    procedure Disp_Quantity_Name (Quantity : Quantity_Index_Type)
@@ -46,7 +46,7 @@ package body Simul.Debugger.AMS is
          when Op_Quantity =>
             Disp_Quantity_Name (Term.Quantity);
          when Op_Vhdl_Expr =>
-            Disp_Vhdl.Disp_Expression (Term.Vhdl_Expr);
+            Vhdl.Prints.Disp_Expression (Term.Vhdl_Expr);
       end case;
    end Disp_Term;
 

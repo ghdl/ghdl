@@ -17,23 +17,25 @@
 --  02111-1307, USA.
 
 with Ada.Unchecked_Conversion;
-with Ada.Text_IO; use Ada.Text_IO;
+with Simple_IO; use Simple_IO;
 with Types; use Types;
-with Iirs_Utils; use Iirs_Utils;
-with Errorout; use Errorout;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with PSL.Types; use PSL.Types;
 with PSL.Nodes;
 with PSL.NFAs;
-with Std_Package;
+with PSL.NFAs.Utils;
+with PSL.Errors; use PSL.Errors;
+with Vhdl.Std_Package;
 with Trans_Analyzes;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
-with Simul.Annotations; use Simul.Annotations;
-with Ieee.Std_Logic_1164;
+with Vhdl.Annotations; use Vhdl.Annotations;
+with Vhdl.Ieee.Std_Logic_1164;
 with Grt.Main;
 with Simul.Debugger; use Simul.Debugger;
 with Simul.Debugger.AMS;
 with Grt.Errors;
-with Grt.Rtis;
 with Grt.Processes;
 with Grt.Signals;
 with Areapools; use Areapools;
@@ -194,9 +196,9 @@ package body Simul.Simulation.Main is
       Marker : Mark_Type;
    begin
       if Trace_Drivers then
-         Ada.Text_IO.Put ("Drivers for ");
+         Put ("Drivers for ");
          Disp_Instance_Name (Instance);
-         Ada.Text_IO.Put_Line (": " & Disp_Node (Proc));
+         Put_Line (": " & Disp_Node (Proc));
       end if;
 
       Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
@@ -357,6 +359,13 @@ package body Simul.Simulation.Main is
    procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc);
    pragma Convention (C, PSL_Process_Executer);
 
+   procedure PSL_Assert_Finalizer (Self : Grt.Processes.Instance_Acc);
+   pragma Convention (C, PSL_Assert_Finalizer);
+
+   type PSL_Entry_Acc is access all PSL_Entry;
+   function To_PSL_Entry_Acc is new Ada.Unchecked_Conversion
+     (Grt.Processes.Instance_Acc, PSL_Entry_Acc);
+
    function Execute_Psl_Expr (Instance : Block_Instance_Acc;
                               Expr : PSL_Node;
                               Eos : Boolean)
@@ -372,9 +381,9 @@ package body Simul.Simulation.Main is
                Res   : Iir_Value_Literal_Acc;
             begin
                Res := Execute_Expression (Instance, E);
-               if Rtype = Std_Package.Boolean_Type_Definition then
+               if Rtype = Vhdl.Std_Package.Boolean_Type_Definition then
                   return Res.B1 = True;
-               elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+               elsif Rtype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   return Res.E8 = 3 or Res.E8 = 7; --  1 or H
                else
                   Error_Kind ("execute_psl_expr", Expr);
@@ -399,10 +408,6 @@ package body Simul.Simulation.Main is
 
    procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc)
    is
-      type PSL_Entry_Acc is access all PSL_Entry;
-      function To_PSL_Entry_Acc is new Ada.Unchecked_Conversion
-        (Grt.Processes.Instance_Acc, PSL_Entry_Acc);
-
       use PSL.NFAs;
 
       E : constant PSL_Entry_Acc := To_PSL_Entry_Acc (Self);
@@ -431,7 +436,7 @@ package body Simul.Simulation.Main is
       if V then
          Nvec := (others => False);
          case Get_Kind (E.Stmt) is
-            when Iir_Kind_Psl_Cover_Statement
+            when Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Nvec (0) := True;
             when others =>
@@ -472,13 +477,19 @@ package body Simul.Simulation.Main is
          S_Num := Get_State_Label (S);
          pragma Assert (S_Num = Get_PSL_Nbr_States (E.Stmt) - 1);
          case Get_Kind (E.Stmt) is
-            when Iir_Kind_Psl_Assert_Statement =>
+            when Iir_Kind_Psl_Assert_Directive =>
                if Nvec (S_Num) then
                   Execute_Failed_Assertion
                     (E.Instance, "psl assertion", E.Stmt,
                      "assertion violation", 2);
                end if;
-            when Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Assume_Directive =>
+               if Nvec (S_Num) then
+                  Execute_Failed_Assertion
+                    (E.Instance, "psl assumption", E.Stmt,
+                     "assumption violation", 2);
+               end if;
+            when Iir_Kind_Psl_Cover_Directive =>
                if Nvec (S_Num) then
                   if Get_Report_Expression (E.Stmt) /= Null_Iir then
                      Execute_Failed_Assertion
@@ -504,6 +515,41 @@ package body Simul.Simulation.Main is
       Current_Process := null;
    end PSL_Process_Executer;
 
+   procedure PSL_Assert_Finalizer (Self : Grt.Processes.Instance_Acc)
+   is
+      use PSL.NFAs;
+      Ent : constant PSL_Entry_Acc := To_PSL_Entry_Acc (Self);
+
+      NFA : constant PSL_NFA := Get_PSL_NFA (Ent.Stmt);
+      S : NFA_State;
+      E : NFA_Edge;
+      Sd : NFA_State;
+      S_Num : Int32;
+   begin
+      S := Get_Final_State (NFA);
+      E := Get_First_Dest_Edge (S);
+      while E /= No_Edge loop
+         Sd := Get_Edge_Src (E);
+
+         if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
+
+            S_Num := Get_State_Label (Sd);
+
+            if Ent.States (S_Num)
+              and then
+              Execute_Psl_Expr (Ent.Instance, Get_Edge_Expr (E), True)
+            then
+               Execute_Failed_Assertion
+                 (Ent.Instance, "psl assertion", Ent.Stmt,
+                  "assertion violation", 2);
+               exit;
+            end if;
+         end if;
+
+         E := Get_Next_Dest_Edge (E);
+      end loop;
+   end PSL_Assert_Finalizer;
+
    procedure Create_PSL is
    begin
       for I in PSL_Table.First .. PSL_Table.Last loop
@@ -521,6 +567,21 @@ package body Simul.Simulation.Main is
 
             Register_Sensitivity
               (E.Instance, Get_PSL_Clock_Sensitivity (E.Stmt));
+
+            case Get_Kind (E.Stmt) is
+               when Iir_Kind_Psl_Assert_Directive
+                  | Iir_Kind_Psl_Assume_Directive =>
+                  if Get_PSL_EOS_Flag (E.Stmt) then
+                     Grt.Processes.Ghdl_Finalize_Register
+                       (To_Instance_Acc (E'Address),
+                        PSL_Assert_Finalizer'Access);
+                  end if;
+               when Iir_Kind_Psl_Cover_Directive =>
+                  --  TODO
+                  null;
+               when others =>
+                  null;
+            end case;
          end;
       end loop;
 
@@ -980,7 +1041,6 @@ package body Simul.Simulation.Main is
                                  Sig : Iir_Value_Literal_Acc;
                                  Val : Iir_Value_Literal_Acc)
    is
-      use Grt.Rtis;
       use Grt.Signals;
 
       procedure Create_Signal (Val : Iir_Value_Literal_Acc;

@@ -41,7 +41,7 @@ RM = rm -f
 
 
 # Extra flags to pass to recursive makes.
-GHDL_ADAFLAGS=-gnata -gnat05 -gnaty3befhkmr -gnatwae
+GHDL_ADAFLAGS=-gnata -gnaty3befhkmr -gnatwa
 GNATBIND = gnatbind
 GNATMAKE = gnatmake
 
@@ -65,7 +65,8 @@ ghdl1$(exeext): force $(GHDL1_OBJS) $(BACKEND) $(LIBDEPS)
 	$(GNATMAKE) -c -aI$(srcdir)/vhdl --subdirs=vhdl ortho_gcc-main \
 	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
-	 -bargs -E -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
+         -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
+	 -bargs -E \
 	 -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GHDL1_OBJS) \
 	 $(filter-out main.o,$(BACKEND)) $(LIBS) $(BACKENDLIBS)
 
@@ -110,11 +111,16 @@ vhdl/default_paths.ads: Makefile
 	echo "end Default_Paths;" >> tmp-dpaths.ads
 	$(srcdir)/../move-if-change tmp-dpaths.ads $@
 
+GHDL_GRT_OBJS=vhdl/grt-cstdio.o
+
 # The driver for ghdl.  Depends on ghdl1 to use object files in vhdl/ subdir.
-ghdl$(exeext): ghdl1$(exeext) vhdl/default_paths.ads force
+ghdl$(exeext): ghdl1$(exeext) $(GHDL_GRT_OBJS) vhdl/default_paths.ads force
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aI$(srcdir)/vhdl/ghdldrv \
 	 -aIvhdl -aOvhdl ghdl_gcc \
-	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) -largs $(LIBS)
+	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
+	 -bargs -E \
+         -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) \
+           $(GHDL_GRT_OBJS) $(LIBS)
 
 # Build hooks:
 
@@ -207,3 +213,6 @@ vhdl.stage3:
 vhdl.stage4:
 	-$(MV) vhdl/*$(objext) vhdl/*.ali vhdl/b_*.c stage4/vhdl
 	-$(MV) vhdl/stamp-* stage4/vhdl
+
+# No vhdl-specific selftests
+selftest-vhdl:

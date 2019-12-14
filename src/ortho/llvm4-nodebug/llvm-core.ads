@@ -127,7 +127,7 @@ package LLVM.Core is
    FastCallConv        : constant CallConv := 8;
    ColdCallConv        : constant CallConv := 9;
    X86StdcallCallConv  : constant CallConv := 64;
-   X86FastcallCallConv : constant CallConv := 6;
+   X86FastcallCallConv : constant CallConv := 65;
 
    type IntPredicate is new unsigned;
    IntEQ  : constant IntPredicate := 32; -- equal

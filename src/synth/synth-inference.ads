@@ -18,12 +18,20 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Types; use Types;
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
+with Synth.Environment; use Synth.Environment;
+with Synth.Source;
 
 package Synth.Inference is
    --  To be called when there is an assignment to a signal/output of VAL and
    --  the previous value is PREV_VAL (an Id_Signal or Id_Output).
    --  If there is a loop, infere a dff or a latch or emit an error.
-   function Infere (Ctxt : Context_Acc; Val : Net; Prev_Val : Net) return Net;
+   procedure Infere (Ctxt : Context_Acc;
+                     Wid : Wire_Id;
+                     Val : Net;
+                     Off : Uns32;
+                     Prev_Val : Net;
+                     Stmt : Source.Syn_Src);
 end Synth.Inference;

@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Standard VHDL Mathematical Packages
 --             :  (MATH_COMPLEX package body)
@@ -472,7 +475,6 @@ package body MATH_COMPLEX is
         --        a) Returns Z on error
 
         variable ZTEMP : COMPLEX;
-        variable temp: REAL;
         variable ZOUT : COMPLEX_POLAR;
     begin
         -- Check validity of input arguments
@@ -1428,7 +1430,7 @@ package body MATH_COMPLEX is
         -- Notes:
         --        a) Returns COMPLEX'(REAL'HIGH, 0.0) on error
         --
-        variable TEMP : REAL := R.RE*R.RE + R.IM*R.IM;
+        constant TEMP : REAL := R.RE*R.RE + R.IM*R.IM;
    begin
         -- Check validity of input arguments
         if (TEMP = 0.0) then

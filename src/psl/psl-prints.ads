@@ -27,6 +27,8 @@ package PSL.Prints is
      (Prop : Node; Parent_Prio : Priority := Prio_Lowest);
    procedure Print_Expr (N : Node; Parent_Prio : Priority := Prio_Lowest);
 
+   function Get_Priority (N : Node) return Priority;
+
    --  Procedure to display HDL_Expr nodes.
    type HDL_Expr_Printer_Acc is access procedure (N : HDL_Node);
    HDL_Expr_Printer : HDL_Expr_Printer_Acc;

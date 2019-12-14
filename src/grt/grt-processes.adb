@@ -28,6 +28,7 @@ with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Grt.Disp;
 with Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Errors; use Grt.Errors;
 with Grt.Options;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
@@ -104,6 +105,11 @@ package body Grt.Processes is
                                         Timeout_Chain_Next => null,
                                         Timeout_Chain_Prev => null);
       Set_Current_Process (Elab_Process);
+
+      --  LRM93 12.3 Elaboration of a declarative part
+      --  During static elaboration, the function STD.STANDARD.NOW (see 14.2)
+      --  returns the vallue 0 ns.
+      Current_Time := 0;
    end Init;
 
    function Get_Nbr_Processes return Natural is
@@ -823,7 +829,9 @@ package body Grt.Processes is
       --  LRM93 12.6.4
       --  At the beginning of initialization, the current time, Tc, is assumed
       --  to be 0 ns.
-      Current_Time := 0;
+      --
+      --  GHDL: already initialized before elaboration.
+      pragma Assert (Current_Time = 0);
 
       --  The initialization phase consists of the following steps:
       --  - The driving value and the effective value of each explicitly
@@ -1109,10 +1117,16 @@ package body Grt.Processes is
          --  in 2 steps: an after_delay for the time and then a read_only
          --  to finish the current cycle.  Note that no message should be
          --  printed if the simulation is already finished at the stop time.
-         Info ("simulation stopped by --stop-time");
+         Info_S ("simulation stopped by --stop-time @");
+         Diag_C_Now;
+         Info_E;
          return True;
       elsif Current_Delta >= Stop_Delta then
-         Info ("simulation stopped by --stop-delta");
+         Info_S ("simulation stopped @");
+         Diag_C_Now;
+         Diag_C (" by --stop-delta=");
+         Diag_C (Stop_Delta);
+         Info_E;
          return True;
       else
          return False;

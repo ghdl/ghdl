@@ -70,10 +70,12 @@ package Grt.Rtis_Utils is
                                     Bounds : out Address);
 
    --  Get address of element EL for record at OBJ.
-   procedure Record_To_Element_Base (Obj : Address;
-                                     El : Ghdl_Rtin_Element_Acc;
-                                     Is_Sig : Boolean;
-                                     Addr : out Address);
+   procedure Record_To_Element (Obj : Address;
+                                El : Ghdl_Rtin_Element_Acc;
+                                Is_Sig : Boolean;
+                                Rec_Layout : Address;
+                                El_Addr : out Address;
+                                El_Bounds : out Address);
 
    procedure Get_Value (Str : in out Vstring;
                         Value : Value_Union;

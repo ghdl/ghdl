@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Standard VHDL Synthesis Packages
 --             :  (NUMERIC_BIT package declaration)
@@ -1213,52 +1216,52 @@ package NUMERIC_BIT is
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector XNOR operation
 
-  -- Id: L.15 
+  -- Id: L.15
   function "and" (L : BIT; R : UNSIGNED) return UNSIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector AND operation
 
-  -- Id: L.16 
+  -- Id: L.16
   function "and" (L : UNSIGNED; R : BIT) return UNSIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar AND operation
 
-  -- Id: L.17 
+  -- Id: L.17
   function "or" (L : BIT; R : UNSIGNED) return UNSIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector OR operation
 
-  -- Id: L.18 
+  -- Id: L.18
   function "or" (L : UNSIGNED; R : BIT) return UNSIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar OR operation
 
-  -- Id: L.19 
+  -- Id: L.19
   function "nand" (L : BIT; R : UNSIGNED) return UNSIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector NAND operation
 
-  -- Id: L.20 
+  -- Id: L.20
   function "nand" (L : UNSIGNED; R : BIT) return UNSIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar NAND operation
 
-  -- Id: L.21 
+  -- Id: L.21
   function "nor" (L : BIT; R : UNSIGNED) return UNSIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector NOR operation
 
-  -- Id: L.22 
+  -- Id: L.22
   function "nor" (L : UNSIGNED; R : BIT) return UNSIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar NOR operation
 
-  -- Id: L.23 
+  -- Id: L.23
   function "xor" (L : BIT; R : UNSIGNED) return UNSIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector XOR operation
 
-  -- Id: L.24 
+  -- Id: L.24
   function "xor" (L : UNSIGNED; R : BIT) return UNSIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar XOR operation
@@ -1267,7 +1270,7 @@ package NUMERIC_BIT is
   -- Note: Function L.25 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.25 
+  -- Id: L.25
   function "xnor" (L : BIT; R : UNSIGNED) return UNSIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector XNOR operation
@@ -1276,57 +1279,57 @@ package NUMERIC_BIT is
   -- Note: Function L.26 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.26 
+  -- Id: L.26
   function "xnor" (L : UNSIGNED; R : BIT) return UNSIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar XNOR operation
 
-  -- Id: L.27 
+  -- Id: L.27
   function "and" (L : BIT; R : SIGNED) return SIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector AND operation
 
-  -- Id: L.28 
+  -- Id: L.28
   function "and" (L : SIGNED; R : BIT) return SIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar AND operation
 
-  -- Id: L.29 
+  -- Id: L.29
   function "or" (L : BIT; R : SIGNED) return SIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector OR operation
 
-  -- Id: L.30 
+  -- Id: L.30
   function "or" (L : SIGNED; R : BIT) return SIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar OR operation
 
-  -- Id: L.31 
+  -- Id: L.31
   function "nand" (L : BIT; R : SIGNED) return SIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector NAND operation
 
-  -- Id: L.32 
+  -- Id: L.32
   function "nand" (L : SIGNED; R : BIT) return SIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar NAND operation
 
-  -- Id: L.33 
+  -- Id: L.33
   function "nor" (L : BIT; R : SIGNED) return SIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector NOR operation
 
-  -- Id: L.34 
+  -- Id: L.34
   function "nor" (L : SIGNED; R : BIT) return SIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar NOR operation
 
-  -- Id: L.35 
+  -- Id: L.35
   function "xor" (L : BIT; R : SIGNED) return SIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector XOR operation
 
-  -- Id: L.36 
+  -- Id: L.36
   function "xor" (L : SIGNED; R : BIT) return SIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar XOR operation
@@ -1335,7 +1338,7 @@ package NUMERIC_BIT is
   -- Note: Function L.37 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.37 
+  -- Id: L.37
   function "xnor" (L : BIT; R : SIGNED) return SIGNED;
   -- Result subtype: SIGNED(R'LENGTH-1 downto 0)
   -- Result: Scalar/Vector XNOR operation
@@ -1344,7 +1347,7 @@ package NUMERIC_BIT is
   -- Note: Function L.38 is not compatible with IEEE Std 1076-1987. Comment
   -- out the function (declaration and body) for IEEE Std 1076-1987 compatibility.
   ------------------------------------------------------------------------------
-  -- Id: L.38 
+  -- Id: L.38
   function "xnor" (L : SIGNED; R : BIT) return SIGNED;
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector/Scalar XNOR operation
@@ -1356,8 +1359,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.39
   function "and" (L : SIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of and'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of and'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.40 is not compatible with editions of IEEE Std 1076 from
@@ -1366,8 +1369,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.40
   function "nand" (L : SIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of nand'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of nand'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.41 is not compatible with editions of IEEE Std 1076 from
@@ -1376,8 +1379,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.41
   function "or" (L : SIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of or'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of or'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.42 is not compatible with editions of IEEE Std 1076 from
@@ -1386,8 +1389,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.42
   function "nor" (L : SIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of nor'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of nor'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.43 is not compatible with editions of IEEE Std 1076 from
@@ -1396,8 +1399,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.43
   function "xor" (L : SIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of xor'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of xor'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.44 is not compatible with editions of IEEE Std 1076 from
@@ -1406,8 +1409,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.44
   function "xnor" (L : SIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of xnor'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of xnor'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.45 is not compatible with editions of IEEE Std 1076 from
@@ -1416,8 +1419,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.45
   function "and" (L : UNSIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of and'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of and'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.46 is not compatible with editions of IEEE Std 1076 from
@@ -1426,8 +1429,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.46
   function "nand" (L : UNSIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of nand'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of nand'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.47 is not compatible with editions of IEEE Std 1076 from
@@ -1436,8 +1439,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.47
   function "or" (L : UNSIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of or'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of or'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.48 is not compatible with editions of IEEE Std 1076 from
@@ -1446,8 +1449,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.48
   function "nor" (L : UNSIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of nor'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of nor'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.49 is not compatible with editions of IEEE Std 1076 from
@@ -1456,8 +1459,8 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.49
   function "xor" (L : UNSIGNED) return BIT;
-  -- Result subtype: BIT. 
-  -- Result: Result of xor'ing all of the bits of the vector. 
+  -- Result subtype: BIT.
+  -- Result: Result of xor'ing all of the bits of the vector.
 
   ------------------------------------------------------------------------------
   -- Note: Function L.50 is not compatible with editions of IEEE Std 1076 from
@@ -1466,7 +1469,7 @@ package NUMERIC_BIT is
   ------------------------------------------------------------------------------
   -- Id: L.50
   function "xnor" (L : UNSIGNED) return BIT;
-  -- Result subtype: BIT. 
+  -- Result subtype: BIT.
   -- Result: Result of xnor'ing all of the bits of the vector.
 
   --============================================================================
@@ -1492,20 +1495,20 @@ package NUMERIC_BIT is
   --============================================================================
   -- the following operations are predefined
 
-  -- FUNCTION to_string ( value : UNSIGNED ) RETURN string;
-  -- FUNCTION to_string ( value : SIGNED   ) RETURN string;
+  -- FUNCTION TO_STRING ( value : UNSIGNED ) RETURN string;
+  -- FUNCTION TO_STRING ( value : SIGNED   ) RETURN string;
 
   -- explicitly defined operations
 
-  alias to_bstring is to_string [UNSIGNED return STRING];
-  alias to_bstring is to_string [SIGNED return STRING];
-  alias to_binary_string is to_string [UNSIGNED return STRING];
-  alias to_binary_string is to_string [SIGNED return STRING];
+  alias TO_BSTRING is TO_STRING [UNSIGNED return STRING];
+  alias TO_BSTRING is TO_STRING [SIGNED return STRING];
+  alias to_binary_string is TO_STRING [UNSIGNED return STRING];
+  alias to_binary_string is TO_STRING [SIGNED return STRING];
 
-  function to_ostring (value : UNSIGNED) return STRING;
-  function to_ostring (value : SIGNED) return STRING;
-  alias to_octal_string is to_ostring [UNSIGNED return STRING];
-  alias to_octal_string is to_ostring [SIGNED return STRING];
+  function TO_OSTRING (value : UNSIGNED) return STRING;
+  function TO_OSTRING (value : SIGNED) return STRING;
+  alias to_octal_string is TO_OSTRING [UNSIGNED return STRING];
+  alias to_octal_string is TO_OSTRING [SIGNED return STRING];
 
   function to_hstring (value : UNSIGNED) return STRING;
   function to_hstring (value : SIGNED) return STRING;

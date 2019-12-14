@@ -15,27 +15,27 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Command_Line; use Ada.Command_Line;
-with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Characters.Latin_1;
-with GNAT.OS_Lib; use GNAT.OS_Lib;
-with Tables;
-with GNAT.Dynamic_Tables;
-with Libraries;
-with Name_Table; use Name_Table;
-with Std_Package;
-with Types; use Types;
-with Iirs; use Iirs;
-with Files_Map;
-with Configuration;
-with Default_Paths;
-with Interfaces.C_Streams;
 with System;
+with Ada.Command_Line; use Ada.Command_Line;
+with Interfaces.C_Streams;
+with GNAT.OS_Lib; use GNAT.OS_Lib;
+
+with Types; use Types;
+with Tables;
+with Dyn_Tables;
+with Files_Map;
+with Libraries;
+with Default_Paths;
+with Simple_IO; use Simple_IO;
+with Name_Table; use Name_Table;
+with Vhdl.Std_Package;
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Configuration;
+with Options; use Options;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Errorout;
 with Version;
-with Options;
 
 package body Ghdldrv is
    --  Name of the tools used.
@@ -66,9 +66,6 @@ package body Ghdldrv is
    --  "-fpic" option.
    Dash_Fpic : constant String_Access := new String'("-fpic");
 
-   --  True if --post is present.
-   Flag_Postprocess : Boolean := False;
-
    --  If set, do not assmble
    Flag_Asm : Boolean;
 
@@ -95,12 +92,10 @@ package body Ghdldrv is
    --  Argument table for the tools.
    --  Each table low bound is 1 so that the length of a table is equal to
    --  the last bound.
-   package Argument_Table_Pkg is new GNAT.Dynamic_Tables
+   package Argument_Table_Pkg is new Dyn_Tables
      (Table_Component_Type => String_Access,
       Table_Index_Type => Integer,
-      Table_Low_Bound => 1,
-      Table_Initial => 4,
-      Table_Increment => 100);
+      Table_Low_Bound => 1);
    use Argument_Table_Pkg;
 
    --  Arguments for tools.
@@ -318,6 +313,7 @@ package body Ghdldrv is
       Free (Obj_File);
    end Do_Compile;
 
+   --  Table of files to be linked.
    package Filelist is new Tables
      (Table_Component_Type => String_Access,
       Table_Index_Type => Natural,
@@ -337,7 +333,6 @@ package body Ghdldrv is
    is
       use Interfaces.C_Streams;
       use System;
-      use Ada.Characters.Latin_1;
 
       --  Replace the first '@' with the machine path.
       function Substitute (Str : String) return String
@@ -379,13 +374,17 @@ package body Ghdldrv is
             end loop;
 
             --  Remove trailing NL.
-            while L > 0 and then (Line (L) = LF or Line (L) = CR) loop
+            while L > 0 and then (Line (L) = ASCII.LF or Line (L) = ASCII.CR)
+            loop
                L := L - 1;
             end loop;
 
             if Line (1) = '>' then
                Dir_Len := L - 1;
                Dir (1 .. Dir_Len) := Line (2 .. L);
+            elsif Line (1) = '+' then
+               File := new String'(Line (2 .. L));
+               Filelist.Append (File);
             else
                if To_Obj then
                   File := new String'(Dir (1 .. Dir_Len)
@@ -395,8 +394,7 @@ package body Ghdldrv is
                   File := new String'(Substitute (Line (1 .. L)));
                end if;
 
-               Filelist.Increment_Last;
-               Filelist.Table (Filelist.Last) := File;
+               Filelist.Append (File);
 
                Dir_Len := 0;
             end if;
@@ -418,8 +416,7 @@ package body Ghdldrv is
         & Get_Object_Suffix.all;
    end Get_Object_Filename;
 
-   procedure Add_Argument (Inst : in out Instance; Arg : String_Access)
-   is
+   procedure Add_Argument (Inst : in out Instance; Arg : String_Access) is
    begin
       Increment_Last (Inst);
       Inst.Table (Last (Inst)) := Arg;
@@ -473,7 +470,9 @@ package body Ghdldrv is
             return new String'(Toolname);
          end if;
       else
-         --  Try from install prefix
+         --  Try from install prefix.  This is used at least with gcc when
+         --  ghdl1 is installed in a libexec subdirectory, and also during
+         --  development.
          if Exec_Prefix /= null then
             declare
                Path : constant String :=
@@ -485,7 +484,21 @@ package body Ghdldrv is
             end;
          end if;
 
-         --  Try configured prefix
+         --  Try from install prefix / bin.  This is used at least for
+         --  ghdl1-llvm.
+         if Exec_Prefix /= null then
+            declare
+               Path : constant String :=
+                 Exec_Prefix.all & Directory_Separator
+                 & "bin" & Directory_Separator & Toolname;
+            begin
+               if Is_Executable_File (Path) then
+                  return new String'(Path);
+               end if;
+            end;
+         end if;
+
+         --  Try configured prefix.
          declare
             Path : constant String :=
               Default_Paths.Install_Prefix & Directory_Separator & Toolname;
@@ -563,7 +576,7 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Comp;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    procedure Disp_Long_Help (Cmd : Command_Comp);
 
@@ -578,22 +591,22 @@ package body Ghdldrv is
       Output_File := null;
 
       --  Initialize argument tables.
-      Init (Compiler_Args);
-      Init (Postproc_Args);
-      Init (Assembler_Args);
-      Init (Linker_Args);
+      Init (Compiler_Args, 4);
+      Init (Postproc_Args, 4);
+      Init (Assembler_Args, 4);
+      Init (Linker_Args, 4);
       Init (Command_Lib (Cmd));
    end Init;
 
    procedure Decode_Option (Cmd : in out Command_Comp;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
+                            Res : out Option_State)
    is
-      Str : String_Access;
       Opt : constant String (1 .. Option'Length) := Option;
+      Str : String_Access;
    begin
-      Res := Option_Bad;
+      Res := Option_Unknown;
       if Opt = "-v" and then Flag_Verbose = False then
          --  Note: this is also decoded for command_lib, but we set
          --  Flag_Disp_Commands too.
@@ -641,7 +654,8 @@ package body Ghdldrv is
             Add_Arguments (Linker_Args, Opt);
          else
             Error ("unknown tool name in '-W" & Opt (3) & ",' option");
-            raise Option_Error;
+            Res := Option_Err;
+            return;
          end if;
          Res := Option_Ok;
       elsif Opt'Length >= 2 and then Opt (2) = 'g' then
@@ -668,25 +682,42 @@ package body Ghdldrv is
       elsif Opt = "--dyn-elab" then
          Elab_Mode := Elab_Dynamic;
          Res := Option_Ok;
-      elsif Options.Parse_Option (Opt) then
-         if Opt'Length > 2 and then Opt (1 .. 2) = "-P" then
-            --  Discard -Pxxx switches, as they are already added to
-            --  compiler_args.
-            null;
-         else
-            Add_Argument (Compiler_Args, new String'(Opt));
-         end if;
-         Res := Option_Ok;
-      elsif Opt'Length >= 2
-        and then (Opt (2) = 'O' or Opt (2) = 'f')
+      elsif Opt'Length > 18
+        and then Opt (1 .. 18) = "--time-resolution="
       then
-         --  Optimization option.
-         --  This is put after Flags.Parse_Option, since it may catch -fxxx
-         --  options.
-         Add_Argument (Compiler_Args, new String'(Opt));
-         Res := Option_Ok;
+         Error ("option --time-resolution not supported by back-end");
+         Res := Option_Err;
+         return;
       else
-         Decode_Option (Command_Lib (Cmd), Opt, Arg, Res);
+         Res := Options.Parse_Option (Opt);
+         if Res = Option_Ok then
+            if Opt'Length > 2 and then Opt (1 .. 2) = "-P" then
+               --  Discard -Pxxx switches, as they are already added to
+               --  compiler_args.
+               null;
+            else
+               if Backend = Backend_Gcc then
+                  --  Prefix options for gcc so that lang.opt does need to be
+                  --  updated when a new option is added.
+                  Str := new String'("--ghdl" & Opt);
+               else
+                  Str := new String'(Opt);
+               end if;
+               Add_Argument (Compiler_Args, Str);
+            end if;
+         elsif Res = Option_Unknown then
+            if Opt'Length >= 2
+              and then (Opt (2) = 'O' or Opt (2) = 'f')
+            then
+               --  Optimization option supported by gcc/llvm.
+               --  This is put after Flags.Parse_Option, since it may catch
+               --  -fxxx options.
+               Add_Argument (Compiler_Args, new String'(Opt));
+               Res := Option_Ok;
+            else
+               Decode_Option (Command_Lib (Cmd), Opt, Arg, Res);
+            end if;
+         end if;
       end if;
    end Decode_Option;
 
@@ -713,7 +744,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Dispconfig; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Dispconfig) return String;
-   procedure Perform_Action (Cmd : in out Command_Dispconfig;
+   procedure Perform_Action (Cmd : Command_Dispconfig;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Dispconfig; Name : String)
@@ -731,7 +762,7 @@ package body Ghdldrv is
       return "--disp-config      Disp tools path";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Dispconfig;
+   procedure Perform_Action (Cmd : Command_Dispconfig;
                              Args : Argument_List)
    is
       use Libraries;
@@ -798,7 +829,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Bootstrap; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Bootstrap) return String;
-   procedure Perform_Action (Cmd : in out Command_Bootstrap;
+   procedure Perform_Action (Cmd : Command_Bootstrap;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Bootstrap; Name : String)
@@ -816,7 +847,7 @@ package body Ghdldrv is
       return "--bootstrap-standard  (Internal) compile std.standard";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Bootstrap;
+   procedure Perform_Action (Cmd : Command_Bootstrap;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -827,8 +858,7 @@ package body Ghdldrv is
          raise Option_Error;
       end if;
 
-      Set_Tools_Name;
-      Locate_Tools;
+      Setup_Compiler (False);
 
       Opt (1) := new String'("--compile-standard");
       Do_Compile (Opt, "std_standard.vhdl", True);
@@ -839,7 +869,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Analyze; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Analyze) return String;
-   procedure Perform_Action (Cmd : in out Command_Analyze;
+   procedure Perform_Action (Cmd : Command_Analyze;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Analyze; Name : String)
@@ -857,7 +887,7 @@ package body Ghdldrv is
       return "-a [OPTS] FILEs    Analyze FILEs";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Analyze;
+   procedure Perform_Action (Cmd : Command_Analyze;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -876,6 +906,8 @@ package body Ghdldrv is
 
    --  Elaboration.
 
+   Primary_Id : Name_Id;
+   Secondary_Id : Name_Id;
    Base_Name : String_Access;
    Elab_Name : String_Access;
    Filelist_Name : String_Access;
@@ -883,16 +915,17 @@ package body Ghdldrv is
 
    procedure Set_Elab_Units (Cmd_Name : String;
                              Args : Argument_List;
-                             Run_Arg : out Natural)
-   is
+                             Run_Arg : out Natural) is
    begin
-      Extract_Elab_Unit (Cmd_Name, Args, Run_Arg);
-      if Sec_Name = null then
-         Base_Name := Prim_Name;
-         Unit_Name := Prim_Name;
+      Extract_Elab_Unit (Cmd_Name, Args, Run_Arg, Primary_Id, Secondary_Id);
+      if Secondary_Id = Null_Identifier then
+         Base_Name := new String'(Image (Primary_Id));
+         Unit_Name := new String'(Image (Primary_Id));
       else
-         Base_Name := new String'(Prim_Name.all & '-' & Sec_Name.all);
-         Unit_Name := new String'(Prim_Name.all & '(' & Sec_Name.all & ')');
+         Base_Name :=
+           new String'(Image (Primary_Id) & '-' & Image (Secondary_Id));
+         Unit_Name :=
+           new String'(Image (Primary_Id) & '(' & Image (Secondary_Id) & ')');
       end if;
 
       Filelist_Name := null;
@@ -914,7 +947,8 @@ package body Ghdldrv is
       end;
    end Set_Elab_Units;
 
-   procedure Set_Elab_Units (Cmd_Name : String; Args : Argument_List)
+   procedure Set_Elab_Units (Cmd_Name : String;
+                             Args : Argument_List)
    is
       Next_Arg : Natural;
    begin
@@ -1045,7 +1079,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Elab; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Elab) return String;
-   procedure Perform_Action (Cmd : in out Command_Elab;
+   procedure Perform_Action (Cmd : Command_Elab;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Elab; Name : String)
@@ -1063,7 +1097,7 @@ package body Ghdldrv is
       return "-e [OPTS] UNIT [ARCH]      Elaborate UNIT";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Elab; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Elab; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       Success : Boolean;
@@ -1084,7 +1118,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Run; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Run) return String;
-   procedure Perform_Action (Cmd : in out Command_Run;
+   procedure Perform_Action (Cmd : Command_Run;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Run; Name : String)
@@ -1115,22 +1149,24 @@ package body Ghdldrv is
       Set_Exit_Status (Exit_Status (Status));
    end Run_Design;
 
-   procedure Perform_Action (Cmd : in out Command_Run; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Run; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       Suffix : constant String_Access := Get_Executable_Suffix;
+      Prim_Id : Name_Id;
+      Sec_Id : Name_Id;
       Opt_Arg : Natural;
    begin
-      Extract_Elab_Unit ("-r", Args, Opt_Arg);
-      if Sec_Name = null then
+      Extract_Elab_Unit ("-r", Args, Opt_Arg, Prim_Id, Sec_Id);
+      if Sec_Id = Null_Identifier then
          Base_Name := new String'
-           (Prim_Name.all & Suffix.all);
+           (Image (Prim_Id) & Suffix.all);
       else
          Base_Name := new String'
-           (Prim_Name.all & '-' & Sec_Name.all & Suffix.all);
+           (Image (Prim_Id) & '-' & Image (Sec_Id) & Suffix.all);
       end if;
       if not Is_Regular_File (Base_Name.all & Nul) then
-         Error ("file '" & Base_Name.all & "' does not exists");
+         Error ("file '" & Base_Name.all & "' does not exist");
          Error ("Please elaborate your design.");
          raise Exec_Error;
       end if;
@@ -1142,7 +1178,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Elab_Run; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Elab_Run) return String;
-   procedure Perform_Action (Cmd : in out Command_Elab_Run;
+   procedure Perform_Action (Cmd : Command_Elab_Run;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Elab_Run; Name : String)
@@ -1160,7 +1196,7 @@ package body Ghdldrv is
       return "--elab-run [OPTS] UNIT [ARCH] [OPTS]  Elaborate and run UNIT";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Elab_Run;
+   procedure Perform_Action (Cmd : Command_Elab_Run;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1185,7 +1221,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Bind; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Bind) return String;
-   procedure Perform_Action (Cmd : in out Command_Bind;
+   procedure Perform_Action (Cmd : Command_Bind;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Bind; Name : String)
@@ -1203,7 +1239,7 @@ package body Ghdldrv is
       return "--bind [OPTS] UNIT [ARCH]  Bind UNIT";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Bind; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Bind; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
    begin
@@ -1218,7 +1254,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Link; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Link) return String;
-   procedure Perform_Action (Cmd : in out Command_Link; Args : Argument_List);
+   procedure Perform_Action (Cmd : Command_Link; Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Link; Name : String)
                            return Boolean
@@ -1235,7 +1271,7 @@ package body Ghdldrv is
       return "--link [OPTS] UNIT [ARCH]  Link UNIT";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Link; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Link; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
    begin
@@ -1252,7 +1288,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_List_Link; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_List_Link) return String;
-   procedure Perform_Action (Cmd : in out Command_List_Link;
+   procedure Perform_Action (Cmd : Command_List_Link;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_List_Link; Name : String)
@@ -1270,7 +1306,7 @@ package body Ghdldrv is
       return "--list-link [OPTS] UNIT [ARCH]  List objects file to link UNIT";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_List_Link;
+   procedure Perform_Action (Cmd : Command_List_Link;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1291,9 +1327,9 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Anaelab;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
-   procedure Perform_Action (Cmd : in out Command_Anaelab;
+   procedure Perform_Action (Cmd : Command_Anaelab;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Anaelab; Name : String)
@@ -1315,8 +1351,7 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Anaelab;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
-   is
+                            Res : out Option_State) is
    begin
       if Option = "-e" then
          Res := Option_End;
@@ -1326,11 +1361,12 @@ package body Ghdldrv is
       end if;
    end Decode_Option;
 
-   procedure Perform_Action (Cmd : in out Command_Anaelab;
+   procedure Perform_Action (Cmd : Command_Anaelab;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       Elab_Index : Integer;
+      Error : Boolean;
    begin
       Elab_Index := -1;
       for I in Args'Range loop
@@ -1340,7 +1376,10 @@ package body Ghdldrv is
          end if;
       end loop;
       if Elab_Index < 0 then
-         Analyze_Files (Args, True);
+         Analyze_Files (Args, True, Error);
+         if Error then
+            raise Errorout.Compilation_Error;
+         end if;
       else
          Set_Elab_Units ("-c", Args (Elab_Index + 1 .. Args'Last));
          Setup_Compiler (False);
@@ -1368,12 +1407,12 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Make;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    function Get_Short_Help (Cmd : Command_Make) return String;
    procedure Disp_Long_Help (Cmd : Command_Make);
 
-   procedure Perform_Action (Cmd : in out Command_Make;
+   procedure Perform_Action (Cmd : Command_Make;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Make; Name : String)
@@ -1411,7 +1450,7 @@ package body Ghdldrv is
    procedure Decode_Option (Cmd : in out Command_Make;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res) is
+                            Res : out Option_State) is
    begin
       if Option = "-b" then
          Cmd.Flag_Bind_Only := True;
@@ -1455,9 +1494,9 @@ package body Ghdldrv is
       return False;
    end Missing_Object_File;
 
-   procedure Perform_Action (Cmd : in out Command_Make; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Make; Args : Argument_List)
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       File : Iir_Design_File;
       Unit : Iir;
@@ -1484,7 +1523,11 @@ package body Ghdldrv is
       Setup_Compiler (True);
 
       --  Create list of files.
-      Files_List := Build_Dependence (Prim_Name, Sec_Name);
+      Files_List := Build_Dependence (Primary_Id, Secondary_Id);
+
+      if Errorout.Nbr_Errors /= 0 then
+         raise Errorout.Compilation_Error;
+      end if;
 
       if Cmd.Flag_Depend_Unit then
          Put_Line ("Units analysis order:");
@@ -1535,7 +1578,7 @@ package body Ghdldrv is
       while Is_Valid (Files_It) loop
          File := Get_Element (Files_It);
 
-         if File = Std_Package.Std_Standard_File then
+         if File = Vhdl.Std_Package.Std_Standard_File then
             Need_Analyze := False;
          elsif Missing_Object_File (File)
            or else Source_File_Modified (File)
@@ -1628,7 +1671,7 @@ package body Ghdldrv is
       if Need_Elaboration then
          if not Flag_Verbose then
             Put ("elaborate ");
-            Put (Prim_Name.all);
+            Put (Image (Primary_Id));
             --Disp_Library_Unit (Get_Library_Unit (Unit));
             New_Line;
          end if;
@@ -1655,7 +1698,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Gen_Makefile; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Gen_Makefile) return String;
-   procedure Perform_Action (Cmd : in out Command_Gen_Makefile;
+   procedure Perform_Action (Cmd : Command_Gen_Makefile;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Gen_Makefile; Name : String)
@@ -1675,13 +1718,13 @@ package body Ghdldrv is
 
    function Is_Makeable_File (File : Iir_Design_File) return Boolean is
    begin
-      if File = Std_Package.Std_Standard_File then
+      if File = Vhdl.Std_Package.Std_Standard_File then
          return False;
       end if;
       return True;
    end Is_Makeable_File;
 
-   procedure Perform_Action (Cmd : in out Command_Gen_Makefile;
+   procedure Perform_Action (Cmd : Command_Gen_Makefile;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1694,7 +1737,7 @@ package body Ghdldrv is
    function Decode_Command (Cmd : Command_Gen_Depends; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Gen_Depends) return String;
-   procedure Perform_Action (Cmd : in out Command_Gen_Depends;
+   procedure Perform_Action (Cmd : Command_Gen_Depends;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Gen_Depends; Name : String)
@@ -1713,7 +1756,7 @@ package body Ghdldrv is
         & "  Generate dependencies of UNIT";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Gen_Depends;
+   procedure Perform_Action (Cmd : Command_Gen_Depends;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1725,7 +1768,7 @@ package body Ghdldrv is
    -- for --gen-depends (Only_Depends) rules and phony targets are omittted
    procedure Gen_Makefile (Args : Argument_List; Only_Depends : Boolean)
    is
-      HT : constant Character := Ada.Characters.Latin_1.HT;
+      HT : constant Character := ASCII.HT;
       Files_List : Iir_List;
       Files_It : List_Iterator;
       File : Iir_Design_File;
@@ -1744,7 +1787,7 @@ package body Ghdldrv is
       end if;
 
       Setup_Libraries (True);
-      Files_List := Build_Dependence (Prim_Name, Sec_Name);
+      Files_List := Build_Dependence (Primary_Id, Secondary_Id);
 
       Put_Line ("# Makefile automatically generated by ghdl");
       Put ("# Version: GHDL ");

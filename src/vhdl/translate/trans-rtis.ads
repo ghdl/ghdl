@@ -70,6 +70,7 @@ package Trans.Rtis is
    Ghdl_Rtik_Attribute_Quiet             : O_Cnode;
    Ghdl_Rtik_Attribute_Stable            : O_Cnode;
    Ghdl_Rtik_Psl_Assert                  : O_Cnode;
+   Ghdl_Rtik_Psl_Assume                  : O_Cnode;
    Ghdl_Rtik_Psl_Cover                   : O_Cnode;
    Ghdl_Rtik_Psl_Endpoint                : O_Cnode;
    Ghdl_Rtik_Error                       : O_Cnode;
@@ -114,7 +115,7 @@ package Trans.Rtis is
    procedure Rti_Initialize;
 
    --  Get address (as Ghdl_Rti_Access) of constant RTI.
-   function New_Rti_Address (Rti : O_Dnode) return O_Cnode;
+   function New_Rti_Address (Rti : O_Dnode) return O_Enode;
 
    --  Generate rtis for a library unit.
    procedure Generate_Unit (Lib_Unit : Iir);
@@ -139,6 +140,6 @@ package Trans.Rtis is
      (Assoc : in out O_Assoc_List; Node : Iir);
    procedure Associate_Null_Rti_Context (Assoc : in out O_Assoc_List);
 
-   function Get_Context_Rti (Node : Iir) return O_Cnode;
+   function Get_Context_Rti (Node : Iir) return O_Enode;
    function Get_Context_Addr (Node : Iir) return O_Enode;
 end Trans.Rtis;

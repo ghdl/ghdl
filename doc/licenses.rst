@@ -1,10 +1,9 @@
-.. include:: shields.inc
 .. _INTRO:Copyrights:
 
 Copyrights | Licenses
 #####################
 
-- The GHDL front-end, package :samp:`std.textio` and the runtime library, :samp:`grt`, are given under :ref:`LIC:GPLv2`.
+- The GHDL front-end package :samp:`std.textio`, and the runtime library :samp:`grt` are given under :ref:`LIC:GPLv2`.
 - The documentation is given under :ref:`LIC:CC-BY-SA`.
 
 .. WARNING::
@@ -28,7 +27,7 @@ Copyrights | Licenses
 GNU GPLv2
 =========
 
-GHDL is copyright |copy| 2002 - 2017 Tristan Gingold.
+GHDL is copyright |copy| 2002 - 2019 Tristan Gingold.
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
 
@@ -41,9 +40,9 @@ CC-BY-SA
 
 This is a free documentation; you can redistribute it and/or modify it under the terms of the `Creative Commons Attribution-ShareAlike 4.0 <https://creativecommons.org/licenses/by-sa/4.0/>`_ license. You are free to **share** (copy and redistribute the material in any medium or format) and/or **adapt** (remix, transform, and build upon the material for any purpose, even commercially). We cannot revoke these freedoms as long as you follow the these terms:
 
-- **Attribution**: you must provide the name of the creator and attribution parties (`more info <https://wiki.creativecommons.org/wiki/License_Versions#Detailed_attribution_comparison_chart>`_), a copyright notice, a license notice, a disclaimer notice, a link to the material, a link to the license and indicate if changes were made (see `marking guide <https://wiki.creativecommons.org/wiki/Best_practices_for_attribution#This_is_a_good_attribution_for_material_you_modified_slightly>`_ and `more info <https://wiki.creativecommons.org/wiki/License_Versions#Modifications_and_adaptations_must_be_marked_as_such>`_ ). You may do so in any reasonable manner, but not in any way that suggests we endorses you or your use.
+- **Attribution**: you must provide the name of the creator and attribution parties (`more info <https://wiki.creativecommons.org/wiki/License_Versions#Detailed_attribution_comparison_chart>`__), a copyright notice, a license notice, a disclaimer notice, a link to the material, a link to the license and indicate if changes were made (see `marking guide <https://wiki.creativecommons.org/wiki/Best_practices_for_attribution#This_is_a_good_attribution_for_material_you_modified_slightly>`__ and `more info <https://wiki.creativecommons.org/wiki/License_Versions#Modifications_and_adaptations_must_be_marked_as_such>`__). You may do so in any reasonable manner, but not in any way that suggests we endorse you or your use.
 - **ShareAlike**: if you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
-- No additional restrictions: you may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+- **No additional restrictions**: you may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
 
 See `CC-BY-SA-4.0 Legal Code <https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt>`_ for more details.
 
@@ -68,9 +67,15 @@ Martinez-Corral, Unai      Docker builds, Travis-CI & Docker, adapt/fix RTD them
 van Rantwijk, Joris        Debian packaging
 =========================  ============================================================
 
+.. only:: html
+
+   .. exec::
+      from helpers import createShields
+      createShields('shields')
+
 Only those who made substantial contributions are shown in the table above, but many others contributed with minor patches. You can find a list at |SHIELD:contributors|
 
-With apologies to anyone who ought to be either on this table or in the GitHub contributor list, but isn't. Thanks also to all those who have reported bugs and support issues, and often patches and testcases to either the late gna! website or `sourceforge.net/p/ghdl-updates/tickets <https://sourceforge.net/p/ghdl-updates/tickets/>`_ .
+With apologies to anyone who ought to be either on this table or in the GitHub contributor list, but isn't. Thanks also to all those who have reported bugs and support issues, and often patches and testcases to either the late gna! website or `sourceforge.net/p/ghdl-updates/tickets <https://sourceforge.net/p/ghdl-updates/tickets/>`_.
 
 --------------------------------------------------------------------------------
 
@@ -78,5 +83,5 @@ With apologies to anyone who ought to be either on this table or in the GitHub c
 
    .. rubric:: Footnotes
 
-   .. [#f1] In alphabetical order.
-   .. [#f2] Maintainer.
+   .. [#f1] In alphabetical order
+   .. [#f2] Maintainer

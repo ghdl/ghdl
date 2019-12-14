@@ -82,7 +82,7 @@ package body Grt.Vcdz is
 
          Stream := gzopen (Vcd_Filename.all'Address, Mode'Address);
          if Stream = NULL_gzFile then
-            Error_C ("cannot open ");
+            Error_S ("cannot open ");
             Error_E (Vcd_Filename (Vcd_Filename'First
                                    .. Vcd_Filename'Last - 1));
             return True;

@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
+with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 with Name_Table; use Name_Table;
 with Ada.Text_IO; use Ada.Text_IO;
@@ -57,6 +58,8 @@ package body PSL.Prints is
             return Prio_Seq_Or;
          when N_And_Prop =>
             return Prio_Seq_And;
+         when N_Paren_Prop =>
+            return Prio_FL_Paren;
          when N_Imp_Seq
            | N_Overlap_Imp_Seq
            | N_Log_Imp_Prop
@@ -371,9 +374,21 @@ package body PSL.Prints is
          when N_Before =>
             Print_Binary_Property_SI (" before", Prop, Prio);
          when N_Or_Prop =>
-            Print_Binary_Property (" || ", Prop, Prio);
+            if True then
+               Print_Binary_Property (" or ", Prop, Prio);
+            else
+               Print_Binary_Property (" || ", Prop, Prio);
+            end if;
          when N_And_Prop =>
-            Print_Binary_Property (" && ", Prop, Prio);
+            if True then
+               Print_Binary_Property (" and ", Prop, Prio);
+            else
+               Print_Binary_Property (" && ", Prop, Prio);
+            end if;
+         when N_Paren_Prop =>
+            Put ("(");
+            Print_Property (Get_Property (Prop), Prio);
+            Put (")");
          when N_Imp_Seq =>
             Print_Property (Get_Sequence (Prop), Prio);
             Put (" |=> ");

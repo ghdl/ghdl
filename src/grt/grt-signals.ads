@@ -60,7 +60,7 @@ package Grt.Signals is
       Time : Std_Time;
       case Kind is
          when Trans_Value =>
-            Val : Value_Union;
+            Val : aliased Value_Union;
          when Trans_Direct =>
             Val_Ptr : Ghdl_Value_Ptr;
          when Trans_Null =>

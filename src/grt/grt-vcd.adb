@@ -49,10 +49,11 @@ with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
-with Grt.Vstrings;
+with Grt.To_Strings;
 with Grt.Wave_Opt; use Grt.Wave_Opt;
 with Grt.Wave_Opt.Design; use Grt.Wave_Opt.Design;
 with Grt.Fcvt;
+with Grt.Options;
 pragma Elaborate_All (Grt.Table);
 
 package body Grt.Vcd is
@@ -121,7 +122,7 @@ package body Grt.Vcd is
          else
             Stream := fopen (Vcd_Filename.all'Address, Mode'Address);
             if Stream = NULL_Stream then
-               Error_C ("cannot open ");
+               Error_S ("cannot open ");
                Error_E (Vcd_Filename (Vcd_Filename'First
                                       .. Vcd_Filename'Last - 1));
                return True;
@@ -164,7 +165,7 @@ package body Grt.Vcd is
       Str : String (1 .. 11);
       First : Natural;
    begin
-      Vstrings.To_String (Str, First, V);
+      To_Strings.To_String (Str, First, V);
       Vcd_Put (Str (First .. Str'Last));
    end Vcd_Put_I32;
 
@@ -241,7 +242,20 @@ package body Grt.Vcd is
       Vcd_Putline ("  GHDL v0");
       Vcd_Put_End;
       Vcd_Putline ("$timescale");
-      Vcd_Putline ("  1 fs");
+      case Options.Time_Resolution_Scale is
+         when 5 =>
+            Vcd_Putline ("  1 fs");
+         when 4 =>
+            Vcd_Putline ("  1 ps");
+         when 3 =>
+            Vcd_Putline ("  1 ns");
+         when 2 =>
+            Vcd_Putline ("  1 us");
+         when 1 =>
+            Vcd_Putline ("  1 ms");
+         when 0 =>
+            Vcd_Putline ("  1 sec");
+      end case;
       Vcd_Put_End;
    end Vcd_Init;
 
@@ -360,8 +374,9 @@ package body Grt.Vcd is
                  Get_Base_Type (Arr_Rti.Indexes (0));
             begin
                Kind := Rti_To_Vcd_Kind (Arr_Rti);
-               Bounds := Loc_To_Addr (St.Common.Depth, St.Bounds,
+               Bounds := Loc_To_Addr (St.Common.Depth, St.Layout,
                                       Avhpi_Get_Context (Sig));
+               Bounds := Array_Layout_To_Bounds (Bounds);
                Extract_Range (Bounds, Idx_Rti, Irange);
             end;
          when Ghdl_Rtik_Type_Array =>
@@ -552,6 +567,11 @@ package body Grt.Vcd is
          return;
       end if;
 
+      Vcd_Put ("$scope module ");
+      Vcd_Put_Name (Inst);
+      Vcd_Putc (' ');
+      Vcd_Put_End;
+
       --  Extract signals.
       loop
          Vhpi_Scan (Decl_It, Decl, Error);
@@ -575,44 +595,38 @@ package body Grt.Vcd is
       end loop;
 
       --  Extract sub-scopes.
-      if Vhpi_Get_Kind (Inst) = VhpiPackInstK then
-         --  Except for packages
-         return;
-      end if;
-      Vhpi_Iterator (VhpiInternalRegions, Inst, Decl_It, Error);
-      if Error /= AvhpiErrorOk then
-         Avhpi_Error (Error);
-         return;
-      end if;
-
-      loop
-         Vhpi_Scan (Decl_It, Decl, Error);
-         exit when Error = AvhpiErrorIteratorEnd;
+      if Vhpi_Get_Kind (Inst) /= VhpiPackInstK then
+         Vhpi_Iterator (VhpiInternalRegions, Inst, Decl_It, Error);
          if Error /= AvhpiErrorOk then
             Avhpi_Error (Error);
             return;
          end if;
-         case Vhpi_Get_Kind (Decl) is
-            when VhpiIfGenerateK
-              | VhpiForGenerateK
-              | VhpiBlockStmtK
-              | VhpiCompInstStmtK =>
-               Match_List_Child := Get_Cursor
-                 (Match_List, Avhpi_Get_Base_Name (Decl));
-               if Is_Displayed (Match_List_Child) then
-                  Vcd_Put ("$scope module ");
-                  Vcd_Put_Name (Decl);
-                  Vcd_Putc (' ');
-                  Vcd_Put_End;
-                  Vcd_Put_Hierarchy (Decl, Match_List_Child);
-                  Vcd_Put ("$upscope ");
-                  Vcd_Put_End;
-               end if;
-            when others =>
-               null;
-         end case;
-      end loop;
 
+         loop
+            Vhpi_Scan (Decl_It, Decl, Error);
+            exit when Error = AvhpiErrorIteratorEnd;
+            if Error /= AvhpiErrorOk then
+               Avhpi_Error (Error);
+               return;
+            end if;
+            case Vhpi_Get_Kind (Decl) is
+               when VhpiIfGenerateK
+                 | VhpiForGenerateK
+                 | VhpiBlockStmtK
+                 | VhpiCompInstStmtK =>
+                  Match_List_Child := Get_Cursor
+                    (Match_List, Avhpi_Get_Base_Name (Decl));
+                  if Is_Displayed (Match_List_Child) then
+                     Vcd_Put_Hierarchy (Decl, Match_List_Child);
+                  end if;
+               when others =>
+                  null;
+            end case;
+         end loop;
+      end if;
+
+      Vcd_Put ("$upscope ");
+      Vcd_Put_End;
    end Vcd_Put_Hierarchy;
 
    procedure Vcd_Put_Bit (V : Ghdl_B1)
@@ -807,7 +821,7 @@ package body Grt.Vcd is
       First : Natural;
    begin
       Vcd_Putc ('#');
-      Vstrings.To_String (Str, First, Ghdl_I64 (Current_Time));
+      To_Strings.To_String (Str, First, Ghdl_I64 (Current_Time));
       Vcd_Put (Str (First .. Str'Last));
       Vcd_Newline;
    end Vcd_Put_Time;

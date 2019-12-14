@@ -1,4 +1,5 @@
 with Types; use Types;
+with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 with PSL.CSE; use PSL.CSE;
 
@@ -501,7 +502,9 @@ package body PSL.Rewrites is
            | N_Goto_Repeat_Seq
            | N_Sequence_Instance
            | N_Endpoint_Instance
-           | N_Braced_SERE =>
+           | N_Braced_SERE
+           | N_And_Seq
+           | N_Or_Seq =>
             return Rewrite_SERE (N);
          when N_Imp_Seq
            | N_Overlap_Imp_Seq =>

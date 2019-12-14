@@ -1,17 +1,20 @@
--- --------------------------------------------------------------------
---
--- Copyright © 2008 by IEEE. All rights reserved.
---
--- This source file is an essential part of IEEE Std 1076-2008,
--- IEEE Standard VHDL Language Reference Manual. This source file may not be
--- copied, sold, or included with software that is sold without written 
--- permission from the IEEE Standards Department. This source file may be 
--- copied for individual use between licensed users. This source file is
--- provided on an AS IS basis. The IEEE disclaims ANY WARRANTY EXPRESS OR
--- IMPLIED INCLUDING ANY WARRANTY OF MERCHANTABILITY AND FITNESS FOR USE
--- FOR A PARTICULAR PURPOSE. The user of the source file shall indemnify
--- and hold IEEE harmless from any damages or liability arising out of the
--- use thereof.
+-- -----------------------------------------------------------------
+-- 
+-- Copyright 2019 IEEE P1076 WG Authors
+-- 
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+-- 
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+-- 
+--     http://www.apache.org/licenses/LICENSE-2.0
+-- 
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
 --
 --   Title     :  Standard VHDL Mathematical Packages
 --             :  (MATH_REAL package body)
@@ -322,8 +325,8 @@ package body MATH_REAL is
         -- Notes:
         --        a) Returns 0.0 on error
 
-        variable XNEGATIVE : BOOLEAN := X < 0.0;
-        variable YNEGATIVE : BOOLEAN := Y < 0.0;
+        constant XNEGATIVE : BOOLEAN := X < 0.0;
+        constant YNEGATIVE : BOOLEAN := Y < 0.0;
         variable VALUE : REAL;
     begin
         -- Check validity of input arguments
@@ -499,7 +502,7 @@ package body MATH_REAL is
 
         variable INIVAL: REAL;
         variable XLOCAL : REAL := X;
-        variable NEGATIVE : BOOLEAN := X < 0.0;
+        constant NEGATIVE : BOOLEAN := X < 0.0;
         variable OLDVAL : REAL ;
         variable NEWVAL : REAL ;
         variable COUNT : INTEGER := 1;
@@ -645,7 +648,7 @@ package body MATH_REAL is
         --
         constant EPS : REAL := BASE_EPS*BASE_EPS*BASE_EPS;-- Precision criteria
 
-            variable RECIPROCAL: BOOLEAN := X < 0.0;-- Check sign of argument
+            constant RECIPROCAL: BOOLEAN := X < 0.0;-- Check sign of argument
             variable XLOCAL : REAL := ABS(X);       -- Use positive value
             variable OLDVAL: REAL ;
             variable COUNT: INTEGER ;
@@ -792,11 +795,7 @@ package body MATH_REAL is
         -- 2. Redistributions in binary form must reproduce the above copyright
         -- notice, this list of conditions and the following disclaimer in the
         -- documentation and/or other materials provided with the distribution.
-        -- 3. All advertising materials mentioning features or use of this
-        -- software must display the following acknowledgement:
-        -- This product includes software developed by the University of
-        -- California, Berkeley and its contributors.
-        -- 4. Neither the name of the University nor the names of its
+        -- 3. Neither the name of the University nor the names of its
         -- contributors may be used to endorse or promote products derived
         -- from this software without specific prior written permission.
         --
@@ -1099,8 +1098,6 @@ package body MATH_REAL is
 
         variable M, J:INTEGER;
         variable F1, F2, G, Q, U, U2, V: REAL;
-        variable ZERO: REAL := 0.0;--Made variable so no constant folding occurs
-        variable ONE: REAL := 1.0; --Made variable so no constant folding occurs
 
         -- double logb(), ldexp();
 
@@ -1276,7 +1273,7 @@ package body MATH_REAL is
         constant EPS : REAL := BASE_EPS*BASE_EPS; -- Convergence criteria
 
         variable N : INTEGER;
-        variable NEGATIVE : BOOLEAN := X < 0.0;
+        constant NEGATIVE : BOOLEAN := X < 0.0;
         variable XLOCAL : REAL := ABS(X) ;
         variable VALUE: REAL;
         variable TEMP : REAL;
@@ -1407,7 +1404,7 @@ package body MATH_REAL is
 
         -- Compute value for general cases
         if ((XLOCAL < MATH_PI_OVER_2 ) and (XLOCAL > 0.0)) then
-                 VALUE:=  CORDIC( KC, 0.0, x, 27, ROTATION)(1);
+                 VALUE:=  CORDIC( KC, 0.0, X, 27, ROTATION)(1);
         end if;
 
         N := INTEGER ( FLOOR(XLOCAL/MATH_PI_OVER_2));
@@ -1446,7 +1443,6 @@ package body MATH_REAL is
         constant EPS : REAL := BASE_EPS*BASE_EPS;
 
         variable XLOCAL : REAL := ABS(X);
-        variable VALUE: REAL;
         variable TEMP : REAL;
 
     begin
@@ -1514,7 +1510,7 @@ package body MATH_REAL is
         --        c) Returns REAL'LOW on error if X < 0.0
         --        d) Returns REAL'HIGH on error if X > 0.0
 
-        variable NEGATIVE : BOOLEAN := X < 0.0;
+        constant NEGATIVE : BOOLEAN := X < 0.0;
         variable XLOCAL : REAL := ABS(X) ;
         variable VALUE: REAL;
         variable TEMP : REAL;
@@ -1575,8 +1571,8 @@ package body MATH_REAL is
         --        a) ARCSIN(-X) = -ARCSIN(X)
         --        b) Returns X on error
 
-        variable NEGATIVE : BOOLEAN := X < 0.0;
-        variable XLOCAL : REAL := ABS(X);
+        constant NEGATIVE : BOOLEAN := X < 0.0;
+        constant XLOCAL : REAL := ABS(X);
         variable VALUE : REAL;
 
    begin
@@ -1620,8 +1616,8 @@ package body MATH_REAL is
         --        a) ARCCOS(-X) = MATH_PI - ARCCOS(X)
         --        b) Returns X on error
 
-        variable NEGATIVE : BOOLEAN := X < 0.0;
-        variable XLOCAL : REAL := ABS(X);
+        constant NEGATIVE : BOOLEAN := X < 0.0;
+        constant XLOCAL : REAL := ABS(X);
         variable VALUE : REAL;
 
    begin
@@ -1668,7 +1664,7 @@ package body MATH_REAL is
 
         constant EPS : REAL := BASE_EPS*BASE_EPS*BASE_EPS;
 
-        variable NEGATIVE : BOOLEAN := Y < 0.0;
+        constant NEGATIVE : BOOLEAN := Y < 0.0;
         variable RECIPROCAL : BOOLEAN;
         variable YLOCAL : REAL := ABS(Y);
         variable VALUE : REAL;
@@ -1786,8 +1782,8 @@ package body MATH_REAL is
         --        a) Returns (EXP(X) - EXP(-X))/2.0
         --        b) SINH(-X) = SINH(X)
 
-        variable NEGATIVE : BOOLEAN := X < 0.0;
-        variable XLOCAL : REAL := ABS(X);
+        constant NEGATIVE : BOOLEAN := X < 0.0;
+        constant XLOCAL : REAL := ABS(X);
         variable TEMP : REAL;
         variable VALUE : REAL;
 
@@ -1815,7 +1811,7 @@ package body MATH_REAL is
         --        a) Returns (EXP(X) + EXP(-X))/2.0
         --        b) COSH(-X) = COSH(X)
 
-        variable XLOCAL : REAL := ABS(X);
+        constant XLOCAL : REAL := ABS(X);
         variable TEMP : REAL;
         variable VALUE : REAL;
     begin
@@ -1839,8 +1835,8 @@ package body MATH_REAL is
         --        a) Returns (EXP(X) - EXP(-X))/(EXP(X) + EXP(-X))
         --        b) TANH(-X) = -TANH(X)
 
-        variable NEGATIVE : BOOLEAN := X < 0.0;
-        variable XLOCAL : REAL := ABS(X);
+        constant NEGATIVE : BOOLEAN := X < 0.0;
+        constant XLOCAL : REAL := ABS(X);
         variable TEMP : REAL;
         variable VALUE : REAL;
 

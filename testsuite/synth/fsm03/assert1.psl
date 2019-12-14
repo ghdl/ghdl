@@ -1,0 +1,5 @@
+vunit assert1 (ent)
+{
+  default clock is rising_edge(clk);
+  assert always req -> eventually! ack;
+}

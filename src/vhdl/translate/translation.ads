@@ -15,7 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 with Ortho_Nodes;
 
 package Translation is
@@ -40,12 +40,9 @@ package Translation is
 
    procedure Gen_Filename (Design_File : Iir);
 
-   --  Primary unit + secondary unit (architecture name which may be null)
-   --  to elaborate.
-   procedure Elaborate (Primary : String;
-                        Secondary : String;
-                        Filelist : String;
-                        Whole : Boolean);
+   --  Generate elaboration code for CONFIG.  Also use units from Configure
+   --  package.
+   procedure Elaborate (Config : Iir; Whole : Boolean);
 
    --  If set, generate Run-Time Information nodes.
    Flag_Rti : Boolean := True;
@@ -80,6 +77,10 @@ package Translation is
    --  This flag is forced during initialization if the code generated doesn't
    --  support nested subprograms.
    Flag_Unnest_Subprograms : Boolean := False;
+
+   --  If > 0, emit a call for large dynamic allocation on the stack.  Large
+   --  defined by the value.
+   Flag_Check_Stack_Allocation : Natural := 32 * 1024;
 
    type Foreign_Kind_Type is (Foreign_Unknown,
                               Foreign_Vhpidirect,

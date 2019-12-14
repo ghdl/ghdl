@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with PSL.Types; use PSL.Types;
+with PSL.Nodes_Priv;
 with PSL.Errors; use PSL.Errors;
 
 package body PSL.NFAs.Utils is
@@ -45,7 +47,7 @@ package body PSL.NFAs.Utils is
             L_Expr : constant Node := Get_Edge_Expr (L);
             R_Expr : constant Node := Get_Edge_Expr (R);
          begin
-            return L_Expr < R_Expr
+            return PSL.Nodes_Priv."<" (L_Expr, R_Expr)
               or else (L_Expr = R_Expr
                          and then Get_Edge_State (L) < Get_Edge_State (R));
          end Lt;
@@ -200,6 +202,11 @@ package body PSL.NFAs.Utils is
       Set_First_Edge (S, First_E);
       Set_First_Edge (S1, No_Edge);
 
+      --  Move the active state if it is deleted.
+      if Get_Active_State (N) = S1 then
+         Set_Active_State (N, S);
+      end if;
+
       Remove_State (N, S1);
    end Merge_State;
 
@@ -344,5 +351,29 @@ package body PSL.NFAs.Utils is
             Error_Kind ("Has_EOS", N);
       end case;
    end Has_EOS;
+
+   procedure Set_Init_Loop (N : NFA)
+   is
+      Start : constant NFA_State := Get_Start_State (N);
+      E : NFA_Edge;
+      Expr : Node;
+   begin
+      --  Look for existing edge.
+      E := Get_First_Src_Edge (Start);
+      while E /= No_Edge loop
+         if Get_Edge_Dest (E) = Start then
+            Expr := Get_Edge_Expr (E);
+            if Get_Kind (Expr) = N_True then
+               return;
+            end if;
+            Set_Edge_Expr (E, True_Node);
+            return;
+         end if;
+         E := Get_Next_Src_Edge (E);
+      end loop;
+
+      --  No existing edge.  Create one.
+      Add_Edge (Start, Start, True_Node);
+   end Set_Init_Loop;
 
 end PSL.NFAs.Utils;

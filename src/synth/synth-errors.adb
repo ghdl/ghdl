@@ -24,13 +24,37 @@ package body Synth.Errors is
                               Arg1 : Earg_Type) is
    begin
       Report_Msg (Msgid_Error, Errorout.Elaboration,
-                  Loc, Msg, (1 => Arg1));
+                  +Loc, Msg, (1 => Arg1));
    end Error_Msg_Synth;
 
    procedure Error_Msg_Synth (Loc : Location_Type;
-                              Msg : String) is
+                              Msg : String;
+                              Args : Earg_Arr := No_Eargs) is
    begin
       Report_Msg (Msgid_Error, Errorout.Elaboration,
-                  Loc, Msg, (1 .. 0 => <>));
+                  +Loc, Msg, Args);
    end Error_Msg_Synth;
+
+   procedure Warning_Msg_Synth (Loc : Location_Type;
+                                Msg : String;
+                                Arg1 : Earg_Type) is
+   begin
+      Report_Msg (Msgid_Warning, Errorout.Elaboration,
+                  +Loc, Msg, (1 => Arg1));
+   end Warning_Msg_Synth;
+
+   procedure Warning_Msg_Synth (Loc : Location_Type;
+                                Msg : String;
+                                Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Msgid_Warning, Errorout.Elaboration, +Loc, Msg, Args);
+   end Warning_Msg_Synth;
+
+   procedure Info_Msg_Synth (Loc : Location_Type;
+                             Msg : String;
+                             Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Msgid_Note, Errorout.Elaboration, +Loc, Msg, Args);
+   end Info_Msg_Synth;
+
 end Synth.Errors;

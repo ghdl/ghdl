@@ -38,5 +38,5 @@ package Default_Paths is
      "@POST_PROCESSOR@";
 
    Shared_Library_Extension : constant String := "@SOEXT@";
-   Default_Pie : constant Boolean := "@default_pie@" = String'("yes");
+   Default_Pie : constant Boolean := "@default_pic@" = String'("true");
 end Default_Paths;

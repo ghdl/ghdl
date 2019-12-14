@@ -160,10 +160,15 @@ package body Ortho_Code.Exprs is
       Enodes.Table (Enode).Arg2 := Label;
    end Set_Jump_Label;
 
-   function Get_Addr_Object (Enode : O_Enode) return O_Dnode is
+   function Get_Addr_Object (Enode : O_Enode) return O_Lnode is
+   begin
+      return O_Lnode (Enodes.Table (Enode).Arg1);
+   end Get_Addr_Object;
+
+   function Get_Addr_Decl (Enode : O_Enode) return O_Dnode is
    begin
       return O_Dnode (Enodes.Table (Enode).Arg1);
-   end Get_Addr_Object;
+   end Get_Addr_Decl;
 
    function Get_Addrl_Frame (Enode : O_Enode) return O_Enode is
    begin
@@ -492,7 +497,7 @@ package body Ortho_Code.Exprs is
       Save_Var : O_Dnode;
    begin
       Save_Asgn := Get_Stmt_Link (Blk);
-      Save_Var := Get_Addr_Object (Get_Assign_Target (Save_Asgn));
+      Save_Var := Get_Addr_Decl (Get_Assign_Target (Save_Asgn));
       New_Enode_Stmt (OE_Set_Stack, New_Value (New_Obj (Save_Var)),
                       O_Enode_Null);
    end New_Stack_Restore;
@@ -696,10 +701,8 @@ package body Ortho_Code.Exprs is
 
    function New_Lit (Lit : O_Cnode) return O_Enode
    is
-      L_Type : O_Tnode;
-      H, L : Uns32;
+      L_Type : constant O_Tnode := Get_Const_Type (Lit);
    begin
-      L_Type := Get_Const_Type (Lit);
       if Flag_Debug_Hli then
          return New_Enode (OE_Lit, L_Type, O_Enode (Lit), O_Enode_Null);
       else
@@ -709,13 +712,18 @@ package body Ortho_Code.Exprs is
               | OC_Float
               | OC_Null
               | OC_Lit =>
-               Get_Const_Bytes (Lit, H, L);
-               return New_Enode
-                 (OE_Const, L_Type,
-                  O_Enode (To_Int32 (L)), O_Enode (To_Int32 (H)));
-            when OC_Address
-              | OC_Subprg_Address =>
-               return New_Enode (OE_Addrg, L_Type,
+               declare
+                  H, L : Uns32;
+               begin
+                  Get_Const_Bytes (Lit, H, L);
+                  return New_Enode
+                    (OE_Const, L_Type,
+                     O_Enode (To_Int32 (L)), O_Enode (To_Int32 (H)));
+               end;
+            when OC_Address =>
+               raise Syntax_Error;
+            when OC_Subprg_Address =>
+               return New_Enode (OE_Addrd, L_Type,
                                  O_Enode (Get_Const_Decl (Lit)), O_Enode_Null);
             when OC_Array
               | OC_Record
@@ -783,7 +791,7 @@ package body Ortho_Code.Exprs is
             end if;
          when OD_Var
            | OD_Const =>
-            Kind := OE_Addrg;
+            Kind := OE_Addrd;
             Chain := O_Enode_Null;
          when others =>
             raise Program_Error;

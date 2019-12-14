@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Types; use Types;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Annotations; use Vhdl.Annotations;
 with Simul.Environments; use Simul.Environments;
 with Simul.Elaboration; use Simul.Elaboration;
 with Areapools; use Areapools;

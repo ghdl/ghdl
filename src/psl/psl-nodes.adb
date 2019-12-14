@@ -325,6 +325,7 @@ package body PSL.Nodes is
       case Get_Kind (N) is
          when N_And_Prop
            | N_Or_Prop
+           | N_Paren_Prop
            | N_Log_Imp_Prop
            | N_Always
            | N_Never
@@ -372,7 +373,8 @@ package body PSL.Nodes is
            | N_Imp_Bool
            | N_False
            | N_True
-           | N_Boolean_Parameter =>
+           | N_Boolean_Parameter
+           | N_Paren_Bool =>
             return Type_Boolean;
          when N_Number
            | N_Const_Parameter =>
@@ -439,6 +441,7 @@ package body PSL.Nodes is
            | N_Before
            | N_Or_Prop
            | N_And_Prop
+           | N_Paren_Prop
            | N_Braced_SERE
            | N_Concat_SERE
            | N_Fusion_SERE
@@ -451,6 +454,7 @@ package body PSL.Nodes is
            | N_Goto_Repeat_Seq
            | N_Plus_Repeat_Seq
            | N_Equal_Repeat_Seq
+           | N_Paren_Bool
            | N_Not_Bool
            | N_And_Bool
            | N_Or_Bool

@@ -39,26 +39,25 @@ else
 # GPL compatible
 vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
 vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93
-vhdl.libs.v08: std.v08
+vhdl.libs.v08: std.v08 ieee.v08
 endif
 
-STD_SRCS := std/textio.vhdl std/textio_body.vhdl
-SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
-  synopsys/std_logic_unsigned.vhdl \
-  synopsys/std_logic_signed.vhdl
-SYNOPSYS_V_BSRCS := synopsys/std_logic_misc.vhdl \
-  synopsys/std_logic_misc-body.vhdl
-SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl
-MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
+STD_SRCS := textio.vhdl textio-body.vhdl
+SYNOPSYS_BSRCS := std_logic_arith.vhdl \
+  std_logic_unsigned.vhdl std_logic_signed.vhdl
+SYNOPSYS_V_BSRCS := std_logic_misc.vhdl std_logic_misc-body.vhdl
+SYNOPSYS8793_BSRCS := std_logic_textio.vhdl
+MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith-body.vhdl
+UPF_SRCS := openieee/upf.vhdl openieee/upf-body.vhdl
 
 ifeq ($(enable_openieee),false)
-IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
-  ieee/numeric_bit.vhdl ieee/numeric_bit-body.vhdl \
-  ieee/numeric_std.vhdl ieee/numeric_std-body.vhdl
-MATH_SRCS := ieee/math_real.vhdl ieee/math_real-body.vhdl \
-  ieee/math_complex.vhdl ieee/math_complex-body.vhdl
-VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing_body.vhdl \
-  vital95/vital_primitives.vhdl vital95/vital_primitives_body.vhdl
+IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
+  numeric_bit.vhdl numeric_bit-body.vhdl \
+  numeric_std.vhdl numeric_std-body.vhdl
+MATH_SRCS := math_real.vhdl math_real-body.vhdl \
+  math_complex.vhdl math_complex-body.vhdl
+VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing-body.vhdl \
+  vital95/vital_primitives.vhdl vital95/vital_primitives-body.vhdl
 VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
   vital2000/prmtvs_p.vhdl vital2000/prmtvs_b.vhdl \
   vital2000/memory_p.vhdl vital2000/memory_b.vhdl
@@ -76,31 +75,39 @@ IEEE08_BSRCS := \
   ieee2008/fixed_pkg.vhdl \
   ieee2008/float_generic_pkg.vhdl ieee2008/float_generic_pkg-body.vhdl \
   ieee2008/float_pkg.vhdl \
-  ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl
+  ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl \
+  $(UPF_SRCS)
+
+IEEE87_BSRCS := $(addprefix ieee/v87/,$(IEEE_SRCS)) $(UPF_SRCS)
+IEEE93_BSRCS := $(addprefix ieee/v93/,$(IEEE_SRCS)) $(addprefix ieee/,$(MATH_SRCS)) $(UPF_SRCS)
+
 else
-IEEE_SRCS := openieee/std_logic_1164.vhdl openieee/std_logic_1164-body.vhdl \
-  openieee/numeric_bit.vhdl openieee/numeric_bit-body.vhdl \
-  openieee/numeric_std.vhdl openieee/numeric_std-body.vhdl
-MATH_SRCS := openieee/math_real.vhdl openieee/math_real-body.vhdl
+IEEE_SRCS := std_logic_1164.vhdl std_logic_1164-body.vhdl \
+  numeric_bit.vhdl numeric_bit-body.vhdl \
+  numeric_std.vhdl numeric_std-body.vhdl
+MATH_SRCS := math_real.vhdl math_real-body.vhdl
 VITAL95_BSRCS :=
 VITAL2000_BSRCS :=
-IEEE08_BSRCS :=
+IEEE08_BSRCS := v08/std_logic_1164.vhdl v08/std_logic_1164-body.vhdl \
+ math_real.vhdl math_real-body.vhdl
+
+IEEE87_BSRCS := $(addprefix openieee/v87/,$(IEEE_SRCS)) $(UPF_SRCS)
+IEEE93_BSRCS := $(addprefix openieee/v93/,$(IEEE_SRCS)) $(addprefix openieee/,$(MATH_SRCS)) $(UPF_SRCS)
+IEEE08_BSRCS := $(addprefix openieee/,$(IEEE08_BSRCS)) $(UPF_SRCS)
 endif
 
 ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
 ANALYZE_DEP=$(GHDL)
 
-STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)
-STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
-STD08_BSRCS := $(STD_SRCS:.vhdl=.v08) std/env.vhdl std/env_body.vhdl
-IEEE87_BSRCS := $(IEEE_SRCS:.vhdl=.v87)
-IEEE93_BSRCS := $(IEEE_SRCS:.vhdl=.v93) $(MATH_SRCS)
-SYNOPSYS87_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS)
-SYNOPSYS93_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS)
-SYNOPSYS08_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS:.vhdl=.v08)
+STD87_BSRCS := $(addprefix std/v87/,$(STD_SRCS))
+STD93_BSRCS := $(addprefix std/v93/,$(STD_SRCS))
+STD08_BSRCS := $(addprefix std/v08/,$(STD_SRCS)) std/env.vhdl std/env-body.vhdl
+SYNOPSYS87_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS))
+SYNOPSYS93_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS))
+SYNOPSYS08_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS)) $(addprefix synopsys/v08/,$(SYNOPSYS_V_BSRCS))
 MENTOR93_BSRCS := $(MENTOR_BSRCS)
 
-.PREFIXES: .vhdl .v93 .v87 .v08
+.PREFIXES: .vhdl
 
 SED_V93:= sed -e '/--V87/s/^/  --/' \
  -e '/--START-V08/,/--END-V08/s/^/--/'
@@ -144,7 +151,7 @@ VITAL2000_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(VITAL2000_BSRCS))
 
 ### V87 ###############################################################
 
-$(LIBDST_DIR)/src/std/%.v87: $(LIBSRC_DIR)/std/%.vhdl
+$(LIBDST_DIR)/src/std/v87/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
 	$(SED_V87) < $< > $@
 
 std.v87: $(STD87_DIR)/std-obj87.cf
@@ -157,10 +164,10 @@ $(STD87_DIR)/std-obj87.cf: $(ANALYZE_DEP) $(STD87_SRCS)
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-$(LIBDST_DIR)/src/ieee/%.v87: $(LIBSRC_DIR)/ieee/%.vhdl
+$(LIBDST_DIR)/src/ieee/v87/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V87) < $< > $@
 
-$(LIBDST_DIR)/src/openieee/%.v87: $(LIBSRC_DIR)/openieee/%.v87
+$(LIBDST_DIR)/src/openieee/v87/%.vhdl: $(LIBSRC_DIR)/openieee/v87/%.vhdl
 	$(CP) $< $@
 
 $(LIBDST_DIR)/src/vital95/%.vhdl: $(LIBSRC_DIR)/vital95/%.vhdl
@@ -202,7 +209,7 @@ $(SYN87_DIR)/ieee-obj87.cf: $(ANALYZE_DEP) $(SYNOPSYS87_SRCS) $(IEEE87_DIR)/ieee
 ### V93 ###############################################################
 
 
-$(LIBDST_DIR)/src/std/%.v93: $(LIBSRC_DIR)/std/%.vhdl
+$(LIBDST_DIR)/src/std/v93/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
 	$(SED_V93) < $< > $@
 
 std.v93: $(STD93_DIR)/std-obj93.cf
@@ -215,7 +222,7 @@ $(STD93_DIR)/std-obj93.cf: $(ANALYZE_DEP) $(STD93_SRCS)
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-$(LIBDST_DIR)/src/ieee/%.v93: $(LIBSRC_DIR)/ieee/%.vhdl
+$(LIBDST_DIR)/src/ieee/v93/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V93) < $< > $@
 
 $(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
@@ -224,7 +231,7 @@ $(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
 $(LIBDST_DIR)/src/openieee/%.vhdl: $(LIBSRC_DIR)/openieee/%.vhdl
 	$(CP) $< $@
 
-$(LIBDST_DIR)/src/openieee/%.v93: $(LIBSRC_DIR)/openieee/%.v93
+$(LIBDST_DIR)/src/openieee/v93/%.vhdl: $(LIBSRC_DIR)/openieee/v93/%.vhdl
 	$(CP) $< $@
 
 $(LIBDST_DIR)/src/vital2000/%.vhdl: $(LIBSRC_DIR)/vital2000/%.vhdl
@@ -283,7 +290,7 @@ $(MENTOR93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(MENTOR93_SRCS) $(IEEE93_DIR)/iee
 
 ### V08 ###############################################################
 
-$(LIBDST_DIR)/src/std/%.v08: $(LIBSRC_DIR)/std/%.vhdl
+$(LIBDST_DIR)/src/std/v08/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
 	$(SED_V08) < $< > $@
 
 $(LIBDST_DIR)/src/std/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
@@ -300,6 +307,9 @@ $(STD08_DIR)/std-obj08.cf: $(ANALYZE_DEP) $(STD08_SRCS)
 	done
 
 $(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
+	$(CP) $< $@
+
+$(LIBDST_DIR)/src/openieee/v08/%.vhdl: $(LIBSRC_DIR)/openieee/v08/%.vhdl
 	$(CP) $< $@
 
 ANALYZE_IEEE08=$(ANALYZE08) -P../.. --work=ieee
@@ -319,7 +329,7 @@ $(IEEE08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(IEEE08_SRCS) $(STD08_DIR)/std-obj0
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-$(LIBDST_DIR)/src/synopsys/%.v08: $(LIBSRC_DIR)/synopsys/%.vhdl
+$(LIBDST_DIR)/src/synopsys/v08/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl
 	$(SED_V08) < $< > $@
 
 synopsys.v08: $(SYN08_DIR)/ieee-obj08.cf
@@ -353,6 +363,6 @@ $(STD93_DIR)/std_standard.o: $(GHDL) std.v93
 $(STD08_DIR)/std_standard.o: $(GHDL) std.v08
 	cd $(STD08_DIR); $(ANALYZE_STD) --std=08
 
-libs.vhdl.standard: $(STD93_DIR)/std_standard.o \
- $(STD87_DIR)/std_standard.o \
+libs.vhdl.standard: $(STD87_DIR)/std_standard.o \
+ $(STD93_DIR)/std_standard.o \
  $(STD08_DIR)/std_standard.o

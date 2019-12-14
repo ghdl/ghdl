@@ -122,10 +122,10 @@ $GHDLNewExecutable =								"$GHDLRootDir\$BuildDirectoryName\$Backend\bin\ghdl.
 # Library sources
 $SourceFiles = @{
 	"std" = @(
-		"textio",								"textio_body"
+		"textio",								"textio-body"
 	);
 	"ieee" = @(
-		"std_logic_1164",				"std_logic_1164_body",
+		"std_logic_1164",				"std_logic_1164-body",
 		"numeric_std",					"numeric_std-body",
 		"numeric_bit",					"numeric_bit-body"
 	);
@@ -134,8 +134,8 @@ $SourceFiles = @{
 		"math_complex",					"math_complex-body"
 	);
 	"std08" = @(
-		"textio",								"textio_body",
-		"env",									"env_body"
+		"textio",								"textio-body",
+		"env",									"env-body"
 	);
 	"ieee2008" = @(
 		"std_logic_1164",				"std_logic_1164-body",
@@ -155,8 +155,8 @@ $SourceFiles = @{
 		"ieee_bit_context"
 	);
 	"vital95" = @(
-		"vital_timing",					"vital_timing_body",
-		"vital_primitives",			"vital_primitives_body"
+		"vital_timing",					"vital_timing-body",
+		"vital_primitives",			"vital_primitives-body"
 	);
 	"vital2000" = @(
 		"timing_p",							"timing_b",
@@ -173,7 +173,7 @@ $SourceFiles = @{
 		"std_logic_misc",				"std_logic_misc-body"
 	);
 	"mentor" = @(
-		"std_logic_arith",			"std_logic_arith_body"
+		"std_logic_arith",			"std_logic_arith-body"
 	)
 }
 

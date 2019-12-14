@@ -18,7 +18,15 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Ada.Unchecked_Deallocation;
+
+with Dyn_Tables;
+
 package Netlists.Utils is
+   type Net_Array_Acc is access Net_Array;
+   procedure Free_Net_Array is new Ada.Unchecked_Deallocation
+     (Net_Array, Net_Array_Acc);
+
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr;
    function Get_Nbr_Outputs (Inst : Instance) return Port_Nbr;
    function Get_Nbr_Params (Inst : Instance) return Param_Nbr;
@@ -31,6 +39,21 @@ package Netlists.Utils is
    function Get_Input_Name (M : Module; I : Port_Idx) return Sname;
    function Get_Output_Name (M : Module; I : Port_Idx) return Sname;
 
+   function Get_Input_Width (M : Module; I : Port_Idx) return Width;
+   function Get_Output_Width (M : Module; I : Port_Idx) return Width;
+
+   function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net;
+
+   --  Return True iff ID describe a constant.
+   function Is_Const_Module (Id : Module_Id) return Boolean;
+   function Is_Const_Net (N : Net) return Boolean;
+
+   --  Assuming than N is a const net, return the value (for small values).
+   function Get_Net_Uns64 (N : Net) return Uns64;
+
+   function Get_Net_Int64 (N : Net) return Int64;
+   pragma Inline (Get_Net_Int64);
+
    --  Return True iff O has at least one sink (ie is connected to at least one
    --  input).
    function Is_Connected (O : Net) return Boolean;
@@ -42,9 +65,16 @@ package Netlists.Utils is
    --  disconnect and free it.
    procedure Disconnect_And_Free (I : Input);
 
-   --  Unlink all free instances of M.
-   procedure Remove_Free_Instances (M : Module);
+   function Clog2 (W : Width) return Width;
 
-   --  Unlink all unused instances of M.
-   procedure Remove_Unused_Instances (M : Module);
+   --  Used at many places.
+   package Net_Tables is new Dyn_Tables
+     (Table_Component_Type => Net,
+      Table_Index_Type => Int32,
+      Table_Low_Bound => 1);
+
+   package Instance_Tables is new Dyn_Tables
+     (Table_Component_Type => Instance,
+      Table_Index_Type => Int32,
+      Table_Low_Bound => 1);
 end Netlists.Utils;

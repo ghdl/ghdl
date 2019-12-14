@@ -16,16 +16,15 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with System;
-with Configuration;
-with Interfaces.C_Streams;
+with Vhdl.Configuration;
 with Errorout; use Errorout;
-with Std_Package; use Std_Package;
-with Iirs_Utils; use Iirs_Utils;
-with Name_Table;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Utils; use Vhdl.Utils;
 with Libraries;
 with Flags;
-with Sem;
+with Vhdl.Sem;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Trans.Chap1;
 with Trans.Chap2;
 with Trans.Chap6;
@@ -85,11 +84,9 @@ package body Trans.Chap12 is
         (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
                                                Unsigned_64 (Elab_Nbr_Pkgs))));
       New_Association
-        (Assoc, New_Lit (New_Global_Address
-                           (Pkgs_Arr, Rtis.Ghdl_Rti_Arr_Acc)));
+        (Assoc, New_Address (New_Obj (Pkgs_Arr), Rtis.Ghdl_Rti_Arr_Acc));
       New_Association
-        (Assoc,
-         New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
+        (Assoc, Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const));
       New_Association
         (Assoc, New_Convert_Ov (Arch_Instance, Ghdl_Ptr_Type));
       New_Procedure_Call (Assoc);
@@ -98,8 +95,7 @@ package body Trans.Chap12 is
       Start_Association (Assoc, Ghdl_Rti_Add_Package);
       New_Association
         (Assoc,
-         New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Standard_Package).Package_Rti_Const)));
+         Rtis.New_Rti_Address (Get_Info (Standard_Package).Package_Rti_Const));
       New_Procedure_Call (Assoc);
    end Call_Elab_Decls;
 
@@ -363,7 +359,7 @@ package body Trans.Chap12 is
 
       Decl : Iir;
    begin
-      Libraries.Load_Design_Unit (Unit, Null_Iir);
+      Load_Design_Unit (Unit, Null_Iir);
       Pkg := Get_Library_Unit (Unit);
       Reset_Identifier_Prefix;
       Lib := Get_Library (Get_Design_File (Get_Design_Unit (Pkg)));
@@ -424,7 +420,7 @@ package body Trans.Chap12 is
    --  Write to file FILELIST all the files that are needed to link the design.
    procedure Gen_Stubs
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       --  Add all dependences of UNIT.
       --  UNIT is not used, but added during link.
@@ -437,7 +433,7 @@ package body Trans.Chap12 is
          Lib_Unit : Iir;
       begin
          --  Load the unit in memory to compute the dependence list.
-         Libraries.Load_Design_Unit (Unit, Null_Iir);
+         Load_Design_Unit (Unit, Null_Iir);
          Update_Node_Infos;
 
          Set_Elab_Flag (Unit, True);
@@ -530,97 +526,32 @@ package body Trans.Chap12 is
       end loop;
    end Gen_Stubs;
 
-   --  Write to file FILELIST all the files that are needed to link the design.
-   procedure Write_File_List (Filelist : String)
+   procedure Elaborate (Config : Iir_Design_Unit; Whole : Boolean)
    is
-      use Interfaces.C_Streams;
-      use System;
-      use Configuration;
-      use Name_Table;
-
-      Nul : constant Character := Character'Val (0);
-      Fname : String := Filelist & Nul;
-      Mode : constant String := "wt" & Nul;
-      F : FILEs;
-      R : int;
-      S : size_t;
-      pragma Unreferenced (R, S); -- FIXME
-      Id : Name_Id;
-      Lib : Iir_Library_Declaration;
-      File : Iir_Design_File;
-      Unit : Iir_Design_Unit;
-   begin
-      F := fopen (Fname'Address, Mode'Address);
-      if F = NULL_Stream then
-         Error_Msg_Elab ("cannot open " & Filelist);
-      end if;
-
-      --  Clear elab flags on design files.
-      for I in Design_Units.First .. Design_Units.Last loop
-         Unit := Design_Units.Table (I);
-         File := Get_Design_File (Unit);
-         Set_Elab_Flag (File, False);
-      end loop;
-
-      for J in Design_Units.First .. Design_Units.Last loop
-         Unit := Design_Units.Table (J);
-         File := Get_Design_File (Unit);
-         if not Get_Elab_Flag (File) then
-            Set_Elab_Flag (File, True);
-
-            --  Write '>LIBRARY_DIRECTORY'.
-            Lib := Get_Library (File);
-            R := fputc (Character'Pos ('>'), F);
-            Id := Get_Library_Directory (Lib);
-            S := fwrite (Get_Address (Id),
-                         size_t (Get_Name_Length (Id)), 1, F);
-            R := fputc (10, F);
-
-            --  Write 'FILENAME'.
-            Id := Get_Design_File_Filename (File);
-            S := fwrite (Get_Address (Id),
-                         size_t (Get_Name_Length (Id)), 1, F);
-            R := fputc (10, F);
-         end if;
-      end loop;
-
-      R := fclose (F);
-   end Write_File_List;
-
-   procedure Elaborate (Primary : String;
-                        Secondary : String;
-                        Filelist : String;
-                        Whole : Boolean)
-   is
-      use Configuration;
+      use Vhdl.Configuration;
 
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
-      Config : Iir_Design_Unit;
       Config_Lib : Iir_Configuration_Declaration;
       Entity : Iir_Entity_Declaration;
       Arch : Iir_Architecture_Body;
       Conf_Info : Config_Info_Acc;
       Last_Design_Unit : Natural;
    begin
-      Config := Configure (Primary, Secondary);
-      if Config = Null_Iir then
-         return;
-      end if;
       Config_Lib := Get_Library_Unit (Config);
       Entity := Get_Entity (Config_Lib);
       Arch := Strip_Denoting_Name
         (Get_Block_Specification (Get_Block_Configuration (Config_Lib)));
 
       --  Be sure the entity can be at the top of a design.
-      Check_Entity_Declaration_Top (Entity);
+      Check_Entity_Declaration_Top (Entity, True);
 
       --  If all design units are loaded, late semantic checks can be
       --  performed.
       if Flag_Load_All_Design_Units then
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
-            Sem.Sem_Analysis_Checks_List (Unit, False);
+            Vhdl.Sem.Sem_Analysis_Checks_List (Unit, False);
             --  There cannot be remaining checks to do.
             pragma Assert
               (Get_Analysis_Checks_List (Unit) = Null_Iir_List);
@@ -633,12 +564,12 @@ package body Trans.Chap12 is
       end if;
 
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                      "List of units in the hierarchy design:");
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-            Report_Msg (Msgid_Note, Elaboration, No_Location,
+            Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                         " %n", (1 => +Lib_Unit));
          end loop;
       end if;
@@ -675,10 +606,12 @@ package body Trans.Chap12 is
 
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Configuration_Declaration =>
-               --  Always generate code for configuration.
-               --  Because default binding may be changed between analysis
-               --  and elaboration.
-               Translate (Unit, True);
+               if Get_Identifier (Lib_Unit) /= Null_Identifier then
+                  --  Always generate code for configuration.
+                  --  Because default binding may be changed between analysis
+                  --  and elaboration.
+                  Translate (Unit, True);
+               end if;
             when Iir_Kind_Entity_Declaration
               | Iir_Kind_Architecture_Body
               | Iir_Kind_Package_Declaration
@@ -698,9 +631,21 @@ package body Trans.Chap12 is
          end case;
       end loop;
 
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         Lib_Unit := Get_Library_Unit (Unit);
+         if Get_Kind (Lib_Unit) = Iir_Kind_Configuration_Declaration
+           and then Get_Identifier (Lib_Unit) = Null_Identifier
+         then
+            --  Because of possible indirect recursion, translate default
+            --  configuration at the end.
+            Translate (Unit, True);
+         end if;
+      end loop;
+
       --  Generate code to elaboration body-less package.
       --
-      --  When a package is analyzed, we don't know wether there is body
+      --  When a package is analyzed, we don't know whether there is body
       --  or not.  Therefore, we assume there is always a body, and will
       --  elaborate the body (which elaborates its spec).  If a package
       --  has no body, create the body elaboration procedure.
@@ -742,19 +687,14 @@ package body Trans.Chap12 is
          Gen_Stubs;
       end if;
 
-      --  Write the file containing the list of object files.
-      if Filelist /= "" then
-         Write_File_List (Filelist);
-      end if;
-
       --  Disp list of files needed.
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Elaboration, No_Location,
+         Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                      "List of units not used:");
          for I in Last_Design_Unit + 1 .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-            Report_Msg (Msgid_Note, Elaboration, No_Location,
+            Report_Msg (Msgid_Note, Elaboration, No_Source_Coord,
                         " %n", (1 => +Lib_Unit));
          end loop;
       end if;

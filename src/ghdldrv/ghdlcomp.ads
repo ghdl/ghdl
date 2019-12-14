@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with GNAT.OS_Lib; use GNAT.OS_Lib;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Ghdlcomp is
    --  This procedure is called at start of commands which call
@@ -68,6 +68,30 @@ package Ghdlcomp is
 
    --  Output of --disp-config.
    procedure Disp_Config;
+
+   -- --time-resolution=X
+   -- Where X corresponds to:
+   -- fs => 'f'
+   -- ps => 'p'
+   -- ns => 'n'
+   -- us => 'u'
+   -- ms => 'm'
+   -- sec => 's'
+   -- min => 'M'
+   -- hr => 'h'
+   Time_Resolution: Character := 'f';
+
+   --  Common action to perform before analysis: library setup.
+   procedure Common_Compile_Init (Analyze_Only : Boolean);
+
+   --  Common action to perform before elaboration:
+   --  * extract PRIM_NAME and SEC_NAME from ARGS.
+   --  * configure
+   --  * Check top entity.
+   procedure Common_Compile_Elab (Cmd_Name : String;
+                                  Args : Argument_List;
+                                  Opt_Arg : out Natural;
+                                  Config : out Iir);
 
    --  Functionnal interface.
    --  Must be first initialized by Compile_Init

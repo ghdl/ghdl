@@ -24,8 +24,11 @@
 --  covered by the GNU Public License.
 
 package body Grt.Rtis is
+   Max_Top_Pkg : Ghdl_Index_Type := 0;
+
    procedure Ghdl_Rti_Add_Package (Pkg : Ghdl_Rti_Access) is
    begin
+      pragma Assert (Ghdl_Rti_Top.Nbr_Child < Max_Top_Pkg);
       Ghdl_Rti_Top.Children (Ghdl_Rti_Top.Nbr_Child) := Pkg;
       Ghdl_Rti_Top.Nbr_Child := Ghdl_Rti_Top.Nbr_Child + 1;
    end Ghdl_Rti_Add_Package;
@@ -33,10 +36,10 @@ package body Grt.Rtis is
    procedure Ghdl_Rti_Add_Top (Max_Pkg : Ghdl_Index_Type;
                                Pkgs : Ghdl_Rti_Arr_Acc;
                                Top : Ghdl_Rti_Access;
-                               Instance : Address)
-   is
-      pragma Unreferenced (Max_Pkg);
+                               Instance : Address) is
    begin
+      Max_Top_Pkg := Max_Pkg;
+
       Ghdl_Rti_Top.Parent := Top;
       Ghdl_Rti_Top.Children := Pkgs;
       Ghdl_Rti_Top_Instance := Instance;

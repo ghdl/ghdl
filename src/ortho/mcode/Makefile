@@ -1,6 +1,6 @@
 ortho_srcdir=..
 GNATMAKE=gnatmake
-GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwlcru -gnat05
+GNATFLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwlcru
 CC=gcc
 BE=mcode
 SED=sed
@@ -9,20 +9,20 @@ all: $(ortho_exec)
 
 $(ortho_exec): $(ortho_srcdir)/mcode/ortho_mcode.ads memsegs_c.o force
 	$(GNATMAKE) -o $@ -g -aI$(ortho_srcdir)/mcode -aI$(ortho_srcdir) \
-	-aI$(ortho_srcdir)/.. $(GNAT_FLAGS) -gnatw.A ortho_code_main \
+	-aI$(ortho_srcdir)/.. $(GNATFLAGS) -gnatw.A ortho_code_main \
 	-bargs -E -largs memsegs_c.o #-static
 
 memsegs_c.o: $(ortho_srcdir)/mcode/memsegs_c.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 oread: force
-	gnatmake -m -o $@ -g $(GNAT_FLAGS) -aI../oread ortho_code_main -aI.. -largs memsegs_c.o
+	$(GNATMAKE) -m -o $@ -g $(GNATFLAGS) -aI../oread ortho_code_main -aI.. -largs memsegs_c.o
 
 elfdump: force
-	gnatmake -m -g $(GNAT_FLAGS) $@
+	$(GNATMAKE) -m -g $(GNATFLAGS) $@
 
 coffdump: force
-	gnatmake -m $(GNAT_FLAGS) $@
+	$(GNATMAKE) -m $(GNATFLAGS) $@
 
 clean:
 	$(RM) -f *.o *.ali ortho_code_main elfdump

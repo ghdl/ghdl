@@ -44,6 +44,13 @@ package Trans.Chap6 is
    function Translate_Selected_Element
      (Prefix : Mnode; El : Iir_Element_Declaration) return Mnode;
 
+   --  Get array element at OFFSET of PREFIX.  If unbounded, PREFIX must be
+   --  stabilized.
+   function Translate_Indexed_Name_By_Offset
+     (Prefix : Mnode; Prefix_Type : Iir; Offset : O_Dnode) return Mnode;
+
+   function Stabilize_If_Unbounded (Val : Mnode) return Mnode;
+
    function Get_Array_Bound_Length (Arr : Mnode; Arr_Type : Iir; Dim : Natural)
                                    return O_Enode;
 

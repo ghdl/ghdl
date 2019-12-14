@@ -779,41 +779,41 @@ def disp_size():
 
 def disp_divmod():
     w("""
-    --  All index range are normalized (N downto 0).
-    --  NUM and QUOT have the same range.
-    --  DEM and REMAIN have the same range.
-    --  No 'X'.
-    procedure divmod (num, dem : UNSIGNED; quot, remain : out UNSIGNED)
-    is
-       variable reg : unsigned (dem'left + 1 downto 0) := (others => '0');
-       variable sub : unsigned (dem'range) := (others => '0');
-       variable carry, d : """ + logic_type () + """;
-    begin
-       for i in num'range loop
-          --  Shift
-          reg (reg'left downto 1) := reg (reg'left - 1 downto 0);
-          reg (0) := num (i);
-          --  Substract
-          carry := '1';
-          for j in dem'reverse_range loop
-             d := not dem (j);
-             sub (j) := compute_sum (carry, reg (j), d);
-             carry := compute_carry (carry, reg (j), d);
-          end loop;
-          carry := compute_carry (carry, reg (reg'left), '1');
-          --  Test
-          if carry = '0' then
-             --  Greater than
-             quot (i) := '0';
-          else
-             quot (i) := '1';
-             reg (reg'left) := '0';
-             reg (sub'range) := sub;
-          end if;
+  --  All index range are normalized (N downto 0).
+  --  NUM and QUOT have the same range.
+  --  DEM and REMAIN have the same range.
+  --  No 'X'.
+  procedure divmod (num, dem : UNSIGNED; quot, remain : out UNSIGNED)
+  is
+     variable reg : unsigned (dem'left + 1 downto 0) := (others => '0');
+     variable sub : unsigned (dem'range) := (others => '0');
+     variable carry, d : """ + logic_type () + """;
+  begin
+     for i in num'range loop
+        --  Shift
+        reg (reg'left downto 1) := reg (reg'left - 1 downto 0);
+        reg (0) := num (i);
+        --  Substract
+        carry := '1';
+        for j in dem'reverse_range loop
+           d := not dem (j);
+           sub (j) := compute_sum (carry, reg (j), d);
+           carry := compute_carry (carry, reg (j), d);
         end loop;
-        remain := reg (dem'range);
-    end divmod;
-    """)
+        carry := compute_carry (carry, reg (reg'left), '1');
+        --  Test
+        if carry = '0' then
+           --  Greater than
+           quot (i) := '0';
+        else
+           quot (i) := '1';
+           reg (reg'left) := '0';
+           reg (sub'range) := sub;
+        end if;
+     end loop;
+     remain := reg (dem'range);
+  end divmod;
+""")
 
 def disp_vec_vec_udiv(func):
     res = """
@@ -1125,7 +1125,7 @@ def gen_body(proto_file):
 # Copy spec
 for log in logics:
     for std in ['87', '93']:
-        out=open('numeric_' + log + '.v' + std, 'w')
+        out=open('v' + std + '/numeric_' + log + '.vhdl', 'w')
         for line in open('numeric_' + log + '.proto'):
             if line == '  @COMMON\n':
                 for lcom in open('numeric_common.proto'):
@@ -1147,7 +1147,7 @@ for log in logics:
 v93=False
 for l in logics:
     logic = l
-    out=open('numeric_{0}-body.v87'.format(l), 'w')
+    out=open('v87/numeric_{0}-body.vhdl'.format(l), 'w')
     gen_body('numeric_{0}-body.proto'.format(l))
     out.close()
 
@@ -1155,6 +1155,6 @@ v93=True
 binary_funcs.append("xnor")
 for l in logics:
     logic = l
-    out=open('numeric_{0}-body.v93'.format(l), 'w')
+    out=open('v93/numeric_{0}-body.vhdl'.format(l), 'w')
     gen_body('numeric_{0}-body.proto'.format(l))
     out.close()

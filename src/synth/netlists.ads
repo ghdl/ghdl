@@ -19,8 +19,20 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Hash; use Hash;
 
 package Netlists is
+   --  Netlists.
+   --
+   --  A netlist is a graph of gates and nets.  This implementation has some
+   --  particularities:
+   --  * the nets are vectors of bits, and a net of one bit is in fact a
+   --    vector of net 1.  Vectors only have a width, their bounds are
+   --    from (width - 1 downto 0) or [width-1:0].
+   --  * there is no separate data structures for nets, so nets are in
+   --    fact the outputs of gates.  So there is no standalone nets, a gate
+   --    is needed to have a net.
+
    --  Names.
    --  As there are many artificial and hierarchical names in a netlist, names
    --  are not flat: it is possible to create a new name using an existing one
@@ -44,26 +56,65 @@ package Netlists is
    --  There is no unification: these routines always create a new name.  There
    --  is no check that the name already exists, so these routines may create
    --  a duplicate name.  Callers must ensure they create uniq names.
-   function New_Sname_User (Id : Name_Id) return Sname;
-   function New_Sname_Artificial (Id : Name_Id) return Sname;
-   function New_Sname (Prefix : Sname; Suffix : Name_Id) return Sname;
-   function New_Sname_Version (Prefix : Sname; Ver : Uns32) return Sname;
+   function New_Sname_User (Id : Name_Id; Prefix : Sname) return Sname;
+   function New_Sname_Artificial (Id : Name_Id; Prefix : Sname) return Sname;
+   function New_Sname_Version (Ver : Uns32; Prefix : Sname) return Sname;
 
    --  Read the content of an Sname.
    function Get_Sname_Kind (Name : Sname) return Sname_Kind;
    function Get_Sname_Prefix (Name : Sname) return Sname;
    function Get_Sname_Suffix (Name : Sname) return Name_Id;
    function Get_Sname_Version (Name : Sname) return Uns32;
-   function Get_Sname_Num (Name : Sname) return Uns32;
 
-   type Net is private;
-   No_Net : constant Net;
+   --  Modifies an Sname.
+   procedure Set_Sname_Prefix (Name : Sname; Prefix : Sname);
 
+   --  TODO: procedure to free an Sname.
+
+   --  Module.
+   --
+   --  A module represent an uninstantiated netlist.  It is composed of nets
+   --  and instances.
+   --
+   --  From the outside, a module has ports (inputs and outputs), and
+   --  optionally parameters.  A module must have at least one port.  Both
+   --  ports and parameters have names.
+   --
+   --  From a module, you can get the list of ports, and the list of instances.
+   --  Instances have names.
+   --
+   --  In a module, there is a special instance (the self one) one that
+   --  represent the ports of the module itself, but with the opposite
+   --  direction.  Using this trick, there is no difference between ports of
+   --  instances and ports of the module itself.
+   --
+   --  In some cases, you also want to read an output port.  This is
+   --  not possible in this model, so just add an 'output' gate that
+   --  is a nop but provides a net.
+   --
+   --  Some modules are predefined and therefore have no inner description.
+   --  These are the well known elementary gates.
    type Module is private;
    No_Module : constant Module;
 
+   --  An instance is an instantiated module within a module.  It is
+   --  connected.
    type Instance is private;
    No_Instance : constant Instance;
+
+   --  Hash INST (simply return its index).
+   function Hash (Inst : Instance) return Hash_Value_Type;
+
+   --  A net is an output of a gate or a sub-circuit.  A net can be connected
+   --  to several inputs.
+   type Net is private;
+   No_Net : constant Net;
+
+   --  So pervasive that it is worth defining this array here.
+   type Net_Array is array (Int32 range <>) of Net;
+
+   type Input is private;
+   No_Input : constant Input;
 
    --  Witdh of a net, ie number of bits.
    --  No_Width (value 0) is reserved to mean unknown.  This is allowed only to
@@ -72,13 +123,10 @@ package Netlists is
    subtype Width is Uns32;
    No_Width : constant Width := 0;
 
-   type Port_Kind is (Port_In, Port_Out, Port_Inout);
-
-   --  Inout are considered as output.
-   subtype Port_Outs is Port_Kind range Port_Out .. Port_Inout;
+   type Port_Kind is (Port_In, Port_Out);
 
    --  Each module has a numeric identifier that can be used to easily identify
-   --  a module.  Gates (and, or, ...) have reverved identifiers.
+   --  a module.  Gates (and, or, ...) have reserved identifiers.
    type Module_Id is new Uns32;
 
    --  Reserved id for no identifier.
@@ -105,14 +153,8 @@ package Netlists is
 
       --  Port width (number of bits).
       W : Width;
-
-      --  Direction.
-      Dir : Port_Kind;
-
-      --  For a bus: left and right bounds of the bus, ie [L:R].
-      Left : Int32;
-      Right : Int32;
    end record;
+   pragma Convention (C, Port_Desc);
 
    type Port_Desc_Array is array (Port_Idx range <>) of Port_Desc;
 
@@ -139,18 +181,7 @@ package Netlists is
 
    type Param_Desc_Array is array (Param_Idx range <>) of Param_Desc;
 
-   --  Module.
-   --
-   --  A module represent an uninstantiated netlist.  It is composed of nets
-   --  and instances
-   --
-   --  From the outside, a module has ports (inputs and outputs), and
-   --  optionally parameters.  A module must have at least one port.
-   --
-   --  In a module, there is a special instance (the self one) one that
-   --  represent the ports of the module itself, but with the opposite
-   --  direction.  Using this trick, there is no difference between ports of
-   --  instances and ports of the module itself.
+   --  Subprograms for modules.
    function New_Design (Name : Sname) return Module;
    function New_User_Module (Parent : Module;
                              Name : Sname;
@@ -159,20 +190,28 @@ package Netlists is
                              Nbr_Outputs : Port_Nbr;
                              Nbr_Params : Param_Nbr := 0)
                             return Module;
-   procedure Set_Port_Desc (M : Module;
-                            Input_Descs : Port_Desc_Array;
-                            Output_Descs : Port_Desc_Array);
-   procedure Set_Param_Desc (M : Module;
-                             Params : Param_Desc_Array);
+   procedure Set_Input_Desc (M : Module; I : Port_Idx; Desc : Port_Desc);
+   procedure Set_Output_Desc (M : Module; O : Port_Idx; Desc : Port_Desc);
+   procedure Set_Ports_Desc (M : Module;
+                             Input_Descs : Port_Desc_Array;
+                             Output_Descs : Port_Desc_Array);
+   procedure Set_Params_Desc (M : Module;
+                              Params : Param_Desc_Array);
+
+   --  Be sure the record is passed by reference.
+   pragma Convention (C, Set_Input_Desc);
+   pragma Convention (C, Set_Output_Desc);
 
    --  Create the self instance, once ports are defined.  This is required if
    --  the internal netlist will be defined.
    function Create_Self_Instance (M : Module) return Instance;
 
    function Get_Module_Name (M : Module) return Sname;
-   function Get_Name (M : Module) return Sname renames Get_Module_Name;
    function Get_Id (M : Module) return Module_Id;
 
+   --  Number of fixed inputs/outputs.
+   --  For gates with variable number of inputs (like Concatn), use the
+   --  functions from Netlists.Utils.
    function Get_Nbr_Inputs (M : Module) return Port_Nbr;
    function Get_Nbr_Outputs (M : Module) return Port_Nbr;
 
@@ -191,24 +230,27 @@ package Netlists is
    function Get_First_Sub_Module (M : Module) return Module;
    function Get_Next_Sub_Module (M : Module) return Module;
 
-   type Input is private;
-   No_Input : constant Input;
-
    --  Instance
    function New_Instance (Parent : Module; M : Module; Name : Sname)
                          return Instance;
+   --  For instances non-fixed number of inputs/outputs/params.
+   function New_Var_Instance (Parent : Module;
+                              M : Module;
+                              Name : Sname;
+                              Nbr_Inputs : Port_Nbr;
+                              Nbr_Outputs : Port_Nbr;
+                              Nbr_Params : Param_Nbr)
+                             return Instance;
 
    --  Mark INST as free, but keep it in the module.
    --  Use Remove_Free_Instances for a cleanup.
+   --  TODO: Destroy instance in Remove_Free_Instances.
    procedure Free_Instance (Inst : Instance);
 
    function Is_Self_Instance (I : Instance) return Boolean;
    function Get_Module (Inst : Instance) return Module;
    function Get_Instance_Name (Inst : Instance) return Sname;
-   function Get_Name (Inst : Instance) return Sname renames Get_Instance_Name;
    function Get_Instance_Parent (Inst : Instance) return Module;
-   function Get_Parent (Inst : Instance) return Module
-     renames Get_Instance_Parent;
    function Get_Output (Inst : Instance; Idx : Port_Idx) return Net;
    function Get_Input (Inst : Instance; Idx : Port_Idx) return Input;
    function Get_Next_Instance (Inst : Instance) return Instance;
@@ -216,16 +258,19 @@ package Netlists is
    function Get_Param_Uns32 (Inst : Instance; Param : Param_Idx) return Uns32;
    procedure Set_Param_Uns32 (Inst : Instance; Param : Param_Idx; Val : Uns32);
 
+   --  Each instance has a mark flag available for any algorithm.
+   --  Please leave this flag clean for the next user.
+   function Get_Mark_Flag (Inst : Instance) return Boolean;
+   procedure Set_Mark_Flag (Inst : Instance; Flag : Boolean);
+
    --  Input
    function Get_Input_Parent (I : Input) return Instance;
-   function Get_Parent (I : Input) return Instance renames Get_Input_Parent;
    function Get_Port_Idx (I : Input) return Port_Idx;
    function Get_Driver (I : Input) return Net;
    function Get_Next_Sink (I : Input) return Input;
 
    --  Net (Output)
    function Get_Net_Parent (O : Net) return Instance;
-   function Get_Parent (O : Net) return Instance renames Get_Net_Parent;
    function Get_Port_Idx (O : Net) return Port_Idx;
    function Get_First_Sink (O : Net) return Input;
    function Get_Width (N : Net) return Width;
@@ -240,6 +285,7 @@ package Netlists is
 
    --  Reconnect all sinks of OLD to N.
    procedure Redirect_Inputs (Old : Net; N : Net);
+
 private
    type Sname is new Uns32 range 0 .. 2**30 - 1;
    No_Sname : constant Sname := 0;
@@ -267,6 +313,12 @@ private
    type Param_Desc_Idx is new Uns32;
    No_Param_Desc_Idx : constant Param_Desc_Idx := 0;
 
+   type Input is new Uns32;
+   No_Input : constant Input := 0;
+
+   type Net is new Uns32;
+   No_Net : constant Net := 0;
+
    type Module_Record is record
       Parent : Module;
       Name : Sname;
@@ -284,7 +336,9 @@ private
       --  Sub-module brother.
       Next_Sub_Module : Module;
 
+      --  List of instances.
       --  The self instance is the first instance.
+      --  FIXME: use an array instead ?
       First_Instance : Instance;
       Last_Instance : Instance;
    end record;
@@ -301,33 +355,48 @@ private
    type Instance_Record is record
       --  The instance is instantiated in Parent.
       Parent : Module;
+
+      --  Instances are in a doubly-linked list.
+      Prev_Instance : Instance;
       Next_Instance : Instance;
 
       --  For a self-instance, Klass is equal to Parent, and Name is No_Sname.
       Klass : Module;
       Name : Sname;
+      Flag_Mark : Boolean;
+      Flag2 : Boolean;
 
       First_Param : Param_Idx;
       First_Input : Input;
       First_Output : Net;
    end record;
+   pragma Pack (Instance_Record);
+   for Instance_Record'Size use 8*32;
 
-   --  Procedures to rewrite the instances of a module: first extract the chain
-   --  of instances from module M, then add the ones to keep.
+   procedure Set_Next_Instance (Inst : Instance; Next : Instance);
+   procedure Set_Prev_Instance (Inst : Instance; Prev : Instance);
+
+   --  Procedures to rewrite the list of instances of a module:
+   --  * first extract the chain of instances from module M (and reset the
+   --    list of instances - so there is none),
+   --  * then add the ones to keep.
+   --  The list of instances is walked by using Get_Next_Instance.
    procedure Extract_All_Instances (M : Module; First_Instance : out Instance);
    procedure Append_Instance (M : Module; Inst : Instance);
 
-   type Input is new Uns32;
-   No_Input : constant Input := 0;
+   --  Extract INST from the list of instance of its module.
+   --  Will still be connected, but won't appear anymore in the list of
+   --  instances.
+   procedure Extract_Instance (Inst : Instance);
+
+   --  Remove and free the unconnected instance INST.
+   procedure Remove_Instance (Inst : Instance);
 
    type Input_Record is record
       Parent : Instance;
       Driver : Net;
       Next_Sink : Input;
    end record;
-
-   type Net is new Uns32;
-   No_Net : constant Net := 0;
 
    function Is_Valid (N : Net) return Boolean;
 

@@ -1,0 +1,66 @@
+{
+  "travis-ci": {
+    "src":    "travis/ghdl/ghdl/master.svg?logo=travis",
+    "target": "https://travis-ci.org/ghdl/ghdl",
+    "alt":    "Build status by Travis-CI" },
+  "appveyor": {
+    "src":    "appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=aab2ab",
+    "target": "https://ci.appveyor.com/project/tgingold/ghdl-psgys/branch/master",
+    "alt":    "Build status by AppVeyor" },
+  "release": {
+    "src":    "github/release/ghdl/ghdl.svg?label=latest%20release",
+    "target": "gh:ghdl/ghdl/releases",
+    "alt":    "Latest release" },
+  "code-lic": {
+    "src":    "badge/code%20license-GPLv2-bd0000.svg?label=license&logo=gnu",
+    "target": "Licenses.html",
+    "alt":    "GNU General Public License 2" },
+  "doc-lic": {
+    "src":    "badge/doc%20license-CC--BY--SA--4.0-aab2ab.svg?",
+    "target": "Licenses.html",
+    "alt":    "Creative Commons Attribution-ShareAlike 4.0" },
+  "gitter": {
+    "src":    "badge/chat-on%20gitter-4db797.svg?logo=gitter&logoColor=4db797",
+    "target": "https://gitter.im/ghdl1/Lobby",
+    "alt":    "Talk to us on Gitter" },
+  "issues-new": {
+    "src":    "badge/new-issue-yellowgreen.svg?logo=github",
+    "target": "gh:ghdl/ghdl/issues/new",
+    "alt":    "Open new issue at GitHub" },
+  "new-pr": {
+    "src":    "badge/new-pull--request-yellowgreen.svg?logo=github",
+    "target": "gh:ghdl/ghdl/compare/",
+    "alt":    "Open new Pull Request (PR) at GitHub" },
+  "bug-report": {
+    "src":    "badge/new-bug--report-yellowgreen.svg?logo=github",
+    "target": "gh:ghdl/ghdl/issues/new?template=bug_report.md",
+    "alt":    "Open new bug report at GitHub" },
+  "feature-request": {
+    "src":    "badge/new-feature--request-yellowgreen.svg?logo=github",
+    "target": "gh:ghdl/ghdl/issues/new?template=feature_request.md",
+    "alt":    "Open new feature request at GitHub" },
+  "issues-open": {
+    "src":    "github/issues/ghdl/ghdl.svg?logo=github",
+    "target": "gh:ghdl/ghdl/issues",
+    "alt":    "Open issues" },
+  "issues-closed": {
+    "src":    "github/issues-closed-raw/ghdl/ghdl.svg?logo=github",
+    "target": "gh:ghdl/ghdl/issues?q=is%3Aissue+is%3Aclosed",
+    "alt":    "Closed issues" },
+  "issues-pr": {
+    "src":    "github/issues-pr/ghdl/ghdl.svg?logo=github",
+    "target": "gh:ghdl/ghdl/pulls",
+    "alt":    "Open pull requests" },
+  "issues-pr-closed": {
+    "src":    "github/issues-pr-closed-raw/ghdl/ghdl.svg?logo=github",
+    "target": "gh:ghdl/ghdl/pulls",
+    "alt":    "Closed pull requests" },
+  "contributors": {
+    "src":    "github/contributors/ghdl/ghdl.svg?logo=github",
+    "target": "gh:ghdl/ghdl/graphs/contributors",
+    "alt":    "Contributors" },
+  "gh-logo": {
+    "src":    "badge/-ghdl/ghdl-323131.svg?logo=github",
+    "target": "gh:ghdl/ghdl",
+    "alt":    "Source Code on GitHub" }
+}

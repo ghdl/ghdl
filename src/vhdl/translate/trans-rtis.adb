@@ -18,9 +18,9 @@
 
 with Name_Table;
 with Files_Map;
-with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
-with Configuration;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Configuration;
 with Libraries;
 with Trans.Chap7;
 with Trans; use Trans.Helpers;
@@ -110,9 +110,7 @@ package body Trans.Rtis is
    Ghdl_Rtin_Subtype_Composite_Common   : O_Fnode;
    Ghdl_Rtin_Subtype_Composite_Name     : O_Fnode;
    Ghdl_Rtin_Subtype_Composite_Basetype : O_Fnode;
-   Ghdl_Rtin_Subtype_Composite_Bounds   : O_Fnode;
-   Ghdl_Rtin_Subtype_Composite_Valsize  : O_Fnode;
-   Ghdl_Rtin_Subtype_Composite_Sigsize  : O_Fnode;
+   Ghdl_Rtin_Subtype_Composite_Layout   : O_Fnode;
 
    --  Node for a record element.
    Ghdl_Rtin_Element        : O_Tnode;
@@ -121,6 +119,7 @@ package body Trans.Rtis is
    Ghdl_Rtin_Element_Type   : O_Fnode;
    Ghdl_Rtin_Element_Valoff : O_Fnode;
    Ghdl_Rtin_Element_Sigoff : O_Fnode;
+   Ghdl_Rtin_Element_Layout : O_Fnode;
 
    --  Node for a record type.
    Ghdl_Rtin_Type_Record          : O_Tnode;
@@ -128,8 +127,7 @@ package body Trans.Rtis is
    Ghdl_Rtin_Type_Record_Name     : O_Fnode;
    Ghdl_Rtin_Type_Record_Nbrel    : O_Fnode;
    Ghdl_Rtin_Type_Record_Elements : O_Fnode;
-   --Ghdl_Rtin_Type_Record_Valsize : O_Fnode;
-   --Ghdl_Rtin_Type_Record_Sigsize : O_Fnode;
+   Ghdl_Rtin_Type_Record_Layout   : O_Fnode;
 
    --  Node for an object.
    Ghdl_Rtin_Object               : O_Tnode;
@@ -154,6 +152,10 @@ package body Trans.Rtis is
    Ghdl_Rtin_Component_Name      : O_Fnode;
    Ghdl_Rtin_Component_Nbr_Child : O_Fnode;
    Ghdl_Rtin_Component_Children  : O_Fnode;
+
+   Null_Loc : O_Cnode;
+
+   function Get_Context_Rti (Node : Iir) return O_Dnode;
 
    --  Create all the declarations for RTIs.
    procedure Rti_Initialize is
@@ -319,6 +321,9 @@ package body Trans.Rtis is
          New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_psl_assert"),
             Ghdl_Rtik_Psl_Assert);
+         New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_rtik_psl_assume"),
+            Ghdl_Rtik_Psl_Assume);
          New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_psl_cover"),
             Ghdl_Rtik_Psl_Cover);
@@ -613,12 +618,8 @@ package body Trans.Rtis is
                            Get_Identifier ("name"), Char_Ptr_Type);
          New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Basetype,
                            Get_Identifier ("basetype"), Ghdl_Rti_Access);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Bounds,
-                           Get_Identifier ("bounds"), Ghdl_Ptr_Type);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Valsize,
-                           Get_Identifier ("val_size"), Ghdl_Ptr_Type);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Sigsize,
-                           Get_Identifier ("sig_size"), Ghdl_Ptr_Type);
+         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Layout,
+                           Get_Identifier ("layout"), Ghdl_Ptr_Type);
          Finish_Record_Type (Constr, Ghdl_Rtin_Subtype_Composite);
          New_Type_Decl (Get_Identifier ("__ghdl_rtin_subtype_composite"),
                         Ghdl_Rtin_Subtype_Composite);
@@ -637,6 +638,8 @@ package body Trans.Rtis is
                            Get_Identifier ("nbrel"), Ghdl_Index_Type);
          New_Record_Field (Constr, Ghdl_Rtin_Type_Record_Elements,
                            Get_Identifier ("elements"), Ghdl_Rti_Arr_Acc);
+         New_Record_Field (Constr, Ghdl_Rtin_Type_Record_Layout,
+                           Get_Identifier ("layout"), Ghdl_Ptr_Type);
          Finish_Record_Type (Constr, Ghdl_Rtin_Type_Record);
          New_Type_Decl (Get_Identifier ("__ghdl_rtin_type_record"),
                         Ghdl_Rtin_Type_Record);
@@ -657,6 +660,8 @@ package body Trans.Rtis is
                            Get_Identifier ("val_off"), Ghdl_Index_Type);
          New_Record_Field (Constr, Ghdl_Rtin_Element_Sigoff,
                            Get_Identifier ("sig_off"), Ghdl_Index_Type);
+         New_Record_Field (Constr, Ghdl_Rtin_Element_Layout,
+                           Get_Identifier ("layout_off"), Ghdl_Index_Type);
          Finish_Record_Type (Constr, Ghdl_Rtin_Element);
          New_Type_Decl (Get_Identifier ("__ghdl_rtin_element"),
                         Ghdl_Rtin_Element);
@@ -722,6 +727,7 @@ package body Trans.Rtis is
                         Ghdl_Rtin_Component);
       end;
 
+      Null_Loc := New_Null_Access (Ghdl_Ptr_Type);
    end Rti_Initialize;
 
    package Rti_Builders is
@@ -891,8 +897,8 @@ package body Trans.Rtis is
          for I in Cur_Block.List.Rtis'Range loop
             exit when I > Nbr;
             New_Array_Aggr_El
-              (List, New_Global_Unchecked_Address (Cur_Block.List.Rtis (I),
-                                                   Ghdl_Rti_Access));
+              (List, New_Global_Unchecked_Address
+                 (New_Global (Cur_Block.List.Rtis (I)), Ghdl_Rti_Access));
          end loop;
 
          --  Next chunks.
@@ -902,7 +908,7 @@ package body Trans.Rtis is
             for I in L.Rtis'Range loop
                exit when I > Nbr;
                New_Array_Aggr_El
-                 (List, New_Global_Unchecked_Address (L.Rtis (I),
+                 (List, New_Global_Unchecked_Address (New_Global (L.Rtis (I)),
                                                       Ghdl_Rti_Access));
             end loop;
             L := L.Next;
@@ -997,21 +1003,24 @@ package body Trans.Rtis is
       end if;
    end Generate_Name;
 
-   function Get_Null_Loc return O_Cnode is
-   begin
-      return New_Null_Access (Ghdl_Ptr_Type);
-   end Get_Null_Loc;
-
-   function Var_Acc_To_Loc (Var : Var_Type) return O_Cnode
-   is
+   function Var_Acc_To_Loc (Var : Var_Type) return O_Cnode is
    begin
       if Is_Var_Field (Var) then
          return Get_Var_Offset (Var, Ghdl_Ptr_Type);
       else
-         return New_Global_Unchecked_Address (Get_Var_Label (Var),
+         return New_Global_Unchecked_Address (New_Global (Get_Var_Label (Var)),
                                               Ghdl_Ptr_Type);
       end if;
    end Var_Acc_To_Loc;
+
+   function Var_Acc_To_Loc_Maybe (Var : Var_Type) return O_Cnode is
+   begin
+      if Var = Null_Var then
+         return Null_Loc;
+      else
+         return Var_Acc_To_Loc (Var);
+      end if;
+   end Var_Acc_To_Loc_Maybe;
 
    --  Generate a name constant for the name of type definition DEF.
    --  If DEF is an anonymous subtype, returns O_LNODE_NULL.
@@ -1038,13 +1047,19 @@ package body Trans.Rtis is
       if Name = O_Dnode_Null then
          return New_Null_Access (Char_Ptr_Type);
       else
-         return New_Global_Unchecked_Address (Name, Char_Ptr_Type);
+         return New_Global_Unchecked_Address (New_Global (Name),
+                                              Char_Ptr_Type);
       end if;
    end New_Name_Address;
 
    function New_Rti_Address (Rti : O_Dnode) return O_Cnode is
    begin
-      return New_Global_Unchecked_Address (Rti, Ghdl_Rti_Access);
+      return New_Global_Unchecked_Address (New_Global (Rti), Ghdl_Rti_Access);
+   end New_Rti_Address;
+
+   function New_Rti_Address (Rti : O_Dnode) return O_Enode is
+   begin
+      return New_Unchecked_Address (New_Obj (Rti), Ghdl_Rti_Access);
    end New_Rti_Address;
 
    --  Declare the RTI constant for type definition attached to INFO.
@@ -1109,8 +1124,7 @@ package body Trans.Rtis is
          Start_Init_Value (Name_Arr);
          Start_Array_Aggr (Arr_Aggr, Name_Arr_Type);
          for I in Name_Lits'Range loop
-            New_Array_Aggr_El
-              (Arr_Aggr, New_Global_Address (Name_Lits (I), Char_Ptr_Type));
+            New_Array_Aggr_El (Arr_Aggr, New_Name_Address (Name_Lits (I)));
          end loop;
          Finish_Array_Aggr (Arr_Aggr, Val);
          Finish_Init_Value (Name_Arr, Val);
@@ -1131,12 +1145,10 @@ package body Trans.Rtis is
          Start_Record_Aggr (Rec_Aggr, Ghdl_Rtin_Type_Enum);
          New_Record_Aggr_El (Rec_Aggr, Generate_Common_Type (Kind, 0, 0));
          New_Record_Aggr_El (Rec_Aggr, New_Name_Address (Name));
+         New_Record_Aggr_El (Rec_Aggr, New_Index_Lit (Unsigned_64 (Nbr_Lit)));
          New_Record_Aggr_El
-           (Rec_Aggr, New_Unsigned_Literal (Ghdl_Index_Type,
-            Unsigned_64 (Nbr_Lit)));
-         New_Record_Aggr_El
-           (Rec_Aggr,
-            New_Global_Address (Name_Arr, Char_Ptr_Array_Ptr_Type));
+           (Rec_Aggr, New_Global_Address (New_Global (Name_Arr),
+                                          Char_Ptr_Array_Ptr_Type));
          Finish_Record_Aggr (Rec_Aggr, Val);
          Finish_Init_Value (Info.Type_Rti, Val);
       end;
@@ -1210,7 +1222,7 @@ package body Trans.Rtis is
          --  Handle non-static units.  The only possibility is a unit of
          --  std.standard.time.
          Val := New_Global_Unchecked_Address
-           (Get_Var_Label (Info.Object_Var), Ghdl_Ptr_Type);
+           (New_Global (Get_Var_Label (Info.Object_Var)), Ghdl_Ptr_Type);
       else
          Val := Chap7.Translate_Numeric_Literal (Unit, Ghdl_I64_Type);
       end if;
@@ -1263,12 +1275,9 @@ package body Trans.Rtis is
       end case;
       New_Record_Aggr_El (List, Generate_Common_Type (Rti_Kind, 0, 0, 0));
       New_Record_Aggr_El (List, New_Name_Address (Name));
-      New_Record_Aggr_El
-        (List,
-         New_Unsigned_Literal (Ghdl_Index_Type,
-           Unsigned_64 (Nbr_Units)));
-      New_Record_Aggr_El
-        (List, New_Global_Address (Unit_Arr, Ghdl_Rti_Arr_Acc));
+      New_Record_Aggr_El (List, New_Index_Lit (Unsigned_64 (Nbr_Units)));
+      New_Record_Aggr_El (List, New_Global_Address (New_Global (Unit_Arr),
+                                                    Ghdl_Rti_Arr_Acc));
       Finish_Record_Aggr (List, Val);
       Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Physical_Type_Definition;
@@ -1347,6 +1356,14 @@ package body Trans.Rtis is
 
       case Get_Kind (Atype) is
          when Iir_Kind_Access_Type_Definition =>
+            --  Don't bother with designated type.  This at least avoid
+            --  loops.
+            Base_Type := Null_Iir;
+            --  Set rti_max_depth before generating RTI for designated type,
+            --  as the designated type can reference this access type (and
+            --  therefore read the max depth).
+            Info.B.Rti_Max_Depth := 0;
+
             declare
                Mark : Id_Mark_Type;
             begin
@@ -1360,9 +1377,6 @@ package body Trans.Rtis is
             else
                Kind := Ghdl_Rtik_Type_Access;
             end if;
-            --  Don't bother with designated type.  This at least avoid
-            --  loops.
-            Base_Type := Null_Iir;
          when Iir_Kind_File_Type_Definition =>
             Base_Type := Get_Type (Get_File_Type_Mark (Atype));
             Base := Generate_Type_Definition (Base_Type);
@@ -1499,10 +1513,9 @@ package body Trans.Rtis is
       New_Record_Aggr_El (Aggr, New_Name_Address (Name));
       New_Record_Aggr_El (Aggr, New_Rti_Address (El_Info.Type_Rti));
       New_Record_Aggr_El
-        (Aggr,
-         New_Unsigned_Literal (Ghdl_Index_Type,
-           Unsigned_64 (Get_Nbr_Elements (List))));
-      New_Record_Aggr_El (Aggr, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
+        (Aggr, New_Index_Lit (Unsigned_64 (Get_Nbr_Elements (List))));
+      New_Record_Aggr_El (Aggr, New_Global_Address (New_Global (Arr),
+                                                    Ghdl_Rti_Arr_Acc));
       Finish_Record_Aggr (Aggr, Val);
       Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Array_Type_Definition;
@@ -1521,7 +1534,7 @@ package body Trans.Rtis is
       Kind      : O_Cnode;
       Depth     : Rti_Depth_Type;
    begin
-      Bounds := Info.S.Composite_Bounds;
+      Bounds := Info.S.Composite_Layout;
       Depth := Get_Depth_From_Var (Bounds);
       Info.B.Rti_Max_Depth :=
         Rti_Depth_Type'Max (Depth, Base_Info.B.Rti_Max_Depth);
@@ -1555,39 +1568,7 @@ package body Trans.Rtis is
            (Kind, Depth, Info.B.Rti_Max_Depth, Type_To_Mode (Atype)));
       New_Record_Aggr_El (Aggr, New_Name_Address (Name));
       New_Record_Aggr_El (Aggr, New_Rti_Address (Base_Info.Type_Rti));
-      if Bounds = Null_Var then
-         Val := Get_Null_Loc;
-      else
-         Val := Var_Acc_To_Loc (Bounds);
-      end if;
-      New_Record_Aggr_El (Aggr, Val);
-      for I in Mode_Value .. Mode_Signal loop
-         case Info.Type_Mode is
-            when Type_Mode_Static_Array
-              | Type_Mode_Static_Record =>
-               if Info.Ortho_Type (I) /= O_Tnode_Null then
-                  Val := New_Sizeof (Info.Ortho_Type (I), Ghdl_Ptr_Type);
-               else
-                  Val := Get_Null_Loc;
-               end if;
-            when Type_Mode_Complex_Array
-              | Type_Mode_Complex_Record =>
-               if Info.Ortho_Type (I) /= O_Tnode_Null
-                 and then Info.C (I).Size_Var /= Null_Var
-               then
-                  Val := Var_Acc_To_Loc (Info.C (I).Size_Var);
-               else
-                  Val := Get_Null_Loc;
-               end if;
-            when Type_Mode_Unbounded_Array
-              | Type_Mode_Unbounded_Record =>
-               Val := Get_Null_Loc;
-            when others =>
-               Error_Kind ("generate_composite_subtype_definition", Atype);
-         end case;
-         New_Record_Aggr_El (Aggr, Val);
-      end loop;
-
+      New_Record_Aggr_El (Aggr, Var_Acc_To_Loc_Maybe (Bounds));
       Finish_Record_Aggr (Aggr, Val);
       Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Composite_Subtype_Definition;
@@ -1640,12 +1621,14 @@ package body Trans.Rtis is
          El := Get_Nth_Element (El_List, I);
          declare
             El_Type    : constant Iir := Get_Type (El);
+            El_Tinfo   : constant Type_Info_Acc := Get_Info (El_Type);
             Field_Info : constant Field_Info_Acc := Get_Info (El);
             Type_Rti   : O_Dnode;
             El_Name    : O_Dnode;
             Aggr       : O_Record_Aggr_List;
             Val        : O_Cnode;
             El_Const   : O_Dnode;
+            Mode       : Natural;
             Mark       : Id_Mark_Type;
          begin
             Push_Identifier_Prefix (Mark, Get_Identifier (El));
@@ -1655,25 +1638,51 @@ package body Trans.Rtis is
               Rti_Depth_Type'Max (Max_Depth,
                                   Get_Info (El_Type).B.Rti_Max_Depth);
 
+            case El_Tinfo.Type_Mode is
+               when Type_Mode_Unbounded_Array
+                 | Type_Mode_Unbounded_Record =>
+                  Mode := 2;
+               when Type_Mode_Complex_Record
+                 | Type_Mode_Complex_Array =>
+                  Mode := 1;
+               when others =>
+                  Mode := 0;
+            end case;
             El_Name := Generate_Name (El);
             New_Const_Decl (El_Const, Create_Identifier ("RTIEL"),
                             Global_Storage, Ghdl_Rtin_Element);
             Start_Init_Value (El_Const);
             Start_Record_Aggr (Aggr, Ghdl_Rtin_Element);
-            New_Record_Aggr_El (Aggr,
-                                Generate_Common (Ghdl_Rtik_Element));
+            New_Record_Aggr_El
+              (Aggr, Generate_Common (Ghdl_Rtik_Element, Mode => Mode));
             New_Record_Aggr_El (Aggr, New_Name_Address (El_Name));
             New_Record_Aggr_El (Aggr, New_Rti_Address (Type_Rti));
             for I in Object_Kind_Type loop
                if Field_Info.Field_Node (I) /= O_Fnode_Null then
-                  Val := New_Offsetof (Info.B.Base_Type (I),
-                                       Field_Info.Field_Node (I),
-                                       Ghdl_Index_Type);
+                  if Is_Static_Type (El_Tinfo) then
+                     Val := New_Offsetof (Info.B.Base_Type (I),
+                                          Field_Info.Field_Node (I),
+                                          Ghdl_Index_Type);
+                  else
+                     Val := New_Offsetof (Info.B.Bounds_Type,
+                                          Field_Info.Field_Node (I),
+                                          Ghdl_Index_Type);
+                  end if;
                else
                   Val := Ghdl_Index_0;
                end if;
                New_Record_Aggr_El (Aggr, Val);
             end loop;
+
+            if Is_Unbounded_Type (El_Tinfo) then
+               Val := New_Offsetof (Info.B.Bounds_Type,
+                                    Field_Info.Field_Bound,
+                                    Ghdl_Index_Type);
+            else
+               Val := Ghdl_Index_0;
+            end if;
+            New_Record_Aggr_El (Aggr, Val);
+
             Finish_Record_Aggr (Aggr, Val);
             Finish_Init_Value (El_Const, Val);
             Add_Rti_Node (El_Const);
@@ -1690,25 +1699,33 @@ package body Trans.Rtis is
          Aggr : O_Record_Aggr_List;
          Name : O_Dnode;
          Rtik : O_Cnode;
+         Depth : Rti_Depth_Type;
+         Layout_Loc : O_Cnode;
       begin
          Name := Generate_Type_Name (Atype);
 
          Start_Init_Value (Info.Type_Rti);
          Start_Record_Aggr (Aggr, Ghdl_Rtin_Type_Record);
+         Depth := 0;
+         Layout_Loc := Null_Loc;
          if Get_Constraint_State (Atype) = Fully_Constrained then
             Rtik := Ghdl_Rtik_Type_Record;
+            if Info.S.Composite_Layout /= Null_Var then
+               Depth := Get_Depth_From_Var (Info.S.Composite_Layout);
+               Layout_Loc := Var_Acc_To_Loc (Info.S.Composite_Layout);
+            end if;
          else
             Rtik := Ghdl_Rtik_Type_Unbounded_Record;
          end if;
          New_Record_Aggr_El
-           (Aggr,
-            Generate_Common_Type (Rtik, 0, Max_Depth, Type_To_Mode (Atype)));
+           (Aggr, Generate_Common_Type
+              (Rtik, Depth, Max_Depth, Type_To_Mode (Atype)));
          New_Record_Aggr_El (Aggr, New_Name_Address (Name));
          New_Record_Aggr_El
-           (Aggr, New_Unsigned_Literal
-              (Ghdl_Index_Type, Unsigned_64 (Get_Nbr_Elements (El_List))));
-         New_Record_Aggr_El (Aggr,
-                             New_Global_Address (El_Arr, Ghdl_Rti_Arr_Acc));
+           (Aggr, New_Index_Lit (Unsigned_64 (Get_Nbr_Elements (El_List))));
+         New_Record_Aggr_El (Aggr, New_Global_Address (New_Global (El_Arr),
+                                                       Ghdl_Rti_Arr_Acc));
+         New_Record_Aggr_El (Aggr, Layout_Loc);
          Finish_Record_Aggr (Aggr, Res);
          Finish_Init_Value (Info.Type_Rti, Res);
       end;
@@ -1919,7 +1936,8 @@ package body Trans.Rtis is
          Start_Record_Aggr (List, Ghdl_Rtin_Object);
          Mode := 0;
          case Get_Kind (Decl) is
-            when Iir_Kind_Signal_Declaration =>
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration =>
                Comm := Ghdl_Rtik_Signal;
                Var := Info.Signal_Sig;
             when Iir_Kind_Interface_Signal_Declaration =>
@@ -1993,12 +2011,7 @@ package body Trans.Rtis is
          end case;
          New_Record_Aggr_El (List, Generate_Common (Comm, Var, Mode));
          New_Record_Aggr_El (List, New_Name_Address (Name));
-         if Var = Null_Var then
-            Val := Get_Null_Loc;
-         else
-            Val := Var_Acc_To_Loc (Var);
-         end if;
-         New_Record_Aggr_El (List, Val);
+         New_Record_Aggr_El (List, Var_Acc_To_Loc_Maybe (Var));
          Val := New_Rti_Address (Type_Info.Type_Rti);
          New_Record_Aggr_El (List, Val);
          New_Record_Aggr_El (List, Generate_Linecol (Decl));
@@ -2030,10 +2043,12 @@ package body Trans.Rtis is
       Start_Init_Value (Info.Psl_Rti_Const);
       Start_Record_Aggr (List, Ghdl_Rtin_Object);
       case Get_Kind (Decl) is
-         when Iir_Kind_Psl_Cover_Statement =>
+         when Iir_Kind_Psl_Cover_Directive =>
             Kind := Ghdl_Rtik_Psl_Cover;
-         when Iir_Kind_Psl_Assert_Statement =>
+         when Iir_Kind_Psl_Assert_Directive =>
             Kind := Ghdl_Rtik_Psl_Assert;
+         when Iir_Kind_Psl_Assume_Directive =>
+            Kind := Ghdl_Rtik_Psl_Assume;
          when Iir_Kind_Psl_Endpoint_Declaration =>
             Kind := Ghdl_Rtik_Psl_Endpoint;
          when others =>
@@ -2091,13 +2106,10 @@ package body Trans.Rtis is
          Start_Init_Value (Info.Comp_Rti_Const);
          Start_Record_Aggr (List, Ghdl_Rtin_Component);
          New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Component));
-         New_Record_Aggr_El (List,
-                             New_Global_Address (Name, Char_Ptr_Type));
-         New_Record_Aggr_El
-           (List, New_Unsigned_Literal (Ghdl_Index_Type,
-                                        Get_Rti_Array_Length));
-         New_Record_Aggr_El (List,
-                             New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
+         New_Record_Aggr_El (List, New_Name_Address (Name));
+         New_Record_Aggr_El (List, New_Index_Lit (Get_Rti_Array_Length));
+         New_Record_Aggr_El (List, New_Global_Address (New_Global (Arr),
+                                                       Ghdl_Rti_Arr_Acc));
          Finish_Record_Aggr (List, Res);
          Finish_Init_Value (Info.Comp_Rti_Const, Res);
          Pop_Rti_Node (Prev);
@@ -2134,7 +2146,8 @@ package body Trans.Rtis is
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Variable_Declaration
               | Iir_Kind_File_Declaration
-              | Iir_Kind_Signal_Attribute_Declaration =>
+              | Iir_Kind_Signal_Attribute_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration =>
                null;
             when Iir_Kind_Object_Alias_Declaration
                | Iir_Kind_Attribute_Declaration =>
@@ -2201,7 +2214,7 @@ package body Trans.Rtis is
       Start_Init_Value (Info.Block_Rti_Const);
       Start_Record_Aggr (List, Ghdl_Rtin_Instance);
       New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Instance));
-      New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
+      New_Record_Aggr_El (List, New_Name_Address (Name));
       New_Record_Aggr_El (List, Generate_Linecol (Stmt));
       New_Record_Aggr_El
         (List, New_Offsetof (Get_Scope_Type
@@ -2264,7 +2277,8 @@ package body Trans.Rtis is
                   Add_Rti_Node (Info.Object_Rti);
                end;
             when Iir_Kind_Signal_Declaration
-               | Iir_Kind_Interface_Signal_Declaration =>
+              | Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Anonymous_Signal_Declaration =>
                declare
                   Info : constant Signal_Info_Acc := Get_Info (Decl);
                begin
@@ -2409,12 +2423,13 @@ package body Trans.Rtis is
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
                Generate_Instance (Stmt, Parent_Rti);
                Pop_Identifier_Prefix (Mark);
-            when Iir_Kind_Psl_Default_Clock =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Declaration =>
-               null;
-            when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+            when Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive
+              | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Generate_Psl_Directive (Stmt);
             when others =>
@@ -2495,7 +2510,7 @@ package body Trans.Rtis is
 
       Start_Record_Aggr (List, Ghdl_Rtin_Block);
       New_Record_Aggr_El (List, Generate_Common (Rtik));
-      New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
+      New_Record_Aggr_El (List, New_Name_Address (Name));
 
       --  Field Loc: offset in the instance of the entity.
       Field_Off := New_Offsetof
@@ -2511,7 +2526,8 @@ package body Trans.Rtis is
       --  Fields Nbr_Child and Children.
       New_Record_Aggr_El
         (List, New_Unsigned_Literal (Ghdl_Index_Type, Get_Rti_Array_Length));
-      New_Record_Aggr_El (List, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
+      New_Record_Aggr_El (List, New_Global_Address (New_Global (Arr),
+                                                    Ghdl_Rti_Arr_Acc));
       Finish_Record_Aggr (List, Res);
 
       Finish_Init_Value (Rti, Res);
@@ -2557,7 +2573,7 @@ package body Trans.Rtis is
 
       Start_Record_Aggr (List, Ghdl_Rtin_Generate);
       New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_For_Generate));
-      New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
+      New_Record_Aggr_El (List, New_Name_Address (Name));
 
       --  Field Loc: offset in the instance of the entity.
       Field_Off := New_Offsetof
@@ -2578,7 +2594,7 @@ package body Trans.Rtis is
                            Ghdl_Index_Type));
 
       --  Child.
-      New_Record_Aggr_El (List, Get_Context_Rti (Bod));
+      New_Record_Aggr_El (List, New_Rti_Address (Get_Context_Rti (Bod)));
 
       Finish_Record_Aggr (List, Res);
 
@@ -2716,17 +2732,17 @@ package body Trans.Rtis is
 
          Start_Record_Aggr (List, Ghdl_Rtin_Block);
          New_Record_Aggr_El (List, Generate_Common (Kind));
-         New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
+         New_Record_Aggr_El (List, New_Name_Address (Name));
 
          --  Field Loc: offset in the instance of the entity.
          if Field_Off = O_Cnode_Null then
-            Field_Off := Get_Null_Loc;
+            Field_Off := Null_Loc;
          end if;
          New_Record_Aggr_El (List, Field_Off);
 
          New_Record_Aggr_El (List, Generate_Linecol (Blk));
 
-      --  Field Parent: RTI of the parent.
+         --  Field Parent: RTI of the parent.
          if Parent_Rti = O_Dnode_Null then
             Res := New_Null_Access (Ghdl_Rti_Access);
          else
@@ -2736,14 +2752,14 @@ package body Trans.Rtis is
 
          --  Fields Nbr_Child and Children.
          New_Record_Aggr_El (List, New_Index_Lit (Get_Rti_Array_Length));
-         New_Record_Aggr_El (List, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
+         New_Record_Aggr_El (List, New_Global_Address (New_Global (Arr),
+                                                       Ghdl_Rti_Arr_Acc));
          Finish_Record_Aggr (List, Res);
 
          if Rti_Type = Ghdl_Rtin_Block_File then
             New_Record_Aggr_El (List_File, Res);
             New_Record_Aggr_El (List_File,
-                                New_Global_Address (Current_Filename_Node,
-                                                    Char_Ptr_Type));
+                                New_Name_Address (Current_Filename_Node));
             Finish_Record_Aggr (List_File, Res);
          end if;
 
@@ -2919,10 +2935,11 @@ package body Trans.Rtis is
 
    procedure Generate_Top (Nbr_Pkgs : out Natural)
    is
-      use Configuration;
+      use Vhdl.Configuration;
 
       Unit : Iir_Design_Unit;
       Lib  : Iir_Library_Declaration;
+      Lib_Unit : Iir;
       Prev : Rti_Block;
    begin
       Push_Rti_Node (Prev);
@@ -2936,52 +2953,66 @@ package body Trans.Rtis is
          Lib := Get_Library (Get_Design_File (Unit));
          Generate_Library (Lib, True);
 
-         if Get_Kind (Get_Library_Unit (Unit)) = Iir_Kind_Package_Declaration
-         then
-            Nbr_Pkgs := Nbr_Pkgs + 1;
-         end if;
+         --  Count the number of top-level packages.
+         Lib_Unit := Get_Library_Unit (Unit);
+         case Get_Kind (Lib_Unit) is
+            when Iir_Kind_Package_Declaration =>
+               Nbr_Pkgs := Nbr_Pkgs + 1;
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               if Get_Macro_Expanded_Flag
+                 (Get_Uninstantiated_Package_Decl (Lib_Unit))
+               then
+                  Nbr_Pkgs := Nbr_Pkgs + 1;
+               end if;
+            when others =>
+               null;
+         end case;
       end loop;
 
       Pop_Rti_Node (Prev);
    end Generate_Top;
 
-   function Get_Context_Rti (Node : Iir) return O_Cnode
+   function Get_Context_Rti (Node : Iir) return O_Dnode
    is
       Node_Info : constant Ortho_Info_Acc := Get_Info (Node);
-      Rti_Const : O_Dnode;
    begin
       case Get_Kind (Node) is
          when Iir_Kind_Component_Declaration =>
-            Rti_Const := Node_Info.Comp_Rti_Const;
+            return Node_Info.Comp_Rti_Const;
          when Iir_Kind_Component_Instantiation_Statement =>
-            Rti_Const := Node_Info.Block_Rti_Const;
+            return Node_Info.Block_Rti_Const;
          when Iir_Kind_Entity_Declaration
             | Iir_Kind_Architecture_Body
             | Iir_Kind_Block_Statement
             | Iir_Kind_Generate_Statement_Body =>
-            Rti_Const := Node_Info.Block_Rti_Const;
+            return Node_Info.Block_Rti_Const;
          when Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement =>
             declare
                Bod : constant Iir := Get_Generate_Statement_Body (Node);
                Bod_Info : constant Block_Info_Acc := Get_Info (Bod);
             begin
-               Rti_Const := Bod_Info.Block_Rti_Const;
+               return Bod_Info.Block_Rti_Const;
             end;
          when Iir_Kind_Package_Declaration
             | Iir_Kind_Package_Body =>
-            Rti_Const := Node_Info.Package_Rti_Const;
+            return Node_Info.Package_Rti_Const;
          when Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
-            Rti_Const := Node_Info.Process_Rti_Const;
-         when Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Cover_Statement
+            return Node_Info.Process_Rti_Const;
+         when Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
+           | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Endpoint_Declaration =>
-            Rti_Const := Node_Info.Psl_Rti_Const;
+            return Node_Info.Psl_Rti_Const;
          when others =>
             Error_Kind ("get_context_rti", Node);
       end case;
-      return New_Rti_Address (Rti_Const);
+   end Get_Context_Rti;
+
+   function Get_Context_Rti (Node : Iir) return O_Enode is
+   begin
+      return New_Rti_Address (Get_Context_Rti (Node));
    end Get_Context_Rti;
 
    function Get_Context_Addr (Node : Iir) return O_Enode
@@ -3011,8 +3042,9 @@ package body Trans.Rtis is
          when Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
             Ref := Get_Instance_Ref (Node_Info.Process_Scope);
-         when Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Cover_Statement
+         when Iir_Kind_Psl_Assert_Directive
+           | Iir_Kind_Psl_Assume_Directive
+           | Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Endpoint_Declaration =>
             Ref := Get_Instance_Ref (Node_Info.Psl_Scope);
          when others =>
@@ -3024,7 +3056,7 @@ package body Trans.Rtis is
    procedure Associate_Rti_Context (Assoc : in out O_Assoc_List; Node : Iir)
    is
    begin
-      New_Association (Assoc, New_Lit (Get_Context_Rti (Node)));
+      New_Association (Assoc, Get_Context_Rti (Node));
       New_Association (Assoc, Get_Context_Addr (Node));
    end Associate_Rti_Context;
 

@@ -42,20 +42,10 @@ package Grt.Astdio is
    procedure Put (Stream : FILEs; C : Character);
    procedure New_Line (Stream : FILEs);
 
-   --  Display time with unit, without space.
-   --  Eg: 10ns, 100ms, 97ps...
-   procedure Put_Time (Stream : FILEs; Time : Std_Time);
-
    --  And on stdout.
    procedure Put (Str : String);
    procedure Put (C : Character);
    procedure New_Line;
    procedure Put_Line (Str : String);
    procedure Put (Str : Ghdl_C_String);
-
-   --  Put STR using put procedures.
-   procedure Put_Str_Len (Stream : FILEs; Str : Ghdl_Str_Len_Type);
-
-   --  Put " to " or " downto ".
-   procedure Put_Dir (Stream : FILEs; Dir : Ghdl_Dir_Type);
 end Grt.Astdio;

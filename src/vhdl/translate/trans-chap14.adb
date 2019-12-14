@@ -16,10 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Evaluation; use Evaluation;
-with Std_Package; use Std_Package;
-with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans_Decls; use Trans_Decls;
 with Trans.Chap3;
 with Trans.Chap6;
@@ -340,7 +340,7 @@ package body Trans.Chap14 is
                Chap6.Check_Bound_Error
                  (New_Compare_Op (ON_Eq,
                   New_Obj_Value (L),
-                  New_Lit (Get_Ortho_Expr (Get_Nth_Element (List, Limit))),
+                  New_Lit (Get_Ortho_Literal (Get_Nth_Element (List, Limit))),
                   Ghdl_Bool_Type),
                   Attr, 0);
                return New_Convert_Ov
@@ -577,7 +577,7 @@ package body Trans.Chap14 is
       Info        : Type_Info_Acc;
       Var         : O_Dnode;
       Data        : Last_Time_Data;
-      Right_Bound : Iir_Int64;
+      Right_Bound : Int64;
       If_Blk      : O_If_Block;
    begin
       Name := Chap6.Translate_Name (Prefix, Mode_Signal);
@@ -809,8 +809,7 @@ package body Trans.Chap14 is
             | Type_Mode_E32
             | Type_Mode_P32
             | Type_Mode_P64 =>
-            New_Association
-              (Assoc, New_Lit (Rtis.New_Rti_Address (Pinfo.Type_Rti)));
+            New_Association (Assoc, Rtis.New_Rti_Address (Pinfo.Type_Rti));
          when Type_Mode_I32
            | Type_Mode_I64
            | Type_Mode_F64 =>
@@ -857,8 +856,7 @@ package body Trans.Chap14 is
             | Type_Mode_E32
             | Type_Mode_P32
             | Type_Mode_P64 =>
-            New_Association
-              (Assoc, New_Lit (Rtis.New_Rti_Address (Pinfo.Type_Rti)));
+            New_Association (Assoc, Rtis.New_Rti_Address (Pinfo.Type_Rti));
          when Type_Mode_I32
            | Type_Mode_I64
            | Type_Mode_F64 =>

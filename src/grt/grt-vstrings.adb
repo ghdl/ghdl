@@ -23,26 +23,12 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-with Interfaces;
-with Grt.Errors; use Grt.Errors;
 with Grt.C; use Grt.C;
-with Grt.Fcvt;
 
 package body Grt.Vstrings is
-   procedure Free (Fs : Fat_String_Acc);
-   pragma Import (C, Free);
-
-   function Malloc (Len : Natural) return Fat_String_Acc;
-   pragma Import (C, Malloc);
-
-   function Realloc (Ptr : Fat_String_Acc; Len : Natural)
-                    return Fat_String_Acc;
-   pragma Import (C, Realloc);
-
-
    procedure Free (Vstr : in out Vstring) is
    begin
-      Free (Vstr.Str);
+      Free (To_Address (Vstr.Str));
       Vstr := (Str => null,
                Max => 0,
                Len => 0);
@@ -70,9 +56,11 @@ package body Grt.Vstrings is
       while Nmax < Nlen loop
          Nmax := Nmax * 2;
       end loop;
-      Vstr.Str := Realloc (Vstr.Str, Nmax);
+      Vstr.Str := To_Ghdl_C_String
+        (Realloc (To_Address (Vstr.Str), size_t (Nmax)));
       if Vstr.Str = null then
-         Internal_Error ("grt.vstrings.grow: memory exhausted");
+         --  Memory exhausted.
+         raise Storage_Error;
       end if;
       Vstr.Max := Nmax;
    end Grow;
@@ -109,29 +97,25 @@ package body Grt.Vstrings is
    procedure Truncate (Vstr : in out Vstring; Len : Natural) is
    begin
       if Len > Vstr.Len then
-         Internal_Error ("grt.vstrings.truncate: bad len");
+         --  Incorrect length.
+         raise Constraint_Error;
       end if;
       Vstr.Len := Len;
    end Truncate;
 
-   procedure Put (Stream : FILEs; Vstr : Vstring)
-   is
-      S : size_t;
+   function Get_Address (Vstr : Vstring) return Address is
    begin
-      S := size_t (Vstr.Len);
-      if S > 0 then
-         S := fwrite (Vstr.Str (1)'Address, S, 1, Stream);
-      end if;
-   end Put;
+      return To_Address (Vstr.Str);
+   end Get_Address;
 
    function Get_C_String (Vstr : Vstring) return Ghdl_C_String is
    begin
-      return To_Ghdl_C_String (Vstr.Str.all'Address);
+      return Vstr.Str;
    end Get_C_String;
 
    procedure Free (Rstr : in out Rstring) is
    begin
-      Free (Rstr.Str);
+      Free (To_Address (Rstr.Str));
       Rstr := (Str => null,
                Max => 0,
                First => 0);
@@ -146,7 +130,7 @@ package body Grt.Vstrings is
    is
       Len : constant Natural := Length (Rstr);
       Nlen : constant Natural := Len + Min;
-      Nstr : Fat_String_Acc;
+      Nstr : Ghdl_C_String;
       Nfirst : Natural;
       Nmax : Natural;
    begin
@@ -161,11 +145,11 @@ package body Grt.Vstrings is
       while Nmax < Nlen loop
          Nmax := Nmax * 2;
       end loop;
-      Nstr := Malloc (Nmax);
+      Nstr := To_Ghdl_C_String (Malloc (size_t (Nmax)));
       Nfirst := Nmax + 1 - Len;
       if Rstr.Str /= null then
          Nstr (Nfirst .. Nmax) := Rstr.Str (Rstr.First .. Rstr.Max);
-         Free (Rstr.Str);
+         Free (To_Address (Rstr.Str));
       end if;
       Rstr := (Str => Nstr,
                Max => Nmax,
@@ -197,8 +181,7 @@ package body Grt.Vstrings is
       Rstr.Str (Rstr.First .. Rstr.First + L - 1) := Str (1 .. L);
    end Prepend;
 
-   function Get_Address (Rstr : Rstring) return Address
-   is
+   function Get_Address (Rstr : Rstring) return Address is
    begin
       return Rstr.Str (Rstr.First)'Address;
    end Get_Address;
@@ -214,133 +197,4 @@ package body Grt.Vstrings is
            Rstr.Str (Rstr.First .. Rstr.First + Len - 1);
       end if;
    end Copy;
-
-   procedure Put (Stream : FILEs; Rstr : Rstring)
-   is
-      S : size_t;
-      pragma Unreferenced (S);
-   begin
-      S := fwrite (Get_Address (Rstr), size_t (Length (Rstr)), 1, Stream);
-   end Put;
-
-   generic
-      type Ntype is range <>;
-      --Max_Len : Natural;
-   procedure Gen_To_String (Str : out String; First : out Natural; N : Ntype);
-
-   procedure Gen_To_String (Str : out String; First : out Natural; N : Ntype)
-   is
-      subtype R_Type is String (1 .. Str'Length);
-      S : R_Type renames Str;
-      P : Natural := S'Last;
-      V : Ntype;
-   begin
-      if N > 0 then
-         V := -N;
-      else
-         V := N;
-      end if;
-      loop
-         S (P) := Character'Val (48 - (V rem 10));
-         V := V / 10;
-         exit when V = 0;
-         P := P - 1;
-      end loop;
-      if N < 0 then
-         P := P - 1;
-         S (P) := '-';
-      end if;
-      First := P;
-   end Gen_To_String;
-
-   procedure To_String_I32 is new Gen_To_String (Ntype => Ghdl_I32);
-
-   procedure To_String (Str : out String; First : out Natural; N : Ghdl_I32)
-     renames To_String_I32;
-
-   procedure To_String_I64 is new Gen_To_String (Ntype => Ghdl_I64);
-
-   procedure To_String (Str : out String; First : out Natural; N : Ghdl_I64)
-     renames To_String_I64;
-
-   procedure To_String (Str : out String; Last : out Natural; N : Ghdl_F64) is
-   begin
-      Grt.Fcvt.Format_Image (Str, Last, Interfaces.IEEE_Float_64 (N));
-   end To_String;
-
-   procedure To_String (Str : out String;
-                        Last : out Natural;
-                        N : Ghdl_F64;
-                        Nbr_Digits : Ghdl_I32) is
-   begin
-      Grt.Fcvt.Format_Digits
-        (Str, Last, Interfaces.IEEE_Float_64 (N), Natural (Nbr_Digits));
-   end To_String;
-
-   procedure To_String (Str : out String_Real_Format;
-                        Last : out Natural;
-                        N : Ghdl_F64;
-                        Format : Ghdl_C_String)
-   is
-      procedure Snprintf_Fmtf (Str : in out String;
-                               Len : Natural;
-                               Format : Ghdl_C_String;
-                               V : Ghdl_F64);
-      pragma Import (C, Snprintf_Fmtf, "__ghdl_snprintf_fmtf");
-   begin
-      --  FIXME: check format ('%', f/g/e/a)
-      Snprintf_Fmtf (Str, Str'Length, Format, N);
-      Last := strlen (To_Ghdl_C_String (Str'Address));
-   end To_String;
-
-   procedure To_String (Str : out String_Time_Unit;
-                        First : out Natural;
-                        Value : Ghdl_I64;
-                        Unit : Ghdl_I64)
-   is
-      V, U : Ghdl_I64;
-      D : Natural;
-      P : Natural := Str'Last;
-      Has_Digits : Boolean;
-   begin
-      --  Always work on negative values.
-      if Value > 0 then
-         V := -Value;
-      else
-         V := Value;
-      end if;
-
-      Has_Digits := False;
-      U := Unit;
-      loop
-         if U = 1 then
-            if Has_Digits then
-               Str (P) := '.';
-               P := P - 1;
-            else
-               Has_Digits := True;
-            end if;
-         end if;
-
-         D := Natural (-(V rem 10));
-         if D /= 0 or else Has_Digits then
-            Str (P) := Character'Val (48 + D);
-            P := P - 1;
-            Has_Digits := True;
-         end if;
-         U := U / 10;
-         V := V / 10;
-         exit when V = 0 and then U = 0;
-      end loop;
-      if not Has_Digits then
-         Str (P) := '0';
-      else
-         P := P + 1;
-      end if;
-      if Value < 0 then
-         P := P - 1;
-         Str (P) := '-';
-      end if;
-      First := P;
-   end To_String;
 end Grt.Vstrings;

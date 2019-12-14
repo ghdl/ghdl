@@ -33,6 +33,10 @@ with Interfaces;
 with Interfaces.C; use Interfaces.C;
 
 procedure Ortho_Code_Main is
+   function GetDefaultNormalizedTargetTriple return Cstring;
+   pragma Import (C, GetDefaultNormalizedTargetTriple,
+                  "LLVMGetDefaultNormalizedTargetTriple");
+
    --  Name of the output filename (given by option '-o').
    Output : String_Acc := null;
 
@@ -41,7 +45,10 @@ procedure Ortho_Code_Main is
    Output_Kind : Output_Kind_Type := Output_Object;
 
    --  True if the LLVM output must be displayed (set by '--dump-llvm')
-   Flag_Dump_Llvm : Boolean := False;
+   Flag_Dump_LLVM : Boolean := False;
+
+   --  Verify generated LLVM code.
+   Flag_Verify_LLVM : Boolean := False;
 
    --  Index of the first file argument.
    First_File : Natural;
@@ -92,7 +99,9 @@ begin
       begin
          if Arg (1) = '-' then
             if Arg = "--dump-llvm" then
-               Flag_Dump_Llvm := True;
+               Flag_Dump_LLVM := True;
+            elsif Arg = "--verify-llvm" then
+               Flag_Verify_LLVM := True;
             elsif Arg = "-o" then
                if Optind = Argc then
                   Put_Line (Standard_Error, "error: missing filename to '-o'");
@@ -187,7 +196,7 @@ begin
    Module := ModuleCreateWithName (Module_Name'Address);
 
    --  Extract target triple
-   Triple := GetDefaultTargetTriple;
+   Triple := GetDefaultNormalizedTargetTriple;
    SetTarget (Module, Triple);
 
    --  Get Target
@@ -231,12 +240,12 @@ begin
       end loop;
    end if;
 
-   if Flag_Dump_Llvm then
+   if Flag_Dump_LLVM then
       DumpModule (Module);
    end if;
 
    --  Verify module.
-   if False then
+   if Flag_Verify_LLVM then
       if LLVM.Analysis.VerifyModule
         (Module, LLVM.Analysis.PrintMessageAction, Msg'Access) /= 0
       then

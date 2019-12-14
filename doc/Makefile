@@ -1,23 +1,17 @@
 SRCS= \
 conf.py ../src/version.in \
-prolog.inc shields.inc shieldswho.inc \
+prolog.inc shields.json shieldswho.json \
 about.rst \
-appendix/Meta.rst appendix/Roadmap.rst \
-building/Building.rst \
-building/Directories.rst \
-building/gcc/GNULinux-GNAT.rst \
-building/gcc/index.rst \
-building/gcc/Windows-MinGW-GNAT.rst \
-building/llvm/GNULinux-GNAT.rst \
-building/llvm/index.rst \
-building/llvm/Windows-MinGW-GNAT.rst \
-building/mcode/GNULinux-GNAT.rst \
-building/mcode/index.rst \
-building/mcode/Windows-GNATGPL.rst \
-building/mcode/Windows-MinGW-GNAT.rst \
-building/PrecompileVendorPrimitives.rst \
+appendix/Meta.rst \
+appendix/Roadmap.rst \
 contribute.rst \
 genindex.rst \
+getting/Directories.rst \
+getting/GCC.rst \
+getting/index.rst \
+getting/LLVM.rst \
+getting/mcode.rst \
+getting/PrecompileVendorPrimitives.rst \
 getting/Releases.rst \
 index.rst \
 licenses.rst \
@@ -25,6 +19,7 @@ references/CodingStyle.rst \
 references/CommandReference.rst \
 references/ImplementationOfVHDL.rst \
 references/ImplementationOfVITAL.rst \
+using/Foreign.rst \
 using/InvokingGHDL.rst \
 using/QuickStartGuide.rst \
 using/Simulation.rst
@@ -35,13 +30,35 @@ CP=cp
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
-BUILDDIR      = build
+BUILDDIR      = _build
 
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees -T -D language=en $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 all: ghdl.info
+
+#---
+
+man:
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(BUILDDIR)/man
+
+#---
+
+html:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+
+#---
+
+latex:
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
+
+#---
+
+texi: ghdl.texi
+ghdl.texi: $(SRCS)
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
+	$(CP) $(BUILDDIR)/texinfo/GHDL.texi $@
 
 info: ghdl.info
 ghdl.info: ghdl.texi
@@ -58,13 +75,7 @@ pdf: ghdl.pdf
 ghdl.pdf: ghdl.dvi
 	dvipdf $<
 
-html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
-
-texi: ghdl.texi
-ghdl.texi: $(SRCS)
-	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
-	$(CP) $(BUILDDIR)/texinfo/GHDL.texi $@
+#---
 
 clean:
 	$(RM) *~ *.dvi *.info ghdl.aux ghdl.cp ghdl.fn ghdl.ky ghdl.log

@@ -24,6 +24,7 @@ architecture behav of atod is
      --  1.   4   0    d   e    4   8    6   7    6   6    5   3    b
 
      7.4505805969238281e-09
+     --  1.00000000 e-27
      );
 
 begin

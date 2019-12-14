@@ -35,7 +35,7 @@ architecture a of e is
       expected_to_string  => to_string,
       actual_to_string    => to_string
     );
-  alias T_SCOREBOARD is P_Scoreboard.ScoreBoardPType
+  alias T_SCOREBOARD is P_Scoreboard.ScoreBoardPType;
 
   shared variable ScoreBoard : T_SCOREBOARD;  -- this causes the error message
 begin

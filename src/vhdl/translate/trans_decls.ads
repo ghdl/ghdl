@@ -23,6 +23,9 @@ package Trans_Decls is
    Ghdl_Ieee_Assert_Failed : O_Dnode;
    Ghdl_Psl_Assert_Failed : O_Dnode;
 
+   Ghdl_Check_Stack_Allocation : O_Dnode;
+
+   Ghdl_Psl_Assume_Failed : O_Dnode;
    Ghdl_Psl_Cover : O_Dnode;
    Ghdl_Psl_Cover_Failed : O_Dnode;
    --  Procedure for report statement.
@@ -164,7 +167,8 @@ package Trans_Decls is
    Ghdl_Malloc : O_Dnode;
    Ghdl_Malloc0 : O_Dnode;
    Ghdl_Real_Exp : O_Dnode;
-   Ghdl_Integer_Exp : O_Dnode;
+   Ghdl_I32_Exp : O_Dnode;
+   Ghdl_I64_Exp : O_Dnode;
 
    --  Procedure called in case of check failed.
    Ghdl_Program_Error : O_Dnode;

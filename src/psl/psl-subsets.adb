@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
-with Types; use Types;
 
 package body PSL.Subsets is
    procedure Check_Simple (N : Node)
@@ -163,7 +163,8 @@ package body PSL.Subsets is
             Check_Simple (Get_Right (N));
          when N_Next
            | N_Next_A
-           | N_Next_E =>
+           | N_Next_E
+           | N_Paren_Prop =>
             Check_Simple (Get_Property (N));
          when N_Next_Event
            | N_Next_Event_A
@@ -171,7 +172,8 @@ package body PSL.Subsets is
            | N_Abort =>
             Check_Simple (Get_Boolean (N));
             Check_Simple (Get_Property (N));
-         when N_Not_Bool =>
+         when N_Not_Bool
+           | N_Paren_Bool =>
             Check_Simple (Get_Boolean (N));
          when N_Const_Parameter
            | N_Sequence_Parameter

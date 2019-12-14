@@ -45,6 +45,7 @@ with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Signals; use Grt.Signals;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Strings; use Grt.Strings;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Options;
@@ -188,8 +189,20 @@ package body Grt.Vpi is
             Trace ("vpiFullName");
          when vpiSize =>
             Trace ("vpiSize");
+         when vpiFile =>
+            Trace ("vpiFile");
+         when vpiLineNo =>
+            Trace ("vpiLineNo");
+
+         when vpiDefName =>
+            Trace ("vpiDefName");
          when vpiTimePrecision =>
             Trace ("vpiTimePrecision");
+         when vpiDefFile =>
+            Trace ("vpiDefFile");
+
+         --  Port and net properties
+
          when vpiScalar =>
             Trace ("vpiScalar");
          when vpiVector =>
@@ -199,6 +212,8 @@ package body Grt.Vpi is
             Trace ("vpiModule");
          when vpiNet =>
             Trace ("vpiNet");
+         when vpiPort =>
+            Trace ("vpiPort");
          when vpiParameter =>
             Trace ("vpiParameter");
          when vpiScope =>
@@ -325,7 +340,7 @@ package body Grt.Vpi is
          raise Program_Error;
       end if;
       Res := Std_Time (Unsigned_64 (V.mHigh) * 2 ** 32 + Unsigned_64 (V.mLow));
-      return Res * 1000;
+      return Res;
    end Vpi_Time_To_Time;
 
 -------------------------------------------------------------------------------
@@ -344,7 +359,7 @@ package body Grt.Vpi is
       Error : AvhpiErrorT;
    begin
       case aType is
-         when vpiNet =>
+         when vpiPort | vpiNet =>
             Rel := VhpiDecls;
          when vpiModule =>
             if Ref = null then
@@ -479,11 +494,22 @@ package body Grt.Vpi is
          when vpiType =>
             Res := Ref.mType;
          when vpiTimePrecision =>
-            Res := -12; -- In ps.
+            Res := -3 * Options.Time_Resolution_Scale;
          when vpiSize =>
             Res := Vpi_Get_Size (Ref);
          when vpiVector =>
             Res := Boolean'Pos (Vpi_Get_Vector (Ref));
+         when vpiDirection =>
+            case Vhpi_Get_Mode (Ref.Ref) is
+               when VhpiInMode =>
+                  Res := vpiInput;
+               when VhpiOutMode =>
+                  Res := vpiOutput;
+               when VhpiInoutMode =>
+                  Res := vpiInout;
+               when others =>
+                  Res := vpiNoDirection;
+            end case;
          when others =>
             dbgPut_Line ("vpi_get: unknown property");
             Res := 0;
@@ -512,8 +538,16 @@ package body Grt.Vpi is
            | VhpiForGenerateK
            | VhpiCompInstStmtK =>
             return vpiModule;
-         when VhpiPortDeclK
-           | VhpiSigDeclK =>
+         when VhpiPortDeclK =>
+            declare
+               Info : Verilog_Wire_Info;
+            begin
+               Get_Verilog_Wire (Res, Info);
+               if Info.Vtype /= Vcd_Bad then
+                  return vpiNet;
+               end if;
+            end;
+         when VhpiSigDeclK =>
             declare
                Info : Verilog_Wire_Info;
             begin
@@ -546,6 +580,9 @@ package body Grt.Vpi is
                                          Ref => Res);
          when vpiNet =>
             return new struct_vpiHandle'(mType => vpiNet,
+                                         Ref => Res);
+         when vpiPort =>
+            return new struct_vpiHandle'(mType => vpiPort,
                                          Ref => Res);
          when vpiParameter =>
             return new struct_vpiHandle'(mType => vpiParameter,
@@ -591,6 +628,8 @@ package body Grt.Vpi is
          when vpiInternalScope
            | vpiModule =>
             Expected_Kind := vpiModule;
+         when vpiPort =>
+            Expected_Kind := vpiPort;
          when vpiNet =>
             Expected_Kind := vpiNet;
          when others =>
@@ -602,7 +641,8 @@ package body Grt.Vpi is
          exit when Error /= AvhpiErrorOk;
 
          Kind := Vhpi_Handle_To_Vpi_Prop (Res);
-         if Kind /= vpiUndefined and then Kind = Expected_Kind then
+         if Kind /= vpiUndefined and then (Kind = Expected_Kind or
+           (Kind = vpiPort and Expected_Kind = vpiNet)) then
             return Build_vpiHandle (Res, Kind);
          end if;
       end loop;
@@ -721,7 +761,7 @@ package body Grt.Vpi is
          when vpiRightRange
            | vpiLeftRange =>
             case Ref.mType is
-               when vpiNet =>
+               when vpiPort| vpiNet =>
                   Res := new struct_vpiHandle (aType);
                   Res.Ref := Ref.Ref;
                   return Res;
@@ -1148,7 +1188,7 @@ package body Grt.Vpi is
 
       Res := Current_Time;
 
-      V := To_Unsigned_64 (Res) / 1000;
+      V := To_Unsigned_64 (Res);
       Time.mHigh := Unsigned_32 (V / 2 ** 32);
       Time.mLow  := Unsigned_32 (V mod 2 ** 32);
       Time.mReal := 0.0;
@@ -1683,8 +1723,8 @@ package body Grt.Vpi is
                Filename (Filename'Last) := NUL;
                Trace_File := fopen (Filename'Address, Mode'Address);
                if Trace_File = NULL_Stream then
-                  Error_C ("cannot open vpi trace file '");
-                  Error_C (Opt (F + 12 .. Opt'Last));
+                  Error_S ("cannot open vpi trace file '");
+                  Diag_C (Opt (F + 12 .. Opt'Last));
                   Error_E ("'");
                   return False;
                end if;
@@ -1692,8 +1732,8 @@ package body Grt.Vpi is
          elsif Opt'Length = 11 then
             Trace_File := stdout;
          else
-            Error_C ("incorrect option '");
-            Error_C (Opt);
+            Error_S ("incorrect option '");
+            Diag_C (Opt);
             Error_E ("'");
             return False;
          end if;

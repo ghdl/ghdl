@@ -347,21 +347,35 @@ package body Ortho_Mcode is
            (Ortho_Code.O_Dnode (Subprg), Ortho_Code.O_Tnode (Atype)));
    end New_Subprogram_Address;
 
-   function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode)
-                                         return O_Cnode is
+   function New_Global_Address (Lvalue : O_Gnode; Atype : O_Tnode)
+                               return O_Cnode is
    begin
       return O_Cnode
         (Ortho_Code.Consts.New_Global_Address
-           (Ortho_Code.O_Dnode (Decl), Ortho_Code.O_Tnode (Atype)));
+           (Ortho_Code.O_Gnode (Lvalue), Ortho_Code.O_Tnode (Atype)));
    end New_Global_Address;
 
-   function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
+   function New_Global_Unchecked_Address (Lvalue : O_Gnode; Atype : O_Tnode)
                                          return O_Cnode is
    begin
       return O_Cnode
         (Ortho_Code.Consts.New_Global_Unchecked_Address
-           (Ortho_Code.O_Dnode (Decl), Ortho_Code.O_Tnode (Atype)));
+           (Ortho_Code.O_Gnode (Lvalue), Ortho_Code.O_Tnode (Atype)));
    end New_Global_Unchecked_Address;
+
+   function New_Global (Decl : O_Dnode) return O_Gnode is
+   begin
+      return O_Gnode
+        (Ortho_Code.Consts.New_Global (Ortho_Code.O_Dnode (Decl)));
+   end New_Global;
+
+   function New_Global_Selected_Element (Rec : O_Gnode; El : O_Fnode)
+                                        return O_Gnode is
+   begin
+      return O_Gnode
+        (Ortho_Code.Consts.New_Global_Selected_Element
+           (Ortho_Code.O_Gnode (Rec), Ortho_Code.O_Fnode (El)));
+   end New_Global_Selected_Element;
 
    function New_Lit (Lit : O_Cnode) return O_Enode is
    begin

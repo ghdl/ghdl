@@ -50,10 +50,12 @@ package Ortho_LLVM is
    type O_Tnode is private;
    type O_Snode is private;
    type O_Dnode is private;
+   type O_Gnode is private;
    type O_Fnode is private;
 
    O_Cnode_Null : constant O_Cnode;
    O_Dnode_Null : constant O_Dnode;
+   O_Gnode_Null : constant O_Gnode;
    O_Enode_Null : constant O_Enode;
    O_Fnode_Null : constant O_Fnode;
    O_Lnode_Null : constant O_Lnode;
@@ -199,17 +201,17 @@ package Ortho_LLVM is
 
    --  Get the address of a subprogram.
    function New_Subprogram_Address (Subprg : O_Dnode; Atype : O_Tnode)
-     return O_Cnode;
+                                   return O_Cnode;
 
    --  Get the address of LVALUE.
    --  ATYPE must be a type access whose designated type is the type of LVALUE.
    --  FIXME: what about arrays.
-   function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode)
+   function New_Global_Address (Lvalue : O_Gnode; Atype : O_Tnode)
                                return O_Cnode;
 
    --  Same as New_Address but without any restriction.
-   function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
-     return O_Cnode;
+   function New_Global_Unchecked_Address (Lvalue : O_Gnode; Atype : O_Tnode)
+                                         return O_Cnode;
 
    -------------------
    --  Expressions  --
@@ -308,12 +310,15 @@ package Ortho_LLVM is
    --  base type of ARR.
    --  INDEX must be of the type of the array index.
    function New_Slice (Arr : O_Lnode; Res_Type : O_Tnode; Index : O_Enode)
-     return O_Lnode;
+                      return O_Lnode;
 
    --  Get an element of a record or a union.
    --  Type of REC must be a record or a union type.
    function New_Selected_Element (Rec : O_Lnode; El : O_Fnode)
-     return O_Lnode;
+                                 return O_Lnode;
+
+   function New_Global_Selected_Element (Rec : O_Gnode; El : O_Fnode)
+                                        return O_Gnode;
 
    --  Reference an access.
    --  Type of ACC must be an access type.
@@ -339,6 +344,9 @@ package Ortho_LLVM is
 
    --  Get an lvalue from a declaration.
    function New_Obj (Obj : O_Dnode) return O_Lnode;
+
+   --  Get a global lvalue from a declaration.
+   function New_Global (Decl : O_Dnode) return O_Gnode;
 
    --  Return a pointer of type RTPE to SIZE bytes allocated on the stack.
    function New_Alloca (Rtype : O_Tnode; Size : O_Enode) return O_Enode;
@@ -613,6 +621,13 @@ private
    end record;
 
    O_Lnode_Null : constant O_Lnode := (False, Null_ValueRef, O_Tnode_Null);
+
+   type O_Gnode is record
+      LLVM : ValueRef;
+      Ltype : O_Tnode;
+   end record;
+
+   O_Gnode_Null : constant O_Gnode := (Null_ValueRef, O_Tnode_Null);
 
    type O_Snode is record
       --  First BB in the loop body.

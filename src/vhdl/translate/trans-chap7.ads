@@ -33,7 +33,9 @@ package Trans.Chap7 is
 
    --  Translate expression EXPR into ortho tree.
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
-                                     return O_Enode;
+                                 return O_Enode;
+   function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
+                                 return Mnode;
 
    --  Translate range and return an lvalue containing the range.
    --  The node returned can be used only one time.
@@ -68,17 +70,16 @@ package Trans.Chap7 is
                                           return O_Cnode;
 
    --  Convert (if necessary) EXPR of type EXPR_TYPE to type ATYPE.
-   function Translate_Implicit_Conv
-     (Expr      : O_Enode;
-      Expr_Type : Iir;
-      Atype     : Iir;
-      Is_Sig    : Object_Kind_Type;
-      Loc       : Iir)
-         return O_Enode;
+   function Translate_Implicit_Conv (Expr      : O_Enode;
+                                     Expr_Type : Iir;
+                                     Atype     : Iir;
+                                     Is_Sig    : Object_Kind_Type;
+                                     Loc       : Iir)
+                                    return O_Enode;
 
    function Translate_Type_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
-         return O_Enode;
+     return O_Enode;
 
    --  Convert bounds SRC (of type SRC_TYPE) to RES (of type RES_TYPE).
    procedure Translate_Type_Conversion_Bounds
@@ -112,6 +113,9 @@ package Trans.Chap7 is
    --  Assign AGGR to TARGET of type TARGET_TYPE.
    procedure Translate_Aggregate
      (Target : Mnode; Target_Type : Iir; Aggr : Iir);
+
+   --  Fill BOUNDS from aggregate AGGR.
+   procedure Translate_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir);
 
    --  Convert bounds access PTR to a fat pointer.
    function Bounds_Acc_To_Fat_Pointer (Ptr : O_Dnode; Acc_Type : Iir)

@@ -59,6 +59,10 @@ package PSL.NFAs is
    procedure Set_Final_State (N : NFA; S : NFA_State);
    function Get_Final_State (N : NFA) return NFA_State;
 
+   --  Each NFA also can have an active state.
+   procedure Set_Active_State (N : NFA; S : NFA_State);
+   function Get_Active_State (N : NFA) return NFA_State;
+
    --  Iterate on all states.
    function Get_First_State (N : NFA) return NFA_State;
    function Get_Next_State (S : NFA_State) return NFA_State;

@@ -18,9 +18,29 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Iirs; use Iirs;
+with Types; use Types;
+with Errorout;
+
+with Netlists;
+
+with Vhdl.Nodes; use Vhdl.Nodes;
+with Vhdl.Errors;
 
 package Synth.Source is
-   subtype Syn_Src is Iir;
-   No_Syn_Src : constant Syn_Src := Null_Iir;
+   subtype Syn_Src is Node;
+   No_Syn_Src : constant Syn_Src := Null_Node;
+
+   function "+" (N : Node) return Location_Type renames Vhdl.Errors."+";
+   function "+" (N : Node) return Errorout.Earg_Type renames Vhdl.Errors."+";
+
+   procedure Set_Location (N : Netlists.Net; Src : Syn_Src);
+   pragma Inline (Set_Location);
+
+   procedure Set_Location (Inst : Netlists.Instance; Src : Syn_Src);
+   pragma Inline (Set_Location);
+
+   --  Set only if not yet set.
+   procedure Set_Location_Maybe (Inst : Netlists.Instance; Src : Syn_Src);
+   procedure Set_Location_Maybe (N : Netlists.Net; Src : Syn_Src);
+   pragma Inline (Set_Location);
 end Synth.Source;

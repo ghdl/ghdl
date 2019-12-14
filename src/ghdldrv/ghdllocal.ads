@@ -15,9 +15,12 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Types; use Types;
+with Options; use Options;
 with Ghdlmain; use Ghdlmain;
-with Iirs; use Iirs;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Ghdllocal is
    --  Init procedure for the functionnal interface.
@@ -25,7 +28,7 @@ package Ghdllocal is
 
    --  Handle:
    --  --std=xx, --work=xx, -Pxxx, --workdir=x, --ieee=x, -Px, and -v
-   function Decode_Driver_Option (Option : String) return Boolean;
+   function Decode_Driver_Option (Opt : String) return Option_State;
 
    type Command_Lib is abstract new Command_Type with null record;
 
@@ -36,7 +39,7 @@ package Ghdllocal is
    procedure Decode_Option (Cmd : in out Command_Lib;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    --  Disp detailled help.
    procedure Disp_Long_Help (Cmd : Command_Lib);
@@ -47,7 +50,7 @@ package Ghdllocal is
    --  getenv ("GHDL_PREFIX").  Set by Setup_Libraries.
    Prefix_Env : String_Access := null;
 
-   --  Installation prefix (deduced from executable path).
+   --  Installation prefix (deduced from executable path and without bin/).
    Exec_Prefix : String_Access;
 
    --  Path prefix for libraries.
@@ -55,6 +58,9 @@ package Ghdllocal is
 
    --  Set with -v option.
    Flag_Verbose : Boolean := False;
+
+   --  True if --post is present.
+   Flag_Postprocess : Boolean := False;
 
    --  Suffix for asm files.
    Asm_Suffix : constant String := ".s";
@@ -113,19 +119,19 @@ package Ghdllocal is
    procedure Setup_Libraries (Load : Boolean);
 
    --  Set Exec_Prefix from program name.  Called by Setup_Libraries.
-   procedure Set_Exec_Prefix;
+   procedure Set_Exec_Prefix_From_Program_Name;
 
    --  Setup library, analyze FILES, and if SAVE_LIBRARY is set save the
    --  work library only
-   procedure Analyze_Files (Files : Argument_List; Save_Library : Boolean);
+   procedure Analyze_Files
+     (Files : Argument_List; Save_Library : Boolean; Error : out Boolean);
 
    --  Load and parse all libraries and files, starting from the work library.
    --  The work library must already be loaded.
    --  Raise errorout.compilation_error in case of error (parse error).
    procedure Load_All_Libraries_And_Files;
 
-   function Build_Dependence (Prim : String_Access; Sec : String_Access)
-     return Iir_List;
+   function Build_Dependence (Prim : Name_Id; Sec : Name_Id) return Iir_List;
 
    --  Return True iff file FILE has been modified (the file time stamp does
    --  no correspond to what was recorded in the library).
@@ -135,12 +141,12 @@ package Ghdllocal is
    --  has been analyzed more recently.
    function Is_File_Outdated (File : Iir_Design_File) return Boolean;
 
-   Prim_Name : String_Access;
-   Sec_Name : String_Access;
-
-   --  Set PRIM_NAME and SEC_NAME.
-   procedure Extract_Elab_Unit
-     (Cmd_Name : String; Args : Argument_List; Next_Arg : out Natural);
+   --  Extract PRIM_ID and SEC_ID from ARGS.
+   procedure Extract_Elab_Unit (Cmd_Name : String;
+                                Args : Argument_List;
+                                Next_Arg : out Natural;
+                                Prim_Id : out Name_Id;
+                                Sec_Id : out Name_Id);
 
    procedure Register_Commands;
 end Ghdllocal;

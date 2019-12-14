@@ -27,7 +27,7 @@ package body Ortho_LLVM is
    --  The current function node (needed for return type).
    Cur_Func_Decl : O_Dnode;
 
-   --  Wether the code is currently unreachable.  LLVM doesn't accept basic
+   --  Whether the code is currently unreachable.  LLVM doesn't accept basic
    --  blocks that cannot be reached (using trivial rules).  So we need to
    --  discard instructions after a return, a next or an exit statement.
    Unreach : Boolean;
@@ -782,22 +782,21 @@ package body Ortho_LLVM is
    -- New_Global_Address --
    ------------------------
 
-   function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode)
+   function New_Global_Address (Lvalue : O_Gnode; Atype : O_Tnode)
                                return O_Cnode is
    begin
-      return O_Cnode'(LLVM => ConstBitCast (Decl.LLVM, Get_LLVM_Type (Atype)),
-                      Ctype => Atype);
+      return New_Global_Unchecked_Address (Lvalue, Atype);
    end New_Global_Address;
 
    ----------------------------------
    -- New_Global_Unchecked_Address --
    ----------------------------------
 
-   function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
-                                         return O_Cnode
-   is
+   function New_Global_Unchecked_Address (Lvalue : O_Gnode; Atype : O_Tnode)
+                                         return O_Cnode is
    begin
-      return O_Cnode'(LLVM => ConstBitCast (Decl.LLVM, Get_LLVM_Type (Atype)),
+      return O_Cnode'(LLVM => ConstBitCast (Lvalue.LLVM,
+                                            Get_LLVM_Type (Atype)),
                       Ctype => Atype);
    end New_Global_Unchecked_Address;
 
@@ -810,6 +809,24 @@ package body Ortho_LLVM is
       return O_Enode'(LLVM => Lit.LLVM,
                       Etype => Lit.Ctype);
    end New_Lit;
+
+   ----------------
+   -- New_Global --
+   ----------------
+
+   function New_Global (Decl : O_Dnode) return O_Gnode is
+   begin
+      --  Can be used to build global objects, even when Unreach is set.
+      --  As this doesn't generate code, this is ok.
+      case Decl.Kind is
+         when ON_Const_Decl
+           | ON_Var_Decl =>
+            return O_Gnode'(LLVM => Decl.LLVM,
+                            Ltype => Decl.Dtype);
+         when others =>
+            raise Program_Error;
+      end case;
+   end New_Global;
 
    -------------------
    -- New_Dyadic_Op --
@@ -1177,6 +1194,28 @@ package body Ortho_LLVM is
       return O_Lnode'(Direct => False, LLVM => Res, Ltype => El.Ftype);
    end New_Selected_Element;
 
+   function New_Global_Selected_Element (Rec : O_Gnode; El : O_Fnode)
+                                        return O_Gnode
+   is
+      Res : ValueRef;
+   begin
+      case El.Kind is
+         when OF_Record =>
+            declare
+               Idx : constant ValueRefArray (1 .. 2) :=
+                 (ConstInt (Int32Type, 0, 0),
+                  ConstInt (Int32Type, Unsigned_64 (El.Index), 0));
+            begin
+               Res := ConstGEP (Rec.LLVM, Idx, 2);
+            end;
+         when OF_Union =>
+            Res := ConstBitCast (Rec.LLVM, El.Ptr_Type);
+         when OF_None =>
+            raise Program_Error;
+      end case;
+      return O_Gnode'(LLVM => Res, Ltype => El.Ftype);
+   end New_Global_Selected_Element;
+
    ------------------------
    -- New_Access_Element --
    ------------------------
@@ -1367,12 +1406,8 @@ package body Ortho_LLVM is
 
    function New_Obj (Obj : O_Dnode) return O_Lnode is
    begin
-      if Unreach then
-         return O_Lnode'(Direct => False,
-                         LLVM => Null_ValueRef,
-                         Ltype => Obj.Dtype);
-      end if;
-
+      --  Can be used to build global objects, even when Unreach is set.
+      --  As this doesn't generate code, this is ok.
       case Obj.Kind is
          when ON_Const_Decl
            | ON_Var_Decl
@@ -1541,10 +1576,13 @@ package body Ortho_LLVM is
       Decl : ValueRef;
    begin
       if Storage = O_Storage_Local then
-         Res := (Kind => ON_Local_Decl,
-                 LLVM => BuildAlloca
-                   (Decl_Builder, Get_LLVM_Type (Atype), Get_Cstring (Ident)),
-                 Dtype => Atype);
+         if Unreach then
+            Decl := Null_ValueRef;
+         else
+            Decl := BuildAlloca
+              (Decl_Builder, Get_LLVM_Type (Atype), Get_Cstring (Ident));
+         end if;
+         Res := (Kind => ON_Local_Decl, LLVM => Decl, Dtype => Atype);
       else
          if Storage = O_Storage_External then
             Decl := GetNamedGlobal (Module, Get_Cstring (Ident));
@@ -1722,7 +1760,8 @@ package body Ortho_LLVM is
 
       Cur_Func := Func.LLVM;
       Cur_Func_Decl := Func;
-      Unreach := False;
+
+      pragma Assert (not Unreach);
 
       Decl_BB := AppendBasicBlock (Cur_Func, Empty_Cstring);
       PositionBuilderAtEnd (Decl_Builder, Decl_BB);
@@ -1755,6 +1794,8 @@ package body Ortho_LLVM is
       Destroy_Declare_Block;
 
       Cur_Func := Null_ValueRef;
+
+      Unreach := False;
    end Finish_Subprogram_Body;
 
    -------------------------
@@ -2025,7 +2066,6 @@ package body Ortho_LLVM is
       Res : ValueRef;
       pragma Unreferenced (Res);
    begin
-      --  FIXME: check Unreach
       if Unreach then
          Label := (Null_BasicBlockRef, Null_BasicBlockRef);
       else

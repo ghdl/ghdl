@@ -68,7 +68,7 @@ package body Grt.Wave_Opt.File is
    procedure Parse_Version (Line : String; Lineno : Positive);
 
    -- Print the version variable given as parameter
-   procedure Print_Version (Version : Version_Type);
+   procedure Diag_C_Version (Version : Version_Type);
 
    -- Parse a line where a signal path is set
    procedure Parse_Path (Line : in out String; Lineno : Positive);
@@ -125,15 +125,16 @@ package body Grt.Wave_Opt.File is
       end loop;
 
       if Version.Major = -1 then
-         Report_C ("warning: version wasn't set at the beginning of the" &
+         Warning_S ("version wasn't set at the beginning of the" &
                    " file; currently supported version is ");
-         Print_Version (Current_Version);
-         Report_E ("");
+         Diag_C_Version (Current_Version);
+         Warning_E;
       end if;
 
       if Tree_Is_Empty then
-         Report_E ("No signal path was found in the wave option file," &
-                   " then every signals will be displayed.");
+         Warning_S ("No signal path was found in the wave option file," &
+                      " then every signals will be displayed.");
+         Warning_E;
       end if;
 
       fclose (Stream);
@@ -196,25 +197,26 @@ package body Grt.Wave_Opt.File is
       if Version.Major /= Current_Version.Major
         or else Version.Minor > Current_Version.Minor
       then
-         Print_Context (Line'First, Lineno, Error);
-         Error_C ("unsupported format version; it must be ");
+         Error_S;
+         Diag_C_Context (Line'First, Lineno);
+         Diag_C ("unsupported format version; it must be ");
          if Current_Version.Minor /= 0 then
-            Error_C ("between ");
-            Print_Version (Version_Type'(Current_Version.Major, 0));
-            Error_C (" and ");
+            Diag_C ("between ");
+            Diag_C_Version (Version_Type'(Current_Version.Major, 0));
+            Diag_C (" and ");
          end if;
-         Print_Version (Current_Version);
+         Diag_C_Version (Current_Version);
          Error_E;
       end if;
 
    end Parse_Version;
 
-   procedure Print_Version (Version : Version_Type) is
+   procedure Diag_C_Version (Version : Version_Type) is
    begin
-      Report_C (Version.Major);
-      Report_C (".");
-      Report_C (Version.Minor);
-   end Print_Version;
+      Diag_C (Version.Major);
+      Diag_C ('.');
+      Diag_C (Version.Minor);
+   end Diag_C_Version;
 
    procedure Initialize_Tree is
    begin
@@ -304,10 +306,12 @@ package body Grt.Wave_Opt.File is
             -- 2nd line, a is a signal but it isn't according to the 1st line.
             -- Then /top/a will supercede /top/a/b.
             if not Tree_Updated and Tree_Cursor.Next_Child /= null then
-               Print_Context (Lineno, Line'First, Warning);
-               Report_C ("supercedes line ");
-               Report_C (Tree_Cursor.Lineno);
-               Report_E (" and possibly more lines in between");
+               Warning_S;
+               Diag_C_Context (Lineno, Line'First);
+               Diag_C ("supercedes line ");
+               Diag_C (Tree_Cursor.Lineno);
+               Diag_C (" and possibly more lines in between");
+               Warning_E;
                -- TODO : destroy Tree_Cursor.Next_Child
                Tree_Cursor.Lineno := Lineno;
                Tree_Cursor.Next_Child := null;
@@ -357,9 +361,11 @@ package body Grt.Wave_Opt.File is
                -- the 1st line, a is a signal but it isn't according to the 2nd
                -- line. Then /top/a will supercede /top/a/b.
                if Level > 1 and not Last_Updated then
-                  Print_Context (Lineno, Elem_Expr'First, Warning);
-                  Report_C ("superceded by line ");
-                  Report_E (Cursor.Lineno);
+                  Warning_S;
+                  Diag_C_Context (Lineno, Elem_Expr'First);
+                  Diag_C ("superceded by line ");
+                  Diag_C (Cursor.Lineno);
+                  Warning_E;
                   return;
                   -- TODO : destroy Created_Elem
                end if;
@@ -417,22 +423,22 @@ package body Grt.Wave_Opt.File is
       if To_Be_Created then
          if Stream /= NULL_Stream then
             fclose (Stream);
-            Error_C ("'");
-            Error_C (Option_File);
+            Error_S ("'");
+            Diag_C (Option_File);
             Error_E ("' already exists and it won't be erased.");
          end if;
          State := Write_File;
          Stream := fopen (Option_File_C'Address, Write_Mode'Address);
          if Stream = NULL_Stream then
-            Error_C ("cannot create '");
-            Error_C (Option_File);
-            Error_E ("'.");
+            Error_S ("cannot create '");
+            Diag_C (Option_File);
+            Error_E ("'");
          end if;
          Write_Version (Stream);
       elsif Stream = NULL_Stream then
-         Error_C ("cannot read '");
-         Error_C (Option_File);
-         Error_E ("'.");
+         Error_S ("cannot read '");
+         Diag_C (Option_File);
+         Error_E ("'");
       end if;
 
       Initialize_Tree;

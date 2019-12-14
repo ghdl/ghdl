@@ -1,5 +1,12 @@
-**0.36-dev** (XXXX-XX-XX)
+**0.37-dev** (XXXX-XX-XX)
+- python binding added
+- synthesis added
+- PSL keywords are directly handled in vhdl-2008
+- Add support for assume.
+
+**0.36** (2019-03-03)
 - A new GitHub organization is created and the main repo is moved from [github.com/tgingold/ghdl](https://github.com/tgingold/ghdl) to [github.com/ghdl/ghdl](https://github.com/ghdl/ghdl). Old refs will continue working, because permanent redirects are set up. However, we suggest every contributor to update the remote URLs in their local clones.
+- Add support for unbounded arrays.
 
 **0.35** (2017-12-14)
 - Assert and report messages are sent to stdout (#394)

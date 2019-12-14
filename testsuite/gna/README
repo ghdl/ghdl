@@ -1,8 +1,17 @@
 Tests
 -----
 
-This directory contains a regression testsuite.  See the driver testsuite.sh
-for naming convention.
+This directory contains a regression testsuite.
+
+Each test correspond to one report, and is put in one directory (using
+the support/bug number)
+
+* bug0XX is for bugs not reported.
+* bug[1-9]XXX is for bugs reported on https://gna.org/bugs/?group=ghdl
+* srXXX is for support reported on https://gna.org/support/?group=ghdl
+* debXX is for bugs report on https://www.debian.org/Bugs/
+* ticketXX is from https://sourceforge.net/p/ghdl-updates/tickets/
+* issueXXX is from https://github.com/ghdl/ghdl/issues
 
 The tests are run by a unix shell like bash (not a c-shell).  This is fine
 under Linux and MacOS-X, but creates issues on Windows.

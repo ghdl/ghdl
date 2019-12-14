@@ -24,7 +24,7 @@ GNATMAKE=gnatmake
 CC=gcc
 CFLAGS=-g
 ALL_GNAT_FLAGS=-pipe -g -gnato -gnatwaeu -gnatf -gnaty3befhkmr
-GNATMAKE_FLAGS=-m $(ALL_GNAT_FLAGS) $(GNAT_FLAGS) -aI$(ortho_srcdir) -aI$(orthobe_srcdir) -aI.
+GNATMAKE_FLAGS=$(ALL_GNAT_FLAGS) $(GNATFLAGS) -aI$(ortho_srcdir) -aI$(orthobe_srcdir) -aI.
 #LARGS=-largs -static
 SED=sed
 

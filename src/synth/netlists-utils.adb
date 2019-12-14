@@ -18,16 +18,27 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Mutils;
+with Types_Utils; use Types_Utils;
+
+with Netlists.Gates; use Netlists.Gates;
+
+
 package body Netlists.Utils is
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr
    is
       M : constant Module := Get_Module (Inst);
    begin
-      if Is_Self_Instance (Inst) then
-         return Get_Nbr_Outputs (M);
-      else
-         return Get_Nbr_Inputs (M);
-      end if;
+      case Get_Id (M) is
+         when Id_Concatn =>
+            return Port_Nbr (Get_Param_Uns32 (Inst, 0));
+         when others =>
+            if Is_Self_Instance (Inst) then
+               return Get_Nbr_Outputs (M);
+            else
+               return Get_Nbr_Inputs (M);
+            end if;
+      end case;
    end Get_Nbr_Inputs;
 
    function Get_Nbr_Outputs (Inst : Instance) return Port_Nbr
@@ -45,7 +56,15 @@ package body Netlists.Utils is
    is
       M : constant Module := Get_Module (Inst);
    begin
-      return Get_Nbr_Params (M);
+      case Get_Id (M) is
+         when Id_Const_Bit =>
+            return Param_Nbr ((Get_Width (Get_Output (Inst, 0)) + 31) / 32);
+         when Id_Const_Log =>
+            return Param_Nbr
+              (2 * ((Get_Width (Get_Output (Inst, 0)) + 31) / 32));
+         when others =>
+            return Get_Nbr_Params (M);
+      end case;
    end Get_Nbr_Params;
 
    function Get_Param_Desc
@@ -68,6 +87,67 @@ package body Netlists.Utils is
    begin
       return Get_Output_Desc (M, I).Name;
    end Get_Output_Name;
+
+   function Get_Input_Width (M : Module; I : Port_Idx) return Width is
+   begin
+      return Get_Input_Desc (M, I).W;
+   end Get_Input_Width;
+
+   function Get_Output_Width (M : Module; I : Port_Idx) return Width is
+   begin
+      return Get_Output_Desc (M, I).W;
+   end Get_Output_Width;
+
+   function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net is
+   begin
+      return Get_Driver (Get_Input (Inst, Idx));
+   end Get_Input_Net;
+
+   function Is_Const_Module (Id : Module_Id) return Boolean is
+   begin
+      case Id is
+         when Id_Const_UB32
+           | Id_Const_SB32
+           | Id_Const_UL32
+           | Id_Const_X
+           | Id_Const_Z
+           | Id_Const_0
+           | Id_Const_Bit
+           | Id_Const_Log =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Const_Module;
+
+   function Is_Const_Net (N : Net) return Boolean is
+   begin
+      return Is_Const_Module (Get_Id (Get_Net_Parent (N)));
+   end Is_Const_Net;
+
+   function Get_Net_Uns64 (N : Net) return Uns64
+   is
+      Inst : constant Instance := Get_Net_Parent (N);
+   begin
+      case Get_Id (Inst) is
+         when Id_Const_UB32 =>
+            declare
+               Va : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+               Wd : constant Width := Get_Width (N);
+            begin
+               --  There must not be any garbage.
+               pragma Assert (Shift_Right (Va, Natural (Wd)) = 0);
+               return Uns64 (Va);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Net_Uns64;
+
+   function Get_Net_Int64 (N : Net) return Int64 is
+   begin
+      return To_Int64 (Get_Net_Uns64 (N));
+   end Get_Net_Int64;
 
    function Is_Connected (O : Net) return Boolean is
    begin
@@ -124,62 +204,8 @@ package body Netlists.Utils is
       Free_Instance (Inst);
    end Disconnect_And_Free;
 
-   function Is_Unused_Instance (Inst : Instance) return Boolean
-   is
-      Nbr_Outputs : constant Port_Idx := Get_Nbr_Outputs (Inst);
-      N : Net;
+   function Clog2 (W : Width) return Width is
    begin
-      --  An instance without outputs is considered as used.
-      if Nbr_Outputs = 0 then
-         return False;
-      end if;
-
-      for Idx in 0 .. Nbr_Outputs - 1 loop
-         N := Get_Output (Inst, Idx);
-         if Is_Connected (N) then
-            --  Connected output.
-            return False;
-         end if;
-      end loop;
-
-      --  All outputs are unconnected.
-      return True;
-   end Is_Unused_Instance;
-
-   procedure Remove_Unused_Instances (M : Module)
-   is
-      pragma Assert (Is_Valid (M));
-      Inst : Instance;
-   begin
-      Extract_All_Instances (M, Inst);
-
-      --  Add the self instance (the first one).
-      Append_Instance (M, Inst);
-      Inst := Get_Next_Instance (Inst);
-
-      while Inst /= No_Instance loop
-         if not (Get_Id (Inst) = Id_Free
-                   or else Is_Unused_Instance (Inst))
-         then
-            --  Keep this used instance.
-            Append_Instance (M, Inst);
-         end if;
-         Inst := Get_Next_Instance (Inst);
-      end loop;
-   end Remove_Unused_Instances;
-
-   procedure Remove_Free_Instances (M : Module)
-   is
-      pragma Assert (Is_Valid (M));
-      Inst : Instance;
-   begin
-      Extract_All_Instances (M, Inst);
-
-      while Inst /= No_Instance loop
-         if Get_Id (Inst) /= Id_Free then
-            Append_Instance (M, Inst);
-         end if;
-         Inst := Get_Next_Instance (Inst);
-      end loop;
-   end Remove_Free_Instances;
+      return Uns32 (Mutils.Clog2 (Uns64 (W)));
+   end Clog2;
 end Netlists.Utils;

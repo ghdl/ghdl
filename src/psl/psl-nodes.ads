@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Types; use Types;
+with PSL.Types; use PSL.Types;
 
 package PSL.Nodes is
    type Nkind is
@@ -66,6 +67,7 @@ package PSL.Nodes is
       N_Before,
       N_Or_Prop,
       N_And_Prop,
+      N_Paren_Prop,
 
       --  Sequences/SERE.
       N_Braced_SERE,
@@ -84,6 +86,7 @@ package PSL.Nodes is
       N_Equal_Repeat_Seq,
 
       --  Boolean layer.
+      N_Paren_Bool,
       N_Not_Bool,
       N_And_Bool,
       N_Or_Bool,
@@ -99,7 +102,7 @@ package PSL.Nodes is
      );
    for Nkind'Size use 8;
 
-   subtype N_Booleans is Nkind range N_Not_Bool .. N_True;
+   subtype N_Booleans is Nkind range N_Paren_Bool .. N_True;
    subtype N_Sequences is Nkind range N_Braced_SERE .. N_Equal_Repeat_Seq;
 
    type PSL_Types is
@@ -334,6 +337,10 @@ package PSL.Nodes is
    --
    --   Get/Set_Right (Field2)
 
+   -- N_Paren_Prop (Short)
+   --
+   --   Get/Set_Property (Field4)
+
    -- N_Until (Short)
    -- N_Before (Short)
    --
@@ -372,6 +379,16 @@ package PSL.Nodes is
    --   Get/Set_HDL_Node (Field1)
    --
    --   Get/Set_HDL_Index (Field2)
+   --
+   --   Get/Set_Hash (Field5)
+   --
+   --   Get/Set_Hash_Link (Field6)
+
+   -- N_Paren_Bool (Short)
+   --
+   --   Get/Set_Presence (State1)
+   --
+   --   Get/Set_Boolean (Field3)
    --
    --   Get/Set_Hash (Field5)
    --
@@ -425,7 +442,7 @@ package PSL.Nodes is
 
    subtype NFA is Types.PSL_NFA;
 
-   subtype HDL_Node is Types.Int32;
+   subtype HDL_Node is Int32;
    HDL_Null : constant HDL_Node := 0;
 
    -- General methods.

@@ -16,18 +16,20 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Iirs_Utils; use Iirs_Utils;
-with Errorout; use Errorout;
-with Std_Package; use Std_Package;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Flags;
 with Libraries;
-with Canon;
+with Vhdl.Canon;
 with Trans_Analyzes;
-with Nodes_Meta;
+with Vhdl.Nodes_Meta;
+with PSL.Types; use PSL.Types;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
-with Ieee.Std_Logic_1164;
+with PSL.Errors; use PSL.Errors;
+with Vhdl.Ieee.Std_Logic_1164;
 with Trans.Chap1;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -369,7 +371,7 @@ package body Trans.Chap9 is
    end Translate_Psl_Directive_Declarations;
 
    function Translate_Psl_Expr (Expr : PSL_Node; Eos : Boolean)
-                                   return O_Enode
+                               return O_Enode
    is
       use PSL.Nodes;
    begin
@@ -387,9 +389,9 @@ package body Trans.Chap9 is
                   return New_Compare_Op
                     (ON_Eq,
                      Res,
-                     New_Lit (Get_Ortho_Expr (Bit_1)),
+                     New_Lit (Get_Ortho_Literal (Bit_1)),
                      Get_Ortho_Type (Boolean_Type_Definition, Mode_Value));
-               elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+               elsif Rtype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   return New_Value
                     (New_Indexed_Element
                        (New_Obj (Ghdl_Std_Ulogic_To_Boolean_Array),
@@ -428,8 +430,8 @@ package body Trans.Chap9 is
    procedure Create_Psl_Final_Proc
      (Stmt : Iir; Base : Block_Info_Acc; Instance : out O_Dnode)
    is
-      Inter_List : O_Inter_List;
       Info       : constant Psl_Info_Acc := Get_Info (Stmt);
+      Inter_List : O_Inter_List;
    begin
       Start_Procedure_Decl (Inter_List, Create_Identifier ("FINALPROC"),
                             O_Storage_Private);
@@ -438,15 +440,95 @@ package body Trans.Chap9 is
       Finish_Subprogram_Decl (Inter_List, Info.Psl_Proc_Final_Subprg);
    end Create_Psl_Final_Proc;
 
+   --  Create an independant procedure to report coverage, as it is needed
+   --  twice and the expression must not be translated twice.
+   procedure Translate_Psl_Report
+     (Stmt : Iir; Base : Block_Info_Acc; Proc : out O_Dnode)
+   is
+      Inter_List : O_Inter_List;
+      Instance   : O_Dnode;
+      Pass       : O_Dnode;
+      Loc        : O_Dnode;
+      Msg_Var    : O_Dnode;
+      Blk        : O_If_Block;
+      Expr       : Iir;
+      Assocs     : O_Assoc_List;
+   begin
+      Start_Procedure_Decl (Inter_List, Create_Identifier ("REPORTPROC"),
+                            O_Storage_Private);
+      New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                          Base.Block_Decls_Ptr_Type);
+      New_Interface_Decl (Inter_List, Pass, Get_Identifier ("pass_fail"),
+                          Ghdl_Bool_Type);
+      Finish_Subprogram_Decl (Inter_List, Proc);
+
+      Start_Subprogram_Body (Proc);
+      Push_Local_Factory;
+      --  Push scope for architecture declarations.
+      Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
+
+      Loc := Chap4.Get_Location (Stmt);
+      New_Var_Decl (Msg_Var, Get_Identifier ("msg"), O_Storage_Local,
+                    Std_String_Ptr_Node);
+      Expr := Get_Report_Expression (Stmt);
+      if Expr = Null_Iir then
+         New_Assign_Stmt (New_Obj (Msg_Var),
+                          New_Lit (New_Null_Access (Std_String_Ptr_Node)));
+      else
+         New_Assign_Stmt
+           (New_Obj (Msg_Var),
+            Chap7.Translate_Expression (Expr, String_Type_Definition));
+      end if;
+
+      Start_If_Stmt (Blk, New_Obj_Value (Pass));
+
+      Start_Association (Assocs, Ghdl_Psl_Cover);
+      New_Association (Assocs, New_Obj_Value (Msg_Var));
+      New_Association (Assocs, New_Lit (Get_Ortho_Literal
+                                          (Severity_Level_Note)));
+      New_Association (Assocs, New_Address (New_Obj (Loc),
+                                            Ghdl_Location_Ptr_Node));
+      New_Procedure_Call (Assocs);
+
+      New_Else_Stmt (Blk);
+
+      Start_Association (Assocs, Ghdl_Psl_Cover_Failed);
+      New_Association (Assocs, New_Obj_Value (Msg_Var));
+      New_Association (Assocs, New_Lit (Get_Ortho_Literal
+                                          (Severity_Level_Error)));
+      New_Association (Assocs, New_Address (New_Obj (Loc),
+                                            Ghdl_Location_Ptr_Node));
+      New_Procedure_Call (Assocs);
+
+      Finish_If_Stmt (Blk);
+
+      Clear_Scope (Base.Block_Scope);
+      Pop_Local_Factory;
+      Finish_Subprogram_Body;
+   end Translate_Psl_Report;
+
+   procedure Call_Psl_Fail (Stmt : Iir; Subprg : O_Dnode)
+   is
+      Assocs  : O_Assoc_List;
+      Loc     : O_Dnode;
+   begin
+      Loc := Chap4.Get_Location (Stmt);
+      Start_Association (Assocs, Subprg);
+      New_Association (Assocs, New_Address (New_Obj (Loc),
+                                            Ghdl_Location_Ptr_Node));
+      New_Procedure_Call (Assocs);
+   end Call_Psl_Fail;
+
    procedure Translate_Psl_Directive_Statement
      (Stmt : Iir; Base : Block_Info_Acc)
    is
       use PSL.NFAs;
+      Info       : constant Psl_Info_Acc := Get_Info (Stmt);
       Inter_List : O_Inter_List;
       Instance   : O_Dnode;
-      Info       : constant Psl_Info_Acc := Get_Info (Stmt);
       Var_I      : O_Dnode;
       Var_Nvec   : O_Dnode;
+      Report_Proc : O_Dnode;
       Label      : O_Snode;
       Clk_Blk    : O_If_Block;
       S_Blk      : O_If_Block;
@@ -458,7 +540,15 @@ package body Trans.Chap9 is
       Cond       : O_Enode;
       NFA        : PSL_NFA;
       D_Lit      : O_Cnode;
+      Assocs     : O_Assoc_List;
    begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Psl_Cover_Directive =>
+            Translate_Psl_Report (Stmt, Base, Report_Proc);
+         when others =>
+            null;
+      end case;
+
       Start_Procedure_Decl (Inter_List, Create_Identifier ("PROC"),
                             O_Storage_Private);
       New_Interface_Decl (Inter_List, Instance, Wki_Instance,
@@ -478,7 +568,7 @@ package body Trans.Chap9 is
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       Init_Var (Var_I);
       case Get_Kind (Stmt) is
-         when Iir_Kind_Psl_Cover_Statement
+         when Iir_Kind_Psl_Cover_Directive
            | Iir_Kind_Psl_Endpoint_Declaration =>
             --  Sequences for cover or endpoints are detected on every cycle,
             --  so the start state is always active.
@@ -566,13 +656,17 @@ package body Trans.Chap9 is
          Start_If_Stmt (S_Blk, Cond);
          Open_Temp;
          case Get_Kind (Stmt) is
-            when Iir_Kind_Psl_Assert_Statement =>
+            when Iir_Kind_Psl_Assert_Directive =>
                Chap8.Translate_Report
                  (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
-            when Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Assume_Directive =>
+               Call_Psl_Fail (Stmt, Ghdl_Psl_Assume_Failed);
+            when Iir_Kind_Psl_Cover_Directive =>
                if Get_Report_Expression (Stmt) /= Null_Iir then
-                  Chap8.Translate_Report
-                     (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
+                  Start_Association (Assocs, Report_Proc);
+                  New_Association (Assocs, New_Obj_Value (Instance));
+                  New_Association (Assocs, New_Lit (Ghdl_Bool_True_Node));
+                  New_Procedure_Call (Assocs);
                end if;
             when others =>
                Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
@@ -617,7 +711,8 @@ package body Trans.Chap9 is
 
       --  The finalizer.
       case Get_Kind (Stmt) is
-         when Iir_Kind_Psl_Assert_Statement =>
+         when Iir_Kind_Psl_Assert_Directive
+            | Iir_Kind_Psl_Assume_Directive =>
             if Get_PSL_EOS_Flag (Stmt) then
                Create_Psl_Final_Proc (Stmt, Base, Instance);
 
@@ -644,8 +739,12 @@ package body Trans.Chap9 is
                        (ON_And, Cond,
                         Translate_Psl_Expr (Get_Edge_Expr (E), True));
                      Start_If_Stmt (E_Blk, Cond);
-                     Chap8.Translate_Report
-                       (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+                     if Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Directive then
+                        Chap8.Translate_Report
+                          (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+                     else
+                        Call_Psl_Fail (Stmt, Ghdl_Psl_Assume_Failed);
+                     end if;
                      New_Return_Stmt;
                      Finish_If_Stmt (E_Blk);
 
@@ -662,7 +761,7 @@ package body Trans.Chap9 is
                Info.Psl_Proc_Final_Subprg := O_Dnode_Null;
             end if;
 
-         when Iir_Kind_Psl_Cover_Statement =>
+         when Iir_Kind_Psl_Cover_Directive =>
             Create_Psl_Final_Proc (Stmt, Base, Instance);
 
             Start_Subprogram_Body (Info.Psl_Proc_Final_Subprg);
@@ -676,8 +775,10 @@ package body Trans.Chap9 is
                                New_Value (Get_Var (Info.Psl_Count_Var)),
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
-            Chap8.Translate_Report
-              (Stmt, Ghdl_Psl_Cover_Failed, Severity_Level_Error);
+            Start_Association (Assocs, Report_Proc);
+            New_Association (Assocs, New_Obj_Value (Instance));
+            New_Association (Assocs, New_Lit (Ghdl_Bool_False_Node));
+            New_Procedure_Call (Assocs);
             Finish_If_Stmt (S_Blk);
 
             Clear_Scope (Base.Block_Scope);
@@ -888,12 +989,13 @@ package body Trans.Chap9 is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement =>
                Translate_Process_Declarations (El);
-            when Iir_Kind_Psl_Default_Clock =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Declaration =>
-               null;
-            when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+            when Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive
+              | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Declarations (El);
             when Iir_Kind_Component_Instantiation_Statement =>
@@ -925,7 +1027,7 @@ package body Trans.Chap9 is
               (New_Selected_Element (Get_Instance_Ref (Ref_Scope),
                Comp_Field),
                Rtis.Ghdl_Component_Link_Stmt),
-            New_Lit (Rtis.Get_Context_Rti (Stmt)));
+            Rtis.Get_Context_Rti (Stmt));
       end Set_Component_Link;
 
       Info : constant Block_Info_Acc := Get_Info (Stmt);
@@ -1036,12 +1138,13 @@ package body Trans.Chap9 is
                if Flag_Direct_Drivers then
                   Chap9.Reset_Direct_Drivers (Stmt);
                end if;
-            when Iir_Kind_Psl_Default_Clock =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Declaration =>
-               null;
-            when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+            when Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive
+              | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Statement (Stmt, Base_Info);
             when Iir_Kind_Component_Instantiation_Statement =>
@@ -1173,11 +1276,20 @@ package body Trans.Chap9 is
       end if;
 
       declare
-         use Nodes_Meta;
+         use Vhdl.Nodes_Meta;
          Kind      : constant Iir_Kind := Get_Kind (N);
          Fields    : constant Fields_Array := Get_Fields (Kind);
          F         : Fields_Enum;
       begin
+         case Kind is
+            when Iir_Kind_Object_Alias_Declaration =>
+               --  No types to free, don't try to recurse as the name can be
+               --  a slice (which will then be freed).
+               return;
+            when others =>
+               null;
+         end case;
+
          for I in Fields'Range loop
             F := Fields (I);
             case F is
@@ -1261,7 +1373,7 @@ package body Trans.Chap9 is
                  | Type_Iir_Constraint
                  | Type_Iir_Mode
                  | Type_Iir_Index32
-                 | Type_Iir_Int64
+                 | Type_Int64
                  | Type_Boolean
                  | Type_Iir_Staticness
                  | Type_Iir_All_Sensitized
@@ -1273,7 +1385,7 @@ package body Trans.Chap9 is
                  | Type_Iir_Direction
                  | Type_Iir_Int32
                  | Type_Int32
-                 | Type_Iir_Fp64
+                 | Type_Fp64
                  | Type_Token_Type
                  | Type_Name_Id =>
                   null;
@@ -1308,8 +1420,8 @@ package body Trans.Chap9 is
       if Val = Mnode_Null then
          return Mnode_Null;
       else
-         return Chap3.Index_Base (Chap3.Get_Composite_Base (Val),
-                                  Targ_Type, New_Obj_Value (Index));
+         return Chap6.Translate_Indexed_Name_By_Offset
+           (Chap6.Stabilize_If_Unbounded (Val), Targ_Type, Index);
       end if;
    end Foreach_Non_Composite_Update_Data_Array_Mnode;
 
@@ -1609,7 +1721,7 @@ package body Trans.Chap9 is
                      --  From the port default value.
                      if Is_Valid (Get_Default_Value (Base)) then
                         Chap3.Translate_Object_Copy
-                          (Drv_Node, M2E (Chap6.Get_Port_Init_Value (Base)),
+                          (Drv_Node, Chap6.Get_Port_Init_Value (Base),
                            Base_Type);
                      else
                         Chap4.Init_Object (Drv_Node, Base_Type);
@@ -1669,7 +1781,7 @@ package body Trans.Chap9 is
       if Is_Sensitized then
          List_Orig := Get_Sensitivity_List (Proc);
          if List_Orig = Iir_List_All then
-            List := Canon.Canon_Extract_Process_Sensitivity (Proc);
+            List := Vhdl.Canon.Canon_Extract_Process_Sensitivity (Proc);
          else
             List := List_Orig;
          end if;
@@ -2519,9 +2631,8 @@ package body Trans.Chap9 is
       New_Association
         (Assoc, New_Convert_Ov (New_Value (M2Lv (Targ)), Ghdl_Signal_Ptr));
       New_Association
-        (Assoc,
-         New_Lit (New_Global_Unchecked_Address
-                    (Get_Info (Sig).Signal_Rti, Rtis.Ghdl_Rti_Access)));
+        (Assoc, New_Unchecked_Address (New_Obj (Get_Info (Sig).Signal_Rti),
+                                       Rtis.Ghdl_Rti_Access));
       New_Procedure_Call (Assoc);
    end Merge_Signals_Rti_Non_Composite;
 
@@ -2626,13 +2737,13 @@ package body Trans.Chap9 is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement =>
                null;
-            when Iir_Kind_Psl_Default_Clock =>
-               null;
-            when Iir_Kind_Psl_Declaration
-              | Iir_Kind_Psl_Endpoint_Declaration =>
-               null;
-            when Iir_Kind_Psl_Assert_Statement
-               | Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Declaration
+               | Iir_Kind_Psl_Endpoint_Declaration
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Assert_Directive
+               | Iir_Kind_Psl_Assume_Directive
+               | Iir_Kind_Psl_Cover_Directive =>
                null;
             when Iir_Kind_Component_Instantiation_Statement =>
                declare
@@ -2689,12 +2800,13 @@ package body Trans.Chap9 is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement =>
                Elab_Process (Stmt, Base_Info);
-            when Iir_Kind_Psl_Default_Clock =>
+            when Iir_Kind_Psl_Default_Clock
+               | Iir_Kind_Psl_Restrict_Directive
+               | Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Declaration =>
-               null;
-            when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+            when Iir_Kind_Psl_Assert_Directive
+              | Iir_Kind_Psl_Assume_Directive
+              | Iir_Kind_Psl_Cover_Directive
               | Iir_Kind_Psl_Endpoint_Declaration =>
                Elab_Psl_Directive (Stmt, Base_Info);
             when Iir_Kind_Component_Instantiation_Statement =>

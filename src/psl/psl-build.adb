@@ -19,6 +19,7 @@
 with Tables;
 with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
+with PSL.Types; use PSL.Types;
 with PSL.Errors; use PSL.Errors;
 with PSL.CSE; use PSL.CSE;
 with PSL.QM;
@@ -377,7 +378,9 @@ package body PSL.Build is
 
       Set_Epsilon_NFA (L, False);
 
-      if Get_First_Src_Edge (Final_L) = No_Edge then
+      if Get_First_Src_Edge (Final_L) = No_Edge
+        and then Final_L /= Get_Active_State (L)
+      then
          Remove_State (L, Final_L);
       end if;
       if Get_First_Dest_Edge (Start_R) = No_Edge then
@@ -942,7 +945,26 @@ package body PSL.Build is
       end loop;
    end Build_Abort;
 
-   function Build_Property_FA (N : Node) return NFA
+   function Build_Property_FA (N : Node; With_Active : Boolean) return NFA;
+
+   function Build_Overlap_Imp
+     (Left, Right : Node; With_Active : Boolean) return NFA
+   is
+      L, R : NFA;
+      Res : NFA;
+   begin
+      L := Build_SERE_FA (Left);
+      R := Build_Property_FA (Right, False);
+      if With_Active then
+         Set_Active_State (L, Get_Final_State (L));
+      end if;
+      Res := Build_Fusion (L, R);
+      --  Ensure the active state is kept.
+      pragma Assert (Res = L);
+      return Res;
+   end Build_Overlap_Imp;
+
+   function Build_Property_FA (N : Node; With_Active : Boolean) return NFA
    is
       L, R : NFA;
    begin
@@ -953,37 +975,44 @@ package body PSL.Build is
             R := Build_SERE_FA (N);
             return Determinize.Determinize (R);
          when N_Strong =>
-            R := Build_Property_FA (Get_Property (N));
+            R := Build_Property_FA (Get_Property (N), False);
             Build_Strong (R);
             return R;
          when N_Imp_Seq =>
             --  R |=> P  -->  {R; TRUE} |-> P
             L := Build_SERE_FA (Get_Sequence (N));
-            R := Build_Property_FA (Get_Property (N));
+            R := Build_Property_FA (Get_Property (N), False);
+            if With_Active then
+               declare
+                  A : NFA_State;
+               begin
+                  A := Add_State (L);
+                  Duplicate_Dest_Edges (L, Get_Final_State (L), A);
+                  Set_Active_State (L, A);
+               end;
+            end if;
             return Build_Concat (L, R);
          when N_Overlap_Imp_Seq =>
             --  S |-> P  is defined as Ac(S) : A(P)
-            L := Build_SERE_FA (Get_Sequence (N));
-            R := Build_Property_FA (Get_Property (N));
-            return Build_Fusion (L, R);
+            return Build_Overlap_Imp
+              (Get_Sequence (N), Get_Property (N), With_Active);
          when N_Log_Imp_Prop =>
             --  B -> P  -->  {B} |-> P  -->  Ac(B) : A(P)
-            L := Build_SERE_FA (Get_Left (N));
-            R := Build_Property_FA (Get_Right (N));
-            return Build_Fusion (L, R);
+            return Build_Overlap_Imp
+              (Get_Left (N), Get_Right (N), With_Active);
          when N_And_Prop =>
             --  P1 && P2  -->  A(P1) | A(P2)
-            L := Build_Property_FA (Get_Left (N));
-            R := Build_Property_FA (Get_Right (N));
+            L := Build_Property_FA (Get_Left (N), False);
+            R := Build_Property_FA (Get_Right (N), False);
             return Build_Or (L, R);
          when N_Never =>
             R := Build_SERE_FA (Get_Property (N));
             return Build_Initial_Rep (R);
          when N_Always =>
-            R := Build_Property_FA (Get_Property (N));
+            R := Build_Property_FA (Get_Property (N), With_Active);
             return Build_Initial_Rep (R);
          when N_Abort =>
-            R := Build_Property_FA (Get_Property (N));
+            R := Build_Property_FA (Get_Property (N), With_Active);
             Build_Abort (R, Get_Boolean (N));
             return R;
          when N_Property_Instance =>
@@ -992,7 +1021,7 @@ package body PSL.Build is
             begin
                Decl := Get_Declaration (N);
                Assoc_Instance (Decl, N);
-               R := Build_Property_FA (Get_Property (Decl));
+               R := Build_Property_FA (Get_Property (Decl), With_Active);
                Unassoc_Instance (Decl);
                return R;
             end;
@@ -1006,7 +1035,7 @@ package body PSL.Build is
       use PSL.NFAs.Utils;
       Res : NFA;
    begin
-      Res := Build_Property_FA (N);
+      Res := Build_Property_FA (N, True);
       if Optimize_Final then
          pragma Debug (Check_NFA (Res));
 

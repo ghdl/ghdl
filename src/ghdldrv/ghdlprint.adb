@@ -25,18 +25,22 @@ with Flags;
 with Name_Table; use Name_Table;
 with Files_Map;
 with Libraries;
+with Options; use Options;
 with Errorout; use Errorout;
-with Iirs_Utils; use Iirs_Utils;
-with Tokens;
-with Scanner;
-with Parse;
-with Canon;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Tokens;
+with Vhdl.Scanner;
+with Vhdl.Parse;
+with Vhdl.Canon;
 with Version;
-with Xrefs;
+with Vhdl.Xrefs;
+with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
-with Disp_Vhdl;
-with Elocations;
+with Vhdl.Prints;
+with Vhdl.Formatters;
+with Vhdl.Elocations;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -84,8 +88,8 @@ package body Ghdlprint is
    procedure PP_Html_File (File : Source_File_Entry)
    is
       use Flags;
-      use Scanner;
-      use Tokens;
+      use Vhdl.Scanner;
+      use Vhdl.Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
 
@@ -228,7 +232,7 @@ package body Ghdlprint is
 
       procedure Disp_Identifier
       is
-         use Xrefs;
+         use Vhdl.Xrefs;
          Ref : Xref;
          Decl : Iir;
          Bod : Iir;
@@ -310,7 +314,7 @@ package body Ghdlprint is
 
       procedure Disp_Attribute
       is
-         use Xrefs;
+         use Vhdl.Xrefs;
          Ref : Xref;
          Decl : Iir;
          Loc : Location_Type;
@@ -344,8 +348,8 @@ package body Ghdlprint is
          end if;
       end Disp_Attribute;
    begin
-      Scanner.Flag_Comment := True;
-      Scanner.Flag_Newline := True;
+      Vhdl.Scanner.Flag_Comment := True;
+      Vhdl.Scanner.Flag_Newline := True;
 
       Set_File (File);
       Buf := Get_File_Source (File);
@@ -366,7 +370,8 @@ package body Ghdlprint is
                New_Line;
                Line := Line + 1;
                Disp_Ln;
-            when Tok_Comment =>
+            when Tok_Line_Comment
+              | Tok_Block_Comment =>
                Disp_Spaces;
                case Html_Format is
                   when Html_2 =>
@@ -378,44 +383,40 @@ package body Ghdlprint is
                      Disp_Text;
                      Put ("</tt>");
                end case;
-            when Tok_Access .. Tok_Elsif
-              | Tok_Entity .. Tok_With
-              | Tok_Mod .. Tok_Rem
-              | Tok_And .. Tok_Not =>
-               Disp_Reserved;
-            when Tok_End =>
+            when Tok_Mod .. Tok_Vunit =>
                Disp_Reserved;
             when Tok_Semi_Colon =>
                Disp_Spaces;
                Disp_Text;
-            when Tok_Xnor .. Tok_Ror =>
-               Disp_Reserved;
-            when Tok_Protected =>
-               Disp_Reserved;
-            when Tok_Context
-              | Tok_Parameter =>
-               Disp_Reserved;
             when Tok_Across .. Tok_Tolerance =>
                Disp_Reserved;
-            when Tok_Psl_Default
-              | Tok_Psl_Clock
-              | Tok_Psl_Property
-              | Tok_Psl_Sequence
+            when Tok_Psl_Clock
               | Tok_Psl_Endpoint
-              | Tok_Psl_Cover
               | Tok_Psl_Boolean
               | Tok_Psl_Const
               | Tok_Inf
               | Tok_Within
               | Tok_Abort
               | Tok_Before
+              | Tok_Before_Em
+              | Tok_Before_Un
+              | Tok_Before_Em_Un
+              | Tok_Until_Em
+              | Tok_Until_Un
+              | Tok_Until_Em_Un
               | Tok_Always
               | Tok_Never
-              | Tok_Eventually
+              | Tok_Eventually_Em
+              | Tok_Next_Em
               | Tok_Next_A
+              | Tok_Next_A_Em
               | Tok_Next_E
+              | Tok_Next_E_Em
               | Tok_Next_Event
+              | Tok_Next_Event_Em
               | Tok_Next_Event_A
+              | Tok_Next_Event_A_Em
+              | Tok_Next_Event_E_Em
               | Tok_Next_Event_E =>
                Disp_Spaces;
                Disp_Text;
@@ -547,7 +548,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Chop; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Chop) return String;
-   procedure Perform_Action (Cmd : in out Command_Chop;
+   procedure Perform_Action (Cmd : Command_Chop;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Chop; Name : String)
@@ -565,10 +566,12 @@ package body Ghdlprint is
       return "--chop [OPTS] FILEs  Chop FILEs";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Chop; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Chop; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Ada.Characters.Latin_1;
+
+      Files : Iir_Array (Args'Range);
 
       function Build_File_Name_Length (Lib : Iir) return Natural
       is
@@ -689,10 +692,11 @@ package body Ghdlprint is
       --  exist.
       for I in Args'Range loop
          Id := Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
+         Design_File := Load_File_Name (Id);
          if Design_File = Null_Iir then
             raise Compile_Error;
          end if;
+         Files (I) := Design_File;
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
             Lib := Get_Library_Unit (Unit);
@@ -718,8 +722,7 @@ package body Ghdlprint is
 
       --  Second loop: do the real work.
       for I in Args'Range loop
-         Id := Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
+         Design_File := Files (I);
          Unit := Get_First_Design_Unit (Design_File);
          declare
             use Files_Map;
@@ -763,7 +766,7 @@ package body Ghdlprint is
                Lib := Get_Library_Unit (Unit);
 
                Location_To_File_Pos
-                 (Elocations.Get_End_Location (Lib), File_Entry, Lend);
+                 (Vhdl.Elocations.Get_End_Location (Lib), File_Entry, Lend);
                if Lend < First then
                   raise Internal_Error;
                end if;
@@ -843,7 +846,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Lines; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Lines) return String;
-   procedure Perform_Action (Cmd : in out Command_Lines;
+   procedure Perform_Action (Cmd : Command_Lines;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Lines; Name : String)
@@ -861,11 +864,11 @@ package body Ghdlprint is
       return "--lines FILEs      Precede line with its number";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Lines; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Lines; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Scanner;
-      use Tokens;
+      use Vhdl.Scanner;
+      use Vhdl.Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
 
@@ -918,7 +921,7 @@ package body Ghdlprint is
 
          Buf := Get_File_Source (File);
          for J in 1 .. Line loop
-            Ptr := Line_To_Position (File, J);
+            Ptr := File_Line_To_Position (File, J);
             exit when Ptr = Source_Ptr_Bad;
             exit when Buf (Ptr) = Files_Map.EOT;
 
@@ -958,11 +961,21 @@ package body Ghdlprint is
    end Perform_Action;
 
    --  Command Reprint.
-   type Command_Reprint is new Command_Lib with null record;
+   type Command_Reprint is new Command_Lib with record
+      Flag_Sem : Boolean := True;
+      Flag_Format : Boolean := False;
+      Flag_Indent : Boolean := False;
+      First_Line : Positive := 1;
+      Last_Line : Positive := Positive'Last;
+   end record;
    function Decode_Command (Cmd : Command_Reprint; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Reprint) return String;
-   procedure Perform_Action (Cmd : in out Command_Reprint;
+   procedure Decode_Option (Cmd : in out Command_Reprint;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State);
+   procedure Perform_Action (Cmd : Command_Reprint;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Reprint; Name : String)
@@ -980,44 +993,105 @@ package body Ghdlprint is
       return "--reprint [OPTS] FILEs    Redisplay FILEs";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Reprint;
+   procedure Decode_Option (Cmd : in out Command_Reprint;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_State)
+   is
+      pragma Assert (Option'First = 1);
+   begin
+      if Option = "--no-sem" then
+         Cmd.Flag_Sem := False;
+         Res := Option_Ok;
+      elsif Option = "--format" then
+         Cmd.Flag_Format := True;
+         Cmd.Flag_Indent := False;
+         Res := Option_Ok;
+      elsif Option = "--indent" then
+         Cmd.Flag_Format := False;
+         Cmd.Flag_Indent := True;
+         Res := Option_Ok;
+      elsif Option'Length > 8 and then Option (1 .. 8) = "--range=" then
+         declare
+            F : constant Natural := 9;
+            L : constant Natural := Option'Last;
+            Colon : constant Natural := Index (Option (F .. L), ':');
+         begin
+            if Colon = 0 then
+               Cmd.First_Line := Positive'Value (Option (F .. L));
+               Cmd.Last_Line := Cmd.First_Line;
+            else
+               if Colon > 9 then
+                  Cmd.First_Line := Positive'Value (Option (F .. Colon - 1));
+               end if;
+               if Colon < Option'Last then
+                  Cmd.Last_Line := Positive'Value (Option (Colon + 1 .. L));
+               end if;
+            end if;
+            Res := Option_Ok;
+         exception
+            when Constraint_Error =>
+               Res := Option_Err;
+         end;
+      else
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
+
+   procedure Perform_Action (Cmd : Command_Reprint;
                              Args : Argument_List)
    is
-      pragma Unreferenced (Cmd);
       Design_File : Iir_Design_File;
+
       Unit : Iir;
+      Next_Unit : Iir;
 
       Id : Name_Id;
-      Next_Unit : Iir;
    begin
-      Setup_Libraries (True);
+      if Cmd.Flag_Sem then
+         Setup_Libraries (True);
+      end if;
 
       --  Keep parenthesis during parse.
-      Parse.Flag_Parse_Parenthesis := True;
+      Vhdl.Parse.Flag_Parse_Parenthesis := True;
 
-      Canon.Canon_Flag_Concurrent_Stmts := False;
-      Canon.Canon_Flag_Configurations := False;
-      Canon.Canon_Flag_Specification_Lists := False;
-      Canon.Canon_Flag_Associations := False;
+      Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+      Vhdl.Canon.Canon_Flag_Configurations := False;
+      Vhdl.Canon.Canon_Flag_Specification_Lists := False;
+      Vhdl.Canon.Canon_Flag_Associations := False;
 
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
-         if Design_File = Null_Iir then
+         Design_File := Load_File_Name (Id);
+         if Design_File = Null_Iir
+           or else Errorout.Nbr_Errors > 0
+         then
             raise Errorout.Compilation_Error;
          end if;
 
          Unit := Get_First_Design_Unit (Design_File);
+         if Cmd.Flag_Sem then
+            Design_File := Null_Iir;
+         end if;
          while Unit /= Null_Iir loop
-            --  Analyze the design unit.
-            Libraries.Finish_Compilation (Unit, True);
+            if Cmd.Flag_Sem then
+               --  Analyze the design unit.
+               Vhdl.Sem_Lib.Finish_Compilation (Unit, True);
+               if Cmd.Flag_Sem and then Design_File = Null_Iir then
+                  Design_File := Get_Design_File (Unit);
+               end if;
+            end if;
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
-               Disp_Vhdl.Disp_Vhdl (Unit);
-               Set_Chain (Unit, Null_Iir);
-               Libraries.Add_Design_Unit_Into_Library (Unit);
+               if not (Cmd.Flag_Format or Cmd.Flag_Indent) then
+                  Vhdl.Prints.Disp_Vhdl (Unit);
+               end if;
+               if Cmd.Flag_Sem then
+                  Set_Chain (Unit, Null_Iir);
+                  Libraries.Add_Design_Unit_Into_Library (Unit);
+               end if;
             end if;
 
             Unit := Next_Unit;
@@ -1025,6 +1099,13 @@ package body Ghdlprint is
 
          if Errorout.Nbr_Errors > 0 then
             raise Errorout.Compilation_Error;
+         end if;
+
+         if Cmd.Flag_Format then
+            Vhdl.Formatters.Format (Design_File);
+         elsif Cmd.Flag_Indent then
+            Vhdl.Formatters.Indent (Design_File,
+                                    Cmd.First_Line, Cmd.Last_Line);
          end if;
       end loop;
    end Perform_Action;
@@ -1034,7 +1115,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Compare_Tokens) return String;
-   procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
+   procedure Perform_Action (Cmd : Command_Compare_Tokens;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
@@ -1052,12 +1133,12 @@ package body Ghdlprint is
       return "--compare-tokens [OPTS] REF FILEs    Compare FILEs with REF";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
+   procedure Perform_Action (Cmd : Command_Compare_Tokens;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Tokens;
-      use Scanner;
+      use Vhdl.Tokens;
+      use Vhdl.Scanner;
 
       package Ref_Tokens is new Tables
         (Table_Component_Type => Token_Type,
@@ -1100,7 +1181,8 @@ package body Ghdlprint is
             loop
                Scan;
                if Ref_Tokens.Table (Tok_Idx) /= Current_Token then
-                  Error_Msg_Parse ("token mismatch");
+                  Report_Msg (Msgid_Error, Errorout.Parse, Get_Token_Coord,
+                              "token mismatch");
                   exit;
                end if;
                case Current_Token is
@@ -1128,15 +1210,14 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
 
    procedure Disp_Long_Help (Cmd : Command_Html);
 
    procedure Decode_Option (Cmd : in out Command_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
-   is
+                            Res : out Option_State) is
    begin
       if Option = "--format=css" then
          Html_Format := Html_Css;
@@ -1161,7 +1242,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_PP_Html; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_PP_Html) return String;
-   procedure Perform_Action (Cmd : in out Command_PP_Html;
+   procedure Perform_Action (Cmd : Command_PP_Html;
                              Files : Argument_List);
 
    function Decode_Command (Cmd : Command_PP_Html; Name : String)
@@ -1179,7 +1260,7 @@ package body Ghdlprint is
       return "--pp-html FILEs    Pretty-print FILEs in HTML";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_PP_Html;
+   procedure Perform_Action (Cmd : Command_PP_Html;
                              Files : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1229,10 +1310,10 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Xref_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res);
+                            Res : out Option_State);
    procedure Disp_Long_Help (Cmd : Command_Xref_Html);
 
-   procedure Perform_Action (Cmd : in out Command_Xref_Html;
+   procedure Perform_Action (Cmd : Command_Xref_Html;
                              Files_Name : Argument_List);
 
    function Decode_Command (Cmd : Command_Xref_Html; Name : String)
@@ -1253,8 +1334,7 @@ package body Ghdlprint is
    procedure Decode_Option (Cmd : in out Command_Xref_Html;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
-   is
+                            Res : out Option_State) is
    begin
       if Option = "-o" then
          if Arg = "" then
@@ -1292,7 +1372,10 @@ package body Ghdlprint is
               | Date_Disk =>
                raise Internal_Error;
             when Date_Parse =>
-               Libraries.Load_Design_Unit (Unit, Null_Iir);
+               Vhdl.Sem_Lib.Load_Design_Unit (Unit, Unit);
+               if Errorout.Nbr_Errors /= 0 then
+                  raise Compilation_Error;
+               end if;
             when Date_Analyze =>
                null;
          end case;
@@ -1301,7 +1384,7 @@ package body Ghdlprint is
    end Analyze_Design_File_Units;
 
    procedure Perform_Action
-     (Cmd : in out Command_Xref_Html; Files_Name : Argument_List)
+     (Cmd : Command_Xref_Html; Files_Name : Argument_List)
    is
       use GNAT.Directory_Operations;
 
@@ -1315,30 +1398,33 @@ package body Ghdlprint is
       end record;
       type File_Data_Array is array (Files_Name'Range) of File_Data;
 
+      Output_Dir : String_Access;
+
       Files : File_Data_Array;
       Output : File_Type;
    begin
-      Xrefs.Init;
+      Vhdl.Xrefs.Init;
       Flags.Flag_Xref := True;
 
       --  Load work library.
       Setup_Libraries (True);
 
-      if Cmd.Output_Dir = null then
-         Cmd.Output_Dir := new String'("html");
-      elsif Cmd.Output_Dir.all = "-" then
-         Cmd.Output_Dir := null;
+      Output_Dir := Cmd.Output_Dir;
+      if Output_Dir = null then
+         Output_Dir := new String'("html");
+      elsif Output_Dir.all = "-" then
+         Output_Dir := null;
       end if;
 
       --  Try to create the directory.
-      if Cmd.Output_Dir /= null
-        and then not Is_Directory (Cmd.Output_Dir.all)
+      if Output_Dir /= null
+        and then not Is_Directory (Output_Dir.all)
       then
          begin
-            Make_Dir (Cmd.Output_Dir.all);
+            Make_Dir (Output_Dir.all);
          exception
             when Directory_Error =>
-               Error ("cannot create directory " & Cmd.Output_Dir.all);
+               Error ("cannot create directory " & Output_Dir.all);
                return;
          end;
       end if;
@@ -1352,7 +1438,7 @@ package body Ghdlprint is
             return;
          end if;
          Files (I).Fe := File;
-         Files (I).Design_File := Libraries.Load_File (File);
+         Files (I).Design_File := Load_File (File);
          if Files (I).Design_File = Null_Iir then
             return;
          end if;
@@ -1371,13 +1457,13 @@ package body Ghdlprint is
          Analyze_Design_File_Units (Files (I).Design_File);
       end loop;
 
-      Xrefs.Sort_By_Location;
+      Vhdl.Xrefs.Sort_By_Location;
 
       if False then
          --  Dump locations
-         for I in 1 .. Xrefs.Get_Last_Xref loop
+         for I in 1 .. Vhdl.Xrefs.Get_Last_Xref loop
             declare
-               use Xrefs;
+               use Vhdl.Xrefs;
 
                procedure Put_Loc (L : Location_Type)
                is
@@ -1424,9 +1510,9 @@ package body Ghdlprint is
       end loop;
 
       for I in Files'Range loop
-         if Cmd.Output_Dir /= null then
+         if Output_Dir /= null then
             Create (Output, Out_File,
-                    Cmd.Output_Dir.all & Directory_Separator
+                    Output_Dir.all & Directory_Separator
                     & Files (I).Output.all);
 
             Set_Output (Output);
@@ -1448,15 +1534,15 @@ package body Ghdlprint is
          PP_Html_File (Files (I).Fe);
          Put_Html_Foot;
 
-         if Cmd.Output_Dir /= null then
+         if Output_Dir /= null then
             Close (Output);
          end if;
       end loop;
 
       --  Create indexes.
-      if Cmd.Output_Dir /= null then
+      if Output_Dir /= null then
          Create (Output, Out_File,
-                 Cmd.Output_Dir.all & Directory_Separator & "index.html");
+                 Output_Dir.all & Directory_Separator & "index.html");
          Set_Output (Output);
 
          Put_Html_Header;
@@ -1502,11 +1588,11 @@ package body Ghdlprint is
       end if;
 
       if Html_Format = Html_Css
-        and then Cmd.Output_Dir /= null
+        and then Output_Dir /= null
       then
          declare
             Css_Filename : constant String :=
-              Cmd.Output_Dir.all & Directory_Separator & "ghdl.css";
+              Output_Dir.all & Directory_Separator & "ghdl.css";
          begin
             if not Is_Regular_File (Css_Filename & Nul) then
                Create (Output, Out_File, Css_Filename);
@@ -1534,7 +1620,7 @@ package body Ghdlprint is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Xref) return String;
 
-   procedure Perform_Action (Cmd : in out Command_Xref;
+   procedure Perform_Action (Cmd : Command_Xref;
                              Files_Name : Argument_List);
 
    function Decode_Command (Cmd : Command_Xref; Name : String)
@@ -1553,7 +1639,7 @@ package body Ghdlprint is
    end Get_Short_Help;
 
    procedure Perform_Action
-     (Cmd : in out Command_Xref; Files_Name : Argument_List)
+     (Cmd : Command_Xref; Files_Name : Argument_List)
    is
       pragma Unreferenced (Cmd);
 
@@ -1573,7 +1659,7 @@ package body Ghdlprint is
       --  Load work library.
       Setup_Libraries (True);
 
-      Xrefs.Init;
+      Vhdl.Xrefs.Init;
       Flags.Flag_Xref := True;
 
       --  Parse all files.
@@ -1585,7 +1671,7 @@ package body Ghdlprint is
             return;
          end if;
          Files (I).Fe := File;
-         Files (I).Design_File := Libraries.Load_File (File);
+         Files (I).Design_File := Load_File (File);
          if Files (I).Design_File = Null_Iir then
             return;
          end if;
@@ -1599,15 +1685,15 @@ package body Ghdlprint is
          Analyze_Design_File_Units (Files (I).Design_File);
       end loop;
 
-      Xrefs.Fix_End_Xrefs;
-      Xrefs.Sort_By_Node_Location;
+      Vhdl.Xrefs.Fix_End_Xrefs;
+      Vhdl.Xrefs.Sort_By_Node_Location;
 
       for F in Files'Range loop
 
          Put ("GHDL-XREF V0");
 
          declare
-            use Xrefs;
+            use Vhdl.Xrefs;
 
             Cur_Decl : Iir;
             Cur_File : Source_File_Entry;
@@ -1642,7 +1728,7 @@ package body Ghdlprint is
                if Loc_File /= Cur_File then
                   Cur_File := Loc_File;
                   Put ("XFILE: ");
-                  Dir := Get_Source_File_Directory (Cur_File);
+                  Dir := Get_Directory_Name (Cur_File);
                   if Dir /= Null_Identifier then
                      Put (Image (Dir));
                   end if;

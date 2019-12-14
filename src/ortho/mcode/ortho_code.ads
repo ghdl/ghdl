@@ -65,6 +65,10 @@ package Ortho_Code is
    for O_Lnode'Size use 32;
    O_Lnode_Null : constant O_Lnode := 0;
 
+   type O_Gnode is new Int32;
+   for O_Gnode'Size use 32;
+   O_Gnode_Null : constant O_Gnode := 0;
+
    type O_Ident is new Int32;
    O_Ident_Nul : constant O_Ident := 0;
 

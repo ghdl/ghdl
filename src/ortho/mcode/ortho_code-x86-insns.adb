@@ -848,7 +848,7 @@ package body Ortho_Code.X86.Insns is
                      Set_Addrl_Frame (Expr, Reload (Spill, R_Any32, Num));
                   end if;
                   return Expr;
-               when OE_Addrg =>
+               when OE_Addrd =>
                   return Expr;
                when others =>
                   Error_Reg ("reload: unhandle expr in b_off", Expr, Dest);
@@ -938,7 +938,7 @@ package body Ortho_Code.X86.Insns is
                   if Get_Addrl_Frame (Insn) /= O_Enode_Null then
                      Free_Insn_Regs (Get_Addrl_Frame (Insn));
                   end if;
-               when OE_Addrg =>
+               when OE_Addrd =>
                   --  RIP-relative, no reg to free.
                   null;
                when others =>
@@ -1358,11 +1358,11 @@ package body Ortho_Code.X86.Insns is
                when others =>
                   Error_Gen_Insn (Stmt, Reg);
             end case;
-         when OE_Addrg =>
+         when OE_Addrd =>
             if Flags.M64 then
                --  Use RIP-Relative addressing.
                if Reg = R_Sib
-                 and then not Is_External_Object (Get_Addr_Object (Stmt))
+                 and then not Is_External_Object (Get_Addr_Decl (Stmt))
                then
                   Set_Expr_Reg (Stmt, R_Sib);
                else
@@ -1901,6 +1901,8 @@ package body Ortho_Code.X86.Insns is
                when R_Any_Cc =>
                   Right := Gen_Insn (Right, R_Irm, Num);
                   Left := Gen_Insn (Left, R_Any8, Num);
+                  Left := Reload (Left, R_Irm, Num);
+                  Right := Reload (Right, R_Any8, Num);
                   Reg_Res := R_Ne;
                   Alloc_Cc (Stmt, Num);
                   Free_Insn_Regs (Left);

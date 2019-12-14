@@ -43,8 +43,7 @@ package Trans.Chap3 is
    procedure Translate_Type_Subprograms
      (Decl : Iir; Kind : Subprg_Translate_Kind);
 
-   procedure Create_Type_Definition_Type_Range (Def : Iir);
-   function Create_Static_Composite_Subtype_Bounds (Def : Iir) return O_Cnode;
+   function Create_Static_Composite_Subtype_Layout (Def : Iir) return O_Cnode;
 
    --  Same as Translate_type_definition only for std.standard.boolean and
    --  std.standard.bit.
@@ -72,7 +71,6 @@ package Trans.Chap3 is
    procedure Translate_Anonymous_Subtype_Definition
      (Def : Iir; With_Vars : Boolean);
 
-   --  Translate_type_definition_Elab do 4 and 6.
    --  It generates code to do type elaboration.
    procedure Elab_Type_Declaration (Decl : Iir);
    procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration);
@@ -118,9 +116,6 @@ package Trans.Chap3 is
    --  For a second or third order complex type, INFO.C.BUILDER_NEED_FUNC
    --  is set to TRUE.
 
-   --  Call builder for variable pointed VAR of type VAR_TYPE.
-   procedure Gen_Call_Type_Builder (Var : Mnode; Var_Type : Iir);
-
    --  Functions for fat array.
    --  Fat array are array whose size is not known at compilation time.
    --  This corresponds to an unconstrained array or a non locally static
@@ -130,6 +125,9 @@ package Trans.Chap3 is
    --  * bounds: a pointer to a structure containing as many fields as
    --    number of dimensions; these fields are a structure describing the
    --    range of the dimension.
+
+   procedure Gen_Call_Type_Builder
+     (Layout : Mnode; Var_Type : Iir; Kind : Object_Kind_Type);
 
    --  If the element subtype of ARR_TYPE is unbounded, create a fat pointer,
    --  set the bounds of it (from ARR), and return it.
@@ -168,11 +166,17 @@ package Trans.Chap3 is
    --  Get the number of elements in array ATYPE.
    function Get_Array_Type_Length (Atype : Iir) return O_Enode;
 
-   --  Get the base of array or record ARR.
-   function Get_Composite_Base (Arr : Mnode) return Mnode;
+   --  Get the base of array or record OBJ.  If OBJ is already constrained,
+   --  return it.
+   function Get_Composite_Base (Obj : Mnode) return Mnode;
+
+   --  Get the base of array or record OBJ; but if OBJ is already constrained,
+   --  convert it to the base of an unbounded object (so this unboxes the
+   --  records).
+   function Get_Composite_Unbounded_Base (Obj : Mnode) return Mnode;
 
    --  Get the bounds of composite ARR (an array or an unbounded record).
-   function Get_Composite_Bounds (Arr : Mnode) return Mnode;
+   function Get_Composite_Bounds (Obj : Mnode) return Mnode;
 
    --  Get the range ot ATYPE.
    function Type_To_Range (Atype : Iir) return Mnode;
@@ -196,20 +200,35 @@ package Trans.Chap3 is
    function Get_Array_Range (Arr : Mnode; Atype : Iir; Dim : Positive)
                                 return Mnode;
 
-   --  Get array bounds for type ATYPE.
-   function Get_Array_Type_Bounds (Atype : Iir) return Mnode;
+   --  Get array/record bounds for type ATYPE.
+   function Get_Composite_Type_Bounds (Atype : Iir) return Mnode;
 
    --  Return a pointer to the base from bounds_acc ACC.
    function Get_Bounds_Acc_Base
      (Acc : O_Enode; D_Type : Iir) return O_Enode;
 
+   --  Return bounds from layout B.
+   function Layout_To_Bounds (B : Mnode) return Mnode;
+
+   --  From a record layout B, return the layout of element EL.  EL must be
+   --  an unbounded element.
+   function Record_Layout_To_Element_Layout (B : Mnode; El : Iir) return Mnode;
+
    --  From an unbounded record bounds B, get the bounds for (unbounded)
    --  element EL.
-   function Bounds_To_Element_Bounds (B : Mnode; El : Iir) return Mnode;
+   function Record_Bounds_To_Element_Bounds (B : Mnode; El : Iir) return Mnode;
+
+   --  Return the offset for field EL in record B.
+   function Record_Layout_To_Element_Offset
+     (B : Mnode; El : Iir; Kind : Object_Kind_Type) return O_Lnode;
 
    --  From an unbounded array bounds B, get the bounds for the (unbounded)
    --  element.
    function Array_Bounds_To_Element_Bounds (B : Mnode; Atype : Iir)
+                                           return Mnode;
+
+   --  From unbounded array bounds B, get the layout of the unbounded element.
+   function Array_Bounds_To_Element_Layout (B : Mnode; Atype : Iir)
                                            return Mnode;
 
    --  Deallocate OBJ.
@@ -235,7 +254,7 @@ package Trans.Chap3 is
    --  Low level copy of SRC to DEST.  Both have the same type, OBJ_TYPE.
    --  There is no length check, so arrays must be of the same length.
    procedure Translate_Object_Copy
-     (Dest : Mnode; Src : O_Enode; Obj_Type : Iir);
+     (Dest : Mnode; Src : Mnode; Obj_Type : Iir);
 
    --  Get size (in bytes with type ghdl_index_type) of subtype ATYPE.
    --  For an unconstrained array, BOUNDS must be set, otherwise it may be a
@@ -247,9 +266,6 @@ package Trans.Chap3 is
    --  For an unconstrained array, OBJ must be really an object, otherwise,
    --  it may be the result of T2M.
    function Get_Object_Size (Obj : Mnode; Obj_Type : Iir) return O_Enode;
-
-   --  If needed call the procedure to build OBJ.
-   procedure Maybe_Call_Type_Builder (Obj : Mnode; Obj_Type : Iir);
 
    --  Allocate the base of an unbounded composite, whose length is
    --  determined from the bounds (already set).
@@ -267,9 +283,15 @@ package Trans.Chap3 is
       Res        : Mnode;
       Obj_Type   : Iir);
 
+   --  Used for alias: create the vars for the subtype of the name (when the
+   --  name is a slice).  The identifier prefix must have been set.
+   procedure Translate_Array_Subtype (Arr_Type : Iir);
+   procedure Elab_Array_Subtype (Arr_Type : Iir);
+
    --  Create the bounds for SUB_TYPE.
-   --  SUB_TYPE is expected to be a non-static, anonymous array type.
-   procedure Create_Array_Subtype (Sub_Type : Iir);
+   --  SUB_TYPE is expected to be a non-static, anonymous array or record
+   --  subtype.
+   procedure Create_Composite_Subtype (Sub_Type : Iir);
 
    --  Return TRUE if VALUE is not is the range specified by ATYPE.
    --  VALUE must be stable.
@@ -295,15 +317,15 @@ package Trans.Chap3 is
      (Value : O_Enode; Expr : Iir; Atype : Iir) return O_Enode;
 
    --  Return True iff all indexes of L_TYPE and R_TYPE have the same
-   --  length.  They must be locally static.
-   function Locally_Array_Match (L_Type, R_Type : Iir) return Boolean;
+   --  length.  They must be constrained.
+   function Locally_Array_Match (L_Type, R_Type : Iir) return Tri_State_Type;
 
-   --  Check bounds length of L match bounds length of R.
-   --  If L_TYPE (resp. R_TYPE) is not a thin array, then L_NODE
+   --  Check bounds of L match bounds of R.
+   --  If L_TYPE (resp. R_TYPE) is not a thin composite type, then L_NODE
    --    (resp. R_NODE) are not used (and may be Mnode_Null).
-   --  If L_TYPE (resp. T_TYPE) is a fat array, then L_NODE (resp. R_NODE)
-   --    must designate the array.
-   procedure Check_Array_Match
+   --  If L_TYPE (resp. T_TYPE) is a fat type, then L_NODE (resp. R_NODE)
+   --    must designate the object.
+   procedure Check_Composite_Match
      (L_Type : Iir; L_Node : Mnode; R_Type : Iir; R_Node : Mnode; Loc : Iir);
 
    --  Create a subtype range to be stored into RES from length LENGTH, which

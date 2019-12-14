@@ -16,8 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
-with Nodes; use Nodes;
 
+generic
+   type El_Type is range <>;
 package Lists is
    type List_Type is new Nat32;
    for List_Type'Size use 32;
@@ -72,13 +73,14 @@ package Lists is
    --  Must be used to free the memory used by the lists.
    procedure Initialize;
 
-   --  Append ELEMENT to the list.
-   procedure Append_Element (List : List_Type; Element : Node_Type);
+   --  Append ELEMENT to the list.  It's an O(1) operation.
+   procedure Append_Element (List : List_Type; Element : El_Type);
 
    --  Return the first element of the list.
-   function Get_First_Element (List : List_Type) return Node_Type;
+   function Get_First_Element (List : List_Type) return El_Type;
 
-   procedure Add_Element (List : List_Type; El : Node_Type);
+   --  Append EL if not already in LIST.  It's an O(n) operation.
+   procedure Add_Element (List : List_Type; El : El_Type);
 
    -- Return the number of elements in the list.
    -- This is also 1 + the position of the last element.
@@ -100,8 +102,8 @@ package Lists is
    function Iterate (List : List_Type) return Iterator;
    function Is_Valid (It : Iterator) return Boolean;
    procedure Next (It : in out Iterator);
-   function Get_Element (It : Iterator) return Node_Type;
-   procedure Set_Element (It : Iterator; El : Node_Type);
+   function Get_Element (It : Iterator) return El_Type;
+   procedure Set_Element (It : Iterator; El : El_Type);
 
    --  Use the C convention for all these subprograms, so that the Iterator is
    --  always passed by reference.
@@ -122,7 +124,7 @@ private
    Chunk_Len : constant := 7;
 
    type Node_Type_Array is
-     array (Nat32 range 0 .. Chunk_Len - 1) of Node_Type;
+     array (Nat32 range 0 .. Chunk_Len - 1) of El_Type;
 
    type Chunk_Type is record
       Next : Chunk_Index_Type;

@@ -16,14 +16,14 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
+with Simple_IO;
 with Std_Names;
-with Errorout; use Errorout;
-with Iir_Chains;
-with Canon;
-with Evaluation; use Evaluation;
-with Std_Package; use Std_Package;
-with Iirs_Utils; use Iirs_Utils;
+with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Nodes_Utils;
+with Vhdl.Canon;
+with Vhdl.Evaluation; use Vhdl.Evaluation;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Utils; use Vhdl.Utils;
 with Trans.Chap2;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -254,13 +254,11 @@ package body Trans.Chap8 is
             begin
                Area := Dp2M (Subprg_Info.Res_Interface,
                              Ret_Info, Mode_Value);
-               Val := Stabilize
-                 (E2M (Chap7.Translate_Expression (Expr, Ret_Type),
-                  Ret_Info, Mode_Value));
+               Val := Stabilize (Chap7.Translate_Expression (Expr, Ret_Type));
                Chap3.Translate_Object_Allocation
                  (Area, Alloc_Return, Ret_Type,
                   Chap3.Get_Composite_Bounds (Val));
-               Chap3.Translate_Object_Copy (Area, M2Addr (Val), Ret_Type);
+               Chap3.Translate_Object_Copy (Area, Val, Ret_Type);
                Gen_Return;
             end;
          when Type_Mode_Bounded_Records
@@ -378,14 +376,6 @@ package body Trans.Chap8 is
       end if;
    end Translate_If_Statement;
 
-   function Get_Range_Ptr_Field_Value (O_Range : O_Lnode; Field : O_Fnode)
-                                          return O_Enode
-   is
-   begin
-      return New_Value (New_Selected_Element
-                        (New_Access_Element (New_Value (O_Range)), Field));
-   end Get_Range_Ptr_Field_Value;
-
    --  Inc or dec ITERATOR according to DIR.
    procedure Gen_Update_Iterator_Common (Val      : Unsigned_64;
                                          Itype    : Iir;
@@ -408,7 +398,7 @@ package body Trans.Chap8 is
                   raise Internal_Error;
                end if;
                V := New_Lit
-                 (Get_Ortho_Expr (Get_Nth_Element (List, Natural (Val))));
+                 (Get_Ortho_Literal (Get_Nth_Element (List, Natural (Val))));
             end;
 
          when others =>
@@ -454,6 +444,59 @@ package body Trans.Chap8 is
                        New_Dyadic_Op (Op, New_Value (Get_Var (Iterator)), V));
    end Gen_Update_Iterator;
 
+   function Is_For_Loop_Iterator_Stable (Iterator : Iir) return Boolean
+   is
+      Iter_Type : constant Iir := Get_Type (Iterator);
+      Constraint : constant Iir := Get_Range_Constraint (Iter_Type);
+      Name : Iir;
+   begin
+      case Iir_Kinds_Range_Attribute (Get_Kind (Constraint)) is
+         when Iir_Kind_Reverse_Range_Array_Attribute =>
+            --  Need to create a reversed range...
+            return False;
+         when Iir_Kind_Range_Array_Attribute =>
+            Name := Get_Prefix (Constraint);
+            Name := Get_Base_Name (Name);
+
+            case Get_Kind (Name) is
+               when Iir_Kind_Implicit_Dereference
+                 | Iir_Kind_Dereference =>
+                  return False;
+               when Iir_Kind_Function_Call =>
+                  if not Is_Fully_Constrained_Type (Get_Type (Name)) then
+                     return False;
+                  end if;
+               when Iir_Kinds_Object_Declaration =>
+                  null;
+               when Iir_Kind_Subtype_Declaration =>
+                  null;
+               when others =>
+                  Error_Kind ("is_for_loop_iterator_stable(2)", Name);
+            end case;
+            return True;
+      end case;
+   end Is_For_Loop_Iterator_Stable;
+
+   function Get_Iterator_Range_Var (Iterator : Iir) return Mnode
+   is
+      Iter_Type : constant Iir := Get_Type (Iterator);
+      Iter_Type_Info : constant Type_Info_Acc :=
+        Get_Info (Get_Base_Type (Iter_Type));
+      It_Info : constant Ortho_Info_Acc := Get_Info (Iterator);
+   begin
+      if It_Info.Iterator_Range_Copy then
+         return Lv2M (Get_Var (It_Info.Iterator_Range),
+                      Iter_Type_Info, Mode_Value,
+                      Iter_Type_Info.B.Range_Type,
+                      Iter_Type_Info.B.Range_Ptr_Type);
+      else
+         return Lp2M (Get_Var (It_Info.Iterator_Range),
+                      Iter_Type_Info, Mode_Value,
+                      Iter_Type_Info.B.Range_Type,
+                      Iter_Type_Info.B.Range_Ptr_Type);
+      end if;
+   end Get_Iterator_Range_Var;
+
    procedure Translate_For_Loop_Statement_Declaration (Stmt : Iir)
    is
       Iterator : constant Iir := Get_Parameter_Specification (Stmt);
@@ -462,6 +505,7 @@ package body Trans.Chap8 is
         Get_Info (Get_Base_Type (Iter_Type));
       Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
       It_Info : Ortho_Info_Acc;
+      Range_Type : O_Tnode;
    begin
       --  Iterator range.
       Chap3.Translate_Object_Subtype (Iterator, False);
@@ -479,10 +523,22 @@ package body Trans.Chap8 is
             Iter_Type_Info.Ortho_Type (Mode_Value),
             O_Storage_Local);
       else
+         --  The range must be copied if:
+         --  * the constraint is 'range or 'reverse_range, or 'subtype, or
+         --    'element (ie any attribute ?)
+         --  * the base name is a function_call returning an unbounded value,
+         --    or a dereference.
+         --  Note: in case of a dereference, the anonymous object can be
+         --  deallocated within the loop.
+         It_Info.Iterator_Range_Copy :=
+           not Is_For_Loop_Iterator_Stable (Iterator);
+         if It_Info.Iterator_Range_Copy then
+            Range_Type := Iter_Type_Info.B.Range_Type;
+         else
+            Range_Type := Iter_Type_Info.B.Range_Ptr_Type;
+         end if;
          It_Info.Iterator_Range := Create_Var
-           (Create_Var_Identifier ("IT_RANGE"),
-            Iter_Type_Info.B.Range_Ptr_Type,
-            O_Storage_Local);
+           (Create_Var_Identifier ("IT_RANGE"), Range_Type, O_Storage_Local);
       end if;
    end Translate_For_Loop_Statement_Declaration;
 
@@ -496,6 +552,7 @@ package body Trans.Chap8 is
       Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
       Dir            : Iir_Direction;
       Op             : ON_Op_Kind;
+      Rng            : O_Lnode;
    begin
       if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
          New_Assign_Stmt
@@ -519,20 +576,25 @@ package body Trans.Chap8 is
             New_Value (Get_Var (It_Info.Iterator_Right)),
             Ghdl_Bool_Type);
       else
-         New_Assign_Stmt (Get_Var (It_Info.Iterator_Range),
-                          New_Address (Chap7.Translate_Range
-                                         (Constraint, Iter_Base_Type),
-                                       Iter_Type_Info.B.Range_Ptr_Type));
+         Rng := Chap7.Translate_Range (Constraint, Iter_Base_Type);
+         if It_Info.Iterator_Range_Copy then
+            Gen_Memcpy (M2Addr (Get_Iterator_Range_Var (Iterator)),
+                        New_Address (Rng, Iter_Type_Info.B.Range_Ptr_Type),
+                        New_Lit (New_Sizeof (Iter_Type_Info.B.Range_Type,
+                                             Ghdl_Index_Type)));
+         else
+            New_Assign_Stmt
+              (Get_Var (It_Info.Iterator_Range),
+               New_Address (Rng, Iter_Type_Info.B.Range_Ptr_Type));
+         end if;
          New_Assign_Stmt
            (Get_Var (It_Info.Iterator_Var),
-            Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
-                                       Iter_Type_Info.B.Range_Left));
+            M2E (Chap3.Range_To_Left (Get_Iterator_Range_Var (Iterator))));
          --  Before starting the loop, check whether there will be at least
          --  one iteration.
          Cond := New_Compare_Op
            (ON_Gt,
-            Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
-                                       Iter_Type_Info.B.Range_Length),
+            M2E (Chap3.Range_To_Length (Get_Iterator_Range_Var (Iterator))),
             New_Lit (Ghdl_Index_0),
             Ghdl_Bool_Type);
       end if;
@@ -541,8 +603,6 @@ package body Trans.Chap8 is
    procedure Exit_Cond_For_Loop (Iterator : Iir; Cond : out O_Enode)
    is
       Iter_Type      : constant Iir := Get_Type (Iterator);
-      Iter_Base_Type : constant Iir := Get_Base_Type (Iter_Type);
-      Iter_Type_Info : constant Ortho_Info_Acc := Get_Info (Iter_Base_Type);
       It_Info        : constant Ortho_Info_Acc := Get_Info (Iterator);
       Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
       Val            : O_Enode;
@@ -553,8 +613,7 @@ package body Trans.Chap8 is
       if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
          Val := New_Value (Get_Var (It_Info.Iterator_Right));
       else
-         Val := Get_Range_Ptr_Field_Value
-           (Get_Var (It_Info.Iterator_Range), Iter_Type_Info.B.Range_Right);
+         Val := M2E (Chap3.Range_To_Right (Get_Iterator_Range_Var (Iterator)));
       end if;
       Cond := New_Compare_Op (ON_Eq,
                               New_Value (Get_Var (It_Info.Iterator_Var)), Val,
@@ -565,7 +624,6 @@ package body Trans.Chap8 is
    is
       Iter_Type      : constant Iir := Get_Type (Iterator);
       Iter_Base_Type : constant Iir := Get_Base_Type (Iter_Type);
-      Iter_Type_Info : constant Ortho_Info_Acc := Get_Info (Iter_Base_Type);
       It_Info        : constant Ortho_Info_Acc := Get_Info (Iterator);
       If_Blk1        : O_If_Block;
       Deep_Rng       : Iir;
@@ -585,8 +643,7 @@ package body Trans.Chap8 is
          Start_If_Stmt
            (If_Blk1, New_Compare_Op
               (ON_Eq,
-               Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
-                                          Iter_Type_Info.B.Range_Dir),
+               M2E (Chap3.Range_To_Dir (Get_Iterator_Range_Var (Iterator))),
                New_Lit (Ghdl_Dir_To_Node),
                Ghdl_Bool_Type));
          Gen_Update_Iterator (It_Info.Iterator_Var,
@@ -955,7 +1012,7 @@ package body Trans.Chap8 is
             Targ_Node : Mnode;
          begin
             Targ_Node := Chap6.Translate_Name (Targ, Mode_Value);
-            Chap3.Translate_Object_Copy (Targ_Node, M2E (Val), Targ_Type);
+            Chap3.Translate_Object_Copy (Targ_Node, Val, Targ_Type);
          end;
       end if;
    end Translate_Variable_Aggregate_Assignment;
@@ -970,7 +1027,7 @@ package body Trans.Chap8 is
    begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          declare
-            E    : O_Enode;
+            E    : Mnode;
             Temp : Mnode;
          begin
             Chap3.Translate_Anonymous_Subtype_Definition (Targ_Type, False);
@@ -988,12 +1045,36 @@ package body Trans.Chap8 is
       else
          Targ_Node := Chap6.Translate_Name (Target, Mode_Value);
          if Get_Kind (Expr) = Iir_Kind_Aggregate then
-            declare
-               E : O_Enode;
-            begin
-               E := Chap7.Translate_Expression (Expr, Targ_Type);
-               Chap3.Translate_Object_Copy (Targ_Node, E, Targ_Type);
-            end;
+            if Get_Constraint_State (Get_Type (Expr)) /= Fully_Constrained then
+               declare
+                  Expr_Type : constant Iir := Get_Type (Expr);
+                  Expr_Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
+                  Val : Mnode;
+               begin
+                  --  Create a temp.
+                  Val := Create_Temp (Expr_Tinfo);
+                  --  Set bounds from target
+                  Stabilize (Targ_Node);
+                  New_Assign_Stmt
+                    (M2Lp (Chap3.Get_Composite_Bounds (Val)),
+                     M2Addr (Chap3.Get_Composite_Bounds (Targ_Node)));
+                  --  Allocate target
+                  Chap3.Allocate_Unbounded_Composite_Base
+                    (Alloc_Stack, Val, Get_Base_Type (Expr_Type));
+                  --  Translate aggregate
+                  Chap7.Translate_Aggregate (Val, Targ_Type, Expr);
+                  --  Assign
+                  Chap3.Translate_Object_Copy (Targ_Node, Val, Targ_Type);
+               end;
+            else
+               --  In case of overlap: be sure to use an intermediate variable.
+               declare
+                  E : Mnode;
+               begin
+                  E := Chap7.Translate_Expression (Expr, Targ_Type);
+                  Chap3.Translate_Object_Copy (Targ_Node, E, Targ_Type);
+               end;
+            end if;
          else
             Chap7.Translate_Assign (Targ_Node, Expr, Targ_Type);
          end if;
@@ -1017,7 +1098,7 @@ package body Trans.Chap8 is
       end if;
       Expr := Get_Severity_Expression (Stmt);
       if Expr = Null_Iir then
-         Severity := New_Lit (Get_Ortho_Expr (Level));
+         Severity := New_Lit (Get_Ortho_Literal (Level));
       else
          Severity := Chap7.Translate_Expression (Expr);
       end if;
@@ -1128,7 +1209,7 @@ package body Trans.Chap8 is
       Expr       : constant Iir := Get_Expression (Stmt);
       Expr_Type  : Iir;
       Base_Type  : Iir;
-      Sel_Length : Iir_Int64;
+      Sel_Length : Int64;
       Cond       : O_Enode;
    begin
       --  Translate into if/elsif statements.
@@ -1173,32 +1254,31 @@ package body Trans.Chap8 is
       end if;
    end Translate_String_Case_Statement_Common;
 
+   type Choice_Id is new Integer;
+   No_Choice_Id : constant Choice_Id := -1;
+
+   type Choice_Info_Type is record
+      --  List of choices, used to sort them.
+      Choice_Chain  : Choice_Id;
+      --  Association index.
+      Choice_Assoc  : Natural;
+      --  Corresponding choice simple expression.
+      Choice_Expr   : Iir;
+      --  Corresponding choice.
+      Choice_Parent : Iir;
+   end record;
+
+   type Choice_Info_Arr is array (Choice_Id range <>) of Choice_Info_Type;
+
    --  Translate a string case statement using a dichotomy.
    --  NBR_CHOICES is the number of non-others choices.
    procedure Translate_String_Case_Statement_Dichotomy
      (Stmt : Iir;
       Choices_Chain : Iir;
       Nbr_Choices : Positive;
+      Choices_Info : in out Choice_Info_Arr;
       Handler : in out Case_Handler'Class)
    is
-      type Choice_Id is new Integer;
-      subtype Valid_Choice_Id is Choice_Id
-        range 0 .. Choice_Id (Nbr_Choices - 1);
-      No_Choice_Id : constant Choice_Id := -1;
-
-      type Choice_Info_Type is record
-         --  List of choices, used to sort them.
-         Choice_Chain  : Choice_Id;
-         --  Association index.
-         Choice_Assoc  : Natural;
-         --  Corresponding choice simple expression.
-         Choice_Expr   : Iir;
-         --  Corresponding choice.
-         Choice_Parent : Iir;
-      end record;
-
-      type Choice_Info_Arr is array (Valid_Choice_Id) of Choice_Info_Type;
-      Choices_Info : Choice_Info_Arr;
       First, Last : Choice_Id;
       El : Choice_Id;
 
@@ -1217,7 +1297,7 @@ package body Trans.Chap8 is
       --  Number of associations.
       Nbr_Assocs  : Natural;
 
-      Sel_Length  : Iir_Int64;
+      Sel_Length  : Int64;
 
       --  Dichotomy table (table of choices).
       String_Type     : O_Tnode;
@@ -1678,6 +1758,7 @@ package body Trans.Chap8 is
                H, L : Iir;
             begin
                Expr := Get_Choice_Range (Choice);
+               Expr := Get_Range_From_Discrete_Range (Expr);
                Get_Low_High_Limit (Expr, L, H);
                New_Range_Choice
                  (Blk,
@@ -1729,9 +1810,31 @@ package body Trans.Chap8 is
             --  Select the strategy according to the number of choices.
             if Nbr_Choices < 3 then
                Translate_String_Case_Statement_Linear (N, Choices, Handler);
+            elsif Nbr_Choices <= 512 then
+               --  Can allocate on the stack.
+               declare
+                  subtype Valid_Choice_Id is Choice_Id
+                    range 0 .. Choice_Id (Nbr_Choices - 1);
+                  Choices_Info : Choice_Info_Arr (Valid_Choice_Id);
+               begin
+                  Translate_String_Case_Statement_Dichotomy
+                    (N, Choices, Nbr_Choices, Choices_Info, Handler);
+               end;
             else
-               Translate_String_Case_Statement_Dichotomy
-                 (N, Choices, Nbr_Choices, Handler);
+               --  Allocate on the heap.
+               declare
+                  type Choice_Info_Arr_Acc is access Choice_Info_Arr;
+                  subtype Valid_Choice_Id is Choice_Id
+                    range 0 .. Choice_Id (Nbr_Choices - 1);
+                  Choices_Info : Choice_Info_Arr_Acc;
+                  procedure Free is new Ada.Unchecked_Deallocation
+                    (Choice_Info_Arr, Choice_Info_Arr_Acc);
+               begin
+                  Choices_Info := new Choice_Info_Arr (Valid_Choice_Id);
+                  Translate_String_Case_Statement_Dichotomy
+                    (N, Choices, Nbr_Choices, Choices_Info.all, Handler);
+                  Free (Choices_Info);
+               end;
             end if;
          end;
       else
@@ -2122,7 +2225,7 @@ package body Trans.Chap8 is
             end;
 
          when others =>
-            Ada.Text_IO.Put_Line
+            Simple_IO.Put_Line_Err
               ("translate_implicit_procedure_call: cannot handle "
                & Iir_Predefined_Functions'Image (Kind));
             raise Internal_Error;
@@ -2557,7 +2660,7 @@ package body Trans.Chap8 is
       type Mnode_Array is array (Natural range <>) of Mnode;
       type O_Enode_Array is array (Natural range <>) of O_Enode;
       Nbr_Assoc : constant Natural :=
-        Iir_Chains.Get_Chain_Length (Assoc_Chain);
+        Vhdl.Nodes_Utils.Get_Chain_Length (Assoc_Chain);
 
       --  References to the formals (for copy-out), and variables for whole
       --  actual of individual associations.
@@ -2585,8 +2688,7 @@ package body Trans.Chap8 is
 
       --  Individual association: assign the individual actual of
       --  the whole actual.
-      procedure Trans_Individual_Assign
-        (Assoc : Iir; Val : O_Enode; Sig : O_Enode)
+      procedure Trans_Individual_Assign (Assoc : Iir; Val : Mnode; Sig : Mnode)
       is
          Formal : constant Iir := Get_Formal (Assoc);
          Formal_Type : constant Iir := Get_Type (Formal);
@@ -2602,7 +2704,7 @@ package body Trans.Chap8 is
            (Formal, Formal_Info, Params (Last_Individual),
             Formal_Object_Kind);
          if Formal_Object_Kind = Mode_Value then
-            Chap7.Translate_Assign (Param, Val, Act, Formal_Type, Assoc);
+            Chap7.Translate_Assign (Param, M2E (Val), Act, Formal_Type, Assoc);
          else
             Chap3.Translate_Object_Copy (Param, Sig, Formal_Type);
             if Is_Suspendable then
@@ -2611,7 +2713,7 @@ package body Trans.Chap8 is
                Assoc_Info := Get_Info (Assoc);
                New_Assign_Stmt
                  (Get_Var (Assoc_Info.Call_Assoc_Value (Mode_Value)),
-                  Val);
+                  M2E (Val));
             else
                --  Assign the value to the whole object, as there is
                --  only one call.
@@ -2646,6 +2748,7 @@ package body Trans.Chap8 is
          Val : O_Enode;
          Sig : O_Enode;
          Mval : Mnode;
+         Msig : Mnode;
          Mode : Iir_Mode;
          Bounds : Mnode;
          Next_Assoc : Iir;
@@ -2712,8 +2815,9 @@ package body Trans.Chap8 is
                      --  FIXME: do not allocate bounds if static.
                      if Mode = Mode_Value then
                         if Get_Type_Staticness (Actual_Type) >= Globally then
-                           Chap3.Create_Array_Subtype (Actual_Type);
-                           Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+                           Chap3.Create_Composite_Subtype (Actual_Type);
+                           Bounds :=
+                             Chap3.Get_Composite_Type_Bounds (Actual_Type);
                            Chap3.Translate_Object_Allocation
                              (Param, Alloc, Formal_Type, Bounds);
                         else
@@ -2877,10 +2981,10 @@ package body Trans.Chap8 is
                   Stabilize (Saved_Val (Pos));
 
                   Chap3.Copy_Bounds
-                    (Chap3.Bounds_To_Element_Bounds
+                    (Chap3.Record_Bounds_To_Element_Bounds
                        (Chap3.Get_Composite_Bounds
                           (Params (Last_Individual)),
-                        Get_Selected_Element (Formal)),
+                        Get_Named_Entity (Formal)),
                      Chap3.Get_Composite_Bounds (Saved_Val (Pos)),
                      Formal_Type);
                end if;
@@ -2892,6 +2996,16 @@ package body Trans.Chap8 is
                  or else (Get_Interface_Of_Formal (Get_Formal (Next_Assoc))
                             /= Base_Formal)
                then
+                  --  * compute the size of the object
+                  Chap3.Gen_Call_Type_Builder
+                    (Chap3.Get_Composite_Bounds (Params (Last_Individual)),
+                     Get_Type (Base_Formal), Mode_Value);
+                  if Formal_Object_Kind = Mode_Signal then
+                     Chap3.Gen_Call_Type_Builder
+                       (Chap3.Get_Composite_Bounds (Params (Last_Individual)),
+                        Get_Type (Base_Formal), Mode_Signal);
+                  end if;
+
                   --  * allocate base
                   Chap3.Allocate_Unbounded_Composite_Base
                     (Alloc, Saved_Val (Last_Individual),
@@ -2908,11 +3022,10 @@ package body Trans.Chap8 is
                      Next_Assoc := Get_Chain (Next_Assoc);
                      if Formal_Object_Kind = Mode_Signal then
                         Trans_Individual_Assign
-                          (Next_Assoc,
-                           M2E (Saved_Val (I)), M2E (Saved_Sig (I)));
+                          (Next_Assoc, Saved_Val (I), Saved_Sig (I));
                      else
                         Trans_Individual_Assign
-                          (Next_Assoc, M2E (Saved_Val (I)), O_Enode_Null);
+                          (Next_Assoc, Saved_Val (I), Mnode_Null);
                      end if;
                   end loop;
 
@@ -2922,7 +3035,15 @@ package body Trans.Chap8 is
             else
                --  Individual association: assign the individual actual of
                --  the whole actual.
-               Trans_Individual_Assign (Assoc, Val, Sig);
+               if Sig = O_Enode_Null then
+                  --  Arghh..
+                  Msig := Mnode_Null;
+               else
+                  Msig := E2M (Sig, Get_Info (Formal_Type), Mode_Signal);
+               end if;
+               --  Note: Ftype_Info may be null (if the formal is a slice).
+               Trans_Individual_Assign
+                 (Assoc, E2M (Val, Get_Info (Formal_Type), Mode_Value), Msig);
             end if;
          elsif Assoc_Info /= null then
             --  For suspendable caller, write the actual to the state
@@ -2985,7 +3106,7 @@ package body Trans.Chap8 is
                   then
                      pragma Assert (Sig = O_Enode_Null); --  TODO
 
-                     if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                     if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
                         pragma Assert
                           (Assoc_Info.Call_Assoc_Fat (Mode) /= Null_Var);
                         --  Allocate array base
@@ -3003,8 +3124,7 @@ package body Trans.Chap8 is
                           (Formal_Type, Alloc_Return, Param);
                         Assign_Params_Field (M2Addr (Param), Mode);
                      end if;
-                     Chap3.Translate_Object_Copy
-                       (Param, M2E (Mval), Formal_Type);
+                     Chap3.Translate_Object_Copy (Param, Mval, Formal_Type);
                   end if;
                end;
             end loop;
@@ -3026,7 +3146,10 @@ package body Trans.Chap8 is
             --  Not for signals.
             pragma Assert (Sig = O_Enode_Null);
 
-            Chap3.Translate_Object_Copy (Inout_Params (Pos), Val, Formal_Type);
+            Chap3.Translate_Object_Copy
+              (Inout_Params (Pos),
+               E2M (Val, Get_Info (Formal_Type), Mode_Value),
+               Formal_Type);
             E_Params (Pos) := M2Addr (Inout_Params (Pos));
          else
             E_Params (Pos) := Val;
@@ -3437,7 +3560,7 @@ package body Trans.Chap8 is
       if Sensitivity = Null_Iir_List and Cond /= Null_Iir then
          --  Extract sensitivity from condition.
          Sensitivity := Create_Iir_List;
-         Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
+         Vhdl.Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
          Set_Sensitivity_List (Stmt, Sensitivity);
       end if;
 
@@ -3596,11 +3719,10 @@ package body Trans.Chap8 is
             Targ2  : O_Dnode;
          begin
             Open_Temp;
-            Val2 := Create_Temp_Init
-              (Type_Info.Ortho_Type (Mode_Value), Val);
+            Val2 := Create_Temp_Init (Type_Info.Ortho_Type (Mode_Value), Val);
             Targ2 := Create_Temp_Init
               (Ghdl_Signal_Ptr, New_Convert_Ov (New_Value (M2Lv (Targ)),
-               Ghdl_Signal_Ptr));
+                                                Ghdl_Signal_Ptr));
             Start_If_Stmt (If_Blk, Chap3.Not_In_Range (Val2, Targ_Type));
             Start_Association (Assoc, Ghdl_Signal_Simple_Assign_Error);
             New_Association (Assoc, New_Obj_Value (Targ2));
@@ -3609,8 +3731,8 @@ package body Trans.Chap8 is
             New_Else_Stmt (If_Blk);
             Start_Association (Assoc, Subprg);
             New_Association (Assoc, New_Obj_Value (Targ2));
-            New_Association
-              (Assoc, New_Convert_Ov (New_Obj_Value (Val2), Conv));
+            New_Association (Assoc,
+                             New_Convert_Ov (New_Obj_Value (Val2), Conv));
             New_Procedure_Call (Assoc);
             Finish_If_Stmt (If_Blk);
             Close_Temp;
@@ -3911,24 +4033,40 @@ package body Trans.Chap8 is
         Get_Index_Subtype_List (Target_Type);
       Nbr_Dim    : constant Natural := Get_Nbr_Elements (Index_List);
       Sub_Aggr   : Mnode;
+      Sub_Type   : Iir;
       El         : Iir;
       Expr       : Iir;
    begin
       El := Get_Association_Choices_Chain (Target);
       while El /= Null_Iir loop
+         Expr := Get_Associated_Expr (El);
          case Get_Kind (El) is
             when Iir_Kind_Choice_By_None =>
-               Sub_Aggr := Chap3.Index_Base
-                 (Aggr, Target_Type, New_Obj_Value (Idx));
+               if Get_Element_Type_Flag (El) then
+                  Sub_Aggr := Chap3.Index_Base
+                    (Aggr, Target_Type, New_Obj_Value (Idx));
+                  Sub_Type := Get_Element_Subtype (Target_Type);
+               else
+                  Sub_Type := Get_Type (Expr);
+                  Sub_Aggr := Chap3.Slice_Base
+                    (Aggr, Sub_Type, New_Obj_Value (Idx));
+               end if;
             when others =>
                Error_Kind ("translate_signal_target_array_aggr", El);
          end case;
-         Expr := Get_Associated_Expr (El);
          if Dim = Nbr_Dim then
-            Translate_Signal_Target_Aggr
-              (Sub_Aggr, Expr, Get_Element_Subtype (Target_Type));
+            Translate_Signal_Target_Aggr (Sub_Aggr, Expr, Sub_Type);
             if Get_Kind (El) = Iir_Kind_Choice_By_None then
-               Inc_Var (Idx);
+               if Get_Element_Type_Flag (El) then
+                  Inc_Var (Idx);
+               else
+                  New_Assign_Stmt
+                    (New_Obj (Idx),
+                     New_Dyadic_Op
+                       (ON_Add_Ov,
+                        New_Obj_Value (Idx),
+                        Chap3.Get_Array_Length (Sub_Aggr, Sub_Type)));
+               end if;
             else
                raise Internal_Error;
             end if;
@@ -3998,7 +4136,7 @@ package body Trans.Chap8 is
          end;
       else
          Src := Chap6.Translate_Name (Target, Mode_Signal);
-         Chap3.Translate_Object_Copy (Aggr, M2E (Src), Target_Type);
+         Chap3.Translate_Object_Copy (Aggr, Src, Target_Type);
       end if;
    end Translate_Signal_Target_Aggr;
 
@@ -4066,18 +4204,9 @@ package body Trans.Chap8 is
       Close_Temp;
    end Gen_Signal_Direct_Assign_Non_Composite;
 
-   function Gen_Signal_Direct_Prepare_Data_Composite
+   function Gen_Signal_Direct_Prepare_Data_Stabilize
      (Targ : Mnode; Targ_Type : Iir; Val : Signal_Direct_Assign_Data)
-         return Signal_Direct_Assign_Data
-   is
-      pragma Unreferenced (Targ, Targ_Type);
-   begin
-      return Val;
-   end Gen_Signal_Direct_Prepare_Data_Composite;
-
-   function Gen_Signal_Direct_Prepare_Data_Record
-     (Targ : Mnode; Targ_Type : Iir; Val : Signal_Direct_Assign_Data)
-         return Signal_Direct_Assign_Data
+     return Signal_Direct_Assign_Data
    is
       pragma Unreferenced (Targ, Targ_Type);
    begin
@@ -4085,20 +4214,31 @@ package body Trans.Chap8 is
         (Drv => Stabilize (Val.Drv),
          Expr => Stabilize (Val.Expr),
          Expr_Node => Val.Expr_Node);
-   end Gen_Signal_Direct_Prepare_Data_Record;
+   end Gen_Signal_Direct_Prepare_Data_Stabilize;
+
+   function Gen_Signal_Direct_Prepare_Data_Array
+     (Targ : Mnode; Targ_Type : Iir; Val : Signal_Direct_Assign_Data)
+     return Signal_Direct_Assign_Data is
+   begin
+      if Is_Unbounded_Type (Get_Info (Targ_Type)) then
+         return Gen_Signal_Direct_Prepare_Data_Stabilize
+           (Targ, Targ_Type, Val);
+      else
+         return Val;
+      end if;
+   end Gen_Signal_Direct_Prepare_Data_Array;
 
    function Gen_Signal_Direct_Update_Data_Array
      (Val       : Signal_Direct_Assign_Data;
       Targ_Type : Iir;
       Index     : O_Dnode)
-         return Signal_Direct_Assign_Data
-   is
+     return Signal_Direct_Assign_Data is
    begin
       return Signal_Direct_Assign_Data'
-        (Drv => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Drv),
-         Targ_Type, New_Obj_Value (Index)),
-         Expr => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Expr),
-           Targ_Type, New_Obj_Value (Index)),
+        (Drv => Chap6.Translate_Indexed_Name_By_Offset
+           (Val.Drv, Targ_Type, Index),
+         Expr => Chap6.Translate_Indexed_Name_By_Offset
+           (Val.Expr, Targ_Type, Index),
          Expr_Node => Val.Expr_Node);
    end Gen_Signal_Direct_Update_Data_Array;
 
@@ -4106,7 +4246,7 @@ package body Trans.Chap8 is
      (Val       : Signal_Direct_Assign_Data;
       Targ_Type : Iir;
       El        : Iir_Element_Declaration)
-         return Signal_Direct_Assign_Data
+     return Signal_Direct_Assign_Data
    is
       pragma Unreferenced (Targ_Type);
    begin
@@ -4120,22 +4260,61 @@ package body Trans.Chap8 is
      (Data_Type => Signal_Direct_Assign_Data,
       Composite_Data_Type => Signal_Direct_Assign_Data,
       Do_Non_Composite => Gen_Signal_Direct_Assign_Non_Composite,
-      Prepare_Data_Array => Gen_Signal_Direct_Prepare_Data_Composite,
+      Prepare_Data_Array => Gen_Signal_Direct_Prepare_Data_Array,
       Update_Data_Array => Gen_Signal_Direct_Update_Data_Array,
-      Prepare_Data_Record => Gen_Signal_Direct_Prepare_Data_Record,
+      Prepare_Data_Record => Gen_Signal_Direct_Prepare_Data_Stabilize,
       Update_Data_Record => Gen_Signal_Direct_Update_Data_Record);
+
+   procedure Translate_Waveform_Expression
+     (Expr : Iir; Target_Type : Iir; Targ : in out Mnode; Res : out Mnode)
+   is
+      Expr_Type : constant Iir := Get_Type (Expr);
+   begin
+      if Get_Kind (Expr) = Iir_Kind_Aggregate
+        and then Get_Constraint_State (Expr_Type) /= Fully_Constrained
+      then
+         declare
+            Expr_Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
+         begin
+            --  Create a temp.
+            Res := Create_Temp (Expr_Tinfo);
+            --  Set bounds from target
+            Stabilize (Targ);
+            New_Assign_Stmt
+              (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+               M2Addr (Chap3.Get_Composite_Bounds (Targ)));
+            --  Allocate target
+            Chap3.Allocate_Unbounded_Composite_Base
+              (Alloc_Stack, Res, Get_Base_Type (Expr_Type));
+            --  Translate aggregate
+            Chap7.Translate_Aggregate (Res, Target_Type, Expr);
+         end;
+      else
+         Res := Chap7.Translate_Expression (Expr, Target_Type);
+      end if;
+   end Translate_Waveform_Expression;
 
    procedure Translate_Direct_Signal_Assignment
      (Target : Iir; Targ : Mnode; Drv : Mnode; We : Iir)
    is
-      Target_Type : constant Iir := Get_Type (Target);
-      Arg         : Signal_Direct_Assign_Data;
+      Target_Type  : constant Iir := Get_Type (Target);
+      Target_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
+      Arg          : Signal_Direct_Assign_Data;
+      Val          : Mnode;
+      Stable_Targ  : Mnode;
    begin
-      Arg.Drv := Drv;
-      Arg.Expr := E2M (Chap7.Translate_Expression (We, Target_Type),
-                       Get_Info (Target_Type), Mode_Value);
-      Arg.Expr_Node := We;
-      Gen_Signal_Direct_Assign (Targ, Target_Type, Arg);
+      Stable_Targ := Targ;
+      Translate_Waveform_Expression (We, Target_Type, Stable_Targ, Val);
+      if Is_Composite (Target_Tinfo) then
+         Stabilize (Val);
+         Stabilize (Stable_Targ);
+         Chap3.Check_Composite_Match
+           (Target_Type, Stable_Targ, Get_Type (We), Val, We);
+      end if;
+      Arg := (Drv => Drv,
+              Expr => Val,
+              Expr_Node => We);
+      Gen_Signal_Direct_Assign (Stable_Targ, Target_Type, Arg);
    end Translate_Direct_Signal_Assignment;
 
    --  Return True iff signal assignment statement STMT has a delay mechanism:
@@ -4185,12 +4364,33 @@ package body Trans.Chap8 is
       Drv : out Mnode)
    is
       Target_Type : constant Iir := Get_Type (Target);
+
+      Target_Tinfo : Type_Info_Acc;
+      Bounds : Mnode;
    begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          Chap3.Translate_Anonymous_Subtype_Definition (Target_Type, False);
-         Targ := Create_Temp (Get_Info (Target_Type), Mode_Signal);
-         Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
-         Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
+         Target_Tinfo := Get_Info (Target_Type);
+         Targ := Create_Temp (Target_Tinfo, Mode_Signal);
+         if Target_Tinfo.Type_Mode in Type_Mode_Unbounded then
+            Bounds := Dv2M (Create_Temp (Target_Tinfo.B.Bounds_Type),
+                            Target_Tinfo,
+                            Mode_Value,
+                            Target_Tinfo.B.Bounds_Type,
+                            Target_Tinfo.B.Bounds_Ptr_Type);
+            New_Assign_Stmt
+              (M2Lp (Chap3.Get_Composite_Bounds (Targ)),
+               M2Addr (Bounds));
+            --  Build bounds from aggregate.
+            Chap7.Translate_Aggregate_Bounds (Bounds, Target);
+            Chap3.Allocate_Unbounded_Composite_Base
+              (Alloc_Stack, Targ, Target_Type);
+            Translate_Signal_Target_Aggr
+              (Chap3.Get_Composite_Base (Targ), Target, Target_Type);
+         else
+            Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
+            Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
+         end if;
       else
          if Mechanism = Signal_Assignment_Direct then
             Chap6.Translate_Direct_Driver (Target, Targ, Drv);
@@ -4210,7 +4410,6 @@ package body Trans.Chap8 is
       Target      : constant Iir := Strip_Reference_Name (Get_Target (Stmt));
       Target_Type : constant Iir := Get_Type (Target);
       We          : Iir_Waveform_Element;
-      Val         : O_Enode;
       Value       : Iir;
    begin
       if Mechanism = Signal_Assignment_Direct then
@@ -4230,18 +4429,34 @@ package body Trans.Chap8 is
       Value := Get_We_Value (Wf_Chain);
       Signal_Assign_Line := Get_Line_Number (Value);
       if Mechanism = Signal_Assignment_Simple then
-         Val := Chap7.Translate_Expression (Value, Target_Type);
-         Gen_Simple_Signal_Assign (Targ, Target_Type, Val);
+         declare
+            Targ_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
+            Val : Mnode;
+            Targ2 : Mnode;
+         begin
+            Open_Temp;
+            Targ2 := Targ;
+            Translate_Waveform_Expression (Value, Target_Type, Targ2, Val);
+            if Is_Composite (Targ_Tinfo)
+              and then Get_Constraint_State (Target_Type) /= Fully_Constrained
+            then
+               Stabilize (Targ2);
+               Stabilize (Val);
+               Chap3.Check_Composite_Match
+                 (Target_Type, Targ2, Get_Type (Value), Val, Wf_Chain);
+            end if;
+            Gen_Simple_Signal_Assign (Targ2, Target_Type, M2E (Val));
+            Close_Temp;
+         end;
          return;
       end if;
 
       --  General case.
       declare
+         Targ_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
          Var_Targ   : Mnode;
-         Targ_Tinfo : Type_Info_Acc;
       begin
          Open_Temp;
-         Targ_Tinfo := Get_Info (Target_Type);
          Var_Targ := Stabilize (Targ, True);
 
          --  Translate the first waveform element.
@@ -4286,9 +4501,11 @@ package body Trans.Chap8 is
             if Get_Kind (Value) = Iir_Kind_Null_Literal then
                Val := Mnode_Null;
             else
-               Val := E2M (Chap7.Translate_Expression (Value, Target_Type),
-                           Targ_Tinfo, Mode_Value);
-               Val := Stabilize (Val);
+               Translate_Waveform_Expression
+                 (Value, Target_Type, Var_Targ, Val);
+               Stabilize (Val);
+               Chap3.Check_Composite_Match
+                 (Target_Type, Var_Targ, Get_Type (Value), Val, We);
             end if;
             Data := Signal_Assign_Data'(Expr => Val,
                                         Reject => Reject_Time,
@@ -4316,9 +4533,12 @@ package body Trans.Chap8 is
                if Get_Kind (Value) = Iir_Kind_Null_Literal then
                   Val := Mnode_Null;
                else
-                  Val :=
-                    E2M (Chap7.Translate_Expression (Value, Target_Type),
-                         Targ_Tinfo, Mode_Value);
+                  Val := Chap7.Translate_Expression (Value, Target_Type);
+                  if Is_Composite (Targ_Tinfo) then
+                     Stabilize (Val);
+                     Chap3.Check_Composite_Match
+                       (Target_Type, Var_Targ, Get_Type (Value), Val, We);
+                  end if;
                end if;
                Data := Signal_Assign_Data'(Expr => Val,
                                            Reject => O_Dnode_Null,
@@ -4467,7 +4687,8 @@ package body Trans.Chap8 is
                C_Stmt : Iir;
             begin
                C_Stmt :=
-                 Canon.Canon_Conditional_Variable_Assignment_Statement (Stmt);
+                 Vhdl.Canon.Canon_Conditional_Variable_Assignment_Statement
+                 (Stmt);
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
             end;
@@ -4476,7 +4697,8 @@ package body Trans.Chap8 is
                C_Stmt : Iir;
             begin
                C_Stmt :=
-                 Canon.Canon_Conditional_Signal_Assignment_Statement (Stmt);
+                 Vhdl.Canon.Canon_Conditional_Signal_Assignment_Statement
+                 (Stmt);
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
             end;
@@ -4495,7 +4717,7 @@ package body Trans.Chap8 is
             begin
                if not Get_Suspend_Flag (Stmt) then
                   --  Suspendable calls were already canonicalized.
-                  Canon.Canon_Subprogram_Call (Call);
+                  Vhdl.Canon.Canon_Subprogram_Call (Call);
                   Trans.Update_Node_Infos;
                end if;
 

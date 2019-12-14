@@ -205,13 +205,13 @@ if ($Install)
 	New-Item -ItemType Directory -Path "$InstallPath"						-ErrorAction SilentlyContinue	| Out-Null
 
 	# writing ZIP file to disk
-	$TempFilePath =									[System.IO.Path]::GetTempFileName()
+	$TempFilePath =	[System.IO.Path]::GetTempFileName().TrimEnd("tmp") + "zip"
 	Write-Host "  Writing temporary ZIP file: $TempFilePath"
 	$CompressedFileContentAsBytes =	[System.Convert]::FromBase64String($CompressedFileContentInBase64)
 	[System.IO.File]::WriteAllBytes("$TempFilePath", $CompressedFileContentAsBytes)
 	
 	Write-Host "  Extracting ZIP file to: $InstallPath"
-	Expand-Archive "$TempFilePath" -OutputPath $InstallPath -Force -ShowProgress
+	Microsoft.PowerShell.Archive\Expand-Archive "$TempFilePath" -DestinationPath $InstallPath -Force
 
 	Remove-Item $TempFilePath
 	

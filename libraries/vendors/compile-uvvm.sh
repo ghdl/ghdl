@@ -36,7 +36,11 @@
 
 # ---------------------------------------------
 # work around for Darwin (Mac OS)
-READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+if greadlink --version > /dev/null 2>&1 ; then
+		READLINK=greadlink
+else
+		READLINK=readlink
+fi
 
 # save working directory
 WorkingDir=$(pwd)
@@ -44,9 +48,27 @@ ScriptDir="$(dirname $0)"
 ScriptDir="$($READLINK -f $ScriptDir)"
 
 # source configuration file from GHDL's 'vendors' library directory
-. $ScriptDir/../ansi_color.sh
+if [ -f $ScriptDir/../ansi_color.sh ]; then
+		. $ScriptDir/../ansi_color.sh
+fi
 . $ScriptDir/config.sh
 . $ScriptDir/shared.sh
+
+uvvm_pkgs="uvvm_util
+ uvvm_vvc_framework"
+
+uvvm_vips="bitvis_vip_sbi
+ bitvis_vip_avalon_mm
+ bitvis_vip_axilite
+ bitvis_vip_axistream
+ bitvis_vip_gpio
+ bitvis_vip_i2c
+ bitvis_vip_spi
+ bitvis_vip_uart
+
+ bitvis_vip_clock_generator
+ bitvis_vip_scoreboard
+"
 
 # command line argument processing
 NO_COMMAND=1
@@ -75,43 +97,51 @@ while [[ $# > 0 ]]; do
 		NO_COMMAND=0
 		;;
 		--uvvm-utilities)
-		COMPILE_UVVM_UTILITIES=TRUE
+		COMPILE_uvvm_util=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vvc-framework)
-		COMPILE_UVVM_VVC_FRAMEWORK=TRUE
+		COMPILE_uvvm_vvc_framework=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-avalon_mm)
-		COMPILE_UVVM_VIP_AVALON_MM=TRUE
+		COMPILE_vip_avalon_mm=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-axi_lite)
-		COMPILE_UVVM_VIP_AXILITE=TRUE
+		COMPILE_vip_axilite=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-axi_stream)
-		COMPILE_UVVM_VIP_AXISTREAM=TRUE
+		COMPILE_vip_axistream=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-gpio)
-		COMPILE_UVVM_VIP_GPIO=TRUE
+		COMPILE_vip_gpio=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-i2c)
-		COMPILE_UVVM_VIP_I2C=TRUE
+		COMPILE_vip_i2c=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-sbi)
-		COMPILE_UVVM_VIP_SBI=TRUE
+		COMPILE_vip_sbi=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-spi)
-		COMPILE_UVVM_VIP_SPI=TRUE
+		COMPILE_vip_spi=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-uart)
-		COMPILE_UVVM_VIP_UART=TRUE
+		COMPILE_vip_uart=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-clock_generator)
+		COMPILE_vip_clock_generator=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-scoreboard)
+		COMPILE_vip_scoreboard=TRUE
 		NO_COMMAND=0
 		;;
 		-h|--help)
@@ -174,18 +204,20 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "     --uvvm-vip         Compile UVVM Verification IPs (VIPs)."
 	echo ""
 	echo "Common Packages:"
-	echo "     --uvvm-utilities      "
-	echo "     --uvvm-vvc-framework  "
+	echo "     --uvvm-utilities"
+	echo "     --uvvm-vvc-framework"
 	echo ""
 	echo "Verification IPs:"
-	echo "     --uvvm-vip-avalon_mm  "
-	echo "     --uvvm-vip-axi_lite   "
-	echo "     --uvvm-vip-axi_stream "
-	echo "     --uvvm-vip-gpio       "
-	echo "     --uvvm-vip-i2c        "
-	echo "     --uvvm-vip-sbi        "
-	echo "     --uvvm-vip-spi        "
-	echo "     --uvvm-vip-uart       "
+	echo "     --uvvm-vip-avalon_mm"
+	echo "     --uvvm-vip-axi_lite"
+	echo "     --uvvm-vip-axi_stream"
+	echo "     --uvvm-vip-gpio"
+	echo "     --uvvm-vip-i2c"
+	echo "     --uvvm-vip-sbi"
+	echo "     --uvvm-vip-spi"
+	echo "     --uvvm-vip-uart"
+	echo "     --uvvm-vip-clock_generator"
+	echo "     --uvvm-vip-scoreboard"
 	echo ""
 	echo "Library compile options:"
 	echo "  -H --halt-on-error    Halt on error(s)."
@@ -202,22 +234,19 @@ if [ "$HELP" == "TRUE" ]; then
 fi
 
 if [ "$COMPILE_ALL" == "TRUE" ]; then
-	COMPILE_UVVM=TRUE
-	COMPILE_UVVM_VIP=TRUE
+		for p in $uvvm_pkgs $uvvm_vips; do
+				eval "COMPILE_$p=TRUE"
+		done
 fi
 if [ "$COMPILE_UVVM" == "TRUE" ]; then
-	COMPILE_UVVM_UTILITIES=TRUE
-	COMPILE_UVVM_VVC_FRAMEWORK=TRUE
+		for p in $uvvm_pkgs; do
+				eval "COMPILE_$p=TRUE"
+		done
 fi
 if [ "$COMPILE_UVVM_VIP" == "TRUE" ]; then
-	COMPILE_UVVM_VIP_AVALON_MM=TRUE
-	COMPILE_UVVM_VIP_AXILITE=TRUE
-	COMPILE_UVVM_VIP_AXISTREAM=TRUE
-	COMPILE_UVVM_VIP_GPIO=TRUE
-	COMPILE_UVVM_VIP_I2C=TRUE
-	COMPILE_UVVM_VIP_SBI=TRUE
-	COMPILE_UVVM_VIP_SPI=TRUE
-	COMPILE_UVVM_VIP_UART=TRUE
+		for p in $uvvm_vips; do
+				eval "COMPILE_$p=TRUE"
+		done
 fi
 
 # -> $SourceDirectories
@@ -260,257 +289,19 @@ fi
 # ==============================================================================
 # compile uvvm_util packages
 ERRORCOUNT=0
-if [ "$COMPILE_UVVM_UTILITIES" == "TRUE" ]; then
-	Library="uvvm_util"
-	VHDLVersion="v08"
-	Files=(
-		uvvm_util/src/types_pkg.vhd
-		uvvm_util/src/adaptations_pkg.vhd
-		uvvm_util/src/string_methods_pkg.vhd
-		uvvm_util/src/protected_types_pkg.vhd
-		uvvm_util/src/hierarchy_linked_list_pkg.vhd
-		uvvm_util/src/alert_hierarchy_pkg.vhd
-		uvvm_util/src/license_pkg.vhd
-		uvvm_util/src/methods_pkg.vhd
-		uvvm_util/src/bfm_common_pkg.vhd
-		uvvm_util/src/uvvm_util_context.vhd
-	)
+for Library in $uvvm_pkgs $uvvm_vips; do
+		if [ x`eval "echo \\\$COMPILE_$Library"` == x"TRUE" ]; then
+				VHDLVersion="v08"
+				# append absolute source path
+				files=`sed -e '/#/d' < $SourceDirectory/$Library/script/compile_order.txt`
+				SourceFiles=()
+				for File in $files; do
+						SourceFiles+=("$SourceDirectory/$Library/script/$File")
+				done
 
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile uvvm_vvc_framework packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VVC_FRAMEWORK" == "TRUE" ]; then
-	Library="uvvm_vvc_framework"
-	VHDLVersion="v08"
-	Files=(
-		uvvm_vvc_framework/src/ti_vvc_framework_support_pkg.vhd
-		uvvm_vvc_framework/src/ti_generic_queue_pkg.vhd
-		uvvm_vvc_framework/src/ti_data_queue_pkg.vhd
-		uvvm_vvc_framework/src/ti_data_fifo_pkg.vhd
-		uvvm_vvc_framework/src/ti_data_stack_pkg.vhd
-		uvvm_vvc_framework/src/ti_uvvm_engine.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# Verification IPs
-# ==============================================================================
-# compile bitvis_vip_avalon_mm packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VIP_AVALON_MM" == "TRUE" ]; then
-	Library="bitvis_vip_avalon_mm"
-	VHDLVersion="v08"
-	Files=(
-		bitvis_vip_avalon_mm/src/avalon_mm_bfm_pkg.vhd
-		bitvis_vip_avalon_mm/src/vvc_cmd_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_avalon_mm/src/vvc_methods_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
-		bitvis_vip_avalon_mm/src/avalon_mm_vvc.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile bitvis_vip_axilite packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VIP_AXILITE" == "TRUE" ]; then
-	Library="bitvis_vip_axilite"
-	VHDLVersion="v08"
-	Files=(
-		bitvis_vip_axilite/src/axilite_bfm_pkg.vhd
-		bitvis_vip_axilite/src/vvc_cmd_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_axilite/src/vvc_methods_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
-		bitvis_vip_axilite/src/axilite_vvc.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile bitvis_vip_axistream packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VIP_AXISTREAM" == "TRUE" ]; then
-	Library="bitvis_vip_axistream"
-	VHDLVersion="v08"
-	Files=(
-		bitvis_vip_axistream/src/axistream_bfm_pkg.vhd
-		bitvis_vip_axistream/src/vvc_cmd_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_axistream/src/vvc_methods_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
-		bitvis_vip_axistream/src/axistream_vvc.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile bitvis_vip_gpio packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VIP_GPIO" == "TRUE" ]; then
-	Library="bitvis_vip_gpio"
-	VHDLVersion="v08"
-	Files=(
-		bitvis_vip_gpio/src/gpio_bfm_pkg.vhd
-		bitvis_vip_gpio/src/vvc_cmd_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_gpio/src/vvc_methods_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
-		bitvis_vip_gpio/src/gpio_vvc.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile bitvis_vip_i2c packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VIP_I2C" == "TRUE" ]; then
-	Library="bitvis_vip_i2c"
-	VHDLVersion="v08"
-	Files=(
-		bitvis_vip_i2c/src/i2c_bfm_pkg.vhd
-		bitvis_vip_i2c/src/vvc_cmd_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_i2c/src/vvc_methods_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
-		bitvis_vip_i2c/src/i2c_vvc.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile bitvis_vip_sbi packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VIP_SBI" == "TRUE" ]; then
-	Library="bitvis_vip_sbi"
-	VHDLVersion="v08"
-	Files=(
-		bitvis_vip_sbi/src/sbi_bfm_pkg.vhd
-		bitvis_vip_sbi/src/vvc_cmd_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_sbi/src/vvc_methods_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
-		bitvis_vip_sbi/src/sbi_vvc.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile bitvis_vip_spi packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VIP_SPI" == "TRUE" ]; then
-	Library="bitvis_vip_spi"
-	VHDLVersion="v08"
-	Files=(
-		bitvis_vip_spi/src/spi_bfm_pkg.vhd
-		bitvis_vip_spi/src/vvc_cmd_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_spi/src/vvc_methods_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
-		bitvis_vip_spi/src/spi_vvc.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile bitvis_vip_uart packages
-ERRORCOUNT=0
-if [ "$COMPILE_UVVM_VIP_UART" == "TRUE" ]; then
-	Library="bitvis_vip_uart"
-	VHDLVersion="v08"
-	Files=(
-		bitvis_vip_uart/src/uart_bfm_pkg.vhd
-		bitvis_vip_uart/src/vvc_cmd_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_uart/src/vvc_methods_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
-		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
-		bitvis_vip_uart/src/uart_rx_vvc.vhd
-		bitvis_vip_uart/src/uart_tx_vvc.vhd
-		bitvis_vip_uart/src/uart_vvc.vhd
-	)
-
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
+				GHDLCompilePackages
+		fi
+done
 	
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling UVVM packages "

@@ -278,6 +278,11 @@ package body Grt.Rtis_Addr is
       end case;
    end Extract_Range;
 
+   function Array_Layout_To_Bounds (Layout : Address) return Address is
+   begin
+      return Layout + Ghdl_Index_Type'(Ghdl_Indexes_Type'Size / 8);
+   end Array_Layout_To_Bounds;
+
    procedure Bound_To_Range (Bounds_Addr : Address;
                              Def : Ghdl_Rtin_Type_Array_Acc;
                              Res : out Ghdl_Range_Array)

@@ -1,0 +1,5 @@
+vunit assert3 (ent)
+{
+  default clock is rising_edge(clk);
+  my_cond: assert always {val; req} |=> eventually! ack;
+}

@@ -264,6 +264,7 @@ package body Ortho_Debug.Disp is
 
    procedure Disp_Enode (E : O_Enode; Etype : O_Tnode);
    procedure Disp_Lnode (Node : O_Lnode);
+   procedure Disp_Gnode (Node : O_Gnode);
    procedure Disp_Snode (First, Last : O_Snode);
    procedure Disp_Dnode (Decl : O_Dnode);
    procedure Disp_Tnode (Atype : O_Tnode; Full : Boolean);
@@ -451,6 +452,81 @@ package body Ortho_Debug.Disp is
       end if;
    end Disp_Lit;
 
+   Xdigit : constant array (0 .. 15) of Character := "0123456789abcdef";
+
+   procedure Disp_Float_Lit
+     (Lit_Type : O_Tnode; Known : Boolean; Val : IEEE_Float_64)
+   is
+      pragma Assert (IEEE_Float_64'Machine_Radix = 2);
+      pragma Assert (IEEE_Float_64'Machine_Mantissa = 53);
+      Exp : Integer;
+      Man : Unsigned_64;
+      --  Res: sign(1) + 0x(2) + Man(53 / 3 ~= 18) + p(1) + sing(1) + exp(4)
+      Str : String (1 .. 1 + 2 + 18 + 1 + 1 + 4);
+      P : Natural;
+      Neg : Boolean;
+   begin
+      Exp := IEEE_Float_64'Exponent (Val) - 1;
+      Man := Unsigned_64 (abs (IEEE_Float_64'Fraction (Val)) * 2.0 ** 53);
+
+      --  Use decimal representation if there is no digit after the dot.
+      if Man = 0 then
+         Disp_Lit (Lit_Type, Known, "0.0");
+      else
+         pragma Assert (Shift_Right (Man, 52) = 1);
+
+         --  Remove hidden 1.
+         Man := Man and (2**52 - 1);
+
+         --  Remove trailing hex 0.
+         while Man /= 0 and (Man rem 16) = 0 loop
+            Man := Man / 16;
+         end loop;
+
+         --  Exponent.
+         P := Str'Last;
+         if Exp < 0 then
+            Neg := True;
+            Exp := -Exp;
+         else
+            Neg := False;
+         end if;
+         loop
+            Str (P) := Xdigit (Exp rem 10);
+            P := P - 1;
+            Exp := Exp / 10;
+            exit when Exp = 0;
+         end loop;
+         if Neg then
+            Str (P) := '-';
+            P := P - 1;
+         end if;
+         Str (P) := 'p';
+         P := P - 1;
+
+         --  Mantissa.
+         loop
+            Str (P) := Xdigit (Natural (Man and 15));
+            P := P - 1;
+            Man := Man / 16;
+            exit when Man = 0;
+         end loop;
+
+         P := P - 4;
+         Str (P + 1) := '0';
+         Str (P + 2) := 'x';
+         Str (P + 3) := '1';
+         Str (P + 4) := '.';
+
+         if Val < 0.0 then
+            Str (P) := '-';
+            P := P - 1;
+         end if;
+
+         Disp_Lit (Lit_Type, Known, Str (P + 1 .. Str'Last));
+      end if;
+   end Disp_Float_Lit;
+
    --  Display C. If CTYPE is set, this is the known type of C.
    procedure Disp_Cnode (C : O_Cnode; Ctype : O_Tnode)
    is
@@ -470,7 +546,7 @@ package body Ortho_Debug.Disp is
          when OC_Signed_Lit =>
             Disp_Lit (C.Ctype, Known, Integer_64'Image (C.S_Val));
          when OC_Float_Lit =>
-            Disp_Lit (C.Ctype, Known, IEEE_Float_64'Image (C.F_Val));
+            Disp_Float_Lit (C.Ctype, Known, C.F_Val);
          when OC_Boolean_Lit =>
             --  Always disp the type of boolean literals.
             Disp_Lit (C.Ctype, False, Get_String (C.B_Id));
@@ -556,24 +632,47 @@ package body Ortho_Debug.Disp is
          when OC_Address =>
             Disp_Tnode_Name (C.Ctype);
             Put ("'address (");
-            Disp_Dnode_Name (C.Decl);
+            Disp_Gnode (C.Addr_Global);
             Put (")");
          when OC_Unchecked_Address =>
             Disp_Tnode_Name (C.Ctype);
             Put ("'unchecked_address (");
-            Disp_Dnode_Name (C.Decl);
+            Disp_Gnode (C.Addr_Global);
             Put (")");
          when OC_Subprogram_Address =>
             Disp_Tnode_Name (C.Ctype);
             Put ("'subprg_addr (");
-            Disp_Dnode_Name (C.Decl);
+            Disp_Dnode_Name (C.Addr_Decl);
             Put (")");
       end case;
    end Disp_Cnode;
 
-   --  Disp E whose expected type is ETYPE (may not be set).
-   procedure Disp_Enode (E : O_Enode; Etype : O_Tnode)
+   function Is_Neg_Neg (E : O_Enode) return Boolean
    is
+      Lit : O_Cnode;
+   begin
+      pragma Assert (E.Kind = OE_Neg_Ov);
+      case E.Operand.Kind is
+         when OE_Neg_Ov =>
+            return True;
+         when OE_Lit =>
+            Lit := E.Operand.Lit;
+            case Lit.Kind is
+               when OC_Signed_Lit =>
+                  return Lit.S_Val < 0;
+               when OC_Float_Lit =>
+                  return Lit.F_Val < 0.0;
+               when others =>
+                  null;
+            end case;
+         when others =>
+            null;
+      end case;
+      return False;
+   end Is_Neg_Neg;
+
+   --  Disp E whose expected type is ETYPE (may not be set).
+   procedure Disp_Enode (E : O_Enode; Etype : O_Tnode) is
    begin
       case E.Kind is
          when OE_Lit =>
@@ -619,7 +718,9 @@ package body Ortho_Debug.Disp is
                when others =>
                   Disp_Enode_Name (E.Kind);
             end case;
-            if E.Kind /= OE_Neg_Ov then
+            --  Don't print space after '-' unless the operand is also '-'.
+            --  (avoid to print --, which is a comment).
+            if E.Kind /= OE_Neg_Ov or else Is_Neg_Neg (E) then
                Put (' ');
             end if;
             Disp_Enode (E.Operand, Etype);
@@ -677,12 +778,20 @@ package body Ortho_Debug.Disp is
             Disp_Lnode (Node.Rec_Base);
             Put ('.');
             Disp_Ident (Node.Rec_El.Ident);
---          when OL_Var_Ref
---            | OL_Const_Ref
---            | OL_Param_Ref =>
---             Disp_Dnode_Name (Node.Decl);
       end case;
    end Disp_Lnode;
+
+   procedure Disp_Gnode (Node : O_Gnode) is
+   begin
+      case Node.Kind is
+         when OG_Decl =>
+            Disp_Dnode_Name (Node.Decl);
+         when OG_Selected_Element =>
+            Disp_Gnode (Node.Rec_Base);
+            Put ('.');
+            Disp_Ident (Node.Rec_El.Ident);
+      end case;
+   end Disp_Gnode;
 
    procedure Disp_Fnodes (First : O_Fnode)
    is
@@ -999,7 +1108,10 @@ package body Ortho_Debug.Disp is
                Disp_Loop_Name (Stmt);
                Put_Line (":");
                Add_Tab;
-               Disp_Snode (Stmt.Next, Stmt.Loop_Last);
+               if Stmt.Loop_Last /= Stmt then
+                  --  Only if the loop is not empty.
+                  Disp_Snode (Stmt.Next, Stmt.Loop_Last);
+               end if;
                Stmt := Stmt.Loop_Last;
                Rem_Tab;
                Put_Keyword ("end");

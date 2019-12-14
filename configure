@@ -1,14 +1,29 @@
 #!/bin/sh
 #
-# configure script for ghdl (c) 2014 Tristan Gingold
+# Configure script for GHDL (C) 2014-2018 Tristan Gingold
 #
+# GHDL is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
+#
+# GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GHDL; see the file COPYING.  If not, write to the Free
+# Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+# 02111-1307, USA.
+
 
 # Current version.  This is the only place where the version is written.
 # Any code that needs version should read it directly or indirectly from this
 # place.
 # Note the absence of spaces and the quotes.
 # Suffix "-dev" is used during development.
-ghdl_version="0.36-dev"
+ghdl_version="0.37-dev"
 
 backend=mcode
 CC=${CC:-gcc}
@@ -29,7 +44,9 @@ build_mode=
 enable_werror=true
 enable_checks=true
 enable_openieee=unknown
-enable_python=false
+enable_libghdl=true
+enable_synth=false
+default_pic=false
 EXEEXT=
 SOEXT=.so
 PIC_FLAGS=-fPIC
@@ -37,12 +54,12 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie enable_werror enable_checks enable_openieee enable_python libghdl_version ghdl_version"
+subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pic enable_werror enable_checks enable_openieee enable_libghdl libghdl_version ghdl_version"
 
 # Find srcdir
 srcdir=`dirname $progname`
 if test x$srcdir = x; then
-    srcdir=.
+  srcdir=.
 fi
 
 # Check echo -n / echo \c
@@ -60,9 +77,9 @@ check_version()
   exp_ver=`echo $1 | sed 's/\./v/g'`
   tool_ver=`echo $2 | sed 's/\./v/g'`
   if echo $tool_ver | grep -q "^$exp_ver"; then
-      return 0
+    return 0
   else
-      return 1
+    return 1
   fi
 }
 
@@ -70,37 +87,42 @@ check_version()
 for opt do
   optarg=`expr x"$opt" : 'x[^=]*=\(.*\)'`
   case "$opt" in
-      CC=*|CFLAGS=*|GNATMAKE=*|LDFLAGS=*|CXX=*)
-        optvar=`expr x"$opt" : 'x\([^=]*\)=.*'`
-	eval $optvar=\"$optarg\"
-	;;
-      --prefix=*) prefix="$optarg";;
-      --srcdir=*) srcdir="$optarg";;
-      --with-gcc=*) gcc_src_dir="$optarg"; backend=gcc;;
-      --with-llvm=*) echo "--with-llvm is deprecated, use --with-llvm-config";
-		     llvm_config="$optarg/bin/llvm-config"; backend=llvm;;
-      --with-llvm-config) llvm_config="llvm-config"; backend=llvm;;
-      --with-llvm-config=*) llvm_config="$optarg"; backend=llvm;;
-      --with-backtrace-lib=*) backtrace_lib="$optarg";;
-      --enable-werror) enable_werror=true;;
-      --disable-werror) enable_werror=false;;
-      --enable-checks) enable_checks=true;;
-      --disable-checks) enable_checks=false;;
-      --enable-openieee) enable_openieee=true;;
-      --disable-openieee) enable_openieee=false;;
-      --enable-python) enable_python=true;;
-      --disable-python) enable_python=false;;
-      --enable-coverage) build_mode="coverage";;
-      -h|-help|--help) show_help=yes;;
-      *) echo "$0: unknown option $opt; try $0 --help"
-	  exit 1
-	  ;;
+    CC=*|CFLAGS=*|GNATMAKE=*|LDFLAGS=*|CXX=*)
+      optvar=`expr x"$opt" : 'x\([^=]*\)=.*'`
+      eval $optvar=\"$optarg\"
+      ;;
+    --prefix=*)             prefix="$optarg";;
+    --srcdir=*)             srcdir="$optarg";;
+    --with-gcc=*)           gcc_src_dir="$optarg";     backend=gcc;;
+    --with-llvm=*)
+      echo "--with-llvm is deprecated, use --with-llvm-config"
+      llvm_config="$optarg/bin/llvm-config";           backend=llvm;;
+    --with-llvm-config)     llvm_config="llvm-config"; backend=llvm;;
+    --with-llvm-config=*)   llvm_config="$optarg";     backend=llvm;;
+    --with-backtrace-lib=*) backtrace_lib="$optarg";;
+    --enable-werror)        enable_werror=true;;
+    --disable-werror)       enable_werror=false;;
+    --enable-checks)        enable_checks=true;;
+    --disable-checks)       enable_checks=false;;
+    --enable-openieee)      enable_openieee=true;;
+    --disable-openieee)     enable_openieee=false;;
+    --enable-libghdl)       enable_libghdl=true;;
+    --disable-libghdl)      enable_libghdl=false;;
+    --enable-synth)         enable_synth=true;;
+    --disable-synth)        enable_synth=false;;
+    --default-pic)          default_pic=true;;
+    --enable-coverage)      build_mode="coverage";;
+    -h|-help|--help)        show_help=yes;;
+    *)
+      echo "$0: unknown option $opt; try $0 --help"
+      exit 1
+      ;;
   esac
 done
 
 # Help
 if test $show_help != no; then
-cat <<EOF
+  cat <<EOF
 Usage: configure [options]
 
 Options [defaults in brackets]:
@@ -112,148 +134,169 @@ Options [defaults in brackets]:
                               backtrace on errors (only for llvm).
   --disable-werror            warnings don't stop build
   --disable-checks            disable internal checks
+  --disable-libghdl           do not build libghdl shared library
   --enable-openieee           use gpl-compatible sources for ieee library
-  --enable-python             build python libghdl
+  --enable-libghdl            also build the libghdl shared library
+  --enable-synth              build with synthesis feature
 EOF
-exit 0
+  exit 0
 fi
 
 # Set abs_srcdir (absolute srcdir)
 case $srcdir in
-    /*) abs_srcdir=$srcdir;;
-    *)
-        # Use a Windows path on windows.
-        case "$OS" in
-            Windows_NT) curdir=`pwd -W 2>/dev/null || pwd` ;;
-            *) curdir=`pwd` ;;
-        esac
-        abs_srcdir=$curdir/$srcdir
-        ;;
+  /*) abs_srcdir=$srcdir;;
+  *)
+    # Use a Windows path on windows.
+    case "$OS" in
+      Windows_NT) curdir=`pwd -W 2>/dev/null || pwd` ;;
+      *) curdir=`pwd` ;;
+    esac
+    abs_srcdir=$curdir/$srcdir
+    ;;
 esac
 
 # Sanity checks
 # Check srcdir
 pat="2019802090ed76fc5c54cec58f22a2c1"
 if ! grep $pat $srcdir/configure > /dev/null 2>&1; then
-    echo "Incorrect srcdir; try with --srcdir=xx"
-    echo "srcdir=$srcdir"
-    exit 1
+  echo "Incorrect srcdir; try with --srcdir=xx"
+  echo "srcdir=$srcdir"
+  exit 1
+fi
+
+if ! `cmp /dev/null /dev/null > /dev/null 2>&1`; then
+  echo "Sorry, you need 'cmp' to configure GHDL.";
+  exit 1
 fi
 
 if ! cmp $srcdir/configure $abs_srcdir/configure > /dev/null 2>&1; then
-    echo "Cannot compute absolute source dir (or incorrect srcdir)"
-    echo "srcdir=$srcdir"
-    echo "abs_srcdir=$abs_srcdir"
-    exit 1
+  echo "Cannot compute absolute source dir (or incorrect srcdir)"
+  echo "srcdir=$srcdir"
+  echo "abs_srcdir=$abs_srcdir"
+  exit 1
 fi
 # Check that gnatmake exists
 if ! $GNATMAKE --version >/dev/null 2>&1; then
-    echo "Sorry, you need GNAT to build GHDL.  See the README"
-    echo "(gnatmake executable is: $GNATMAKE)"
-    exit 1
+  echo "Sorry, you need GNAT to build GHDL.  See the README"
+  echo "(gnatmake executable is: $GNATMAKE)"
+  exit 1
 fi
 
 # Check that compiler exists
 if ! $CC -v 2> /dev/null; then
-    echo "Sorry, you need a C compiler to build GHDL.  See the README"
-    exit 1
+  echo "Sorry, you need a C compiler to build GHDL.  See the README"
+  exit 1
+fi
+
+# Check the version of libghdl is correct.
+if [ "$enable_libghdl" = true ]; then
+    libghdl_version="$srcdir/python/libghdl/version.py"
+    # Extract content between single quotes in version.py, to avoid false positives due to LF/CRLF mismatch.
+    if [ "$ghdl_version" != "`sed "s/.*'\(.*\)'.*/\1/g" $libghdl_version`" ]; then
+      echo "Sorry, the version of $libghdl_version is not correct"
+      echo "update the version to: $ghdl_version"
+      echo "or use --disable-libghdl"
+      exit 1
+    fi
 fi
 
 # Default for enable_openieee
 if [ "$enable_openieee" = "unknown" ]; then
-    if test -d $srcdir/libraries/ieee ; then
-	enable_openieee=false
-	echo "Use full IEEE library"
-    else
-	enable_openieee=true
-	echo "Use openieee source files for IEEE library (but partial)"
-    fi
+  if test -d $srcdir/libraries/ieee ; then
+    enable_openieee=false
+    echo "Use full IEEE library"
+  else
+    enable_openieee=true
+    echo "Use openieee source files for IEEE library (but partial)"
+  fi
 elif [ "$enable_openieee" = false ]; then
-    if ! test -d $srcdir/libraries/ieee ; then
-	echo "Sorry, full ieee library source files not present"
-	echo "consider --enable-openieee"
-	exit 1
-    fi
+  if ! test -d $srcdir/libraries/ieee ; then
+    echo "Sorry, full ieee library source files not present"
+    echo "consider --enable-openieee"
+    exit 1
+  fi
 fi
 
 # Compute build machine
 if test x$build = x; then
-    build=`$CC $CFLAGS -dumpmachine`
+  build=`$CC $CFLAGS -dumpmachine`
 fi
 echo "Build machine is: $build"
 
 # For mcode, check that gcc emits i386
 if test $backend = mcode; then
-    gcc_machine=`$CC $CFLAGS -dumpmachine`
-    case "$gcc_machine" in
-	i[3-6]86*) mcode64="" ;;
-	x86_64*) mcode64="64" ;;
-	*)
-	  mcode64=""
-	  echo "WARNING: GHDL for mcode is supported only on x86"
-	  echo "continuing, but build failure expected (See the README)"
-	  ;;
-    esac
-    if test "x$backtrace_lib" != x ; then
-	echo "WARNING: --with-backtrace-lib= ignored with mcode"
-	backtrace_lib=
-    fi
+  gcc_machine=`$CC $CFLAGS -dumpmachine`
+  case "$gcc_machine" in
+    i[3-6]86*) mcode64="" ;;
+    x86_64*) mcode64="64" ;;
+    *)
+      mcode64=""
+      echo "WARNING: GHDL for mcode is supported only on x86"
+      echo "continuing, but build failure expected (See the README)"
+      ;;
+  esac
+  if test "x$backtrace_lib" != x ; then
+    echo "WARNING: --with-backtrace-lib= ignored with mcode"
+    backtrace_lib=
+  fi
 fi
 
 # For gcc backend, check existing version
 if test $backend = gcc; then
-    if ! test -f $gcc_src_dir/gcc/BASE-VER; then
-	echo "cannot find gcc/BASE-VER in $gcc_src_dir"
-	exit 1
-    fi
-    if test "x$backtrace_lib" = x ; then
-	# Automatically use libbacktrace from gcc.
-	backtrace_lib="$prefix/$libdirsuffix/libbacktrace.a"
-    fi
+  if ! test -f $gcc_src_dir/gcc/BASE-VER; then
+    echo "cannot find gcc/BASE-VER in $gcc_src_dir"
+    exit 1
+  fi
+  if test "x$backtrace_lib" = x ; then
+    # Automatically use libbacktrace from gcc.
+    backtrace_lib="$prefix/$libdirsuffix/libbacktrace.a"
+  fi
 fi
 
 # For llvm backend, check llvm-config
 if test $backend = llvm; then
-    llvm_version=`"$llvm_config" --version 2>/dev/null`
-    if [ $? != 0 ]; then
-	echo "cannot run $llvm_config"
-	exit 1
-    fi
-    if check_version 3.5 $llvm_version; then
-	llvm_be=llvm
-    elif check_version 3.6 $llvm_version ||
-	 check_version 3.7 $llvm_version ||
-         check_version 3.8 $llvm_version;
-    then
-	echo "Debugging is not enabled with llvm $llvm_version"
-	llvm_be=llvm-nodebug
-	# Tested with llvm 3.5, so assume 3.6, 3.7 and 3.8
-    elif check_version 3.9 $llvm_version ||
-	 check_version 4.0 $llvm_version ||
-	 check_version 5.0 $llvm_version ||
-	 check_version 6.0 $llvm_version ||
-	 false; then
-	echo "Debugging is not enabled with llvm $llvm_version"
-	llvm_be=llvm4-nodebug
-    else
-	echo "Unhandled version llvm $llvm_version"
-	exit 1
-    fi
-    # For llvm, the c++ compiler is used for linking so that the standard c++
-    # library is included.  However, the linker needs the no_compact_unwind
-    # flag because code generated by gcc is not compatible with compact unwind.
-    case "$build" in
-	*darwin*) LDFLAGS="$LDFLAGS -Wl,-no_compact_unwind" ;;
-    esac
+  llvm_version=`"$llvm_config" --version 2>/dev/null`
+  if [ $? != 0 ]; then
+    echo "cannot run $llvm_config"
+    exit 1
+  fi
+  if check_version 3.5 $llvm_version; then
+    llvm_be=llvm35
+  elif check_version 3.6 $llvm_version ||
+       check_version 3.7 $llvm_version ||
+       check_version 3.8 $llvm_version ||
+       false; then
+    echo "Debugging is not enabled with llvm $llvm_version"
+    llvm_be=llvm-nodebug
+    # Tested with llvm 3.5, so assume 3.6, 3.7 and 3.8
+  elif check_version 3.9 $llvm_version ||
+       check_version 4.0 $llvm_version ||
+       check_version 5.0 $llvm_version ||
+       check_version 6.0 $llvm_version ||
+       check_version 7.0 $llvm_version ||
+       check_version 8.0 $llvm_version ||
+       check_version 9.0 $llvm_version ||
+       false; then
+    echo "Debugging is not enabled with llvm $llvm_version"
+    llvm_be=llvm4-nodebug
+  else
+    echo "Unhandled version llvm $llvm_version"
+    exit 1
+  fi
+  # For llvm, the c++ compiler is used for linking so that the standard c++
+  # library is included.  However, the linker needs the no_compact_unwind
+  # flag because code generated by gcc is not compatible with compact unwind.
+  case "$build" in
+    *darwin*) LDFLAGS="$LDFLAGS -Wl,-no_compact_unwind" ;;
+  esac
 fi
 
 # Define default file extensions for Windows or Linux-like systems and
 # use -fPIC or not.
 case "$build" in
-    *mingw* | *cygwin*)
-              SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";;
-    *darwin*) SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";;
-    *)        SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC";;
+  *mingw* | *cygwin*) SOEXT=".dll";   EXEEXT=".exe"; PIC_FLAGS="";;
+  *darwin*)           SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";;
+  *)                  SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC";;
 esac
 
 # Define libghdl_version
@@ -262,51 +305,46 @@ libghdl_version=`echo $ghdl_version | sed -e 's/[-.]/_/g'`
 # Check if gcc was configured with --enable-default-pie.  In that case -fPIC
 # should be added.
 if gcc -v 2>&1 | grep -q enable-default-pie; then
-    default_pie="yes"
-else
-    default_pie="no"
+  default_pic="true"
 fi
 
 # Create subdirectories
 if [ ! -d pic ]; then
-    echo "create pic/ subdirectory"
-    if ! mkdir pic; then
-        echo "failed to create pic/"
-        exit 1;
-    fi
+  echo "create pic/ subdirectory"
+  if ! mkdir pic; then
+    echo "failed to create pic/"
+    exit 1;
+  fi
 fi
 
 # Generate config.status
 rm -f config.status
 {
-echo "#! /bin/sh"
-echo "# Generated by configure."
-echo "# Run this file to recreate the current configuration."
-echo
-echo 'if [ x"$1" = x"--reconfigure" ]; then'
-#  Do not use exec as bash 3.2 pass the absolute path in argv[0]
-echo $echon "   $progname"$echoc
-for opt do
-  echo $echon \ \"$opt\"$echoc
-done
-echo
-echo "  exit"
-echo 'fi'
-echo
-echo subst_vars=\"$subst_vars\"
-for v in $subst_vars; do
+  echo "#! /bin/sh"
+  echo "# Generated by configure."
+  echo "# Run this file to recreate the current configuration."
+  echo
+  echo 'if [ x"$1" = x"--reconfigure" ]; then'
+  #  Do not use exec as bash 3.2 pass the absolute path in argv[0]
+  echo $echon "   $progname"$echoc
+  for opt do
+    echo $echon \ \"$opt\"$echoc
+  done
+  echo
+  echo "  exit"
+  echo 'fi'
+  echo
+  echo subst_vars=\"$subst_vars\"
+  for v in $subst_vars; do
     eval vval=\$$v
     echo $v=\"$vval\"
-done
-sed_opts=`echo $subst_vars | sed -e "s/\\([a-zA-Z_]*\\)/ -e \"s%@\1@%\$\1%g\"/g"`
-subst_files="ghdl.gpr Makefile"
-if [ "$enable_python" = true ]; then
-    subst_files="$subst_files setup.py"
-fi
-echo "for f in $subst_files; do"
-echo '  echo "Creating $f"'
-echo "  sed $sed_opts" '< $srcdir/${f}.in > $f'
-echo "done"
+  done
+  sed_opts=`echo $subst_vars | sed -e "s/\\([a-zA-Z_]*\\)/ -e \"s%@\1@%\$\1%g\"/g"`
+  subst_files="ghdl.gpr Makefile"
+  echo "for f in $subst_files; do"
+  echo '  echo "Creating $f"'
+  echo "  sed $sed_opts" '< $srcdir/${f}.in > $f'
+  echo "done"
 } > config.status || \
 {
   echo "$progname: cannot create config.status"
@@ -317,32 +355,45 @@ chmod +x ./config.status
 
 # Run config.status to generate files
 if ! sh ./config.status; then
-    echo "$progname: cannot execute config.status"
-    exit 1
+  echo "$progname: cannot execute config.status"
+  exit 1
 fi
 
 # Create dirs
-$MAKE create-dirs
+if ! $MAKE create-dirs; then
+    echo "$progname: cannot execute $MAKE create-dirs"
+    exit 1
+fi
 
 # Generate ortho_code-x86-flags
 if test $backend = mcode; then
-    case "$build" in
-	*darwin*) ortho_flags="Flags_Macosx${mcode64}" ;;
-	*mingw32*) ortho_flags="Flags_Windows${mcode64}" ;;
-	*linux*) ortho_flags="Flags_Linux${mcode64}" ;;
-	*) echo "Unsupported $build build for mcode"; exit 1;;
-    esac
-    echo "Generate ortho_code-x86-flags.ads"
-    {
-     echo "with Ortho_Code.X86.$ortho_flags;"
-     echo "package Ortho_Code.X86.Flags renames Ortho_Code.X86.$ortho_flags;"
-    } > ortho_code-x86-flags.ads
-    echo "Generate elf_arch.ads"
-    {
-	echo "with Elf_Arch${mcode64:-32};"
-	echo "package Elf_Arch renames Elf_Arch${mcode64:-32};"
-    } > elf_arch.ads
+  case "$build" in
+    *darwin*) ortho_flags="Flags_Macosx${mcode64}" ;;
+    *mingw32*) ortho_flags="Flags_Windows${mcode64}" ;;
+    *linux*) ortho_flags="Flags_Linux${mcode64}" ;;
+    *) echo "Unsupported $build build for mcode"; exit 1;;
+  esac
+  echo "Generate ortho_code-x86-flags.ads"
+  {
+    echo "with Ortho_Code.X86.$ortho_flags;"
+    echo "package Ortho_Code.X86.Flags renames Ortho_Code.X86.$ortho_flags;"
+  } > ortho_code-x86-flags.ads
+  echo "Generate elf_arch.ads"
+  {
+    echo "with Elf_Arch${mcode64:-32};"
+    echo "package Elf_Arch renames Elf_Arch${mcode64:-32};"
+  } > elf_arch.ads
 fi
+
+# Generate ghdlsynth_maybe.ads
+echo "Generate ghdlsynth_maybe.ads"
+if [ "$enable_synth" = "true" ]; then
+    pkg_synth=Ghdlsynth
+else
+    pkg_synth=Ghdlnull
+fi
+echo "with $pkg_synth;" > ghdlsynth_maybe.ads
+echo "package Ghdlsynth_Maybe renames $pkg_synth;" >> ghdlsynth_maybe.ads
 
 # Generate default_paths.ads
 # Also update dist/windows/mcode/default_paths.ads if you change this
@@ -351,12 +402,12 @@ echo "Generate default_paths.ads"
 sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
     -e "s%@COMPILER_DEBUG@%ghdl1-debug$EXEEXT%" \
     -e "s%@COMPILER_MCODE@%ghdl1-mcode$EXEEXT%" \
-    -e "s%@COMPILER_LLVM@%bin/ghdl1-llvm$EXEEXT%" \
+    -e "s%@COMPILER_LLVM@%ghdl1-llvm$EXEEXT%" \
     -e "s%@POST_PROCESSOR@%oread-$backend%" \
     -e "s%@INSTALL_PREFIX@%$prefix%" \
     -e "s%@LIB_PREFIX@%$libdirsuffix%" \
     -e "s%@SOEXT@%$SOEXT%" \
-    -e "s%@default_pie@%$default_pie%" \
+    -e "s%@default_pic@%$default_pic%" \
     < $srcdir/src/ghdldrv/default_paths.ads.in > default_paths.ads
 
 exit 0

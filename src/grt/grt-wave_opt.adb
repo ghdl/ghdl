@@ -29,47 +29,33 @@ with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Opt is
 
-   procedure Print_Context
-     (Lineno, Column : Positive; Severity : Severity_Type) is
+   procedure Diag_C_Context (Lineno, Column : Positive) is
    begin
-      case Severity is
-         when Error =>
-            Error_C ("");
-         when Warning =>
-            Report_C ("warning: ");
-      end case;
-      Report_C (File_Path.all);
-      Report_C (":");
-      Report_C (Lineno);
-      Report_C (":");
-      Report_C (Column);
-      Report_C (": ");
-   end Print_Context;
+      Diag_C (File_Path.all);
+      Diag_C (':');
+      Diag_C (Lineno);
+      Diag_C (':');
+      Diag_C (Column);
+      Diag_C (": ");
+   end Diag_C_Context;
 
-   procedure Print_Context (Element : Elem_Acc; Severity : Severity_Type) is
+   procedure Diag_C_Context (Element : Elem_Acc) is
    begin
-      Print_Context
-        (Element.Lineno, Element.Column, Severity);
-   end Print_Context;
+      Diag_C_Context (Element.Lineno, Element.Column);
+   end Diag_C_Context;
 
    procedure Error_Context (Msg : String;
-                            Lineno, Column : Positive;
-                            Severity : Severity_Type := Error) is
+                            Lineno, Column : Positive) is
    begin
-      Print_Context (Lineno, Column, Severity);
-      case Severity is
-         when Error =>
-            Error_E (Msg);
-         when Warning =>
-            Report_E (Msg);
-      end case;
+      Error_S;
+      Diag_C_Context (Lineno, Column);
+      Diag_C (Msg);
+      Error_E;
    end Error_Context;
 
-   procedure Error_Context
-     (Msg : String; Element : Elem_Acc; Severity : Severity_Type := Error) is
+   procedure Error_Context (Msg : String; Element : Elem_Acc) is
    begin
-      Error_Context
-        (Msg, Element.Lineno, Element.Column, Severity);
+      Error_Context (Msg, Element.Lineno, Element.Column);
    end Error_Context;
 
 end Grt.Wave_Opt;

@@ -31,10 +31,6 @@ generic
    --  Table_Index_Type'First, as otherwise Last may raise constraint error
    --  when the table is empty.
    Table_Low_Bound : Table_Index_Type;
-
-   --  Initial number of elements.
-   Table_Initial   : Positive;
-
 package Dyn_Tables is
    --  Ada type for the array.
    type Table_Type is
@@ -64,7 +60,7 @@ package Dyn_Tables is
    end record;
 
    --  Initialize the table.  This must be done by users.
-   procedure Init (T : in out Instance);
+   procedure Init (T : in out Instance; Table_Initial : Positive);
 
    --  Logical bounds of the array.
    First : constant Table_Index_Type := Table_Low_Bound;

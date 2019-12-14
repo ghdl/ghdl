@@ -9,7 +9,7 @@
 
 # User defined variables (can be set to run the testsuite in some
 #  configuration, such as optimization or debugging):
-# GHDL_STD_FLAG
+# GHDL_STD_FLAGS
 # GHDL_FLAGS
 # GHDL_ELABFLAGS
 # GHDL_SIMFLAGS
@@ -34,11 +34,13 @@ if [ x"$GHDL" = x ]; then
     exit 4
 fi
 
+PYTHON=${PYTHON:-python3}
+
 # Analyze files (no error expected)
 analyze ()
 {
    echo "analyze $@"
-   "$GHDL" -a $GHDL_STD_FLAGS $GHDL_FLAGS $@
+   "$GHDL" -a $GHDL_STD_FLAGS $GHDL_FLAGS "$@"
 }
 
 # Analyze files (failure expected)
@@ -46,7 +48,7 @@ analyze_failure ()
 {
    echo "try to analyze $@"
    # for arg in $@; do echo "arg: $arg"; done
-   if ! "$GHDL" -a --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $@ ; then
+   if ! "$GHDL" -a --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS "$@" ; then
      echo "Failure expected"
      return 1
    fi
@@ -99,6 +101,12 @@ elab_simulate_failure ()
    echo "elaborate and simulate (failure expected) $@"
    "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS \
      $@ --expect-failure
+}
+
+synth()
+{
+    echo "Synthesis of $@" >&2
+    "$GHDL" --synth $GHDL_STD_FLAGS $GHDL_FLAGS $@
 }
 
 # Check if a feature is present

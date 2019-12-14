@@ -15,24 +15,27 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Interfaces; use Interfaces;
 with Ortho_Nodes; use Ortho_Nodes;
 with Ortho_Ident; use Ortho_Ident;
 with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
 with Name_Table; -- use Name_Table;
 with Str_Table;
 with Files_Map;
-with Iirs_Utils; use Iirs_Utils;
-with Std_Package; use Std_Package;
-with Sem_Specs;
+with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Std_Package; use Vhdl.Std_Package;
+with Vhdl.Sem_Specs;
 with Libraries;
 with Std_Names;
-with Canon;
+with Vhdl.Canon;
 with Trans;
 with Trans_Decls; use Trans_Decls;
 with Trans.Chap1;
 with Trans.Chap2;
+with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap7;
 with Trans.Chap12;
@@ -107,7 +110,7 @@ package body Translation is
    is
       --  Look for 'FOREIGN.
       Attr : constant Iir_Attribute_Value :=
-        Sem_Specs.Find_Attribute_Value (Decl, Std_Names.Name_Foreign);
+        Vhdl.Sem_Specs.Find_Attribute_Value (Decl, Std_Names.Name_Foreign);
       pragma Assert (Attr /= Null_Iir);
       Spec : constant Iir_Attribute_Specification :=
         Get_Attribute_Specification (Attr);
@@ -137,24 +140,26 @@ package body Translation is
             if P > Length then
                Error_Msg_Sem
                  (+Spec, "missing subprogram/library name after VHPIDIRECT");
+               Info.Lib_Len := 0;
+               Info.Subprg_Len := 0;
+               return Info;
             end if;
             --  Extract library.
             Lf := P;
-            while P < Length and then Name (P) /= ' ' loop
+            while P <= Length and then Name (P) /= ' ' loop
                P := P + 1;
             end loop;
-            Ll := P;
+            Ll := P - 1;
             --  Extract subprogram.
-            P := P + 1;
             while P <= Length and then Name (P) = ' ' loop
                P := P + 1;
             end loop;
             Sf := P;
-            while P < Length and then Name (P) /= ' ' loop
+            while P <= Length and then Name (P) /= ' ' loop
                P := P + 1;
             end loop;
-            Sl := P;
-            if P < Length then
+            Sl := P - 1;
+            if P <= Length then
                Error_Msg_Sem (+Spec, "garbage at end of VHPIDIRECT");
             end if;
 
@@ -332,6 +337,7 @@ package body Translation is
                   Push_Identifier_Prefix (Mark_Arch, Get_Identifier (Arch));
                   Push_Identifier_Prefix
                     (Mark, Name_Table.Get_Identifier ("DEFAULT_CONFIG"));
+                  --  Spec is built during translation of architecture.
                   Chap1.Translate_Configuration_Declaration_Body (Lib_Unit);
                   Pop_Identifier_Prefix (Mark);
                   Pop_Identifier_Prefix (Mark_Arch);
@@ -370,7 +376,7 @@ package body Translation is
       Init_Node_Infos;
 
       --  Set flags for canon.
-      Canon.Canon_Flag_Add_Labels := True;
+      Vhdl.Canon.Canon_Flag_Add_Labels := True;
 
       --  Force to unnest subprograms is the code generator doesn't support
       --  nested subprograms.
@@ -422,6 +428,9 @@ package body Translation is
 
       Ghdl_Index_0 := New_Unsigned_Literal (Ghdl_Index_Type, 0);
       Ghdl_Index_1 := New_Unsigned_Literal (Ghdl_Index_Type, 1);
+      Ghdl_Index_2 := New_Unsigned_Literal (Ghdl_Index_Type, 2);
+      Ghdl_Index_4 := New_Unsigned_Literal (Ghdl_Index_Type, 4);
+      Ghdl_Index_8 := New_Unsigned_Literal (Ghdl_Index_Type, 8);
 
       Ghdl_I32_Type := New_Signed_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_i32"), Ghdl_I32_Type);
@@ -451,6 +460,8 @@ package body Translation is
 
       Char_Ptr_Type := New_Access_Type (Chararray_Type);
       New_Type_Decl (Get_Identifier ("__ghdl_char_ptr"), Char_Ptr_Type);
+
+      Ghdl_Index_Ptr_Align := New_Alignof (Char_Ptr_Type, Ghdl_Index_Type);
 
       Char_Ptr_Array_Type := New_Array_Type (Char_Ptr_Type, Ghdl_Index_Type);
       New_Type_Decl (Get_Identifier ("__ghdl_char_ptr_array"),
@@ -529,6 +540,10 @@ package body Translation is
          New_Type_Decl (Get_Identifier ("__ghdl_sizes_type"),
                         Ghdl_Sizes_Type);
       end;
+
+      --  __ghdl_sizes_ptr is access __ghdl_sizes_type;
+      Ghdl_Sizes_Ptr := New_Access_Type (Ghdl_Sizes_Type);
+      New_Type_Decl (Get_Identifier ("__ghdl_sizes_ptr"), Ghdl_Sizes_Ptr);
 
       --  Create type ghdl_compare_type is (lt, eq, ge);
       declare
@@ -1055,6 +1070,15 @@ package body Translation is
                                 Ghdl_Location_Ptr_Node);
             Finish_Subprogram_Decl (Interfaces, Subprg);
          end Create_Report_Subprg;
+
+         procedure Create_Fail_Subprg (Name : String; Subprg : out O_Dnode) is
+         begin
+            Start_Procedure_Decl
+              (Interfaces, Get_Identifier (Name), O_Storage_External);
+            New_Interface_Decl (Interfaces, Param, Get_Identifier ("location"),
+                                Ghdl_Location_Ptr_Node);
+            Finish_Subprogram_Decl (Interfaces, Subprg);
+         end Create_Fail_Subprg;
       begin
          Create_Report_Subprg
            ("__ghdl_assert_failed", Ghdl_Assert_Failed);
@@ -1066,7 +1090,24 @@ package body Translation is
          Create_Report_Subprg ("__ghdl_psl_cover_failed",
                                Ghdl_Psl_Cover_Failed);
          Create_Report_Subprg ("__ghdl_report", Ghdl_Report);
+
+         Create_Fail_Subprg ("__ghdl_psl_assume_failed",
+                             Ghdl_Psl_Assume_Failed);
       end;
+
+      --  procedure __ghdl_check_stack_allocation (size : __ghdl_index_type)
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_check_stack_allocation"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Wki_Val, Ghdl_Index_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Check_Stack_Allocation);
+
+      if Flag_Check_Stack_Allocation > 0 then
+         Check_Stack_Allocation_Threshold :=
+           New_Index_Lit (Unsigned_64 (Flag_Check_Stack_Allocation));
+      else
+         Check_Stack_Allocation_Threshold := O_Cnode_Null;
+      end if;
 
       --  procedure __ghdl_text_write (file : __ghdl_file_index;
       --                               str  : std_string_ptr);
@@ -1128,16 +1169,25 @@ package body Translation is
                           Std_Integer_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Real_Exp);
 
-      --  function __ghdl_integer_exp (left : std__standard__integer;
-      --                               right : std__standard__integer)
-      --   return std__standard__integer;
+      --  function __ghdl_i32_exp (left : ghdl_i32;
+      --                           right : std__standard__integer)
+      --   return ghdl_i32;
       Start_Function_Decl
-        (Interfaces, Get_Identifier ("__ghdl_integer_exp"), O_Storage_External,
-         Std_Integer_Otype);
-      New_Interface_Decl (Interfaces, Param, Wki_Left, Std_Integer_Otype);
+        (Interfaces, Get_Identifier ("__ghdl_i32_exp"), O_Storage_External,
+         Ghdl_I32_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Left, Ghdl_I32_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Right, Std_Integer_Otype);
-      Finish_Subprogram_Decl (Interfaces, Ghdl_Integer_Exp);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_I32_Exp);
 
+      --  function __ghdl_i64_exp (left : ghdl_i64;
+      --                           right : std__standard__integer)
+      --   return ghdl_i64;
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_i64_exp"), O_Storage_External,
+         Ghdl_I64_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Left, Ghdl_I64_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Right, Std_Integer_Otype);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_I64_Exp);
 
       --  procedure __ghdl_image_b1 (res : std_string_ptr_node;
       --                             val : ghdl_bool_type;
@@ -1905,12 +1955,22 @@ package body Translation is
 
    end Post_Initialize;
 
-   procedure Translate_Type_Implicit_Subprograms (Decl : in out Iir)
+   procedure Translate_Type_Implicit_Subprograms
+     (Decl : in out Iir; Main : Boolean)
    is
       Infos : Chap7.Implicit_Subprogram_Infos;
+      Subprg_Kind : Subprg_Translate_Kind;
    begin
-      --  Skip type declaration.
       pragma Assert (Get_Kind (Decl) in Iir_Kinds_Type_Declaration);
+
+      if Main then
+         Subprg_Kind := Subprg_Translate_Spec_And_Body;
+      else
+         Subprg_Kind := Subprg_Translate_Only_Spec;
+      end if;
+      Chap3.Translate_Type_Subprograms (Decl, Subprg_Kind);
+
+      --  Skip type declaration.
       Decl := Get_Chain (Decl);
 
       --  Implicit subprograms are immediately follow the type declaration.
@@ -1980,29 +2040,29 @@ package body Translation is
       --  We need this type very early, for predefined functions.
       Std_Boolean_Type_Node :=
         Get_Ortho_Type (Boolean_Type_Definition, Mode_Value);
-      Std_Boolean_True_Node := Get_Ortho_Expr (Boolean_True);
-      Std_Boolean_False_Node := Get_Ortho_Expr (Boolean_False);
+      Std_Boolean_True_Node := Get_Ortho_Literal (Boolean_True);
+      Std_Boolean_False_Node := Get_Ortho_Literal (Boolean_False);
 
       Std_Boolean_Array_Type :=
         New_Array_Type (Std_Boolean_Type_Node, Ghdl_Index_Type);
       New_Type_Decl (Create_Identifier ("BOOLEAN_ARRAY"),
                      Std_Boolean_Array_Type);
-      Translate_Type_Implicit_Subprograms (Decl);
+      Translate_Type_Implicit_Subprograms (Decl, Main);
 
       --  Second declaration: bit.
       pragma Assert (Decl = Bit_Type_Declaration);
       Chap4.Translate_Bool_Type_Declaration (Bit_Type_Declaration);
-      Translate_Type_Implicit_Subprograms (Decl);
+      Translate_Type_Implicit_Subprograms (Decl, Main);
 
       --  Nothing special for other declarations.
       while Decl /= Null_Iir loop
          case Get_Kind (Decl) is
             when Iir_Kind_Type_Declaration =>
                Chap4.Translate_Type_Declaration (Decl);
-               Translate_Type_Implicit_Subprograms (Decl);
+               Translate_Type_Implicit_Subprograms (Decl, Main);
             when Iir_Kind_Anonymous_Type_Declaration =>
                Chap4.Translate_Anonymous_Type_Declaration (Decl);
-               Translate_Type_Implicit_Subprograms (Decl);
+               Translate_Type_Implicit_Subprograms (Decl, Main);
             when Iir_Kind_Subtype_Declaration =>
                Chap4.Translate_Subtype_Declaration (Decl);
                Decl := Get_Chain (Decl);
@@ -2077,16 +2137,13 @@ package body Translation is
       --Pop_Global_Factory;
    end Translate_Standard;
 
-   procedure Finalize
-   is
+   procedure Finalize is
    begin
       Free_Node_Infos;
       Free_Old_Temp;
    end Finalize;
 
-   procedure Elaborate (Primary : String;
-                        Secondary : String;
-                        Filelist : String;
-                        Whole : Boolean) renames Trans.Chap12.Elaborate;
+   procedure Elaborate (Config : Iir; Whole : Boolean)
+     renames Trans.Chap12.Elaborate;
 
 end Translation;

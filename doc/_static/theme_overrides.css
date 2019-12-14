@@ -19,8 +19,8 @@ footer hr {margin-bottom: 10px}
 /*Shrink left nav to 260px*/
 .wy-nav-side,.rst-versions,.wy-side-nav-search,.wy-menu-vertical{width: 260px}
 .wy-nav-content-wrap{margin-left:260px;background:#fcfcfc;min-height:100%}
-@media screen and (max-width: 768px){  
-  .wy-nav-top i {padding-top:7px}  
+@media screen and (max-width: 768px){
+  .wy-nav-top i {padding-top:7px}
   .wy-nav-content-wrap{margin-left:0px}
   .wy-nav-content-wrap.shift{margin-left:260px;position: static;}
   .wy-nav-side.shift{width:260px;padding-bottom: 40px;}

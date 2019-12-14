@@ -51,7 +51,7 @@ with Grt.Astdio; use Grt.Astdio;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
-with Grt.Vstrings;
+with Grt.To_Strings;
 with Grt.Wave_Opt; use Grt.Wave_Opt;
 with Grt.Wave_Opt.Design; use Grt.Wave_Opt.Design;
 with Ada.Unchecked_Deallocation;
@@ -91,7 +91,7 @@ package body Grt.Fst is
       Context := fstWriterCreate
         (To_Ghdl_C_String (Fst_Filename.all'Address), 1);
       if Context = Null_fstContext then
-         Error_C ("fst: cannot open ");
+         Error_S ("fst: cannot open ");
          Error_E (Fst_Filename (Fst_Filename'First .. Fst_Filename'Last - 1));
       end if;
       return True;
@@ -367,7 +367,7 @@ package body Grt.Fst is
                Num_First : Natural;
                Num_Len : Natural;
             begin
-               Grt.Vstrings.To_String (Num, Num_First, N);
+               Grt.To_Strings.To_String (Num, Num_First, N);
                Num_Len := Num'Last - Num_First + 1;
                Name2 (Name_Len + 1 .. Name_Len + Num_Len) :=
                  Num (Num_First .. Num'Last);

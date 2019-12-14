@@ -18,6 +18,7 @@
 with System;
 with Interfaces; use Interfaces;
 with Ada.Unchecked_Deallocation;
+with Ada.Unchecked_Conversion;
 with Ortho_Ident; use Ortho_Ident;
 with Tables;
 with Memsegs;
@@ -160,6 +161,10 @@ private
    subtype Byte_Array is Byte_Array_Base (Pc_Type);
    type Byte_Array_Acc is access Byte_Array;
    pragma No_Strict_Aliasing (Byte_Array_Acc);
+
+   function To_Byte_Array_Acc is new Ada.Unchecked_Conversion
+     (Source => System.Address, Target => Byte_Array_Acc);
+
    type String_Acc is access String;
    --type Section_Flags is new Unsigned_32;
 

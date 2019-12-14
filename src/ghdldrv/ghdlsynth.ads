@@ -15,11 +15,20 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Netlists;
-with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Grt.Types; use Grt.Types;
+with Netlists; use Netlists;
 
 package Ghdlsynth is
    procedure Register_Commands;
 
-   function Ghdl_Synth (Args : Argument_List) return Netlists.Module;
+   --  When used from a library, this init procedure must be called before
+   --  ghdl_synth.
+   procedure Init_For_Ghdl_Synth;
+
+   type C_String_Array is array (Natural) of Ghdl_C_String;
+   type C_String_Array_Acc is access C_String_Array;
+
+   function Ghdl_Synth
+     (Init : Natural; Argc : Natural; Argv : C_String_Array_Acc)
+     return Module;
 end Ghdlsynth;

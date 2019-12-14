@@ -36,9 +36,17 @@ package body Grt.Files is
    Auto_Flush : constant Boolean := False;
 
    type File_Entry_Type is record
+      --  The corresponding C stream.
       Stream : C_Files;
+
       Signature : Ghdl_C_String;
+
+      --  Open kind: r, a or w.
+      Kind : Character;
+
       Is_Text : Boolean;
+
+      --  True if the file entry is used.
       Is_Alive : Boolean;
    end record;
 
@@ -48,8 +56,7 @@ package body Grt.Files is
       Table_Low_Bound => 1,
       Table_Initial => 2);
 
-   function Get_File (Index : Ghdl_File_Index) return C_Files
-   is
+   function Get_File (Index : Ghdl_File_Index) return C_Files is
    begin
       if Index not in Files_Table.First .. Files_Table.Last then
          Internal_Error ("get_file: bad file index");
@@ -57,19 +64,60 @@ package body Grt.Files is
       return Files_Table.Table (Index).Stream;
    end Get_File;
 
-   procedure Check_File_Mode (Index : Ghdl_File_Index; Is_Text : Boolean)
-   is
+   function Is_Open (Index : Ghdl_File_Index) return Boolean is
+   begin
+      return Files_Table.Table (Index).Stream /= NULL_Stream;
+   end Is_Open;
+
+   function Get_Kind (Index : Ghdl_File_Index) return Character is
+   begin
+      return Files_Table.Table (Index).Kind;
+   end Get_Kind;
+
+   procedure Check_File_Mode (Index : Ghdl_File_Index; Is_Text : Boolean) is
    begin
       if Files_Table.Table (Index).Is_Text /= Is_Text then
          Internal_Error ("check_file_mode: bad file mode");
       end if;
    end Check_File_Mode;
 
-   function Create_File (Is_Text : Boolean; Sig : Ghdl_C_String)
-                        return Ghdl_File_Index is
+   procedure Check_Read (Index : Ghdl_File_Index; Is_Text : Boolean) is
+   begin
+      Check_File_Mode (Index, Is_Text);
+
+      --  LRM08 5.5.2 File operations
+      --  It is an error if the access mode of the file object is write-only
+      --  or if the file object is not open.
+      if not Is_Open (Index) then
+         Error_Call_Stack ("read called on a non-open file", 2);
+      end if;
+      if Get_Kind (Index) /= 'r' then
+         Error_Call_Stack ("read called on a write-only file", 2);
+      end if;
+   end Check_Read;
+
+   procedure Check_Write (Index : Ghdl_File_Index; Is_Text : Boolean) is
+   begin
+      Check_File_Mode (Index, Is_Text);
+
+      --  LRM08 5.5.2 File operations
+      --  It is an error if the access mode of the file object is read-only
+      --  or if the file object is not open.
+      if not Is_Open (Index) then
+         Error_Call_Stack ("write called on a non-open file", 2);
+      end if;
+      if Get_Kind (Index) = 'r' then
+         Error_Call_Stack ("write called on a read-only file", 2);
+      end if;
+   end Check_Write;
+
+   function Create_File
+     (Is_Text : Boolean; Kind : Character; Sig : Ghdl_C_String)
+     return Ghdl_File_Index is
    begin
       Files_Table.Append ((Stream => NULL_Stream,
                            Signature => Sig,
+                           Kind => Kind,
                            Is_Text => Is_Text,
                            Is_Alive => True));
       return Files_Table.Last;
@@ -100,13 +148,13 @@ package body Grt.Files is
 
    function Ghdl_Text_File_Elaborate return Ghdl_File_Index is
    begin
-      return Create_File (True, null);
+      return Create_File (True, ' ', null);
    end Ghdl_Text_File_Elaborate;
 
    function Ghdl_File_Elaborate (Sig : Ghdl_C_String) return Ghdl_File_Index
    is
    begin
-      return Create_File (False, Sig);
+      return Create_File (False, ' ', Sig);
    end Ghdl_File_Elaborate;
 
    procedure Ghdl_Text_File_Finalize (File : Ghdl_File_Index) is
@@ -125,6 +173,23 @@ package body Grt.Files is
       C : int;
    begin
       Stream := Get_File (File);
+
+      --  LRM93 3.4.1 File Operations
+      --  LRM08 5.5.2 File Operations
+      --  It is an error if ENDFILE is called on a file object that is not
+      --  open.
+      if Stream = NULL_Stream then
+         Error_Call_Stack ("endfile with a non-opened file", 1);
+      end if;
+
+      --  LRM93 3.4.1 File Operations
+      --  LRM08 5.5.2 File Operations
+      --  Function ENDFILE always returns TRUE for an open file object whose
+      --  access mode is write-only.
+      if Get_Kind (File) /= 'r' then
+         return True;
+      end if;
+
       if feof (Stream) /= 0 then
          return True;
       end if;
@@ -150,6 +215,7 @@ package body Grt.Files is
       F : C_Files;
       Sig : Ghdl_C_String;
       Sig_Len : Natural;
+      Kind : Character;
    begin
       F := Get_File (File);
 
@@ -164,6 +230,18 @@ package body Grt.Files is
       end loop;
       Name (Name'Last) := NUL;
 
+      case Mode is
+         when Read_Mode =>
+            Kind := 'r';
+         when Write_Mode =>
+            Kind := 'w';
+         when Append_Mode =>
+            Kind := 'a';
+         when others =>
+            --  Bad mode, cannot happen.
+            Internal_Error ("file_open: bad open mode");
+      end case;
+
       if Name = "STD_INPUT" & NUL then
          if Mode /= Read_Mode then
             return Mode_Error;
@@ -175,17 +253,7 @@ package body Grt.Files is
          end if;
          F := stdout;
       else
-         case Mode is
-            when Read_Mode =>
-               Str_Mode (1) := 'r';
-            when Write_Mode =>
-               Str_Mode (1) := 'w';
-            when Append_Mode =>
-               Str_Mode (1) := 'a';
-            when others =>
-               --  Bad mode, cannot happen.
-               Internal_Error ("file_open: bad open mode");
-         end case;
+         Str_Mode (1) := Kind;
          if Files_Table.Table (File).Is_Text then
             Str_Mode (2) := NUL;
          else
@@ -200,6 +268,7 @@ package body Grt.Files is
             setbuf (F, NULL_voids);
          end if;
       end if;
+
       Sig := Files_Table.Table (File).Signature;
       if Sig /= null then
          Sig_Len := strlen (Sig);
@@ -241,26 +310,35 @@ package body Grt.Files is
                null;
          end case;
       end if;
+
       Files_Table.Table (File).Stream := F;
+      Files_Table.Table (File).Kind := Kind;
+
       return Open_Ok;
    end File_Open;
+
+   procedure Error_Open (Str : Std_String_Ptr)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      Save_Backtrace (Bt, 2);
+      Error_S ("cannot open file """);
+      Diag_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
+      Diag_C ('"');
+      Error_E_Call_Stack (Bt);
+   end Error_Open;
 
    procedure Ghdl_Text_File_Open
      (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
    is
       Res : Ghdl_I32;
-      Bt : Backtrace_Addrs;
    begin
       Check_File_Mode (File, True);
 
       Res := File_Open (File, Mode, Str);
 
       if Res /= Open_Ok then
-         Save_Backtrace (Bt, 1);
-         Error_C ("cannot open text file """);
-         Error_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
-         Error_C ("""");
-         Error_E_Call_Stack (Bt);
+         Error_Open (Str);
       end if;
    end Ghdl_Text_File_Open;
 
@@ -268,18 +346,13 @@ package body Grt.Files is
      (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
    is
       Res : Ghdl_I32;
-      Bt : Backtrace_Addrs;
    begin
       Check_File_Mode (File, False);
 
       Res := File_Open (File, Mode, Str);
 
       if Res /= Open_Ok then
-         Save_Backtrace (Bt, 1);
-         Error_C ("cannot open file """);
-         Error_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
-         Error_C ("""");
-         Error_E_Call_Stack (Bt);
+         Error_Open (Str);
       end if;
    end Ghdl_File_Open;
 
@@ -304,19 +377,22 @@ package body Grt.Files is
    procedure Ghdl_Text_Write (File : Ghdl_File_Index; Str : Std_String_Ptr)
    is
       Res : C_Files;
+      Len : size_t;
       R : size_t;
-      R1 : int;
-      pragma Unreferenced (R, R1);
    begin
       Res := Get_File (File);
-      Check_File_Mode (File, True);
-      if Res = NULL_Stream then
-         Error ("write to a non-opened file");
+      Check_Write (File, True);
+
+      Len := size_t (Str.Bounds.Dim_1.Length);
+      if Len = 0 then
+         return;
       end if;
-      --  FIXME: check mode.
-      R := fwrite (Str.Base (0)'Address,
-                   size_t (Str.Bounds.Dim_1.Length), 1, Res);
-      --  FIXME: check r
+
+      R := fwrite (Str.Base (0)'Address, Len, 1, Res);
+      if R /= 1 then
+         Error ("text_write failed");
+      end if;
+
       if Auto_Flush then
          fflush (Res);
       end if;
@@ -330,11 +406,8 @@ package body Grt.Files is
       R : size_t;
    begin
       Res := Get_File (File);
-      Check_File_Mode (File, False);
-      if Res = NULL_Stream then
-         Error ("write to a non-opened file");
-      end if;
-      --  FIXME: check mode.
+      Check_Write (File, False);
+
       R := fwrite (System.Address (Ptr), size_t (Length), 1, Res);
       if R /= 1 then
          Error ("write_scalar failed");
@@ -352,11 +425,8 @@ package body Grt.Files is
       R : size_t;
    begin
       Res := Get_File (File);
-      Check_File_Mode (File, False);
-      if Res = NULL_Stream then
-         Error ("write to a non-opened file");
-      end if;
-      --  FIXME: check mode.
+      Check_Read (File, False);
+
       R := fread (System.Address (Ptr), size_t (Length), 1, Res);
       if R /= 1 then
          Error ("read_scalar failed");
@@ -372,14 +442,15 @@ package body Grt.Files is
       Len : Ghdl_Index_Type;
    begin
       Stream := Get_File (File);
-      Check_File_Mode (File, True);
+      Check_Read (File, True);
+
       Len := Str.Bounds.Dim_1.Length;
       --  Read until EOL (or EOF).
       --  Store as much as possible.
       for I in Ghdl_Index_Type loop
          C := fgetc (Stream);
          if C < 0 then
-            Error ("read: end of file reached");
+            Error_Call_Stack ("read: end of file reached", 1);
             return Std_Integer (I);
          end if;
          if I < Len then
@@ -400,7 +471,8 @@ package body Grt.Files is
       Max_Len : int;
    begin
       Stream := Get_File (File);
-      Check_File_Mode (File, True);
+      Check_Read (File, True);
+
       Max_Len := int (Str.Bounds.Dim_1.Length);
       if fgets (Str.Base (0)'Address, Max_Len, Stream) = Null_Address then
          Internal_Error ("ghdl_untruncated_text_read: end of file");
@@ -421,12 +493,14 @@ package body Grt.Files is
    begin
       Stream := Get_File (File);
       Check_File_Mode (File, Is_Text);
+
       --  LRM 3.4.1  File Operations
       --  If F is not associated with an external file, then FILE_CLOSE has
       --  no effect.
       if Stream = NULL_Stream then
          return;
       end if;
+
       if fclose (Stream) /= 0 then
          Internal_Error ("file_close: fclose error");
       end if;
@@ -448,9 +522,17 @@ package body Grt.Files is
       Stream : C_Files;
    begin
       Stream := Get_File (File);
+
+      --  LRM08 5.5.2 File Operations
+      --  For the WRITE and FLUSH procedures, it is an error if the access
+      --  mode of the file object is read-only or if the file is not open.
       if Stream = NULL_Stream then
-         return;
+         Error_Call_Stack ("flush called on a non-open file", 1);
       end if;
+      if Get_Kind (File) = 'r' then
+         Error_Call_Stack ("flush called on a read-only file", 1);
+      end if;
+
       fflush (Stream);
    end Ghdl_File_Flush;
 end Grt.Files;
