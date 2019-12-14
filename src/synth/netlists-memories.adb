@@ -347,9 +347,7 @@ package body Netlists.Memories is
             when Id_Memidx =>
                return Res + 1;
             when Id_Addidx =>
-               if Get_Id (Get_Net_Parent (Get_Input_Net (Inst, 1)))
-                 /= Id_Memidx
-               then
+               if Get_Id (Get_Input_Instance (Inst, 1)) /= Id_Memidx then
                   raise Internal_Error;
                end if;
                Res := Res + 1;
@@ -403,7 +401,7 @@ package body Netlists.Memories is
                   Indexes (P) := (Inst => Inst, Addr => No_Net);
                   exit;
                when Id_Addidx =>
-                  Inst2 := Get_Net_Parent (Get_Input_Net (Inst, 0));
+                  Inst2 := Get_Input_Instance (Inst, 0);
                   if Get_Id (Inst2) /= Id_Memidx then
                      raise Internal_Error;
                   end if;
@@ -494,7 +492,7 @@ package body Netlists.Memories is
                   Remove_Instance (Inst);
                   exit;
                when Id_Addidx =>
-                  Inst2 := Get_Net_Parent (Get_Input_Net (Inst, 0));
+                  Inst2 := Get_Input_Instance (Inst, 0);
                   if Get_Id (Inst2) /= Id_Memidx then
                      raise Internal_Error;
                   end if;
@@ -916,7 +914,7 @@ package body Netlists.Memories is
                end if;
                Set_Mark_Flag (Inst, True);
                Last := Inst;
-               Inst := Get_Net_Parent (Get_Input_Net (Inst, 0));
+               Inst := Get_Input_Instance (Inst, 0);
             when Id_Isignal
               | Id_Signal
               | Id_Const_Bit =>
@@ -1393,7 +1391,7 @@ package body Netlists.Memories is
    is
       Inst : Instance;
    begin
-      Inst := Get_Net_Parent (Get_Input_Net (Sig, 0));
+      Inst := Get_Input_Instance (Sig, 0);
 
       --  Skip dff/idff.
       --  FIXME: that should be considered as an implicit mux.
@@ -1401,7 +1399,7 @@ package body Netlists.Memories is
       case Get_Id (Inst) is
          when Id_Dff
            | Id_Idff =>
-            Inst := Get_Net_Parent (Get_Input_Net (Inst, 1));
+            Inst := Get_Input_Instance (Inst, 1);
          when others =>
             null;
       end case;
@@ -1415,7 +1413,7 @@ package body Netlists.Memories is
             when Id_Dyn_Insert
               | Id_Dyn_Insert_En =>
                --  Skip the dyn_insert.
-               Inst := Get_Net_Parent (Get_Input_Net (Inst, 0));
+               Inst := Get_Input_Instance (Inst, 0);
             when Id_Signal
               | Id_Isignal =>
                --  Should be done.
@@ -1436,7 +1434,7 @@ package body Netlists.Memories is
             return True;
          when Id_Signal
            | Id_Isignal =>
-            return Is_Const_Input (Get_Net_Parent (Get_Input_Net (Inst, 0)));
+            return Is_Const_Input (Get_Input_Instance (Inst, 0));
          when others =>
             --  FIXME: handle other consts ?
             return False;

@@ -42,7 +42,12 @@ package Netlists.Utils is
    function Get_Input_Width (M : Module; I : Port_Idx) return Width;
    function Get_Output_Width (M : Module; I : Port_Idx) return Width;
 
+   --  Return the net (driver) connected to input IDX of INSTANCE.
    function Get_Input_Net (Inst : Instance; Idx : Port_Idx) return Net;
+
+   --  Return the instance that drives input IDX of INST.
+   function Get_Input_Instance (Inst : Instance; Idx : Port_Idx)
+                               return Instance;
 
    --  Return True iff ID describe a constant.
    function Is_Const_Module (Id : Module_Id) return Boolean;

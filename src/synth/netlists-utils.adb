@@ -103,6 +103,12 @@ package body Netlists.Utils is
       return Get_Driver (Get_Input (Inst, Idx));
    end Get_Input_Net;
 
+   function Get_Input_Instance (Inst : Instance; Idx : Port_Idx)
+                               return Instance is
+   begin
+      return Get_Net_Parent (Get_Input_Net (Inst, Idx));
+   end Get_Input_Instance;
+
    function Is_Const_Module (Id : Module_Id) return Boolean is
    begin
       case Id is
