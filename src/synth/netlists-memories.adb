@@ -1292,6 +1292,28 @@ package body Netlists.Memories is
       Drv1 := Get_Driver (In1);
       Sel := Get_Driver (Sel_Inp);
 
+      --  An enable mux has this shape:
+      --            _
+      --           / |----- dyn_insert ----+----+
+      --    out --|  |                     |    +---- inp
+      --           \_|---------------------/
+      --
+      --  The dyn_insert can be on one input or the other of the mux.
+      --  The important point is that the output od the dyn_insert is connected
+      --  only to the mux, while the other mux input is connected to two nodes.
+      --
+      --  There can be several dyn_inserts in a raw, like this:
+      --            _
+      --           / |-- dyn_insert --- dyn_insert ---+----+
+      --    out --|  |                                |    +---- inp
+      --           \_|--------------------------------/
+      --
+      --  Or even nested muxes:
+      --                 _
+      --           _    / |----- dyn_insert ----+----+
+      --          / |--|  |                     |    |
+      --   out --|  |   \_|---------------------/    |
+      --          \_|--------------------------------+----- inp
       if Has_One_Connection (Drv0) and then not Has_One_Connection (Drv1) then
          Disconnect (In0);
          Disconnect (In1);
@@ -1317,21 +1339,30 @@ package body Netlists.Memories is
 
       Remove_Instance (Mux);
 
-      --  Reduce Drv until Src
+      --  Reduce Drv until Src.
+      --  Transform dyn_insert to dyn_insert_en by adding SEL, or simply add
+      --  SEL to existing dyn_insert_en.
+      --  RES is the head of the result chain.
       Res := No_Instance;
       while Drv /= Src loop
          Inst := Get_Net_Parent (Drv);
          case Get_Id (Inst) is
             when Id_Mux2 =>
+               --  Recurse on the mux.
                Inst := Reduce_Muxes_Mux2 (Ctxt, Inst);
+               --  But continue with the result: still need to add the SEL.
                Drv := Get_Output (Inst, 0);
             when Id_Dyn_Insert =>
+               --  Transform dyn_insert to dyn_insert_en.
                Inst := Add_Enable_To_Dyn_Insert (Ctxt, Inst, Sel);
+               --  If this is the head, keep it.
                if Res = No_Instance then
                   Res := Inst;
                end if;
+               --  Continue the walk with the next element.
                Drv := Get_Input_Net (Inst, 0);
             when Id_Dyn_Insert_En =>
+               --  Simply add SEL to the enable input.
                declare
                   En_Inp : constant Input := Get_Input (Inst, 3);
                   En : Net;
@@ -1341,9 +1372,11 @@ package body Netlists.Memories is
                   En := Build_Dyadic (Ctxt, Id_And, En, Sel);
                   Connect (En_Inp, En);
                end;
+               --  If this is the head, keep it.
                if Res = No_Instance then
                   Res := Inst;
                end if;
+               --  Continue the walk with the next element.
                Drv := Get_Input_Net (Inst, 0);
             when others =>
                raise Internal_Error;
@@ -1353,13 +1386,18 @@ package body Netlists.Memories is
       return Res;
    end Reduce_Muxes_Mux2;
 
+   --  From SIG (the signal/isignal for the RAM), move all the muxes to the
+   --  dyn_insert.  The dyn_insert may be transformed to dyn_insert_en.
+   --  At the end, the loop is linear and without muxes.
    procedure Reduce_Muxes (Ctxt : Context_Acc; Sig : Instance)
    is
       Inst : Instance;
    begin
       Inst := Get_Net_Parent (Get_Input_Net (Sig, 0));
 
-      --  Skip dff/idff
+      --  Skip dff/idff.
+      --  FIXME: that should be considered as an implicit mux.
+      --  FIXME: what about dual-port RAMS with two different clocks ?
       case Get_Id (Inst) is
          when Id_Dff
            | Id_Idff =>
@@ -1368,15 +1406,19 @@ package body Netlists.Memories is
             null;
       end case;
 
+      --  Walk until the reaching SIG again.
       loop
          case Get_Id (Inst) is
             when Id_Mux2 =>
+               --  Reduce the mux.
                Inst := Reduce_Muxes_Mux2 (Ctxt, Inst);
             when Id_Dyn_Insert
               | Id_Dyn_Insert_En =>
+               --  Skip the dyn_insert.
                Inst := Get_Net_Parent (Get_Input_Net (Inst, 0));
             when Id_Signal
               | Id_Isignal =>
+               --  Should be done.
                if Inst /= Sig then
                   raise Internal_Error;
                end if;
