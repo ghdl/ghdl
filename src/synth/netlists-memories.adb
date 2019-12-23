@@ -18,7 +18,10 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Ada.Unchecked_Deallocation;
 with Errorout; use Errorout;
+
+with Grt.Algos;
 
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
@@ -198,140 +201,6 @@ package body Netlists.Memories is
       end if;
    end Check_Memory_Read_Ports;
 
-   procedure Check_Memory_Write_Ports (Orig : Instance;
-                                       Data_W : out Width;
-                                       Size : out Width)
-   is
-      Orig_Net : constant Net := Get_Output (Orig, 0);
-      Orig_Loc : constant Location_Type := Get_Location (Orig);
-      Mem_Sz : Width;
-      W : Width;
-      Dff : Net;
-      Dff_Inst : Instance;
-      Data : Net;
-      Data_Inst : Instance;
-      Data_Inp : Input;
-   begin
-      --  By default, error.
-      Data_W := 0;
-      Size := 0;
-
-      --  The memory must come from signal/isignal.
-      case Get_Id (Orig) is
-         when Id_Isignal
-           | Id_Signal =>
-            null;
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      --  The driver of the signal must be a dff/idff.
-      Dff := Get_Input_Net (Orig, 0);
-      Dff_Inst := Get_Net_Parent (Dff);
-
-      case Get_Id (Dff_Inst) is
-         when Id_Idff
-           | Id_Dff =>
-            Mem_Sz := Get_Width (Dff);
-         when others =>
-            Info_Msg_Synth
-              (Orig_Loc,
-               "write to memory %n is not synchronous", (1 => +Orig));
-            return;
-      end case;
-
-      --  Check write ports.
-      Data_Inp := Get_Input (Dff_Inst, 1);
-      Data := Get_Driver (Data_Inp);
-      loop
-         Data_Inst := Get_Net_Parent (Data);
-
-         --  Skip muxes (that's enables).
-         while Get_Id (Data_Inst) = Id_Mux2 loop
-            declare
-               I0_Inp : constant Input := Get_Input (Data_Inst, 1);
-               I1_Inp : constant Input := Get_Input (Data_Inst, 2);
-            begin
-               if Get_Driver (I0_Inp) = Orig_Net then
-                  Data := Get_Driver (I1_Inp);
-               elsif Get_Driver (I1_Inp) = Orig_Net then
-                  Data := Get_Driver (I0_Inp);
-               else
-                  Info_Msg_Synth
-                    (+Data_Inst, "write to a non-memory %n", (1 => +Orig));
-                  Data_W := 0;
-                  return;
-               end if;
-               Data_Inst := Get_Net_Parent (Data);
-            end;
-         end loop;
-
-         if Get_Id (Data_Inst) in Dyn_Insert_Module_Id then
-            --  Write port.
-            W := Get_Width (Get_Input_Net (Data_Inst, 1));
-            if Data_W = 0 then
-               Data_W := W;
-            elsif Data_W /= W then
-               --  Different size.
-               Info_Msg_Synth
-                 (+Data_Inst, "write to memory %n with different size",
-                  (1 => +Orig));
-               Data_W := 0;
-               return;
-            end if;
-
-            Data := Get_Input_Net (Data_Inst, 0);
-         elsif Data = Orig_Net then
-            exit;
-         else
-            Info_Msg_Synth
-              (+Data_Inst, "full write to memory %n", (1 => +Orig));
-            Data_W := 0;
-            return;
-         end if;
-      end loop;
-
-      Size := Mem_Sz / Data_W;
-   end Check_Memory_Write_Ports;
-
-   procedure Check_RAM_Ports (Orig : Instance;
-                              Data_W : out Width;
-                              Size : out Width)
-   is
-      Write_Dw : Width;
-      Write_Size : Width;
-
-      Read_Dw : Width;
-      Read_Size : Width;
-   begin
-      --  By default, error.
-      Data_W := 0;
-      Size := 0;
-
-      Check_Memory_Write_Ports (Orig, Write_Dw, Write_Size);
-      if Write_Dw = 0 then
-         return;
-      end if;
-
-      Check_Memory_Read_Ports (Orig, Read_Dw, Read_Size);
-      if Read_Dw = 0 then
-         return;
-      end if;
-      if Read_Dw /= Write_Dw then
-         Info_Msg_Synth (+Orig, "different read/write width for memory %n",
-                         (1 => +Orig));
-         return;
-      end if;
-      if Read_Size /= Write_Size then
-         Info_Msg_Synth (+Orig, "different read/write size for memory %n",
-                         (1 => +Orig));
-         return;
-      end if;
-
-      Data_W := Write_Dw;
-      Size := Write_Size;
-   end Check_RAM_Ports;
-
    --  Count the number of memidx in a memory address.
    function Count_Memidx (Addr : Net) return Natural
    is
@@ -360,18 +229,17 @@ package body Netlists.Memories is
 
    --  Lower memidx/addidx to simpler gates (concat).
    --  MEM is the memory (used to get its size).
+   --  MEM_SIZE: size of the memory (in bits).
    --  ADDR is the address net with memidx/addidx gates.
    --  VAL_WD is the width of the data port.
    procedure Convert_Memidx (Ctxt : Context_Acc;
-                             Mem : Instance;
+                             Mem_Size : Uns32;
                              Addr : in out Net;
                              Val_Wd : Width)
    is
       --  Number of memidx.
       Nbr_Idx : constant Positive := Count_Memidx (Addr);
 
-      --  Size of the memory (in bits).
-      Mem_Size : constant Uns32 := Get_Width (Get_Output (Mem, 0));
       Mem_Depth : Uns32;
       Last_Size : Uns32;
       Low_Addr : Net;
@@ -508,6 +376,16 @@ package body Netlists.Memories is
       Addr := Low_Addr;
    end Convert_Memidx;
 
+   procedure Convert_Memidx (Ctxt : Context_Acc;
+                             Mem : Instance;
+                             Addr : in out Net;
+                             Val_Wd : Width)
+   is
+      Mem_Size : constant Uns32 := Get_Width (Get_Output (Mem, 0));
+   begin
+      Convert_Memidx (Ctxt, Mem_Size, Addr, Val_Wd);
+   end Convert_Memidx;
+
    --  Return True iff MUX_INP is a mux2 input whose output is connected to a
    --  dff to create a DFF with enable (the other mux2 input is connected to
    --  the dff output).
@@ -537,6 +415,66 @@ package body Netlists.Memories is
          return Get_Input_Net (Mux_Inst, 1) = Dff_Out;
       end if;
    end Is_Enable_Dff;
+
+   procedure Extract_Extract_Dff
+     (Ctxt : Context_Acc;
+      Inst : Instance;
+      Last_Inst : out Instance;
+      Clk : out Net;
+      En : out Net)
+   is
+      Val : constant Net := Get_Output (Inst, 0);
+      Inp : Input;
+      Iinst : Instance;
+   begin
+      Inp := Get_First_Sink (Val);
+      if Get_Next_Sink (Inp) = No_Input then
+         --  There is a single input.
+         Iinst := Get_Input_Parent (Inp);
+         if Get_Id (Iinst) = Id_Dff then
+            --  The output of the dyn_extract is directly connected to a dff.
+            --  So this is a synchronous read without enable.
+            declare
+               Clk_Inp : Input;
+            begin
+               Clk_Inp := Get_Input (Iinst, 0);
+               Clk := Get_Driver (Clk_Inp);
+               Disconnect (Clk_Inp);
+               En := No_Net;
+               Disconnect (Inp);
+               Last_Inst := Iinst;
+            end;
+         elsif Get_Id (Iinst) = Id_Mux2 and then Is_Enable_Dff (Inp) then
+            declare
+               Mux_Out : constant Net := Get_Output (Iinst, 0);
+               Mux_En_Inp : constant Input := Get_Input (Iinst, 0);
+               Mux_I0_Inp : constant Input := Get_Input (Iinst, 1);
+               Mux_I1_Inp : constant Input := Get_Input (Iinst, 2);
+               Dff_Din : constant Input := Get_First_Sink (Mux_Out);
+               Dff_Inst : constant Instance := Get_Input_Parent (Dff_Din);
+               Dff_Out : constant Net := Get_Output (Dff_Inst, 0);
+               Clk_Inp : constant Input := Get_Input (Dff_Inst, 0);
+            begin
+               Clk := Get_Driver (Clk_Inp);
+               En := Get_Driver (Mux_En_Inp);
+               if Dff_Out = Get_Driver (Mux_I1_Inp) then
+                  En := Build_Monadic (Ctxt, Id_Not, En);
+               end if;
+               Disconnect (Mux_En_Inp);
+               Disconnect (Mux_I0_Inp);
+               Disconnect (Mux_I1_Inp);
+               Disconnect (Dff_Din);
+               Disconnect (Clk_Inp);
+               Remove_Instance (Iinst);
+               Last_Inst := Dff_Inst;
+            end;
+         end if;
+      else
+         Last_Inst := Inst;
+         Clk := No_Net;
+         En := No_Net;
+      end if;
+   end Extract_Extract_Dff;
 
    --  Create a mem_rd/mem_rd_sync from a dyn_extract gate.
    --  LAST is the last memory port on the chain.
@@ -666,160 +604,6 @@ package body Netlists.Memories is
          Inp := Next_Inp;
       end loop;
    end Replace_Read_Ports;
-
-   --  ORIG (the memory) must be signal/isignal.
-   procedure Replace_RAM_Memory (Ctxt : Context_Acc; Orig : Instance)
-   is
-      Orig_Net : constant Net := Get_Output (Orig, 0);
-      Dff : Net;
-      Dff_Inst : Instance;
-      En : Net;
-      Data : Net;
-      Data_Inst : Instance;
-      Last : Net;
-      Data_Inp : Input;
-   begin
-      --  The driver of the signal must be a dff/idff.
-      Dff := Get_Input_Net (Orig, 0);
-      Dff_Inst := Get_Net_Parent (Dff);
-
-      case Get_Id (Dff_Inst) is
-         when Id_Idff =>
-            --  Disconnect the init input to isignal.
-            Disconnect (Get_Input (Orig, 1));
-            declare
-               Init_Inp : constant Input := Get_Input (Dff_Inst, 2);
-               Init_Net : constant Net := Get_Driver (Init_Inp);
-            begin
-               Disconnect (Init_Inp);
-               Last := Build_Memory_Init (Ctxt, Get_Width (Dff), Init_Net);
-            end;
-         when Id_Dff =>
-            Last := Build_Memory (Ctxt, Get_Width (Dff));
-         when others =>
-            Info_Msg_Synth
-              (+Orig, "write to memory %n is not synchronous", (1 => +Orig));
-            return;
-      end case;
-
-      --  TODO: set name, set location.
-
-      --  Extract enable from the value.  Follow muxes (and free them).
-      Data_Inp := Get_Input (Dff_Inst, 1);
-      Data := Get_Driver (Data_Inp);
-      Disconnect (Data_Inp);
-      En := No_Net;
-      loop
-         Data_Inst := Get_Net_Parent (Data);
-
-         --  Stop when the dyn_insert is reached.
-         exit when Get_Id (Data_Inst) in Dyn_Insert_Module_Id;
-
-         if Get_Id (Data_Inst) /= Id_Mux2 then
-            raise Internal_Error;
-         end if;
-         --  Should have only one connection to the parent (removed above).
-         if Is_Connected (Data) then
-            raise Internal_Error;
-         end if;
-
-         declare
-            Sel_Inp : constant Input := Get_Input (Data_Inst, 0);
-            I0_Inp : constant Input := Get_Input (Data_Inst, 1);
-            I1_Inp : constant Input := Get_Input (Data_Inst, 2);
-            Sel : constant Net := Get_Driver (Sel_Inp);
-            En1_Val : Net;
-            En1_Sel : Net;
-         begin
-            if Get_Driver (I0_Inp) = Orig_Net then
-               En1_Val := Get_Driver (I1_Inp);
-               En1_Sel := Sel;
-            elsif Get_Driver (I1_Inp) = Orig_Net then
-               En1_Val := Get_Driver (I0_Inp);
-               En1_Sel := Build_Monadic (Ctxt, Id_Not, Sel);
-            else
-               raise Internal_Error;
-            end if;
-
-            --  Disconnect and remove the mux.
-            Disconnect (Sel_Inp);
-            Disconnect (I0_Inp);
-            Disconnect (I1_Inp);
-            Remove_Instance (Data_Inst);
-
-            --  AND the enable.
-            if En = No_Net then
-               En := En1_Sel;
-            else
-               En := Build_Dyadic (Ctxt, Id_And, En, En1_Sel);
-            end if;
-
-            Data := En1_Val;
-         end;
-      end loop;
-
-      if Get_Id (Data_Inst) = Id_Dyn_Insert_En then
-         declare
-            Ins_En_Inp : constant Input := Get_Input (Data_Inst, 3);
-            Ins_En : constant Net := Get_Driver (Ins_En_Inp);
-         begin
-            if En = No_Net then
-               En := Ins_En;
-            else
-               En := Build_Dyadic (Ctxt, Id_And, En, Ins_En);
-            end if;
-            Disconnect (Ins_En_Inp);
-         end;
-      end if;
-
-      --  Dummy enable if enable is not present.
-      if En = No_Net then
-         En := Build_Const_UB32 (Ctxt, 1, 1);
-      end if;
-
-      --  DATA is now the dyn_insert.
-      --  Convert memidx/addidx, check size and step.
-      declare
-         Data_Inp : constant Input := Get_Input (Data_Inst, 1);
-         Addr_Inp : constant Input := Get_Input (Data_Inst, 2);
-         Clk_Inp : Input;
-         Clk : Net;
-         Addr : Net;
-         Val : Net;
-         Port_Inst : Instance;
-      begin
-         Addr := Get_Driver (Addr_Inp);
-         Disconnect (Addr_Inp);
-         Val := Get_Input_Net (Data_Inst, 1);
-         if Get_Input_Net (Data_Inst, 0) /= Orig_Net then
-            raise Internal_Error;
-         end if;
-         Convert_Memidx (Ctxt, Orig, Addr, Get_Width (Val));
-
-         --  Replace dyn_insert with mem_wr_sync
-         Clk_Inp := Get_Input (Dff_Inst, 0);
-         Clk := Get_Driver (Clk_Inp);
-         Disconnect (Clk_Inp);
-         Data := Get_Driver (Data_Inp);
-         Disconnect (Data_Inp);
-         Port_Inst := Build_Mem_Wr_Sync (Ctxt, Last, Addr, Clk, En, Data);
-         Last := Get_Output (Port_Inst, 0);
-
-         --  Free the dff/idff.
-         Disconnect (Get_Input (Orig, 0));
-         --  Remove_Instance (Dff_Inst);
-
-         --  Free the dyn_extract
-         Disconnect (Get_Input (Data_Inst, 0));
-         Remove_Instance (Data_Inst);
-      end;
-
-      Remove_Instance (Dff_Inst);
-
-      Replace_Read_Ports (Ctxt, Orig, Last);
-
-      Remove_Instance (Orig);
-   end Replace_RAM_Memory;
 
    --  ORIG (the memory) must be Const.
    procedure Replace_ROM_Memory (Ctxt : Context_Acc; Orig : Instance)
@@ -1427,6 +1211,434 @@ package body Netlists.Memories is
       end loop;
    end Reduce_Muxes;
 
+   --  Extract the step (equivalent to data width) of a dyn_insert/dyn_extract
+   --  address.  This is either a memidx or an addidx gate.
+   function Extract_Memidx_Step (Memidx : Instance) return Width
+   is
+      Inst : Instance;
+   begin
+      Inst := Memidx;
+      loop
+         case Get_Id (Inst) is
+            when Id_Addidx =>
+               Inst := Get_Input_Instance (Inst, 1);
+            when Id_Memidx =>
+               return Get_Param_Uns32 (Inst, 0);
+            when others =>
+               raise Internal_Error;
+         end case;
+      end loop;
+   end Extract_Memidx_Step;
+
+   type Off_Array is array (Int32 range <>) of Uns32;
+   type Off_Array_Acc is access Off_Array;
+
+   procedure Free_Off_Array is new Ada.Unchecked_Deallocation
+     (Off_Array, Off_Array_Acc);
+
+   function Off_Array_Search (Arr : Off_Array; Off : Uns32) return Int32 is
+   begin
+      for I in Arr'Range loop
+         if Arr (I) = Off then
+            return I;
+         end if;
+      end loop;
+      raise Internal_Error;
+   end Off_Array_Search;
+
+   procedure Off_Array_To_Idx (Arr: Off_Array;
+                               Off : Uns32;
+                               Wd : Uns32;
+                               Idx : out Int32;
+                               Len : out Int32)
+   is
+      Idx2 : Int32;
+   begin
+      Idx := Off_Array_Search (Arr, Off);
+      Idx2 := Off_Array_Search (Arr (Idx + 1 .. Arr'Last), Off + Wd);
+      Len := Idx2 - Idx;
+   end Off_Array_To_Idx;
+
+   procedure Convert_To_Memory (Ctxt : Context_Acc; Sig : Instance)
+   is
+      --  Size of RAM (in bits).
+      Mem_Sz : constant Uns32 := Get_Width (Get_Output (Sig, 0));
+
+      --  Width of the RAM, computed from the step of memidx.
+      Mem_W : Width;
+
+      --  Number of addresses of the memory.
+      --  Sz = W * Depth.
+      Mem_Depth : Uns32;
+
+      Nbr_Ports : Int32;
+      Inst : Instance;
+
+      Offs : Off_Array_Acc;
+      Nbr_Offs : Int32;
+      Heads : Net_Array_Acc;
+      Tails : Net_Array_Acc;
+      Outs : Net_Array_Acc;
+   begin
+      --  1. Walk to count number of insert/extract instances + extract width
+      Nbr_Ports := 0;
+      Mem_W := 0;
+      Inst := Sig;
+      loop
+         declare
+            Inp : Input;
+            N_Inst : Instance;
+            In_Inst : Instance;
+            Memidx : Instance;
+         begin
+            --  Check gates connected to the output.
+            Inp := Get_First_Sink (Get_Output (Inst, 0));
+            N_Inst := No_Instance;
+            while Inp /= No_Input loop
+               In_Inst := Get_Input_Parent (Inp);
+               Memidx := No_Instance;
+               case Get_Id (In_Inst) is
+                  when Id_Dyn_Extract =>
+                     Nbr_Ports := Nbr_Ports + 1;
+                     Memidx := Get_Input_Instance (In_Inst, 1);
+                  when Id_Dyn_Insert_En
+                    | Id_Dyn_Insert =>
+                     Nbr_Ports := Nbr_Ports + 1;
+                     Memidx := Get_Input_Instance (In_Inst, 2);
+                     pragma Assert (N_Inst = No_Instance);
+                     N_Inst := In_Inst;
+                  when Id_Dff
+                    | Id_Idff
+                    | Id_Signal
+                    | Id_Isignal =>
+                     pragma Assert (N_Inst = No_Instance);
+                     N_Inst := In_Inst;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+               if Memidx /= No_Instance then
+                  if Mem_W = 0 then
+                     Mem_W := Extract_Memidx_Step (Memidx);
+                  elsif Mem_W /= Extract_Memidx_Step (Memidx) then
+                     Info_Msg_Synth
+                       (+Inst, "memory %n uses different widths",
+                        (1 => +Inst));
+                     return;
+                  end if;
+               end if;
+               Inp := Get_Next_Sink (Inp);
+            end loop;
+
+            Inst := N_Inst;
+            exit when Inst = Sig;
+         end;
+      end loop;
+
+      if Mem_W = 0 then
+         --  No ports ?
+         raise Internal_Error;
+      end if;
+
+      Mem_Depth := Mem_Sz / Mem_W;
+
+      Info_Msg_Synth
+        (+Sig, "found RAM %n, width: %v bits, depth: %v",
+         (1 => +Sig, 2 => +Mem_W, 3 => +Mem_Depth));
+
+      --  2. Walk to extract offsets/width
+      Offs := new Off_Array (1 .. 2 * Nbr_Ports);
+      Nbr_Offs := 0;
+      Inst := Sig;
+      loop
+         declare
+            Inp : Input;
+            N_Inst : Instance;
+            In_Inst : Instance;
+            Ow : Off_Array (1 .. 2);
+         begin
+            --  Check gates connected to the output.
+            Inp := Get_First_Sink (Get_Output (Inst, 0));
+            N_Inst := No_Instance;
+            while Inp /= No_Input loop
+               In_Inst := Get_Input_Parent (Inp);
+               Ow := (0, 0);
+               case Get_Id (In_Inst) is
+                  when Id_Dyn_Extract =>
+                     Ow := (1 => Get_Param_Uns32 (In_Inst, 0),
+                            2 => Get_Width (Get_Output (In_Inst, 0)));
+                  when Id_Dyn_Insert_En
+                    | Id_Dyn_Insert =>
+                     Ow := (1 => Get_Param_Uns32 (In_Inst, 0),
+                            2 => Get_Width (Get_Input_Net (In_Inst, 1)));
+                     pragma Assert (N_Inst = No_Instance);
+                     N_Inst := In_Inst;
+                  when Id_Dff
+                    | Id_Idff
+                    | Id_Signal
+                    | Id_Isignal =>
+                     pragma Assert (N_Inst = No_Instance);
+                     N_Inst := In_Inst;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+               if Ow (2) /= 0 then
+                  --  Ow (2) was just a width, convert it to an offset.
+                  Ow (2) := Ow (1) + Ow (2);
+                  if Nbr_Offs = 0 or else Ow /= Offs (1 .. 2) then
+                     Nbr_Offs := Nbr_Offs + 2;
+                     Offs (Nbr_Offs -1 .. Nbr_Offs) := Ow;
+                  end if;
+               end if;
+               Inp := Get_Next_Sink (Inp);
+            end loop;
+
+            Inst := N_Inst;
+            exit when Inst = Sig;
+         end;
+      end loop;
+
+      --  2.1 Sort
+      declare
+         function Lt (Op1, Op2 : Natural) return Boolean is
+         begin
+            return Offs (Nat32 (Op1)) < Offs (Nat32 (Op2));
+         end Lt;
+
+         procedure Swap (From : Natural; To : Natural)
+         is
+            T : Uns32;
+         begin
+            T := Offs (Nat32 (From));
+            Offs (Nat32 (From)) := Offs (Nat32 (To));
+            Offs (Nat32 (To)) := T;
+         end Swap;
+
+         procedure Heap_Sort is new Grt.Algos.Heap_Sort
+           (Lt => Lt, Swap => Swap);
+
+         P : Nat32;
+      begin
+         Heap_Sort (Natural (Nbr_Offs));
+
+         --  Remove duplicates.
+         P := 1;
+         for I in 2 .. Nbr_Offs loop
+            if Offs (I) /= Offs (P) then
+               P := P + 1;
+               if P /= I then
+                  Offs (P) := Offs (I);
+               end if;
+            end if;
+         end loop;
+         Nbr_Offs := P;
+      end;
+
+      if Offs (Nbr_Offs) < Mem_W then
+         --  Be sure the whole data width is covered.
+         --  FIXME: simply discard unused data bits ?
+         Nbr_Offs := Nbr_Offs + 1;
+         Offs (Nbr_Offs) := Mem_W;
+      end if;
+
+      --  3. Create array of instances
+      Heads := new Net_Array (1 .. Nbr_Offs - 1);
+      Tails := new Net_Array (1 .. Nbr_Offs - 1);
+      Outs := new Net_Array (1 .. Nbr_Offs - 1);
+
+      --  4. Create Memory/Memory_Init from signal/isignal.
+      for I in 1 .. Nbr_Offs - 1 loop
+         declare
+            Wd : constant Width := (Offs (I + 1) - Offs (I)) * Mem_Depth;
+         begin
+            case Get_Id (Sig) is
+               when Id_Isignal =>
+                  Heads (I) := Build_Memory_Init
+                    (Ctxt, Wd, Build2_Extract (Ctxt, Get_Input_Net (Sig, 1),
+                                               Offs (I), Wd));
+               when Id_Signal =>
+                  Heads (I) := Build_Memory (Ctxt, Wd);
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Tails (I) := Heads (I);
+         end;
+      end loop;
+
+      --  5. For each part of the data, create memory ports
+      declare
+         Inp : Input;
+         N_Inp : Input;
+         N_Inst : Instance;
+         In_Inst : Instance;
+         Dff_Clk : Net;
+      begin
+         --  Try to extract clock from dff.
+         Dff_Clk := No_Net;
+         Inst := Get_Input_Instance (Sig, 0);
+         case Get_Id (Inst) is
+            when Id_Dff
+              | Id_Idff =>
+               Dff_Clk := Get_Input_Net (Inst, 0);
+            when others =>
+               null;
+         end case;
+
+         --  Do the real work: transform gates to ports.
+         Inst := Sig;
+         loop
+            --  Check gates connected to the output.
+            N_Inst := No_Instance;
+            Inp := Get_First_Sink (Get_Output (Inst, 0));
+            while Inp /= No_Input loop
+               In_Inst := Get_Input_Parent (Inp);
+               N_Inp := Get_Next_Sink (Inp);
+               case Get_Id (In_Inst) is
+                  when Id_Dyn_Extract =>
+                     declare
+                        Off : constant Uns32 := Get_Param_Uns32 (In_Inst, 0);
+                        Wd : constant Width := Get_Width (Get_Output
+                                                            (In_Inst, 0));
+                        Idx : Int32;
+                        Len : Int32;
+                        Addr : Net;
+                        Rd_Inst : Instance;
+                        Rd : Net;
+                        Inp2 : Input;
+                        En : Net;
+                        Clk : Net;
+                        Last_Inst : Instance;
+                     begin
+                        Off_Array_To_Idx (Offs.all, Off, Wd, Idx, Len);
+                        Inp2 := Get_Input (In_Inst, 1);
+                        Addr := Get_Driver (Inp2);
+                        Disconnect (Inp2);
+                        Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
+                        Extract_Extract_Dff
+                          (Ctxt, In_Inst, Last_Inst, Clk, En);
+                        if Clk /= No_Net and then En = No_Net then
+                           En := Build_Const_UB32 (Ctxt, 1, 1);
+                        end if;
+                        --  iterate to build mem_rd/mem_rd_sync
+                        for I in Idx .. Idx + Len - 1 loop
+                           if Clk /= No_Net then
+                              Rd_Inst := Build_Mem_Rd_Sync
+                                (Ctxt, Tails (I), Addr, Clk, En,
+                                 Offs (Idx + 1) - Offs (Idx));
+                           else
+                              Rd_Inst := Build_Mem_Rd
+                                (Ctxt, Tails (I), Addr,
+                                 Offs (Idx + 1) - Offs (Idx));
+                           end if;
+                           Tails (I) := Get_Output (Rd_Inst, 0);
+                           Outs (I) := Get_Output (Rd_Inst, 1);
+                        end loop;
+                        if Len = 1 then
+                           Rd := Outs (Idx);
+                        else
+                           Rd := Build2_Concat
+                             (Ctxt, Outs (Idx .. Idx + Len - 1));
+                        end if;
+                        Redirect_Inputs (Get_Output (Last_Inst, 0), Rd);
+                        Disconnect (Get_Input (In_Inst, 0));
+                        if Last_Inst /= In_Inst then
+                           Remove_Instance (In_Inst);
+                        end if;
+                        Remove_Instance (Last_Inst);
+                     end;
+                  when Id_Dyn_Insert_En
+                    | Id_Dyn_Insert
+                    | Id_Dff
+                    | Id_Idff
+                    | Id_Signal
+                    | Id_Isignal =>
+                     pragma Assert (N_Inst = No_Instance);
+                     N_Inst := In_Inst;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+               Inp := N_Inp;
+            end loop;
+
+            --  Handle INST.
+            case Get_Id (Inst) is
+               when Id_Dyn_Insert_En
+                 | Id_Dyn_Insert =>
+                  declare
+                     Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+                     Wd : constant Width :=
+                       Get_Width (Get_Input_Net (Inst, 1));
+                     Idx : Int32;
+                     Len : Int32;
+                     Addr : Net;
+                     Wr_Inst : Instance;
+                     Inp2 : Input;
+                     Dat : Net;
+                     En : Net;
+                  begin
+                     Off_Array_To_Idx (Offs.all, Off, Wd, Idx, Len);
+                     Inp2 := Get_Input (Inst, 2);
+                     Addr := Get_Driver (Inp2);
+                     Disconnect (Inp2);
+                     Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
+                     pragma Assert (Dff_Clk /= No_Net);
+                     if Get_Id (Inst) = Id_Dyn_Insert_En then
+                        Inp2 := Get_Input (Inst, 3);
+                        En := Get_Driver (Inp2);
+                        Disconnect (Inp2);
+                     else
+                        En := Build_Const_UB32 (Ctxt, 1, 1);
+                     end if;
+                     for I in Idx .. Idx + Len - 1 loop
+                        Inp2 := Get_Input (Inst, 1);
+                        Dat := Get_Driver (Inp2);
+                        Wr_Inst := Build_Mem_Wr_Sync
+                          (Ctxt, Tails (I), Addr, Dff_Clk, En, Dat);
+                        Disconnect (Inp2);
+                        Tails (I) := Get_Output (Wr_Inst, 0);
+                     end loop;
+                  end;
+                  Inp := Get_Input (Inst, 0);
+                  Disconnect (Inp);
+                  Remove_Instance (Inst);
+               when Id_Dff
+                 | Id_Idff =>
+                  Disconnect (Get_Input (Inst, 0));
+                  Disconnect (Get_Input (Inst, 1));
+                  if Get_Id (Inst) = Id_Idff then
+                     Disconnect (Get_Input (Inst, 2));
+                  end if;
+                  Remove_Instance (Inst);
+               when Id_Signal
+                 | Id_Isignal =>
+                  null;
+               when others =>
+                  raise Internal_Error;
+            end case;
+
+            Inst := N_Inst;
+            case Get_Id (Inst) is
+               when Id_Signal =>
+                  exit;
+               when Id_Isignal =>
+                  Disconnect (Get_Input (Inst, 1));
+                  exit;
+               when others =>
+                  null;
+            end case;
+         end loop;
+
+         --  Finish to remove the signal/isignal.
+         Disconnect (Get_Input (Inst, 0));
+         Remove_Instance (Inst);
+      end;
+
+      --  6. Cleanup.
+      Free_Off_Array (Offs);
+      Free_Net_Array (Heads);
+      Free_Net_Array (Tails);
+      Free_Net_Array (Outs);
+   end Convert_To_Memory;
+
    function Is_Const_Input (Inst : Instance) return Boolean is
    begin
       case Get_Id (Inst) is
@@ -1529,13 +1741,7 @@ package body Netlists.Memories is
             else
                if Validate_RAM (Inst) then
                   Reduce_Muxes (Ctxt, Inst);
-                  Check_RAM_Ports (Inst, Data_W, Size);
-                  if Data_W /= 0 then
-                     Info_Msg_Synth
-                       (+Inst, "found RAM %n, width: %v bits, depth: %v",
-                        (1 => +Inst, 2 => +Data_W, 3 => +Size));
-                     Replace_RAM_Memory (Ctxt, Inst);
-                  end if;
+                  Convert_To_Memory (Ctxt, Inst);
                end if;
             end if;
          end;
