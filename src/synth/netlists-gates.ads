@@ -159,12 +159,14 @@ package Netlists.Gates is
    --  OUT := IN0[IN1+OFF+WD-1:IN1+OFF]
    --  Input0: the memory
    --  Input1: then index
+   --  Param0: offset
    Id_Dyn_Extract : constant Module_Id := 69;
 
    --  Like Insert but for dynamic values.
    --  Input0: the memory
    --  Input1: the value to insert
    --  Input2: the index.
+   --  Param0: offset
    --  T := IN0
    --  T [IN2+OFF+WD-1:IN2+OFF] := IN1
    --  OUT := T

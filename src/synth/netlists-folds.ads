@@ -58,7 +58,7 @@ package Netlists.Folds is
                             Loc : Location_Type := No_Location)
                            return Net;
 
---  Same as Build_Extract, but return I iff extract all the bits.
+   --  Same as Build_Extract, but return I iff extract all the bits.
    function Build2_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
 end Netlists.Folds;
