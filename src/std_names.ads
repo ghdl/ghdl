@@ -725,14 +725,15 @@ package Std_Names is
    Name_Rotate_Left        : constant Name_Id := Name_First_Ieee + 026;
    Name_Rotate_Right       : constant Name_Id := Name_First_Ieee + 027;
    Name_To_Bitvector       : constant Name_Id := Name_First_Ieee + 028;
-   Name_Conv_Signed        : constant Name_Id := Name_First_Ieee + 029;
-   Name_Conv_Unsigned      : constant Name_Id := Name_First_Ieee + 030;
-   Name_Conv_Integer       : constant Name_Id := Name_First_Ieee + 031;
-   Name_Math_Real          : constant Name_Id := Name_First_Ieee + 032;
-   Name_Ceil               : constant Name_Id := Name_First_Ieee + 033;
-   Name_Log2               : constant Name_Id := Name_First_Ieee + 034;
-   Name_Sin                : constant Name_Id := Name_First_Ieee + 035;
-   Name_Cos                : constant Name_Id := Name_First_Ieee + 036;
+   Name_Is_X               : constant Name_Id := Name_First_Ieee + 029;
+   Name_Conv_Signed        : constant Name_Id := Name_First_Ieee + 030;
+   Name_Conv_Unsigned      : constant Name_Id := Name_First_Ieee + 031;
+   Name_Conv_Integer       : constant Name_Id := Name_First_Ieee + 032;
+   Name_Math_Real          : constant Name_Id := Name_First_Ieee + 033;
+   Name_Ceil               : constant Name_Id := Name_First_Ieee + 034;
+   Name_Log2               : constant Name_Id := Name_First_Ieee + 035;
+   Name_Sin                : constant Name_Id := Name_First_Ieee + 036;
+   Name_Cos                : constant Name_Id := Name_First_Ieee + 037;
    Name_Last_Ieee          : constant Name_Id := Name_Cos;
 
    Name_First_Synthesis    : constant Name_Id := Name_Last_Ieee + 1;

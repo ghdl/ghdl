@@ -4920,6 +4920,9 @@ package Vhdl.Nodes is
 
       Iir_Predefined_Ieee_1164_To_Bitvector,
 
+      Iir_Predefined_Ieee_1164_Vector_Is_X,
+      Iir_Predefined_Ieee_1164_Scalar_Is_X,
+
       Iir_Predefined_Ieee_1164_Rising_Edge,
       Iir_Predefined_Ieee_1164_Falling_Edge,
 

@@ -271,6 +271,9 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when Name_Op_Condition =>
                            Predefined :=
                              Iir_Predefined_Ieee_1164_Condition_Operator;
+                        when Name_Is_X =>
+                           Predefined :=
+                             Iir_Predefined_Ieee_1164_Scalar_Is_X;
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;
@@ -301,6 +304,9 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when Name_Or =>
                            Predefined :=
                              Iir_Predefined_Ieee_1164_Vector_Or_Reduce;
+                        when Name_Is_X =>
+                           Predefined :=
+                             Iir_Predefined_Ieee_1164_Scalar_Is_X;
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;
