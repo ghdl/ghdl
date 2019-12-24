@@ -995,6 +995,10 @@ package body Synth.Oper is
                Edge := Build_Edge (Build_Context, Clk);
                return Create_Value_Net (Edge, Boolean_Type);
             end;
+         when Iir_Predefined_Ieee_1164_Scalar_Is_X
+           | Iir_Predefined_Ieee_1164_Vector_Is_X =>
+            --  Always false.
+            return Create_Value_Discrete (0, Boolean_Type);
          when Iir_Predefined_Ieee_1164_To_Bitvector =>
             declare
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
