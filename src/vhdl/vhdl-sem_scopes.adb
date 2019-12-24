@@ -1459,7 +1459,9 @@ package body Vhdl.Sem_Scopes is
    --  that simple name, character literal, or operator symbol contained
    --  within the package or library denoted by the prefix of the selected
    --  name.
-   procedure Use_Selected_Name (Name : Iir) is
+   procedure Use_Selected_Name (Name : Iir)
+   is
+      Nname : Iir;
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Overload_List =>
@@ -1473,10 +1475,11 @@ package body Vhdl.Sem_Scopes is
             --  If the suffix of the selected name is a type mark, then the
             --  declaration of the type or subtype denoted by the type mark
             --  is identified. Moreover [...]
-            if (Vhdl_Std >= Vhdl_08 or else Flag_Relaxed_Rules)
-              and then Get_Kind (Name) in Iir_Kinds_Type_Declaration
-            then
-               Use_Selected_Type_Name (Name);
+            if (Vhdl_Std >= Vhdl_08 or else Flag_Relaxed_Rules) then
+               Nname := Strip_Non_Object_Alias (Name);
+               if Get_Kind (Nname) in Iir_Kinds_Type_Declaration then
+                  Use_Selected_Type_Name (Nname);
+               end if;
             end if;
       end case;
    end Use_Selected_Name;
