@@ -50,13 +50,14 @@ with Synth.Context; use Synth.Context;
 with Synth.Flags; use Synth.Flags;
 
 package body Ghdlsynth is
-   type Out_Format is (Format_Raw, Format_Dump, Format_Vhdl, Format_None);
+   type Out_Format is
+     (Format_Default, Format_Raw, Format_Dump, Format_Vhdl, Format_None);
 
    --  Command --synth
    type Command_Synth is new Command_Lib with record
       Disp_Inline : Boolean := True;
       Disp_Id : Boolean := True;
-      Oformat : Out_Format := Format_Vhdl;
+      Oformat : Out_Format := Format_Default;
    end record;
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean;
@@ -252,6 +253,42 @@ package body Ghdlsynth is
       return Config;
    end Ghdl_Synth_Configure;
 
+   procedure Disp_Design (Cmd : Command_Synth;
+                          Default : Out_Format;
+                          Res : Module;
+                          Config : Iir;
+                          Inst : Synth_Instance_Acc)
+   is
+      Format : Out_Format;
+      Ent : Iir;
+   begin
+      Format := Cmd.Oformat;
+      if Format = Format_Default then
+         Format := Default;
+      end if;
+
+      case Format is
+         when Format_Default =>
+            raise Internal_Error;
+         when Format_None =>
+            null;
+         when Format_Raw =>
+            Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
+            Netlists.Dump.Flag_Disp_Id := Cmd.Disp_Id;
+            Netlists.Dump.Disp_Module (Res);
+         when Format_Dump =>
+            Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
+            Netlists.Dump.Dump_Module (Res);
+         when Format_Vhdl =>
+            if Boolean'(True) then
+               Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
+               Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res, Inst);
+            else
+               Netlists.Disp_Vhdl.Disp_Vhdl (Res);
+            end if;
+      end case;
+   end Disp_Design;
+
    function Ghdl_Synth
      (Init : Natural; Argc : Natural; Argv : C_String_Array_Acc)
      return Module
@@ -285,6 +322,8 @@ package body Ghdlsynth is
 
       Synthesis.Synth_Design (Config, Res, Inst);
 
+      Disp_Design (Command_Synth (Cmd.all), Format_None, Res, Config, Inst);
+
       --  De-elaborate all packages, so that they could be re-used for
       --  synthesis of a second design.
       --  FIXME: move to vhdl.configure ?
@@ -312,7 +351,6 @@ package body Ghdlsynth is
       Res : Module;
       Inst : Synth_Instance_Acc;
       Config : Iir;
-      Ent : Iir;
    begin
       Config := Ghdl_Synth_Configure (True, Args);
 
@@ -327,24 +365,7 @@ package body Ghdlsynth is
          raise Errorout.Compilation_Error;
       end if;
 
-      case Cmd.Oformat is
-         when Format_None =>
-            null;
-         when Format_Raw =>
-            Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
-            Netlists.Dump.Flag_Disp_Id := Cmd.Disp_Id;
-            Netlists.Dump.Disp_Module (Res);
-         when Format_Dump =>
-            Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
-            Netlists.Dump.Dump_Module (Res);
-         when Format_Vhdl =>
-            if Boolean'(True) then
-               Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);
-               Synth.Disp_Vhdl.Disp_Vhdl_Wrapper (Ent, Res, Inst);
-            else
-               Netlists.Disp_Vhdl.Disp_Vhdl (Res);
-            end if;
-      end case;
+      Disp_Design (Cmd, Format_Vhdl, Res, Config, Inst);
    end Perform_Action;
 
    function Get_Libghdl_Name return String
