@@ -494,11 +494,21 @@ package body Netlists.Disp_Vhdl is
               | Conv_Slv =>
                Disp_Net_Name (N);
             when Conv_Unsigned =>
-               Put ("unsigned (");
+               Put ("unsigned");
+               if Get_Width (N) = 1 then
+                  Put ("'(1 => ");
+               else
+                  Put (" (");
+               end if;
                Disp_Net_Name (N);
                Put (")");
             when Conv_Signed =>
-               Put ("signed (");
+               Put ("signed");
+               if Get_Width (N) = 1 then
+                  Put ("'(1 => ");
+               else
+                  Put (" (");
+               end if;
                Disp_Net_Name (N);
                Put (")");
          end case;

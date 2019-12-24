@@ -443,6 +443,7 @@ package body Netlists.Memories is
                En := No_Net;
                Disconnect (Inp);
                Last_Inst := Iinst;
+               return;
             end;
          elsif Get_Id (Iinst) = Id_Mux2 and then Is_Enable_Dff (Inp) then
             declare
@@ -467,13 +468,14 @@ package body Netlists.Memories is
                Disconnect (Clk_Inp);
                Remove_Instance (Iinst);
                Last_Inst := Dff_Inst;
+               return;
             end;
          end if;
-      else
-         Last_Inst := Inst;
-         Clk := No_Net;
-         En := No_Net;
       end if;
+
+      Last_Inst := Inst;
+      Clk := No_Net;
+      En := No_Net;
    end Extract_Extract_Dff;
 
    --  Create a mem_rd/mem_rd_sync from a dyn_extract gate.
@@ -1541,9 +1543,9 @@ package body Netlists.Memories is
                         Redirect_Inputs (Get_Output (Last_Inst, 0), Rd);
                         Disconnect (Get_Input (In_Inst, 0));
                         if Last_Inst /= In_Inst then
-                           Remove_Instance (In_Inst);
+                           Remove_Instance (Last_Inst);
                         end if;
-                        Remove_Instance (Last_Inst);
+                        Remove_Instance (In_Inst);
                      end;
                   when Id_Dyn_Insert_En
                     | Id_Dyn_Insert
