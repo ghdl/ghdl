@@ -6248,7 +6248,8 @@ package body Trans.Chap7 is
             | Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
             null;
 
-         when Iir_Predefined_Now_Function =>
+         when Iir_Predefined_Now_Function
+           | Iir_Predefined_Real_Now_Function =>
             null;
 
             --  when others =>

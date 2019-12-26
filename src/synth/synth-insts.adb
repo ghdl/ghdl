@@ -536,7 +536,7 @@ package body Synth.Insts is
       Actual : Node;
       Formal_Typ : Type_Acc;
    begin
-      case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+      case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
          when Iir_Kind_Association_Element_Open =>
             Actual := Get_Default_Value (Inter);
          when Iir_Kind_Association_Element_By_Expression =>

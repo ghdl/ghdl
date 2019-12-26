@@ -48,6 +48,7 @@ package body Vhdl.Canon is
                               return Iir;
 
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir);
+   procedure Canon_Simultaneous_Stmts (Top : Iir_Design_Unit; Parent : Iir);
 
    --  Canonicalize an association list.
    --  If ASSOCIATION_LIST is not null, then it is re-ordored and returned.
@@ -234,6 +235,7 @@ package body Vhdl.Canon is
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kinds_Signal_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_External_Signal_Name =>
             --  LRM 8.1
             --  A simple name that denotes a signal, add the longuest static
@@ -269,7 +271,8 @@ package body Vhdl.Canon is
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_File_Declaration =>
+           | Iir_Kind_File_Declaration
+           | Iir_Kinds_Quantity_Declaration =>
             null;
 
          when Iir_Kinds_Array_Attribute =>
@@ -983,7 +986,8 @@ package body Vhdl.Canon is
                      Found := True;
                   when Iir_Kind_Association_Element_Package
                     | Iir_Kind_Association_Element_Type
-                    | Iir_Kind_Association_Element_Subprogram =>
+                    | Iir_Kind_Association_Element_Subprogram
+                    | Iir_Kind_Association_Element_Terminal =>
                      goto Done;
                   when others =>
                      Error_Kind ("canon_association_chain", Assoc_El);
@@ -1901,6 +1905,64 @@ package body Vhdl.Canon is
       return Proc;
    end Canon_Concurrent_Assertion_Statement;
 
+   function Canon_Concurrent_Break_Statement (Stmt : Iir) return Iir
+   is
+      Proc : Iir;
+      Brk : Iir;
+      Sensitivity_List : Iir_List;
+      Cond : Iir;
+   begin
+      -- Create a new entry.
+      Proc := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
+      Location_Copy (Proc, Stmt);
+      Set_Parent (Proc, Get_Parent (Stmt));
+      Set_Chain (Proc, Get_Chain (Stmt));
+      Set_Process_Origin (Proc, Stmt);
+
+      --  AMS-LRM17 11.9 Concurrent break statement
+      --  The equivalent process statement has a label if and only if the
+      --  concurrent break statement has a label; if the equivalent process
+      --  statement has a label, it is the same as that of the concurrent
+      --  break statement.
+      Set_Label (Proc, Get_Label (Stmt));
+
+      --  AMS-LRM17 11.9 Concurrent break statement
+      --  The equivalent process statement does not include the reserved word
+      --  postponed, [...]
+      Set_Postponed_Flag (Proc, False);
+
+      Brk := Create_Iir (Iir_Kind_Break_Statement);
+      Set_Sequential_Statement_Chain (Proc, Brk);
+      Set_Parent (Brk, Proc);
+      Location_Copy (Brk, Stmt);
+
+      Cond := Get_Condition (Stmt);
+      Set_Break_Element (Brk, Get_Break_Element (Stmt));
+      Set_Break_Element (Stmt, Null_Iir);
+      Set_Condition (Brk, Cond);
+      Set_Condition (Stmt, Null_Iir);
+
+      --  AMS-LRM17 11.9 Concurrent break statement
+      --  If the concurrent break statement has a sensitivity clause, then
+      --  the wait statement of the equivalent process statement contains the
+      --  same sensitivity clause; otherwise, if a name that denotes a signal
+      --  appears in the Boolean expression that defines the condition of the
+      --  break, then the wait statement includes a sensitivity clause that is
+      --  constructed by applying the rule of 10.2 to that expression;
+      --  otherwise the wait statement contains no sensitivity clause.  The
+      --  wait statement does not contain a condition clause of a timeout
+      --  clause.
+      Sensitivity_List := Get_Sensitivity_List (Stmt);
+      if Sensitivity_List = Null_Iir_List and then Cond /= Null_Iir then
+         Sensitivity_List := Create_Iir_List;
+         Canon_Extract_Sensitivity (Cond, Sensitivity_List, False);
+      end if;
+      Set_Sensitivity_List (Proc, Sensitivity_List);
+      Set_Is_Ref (Proc, True);
+
+      return Proc;
+   end Canon_Concurrent_Break_Statement;
+
    procedure Canon_Concurrent_Label (Stmt : Iir; Proc_Num : in out Natural) is
    begin
       --  Add a label if required.
@@ -1980,6 +2042,14 @@ package body Vhdl.Canon is
 
             if Canon_Flag_Concurrent_Stmts then
                Stmt := Canon_Concurrent_Assertion_Statement (Stmt);
+            end if;
+
+         when Iir_Kind_Concurrent_Break_Statement =>
+            if Canon_Flag_Expressions then
+               Canon_Expression_If_Valid (Get_Condition (Stmt));
+            end if;
+            if Canon_Flag_Concurrent_Stmts then
+               Stmt := Canon_Concurrent_Break_Statement (Stmt);
             end if;
 
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
@@ -2195,6 +2265,19 @@ package body Vhdl.Canon is
                Canon_Expression (Get_Simultaneous_Left (Stmt));
                Canon_Expression (Get_Simultaneous_Right (Stmt));
             end if;
+         when Iir_Kind_Simultaneous_If_Statement =>
+            declare
+               Clause : Iir;
+            begin
+               Clause := Stmt;
+               while Clause /= Null_Iir loop
+                  if Canon_Flag_Expressions then
+                     Canon_Expression_If_Valid (Get_Condition (Clause));
+                  end if;
+                  Canon_Simultaneous_Stmts (Top, Clause);
+                  Clause := Get_Else_Clause (Clause);
+               end loop;
+            end;
 
          when others =>
             Error_Kind ("canon_concurrent_statement", Stmt);
@@ -2216,6 +2299,7 @@ package body Vhdl.Canon is
 
          Canon_Concurrent_Statement (Stmt, Top);
 
+         --  STMT may have been changed.
          if Prev_Stmt = Null_Iir then
             Set_Concurrent_Statement_Chain (Parent, Stmt);
          else
@@ -2225,6 +2309,24 @@ package body Vhdl.Canon is
          Stmt := Get_Chain (Stmt);
       end loop;
    end Canon_Concurrent_Stmts;
+
+   procedure Canon_Simultaneous_Stmts (Top : Iir_Design_Unit; Parent : Iir)
+   is
+      Stmt : Iir;
+      Prev_Stmt : Iir;
+      Proc_Num : Natural := 0;
+   begin
+      Stmt := Get_Simultaneous_Statement_Chain (Parent);
+      while Stmt /= Null_Iir loop
+         Canon_Concurrent_Label (Stmt, Proc_Num);
+
+         Prev_Stmt := Stmt;
+         Canon_Concurrent_Statement (Stmt, Top);
+         pragma Assert (Stmt = Prev_Stmt);
+
+         Stmt := Get_Chain (Stmt);
+      end loop;
+   end Canon_Simultaneous_Stmts;
 
 --    procedure Canon_Binding_Indication
 --      (Component: Iir; Binding : Iir_Binding_Indication)
@@ -2696,6 +2798,48 @@ package body Vhdl.Canon is
       end if;
    end Canon_Disconnection_Specification;
 
+   --  Replace ALL/OTHERS with the explicit list of signals.
+   procedure Canon_Step_Limit_Specification (Limit : Iir)
+   is
+      Quantity_List : Iir_Flist;
+      Force : Boolean;
+      El : Iir;
+      N_List : Iir_List;
+      Quan_Type : Iir;
+   begin
+      if Canon_Flag_Expressions then
+         Canon_Expression (Get_Expression (Limit));
+      end if;
+
+      if Canon_Flag_Specification_Lists then
+         Quantity_List := Get_Quantity_List (Limit);
+         if Quantity_List = Iir_Flist_All then
+            Force := True;
+         elsif Quantity_List = Iir_Flist_Others then
+            Force := False;
+         else
+            --  User list: nothing to do.
+            return;
+         end if;
+
+         pragma Unreferenced (Force);
+
+         Quan_Type := Get_Type (Get_Type_Mark (Limit));
+         N_List := Create_Iir_List;
+         Set_Is_Ref (Limit, True);
+         El := Get_Declaration_Chain (Get_Parent (Limit));
+         while El /= Null_Iir loop
+            if Get_Kind (El) in Iir_Kinds_Quantity_Declaration
+              and then Get_Type (El) = Quan_Type
+            then
+               raise Internal_Error;
+            end if;
+            El := Get_Chain (El);
+         end loop;
+         Set_Quantity_List (Limit, List_To_Flist (N_List));
+      end if;
+   end Canon_Step_Limit_Specification;
+
    procedure Canon_Subtype_Indication (Def : Iir) is
    begin
       case Get_Kind (Def) is
@@ -2870,6 +3014,8 @@ package body Vhdl.Canon is
             end if;
          when Iir_Kind_Disconnection_Specification =>
             Canon_Disconnection_Specification (Decl);
+         when Iir_Kind_Step_Limit_Specification =>
+            Canon_Step_Limit_Specification (Decl);
 
          when Iir_Kind_Group_Template_Declaration =>
             null;

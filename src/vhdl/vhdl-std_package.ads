@@ -112,6 +112,15 @@ package Vhdl.Std_Package is
    Time_Subtype_Definition: Iir_Physical_Subtype_Definition;
    Time_Subtype_Declaration : Iir_Subtype_Declaration;
 
+   --  For AMS-VHDL
+   Domain_Type_Type_Declaration : Iir_Type_Declaration;
+   Domain_Type_Type_Definition : Iir_Enumeration_Type_Definition;
+   Domain_Type_Quiescent_Domain : Iir_Enumeration_Literal;
+   Domain_Type_Time_Domain : Iir_Enumeration_Literal;
+   Domain_Type_Frequency_Domain : Iir_Enumeration_Literal;
+
+   Domain_Signal : Iir_Signal_Declaration;
+
    --  For VHDL-93
    Delay_Length_Subtype_Definition : Iir_Physical_Subtype_Definition;
    Delay_Length_Subtype_Declaration : Iir_Subtype_Declaration;

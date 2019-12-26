@@ -34,6 +34,8 @@ package body Vhdl.Elocations_Meta is
             return "begin_location";
          when Field_Then_Location =>
             return "then_location";
+         when Field_Use_Location =>
+            return "use_location";
          when Field_Loop_Location =>
             return "loop_location";
          when Field_Generate_Location =>
@@ -83,6 +85,8 @@ package body Vhdl.Elocations_Meta is
             return Get_Begin_Location (N);
          when Field_Then_Location =>
             return Get_Then_Location (N);
+         when Field_Use_Location =>
+            return Get_Use_Location (N);
          when Field_Loop_Location =>
             return Get_Loop_Location (N);
          when Field_Generate_Location =>
@@ -123,6 +127,8 @@ package body Vhdl.Elocations_Meta is
             Set_Begin_Location (N, V);
          when Field_Then_Location =>
             Set_Then_Location (N, V);
+         when Field_Use_Location =>
+            Set_Use_Location (N, V);
          when Field_Loop_Location =>
             Set_Loop_Location (N, V);
          when Field_Generate_Location =>
@@ -181,6 +187,8 @@ package body Vhdl.Elocations_Meta is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Quantity_Declaration
+           | Iir_Kind_Interface_Terminal_Declaration
            | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Sensitized_Process_Statement
@@ -192,6 +200,9 @@ package body Vhdl.Elocations_Meta is
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
+           | Iir_Kind_Simultaneous_Procedural_Statement
+           | Iir_Kind_Simultaneous_If_Statement
+           | Iir_Kind_Simultaneous_Elsif
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement
            | Iir_Kind_If_Statement
@@ -213,6 +224,7 @@ package body Vhdl.Elocations_Meta is
          when Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Record_Nature_Definition
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
@@ -230,6 +242,9 @@ package body Vhdl.Elocations_Meta is
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
+           | Iir_Kind_Simultaneous_Procedural_Statement
+           | Iir_Kind_Simultaneous_If_Statement
+           | Iir_Kind_Simultaneous_Elsif
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Case_Statement
@@ -252,7 +267,8 @@ package body Vhdl.Elocations_Meta is
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
-           | Iir_Kind_Block_Statement =>
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Simultaneous_Procedural_Statement =>
             return True;
          when others =>
             return False;
@@ -269,7 +285,8 @@ package body Vhdl.Elocations_Meta is
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement_Body =>
+           | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_Simultaneous_Procedural_Statement =>
             return True;
          when others =>
             return False;
@@ -286,6 +303,17 @@ package body Vhdl.Elocations_Meta is
             return False;
       end case;
    end Has_Then_Location;
+
+   function Has_Use_Location (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Simultaneous_If_Statement
+           | Iir_Kind_Simultaneous_Elsif =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Use_Location;
 
    function Has_Loop_Location (K : Iir_Kind) return Boolean is
    begin
@@ -367,7 +395,8 @@ package body Vhdl.Elocations_Meta is
            | Iir_Kind_Association_Element_Open
            | Iir_Kind_Association_Element_Package
            | Iir_Kind_Association_Element_Type
-           | Iir_Kind_Association_Element_Subprogram =>
+           | Iir_Kind_Association_Element_Subprogram
+           | Iir_Kind_Association_Element_Terminal =>
             return True;
          when others =>
             return False;
@@ -380,7 +409,8 @@ package body Vhdl.Elocations_Meta is
          when Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration =>
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Quantity_Declaration =>
             return True;
          when others =>
             return False;
@@ -393,7 +423,8 @@ package body Vhdl.Elocations_Meta is
          when Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration =>
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Quantity_Declaration =>
             return True;
          when others =>
             return False;

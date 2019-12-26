@@ -29,6 +29,7 @@ package Vhdl.Elocations_Meta is
       Field_Is_Location,
       Field_Begin_Location,
       Field_Then_Location,
+      Field_Use_Location,
       Field_Loop_Location,
       Field_Generate_Location,
       Field_Generic_Location,
@@ -57,6 +58,7 @@ package Vhdl.Elocations_Meta is
    function Has_Is_Location (K : Iir_Kind) return Boolean;
    function Has_Begin_Location (K : Iir_Kind) return Boolean;
    function Has_Then_Location (K : Iir_Kind) return Boolean;
+   function Has_Use_Location (K : Iir_Kind) return Boolean;
    function Has_Loop_Location (K : Iir_Kind) return Boolean;
    function Has_Generate_Location (K : Iir_Kind) return Boolean;
    function Has_Generic_Location (K : Iir_Kind) return Boolean;

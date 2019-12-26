@@ -244,7 +244,9 @@ package body Vhdl.Elocations is
            | Iir_Kind_Array_Element_Resolution
            | Iir_Kind_Record_Resolution
            | Iir_Kind_Record_Element_Resolution
+           | Iir_Kind_Break_Element
            | Iir_Kind_Disconnection_Specification
+           | Iir_Kind_Step_Limit_Specification
            | Iir_Kind_Configuration_Specification
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
@@ -266,6 +268,8 @@ package body Vhdl.Elocations is
            | Iir_Kind_Wildcard_Type_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
+           | Iir_Kind_Array_Nature_Definition
+           | Iir_Kind_Array_Subnature_Definition
            | Iir_Kind_Overload_List
            | Iir_Kind_Vmode_Declaration
            | Iir_Kind_Vprop_Declaration
@@ -275,14 +279,17 @@ package body Vhdl.Elocations is
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Element_Declaration
+           | Iir_Kind_Nature_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Spectrum_Quantity_Declaration
+           | Iir_Kind_Noise_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Interface_Function_Declaration
            | Iir_Kind_Interface_Procedure_Declaration
@@ -346,6 +353,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Psl_Expression
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kind_Concurrent_Break_Statement
            | Iir_Kind_Psl_Assert_Directive
            | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
@@ -366,6 +374,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Break_Statement
            | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
@@ -383,6 +392,9 @@ package body Vhdl.Elocations is
            | Iir_Kind_Base_Attribute
            | Iir_Kind_Subtype_Attribute
            | Iir_Kind_Element_Attribute
+           | Iir_Kind_Across_Attribute
+           | Iir_Kind_Through_Attribute
+           | Iir_Kind_Nature_Reference_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute
@@ -396,6 +408,12 @@ package body Vhdl.Elocations is
            | Iir_Kind_Pred_Attribute
            | Iir_Kind_Leftof_Attribute
            | Iir_Kind_Rightof_Attribute
+           | Iir_Kind_Signal_Slew_Attribute
+           | Iir_Kind_Quantity_Slew_Attribute
+           | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Dot_Attribute
+           | Iir_Kind_Integ_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -429,6 +447,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Association_Element_Package
            | Iir_Kind_Association_Element_Type
            | Iir_Kind_Association_Element_Subprogram
+           | Iir_Kind_Association_Element_Terminal
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -442,6 +461,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
+           | Iir_Kind_Interface_Terminal_Declaration
            | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Parenthesis_Expression
@@ -452,6 +472,7 @@ package body Vhdl.Elocations is
          when Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Record_Nature_Definition
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
@@ -463,11 +484,14 @@ package body Vhdl.Elocations is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Quantity_Declaration
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
+           | Iir_Kind_Simultaneous_If_Statement
+           | Iir_Kind_Simultaneous_Elsif
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement
            | Iir_Kind_If_Statement
@@ -480,7 +504,8 @@ package body Vhdl.Elocations is
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
-           | Iir_Kind_Block_Statement =>
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Simultaneous_Procedural_Statement =>
             return Format_L4;
          when Iir_Kind_Package_Header =>
             return Format_L5;
@@ -586,6 +611,22 @@ package body Vhdl.Elocations is
                      "no field Then_Location");
       Set_Field3 (N, Loc);
    end Set_Then_Location;
+
+   function Get_Use_Location (N : Iir) return Location_Type is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Use_Location (Get_Kind (N)),
+                     "no field Use_Location");
+      return Get_Field3 (N);
+   end Get_Use_Location;
+
+   procedure Set_Use_Location (N : Iir; Loc : Location_Type) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Use_Location (Get_Kind (N)),
+                     "no field Use_Location");
+      Set_Field3 (N, Loc);
+   end Set_Use_Location;
 
    function Get_Loop_Location (N : Iir) return Location_Type is
    begin

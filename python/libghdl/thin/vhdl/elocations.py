@@ -25,6 +25,10 @@ Get_Then_Location = libghdl.vhdl__elocations__get_then_location
 
 Set_Then_Location = libghdl.vhdl__elocations__set_then_location
 
+Get_Use_Location = libghdl.vhdl__elocations__get_use_location
+
+Set_Use_Location = libghdl.vhdl__elocations__set_use_location
+
 Get_Loop_Location = libghdl.vhdl__elocations__get_loop_location
 
 Set_Loop_Location = libghdl.vhdl__elocations__set_loop_location

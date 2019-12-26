@@ -43,6 +43,8 @@ package Vhdl.Sem_Specs is
    procedure Sem_Disconnection_Specification
      (Dis : Iir_Disconnection_Specification);
 
+   procedure Sem_Step_Limit_Specification (Limit : Iir);
+
    procedure Sem_Configuration_Specification
      (Parent_Stmts : Iir; Conf : Iir_Configuration_Specification);
 

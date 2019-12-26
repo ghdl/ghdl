@@ -170,7 +170,8 @@ package body Trans_Analyzes is
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Case_Statement
-           | Iir_Kind_If_Statement =>
+           | Iir_Kind_If_Statement
+           | Iir_Kind_Break_Statement =>
             null;
       end case;
       return Walk_Continue;

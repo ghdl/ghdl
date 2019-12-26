@@ -37,263 +37,293 @@ class Iir_Kind:
     Association_Element_Package = 22
     Association_Element_Type = 23
     Association_Element_Subprogram = 24
-    Choice_By_Range = 25
-    Choice_By_Expression = 26
-    Choice_By_Others = 27
-    Choice_By_None = 28
-    Choice_By_Name = 29
-    Entity_Aspect_Entity = 30
-    Entity_Aspect_Configuration = 31
-    Entity_Aspect_Open = 32
-    Psl_Hierarchical_Name = 33
-    Block_Configuration = 34
-    Block_Header = 35
-    Component_Configuration = 36
-    Binding_Indication = 37
-    Entity_Class = 38
-    Attribute_Value = 39
-    Signature = 40
-    Aggregate_Info = 41
-    Procedure_Call = 42
-    Record_Element_Constraint = 43
-    Array_Element_Resolution = 44
-    Record_Resolution = 45
-    Record_Element_Resolution = 46
-    Attribute_Specification = 47
-    Disconnection_Specification = 48
-    Configuration_Specification = 49
-    Access_Type_Definition = 50
-    Incomplete_Type_Definition = 51
-    Interface_Type_Definition = 52
-    File_Type_Definition = 53
-    Protected_Type_Declaration = 54
-    Record_Type_Definition = 55
-    Array_Type_Definition = 56
-    Array_Subtype_Definition = 57
-    Record_Subtype_Definition = 58
-    Access_Subtype_Definition = 59
-    Physical_Subtype_Definition = 60
-    Floating_Subtype_Definition = 61
-    Integer_Subtype_Definition = 62
-    Enumeration_Subtype_Definition = 63
-    Enumeration_Type_Definition = 64
-    Integer_Type_Definition = 65
-    Floating_Type_Definition = 66
-    Physical_Type_Definition = 67
-    Range_Expression = 68
-    Protected_Type_Body = 69
-    Wildcard_Type_Definition = 70
-    Subtype_Definition = 71
-    Scalar_Nature_Definition = 72
-    Overload_List = 73
-    Entity_Declaration = 74
-    Configuration_Declaration = 75
-    Context_Declaration = 76
-    Package_Declaration = 77
-    Package_Instantiation_Declaration = 78
-    Vmode_Declaration = 79
-    Vprop_Declaration = 80
-    Vunit_Declaration = 81
-    Package_Body = 82
-    Architecture_Body = 83
-    Type_Declaration = 84
-    Anonymous_Type_Declaration = 85
-    Subtype_Declaration = 86
-    Nature_Declaration = 87
-    Subnature_Declaration = 88
-    Package_Header = 89
-    Unit_Declaration = 90
-    Library_Declaration = 91
-    Component_Declaration = 92
-    Attribute_Declaration = 93
-    Group_Template_Declaration = 94
-    Group_Declaration = 95
-    Element_Declaration = 96
-    Non_Object_Alias_Declaration = 97
-    Psl_Declaration = 98
-    Psl_Endpoint_Declaration = 99
-    Terminal_Declaration = 100
-    Free_Quantity_Declaration = 101
-    Across_Quantity_Declaration = 102
-    Through_Quantity_Declaration = 103
-    Enumeration_Literal = 104
-    Function_Declaration = 105
-    Procedure_Declaration = 106
-    Function_Body = 107
-    Procedure_Body = 108
-    Object_Alias_Declaration = 109
-    File_Declaration = 110
-    Guard_Signal_Declaration = 111
-    Signal_Declaration = 112
-    Variable_Declaration = 113
-    Constant_Declaration = 114
-    Iterator_Declaration = 115
-    Interface_Constant_Declaration = 116
-    Interface_Variable_Declaration = 117
-    Interface_Signal_Declaration = 118
-    Interface_File_Declaration = 119
-    Interface_Type_Declaration = 120
-    Interface_Package_Declaration = 121
-    Interface_Function_Declaration = 122
-    Interface_Procedure_Declaration = 123
-    Anonymous_Signal_Declaration = 124
-    Signal_Attribute_Declaration = 125
-    Identity_Operator = 126
-    Negation_Operator = 127
-    Absolute_Operator = 128
-    Not_Operator = 129
-    Implicit_Condition_Operator = 130
-    Condition_Operator = 131
-    Reduction_And_Operator = 132
-    Reduction_Or_Operator = 133
-    Reduction_Nand_Operator = 134
-    Reduction_Nor_Operator = 135
-    Reduction_Xor_Operator = 136
-    Reduction_Xnor_Operator = 137
-    And_Operator = 138
-    Or_Operator = 139
-    Nand_Operator = 140
-    Nor_Operator = 141
-    Xor_Operator = 142
-    Xnor_Operator = 143
-    Equality_Operator = 144
-    Inequality_Operator = 145
-    Less_Than_Operator = 146
-    Less_Than_Or_Equal_Operator = 147
-    Greater_Than_Operator = 148
-    Greater_Than_Or_Equal_Operator = 149
-    Match_Equality_Operator = 150
-    Match_Inequality_Operator = 151
-    Match_Less_Than_Operator = 152
-    Match_Less_Than_Or_Equal_Operator = 153
-    Match_Greater_Than_Operator = 154
-    Match_Greater_Than_Or_Equal_Operator = 155
-    Sll_Operator = 156
-    Sla_Operator = 157
-    Srl_Operator = 158
-    Sra_Operator = 159
-    Rol_Operator = 160
-    Ror_Operator = 161
-    Addition_Operator = 162
-    Substraction_Operator = 163
-    Concatenation_Operator = 164
-    Multiplication_Operator = 165
-    Division_Operator = 166
-    Modulus_Operator = 167
-    Remainder_Operator = 168
-    Exponentiation_Operator = 169
-    Function_Call = 170
-    Aggregate = 171
-    Parenthesis_Expression = 172
-    Qualified_Expression = 173
-    Type_Conversion = 174
-    Allocator_By_Expression = 175
-    Allocator_By_Subtype = 176
-    Selected_Element = 177
-    Dereference = 178
-    Implicit_Dereference = 179
-    Slice_Name = 180
-    Indexed_Name = 181
-    Psl_Expression = 182
-    Sensitized_Process_Statement = 183
-    Process_Statement = 184
-    Concurrent_Simple_Signal_Assignment = 185
-    Concurrent_Conditional_Signal_Assignment = 186
-    Concurrent_Selected_Signal_Assignment = 187
-    Concurrent_Assertion_Statement = 188
-    Concurrent_Procedure_Call_Statement = 189
-    Psl_Assert_Directive = 190
-    Psl_Assume_Directive = 191
-    Psl_Cover_Directive = 192
-    Psl_Restrict_Directive = 193
-    Block_Statement = 194
-    If_Generate_Statement = 195
-    Case_Generate_Statement = 196
-    For_Generate_Statement = 197
-    Component_Instantiation_Statement = 198
-    Psl_Default_Clock = 199
-    Simple_Simultaneous_Statement = 200
-    Generate_Statement_Body = 201
-    If_Generate_Else_Clause = 202
-    Simple_Signal_Assignment_Statement = 203
-    Conditional_Signal_Assignment_Statement = 204
-    Selected_Waveform_Assignment_Statement = 205
-    Null_Statement = 206
-    Assertion_Statement = 207
-    Report_Statement = 208
-    Wait_Statement = 209
-    Variable_Assignment_Statement = 210
-    Conditional_Variable_Assignment_Statement = 211
-    Return_Statement = 212
-    For_Loop_Statement = 213
-    While_Loop_Statement = 214
-    Next_Statement = 215
-    Exit_Statement = 216
-    Case_Statement = 217
-    Procedure_Call_Statement = 218
-    If_Statement = 219
-    Elsif = 220
-    Character_Literal = 221
-    Simple_Name = 222
-    Selected_Name = 223
-    Operator_Symbol = 224
-    Reference_Name = 225
-    External_Constant_Name = 226
-    External_Signal_Name = 227
-    External_Variable_Name = 228
-    Selected_By_All_Name = 229
-    Parenthesis_Name = 230
-    Package_Pathname = 231
-    Absolute_Pathname = 232
-    Relative_Pathname = 233
-    Pathname_Element = 234
-    Base_Attribute = 235
-    Subtype_Attribute = 236
-    Element_Attribute = 237
-    Left_Type_Attribute = 238
-    Right_Type_Attribute = 239
-    High_Type_Attribute = 240
-    Low_Type_Attribute = 241
-    Ascending_Type_Attribute = 242
-    Image_Attribute = 243
-    Value_Attribute = 244
-    Pos_Attribute = 245
-    Val_Attribute = 246
-    Succ_Attribute = 247
-    Pred_Attribute = 248
-    Leftof_Attribute = 249
-    Rightof_Attribute = 250
-    Delayed_Attribute = 251
-    Stable_Attribute = 252
-    Quiet_Attribute = 253
-    Transaction_Attribute = 254
-    Event_Attribute = 255
-    Active_Attribute = 256
-    Last_Event_Attribute = 257
-    Last_Active_Attribute = 258
-    Last_Value_Attribute = 259
-    Driving_Attribute = 260
-    Driving_Value_Attribute = 261
-    Behavior_Attribute = 262
-    Structure_Attribute = 263
-    Simple_Name_Attribute = 264
-    Instance_Name_Attribute = 265
-    Path_Name_Attribute = 266
-    Left_Array_Attribute = 267
-    Right_Array_Attribute = 268
-    High_Array_Attribute = 269
-    Low_Array_Attribute = 270
-    Length_Array_Attribute = 271
-    Ascending_Array_Attribute = 272
-    Range_Array_Attribute = 273
-    Reverse_Range_Array_Attribute = 274
-    Attribute_Name = 275
+    Association_Element_Terminal = 25
+    Choice_By_Range = 26
+    Choice_By_Expression = 27
+    Choice_By_Others = 28
+    Choice_By_None = 29
+    Choice_By_Name = 30
+    Entity_Aspect_Entity = 31
+    Entity_Aspect_Configuration = 32
+    Entity_Aspect_Open = 33
+    Psl_Hierarchical_Name = 34
+    Block_Configuration = 35
+    Block_Header = 36
+    Component_Configuration = 37
+    Binding_Indication = 38
+    Entity_Class = 39
+    Attribute_Value = 40
+    Signature = 41
+    Aggregate_Info = 42
+    Procedure_Call = 43
+    Record_Element_Constraint = 44
+    Array_Element_Resolution = 45
+    Record_Resolution = 46
+    Record_Element_Resolution = 47
+    Break_Element = 48
+    Attribute_Specification = 49
+    Disconnection_Specification = 50
+    Step_Limit_Specification = 51
+    Configuration_Specification = 52
+    Access_Type_Definition = 53
+    Incomplete_Type_Definition = 54
+    Interface_Type_Definition = 55
+    File_Type_Definition = 56
+    Protected_Type_Declaration = 57
+    Record_Type_Definition = 58
+    Array_Type_Definition = 59
+    Array_Subtype_Definition = 60
+    Record_Subtype_Definition = 61
+    Access_Subtype_Definition = 62
+    Physical_Subtype_Definition = 63
+    Floating_Subtype_Definition = 64
+    Integer_Subtype_Definition = 65
+    Enumeration_Subtype_Definition = 66
+    Enumeration_Type_Definition = 67
+    Integer_Type_Definition = 68
+    Floating_Type_Definition = 69
+    Physical_Type_Definition = 70
+    Range_Expression = 71
+    Protected_Type_Body = 72
+    Wildcard_Type_Definition = 73
+    Subtype_Definition = 74
+    Scalar_Nature_Definition = 75
+    Record_Nature_Definition = 76
+    Array_Nature_Definition = 77
+    Array_Subnature_Definition = 78
+    Overload_List = 79
+    Entity_Declaration = 80
+    Configuration_Declaration = 81
+    Context_Declaration = 82
+    Package_Declaration = 83
+    Package_Instantiation_Declaration = 84
+    Vmode_Declaration = 85
+    Vprop_Declaration = 86
+    Vunit_Declaration = 87
+    Package_Body = 88
+    Architecture_Body = 89
+    Type_Declaration = 90
+    Anonymous_Type_Declaration = 91
+    Subtype_Declaration = 92
+    Nature_Declaration = 93
+    Subnature_Declaration = 94
+    Package_Header = 95
+    Unit_Declaration = 96
+    Library_Declaration = 97
+    Component_Declaration = 98
+    Attribute_Declaration = 99
+    Group_Template_Declaration = 100
+    Group_Declaration = 101
+    Element_Declaration = 102
+    Nature_Element_Declaration = 103
+    Non_Object_Alias_Declaration = 104
+    Psl_Declaration = 105
+    Psl_Endpoint_Declaration = 106
+    Enumeration_Literal = 107
+    Function_Declaration = 108
+    Procedure_Declaration = 109
+    Function_Body = 110
+    Procedure_Body = 111
+    Terminal_Declaration = 112
+    Object_Alias_Declaration = 113
+    Free_Quantity_Declaration = 114
+    Spectrum_Quantity_Declaration = 115
+    Noise_Quantity_Declaration = 116
+    Across_Quantity_Declaration = 117
+    Through_Quantity_Declaration = 118
+    File_Declaration = 119
+    Guard_Signal_Declaration = 120
+    Signal_Declaration = 121
+    Variable_Declaration = 122
+    Constant_Declaration = 123
+    Iterator_Declaration = 124
+    Interface_Constant_Declaration = 125
+    Interface_Variable_Declaration = 126
+    Interface_Signal_Declaration = 127
+    Interface_File_Declaration = 128
+    Interface_Quantity_Declaration = 129
+    Interface_Terminal_Declaration = 130
+    Interface_Type_Declaration = 131
+    Interface_Package_Declaration = 132
+    Interface_Function_Declaration = 133
+    Interface_Procedure_Declaration = 134
+    Anonymous_Signal_Declaration = 135
+    Signal_Attribute_Declaration = 136
+    Identity_Operator = 137
+    Negation_Operator = 138
+    Absolute_Operator = 139
+    Not_Operator = 140
+    Implicit_Condition_Operator = 141
+    Condition_Operator = 142
+    Reduction_And_Operator = 143
+    Reduction_Or_Operator = 144
+    Reduction_Nand_Operator = 145
+    Reduction_Nor_Operator = 146
+    Reduction_Xor_Operator = 147
+    Reduction_Xnor_Operator = 148
+    And_Operator = 149
+    Or_Operator = 150
+    Nand_Operator = 151
+    Nor_Operator = 152
+    Xor_Operator = 153
+    Xnor_Operator = 154
+    Equality_Operator = 155
+    Inequality_Operator = 156
+    Less_Than_Operator = 157
+    Less_Than_Or_Equal_Operator = 158
+    Greater_Than_Operator = 159
+    Greater_Than_Or_Equal_Operator = 160
+    Match_Equality_Operator = 161
+    Match_Inequality_Operator = 162
+    Match_Less_Than_Operator = 163
+    Match_Less_Than_Or_Equal_Operator = 164
+    Match_Greater_Than_Operator = 165
+    Match_Greater_Than_Or_Equal_Operator = 166
+    Sll_Operator = 167
+    Sla_Operator = 168
+    Srl_Operator = 169
+    Sra_Operator = 170
+    Rol_Operator = 171
+    Ror_Operator = 172
+    Addition_Operator = 173
+    Substraction_Operator = 174
+    Concatenation_Operator = 175
+    Multiplication_Operator = 176
+    Division_Operator = 177
+    Modulus_Operator = 178
+    Remainder_Operator = 179
+    Exponentiation_Operator = 180
+    Function_Call = 181
+    Aggregate = 182
+    Parenthesis_Expression = 183
+    Qualified_Expression = 184
+    Type_Conversion = 185
+    Allocator_By_Expression = 186
+    Allocator_By_Subtype = 187
+    Selected_Element = 188
+    Dereference = 189
+    Implicit_Dereference = 190
+    Slice_Name = 191
+    Indexed_Name = 192
+    Psl_Expression = 193
+    Sensitized_Process_Statement = 194
+    Process_Statement = 195
+    Concurrent_Simple_Signal_Assignment = 196
+    Concurrent_Conditional_Signal_Assignment = 197
+    Concurrent_Selected_Signal_Assignment = 198
+    Concurrent_Assertion_Statement = 199
+    Concurrent_Procedure_Call_Statement = 200
+    Concurrent_Break_Statement = 201
+    Psl_Assert_Directive = 202
+    Psl_Assume_Directive = 203
+    Psl_Cover_Directive = 204
+    Psl_Restrict_Directive = 205
+    Block_Statement = 206
+    If_Generate_Statement = 207
+    Case_Generate_Statement = 208
+    For_Generate_Statement = 209
+    Component_Instantiation_Statement = 210
+    Psl_Default_Clock = 211
+    Generate_Statement_Body = 212
+    If_Generate_Else_Clause = 213
+    Simple_Simultaneous_Statement = 214
+    Simultaneous_Procedural_Statement = 215
+    Simultaneous_If_Statement = 216
+    Simultaneous_Elsif = 217
+    Simple_Signal_Assignment_Statement = 218
+    Conditional_Signal_Assignment_Statement = 219
+    Selected_Waveform_Assignment_Statement = 220
+    Null_Statement = 221
+    Assertion_Statement = 222
+    Report_Statement = 223
+    Wait_Statement = 224
+    Variable_Assignment_Statement = 225
+    Conditional_Variable_Assignment_Statement = 226
+    Return_Statement = 227
+    For_Loop_Statement = 228
+    While_Loop_Statement = 229
+    Next_Statement = 230
+    Exit_Statement = 231
+    Case_Statement = 232
+    Procedure_Call_Statement = 233
+    Break_Statement = 234
+    If_Statement = 235
+    Elsif = 236
+    Character_Literal = 237
+    Simple_Name = 238
+    Selected_Name = 239
+    Operator_Symbol = 240
+    Reference_Name = 241
+    External_Constant_Name = 242
+    External_Signal_Name = 243
+    External_Variable_Name = 244
+    Selected_By_All_Name = 245
+    Parenthesis_Name = 246
+    Package_Pathname = 247
+    Absolute_Pathname = 248
+    Relative_Pathname = 249
+    Pathname_Element = 250
+    Base_Attribute = 251
+    Subtype_Attribute = 252
+    Element_Attribute = 253
+    Across_Attribute = 254
+    Through_Attribute = 255
+    Nature_Reference_Attribute = 256
+    Left_Type_Attribute = 257
+    Right_Type_Attribute = 258
+    High_Type_Attribute = 259
+    Low_Type_Attribute = 260
+    Ascending_Type_Attribute = 261
+    Image_Attribute = 262
+    Value_Attribute = 263
+    Pos_Attribute = 264
+    Val_Attribute = 265
+    Succ_Attribute = 266
+    Pred_Attribute = 267
+    Leftof_Attribute = 268
+    Rightof_Attribute = 269
+    Signal_Slew_Attribute = 270
+    Quantity_Slew_Attribute = 271
+    Ramp_Attribute = 272
+    Dot_Attribute = 273
+    Integ_Attribute = 274
+    Above_Attribute = 275
+    Delayed_Attribute = 276
+    Stable_Attribute = 277
+    Quiet_Attribute = 278
+    Transaction_Attribute = 279
+    Event_Attribute = 280
+    Active_Attribute = 281
+    Last_Event_Attribute = 282
+    Last_Active_Attribute = 283
+    Last_Value_Attribute = 284
+    Driving_Attribute = 285
+    Driving_Value_Attribute = 286
+    Behavior_Attribute = 287
+    Structure_Attribute = 288
+    Simple_Name_Attribute = 289
+    Instance_Name_Attribute = 290
+    Path_Name_Attribute = 291
+    Left_Array_Attribute = 292
+    Right_Array_Attribute = 293
+    High_Array_Attribute = 294
+    Low_Array_Attribute = 295
+    Length_Array_Attribute = 296
+    Ascending_Array_Attribute = 297
+    Range_Array_Attribute = 298
+    Reverse_Range_Array_Attribute = 299
+    Attribute_Name = 300
 
 
 class Iir_Kinds:
     Variable_Assignment_Statement = [
         Iir_Kind.Variable_Assignment_Statement,
         Iir_Kind.Conditional_Variable_Assignment_Statement]
+
+    Simultaneous_Statement = [
+        Iir_Kind.Simple_Simultaneous_Statement,
+        Iir_Kind.Simultaneous_Procedural_Statement,
+        Iir_Kind.Simultaneous_If_Statement]
 
     Case_Choice = [
         Iir_Kind.Choice_By_Range,
@@ -337,20 +367,8 @@ class Iir_Kinds:
         Iir_Kind.Integer_Subtype_Definition,
         Iir_Kind.Enumeration_Subtype_Definition]
 
-    Nonoverloadable_Declaration = [
-        Iir_Kind.Type_Declaration,
-        Iir_Kind.Anonymous_Type_Declaration,
-        Iir_Kind.Subtype_Declaration,
-        Iir_Kind.Nature_Declaration,
-        Iir_Kind.Subnature_Declaration,
-        Iir_Kind.Package_Header,
-        Iir_Kind.Unit_Declaration,
-        Iir_Kind.Library_Declaration,
-        Iir_Kind.Component_Declaration,
-        Iir_Kind.Attribute_Declaration,
-        Iir_Kind.Group_Template_Declaration,
-        Iir_Kind.Group_Declaration,
-        Iir_Kind.Element_Declaration]
+    Subnature_Definition = [
+        Iir_Kind.Array_Subnature_Definition]
 
     Literal = [
         Iir_Kind.Integer_Literal,
@@ -364,8 +382,18 @@ class Iir_Kinds:
         Iir_Kind.Sensitized_Process_Statement,
         Iir_Kind.Process_Statement]
 
+    Nature_Definition = [
+        Iir_Kind.Scalar_Nature_Definition,
+        Iir_Kind.Record_Nature_Definition,
+        Iir_Kind.Array_Nature_Definition]
+
     Object_Declaration = [
         Iir_Kind.Object_Alias_Declaration,
+        Iir_Kind.Free_Quantity_Declaration,
+        Iir_Kind.Spectrum_Quantity_Declaration,
+        Iir_Kind.Noise_Quantity_Declaration,
+        Iir_Kind.Across_Quantity_Declaration,
+        Iir_Kind.Through_Quantity_Declaration,
         Iir_Kind.File_Declaration,
         Iir_Kind.Guard_Signal_Declaration,
         Iir_Kind.Signal_Declaration,
@@ -375,7 +403,8 @@ class Iir_Kinds:
         Iir_Kind.Interface_Constant_Declaration,
         Iir_Kind.Interface_Variable_Declaration,
         Iir_Kind.Interface_Signal_Declaration,
-        Iir_Kind.Interface_File_Declaration]
+        Iir_Kind.Interface_File_Declaration,
+        Iir_Kind.Interface_Quantity_Declaration]
 
     Clause = [
         Iir_Kind.Library_Clause,
@@ -466,6 +495,7 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Selected_Signal_Assignment,
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
+        Iir_Kind.Concurrent_Break_Statement,
         Iir_Kind.Psl_Assert_Directive,
         Iir_Kind.Psl_Assume_Directive,
         Iir_Kind.Psl_Cover_Directive,
@@ -492,16 +522,14 @@ class Iir_Kinds:
         Iir_Kind.Function_Body,
         Iir_Kind.Procedure_Body]
 
-    Type_Attribute = [
-        Iir_Kind.Left_Type_Attribute,
-        Iir_Kind.Right_Type_Attribute,
-        Iir_Kind.High_Type_Attribute,
-        Iir_Kind.Low_Type_Attribute,
-        Iir_Kind.Ascending_Type_Attribute]
+    Source_Quantity_Declaration = [
+        Iir_Kind.Spectrum_Quantity_Declaration,
+        Iir_Kind.Noise_Quantity_Declaration]
 
     Specification = [
         Iir_Kind.Attribute_Specification,
         Iir_Kind.Disconnection_Specification,
+        Iir_Kind.Step_Limit_Specification,
         Iir_Kind.Configuration_Specification]
 
     Dyadic_Operator = [
@@ -552,6 +580,12 @@ class Iir_Kinds:
         Iir_Kind.Pred_Attribute,
         Iir_Kind.Leftof_Attribute,
         Iir_Kind.Rightof_Attribute,
+        Iir_Kind.Signal_Slew_Attribute,
+        Iir_Kind.Quantity_Slew_Attribute,
+        Iir_Kind.Ramp_Attribute,
+        Iir_Kind.Dot_Attribute,
+        Iir_Kind.Integ_Attribute,
+        Iir_Kind.Above_Attribute,
         Iir_Kind.Delayed_Attribute,
         Iir_Kind.Stable_Attribute,
         Iir_Kind.Quiet_Attribute,
@@ -594,6 +628,8 @@ class Iir_Kinds:
         Iir_Kind.Interface_Variable_Declaration,
         Iir_Kind.Interface_Signal_Declaration,
         Iir_Kind.Interface_File_Declaration,
+        Iir_Kind.Interface_Quantity_Declaration,
+        Iir_Kind.Interface_Terminal_Declaration,
         Iir_Kind.Interface_Type_Declaration,
         Iir_Kind.Interface_Package_Declaration,
         Iir_Kind.Interface_Function_Declaration,
@@ -626,6 +662,7 @@ class Iir_Kinds:
         Iir_Kind.Exit_Statement,
         Iir_Kind.Case_Statement,
         Iir_Kind.Procedure_Call_Statement,
+        Iir_Kind.Break_Statement,
         Iir_Kind.If_Statement]
 
     Denoting_And_External_Name = [
@@ -637,6 +674,11 @@ class Iir_Kinds:
         Iir_Kind.External_Constant_Name,
         Iir_Kind.External_Signal_Name,
         Iir_Kind.External_Variable_Name]
+
+    Association_Element_Parameters = [
+        Iir_Kind.Association_Element_By_Expression,
+        Iir_Kind.Association_Element_By_Individual,
+        Iir_Kind.Association_Element_Open]
 
     Range_Type_Definition = [
         Iir_Kind.Physical_Subtype_Definition,
@@ -659,6 +701,7 @@ class Iir_Kinds:
         Iir_Kind.Concurrent_Selected_Signal_Assignment,
         Iir_Kind.Concurrent_Assertion_Statement,
         Iir_Kind.Concurrent_Procedure_Call_Statement,
+        Iir_Kind.Concurrent_Break_Statement,
         Iir_Kind.Psl_Assert_Directive,
         Iir_Kind.Psl_Assume_Directive,
         Iir_Kind.Psl_Cover_Directive,
@@ -688,13 +731,18 @@ class Iir_Kinds:
     Association_Element = [
         Iir_Kind.Association_Element_By_Expression,
         Iir_Kind.Association_Element_By_Individual,
-        Iir_Kind.Association_Element_Open]
+        Iir_Kind.Association_Element_Open,
+        Iir_Kind.Association_Element_Package,
+        Iir_Kind.Association_Element_Type,
+        Iir_Kind.Association_Element_Subprogram,
+        Iir_Kind.Association_Element_Terminal]
 
     Interface_Object_Declaration = [
         Iir_Kind.Interface_Constant_Declaration,
         Iir_Kind.Interface_Variable_Declaration,
         Iir_Kind.Interface_Signal_Declaration,
-        Iir_Kind.Interface_File_Declaration]
+        Iir_Kind.Interface_File_Declaration,
+        Iir_Kind.Interface_Quantity_Declaration]
 
     Composite_Type_Definition = [
         Iir_Kind.Record_Type_Definition,
@@ -706,9 +754,32 @@ class Iir_Kinds:
         Iir_Kind.Interface_Function_Declaration,
         Iir_Kind.Interface_Procedure_Declaration]
 
+    Nonoverloadable_Declaration = [
+        Iir_Kind.Type_Declaration,
+        Iir_Kind.Anonymous_Type_Declaration,
+        Iir_Kind.Subtype_Declaration,
+        Iir_Kind.Nature_Declaration,
+        Iir_Kind.Subnature_Declaration,
+        Iir_Kind.Package_Header,
+        Iir_Kind.Unit_Declaration,
+        Iir_Kind.Library_Declaration,
+        Iir_Kind.Component_Declaration,
+        Iir_Kind.Attribute_Declaration,
+        Iir_Kind.Group_Template_Declaration,
+        Iir_Kind.Group_Declaration,
+        Iir_Kind.Element_Declaration,
+        Iir_Kind.Nature_Element_Declaration]
+
     Branch_Quantity_Declaration = [
         Iir_Kind.Across_Quantity_Declaration,
         Iir_Kind.Through_Quantity_Declaration]
+
+    Type_Attribute = [
+        Iir_Kind.Left_Type_Attribute,
+        Iir_Kind.Right_Type_Attribute,
+        Iir_Kind.High_Type_Attribute,
+        Iir_Kind.Low_Type_Attribute,
+        Iir_Kind.Ascending_Type_Attribute]
 
     Signal_Value_Attribute = [
         Iir_Kind.Event_Attribute,
@@ -721,6 +792,8 @@ class Iir_Kinds:
 
     Quantity_Declaration = [
         Iir_Kind.Free_Quantity_Declaration,
+        Iir_Kind.Spectrum_Quantity_Declaration,
+        Iir_Kind.Noise_Quantity_Declaration,
         Iir_Kind.Across_Quantity_Declaration,
         Iir_Kind.Through_Quantity_Declaration]
 
@@ -742,6 +815,9 @@ class Iir_Kinds:
         Iir_Kind.Base_Attribute,
         Iir_Kind.Subtype_Attribute,
         Iir_Kind.Element_Attribute,
+        Iir_Kind.Across_Attribute,
+        Iir_Kind.Through_Attribute,
+        Iir_Kind.Nature_Reference_Attribute,
         Iir_Kind.Left_Type_Attribute,
         Iir_Kind.Right_Type_Attribute,
         Iir_Kind.High_Type_Attribute,
@@ -755,6 +831,12 @@ class Iir_Kinds:
         Iir_Kind.Pred_Attribute,
         Iir_Kind.Leftof_Attribute,
         Iir_Kind.Rightof_Attribute,
+        Iir_Kind.Signal_Slew_Attribute,
+        Iir_Kind.Quantity_Slew_Attribute,
+        Iir_Kind.Ramp_Attribute,
+        Iir_Kind.Dot_Attribute,
+        Iir_Kind.Integ_Attribute,
+        Iir_Kind.Above_Attribute,
         Iir_Kind.Delayed_Attribute,
         Iir_Kind.Stable_Attribute,
         Iir_Kind.Quiet_Attribute,
@@ -1047,186 +1129,187 @@ class Iir_Predefined:
     Write = 168
     Endfile = 169
     Now_Function = 170
-    PNone = 171
-    Foreign_Untruncated_Text_Read = 172
-    Foreign_Textio_Read_Real = 173
-    Foreign_Textio_Write_Real = 174
-    Ieee_1164_Scalar_And = 175
-    Ieee_1164_Scalar_Nand = 176
-    Ieee_1164_Scalar_Or = 177
-    Ieee_1164_Scalar_Nor = 178
-    Ieee_1164_Scalar_Xor = 179
-    Ieee_1164_Scalar_Xnor = 180
-    Ieee_1164_Scalar_Not = 181
-    Ieee_1164_Vector_And = 182
-    Ieee_1164_Vector_Nand = 183
-    Ieee_1164_Vector_Or = 184
-    Ieee_1164_Vector_Nor = 185
-    Ieee_1164_Vector_Xor = 186
-    Ieee_1164_Vector_Xnor = 187
-    Ieee_1164_Vector_Not = 188
-    Ieee_1164_To_Bitvector = 189
-    Ieee_1164_Vector_Is_X = 190
-    Ieee_1164_Scalar_Is_X = 191
-    Ieee_1164_Rising_Edge = 192
-    Ieee_1164_Falling_Edge = 193
-    Ieee_1164_Vector_And_Reduce = 194
-    Ieee_1164_Vector_Or_Reduce = 195
-    Ieee_1164_Condition_Operator = 196
-    Ieee_Numeric_Std_Toint_Uns_Nat = 197
-    Ieee_Numeric_Std_Toint_Sgn_Int = 198
-    Ieee_Numeric_Std_Touns_Nat_Nat_Uns = 199
-    Ieee_Numeric_Std_Touns_Nat_Uns_Uns = 200
-    Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn = 201
-    Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn = 202
-    Ieee_Numeric_Std_Resize_Uns_Nat = 203
-    Ieee_Numeric_Std_Resize_Sgn_Nat = 204
-    Ieee_Numeric_Std_Resize_Uns_Uns = 205
-    Ieee_Numeric_Std_Resize_Sgn_Sgn = 206
-    Ieee_Numeric_Std_Add_Uns_Uns = 207
-    Ieee_Numeric_Std_Add_Uns_Nat = 208
-    Ieee_Numeric_Std_Add_Nat_Uns = 209
-    Ieee_Numeric_Std_Add_Uns_Log = 210
-    Ieee_Numeric_Std_Add_Log_Uns = 211
-    Ieee_Numeric_Std_Add_Sgn_Sgn = 212
-    Ieee_Numeric_Std_Add_Sgn_Int = 213
-    Ieee_Numeric_Std_Add_Int_Sgn = 214
-    Ieee_Numeric_Std_Add_Sgn_Log = 215
-    Ieee_Numeric_Std_Add_Log_Sgn = 216
-    Ieee_Numeric_Std_Sub_Uns_Uns = 217
-    Ieee_Numeric_Std_Sub_Uns_Nat = 218
-    Ieee_Numeric_Std_Sub_Nat_Uns = 219
-    Ieee_Numeric_Std_Sub_Sgn_Sgn = 220
-    Ieee_Numeric_Std_Sub_Sgn_Int = 221
-    Ieee_Numeric_Std_Sub_Int_Sgn = 222
-    Ieee_Numeric_Std_Mul_Uns_Uns = 223
-    Ieee_Numeric_Std_Mul_Uns_Nat = 224
-    Ieee_Numeric_Std_Mul_Nat_Uns = 225
-    Ieee_Numeric_Std_Mul_Sgn_Sgn = 226
-    Ieee_Numeric_Std_Mul_Sgn_Int = 227
-    Ieee_Numeric_Std_Mul_Int_Sgn = 228
-    Ieee_Numeric_Std_Div_Uns_Uns = 229
-    Ieee_Numeric_Std_Div_Uns_Nat = 230
-    Ieee_Numeric_Std_Div_Nat_Uns = 231
-    Ieee_Numeric_Std_Div_Sgn_Sgn = 232
-    Ieee_Numeric_Std_Div_Sgn_Int = 233
-    Ieee_Numeric_Std_Div_Int_Sgn = 234
-    Ieee_Numeric_Std_Gt_Uns_Uns = 235
-    Ieee_Numeric_Std_Gt_Uns_Nat = 236
-    Ieee_Numeric_Std_Gt_Nat_Uns = 237
-    Ieee_Numeric_Std_Gt_Sgn_Sgn = 238
-    Ieee_Numeric_Std_Gt_Sgn_Int = 239
-    Ieee_Numeric_Std_Gt_Int_Sgn = 240
-    Ieee_Numeric_Std_Lt_Uns_Uns = 241
-    Ieee_Numeric_Std_Lt_Uns_Nat = 242
-    Ieee_Numeric_Std_Lt_Nat_Uns = 243
-    Ieee_Numeric_Std_Lt_Sgn_Sgn = 244
-    Ieee_Numeric_Std_Lt_Sgn_Int = 245
-    Ieee_Numeric_Std_Lt_Int_Sgn = 246
-    Ieee_Numeric_Std_Le_Uns_Uns = 247
-    Ieee_Numeric_Std_Le_Uns_Nat = 248
-    Ieee_Numeric_Std_Le_Nat_Uns = 249
-    Ieee_Numeric_Std_Le_Sgn_Sgn = 250
-    Ieee_Numeric_Std_Le_Sgn_Int = 251
-    Ieee_Numeric_Std_Le_Int_Sgn = 252
-    Ieee_Numeric_Std_Ge_Uns_Uns = 253
-    Ieee_Numeric_Std_Ge_Uns_Nat = 254
-    Ieee_Numeric_Std_Ge_Nat_Uns = 255
-    Ieee_Numeric_Std_Ge_Sgn_Sgn = 256
-    Ieee_Numeric_Std_Ge_Sgn_Int = 257
-    Ieee_Numeric_Std_Ge_Int_Sgn = 258
-    Ieee_Numeric_Std_Eq_Uns_Uns = 259
-    Ieee_Numeric_Std_Eq_Uns_Nat = 260
-    Ieee_Numeric_Std_Eq_Nat_Uns = 261
-    Ieee_Numeric_Std_Eq_Sgn_Sgn = 262
-    Ieee_Numeric_Std_Eq_Sgn_Int = 263
-    Ieee_Numeric_Std_Eq_Int_Sgn = 264
-    Ieee_Numeric_Std_Ne_Uns_Uns = 265
-    Ieee_Numeric_Std_Ne_Uns_Nat = 266
-    Ieee_Numeric_Std_Ne_Nat_Uns = 267
-    Ieee_Numeric_Std_Ne_Sgn_Sgn = 268
-    Ieee_Numeric_Std_Ne_Sgn_Int = 269
-    Ieee_Numeric_Std_Ne_Int_Sgn = 270
-    Ieee_Numeric_Std_Shl_Uns_Nat = 271
-    Ieee_Numeric_Std_Shr_Uns_Nat = 272
-    Ieee_Numeric_Std_Shl_Sgn_Nat = 273
-    Ieee_Numeric_Std_Shr_Sgn_Nat = 274
-    Ieee_Numeric_Std_Rol_Uns_Nat = 275
-    Ieee_Numeric_Std_Ror_Uns_Nat = 276
-    Ieee_Numeric_Std_Rol_Sgn_Nat = 277
-    Ieee_Numeric_Std_Ror_Sgn_Nat = 278
-    Ieee_Numeric_Std_Not_Uns = 279
-    Ieee_Numeric_Std_Not_Sgn = 280
-    Ieee_Numeric_Std_And_Uns_Uns = 281
-    Ieee_Numeric_Std_And_Sgn_Sgn = 282
-    Ieee_Numeric_Std_Or_Uns_Uns = 283
-    Ieee_Numeric_Std_Or_Sgn_Sgn = 284
-    Ieee_Numeric_Std_Nand_Uns_Uns = 285
-    Ieee_Numeric_Std_Nand_Sgn_Sgn = 286
-    Ieee_Numeric_Std_Nor_Uns_Uns = 287
-    Ieee_Numeric_Std_Nor_Sgn_Sgn = 288
-    Ieee_Numeric_Std_Xor_Uns_Uns = 289
-    Ieee_Numeric_Std_Xor_Sgn_Sgn = 290
-    Ieee_Numeric_Std_Xnor_Uns_Uns = 291
-    Ieee_Numeric_Std_Xnor_Sgn_Sgn = 292
-    Ieee_Numeric_Std_Neg_Uns = 293
-    Ieee_Numeric_Std_Neg_Sgn = 294
-    Ieee_Numeric_Std_Match_Log = 295
-    Ieee_Numeric_Std_Match_Uns = 296
-    Ieee_Numeric_Std_Match_Sgn = 297
-    Ieee_Numeric_Std_Match_Slv = 298
-    Ieee_Numeric_Std_Match_Suv = 299
-    Ieee_Math_Real_Ceil = 300
-    Ieee_Math_Real_Log2 = 301
-    Ieee_Math_Real_Sin = 302
-    Ieee_Math_Real_Cos = 303
-    Ieee_Std_Logic_Unsigned_Add_Slv_Slv = 304
-    Ieee_Std_Logic_Unsigned_Add_Slv_Int = 305
-    Ieee_Std_Logic_Unsigned_Add_Int_Slv = 306
-    Ieee_Std_Logic_Unsigned_Add_Slv_Sl = 307
-    Ieee_Std_Logic_Unsigned_Add_Sl_Slv = 308
-    Ieee_Std_Logic_Unsigned_Sub_Slv_Slv = 309
-    Ieee_Std_Logic_Unsigned_Sub_Slv_Int = 310
-    Ieee_Std_Logic_Unsigned_Sub_Int_Slv = 311
-    Ieee_Std_Logic_Unsigned_Sub_Slv_Sl = 312
-    Ieee_Std_Logic_Unsigned_Sub_Sl_Slv = 313
-    Ieee_Std_Logic_Unsigned_Lt_Slv_Slv = 314
-    Ieee_Std_Logic_Unsigned_Lt_Slv_Int = 315
-    Ieee_Std_Logic_Unsigned_Lt_Int_Slv = 316
-    Ieee_Std_Logic_Unsigned_Le_Slv_Slv = 317
-    Ieee_Std_Logic_Unsigned_Le_Slv_Int = 318
-    Ieee_Std_Logic_Unsigned_Le_Int_Slv = 319
-    Ieee_Std_Logic_Unsigned_Gt_Slv_Slv = 320
-    Ieee_Std_Logic_Unsigned_Gt_Slv_Int = 321
-    Ieee_Std_Logic_Unsigned_Gt_Int_Slv = 322
-    Ieee_Std_Logic_Unsigned_Ge_Slv_Slv = 323
-    Ieee_Std_Logic_Unsigned_Ge_Slv_Int = 324
-    Ieee_Std_Logic_Unsigned_Ge_Int_Slv = 325
-    Ieee_Std_Logic_Unsigned_Eq_Slv_Slv = 326
-    Ieee_Std_Logic_Unsigned_Eq_Slv_Int = 327
-    Ieee_Std_Logic_Unsigned_Eq_Int_Slv = 328
-    Ieee_Std_Logic_Unsigned_Ne_Slv_Slv = 329
-    Ieee_Std_Logic_Unsigned_Ne_Slv_Int = 330
-    Ieee_Std_Logic_Unsigned_Ne_Int_Slv = 331
-    Ieee_Std_Logic_Unsigned_Conv_Integer = 332
-    Ieee_Std_Logic_Signed_Add_Slv_Slv = 333
-    Ieee_Std_Logic_Signed_Add_Slv_Int = 334
-    Ieee_Std_Logic_Signed_Add_Int_Slv = 335
-    Ieee_Std_Logic_Signed_Add_Slv_Sl = 336
-    Ieee_Std_Logic_Signed_Add_Sl_Slv = 337
-    Ieee_Std_Logic_Signed_Sub_Slv_Slv = 338
-    Ieee_Std_Logic_Signed_Sub_Slv_Int = 339
-    Ieee_Std_Logic_Signed_Sub_Int_Slv = 340
-    Ieee_Std_Logic_Signed_Sub_Slv_Sl = 341
-    Ieee_Std_Logic_Signed_Sub_Sl_Slv = 342
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Int = 343
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Uns = 344
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn = 345
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Log = 346
-    Ieee_Std_Logic_Arith_Conv_Integer_Int = 347
-    Ieee_Std_Logic_Arith_Conv_Integer_Uns = 348
-    Ieee_Std_Logic_Arith_Conv_Integer_Sgn = 349
-    Ieee_Std_Logic_Arith_Conv_Integer_Log = 350
+    Real_Now_Function = 171
+    PNone = 172
+    Foreign_Untruncated_Text_Read = 173
+    Foreign_Textio_Read_Real = 174
+    Foreign_Textio_Write_Real = 175
+    Ieee_1164_Scalar_And = 176
+    Ieee_1164_Scalar_Nand = 177
+    Ieee_1164_Scalar_Or = 178
+    Ieee_1164_Scalar_Nor = 179
+    Ieee_1164_Scalar_Xor = 180
+    Ieee_1164_Scalar_Xnor = 181
+    Ieee_1164_Scalar_Not = 182
+    Ieee_1164_Vector_And = 183
+    Ieee_1164_Vector_Nand = 184
+    Ieee_1164_Vector_Or = 185
+    Ieee_1164_Vector_Nor = 186
+    Ieee_1164_Vector_Xor = 187
+    Ieee_1164_Vector_Xnor = 188
+    Ieee_1164_Vector_Not = 189
+    Ieee_1164_To_Bitvector = 190
+    Ieee_1164_Vector_Is_X = 191
+    Ieee_1164_Scalar_Is_X = 192
+    Ieee_1164_Rising_Edge = 193
+    Ieee_1164_Falling_Edge = 194
+    Ieee_1164_Vector_And_Reduce = 195
+    Ieee_1164_Vector_Or_Reduce = 196
+    Ieee_1164_Condition_Operator = 197
+    Ieee_Numeric_Std_Toint_Uns_Nat = 198
+    Ieee_Numeric_Std_Toint_Sgn_Int = 199
+    Ieee_Numeric_Std_Touns_Nat_Nat_Uns = 200
+    Ieee_Numeric_Std_Touns_Nat_Uns_Uns = 201
+    Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn = 202
+    Ieee_Numeric_Std_Tosgn_Int_Sgn_Sgn = 203
+    Ieee_Numeric_Std_Resize_Uns_Nat = 204
+    Ieee_Numeric_Std_Resize_Sgn_Nat = 205
+    Ieee_Numeric_Std_Resize_Uns_Uns = 206
+    Ieee_Numeric_Std_Resize_Sgn_Sgn = 207
+    Ieee_Numeric_Std_Add_Uns_Uns = 208
+    Ieee_Numeric_Std_Add_Uns_Nat = 209
+    Ieee_Numeric_Std_Add_Nat_Uns = 210
+    Ieee_Numeric_Std_Add_Uns_Log = 211
+    Ieee_Numeric_Std_Add_Log_Uns = 212
+    Ieee_Numeric_Std_Add_Sgn_Sgn = 213
+    Ieee_Numeric_Std_Add_Sgn_Int = 214
+    Ieee_Numeric_Std_Add_Int_Sgn = 215
+    Ieee_Numeric_Std_Add_Sgn_Log = 216
+    Ieee_Numeric_Std_Add_Log_Sgn = 217
+    Ieee_Numeric_Std_Sub_Uns_Uns = 218
+    Ieee_Numeric_Std_Sub_Uns_Nat = 219
+    Ieee_Numeric_Std_Sub_Nat_Uns = 220
+    Ieee_Numeric_Std_Sub_Sgn_Sgn = 221
+    Ieee_Numeric_Std_Sub_Sgn_Int = 222
+    Ieee_Numeric_Std_Sub_Int_Sgn = 223
+    Ieee_Numeric_Std_Mul_Uns_Uns = 224
+    Ieee_Numeric_Std_Mul_Uns_Nat = 225
+    Ieee_Numeric_Std_Mul_Nat_Uns = 226
+    Ieee_Numeric_Std_Mul_Sgn_Sgn = 227
+    Ieee_Numeric_Std_Mul_Sgn_Int = 228
+    Ieee_Numeric_Std_Mul_Int_Sgn = 229
+    Ieee_Numeric_Std_Div_Uns_Uns = 230
+    Ieee_Numeric_Std_Div_Uns_Nat = 231
+    Ieee_Numeric_Std_Div_Nat_Uns = 232
+    Ieee_Numeric_Std_Div_Sgn_Sgn = 233
+    Ieee_Numeric_Std_Div_Sgn_Int = 234
+    Ieee_Numeric_Std_Div_Int_Sgn = 235
+    Ieee_Numeric_Std_Gt_Uns_Uns = 236
+    Ieee_Numeric_Std_Gt_Uns_Nat = 237
+    Ieee_Numeric_Std_Gt_Nat_Uns = 238
+    Ieee_Numeric_Std_Gt_Sgn_Sgn = 239
+    Ieee_Numeric_Std_Gt_Sgn_Int = 240
+    Ieee_Numeric_Std_Gt_Int_Sgn = 241
+    Ieee_Numeric_Std_Lt_Uns_Uns = 242
+    Ieee_Numeric_Std_Lt_Uns_Nat = 243
+    Ieee_Numeric_Std_Lt_Nat_Uns = 244
+    Ieee_Numeric_Std_Lt_Sgn_Sgn = 245
+    Ieee_Numeric_Std_Lt_Sgn_Int = 246
+    Ieee_Numeric_Std_Lt_Int_Sgn = 247
+    Ieee_Numeric_Std_Le_Uns_Uns = 248
+    Ieee_Numeric_Std_Le_Uns_Nat = 249
+    Ieee_Numeric_Std_Le_Nat_Uns = 250
+    Ieee_Numeric_Std_Le_Sgn_Sgn = 251
+    Ieee_Numeric_Std_Le_Sgn_Int = 252
+    Ieee_Numeric_Std_Le_Int_Sgn = 253
+    Ieee_Numeric_Std_Ge_Uns_Uns = 254
+    Ieee_Numeric_Std_Ge_Uns_Nat = 255
+    Ieee_Numeric_Std_Ge_Nat_Uns = 256
+    Ieee_Numeric_Std_Ge_Sgn_Sgn = 257
+    Ieee_Numeric_Std_Ge_Sgn_Int = 258
+    Ieee_Numeric_Std_Ge_Int_Sgn = 259
+    Ieee_Numeric_Std_Eq_Uns_Uns = 260
+    Ieee_Numeric_Std_Eq_Uns_Nat = 261
+    Ieee_Numeric_Std_Eq_Nat_Uns = 262
+    Ieee_Numeric_Std_Eq_Sgn_Sgn = 263
+    Ieee_Numeric_Std_Eq_Sgn_Int = 264
+    Ieee_Numeric_Std_Eq_Int_Sgn = 265
+    Ieee_Numeric_Std_Ne_Uns_Uns = 266
+    Ieee_Numeric_Std_Ne_Uns_Nat = 267
+    Ieee_Numeric_Std_Ne_Nat_Uns = 268
+    Ieee_Numeric_Std_Ne_Sgn_Sgn = 269
+    Ieee_Numeric_Std_Ne_Sgn_Int = 270
+    Ieee_Numeric_Std_Ne_Int_Sgn = 271
+    Ieee_Numeric_Std_Shl_Uns_Nat = 272
+    Ieee_Numeric_Std_Shr_Uns_Nat = 273
+    Ieee_Numeric_Std_Shl_Sgn_Nat = 274
+    Ieee_Numeric_Std_Shr_Sgn_Nat = 275
+    Ieee_Numeric_Std_Rol_Uns_Nat = 276
+    Ieee_Numeric_Std_Ror_Uns_Nat = 277
+    Ieee_Numeric_Std_Rol_Sgn_Nat = 278
+    Ieee_Numeric_Std_Ror_Sgn_Nat = 279
+    Ieee_Numeric_Std_Not_Uns = 280
+    Ieee_Numeric_Std_Not_Sgn = 281
+    Ieee_Numeric_Std_And_Uns_Uns = 282
+    Ieee_Numeric_Std_And_Sgn_Sgn = 283
+    Ieee_Numeric_Std_Or_Uns_Uns = 284
+    Ieee_Numeric_Std_Or_Sgn_Sgn = 285
+    Ieee_Numeric_Std_Nand_Uns_Uns = 286
+    Ieee_Numeric_Std_Nand_Sgn_Sgn = 287
+    Ieee_Numeric_Std_Nor_Uns_Uns = 288
+    Ieee_Numeric_Std_Nor_Sgn_Sgn = 289
+    Ieee_Numeric_Std_Xor_Uns_Uns = 290
+    Ieee_Numeric_Std_Xor_Sgn_Sgn = 291
+    Ieee_Numeric_Std_Xnor_Uns_Uns = 292
+    Ieee_Numeric_Std_Xnor_Sgn_Sgn = 293
+    Ieee_Numeric_Std_Neg_Uns = 294
+    Ieee_Numeric_Std_Neg_Sgn = 295
+    Ieee_Numeric_Std_Match_Log = 296
+    Ieee_Numeric_Std_Match_Uns = 297
+    Ieee_Numeric_Std_Match_Sgn = 298
+    Ieee_Numeric_Std_Match_Slv = 299
+    Ieee_Numeric_Std_Match_Suv = 300
+    Ieee_Math_Real_Ceil = 301
+    Ieee_Math_Real_Log2 = 302
+    Ieee_Math_Real_Sin = 303
+    Ieee_Math_Real_Cos = 304
+    Ieee_Std_Logic_Unsigned_Add_Slv_Slv = 305
+    Ieee_Std_Logic_Unsigned_Add_Slv_Int = 306
+    Ieee_Std_Logic_Unsigned_Add_Int_Slv = 307
+    Ieee_Std_Logic_Unsigned_Add_Slv_Sl = 308
+    Ieee_Std_Logic_Unsigned_Add_Sl_Slv = 309
+    Ieee_Std_Logic_Unsigned_Sub_Slv_Slv = 310
+    Ieee_Std_Logic_Unsigned_Sub_Slv_Int = 311
+    Ieee_Std_Logic_Unsigned_Sub_Int_Slv = 312
+    Ieee_Std_Logic_Unsigned_Sub_Slv_Sl = 313
+    Ieee_Std_Logic_Unsigned_Sub_Sl_Slv = 314
+    Ieee_Std_Logic_Unsigned_Lt_Slv_Slv = 315
+    Ieee_Std_Logic_Unsigned_Lt_Slv_Int = 316
+    Ieee_Std_Logic_Unsigned_Lt_Int_Slv = 317
+    Ieee_Std_Logic_Unsigned_Le_Slv_Slv = 318
+    Ieee_Std_Logic_Unsigned_Le_Slv_Int = 319
+    Ieee_Std_Logic_Unsigned_Le_Int_Slv = 320
+    Ieee_Std_Logic_Unsigned_Gt_Slv_Slv = 321
+    Ieee_Std_Logic_Unsigned_Gt_Slv_Int = 322
+    Ieee_Std_Logic_Unsigned_Gt_Int_Slv = 323
+    Ieee_Std_Logic_Unsigned_Ge_Slv_Slv = 324
+    Ieee_Std_Logic_Unsigned_Ge_Slv_Int = 325
+    Ieee_Std_Logic_Unsigned_Ge_Int_Slv = 326
+    Ieee_Std_Logic_Unsigned_Eq_Slv_Slv = 327
+    Ieee_Std_Logic_Unsigned_Eq_Slv_Int = 328
+    Ieee_Std_Logic_Unsigned_Eq_Int_Slv = 329
+    Ieee_Std_Logic_Unsigned_Ne_Slv_Slv = 330
+    Ieee_Std_Logic_Unsigned_Ne_Slv_Int = 331
+    Ieee_Std_Logic_Unsigned_Ne_Int_Slv = 332
+    Ieee_Std_Logic_Unsigned_Conv_Integer = 333
+    Ieee_Std_Logic_Signed_Add_Slv_Slv = 334
+    Ieee_Std_Logic_Signed_Add_Slv_Int = 335
+    Ieee_Std_Logic_Signed_Add_Int_Slv = 336
+    Ieee_Std_Logic_Signed_Add_Slv_Sl = 337
+    Ieee_Std_Logic_Signed_Add_Sl_Slv = 338
+    Ieee_Std_Logic_Signed_Sub_Slv_Slv = 339
+    Ieee_Std_Logic_Signed_Sub_Slv_Int = 340
+    Ieee_Std_Logic_Signed_Sub_Int_Slv = 341
+    Ieee_Std_Logic_Signed_Sub_Slv_Sl = 342
+    Ieee_Std_Logic_Signed_Sub_Sl_Slv = 343
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Int = 344
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Uns = 345
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn = 346
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Log = 347
+    Ieee_Std_Logic_Arith_Conv_Integer_Int = 348
+    Ieee_Std_Logic_Arith_Conv_Integer_Uns = 349
+    Ieee_Std_Logic_Arith_Conv_Integer_Sgn = 350
+    Ieee_Std_Logic_Arith_Conv_Integer_Log = 351
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location
@@ -1414,6 +1497,10 @@ Set_Attribute_Specification = libghdl.vhdl__nodes__set_attribute_specification
 Get_Signal_List = libghdl.vhdl__nodes__get_signal_list
 
 Set_Signal_List = libghdl.vhdl__nodes__set_signal_list
+
+Get_Quantity_List = libghdl.vhdl__nodes__get_quantity_list
+
+Set_Quantity_List = libghdl.vhdl__nodes__set_quantity_list
 
 Get_Designated_Entity = libghdl.vhdl__nodes__get_designated_entity
 
@@ -1619,9 +1706,17 @@ Get_Interface_Type_Subprograms = libghdl.vhdl__nodes__get_interface_type_subprog
 
 Set_Interface_Type_Subprograms = libghdl.vhdl__nodes__set_interface_type_subprograms
 
+Get_Nature_Definition = libghdl.vhdl__nodes__get_nature_definition
+
+Set_Nature_Definition = libghdl.vhdl__nodes__set_nature_definition
+
 Get_Nature = libghdl.vhdl__nodes__get_nature
 
 Set_Nature = libghdl.vhdl__nodes__set_nature
+
+Get_Subnature_Indication = libghdl.vhdl__nodes__get_subnature_indication
+
+Set_Subnature_Indication = libghdl.vhdl__nodes__set_subnature_indication
 
 Get_Mode = libghdl.vhdl__nodes__get_mode
 
@@ -1650,6 +1745,10 @@ Set_Subprogram_Specification = libghdl.vhdl__nodes__set_subprogram_specification
 Get_Sequential_Statement_Chain = libghdl.vhdl__nodes__get_sequential_statement_chain
 
 Set_Sequential_Statement_Chain = libghdl.vhdl__nodes__set_sequential_statement_chain
+
+Get_Simultaneous_Statement_Chain = libghdl.vhdl__nodes__get_simultaneous_statement_chain
+
+Set_Simultaneous_Statement_Chain = libghdl.vhdl__nodes__set_simultaneous_statement_chain
 
 Get_Subprogram_Body = libghdl.vhdl__nodes__get_subprogram_body
 
@@ -1811,6 +1910,10 @@ Get_Base_Type = libghdl.vhdl__nodes__get_base_type
 
 Set_Base_Type = libghdl.vhdl__nodes__set_base_type
 
+Get_Base_Nature = libghdl.vhdl__nodes__get_base_nature
+
+Set_Base_Nature = libghdl.vhdl__nodes__set_base_nature
+
 Get_Resolution_Indication = libghdl.vhdl__nodes__get_resolution_indication
 
 Set_Resolution_Indication = libghdl.vhdl__nodes__set_resolution_indication
@@ -1823,6 +1926,14 @@ Get_Tolerance = libghdl.vhdl__nodes__get_tolerance
 
 Set_Tolerance = libghdl.vhdl__nodes__set_tolerance
 
+Get_Plus_Terminal_Name = libghdl.vhdl__nodes__get_plus_terminal_name
+
+Set_Plus_Terminal_Name = libghdl.vhdl__nodes__set_plus_terminal_name
+
+Get_Minus_Terminal_Name = libghdl.vhdl__nodes__get_minus_terminal_name
+
+Set_Minus_Terminal_Name = libghdl.vhdl__nodes__set_minus_terminal_name
+
 Get_Plus_Terminal = libghdl.vhdl__nodes__get_plus_terminal
 
 Set_Plus_Terminal = libghdl.vhdl__nodes__set_plus_terminal
@@ -1830,6 +1941,18 @@ Set_Plus_Terminal = libghdl.vhdl__nodes__set_plus_terminal
 Get_Minus_Terminal = libghdl.vhdl__nodes__get_minus_terminal
 
 Set_Minus_Terminal = libghdl.vhdl__nodes__set_minus_terminal
+
+Get_Magnitude_Expression = libghdl.vhdl__nodes__get_magnitude_expression
+
+Set_Magnitude_Expression = libghdl.vhdl__nodes__set_magnitude_expression
+
+Get_Phase_Expression = libghdl.vhdl__nodes__get_phase_expression
+
+Set_Phase_Expression = libghdl.vhdl__nodes__set_phase_expression
+
+Get_Power_Expression = libghdl.vhdl__nodes__get_power_expression
+
+Set_Power_Expression = libghdl.vhdl__nodes__set_power_expression
 
 Get_Simultaneous_Left = libghdl.vhdl__nodes__get_simultaneous_left
 
@@ -1850,6 +1973,10 @@ Set_Only_Characters_Flag = libghdl.vhdl__nodes__set_only_characters_flag
 Get_Is_Character_Type = libghdl.vhdl__nodes__get_is_character_type
 
 Set_Is_Character_Type = libghdl.vhdl__nodes__set_is_character_type
+
+Get_Nature_Staticness = libghdl.vhdl__nodes__get_nature_staticness
+
+Set_Nature_Staticness = libghdl.vhdl__nodes__set_nature_staticness
 
 Get_Type_Staticness = libghdl.vhdl__nodes__get_type_staticness
 
@@ -1874,6 +2001,14 @@ Set_Element_Subtype_Indication = libghdl.vhdl__nodes__set_element_subtype_indica
 Get_Element_Subtype = libghdl.vhdl__nodes__get_element_subtype
 
 Set_Element_Subtype = libghdl.vhdl__nodes__set_element_subtype
+
+Get_Element_Subnature_Indication = libghdl.vhdl__nodes__get_element_subnature_indication
+
+Set_Element_Subnature_Indication = libghdl.vhdl__nodes__set_element_subnature_indication
+
+Get_Element_Subnature = libghdl.vhdl__nodes__get_element_subnature
+
+Set_Element_Subnature = libghdl.vhdl__nodes__set_element_subnature
 
 Get_Index_Constraint_List = libghdl.vhdl__nodes__get_index_constraint_list
 
@@ -1910,6 +2045,22 @@ Set_Reference = libghdl.vhdl__nodes__set_reference
 Get_Nature_Declarator = libghdl.vhdl__nodes__get_nature_declarator
 
 Set_Nature_Declarator = libghdl.vhdl__nodes__set_nature_declarator
+
+Get_Across_Type_Mark = libghdl.vhdl__nodes__get_across_type_mark
+
+Set_Across_Type_Mark = libghdl.vhdl__nodes__set_across_type_mark
+
+Get_Through_Type_Mark = libghdl.vhdl__nodes__get_through_type_mark
+
+Set_Through_Type_Mark = libghdl.vhdl__nodes__set_through_type_mark
+
+Get_Across_Type_Definition = libghdl.vhdl__nodes__get_across_type_definition
+
+Set_Across_Type_Definition = libghdl.vhdl__nodes__set_across_type_definition
+
+Get_Through_Type_Definition = libghdl.vhdl__nodes__get_through_type_definition
+
+Set_Through_Type_Definition = libghdl.vhdl__nodes__set_through_type_definition
 
 Get_Across_Type = libghdl.vhdl__nodes__get_across_type
 
@@ -1954,6 +2105,18 @@ Set_Package_Origin = libghdl.vhdl__nodes__set_package_origin
 Get_Condition_Clause = libghdl.vhdl__nodes__get_condition_clause
 
 Set_Condition_Clause = libghdl.vhdl__nodes__set_condition_clause
+
+Get_Break_Element = libghdl.vhdl__nodes__get_break_element
+
+Set_Break_Element = libghdl.vhdl__nodes__set_break_element
+
+Get_Selector_Quantity = libghdl.vhdl__nodes__get_selector_quantity
+
+Set_Selector_Quantity = libghdl.vhdl__nodes__set_selector_quantity
+
+Get_Break_Quantity = libghdl.vhdl__nodes__get_break_quantity
+
+Set_Break_Quantity = libghdl.vhdl__nodes__set_break_quantity
 
 Get_Timeout_Clause = libghdl.vhdl__nodes__get_timeout_clause
 
@@ -2287,6 +2450,10 @@ Get_Parameter = libghdl.vhdl__nodes__get_parameter
 
 Set_Parameter = libghdl.vhdl__nodes__set_parameter
 
+Get_Parameter_2 = libghdl.vhdl__nodes__get_parameter_2
+
+Set_Parameter_2 = libghdl.vhdl__nodes__set_parameter_2
+
 Get_Attr_Chain = libghdl.vhdl__nodes__get_attr_chain
 
 Set_Attr_Chain = libghdl.vhdl__nodes__set_attr_chain
@@ -2382,6 +2549,10 @@ Set_Method_Object = libghdl.vhdl__nodes__set_method_object
 Get_Subtype_Type_Mark = libghdl.vhdl__nodes__get_subtype_type_mark
 
 Set_Subtype_Type_Mark = libghdl.vhdl__nodes__set_subtype_type_mark
+
+Get_Subnature_Nature_Mark = libghdl.vhdl__nodes__get_subnature_nature_mark
+
+Set_Subnature_Nature_Mark = libghdl.vhdl__nodes__set_subnature_nature_mark
 
 Get_Type_Conversion_Subtype = libghdl.vhdl__nodes__get_type_conversion_subtype
 

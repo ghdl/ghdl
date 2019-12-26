@@ -1725,6 +1725,7 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_Access_Inequality
            | Iir_Predefined_TF_Array_Not
            | Iir_Predefined_Now_Function
+           | Iir_Predefined_Real_Now_Function
            | Iir_Predefined_Deallocate
            | Iir_Predefined_Write
            | Iir_Predefined_Read
@@ -3147,7 +3148,9 @@ package body Vhdl.Evaluation is
             begin
                Assoc := Get_Parameter_Association_Chain (Expr);
                while Is_Valid (Assoc) loop
-                  case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+                  case Iir_Kinds_Association_Element_Parameters
+                    (Get_Kind (Assoc))
+                  is
                      when Iir_Kind_Association_Element_By_Expression =>
                         Assoc_Expr := Get_Actual (Assoc);
                         if not Can_Eval_Value (Assoc_Expr, False) then

@@ -58,6 +58,7 @@ package Vhdl.Elocations is
    -- Iir_Kind_Association_Element_Package (L1)
    -- Iir_Kind_Association_Element_Type (L1)
    -- Iir_Kind_Association_Element_Subprogram (L1)
+   -- Iir_Kind_Association_Element_Terminal (L1)
    --
    --   Get/Set_Arrow_Location (Field1)
 
@@ -89,6 +90,7 @@ package Vhdl.Elocations is
    -- Iir_Kind_Configuration_Specification (None)
 
    -- Iir_Kind_Disconnection_Specification (None)
+   -- Iir_Kind_Step_Limit_Specification (None)
 
    -- Iir_Kind_Block_Header (L6)
    --
@@ -225,6 +227,7 @@ package Vhdl.Elocations is
    -- Iir_Kind_Interface_Constant_Declaration (L3)
    -- Iir_Kind_Interface_Variable_Declaration (L3)
    -- Iir_Kind_Interface_File_Declaration (L3)
+   -- Iir_Kind_Interface_Quantity_Declaration (L3)
    --
    --   Get/Set_Start_Location (Field1)
    --
@@ -233,6 +236,7 @@ package Vhdl.Elocations is
    --   Get/Set_Assign_Location (Field3)
 
    -- Iir_Kind_Interface_Type_Declaration (L1)
+   -- Iir_Kind_Interface_Terminal_Declaration (L1)
    --
    --   Get/Set_Start_Location (Field1)
 
@@ -280,6 +284,7 @@ package Vhdl.Elocations is
    --   Get/Set_Start_Location (Field1)
 
    -- Iir_Kind_Element_Declaration (None)
+   -- Iir_Kind_Nature_Element_Declaration (None)
 
    -- Iir_Kind_Record_Resolution (None)
 
@@ -304,6 +309,8 @@ package Vhdl.Elocations is
    -- Iir_Kind_Terminal_Declaration (None)
 
    -- Iir_Kind_Free_Quantity_Declaration (None)
+   -- Iir_Kind_Spectrum_Quantity_Declaration (None)
+   -- Iir_Kind_Noise_Quantity_Declaration (None)
 
    -- Iir_Kind_Across_Quantity_Declaration (None)
    -- Iir_Kind_Through_Quantity_Declaration (None)
@@ -328,8 +335,10 @@ package Vhdl.Elocations is
    -- Iir_Kind_Floating_Type_Definition (None)
 
    -- Iir_Kind_Array_Type_Definition (None)
+   -- Iir_Kind_Array_Nature_Definition (None)
 
    -- Iir_Kind_Record_Type_Definition (L2)
+   -- Iir_Kind_Record_Nature_Definition (L2)
    --
    --   Get/Set_End_Location (Field2)
 
@@ -374,6 +383,7 @@ package Vhdl.Elocations is
    -- Iir_Kind_Record_Subtype_Definition (None)
 
    -- Iir_Kind_Array_Subtype_Definition (None)
+   -- Iir_Kind_Array_Subnature_Definition (None)
 
    -- Iir_Kind_Range_Expression (None)
 
@@ -407,6 +417,8 @@ package Vhdl.Elocations is
    --   Get/Set_Is_Location (Field4)
 
    -- Iir_Kind_Concurrent_Assertion_Statement (None)
+
+   -- Iir_Kind_Concurrent_Break_Statement (None)
 
    -- Iir_Kind_Psl_Default_Clock (None)
 
@@ -457,6 +469,27 @@ package Vhdl.Elocations is
    -- Iir_Kind_Case_Generate_Statement (None)
 
    -- Iir_Kind_Simple_Simultaneous_Statement (None)
+
+   -- Iir_Kind_Simultaneous_Procedural_Statement (L4)
+   --
+   --   Get/Set_Start_Location (Field1)
+   --
+   --   Get/Set_End_Location (Field2)
+   --
+   --   Get/Set_Begin_Location (Field3)
+   --
+   --   Get/Set_Is_Location (Field4)
+
+   -- Iir_Kind_Simultaneous_If_Statement (L3)
+   -- Iir_Kind_Simultaneous_Elsif (L3)
+   --
+   --  Location of 'if', 'else' or 'elsif'.
+   --   Get/Set_Start_Location (Field1)
+   --
+   --  Location of the next 'elsif', 'else' or 'end if'.
+   --   Get/Set_End_Location (Field2)
+   --
+   --   Get/Set_Use_Location (Field3)
 
    ----------------------------
    --  sequential statements --
@@ -511,6 +544,10 @@ package Vhdl.Elocations is
    -- Iir_Kind_Procedure_Call (None)
 
    -- Iir_Kind_Null_Statement (None)
+
+   -- Iir_Kind_Break_Statement (None)
+
+   -- Iir_Kind_Break_Element (None)
 
    ----------------
    --  operators --
@@ -582,6 +619,9 @@ package Vhdl.Elocations is
    -- Iir_Kind_Attribute_Name (None)
 
    -- Iir_Kind_Base_Attribute (None)
+   -- Iir_Kind_Across_Attribute (None)
+   -- Iir_Kind_Through_Attribute (None)
+   -- Iir_Kind_Nature_Reference_Attribute (None)
    -- Iir_Kind_Left_Type_Attribute (None)
    -- Iir_Kind_Right_Type_Attribute (None)
    -- Iir_Kind_High_Type_Attribute (None)
@@ -600,11 +640,17 @@ package Vhdl.Elocations is
    -- Iir_Kind_Subtype_Attribute (None)
    -- Iir_Kind_Element_Attribute (None)
 
+   -- Iir_Kind_Signal_Slew_Attribute (None)
+   -- Iir_Kind_Quantity_Slew_Attribute (None)
+   -- Iir_Kind_Dot_Attribute (None)
+   -- Iir_Kind_Integ_Attribute (None)
+
+   -- Iir_Kind_Ramp_Attribute (None)
+   -- Iir_Kind_Above_Attribute (None)
    -- Iir_Kind_Stable_Attribute (None)
    -- Iir_Kind_Delayed_Attribute (None)
    -- Iir_Kind_Quiet_Attribute (None)
    -- Iir_Kind_Transaction_Attribute (None)
-   --  (Iir_Kinds_Signal_Attribute)
 
    -- Iir_Kind_Event_Attribute (None)
    -- Iir_Kind_Last_Event_Attribute (None)
@@ -666,6 +712,10 @@ package Vhdl.Elocations is
    --  Field: Field3
    function Get_Then_Location (N : Iir) return Location_Type;
    procedure Set_Then_Location (N : Iir; Loc : Location_Type);
+
+   --  Field: Field3
+   function Get_Use_Location (N : Iir) return Location_Type;
+   procedure Set_Use_Location (N : Iir; Loc : Location_Type);
 
    --  Field: Field3
    function Get_Loop_Location (N : Iir) return Location_Type;

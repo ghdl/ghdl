@@ -1443,6 +1443,8 @@ package body Synth.Stmts is
                        (Info.Obj, Info.Off, Info.Targ_Type);
                   when Iir_Kind_Interface_File_Declaration =>
                      Val := Info.Obj;
+                  when Iir_Kind_Interface_Quantity_Declaration =>
+                     raise Internal_Error;
                end case;
          end case;
 
@@ -1464,6 +1466,8 @@ package body Synth.Stmts is
                Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_File_Declaration =>
                Create_Object (Subprg_Inst, Inter, Val);
+            when Iir_Kind_Interface_Quantity_Declaration =>
+               raise Internal_Error;
          end case;
       end loop;
    end Synth_Subprogram_Association;

@@ -114,6 +114,8 @@ package body Trans.Chap2 is
                Mech := Pass_By_Address;
             end if;
             Info.Interface_Mechanism (Mode_Value) := Mech;
+         when Iir_Kind_Interface_Quantity_Declaration =>
+            raise Internal_Error;
       end case;
    end Translate_Interface_Mechanism;
 

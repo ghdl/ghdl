@@ -2397,7 +2397,7 @@ package body Trans.Chap8 is
             Has_Value_Field := False;
             Has_Ref_Field := False;
 
-            case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+            case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
                when Iir_Kind_Association_Element_By_Individual =>
                   --  Create a field for the whole formal.
                   Has_Value_Field := True;

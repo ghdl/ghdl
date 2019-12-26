@@ -375,7 +375,9 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Psl_Declaration
-           | Iir_Kind_Signature =>
+           | Iir_Kind_Signature
+           | Iir_Kind_Interface_Terminal_Declaration
+           | Iir_Kind_Terminal_Declaration =>
             Error_Msg_Sem (+Loc, "%n not allowed in an expression", +Expr);
             return Null_Iir;
          when Iir_Kind_Function_Declaration =>
@@ -395,8 +397,6 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Allocator_By_Expression
            | Iir_Kind_Allocator_By_Subtype
            | Iir_Kind_Qualified_Expression =>
-            return Expr;
-         when Iir_Kinds_Quantity_Declaration =>
             return Expr;
          when Iir_Kinds_Dyadic_Operator
            | Iir_Kinds_Monadic_Operator =>
@@ -4313,7 +4313,8 @@ package body Vhdl.Sem_Expr is
               | Iir_Kind_Iterator_Declaration
               | Iir_Kind_Guard_Signal_Declaration =>
                return;
-            when Iir_Kinds_Quantity_Declaration =>
+            when Iir_Kinds_Quantity_Declaration
+              | Iir_Kind_Interface_Quantity_Declaration =>
                return;
             when Iir_Kinds_External_Name =>
                return;
@@ -4368,7 +4369,11 @@ package body Vhdl.Sem_Expr is
               | Iir_Kind_Value_Attribute
               | Iir_Kinds_Name_Attribute
               | Iir_Kinds_Signal_Attribute
-              | Iir_Kinds_Signal_Value_Attribute =>
+              | Iir_Kinds_Signal_Value_Attribute
+              | Iir_Kind_Above_Attribute
+              | Iir_Kind_Dot_Attribute
+              | Iir_Kind_Integ_Attribute
+              | Iir_Kind_Ramp_Attribute =>
                return;
             when Iir_Kind_Aggregate =>
                Check_Read_Aggregate (Obj);

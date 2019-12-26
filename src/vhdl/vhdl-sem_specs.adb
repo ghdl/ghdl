@@ -1153,6 +1153,102 @@ package body Vhdl.Sem_Specs is
       end if;
    end Sem_Disconnection_Specification;
 
+   procedure Sem_Step_Limit_Specification (Limit : Iir)
+   is
+      Type_Mark : Iir;
+      Atype : Iir;
+      Time_Expr : Iir;
+      List : Iir_Flist;
+      El : Iir;
+      Quan : Iir;
+      Prefix : Iir;
+   begin
+      --  Sem type mark.
+      Type_Mark := Get_Type_Mark (Limit);
+      Type_Mark := Sem_Type_Mark (Type_Mark);
+      Set_Type_Mark (Limit, Type_Mark);
+      Atype := Get_Type (Type_Mark);
+
+      --  FIXME: there are no requirements on the expression.
+      Time_Expr := Sem_Expression
+        (Get_Expression (Limit), Real_Type_Definition);
+      if Time_Expr /= Null_Iir then
+         Check_Read (Time_Expr);
+         Set_Expression (Limit, Time_Expr);
+         if Get_Expr_Staticness (Time_Expr) < Globally then
+            Error_Msg_Sem (+Time_Expr, "time expression must be static");
+         end if;
+      end if;
+
+      List := Get_Quantity_List (Limit);
+      if List in Iir_Flists_All_Others then
+         --  FIXME: checks todo
+         raise Internal_Error;
+      else
+         for I in Flist_First .. Flist_Last (List) loop
+            El := Get_Nth_Element (List, I);
+
+            if Is_Error (El) then
+               Quan := Null_Iir;
+            else
+               Sem_Name (El);
+               El := Finish_Sem_Name (El);
+               Set_Nth_Element (List, I, El);
+
+               Quan := Get_Named_Entity (El);
+               Quan := Name_To_Object (Quan);
+            end if;
+
+            if Quan /= Null_Iir then
+               Set_Type (El, Get_Type (Quan));
+               Prefix := Get_Object_Prefix (Quan);
+               --  AMS-LRM17 7.5
+               --  Each quantity name in a quantity in a step limit
+               --  specification shall be a locally static name that denotes
+               --  a quantity.
+               case Get_Kind (Prefix) is
+                  when Iir_Kinds_Quantity_Declaration
+                    | Iir_Kind_Interface_Quantity_Declaration =>
+                     null;
+                  when others =>
+                     Error_Msg_Sem (+El, "object must be a quantity");
+                     return;
+               end case;
+               if Get_Name_Staticness (Quan) /= Locally then
+                  Error_Msg_Sem (+El, "signal name must be locally static");
+               end if;
+
+               --  AMS-LRM17 7.5
+               --  If the quantity is a declared quantity or a slice of
+               --  thereof, the type mark shall be the same as the type mark
+               --  indicated in the quantity declaration for that quantity.
+               --  If the quantity is an array element of an explicitly
+               --  declared quantity, the type mark must be the same as the
+               --  element subtype indication in the (explicit or implicit)
+               --  array type declaration that declares the base type of the
+               --  explicitly declared quantity.
+               --  If the quantity is a record element of an explicitly
+               --  declared quantity, then the type mark must be the same as
+               --  the type mark in the element subtype definition of the
+               --  record type declaration that declares the type of the
+               --  explicitly declared quantity.
+               if not Is_Same_Type_Mark (Get_Type (Quan), Atype) then
+                  Error_Msg_Sem (+El, "type mark and quantity type mismatch");
+               end if;
+
+               --  AMS-LRM17 7.5
+               --  Each quantity must be declared in the declarative part
+               --  enclosing the step limit specification.
+               --  FIXME: todo.
+            elsif not Is_Error (El)
+              and then Get_Designated_Entity (El) /= Error_Mark
+            then
+               Error_Msg_Sem (+El, "name must designate a quantity");
+            end if;
+         end loop;
+      end if;
+   end Sem_Step_Limit_Specification;
+
    --  Analyze entity aspect ASPECT and return the entity declaration.
    --  Return NULL_IIR if not found.
    function Sem_Entity_Aspect (Aspect : Iir) return Iir is

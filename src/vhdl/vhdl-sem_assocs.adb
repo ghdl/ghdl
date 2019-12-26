@@ -86,6 +86,8 @@ package body Vhdl.Sem_Assocs is
             if Get_Kind (Actual) = Iir_Kind_String_Literal8 then
                Actual := Vhdl.Parse.String_To_Operator_Symbol (Actual);
             end if;
+         when Iir_Kind_Interface_Terminal_Declaration =>
+            N_Assoc := Create_Iir (Iir_Kind_Association_Element_Terminal);
          when others =>
             Error_Kind ("rewrite_non_object_association", Inter);
       end case;
@@ -1787,6 +1789,61 @@ package body Vhdl.Sem_Assocs is
       Sem_Decls.Mark_Subprogram_Used (Res);
    end Sem_Association_Subprogram;
 
+   procedure Sem_Association_Terminal
+     (Assoc : Iir;
+      Inter : Iir;
+      Finish : Boolean;
+      Match : out Compatibility_Level)
+   is
+      Actual_Name : Iir;
+      Actual : Iir;
+   begin
+      if not Finish then
+         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
+         return;
+      end if;
+
+      Match := Not_Compatible;
+      Sem_Association_Package_Type_Finish (Assoc, Inter);
+
+      --  Analyze actual.
+      Actual_Name := Get_Actual (Assoc);
+      Sem_Name (Actual_Name);
+      Actual := Get_Named_Entity (Actual_Name);
+
+      if Is_Error (Actual) then
+         return;
+      elsif Is_Overload_List (Actual) then
+         Error_Msg_Sem (+Actual_Name, "terminal name expected");
+         return;
+      else
+         Actual := Finish_Sem_Name (Actual_Name);
+         case Get_Kind (Get_Object_Prefix (Actual)) is
+            when Iir_Kind_Terminal_Declaration
+              | Iir_Kind_Interface_Terminal_Declaration =>
+               null;
+            when others =>
+               Error_Msg_Sem
+                 (+Actual_Name, "%n is not a terminal name", +Actual);
+               return;
+         end case;
+      end if;
+
+      Set_Actual (Assoc, Actual);
+
+      if (Get_Base_Nature (Get_Nature (Get_Named_Entity (Actual)))
+            /= Get_Base_Nature (Get_Nature (Inter)))
+      then
+         Error_Msg_Sem
+           (+Actual, "nature of actual is not the same as formal nature");
+         return;
+      end if;
+
+      Match := Fully_Compatible;
+
+      return;
+   end Sem_Association_Terminal;
+
    --  Associate ASSOC with interface INTERFACE
    --  This sets MATCH.
    procedure Sem_Association_By_Expression
@@ -2066,6 +2123,13 @@ package body Vhdl.Sem_Assocs is
             else
                Sem_Association_By_Expression
                  (Assoc, Inter, Formal, Formal_Conv, Finish, Match);
+            end if;
+
+         when Iir_Kind_Interface_Terminal_Declaration =>
+            if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+               Sem_Association_Open (Assoc, Finish, Match);
+            else
+               Sem_Association_Terminal (Assoc, Inter, Finish, Match);
             end if;
 
          when Iir_Kind_Interface_Package_Declaration =>

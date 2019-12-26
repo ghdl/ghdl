@@ -433,6 +433,7 @@ package Vhdl.Nodes is
    -- Iir_Kind_Association_Element_Package (Short)
    -- Iir_Kind_Association_Element_Type (Short)
    -- Iir_Kind_Association_Element_Subprogram (Short)
+   -- Iir_Kind_Association_Element_Terminal (Short)
    --  These are used for association element of an association list with
    --  an interface (ie subprogram call, port map, generic map).
    --
@@ -444,6 +445,7 @@ package Vhdl.Nodes is
    -- Only for Iir_Kind_Association_Element_Package:
    -- Only for Iir_Kind_Association_Element_Type:
    -- Only for Iir_Kind_Association_Element_Subprogram:
+   -- Only for Iir_Kind_Association_Element_Terminal:
    --   Get/Set_Actual (Field3)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
@@ -717,6 +719,33 @@ package Vhdl.Nodes is
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Signal_List (Field3)
+   --
+   --   Get/Set_Type_Mark (Field4)
+   --
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
+
+   -- Iir_Kind_Step_Limit_Specification (Short)
+   --
+   --  AMS-LRM17 7.5 Step limit specification
+   --
+   --  step_limit_specification ::=
+   --    LIMIT quantity_specification WITH real_expression ;
+   --
+   --  quantity_specification ::=
+   --    quantity_list : type_mark
+   --
+   --  quantity_list ::=
+   --       quantity_name { , quantity_name }
+   --     | OTHERS
+   --     | ALL
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Quantity_List (Field3)
    --
    --   Get/Set_Type_Mark (Field4)
    --
@@ -1262,9 +1291,14 @@ package Vhdl.Nodes is
 
    -- Iir_Kind_Nature_Declaration (Short)
    --
+   --  AMS-LRM17 6.11 Nature and subnature declarations
+   --  nature_declaration ::=
+   --    NATURE identifier IS nature_definition ;
+   --
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Nature (Field1)
+   --   Get/Set_Nature_Definition (Field1)
+   --   Get/Set_Nature (Alias Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -1276,6 +1310,10 @@ package Vhdl.Nodes is
 
    -- Iir_Kind_Subnature_Declaration (Short)
    --
+   --  AMS-LRM17 6.11 Nature and subnature declarations
+   --  subnature_declaration ::=
+   --    SUBNATURE identifier IS subnature_indication ;
+   --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Nature (Field1)
@@ -1283,6 +1321,8 @@ package Vhdl.Nodes is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Subnature_Indication (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1292,6 +1332,7 @@ package Vhdl.Nodes is
    -- Iir_Kind_Interface_Constant_Declaration (Short)
    -- Iir_Kind_Interface_Variable_Declaration (Short)
    -- Iir_Kind_Interface_File_Declaration (Short)
+   -- Iir_Kind_Interface_Quantity_Declaration (Short)
    --
    --  Get/Set the parent of an interface declaration.
    --  The parent is an entity declaration, a subprogram specification, a
@@ -1344,6 +1385,32 @@ package Vhdl.Nodes is
    --   Get/Set_Open_Flag (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Interface_Terminal_Declaration (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Subnature_Indication (Field5)
+   --
+   --   Get/Set_Nature (Field1)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Has_Mode (Flag10)
+   --
+   --   Get/Set_Has_Class (Flag11)
+   --
+   --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Name_Staticness (State2)
 
@@ -2013,17 +2080,19 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --   Get/Set_Subnature_Indication (Field5)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
    --
    --   Get/Set_Has_Identifier_List (Flag3)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Free_Quantity_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
-   --
-   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -2033,6 +2102,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --   Get/Set_Type (Field1)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
@@ -2040,6 +2111,62 @@ package Vhdl.Nodes is
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
+   --   Get/Set_Is_Ref (Flag12)
+
+   -- Iir_Kind_Spectrum_Quantity_Declaration (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   --   Get/Set_Magnitude_Expression (Field6)
+   --
+   --   Get/Set_Phase_Expression (Field7)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
+   --   Get/Set_Is_Ref (Flag12)
+
+   -- Iir_Kind_Noise_Quantity_Declaration (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   --   Get/Set_Power_Expression (Field4)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
    --
    --   Get/Set_Is_Ref (Flag12)
 
@@ -2058,9 +2185,15 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Tolerance (Field7)
    --
-   --   Get/Set_Plus_Terminal (Field8)
+   --   Get/Set_Plus_Terminal_Name (Field8)
    --
-   --   Get/Set_Minus_Terminal (Field9)
+   --   Get/Set_Minus_Terminal_Name (Field9)
+   --
+   --   Get/Set_Plus_Terminal (Field10)
+   --
+   --   Get/Set_Minus_Terminal (Field11)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -2069,6 +2202,8 @@ package Vhdl.Nodes is
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Use_Clause (Short)
    --
@@ -2800,14 +2935,145 @@ package Vhdl.Nodes is
    --  The declarator that has created this nature type.
    --   Get/Set_Nature_Declarator (Field3)
    --
-   --  C--  Get/Set_Base_Type (Field4)
+   --   Get/Set_Base_Nature (Field4)
    --
-   --  Type staticness is always locally.
-   --  C--  Get/Set_Type_Staticness (State1)
+   --   Get/Set_Across_Type_Mark (Field9)
    --
-   --   Get/Set_Across_Type (Field7)
+   --   Get/Set_Through_Type_Mark (Field10)
    --
-   --   Get/Set_Through_Type (Field8)
+   --   Get/Set_Across_Type (Field11)
+   --
+   --   Get/Set_Through_Type (Field12)
+   --
+   --   Get/Set_Nature_Staticness (State1)
+
+   -- Iir_Kind_Array_Nature_Definition (Medium)
+   --
+   --  AMS-LRM17 5.8.3.2 Array Natures
+   --
+   --  This is a list of type marks.
+   --   Get/Set_Index_Subtype_Definition_List (Field6)
+   --
+   --   Get/Set_Element_Subnature_Indication (Field2)
+   --
+   --  Same as the index_subtype_definition_list.
+   --   Get/Set_Index_Subtype_List (Field9)
+   --
+   --   Get/Set_Element_Subnature (Field1)
+   --
+   --   Get/Set_Nature_Declarator (Field3)
+   --
+   --   Get/Set_Base_Nature (Field4)
+   --
+   --   Get/Set_Nature_Staticness (State1)
+   --
+   --   Get/Set_Constraint_State (State2)
+   --
+   --  Always false.
+   --   Get/Set_Index_Constraint_Flag (Flag4)
+   --
+   --   Get/Set_Across_Type_Definition (Field10)
+   --
+   --   Get/Set_Through_Type_Definition (Field5)
+   --
+   --   Get/Set_Across_Type (Field11)
+   --
+   --   Get/Set_Through_Type (Field12)
+
+   -- Iir_Kind_Array_Subnature_Definition (Medium)
+   --
+   --   Get/Set_Subnature_Nature_Mark (Field2)
+   --
+   --  The index_constraint list as it appears in the subtype indication (if
+   --  present). This is a list of subtype indication.
+   --   Get/Set_Index_Constraint_List (Field6)
+   --
+   --  The type of the index.  This is either the index_constraint list or the
+   --  index subtypes of the type_mark.
+   --   Get/Set_Index_Subtype_List (Field9)
+   --
+   --   Get/Set_Array_Element_Constraint (Field8)
+   --
+   --   Get/Set_Tolerance (Field7)
+   --
+   --   Get/Set_Element_Subnature (Field1)
+   --
+   --   Get/Set_Nature_Declarator (Field3)
+   --
+   --   Get/Set_Base_Nature (Field4)
+   --
+   --   Get/Set_Nature_Staticness (State1)
+   --
+   --   Get/Set_Constraint_State (State2)
+   --
+   --   Get/Set_Index_Constraint_Flag (Flag4)
+   --
+   --   Get/Set_Across_Type_Definition (Field10)
+   --
+   --   Get/Set_Through_Type_Definition (Field5)
+   --
+   --   Get/Set_Across_Type (Field11)
+   --
+   --   Get/Set_Through_Type (Field12)
+
+   -- Iir_Kind_Record_Nature_Definition (Medium)
+   --
+   --  AMS-LRM17 5.8.3.3 Record natures
+   --  record_nature_definition ::=
+   --     RECORD
+   --        nature_element_declaration
+   --        { nature_element_declaration }
+   --     END RECORD [ /record_nature/_simple_name ]
+   --
+   --   Get/Set_Elements_Declaration_List (Field1)
+   --
+   --   Get/Set_Nature_Declarator (Field3)
+   --
+   --   Get/Set_Base_Nature (Field4)
+   --
+   --   Get/Set_Across_Type_Definition (Field10)
+   --
+   --   Get/Set_Through_Type_Definition (Field5)
+   --
+   --   Get/Set_Across_Type (Field11)
+   --
+   --   Get/Set_Through_Type (Field12)
+   --
+   --   Get/Set_Nature_Staticness (State1)
+   --
+   --   Get/Set_Constraint_State (State2)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --  Always false for record type: elements are owned by this node.
+   --   Get/Set_Is_Ref (Flag12)
+
+
+   -- Iir_Kind_Nature_Element_Declaration (Short)
+   --
+   --  AMS-LRM17 5.8.3.3 Record natures
+   --
+   --  nature_element_declaration ::=
+   --     identifier_list : element_subnature_definition ;
+   --
+   --  element_subnature_definition ::= subnature_indication
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Subnature_Indication (Field5)
+   --
+   --   Get/Set_Element_Position (Field4)
+   --
+   --   Get/Set_Nature (Field1)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+
 
    ----------------------------
    --  concurrent statements --
@@ -3215,6 +3481,73 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
+   -- Iir_Kind_Simultaneous_Procedural_Statement (Short)
+   --
+   --  AMS-LRM17 11.13 Simultaneous procedural statement
+   --  simultaneous_procedural_statement ::=
+   --    [ procedural_label : ]
+   --      PROCEDURAL [ IS ]
+   --        procedural_declarative_part
+   --      BEGIN
+   --        procedural_statement_part
+   --      END PROCEDURAL [ procedural_label ] ;
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Declaration_Chain (Field1)
+   --
+   --   Get/Set_Label (Field3)
+   --
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Sequential_Statement_Chain (Field5)
+   --
+   --   Get/Set_Has_Is (Flag7)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+
+   -- Iir_Kind_Simultaneous_If_Statement (Short)
+   -- Iir_Kind_Simultaneous_Elsif (Short)
+   --
+   --  AMS-LRM17 11.11 Simultaneous if statement
+   --  simultaneous_if_statement ::=
+   --    [ /if/_label : ]
+   --      IF condition USE
+   --        simultaneous_statement_part
+   --      { ELSIF condition USE
+   --        simultaneous_statement_part }
+   --      [ ELSE
+   --        simultaneous_statement_part ]
+   --      END USE [ /if/_label ];
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   -- Only for Iir_Kind_Simultaneous_If_Statement:
+   --   Get/Set_Label (Field3)
+   --
+   -- Only for Iir_Kind_Simultaneous_If_Statement:
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Condition (Field1)
+   --
+   --   Get/Set_Simultaneous_Statement_Chain (Field5)
+   --
+   --   Get/Set_Else_Clause (Field4)
+   --
+   -- Only for Iir_Kind_Simultaneous_If_Statement:
+   --   Get/Set_Chain (Field2)
+   --
+   -- Only for Iir_Kind_Simultaneous_If_Statement:
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+
    ----------------------------
    --  sequential statements --
    ----------------------------
@@ -3506,6 +3839,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Parent (Field0)
    --
+   --   Get/Set_Expression (Field5)
+   --
    --  Chain is composed of Iir_Kind_Choice_By_XXX.
    --   Get/Set_Case_Statement_Alternative_Chain (Field1)
    --
@@ -3513,8 +3848,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -3562,6 +3895,37 @@ package Vhdl.Nodes is
    --   Get/Set_Identifier (Alias Field3)
    --
    --   Get/Set_Visible_Flag (Flag4)
+
+   -- Iir_Kind_Break_Statement (Short)
+   -- Iir_Kind_Concurrent_Break_Statement (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Condition (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   -- Only for Iir_Kind_Concurrent_Break_Statement:
+   --   Get/Set_Sensitivity_List (Field6)
+   --
+   --   Get/Set_Break_Element (Field4)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
+
+   -- Iir_Kind_Break_Element (Short)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Selector_Quantity (Field3)
+   --
+   --   Get/Set_Break_Quantity (Field4)
+   --
+   --   Get/Set_Expression (Field5)
 
    ----------------
    --  operators --
@@ -4017,6 +4381,71 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type (Field1)
 
+   -- Iir_Kind_Across_Attribute (Short)
+   -- Iir_Kind_Through_Attribute (Short)
+   --
+   --   Get/Set_Prefix (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Type_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Nature_Reference_Attribute (Short)
+   --
+   --   Get/Set_Prefix (Field0)
+   --
+   --   Get/Set_Nature (Field1)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Above_Attribute (Short)
+   -- Iir_Kind_Dot_Attribute (Short)
+   -- Iir_Kind_Integ_Attribute (Short)
+   --
+   --   Get/Set_Prefix (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Attr_Chain (Field2)
+   --
+   --  Head of the chain.  Used only to ease the reconstruction of the chain.
+   --   Get/Set_Signal_Attribute_Declaration (Field3)
+   --
+   -- Only for Iir_Kind_Above_Attribute:
+   --   Get/Set_Parameter (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+
+   -- Iir_Kind_Ramp_Attribute (Medium)
+   -- Iir_Kind_Signal_Slew_Attribute (Medium)
+   -- Iir_Kind_Quantity_Slew_Attribute (Medium)
+   --
+   --   Get/Set_Prefix (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Attr_Chain (Field2)
+   --
+   --   Get/Set_Parameter (Field4)
+   --
+   --   Get/Set_Parameter_2 (Field6)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+
    -- Iir_Kind_Left_Type_Attribute (Short)
    -- Iir_Kind_Right_Type_Attribute (Short)
    -- Iir_Kind_High_Type_Attribute (Short)
@@ -4231,6 +4660,7 @@ package Vhdl.Nodes is
       Iir_Kind_Association_Element_Package,
       Iir_Kind_Association_Element_Type,
       Iir_Kind_Association_Element_Subprogram,
+      Iir_Kind_Association_Element_Terminal,
       Iir_Kind_Choice_By_Range,
       Iir_Kind_Choice_By_Expression,
       Iir_Kind_Choice_By_Others,
@@ -4253,9 +4683,11 @@ package Vhdl.Nodes is
       Iir_Kind_Array_Element_Resolution,
       Iir_Kind_Record_Resolution,
       Iir_Kind_Record_Element_Resolution,
+      Iir_Kind_Break_Element,
 
       Iir_Kind_Attribute_Specification,
       Iir_Kind_Disconnection_Specification,
+      Iir_Kind_Step_Limit_Specification,
       Iir_Kind_Configuration_Specification,
 
    -- Type definitions.
@@ -4286,6 +4718,9 @@ package Vhdl.Nodes is
 
    -- Nature definition
       Iir_Kind_Scalar_Nature_Definition,
+      Iir_Kind_Record_Nature_Definition,
+      Iir_Kind_Array_Nature_Definition,
+      Iir_Kind_Array_Subnature_Definition,
 
    -- Lists.
       Iir_Kind_Overload_List,  -- used internally by sem_expr.
@@ -4315,14 +4750,11 @@ package Vhdl.Nodes is
       Iir_Kind_Group_Template_Declaration,
       Iir_Kind_Group_Declaration,
       Iir_Kind_Element_Declaration,
+      Iir_Kind_Nature_Element_Declaration,
       Iir_Kind_Non_Object_Alias_Declaration,
 
       Iir_Kind_Psl_Declaration,
       Iir_Kind_Psl_Endpoint_Declaration,
-      Iir_Kind_Terminal_Declaration,
-      Iir_Kind_Free_Quantity_Declaration,
-      Iir_Kind_Across_Quantity_Declaration,
-      Iir_Kind_Through_Quantity_Declaration,
 
       Iir_Kind_Enumeration_Literal,
       Iir_Kind_Function_Declaration,            --  Subprg, Func
@@ -4330,7 +4762,14 @@ package Vhdl.Nodes is
       Iir_Kind_Function_Body,
       Iir_Kind_Procedure_Body,
 
+      Iir_Kind_Terminal_Declaration,
+
       Iir_Kind_Object_Alias_Declaration,       -- object
+      Iir_Kind_Free_Quantity_Declaration,      -- object
+      Iir_Kind_Spectrum_Quantity_Declaration,  -- object
+      Iir_Kind_Noise_Quantity_Declaration,     -- object
+      Iir_Kind_Across_Quantity_Declaration,    -- object
+      Iir_Kind_Through_Quantity_Declaration,   -- object
       Iir_Kind_File_Declaration,               -- object
       Iir_Kind_Guard_Signal_Declaration,       -- object
       Iir_Kind_Signal_Declaration,             -- object
@@ -4341,6 +4780,8 @@ package Vhdl.Nodes is
       Iir_Kind_Interface_Variable_Declaration, -- object, interface
       Iir_Kind_Interface_Signal_Declaration,   -- object, interface
       Iir_Kind_Interface_File_Declaration,     -- object, interface
+      Iir_Kind_Interface_Quantity_Declaration, -- object, interface
+      Iir_Kind_Interface_Terminal_Declaration, --         interface
       Iir_Kind_Interface_Type_Declaration,     --         interface
       Iir_Kind_Interface_Package_Declaration,  --         interface
       Iir_Kind_Interface_Function_Declaration, --         interface
@@ -4416,6 +4857,7 @@ package Vhdl.Nodes is
       Iir_Kind_Concurrent_Selected_Signal_Assignment,
       Iir_Kind_Concurrent_Assertion_Statement,
       Iir_Kind_Concurrent_Procedure_Call_Statement,
+      Iir_Kind_Concurrent_Break_Statement,
       Iir_Kind_Psl_Assert_Directive,
       Iir_Kind_Psl_Assume_Directive,
       Iir_Kind_Psl_Cover_Directive,
@@ -4428,12 +4870,16 @@ package Vhdl.Nodes is
 
       Iir_Kind_Psl_Default_Clock,
 
-      Iir_Kind_Simple_Simultaneous_Statement,
-
       Iir_Kind_Generate_Statement_Body,
       Iir_Kind_If_Generate_Else_Clause,
 
-   -- Iir_Kind_Sequential_Statement
+   -- Simultaneous statements.
+      Iir_Kind_Simple_Simultaneous_Statement,
+      Iir_Kind_Simultaneous_Procedural_Statement,
+      Iir_Kind_Simultaneous_If_Statement,
+      Iir_Kind_Simultaneous_Elsif,
+
+   -- Sequential statement
       Iir_Kind_Simple_Signal_Assignment_Statement,
       Iir_Kind_Conditional_Signal_Assignment_Statement,
       Iir_Kind_Selected_Waveform_Assignment_Statement,
@@ -4450,6 +4896,7 @@ package Vhdl.Nodes is
       Iir_Kind_Exit_Statement,
       Iir_Kind_Case_Statement,
       Iir_Kind_Procedure_Call_Statement,
+      Iir_Kind_Break_Statement,
       Iir_Kind_If_Statement,
       Iir_Kind_Elsif,
 
@@ -4476,6 +4923,9 @@ package Vhdl.Nodes is
       Iir_Kind_Base_Attribute,
       Iir_Kind_Subtype_Attribute,
       Iir_Kind_Element_Attribute,
+      Iir_Kind_Across_Attribute,
+      Iir_Kind_Through_Attribute,
+      Iir_Kind_Nature_Reference_Attribute,
       Iir_Kind_Left_Type_Attribute,            --  type_attribute
       Iir_Kind_Right_Type_Attribute,           --  type_attribute
       Iir_Kind_High_Type_Attribute,            --  type_attribute
@@ -4489,6 +4939,12 @@ package Vhdl.Nodes is
       Iir_Kind_Pred_Attribute,                 --  scalar_type_attribute
       Iir_Kind_Leftof_Attribute,               --  scalar_type_attribute
       Iir_Kind_Rightof_Attribute,              --  scalar_type_attribute
+      Iir_Kind_Signal_Slew_Attribute,
+      Iir_Kind_Quantity_Slew_Attribute,
+      Iir_Kind_Ramp_Attribute,
+      Iir_Kind_Dot_Attribute,
+      Iir_Kind_Integ_Attribute,
+      Iir_Kind_Above_Attribute,
       Iir_Kind_Delayed_Attribute,              --  signal_attribute
       Iir_Kind_Stable_Attribute,               --  signal_attribute
       Iir_Kind_Quiet_Attribute,                --  signal_attribute
@@ -4892,6 +5348,7 @@ package Vhdl.Nodes is
 
       --  Misc impure functions.
       Iir_Predefined_Now_Function,
+      Iir_Predefined_Real_Now_Function,
 
       --  A not predefined and not known function.  User function.
       Iir_Predefined_None,
@@ -5426,9 +5883,30 @@ package Vhdl.Nodes is
    --Iir_Kind_Anonymous_Type_Declaration
      Iir_Kind_Subtype_Declaration;
 
+   subtype Iir_Kinds_Nature_Definition is Iir_Kind range
+     Iir_Kind_Scalar_Nature_Definition ..
+   --Iir_Kind_Record_Nature_Definition
+     Iir_Kind_Array_Nature_Definition;
+
+   subtype Iir_Kinds_Subnature_Definition is Iir_Kind range
+     Iir_Kind_Array_Subnature_Definition ..
+     Iir_Kind_Array_Subnature_Definition;
+
    subtype Iir_Kinds_Nonoverloadable_Declaration is Iir_Kind range
      Iir_Kind_Type_Declaration ..
-     Iir_Kind_Element_Declaration;
+   --Iir_Kind_Anonymous_Type_Declaration
+   --Iir_Kind_Subtype_Declaration
+   --Iir_Kind_Nature_Declaration
+   --Iir_Kind_Subnature_Declaration
+   --Iir_Kind_Package_Header
+   --Iir_Kind_Unit_Declaration
+   --Iir_Kind_Library_Declaration
+   --Iir_Kind_Component_Declaration
+   --Iir_Kind_Attribute_Declaration
+   --Iir_Kind_Group_Template_Declaration
+   --Iir_Kind_Group_Declaration
+   --Iir_Kind_Element_Declaration
+     Iir_Kind_Nature_Element_Declaration;
 
    subtype Iir_Kinds_Monadic_Operator is Iir_Kind range
      Iir_Kind_Identity_Operator ..
@@ -5498,7 +5976,8 @@ package Vhdl.Nodes is
      Iir_Kind_Interface_Constant_Declaration ..
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
-     Iir_Kind_Interface_File_Declaration;
+   --Iir_Kind_Interface_File_Declaration
+     Iir_Kind_Interface_Quantity_Declaration;
 
    subtype Iir_Kinds_Interface_Subprogram_Declaration is Iir_Kind range
      Iir_Kind_Interface_Function_Declaration ..
@@ -5509,13 +5988,26 @@ package Vhdl.Nodes is
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
    --Iir_Kind_Interface_File_Declaration
+   --Iir_Kind_Interface_Quantity_Declaration
+   --Iir_Kind_Interface_Terminal_Declaration
    --Iir_Kind_Interface_Type_Declaration
    --Iir_Kind_Interface_Package_Declaration
    --Iir_Kind_Interface_Function_Declaration
      Iir_Kind_Interface_Procedure_Declaration;
 
+   --  LRM-AMS17 6.4 Objects
+   --  An object is a named entity that is a terminal or that contains (has)
+   --  a value of a type.
+   --
+   --  Note: Object_Declaration does not include terminals.
+
    subtype Iir_Kinds_Object_Declaration is Iir_Kind range
      Iir_Kind_Object_Alias_Declaration ..
+   --Iir_Kind_Free_Quantity_Declaration
+   --Iir_Kind_Spectrum_Quantity_Declaration
+   --Iir_Kind_Noise_Quantity_Declaration
+   --Iir_Kind_Across_Quantity_Declaration
+   --Iir_Kind_Through_Quantity_Declaration
    --Iir_Kind_File_Declaration
    --Iir_Kind_Guard_Signal_Declaration
    --Iir_Kind_Signal_Declaration
@@ -5525,14 +6017,21 @@ package Vhdl.Nodes is
    --Iir_Kind_Interface_Constant_Declaration
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
-     Iir_Kind_Interface_File_Declaration;
+   --Iir_Kind_Interface_File_Declaration
+     Iir_Kind_Interface_Quantity_Declaration;
 
    subtype Iir_Kinds_Branch_Quantity_Declaration is Iir_Kind range
      Iir_Kind_Across_Quantity_Declaration ..
      Iir_Kind_Through_Quantity_Declaration;
 
+   subtype Iir_Kinds_Source_Quantity_Declaration is Iir_Kind range
+     Iir_Kind_Spectrum_Quantity_Declaration ..
+     Iir_Kind_Noise_Quantity_Declaration;
+
    subtype Iir_Kinds_Quantity_Declaration is Iir_Kind range
      Iir_Kind_Free_Quantity_Declaration ..
+   --Iir_Kind_Spectrum_Quantity_Declaration
+   --Iir_Kind_Noise_Quantity_Declaration
    --Iir_Kind_Across_Quantity_Declaration
      Iir_Kind_Through_Quantity_Declaration;
 
@@ -5548,10 +6047,20 @@ package Vhdl.Nodes is
    --Iir_Kind_Interface_Signal_Declaration
      Iir_Kind_Interface_File_Declaration;
 
-   subtype Iir_Kinds_Association_Element is Iir_Kind range
+   --  Association elements for parameters.
+   subtype Iir_Kinds_Association_Element_Parameters is Iir_Kind range
      Iir_Kind_Association_Element_By_Expression ..
    --Iir_Kind_Association_Element_By_Individual
      Iir_Kind_Association_Element_Open;
+
+   subtype Iir_Kinds_Association_Element is Iir_Kind range
+     Iir_Kind_Association_Element_By_Expression ..
+   --Iir_Kind_Association_Element_By_Individual
+   --Iir_Kind_Association_Element_Open
+   --Iir_Kind_Association_Element_Package
+   --Iir_Kind_Association_Element_Type
+   --Iir_Kind_Association_Element_Subprogram
+     Iir_Kind_Association_Element_Terminal;
 
    subtype Iir_Kinds_Choice is Iir_Kind range
      Iir_Kind_Choice_By_Range ..
@@ -5637,6 +6146,12 @@ package Vhdl.Nodes is
    --Iir_Kind_Pred_Attribute
    --Iir_Kind_Leftof_Attribute
    --Iir_Kind_Rightof_Attribute
+   --Iir_Kind_Signal_Slew_Attribute
+   --Iir_Kind_Quantity_Slew_Attribute
+   --Iir_Kind_Ramp_Attribute
+   --Iir_Kind_Dot_Attribute
+   --Iir_Kind_Integ_Attribute
+   --Iir_Kind_Above_Attribute
    --Iir_Kind_Delayed_Attribute
    --Iir_Kind_Stable_Attribute
    --Iir_Kind_Quiet_Attribute
@@ -5729,6 +6244,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Concurrent_Selected_Signal_Assignment
    --Iir_Kind_Concurrent_Assertion_Statement
    --Iir_Kind_Concurrent_Procedure_Call_Statement
+   --Iir_Kind_Concurrent_Break_Statement
    --Iir_Kind_Psl_Assert_Directive
    --Iir_Kind_Psl_Assume_Directive
    --Iir_Kind_Psl_Cover_Directive
@@ -5748,6 +6264,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Concurrent_Selected_Signal_Assignment
    --Iir_Kind_Concurrent_Assertion_Statement
    --Iir_Kind_Concurrent_Procedure_Call_Statement
+   --Iir_Kind_Concurrent_Break_Statement
    --Iir_Kind_Psl_Assert_Directive
    --Iir_Kind_Psl_Assume_Directive
    --Iir_Kind_Psl_Cover_Directive
@@ -5761,6 +6278,10 @@ package Vhdl.Nodes is
    subtype Iir_Kinds_If_Case_Generate_Statement is Iir_Kind range
      Iir_Kind_If_Generate_Statement ..
      Iir_Kind_Case_Generate_Statement;
+
+   subtype Iir_Kinds_Simultaneous_Statement is Iir_Kind range
+     Iir_Kind_Simple_Simultaneous_Statement ..
+     Iir_Kind_Simultaneous_If_Statement;
 
    subtype Iir_Kinds_Sequential_Statement is Iir_Kind range
      Iir_Kind_Simple_Signal_Assignment_Statement ..
@@ -5779,6 +6300,7 @@ package Vhdl.Nodes is
    --Iir_Kind_Exit_Statement
    --Iir_Kind_Case_Statement
    --Iir_Kind_Procedure_Call_Statement
+   --Iir_Kind_Break_Statement
      Iir_Kind_If_Statement;
 
    subtype Iir_Kinds_Next_Exit_Statement is Iir_Kind range
@@ -5801,6 +6323,7 @@ package Vhdl.Nodes is
    subtype Iir_Kinds_Specification is Iir_Kind range
      Iir_Kind_Attribute_Specification ..
    --Iir_Kind_Disconnection_Specification
+   --Iir_Kind_Step_Limit_Specification
      Iir_Kind_Configuration_Specification;
 
    --  Nodes and lists.
@@ -6479,6 +7002,10 @@ package Vhdl.Nodes is
    function Get_Signal_List (Target : Iir) return Iir_Flist;
    procedure Set_Signal_List (Target : Iir; List : Iir_Flist);
 
+   --  Field: Field3 Of_Maybe_Ref (uc)
+   function Get_Quantity_List (Target : Iir) return Iir_Flist;
+   procedure Set_Quantity_List (Target : Iir; List : Iir_Flist);
+
    --  Field: Field3 Forward_Ref
    function Get_Designated_Entity (Val : Iir_Attribute_Value) return Iir;
    procedure Set_Designated_Entity (Val : Iir_Attribute_Value; Entity : Iir);
@@ -6735,8 +7262,16 @@ package Vhdl.Nodes is
    procedure Set_Interface_Type_Subprograms (Target : Iir; Subprg : Iir);
 
    --  Field: Field1
+   function Get_Nature_Definition (Target : Iir) return Iir;
+   procedure Set_Nature_Definition (Target : Iir; Def : Iir);
+
+   --  Field: Field1 Ref
    function Get_Nature (Target : Iir) return Iir;
    procedure Set_Nature (Target : Iir; Nature : Iir);
+
+   --  Field: Field5
+   function Get_Subnature_Indication (Decl : Iir) return Iir;
+   procedure Set_Subnature_Indication (Decl : Iir; Sub_Nature : Iir);
 
    --  Mode of interfaces or file (v87).
    --  Field: Flag13,Flag14,Flag15 (grp)
@@ -6772,6 +7307,10 @@ package Vhdl.Nodes is
    --  Field: Field5 Chain
    function Get_Sequential_Statement_Chain (Target : Iir) return Iir;
    procedure Set_Sequential_Statement_Chain (Target : Iir; Chain : Iir);
+
+   --  Field: Field5 Chain
+   function Get_Simultaneous_Statement_Chain (Target : Iir) return Iir;
+   procedure Set_Simultaneous_Statement_Chain (Target : Iir; Chain : Iir);
 
    --  Field: Field9 Forward_Ref
    function Get_Subprogram_Body (Target : Iir) return Iir;
@@ -6898,7 +7437,8 @@ package Vhdl.Nodes is
    function Get_Selected_Name (Target : Iir) return Iir;
    procedure Set_Selected_Name (Target : Iir; Name : Iir);
 
-   --  The type declarator which declares the type definition DEF.
+   --  The type declarator which declares the type definition DEF.  Can also
+   --  be a nature declarator for composite nature definition.
    --  Field: Field3 Ref
    function Get_Type_Declarator (Def : Iir) return Iir;
    procedure Set_Type_Declarator (Def : Iir; Decl : Iir);
@@ -6988,6 +7528,10 @@ package Vhdl.Nodes is
    procedure Set_Base_Type (Decl : Iir; Base_Type : Iir);
    pragma Inline (Get_Base_Type);
 
+   --  Field: Field4 Ref
+   function Get_Base_Nature (Decl : Iir) return Iir;
+   procedure Set_Base_Nature (Decl : Iir; Base_Nature : Iir);
+
    --  Either a resolution function name, an array_element_resolution or a
    --  record_resolution
    --  Field: Field5
@@ -7003,12 +7547,32 @@ package Vhdl.Nodes is
    procedure Set_Tolerance (Def : Iir; Tol : Iir);
 
    --  Field: Field8
+   function Get_Plus_Terminal_Name (Def : Iir) return Iir;
+   procedure Set_Plus_Terminal_Name (Def : Iir; Name : Iir);
+
+   --  Field: Field9
+   function Get_Minus_Terminal_Name (Def : Iir) return Iir;
+   procedure Set_Minus_Terminal_Name (Def : Iir; Name : Iir);
+
+   --  Field: Field10 Ref
    function Get_Plus_Terminal (Def : Iir) return Iir;
    procedure Set_Plus_Terminal (Def : Iir; Terminal : Iir);
 
-   --  Field: Field9
+   --  Field: Field11 Ref
    function Get_Minus_Terminal (Def : Iir) return Iir;
    procedure Set_Minus_Terminal (Def : Iir; Terminal : Iir);
+
+   --  Field: Field6
+   function Get_Magnitude_Expression (Decl : Iir) return Iir;
+   procedure Set_Magnitude_Expression (Decl : Iir; Expr : Iir);
+
+   --  Field: Field7
+   function Get_Phase_Expression (Decl : Iir) return Iir;
+   procedure Set_Phase_Expression (Decl : Iir; Expr : Iir);
+
+   --  Field: Field4
+   function Get_Power_Expression (Decl : Iir) return Iir;
+   procedure Set_Power_Expression (Decl : Iir; Expr : Iir);
 
    --  Field: Field5
    function Get_Simultaneous_Left (Def : Iir) return Iir;
@@ -7032,6 +7596,10 @@ package Vhdl.Nodes is
    --  Field: Flag5
    function Get_Is_Character_Type (Atype : Iir) return Boolean;
    procedure Set_Is_Character_Type (Atype : Iir; Flag : Boolean);
+
+   --  Field: State1 (pos)
+   function Get_Nature_Staticness (Anat : Iir) return Iir_Staticness;
+   procedure Set_Nature_Staticness (Anat : Iir; Static : Iir_Staticness);
 
    --  Field: State1 (pos)
    function Get_Type_Staticness (Atype : Iir) return Iir_Staticness;
@@ -7062,6 +7630,14 @@ package Vhdl.Nodes is
    --  Field: Field1 Ref
    function Get_Element_Subtype (Decl : Iir) return Iir;
    procedure Set_Element_Subtype (Decl : Iir; Sub_Type : Iir);
+
+   --  Field: Field2
+   function Get_Element_Subnature_Indication (Decl : Iir) return Iir;
+   procedure Set_Element_Subnature_Indication (Decl : Iir; Sub_Nature : Iir);
+
+   --  Field: Field1 Ref
+   function Get_Element_Subnature (Decl : Iir) return Iir;
+   procedure Set_Element_Subnature (Decl : Iir; Sub_Nature : Iir);
 
    --  Field: Field6 (uc)
    function Get_Index_Constraint_List (Def : Iir) return Iir_Flist;
@@ -7098,19 +7674,37 @@ package Vhdl.Nodes is
    procedure Set_Index_List (Decl : Iir; List : Iir_Flist);
 
    --  The terminal declaration for the reference (ground) of a nature
-   --  Field: Field2
+   --  Field: Field2 Forward_Ref
    function Get_Reference (Def : Iir) return Iir;
    procedure Set_Reference (Def : Iir; Ref : Iir);
 
-   --  Field: Field3
+   --  Field: Field3 Ref
    function Get_Nature_Declarator (Def : Iir) return Iir;
    procedure Set_Nature_Declarator (Def : Iir; Decl : Iir);
 
-   --  Field: Field7
+   --  Field: Field9
+   function Get_Across_Type_Mark (Def : Iir) return Iir;
+   procedure Set_Across_Type_Mark (Def : Iir; Name : Iir);
+
+   --  Field: Field10
+   function Get_Through_Type_Mark (Def : Iir) return Iir;
+   procedure Set_Through_Type_Mark (Def : Iir; Atype : Iir);
+
+   --  For array and record nature: the owner of the across type.
+   --  Field: Field10
+   function Get_Across_Type_Definition (Def : Iir) return Iir;
+   procedure Set_Across_Type_Definition (Def : Iir; Atype : Iir);
+
+   --  For array and record nature: the owner of the through type.
+   --  Field: Field5
+   function Get_Through_Type_Definition (Def : Iir) return Iir;
+   procedure Set_Through_Type_Definition (Def : Iir; Atype : Iir);
+
+   --  Field: Field11 Ref
    function Get_Across_Type (Def : Iir) return Iir;
    procedure Set_Across_Type (Def : Iir; Atype : Iir);
 
-   --  Field: Field8
+   --  Field: Field12 Ref
    function Get_Through_Type (Def : Iir) return Iir;
    procedure Set_Through_Type (Def : Iir; Atype : Iir);
 
@@ -7150,6 +7744,18 @@ package Vhdl.Nodes is
    --  Field: Field5
    function Get_Condition_Clause (Wait : Iir_Wait_Statement) return Iir;
    procedure Set_Condition_Clause (Wait : Iir_Wait_Statement; Cond : Iir);
+
+   --  Field: Field4 Chain
+   function Get_Break_Element (Stmt : Iir) return Iir;
+   procedure Set_Break_Element (Stmt : Iir; El : Iir);
+
+   --  Field: Field3
+   function Get_Selector_Quantity (Stmt : Iir) return Iir;
+   procedure Set_Selector_Quantity (Stmt : Iir; Sel : Iir);
+
+   --  Field: Field4
+   function Get_Break_Quantity (Stmt : Iir) return Iir;
+   procedure Set_Break_Quantity (Stmt : Iir; Sel : Iir);
 
    --  Field: Field1
    function Get_Timeout_Clause (Wait : Iir_Wait_Statement) return Iir;
@@ -7590,6 +8196,11 @@ package Vhdl.Nodes is
    function Get_Parameter (Target : Iir) return Iir;
    procedure Set_Parameter (Target : Iir; Param : Iir);
 
+   --  Second parameter of an attribute (for AMS VHDL).
+   --  Field: Field6
+   function Get_Parameter_2 (Target : Iir) return Iir;
+   procedure Set_Parameter_2 (Target : Iir; Param : Iir);
+
    --  Field: Field2 Forward_Ref
    function Get_Attr_Chain (Attr : Iir) return Iir;
    procedure Set_Attr_Chain (Attr : Iir; Chain : Iir);
@@ -7715,6 +8326,10 @@ package Vhdl.Nodes is
    --  Field: Field2
    function Get_Subtype_Type_Mark (Target : Iir) return Iir;
    procedure Set_Subtype_Type_Mark (Target : Iir; Mark : Iir);
+
+   --  Field: Field2
+   function Get_Subnature_Nature_Mark (Target : Iir) return Iir;
+   procedure Set_Subnature_Nature_Mark (Target : Iir; Mark : Iir);
 
    --  Field: Field3
    function Get_Type_Conversion_Subtype (Target : Iir) return Iir;

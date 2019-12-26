@@ -62,6 +62,7 @@ package body Vhdl.Parse is
    procedure Parse_Concurrent_Statements (Parent : Iir);
    function Parse_Subprogram_Declaration return Iir;
    function Parse_Subtype_Indication (Name : Iir := Null_Iir) return Iir;
+   function Parse_Subnature_Indication return Iir;
    function Parse_Interface_List (Ctxt : Interface_Kind_Type; Parent : Iir)
                                  return Iir;
    procedure Parse_Component_Specification (Res : Iir);
@@ -71,6 +72,11 @@ package body Vhdl.Parse is
    procedure Parse_Declarative_Part (Parent : Iir; Package_Parent : Iir);
    function Parse_Tolerance_Aspect_Opt return Iir;
    function Parse_Package (Parent : Iir) return Iir;
+
+   function Parse_Simultaneous_If_Statement (Label : Name_Id;
+                                             Label_Loc : Location_Type;
+                                             If_Loc : Location_Type;
+                                             First_Cond : Iir) return Iir;
 
    --  Maximum number of nested parenthesis, before generating an error.
    Max_Parenthesis_Depth : constant Natural := 1000;
@@ -933,6 +939,49 @@ package body Vhdl.Parse is
       return Res;
    end String_To_Operator_Symbol;
 
+   --  [ LRM93 6.6 ]
+   --  attribute_name ::=
+   --      prefix [ signature ] ' attribute_designator [ ( expression ) ]
+   --
+   function Parse_Attribute_Name (Prefix : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      case Current_Token is
+         when Tok_Range | Tok_Identifier =>
+            null;
+         when Tok_Across
+           | Tok_Through
+           | Tok_Reference
+           | Tok_Tolerance =>
+            --  AMS reserved words.
+            null;
+         when Tok_Subtype =>
+            if Vhdl_Std < Vhdl_08 then
+               Error_Msg_Parse
+                 ("'subtype attribute is not allowed before vhdl08");
+               return Null_Iir;
+            end if;
+         when others =>
+            return Null_Iir;
+      end case;
+
+      Res := Create_Iir (Iir_Kind_Attribute_Name);
+      Set_Identifier (Res, Current_Identifier);
+      Set_Location (Res);
+      if Get_Kind (Prefix) = Iir_Kind_Signature then
+         Set_Attribute_Signature (Res, Prefix);
+
+         --  Transfer the prefix from the signature to the attribute.
+         Set_Prefix (Res, Get_Signature_Prefix (Prefix));
+         Set_Signature_Prefix (Prefix, Null_Iir);
+      else
+         Set_Prefix (Res, Prefix);
+      end if;
+
+      return Res;
+   end Parse_Attribute_Name;
+
    --  precond : next token
    --  postcond: next token
    --
@@ -972,10 +1021,6 @@ package body Vhdl.Parse is
    --
    --  [ LRM93 3.1 ]
    --  direction ::= TO | DOWNTO
-   --
-   --  [ LRM93 6.6 ]
-   --  attribute_name ::=
-   --      prefix [ signature ] ' attribute_designator [ ( expression ) ]
    --
    --  [ LRM93 6.6 ]
    --  attribute_designator ::= ATTRIBUTE_simple_name
@@ -1025,30 +1070,16 @@ package body Vhdl.Parse is
                   Location_Copy (Res, Prefix);
                   Set_Expression (Res, Parse_Aggregate);
                   return Res;
-               elsif Current_Token /= Tok_Range
-                 and then Current_Token /= Tok_Identifier
-                 and then not (Vhdl_Std >= Vhdl_08
-                                 and then Current_Token = Tok_Subtype)
-               then
-                  Expect
-                    (Tok_Identifier, "attribute identifier expected after '");
-                  return Create_Error_Node (Prefix);
-               end if;
-               Res := Create_Iir (Iir_Kind_Attribute_Name);
-               Set_Identifier (Res, Current_Identifier);
-               Set_Location (Res);
-               if Get_Kind (Prefix) = Iir_Kind_Signature then
-                  Set_Attribute_Signature (Res, Prefix);
-
-                  --  Transfer the prefix from the signature to the attribute.
-                  Set_Prefix (Res, Get_Signature_Prefix (Prefix));
-                  Set_Signature_Prefix (Prefix, Null_Iir);
                else
-                  Set_Prefix (Res, Prefix);
-               end if;
+                  Res := Parse_Attribute_Name (Prefix);
+                  if Res = Null_Iir then
+                     Error_Msg_Parse ("attribute identifier expected after '");
+                     return Create_Error_Node (Prefix);
+                  end if;
 
-               -- accept the identifier.
-               Scan;
+                  -- accept the identifier.
+                  Scan;
+               end if;
 
             when Tok_Left_Paren =>
                if not Allow_Indexes then
@@ -1472,6 +1503,11 @@ package body Vhdl.Parse is
    --      [ VARIABLE ] identifier_list : [ mode ] subtype_indication
    --          [ := STATIC_expression ]
    --
+   --  [ AMS-LRM17 6.5.2 ]
+   --  interface_quantity_declaration ::=
+   --      QUANTITY identifier_list : [ IN | OUT ] subtype_indication
+   --          [ := /static/_expression ]
+   --
    --  The default kind of interface declaration is DEFAULT.
    function Parse_Interface_Object_Declaration (Ctxt : Interface_Kind_Type)
                                                return Iir
@@ -1533,6 +1569,8 @@ package body Vhdl.Parse is
                  ("variable interface not allowed in generic or port clause");
             end if;
             Kind := Iir_Kind_Interface_File_Declaration;
+         when Tok_Quantity =>
+            Kind := Iir_Kind_Interface_Quantity_Declaration;
          when others =>
             --  Fall back in case of parse error.
             Kind := Iir_Kind_Interface_Variable_Declaration;
@@ -1665,6 +1703,20 @@ package body Vhdl.Parse is
                Error_Msg_Parse ("mode must be 'in' for a constant");
                Interface_Mode := Iir_In_Mode;
             end if;
+         when Iir_Kind_Interface_Quantity_Declaration =>
+            case Interface_Mode is
+               when Iir_Unknown_Mode =>
+                  Interface_Mode := Iir_In_Mode;
+               when Iir_In_Mode
+                 | Iir_Out_Mode =>
+                  null;
+               when Iir_Inout_Mode
+                 | Iir_Linkage_Mode
+                 | Iir_Buffer_Mode =>
+                  Error_Msg_Parse
+                    ("mode must be 'in' or 'out' for a quantity");
+                  Interface_Mode := Iir_In_Mode;
+            end case;
       end case;
 
       Interface_Type := Parse_Subtype_Indication;
@@ -1717,6 +1769,114 @@ package body Vhdl.Parse is
 
       return First;
    end Parse_Interface_Object_Declaration;
+
+   --  [ AMS-LRM17 6.5.2 ]
+   --  interface_terminal_declaration ::=
+   --      TERMINAL identifier_list : subnature_indication
+   --
+   --  The default kind of interface declaration is DEFAULT.
+   function Parse_Interface_Terminal_Declaration (Ctxt : Interface_Kind_Type)
+                                                 return Iir
+   is
+      Last : Iir;
+      First : Iir;
+      Inter: Iir;
+      Interface_Nature: Iir;
+      Default_Value: Iir;
+   begin
+      pragma Assert (Current_Token = Tok_Terminal);
+
+      --  LRM08 6.5.2 Interface object declarations
+      --  Interface obejcts include interface constants that appear as
+      --  generics of a design entity, a component, a block, a package or
+      --  a subprogram, or as constant parameter of subprograms; interface
+      --  signals that appear as ports of a design entity, component or
+      --  block, or as signal parameters of subprograms; interface variables
+      --  that appear as variable parameter subprograms; interface files
+      --  that appear as file parameters of subrograms.
+      if Ctxt = Generic_Interface_List then
+         Error_Msg_Parse ("terminal interface not allowed in generic clause");
+      end if;
+
+      First := Create_Iir (Iir_Kind_Interface_Terminal_Declaration);
+
+      if Flag_Elocations then
+         Create_Elocations (First);
+         Set_Start_Location (First, Get_Token_Location);
+      end if;
+
+      --  Skip 'terminal'.
+      Scan;
+
+      --  Parse list of identifiers.
+      Inter := First;
+      Last := First;
+      loop
+         Scan_Identifier (Inter);
+
+         exit when Current_Token /= Tok_Comma;
+
+         --  Skip ','
+         Scan;
+
+         Inter := Create_Iir (Iir_Kind_Interface_Terminal_Declaration);
+
+         if Flag_Elocations then
+            Create_Elocations (Inter);
+            Set_Start_Location (Inter, Get_Start_Location (First));
+         end if;
+
+         Set_Chain (Last, Inter);
+         Last := Inter;
+      end loop;
+
+      if Flag_Elocations then
+         Set_Colon_Location (First, Get_Token_Location);
+      end if;
+
+      --  Skip ':'
+      Expect_Scan (Tok_Colon, "':' expected after interface identifier");
+
+      case Current_Token is
+         when Tok_In
+           | Tok_Out
+           | Tok_Inout
+           | Tok_Linkage
+           | Tok_Buffer =>
+            Error_Msg_Parse ("mode not allowed for terminal interface");
+
+            --  Skip mode.
+            Scan;
+         when others =>
+            null;
+      end case;
+
+      Interface_Nature := Parse_Subnature_Indication;
+      --  Subnature_Indication is set only on the first interface.
+      Set_Subnature_Indication (First, Interface_Nature);
+
+      if Current_Token = Tok_Assign then
+         Error_Msg_Parse
+              ("default expression not allowed for an interface terminal");
+
+         --  Skip ':='
+         Scan;
+
+         Default_Value := Parse_Expression;
+         pragma Unreferenced (Default_Value);
+      end if;
+
+      Inter := First;
+      while Inter /= Null_Iir loop
+         Set_Is_Ref (Inter, Inter /= First);
+         Set_Has_Mode (Inter, False);
+         Set_Has_Class (Inter, True);
+         Set_Has_Identifier_List (Inter, Inter /= Last);
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      return First;
+   end Parse_Interface_Terminal_Declaration;
 
    --  Precond : 'package'
    --  Postcond: next token
@@ -1973,9 +2133,12 @@ package body Vhdl.Parse is
               | Tok_Signal
               | Tok_Variable
               | Tok_Constant
-              | Tok_File =>
-               --  An inteface object.
+              | Tok_File
+              | Tok_Quantity =>
+               --  An interface object.
                Inters := Parse_Interface_Object_Declaration (Ctxt);
+            when Tok_Terminal =>
+               Inters := Parse_Interface_Terminal_Declaration (Ctxt);
             when Tok_Package =>
                if Ctxt /= Generic_Interface_List then
                   Error_Msg_Parse
@@ -2099,9 +2262,19 @@ package body Vhdl.Parse is
       --  Check the interface are signal interfaces.
       El := Res;
       while El /= Null_Iir loop
-         if Get_Kind (El) /= Iir_Kind_Interface_Signal_Declaration then
-            Error_Msg_Parse (+El, "port must be a signal");
-         end if;
+         case Get_Kind (El) is
+            when Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_Terminal_Declaration
+              | Iir_Kind_Interface_Quantity_Declaration =>
+               null;
+            when others =>
+               if AMS_Vhdl then
+                  Error_Msg_Parse
+                    (+El, "port must be a signal, a terminal or a quantity");
+               else
+                  Error_Msg_Parse (+El, "port must be a signal");
+               end if;
+         end case;
          El := Get_Chain (El);
       end loop;
 
@@ -2255,48 +2428,25 @@ package body Vhdl.Parse is
       return Enum_Type;
    end Parse_Enumeration_Type_Definition;
 
-   --  precond : ARRAY
-   --  postcond: ??
-   --
-   --  [ LRM93 3.2.1 ]
-   --  array_type_definition ::= unconstrained_array_definition
-   --                          | constrained_array_definition
-   --
-   --   unconstrained_array_definition ::=
-   --      ARRAY ( index_subtype_definition { , index_subtype_definition } )
-   --      OF element_subtype_indication
-   --
-   --   constrained_array_definition ::=
-   --      ARRAY index_constraint OF element_subtype_indication
+   --  Parse:
+   --    ARRAY ( index_subtype_definition { , index_subtype_definition } ) OF
+   --  | ARRAY index_constraint OF
    --
    --   index_subtype_definition ::= type_mark RANGE <>
    --
    --   index_constraint ::= ( discrete_range { , discrete_range } )
    --
    --   discrete_range ::= discrete_subtype_indication | range
-   --
-   --  [ LRM08 5.3.2.1 ]
-   --  array_type_definition ::= unbounded_array_definition
-   --                          | constrained_array_definition
-   --
-   --   unbounded_array_definition ::=
-   --      ARRAY ( index_subtype_definition { , index_subtype_definition } )
-   --      OF element_subtype_indication
-   function Parse_Array_Type_Definition return Iir
+   procedure Parse_Array_Indexes
+     (Indexes : out Iir_Flist; Constrained : out Boolean)
    is
+      First : Boolean;
+      Index_List : Iir_List;
       Index_Constrained : Boolean;
       Array_Constrained : Boolean;
-      First : Boolean;
-      Res_Type: Iir;
-      Index_List : Iir_List;
-
-      Loc : Location_Type;
-      Def : Iir;
       Type_Mark : Iir;
-      Element_Subtype : Iir;
+      Def : Iir;
    begin
-      Loc := Get_Token_Location;
-
       --  Skip 'array'.
       Scan;
 
@@ -2372,19 +2522,56 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Right_Paren);
       Expect_Scan (Tok_Of);
 
+      Indexes := List_To_Flist (Index_List);
+      Constrained := Array_Constrained;
+   end Parse_Array_Indexes;
+
+   --  precond : ARRAY
+   --  postcond: ??
+   --
+   --  [ LRM93 3.2.1 ]
+   --  array_type_definition ::= unconstrained_array_definition
+   --                          | constrained_array_definition
+   --
+   --   unconstrained_array_definition ::=
+   --      ARRAY ( index_subtype_definition { , index_subtype_definition } )
+   --      OF element_subtype_indication
+   --
+   --   constrained_array_definition ::=
+   --      ARRAY index_constraint OF element_subtype_indication
+   --
+   --  [ LRM08 5.3.2.1 ]
+   --  array_type_definition ::= unbounded_array_definition
+   --                          | constrained_array_definition
+   --
+   --   unbounded_array_definition ::=
+   --      ARRAY ( index_subtype_definition { , index_subtype_definition } )
+   --      OF element_subtype_indication
+   function Parse_Array_Type_Definition return Iir
+   is
+      Array_Constrained : Boolean;
+      Res_Type: Iir;
+      Index_Flist : Iir_Flist;
+
+      Loc : Location_Type;
+      Element_Subtype : Iir;
+   begin
+      Loc := Get_Token_Location;
+
+      Parse_Array_Indexes (Index_Flist, Array_Constrained);
+
       Element_Subtype := Parse_Subtype_Indication;
 
       if Array_Constrained then
          --  Sem_Type will create the array type.
          Res_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
          Set_Array_Element_Constraint (Res_Type, Element_Subtype);
-         Set_Index_Constraint_List (Res_Type, List_To_Flist (Index_List));
+         Set_Index_Constraint_List (Res_Type, Index_Flist);
          Set_Index_Constraint_Flag (Res_Type, True);
       else
          Res_Type := Create_Iir (Iir_Kind_Array_Type_Definition);
          Set_Element_Subtype_Indication (Res_Type, Element_Subtype);
-         Set_Index_Subtype_Definition_List (Res_Type,
-                                            List_To_Flist (Index_List));
+         Set_Index_Subtype_Definition_List (Res_Type, Index_Flist);
       end if;
       Set_Location (Res_Type, Loc);
 
@@ -2984,14 +3171,13 @@ package body Vhdl.Parse is
    --  array_element_constraint ::= element_constraint
    --
    --  RES is the resolution_indication of the subtype indication.
-   function Parse_Element_Constraint return Iir
+   procedure Parse_Element_Constraint (Def : Iir)
    is
-      Def : Iir;
+      El_Def : Iir;
       El : Iir;
       Index_List : Iir_List;
    begin
       --  Index_constraint.
-      Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Def);
       Set_Index_Constraint_Flag (Def, True);
 
@@ -3020,9 +3206,10 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_Right_Paren);
 
       if Current_Token = Tok_Left_Paren then
-         Set_Array_Element_Constraint (Def, Parse_Element_Constraint);
+         El_Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+         Parse_Element_Constraint (El_Def);
+         Set_Array_Element_Constraint (Def, El_Def);
       end if;
-      return Def;
    end Parse_Element_Constraint;
 
    --  precond : tolerance
@@ -3101,7 +3288,8 @@ package body Vhdl.Parse is
       case Current_Token is
          when Tok_Left_Paren =>
             --  element_constraint.
-            Def := Parse_Element_Constraint;
+            Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Parse_Element_Constraint (Def);
             Set_Subtype_Type_Mark (Def, Type_Mark);
             Set_Resolution_Indication (Def, Resolution_Indication);
             Set_Tolerance (Def, Parse_Tolerance_Aspect_Opt);
@@ -3173,17 +3361,196 @@ package body Vhdl.Parse is
       return Decl;
    end Parse_Subtype_Declaration;
 
-   --  precond : NATURE
-   --  postcond: a token
-   --
-   --  [ LRM93 4.8 ]
-   --  nature_definition ::= scalar_nature_definition
-   --                    | composite_nature_definition
-   --
    --  [ LRM93 3.5.1 ]
    --  scalar_nature_definition ::= type_mark ACROSS
    --                               type_mark THROUGH
    --                               identifier REFERENCE
+   --
+   function Parse_Scalar_Nature_Definition return Iir
+   is
+      Def : Iir;
+      Ref : Iir;
+   begin
+      Def := Create_Iir (Iir_Kind_Scalar_Nature_Definition);
+      Set_Across_Type_Mark (Def, Parse_Type_Mark);
+      Expect_Scan (Tok_Across, "'across' expected after type mark");
+      Set_Through_Type_Mark (Def, Parse_Type_Mark);
+      Expect_Scan (Tok_Through, "'through' expected after type mark");
+      if Current_Token = Tok_Identifier then
+         Ref := Create_Iir (Iir_Kind_Terminal_Declaration);
+         Scan_Identifier (Ref);
+         Set_Reference (Def, Ref);
+         if Current_Token = Tok_Reference then
+            Scan;
+         else
+            Expect (Tok_Reference, "'reference' expected");
+            Skip_Until_Semi_Colon;
+         end if;
+      else
+         Error_Msg_Parse ("reference identifier expected");
+         Skip_Until_Semi_Colon;
+      end if;
+
+      return Def;
+   end Parse_Scalar_Nature_Definition;
+
+   --  precond : identifier
+   --  postcond: next token
+   --
+   --  LRM 4.8 Nature declaration
+   --
+   --  subnature_indication ::=
+   --      nature_mark [ index_constraint ]
+   --      [ TOLERANCE string_expression ACROSS string_expression THROUGH ]
+   --
+   --  nature_mark ::=
+   --      nature_name | subnature_name
+   function Parse_Subnature_Indication return Iir
+   is
+      Nature_Mark : Iir;
+      Expr : Iir;
+      Res : Iir;
+   begin
+      if Current_Token /= Tok_Identifier then
+         Error_Msg_Parse ("nature mark expected in a subnature indication");
+         return Null_Iir;
+      end if;
+      Res := Parse_Name (Allow_Indexes => False);
+
+      if Current_Token = Tok_Left_Paren then
+         Nature_Mark := Res;
+         Res := Create_Iir (Iir_Kind_Array_Subnature_Definition);
+         Parse_Element_Constraint (Res);
+         Set_Subnature_Nature_Mark (Res, Nature_Mark);
+      end if;
+
+      if Current_Token = Tok_Tolerance then
+         --  Skip 'tolerance'.
+         Scan;
+
+         Expr := Parse_Expression;
+
+         Expect_Scan (Tok_Across, "'across' required after tolerance");
+
+         Expr := Parse_Expression;
+
+         Expect_Scan (Tok_Through, "'through' required after tolerance");
+         pragma Unreferenced (Expr);
+      end if;
+      return Res;
+   end Parse_Subnature_Indication;
+
+   function Parse_Array_Nature_Definition return Iir
+   is
+      Loc : Location_Type;
+      Index_Flist : Iir_Flist;
+      Array_Constrained : Boolean;
+      Element_Subnature : Iir;
+      Res_Type : Iir;
+   begin
+      Loc := Get_Token_Location;
+
+      Parse_Array_Indexes (Index_Flist, Array_Constrained);
+
+      Element_Subnature := Parse_Subnature_Indication;
+
+      if Array_Constrained then
+         --  Sem_Type will create the array type.
+         Res_Type := Create_Iir (Iir_Kind_Array_Subnature_Definition);
+         Set_Array_Element_Constraint (Res_Type, Element_Subnature);
+         Set_Index_Constraint_List (Res_Type, Index_Flist);
+         Set_Index_Constraint_Flag (Res_Type, True);
+      else
+         Res_Type := Create_Iir (Iir_Kind_Array_Nature_Definition);
+         Set_Element_Subnature_Indication (Res_Type, Element_Subnature);
+         Set_Index_Subtype_Definition_List (Res_Type, Index_Flist);
+      end if;
+      Set_Location (Res_Type, Loc);
+
+      return Res_Type;
+   end Parse_Array_Nature_Definition;
+
+   --  record_nature_definition ::=
+   --     RECORD
+   --        nature_element_declaration
+   --        { nature_element_declaration }
+   --     END RECORD [ /record_nature/_simple_name ]
+   --
+   function Parse_Record_Nature_Definition return Iir
+   is
+      Res : Iir;
+      El_List : Iir_List;
+      El : Iir;
+      First : Iir;
+      Pos: Iir_Index32;
+      Subnature_Indication : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Record_Nature_Definition);
+      Set_Location (Res);
+      El_List := Create_Iir_List;
+
+      --  Skip 'record'
+      Scan;
+
+      Pos := 0;
+      First := Null_Iir;
+      loop
+         pragma Assert (First = Null_Iir);
+         --  Parse identifier_list
+         loop
+            El := Create_Iir (Iir_Kind_Nature_Element_Declaration);
+            Scan_Identifier (El);
+
+            Set_Parent (El, Res);
+            if First = Null_Iir then
+               First := El;
+            end if;
+
+            Append_Element (El_List, El);
+            Set_Element_Position (El, Pos);
+            Pos := Pos + 1;
+
+            exit when Current_Token /= Tok_Comma;
+
+            Set_Has_Identifier_List (El, True);
+
+            --  Skip ','
+            Scan;
+         end loop;
+
+         --  Scan ':'.
+         Expect_Scan (Tok_Colon);
+
+         --  Parse element subnature indication.
+         Subnature_Indication := Parse_Subnature_Indication;
+         Set_Subnature_Indication (First, Subnature_Indication);
+
+         First := Null_Iir;
+         Scan_Semi_Colon_Declaration ("element declaration");
+         exit when Current_Token /= Tok_Identifier;
+      end loop;
+
+      Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
+
+      if Flag_Elocations then
+         Create_Elocations (Res);
+         Set_End_Location (Res, Get_Token_Location);
+      end if;
+
+      --  Skip 'end'
+      Expect_Scan (Tok_End);
+      Expect_Scan (Tok_Record);
+      Set_End_Has_Reserved_Id (Res, True);
+
+      return Res;
+   end Parse_Record_Nature_Definition;
+
+   --  precond : NATURE
+   --  postcond: a token
+   --
+   --  AMS-LRM17 6.11 Nature and subnature declarations
+   --  nature_definition ::= scalar_nature_definition
+   --                    | composite_nature_definition
    --
    --  [ LRM93 3.5.2 ]
    --  composite_nature_definition ::= array_nature_definition
@@ -3191,7 +3558,6 @@ package body Vhdl.Parse is
    function Parse_Nature_Declaration return Iir
    is
       Def : Iir;
-      Ref : Iir;
       Loc : Location_Type;
       Ident : Name_Id;
       Decl : Iir;
@@ -3201,8 +3567,7 @@ package body Vhdl.Parse is
       Scan;
 
       -- Get the identifier
-      Expect (Tok_Identifier,
-              "an identifier is expected after 'nature'");
+      Expect (Tok_Identifier, "an identifier is expected after 'nature'");
       Loc := Get_Token_Location;
       Ident := Current_Identifier;
 
@@ -3213,44 +3578,14 @@ package body Vhdl.Parse is
 
       case Current_Token is
          when Tok_Array =>
-            --  TODO
-            Error_Msg_Parse ("array nature definition not supported");
-            Def := Null_Iir;
-            Skip_Until_Semi_Colon;
-         when Tok_Record =>
-            --  TODO
-            Error_Msg_Parse ("record nature definition not supported");
-            Def := Null_Iir;
-            Skip_Until_Semi_Colon;
-         when Tok_Identifier =>
-            Def := Create_Iir (Iir_Kind_Scalar_Nature_Definition);
+            Def := Parse_Array_Nature_Definition;
             Set_Location (Def, Loc);
-            Set_Across_Type (Def, Parse_Type_Mark);
-            if Current_Token = Tok_Across then
-               Scan;
-            else
-               Expect (Tok_Across, "'across' expected after type mark");
-            end if;
-            Set_Through_Type (Def, Parse_Type_Mark);
-            if Current_Token = Tok_Through then
-               Scan;
-            else
-               Expect (Tok_Across, "'through' expected after type mark");
-            end if;
-            if Current_Token = Tok_Identifier then
-               Ref := Create_Iir (Iir_Kind_Terminal_Declaration);
-               Scan_Identifier (Ref);
-               Set_Reference (Def, Ref);
-               if Current_Token = Tok_Reference then
-                  Scan;
-               else
-                  Expect (Tok_Reference, "'reference' expected");
-                  Skip_Until_Semi_Colon;
-               end if;
-            else
-               Error_Msg_Parse ("reference identifier expected");
-               Skip_Until_Semi_Colon;
-            end if;
+         when Tok_Record =>
+            Def := Parse_Record_Nature_Definition;
+            Set_Location (Def, Loc);
+         when Tok_Identifier =>
+            Def := Parse_Scalar_Nature_Definition;
+            Set_Location (Def, Loc);
          when others =>
             Error_Msg_Parse ("nature definition expected here");
             Skip_Until_Semi_Colon;
@@ -3267,40 +3602,31 @@ package body Vhdl.Parse is
       return Decl;
    end Parse_Nature_Declaration;
 
-   --  precond : identifier
-   --  postcond: next token
-   --
-   --  LRM 4.8 Nature declaration
-   --
-   --  subnature_indication ::=
-   --      nature_mark [ index_constraint ]
-   --      [ TOLERANCE string_expression ACROSS string_expression THROUGH ]
-   --
-   --  nature_mark ::=
-   --      nature_name | subnature_name
-   function Parse_Subnature_Indication return Iir
+   --  AMS-LRM17 6.11 Nature and subnature declarations
+   --  subnature_declaration ::=
+   --    SUBNATURE identifier is subnature_indication ;
+   function Parse_Subnature_Declaration return Iir
    is
-      Nature_Mark : Iir;
+      Res : Iir;
    begin
-      if Current_Token /= Tok_Identifier then
-         Error_Msg_Parse ("nature mark expected in a subnature indication");
-         return Null_Iir;
-      end if;
-      Nature_Mark := Parse_Name (Allow_Indexes => False);
+      Res := Create_Iir (Iir_Kind_Subnature_Declaration);
+      Set_Location (Res);
 
-      if Current_Token = Tok_Left_Paren then
-         --  TODO
-         Error_Msg_Parse
-           ("index constraint not supported for subnature indication");
-         raise Internal_Error;
-      end if;
+      --  Skip 'subnature'.
+      Scan;
 
-      if Current_Token = Tok_Tolerance then
-         Error_Msg_Parse ("tolerance not supported for subnature indication");
-         raise Internal_Error;
-      end if;
-      return Nature_Mark;
-   end Parse_Subnature_Indication;
+      Scan_Identifier (Res);
+
+      --  Skip 'is'.
+      Expect_Scan (Tok_Is);
+
+      Set_Subnature_Indication (Res, Parse_Subnature_Indication);
+
+      -- ';' is expected after end of type declaration
+      Scan_Semi_Colon_Declaration ("subnature declaration");
+
+      return Res;
+   end Parse_Subnature_Declaration;
 
    --  precond : TERMINAL
    --  postcond: next token.
@@ -3348,9 +3674,9 @@ package body Vhdl.Parse is
          -- Type definitions are factorized.  This is OK, but not done by
          -- sem.
          if Terminal = First then
-            Set_Nature (Terminal, Subnature);
+            Set_Subnature_Indication (Terminal, Subnature);
          else
-            Set_Nature (Terminal, Null_Iir);
+            Set_Subnature_Indication (Terminal, Null_Iir);
          end if;
          Terminal := Get_Chain (Terminal);
       end loop;
@@ -3360,6 +3686,56 @@ package body Vhdl.Parse is
 
       return First;
    end Parse_Terminal_Declaration;
+
+   --  precond : SPECTRUM
+   --
+   --  AMS-LRM17 6.4.2.7 Quantity declarations
+   --  source_aspect ::=
+   --     SPECTRUM magnitude_simple_expression , phase_simple_expression
+   --   | NOISE power_simple_expression
+   function Parse_Source_Quantity_Declaration
+     (Old : Iir; Parent : Iir; Kind : Iir_Kinds_Source_Quantity_Declaration)
+     return Iir
+   is
+      Object : Iir;
+      New_Object : Iir;
+      First, Last : Iir;
+   begin
+      --  Change declarations
+      Object := Old;
+      Chain_Init (First, Last);
+      while Object /= Null_Iir loop
+         New_Object := Create_Iir (Kind);
+         Location_Copy (New_Object, Object);
+         Set_Identifier (New_Object, Get_Identifier (Object));
+         Set_Subtype_Indication (New_Object, Get_Subtype_Indication (Object));
+         Set_Parent (New_Object, Parent);
+         Set_Has_Identifier_List
+           (New_Object, Get_Has_Identifier_List (Object));
+
+         Chain_Append (First, Last, New_Object);
+
+         New_Object := Get_Chain (Object);
+         Free_Iir (Object);
+         Object := New_Object;
+      end loop;
+
+      --  Skip 'spectrum'/'noise'
+      Scan;
+
+      case Kind is
+         when Iir_Kind_Spectrum_Quantity_Declaration =>
+            Set_Magnitude_Expression (First, Parse_Expression);
+
+            Expect_Scan (Tok_Comma);
+
+            Set_Phase_Expression (First, Parse_Expression);
+         when Iir_Kind_Noise_Quantity_Declaration =>
+            Set_Power_Expression (First, Parse_Expression);
+      end case;
+
+      return First;
+   end Parse_Source_Quantity_Declaration;
 
    --  precond : QUANTITY
    --  postcond: next token.
@@ -3419,6 +3795,8 @@ package body Vhdl.Parse is
 
          --  Eat ','
          Scan;
+
+         Set_Has_Identifier_List (Object, True);
       end loop;
 
       case Current_Token is
@@ -3431,12 +3809,21 @@ package body Vhdl.Parse is
 
             Set_Subtype_Indication (First, Parse_Subtype_Indication);
 
-            if Current_Token = Tok_Assign then
-               --  Skip ':='.
-               Scan;
+            case Current_Token is
+               when Tok_Spectrum =>
+                  First := Parse_Source_Quantity_Declaration
+                    (First, Parent, Iir_Kind_Spectrum_Quantity_Declaration);
+               when Tok_Noise =>
+                  First := Parse_Source_Quantity_Declaration
+                    (First, Parent, Iir_Kind_Noise_Quantity_Declaration);
+               when Tok_Assign =>
+                  --  Skip ':='.
+                  Scan;
 
-               Set_Default_Value (First, Parse_Expression);
-            end if;
+                  Set_Default_Value (First, Parse_Expression);
+               when others =>
+                  null;
+            end case;
          when Tok_Tolerance
            | Tok_Assign
            | Tok_Across
@@ -3478,6 +3865,8 @@ package body Vhdl.Parse is
                Set_Parent (New_Object, Parent);
                Set_Tolerance (New_Object, Tolerance);
                Set_Default_Value (New_Object, Default_Value);
+               Set_Has_Identifier_List
+                 (New_Object, Get_Has_Identifier_List (Object));
 
                Chain_Append (First, Last, New_Object);
 
@@ -3500,6 +3889,11 @@ package body Vhdl.Parse is
                  | Tok_Across =>
                   --  Through quantity declaration.  Convert the Plus_Terminal
                   --  to a declaration.
+                  if Get_Kind (First) = Iir_Kind_Through_Quantity_Declaration
+                  then
+                     Error_Msg_Parse ("terminal aspect expected");
+                  end if;
+
                   Object := Create_Iir (Iir_Kind_Through_Quantity_Declaration);
                   New_Object := Object;
                   Location_Copy (Object, Plus_Terminal);
@@ -3514,6 +3908,7 @@ package body Vhdl.Parse is
 
                   loop
                      Set_Parent (Object, Parent);
+                     Set_Has_Identifier_List (Last, True);
                      Chain_Append (First, Last, Object);
                      exit when Current_Token /= Tok_Comma;
                      --  Skip ','.
@@ -3523,7 +3918,6 @@ package body Vhdl.Parse is
                        (Iir_Kind_Through_Quantity_Declaration);
                      Scan_Identifier (Object);
                      Set_Plus_Terminal (Object, Null_Iir);
-
                   end loop;
 
                   --  Parse tolerance aspect
@@ -3552,12 +3946,14 @@ package body Vhdl.Parse is
                   null;
             end case;
 
-            Set_Plus_Terminal (First, Plus_Terminal);
+            Set_Plus_Terminal_Name (First, Plus_Terminal);
 
             --  Parse minus terminal (if present)
             if Current_Token = Tok_To then
+               --  Skip 'to'.
                Scan;
-               Set_Minus_Terminal (First, Parse_Name);
+
+               Set_Minus_Terminal_Name (First, Parse_Name);
             end if;
          when others =>
             Error_Msg_Parse ("missing type or across/throught aspect "
@@ -4335,11 +4731,17 @@ package body Vhdl.Parse is
    --  precond : next token
    --  postcond: ':'
    --
-   --  [ LRM93 5.4 ]
+   --  LRM93 5.4
    --  signal_list ::= signal_name { , signal_name }
    --                | OTHERS
    --                | ALL
-   function Parse_Signal_List return Iir_Flist
+   --
+   --  AMS-LRM17 7.5 Step limit specification
+   --  quantity_list ::=
+   --      quantity_name { , quantity_name }
+   --    | others
+   --    | all
+   function Parse_Name_List return Iir_Flist
    is
       Res : Iir_List;
    begin
@@ -4368,7 +4770,7 @@ package body Vhdl.Parse is
 
             return List_To_Flist (Res);
       end case;
-   end Parse_Signal_List;
+   end Parse_Name_List;
 
    --  precond : DISCONNECT
    --  postcond: next token.
@@ -4389,7 +4791,7 @@ package body Vhdl.Parse is
       --  Skip 'disconnect'
       Scan;
 
-      Set_Signal_List (Res, Parse_Signal_List);
+      Set_Signal_List (Res, Parse_Name_List);
 
       --  Skip ':'
       Expect_Scan (Tok_Colon);
@@ -4406,6 +4808,42 @@ package body Vhdl.Parse is
 
       return Res;
    end Parse_Disconnection_Specification;
+
+   --  precond : LIMIT
+   --  postcond: next token.
+   --
+   --  AMS-LRM17 7.5 Step limit specification
+   --  step_limit_specification ::=
+   --      LIMIT quantity_specification WITH real_expression ;
+   function Parse_Step_Limit_Specification return Iir
+   is
+      Res : Iir;
+   begin
+      pragma Assert (Current_Token = Tok_Limit);
+
+      Res := Create_Iir (Iir_Kind_Step_Limit_Specification);
+      Set_Location (Res);
+
+      --  Skip 'limit'
+      Scan;
+
+      Set_Quantity_List (Res, Parse_Name_List);
+
+      --  Skip ':'
+      Expect_Scan (Tok_Colon);
+
+      Set_Type_Mark (Res, Parse_Type_Mark (Check_Paren => True));
+
+      --  Skip 'with'
+      Expect_Scan (Tok_With);
+
+      Set_Expression (Res, Parse_Expression);
+
+      --  Skip ';'.
+      Scan_Semi_Colon_Declaration ("step limit specification");
+
+      return Res;
+   end Parse_Step_Limit_Specification;
 
    --  Parse PSL clock_declaration at 'clock'.
    function Parse_Psl_Default_Clock_Cont
@@ -4719,6 +5157,8 @@ package body Vhdl.Parse is
             Decl := Parse_Subtype_Declaration (Parent);
          when Tok_Nature =>
             Decl := Parse_Nature_Declaration;
+         when Tok_Subnature =>
+            Decl := Parse_Subnature_Declaration;
          when Tok_Terminal =>
             Decl := Parse_Terminal_Declaration (Parent);
          when Tok_Quantity =>
@@ -4753,8 +5193,11 @@ package body Vhdl.Parse is
                      Error_Msg_Parse
                        ("signal declaration not allowed in package body");
                   end if;
+               when Iir_Kind_Simultaneous_Procedural_Statement =>
+                  Error_Msg_Parse
+                    ("signal declaration not allowed in procedural statement");
                when others =>
-                  Error_Kind ("parse_declarative_part", Package_Parent);
+                  Error_Kind ("parse_declaration(1)", Package_Parent);
             end case;
             Decl := Parse_Object_Declaration (Parent);
          when Tok_Constant =>
@@ -4784,10 +5227,11 @@ package body Vhdl.Parse is
                when Iir_Kind_Function_Body
                  | Iir_Kind_Procedure_Body
                  | Iir_Kinds_Process_Statement
-                 | Iir_Kind_Protected_Type_Body =>
+                 | Iir_Kind_Protected_Type_Body
+                 | Iir_Kind_Simultaneous_Procedural_Statement =>
                   null;
                when others =>
-                  Error_Kind ("parse_declarative_part", Package_Parent);
+                  Error_Kind ("parse_declaration(2)", Package_Parent);
             end case;
             Decl := Parse_Object_Declaration (Parent);
          when Tok_Shared =>
@@ -4827,11 +5271,12 @@ package body Vhdl.Parse is
                when Iir_Kind_Function_Body
                  | Iir_Kind_Procedure_Body
                  | Iir_Kinds_Process_Statement
-                 | Iir_Kind_Protected_Type_Body =>
+                 | Iir_Kind_Protected_Type_Body
+                 | Iir_Kind_Simultaneous_Procedural_Statement =>
                   Error_Msg_Parse
                     ("shared variable declaration not allowed here");
                when others =>
-                  Error_Kind ("parse_declarative_part", Package_Parent);
+                  Error_Kind ("parse_declarative_part(3)", Package_Parent);
             end case;
             Decl := Parse_Object_Declaration (Parent);
          when Tok_File =>
@@ -4859,7 +5304,8 @@ package body Vhdl.Parse is
                  | Iir_Kinds_Process_Statement
                  | Iir_Kind_Package_Body
                  | Iir_Kind_Protected_Type_Body
-                 | Iir_Kind_Protected_Type_Declaration =>
+                 | Iir_Kind_Protected_Type_Declaration
+                 | Iir_Kind_Simultaneous_Procedural_Statement =>
                   Error_Msg_Parse
                     ("component declaration are not allowed here");
                when Iir_Kind_Architecture_Body
@@ -4868,7 +5314,7 @@ package body Vhdl.Parse is
                  | Iir_Kind_Package_Declaration =>
                   null;
                when others =>
-                  Error_Kind ("parse_declarative_part", Parent);
+                  Error_Kind ("parse_declarative_part(4)", Parent);
             end case;
             Decl := Parse_Component_Declaration;
          when Tok_For =>
@@ -4880,7 +5326,8 @@ package body Vhdl.Parse is
                  | Iir_Kind_Package_Declaration
                  | Iir_Kind_Package_Body
                  | Iir_Kind_Protected_Type_Body
-                 | Iir_Kind_Protected_Type_Declaration =>
+                 | Iir_Kind_Protected_Type_Declaration
+                 | Iir_Kind_Simultaneous_Procedural_Statement =>
                   Error_Msg_Parse
                     ("configuration specification not allowed here");
                when Iir_Kind_Architecture_Body
@@ -4888,7 +5335,7 @@ package body Vhdl.Parse is
                  | Iir_Kind_Generate_Statement_Body =>
                   null;
                when others =>
-                  Error_Kind ("parse_declarative_part", Parent);
+                  Error_Kind ("parse_declarative_part(5)", Parent);
             end case;
             Decl := Parse_Configuration_Specification;
          when Tok_Attribute =>
@@ -4906,7 +5353,8 @@ package body Vhdl.Parse is
                  | Iir_Kinds_Process_Statement
                  | Iir_Kind_Protected_Type_Body
                  | Iir_Kind_Package_Body
-                 | Iir_Kind_Protected_Type_Declaration =>
+                 | Iir_Kind_Protected_Type_Declaration
+                 | Iir_Kind_Simultaneous_Procedural_Statement =>
                   Error_Msg_Parse
                     ("disconnect specification not allowed here");
                when Iir_Kind_Entity_Declaration
@@ -4916,9 +5364,11 @@ package body Vhdl.Parse is
                  | Iir_Kind_Package_Declaration =>
                   null;
                when others =>
-                  Error_Kind ("parse_declarative_part", Parent);
+                  Error_Kind ("parse_declaration(6)", Parent);
             end case;
             Decl := Parse_Disconnection_Specification;
+         when Tok_Limit =>
+            Decl := Parse_Step_Limit_Specification;
          when Tok_Use =>
             Decl := Parse_Use_Clause;
          when Tok_Group =>
@@ -4953,7 +5403,8 @@ package body Vhdl.Parse is
                  | Iir_Kind_Protected_Type_Body
                  | Iir_Kind_Package_Declaration
                  | Iir_Kind_Package_Body
-                 | Iir_Kind_Protected_Type_Declaration =>
+                 | Iir_Kind_Protected_Type_Declaration
+                 | Iir_Kind_Simultaneous_Procedural_Statement =>
                   Error_Msg_Parse
                     ("PSL default clock declaration not allowed here");
                when Iir_Kind_Entity_Declaration
@@ -4962,7 +5413,7 @@ package body Vhdl.Parse is
                  | Iir_Kind_Generate_Statement_Body =>
                   null;
                when others =>
-                  Error_Kind ("parse_declarative_part", Parent);
+                  Error_Kind ("parse_declaration(7)", Parent);
             end case;
             Decl := Parse_Psl_Default_Clock (False);
          when Tok_Identifier =>
@@ -6330,10 +6781,13 @@ package body Vhdl.Parse is
    --
    --  [ LRM93 8.1 ]
    --  sensitivity_list ::= SIGNAL_name { , SIGNAL_name }
-   procedure Parse_Sensitivity_List (List: Iir_List)
+   function Parse_Sensitivity_List return Iir_List
    is
+      List : Iir_List;
       El : Iir;
    begin
+      List := Create_Iir_List;
+
       loop
          El := Parse_Name (Allow_Indexes => True);
          if El /= Null_Iir then
@@ -6359,6 +6813,8 @@ package body Vhdl.Parse is
          --  Skip ','.
          Scan;
       end loop;
+
+      return List;
    end Parse_Sensitivity_List;
 
    --  precond : ASSERT
@@ -6462,10 +6918,11 @@ package body Vhdl.Parse is
       --  Sensitivity clause.
       case Current_Token is
          when Tok_On =>
-            List := Create_Iir_List;
-            Set_Sensitivity_List (Res, List);
+            --  Skip 'on'.
             Scan;
-            Parse_Sensitivity_List (List);
+
+            List := Parse_Sensitivity_List;
+            Set_Sensitivity_List (Res, List);
          when Tok_Until =>
             null;
          when Tok_For =>
@@ -6595,11 +7052,10 @@ package body Vhdl.Parse is
             end if;
 
             exit;
-         elsif Current_Token = Tok_Elsif then
+         else
+            pragma Assert (Current_Token = Tok_Elsif);
             --  Skip 'elsif'.
             Scan;
-         else
-            raise Program_Error;
          end if;
       end loop;
 
@@ -7027,6 +7483,92 @@ package body Vhdl.Parse is
       return Stmt;
    end Parse_While_Loop_Statement;
 
+   --  AMS-LRM17 10.15 Break statement
+   --  break_list ::= break_element { , break_element }
+   --
+   --  break_element ::=
+   --    [ break_selector_clause ] /quantity/_name => expression
+   --
+   --  break_selector_clause ::= FOR /quantity/_name USE
+
+   function Parse_Break_List return Iir
+   is
+      First, Last : Iir;
+      El : Iir;
+      Sel : Iir;
+   begin
+      Chain_Init (First, Last);
+
+      loop
+         case Current_Token is
+            when Tok_For =>
+               --  break_selector_clause
+
+               --  Skip 'for'.
+               Scan;
+
+               Sel := Parse_Name;
+
+               --  Skip 'use'.
+               Expect_Scan (Tok_Use, "'use' expected after quantity name");
+
+            when Tok_Identifier =>
+               --  No break_selector_clause.
+               Sel := Null_Iir;
+
+            when others =>
+               --  No more break_element.
+               exit;
+         end case;
+
+         El := Create_Iir (Iir_Kind_Break_Element);
+         Set_Selector_Quantity (El, Sel);
+
+         Set_Location (El);
+         Set_Break_Quantity (El, Parse_Name);
+
+         Expect_Scan (Tok_Double_Arrow, "'=>' expected after quantity name");
+         Set_Expression (El, Parse_Expression);
+
+         Chain_Append (First, Last, El);
+
+         exit when Current_Token /= Tok_Comma;
+
+         --  Eat ','
+         Scan;
+      end loop;
+
+      return First;
+   end Parse_Break_List;
+
+   -- precond : BREAK
+   -- postcond: ';'
+   --
+   --  AMS-LRM17 10.15 Break statement
+   --  break_statement ::=
+   --    [ label : ] BREAK [ break_list ] [ WHEN condition ] ;
+   function Parse_Break_Statement return Iir
+   is
+      Res: Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Break_Statement);
+      Set_Location (Res);
+
+      --  Skip 'break'.
+      Scan;
+
+      Set_Break_Element (Res, Parse_Break_List);
+
+      if Current_Token = Tok_When then
+         --  Skip 'when'.
+         Scan;
+
+         Set_Condition (Res, Parse_Expression);
+      end if;
+
+      return Res;
+   end Parse_Break_Statement;
+
    --  precond:  next token
    --  postcond: next token
    --
@@ -7047,6 +7589,7 @@ package body Vhdl.Parse is
    --                         | exit_statement
    --                         | return_statement
    --                         | null_statement
+   --                         | break_statement
    --
    --  [ 8.13 ]
    --  null_statement ::= [ label : ] NULL ;
@@ -7076,8 +7619,7 @@ package body Vhdl.Parse is
    --
    --  [ 8.3 ]
    --  report_statement ::= [ label : ] REPORT expression SEVERITY expression ;
-   function Parse_Sequential_Statements (Parent : Iir)
-     return Iir
+   function Parse_Sequential_Statements (Parent : Iir) return Iir
    is
       First_Stmt : Iir;
       Last_Stmt : Iir;
@@ -7202,6 +7744,9 @@ package body Vhdl.Parse is
 
             when Tok_Wait =>
                Stmt := Parse_Wait_Statement;
+
+            when Tok_Break =>
+               Stmt := Parse_Break_Statement;
 
             when Tok_Semi_Colon =>
                Error_Msg_Parse ("extra ';' ignored");
@@ -7477,8 +8022,7 @@ package body Vhdl.Parse is
             --  Skip 'all'
             Scan;
          else
-            Sensitivity_List := Create_Iir_List;
-            Parse_Sensitivity_List (Sensitivity_List);
+            Sensitivity_List := Parse_Sensitivity_List;
          end if;
          Set_Sensitivity_List (Res, Sensitivity_List);
 
@@ -8223,22 +8767,31 @@ package body Vhdl.Parse is
       Last : Iir;
       Start_Loc, Generate_Loc, End_Loc : Location_Type;
    begin
-      if Label = Null_Identifier then
-         Error_Msg_Parse ("a generate statement must have a label");
-      end if;
-      Res := Create_Iir (Iir_Kind_If_Generate_Statement);
-      Set_Location (Res, Loc);
-      Set_Label (Res, Label);
       Start_Loc := Get_Token_Location;
 
       --  Skip 'if'.
       Scan;
 
+      Cond := Parse_Expression;
+
+      --  AMS-VHDL simultaneous if statement.
+      if Current_Token = Tok_Use then
+         if not AMS_Vhdl then
+            Error_Msg_Parse ("if/use is an AMS-VHDL statement");
+         end if;
+         return Parse_Simultaneous_If_Statement (Label, Loc, Start_Loc, Cond);
+      end if;
+
+      if Label = Null_Identifier then
+         Error_Msg_Parse (Start_Loc, "a generate statement must have a label");
+      end if;
+      Res := Create_Iir (Iir_Kind_If_Generate_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+
       Clause := Res;
       Last := Null_Iir;
       loop
-         Cond := Parse_Expression;
-
          Alt_Label := Null_Identifier;
          if Current_Token = Tok_Colon then
             if Get_Kind (Cond) = Iir_Kind_Simple_Name then
@@ -8299,6 +8852,8 @@ package body Vhdl.Parse is
 
          --  Skip 'elsif'
          Scan;
+
+         Cond := Parse_Expression;
       end loop;
 
       if Current_Token = Tok_Else then
@@ -8492,6 +9047,86 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Case_Generate_Statement;
 
+   --  AMS-LRM17 11.10 Simple simultaneous statement
+   --  simple_simultaneous_statement ::=
+   --    [ label : ] simple_expression == simple_expression
+   --      [ tolerance_aspect ] ;
+   function Parse_Simple_Simultaneous_Statement (Name : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Simple_Simultaneous_Statement);
+      Set_Simultaneous_Left
+        (Res, Parse_Binary_Expression (Name, Prio_Simple));
+      Set_Location (Res);
+      Expect_Scan (Tok_Equal_Equal, "'==' expected after expression");
+      Set_Simultaneous_Right (Res, Parse_Expression (Prio_Simple));
+      Set_Tolerance (Res, Parse_Tolerance_Aspect_Opt);
+      Expect_Scan (Tok_Semi_Colon);
+      return Res;
+   end Parse_Simple_Simultaneous_Statement;
+
+   --  AMS-LRM17 11.13 Simultaneous procedural statement
+   --  simultaneous_procedural_statement ::=
+   --    [ procedural_label : ]
+   --      PROCEDURAL [ IS ]
+   --        procedural_declarative_part
+   --      BEGIN
+   --        procedural_statement_part
+   --      END PROCEDURAL [ procedural_label ] ;
+   function Parse_Simultaneous_Procedural_Statement (Label : Name_Id)
+                                                    return Iir
+   is
+      Res: Iir;
+      Start_Loc, Is_Loc, Begin_Loc, End_Loc : Location_Type;
+   begin
+      Start_Loc := Get_Token_Location;
+      Res := Create_Iir (Iir_Kind_Simultaneous_Procedural_Statement);
+      Set_Location (Res, Start_Loc);
+      Set_Label (Res, Label);
+
+      --  Skip 'procedural'.
+      Scan;
+
+      if Current_Token = Tok_Is then
+         Is_Loc := Get_Token_Location;
+         Set_Has_Is (Res, True);
+
+         --  Skip 'is'.
+         Scan;
+      end if;
+
+      Parse_Declarative_Part (Res, Res);
+
+      --  Skip 'begin'.
+      Begin_Loc := Get_Token_Location;
+      Expect_Scan (Tok_Begin);
+
+      Set_Sequential_Statement_Chain
+        (Res, Parse_Sequential_Statements (Res));
+
+      --  Skip 'end'.
+      End_Loc := Get_Token_Location;
+      Expect_Scan (Tok_End);
+
+      --  Skip 'procedural'.
+      Expect_Scan (Tok_Procedural);
+
+      Check_End_Name (Res);
+
+      if Flag_Elocations then
+         Create_Elocations (Res);
+         Set_Start_Location (Res, Start_Loc);
+         Set_Is_Location (Res, Is_Loc);
+         Set_Begin_Location (Res, Begin_Loc);
+         Set_End_Location (Res, End_Loc);
+      end if;
+
+      Scan_Semi_Colon_Declaration ("procedural statement");
+
+      return Res;
+   end Parse_Simultaneous_Procedural_Statement;
+
    --  precond : first token
    --  postcond: next token
    --
@@ -8547,19 +9182,7 @@ package body Vhdl.Parse is
 
             -- or a simple simultaneous statement
             if AMS_Vhdl then
-               Res := Create_Iir (Iir_Kind_Simple_Simultaneous_Statement);
-               Set_Simultaneous_Left
-                 (Res, Parse_Binary_Expression (Target, Prio_Simple));
-               if Current_Token /= Tok_Equal_Equal then
-                  Error_Msg_Parse ("'==' expected after expression");
-               else
-                  Set_Location (Res);
-                  Scan;
-               end if;
-               Set_Simultaneous_Right (Res, Parse_Expression (Prio_Simple));
-               Set_Tolerance (Res, Parse_Tolerance_Aspect_Opt);
-               Expect_Scan (Tok_Semi_Colon);
-               return Res;
+               return Parse_Simple_Simultaneous_Statement (Target);
             else
                return Parse_Concurrent_Conditional_Signal_Assignment
                  (Parse_Binary_Expression (Target, Prio_Simple));
@@ -8567,18 +9190,252 @@ package body Vhdl.Parse is
       end case;
    end Parse_Concurrent_Assignment;
 
-   function Parse_Concurrent_Assignment_With_Name
-     (Name : Name_Id; Loc : Location_Type) return Iir
+   function Parse_Name_From_Identifier (Name : Name_Id; Loc : Location_Type)
+                                       return Iir
    is
       Target : Iir;
    begin
       Target := Create_Iir (Iir_Kind_Simple_Name);
       Set_Location (Target, Loc);
       Set_Identifier (Target, Name);
-      Target := Parse_Name_Suffix (Target);
+      return Parse_Name_Suffix (Target);
+   end Parse_Name_From_Identifier;
 
+   function Parse_Concurrent_Assignment_With_Name
+     (Name : Name_Id; Loc : Location_Type) return Iir
+   is
+      Target : Iir;
+   begin
+      Target := Parse_Name_From_Identifier (Name, Loc);
       return Parse_Concurrent_Assignment (Target);
    end Parse_Concurrent_Assignment_With_Name;
+
+   --  AMS-LRM17 11.9 Concurrent break statement
+   --  concurrent_break_statement ::=
+   --    [ label : ] BREAK [ break_list ] [ sensitivity_clause ]
+   --      [ WHEN condition ] ;
+   function Parse_Concurrent_Break_Statement (Label : Name_Id;
+                                              Loc : Location_Type) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Concurrent_Break_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+
+      --  Skip 'break'.
+      Scan;
+
+      Set_Break_Element (Res, Parse_Break_List);
+
+      if Current_Token = Tok_On then
+         --  Sensitivity list.
+         --  Skip 'on'.
+         Scan;
+
+         Set_Sensitivity_List (Res, Parse_Sensitivity_List);
+      end if;
+
+      if Current_Token = Tok_When then
+         --  Condition.
+         --  Skip 'when'.
+         Scan;
+
+         Set_Condition (Res, Parse_Expression);
+      end if;
+
+      --  Skip ';'.
+      Expect_Scan (Tok_Semi_Colon);
+
+      return Res;
+   end Parse_Concurrent_Break_Statement;
+
+   --  AMS-LRM17 11 Architecture statements
+   --  simultaneous_statement ::=
+   --      simple_simultaneous_statement
+   --    | simultaneous_if_statement
+   --    | simultaneous_case_statement
+   --    | simultaneous_procedural_statement
+   --    | simultaneous_null_statement
+   --
+   --  simultaneous_statement_part ::=
+   --    { simultaneous_statement }
+   procedure Parse_Simultaneous_Statements (Parent : Iir)
+   is
+      Last_Stmt : Iir;
+      Stmt: Iir;
+      Label: Name_Id;
+      Loc : Location_Type;
+      Start_Loc : Location_Type;
+      Expr : Iir;
+   begin
+      Last_Stmt := Null_Iir;
+      loop
+         Stmt := Null_Iir;
+         Label := Null_Identifier;
+         Loc := Get_Token_Location;
+
+         -- Try to find a label.
+         if Current_Token = Tok_Identifier then
+            Label := Current_Identifier;
+
+            --  Skip identifier
+            Scan;
+
+            if Current_Token = Tok_Colon then
+               --  The identifier is really a label.
+
+               --  Skip ':'
+               Scan;
+            else
+               --  This is not a label.  Assume a concurrent assignment.
+               Expr := Parse_Name_From_Identifier (Label, Loc);
+               Stmt := Parse_Simple_Simultaneous_Statement (Expr);
+               Label := Null_Identifier;
+               goto Has_Stmt;
+            end if;
+         end if;
+
+         case Current_Token is
+            when Tok_End | Tok_Else | Tok_Elsif | Tok_When =>
+               --  End of list.  'else', 'elseif' and 'when' can be used to
+               --  separate statements in a generate statement.
+               if Label /= Null_Identifier then
+                  Error_Msg_Parse ("label is not allowed here");
+               end if;
+               return;
+            when Tok_Identifier =>
+               --  FIXME: sign, factor, parenthesis...
+               Expr := Parse_Name (Allow_Indexes => True);
+               Stmt := Parse_Simple_Simultaneous_Statement (Expr);
+            when Tok_If =>
+               Start_Loc := Get_Token_Location;
+
+               --  Skip 'if'.
+               Scan;
+
+               Expr := Parse_Expression;
+
+               Stmt := Parse_Simultaneous_If_Statement
+                 (Label, Loc, Start_Loc, Expr);
+            when Tok_Eof =>
+               Error_Msg_Parse ("unexpected end of file, 'END;' expected");
+               return;
+            when others =>
+               --  FIXME: improve message:
+               Unexpected ("simultaneous statement list");
+               Resync_To_End_Of_Statement;
+               if Current_Token = Tok_Semi_Colon then
+                  Scan;
+               end if;
+         end case;
+
+         << Has_Stmt >> null;
+
+         --  Stmt can be null in case of error.
+         if Stmt /= Null_Iir then
+            Set_Location (Stmt, Loc);
+            if Label /= Null_Identifier then
+               Set_Label (Stmt, Label);
+            end if;
+            Set_Parent (Stmt, Parent);
+            --  Append it to the chain.
+            if Last_Stmt = Null_Iir then
+               Set_Simultaneous_Statement_Chain (Parent, Stmt);
+            else
+               Set_Chain (Last_Stmt, Stmt);
+            end if;
+            Last_Stmt := Stmt;
+         end if;
+      end loop;
+   end Parse_Simultaneous_Statements;
+
+   --  AMS-LRM17 11.11 Simultaneous if statement
+   --  simultaneous_if_statement ::=
+   --    [ /if/_label : ]
+   --      IF condition USE
+   --        simultaneous_statement_part
+   --      { ELSIF condition USE
+   --        simultaneous_statement_part }
+   --      [ ELSE
+   --        simultaneous_statement_part ]
+   --      END USE [ /if/_label ];
+   function Parse_Simultaneous_If_Statement (Label : Name_Id;
+                                             Label_Loc : Location_Type;
+                                             If_Loc : Location_Type;
+                                             First_Cond : Iir) return Iir
+   is
+      Res : Iir;
+      Clause : Iir;
+      N_Clause : Iir;
+      Start_Loc, Use_Loc, End_Loc : Location_Type;
+   begin
+      Res := Create_Iir (Iir_Kind_Simultaneous_If_Statement);
+      Set_Location (Res, Label_Loc);
+      Set_Label (Res, Label);
+      Set_Condition (Res, First_Cond);
+
+      Start_Loc := If_Loc;
+      Clause := Res;
+      loop
+         -- Set_Condition (Clause, Parse_Expression);
+         Use_Loc := Get_Token_Location;
+         if Current_Token = Tok_Use then
+            --  Eat 'use'.
+            Scan;
+         else
+            Expect_Error (Tok_Use, "'use' is expected here");
+         end if;
+
+         Parse_Simultaneous_Statements (Clause);
+
+         End_Loc := Get_Token_Location;
+
+         if Flag_Elocations then
+            Create_Elocations (Clause);
+            Set_Start_Location (Clause, Start_Loc);
+            Set_Use_Location (Clause, Use_Loc);
+            Set_End_Location (Clause, End_Loc);
+         end if;
+
+         exit when Current_Token /= Tok_Else and Current_Token /= Tok_Elsif;
+
+         N_Clause := Create_Iir (Iir_Kind_Simultaneous_Elsif);
+         Start_Loc := Get_Token_Location;
+         Set_Location (N_Clause, Start_Loc);
+         Set_Else_Clause (Clause, N_Clause);
+         Clause := N_Clause;
+         if Current_Token = Tok_Else then
+
+            --  Skip 'else'.
+            Scan;
+
+            Parse_Simultaneous_Statements (Clause);
+
+            if Flag_Elocations then
+               Create_Elocations (Clause);
+               Set_Start_Location (Clause, Start_Loc);
+               Set_End_Location (Clause, Get_Token_Location);
+            end if;
+
+            exit;
+         else
+            pragma Assert (Current_Token = Tok_Elsif);
+            --  Skip 'elsif'.
+            Scan;
+
+            Set_Condition (Clause, Parse_Expression);
+         end if;
+      end loop;
+
+      --  Skip 'end' 'use'
+      Expect_Scan (Tok_End);
+      Expect_Scan (Tok_Use);
+
+      Expect_Scan (Tok_Semi_Colon);
+
+      return Res;
+   end Parse_Simultaneous_If_Statement;
 
    --  Parse end of PSL assert/cover statement.
    procedure Parse_Psl_Assert_Report_Severity
@@ -8839,6 +9696,12 @@ package body Vhdl.Parse is
                   Stmt := Parse_Component_Instantiation (Unit);
                   Set_Has_Component (Stmt, Has_Component);
                end;
+            when Tok_Break =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Concurrent_Break_Statement (Label, Loc);
+            when Tok_Procedural =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Simultaneous_Procedural_Statement (Label);
             when Tok_Default =>
                Postponed_Not_Allowed;
                Label_Not_Allowed;

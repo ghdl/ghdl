@@ -76,8 +76,11 @@ package Vhdl.Utils is
    --  also be an expression like a function call or an attribute.
    function Name_To_Value (Name : Iir) return Iir;
 
-   --  Return TRUE if EXPR is a signal name.
+   --  Return TRUE iff EXPR is a signal name.
    function Is_Signal_Name (Expr : Iir) return Boolean;
+
+   --  Return TRUE iff EXPR is a quantity name.
+   function Is_Quantity_Name (Expr : Iir) return Boolean;
 
    --  Get the interface corresponding to the formal name FORMAL.  This is
    --  always an interface, even if the formal is a name.
@@ -158,6 +161,10 @@ package Vhdl.Utils is
    function Is_Anonymous_Type_Definition (Def : Iir) return Boolean;
    pragma Inline (Is_Anonymous_Type_Definition);
 
+   --  Likewise but for natures.
+   function Is_Anonymous_Nature_Definition (Def : Iir) return Boolean;
+   pragma Inline (Is_Anonymous_Nature_Definition);
+
    --  Return TRUE iff DEF is a fully constrained type (or subtype) definition.
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean;
 
@@ -216,6 +223,9 @@ package Vhdl.Utils is
    --  an index_constraint.
    function Get_Index_Type (Index_Type : Iir) return Iir
      renames Get_Type_Of_Subtype_Indication;
+
+   --  Get the nature from a subnature indication.
+   function Get_Nature_Of_Subnature_Indication (Ind : Iir) return Iir;
 
    --  Return the IDX-th index type for index subtype definition list or
    --  index_constraint INDEXES.  Return Null_Iir if IDX is out of dimension

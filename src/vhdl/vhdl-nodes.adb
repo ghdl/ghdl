@@ -994,6 +994,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Association_Element_Package
            | Iir_Kind_Association_Element_Type
            | Iir_Kind_Association_Element_Subprogram
+           | Iir_Kind_Association_Element_Terminal
            | Iir_Kind_Choice_By_Range
            | Iir_Kind_Choice_By_Expression
            | Iir_Kind_Choice_By_Others
@@ -1013,7 +1014,9 @@ package body Vhdl.Nodes is
            | Iir_Kind_Array_Element_Resolution
            | Iir_Kind_Record_Resolution
            | Iir_Kind_Record_Element_Resolution
+           | Iir_Kind_Break_Element
            | Iir_Kind_Disconnection_Specification
+           | Iir_Kind_Step_Limit_Specification
            | Iir_Kind_Configuration_Specification
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
@@ -1049,11 +1052,13 @@ package body Vhdl.Nodes is
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Element_Declaration
+           | Iir_Kind_Nature_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
-           | Iir_Kind_Terminal_Declaration
-           | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Noise_Quantity_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
@@ -1061,6 +1066,8 @@ package body Vhdl.Nodes is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Quantity_Declaration
+           | Iir_Kind_Interface_Terminal_Declaration
            | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Signal_Attribute_Declaration
@@ -1129,6 +1136,9 @@ package body Vhdl.Nodes is
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
+           | Iir_Kind_Simultaneous_Procedural_Statement
+           | Iir_Kind_Simultaneous_If_Statement
+           | Iir_Kind_Simultaneous_Elsif
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
@@ -1143,6 +1153,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Exit_Statement
            | Iir_Kind_Case_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Break_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif
            | Iir_Kind_Character_Literal
@@ -1162,6 +1173,9 @@ package body Vhdl.Nodes is
            | Iir_Kind_Base_Attribute
            | Iir_Kind_Subtype_Attribute
            | Iir_Kind_Element_Attribute
+           | Iir_Kind_Across_Attribute
+           | Iir_Kind_Through_Attribute
+           | Iir_Kind_Nature_Reference_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute
@@ -1175,6 +1189,9 @@ package body Vhdl.Nodes is
            | Iir_Kind_Pred_Attribute
            | Iir_Kind_Leftof_Attribute
            | Iir_Kind_Rightof_Attribute
+           | Iir_Kind_Dot_Attribute
+           | Iir_Kind_Integ_Attribute
+           | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -1213,6 +1230,9 @@ package body Vhdl.Nodes is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
+           | Iir_Kind_Record_Nature_Definition
+           | Iir_Kind_Array_Nature_Definition
+           | Iir_Kind_Array_Subnature_Definition
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
@@ -1222,12 +1242,13 @@ package body Vhdl.Nodes is
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration
-           | Iir_Kind_Across_Quantity_Declaration
-           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
+           | Iir_Kind_Spectrum_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
@@ -1239,6 +1260,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
+           | Iir_Kind_Concurrent_Break_Statement
            | Iir_Kind_Psl_Assert_Directive
            | Iir_Kind_Psl_Assume_Directive
            | Iir_Kind_Psl_Cover_Directive
@@ -1247,7 +1269,10 @@ package body Vhdl.Nodes is
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Selected_Waveform_Assignment_Statement
-           | Iir_Kind_Wait_Statement =>
+           | Iir_Kind_Wait_Statement
+           | Iir_Kind_Signal_Slew_Attribute
+           | Iir_Kind_Quantity_Slew_Attribute
+           | Iir_Kind_Ramp_Attribute =>
             return Format_Medium;
       end case;
    end Get_Format;
@@ -2057,6 +2082,22 @@ package body Vhdl.Nodes is
                      "no field Signal_List");
       Set_Field3 (Target, Iir_Flist_To_Iir (List));
    end Set_Signal_List;
+
+   function Get_Quantity_List (Target : Iir) return Iir_Flist is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Quantity_List (Get_Kind (Target)),
+                     "no field Quantity_List");
+      return Iir_To_Iir_Flist (Get_Field3 (Target));
+   end Get_Quantity_List;
+
+   procedure Set_Quantity_List (Target : Iir; List : Iir_Flist) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Quantity_List (Get_Kind (Target)),
+                     "no field Quantity_List");
+      Set_Field3 (Target, Iir_Flist_To_Iir (List));
+   end Set_Quantity_List;
 
    function Get_Designated_Entity (Val : Iir_Attribute_Value) return Iir is
    begin
@@ -2876,6 +2917,22 @@ package body Vhdl.Nodes is
       Set_Field4 (Target, Subprg);
    end Set_Interface_Type_Subprograms;
 
+   function Get_Nature_Definition (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Nature_Definition (Get_Kind (Target)),
+                     "no field Nature_Definition");
+      return Get_Field1 (Target);
+   end Get_Nature_Definition;
+
+   procedure Set_Nature_Definition (Target : Iir; Def : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Nature_Definition (Get_Kind (Target)),
+                     "no field Nature_Definition");
+      Set_Field1 (Target, Def);
+   end Set_Nature_Definition;
+
    function Get_Nature (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -2891,6 +2948,22 @@ package body Vhdl.Nodes is
                      "no field Nature");
       Set_Field1 (Target, Nature);
    end Set_Nature;
+
+   function Get_Subnature_Indication (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Subnature_Indication (Get_Kind (Decl)),
+                     "no field Subnature_Indication");
+      return Get_Field5 (Decl);
+   end Get_Subnature_Indication;
+
+   procedure Set_Subnature_Indication (Decl : Iir; Sub_Nature : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Subnature_Indication (Get_Kind (Decl)),
+                     "no field Subnature_Indication");
+      Set_Field5 (Decl, Sub_Nature);
+   end Set_Subnature_Indication;
 
    type Iir_Mode_Conv is record
       Flag13: Boolean;
@@ -3025,6 +3098,22 @@ package body Vhdl.Nodes is
                      "no field Sequential_Statement_Chain");
       Set_Field5 (Target, Chain);
    end Set_Sequential_Statement_Chain;
+
+   function Get_Simultaneous_Statement_Chain (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Simultaneous_Statement_Chain (Get_Kind (Target)),
+                     "no field Simultaneous_Statement_Chain");
+      return Get_Field5 (Target);
+   end Get_Simultaneous_Statement_Chain;
+
+   procedure Set_Simultaneous_Statement_Chain (Target : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Simultaneous_Statement_Chain (Get_Kind (Target)),
+                     "no field Simultaneous_Statement_Chain");
+      Set_Field5 (Target, Chain);
+   end Set_Simultaneous_Statement_Chain;
 
    function Get_Subprogram_Body (Target : Iir) return Iir is
    begin
@@ -3672,6 +3761,22 @@ package body Vhdl.Nodes is
       Set_Field4 (Decl, Base_Type);
    end Set_Base_Type;
 
+   function Get_Base_Nature (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Base_Nature (Get_Kind (Decl)),
+                     "no field Base_Nature");
+      return Get_Field4 (Decl);
+   end Get_Base_Nature;
+
+   procedure Set_Base_Nature (Decl : Iir; Base_Nature : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Base_Nature (Get_Kind (Decl)),
+                     "no field Base_Nature");
+      Set_Field4 (Decl, Base_Nature);
+   end Set_Base_Nature;
+
    function Get_Resolution_Indication (Decl : Iir) return Iir is
    begin
       pragma Assert (Decl /= Null_Iir);
@@ -3720,12 +3825,44 @@ package body Vhdl.Nodes is
       Set_Field7 (Def, Tol);
    end Set_Tolerance;
 
+   function Get_Plus_Terminal_Name (Def : Iir) return Iir is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Plus_Terminal_Name (Get_Kind (Def)),
+                     "no field Plus_Terminal_Name");
+      return Get_Field8 (Def);
+   end Get_Plus_Terminal_Name;
+
+   procedure Set_Plus_Terminal_Name (Def : Iir; Name : Iir) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Plus_Terminal_Name (Get_Kind (Def)),
+                     "no field Plus_Terminal_Name");
+      Set_Field8 (Def, Name);
+   end Set_Plus_Terminal_Name;
+
+   function Get_Minus_Terminal_Name (Def : Iir) return Iir is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Minus_Terminal_Name (Get_Kind (Def)),
+                     "no field Minus_Terminal_Name");
+      return Get_Field9 (Def);
+   end Get_Minus_Terminal_Name;
+
+   procedure Set_Minus_Terminal_Name (Def : Iir; Name : Iir) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Minus_Terminal_Name (Get_Kind (Def)),
+                     "no field Minus_Terminal_Name");
+      Set_Field9 (Def, Name);
+   end Set_Minus_Terminal_Name;
+
    function Get_Plus_Terminal (Def : Iir) return Iir is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Plus_Terminal (Get_Kind (Def)),
                      "no field Plus_Terminal");
-      return Get_Field8 (Def);
+      return Get_Field10 (Def);
    end Get_Plus_Terminal;
 
    procedure Set_Plus_Terminal (Def : Iir; Terminal : Iir) is
@@ -3733,7 +3870,7 @@ package body Vhdl.Nodes is
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Plus_Terminal (Get_Kind (Def)),
                      "no field Plus_Terminal");
-      Set_Field8 (Def, Terminal);
+      Set_Field10 (Def, Terminal);
    end Set_Plus_Terminal;
 
    function Get_Minus_Terminal (Def : Iir) return Iir is
@@ -3741,7 +3878,7 @@ package body Vhdl.Nodes is
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Minus_Terminal (Get_Kind (Def)),
                      "no field Minus_Terminal");
-      return Get_Field9 (Def);
+      return Get_Field11 (Def);
    end Get_Minus_Terminal;
 
    procedure Set_Minus_Terminal (Def : Iir; Terminal : Iir) is
@@ -3749,8 +3886,56 @@ package body Vhdl.Nodes is
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Minus_Terminal (Get_Kind (Def)),
                      "no field Minus_Terminal");
-      Set_Field9 (Def, Terminal);
+      Set_Field11 (Def, Terminal);
    end Set_Minus_Terminal;
+
+   function Get_Magnitude_Expression (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Magnitude_Expression (Get_Kind (Decl)),
+                     "no field Magnitude_Expression");
+      return Get_Field6 (Decl);
+   end Get_Magnitude_Expression;
+
+   procedure Set_Magnitude_Expression (Decl : Iir; Expr : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Magnitude_Expression (Get_Kind (Decl)),
+                     "no field Magnitude_Expression");
+      Set_Field6 (Decl, Expr);
+   end Set_Magnitude_Expression;
+
+   function Get_Phase_Expression (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Phase_Expression (Get_Kind (Decl)),
+                     "no field Phase_Expression");
+      return Get_Field7 (Decl);
+   end Get_Phase_Expression;
+
+   procedure Set_Phase_Expression (Decl : Iir; Expr : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Phase_Expression (Get_Kind (Decl)),
+                     "no field Phase_Expression");
+      Set_Field7 (Decl, Expr);
+   end Set_Phase_Expression;
+
+   function Get_Power_Expression (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Power_Expression (Get_Kind (Decl)),
+                     "no field Power_Expression");
+      return Get_Field4 (Decl);
+   end Get_Power_Expression;
+
+   procedure Set_Power_Expression (Decl : Iir; Expr : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Power_Expression (Get_Kind (Decl)),
+                     "no field Power_Expression");
+      Set_Field4 (Decl, Expr);
+   end Set_Power_Expression;
 
    function Get_Simultaneous_Left (Def : Iir) return Iir is
    begin
@@ -3831,6 +4016,22 @@ package body Vhdl.Nodes is
                      "no field Is_Character_Type");
       Set_Flag5 (Atype, Flag);
    end Set_Is_Character_Type;
+
+   function Get_Nature_Staticness (Anat : Iir) return Iir_Staticness is
+   begin
+      pragma Assert (Anat /= Null_Iir);
+      pragma Assert (Has_Nature_Staticness (Get_Kind (Anat)),
+                     "no field Nature_Staticness");
+      return Iir_Staticness'Val (Get_State1 (Anat));
+   end Get_Nature_Staticness;
+
+   procedure Set_Nature_Staticness (Anat : Iir; Static : Iir_Staticness) is
+   begin
+      pragma Assert (Anat /= Null_Iir);
+      pragma Assert (Has_Nature_Staticness (Get_Kind (Anat)),
+                     "no field Nature_Staticness");
+      Set_State1 (Anat, Iir_Staticness'Pos (Static));
+   end Set_Nature_Staticness;
 
    function Get_Type_Staticness (Atype : Iir) return Iir_Staticness is
    begin
@@ -3927,6 +4128,39 @@ package body Vhdl.Nodes is
                      "no field Element_Subtype");
       Set_Field1 (Decl, Sub_Type);
    end Set_Element_Subtype;
+
+   function Get_Element_Subnature_Indication (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Element_Subnature_Indication (Get_Kind (Decl)),
+                     "no field Element_Subnature_Indication");
+      return Get_Field2 (Decl);
+   end Get_Element_Subnature_Indication;
+
+   procedure Set_Element_Subnature_Indication (Decl : Iir; Sub_Nature : Iir)
+   is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Element_Subnature_Indication (Get_Kind (Decl)),
+                     "no field Element_Subnature_Indication");
+      Set_Field2 (Decl, Sub_Nature);
+   end Set_Element_Subnature_Indication;
+
+   function Get_Element_Subnature (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Element_Subnature (Get_Kind (Decl)),
+                     "no field Element_Subnature");
+      return Get_Field1 (Decl);
+   end Get_Element_Subnature;
+
+   procedure Set_Element_Subnature (Decl : Iir; Sub_Nature : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Element_Subnature (Get_Kind (Decl)),
+                     "no field Element_Subnature");
+      Set_Field1 (Decl, Sub_Nature);
+   end Set_Element_Subnature;
 
    function Get_Index_Constraint_List (Def : Iir) return Iir_Flist is
    begin
@@ -4072,12 +4306,76 @@ package body Vhdl.Nodes is
       Set_Field3 (Def, Decl);
    end Set_Nature_Declarator;
 
+   function Get_Across_Type_Mark (Def : Iir) return Iir is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Across_Type_Mark (Get_Kind (Def)),
+                     "no field Across_Type_Mark");
+      return Get_Field9 (Def);
+   end Get_Across_Type_Mark;
+
+   procedure Set_Across_Type_Mark (Def : Iir; Name : Iir) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Across_Type_Mark (Get_Kind (Def)),
+                     "no field Across_Type_Mark");
+      Set_Field9 (Def, Name);
+   end Set_Across_Type_Mark;
+
+   function Get_Through_Type_Mark (Def : Iir) return Iir is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Through_Type_Mark (Get_Kind (Def)),
+                     "no field Through_Type_Mark");
+      return Get_Field10 (Def);
+   end Get_Through_Type_Mark;
+
+   procedure Set_Through_Type_Mark (Def : Iir; Atype : Iir) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Through_Type_Mark (Get_Kind (Def)),
+                     "no field Through_Type_Mark");
+      Set_Field10 (Def, Atype);
+   end Set_Through_Type_Mark;
+
+   function Get_Across_Type_Definition (Def : Iir) return Iir is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Across_Type_Definition (Get_Kind (Def)),
+                     "no field Across_Type_Definition");
+      return Get_Field10 (Def);
+   end Get_Across_Type_Definition;
+
+   procedure Set_Across_Type_Definition (Def : Iir; Atype : Iir) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Across_Type_Definition (Get_Kind (Def)),
+                     "no field Across_Type_Definition");
+      Set_Field10 (Def, Atype);
+   end Set_Across_Type_Definition;
+
+   function Get_Through_Type_Definition (Def : Iir) return Iir is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Through_Type_Definition (Get_Kind (Def)),
+                     "no field Through_Type_Definition");
+      return Get_Field5 (Def);
+   end Get_Through_Type_Definition;
+
+   procedure Set_Through_Type_Definition (Def : Iir; Atype : Iir) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Through_Type_Definition (Get_Kind (Def)),
+                     "no field Through_Type_Definition");
+      Set_Field5 (Def, Atype);
+   end Set_Through_Type_Definition;
+
    function Get_Across_Type (Def : Iir) return Iir is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Across_Type (Get_Kind (Def)),
                      "no field Across_Type");
-      return Get_Field7 (Def);
+      return Get_Field11 (Def);
    end Get_Across_Type;
 
    procedure Set_Across_Type (Def : Iir; Atype : Iir) is
@@ -4085,7 +4383,7 @@ package body Vhdl.Nodes is
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Across_Type (Get_Kind (Def)),
                      "no field Across_Type");
-      Set_Field7 (Def, Atype);
+      Set_Field11 (Def, Atype);
    end Set_Across_Type;
 
    function Get_Through_Type (Def : Iir) return Iir is
@@ -4093,7 +4391,7 @@ package body Vhdl.Nodes is
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Through_Type (Get_Kind (Def)),
                      "no field Through_Type");
-      return Get_Field8 (Def);
+      return Get_Field12 (Def);
    end Get_Through_Type;
 
    procedure Set_Through_Type (Def : Iir; Atype : Iir) is
@@ -4101,7 +4399,7 @@ package body Vhdl.Nodes is
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Through_Type (Get_Kind (Def)),
                      "no field Through_Type");
-      Set_Field8 (Def, Atype);
+      Set_Field12 (Def, Atype);
    end Set_Through_Type;
 
    function Get_Target (Target : Iir) return Iir is
@@ -4247,6 +4545,54 @@ package body Vhdl.Nodes is
                      "no field Condition_Clause");
       Set_Field5 (Wait, Cond);
    end Set_Condition_Clause;
+
+   function Get_Break_Element (Stmt : Iir) return Iir is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Break_Element (Get_Kind (Stmt)),
+                     "no field Break_Element");
+      return Get_Field4 (Stmt);
+   end Get_Break_Element;
+
+   procedure Set_Break_Element (Stmt : Iir; El : Iir) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Break_Element (Get_Kind (Stmt)),
+                     "no field Break_Element");
+      Set_Field4 (Stmt, El);
+   end Set_Break_Element;
+
+   function Get_Selector_Quantity (Stmt : Iir) return Iir is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Selector_Quantity (Get_Kind (Stmt)),
+                     "no field Selector_Quantity");
+      return Get_Field3 (Stmt);
+   end Get_Selector_Quantity;
+
+   procedure Set_Selector_Quantity (Stmt : Iir; Sel : Iir) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Selector_Quantity (Get_Kind (Stmt)),
+                     "no field Selector_Quantity");
+      Set_Field3 (Stmt, Sel);
+   end Set_Selector_Quantity;
+
+   function Get_Break_Quantity (Stmt : Iir) return Iir is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Break_Quantity (Get_Kind (Stmt)),
+                     "no field Break_Quantity");
+      return Get_Field4 (Stmt);
+   end Get_Break_Quantity;
+
+   procedure Set_Break_Quantity (Stmt : Iir; Sel : Iir) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Break_Quantity (Get_Kind (Stmt)),
+                     "no field Break_Quantity");
+      Set_Field4 (Stmt, Sel);
+   end Set_Break_Quantity;
 
    function Get_Timeout_Clause (Wait : Iir_Wait_Statement) return Iir is
    begin
@@ -5580,6 +5926,22 @@ package body Vhdl.Nodes is
       Set_Field4 (Target, Param);
    end Set_Parameter;
 
+   function Get_Parameter_2 (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Parameter_2 (Get_Kind (Target)),
+                     "no field Parameter_2");
+      return Get_Field6 (Target);
+   end Get_Parameter_2;
+
+   procedure Set_Parameter_2 (Target : Iir; Param : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Parameter_2 (Get_Kind (Target)),
+                     "no field Parameter_2");
+      Set_Field6 (Target, Param);
+   end Set_Parameter_2;
+
    function Get_Attr_Chain (Attr : Iir) return Iir is
    begin
       pragma Assert (Attr /= Null_Iir);
@@ -5971,6 +6333,22 @@ package body Vhdl.Nodes is
                      "no field Subtype_Type_Mark");
       Set_Field2 (Target, Mark);
    end Set_Subtype_Type_Mark;
+
+   function Get_Subnature_Nature_Mark (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Subnature_Nature_Mark (Get_Kind (Target)),
+                     "no field Subnature_Nature_Mark");
+      return Get_Field2 (Target);
+   end Get_Subnature_Nature_Mark;
+
+   procedure Set_Subnature_Nature_Mark (Target : Iir; Mark : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Subnature_Nature_Mark (Get_Kind (Target)),
+                     "no field Subnature_Nature_Mark");
+      Set_Field2 (Target, Mark);
+   end Set_Subnature_Nature_Mark;
 
    function Get_Type_Conversion_Subtype (Target : Iir) return Iir is
    begin

@@ -964,6 +964,69 @@ package body Vhdl.Std_Package is
          end if;
       end;
 
+      --  AMS-VHDL:
+      --  type DOMAIN_TYPE is
+      --    (QUIESCENT_DOMAIN, TIME_DOMAIN, FREQUENCY_DOMAIN);
+      if AMS_Vhdl then
+         Domain_Type_Type_Definition :=
+           Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
+         Set_Base_Type (Domain_Type_Type_Definition,
+                        Domain_Type_Type_Definition);
+         Set_Enumeration_Literal_List
+           (Domain_Type_Type_Definition, Create_Iir_Flist (3));
+
+         Domain_Type_Quiescent_Domain := Create_Std_Literal
+           (Name_Quiescent_Domain, 0, Domain_Type_Type_Definition);
+         Domain_Type_Time_Domain := Create_Std_Literal
+           (Name_Time_Domain, 1, Domain_Type_Type_Definition);
+         Domain_Type_Frequency_Domain := Create_Std_Literal
+           (Name_Frequency_Domain, 2, Domain_Type_Type_Definition);
+         Set_Type_Staticness (Domain_Type_Type_Definition, Locally);
+         Set_Signal_Type_Flag (Domain_Type_Type_Definition, True);
+         Set_Has_Signal_Flag (Domain_Type_Type_Definition, True);
+
+         --  type domain_type is
+         Create_Std_Type
+           (Domain_Type_Type_Declaration, Domain_Type_Type_Definition,
+            Name_Domain_Type);
+
+         Utils.Create_Range_Constraint_For_Enumeration_Type
+           (Domain_Type_Type_Definition);
+         Add_Implicit_Operations (Domain_Type_Type_Declaration);
+
+         --  signal DOMAIN : DOMAIN_TYPE := QUIESCENT_DOMAIN;
+         declare
+            Init : Iir;
+         begin
+            Domain_Signal := Create_Std_Decl (Iir_Kind_Signal_Declaration);
+            Set_Std_Identifier (Domain_Signal, Std_Names.Name_Domain);
+            Set_Type (Domain_Signal, Domain_Type_Type_Definition);
+            Set_Subtype_Indication
+              (Domain_Signal,
+               Create_Std_Type_Mark (Domain_Type_Type_Declaration));
+            Set_Expr_Staticness (Domain_Signal, None);
+            Set_Name_Staticness (Domain_Signal, Locally);
+
+            Init := Create_Std_Iir (Iir_Kind_Simple_Name);
+            Set_Identifier (Init, Name_Quiescent_Domain);
+            Set_Named_Entity (Init, Domain_Type_Quiescent_Domain);
+            Set_Type (Init, Domain_Type_Type_Definition);
+            Set_Expr_Staticness (Init, Locally);
+            Set_Name_Staticness (Init, Locally);
+
+            Set_Default_Value (Domain_Signal, Init);
+
+            Add_Decl (Domain_Signal);
+         end;
+      else
+         Domain_Type_Type_Declaration := Null_Iir;
+         Domain_Type_Type_Definition := Null_Iir;
+         Domain_Type_Quiescent_Domain := Null_Iir;
+         Domain_Type_Time_Domain := Null_Iir;
+         Domain_Type_Frequency_Domain := Null_Iir;
+         Domain_Signal := Null_Iir;
+      end if;
+
       --  VHDL87:
       --  function NOW return TIME
       --
@@ -987,6 +1050,23 @@ package body Vhdl.Std_Package is
          Vhdl.Sem_Utils.Compute_Subprogram_Hash (Function_Now);
          Add_Decl (Function_Now);
       end;
+
+      --  AMS-LRM17 16.3
+      --  impure function NOW return REAL;
+      if AMS_Vhdl then
+         declare
+            Function_Now : Iir_Function_Declaration;
+         begin
+            Function_Now := Create_Std_Decl (Iir_Kind_Function_Declaration);
+            Set_Std_Identifier (Function_Now, Std_Names.Name_Now);
+            Set_Return_Type (Function_Now, Real_Subtype_Definition);
+            Set_Pure_Flag (Function_Now, False);
+            Set_Implicit_Definition
+              (Function_Now, Iir_Predefined_Real_Now_Function);
+            Vhdl.Sem_Utils.Compute_Subprogram_Hash (Function_Now);
+            Add_Decl (Function_Now);
+         end;
+      end if;
 
       -- natural subtype
       declare
@@ -1117,12 +1197,16 @@ package body Vhdl.Std_Package is
          Create_Array_Type
            (Integer_Vector_Type_Definition, Integer_Vector_Type_Declaration,
             Integer_Subtype_Declaration, Name_Integer_Vector);
+      end if;
 
+      if Vhdl_Std >= Vhdl_08 or else AMS_Vhdl then
          -- type Real_vector is array (natural range <>) of Real;
          Create_Array_Type
            (Real_Vector_Type_Definition, Real_Vector_Type_Declaration,
             Real_Subtype_Declaration, Name_Real_Vector);
+      end if;
 
+      if Vhdl_Std >= Vhdl_08 then
          -- type Time_vector is array (natural range <>) of Time;
          Create_Array_Type
            (Time_Vector_Type_Definition, Time_Vector_Type_Declaration,

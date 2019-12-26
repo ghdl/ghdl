@@ -629,7 +629,7 @@ package body Trans.Chap5 is
       Act_Node : Mnode;
    begin
       Open_Temp;
-      case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+      case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
          when Iir_Kind_Association_Element_By_Expression =>
             pragma Assert (Get_Whole_Association_Flag (Assoc));
             Bounds := Get_Unconstrained_Port_Bounds (Assoc, Port);
@@ -704,7 +704,7 @@ package body Trans.Chap5 is
             --  Allocate storage of ports.
             --  (Only once for each port, individual association are ignored).
             Open_Temp;
-            case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+            case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
                when Iir_Kind_Association_Element_By_Individual
                  | Iir_Kind_Association_Element_Open =>
                   pragma Assert (Get_Whole_Association_Flag (Assoc));
@@ -719,7 +719,7 @@ package body Trans.Chap5 is
 
             --  Create or copy signals.
             Open_Temp;
-            case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+            case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
                when Iir_Kind_Association_Element_By_Expression =>
                   if Get_Whole_Association_Flag (Assoc) then
                      if Get_Collapse_Signal_Flag (Assoc) then

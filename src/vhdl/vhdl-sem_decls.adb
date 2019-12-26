@@ -210,6 +210,15 @@ package body Vhdl.Sem_Decls is
       end case;
    end Check_Signal_Type;
 
+   procedure Check_Nature_Type (Decl : Iir)
+   is
+      Decl_Type : constant Iir := Get_Type (Decl);
+   begin
+      if not Is_Nature_Type (Decl_Type) then
+         Error_Msg_Sem (+Decl, "type of %n must only have float", +Decl);
+      end if;
+   end Check_Nature_Type;
+
    procedure Sem_Interface_Object_Declaration
      (Inter, Last : Iir; Interface_Kind : Interface_Kind_Type)
    is
@@ -322,6 +331,8 @@ package body Vhdl.Sem_Decls is
                   Error_Msg_Sem
                     (+Inter, "file formal type must be a file type");
                end if;
+            when Iir_Kind_Interface_Quantity_Declaration =>
+               Check_Nature_Type (Inter);
             when others =>
                --  Inter is not an interface.
                raise Internal_Error;
@@ -394,9 +405,22 @@ package body Vhdl.Sem_Decls is
                Set_Expr_Staticness (Inter, Globally);
             end if;
          when Port_Interface_List =>
-            if Get_Kind (Inter) /= Iir_Kind_Interface_Signal_Declaration then
-               Error_Msg_Sem (+Inter, "port %n must be a signal", +Inter);
-            end if;
+            case Get_Kind (Inter) is
+               when Iir_Kind_Interface_Signal_Declaration
+                 | Iir_Kind_Interface_Terminal_Declaration
+                 | Iir_Kind_Interface_Quantity_Declaration =>
+                  null;
+               when others =>
+                  if AMS_Vhdl then
+                     Error_Msg_Sem
+                       (+Inter,
+                        "port %n must be a signal, a terminal or a quantity",
+                        +Inter);
+                  else
+                     Error_Msg_Sem
+                       (+Inter, "port %n must be a signal", +Inter);
+                  end if;
+            end case;
          when Parameter_Interface_List =>
             if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
               and then Interface_Kind = Function_Parameter_Interface_List
@@ -437,6 +461,34 @@ package body Vhdl.Sem_Decls is
             end case;
       end case;
    end Sem_Interface_Object_Declaration;
+
+   procedure Sem_Interface_Terminal_Declaration (Inter, Last : Iir)
+   is
+      Nature: Iir;
+   begin
+      --  Avoid the reanalysed duplicated natures.
+      Nature := Get_Subnature_Indication (Inter);
+      if Nature = Null_Iir then
+         if Last = Null_Iir or else not Get_Has_Identifier_List (Last) then
+            --  Subnature indication was not parsed.
+            Nature := Create_Error (Null_Iir);
+            Set_Subtype_Indication (Inter, Nature);
+         else
+            Nature := Get_Nature (Last);
+         end if;
+      else
+         Nature := Sem_Subnature_Indication (Nature);
+         Set_Subnature_Indication (Inter, Nature);
+         Nature := Get_Nature_Of_Subnature_Indication (Nature);
+      end if;
+
+      Set_Name_Staticness (Inter, Locally);
+      Xref_Decl (Inter);
+
+      Set_Nature (Inter, Nature);
+
+      Sem_Scopes.Add_Name (Inter);
+   end Sem_Interface_Terminal_Declaration;
 
    procedure Sem_Interface_Package_Declaration (Inter : Iir)
    is
@@ -550,6 +602,9 @@ package body Vhdl.Sem_Decls is
          case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
             when Iir_Kinds_Interface_Object_Declaration =>
                Sem_Interface_Object_Declaration (Inter, Last, Interface_Kind);
+               Last := Inter;
+            when Iir_Kind_Interface_Terminal_Declaration =>
+               Sem_Interface_Terminal_Declaration (Inter, Last);
                Last := Inter;
             when Iir_Kind_Interface_Package_Declaration =>
                Sem_Interface_Package_Declaration (Inter);
@@ -1052,6 +1107,9 @@ package body Vhdl.Sem_Decls is
                end;
             end if;
             Set_Expr_Staticness (Decl, None);
+         when Iir_Kind_Free_Quantity_Declaration =>
+            Check_Nature_Type (Decl);
+            Set_Expr_Staticness (Decl, None);
          when others =>
             Error_Kind ("sem_object_declaration", Decl);
       end case;
@@ -1068,10 +1126,11 @@ package body Vhdl.Sem_Decls is
             end if;
 
          when Iir_Kind_Variable_Declaration
-           | Iir_Kind_Signal_Declaration =>
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Free_Quantity_Declaration =>
             --  LRM93 3.2.1.1 / LRM08 5.3.2.2
             --  For a variable or signal declared by an object declaration, the
-            --  subtype indication of the corressponding object declaration
+            --  subtype indication of the corresponding object declaration
             --  must define a constrained array subtype.
             if not Is_Fully_Constrained_Type (Atype) then
                Error_Msg_Sem
@@ -1193,6 +1252,62 @@ package body Vhdl.Sem_Decls is
          end case;
       end;
    end Sem_File_Declaration;
+
+   procedure Sem_Source_Quantity_Declaration (Decl : Iir; Last_Decl : Iir)
+   is
+      Atype: Iir;
+      Expr : Iir;
+   begin
+      Sem_Scopes.Add_Name (Decl);
+      Set_Expr_Staticness (Decl, None);
+      Xref_Decl (Decl);
+
+      -- Try to find a type.
+      Atype := Get_Subtype_Indication (Decl);
+      if Atype /= Null_Iir then
+         Atype := Sem_Subtype_Indication (Atype);
+         Set_Subtype_Indication (Decl, Atype);
+         Atype := Get_Type_Of_Subtype_Indication (Atype);
+         if Atype = Null_Iir then
+            Atype := Create_Error_Type (Get_Type (Decl));
+         elsif not Is_Nature_Type (Atype) then
+            Error_Msg_Sem
+              (+Decl, "type of %n must only have float types", +Decl);
+         end if;
+      else
+         Atype := Get_Type (Last_Decl);
+      end if;
+      Set_Type (Decl, Atype);
+
+      --  AMS-LRM17 6.4.2.7 Quantity declarations
+      --  The type of the magnitude simple expression, phase simple expression,
+      --  and power simple expression in a source aspect shall be that of the
+      --  source quantity.
+      case Iir_Kinds_Source_Quantity_Declaration (Get_Kind (Decl)) is
+         when Iir_Kind_Spectrum_Quantity_Declaration =>
+            Expr := Get_Magnitude_Expression (Decl);
+            if Expr /= Null_Iir then
+               Expr := Sem_Expression (Expr, Atype);
+               Set_Magnitude_Expression (Decl, Expr);
+            end if;
+            Expr := Get_Phase_Expression (Decl);
+            if Expr /= Null_Iir then
+               Expr := Sem_Expression (Expr, Atype);
+               Set_Phase_Expression (Decl, Expr);
+            end if;
+         when Iir_Kind_Noise_Quantity_Declaration =>
+            Expr := Get_Power_Expression (Decl);
+            if Expr /= Null_Iir then
+               Expr := Sem_Expression (Expr, Atype);
+               Set_Power_Expression (Decl, Expr);
+            end if;
+      end case;
+
+      --  TODO: It is an error if the name of a source quantity appears in an
+      --  expression in a source aspect.
+
+      Name_Visible (Decl);
+   end Sem_Source_Quantity_Declaration;
 
    procedure Sem_Attribute_Declaration (Decl: Iir_Attribute_Declaration)
    is
@@ -1649,15 +1764,18 @@ package body Vhdl.Sem_Decls is
             if Flags.Vhdl_Std >= Vhdl_08 then
                Add_Aliases_For_Type_Alias (Alias);
             end if;
+         when Iir_Kind_Nature_Declaration =>
+            null;
          when Iir_Kinds_Object_Declaration =>
             raise Internal_Error;
          when Iir_Kind_Attribute_Declaration
            | Iir_Kind_Component_Declaration =>
             null;
+         when Iir_Kind_Terminal_Declaration =>
+            --  TODO: should have Sem_Terminal_Alias_Declaration.
+            null;
          when Iir_Kind_Library_Declaration =>
             --  Not explicitly allowed before vhdl-08.
-            null;
-         when Iir_Kind_Terminal_Declaration =>
             null;
          when Iir_Kind_Base_Attribute =>
             Error_Msg_Sem (+Alias, "base attribute not allowed in alias");
@@ -1900,61 +2018,6 @@ package body Vhdl.Sem_Decls is
       Set_Visible_Flag (Group, True);
    end Sem_Group_Declaration;
 
-   function Sem_Scalar_Nature_Definition (Def : Iir; Decl : Iir) return Iir
-   is
-      function Sem_Scalar_Nature_Typemark (T : Iir; Name : String) return Iir
-      is
-         Res : Iir;
-      begin
-         Res := Sem_Type_Mark (T);
-         Res := Get_Type (Res);
-         if Is_Error (Res) then
-            return Real_Type_Definition;
-         end if;
-         --  LRM93 3.5.1
-         --  The type marks must denote floating point types
-         case Get_Kind (Res) is
-            when Iir_Kind_Floating_Subtype_Definition
-              | Iir_Kind_Floating_Type_Definition =>
-               return Res;
-            when others =>
-               Error_Msg_Sem (+T, Name & "type must be a floating point type");
-               return Real_Type_Definition;
-         end case;
-      end Sem_Scalar_Nature_Typemark;
-
-      Tm : Iir;
-      Ref : Iir;
-   begin
-      Tm := Get_Across_Type (Def);
-      Tm := Sem_Scalar_Nature_Typemark (Tm, "across");
-      Set_Across_Type (Def, Tm);
-
-      Tm := Get_Through_Type (Def);
-      Tm := Sem_Scalar_Nature_Typemark (Tm, "through");
-      Set_Through_Type (Def, Tm);
-
-      --  Declare the reference
-      Ref := Get_Reference (Def);
-      Set_Nature (Ref, Def);
-      Set_Chain (Ref, Get_Chain (Decl));
-      Set_Chain (Decl, Ref);
-
-      return Def;
-   end Sem_Scalar_Nature_Definition;
-
-   function Sem_Nature_Definition (Def : Iir; Decl : Iir) return Iir
-   is
-   begin
-      case Get_Kind (Def) is
-         when Iir_Kind_Scalar_Nature_Definition =>
-            return Sem_Scalar_Nature_Definition (Def, Decl);
-         when others =>
-            Error_Kind ("sem_nature_definition", Def);
-            return Null_Iir;
-      end case;
-   end Sem_Nature_Definition;
-
    procedure Sem_Nature_Declaration (Decl : Iir)
    is
       Def : Iir;
@@ -1972,6 +2035,35 @@ package body Vhdl.Sem_Decls is
       end if;
    end Sem_Nature_Declaration;
 
+   procedure Sem_Subnature_Declaration (Decl: Iir)
+   is
+      Def: Iir;
+      Ind : Iir;
+   begin
+      Sem_Scopes.Add_Name (Decl);
+      Xref_Decl (Decl);
+
+      --  Analyze the definition of the type.
+      Ind := Get_Subnature_Indication (Decl);
+      Ind := Sem_Subnature_Indication (Ind);
+      Set_Subnature_Indication (Decl, Ind);
+      Def := Get_Nature_Of_Subnature_Indication (Ind);
+      if Def = Null_Iir or else Is_Error (Def) then
+         return;
+      end if;
+
+      if not Is_Anonymous_Nature_Definition (Def) then
+         --  There is no added constraints and therefore the subtype
+         --  declaration is in fact an alias of the type.  Create a copy so
+         --  that it has its own type declarator.
+         raise Internal_Error;
+      end if;
+
+      Set_Nature (Decl, Def);
+      Set_Nature_Declarator (Def, Decl);
+      Name_Visible (Decl);
+   end Sem_Subnature_Declaration;
+
    procedure Sem_Terminal_Declaration (Decl : Iir; Last_Decl : Iir)
    is
       Def, Nature : Iir;
@@ -1979,12 +2071,17 @@ package body Vhdl.Sem_Decls is
       Sem_Scopes.Add_Name (Decl);
       Xref_Decl (Decl);
 
-      Def := Get_Nature (Decl);
+      Set_Name_Staticness (Decl, Locally);
 
+      Def := Get_Subnature_Indication (Decl);
       if Def = Null_Iir then
          Nature := Get_Nature (Last_Decl);
       else
          Nature := Sem_Subnature_Indication (Def);
+         if Nature /= Null_Iir then
+            Set_Subnature_Indication (Decl, Nature);
+            Nature := Get_Nature_Of_Subnature_Indication (Nature);
+         end if;
       end if;
 
       if Nature /= Null_Iir then
@@ -1996,6 +2093,7 @@ package body Vhdl.Sem_Decls is
    procedure Sem_Branch_Quantity_Declaration (Decl : Iir; Last_Decl : Iir)
    is
       Plus_Name : Iir;
+      Plus_Ref : Iir;
       Minus_Name : Iir;
       Branch_Type : Iir;
       Value : Iir;
@@ -2004,7 +2102,7 @@ package body Vhdl.Sem_Decls is
       Sem_Scopes.Add_Name (Decl);
       Xref_Decl (Decl);
 
-      Plus_Name := Get_Plus_Terminal (Decl);
+      Plus_Name := Get_Plus_Terminal_Name (Decl);
       if Plus_Name = Null_Iir then
          --  List of identifier.
          Is_Second := True;
@@ -2014,7 +2112,7 @@ package body Vhdl.Sem_Decls is
       else
          Is_Second := False;
          Plus_Name := Sem_Terminal_Name (Plus_Name);
-         Minus_Name := Get_Minus_Terminal (Decl);
+         Minus_Name := Get_Minus_Terminal_Name (Decl);
          if Minus_Name /= Null_Iir then
             Minus_Name := Sem_Terminal_Name (Minus_Name);
          end if;
@@ -2022,15 +2120,17 @@ package body Vhdl.Sem_Decls is
       end if;
       Set_Plus_Terminal (Decl, Plus_Name);
       Set_Minus_Terminal (Decl, Minus_Name);
-      case Get_Kind (Decl) is
+      Plus_Ref := Get_Nature (Get_Named_Entity (Plus_Name));
+      case Iir_Kinds_Branch_Quantity_Declaration (Get_Kind (Decl)) is
          when Iir_Kind_Across_Quantity_Declaration =>
-            Branch_Type := Get_Across_Type (Get_Nature (Plus_Name));
+            Branch_Type := Get_Across_Type (Plus_Ref);
          when Iir_Kind_Through_Quantity_Declaration =>
-            Branch_Type := Get_Through_Type (Get_Nature (Plus_Name));
-         when others =>
-            raise Program_Error;
+            Branch_Type := Get_Through_Type (Plus_Ref);
       end case;
+      pragma Assert (Branch_Type /= Null_Iir);
       Set_Type (Decl, Branch_Type);
+
+      Set_Name_Staticness (Decl, Locally);
 
       if not Is_Second and then Value /= Null_Iir then
          Value := Sem_Expression (Value, Branch_Type);
@@ -2063,10 +2163,13 @@ package body Vhdl.Sem_Decls is
             Sem_Subtype_Declaration (Decl, Is_Global);
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Variable_Declaration =>
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Free_Quantity_Declaration =>
             Sem_Object_Declaration (Decl, Prev_Decl);
          when Iir_Kind_File_Declaration =>
             Sem_File_Declaration (Decl, Prev_Decl);
+         when Iir_Kinds_Source_Quantity_Declaration =>
+            Sem_Source_Quantity_Declaration (Decl, Prev_Decl);
          when Iir_Kind_Attribute_Declaration =>
             Sem_Attribute_Declaration (Decl);
          when Iir_Kind_Attribute_Specification =>
@@ -2109,6 +2212,8 @@ package body Vhdl.Sem_Decls is
             null;
          when Iir_Kind_Disconnection_Specification =>
             Sem_Disconnection_Specification (Decl);
+         when Iir_Kind_Step_Limit_Specification =>
+            Sem_Step_Limit_Specification (Decl);
          when Iir_Kind_Group_Template_Declaration =>
             Sem_Group_Template_Declaration (Decl);
          when Iir_Kind_Group_Declaration =>
@@ -2128,6 +2233,8 @@ package body Vhdl.Sem_Decls is
 
          when Iir_Kind_Nature_Declaration =>
             Sem_Nature_Declaration (Decl);
+         when Iir_Kind_Subnature_Declaration =>
+            Sem_Subnature_Declaration (Decl);
          when Iir_Kind_Terminal_Declaration =>
             Sem_Terminal_Declaration (Decl, Prev_Decl);
          when Iir_Kind_Across_Quantity_Declaration

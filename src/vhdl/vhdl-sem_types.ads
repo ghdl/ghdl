@@ -65,4 +65,13 @@ package Vhdl.Sem_Types is
 
    --  Although a nature is not a type, it is patterned like a type.
    function Sem_Subnature_Indication (Def: Iir) return Iir;
+
+   function Sem_Nature_Definition (Def : Iir; Decl : Iir) return Iir;
+
+   --  AMS-LRM17 6.4.2.7 Quantity declarations
+   --  A nature type is a floating-point type of a composite type whose
+   --  elements are of a nature type.
+   --
+   --  Return true iff DTYPE is a nature type.
+   function Is_Nature_Type (Dtype : Iir) return Boolean;
 end Vhdl.Sem_Types;

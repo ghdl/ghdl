@@ -803,6 +803,8 @@ package body Simul.Elaboration is
                   Kind := Quantity_Through;
                when Iir_Kind_Free_Quantity_Declaration =>
                   Kind := Quantity_Free;
+               when Iir_Kinds_Source_Quantity_Declaration =>
+                  raise Internal_Error; --  TODO.
             end case;
             Res := Create_Quantity_Value
               (Create_Scalar_Quantity (Kind, Decl, Block));
