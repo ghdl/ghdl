@@ -1351,14 +1351,13 @@ package body Vhdl.Prints is
      (Ctxt : in out Ctxt_Class; Decl: Iir_Object_Alias_Declaration)
    is
       St_Ind : constant Iir := Get_Subtype_Indication (Decl);
-      Atype : constant Iir := Get_Type (Decl);
    begin
       Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Alias);
       Disp_Function_Name (Ctxt, Decl);
-      if St_Ind /= Null_Iir or else Atype /= Null_Iir then
+      if St_Ind /= Null_Iir then
          Disp_Token (Ctxt, Tok_Colon);
-         Disp_Subtype_Indication (Ctxt, Or_Else (St_Ind, Atype));
+         Disp_Subtype_Indication (Ctxt, St_Ind);
       end if;
       Disp_Token (Ctxt, Tok_Is);
       Print (Ctxt, Get_Name (Decl));
