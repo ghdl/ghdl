@@ -2297,6 +2297,8 @@ package body Vhdl.Prints is
                Disp_Token (Ctxt, Tok_Reject);
                Print (Ctxt, Expr);
                Disp_Token (Ctxt, Tok_Inertial);
+            elsif Get_Has_Delay_Mechanism (Stmt) then
+               Disp_Token (Ctxt, Tok_Inertial);
             end if;
       end case;
    end Disp_Delay_Mechanism;

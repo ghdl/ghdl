@@ -6468,6 +6468,22 @@ package body Vhdl.Nodes is
       Set_Flag11 (Decl, Flag);
    end Set_Has_Class;
 
+   function Get_Has_Delay_Mechanism (Stmt : Iir) return Boolean is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Has_Delay_Mechanism (Get_Kind (Stmt)),
+                     "no field Has_Delay_Mechanism");
+      return Get_Flag2 (Stmt);
+   end Get_Has_Delay_Mechanism;
+
+   procedure Set_Has_Delay_Mechanism (Stmt : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Has_Delay_Mechanism (Get_Kind (Stmt)),
+                     "no field Has_Delay_Mechanism");
+      Set_Flag2 (Stmt, Flag);
+   end Set_Has_Delay_Mechanism;
+
    function Get_Suspend_Flag (Stmt : Iir) return Boolean is
    begin
       pragma Assert (Stmt /= Null_Iir);

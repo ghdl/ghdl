@@ -6104,6 +6104,9 @@ package body Vhdl.Parse is
    begin
       if Current_Token = Tok_Transport then
          Set_Delay_Mechanism (Assign, Iir_Transport_Delay);
+         Set_Has_Delay_Mechanism (Assign, True);
+
+         --  Skip 'transport'.
          Scan;
       else
          Set_Delay_Mechanism (Assign, Iir_Inertial_Delay);
@@ -6112,15 +6115,23 @@ package body Vhdl.Parse is
                Error_Msg_Parse
                  ("'reject' delay mechanism not allowed in vhdl 87");
             end if;
+            Set_Has_Delay_Mechanism (Assign, True);
+
+            --  Skip 'reject'.
             Scan;
+
             Set_Reject_Time_Expression (Assign, Parse_Expression);
-            Expect (Tok_Inertial);
-            Scan;
+
+            --  Skip 'inertial'.
+            Expect_Scan (Tok_Inertial);
          elsif Current_Token = Tok_Inertial then
             if Flags.Vhdl_Std = Vhdl_87 then
                Error_Msg_Parse
                  ("'inertial' keyword not allowed in vhdl 87");
             end if;
+            Set_Has_Delay_Mechanism (Assign, True);
+
+            --  Skip 'inertial'.
             Scan;
          end if;
       end if;

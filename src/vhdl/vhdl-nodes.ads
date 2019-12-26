@@ -2848,6 +2848,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Delay_Mechanism (Flag1)
    --
+   --   Get/Set_Has_Delay_Mechanism (Flag2)
+   --
    --   Get/Set_Postponed_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -3387,6 +3389,8 @@ package Vhdl.Nodes is
    --   Get/Set_Selected_Waveform_Chain (Field7)
    --
    --   Get/Set_Delay_Mechanism (Flag1)
+   --
+   --   Get/Set_Has_Delay_Mechanism (Flag2)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -7869,6 +7873,13 @@ package Vhdl.Nodes is
    --  Field: Flag11
    function Get_Has_Class (Decl : Iir) return Boolean;
    procedure Set_Has_Class (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag for signal assignment.  If True, the delay mechanism is
+   --  present.  This is obviously true for transport or inertial with reject,
+   --  but the simple 'inertial' is optional.
+   --  Field: Flag2
+   function Get_Has_Delay_Mechanism (Stmt : Iir) return Boolean;
+   procedure Set_Has_Delay_Mechanism (Stmt : Iir; Flag : Boolean);
 
    --  Set on wait, procedure call and composite statements when there is a
    --  sub-statement that can suspend a procedure or a process.  Also set

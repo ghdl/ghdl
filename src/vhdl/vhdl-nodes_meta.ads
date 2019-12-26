@@ -380,6 +380,7 @@ package Vhdl.Nodes_Meta is
       Field_Has_Identifier_List,
       Field_Has_Mode,
       Field_Has_Class,
+      Field_Has_Delay_Mechanism,
       Field_Suspend_Flag,
       Field_Is_Ref,
       Field_Is_Forward_Ref,
@@ -919,6 +920,7 @@ package Vhdl.Nodes_Meta is
    function Has_Has_Identifier_List (K : Iir_Kind) return Boolean;
    function Has_Has_Mode (K : Iir_Kind) return Boolean;
    function Has_Has_Class (K : Iir_Kind) return Boolean;
+   function Has_Has_Delay_Mechanism (K : Iir_Kind) return Boolean;
    function Has_Suspend_Flag (K : Iir_Kind) return Boolean;
    function Has_Is_Ref (K : Iir_Kind) return Boolean;
    function Has_Is_Forward_Ref (K : Iir_Kind) return Boolean;

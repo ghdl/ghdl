@@ -380,19 +380,20 @@ class fields:
     Has_Identifier_List = 316
     Has_Mode = 317
     Has_Class = 318
-    Suspend_Flag = 319
-    Is_Ref = 320
-    Is_Forward_Ref = 321
-    Psl_Property = 322
-    Psl_Sequence = 323
-    Psl_Declaration = 324
-    Psl_Expression = 325
-    Psl_Boolean = 326
-    PSL_Clock = 327
-    PSL_NFA = 328
-    PSL_Nbr_States = 329
-    PSL_Clock_Sensitivity = 330
-    PSL_EOS_Flag = 331
+    Has_Delay_Mechanism = 319
+    Suspend_Flag = 320
+    Is_Ref = 321
+    Is_Forward_Ref = 322
+    Psl_Property = 323
+    Psl_Sequence = 324
+    Psl_Declaration = 325
+    Psl_Expression = 326
+    Psl_Boolean = 327
+    PSL_Clock = 328
+    PSL_NFA = 329
+    PSL_Nbr_States = 330
+    PSL_Clock_Sensitivity = 331
+    PSL_EOS_Flag = 332
 
 
 Get_Boolean = libghdl.vhdl__nodes_meta__get_boolean
@@ -1414,6 +1415,9 @@ Has_Has_Mode =\
 
 Has_Has_Class =\
     libghdl.vhdl__nodes_meta__has_has_class
+
+Has_Has_Delay_Mechanism =\
+    libghdl.vhdl__nodes_meta__has_has_delay_mechanism
 
 Has_Suspend_Flag =\
     libghdl.vhdl__nodes_meta__has_suspend_flag

@@ -2507,6 +2507,10 @@ Get_Has_Class = libghdl.vhdl__nodes__get_has_class
 
 Set_Has_Class = libghdl.vhdl__nodes__set_has_class
 
+Get_Has_Delay_Mechanism = libghdl.vhdl__nodes__get_has_delay_mechanism
+
+Set_Has_Delay_Mechanism = libghdl.vhdl__nodes__set_has_delay_mechanism
+
 Get_Suspend_Flag = libghdl.vhdl__nodes__get_suspend_flag
 
 Set_Suspend_Flag = libghdl.vhdl__nodes__set_suspend_flag
