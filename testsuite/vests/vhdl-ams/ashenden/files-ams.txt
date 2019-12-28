@@ -1,0 +1,533 @@
+vhdl-ams/ashenden/compliant/access-types/bounded_buffer_adt.vhd
+vhdl-ams/ashenden/compliant/access-types/inline_01.vhd
+vhdl-ams/ashenden/compliant/access-types/inline_02a.vhd
+vhdl-ams/ashenden/compliant/access-types/inline_03.vhd
+vhdl-ams/ashenden/compliant/access-types/inline_04a.vhd
+vhdl-ams/ashenden/compliant/access-types/inline_05.vhd
+#vhdl-ams/ashenden/compliant/access-types/inline_06a.vhd	# missing decl
+vhdl-ams/ashenden/compliant/access-types/inline_07a.vhd
+vhdl-ams/ashenden/compliant/access-types/inline_08.vhd
+vhdl-ams/ashenden/compliant/access-types/inline_09.vhd
+vhdl-ams/ashenden/compliant/access-types/list_search.vhd
+vhdl-ams/ashenden/compliant/access-types/list_traversal.vhd
+#vhdl-ams/ashenden/compliant/access-types/ordered_collection_adt.vhd	# meta-char
+vhdl-ams/ashenden/compliant/access-types/receiver.vhd
+vhdl-ams/ashenden/compliant/access-types/stimulus_types-1.vhd
+vhdl-ams/ashenden/compliant/access-types/tb_bounded_buffer_adt.vhd
+vhdl-ams/ashenden/compliant/access-types/test_bench-1.vhd
+vhdl-ams/ashenden/compliant/aliases/controller_system.vhd
+vhdl-ams/ashenden/compliant/aliases/DMA_controller_types_and_utilities.vhd
+vhdl-ams/ashenden/compliant/aliases/DMA_controller.vhd
+vhdl-ams/ashenden/compliant/aliases/function_plus.vhd
+vhdl-ams/ashenden/compliant/aliases/inline_01a.vhd
+vhdl-ams/ashenden/compliant/aliases/inline_02.vhd
+#vhdl-ams/ashenden/compliant/aliases/inline_03a.vhd	# record nature
+vhdl-ams/ashenden/compliant/aliases/inline_04.vhd
+vhdl-ams/ashenden/compliant/aliases/inline_05.vhd
+#vhdl-ams/ashenden/compliant/aliases/inline_06.vhd	# util
+vhdl-ams/ashenden/compliant/aliases/safety_switch.vhd
+vhdl-ams/ashenden/compliant/aliases/tb_function_plus.vhd
+vhdl-ams/ashenden/compliant/AMS_CS1_Mixed_Sig/a2d_nbit.vhd
+vhdl-ams/ashenden/compliant/AMS_CS1_Mixed_Sig/dac_10_bit.vhd
+vhdl-ams/ashenden/compliant/AMS_CS1_Mixed_Sig/switch_dig_2in.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS1_Mixed_Sig/tb_2in_switch.vhd	# unit
+#vhdl-ams/ashenden/compliant/AMS_CS1_Mixed_Sig/tb_a2d_d2a.vhd		# unit
+#vhdl-ams/ashenden/compliant/AMS_CS1_Mixed_Sig/tb_CS1.vhd		# unit
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/DC_Motor.vhd		# decl
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/gain.vhd
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/gain_e.vhd
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/gear_rv_r.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag.vhd		# ltf
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag_diff.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag_ztf.vhd	# ztf
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/limiter.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lpf_1.vhd		# ltf
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/stop_r.vhd		# crash
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/sum2.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/tb_CS2_Mech_Domain.vhd	# spectrum
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/tb_CS2_S_Domain.vhd	#idem
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/tb_CS2_Z_Domain_Diff.vhd	#unit
+#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/tb_CS2_Z_Domain_ZTF.vhd	#spectrum
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/buck_sw.vhd
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/CalcBuckParams.vhd
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/CalcBuckParams_wa.vhd
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/capacitor.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/comp_2p2z.vhd	#ltf
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/pwl_load.vhd
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/pwl_load_wa.vhd
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/sw_LoopCtrl.vhd
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/sw_LoopCtrl_wa.vhd
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/switch_dig.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/tb_BuckConverter.vhd	#libs
+#vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/tb_CalcBuckParams.vhd	#unit
+#vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/tb_CS3_BuckConverter_average.vhd	#quantity
+vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/bfsk.vhd
+vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/bfsk_wa.vhd
+vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/MeasFreq.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/PLL.vhd	#ltf
+#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/tb_CS4_CommSys_det.vhd	#crash nature
+#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/tb_CS4_CommSys_PLL.vhd	#idem
+#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/tb_pll.vhd			#libs
+#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/v_BPF.vhd			#ltf
+vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/v_Sum.vhd
+vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/amp_lim.vhd
+vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/pwl_functions.vhd
+vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/prop_pwl.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/tb_CS5_Amp_Lim.vhd	#unit
+#vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/tb_CS5_CC_Rudder.vhd	#quan
+#vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/tb_CS5_HCL.vhd	#quan
+#vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/tb_CS5_Prop.vhd	#quan
+#vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/tb_CS5_Rudder_Power.vhd	#quan
+vhdl-ams/ashenden/compliant/analog-modeling/analog_switch.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/ball.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/ball_wa.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/bit_to_analog.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/capacitor.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/comparator-1.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/comparator.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/control_system.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/dac_12_bit.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/diode.vhd			# crash
+vhdl-ams/ashenden/compliant/analog-modeling/inductor-1.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inductor.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_01a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_02a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_03a.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_04a.vhd		#record
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_05a.vhd		#record
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_06a.vhd		#record
+vhdl-ams/ashenden/compliant/analog-modeling/inline_07a.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_08a.vhd		#crash
+vhdl-ams/ashenden/compliant/analog-modeling/inline_09a.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_10a.vhd		#record
+vhdl-ams/ashenden/compliant/analog-modeling/inline_11a.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_12a.vhd		#case
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_13a.vhd		#idem
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_14a.vhd		#null
+vhdl-ams/ashenden/compliant/analog-modeling/inline_15a.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_16a.vhd		#record?
+vhdl-ams/ashenden/compliant/analog-modeling/inline_17a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_18a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_19a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_20a.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_21a.vhd		#spec
+vhdl-ams/ashenden/compliant/analog-modeling/inline_22a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_23a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_24a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/opamp-1.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/opamp.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/opamp_wa-1.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/resistor.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inverting_integrator.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/moving_mass.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/moving_mass_wa.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/pendulum.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/pendulum_wa.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/piston.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/quad_opamp.vhd		#crash
+#vhdl-ams/ashenden/compliant/analog-modeling/quad_opamp_wa.vhd		#crash
+vhdl-ams/ashenden/compliant/analog-modeling/std_logic_to_analog.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_analog_switch.vhd	#unit
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_bit_to_analog.vhd	#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_comparator-1.vhd	#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_comparator.vhd		#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_control_system.vhd	#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_diode.vhd		#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_inv_integrator.vhd	#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_moving_mass.vhd	#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_piston.vhd		#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_quad_opamp.vhd		#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_std_logic_to_analog.vhd	#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_transmission_line.vhd		#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_triangle_waveform.vhd		#lib
+#vhdl-ams/ashenden/compliant/analog-modeling/tb_variable_comparator.vhd	#lib
+vhdl-ams/ashenden/compliant/analog-modeling/timer.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/transmission_line.vhd	#delayed
+#vhdl-ams/ashenden/compliant/analog-modeling/transmission_line_wa.vhd	#idem
+vhdl-ams/ashenden/compliant/analog-modeling/triangle_waveform.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/triangle_waveform_wa.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/variable_comparator.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/74x138.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/add_with_overflow.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/bottom.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/clock_buffer.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/controller.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/CPU.vhd
+#vhdl-ams/ashenden/compliant/attributes-and-groups/display_interface.vhd	#foreign
+vhdl-ams/ashenden/compliant/attributes-and-groups/flipflop.vhd
+#vhdl-ams/ashenden/compliant/attributes-and-groups/gate_components.vhd	#lib
+#vhdl-ams/ashenden/compliant/attributes-and-groups/inline_01.vhd	#lib
+#vhdl-ams/ashenden/compliant/attributes-and-groups/inline_02.vhd	#lib
+vhdl-ams/ashenden/compliant/attributes-and-groups/inline_03.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/inline_04.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/inline_05.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/inline_06.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/inline_07.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/inline_08.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/inline_09.vhd
+#vhdl-ams/ashenden/compliant/attributes-and-groups/inline_10.vhd	#foreign
+vhdl-ams/ashenden/compliant/attributes-and-groups/inline_11.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/mem_pkg.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/mem_read.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/sequencer.vhd
+#vhdl-ams/ashenden/compliant/attributes-and-groups/tb_flipflop.vhd	#lib?
+vhdl-ams/ashenden/compliant/attributes-and-groups/top.vhd
+vhdl-ams/ashenden/compliant/attributes-and-groups/voltage_defs.vhd
+#vhdl-ams/ashenden/compliant/components-and-configs/automotive_valve_defs.vhd  #crash
+#vhdl-ams/ashenden/compliant/components-and-configs/automotive_valve.vhd	#crash
+#vhdl-ams/ashenden/compliant/components-and-configs/brake_system.vhd		#lib
+#vhdl-ams/ashenden/compliant/components-and-configs/computer_system.vhd  	#lib
+#vhdl-ams/ashenden/compliant/components-and-configs/computer_structure.vhd	#lib
+vhdl-ams/ashenden/compliant/components-and-configs/reg-1.vhd
+vhdl-ams/ashenden/compliant/components-and-configs/control_section.vhd
+vhdl-ams/ashenden/compliant/components-and-configs/controller_with_timing-1.vhd
+vhdl-ams/ashenden/compliant/components-and-configs/decoder_3_to_8.vhd
+vhdl-ams/ashenden/compliant/components-and-configs/notch_filter.vhd
+vhdl-ams/ashenden/compliant/components-and-configs/opamp.vhd
+#vhdl-ams/ashenden/compliant/components-and-configs/opamp_mosfets.vhd	#lib
+#vhdl-ams/ashenden/compliant/components-and-configs/notch_filter_down_to_device_level.vhd #lib
+#vhdl-ams/ashenden/compliant/components-and-configs/notch_filter_full.vhd  #lib
+#vhdl-ams/ashenden/compliant/components-and-configs/fm_radio.vhd	    #lib
+#vhdl-ams/ashenden/compliant/components-and-configs/inline_02a.vhd	    #crash
+#vhdl-ams/ashenden/compliant/components-and-configs/inline_04a.vhd	    #lib
+#vhdl-ams/ashenden/compliant/components-and-configs/inline_05.vhd	    #assoc
+#vhdl-ams/ashenden/compliant/components-and-configs/interlock_control.vhd  #lib
+#vhdl-ams/ashenden/compliant/components-and-configs/interlock_control_with_estimates.vhd #lib
+#vhdl-ams/ashenden/compliant/components-and-configs/intermediate.vhd	#lib
+#vhdl-ams/ashenden/compliant/components-and-configs/logic_block.vhd	#lib
+#vhdl-ams/ashenden/compliant/components-and-configs/misc_logic.vhd	#lib
+#vhdl-ams/ashenden/compliant/components-and-configs/misc_logic_reconfigured.vhd  #lib
+vhdl-ams/ashenden/compliant/components-and-configs/successive_approx_adc.vhd
+vhdl-ams/ashenden/compliant/components-and-configs/sensor_interface.vhd
+#vhdl-ams/ashenden/compliant/components-and-configs/sensor_interface_with_timing.vhd #crash
+vhdl-ams/ashenden/compliant/components-and-configs/single_board_computer.vhd
+vhdl-ams/ashenden/compliant/composite-data/and_multiple.vhd
+vhdl-ams/ashenden/compliant/composite-data/byte_swap.vhd
+vhdl-ams/ashenden/compliant/composite-data/coeff_ram.vhd
+vhdl-ams/ashenden/compliant/composite-data/computer.vhd
+vhdl-ams/ashenden/compliant/composite-data/inline_01.vhd
+#vhdl-ams/ashenden/compliant/composite-data/inline_02a.vhd	#crash subnature
+vhdl-ams/ashenden/compliant/composite-data/inline_03.vhd
+#vhdl-ams/ashenden/compliant/composite-data/inline_04a.vhd	#idem
+vhdl-ams/ashenden/compliant/composite-data/inline_05.vhd
+vhdl-ams/ashenden/compliant/composite-data/inline_06a.vhd
+#vhdl-ams/ashenden/compliant/composite-data/inline_07a.vhd	#idem
+vhdl-ams/ashenden/compliant/composite-data/inline_08.vhd
+#vhdl-ams/ashenden/compliant/composite-data/inline_09a.vhd	#crash
+#vhdl-ams/ashenden/compliant/composite-data/inline_10.vhd	#visibility
+vhdl-ams/ashenden/compliant/composite-data/inline_11a.vhd
+vhdl-ams/ashenden/compliant/composite-data/inline_12.vhd
+#vhdl-ams/ashenden/compliant/composite-data/inline_13.vhd	#range
+vhdl-ams/ashenden/compliant/composite-data/inline_14a.vhd
+vhdl-ams/ashenden/compliant/composite-data/inline_15.vhd
+vhdl-ams/ashenden/compliant/composite-data/inline_16.vhd
+#vhdl-ams/ashenden/compliant/composite-data/inline_17a.vhd	#record
+vhdl-ams/ashenden/compliant/composite-data/modem_controller.vhd
+vhdl-ams/ashenden/compliant/composite-data/tb_and_multiple.vhd
+vhdl-ams/ashenden/compliant/composite-data/tb_byte_swap.vhd
+vhdl-ams/ashenden/compliant/composite-data/tb_coeff_ram.vhd
+#vhdl-ams/ashenden/compliant/composite-data/transmission_lines.vhd	#crash sub
+#vhdl-ams/ashenden/compliant/design-processing/active_filter.vhd	#lib
+vhdl-ams/ashenden/compliant/design-processing/dff.vhd
+#vhdl-ams/ashenden/compliant/design-processing/inline_01a.vhd		#lib
+#vhdl-ams/ashenden/compliant/design-processing/inline_02a.vhd		#lib
+#vhdl-ams/ashenden/compliant/design-processing/inline_03a.vhd		#attr
+vhdl-ams/ashenden/compliant/design-processing/inline_04a.vhd
+vhdl-ams/ashenden/compliant/design-processing/inline_05a.vhd
+#vhdl-ams/ashenden/compliant/design-processing/inverting_integrator.vhd	#assoc
+#vhdl-ams/ashenden/compliant/design-processing/tb_volume_sensor.vhd		#lib
+#vhdl-ams/ashenden/compliant/design-processing/volume_sensor.vhd		#lib
+vhdl-ams/ashenden/compliant/digital-modeling/alu.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/and2.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/and_or_inv.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/asym_delay.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/clock_gen-1.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/clock_gen-2.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/clock_gen.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/computer_system.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/edge_triggered_Dff.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/reg4.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/counter.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/full_adder.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_01.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_02.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_03.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_04.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_05.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_06.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_07.vhd
+#vhdl-ams/ashenden/compliant/digital-modeling/inline_08.vhd	#lib
+vhdl-ams/ashenden/compliant/digital-modeling/inline_09.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_10.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_11.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_12.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_13.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_14.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_15.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_16.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_17.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_18.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_19.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/inline_20.vhd
+#vhdl-ams/ashenden/compliant/digital-modeling/inline_21.vhd	#lib
+vhdl-ams/ashenden/compliant/digital-modeling/inline_22.vhd
+#vhdl-ams/ashenden/compliant/digital-modeling/inline_23.vhd	#lib
+#vhdl-ams/ashenden/compliant/digital-modeling/inline_24.vhd	#lib
+#vhdl-ams/ashenden/compliant/digital-modeling/inline_28a.vhd	#wait
+vhdl-ams/ashenden/compliant/digital-modeling/microprocessor.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/mux.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/mux2.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/program_rom.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/rom.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/S_R_flipflop-1.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/S_R_flipflop.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/scheduler.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/tb_and2.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/tb_and_or_inv.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/tb_counter.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/tb_edge_triggered_Dff.vhd
+#vhdl-ams/ashenden/compliant/digital-modeling/tb_full_adder.vhd	#lib
+vhdl-ams/ashenden/compliant/digital-modeling/tb_mux2.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/tb_reg4.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/tb_rom.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/tb_S_R_flipflop-1.vhd
+vhdl-ams/ashenden/compliant/digital-modeling/tb_S_R_flipflop.vhd
+#vhdl-ams/ashenden/compliant/digital-modeling/zmux-1.vhd	#lib
+#vhdl-ams/ashenden/compliant/digital-modeling/zmux.vhd		#lib
+vhdl-ams/ashenden/compliant/files-and-IO/bus_monitor.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/cache.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/CPU.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_01.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_02.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_03.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_04.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_05.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_06.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_08.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_09.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/inline_10.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/read_array.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/read_transform.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/ROM.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/stimulate_network.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/stimulus_generator.vhd
+#vhdl-ams/ashenden/compliant/files-and-IO/stimulus_interpreter-1.vhd	#crash
+vhdl-ams/ashenden/compliant/files-and-IO/tb_cache.vhd
+vhdl-ams/ashenden/compliant/files-and-IO/tb_ROM.vhd
+#vhdl-ams/ashenden/compliant/files-and-IO/textio.vhd		#redeclaration
+#vhdl-ams/ashenden/compliant/frequency-modeling/inline_01a.vhd	#quan
+#vhdl-ams/ashenden/compliant/frequency-modeling/inline_02a.vhd	#quan
+vhdl-ams/ashenden/compliant/frequency-modeling/inline_03a.vhd
+vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-1.vhd
+vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-2.vhd
+#vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-3.vhd	#ltf
+#vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-4.vhd	#zoh
+#vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-5.vhd	#ztf
+#vhdl-ams/ashenden/compliant/frequency-modeling/lowpass.vhd	#ltf
+#vhdl-ams/ashenden/compliant/frequency-modeling/nmos_transistor.vhd	#quan
+vhdl-ams/ashenden/compliant/frequency-modeling/nmos_transistor_wa.vhd
+vhdl-ams/ashenden/compliant/frequency-modeling/opamp.vhd
+#vhdl-ams/ashenden/compliant/frequency-modeling/opamp_2pole.vhd	#ltf
+#vhdl-ams/ashenden/compliant/frequency-modeling/opamp_2pole_res.vhd	#ltf
+#vhdl-ams/ashenden/compliant/frequency-modeling/tb_lpf_dot_ltf_ztf-1.vhd	#lib
+#vhdl-ams/ashenden/compliant/frequency-modeling/tb_lpf_dot_ltf_ztf.vhd		#lib
+#vhdl-ams/ashenden/compliant/frequency-modeling/tb_mosfet_noisy.vhd		#lib
+#vhdl-ams/ashenden/compliant/frequency-modeling/tb_opamp.vhd			#lib
+#vhdl-ams/ashenden/compliant/frequency-modeling/tb_opamp_2pole.vhd		#lib
+#vhdl-ams/ashenden/compliant/frequency-modeling/tb_v_source.vhd		#lib
+#vhdl-ams/ashenden/compliant/frequency-modeling/v_source-1.vhd			#quan
+#vhdl-ams/ashenden/compliant/frequency-modeling/v_source.vhd			#quan
+vhdl-ams/ashenden/compliant/fundamental/d_ff.vhd
+vhdl-ams/ashenden/compliant/fundamental/vc_amp.vhd
+#vhdl-ams/ashenden/compliant/fundamental/adc.vhd		#lib
+vhdl-ams/ashenden/compliant/fundamental/comparator.vhd
+#vhdl-ams/ashenden/compliant/fundamental/propulsion.vhd	#lib
+vhdl-ams/ashenden/compliant/fundamental/resistor.vhd
+#vhdl-ams/ashenden/compliant/fundamental/tb_adc.vhd		#lib
+#vhdl-ams/ashenden/compliant/fundamental/test_bench-1.vhd	#lib
+vhdl-ams/ashenden/compliant/generators/computer_system-1.vhd
+vhdl-ams/ashenden/compliant/generators/computer_system.vhd
+#vhdl-ams/ashenden/compliant/generators/architectural.vhd	#lib
+#vhdl-ams/ashenden/compliant/generators/carry_chain.vhd	#syntax
+#vhdl-ams/ashenden/compliant/generators/down_to_chips.vhd	#lib
+vhdl-ams/ashenden/compliant/generators/fanout_tree.vhd
+vhdl-ams/ashenden/compliant/generators/graphics_engine.vhd
+#vhdl-ams/ashenden/compliant/generators/identical_devices.vhd	#lib
+vhdl-ams/ashenden/compliant/generators/inline_01.vhd
+vhdl-ams/ashenden/compliant/generators/inline_02.vhd
+#vhdl-ams/ashenden/compliant/generators/last_pass_spice.vhd	#lib
+#vhdl-ams/ashenden/compliant/generators/led_bar_display.vhd	#syntax
+vhdl-ams/ashenden/compliant/generators/memory_board.vhd
+#vhdl-ams/ashenden/compliant/generators/resistor_pack.vhd	#crash sub
+vhdl-ams/ashenden/compliant/generics/control_unit.vhd
+#vhdl-ams/ashenden/compliant/generics/inline_01.vhd		#lib
+vhdl-ams/ashenden/compliant/generics/inline_02a.vhd
+vhdl-ams/ashenden/compliant/generics/inline_03.vhd
+#vhdl-ams/ashenden/compliant/generics/inline_05a.vhd		#lib
+vhdl-ams/ashenden/compliant/generics/inline_06.vhd
+vhdl-ams/ashenden/compliant/generics/inline_07.vhd
+#vhdl-ams/ashenden/compliant/generics/inline_08.vhd		#lib
+#vhdl-ams/ashenden/compliant/generics/inline_09a.vhd		#crash
+#vhdl-ams/ashenden/compliant/generics/multiple_opamp.vhd	#crash
+vhdl-ams/ashenden/compliant/generics/reg.vhd
+#vhdl-ams/ashenden/compliant/generics/tb_timer_w_stim.vhd	#lib
+vhdl-ams/ashenden/compliant/generics/timer.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/circuit.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/computer_system-1.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/computer_system.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/data_logger.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/example_entity.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/full.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/inline_01.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/inline_02.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/inline_03.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/inline_04.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/inline_05.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/inline_06.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/latch.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/processor.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/processor_node.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/reg_read_selector.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/resolve.vhd
+#vhdl-ams/ashenden/compliant/guards-and-blocks/sensor.vhd	#comment
+#vhdl-ams/ashenden/compliant/guards-and-blocks/tb_full.vhd	#lib
+vhdl-ams/ashenden/compliant/guards-and-blocks/tb_latch.vhd
+#vhdl-ams/ashenden/compliant/guards-and-blocks/tb_sensor.vhd	#lib
+vhdl-ams/ashenden/compliant/guards-and-blocks/tri_state_reg.vhd
+vhdl-ams/ashenden/compliant/guards-and-blocks/tb_tri_state_reg.vhd
+vhdl-ams/ashenden/compliant/misc-topics/count2-1.vhd
+vhdl-ams/ashenden/compliant/misc-topics/inline_01.vhd
+vhdl-ams/ashenden/compliant/misc-topics/inline_02.vhd
+vhdl-ams/ashenden/compliant/misc-topics/inline_04a.vhd
+vhdl-ams/ashenden/compliant/misc-topics/limit_checker.vhd
+#vhdl-ams/ashenden/compliant/misc-topics/processor.vhd		# conversions
+vhdl-ams/ashenden/compliant/misc-topics/SR_flipflop.vhd
+vhdl-ams/ashenden/compliant/misc-topics/tb_count2.vhd
+vhdl-ams/ashenden/compliant/misc-topics/tb_limit_checker.vhd
+vhdl-ams/ashenden/compliant/misc-topics/tb_SR_flipflop.vhd
+vhdl-ams/ashenden/compliant/misc-topics/test_bench.vhd
+vhdl-ams/ashenden/compliant/packages/cpu_types.vhd
+vhdl-ams/ashenden/compliant/packages/cpu_types-1.vhd
+vhdl-ams/ashenden/compliant/packages/address_decoder.vhd
+vhdl-ams/ashenden/compliant/packages/clock_power_pkg.vhd
+vhdl-ams/ashenden/compliant/packages/analog_output_interface.vhd
+vhdl-ams/ashenden/compliant/packages/bit_vector_signed_arithmetic.vhd
+vhdl-ams/ashenden/compliant/packages/bus_sequencer-1.vhd
+vhdl-ams/ashenden/compliant/packages/cpu.vhd
+vhdl-ams/ashenden/compliant/packages/cpu-1.vhd
+vhdl-ams/ashenden/compliant/packages/inline_01.vhd
+#vhdl-ams/ashenden/compliant/packages/inline_02.vhd	#nobody
+vhdl-ams/ashenden/compliant/packages/inline_03.vhd
+vhdl-ams/ashenden/compliant/packages/inline_04a.vhd
+vhdl-ams/ashenden/compliant/packages/inline_05.vhd
+vhdl-ams/ashenden/compliant/packages/inline_06.vhd
+vhdl-ams/ashenden/compliant/packages/inline_08.vhd
+vhdl-ams/ashenden/compliant/packages/inline_09.vhd
+vhdl-ams/ashenden/compliant/packages/io_controller-1.vhd
+vhdl-ams/ashenden/compliant/packages/lessthan.vhd
+vhdl-ams/ashenden/compliant/packages/tb_address_decoder.vhd
+vhdl-ams/ashenden/compliant/packages/tb_bit_vector_signed_arithmetic.vhd
+vhdl-ams/ashenden/compliant/packages/test_alu.vhd
+vhdl-ams/ashenden/compliant/resolution/bus_based_system.vhd
+vhdl-ams/ashenden/compliant/resolution/words.vhd
+vhdl-ams/ashenden/compliant/resolution/computer_system.vhd
+vhdl-ams/ashenden/compliant/resolution/inline_01.vhd
+vhdl-ams/ashenden/compliant/resolution/inline_02.vhd
+vhdl-ams/ashenden/compliant/resolution/inline_03.vhd
+vhdl-ams/ashenden/compliant/resolution/MVL4.vhd
+vhdl-ams/ashenden/compliant/resolution/memory_system.vhd
+vhdl-ams/ashenden/compliant/resolution/tri_state_buffer.vhd
+vhdl-ams/ashenden/compliant/resolution/misc_logic.vhd
+vhdl-ams/ashenden/compliant/resolution/resolve_tri_state_logic.vhd
+vhdl-ams/ashenden/compliant/resolution/resolved.vhd
+vhdl-ams/ashenden/compliant/resolution/synchronize.vhd
+vhdl-ams/ashenden/compliant/resolution/synchronized_module.vhd
+vhdl-ams/ashenden/compliant/scalar-data/ent.vhd
+#vhdl-ams/ashenden/compliant/scalar-data/inline_01a.vhd	#crash decl
+vhdl-ams/ashenden/compliant/scalar-data/int_types.vhd
+vhdl-ams/ashenden/compliant/scalar-data/small_adder.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/cos.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/counter-1.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/counter.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/edge_triggered_register.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_01.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_02.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_03.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_04a.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_05.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_06.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_07.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_08.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_09.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_10a.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_11.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_12.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_13.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_14.vhd
+#vhdl-ams/ashenden/compliant/sequential-statements/inline_15.vhd	#error
+vhdl-ams/ashenden/compliant/sequential-statements/inline_16.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_17.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_18.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/inline_19.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/max3.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/mux4.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/SR_flipflop.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/tb_cos-1.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/tb_cos.vhd
+#vhdl-ams/ashenden/compliant/sequential-statements/tb_counter-1.vhd	#error
+vhdl-ams/ashenden/compliant/sequential-statements/tb_counter.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/tb_edge_triggered_register.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/tb_max3.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/tb_mux4.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/tb_SR_flipflop.vhd
+vhdl-ams/ashenden/compliant/sequential-statements/thermostat-1.vhd
+vhdl-ams/ashenden/compliant/subprograms/addu.vhd
+vhdl-ams/ashenden/compliant/subprograms/average_samples.vhd
+vhdl-ams/ashenden/compliant/subprograms/bv_lt.vhd
+vhdl-ams/ashenden/compliant/subprograms/bv_to_natural.vhd
+vhdl-ams/ashenden/compliant/subprograms/cache.vhd
+vhdl-ams/ashenden/compliant/subprograms/check_setup.vhd
+vhdl-ams/ashenden/compliant/subprograms/control_processor.vhd
+vhdl-ams/ashenden/compliant/subprograms/control_sequencer.vhd
+vhdl-ams/ashenden/compliant/subprograms/do_arith_op.vhd
+#vhdl-ams/ashenden/compliant/subprograms/ent.vhd		#incomplete
+vhdl-ams/ashenden/compliant/subprograms/find_first_set.vhd
+vhdl-ams/ashenden/compliant/subprograms/freq_detect.vhd
+vhdl-ams/ashenden/compliant/subprograms/generate_clock.vhd
+vhdl-ams/ashenden/compliant/subprograms/hold_time_checker.vhd
+vhdl-ams/ashenden/compliant/subprograms/increment.vhd
+vhdl-ams/ashenden/compliant/subprograms/inline_01.vhd
+vhdl-ams/ashenden/compliant/subprograms/inline_02.vhd
+vhdl-ams/ashenden/compliant/subprograms/inline_03.vhd
+vhdl-ams/ashenden/compliant/subprograms/inline_04a.vhd
+vhdl-ams/ashenden/compliant/subprograms/inline_05a.vhd
+vhdl-ams/ashenden/compliant/subprograms/inline_06a.vhd
+vhdl-ams/ashenden/compliant/subprograms/inline_07.vhd
+vhdl-ams/ashenden/compliant/subprograms/inline_08.vhd
+vhdl-ams/ashenden/compliant/subprograms/instruction_interpreter-1.vhd
+vhdl-ams/ashenden/compliant/subprograms/instruction_interpreter.vhd
+vhdl-ams/ashenden/compliant/subprograms/limited.vhd
+#vhdl-ams/ashenden/compliant/subprograms/mixer.vhd		#crash sub
+#vhdl-ams/ashenden/compliant/subprograms/mixer_wa.vhd		#crash sub
+#vhdl-ams/ashenden/compliant/subprograms/motor_system.vhd	#idem
+vhdl-ams/ashenden/compliant/subprograms/motor_system_wa.vhd
+vhdl-ams/ashenden/compliant/subprograms/negate.vhd
+vhdl-ams/ashenden/compliant/subprograms/network_driver.vhd
+#vhdl-ams/ashenden/compliant/subprograms/p1.vhd		#incomplete
+vhdl-ams/ashenden/compliant/subprograms/receiver.vhd
+vhdl-ams/ashenden/compliant/subprograms/reg_ctrl.vhd
+vhdl-ams/ashenden/compliant/subprograms/signal_generator.vhd
+#vhdl-ams/ashenden/compliant/subprograms/tb_freq_detect.vhd	#lib
+#vhdl-ams/ashenden/compliant/subprograms/tb_mixer.vhd		#lib
+#vhdl-ams/ashenden/compliant/subprograms/tb_motor_system.vhd	#lib
+#vhdl-ams/ashenden/compliant/subprograms/tb_reg_ctrl.vhd	#lib
+vhdl-ams/ashenden/compliant/subprograms/v_source.vhd
+#vhdl-ams/ashenden/compliant/subprograms/tb_v_source.vhd	#lib
+vhdl-ams/ashenden/compliant/util/clock_duty.vhd
+vhdl-ams/ashenden/compliant/util/gain.vhd
+vhdl-ams/ashenden/compliant/util/resistor.vhd
+vhdl-ams/ashenden/compliant/util/src_constant.vhd
+#vhdl-ams/ashenden/compliant/util/src_pulse.vhd		#unit
+vhdl-ams/ashenden/compliant/util/src_sine.vhd
+vhdl-ams/ashenden/compliant/util/stimulus_generators.vhd
+vhdl-ams/ashenden/compliant/util/sum2.vhd
