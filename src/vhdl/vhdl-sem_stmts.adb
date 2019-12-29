@@ -2112,15 +2112,29 @@ package body Vhdl.Sem_Stmts is
          return;
       end if;
 
-      Set_Simultaneous_Left (Stmt, Left);
-      Set_Simultaneous_Right (Stmt, Right);
-
       Res_Type := Search_Compatible_Type (Get_Type (Left), Get_Type (Right));
       if Res_Type = Null_Iir then
          Error_Msg_Sem
            (+Stmt, "types of left and right expressions are incompatible");
          return;
       end if;
+
+      --  AMS-LRM17 11.10 Simple simultaneous statement
+      --  The base type of each simple expression shall be the same nature
+      --  type.
+      if not Sem_Types.Is_Nature_Type (Res_Type) then
+         Error_Msg_Sem (+Stmt, "type of expressions must be a float types");
+      end if;
+
+      if not Is_Expr_Fully_Analyzed (Left) then
+         Left := Sem_Expression_Ov (Left, Res_Type);
+      end if;
+      if not Is_Expr_Fully_Analyzed (Right) then
+         Right := Sem_Expression_Ov (Right, Res_Type);
+      end if;
+
+      Set_Simultaneous_Left (Stmt, Left);
+      Set_Simultaneous_Right (Stmt, Right);
 
       --  FIXME: check for nature type...
    end Sem_Simple_Simultaneous_Statement;

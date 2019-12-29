@@ -2185,12 +2185,16 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Tolerance (Field7)
    --
+   --  Set only for the first declaration.
    --   Get/Set_Plus_Terminal_Name (Field8)
    --
+   --  Set only for the first declaration.
    --   Get/Set_Minus_Terminal_Name (Field9)
    --
+   --  Same as Plus_Terminal_Name when defined.
    --   Get/Set_Plus_Terminal (Field10)
    --
+   --  Same as Minus_Terminal_Name when defined.
    --   Get/Set_Minus_Terminal (Field11)
    --
    --   Get/Set_Has_Identifier_List (Flag3)

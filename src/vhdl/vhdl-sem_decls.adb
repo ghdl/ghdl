@@ -2112,15 +2112,19 @@ package body Vhdl.Sem_Decls is
       else
          Is_Second := False;
          Plus_Name := Sem_Terminal_Name (Plus_Name);
+         Set_Plus_Terminal_Name (Decl, Plus_Name);
+         Plus_Name := Strip_Denoting_Name (Plus_Name);
          Minus_Name := Get_Minus_Terminal_Name (Decl);
          if Minus_Name /= Null_Iir then
             Minus_Name := Sem_Terminal_Name (Minus_Name);
+            Set_Minus_Terminal_Name (Decl, Minus_Name);
+            Minus_Name := Strip_Denoting_Name (Minus_Name);
          end if;
          Value := Get_Default_Value (Decl);
       end if;
       Set_Plus_Terminal (Decl, Plus_Name);
       Set_Minus_Terminal (Decl, Minus_Name);
-      Plus_Ref := Get_Nature (Get_Named_Entity (Plus_Name));
+      Plus_Ref := Get_Nature (Plus_Name);
       case Iir_Kinds_Branch_Quantity_Declaration (Get_Kind (Decl)) is
          when Iir_Kind_Across_Quantity_Declaration =>
             Branch_Type := Get_Across_Type (Plus_Ref);
