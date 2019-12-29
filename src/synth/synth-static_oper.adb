@@ -21,9 +21,14 @@
 with Types; use Types;
 
 with Vhdl.Utils; use Vhdl.Utils;
+with Vhdl.Ieee.Std_Logic_1164;
+
+with Netlists; use Netlists;
+with Netlists.Utils; use Netlists.Utils;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
+with Synth.Environment;
 with Synth.Expr; use Synth.Expr;
 with Synth.Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
@@ -31,6 +36,69 @@ with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
 
 package body Synth.Static_Oper is
    --  From openiee:
+
+   type Static_Arr_Kind is (Sarr_Value, Sarr_Net);
+
+   type Static_Arr_Type (Kind : Static_Arr_Kind) is record
+      case Kind is
+         when Sarr_Value =>
+            Arr : Value_Array_Acc;
+         when Sarr_Net =>
+            N : Net;
+      end case;
+   end record;
+
+   function Get_Static_Array (V : Value_Acc) return Static_Arr_Type
+   is
+      N : Net;
+   begin
+      case V.Kind is
+         when Value_Const =>
+            return (Kind => Sarr_Value, Arr => V.C_Val.Arr);
+         when Value_Const_Array =>
+            return (Kind => Sarr_Value, Arr => V.Arr);
+         when Value_Net =>
+            N := V.N;
+         when Value_Wire =>
+            N := Synth.Environment.Get_Const_Wire (V.W);
+         when others =>
+            raise Internal_Error;
+      end case;
+      return (Kind => Sarr_Net, N => N);
+   end Get_Static_Array;
+
+   function Logic_To_Std_Logic (Va : Uns32; Zx : Uns32) return Std_Ulogic
+   is
+      subtype Uns4 is Uns32 range 0 .. 3;
+   begin
+      case Uns4 (Va + 2 * Zx) is
+         when 0 =>
+            return Std_Ulogic'Val (Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos);
+         when 1 =>
+            return Std_Ulogic'Val (Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos);
+         when 2 =>
+            return Std_Ulogic'Val (Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos);
+         when 3 =>
+            return Std_Ulogic'Val (Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos);
+      end case;
+   end Logic_To_Std_Logic;
+
+   function Get_Static_Std_Logic (Sarr : Static_Arr_Type; Off : Uns32)
+                                 return Std_Ulogic is
+   begin
+      case Sarr.Kind is
+         when Sarr_Value =>
+            return Std_Ulogic'Val (Sarr.Arr.V (Iir_Index32 (Off + 1)).Scal);
+         when Sarr_Net =>
+            declare
+               Va : Uns32;
+               Zx : Uns32;
+            begin
+               Get_Net_Element (Sarr.N, Off, Va, Zx);
+               return Logic_To_Std_Logic (Va, Zx);
+            end;
+      end case;
+   end Get_Static_Std_Logic;
 
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
@@ -44,31 +112,34 @@ package body Synth.Static_Oper is
       return Create_Vec_Type_By_Length (Prev.W, Prev.Vec_El);
    end Create_Res_Bound;
 
-   function Synth_Vector_Dyadic
-     (L, R : Value_Acc; Op : Table_2d; Loc : Syn_Src) return Value_Acc
+   function Synth_Vector_Dyadic (Left, Right : Value_Acc;
+                                 Op : Table_2d;
+                                 Loc : Syn_Src) return Value_Acc
    is
-      El_Typ : constant Type_Acc := L.Typ.Vec_El;
+      El_Typ : constant Type_Acc := Left.Typ.Vec_El;
+      Larr : constant Static_Arr_Type := Get_Static_Array (Left);
+      Rarr : constant Static_Arr_Type := Get_Static_Array (Right);
       Arr : Value_Array_Acc;
    begin
-      if L.Arr.Len /= R.Arr.Len then
+      if Left.Typ.W /= Right.Typ.W then
          Error_Msg_Synth (+Loc, "length of operands mismatch");
          return null;
       end if;
 
-      Arr := Create_Value_Array (L.Arr.Len);
+      Arr := Create_Value_Array (Iir_Index32 (Left.Typ.W));
       for I in Arr.V'Range loop
          declare
             Ls : constant Std_Ulogic :=
-              Std_Ulogic'Val (L.Arr.V (I).Scal);
+              Get_Static_Std_Logic (Larr, Uns32 (I - 1));
             Rs : constant Std_Ulogic :=
-              Std_Ulogic'Val (R.Arr.V (I).Scal);
+              Get_Static_Std_Logic (Rarr, Uns32 (I - 1));
             V : constant Std_Ulogic := Op (Ls, Rs);
          begin
             Arr.V (I) := Create_Value_Discrete (Std_Ulogic'Pos (V), El_Typ);
          end;
       end loop;
 
-      return Create_Value_Const_Array (Create_Res_Bound (L.Typ), Arr);
+      return Create_Value_Const_Array (Create_Res_Bound (Left.Typ), Arr);
    end Synth_Vector_Dyadic;
 
    procedure To_Std_Logic_Vector

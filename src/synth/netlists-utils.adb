@@ -155,6 +155,26 @@ package body Netlists.Utils is
       return To_Int64 (Get_Net_Uns64 (N));
    end Get_Net_Int64;
 
+   procedure Get_Net_Element
+     (N : Net; Off : Uns32; Va : out Uns32; Zx : out Uns32)
+   is
+      Inst : constant Instance := Get_Net_Parent (N);
+   begin
+      case Get_Id (Inst) is
+         when Id_Const_UB32 =>
+            declare
+               V : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+               Wd : constant Width := Get_Width (N);
+            begin
+               pragma Assert (Off < 32);
+               Zx := 0;
+               Va := Shift_Right (V, Natural (Wd - Off)) and 1;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Net_Element;
+
    function Is_Connected (O : Net) return Boolean is
    begin
       return Get_First_Sink (O) /= No_Input;
