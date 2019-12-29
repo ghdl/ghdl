@@ -3045,7 +3045,8 @@ package body Vhdl.Canon is
          when Iir_Kind_Signal_Attribute_Declaration =>
             null;
 
-         when Iir_Kind_Nature_Declaration =>
+         when Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration =>
             null;
          when Iir_Kind_Terminal_Declaration =>
             null;

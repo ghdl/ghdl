@@ -3192,9 +3192,9 @@ package body Vhdl.Nodes_Meta is
       Field_Visible_Flag,
       Field_Use_Flag,
       Field_Parent,
+      Field_Subnature_Indication,
       Field_Nature,
       Field_Chain,
-      Field_Subnature_Indication,
       --  Iir_Kind_Package_Header
       Field_Generic_Chain,
       Field_Generic_Map_Aspect_Chain,
