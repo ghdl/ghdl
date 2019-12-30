@@ -8434,7 +8434,8 @@ package body Vhdl.Nodes_Meta is
    function Has_Nature (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_Nature_Declaration
+         when Iir_Kind_Error
+           | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Nature_Element_Declaration
            | Iir_Kind_Terminal_Declaration

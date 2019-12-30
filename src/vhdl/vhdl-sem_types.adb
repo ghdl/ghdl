@@ -2715,7 +2715,9 @@ package body Vhdl.Sem_Types is
 
    function Is_Nature_Type (Dtype : Iir) return Boolean is
    begin
-      case Iir_Kinds_Type_And_Subtype_Definition (Get_Kind (Dtype)) is
+      case Get_Kind (Dtype) is
+         when Iir_Kind_Error =>
+            return True;
          when Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Floating_Subtype_Definition =>
             return True;
@@ -2751,6 +2753,8 @@ package body Vhdl.Sem_Types is
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
             return False;
+         when others =>
+            Error_Kind ("is_nature_type", Dtype);
       end case;
    end Is_Nature_Type;
 

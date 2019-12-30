@@ -2090,7 +2090,7 @@ package body Vhdl.Sem_Decls is
       end if;
    end Sem_Terminal_Declaration;
 
-   procedure Sem_Branch_Quantity_Declaration (Decl : Iir; Last_Decl : Iir)
+   procedure Sem_Branch_Quantity_Declaration (Decl : Iir; Prev_Decl : Iir)
    is
       Plus_Name : Iir;
       Minus_Name : Iir;
@@ -2106,9 +2106,15 @@ package body Vhdl.Sem_Decls is
       if Plus_Name = Null_Iir then
          --  List of identifier.
          Is_Second := True;
-         Plus_Name := Get_Plus_Terminal (Last_Decl);
-         Minus_Name := Get_Minus_Terminal (Last_Decl);
-         Value := Get_Default_Value (Last_Decl);
+         Plus_Name := Get_Plus_Terminal (Prev_Decl);
+         Minus_Name := Get_Minus_Terminal (Prev_Decl);
+         if Get_Kind (Decl) = Get_Kind (Prev_Decl) then
+            --  Keep the same default value for all across and all through.
+            Value := Get_Default_Value (Prev_Decl);
+         else
+            --  But do not use the across default value for through quantity.
+            Value := Get_Default_Value (Decl);
+         end if;
       else
          Is_Second := False;
          Plus_Name := Sem_Terminal_Name (Plus_Name);
@@ -2129,68 +2135,79 @@ package body Vhdl.Sem_Decls is
             --
             --  GHDL: FIXME: isn't it self-referential with the definition of
             --  the terminal nature ?
-            Minus_Name := Get_Reference
-              (Get_Nature_Simple_Nature (Get_Nature (Plus_Name)));
+            if Is_Error (Plus_Name) then
+               Minus_Name := Error_Mark;
+            else
+               Minus_Name := Get_Reference
+                 (Get_Nature_Simple_Nature (Get_Nature (Plus_Name)));
+            end if;
          end if;
          Value := Get_Default_Value (Decl);
       end if;
       Set_Plus_Terminal (Decl, Plus_Name);
       Set_Minus_Terminal (Decl, Minus_Name);
 
-      declare
-         Plus_Nature : constant Iir := Get_Nature (Plus_Name);
-         Minus_Nature : constant Iir := Get_Nature (Minus_Name);
-         Plus_Composite : constant Boolean :=
-           Is_Composite_Nature (Plus_Nature);
-         Minus_Composite : constant Boolean :=
-           Is_Composite_Nature (Minus_Nature);
-      begin
-         --  AMS-LRM17 6.4.2.7 Quantity declarations
-         --  If the terminals denoted by the terminal names of a terminal
-         --  aspect are both of composite natures, then they shall be of the
-         --  same nature, [and for each element of the plus terminal there
-         --  shall be a matching element of the minus terminal.]
-         --  If one terminal is a terminal of a composite nature and the
-         --  other of a scalar nature, then the scalar nature nature shall be
-         --  the nature of the scalar subelements of the composite terminal.
-         if (Plus_Composite and Minus_Composite)
-           or else (not Plus_Composite and not Minus_Composite)
-         then
-            if Get_Base_Nature (Plus_Nature) /= Get_Base_Nature (Minus_Nature)
+      if not Is_Error (Plus_Name) and then not Is_Error (Minus_Name) then
+         declare
+            Plus_Nature : constant Iir := Get_Nature (Plus_Name);
+            Minus_Nature : constant Iir := Get_Nature (Minus_Name);
+            Plus_Composite : constant Boolean :=
+              Is_Composite_Nature (Plus_Nature);
+            Minus_Composite : constant Boolean :=
+              Is_Composite_Nature (Minus_Nature);
+         begin
+            --  AMS-LRM17 6.4.2.7 Quantity declarations
+            --  If the terminals denoted by the terminal names of a terminal
+            --  aspect are both of composite natures, then they shall be of the
+            --  same nature, [and for each element of the plus terminal there
+            --  shall be a matching element of the minus terminal.]
+            --  If one terminal is a terminal of a composite nature and the
+            --  other of a scalar nature, then the scalar nature nature shall
+            --  be the nature of the scalar subelements of the composite
+            --  terminal.
+            if (Plus_Composite and Minus_Composite)
+              or else (not Plus_Composite and not Minus_Composite)
             then
-               Error_Msg_Sem
-                 (+Decl, "terminals must be of the same nature");
+               if (Get_Base_Nature (Plus_Nature)
+                     /= Get_Base_Nature (Minus_Nature))
+               then
+                  Error_Msg_Sem
+                    (+Decl, "terminals must be of the same nature");
+               end if;
+               Nat := Plus_Nature;
+            elsif Plus_Composite then
+               pragma Assert (not Minus_Composite);
+               if (Get_Nature_Simple_Nature (Plus_Nature)
+                     /= Get_Base_Nature (Minus_Nature))
+               then
+                  Error_Msg_Sem
+                    (+Decl, "minus terminal must be of the nature of "
+                       & "plus subelements");
+               end if;
+               Nat := Plus_Nature;
+            else
+               pragma Assert (Minus_Composite and not Plus_Composite);
+               if (Get_Nature_Simple_Nature (Minus_Nature)
+                     /= Get_Base_Nature (Plus_Nature))
+               then
+                  Error_Msg_Sem
+                    (+Decl, "plus terminal must be of the nature of "
+                       & "minus subelements");
+               end if;
+               Nat := Minus_Nature;
             end if;
-            Nat := Plus_Nature;
-         elsif Plus_Composite then
-            pragma Assert (not Minus_Composite);
-            if (Get_Nature_Simple_Nature (Plus_Nature)
-                  /= Get_Base_Nature (Minus_Nature))
-            then
-               Error_Msg_Sem
-                 (+Decl, "minus terminal must be of the nature of "
-                    & "plus subelements");
-            end if;
-            Nat := Plus_Nature;
-         else
-            pragma Assert (Minus_Composite and not Plus_Composite);
-            if (Get_Nature_Simple_Nature (Minus_Nature)
-                  /= Get_Base_Nature (Plus_Nature))
-            then
-               Error_Msg_Sem
-                 (+Decl, "plus terminal must be of the nature of "
-                    & "minus subelements");
-            end if;
-            Nat := Minus_Nature;
-         end if;
-      end;
-      case Iir_Kinds_Branch_Quantity_Declaration (Get_Kind (Decl)) is
-         when Iir_Kind_Across_Quantity_Declaration =>
-            Branch_Type := Get_Across_Type (Nat);
-         when Iir_Kind_Through_Quantity_Declaration =>
-            Branch_Type := Get_Through_Type (Nat);
-      end case;
-      pragma Assert (Branch_Type /= Null_Iir);
+         end;
+
+         case Iir_Kinds_Branch_Quantity_Declaration (Get_Kind (Decl)) is
+            when Iir_Kind_Across_Quantity_Declaration =>
+               Branch_Type := Get_Across_Type (Nat);
+            when Iir_Kind_Through_Quantity_Declaration =>
+               Branch_Type := Get_Through_Type (Nat);
+         end case;
+         pragma Assert (Branch_Type /= Null_Iir);
+      else
+         Branch_Type := Error_Mark;
+      end if;
       Set_Type (Decl, Branch_Type);
 
       Set_Name_Staticness (Decl, Locally);

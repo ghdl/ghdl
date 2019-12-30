@@ -4617,6 +4617,7 @@ package Vhdl.Nodes is
    -- Iir_Kind_Error (Short)
    --  Can be used instead of an expression or a type.
    --   Get/Set_Type (Field1)
+   --   Get/Set_Nature (Alias Field1)
    --
    --   Get/Set_Error_Origin (Field2)
    --

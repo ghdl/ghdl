@@ -9110,7 +9110,8 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_End);
 
       --  Skip 'procedural'.
-      Expect_Scan (Tok_Procedural);
+      Expect_Scan (Tok_Procedural, "missing 'procedural' after 'end'");
+      Set_End_Has_Reserved_Id (Res, True);
 
       Check_End_Name (Res);
 

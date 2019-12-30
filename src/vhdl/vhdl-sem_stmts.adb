@@ -2107,6 +2107,7 @@ package body Vhdl.Sem_Stmts is
    procedure Sem_Simple_Simultaneous_Statement (Stmt : Iir)
    is
       Left, Right : Iir;
+      Left_Type, Right_Type : Iir;
       Res_Type : Iir;
    begin
       Left := Get_Simultaneous_Left (Stmt);
@@ -2117,6 +2118,12 @@ package body Vhdl.Sem_Stmts is
 
       --  Give up in case of error
       if Left = Null_Iir or else Right = Null_Iir then
+         return;
+      end if;
+
+      Left_Type := Get_Type (Left);
+      Right_Type := Get_Type (Right);
+      if Left_Type = Null_Iir or else Right_Type = Null_Iir then
          return;
       end if;
 
