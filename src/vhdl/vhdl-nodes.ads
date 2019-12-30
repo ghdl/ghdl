@@ -3501,15 +3501,20 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Declaration_Chain (Field1)
+   --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Label (Field3)
-   --
    --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Declaration_Chain (Field1)
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
    --
    --   Get/Set_Has_Is (Flag7)
    --

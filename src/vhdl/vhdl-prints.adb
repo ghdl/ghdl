@@ -284,7 +284,8 @@ package body Vhdl.Prints is
          when Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
-           | Iir_Kind_For_Generate_Statement =>
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Simultaneous_Procedural_Statement =>
             Disp_Ident (Ctxt, Get_Label (Decl));
          when Iir_Kind_Package_Body =>
             Disp_Identifier (Ctxt, Decl);
@@ -3942,6 +3943,38 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
    end Disp_Simple_Simultaneous_Statement;
 
+   procedure Disp_Simultaneous_Procedural_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir) is
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+
+      Disp_Token (Ctxt, Tok_Procedural);
+      if Get_Has_Is (Stmt) then
+         Disp_Token (Ctxt, Tok_Is);
+      end if;
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Declaration_Chain (Ctxt, Stmt);
+      Close_Vbox (Ctxt);
+
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Begin);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Disp_Sequential_Statements
+        (Ctxt, Get_Sequential_Statement_Chain (Stmt));
+      Close_Vbox (Ctxt);
+
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_End);
+      Disp_After_End (Ctxt, Stmt, Tok_Procedural);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
+   end Disp_Simultaneous_Procedural_Statement;
+
    procedure Disp_Concurrent_Statement (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
       case Get_Kind (Stmt) is
@@ -3987,6 +4020,8 @@ package body Vhdl.Prints is
             Disp_Simple_Simultaneous_Statement (Ctxt, Stmt);
          when Iir_Kind_Simultaneous_If_Statement =>
             Disp_Simultaneous_If_Statement (Ctxt, Stmt);
+         when Iir_Kind_Simultaneous_Procedural_Statement =>
+            Disp_Simultaneous_Procedural_Statement (Ctxt, Stmt);
          when others =>
             Error_Kind ("disp_concurrent_statement", Stmt);
       end case;

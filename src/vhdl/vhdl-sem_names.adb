@@ -1524,7 +1524,8 @@ package body Vhdl.Sem_Names is
          return;
       end if;
       case Get_Kind (Subprg) is
-         when Iir_Kinds_Process_Statement =>
+         when Iir_Kinds_Process_Statement
+           | Iir_Kind_Simultaneous_Procedural_Statement =>
             return;
          when Iir_Kind_Procedure_Declaration =>
             --  Exit now if already known as impure.

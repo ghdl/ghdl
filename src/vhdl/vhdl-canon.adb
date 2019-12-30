@@ -2278,6 +2278,17 @@ package body Vhdl.Canon is
                   Clause := Get_Else_Clause (Clause);
                end loop;
             end;
+         when Iir_Kind_Simultaneous_Procedural_Statement =>
+            Canon_Declarations (Top, Stmt, Null_Iir);
+            if Canon_Flag_Sequentials_Stmts then
+               declare
+                  Stmts : Iir;
+               begin
+                  Stmts := Get_Sequential_Statement_Chain (Stmt);
+                  Stmts := Canon_Sequential_Stmts (Stmts);
+                  Set_Sequential_Statement_Chain (Stmt, Stmts);
+               end;
+            end if;
 
          when others =>
             Error_Kind ("canon_concurrent_statement", Stmt);

@@ -409,6 +409,14 @@ package body Vhdl.Sem_Stmts is
             --  An object designated by an access type is always an object of
             --  class variable.
             null;
+         when Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kinds_Branch_Quantity_Declaration
+           | Iir_Kind_Dot_Attribute =>
+            if (Get_Kind (Get_Parent (Stmt))
+                  /= Iir_Kind_Simultaneous_Procedural_Statement)
+            then
+               Error_Msg_Sem (+Stmt, "%n cannot be assigned", +Target_Prefix);
+            end if;
          when others =>
             Error_Msg_Sem (+Stmt, "%n is not a variable to be assigned",
                            +Target_Prefix);
@@ -2152,6 +2160,21 @@ package body Vhdl.Sem_Stmts is
       end loop;
    end Sem_Simultaneous_If_Statement;
 
+   procedure Sem_Simultaneous_Procedural_Statement (Stmt : Iir) is
+   begin
+      Set_Is_Within_Flag (Stmt, True);
+
+      --  AMS-LRM17 12.1 Declarative region
+      --  j) A simultaneous procedural statement
+      Open_Declarative_Region;
+
+      Sem_Sequential_Statements (Stmt, Stmt);
+
+      Close_Declarative_Region;
+
+      Set_Is_Within_Flag (Stmt, False);
+   end Sem_Simultaneous_Procedural_Statement;
+
    procedure Sem_Simultaneous_Statements (First : Iir)
    is
       Stmt : Iir;
@@ -2163,6 +2186,8 @@ package body Vhdl.Sem_Stmts is
                Sem_Simple_Simultaneous_Statement (Stmt);
             when Iir_Kind_Simultaneous_If_Statement =>
                Sem_Simultaneous_If_Statement (Stmt);
+            when Iir_Kind_Simultaneous_Procedural_Statement =>
+               Sem_Simultaneous_Procedural_Statement (Stmt);
             when others =>
                Error_Kind ("sem_simultaneous_statements", Stmt);
          end case;
@@ -2244,6 +2269,8 @@ package body Vhdl.Sem_Stmts is
             Sem_Simple_Simultaneous_Statement (Stmt);
          when Iir_Kind_Simultaneous_If_Statement =>
             Sem_Simultaneous_If_Statement (Stmt);
+         when Iir_Kind_Simultaneous_Procedural_Statement =>
+            Sem_Simultaneous_Procedural_Statement (Stmt);
          when others =>
             Error_Kind ("sem_concurrent_statement", Stmt);
       end case;
