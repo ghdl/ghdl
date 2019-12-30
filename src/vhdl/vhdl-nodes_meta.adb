@@ -3399,9 +3399,9 @@ package body Vhdl.Nodes_Meta is
       Field_Use_Flag,
       Field_Name_Staticness,
       Field_Parent,
-      Field_Nature,
       Field_Chain,
       Field_Subnature_Indication,
+      Field_Nature,
       --  Iir_Kind_Object_Alias_Declaration
       Field_Identifier,
       Field_Visible_Flag,

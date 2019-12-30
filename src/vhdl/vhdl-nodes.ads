@@ -2074,13 +2074,13 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Nature (Field1)
-   --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Subnature_Indication (Field5)
+   --
+   --   Get/Set_Nature (Field1)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
