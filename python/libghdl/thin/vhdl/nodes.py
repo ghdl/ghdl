@@ -320,10 +320,12 @@ class Iir_Kinds:
         Iir_Kind.Variable_Assignment_Statement,
         Iir_Kind.Conditional_Variable_Assignment_Statement]
 
-    Simultaneous_Statement = [
-        Iir_Kind.Simple_Simultaneous_Statement,
-        Iir_Kind.Simultaneous_Procedural_Statement,
-        Iir_Kind.Simultaneous_If_Statement]
+    Denoting_Name = [
+        Iir_Kind.Character_Literal,
+        Iir_Kind.Simple_Name,
+        Iir_Kind.Selected_Name,
+        Iir_Kind.Operator_Symbol,
+        Iir_Kind.Reference_Name]
 
     Case_Choice = [
         Iir_Kind.Choice_By_Range,
@@ -377,6 +379,12 @@ class Iir_Kinds:
         Iir_Kind.String_Literal8,
         Iir_Kind.Physical_Int_Literal,
         Iir_Kind.Physical_Fp_Literal]
+
+    Nature_Indication = [
+        Iir_Kind.Scalar_Nature_Definition,
+        Iir_Kind.Record_Nature_Definition,
+        Iir_Kind.Array_Nature_Definition,
+        Iir_Kind.Array_Subnature_Definition]
 
     Process_Statement = [
         Iir_Kind.Sensitized_Process_Statement,
@@ -754,22 +762,6 @@ class Iir_Kinds:
         Iir_Kind.Interface_Function_Declaration,
         Iir_Kind.Interface_Procedure_Declaration]
 
-    Nonoverloadable_Declaration = [
-        Iir_Kind.Type_Declaration,
-        Iir_Kind.Anonymous_Type_Declaration,
-        Iir_Kind.Subtype_Declaration,
-        Iir_Kind.Nature_Declaration,
-        Iir_Kind.Subnature_Declaration,
-        Iir_Kind.Package_Header,
-        Iir_Kind.Unit_Declaration,
-        Iir_Kind.Library_Declaration,
-        Iir_Kind.Component_Declaration,
-        Iir_Kind.Attribute_Declaration,
-        Iir_Kind.Group_Template_Declaration,
-        Iir_Kind.Group_Declaration,
-        Iir_Kind.Element_Declaration,
-        Iir_Kind.Nature_Element_Declaration]
-
     Branch_Quantity_Declaration = [
         Iir_Kind.Across_Quantity_Declaration,
         Iir_Kind.Through_Quantity_Declaration]
@@ -797,9 +789,21 @@ class Iir_Kinds:
         Iir_Kind.Across_Quantity_Declaration,
         Iir_Kind.Through_Quantity_Declaration]
 
-    Physical_Literal = [
-        Iir_Kind.Physical_Int_Literal,
-        Iir_Kind.Physical_Fp_Literal]
+    Nonoverloadable_Declaration = [
+        Iir_Kind.Type_Declaration,
+        Iir_Kind.Anonymous_Type_Declaration,
+        Iir_Kind.Subtype_Declaration,
+        Iir_Kind.Nature_Declaration,
+        Iir_Kind.Subnature_Declaration,
+        Iir_Kind.Package_Header,
+        Iir_Kind.Unit_Declaration,
+        Iir_Kind.Library_Declaration,
+        Iir_Kind.Component_Declaration,
+        Iir_Kind.Attribute_Declaration,
+        Iir_Kind.Group_Template_Declaration,
+        Iir_Kind.Group_Declaration,
+        Iir_Kind.Element_Declaration,
+        Iir_Kind.Nature_Element_Declaration]
 
     Scalar_Type_And_Subtype_Definition = [
         Iir_Kind.Physical_Subtype_Definition,
@@ -862,12 +866,14 @@ class Iir_Kinds:
         Iir_Kind.Range_Array_Attribute,
         Iir_Kind.Reverse_Range_Array_Attribute]
 
-    Denoting_Name = [
-        Iir_Kind.Character_Literal,
-        Iir_Kind.Simple_Name,
-        Iir_Kind.Selected_Name,
-        Iir_Kind.Operator_Symbol,
-        Iir_Kind.Reference_Name]
+    Physical_Literal = [
+        Iir_Kind.Physical_Int_Literal,
+        Iir_Kind.Physical_Fp_Literal]
+
+    Simultaneous_Statement = [
+        Iir_Kind.Simple_Simultaneous_Statement,
+        Iir_Kind.Simultaneous_Procedural_Statement,
+        Iir_Kind.Simultaneous_If_Statement]
 
     Concurrent_Signal_Assignment = [
         Iir_Kind.Concurrent_Simple_Signal_Assignment,
@@ -1909,6 +1915,10 @@ Set_Right_Limit_Expr = libghdl.vhdl__nodes__set_right_limit_expr
 Get_Base_Type = libghdl.vhdl__nodes__get_base_type
 
 Set_Base_Type = libghdl.vhdl__nodes__set_base_type
+
+Get_Simple_Nature = libghdl.vhdl__nodes__get_simple_nature
+
+Set_Simple_Nature = libghdl.vhdl__nodes__set_simple_nature
 
 Get_Base_Nature = libghdl.vhdl__nodes__get_base_nature
 

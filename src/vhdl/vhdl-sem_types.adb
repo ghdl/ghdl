@@ -2447,7 +2447,7 @@ package body Vhdl.Sem_Types is
             St_Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
             Location_Copy (St_Def, Def);
             Set_Index_Subtype_List (St_Def, Get_Index_Subtype_List (Def));
-            Set_Element_Subtype (St_Def, Get_Element_Subtype (St_Def));
+            Set_Element_Subtype (St_Def, Get_Element_Subtype (Br_Def));
             Set_Base_Type (St_Def, Get_Base_Type (Br_Def));
             Set_Type_Staticness (St_Def, Get_Nature_Staticness (Def));
             Set_Constraint_State (St_Def, Get_Constraint_State (Def));
@@ -2543,6 +2543,8 @@ package body Vhdl.Sem_Types is
          El_Nat := Get_Named_Entity (El_Nat);
          El_Nat := Get_Nature (El_Nat);
          Set_Element_Subnature (Def, El_Nat);
+
+         Set_Simple_Nature (Def, Get_Nature_Simple_Nature (El_Nat));
       end if;
 
       Set_Base_Nature (Def, Def);
@@ -2575,6 +2577,7 @@ package body Vhdl.Sem_Types is
       Nature_Staticness : Iir_Staticness;
       Constraint : Iir_Constraint;
       Composite_Found : Boolean;
+      Simple_Nature : Iir;
    begin
       --  AMS-LRM17 12.1 Declarative region
       --  f) A record nature declaration
@@ -2584,6 +2587,7 @@ package body Vhdl.Sem_Types is
       Nature_Staticness := Locally;
       Constraint := Fully_Constrained;
       Composite_Found := False;
+      Simple_Nature := Null_Iir;
 
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
@@ -2599,6 +2603,17 @@ package body Vhdl.Sem_Types is
          end if;
          if El_Nat /= Null_Iir then
             Set_Nature (El, El_Nat);
+
+            --  AMS-LRM17 5.8.3 Composite natures
+            --  The scalar subelements of a composite nature shall all have
+            --  the same simple nature, [...]
+            if Simple_Nature = Null_Iir then
+               Simple_Nature := Get_Nature_Simple_Nature (El_Nat);
+               Set_Simple_Nature (Def, El_Nat);
+            elsif Get_Nature_Simple_Nature (El_Nat) /= Simple_Nature then
+               Error_Msg_Sem
+                 (+El, "elements must have the same simple nature");
+            end if;
 
             --  LRM93 3.2.1.1
             --  The same requirement [must define a constrained array
@@ -2739,4 +2754,28 @@ package body Vhdl.Sem_Types is
       end case;
    end Is_Nature_Type;
 
+   function Get_Nature_Simple_Nature (Nat : Iir) return Iir is
+   begin
+      case Iir_Kinds_Nature_Indication (Get_Kind (Nat)) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            return Nat;
+         when Iir_Kind_Array_Nature_Definition
+           | Iir_Kind_Record_Nature_Definition =>
+            return Get_Simple_Nature (Nat);
+         when Iir_Kind_Array_Subnature_Definition =>
+            return Get_Simple_Nature (Get_Base_Nature (Nat));
+      end case;
+   end Get_Nature_Simple_Nature;
+
+   function Is_Composite_Nature (Nat : Iir) return Boolean is
+   begin
+      case Iir_Kinds_Nature_Indication (Get_Kind (Nat)) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            return False;
+         when Iir_Kind_Array_Nature_Definition
+           | Iir_Kind_Record_Nature_Definition
+           | Iir_Kind_Array_Subnature_Definition =>
+            return True;
+      end case;
+   end Is_Composite_Nature;
 end Vhdl.Sem_Types;

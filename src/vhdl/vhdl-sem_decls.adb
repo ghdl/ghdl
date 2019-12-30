@@ -2093,11 +2093,11 @@ package body Vhdl.Sem_Decls is
    procedure Sem_Branch_Quantity_Declaration (Decl : Iir; Last_Decl : Iir)
    is
       Plus_Name : Iir;
-      Plus_Ref : Iir;
       Minus_Name : Iir;
       Branch_Type : Iir;
       Value : Iir;
       Is_Second : Boolean;
+      Nat : Iir;
    begin
       Sem_Scopes.Add_Name (Decl);
       Xref_Decl (Decl);
@@ -2119,22 +2119,82 @@ package body Vhdl.Sem_Decls is
             Minus_Name := Sem_Terminal_Name (Minus_Name);
             Set_Minus_Terminal_Name (Decl, Minus_Name);
             Minus_Name := Strip_Denoting_Name (Minus_Name);
+         else
+            --  AMS-LRM17 6.4.2.7 Quantity declarations
+            --  A terminal aspect that does not include an explicit minus
+            --  terminal name is equivalent to a terminal aspect with the
+            --  given plus terminal name and the name of the reference
+            --  terminal of the simple nature of its nature as the minus
+            --  terminal name.
+            --
+            --  GHDL: FIXME: isn't it self-referential with the definition of
+            --  the terminal nature ?
+            Minus_Name := Get_Reference
+              (Get_Nature_Simple_Nature (Get_Nature (Plus_Name)));
          end if;
          Value := Get_Default_Value (Decl);
       end if;
       Set_Plus_Terminal (Decl, Plus_Name);
       Set_Minus_Terminal (Decl, Minus_Name);
-      Plus_Ref := Get_Nature (Plus_Name);
+
+      declare
+         Plus_Nature : constant Iir := Get_Nature (Plus_Name);
+         Minus_Nature : constant Iir := Get_Nature (Minus_Name);
+         Plus_Composite : constant Boolean :=
+           Is_Composite_Nature (Plus_Nature);
+         Minus_Composite : constant Boolean :=
+           Is_Composite_Nature (Minus_Nature);
+      begin
+         --  AMS-LRM17 6.4.2.7 Quantity declarations
+         --  If the terminals denoted by the terminal names of a terminal
+         --  aspect are both of composite natures, then they shall be of the
+         --  same nature, [and for each element of the plus terminal there
+         --  shall be a matching element of the minus terminal.]
+         --  If one terminal is a terminal of a composite nature and the
+         --  other of a scalar nature, then the scalar nature nature shall be
+         --  the nature of the scalar subelements of the composite terminal.
+         if (Plus_Composite and Minus_Composite)
+           or else (not Plus_Composite and not Minus_Composite)
+         then
+            if Get_Base_Nature (Plus_Nature) /= Get_Base_Nature (Minus_Nature)
+            then
+               Error_Msg_Sem
+                 (+Decl, "terminals must be of the same nature");
+            end if;
+            Nat := Plus_Nature;
+         elsif Plus_Composite then
+            pragma Assert (not Minus_Composite);
+            if (Get_Nature_Simple_Nature (Plus_Nature)
+                  /= Get_Base_Nature (Minus_Nature))
+            then
+               Error_Msg_Sem
+                 (+Decl, "minus terminal must be of the nature of "
+                    & "plus subelements");
+            end if;
+            Nat := Plus_Nature;
+         else
+            pragma Assert (Minus_Composite and not Plus_Composite);
+            if (Get_Nature_Simple_Nature (Minus_Nature)
+                  /= Get_Base_Nature (Plus_Nature))
+            then
+               Error_Msg_Sem
+                 (+Decl, "plus terminal must be of the nature of "
+                    & "minus subelements");
+            end if;
+            Nat := Minus_Nature;
+         end if;
+      end;
       case Iir_Kinds_Branch_Quantity_Declaration (Get_Kind (Decl)) is
          when Iir_Kind_Across_Quantity_Declaration =>
-            Branch_Type := Get_Across_Type (Plus_Ref);
+            Branch_Type := Get_Across_Type (Nat);
          when Iir_Kind_Through_Quantity_Declaration =>
-            Branch_Type := Get_Through_Type (Plus_Ref);
+            Branch_Type := Get_Through_Type (Nat);
       end case;
       pragma Assert (Branch_Type /= Null_Iir);
       Set_Type (Decl, Branch_Type);
 
       Set_Name_Staticness (Decl, Locally);
+      Set_Expr_Staticness (Decl, None);
 
       if not Is_Second and then Value /= Null_Iir then
          Value := Sem_Expression (Value, Branch_Type);

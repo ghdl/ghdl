@@ -210,6 +210,7 @@ package Vhdl.Nodes_Meta is
       Field_Left_Limit_Expr,
       Field_Right_Limit_Expr,
       Field_Base_Type,
+      Field_Simple_Nature,
       Field_Base_Nature,
       Field_Resolution_Indication,
       Field_Record_Element_Resolution_Chain,
@@ -767,6 +768,7 @@ package Vhdl.Nodes_Meta is
    function Has_Left_Limit_Expr (K : Iir_Kind) return Boolean;
    function Has_Right_Limit_Expr (K : Iir_Kind) return Boolean;
    function Has_Base_Type (K : Iir_Kind) return Boolean;
+   function Has_Simple_Nature (K : Iir_Kind) return Boolean;
    function Has_Base_Nature (K : Iir_Kind) return Boolean;
    function Has_Resolution_Indication (K : Iir_Kind) return Boolean;
    function Has_Record_Element_Resolution_Chain (K : Iir_Kind)

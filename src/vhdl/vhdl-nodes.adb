@@ -3761,6 +3761,22 @@ package body Vhdl.Nodes is
       Set_Field4 (Decl, Base_Type);
    end Set_Base_Type;
 
+   function Get_Simple_Nature (Def : Iir) return Iir is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Simple_Nature (Get_Kind (Def)),
+                     "no field Simple_Nature");
+      return Get_Field7 (Def);
+   end Get_Simple_Nature;
+
+   procedure Set_Simple_Nature (Def : Iir; Nature : Iir) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Simple_Nature (Get_Kind (Def)),
+                     "no field Simple_Nature");
+      Set_Field7 (Def, Nature);
+   end Set_Simple_Nature;
+
    function Get_Base_Nature (Decl : Iir) return Iir is
    begin
       pragma Assert (Decl /= Null_Iir);

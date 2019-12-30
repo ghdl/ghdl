@@ -2969,6 +2969,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Base_Nature (Field4)
    --
+   --   Get/Set_Simple_Nature (Field7)
+   --
    --   Get/Set_Nature_Staticness (State1)
    --
    --   Get/Set_Constraint_State (State2)
@@ -3043,6 +3045,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Through_Type (Field12)
    --
+   --   Get/Set_Simple_Nature (Field7)
+   --
    --   Get/Set_Nature_Staticness (State1)
    --
    --   Get/Set_Constraint_State (State2)
@@ -3053,7 +3057,6 @@ package Vhdl.Nodes is
    --
    --  Always false for record type: elements are owned by this node.
    --   Get/Set_Is_Ref (Flag12)
-
 
    -- Iir_Kind_Nature_Element_Declaration (Short)
    --
@@ -5896,6 +5899,12 @@ package Vhdl.Nodes is
      Iir_Kind_Array_Subnature_Definition ..
      Iir_Kind_Array_Subnature_Definition;
 
+   subtype Iir_Kinds_Nature_Indication is Iir_Kind range
+     Iir_Kind_Scalar_Nature_Definition ..
+   --Iir_Kind_Record_Nature_Definition
+   --Iir_Kind_Array_Nature_Definition
+     Iir_Kind_Array_Subnature_Definition;
+
    subtype Iir_Kinds_Nonoverloadable_Declaration is Iir_Kind range
      Iir_Kind_Type_Declaration ..
    --Iir_Kind_Anonymous_Type_Declaration
@@ -7531,6 +7540,11 @@ package Vhdl.Nodes is
    function Get_Base_Type (Decl : Iir) return Iir;
    procedure Set_Base_Type (Decl : Iir; Base_Type : Iir);
    pragma Inline (Get_Base_Type);
+
+   --  Only for composite base nature: the simple nature.
+   --  Field: Field7 Ref
+   function Get_Simple_Nature (Def : Iir) return Iir;
+   procedure Set_Simple_Nature (Def : Iir; Nature : Iir);
 
    --  Field: Field4 Ref
    function Get_Base_Nature (Decl : Iir) return Iir;
