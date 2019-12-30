@@ -2167,6 +2167,32 @@ package body Vhdl.Sem_Stmts is
       end loop;
    end Sem_Simultaneous_If_Statement;
 
+   procedure Sem_Simultaneous_Case_Statement (Stmt : Iir)
+   is
+      Expr: Iir;
+      Chain : Iir;
+      El: Iir;
+   begin
+      Expr := Get_Expression (Stmt);
+      Expr := Sem_Case_Expression (Expr);
+      if Expr /= Null_Iir then
+         Check_Read (Expr);
+         Set_Expression (Stmt, Expr);
+
+         Chain := Get_Case_Statement_Alternative_Chain (Stmt);
+         Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
+         Set_Case_Statement_Alternative_Chain (Stmt, Chain);
+      end if;
+
+      El := Chain;
+      while El /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (El) then
+            Sem_Simultaneous_Statements (Get_Associated_Chain (El));
+         end if;
+         El := Get_Chain (El);
+      end loop;
+   end Sem_Simultaneous_Case_Statement;
+
    procedure Sem_Simultaneous_Procedural_Statement (Stmt : Iir) is
    begin
       Set_Is_Within_Flag (Stmt, True);
@@ -2193,8 +2219,12 @@ package body Vhdl.Sem_Stmts is
                Sem_Simple_Simultaneous_Statement (Stmt);
             when Iir_Kind_Simultaneous_If_Statement =>
                Sem_Simultaneous_If_Statement (Stmt);
+            when Iir_Kind_Simultaneous_Case_Statement =>
+               Sem_Simultaneous_Case_Statement (Stmt);
             when Iir_Kind_Simultaneous_Procedural_Statement =>
                Sem_Simultaneous_Procedural_Statement (Stmt);
+            when Iir_Kind_Simultaneous_Null_Statement =>
+               null;
             when others =>
                Error_Kind ("sem_simultaneous_statements", Stmt);
          end case;
@@ -2276,8 +2306,12 @@ package body Vhdl.Sem_Stmts is
             Sem_Simple_Simultaneous_Statement (Stmt);
          when Iir_Kind_Simultaneous_If_Statement =>
             Sem_Simultaneous_If_Statement (Stmt);
+         when Iir_Kind_Simultaneous_Case_Statement =>
+            Sem_Simultaneous_Case_Statement (Stmt);
          when Iir_Kind_Simultaneous_Procedural_Statement =>
             Sem_Simultaneous_Procedural_Statement (Stmt);
+         when Iir_Kind_Simultaneous_Null_Statement =>
+            null;
          when others =>
             Error_Kind ("sem_concurrent_statement", Stmt);
       end case;

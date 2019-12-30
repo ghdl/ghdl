@@ -531,6 +531,7 @@ package Vhdl.Nodes is
    --  Iir_Kind_Case_Statement
    --  Iir_Kind_Case_Generate_Statement
    --  Iir_Kind_Concurrent_Selected_Signal_Assignment
+   --  Iir_Kind_Simultaneous_Case_Statement
    --
    --  The location of the first alternative is set on:
    --  'when' for case statement, selected assignment and case generate,
@@ -3488,6 +3489,17 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
+   -- Iir_Kind_Simultaneous_Null_Statement (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+
    -- Iir_Kind_Simultaneous_Procedural_Statement (Short)
    --
    --  AMS-LRM17 11.13 Simultaneous procedural statement
@@ -3557,6 +3569,28 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+
+   -- Iir_Kind_Simultaneous_Case_Statement (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --  Chain is composed of Iir_Kind_Choice_By_XXX.
+   --   Get/Set_Case_Statement_Alternative_Chain (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
@@ -4888,7 +4922,9 @@ package Vhdl.Nodes is
 
    -- Simultaneous statements.
       Iir_Kind_Simple_Simultaneous_Statement,
+      Iir_Kind_Simultaneous_Null_Statement,
       Iir_Kind_Simultaneous_Procedural_Statement,
+      Iir_Kind_Simultaneous_Case_Statement,
       Iir_Kind_Simultaneous_If_Statement,
       Iir_Kind_Simultaneous_Elsif,
 
@@ -6301,6 +6337,9 @@ package Vhdl.Nodes is
 
    subtype Iir_Kinds_Simultaneous_Statement is Iir_Kind range
      Iir_Kind_Simple_Simultaneous_Statement ..
+   --Iir_Kind_Simultaneous_Null_Statement
+   --Iir_Kind_Simultaneous_Procedural_Statement
+   --Iir_Kind_Simultaneous_Case_Statement
      Iir_Kind_Simultaneous_If_Statement;
 
    subtype Iir_Kinds_Sequential_Statement is Iir_Kind range

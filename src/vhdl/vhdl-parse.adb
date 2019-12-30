@@ -77,6 +77,8 @@ package body Vhdl.Parse is
                                              Label_Loc : Location_Type;
                                              If_Loc : Location_Type;
                                              First_Cond : Iir) return Iir;
+   function Parse_Simultaneous_Case_Statement
+     (Label : Name_Id; Loc : Location_Type; Expr : Iir) return Iir;
 
    --  Maximum number of nested parenthesis, before generating an error.
    Max_Parenthesis_Depth : constant Natural := 1000;
@@ -7337,8 +7339,7 @@ package body Vhdl.Parse is
       Set_Expression (Stmt, Parse_Expression);
 
       --  Skip 'is'.
-      Expect (Tok_Is);
-      Scan;
+      Expect_Scan (Tok_Is);
 
       if Current_Token = Tok_End then
          Error_Msg_Parse ("missing alternative in case statement");
@@ -9000,18 +9001,31 @@ package body Vhdl.Parse is
       Res : Iir;
       Alt : Iir;
       Last_Alt : Iir;
+      Expr : Iir;
+      Start_Loc : Location_Type;
    begin
-      if Label = Null_Identifier then
-         Error_Msg_Parse ("a generate statement must have a label");
-      end if;
-      Res := Create_Iir (Iir_Kind_Case_Generate_Statement);
-      Set_Location (Res, Loc);
-      Set_Label (Res, Label);
+      Start_Loc := Get_Token_Location;
 
       --  Skip 'case'.
       Scan;
 
-      Set_Expression (Res, Parse_Expression);
+      Expr := Parse_Expression;
+
+      if Current_Token = Tok_Use then
+         if not AMS_Vhdl then
+            Error_Msg_Parse ("if/use is an AMS-VHDL statement");
+         end if;
+         return Parse_Simultaneous_Case_Statement (Label, Loc, Expr);
+      end if;
+
+      if Label = Null_Identifier then
+         Error_Msg_Parse (Start_Loc, "a generate statement must have a label");
+      end if;
+
+      Res := Create_Iir (Iir_Kind_Case_Generate_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+      Set_Expression (Res, Expr);
 
       --  Skip 'generate'
       Expect_Scan (Tok_Generate);
@@ -9130,6 +9144,28 @@ package body Vhdl.Parse is
 
       return Res;
    end Parse_Simultaneous_Procedural_Statement;
+
+   --  precond : NULL
+   --
+   --  AMS-LRM17 11.14 Simultaneous null statement
+   --  simultaneous_null_statement ::=
+   --    [ label : ] NULL ;
+   function Parse_Simultaneous_Null_Statement
+     (Label : Name_Id; Loc : Location_Type) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Simultaneous_Null_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+
+      --  Skip 'procedural'.
+      Scan;
+
+      Scan_Semi_Colon_Declaration ("null statement");
+
+      return Res;
+   end Parse_Simultaneous_Null_Statement;
 
    --  precond : first token
    --  postcond: next token
@@ -9264,16 +9300,16 @@ package body Vhdl.Parse is
    --
    --  simultaneous_statement_part ::=
    --    { simultaneous_statement }
-   procedure Parse_Simultaneous_Statements (Parent : Iir)
+   function Parse_Simultaneous_Statements (Parent : Iir) return Iir
    is
-      Last_Stmt : Iir;
+      First_Stmt, Last_Stmt : Iir;
       Stmt: Iir;
       Label: Name_Id;
       Loc : Location_Type;
       Start_Loc : Location_Type;
       Expr : Iir;
    begin
-      Last_Stmt := Null_Iir;
+      Chain_Init (First_Stmt, Last_Stmt);
       loop
          Stmt := Null_Iir;
          Label := Null_Identifier;
@@ -9307,7 +9343,7 @@ package body Vhdl.Parse is
                if Label /= Null_Identifier then
                   Error_Msg_Parse ("label is not allowed here");
                end if;
-               return;
+               return First_Stmt;
             when Tok_Identifier =>
                --  FIXME: sign, factor, parenthesis...
                Expr := Parse_Name (Allow_Indexes => True);
@@ -9322,9 +9358,18 @@ package body Vhdl.Parse is
 
                Stmt := Parse_Simultaneous_If_Statement
                  (Label, Loc, Start_Loc, Expr);
+            when Tok_Case =>
+               --  Skip 'case'.
+               Scan;
+
+               Expr := Parse_Expression;
+
+               Stmt := Parse_Simultaneous_Case_Statement (Label, Loc, Expr);
+            when Tok_Null =>
+               Stmt := Parse_Simultaneous_Null_Statement (Label, Loc);
             when Tok_Eof =>
                Error_Msg_Parse ("unexpected end of file, 'END;' expected");
-               return;
+               return First_Stmt;
             when others =>
                --  FIXME: improve message:
                Unexpected ("simultaneous statement list");
@@ -9344,12 +9389,7 @@ package body Vhdl.Parse is
             end if;
             Set_Parent (Stmt, Parent);
             --  Append it to the chain.
-            if Last_Stmt = Null_Iir then
-               Set_Simultaneous_Statement_Chain (Parent, Stmt);
-            else
-               Set_Chain (Last_Stmt, Stmt);
-            end if;
-            Last_Stmt := Stmt;
+            Chain_Append (First_Stmt, Last_Stmt, Stmt);
          end if;
       end loop;
    end Parse_Simultaneous_Statements;
@@ -9391,7 +9431,8 @@ package body Vhdl.Parse is
             Expect_Error (Tok_Use, "'use' is expected here");
          end if;
 
-         Parse_Simultaneous_Statements (Clause);
+         Set_Simultaneous_Statement_Chain
+           (Clause, Parse_Simultaneous_Statements (Clause));
 
          End_Loc := Get_Token_Location;
 
@@ -9414,7 +9455,8 @@ package body Vhdl.Parse is
             --  Skip 'else'.
             Scan;
 
-            Parse_Simultaneous_Statements (Clause);
+            Set_Simultaneous_Statement_Chain
+              (Clause, Parse_Simultaneous_Statements (Clause));
 
             if Flag_Elocations then
                Create_Elocations (Clause);
@@ -9440,6 +9482,63 @@ package body Vhdl.Parse is
 
       return Res;
    end Parse_Simultaneous_If_Statement;
+
+   --  simultaneous_case_statement ::=
+   --     /case/_label :
+   --     CASE expression USE
+   --        simultaneous_alternative
+   --      { simultaneous_alternative }
+   --     END CASE [ /case/_label ] ;
+   function Parse_Simultaneous_Case_Statement
+     (Label : Name_Id; Loc : Location_Type; Expr : Iir) return Iir
+   is
+      Res : Iir;
+      When_Loc : Location_Type;
+      Assoc : Iir;
+      First_Assoc, Last_Assoc : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Simultaneous_Case_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+      Set_Expression (Res, Expr);
+
+      --  Skip 'use'
+      Expect_Scan (Tok_Use);
+
+      if Current_Token = Tok_End then
+         Error_Msg_Parse ("no generate alternative");
+      end if;
+
+      Chain_Init (First_Assoc, Last_Assoc);
+      while Current_Token = Tok_When loop
+         When_Loc := Get_Token_Location;
+
+         --  Skip 'when'.
+         Scan;
+
+         Parse_Choices (Null_Iir, When_Loc, Assoc);
+
+         --  Skip '=>'.
+         Expect_Scan (Tok_Double_Arrow);
+
+         Set_Associated_Chain (Assoc, Parse_Simultaneous_Statements (Res));
+         Chain_Append_Subchain (First_Assoc, Last_Assoc, Assoc);
+      end loop;
+
+      Set_Case_Statement_Alternative_Chain (Res, First_Assoc);
+
+      --  Skip 'end', 'case'
+      Expect_Scan (Tok_End);
+      Expect_Scan (Tok_Case);
+
+      --  LRM93 9.7
+      --  If a label appears at the end of a generate statement, it must repeat
+      --  the generate label.
+      Check_End_Name (Res);
+      Expect_Scan (Tok_Semi_Colon);
+
+      return Res;
+   end Parse_Simultaneous_Case_Statement;
 
    --  Parse end of PSL assert/cover statement.
    procedure Parse_Psl_Assert_Report_Severity
@@ -9684,9 +9783,6 @@ package body Vhdl.Parse is
             when Tok_Case =>
                Postponed_Not_Allowed;
                Stmt := Parse_Case_Generate_Statement (Label, Loc);
-            when Tok_Eof =>
-               Error_Msg_Parse ("unexpected end of file, 'END;' expected");
-               return;
             when Tok_Component
               | Tok_Entity
               | Tok_Configuration =>
@@ -9706,6 +9802,13 @@ package body Vhdl.Parse is
             when Tok_Procedural =>
                Postponed_Not_Allowed;
                Stmt := Parse_Simultaneous_Procedural_Statement (Label);
+            when Tok_Null =>
+               if not AMS_Vhdl then
+                  Error_Msg_Parse ("concurrent null statement not allowed");
+               else
+                  Postponed_Not_Allowed;
+               end if;
+               Stmt := Parse_Simultaneous_Null_Statement (Label, Loc);
             when Tok_Default =>
                Postponed_Not_Allowed;
                Label_Not_Allowed;
@@ -9732,6 +9835,9 @@ package body Vhdl.Parse is
                  ("sequential statement only allowed in processes");
                Stmt := Parse_Sequential_Statements (Parent);
                Stmt := Null_Iir;
+            when Tok_Eof =>
+               Error_Msg_Parse ("unexpected end of file, 'END;' expected");
+               return;
             when others =>
                --  FIXME: improve message:
                --  instead of 'unexpected token 'signal' in conc stmt list'

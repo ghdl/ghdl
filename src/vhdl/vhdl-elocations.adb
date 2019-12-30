@@ -361,6 +361,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
+           | Iir_Kind_Simultaneous_Null_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
            | Iir_Kind_Selected_Waveform_Assignment_Statement
@@ -477,6 +478,7 @@ package body Vhdl.Elocations is
            | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
+           | Iir_Kind_Simultaneous_Case_Statement
            | Iir_Kind_Case_Statement =>
             return Format_L2;
          when Iir_Kind_Package_Instantiation_Declaration

@@ -1136,7 +1136,9 @@ package body Vhdl.Nodes is
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
+           | Iir_Kind_Simultaneous_Null_Statement
            | Iir_Kind_Simultaneous_Procedural_Statement
+           | Iir_Kind_Simultaneous_Case_Statement
            | Iir_Kind_Simultaneous_If_Statement
            | Iir_Kind_Simultaneous_Elsif
            | Iir_Kind_Simple_Signal_Assignment_Statement

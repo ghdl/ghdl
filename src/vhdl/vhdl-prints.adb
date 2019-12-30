@@ -57,7 +57,7 @@ package body Vhdl.Prints is
    procedure Disp_Concurrent_Statement_Chain
      (Ctxt : in out Ctxt_Class; Parent: Iir);
    procedure Disp_Simultaneous_Statement_Chain
-     (Ctxt : in out Ctxt_Class; Parent: Iir);
+     (Ctxt : in out Ctxt_Class; Chain: Iir);
    procedure Disp_Declaration_Chain
      (Ctxt : in out Ctxt_Class; Parent : Iir);
    procedure Disp_Process_Statement (Ctxt : in out Ctxt_Class; Process: Iir);
@@ -1377,11 +1377,11 @@ package body Vhdl.Prints is
    end Disp_Concurrent_Statement_Chain;
 
    procedure Disp_Simultaneous_Statement_Chain
-     (Ctxt : in out Ctxt_Class; Parent : Iir)
+     (Ctxt : in out Ctxt_Class; Chain : Iir)
    is
       El: Iir;
    begin
-      El := Get_Simultaneous_Statement_Chain (Parent);
+      El := Chain;
       while El /= Null_Iir loop
          Disp_Concurrent_Statement (Ctxt, El);
          El := Get_Chain (El);
@@ -3784,43 +3784,6 @@ package body Vhdl.Prints is
       Disp_End (Ctxt, Stmt, Tok_Generate);
    end Disp_Case_Generate_Statement;
 
-   procedure Disp_Simultaneous_If_Statement
-     (Ctxt : in out Ctxt_Class; Stmt : Iir)
-   is
-      Clause : Iir;
-      Expr : Iir;
-   begin
-      Start_Hbox (Ctxt);
-      Disp_Label (Ctxt, Stmt);
-      Disp_Token (Ctxt, Tok_If);
-      Clause := Stmt;
-      Print (Ctxt, Get_Condition (Clause));
-      Close_Hbox (Ctxt);
-      Start_Hbox (Ctxt);
-      Disp_Token (Ctxt, Tok_Use);
-      Close_Hbox (Ctxt);
-      while Clause /= Null_Iir loop
-         Start_Vbox (Ctxt);
-         Disp_Simultaneous_Statement_Chain (Ctxt, Clause);
-         Close_Vbox (Ctxt);
-         Clause := Get_Else_Clause (Clause);
-         exit when Clause = Null_Iir;
-         Start_Hbox (Ctxt);
-         Expr := Get_Condition (Clause);
-         if Expr /= Null_Iir then
-            Disp_Token (Ctxt, Tok_Elsif);
-            Print (Ctxt, Expr);
-            Close_Hbox (Ctxt);
-            Start_Hbox (Ctxt);
-            Disp_Token (Ctxt, Tok_Use);
-         else
-            Disp_Token (Ctxt, Tok_Else);
-         end if;
-         Close_Hbox (Ctxt);
-      end loop;
-      Disp_End_Label (Ctxt, Stmt, Tok_Use);
-   end Disp_Simultaneous_If_Statement;
-
    procedure Disp_PSL_NFA (Ctxt : in out Ctxt_Class; N : PSL.Nodes.NFA)
    is
       use PSL.NFAs;
@@ -3945,6 +3908,78 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
    end Disp_Simple_Simultaneous_Statement;
 
+   procedure Disp_Simultaneous_If_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir)
+   is
+      Clause : Iir;
+      Expr : Iir;
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_If);
+      Clause := Stmt;
+      Print (Ctxt, Get_Condition (Clause));
+      Close_Hbox (Ctxt);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Use);
+      Close_Hbox (Ctxt);
+      while Clause /= Null_Iir loop
+         Start_Vbox (Ctxt);
+         Disp_Simultaneous_Statement_Chain
+           (Ctxt, Get_Simultaneous_Statement_Chain (Clause));
+         Close_Vbox (Ctxt);
+         Clause := Get_Else_Clause (Clause);
+         exit when Clause = Null_Iir;
+         Start_Hbox (Ctxt);
+         Expr := Get_Condition (Clause);
+         if Expr /= Null_Iir then
+            Disp_Token (Ctxt, Tok_Elsif);
+            Print (Ctxt, Expr);
+            Close_Hbox (Ctxt);
+            Start_Hbox (Ctxt);
+            Disp_Token (Ctxt, Tok_Use);
+         else
+            Disp_Token (Ctxt, Tok_Else);
+         end if;
+         Close_Hbox (Ctxt);
+      end loop;
+      Disp_End_Label (Ctxt, Stmt, Tok_Use);
+   end Disp_Simultaneous_If_Statement;
+
+   procedure Disp_Simultaneous_Case_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir)
+   is
+      Assoc: Iir;
+      Stmts : Iir;
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Case);
+      Print (Ctxt, Get_Expression (Stmt));
+      Close_Hbox (Ctxt);
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Use);
+      Close_Hbox (Ctxt);
+
+      Start_Vbox (Ctxt);
+      Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
+      while Assoc /= Null_Iir loop
+         Start_Hbox (Ctxt);
+         Disp_Token (Ctxt, Tok_When);
+         Stmts := Get_Associated_Chain (Assoc);
+         Disp_Choice (Ctxt, Assoc);
+         Disp_Token (Ctxt, Tok_Double_Arrow);
+         Close_Hbox (Ctxt);
+
+         Start_Vbox (Ctxt);
+         Disp_Simultaneous_Statement_Chain (Ctxt, Stmts);
+         Close_Vbox (Ctxt);
+      end loop;
+      Close_Vbox (Ctxt);
+
+      Disp_End_Label (Ctxt, Stmt, Tok_Case);
+   end Disp_Simultaneous_Case_Statement;
+
    procedure Disp_Simultaneous_Procedural_Statement
      (Ctxt : in out Ctxt_Class; Stmt : Iir) is
    begin
@@ -3976,6 +4011,16 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Semi_Colon);
       Close_Hbox (Ctxt);
    end Disp_Simultaneous_Procedural_Statement;
+
+   procedure Disp_Simultaneous_Null_Statement
+     (Ctxt : in out Ctxt_Class; Stmt : Iir) is
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Label (Ctxt, Stmt);
+      Disp_Token (Ctxt, Tok_Null);
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
+   end Disp_Simultaneous_Null_Statement;
 
    procedure Disp_Concurrent_Statement (Ctxt : in out Ctxt_Class; Stmt: Iir) is
    begin
@@ -4022,8 +4067,12 @@ package body Vhdl.Prints is
             Disp_Simple_Simultaneous_Statement (Ctxt, Stmt);
          when Iir_Kind_Simultaneous_If_Statement =>
             Disp_Simultaneous_If_Statement (Ctxt, Stmt);
+         when Iir_Kind_Simultaneous_Case_Statement =>
+            Disp_Simultaneous_Case_Statement (Ctxt, Stmt);
          when Iir_Kind_Simultaneous_Procedural_Statement =>
             Disp_Simultaneous_Procedural_Statement (Ctxt, Stmt);
+         when Iir_Kind_Simultaneous_Null_Statement =>
+            Disp_Simultaneous_Null_Statement (Ctxt, Stmt);
          when others =>
             Error_Kind ("disp_concurrent_statement", Stmt);
       end case;

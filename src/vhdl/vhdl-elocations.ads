@@ -469,6 +469,7 @@ package Vhdl.Elocations is
    -- Iir_Kind_Case_Generate_Statement (None)
 
    -- Iir_Kind_Simple_Simultaneous_Statement (None)
+   -- Iir_Kind_Simultaneous_Null_Statement (None)
 
    -- Iir_Kind_Simultaneous_Procedural_Statement (L4)
    --
@@ -535,6 +536,7 @@ package Vhdl.Elocations is
    -- Iir_Kind_Return_Statement (None)
 
    -- Iir_Kind_Case_Statement (L2)
+   -- Iir_Kind_Simultaneous_Case_Statement (L2)
    --
    --   Get/Set_End_Location (Field2)
 

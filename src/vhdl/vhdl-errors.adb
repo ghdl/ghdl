@@ -602,8 +602,12 @@ package body Vhdl.Errors is
 
          when Iir_Kind_Simple_Simultaneous_Statement =>
             return "simple simultaneous statement";
+         when Iir_Kind_Simultaneous_Null_Statement =>
+            return "simultaneous null statement";
          when Iir_Kind_Simultaneous_Procedural_Statement =>
             return "simultaneous procedural statement";
+         when Iir_Kind_Simultaneous_Case_Statement =>
+            return "simultaneous case statement";
          when Iir_Kind_Simultaneous_If_Statement
            | Iir_Kind_Simultaneous_Elsif =>
             return "simultaneous if statement";

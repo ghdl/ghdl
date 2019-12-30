@@ -48,7 +48,7 @@ package body Vhdl.Canon is
                               return Iir;
 
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir);
-   procedure Canon_Simultaneous_Stmts (Top : Iir_Design_Unit; Parent : Iir);
+   procedure Canon_Simultaneous_Stmts (Top : Iir_Design_Unit; Chain : Iir);
 
    --  Canonicalize an association list.
    --  If ASSOCIATION_LIST is not null, then it is re-ordored and returned.
@@ -2274,8 +2274,25 @@ package body Vhdl.Canon is
                   if Canon_Flag_Expressions then
                      Canon_Expression_If_Valid (Get_Condition (Clause));
                   end if;
-                  Canon_Simultaneous_Stmts (Top, Clause);
+                  Canon_Simultaneous_Stmts
+                    (Top, Get_Simultaneous_Statement_Chain (Clause));
                   Clause := Get_Else_Clause (Clause);
+               end loop;
+            end;
+         when Iir_Kind_Simultaneous_Case_Statement =>
+            declare
+               Alt : Iir;
+            begin
+               if Canon_Flag_Expressions then
+                  Canon_Expression (Get_Expression (Stmt));
+               end if;
+               Alt := Get_Case_Statement_Alternative_Chain (Stmt);
+               while Alt /= Null_Iir loop
+                  if not Get_Same_Alternative_Flag (Alt) then
+                     Canon_Simultaneous_Stmts
+                       (Top, Get_Associated_Block (Alt));
+                  end if;
+                  Alt := Get_Chain (Alt);
                end loop;
             end;
          when Iir_Kind_Simultaneous_Procedural_Statement =>
@@ -2289,6 +2306,8 @@ package body Vhdl.Canon is
                   Set_Sequential_Statement_Chain (Stmt, Stmts);
                end;
             end if;
+         when Iir_Kind_Simultaneous_Null_Statement =>
+            null;
 
          when others =>
             Error_Kind ("canon_concurrent_statement", Stmt);
@@ -2321,13 +2340,13 @@ package body Vhdl.Canon is
       end loop;
    end Canon_Concurrent_Stmts;
 
-   procedure Canon_Simultaneous_Stmts (Top : Iir_Design_Unit; Parent : Iir)
+   procedure Canon_Simultaneous_Stmts (Top : Iir_Design_Unit; Chain : Iir)
    is
       Stmt : Iir;
       Prev_Stmt : Iir;
       Proc_Num : Natural := 0;
    begin
-      Stmt := Get_Simultaneous_Statement_Chain (Parent);
+      Stmt := Chain;
       while Stmt /= Null_Iir loop
          Canon_Concurrent_Label (Stmt, Proc_Num);
 
