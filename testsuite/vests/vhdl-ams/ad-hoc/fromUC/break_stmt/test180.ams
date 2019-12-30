@@ -49,7 +49,7 @@
 -- codition.
 
 PACKAGE electricalSystem IS
-    NATURE electrical IS real ACROSS real THROUGH; -- GROUND REFERENCE;
+    NATURE electrical IS real ACROSS real THROUGH GROUND REFERENCE;
     FUNCTION SIN(X : real) RETURN real;
     FUNCTION EXP(X : real) RETURN real;
 END PACKAGE electricalSystem;

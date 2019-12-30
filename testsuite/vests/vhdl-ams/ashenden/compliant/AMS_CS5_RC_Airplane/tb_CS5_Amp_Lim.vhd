@@ -233,7 +233,7 @@ end rudder_servo;
 -- File       : gear_rv_r.vhd
 -- Author     : Mentor Graphics
 -- Created    : 2001/10/10
--- Last update: 2002/05/21
+-- Last update: 2019-12-30
 -------------------------------------------------------------------------------
 -- Description: Gear Model (ROTATIONAL_V/ROTATIONAL domains)
 -------------------------------------------------------------------------------
@@ -743,9 +743,9 @@ entity v_pulse is
   generic (
     initial  : voltage := 0.0;          -- initial value [Volts]
     pulse    : voltage;                 -- pulsed value [Volts]
-    ti2p     : time    := 1ns;          -- initial to pulse [Sec]
-    tp2i     : time    := 1ns;          -- pulse to initial [Sec]
-    delay    : time    := 0ms;          -- delay time [Sec]
+    ti2p     : time    := 1 ns;          -- initial to pulse [Sec]
+    tp2i     : time    := 1 ns;          -- pulse to initial [Sec]
+    delay    : time    := 0 ms;          -- delay time [Sec]
     width    : time;                    -- duration of pulse [Sec]
     period   : time;                    -- period [Sec]
     ac_mag   : voltage := 1.0;          -- AC magnitude [Volts]
@@ -1062,11 +1062,11 @@ begin
         generic map(
             initial => 0.0,
             pulse => 4.8,
-            ti2p => 300ms,
-            tp2i => 300ms,
-            delay => 100ms,
-            width => 5ms,
-            period => 605ms
+            ti2p => 300 ms,
+            tp2i => 300 ms,
+            delay => 100 ms,
+            width => 5 ms,
+            period => 605 ms
         )
         port map(
             pos => src_in,

@@ -54,7 +54,7 @@
 ---------------------------------------------------------------------------------
 PACKAGE electricalSystem IS
     SUBTYPE voltage is real;
-    NATURE electrical IS real ACROSS real THROUGH;
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
     FUNCTION SIN(X : real) RETURN real;
     FUNCTION EXP(X : real) RETURN real;
     FUNCTION SQRT(X : real) RETURN real;

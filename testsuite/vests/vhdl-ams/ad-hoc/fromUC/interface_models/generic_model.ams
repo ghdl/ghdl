@@ -112,7 +112,7 @@ BEGIN
 
  testbench:PROCESS
         VARIABLE outline : LINE;
-        VARIABLE Headline   : string(1 TO 8) :=
+        VARIABLE Headline   : string(1 TO 7) :=
             "time y ";
         VARIABLE   seperator    : string(1 TO 1) := " ";
         VARIABLE   flag     : bit := '0';
@@ -123,7 +123,7 @@ BEGIN
             WRITE(outline,Headline);
             WRITELINE(outfile,outline);
         ELSE
-            WRITE(outline, now);
+            WRITE(outline, time'(now));
             WRITE(outline,seperator);
             WRITE(outline,y);
             WRITE(outline,seperator);

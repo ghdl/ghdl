@@ -40,7 +40,7 @@
 
 
 PACKAGE electricalSystem IS
-    NATURE electrical IS real ACROSS real THROUGH;
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
     FUNCTION POW(X,Y: real) RETURN real;
     FUNCTION SIN(X : real) RETURN real;
     FUNCTION EXP(X : real) RETURN real;

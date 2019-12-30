@@ -234,7 +234,7 @@ end rudder_servo;
 -- File       : gear_rv_r.vhd
 -- Author     : Mentor Graphics
 -- Created    : 2001/10/10
--- Last update: 2002/05/21
+-- Last update: 2019-12-30
 -------------------------------------------------------------------------------
 -- Description: Gear Model (ROTATIONAL_V/ROTATIONAL domains)
 -------------------------------------------------------------------------------
@@ -563,7 +563,7 @@ use IEEE_proposed.electrical_systems.all;
 use IEEE_proposed.mechanical_systems.all;
 
 entity RF_xmtr_rcvr is
-generic (td : time := 0ns);
+generic (td : time := 0 ns);
 port
 (
       tdm_in : in std_logic ;
@@ -734,14 +734,14 @@ begin
     -- Component instances
     XCMP1 : entity work.clock(ideal)
         generic map(
-            period => 10us
+            period => 10 us
         )
         port map(
             CLK_OUT => clk_100k
         );
     XCMP2 : entity work.clock(ideal)
         generic map(
-            period => 150us
+            period => 150 us
         )
         port map(
             CLK_OUT => clk_6K
@@ -2180,7 +2180,7 @@ begin
         );
     clk_en_rudder : entity work.clock_en(ideal)
         generic map(
-            pw => 500ns
+            pw => 500 ns
         )
         port map(
             CLOCK_OUT => XSIG010008,
@@ -2188,7 +2188,7 @@ begin
         );
     XCMP5 : entity work.inverter(ideal)
         generic map(
-            delay => 2us
+            delay => 2 us
         )
         port map(
             input => XSIG010022,
@@ -2196,7 +2196,7 @@ begin
         );
     XCMP8 : entity work.inverter(ideal)
         generic map(
-            delay => 2us
+            delay => 2 us
         )
         port map(
             input => XSIG010020,
@@ -2204,7 +2204,7 @@ begin
         );
     XCMP9 : entity work.inverter(ideal)
         generic map(
-            delay => 2us
+            delay => 2 us
         )
         port map(
             input => XSIG010022,
@@ -3461,7 +3461,7 @@ begin
         );
     clock1 : entity work.clock(ideal)
         generic map(
-            period => 9.375us
+            period => 9.375 us
         )
         port map(
             CLK_OUT => clk16x

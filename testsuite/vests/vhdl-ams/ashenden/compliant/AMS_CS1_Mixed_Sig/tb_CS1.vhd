@@ -161,14 +161,14 @@ begin
     -- Component instances
     XCMP1 : entity work.clock(ideal)
         generic map(
-            period => 10us
+            period => 10 us
         )
         port map(
             CLK_OUT => clk_100k
         );
     XCMP2 : entity work.clock(ideal)
         generic map(
-            period => 150us
+            period => 150 us
         )
         port map(
             CLK_OUT => clk_6K
@@ -1503,7 +1503,7 @@ begin
         );
     clk_en_rudder : entity work.clock_en(ideal)
         generic map(
-            pw => 500ns
+            pw => 500 ns
         )
         port map(
             CLOCK_OUT => XSIG010008,
@@ -1511,7 +1511,7 @@ begin
         );
     XCMP5 : entity work.inverter(ideal)
         generic map(
-            delay => 2us
+            delay => 2 us
         )
         port map(
             input => XSIG010022,
@@ -1519,7 +1519,7 @@ begin
         );
     XCMP8 : entity work.inverter(ideal)
         generic map(
-            delay => 2us
+            delay => 2 us
         )
         port map(
             input => XSIG010020,
@@ -1527,7 +1527,7 @@ begin
         );
     XCMP9 : entity work.inverter(ideal)
         generic map(
-            delay => 2us
+            delay => 2 us
         )
         port map(
             input => XSIG010022,
