@@ -250,6 +250,7 @@ package body Vhdl.Prints is
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Terminal_Declaration
            | Iir_Kinds_Quantity_Declaration
            | Iir_Kind_Group_Template_Declaration
@@ -1066,7 +1067,7 @@ package body Vhdl.Prints is
    begin
       Start_Hbox (Ctxt);
       Disp_Token (Ctxt, Tok_Nature);
-      Disp_Name_Of (Ctxt, Decl);
+      Disp_Identifier (Ctxt, Decl);
       Disp_Token (Ctxt, Tok_Is);
       Disp_Nature_Definition (Ctxt, Get_Nature (Decl));
       Disp_Token (Ctxt, Tok_Semi_Colon);
@@ -1087,6 +1088,18 @@ package body Vhdl.Prints is
             Error_Kind ("disp_subnature_indication", Ind);
       end case;
    end Disp_Subnature_Indication;
+
+   procedure Disp_Subnature_Declaration
+     (Ctxt : in out Ctxt_Class; Decl : Iir) is
+   begin
+      Start_Hbox (Ctxt);
+      Disp_Token (Ctxt, Tok_Subnature);
+      Disp_Identifier (Ctxt, Decl);
+      Disp_Token (Ctxt, Tok_Is);
+      Disp_Subnature_Indication (Ctxt, Get_Subnature_Indication (Decl));
+      Disp_Token (Ctxt, Tok_Semi_Colon);
+      Close_Hbox (Ctxt);
+   end Disp_Subnature_Declaration;
 
    procedure Disp_Mode (Ctxt : in out Ctxt_Class; Mode: Iir_Mode) is
    begin
@@ -2333,6 +2346,8 @@ package body Vhdl.Prints is
                      Decl := Get_Chain (Decl);
                   end if;
                end;
+            when Iir_Kind_Subnature_Declaration =>
+               Disp_Subnature_Declaration (Ctxt, Decl);
             when Iir_Kind_Non_Object_Alias_Declaration =>
                Disp_Non_Object_Alias_Declaration (Ctxt, Decl);
             when Iir_Kind_Function_Declaration
