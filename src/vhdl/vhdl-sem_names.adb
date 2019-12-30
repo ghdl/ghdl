@@ -1861,7 +1861,8 @@ package body Vhdl.Sem_Names is
             return Res;
          when Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute =>
-            null;
+            --  Already finished.
+            return Res;
          when Iir_Kinds_Type_Attribute
            |  Iir_Kind_Base_Attribute =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Attribute_Name);
@@ -1916,9 +1917,7 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Subtype_Attribute
            | Iir_Kind_Through_Attribute
            | Iir_Kind_Across_Attribute
-           | Iir_Kind_Nature_Reference_Attribute
-           | Iir_Kind_Dot_Attribute
-           | Iir_Kind_Integ_Attribute =>
+           | Iir_Kind_Nature_Reference_Attribute =>
             Sem_Name_Free_Result (Name, Res);
          when others =>
             Error_Kind ("finish_sem_name_1(2)", Res);
@@ -3959,15 +3958,15 @@ package body Vhdl.Sem_Names is
    function Sem_Quantity_Attribute (Attr : Iir_Attribute_Name) return Iir
    is
       use Std_Names;
-      Prefix_Name : constant Iir := Get_Prefix (Attr);
+      Name_Prefix : constant Iir := Get_Prefix (Attr);
       Prefix: Iir;
       Res : Iir;
    begin
-      Prefix := Get_Named_Entity (Prefix_Name);
+      Prefix := Get_Named_Entity (Name_Prefix);
+      Prefix := Finish_Sem_Name_1 (Name_Prefix, Prefix);
       if not Is_Quantity_Name (Prefix) then
          Error_Msg_Sem
            (+Attr, "prefix of %i attribute must denote a quantity", +Attr);
-         return Error_Mark;
       end if;
 
       case Get_Identifier (Attr) is
@@ -3992,7 +3991,7 @@ package body Vhdl.Sem_Names is
       --  Prefix: Any quantity denoted by the static name Q.
       if Get_Name_Staticness (Prefix) < Globally then
          Error_Msg_Sem
-           (+Attr, "prefix of %i attribute must be a static name", +Attr);
+           (+Res, "prefix of %i attribute must be a static name", +Res);
       end if;
 
       --  According to LRM 7.4, signal attributes are not static expressions
