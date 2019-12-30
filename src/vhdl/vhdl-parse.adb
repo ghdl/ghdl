@@ -3583,6 +3583,9 @@ package body Vhdl.Parse is
          when Tok_Record =>
             Def := Parse_Record_Nature_Definition;
             Set_Location (Def, Loc);
+            if Current_Token = Tok_Identifier then
+               Check_End_Name (Ident, Def);
+            end if;
          when Tok_Identifier =>
             Def := Parse_Scalar_Nature_Definition;
             Set_Location (Def, Loc);

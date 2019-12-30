@@ -274,6 +274,8 @@ package body Vhdl.Prints is
            | Iir_Kind_Protected_Type_Declaration =>
             --  Used for 'end' DECL_NAME.
             Disp_Identifier (Ctxt, Get_Type_Declarator (Decl));
+         when Iir_Kind_Record_Nature_Definition =>
+            Disp_Identifier (Ctxt, Get_Nature_Declarator (Decl));
          when Iir_Kind_Component_Instantiation_Statement =>
             Disp_Ident (Ctxt, Get_Label (Decl));
          when Iir_Kind_Design_Unit =>
