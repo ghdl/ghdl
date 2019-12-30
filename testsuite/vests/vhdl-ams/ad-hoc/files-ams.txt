@@ -4,51 +4,51 @@ vhdl-ams/ad-hoc/fromUC/analog_models/bjt_pnp_gen.ams
 #vhdl-ams/ad-hoc/fromUC/analog_models/static_cmos_inv_sqr.ams  # syntax
 vhdl-ams/ad-hoc/fromUC/analog_models/static_njfet.ams
 vhdl-ams/ad-hoc/fromUC/analog_models/static_pjfet.ams
-#vhdl-ams/ad-hoc/fromUC/array_models/cap_array.ams	# array
-#vhdl-ams/ad-hoc/fromUC/array_models/res_array.ams	# array
-#vhdl-ams/ad-hoc/fromUC/array_models/res_index.ams	# array
-#vhdl-ams/ad-hoc/fromUC/array_tests/test107.ams	# 'ref
-#vhdl-ams/ad-hoc/fromUC/array_tests/test129.ams	# syntax
-#vhdl-ams/ad-hoc/fromUC/array_tests/test130.ams	# syntax
+vhdl-ams/ad-hoc/fromUC/array_models/cap_array.ams
+vhdl-ams/ad-hoc/fromUC/array_models/res_array.ams
+vhdl-ams/ad-hoc/fromUC/array_models/res_index.ams
+#vhdl-ams/ad-hoc/fromUC/array_tests/test107.ams	# 'ref for nature/subnature.
+#vhdl-ams/ad-hoc/fromUC/array_tests/test129.ams	# broken syntax
+#vhdl-ams/ad-hoc/fromUC/array_tests/test130.ams	# broken syntax
 vhdl-ams/ad-hoc/fromUC/array_tests/test139.ams
-#vhdl-ams/ad-hoc/fromUC/array_tests/test186.ams	# array
+#vhdl-ams/ad-hoc/fromUC/array_tests/test186.ams	# broken: missing declaration
 #vhdl-ams/ad-hoc/fromUC/attribute/across.ams		# 'across
 vhdl-ams/ad-hoc/fromUC/attribute/step_limit.ams
-#vhdl-ams/ad-hoc/fromUC/attribute/through.ams		# 'trough
+#vhdl-ams/ad-hoc/fromUC/attribute/through.ams		# 'through
 #vhdl-ams/ad-hoc/fromUC/attribute/tick_contribution.ams  # 'contrib
 #vhdl-ams/ad-hoc/fromUC/attribute/tick_left.ams	  # array
 #vhdl-ams/ad-hoc/fromUC/attribute/tick_reference.ams	  # ref
 vhdl-ams/ad-hoc/fromUC/break_stmt/bouncing_ball.ams
 vhdl-ams/ad-hoc/fromUC/break_stmt/lorenz_chaos.ams
 vhdl-ams/ad-hoc/fromUC/break_stmt/precharged_capacitor.ams
-#vhdl-ams/ad-hoc/fromUC/break_stmt/test123.ams		# syntax
+vhdl-ams/ad-hoc/fromUC/break_stmt/test123.ams
 vhdl-ams/ad-hoc/fromUC/break_stmt/test133.ams
-#vhdl-ams/ad-hoc/fromUC/break_stmt/test134.ams		# syntax
+#vhdl-ams/ad-hoc/fromUC/break_stmt/test134.ams		# broken syntax
 #vhdl-ams/ad-hoc/fromUC/break_stmt/test158.ams		# syntax
-#vhdl-ams/ad-hoc/fromUC/break_stmt/test180.ams		# syntax
-#vhdl-ams/ad-hoc/fromUC/break_stmt/test181.ams		# syntax
+vhdl-ams/ad-hoc/fromUC/break_stmt/test180.ams
+vhdl-ams/ad-hoc/fromUC/break_stmt/test181.ams
 #vhdl-ams/ad-hoc/fromUC/break_stmt/torsional_oscillator.ams	# aggregate
 vhdl-ams/ad-hoc/fromUC/free_equations/2nd_order_ode.ams
 vhdl-ams/ad-hoc/fromUC/free_equations/test1.ams
 vhdl-ams/ad-hoc/fromUC/free_equations/test2.ams
-#vhdl-ams/ad-hoc/fromUC/interface_models/above_attr.ams	# write
+vhdl-ams/ad-hoc/fromUC/interface_models/above_attr.ams
 vhdl-ams/ad-hoc/fromUC/interface_models/am_modulation.ams
-#vhdl-ams/ad-hoc/fromUC/interface_models/generic_model.ams	# write
+vhdl-ams/ad-hoc/fromUC/interface_models/generic_model.ams
 vhdl-ams/ad-hoc/fromUC/interface_models/mesh.ams
-#vhdl-ams/ad-hoc/fromUC/interface_models/mixed_model_1.ams	# write
-#vhdl-ams/ad-hoc/fromUC/interface_models/mixed_model_2.ams	# write
+vhdl-ams/ad-hoc/fromUC/interface_models/mixed_model_1.ams
+vhdl-ams/ad-hoc/fromUC/interface_models/mixed_model_2.ams
 vhdl-ams/ad-hoc/fromUC/interface_models/multiple_res_comp.ams
 vhdl-ams/ad-hoc/fromUC/interface_models/parallel-plate.ams
 vhdl-ams/ad-hoc/fromUC/interface_models/parallel-plates4.ams
 vhdl-ams/ad-hoc/fromUC/interface_models/res_component.ams
 #vhdl-ams/ad-hoc/fromUC/inverter_model/inverter.ams		# reference
-#vhdl-ams/ad-hoc/fromUC/mixed_tests/mixed_1.ams		# write
-#vhdl-ams/ad-hoc/fromUC/mixed_tests/mixed_2.ams		# write
+vhdl-ams/ad-hoc/fromUC/mixed_tests/mixed_1.ams
+vhdl-ams/ad-hoc/fromUC/mixed_tests/mixed_2.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test100.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test101.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test102.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test103.ams
-#vhdl-ams/ad-hoc/fromUC/regression_test/test104.ams		# label ?
+#vhdl-ams/ad-hoc/fromUC/regression_test/test104.ams		# syntax
 #vhdl-ams/ad-hoc/fromUC/regression_test/test105.ams		# redef
 vhdl-ams/ad-hoc/fromUC/regression_test/test106.ams
 #vhdl-ams/ad-hoc/fromUC/regression_test/test107.ams		# 'ref

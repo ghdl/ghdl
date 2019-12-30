@@ -21,7 +21,7 @@ vhdl-ams/ashenden/compliant/aliases/DMA_controller.vhd
 vhdl-ams/ashenden/compliant/aliases/function_plus.vhd
 vhdl-ams/ashenden/compliant/aliases/inline_01a.vhd
 vhdl-ams/ashenden/compliant/aliases/inline_02.vhd
-#vhdl-ams/ashenden/compliant/aliases/inline_03a.vhd	# record nature
+vhdl-ams/ashenden/compliant/aliases/inline_03a.vhd
 vhdl-ams/ashenden/compliant/aliases/inline_04.vhd
 vhdl-ams/ashenden/compliant/aliases/inline_05.vhd
 #vhdl-ams/ashenden/compliant/aliases/inline_06.vhd	# util
@@ -42,7 +42,7 @@ vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag_diff.vhd
 #vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag_ztf.vhd	# ztf
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/limiter.vhd
 #vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lpf_1.vhd		# ltf
-#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/stop_r.vhd		# crash
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/stop_r.vhd
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/sum2.vhd
 #vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/tb_CS2_Mech_Domain.vhd	# spectrum
 #vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/tb_CS2_S_Domain.vhd	#idem
@@ -93,24 +93,24 @@ vhdl-ams/ashenden/compliant/analog-modeling/inductor.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_01a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_02a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_03a.vhd
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_04a.vhd		#record
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_05a.vhd		#record
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_06a.vhd		#record
+vhdl-ams/ashenden/compliant/analog-modeling/inline_04a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_05a.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/inline_06a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_07a.vhd
 #vhdl-ams/ashenden/compliant/analog-modeling/inline_08a.vhd		#crash
 vhdl-ams/ashenden/compliant/analog-modeling/inline_09a.vhd
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_10a.vhd		#record
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_10a.vhd		# syntax
 vhdl-ams/ashenden/compliant/analog-modeling/inline_11a.vhd
 #vhdl-ams/ashenden/compliant/analog-modeling/inline_12a.vhd		#case
 #vhdl-ams/ashenden/compliant/analog-modeling/inline_13a.vhd		#idem
 #vhdl-ams/ashenden/compliant/analog-modeling/inline_14a.vhd		#null
 vhdl-ams/ashenden/compliant/analog-modeling/inline_15a.vhd
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_16a.vhd		#record?
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_16a.vhd		#assoc
 vhdl-ams/ashenden/compliant/analog-modeling/inline_17a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_18a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_19a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_20a.vhd
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_21a.vhd		#spec
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_21a.vhd		#spec-all
 vhdl-ams/ashenden/compliant/analog-modeling/inline_22a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_23a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_24a.vhd
@@ -124,8 +124,8 @@ vhdl-ams/ashenden/compliant/analog-modeling/moving_mass_wa.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/pendulum.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/pendulum_wa.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/piston.vhd
-#vhdl-ams/ashenden/compliant/analog-modeling/quad_opamp.vhd		#crash
-#vhdl-ams/ashenden/compliant/analog-modeling/quad_opamp_wa.vhd		#crash
+vhdl-ams/ashenden/compliant/analog-modeling/quad_opamp.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/quad_opamp_wa.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/std_logic_to_analog.vhd
 #vhdl-ams/ashenden/compliant/analog-modeling/tb_analog_switch.vhd	#unit
 #vhdl-ams/ashenden/compliant/analog-modeling/tb_bit_to_analog.vhd	#lib
@@ -213,7 +213,7 @@ vhdl-ams/ashenden/compliant/composite-data/inline_05.vhd
 vhdl-ams/ashenden/compliant/composite-data/inline_06a.vhd
 #vhdl-ams/ashenden/compliant/composite-data/inline_07a.vhd	#idem
 vhdl-ams/ashenden/compliant/composite-data/inline_08.vhd
-#vhdl-ams/ashenden/compliant/composite-data/inline_09a.vhd	#crash
+vhdl-ams/ashenden/compliant/composite-data/inline_09a.vhd
 #vhdl-ams/ashenden/compliant/composite-data/inline_10.vhd	#visibility
 vhdl-ams/ashenden/compliant/composite-data/inline_11a.vhd
 vhdl-ams/ashenden/compliant/composite-data/inline_12.vhd
@@ -221,7 +221,7 @@ vhdl-ams/ashenden/compliant/composite-data/inline_12.vhd
 vhdl-ams/ashenden/compliant/composite-data/inline_14a.vhd
 vhdl-ams/ashenden/compliant/composite-data/inline_15.vhd
 vhdl-ams/ashenden/compliant/composite-data/inline_16.vhd
-#vhdl-ams/ashenden/compliant/composite-data/inline_17a.vhd	#record
+vhdl-ams/ashenden/compliant/composite-data/inline_17a.vhd
 vhdl-ams/ashenden/compliant/composite-data/modem_controller.vhd
 vhdl-ams/ashenden/compliant/composite-data/tb_and_multiple.vhd
 vhdl-ams/ashenden/compliant/composite-data/tb_byte_swap.vhd
@@ -336,7 +336,7 @@ vhdl-ams/ashenden/compliant/frequency-modeling/opamp.vhd
 #vhdl-ams/ashenden/compliant/frequency-modeling/tb_opamp_2pole.vhd		#lib
 #vhdl-ams/ashenden/compliant/frequency-modeling/tb_v_source.vhd		#lib
 #vhdl-ams/ashenden/compliant/frequency-modeling/v_source-1.vhd			#quan
-#vhdl-ams/ashenden/compliant/frequency-modeling/v_source.vhd			#quan
+vhdl-ams/ashenden/compliant/frequency-modeling/v_source.vhd
 vhdl-ams/ashenden/compliant/fundamental/d_ff.vhd
 vhdl-ams/ashenden/compliant/fundamental/vc_amp.vhd
 #vhdl-ams/ashenden/compliant/fundamental/adc.vhd		#lib
@@ -507,9 +507,9 @@ vhdl-ams/ashenden/compliant/subprograms/inline_08.vhd
 vhdl-ams/ashenden/compliant/subprograms/instruction_interpreter-1.vhd
 vhdl-ams/ashenden/compliant/subprograms/instruction_interpreter.vhd
 vhdl-ams/ashenden/compliant/subprograms/limited.vhd
-#vhdl-ams/ashenden/compliant/subprograms/mixer.vhd		#crash sub
-#vhdl-ams/ashenden/compliant/subprograms/mixer_wa.vhd		#crash sub
-#vhdl-ams/ashenden/compliant/subprograms/motor_system.vhd	#idem
+vhdl-ams/ashenden/compliant/subprograms/mixer.vhd
+vhdl-ams/ashenden/compliant/subprograms/mixer_wa.vhd
+vhdl-ams/ashenden/compliant/subprograms/motor_system.vhd
 vhdl-ams/ashenden/compliant/subprograms/motor_system_wa.vhd
 vhdl-ams/ashenden/compliant/subprograms/negate.vhd
 vhdl-ams/ashenden/compliant/subprograms/network_driver.vhd
