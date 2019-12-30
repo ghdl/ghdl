@@ -1051,9 +1051,9 @@ package body Vhdl.Std_Package is
          Add_Decl (Function_Now);
       end;
 
-      --  AMS-LRM17 16.3
-      --  impure function NOW return REAL;
       if AMS_Vhdl then
+         --  AMS-LRM17 16.3
+         --  impure function NOW return REAL;
          declare
             Function_Now : Iir_Function_Declaration;
          begin
@@ -1065,6 +1065,21 @@ package body Vhdl.Std_Package is
               (Function_Now, Iir_Predefined_Real_Now_Function);
             Vhdl.Sem_Utils.Compute_Subprogram_Hash (Function_Now);
             Add_Decl (Function_Now);
+         end;
+
+         --  AMS-LRM17 16.3
+         --  impure function FREQUENCY return REAL;
+         declare
+            Function_Freq : Iir_Function_Declaration;
+         begin
+            Function_Freq := Create_Std_Decl (Iir_Kind_Function_Declaration);
+            Set_Std_Identifier (Function_Freq, Std_Names.Name_Frequency);
+            Set_Return_Type (Function_Freq, Real_Subtype_Definition);
+            Set_Pure_Flag (Function_Freq, False);
+            Set_Implicit_Definition
+              (Function_Freq, Iir_Predefined_Frequency_Function);
+            Vhdl.Sem_Utils.Compute_Subprogram_Hash (Function_Freq);
+            Add_Decl (Function_Freq);
          end;
       end if;
 

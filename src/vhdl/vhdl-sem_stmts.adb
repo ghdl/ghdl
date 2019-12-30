@@ -412,7 +412,7 @@ package body Vhdl.Sem_Stmts is
          when Iir_Kind_Free_Quantity_Declaration
            | Iir_Kinds_Branch_Quantity_Declaration
            | Iir_Kind_Dot_Attribute =>
-            if (Get_Kind (Get_Parent (Stmt))
+            if (Get_Kind (Get_Current_Concurrent_Statement)
                   /= Iir_Kind_Simultaneous_Procedural_Statement)
             then
                Error_Msg_Sem (+Stmt, "%n cannot be assigned", +Target_Prefix);

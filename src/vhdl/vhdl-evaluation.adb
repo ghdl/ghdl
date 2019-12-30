@@ -1726,6 +1726,7 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_TF_Array_Not
            | Iir_Predefined_Now_Function
            | Iir_Predefined_Real_Now_Function
+           | Iir_Predefined_Frequency_Function
            | Iir_Predefined_Deallocate
            | Iir_Predefined_Write
            | Iir_Predefined_Read

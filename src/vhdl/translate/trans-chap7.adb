@@ -6249,7 +6249,8 @@ package body Trans.Chap7 is
             null;
 
          when Iir_Predefined_Now_Function
-           | Iir_Predefined_Real_Now_Function =>
+           | Iir_Predefined_Real_Now_Function
+           | Iir_Predefined_Frequency_Function =>
             null;
 
             --  when others =>

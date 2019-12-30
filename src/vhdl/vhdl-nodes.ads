@@ -5362,6 +5362,7 @@ package Vhdl.Nodes is
       --  Misc impure functions.
       Iir_Predefined_Now_Function,
       Iir_Predefined_Real_Now_Function,
+      Iir_Predefined_Frequency_Function,
 
       --  A not predefined and not known function.  User function.
       Iir_Predefined_None,

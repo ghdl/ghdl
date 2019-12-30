@@ -2400,11 +2400,13 @@ package body Vhdl.Sem_Types is
    --  Analyze NAME as a nature name.  Return NAME or an error node.
    function Sem_Nature_Mark (Name : Iir) return Iir
    is
-      Nature_Mark : Iir;
+      Nature_Mark : constant Iir := Sem_Denoting_Name (Name);
       Res : Iir;
    begin
-      Nature_Mark := Sem_Denoting_Name (Name);
       Res := Get_Named_Entity (Nature_Mark);
+      if Is_Error (Res) then
+         return Name;
+      end if;
       Res := Get_Nature (Res);
       case Get_Kind (Res) is
          when Iir_Kind_Scalar_Nature_Definition
