@@ -212,6 +212,4 @@ begin
 
   end block block_9;
 
-
-begin
 end architecture test;

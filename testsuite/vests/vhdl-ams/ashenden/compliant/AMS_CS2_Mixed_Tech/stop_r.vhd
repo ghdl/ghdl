@@ -31,19 +31,19 @@ end entity stop_r;
 
 architecture ideal of stop_r is
 
-  quantity velocity : velocity;
+  quantity qvelocity : velocity;
   quantity ang across trq through ang1 to ang2;
 
 begin
 
-  velocity == ang'dot;
+  qvelocity == ang'dot;
 
   if ang > ang_max use	   -- Hit upper stop, generate opposing torque
-    trq == k_stop * (ang - ang_max) + (damp_stop * velocity);
+    trq == k_stop * (ang - ang_max) + (damp_stop * qvelocity);
   elsif ang > ang_min use  -- Between stops, no opposing torque
     trq   == 0.0;
   else		           -- Hit lower stop, generate opposing torque
-    trq   == k_stop * (ang - ang_min) + (damp_stop * velocity);
+    trq   == k_stop * (ang - ang_min) + (damp_stop * qvelocity);
   end use;
 
   break on ang'above(ang_min), ang'above(ang_max);
