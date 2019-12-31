@@ -708,7 +708,8 @@ package body Vhdl.Errors is
             return "'stable attribute";
          when Iir_Kind_Quiet_Attribute =>
             return "'quiet attribute";
-         when Iir_Kind_Delayed_Attribute =>
+         when Iir_Kind_Delayed_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute =>
             return "'delayed attribute";
          when Iir_Kind_Driving_Attribute =>
             return "'driving attribute";

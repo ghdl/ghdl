@@ -1242,7 +1242,7 @@ package body Vhdl.Sem_Names is
    end Finish_Sem_Signal_Attribute;
 
    procedure Sem_Quantity_Attribute_Parameters
-     (Attr : Iir; Params : Iir_Array; Params_Type : Iir_Array; Min : Positive)
+     (Attr : Iir; Params : Iir_Array; Params_Type : Iir_Array; Min : Natural)
    is
       Param : Iir;
    begin
@@ -1285,6 +1285,15 @@ package body Vhdl.Sem_Names is
       Free_Iir (Attr_Name);
 
       case Get_Kind (Attr) is
+         when Iir_Kind_Quantity_Delayed_Attribute =>
+            --  AMS-LRM17 16.2.6
+            --  Q'DELAYED[(T)]
+            --  Parameter:
+            --    T: A static expression of type REAL that evaluates to a
+            --     non-negative number.  If omitted, defaults to 0.0.
+            Sem_Quantity_Attribute_Parameters
+              (Attr, Params, (1 => Real_Type_Definition,
+                              2 .. 4 => Null_Iir), 0);
          when Iir_Kind_Above_Attribute =>
             pragma Assert (Params'First = 1 and Params'Last = 1);
             if Params (1) = Null_Iir then
@@ -1917,7 +1926,8 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Zoh_Attribute
            | Iir_Kind_Ltf_Attribute
-           | Iir_Kind_Ztf_Attribute =>
+           | Iir_Kind_Ztf_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute =>
             if Get_Parameter (Res) = Null_Iir then
                --  Not finished.  Need to emit an error message.
                Finish_Sem_Quantity_Attribute (Name, Res, (1 => Null_Iir));
@@ -3007,7 +3017,8 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Zoh_Attribute
            | Iir_Kind_Ltf_Attribute
-           | Iir_Kind_Ztf_Attribute =>
+           | Iir_Kind_Ztf_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute =>
             declare
                Params : Iir_Array (1 .. 4);
             begin
@@ -3691,6 +3702,120 @@ package body Vhdl.Sem_Names is
       return Res;
    end Sem_Nature_Reference_Attribute;
 
+   function Sem_Quantity_Attribute (Attr : Iir_Attribute_Name) return Iir
+   is
+      use Std_Names;
+      Name_Prefix : constant Iir := Get_Prefix (Attr);
+      Prefix: Iir;
+      Res : Iir;
+      Res_Type : Iir;
+   begin
+      Prefix := Get_Named_Entity (Name_Prefix);
+      Prefix := Finish_Sem_Name_1 (Name_Prefix, Prefix);
+      if not Is_Quantity_Name (Prefix) then
+         Error_Msg_Sem
+           (+Attr, "prefix of %i attribute must denote a quantity", +Attr);
+      end if;
+
+      Res_Type := Get_Type (Prefix);
+      case Get_Identifier (Attr) is
+         when Name_Above =>
+            Res := Create_Iir (Iir_Kind_Above_Attribute);
+            Res_Type := Boolean_Type_Definition;
+         when Name_Dot =>
+            Res := Create_Iir (Iir_Kind_Dot_Attribute);
+         when Name_Integ =>
+            Res := Create_Iir (Iir_Kind_Integ_Attribute);
+         when Name_Zoh =>
+            Res := Create_Iir (Iir_Kind_Zoh_Attribute);
+         when Name_Ltf =>
+            Res := Create_Iir (Iir_Kind_Ltf_Attribute);
+         when Name_Ztf =>
+            Res := Create_Iir (Iir_Kind_Ztf_Attribute);
+         when Name_Delayed =>
+            Res := Create_Iir (Iir_Kind_Quantity_Delayed_Attribute);
+         when others =>
+            --  Not yet implemented attribute, or really an internal error.
+            raise Internal_Error;
+      end case;
+
+      Location_Copy (Res, Attr);
+      Set_Prefix (Res, Prefix);
+      Set_Type (Res, Res_Type);
+
+      --  AMS-LRM17 16.2.6 Predefined analog an mixed-signal attributes
+      --  Prefix: Any quantity denoted by the static name Q.
+      if Get_Name_Staticness (Prefix) < Globally then
+         Error_Msg_Sem
+           (+Res, "prefix of %i attribute must be a static name", +Res);
+      end if;
+
+      --  According to LRM 7.4, signal attributes are not static expressions
+      --  since the prefix (a signal) is not a static expression.
+      Set_Expr_Staticness (Res, None);
+
+      --  AMS-LRM17 8.1 Names
+      --  A name is said to be a static name if and only if one of the
+      --  following conditions holds:
+      --  [...]
+      --  -  The name is an attribute whose prefix is a static quantity name
+      --     and whose suffix is one of the predefined attributes 'ABOVE, 'DOT,
+      --     'INTEG, 'DELAYED, 'SLEW, 'LTF, 'ZOH, or 'ZTF.
+      Set_Name_Staticness (Res, Globally);
+
+      return Res;
+   end Sem_Quantity_Attribute;
+
+   function Sem_Slew_Attribute (Attr : Iir_Attribute_Name) return Iir
+   is
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
+      Prefix: Iir;
+      Res : Iir;
+      Res_Type : Iir;
+   begin
+      Prefix := Get_Named_Entity (Prefix_Name);
+      if Is_Quantity_Name (Prefix) then
+         Res := Create_Iir (Iir_Kind_Quantity_Slew_Attribute);
+      elsif Is_Signal_Name (Prefix) then
+         Res := Create_Iir (Iir_Kind_Signal_Slew_Attribute);
+      else
+         Error_Msg_Sem
+           (+Attr,
+            "prefix of 'slew must denote a quantity or a signal", +Attr);
+         return Error_Mark;
+      end if;
+
+      --  AMS-VHDL17 16.2.6
+      --  Prefix: Any signal denoted by the static name S whose scalar
+      --    subelements are of a floating-point type.
+      --
+      --  GHDL: not necessary when the prefix is a quantity.
+      Res_Type := Get_Type (Prefix);
+      if not Sem_Types.Is_Nature_Type (Res_Type) then
+         Error_Msg_Sem (+Attr, "prefix of 'slew must be of nature type");
+      end if;
+
+      if Get_Name_Staticness (Prefix) < Globally then
+         Error_Msg_Sem (+Attr, "prefix of 'slew must be a static name");
+      end if;
+
+      Set_Type (Res, Res_Type);
+      Location_Copy (Res, Attr);
+      Set_Prefix (Res, Prefix);
+      Set_Expr_Staticness (Res, None);
+
+      --  AMS-LRM17 8.1 Names
+      --  A name is said to be a static name if and only if one of the
+      --  following conditions holds:
+      --  [...]
+      --  -  The name is an attribute whose prefix is a static quantity name
+      --     and whose suffix is one of the predefined attributes 'ABOVE, 'DOT,
+      --     'INTEG, 'DELAYED, 'SLEW, 'LTF, 'ZOH, or 'ZTF.
+      Set_Name_Staticness (Res, Globally);
+
+      return Res;
+   end Sem_Slew_Attribute;
+
    function Sem_Signal_Signal_Attribute
      (Attr : Iir_Attribute_Name; Kind : Iir_Kind)
      return Iir
@@ -3736,12 +3861,20 @@ package body Vhdl.Sem_Names is
    function Sem_Signal_Attribute (Attr : Iir_Attribute_Name) return Iir
    is
       use Std_Names;
+      Id : constant Name_Id := Get_Identifier (Attr);
       Prefix: Iir;
       Res : Iir;
       Base : Iir;
    begin
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
       Base := Get_Object_Prefix (Prefix);
+      if AMS_Vhdl
+        and then Id = Name_Delayed
+        and then Is_Quantity_Name (Base)
+      then
+         return Sem_Quantity_Attribute (Attr);
+      end if;
+
       case Get_Kind (Base) is
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Interface_Signal_Declaration
@@ -3753,7 +3886,7 @@ package body Vhdl.Sem_Names is
               (+Attr, "prefix of %i attribute must denote a signal", +Attr);
             return Error_Mark;
       end case;
-      case Get_Identifier (Attr) is
+      case Id is
          when Name_Stable =>
             Res := Sem_Signal_Signal_Attribute
               (Attr, Iir_Kind_Stable_Attribute);
@@ -4023,118 +4156,6 @@ package body Vhdl.Sem_Names is
       Set_Type (Res, Attr_Type);
       return Res;
    end Sem_Name_Attribute;
-
-   function Sem_Quantity_Attribute (Attr : Iir_Attribute_Name) return Iir
-   is
-      use Std_Names;
-      Name_Prefix : constant Iir := Get_Prefix (Attr);
-      Prefix: Iir;
-      Res : Iir;
-      Res_Type : Iir;
-   begin
-      Prefix := Get_Named_Entity (Name_Prefix);
-      Prefix := Finish_Sem_Name_1 (Name_Prefix, Prefix);
-      if not Is_Quantity_Name (Prefix) then
-         Error_Msg_Sem
-           (+Attr, "prefix of %i attribute must denote a quantity", +Attr);
-      end if;
-
-      Res_Type := Get_Type (Prefix);
-      case Get_Identifier (Attr) is
-         when Name_Above =>
-            Res := Create_Iir (Iir_Kind_Above_Attribute);
-            Res_Type := Boolean_Type_Definition;
-         when Name_Dot =>
-            Res := Create_Iir (Iir_Kind_Dot_Attribute);
-         when Name_Integ =>
-            Res := Create_Iir (Iir_Kind_Integ_Attribute);
-         when Name_Zoh =>
-            Res := Create_Iir (Iir_Kind_Zoh_Attribute);
-         when Name_Ltf =>
-            Res := Create_Iir (Iir_Kind_Ltf_Attribute);
-         when Name_Ztf =>
-            Res := Create_Iir (Iir_Kind_Ztf_Attribute);
-         when others =>
-            --  Not yet implemented attribute, or really an internal error.
-            raise Internal_Error;
-      end case;
-
-      Location_Copy (Res, Attr);
-      Set_Prefix (Res, Prefix);
-      Set_Type (Res, Res_Type);
-
-      --  AMS-LRM17 16.2.6 Predefined analog an mixed-signal attributes
-      --  Prefix: Any quantity denoted by the static name Q.
-      if Get_Name_Staticness (Prefix) < Globally then
-         Error_Msg_Sem
-           (+Res, "prefix of %i attribute must be a static name", +Res);
-      end if;
-
-      --  According to LRM 7.4, signal attributes are not static expressions
-      --  since the prefix (a signal) is not a static expression.
-      Set_Expr_Staticness (Res, None);
-
-      --  AMS-LRM17 8.1 Names
-      --  A name is said to be a static name if and only if one of the
-      --  following conditions holds:
-      --  [...]
-      --  -  The name is an attribute whose prefix is a static quantity name
-      --     and whose suffix is one of the predefined attributes 'ABOVE, 'DOT,
-      --     'INTEG, 'DELAYED, 'SLEW, 'LTF, 'ZOH, or 'ZTF.
-      Set_Name_Staticness (Res, Globally);
-
-      return Res;
-   end Sem_Quantity_Attribute;
-
-   function Sem_Slew_Attribute (Attr : Iir_Attribute_Name) return Iir
-   is
-      Prefix_Name : constant Iir := Get_Prefix (Attr);
-      Prefix: Iir;
-      Res : Iir;
-      Res_Type : Iir;
-   begin
-      Prefix := Get_Named_Entity (Prefix_Name);
-      if Is_Quantity_Name (Prefix) then
-         Res := Create_Iir (Iir_Kind_Quantity_Slew_Attribute);
-      elsif Is_Signal_Name (Prefix) then
-         Res := Create_Iir (Iir_Kind_Signal_Slew_Attribute);
-      else
-         Error_Msg_Sem
-           (+Attr,
-            "prefix of 'slew must denote a quantity or a signal", +Attr);
-         return Error_Mark;
-      end if;
-
-      --  AMS-VHDL17 16.2.6
-      --  Prefix: Any signal denoted by the static name S whose scalar
-      --    subelements are of a floating-point type.
-      --
-      --  GHDL: not necessary when the prefix is a quantity.
-      Res_Type := Get_Type (Prefix);
-      if not Sem_Types.Is_Nature_Type (Res_Type) then
-         Error_Msg_Sem (+Attr, "prefix of 'slew must be of nature type");
-      end if;
-
-      if Get_Name_Staticness (Prefix) < Globally then
-         Error_Msg_Sem (+Attr, "prefix of 'slew must be a static name");
-      end if;
-
-      Set_Type (Res, Res_Type);
-      Location_Copy (Res, Attr);
-      Set_Prefix (Res, Prefix);
-      Set_Expr_Staticness (Res, None);
-
-      --  AMS-LRM17 8.1 Names
-      --  A name is said to be a static name if and only if one of the
-      --  following conditions holds:
-      --  [...]
-      --  -  The name is an attribute whose prefix is a static quantity name
-      --     and whose suffix is one of the predefined attributes 'ABOVE, 'DOT,
-      --     'INTEG, 'DELAYED, 'SLEW, 'LTF, 'ZOH, or 'ZTF.
-      Set_Name_Staticness (Res, Globally);
-
-      return Res;
-   end Sem_Slew_Attribute;
 
    procedure Sem_Attribute_Name (Attr : Iir_Attribute_Name)
    is
@@ -4682,7 +4703,8 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Ltf_Attribute
            | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Signal_Slew_Attribute
-           | Iir_Kind_Quantity_Slew_Attribute =>
+           | Iir_Kind_Quantity_Slew_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute =>
             --  Never static
             return Res;
          when Iir_Kinds_Type_Attribute

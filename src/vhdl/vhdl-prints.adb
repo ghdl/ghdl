@@ -4646,6 +4646,8 @@ package body Vhdl.Prints is
          when Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute =>
             Disp_Parametered_Attribute (Ctxt, Name_Slew, Expr, 2);
+         when Iir_Kind_Quantity_Delayed_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Delayed, Expr, 1);
          when Iir_Kind_Ramp_Attribute =>
             Disp_Parametered_Attribute (Ctxt, Name_Ramp, Expr, 2);
          when Iir_Kind_Above_Attribute =>

@@ -4376,7 +4376,8 @@ package body Vhdl.Sem_Expr is
               | Iir_Kind_Ztf_Attribute
               | Iir_Kind_Dot_Attribute
               | Iir_Kind_Integ_Attribute
-              | Iir_Kind_Ramp_Attribute =>
+              | Iir_Kind_Ramp_Attribute
+              | Iir_Kind_Quantity_Delayed_Attribute =>
                return;
             when Iir_Kind_Aggregate =>
                Check_Read_Aggregate (Obj);

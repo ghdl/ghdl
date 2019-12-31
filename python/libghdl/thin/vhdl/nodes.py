@@ -293,31 +293,32 @@ class Iir_Kind:
     Dot_Attribute = 278
     Integ_Attribute = 279
     Above_Attribute = 280
-    Delayed_Attribute = 281
-    Stable_Attribute = 282
-    Quiet_Attribute = 283
-    Transaction_Attribute = 284
-    Event_Attribute = 285
-    Active_Attribute = 286
-    Last_Event_Attribute = 287
-    Last_Active_Attribute = 288
-    Last_Value_Attribute = 289
-    Driving_Attribute = 290
-    Driving_Value_Attribute = 291
-    Behavior_Attribute = 292
-    Structure_Attribute = 293
-    Simple_Name_Attribute = 294
-    Instance_Name_Attribute = 295
-    Path_Name_Attribute = 296
-    Left_Array_Attribute = 297
-    Right_Array_Attribute = 298
-    High_Array_Attribute = 299
-    Low_Array_Attribute = 300
-    Length_Array_Attribute = 301
-    Ascending_Array_Attribute = 302
-    Range_Array_Attribute = 303
-    Reverse_Range_Array_Attribute = 304
-    Attribute_Name = 305
+    Quantity_Delayed_Attribute = 281
+    Delayed_Attribute = 282
+    Stable_Attribute = 283
+    Quiet_Attribute = 284
+    Transaction_Attribute = 285
+    Event_Attribute = 286
+    Active_Attribute = 287
+    Last_Event_Attribute = 288
+    Last_Active_Attribute = 289
+    Last_Value_Attribute = 290
+    Driving_Attribute = 291
+    Driving_Value_Attribute = 292
+    Behavior_Attribute = 293
+    Structure_Attribute = 294
+    Simple_Name_Attribute = 295
+    Instance_Name_Attribute = 296
+    Path_Name_Attribute = 297
+    Left_Array_Attribute = 298
+    Right_Array_Attribute = 299
+    High_Array_Attribute = 300
+    Low_Array_Attribute = 301
+    Length_Array_Attribute = 302
+    Ascending_Array_Attribute = 303
+    Range_Array_Attribute = 304
+    Reverse_Range_Array_Attribute = 305
+    Attribute_Name = 306
 
 
 class Iir_Kinds:
@@ -602,6 +603,7 @@ class Iir_Kinds:
         Iir_Kind.Dot_Attribute,
         Iir_Kind.Integ_Attribute,
         Iir_Kind.Above_Attribute,
+        Iir_Kind.Quantity_Delayed_Attribute,
         Iir_Kind.Delayed_Attribute,
         Iir_Kind.Stable_Attribute,
         Iir_Kind.Quiet_Attribute,
@@ -852,6 +854,7 @@ class Iir_Kinds:
         Iir_Kind.Dot_Attribute,
         Iir_Kind.Integ_Attribute,
         Iir_Kind.Above_Attribute,
+        Iir_Kind.Quantity_Delayed_Attribute,
         Iir_Kind.Delayed_Attribute,
         Iir_Kind.Stable_Attribute,
         Iir_Kind.Quiet_Attribute,

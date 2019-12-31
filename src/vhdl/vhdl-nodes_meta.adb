@@ -1671,6 +1671,8 @@ package body Vhdl.Nodes_Meta is
             return "integ_attribute";
          when Iir_Kind_Above_Attribute =>
             return "above_attribute";
+         when Iir_Kind_Quantity_Delayed_Attribute =>
+            return "quantity_delayed_attribute";
          when Iir_Kind_Delayed_Attribute =>
             return "delayed_attribute";
          when Iir_Kind_Stable_Attribute =>
@@ -4868,6 +4870,15 @@ package body Vhdl.Nodes_Meta is
       Field_Signal_Attribute_Declaration,
       Field_Parameter,
       Field_Base_Name,
+      --  Iir_Kind_Quantity_Delayed_Attribute
+      Field_Expr_Staticness,
+      Field_Name_Staticness,
+      Field_Prefix,
+      Field_Type,
+      Field_Attr_Chain,
+      Field_Signal_Attribute_Declaration,
+      Field_Parameter,
+      Field_Base_Name,
       --  Iir_Kind_Delayed_Attribute
       Field_Has_Active_Flag,
       Field_Expr_Staticness,
@@ -5324,31 +5335,32 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Dot_Attribute => 2123,
       Iir_Kind_Integ_Attribute => 2130,
       Iir_Kind_Above_Attribute => 2138,
-      Iir_Kind_Delayed_Attribute => 2147,
-      Iir_Kind_Stable_Attribute => 2156,
-      Iir_Kind_Quiet_Attribute => 2165,
-      Iir_Kind_Transaction_Attribute => 2174,
-      Iir_Kind_Event_Attribute => 2178,
-      Iir_Kind_Active_Attribute => 2182,
-      Iir_Kind_Last_Event_Attribute => 2186,
-      Iir_Kind_Last_Active_Attribute => 2190,
-      Iir_Kind_Last_Value_Attribute => 2194,
-      Iir_Kind_Driving_Attribute => 2198,
-      Iir_Kind_Driving_Value_Attribute => 2202,
-      Iir_Kind_Behavior_Attribute => 2202,
-      Iir_Kind_Structure_Attribute => 2202,
-      Iir_Kind_Simple_Name_Attribute => 2209,
-      Iir_Kind_Instance_Name_Attribute => 2214,
-      Iir_Kind_Path_Name_Attribute => 2219,
-      Iir_Kind_Left_Array_Attribute => 2226,
-      Iir_Kind_Right_Array_Attribute => 2233,
-      Iir_Kind_High_Array_Attribute => 2240,
-      Iir_Kind_Low_Array_Attribute => 2247,
-      Iir_Kind_Length_Array_Attribute => 2254,
-      Iir_Kind_Ascending_Array_Attribute => 2261,
-      Iir_Kind_Range_Array_Attribute => 2268,
-      Iir_Kind_Reverse_Range_Array_Attribute => 2275,
-      Iir_Kind_Attribute_Name => 2284
+      Iir_Kind_Quantity_Delayed_Attribute => 2146,
+      Iir_Kind_Delayed_Attribute => 2155,
+      Iir_Kind_Stable_Attribute => 2164,
+      Iir_Kind_Quiet_Attribute => 2173,
+      Iir_Kind_Transaction_Attribute => 2182,
+      Iir_Kind_Event_Attribute => 2186,
+      Iir_Kind_Active_Attribute => 2190,
+      Iir_Kind_Last_Event_Attribute => 2194,
+      Iir_Kind_Last_Active_Attribute => 2198,
+      Iir_Kind_Last_Value_Attribute => 2202,
+      Iir_Kind_Driving_Attribute => 2206,
+      Iir_Kind_Driving_Value_Attribute => 2210,
+      Iir_Kind_Behavior_Attribute => 2210,
+      Iir_Kind_Structure_Attribute => 2210,
+      Iir_Kind_Simple_Name_Attribute => 2217,
+      Iir_Kind_Instance_Name_Attribute => 2222,
+      Iir_Kind_Path_Name_Attribute => 2227,
+      Iir_Kind_Left_Array_Attribute => 2234,
+      Iir_Kind_Right_Array_Attribute => 2241,
+      Iir_Kind_High_Array_Attribute => 2248,
+      Iir_Kind_Low_Array_Attribute => 2255,
+      Iir_Kind_Length_Array_Attribute => 2262,
+      Iir_Kind_Ascending_Array_Attribute => 2269,
+      Iir_Kind_Range_Array_Attribute => 2276,
+      Iir_Kind_Reverse_Range_Array_Attribute => 2283,
+      Iir_Kind_Attribute_Name => 2292
      );
 
    function Get_Fields_First (K : Iir_Kind) return Fields_Index is
@@ -8413,6 +8425,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -8623,6 +8636,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -10819,6 +10833,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11061,6 +11076,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11131,6 +11147,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11256,6 +11273,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Ltf_Attribute
            | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Above_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11311,6 +11329,7 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -11327,6 +11346,7 @@ package body Vhdl.Nodes_Meta is
          when Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
+           | Iir_Kind_Quantity_Delayed_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute

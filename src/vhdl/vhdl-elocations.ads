@@ -649,6 +649,7 @@ package Vhdl.Elocations is
    -- Iir_Kind_Ztf_Attribute (None)
    -- Iir_Kind_Dot_Attribute (None)
    -- Iir_Kind_Integ_Attribute (None)
+   -- Iir_Kind_Quantity_Delayed_Attribute (None)
 
    -- Iir_Kind_Ramp_Attribute (None)
    -- Iir_Kind_Above_Attribute (None)
