@@ -114,23 +114,23 @@ vhdl-ams/ad-hoc/fromUC/regression_test/test170.ams
 #vhdl-ams/ad-hoc/fromUC/regression_test/test173.ams		# syntax
 #vhdl-ams/ad-hoc/fromUC/regression_test/test174.ams		# syntax
 #vhdl-ams/ad-hoc/fromUC/regression_test/test175.ams		# syntax
-#vhdl-ams/ad-hoc/fromUC/regression_test/test176.ams		# null
+vhdl-ams/ad-hoc/fromUC/regression_test/test176.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test177.ams
-#vhdl-ams/ad-hoc/fromUC/regression_test/test178.ams		# crash visible
+vhdl-ams/ad-hoc/fromUC/regression_test/test178.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test179.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test180.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test181.ams
 vhdl-ams/ad-hoc/fromUC/regression_test/test182.ams
 #vhdl-ams/ad-hoc/fromUC/regression_test/test183.ams		# syntax
 vhdl-ams/ad-hoc/fromUC/regression_test/test184.ams
-#vhdl-ams/ad-hoc/fromUC/regression_test/test185.ams		# null
+vhdl-ams/ad-hoc/fromUC/regression_test/test185.ams
 vhdl-ams/ad-hoc/fromUC/resistor_models/ccvs.ams
 vhdl-ams/ad-hoc/fromUC/resistor_models/parallel.ams
 vhdl-ams/ad-hoc/fromUC/resistor_models/series-parallel.ams
 vhdl-ams/ad-hoc/fromUC/resistor_models/series.ams
 vhdl-ams/ad-hoc/fromUC/resistor_models/vccs.ams
 vhdl-ams/ad-hoc/fromUC/resistor_models/vcvs.ams
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/clipper.ams		# crash name
+vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/clipper.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/double_tuned.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/hwr_filter.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/limiter.ams
@@ -140,17 +140,17 @@ vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test100.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test101.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test102.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test103.ams
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test104.ams		# label
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test104.ams		# syntax
 #vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test105.ams		# syntax
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test106.ams
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test108.ams		# crash visible
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test109.ams		# idem
+vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test108.ams
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test109.ams		# crash
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test110.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test111.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test113.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test114.ams
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test115.ams		# crash nature
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test116.ams		# idem
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test115.ams		# errors
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test116.ams		# errors
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test118.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test119.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test121.ams
@@ -159,7 +159,7 @@ vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test124.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test128.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test136.ams
 #vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test141.ams		# syntax
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test145.ams		# syntax
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test145.ams		# reference
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test146.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test147.ams
 #vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test148.ams		# reference
@@ -175,22 +175,22 @@ vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test157.ams
 #vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test161.ams		# reference
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test162.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test163.ams
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test164.ams		# syntax ;
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test164.ams		# invalid (missing ;)
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test165.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test166.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test167.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test168.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test169.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test170.ams
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test172.ams		# syntax
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test173.ams		# syntax
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test174.ams		# syntax
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test175.ams		# syntax
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test176.ams		# null
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test172.ams		# invalid
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test173.ams		# invalid
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test174.ams		# invalid
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test175.ams		# invalid
+vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test176.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test182.ams
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test183.ams		# reference
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test184.ams		# reference
-#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test185.ams		# null
+#vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test183.ams		# alias
+vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test184.ams
+vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/test185.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/voltage_doubler.ams
 vhdl-ams/ad-hoc/fromUC/simultaneous_stmts/wein_bridge.ams
 vhdl-ams/ad-hoc/fromUC/subtype_test/test112.ams

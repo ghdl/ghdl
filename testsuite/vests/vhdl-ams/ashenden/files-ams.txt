@@ -37,11 +37,11 @@ vhdl-ams/ashenden/compliant/AMS_CS1_Mixed_Sig/switch_dig_2in.vhd
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/gain.vhd
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/gain_e.vhd
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/gear_rv_r.vhd
-#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag.vhd		# ltf
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag.vhd
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag_diff.vhd
-#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag_ztf.vhd	# ztf
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lead_lag_ztf.vhd
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/limiter.vhd
-#vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lpf_1.vhd		# ltf
+vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/lpf_1.vhd
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/stop_r.vhd
 vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/sum2.vhd
 #vhdl-ams/ashenden/compliant/AMS_CS2_Mixed_Tech/tb_CS2_Mech_Domain.vhd	# spectrum
@@ -52,7 +52,7 @@ vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/buck_sw.vhd
 vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/CalcBuckParams.vhd
 vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/CalcBuckParams_wa.vhd
 vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/capacitor.vhd
-#vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/comp_2p2z.vhd	#ltf
+vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/comp_2p2z.vhd
 vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/pwl_load.vhd
 vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/pwl_load_wa.vhd
 vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/sw_LoopCtrl.vhd
@@ -60,15 +60,15 @@ vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/sw_LoopCtrl_wa.vhd
 vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/switch_dig.vhd
 #vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/tb_BuckConverter.vhd	#libs
 #vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/tb_CalcBuckParams.vhd	#unit
-#vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/tb_CS3_BuckConverter_average.vhd	#quantity
+#vhdl-ams/ashenden/compliant/AMS_CS3_Power_Systems/tb_CS3_BuckConverter_average.vhd	#unit
 vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/bfsk.vhd
 vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/bfsk_wa.vhd
 vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/MeasFreq.vhd
-#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/PLL.vhd	#ltf
-#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/tb_CS4_CommSys_det.vhd	#crash nature
+vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/PLL.vhd
+#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/tb_CS4_CommSys_det.vhd	#libs
 #vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/tb_CS4_CommSys_PLL.vhd	#idem
 #vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/tb_pll.vhd			#libs
-#vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/v_BPF.vhd			#ltf
+vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/v_BPF.vhd
 vhdl-ams/ashenden/compliant/AMS_CS4_RF_IC/v_Sum.vhd
 vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/amp_lim.vhd
 vhdl-ams/ashenden/compliant/AMS_CS5_RC_Airplane/pwl_functions.vhd
@@ -101,9 +101,9 @@ vhdl-ams/ashenden/compliant/analog-modeling/inline_07a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_09a.vhd
 #vhdl-ams/ashenden/compliant/analog-modeling/inline_10a.vhd		# syntax
 vhdl-ams/ashenden/compliant/analog-modeling/inline_11a.vhd
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_12a.vhd		#case
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_13a.vhd		#idem
-#vhdl-ams/ashenden/compliant/analog-modeling/inline_14a.vhd		#null
+vhdl-ams/ashenden/compliant/analog-modeling/inline_12a.vhd
+#vhdl-ams/ashenden/compliant/analog-modeling/inline_13a.vhd		#invalid
+vhdl-ams/ashenden/compliant/analog-modeling/inline_14a.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/inline_15a.vhd
 #vhdl-ams/ashenden/compliant/analog-modeling/inline_16a.vhd		#assoc
 vhdl-ams/ashenden/compliant/analog-modeling/inline_17a.vhd
@@ -315,27 +315,27 @@ vhdl-ams/ashenden/compliant/files-and-IO/stimulus_generator.vhd
 vhdl-ams/ashenden/compliant/files-and-IO/tb_cache.vhd
 vhdl-ams/ashenden/compliant/files-and-IO/tb_ROM.vhd
 #vhdl-ams/ashenden/compliant/files-and-IO/textio.vhd		#redeclaration
-#vhdl-ams/ashenden/compliant/frequency-modeling/inline_01a.vhd	#quan
-#vhdl-ams/ashenden/compliant/frequency-modeling/inline_02a.vhd	#quan
+vhdl-ams/ashenden/compliant/frequency-modeling/inline_01a.vhd
+#vhdl-ams/ashenden/compliant/frequency-modeling/inline_02a.vhd	#lib
 vhdl-ams/ashenden/compliant/frequency-modeling/inline_03a.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-1.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-2.vhd
-#vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-3.vhd	#ltf
+vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-3.vhd
 #vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-4.vhd	#zoh
-#vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-5.vhd	#ztf
+vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-5.vhd
 #vhdl-ams/ashenden/compliant/frequency-modeling/lowpass.vhd	#ltf
-#vhdl-ams/ashenden/compliant/frequency-modeling/nmos_transistor.vhd	#quan
+vhdl-ams/ashenden/compliant/frequency-modeling/nmos_transistor.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/nmos_transistor_wa.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/opamp.vhd
-#vhdl-ams/ashenden/compliant/frequency-modeling/opamp_2pole.vhd	#ltf
-#vhdl-ams/ashenden/compliant/frequency-modeling/opamp_2pole_res.vhd	#ltf
+vhdl-ams/ashenden/compliant/frequency-modeling/opamp_2pole.vhd
+vhdl-ams/ashenden/compliant/frequency-modeling/opamp_2pole_res.vhd
 #vhdl-ams/ashenden/compliant/frequency-modeling/tb_lpf_dot_ltf_ztf-1.vhd	#lib
 #vhdl-ams/ashenden/compliant/frequency-modeling/tb_lpf_dot_ltf_ztf.vhd		#lib
 #vhdl-ams/ashenden/compliant/frequency-modeling/tb_mosfet_noisy.vhd		#lib
 #vhdl-ams/ashenden/compliant/frequency-modeling/tb_opamp.vhd			#lib
 #vhdl-ams/ashenden/compliant/frequency-modeling/tb_opamp_2pole.vhd		#lib
 #vhdl-ams/ashenden/compliant/frequency-modeling/tb_v_source.vhd		#lib
-#vhdl-ams/ashenden/compliant/frequency-modeling/v_source-1.vhd			#quan
+vhdl-ams/ashenden/compliant/frequency-modeling/v_source-1.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/v_source.vhd
 vhdl-ams/ashenden/compliant/fundamental/d_ff.vhd
 vhdl-ams/ashenden/compliant/fundamental/vc_amp.vhd
@@ -360,6 +360,7 @@ vhdl-ams/ashenden/compliant/generators/inline_02.vhd
 vhdl-ams/ashenden/compliant/generators/memory_board.vhd
 #vhdl-ams/ashenden/compliant/generators/resistor_pack.vhd	#crash sub
 vhdl-ams/ashenden/compliant/generics/control_unit.vhd
+vhdl-ams/ashenden/compliant/generics/multiple_opamp.vhd
 #vhdl-ams/ashenden/compliant/generics/inline_01.vhd		#lib
 vhdl-ams/ashenden/compliant/generics/inline_02a.vhd
 vhdl-ams/ashenden/compliant/generics/inline_03.vhd
@@ -367,8 +368,7 @@ vhdl-ams/ashenden/compliant/generics/inline_03.vhd
 vhdl-ams/ashenden/compliant/generics/inline_06.vhd
 vhdl-ams/ashenden/compliant/generics/inline_07.vhd
 #vhdl-ams/ashenden/compliant/generics/inline_08.vhd		#lib
-#vhdl-ams/ashenden/compliant/generics/inline_09a.vhd		#crash
-#vhdl-ams/ashenden/compliant/generics/multiple_opamp.vhd	#crash
+vhdl-ams/ashenden/compliant/generics/inline_09a.vhd
 vhdl-ams/ashenden/compliant/generics/reg.vhd
 #vhdl-ams/ashenden/compliant/generics/tb_timer_w_stim.vhd	#lib
 vhdl-ams/ashenden/compliant/generics/timer.vhd
