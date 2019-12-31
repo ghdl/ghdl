@@ -65,6 +65,7 @@ uvvm_vips="bitvis_vip_sbi
  bitvis_vip_i2c
  bitvis_vip_spi
  bitvis_vip_uart
+ bitvis_vip_wishbone
 
  bitvis_vip_clock_generator
  bitvis_vip_scoreboard
@@ -134,6 +135,10 @@ while [[ $# > 0 ]]; do
 		;;
 		--uvvm-vip-uart)
 		COMPILE_vip_uart=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-wishbone)
+		COMPILE_vip_wishbone=TRUE
 		NO_COMMAND=0
 		;;
 		--uvvm-vip-clock_generator)
@@ -216,6 +221,7 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "     --uvvm-vip-sbi"
 	echo "     --uvvm-vip-spi"
 	echo "     --uvvm-vip-uart"
+	echo "     --uvvm-vip-wishbone"
 	echo "     --uvvm-vip-clock_generator"
 	echo "     --uvvm-vip-scoreboard"
 	echo ""
