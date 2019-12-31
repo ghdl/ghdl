@@ -324,6 +324,21 @@ package body Synth.Inference is
       end if;
    end Check_FF_Else;
 
+   function Is_Prev_FF_Value (V : Net; Prev_Val : Net; Off : Uns32)
+                             return Boolean
+   is
+      Inst : Instance;
+   begin
+      if V = Prev_Val then
+         pragma Assert (Off = 0);
+         return True;
+      end if;
+      Inst := Get_Net_Parent (V);
+      return Get_Id (Inst) = Id_Extract
+        and then Get_Param_Uns32 (Inst, 0) = Off
+        and then Get_Input_Net (Inst, 0) = Prev_Val;
+   end Is_Prev_FF_Value;
+
    --  LAST_MUX is the mux whose input 0 is the loop and clock for selector.
    procedure Infere_FF (Ctxt : Context_Acc;
                         Wid : Wire_Id;
@@ -415,7 +430,7 @@ package body Synth.Inference is
 
             Last_Out := Get_Output (Mux, 0);
 
-            if Mux_Rst_Val = Prev_Val then
+            if Is_Prev_FF_Value (Mux_Rst_Val, Prev_Val, Off) then
                --  The mux is like an enable.  Like in this example, q2 is not
                --  assigned when RST is true:
                --    if rst then
