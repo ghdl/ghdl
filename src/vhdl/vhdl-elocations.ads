@@ -644,6 +644,9 @@ package Vhdl.Elocations is
 
    -- Iir_Kind_Signal_Slew_Attribute (None)
    -- Iir_Kind_Quantity_Slew_Attribute (None)
+   -- Iir_Kind_Zoh_Attribute (None)
+   -- Iir_Kind_Ltf_Attribute (None)
+   -- Iir_Kind_Ztf_Attribute (None)
    -- Iir_Kind_Dot_Attribute (None)
    -- Iir_Kind_Integ_Attribute (None)
 

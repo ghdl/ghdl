@@ -382,9 +382,9 @@ class Name:
     Dot = 604
     Integ = 605
     Above = 606
-    ZOH = 607
-    LTF = 608
-    ZTF = 609
+    Zoh = 607
+    Ltf = 608
+    Ztf = 609
     Ramp = 610
     Slew = 611
     Last_AMS_Attribute = 611

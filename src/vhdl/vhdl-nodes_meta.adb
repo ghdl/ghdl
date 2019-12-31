@@ -305,6 +305,8 @@ package body Vhdl.Nodes_Meta is
       Field_Index_Subtype => Type_Iir,
       Field_Parameter => Type_Iir,
       Field_Parameter_2 => Type_Iir,
+      Field_Parameter_3 => Type_Iir,
+      Field_Parameter_4 => Type_Iir,
       Field_Attr_Chain => Type_Iir,
       Field_Signal_Attribute_Declaration => Type_Iir,
       Field_Actual_Type => Type_Iir,
@@ -957,6 +959,10 @@ package body Vhdl.Nodes_Meta is
             return "parameter";
          when Field_Parameter_2 =>
             return "parameter_2";
+         when Field_Parameter_3 =>
+            return "parameter_3";
+         when Field_Parameter_4 =>
+            return "parameter_4";
          when Field_Attr_Chain =>
             return "attr_chain";
          when Field_Signal_Attribute_Declaration =>
@@ -1653,6 +1659,12 @@ package body Vhdl.Nodes_Meta is
             return "quantity_slew_attribute";
          when Iir_Kind_Ramp_Attribute =>
             return "ramp_attribute";
+         when Iir_Kind_Zoh_Attribute =>
+            return "zoh_attribute";
+         when Iir_Kind_Ltf_Attribute =>
+            return "ltf_attribute";
+         when Iir_Kind_Ztf_Attribute =>
+            return "ztf_attribute";
          when Iir_Kind_Dot_Attribute =>
             return "dot_attribute";
          when Iir_Kind_Integ_Attribute =>
@@ -2286,6 +2298,10 @@ package body Vhdl.Nodes_Meta is
          when Field_Parameter =>
             return Attr_None;
          when Field_Parameter_2 =>
+            return Attr_None;
+         when Field_Parameter_3 =>
+            return Attr_None;
+         when Field_Parameter_4 =>
             return Attr_None;
          when Field_Attr_Chain =>
             return Attr_Forward_Ref;
@@ -4798,6 +4814,35 @@ package body Vhdl.Nodes_Meta is
       Field_Parameter,
       Field_Parameter_2,
       Field_Base_Name,
+      --  Iir_Kind_Zoh_Attribute
+      Field_Expr_Staticness,
+      Field_Name_Staticness,
+      Field_Prefix,
+      Field_Type,
+      Field_Attr_Chain,
+      Field_Parameter,
+      Field_Parameter_2,
+      Field_Base_Name,
+      --  Iir_Kind_Ltf_Attribute
+      Field_Expr_Staticness,
+      Field_Name_Staticness,
+      Field_Prefix,
+      Field_Type,
+      Field_Attr_Chain,
+      Field_Parameter,
+      Field_Parameter_2,
+      Field_Base_Name,
+      --  Iir_Kind_Ztf_Attribute
+      Field_Expr_Staticness,
+      Field_Name_Staticness,
+      Field_Prefix,
+      Field_Type,
+      Field_Attr_Chain,
+      Field_Parameter,
+      Field_Parameter_2,
+      Field_Parameter_3,
+      Field_Parameter_4,
+      Field_Base_Name,
       --  Iir_Kind_Dot_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
@@ -5273,34 +5318,37 @@ package body Vhdl.Nodes_Meta is
       Iir_Kind_Signal_Slew_Attribute => 2074,
       Iir_Kind_Quantity_Slew_Attribute => 2082,
       Iir_Kind_Ramp_Attribute => 2090,
-      Iir_Kind_Dot_Attribute => 2097,
-      Iir_Kind_Integ_Attribute => 2104,
-      Iir_Kind_Above_Attribute => 2112,
-      Iir_Kind_Delayed_Attribute => 2121,
-      Iir_Kind_Stable_Attribute => 2130,
-      Iir_Kind_Quiet_Attribute => 2139,
-      Iir_Kind_Transaction_Attribute => 2148,
-      Iir_Kind_Event_Attribute => 2152,
-      Iir_Kind_Active_Attribute => 2156,
-      Iir_Kind_Last_Event_Attribute => 2160,
-      Iir_Kind_Last_Active_Attribute => 2164,
-      Iir_Kind_Last_Value_Attribute => 2168,
-      Iir_Kind_Driving_Attribute => 2172,
-      Iir_Kind_Driving_Value_Attribute => 2176,
-      Iir_Kind_Behavior_Attribute => 2176,
-      Iir_Kind_Structure_Attribute => 2176,
-      Iir_Kind_Simple_Name_Attribute => 2183,
-      Iir_Kind_Instance_Name_Attribute => 2188,
-      Iir_Kind_Path_Name_Attribute => 2193,
-      Iir_Kind_Left_Array_Attribute => 2200,
-      Iir_Kind_Right_Array_Attribute => 2207,
-      Iir_Kind_High_Array_Attribute => 2214,
-      Iir_Kind_Low_Array_Attribute => 2221,
-      Iir_Kind_Length_Array_Attribute => 2228,
-      Iir_Kind_Ascending_Array_Attribute => 2235,
-      Iir_Kind_Range_Array_Attribute => 2242,
-      Iir_Kind_Reverse_Range_Array_Attribute => 2249,
-      Iir_Kind_Attribute_Name => 2258
+      Iir_Kind_Zoh_Attribute => 2098,
+      Iir_Kind_Ltf_Attribute => 2106,
+      Iir_Kind_Ztf_Attribute => 2116,
+      Iir_Kind_Dot_Attribute => 2123,
+      Iir_Kind_Integ_Attribute => 2130,
+      Iir_Kind_Above_Attribute => 2138,
+      Iir_Kind_Delayed_Attribute => 2147,
+      Iir_Kind_Stable_Attribute => 2156,
+      Iir_Kind_Quiet_Attribute => 2165,
+      Iir_Kind_Transaction_Attribute => 2174,
+      Iir_Kind_Event_Attribute => 2178,
+      Iir_Kind_Active_Attribute => 2182,
+      Iir_Kind_Last_Event_Attribute => 2186,
+      Iir_Kind_Last_Active_Attribute => 2190,
+      Iir_Kind_Last_Value_Attribute => 2194,
+      Iir_Kind_Driving_Attribute => 2198,
+      Iir_Kind_Driving_Value_Attribute => 2202,
+      Iir_Kind_Behavior_Attribute => 2202,
+      Iir_Kind_Structure_Attribute => 2202,
+      Iir_Kind_Simple_Name_Attribute => 2209,
+      Iir_Kind_Instance_Name_Attribute => 2214,
+      Iir_Kind_Path_Name_Attribute => 2219,
+      Iir_Kind_Left_Array_Attribute => 2226,
+      Iir_Kind_Right_Array_Attribute => 2233,
+      Iir_Kind_High_Array_Attribute => 2240,
+      Iir_Kind_Low_Array_Attribute => 2247,
+      Iir_Kind_Length_Array_Attribute => 2254,
+      Iir_Kind_Ascending_Array_Attribute => 2261,
+      Iir_Kind_Range_Array_Attribute => 2268,
+      Iir_Kind_Reverse_Range_Array_Attribute => 2275,
+      Iir_Kind_Attribute_Name => 2284
      );
 
    function Get_Fields_First (K : Iir_Kind) return Fields_Index is
@@ -6089,6 +6137,10 @@ package body Vhdl.Nodes_Meta is
             return Get_Parameter (N);
          when Field_Parameter_2 =>
             return Get_Parameter_2 (N);
+         when Field_Parameter_3 =>
+            return Get_Parameter_3 (N);
+         when Field_Parameter_4 =>
+            return Get_Parameter_4 (N);
          when Field_Attr_Chain =>
             return Get_Attr_Chain (N);
          when Field_Signal_Attribute_Declaration =>
@@ -6533,6 +6585,10 @@ package body Vhdl.Nodes_Meta is
             Set_Parameter (N, V);
          when Field_Parameter_2 =>
             Set_Parameter_2 (N, V);
+         when Field_Parameter_3 =>
+            Set_Parameter_3 (N, V);
+         when Field_Parameter_4 =>
+            Set_Parameter_4 (N, V);
          when Field_Attr_Chain =>
             Set_Attr_Chain (N, V);
          when Field_Signal_Attribute_Declaration =>
@@ -8351,6 +8407,9 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
            | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
@@ -8558,6 +8617,9 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
            | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
@@ -10751,6 +10813,9 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
            | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
@@ -10990,6 +11055,9 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
            | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
@@ -11057,6 +11125,9 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
            | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute
@@ -11181,6 +11252,9 @@ package body Vhdl.Nodes_Meta is
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
            | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Above_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
@@ -11205,12 +11279,25 @@ package body Vhdl.Nodes_Meta is
       case K is
          when Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
-           | Iir_Kind_Ramp_Attribute =>
+           | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute =>
             return True;
          when others =>
             return False;
       end case;
    end Has_Parameter_2;
+
+   function Has_Parameter_3 (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Ztf_Attribute;
+   end Has_Parameter_3;
+
+   function Has_Parameter_4 (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Ztf_Attribute;
+   end Has_Parameter_4;
 
    function Has_Attr_Chain (K : Iir_Kind) return Boolean is
    begin
@@ -11218,6 +11305,9 @@ package body Vhdl.Nodes_Meta is
          when Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
            | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Above_Attribute

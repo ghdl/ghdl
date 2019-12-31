@@ -430,9 +430,9 @@ package body Std_Names is
       Def ("dot",           Name_Dot);
       Def ("integ",         Name_Integ);
       Def ("above",         Name_Above);
-      Def ("zoh",           Name_ZOH);
-      Def ("ltf",           Name_LTF);
-      Def ("ztf",           Name_ZTF);
+      Def ("zoh",           Name_Zoh);
+      Def ("ltf",           Name_Ltf);
+      Def ("ztf",           Name_Ztf);
       Def ("ramp",          Name_Ramp);
       Def ("slew",          Name_Slew);
 

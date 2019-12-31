@@ -688,6 +688,12 @@ package body Vhdl.Errors is
          when Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute =>
             return "'slew attribute";
+         when Iir_Kind_Zoh_Attribute =>
+            return "'zoh attribute";
+         when Iir_Kind_Ltf_Attribute =>
+            return "'ltf attribute";
+         when Iir_Kind_Ztf_Attribute =>
+            return "'ztf attribute";
          when Iir_Kind_Ramp_Attribute =>
             return "'ramp attribute";
          when Iir_Kind_Dot_Attribute =>

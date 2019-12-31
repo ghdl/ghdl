@@ -3479,14 +3479,7 @@ package body Vhdl.Prints is
       Disp_Ident (Ctxt, Name);
       Has_Params := False;
       for I in 1 .. Num loop
-         case I is
-            when 1 =>
-               Param := Get_Parameter (Expr);
-            when 2 =>
-               Param := Get_Parameter_2 (Expr);
-            when others =>
-               raise Internal_Error;
-         end case;
+         Param := Get_Attribute_Parameter (Expr, I);
          exit when Param = Null_Iir;
          if not Has_Params then
             Disp_Token (Ctxt, Tok_Left_Paren);
@@ -4643,6 +4636,12 @@ package body Vhdl.Prints is
             Disp_Name_Attribute (Ctxt, Expr, Name_Dot);
          when Iir_Kind_Integ_Attribute =>
             Disp_Name_Attribute (Ctxt, Expr, Name_Integ);
+         when Iir_Kind_Zoh_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Zoh, Expr, 2);
+         when Iir_Kind_Ltf_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Ltf, Expr, 2);
+         when Iir_Kind_Ztf_Attribute =>
+            Disp_Parametered_Attribute (Ctxt, Name_Ztf, Expr, 4);
 
          when Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute =>

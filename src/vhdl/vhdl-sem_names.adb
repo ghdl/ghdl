@@ -1241,6 +1241,39 @@ package body Vhdl.Sem_Names is
       end if;
    end Finish_Sem_Signal_Attribute;
 
+   procedure Sem_Quantity_Attribute_Parameters
+     (Attr : Iir; Params : Iir_Array; Params_Type : Iir_Array; Min : Positive)
+   is
+      Param : Iir;
+   begin
+      pragma Assert (Params'First = 1);
+      pragma Assert (Params_Type'First = 1);
+      pragma Assert (Params_Type'Last = Params'Last);
+      for I in Params'Range loop
+         Param := Params (I);
+         if Param = Null_Iir then
+            if I <= Min then
+               Error_Msg_Sem
+                 (+Attr, "not enough parameters for the attribute");
+            end if;
+            return;
+         end if;
+         if Params_Type (I) = Null_Iir then
+            Error_Msg_Sem (+Attr, "too many parameters for the attribute");
+            return;
+         end if;
+
+         Param := Sem_Expression (Param, Params_Type (I));
+         if Param /= Null_Iir then
+            if Get_Expr_Staticness (Param) < Globally then
+               Error_Msg_Sem
+                 (+Param, "parameter must be a static expression");
+            end if;
+            Set_Attribute_Parameter (Attr, I, Param);
+         end if;
+      end loop;
+   end Sem_Quantity_Attribute_Parameters;
+
    procedure Finish_Sem_Quantity_Attribute
      (Attr_Name : Iir; Attr : Iir; Params : Iir_Array)
    is
@@ -1268,7 +1301,7 @@ package body Vhdl.Sem_Names is
          when Iir_Kind_Ramp_Attribute
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute =>
-            pragma Assert (Params'First = 1 and Params'Last = 2);
+            pragma Assert (Params'First = 1 and Params'Last = 4);
             --  AMS-LRM17 16.2.6
             --  S'RAMP [(TRISE [, TFALL])]
             --  Parameters:
@@ -1298,25 +1331,54 @@ package body Vhdl.Sem_Names is
             --     evaluates to a negative value.  If omitted, it defaults
             --     to the negative of MAX_RISING_SLOPE.  The value REAL'LOW
             --     is interpreted as a negative infinite slope.
-            for I in 1 .. 2 loop
-               Param := Params (I);
-               exit when Param = Null_Iir;
-               --  FIXME: type.
-               Param := Sem_Expression (Param, Real_Type_Definition);
-               if Param /= Null_Iir then
-                  if Get_Expr_Staticness (Param) < Globally then
-                     Error_Msg_Sem
-                       (+Param,
-                        "parameters of 'ramp must be static expressions");
-                  end if;
-                  case I is
-                     when 1 =>
-                        Set_Parameter (Attr, Param);
-                     when 2 =>
-                        Set_Parameter_2 (Attr, Param);
-                  end case;
-               end if;
-            end loop;
+            Sem_Quantity_Attribute_Parameters
+              (Attr, Params, (1 => Real_Type_Definition,
+                              2 => Real_Type_Definition,
+                              3 | 4 => Null_Iir), 1);
+         when Iir_Kind_Zoh_Attribute =>
+            --  AMS-LRM17 16.2.6
+            --  Q'LTF(T [, INITIAL_DELAY)
+            --  Parameters:
+            --    T: A static expression of type REAL that evaluates to a
+            --     positive value.  This is the sampling period.
+            --    INITIAL_DELAY: A static expression of type REAL that
+            --     evaluates to a non-negative value.  The first sampling will
+            --     occur after INITIAL_DELAY seconds.  If omitted, it defaults
+            --     to 0.0.
+            Sem_Quantity_Attribute_Parameters
+              (Attr, Params, (1 => Real_Type_Definition,
+                              2 => Real_Type_Definition,
+                              3 | 4 => Null_Iir), 1);
+         when Iir_Kind_Ltf_Attribute =>
+            --  AMS-LRM17 16.2.6
+            --  Q'LTF(NUM, DEN)
+            --  Parameters:
+            --    NUM: a static expression of type REAL_VECTOR that contains
+            --     the numerator coefficients.
+            --    DEN: a static expression of type REAL_VECTOR that contains
+            --     the denominator coefficients.
+            Sem_Quantity_Attribute_Parameters
+              (Attr, Params, (1 => Real_Vector_Type_Definition,
+                              2 => Real_Vector_Type_Definition,
+                              3 | 4 => Null_Iir), 2);
+         when Iir_Kind_Ztf_Attribute =>
+            --  AMS-LRM17 16.2.6
+            --  Q'ZTF(NUM, DEN, T, [, INITIAL_DELAY])
+            --  Parameters:
+            --    NUM: A static expression of type REAL_VECTOR with the
+            --     numerator coefficients.
+            --    DEN: A static expression of type REAL_VECTOR with the
+            --     denominator coefficients.
+            --    T: A static expression of type REAL that evaluates to a
+            --     positive value, which is the sampling period.
+            --    INITIAL_DELAY: A static expression of type REAL that
+            --     evaluates to a non-negative value, which is the time of the
+            --     first sampling.  If omitted, it defaults to 0.0
+            Sem_Quantity_Attribute_Parameters
+              (Attr, Params, (1 => Real_Vector_Type_Definition,
+                              2 => Real_Vector_Type_Definition,
+                              3 => Real_Type_Definition,
+                              4 => Real_Type_Definition), 3);
          when others =>
             Error_Kind ("finish_sem_quantity_attribute", Attr);
       end case;
@@ -1852,7 +1914,10 @@ package body Vhdl.Sem_Names is
          when Iir_Kind_Above_Attribute
            | Iir_Kind_Ramp_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
-           | Iir_Kind_Signal_Slew_Attribute =>
+           | Iir_Kind_Signal_Slew_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute =>
             if Get_Parameter (Res) = Null_Iir then
                --  Not finished.  Need to emit an error message.
                Finish_Sem_Quantity_Attribute (Name, Res, (1 => Null_Iir));
@@ -2939,9 +3004,12 @@ package body Vhdl.Sem_Names is
 
          when Iir_Kind_Ramp_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
-           | Iir_Kind_Signal_Slew_Attribute =>
+           | Iir_Kind_Signal_Slew_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute =>
             declare
-               Params : Iir_Array (1 .. 2);
+               Params : Iir_Array (1 .. 4);
             begin
                --  Try to extract 2 actuals from the name association list.
                --  Emit a message in case of error.
@@ -3962,6 +4030,7 @@ package body Vhdl.Sem_Names is
       Name_Prefix : constant Iir := Get_Prefix (Attr);
       Prefix: Iir;
       Res : Iir;
+      Res_Type : Iir;
    begin
       Prefix := Get_Named_Entity (Name_Prefix);
       Prefix := Finish_Sem_Name_1 (Name_Prefix, Prefix);
@@ -3970,16 +4039,21 @@ package body Vhdl.Sem_Names is
            (+Attr, "prefix of %i attribute must denote a quantity", +Attr);
       end if;
 
+      Res_Type := Get_Type (Prefix);
       case Get_Identifier (Attr) is
          when Name_Above =>
             Res := Create_Iir (Iir_Kind_Above_Attribute);
-            Set_Type (Res, Boolean_Type_Definition);
+            Res_Type := Boolean_Type_Definition;
          when Name_Dot =>
             Res := Create_Iir (Iir_Kind_Dot_Attribute);
-            Set_Type (Res, Get_Type (Prefix));
          when Name_Integ =>
             Res := Create_Iir (Iir_Kind_Integ_Attribute);
-            Set_Type (Res, Get_Type (Prefix));
+         when Name_Zoh =>
+            Res := Create_Iir (Iir_Kind_Zoh_Attribute);
+         when Name_Ltf =>
+            Res := Create_Iir (Iir_Kind_Ltf_Attribute);
+         when Name_Ztf =>
+            Res := Create_Iir (Iir_Kind_Ztf_Attribute);
          when others =>
             --  Not yet implemented attribute, or really an internal error.
             raise Internal_Error;
@@ -3987,6 +4061,7 @@ package body Vhdl.Sem_Names is
 
       Location_Copy (Res, Attr);
       Set_Prefix (Res, Prefix);
+      Set_Type (Res, Res_Type);
 
       --  AMS-LRM17 16.2.6 Predefined analog an mixed-signal attributes
       --  Prefix: Any quantity denoted by the static name Q.
@@ -4210,7 +4285,10 @@ package body Vhdl.Sem_Names is
 
          when Name_Above
            | Name_Dot
-           | Name_Integ =>
+           | Name_Integ
+           | Name_Zoh
+           | Name_Ltf
+           | Name_Ztf =>
             if Flags.AMS_Vhdl then
                Res := Sem_Quantity_Attribute (Attr);
             else
@@ -4600,6 +4678,9 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Dot_Attribute
            | Iir_Kind_Integ_Attribute
            | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute =>
             --  Never static

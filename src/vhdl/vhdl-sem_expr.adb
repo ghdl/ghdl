@@ -4371,6 +4371,9 @@ package body Vhdl.Sem_Expr is
               | Iir_Kinds_Signal_Attribute
               | Iir_Kinds_Signal_Value_Attribute
               | Iir_Kind_Above_Attribute
+              | Iir_Kind_Zoh_Attribute
+              | Iir_Kind_Ltf_Attribute
+              | Iir_Kind_Ztf_Attribute
               | Iir_Kind_Dot_Attribute
               | Iir_Kind_Integ_Attribute
               | Iir_Kind_Ramp_Attribute =>

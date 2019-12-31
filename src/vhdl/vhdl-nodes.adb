@@ -1274,7 +1274,10 @@ package body Vhdl.Nodes is
            | Iir_Kind_Wait_Statement
            | Iir_Kind_Signal_Slew_Attribute
            | Iir_Kind_Quantity_Slew_Attribute
-           | Iir_Kind_Ramp_Attribute =>
+           | Iir_Kind_Ramp_Attribute
+           | Iir_Kind_Zoh_Attribute
+           | Iir_Kind_Ltf_Attribute
+           | Iir_Kind_Ztf_Attribute =>
             return Format_Medium;
       end case;
    end Get_Format;
@@ -5959,6 +5962,38 @@ package body Vhdl.Nodes is
                      "no field Parameter_2");
       Set_Field6 (Target, Param);
    end Set_Parameter_2;
+
+   function Get_Parameter_3 (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Parameter_3 (Get_Kind (Target)),
+                     "no field Parameter_3");
+      return Get_Field7 (Target);
+   end Get_Parameter_3;
+
+   procedure Set_Parameter_3 (Target : Iir; Param : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Parameter_3 (Get_Kind (Target)),
+                     "no field Parameter_3");
+      Set_Field7 (Target, Param);
+   end Set_Parameter_3;
+
+   function Get_Parameter_4 (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Parameter_4 (Get_Kind (Target)),
+                     "no field Parameter_4");
+      return Get_Field8 (Target);
+   end Get_Parameter_4;
+
+   procedure Set_Parameter_4 (Target : Iir; Param : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Parameter_4 (Get_Kind (Target)),
+                     "no field Parameter_4");
+      Set_Field8 (Target, Param);
+   end Set_Parameter_4;
 
    function Get_Attr_Chain (Attr : Iir) return Iir is
    begin

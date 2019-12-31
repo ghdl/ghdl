@@ -4475,6 +4475,9 @@ package Vhdl.Nodes is
    -- Iir_Kind_Ramp_Attribute (Medium)
    -- Iir_Kind_Signal_Slew_Attribute (Medium)
    -- Iir_Kind_Quantity_Slew_Attribute (Medium)
+   -- Iir_Kind_Zoh_Attribute (Medium)
+   -- Iir_Kind_Ltf_Attribute (Medium)
+   -- Iir_Kind_Ztf_Attribute (Medium)
    --
    --   Get/Set_Prefix (Field0)
    --
@@ -4485,6 +4488,12 @@ package Vhdl.Nodes is
    --   Get/Set_Parameter (Field4)
    --
    --   Get/Set_Parameter_2 (Field6)
+   --
+   -- Only for Iir_Kind_Ztf_Attribute:
+   --   Get/Set_Parameter_3 (Field7)
+   --
+   -- Only for Iir_Kind_Ztf_Attribute:
+   --   Get/Set_Parameter_4 (Field8)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -4991,6 +5000,9 @@ package Vhdl.Nodes is
       Iir_Kind_Signal_Slew_Attribute,
       Iir_Kind_Quantity_Slew_Attribute,
       Iir_Kind_Ramp_Attribute,
+      Iir_Kind_Zoh_Attribute,
+      Iir_Kind_Ltf_Attribute,
+      Iir_Kind_Ztf_Attribute,
       Iir_Kind_Dot_Attribute,
       Iir_Kind_Integ_Attribute,
       Iir_Kind_Above_Attribute,
@@ -6205,6 +6217,9 @@ package Vhdl.Nodes is
    --Iir_Kind_Signal_Slew_Attribute
    --Iir_Kind_Quantity_Slew_Attribute
    --Iir_Kind_Ramp_Attribute
+   --Iir_Kind_Zoh_Attribute
+   --Iir_Kind_Ltf_Attribute
+   --Iir_Kind_Ztf_Attribute
    --Iir_Kind_Dot_Attribute
    --Iir_Kind_Integ_Attribute
    --Iir_Kind_Above_Attribute
@@ -8264,6 +8279,16 @@ package Vhdl.Nodes is
    --  Field: Field6
    function Get_Parameter_2 (Target : Iir) return Iir;
    procedure Set_Parameter_2 (Target : Iir; Param : Iir);
+
+   --  Third parameter of an attribute (for AMS VHDL).
+   --  Field: Field7
+   function Get_Parameter_3 (Target : Iir) return Iir;
+   procedure Set_Parameter_3 (Target : Iir; Param : Iir);
+
+   --  Fourth parameter of an attribute (for AMS VHDL).
+   --  Field: Field8
+   function Get_Parameter_4 (Target : Iir) return Iir;
+   procedure Set_Parameter_4 (Target : Iir; Param : Iir);
 
    --  Field: Field2 Forward_Ref
    function Get_Attr_Chain (Attr : Iir) return Iir;

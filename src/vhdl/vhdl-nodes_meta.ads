@@ -347,6 +347,8 @@ package Vhdl.Nodes_Meta is
       Field_Index_Subtype,
       Field_Parameter,
       Field_Parameter_2,
+      Field_Parameter_3,
+      Field_Parameter_4,
       Field_Attr_Chain,
       Field_Signal_Attribute_Declaration,
       Field_Actual_Type,
@@ -909,6 +911,8 @@ package Vhdl.Nodes_Meta is
    function Has_Index_Subtype (K : Iir_Kind) return Boolean;
    function Has_Parameter (K : Iir_Kind) return Boolean;
    function Has_Parameter_2 (K : Iir_Kind) return Boolean;
+   function Has_Parameter_3 (K : Iir_Kind) return Boolean;
+   function Has_Parameter_4 (K : Iir_Kind) return Boolean;
    function Has_Attr_Chain (K : Iir_Kind) return Boolean;
    function Has_Signal_Attribute_Declaration (K : Iir_Kind) return Boolean;
    function Has_Actual_Type (K : Iir_Kind) return Boolean;

@@ -287,34 +287,37 @@ class Iir_Kind:
     Signal_Slew_Attribute = 272
     Quantity_Slew_Attribute = 273
     Ramp_Attribute = 274
-    Dot_Attribute = 275
-    Integ_Attribute = 276
-    Above_Attribute = 277
-    Delayed_Attribute = 278
-    Stable_Attribute = 279
-    Quiet_Attribute = 280
-    Transaction_Attribute = 281
-    Event_Attribute = 282
-    Active_Attribute = 283
-    Last_Event_Attribute = 284
-    Last_Active_Attribute = 285
-    Last_Value_Attribute = 286
-    Driving_Attribute = 287
-    Driving_Value_Attribute = 288
-    Behavior_Attribute = 289
-    Structure_Attribute = 290
-    Simple_Name_Attribute = 291
-    Instance_Name_Attribute = 292
-    Path_Name_Attribute = 293
-    Left_Array_Attribute = 294
-    Right_Array_Attribute = 295
-    High_Array_Attribute = 296
-    Low_Array_Attribute = 297
-    Length_Array_Attribute = 298
-    Ascending_Array_Attribute = 299
-    Range_Array_Attribute = 300
-    Reverse_Range_Array_Attribute = 301
-    Attribute_Name = 302
+    Zoh_Attribute = 275
+    Ltf_Attribute = 276
+    Ztf_Attribute = 277
+    Dot_Attribute = 278
+    Integ_Attribute = 279
+    Above_Attribute = 280
+    Delayed_Attribute = 281
+    Stable_Attribute = 282
+    Quiet_Attribute = 283
+    Transaction_Attribute = 284
+    Event_Attribute = 285
+    Active_Attribute = 286
+    Last_Event_Attribute = 287
+    Last_Active_Attribute = 288
+    Last_Value_Attribute = 289
+    Driving_Attribute = 290
+    Driving_Value_Attribute = 291
+    Behavior_Attribute = 292
+    Structure_Attribute = 293
+    Simple_Name_Attribute = 294
+    Instance_Name_Attribute = 295
+    Path_Name_Attribute = 296
+    Left_Array_Attribute = 297
+    Right_Array_Attribute = 298
+    High_Array_Attribute = 299
+    Low_Array_Attribute = 300
+    Length_Array_Attribute = 301
+    Ascending_Array_Attribute = 302
+    Range_Array_Attribute = 303
+    Reverse_Range_Array_Attribute = 304
+    Attribute_Name = 305
 
 
 class Iir_Kinds:
@@ -593,6 +596,9 @@ class Iir_Kinds:
         Iir_Kind.Signal_Slew_Attribute,
         Iir_Kind.Quantity_Slew_Attribute,
         Iir_Kind.Ramp_Attribute,
+        Iir_Kind.Zoh_Attribute,
+        Iir_Kind.Ltf_Attribute,
+        Iir_Kind.Ztf_Attribute,
         Iir_Kind.Dot_Attribute,
         Iir_Kind.Integ_Attribute,
         Iir_Kind.Above_Attribute,
@@ -840,6 +846,9 @@ class Iir_Kinds:
         Iir_Kind.Signal_Slew_Attribute,
         Iir_Kind.Quantity_Slew_Attribute,
         Iir_Kind.Ramp_Attribute,
+        Iir_Kind.Zoh_Attribute,
+        Iir_Kind.Ltf_Attribute,
+        Iir_Kind.Ztf_Attribute,
         Iir_Kind.Dot_Attribute,
         Iir_Kind.Integ_Attribute,
         Iir_Kind.Above_Attribute,
@@ -2468,6 +2477,14 @@ Set_Parameter = libghdl.vhdl__nodes__set_parameter
 Get_Parameter_2 = libghdl.vhdl__nodes__get_parameter_2
 
 Set_Parameter_2 = libghdl.vhdl__nodes__set_parameter_2
+
+Get_Parameter_3 = libghdl.vhdl__nodes__get_parameter_3
+
+Set_Parameter_3 = libghdl.vhdl__nodes__set_parameter_3
+
+Get_Parameter_4 = libghdl.vhdl__nodes__get_parameter_4
+
+Set_Parameter_4 = libghdl.vhdl__nodes__set_parameter_4
 
 Get_Attr_Chain = libghdl.vhdl__nodes__get_attr_chain
 

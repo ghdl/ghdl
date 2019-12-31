@@ -383,6 +383,14 @@ package Vhdl.Utils is
    function Kind_In (N : Iir; K1, K2 : Iir_Kind) return Boolean;
    pragma Inline (Kind_In);
 
+   subtype Parameter_Index is Natural range 1 .. 4;
+
+   --  Get/Set attribute parameter by index (for AMS attributes).
+   procedure Set_Attribute_Parameter
+     (Attr : Iir; N : Parameter_Index; Param : Iir);
+   function Get_Attribute_Parameter
+     (Attr : Iir; N : Parameter_Index) return Iir;
+
    --  IIR wrapper around Get_HDL_Node/Set_HDL_Node.
    function Get_HDL_Node (N : PSL_Node) return Iir;
    procedure Set_HDL_Node (N : PSL_Node; Expr : Iir);

@@ -500,9 +500,9 @@ package Std_Names is
    Name_Dot :            constant Name_Id := Name_First_AMS_Attribute + 001;
    Name_Integ :          constant Name_Id := Name_First_AMS_Attribute + 002;
    Name_Above :          constant Name_Id := Name_First_AMS_Attribute + 003;
-   Name_ZOH :            constant Name_Id := Name_First_AMS_Attribute + 004;
-   Name_LTF :            constant Name_Id := Name_First_AMS_Attribute + 005;
-   Name_ZTF :            constant Name_Id := Name_First_AMS_Attribute + 006;
+   Name_Zoh :            constant Name_Id := Name_First_AMS_Attribute + 004;
+   Name_Ltf :            constant Name_Id := Name_First_AMS_Attribute + 005;
+   Name_Ztf :            constant Name_Id := Name_First_AMS_Attribute + 006;
    Name_Ramp :           constant Name_Id := Name_First_AMS_Attribute + 007;
    Name_Slew :           constant Name_Id := Name_First_AMS_Attribute + 008;
    Name_Last_AMS_Attribute : constant Name_Id := Name_Slew;

@@ -1693,6 +1693,36 @@ package body Vhdl.Utils is
       return K = K1 or K = K2;
    end Kind_In;
 
+   procedure Set_Attribute_Parameter
+     (Attr : Iir; N : Parameter_Index; Param : Iir) is
+   begin
+      case N is
+         when 1 =>
+            Set_Parameter (Attr, Param);
+         when 2 =>
+            Set_Parameter_2 (Attr, Param);
+         when 3 =>
+            Set_Parameter_3 (Attr, Param);
+         when 4 =>
+            Set_Parameter_4 (Attr, Param);
+      end case;
+   end Set_Attribute_Parameter;
+
+   function Get_Attribute_Parameter
+     (Attr : Iir; N : Parameter_Index) return Iir is
+   begin
+      case N is
+         when 1 =>
+            return Get_Parameter (Attr);
+         when 2 =>
+            return Get_Parameter_2 (Attr);
+         when 3 =>
+            return Get_Parameter_3 (Attr);
+         when 4 =>
+            return Get_Parameter_4 (Attr);
+      end case;
+   end Get_Attribute_Parameter;
+
    function Get_HDL_Node (N : PSL_Node) return Iir is
    begin
       return Iir (PSL.Nodes.Get_HDL_Node (N));
