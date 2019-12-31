@@ -142,8 +142,8 @@ vhdl-ams/ashenden/compliant/analog-modeling/std_logic_to_analog.vhd
 #vhdl-ams/ashenden/compliant/analog-modeling/tb_triangle_waveform.vhd		#lib
 #vhdl-ams/ashenden/compliant/analog-modeling/tb_variable_comparator.vhd	#lib
 vhdl-ams/ashenden/compliant/analog-modeling/timer.vhd
-#vhdl-ams/ashenden/compliant/analog-modeling/transmission_line.vhd	#delayed
-#vhdl-ams/ashenden/compliant/analog-modeling/transmission_line_wa.vhd	#idem
+vhdl-ams/ashenden/compliant/analog-modeling/transmission_line.vhd
+vhdl-ams/ashenden/compliant/analog-modeling/transmission_line_wa.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/triangle_waveform.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/triangle_waveform_wa.vhd
 vhdl-ams/ashenden/compliant/analog-modeling/variable_comparator.vhd
@@ -321,9 +321,9 @@ vhdl-ams/ashenden/compliant/frequency-modeling/inline_03a.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-1.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-2.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-3.vhd
-#vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-4.vhd	#zoh
+vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-4.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/lowpass-5.vhd
-#vhdl-ams/ashenden/compliant/frequency-modeling/lowpass.vhd	#ltf
+vhdl-ams/ashenden/compliant/frequency-modeling/lowpass.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/nmos_transistor.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/nmos_transistor_wa.vhd
 vhdl-ams/ashenden/compliant/frequency-modeling/opamp.vhd
