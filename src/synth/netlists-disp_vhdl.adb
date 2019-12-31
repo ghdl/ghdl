@@ -882,7 +882,8 @@ package body Netlists.Disp_Vhdl is
             Put_Line (";");
          when Id_Const_Bit =>
             null;
-         when Id_Adff =>
+         when Id_Adff
+           | Id_Iadff =>
             Disp_Template ("  process (\i0, \i2)" & NL &
                            "  begin" & NL &
                            "    if \i2 = '1' then" & NL &
@@ -1153,6 +1154,10 @@ package body Netlists.Disp_Vhdl is
                      Put (" := ");
                      Disp_Constant_Inline
                        (Get_Net_Parent (Get_Input_Net (Inst, 2)));
+                  when Id_Iadff =>
+                     Put (" := ");
+                     Disp_Constant_Inline
+                       (Get_Net_Parent (Get_Input_Net (Inst, 4)));
                   when Constant_Module_Id =>
                      Put (" := ");
                      Disp_Constant_Inline (Inst);

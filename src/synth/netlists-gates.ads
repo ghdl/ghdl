@@ -130,16 +130,23 @@ package Netlists.Gates is
    --           1: D
    --           2: RST
    --           3: RST_VAL
-   --  Output: Q
+   --  Output:  0: Q
    Id_Adff  : constant Module_Id := 51;
 
    --  A simple DFF with an initial value (must be constant).  This is
    --  for FPGAs.
-   --  Input 0: Clock
-   --  Input 1: Data
+   --  Inputs:  0: CLK
+   --           1: D
+   --           2: INIT (initial value)
+   --  Output:  0: Q
    Id_Idff  : constant Module_Id := 52;
    --  A DFF with an asynchronous reset and an initial value.
-   --  Input 2: Initial value.
+   --  Inputs:  0: CLK
+   --           1: D
+   --           2: RST
+   --           3: RST_VAL
+   --           4: INIT (initial value)
+   --  Output:  0: Q
    Id_Iadff : constant Module_Id := 53;
 
    --  Width change: truncate or extend.  Sign is know in order to possibly
@@ -157,8 +164,8 @@ package Netlists.Gates is
    Id_Extract : constant Module_Id := 68;
 
    --  OUT := IN0[IN1+OFF+WD-1:IN1+OFF]
-   --  Input0: the memory
-   --  Input1: then index
+   --  Inputs: MEM (the memory)
+   --          IDX (then index)
    --  Param0: offset
    Id_Dyn_Extract : constant Module_Id := 69;
 
