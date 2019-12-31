@@ -74,6 +74,11 @@ package Netlists.Utils is
    --  disconnect and free it.
    procedure Disconnect_And_Free (I : Input);
 
+   --  Return true IFF L and R is the same net.
+   --  Either because L = R (obvious case) or because both are the same
+   --  selection of the same net.
+   function Same_Net (L, R : Net) return Boolean;
+
    function Clog2 (W : Width) return Width;
 
    --  Used at many places.

@@ -230,6 +230,34 @@ package body Netlists.Utils is
       Free_Instance (Inst);
    end Disconnect_And_Free;
 
+   function Same_Net (L, R : Net) return Boolean
+   is
+      Linst : Instance;
+      Rinst : Instance;
+   begin
+      if L = R then
+         --  Obvious case.
+         return True;
+      end if;
+
+      if Get_Width (L) /= Get_Width (R) then
+         --  Must have the same width.
+         return False;
+      end if;
+
+      --  Handle extract.
+      Linst := Get_Net_Parent (L);
+      if Get_Id (Linst) /= Id_Extract then
+         return False;
+      end if;
+      Rinst := Get_Net_Parent (R);
+      if Get_Id (Rinst) /= Id_Extract then
+         return False;
+      end if;
+      return Get_Input_Net (Linst, 0) = Get_Input_Net (Rinst, 0)
+        and then Get_Param_Uns32 (Linst, 0) = Get_Param_Uns32 (Rinst, 0);
+   end Same_Net;
+
    function Clog2 (W : Width) return Width is
    begin
       return Uns32 (Mutils.Clog2 (Uns64 (W)));

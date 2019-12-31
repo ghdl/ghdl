@@ -1018,7 +1018,7 @@ package body Synth.Environment is
          --  Build mux.
          N1_Inst := Get_Net_Parent (N (1));
          if Get_Id (N1_Inst) = Id_Mux2
-           and then Get_Driver (Get_Mux2_I0 (N1_Inst)) = N (0)
+           and then Same_Net (Get_Driver (Get_Mux2_I0 (N1_Inst)), N (0))
          then
             Res := Build_Mux2
               (Ctxt, Build_Dyadic (Ctxt, Id_And,
