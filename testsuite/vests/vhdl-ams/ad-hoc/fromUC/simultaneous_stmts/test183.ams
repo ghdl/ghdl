@@ -34,7 +34,7 @@
 -- this model tests for the correst implementation of the 'above 
 -- statement.
 PACKAGE electricalSystem IS
-    NATURE electrical IS real ACROSS real THROUGH;
+    NATURE electrical IS real ACROSS real THROUGH gnd reference;
     FUNCTION SIN(X : real) RETURN real;
     alias ground is electrical'reference;
 END PACKAGE electricalSystem;
@@ -50,7 +50,7 @@ end product;
 architecture pro of product is
 constant in1:real:=10.0;
 constant in2:real:=1.0;
-signal outofbound:out boolean;
+signal outofbound: boolean;
 
 begin
 	outofbound<=true;
