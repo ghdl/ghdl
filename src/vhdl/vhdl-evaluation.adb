@@ -15,18 +15,21 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
 with Ada.Unchecked_Deallocation;
+with Ada.Characters.Handling;
 with Interfaces;
-with Vhdl.Scanner;
-with Errorout; use Errorout;
+
 with Name_Table; use Name_Table;
 with Str_Table;
+with Flags; use Flags;
+with Std_Names;
+with Errorout; use Errorout;
+with Vhdl.Scanner;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Flags; use Flags;
-with Std_Names;
-with Ada.Characters.Handling;
+with Vhdl.Ieee.Std_Logic_1164;
 with Grt.Fcvt;
 
 package body Vhdl.Evaluation is
@@ -1372,6 +1375,42 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Array_Compare;
 
+   function Eval_Logic_Match_Equality (L, R : Iir_Int32; Loc : Iir)
+                                      return Iir_Index32
+   is
+      use Vhdl.Ieee.Std_Logic_1164;
+      Lb, Rb : Boolean;
+   begin
+      if L = Std_Logic_D_Pos or R = Std_Logic_D_Pos then
+         Warning_Msg_Sem
+           (Warnid_Analyze_Assert, +Loc,
+            "STD_LOGIC_1164: '-' operand for matching ordering operator");
+         return Std_Logic_1_Pos;
+      end if;
+      if L = Std_Logic_U_Pos or R = Std_Logic_U_Pos then
+         return Std_Logic_U_Pos;
+      end if;
+      if L = Std_Logic_X_Pos
+        or L = Std_Logic_Z_Pos
+        or L = Std_Logic_W_Pos
+      then
+         return Std_Logic_X_Pos;
+      end if;
+      if R = Std_Logic_X_Pos
+        or R = Std_Logic_Z_Pos
+        or R = Std_Logic_W_Pos
+      then
+         return Std_Logic_X_Pos;
+      end if;
+      Lb := L = Std_Logic_1_Pos or L = Std_Logic_H_Pos;
+      Rb := R = Std_Logic_1_Pos or R = Std_Logic_H_Pos;
+      if Lb = Rb then
+         return Std_Logic_1_Pos;
+      else
+         return Std_Logic_0_Pos;
+      end if;
+   end Eval_Logic_Match_Equality;
+
    --  ORIG is either a dyadic operator or a function call.
    function Eval_Dyadic_Operator (Orig : Iir; Imp : Iir; Left, Right : Iir)
                                  return Iir
@@ -1752,8 +1791,12 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_Vector_Maximum =>
             raise Internal_Error;
 
-         when Iir_Predefined_Std_Ulogic_Match_Equality
-           | Iir_Predefined_Std_Ulogic_Match_Inequality
+         when Iir_Predefined_Std_Ulogic_Match_Equality =>
+            return Build_Enumeration
+              (Eval_Logic_Match_Equality (Get_Enum_Pos (Left),
+                                          Get_Enum_Pos (Right), Orig),
+               Orig);
+         when Iir_Predefined_Std_Ulogic_Match_Inequality
            | Iir_Predefined_Std_Ulogic_Match_Less
            | Iir_Predefined_Std_Ulogic_Match_Less_Equal
            | Iir_Predefined_Std_Ulogic_Match_Greater
