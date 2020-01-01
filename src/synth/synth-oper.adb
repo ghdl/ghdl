@@ -21,6 +21,8 @@
 with Ada.Unchecked_Conversion;
 with Types; use Types;
 with Types_Utils; use Types_Utils;
+with Mutils;
+
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -182,6 +184,7 @@ package body Synth.Oper is
                                     Right_Expr : Node;
                                     Expr : Node) return Value_Acc
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
       Inter_Chain : constant Node :=
@@ -710,6 +713,27 @@ package body Synth.Oper is
          when Iir_Predefined_Integer_Div =>
             return Synth_Int_Dyadic (Id_Sdiv);
          when Iir_Predefined_Integer_Mod =>
+            if Is_Static_Val (Right) then
+               --  Optimize when the divisor is a power of 2.
+               declare
+                  use Mutils;
+                  Etype : constant Type_Acc :=
+                    Get_Value_Type (Syn_Inst, Expr_Type);
+                  R : constant Int64 := Get_Static_Discrete (Right);
+                  Log_R : Natural;
+                  N : Net;
+               begin
+                  if R > 0 and then Is_Power2 (Uns64 (R)) then
+                     Log_R := Clog2 (Uns64 (R));
+                     pragma Assert (Log_R <= Natural (Left.Typ.W));
+                     N := Get_Net (Left);
+                     N := Build2_Extract (Ctxt, N, 0, Width (Log_R));
+                     N := Build2_Uresize (Ctxt, N, Left.Typ.W,
+                                          Get_Location (Expr));
+                     return Create_Value_Net (N, Etype);
+                  end if;
+               end;
+            end if;
             return Synth_Int_Dyadic (Id_Smod);
          when Iir_Predefined_Integer_Rem =>
             return Synth_Int_Dyadic (Id_Srem);

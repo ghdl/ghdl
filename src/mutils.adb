@@ -24,4 +24,8 @@ package body Mutils is
       return 64;
    end Clog2;
 
+   function Is_Power2 (V : Uns64) return Boolean is
+   begin
+      return (V and (V - 1)) = 0;
+   end Is_Power2;
 end Mutils;
