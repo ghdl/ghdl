@@ -125,7 +125,11 @@ package body Synth.Disp_Vhdl is
             if W > 1 then
                Put ("std_logic_vector(");
             end if;
-            Put ("to_unsigned(");
+            if Typ.Drange.Is_Signed then
+               Put ("to_signed(");
+            else
+               Put ("to_unsigned(");
+            end if;
             Put (Pfx & "," & Width'Image (W) & ")");
             if W > 1 then
                Put (")");
