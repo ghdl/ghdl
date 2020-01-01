@@ -1537,6 +1537,7 @@ package body Vhdl.Scanner is
 
    procedure Convert_Identifier (Str : in out String; Err : out Boolean)
    is
+      pragma Assert (Str'First = 1);
       procedure Error_Bad is
       begin
          Error_Msg_Option ("bad character in identifier");
@@ -1548,41 +1549,39 @@ package body Vhdl.Scanner is
       end Error_8bit;
 
       C : Character;
-      subtype Id_Subtype is String (1 .. Str'Length);
-      Id : Id_Subtype renames Str;
    begin
       Err := True;
 
-      if Id'Length = 0 then
+      if Str'Length = 0 then
          Error_Msg_Option ("identifier required");
          return;
       end if;
 
-      if Id (1) = '\' then
+      if Str (1) = '\' then
          --  Extended identifier.
          if Vhdl_Std = Vhdl_87 then
             Error_Msg_Option ("extended identifiers not allowed in vhdl87");
             return;
          end if;
 
-         if Id'Length < 3 then
+         if Str'Length < 3 then
             Error_Msg_Option ("extended identifier is too short");
             return;
          end if;
-         if Id (Id'Last) /= '\' then
+         if Str (Str'Last) /= '\' then
             Error_Msg_Option ("extended identifier must finish with a '\'");
             return;
          end if;
-         for I in 2 .. Id'Last - 1 loop
-            C := Id (I);
+         for I in 2 .. Str'Last - 1 loop
+            C := Str (I);
             case Characters_Kind (C) is
                when Format_Effector =>
                   Error_Msg_Option ("format effector in extended identifier");
                   return;
                when Graphic_Character =>
                   if C = '\' then
-                     if Id (I + 1) /= '\'
-                       or else I = Id'Last - 1
+                     if Str (I + 1) /= '\'
+                       or else I = Str'Last - 1
                      then
                         Error_Msg_Option ("anti-slash must be doubled "
                                             & "in extended identifier");
@@ -1596,15 +1595,15 @@ package body Vhdl.Scanner is
          end loop;
       else
          --  Identifier
-         for I in 1 .. Id'Length loop
-            C := Id (I);
+         for I in 1 .. Str'Length loop
+            C := Str (I);
             case Characters_Kind (C) is
                when Upper_Case_Letter =>
                   if Vhdl_Std = Vhdl_87 and C > 'Z' then
                      Error_8bit;
                      return;
                   end if;
-                  Id (I) := To_Lower_Map (C);
+                  Str (I) := To_Lower_Map (C);
                when Lower_Case_Letter | Digit =>
                   if Vhdl_Std = Vhdl_87 and C > 'z' then
                      Error_8bit;
@@ -1618,12 +1617,12 @@ package body Vhdl.Scanner is
                           ("an identifier cannot start with an underscore");
                         return;
                      end if;
-                     if Id (I - 1) = '_' then
+                     if Str (I - 1) = '_' then
                         Error_Msg_Option
                           ("two underscores can't be consecutive");
                         return;
                      end if;
-                     if I = Id'Last then
+                     if I = Str'Last then
                         Error_Msg_Option
                           ("an identifier cannot finish with an underscore");
                         return;

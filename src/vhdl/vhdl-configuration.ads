@@ -61,4 +61,10 @@ package Vhdl.Configuration is
    --  a design file): mark all instantiated units and return the unmarked
    --  one if there is only one.
    function Find_Top_Entity (From : Iir) return Iir;
+
+   --  Add an override for generic ID.
+   procedure Add_Generic_Override (Id : Name_Id; Value : String);
+
+   --  Apply generic overrides to entity ENT.
+   procedure Apply_Generic_Override (Ent : Iir);
 end Vhdl.Configuration;

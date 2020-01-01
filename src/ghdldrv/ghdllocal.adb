@@ -56,6 +56,68 @@ package body Ghdllocal is
       Compile_Init;
    end Init;
 
+   function Is_Generic_Override_Option (Opt : String) return Boolean
+   is
+      pragma Assert (Opt'First = 1);
+   begin
+      if Opt (1 .. 2) /= "-g" then
+         return False;
+      end if;
+      --  Look for '='.
+      for I in 3 .. Opt'Last loop
+         if Opt (I) = '=' then
+            --  Ideally, OPT must be of the form -gGEN=VAL, where GEN is
+            --  a generic name, and VAL a literal.
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Is_Generic_Override_Option;
+
+   function Decode_Generic_Override_Option (Opt : String) return Option_State
+   is
+      use Errorout;
+      pragma Assert (Opt'First = 1);
+      pragma Assert (Opt'Last >= 5);
+      Eq_Pos : Natural;
+      Id : Name_Id;
+   begin
+      Eq_Pos := 0;
+      for I in 3 .. Opt'Last loop
+         if Opt (I) = '=' then
+            Eq_Pos := I;
+            exit;
+         end if;
+      end loop;
+      if Eq_Pos = 0 then
+         Error_Msg_Option ("missing '=' in generic override option");
+         return Option_Err;
+      elsif Eq_Pos < 3 then
+         Error_Msg_Option ("missing generic name in generic override option");
+         return Option_Err;
+      elsif Eq_Pos = Opt'Last then
+         Error_Msg_Option ("missing value in generic override option");
+         return Option_Err;
+      end if;
+
+      declare
+         Res : String (1 .. Eq_Pos - 3) := Opt (3 .. Eq_Pos - 1);
+         Err : Boolean;
+      begin
+         Vhdl.Scanner.Convert_Identifier (Res, Err);
+         if Err then
+            Error_Msg_Option
+              ("incorrect generic name in generic override option");
+            return Option_Err;
+         end if;
+         Id := Name_Table.Get_Identifier (Res);
+      end;
+
+      Vhdl.Configuration.Add_Generic_Override
+        (Id, Opt (Eq_Pos + 1 .. Opt'Last));
+      return Option_Ok;
+   end Decode_Generic_Override_Option;
+
    function Decode_Driver_Option (Opt : String) return Option_State
    is
       pragma Assert (Opt'First = 1);
@@ -74,10 +136,13 @@ package body Ghdllocal is
          Flag_Ieee := Lib_Standard;
       elsif Opt = "-m32" then
          Flag_32bit := True;
-      elsif Opt'Length >= 2
-        and then (Opt (2) = 'g' or Opt (2) = 'O')
+      elsif Opt'Length >= 2 and then Opt (2) = 'O' then
+         --  Silently accept -O
+         null;
+      elsif Opt'Length >= 2 and then Opt (2) = 'g'
+        and then not Is_Generic_Override_Option (Opt)
       then
-         --  Silently accept -g and -O.
+         --  Silently accept -g (if this is not a generic override option).
          null;
       else
          return Options.Parse_Option (Opt);

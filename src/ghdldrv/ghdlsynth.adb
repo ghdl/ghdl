@@ -87,9 +87,16 @@ package body Ghdlsynth is
    procedure Decode_Option (Cmd : in out Command_Synth;
                             Option : String;
                             Arg : String;
-                            Res : out Option_State) is
+                            Res : out Option_State)
+   is
+      pragma Assert (Option'First = 1);
    begin
-      if Option = "--disp-noinline" then
+      if Option'Last > 3
+        and then Option (2) = 'g'
+        and then Is_Generic_Override_Option (Option)
+      then
+         Res := Decode_Generic_Override_Option (Option);
+      elsif Option = "--disp-noinline" then
          Cmd.Disp_Inline := False;
          Res := Option_Ok;
       elsif Option = "--disp-noid" then
@@ -237,6 +244,7 @@ package body Ghdlsynth is
          Entity : constant Iir :=
            Vhdl.Utils.Get_Entity_From_Configuration (Config);
       begin
+         Vhdl.Configuration.Apply_Generic_Override (Entity);
          Vhdl.Configuration.Check_Entity_Declaration_Top (Entity, False);
          if Nbr_Errors > 0 then
             return Null_Iir;

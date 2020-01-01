@@ -16,17 +16,19 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Libraries;
+with Name_Table; use Name_Table;
+with Str_Table;
+with Flags;
 with Errorout; use Errorout;
+with Libraries;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Std_Package;
-with Name_Table; use Name_Table;
-with Flags;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Nodes_Walk;
 with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Lib; use Vhdl.Sem_Lib;
 with Vhdl.Canon;
+with Vhdl.Evaluation;
 
 package body Vhdl.Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
@@ -1032,4 +1034,106 @@ package body Vhdl.Configuration is
       end if;
    end Find_Top_Entity;
 
+   type Override_Entry is record
+      Gen : Name_Id;
+      Value : String_Acc;
+   end record;
+
+   package Override_Table is new Tables
+     (Table_Component_Type => Override_Entry,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
+      Table_Initial => 16);
+
+   procedure Add_Generic_Override (Id : Name_Id; Value : String) is
+   begin
+      Override_Table.Append (Override_Entry'(Gen => Id,
+                                             Value => new String'(Value)));
+   end Add_Generic_Override;
+
+   procedure Override_Generic (Gen : Iir; Value : String_Acc)
+   is
+      use Vhdl.Evaluation;
+      Formal_Type : constant Iir := Get_Type (Gen);
+      Formal_Btype : constant Iir := Get_Base_Type (Formal_Type);
+      Res : Iir;
+   begin
+      case Get_Kind (Formal_Btype) is
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition =>
+            Res := Eval_Value_Attribute (Value.all, Formal_Type, Gen);
+            if not Eval_Is_In_Bound (Res, Formal_Type) then
+               Error_Msg_Elab ("override for %n is out of bounds", +Gen);
+               return;
+            end if;
+            Set_Literal_Origin (Res, Null_Iir);
+         when Iir_Kind_Array_Type_Definition =>
+            if Is_One_Dimensional_Array_Type (Formal_Btype) then
+               declare
+                  use Str_Table;
+                  Str8 : String8_Id;
+                  Ntype : Iir;
+               begin
+                  Str8 := Create_String8;
+                  Append_String8_String (Value.all);
+                  Res := Create_Iir (Iir_Kind_String_Literal8);
+                  Set_String8_Id (Res, Str8);
+                  --  FIXME: check characters are in the type.
+                  Set_String_Length (Res, Value'Length);
+                  Set_Expr_Staticness (Res, Locally);
+                  Ntype := Create_Unidim_Array_By_Length
+                    (Get_Base_Type (Formal_Type), Value'Length, Res);
+                  Set_Type (Res, Ntype);
+                  Set_Literal_Subtype (Res, Ntype);
+               end;
+            else
+               Res := Null_Iir;
+            end if;
+         when others =>
+            Res := Null_Iir;
+      end case;
+      if Res = Null_Iir then
+         Error_Msg_Elab ("unhandled override for %n", +Gen);
+      end if;
+
+      if Get_Is_Ref (Gen) then
+         Set_Is_Ref (Gen, False);
+      else
+         if Get_Has_Identifier_List (Gen) then
+            --  Transfer ownership to the next interface.
+            Set_Is_Ref (Get_Chain (Gen), False);
+         end if;
+      end if;
+      Set_Location (Res, No_Location);
+      Set_Default_Value (Gen, Res);
+   end Override_Generic;
+
+   procedure Apply_Generic_Override (Ent : Iir)
+   is
+      Inter_Chain : constant Iir := Get_Generic_Chain (Ent);
+      Inter : Iir;
+   begin
+      for I in Override_Table.First .. Override_Table.Last loop
+         declare
+            Over : constant Override_Entry := Override_Table.Table (I);
+         begin
+            Inter := Inter_Chain;
+            while Inter /= Null_Iir loop
+               exit when Get_Identifier (Inter) = Over.Gen;
+               Inter := Get_Chain (Inter);
+            end loop;
+
+            if Inter = Null_Iir then
+               Error_Msg_Elab ("no generic %i for -g", +Over.Gen);
+            elsif Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration
+            then
+               Error_Msg_Elab
+                 ("generic %n cannot be overriden (not a constant)",
+                  +Over.Gen);
+            else
+               Override_Generic (Inter, Over.Value);
+            end if;
+         end;
+      end loop;
+   end Apply_Generic_Override;
 end Vhdl.Configuration;

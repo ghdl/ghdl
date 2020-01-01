@@ -148,5 +148,13 @@ package Ghdllocal is
                                 Prim_Id : out Name_Id;
                                 Sec_Id : out Name_Id);
 
+   --  Report true iff OPT has the form '-gGEN=VAL'.  Used to distingish from
+   --  debugging (like '-g' or '-ggdb' or '-g2') options.
+   function Is_Generic_Override_Option (Opt : String) return Boolean;
+
+   --  Handle generic override option OPT.  Return Option_Err if the generic
+   --  name is incorrect.
+   function Decode_Generic_Override_Option (Opt : String) return Option_State;
+
    procedure Register_Commands;
 end Ghdllocal;
