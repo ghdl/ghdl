@@ -3629,7 +3629,9 @@ package body Trans.Chap7 is
             --  There are corresponding bounds.
             Expr := Get_Associated_Expr (Assoc);
             Expr_Type := Get_Type (Expr);
-            if Get_Constraint_State (Expr_Type) = Fully_Constrained then
+            if False
+              and then Get_Constraint_State (Expr_Type) = Fully_Constrained
+            then
                --  Translate subtype, and copy bounds.
                raise Internal_Error;
             else
@@ -4174,14 +4176,15 @@ package body Trans.Chap7 is
                                  return Mnode
    is
       Res_Type : Iir;
+      Res : O_Enode;
    begin
       if Rtype = Null_Iir then
          Res_Type := Get_Type (Expr);
       else
          Res_Type := Rtype;
       end if;
-      return E2M (Translate_Expression (Expr, Res_Type),
-                  Get_Info (Res_Type), Mode_Value);
+      Res := Translate_Expression (Expr, Res_Type);
+      return E2M (Res, Get_Info (Res_Type), Mode_Value);
    end Translate_Expression;
 
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
@@ -4249,6 +4252,12 @@ package body Trans.Chap7 is
                   if Get_Constraint_State (Aggr_Type) /= Fully_Constrained
                   then
                      Tinfo := Get_Info (Aggr_Type);
+                     if Tinfo = null then
+                        --  AGGR_TYPE may be a subtype that has not been
+                        --  translated.  Use the base type in that case.
+                        Aggr_Type := Get_Base_Type (Aggr_Type);
+                        Tinfo := Get_Info (Aggr_Type);
+                     end if;
 
                      Mres := Create_Temp (Tinfo);
                      Bounds := Create_Temp_Bounds (Tinfo);
