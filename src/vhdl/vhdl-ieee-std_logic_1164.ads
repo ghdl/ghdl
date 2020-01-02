@@ -33,9 +33,9 @@ package Vhdl.Ieee.Std_Logic_1164 is
    Std_Logic_0_Pos : constant := 2;
    Std_Logic_1_Pos : constant := 3;
    Std_Logic_Z_Pos : constant := 4;
-   Std_Logic_L_Pos : constant := 5;
-   Std_Logic_H_Pos : constant := 6;
-   Std_Logic_W_Pos : constant := 7;
+   Std_Logic_W_Pos : constant := 5;
+   Std_Logic_L_Pos : constant := 6;
+   Std_Logic_H_Pos : constant := 7;
    Std_Logic_D_Pos : constant := 8;
 
    --  Extract declarations from PKG.
