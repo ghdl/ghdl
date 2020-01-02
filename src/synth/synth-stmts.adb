@@ -1432,6 +1432,8 @@ package body Synth.Stmts is
                            raise Internal_Error;
                         end if;
                         Val := Info.Obj;
+                     elsif Info.Kind = Target_Simple then
+                        Val := Info.Obj;
                      else
                         Val := Synth_Read_Memory
                           (Caller_Inst, Info.Obj, Info.Off, No_Net,
