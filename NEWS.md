@@ -1,19 +1,23 @@
 **0.37-dev** (XXXX-XX-XX)
+
 - python binding added
 - synthesis added
 - PSL keywords are directly handled in vhdl-2008
 - Add support for assume.
 
 **0.36** (2019-03-03)
+
 - A new GitHub organization is created and the main repo is moved from [github.com/tgingold/ghdl](https://github.com/tgingold/ghdl) to [github.com/ghdl/ghdl](https://github.com/ghdl/ghdl). Old refs will continue working, because permanent redirects are set up. However, we suggest every contributor to update the remote URLs in their local clones.
 - Add support for unbounded arrays.
 
 **0.35** (2017-12-14)
+
 - Assert and report messages are sent to stdout (#394)
 - Improve support for unbounded records
 - Bugs fixed
 
 **0.34** (2017-08-15)
+
 - Display stack backtraces on errors or assert failures
 - Compile scripts for vendor libraries (Xilinx, Altera, osvvm, vunit)
 - Use SSE2 for mcode backend
@@ -25,13 +29,15 @@
 - New option `--psl-report`, to report status of PSL assert and cover.
 - VHDL2008: support nested package
 
-**v0.33** (2015-10-04)
+**0.33** (2015-10-04)
+
 - Improve support of VHDL2008
 - Support [OSVVM](http://osvvm.org) 2015
 - Support VUnit: [LarsAsplund/vunit](https://github.com/LarsAsplund/vunit)
 - Many bugs fixed
 
-**v0.32** (2014-11-XX)
+**0.32** (2014-11-XX)
+
 - Updated to build with `gcc-4.9.2`.
 - support:
 	- partial of VHDL2008 (available with `--std=08`):
@@ -47,17 +53,20 @@
 	- OSVVM 2014_01
 - Bugs fixed
 
-**v0.31** (2014-01-XX)
+**0.31** (2014-01-XX)
+
 - Updated to build with `gcc-4.8.2`.
 - Supports OSVVM (Open-Source VHDL Verification Methodology) (see [osvvm.org](http://osvvm.org)) in its VHDL-2002 form.
 - Adds `'image` and `'value` attributes for all required datatypes
 - Many bugs and support issues fixed.
 - New home on `https://sourceforge.net/projects/ghdl-updates/`
 
-**v0.30**
+**0.30** (-)
+
 Never released, swith to Dunoon Edition.
 
-**v0.29** (2010-01-09)
+**0.29** (2010-01-09)
+
 - Initial implementation of embedded PSL assertions.
 - Improve:
 	- speed of non-sensitized processes.
@@ -67,7 +76,8 @@ Never released, swith to Dunoon Edition.
 	- when the bound of a string literal type is not locally static.
 	- gcov crash
 
-**v0.28** (2009-09-17)
+**0.28** (2009-09-17)
+
 - Add `--std=08` to enable VHDL2008 features.
 - Support all-sensitized processes from VHDL2008.
 - Documentation typos (thanks to Peter Huewe).
@@ -77,7 +87,8 @@ Never released, swith to Dunoon Edition.
   - direct drivers elaboration for unconstrained array signals.
   - many minor bugs.
 
-**v0.27** (2008-07-01)
+**0.27** (2008-07-01)
+
 - Improve SDF annotation (handles much more annotations)
 - Add `--ieee-asserts=` option to control assert messages from ieee packages.
 - bug fix:
@@ -89,7 +100,8 @@ Never released, swith to Dunoon Edition.
   - clear timeout in wait for.
   - minor bugs.
 
-**v0.26** (2007-04-08)
+**0.26** (2007-04-08)
+
 - `GHDL_PREFIX` environment variable overrides default installation prefix.
 - simulation speed improved with 'direct drivers'.
 - windows version:
@@ -105,7 +117,8 @@ Never released, swith to Dunoon Edition.
 	- crash when bad array prefix
 	- correctly extract sensitivity of record aggregate
 
-**v0.25** (2006-08-11)
+**0.25** (2006-08-11)
+
 - VPI functions to schedules values.
 - `math_real` now works under windows.
 - documentation updated for windows.
@@ -124,7 +137,8 @@ Never released, swith to Dunoon Edition.
 	- handle in-conversion for signal associated with an expression.
 	- emit an error when a function tries to exit without a return.
 
-**v0.24** (2006-06-25)
+**0.24** (2006-06-25)
+
 - Handle enums with more than 256 elements.
 - Relax expr static rules in 93c to analyze Xilinx core lib from 8.1
 - man page, `ghdl.1`, added.
@@ -143,13 +157,15 @@ Never released, swith to Dunoon Edition.
 	- time and character read procedure of std.textio.
 	- initialize by value parameters (instead of copy-in).
 
-**v0.23** (2006-05-16)
+**0.23** (2006-05-16)
+
 - bug fix:
 	- handle implicit conversion in resolution functions.
 	- missing implicit conversion added.
 	- avoid a crash in error.
 
-**v0.22** (2006-03-28)
+**0.22** (2006-03-28)
+
 - direntry added in `ghdl.texi`
 - updated:
 	- Documentation (explain bug in Xilinx unisim library).
@@ -164,7 +180,8 @@ Never released, swith to Dunoon Edition.
 	- configuration issue
 	- `--warn-no-vital-generic` is now working
 
-**v0.21** (2005-12-18)
+**0.21** (2005-12-18)
+
 - local optimizations (loops, indexed name).
 - simulation speed improved by 20% due to processes mngt optimizations.
 - stack-switching code ported to `x86_64` (`amd64/em64t`).
@@ -185,7 +202,8 @@ Never released, swith to Dunoon Edition.
 	- handle missing `EOL` for `readline`.
 	- for `x86_64`
 
-**v0.20** (2005-10-15)
+**0.20** (2005-10-15)
+
 - stack memory usage improved for shortcurt operations.
 - gtkwave now displays nice waves for bit and std_ulogic signals.
 - time unit is displayed in assert/report message.
@@ -204,7 +222,8 @@ Never released, swith to Dunoon Edition.
 	- for reading `.ghw` files.
 	- in `--xref`.
 
-**v0.19** (2005-08-17)
+**0.19** (2005-08-17)
+
 - `ADAFLAGS` has been replaced by `GHDL_ADAFLAGS` to ease compilation.
 - `ieee.math_real` and `ieee.math_complex` added (only partially, based on a
   draft).
@@ -236,7 +255,8 @@ Never released, swith to Dunoon Edition.
 	- allow conversion in component configuration.
 	- conversion in associations with not statically defined array signals.
 
-**v0.18** (2005-03-12)
+**0.18** (2005-03-12)
+
 - Keep last line number to speed-up line number look-up (improvement).
 - `--warn-default-binding` added, `--warn-binding` rewritten.
 - `'value` implemented for integer numbers.
@@ -248,7 +268,8 @@ Never released, swith to Dunoon Edition.
 	- correctly set the default value of collapsed ports.
 	- handling of stack2 (aka large concatenation bug).
 
-**v0.17** (2005-02-26)
+**0.17** (2005-02-26)
+
 - command `--elab-run` added.
 - Code generation for aggregate improved.
 - Library name of option `--work=` is checked.
@@ -267,7 +288,8 @@ Never released, swith to Dunoon Edition.
 	- non-object name in sensitivity list crashed.
 	- correctly handle alias of signals in processes.
 
-**v0.16** (2005-01-02)
+**0.16** (2005-01-02)
+
 - `std.textio`: readline has no limits on line length.
 - command `-r` (run) added.
 - bug fix:
@@ -276,12 +298,14 @@ Never released, swith to Dunoon Edition.
 	- parse error: `begin` in aggregates.
 	- bad `unused subprogram` warnings.
 
-**v0.15** (2004-10-13)
+**0.15** (2004-10-13)
+
 - library file format modified to handle relative pathes.
 - install fixed to use relative pathes.
 - internal change: ortho API modified (constant are not anymore expressions).
 
-**v0.14** (2004-08-29)
+**0.14** (2004-08-29)
+
 - pretty printing in HTML command, `--pp-html`, added.
 - xref generation in HTML command, `--xref-html`, added.
 - syntax checking command, `-s`, added.
@@ -308,7 +332,8 @@ Never released, swith to Dunoon Edition.
 	- parameters of protected type: handled and checked.
 	- `gen_tree.c` modified to work with sparc.
 
-**v0.13** (2004-06-26)
+**0.13** (2004-06-26)
+
 - support of 64bits integers and 32bits time (not yet user available)
 - handle `'high` and `'low` attributes on non-locally static types and subtypes.
 - Many warning switches added (to control output of warnings).
@@ -330,7 +355,8 @@ Never released, swith to Dunoon Edition.
 	- multiple visibility of declarations (eg: direct and alias).
 	- names attribute of non-object aliases.
 
-**v0.12** (2004-05-30)
+**0.12** (2004-05-30)
+
 - simulation speed improved (2 fold) due to reduced activity optimization.
 - type conversion handled in associations
 - make mode of ghdl improved.
@@ -345,13 +371,15 @@ Never released, swith to Dunoon Edition.
 	- association of an unconstrained port with an expression.
 	- declaring an uncons. array subtype of an uncons. array subtype.
 
-**v0.11.1** (2004-04-24)
+**0.11.1** (2004-04-24)
+
 - bug fix:
 	- corner case of signal not updated
 	- handle `'stable`, `'quiet` with a paramater > 0
 	- typos (missing `+ `) in sparc.S
 
-**v0.11** (2004-04-17)
+**0.11** (2004-04-17)
+
 - signal collapsing improved.
 - simulation kernel speed improved (maybe 5x faster).
 - `--lines` mode of ghdldrv added.
@@ -364,7 +392,8 @@ Never released, swith to Dunoon Edition.
 	- implicit conversion in formal function convertor.
 	- return type is a type mark.
 
-**v0.10** (2004-02-28)
+**0.10** (2004-02-28)
+
 - architecture with many instances can be compiled with less memory.
 - `--stats` option added to the simulator, to evaluate performance.
 - signals are now collapsed between instances, if possible.
@@ -376,7 +405,8 @@ Never released, swith to Dunoon Edition.
 	- absolute source files.
 	- empty sequence of statements in case alternatives.
 
-**v0.9** (2004-02-01)
+**0.9** (2004-02-01)
+
 - VITAL level 0 restrictions checks added.
 - VITAL 2000 packages provided.
 - run-time information (such as signal names) rewritten.
@@ -389,7 +419,8 @@ Never released, swith to Dunoon Edition.
 	- concurrent procedure call creates a non-sensitized process.
 	- effective value of non-scalar resolved signal might not be set.
 
-**v0.8** (2003-11-05)
+**0.8** (2003-11-05)
+
 - protected types (from 1076a/1076-2000) implemented.
 - file declarations are finalized in subprograms.
 - an exit call-back has been added in the run-time library.
@@ -402,7 +433,8 @@ Never released, swith to Dunoon Edition.
 	- signal declaration not allowed in processes.
 	- several bugs fixed.
 
-**v0.7** (2003-08-02)
+**0.7** (2003-08-02)
+
 - layout of internal nodes improved.
 - incremental binding (vhdl93).
 - association of in port with expressions (vhdl93).
@@ -416,7 +448,8 @@ Never released, swith to Dunoon Edition.
 	- correctly handle operators names at function call.
 	- several small bugs fixed.
 
-**v0.6** (2003-06-09)
+**0.6** (2003-06-09)
+
 - internal modifications (single linked list used instead of arrays).
 - Mentor version of std_logic_arith is provided.
 - postponed handled (vhdl 93).
@@ -428,7 +461,8 @@ Never released, swith to Dunoon Edition.
 	- `selected_name` list in use clauses.
 	- many other small bug fixes.
 
-**v0.5** (2003-05-10)
+**0.5** (2003-05-10)
+
 - foreign attribute handled.  You can now call subprograms defined in a foreign
   language (such as C or Ada).
 - ghdl entry point added: you can start the VHDL simulation from your own
@@ -437,10 +471,12 @@ Never released, swith to Dunoon Edition.
 	- triple use.
 	- incomplete types
 
-**v0.4.1** (2003-04-07)
+**0.4.1** (2003-04-07)
+
 - bug fix: in the vcd output.
 
-**v0.4** (2003-04-02)
+**0.4** (2003-04-02)
+
 - `libgrt` does not depend on GNAT library anymore.
   Installation requirements are reduced.
 - `'delayed` attribute implemented.
