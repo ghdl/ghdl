@@ -20,7 +20,7 @@ env:
     - TASK=fedora30+llvm
 
 deploy:
-  - &deploy-docker
+  - &dep
     provider: releases
     skip_cleanup: true
     api_key:
@@ -51,5 +51,5 @@ jobs:
     - env: TASK="man"
       script: ./dist/man.sh
       deploy:
-        - <<: *deploy-docker
+        - <<: *dep
           file: "doc/_build/man/ghdl.1"
