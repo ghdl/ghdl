@@ -1527,8 +1527,6 @@ package body Trans.Rtis is
       Base_Info : constant Type_Info_Acc := Get_Info (Base_Type);
       Aggr      : O_Record_Aggr_List;
       Val       : O_Cnode;
-      Base_Rti  : O_Dnode;
-      pragma Unreferenced (Base_Rti);
       Bounds    : Var_Type;
       Name      : O_Dnode;
       Kind      : O_Cnode;
@@ -1582,8 +1580,8 @@ package body Trans.Rtis is
       pragma Unreferenced (Base_Rti);
       Mark      : Id_Mark_Type;
    begin
-      --  FIXME: temporary work-around
-      if Get_Constraint_State (Atype) /= Fully_Constrained then
+      if Base_Info = Get_Info (Atype) then
+         --  An alias, or no added constraints.
          return;
       end if;
 

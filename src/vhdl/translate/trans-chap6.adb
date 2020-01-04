@@ -865,6 +865,7 @@ package body Trans.Chap6 is
      (Prefix : Mnode; El : Iir_Element_Declaration) return Mnode
    is
       El_Type       : constant Iir := Get_Type (El);
+      El_Btype      : constant Iir := Get_Base_Type (El_Type);
       El_Tinfo      : constant Type_Info_Acc := Get_Info (El_Type);
       Kind          : constant Object_Kind_Type := Get_Object_Kind (Prefix);
       Base_El       : constant Iir := Get_Base_Element_Declaration (El);
@@ -963,8 +964,10 @@ package body Trans.Chap6 is
 
       if Is_Unbounded_Type (El_Tinfo) then
          --  Ok, we know that Get_Composite_Base doesn't return a copy.
-         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Fat_Res)),
-                          M2Addr (Res));
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Composite_Base (Fat_Res)),
+            New_Convert_Ov (M2Addr (Res),
+                            Get_Info (El_Btype).B.Base_Ptr_Type (Kind)));
          return Fat_Res;
       else
          return Res;

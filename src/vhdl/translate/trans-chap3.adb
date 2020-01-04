@@ -950,6 +950,9 @@ package body Trans.Chap3 is
          --  Declare the types.
          Finish_Unbounded_Type_Base (Info);
       else
+         --  The element type is not static (like an array sub-type with
+         --  bounds that were computed).  So an array cannot be created in
+         --  ortho.
          if El_Tinfo.Type_Mode in Type_Mode_Arrays then
             Info.B.Base_Type := El_Tinfo.B.Base_Ptr_Type;
             Info.B.Base_Ptr_Type := El_Tinfo.B.Base_Ptr_Type;
