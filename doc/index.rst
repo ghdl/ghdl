@@ -102,8 +102,29 @@
    :caption: Development
    :hidden:
 
-   genindex
    development/Synthesis
    development/Debugging
    development/CodingStyle
    development/Roadmap
+
+.. raw:: latex
+
+   \part{Internals}
+
+.. toctree::
+   :caption: Internals
+   :hidden:
+
+   internals/Overview
+   internals/Frontend
+   internals/AST
+
+.. raw:: latex
+
+   \part{Index}
+
+.. toctree::
+   :caption: Index
+   :hidden:
+
+   genindex
