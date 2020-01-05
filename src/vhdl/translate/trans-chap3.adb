@@ -3580,7 +3580,11 @@ package body Trans.Chap3 is
                  Get_Elements_Declaration_List (R_Type);
                Cond : O_Enode;
                Sub_Cond : O_Enode;
+               L_Bounds1 : Mnode;
+               R_Bounds1 : Mnode;
             begin
+               L_Bounds1 := Stabilize (L_Bounds);
+               R_Bounds1 := Stabilize (R_Bounds);
                Cond := O_Enode_Null;
                for I in Flist_First .. Flist_Last (L_El_List) loop
                   declare
@@ -3592,9 +3596,9 @@ package body Trans.Chap3 is
                      if Types_Match (L_El_Type, R_El_Type) = Unknown then
                         Sub_Cond := Check_Match_Cond
                           (L_El_Type,
-                           Record_Bounds_To_Element_Bounds (L_Bounds, L_El),
+                           Record_Bounds_To_Element_Bounds (L_Bounds1, L_El),
                            R_El_Type,
-                           Record_Bounds_To_Element_Bounds (R_Bounds, R_El));
+                           Record_Bounds_To_Element_Bounds (R_Bounds1, R_El));
                         if Cond = O_Enode_Null then
                            Cond := Sub_Cond;
                         else
