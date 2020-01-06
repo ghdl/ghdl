@@ -248,15 +248,14 @@ package body Trans.Helpers2 is
    function Gen_Oenode_Update_Data_Array (Val       : Mnode;
                                           Targ_Type : Iir;
                                           Index     : O_Dnode)
-                                             return O_Enode
-   is
+                                         return O_Enode is
    begin
       return M2E (Chap3.Index_Base (Val, Targ_Type, New_Obj_Value (Index)));
    end Gen_Oenode_Update_Data_Array;
 
    function Gen_Oenode_Update_Data_Record
      (Val : Mnode; Targ_Type : Iir; El : Iir_Element_Declaration)
-         return O_Enode
+     return O_Enode
    is
       pragma Unreferenced (Targ_Type);
    begin

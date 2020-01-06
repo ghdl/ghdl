@@ -1054,7 +1054,7 @@ package body Trans.Chap3 is
       end loop;
    end Create_Array_For_Array_Subtype;
 
-   procedure Translate_Array_Subtype_Definition
+   procedure Translate_Bounded_Array_Subtype_Definition
      (Def : Iir_Array_Subtype_Definition; Parent_Type : Iir)
    is
       El_Type   : constant Iir := Get_Element_Subtype (Def);
@@ -1112,7 +1112,7 @@ package body Trans.Chap3 is
             New_Type_Decl (Id, Info.Ortho_Type (I));
          end loop;
       end if;
-   end Translate_Array_Subtype_Definition;
+   end Translate_Bounded_Array_Subtype_Definition;
 
    procedure Translate_Array_Subtype_Definition_Constrained_Element
      (Def : Iir_Array_Subtype_Definition; Parent_Type : Iir)
@@ -1180,6 +1180,44 @@ package body Trans.Chap3 is
         (Info.B.Builder (Kind).Builder_Instance);
       Finish_Subprogram_Body;
    end Create_Array_Type_Builder;
+
+   procedure Translate_Array_Subtype_Definition
+     (Def : Iir; Parent_Type : Iir; With_Vars : Boolean)
+   is
+      El_Type : constant Iir := Get_Element_Subtype (Def);
+      Parent_El_Type : constant Iir := Get_Element_Subtype (Parent_Type);
+      Mark : Id_Mark_Type;
+   begin
+      --  Handle element subtype.
+      if El_Type /= Parent_El_Type then
+         --  TODO: do not create vars for element subtype, but use
+         --  the layout field of the array vars.
+         Push_Identifier_Prefix (Mark, "ET");
+         Translate_Subtype_Definition (El_Type, Parent_El_Type, With_Vars);
+         Pop_Identifier_Prefix (Mark);
+      end if;
+
+      if Get_Constraint_State (Def) = Fully_Constrained then
+         Translate_Bounded_Array_Subtype_Definition (Def, Parent_Type);
+         if With_Vars then
+            Create_Composite_Subtype_Layout_Var (Def, False);
+         end if;
+      elsif Is_Fully_Constrained_Type (El_Type)
+        and then not Is_Fully_Constrained_Type (Parent_El_Type)
+        and then Is_Static_Type (Get_Info (El_Type))
+      then
+         --  The array subtype is not constrained, but the element
+         --  subtype was just contrained.  Create an array for
+         --  ortho, if the element subtype is static.
+         Translate_Array_Subtype_Definition_Constrained_Element
+           (Def, Parent_Type);
+      else
+         --  An unconstrained array subtype.  Use same infos as base
+         --  type.
+         Free_Info (Def);
+         Set_Info (Def, Get_Info (Parent_Type));
+      end if;
+   end Translate_Array_Subtype_Definition;
 
    --------------
    --  record  --
@@ -2412,43 +2450,7 @@ package body Trans.Chap3 is
             end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
-            declare
-               El_Type : constant Iir := Get_Element_Subtype (Def);
-               Parent_El_Type : constant Iir :=
-                 Get_Element_Subtype (Parent_Type);
-               Mark : Id_Mark_Type;
-            begin
-               --  Handle element subtype.
-               if El_Type /= Parent_El_Type then
-                  --  TODO: do not create vars for element subtype, but use
-                  --  the layout field of the array vars.
-                  Push_Identifier_Prefix (Mark, "ET");
-                  Translate_Subtype_Definition
-                    (El_Type, Parent_El_Type, With_Vars);
-                  Pop_Identifier_Prefix (Mark);
-               end if;
-
-               if Get_Constraint_State (Def) = Fully_Constrained then
-                  Translate_Array_Subtype_Definition (Def, Parent_Type);
-                  if With_Vars then
-                     Create_Composite_Subtype_Layout_Var (Def, False);
-                  end if;
-               elsif Is_Fully_Constrained_Type (El_Type)
-                 and then not Is_Fully_Constrained_Type (Parent_El_Type)
-                 and then Is_Static_Type (Get_Info (El_Type))
-               then
-                  --  The array subtype is not constrained, but the element
-                  --  subtype was just contrained.  Create an array for
-                  --  ortho, if the element subtype is static.
-                  Translate_Array_Subtype_Definition_Constrained_Element
-                    (Def, Parent_Type);
-               else
-                  --  An unconstrained array subtype.  Use same infos as base
-                  --  type.
-                  Free_Info (Def);
-                  Set_Info (Def, Get_Info (Parent_Type));
-               end if;
-            end;
+            Translate_Array_Subtype_Definition (Def, Parent_Type, With_Vars);
 
          when Iir_Kind_Record_Subtype_Definition =>
             Translate_Record_Subtype (Def, With_Vars);
