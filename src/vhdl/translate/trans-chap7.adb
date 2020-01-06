@@ -980,18 +980,7 @@ package body Trans.Chap7 is
             end case;
          when Type_Mode_Bounded_Records =>
             --  X to bounded
-            case Einfo.Type_Mode is
-               when Type_Mode_Unbounded_Record =>
-                  --  unbounded to bounded.
-                  return Convert_To_Constrained
-                    (Expr, Expr_Type, Res_Type, Loc);
-               when Type_Mode_Bounded_Records =>
-                  --  bounded to bounded.
-                  --  TODO: likewise ? check bounds ?
-                  return Expr;
-               when others =>
-                  raise Internal_Error;
-            end case;
+            return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
          when others =>
             raise Internal_Error;
       end case;
