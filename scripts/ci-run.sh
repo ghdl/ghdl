@@ -397,9 +397,7 @@ ci_run () {
   RUN="docker run --rm -t -e CI -e TRAVIS -v `pwd`:/work -w /work"
   if [ "x$IS_MACOS" = "xtrue" ]; then
       export CPATH="$CPATH:`xcrun --show-sdk-path`/usr/include"
-      CC=clang \
-      CONFIG_OPTS="--disable-libghdl" \
-      bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+      CC=clang bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
   else
       # Assume linux
 
