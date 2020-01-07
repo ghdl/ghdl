@@ -5,7 +5,7 @@ set -e
 cd "$(dirname $0)"
 
 docker build -t ghdl/sphinx -f- . <<EOF
-FROM btdi/sphinx:py3-featured
+FROM btdi/sphinx:featured
 COPY requirements.txt /
 RUN apk add -U --no-cache make \
  && pip3 install -r /requirements.txt
