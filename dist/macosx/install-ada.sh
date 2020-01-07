@@ -12,9 +12,9 @@ set -x
 
 # Download from libre.adacore.com
 tarfile=gnat-gpl-2017-x86_64-darwin-bin.tar.gz
-curl -o $tarfile http://mirrors.cdn.adacore.com/art/591c9045c7a447af2deed24e
+wget -O $tarfile https://community.download.adacore.com/v1/7bbc77bd9c3c03fdb93699bce67b458f95d049a9?filename=gnat-gpl-2017-x86_64-darwin-bin.tar.gz
 
-# un tar
+# untar
 tar xf $tarfile
 
 # Remove old gnat directory and install manually
