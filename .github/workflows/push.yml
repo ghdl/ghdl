@@ -31,7 +31,10 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - run: |
+        brew update
+        brew install p7zip
         ./dist/macosx/install-ada.sh
+    - run: |
         PATH=$PWD/gnat/bin:$PATH
         ./dist/ci-run.sh -c
       env:
