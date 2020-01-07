@@ -30,7 +30,10 @@ jobs:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v1
-    - run: ./dist/ci-run.sh -c
+    - run: |
+        ./dist/macosx/install-ada.sh
+        PATH=$PWD/gnat/bin:$PATH
+        ./dist/ci-run.sh -c
       env:
         TASK: macosx+mcode
         GITHUB_OS: ${{ runner.os }}

@@ -388,14 +388,6 @@ ci_run () {
   git fetch --unshallow || true
   gend
 
-  if [ "x$IS_MACOS" = "xtrue" ]; then
-      gstart "[CI] Install gnat compiler (use cache) and set CPATH" "$ANSI_BLUE"
-      ./dist/macosx/install-ada.sh || exit 1
-      PATH=$PWD/gnat/bin:$PATH
-      export CPATH="$CPATH:`xcrun --show-sdk-path`/usr/include"
-      gend
-  fi
-
   # Get build command options
   gstart "[CI] Get build command options" "$ANSI_BLUE"
   buildCmdOpts "$TASK"
@@ -406,7 +398,10 @@ ci_run () {
 
   RUN="docker run --rm -t -e CI -e TRAVIS -v `pwd`:/work -w /work"
   if [ "x$IS_MACOS" = "xtrue" ]; then
-      CC=clang CONFIG_OPTS="--disable-libghdl" bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+      export CPATH="$CPATH:`xcrun --show-sdk-path`/usr/include"
+      CC=clang \
+      CONFIG_OPTS="--disable-libghdl" \
+      bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
   else
       # Assume linux
 
@@ -435,7 +430,9 @@ ci_run () {
   # Test
 
   if [ "x$IS_MACOS" = "xtrue" ]; then
-      CC=clang prefix="`cd ./install-mcode; pwd`" ./testsuite/testsuite.sh sanity gna vests
+      CC=clang \
+      prefix="`cd ./install-mcode; pwd`" \
+      ./testsuite/testsuite.sh sanity gna vests
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
