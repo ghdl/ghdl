@@ -64,7 +64,9 @@ package body Synth.Environment is
    is
       Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
    begin
+      --  Check the wire was not already free.
       pragma Assert (Wire_Rec.Kind /= Wire_None);
+
       pragma Assert (Wire_Rec.Cur_Assign = No_Seq_Assign);
       Wire_Rec.Kind := Wire_None;
    end Free_Wire;

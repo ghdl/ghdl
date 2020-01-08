@@ -51,6 +51,7 @@ with Synth.Flags;
 with Synth.Debugger;
 
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Folds; use Netlists.Folds;
 with Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
@@ -537,6 +538,22 @@ package body Synth.Stmts is
       Set_Location (N, Loc);
       return Create_Value_Net (N, Typ);
    end Synth_Read_Memory;
+
+   function Synth_Read (Syn_Inst : Synth_Instance_Acc;
+                        Targ : Target_Info;
+                        Loc : Node) return Value_Acc
+   is
+      N : Net;
+   begin
+      if Targ.Kind = Target_Simple then
+         N := Build2_Extract (Get_Build (Syn_Inst),
+                              Get_Net (Targ.Obj), Targ.Off, Targ.Targ_Type.W);
+         return Create_Value_Net (N, Targ.Targ_Type);
+      else
+         return Synth_Read_Memory (Syn_Inst, Targ.Obj, Targ.Off, No_Net,
+                                   Targ.Targ_Type, Loc);
+      end if;
+   end Synth_Read;
 
    --  Concurrent or sequential simple signal assignment
    procedure Synth_Simple_Signal_Assignment
@@ -1432,12 +1449,8 @@ package body Synth.Stmts is
                            raise Internal_Error;
                         end if;
                         Val := Info.Obj;
-                     elsif Info.Kind = Target_Simple then
-                        Val := Info.Obj;
                      else
-                        Val := Synth_Read_Memory
-                          (Caller_Inst, Info.Obj, Info.Off, No_Net,
-                           Info.Targ_Type, Assoc);
+                        Val := Synth_Read (Caller_Inst, Info, Assoc);
                      end if;
                   when Iir_Kind_Interface_Signal_Declaration =>
                      --  Always pass by reference (use an alias).
@@ -1463,7 +1476,13 @@ package body Synth.Stmts is
                Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_Variable_Declaration =>
                --  Arguments are passed by copy.
-               Create_Object (Subprg_Inst, Inter, Unshare (Val, Current_Pool));
+               if Is_Static (Val) or else Get_Mode (Inter) = Iir_In_Mode then
+                  Val := Unshare (Val, Current_Pool);
+               else
+                  --  Will be changed to a wire.
+                  null;
+               end if;
+               Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_Signal_Declaration =>
                Create_Object (Subprg_Inst, Inter, Val);
             when Iir_Kind_Interface_File_Declaration =>
@@ -1485,6 +1504,37 @@ package body Synth.Stmts is
       Synth_Subprogram_Association (Subprg_Inst, Caller_Inst,
                                     Inter_Chain, Assoc_Chain, Infos);
    end Synth_Subprogram_Association;
+
+   --  Create wires for out and inout interface variables.
+   procedure Synth_Subprogram_Association_Wires
+     (Subprg_Inst : Synth_Instance_Acc; Inter_Chain : Node; Assoc_Chain : Node)
+   is
+      Inter : Node;
+      Assoc : Node;
+      Val : Value_Acc;
+      Iterator : Association_Iterator;
+      Wire : Wire_Id;
+   begin
+      --  Process in INTER order.
+      Association_Iterate_Init (Iterator, Inter_Chain, Assoc_Chain);
+      loop
+         Association_Iterate_Next (Iterator, Inter, Assoc);
+         exit when Inter = Null_Node;
+
+         if Get_Mode (Inter) in Iir_Out_Modes
+           and then Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
+         then
+            Val := Get_Value (Subprg_Inst, Inter);
+            --  Arguments are passed by copy.
+            Wire := Alloc_Wire (Wire_Variable, Inter);
+            Set_Wire_Gate (Wire, Get_Net (Val));
+
+            Val := Create_Value_Wire (Wire, Val.Typ);
+            Create_Object_Force (Subprg_Inst, Inter, null);
+            Create_Object_Force (Subprg_Inst, Inter, Val);
+         end if;
+      end loop;
+   end Synth_Subprogram_Association_Wires;
 
    procedure Synth_Subprogram_Back_Association
      (Subprg_Inst : Synth_Instance_Acc;
@@ -1513,6 +1563,12 @@ package body Synth.Stmts is
             Nbr_Inout := Nbr_Inout + 1;
             Val := Get_Value (Subprg_Inst, Inter);
             Synth_Assignment (Caller_Inst, Infos (Nbr_Inout), Val, Assoc);
+
+            --  Free wire used for out/inout interface variables.
+            if Val.Kind = Value_Wire then
+               Phi_Discard_Wires (Val.W, No_Wire_Id);
+               Free_Wire (Val.W);
+            end if;
          end if;
 
          Next_Association_Interface (Assoc, Assoc_Inter);
@@ -1556,6 +1612,8 @@ package body Synth.Stmts is
       end if;
 
       Push_Phi;
+
+      Synth_Subprogram_Association_Wires (Sub_Inst, Inter_Chain, Assoc_Chain);
 
       if Is_Func then
          --  Set a default value for the return.
@@ -1685,8 +1743,8 @@ package body Synth.Stmts is
       Sub_Inst : Synth_Instance_Acc;
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
-      Sub_Inst :=  Make_Instance (Syn_Inst, Bod,
-                                  New_Internal_Name (Build_Context));
+      Sub_Inst := Make_Instance (Syn_Inst, Bod,
+                                 New_Internal_Name (Build_Context));
       Synth_Subprogram_Association
         (Sub_Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
 

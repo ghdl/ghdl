@@ -228,7 +228,7 @@ package body Synth.Context is
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
-      pragma Assert (Syn_Inst.Objects (Info.Slot) = null);
+      pragma Assert (Val = null or else Syn_Inst.Objects (Info.Slot) = null);
       Syn_Inst.Objects (Info.Slot) := Val;
    end Create_Object_Force;
 
