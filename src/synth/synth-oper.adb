@@ -434,9 +434,10 @@ package body Synth.Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Nor_Uns_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn_Sgn =>
             return Synth_Vec_Dyadic (Id_Nor);
-         when Iir_Predefined_Ieee_1164_Vector_Xor
-            | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
-            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
+         when Iir_Predefined_TF_Array_Xor
+           | Iir_Predefined_Ieee_1164_Vector_Xor
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
             return Synth_Vec_Dyadic (Id_Xor);
          when Iir_Predefined_Ieee_1164_Vector_Xnor
             | Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns
