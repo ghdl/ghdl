@@ -176,6 +176,10 @@ package body Ghdlsynth is
 
          --  Do not canon concurrent statements.
          Vhdl.Canon.Canon_Flag_Concurrent_Stmts := False;
+
+         --  Do not create concurrent signal assignment for inertial
+         --  association.  They are handled directly.
+         Vhdl.Canon.Canon_Flag_Inertial_Associations := False;
       end if;
 
       Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;

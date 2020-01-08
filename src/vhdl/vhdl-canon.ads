@@ -34,6 +34,10 @@ package Vhdl.Canon is
    --  association with a non globally expression).
    Canon_Flag_Associations : Boolean := True;
 
+   --  If true, create a concurrent signal assignment for internal
+   --  associations.
+   Canon_Flag_Inertial_Associations : Boolean := True;
+
    --  If true, canon lists in specifications.
    Canon_Flag_Specification_Lists : Boolean := True;
 

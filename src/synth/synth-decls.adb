@@ -677,8 +677,9 @@ package body Synth.Decls is
                Create_Object (Syn_Inst, Decl, Res);
             end;
          when Iir_Kind_Anonymous_Signal_Declaration =>
-            Create_Wire_Object (Syn_Inst, Wire_Signal, Decl);
-            Create_Var_Wire (Syn_Inst, Decl, null);
+            --  Anonymous signals created by inertial associations are
+            --  simply ignored.
+            null;
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Declaration =>
             Synth_Subprogram_Declaration (Syn_Inst, Decl);
@@ -790,10 +791,11 @@ package body Synth.Decls is
             end if;
          when Iir_Kind_Constant_Declaration =>
             null;
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Anonymous_Signal_Declaration =>
+         when Iir_Kind_Signal_Declaration =>
             pragma Assert (not Is_Subprg);
             Finalize_Signal (Syn_Inst, Decl);
+         when Iir_Kind_Anonymous_Signal_Declaration =>
+            null;
          when Iir_Kind_Object_Alias_Declaration =>
             null;
          when Iir_Kind_Procedure_Declaration

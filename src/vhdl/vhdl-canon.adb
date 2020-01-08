@@ -2989,7 +2989,7 @@ package body Vhdl.Canon is
                Canon_Expression (Get_Expression (Decl));
             end if;
             --  Create a signal assignment.
-            if Canon_Flag_Associations then
+            if Canon_Flag_Inertial_Associations then
                declare
                   Parent : constant Node := Get_Parent (Decl);
                   Asgn : Iir;

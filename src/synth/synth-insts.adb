@@ -541,6 +541,14 @@ package body Synth.Insts is
             Actual := Get_Default_Value (Inter);
          when Iir_Kind_Association_Element_By_Expression =>
             Actual := Get_Actual (Assoc);
+            if Get_Kind (Actual) = Iir_Kind_Reference_Name then
+               --  Skip inserted anonymous signal declaration.
+               --  FIXME: simply do not insert it ?
+               Actual := Get_Named_Entity (Actual);
+               pragma Assert
+                 (Get_Kind (Actual) = Iir_Kind_Anonymous_Signal_Declaration);
+               Actual := Get_Expression (Actual);
+            end if;
          when Iir_Kind_Association_Element_By_Individual =>
             Synth_Individual_Input_Assoc (Inp, Syn_Inst, Assoc, Inter_Inst);
             return;
