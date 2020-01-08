@@ -3,7 +3,7 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--std=08
-for t in test; do
+for t in test testrec; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
