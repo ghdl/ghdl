@@ -2,7 +2,7 @@
 
 set -e
 
-if [ -e gnat/etc/install_ok ]; then
+if [ -e gnat/etc/install_ok ] && [ "x$(cat gnat/etc/install_ok)" = "x2019" ]; then
     echo "gnatgpl already installed"
     exit 0
 fi
@@ -10,16 +10,20 @@ fi
 echo "Download and install gnat-gpl"
 set -x
 
-# Download from libre.adacore.com
-tarfile=gnat-gpl-2017-x86_64-darwin-bin.tar.gz
-wget -O $tarfile https://community.download.adacore.com/v1/7bbc77bd9c3c03fdb93699bce67b458f95d049a9?filename=gnat-gpl-2017-x86_64-darwin-bin.tar.gz
+# Remove old gnat directory
+if [ -d gnat ]; then
+    rm -rf gnat
+fi
 
-# untar
-tar xf $tarfile
+# Download from community.adacore.com and extract
+wget -O dmgfile https://community.download.adacore.com/v1/5a7801fc686e86de838cfaf7071170152d81254d?filename=gnat-community-2019-20190517-x86_64-darwin-bin.dmg
+7z x dmgfile
+installer="gnat-community-2019-20190517-x86_64-darwin-bin/gnat-community-2019-20190517-x86_64-darwin-bin.app/Contents/MacOS/gnat-community-2019-20190517-x86_64-darwin-bin"
 
-# Remove old gnat directory and install manually
-rm -rf gnat
-mv gnat-gpl-2017-x86_64-darwin-bin gnat
+# Install
+mkdir -p gnat
+chmod +x $installer
+./$installer PREFIX=gnat
 
 # Cleanup: remove components not needed
 rm -rf gnat/share/{themes,icons} \
@@ -40,9 +44,8 @@ rm -rf gnat/share/{themes,icons} \
        gnat/lib/gcc/x86*/*/rts-native/adalib/*.dylib \
        gnat/lib/gcc/x86*/*/rts-native/adalib/lib*_pic.a \
        gnat/libexec/gprbuild \
-       gnat/libexec/gcc/x86*/*/{plugin,install-tools}
-
-rm -f  gnat/bin/aws* gnat/bin/gps* gnat/bin/gcov* \
+       gnat/libexec/gcc/x86*/*/{plugin,install-tools} \
+       gnat/bin/aws* gnat/bin/gps* gnat/bin/gcov* \
        gnat/bin/gnat2* gnat/bin/xml2* gnat/bin/gnatcoll* \
        gnat/bin/gnat{doc,metric,pp,stub,prep,test,check,elim,inspect,find,kr} \
        gnat/bin/gnat{xref,name} \
@@ -54,4 +57,4 @@ rm -f  gnat/bin/aws* gnat/bin/gps* gnat/bin/gcov* \
        gnat/lib/libxmlada* \
        gnat/libexec/gcc/x86*/*/{cc1obj,cc1plus,lto1}
 
-touch gnat/etc/install_ok
+echo "2019" > gnat/etc/install_ok

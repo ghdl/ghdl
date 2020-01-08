@@ -39,15 +39,21 @@ jobs:
     - &osx
       os: osx
       language: c
-      osx_image: xcode9.4
-      install: true
+      osx_image: xcode10
+      env: TASK=macosx+mcode
       cache:
         directories:
           - gnat
-      env: TASK=macosx+mcode
+      install: ./dist/macosx/install-ada.sh
+      before_script: PATH=$PWD/gnat/bin:$PATH
+      addons:
+        homebrew:
+          packages:
+            - p7zip
+          update: true
     # Optionally, more macos jobs can be added. See list of available versions at https://docs.travis-ci.com/user/reference/osx/#macos-version
 #   - <<: *osx
-#     osx_image: xcode10
+#     osx_image: xcode9.4
     - env: TASK="man"
       script: ./dist/man.sh
       deploy:
