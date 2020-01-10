@@ -131,7 +131,18 @@ package body Synth.Insts is
          Inter := Get_Chain (Inter);
       end loop;
 
-      --  TODO: ports size ?
+      Inter := Get_Port_Chain (Params.Decl);
+      while Inter /= Null_Node loop
+         if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
+            if not Are_Types_Equal (Get_Value (Obj.Syn_Inst, Inter).Typ,
+                                    Get_Value (Params.Syn_Inst, Inter).Typ)
+            then
+               return False;
+            end if;
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+
       return True;
    end Equal;
 
@@ -210,19 +221,10 @@ package body Synth.Insts is
       Decl : constant Node := Params.Decl;
       Id : constant Name_Id := Get_Identifier (Decl);
       Generics : constant Node := Get_Generic_Chain (Decl);
-      Gen_Decl : Node;
-      Gen : Value_Acc;
+      Ports : constant Node := Get_Port_Chain (Decl);
       Ctxt : GNAT.SHA1.Context;
       Has_Hash : Boolean;
    begin
-      --  Easy case: no generics, so simply use the name of the entity.
-      --  TODO: what about two entities with the same identifier but declared
-      --   in two different libraries ?
-      --  TODO: what about extended identifiers ?
-      if Generics = Null_Node then
-         return New_Sname_User (Id, No_Sname);
-      end if;
-
       --  Create a buffer, store the entity name.
       --  For each generic:
       --  * write the value for integers.
@@ -237,6 +239,9 @@ package body Synth.Insts is
          pragma Assert (GNAT.SHA1.Hash_Length = 20);
          Str : String (1 .. Str_Len + 41);
          Len : Natural;
+
+         Gen_Decl : Node;
+         Gen : Value_Acc;
       begin
          Len := Id_Len;
          Str (1 .. Len) := Get_Name_Ptr (Id) (1 .. Len);
@@ -268,6 +273,29 @@ package body Synth.Insts is
             end case;
             Gen_Decl := Get_Chain (Gen_Decl);
          end loop;
+
+         declare
+            Port_Decl : Node;
+            Port_Typ : Type_Acc;
+         begin
+            Port_Decl := Ports;
+            while Port_Decl /= Null_Node loop
+               if not Is_Fully_Constrained_Type (Get_Type (Port_Decl)) then
+                  Port_Typ := Get_Value (Params.Syn_Inst, Port_Decl).Typ;
+                  Has_Hash := True;
+                  Hash_Bounds (Ctxt, Port_Typ);
+               end if;
+               Port_Decl := Get_Chain (Port_Decl);
+            end loop;
+         end;
+
+         if not Has_Hash and then Generics = Null_Node then
+            --  Simple case: same name.
+            --  TODO: what about two entities with the same identifier but
+            --   declared in two different libraries ?
+            --  TODO: what about extended identifiers ?
+            return New_Sname_User (Id, No_Sname);
+         end if;
 
          if Has_Hash then
             Str (Len + 1) := '_';
@@ -736,55 +764,35 @@ package body Synth.Insts is
       return null;
    end Synth_Type_Of_Object;
 
-   procedure Synth_Direct_Instantiation_Statement
-     (Syn_Inst : Synth_Instance_Acc;
-      Stmt : Node;
-      Ent : Node;
-      Arch : Node;
-      Config : Node)
+   procedure Synth_Ports_Association_Type (Sub_Inst : Synth_Instance_Acc;
+                                           Syn_Inst : Synth_Instance_Acc;
+                                           Inter_Chain : Node;
+                                           Assoc_Chain : Node)
    is
-      Sub_Inst : Synth_Instance_Acc;
       Inter : Node;
-      Inter_Typ : Type_Acc;
-      Inst_Obj : Inst_Object;
-      Inst : Instance;
+      Assoc : Node;
       Val : Value_Acc;
+      Inter_Typ : Type_Acc;
    begin
-      --  Elaborate generic + map aspect
-      Sub_Inst := Make_Instance
-        (Syn_Inst, Ent, New_Sname_User (Get_Identifier (Ent), No_Sname));
-
-      Synth_Generics_Association (Sub_Inst, Syn_Inst,
-                                  Get_Generic_Chain (Ent),
-                                  Get_Generic_Map_Aspect_Chain (Stmt));
-
-      --  Elaborate port types.
-      --  FIXME: what about unconstrained ports ?  Get the type from the
-      --    association.
-      Inter := Get_Port_Chain (Ent);
+      Inter := Inter_Chain;
       while Is_Valid (Inter) loop
          if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
             --  TODO
             --  Find the association for this interface
             --  * if individual assoc: get type
             --  * if whole assoc: get type from object.
-            declare
-               Assoc : Node;
-            begin
-               Assoc := Find_First_Association_For_Interface
-                 (Get_Port_Map_Aspect_Chain (Stmt), Get_Port_Chain (Ent),
-                  Inter);
-               if Assoc = Null_Node then
+            Assoc := Find_First_Association_For_Interface
+              (Assoc_Chain, Inter_Chain, Inter);
+            if Assoc = Null_Node then
+               raise Internal_Error;
+            end if;
+            case Get_Kind (Assoc) is
+               when Iir_Kind_Association_Element_By_Expression =>
+                  Inter_Typ := Synth_Type_Of_Object
+                    (Syn_Inst, Get_Actual (Assoc));
+               when others =>
                   raise Internal_Error;
-               end if;
-               case Get_Kind (Assoc) is
-                  when Iir_Kind_Association_Element_By_Expression =>
-                     Inter_Typ := Synth_Type_Of_Object
-                       (Syn_Inst, Get_Actual (Assoc));
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end;
+            end case;
          else
             Synth_Declaration_Type (Sub_Inst, Inter);
             Inter_Typ := Get_Value_Type (Sub_Inst, Get_Type (Inter));
@@ -798,6 +806,31 @@ package body Synth.Insts is
          Create_Object (Sub_Inst, Inter, Val);
          Inter := Get_Chain (Inter);
       end loop;
+   end Synth_Ports_Association_Type;
+
+   procedure Synth_Direct_Instantiation_Statement
+     (Syn_Inst : Synth_Instance_Acc;
+      Stmt : Node;
+      Ent : Node;
+      Arch : Node;
+      Config : Node)
+   is
+      Sub_Inst : Synth_Instance_Acc;
+      Inst_Obj : Inst_Object;
+      Inst : Instance;
+   begin
+      --  Elaborate generic + map aspect
+      Sub_Inst := Make_Instance
+        (Syn_Inst, Ent, New_Sname_User (Get_Identifier (Ent), No_Sname));
+
+      Synth_Generics_Association (Sub_Inst, Syn_Inst,
+                                  Get_Generic_Chain (Ent),
+                                  Get_Generic_Map_Aspect_Chain (Stmt));
+
+      --  Elaborate port types.
+      Synth_Ports_Association_Type (Sub_Inst, Syn_Inst,
+                                    Get_Port_Chain (Ent),
+                                    Get_Port_Map_Aspect_Chain (Stmt));
 
       --  Search if corresponding module has already been used.
       --  If not create a new module
@@ -976,6 +1009,10 @@ package body Synth.Insts is
       Synth_Generics_Association (Sub_Inst, Comp_Inst,
                                   Get_Generic_Chain (Ent),
                                   Get_Generic_Map_Aspect_Chain (Bind));
+
+      Synth_Ports_Association_Type (Sub_Inst, Comp_Inst,
+                                    Get_Port_Chain (Ent),
+                                    Get_Port_Map_Aspect_Chain (Bind));
 
       --  Search if corresponding module has already been used.
       --  If not create a new module

@@ -148,6 +148,62 @@ package body Synth.Values is
       end case;
    end Is_Equal;
 
+   function Are_Types_Equal (L, R : Type_Acc) return Boolean is
+   begin
+      if L.Kind /= R.Kind
+        or else L.W /= R.W
+      then
+         return False;
+      end if;
+      if L = R then
+         return True;
+      end if;
+
+      case L.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            return True;
+         when Type_Discrete =>
+            return L.Drange = R.Drange;
+         when Type_Float =>
+            return L.Frange = R.Frange;
+         when Type_Vector =>
+            return L.Vbound = R.Vbound
+              and then Are_Types_Equal (L.Vec_El, R.Vec_El);
+         when Type_Unbounded_Vector =>
+            return Are_Types_Equal (L.Uvec_El, R.Uvec_El);
+         when Type_Slice =>
+            return Are_Types_Equal (L.Slice_El, R.Slice_El);
+         when Type_Array =>
+            if L.Abounds.Len /= R.Abounds.Len then
+               return False;
+            end if;
+            for I in L.Abounds.D'Range loop
+               if L.Abounds.D (I) /= R.Abounds.D (I) then
+                  return False;
+               end if;
+            end loop;
+            return Are_Types_Equal (L.Arr_El, R.Arr_El);
+         when Type_Unbounded_Array =>
+            return L.Uarr_Ndim = R.Uarr_Ndim
+              and then Are_Types_Equal (L.Uarr_El, R.Uarr_El);
+         when Type_Record =>
+            if L.Rec.Len /= R.Rec.Len then
+               return False;
+            end if;
+            for I in L.Rec.E'Range loop
+               if not Are_Types_Equal (L.Rec.E (I).Typ, R.Rec.E (I).Typ) then
+                  return False;
+               end if;
+            end loop;
+            return True;
+         when Type_Access =>
+            return Are_Types_Equal (L.Acc_Acc, R.Acc_Acc);
+         when Type_File =>
+            return Are_Types_Equal (L.File_Typ, R.File_Typ);
+      end case;
+   end Are_Types_Equal;
+
    function Discrete_Range_Width (Rng : Discrete_Range_Type) return Width
    is
       Lo, Hi : Int64;

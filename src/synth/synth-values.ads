@@ -285,6 +285,7 @@ package Synth.Values is
    function Is_Static_Val (Val : Value_Acc) return Boolean;
 
    function Is_Equal (L, R : Value_Acc) return Boolean;
+   function Are_Types_Equal (L, R : Type_Acc) return Boolean;
 
    --  Create a Value_Net.
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Value_Acc;
