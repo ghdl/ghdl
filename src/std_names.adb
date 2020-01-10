@@ -650,6 +650,7 @@ package body Std_Names is
       Def ("conv_integer",       Name_Conv_Integer);
       Def ("math_real",          Name_Math_Real);
       Def ("ceil",               Name_Ceil);
+      Def ("round",              Name_Round);
       Def ("log2",               Name_Log2);
       Def ("sin",                Name_Sin);
       Def ("cos",                Name_Cos);

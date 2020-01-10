@@ -1186,6 +1186,20 @@ package body Synth.Oper is
                return Create_Value_Float
                  (Ceil (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
             end;
+         when Iir_Predefined_Ieee_Math_Real_Round =>
+            declare
+               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+
+               function Round (Arg : Fp64) return Fp64;
+               pragma Import (C, Round);
+            begin
+               if V.Typ.Kind /= Type_Float then
+                  Error_Msg_Synth(+Expr, "argument must be a float value");
+                  return null;
+               end if;
+               return Create_Value_Float
+                 (Round (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
+            end;
          when Iir_Predefined_Ieee_Math_Real_Sin =>
             declare
                V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);

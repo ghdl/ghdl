@@ -29,7 +29,8 @@ class Msgid:
     Warnid_Unused = 21
     Warnid_Others = 22
     Warnid_Pure = 23
-    Warnid_Static = 24
-    Msgid_Warning = 25
-    Msgid_Error = 26
-    Msgid_Fatal = 27
+    Warnid_Analyze_Assert = 24
+    Warnid_Static = 25
+    Msgid_Warning = 26
+    Msgid_Error = 27
+    Msgid_Fatal = 28
