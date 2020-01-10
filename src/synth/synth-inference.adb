@@ -302,7 +302,10 @@ package body Synth.Inference is
       end case;
    end Extract_Clock;
 
-   procedure Check_FF_Else (Els : Net; Prev_Val : Net; Off : Uns32)
+   procedure Check_FF_Else (Els : Net;
+                            Prev_Val : Net;
+                            Off : Uns32;
+                            Loc : Source.Syn_Src)
    is
       Inst : Instance;
    begin
@@ -313,14 +316,11 @@ package body Synth.Inference is
          return;
       end if;
       Inst := Get_Net_Parent (Els);
-      if Get_Id (Inst) /= Id_Extract then
-         raise Internal_Error;
-      end if;
-      if Get_Param_Uns32 (Inst, 0) /= Off then
-         raise Internal_Error;
-      end if;
-      if Get_Input_Net (Inst, 0) /= Prev_Val then
-         raise Internal_Error;
+      if Get_Id (Inst) /= Id_Extract
+        or else Get_Param_Uns32 (Inst, 0) /= Off
+        or else Get_Input_Net (Inst, 0) /= Prev_Val
+      then
+         Error_Msg_Synth (+Loc, "synchronous code does not expect else part");
       end if;
    end Check_FF_Else;
 
@@ -369,7 +369,7 @@ package body Synth.Inference is
       begin
          Disconnect (Sel);
          --  There must be no 'else' part for clock expression.
-         Check_FF_Else (Get_Driver (I0), Prev_Val, Off);
+         Check_FF_Else (Get_Driver (I0), Prev_Val, Off, Stmt);
          --  Don't try to free driver of I0 as this is Prev_Val or a selection
          --  of it.
          Disconnect (I0);
