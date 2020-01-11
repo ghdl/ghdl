@@ -58,7 +58,8 @@ package body Synthesis is
       Synth_Top_Entity (Global_Instance, Arch, Config, Inst);
       Synth_All_Instances;
       if Errorout.Nbr_Errors > 0 then
-         raise Compilation_Error;
+         M := No_Module;
+         return;
       end if;
 
       M := Get_Top_Module (Global_Instance);

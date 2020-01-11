@@ -58,6 +58,7 @@ package body Ghdlsynth is
       Disp_Inline : Boolean := True;
       Disp_Id : Boolean := True;
       Oformat : Out_Format := Format_Default;
+      Expect_Failure : Boolean := False;
    end record;
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean;
@@ -96,6 +97,9 @@ package body Ghdlsynth is
         and then Is_Generic_Override_Option (Option)
       then
          Res := Decode_Generic_Override_Option (Option);
+      elsif Option = "--expect-failure" then
+         Cmd.Expect_Failure := True;
+         Res := Option_Ok;
       elsif Option = "--disp-noinline" then
          Cmd.Disp_Inline := False;
          Res := Option_Ok;
@@ -333,6 +337,9 @@ package body Ghdlsynth is
       end if;
 
       Synthesis.Synth_Design (Config, Res, Inst);
+      if Res = No_Module then
+         return No_Module;
+      end if;
 
       Disp_Design (Command_Synth (Cmd.all), Format_None, Res, Config, Inst);
 
@@ -367,13 +374,23 @@ package body Ghdlsynth is
       Config := Ghdl_Synth_Configure (True, Args);
 
       if Config = Null_Iir then
-         raise Errorout.Compilation_Error;
+         if Cmd.Expect_Failure then
+            return;
+         else
+            raise Errorout.Compilation_Error;
+         end if;
       end if;
 
       Netlists.Errors.Initialize;
 
       Synthesis.Synth_Design (Config, Res, Inst);
       if Res = No_Module then
+         if Cmd.Expect_Failure then
+            return;
+         else
+            raise Errorout.Compilation_Error;
+         end if;
+      elsif Cmd.Expect_Failure then
          raise Errorout.Compilation_Error;
       end if;
 
