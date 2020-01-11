@@ -2,6 +2,6 @@
 
 . ../../testenv.sh
 
-! synth blinky.vhdl -e 
+synth --expect-failure blinky.vhdl -e
 
 echo "Test successful"

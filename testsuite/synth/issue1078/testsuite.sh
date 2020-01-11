@@ -2,6 +2,6 @@
 
 . ../../testenv.sh
 
-! synth ent.vhdl -e
+synth --expect-failure ent.vhdl -e
 
 echo "Test successful"
