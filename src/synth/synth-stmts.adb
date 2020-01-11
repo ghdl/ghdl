@@ -2859,15 +2859,22 @@ package body Synth.Stmts is
    is
       Gen : Node;
       Bod : Node;
+      Icond : Node;
       Cond : Value_Acc;
       Name : Sname;
    begin
       Gen := Stmt;
       Name := New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst));
       loop
-         Cond := Synth_Expression (Syn_Inst, Get_Condition (Gen));
-         pragma Assert (Cond.Kind = Value_Discrete);
-         if Cond.Scal = 1 then
+         Icond := Get_Condition (Gen);
+         if Icond /= Null_Node then
+            Cond := Synth_Expression (Syn_Inst, Icond);
+            pragma Assert (Cond.Kind = Value_Discrete);
+         else
+            --  It is the else generate.
+            Cond := null;
+         end if;
+         if Cond = null or else Cond.Scal = 1 then
             Bod := Get_Generate_Statement_Body (Gen);
             Apply_Block_Configuration
               (Get_Generate_Block_Configuration (Bod), Bod);
