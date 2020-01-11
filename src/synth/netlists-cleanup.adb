@@ -129,9 +129,11 @@ package body Netlists.Cleanup is
          if Get_Id (Inst) = Id_Output then
             Inp := Get_Input (Inst, 0);
             O := Get_Driver (Inp);
-            Disconnect (Inp);
-
-            Redirect_Inputs (Get_Output (Inst, 0), O);
+            if O /= No_Net then
+               --  Only when the output is driven.
+               Disconnect (Inp);
+               Redirect_Inputs (Get_Output (Inst, 0), O);
+            end if;
             Remove_Instance (Inst);
          end if;
 
