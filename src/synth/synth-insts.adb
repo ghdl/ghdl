@@ -563,10 +563,12 @@ package body Synth.Insts is
    is
       Actual : Node;
       Formal_Typ : Type_Acc;
+      Act_Inst : Synth_Instance_Acc;
    begin
       case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
          when Iir_Kind_Association_Element_Open =>
             Actual := Get_Default_Value (Inter);
+            Act_Inst := Inter_Inst;
          when Iir_Kind_Association_Element_By_Expression =>
             Actual := Get_Actual (Assoc);
             if Get_Kind (Actual) = Iir_Kind_Reference_Name then
@@ -577,6 +579,7 @@ package body Synth.Insts is
                  (Get_Kind (Actual) = Iir_Kind_Anonymous_Signal_Declaration);
                Actual := Get_Expression (Actual);
             end if;
+            Act_Inst := Syn_Inst;
          when Iir_Kind_Association_Element_By_Individual =>
             Synth_Individual_Input_Assoc (Inp, Syn_Inst, Assoc, Inter_Inst);
             return;
@@ -586,7 +589,7 @@ package body Synth.Insts is
 
       Connect (Inp,
                Get_Net (Synth_Expression_With_Type
-                          (Syn_Inst, Actual, Formal_Typ)));
+                          (Act_Inst, Actual, Formal_Typ)));
    end Synth_Input_Assoc;
 
    procedure Synth_Individual_Output_Assoc (Outp : Net;
