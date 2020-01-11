@@ -661,8 +661,12 @@ package body Netlists.Disp_Vhdl is
       --  Declare the memory.
       Disp_Template ("    type \o0_type is array (0 to \n0)" & NL,
                      Mem, (0 => Depth - 1));
-      Disp_Template ("      of std_logic_vector (\n0 downto 0);" & NL,
-                     Mem, (0 => Data_W - 1));
+      if Data_W = 1 then
+         Disp_Template ("      of std_logic;" & NL, Mem);
+      else
+         Disp_Template ("      of std_logic_vector (\n0 downto 0);" & NL,
+                        Mem, (0 => Data_W - 1));
+      end if;
       Disp_Template ("    variable \o0 : \o0_type", Mem);
       if Get_Id (Mem) = Id_Memory_Init then
          declare
