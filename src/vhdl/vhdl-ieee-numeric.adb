@@ -322,6 +322,22 @@ package body Vhdl.Ieee.Numeric is
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Nat,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat);
 
+   Sll_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int);
+
+   Srl_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int);
+
+   Sla_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sla_Sgn_Int,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sla_Uns_Int);
+
+   Sra_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int);
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg_Decl : Iir_Package_Declaration;
@@ -515,13 +531,13 @@ package body Vhdl.Ieee.Numeric is
          Set_Implicit_Definition (Decl, Predefined);
       end Handle_Std_Match;
 
-      procedure Handle_Shift (Pats : Shift_Pattern_Type)
+      procedure Handle_Shift (Pats : Shift_Pattern_Type; Sh_Sign : Sign_Kind)
       is
          Res : Iir_Predefined_Functions;
       begin
          if Arg1_Kind = Arg_Vect
            and then Arg2_Kind = Arg_Scal
-           and then Arg2_Sign = Type_Unsigned
+           and then Arg2_Sign = Sh_Sign
          then
             case Arg1_Sign is
                when Type_Signed | Type_Unsigned =>
@@ -647,13 +663,21 @@ package body Vhdl.Ieee.Numeric is
                      when Name_Std_Match =>
                         Handle_Std_Match;
                      when Name_Shift_Left =>
-                        Handle_Shift (Shl_Patterns);
+                        Handle_Shift (Shl_Patterns, Type_Unsigned);
                      when Name_Shift_Right =>
-                        Handle_Shift (Shr_Patterns);
+                        Handle_Shift (Shr_Patterns, Type_Unsigned);
+                     when Name_Sll =>
+                        Handle_Shift (Sll_Patterns, Type_Signed);
+                     when Name_Srl =>
+                        Handle_Shift (Srl_Patterns, Type_Signed);
+                     when Name_Sla =>
+                        Handle_Shift (Sla_Patterns, Type_Signed);
+                     when Name_Sra =>
+                        Handle_Shift (Sra_Patterns, Type_Signed);
                      when Name_Rotate_Left =>
-                        Handle_Shift (Rol_Patterns);
+                        Handle_Shift (Rol_Patterns, Type_Unsigned);
                      when Name_Rotate_Right =>
-                        Handle_Shift (Ror_Patterns);
+                        Handle_Shift (Ror_Patterns, Type_Unsigned);
                      when others =>
                         null;
                   end case;
