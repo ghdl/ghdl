@@ -1242,41 +1242,6 @@ package body Synth.Expr is
       end loop;
    end Decompose_Mul_Add;
 
-   function Is_Same (L, R : Net) return Boolean is
-   begin
-      if L = R then
-         return True;
-      end if;
-
-      if Get_Width (L) /= Get_Width (R) then
-         return False;
-      end if;
-
-      declare
-         Linst : constant Instance := Get_Net_Parent (L);
-         Rinst : constant Instance := Get_Net_Parent (R);
-      begin
-         if Get_Id (Linst) /= Get_Id (Rinst) then
-            return False;
-         end if;
-         case Get_Id (Linst) is
-            when Id_Uextend =>
-               --  When index is extended from a subtype.
-               return Is_Same (Get_Input_Net (Linst, 0),
-                               Get_Input_Net (Rinst, 0));
-            when Id_Extract =>
-               --  When index is extracted from a record.
-               if Get_Param_Uns32 (Linst, 0) /= Get_Param_Uns32 (Rinst, 0) then
-                  return False;
-               end if;
-               return Is_Same (Get_Input_Net (Linst, 0),
-                               Get_Input_Net (Rinst, 0));
-            when others =>
-               return False;
-         end case;
-      end;
-   end Is_Same;
-
    --  Identify LEFT to/downto RIGHT as:
    --  INP * STEP + WIDTH - 1 + OFF to/downto INP * STEP + OFF
    procedure Synth_Extract_Dyn_Suffix (Loc : Node;
@@ -1309,7 +1274,7 @@ package body Synth.Expr is
          Decompose_Mul_Add (Right, R_Inp, R_Fac, R_Add);
       end if;
 
-      if not Is_Same (L_Inp, R_Inp) then
+      if not Same_Net (L_Inp, R_Inp) then
          Error_Msg_Synth
            (+Loc, "cannot extract same variable part for dynamic slice");
          return;
