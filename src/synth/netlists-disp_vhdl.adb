@@ -1046,6 +1046,8 @@ package body Netlists.Disp_Vhdl is
                Disp_Template ("  \o0 <= \i0 ", Inst);
                if W = 1 then
                   Disp_Template ("(0)", Inst);
+               elsif W = 0 then
+                  Disp_Template ("(-1 downto 0)", Inst);
                else
                   Disp_Template ("(\n0 downto 0)", Inst, (0 => W - 1));
                end if;
