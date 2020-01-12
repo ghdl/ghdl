@@ -260,9 +260,10 @@ build () {
   case "$BACK" in
       gcc*)
           gstart "[GHDL - build] Get gcc sources"
-          echo "https://github.com/gcc-mirror/gcc/archive/`echo ${BACK} | sed -e 's/\./_/g'`-release.tar.gz"
+          gccURL="https://codeload.github.com/gcc-mirror/gcc/tar.gz/releases/${BACK}"
+          echo "$gccURL"
           mkdir gcc-srcs
-          curl -L "https://github.com/gcc-mirror/gcc/archive/`echo ${BACK} | sed -e 's/\./_/g'`-release.tar.gz" | tar -xz -C gcc-srcs --strip-components=1
+          curl -L "$gccURL" | tar -xz -C gcc-srcs --strip-components=1
           cd gcc-srcs
           sed -i.bak s/ftp:/http:/g ./contrib/download_prerequisites
           ./contrib/download_prerequisites
