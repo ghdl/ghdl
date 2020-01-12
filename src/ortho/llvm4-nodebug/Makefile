@@ -6,7 +6,7 @@ GNATMAKE=gnatmake
 SED=sed
 BE=llvm4-nodebug
 
-LLVM_LDFLAGS=$(LLVM_CONFIG) --link-static --ldflags --libs --system-libs
+LLVM_LDFLAGS=$(LLVM_CONFIG) --ldflags --libs --system-libs
 
 all: $(ortho_exec)
 
