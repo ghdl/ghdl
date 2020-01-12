@@ -509,6 +509,11 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Ieee_1164_Vector_Not =>
             return Synth_Vector_Monadic (Operand, Not_Table);
 
+         when Iir_Predefined_Ieee_1164_Scalar_Not =>
+            return Create_Value_Discrete
+              (Std_Ulogic'Pos (Not_Table (Std_Ulogic'Val (Operand.Scal))),
+               Oper_Typ);
+
          when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
             return Synth_Vector_Reduce ('0', Operand, Or_Table);
 
