@@ -11,9 +11,6 @@ LLVM_LDFLAGS=$(LLVM_CONFIG) --ldflags --libs --system-libs
 all: $(ortho_exec)
 
 $(ortho_exec): $(ortho_srcdir)/llvm4-nodebug/ortho_llvm.ads force llvm-cbindings.o
-	@echo "llvm ldflags cmd: $(LLVM_LDFLAGS)"
-	@echo "llvm ldflags (back-quoted): `$(LLVM_LDFLAGS)`"
-	$(LLVM_LDFLAGS)
 	$(GNATMAKE) -o $@ -aI$(ortho_srcdir)/llvm4-nodebug -aI$(ortho_srcdir) \
 	$(GNATFLAGS) ortho_code_main -bargs -E \
 	-largs llvm-cbindings.o --LINK=$(CXX) \
