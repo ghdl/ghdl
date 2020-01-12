@@ -379,6 +379,11 @@ package body Netlists.Disp_Vhdl is
             Zx := 0;
             Val := Get_Param_Uns32 (Inst, Param_Idx (Off / 32));
             Val := Shift_Right (Val, Natural (Off mod 32)) and 1;
+         when Id_Const_Log =>
+            Zx := Get_Param_Uns32 (Inst, 2 * Param_Idx (Off / 32) + 1);
+            Zx := Shift_Right (Zx, Natural (Off mod 32)) and 1;
+            Val := Get_Param_Uns32 (Inst, 2 * Param_Idx (Off / 32));
+            Val := Shift_Right (Val, Natural (Off mod 32)) and 1;
          when Id_Const_UB32 =>
             Zx := 0;
             if Off < 32 then
