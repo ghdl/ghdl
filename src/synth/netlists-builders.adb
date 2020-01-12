@@ -1234,7 +1234,6 @@ package body Netlists.Builders is
                           return Net
    is
       Wd : constant Width := Get_Width (Init);
-      pragma Assert (Wd /= No_Width);
       Inst : Instance;
       O : Net;
    begin
@@ -1282,7 +1281,6 @@ package body Netlists.Builders is
                         Init : Net) return Net
    is
       Wd : constant Width := Get_Width (Init);
-      pragma Assert (Wd /= No_Width);
       pragma Assert (D = No_Net or else Get_Width (D) = Wd);
       pragma Assert (Get_Width (Clk) = 1);
       Inst : Instance;
