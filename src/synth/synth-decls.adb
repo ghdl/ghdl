@@ -640,6 +640,8 @@ package body Synth.Decls is
                if Is_Valid (Def) then
                   Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
                   Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Type);
+                  Init := Synth_Subtype_Conversion
+                    (Init, Obj_Type, False, Decl);
                else
                   Init := null;
                end if;
