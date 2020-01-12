@@ -1923,6 +1923,18 @@ package body Synth.Expr is
                B := Synth_Array_Attribute (Syn_Inst, Expr);
                return Create_Value_Discrete (Int64 (B.Len), Expr_Type);
             end;
+         when Iir_Kind_Pos_Attribute =>
+            declare
+               Param : constant Node := Get_Parameter (Expr);
+               V : Value_Acc;
+               Dtype : Type_Acc;
+            begin
+               V := Synth_Expression (Syn_Inst, Param);
+               Dtype := Get_Value_Type (Syn_Inst, Get_Type (Expr));
+               --  FIXME: to be generalized.  Not always as simple as a
+               --  subtype conversion.
+               return Synth_Subtype_Conversion (V, Dtype, False, Expr);
+            end;
          when Iir_Kind_Null_Literal =>
             return Create_Value_Access (Expr_Type, Null_Heap_Index);
          when Iir_Kind_Allocator_By_Subtype =>
