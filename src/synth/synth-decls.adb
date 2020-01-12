@@ -608,19 +608,14 @@ package body Synth.Decls is
                   Init := Synth_Subtype_Conversion
                     (Init, Obj_Type, False, Decl);
                else
-                  if Get_Instance_Const (Syn_Inst) then
-                     Init := Create_Value_Default (Obj_Type);
-                  else
-                     Init := null;
-                  end if;
+                  Init := Create_Value_Default (Obj_Type);
                end if;
                if Get_Instance_Const (Syn_Inst) then
-                  pragma Assert (Init /= null);
                   Create_Object (Syn_Inst, Decl, Unshare (Init, Current_Pool));
                else
                   Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
                   Create_Var_Wire (Syn_Inst, Decl, Init);
-                  if Is_Subprg and then Init /= null then
+                  if Is_Subprg then
                      Phi_Assign
                        (Get_Build (Syn_Inst),
                         Get_Value (Syn_Inst, Decl).W, Get_Net (Init), 0);
