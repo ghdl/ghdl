@@ -1181,6 +1181,7 @@ package body Synth.Expr is
       end case;
    end Get_Const;
 
+   --  Decompose VAL as FACTOR * INP + ADDEND (where only INP is non-static).
    procedure Decompose_Mul_Add (Val : Net;
                                 Inp : out Net;
                                 Factor : out Int32;
@@ -1215,6 +1216,10 @@ package body Synth.Expr is
                if Is_Static (Val_I1) then
                   Addend := Addend - Get_Const (Val_I1) * Factor;
                   Inp := Val_I0;
+               elsif Is_Static (Val_I0) then
+                  Addend := Addend + Get_Const (Val_I0) * Factor;
+                  Factor := -Factor;
+                  Inp := Val_I1;
                else
                   --  It's a substraction, but without any constant value.
                   return;
@@ -1244,7 +1249,8 @@ package body Synth.Expr is
 
    --  Identify LEFT to/downto RIGHT as:
    --  INP * STEP + WIDTH - 1 + OFF to/downto INP * STEP + OFF
-   procedure Synth_Extract_Dyn_Suffix (Loc : Node;
+   procedure Synth_Extract_Dyn_Suffix (Ctxt : Context_Acc;
+                                       Loc : Node;
                                        Pfx_Bnd : Bound_Type;
                                        Left : Net;
                                        Right : Net;
@@ -1286,8 +1292,13 @@ package body Synth.Expr is
            (+Loc, "cannot extract same constant factor for dynamic slice");
          return;
       end if;
-      --  FIXME: what to do with negative values.
-      Step := Uns32 (L_Fac);
+      if L_Fac < 0 then
+         Step := Uns32 (-L_Fac);
+         Inp := Build_Monadic (Ctxt, Id_Neg, Inp);
+         Set_Location (Inp, Loc);
+      else
+         Step := Uns32 (L_Fac);
+      end if;
 
       case Pfx_Bnd.Dir is
          when Iir_To =>
@@ -1424,8 +1435,8 @@ package body Synth.Expr is
             return;
          end if;
          Synth_Extract_Dyn_Suffix
-           (Name, Pfx_Bnd, Get_Net (Left), Get_Net (Right),
-            Inp, Step, Off, Wd);
+           (Get_Build (Syn_Inst), Name,
+            Pfx_Bnd, Get_Net (Left), Get_Net (Right), Inp, Step, Off, Wd);
          Inp_W := Get_Width (Inp);
          --  FIXME: convert range to offset.
          --  Extract max from the range.
