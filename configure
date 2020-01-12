@@ -129,7 +129,7 @@ Options [defaults in brackets]:
   --prefix=PREFIX             install in PREFIX [$prefix]
   --srcdir=SRCDIR             source code path [$srcdir]
   --with-gcc=DIR              use gcc backend from DIR
-  --with-llvm-config=PATH     use llvm from PATH (needs llvm 3.5 - 3.9)
+  --with-llvm-config[=LLVM-CONFIG]  use llvm backend [llvm-config]
   --with-backtrace-lib=LIB.a  link with libbacktrace LIB.a to display a
                               backtrace on errors (only for llvm).
   --disable-werror            warnings don't stop build
