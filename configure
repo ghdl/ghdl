@@ -255,7 +255,10 @@ fi
 
 # For llvm backend, check llvm-config
 if test $backend = llvm; then
-  llvm_version=`"$llvm_config" --version 2>/dev/null`
+  # No quotes for llvm_config, so that options (like --link-static) can be
+  # added.  As a consequence, spaces in --with-llvm-config= are not allowed
+  # for the path.
+  llvm_version=`$llvm_config --version 2>/dev/null`
   if [ $? != 0 ]; then
     echo "cannot run $llvm_config"
     exit 1
