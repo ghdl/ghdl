@@ -175,6 +175,18 @@ package body Netlists.Utils is
       end case;
    end Get_Net_Element;
 
+   function Skip_Signal (N : Net) return Net
+   is
+      Inst : constant Instance := Get_Net_Parent (N);
+   begin
+      case Get_Id (Inst) is
+         when Id_Signal =>
+            return Get_Input_Net (Inst, 0);
+         when others =>
+            return N;
+      end case;
+   end Skip_Signal;
+
    function Is_Connected (O : Net) return Boolean is
    begin
       return Get_First_Sink (O) /= No_Input;

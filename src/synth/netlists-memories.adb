@@ -410,9 +410,9 @@ package body Netlists.Memories is
       Dff_Out := Get_Output (Dff_Inst, 0);
 
       if Mux_Inp = Get_Input (Mux_Inst, 1) then
-         return Get_Input_Net (Mux_Inst, 2) = Dff_Out;
+         return Skip_Signal (Get_Input_Net (Mux_Inst, 2)) = Dff_Out;
       else
-         return Get_Input_Net (Mux_Inst, 1) = Dff_Out;
+         return Skip_Signal (Get_Input_Net (Mux_Inst, 1)) = Dff_Out;
       end if;
    end Is_Enable_Dff;
 
