@@ -334,6 +334,7 @@ package Synth.Values is
 
    --  If VAL is a const, replace it by its value.
    procedure Strip_Const (Val : in out Value_Acc);
+   function Strip_Const (Val : Value_Acc) return Value_Acc;
 
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
                     return Value_Acc;

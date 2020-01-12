@@ -707,6 +707,15 @@ package body Synth.Values is
       end if;
    end Strip_Const;
 
+   function Strip_Const (Val : Value_Acc) return Value_Acc is
+   begin
+      if Val.Kind = Value_Const then
+         return Val.C_Val;
+      else
+         return Val;
+      end if;
+   end Strip_Const;
+
    function Copy (Src : Value_Acc) return Value_Acc;
 
    function Copy_Array (Arr : Value_Array_Acc) return Value_Array_Acc

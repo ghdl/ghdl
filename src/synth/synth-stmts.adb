@@ -479,7 +479,7 @@ package body Synth.Stmts is
                     (+Loc, "cannot assign a net to a static value");
                else
                   pragma Assert (Target.Off = 0);
-                  Assign_Value (Target.Obj, Val, Loc);
+                  Assign_Value (Target.Obj, Strip_Const (Val), Loc);
                end if;
             end if;
          when Target_Memory =>
