@@ -476,6 +476,7 @@ package body Synth.Decls is
          Obj_Type := Get_Value_Type (Syn_Inst, Decl_Type);
          Val := Synth_Expression_With_Type
            (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
+         Val := Synth_Subtype_Conversion (Val, Obj_Type, True, Decl);
          --  For constant functions, the value must be constant.
          pragma Assert (not Get_Instance_Const (Syn_Inst)
                           or else Is_Static (Val));
