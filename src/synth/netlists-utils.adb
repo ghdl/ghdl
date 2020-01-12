@@ -128,6 +128,9 @@ package body Netlists.Utils is
 
    function Is_Const_Net (N : Net) return Boolean is
    begin
+      if Get_Width (N) = 0 then
+         return True;
+      end if;
       return Is_Const_Module (Get_Id (Get_Net_Parent (N)));
    end Is_Const_Net;
 
@@ -146,6 +149,9 @@ package body Netlists.Utils is
                return Uns64 (Va);
             end;
          when others =>
+            if Get_Width (N) = 0 then
+               return 0;
+            end if;
             raise Internal_Error;
       end case;
    end Get_Net_Uns64;
