@@ -148,6 +148,17 @@ package body Netlists.Utils is
                pragma Assert (Shift_Right (Va, Natural (Wd)) = 0);
                return Uns64 (Va);
             end;
+         when Id_Const_SB32 =>
+            declare
+               Va : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+               Wd : constant Natural := Natural (Get_Width (N));
+               Res : Uns64;
+            begin
+               Res := Uns64 (Va);
+               Res := Shift_Left (Res, 64 - Wd);
+               Res := Shift_Right_Arithmetic (Res, 64 - Wd);
+               return Res;
+            end;
          when others =>
             if Get_Width (N) = 0 then
                return 0;
