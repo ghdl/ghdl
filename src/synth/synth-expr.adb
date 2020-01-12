@@ -164,8 +164,8 @@ package body Synth.Expr is
             for I in 0 .. Val.Typ.W - 1 loop
                declare
                   B : constant Uns32 :=
-                    Uns32 (Shift_Right (To_Uns64 (Val.Scal), Natural (I)))
-                    and 1;
+                    Uns32 (Shift_Right (To_Uns64 (Val.Scal), Natural (I))
+                             and 1);
                   Idx : constant Digit_Index := Digit_Index (Off / 32);
                   Pos : constant Natural := Natural (Off mod 32);
                begin
