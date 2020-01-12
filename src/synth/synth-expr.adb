@@ -858,7 +858,7 @@ package body Synth.Expr is
          Val := Synth_Expression_With_Type
            (Syn_Inst, Get_Nth_Element (Els, I), El_Typ);
          pragma Assert (Is_Static (Val));
-         Arr.V (Iir_Index32 (Last - I + 1)) := Val;
+         Arr.V (Iir_Index32 (I + 1)) := Val;
       end loop;
 
       return Create_Value_Const_Array (Res_Type, Arr);
