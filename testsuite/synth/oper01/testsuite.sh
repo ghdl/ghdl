@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in snum01 snum02 snum03 snum04 snum05 cmp01 cmp02 match01; do
+for t in snum01 snum02 snum03 snum04 snum05 cmp01 cmp02 match01 uns01; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t --ieee-asserts=disable-at-0
     clean
