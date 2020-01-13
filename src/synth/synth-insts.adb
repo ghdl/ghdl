@@ -767,6 +767,31 @@ package body Synth.Insts is
       return null;
    end Synth_Type_Of_Object;
 
+   function Synth_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
+                                         Syn_Inst : Synth_Instance_Acc;
+                                         Inter : Node;
+                                         Assoc : Node) return Type_Acc is
+   begin
+      if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
+         --  TODO
+         --  Find the association for this interface
+         --  * if individual assoc: get type
+         --  * if whole assoc: get type from object.
+         if Assoc = Null_Node then
+            raise Internal_Error;
+         end if;
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_By_Expression =>
+               return Synth_Type_Of_Object (Syn_Inst, Get_Actual (Assoc));
+            when others =>
+               raise Internal_Error;
+         end case;
+      else
+         Synth_Declaration_Type (Sub_Inst, Inter);
+         return Get_Value_Type (Sub_Inst, Get_Type (Inter));
+      end if;
+   end Synth_Port_Association_Type;
+
    procedure Synth_Ports_Association_Type (Sub_Inst : Synth_Instance_Acc;
                                            Syn_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
@@ -774,40 +799,26 @@ package body Synth.Insts is
    is
       Inter : Node;
       Assoc : Node;
+      Assoc_Inter : Node;
       Val : Value_Acc;
       Inter_Typ : Type_Acc;
    begin
-      Inter := Inter_Chain;
-      while Is_Valid (Inter) loop
-         if not Is_Fully_Constrained_Type (Get_Type (Inter)) then
-            --  TODO
-            --  Find the association for this interface
-            --  * if individual assoc: get type
-            --  * if whole assoc: get type from object.
-            Assoc := Find_First_Association_For_Interface
-              (Assoc_Chain, Inter_Chain, Inter);
-            if Assoc = Null_Node then
-               raise Internal_Error;
-            end if;
-            case Get_Kind (Assoc) is
-               when Iir_Kind_Association_Element_By_Expression =>
-                  Inter_Typ := Synth_Type_Of_Object
-                    (Syn_Inst, Get_Actual (Assoc));
-               when others =>
-                  raise Internal_Error;
+      Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
+      while Is_Valid (Assoc) loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         if Get_Whole_Association_Flag (Assoc) then
+            Inter_Typ :=  Synth_Port_Association_Type
+              (Sub_Inst, Syn_Inst, Inter, Assoc);
+            case Mode_To_Port_Kind (Get_Mode (Inter)) is
+               when Port_In =>
+                  Val := Create_Value_Net (No_Net, Inter_Typ);
+               when Port_Out =>
+                  Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
             end case;
-         else
-            Synth_Declaration_Type (Sub_Inst, Inter);
-            Inter_Typ := Get_Value_Type (Sub_Inst, Get_Type (Inter));
+            Create_Object (Sub_Inst, Inter, Val);
          end if;
-         case Mode_To_Port_Kind (Get_Mode (Inter)) is
-            when Port_In =>
-               Val := Create_Value_Net (No_Net, Inter_Typ);
-            when Port_Out =>
-               Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
-         end case;
-         Create_Object (Sub_Inst, Inter, Val);
-         Inter := Get_Chain (Inter);
+         Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
    end Synth_Ports_Association_Type;
 
@@ -955,6 +966,7 @@ package body Synth.Insts is
          Actual : Node;
          Inter : Node;
          Inter_Type : Type_Acc;
+         Val : Value_Acc;
       begin
          Assoc := Get_Port_Map_Aspect_Chain (Stmt);
          Assoc_Inter := Get_Port_Chain (Component);
@@ -970,19 +982,17 @@ package body Synth.Insts is
                   raise Internal_Error;
             end case;
 
-            Synth_Declaration_Type (Comp_Inst, Inter);
+            Inter_Type := Synth_Port_Association_Type
+              (Comp_Inst, Syn_Inst, Inter, Assoc);
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
-                  Inter_Type :=
-                    Get_Value_Type (Comp_Inst, Get_Type (Assoc_Inter));
-                  Create_Object (Comp_Inst, Assoc_Inter,
-                                 Synth_Expression_With_Type
-                                   (Syn_Inst, Actual, Inter_Type));
+                  Val := Synth_Expression_With_Type
+                    (Syn_Inst, Actual, Inter_Type);
                when Port_Out =>
-                  Create_Wire_Object (Comp_Inst, Wire_None, Assoc_Inter);
-                  Create_Component_Wire
-                    (Assoc_Inter, Get_Value (Comp_Inst, Assoc_Inter));
+                  Val := Create_Value_Wire (No_Wire_Id, Inter_Type);
+                  Create_Component_Wire (Assoc_Inter, Val);
             end case;
+            Create_Object (Comp_Inst, Assoc_Inter, Val);
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
       end;
@@ -1073,7 +1083,7 @@ package body Synth.Insts is
                      Port := Get_Output (Inst, Nbr_Outputs);
                      Port := Builders.Build_Port (Get_Build (Syn_Inst), Port);
                      O := Create_Value_Net
-                       (Port, Get_Value_Type (Comp_Inst, Get_Type (Inter)));
+                       (Port, Get_Value (Comp_Inst, Inter).Typ);
                      Synth_Assignment (Syn_Inst, Actual, O, Assoc);
                   end if;
                   Nbr_Outputs := Nbr_Outputs + 1;
