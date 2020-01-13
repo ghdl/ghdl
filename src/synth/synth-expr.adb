@@ -464,11 +464,10 @@ package body Synth.Expr is
                      Ch : constant Node := Get_Choice_Range (Assoc);
                      Rng : Discrete_Range_Type;
                      Val : Value_Acc;
-                     W_Rng : Width;
                      Rng_Len : Width;
                      Off : Iir_Index32;
                   begin
-                     Synth_Discrete_Range (Syn_Inst, Ch, Rng, W_Rng);
+                     Synth_Discrete_Range (Syn_Inst, Ch, Rng);
                      if Get_Element_Type_Flag (Assoc) then
                         Val := Create_Value_Discrete
                           (Rng.Left,
@@ -675,13 +674,11 @@ package body Synth.Expr is
 
    procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
                                    Bound : Node;
-                                   Rng : out Discrete_Range_Type;
-                                   W : out Width) is
+                                   Rng : out Discrete_Range_Type) is
    begin
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
             Rng := Synth_Discrete_Range_Expression (Syn_Inst, Bound);
-            W := Discrete_Range_Width (Rng);
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
             if Get_Type_Declarator (Bound) /= Null_Node then
@@ -691,11 +688,10 @@ package body Synth.Expr is
                   --  This is a named subtype, so it has been evaluated.
                   Typ := Get_Value_Type (Syn_Inst, Bound);
                   Rng := Typ.Drange;
-                  W := Typ.W;
                end;
             else
                Synth_Discrete_Range
-                 (Syn_Inst, Get_Range_Constraint (Bound), Rng, W);
+                 (Syn_Inst, Get_Range_Constraint (Bound), Rng);
             end if;
          when Iir_Kind_Range_Array_Attribute =>
             declare
@@ -706,7 +702,6 @@ package body Synth.Expr is
                                            Is_Signed => True,
                                            Left => Int64 (B.Left),
                                            Right => Int64 (B.Right));
-               W := B.Wbounds;
             end;
          when others =>
             Error_Kind ("synth_discrete_range", Bound);
@@ -747,11 +742,9 @@ package body Synth.Expr is
                                      Atype : Node) return Bound_Type
    is
       Rng : Discrete_Range_Type;
-      W : Width;
    begin
-      Synth_Discrete_Range (Syn_Inst, Atype, Rng, W);
+      Synth_Discrete_Range (Syn_Inst, Atype, Rng);
       return (Dir => Rng.Dir,
-              Wbounds => W,
               Left => Int32 (Rng.Left), Right => Int32 (Rng.Right),
               Len => Get_Range_Length (Rng));
    end Synth_Bounds_From_Range;
@@ -1051,8 +1044,10 @@ package body Synth.Expr is
       Idx2 : Net;
       Off : Net;
       Right : Net;
+      Wbounds : Width;
    begin
-      Idx2 := Synth_Resize (Idx_Val, Bnd.Wbounds, Loc);
+      Wbounds := Clog2 (Bnd.Len);
+      Idx2 := Synth_Resize (Idx_Val, Wbounds, Loc);
 
       if Bnd.Right = 0 and then Bnd.Dir = Iir_Downto then
          --  Simple case without adjustments.
@@ -1060,7 +1055,7 @@ package body Synth.Expr is
       end if;
 
       Right := Build_Const_UB32 (Build_Context, To_Uns32 (Bnd.Right),
-                                 Bnd.Wbounds);
+                                 Wbounds);
       Set_Location (Right, Loc);
 
       case Bnd.Dir is
@@ -1362,7 +1357,6 @@ package body Synth.Expr is
          end case;
       end if;
       Res_Bnd := (Dir => Pfx_Bnd.Dir,
-                  Wbounds => Pfx_Bnd.Wbounds,
                   Len => Len,
                   Left => Int32 (L),
                   Right => Int32 (R));
@@ -1397,9 +1391,8 @@ package body Synth.Expr is
          when Iir_Kind_Range_Array_Attribute =>
             declare
                Rng : Discrete_Range_Type;
-               W : Width;
             begin
-               Synth_Discrete_Range (Syn_Inst, Expr, Rng, W);
+               Synth_Discrete_Range (Syn_Inst, Expr, Rng);
                Inp := No_Net;
                Synth_Slice_Const_Suffix (Syn_Inst, Expr,
                                          Name, Pfx_Bnd,

@@ -56,12 +56,6 @@ package Synth.Values is
       Left : Int32;
       Right : Int32;
       Len : Width;
-
-      --  Width of bounds.  This is the precision used to compute the
-      --  address.
-      --  If bounds are 1 to 128 (so left = 1, dir = to, right = 128),
-      --  Wbounds = 8.
-      Wbounds : Width;
    end record;
 
    type Bound_Array_Type is array (Iir_Index32 range <>) of Bound_Type;

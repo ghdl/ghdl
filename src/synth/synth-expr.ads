@@ -92,8 +92,7 @@ package Synth.Expr is
 
    procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;
                                    Bound : Node;
-                                   Rng : out Discrete_Range_Type;
-                                   W : out Width);
+                                   Rng : out Discrete_Range_Type);
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;

@@ -1095,12 +1095,10 @@ package body Synth.Stmts is
             when Iir_Kind_Choice_By_Range =>
                declare
                   Bnd : Discrete_Range_Type;
-                  W : Width;
-                  pragma Unreferenced (W);
                   Is_In : Boolean;
                begin
                   Synth_Discrete_Range
-                    (C.Inst, Get_Choice_Range (Choice), Bnd, W);
+                    (C.Inst, Get_Choice_Range (Choice), Bnd);
                   case Bnd.Dir is
                      when Iir_To =>
                         Is_In := Sel >= Bnd.Left and Sel <= Bnd.Right;

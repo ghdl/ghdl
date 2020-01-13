@@ -148,14 +148,12 @@ package body Synth.Oper is
    is
       Res : Bound_Type;
       Index_Bounds : Discrete_Range_Type;
-      W : Width;
    begin
-      Synth_Discrete_Range (Syn_Inst, Atype, Index_Bounds, W);
+      Synth_Discrete_Range (Syn_Inst, Atype, Index_Bounds);
 
       Res := (Left => Int32 (Index_Bounds.Left),
               Right => 0,
               Dir => Index_Bounds.Dir,
-              Wbounds => W,
               Len => Uns32 (Len));
 
       if Len = 0 then

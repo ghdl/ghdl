@@ -300,12 +300,9 @@ package body Synth.Values is
    end Create_Slice_Type;
 
    function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
-                                      return Type_Acc
-   is
-      W : constant Width := Uns32 (Clog2 (Uns64 (Len)));
+                                      return Type_Acc is
    begin
       return Create_Vector_Type ((Dir => Iir_Downto,
-                                  Wbounds => W,
                                   Left => Int32 (Len) - 1,
                                   Right => 0,
                                   Len => Len),

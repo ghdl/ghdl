@@ -245,10 +245,9 @@ package body Synth.Decls is
    function Synth_Discrete_Range_Constraint
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
    is
-      W : Width;
       Res : Discrete_Range_Type;
    begin
-      Synth_Discrete_Range (Syn_Inst, Rng, Res, W);
+      Synth_Discrete_Range (Syn_Inst, Rng, Res);
       return Res;
    end Synth_Discrete_Range_Constraint;
 
