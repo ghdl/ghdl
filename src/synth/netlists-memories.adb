@@ -796,7 +796,8 @@ package body Netlists.Memories is
               | Id_Isignal =>
                Res := Inst;
                Nbr_Sig := Nbr_Sig + 1;
-            when Id_Dff =>
+            when Id_Dff
+              | Id_Idff =>
                if Get_Next_Sink (Inp) = No_Input
                  and then Get_First_Sink (First) = Inp
                then
