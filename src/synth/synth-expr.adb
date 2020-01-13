@@ -972,7 +972,8 @@ package body Synth.Expr is
                        return Value_Acc is
    begin
       case Get_Kind (Name) is
-         when Iir_Kind_Simple_Name =>
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
             return Synth_Name (Syn_Inst, Get_Named_Entity (Name));
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
@@ -1764,6 +1765,7 @@ package body Synth.Expr is
                end if;
             end;
          when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name
            | Iir_Kind_Interface_Signal_Declaration --  For PSL.
            | Iir_Kind_Signal_Declaration =>  -- For PSL.
             return Synth_Name (Syn_Inst, Expr);
