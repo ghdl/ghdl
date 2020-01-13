@@ -1137,53 +1137,61 @@ package body Netlists.Disp_Vhdl is
       --  There are as many signals as gate outputs.
       for Inst of Instances (M) loop
          Id := Get_Id (Inst);
-         if Id = Id_Memory or Id = Id_Memory_Init then
-            null;
-         elsif Id = Id_Mem_Wr_Sync then
-            null;
-         elsif Id = Id_Mem_Rd then
-            declare
-               N : constant Net := Get_Output (Inst, 1);
-            begin
-               Put ("  signal ");
-               Disp_Net_Name (N);
-               Put (" : ");
-               Put_Type (Get_Width (N));
-               Put_Line (";");
-            end;
-         elsif not Is_Self_Instance (Inst)
-           and then not (Flag_Merge_Lit
-                           and then Id in Constant_Module_Id
-                           and then not Need_Signal (Inst))
-           and then Id < Id_User_None
-         then
-            for N of Outputs (Inst) loop
-               if Id in Constant_Module_Id then
-                  Put ("  constant ");
-               else
+         case Id is
+            when Id_Memory
+              | Id_Memory_Init =>
+               --  For memories: skip the chain.
+               null;
+            when Id_Mem_Wr_Sync =>
+               --  For memories: skip the chain.
+               null;
+            when Id_Mem_Rd
+              | Id_Mem_Rd_Sync =>
+               --  For memories: skip the chain.
+               declare
+                  N : constant Net := Get_Output (Inst, 1);
+               begin
                   Put ("  signal ");
+                  Disp_Net_Name (N);
+                  Put (" : ");
+                  Put_Type (Get_Width (N));
+                  Put_Line (";");
+               end;
+            when others =>
+               if not Is_Self_Instance (Inst)
+                 and then not (Flag_Merge_Lit
+                                 and then Id in Constant_Module_Id
+                                 and then not Need_Signal (Inst))
+                 and then Id < Id_User_None
+               then
+                  for N of Outputs (Inst) loop
+                     if Id in Constant_Module_Id then
+                        Put ("  constant ");
+                     else
+                        Put ("  signal ");
+                     end if;
+                     Disp_Net_Name (N);
+                     Put (" : ");
+                     Put_Type (Get_Width (N));
+                     case Id is
+                        when Id_Idff =>
+                           Put (" := ");
+                           Disp_Constant_Inline
+                             (Get_Net_Parent (Get_Input_Net (Inst, 2)));
+                        when Id_Iadff =>
+                           Put (" := ");
+                           Disp_Constant_Inline
+                             (Get_Net_Parent (Get_Input_Net (Inst, 4)));
+                        when Constant_Module_Id =>
+                           Put (" := ");
+                           Disp_Constant_Inline (Inst);
+                        when others =>
+                           null;
+                     end case;
+                     Put_Line (";");
+                  end loop;
                end if;
-               Disp_Net_Name (N);
-               Put (" : ");
-               Put_Type (Get_Width (N));
-               case Id is
-                  when Id_Idff =>
-                     Put (" := ");
-                     Disp_Constant_Inline
-                       (Get_Net_Parent (Get_Input_Net (Inst, 2)));
-                  when Id_Iadff =>
-                     Put (" := ");
-                     Disp_Constant_Inline
-                       (Get_Net_Parent (Get_Input_Net (Inst, 4)));
-                  when Constant_Module_Id =>
-                     Put (" := ");
-                     Disp_Constant_Inline (Inst);
-                  when others =>
-                     null;
-               end case;
-               Put_Line (";");
-            end loop;
-         end if;
+         end case;
       end loop;
    end Disp_Architecture_Declarations;
 
