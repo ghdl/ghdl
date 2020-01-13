@@ -761,6 +761,26 @@ package body Synth.Insts is
             end;
          when Iir_Kind_Simple_Name =>
             return Synth_Type_Of_Object (Syn_Inst, Get_Named_Entity (Expr));
+         when Iir_Kind_Slice_Name =>
+            declare
+               Pfx_Typ : Type_Acc;
+               Pfx_Bnd : Bound_Type;
+               El_Typ : Type_Acc;
+               Res_Bnd : Bound_Type;
+               Sl_Voff : Net;
+               Sl_Off : Uns32;
+               Wd : Uns32;
+            begin
+               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
+               Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
+               Synth_Slice_Suffix (Syn_Inst, Expr, Pfx_Bnd, El_Typ.W,
+                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
+
+               if Sl_Voff /= No_Net then
+                  raise Internal_Error;
+               end if;
+               return Create_Onedimensional_Array_Subtype (Pfx_Typ, Res_Bnd);
+            end;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_type_of_object", Expr);
       end case;
