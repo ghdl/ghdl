@@ -322,6 +322,7 @@ package body Netlists is
          Instances_Table.Table (M_Ent.Last_Instance).Next_Instance := Inst;
       end if;
       Instances_Table.Table (Inst).Prev_Instance := M_Ent.Last_Instance;
+      Instances_Table.Table (Inst).Next_Instance := No_Instance;
       M_Ent.Last_Instance := Inst;
    end Append_Instance;
 

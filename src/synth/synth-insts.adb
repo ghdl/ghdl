@@ -1403,7 +1403,8 @@ package body Synth.Insts is
       --  a correctness point: there might be some unsynthesizable gates, like
       --  the one created for 'rising_egde (clk) and not rst'.
       if not Synth.Flags.Flag_Debug_Nocleanup then
-         Netlists.Cleanup.Remove_Unconnected_Instances (Inst.M);
+         --  Netlists.Cleanup.Remove_Unconnected_Instances (Inst.M);
+         Netlists.Cleanup.Mark_And_Sweep (Inst.M);
          Netlists.Cleanup.Remove_Output_Gates (Inst.M);
       end if;
 

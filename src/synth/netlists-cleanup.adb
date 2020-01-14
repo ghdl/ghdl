@@ -141,4 +141,123 @@ package body Netlists.Cleanup is
       end loop;
    end Remove_Output_Gates;
 
+   procedure Insert_Mark_And_Sweep (Inspect : in out Instance_Tables.Instance;
+                                    Inst : Instance) is
+   begin
+      if not Get_Mark_Flag (Inst) then
+         Set_Mark_Flag (Inst, True);
+         Instance_Tables.Append (Inspect, Inst);
+      end if;
+   end Insert_Mark_And_Sweep;
+
+   procedure Mark_And_Sweep (M : Module)
+   is
+      use Netlists.Gates;
+      Inspect : Instance_Tables.Instance;
+
+      Inst : Instance;
+      Inp : Input;
+   begin
+      Instance_Tables.Init (Inspect, 64);
+
+      --  1.  Check instances are not marked.
+      --  1.1 Insert assertion gates.
+      Inst := Get_First_Instance (M);
+      while Inst /= No_Instance loop
+         pragma Assert (Get_Mark_Flag (Inst) = False);
+
+         case Get_Id (Inst) is
+            when Id_Assert
+              | Id_Assume
+              | Id_Cover
+              | Id_Assert_Cover =>
+               Insert_Mark_And_Sweep (Inspect, Inst);
+            when others =>
+               null;
+         end case;
+         Inst := Get_Next_Instance (Inst);
+      end loop;
+
+      --  1.2 Insert output drivers.
+      --      This corresponds to the input of the self instance.
+      Insert_Mark_And_Sweep (Inspect, Get_Self_Instance (M));
+
+      --  2. While the table is not empty, extract an element and insert
+      --     all the input drivers.
+      loop
+         declare
+            Idx : Int32;
+            N : Net;
+         begin
+            Idx := Instance_Tables.Last (Inspect);
+            exit when Idx < Instance_Tables.First;
+            Inst := Inspect.Table (Idx);
+            Instance_Tables.Decrement_Last (Inspect);
+
+            for I in 1 .. Get_Nbr_Inputs (Inst) loop
+               N := Get_Input_Net (Inst, I - 1);
+               if N /= No_Net then
+                  Insert_Mark_And_Sweep (Inspect, Get_Net_Parent (N));
+               end if;
+            end loop;
+         end;
+      end loop;
+
+      --  3.  Remove unused instances; unmark used instances.
+      Instance_Tables.Free (Inspect);
+      declare
+         Next_Inst : Instance;
+         First_Unused : Instance;
+         Last_Unused : Instance;
+      begin
+         First_Unused := No_Instance;
+
+         Extract_All_Instances (M, Inst);
+         --  But keep the self-instance.
+         pragma Assert (Get_Mark_Flag (Inst));
+         Set_Mark_Flag (Inst, False);
+         Next_Inst := Get_Next_Instance (Inst);
+         Append_Instance (M, Inst);
+         Inst := Next_Inst;
+         while Inst /= No_Instance loop
+            Next_Inst := Get_Next_Instance (Inst);
+            if Get_Mark_Flag (Inst) then
+               --  Instance was marked, keept it.
+               Set_Mark_Flag (Inst, False);
+               Append_Instance (M, Inst);
+            else
+               --  Instance was not marked, disconnect it.
+               for I in 1 .. Get_Nbr_Inputs (Inst) loop
+                  Inp := Get_Input (Inst, I - 1);
+                  if Get_Driver (Inp) /= No_Net then
+                     --  Disconnect the input.
+                     Disconnect (Inp);
+                  end if;
+               end loop;
+
+               if First_Unused = No_Instance then
+                  First_Unused := Inst;
+               else
+                  Set_Next_Instance (Last_Unused, Inst);
+               end if;
+               Last_Unused := Inst;
+            end if;
+            Inst := Next_Inst;
+         end loop;
+
+         --  Free unused instances.  This must be done at the end so that
+         --  their outputs are disconnected.
+         if First_Unused /= No_Instance then
+            Set_Next_Instance (Last_Unused, No_Instance);
+            loop
+               Inst := First_Unused;
+               exit when Inst = No_Instance;
+               First_Unused := Get_Next_Instance (Inst);
+
+               Free_Instance (Inst);
+            end loop;
+         end if;
+      end;
+   end Mark_And_Sweep;
+
 end Netlists.Cleanup;

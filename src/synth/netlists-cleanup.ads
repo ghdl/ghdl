@@ -24,6 +24,10 @@ package Netlists.Cleanup is
    --  that are also removed.
    procedure Remove_Unconnected_Instances (M : Module);
 
+   --  Stronger version of Remove_Unconnected_Instances: use a mark and
+   --  sweep algorithm.
+   procedure Mark_And_Sweep (M : Module);
+
    --  Remove Id_Output gates.
    procedure Remove_Output_Gates (M : Module);
 end Netlists.Cleanup;
