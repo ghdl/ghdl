@@ -1,5 +1,6 @@
 .. program:: ghdl
-.. FOREIGN:
+
+.. _USING:Foreign:
 
 Interfacing to other languages
 ##############################
