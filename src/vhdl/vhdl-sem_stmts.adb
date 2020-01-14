@@ -1117,6 +1117,15 @@ package body Vhdl.Sem_Stmts is
             if Flags.Vhdl_Std >= Vhdl_08 then
                --  No specific restrictions in vhdl 2008.
                null;
+            elsif Flags.Flag_Relaxed_Rules then
+               --  In relaxed mode, only check staticness of the expression
+               --  subtype, as the type of a prefix may not be locally static
+               --  while the type of the expression is.
+               if Get_Type_Staticness (Choice_Type) /= Locally then
+                  Error_Msg_Sem
+                    (+Choice, "choice subtype is not locally static");
+                  return;
+               end if;
             else
                if not Check_Odcat_Expression (Choice) then
                   return;
