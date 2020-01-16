@@ -447,12 +447,12 @@ package body Synth.Decls is
       Cst : Value_Acc;
       Obj_Type : Type_Acc;
    begin
+      Synth_Declaration_Type (Syn_Inst, Decl);
       if Deferred_Decl = Null_Node
         or else Get_Deferred_Declaration_Flag (Decl)
       then
          --  Create the object (except for full declaration of a
          --  deferred constant).
-         Synth_Declaration_Type (Syn_Inst, Decl);
          Create_Object (Syn_Inst, Decl, null);
       end if;
       --  Initialize the value (except for a deferred declaration).

@@ -756,6 +756,9 @@ package body Vhdl.Annotations is
                --  declaration.
                Annotate_Declaration_Type (Block_Info, Decl);
                Create_Object_Info (Block_Info, Decl);
+            elsif Flag_Synthesis then
+               --  Always create the slot for the subtype.
+               Annotate_Declaration_Type (Block_Info, Decl);
             end if;
 
          when Iir_Kind_File_Declaration =>
