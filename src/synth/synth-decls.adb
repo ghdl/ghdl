@@ -457,10 +457,13 @@ package body Synth.Decls is
       end if;
       --  Initialize the value (except for a deferred declaration).
       if Deferred_Decl = Null_Node then
+         --  A normal constant declaration
          First_Decl := Decl;
       elsif not Get_Deferred_Declaration_Flag (Decl) then
+         --  The full declaration of a deferred constant.
          First_Decl := Deferred_Decl;
       else
+         --  The first declaration of a deferred constant.
          First_Decl := Null_Node;
       end if;
       if First_Decl /= Null_Node then
