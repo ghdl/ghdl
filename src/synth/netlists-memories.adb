@@ -1262,6 +1262,130 @@ package body Netlists.Memories is
       Len := Idx2 - Idx;
    end Off_Array_To_Idx;
 
+   type Copy_Mode_Type is (Copy_Mode_Bit, Copy_Mode_Val, Copy_Mode_Zx);
+
+   procedure Copy_Const_Content (Src : Instance;
+                                 Src_Off : Width;
+                                 Src_Wd : Width;
+                                 Dst : Instance;
+                                 Dst_Wd : Width;
+                                 Depth : Uns32;
+                                 Mode : Copy_Mode_Type)
+   is
+      function Off_To_Param (Off : Uns32) return Param_Idx
+      is
+         Res : constant Param_Idx := Param_Idx (Off / 32);
+      begin
+         case Mode is
+            when Copy_Mode_Bit =>
+               return Res;
+            when Copy_Mode_Val =>
+               return Res * 2;
+            when Copy_Mode_Zx =>
+               return Res * 2 + 1;
+         end case;
+      end Off_To_Param;
+
+      Boff : Uns32;
+      Nbits : Uns32;
+      Word_Idx : Param_Idx;
+      Word_Off : Uns32;
+
+      Soff : Uns32;
+      Slen : Uns32;
+      Sval : Uns32;
+
+      Doff : Uns32;
+      Dlen : Uns32;
+      Dval : Uns32;
+   begin
+      Boff := Src_Off;
+      Doff := 0;
+      for I in 0 .. Depth - 1 loop
+         Nbits := Dst_Wd;
+         Soff := Boff;
+         while Nbits > 0 loop
+            --  Try to read as much as possible.
+            Word_Idx := Off_To_Param (Soff);
+            Word_Off := Soff mod 32;
+            Slen := 32 - Word_Off;
+            if Slen > Nbits then
+               Slen := Nbits;
+            end if;
+            Sval := Get_Param_Uns32 (Src, Word_Idx);
+            --  Reframe (put at bit 0, mask extra bits).
+            Sval := Shift_Right (Sval, Natural (Word_Off));
+            Sval := Sval and Shift_Right (16#ffff_ffff#,
+                                          Natural (32 - Slen));
+
+            Soff := Soff + Slen;
+            Nbits := Nbits - Slen;
+
+            --  Store.
+            while Slen > 0 loop
+               Word_Idx := Off_To_Param (Doff);
+               Word_Off := Doff mod 32;
+               Dlen := 32 - Word_Off;
+               if Dlen > Slen then
+                  Dlen := Slen;
+               end if;
+               Dval := Sval and Shift_Right (16#ffff_ffff#,
+                                             Natural (32 - Dlen));
+               Dval := Shift_Left (Dval, Natural (Word_Off));
+               Dval := Dval or Get_Param_Uns32 (Dst, Word_Idx);
+               Set_Param_Uns32 (Dst, Word_Idx, Dval);
+
+               Sval := Shift_Right (Sval, Natural (Dlen));
+               Slen := Slen - Dlen;
+               Doff := Doff + Dlen;
+            end loop;
+         end loop;
+         Boff := Boff + Src_Wd;
+      end loop;
+   end Copy_Const_Content;
+
+   --  From constant net CST (used to initialize a memory), extract DEPTH sub
+   --  words (bits OFF:OFF + WD - 1).
+   --  Used when memories are split.
+   function Extract_Sub_Constant (Ctxt : Context_Acc;
+                                  Cst : Instance;
+                                  Cst_Wd : Uns32;
+                                  Off : Uns32;
+                                  Wd : Uns32;
+                                  Depth : Uns32) return Net
+   is
+      pragma Assert (Depth /= 0);
+      Mem_Wd : constant Width := Wd * Depth;
+      Res : Instance;
+   begin
+      case Get_Id (Cst) is
+         when Id_Const_Bit =>
+            Res := Build_Const_Bit (Ctxt, Mem_Wd);
+            Copy_Const_Content (Cst, Off, Cst_Wd, Res, Wd, Depth,
+                                Copy_Mode_Bit);
+            return Get_Output (Res, 0);
+         when Id_Const_Log =>
+            Res := Build_Const_Log (Ctxt, Mem_Wd);
+            Copy_Const_Content (Cst, Off, Cst_Wd, Res, Wd, Depth,
+                                Copy_Mode_Val);
+            Copy_Const_Content (Cst, Off, Cst_Wd, Res, Wd, Depth,
+                                Copy_Mode_Zx);
+            return Get_Output (Res, 0);
+         when Id_Const_UB32 =>
+            declare
+               N : Net;
+            begin
+               N := Build_Const_UB32 (Ctxt, 0, Mem_Wd);
+               Copy_Const_Content
+                 (Cst, Off, Cst_Wd, Get_Net_Parent (N), Wd, Depth,
+                  Copy_Mode_Bit);
+               return N;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Extract_Sub_Constant;
+
    procedure Convert_To_Memory (Ctxt : Context_Acc; Sig : Instance)
    is
       --  Size of RAM (in bits).
@@ -1451,15 +1575,18 @@ package body Netlists.Memories is
       --  4. Create Memory/Memory_Init from signal/isignal.
       for I in 1 .. Nbr_Offs - 1 loop
          declare
-            Wd : constant Width := (Offs (I + 1) - Offs (I)) * Mem_Depth;
+            Data_Wd : constant Width := Offs (I + 1) - Offs (I);
+            Mem_Wd : constant Width := Data_Wd * Mem_Depth;
          begin
             case Get_Id (Sig) is
                when Id_Isignal =>
                   Heads (I) := Build_Memory_Init
-                    (Ctxt, Wd, Build2_Extract (Ctxt, Get_Input_Net (Sig, 1),
-                                               Offs (I), Wd));
+                    (Ctxt, Mem_Wd,
+                     Extract_Sub_Constant
+                       (Ctxt, Get_Input_Instance (Sig, 1),
+                        Mem_W, Offs (I), Data_Wd, Mem_Depth));
                when Id_Signal =>
-                  Heads (I) := Build_Memory (Ctxt, Wd);
+                  Heads (I) := Build_Memory (Ctxt, Mem_Wd);
                when others =>
                   raise Internal_Error;
             end case;
