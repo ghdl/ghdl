@@ -402,11 +402,12 @@ package body Netlists.Disp_Vhdl is
    is
       Q : constant Character := Get_Lit_Quote (W);
    begin
-      for I in 0 .. Depth - 1 loop
-         if I = 0 then
-            Put ("      (");
+      for I in reverse 0 .. Depth - 1 loop
+         Put ("      ");
+         if I = Depth - 1 then
+            Put ("(");
          else
-            Put ("       ");
+            Put (" ");
          end if;
          Put_Uns32 (I);
          Put (" => ");
@@ -415,7 +416,7 @@ package body Netlists.Disp_Vhdl is
             Disp_Const_Bit (Val, I * W + J);
          end loop;
          Put (Q);
-         if I /= Depth - 1 then
+         if I /= 0 then
             Put_Line (",");
          else
             Put_Line (");");
