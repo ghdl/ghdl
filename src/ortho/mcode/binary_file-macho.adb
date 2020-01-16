@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Macho; use Macho;
-with Macho_Arch32; use Macho_Arch32;
+with Macho_Arch64; use Macho_Arch64;
 
 package body Binary_File.Macho is
    procedure Write (Fd : GNAT.OS_Lib.File_Descriptor)
