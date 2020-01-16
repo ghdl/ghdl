@@ -340,14 +340,13 @@ package body Synth.Inference is
    end Is_Prev_FF_Value;
 
    --  LAST_MUX is the mux whose input 0 is the loop and clock for selector.
-   procedure Infere_FF (Ctxt : Context_Acc;
-                        Wid : Wire_Id;
-                        Prev_Val : Net;
-                        Off : Uns32;
-                        Last_Mux : Instance;
-                        Clk : Net;
-                        Clk_Enable : Net;
-                        Stmt : Source.Syn_Src)
+   function Infere_FF (Ctxt : Context_Acc;
+                       Prev_Val : Net;
+                       Off : Uns32;
+                       Last_Mux : Instance;
+                       Clk : Net;
+                       Clk_Enable : Net;
+                       Stmt : Source.Syn_Src) return Net
    is
       O : constant Net := Get_Output (Last_Mux, 0);
       Data : Net;
@@ -527,7 +526,7 @@ package body Synth.Inference is
 
       Free_Instance (Last_Mux);
 
-      Add_Conc_Assign (Wid, Res, Off, Stmt);
+      return Res;
    end Infere_FF;
 
    --  Detect false combinational loop.  They can easily appear when variables
@@ -610,21 +609,16 @@ package body Synth.Inference is
       return Res;
    end Is_False_Loop;
 
-   procedure Infere_Latch (Ctxt : Context_Acc;
-                           Wid : Wire_Id;
-                           Val : Net;
-                           Off : Uns32;
-                           Prev_Val : Net;
-                           Stmt : Source.Syn_Src)
+   function Infere_Latch (Ctxt : Context_Acc;
+                          Val : Net;
+                          Prev_Val : Net;
+                          Stmt : Source.Syn_Src) return Net
    is
-      X : Net;
       Name : Sname;
    begin
       --  In case of false loop, do not close the loop but assign X.
       if Is_False_Loop (Prev_Val) then
-         X := Build_Const_X (Ctxt, Get_Width (Val));
-         Connect (Get_Input (Get_Net_Parent (Prev_Val), 0), X);
-         return;
+         return Build_Const_X (Ctxt, Get_Width (Val));
       end if;
 
       --  Latch or combinational loop.
@@ -653,7 +647,7 @@ package body Synth.Inference is
       end if;
       Error_Msg_Synth (+Stmt, "latch infered for net %n", +Name);
 
-      Add_Conc_Assign (Wid, Val, Off, Stmt);
+      return Val;
    end Infere_Latch;
 
    --  Note: PREV_VAL is the wire gate, so with full width and no offset.
@@ -671,6 +665,7 @@ package body Synth.Inference is
       Sel : Input;
       Clk : Net;
       Enable : Net;
+      Res : Net;
    begin
       if not Flags.Flag_Debug_Noinference then
          if Get_First_Sink (Prev_Val) = No_Input then
@@ -685,18 +680,21 @@ package body Synth.Inference is
       end if;
       if Len <= 0 then
          --  No logical loop or self assignment.
-         Add_Conc_Assign (Wid, Val, Off, Stmt);
+         Res := Val;
       else
          --  So there is a logical loop.
          Sel := Get_Mux2_Sel (Last_Mux);
          Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
          if Clk = No_Net then
             --  No clock -> latch or combinational loop
-            Infere_Latch (Ctxt, Wid, Val, Off, Prev_Val, Stmt);
+            Res := Infere_Latch (Ctxt, Val, Prev_Val, Stmt);
          else
             --  Clock -> FF
-            Infere_FF (Ctxt, Wid, Prev_Val, Off, Last_Mux, Clk, Enable, Stmt);
+            Res := Infere_FF (Ctxt, Prev_Val, Off, Last_Mux,
+                              Clk, Enable, Stmt);
          end if;
       end if;
+
+      Add_Conc_Assign (Wid, Res, Off, Stmt);
    end Infere;
 end Synth.Inference;
