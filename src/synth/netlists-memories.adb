@@ -1084,7 +1084,7 @@ package body Netlists.Memories is
       --           \_|---------------------/
       --
       --  The dyn_insert can be on one input or the other of the mux.
-      --  The important point is that the output od the dyn_insert is connected
+      --  The important point is that the output of the dyn_insert is connected
       --  only to the mux, while the other mux input is connected to two nodes.
       --
       --  There can be several dyn_inserts in a raw, like this:
