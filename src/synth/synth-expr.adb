@@ -18,7 +18,6 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Ada.Unchecked_Conversion;
 with Types_Utils; use Types_Utils;
 with Std_Names;
 with Str_Table;
