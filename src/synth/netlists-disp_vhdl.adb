@@ -155,7 +155,6 @@ package body Netlists.Disp_Vhdl is
       Imod : constant Module := Get_Module (Inst);
       Idx : Port_Idx;
       Max_Idx : Port_Idx;
-      P_Idx : Param_Idx;
       Name : Sname;
       First : Boolean;
    begin
@@ -181,19 +180,14 @@ package body Netlists.Disp_Vhdl is
 
       if Get_Nbr_Params (Imod) /= 0 then
          Put_Line (" generic map (");
-         First := True;
-         Idx := 0;
-         for P in Params (Inst) loop
-            if First then
-               First := False;
-            else
+         for P in 1 .. Get_Nbr_Params (Inst) loop
+            if P > 1 then
                Put_Line (",");
             end if;
             Put ("    ");
-            P_Idx := Get_Param_Idx (P);
-            Put_Interface_Name (Get_Param_Desc (Imod, P_Idx).Name);
+            Put_Interface_Name (Get_Param_Desc (Imod, P - 1).Name);
             Put (" => ");
-            Put_Uns32 (Get_Param_Uns32 (Inst, P_Idx));
+            Put_Uns32 (Get_Param_Uns32 (Inst, P - 1));
          end loop;
          Put_Line (")");
          Put_Line ("    port map (");
