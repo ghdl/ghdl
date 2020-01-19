@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - run: |
-        TASK=buster+mcode ./dist/ci-run.sh -c --gpl
+        TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
 
   linux:
     strategy:
