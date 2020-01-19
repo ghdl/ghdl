@@ -264,6 +264,17 @@ package body Synth.Oper is
          return Create_Value_Net (N, Boolean_Type);
       end Synth_Compare_Sgn_Int;
 
+      function Synth_Compare_Int_Sgn (Id : Compare_Module_Id)
+                                     return Value_Acc
+      is
+         N : Net;
+      begin
+         N := Synth_Sresize (Left, Right.Typ.W, Expr);
+         N := Build_Compare (Build_Context, Id, N, Get_Net (Right));
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Boolean_Type);
+      end Synth_Compare_Int_Sgn;
+
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
       is
          N : Net;
@@ -588,6 +599,9 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
             --  "=" (Signed, Signed) [resize]
             return Synth_Compare_Sgn_Sgn (Id_Eq);
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn =>
+            --  "=" (Integer, Signed)
+            return Synth_Compare_Int_Sgn (Id_Eq);
 
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv =>
@@ -596,6 +610,15 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat =>
             --  "/=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Ne);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn =>
+            --  "/=" (Signed, Signed) [resize]
+            return Synth_Compare_Sgn_Sgn (Id_Ne);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int =>
+            --  "/=" (Signed, Integer)
+            return Synth_Compare_Sgn_Int (Id_Ne);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn =>
+            --  "/=" (Integer, Signed)
+            return Synth_Compare_Int_Sgn (Id_Ne);
 
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
             --  "<" (Unsigned, Natural)
@@ -611,6 +634,12 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn =>
             --  "<" (Signed, Signed) [resize]
             return Synth_Compare_Sgn_Sgn (Id_Slt);
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Int =>
+            --  "<" (Signed, Integer)
+            return Synth_Compare_Sgn_Int (Id_Slt);
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Int_Sgn =>
+            --  "<" (Integer, Signed)
+            return Synth_Compare_Int_Sgn (Id_Slt);
 
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
@@ -619,6 +648,15 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
             --  "<=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Ule);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn =>
+            --  "<=" (Signed, Signed)
+            return Synth_Compare_Sgn_Sgn (Id_Sle);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int =>
+            --  "<=" (Signed, Integer)
+            return Synth_Compare_Sgn_Int (Id_Sle);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn =>
+            --  "<=" (Integer, Signed)
+            return Synth_Compare_Int_Sgn (Id_Sle);
 
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
             --  ">" (Unsigned, Natural)
@@ -630,6 +668,12 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn =>
             --  ">" (Signed, Signed) [resize]
             return Synth_Compare_Sgn_Sgn (Id_Sgt);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int =>
+            --  ">" (Signed, Integer)
+            return Synth_Compare_Sgn_Int (Id_Sgt);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn =>
+            --  ">=" (Integer, Signed)
+            return Synth_Compare_Int_Sgn (Id_Sgt);
 
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
@@ -638,6 +682,15 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat =>
             --  ">=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Uge);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn =>
+            --  ">=" (Signed, Signed) [resize]
+            return Synth_Compare_Sgn_Sgn (Id_Sge);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int =>
+            --  ">=" (Signed, Integer)
+            return Synth_Compare_Sgn_Int (Id_Sge);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn =>
+            --  ">=" (Integer, Signed)
+            return Synth_Compare_Int_Sgn (Id_Sge);
 
          when Iir_Predefined_Array_Element_Concat =>
             declare
@@ -947,26 +1000,29 @@ package body Synth.Oper is
       return Create_Value_Net (Res, Boolean_Type);
    end Synth_Std_Match;
 
-   function Eval_To_Unsigned (Arg : Int64; Sz : Int64; Res_Type : Type_Acc)
+   function Eval_To_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
                              return Value_Acc
    is
       Len : constant Iir_Index32 := Iir_Index32 (Sz);
       El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
       Arr : Value_Array_Acc;
       Bnd : Type_Acc;
+      B : Uns64;
    begin
       Arr := Create_Value_Array (Len);
       for I in 1 .. Len loop
+         B := Shift_Right_Arithmetic (Arg, Natural (I - 1)) and 1;
          Arr.V (Len - I + 1) := Create_Value_Discrete
-           (Std_Logic_0_Pos + (Arg / 2 ** Natural (I - 1)) mod 2, El_Type);
+           (Std_Logic_0_Pos + Int64 (B), El_Type);
       end loop;
       Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
       return Create_Value_Const_Array (Bnd, Arr);
-   end Eval_To_Unsigned;
+   end Eval_To_Vector;
 
    function Synth_Predefined_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Imp  : constant Node := Get_Implementation (Expr);
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
@@ -1005,7 +1061,7 @@ package body Synth.Oper is
                Edge : Net;
             begin
                Clk := Get_Net (Get_Value (Subprg_Inst, Param1));
-               Edge := Build_Edge (Build_Context, Clk);
+               Edge := Build_Edge (Ctxt, Clk);
                return Create_Value_Net (Edge, Boolean_Type);
             end;
          when Iir_Predefined_Ieee_1164_Falling_Edge =>
@@ -1014,8 +1070,8 @@ package body Synth.Oper is
                Edge : Net;
             begin
                Clk := Get_Net (Get_Value (Subprg_Inst, Param1));
-               Clk := Build_Monadic (Build_Context, Id_Not, Clk);
-               Edge := Build_Edge (Build_Context, Clk);
+               Clk := Build_Monadic (Ctxt, Id_Not, Clk);
+               Edge := Build_Edge (Ctxt, Clk);
                return Create_Value_Net (Edge, Boolean_Type);
             end;
          when Iir_Predefined_Ieee_1164_Scalar_Is_X
@@ -1048,13 +1104,41 @@ package body Synth.Oper is
                   Strip_Const (Size);
                   --  FIXME: what if the arg is constant too ?
                   if Is_Static (Arg) then
-                     return Eval_To_Unsigned
-                       (Arg.Scal, Size.Scal,
+                     return Eval_To_Vector
+                       (Uns64 (Arg.Scal), Size.Scal,
                         Get_Value_Type (Syn_Inst, Get_Type (Imp)));
                   else
                      Arg_Net := Get_Net (Arg);
                      return Create_Value_Net
-                       (Synth_Uresize (Arg_Net, Uns32 (Size.Scal), Expr),
+                       (Build2_Uresize (Ctxt, Arg_Net, Uns32 (Size.Scal),
+                                        Get_Location (Expr)),
+                        Create_Vec_Type_By_Length (Uns32 (Size.Scal),
+                                                   Logic_Type));
+                  end if;
+               end if;
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn =>
+            declare
+               Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+               Size : Value_Acc;
+               Arg_Net : Net;
+            begin
+               Size := Get_Value (Subprg_Inst, Param2);
+               if not Is_Static (Size) then
+                  Error_Msg_Synth (+Expr, "to_signed size must be constant");
+                  return Arg;
+               else
+                  Strip_Const (Size);
+                  --  FIXME: what if the arg is constant too ?
+                  if Is_Static (Arg) then
+                     return Eval_To_Vector
+                       (To_Uns64 (Arg.Scal), Size.Scal,
+                        Get_Value_Type (Syn_Inst, Get_Type (Imp)));
+                  else
+                     Arg_Net := Get_Net (Arg);
+                     return Create_Value_Net
+                       (Build2_Sresize (Ctxt, Arg_Net, Uns32 (Size.Scal),
+                                        Get_Location (Expr)),
                         Create_Vec_Type_By_Length (Uns32 (Size.Scal),
                                                    Logic_Type));
                   end if;
