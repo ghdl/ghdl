@@ -263,10 +263,6 @@ package body Synth.Stmts is
 
                if Sl_Voff /= No_Net then
                   --  Variable slice.
-                  if Dest_Off /= 0 then
-                     --  Offset before slice is not yet handled.
-                     raise Internal_Error;
-                  end if;
                   Dest_Off := Dest_Off + Sl_Off;
                   if Dest_Voff /= No_Net then
                      Dest_Voff := Build_Addidx
