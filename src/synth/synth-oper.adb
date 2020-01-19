@@ -325,10 +325,13 @@ package body Synth.Oper is
          L1, R1 : Net;
          N : Net;
       begin
+         Rtype := Left.Typ;
+         if Rtype.Kind = Type_Vector then
+            Rtype := Rtype.Vec_El;
+         end if;
+
          if Is_Res_Vec then
-            Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-         else
-            Rtype := Left.Typ;
+            Rtype := Create_Vec_Type_By_Length (W, Rtype);
          end if;
          L1 := Synth_Sresize (Left, W, Expr);
          R1 := Synth_Sresize (Right, W, Expr);
@@ -374,6 +377,18 @@ package body Synth.Oper is
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Dyadic_Sgn_Int;
+
+      function Synth_Dyadic_Int_Sgn (Id : Dyadic_Module_Id) return Value_Acc
+      is
+         R : constant Net := Get_Net (Right);
+         L1 : Net;
+         N : Net;
+      begin
+         L1 := Synth_Sresize (Left, Right.Typ.W, Expr);
+         N := Build_Dyadic (Build_Context, Id, R, L1);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Create_Res_Bound (Right));
+      end Synth_Dyadic_Int_Sgn;
 
       function Synth_Compare_Sgn_Sgn (Id : Compare_Module_Id)
                                      return Value_Acc
@@ -506,7 +521,12 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
             --  "+" (Signed, Integer)
             return Synth_Dyadic_Sgn_Int (Id_Add);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn =>
+            --  "+" (Integer, Signed)
+            return Synth_Dyadic_Int_Sgn (Id_Add);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
+           | Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn =>
             --  "+" (Signed, Signed)
             return Synth_Dyadic_Sgn (Id_Add, True);
 
@@ -523,7 +543,12 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
             --  "-" (Signed, Integer)
             return Synth_Dyadic_Sgn_Int (Id_Sub);
-         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn =>
+            --  "-" (Integer, Signed)
+            return Synth_Dyadic_Int_Sgn (Id_Sub);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
+           | Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn =>
             --  "-" (Signed, Signed)
             return Synth_Dyadic_Sgn (Id_Sub, True);
 
@@ -564,7 +589,7 @@ package body Synth.Oper is
                L1 := Synth_Uresize (Left, W, Expr);
                R1 := Synth_Uresize (Right, W, Expr);
                Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-               N := Build_Dyadic (Build_Context, Id_Umul, L1, R1);
+               N := Build_Dyadic (Ctxt, Id_Umul, L1, R1);
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
@@ -580,9 +605,26 @@ package body Synth.Oper is
                L1 := Synth_Uresize (Left, W, Expr);
                R1 := Synth_Uresize (Right, W, Expr);
                Rtype := Create_Vec_Type_By_Length (Lw, Left.Typ.Vec_El);
+               N := Build_Dyadic (Ctxt, Id_Udiv, L1, R1);
+               Set_Location (N, Expr);
+               N := Build2_Uresize (Ctxt, N, Lw, Get_Location (Expr));
+               return Create_Value_Net (N, Rtype);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Int =>
+            declare
+               Lw : constant Width := Left.Typ.W;
+               W : constant Width := Width'Max (Lw, Right.Typ.W);
+               L1, R1 : Net;
+               Rtype : Type_Acc;
+               N : Net;
+            begin
+               L1 := Synth_Sresize (Left, W, Expr);
+               R1 := Synth_Sresize (Right, W, Expr);
+               Rtype := Create_Vec_Type_By_Length (Lw, Left.Typ.Vec_El);
                N := Build_Dyadic (Build_Context, Id_Udiv, L1, R1);
                Set_Location (N, Expr);
-               N := Synth_Uresize (N, Lw, Expr);
+               N := Build2_Sresize (Ctxt, N, Lw, Get_Location (Expr));
                return Create_Value_Net (N, Rtype);
             end;
 
