@@ -1247,7 +1247,6 @@ package body Netlists.Builders is
    function Build_Port (Ctxt : Context_Acc; N : Net) return Net
    is
       Wd : constant Width := Get_Width (N);
-      pragma Assert (Wd /= No_Width);
       Inst : Instance;
       O : Net;
    begin
