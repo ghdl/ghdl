@@ -14,10 +14,10 @@ env:
       TARGS=--gpl
     - TASK=buster+mcode
       TARGS=--synth
-    - TASK=ubuntu14+mcode
-    - TASK=ubuntu14+llvm-3.8
-    - TASK=fedora30+mcode
-    - TASK=fedora30+llvm
+    - TASK=ubuntu16+mcode
+    - TASK=ubuntu16+llvm-3.9
+    - TASK=fedora31+mcode
+    - TASK=fedora31+llvm
 
 deploy:
   - &dep
