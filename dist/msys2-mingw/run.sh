@@ -99,7 +99,7 @@ build () {
   ls -la
 
   gstart 'Install package'
-    pacman --noconfirm -U "mingw-w64-${TARBALL_ARCH}-ghdl-${TARGET}-ci"-*-any.pkg.tar.xz
+    pacman --noconfirm -U "mingw-w64-${TARBALL_ARCH}-ghdl-${TARGET}-ci"-*-any.pkg.tar.zst
   gend
 }
 
