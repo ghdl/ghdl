@@ -82,17 +82,17 @@ echo "cliargs: $0 $@"
 set -e
 
 ISGPL=false
-ISSYNTH=false
+ISSYNTH=true
 
 # Transform long options to short ones
 for arg in "$@"; do
   shift
   case "$arg" in
-      "--color"|"-color")     set -- "$@" "-c";;
-      "--backend"|"-backend") set -- "$@" "-b";;
-      "--pkg"|"-pkg")         set -- "$@" "-p";;
-      "--gpl"|"-gpl")         set -- "$@" "-g";;
-      "--synth"|"-synth")     set -- "$@" "-s";;
+      "--color"|"-color")       set -- "$@" "-c";;
+      "--backend"|"-backend")   set -- "$@" "-b";;
+      "--pkg"|"-pkg")           set -- "$@" "-p";;
+      "--gpl"|"-gpl")           set -- "$@" "-g";;
+      "--no-synth"|"-no-synth") set -- "$@" "-s";;
     *) set -- "$@" "$arg"
   esac
 done
@@ -103,7 +103,7 @@ while getopts ":b:p:cgs" opt; do
     b) BACK=$OPTARG ;;
     p) PKG_NAME=$OPTARG;;
     g) ISGPL=true;;
-    s) ISSYNTH=true;;
+    s) ISSYNTH=false;;
     \?) printf "$ANSI_RED[CI - args] Invalid option: -$OPTARG $ANSI_NOCOLOR\n" >&2
         exit 1 ;;
     :)  printf "$ANSI_RED[CI - args] Option -$OPTARG requires an argument. $ANSI_NOCOLOR\n" >&2
@@ -196,11 +196,6 @@ buildCmdOpts () {
       PKG_NAME="${PKG_NAME}-gpl"
       DEXT="-gpl"
   fi
-  if [ "x$ISSYNTH" = "xtrue" ]; then
-      BUILD_CMD_OPTS="$BUILD_CMD_OPTS --synth"
-      PKG_NAME="${PKG_NAME}-synth"
-      DEXT="-synth"
-  fi
   export BUILD_CMD_OPTS="${BUILD_CMD_OPTS} -p $PKG_NAME"
 
   GHDL_IMAGE_TAG="`echo $BUILD_ARG | sed -e 's/+/-/g'`"
@@ -254,8 +249,8 @@ build () {
   mkdir "build-$BACK"
   cd "build-$BACK"
 
-  if [ "x$ISSYNTH" = "xtrue" ]; then
-    CONFIG_OPTS+=" --enable-synth"
+  if [ "x$ISSYNTH" = "xfalse" ]; then
+    CONFIG_OPTS+=" --disable-synth"
   fi
 
   case "$BACK" in
