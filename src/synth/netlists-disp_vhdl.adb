@@ -760,6 +760,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= not \i0;" & NL, Inst);
          when Id_Neg =>
             Disp_Template ("  \o0 <= std_logic_vector(-\si0);" & NL, Inst);
+         when Id_Abs=>
+            Disp_Template ("  \o0 <= std_logic_vector(abs \si0);" & NL, Inst);
          when Id_Extract =>
             Disp_Template ("  \o0 <= ", Inst);
             Disp_Extract (Inst);

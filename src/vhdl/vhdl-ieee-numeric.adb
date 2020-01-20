@@ -227,6 +227,13 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (others => Iir_Predefined_None));
 
+   Abs_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_None,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
+
    Not_Patterns : constant Unary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Not_Uns,
@@ -688,6 +695,8 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Unary (Neg_Patterns);
                      when Name_Not =>
                         Handle_Unary (Not_Patterns);
+                     when Name_Abs =>
+                        Handle_Unary (Abs_Patterns);
                      when Name_To_Integer =>
                         Handle_To_Integer;
                      when others =>

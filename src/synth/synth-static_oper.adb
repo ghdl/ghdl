@@ -514,6 +514,8 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Integer_Negation =>
             return Create_Value_Discrete (-Operand.Scal, Oper_Typ);
+         when Iir_Predefined_Integer_Absolute =>
+            return Create_Value_Discrete (abs Operand.Scal, Oper_Typ);
 
          when Iir_Predefined_Floating_Negation =>
             return Create_Value_Float (-Operand.Fp, Oper_Typ);

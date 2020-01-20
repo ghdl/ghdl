@@ -929,6 +929,8 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Neg_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
             return Synth_Vec_Monadic (Id_Neg);
+         when Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn =>
+            return Synth_Vec_Monadic (Id_Abs);
          when Iir_Predefined_Ieee_1164_Vector_And_Reduce =>
             return Synth_Vec_Reduce_Monadic(Id_Red_And);
          when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
