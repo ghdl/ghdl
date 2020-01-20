@@ -12,8 +12,8 @@ entity ent is
 		b : in signed(7 downto 0);
 
 		const : out signed(7 downto 0);
---		absolute1 : out unsigned(7 downto 0);
---		absolute2 : out unsigned(7 downto 0);
+		absolute1 : out unsigned(7 downto 0);
+		absolute2 : out unsigned(7 downto 0);
 		sum  : out signed(8 downto 0);
 		diff : out signed(8 downto 0);
 		inv_diff : out signed(8 downto 0);
@@ -61,8 +61,8 @@ begin
 	rb <= resize(b, 9);
 
 	const <= to_signed(INT, const'length);
-	--absolute1 <= to_unsigned(abs(INT), absolute1'length);
-	--absolute2 <= unsigned(abs(a));
+	absolute1 <= to_unsigned(abs(INT), absolute1'length);
+	absolute2 <= unsigned(abs(a));
 	sum <= ra + rb;
 	diff <= ra + (-rb);
 	inv_diff <= rb - ra;
