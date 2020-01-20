@@ -57,16 +57,19 @@ jobs:
       MINGW_INSTALLS: ${{ matrix.task.installs }}
       TARGET: ${{ matrix.task.pkg }}
     steps:
-    - uses: numworks/setup-msys2@v1
+    - uses: eine/setup-msys2@v0
       with:
         msystem: MSYS
-    - run: msys2do pacman -Syu --noconfirm
+        update: true
     - uses: actions/checkout@v1
     - name: Build and (hopefully) install package
+      shell: msys2 {0}
       run: |
-        msys2do ./dist/msys2-mingw/run.sh -b
+        ./dist/msys2-mingw/run.sh -b
     - name: Test package
-      run: msys2do ./dist/msys2-mingw/run.sh -t
+      shell: msys2 {0}
+      run: |
+        ./dist/msys2-mingw/run.sh -t
       env:
         MSYSTEM: ${{ matrix.task.installs }}
 
