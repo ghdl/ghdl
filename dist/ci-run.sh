@@ -248,8 +248,8 @@ build () {
   #--- Configure
 
   CDIR=`pwd`
-  export prefix="$CDIR/install-$BACK"
-  mkdir "$prefix"
+  INSTALL_DIR="$CDIR/install-$BACK"
+  mkdir "$INSTALL_DIR"
   mkdir "build-$BACK"
   cd "build-$BACK"
 
@@ -271,14 +271,14 @@ build () {
           gend
 
           gstart "[GHDL - build] Configure ghdl"
-          run_cmd ../configure --with-gcc=gcc-srcs --prefix="$prefix" $CONFIG_OPTS
+          run_cmd ../configure --with-gcc=gcc-srcs $CONFIG_OPTS
           gend
           gstart "[GHDL - build] Copy sources"
           make copy-sources
           mkdir gcc-objs; cd gcc-objs
           gend
           gstart "[GHDL - build] Configure gcc"
-          run_cmd ../gcc-srcs/configure --prefix="$prefix" --enable-languages=c,vhdl --disable-bootstrap --disable-lto --disable-multilib --disable-libssp --disable-libgomp --disable-libquadmath "`gcc -v 2>&1 | grep -o -- --enable-default-pie`"
+          run_cmd ../gcc-srcs/configure --enable-languages=c,vhdl --disable-bootstrap --disable-lto --disable-multilib --disable-libssp --disable-libgomp --disable-libquadmath "`gcc -v 2>&1 | grep -o -- --enable-default-pie`"
           gend
       ;;
       mcode)
@@ -304,7 +304,7 @@ build () {
 
   if [ ! "`echo $BACK | grep gcc`" ]; then
       gstart "[GHDL - build] Configure"
-      run_cmd ../configure "--prefix=$prefix" $CONFIG_OPTS
+      run_cmd ../configure $CONFIG_OPTS
       gend
   fi
 
@@ -318,17 +318,17 @@ build () {
   gend
 
   gstart "[GHDL - build] Install"
-  make install
+  make DESTDIR="$INSTALL_DIR" install
   cd ..
   gend
 
   if [ "`echo $BACK | grep gcc`" ]; then
       gstart "[GHDL - build] Make ghdllib"
-      make ghdllib
+      make DESTDIR="$INSTALL_DIR" ghdllib
       gend
 
       gstart "[GHDL - build] Install ghdllib"
-      make install
+      make DESTDIR="$INSTALL_DIR" install
       cd ..
       gend
   fi
@@ -336,7 +336,7 @@ build () {
   #--- package
 
   gstart "[GHDL - build] Create package ${ANSI_DARKCYAN}${PKG_NAME}.tgz"
-  tar -zcvf "${PKG_NAME}.tgz" -C "$prefix" .
+  tar -zcvf "${PKG_NAME}.tgz" -C "$INSTALL_DIR/usr/local" .
   gend
 
   #--- build tools versions
@@ -432,7 +432,7 @@ ci_run () {
 
   if [ "x$IS_MACOS" = "xtrue" ]; then
       CC=clang \
-      prefix="`cd ./install-mcode; pwd`" \
+      prefix="`cd ./install-mcode; pwd`/usr/local" \
       ./testsuite/testsuite.sh sanity gna vests
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image

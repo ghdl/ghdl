@@ -264,7 +264,7 @@ copy-sources.gcc: version.ads
 
 # To build vhdl libs using a non-installed ghdl, define GHDL_GCC_BIN to the
 # path of ghdl and GHDL1_GCC_BIN to path of ghdl1
-GHDL_GCC_BIN=$(bindir)/ghdl$(EXEEXT)
+GHDL_GCC_BIN=$(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 GHDL1_GCC_BIN=  # --GHDL1=/path/to/ghdl1
 
 libs.vhdl.gcc:
