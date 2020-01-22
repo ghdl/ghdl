@@ -633,6 +633,12 @@ package body Vhdl.Sem_Inst is
          --  incomplete type
          --  attribute_value
 
+         if Get_Kind (Res) in Iir_Kinds_Subprogram_Declaration then
+            --  Recompute the hash as the interface may have
+            --  changed due to instantiation.
+            Sem_Utils.Compute_Subprogram_Hash (Res);
+         end if;
+
          return Res;
       end;
    end Instantiate_Iir;
