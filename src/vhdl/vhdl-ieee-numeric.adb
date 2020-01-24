@@ -220,6 +220,114 @@ package body Vhdl.Ieee.Numeric is
         (others =>
            (others => Iir_Predefined_None)));
 
+   Match_Eq_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Match_Ne_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Match_Lt_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Match_Le_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Le_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Le_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Match_Gt_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Match_Ge_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
    Neg_Patterns : constant Unary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
@@ -645,6 +753,18 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Binary (Gt_Patterns);
                      when Name_Op_Greater_Equal =>
                         Handle_Binary (Ge_Patterns);
+                     when Name_Op_Match_Equality =>
+                        Handle_Binary (Match_Eq_Patterns);
+                     when Name_Op_Match_Inequality =>
+                        Handle_Binary (Match_Ne_Patterns);
+                     when Name_Op_Match_Less =>
+                        Handle_Binary (Match_Lt_Patterns);
+                     when Name_Op_Match_Less_Equal =>
+                        Handle_Binary (Match_Le_Patterns);
+                     when Name_Op_Match_Greater =>
+                        Handle_Binary (Match_Gt_Patterns);
+                     when Name_Op_Match_Greater_Equal =>
+                        Handle_Binary (Match_Ge_Patterns);
                      when Name_And =>
                         Handle_Binary (And_Patterns);
                      when Name_Or =>

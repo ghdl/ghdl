@@ -192,6 +192,7 @@ package body Synth.Oper is
       Right_Type : constant Node := Get_Type (Get_Chain (Inter_Chain));
       Left_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Left_Type);
       Right_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Right_Type);
+      Expr_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Expr_Type);
       Left : Value_Acc;
       Right : Value_Acc;
 
@@ -205,7 +206,8 @@ package body Synth.Oper is
          return Create_Value_Net (N, Left.Typ);
       end Synth_Bit_Dyadic;
 
-      function Synth_Compare (Id : Compare_Module_Id) return Value_Acc
+      function Synth_Compare (Id : Compare_Module_Id; Res_Type : Type_Acc)
+                             return Value_Acc
       is
          N : Net;
       begin
@@ -213,11 +215,11 @@ package body Synth.Oper is
          N := Build_Compare
            (Build_Context, Id, Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Boolean_Type);
+         return Create_Value_Net (N, Res_Type);
       end Synth_Compare;
 
-      function Synth_Compare_Array (Id, Id_Eq : Compare_Module_Id)
-                                   return Value_Acc
+      function Synth_Compare_Array (Id, Id_Eq : Compare_Module_Id;
+                                    Res_Type : Type_Acc) return Value_Acc
       is
          pragma Unreferenced (Id_Eq);
          N : Net;
@@ -229,7 +231,7 @@ package body Synth.Oper is
                N := Build_Compare
                  (Get_Build (Syn_Inst), Id, Get_Net (Left), Get_Net (Right));
                Set_Location (N, Expr);
-               return Create_Value_Net (N, Boolean_Type);
+               return Create_Value_Net (N, Res_Type);
             elsif Left.Typ.W < Right.Typ.W then
                --  TODO: truncate right, compare using id_eq.
                raise Internal_Error;
@@ -242,37 +244,48 @@ package body Synth.Oper is
          end if;
       end Synth_Compare_Array;
 
-      function Synth_Compare_Uns_Nat (Id : Compare_Module_Id)
-                                     return Value_Acc
+      function Synth_Compare_Uns_Nat
+        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Value_Acc
       is
          N : Net;
       begin
          N := Synth_Uresize (Right, Left.Typ.W, Expr);
          N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Boolean_Type);
+         return Create_Value_Net (N, Res_Type);
       end Synth_Compare_Uns_Nat;
 
-      function Synth_Compare_Sgn_Int (Id : Compare_Module_Id)
-                                     return Value_Acc
+      function Synth_Compare_Nat_Uns
+        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Value_Acc
+      is
+         N : Net;
+      begin
+         N := Synth_Uresize (Left, Right.Typ.W, Expr);
+         N := Build_Compare (Build_Context, Id, Get_Net (Right), N);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Res_Type);
+      end Synth_Compare_Nat_Uns;
+
+      function Synth_Compare_Sgn_Int
+        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Value_Acc
       is
          N : Net;
       begin
          N := Synth_Sresize (Right, Left.Typ.W, Expr);
          N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Boolean_Type);
+         return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Sgn_Int;
 
-      function Synth_Compare_Int_Sgn (Id : Compare_Module_Id)
-                                     return Value_Acc
+      function Synth_Compare_Int_Sgn
+        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Value_Acc
       is
          N : Net;
       begin
          N := Synth_Sresize (Left, Right.Typ.W, Expr);
          N := Build_Compare (Build_Context, Id, N, Get_Net (Right));
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Boolean_Type);
+         return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Int_Sgn;
 
       function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
@@ -340,8 +353,8 @@ package body Synth.Oper is
          return Create_Value_Net (N, Rtype);
       end Synth_Dyadic_Sgn;
 
-      function Synth_Compare_Uns_Uns (Id : Compare_Module_Id)
-                                     return Value_Acc
+      function Synth_Compare_Uns_Uns
+        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Value_Acc
       is
          W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          L1, R1 : Net;
@@ -351,7 +364,7 @@ package body Synth.Oper is
          R1 := Synth_Uresize (Right, W, Expr);
          N := Build_Compare (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Boolean_Type);
+         return Create_Value_Net (N, Res_Type);
       end Synth_Compare_Uns_Uns;
 
       function Synth_Dyadic_Uns_Nat (Id : Dyadic_Module_Id) return Value_Acc
@@ -390,8 +403,8 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Right));
       end Synth_Dyadic_Int_Sgn;
 
-      function Synth_Compare_Sgn_Sgn (Id : Compare_Module_Id)
-                                     return Value_Acc
+      function Synth_Compare_Sgn_Sgn
+        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Value_Acc
       is
          W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          L1, R1 : Net;
@@ -401,7 +414,7 @@ package body Synth.Oper is
          R1 := Synth_Sresize (Right, W, Expr);
          N := Build_Compare (Build_Context, Id, L1, R1);
          Set_Location (N, Expr);
-         return Create_Value_Net (N, Boolean_Type);
+         return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Sgn_Sgn;
    begin
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
@@ -478,22 +491,43 @@ package body Synth.Oper is
                   return Synth_Bit_Eq_Const (Right, Left, Expr);
                end if;
             end if;
-            return Synth_Compare (Id_Eq);
+            return Synth_Compare (Id_Eq, Boolean_Type);
          when Iir_Predefined_Enum_Inequality =>
             --  TODO: Optimize ?
-            return Synth_Compare (Id_Ne);
+            return Synth_Compare (Id_Ne, Boolean_Type);
          when Iir_Predefined_Enum_Less_Equal =>
-            return Synth_Compare (Id_Ult);
+            return Synth_Compare (Id_Ult, Boolean_Type);
+
+         when Iir_Predefined_Std_Ulogic_Match_Equality =>
+            return Synth_Compare (Id_Eq, Logic_Type);
+         when Iir_Predefined_Std_Ulogic_Match_Inequality =>
+            return Synth_Compare (Id_Ne, Logic_Type);
+         when Iir_Predefined_Std_Ulogic_Match_Less =>
+            return Synth_Compare (Id_Ult, Logic_Type);
+         when Iir_Predefined_Std_Ulogic_Match_Less_Equal =>
+            return Synth_Compare (Id_Ule, Logic_Type);
+         when Iir_Predefined_Std_Ulogic_Match_Greater =>
+            return Synth_Compare (Id_Ugt, Logic_Type);
+         when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
+            return Synth_Compare (Id_Uge, Logic_Type);
 
          when Iir_Predefined_Array_Equality
-            | Iir_Predefined_Record_Equality =>
+           | Iir_Predefined_Record_Equality =>
             if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
                Warning_Msg_Synth
                  (+Expr,
                   "length of '=' operands doesn't match, result is false");
                return Create_Value_Discrete (0, Boolean_Type);
             end if;
-            return Synth_Compare (Id_Eq);
+            return Synth_Compare (Id_Eq, Boolean_Type);
+         when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
+            if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
+               Warning_Msg_Synth
+                 (+Expr,
+                  "length of '?=' operands doesn't match, result is '0'");
+               return Create_Value_Discrete (0, Logic_Type);
+            end if;
+            return Synth_Compare (Id_Eq, Logic_Type);
          when Iir_Predefined_Array_Inequality
             | Iir_Predefined_Record_Inequality =>
             if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
@@ -502,11 +536,19 @@ package body Synth.Oper is
                   "length of '/=' operands doesn't match, result is true");
                return Create_Value_Discrete (1, Boolean_Type);
             end if;
-            return Synth_Compare (Id_Ne);
+            return Synth_Compare (Id_Ne, Boolean_Type);
+         when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
+            if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
+               Warning_Msg_Synth
+                 (+Expr,
+                  "length of '/=' operands doesn't match, result is '1'");
+               return Create_Value_Discrete (1, Logic_Type);
+            end if;
+            return Synth_Compare (Id_Ne, Logic_Type);
          when Iir_Predefined_Array_Greater =>
-            return Synth_Compare_Array (Id_Ugt, Id_Uge);
+            return Synth_Compare_Array (Id_Ugt, Id_Uge, Boolean_Type);
          when Iir_Predefined_Array_Less =>
-            return Synth_Compare_Array (Id_Ult, Id_Ule);
+            return Synth_Compare_Array (Id_Ult, Id_Ule, Boolean_Type);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
@@ -628,111 +670,165 @@ package body Synth.Oper is
                return Create_Value_Net (N, Rtype);
             end;
 
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
-            --  "=" (Unsigned, Natural)
-            return Synth_Compare_Uns_Nat (Id_Eq);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Uns =>
             --  "=" (Unsigned, Unsigned) [resize]
-            return Synth_Compare_Uns_Uns (Id_Eq);
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int =>
+            return Synth_Compare_Uns_Uns (Id_Eq, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Nat =>
+            --  "=" (Unsigned, Natural)
+            return Synth_Compare_Uns_Nat (Id_Eq, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Nat_Uns =>
+            --  "=" (Natural, Unsigned) [resize]
+            return Synth_Compare_Nat_Uns (Id_Eq, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Int =>
             --  "=" (Signed, Integer)
-            return Synth_Compare_Sgn_Int (Id_Eq);
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
+            return Synth_Compare_Sgn_Int (Id_Eq, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn =>
             --  "=" (Signed, Signed) [resize]
-            return Synth_Compare_Sgn_Sgn (Id_Eq);
-         when Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn =>
+            return Synth_Compare_Sgn_Sgn (Id_Eq, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Int_Sgn =>
             --  "=" (Integer, Signed)
-            return Synth_Compare_Int_Sgn (Id_Eq);
+            return Synth_Compare_Int_Sgn (Id_Eq, Expr_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Uns_Uns =>
             --  "/=" (Unsigned, Unsigned) [resize]
-            return Synth_Compare_Uns_Uns (Id_Ne);
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat =>
+            return Synth_Compare_Uns_Uns (Id_Ne, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Uns_Nat
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Uns_Nat =>
             --  "/=" (Unsigned, Natural)
-            return Synth_Compare_Uns_Nat (Id_Ne);
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn =>
+            return Synth_Compare_Uns_Nat (Id_Ne, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Nat_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Nat_Uns =>
+            --  "/=" (Natural, Unsigned) [resize]
+            return Synth_Compare_Nat_Uns (Id_Ne, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Sgn =>
             --  "/=" (Signed, Signed) [resize]
-            return Synth_Compare_Sgn_Sgn (Id_Ne);
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int =>
+            return Synth_Compare_Sgn_Sgn (Id_Ne, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Int =>
             --  "/=" (Signed, Integer)
-            return Synth_Compare_Sgn_Int (Id_Ne);
-         when Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn =>
+            return Synth_Compare_Sgn_Int (Id_Ne, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Int_Sgn =>
             --  "/=" (Integer, Signed)
-            return Synth_Compare_Int_Sgn (Id_Ne);
+            return Synth_Compare_Int_Sgn (Id_Ne, Expr_Typ);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Nat =>
             --  "<" (Unsigned, Natural)
             if Is_Static (Right) and then Right.Scal = 0 then
                --  Always false.
-               return Create_Value_Discrete (0, Boolean_Type);
+               return Create_Value_Discrete (0, Expr_Typ);
             end if;
-            return Synth_Compare_Uns_Nat (Id_Ult);
+            return Synth_Compare_Uns_Nat (Id_Ult, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Uns =>
             --  "<" (Unsigned, Unsigned) [resize]
-            return Synth_Compare_Uns_Uns (Id_Ult);
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn =>
+            return Synth_Compare_Uns_Uns (Id_Ult, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Nat_Uns =>
+            --  "<" (Natural, Unsigned) [resize]
+            return Synth_Compare_Nat_Uns (Id_Ult, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Sgn_Sgn =>
             --  "<" (Signed, Signed) [resize]
-            return Synth_Compare_Sgn_Sgn (Id_Slt);
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Int =>
+            return Synth_Compare_Sgn_Sgn (Id_Slt, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Int
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Sgn_Int =>
             --  "<" (Signed, Integer)
-            return Synth_Compare_Sgn_Int (Id_Slt);
-         when Iir_Predefined_Ieee_Numeric_Std_Lt_Int_Sgn =>
+            return Synth_Compare_Sgn_Int (Id_Slt, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Int_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Int_Sgn =>
             --  "<" (Integer, Signed)
-            return Synth_Compare_Int_Sgn (Id_Slt);
+            return Synth_Compare_Int_Sgn (Id_Slt, Expr_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Uns =>
             --  "<=" (Unsigned, Unsigned) [resize]
-            return Synth_Compare_Uns_Uns (Id_Ule);
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
+            return Synth_Compare_Uns_Uns (Id_Ule, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Nat =>
             --  "<=" (Unsigned, Natural)
-            return Synth_Compare_Uns_Nat (Id_Ule);
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn =>
+            return Synth_Compare_Uns_Nat (Id_Ule, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Nat_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Nat_Uns =>
+            --  "<=" (Natural, Unsigned) [resize]
+            return Synth_Compare_Nat_Uns (Id_Ule, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Sgn =>
             --  "<=" (Signed, Signed)
-            return Synth_Compare_Sgn_Sgn (Id_Sle);
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int =>
+            return Synth_Compare_Sgn_Sgn (Id_Sle, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Int =>
             --  "<=" (Signed, Integer)
-            return Synth_Compare_Sgn_Int (Id_Sle);
-         when Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn =>
+            return Synth_Compare_Sgn_Int (Id_Sle, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Int_Sgn =>
             --  "<=" (Integer, Signed)
-            return Synth_Compare_Int_Sgn (Id_Sle);
+            return Synth_Compare_Int_Sgn (Id_Sle, Expr_Typ);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
-            --  ">" (Unsigned, Natural)
-            return Synth_Compare_Uns_Nat (Id_Ugt);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns =>
             --  ">" (Unsigned, Unsigned) [resize]
-            return Synth_Compare_Uns_Uns (Id_Ugt);
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn =>
+            return Synth_Compare_Uns_Uns (Id_Ugt, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Nat =>
+            --  ">" (Unsigned, Natural)
+            return Synth_Compare_Uns_Nat (Id_Ugt, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Nat_Uns =>
+            --  ">" (Natural, Unsigned) [resize]
+            return Synth_Compare_Nat_Uns (Id_Ugt, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn =>
             --  ">" (Signed, Signed) [resize]
-            return Synth_Compare_Sgn_Sgn (Id_Sgt);
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int =>
+            return Synth_Compare_Sgn_Sgn (Id_Sgt, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Int =>
             --  ">" (Signed, Integer)
-            return Synth_Compare_Sgn_Int (Id_Sgt);
-         when Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn =>
-            --  ">=" (Integer, Signed)
-            return Synth_Compare_Int_Sgn (Id_Sgt);
+            return Synth_Compare_Sgn_Int (Id_Sgt, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Int_Sgn =>
+            --  ">" (Integer, Signed)
+            return Synth_Compare_Int_Sgn (Id_Sgt, Expr_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Uns =>
             --  ">=" (Unsigned, Unsigned) [resize]
-            return Synth_Compare_Uns_Uns (Id_Uge);
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat =>
+            return Synth_Compare_Uns_Uns (Id_Uge, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Nat_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Nat_Uns =>
+            --  ">=" (Natural, Unsigned) [resize]
+            return Synth_Compare_Nat_Uns (Id_Uge, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Nat =>
             --  ">=" (Unsigned, Natural)
-            return Synth_Compare_Uns_Nat (Id_Uge);
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn =>
+            return Synth_Compare_Uns_Nat (Id_Uge, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Sgn =>
             --  ">=" (Signed, Signed) [resize]
-            return Synth_Compare_Sgn_Sgn (Id_Sge);
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int =>
+            return Synth_Compare_Sgn_Sgn (Id_Sge, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Int
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Sgn_Int =>
             --  ">=" (Signed, Integer)
-            return Synth_Compare_Sgn_Int (Id_Sge);
-         when Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn =>
+            return Synth_Compare_Sgn_Int (Id_Sge, Expr_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Int_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Int_Sgn =>
             --  ">=" (Integer, Signed)
-            return Synth_Compare_Int_Sgn (Id_Sge);
+            return Synth_Compare_Int_Sgn (Id_Sge, Expr_Typ);
 
          when Iir_Predefined_Array_Element_Concat =>
             declare
@@ -836,17 +932,17 @@ package body Synth.Oper is
               (+Expr, "non-constant exponentiation not supported");
             return null;
          when Iir_Predefined_Integer_Less_Equal =>
-            return Synth_Compare (Id_Sle);
+            return Synth_Compare (Id_Sle, Boolean_Type);
          when Iir_Predefined_Integer_Less =>
-            return Synth_Compare (Id_Slt);
+            return Synth_Compare (Id_Slt, Boolean_Type);
          when Iir_Predefined_Integer_Greater_Equal =>
-            return Synth_Compare (Id_Sge);
+            return Synth_Compare (Id_Sge, Boolean_Type);
          when Iir_Predefined_Integer_Greater =>
-            return Synth_Compare (Id_Sgt);
+            return Synth_Compare (Id_Sgt, Boolean_Type);
          when Iir_Predefined_Integer_Equality =>
-            return Synth_Compare (Id_Eq);
+            return Synth_Compare (Id_Eq, Boolean_Type);
          when Iir_Predefined_Integer_Inequality =>
-            return Synth_Compare (Id_Ne);
+            return Synth_Compare (Id_Ne, Boolean_Type);
          when Iir_Predefined_Physical_Physical_Div =>
             Error_Msg_Synth (+Expr, "non-constant division not supported");
             return null;
