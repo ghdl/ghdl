@@ -168,6 +168,12 @@ package body Synth.Stmts is
                   Dest_Off := 0;
                end if;
             end;
+         when Iir_Kind_Function_Call =>
+            Dest_Obj := Synth_Expression (Syn_Inst, Pfx);
+            Dest_Off := 0;
+            Dest_Voff := No_Net;
+            Dest_Rdwd := 0;
+            Dest_Type := Dest_Obj.Typ;
          when Iir_Kind_Indexed_Name =>
             declare
                Voff : Net;
