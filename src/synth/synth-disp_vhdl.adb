@@ -152,13 +152,19 @@ package body Synth.Disp_Vhdl is
             elsif Is_Std_Logic_Array (Btype) then
                W := Typ.Vbound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
-               Put ("std_logic_vector(" & Pfx);
+               if W > 1 then
+                  Put ("std_logic_vector(");
+               end if;
+               Put (Pfx);
                if W = 1 then
                   --  This is an array of length 1.  A scalar is used in the
                   --  netlist.
                   Put (" (" & Pfx & "'left)");
                end if;
-               Put_Line (");");
+               if W > 1 then
+                  Put (')');
+               end if;
+               Put_Line (";");
             elsif Btype = Vhdl.Std_Package.Bit_Vector_Type_Definition then
                W := Typ.Vbound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);

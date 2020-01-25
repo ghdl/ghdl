@@ -1069,9 +1069,7 @@ package body Netlists.Builders is
      (Ctxt : Context_Acc;
       I : Net; Step : Uns32; Max : Uns32; W : Width) return Net
    is
-      pragma Assert (Get_Width (I) /= No_Width);
       pragma Assert (Step > 0);
-      pragma Assert (W > 0);
       Inst : Instance;
       O : Net;
    begin

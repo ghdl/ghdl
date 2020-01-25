@@ -73,7 +73,6 @@ package body Netlists.Expands is
          P := P - 1;
 
          Max := Get_Param_Uns32 (Memidx, 1);
-         pragma Assert (Max /= 0);
          Nbr_Els := Nbr_Els * Natural (Max + 1);
 
          exit when Memidx = Ninst;

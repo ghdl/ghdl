@@ -812,18 +812,22 @@ package body Netlists.Disp_Vhdl is
                Wd : constant Width := Get_Width (O);
                Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
             begin
-               Disp_Template ("  \o0 <= \i0 (to_integer (\ui1)", Inst);
-               if Off /= 0 then
-                  Disp_Template (" + \n0", Inst, (0 => Off));
-               end if;
-               if Wd > 1 then
-                  Disp_Template (" + \n0 - 1 downto to_integer (\ui1)",
-                                 Inst, (0 => Wd));
+               Disp_Template ("  \o0 <= \i0", Inst);
+               if Wd /= 0 then
+                  Disp_Template (" (to_integer (\ui1)", Inst);
                   if Off /= 0 then
                      Disp_Template (" + \n0", Inst, (0 => Off));
                   end if;
+                  if Wd > 1 then
+                     Disp_Template (" + \n0 - 1 downto to_integer (\ui1)",
+                                    Inst, (0 => Wd));
+                     if Off /= 0 then
+                        Disp_Template (" + \n0", Inst, (0 => Off));
+                     end if;
+                  end if;
+                  Put (")");
                end if;
-               Put_Line (");");
+               Put_Line (";");
             end;
          when Id_Dyn_Insert
            | Id_Dyn_Insert_En =>
@@ -1040,13 +1044,17 @@ package body Netlists.Disp_Vhdl is
             declare
                W : constant Width := Get_Width (Get_Output (Inst, 0));
             begin
-               Disp_Template ("  \o0 <= \i0 ", Inst);
-               if W = 1 then
-                  Disp_Template ("(0)", Inst);
-               elsif W = 0 then
-                  Disp_Template ("(-1 downto 0)", Inst);
+               if W = 0 then
+                  Disp_Template ("  \o0 <= """"", Inst);
                else
-                  Disp_Template ("(\n0 downto 0)", Inst, (0 => W - 1));
+                  Disp_Template ("  \o0 <= \i0 ", Inst);
+                  if W = 1 then
+                     Disp_Template ("(0)", Inst);
+                  elsif W = 0 then
+                     Disp_Template ("(-1 downto 0)", Inst);
+                  else
+                     Disp_Template ("(\n0 downto 0)", Inst, (0 => W - 1));
+                  end if;
                end if;
                Disp_Template (";  --  trunc" & NL, Inst);
             end;
