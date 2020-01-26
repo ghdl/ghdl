@@ -1343,7 +1343,6 @@ package body Netlists.Builders is
    is
       Wd : constant Width := Get_Width (I);
       pragma Assert (Wd /= No_Width);
-      pragma Assert (W > 0);
       pragma Assert (W + Off <= Wd);
       Inst : Instance;
       O : Net;

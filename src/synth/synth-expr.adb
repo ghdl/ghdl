@@ -1323,6 +1323,11 @@ package body Synth.Expr is
          Error_Msg_Synth (+Name, "direction mismatch in slice");
          Off := 0;
          Wd := 0;
+         if Dir = Iir_To then
+            Res_Bnd := (Dir => Iir_To, Left => 1, Right => 0, Len => 0);
+         else
+            Res_Bnd := (Dir => Iir_Downto, Left => 0, Right => 1, Len => 0);
+         end if;
          return;
       end if;
 
@@ -1418,6 +1423,11 @@ package body Synth.Expr is
             Inp := No_Net;
             Off := 0;
             Wd := 0;
+            if Dir = Iir_To then
+               Res_Bnd := (Dir => Iir_To, Left => 1, Right => 0, Len => 0);
+            else
+               Res_Bnd := (Dir => Iir_Downto, Left => 0, Right => 1, Len => 0);
+            end if;
             return;
          end if;
 
