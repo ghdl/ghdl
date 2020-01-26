@@ -1045,13 +1045,13 @@ package body Netlists.Disp_Vhdl is
                W : constant Width := Get_Width (Get_Output (Inst, 0));
             begin
                if W = 0 then
+                  --  Do not try to slice the input, as it can be a single
+                  --  wire.
                   Disp_Template ("  \o0 <= """"", Inst);
                else
                   Disp_Template ("  \o0 <= \i0 ", Inst);
                   if W = 1 then
                      Disp_Template ("(0)", Inst);
-                  elsif W = 0 then
-                     Disp_Template ("(-1 downto 0)", Inst);
                   else
                      Disp_Template ("(\n0 downto 0)", Inst, (0 => W - 1));
                   end if;
