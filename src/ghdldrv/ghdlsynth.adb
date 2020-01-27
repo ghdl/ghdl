@@ -201,7 +201,7 @@ package body Ghdlsynth is
                   return Null_Iir;
                end if;
             else
-               Design_File := Ghdlcomp.Compile_Analyze_File2 (Arg);
+               Ghdlcomp.Compile_Load_File (Arg);
             end if;
          end;
       end loop;

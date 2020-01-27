@@ -95,7 +95,7 @@ package body Libghdl is
 
    function Analyze_File (File : Thin_String_Ptr; Len : Natural) return Iir is
    begin
-      return Ghdlcomp.Compile_Analyze_File2 (File (1 .. Len));
+      return Ghdlcomp.Compile_Analyze_File (File (1 .. Len));
    end Analyze_File;
 
    procedure Set_Exec_Prefix (Prefix : Thin_String_Ptr; Len : Natural) is

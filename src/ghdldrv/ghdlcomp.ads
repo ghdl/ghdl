@@ -96,8 +96,14 @@ package Ghdlcomp is
    --  Functionnal interface.
    --  Must be first initialized by Compile_Init
    procedure Compile_Analyze_Init (Load_Work : Boolean := True);
-   procedure Compile_Analyze_File (File : String);
-   function Compile_Analyze_File2 (File : String) return Iir;
+
+   --  Load and parse FILE, put library units in the work library (without
+   --  analyzing them).
+   procedure Compile_Load_File (File : String);
+
+   --  Load, parse and analyze FILE.
+   function Compile_Analyze_File (File : String) return Iir;
+
    procedure Compile_Elaborate (Unit_Name : String_Access);
    procedure Compile_Run;
 end Ghdlcomp;

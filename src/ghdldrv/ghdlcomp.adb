@@ -213,7 +213,7 @@ package body Ghdlcomp is
       end if;
    end Compile_Analyze_Init;
 
-   procedure Compile_Analyze_File (File : String)
+   procedure Compile_Load_File (File : String)
    is
       Res : Iir_Design_File;
       Design : Iir;
@@ -232,9 +232,9 @@ package body Ghdlcomp is
          Libraries.Add_Design_Unit_Into_Library (Design);
          Design := Next_Design;
       end loop;
-   end Compile_Analyze_File;
+   end Compile_Load_File;
 
-   function Compile_Analyze_File2 (File : String) return Iir
+   function Compile_Analyze_File (File : String) return Iir
    is
       Id : constant Name_Id := Name_Table.Get_Identifier (File);
       Design_File : Iir_Design_File;
@@ -280,7 +280,7 @@ package body Ghdlcomp is
       end loop;
 
       return New_Design_File;
-   end Compile_Analyze_File2;
+   end Compile_Analyze_File;
 
    procedure Compile_Elaborate (Unit_Name : String_Access)
    is
@@ -372,7 +372,7 @@ package body Ghdlcomp is
                      Elab_Arg := I + 1;
                      exit;
                   else
-                     Compile_Analyze_File (Arg);
+                     Compile_Load_File (Arg);
                   end if;
                end;
             end loop;
