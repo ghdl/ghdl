@@ -3011,20 +3011,37 @@ package body Trans.Chap3 is
       end if;
    end Index_Base;
 
+   function Convert_Array_Base (Arr : Mnode) return Mnode
+   is
+      Type_Info : constant Type_Info_Acc := Get_Type_Info (Arr);
+      Mode : constant Object_Kind_Type := Get_Object_Kind (Arr);
+   begin
+      if Type_Info.Ortho_Ptr_Type (Mode) /= Type_Info.B.Base_Ptr_Type (Mode)
+      then
+         return E2M
+           (New_Convert_Ov (M2E (Arr), Type_Info.B.Base_Ptr_Type (Mode)),
+            Type_Info, Mode);
+      else
+         return Arr;
+      end if;
+   end Convert_Array_Base;
+
    function Index_Array (Arr : Mnode; Atype : Iir; Index : O_Enode)
                         return Mnode
    is
       El_Type  : constant Iir := Get_Element_Subtype (Atype);
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Arr);
+      Base     : Mnode;
    begin
+      Base := Get_Composite_Base (Arr);
       --  For indexing, we need to consider the size of elements.
       case Type_Mode_Valid (El_Tinfo.Type_Mode) is
          when Type_Mode_Unbounded_Array
            | Type_Mode_Unbounded_Record =>
             return E2M
               (Add_Pointer
-                 (M2E (Get_Composite_Base (Arr)),
+                 (M2E (Base),
                   New_Dyadic_Op
                     (ON_Mul_Ov,
                      Index,
@@ -3036,14 +3053,13 @@ package body Trans.Chap3 is
                El_Tinfo.B.Base_Ptr_Type (Kind));
          when Type_Mode_Complex_Array
            | Type_Mode_Complex_Record =>
-            return Reindex_Complex_Array
-              (Get_Composite_Base (Arr), Atype, Index, El_Tinfo);
+            return Reindex_Complex_Array (Base, Atype, Index, El_Tinfo);
          when Type_Mode_Thin
            | Type_Mode_Static_Array
            | Type_Mode_Static_Record =>
-            return Lv2M
-              (New_Indexed_Element (M2Lv (Get_Composite_Base (Arr)), Index),
-               El_Tinfo, Kind);
+            Base := Convert_Array_Base (Base);
+            return Lv2M (New_Indexed_Element (M2Lv (Base), Index),
+                         El_Tinfo, Kind);
          when Type_Mode_Protected =>
             raise Internal_Error;
       end case;

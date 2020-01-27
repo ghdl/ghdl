@@ -170,6 +170,11 @@ package Trans.Chap3 is
    --  return it.
    function Get_Composite_Base (Obj : Mnode) return Mnode;
 
+   --  The base returned by Get_Composite_Base is always the least
+   --  constrained array base.  But the subtype may be more constrained than
+   --  the base.  In that case the base must be converted to the subtype.
+   function Convert_Array_Base (Arr : Mnode) return Mnode;
+
    --  Get the base of array or record OBJ; but if OBJ is already constrained,
    --  convert it to the base of an unbounded object (so this unboxes the
    --  records).
