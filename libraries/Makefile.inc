@@ -34,7 +34,8 @@ ifeq ($(enable_openieee),false)
 # Full libraries
 vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
 vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
-vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08
+vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08 \
+  $(LIBDST_DIR)/src/ieee2008/LICENSE
 else
 # GPL compatible
 vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
@@ -307,6 +308,9 @@ $(STD08_DIR)/std-obj08.cf: $(ANALYZE_DEP) $(STD08_SRCS)
 	done
 
 $(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
+	$(CP) $< $@
+
+$(LIBDST_DIR)/src/ieee2008/LICENSE: $(LIBSRC_DIR)/ieee2008/LICENSE
 	$(CP) $< $@
 
 $(LIBDST_DIR)/src/openieee/v08/%.vhdl: $(LIBSRC_DIR)/openieee/v08/%.vhdl
