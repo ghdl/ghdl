@@ -9,7 +9,7 @@ GCC backend
 
 * GCC (Gnu Compiler Collection)
 * GNAT (Ada compiler for GCC)
-* GCC source files. Download and untar the sources of version 4.9.x, 5.x, 6.x or 7.x.
+* GCC source files. Download and untar the sources of version 4.9.x, 5.x, 6.x, 7.x, 8.x, 9.x or 10.x.
 
 .. HINT :: There are some dependencies for building GCC (``gmp``, ``mpfr`` and ``mpc``). If you have not installed them on your system, you can either build them manually or use the ``download_prerequisites`` script provided in the GCC source tree (recommended): ``cd /path/to/gcc/source/dir && ./contrib/download_prerequisites``.
 
@@ -62,7 +62,7 @@ GCC backend
   If your system gcc was built with ``--enable-default-pie``, add
   ``-no-pie`` option for linking.
 
-.. HINT :: For ppc64 (and AIX ?) platform, the object file format contains an identifier for the source language. Because gcc doesn't know about VHDL, gcc crashes very early. This could be fixed with a very simple change in ``gcc/config/rs6000/rs6000.c``, ``function rs6000_output_function_epilogue`` (as of gcc 4.8):
+.. HINT :: For ppc64/ppc64le platform, the object file format contains an identifier for the source language. Because gcc doesn't know about VHDL, gcc crashes very early. This could be fixed with a very simple change in ``gcc/config/rs6000/rs6000.c`` (``gcc/config/rs6000/rs6000-logue.c`` since gcc 10), function ``rs6000_output_function_epilogue``:
 
 	  .. CODE:: diff
 
