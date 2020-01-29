@@ -248,8 +248,9 @@ copy-sources.gcc: version.ads
 	 7.*)      gcc_ortho_lang=ortho-lang-7.c ;; \
 	 8.*)      gcc_ortho_lang=ortho-lang-8.c ;; \
 	 9.*)      gcc_ortho_lang=ortho-lang-9.c ;; \
+	 10.*)     gcc_ortho_lang=ortho-lang-9.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
-	    echo "Need gcc version 4.9.x, 5.x, 6.x, 7.x, 8.x or 9.x"; \
+	    echo "Need gcc version 4.9.x, 5.x, 6.x, 7.x, 8.x, 9.x or 10.x"; \
 	    exit 1 ;; \
 	esac; \
 	$(CP) -p $(srcdir)/src/ortho/gcc/$$gcc_ortho_lang \
