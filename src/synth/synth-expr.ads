@@ -38,13 +38,19 @@ package Synth.Expr is
                                       Loc : Source.Syn_Src)
                                      return Value_Acc;
 
+   --  For a static value V, return the value.
    function Get_Static_Discrete (V : Value_Acc) return Int64;
+
+   --  Return True only if discrete value V is known to be positive or 0.
+   --  False means either not positive or unknown.
+   function Is_Positive (V : Value_Acc) return Boolean;
 
    --  Return the bounds of a one dimensional array/vector type and the
    --  width of the element.
    procedure Get_Onedimensional_Array_Bounds
      (Typ : Type_Acc; Bnd : out Bound_Type; El_Typ : out Type_Acc);
 
+   --  Create an array subtype from bound BND.
    function Create_Onedimensional_Array_Subtype
      (Btyp : Type_Acc; Bnd : Bound_Type) return Type_Acc;
 

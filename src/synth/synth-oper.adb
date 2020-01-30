@@ -34,6 +34,7 @@ with Netlists; use Netlists;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
+with Netlists.Utils;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Stmts; use Synth.Stmts;
@@ -416,6 +417,64 @@ package body Synth.Oper is
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Sgn_Sgn;
+
+      function Synth_Shift (Id_Pos : Module_Id; Id_Neg : Module_Id)
+                           return Value_Acc
+      is
+         pragma Unreferenced (Id_Neg);
+         L1, R1 : Net;
+         N : Net;
+         Is_Pos : Boolean;
+      begin
+         Is_Pos := Is_Positive (Right);
+
+         L1 := Get_Net (Left);
+         R1 := Get_Net (Right);
+         if Is_Pos then
+            N := Build_Shift_Rotate (Ctxt, Id_Pos, L1, R1);
+         else
+            raise Internal_Error;
+         end if;
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Create_Res_Bound (Left));
+      end Synth_Shift;
+
+      function Synth_Rotation (Id : Module_Id) return Value_Acc
+      is
+         Amt : Int64;
+         Ww : Width;
+         L1, R1 : Net;
+         N : Net;
+      begin
+         if Is_Static_Val (Right) then
+            Amt := Get_Static_Discrete (Right);
+            if Amt < 0 then
+               raise Internal_Error;
+            end if;
+            Amt := Amt mod Int64 (Left.Typ.W);
+            R1 := Build_Const_UB32 (Ctxt, Uns32 (Amt), Right.Typ.W);
+            Set_Location (R1, Right_Expr);
+         elsif not Is_Positive (Right) then
+            Error_Msg_Synth (+Expr, "rotation quantity must be unsigned");
+            return Left;
+         else
+            R1 := Get_Net (Right);
+            Ww := Netlists.Utils.Clog2 (Left.Typ.W);
+            if Right.Typ.W >= Ww then
+               if Mutils.Is_Power2 (Uns64 (Left.Typ.W)) then
+                  R1 := Build2_Trunc (Ctxt, Id_Utrunc, R1, Ww, +Expr);
+               else
+                  Error_Msg_Synth
+                    (+Expr, "vector length of rotation must be a power of 2");
+                  return Left;
+               end if;
+            end if;
+         end if;
+         L1 := Get_Net (Left);
+         N := Build_Shift_Rotate (Ctxt, Id, L1, R1);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Create_Res_Bound (Left));
+      end Synth_Rotation;
    begin
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
       Left := Synth_Subtype_Conversion (Left, Left_Typ, False, Expr);
@@ -950,6 +1009,15 @@ package body Synth.Oper is
          when Iir_Predefined_Floating_Div =>
             Error_Msg_Synth (+Expr, "non-constant division not supported");
             return null;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
+            return Synth_Shift (Id_Asr, Id_None);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int =>
+            return Synth_Shift (Id_Lsl, Id_None);
+
+         when Iir_Predefined_Ieee_1164_Vector_Ror =>
+            return Synth_Rotation (Id_Ror);
 
          when others =>
             Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "

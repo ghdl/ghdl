@@ -68,6 +68,35 @@ package body Synth.Expr is
       return Get_Net_Int64 (N);
    end Get_Static_Discrete;
 
+   function Is_Positive (V : Value_Acc) return Boolean
+   is
+      N : Net;
+      Inst : Instance;
+   begin
+      pragma Assert (V.Typ.Kind = Type_Discrete);
+      case V.Kind is
+         when Value_Discrete =>
+            return V.Scal >= 0;
+         when Value_Const =>
+            return V.C_Val.Scal >= 0;
+         when Value_Net =>
+            N := V.N;
+         when Value_Wire =>
+            N := Get_Net (V);
+         when others =>
+            raise Internal_Error;
+      end case;
+      Inst := Get_Net_Parent (N);
+      case Get_Id (Inst) is
+         when Id_Uextend
+           | Id_Const_UB32 =>
+            return True;
+         when others =>
+            --  Be conservative.
+            return False;
+      end case;
+   end Is_Positive;
+
    procedure From_Std_Logic (Enum : Int64; Val : out Uns32; Zx : out Uns32) is
    begin
       case Enum is

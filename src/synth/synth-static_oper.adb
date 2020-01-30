@@ -260,6 +260,44 @@ package body Synth.Static_Oper is
       end;
    end Synth_Mul_Sgn_Sgn;
 
+   function Synth_Shift (Val : Value_Acc;
+                         Amt : Uns32;
+                         Right : Boolean;
+                         Arith : Boolean) return Value_Acc
+   is
+      Len : constant Uns32 := Uns32 (Val.Arr.Len);
+      Arr : Std_Logic_Vector (1 .. Natural (Len));
+      Pad : Std_Ulogic;
+   begin
+      if Len = 0 or Amt >= Len then
+         Arr := (others => '0');
+      else
+         To_Std_Logic_Vector (Val, Arr);
+         if Arith then
+            Pad := Arr (1);
+         else
+            Pad := '0';
+         end if;
+
+         if Right then
+            for I in reverse Amt + 1 .. Len loop
+               Arr (Natural (I)) := Arr (Natural (I - Amt));
+            end loop;
+            for I in 1 .. Amt loop
+               Arr (Natural (I)) := Pad;
+            end loop;
+         else
+            for I in 1 .. Len - Amt loop
+               Arr (Natural (I)) := Arr (Natural (I + Amt));
+            end loop;
+            for I in Len - Amt + 1 .. Len loop
+               Arr (Natural (I)) := Pad;
+            end loop;
+         end if;
+      end if;
+      return To_Value_Acc (Arr, Val.Typ.Vec_El);
+   end Synth_Shift;
+
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
                                             Left : Value_Acc;
@@ -466,6 +504,18 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
             return Synth_Mul_Sgn_Sgn (Left, Right, Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int =>
+            declare
+               Amt : Int64;
+            begin
+               Amt := Get_Static_Discrete (Right);
+               if Amt >= 0 then
+                  return Synth_Shift (Left, Uns32 (Amt), True, False);
+               else
+                  return Synth_Shift (Left, Uns32 (-Amt), False, False);
+               end if;
+            end;
 
          when others =>
             Error_Msg_Synth

@@ -19,6 +19,7 @@ with Types; use Types;
 with Name_Table;
 with Std_Names; use Std_Names;
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Std_Package;
 
 package body Vhdl.Ieee.Std_Logic_1164 is
    function Is_Scalar_Parameter (Inter : Iir) return Boolean is
@@ -33,6 +34,12 @@ package body Vhdl.Ieee.Std_Logic_1164 is
       return Base_Type = Std_Ulogic_Vector_Type
         or Base_Type = Std_Logic_Vector_Type;
    end Is_Vector_Parameter;
+
+   function Is_Integer_Parameter (Inter : Iir) return Boolean is
+   begin
+      return (Get_Base_Type (Get_Type (Inter))
+                = Std_Package.Integer_Type_Definition);
+   end Is_Integer_Parameter;
 
    --  Return True iff the profile of FUNC is: (l, r : std_ulogic)
    function Is_Scalar_Scalar_Function (Func : Iir) return Boolean
@@ -97,6 +104,30 @@ package body Vhdl.Ieee.Std_Logic_1164 is
 
       return True;
    end Is_Vector_Vector_Function;
+
+   --  Return True iff the profile of FUNC is:
+   --    (l : std_[u]logic_vector; r : integer)
+   function Is_Vector_Integer_Function (Func : Iir) return Boolean
+   is
+      Inter : constant Iir := Get_Interface_Declaration_Chain (Func);
+      Inter2 : Iir;
+   begin
+      if Get_Implicit_Definition (Func) /= Iir_Predefined_None then
+         return False;
+      end if;
+      if Inter = Null_Iir or else not Is_Vector_Parameter (Inter) then
+         return False;
+      end if;
+      Inter2 := Get_Chain (Inter);
+      if Inter2 =  Null_Iir or else not Is_Integer_Parameter (Inter2) then
+         return False;
+      end if;
+      if Get_Chain (Inter2) /= Null_Iir then
+         return False;
+      end if;
+
+      return True;
+   end Is_Vector_Integer_Function;
 
    --  Return True iff the profile of FUNC is: (l : std_[u]logic_vector)
    function Is_Vector_Function (Func : Iir) return Boolean
@@ -307,6 +338,19 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when Name_Is_X =>
                            Predefined :=
                              Iir_Predefined_Ieee_1164_Scalar_Is_X;
+                        when others =>
+                           Predefined := Iir_Predefined_None;
+                     end case;
+                  elsif Is_Vector_Integer_Function (Decl) then
+                     case Get_Identifier (Decl) is
+                        when Name_Sll =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Sll;
+                        when Name_Srl =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Srl;
+                        when Name_Rol =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Rol;
+                        when Name_Ror =>
+                           Predefined := Iir_Predefined_Ieee_1164_Vector_Ror;
                         when others =>
                            Predefined := Iir_Predefined_None;
                      end case;

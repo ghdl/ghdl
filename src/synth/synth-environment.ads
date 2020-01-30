@@ -85,13 +85,13 @@ package Synth.Environment is
 
    --  The current value of WID.  For variables, this is the last assigned
    --  value.  For signals, this is the initial value.
+   --  A builder is needed in case of concatenation.
    function Get_Current_Value (Ctxt : Builders.Context_Acc; Wid : Wire_Id)
                               return Net;
 
    function Get_Current_Assign_Value
      (Ctxt : Builders.Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width)
      return Net;
-
 
    --  Read and write the mark flag.
    function Get_Wire_Mark (Wid : Wire_Id) return Boolean;

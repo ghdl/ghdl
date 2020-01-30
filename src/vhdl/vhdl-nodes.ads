@@ -5456,6 +5456,11 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_1164_Vector_And_Reduce,
       Iir_Predefined_Ieee_1164_Vector_Or_Reduce,
 
+      Iir_Predefined_Ieee_1164_Vector_Sll,
+      Iir_Predefined_Ieee_1164_Vector_Srl,
+      Iir_Predefined_Ieee_1164_Vector_Rol,
+      Iir_Predefined_Ieee_1164_Vector_Ror,
+
       Iir_Predefined_Ieee_1164_Condition_Operator,
 
       --  Numeric_Std.
