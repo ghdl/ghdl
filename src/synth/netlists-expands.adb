@@ -426,7 +426,11 @@ package body Netlists.Expands is
       Remove_Instance (Inst);
    end Expand_Dyn_Insert;
 
-   procedure Expand_Rol (Ctxt : Context_Acc; Inst : Instance)
+   --  Replase instance INST a ROT b by: S (a, b) | C (a, l - b)
+   --  (S for shifted, C for counter-shifted)
+   procedure Expand_Rot (Ctxt : Context_Acc;
+                         Inst : Instance;
+                         Id_S, Id_C : Shift_Module_Id)
    is
       Val : constant Input := Get_Input (Inst, 0);
       Amt : constant Input := Get_Input (Inst, 1);
@@ -434,23 +438,33 @@ package body Netlists.Expands is
       Amt_N : constant Net := Get_Driver (Amt);
       W_Val : constant Width := Get_Width (Val_N);
       W_Amt : constant Width := Clog2 (W_Val);
-      Shl : Net;
+      Sh_S : Net;
       R_Amt : Net;
-      Shr : Net;
+      Sh_C : Net;
       Res : Net;
    begin
-      Shl := Build_Shift_Rotate (Ctxt, Id_Lsl, Val_N, Amt_N);
+      Sh_S := Build_Shift_Rotate (Ctxt, Id_S, Val_N, Amt_N);
       R_Amt := Build_Dyadic (Ctxt, Id_Sub,
                              Build_Const_UB32 (Ctxt, W_Val, W_Amt),
                              Build2_Uresize (Ctxt, Amt_N, W_Amt));
-      Shr := Build_Shift_Rotate (Ctxt, Id_Lsr, Val_N, R_Amt);
-      Res := Build_Dyadic (Ctxt, Id_Or, Shl, Shr);
+      Sh_C := Build_Shift_Rotate (Ctxt, Id_C, Val_N, R_Amt);
+      Res := Build_Dyadic (Ctxt, Id_Or, Sh_S, Sh_C);
 
       Redirect_Inputs (Get_Output (Inst, 0), Res);
       Disconnect (Val);
       Disconnect (Amt);
       Remove_Instance (Inst);
+   end Expand_Rot;
+
+   procedure Expand_Rol (Ctxt : Context_Acc; Inst : Instance) is
+   begin
+      Expand_Rot (Ctxt, Inst, Id_Lsl, Id_Lsr);
    end Expand_Rol;
+
+   procedure Expand_Ror (Ctxt : Context_Acc; Inst : Instance) is
+   begin
+      Expand_Rot (Ctxt, Inst, Id_Lsr, Id_Lsl);
+   end Expand_Ror;
 
    procedure Expand_Gates (Ctxt : Context_Acc; M : Module)
    is
@@ -471,8 +485,11 @@ package body Netlists.Expands is
                Expand_Dyn_Insert (Ctxt, Inst, Get_Input_Net (Inst, 3));
 
             when Id_Rol =>
-               --  a rol b == shl (a, b) | shr (a, l - b)
+               --  a rol b == shl (a, b) | shr (a, l - b)  [if b < l]
                Expand_Rol (Ctxt, Inst);
+            when Id_Ror =>
+               --  a ror b == shr (a, b) | shl (a, l - b)  [if b < l]
+               Expand_Ror (Ctxt, Inst);
 
             when others =>
                null;
