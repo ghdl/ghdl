@@ -944,10 +944,8 @@ package body Trans.Chap8 is
                if Final then
                   Translate_Variable_Aggregate_Assignment
                     (Get_Associated_Expr (El), El_Type,
-                     Chap3.Index_Base
-                       (Val, Targ_Type,
-                        New_Lit (New_Unsigned_Literal
-                          (Ghdl_Index_Type, Index))));
+                     Chap3.Index_Base (Val, Targ_Type,
+                                       New_Lit (New_Index_Lit (Index))));
                   Index := Index + 1;
                else
                   Translate_Variable_Array_Aggr
@@ -1017,6 +1015,100 @@ package body Trans.Chap8 is
       end if;
    end Translate_Variable_Aggregate_Assignment;
 
+   function Aggregate_Overlap_Variable (Aggr : Iir; Name : Iir) return Boolean
+   is
+      Assoc : Iir;
+      Expr : Iir;
+   begin
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      while Assoc /= Null_Iir loop
+         Expr := Get_Associated_Expr (Assoc);
+         if Get_Kind (Expr) = Iir_Kind_Aggregate then
+            if Aggregate_Overlap_Variable (Expr, Name) then
+               return True;
+            end if;
+         else
+            Expr := Get_Base_Name (Expr);
+            if Expr = Name then
+               return True;
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+      return False;
+   end Aggregate_Overlap_Variable;
+
+   function Aggregate_Overlap_Dereference (Aggr : Iir; Atype : Iir)
+                                          return Boolean
+   is
+      Assoc : Iir;
+      Expr : Iir;
+   begin
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      while Assoc /= Null_Iir loop
+         Expr := Get_Associated_Expr (Assoc);
+         if Get_Kind (Expr) = Iir_Kind_Aggregate then
+            if Aggregate_Overlap_Dereference (Expr, Atype) then
+               return True;
+            end if;
+         else
+            Expr := Get_Base_Name (Expr);
+            if Get_Kind (Expr) in Iir_Kinds_Dereference
+              and then Get_Base_Type (Get_Type (Expr)) = Atype
+            then
+               return True;
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+      return False;
+   end Aggregate_Overlap_Dereference;
+
+   --  Return true if there is a possible overlap between source and
+   --  target in an assignment whose target is an aggregate.
+   function Assignment_Overlap (Targ : Iir; Expr : Iir) return Boolean
+   is
+      Base : Iir;
+   begin
+      Base := Expr;
+
+      --  Strip qualified expression/parenthesis/type conversion.  Although
+      --  they are expression, code generation doesn't copy the value.
+      loop
+         case Get_Kind (Base) is
+            when Iir_Kind_Qualified_Expression
+              | Iir_Kind_Parenthesis_Expression
+              | Iir_Kind_Type_Conversion =>
+               Base := Get_Expression (Base);
+            when others =>
+               exit;
+         end case;
+      end loop;
+
+      case Get_Kind (Base) is
+         when Iir_Kinds_Name =>
+            Base := Get_Base_Name (Base);
+         when Iir_Kinds_Dereference =>
+            null;
+         when others =>
+            --  An expression.
+            return False;
+      end case;
+
+      case Get_Kind (Base) is
+         when Iir_Kinds_Dereference =>
+            return Aggregate_Overlap_Dereference
+              (Targ, Get_Base_Type (Get_Type (Base)));
+         when Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Variable_Declaration =>
+            return Aggregate_Overlap_Variable (Targ, Base);
+         when Iir_Kind_External_Variable_Name =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Assignment_Overlap;
+
    procedure Translate_Variable_Assignment_Statement
      (Stmt : Iir_Variable_Assignment_Statement)
    is
@@ -1031,15 +1123,20 @@ package body Trans.Chap8 is
             Temp : Mnode;
          begin
             Chap3.Translate_Anonymous_Subtype_Definition (Targ_Type, False);
-
-            --  Use a temporary variable, to avoid overlap.
-            Temp := Create_Temp (Get_Info (Targ_Type));
-            Chap4.Allocate_Complex_Object (Targ_Type, Alloc_Stack, Temp);
-
             E := Chap7.Translate_Expression (Expr, Targ_Type);
-            Chap3.Translate_Object_Copy (Temp, E, Targ_Type);
-            Translate_Variable_Aggregate_Assignment
-              (Target, Targ_Type, Temp);
+
+            if Assignment_Overlap (Target, Expr) then
+               --  Use a temporary variable, to avoid overlap.
+               Temp := Create_Temp (Get_Info (Targ_Type));
+               Chap4.Allocate_Complex_Object (Targ_Type, Alloc_Stack, Temp);
+
+               Chap3.Translate_Object_Copy (Temp, E, Targ_Type);
+               E := Temp;
+            else
+               --  FIXME: check bounds.
+               Stabilize (E);
+            end if;
+            Translate_Variable_Aggregate_Assignment (Target, Targ_Type, E);
             return;
          end;
       else
