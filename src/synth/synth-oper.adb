@@ -1433,7 +1433,8 @@ package body Synth.Oper is
             begin
                return Synth_Shift_Rotate (Id_Ror, L, R, Expr);
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Match_Suv =>
+         when Iir_Predefined_Ieee_Numeric_Std_Match_Suv
+            | Iir_Predefined_Ieee_Numeric_Std_Match_Slv =>
             declare
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
                R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
