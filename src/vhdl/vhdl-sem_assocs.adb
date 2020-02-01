@@ -1325,10 +1325,23 @@ package body Vhdl.Sem_Assocs is
          if Is_Valid_Conversion (Conv, Res_Base_Type, Param_Base_Type) then
             Res := Conv;
          else
-            Res := Null_Iir;
             Error_Msg_Sem (+Loc, "conversion function or type does not match");
+            return Null_Iir;
          end if;
       end if;
+
+      if Get_Kind (Res) = Iir_Kind_Function_Call then
+         declare
+            Imp : constant Iir := Get_Implementation (Res);
+            Inter : constant Iir := Get_Interface_Declaration_Chain (Imp);
+         begin
+            if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
+               Error_Msg_Sem
+                 (+Loc, "interface of function must be a constant interface");
+            end if;
+         end;
+      end if;
+
       return Res;
    end Extract_Conversion;
 
