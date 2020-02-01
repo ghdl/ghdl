@@ -1707,6 +1707,76 @@ package body Ghdllocal is
       end if;
    end Extract_Elab_Unit;
 
+   --  Command Elab_Order.
+   type Command_Elab_Order is new Command_Lib with null record;
+   function Decode_Command (Cmd : Command_Elab_Order; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Elab_Order) return String;
+   procedure Perform_Action (Cmd : Command_Elab_Order;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Elab_Order; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--elab-order";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Elab_Order) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--elab-order [OPTS] UNIT [ARCH]  Display ordered source files";
+   end Get_Short_Help;
+
+   function Is_Makeable_File (File : Iir_Design_File) return Boolean is
+   begin
+      if File = Vhdl.Std_Package.Std_Standard_File then
+         return False;
+      end if;
+      return True;
+   end Is_Makeable_File;
+
+   procedure Perform_Action (Cmd : Command_Elab_Order;
+                             Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      use Ada.Command_Line;
+      use Name_Table;
+
+      Prim_Id : Name_Id;
+      Sec_Id : Name_Id;
+      Files_List : Iir_List;
+      File : Iir_Design_File;
+      Files_It : List_Iterator;
+
+      Dir_Id : Name_Id;
+
+      Next_Arg : Natural;
+   begin
+      Extract_Elab_Unit ("--elab-order", Args, Next_Arg, Prim_Id, Sec_Id);
+      Setup_Libraries (True);
+      Files_List := Build_Dependence (Prim_Id, Sec_Id);
+
+      Files_It := List_Iterate (Files_List);
+      while Is_Valid (Files_It) loop
+         File := Get_Element (Files_It);
+         Dir_Id := Get_Design_File_Directory (File);
+         if not Is_Makeable_File (File)
+           or else Dir_Id /= Files_Map.Get_Home_Directory
+         then
+            --  Builtin file.
+            null;
+         else
+            --  Lib := Get_Library (File);
+            Put (Image (Get_Design_File_Filename (File)));
+            New_Line;
+         end if;
+         Next (Files_It);
+      end loop;
+   end Perform_Action;
+
    procedure Register_Commands is
    begin
       Register_Command (new Command_Import);
@@ -1717,6 +1787,7 @@ package body Ghdllocal is
       Register_Command (new Command_Remove);
       Register_Command (new Command_Copy);
       Register_Command (new Command_Disp_Standard);
+      Register_Command (new Command_Elab_Order);
       Register_Command (new Command_Find_Top);
       Register_Command (new Command_Bug_Box);
    end Register_Commands;

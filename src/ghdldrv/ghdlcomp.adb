@@ -799,7 +799,7 @@ package body Ghdlcomp is
          end if;
    end Perform_Action;
 
-      --  Command Gen_Makefile.
+   --  Command Gen_Makefile.
    type Command_Gen_Makefile is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Gen_Makefile; Name : String)
                            return Boolean;
