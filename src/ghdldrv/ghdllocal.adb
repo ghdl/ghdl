@@ -1742,7 +1742,6 @@ package body Ghdllocal is
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Ada.Command_Line;
       use Name_Table;
 
       Prim_Id : Name_Id;
