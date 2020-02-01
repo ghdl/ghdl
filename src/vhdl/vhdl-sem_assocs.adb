@@ -1249,44 +1249,44 @@ package body Vhdl.Sem_Assocs is
       return True;
    end Is_Conversion_Function;
 
-   function Is_Valid_Conversion
-     (Func : Iir; Res_Base_Type : Iir; Param_Base_Type : Iir) return Boolean
+   function Is_Valid_Type_Conversion
+     (Conv : Iir; Res_Base_Type : Iir; Param_Base_Type : Iir) return Boolean
    is
-      R_Type : Iir;
-      P_Type : Iir;
+      Atype : constant Iir := Get_Type (Conv);
+   begin
+      return Get_Base_Type (Atype) = Res_Base_Type
+        and then Are_Types_Closely_Related (Atype, Param_Base_Type);
+   end Is_Valid_Type_Conversion;
+
+   function Is_Valid_Function_Conversion
+     (Call : Iir; Res_Base_Type : Iir; Param_Base_Type : Iir) return Boolean
+   is
+      Imp : constant Iir := Get_Implementation (Call);
+      Res_Type : constant Iir := Get_Type (Imp);
+      Inters : constant Iir := Get_Interface_Declaration_Chain (Imp);
+      Param_Type : Iir;
+   begin
+      if Inters = Null_Iir then
+         return False;
+      end if;
+      Param_Type := Get_Type (Inters);
+
+      return Get_Base_Type (Res_Type) = Res_Base_Type
+        and then Get_Base_Type (Param_Type) = Param_Base_Type;
+   end Is_Valid_Function_Conversion;
+
+   function Is_Valid_Conversion
+     (Func : Iir; Res_Base_Type : Iir; Param_Base_Type : Iir) return Boolean is
    begin
       case Get_Kind (Func) is
-         when Iir_Kind_Function_Declaration =>
-            R_Type := Get_Type (Func);
-            P_Type := Get_Type (Get_Interface_Declaration_Chain (Func));
-            if Get_Base_Type (R_Type) = Res_Base_Type
-              and then Get_Base_Type (P_Type) = Param_Base_Type
-            then
-               return True;
-            else
-               return False;
-            end if;
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
-            R_Type := Get_Type (Func);
-            if Get_Base_Type (R_Type) = Res_Base_Type
-              and then Are_Types_Closely_Related (R_Type, Param_Base_Type)
-            then
-               return True;
-            else
-               return False;
-            end if;
          when Iir_Kind_Function_Call =>
-            return Is_Valid_Conversion (Get_Implementation (Func),
-                                        Res_Base_Type, Param_Base_Type);
+            return Is_Valid_Function_Conversion
+              (Func, Res_Base_Type, Param_Base_Type);
          when Iir_Kind_Type_Conversion =>
-            return Is_Valid_Conversion (Get_Type_Mark (Func),
-                                        Res_Base_Type, Param_Base_Type);
-         when Iir_Kinds_Denoting_Name =>
-            return Is_Valid_Conversion (Get_Named_Entity (Func),
-                                        Res_Base_Type, Param_Base_Type);
+            return Is_Valid_Type_Conversion
+              (Func, Res_Base_Type, Param_Base_Type);
          when others =>
-            return False;
+            Error_Kind ("is_valid_conversion", Func);
       end case;
    end Is_Valid_Conversion;
 
