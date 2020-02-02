@@ -926,36 +926,57 @@ package body Trans.Chap8 is
      (Targ      : Iir_Aggregate;
       Targ_Type : Iir;
       Val       : Mnode;
-      Index     : in out Unsigned_64;
+      Index     : O_Dnode;
       Dim       : Natural)
    is
-      El      : Iir;
+      Choice  : Iir;
       Final   : Boolean;
-      El_Type : Iir;
+      Expr    : Iir;
    begin
       Final := Dim = Get_Nbr_Elements (Get_Index_Subtype_List (Targ_Type));
-      if Final then
-         El_Type := Get_Element_Subtype (Targ_Type);
-      end if;
-      El := Get_Association_Choices_Chain (Targ);
-      while El /= Null_Iir loop
-         case Get_Kind (El) is
+      Choice := Get_Association_Choices_Chain (Targ);
+      while Choice /= Null_Iir loop
+         Expr := Get_Associated_Expr (Choice);
+         case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_None =>
                if Final then
-                  Translate_Variable_Aggregate_Assignment
-                    (Get_Associated_Expr (El), El_Type,
-                     Chap3.Index_Base (Val, Targ_Type,
-                                       New_Lit (New_Index_Lit (Index))));
-                  Index := Index + 1;
+                  declare
+                     Sub_Aggr   : Mnode;
+                     Sub_Type   : Iir;
+                  begin
+                     if Get_Element_Type_Flag (Choice) then
+                        Sub_Aggr := Chap3.Index_Base
+                          (Chap3.Get_Composite_Base (Val), Targ_Type,
+                           New_Obj_Value (Index));
+                        Sub_Type := Get_Element_Subtype (Targ_Type);
+                     else
+                        Sub_Type := Get_Type (Expr);
+                        Sub_Aggr := Chap3.Slice_Base
+                          (Chap3.Get_Composite_Base (Val),
+                           Sub_Type, New_Obj_Value (Index));
+                     end if;
+                     Translate_Variable_Aggregate_Assignment
+                       (Expr, Sub_Type, Sub_Aggr);
+                     if Get_Element_Type_Flag (Choice) then
+                        Inc_Var (Index);
+                     else
+                        New_Assign_Stmt
+                          (New_Obj (Index),
+                           New_Dyadic_Op
+                             (ON_Add_Ov,
+                              New_Obj_Value (Index),
+                              Chap3.Get_Array_Length (Sub_Aggr, Sub_Type)));
+                     end if;
+                  end;
                else
                   Translate_Variable_Array_Aggr
-                    (Get_Associated_Expr (El),
+                    (Get_Associated_Expr (Choice),
                      Targ_Type, Val, Index, Dim + 1);
                end if;
             when others =>
-               Error_Kind ("translate_variable_array_aggr", El);
+               Error_Kind ("translate_variable_array_aggr", Choice);
          end case;
-         El := Get_Chain (El);
+         Choice := Get_Chain (Choice);
       end loop;
    end Translate_Variable_Array_Aggr;
 
@@ -988,16 +1009,19 @@ package body Trans.Chap8 is
    end Translate_Variable_Rec_Aggr;
 
    procedure Translate_Variable_Aggregate_Assignment
-     (Targ : Iir; Targ_Type : Iir; Val : Mnode)
-   is
-      Index : Unsigned_64;
+     (Targ : Iir; Targ_Type : Iir; Val : Mnode) is
    begin
       if Get_Kind (Targ) = Iir_Kind_Aggregate then
          case Get_Kind (Targ_Type) is
             when Iir_Kinds_Array_Type_Definition =>
-               Index := 0;
-               Translate_Variable_Array_Aggr
-                 (Targ, Targ_Type, Val, Index, 1);
+               declare
+                  Index : O_Dnode;
+               begin
+                  Index := Create_Temp (Ghdl_Index_Type);
+                  Init_Var (Index);
+                  Translate_Variable_Array_Aggr
+                    (Targ, Targ_Type, Val, Index, 1);
+               end;
             when Iir_Kind_Record_Type_Definition
                | Iir_Kind_Record_Subtype_Definition =>
                Translate_Variable_Rec_Aggr (Targ, Targ_Type, Val);
