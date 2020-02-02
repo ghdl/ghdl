@@ -1339,6 +1339,14 @@ package body Vhdl.Sem_Assocs is
                Error_Msg_Sem
                  (+Loc, "interface of function must be a constant interface");
             end if;
+            if Get_Chain (Inter) /= Null_Iir then
+               --  LRM08 6.5.7 Association lists
+               --  In this case, the function name shall denote a function
+               --  whose single parameter is of the type of the formal
+               --  and [...]
+               Error_Msg_Sem
+                 (+Loc, "conversion function must have only one parameter");
+            end if;
          end;
       end if;
 
