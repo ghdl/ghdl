@@ -1051,6 +1051,91 @@ package body Vhdl.Configuration is
                                              Value => new String'(Value)));
    end Add_Generic_Override;
 
+   function Override_String_Generic
+     (Value : String_Acc; Formal_Type : Iir) return Iir
+   is
+      use Str_Table;
+      use Vhdl.Evaluation;
+      El_Type : constant Iir :=
+        Get_Base_Type (Get_Element_Subtype (Formal_Type));
+      F : constant Positive := Value'First;
+      Elist : Iir_Flist;
+      Res : Iir;
+      Str8 : String8_Id;
+      Ntype : Iir;
+      Len : Int32;
+   begin
+      if Get_Kind (El_Type) /= Iir_Kind_Enumeration_Type_Definition then
+         return Null_Iir;
+      end if;
+      Elist := Get_Enumeration_Literal_List (El_Type);
+
+      Str8 := Create_String8;
+      if Value'Last >= F + 2
+        and then (Value (F) = 'x' or Value (F) = 'X')
+        and then Value (F + 1) = '"'
+        and then Value (Value'Last) = '"'
+      then
+         --  Hexa string.
+         declare
+            C : Character;
+            V : Natural;
+            E0, E1 : Iir;
+            E : Iir;
+         begin
+            E0 := Find_Name_In_Flist (Elist, Get_Identifier ('0'));
+            E1 := Find_Name_In_Flist (Elist, Get_Identifier ('1'));
+            if E0 = Null_Iir or E1 = Null_Iir then
+               return Null_Iir;
+            end if;
+            Len := 0;
+            for I in F + 2 .. Value'Last - 1 loop
+               C := Value (I);
+               case C is
+                  when '0' .. '9' =>
+                     V := Character'Pos (C) - Character'Pos ('0');
+                  when 'A' .. 'F' =>
+                     V := Character'Pos (C) - Character'Pos ('A') + 10;
+                  when 'a' .. 'f' =>
+                     V := Character'Pos (C) - Character'Pos ('a') + 10;
+                  when '_' =>
+                     V := 16;
+                  when others =>
+                     Error_Msg_Elab ("incorrect character in bit string");
+                     V := 16;
+               end case;
+               if V < 16 then
+                  Len := Len + 4;
+                  for J in 1 .. 4 loop
+                     if V >= 8 then
+                        E := E1;
+                        V := V - 8;
+                     else
+                        E := E0;
+                     end if;
+                     Append_String8 (Nat8 (Get_Enum_Pos (E)));
+                     V := V * 2;
+                  end loop;
+               end if;
+            end loop;
+         end;
+      else
+         Append_String8_String (Value.all);
+         Len := Value'Length;
+      end if;
+      Res := Create_Iir (Iir_Kind_String_Literal8);
+      Set_String8_Id (Res, Str8);
+      --  FIXME: check characters are in the type.
+      Set_String_Length (Res, Len);
+      Set_Expr_Staticness (Res, Locally);
+      Ntype := Create_Unidim_Array_By_Length
+        (Get_Base_Type (Formal_Type), Value'Length, Res);
+      Set_Type (Res, Ntype);
+      Set_Literal_Subtype (Res, Ntype);
+
+      return Res;
+   end Override_String_Generic;
+
    procedure Override_Generic (Gen : Iir; Value : String_Acc)
    is
       use Vhdl.Evaluation;
@@ -1069,23 +1154,7 @@ package body Vhdl.Configuration is
             Set_Literal_Origin (Res, Null_Iir);
          when Iir_Kind_Array_Type_Definition =>
             if Is_One_Dimensional_Array_Type (Formal_Btype) then
-               declare
-                  use Str_Table;
-                  Str8 : String8_Id;
-                  Ntype : Iir;
-               begin
-                  Str8 := Create_String8;
-                  Append_String8_String (Value.all);
-                  Res := Create_Iir (Iir_Kind_String_Literal8);
-                  Set_String8_Id (Res, Str8);
-                  --  FIXME: check characters are in the type.
-                  Set_String_Length (Res, Value'Length);
-                  Set_Expr_Staticness (Res, Locally);
-                  Ntype := Create_Unidim_Array_By_Length
-                    (Get_Base_Type (Formal_Type), Value'Length, Res);
-                  Set_Type (Res, Ntype);
-                  Set_Literal_Subtype (Res, Ntype);
-               end;
+               Res := Override_String_Generic (Value, Formal_Type);
             else
                Res := Null_Iir;
             end if;
