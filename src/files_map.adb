@@ -1161,49 +1161,52 @@ package body Files_Map is
       end loop;
    end Debug_Source_Lines;
 
+   procedure Debug_Source_File (File : Source_File_Entry)
+   is
+      F : Source_File_Record renames Source_Files.Table(File);
+   begin
+      Log ("*");
+      Log (Source_File_Entry'Image (File));
+      Log (" name: " & Image (F.File_Name));
+      Log (" dir:" & Image (F.Directory));
+      Log (" file length:" & Source_Ptr'Image (F.File_Length));
+      Log_Line;
+      Log (" location:" & Location_Type'Image (F.First_Location)
+             & " -" & Location_Type'Image (F.Last_Location));
+      Log_Line;
+      if F.Checksum /= No_File_Checksum_Id then
+         Log (" checksum: " & Get_File_Checksum_String (F.Checksum));
+         Log_Line;
+      end if;
+      case F.Kind is
+         when Source_File_File =>
+            if F.Source = null then
+               Log (" no buf");
+            else
+               Log (" buf:" & Source_Ptr'Image (F.Source'First)
+                      & " -" & Source_Ptr'Image (F.Source'Last));
+            end if;
+            Log_Line;
+            Log (" nbr lines:"
+                   & Natural'Image (Lines_Tables.Last (F.Lines)));
+            Log_Line;
+            Log (" Gap:" & Source_Ptr'Image (F.Gap_Start)
+                   & " -" & Source_Ptr'Image (F.Gap_Last));
+            Log_Line;
+         when Source_File_String =>
+            null;
+         when Source_File_Instance =>
+            Log (" instance from:" & Source_File_Entry'Image (F.Ref));
+            Log (", base:" & Source_File_Entry'Image (F.Base));
+            Log (", loc:" & Image (F.Instance_Loc));
+            Log_Line;
+      end case;
+   end Debug_Source_File;
+
    procedure Debug_Source_Files is
    begin
       for I in Source_Files.First .. Source_Files.Last loop
-         declare
-            F : Source_File_Record renames Source_Files.Table(I);
-         begin
-            Log ("*");
-            Log (Source_File_Entry'Image (I));
-            Log (" name: " & Image (F.File_Name));
-            Log (" dir:" & Image (F.Directory));
-            Log (" file length:" & Source_Ptr'Image (F.File_Length));
-            Log_Line;
-            Log (" location:" & Location_Type'Image (F.First_Location)
-                   & " -" & Location_Type'Image (F.Last_Location));
-            Log_Line;
-            if F.Checksum /= No_File_Checksum_Id then
-               Log (" checksum: " & Get_File_Checksum_String (F.Checksum));
-               Log_Line;
-            end if;
-            case F.Kind is
-               when Source_File_File =>
-                  if F.Source = null then
-                     Log (" no buf");
-                  else
-                     Log (" buf:" & Source_Ptr'Image (F.Source'First)
-                            & " -" & Source_Ptr'Image (F.Source'Last));
-                  end if;
-                  Log_Line;
-                  Log (" nbr lines:"
-                         & Natural'Image (Lines_Tables.Last (F.Lines)));
-                  Log_Line;
-                  Log (" Gap:" & Source_Ptr'Image (F.Gap_Start)
-                         & " -" & Source_Ptr'Image (F.Gap_Last));
-                  Log_Line;
-               when Source_File_String =>
-                  null;
-               when Source_File_Instance =>
-                  Log (" instance from:" & Source_File_Entry'Image (F.Ref));
-                  Log (", base:" & Source_File_Entry'Image (F.Base));
-                  Log (", loc:" & Image (F.Instance_Loc));
-                  Log_Line;
-            end case;
-         end;
+         Debug_Source_File (I);
       end loop;
    end Debug_Source_Files;
 
