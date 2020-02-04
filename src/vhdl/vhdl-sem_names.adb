@@ -4814,7 +4814,7 @@ package body Vhdl.Sem_Names is
             --  A message must have been displayed.
             return Name;
          when Iir_Kind_Overload_List =>
-            Error_Overload (Res);
+            Error_Overload (Name);
             Set_Named_Entity (Name, Create_Error_Name (Name));
             return Name;
          when Iir_Kinds_Concurrent_Statement
