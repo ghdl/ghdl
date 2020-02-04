@@ -2274,6 +2274,12 @@ package body Vhdl.Scanner is
                  Name_Table.Get_Identifier (Source (Pos + 1));
                Pos := Pos + 3;
                return;
+            elsif Source (Pos + 1) = ''' then
+               Error_Msg_Scan ("empty quote is not allowed in vhdl");
+               Current_Token := Tok_Character;
+               Current_Context.Identifier := Name_Table.Get_Identifier (' ');
+               Pos := Pos + 2;
+               return;
             else
                Current_Token := Tok_Tick;
                Pos := Pos + 1;
