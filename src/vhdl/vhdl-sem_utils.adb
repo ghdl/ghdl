@@ -55,10 +55,12 @@ package body Vhdl.Sem_Utils is
       if Kind /= Iir_Kind_Enumeration_Literal then
          Inter := Get_Interface_Declaration_Chain (Subprg);
          while Inter /= Null_Iir loop
-            Itype := Get_Base_Type (Get_Type (Inter));
-            Sig := Sig + 1;
-            Hash := Hash * 7 + To_Hash (Itype);
-            Hash := Hash + Hash / 2**28;
+            if Get_Kind (Inter) in Iir_Kinds_Interface_Object_Declaration then
+               Itype := Get_Base_Type (Get_Type (Inter));
+               Sig := Sig + 1;
+               Hash := Hash * 7 + To_Hash (Itype);
+               Hash := Hash + Hash / 2**28;
+            end if;
             Inter := Get_Chain (Inter);
          end loop;
       end if;
