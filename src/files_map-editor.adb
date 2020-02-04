@@ -193,6 +193,8 @@ package body Files_Map.Editor is
            F.Source (New_Start .. New_Start + Diff - 1);
 
          if F.Gap_Start >= F.File_Length then
+            --  The gap was after the EOT.  As it is moved before, we need
+            --  to increase the file length.
             F.File_Length := F.File_Length + Gap_Len;
          end if;
 
@@ -213,7 +215,8 @@ package body Files_Map.Editor is
          F.Source (F.Gap_Start .. F.Gap_Start + Diff - 1) :=
            F.Source (F.Gap_Last + 1 .. F.Gap_Last + 1 + Diff - 1);
 
-         if New_Start + Gap_Len >= F.File_Length then
+         if New_Start + Gap_Len > F.File_Length then
+            --  Moved past the end of file.  Decrease the file length.
             F.File_Length := F.File_Length - Gap_Len;
          end if;
 
