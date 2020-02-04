@@ -60,6 +60,10 @@ package body Vhdl.Sem_Utils is
                Sig := Sig + 1;
                Hash := Hash * 7 + To_Hash (Itype);
                Hash := Hash + Hash / 2**28;
+            else
+               --  Non-object parameter are not allowed.
+               pragma Assert (Flags.Flag_Force_Analysis);
+               null;
             end if;
             Inter := Get_Chain (Inter);
          end loop;

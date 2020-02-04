@@ -8,8 +8,9 @@ analyze_failure --force-analysis notype2.vhdl
 analyze_failure --force-analysis nochoice1.vhdl
 analyze_failure --force-analysis nochoice2.vhdl
 analyze_failure --force-analysis choicelen.vhdl
-analyze_failure --force-analysis noexpr.vhdl 
-analyze_failure --force-analysis str.vhdl 
+analyze_failure --force-analysis noexpr.vhdl
+analyze_failure --force-analysis str.vhdl
+analyze_failure --force-analysis procinter.vhdl
 analyze_failure usrattr.vhdl
 analyze_failure forloop.vhdl 
 
