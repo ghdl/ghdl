@@ -84,6 +84,15 @@ package body Files_Map.Editor is
       P : Source_Ptr;
       Nl : Natural;
    begin
+      --  Check File_Length.
+      P := F.File_Length;
+      if P >= Get_Buffer_Length (File) then
+         Log_Line ("invalid file length");
+      end if;
+      if F.Source (P) /= EOT or else F.Source (P + 1) /= EOT then
+         Log_Line ("missing EOT at end of buffer");
+      end if;
+
       L := 1;
       P := Source_Ptr_Org;
       Main_Loop: loop
