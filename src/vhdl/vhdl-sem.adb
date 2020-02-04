@@ -122,7 +122,7 @@ package body Vhdl.Sem is
          Entity := Load_Primary_Unit
            (Library, Get_Identifier (Name), Library_Unit);
          if Entity = Null_Iir then
-            Error_Msg_Sem (+Library_Unit, "entity %n was not analysed", +Name);
+            Error_Msg_Sem (+Name, "entity %n was not analysed", +Name);
             return Null_Iir;
          end if;
          Entity := Get_Library_Unit (Entity);
