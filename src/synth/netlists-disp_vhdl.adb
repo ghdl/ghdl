@@ -334,6 +334,7 @@ package body Netlists.Disp_Vhdl is
    is
       Imod : constant Module := Get_Module (Inst);
       O : constant Net := Get_Output (Inst, 0);
+      W : Width;
    begin
       case Get_Id (Imod) is
          when Id_Const_UB32
@@ -348,9 +349,14 @@ package body Netlists.Disp_Vhdl is
             Put_Uns32 (Get_Width (O) - 1);
             Put (" downto 0 => 'Z')");
          when Id_Const_X =>
-            Put ('(');
-            Put_Uns32 (Get_Width (O) - 1);
-            Put (" downto 0 => 'X')");
+            W := Get_Width (O);
+            if W = 1 then
+               Put ("'X'");
+            else
+               Put ('(');
+               Put_Uns32 (Get_Width (O) - 1);
+               Put (" downto 0 => 'X')");
+            end if;
          when Id_Const_Bit =>
             Disp_Const_Bit (Inst);
          when Id_Const_Log =>
