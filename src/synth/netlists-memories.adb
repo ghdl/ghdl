@@ -724,312 +724,6 @@ package body Netlists.Memories is
       end loop;
    end Unmark_Table;
 
-   type Validate_RAM_Result is
-     (
-      --  The last gate is signal/isignal output.
-      --  The end of the structure was reached.
-      Validate_RAM_Signal,
-
-      --  An element was recognized.
-      Validate_RAM_Ok,
-
-      --  Error in the netlist: invalid gate.
-      Validate_RAM_Error,
-
-      --  Error: not a RAM.
-      Validate_RAM_None,
-
-      --  The input is a mux.
-      Validate_RAM_Mux
-     );
-
-   type Validate_RAM_Type (Res : Validate_RAM_Result := Validate_RAM_Signal) is
-      record
-      case Res is
-         when Validate_RAM_Signal =>
-            Sig : Instance;
-         when Validate_RAM_Ok =>
-            Outp : Instance;
-         when Validate_RAM_Error =>
-            Err : Instance;
-         when Validate_RAM_Mux =>
-            Mux : Instance;
-         when Validate_RAM_None =>
-            null;
-      end case;
-   end record;
-
-   --  Return O for input FIRST, or No_Net in case of error.
-   --  - O := dyn_insert(I)
-   --  - O := mux(sel, el(I), I)
-   --  - O := mux(sel, el1(I), el2(I))
-   --  - O := el1(el2(I))
-   function Validate_RAM_Element (First : Net) return Validate_RAM_Type
-   is
-      Nbr_Muxes : Nat32;
-      Nbr_Inserts : Nat32;
-      Nbr_Sig : Nat32;
-      Inp : Input;
-      Inst : Instance;
-      Res : Instance;
-      Last_Mux : Instance;
-   begin
-      --  Count number of muxes, inserts and signals that are connected to
-      --  the output of FIRST (the Id_Signal/Id_Isignal).
-      Nbr_Muxes := 0;
-      Nbr_Inserts := 0;
-      Nbr_Sig := 0;
-      Last_Mux := No_Instance;
-      Res := No_Instance;
-      Inp := Get_First_Sink (First);
-      while Inp /= No_Input loop
-         Inst := Get_Input_Parent (Inp);
-         case Get_Id (Inst) is
-            when Id_Mux2 =>
-               Nbr_Muxes := Nbr_Muxes + 1;
-               Last_Mux := Inst;
-            when Id_Dyn_Insert =>
-               Res := Inst;
-               Nbr_Inserts := Nbr_Inserts + 1;
-            when Id_Dyn_Extract =>
-               null;
-            when Id_Signal
-              | Id_Isignal =>
-               Res := Inst;
-               Nbr_Sig := Nbr_Sig + 1;
-            when Id_Dff
-              | Id_Idff =>
-               if Get_Next_Sink (Inp) = No_Input
-                 and then Get_First_Sink (First) = Inp
-               then
-                  --  The dff has only one output, hopefully a signal.
-                  return Validate_RAM_Element (Get_Output (Inst, 0));
-               else
-                  return Validate_RAM_Type'
-                    (Res => Validate_RAM_Error, Err => Inst);
-               end if;
-            when others =>
-               --  The whole content of the RAM is directly used.
-               return Validate_RAM_Type'
-                 (Res => Validate_RAM_Error, Err => Inst);
-         end case;
-         Inp := Get_Next_Sink (Inp);
-      end loop;
-
-      if Nbr_Sig /= 0 then
-         if Nbr_Sig /= 1 or Nbr_Inserts /= 0 or Nbr_Muxes /= 0 then
-            --  Not sure this is even possible.
-            raise Internal_Error;
-         end if;
-         --  So only the signal was reached.
-         return Validate_RAM_Type'(Res => Validate_RAM_Signal, Sig => Res);
-      end if;
-
-      if Nbr_Inserts = 0 then
-         if Nbr_Muxes = 1 then
-            return Validate_RAM_Type'
-              (Res => Validate_RAM_Mux, Mux => Last_Mux);
-         elsif Nbr_Muxes = 0 then
-            --  No insert, no muxes.  Just a normal dynamic extraction/mux.
-            return Validate_RAM_Type'(Res => Validate_RAM_None);
-         end if;
-         --  Invalide shape.
-         return Validate_RAM_Type'(Res => Validate_RAM_None);
-      end if;
-
-      if Nbr_Muxes = 0 and Nbr_Inserts = 1 then
-         --  First case.
-         return Validate_RAM_Type'(Res => Validate_RAM_Ok, Outp => Res);
-      end if;
-
-      declare
-         subtype Instance_Array is Instance_Tables.Table_Type;
-         --  Reserve one more slot.
-         Muxes : Instance_Array (1 .. Nbr_Muxes + Nbr_Inserts + 1);
-         First_Non_Mux : Nat32;
-         El : Validate_RAM_Type;
-         K : Nat32;
-      begin
-         --  Fill the tables.
-         Nbr_Muxes := 0;
-         First_Non_Mux := Muxes'Last + 1;
-         Inp := Get_First_Sink (First);
-         while Inp /= No_Input loop
-            Inst := Get_Input_Parent (Inp);
-            case Get_Id (Inst) is
-               when Id_Mux2 =>
-                  Nbr_Muxes := Nbr_Muxes + 1;
-                  Muxes (Nbr_Muxes) := Inst;
-               when Id_Dyn_Insert =>
-                  First_Non_Mux := First_Non_Mux - 1;
-                  Muxes (First_Non_Mux) := Inst;
-               when Id_Dyn_Extract =>
-                  null;
-               when others =>
-                  raise Internal_Error;
-            end case;
-            Inp := Get_Next_Sink (Inp);
-         end loop;
-         pragma Assert (Nbr_Muxes + 2 = First_Non_Mux);
-
-         loop
-            --  Reduce non-mux.
-            for I in First_Non_Mux .. Muxes'Last loop
-               Inst := Muxes (I);
-               loop
-                  case Get_Id (Inst) is
-                     when Id_Signal
-                       | Id_Isignal =>
-                        if Nbr_Muxes = 0 and then First_Non_Mux = Muxes'Last
-                        then
-                           --  The only gate.
-                           return Validate_RAM_Type'
-                             (Res => Validate_RAM_Signal, Sig => Inst);
-                        else
-                           return Validate_RAM_Type'
-                             (Res => Validate_RAM_Error, Err => Inst);
-                        end if;
-                     when Id_Dyn_Insert
-                       | Id_Mux2 =>
-                        El := Validate_RAM_Element (Get_Output (Inst, 0));
-                        case El.Res is
-                           when Validate_RAM_Error
-                             | Validate_RAM_None =>
-                              --  A sub-element does not describe a RAM.
-                              --  Returns the error.
-                              return El;
-                           when Validate_RAM_Mux =>
-                              --  A sub-element ended with a mux.  This mux is
-                              --  part of this sub-element.
-                              Nbr_Muxes := Nbr_Muxes + 1;
-                              Muxes (Nbr_Muxes) := El.Mux;
-                              exit;
-                           when Validate_RAM_Ok =>
-                              --  Continue.
-                              Inst := El.Outp;
-                           when Validate_RAM_Signal =>
-                              --  Continue.
-                              Inst := El.Sig;
-                        end case;
-                     when Id_Dff =>
-                        declare
-                           O : constant Net := Get_Output (Inst, 0);
-                           Inp : Input;
-                        begin
-                           Inp := Get_First_Sink (O);
-                           if Inp = No_Input
-                             or else Get_Next_Sink (Inp) /= No_Input
-                           then
-                              return Validate_RAM_Type'
-                                (Res => Validate_RAM_Error, Err => Inst);
-                           end if;
-                           Inst := Get_Input_Parent (Inp);
-                        end;
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-               end loop;
-            end loop;
-
-            if Nbr_Muxes = 1 then
-               --  So reduced to only one mux.  Return it.
-               return Validate_RAM_Type'
-                 (Res => Validate_RAM_Mux, Mux => Muxes (1));
-            end if;
-
-            --  Each muxes that appear twice are removed from muxes list,
-            --  moved to the reduce list.
-            First_Non_Mux := Muxes'Last + 1;
-            K := 1;
-            while K <= Nbr_Muxes loop
-               Inst := Muxes (K);
-               loop
-                  if Get_Mark_Flag (Inst) then
-                     --  Second input of the mux.
-                     Set_Mark_Flag (Inst, False);
-                     --  Move it to the non-mux list.
-                     First_Non_Mux := First_Non_Mux - 1;
-                     Muxes (First_Non_Mux) := Inst;
-                     --  Remove it from mux list.
-                     Inst := Muxes (Nbr_Muxes);
-                     Nbr_Muxes := Nbr_Muxes - 1;
-                     --  Exit if this was the last one.
-                     exit when K > Nbr_Muxes;
-                     Muxes (K) := Inst;
-                  else
-                     --  First input of the mux.  Mark it.
-                     Set_Mark_Flag (Inst, True);
-                     exit;
-                  end if;
-               end loop;
-               K := K + 1;
-            end loop;
-            pragma Assert (First_Non_Mux > Nbr_Muxes);
-
-            if First_Non_Mux = Muxes'Last + 1 then
-               --  Nothing was done.
-               if Nbr_Muxes = 0 then
-                  --  Very wrong state.
-                  raise Internal_Error;
-               else
-                  --  There are muxes with external inputs, like a reset value.
-                  --  Not a RAM.
-                  return Validate_RAM_Type'
-                    (Res => Validate_RAM_Error, Err => Muxes (1));
-               end if;
-            end if;
-
-            --  Remove them from Muxes array, unmark all of them.
-            K := 1;
-            while K <= Nbr_Muxes loop
-               Inst := Muxes (K);
-               loop
-                  if Get_Mark_Flag (Inst) then
-                     Set_Mark_Flag (Inst, False);
-                     exit;
-                  else
-                     --  Remove.
-                     pragma Assert (Get_Id (Inst) = Id_Mux2);
-                     Inst := Muxes (Nbr_Muxes);
-                     Nbr_Muxes := Nbr_Muxes - 1;
-                     --  Exit if this was the last one.
-                     exit when K > Nbr_Muxes;
-                     Muxes (K) := Inst;
-                  end if;
-               end loop;
-               K := K + 1;
-            end loop;
-         end loop;
-      end;
-   end Validate_RAM_Element;
-
-   function Validate_RAM (Sig : Instance) return Boolean
-   is
-      Res : Validate_RAM_Type;
-   begin
-      Res := Validate_RAM_Element (Get_Output (Sig, 0));
-      case Res.Res is
-         when Validate_RAM_Signal =>
-            if Res.Sig /= Sig then
-               raise Internal_Error;
-            end if;
-            return True;
-         when Validate_RAM_Ok =>
-            return True;
-         when Validate_RAM_Mux =>
-            Info_Msg_Synth (+Sig, "RAM is written in whole with mux %n",
-                            (1 => +Res.Mux));
-            return False;
-         when Validate_RAM_None =>
-            --  Not a RAM, but without a specific gate (wrong shape).
-            return False;
-         when Validate_RAM_Error =>
-            Info_Msg_Synth (+Sig, "gate %n not allowed in a RAM",
-                            (1 => +Res.Err));
-            return False;
-      end case;
-   end Validate_RAM;
-
    function Validate_RAM_Simple (Sig : Instance) return Boolean
    is
       Inst : Instance;
@@ -1660,7 +1354,6 @@ package body Netlists.Memories is
          N_Inst : Instance;
          In_Inst : Instance;
          Dff_Clk : Net;
-         Prev_Inst : Instance;
       begin
          --  Try to extract clock from dff.
          Dff_Clk := No_Net;
@@ -1672,8 +1365,6 @@ package body Netlists.Memories is
             when others =>
                null;
          end case;
-
-         Prev_Inst := No_Instance;
 
          --  Do the real work: transform gates to ports.
          Inst := Sig;
@@ -1752,10 +1443,6 @@ package body Netlists.Memories is
                Inp := N_Inp;
             end loop;
 
-            if Prev_Inst /= No_Instance then
-               Remove_Instance (Prev_Inst);
-            end if;
-
             --  Handle INST.
             case Get_Id (Inst) is
                when Id_Dyn_Insert_En
@@ -1808,10 +1495,9 @@ package body Netlists.Memories is
                   if Get_Id (Inst) = Id_Idff then
                      Disconnect (Get_Input (Inst, 2));
                   end if;
-                  Prev_Inst := Inst;
                when Id_Signal
                  | Id_Isignal =>
-                  Prev_Inst := No_Instance;
+                  null;
                when others =>
                   raise Internal_Error;
             end case;
@@ -1827,8 +1513,6 @@ package body Netlists.Memories is
                   null;
             end case;
          end loop;
-
-         pragma Assert (Prev_Inst = No_Instance);
 
          --  Finish to remove the signal/isignal.
          Remove_Instance (Inst);
@@ -2076,6 +1760,4 @@ package body Netlists.Memories is
       Inst := Reduce_Muxes (Ctxt, Inst);
       return Get_Output (Inst, 0);
    end Infere_RAM;
-
-   pragma Unreferenced (Validate_RAM);
 end Netlists.Memories;
