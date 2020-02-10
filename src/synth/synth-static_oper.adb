@@ -487,6 +487,17 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Numeric_Std_Or_Sgn_Sgn =>
             return Synth_Vector_Dyadic (Left, Right, Or_Table, Expr);
 
+         when Iir_Predefined_Ieee_1164_Vector_Xor
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
+            return Synth_Vector_Dyadic (Left, Right, Xor_Table, Expr);
+
+         when Iir_Predefined_Ieee_1164_Scalar_Xor =>
+            return Create_Value_Discrete
+              (Std_Ulogic'Pos (Xor_Table (Std_Ulogic'Val (Left.Scal),
+                                          Std_Ulogic'Val (Right.Scal))),
+               Res_Typ);
+
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
             return Synth_Add_Uns_Uns (Left, Right, Expr);
 
