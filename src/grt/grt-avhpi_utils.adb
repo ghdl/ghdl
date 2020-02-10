@@ -61,5 +61,3 @@ package body Grt.Avhpi_Utils is
    end Name_Compare;
 
 end Grt.Avhpi_Utils;
-
-

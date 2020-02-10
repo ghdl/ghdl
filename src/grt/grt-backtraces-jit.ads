@@ -26,8 +26,6 @@
 with System;
 
 package Grt.Backtraces.Jit is
-   pragma Preelaborate (Grt.Backtraces.Jit);
-
    procedure Symbolizer (Pc : System.Address;
                          Filename : out System.Address;
                          Lineno : out Natural;

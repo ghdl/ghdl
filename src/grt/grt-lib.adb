@@ -25,6 +25,7 @@
 
 with Interfaces;
 with Grt.Errors; use Grt.Errors;
+with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.Options;
 with Grt.Fcvt;
 
@@ -283,6 +284,7 @@ package body Grt.Lib is
 
    procedure Ghdl_Check_Stack_Allocation (Size : Ghdl_Index_Type)
    is
+      use Options;
       Bt : Backtrace_Addrs;
    begin
       if Max_Stack_Allocation = 0 then

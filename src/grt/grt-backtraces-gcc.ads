@@ -26,8 +26,6 @@
 with System;
 
 package Grt.Backtraces.Gcc is
-   pragma Preelaborate (Grt.Backtraces.Gcc);
-
    procedure Symbolizer (Pc : System.Address;
                          Filename : out System.Address;
                          Lineno : out Natural;

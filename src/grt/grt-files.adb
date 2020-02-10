@@ -23,6 +23,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Grt.Errors; use Grt.Errors;
+with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Table;

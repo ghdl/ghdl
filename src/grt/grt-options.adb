@@ -305,7 +305,7 @@ package body Grt.Options is
                Diag_C (Option);
                Error_E ("'");
             else
-               Lib.Max_Stack_Allocation := Ghdl_Index_Type (Val * 1024);
+               Max_Stack_Allocation := Ghdl_Index_Type (Val * 1024);
             end if;
          end;
       elsif Len >= 11 and then Option (1 .. 11) = "--activity=" then

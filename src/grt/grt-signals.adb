@@ -26,7 +26,9 @@ with System; use System;
 with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Ada.Unchecked_Deallocation;
+
 with Grt.Errors; use Grt.Errors;
+with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.Processes; use Grt.Processes;
 with Grt.Options; use Grt.Options;
 with Grt.Disp_Signals;

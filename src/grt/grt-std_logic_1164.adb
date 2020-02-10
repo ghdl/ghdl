@@ -24,6 +24,7 @@
 --  covered by the GNU Public License.
 
 with Grt.Lib;
+with Grt.Errors; use Grt.Errors;
 
 package body Grt.Std_Logic_1164 is
    Assert_DC_Msg : constant String :=

@@ -27,7 +27,6 @@ with Grt.Astdio; use Grt.Astdio;
 with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Options; use Grt.Options;
 with Grt.Hooks; use Grt.Hooks;
-with Grt.Backtraces;
 
 package body Grt.Errors is
    --  Output stream to send error messages
@@ -193,15 +192,6 @@ package body Grt.Errors is
       Error_E;
    end Error;
 
-   procedure Error_Call_Stack (Str : String; Skip : Natural)
-   is
-      Bt : Backtrace_Addrs;
-   begin
-      Save_Backtrace (Bt, Skip + 1);
-      Diag_C (Str);
-      Error_E_Call_Stack (Bt);
-   end Error_Call_Stack;
-
    procedure Error (Str : String;
                     Filename : Ghdl_C_String;
                     Line : Ghdl_I32) is
@@ -242,35 +232,4 @@ package body Grt.Errors is
       Newline_Err;
       Fatal_Error;
    end Internal_Error;
-
-   procedure Error_E_Call_Stack (Bt : Backtrace_Addrs) is
-   begin
-      Newline_Err;
-
-      Grt.Backtraces.Put_Err_Backtrace (Bt);
-
-      --  Should be able to call Error_E, but we don't want the newline.
-      Fatal_Error;
-   end Error_E_Call_Stack;
-
-   procedure Error_E_Call_Stack (Bt : Backtrace_Addrs_Acc) is
-   begin
-      if Bt /= null then
-         Error_E_Call_Stack (Bt.all);
-      else
-         Error_E;
-      end if;
-   end Error_E_Call_Stack;
-
-   procedure Grt_Overflow_Error (Bt : Backtrace_Addrs_Acc) is
-   begin
-      Error_S ("overflow detected");
-      Error_E_Call_Stack (Bt);
-   end Grt_Overflow_Error;
-
-   procedure Grt_Null_Access_Error (Bt : Backtrace_Addrs_Acc) is
-   begin
-      Error_S ("NULL access dereferenced");
-      Error_E_Call_Stack (Bt);
-   end Grt_Null_Access_Error;
 end Grt.Errors;

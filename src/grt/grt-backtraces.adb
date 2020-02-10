@@ -26,6 +26,7 @@
 with System;
 with Grt.Types; use Grt.Types;
 with Grt.Hooks; use Grt.Hooks;
+with Grt.Errors; use Grt.Errors;
 with Grt.Backtraces.Impl;
 
 package body Grt.Backtraces is

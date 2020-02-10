@@ -27,6 +27,7 @@ with Ada.Unchecked_Conversion;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Processes; use Grt.Processes;
 with Grt.Errors; use Grt.Errors;
+with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.To_Strings; use Grt.To_Strings;
 
 package body Grt.Images is
