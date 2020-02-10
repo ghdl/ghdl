@@ -996,6 +996,41 @@ package body Synth.Expr is
       end case;
    end Synth_Subtype_Conversion;
 
+   function Synth_Value_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
+                                  return Value_Acc
+   is
+      Param : constant Node := Get_Parameter (Attr);
+      Etype : constant Node := Get_Type (Attr);
+      Btype : constant Node := Get_Base_Type (Etype);
+      V : Value_Acc;
+      Dtype : Type_Acc;
+   begin
+      V := Synth_Expression (Syn_Inst, Param);
+      Dtype := Get_Value_Type (Syn_Inst, Etype);
+      if not Is_Static (V) then
+         Error_Msg_Synth (+Attr, "parameter of 'value must be static");
+         return Create_Value_Default (Dtype);
+      end if;
+      if Get_Kind (Btype) /= Iir_Kind_Enumeration_Type_Definition then
+         Error_Msg_Synth (+Attr, "'value supported only for enumeration");
+         return Create_Value_Default (Dtype);
+      end if;
+
+      declare
+         Str : String (1 .. Natural (V.Arr.Len));
+         Res_N : Node;
+         Res_V : Value_Acc;
+      begin
+         for I in V.Arr.V'Range loop
+            Str (Natural (I)) := Character'Val (V.Arr.V (I).Scal);
+         end loop;
+         Res_N := Eval_Value_Attribute (Str, Etype, Attr);
+         Res_V := Create_Value_Discrete (Int64 (Get_Enum_Pos (Res_N)), Dtype);
+         Free_Iir (Res_N);
+         return Res_V;
+      end;
+   end Synth_Value_Attribute;
+
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Value_Acc is
    begin
@@ -1932,7 +1967,8 @@ package body Synth.Expr is
                B := Synth_Array_Attribute (Syn_Inst, Expr);
                return Create_Value_Discrete (Int64 (B.Len), Expr_Type);
             end;
-         when Iir_Kind_Pos_Attribute =>
+         when Iir_Kind_Pos_Attribute
+           | Iir_Kind_Val_Attribute =>
             declare
                Param : constant Node := Get_Parameter (Expr);
                V : Value_Acc;
@@ -1944,6 +1980,8 @@ package body Synth.Expr is
                --  subtype conversion.
                return Synth_Subtype_Conversion (V, Dtype, False, Expr);
             end;
+         when Iir_Kind_Value_Attribute =>
+            return Synth_Value_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Null_Literal =>
             return Create_Value_Access (Expr_Type, Null_Heap_Index);
          when Iir_Kind_Allocator_By_Subtype =>
