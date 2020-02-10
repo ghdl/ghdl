@@ -202,6 +202,30 @@ package body Netlists.Cleanup is
                   Insert_Mark_And_Sweep (Inspect, Get_Net_Parent (N));
                end if;
             end loop;
+
+            case Get_Id (Inst) is
+               when Id_Mem_Rd
+                 | Id_Mem_Rd_Sync =>
+                  --  When a memory read port is found, mark the whole
+                  --  memory.
+                  --  FIXME: free unused read ports.
+                  declare
+                     Inp : Input;
+                  begin
+                     loop
+                        N := Get_Output (Inst, 0);
+                        Inp := Get_First_Sink (N);
+                        exit when Inp = No_Input;
+                        pragma Assert (Get_Next_Sink (Inp) = No_Input);
+                        Inst := Get_Input_Parent (Inp);
+                        exit when Get_Mark_Flag (Inst);
+                        Insert_Mark_And_Sweep (Inspect, Inst);
+                        N := Get_Output (Inst, 0);
+                     end loop;
+                  end;
+               when others =>
+                  null;
+            end case;
          end;
       end loop;
 
