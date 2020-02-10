@@ -24,10 +24,10 @@ with Netlists.Gates;
 with Netlists.Gates_Ports;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Folds; use Netlists.Folds;
+with Netlists.Inference;
 
 with Errorout; use Errorout;
 
-with Synth.Inference;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 
@@ -363,9 +363,11 @@ package body Synth.Environment is
                declare
                   Pa : Partial_Assign_Record renames
                     Partial_Assign_Table.Table (P);
+                  Res : Net;
                begin
-                  Inference.Infere
-                    (Ctxt, Wid, Pa.Value, Pa.Offset, Outport, Stmt);
+                  Res := Inference.Infere
+                    (Ctxt, Pa.Value, Pa.Offset, Outport, Stmt);
+                  Add_Conc_Assign (Wid, Res, Pa.Offset, Stmt);
                   P := Pa.Next;
                end;
             end loop;
@@ -1022,10 +1024,26 @@ package body Synth.Environment is
          if Get_Id (N1_Inst) = Id_Mux2
            and then Same_Net (Get_Driver (Get_Mux2_I0 (N1_Inst)), N (0))
          then
-            Res := Build_Mux2
-              (Ctxt, Build_Dyadic (Ctxt, Id_And,
-                                   Sel, Get_Driver (Get_Mux2_Sel (N1_Inst))),
-               N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
+            declare
+               N1_Net : Net;
+               N1_Sel : Input;
+               N1_Sel_Net : Net;
+            begin
+               N1_Net := Get_Output (N1_Inst, 0);
+               N1_Sel := Get_Input (N1_Inst, 0);
+               N1_Sel_Net := Get_Driver (N1_Sel);
+               if not Is_Connected (N1_Net) then
+                  --  If the previous mux2 is not used, just modify it.
+                  Res := N1_Net;
+                  Disconnect (N1_Sel);
+                  N1_Sel_Net := Build_Dyadic (Ctxt, Id_And, Sel, N1_Sel_Net);
+                  Connect (N1_Sel, N1_Sel_Net);
+               else
+                  Res := Build_Mux2
+                    (Ctxt, Build_Dyadic (Ctxt, Id_And, Sel, N1_Sel_Net),
+                     N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
+               end if;
+            end;
          else
             Res := Build_Mux2 (Ctxt, Sel, N (0), N (1));
          end if;

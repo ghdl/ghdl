@@ -357,7 +357,7 @@ package body Netlists is
       Nbr_Inputs : constant Port_Idx := Get_Nbr_Inputs (Inst);
    begin
       --  Check that all outputs are unused.
-      if Nbr_Outputs > 1 then
+      if Nbr_Outputs > 0 then
          for K in 0 .. Nbr_Outputs - 1 loop
             if Is_Connected (Get_Output (Inst, K)) then
                return True;
@@ -861,15 +861,16 @@ package body Netlists is
    procedure Redirect_Inputs (Old : Net; N : Net)
    is
       First_I, I : Input;
-      Prev_I : Input;
+      Last_I : Input;
    begin
       First_I := Get_First_Sink (Old);
       if First_I = No_Input then
+         --  Nothing to do if no input.
          return;
       end if;
 
       I := First_I;
-      Prev_I := No_Input;
+      Last_I := No_Input;
       while I /= No_Input loop
          declare
             I_Rec : Input_Record renames Inputs_Table.Table (I);
@@ -877,18 +878,16 @@ package body Netlists is
             pragma Assert (I_Rec.Driver = Old);
             I_Rec.Driver := N;
 
-            if Prev_I /= No_Input then
-               Inputs_Table.Table (Prev_I).Next_Sink := I;
-            end if;
-            Prev_I := I;
+            Last_I := I;
 
             I := I_Rec.Next_Sink;
          end;
       end loop;
-      if Prev_I /= No_Input then
-         Inputs_Table.Table (Prev_I).Next_Sink := Get_First_Sink (N);
-         Nets_Table.Table (N).First_Sink := First_I;
-      end if;
+      Inputs_Table.Table (Last_I).Next_Sink := Get_First_Sink (N);
+      Nets_Table.Table (N).First_Sink := First_I;
+
+      --  Also disconnect OLD
+      Nets_Table.Table (Old).First_Sink := No_Input;
    end Redirect_Inputs;
 
 begin

@@ -27,4 +27,11 @@ package Netlists.Memories is
    --  Count the number of memidx in a memory address.
    function Count_Memidx (Addr : Net) return Natural;
 
+   --  True iff a RAM can be infered from VAL (the input of an assignment).
+   --  TODO: handle partial write (offset)
+   --  TODO: directly check with assignment target.
+   function Can_Infere_RAM (Val : Net; Prev_Val : Net) return Boolean;
+
+   --  Transform VAL to a RAM.
+   function Infere_RAM (Ctxt : Context_Acc; Val : Net) return Net;
 end Netlists.Memories;

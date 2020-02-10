@@ -133,6 +133,8 @@ package body Netlists.Cleanup is
                --  Only when the output is driven.
                Disconnect (Inp);
                Redirect_Inputs (Get_Output (Inst, 0), O);
+            else
+               Disconnect (Get_First_Sink (Get_Output (Inst, 0)));
             end if;
             Remove_Instance (Inst);
          end if;

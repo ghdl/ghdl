@@ -29,6 +29,7 @@ with Netlists.Locations; use Netlists.Locations;
 with Netlists.Errors; use Netlists.Errors;
 with Netlists.Concats;
 with Netlists.Folds; use Netlists.Folds;
+with Netlists.Inference;
 
 with Synth.Errors; use Synth.Errors;
 
@@ -1029,6 +1030,44 @@ package body Netlists.Memories is
       end case;
    end Validate_RAM;
 
+   function Validate_RAM_Simple (Sig : Instance) return Boolean
+   is
+      Inst : Instance;
+      N : Net;
+      Inp : Input;
+      Ok : Boolean;
+   begin
+      Ok := False;
+      N := Get_Output (Sig, 0);
+      while N /= No_Net loop
+         Inp := Get_First_Sink (N);
+         N := No_Net;
+
+         while Inp /= No_Input loop
+            Inst := Get_Input_Parent (Inp);
+            case Get_Id (Inst) is
+               when Id_Dyn_Insert_En =>
+                  if N /= No_Net then
+                     return False;
+                  end if;
+                  N := Get_Output (Inst, 0);
+               when Id_Dyn_Extract =>
+                  null;
+               when Id_Isignal
+                 | Id_Signal =>
+                  if Inst /= Sig then
+                     return False;
+                  end if;
+                  Ok := True;
+               when others =>
+                  return False;
+            end case;
+            Inp := Get_Next_Sink (Inp);
+         end loop;
+      end loop;
+      return Ok;
+   end Validate_RAM_Simple;
+
    function Add_Enable_To_Dyn_Insert
      (Ctxt : Context_Acc; Inst : Instance; Sel : Net) return Instance
    is
@@ -1037,7 +1076,6 @@ package body Netlists.Memories is
       In_Idx : constant Input := Get_Input (Inst, 2);
       Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
       Dest : constant Input := Get_First_Sink (Get_Output (Inst, 0));
-      pragma Assert (Has_One_Connection (Get_Output (Inst, 0)));
       Res : Net;
    begin
       Res := Build_Dyn_Insert_En
@@ -1048,8 +1086,12 @@ package body Netlists.Memories is
       Disconnect (In_Mem);
       Disconnect (In_V);
       Disconnect (In_Idx);
-      Disconnect (Dest);
-      Connect (Dest, Res);
+      if Dest /= No_Input then
+         --  Only one connection.
+         pragma Assert (Get_Next_Sink (Dest) = No_Input);
+         Disconnect (Dest);
+         Connect (Dest, Res);
+      end if;
 
       Remove_Instance (Inst);
 
@@ -1058,10 +1100,13 @@ package body Netlists.Memories is
 
    --  Remove the mux2 MUX (by adding enable to dyn_insert).
    --  Return the new head.
-   function Reduce_Muxes_Mux2 (Ctxt : Context_Acc; Mux : Instance)
-                              return Instance
+   procedure Reduce_Muxes_Mux2 (Ctxt : Context_Acc;
+                                Psel : Net;
+                                Head : in out Instance;
+                                Tail : out Instance)
    is
-      Dest : constant Input := Get_First_Sink (Get_Output (Mux, 0));
+      Mux : constant Instance := Head;
+      Muxout : constant Net := Get_Output (Mux, 0);
       Sel_Inp : constant Input := Get_Input (Mux, 0);
       In0 : constant Input := Get_Input (Mux, 1);
       In1 : constant Input := Get_Input (Mux, 2);
@@ -1103,8 +1148,6 @@ package body Netlists.Memories is
          Disconnect (In0);
          Disconnect (In1);
          Disconnect (Sel_Inp);
-         Disconnect (Dest);
-         Connect (Dest, Drv0);
          Drv := Drv0;
          Src := Drv1;
          Sel := Build_Monadic (Ctxt, Id_Not, Sel);
@@ -1113,8 +1156,6 @@ package body Netlists.Memories is
          Disconnect (In0);
          Disconnect (In1);
          Disconnect (Sel_Inp);
-         Disconnect (Dest);
-         Connect (Dest, Drv1);
          Drv := Drv1;
          Src := Drv0;
       else
@@ -1122,7 +1163,9 @@ package body Netlists.Memories is
          raise Internal_Error;
       end if;
 
-      Remove_Instance (Mux);
+      if Psel /= No_Net then
+         Sel := Build_Dyadic (Ctxt, Id_And, Psel, Sel);
+      end if;
 
       --  Reduce Drv until Src.
       --  Transform dyn_insert to dyn_insert_en by adding SEL, or simply add
@@ -1134,18 +1177,21 @@ package body Netlists.Memories is
          case Get_Id (Inst) is
             when Id_Mux2 =>
                --  Recurse on the mux.
-               Inst := Reduce_Muxes_Mux2 (Ctxt, Inst);
-               --  But continue with the result: still need to add the SEL.
-               Drv := Get_Output (Inst, 0);
-            when Id_Dyn_Insert =>
-               --  Transform dyn_insert to dyn_insert_en.
-               Inst := Add_Enable_To_Dyn_Insert (Ctxt, Inst, Sel);
-               --  If this is the head, keep it.
+               Reduce_Muxes_Mux2 (Ctxt, Sel, Inst, Tail);
                if Res = No_Instance then
                   Res := Inst;
                end if;
                --  Continue the walk with the next element.
                Drv := Get_Input_Net (Inst, 0);
+            when Id_Dyn_Insert =>
+               --  Transform dyn_insert to dyn_insert_en.
+               Tail := Add_Enable_To_Dyn_Insert (Ctxt, Inst, Sel);
+               --  If this is the head, keep it.
+               if Res = No_Instance then
+                  Res := Tail;
+               end if;
+               --  Continue the walk with the next element.
+               Drv := Get_Input_Net (Tail, 0);
             when Id_Dyn_Insert_En =>
                --  Simply add SEL to the enable input.
                declare
@@ -1162,23 +1208,31 @@ package body Netlists.Memories is
                   Res := Inst;
                end if;
                --  Continue the walk with the next element.
+               Tail := Inst;
                Drv := Get_Input_Net (Inst, 0);
             when others =>
                raise Internal_Error;
          end case;
       end loop;
 
-      return Res;
+      Redirect_Inputs (Muxout, Get_Output (Res, 0));
+      Remove_Instance (Mux);
+
+      Head := Res;
    end Reduce_Muxes_Mux2;
 
    --  From SIG (the signal/isignal for the RAM), move all the muxes to the
    --  dyn_insert.  The dyn_insert may be transformed to dyn_insert_en.
    --  At the end, the loop is linear and without muxes.
-   procedure Reduce_Muxes (Ctxt : Context_Acc; Sig : Instance)
+   --  Return the new head.
+   function Reduce_Muxes (Ctxt : Context_Acc; Sig : Instance) return Instance
    is
+      pragma Assert (not Is_Connected (Get_Output (Sig, 0)));
       Inst : Instance;
+      Tail : Instance;
+      Res : Instance;
    begin
-      Inst := Get_Input_Instance (Sig, 0);
+      Inst := Sig;
 
       --  Skip dff/idff.
       --  FIXME: that should be considered as an implicit mux.
@@ -1186,9 +1240,10 @@ package body Netlists.Memories is
       case Get_Id (Inst) is
          when Id_Dff
            | Id_Idff =>
+            Res := Inst;
             Inst := Get_Input_Instance (Inst, 1);
          when others =>
-            null;
+            Res := No_Instance;
       end case;
 
       --  Walk until the reaching SIG again.
@@ -1196,18 +1251,22 @@ package body Netlists.Memories is
          case Get_Id (Inst) is
             when Id_Mux2 =>
                --  Reduce the mux.
-               Inst := Reduce_Muxes_Mux2 (Ctxt, Inst);
+               Reduce_Muxes_Mux2 (Ctxt, No_Net, Inst, Tail);
+               if Res = No_Instance then
+                  Res := Inst;
+               end if;
+               Inst := Tail;
             when Id_Dyn_Insert
               | Id_Dyn_Insert_En =>
+               if Res = No_Instance then
+                  Res := Inst;
+               end if;
                --  Skip the dyn_insert.
                Inst := Get_Input_Instance (Inst, 0);
             when Id_Signal
               | Id_Isignal =>
                --  Should be done.
-               if Inst /= Sig then
-                  raise Internal_Error;
-               end if;
-               return;
+               return Res;
             when others =>
                raise Internal_Error;
          end case;
@@ -1601,6 +1660,7 @@ package body Netlists.Memories is
          N_Inst : Instance;
          In_Inst : Instance;
          Dff_Clk : Net;
+         Prev_Inst : Instance;
       begin
          --  Try to extract clock from dff.
          Dff_Clk := No_Net;
@@ -1613,10 +1673,13 @@ package body Netlists.Memories is
                null;
          end case;
 
+         Prev_Inst := No_Instance;
+
          --  Do the real work: transform gates to ports.
          Inst := Sig;
          loop
             --  Check gates connected to the output.
+            --  First the dyn_extract
             N_Inst := No_Instance;
             Inp := Get_First_Sink (Get_Output (Inst, 0));
             while Inp /= No_Input loop
@@ -1677,10 +1740,10 @@ package body Netlists.Memories is
                      end;
                   when Id_Dyn_Insert_En
                     | Id_Dyn_Insert
-                    | Id_Dff
-                    | Id_Idff
                     | Id_Signal
                     | Id_Isignal =>
+                     Inp := Get_Input (In_Inst, 0);
+                     Disconnect (Inp);
                      pragma Assert (N_Inst = No_Instance);
                      N_Inst := In_Inst;
                   when others =>
@@ -1688,6 +1751,10 @@ package body Netlists.Memories is
                end case;
                Inp := N_Inp;
             end loop;
+
+            if Prev_Inst /= No_Instance then
+               Remove_Instance (Prev_Inst);
+            end if;
 
             --  Handle INST.
             case Get_Id (Inst) is
@@ -1704,31 +1771,35 @@ package body Netlists.Memories is
                      Inp2 : Input;
                      Dat : Net;
                      En : Net;
+                     Clk : Net;
                   begin
                      Off_Array_To_Idx (Offs.all, Off, Wd, Idx, Len);
                      Inp2 := Get_Input (Inst, 2);
                      Addr := Get_Driver (Inp2);
                      Disconnect (Inp2);
                      Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
-                     pragma Assert (Dff_Clk /= No_Net);
                      if Get_Id (Inst) = Id_Dyn_Insert_En then
                         Inp2 := Get_Input (Inst, 3);
                         En := Get_Driver (Inp2);
                         Disconnect (Inp2);
+                        Inference.Extract_Clock (Ctxt, En, Clk, En);
                      else
+                        Clk := Dff_Clk;
+                        En := No_Net;
+                     end if;
+                     pragma Assert (Clk /= No_Net);
+                     if En = No_Net then
                         En := Build_Const_UB32 (Ctxt, 1, 1);
                      end if;
                      for I in Idx .. Idx + Len - 1 loop
                         Inp2 := Get_Input (Inst, 1);
                         Dat := Get_Driver (Inp2);
                         Wr_Inst := Build_Mem_Wr_Sync
-                          (Ctxt, Tails (I), Addr, Dff_Clk, En, Dat);
+                          (Ctxt, Tails (I), Addr, Clk, En, Dat);
                         Disconnect (Inp2);
                         Tails (I) := Get_Output (Wr_Inst, 0);
                      end loop;
                   end;
-                  Inp := Get_Input (Inst, 0);
-                  Disconnect (Inp);
                   Remove_Instance (Inst);
                when Id_Dff
                  | Id_Idff =>
@@ -1737,10 +1808,10 @@ package body Netlists.Memories is
                   if Get_Id (Inst) = Id_Idff then
                      Disconnect (Get_Input (Inst, 2));
                   end if;
-                  Remove_Instance (Inst);
+                  Prev_Inst := Inst;
                when Id_Signal
                  | Id_Isignal =>
-                  null;
+                  Prev_Inst := No_Instance;
                when others =>
                   raise Internal_Error;
             end case;
@@ -1757,8 +1828,9 @@ package body Netlists.Memories is
             end case;
          end loop;
 
+         pragma Assert (Prev_Inst = No_Instance);
+
          --  Finish to remove the signal/isignal.
-         Disconnect (Get_Input (Inst, 0));
          Remove_Instance (Inst);
       end;
 
@@ -1796,7 +1868,7 @@ package body Netlists.Memories is
       while Inst /= No_Instance loop
          --  Walk all the instances of M:
          case Get_Id (Inst) is
-            when Id_Dyn_Insert
+            when Id_Dyn_Insert_En
               | Id_Dyn_Extract =>
                Instance_Tables.Append (Dyns, Inst);
                pragma Assert (Get_Mark_Flag (Inst) = False);
@@ -1869,8 +1941,7 @@ package body Netlists.Memories is
                   Replace_ROM_Memory (Ctxt, Inst);
                end if;
             else
-               if Validate_RAM (Inst) then
-                  Reduce_Muxes (Ctxt, Inst);
+               if Validate_RAM_Simple (Inst) then
                   Convert_To_Memory (Ctxt, Inst);
                end if;
             end if;
@@ -1879,4 +1950,132 @@ package body Netlists.Memories is
 
       Instance_Tables.Free (Mems);
    end Extract_Memories2;
+
+   function One_Write_Connection (O : Net) return Boolean
+   is
+      Inp : Input;
+      Nbr : Natural;
+   begin
+      Inp := Get_First_Sink (O);
+      Nbr := 0;
+      while Inp /= No_Input loop
+         if Get_Id (Get_Input_Parent (Inp)) /= Id_Dyn_Extract then
+            Nbr := Nbr + 1;
+            if Nbr > 1 then
+               return False;
+            end if;
+         end if;
+         Inp := Get_Next_Sink (Inp);
+      end loop;
+      return Nbr = 1;
+   end One_Write_Connection;
+
+   function Can_Infere_RAM_Mux2 (Mux : Instance) return Instance
+   is
+      Drv0 : Net;
+      Drv1 : Net;
+      Drv : Net;
+      Src : Net;
+      Inst : Instance;
+   begin
+      --  An enable mux has this shape:
+      --            _
+      --           / |----- dyn_insert ----+----+
+      --    out --|  |                     |    +---- inp
+      --           \_|---------------------/
+      --
+      --  The dyn_insert can be on one input or the other of the mux.
+      --  The important point is that the output of the dyn_insert is connected
+      --  only to the mux, while the other mux input is connected to two nodes.
+      --
+      --  There can be several dyn_inserts in a raw, like this:
+      --            _
+      --           / |-- dyn_insert --- dyn_insert ---+----+
+      --    out --|  |                                |    +---- inp
+      --           \_|--------------------------------/
+      --
+      --  Or even nested muxes:
+      --                 _
+      --           _    / |----- dyn_insert ----+----+
+      --          / |--|  |                     |    |
+      --   out --|  |   \_|---------------------/    |
+      --          \_|--------------------------------+----- inp
+      Drv0 := Get_Input_Net (Mux, 1);
+      Drv1 := Get_Input_Net (Mux, 2);
+      if One_Write_Connection (Drv0)
+        and then not One_Write_Connection (Drv1)
+      then
+         Drv := Drv0;
+         Src := Drv1;
+      elsif One_Write_Connection (Drv1)
+        and then not One_Write_Connection (Drv0)
+      then
+         Drv := Drv1;
+         Src := Drv0;
+      else
+         --  Not an enable mux.
+         return No_Instance;
+      end if;
+
+      --  Walk Drv until Src.
+      while Drv /= Src loop
+         Inst := Get_Net_Parent (Drv);
+         case Get_Id (Inst) is
+            when Id_Mux2 =>
+               --  Recurse on the mux.
+               Inst := Can_Infere_RAM_Mux2 (Inst);
+               if Inst = No_Instance then
+                  return No_Instance;
+               end if;
+               --  But continue with the result: still need to add the SEL.
+               Drv := Get_Output (Inst, 0);
+            when Id_Dyn_Insert =>
+               --  Continue the walk with the next element.
+               Drv := Get_Input_Net (Inst, 0);
+            when others =>
+               return No_Instance;
+         end case;
+      end loop;
+
+      return Get_Net_Parent (Src);
+   end Can_Infere_RAM_Mux2;
+
+   function Can_Infere_RAM (Val : Net; Prev_Val : Net) return Boolean
+   is
+      Inst : Instance;
+   begin
+      Inst := Get_Net_Parent (Val);
+
+      --  Walk until the reaching Prev_Val.
+      loop
+         case Get_Id (Inst) is
+            when Id_Mux2 =>
+               --  Reduce the mux.
+               Inst := Can_Infere_RAM_Mux2 (Inst);
+               if Inst = No_Instance then
+                  return False;
+               end if;
+            when Id_Dyn_Insert
+              | Id_Dyn_Insert_En =>
+               --  Skip the dyn_insert.
+               Inst := Get_Input_Instance (Inst, 0);
+            when Id_Signal
+              | Id_Isignal =>
+               return Get_Output (Inst, 0) = Prev_Val;
+            when others =>
+               return False;
+         end case;
+      end loop;
+   end Can_Infere_RAM;
+
+   function Infere_RAM (Ctxt : Context_Acc; Val : Net) return Net
+   is
+      Inst : Instance;
+   begin
+      Inst := Get_Net_Parent (Val);
+      Inst := Reduce_Muxes (Ctxt, Inst);
+      return Get_Output (Inst, 0);
+   end Infere_RAM;
+
+   pragma Unreferenced (Validate_RAM);
 end Netlists.Memories;

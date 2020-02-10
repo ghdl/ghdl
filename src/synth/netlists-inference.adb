@@ -25,12 +25,13 @@ with Netlists.Locations; use Netlists.Locations;
 with Netlists.Errors; use Netlists.Errors;
 with Netlists.Internings;
 with Netlists.Folds; use Netlists.Folds;
+with Netlists.Memories;
 
 with Synth.Flags;
 with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
 
-package body Synth.Inference is
+package body Netlists.Inference is
    --  DFF inference.
    --  As an initial implementation, the following 'styles' must be
    --  supported:
@@ -324,7 +325,7 @@ package body Synth.Inference is
                        Last_Mux : Instance;
                        Clk : Net;
                        Clk_Enable : Net;
-                       Stmt : Source.Syn_Src) return Net
+                       Stmt : Synth.Source.Syn_Src) return Net
    is
       O : constant Net := Get_Output (Last_Mux, 0);
       Data : Net;
@@ -602,7 +603,7 @@ package body Synth.Inference is
    function Infere_Latch (Ctxt : Context_Acc;
                           Val : Net;
                           Prev_Val : Net;
-                          Stmt : Source.Syn_Src) return Net
+                          Stmt : Synth.Source.Syn_Src) return Net
    is
       Name : Sname;
    begin
@@ -641,13 +642,13 @@ package body Synth.Inference is
    end Infere_Latch;
 
    --  Note: PREV_VAL is the wire gate, so with full width and no offset.
-   procedure Infere (Ctxt : Context_Acc;
-                     Wid : Wire_Id;
-                     Val : Net;
-                     Off : Uns32;
-                     Prev_Val : Net;
-                     Stmt : Source.Syn_Src)
+   function Infere (Ctxt : Context_Acc;
+                    Val : Net;
+                    Off : Uns32;
+                    Prev_Val : Net;
+                    Stmt : Synth.Source.Syn_Src) return Net
    is
+      use Netlists.Memories;
       pragma Assert (Val /= No_Net);
       pragma Assert (Prev_Val /= No_Net);
       Last_Mux : Instance;
@@ -657,7 +658,7 @@ package body Synth.Inference is
       Enable : Net;
       Res : Net;
    begin
-      if not Flags.Flag_Debug_Noinference then
+      if not Synth.Flags.Flag_Debug_Noinference then
          if Get_First_Sink (Prev_Val) = No_Input then
             --  PREV_VAL is never read, so there cannot be any loop.
             --  This is an important optimization for control signals.
@@ -671,6 +672,9 @@ package body Synth.Inference is
       if Len <= 0 then
          --  No logical loop or self assignment.
          Res := Val;
+      elsif Can_Infere_RAM (Val, Prev_Val) then
+         --  Try to infere RAM before FF, because of many ports/clocks.
+         Res := Infere_RAM (Ctxt, Val);
       else
          --  So there is a logical loop.
          Sel := Get_Mux2_Sel (Last_Mux);
@@ -685,6 +689,6 @@ package body Synth.Inference is
          end if;
       end if;
 
-      Add_Conc_Assign (Wid, Res, Off, Stmt);
+      return Res;
    end Infere;
-end Synth.Inference;
+end Netlists.Inference;

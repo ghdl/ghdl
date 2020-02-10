@@ -209,6 +209,7 @@ package body Netlists.Expands is
       end;
 
       --  3. build mux tree
+      Disconnect (Get_Input (Inst, 1));
       Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
       Truncate_Address (Ctxt, Addr, Nbr_Els);
       Def := No_Net;
@@ -216,7 +217,6 @@ package body Netlists.Expands is
 
       --  4. remove old dyn_extract.
       Disconnect (Get_Input (Inst, 0));
-      Disconnect (Get_Input (Inst, 1));
       Redirect_Inputs (Get_Output (Inst, 0), Res);
       Remove_Instance (Inst);
 
@@ -396,6 +396,7 @@ package body Netlists.Expands is
 
       --  Generate decoder.
       Net_Arr := new Net_Array(0 .. Int32 (Nbr_Els - 1));
+      Disconnect (Get_Input (Inst, 2));
       Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
       Truncate_Address (Ctxt, Addr, Nbr_Els);
       Generate_Decoder (Ctxt, Addr, Net_Arr.all);
@@ -419,7 +420,6 @@ package body Netlists.Expands is
       Redirect_Inputs (O, Res);
       Disconnect (Get_Input (Inst, 0));
       Disconnect (Get_Input (Inst, 1));
-      Disconnect (Get_Input (Inst, 2));
       if En /= No_Net then
          Disconnect (Get_Input (Inst, 3));
       end if;
