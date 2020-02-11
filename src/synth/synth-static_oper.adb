@@ -402,21 +402,25 @@ package body Synth.Static_Oper is
             declare
                Ret_Typ : constant Type_Acc :=
                  Get_Value_Type (Syn_Inst, Get_Return_Type (Imp));
+               L_Len : constant Iir_Index32 :=
+                 Iir_Index32 (Get_Bound_Length (Left.Typ, 1));
+               R_Len : constant Iir_Index32 :=
+                 Iir_Index32 (Get_Bound_Length (Right.Typ, 1));
                Bnd : Bound_Type;
                Res_Typ : Type_Acc;
                Arr : Value_Array_Acc;
             begin
                Bnd := Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0),
-                  Left.Arr.Len + Right.Arr.Len);
+                  L_Len + R_Len);
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Ret_Typ, Bnd);
-               Arr := Create_Value_Array (Left.Arr.Len + Right.Arr.Len);
-               for I in Left.Arr.V'Range loop
+               Arr := Create_Value_Array (L_Len + R_Len);
+               for I in 1 .. L_Len loop
                   Arr.V (I) := Left.Arr.V (I);
                end loop;
-               for I in Right.Arr.V'Range loop
-                  Arr.V (Left.Arr.Len + I) := Right.Arr.V (I);
+               for I in 1 .. R_Len loop
+                  Arr.V (L_Len + I) := Right.Arr.V (I);
                end loop;
                return Create_Value_Const_Array (Res_Typ, Arr);
             end;

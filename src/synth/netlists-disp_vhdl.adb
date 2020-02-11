@@ -612,8 +612,10 @@ package body Netlists.Disp_Vhdl is
          if Wd > 1 then
             Disp_Template (" (\n0 downto \n1)", Inst,
                            (0 => Off + Wd - 1, 1 => Off));
-         else
+         elsif Wd = 1 then
             Disp_Template (" (\n0)", Inst, (0 => Off));
+         else
+            Disp_Template (" (-1 downto 0)", Inst);
          end if;
       end if;
    end Disp_Extract;
