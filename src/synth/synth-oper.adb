@@ -380,6 +380,18 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Dyadic_Uns_Nat;
 
+      function Synth_Dyadic_Nat_Uns (Id : Dyadic_Module_Id) return Value_Acc
+      is
+         R : constant Net := Get_Net (Right);
+         L1 : Net;
+         N : Net;
+      begin
+         L1 := Synth_Uresize (Left, Right.Typ.W, Expr);
+         N := Build_Dyadic (Build_Context, Id, L1, R);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Create_Res_Bound (Right));
+      end Synth_Dyadic_Nat_Uns;
+
       function Synth_Dyadic_Sgn_Int (Id : Dyadic_Module_Id) return Value_Acc
       is
          L : constant Net := Get_Net (Left);
@@ -613,6 +625,9 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
             --  "+" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Id_Add);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns =>
+            --  "+" (Natural, Unsigned)
+            return Synth_Dyadic_Nat_Uns (Id_Add);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl
