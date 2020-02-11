@@ -27,4 +27,4 @@ checks if it is a keyword.  In that case it changes the token to the keyword tok
 The procedure `scan` is called to get the next token.  The location of the token and
 the location after the token are available to store it in the parser tree.
 
-The main clieant of the scanner is the parser.
+The main client of the scanner is the parser.
