@@ -622,7 +622,7 @@ package body Trans.Chap6 is
       --  Check direction against same direction, error if different.
       --  FIXME: what about v87 -> if different then null slice
       if not Static_Range
-        or else Get_Kind (Prefix_Type) /= Iir_Kind_Array_Subtype_Definition
+        or else not Get_Index_Constraint_Flag (Prefix_Type)
       then
          --  Check same direction.
          Check_Direction_Error
