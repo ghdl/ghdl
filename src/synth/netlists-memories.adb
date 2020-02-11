@@ -1154,8 +1154,14 @@ package body Netlists.Memories is
       Nbr_Ports : Int32;
       Inst : Instance;
 
+      --  Table of offsets.
+      --  The same RAM can be partially read or written: not all the bits of
+      --  the data bus are read or written.  The RAM is split in several
+      --  sub-rams which are fully read/written.
+      --  This table will contain the offset of each sub-rams.
       Offs : Off_Array_Acc;
       Nbr_Offs : Int32;
+
       Heads : Net_Array_Acc;
       Tails : Net_Array_Acc;
       Outs : Net_Array_Acc;
@@ -1277,7 +1283,7 @@ package body Netlists.Memories is
          end;
       end loop;
 
-      --  2.1 Sort
+      --  2.1 Sort the offsets.
       declare
          function Lt (Op1, Op2 : Natural) return Boolean is
          begin
@@ -1295,12 +1301,14 @@ package body Netlists.Memories is
 
          procedure Heap_Sort is new Grt.Algos.Heap_Sort
            (Lt => Lt, Swap => Swap);
-
-         P : Nat32;
       begin
          Heap_Sort (Natural (Nbr_Offs));
+      end;
 
-         --  Remove duplicates.
+      --  2.2 Remove duplicates.
+      declare
+         P : Nat32;
+      begin
          P := 1;
          for I in 2 .. Nbr_Offs loop
             if Offs (I) /= Offs (P) then
@@ -1478,14 +1486,16 @@ package body Netlists.Memories is
                      if En = No_Net then
                         En := Build_Const_UB32 (Ctxt, 1, 1);
                      end if;
+                     Inp2 := Get_Input (Inst, 1);
+                     Dat := Get_Driver (Inp2);
                      for I in Idx .. Idx + Len - 1 loop
-                        Inp2 := Get_Input (Inst, 1);
-                        Dat := Get_Driver (Inp2);
                         Wr_Inst := Build_Mem_Wr_Sync
-                          (Ctxt, Tails (I), Addr, Clk, En, Dat);
-                        Disconnect (Inp2);
+                          (Ctxt, Tails (I), Addr, Clk, En,
+                           Build2_Extract (Ctxt, Dat, Offs (I) - Offs (Idx),
+                                           Offs (I + 1) - Offs (I)));
                         Tails (I) := Get_Output (Wr_Inst, 0);
                      end loop;
+                     Disconnect (Inp2);
                   end;
                   Remove_Instance (Inst);
                when Id_Dff
