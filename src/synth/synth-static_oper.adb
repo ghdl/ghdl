@@ -331,7 +331,8 @@ package body Synth.Static_Oper is
                Res_Typ);
          when Iir_Predefined_Integer_Div =>
             return Create_Value_Discrete
-              (Left.Scal / Right.Scal, Res_Typ);
+              (Get_Static_Discrete (Left) / Get_Static_Discrete (Right),
+               Res_Typ);
          when Iir_Predefined_Integer_Mod =>
             return Create_Value_Discrete
               (Get_Static_Discrete (Left) mod Get_Static_Discrete (Right),
