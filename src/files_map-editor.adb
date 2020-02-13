@@ -452,7 +452,7 @@ package body Files_Map.Editor is
          D.Source (S.Gap_Start .. S_Cont_Len - 1) :=
            S.Source (S.Gap_Last + 1 .. S.File_Length - 1);
       else
-         pragma Assert (S.Gap_Start = S_Cont_Len);
+         pragma Assert (S.Gap_Start = S_Cont_Len + 2);
          D.Source (Source_Ptr_Org .. Source_Ptr_Org + S_Cont_Len - 1) :=
            S.Source (Source_Ptr_Org .. Source_Ptr_Org + S_Cont_Len - 1);
       end if;
