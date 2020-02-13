@@ -4169,6 +4169,12 @@ package body Vhdl.Sem_Expr is
       N_Type := Sem_Type_Mark (Get_Type_Mark (Expr));
       Set_Type_Mark (Expr, N_Type);
       N_Type := Get_Type (N_Type);
+      if N_Type = Null_Iir then
+         --  Stop now in case of error.  It is highly possible that the
+         --  expression is ambiguous.
+         return Null_Iir;
+      end if;
+
       Set_Type (Expr, N_Type);
       if A_Type /= Null_Iir
         and then Are_Types_Compatible (A_Type, N_Type) = Not_Compatible
