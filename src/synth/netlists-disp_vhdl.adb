@@ -128,23 +128,25 @@ package body Netlists.Disp_Vhdl is
       declare
          Inst : constant Instance := Get_Net_Parent (N);
          Idx : constant Port_Idx := Get_Port_Idx (N);
+         M : Module;
          Inst_Name : Sname;
          Port_Name : Sname;
       begin
          if Is_Self_Instance (Inst) then
+            --  For ports of the current module, simply use the port name.
             Put_Name (Get_Input_Desc (Get_Module (Inst), Idx).Name);
          else
             Inst_Name := Get_Instance_Name (Inst);
             Put_Name (Inst_Name);
-            case Get_Sname_Kind (Inst_Name) is
-               when Sname_Version =>
-                  Port_Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
-                  Put ("_");
-                  Put_Interface_Name (Port_Name);
-               when Sname_User =>
+            M := Get_Module (Inst);
+            case Get_Id (M) is
+               when Id_Signal
+                 | Id_Isignal =>
                   null;
                when others =>
-                  raise Internal_Error;
+                  Port_Name := Get_Output_Desc (M, Idx).Name;
+                  Put ("_");
+                  Put_Interface_Name (Port_Name);
             end case;
          end if;
       end;
@@ -227,20 +229,12 @@ package body Netlists.Disp_Vhdl is
          Put (" => ");
          declare
             I : Input;
-            O_Inst : Instance;
          begin
             I := Get_First_Sink (O);
             if I = No_Input then
                Put ("open");
             else
-               O_Inst := Get_Input_Parent (I);
-               if O_Inst /= No_Instance
-                 and then Get_Id (O_Inst) = Id_Port
-               then
-                  Disp_Net_Name (Get_Output (O_Inst, 0));
-               else
-                  Disp_Net_Name (O);
-               end if;
+               Disp_Net_Name (O);
             end if;
          end;
       end loop;
@@ -763,7 +757,7 @@ package body Netlists.Disp_Vhdl is
          when Id_Isignal =>
             Disp_Template ("  \o0 <= \i0; -- (isignal)" & NL, Inst);
          when Id_Port =>
-            null;
+            Disp_Template ("  \o0 <= \i0; -- (port)" & NL, Inst);
          when Id_Not =>
             Disp_Template ("  \o0 <= not \i0;" & NL, Inst);
          when Id_Neg =>
@@ -1174,8 +1168,8 @@ package body Netlists.Disp_Vhdl is
                if not Is_Self_Instance (Inst)
                  and then not (Flag_Merge_Lit
                                  and then Id in Constant_Module_Id
+                                 and then Id < Id_User_None
                                  and then not Need_Signal (Inst))
-                 and then Id < Id_User_None
                then
                   for N of Outputs (Inst) loop
                      if Id in Constant_Module_Id then

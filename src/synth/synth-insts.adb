@@ -32,7 +32,7 @@ with Synthesis; use Synthesis;
 with Grt.Algos;
 
 with Netlists; use Netlists;
-with Netlists.Builders;
+with Netlists.Builders; use Netlists.Builders;
 with Netlists.Cleanup;
 with Netlists.Memories;
 with Netlists.Expands;
@@ -597,7 +597,6 @@ package body Synth.Insts is
                                             Assoc : Node;
                                             Inter_Inst : Synth_Instance_Acc)
    is
-      use Netlists.Builders;
       Iassoc : Node;
       V : Value_Acc;
       Off : Uns32;
@@ -930,7 +929,8 @@ package body Synth.Insts is
         (Syn_Inst, Stmt, Comp, Null_Node, Null_Node);
    end Synth_Blackbox_Instantiation_Statement;
 
-   procedure Create_Component_Wire (Inter : Node; Val : Value_Acc)
+   procedure Create_Component_Wire
+     (Ctxt : Context_Acc; Inter : Node; Val : Value_Acc; Pfx_Name : Sname)
    is
       Value : Net;
       W : Width;
@@ -940,9 +940,8 @@ package body Synth.Insts is
             --  Create a gate for the output, so that it could be read.
             Val.W := Alloc_Wire (Wire_Output, Inter);
             W := Get_Type_Width (Val.Typ);
-            Value := Builders.Build_Signal
-              (Build_Context,
-               New_Sname_User (Get_Identifier (Inter), No_Sname), W);
+            Value := Build_Signal
+              (Ctxt, New_Internal_Name (Ctxt, Pfx_Name), W);
             Set_Wire_Gate (Val.W, Value);
          when others =>
             raise Internal_Error;
@@ -965,9 +964,13 @@ package body Synth.Insts is
       Sub_Inst : Synth_Instance_Acc;
       Inst_Obj : Inst_Object;
       Inst : Instance;
+      Inst_Name : Sname;
    begin
       pragma Assert (Get_Component_Configuration (Stmt) /= Null_Node);
       pragma Assert (Get_Kind (Aspect) = Iir_Kind_Entity_Aspect_Entity);
+
+      Inst_Name := New_Sname_User (Get_Identifier (Stmt),
+                                   Get_Sname (Syn_Inst));
 
       --  Create the sub-instance for the component
       --  Elaborate generic + map aspect
@@ -979,7 +982,8 @@ package body Synth.Insts is
                                   Get_Generic_Chain (Component),
                                   Get_Generic_Map_Aspect_Chain (Stmt));
 
-      --  Create objects for inputs and outputs, assign inputs.
+      --  Create objects for the inputs and the outputs of the component,
+      --  assign inputs (that's nets) and create wires for outputs.
       declare
          Assoc : Node;
          Assoc_Inter : Node;
@@ -1010,7 +1014,8 @@ package body Synth.Insts is
                     (Syn_Inst, Actual, Inter_Type);
                when Port_Out =>
                   Val := Create_Value_Wire (No_Wire_Id, Inter_Type);
-                  Create_Component_Wire (Assoc_Inter, Val);
+                  Create_Component_Wire
+                    (Get_Build (Syn_Inst), Assoc_Inter, Val, Inst_Name);
             end case;
             Create_Object (Comp_Inst, Assoc_Inter, Val);
             Next_Association_Interface (Assoc, Assoc_Inter);
@@ -1060,9 +1065,7 @@ package body Synth.Insts is
       --  TODO: free sub_inst.
 
       Inst := New_Instance (Get_Instance_Module (Syn_Inst),
-                            Inst_Obj.M,
-                            New_Sname_User (Get_Identifier (Stmt),
-                                            Get_Sname (Syn_Inst)));
+                            Inst_Obj.M, Inst_Name);
 
       Synth_Instantiate_Module
         (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));
@@ -1100,10 +1103,10 @@ package body Synth.Insts is
                   null;
                when Port_Out =>
                   if Actual /= Null_Node then
-                     Port := Get_Output (Inst, Nbr_Outputs);
-                     Port := Builders.Build_Port (Get_Build (Syn_Inst), Port);
-                     O := Create_Value_Net
-                       (Port, Get_Value (Comp_Inst, Inter).Typ);
+                     O := Get_Value (Comp_Inst, Inter);
+                     Port := Get_Net (O);
+                     Port := Build_Port (Get_Build (Syn_Inst), Port);
+                     O := Create_Value_Net (Port, O.Typ);
                      Synth_Assignment (Syn_Inst, Actual, O, Assoc);
                   end if;
                   Nbr_Outputs := Nbr_Outputs + 1;

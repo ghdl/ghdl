@@ -126,18 +126,22 @@ package body Netlists.Cleanup is
       while Inst /= No_Instance loop
          Next_Inst := Get_Next_Instance (Inst);
 
-         if Get_Id (Inst) = Id_Output then
-            Inp := Get_Input (Inst, 0);
-            O := Get_Driver (Inp);
-            if O /= No_Net then
-               --  Only when the output is driven.
-               Disconnect (Inp);
-               Redirect_Inputs (Get_Output (Inst, 0), O);
-            else
-               Disconnect (Get_First_Sink (Get_Output (Inst, 0)));
-            end if;
-            Remove_Instance (Inst);
-         end if;
+         case Get_Id (Inst) is
+            when Id_Output
+              | Id_Port =>
+               Inp := Get_Input (Inst, 0);
+               O := Get_Driver (Inp);
+               if O /= No_Net then
+                  --  Only when the output is driven.
+                  Disconnect (Inp);
+                  Redirect_Inputs (Get_Output (Inst, 0), O);
+               else
+                  Disconnect (Get_First_Sink (Get_Output (Inst, 0)));
+               end if;
+               Remove_Instance (Inst);
+            when others =>
+               null;
+         end case;
 
          Inst := Next_Inst;
       end loop;
