@@ -208,6 +208,28 @@ package body Vhdl.Parse is
       Check_End_Name (Get_Identifier (Decl), Decl);
    end Check_End_Name;
 
+   --  Skip the reserved identifier after 'end'.
+   procedure Scan_End_Token (Tok : Token_Type; Decl : Iir) is
+   begin
+      if Current_Token /= Tok then
+         Error_Msg_Parse ("""end"" must be followed by %t", +Tok);
+         case Current_Token is
+            when Tok_If
+              | Tok_Loop
+              | Tok_Case
+              | Tok_Process =>
+               --  Mismatching token.
+               Scan;
+            when others =>
+               null;
+         end case;
+      else
+         Set_End_Has_Reserved_Id (Decl, True);
+
+         --  Skip tok.
+         Scan;
+      end if;
+   end Scan_End_Token;
 
    --  Expect ' END tok [ name ] ; '
    procedure Check_End_Name (Tok : Token_Type; Decl : Iir) is
@@ -215,13 +237,11 @@ package body Vhdl.Parse is
       if Current_Token /= Tok_End then
          Error_Msg_Parse ("""end " & Image (Tok) & ";"" expected");
       else
+         --  Skip 'end'.
          Scan;
-         if Current_Token /= Tok then
-            Error_Msg_Parse ("""end"" must be followed by %t", +Tok);
-         else
-            Set_End_Has_Reserved_Id (Decl, True);
-            Scan;
-         end if;
+
+         Scan_End_Token (Tok, Decl);
+
          Check_End_Name (Decl);
       end if;
    end Check_End_Name;
@@ -8084,8 +8104,7 @@ package body Vhdl.Parse is
          --  Skip ';'.
          Scan;
       else
-         Expect_Scan (Tok_Process);
-         Set_End_Has_Reserved_Id (Res, True);
+         Scan_End_Token (Tok_Process, Res);
          Check_End_Name (Res);
          Expect_Scan (Tok_Semi_Colon, "';' expected at end of process");
       end if;
