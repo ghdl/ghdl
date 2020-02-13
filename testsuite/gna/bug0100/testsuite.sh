@@ -15,6 +15,7 @@ analyze_failure --force-analysis emptyquote2.vhdl
 analyze_failure usrattr.vhdl
 analyze_failure forloop.vhdl 
 analyze_failure emptyquote.vhdl
+analyze_failure qual.vhdl
 
 if analyze_failure --force-analysis notype1.vhdl 2>&1 | grep -q "indexed name"; then
   :
