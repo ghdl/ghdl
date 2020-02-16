@@ -510,16 +510,6 @@ package body Netlists.Inference is
       end if;
       Copy_Location (Res, Last_Mux);
 
-      --  The output of the mux may be read later in the process,
-      --  like this:
-      --    if clk'event and clk = '1' then
-      --       d := i + 1;
-      --    end if;
-      --    d1 := d + 1;
-      --  So connections to the mux output are redirected to dff
-      --  output.
-      Redirect_Inputs (O, Res);
-
       Free_Instance (Last_Mux);
 
       return Res;
