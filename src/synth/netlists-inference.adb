@@ -25,7 +25,7 @@ with Netlists.Locations; use Netlists.Locations;
 with Netlists.Errors; use Netlists.Errors;
 with Netlists.Internings;
 with Netlists.Folds; use Netlists.Folds;
-with Netlists.Memories;
+with Netlists.Memories; use Netlists.Memories;
 
 with Synth.Flags;
 with Synth.Source; use Synth.Source;
@@ -471,10 +471,15 @@ package body Netlists.Inference is
          end loop;
       end;
 
-      --  If there is a condition with the clock, that's an enable which
-      --  keep the previous value if the condition is false.  Add the mux
-      --  for it.
-      if Enable /= No_Net then
+      if Off = 0
+        and then Can_Infere_RAM (Data, Prev_Val)
+      then
+         --  Maybe it is a RAM.
+         Data := Infere_RAM (Ctxt, Data, Enable);
+      elsif Enable /= No_Net then
+         --  If there is a condition with the clock, that's an enable which
+         --  keep the previous value if the condition is false.  Add the mux
+         --  for it.
          declare
             Prev : Net;
          begin
@@ -648,7 +653,6 @@ package body Netlists.Inference is
                     Prev_Val : Net;
                     Stmt : Synth.Source.Syn_Src) return Net
    is
-      use Netlists.Memories;
       pragma Assert (Val /= No_Net);
       pragma Assert (Prev_Val /= No_Net);
       Last_Mux : Instance;
@@ -672,9 +676,6 @@ package body Netlists.Inference is
       if Len <= 0 then
          --  No logical loop or self assignment.
          Res := Val;
-      elsif Can_Infere_RAM (Val, Prev_Val) then
-         --  Try to infere RAM before FF, because of many ports/clocks.
-         Res := Infere_RAM (Ctxt, Val);
       else
          --  So there is a logical loop.
          Sel := Get_Mux2_Sel (Last_Mux);
