@@ -328,6 +328,7 @@ package body Netlists.Inference is
                        Stmt : Synth.Source.Syn_Src) return Net
    is
       O : constant Net := Get_Output (Last_Mux, 0);
+      Mux_Loc : constant Location_Type := Get_Location (Last_Mux);
       Data : Net;
       Res : Net;
       Sig : Instance;
@@ -335,6 +336,7 @@ package body Netlists.Inference is
       Rst : Net;
       Rst_Val : Net;
       Enable : Net;
+      Els : Net;
    begin
       --  Create and return the DFF.
 
@@ -344,12 +346,31 @@ package body Netlists.Inference is
          Sel : constant Input := Get_Mux2_Sel (Last_Mux);
          I0 : constant Input := Get_Mux2_I0 (Last_Mux);
          I1 : constant Input := Get_Mux2_I1 (Last_Mux);
+         Els_Inst : Instance;
+         Els_Clk : Net;
+         Els_En : Net;
       begin
          --  There must be no 'else' part for clock expression.
-         if not Is_Prev_FF_Value (Get_Driver (I0), Prev_Val, Off) then
-            Error_Msg_Synth
-              (+Stmt, "synchronous code does not expect else part");
-            return Prev_Val;
+         Els := Get_Driver (I0);
+         if Is_Prev_FF_Value (Els, Prev_Val, Off) then
+            --  The loop.
+            Els := No_Net;
+         else
+            Els_Inst := Get_Net_Parent (Els);
+            if Get_Id (Els_Inst) = Id_Mux2 then
+               Extract_Clock (Ctxt, Get_Driver (Get_Mux2_Sel (Els_Inst)),
+                              Els_Clk, Els_En);
+            else
+               Els_Clk := No_Net;
+            end if;
+            if Els_Clk = No_Net then
+               Error_Msg_Synth
+                 (+Stmt, "clocked logic requires clocked logic on else part");
+               Els := No_Net;
+            else
+               Els := Infere_FF (Ctxt, Prev_Val, Off, Els_Inst,
+                                 Els_Clk, Els_En, Stmt);
+            end if;
          end if;
 
          Disconnect (Sel);
@@ -471,6 +492,8 @@ package body Netlists.Inference is
          end loop;
       end;
 
+      Free_Instance (Last_Mux);
+
       if Off = 0
         and then Can_Infere_RAM (Data, Prev_Val)
       then
@@ -493,12 +516,25 @@ package body Netlists.Inference is
       --  Create the FF.
       if Rst = No_Net then
          pragma Assert (Rst_Val = No_Net);
-         if Init /= No_Net then
-            Res := Build_Idff (Ctxt, Clk, D => Data, Init => Init);
+         if Els = No_Net then
+            if Init /= No_Net then
+               Res := Build_Idff (Ctxt, Clk, D => Data, Init => Init);
+            else
+               Res := Build_Dff (Ctxt, Clk, D => Data);
+            end if;
          else
-            Res := Build_Dff (Ctxt, Clk, D => Data);
+            if Init /= No_Net then
+               raise Internal_Error;
+            else
+               Res := Build_Mdff (Ctxt, Clk, D => Data, Els => Els);
+            end if;
          end if;
       else
+         if Els /= No_Net then
+            Error_Msg_Synth
+              (+Stmt, "synchronous code does not expect else part");
+         end if;
+
          if Init /= No_Net then
             Res := Build_Iadff (Ctxt, Clk, D => Data,
                                 Rst => Rst, Rst_Val => Rst_Val,
@@ -508,9 +544,7 @@ package body Netlists.Inference is
                                Rst => Rst, Rst_Val => Rst_Val);
          end if;
       end if;
-      Copy_Location (Res, Last_Mux);
-
-      Free_Instance (Last_Mux);
+      Set_Location (Res, Mux_Loc);
 
       return Res;
    end Infere_FF;

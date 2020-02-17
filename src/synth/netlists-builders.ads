@@ -185,7 +185,12 @@ package Netlists.Builders is
    function Build_Iadff (Ctxt : Context_Acc;
                         Clk : Net;
                         D : Net; Rst : Net; Rst_Val : Net;
-                        Init : Net) return Net;
+                                            Init : Net) return Net;
+
+   function Build_Mdff (Ctxt : Context_Acc;
+                        Clk : Net;
+                        D : Net;
+                        Els : Net) return Net;
 private
    type Module_Arr is array (Module_Id range <>) of Module;
 
@@ -217,6 +222,7 @@ private
       M_Idff : Module;
       M_Adff : Module;
       M_Iadff : Module;
+      M_Mdff : Module;
       M_Truncate : Module_Arr (Truncate_Module_Id);
       M_Extend : Module_Arr (Extend_Module_Id);
       M_Reduce : Module_Arr (Reduce_Module_Id);

@@ -141,6 +141,7 @@ package Netlists.Gates is
    --           2: INIT (initial value)
    --  Output:  0: Q
    Id_Idff  : constant Module_Id := 52;
+
    --  A DFF with an asynchronous reset and an initial value.
    --  Inputs:  0: CLK
    --           1: D
@@ -149,6 +150,13 @@ package Netlists.Gates is
    --           4: INIT (initial value)
    --  Output:  0: Q
    Id_Iadff : constant Module_Id := 53;
+
+   --  Multi clock dff.  ELSE is the output of the next DFF.
+   --  Inputs:  0: CLK
+   --           1: D
+   --           2: ELSE
+   --  Output:  0: Q
+   Id_Mdff : constant Module_Id := 54;
 
    --  Width change: truncate or extend.  Sign is know in order to possibly
    --  detect loss of value.
