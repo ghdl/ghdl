@@ -4,7 +4,7 @@
 
 GHDL_STD_FLAGS=--std=08
 
-for t in ent; do
+for t in ent ent2; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
