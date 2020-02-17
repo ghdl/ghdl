@@ -877,6 +877,8 @@ package body Vhdl.Sem_Assocs is
       end if;
    end Add_Individual_Association;
 
+   procedure Finish_Individual_Association1 (Assoc : Iir; Atype : Iir);
+
    procedure Finish_Individual_Assoc_Array_Subtype
      (Assoc : Iir; Atype : Iir; Dim : Positive)
    is
@@ -885,6 +887,7 @@ package body Vhdl.Sem_Assocs is
       Index_Type : constant Iir := Get_Nth_Element (Index_Tlist, Dim - 1);
       Chain : constant Iir := Get_Individual_Association_Chain (Assoc);
       Low, High : Iir;
+      El_Type : Iir;
       El : Iir;
    begin
       Sem_Check_Continuous_Choices
@@ -897,6 +900,14 @@ package body Vhdl.Sem_Assocs is
               (Get_Associated_Expr (El), Atype, Dim + 1);
             El := Get_Chain (El);
          end loop;
+      else
+         El_Type := Get_Element_Subtype (Atype);
+         El := Chain;
+         while El /= Null_Iir loop
+            Finish_Individual_Association1
+              (Get_Associated_Expr (El), El_Type);
+            El := Get_Chain (El);
+         end loop;
       end if;
    end Finish_Individual_Assoc_Array_Subtype;
 
@@ -904,14 +915,14 @@ package body Vhdl.Sem_Assocs is
      (Actual : Iir; Assoc : Iir; Dim : Natural)
    is
       Actual_Type : constant Iir := Get_Actual_Type (Actual);
+      Index_Tlist : constant Iir_Flist := Get_Index_Subtype_List (Actual_Type);
       Actual_Index : Iir;
       Base_Type : Iir;
       Base_Index : Iir;
       Low, High : Iir;
       Chain : Iir;
    begin
-      Actual_Index := Get_Nth_Element (Get_Index_Subtype_List (Actual_Type),
-                                       Dim - 1);
+      Actual_Index := Get_Nth_Element (Index_Tlist, Dim - 1);
       if Actual_Index /= Null_Iir then
          Base_Index := Actual_Index;
       else
@@ -986,6 +997,22 @@ package body Vhdl.Sem_Assocs is
             end if;
          end;
       end if;
+
+      declare
+         Nbr_Dims : constant Natural := Get_Nbr_Elements (Index_Tlist);
+         El_Type : Iir;
+         El : Iir;
+      begin
+         if Dim = Nbr_Dims then
+            El_Type := Get_Element_Subtype (Actual_Type);
+            El := Chain;
+            while El /= Null_Iir loop
+               Finish_Individual_Association1
+                 (Get_Associated_Expr (El), El_Type);
+               El := Get_Chain (El);
+            end loop;
+         end if;
+      end;
    end Finish_Individual_Assoc_Array;
 
    procedure Finish_Individual_Assoc_Record (Assoc : Iir; Atype : Iir)
@@ -1017,6 +1044,9 @@ package body Vhdl.Sem_Assocs is
          Rec_El := Get_Nth_Element (El_List, I);
          if Matches (I) = Null_Iir then
             Error_Msg_Sem (+Assoc, "%n not associated", +Rec_El);
+         else
+            Finish_Individual_Association1
+              (Get_Associated_Expr (Matches (I)), Get_Type (Rec_El));
          end if;
       end loop;
 
@@ -1110,6 +1140,41 @@ package body Vhdl.Sem_Assocs is
       end loop;
    end Clean_Individual_Association;
 
+   procedure Finish_Individual_Association1 (Assoc : Iir; Atype : Iir)
+   is
+      Ntype : Iir;
+   begin
+      if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual then
+         --  End of recursion.  The association is an element association,
+         --  not an individual one.
+         return;
+      end if;
+
+      case Get_Kind (Atype) is
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            if Get_Constraint_State (Atype) = Fully_Constrained then
+               Finish_Individual_Assoc_Array_Subtype (Assoc, Atype, 1);
+               Set_Actual_Type (Assoc, Atype);
+            else
+               Ntype := Create_Array_Subtype (Atype, Get_Location (Assoc));
+               Set_Index_Constraint_Flag (Ntype, True);
+               Set_Constraint_State (Ntype, Fully_Constrained);
+               Set_Has_Signal_Flag (Ntype, Get_Has_Signal_Flag (Atype));
+               Set_Actual_Type (Assoc, Ntype);
+               Set_Actual_Type_Definition (Assoc, Ntype);
+               Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
+            end if;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            Finish_Individual_Assoc_Record (Assoc, Atype);
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
+            null;
+         when others =>
+            Error_Kind ("finish_individual_association", Atype);
+      end case;
+   end Finish_Individual_Association1;
+
    --  Called by sem_individual_association to finish the analyze of
    --  individual association ASSOC: compute bounds, detect missing elements.
    procedure Finish_Individual_Association (Assoc : Iir)
@@ -1126,31 +1191,7 @@ package body Vhdl.Sem_Assocs is
       Atype := Get_Type (Inter);
       Set_Whole_Association_Flag (Assoc, True);
 
-      case Get_Kind (Atype) is
-         when Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Array_Type_Definition =>
-            if Get_Constraint_State (Atype) = Fully_Constrained then
-               Finish_Individual_Assoc_Array_Subtype (Assoc, Atype, 1);
-               Set_Actual_Type (Assoc, Atype);
-            else
-               Atype := Create_Array_Subtype (Atype, Get_Location (Assoc));
-               Set_Index_Constraint_Flag (Atype, True);
-               Set_Constraint_State (Atype, Fully_Constrained);
-               if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
-               then
-                  --  The subtype is used for signals.
-                  Set_Has_Signal_Flag (Atype, True);
-               end if;
-               Set_Actual_Type (Assoc, Atype);
-               Set_Actual_Type_Definition (Assoc, Atype);
-               Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
-            end if;
-         when Iir_Kind_Record_Type_Definition
-           | Iir_Kind_Record_Subtype_Definition =>
-            Finish_Individual_Assoc_Record (Assoc, Atype);
-         when others =>
-            Error_Kind ("finish_individual_association", Atype);
-      end case;
+      Finish_Individual_Association1 (Assoc, Atype);
 
       --  Free the hierarchy, keep only the top individual association.
       Clean_Individual_Association (Assoc);
