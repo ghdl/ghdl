@@ -2869,6 +2869,7 @@ package body Synth.Stmts is
          Icond := Get_Condition (Gen);
          if Icond /= Null_Node then
             Cond := Synth_Expression (Syn_Inst, Icond);
+            Strip_Const (Cond);
             pragma Assert (Cond.Kind = Value_Discrete);
          else
             --  It is the else generate.
