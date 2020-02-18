@@ -507,12 +507,12 @@ package body Synth.Environment is
             --  There is an hole.
             if Next_Off = Expected_Off + 1 then
                Warning_Msg_Synth
-                 (+Wire_Rec.Decl, "no assignment for offset %v",
-                  (1 => +Expected_Off));
+                 (+Wire_Rec.Decl, "no assignment for offset %v of %n",
+                  (1 => +Expected_Off, 2 => +Wire_Rec.Decl));
             else
                Warning_Msg_Synth
-                 (+Wire_Rec.Decl, "no assignment for offsets %v:%v",
-                  (+Expected_Off, +(Next_Off - 1)));
+                 (+Wire_Rec.Decl, "no assignment for offsets %v:%v of %n",
+                  (+Expected_Off, +(Next_Off - 1), +Wire_Rec.Decl));
             end if;
 
             --  Insert conc_assign with initial value.
@@ -582,10 +582,12 @@ package body Synth.Environment is
             if Wire_Rec.Decl /= Null_Node
               and then Wire_Rec.Kind = Wire_Output
             then
-               Error_Msg_Synth
+               Warning_Msg_Synth
                  (+Wire_Rec.Decl, "no assignment for %n", +Wire_Rec.Decl);
+               Value := Build_Const_Z (Ctxt, Get_Width (Wire_Rec.Gate));
+            else
+               return;
             end if;
-            return;
          when 1 =>
             declare
                Conc_Asgn : Conc_Assign_Record renames
