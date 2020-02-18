@@ -1104,7 +1104,8 @@ package body Vhdl.Sem_Scopes is
            | Iir_Kind_Disconnection_Specification =>
             null;
          when Iir_Kinds_Signal_Attribute
-           | Iir_Kind_Signal_Attribute_Declaration =>
+           | Iir_Kind_Signal_Attribute_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration =>
             null;
 
          when Iir_Kind_Protected_Type_Body =>
