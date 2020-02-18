@@ -18,7 +18,6 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Ada.Unchecked_Conversion;
 with Types; use Types;
 with Types_Utils; use Types_Utils;
 with Mutils;
@@ -40,14 +39,9 @@ with Synth.Errors; use Synth.Errors;
 with Synth.Stmts; use Synth.Stmts;
 with Synth.Expr; use Synth.Expr;
 with Synth.Source;
-with Synth.Files_Operations;
 with Synth.Static_Oper; use Synth.Static_Oper;
 
 package body Synth.Oper is
-   --  As log2(3m) is directly referenced, the program must be linked with -lm
-   --  (math library) on unix systems.
-   pragma Linker_Options ("-lm");
-
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
 
@@ -1223,45 +1217,17 @@ package body Synth.Oper is
       return Create_Value_Net (Res, Boolean_Type);
    end Synth_Std_Match;
 
-   function Eval_To_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
-                             return Value_Acc
+   function Synth_Dynamic_Predefined_Function_Call
+     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
    is
-      Len : constant Iir_Index32 := Iir_Index32 (Sz);
-      El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
-      Arr : Value_Array_Acc;
-      Bnd : Type_Acc;
-      B : Uns64;
-   begin
-      Arr := Create_Value_Array (Len);
-      for I in 1 .. Len loop
-         B := Shift_Right_Arithmetic (Arg, Natural (I - 1)) and 1;
-         Arr.V (Len - I + 1) := Create_Value_Discrete
-           (Std_Logic_0_Pos + Int64 (B), El_Type);
-      end loop;
-      Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
-      return Create_Value_Const_Array (Bnd, Arr);
-   end Eval_To_Vector;
-
-   function Synth_Predefined_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
-   is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Ctxt : constant Context_Acc := Get_Build (Subprg_Inst);
       Imp  : constant Node := Get_Implementation (Expr);
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
-      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Param1 : Node;
       Param2 : Node;
-      Subprg_Inst : Synth_Instance_Acc;
-      M : Areapools.Mark_Type;
    begin
-      Areapools.Mark (M, Instance_Pool.all);
-      Subprg_Inst := Make_Instance (Syn_Inst, Imp);
-
-      Synth_Subprogram_Association
-        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
-
       Param1 := Inter_Chain;
       if Param1 /= Null_Node then
          Param2 := Get_Chain (Inter_Chain);
@@ -1270,14 +1236,6 @@ package body Synth.Oper is
       end if;
 
       case Def is
-         when Iir_Predefined_Endfile =>
-            declare
-               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-               Res : Boolean;
-            begin
-               Res := Synth.Files_Operations.Endfile (L.File, Expr);
-               return Create_Value_Discrete (Boolean'Pos (Res), Boolean_Type);
-            end;
          when Iir_Predefined_Ieee_1164_Rising_Edge =>
             declare
                Clk : Net;
@@ -1312,6 +1270,15 @@ package body Synth.Oper is
                end if;
                return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
             end;
+         when Iir_Predefined_Ieee_1164_To_Stdlogicvector =>
+            declare
+               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+            begin
+               if Is_Static (L) then
+                  raise Internal_Error;
+               end if;
+               return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             declare
@@ -1322,23 +1289,15 @@ package body Synth.Oper is
                Size := Get_Value (Subprg_Inst, Param2);
                if not Is_Static (Size) then
                   Error_Msg_Synth (+Expr, "to_unsigned size must be constant");
-                  return Arg;
-               else
-                  Strip_Const (Size);
-                  --  FIXME: what if the arg is constant too ?
-                  if Is_Static (Arg) then
-                     return Eval_To_Vector
-                       (Uns64 (Arg.Scal), Size.Scal,
-                        Get_Value_Type (Syn_Inst, Get_Type (Imp)));
-                  else
-                     Arg_Net := Get_Net (Arg);
-                     return Create_Value_Net
-                       (Build2_Uresize (Ctxt, Arg_Net, Uns32 (Size.Scal),
-                                        Get_Location (Expr)),
-                        Create_Vec_Type_By_Length (Uns32 (Size.Scal),
-                                                   Logic_Type));
-                  end if;
+                  return null;
                end if;
+               Strip_Const (Size);
+               Arg_Net := Get_Net (Arg);
+               return Create_Value_Net
+                 (Build2_Uresize (Ctxt, Arg_Net, Uns32 (Size.Scal),
+                                  Get_Location (Expr)),
+                  Create_Vec_Type_By_Length (Uns32 (Size.Scal),
+                                             Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn =>
             declare
@@ -1349,23 +1308,15 @@ package body Synth.Oper is
                Size := Get_Value (Subprg_Inst, Param2);
                if not Is_Static (Size) then
                   Error_Msg_Synth (+Expr, "to_signed size must be constant");
-                  return Arg;
-               else
-                  Strip_Const (Size);
-                  --  FIXME: what if the arg is constant too ?
-                  if Is_Static (Arg) then
-                     return Eval_To_Vector
-                       (To_Uns64 (Arg.Scal), Size.Scal,
-                        Get_Value_Type (Syn_Inst, Get_Type (Imp)));
-                  else
-                     Arg_Net := Get_Net (Arg);
-                     return Create_Value_Net
-                       (Build2_Sresize (Ctxt, Arg_Net, Uns32 (Size.Scal),
-                                        Get_Location (Expr)),
-                        Create_Vec_Type_By_Length (Uns32 (Size.Scal),
-                                                   Logic_Type));
-                  end if;
+                  return null;
                end if;
+               Strip_Const (Size);
+               Arg_Net := Get_Net (Arg);
+               return Create_Value_Net
+                 (Build2_Sresize (Ctxt, Arg_Net, Uns32 (Size.Scal),
+                                  Get_Location (Expr)),
+                  Create_Vec_Type_By_Length (Uns32 (Size.Scal),
+                                             Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
@@ -1373,7 +1324,7 @@ package body Synth.Oper is
             --  UNSIGNED to Natural.
             declare
                Int_Type : constant Type_Acc :=
-                 Get_Value_Type (Syn_Inst,
+                 Get_Value_Type (Subprg_Inst,
                                  Vhdl.Std_Package.Integer_Subtype_Definition);
             begin
                return Create_Value_Net
@@ -1408,8 +1359,7 @@ package body Synth.Oper is
                end if;
                W := Uns32 (Sz.Scal);
                return Create_Value_Net
-                 (Build2_Sresize (Get_Build (Syn_Inst), Get_Net (V), W,
-                                  Get_Location (Expr)),
+                 (Build2_Sresize (Ctxt, Get_Net (V), W, Get_Location (Expr)),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat
@@ -1464,85 +1414,52 @@ package body Synth.Oper is
                   return null;
                end if;
             end;
-         when Iir_Predefined_Ieee_Math_Real_Log2 =>
-            declare
-               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-
-               function Log2 (Arg : Fp64) return Fp64;
-               pragma Import (C, Log2);
-            begin
-               if V.Typ.Kind /= Type_Float then
-                  Error_Msg_Synth (+Expr, "argument must be a float value");
-                  return null;
-               end if;
-               return Create_Value_Float
-                 (Log2 (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
-            end;
-         when Iir_Predefined_Ieee_Math_Real_Ceil =>
-            declare
-               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-
-               function Ceil (Arg : Fp64) return Fp64;
-               pragma Import (C, Ceil);
-            begin
-               if V.Typ.Kind /= Type_Float then
-                  Error_Msg_Synth(+Expr, "argument must be a float value");
-                  return null;
-               end if;
-               return Create_Value_Float
-                 (Ceil (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
-            end;
-         when Iir_Predefined_Ieee_Math_Real_Round =>
-            declare
-               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-
-               function Round (Arg : Fp64) return Fp64;
-               pragma Import (C, Round);
-            begin
-               if V.Typ.Kind /= Type_Float then
-                  Error_Msg_Synth(+Expr, "argument must be a float value");
-                  return null;
-               end if;
-               return Create_Value_Float
-                 (Round (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
-            end;
-         when Iir_Predefined_Ieee_Math_Real_Sin =>
-            declare
-               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-
-               function Sin (Arg : Fp64) return Fp64;
-               pragma Import (C, Sin);
-            begin
-               if V.Typ.Kind /= Type_Float then
-                  Error_Msg_Synth (+Expr, "argument must be a float value");
-                  return null;
-               end if;
-               return Create_Value_Float
-                 (Sin (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
-            end;
-         when Iir_Predefined_Ieee_Math_Real_Cos =>
-            declare
-               V : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-
-               function Cos (Arg : Fp64) return Fp64;
-               pragma Import (C, Cos);
-            begin
-               if V.Typ.Kind /= Type_Float then
-                  Error_Msg_Synth (+Expr, "argument must be a float value");
-                  return null;
-               end if;
-               return Create_Value_Float
-                 (Cos (V.Fp), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
-            end;
          when others =>
             Error_Msg_Synth
               (+Expr,
                "unhandled function: " & Iir_Predefined_Functions'Image (Def));
+            return null;
       end case;
+   end Synth_Dynamic_Predefined_Function_Call;
+
+   function Synth_Predefined_Function_Call
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Expr);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Inter : Node;
+      Subprg_Inst : Synth_Instance_Acc;
+      M : Areapools.Mark_Type;
+      Static : Boolean;
+      Res : Value_Acc;
+   begin
+      Areapools.Mark (M, Instance_Pool.all);
+      Subprg_Inst := Make_Instance (Syn_Inst, Imp);
+
+      Synth_Subprogram_Association
+        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
+
+      --  If all operands are static, handle the call differently.
+      Static := True;
+      Inter := Inter_Chain;
+      while Inter /= Null_Node loop
+         if not Is_Static (Get_Value (Subprg_Inst, Inter)) then
+            Static := False;
+            exit;
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      if Static then
+         Res := Synth_Static_Predefined_Function_Call (Subprg_Inst, Expr);
+      else
+         Res := Synth_Dynamic_Predefined_Function_Call (Subprg_Inst, Expr);
+      end if;
 
       Free_Instance (Subprg_Inst);
       Areapools.Release (M, Instance_Pool.all);
 
-      return null;
+      return Res;
    end Synth_Predefined_Function_Call;
 end Synth.Oper;

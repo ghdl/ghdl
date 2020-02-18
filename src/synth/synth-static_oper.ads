@@ -32,4 +32,8 @@ package Synth.Static_Oper is
                                              Imp : Node;
                                              Operand : Value_Acc;
                                              Expr : Node) return Value_Acc;
+
+   function Synth_Static_Predefined_Function_Call
+     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
+
 end Synth.Static_Oper;

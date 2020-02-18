@@ -19,9 +19,10 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Types_Utils; use Types_Utils;
 
 with Vhdl.Utils; use Vhdl.Utils;
-with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
 with Netlists; use Netlists;
 with Netlists.Utils; use Netlists.Utils;
@@ -33,8 +34,13 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
+with Synth.Files_Operations;
 
 package body Synth.Static_Oper is
+   --  As log2(3m) is directly referenced, the program must be linked with -lm
+   --  (math library) on unix systems.
+   pragma Linker_Options ("-lm");
+
    --  From openiee:
 
    type Static_Arr_Kind is (Sarr_Value, Sarr_Net);
@@ -651,4 +657,149 @@ package body Synth.Static_Oper is
             raise Internal_Error;
       end case;
    end Synth_Static_Monadic_Predefined;
+
+   function Eval_To_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
+                           return Value_Acc
+   is
+      Len : constant Iir_Index32 := Iir_Index32 (Sz);
+      El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
+      Arr : Value_Array_Acc;
+      Bnd : Type_Acc;
+      B : Uns64;
+   begin
+      Arr := Create_Value_Array (Len);
+      for I in 1 .. Len loop
+         B := Shift_Right_Arithmetic (Arg, Natural (I - 1)) and 1;
+         Arr.V (Len - I + 1) := Create_Value_Discrete
+           (Std_Logic_0_Pos + Int64 (B), El_Type);
+      end loop;
+      Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
+      return Create_Value_Const_Array (Bnd, Arr);
+   end Eval_To_Vector;
+
+   function Eval_Unsigned_To_Integer
+     (Arg : Value_Acc; Res_Type : Type_Acc; Loc : Node) return Value_Acc
+   is
+      Res : Uns64;
+   begin
+      Res := 0;
+      for I in Arg.Arr.V'Range loop
+         case Arg.Arr.V (I).Scal is
+            when Std_Logic_0_Pos
+              | Std_Logic_L_Pos =>
+               Res := Res * 2;
+            when Std_Logic_1_Pos
+              | Std_Logic_H_Pos =>
+               Res := Res * 2 + 1;
+            when Std_Logic_U_Pos
+              | Std_Logic_X_Pos
+              | Std_Logic_Z_Pos
+              | Std_Logic_W_Pos
+              | Std_Logic_D_Pos =>
+               Warning_Msg_Synth
+                 (+Loc, "metavalue detected, returning 0");
+               Res := 0;
+               exit;
+            when others =>
+               raise Internal_Error;
+         end case;
+      end loop;
+      return Create_Value_Discrete (To_Int64 (Res), Res_Type);
+   end Eval_Unsigned_To_Integer;
+
+   function Synth_Static_Predefined_Function_Call
+     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Expr);
+      Def : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Param1 : Value_Acc;
+      Param2 : Value_Acc;
+      Res_Typ : Type_Acc;
+      Inter : Node;
+   begin
+      Inter := Inter_Chain;
+      if Inter /= Null_Node then
+         Param1 := Get_Value (Subprg_Inst, Inter);
+         Strip_Const (Param1);
+         Inter := Get_Chain (Inter);
+      else
+         Param1 := null;
+      end if;
+      if Inter /= Null_Node then
+         Param2 := Get_Value (Subprg_Inst, Inter);
+         Strip_Const (Param2);
+         Inter := Get_Chain (Inter);
+      else
+         Param2 := null;
+      end if;
+
+      Res_Typ := Get_Value_Type (Subprg_Inst, Get_Type (Imp));
+
+      case Def is
+         when Iir_Predefined_Endfile =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth.Files_Operations.Endfile (Param1.File, Expr);
+               return Create_Value_Discrete (Boolean'Pos (Res), Boolean_Type);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
+            return Eval_To_Vector
+              (Uns64 (Param1.Scal), Param2.Scal, Res_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn =>
+            return Eval_To_Vector
+              (To_Uns64 (Param1.Scal), Param2.Scal, Res_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
+            --  UNSIGNED to Natural.
+            return Eval_Unsigned_To_Integer (Param1, Res_Typ, Expr);
+
+         when Iir_Predefined_Ieee_Math_Real_Log2 =>
+            declare
+               function Log2 (Arg : Fp64) return Fp64;
+               pragma Import (C, Log2);
+            begin
+               return Create_Value_Float (Log2 (Param1.Fp), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Ceil =>
+            declare
+               function Ceil (Arg : Fp64) return Fp64;
+               pragma Import (C, Ceil);
+            begin
+               return Create_Value_Float (Ceil (Param1.Fp), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Round =>
+            declare
+               function Round (Arg : Fp64) return Fp64;
+               pragma Import (C, Round);
+            begin
+               return Create_Value_Float (Round (Param1.Fp), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Sin =>
+            declare
+               function Sin (Arg : Fp64) return Fp64;
+               pragma Import (C, Sin);
+            begin
+               return Create_Value_Float (Sin (Param1.Fp), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Math_Real_Cos =>
+            declare
+               function Cos (Arg : Fp64) return Fp64;
+               pragma Import (C, Cos);
+            begin
+               return Create_Value_Float (Cos (Param1.Fp), Res_Typ);
+            end;
+         when others =>
+            Error_Msg_Synth
+              (+Expr, "unhandled (static) function: "
+                 & Iir_Predefined_Functions'Image (Def));
+            return null;
+      end case;
+   end Synth_Static_Predefined_Function_Call;
+
 end Synth.Static_Oper;
