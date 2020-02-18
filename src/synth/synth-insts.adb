@@ -564,6 +564,7 @@ package body Synth.Insts is
       Actual : Node;
       Formal_Typ : Type_Acc;
       Act_Inst : Synth_Instance_Acc;
+      Act : Value_Acc;
    begin
       case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
          when Iir_Kind_Association_Element_Open =>
@@ -587,9 +588,8 @@ package body Synth.Insts is
 
       Formal_Typ := Get_Value_Type (Inter_Inst, Get_Type (Inter));
 
-      Connect (Inp,
-               Get_Net (Synth_Expression_With_Type
-                          (Act_Inst, Actual, Formal_Typ)));
+      Act := Synth_Expression_With_Type (Act_Inst, Actual, Formal_Typ);
+      Connect (Inp, Get_Net (Act));
    end Synth_Input_Assoc;
 
    procedure Synth_Individual_Output_Assoc (Outp : Net;
@@ -1041,7 +1041,7 @@ package body Synth.Insts is
          raise Internal_Error;
       end if;
 
-      --  Elaborate generic + map aspect
+      --  Elaborate generic + map aspect for the entity instance.
       Sub_Inst := Make_Instance
         (Comp_Inst, Ent, New_Sname_User (Get_Identifier (Ent), No_Sname));
       Synth_Generics_Association (Sub_Inst, Comp_Inst,
