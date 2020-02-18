@@ -465,6 +465,27 @@ package body Synth.Insts is
                Off := Off + Arr_Off;
                Typ := Get_Array_Element (Typ);
             end;
+         when Iir_Kind_Slice_Name =>
+            declare
+               Pfx_Bnd : Bound_Type;
+               El_Typ : Type_Acc;
+               Res_Bnd : Bound_Type;
+               Sl_Voff : Net;
+               Sl_Off : Uns32;
+               Wd : Uns32;
+            begin
+               Synth_Individual_Prefix
+                 (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
+
+               Get_Onedimensional_Array_Bounds (Typ, Pfx_Bnd, El_Typ);
+               Synth_Slice_Suffix (Syn_Inst, Formal, Pfx_Bnd, El_Typ.W,
+                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
+               if Sl_Voff /= No_Net then
+                  raise Internal_Error;
+               end if;
+               Off := Off + Sl_Off;
+               Typ := Create_Onedimensional_Array_Subtype (Typ, Res_Bnd);
+            end;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_individual_prefix", Formal);
       end case;
