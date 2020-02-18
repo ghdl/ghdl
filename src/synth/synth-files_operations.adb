@@ -173,6 +173,48 @@ package body Synth.Files_Operations is
       end if;
    end Endfile;
 
+   --  Declaration
+   --  procedure FILE_OPEN (file F : FT:
+   --                       External_Name : String;
+   --                       Open_Kind : File_Open_Kind);
+   procedure Synth_File_Open (Syn_Inst : Synth_Instance_Acc;
+                              Imp : Node;
+                              Loc : Node)
+   is
+      Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
+      F : constant File_Index := Get_Value (Syn_Inst, Inters).File;
+      Param2 : constant Node := Get_Chain (Inters);
+      File_Name : constant Value_Acc := Get_Value (Syn_Inst, Param2);
+      Param3 : constant Node := Get_Chain (Param2);
+      Open_Kind : constant Value_Acc := Get_Value (Syn_Inst, Param3);
+      C_Name : C_File_Name;
+      C_Name_Len : Natural;
+      File_Mode : Ghdl_I32;
+      Status : Op_Status;
+   begin
+      Convert_File_Name (File_Name, C_Name, C_Name_Len, Status);
+      if Status = Op_Ok then
+         File_Mode := Ghdl_I32 (Open_Kind.Scal);
+         if Get_Text_File_Flag (Get_Type (Inters)) then
+            Ghdl_Text_File_Open
+              (F, File_Mode, To_Ghdl_C_String (C_Name'Address), Status);
+         else
+            Ghdl_File_Open
+              (F, File_Mode, To_Ghdl_C_String (C_Name'Address), Status);
+         end if;
+      end if;
+
+      if Status /= Op_Ok then
+         if Status = Op_Name_Error then
+            Error_Msg_Synth
+              (+Loc, "cannot open file: " & C_Name (1 .. C_Name_Len));
+            raise File_Execution_Error;
+         else
+            File_Error (Loc, Status);
+         end if;
+      end if;
+   end Synth_File_Open;
+
    --  Declaration:
    --  procedure untruncated_text_read                              --!V87
    --    (file f : text; str : out string; len : out natural);      --!V87

@@ -33,6 +33,10 @@ package Synth.Files_Operations is
 
    function Endfile (F : File_Index; Loc : Syn_Src) return Boolean;
 
+   procedure Synth_File_Open (Syn_Inst : Synth_Instance_Acc;
+                              Imp : Node;
+                              Loc : Node);
+
    procedure Synth_Untruncated_Text_Read (Syn_Inst : Synth_Instance_Acc;
                                           Imp : Node;
                                           Loc : Node);
