@@ -5444,7 +5444,13 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_1164_Vector_Xnor,
       Iir_Predefined_Ieee_1164_Vector_Not,
 
+      Iir_Predefined_Ieee_1164_To_Bit,
       Iir_Predefined_Ieee_1164_To_Bitvector,
+      Iir_Predefined_Ieee_1164_To_Stdulogic,
+      Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv,
+      Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv,
+      Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv,
+      Iir_Predefined_Ieee_1164_To_Stdulogicvector_Slv,
 
       Iir_Predefined_Ieee_1164_Vector_Is_X,
       Iir_Predefined_Ieee_1164_Scalar_Is_X,

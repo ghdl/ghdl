@@ -35,6 +35,13 @@ package body Vhdl.Ieee.Std_Logic_1164 is
         or Base_Type = Std_Logic_Vector_Type;
    end Is_Vector_Parameter;
 
+   function Is_Bitvec_Parameter (Inter : Iir) return Boolean
+   is
+      Base_Type : constant Iir := Get_Base_Type (Get_Type (Inter));
+   begin
+      return Base_Type = Std_Package.Bit_Vector_Type_Definition;
+   end Is_Bitvec_Parameter;
+
    function Is_Integer_Parameter (Inter : Iir) return Boolean is
    begin
       return (Get_Base_Type (Get_Type (Inter))
@@ -146,6 +153,24 @@ package body Vhdl.Ieee.Std_Logic_1164 is
 
       return True;
    end Is_Vector_Function;
+
+   --  Return True iff the profile of FUNC is: (l : bit_vector)
+   function Is_Bitvec_Function (Func : Iir) return Boolean
+   is
+      Inter : constant Iir := Get_Interface_Declaration_Chain (Func);
+   begin
+      if Get_Implicit_Definition (Func) /= Iir_Predefined_None then
+         return False;
+      end if;
+      if Inter = Null_Iir or else not Is_Bitvec_Parameter (Inter) then
+         return False;
+      end if;
+      if Get_Chain (Inter) /= Null_Iir then
+         return False;
+      end if;
+
+      return True;
+   end Is_Bitvec_Function;
 
    procedure Extract_Declarations (Pkg : Iir_Package_Declaration)
    is
@@ -277,6 +302,24 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                     (Get_Interface_Declaration_Chain (Decl), False);
                when Name_To_Bitvector =>
                   Predefined := Iir_Predefined_Ieee_1164_To_Bitvector;
+               when Name_To_Stdulogic =>
+                  Predefined := Iir_Predefined_Ieee_1164_To_Stdulogic;
+               when Name_To_Stdlogicvector =>
+                  if Is_Vector_Function (Decl) then
+                     Predefined :=
+                       Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv;
+                  elsif Is_Bitvec_Function (Decl) then
+                     Predefined :=
+                       Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv;
+                  end if;
+               when Name_To_Stdulogicvector =>
+                  if Is_Vector_Function (Decl) then
+                     Predefined :=
+                       Iir_Predefined_Ieee_1164_To_Stdulogicvector_Slv;
+                  elsif Is_Bitvec_Function (Decl) then
+                     Predefined :=
+                       Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv;
+                  end if;
                when others =>
                   if Is_Scalar_Scalar_Function (Decl) then
                      case Get_Identifier (Decl) is

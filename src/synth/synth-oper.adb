@@ -1270,7 +1270,8 @@ package body Synth.Oper is
                end if;
                return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
             end;
-         when Iir_Predefined_Ieee_1164_To_Stdlogicvector =>
+         when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
+           | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
             declare
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
             begin
