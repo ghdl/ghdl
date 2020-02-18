@@ -940,6 +940,7 @@ package body Vhdl.Configuration is
       begin
          if not Flags.Flag_Elaborate_With_Outdated then
             if Get_Date (Design) < Date_Analyzed then
+               --  Skip outdated units.
                return Walk_Continue;
             end if;
          end if;
@@ -951,10 +952,8 @@ package body Vhdl.Configuration is
                   Mark_Instantiation_Cb'Access);
                pragma Assert (Status = Walk_Continue);
             when Iir_Kind_Configuration_Declaration =>
-               --  TODO
-               raise Program_Error;
-               --  Mark_Units_Of_Block_Configuration
-               --   (Get_Block_Configuration (Unit));
+               --  Just ignored.
+               null;
             when Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Instantiation_Declaration
               | Iir_Kind_Package_Body
@@ -1024,6 +1023,7 @@ package body Vhdl.Configuration is
 
    function Find_Top_Entity (From : Iir) return Iir is
    begin
+      --  FROM is a library or a design file.
       Top.Mark_Instantiated_Units (From);
       Top.Find_First_Top_Entity (From);
 
