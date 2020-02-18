@@ -1,0 +1,8 @@
+Tests for RAMs
+--------------
+
+dpram1: Read+Write (using a signal)
+ram3:   not a RAM (whole content available on a port).
+ram4:   not a RAM (reset).
+ram5:   not a RAM (reset)
+ram6:   not a RAM (whole content available).

@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in rom1 dpram1 dpram2 dpram3; do
+for t in rom1 srom01 sram01 dpram1 dpram2 dpram3; do
     analyze $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean

@@ -1,0 +1,9 @@
+Tests for RAMs
+--------------
+
+rom1: asynchronous ROM
+srom01: Read (initialized ROM).
+sram01: Read+Write (at the same address).
+dpram1: Read+Write (using signals, without enables)
+dpram2: Read+Write (using a variable, without enables)
+dpram3: Read+Write (like dpram2 but downto)

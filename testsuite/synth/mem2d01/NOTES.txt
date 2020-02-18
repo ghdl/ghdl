@@ -1,0 +1,7 @@
+Tests for RAMs
+--------------
+
+dpram1r: Read(2d)+Write(1d), using indexes
+dpram2r: Read(2d)+Write(1d), using slices.
+dpram2w: Read(1d)+Write(2d), using slices.
+memmux04: Read(2d)+Write(1d), enable on write, intermediate variable for read.
