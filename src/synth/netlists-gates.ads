@@ -158,6 +158,14 @@ package Netlists.Gates is
    --  Output:  0: Q
    Id_Mdff : constant Module_Id := 54;
 
+   --  Multi clock dff with initial value.  ELSE is the output of the next DFF.
+   --  Inputs:  0: CLK
+   --           1: D
+   --           2: ELSE
+   --           3: Init
+   --  Output:  0: Q
+   Id_Midff : constant Module_Id := 55;
+
    --  Width change: truncate or extend.  Sign is know in order to possibly
    --  detect loss of value.
    Id_Utrunc : constant Module_Id := 64;

@@ -496,6 +496,16 @@ package body Netlists.Builders is
                                     1 => Create_Input ("d"),
                                     2 => Create_Input ("els")),
                       Outputs);
+
+      Ctxt.M_Midff := New_User_Module
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("midff"), No_Sname),
+         Id_Midff, 4, 1, 0);
+      Set_Ports_Desc (Ctxt.M_Midff, (0 => Create_Input ("clk", 1),
+                                     1 => Create_Input ("d"),
+                                     2 => Create_Input ("els"),
+                                     3 => Create_Input ("init")),
+                      Outputs);
    end Create_Dff_Modules;
 
    procedure Create_Assert_Assume_Cover (Ctxt : Context_Acc)
@@ -1365,6 +1375,29 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 2), Els);
       return O;
    end Build_Mdff;
+
+   function Build_Midff (Ctxt : Context_Acc;
+                         Clk : Net;
+                         D : Net;
+                         Els : Net;
+                         Init : Net) return Net
+   is
+      Wd : constant Width := Get_Width (D);
+      pragma Assert (Get_Width (Clk) = 1);
+      pragma Assert (Get_Width (Els) = Wd);
+      pragma Assert (Get_Width (Init) = Wd);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Midff);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Connect (Get_Input (Inst, 0), Clk);
+      Connect (Get_Input (Inst, 1), D);
+      Connect (Get_Input (Inst, 2), Els);
+      Connect (Get_Input (Inst, 3), Init);
+      return O;
+   end Build_Midff;
 
    function Build_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net
