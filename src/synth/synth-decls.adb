@@ -650,8 +650,8 @@ package body Synth.Decls is
                Create_Var_Wire (Syn_Inst, Decl, Init);
             end;
          when Iir_Kind_Object_Alias_Declaration =>
-            Synth_Declaration_Type (Syn_Inst, Decl);
             declare
+               Atype : constant Node := Get_Type (Decl);
                Obj : Value_Acc;
                Off : Uns32;
                Voff : Net;
@@ -660,7 +660,12 @@ package body Synth.Decls is
                Res : Value_Acc;
                Obj_Type : Type_Acc;
             begin
-               Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
+               --  Subtype indication may not be present.
+               if Is_Anonymous_Type_Definition (Atype) then
+                  Synth_Subtype_Indication (Syn_Inst, Atype);
+               end if;
+               Obj_Type := Get_Value_Type (Syn_Inst, Atype);
+
                Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
                                               Obj, Off, Voff, Rdwd, Typ);
                pragma Assert (Voff = No_Net);
