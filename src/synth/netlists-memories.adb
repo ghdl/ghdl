@@ -1497,11 +1497,11 @@ package body Netlists.Memories is
    --  Remove the mux2 MUX (by adding enable to dyn_insert).
    --  Return the new head.
    procedure Reduce_Muxes (Ctxt : Context_Acc;
-                            Sel : Net;
-                            Head_In : Net;
-                            Tail_In : Net;
-                            Head_Out : out Instance;
-                            Tail_Out : out Instance)
+                           Sel : Net;
+                           Head_In : Net;
+                           Tail_In : Net;
+                           Head_Out : out Instance;
+                           Tail_Out : out Instance)
    is
       Inst : Instance;
       N : Net;
@@ -1543,7 +1543,8 @@ package body Netlists.Memories is
             when Id_Signal
               | Id_Isignal =>
                pragma Assert (Tail_In = No_Net);
-               return;
+               Tail_Out := Inst;
+               exit;
             when others =>
                raise Internal_Error;
          end case;
@@ -1554,6 +1555,33 @@ package body Netlists.Memories is
          --  Continue the walk with the next element.
          N := Get_Input_Net (Tail_Out, 0);
       end loop;
+
+      --  If there are muxes for dyn_extract driven by the same SEL
+      --  net, between N and HEAD_IN, move them to HEAD_OUT as dyn_extract_en.
+      declare
+         Tail_Net : constant Net := Get_Output (Tail_Out, 0);
+         Head_Net : constant Net := Get_Output (Head_Out, 0);
+         Inp : Input;
+         Next_Inp : Input;
+      begin
+         Inp := Get_First_Sink (Tail_Net);
+         while Inp /= No_Input loop
+            Next_Inp := Get_Next_Sink (Inp);
+            Inst := Get_Input_Parent (Inp);
+            if Get_Id (Inst) = Id_Mux2
+              and then Get_Input_Net (Inst, 0) = Sel
+              and then Get_Input_Net (Inst, 1) = Tail_Net
+              and then Get_Input_Net (Inst, 2) = Head_Net
+            then
+               Disconnect (Get_Input (Inst, 0));
+               Disconnect (Get_Input (Inst, 1));
+               Disconnect (Get_Input (Inst, 2));
+               Redirect_Inputs (Get_Output (Inst, 0), Head_Net);
+               Remove_Instance (Inst);
+            end if;
+            Inp := Next_Inp;
+         end loop;
+      end;
    end Reduce_Muxes;
 
    --  Remove the mux2 MUX (by adding enable to dyn_insert).
@@ -1638,7 +1666,7 @@ package body Netlists.Memories is
 
    function Infere_RAM (Ctxt : Context_Acc; Val : Net; En : Net) return Net
    is
-      pragma Assert (not Is_Connected (Val));
+      --  pragma Assert (not Is_Connected (Val));
       Tail : Instance;
       Res : Instance;
    begin
