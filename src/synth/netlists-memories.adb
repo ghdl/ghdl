@@ -553,9 +553,9 @@ package body Netlists.Memories is
       return Res;
    end Create_Read_Port;
 
-   --  MEM_LINK is the link from the last port (or from the memory).
+   --  MEM_INST is the memory instance.
    procedure Replace_Read_Ports
-     (Ctxt : Context_Acc; Orig : Instance; Mem_Link : Net)
+     (Ctxt : Context_Acc; Orig : Instance; Mem_Inst : Instance)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
       Last : Net;
@@ -568,7 +568,7 @@ package body Netlists.Memories is
       Val_W : Width;
       Port_Inst : Instance;
    begin
-      Last := Mem_Link;
+      Last := Get_Output (Mem_Inst, 0);
 
       --  Convert readers.
       Inp := Get_First_Sink (Orig_Net);
@@ -605,17 +605,20 @@ package body Netlists.Memories is
          end case;
          Inp := Next_Inp;
       end loop;
+
+      --  Close the loop.
+      Connect (Get_Input (Mem_Inst, 0), Last);
    end Replace_Read_Ports;
 
    --  ORIG (the memory) must be Const.
    procedure Replace_ROM_Memory (Ctxt : Context_Acc; Orig : Instance)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
-      Last : Net;
+      Inst : Instance;
    begin
-      Last := Build_Memory_Init (Ctxt, Get_Width (Orig_Net), Orig_Net);
+      Inst := Build_Memory_Init (Ctxt, Get_Width (Orig_Net), Orig_Net);
 
-      Replace_Read_Ports (Ctxt, Orig, Last);
+      Replace_Read_Ports (Ctxt, Orig, Inst);
    end Replace_ROM_Memory;
 
    --  Try to reach Id_Signal/Id_Isignal (TODO: Id_Output) from dyn_insert
@@ -966,7 +969,7 @@ package body Netlists.Memories is
       Offs : Off_Array_Acc;
       Nbr_Offs : Int32;
 
-      Heads : Net_Array_Acc;
+      Heads : Instance_Array_Acc;
       Tails : Net_Array_Acc;
       Outs : Net_Array_Acc;
    begin
@@ -1133,7 +1136,7 @@ package body Netlists.Memories is
       end if;
 
       --  3. Create array of instances
-      Heads := new Net_Array (1 .. Nbr_Offs - 1);
+      Heads := new Instance_Array (1 .. Nbr_Offs - 1);
       Tails := new Net_Array (1 .. Nbr_Offs - 1);
       Outs := new Net_Array (1 .. Nbr_Offs - 1);
 
@@ -1155,7 +1158,7 @@ package body Netlists.Memories is
                when others =>
                   raise Internal_Error;
             end case;
-            Tails (I) := Heads (I);
+            Tails (I) := Get_Output (Heads (I), 0);
          end;
       end loop;
 
@@ -1168,6 +1171,7 @@ package body Netlists.Memories is
          Dff_Clk : Net;
       begin
          --  Try to extract clock from dff.
+         --  FIXME: this is wrong as it assumes there is only one dff.
          Dff_Clk := No_Net;
          Inst := Get_Input_Instance (Sig, 0);
          case Get_Id (Inst) is
@@ -1182,7 +1186,8 @@ package body Netlists.Memories is
          Inst := Sig;
          loop
             --  Check gates connected to the output.
-            --  First the dyn_extract
+            --  First the read ports (dyn_extract), and also find the next
+            --  gate in the loop.
             N_Inst := No_Instance;
             Inp := Get_First_Sink (Get_Output (Inst, 0));
             while Inp /= No_Input loop
@@ -1265,14 +1270,15 @@ package body Netlists.Memories is
                Inp := N_Inp;
             end loop;
 
-            --  Handle INST.
-            case Get_Id (Inst) is
+            --  Handle N_Inst.  If the output is connected to a write port,
+            --  add it (after the read ports).
+            case Get_Id (N_Inst) is
                when Id_Dyn_Insert_En
                  | Id_Dyn_Insert =>
                   declare
-                     Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
+                     Off : constant Uns32 := Get_Param_Uns32 (N_Inst, 0);
                      Wd : constant Width :=
-                       Get_Width (Get_Input_Net (Inst, 1));
+                       Get_Width (Get_Input_Net (N_Inst, 1));
                      Idx : Int32;
                      Len : Int32;
                      Addr : Net;
@@ -1283,12 +1289,12 @@ package body Netlists.Memories is
                      Clk : Net;
                   begin
                      Off_Array_To_Idx (Offs.all, Off, Wd, Idx, Len);
-                     Inp2 := Get_Input (Inst, 2);
+                     Inp2 := Get_Input (N_Inst, 2);
                      Addr := Get_Driver (Inp2);
                      Disconnect (Inp2);
                      Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
-                     if Get_Id (Inst) = Id_Dyn_Insert_En then
-                        Inp2 := Get_Input (Inst, 3);
+                     if Get_Id (N_Inst) = Id_Dyn_Insert_En then
+                        Inp2 := Get_Input (N_Inst, 3);
                         En := Get_Driver (Inp2);
                         Disconnect (Inp2);
                         Clk := Dff_Clk;
@@ -1300,7 +1306,7 @@ package body Netlists.Memories is
                      if En = No_Net then
                         En := Build_Const_UB32 (Ctxt, 1, 1);
                      end if;
-                     Inp2 := Get_Input (Inst, 1);
+                     Inp2 := Get_Input (N_Inst, 1);
                      Dat := Get_Driver (Inp2);
                      for I in Idx .. Idx + Len - 1 loop
                         Wr_Inst := Build_Mem_Wr_Sync
@@ -1311,9 +1317,24 @@ package body Netlists.Memories is
                      end loop;
                      Disconnect (Inp2);
                   end;
+               when Id_Dff
+                 | Id_Idff =>
+                  null;
+               when Id_Signal
+                 | Id_Isignal =>
+                  null;
+               when others =>
+                  raise Internal_Error;
+            end case;
+
+            --  Remove INST.
+            case Get_Id (Inst) is
+               when Id_Dyn_Insert_En
+                 | Id_Dyn_Insert =>
                   Remove_Instance (Inst);
                when Id_Dff
                  | Id_Idff =>
+                  --  Disconnect clock and init value.
                   Disconnect (Get_Input (Inst, 0));
                   if Get_Id (Inst) = Id_Idff then
                      Disconnect (Get_Input (Inst, 2));
@@ -1338,13 +1359,18 @@ package body Netlists.Memories is
             end case;
          end loop;
 
+         --  Close loops.
+         for I in Heads'Range loop
+            Connect (Get_Input (Heads (I), 0), Tails (I));
+         end loop;
+
          --  Finish to remove the signal/isignal.
          Remove_Instance (Inst);
       end;
 
       --  6. Cleanup.
       Free_Off_Array (Offs);
-      Free_Net_Array (Heads);
+      Free_Instance_Array (Heads);
       Free_Net_Array (Tails);
       Free_Net_Array (Outs);
    end Convert_To_Memory;

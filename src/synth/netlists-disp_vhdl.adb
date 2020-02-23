@@ -645,16 +645,17 @@ package body Netlists.Disp_Vhdl is
                --  Clock
                S := Get_Input_Net (Port_Inst, 2);
                Data_W := Get_Width (Get_Output (Port_Inst, 1));
+            when Id_Memory
+              | Id_Memory_Init =>
+               exit;
             when others =>
                raise Internal_Error;
          end case;
+         if Port /= Ports then
+            Put (", ");
+         end if;
          Disp_Net_Name (S);
          Port := Get_Output (Port_Inst, 0);
-         if Is_Connected (Port) then
-            Put (", ");
-         else
-            exit;
-         end if;
       end loop;
       Put_Line (") is");
 
@@ -675,7 +676,7 @@ package body Netlists.Disp_Vhdl is
             Val : Net;
             Val_Inst : Instance;
          begin
-            Val := Get_Input_Net (Mem, 0);
+            Val := Get_Input_Net (Mem, 1);
             Val_Inst := Get_Net_Parent (Val);
             if Get_Id (Val_Inst) = Id_Isignal then
                Val := Get_Input_Net (Val_Inst, 1);
@@ -711,11 +712,13 @@ package body Netlists.Disp_Vhdl is
                Disp_Template ("\o0", Mem);
                Disp_Template ("(to_integer (\ui1));" & NL, Port_Inst);
                Put_Line ("    end if;");
+            when Id_Memory
+              | Id_Memory_Init =>
+               exit;
             when others =>
                raise Internal_Error;
          end case;
          Port := Get_Output (Port_Inst, 0);
-         exit when not Is_Connected (Port);
       end loop;
       Put_Line ("  end process;");
    end Disp_Memory;

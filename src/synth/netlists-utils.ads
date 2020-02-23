@@ -27,6 +27,10 @@ package Netlists.Utils is
    procedure Free_Net_Array is new Ada.Unchecked_Deallocation
      (Net_Array, Net_Array_Acc);
 
+   type Instance_Array_Acc is access Instance_Array;
+   procedure Free_Instance_Array is new Ada.Unchecked_Deallocation
+     (Instance_Array, Instance_Array_Acc);
+
    function Get_Nbr_Inputs (Inst : Instance) return Port_Nbr;
    function Get_Nbr_Outputs (Inst : Instance) return Port_Nbr;
    function Get_Nbr_Params (Inst : Instance) return Param_Nbr;

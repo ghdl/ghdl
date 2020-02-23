@@ -320,28 +320,30 @@ package body Netlists.Builders is
       Res := New_User_Module
         (Ctxt.Design,
          New_Sname_Artificial (Get_Identifier ("memory"), No_Sname),
-         Id_Memory, 0, 1, 0);
+         Id_Memory, 1, 1, 0);
       Ctxt.M_Memory := Res;
-      Outputs (0 .. 0) := (0 => Create_Output ("ports"));
-      Set_Ports_Desc (Res, Port_Desc_Array'(1 .. 0 => <>), Outputs (0 .. 0));
+      Outputs (0 .. 0) := (0 => Create_Output ("oport"));
+      Inputs (0 .. 0) := (0 => Create_Input ("iport"));
+      Set_Ports_Desc (Res, Inputs (0 .. 0), Outputs (0 .. 0));
 
       Res := New_User_Module
         (Ctxt.Design,
          New_Sname_Artificial (Get_Identifier ("memory_init"), No_Sname),
-         Id_Memory_Init, 1, 1, 0);
+         Id_Memory_Init, 2, 1, 0);
       Ctxt.M_Memory_Init := Res;
-      Outputs (0 .. 0) := (0 => Create_Output ("ports"));
-      Inputs (0 .. 0) := (0 => Create_Input ("init"));
-      Set_Ports_Desc (Res, Inputs (0 .. 0), Outputs (0 .. 0));
+      Outputs (0 .. 0) := (0 => Create_Output ("oport"));
+      Inputs (0 .. 1) := (0 => Create_Input ("iport"),
+                          1 => Create_Input ("init"));
+      Set_Ports_Desc (Res, Inputs (0 .. 1), Outputs (0 .. 0));
 
       Res := New_User_Module
         (Ctxt.Design,
          New_Sname_Artificial (Get_Identifier ("mem_rd"), No_Sname),
          Id_Mem_Rd, 2, 2, 0);
       Ctxt.M_Mem_Rd := Res;
-      Inputs (0 .. 1) := (0 => Create_Input ("pport"),
+      Inputs (0 .. 1) := (0 => Create_Input ("iport"),
                           1 => Create_Input ("addr"));
-      Outputs (0 .. 1) := (0 => Create_Output ("nport"),
+      Outputs (0 .. 1) := (0 => Create_Output ("oport"),
                            1 => Create_Output ("data"));
       Set_Ports_Desc (Res, Inputs (0 .. 1), Outputs (0 .. 1));
 
@@ -350,11 +352,11 @@ package body Netlists.Builders is
          New_Sname_Artificial (Get_Identifier ("mem_rd_sync"), No_Sname),
          Id_Mem_Rd_Sync, 4, 2, 0);
       Ctxt.M_Mem_Rd_Sync := Res;
-      Inputs (0 .. 3) := (0 => Create_Input ("pport"),
+      Inputs (0 .. 3) := (0 => Create_Input ("iport"),
                           1 => Create_Input ("addr"),
                           2 => Create_Input ("clk"),
                           3 => Create_Input ("en"));
-      Outputs (0 .. 1) := (0 => Create_Output ("nport"),
+      Outputs (0 .. 1) := (0 => Create_Output ("oport"),
                            1 => Create_Output ("data"));
       Set_Ports_Desc (Res, Inputs (0 .. 3), Outputs (0 .. 1));
 
@@ -363,12 +365,12 @@ package body Netlists.Builders is
          New_Sname_Artificial (Get_Identifier ("mem_wr_sync"), No_Sname),
          Id_Mem_Wr_Sync, 5, 1, 0);
       Ctxt.M_Mem_Wr_Sync := Res;
-      Inputs := (0 => Create_Input ("pport"),
+      Inputs := (0 => Create_Input ("iport"),
                  1 => Create_Input ("addr"),
                  2 => Create_Input ("clk"),
                  3 => Create_Input ("en"),
                  4 => Create_Input ("data"));
-      Outputs (0 .. 0) := (0 => Create_Output ("nport"));
+      Outputs (0 .. 0) := (0 => Create_Output ("oport"));
       Set_Ports_Desc (Res, Inputs (0 .. 4), Outputs (0 .. 0));
    end Create_Memory_Modules;
 
@@ -1117,7 +1119,7 @@ package body Netlists.Builders is
       return O;
    end Build_Addidx;
 
-   function Build_Memory (Ctxt : Context_Acc; W : Width) return Net
+   function Build_Memory (Ctxt : Context_Acc; W : Width) return Instance
    is
       pragma Assert (W > 0);
       Inst : Instance;
@@ -1126,11 +1128,11 @@ package body Netlists.Builders is
       Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memory);
       O := Get_Output (Inst, 0);
       Set_Width (O, W);
-      return O;
+      return Inst;
    end Build_Memory;
 
    function Build_Memory_Init (Ctxt : Context_Acc; W : Width; Init : Net)
-                              return Net
+                              return Instance
    is
       pragma Assert (W > 0);
       pragma Assert (Get_Width (Init) = W);
@@ -1140,8 +1142,8 @@ package body Netlists.Builders is
       Inst := New_Internal_Instance (Ctxt, Ctxt.M_Memory_Init);
       O := Get_Output (Inst, 0);
       Set_Width (O, W);
-      Connect (Get_Input (Inst, 0), Init);
-      return O;
+      Connect (Get_Input (Inst, 1), Init);
+      return Inst;
    end Build_Memory_Init;
 
    function Build_Mem_Rd

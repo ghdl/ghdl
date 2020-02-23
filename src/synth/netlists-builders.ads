@@ -131,9 +131,9 @@ package Netlists.Builders is
       I : Net; Step : Uns32; Max : Uns32; W : Width) return Net;
    function Build_Addidx (Ctxt : Context_Acc; L, R : Net) return Net;
 
-   function Build_Memory (Ctxt : Context_Acc; W : Width) return Net;
+   function Build_Memory (Ctxt : Context_Acc; W : Width) return Instance;
    function Build_Memory_Init (Ctxt : Context_Acc; W : Width; Init : Net)
-                              return Net;
+                              return Instance;
    function Build_Mem_Rd
      (Ctxt : Context_Acc; Pport : Net; Addr : Net; Data_W : Width)
      return Instance;
