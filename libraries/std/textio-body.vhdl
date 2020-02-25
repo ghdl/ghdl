@@ -428,16 +428,14 @@ package body textio is
     loop
       untruncated_text_read (f, str, len);
       exit when len = 0;
-      if str (len) = LF or str (len) = CR then
+      if str (len) = LF then
         --  LRM 14.3
         --  The representation of the line does not contain the representation
         --  of the end of the line.
         is_eol := true;
         len := len - 1;
-        --  End of line is any of LF/CR/CR+LF/LF+CR.
-        if len > 0 and (str (len) = LF or str (len) = CR) then
-          len := len - 1;
-        end if;
+        --  End of line is any of LF/CR/CR+LF.  This is now handled
+        --  by untruncated_text_read because we need to do a look-ahead.
       elsif endfile (f) then
         is_eol := true;
       else

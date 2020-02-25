@@ -31,6 +31,10 @@ pragma Elaborate_All (Grt.Table);
 package body Grt.Files_Operations is
    subtype C_Files is Grt.Stdio.FILEs;
 
+   --  The end of lines
+   C_LF : constant int := 10;   --  \n
+   C_CR : constant int := 13;   --  \r
+
    Auto_Flush : constant Boolean := False;
 
    type File_Entry_Type is record
@@ -518,7 +522,7 @@ package body Grt.Files_Operations is
             Str.Base (I) := Character'Val (C);
          end if;
          --  End of line is '\n' or LF or character # 10.
-         if C = 10 then
+         if C = C_LF then
             Length := Std_Integer (I + 1);
             Status := Op_Ok;
             return;
@@ -534,7 +538,8 @@ package body Grt.Files_Operations is
                                          Status : out Op_Status)
    is
       Stream : C_Files;
-      Max_Len : int;
+      L : Natural;
+      C : int;
    begin
       Get_File (File, Stream, Status);
       if Status /= Op_Ok then
@@ -545,15 +550,35 @@ package body Grt.Files_Operations is
          return;
       end if;
 
-      Max_Len := int (Len);
-      if fgets (To_Address (Buf), Max_Len, Stream) = Null_Address then
-         Status := Op_End_Of_File;
-         return;
-      end if;
-
-      --  Compute the length.
-      Len := Std_Integer (strlen (Buf));
+      --  Default status.
       Status := Op_Ok;
+
+      --  Read at most LEN characters, stop at EOL.
+      L := 0;
+      for I in 1 .. Len loop
+         C := fgetc (Stream);
+         if C < 0 then
+            Status := Op_End_Of_File;
+            exit;
+         end if;
+         --  Be nice with DOS files: handle CR/CR+LF/LF.
+         --  Note: LF+CR is not handled, so that on unix we don't need
+         --  to read the next line.
+         --  Always return LF as end of line.
+         if C = C_CR then
+            C := fgetc (Stream);
+            if C > 0 and C /= C_LF then
+               C := ungetc (C, Stream);
+               pragma Assert (C >= 0);
+            end if;
+            C := C_LF;
+         end if;
+         L := L + 1;
+         Buf (L) := Character'Val (C);
+         exit when C = C_LF;
+      end loop;
+
+      Len := Std_Integer (L);
    end Ghdl_Untruncated_Text_Read;
 
    procedure File_Close

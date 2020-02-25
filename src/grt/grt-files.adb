@@ -34,6 +34,10 @@ pragma Elaborate_All (Grt.Table);
 package body Grt.Files is
    subtype C_Files is Grt.Stdio.FILEs;
 
+   --  The end of lines
+   C_LF : constant int := 10;   --  \n
+   C_CR : constant int := 13;   --  \r
+
    Auto_Flush : constant Boolean := False;
 
    type File_Entry_Type is record
@@ -470,22 +474,37 @@ package body Grt.Files is
    is
       Stream : C_Files;
       Max_Len : int;
+      C : int;
+      L : Ghdl_Index_Type;
    begin
       Stream := Get_File (File);
       Check_Read (File, True);
 
       Max_Len := int (Str.Bounds.Dim_1.Length);
-      if fgets (Str.Base (0)'Address, Max_Len, Stream) = Null_Address then
-         Internal_Error ("ghdl_untruncated_text_read: end of file");
-      end if;
 
-      --  Compute the length.
-      for I in Ghdl_Index_Type loop
-         if Str.Base (I) = NUL then
-            Len.all := Std_Integer (I);
-            exit;
+      --  Read at most LEN characters, stop at EOL.
+      L := 0;
+      for I in 1 .. Max_Len loop
+         C := fgetc (Stream);
+         exit when C < 0;
+         --  Be nice with DOS files: handle CR/CR+LF/LF.
+         --  Note: LF+CR is not handled, so that on unix we don't need
+         --  to read the next line.
+         --  Always return LF as end of line.
+         if C = C_CR then
+            C := fgetc (Stream);
+            if C > 0 and C /= C_LF then
+               C := ungetc (C, Stream);
+               pragma Assert (C >= 0);
+            end if;
+            C := C_LF;
          end if;
+         Str.Base (L) := Character'Val (C);
+         L := L + 1;
+         exit when C = C_LF;
       end loop;
+
+      Len.all := Std_Integer (L);
    end Ghdl_Untruncated_Text_Read;
 
    procedure File_Close (File : Ghdl_File_Index; Is_Text : Boolean)
