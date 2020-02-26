@@ -11,7 +11,7 @@
    News
    ****
 
-   xx.xx.2020 - GHDL 2020.1 was released.
+   xx.xx.2020 - GHDL v0.37 was released.
    ======================================
 
    The major changes are:

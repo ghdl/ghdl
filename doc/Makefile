@@ -1,29 +1,3 @@
-SRCS= \
-conf.py ../src/version.in \
-prolog.inc shields.json shieldswho.json \
-about.rst \
-appendix/Meta.rst \
-appendix/Roadmap.rst \
-contribute.rst \
-genindex.rst \
-getting/Directories.rst \
-getting/GCC.rst \
-getting/index.rst \
-getting/LLVM.rst \
-getting/mcode.rst \
-getting/PrecompileVendorPrimitives.rst \
-getting/Releases.rst \
-index.rst \
-licenses.rst \
-references/CodingStyle.rst \
-references/CommandReference.rst \
-references/ImplementationOfVHDL.rst \
-references/ImplementationOfVITAL.rst \
-using/Foreign.rst \
-using/InvokingGHDL.rst \
-using/QuickStartGuide.rst \
-using/Simulation.rst
-
 CP=cp
 
 # Sphinx options.
@@ -56,7 +30,7 @@ latex:
 #---
 
 texi: ghdl.texi
-ghdl.texi: $(SRCS)
+ghdl.texi:
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
 	$(CP) $(BUILDDIR)/texinfo/GHDL.texi $@
 
