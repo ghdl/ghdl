@@ -174,12 +174,11 @@ package body Synth.Files_Operations is
    end Endfile;
 
    --  Declaration
-   --  procedure FILE_OPEN (file F : FT:
+   --  procedure FILE_OPEN (file F : FT;
    --                       External_Name : String;
    --                       Open_Kind : File_Open_Kind);
-   procedure Synth_File_Open (Syn_Inst : Synth_Instance_Acc;
-                              Imp : Node;
-                              Loc : Node)
+   procedure Synth_File_Open
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
    is
       Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
       F : constant File_Index := Get_Value (Syn_Inst, Inters).File;
@@ -214,6 +213,26 @@ package body Synth.Files_Operations is
          end if;
       end if;
    end Synth_File_Open;
+
+   --  Declaration
+   --  procedure FILE_CLOSE (file F : FT);
+   procedure Synth_File_Close
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
+   is
+      Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
+      F : constant File_Index := Get_Value (Syn_Inst, Inters).File;
+      Status : Op_Status;
+   begin
+      if Get_Text_File_Flag (Get_Type (Inters)) then
+         Ghdl_Text_File_Close (F, Status);
+      else
+         Ghdl_File_Close (F, Status);
+      end if;
+
+      if Status /= Op_Ok then
+         File_Error (Loc, Status);
+      end if;
+   end Synth_File_Close;
 
    --  Declaration:
    --  procedure untruncated_text_read                              --!V87

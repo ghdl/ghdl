@@ -43,6 +43,8 @@ package body Synth.Static_Proc is
       case Get_Implicit_Definition (Imp) is
          when Iir_Predefined_File_Open =>
             Synth_File_Open (Syn_Inst, Imp, Loc);
+         when Iir_Predefined_File_Close =>
+            Synth_File_Close (Syn_Inst, Imp, Loc);
          when Iir_Predefined_Foreign_Untruncated_Text_Read =>
             Synth_Untruncated_Text_Read (Syn_Inst, Imp, Loc);
          when Iir_Predefined_Deallocate =>
