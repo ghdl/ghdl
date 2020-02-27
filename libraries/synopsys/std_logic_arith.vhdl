@@ -170,20 +170,20 @@ package std_logic_arith is
     function CONV_SIGNED(ARG: SIGNED; SIZE: INTEGER) return SIGNED;
     function CONV_SIGNED(ARG: STD_ULOGIC; SIZE: INTEGER) return SIGNED;
 
-    function CONV_STD_LOGIC_VECTOR(ARG: INTEGER; SIZE: INTEGER) 
+    function CONV_STD_LOGIC_VECTOR(ARG: INTEGER; SIZE: INTEGER)
 						       return STD_LOGIC_VECTOR;
-    function CONV_STD_LOGIC_VECTOR(ARG: UNSIGNED; SIZE: INTEGER) 
+    function CONV_STD_LOGIC_VECTOR(ARG: UNSIGNED; SIZE: INTEGER)
 						       return STD_LOGIC_VECTOR;
-    function CONV_STD_LOGIC_VECTOR(ARG: SIGNED; SIZE: INTEGER) 
+    function CONV_STD_LOGIC_VECTOR(ARG: SIGNED; SIZE: INTEGER)
 						       return STD_LOGIC_VECTOR;
-    function CONV_STD_LOGIC_VECTOR(ARG: STD_ULOGIC; SIZE: INTEGER) 
+    function CONV_STD_LOGIC_VECTOR(ARG: STD_ULOGIC; SIZE: INTEGER)
 						       return STD_LOGIC_VECTOR;
-    -- zero extend STD_LOGIC_VECTOR (ARG) to SIZE, 
+    -- zero extend STD_LOGIC_VECTOR (ARG) to SIZE,
     -- SIZE < 0 is same as SIZE = 0
     -- returns STD_LOGIC_VECTOR(SIZE-1 downto 0)
     function EXT(ARG: STD_LOGIC_VECTOR; SIZE: INTEGER) return STD_LOGIC_VECTOR;
 
-    -- sign extend STD_LOGIC_VECTOR (ARG) to SIZE, 
+    -- sign extend STD_LOGIC_VECTOR (ARG) to SIZE,
     -- SIZE < 0 is same as SIZE = 0
     -- return STD_LOGIC_VECTOR(SIZE-1 downto 0)
     function SXT(ARG: STD_LOGIC_VECTOR; SIZE: INTEGER) return STD_LOGIC_VECTOR;
@@ -216,43 +216,43 @@ package body std_logic_arith is
 	end if;
     end;
 
-    -- synopsys synthesis_off
+    -- --synopsys synthesis_off
     type tbl_type is array (STD_ULOGIC) of STD_ULOGIC;
     constant tbl_BINARY : tbl_type :=
 	('X', 'X', '0', '1', 'X', 'X', '0', '1', 'X');
-    -- synopsys synthesis_on
+    -- --synopsys synthesis_on
 
-    -- synopsys synthesis_off
+    -- --synopsys synthesis_off
     type tbl_mvl9_boolean is array (STD_ULOGIC) of boolean;
     constant IS_X : tbl_mvl9_boolean :=
         (true, true, false, false, true, true, false, false, true);
-    -- synopsys synthesis_on
+    -- --synopsys synthesis_on
 
 
 
     function MAKE_BINARY(A : STD_ULOGIC) return STD_ULOGIC is
-	-- synopsys built_in SYN_FEED_THRU
+	-- --synopsys built_in SYN_FEED_THRU
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	    if (IS_X(A)) then
-		assert false 
+		assert false
 		report "There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, the result will be 'X'(es)."
 		severity warning;
 	        return ('X');
 	    end if;
 	    return tbl_BINARY(A);
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function MAKE_BINARY(A : UNSIGNED) return UNSIGNED is
-	-- synopsys built_in SYN_FEED_THRU
+	-- --synopsys built_in SYN_FEED_THRU
 	variable one_bit : STD_ULOGIC;
 	variable result : UNSIGNED (A'range);
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	    for i in A'range loop
 	        if (IS_X(A(i))) then
-		    assert false 
+		    assert false
 		    report "There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, the result will be 'X'(es)."
 		    severity warning;
 		    result := (others => 'X');
@@ -261,18 +261,18 @@ package body std_logic_arith is
 		result(i) := tbl_BINARY(A(i));
 	    end loop;
 	    return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function MAKE_BINARY(A : UNSIGNED) return SIGNED is
-	-- synopsys built_in SYN_FEED_THRU
+	-- --synopsys built_in SYN_FEED_THRU
 	variable one_bit : STD_ULOGIC;
 	variable result : SIGNED (A'range);
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	    for i in A'range loop
 	        if (IS_X(A(i))) then
-		    assert false 
+		    assert false
 		    report "There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, the result will be 'X'(es)."
 		    severity warning;
 		    result := (others => 'X');
@@ -281,18 +281,18 @@ package body std_logic_arith is
 		result(i) := tbl_BINARY(A(i));
 	    end loop;
 	    return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function MAKE_BINARY(A : SIGNED) return UNSIGNED is
-	-- synopsys built_in SYN_FEED_THRU
+	-- --synopsys built_in SYN_FEED_THRU
 	variable one_bit : STD_ULOGIC;
 	variable result : UNSIGNED (A'range);
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	    for i in A'range loop
 	        if (IS_X(A(i))) then
-		    assert false 
+		    assert false
 		    report "There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, the result will be 'X'(es)."
 		    severity warning;
 		    result := (others => 'X');
@@ -301,18 +301,18 @@ package body std_logic_arith is
 		result(i) := tbl_BINARY(A(i));
 	    end loop;
 	    return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function MAKE_BINARY(A : SIGNED) return SIGNED is
-	-- synopsys built_in SYN_FEED_THRU
+	-- --synopsys built_in SYN_FEED_THRU
 	variable one_bit : STD_ULOGIC;
 	variable result : SIGNED (A'range);
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	    for i in A'range loop
 	        if (IS_X(A(i))) then
-		    assert false 
+		    assert false
 		    report "There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, the result will be 'X'(es)."
 		    severity warning;
 		    result := (others => 'X');
@@ -321,18 +321,18 @@ package body std_logic_arith is
 		result(i) := tbl_BINARY(A(i));
 	    end loop;
 	    return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function MAKE_BINARY(A : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
-	-- synopsys built_in SYN_FEED_THRU
+	-- --synopsys built_in SYN_FEED_THRU
 	variable one_bit : STD_ULOGIC;
 	variable result : STD_LOGIC_VECTOR (A'range);
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	    for i in A'range loop
 	        if (IS_X(A(i))) then
-		    assert false 
+		    assert false
 		    report "There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, the result will be 'X'(es)."
 		    severity warning;
 		    result := (others => 'X');
@@ -341,18 +341,18 @@ package body std_logic_arith is
 		result(i) := tbl_BINARY(A(i));
 	    end loop;
 	    return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function MAKE_BINARY(A : UNSIGNED) return STD_LOGIC_VECTOR is
-	-- synopsys built_in SYN_FEED_THRU
+	-- --synopsys built_in SYN_FEED_THRU
 	variable one_bit : STD_ULOGIC;
 	variable result : STD_LOGIC_VECTOR (A'range);
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	    for i in A'range loop
 	        if (IS_X(A(i))) then
-		    assert false 
+		    assert false
 		    report "There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, the result will be 'X'(es)."
 		    severity warning;
 		    result := (others => 'X');
@@ -361,18 +361,18 @@ package body std_logic_arith is
 		result(i) := tbl_BINARY(A(i));
 	    end loop;
 	    return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function MAKE_BINARY(A : SIGNED) return STD_LOGIC_VECTOR is
-	-- synopsys built_in SYN_FEED_THRU
+	-- --synopsys built_in SYN_FEED_THRU
 	variable one_bit : STD_ULOGIC;
 	variable result : STD_LOGIC_VECTOR (A'range);
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	    for i in A'range loop
 	        if (IS_X(A(i))) then
-		    assert false 
+		    assert false
 		    report "There is an 'U'|'X'|'W'|'Z'|'-' in an arithmetic operand, the result will be 'X'(es)."
 		    severity warning;
 		    result := (others => 'X');
@@ -381,7 +381,7 @@ package body std_logic_arith is
 		result(i) := tbl_BINARY(A(i));
 	    end loop;
 	    return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -394,7 +394,7 @@ package body std_logic_arith is
     begin
       return(Z);
     end;
-	
+
     -- Type propagation function which returns an unsigned type with the
     -- size of the left arg.
     function LEFT_UNSIGNED_ARG(A,B: UNSIGNED) return UNSIGNED is
@@ -403,7 +403,7 @@ package body std_logic_arith is
     begin
       return(Z);
     end;
-	
+
     -- Type propagation function which returns a signed type with the
     -- size of the result of a signed multiplication
     function MULT_SIGNED_ARG(A,B: SIGNED) return SIGNED is
@@ -412,7 +412,7 @@ package body std_logic_arith is
     begin
       return(Z);
     end;
-	
+
     -- Type propagation function which returns an unsigned type with the
     -- size of the result of a unsigned multiplication
     function MULT_UNSIGNED_ARG(A,B: UNSIGNED) return UNSIGNED is
@@ -431,7 +431,7 @@ package body std_logic_arith is
       variable AA: SIGNED(A'length downto 0);
       variable neg: STD_ULOGIC;
       constant one : UNSIGNED(1 downto 0) := "01";
-      
+
       -- pragma map_to_operator MULT_TC_OP
       -- pragma type_function MULT_SIGNED_ARG
       -- pragma return_port_name Z
@@ -453,7 +453,7 @@ package body std_logic_arith is
         end loop;
         if (neg= '1') then
           return(-PA);
-        else 
+        else
           return(PA);
         end if;
       end;
@@ -463,7 +463,7 @@ package body std_logic_arith is
       variable BA: UNSIGNED((A'length+B'length-1) downto 0);
       variable PA: UNSIGNED((A'length+B'length-1) downto 0);
       constant one : UNSIGNED(1 downto 0) := "01";
-      
+
       -- pragma map_to_operator MULT_UNS_OP
       -- pragma type_function MULT_UNSIGNED_ARG
       -- pragma return_port_name Z
@@ -600,77 +600,77 @@ package body std_logic_arith is
 
     function "*"(L: SIGNED; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to mult
-	-- synopsys subpgm_id 296
+	-- --synopsys subpgm_id 296
     begin
           return     mult(CONV_SIGNED(L, L'length),
-		          CONV_SIGNED(R, R'length)); -- pragma label mult 
+		          CONV_SIGNED(R, R'length)); -- pragma label mult
     end;
-      
+
     function "*"(L: UNSIGNED; R: UNSIGNED) return UNSIGNED is
 	-- pragma label_applies_to mult
-	-- synopsys subpgm_id 295
+	-- --synopsys subpgm_id 295
     begin
           return   mult(CONV_UNSIGNED(L, L'length),
-                        CONV_UNSIGNED(R, R'length)); -- pragma label mult 
+                        CONV_UNSIGNED(R, R'length)); -- pragma label mult
     end;
-        
+
     function "*"(L: UNSIGNED; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to mult
-	-- synopsys subpgm_id 297
+	-- --synopsys subpgm_id 297
     begin
  	return       mult(CONV_SIGNED(L, L'length+1),
-		          CONV_SIGNED(R, R'length)); -- pragma label mult 
+		          CONV_SIGNED(R, R'length)); -- pragma label mult
     end;
 
     function "*"(L: SIGNED; R: UNSIGNED) return SIGNED is
 	-- pragma label_applies_to mult
-	-- synopsys subpgm_id 298
+	-- --synopsys subpgm_id 298
     begin
 	return      mult(CONV_SIGNED(L, L'length),
-		         CONV_SIGNED(R, R'length+1)); -- pragma label mult 
+		         CONV_SIGNED(R, R'length+1)); -- pragma label mult
     end;
 
 
     function "*"(L: SIGNED; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to mult
-	-- synopsys subpgm_id 301
-    begin
-          return STD_LOGIC_VECTOR (
-		mult(-- pragma label mult 
-		CONV_SIGNED(L, L'length), CONV_SIGNED(R, R'length))); 
-    end;
-      
-    function "*"(L: UNSIGNED; R: UNSIGNED) return STD_LOGIC_VECTOR is
-	-- pragma label_applies_to mult
-	-- synopsys subpgm_id 300
+	-- --synopsys subpgm_id 301
     begin
           return STD_LOGIC_VECTOR (
 		mult(-- pragma label mult
-		CONV_UNSIGNED(L, L'length), CONV_UNSIGNED(R, R'length))); 
+		CONV_SIGNED(L, L'length), CONV_SIGNED(R, R'length)));
     end;
-        
+
+    function "*"(L: UNSIGNED; R: UNSIGNED) return STD_LOGIC_VECTOR is
+	-- pragma label_applies_to mult
+	-- --synopsys subpgm_id 300
+    begin
+          return STD_LOGIC_VECTOR (
+		mult(-- pragma label mult
+		CONV_UNSIGNED(L, L'length), CONV_UNSIGNED(R, R'length)));
+    end;
+
     function "*"(L: UNSIGNED; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to mult
-	-- synopsys subpgm_id 302
+	-- --synopsys subpgm_id 302
     begin
  	return STD_LOGIC_VECTOR (
 		mult(-- pragma label mult
-		CONV_SIGNED(L, L'length+1), CONV_SIGNED(R, R'length))); 
+		CONV_SIGNED(L, L'length+1), CONV_SIGNED(R, R'length)));
     end;
 
     function "*"(L: SIGNED; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to mult
-	-- synopsys subpgm_id 303
+	-- --synopsys subpgm_id 303
     begin
 	return STD_LOGIC_VECTOR (
 		mult(-- pragma label mult
-		CONV_SIGNED(L, L'length), CONV_SIGNED(R, R'length+1))); 
+		CONV_SIGNED(L, L'length), CONV_SIGNED(R, R'length+1)));
     end;
 
 
     function "+"(L: UNSIGNED; R: UNSIGNED) return UNSIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 236
+	-- --synopsys subpgm_id 236
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return unsigned_plus(CONV_UNSIGNED(L, length),
@@ -680,7 +680,7 @@ package body std_logic_arith is
 
     function "+"(L: SIGNED; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 237
+	-- --synopsys subpgm_id 237
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return plus(CONV_SIGNED(L, length),
@@ -690,7 +690,7 @@ package body std_logic_arith is
 
     function "+"(L: UNSIGNED; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 238
+	-- --synopsys subpgm_id 238
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return plus(CONV_SIGNED(L, length),
@@ -700,7 +700,7 @@ package body std_logic_arith is
 
     function "+"(L: SIGNED; R: UNSIGNED) return SIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 239
+	-- --synopsys subpgm_id 239
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return plus(CONV_SIGNED(L, length),
@@ -710,7 +710,7 @@ package body std_logic_arith is
 
     function "+"(L: UNSIGNED; R: INTEGER) return UNSIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 240
+	-- --synopsys subpgm_id 240
 	constant length: INTEGER := L'length + 1;
     begin
 	return CONV_UNSIGNED(
@@ -721,7 +721,7 @@ package body std_logic_arith is
 
     function "+"(L: INTEGER; R: UNSIGNED) return UNSIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 241
+	-- --synopsys subpgm_id 241
 	constant length: INTEGER := R'length + 1;
     begin
 	return CONV_UNSIGNED(
@@ -732,7 +732,7 @@ package body std_logic_arith is
 
     function "+"(L: SIGNED; R: INTEGER) return SIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 242
+	-- --synopsys subpgm_id 242
 	constant length: INTEGER := L'length;
     begin
 	return plus(CONV_SIGNED(L, length),
@@ -742,7 +742,7 @@ package body std_logic_arith is
 
     function "+"(L: INTEGER; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 243
+	-- --synopsys subpgm_id 243
 	constant length: INTEGER := R'length;
     begin
 	return plus(CONV_SIGNED(L, length),
@@ -752,7 +752,7 @@ package body std_logic_arith is
 
     function "+"(L: UNSIGNED; R: STD_ULOGIC) return UNSIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 244
+	-- --synopsys subpgm_id 244
 	constant length: INTEGER := L'length;
     begin
 	return unsigned_plus(CONV_UNSIGNED(L, length),
@@ -762,7 +762,7 @@ package body std_logic_arith is
 
     function "+"(L: STD_ULOGIC; R: UNSIGNED) return UNSIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 245
+	-- --synopsys subpgm_id 245
 	constant length: INTEGER := R'length;
     begin
 	return unsigned_plus(CONV_UNSIGNED(L, length),
@@ -772,7 +772,7 @@ package body std_logic_arith is
 
     function "+"(L: SIGNED; R: STD_ULOGIC) return SIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 246
+	-- --synopsys subpgm_id 246
 	constant length: INTEGER := L'length;
     begin
 	return plus(CONV_SIGNED(L, length),
@@ -782,7 +782,7 @@ package body std_logic_arith is
 
     function "+"(L: STD_ULOGIC; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 247
+	-- --synopsys subpgm_id 247
 	constant length: INTEGER := R'length;
     begin
 	return plus(CONV_SIGNED(L, length),
@@ -793,51 +793,51 @@ package body std_logic_arith is
 
     function "+"(L: UNSIGNED; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 260
+	-- --synopsys subpgm_id 260
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return STD_LOGIC_VECTOR (
 		unsigned_plus(-- pragma label plus
-		CONV_UNSIGNED(L, length), CONV_UNSIGNED(R, length))); 
+		CONV_UNSIGNED(L, length), CONV_UNSIGNED(R, length)));
     end;
 
 
     function "+"(L: SIGNED; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 261
+	-- --synopsys subpgm_id 261
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return STD_LOGIC_VECTOR (
 		plus(-- pragma label plus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "+"(L: UNSIGNED; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 262
+	-- --synopsys subpgm_id 262
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return STD_LOGIC_VECTOR (
 		plus(-- pragma label plus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "+"(L: SIGNED; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 263
+	-- --synopsys subpgm_id 263
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return STD_LOGIC_VECTOR (
 		plus(-- pragma label plus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "+"(L: UNSIGNED; R: INTEGER) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 264
+	-- --synopsys subpgm_id 264
 	constant length: INTEGER := L'length + 1;
     begin
 	return STD_LOGIC_VECTOR (CONV_UNSIGNED(
@@ -848,7 +848,7 @@ package body std_logic_arith is
 
     function "+"(L: INTEGER; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 265
+	-- --synopsys subpgm_id 265
 	constant length: INTEGER := R'length + 1;
     begin
 	return STD_LOGIC_VECTOR (CONV_UNSIGNED(
@@ -859,74 +859,74 @@ package body std_logic_arith is
 
     function "+"(L: SIGNED; R: INTEGER) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 266
+	-- --synopsys subpgm_id 266
 	constant length: INTEGER := L'length;
     begin
 	return STD_LOGIC_VECTOR (
 		plus(-- pragma label plus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "+"(L: INTEGER; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 267
+	-- --synopsys subpgm_id 267
 	constant length: INTEGER := R'length;
     begin
 	return STD_LOGIC_VECTOR (
 		plus(-- pragma label plus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "+"(L: UNSIGNED; R: STD_ULOGIC) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 268
+	-- --synopsys subpgm_id 268
 	constant length: INTEGER := L'length;
     begin
 	return STD_LOGIC_VECTOR (
 		unsigned_plus(-- pragma label plus
-		CONV_UNSIGNED(L, length), CONV_UNSIGNED(R, length))) ; 
+		CONV_UNSIGNED(L, length), CONV_UNSIGNED(R, length))) ;
     end;
 
 
     function "+"(L: STD_ULOGIC; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 269
+	-- --synopsys subpgm_id 269
 	constant length: INTEGER := R'length;
     begin
 	return STD_LOGIC_VECTOR (
 		unsigned_plus(-- pragma label plus
-		CONV_UNSIGNED(L, length), CONV_UNSIGNED(R, length))); 
+		CONV_UNSIGNED(L, length), CONV_UNSIGNED(R, length)));
     end;
 
 
     function "+"(L: SIGNED; R: STD_ULOGIC) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 270
+	-- --synopsys subpgm_id 270
 	constant length: INTEGER := L'length;
     begin
 	return STD_LOGIC_VECTOR (
 		plus(-- pragma label plus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "+"(L: STD_ULOGIC; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to plus
-	-- synopsys subpgm_id 271
+	-- --synopsys subpgm_id 271
 	constant length: INTEGER := R'length;
     begin
 	return STD_LOGIC_VECTOR (
 		plus(-- pragma label plus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
 
     function "-"(L: UNSIGNED; R: UNSIGNED) return UNSIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 248
+	-- --synopsys subpgm_id 248
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return unsigned_minus(CONV_UNSIGNED(L, length),
@@ -936,7 +936,7 @@ package body std_logic_arith is
 
     function "-"(L: SIGNED; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 249
+	-- --synopsys subpgm_id 249
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return minus(CONV_SIGNED(L, length),
@@ -946,7 +946,7 @@ package body std_logic_arith is
 
     function "-"(L: UNSIGNED; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 250
+	-- --synopsys subpgm_id 250
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return minus(CONV_SIGNED(L, length),
@@ -956,7 +956,7 @@ package body std_logic_arith is
 
     function "-"(L: SIGNED; R: UNSIGNED) return SIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 251
+	-- --synopsys subpgm_id 251
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return minus(CONV_SIGNED(L, length),
@@ -966,7 +966,7 @@ package body std_logic_arith is
 
     function "-"(L: UNSIGNED; R: INTEGER) return UNSIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 252
+	-- --synopsys subpgm_id 252
 	constant length: INTEGER := L'length + 1;
     begin
 	return CONV_UNSIGNED(
@@ -977,7 +977,7 @@ package body std_logic_arith is
 
     function "-"(L: INTEGER; R: UNSIGNED) return UNSIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 253
+	-- --synopsys subpgm_id 253
 	constant length: INTEGER := R'length + 1;
     begin
 	return CONV_UNSIGNED(
@@ -988,7 +988,7 @@ package body std_logic_arith is
 
     function "-"(L: SIGNED; R: INTEGER) return SIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 254
+	-- --synopsys subpgm_id 254
 	constant length: INTEGER := L'length;
     begin
 	return minus(CONV_SIGNED(L, length),
@@ -998,7 +998,7 @@ package body std_logic_arith is
 
     function "-"(L: INTEGER; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 255
+	-- --synopsys subpgm_id 255
 	constant length: INTEGER := R'length;
     begin
 	return minus(CONV_SIGNED(L, length),
@@ -1008,7 +1008,7 @@ package body std_logic_arith is
 
     function "-"(L: UNSIGNED; R: STD_ULOGIC) return UNSIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 256
+	-- --synopsys subpgm_id 256
 	constant length: INTEGER := L'length + 1;
     begin
 	return CONV_UNSIGNED(
@@ -1019,7 +1019,7 @@ package body std_logic_arith is
 
     function "-"(L: STD_ULOGIC; R: UNSIGNED) return UNSIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 257
+	-- --synopsys subpgm_id 257
 	constant length: INTEGER := R'length + 1;
     begin
 	return CONV_UNSIGNED(
@@ -1030,7 +1030,7 @@ package body std_logic_arith is
 
     function "-"(L: SIGNED; R: STD_ULOGIC) return SIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 258
+	-- --synopsys subpgm_id 258
 	constant length: INTEGER := L'length;
     begin
 	return minus(CONV_SIGNED(L, length),
@@ -1040,7 +1040,7 @@ package body std_logic_arith is
 
     function "-"(L: STD_ULOGIC; R: SIGNED) return SIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 259
+	-- --synopsys subpgm_id 259
 	constant length: INTEGER := R'length;
     begin
 	return minus(CONV_SIGNED(L, length),
@@ -1052,51 +1052,51 @@ package body std_logic_arith is
 
     function "-"(L: UNSIGNED; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 272
+	-- --synopsys subpgm_id 272
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return STD_LOGIC_VECTOR (
 		unsigned_minus(-- pragma label minus
-		CONV_UNSIGNED(L, length), CONV_UNSIGNED(R, length))); 
+		CONV_UNSIGNED(L, length), CONV_UNSIGNED(R, length)));
     end;
 
 
     function "-"(L: SIGNED; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 273
+	-- --synopsys subpgm_id 273
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return STD_LOGIC_VECTOR (
 		minus(-- pragma label minus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "-"(L: UNSIGNED; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 274
+	-- --synopsys subpgm_id 274
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return STD_LOGIC_VECTOR (
 		minus(-- pragma label minus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "-"(L: SIGNED; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 275
+	-- --synopsys subpgm_id 275
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return STD_LOGIC_VECTOR (
 		minus(-- pragma label minus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "-"(L: UNSIGNED; R: INTEGER) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 276
+	-- --synopsys subpgm_id 276
 	constant length: INTEGER := L'length + 1;
     begin
 	return STD_LOGIC_VECTOR (CONV_UNSIGNED(
@@ -1107,7 +1107,7 @@ package body std_logic_arith is
 
     function "-"(L: INTEGER; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 277
+	-- --synopsys subpgm_id 277
 	constant length: INTEGER := R'length + 1;
     begin
 	return STD_LOGIC_VECTOR (CONV_UNSIGNED(
@@ -1118,29 +1118,29 @@ package body std_logic_arith is
 
     function "-"(L: SIGNED; R: INTEGER) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 278
+	-- --synopsys subpgm_id 278
 	constant length: INTEGER := L'length;
     begin
 	return STD_LOGIC_VECTOR (
 		minus(-- pragma label minus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "-"(L: INTEGER; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 279
+	-- --synopsys subpgm_id 279
 	constant length: INTEGER := R'length;
     begin
 	return STD_LOGIC_VECTOR (
 		minus(-- pragma label minus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "-"(L: UNSIGNED; R: STD_ULOGIC) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 280
+	-- --synopsys subpgm_id 280
 	constant length: INTEGER := L'length + 1;
     begin
 	return STD_LOGIC_VECTOR (CONV_UNSIGNED(
@@ -1151,7 +1151,7 @@ package body std_logic_arith is
 
     function "-"(L: STD_ULOGIC; R: UNSIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 281
+	-- --synopsys subpgm_id 281
 	constant length: INTEGER := R'length + 1;
     begin
 	return STD_LOGIC_VECTOR (CONV_UNSIGNED(
@@ -1162,37 +1162,37 @@ package body std_logic_arith is
 
     function "-"(L: SIGNED; R: STD_ULOGIC) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 282
+	-- --synopsys subpgm_id 282
 	constant length: INTEGER := L'length;
     begin
 	return STD_LOGIC_VECTOR (
 		minus(-- pragma label minus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
     function "-"(L: STD_ULOGIC; R: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 283
+	-- --synopsys subpgm_id 283
 	constant length: INTEGER := R'length;
     begin
 	return STD_LOGIC_VECTOR (
 		minus(-- pragma label minus
-		CONV_SIGNED(L, length), CONV_SIGNED(R, length))); 
+		CONV_SIGNED(L, length), CONV_SIGNED(R, length)));
     end;
 
 
 
 
     function "+"(L: UNSIGNED) return UNSIGNED is
-	-- synopsys subpgm_id 284
+	-- --synopsys subpgm_id 284
     begin
 	return L;
     end;
 
 
     function "+"(L: SIGNED) return SIGNED is
-	-- synopsys subpgm_id 285
+	-- --synopsys subpgm_id 285
     begin
 	return L;
     end;
@@ -1200,14 +1200,14 @@ package body std_logic_arith is
 
     function "-"(L: SIGNED) return SIGNED is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 286
+	-- --synopsys subpgm_id 286
     begin
 	return 0 - L; -- pragma label minus
     end;
 
 
     function "ABS"(L: SIGNED) return SIGNED is
-	-- synopsys subpgm_id 287
+	-- --synopsys subpgm_id 287
     begin
 	if (L(L'left) = '0' or L(L'left) = 'L') then
 	    return L;
@@ -1218,14 +1218,14 @@ package body std_logic_arith is
 
 
     function "+"(L: UNSIGNED) return STD_LOGIC_VECTOR is
-	-- synopsys subpgm_id 289
+	-- --synopsys subpgm_id 289
     begin
 	return STD_LOGIC_VECTOR (L);
     end;
 
 
     function "+"(L: SIGNED) return STD_LOGIC_VECTOR is
-	-- synopsys subpgm_id 290
+	-- --synopsys subpgm_id 290
     begin
 	return STD_LOGIC_VECTOR (L);
     end;
@@ -1233,16 +1233,16 @@ package body std_logic_arith is
 
     function "-"(L: SIGNED) return STD_LOGIC_VECTOR is
 	-- pragma label_applies_to minus
-	-- synopsys subpgm_id 292
+	-- --synopsys subpgm_id 292
 	variable tmp: SIGNED(L'length-1 downto 0);
     begin
 	tmp := 0 - L;  -- pragma label minus
-	return STD_LOGIC_VECTOR (tmp); 
+	return STD_LOGIC_VECTOR (tmp);
     end;
 
 
     function "ABS"(L: SIGNED) return STD_LOGIC_VECTOR is
-	-- synopsys subpgm_id 294
+	-- --synopsys subpgm_id 294
 	variable tmp: SIGNED(L'length-1 downto 0);
     begin
 	if (L(L'left) = '0' or L(L'left) = 'L') then
@@ -1261,7 +1261,7 @@ package body std_logic_arith is
     begin
       return(Z);
     end;
-	
+
     -- Type propagation function which returns the type BOOLEAN
     function SIGNED_RETURN_BOOLEAN(A,B: SIGNED) return BOOLEAN is
       variable Z: BOOLEAN;
@@ -1269,7 +1269,7 @@ package body std_logic_arith is
     begin
       return(Z);
     end;
-	
+
 
     -- compare two signed numbers of the same length
     -- both arrays must have range (msb downto 0)
@@ -1376,7 +1376,7 @@ package body std_logic_arith is
 
     function "<"(L: UNSIGNED; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to lt
-	-- synopsys subpgm_id 305
+	-- --synopsys subpgm_id 305
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return unsigned_is_less(CONV_UNSIGNED(L, length),
@@ -1386,7 +1386,7 @@ package body std_logic_arith is
 
     function "<"(L: SIGNED; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to lt
-	-- synopsys subpgm_id 306
+	-- --synopsys subpgm_id 306
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return is_less(CONV_SIGNED(L, length),
@@ -1396,7 +1396,7 @@ package body std_logic_arith is
 
     function "<"(L: UNSIGNED; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to lt
-	-- synopsys subpgm_id 307
+	-- --synopsys subpgm_id 307
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return is_less(CONV_SIGNED(L, length),
@@ -1406,7 +1406,7 @@ package body std_logic_arith is
 
     function "<"(L: SIGNED; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to lt
-	-- synopsys subpgm_id 308
+	-- --synopsys subpgm_id 308
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return is_less(CONV_SIGNED(L, length),
@@ -1416,7 +1416,7 @@ package body std_logic_arith is
 
     function "<"(L: UNSIGNED; R: INTEGER) return BOOLEAN is
 	-- pragma label_applies_to lt
-	-- synopsys subpgm_id 309
+	-- --synopsys subpgm_id 309
 	constant length: INTEGER := L'length + 1;
     begin
 	return is_less(CONV_SIGNED(L, length),
@@ -1426,7 +1426,7 @@ package body std_logic_arith is
 
     function "<"(L: INTEGER; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to lt
-	-- synopsys subpgm_id 310
+	-- --synopsys subpgm_id 310
 	constant length: INTEGER := R'length + 1;
     begin
 	return is_less(CONV_SIGNED(L, length),
@@ -1436,7 +1436,7 @@ package body std_logic_arith is
 
     function "<"(L: SIGNED; R: INTEGER) return BOOLEAN is
 	-- pragma label_applies_to lt
-	-- synopsys subpgm_id 311
+	-- --synopsys subpgm_id 311
 	constant length: INTEGER := L'length;
     begin
 	return is_less(CONV_SIGNED(L, length),
@@ -1446,7 +1446,7 @@ package body std_logic_arith is
 
     function "<"(L: INTEGER; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to lt
-	-- synopsys subpgm_id 312
+	-- --synopsys subpgm_id 312
 	constant length: INTEGER := R'length;
     begin
 	return is_less(CONV_SIGNED(L, length),
@@ -1458,7 +1458,7 @@ package body std_logic_arith is
 
     function "<="(L: UNSIGNED; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to leq
-	-- synopsys subpgm_id 314
+	-- --synopsys subpgm_id 314
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return unsigned_is_less_or_equal(CONV_UNSIGNED(L, length),
@@ -1468,7 +1468,7 @@ package body std_logic_arith is
 
     function "<="(L: SIGNED; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to leq
-	-- synopsys subpgm_id 315
+	-- --synopsys subpgm_id 315
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return is_less_or_equal(CONV_SIGNED(L, length),
@@ -1478,7 +1478,7 @@ package body std_logic_arith is
 
     function "<="(L: UNSIGNED; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to leq
-	-- synopsys subpgm_id 316
+	-- --synopsys subpgm_id 316
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return is_less_or_equal(CONV_SIGNED(L, length),
@@ -1488,7 +1488,7 @@ package body std_logic_arith is
 
     function "<="(L: SIGNED; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to leq
-	-- synopsys subpgm_id 317
+	-- --synopsys subpgm_id 317
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return is_less_or_equal(CONV_SIGNED(L, length),
@@ -1498,7 +1498,7 @@ package body std_logic_arith is
 
     function "<="(L: UNSIGNED; R: INTEGER) return BOOLEAN is
 	-- pragma label_applies_to leq
-	-- synopsys subpgm_id 318
+	-- --synopsys subpgm_id 318
 	constant length: INTEGER := L'length + 1;
     begin
 	return is_less_or_equal(CONV_SIGNED(L, length),
@@ -1508,7 +1508,7 @@ package body std_logic_arith is
 
     function "<="(L: INTEGER; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to leq
-	-- synopsys subpgm_id 319
+	-- --synopsys subpgm_id 319
 	constant length: INTEGER := R'length + 1;
     begin
 	return is_less_or_equal(CONV_SIGNED(L, length),
@@ -1518,7 +1518,7 @@ package body std_logic_arith is
 
     function "<="(L: SIGNED; R: INTEGER) return BOOLEAN is
 	-- pragma label_applies_to leq
-	-- synopsys subpgm_id 320
+	-- --synopsys subpgm_id 320
 	constant length: INTEGER := L'length;
     begin
 	return is_less_or_equal(CONV_SIGNED(L, length),
@@ -1528,7 +1528,7 @@ package body std_logic_arith is
 
     function "<="(L: INTEGER; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to leq
-	-- synopsys subpgm_id 321
+	-- --synopsys subpgm_id 321
 	constant length: INTEGER := R'length;
     begin
 	return is_less_or_equal(CONV_SIGNED(L, length),
@@ -1540,7 +1540,7 @@ package body std_logic_arith is
 
     function ">"(L: UNSIGNED; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to gt
-	-- synopsys subpgm_id 323
+	-- --synopsys subpgm_id 323
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return unsigned_is_less(CONV_UNSIGNED(R, length),
@@ -1550,7 +1550,7 @@ package body std_logic_arith is
 
     function ">"(L: SIGNED; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to gt
-	-- synopsys subpgm_id 324
+	-- --synopsys subpgm_id 324
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return is_less(CONV_SIGNED(R, length),
@@ -1560,7 +1560,7 @@ package body std_logic_arith is
 
     function ">"(L: UNSIGNED; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to gt
-	-- synopsys subpgm_id 325
+	-- --synopsys subpgm_id 325
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return is_less(CONV_SIGNED(R, length),
@@ -1570,7 +1570,7 @@ package body std_logic_arith is
 
     function ">"(L: SIGNED; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to gt
-	-- synopsys subpgm_id 326
+	-- --synopsys subpgm_id 326
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return is_less(CONV_SIGNED(R, length),
@@ -1580,7 +1580,7 @@ package body std_logic_arith is
 
     function ">"(L: UNSIGNED; R: INTEGER) return BOOLEAN is
 	-- pragma label_applies_to gt
-	-- synopsys subpgm_id 327
+	-- --synopsys subpgm_id 327
 	constant length: INTEGER := L'length + 1;
     begin
 	return is_less(CONV_SIGNED(R, length),
@@ -1590,7 +1590,7 @@ package body std_logic_arith is
 
     function ">"(L: INTEGER; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to gt
-	-- synopsys subpgm_id 328
+	-- --synopsys subpgm_id 328
 	constant length: INTEGER := R'length + 1;
     begin
 	return is_less(CONV_SIGNED(R, length),
@@ -1600,7 +1600,7 @@ package body std_logic_arith is
 
     function ">"(L: SIGNED; R: INTEGER) return BOOLEAN is
 	-- pragma label_applies_to gt
-	-- synopsys subpgm_id 329
+	-- --synopsys subpgm_id 329
 	constant length: INTEGER := L'length;
     begin
 	return is_less(CONV_SIGNED(R, length),
@@ -1610,7 +1610,7 @@ package body std_logic_arith is
 
     function ">"(L: INTEGER; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to gt
-	-- synopsys subpgm_id 330
+	-- --synopsys subpgm_id 330
 	constant length: INTEGER := R'length;
     begin
 	return is_less(CONV_SIGNED(R, length),
@@ -1622,7 +1622,7 @@ package body std_logic_arith is
 
     function ">="(L: UNSIGNED; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to geq
-	-- synopsys subpgm_id 332
+	-- --synopsys subpgm_id 332
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return unsigned_is_less_or_equal(CONV_UNSIGNED(R, length),
@@ -1632,7 +1632,7 @@ package body std_logic_arith is
 
     function ">="(L: SIGNED; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to geq
-	-- synopsys subpgm_id 333
+	-- --synopsys subpgm_id 333
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return is_less_or_equal(CONV_SIGNED(R, length),
@@ -1642,7 +1642,7 @@ package body std_logic_arith is
 
     function ">="(L: UNSIGNED; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to geq
-	-- synopsys subpgm_id 334
+	-- --synopsys subpgm_id 334
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return is_less_or_equal(CONV_SIGNED(R, length),
@@ -1652,7 +1652,7 @@ package body std_logic_arith is
 
     function ">="(L: SIGNED; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to geq
-	-- synopsys subpgm_id 335
+	-- --synopsys subpgm_id 335
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return is_less_or_equal(CONV_SIGNED(R, length),
@@ -1662,7 +1662,7 @@ package body std_logic_arith is
 
     function ">="(L: UNSIGNED; R: INTEGER) return BOOLEAN is
 	-- pragma label_applies_to geq
-	-- synopsys subpgm_id 336
+	-- --synopsys subpgm_id 336
 	constant length: INTEGER := L'length + 1;
     begin
 	return is_less_or_equal(CONV_SIGNED(R, length),
@@ -1672,7 +1672,7 @@ package body std_logic_arith is
 
     function ">="(L: INTEGER; R: UNSIGNED) return BOOLEAN is
 	-- pragma label_applies_to geq
-	-- synopsys subpgm_id 337
+	-- --synopsys subpgm_id 337
 	constant length: INTEGER := R'length + 1;
     begin
 	return is_less_or_equal(CONV_SIGNED(R, length),
@@ -1682,7 +1682,7 @@ package body std_logic_arith is
 
     function ">="(L: SIGNED; R: INTEGER) return BOOLEAN is
 	-- pragma label_applies_to geq
-	-- synopsys subpgm_id 338
+	-- --synopsys subpgm_id 338
 	constant length: INTEGER := L'length;
     begin
 	return is_less_or_equal(CONV_SIGNED(R, length),
@@ -1692,7 +1692,7 @@ package body std_logic_arith is
 
     function ">="(L: INTEGER; R: SIGNED) return BOOLEAN is
 	-- pragma label_applies_to geq
-	-- synopsys subpgm_id 339
+	-- --synopsys subpgm_id 339
 	constant length: INTEGER := R'length;
     begin
 	return is_less_or_equal(CONV_SIGNED(R, length),
@@ -1730,7 +1730,7 @@ package body std_logic_arith is
 
 
     function "="(L: UNSIGNED; R: UNSIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 341
+	-- --synopsys subpgm_id 341
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return bitwise_eql( STD_ULOGIC_VECTOR( CONV_UNSIGNED(L, length) ),
@@ -1739,7 +1739,7 @@ package body std_logic_arith is
 
 
     function "="(L: SIGNED; R: SIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 342
+	-- --synopsys subpgm_id 342
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return bitwise_eql( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1748,7 +1748,7 @@ package body std_logic_arith is
 
 
     function "="(L: UNSIGNED; R: SIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 343
+	-- --synopsys subpgm_id 343
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return bitwise_eql( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1757,7 +1757,7 @@ package body std_logic_arith is
 
 
     function "="(L: SIGNED; R: UNSIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 344
+	-- --synopsys subpgm_id 344
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return bitwise_eql( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1766,7 +1766,7 @@ package body std_logic_arith is
 
 
     function "="(L: UNSIGNED; R: INTEGER) return BOOLEAN is
-	-- synopsys subpgm_id 345
+	-- --synopsys subpgm_id 345
 	constant length: INTEGER := L'length + 1;
     begin
 	return bitwise_eql( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1775,7 +1775,7 @@ package body std_logic_arith is
 
 
     function "="(L: INTEGER; R: UNSIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 346
+	-- --synopsys subpgm_id 346
 	constant length: INTEGER := R'length + 1;
     begin
 	return bitwise_eql( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1784,7 +1784,7 @@ package body std_logic_arith is
 
 
     function "="(L: SIGNED; R: INTEGER) return BOOLEAN is
-	-- synopsys subpgm_id 347
+	-- --synopsys subpgm_id 347
 	constant length: INTEGER := L'length;
     begin
 	return bitwise_eql( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1793,7 +1793,7 @@ package body std_logic_arith is
 
 
     function "="(L: INTEGER; R: SIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 348
+	-- --synopsys subpgm_id 348
 	constant length: INTEGER := R'length;
     begin
 	return bitwise_eql( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1804,7 +1804,7 @@ package body std_logic_arith is
 
 
     function "/="(L: UNSIGNED; R: UNSIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 350
+	-- --synopsys subpgm_id 350
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return bitwise_neq( STD_ULOGIC_VECTOR( CONV_UNSIGNED(L, length) ),
@@ -1813,7 +1813,7 @@ package body std_logic_arith is
 
 
     function "/="(L: SIGNED; R: SIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 351
+	-- --synopsys subpgm_id 351
 	constant length: INTEGER := max(L'length, R'length);
     begin
 	return bitwise_neq( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1822,7 +1822,7 @@ package body std_logic_arith is
 
 
     function "/="(L: UNSIGNED; R: SIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 352
+	-- --synopsys subpgm_id 352
 	constant length: INTEGER := max(L'length + 1, R'length);
     begin
 	return bitwise_neq( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1831,7 +1831,7 @@ package body std_logic_arith is
 
 
     function "/="(L: SIGNED; R: UNSIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 353
+	-- --synopsys subpgm_id 353
 	constant length: INTEGER := max(L'length, R'length + 1);
     begin
 	return bitwise_neq( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1840,7 +1840,7 @@ package body std_logic_arith is
 
 
     function "/="(L: UNSIGNED; R: INTEGER) return BOOLEAN is
-	-- synopsys subpgm_id 354
+	-- --synopsys subpgm_id 354
 	constant length: INTEGER := L'length + 1;
     begin
 	return bitwise_neq( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1849,7 +1849,7 @@ package body std_logic_arith is
 
 
     function "/="(L: INTEGER; R: UNSIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 355
+	-- --synopsys subpgm_id 355
 	constant length: INTEGER := R'length + 1;
     begin
 	return bitwise_neq( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1858,7 +1858,7 @@ package body std_logic_arith is
 
 
     function "/="(L: SIGNED; R: INTEGER) return BOOLEAN is
-	-- synopsys subpgm_id 356
+	-- --synopsys subpgm_id 356
 	constant length: INTEGER := L'length;
     begin
 	return bitwise_neq( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1867,7 +1867,7 @@ package body std_logic_arith is
 
 
     function "/="(L: INTEGER; R: SIGNED) return BOOLEAN is
-	-- synopsys subpgm_id 357
+	-- --synopsys subpgm_id 357
 	constant length: INTEGER := R'length;
     begin
 	return bitwise_neq( STD_ULOGIC_VECTOR( CONV_SIGNED(L, length) ),
@@ -1877,7 +1877,7 @@ package body std_logic_arith is
 
 
     function SHL(ARG: UNSIGNED; COUNT: UNSIGNED) return UNSIGNED is
-	-- synopsys subpgm_id 358
+	-- --synopsys subpgm_id 358
 	constant control_msb: INTEGER := COUNT'length - 1;
 	variable control: UNSIGNED (control_msb downto 0);
 	constant result_msb: INTEGER := ARG'length-1;
@@ -1885,18 +1885,18 @@ package body std_logic_arith is
 	variable result, temp: rtype;
     begin
 	control := MAKE_BINARY(COUNT);
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	if (control(0) = 'X') then
 	    result := rtype'(others => 'X');
 	    return result;
 	end if;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
 	result := ARG;
 	for i in 0 to control_msb loop
 	    if control(i) = '1' then
 		temp := rtype'(others => '0');
 		if 2**i <= result_msb then
-		    temp(result_msb downto 2**i) := 
+		    temp(result_msb downto 2**i) :=
 				    result(result_msb - 2**i downto 0);
 		end if;
 		result := temp;
@@ -1906,7 +1906,7 @@ package body std_logic_arith is
     end;
 
     function SHL(ARG: SIGNED; COUNT: UNSIGNED) return SIGNED is
-	-- synopsys subpgm_id 359
+	-- --synopsys subpgm_id 359
 	constant control_msb: INTEGER := COUNT'length - 1;
 	variable control: UNSIGNED (control_msb downto 0);
 	constant result_msb: INTEGER := ARG'length-1;
@@ -1914,18 +1914,18 @@ package body std_logic_arith is
 	variable result, temp: rtype;
     begin
 	control := MAKE_BINARY(COUNT);
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	if (control(0) = 'X') then
 	    result := rtype'(others => 'X');
 	    return result;
 	end if;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
 	result := ARG;
 	for i in 0 to control_msb loop
 	    if control(i) = '1' then
 		temp := rtype'(others => '0');
 		if 2**i <= result_msb then
-		    temp(result_msb downto 2**i) := 
+		    temp(result_msb downto 2**i) :=
 				    result(result_msb - 2**i downto 0);
 		end if;
 		result := temp;
@@ -1936,7 +1936,7 @@ package body std_logic_arith is
 
 
     function SHR(ARG: UNSIGNED; COUNT: UNSIGNED) return UNSIGNED is
-	-- synopsys subpgm_id 360
+	-- --synopsys subpgm_id 360
 	constant control_msb: INTEGER := COUNT'length - 1;
 	variable control: UNSIGNED (control_msb downto 0);
 	constant result_msb: INTEGER := ARG'length-1;
@@ -1944,18 +1944,18 @@ package body std_logic_arith is
 	variable result, temp: rtype;
     begin
 	control := MAKE_BINARY(COUNT);
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	if (control(0) = 'X') then
 	    result := rtype'(others => 'X');
 	    return result;
 	end if;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
 	result := ARG;
 	for i in 0 to control_msb loop
 	    if control(i) = '1' then
 		temp := rtype'(others => '0');
 		if 2**i <= result_msb then
-		    temp(result_msb - 2**i downto 0) := 
+		    temp(result_msb - 2**i downto 0) :=
 					result(result_msb downto 2**i);
 		end if;
 		result := temp;
@@ -1965,7 +1965,7 @@ package body std_logic_arith is
     end;
 
     function SHR(ARG: SIGNED; COUNT: UNSIGNED) return SIGNED is
-	-- synopsys subpgm_id 361
+	-- --synopsys subpgm_id 361
 	constant control_msb: INTEGER := COUNT'length - 1;
 	variable control: UNSIGNED (control_msb downto 0);
 	constant result_msb: INTEGER := ARG'length-1;
@@ -1974,19 +1974,19 @@ package body std_logic_arith is
 	variable sign_bit: STD_ULOGIC;
     begin
 	control := MAKE_BINARY(COUNT);
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	if (control(0) = 'X') then
 	    result := rtype'(others => 'X');
 	    return result;
 	end if;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
 	result := ARG;
 	sign_bit := ARG(ARG'left);
 	for i in 0 to control_msb loop
 	    if control(i) = '1' then
 		temp := rtype'(others => sign_bit);
 		if 2**i <= result_msb then
-		    temp(result_msb - 2**i downto 0) := 
+		    temp(result_msb - 2**i downto 0) :=
 					result(result_msb downto 2**i);
 		end if;
 		result := temp;
@@ -1999,7 +1999,7 @@ package body std_logic_arith is
 
 
     function CONV_INTEGER(ARG: INTEGER) return INTEGER is
-	-- synopsys subpgm_id 365
+	-- --synopsys subpgm_id 365
     begin
 	return ARG;
     end;
@@ -2007,10 +2007,10 @@ package body std_logic_arith is
     function CONV_INTEGER(ARG: UNSIGNED) return INTEGER is
 	variable result: INTEGER;
 	variable tmp: STD_ULOGIC;
-	-- synopsys built_in SYN_UNSIGNED_TO_INTEGER
-	-- synopsys subpgm_id 366
+	-- --synopsys built_in SYN_UNSIGNED_TO_INTEGER
+	-- --synopsys subpgm_id 366
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	assert ARG'length <= 31
 	    report "ARG is too large in CONV_INTEGER"
 	    severity FAILURE;
@@ -2027,17 +2027,17 @@ package body std_logic_arith is
 	    end if;
 	end loop;
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
     function CONV_INTEGER(ARG: SIGNED) return INTEGER is
 	variable result: INTEGER;
 	variable tmp: STD_ULOGIC;
-	-- synopsys built_in SYN_SIGNED_TO_INTEGER
-	-- synopsys subpgm_id 367
+	-- --synopsys built_in SYN_SIGNED_TO_INTEGER
+	-- --synopsys subpgm_id 367
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	assert ARG'length <= 32
 	    report "ARG is too large in CONV_INTEGER"
 	    severity FAILURE;
@@ -2064,16 +2064,16 @@ package body std_logic_arith is
 	    end if;
 	end if;
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
     function CONV_INTEGER(ARG: STD_ULOGIC) return SMALL_INT is
 	variable tmp: STD_ULOGIC;
-	-- synopsys built_in SYN_FEED_THRU
-	-- synopsys subpgm_id 370
+	-- --synopsys built_in SYN_FEED_THRU
+	-- --synopsys subpgm_id 370
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	tmp := tbl_BINARY(ARG);
 	if tmp = '1' then
 	    return 1;
@@ -2085,7 +2085,7 @@ package body std_logic_arith is
 	else
 	    return 0;
 	end if;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -2093,15 +2093,15 @@ package body std_logic_arith is
     function CONV_UNSIGNED(ARG: INTEGER; SIZE: INTEGER) return UNSIGNED is
 	variable result: UNSIGNED(SIZE-1 downto 0);
 	variable temp: integer;
-	-- synopsys built_in SYN_INTEGER_TO_UNSIGNED
-	-- synopsys subpgm_id 371
+	-- --synopsys built_in SYN_INTEGER_TO_UNSIGNED
+	-- --synopsys subpgm_id 371
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	temp := ARG;
 	for i in 0 to SIZE-1 loop
 	    if (temp mod 2) = 1 then
 		result(i) := '1';
-	    else 
+	    else
 		result(i) := '0';
 	    end if;
 	    if temp > 0 then
@@ -2111,7 +2111,7 @@ package body std_logic_arith is
 	    end if;
 	end loop;
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -2120,10 +2120,10 @@ package body std_logic_arith is
 	subtype rtype is UNSIGNED (SIZE-1 downto 0);
 	variable new_bounds: UNSIGNED (ARG'length-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_ZERO_EXTEND
-	-- synopsys subpgm_id 372
+	-- --synopsys built_in SYN_ZERO_EXTEND
+	-- --synopsys subpgm_id 372
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	new_bounds := MAKE_BINARY(ARG);
 	if (new_bounds(0) = 'X') then
 	    result := rtype'(others => 'X');
@@ -2132,7 +2132,7 @@ package body std_logic_arith is
 	result := rtype'(others => '0');
 	result(msb downto 0) := new_bounds(msb downto 0);
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -2141,10 +2141,10 @@ package body std_logic_arith is
 	subtype rtype is UNSIGNED (SIZE-1 downto 0);
 	variable new_bounds: UNSIGNED (ARG'length-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_SIGN_EXTEND
-	-- synopsys subpgm_id 373
+	-- --synopsys built_in SYN_SIGN_EXTEND
+	-- --synopsys subpgm_id 373
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	new_bounds := MAKE_BINARY(ARG);
 	if (new_bounds(0) = 'X') then
 	    result := rtype'(others => 'X');
@@ -2153,24 +2153,24 @@ package body std_logic_arith is
 	result := rtype'(others => new_bounds(new_bounds'left));
 	result(msb downto 0) := new_bounds(msb downto 0);
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
     function CONV_UNSIGNED(ARG: STD_ULOGIC; SIZE: INTEGER) return UNSIGNED is
 	subtype rtype is UNSIGNED (SIZE-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_ZERO_EXTEND
-	-- synopsys subpgm_id 375
+	-- --synopsys built_in SYN_ZERO_EXTEND
+	-- --synopsys subpgm_id 375
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	result := rtype'(others => '0');
 	result(0) := MAKE_BINARY(ARG);
 	if (result(0) = 'X') then
 	    result := rtype'(others => 'X');
 	end if;
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -2178,15 +2178,15 @@ package body std_logic_arith is
     function CONV_SIGNED(ARG: INTEGER; SIZE: INTEGER) return SIGNED is
 	variable result: SIGNED (SIZE-1 downto 0);
 	variable temp: integer;
-	-- synopsys built_in SYN_INTEGER_TO_SIGNED
-	-- synopsys subpgm_id 376
+	-- --synopsys built_in SYN_INTEGER_TO_SIGNED
+	-- --synopsys subpgm_id 376
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	temp := ARG;
 	for i in 0 to SIZE-1 loop
 	    if (temp mod 2) = 1 then
 		result(i) := '1';
-	    else 
+	    else
 		result(i) := '0';
 	    end if;
 	    if temp > 0 then
@@ -2198,7 +2198,7 @@ package body std_logic_arith is
 	    end if;
 	end loop;
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -2207,10 +2207,10 @@ package body std_logic_arith is
 	subtype rtype is SIGNED (SIZE-1 downto 0);
 	variable new_bounds : SIGNED (ARG'length-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_ZERO_EXTEND
-	-- synopsys subpgm_id 377
+	-- --synopsys built_in SYN_ZERO_EXTEND
+	-- --synopsys subpgm_id 377
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	new_bounds := MAKE_BINARY(ARG);
 	if (new_bounds(0) = 'X') then
 	    result := rtype'(others => 'X');
@@ -2219,7 +2219,7 @@ package body std_logic_arith is
 	result := rtype'(others => '0');
 	result(msb downto 0) := new_bounds(msb downto 0);
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function CONV_SIGNED(ARG: SIGNED; SIZE: INTEGER) return SIGNED is
@@ -2227,10 +2227,10 @@ package body std_logic_arith is
 	subtype rtype is SIGNED (SIZE-1 downto 0);
 	variable new_bounds : SIGNED (ARG'length-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_SIGN_EXTEND
-	-- synopsys subpgm_id 378
+	-- --synopsys built_in SYN_SIGN_EXTEND
+	-- --synopsys subpgm_id 378
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	new_bounds := MAKE_BINARY(ARG);
 	if (new_bounds(0) = 'X') then
 	    result := rtype'(others => 'X');
@@ -2239,24 +2239,24 @@ package body std_logic_arith is
 	result := rtype'(others => new_bounds(new_bounds'left));
 	result(msb downto 0) := new_bounds(msb downto 0);
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
     function CONV_SIGNED(ARG: STD_ULOGIC; SIZE: INTEGER) return SIGNED is
 	subtype rtype is SIGNED (SIZE-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_ZERO_EXTEND
-	-- synopsys subpgm_id 380
+	-- --synopsys built_in SYN_ZERO_EXTEND
+	-- --synopsys subpgm_id 380
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	result := rtype'(others => '0');
 	result(0) := MAKE_BINARY(ARG);
 	if (result(0) = 'X') then
 	    result := rtype'(others => 'X');
 	end if;
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -2264,15 +2264,15 @@ package body std_logic_arith is
     function CONV_STD_LOGIC_VECTOR(ARG: INTEGER; SIZE: INTEGER) return STD_LOGIC_VECTOR is
 	variable result: STD_LOGIC_VECTOR (SIZE-1 downto 0);
 	variable temp: integer;
-	-- synopsys built_in SYN_INTEGER_TO_SIGNED
-	-- synopsys subpgm_id 381
+	-- --synopsys built_in SYN_INTEGER_TO_SIGNED
+	-- --synopsys subpgm_id 381
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	temp := ARG;
 	for i in 0 to SIZE-1 loop
 	    if (temp mod 2) = 1 then
 		result(i) := '1';
-	    else 
+	    else
 		result(i) := '0';
 	    end if;
 	    if temp > 0 then
@@ -2284,7 +2284,7 @@ package body std_logic_arith is
 	    end if;
 	end loop;
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -2293,10 +2293,10 @@ package body std_logic_arith is
 	subtype rtype is STD_LOGIC_VECTOR (SIZE-1 downto 0);
 	variable new_bounds : STD_LOGIC_VECTOR (ARG'length-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_ZERO_EXTEND
-	-- synopsys subpgm_id 382
+	-- --synopsys built_in SYN_ZERO_EXTEND
+	-- --synopsys subpgm_id 382
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	new_bounds := MAKE_BINARY(ARG);
 	if (new_bounds(0) = 'X') then
 	    result := rtype'(others => 'X');
@@ -2305,7 +2305,7 @@ package body std_logic_arith is
 	result := rtype'(others => '0');
 	result(msb downto 0) := new_bounds(msb downto 0);
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
     function CONV_STD_LOGIC_VECTOR(ARG: SIGNED; SIZE: INTEGER) return STD_LOGIC_VECTOR is
@@ -2313,10 +2313,10 @@ package body std_logic_arith is
 	subtype rtype is STD_LOGIC_VECTOR (SIZE-1 downto 0);
 	variable new_bounds : STD_LOGIC_VECTOR (ARG'length-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_SIGN_EXTEND
-	-- synopsys subpgm_id 383
+	-- --synopsys built_in SYN_SIGN_EXTEND
+	-- --synopsys subpgm_id 383
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	new_bounds := MAKE_BINARY(ARG);
 	if (new_bounds(0) = 'X') then
 	    result := rtype'(others => 'X');
@@ -2325,36 +2325,36 @@ package body std_logic_arith is
 	result := rtype'(others => new_bounds(new_bounds'left));
 	result(msb downto 0) := new_bounds(msb downto 0);
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
     function CONV_STD_LOGIC_VECTOR(ARG: STD_ULOGIC; SIZE: INTEGER) return STD_LOGIC_VECTOR is
 	subtype rtype is STD_LOGIC_VECTOR (SIZE-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_ZERO_EXTEND
-	-- synopsys subpgm_id 384
+	-- --synopsys built_in SYN_ZERO_EXTEND
+	-- --synopsys subpgm_id 384
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	result := rtype'(others => '0');
 	result(0) := MAKE_BINARY(ARG);
 	if (result(0) = 'X') then
 	    result := rtype'(others => 'X');
 	end if;
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
-    function EXT(ARG: STD_LOGIC_VECTOR; SIZE: INTEGER) 
+    function EXT(ARG: STD_LOGIC_VECTOR; SIZE: INTEGER)
 						return STD_LOGIC_VECTOR is
 	constant msb: INTEGER := min(ARG'length, SIZE) - 1;
 	subtype rtype is STD_LOGIC_VECTOR (SIZE-1 downto 0);
 	variable new_bounds: STD_LOGIC_VECTOR (ARG'length-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_ZERO_EXTEND
-	-- synopsys subpgm_id 385
+	-- --synopsys built_in SYN_ZERO_EXTEND
+	-- --synopsys subpgm_id 385
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	new_bounds := MAKE_BINARY(ARG);
 	if (new_bounds(0) = 'X') then
 	    result := rtype'(others => 'X');
@@ -2363,7 +2363,7 @@ package body std_logic_arith is
 	result := rtype'(others => '0');
 	result(msb downto 0) := new_bounds(msb downto 0);
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
@@ -2372,10 +2372,10 @@ package body std_logic_arith is
 	subtype rtype is STD_LOGIC_VECTOR (SIZE-1 downto 0);
 	variable new_bounds : STD_LOGIC_VECTOR (ARG'length-1 downto 0);
 	variable result: rtype;
-	-- synopsys built_in SYN_SIGN_EXTEND
-	-- synopsys subpgm_id 386
+	-- --synopsys built_in SYN_SIGN_EXTEND
+	-- --synopsys subpgm_id 386
     begin
-	-- synopsys synthesis_off
+	-- --synopsys synthesis_off
 	new_bounds := MAKE_BINARY(ARG);
 	if (new_bounds(0) = 'X') then
 	    result := rtype'(others => 'X');
@@ -2384,7 +2384,7 @@ package body std_logic_arith is
 	result := rtype'(others => new_bounds(new_bounds'left));
 	result(msb downto 0) := new_bounds(msb downto 0);
 	return result;
-	-- synopsys synthesis_on
+	-- --synopsys synthesis_on
     end;
 
 
