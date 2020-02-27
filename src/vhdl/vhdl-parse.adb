@@ -118,7 +118,7 @@ package body Vhdl.Parse is
       Error_Msg_Parse ("unexpected token %t in a " & Where, +Current_Token);
    end Unexpected;
 
-   procedure Expect_Error (Token: Token_Type; Msg: String)
+   procedure Expect_Error (Token: Token_Type; Msg: String := "")
    is
       Loc : Location_Type;
    begin
@@ -141,7 +141,7 @@ package body Vhdl.Parse is
                           (+Token, +Current_Identifier));
       else
          Error_Msg_Parse
-           (Loc, "%t is expected instead of %t", (+Token, + Current_Token));
+           (Loc, "%t is expected instead of %t", (+Token, +Current_Token));
       end if;
    end Expect_Error;
 
@@ -5448,6 +5448,9 @@ package body Vhdl.Parse is
          when Tok_Semi_Colon =>
             Error_Msg_Parse ("';' (semi colon) not allowed alone");
             Scan;
+         when Tok_Is =>
+            Error_Msg_Parse ("duplicate 'is' in declarative part");
+            Scan;
          when others =>
             null;
       end case;
@@ -7779,6 +7782,22 @@ package body Vhdl.Parse is
                Scan;
 
                goto Again;
+            when Tok_Constant
+              | Tok_Variable
+              | Tok_Signal
+              | Tok_Alias
+              | Tok_File
+              | Tok_Attribute =>
+               Error_Msg_Parse ("declaration not allowed within statements");
+               Scan;
+               Resync_To_End_Of_Declaration;
+               goto Again;
+
+            when Tok_Begin =>
+               Error_Msg_Parse ("'begin' not allowed within statements");
+               Scan;
+               goto Again;
+
             when others =>
                return First_Stmt;
          end case;
@@ -8051,8 +8070,7 @@ package body Vhdl.Parse is
          Set_Sensitivity_List (Res, Sensitivity_List);
 
          --  Skip ')'
-         Expect (Tok_Right_Paren);
-         Scan;
+         Expect_Scan (Tok_Right_Paren);
       else
          Res := Create_Iir (Iir_Kind_Process_Statement);
       end if;
@@ -8071,7 +8089,7 @@ package body Vhdl.Parse is
          Scan;
       end if;
 
-      -- declarative part.
+      --  Declarative part.
       Parse_Declarative_Part (Res, Res);
 
       --  Skip 'begin'.
@@ -8842,7 +8860,17 @@ package body Vhdl.Parse is
 
          --  Skip 'generate'
          Generate_Loc := Get_Token_Location;
-         Expect_Scan (Tok_Generate);
+         case Current_Token is
+            when Tok_Generate =>
+               --  Skip 'generate'.
+               Scan;
+            when Tok_Then =>
+               Expect_Error (Tok_Generate);
+               --  Skip 'then'.
+               Scan;
+            when others =>
+               Expect_Error (Tok_Generate);
+         end case;
 
          Parse_Generate_Statement_Body (Res, Alt_Label, Bod, End_Loc);
 
@@ -8927,8 +8955,18 @@ package body Vhdl.Parse is
       end if;
 
       --  Skip 'generate'
-      Expect_Scan (Tok_Generate);
-      Set_End_Has_Reserved_Id (Res, True);
+      case Current_Token is
+         when Tok_Generate =>
+            Scan;
+            Set_End_Has_Reserved_Id (Res, True);
+         when Tok_If =>
+            Expect_Error (Tok_Generate);
+            --  Skip 'then'.
+            Scan;
+            Set_End_Has_Reserved_Id (Res, True);
+         when others =>
+            Expect_Error (Tok_Generate);
+      end case;
 
       --  LRM93 9.7
       --  If a label appears at the end of a generate statement, it must repeat
