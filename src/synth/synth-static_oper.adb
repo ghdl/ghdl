@@ -758,7 +758,26 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
             return Eval_Unsigned_To_Integer (Param1, Res_Typ, Expr);
-
+         when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
+            declare
+               El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
+               Arr : Value_Array_Acc;
+               Bnd : Type_Acc;
+               B : Int64;
+            begin
+               Arr := Create_Value_Array (Param1.Arr.Len);
+               for I in Param1.Arr.V'Range loop
+                  if Param1.Arr.V (I).Scal = 0 then
+                     B := Std_Logic_0_Pos;
+                  else
+                     B := Std_Logic_1_Pos;
+                  end if;
+                  Arr.V (I) := Create_Value_Discrete (B, El_Type);
+               end loop;
+               Bnd := Create_Vec_Type_By_Length
+                 (Width (Param1.Arr.Len), El_Type);
+               return Create_Value_Const_Array (Bnd, Arr);
+            end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
             declare
                function Log2 (Arg : Fp64) return Fp64;
