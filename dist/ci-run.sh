@@ -126,7 +126,7 @@ notag() {
 vertag() {
   if expr "$1" : 'v[0-9].*' > /dev/null; then
     # Check version defined in configure.
-    cfgver="`grep "^ghdl_version=" configure | sed -e 's/.*"\(.*\)";/\1/'`"
+    cfgver=`grep "^ghdl_version=" configure | sed -e 's/.*"\(.*\)"/\1/'`
     if [ "x$1" != "xv$cfgver" ]; then
       printf "${ANSI_RED}Tag '$1' does not match configure 'ghdl_version' ($cfgver)!${ANSI_NOCOLOR}\n" 1>&2;
       exit 1
