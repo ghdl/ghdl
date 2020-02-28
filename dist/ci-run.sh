@@ -125,13 +125,14 @@ notag() {
 
 vertag() {
   if expr "$1" : 'v[0-9].*' > /dev/null; then
-    # Remove leading 'v' in tags in the filenames.
-    echo $1 | cut -c2-
     # Check version defined in configure.
-    if [ "x$1" != "x`grep "^ghdl_version=" configure | sed -e 's/.*"\(.*\)";/\1/'`" ]; then
-      printf "${ANSI_RED}Tag '$1' does not match 'ghdl_version'!${ANSI_NOCOLOR}\n" 1>&2;
+    cfgver="`grep "^ghdl_version=" configure | sed -e 's/.*"\(.*\)";/\1/'`"
+    if [ "x$1" != "xv$cfgver" ]; then
+      printf "${ANSI_RED}Tag '$1' does not match configure 'ghdl_version' ($cfgver)!${ANSI_NOCOLOR}\n" 1>&2;
       exit 1
     fi
+    # Remove leading 'v' in tags in the filenames.
+    echo $1 | cut -c2-
   else
     # Regular tag (like snapshots), nothing to change.
     echo "$2"
