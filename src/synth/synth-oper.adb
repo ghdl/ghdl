@@ -1463,4 +1463,24 @@ package body Synth.Oper is
 
       return Res;
    end Synth_Predefined_Function_Call;
+
+   function Synth_Operator_Function_Call
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Expr);
+      Assoc : Node;
+      Inter : Node;
+      Op1, Op2 : Node;
+   begin
+      Assoc := Get_Parameter_Association_Chain (Expr);
+      Inter := Get_Interface_Declaration_Chain (Imp);
+
+      Op1 := Get_Actual (Assoc);
+      if Get_Chain (Inter) = Null_Node then
+         return Synth_Monadic_Operation (Syn_Inst, Imp, Op1, Expr);
+      else
+         Op2 := Get_Actual (Get_Chain (Assoc));
+         return Synth_Dyadic_Operation (Syn_Inst, Imp, Op1, Op2, Expr);
+      end if;
+   end Synth_Operator_Function_Call;
 end Synth.Oper;

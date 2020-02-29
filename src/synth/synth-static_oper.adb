@@ -326,19 +326,25 @@ package body Synth.Static_Oper is
             return Create_Value_Discrete
               (Boolean'Pos (Left.Scal /= Right.Scal), Boolean_Type);
 
-         when Iir_Predefined_Integer_Plus =>
+         when Iir_Predefined_Integer_Plus
+           | Iir_Predefined_Physical_Plus =>
             return Create_Value_Discrete
               (Get_Static_Discrete (Left) + Get_Static_Discrete (Right),
                Res_Typ);
-         when Iir_Predefined_Integer_Minus =>
+         when Iir_Predefined_Integer_Minus
+           | Iir_Predefined_Physical_Minus =>
             return Create_Value_Discrete
               (Get_Static_Discrete (Left) - Get_Static_Discrete (Right),
                Res_Typ);
-         when Iir_Predefined_Integer_Mul =>
+         when Iir_Predefined_Integer_Mul
+           | Iir_Predefined_Physical_Integer_Mul
+           | Iir_Predefined_Integer_Physical_Mul =>
             return Create_Value_Discrete
               (Get_Static_Discrete (Left) * Get_Static_Discrete (Right),
                Res_Typ);
-         when Iir_Predefined_Integer_Div =>
+         when Iir_Predefined_Integer_Div
+           | Iir_Predefined_Physical_Physical_Div
+           | Iir_Predefined_Physical_Integer_Div =>
             return Create_Value_Discrete
               (Get_Static_Discrete (Left) / Get_Static_Discrete (Right),
                Res_Typ);
@@ -352,30 +358,53 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Integer_Exp =>
             return Create_Value_Discrete
               (Left.Scal ** Natural (Right.Scal), Res_Typ);
-         when Iir_Predefined_Integer_Less_Equal =>
+         when Iir_Predefined_Physical_Minimum =>
+            return Create_Value_Discrete
+              (Int64'Min (Get_Static_Discrete (Left),
+                          Get_Static_Discrete (Right)),
+               Res_Typ);
+         when Iir_Predefined_Physical_Maximum =>
+            return Create_Value_Discrete
+              (Int64'Max (Get_Static_Discrete (Left),
+                          Get_Static_Discrete (Right)),
+               Res_Typ);
+         when Iir_Predefined_Integer_Less_Equal
+           | Iir_Predefined_Physical_Less_Equal =>
             return Create_Value_Discrete
               (Boolean'Pos (Left.Scal <= Right.Scal), Boolean_Type);
-         when Iir_Predefined_Integer_Less =>
+         when Iir_Predefined_Integer_Less
+           | Iir_Predefined_Physical_Less =>
             return Create_Value_Discrete
               (Boolean'Pos (Left.Scal < Right.Scal), Boolean_Type);
-         when Iir_Predefined_Integer_Greater_Equal =>
+         when Iir_Predefined_Integer_Greater_Equal
+           | Iir_Predefined_Physical_Greater_Equal =>
             return Create_Value_Discrete
               (Boolean'Pos (Left.Scal >= Right.Scal), Boolean_Type);
-         when Iir_Predefined_Integer_Greater =>
+         when Iir_Predefined_Integer_Greater
+           | Iir_Predefined_Physical_Greater =>
             return Create_Value_Discrete
               (Boolean'Pos (Left.Scal > Right.Scal), Boolean_Type);
-         when Iir_Predefined_Integer_Equality =>
+         when Iir_Predefined_Integer_Equality
+           | Iir_Predefined_Physical_Equality =>
             return Create_Value_Discrete
               (Boolean'Pos (Get_Static_Discrete (Left)
                               = Get_Static_Discrete (Right)), Boolean_Type);
-         when Iir_Predefined_Integer_Inequality =>
+         when Iir_Predefined_Integer_Inequality
+           | Iir_Predefined_Physical_Inequality =>
             return Create_Value_Discrete
               (Boolean'Pos (Get_Static_Discrete (Left)
-                              /= Get_Static_Discrete (Right)), Boolean_Type);
-         when Iir_Predefined_Physical_Physical_Div
-           | Iir_Predefined_Physical_Integer_Div =>
+                              /= Get_Static_Discrete (Right)),
+               Boolean_Type);
+
+         when Iir_Predefined_Physical_Real_Mul =>
             return Create_Value_Discrete
-              (Left.Scal / Right.Scal, Res_Typ);
+              (Int64 (Fp64 (Left.Scal) * Right.Fp), Res_Typ);
+         when Iir_Predefined_Real_Physical_Mul =>
+            return Create_Value_Discrete
+              (Int64 (Left.Fp * Fp64 (Right.Scal)), Res_Typ);
+         when Iir_Predefined_Physical_Real_Div =>
+            return Create_Value_Discrete
+              (Int64 (Fp64 (Left.Scal) / Right.Fp), Res_Typ);
 
          when Iir_Predefined_Floating_Less =>
             return Create_Value_Discrete
@@ -607,10 +636,15 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Bit_Not =>
             return Create_Value_Discrete (1 - Operand.Scal, Oper_Typ);
 
-         when Iir_Predefined_Integer_Negation =>
+         when Iir_Predefined_Integer_Negation
+           | Iir_Predefined_Physical_Negation =>
             return Create_Value_Discrete (-Operand.Scal, Oper_Typ);
-         when Iir_Predefined_Integer_Absolute =>
+         when Iir_Predefined_Integer_Absolute
+           | Iir_Predefined_Physical_Absolute =>
             return Create_Value_Discrete (abs Operand.Scal, Oper_Typ);
+         when Iir_Predefined_Integer_Identity
+           | Iir_Predefined_Physical_Identity =>
+            return Operand;
 
          when Iir_Predefined_Floating_Negation =>
             return Create_Value_Float (-Operand.Fp, Oper_Typ);

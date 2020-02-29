@@ -25,6 +25,8 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 package Synth.Oper is
    function Synth_Predefined_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
+   function Synth_Operator_Function_Call
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
 
    function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                     Imp : Node;

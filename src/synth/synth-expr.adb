@@ -1912,11 +1912,14 @@ package body Synth.Expr is
             declare
                Imp : constant Node := Get_Implementation (Expr);
             begin
-               if Get_Implicit_Definition (Imp) /= Iir_Predefined_None then
-                  return Synth_Predefined_Function_Call (Syn_Inst, Expr);
-               else
-                  return Synth_User_Function_Call (Syn_Inst, Expr);
-               end if;
+               case Get_Implicit_Definition (Imp) is
+                  when Iir_Predefined_Pure_Functions =>
+                     return Synth_Operator_Function_Call (Syn_Inst, Expr);
+                  when Iir_Predefined_None =>
+                     return Synth_User_Function_Call (Syn_Inst, Expr);
+                  when others =>
+                     return Synth_Predefined_Function_Call (Syn_Inst, Expr);
+               end case;
             end;
          when Iir_Kind_Aggregate =>
             return Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
