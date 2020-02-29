@@ -322,6 +322,9 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Enum_Equality =>
             return Create_Value_Discrete
               (Boolean'Pos (Left.Scal = Right.Scal), Boolean_Type);
+         when Iir_Predefined_Enum_Inequality =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Left.Scal /= Right.Scal), Boolean_Type);
 
          when Iir_Predefined_Integer_Plus =>
             return Create_Value_Discrete
