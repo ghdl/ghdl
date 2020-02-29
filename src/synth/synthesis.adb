@@ -53,7 +53,6 @@ package body Synthesis is
       Global_Instance := Make_Base_Instance;
 
       Synth.Values.Init;
-      Synth.Insts.Init;
 
       Synth_Top_Entity (Global_Instance, Arch, Config, Inst);
       Synth_All_Instances;

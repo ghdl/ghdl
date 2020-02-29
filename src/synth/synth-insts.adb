@@ -1205,6 +1205,8 @@ package body Synth.Insts is
    begin
       Root_Instance := Global_Instance;
 
+      Insts_Interning.Init;
+
       if Flags.Flag_Debug_Init then
          Synth.Debugger.Debug_Init;
       end if;
@@ -1456,9 +1458,4 @@ package body Synth.Insts is
          Idx := Idx + 1;
       end loop;
    end Synth_All_Instances;
-
-   procedure Init is
-   begin
-      Insts_Interning.Init;
-   end Init;
 end Synth.Insts;
