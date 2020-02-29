@@ -99,6 +99,19 @@ package body Synth.Decls is
       return Typ;
    end Synth_Array_Type_Definition;
 
+   --  Synth subtype of record elements.
+   procedure Synth_Record_Elements_Definition
+     (Syn_Inst : Synth_Instance_Acc; Def : Node)
+   is
+      El_List : constant Node_Flist := Get_Elements_Declaration_List (Def);
+      El : Node;
+   begin
+      for I in Flist_First .. Flist_Last (El_List) loop
+         El := Get_Nth_Element (El_List, I);
+         Synth_Declaration_Type (Syn_Inst, El);
+      end loop;
+   end Synth_Record_Elements_Definition;
+
    function Synth_Record_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
@@ -119,7 +132,6 @@ package body Synth.Decls is
       Off := 0;
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         Synth_Declaration_Type (Syn_Inst, El);
          El_Typ := Get_Value_Type (Syn_Inst, Get_Type (El));
          Rec_Els.E (Iir_Index32 (I + 1)) := (Off => Off,
                                              Typ => El_Typ);
@@ -193,6 +205,7 @@ package body Synth.Decls is
          when Iir_Kind_File_Type_Definition =>
             Typ := Synth_File_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Record_Type_Definition =>
+            Synth_Record_Elements_Definition (Syn_Inst, Def);
             Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
          when others =>
             Vhdl.Errors.Error_Kind ("synth_type_definition", Def);
