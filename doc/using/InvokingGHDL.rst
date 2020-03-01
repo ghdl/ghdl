@@ -259,7 +259,6 @@ Options
 
   .. index:: ieee library
   .. index:: synopsys library
-  .. index:: mentor library
 
   Select the ``IEEE`` library to use. ``IEEE_VAR`` must be one of:
 
@@ -286,11 +285,6 @@ Options
     These packages were created by some companies, and are popular. However
     they are not standard packages, and have been placed in the `IEEE`
     library without the permission from the ``ieee``.
-
-  mentor
-    Supply the standard packages and the following additional package:
-    ``std_logic_arith``. This package is a slight variation of a definitely
-    not standard but widely misused package.
 
   To avoid errors, you must use the same `IEEE` library for all units of
   your design, and during elaboration.
@@ -645,7 +639,15 @@ Display the library directory added by the link flags.
 IEEE library pitfalls
 =====================
 
-When you use options :option:`--ieee=synopsys <--ieee>` or :option:`--ieee=mentor <--ieee>`, the ``ieee`` library contains non standard packages such as ``std_logic_arith``. These packages are not standard because there are not described by an IEEE standard, even if they have been put in the `IEEE` library. Furthermore, they are not really de-facto standard, because there are slight differences between the packages of Mentor and those of Synopsys. Furthermore, since they are not well thought out, their use has pitfalls. For example, this description has an error during compilation:
+When you use options :option:`--ieee=synopsys <--ieee>`, the ``ieee``
+library contains non standard packages such as
+``std_logic_arith``. These packages are not standard because there are
+not described by an IEEE standard, even if they have been put in the
+`IEEE` library. Furthermore, they are not really de-facto standard,
+because there are slight differences between the packages of Mentor
+and those of Synopsys. Furthermore, since they are not well thought
+out, their use has pitfalls. For example, this description has an
+error during compilation:
 
 .. code-block:: VHDL
 

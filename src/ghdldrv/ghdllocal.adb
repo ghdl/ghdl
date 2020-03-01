@@ -36,7 +36,7 @@ with Vhdl.Prints;
 
 package body Ghdllocal is
    --  Version of the IEEE library to use.  This just change paths.
-   type Ieee_Lib_Kind is (Lib_Standard, Lib_None, Lib_Synopsys, Lib_Mentor);
+   type Ieee_Lib_Kind is (Lib_Standard, Lib_None, Lib_Synopsys);
    Flag_Ieee : Ieee_Lib_Kind;
 
    --  If TRUE, generate 32bits code on 64bits machines.
@@ -120,6 +120,7 @@ package body Ghdllocal is
 
    function Decode_Driver_Option (Opt : String) return Option_State
    is
+      use Errorout;
       pragma Assert (Opt'First = 1);
    begin
       if Opt = "-v" and then Flag_Verbose = False then
@@ -129,7 +130,10 @@ package body Ghdllocal is
       elsif Opt = "--ieee=synopsys" then
          Flag_Ieee := Lib_Synopsys;
       elsif Opt = "--ieee=mentor" then
-         Flag_Ieee := Lib_Mentor;
+         Warning_Msg_Option
+           (Warnid_Deprecated_Option,
+            "option --ieee=mentor is deprecated, replaced by --ieee=synopsys");
+         Flag_Ieee := Lib_Synopsys;
       elsif Opt = "--ieee=none" then
          Flag_Ieee := Lib_None;
       elsif Opt = "--ieee=standard" then
@@ -174,7 +178,7 @@ package body Ghdllocal is
       P (" --PREFIX=DIR   Specify installation prefix");
       P (" --ieee=NAME    Use NAME as ieee library, where name is:");
       P ("    standard: standard version (default)");
-      P ("    synopsys, mentor: vendor version (not advised)");
+      P ("    synopsys: vendor version (not advised)");
       P ("    none: do not use a predefined ieee library");
    end Disp_Long_Help;
 
@@ -441,12 +445,6 @@ package body Ghdllocal is
                Add_Library_Name ("ieee");
             when Lib_Synopsys =>
                Add_Library_Name ("synopsys");
-            when Lib_Mentor =>
-               if Vhdl_Std >= Vhdl_08 then
-                  Warning ("--ieee=mentor is ignored for --std=08");
-               else
-                  Add_Library_Name ("mentor");
-               end if;
             when Lib_None =>
                null;
          end case;

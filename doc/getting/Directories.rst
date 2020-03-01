@@ -5,7 +5,7 @@ Directory structure
 
 * ``src``: sources of GHDL, all of them in Ada.
 
-* ``libraries``: mostly third party libraries such as, `ieee`, `mentor`,
+* ``libraries``: mostly third party libraries such as, `ieee`,
   `std`, `synopsys` and `vital`. Except for a few shell and `Python` scripts, all
   the content is written in VHDL.
 

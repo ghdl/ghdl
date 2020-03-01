@@ -33,7 +33,7 @@ enable_openieee=false
 ifeq ($(enable_openieee),false)
 # Full libraries
 vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
-vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
+vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93
 vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08 \
   $(LIBDST_DIR)/src/ieee2008/LICENSE
 else
@@ -48,7 +48,6 @@ SYNOPSYS_BSRCS := std_logic_arith.vhdl \
   std_logic_unsigned.vhdl std_logic_signed.vhdl
 SYNOPSYS_V_BSRCS := std_logic_misc.vhdl std_logic_misc-body.vhdl
 SYNOPSYS8793_BSRCS := std_logic_textio.vhdl
-MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith-body.vhdl
 UPF_SRCS := openieee/upf.vhdl openieee/upf-body.vhdl
 
 ifeq ($(enable_openieee),false)
@@ -106,7 +105,6 @@ STD08_BSRCS := $(addprefix std/v08/,$(STD_SRCS)) std/env.vhdl std/env-body.vhdl
 SYNOPSYS87_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS))
 SYNOPSYS93_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS))
 SYNOPSYS08_BSRCS := $(addprefix synopsys/,$(SYNOPSYS_BSRCS)) $(addprefix synopsys/v08/,$(SYNOPSYS_V_BSRCS))
-MENTOR93_BSRCS := $(MENTOR_BSRCS)
 
 .PREFIXES: .vhdl
 
@@ -126,7 +124,6 @@ SYN87_DIR:=$(LIBDST_DIR)/synopsys/v87
 STD93_DIR:=$(LIBDST_DIR)/std/v93
 IEEE93_DIR:=$(LIBDST_DIR)/ieee/v93
 SYN93_DIR:=$(LIBDST_DIR)/synopsys/v93
-MENTOR93_DIR:=$(LIBDST_DIR)/mentor/v93
 
 STD08_DIR:=$(LIBDST_DIR)/std/v08
 IEEE08_DIR:=$(LIBDST_DIR)/ieee/v08
@@ -146,7 +143,6 @@ IEEE08_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(IEEE08_BSRCS))
 SYNOPSYS87_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(SYNOPSYS87_BSRCS))
 SYNOPSYS93_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(SYNOPSYS93_BSRCS))
 SYNOPSYS08_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(SYNOPSYS08_BSRCS))
-MENTOR93_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(MENTOR93_BSRCS))
 VITAL95_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(VITAL95_BSRCS))
 VITAL2000_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(VITAL2000_BSRCS))
 
@@ -265,27 +261,6 @@ $(SYN93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(SYNOPSYS93_SRCS) $(IEEE93_DIR)/ieee
 	done; \
 	for i in $(SYNOPSYS93_BSRCS); do \
           cmd="$(ANALYZE_IEEE93) ../../src/$$i"; \
-	  echo $$cmd; eval $$cmd || exit 1; \
-	done
-
-$(LIBDST_DIR)/src/mentor/%.vhdl: $(LIBSRC_DIR)/mentor/%.vhdl
-	$(CP) $< $@
-
-mentor.v93: $(MENTOR93_DIR)/ieee-obj93.cf
-
-$(MENTOR93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(MENTOR93_SRCS) $(IEEE93_DIR)/ieee-obj93.cf
-	$(RM) -f $@
-	cd $(MENTOR93_DIR); \
-	$(CP) ../../ieee/v93/ieee-obj93.cf . ;\
-	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
-	  b=`basename $$i .vhdl`; \
-	  if [ -f ../../ieee/v93/$$b.o ]; then \
-	    $(RM) -f $$b.o; $(LN) ../../ieee/v93/$$b.o $$b.o || exit 1; \
-	  fi; \
-	done ; \
-	for i in $(MENTOR93_BSRCS); do \
-          cmd="$(ANALYZE_IEEE93) ../../src/$$i";\
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 

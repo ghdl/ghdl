@@ -36,6 +36,9 @@ package Errorout is
       --  Design unit redefines another design unit.
       Warnid_Library,
 
+      --  Option is deprecated.
+      Warnid_Deprecated_Option,
+
       --  Missing Xref in pretty print.
       Warnid_Missing_Xref,
 
@@ -302,6 +305,7 @@ private
      (Warnid_Library | Warnid_Binding | Warnid_Port | Warnid_Shared
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
+        | Warnid_Deprecated_Option
         | Msgid_Warning  => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
 
