@@ -19,12 +19,17 @@
 --  MA 02110-1301, USA.
 
 with Vhdl.Nodes; use Vhdl.Nodes;
+
 with Netlists; use Netlists;
+
 with Synth.Context; use Synth.Context;
+with Synth.Flags; use Synth.Flags;
 
 package Synthesis is
-   procedure Synth_Design
-     (Design : Iir; M : out Module; Inst : out Synth_Instance_Acc);
+   procedure Synth_Design (Design : Iir;
+                           Encoding : Name_Encoding;
+                           M : out Module;
+                           Inst : out Synth_Instance_Acc);
 
    Synth_Error : exception;
 end Synthesis;

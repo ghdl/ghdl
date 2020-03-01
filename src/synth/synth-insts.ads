@@ -21,12 +21,14 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Synth.Context; use Synth.Context;
+with Synth.Flags; use Synth.Flags;
 
 package Synth.Insts is
    --  Create the declaration of the top entity.
    procedure Synth_Top_Entity (Global_Instance : Synth_Instance_Acc;
                                Arch : Node;
                                Config : Node;
+                               Encoding : Name_Encoding;
                                Inst : out Synth_Instance_Acc);
 
    --  Synthesize the top entity and all the sub-modules.

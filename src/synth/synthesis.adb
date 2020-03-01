@@ -18,18 +18,20 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Errorout; use Errorout;
+with Vhdl.Errors; use Vhdl.Errors;
+
 with Synth.Values;
 with Synth.Insts; use Synth.Insts;
 
 with Synth.Environment.Debug;
 pragma Unreferenced (Synth.Environment.Debug);
 
-with Errorout; use Errorout;
-with Vhdl.Errors; use Vhdl.Errors;
-
 package body Synthesis is
-   procedure Synth_Design
-     (Design : Node; M : out Module; Inst : out Synth_Instance_Acc)
+   procedure Synth_Design (Design : Node;
+                           Encoding : Name_Encoding;
+                           M : out Module;
+                           Inst : out Synth_Instance_Acc)
    is
       Unit : constant Node := Get_Library_Unit (Design);
       Arch : Node;
@@ -54,7 +56,7 @@ package body Synthesis is
 
       Synth.Values.Init;
 
-      Synth_Top_Entity (Global_Instance, Arch, Config, Inst);
+      Synth_Top_Entity (Global_Instance, Arch, Config, Encoding, Inst);
       Synth_All_Instances;
       if Errorout.Nbr_Errors > 0 then
          M := No_Module;

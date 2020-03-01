@@ -42,7 +42,6 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
 with Vhdl.Ieee.Math_Real;
 
-with Synth.Flags;
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Stmts; use Synth.Stmts;
@@ -90,6 +89,8 @@ package body Synth.Insts is
       Config : Node;
       --  Values of generics.
       Syn_Inst : Synth_Instance_Acc;
+      --  Encoding if the instance name.
+      Encoding : Name_Encoding;
    end record;
 
    type Inst_Object is record
@@ -224,7 +225,7 @@ package body Synth.Insts is
       Ports : constant Node := Get_Port_Chain (Decl);
       Ctxt : GNAT.SHA1.Context;
       Has_Hash : Boolean;
-   begin
+
       --  Create a buffer, store the entity name.
       --  For each generic:
       --  * write the value for integers.
@@ -232,80 +233,90 @@ package body Synth.Insts is
       --    identifiers.
       --  * hash all other values
       --  Append the hash if any.
-      declare
-         use Name_Table;
-         Id_Len : constant Natural := Get_Name_Length (Id);
-         Str_Len : constant Natural := Id_Len + 512;
-         pragma Assert (GNAT.SHA1.Hash_Length = 20);
-         Str : String (1 .. Str_Len + 41);
-         Len : Natural;
+      use Name_Table;
+      Id_Len : constant Natural := Get_Name_Length (Id);
+      Str_Len : constant Natural := Id_Len + 512;
+      pragma Assert (GNAT.SHA1.Hash_Length = 20);
+      Str : String (1 .. Str_Len + 41);
+      Len : Natural;
 
-         Gen_Decl : Node;
-         Gen : Value_Acc;
-      begin
-         Len := Id_Len;
-         Str (1 .. Len) := Get_Name_Ptr (Id) (1 .. Len);
+      Gen_Decl : Node;
+      Gen : Value_Acc;
+   begin
+      Len := Id_Len;
+      Str (1 .. Len) := Get_Name_Ptr (Id) (1 .. Len);
 
-         Has_Hash := False;
-         Ctxt := GNAT.SHA1.Initial_Context;
+      Has_Hash := False;
 
-         Gen_Decl := Generics;
-         while Gen_Decl /= Null_Node loop
-            Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
-            case Gen.Kind is
-               when Value_Discrete =>
-                  declare
-                     S : constant String := Uns64'Image (To_Uns64 (Gen.Scal));
-                  begin
-                     if Len + S'Length > Str_Len then
-                        Has_Hash := True;
-                        Hash_Const (Ctxt, Gen);
-                     else
-                        Str (Len + 1 .. Len + S'Length) := S;
-                        pragma Assert (Str (Len + 1) = ' ');
-                        Str (Len + 1) := '_';  --  Overwrite the space.
-                        Len := Len + S'Length;
-                     end if;
-                  end;
-               when others =>
-                  Has_Hash := True;
-                  Hash_Const (Ctxt, Gen);
-            end case;
-            Gen_Decl := Get_Chain (Gen_Decl);
-         end loop;
+      case Params.Encoding is
+         when Name_Hash =>
+            Ctxt := GNAT.SHA1.Initial_Context;
 
-         declare
-            Port_Decl : Node;
-            Port_Typ : Type_Acc;
-         begin
-            Port_Decl := Ports;
-            while Port_Decl /= Null_Node loop
-               if not Is_Fully_Constrained_Type (Get_Type (Port_Decl)) then
-                  Port_Typ := Get_Value (Params.Syn_Inst, Port_Decl).Typ;
-                  Has_Hash := True;
-                  Hash_Bounds (Ctxt, Port_Typ);
-               end if;
-               Port_Decl := Get_Chain (Port_Decl);
+            Gen_Decl := Generics;
+            while Gen_Decl /= Null_Node loop
+               Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
+               case Gen.Kind is
+                  when Value_Discrete =>
+                     declare
+                        S : constant String :=
+                          Uns64'Image (To_Uns64 (Gen.Scal));
+                     begin
+                        if Len + S'Length > Str_Len then
+                           Has_Hash := True;
+                           Hash_Const (Ctxt, Gen);
+                        else
+                           Str (Len + 1 .. Len + S'Length) := S;
+                           pragma Assert (Str (Len + 1) = ' ');
+                           Str (Len + 1) := '_';  --  Overwrite the space.
+                           Len := Len + S'Length;
+                        end if;
+                     end;
+                  when others =>
+                     Has_Hash := True;
+                     Hash_Const (Ctxt, Gen);
+               end case;
+               Gen_Decl := Get_Chain (Gen_Decl);
             end loop;
-         end;
 
-         if not Has_Hash and then Generics = Null_Node then
-            --  Simple case: same name.
-            --  TODO: what about two entities with the same identifier but
-            --   declared in two different libraries ?
-            --  TODO: what about extended identifiers ?
+            declare
+               Port_Decl : Node;
+               Port_Typ : Type_Acc;
+            begin
+               Port_Decl := Ports;
+               while Port_Decl /= Null_Node loop
+                  if not Is_Fully_Constrained_Type (Get_Type (Port_Decl)) then
+                     Port_Typ := Get_Value (Params.Syn_Inst, Port_Decl).Typ;
+                     Has_Hash := True;
+                     Hash_Bounds (Ctxt, Port_Typ);
+                  end if;
+                  Port_Decl := Get_Chain (Port_Decl);
+               end loop;
+            end;
+            if not Has_Hash and then Generics = Null_Node then
+               --  Simple case: same name.
+               --  TODO: what about two entities with the same identifier but
+               --   declared in two different libraries ?
+               --  TODO: what about extended identifiers ?
+               return New_Sname_User (Id, No_Sname);
+            end if;
+
+            if Has_Hash then
+               Str (Len + 1) := '_';
+               Len := Len + 1;
+               Str (Len + 1 .. Len + 40) := GNAT.SHA1.Digest (Ctxt);
+               Len := Len + 40;
+            end if;
+
+         when Name_Asis =>
             return New_Sname_User (Id, No_Sname);
-         end if;
 
-         if Has_Hash then
-            Str (Len + 1) := '_';
-            Len := Len + 1;
-            Str (Len + 1 .. Len + 40) := GNAT.SHA1.Digest (Ctxt);
-            Len := Len + 40;
-         end if;
+         when Name_Index =>
+            --  TODO.
+            raise Internal_Error;
+      end case;
 
-         return New_Sname_User (Get_Identifier (Str (1 .. Len)), No_Sname);
-      end;
+
+      return New_Sname_User (Get_Identifier (Str (1 .. Len)), No_Sname);
    end Create_Module_Name;
 
    function Build (Params : Inst_Params) return Inst_Object
@@ -894,7 +905,8 @@ package body Synth.Insts is
       Inst_Obj := Insts_Interning.Get ((Decl => Ent,
                                         Arch => Arch,
                                         Config => Config,
-                                        Syn_Inst => Sub_Inst));
+                                        Syn_Inst => Sub_Inst,
+                                        Encoding => Name_Hash));
 
       --  TODO: free sub_inst.
 
@@ -1081,7 +1093,8 @@ package body Synth.Insts is
       Inst_Obj := Insts_Interning.Get ((Decl => Ent,
                                         Arch => Arch,
                                         Config => Sub_Config,
-                                        Syn_Inst => Sub_Inst));
+                                        Syn_Inst => Sub_Inst,
+                                        Encoding => Name_Hash));
 
       --  TODO: free sub_inst.
 
@@ -1194,6 +1207,7 @@ package body Synth.Insts is
    procedure Synth_Top_Entity (Global_Instance : Synth_Instance_Acc;
                                Arch : Node;
                                Config : Node;
+                               Encoding : Name_Encoding;
                                Inst : out Synth_Instance_Acc)
    is
       Entity : constant Node := Get_Entity (Arch);
@@ -1266,7 +1280,8 @@ package body Synth.Insts is
         ((Decl => Entity,
           Arch => Arch,
           Config => Get_Block_Configuration (Config),
-          Syn_Inst => Syn_Inst));
+          Syn_Inst => Syn_Inst,
+          Encoding => Encoding));
       Inst := Inst_Obj.Syn_Inst;
    end Synth_Top_Entity;
 

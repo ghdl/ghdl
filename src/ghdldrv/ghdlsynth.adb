@@ -55,9 +55,15 @@ package body Ghdlsynth is
 
    --  Command --synth
    type Command_Synth is new Command_Lib with record
+      --  Control format of the output.
       Disp_Inline : Boolean := True;
       Disp_Id : Boolean := True;
       Oformat : Out_Format := Format_Default;
+
+      --  Control name encoding of the top-entity.
+      Top_Encoding : Name_Encoding := Name_Asis;
+
+      --  If True, a failure is expected.  For tests.
       Expect_Failure : Boolean := False;
    end record;
    function Decode_Command (Cmd : Command_Synth; Name : String)
@@ -97,6 +103,10 @@ package body Ghdlsynth is
         and then Is_Generic_Override_Option (Option)
       then
          Res := Decode_Generic_Override_Option (Option);
+      elsif Option = "--top-name=hash" then
+         Cmd.Top_Encoding := Name_Hash;
+      elsif Option = "--top-name=asis" then
+         Cmd.Top_Encoding := Name_Asis;
       elsif Option = "--expect-failure" then
          Cmd.Expect_Failure := True;
          Res := Option_Ok;
@@ -336,7 +346,8 @@ package body Ghdlsynth is
          return No_Module;
       end if;
 
-      Synthesis.Synth_Design (Config, Res, Inst);
+      Synthesis.Synth_Design
+        (Config, Command_Synth (Cmd.all).Top_Encoding, Res, Inst);
       if Res = No_Module then
          return No_Module;
       end if;
@@ -383,7 +394,7 @@ package body Ghdlsynth is
 
       Netlists.Errors.Initialize;
 
-      Synthesis.Synth_Design (Config, Res, Inst);
+      Synthesis.Synth_Design (Config, Cmd.Top_Encoding, Res, Inst);
       if Res = No_Module then
          if Cmd.Expect_Failure then
             return;
