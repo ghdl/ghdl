@@ -7,24 +7,28 @@ env:
 
 jobs:
 
+  gpl:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - run: |
+        TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
+
   linux:
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 3
       matrix:
         task: [
-          { backend: mcode,     args: "--gpl" },
-          { backend: mcode,     args: "--synth" },
-          { backend: llvm-7,    args: "--synth" },
-          { backend: gcc-8.3.0, args: "--synth" },
+          { backend: mcode,     args: "" },
+          { backend: llvm-7,    args: "" },
+          { backend: gcc-8.3.0, args: "" },
         ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - run: ./dist/ci-run.sh -c $TARGS
-      env:
-        TASK: buster+${{ matrix.task.backend }}
-        TARGS: ${{ matrix.task.args }}
+    - run: |
+        TASK=buster+${{ matrix.task.backend }} ./dist/ci-run.sh -c
 
   osx:
     runs-on: macOS-latest
