@@ -449,6 +449,11 @@ package body Vhdl.Utils is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             return Name_To_Value (Get_Named_Entity (Name));
+         when Iir_Kind_Indexed_Name
+           | Iir_Kind_Selected_Element
+           | Iir_Kind_Slice_Name =>
+            --  Already a value.
+            return Name;
          when others =>
             return Name_To_Object (Name);
       end case;
