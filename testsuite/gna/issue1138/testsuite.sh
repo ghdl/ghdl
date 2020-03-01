@@ -4,7 +4,8 @@
 
 export GHDL_STD_FLAGS=--std=08
 analyze_failure repro.vhdl
-analyze_failure crc_pkg.vhdl wbcrc_syn.vhdl
+analyze crc_pkg.vhdl
+analyze_failure wbcrc_syn.vhdl
 
 export GHDL_STD_FLAGS="--std=08 -frelaxed"
 analyze repro.vhdl
