@@ -982,7 +982,6 @@ package body Vhdl.Parse is
             if Vhdl_Std < Vhdl_08 then
                Error_Msg_Parse
                  ("'subtype attribute is not allowed before vhdl08");
-               return Null_Iir;
             end if;
          when others =>
             return Null_Iir;
