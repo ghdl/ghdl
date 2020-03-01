@@ -962,6 +962,7 @@ package body Vhdl.Sem_Names is
       Parent : Iir;
    begin
       if Get_Kind (Base) in Iir_Kinds_Dereference then
+         --  A dereferenced object is never static.
          return None;
       end if;
 
@@ -1038,6 +1039,11 @@ package body Vhdl.Sem_Names is
               = Iir_Kind_Function_Declaration)
          then
             Prefix := Function_Declaration_To_Call (Prefix);
+         end if;
+         if not Is_Object_Name (Prefix) then
+            Error_Msg_Sem_Relaxed
+              (Attr, Warnid_Attribute,
+               "prefix of array attribute must be an object name");
          end if;
       end if;
       Set_Prefix (Attr, Prefix);

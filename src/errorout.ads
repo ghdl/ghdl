@@ -108,6 +108,9 @@ package Errorout is
       --  Assertion during analysis.
       Warnid_Analyze_Assert,
 
+      --  Incorrect use of attributes (like non-object prefix).
+      Warnid_Attribute,
+
       --  Violation of staticness rules
       Warnid_Static,
 
@@ -298,7 +301,7 @@ private
    Default_Warnings : constant Warnings_Setting :=
      (Warnid_Library | Warnid_Binding | Warnid_Port | Warnid_Shared
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
-        | Warnid_Pragma | Warnid_Analyze_Assert
+        | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
         | Msgid_Warning  => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
 

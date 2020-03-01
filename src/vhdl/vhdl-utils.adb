@@ -393,6 +393,10 @@ package body Vhdl.Utils is
          when Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Element =>
+            if Name_To_Object (Get_Prefix (Name)) = Null_Iir then
+               --  The prefix may not be an object.
+               return Null_Iir;
+            end if;
             return Name;
 
          --  An object designated by a value of an access type
@@ -1034,20 +1038,25 @@ package body Vhdl.Utils is
    is
       Ent : Iir;
    begin
-      if Get_Kind (Name) in Iir_Kinds_Denoting_Name then
-         Ent := Get_Named_Entity (Name);
-         case Get_Kind (Ent) is
-            when Iir_Kind_Type_Declaration =>
-               return Get_Type_Definition (Ent);
-            when Iir_Kind_Subtype_Declaration
-              | Iir_Kind_Base_Attribute =>
-               return Get_Type (Ent);
-            when others =>
-               return Null_Iir;
-         end case;
-      else
-         return Null_Iir;
-      end if;
+      case Get_Kind (Name) is
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Attribute_Name =>
+            Ent := Get_Named_Entity (Name);
+            case Get_Kind (Ent) is
+               when Iir_Kind_Type_Declaration =>
+                  return Get_Type_Definition (Ent);
+               when Iir_Kind_Subtype_Declaration
+                 | Iir_Kind_Base_Attribute
+                 | Iir_Kind_Subtype_Attribute =>
+                  return Get_Type (Ent);
+               when others =>
+                  return Null_Iir;
+            end case;
+         when Iir_Kind_Subtype_Attribute =>
+            return Get_Type (Ent);
+         when others =>
+            return Null_Iir;
+      end case;
    end Is_Type_Name;
 
    function Get_Type_Of_Subtype_Indication (Ind : Iir) return Iir is
