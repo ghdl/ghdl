@@ -19,16 +19,12 @@ jobs:
       fail-fast: false
       max-parallel: 3
       matrix:
-        task: [
-          { backend: mcode,     args: "" },
-          { backend: llvm-7,    args: "" },
-          { backend: gcc-8.3.0, args: "" },
-        ]
+        task: [ mcode, llvm-7, gcc-8.3.0 ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - run: |
-        TASK=buster+${{ matrix.task.backend }} ./dist/ci-run.sh -c
+        TASK=buster+${{ matrix.task }} ./dist/ci-run.sh -c
 
   osx:
     runs-on: macOS-latest
