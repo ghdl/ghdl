@@ -237,9 +237,10 @@ package body Vhdl.Prints is
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_Anonymous_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Type_Declaration
            | Iir_Kind_File_Declaration
+           | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Record_Element_Constraint
@@ -2393,7 +2394,14 @@ package body Vhdl.Prints is
             when Iir_Kind_Signal_Attribute_Declaration =>
                null;
             when Iir_Kind_Anonymous_Signal_Declaration =>
-               null;
+               if False then
+                  --  Disabled as it is not part of the sources.
+                  Start_Hbox (Ctxt);
+                  Disp_Token (Ctxt, Tok_Signal);
+                  Disp_Ident (Ctxt, Get_Identifier (Decl));
+                  Disp_Token (Ctxt, Tok_Semi_Colon);
+                  Close_Hbox (Ctxt);
+               end if;
             when Iir_Kind_Group_Template_Declaration =>
                Disp_Group_Template_Declaration (Ctxt, Decl);
             when Iir_Kind_Group_Declaration =>
