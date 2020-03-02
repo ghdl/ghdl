@@ -29,6 +29,7 @@ with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils;
 
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Folds; use Netlists.Folds;
 with Netlists.Concats;
 
 with Synth.Expr; use Synth.Expr;
@@ -445,12 +446,16 @@ package body Synth.Context is
                      return Res;
                   end;
                when Type_Discrete =>
-                  if Val.Typ.W <= 32 then
+                  if Val.Typ.W <= 64 then
                      declare
-                        V : Uns32;
+                        Sh : constant Natural := 64 - Natural (Val.Typ.W);
+                        V : Uns64;
                      begin
-                        V := Uns32 (To_Uns64 (Val.Scal) and 16#ffff_ffff#);
-                        return Build_Const_UB32 (Build_Context, V, Val.Typ.W);
+                        V := To_Uns64 (Val.Scal);
+                        --  Keep only Val.Typ.W bits of the value.
+                        V := Shift_Right (Shift_Left (V, Sh), Sh);
+                        return Build2_Const_Uns
+                          (Build_Context, V, Val.Typ.W);
                      end;
                   else
                      raise Internal_Error;

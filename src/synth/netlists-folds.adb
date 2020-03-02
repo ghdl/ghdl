@@ -39,7 +39,7 @@ package body Netlists.Folds is
             Inst := Build_Const_Bit (Ctxt, W);
             Set_Param_Uns32 (Inst, 0, Uns32 (Val and 16#ffff_ffff#));
             Set_Param_Uns32 (Inst, 1, Uns32 (Shift_Right (Val, 32)));
-            for I in 2 .. (W + 31) / 32 loop
+            for I in 2 .. (W + 31) / 32 - 1 loop
                Set_Param_Uns32 (Inst, Param_Idx (I), 0);
             end loop;
             return Get_Output (Inst, 0);
@@ -81,7 +81,7 @@ package body Netlists.Folds is
             Inst := Build_Const_Bit (Ctxt, W);
             Set_Param_Uns32 (Inst, 0, Uns32 (V and 16#ffff_ffff#));
             Set_Param_Uns32 (Inst, 1, Uns32 (Shift_Right (V, 32)));
-            for I in 2 .. (W + 31) / 32 loop
+            for I in 2 .. (W + 31) / 32 - 1 loop
                Set_Param_Uns32 (Inst, Param_Idx (I), S);
             end loop;
             return Get_Output (Inst, 0);
