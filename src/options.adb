@@ -180,6 +180,8 @@ package body Options is
          Flag_Explicit := True;
       elsif Opt = "-frelaxed-rules" or else Opt = "-frelaxed" then
          Flag_Relaxed_Rules := True;
+      elsif Opt = "-fsynopsys" then
+         Flag_Synopsys := True;
       elsif Opt = "--syn-binding" then
          Flag_Syn_Binding := True;
       elsif Opt = "--no-vital-checks" then

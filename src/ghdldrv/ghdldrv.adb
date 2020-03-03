@@ -26,6 +26,7 @@ with Dyn_Tables;
 with Files_Map;
 with Libraries;
 with Default_Paths;
+with Flags;
 with Simple_IO; use Simple_IO;
 with Name_Table; use Name_Table;
 with Vhdl.Std_Package;
@@ -688,6 +689,15 @@ package body Ghdldrv is
          Error ("option --time-resolution not supported by back-end");
          Res := Option_Err;
          return;
+      elsif Opt = "--ieee=synopsys" or else Opt = "--ieee=none" then
+         --  Automatically translate the option.
+         if Backend = Backend_Gcc then
+            Add_Argument (Compiler_Args, new String'("--ghdl-fsynopsys"));
+         else
+            Add_Argument (Compiler_Args, new String'("-fsynopsys"));
+         end if;
+         Flags.Flag_Synopsys := True;
+         Res := Option_Ok;
       else
          Res := Options.Parse_Option (Opt);
          if Res = Option_Ok then

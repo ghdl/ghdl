@@ -32,14 +32,13 @@ enable_openieee=false
 
 ifeq ($(enable_openieee),false)
 # Full libraries
-vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
-vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93
-vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08 \
-  $(LIBDST_DIR)/src/ieee2008/LICENSE
+vhdl.libs.v87: std.v87 ieee.v87
+vhdl.libs.v93: std.v93 ieee.v93
+vhdl.libs.v08: std.v08 ieee.v08 $(LIBDST_DIR)/src/ieee2008/LICENSE
 else
 # GPL compatible
-vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
-vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93
+vhdl.libs.v87: std.v87 ieee.v87
+vhdl.libs.v93: std.v93 ieee.v93
 vhdl.libs.v08: std.v08 ieee.v08
 endif
 
@@ -119,15 +118,12 @@ SED_V08:= sed -e '/--V87/s/^/  --/' -e '/--!V08/s/^/  --/' \
 
 STD87_DIR:=$(LIBDST_DIR)/std/v87
 IEEE87_DIR:=$(LIBDST_DIR)/ieee/v87
-SYN87_DIR:=$(LIBDST_DIR)/synopsys/v87
 
 STD93_DIR:=$(LIBDST_DIR)/std/v93
 IEEE93_DIR:=$(LIBDST_DIR)/ieee/v93
-SYN93_DIR:=$(LIBDST_DIR)/synopsys/v93
 
 STD08_DIR:=$(LIBDST_DIR)/std/v08
 IEEE08_DIR:=$(LIBDST_DIR)/ieee/v08
-SYN08_DIR:=$(LIBDST_DIR)/synopsys/v08
 
 ANALYZE87:=$(ANALYZE) --std=87
 ANALYZE93:=$(ANALYZE) --std=93
@@ -174,34 +170,21 @@ ANALYZE_IEEE87=$(ANALYZE87) -P../.. --work=ieee
 
 ieee.v87: $(IEEE87_DIR)/ieee-obj87.cf
 
-$(IEEE87_DIR)/ieee-obj87.cf: $(ANALYZE_DEP) $(IEEE87_SRCS) $(VITAL95_SRCS) $(STD87_DIR)/std-obj87.cf
+$(IEEE87_DIR)/ieee-obj87.cf: $(ANALYZE_DEP) $(IEEE87_SRCS) $(VITAL95_SRCS) $(SYNOPSYS87_SRCS) $(STD87_DIR)/std-obj87.cf
+	echo dep: $(SYNOPSYS87_SRCS)
 	$(RM) -f $@
 	cd $(IEEE87_DIR); \
 	for i in $(IEEE87_BSRCS) $(VITAL95_BSRCS); do \
           cmd="$(ANALYZE_IEEE87) ../../src/$$i";\
 	  echo $$cmd; eval $$cmd || exit 1; \
+	done; \
+	for i in $(SYNOPSYS87_BSRCS); do \
+          cmd="$(ANALYZE_IEEE87) -fsynopsys ../../src/$$i";\
+	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
 $(LIBDST_DIR)/src/synopsys/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl
 	$(CP) $< $@
-
-synopsys.v87: $(SYN87_DIR)/ieee-obj87.cf
-
-$(SYN87_DIR)/ieee-obj87.cf: $(ANALYZE_DEP) $(SYNOPSYS87_SRCS) $(IEEE87_DIR)/ieee-obj87.cf
-	$(RM) -f $@
-	cd $(SYN87_DIR); \
-	$(CP) ../../ieee/v87/ieee-obj87.cf . ; \
-	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE_SRCS) $(VITAL95_SRCS); do \
-	  b=`basename $$i .vhdl`; \
-	  if [ -f ../../ieee/v87/$$b.o ]; then \
-	    $(RM) -f $$b.o; $(LN) ../../ieee/v87/$$b.o $$b.o || exit 1; \
-	  fi; \
-	done; \
-	for i in $(SYNOPSYS87_BSRCS); do \
-          cmd="$(ANALYZE_IEEE87) ../../src/$$i";\
-	  echo $$cmd; eval $$cmd || exit 1; \
-	done
 
 ### V93 ###############################################################
 
@@ -238,29 +221,15 @@ ANALYZE_IEEE93=$(ANALYZE93) -P../.. --work=ieee
 
 ieee.v93: $(IEEE93_DIR)/ieee-obj93.cf
 
-$(IEEE93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(IEEE93_SRCS) $(VITAL2000_SRCS) $(STD93_DIR)/std-obj93.cf
+$(IEEE93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(IEEE93_SRCS) $(VITAL2000_SRCS) $(SYNOPSYS93_SRCS) $(STD93_DIR)/std-obj93.cf
 	$(RM) -f $@
 	cd $(IEEE93_DIR); \
 	for i in $(IEEE93_BSRCS) $(VITAL2000_BSRCS); do \
           cmd="$(ANALYZE_IEEE93) ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done
-
-synopsys.v93: $(SYN93_DIR)/ieee-obj93.cf
-
-$(SYN93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(SYNOPSYS93_SRCS) $(IEEE93_DIR)/ieee-obj93.cf
-	$(RM) -f $@
-	cd $(SYN93_DIR); \
-	$(CP) ../../ieee/v93/ieee-obj93.cf .; \
-	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
-	  b=`basename $$i .vhdl`; \
-	  if [ -f ../../ieee/v93/$$b.o ]; then \
-	    $(RM) -f $$b.o; $(LN) ../../ieee/v93/$$b.o $$b.o || exit 1; \
-	  fi; \
 	done; \
 	for i in $(SYNOPSYS93_BSRCS); do \
-          cmd="$(ANALYZE_IEEE93) ../../src/$$i"; \
+          cmd="$(ANALYZE_IEEE93) -fsynopsys ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
@@ -296,7 +265,7 @@ ANALYZE_VITAL08=$(ANALYZE08) -P../.. --work=ieee -frelaxed-rules
 
 ieee.v08: $(IEEE08_DIR)/ieee-obj08.cf
 
-$(IEEE08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(IEEE08_SRCS) $(STD08_DIR)/std-obj08.cf
+$(IEEE08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(IEEE08_SRCS) $(SYNOPSYS08_SRCS) $(STD08_DIR)/std-obj08.cf
 	$(RM) -f $@
 	cd $(IEEE08_DIR); \
 	for i in $(IEEE08_BSRCS); do \
@@ -306,28 +275,14 @@ $(IEEE08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(IEEE08_SRCS) $(STD08_DIR)/std-obj0
 	for i in $(VITAL2000_BSRCS); do \
           cmd="$(ANALYZE_VITAL08) ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
+	done; \
+	for i in $(SYNOPSYS08_BSRCS); do \
+          cmd="$(ANALYZE_IEEE08) -fsynopsys ../../src/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
 $(LIBDST_DIR)/src/synopsys/v08/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl
 	$(SED_V08) < $< > $@
-
-synopsys.v08: $(SYN08_DIR)/ieee-obj08.cf
-
-$(SYN08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(SYNOPSYS08_SRCS) $(IEEE08_DIR)/ieee-obj08.cf
-	$(RM) -f $@
-	cd $(SYN08_DIR); \
-	$(CP) ../../ieee/v08/ieee-obj08.cf .; \
-	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE08_SRCS) $(VITAL2000_SRCS); do \
-	  b=`basename $$i .vhdl`; \
-	  if [ -f ../../ieee/v08/$$b.o ]; then \
-	    $(RM) -f $$b.o; $(LN) ../../ieee/v08/$$b.o $$b.o || exit 1; \
-	  fi; \
-	done; \
-	for i in $(SYNOPSYS08_BSRCS); do \
-          cmd="$(ANALYZE_IEEE08) ../../src/$$i"; \
-	  echo $$cmd; eval $$cmd || exit 1; \
-	done
 
 ##############################################################################
 

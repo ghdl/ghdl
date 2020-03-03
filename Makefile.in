@@ -524,14 +524,13 @@ LIBDST_DIR:=$(libdirsuffix)
 
 VHDLLIB_SUBDIRS_COMMON= src/std src/std/v87 src/std/v93 src/std/v08 \
   src/synopsys src/synopsys/v08 \
-  std/v87 ieee/v87 synopsys/v87 \
-  std/v93 ieee/v93 synopsys/v93 \
+  std/v87 ieee/v87 \
+  std/v93 ieee/v93 \
   std/v08 ieee/v08 \
   src/openieee
 
-VHDLLIB_SUBDIRS_FULL= src/ieee src/vital95 src/vital2000 src/mentor \
-  src/ieee/v87 src/ieee/v93 src/ieee2008 \
-  mentor/v93 synopsys/v08
+VHDLLIB_SUBDIRS_FULL= src/ieee src/vital95 src/vital2000 \
+  src/ieee/v87 src/ieee/v93 src/ieee2008
 
 ifeq ($(enable_openieee),false)
 VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON) $(VHDLLIB_SUBDIRS_FULL)
@@ -603,8 +602,6 @@ clean-pure-gpl:
 #       IEEE 1164 or vital libraries aren't GPL compatible
 	$(RM) -rf libraries/ieee libraries/ieee2008
 	$(RM) -rf libraries/vital95 libraries/vital2000
-#	Don't promote deprecated mentor libraries; synopsys one is ok
-	$(RM) -rf libraries/mentor
 #	The GNA testsuite contains open-source reproducer that may not be GPL.
 	$(RM) -rf testsuite/gna
 

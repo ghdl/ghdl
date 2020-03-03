@@ -284,6 +284,18 @@ Options
 
   Specify the standard to use. By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax. For details on ``STANDARD`` values see section :ref:`VHDL_standards`.
 
+.. option:: -fsynopsys
+
+  Allow the use of synopsys non-standard packages
+  (``std_logic_arith``, ``std_logic_signed``, ``std_logic_unsigned``,
+  ``std_logic_textio``).  These packages are
+  present in the ieee library but without this option it's an error to
+  use them.
+
+  The synopsys packages were created by some companies, and are popular. However
+  they are not standard packages, and have been placed in the `IEEE`
+  library without the permission from the ``ieee``.
+
 .. option:: --ieee=<IEEE_VAR>
 
   .. index:: ieee library
@@ -307,13 +319,8 @@ Options
     for more details.
 
   synopsys
-    Supply the former packages and the following additional packages:
-    ``std_logic_arith``, ``std_logic_signed``,
-    ``std_logic_unsigned``, ``std_logic_textio``.
-
-    These packages were created by some companies, and are popular. However
-    they are not standard packages, and have been placed in the `IEEE`
-    library without the permission from the ``ieee``.
+    This option is now deprecated.  It is equivalent to
+    ``--ieee=standard`` and ``-fsynopsys``.
 
   To avoid errors, you must use the same `IEEE` library for all units of
   your design, and during elaboration.

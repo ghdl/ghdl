@@ -444,9 +444,11 @@ package body Ghdllocal is
             when Lib_Standard =>
                Add_Library_Name ("ieee");
             when Lib_Synopsys =>
-               Add_Library_Name ("synopsys");
+               Add_Library_Name ("ieee");
+               Flag_Synopsys := True;
             when Lib_None =>
-               null;
+               --  Allow synopsys packages.
+               Flag_Synopsys := True;
          end case;
 
          --  For std: just add the library prefix.

@@ -2263,29 +2263,33 @@ package body Vhdl.Sem_Names is
          Error_Msg_Sem (+Name, "no method %i in %n", (+Suffix, +Prot_Type));
       end Error_Protected_Item;
 
-      --  Emit an error message if unit is not found in library LIB.
-      procedure Error_Unit_Not_Found (Lib : Iir)
+      --  Check if a synopsys package can be imported.
+      procedure Check_Synopsys_Package (Lib : Iir)
       is
          use Std_Names;
       begin
-         Error_Msg_Sem (+Name, "unit %i not found in %n", (+Suffix, +Lib));
-
-         --  Give an advice for common synopsys packages.
-         if Get_Identifier (Lib) = Name_Ieee then
-            if Suffix = Name_Std_Logic_Arith
-              or else Suffix = Name_Std_Logic_Signed
-              or else Suffix = Name_Std_Logic_Unsigned
-            then
-               Error_Msg_Sem
-                 (+Name,
-                  " (use --ieee=synopsys for non-standard synopsys packages)");
-            elsif Suffix = Name_Std_Logic_Textio then
-               Error_Msg_Sem
-                 (+Name, " (use --ieee=synopsys or --std=08 for "
-                    & "this non-standard synopsys package)");
-            end if;
+         if Get_Identifier (Lib) /= Name_Ieee then
+            return;
          end if;
-      end Error_Unit_Not_Found;
+
+         case Suffix is
+            when Name_Std_Logic_Arith
+              | Name_Std_Logic_Signed
+              | Name_Std_Logic_Unsigned =>
+               --  Synopsys package.
+               null;
+            when Name_Std_Logic_Textio =>
+               if Vhdl_Std >= Vhdl_08 then
+                  --  Standard ieee package in vhdl-08
+                  return;
+               end if;
+            when others =>
+               --  Not a synopsys package.
+               return;
+         end case;
+         Error_Msg_Sem
+           (+Name, "use of synopsys packages needs the -fsynopsys option");
+      end Check_Synopsys_Package;
    begin
       --  Analyze prefix.
       if Soft then
@@ -2368,10 +2372,14 @@ package body Vhdl.Sem_Names is
             --  GHDL: FIXME: error message more explicit
             Res := Load_Primary_Unit (Prefix, Suffix, Name);
             if Res /= Null_Iir then
+               if not Soft and then not Flag_Synopsys then
+                  Check_Synopsys_Package (Prefix);
+               end if;
                Sem.Add_Dependence (Res);
                Res := Get_Library_Unit (Res);
             elsif not Soft then
-               Error_Unit_Not_Found (Prefix);
+               Error_Msg_Sem
+                 (+Name, "unit %i not found in %n", (+Suffix, +Prefix));
             end if;
          when Iir_Kind_Process_Statement
            | Iir_Kind_Procedure_Declaration

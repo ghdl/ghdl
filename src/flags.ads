@@ -148,6 +148,9 @@ package Flags is
    --    constant x : xtype := x;
    Flag_Relaxed_Rules : Boolean := False;
 
+   --  If true, allow to use synopsys packages (std_logic_arith & co).
+   Flag_Synopsys : Boolean := False;
+
    -- --warn-undriven
    --Warn_Undriven : Boolean := False;
 
