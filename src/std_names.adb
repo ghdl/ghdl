@@ -617,23 +617,26 @@ package body Std_Names is
 
       Def ("ieee",               Name_Ieee);
       Def ("std_logic_1164",     Name_Std_Logic_1164);
+      Def ("vital_timing",       Name_VITAL_Timing);
+      Def ("numeric_std",        Name_Numeric_Std);
+      Def ("numeric_bit",        Name_Numeric_Bit);
+      Def ("std_logic_arith",    Name_Std_Logic_Arith);
+      Def ("std_logic_signed",   Name_Std_Logic_Signed);
+      Def ("std_logic_unsigned", Name_Std_Logic_Unsigned);
+      Def ("std_logic_textio",   Name_Std_Logic_Textio);
+      Def ("std_logic_misc",     Name_Std_Logic_Misc);
+      Def ("math_real",          Name_Math_Real);
+
       Def ("std_ulogic",         Name_Std_Ulogic);
       Def ("std_ulogic_vector",  Name_Std_Ulogic_Vector);
       Def ("std_logic",          Name_Std_Logic);
       Def ("std_logic_vector",   Name_Std_Logic_Vector);
       Def ("rising_edge",        Name_Rising_Edge);
       Def ("falling_edge",       Name_Falling_Edge);
-      Def ("vital_timing",       Name_VITAL_Timing);
       Def ("vital_level0",       Name_VITAL_Level0);
       Def ("vital_level1",       Name_VITAL_Level1);
-      Def ("numeric_std",        Name_Numeric_Std);
-      Def ("numeric_bit",        Name_Numeric_Bit);
       Def ("unresolved_unsigned", Name_Unresolved_Unsigned);
       Def ("unresolved_signed",  Name_Unresolved_Signed);
-      Def ("std_logic_arith",    Name_Std_Logic_Arith);
-      Def ("std_logic_signed",   Name_Std_Logic_Signed);
-      Def ("std_logic_unsigned", Name_Std_Logic_Unsigned);
-      Def ("std_logic_textio",   Name_Std_Logic_Textio);
       Def ("to_integer",         Name_To_Integer);
       Def ("to_unsigned",        Name_To_Unsigned);
       Def ("to_signed",          Name_To_Signed);
@@ -652,7 +655,6 @@ package body Std_Names is
       Def ("conv_signed",        Name_Conv_Signed);
       Def ("conv_unsigned",      Name_Conv_Unsigned);
       Def ("conv_integer",       Name_Conv_Integer);
-      Def ("math_real",          Name_Math_Real);
       Def ("ceil",               Name_Ceil);
       Def ("round",              Name_Round);
       Def ("log2",               Name_Log2);
