@@ -29,6 +29,10 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 
   Set value `VALUE` to generic with name `GENERIC`.
 
+  Example::
+
+    $ ghdl -r --std=08 my_unit -gDEPTH=12
+
   .. WARNING::
      This is currently a run option; but in the future it will be deprecated to
      become an elaboration option only.
