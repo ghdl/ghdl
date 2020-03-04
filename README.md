@@ -99,6 +99,4 @@ That's all!
 
 - **[experimental]** [ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdl` library (built with `--enable-synth`).
 
-- **[deprecated]** `libghdlsynth` is a shared library that includes the analysis and synthesis features of the core GHDL, but not the pieces for compilation/simulation.
-
 - **[deprecated]** `ghdl_simul`, which supports interpreted simulation, is available for historical reasons and for development/debugging only. It is very slow compared to the 'regular' compiled simulation and not all the features are supported.
