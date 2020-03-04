@@ -39,6 +39,9 @@ package Errorout is
       --  Option is deprecated.
       Warnid_Deprecated_Option,
 
+      --  Unexpected option.
+      Warnid_Unexpected_Option,
+
       --  Missing Xref in pretty print.
       Warnid_Missing_Xref,
 
@@ -305,9 +308,14 @@ private
      (Warnid_Library | Warnid_Binding | Warnid_Port | Warnid_Shared
         | Warnid_Runtime_Error | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Pragma | Warnid_Analyze_Assert | Warnid_Attribute
-        | Warnid_Deprecated_Option
+        | Warnid_Deprecated_Option | Warnid_Unexpected_Option
         | Msgid_Warning  => (Enabled => True, Error => False),
-      others             => (Enabled => False, Error => False));
+      Warnid_Delta_Cycle | Warnid_Body | Warnid_Static | Warnid_Nested_Comment
+        | Warnid_Universal | Warnid_Port_Bounds
+        | Warnid_Others | Warnid_Reserved_Word | Warnid_Directive
+        | Warnid_Parenthesis | Warnid_Delayed_Checks | Warnid_Default_Binding
+        | Warnid_Vital_Generic | Warnid_Missing_Xref
+        | Warnid_Unused => (Enabled => False, Error => False));
 
    --  Compute the column from Error_Record E.
    function Get_Error_Col (E : Error_Record) return Natural;

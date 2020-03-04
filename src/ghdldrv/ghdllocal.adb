@@ -1707,6 +1707,20 @@ package body Ghdllocal is
       end if;
    end Extract_Elab_Unit;
 
+   procedure Expect_Filenames (Args : Argument_List)
+   is
+      use Errorout;
+   begin
+      for I in Args'Range loop
+         if Args (I)(Args (I)'First) = '-' then
+            Warning_Msg_Option
+              (Warnid_Unexpected_Option,
+               "no option expected after files, use ./" & Args (I).all);
+            exit;
+         end if;
+      end loop;
+   end Expect_Filenames;
+
    --  Command Elab_Order.
    type Command_Elab_Order is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Elab_Order; Name : String)

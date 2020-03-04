@@ -907,6 +907,9 @@ package body Ghdldrv is
          Error ("no file to analyze");
          raise Option_Error;
       end if;
+
+      Expect_Filenames (Args);
+
       Setup_Compiler (False);
 
       for I in Args'Range loop

@@ -444,6 +444,8 @@ package body Ghdlcomp is
          raise Compilation_Error;
       end if;
 
+      Expect_Filenames (Args);
+
       Hooks.Compile_Init.all (True);
 
       --  Parse all files.
