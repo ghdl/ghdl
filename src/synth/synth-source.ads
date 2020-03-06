@@ -42,5 +42,4 @@ package Synth.Source is
    --  Set only if not yet set.
    procedure Set_Location_Maybe (Inst : Netlists.Instance; Src : Syn_Src);
    procedure Set_Location_Maybe (N : Netlists.Net; Src : Syn_Src);
-   pragma Inline (Set_Location);
 end Synth.Source;
