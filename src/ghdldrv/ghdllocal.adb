@@ -175,11 +175,9 @@ package body Ghdllocal is
       P (" --work=NAME    Set the name of the WORK library");
       P (" -PDIR          Add DIR in the library search path");
       P (" --workdir=DIR  Specify the directory of the WORK library");
-      P (" --PREFIX=DIR   Specify installation prefix");
-      P (" --ieee=NAME    Use NAME as ieee library, where name is:");
-      P ("    standard: standard version (default)");
-      P ("    synopsys: vendor version (not advised)");
-      P ("    none: do not use a predefined ieee library");
+      P (" -fsynopsys     Allow to use synopsys packages in ieee library");
+      P (" -frelaxed      Relax semantic rules");
+      P (" -fexplicit     Gives priority to explicit operator redefinitions");
    end Disp_Long_Help;
 
    function Is_Directory_Separator (C : Character) return Boolean is
