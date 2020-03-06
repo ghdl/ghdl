@@ -268,6 +268,8 @@ package body Vhdl.Parse is
               | Tok_End =>
                exit;
             when Tok_If
+              | Tok_Else
+              | Tok_Case
               | Tok_For
               | Tok_While
               | Tok_Loop
