@@ -12,6 +12,7 @@ analyze_failure --force-analysis noexpr.vhdl
 analyze_failure --force-analysis str.vhdl
 analyze_failure --force-analysis procinter.vhdl
 analyze_failure --force-analysis emptyquote2.vhdl
+analyze_failure --force-analysis bitstr.vhdl
 analyze_failure usrattr.vhdl
 analyze_failure forloop.vhdl 
 analyze_failure emptyquote.vhdl
