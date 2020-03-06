@@ -965,6 +965,7 @@ package body Ghdlprint is
       Flag_Sem : Boolean := True;
       Flag_Format : Boolean := False;
       Flag_Indent : Boolean := False;
+      Flag_Force : Boolean := False;
       First_Line : Positive := 1;
       Last_Line : Positive := Positive'Last;
    end record;
@@ -1010,6 +1011,9 @@ package body Ghdlprint is
       elsif Option = "--indent" then
          Cmd.Flag_Format := False;
          Cmd.Flag_Indent := True;
+         Res := Option_Ok;
+      elsif Option = "--force" then
+         Cmd.Flag_Force := True;
          Res := Option_Ok;
       elsif Option'Length > 8 and then Option (1 .. 8) = "--range=" then
          declare
@@ -1066,7 +1070,7 @@ package body Ghdlprint is
          Id := Name_Table.Get_Identifier (Args (I).all);
          Design_File := Load_File_Name (Id);
          if Design_File = Null_Iir
-           or else Errorout.Nbr_Errors > 0
+           or else (Errorout.Nbr_Errors > 0 and not Cmd.Flag_Force)
          then
             raise Errorout.Compilation_Error;
          end if;
@@ -1085,10 +1089,12 @@ package body Ghdlprint is
             end if;
 
             Next_Unit := Get_Chain (Unit);
+            if not (Cmd.Flag_Format or Cmd.Flag_Indent)
+              and then (Errorout.Nbr_Errors = 0 or Cmd.Flag_Force)
+            then
+               Vhdl.Prints.Disp_Vhdl (Unit);
+            end if;
             if Errorout.Nbr_Errors = 0 then
-               if not (Cmd.Flag_Format or Cmd.Flag_Indent) then
-                  Vhdl.Prints.Disp_Vhdl (Unit);
-               end if;
                if Cmd.Flag_Sem then
                   Set_Chain (Unit, Null_Iir);
                   Libraries.Add_Design_Unit_Into_Library (Unit);
