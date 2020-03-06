@@ -1529,7 +1529,10 @@ package body Vhdl.Sem_Expr is
       Inter : Iir;
    begin
       Name := Get_Prefix (Call);
-      if Name = Null_Iir or else Is_Error (Name) then
+      if Name = Null_Iir
+        or else Is_Error (Name)
+        or else Get_Kind (Name) = Iir_Kind_String_Literal8
+      then
          pragma Assert (Flags.Flag_Force_Analysis);
          return;
       end if;
