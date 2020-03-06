@@ -110,6 +110,8 @@ package body Vhdl.Errors is
       Report_Msg (Msgid_Error, Semantic, +Loc, Msg, (1 => Arg1));
    end Error_Msg_Sem;
 
+   Relaxed_Hint_Done : Boolean := False;
+
    procedure Error_Msg_Relaxed (Origin : Report_Origin;
                                 Id : Msgid_Warnings;
                                 Msg : String;
@@ -127,6 +129,14 @@ package body Vhdl.Errors is
          Level := Msgid_Error;
       end if;
       Report_Msg (Level, Origin, +Loc, Msg, Args);
+      if not Relaxed_Hint_Done and then Level = Msgid_Error then
+         Report_Msg
+           (Msgid_Note, Origin, +Loc,
+            "(you can use -frelaxed to turn this error into a warning)");
+         --  Emit the message only once, although it applies for many error.
+         --  Maybe do it once per Id ?
+         Relaxed_Hint_Done := True;
+      end if;
    end Error_Msg_Relaxed;
 
    procedure Error_Msg_Sem_Relaxed (Loc : Iir;
