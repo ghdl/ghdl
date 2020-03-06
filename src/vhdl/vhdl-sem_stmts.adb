@@ -318,6 +318,15 @@ package body Vhdl.Sem_Stmts is
    begin
       Target_Object := Name_To_Object (Target);
       if Target_Object = Null_Iir then
+         if Get_Kind (Target) = Iir_Kind_Simple_Name
+           and then Is_Error (Get_Named_Entity (Target))
+         then
+            --  Common case: target is not declared.  There was already
+            --  an error message for it.
+            return;
+         end if;
+
+         --  Uncommon case: target is not an object (could be a component).
          Error_Msg_Sem (+Target, "target is not a signal name");
          return;
       end if;
