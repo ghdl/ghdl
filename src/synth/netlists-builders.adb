@@ -725,7 +725,6 @@ package body Netlists.Builders is
                           L, R : Net) return Net
    is
       Wd : constant Width := Get_Width (L);
-      pragma Assert (Wd /= No_Width);
       pragma Assert (Get_Width (R) = Wd);
       pragma Assert (Ctxt.M_Dyadic (Id) /= No_Module);
       Inst : Instance;
