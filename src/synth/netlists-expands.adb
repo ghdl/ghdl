@@ -406,7 +406,8 @@ package body Netlists.Expands is
          Off : Uns32;
       begin
          Off := Get_Param_Uns32 (Inst, 0);
-         Generate_Muxes (Ctxt, Concat, Mem, Off, Dat, Memidx_Arr, Net_Arr.all);
+         Generate_Muxes
+           (Ctxt, Concat, Mem, Off, Dat, Memidx_Arr, Net_Arr.all, En);
          if Off < O_W then
             Append (Concat, Build_Extract (Ctxt, Mem, Off, O_W - Off));
          end if;
