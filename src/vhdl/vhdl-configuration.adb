@@ -908,10 +908,13 @@ package body Vhdl.Configuration is
                declare
                   use Vhdl.Sem_Scopes;
                   Comp : constant Iir := Get_Named_Entity (Inst);
-                  Interp : constant Name_Interpretation_Type :=
-                    Get_Interpretation (Get_Identifier (Comp));
+                  Interp : Name_Interpretation_Type;
                   Decl : Iir;
                begin
+                  if Is_Error (Comp) then
+                     return Walk_Continue;
+                  end if;
+                  Interp := Get_Interpretation (Get_Identifier (Comp));
                   if Valid_Interpretation (Interp) then
                      Decl := Get_Declaration (Interp);
                      pragma Assert
