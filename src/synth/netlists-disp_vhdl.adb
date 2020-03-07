@@ -1018,6 +1018,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0 nor \i1;" & NL, Inst);
          when Id_Nand =>
             Disp_Template ("  \o0 <= \i0 nand \i1;" & NL, Inst);
+         when Id_Xnor =>
+            Disp_Template ("  \o0 <= \i0 xnor \i1;" & NL, Inst);
 
          when Id_Concat2 =>
             declare
