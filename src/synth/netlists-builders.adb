@@ -421,6 +421,8 @@ package body Netlists.Builders is
       Inputs2 : Port_Desc_Array (0 .. 1);
    begin
       Inputs := (0 => Create_Input ("i"));
+      Inputs2 := (0 => Create_Input ("i"),
+                  1 => Create_Input ("init"));
       Outputs := (0 => Create_Output ("o"));
 
       Ctxt.M_Output := New_User_Module
@@ -428,13 +430,17 @@ package body Netlists.Builders is
          Id_Output, 1, 1, 0);
       Set_Ports_Desc (Ctxt.M_Output, Inputs, Outputs);
 
+      Ctxt.M_Ioutput := New_User_Module
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("ioutput"), No_Sname),
+         Id_Ioutput, 2, 1, 0);
+      Set_Ports_Desc (Ctxt.M_Ioutput, Inputs2, Outputs);
+
       Ctxt.M_Signal := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Name_Signal, No_Sname),
          Id_Signal, 1, 1, 0);
       Set_Ports_Desc (Ctxt.M_Signal, Inputs, Outputs);
 
-      Inputs2 := (0 => Create_Input ("i"),
-                  1 => Create_Input ("init"));
       Ctxt.M_Isignal := New_User_Module
         (Ctxt.Design,
          New_Sname_Artificial (Get_Identifier ("isignal"), No_Sname),
@@ -1236,6 +1242,19 @@ package body Netlists.Builders is
    begin
       return Build_Object (Ctxt, Ctxt.M_Output, W);
    end Build_Output;
+
+   function Build_Ioutput (Ctxt : Context_Acc; Init : Net) return Net
+   is
+      Wd : constant Width := Get_Width (Init);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Ioutput);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Connect (Get_Input (Inst, 1), Init);
+      return O;
+   end Build_Ioutput;
 
    function Build_Signal (Ctxt : Context_Acc; Name : Sname; W : Width)
                          return Net

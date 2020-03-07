@@ -1293,12 +1293,16 @@ package body Synth.Insts is
       Val.N := Get_Output (Self_Inst, Idx);
    end Create_Input_Wire;
 
-   procedure Create_Output_Wire (Self_Inst : Instance;
+   procedure Create_Output_Wire (Syn_Inst : Synth_Instance_Acc;
+                                 Self_Inst : Instance;
                                  Inter : Node;
                                  Idx : Port_Idx;
                                  Val : Value_Acc)
    is
+      Default : constant Node := Get_Default_Value (Inter);
+      Inter_Typ : Type_Acc;
       Value : Net;
+      Init : Value_Acc;
       Inp : Input;
       W : Width;
    begin
@@ -1308,7 +1312,16 @@ package body Synth.Insts is
       Val.W := Alloc_Wire (Wire_Output, Inter);
       W := Get_Output_Desc (Get_Module (Self_Inst), Idx).W;
       pragma Assert (W = Get_Type_Width (Val.Typ));
-      Value := Builders.Build_Output (Build_Context, W);
+      if Default /= Null_Node then
+         Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
+         Init := Synth_Expression_With_Type
+           (Syn_Inst, Default, Inter_Typ);
+         Init := Synth_Subtype_Conversion
+           (Init, Inter_Typ, False, Inter);
+         Value := Builders.Build_Ioutput (Build_Context, Get_Net (Init));
+      else
+         Value := Builders.Build_Output (Build_Context, W);
+      end if;
       Set_Location (Value, Inter);
       Inp := Get_Input (Self_Inst, Idx);
       Connect (Inp, Value);
@@ -1416,7 +1429,8 @@ package body Synth.Insts is
                Create_Input_Wire (Self_Inst, Nbr_Inputs, Val);
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out =>
-               Create_Output_Wire (Self_Inst, Inter, Nbr_Outputs, Val);
+               Create_Output_Wire
+                 (Syn_Inst, Self_Inst, Inter, Nbr_Outputs, Val);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Inter := Get_Chain (Inter);

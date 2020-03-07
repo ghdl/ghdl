@@ -496,12 +496,14 @@ package body Netlists.Inference is
 
       --  If the signal declaration has an initial value, get it.
       Sig := Get_Net_Parent (Prev_Val);
-      if Get_Id (Get_Module (Sig)) = Id_Isignal then
-         Init := Get_Input_Net (Sig, 1);
-         Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O));
-      else
-         Init := No_Net;
-      end if;
+      case Get_Id (Get_Module (Sig)) is
+         when Id_Isignal
+           | Id_Ioutput =>
+            Init := Get_Input_Net (Sig, 1);
+            Init := Build2_Extract (Ctxt, Init, Off, Get_Width (O));
+         when others =>
+            Init := No_Net;
+      end case;
 
       Enable := Clk_Enable;
 

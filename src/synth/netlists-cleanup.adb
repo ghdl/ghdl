@@ -126,6 +126,7 @@ package body Netlists.Cleanup is
 
          case Get_Id (Inst) is
             when Id_Output
+              | Id_Ioutput
               | Id_Port =>
                declare
                   Inp : Input;
@@ -142,6 +143,12 @@ package body Netlists.Cleanup is
                   else
                      Disconnect (Get_First_Sink (O));
                   end if;
+
+                  if Get_Id (Inst) = Id_Ioutput then
+                     --  Disconnect the initial value.
+                     Disconnect (Get_Input (Inst, 1));
+                  end if;
+
                   Remove_Instance (Inst);
                end;
             when others =>

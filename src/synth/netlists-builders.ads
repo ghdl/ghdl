@@ -151,6 +151,7 @@ package Netlists.Builders is
                                Data : Net) return Instance;
 
    function Build_Output (Ctxt : Context_Acc; W : Width) return Net;
+   function Build_Ioutput (Ctxt : Context_Acc; Init : Net) return Net;
    function Build_Signal (Ctxt : Context_Acc; Name : Sname; W : Width)
                          return Net;
    function Build_Isignal (Ctxt : Context_Acc; Name : Sname; Init : Net)
@@ -220,6 +221,7 @@ private
       M_Mux2 : Module;
       M_Mux4 : Module;
       M_Output : Module;
+      M_Ioutput : Module;
       M_Signal : Module;
       M_Isignal : Module;
       M_Port : Module;

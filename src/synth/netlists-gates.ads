@@ -109,10 +109,12 @@ package Netlists.Gates is
    --  be read.  At the end, this is not an issue because an output is driven
    --  by a gate (and thus the value of the output could be read), but that
    --  driving value may not be available early enough.
+   --  Id_Ioutput is an output with an initial value.
    Id_Signal  : constant Module_Id := 46;
    Id_Isignal : constant Module_Id := 47;
    Id_Output  : constant Module_Id := 48;
-   Id_Port    : constant Module_Id := 49;
+   Id_Ioutput : constant Module_Id := 49;
+   Id_Port    : constant Module_Id := 50;
 
    --  Note: initial values must be constant nets.
    --
@@ -122,7 +124,7 @@ package Netlists.Gates is
    --  Inputs:  0: CLK
    --           1: D
    --  Output:  0: Q
-   Id_Dff   : constant Module_Id := 50;
+   Id_Dff   : constant Module_Id := 52;
 
    --  A DFF with an asynchronous reset.  Note that the asynchronous reset
    --  has priority over the clock.  When RST is asserted, the value is
@@ -132,7 +134,7 @@ package Netlists.Gates is
    --           2: RST
    --           3: RST_VAL
    --  Output:  0: Q
-   Id_Adff  : constant Module_Id := 51;
+   Id_Adff  : constant Module_Id := 53;
 
    --  A simple DFF with an initial value (must be constant).  This is
    --  for FPGAs.
@@ -140,7 +142,7 @@ package Netlists.Gates is
    --           1: D
    --           2: INIT (initial value)
    --  Output:  0: Q
-   Id_Idff  : constant Module_Id := 52;
+   Id_Idff  : constant Module_Id := 54;
 
    --  A DFF with an asynchronous reset and an initial value.
    --  Inputs:  0: CLK
@@ -149,14 +151,14 @@ package Netlists.Gates is
    --           3: RST_VAL
    --           4: INIT (initial value)
    --  Output:  0: Q
-   Id_Iadff : constant Module_Id := 53;
+   Id_Iadff : constant Module_Id := 55;
 
    --  Multi clock dff.  ELSE is the output of the next DFF.
    --  Inputs:  0: CLK
    --           1: D
    --           2: ELSE
    --  Output:  0: Q
-   Id_Mdff : constant Module_Id := 54;
+   Id_Mdff : constant Module_Id := 56;
 
    --  Multi clock dff with initial value.  ELSE is the output of the next DFF.
    --  Inputs:  0: CLK
@@ -164,7 +166,7 @@ package Netlists.Gates is
    --           2: ELSE
    --           3: Init
    --  Output:  0: Q
-   Id_Midff : constant Module_Id := 55;
+   Id_Midff : constant Module_Id := 57;
 
    --  Width change: truncate or extend.  Sign is know in order to possibly
    --  detect loss of value.
