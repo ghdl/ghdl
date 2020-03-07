@@ -116,6 +116,22 @@ synth_analyze()
     analyze syn_$1.vhdl
 }
 
+# Analyze and test $1
+# Then synthesize and test the result
+synth_tb()
+{
+    t=$1
+
+    analyze $t.vhdl tb_$t.vhdl
+    elab_simulate tb_$t
+    clean
+
+    synth $t.vhdl -e $t > syn_$t.vhdl
+    analyze syn_$t.vhdl tb_$t.vhdl
+    elab_simulate tb_$t --ieee-asserts=disable-at-0
+    clean
+}
+
 # Check if a feature is present
 ghdl_has_feature ()
 {
