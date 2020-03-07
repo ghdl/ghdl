@@ -109,6 +109,13 @@ synth()
     "$GHDL" --synth $GHDL_STD_FLAGS $GHDL_FLAGS $@
 }
 
+# Synthesis of a single file and analyze the result
+synth_analyze()
+{
+    synth $1.vhdl -e > syn_$1.vhdl
+    analyze syn_$1.vhdl
+}
+
 # Check if a feature is present
 ghdl_has_feature ()
 {
