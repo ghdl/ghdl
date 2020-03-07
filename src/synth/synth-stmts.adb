@@ -667,6 +667,7 @@ package body Synth.Stmts is
    begin
       Cond_Val := Synth_Expression (C.Inst, Cond);
       if Is_Static (Cond_Val) then
+         Strip_Const (Cond_Val);
          if Cond_Val.Scal = 1 then
             --  True.
             Synth_Sequential_Statements
