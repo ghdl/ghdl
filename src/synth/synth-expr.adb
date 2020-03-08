@@ -1666,7 +1666,7 @@ package body Synth.Expr is
       end case;
    end Synth_Type_Conversion;
 
-   procedure Error_Unknown_Operator (Imp : Node; Loc : Node) is
+   procedure Error_Ieee_Operator (Imp : Node; Loc : Node) is
    begin
       if Get_Kind (Get_Parent (Imp)) = Iir_Kind_Package_Declaration
         and then (Get_Identifier
@@ -1676,10 +1676,8 @@ package body Synth.Expr is
       then
          Error_Msg_Synth (+Loc, "unhandled predefined IEEE operator %i", +Imp);
          Error_Msg_Synth (+Imp, " declared here");
-      else
-         Error_Msg_Synth (+Loc, "user defined operator %i not handled", +Imp);
       end if;
-   end Error_Unknown_Operator;
+   end Error_Ieee_Operator;
 
    function Synth_String_Literal
      (Syn_Inst : Synth_Instance_Acc; Str : Node; Str_Typ : Type_Acc)
@@ -1814,6 +1812,10 @@ package body Synth.Expr is
                      return Synth_Short_Circuit
                        (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
                         Bit_Type, Expr);
+                  when Iir_Predefined_None =>
+                     Error_Ieee_Operator (Imp, Expr);
+                     return Synth_User_Operator
+                       (Syn_Inst, Get_Left (Expr), Get_Right (Expr), Expr);
                   when others =>
                      return Synth_Dyadic_Operation
                        (Syn_Inst, Imp,
@@ -1826,14 +1828,13 @@ package body Synth.Expr is
                Def : constant Iir_Predefined_Functions :=
                  Get_Implicit_Definition (Imp);
             begin
-               if Def in Iir_Predefined_Implicit
-                 or else Def in Iir_Predefined_IEEE_Explicit
-               then
+               if Def = Iir_Predefined_None then
+                  Error_Ieee_Operator (Imp, Expr);
+                  return Synth_User_Operator
+                    (Syn_Inst, Get_Operand (Expr), Null_Node, Expr);
+               else
                   return Synth_Monadic_Operation
                     (Syn_Inst, Imp, Get_Operand (Expr), Expr);
-               else
-                  Error_Unknown_Operator (Imp, Expr);
-                  raise Internal_Error;
                end if;
             end;
          when Iir_Kind_Simple_Name

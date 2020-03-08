@@ -1291,7 +1291,42 @@ package body Synth.Stmts is
       end case;
    end Is_Copyback_Interface;
 
-   function Count_Associations (Inter_Chain : Node; Assoc_Chain : Node)
+   type Association_Iterator_Kind is
+     (Association_Function,
+      Association_Operator);
+
+   type Association_Iterator_Init
+     (Kind : Association_Iterator_Kind := Association_Function) is
+   record
+      Inter_Chain : Node;
+      case Kind is
+         when Association_Function =>
+            Assoc_Chain : Node;
+         when Association_Operator =>
+            Left : Node;
+            Right : Node;
+      end case;
+   end record;
+
+   function Association_Iterator_Build (Inter_Chain : Node; Assoc_Chain : Node)
+                                       return Association_Iterator_Init is
+   begin
+      return Association_Iterator_Init'(Kind => Association_Function,
+                                        Inter_Chain => Inter_Chain,
+                                        Assoc_Chain => Assoc_Chain);
+   end Association_Iterator_Build;
+
+   function Association_Iterator_Build
+     (Inter_Chain : Node; Left : Node; Right : Node)
+     return Association_Iterator_Init is
+   begin
+      return Association_Iterator_Init'(Kind => Association_Operator,
+                                        Inter_Chain => Inter_Chain,
+                                        Left => Left,
+                                        Right => Right);
+   end Association_Iterator_Build;
+
+   function Count_Associations (Init : Association_Iterator_Init)
                                return Natural
    is
       Assoc : Node;
@@ -1299,38 +1334,64 @@ package body Synth.Stmts is
       Inter : Node;
       Nbr_Inout : Natural;
    begin
-      Nbr_Inout := 0;
+      case Init.Kind is
+         when Association_Function =>
+            Nbr_Inout := 0;
 
-      Assoc := Assoc_Chain;
-      Assoc_Inter := Inter_Chain;
-      while Is_Valid (Assoc) loop
-         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+            Assoc := Init.Assoc_Chain;
+            Assoc_Inter := Init.Inter_Chain;
+            while Is_Valid (Assoc) loop
+               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-         if Is_Copyback_Interface (Inter) then
-            Nbr_Inout := Nbr_Inout + 1;
-         end if;
+               if Is_Copyback_Interface (Inter) then
+                  Nbr_Inout := Nbr_Inout + 1;
+               end if;
 
-         Next_Association_Interface (Assoc, Assoc_Inter);
-      end loop;
+               Next_Association_Interface (Assoc, Assoc_Inter);
+            end loop;
 
-      return Nbr_Inout;
+            return Nbr_Inout;
+         when Association_Operator =>
+            return 0;
+      end case;
    end Count_Associations;
 
-   type Association_Iterator is record
+   type Association_Iterator
+     (Kind : Association_Iterator_Kind := Association_Function) is
+   record
       Inter : Node;
-      First_Named_Assoc : Node;
-      Next_Assoc : Node;
+      case Kind is
+         when Association_Function =>
+            First_Named_Assoc : Node;
+            Next_Assoc : Node;
+         when Association_Operator =>
+            Op1 : Node;
+            Op2 : Node;
+      end case;
    end record;
 
    procedure Association_Iterate_Init (Iterator : out Association_Iterator;
-                                       Inter_Chain : Node;
-                                       Assoc_Chain : Node) is
+                                       Init : Association_Iterator_Init) is
    begin
-      Iterator := (Inter => Inter_Chain,
-                   First_Named_Assoc => Null_Node,
-                   Next_Assoc => Assoc_Chain);
+      case Init.Kind is
+         when Association_Function =>
+            Iterator := (Kind => Association_Function,
+                         Inter => Init.Inter_Chain,
+                         First_Named_Assoc => Null_Node,
+                         Next_Assoc => Init.Assoc_Chain);
+         when Association_Operator =>
+            Iterator := (Kind => Association_Operator,
+                         Inter => Init.Inter_Chain,
+                         Op1 => Init.Left,
+                         Op2 => Init.Right);
+      end case;
    end Association_Iterate_Init;
 
+   --  Return the next association.
+   --  ASSOC can be:
+   --  * an Iir_Kind_Association_By_XXX node (normal case)
+   --  * Null_Iir if INTER is not associated (and has a default value).
+   --  * an expression (for operator association).
    procedure Association_Iterate_Next (Iterator : in out Association_Iterator;
                                        Inter : out Node;
                                        Assoc : out Node)
@@ -1347,47 +1408,54 @@ package body Synth.Stmts is
          Iterator.Inter := Get_Chain (Iterator.Inter);
       end if;
 
-      if Iterator.First_Named_Assoc = Null_Node then
-         Assoc := Iterator.Next_Assoc;
-         if Assoc = Null_Node then
-            --  No more association: open association.
-            return;
-         end if;
-         Formal := Get_Formal (Assoc);
-         if Formal = Null_Node then
-            --  Association by position.
-            --  Update for the next call.
-            Iterator.Next_Assoc := Get_Chain (Assoc);
-            return;
-         end if;
-         Iterator.First_Named_Assoc := Assoc;
-      end if;
-
-      --  Search by name.
-      Assoc := Iterator.First_Named_Assoc;
-      while Assoc /= Null_Node loop
-         Formal := Get_Formal (Assoc);
-         pragma Assert (Formal /= Null_Node);
-         Formal := Get_Interface_Of_Formal (Formal);
-         if Formal = Inter then
-            --  Found.
-            --  Optimize in case assocs are in order.
-            if Assoc = Iterator.First_Named_Assoc then
-               Iterator.First_Named_Assoc := Get_Chain (Assoc);
+      case Iterator.Kind is
+         when Association_Function =>
+            if Iterator.First_Named_Assoc = Null_Node then
+               Assoc := Iterator.Next_Assoc;
+               if Assoc = Null_Node then
+                  --  No more association: open association.
+                  return;
+               end if;
+               Formal := Get_Formal (Assoc);
+               if Formal = Null_Node then
+                  --  Association by position.
+                  --  Update for the next call.
+                  Iterator.Next_Assoc := Get_Chain (Assoc);
+                  return;
+               end if;
+               Iterator.First_Named_Assoc := Assoc;
             end if;
-            return;
-         end if;
-         Assoc := Get_Chain (Assoc);
-      end loop;
 
-      --  Not found: open association.
-      return;
+            --  Search by name.
+            Assoc := Iterator.First_Named_Assoc;
+            while Assoc /= Null_Node loop
+               Formal := Get_Formal (Assoc);
+               pragma Assert (Formal /= Null_Node);
+               Formal := Get_Interface_Of_Formal (Formal);
+               if Formal = Inter then
+                  --  Found.
+                  --  Optimize in case assocs are in order.
+                  if Assoc = Iterator.First_Named_Assoc then
+                     Iterator.First_Named_Assoc := Get_Chain (Assoc);
+                  end if;
+                  return;
+               end if;
+               Assoc := Get_Chain (Assoc);
+            end loop;
+
+            --  Not found: open association.
+            return;
+
+         when Association_Operator =>
+            Assoc := Iterator.Op1;
+            Iterator.Op1 := Iterator.Op2;
+            Iterator.Op2 := Null_Node;
+      end case;
    end Association_Iterate_Next;
 
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
-                                           Inter_Chain : Node;
-                                           Assoc_Chain : Node;
+                                           Init : Association_Iterator_Init;
                                            Infos : out Target_Info_Array)
    is
       pragma Assert (Infos'First = 1);
@@ -1405,7 +1473,7 @@ package body Synth.Stmts is
       Nbr_Inout := 0;
 
       --  Process in INTER order.
-      Association_Iterate_Init (Iterator, Inter_Chain, Assoc_Chain);
+      Association_Iterate_Init (Iterator, Init);
       loop
          Association_Iterate_Next (Iterator, Inter, Assoc);
          exit when Inter = Null_Node;
@@ -1421,14 +1489,15 @@ package body Synth.Stmts is
                   Val := Synth_Expression_With_Type
                     (Subprg_Inst, Actual, Inter_Type);
                else
-                  case Get_Kind (Assoc) is
-                     when Iir_Kind_Association_Element_By_Expression =>
-                        Actual := Get_Actual (Assoc);
-                        Val := Synth_Expression_With_Type
-                          (Caller_Inst, Actual, Inter_Type);
-                     when others =>
-                        raise Internal_Error;
-                  end case;
+                  if Get_Kind (Assoc) =
+                    Iir_Kind_Association_Element_By_Expression
+                  then
+                     Actual := Get_Actual (Assoc);
+                  else
+                     Actual := Assoc;
+                  end if;
+                  Val := Synth_Expression_With_Type
+                    (Caller_Inst, Actual, Inter_Type);
                end if;
             when Iir_Out_Mode | Iir_Inout_Mode =>
                Actual := Get_Actual (Assoc);
@@ -1501,14 +1570,15 @@ package body Synth.Stmts is
    is
       Infos : Target_Info_Array (1 .. 0);
       pragma Unreferenced (Infos);
+      Init : Association_Iterator_Init;
    begin
-      Synth_Subprogram_Association (Subprg_Inst, Caller_Inst,
-                                    Inter_Chain, Assoc_Chain, Infos);
+      Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
+      Synth_Subprogram_Association (Subprg_Inst, Caller_Inst, Init, Infos);
    end Synth_Subprogram_Association;
 
    --  Create wires for out and inout interface variables.
    procedure Synth_Subprogram_Association_Wires
-     (Subprg_Inst : Synth_Instance_Acc; Inter_Chain : Node; Assoc_Chain : Node)
+     (Subprg_Inst : Synth_Instance_Acc; Init : Association_Iterator_Init)
    is
       Inter : Node;
       Assoc : Node;
@@ -1517,7 +1587,7 @@ package body Synth.Stmts is
       Wire : Wire_Id;
    begin
       --  Process in INTER order.
-      Association_Iterate_Init (Iterator, Inter_Chain, Assoc_Chain);
+      Association_Iterate_Init (Iterator, Init);
       loop
          Association_Iterate_Next (Iterator, Inter, Assoc);
          exit when Inter = Null_Node;
@@ -1540,8 +1610,7 @@ package body Synth.Stmts is
    procedure Synth_Subprogram_Back_Association
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
-      Inter_Chain : Node;
-      Assoc_Chain : Node;
+      Init : Association_Iterator_Init;
       Infos : Target_Info_Array)
    is
       pragma Assert (Infos'First = 1);
@@ -1552,8 +1621,9 @@ package body Synth.Stmts is
       Nbr_Inout : Natural;
    begin
       Nbr_Inout := 0;
-      Assoc := Assoc_Chain;
-      Assoc_Inter := Inter_Chain;
+      pragma Assert (Init.Kind = Association_Function);
+      Assoc := Init.Assoc_Chain;
+      Assoc_Inter := Init.Inter_Chain;
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
@@ -1580,13 +1650,12 @@ package body Synth.Stmts is
    function Synth_Dynamic_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                            Sub_Inst : Synth_Instance_Acc;
                                            Call : Node;
+                                           Init : Association_Iterator_Init;
                                            Infos : Target_Info_Array)
                                           return Value_Acc
    is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
-      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
-      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Bod : constant Node := Get_Subprogram_Body (Imp);
       Res : Value_Acc;
       C : Seq_Context (Mode_Dynamic);
@@ -1614,7 +1683,7 @@ package body Synth.Stmts is
 
       Push_Phi;
 
-      Synth_Subprogram_Association_Wires (Sub_Inst, Inter_Chain, Assoc_Chain);
+      Synth_Subprogram_Association_Wires (Sub_Inst, Init);
 
       if Is_Func then
          --  Set a default value for the return.
@@ -1653,8 +1722,7 @@ package body Synth.Stmts is
          end if;
       else
          Res := null;
-         Synth_Subprogram_Back_Association
-           (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+         Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
       end if;
 
       Pop_Phi (Subprg_Phi);
@@ -1680,13 +1748,12 @@ package body Synth.Stmts is
    function Synth_Static_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                           Sub_Inst : Synth_Instance_Acc;
                                           Call : Node;
+                                          Init : Association_Iterator_Init;
                                           Infos : Target_Info_Array)
                                          return Value_Acc
    is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
-      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
-      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Bod : constant Node := Get_Subprogram_Body (Imp);
       Res : Value_Acc;
       C : Seq_Context (Mode_Static);
@@ -1718,8 +1785,7 @@ package body Synth.Stmts is
          end if;
       else
          Res := null;
-         Synth_Subprogram_Back_Association
-           (C.Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+         Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
       end if;
 
       Decls.Finalize_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
@@ -1728,16 +1794,15 @@ package body Synth.Stmts is
       return Res;
    end Synth_Static_Subprogram_Call;
 
-   function Synth_Subprogram_Call
-     (Syn_Inst : Synth_Instance_Acc; Call : Node) return Value_Acc
+   function Synth_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
+                                   Call : Node;
+                                   Init : Association_Iterator_Init)
+                                  return Value_Acc
    is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
-      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
-      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Bod : constant Node := Get_Subprogram_Body (Imp);
-      Nbr_Inout : constant Natural :=
-        Count_Associations (Inter_Chain, Assoc_Chain);
+      Nbr_Inout : constant Natural := Count_Associations (Init);
       Infos : Target_Info_Array (1 .. Nbr_Inout);
       Area_Mark : Areapools.Mark_Type;
       Res : Value_Acc;
@@ -1746,8 +1811,7 @@ package body Synth.Stmts is
       Areapools.Mark (Area_Mark, Instance_Pool.all);
       Sub_Inst := Make_Instance (Syn_Inst, Bod,
                                  New_Internal_Name (Build_Context));
-      Synth_Subprogram_Association
-        (Sub_Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+      Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
 
       if not Is_Func then
          if Get_Purity_State (Imp) /= Pure then
@@ -1757,10 +1821,10 @@ package body Synth.Stmts is
 
       if Get_Instance_Const (Sub_Inst) then
          Res := Synth_Static_Subprogram_Call
-           (Syn_Inst, Sub_Inst, Call, Infos);
+           (Syn_Inst, Sub_Inst, Call, Init, Infos);
       else
          Res := Synth_Dynamic_Subprogram_Call
-           (Syn_Inst, Sub_Inst, Call, Infos);
+           (Syn_Inst, Sub_Inst, Call, Init, Infos);
       end if;
 
       Free_Instance (Sub_Inst);
@@ -1769,14 +1833,40 @@ package body Synth.Stmts is
       return Res;
    end Synth_Subprogram_Call;
 
+   function Synth_Subprogram_Call
+     (Syn_Inst : Synth_Instance_Acc; Call : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Call);
+      Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Init : Association_Iterator_Init;
+   begin
+      Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
+      return Synth_Subprogram_Call (Syn_Inst, Call, Init);
+   end Synth_Subprogram_Call;
+
+   function Synth_User_Operator (Syn_Inst : Synth_Instance_Acc;
+                                 Left_Expr : Node;
+                                 Right_Expr : Node;
+                                 Expr : Node) return Value_Acc
+   is
+      Imp  : constant Node := Get_Implementation (Expr);
+      Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
+      Init : Association_Iterator_Init;
+   begin
+      Init := Association_Iterator_Build (Inter_Chain, Left_Expr, Right_Expr);
+      return Synth_Subprogram_Call (Syn_Inst, Expr, Init);
+   end Synth_User_Operator;
+
    procedure Synth_Implicit_Procedure_Call
      (Syn_Inst : Synth_Instance_Acc; Call : Node)
    is
       Imp  : constant Node := Get_Implementation (Call);
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
-      Nbr_Inout : constant Natural :=
-        Count_Associations (Inter_Chain, Assoc_Chain);
+      Init : constant Association_Iterator_Init :=
+        Association_Iterator_Build (Inter_Chain, Assoc_Chain);
+      Nbr_Inout : constant Natural := Count_Associations (Init);
       Infos : Target_Info_Array (1 .. Nbr_Inout);
       Area_Mark : Areapools.Mark_Type;
       Sub_Inst : Synth_Instance_Acc;
@@ -1785,13 +1875,11 @@ package body Synth.Stmts is
       Sub_Inst := Make_Instance (Syn_Inst, Imp,
                                  New_Internal_Name (Build_Context));
 
-      Synth_Subprogram_Association
-        (Sub_Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+      Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
 
       Synth.Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
 
-      Synth_Subprogram_Back_Association
-        (Sub_Inst, Syn_Inst, Inter_Chain, Assoc_Chain, Infos);
+      Synth_Subprogram_Back_Association (Sub_Inst, Syn_Inst, Init, Infos);
 
       Free_Instance (Sub_Inst);
       Areapools.Release (Area_Mark, Instance_Pool.all);

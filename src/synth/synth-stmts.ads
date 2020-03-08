@@ -56,6 +56,12 @@ package Synth.Stmts is
    function Synth_User_Function_Call
      (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
 
+   --  Operation implemented by a user function.
+   function Synth_User_Operator (Syn_Inst : Synth_Instance_Acc;
+                                 Left_Expr : Node;
+                                 Right_Expr : Node;
+                                 Expr : Node) return Value_Acc;
+
    --  Generate netlists for concurrent statements STMTS.
    procedure Synth_Concurrent_Statements
      (Syn_Inst : Synth_Instance_Acc; Stmts : Node);
