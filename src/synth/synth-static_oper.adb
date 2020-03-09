@@ -684,7 +684,8 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Create_Value_Discrete
-              (Std_Ulogic'Pos (Not_Table (Std_Ulogic'Val (Operand.Scal))),
+              (Std_Ulogic'Pos
+                 (Not_Table (Std_Ulogic'Val (Get_Static_Discrete (Operand)))),
                Oper_Typ);
 
          when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
