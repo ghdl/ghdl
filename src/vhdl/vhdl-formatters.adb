@@ -29,32 +29,39 @@ package body Vhdl.Formatters is
    --  cases.
    procedure Check_Token (Tok : Token_Type) is
    begin
-      --  There are a couple of exceptions due to attributes or
-      --  PSL.
+      if Tok = Current_Token then
+         return;
+      end if;
+
+      --  There are a couple of exceptions.
+      --  Range and Subtype are considered as identifiers when used as
+      --  attributes.
       if Tok = Tok_Identifier
         and then (Current_Token = Tok_Range
                     or else Current_Token = Tok_Subtype)
       then
-         null;
-      elsif (Tok = Tok_Default
-               or else Tok = Tok_Psl_Clock)
+         return;
+      end if;
+
+      --  'default clock' are considered as identifiers.
+      if (Tok = Tok_Default or else Tok = Tok_Psl_Clock)
         and then Current_Token = Tok_Identifier
       then
-         null;
-      elsif Tok /= Current_Token then
-         declare
-            use Simple_IO;
-         begin
-            Put_Line_Err ("error: token mismatch. ");
-            Put_Err ("  need to print: ");
-            Put_Err (Image (Tok));
-            Put_Err (", but read ");
-            Put_Err (Image (Current_Token));
-            Put_Err (" from file.");
-            New_Line_Err;
-         end;
-         raise Internal_Error;
+         return;
       end if;
+
+      declare
+         use Simple_IO;
+      begin
+         Put_Line_Err ("error: token mismatch. ");
+         Put_Err ("  need to print: ");
+         Put_Err (Image (Tok));
+         Put_Err (", but read ");
+         Put_Err (Image (Current_Token));
+         Put_Err (" from file.");
+         New_Line_Err;
+      end;
+      raise Internal_Error;
    end Check_Token;
 
    package Format_Disp_Ctxt is
