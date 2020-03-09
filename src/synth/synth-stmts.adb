@@ -2773,7 +2773,6 @@ package body Synth.Stmts is
       Clk_Inst : Instance;
    begin
       --  create init net, clock net
-      pragma Assert (Nbr_States <= 32);
       Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
       Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
 
