@@ -175,7 +175,8 @@ package body Synth.Oper is
    --  Return No_Net if CST has incorrect value.
    function Synth_Match (Cst : Value_Acc;
                          Oper : Value_Acc;
-                         Expr : Node) return Net
+                         Expr : Node;
+                         Op : Compare_Module_Id := Id_Eq) return Net
    is
       Wd : constant Width := Cst.Typ.W;
       pragma Assert (Wd > 0);
@@ -198,24 +199,24 @@ package body Synth.Oper is
       Woff := 0;
       for I in reverse Cst.Arr.V'Range loop
          case Cst.Arr.V (I).Scal is
-            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_L_Pos =>
+            when Std_Logic_0_Pos
+              |  Std_Logic_L_Pos =>
                B := 0;
                M := 1;
-            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
+            when Std_Logic_1_Pos
+              |  Std_Logic_H_Pos =>
                B := 1;
                M := 1;
-            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
+            when Std_Logic_U_Pos
+              |  Std_Logic_X_Pos
+              |  Std_Logic_Z_Pos
+              |  Std_Logic_W_Pos =>
                --  Never match
                --  FIXME: warning ?
                Unchecked_Deallocate (Mask);
                Unchecked_Deallocate (Vals);
                return No_Net;
-            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos =>
+            when Std_Logic_D_Pos =>
                B := 0;
                M := 0;
             when others =>
@@ -239,7 +240,7 @@ package body Synth.Oper is
       Unchecked_Deallocate (Mask);
       Res := Build_Dyadic (Build_Context, Id_And, Get_Net (Oper), Nm);
       Set_Location (Res, Expr);
-      Res := Build_Compare (Build_Context, Id_Eq, Res, Nv);
+      Res := Build_Compare (Build_Context, Op, Res, Nv);
       Set_Location (Res, Expr);
 
       return Res;
@@ -660,13 +661,63 @@ package body Synth.Oper is
             end if;
             return Synth_Compare (Id_Eq, Boolean_Type);
          when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
-            if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
-               Warning_Msg_Synth
-                 (+Expr,
-                  "length of '?=' operands doesn't match, result is '0'");
-               return Create_Value_Discrete (0, Logic_Type);
-            end if;
-            return Synth_Compare (Id_Eq, Logic_Type);
+            declare
+               Cst, Oper : Value_Acc;
+               Res : Net;
+            begin
+               if Left.Typ.W /= Right.Typ.W then
+                  Error_Msg_Synth
+                    (+Expr, "operands of ?= don't have the same size");
+                  return Create_Value_Discrete (0, Bit_Type);
+               end if;
+
+               if Is_Static (Left) then
+                  Cst := Left;
+                  Oper := Right;
+               elsif Is_Static (Right) then
+                  Cst := Right;
+                  Oper := Left;
+               else
+                  Warning_Msg_Synth
+                    (+Expr, "no operand of ?= is constant, handled like =");
+                  return Synth_Compare (Id_Eq, Logic_Type);
+               end if;
+               Res := Synth_Match (Cst, Oper, Expr);
+               if Res = No_Net then
+                  return Create_Value_Discrete (Std_Logic_X_Pos, Expr_Typ);
+               else
+                  return Create_Value_Net (Res, Logic_Type);
+               end if;
+            end;
+         when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
+            declare
+               Cst, Oper : Value_Acc;
+               Res : Net;
+            begin
+               if Left.Typ.W /= Right.Typ.W then
+                  Error_Msg_Synth
+                    (+Expr, "operands of ?/= don't have the same size");
+                  return Create_Value_Discrete (1, Bit_Type);
+               end if;
+
+               if Is_Static (Left) then
+                  Cst := Left;
+                  Oper := Right;
+               elsif Is_Static (Right) then
+                  Cst := Right;
+                  Oper := Left;
+               else
+                  Warning_Msg_Synth
+                    (+Expr, "no operand of ?/= is constant, handled like /=");
+                  return Synth_Compare (Id_Ne, Logic_Type);
+               end if;
+               Res := Synth_Match (Cst, Oper, Expr, Id_Ne);
+               if Res = No_Net then
+                  return Create_Value_Discrete (Std_Logic_X_Pos, Expr_Typ);
+               else
+                  return Create_Value_Net (Res, Logic_Type);
+               end if;
+            end;
          when Iir_Predefined_Array_Inequality
             | Iir_Predefined_Record_Inequality =>
             if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
@@ -676,14 +727,6 @@ package body Synth.Oper is
                return Create_Value_Discrete (1, Boolean_Type);
             end if;
             return Synth_Compare (Id_Ne, Boolean_Type);
-         when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
-            if not Is_Matching_Bounds (Left.Typ, Right.Typ) then
-               Warning_Msg_Synth
-                 (+Expr,
-                  "length of '/=' operands doesn't match, result is '1'");
-               return Create_Value_Discrete (1, Logic_Type);
-            end if;
-            return Synth_Compare (Id_Ne, Logic_Type);
          when Iir_Predefined_Array_Greater =>
             return Synth_Compare_Array (Id_Ugt, Id_Uge, Boolean_Type);
          when Iir_Predefined_Array_Less =>
