@@ -191,14 +191,7 @@ package body Synth.Stmts is
                Dest_Type := Get_Array_Element (Dest_Type);
 
                if Voff /= No_Net then
-                  if Dest_Off /= 0 then
-                     --  TODO: add addidx (addoff ?)
-                     if Off /= 0 or else Dest_Type.W /= 1 then
-                        raise Internal_Error;
-                     end if;
-                  else
-                     Dest_Off := Off;
-                  end if;
+                  Dest_Off := Dest_Off + Off;
                   if Dest_Voff = No_Net then
                      Dest_Voff := Voff;
                      Dest_Rdwd := Dest_W;
