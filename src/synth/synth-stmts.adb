@@ -277,10 +277,7 @@ package body Synth.Stmts is
                     Create_Onedimensional_Array_Subtype (Dest_Type, Res_Bnd);
                   if Dest_Voff /= No_Net then
                      --  Slice of a memory.
-                     if Dest_Off /= 0 then
-                        raise Internal_Error;
-                     end if;
-                     Dest_Off := Sl_Off;
+                     Dest_Off := Dest_Off + Sl_Off;
                   else
                      if Dest_Obj.Kind in Value_Array .. Value_Const_Array then
                         declare
