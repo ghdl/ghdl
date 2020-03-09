@@ -171,6 +171,80 @@ package body Synth.Oper is
       return Res;
    end Create_Bounds_From_Length;
 
+   --  Do a match comparison between CST and OPER.
+   --  Return No_Net if CST has incorrect value.
+   function Synth_Match (Cst : Value_Acc;
+                         Oper : Value_Acc;
+                         Expr : Node) return Net
+   is
+      Wd : constant Width := Cst.Typ.W;
+      pragma Assert (Wd > 0);
+      Nwords : constant Natural := Natural ((Wd + 31) / 32);
+      Mask : Uns32_Arr_Acc;
+      Vals : Uns32_Arr_Acc;
+      Boff : Natural;
+      Woff : Natural;
+      B : Uns32;
+      M : Uns32;
+      Nv : Net;
+      Nm : Net;
+      Res : Net;
+   begin
+      --  Flatten 0/1 DC.
+      Mask := new Uns32_Arr'(0 .. Nwords - 1 => 0);
+      Vals := new Uns32_Arr'(0 .. Nwords - 1 => 0);
+
+      Boff := 0;
+      Woff := 0;
+      for I in reverse Cst.Arr.V'Range loop
+         case Cst.Arr.V (I).Scal is
+            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos
+              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_L_Pos =>
+               B := 0;
+               M := 1;
+            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos
+              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
+               B := 1;
+               M := 1;
+            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
+              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
+              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
+              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
+               --  Never match
+               --  FIXME: warning ?
+               Unchecked_Deallocate (Mask);
+               Unchecked_Deallocate (Vals);
+               return No_Net;
+            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos =>
+               B := 0;
+               M := 0;
+            when others =>
+               raise Internal_Error;
+         end case;
+         Mask (Woff) := Mask (Woff) or Shift_Left (M, Boff);
+         Vals (Woff) := Vals (Woff) or Shift_Left (B, Boff);
+         Boff := Boff + 1;
+         if Boff = 32 then
+            Boff := 0;
+            Woff := Woff + 1;
+         end if;
+      end loop;
+
+      --  Generate and + eq
+      Nv := Build2_Const_Vec (Build_Context, Wd, Vals.all);
+      Set_Location (Nv, Expr);
+      Unchecked_Deallocate (Vals);
+      Nm := Build2_Const_Vec (Build_Context, Wd, Mask.all);
+      Set_Location (Nm, Expr);
+      Unchecked_Deallocate (Mask);
+      Res := Build_Dyadic (Build_Context, Id_And, Get_Net (Oper), Nm);
+      Set_Location (Res, Expr);
+      Res := Build_Compare (Build_Context, Id_Eq, Res, Nv);
+      Set_Location (Res, Expr);
+
+      return Res;
+   end Synth_Match;
+
    function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                     Imp : Node;
                                     Left_Expr : Node;
@@ -1138,85 +1212,6 @@ package body Synth.Oper is
       return Create_Value_Net (N, Create_Res_Bound (Left));
    end Synth_Shift_Rotate;
 
-   function Synth_Std_Match (Cst : Value_Acc;
-                             Oper : Value_Acc;
-                             Expr : Node) return Value_Acc
-   is
-      Wd : constant Width := Cst.Typ.W;
-      Nwords : constant Natural := Natural ((Wd + 31) / 32);
-      Mask : Uns32_Arr_Acc;
-      Vals : Uns32_Arr_Acc;
-      Boff : Natural;
-      Woff : Natural;
-      B : Uns32;
-      M : Uns32;
-      Nv : Net;
-      Nm : Net;
-      Res : Net;
-   begin
-      if Oper.Typ.W /= Wd then
-         Error_Msg_Synth
-           (+Expr, "operands of std_match don't have the same size");
-         return Create_Value_Discrete (0, Boolean_Type);
-      end if;
-
-      pragma Assert (Wd > 0);
-
-      --  Flatten 0/1 DC.
-      Mask := new Uns32_Arr'(0 .. Nwords - 1 => 0);
-      Vals := new Uns32_Arr'(0 .. Nwords - 1 => 0);
-
-      Boff := 0;
-      Woff := 0;
-      for I in reverse Cst.Arr.V'Range loop
-         case Cst.Arr.V (I).Scal is
-            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_L_Pos =>
-               B := 0;
-               M := 1;
-            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
-               B := 1;
-               M := 1;
-            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
-              |  Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
-               --  Never match
-               --  FIXME: warning ?
-               Unchecked_Deallocate (Mask);
-               Unchecked_Deallocate (Vals);
-               return Create_Value_Discrete (0, Boolean_Type);
-            when Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos =>
-               B := 0;
-               M := 0;
-            when others =>
-               raise Internal_Error;
-         end case;
-         Mask (Woff) := Mask (Woff) or Shift_Left (M, Boff);
-         Vals (Woff) := Vals (Woff) or Shift_Left (B, Boff);
-         Boff := Boff + 1;
-         if Boff = 32 then
-            Boff := 0;
-            Woff := Woff + 1;
-         end if;
-      end loop;
-
-      --  Generate and + eq
-      Nv := Build2_Const_Vec (Build_Context, Wd, Vals.all);
-      Set_Location (Nv, Expr);
-      Unchecked_Deallocate (Vals);
-      Nm := Build2_Const_Vec (Build_Context, Wd, Mask.all);
-      Set_Location (Nm, Expr);
-      Unchecked_Deallocate (Mask);
-      Res := Build_Dyadic (Build_Context, Id_And, Get_Net (Oper), Nm);
-      Set_Location (Res, Expr);
-      Res := Build_Compare (Build_Context, Id_Eq, Res, Nv);
-      Set_Location (Res, Expr);
-
-      return Create_Value_Net (Res, Boolean_Type);
-   end Synth_Std_Match;
-
    function Synth_Dynamic_Predefined_Function_Call
      (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
    is
@@ -1404,15 +1399,30 @@ package body Synth.Oper is
             declare
                L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
                R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
+               Cst, Oper : Value_Acc;
+               Res : Net;
             begin
                if Is_Static (L) then
-                  return Synth_Std_Match (L, R, Expr);
+                  Cst := L;
+                  Oper := R;
                elsif Is_Static (R) then
-                  return Synth_Std_Match (R, L, Expr);
+                  Cst := R;
+                  Oper := L;
                else
                   Error_Msg_Synth
                     (+Expr, "one operand of std_match must be constant");
                   return null;
+               end if;
+               if Oper.Typ.W /= Cst.Typ.W then
+                  Error_Msg_Synth
+                    (+Expr, "operands of std_match don't have the same size");
+                  return Create_Value_Discrete (0, Boolean_Type);
+               end if;
+               Res := Synth_Match (Cst, Oper, Expr);
+               if Res = No_Net then
+                  return Create_Value_Discrete (0, Boolean_Type);
+               else
+                  return Create_Value_Net (Res, Boolean_Type);
                end if;
             end;
          when others =>
