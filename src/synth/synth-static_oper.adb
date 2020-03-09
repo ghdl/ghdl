@@ -304,6 +304,11 @@ package body Synth.Static_Oper is
       return To_Value_Acc (Arr, Val.Typ.Vec_El);
    end Synth_Shift;
 
+   function Get_Static_Ulogic (Op : Value_Acc) return Std_Ulogic is
+   begin
+      return Std_Ulogic'Val (Get_Static_Discrete (Op));
+   end Get_Static_Ulogic;
+
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
                                             Left : Value_Acc;
@@ -538,10 +543,22 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn_Sgn =>
             return Synth_Vector_Dyadic (Left, Right, Xor_Table, Expr);
 
+         when Iir_Predefined_Ieee_1164_Scalar_Or =>
+            return Create_Value_Discrete
+              (Std_Ulogic'Pos (Or_Table (Get_Static_Ulogic (Left),
+                                         Get_Static_Ulogic (Right))),
+               Res_Typ);
+
+         when Iir_Predefined_Ieee_1164_Scalar_And =>
+            return Create_Value_Discrete
+              (Std_Ulogic'Pos (And_Table (Get_Static_Ulogic (Left),
+                                          Get_Static_Ulogic (Right))),
+               Res_Typ);
+
          when Iir_Predefined_Ieee_1164_Scalar_Xor =>
             return Create_Value_Discrete
-              (Std_Ulogic'Pos (Xor_Table (Std_Ulogic'Val (Left.Scal),
-                                          Std_Ulogic'Val (Right.Scal))),
+              (Std_Ulogic'Pos (Xor_Table (Get_Static_Ulogic (Left),
+                                          Get_Static_Ulogic (Right))),
                Res_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
