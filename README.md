@@ -87,7 +87,7 @@ That's all!
 
 - The 'regular' tool allows analysis, compilation, simulation and (very experimental) synthesis of EDIF netlists. It is written in Ada and C, and three different backends are supported, which are sometimes named `ghdl_mcode`, `ghdl_gcc` and `ghdl_llvm`. This is the entrypoint for most users.
 
-- [ghdl-ls](https://github.com/ghdl/ghdl-language-server/tree/master/ghdl-ls) implements Language Server Protocol (LSP) in Python. VHDL analysis features provided by GHDL are accessed through `libghdl-py`. This can be integrated in text editors or IDES, such as, Vim, Emacs, Atom or Visual Studio Code.
+- `ghdl-ls` implements Language Server Protocol (LSP) in Python. VHDL analysis features provided by GHDL are accessed through `libghdl-py`. This can be integrated in text editors or IDES, such as, Vim, Emacs, Atom or Visual Studio Code.
 
 - [vscode-client](https://github.com/ghdl/ghdl-language-server/tree/master/vscode-client) is an extension for [Visual Studio Code (VSC)](https://code.visualstudio.com/) to provide language support for VHDL by interfacing `ghdl-ls`.
 
