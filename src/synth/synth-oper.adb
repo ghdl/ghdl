@@ -282,11 +282,26 @@ package body Synth.Oper is
          N : Net;
       begin
          pragma Assert (Left_Type = Right_Type);
+         pragma Assert (Res_Type = Expr_Typ);
          N := Build_Compare
            (Build_Context, Id, Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare;
+
+      function Synth_Minmax (Id : Compare_Module_Id) return Value_Acc
+      is
+         L : constant Net := Get_Net (Left);
+         R : constant Net := Get_Net (Right);
+         Sel, N : Net;
+      begin
+         pragma Assert (Left_Type = Right_Type);
+         Sel := Build_Compare (Build_Context, Id, L, R);
+         Set_Location (Sel, Expr);
+         N := Build_Mux2 (Build_Context, Sel, R, L);
+         Set_Location (N, Expr);
+         return Create_Value_Net (N, Expr_Typ);
+      end Synth_Minmax;
 
       function Synth_Compare_Array (Id, Id_Eq : Compare_Module_Id;
                                     Res_Type : Type_Acc) return Value_Acc
@@ -1126,6 +1141,10 @@ package body Synth.Oper is
             return Synth_Compare (Id_Eq, Boolean_Type);
          when Iir_Predefined_Integer_Inequality =>
             return Synth_Compare (Id_Ne, Boolean_Type);
+         when Iir_Predefined_Integer_Minimum =>
+            return Synth_Minmax (Id_Slt);
+         when Iir_Predefined_Integer_Maximum =>
+            return Synth_Minmax (Id_Sgt);
          when Iir_Predefined_Physical_Physical_Div =>
             Error_Msg_Synth (+Expr, "non-constant division not supported");
             return null;
