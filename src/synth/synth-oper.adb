@@ -807,18 +807,49 @@ package body Synth.Oper is
                return Create_Value_Net
                  (N, Create_Vec_Type_By_Length (W, Left.Typ.Vec_El));
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Int =>
+            declare
+               Lw : constant Width := Left.Typ.W;
+               W : constant Width := 2 * Lw;
+               Rtype : Type_Acc;
+               L, R : Net;
+               N : Net;
+            begin
+               L := Synth_Sresize (Left, W, Left_Expr);
+               R := Synth_Sresize (Right, W, Right_Expr);
+               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
+               N := Build_Dyadic (Build_Context, Id_Smul, L, R);
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Rtype);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Int_Sgn =>
+            declare
+               Rw : constant Width := Right.Typ.W;
+               W : constant Width := 2 * Rw;
+               Rtype : Type_Acc;
+               L, R : Net;
+               N : Net;
+            begin
+               L := Synth_Sresize (Left, W, Left_Expr);
+               R := Synth_Sresize (Right, W, Right_Expr);
+               Rtype := Create_Vec_Type_By_Length (W, Right.Typ.Vec_El);
+               N := Build_Dyadic (Build_Context, Id_Smul, L, R);
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Rtype);
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
             declare
                W : constant Width := Left.Typ.W + Right.Typ.W;
+               Rtype : Type_Acc;
                L, R : Net;
                N : Net;
             begin
                L := Synth_Uresize (Left, W, Left_Expr);
                R := Synth_Uresize (Right, W, Right_Expr);
+               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
                N := Build_Dyadic (Build_Context, Id_Umul, L, R);
                Set_Location (N, Expr);
-               return Create_Value_Net
-                 (N, Create_Vec_Type_By_Length (W, Left.Typ.Vec_El));
+               return Create_Value_Net (N, Rtype);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
             declare
@@ -835,8 +866,24 @@ package body Synth.Oper is
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Nat_Uns =>
+            declare
+               Rw : constant Width := Right.Typ.W;
+               W : constant Width := 2 * Rw;
+               L1, R1 : Net;
+               Rtype : Type_Acc;
+               N : Net;
+            begin
+               L1 := Synth_Uresize (Left, W, Expr);
+               R1 := Synth_Uresize (Right, W, Expr);
+               Rtype := Create_Vec_Type_By_Length (W, Right.Typ.Vec_El);
+               N := Build_Dyadic (Ctxt, Id_Umul, L1, R1);
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Rtype);
+            end;
 
-         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
             declare
                Lw : constant Width := Left.Typ.W;
                W : constant Width := Width'Max (Lw, Right.Typ.W);
@@ -852,8 +899,25 @@ package body Synth.Oper is
                N := Build2_Uresize (Ctxt, N, Lw, Get_Location (Expr));
                return Create_Value_Net (N, Rtype);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Nat_Uns =>
+            declare
+               Rw : constant Width := Right.Typ.W;
+               W : constant Width := Width'Max (Left.Typ.W, Rw);
+               L1, R1 : Net;
+               Rtype : Type_Acc;
+               N : Net;
+            begin
+               L1 := Synth_Uresize (Left, W, Expr);
+               R1 := Synth_Uresize (Right, W, Expr);
+               Rtype := Create_Vec_Type_By_Length (Rw, Right.Typ.Vec_El);
+               N := Build_Dyadic (Ctxt, Id_Udiv, L1, R1);
+               Set_Location (N, Expr);
+               N := Build2_Uresize (Ctxt, N, Rw, Get_Location (Expr));
+               return Create_Value_Net (N, Rtype);
+            end;
 
-         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Int
+           | Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Sgn =>
             declare
                Lw : constant Width := Left.Typ.W;
                W : constant Width := Width'Max (Lw, Right.Typ.W);
@@ -867,6 +931,22 @@ package body Synth.Oper is
                N := Build_Dyadic (Build_Context, Id_Udiv, L1, R1);
                Set_Location (N, Expr);
                N := Build2_Sresize (Ctxt, N, Lw, Get_Location (Expr));
+               return Create_Value_Net (N, Rtype);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Int_Sgn =>
+            declare
+               Rw : constant Width := Right.Typ.W;
+               W : constant Width := Width'Max (Left.Typ.W, Rw);
+               L1, R1 : Net;
+               Rtype : Type_Acc;
+               N : Net;
+            begin
+               L1 := Synth_Sresize (Left, W, Expr);
+               R1 := Synth_Sresize (Right, W, Expr);
+               Rtype := Create_Vec_Type_By_Length (Rw, Right.Typ.Vec_El);
+               N := Build_Dyadic (Build_Context, Id_Udiv, L1, R1);
+               Set_Location (N, Expr);
+               N := Build2_Sresize (Ctxt, N, Rw, Get_Location (Expr));
                return Create_Value_Net (N, Rtype);
             end;
 
