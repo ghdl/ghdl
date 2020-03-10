@@ -1408,8 +1408,7 @@ package body Vhdl.Utils is
    end Get_Entity_Identifier_Of_Architecture;
 
    function Is_Component_Instantiation
-     (Inst : Iir_Component_Instantiation_Statement)
-     return Boolean is
+     (Inst : Iir_Component_Instantiation_Statement) return Boolean is
    begin
       case Get_Kind (Get_Instantiated_Unit (Inst)) is
          when Iir_Kinds_Denoting_Name =>
@@ -1423,8 +1422,7 @@ package body Vhdl.Utils is
    end Is_Component_Instantiation;
 
    function Is_Entity_Instantiation
-     (Inst : Iir_Component_Instantiation_Statement)
-     return Boolean is
+     (Inst : Iir_Component_Instantiation_Statement) return Boolean is
    begin
       case Get_Kind (Get_Instantiated_Unit (Inst)) is
          when Iir_Kinds_Denoting_Name =>

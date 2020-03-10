@@ -539,6 +539,19 @@ package body Vhdl.Configuration is
       end loop;
    end Check_Binding_Indication;
 
+   function Is_In_Vendor_Library (Inst : Iir) return Boolean
+   is
+      Parent : Iir;
+   begin
+      Parent := Strip_Denoting_Name (Inst);
+      loop
+         Parent := Get_Parent (Parent);
+         if Get_Kind (Parent) = Iir_Kind_Library_Declaration then
+            return Get_Vendor_Library_Flag (Parent);
+         end if;
+      end loop;
+   end Is_In_Vendor_Library;
+
    --  CONF is either a configuration specification or a component
    --   configuration.
    --  If ADD_DEFAULT is true, then the default configuration for the design
@@ -548,18 +561,22 @@ package body Vhdl.Configuration is
       Bind : constant Iir_Binding_Indication := Get_Binding_Indication (Conf);
       Aspect : Iir;
       Inst : Iir;
+      Comp : Iir;
    begin
       if Bind = Null_Iir then
          if Is_Warning_Enabled (Warnid_Binding) then
             Inst := Get_Nth_Element (Get_Instantiation_List (Conf), 0);
             Inst := Strip_Denoting_Name (Inst);
-            Report_Start_Group;
-            Warning_Msg_Elab (Warnid_Binding, Conf,
-                              "instance %i of component %i is not bound",
-                              (+Inst, +Get_Instantiated_Unit (Inst)));
-            Warning_Msg_Elab (Warnid_Binding, Current_Configuration,
-                              "(in %n)", +Current_Configuration);
-            Report_End_Group;
+            Comp := Get_Instantiated_Unit (Inst);
+            if not Is_In_Vendor_Library (Comp) then
+               Report_Start_Group;
+               Warning_Msg_Elab (Warnid_Binding, Conf,
+                                 "instance %i of component %i is not bound",
+                                 (+Inst, +Comp));
+               Warning_Msg_Elab (Warnid_Binding, Current_Configuration,
+                                 "(in %n)", +Current_Configuration);
+               Report_End_Group;
+            end if;
          end if;
          return;
       end if;

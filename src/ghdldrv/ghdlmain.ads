@@ -84,6 +84,12 @@ package Ghdlmain is
    --  Exec failed: either the program was not found, or failed.
    Exec_Error : exception;
 
+   --  Decode options from ARGS for command CMD after initializing CMD.
+   --  Return the index of the first non-option argument.
+   procedure Decode_Command_Options (Cmd : in out Command_Type'Class;
+                                     Args : Argument_List;
+                                     First_Arg : out Natural);
+
    --  Decode command CMD_NAME and options from ARGS.
    --  Return the index of the first non-option argument.
    procedure Decode_Command_Options (Cmd_Name : String;

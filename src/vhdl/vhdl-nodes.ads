@@ -1122,6 +1122,11 @@ package Vhdl.Nodes is
    --   Get/Set_Elab_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --  Set on vendor libraries to turn off warnings on unbounded instantiation.
+   --  The vendor libraries are those providing components/entities for
+   --  hard-macros.
+   --   Get/Set_Vendor_Library_Flag (Flag1)
 
    -- Iir_Kind_Component_Declaration (Medium)
    --
@@ -8012,6 +8017,10 @@ package Vhdl.Nodes is
    --  Field: Flag3
    function Get_Elab_Flag (Design : Iir) return Boolean;
    procedure Set_Elab_Flag (Design : Iir; Flag : Boolean);
+
+   --  Field: Flag1
+   function Get_Vendor_Library_Flag (Lib : Iir) return Boolean;
+   procedure Set_Vendor_Library_Flag (Lib : Iir; Flag : Boolean);
 
    --  Used only by configuration to mark a design unit as already inserted in
    --  the list of units.  Used to avoid double insertion.

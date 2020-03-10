@@ -19,6 +19,7 @@
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
 with Types; use Types;
+with Name_Table;
 with Ghdllocal; use Ghdllocal;
 with Ghdlcomp; use Ghdlcomp;
 with Ghdlmain; use Ghdlmain;
@@ -53,6 +54,8 @@ package body Ghdlsynth is
    type Out_Format is
      (Format_Default, Format_Raw, Format_Dump, Format_Vhdl, Format_None);
 
+   type Name_Id_Array is array (Natural range <>) of Name_Id;
+
    --  Command --synth
    type Command_Synth is new Command_Lib with record
       --  Control format of the output.
@@ -65,6 +68,9 @@ package body Ghdlsynth is
 
       --  If True, a failure is expected.  For tests.
       Expect_Failure : Boolean := False;
+
+      Nbr_Vendor_Libraries : Natural := 0;
+      Vendor_Libraries : Name_Id_Array (1 .. 8) := (others => No_Name_Id);
    end record;
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean;
@@ -98,6 +104,8 @@ package body Ghdlsynth is
    is
       pragma Assert (Option'First = 1);
    begin
+      Res := Option_Ok;
+
       if Option'Last > 3
         and then Option (2) = 'g'
         and then Is_Generic_Override_Option (Option)
@@ -107,45 +115,54 @@ package body Ghdlsynth is
          Cmd.Top_Encoding := Name_Hash;
       elsif Option = "--top-name=asis" then
          Cmd.Top_Encoding := Name_Asis;
+      elsif Option'Last > 17
+        and then Option (1 .. 17) = "--vendor-library="
+      then
+         if Cmd.Nbr_Vendor_Libraries >= Cmd.Vendor_Libraries'Last then
+            --  FIXME: use a table/vector ?
+            Errorout.Error_Msg_Option ("too many vendor libraries");
+            Res := Option_Err;
+         else
+            declare
+               Name : String := Option (18 .. Option'Last);
+               Err : Boolean;
+            begin
+               Vhdl.Scanner.Convert_Identifier (Name, Err);
+               if Err then
+                  Res := Option_Err;
+               else
+                  Cmd.Nbr_Vendor_Libraries := Cmd.Nbr_Vendor_Libraries + 1;
+                  Cmd.Vendor_Libraries (Cmd.Nbr_Vendor_Libraries) :=
+                    Name_Table.Get_Identifier (Name);
+               end if;
+            end;
+         end if;
       elsif Option = "--expect-failure" then
          Cmd.Expect_Failure := True;
-         Res := Option_Ok;
       elsif Option = "--disp-noinline" then
          Cmd.Disp_Inline := False;
-         Res := Option_Ok;
       elsif Option = "--disp-noid" then
          Cmd.Disp_Id := False;
-         Res := Option_Ok;
       elsif Option = "--out=raw" then
          Cmd.Oformat := Format_Raw;
-         Res := Option_Ok;
       elsif Option = "--out=dump" then
          Cmd.Oformat := Format_Dump;
-         Res := Option_Ok;
       elsif Option = "--out=none" then
          Cmd.Oformat := Format_None;
-         Res := Option_Ok;
       elsif Option = "--out=vhdl" then
          Cmd.Oformat := Format_Vhdl;
-         Res := Option_Ok;
       elsif Option = "-di" then
          Flag_Debug_Noinference := True;
-         Res := Option_Ok;
       elsif Option = "-dc" then
          Flag_Debug_Nocleanup := True;
-         Res := Option_Ok;
       elsif Option = "-dm" then
          Flag_Debug_Nomemory := True;
-         Res := Option_Ok;
       elsif Option = "-de" then
          Flag_Debug_Noexpand := True;
-         Res := Option_Ok;
       elsif Option = "-t" then
          Flag_Trace_Statements := True;
-         Res := Option_Ok;
       elsif Option = "-i" then
          Flag_Debug_Init := True;
-         Res := Option_Ok;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
@@ -153,8 +170,8 @@ package body Ghdlsynth is
 
    --  Init, analyze and configure.
    --  Return the top configuration.
-   function Ghdl_Synth_Configure (Init : Boolean; Args : Argument_List)
-                                 return Node
+   function Ghdl_Synth_Configure
+     (Init : Boolean; Cmd : Command_Synth; Args : Argument_List) return Node
    is
       use Vhdl.Errors;
       use Vhdl.Configuration;
@@ -195,6 +212,17 @@ package body Ghdlsynth is
          --  association.  They are handled directly.
          Vhdl.Canon.Canon_Flag_Inertial_Associations := False;
       end if;
+
+      --  Mark vendor libraries.
+      for I in 1 .. Cmd.Nbr_Vendor_Libraries loop
+         declare
+            Lib : Node;
+         begin
+            Lib := Libraries.Get_Library
+              (Cmd.Vendor_Libraries (I), No_Location);
+            Set_Vendor_Library_Flag (Lib, True);
+         end;
+      end loop;
 
       Flags.Flag_Elaborate_With_Outdated := E_Opt >= Args'First;
 
@@ -322,7 +350,7 @@ package body Ghdlsynth is
       use Vhdl.Configuration;
       Args : Argument_List (1 .. Argc);
       Res : Module;
-      Cmd : Command_Acc;
+      Cmd : Command_Synth;
       First_Arg : Natural;
       Config : Node;
       Inst : Synth_Instance_Acc;
@@ -337,22 +365,21 @@ package body Ghdlsynth is
       end loop;
 
       --  Find the command.  This is a little bit convoluted...
-      Decode_Command_Options ("--synth", Cmd, Args, First_Arg);
+      Decode_Command_Options (Cmd, Args, First_Arg);
 
       --  Do the real work!
       Config := Ghdl_Synth_Configure
-        (Init /= 0, Args (First_Arg .. Args'Last));
+        (Init /= 0, Cmd, Args (First_Arg .. Args'Last));
       if Config = Null_Iir then
          return No_Module;
       end if;
 
-      Synthesis.Synth_Design
-        (Config, Command_Synth (Cmd.all).Top_Encoding, Res, Inst);
+      Synthesis.Synth_Design (Config, Cmd.Top_Encoding, Res, Inst);
       if Res = No_Module then
          return No_Module;
       end if;
 
-      Disp_Design (Command_Synth (Cmd.all), Format_None, Res, Config, Inst);
+      Disp_Design (Cmd, Format_None, Res, Config, Inst);
 
       --  De-elaborate all packages, so that they could be re-used for
       --  synthesis of a second design.
@@ -382,7 +409,7 @@ package body Ghdlsynth is
       Inst : Synth_Instance_Acc;
       Config : Iir;
    begin
-      Config := Ghdl_Synth_Configure (True, Args);
+      Config := Ghdl_Synth_Configure (True, Cmd, Args);
 
       if Config = Null_Iir then
          if Cmd.Expect_Failure then

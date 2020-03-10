@@ -4857,6 +4857,22 @@ package body Vhdl.Nodes is
       Set_Flag3 (Design, Flag);
    end Set_Elab_Flag;
 
+   function Get_Vendor_Library_Flag (Lib : Iir) return Boolean is
+   begin
+      pragma Assert (Lib /= Null_Iir);
+      pragma Assert (Has_Vendor_Library_Flag (Get_Kind (Lib)),
+                     "no field Vendor_Library_Flag");
+      return Get_Flag1 (Lib);
+   end Get_Vendor_Library_Flag;
+
+   procedure Set_Vendor_Library_Flag (Lib : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Lib /= Null_Iir);
+      pragma Assert (Has_Vendor_Library_Flag (Get_Kind (Lib)),
+                     "no field Vendor_Library_Flag");
+      Set_Flag1 (Lib, Flag);
+   end Set_Vendor_Library_Flag;
+
    function Get_Configuration_Mark_Flag (Design : Iir) return Boolean is
    begin
       pragma Assert (Design /= Null_Iir);

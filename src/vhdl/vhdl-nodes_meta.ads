@@ -278,6 +278,7 @@ package Vhdl.Nodes_Meta is
       Field_Has_Signal_Flag,
       Field_Purity_State,
       Field_Elab_Flag,
+      Field_Vendor_Library_Flag,
       Field_Configuration_Mark_Flag,
       Field_Configuration_Done_Flag,
       Field_Index_Constraint_Flag,
@@ -841,6 +842,7 @@ package Vhdl.Nodes_Meta is
    function Has_Has_Signal_Flag (K : Iir_Kind) return Boolean;
    function Has_Purity_State (K : Iir_Kind) return Boolean;
    function Has_Elab_Flag (K : Iir_Kind) return Boolean;
+   function Has_Vendor_Library_Flag (K : Iir_Kind) return Boolean;
    function Has_Configuration_Mark_Flag (K : Iir_Kind) return Boolean;
    function Has_Configuration_Done_Flag (K : Iir_Kind) return Boolean;
    function Has_Index_Constraint_Flag (K : Iir_Kind) return Boolean;

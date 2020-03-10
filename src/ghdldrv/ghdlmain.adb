@@ -289,14 +289,12 @@ package body Ghdlmain is
       return 0;
    end Index;
 
-   --  Decode command CMD_NAME and options from ARGS.
-   --  Return the index of the first non-option argument.
-   procedure Decode_Command_Options (Cmd_Name : String;
-                                     Cmd : out Command_Acc;
-                                     Args : Argument_List;
-                                     First_Arg : out Natural)
+   --  Decode command CMD_NAME and return the command_type.
+   --  If the command is not known, emit an error message and
+   --  raise Option_Error.
+   function Find_Command_With_Error (Cmd_Name : String) return Command_Acc
    is
-      Arg_Index : Natural;
+      Cmd : Command_Acc;
    begin
       --  Decode command.
       Cmd := Find_Command (Cmd_Name);
@@ -305,7 +303,16 @@ package body Ghdlmain is
          raise Option_Error;
       end if;
 
-      Init (Cmd.all);
+      return Cmd;
+   end Find_Command_With_Error;
+
+   procedure Decode_Command_Options (Cmd : in out Command_Type'Class;
+                                     Args : Argument_List;
+                                     First_Arg : out Natural)
+   is
+      Arg_Index : Natural;
+   begin
+      Init (Cmd);
 
       --  Decode options.
 
@@ -324,11 +331,10 @@ package body Ghdlmain is
                   raise Option_Error;
                end if;
 
-               Decode_Option (Cmd.all, Arg.all, "", Res);
+               Decode_Option (Cmd, Arg.all, "", Res);
                case Res is
                   when Option_Unknown =>
-                     Error ("unknown option '" & Arg.all & "' for command '"
-                            & Cmd_Name & "'");
+                     Error ("unknown option '" & Arg.all & "'");
                      raise Option_Error;
                   when Option_Err =>
                      raise Option_Error;
@@ -341,7 +347,7 @@ package body Ghdlmain is
                         raise Option_Error;
                      end if;
                      Decode_Option
-                       (Cmd.all, Arg.all, Args (Arg_Index + 1).all, Res);
+                       (Cmd, Arg.all, Args (Arg_Index + 1).all, Res);
                      if Res /= Option_Arg then
                         raise Program_Error;
                      end if;
@@ -362,6 +368,15 @@ package body Ghdlmain is
       if First_Arg = 0 then
          First_Arg := Args'Last + 1;
       end if;
+   end Decode_Command_Options;
+
+   procedure Decode_Command_Options (Cmd_Name : String;
+                                     Cmd : out Command_Acc;
+                                     Args : Argument_List;
+                                     First_Arg : out Natural) is
+   begin
+      Cmd := Find_Command_With_Error (Cmd_Name);
+      Decode_Command_Options (Cmd.all, Args, First_Arg);
    end Decode_Command_Options;
 
    Is_Windows : constant Boolean :=

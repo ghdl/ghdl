@@ -1537,7 +1537,8 @@ package body Vhdl.Scanner is
 
    procedure Convert_Identifier (Str : in out String; Err : out Boolean)
    is
-      pragma Assert (Str'First = 1);
+      F : constant Integer := Str'First;
+
       procedure Error_Bad is
       begin
          Error_Msg_Option ("bad character in identifier");
@@ -1557,14 +1558,14 @@ package body Vhdl.Scanner is
          return;
       end if;
 
-      if Str (1) = '\' then
+      if Str (F) = '\' then
          --  Extended identifier.
          if Vhdl_Std = Vhdl_87 then
             Error_Msg_Option ("extended identifiers not allowed in vhdl87");
             return;
          end if;
 
-         if Str'Length < 3 then
+         if Str'Last < F + 2 then
             Error_Msg_Option ("extended identifier is too short");
             return;
          end if;
@@ -1572,7 +1573,7 @@ package body Vhdl.Scanner is
             Error_Msg_Option ("extended identifier must finish with a '\'");
             return;
          end if;
-         for I in 2 .. Str'Last - 1 loop
+         for I in F + 1 .. Str'Last - 1 loop
             C := Str (I);
             case Characters_Kind (C) is
                when Format_Effector =>
@@ -1595,7 +1596,7 @@ package body Vhdl.Scanner is
          end loop;
       else
          --  Identifier
-         for I in 1 .. Str'Length loop
+         for I in F .. Str'Last loop
             C := Str (I);
             case Characters_Kind (C) is
                when Upper_Case_Letter =>

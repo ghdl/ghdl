@@ -2265,6 +2265,10 @@ Get_Elab_Flag = libghdl.vhdl__nodes__get_elab_flag
 
 Set_Elab_Flag = libghdl.vhdl__nodes__set_elab_flag
 
+Get_Vendor_Library_Flag = libghdl.vhdl__nodes__get_vendor_library_flag
+
+Set_Vendor_Library_Flag = libghdl.vhdl__nodes__set_vendor_library_flag
+
 Get_Configuration_Mark_Flag = libghdl.vhdl__nodes__get_configuration_mark_flag
 
 Set_Configuration_Mark_Flag = libghdl.vhdl__nodes__set_configuration_mark_flag
