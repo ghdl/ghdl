@@ -151,8 +151,12 @@ package body Netlists.Expands is
          Res_Arr (P) := Get_Driver (Inp);
          P := P + 1;
 
-         Disconnect (Inp);
-         Remove_Instance (Inst1);
+         if not Is_Connected (Get_Output (Inst1, 0)) then
+            --  A memidx can be shared between several insert/extract.
+            --  FIXME: what about memidx ?
+            Disconnect (Inp);
+            Remove_Instance (Inst1);
+         end if;
 
          exit when Inst1 = Inst;
       end loop;

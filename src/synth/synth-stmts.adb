@@ -537,14 +537,18 @@ package body Synth.Stmts is
    is
       N : Net;
    begin
-      if Targ.Kind = Target_Simple then
-         N := Build2_Extract (Get_Build (Syn_Inst),
-                              Get_Net (Targ.Obj), Targ.Off, Targ.Targ_Type.W);
-         return Create_Value_Net (N, Targ.Targ_Type);
-      else
-         return Synth_Read_Memory (Syn_Inst, Targ.Obj, Targ.Off, No_Net,
-                                   Targ.Targ_Type, Loc);
-      end if;
+      case Targ.Kind is
+         when Target_Simple =>
+            N := Build2_Extract
+              (Get_Build (Syn_Inst),
+               Get_Net (Targ.Obj), Targ.Off, Targ.Targ_Type.W);
+            return Create_Value_Net (N, Targ.Targ_Type);
+         when Target_Aggregate =>
+            raise Internal_Error;
+         when Target_Memory =>
+            return Synth_Read_Memory (Syn_Inst, Targ.Mem_Obj, Targ.Mem_Moff,
+                                      Targ.Mem_Voff, Targ.Targ_Type, Loc);
+      end case;
    end Synth_Read;
 
    --  Concurrent or sequential simple signal assignment
@@ -1505,9 +1509,6 @@ package body Synth.Stmts is
                Actual := Get_Actual (Assoc);
                Info := Synth_Target (Caller_Inst, Actual);
 
-               if Info.Kind /= Target_Simple then
-                  raise Internal_Error;
-               end if;
                case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter))
                   is
                   when Iir_Kind_Interface_Constant_Declaration =>
@@ -1516,7 +1517,9 @@ package body Synth.Stmts is
                      --  Always pass by value.
                      Nbr_Inout := Nbr_Inout + 1;
                      Infos (Nbr_Inout) := Info;
-                     if Is_Static (Info.Obj) then
+                     if Info.Kind = Target_Simple
+                       and then Is_Static (Info.Obj)
+                     then
                         if Info.Off /= 0 then
                            raise Internal_Error;
                         end if;
@@ -1526,6 +1529,9 @@ package body Synth.Stmts is
                      end if;
                   when Iir_Kind_Interface_Signal_Declaration =>
                      --  Always pass by reference (use an alias).
+                     if Info.Kind /= Target_Simple then
+                        raise Internal_Error;
+                     end if;
                      Val := Create_Value_Alias
                        (Info.Obj, Info.Off, Info.Targ_Type);
                   when Iir_Kind_Interface_File_Declaration =>
