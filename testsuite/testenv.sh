@@ -109,6 +109,16 @@ synth()
     "$GHDL" --synth $GHDL_STD_FLAGS $GHDL_FLAGS $@
 }
 
+synth_failure ()
+{
+   echo "try to synthesize $@"
+   # for arg in $@; do echo "arg: $arg"; done
+   if ! "$GHDL" --synth --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS "$@" ; then
+     echo "Failure expected"
+     return 1
+   fi
+}
+
 # Synthesis of a single file and analyze the result
 synth_analyze()
 {
