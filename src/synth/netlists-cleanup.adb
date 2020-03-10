@@ -253,6 +253,7 @@ package body Netlists.Cleanup is
          Last_Unused : Instance;
       begin
          First_Unused := No_Instance;
+         Last_Unused := No_Instance;
 
          Extract_All_Instances (M, Inst);
          --  But keep the self-instance.
