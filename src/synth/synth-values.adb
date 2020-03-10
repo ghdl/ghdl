@@ -142,6 +142,8 @@ package body Synth.Values is
             return True;
          when Value_Const =>
             return Is_Equal (L.C_Val, R.C_Val);
+         when Value_Float =>
+            return L.Fp = R.Fp;
          when others =>
             --  TODO.
             raise Internal_Error;
