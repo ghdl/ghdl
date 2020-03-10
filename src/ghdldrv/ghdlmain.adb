@@ -370,15 +370,6 @@ package body Ghdlmain is
       end if;
    end Decode_Command_Options;
 
-   procedure Decode_Command_Options (Cmd_Name : String;
-                                     Cmd : out Command_Acc;
-                                     Args : Argument_List;
-                                     First_Arg : out Natural) is
-   begin
-      Cmd := Find_Command_With_Error (Cmd_Name);
-      Decode_Command_Options (Cmd.all, Args, First_Arg);
-   end Decode_Command_Options;
-
    Is_Windows : constant Boolean :=
      Default_Paths.Shared_Library_Extension = ".dll";
 
@@ -486,8 +477,8 @@ package body Ghdlmain is
          Cmd : Command_Acc;
          First_Arg : Natural;
       begin
-         Decode_Command_Options (Args (1).all, Cmd,
-                                 Args (2 .. Args'Last), First_Arg);
+         Cmd := Find_Command_With_Error (Args (1).all);
+         Decode_Command_Options (Cmd.all, Args (2 .. Args'Last), First_Arg);
 
          --  Set before running the action, so that it can be changed.
          Set_Exit_Status (Success);

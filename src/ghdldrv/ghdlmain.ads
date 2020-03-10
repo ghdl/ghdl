@@ -90,13 +90,6 @@ package Ghdlmain is
                                      Args : Argument_List;
                                      First_Arg : out Natural);
 
-   --  Decode command CMD_NAME and options from ARGS.
-   --  Return the index of the first non-option argument.
-   procedure Decode_Command_Options (Cmd_Name : String;
-                                     Cmd : out Command_Acc;
-                                     Args : Argument_List;
-                                     First_Arg : out Natural);
-
    procedure Main;
 
    --  Additionnal one-line message displayed by the --version command,
