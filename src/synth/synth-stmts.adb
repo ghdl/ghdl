@@ -566,6 +566,7 @@ package body Synth.Stmts is
       Targ : Target_Info;
       Cond : Node;
       Cwf : Node;
+      Inp : Input;
       Val, Cond_Val : Value_Acc;
       First, Last : Net;
       V : Net;
@@ -573,6 +574,7 @@ package body Synth.Stmts is
       Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
       Last := No_Net;
       Cwf := Get_Conditional_Waveform_Chain (Stmt);
+      Cond := Null_Node;
       while Cwf /= Null_Node loop
          Val := Synth_Waveform
            (Syn_Inst, Get_Waveform_Chain (Cwf), Targ.Targ_Type);
@@ -587,13 +589,23 @@ package body Synth.Stmts is
          end if;
 
          if Last /= No_Net then
-            Connect (Get_Input (Get_Net_Parent (Last), 1), V);
+            Inp := Get_Input (Get_Net_Parent (Last), 1);
+            Connect (Inp, V);
          else
             First := V;
          end if;
          Last := V;
          Cwf := Get_Chain (Cwf);
       end loop;
+      if Cond /= Null_Node then
+         pragma Assert (Last /= No_Net);
+         Inp := Get_Input (Get_Net_Parent (Last), 1);
+         if Get_Driver (Inp) = No_Net then
+            --  No else.
+            Val := Synth_Read (Syn_Inst, Targ, Stmt);
+            Connect (Inp, Get_Net (Val));
+         end if;
+      end if;
       Val := Create_Value_Net (First, Targ.Targ_Type);
       Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
    end Synth_Conditional_Signal_Assignment;
