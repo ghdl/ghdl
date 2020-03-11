@@ -731,6 +731,28 @@ package body Synth.Expr is
                                            Left => Int64 (B.Left),
                                            Right => Int64 (B.Right));
             end;
+         when Iir_Kind_Reverse_Range_Array_Attribute =>
+            declare
+               B : Bound_Type;
+               T : Int32;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Bound);
+               --  Reverse
+               case B.Dir is
+                  when Iir_To =>
+                     B.Dir := Iir_Downto;
+                  when Iir_Downto =>
+                     B.Dir := Iir_To;
+               end case;
+               T := B.Right;
+               B.Right := B.Left;
+               B.Left := T;
+
+               Rng := Discrete_Range_Type'(Dir => B.Dir,
+                                           Is_Signed => True,
+                                           Left => Int64 (B.Left),
+                                           Right => Int64 (B.Right));
+            end;
          when others =>
             Error_Kind ("synth_discrete_range", Bound);
       end case;
