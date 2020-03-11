@@ -1252,7 +1252,7 @@ package body Synth.Oper is
          when others =>
             Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
                                & Iir_Predefined_Functions'Image (Def));
-            raise Internal_Error;
+            return null;
       end case;
    end Synth_Dyadic_Operation;
 

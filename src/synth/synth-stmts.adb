@@ -2625,7 +2625,7 @@ package body Synth.Stmts is
                Lib := Get_Library (Get_Design_File (Unit));
                if Get_Identifier (Lib) = Std_Names.Name_Ieee then
                   Error_Msg_Synth
-                    (+Expr, "unhandled call to an ieee function");
+                    (+Expr, "unhandled call to ieee function %i", +Imp);
                   Set_Error (Syn_Inst);
                   return null;
                end if;
