@@ -337,6 +337,7 @@ package body Vhdl.Sem_Lib is
    is
       Prev_Nbr_Errors : Natural;
       Warnings : Warnings_Setting;
+      Error : Boolean;
    begin
       if Get_Date (Design_Unit) = Date_Replacing then
          Error_Msg_Sem (+Loc, "circular reference of %n", +Design_Unit);
@@ -348,9 +349,16 @@ package body Vhdl.Sem_Lib is
       Prev_Nbr_Errors := Errorout.Nbr_Errors;
       Errorout.Nbr_Errors := 0;
 
+      --  Disable all warnings.  Warnings are emitted only when the unit
+      --  is analyzed.
+      Save_Warnings_Setting (Warnings);
+      Disable_All_Warnings;
+
       if Get_Date_State (Design_Unit) = Date_Disk then
          Load_Parse_Design_Unit (Design_Unit, Loc);
       end if;
+
+      Error := False;
 
       if Get_Date_State (Design_Unit) = Date_Parse then
          --  Analyze the design unit.
@@ -364,16 +372,8 @@ package body Vhdl.Sem_Lib is
          --  Avoid infinite recursion, if the unit is self-referenced.
          Set_Date_State (Design_Unit, Date_Analyze);
 
-         --  Disable all warnings.  Warnings are emitted only when the unit
-         --  is analyzed.
-         Save_Warnings_Setting (Warnings);
-         Disable_All_Warnings;
-
          --  Analyze unit.
          Finish_Compilation (Design_Unit);
-
-         --  Restore warnings.
-         Restore_Warnings_Setting (Warnings);
 
          --  Check if one of its dependency makes this unit obsolete.
          --  FIXME: to do when the dependency is added ?
@@ -381,13 +381,20 @@ package body Vhdl.Sem_Lib is
            and then Check_Obsolete_Dependence (Design_Unit, Loc)
          then
             Set_Date (Design_Unit, Date_Obsolete);
-            Errorout.Nbr_Errors := Prev_Nbr_Errors + Errorout.Nbr_Errors;
-            return;
+            Error := True;
          end if;
       end if;
 
       --  Restore nbr_errors (accumulate).
       Errorout.Nbr_Errors := Prev_Nbr_Errors + Errorout.Nbr_Errors;
+
+      --  Restore warnings.
+      Restore_Warnings_Setting (Warnings);
+
+      if Error then
+         --  Return now in case of analyze error.
+         return;
+      end if;
 
       case Get_Date (Design_Unit) is
          when Date_Parsed =>
