@@ -1630,6 +1630,9 @@ package body Synth.Expr is
       Val : Value_Acc;
    begin
       Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
+      if Val = null then
+         return null;
+      end if;
       Strip_Const (Val);
       case Get_Kind (Conv_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
