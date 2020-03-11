@@ -248,6 +248,20 @@ package body Netlists.Folds is
       end if;
    end Build2_Sresize;
 
+   function Build2_Resize (Ctxt : Context_Acc;
+                           I : Net;
+                           W : Width;
+                           Is_Signed : Boolean;
+                           Loc : Location_Type := No_Location)
+                          return Net is
+   begin
+      if Is_Signed then
+         return Build2_Sresize (Ctxt, I, W, Loc);
+      else
+         return Build2_Uresize (Ctxt, I, W, Loc);
+      end if;
+   end Build2_Resize;
+
    function Build2_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net is
    begin

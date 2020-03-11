@@ -23,7 +23,6 @@ with Types_Utils; use Types_Utils;
 with Mutils;
 
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
-with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 
@@ -1369,6 +1368,27 @@ package body Synth.Oper is
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Param1 : Node;
       Param2 : Node;
+
+      --  Resize PARAM1 to PARAM2 bit according to IS_SIGNED.
+      function Synth_Conv_Vector (Is_Signed : Boolean) return Value_Acc
+      is
+         Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
+         Size_Val : Value_Acc;
+         Size : Width;
+         Arg_Net : Net;
+      begin
+         Size_Val := Get_Value (Subprg_Inst, Param2);
+         if not Is_Static (Size_Val) then
+            Error_Msg_Synth (+Expr, "size parameter must be constant");
+            return null;
+         end if;
+         Size := Uns32 (Strip_Const (Size_Val).Scal);
+         Arg_Net := Get_Net (Arg);
+         Arg_Net := Build2_Resize (Ctxt, Arg_Net, Size, Is_Signed,
+                                   Get_Location (Expr));
+         return Create_Value_Net
+           (Arg_Net, Create_Vec_Type_By_Length (Size, Logic_Type));
+      end Synth_Conv_Vector;
    begin
       Param1 := Inter_Chain;
       if Param1 /= Null_Node then
@@ -1424,51 +1444,17 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
-            declare
-               Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-               Size : Value_Acc;
-               Arg_Net : Net;
-            begin
-               Size := Get_Value (Subprg_Inst, Param2);
-               if not Is_Static (Size) then
-                  Error_Msg_Synth (+Expr, "to_unsigned size must be constant");
-                  return null;
-               end if;
-               Strip_Const (Size);
-               Arg_Net := Get_Net (Arg);
-               return Create_Value_Net
-                 (Build2_Uresize (Ctxt, Arg_Net, Uns32 (Size.Scal),
-                                  Get_Location (Expr)),
-                  Create_Vec_Type_By_Length (Uns32 (Size.Scal),
-                                             Logic_Type));
-            end;
-         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn =>
-            declare
-               Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-               Size : Value_Acc;
-               Arg_Net : Net;
-            begin
-               Size := Get_Value (Subprg_Inst, Param2);
-               if not Is_Static (Size) then
-                  Error_Msg_Synth (+Expr, "to_signed size must be constant");
-                  return null;
-               end if;
-               Strip_Const (Size);
-               Arg_Net := Get_Net (Arg);
-               return Create_Value_Net
-                 (Build2_Sresize (Ctxt, Arg_Net, Uns32 (Size.Scal),
-                                  Get_Location (Expr)),
-                  Create_Vec_Type_By_Length (Uns32 (Size.Scal),
-                                             Logic_Type));
-            end;
+            return Synth_Conv_Vector (False);
+         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
+            return Synth_Conv_Vector (True);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
             declare
                Int_Type : constant Type_Acc :=
-                 Get_Value_Type (Subprg_Inst,
-                                 Vhdl.Std_Package.Integer_Subtype_Definition);
+                 Get_Value_Type (Subprg_Inst, Get_Type (Imp));
             begin
                return Create_Value_Net
                  (Synth_Uresize (Get_Net (Get_Value (Subprg_Inst, Param1)),

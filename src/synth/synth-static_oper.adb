@@ -808,7 +808,8 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             return Eval_To_Vector
               (Uns64 (Param1.Scal), Param2.Scal, Res_Typ);
-         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
             return Eval_To_Vector
               (To_Uns64 (Param1.Scal), Param2.Scal, Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat

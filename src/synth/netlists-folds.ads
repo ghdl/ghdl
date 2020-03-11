@@ -58,6 +58,14 @@ package Netlists.Folds is
                             Loc : Location_Type := No_Location)
                            return Net;
 
+   --  If IS_SIGNED is true, this is Build2_Sresize, otherwise Build2_Uresize.
+   function Build2_Resize (Ctxt : Context_Acc;
+                            I : Net;
+                            W : Width;
+                            Is_Signed : Boolean;
+                            Loc : Location_Type := No_Location)
+                          return Net;
+
    --  Same as Build_Extract, but return I iff extract all the bits.
    function Build2_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
