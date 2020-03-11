@@ -1661,8 +1661,13 @@ package body Synth.Expr is
                when others =>
                   Error_Msg_Synth
                     (+Conv, "unhandled type conversion (to array)");
-                  return Val;
+                  return null;
             end case;
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
+            pragma Assert (Get_Base_Type (Get_Type (Expr))
+                             = Get_Base_Type (Conv_Type));
+            return Val;
          when others =>
             Error_Msg_Synth (+Conv, "unhandled type conversion");
             return null;
