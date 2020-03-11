@@ -738,11 +738,12 @@ package Std_Names is
    Name_Conv_Signed        : constant Name_Id := Name_First_Ieee_Name + 025;
    Name_Conv_Unsigned      : constant Name_Id := Name_First_Ieee_Name + 026;
    Name_Conv_Integer       : constant Name_Id := Name_First_Ieee_Name + 027;
-   Name_Ceil               : constant Name_Id := Name_First_Ieee_Name + 028;
-   Name_Round              : constant Name_Id := Name_First_Ieee_Name + 029;
-   Name_Log2               : constant Name_Id := Name_First_Ieee_Name + 030;
-   Name_Sin                : constant Name_Id := Name_First_Ieee_Name + 031;
-   Name_Cos                : constant Name_Id := Name_First_Ieee_Name + 032;
+   Name_Conv_Std_Logic_Vector : constant Name_Id := Name_First_Ieee_Name + 028;
+   Name_Ceil               : constant Name_Id := Name_First_Ieee_Name + 029;
+   Name_Round              : constant Name_Id := Name_First_Ieee_Name + 030;
+   Name_Log2               : constant Name_Id := Name_First_Ieee_Name + 031;
+   Name_Sin                : constant Name_Id := Name_First_Ieee_Name + 032;
+   Name_Cos                : constant Name_Id := Name_First_Ieee_Name + 033;
    Name_Last_Ieee_Name     : constant Name_Id := Name_Cos;
 
    Name_First_Synthesis    : constant Name_Id := Name_Last_Ieee_Name + 1;

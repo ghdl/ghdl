@@ -1405,6 +1405,10 @@ class Iir_Predefined:
     Ieee_Std_Logic_Arith_Conv_Integer_Uns = 422
     Ieee_Std_Logic_Arith_Conv_Integer_Sgn = 423
     Ieee_Std_Logic_Arith_Conv_Integer_Log = 424
+    Ieee_Std_Logic_Arith_Conv_Vector_Int = 425
+    Ieee_Std_Logic_Arith_Conv_Vector_Uns = 426
+    Ieee_Std_Logic_Arith_Conv_Vector_Sgn = 427
+    Ieee_Std_Logic_Arith_Conv_Vector_Log = 428
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location

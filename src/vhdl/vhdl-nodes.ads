@@ -5746,7 +5746,12 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Int,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Sgn,
-      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log,
+
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Log
      );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.

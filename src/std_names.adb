@@ -655,6 +655,7 @@ package body Std_Names is
       Def ("conv_signed",        Name_Conv_Signed);
       Def ("conv_unsigned",      Name_Conv_Unsigned);
       Def ("conv_integer",       Name_Conv_Integer);
+      Def ("conv_std_logic_vector", Name_Conv_Std_Logic_Vector);
       Def ("ceil",               Name_Ceil);
       Def ("round",              Name_Round);
       Def ("log2",               Name_Log2);

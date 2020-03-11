@@ -45,6 +45,12 @@ package body Vhdl.Ieee.Std_Logic_Arith is
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Int,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log);
 
+   Conv_Vec_Patterns : constant Conv_Pattern_Type :=
+     (Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Log);
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg : Iir_Package_Declaration)
@@ -152,6 +158,8 @@ package body Vhdl.Ieee.Std_Logic_Arith is
                   case Get_Identifier (Decl) is
                      when Name_Conv_Unsigned =>
                         Def := Handle_Conv (Conv_Uns_Patterns);
+                     when Name_Conv_Std_Logic_Vector =>
+                        Def := Handle_Conv (Conv_Vec_Patterns);
                      when others =>
                         null;
                   end case;
