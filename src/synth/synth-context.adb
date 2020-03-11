@@ -61,6 +61,7 @@ package body Synth.Context is
 
       Res := new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
                                       Is_Const => False,
+                                      Is_Error => False,
                                       Base => Base,
                                       Name => No_Sname,
                                       Block_Scope => Global_Info,
@@ -96,6 +97,7 @@ package body Synth.Context is
 
       Res := new Synth_Instance_Type'(Max_Objs => Info.Nbr_Objects,
                                       Is_Const => False,
+                                      Is_Error => False,
                                       Base => Parent.Base,
                                       Name => Name,
                                       Block_Scope => Scope,
@@ -134,6 +136,16 @@ package body Synth.Context is
       Base.Bit1 := Build_Const_UB32 (Base.Builder, 1, 1);
       Inst.Base := Base;
    end Set_Instance_Module;
+
+   function Is_Error (Inst : Synth_Instance_Acc) return Boolean is
+   begin
+      return Inst.Is_Error;
+   end Is_Error;
+
+   procedure Set_Error (Inst : Synth_Instance_Acc) is
+   begin
+      Inst.Is_Error := True;
+   end Set_Error;
 
    function Get_Instance_Module (Inst : Synth_Instance_Acc) return Module is
    begin

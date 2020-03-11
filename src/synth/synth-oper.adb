@@ -573,9 +573,15 @@ package body Synth.Oper is
       end Synth_Rotation;
    begin
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
+      if Left = null then
+         return null;
+      end if;
       Left := Synth_Subtype_Conversion (Left, Left_Typ, False, Expr);
       Strip_Const (Left);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
+      if Right = null then
+         return null;
+      end if;
       Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
       Strip_Const (Right);
 

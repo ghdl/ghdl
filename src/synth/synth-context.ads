@@ -52,6 +52,11 @@ package Synth.Context is
                           return Synth_Instance_Acc;
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
 
+   function Is_Error (Inst : Synth_Instance_Acc) return Boolean;
+   pragma Inline (Is_Error);
+
+   procedure Set_Error (Inst : Synth_Instance_Acc);
+
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
    pragma Inline (Get_Sname);
 
@@ -132,6 +137,10 @@ private
 
    type Synth_Instance_Type (Max_Objs : Object_Slot_Type) is limited record
       Is_Const : Boolean;
+
+      --  True if a fatal error has been detected that aborts the synthesis
+      --  of this instance.
+      Is_Error : Boolean;
 
       Base : Base_Instance_Acc;
 

@@ -94,6 +94,9 @@ package body Synth.Stmts is
                            Offset : Uns32;
                            Loc : Source.Syn_Src) is
    begin
+      if Val = null then
+         return;
+      end if;
       Phi_Assign (Build_Context, Wid,
                   Get_Net (Synth_Subtype_Conversion (Val, Typ, False, Loc)),
                   Offset);
@@ -572,6 +575,7 @@ package body Synth.Stmts is
       Cwf : Node;
       Inp : Input;
       Val, Cond_Val : Value_Acc;
+      Cond_Net : Net;
       First, Last : Net;
       V : Net;
    begin
@@ -586,9 +590,13 @@ package body Synth.Stmts is
          Cond := Get_Condition (Cwf);
          if Cond /= Null_Node then
             Cond_Val := Synth_Expression (Syn_Inst, Cond);
-            V := Build_Mux2 (Build_Context,
-                             Get_Net (Cond_Val),
-                             No_Net, V);
+            if Cond_Val = null then
+               Cond_Net := Build_Const_UB32 (Build_Context, 0, 1);
+            else
+               Cond_Net := Get_Net (Cond_Val);
+            end if;
+
+            V := Build_Mux2 (Build_Context, Cond_Net, No_Net, V);
             Set_Location (V, Cwf);
          end if;
 
@@ -1541,6 +1549,11 @@ package body Synth.Stmts is
                end case;
          end case;
 
+         if Val = null then
+            Set_Error (Subprg_Inst);
+            return;
+         end if;
+
          --  FIXME: conversion only for constants, reshape for all.
          Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
 
@@ -1716,21 +1729,26 @@ package body Synth.Stmts is
       Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
 
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+      if not Is_Error (C.Inst) then
+         Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
+      end if;
 
-      Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
-
-      if Is_Func then
-         if C.Nbr_Ret = 0 then
-            raise Internal_Error;
-         elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value) then
-            Res := C.Ret_Value;
-         else
-            Res := Create_Value_Net
-              (Get_Current_Value (Build_Context, C.W_Val), C.Ret_Value.Typ);
-         end if;
-      else
+      if Is_Error (C.Inst) then
          Res := null;
-         Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
+      else
+         if Is_Func then
+            if C.Nbr_Ret = 0 then
+               raise Internal_Error;
+            elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value) then
+               Res := C.Ret_Value;
+            else
+               Res := Create_Value_Net
+                 (Get_Current_Value (Build_Context, C.W_Val), C.Ret_Value.Typ);
+            end if;
+         else
+            Res := null;
+            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
+         end if;
       end if;
 
       Pop_Phi (Subprg_Phi);
@@ -1821,18 +1839,22 @@ package body Synth.Stmts is
                                  New_Internal_Name (Build_Context));
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
 
-      if not Is_Func then
-         if Get_Purity_State (Imp) /= Pure then
-            Set_Instance_Const (Sub_Inst, False);
-         end if;
-      end if;
-
-      if Get_Instance_Const (Sub_Inst) then
-         Res := Synth_Static_Subprogram_Call
-           (Syn_Inst, Sub_Inst, Call, Init, Infos);
+      if Is_Error (Sub_Inst) then
+         Res := null;
       else
-         Res := Synth_Dynamic_Subprogram_Call
-           (Syn_Inst, Sub_Inst, Call, Init, Infos);
+         if not Is_Func then
+            if Get_Purity_State (Imp) /= Pure then
+               Set_Instance_Const (Sub_Inst, False);
+            end if;
+         end if;
+
+         if Get_Instance_Const (Sub_Inst) then
+            Res := Synth_Static_Subprogram_Call
+              (Syn_Inst, Sub_Inst, Call, Init, Infos);
+         else
+            Res := Synth_Dynamic_Subprogram_Call
+              (Syn_Inst, Sub_Inst, Call, Init, Infos);
+         end if;
       end if;
 
       Free_Instance (Sub_Inst);
@@ -2350,6 +2372,11 @@ package body Synth.Stmts is
       if Expr /= Null_Node then
          --  Return in function.
          Val := Synth_Expression_With_Type (C.Inst, Expr, C.Ret_Typ);
+         if Val = null then
+            Set_Error (C.Inst);
+            return;
+         end if;
+
          Val := Synth_Subtype_Conversion (Val, C.Ret_Typ, True, Stmt);
 
          if C.Nbr_Ret = 0 then
@@ -2599,7 +2626,8 @@ package body Synth.Stmts is
                if Get_Identifier (Lib) = Std_Names.Name_Ieee then
                   Error_Msg_Synth
                     (+Expr, "unhandled call to an ieee function");
-                  raise Internal_Error;
+                  Set_Error (Syn_Inst);
+                  return null;
                end if;
             end if;
          end if;
