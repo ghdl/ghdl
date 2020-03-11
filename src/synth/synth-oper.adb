@@ -1070,6 +1070,7 @@ package body Synth.Oper is
             --  ">" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ugt, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int
            | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Nat =>
             --  ">" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Ugt, Expr_Typ);

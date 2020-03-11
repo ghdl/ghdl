@@ -54,6 +54,18 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Int_Slv,
       others => Iir_Predefined_None);
 
+   Gt_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Int_Slv,
+      others => Iir_Predefined_None);
+
+   Ge_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Int_Slv,
+      others => Iir_Predefined_None);
+
    Add_Uns_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int,
@@ -174,6 +186,10 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
                   Res := Handle_Binary (Lt_Patterns, None_Patterns);
                when Name_Op_Less_Equal =>
                   Res := Handle_Binary (Le_Patterns, None_Patterns);
+               when Name_Op_Greater =>
+                  Res := Handle_Binary (Gt_Patterns, None_Patterns);
+               when Name_Op_Greater_Equal =>
+                  Res := Handle_Binary (Ge_Patterns, None_Patterns);
                when Name_Op_Plus =>
                   Res := Handle_Binary (Add_Uns_Patterns, Add_Sgn_Patterns);
                when Name_Op_Minus =>
