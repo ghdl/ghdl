@@ -376,7 +376,8 @@ package body Trans.Chap9 is
       use PSL.Nodes;
    begin
       case Get_Kind (Expr) is
-         when N_HDL_Expr =>
+         when N_HDL_Bool
+           | N_HDL_Expr =>
             declare
                E     : constant Iir := Get_HDL_Node (Expr);
                Rtype : constant Iir := Get_Base_Type (Get_Type (E));

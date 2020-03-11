@@ -1959,7 +1959,8 @@ package body Vhdl.Prints is
             end;
          when N_Name_Decl =>
             Disp_Ident (Ctxt, Get_Identifier (N));
-         when N_HDL_Expr =>
+         when N_HDL_Expr
+           | N_HDL_Bool =>
             Print (Ctxt, Vhdl_Node (PSL.Nodes.Get_HDL_Node (N)));
             --  FIXME: this is true only when using the scanner.
             --  Print_Expr (Node (Get_HDL_Node (N)));

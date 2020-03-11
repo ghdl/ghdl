@@ -71,6 +71,7 @@ package body PSL.Prints is
            | N_False
            | N_EOS
            | N_HDL_Expr
+           | N_HDL_Bool
            | N_Property_Instance
            | N_Sequence_Instance =>
             return Prio_HDL;
@@ -152,7 +153,8 @@ package body PSL.Prints is
             end;
          when N_Name_Decl =>
             Put (Image (Get_Identifier (N)));
-         when N_HDL_Expr =>
+         when N_HDL_Expr
+           | N_HDL_Bool =>
             if HDL_Expr_Printer = null then
                Put ("HDL_Expr");
             else

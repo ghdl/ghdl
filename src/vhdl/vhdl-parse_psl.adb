@@ -734,6 +734,7 @@ package body Vhdl.Parse_Psl is
            | N_Paren_Bool
            | N_Fusion_SERE
            | N_HDL_Expr
+           | N_HDL_Bool
            | N_Hdl_Mod_Name
            | N_Concat_SERE
            | N_Within_SERE

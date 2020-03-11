@@ -130,15 +130,24 @@ package body Vhdl.Sem_Psl is
             --  Get the named entity for names in order to hash it.
             declare
                Name : Iir;
+               Hnode : PSL_Node;
+               N : PSL_Node;
             begin
                Name := Get_Named_Entity (Expr);
                if Name /= Null_Iir then
-                  return PSL.Hash.Get_PSL_Node (HDL_Node (Name));
+                  Hnode := PSL.Hash.Get_PSL_Node (HDL_Node (Name));
+                  N := Create_Node (N_HDL_Expr);
+                  Set_Location (N, Get_Location (Expr));
+                  Set_HDL_Node (N, HDL_Node (Expr));
+                  Set_HDL_Hash (N, Hnode);
+                  return N;
                end if;
             end;
          when others =>
             null;
       end case;
+
+      --  Default.
       return PSL.Hash.Get_PSL_Node (HDL_Node (Expr));
    end Convert_Bool;
 
@@ -615,7 +624,8 @@ package body Vhdl.Sem_Psl is
       end Rewrite_Monadic_Operator;
    begin
       case Get_Kind (Prop) is
-         when N_HDL_Expr =>
+         when N_HDL_Expr
+           | N_HDL_Bool =>
             return Get_HDL_Node (Prop);
          when N_And_Bool =>
             return Rewrite_Dyadic_Operator (Prop, Iir_Kind_And_Operator);
@@ -631,13 +641,16 @@ package body Vhdl.Sem_Psl is
             begin
                Res := Create_Iir (Iir_Kind_Parenthesis_Expression);
                Set_Location (Res, Get_Location (Prop));
-               if Get_Kind (Expr) = N_HDL_Expr then
-                  Hexpr := Get_HDL_Node (Expr);
-                  Set_Expression (Res, Hexpr);
-                  Set_Type (Res, Get_Type (Hexpr));
-               else
-                  Set_Expression (Res, Rewrite_As_Boolean_Expression (Expr));
-               end if;
+               case Get_Kind (Expr) is
+                  when N_HDL_Expr
+                    | N_HDL_Bool =>
+                     Hexpr := Get_HDL_Node (Expr);
+                     Set_Expression (Res, Hexpr);
+                     Set_Type (Res, Get_Type (Hexpr));
+                  when others =>
+                     Hexpr := Rewrite_As_Boolean_Expression (Expr);
+                     Set_Expression (Res, Hexpr);
+               end case;
                return Res;
             end;
          when others =>
@@ -676,7 +689,8 @@ package body Vhdl.Sem_Psl is
    function Is_Boolean_Assertion (Expr : PSL_Node) return Boolean is
    begin
       case Get_Kind (Expr) is
-         when N_HDL_Expr =>
+         when N_HDL_Expr
+           | N_HDL_Bool =>
             return True;
          when N_And_Bool | N_Or_Bool | N_Not_Bool | N_Paren_Bool =>
             return True;

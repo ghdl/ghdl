@@ -374,7 +374,8 @@ package body PSL.Nodes is
            | N_False
            | N_True
            | N_Boolean_Parameter
-           | N_Paren_Bool =>
+           | N_Paren_Bool
+           | N_HDL_Bool =>
             return Type_Boolean;
          when N_Number
            | N_Const_Parameter =>

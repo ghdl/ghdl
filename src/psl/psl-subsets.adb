@@ -190,7 +190,8 @@ package body PSL.Subsets is
            | N_False
            | N_Number
            | N_EOS
-           | N_HDL_Expr =>
+           | N_HDL_Expr
+           | N_HDL_Bool =>
             null;
       end case;
    end Check_Simple;

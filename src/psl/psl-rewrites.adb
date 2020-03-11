@@ -109,6 +109,8 @@ package body PSL.Rewrites is
             Set_Right (N, Rewrite_Boolean (Get_Right (N)));
             return N;
          when N_HDL_Expr =>
+            return Get_HDL_Hash (N);
+         when N_HDL_Bool =>
             return N;
          when others =>
             Error_Kind ("rewrite_boolean", N);

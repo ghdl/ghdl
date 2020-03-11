@@ -2690,7 +2690,7 @@ package body Synth.Stmts is
       use PSL.Nodes;
    begin
       case Get_Kind (Expr) is
-         when N_HDL_Expr =>
+         when N_HDL_Bool =>
             declare
                E : constant Vhdl.Types.Vhdl_Node := Get_HDL_Node (Expr);
             begin
@@ -2707,8 +2707,7 @@ package body Synth.Stmts is
                Edge : Net;
             begin
                --  Handle edge (as it can be in default clock).
-               if Get_Kind (L) = N_HDL_Expr and then Get_Kind (R) = N_HDL_Expr
-               then
+               if Get_Kind (L) in N_HDLs and then Get_Kind (R) in N_HDLs then
                   Edge := Synth_Clock_Edge
                     (Syn_Inst, Get_HDL_Node (L), Get_HDL_Node (R));
                   if Edge /= No_Net then
@@ -2735,7 +2734,7 @@ package body Synth.Stmts is
            | N_EOS =>
             return Build_Const_UB32 (Build_Context, 0, 1);
          when others =>
-            PSL.Errors.Error_Kind ("translate_psl_expr", Expr);
+            PSL.Errors.Error_Kind ("synth_psl_expr", Expr);
       end case;
    end Synth_PSL_Expression;
 

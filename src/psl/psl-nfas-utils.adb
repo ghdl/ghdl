@@ -339,7 +339,7 @@ package body PSL.NFAs.Utils is
             return True;
          when N_False
            | N_True
-           | N_HDL_Expr =>
+           | N_HDL_Bool =>
             return False;
          when N_Not_Bool =>
             return Has_EOS (Get_Boolean (N));

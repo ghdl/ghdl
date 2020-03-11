@@ -53,7 +53,7 @@ package body PSL.Hash is
       --  In the primary table.
       Res := Cells.Table (Idx).Res;
       if Res = Null_Node then
-         Res := Create_Node (N_HDL_Expr);
+         Res := Create_Node (N_HDL_Bool);
          Set_HDL_Node (Res, Hdl);
          Cells.Table (Idx).Res := Res;
          return Res;
@@ -69,7 +69,7 @@ package body PSL.Hash is
          Idx := N_Idx;
          Res := Cells.Table (Idx).Res;
       end loop;
-      Res := Create_Node (N_HDL_Expr);
+      Res := Create_Node (N_HDL_Bool);
       Set_HDL_Node (Res, Hdl);
       Cells.Append ((Res => Res, Next => No_Index));
       Cells.Table (Idx).Next := Cells.Last;

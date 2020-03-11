@@ -374,7 +374,8 @@ package body Simul.Simulation.Main is
       use PSL.Nodes;
    begin
       case Get_Kind (Expr) is
-         when N_HDL_Expr =>
+         when N_HDL_Expr
+           | N_HDL_Bool =>
             declare
                E : constant Iir := Get_HDL_Node (Expr);
                Rtype : constant Iir := Get_Base_Type (Get_Type (E));

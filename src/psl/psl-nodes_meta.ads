@@ -60,6 +60,7 @@ package PSL.Nodes_Meta is
       Field_Hash,
       Field_Hash_Link,
       Field_HDL_Index,
+      Field_HDL_Hash,
       Field_Presence,
       Field_NFA,
       Field_Parameter_List,
@@ -163,6 +164,7 @@ package PSL.Nodes_Meta is
    function Has_Hash (K : Nkind) return Boolean;
    function Has_Hash_Link (K : Nkind) return Boolean;
    function Has_HDL_Index (K : Nkind) return Boolean;
+   function Has_HDL_Hash (K : Nkind) return Boolean;
    function Has_Presence (K : Nkind) return Boolean;
    function Has_NFA (K : Nkind) return Boolean;
    function Has_Parameter_List (K : Nkind) return Boolean;

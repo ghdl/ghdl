@@ -374,7 +374,8 @@ package body PSL.Nodes is
            | N_False
            | N_True
            | N_Boolean_Parameter
-           | N_Paren_Bool =>
+           | N_Paren_Bool
+           | N_HDL_Bool =>
             return Type_Boolean;
          when N_Number
            | N_Const_Parameter =>
@@ -460,6 +461,7 @@ package body PSL.Nodes is
            | N_Or_Bool
            | N_Imp_Bool
            | N_HDL_Expr
+           | N_HDL_Bool
            | N_False
            | N_True
            | N_EOS
@@ -853,6 +855,22 @@ package body PSL.Nodes is
                      "no field HDL_Index");
       Set_Field2 (N, Int32_To_Node (Idx));
    end Set_HDL_Index;
+
+   function Get_HDL_Hash (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_HDL_Hash (Get_Kind (N)),
+                     "no field HDL_Hash");
+      return Get_Field5 (N);
+   end Get_HDL_Hash;
+
+   procedure Set_HDL_Hash (N : Node; H : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_HDL_Hash (Get_Kind (N)),
+                     "no field HDL_Hash");
+      Set_Field5 (N, H);
+   end Set_HDL_Hash;
 
    function Get_Presence (N : Node) return PSL_Presence_Kind is
    begin

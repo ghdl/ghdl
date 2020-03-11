@@ -850,7 +850,8 @@ package body Vhdl.Canon is
       use PSL.Nodes;
    begin
       case Get_Kind (Expr) is
-         when N_HDL_Expr =>
+         when N_HDL_Expr
+           | N_HDL_Bool =>
             Canon_Expression (Get_HDL_Node (Expr));
          when N_True | N_EOS =>
             null;

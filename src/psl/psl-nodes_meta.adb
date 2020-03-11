@@ -43,6 +43,7 @@ package body PSL.Nodes_Meta is
       Field_Hash => Type_Uns32,
       Field_Hash_Link => Type_Node,
       Field_HDL_Index => Type_Int32,
+      Field_HDL_Hash => Type_Node,
       Field_Presence => Type_PSL_Presence_Kind,
       Field_NFA => Type_NFA,
       Field_Parameter_List => Type_Node,
@@ -109,6 +110,8 @@ package body PSL.Nodes_Meta is
             return "hash_link";
          when Field_HDL_Index =>
             return "hdl_index";
+         when Field_HDL_Hash =>
+            return "hdl_hash";
          when Field_Presence =>
             return "presence";
          when Field_NFA =>
@@ -241,6 +244,8 @@ package body PSL.Nodes_Meta is
             return "imp_bool";
          when N_HDL_Expr =>
             return "hdl_expr";
+         when N_HDL_Bool =>
+            return "hdl_bool";
          when N_False =>
             return "false";
          when N_True =>
@@ -306,6 +311,8 @@ package body PSL.Nodes_Meta is
          when Field_Hash_Link =>
             return Attr_None;
          when Field_HDL_Index =>
+            return Attr_None;
+         when Field_HDL_Hash =>
             return Attr_None;
          when Field_Presence =>
             return Attr_None;
@@ -537,6 +544,9 @@ package body PSL.Nodes_Meta is
       Field_Hash_Link,
       --  N_HDL_Expr
       Field_HDL_Node,
+      Field_HDL_Hash,
+      --  N_HDL_Bool
+      Field_HDL_Node,
       Field_HDL_Index,
       Field_Hash,
       Field_Presence,
@@ -613,13 +623,14 @@ package body PSL.Nodes_Meta is
       N_And_Bool => 142,
       N_Or_Bool => 147,
       N_Imp_Bool => 152,
-      N_HDL_Expr => 157,
-      N_False => 157,
-      N_True => 157,
-      N_EOS => 160,
-      N_Name => 162,
-      N_Name_Decl => 164,
-      N_Number => 165
+      N_HDL_Expr => 154,
+      N_HDL_Bool => 159,
+      N_False => 159,
+      N_True => 159,
+      N_EOS => 162,
+      N_Name => 164,
+      N_Name_Decl => 166,
+      N_Number => 167
      );
 
    function Get_Fields (K : Nkind) return Fields_Array
@@ -801,6 +812,8 @@ package body PSL.Nodes_Meta is
             return Get_Decl (N);
          when Field_Hash_Link =>
             return Get_Hash_Link (N);
+         when Field_HDL_Hash =>
+            return Get_HDL_Hash (N);
          when Field_Parameter_List =>
             return Get_Parameter_List (N);
          when Field_Actual =>
@@ -855,6 +868,8 @@ package body PSL.Nodes_Meta is
             Set_Decl (N, V);
          when Field_Hash_Link =>
             Set_Hash_Link (N, V);
+         when Field_HDL_Hash =>
+            Set_HDL_Hash (N, V);
          when Field_Parameter_List =>
             Set_Parameter_List (N, V);
          when Field_Actual =>
@@ -1207,7 +1222,13 @@ package body PSL.Nodes_Meta is
 
    function Has_HDL_Node (K : Nkind) return Boolean is
    begin
-      return K = N_HDL_Expr;
+      case K is
+         when N_HDL_Expr
+           | N_HDL_Bool =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_HDL_Node;
 
    function Has_Hash (K : Nkind) return Boolean is
@@ -1218,7 +1239,7 @@ package body PSL.Nodes_Meta is
            | N_And_Bool
            | N_Or_Bool
            | N_Imp_Bool
-           | N_HDL_Expr
+           | N_HDL_Bool
            | N_EOS =>
             return True;
          when others =>
@@ -1234,7 +1255,7 @@ package body PSL.Nodes_Meta is
            | N_And_Bool
            | N_Or_Bool
            | N_Imp_Bool
-           | N_HDL_Expr
+           | N_HDL_Bool
            | N_EOS =>
             return True;
          when others =>
@@ -1245,13 +1266,18 @@ package body PSL.Nodes_Meta is
    function Has_HDL_Index (K : Nkind) return Boolean is
    begin
       case K is
-         when N_HDL_Expr
+         when N_HDL_Bool
            | N_EOS =>
             return True;
          when others =>
             return False;
       end case;
    end Has_HDL_Index;
+
+   function Has_HDL_Hash (K : Nkind) return Boolean is
+   begin
+      return K = N_HDL_Expr;
+   end Has_HDL_Hash;
 
    function Has_Presence (K : Nkind) return Boolean is
    begin
@@ -1261,7 +1287,7 @@ package body PSL.Nodes_Meta is
            | N_And_Bool
            | N_Or_Bool
            | N_Imp_Bool
-           | N_HDL_Expr =>
+           | N_HDL_Bool =>
             return True;
          when others =>
             return False;

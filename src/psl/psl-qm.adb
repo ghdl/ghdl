@@ -197,7 +197,7 @@ package body PSL.QM is
    function Build_Primes (N : Node; Negate : Boolean) return Primes_Set is
    begin
       case Get_Kind (N) is
-         when N_HDL_Expr
+         when N_HDL_Bool
            | N_EOS =>
             declare
                Res : Primes_Set (1);
