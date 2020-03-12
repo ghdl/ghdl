@@ -1813,6 +1813,45 @@ package body Vhdl.Scanner is
       Flag_Comment := True;
    end Scan_Translate_On;
 
+   procedure Scan_Comment_Pragma
+   is
+      use Std_Names;
+      Id : Name_Id;
+   begin
+      Scan_Comment_Identifier (Id, True);
+      case Id is
+         when Null_Identifier =>
+            Warning_Msg_Scan
+              (Warnid_Pragma, "incomplete pragma directive ignored");
+         when Name_Translate_Off =>
+            if Current_Context.Translate_Off then
+               Warning_Msg_Scan
+                 (Warnid_Pragma, "nested 'translate_off' ignored");
+            else
+               Scan_Translate_Off;
+            end if;
+         when Name_Translate_On =>
+            if Current_Context.Translate_Off then
+               Scan_Translate_On;
+            else
+               Warning_Msg_Scan
+                 (Warnid_Pragma, "'translate_on' without "
+                    & "coresponding 'translate_off'");
+            end if;
+         when Name_Label
+           | Name_Label_Applies_To
+           | Name_Return_Port_Name
+           | Name_Map_To_Operator
+           | Name_Type_Function
+           | Name_Built_In =>
+            --  Used by synopsys, discarded.
+            Skip_Until_EOL;
+         when others =>
+            Warning_Msg_Scan
+              (Warnid_Pragma, "unknown pragma %i ignored", +Id);
+      end case;
+   end Scan_Comment_Pragma;
+
    --  Scan tokens within a comment.  Return TRUE if Current_Token was set,
    --  return FALSE to discard the comment (ie treat it like a real comment).
    function Scan_Comment return Boolean
@@ -1838,38 +1877,7 @@ package body Vhdl.Scanner is
            | Name_Synthesis
            | Name_Synopsys =>
             if Flag_Pragma_Comment then
-               Scan_Comment_Identifier (Id, True);
-               case Id is
-                  when Null_Identifier =>
-                     Warning_Msg_Scan
-                       (Warnid_Pragma, "incomplete pragma directive ignored");
-                  when Name_Translate_Off =>
-                     if Current_Context.Translate_Off then
-                        Warning_Msg_Scan
-                          (Warnid_Pragma, "nested 'translate_off' ignored");
-                     else
-                        Scan_Translate_Off;
-                     end if;
-                  when Name_Translate_On =>
-                     if Current_Context.Translate_Off then
-                        Scan_Translate_On;
-                     else
-                        Warning_Msg_Scan
-                          (Warnid_Pragma, "'translate_on' without "
-                             & "coresponding 'translate_off'");
-                     end if;
-                  when Name_Label
-                    | Name_Label_Applies_To
-                    | Name_Return_Port_Name
-                    | Name_Map_To_Operator
-                    | Name_Type_Function
-                    | Name_Built_In =>
-                     --  Used by synopsys, discarded.
-                     Skip_Until_EOL;
-                  when others =>
-                     Warning_Msg_Scan
-                       (Warnid_Pragma, "unknown pragma %i ignored", +Id);
-               end case;
+               Scan_Comment_Pragma;
                return False;
             end if;
          when others =>
