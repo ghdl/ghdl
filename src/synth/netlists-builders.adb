@@ -818,7 +818,6 @@ package body Netlists.Builders is
 
    function Build_Const_Z (Ctxt : Context_Acc; W : Width) return Net
    is
-      pragma Assert (W > 0);
       Inst : Instance;
       O : Net;
    begin
@@ -1422,7 +1421,6 @@ package body Netlists.Builders is
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net
    is
       Wd : constant Width := Get_Width (I);
-      pragma Assert (Wd /= No_Width);
       pragma Assert (W + Off <= Wd);
       Inst : Instance;
       O : Net;

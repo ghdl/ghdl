@@ -236,6 +236,11 @@ package body Netlists.Expands is
       J : Int32;
       Step : Int32;
    begin
+      if W = 0 then
+         Net_Arr (0) := Build_Const_UB32 (Ctxt, 1, 1);
+         return;
+      end if;
+
       for I in reverse 0 .. W - 1 loop
          V1 := Build_Extract_Bit (Ctxt, Addr, I);
          V0 := Build_Monadic (Ctxt, Id_Not, V1);

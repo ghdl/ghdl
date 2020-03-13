@@ -1082,7 +1082,6 @@ package body Netlists.Disp_Vhdl is
                Ow : constant Width := Get_Width (Get_Output (Inst, 0));
                Iw : constant Width := Get_Width (Get_Input_Net (Inst, 0));
             begin
-               pragma Assert (Iw > 0);
                pragma Assert (Ow > Iw);
                Disp_Template ("  \o0 <= ", Inst);
                if Iw = 1 then
