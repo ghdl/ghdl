@@ -149,11 +149,20 @@ package body Synth.Static_Oper is
    end Synth_Vector_Dyadic;
 
    procedure To_Std_Logic_Vector
-     (Val : Value_Acc; Arr : out Std_Logic_Vector) is
+     (Val : Value_Acc; Arr : out Std_Logic_Vector)
+   is
+      Sarr : constant Static_Arr_Type := Get_Static_Array (Val);
    begin
-      for I in Val.Arr.V'Range loop
-         Arr (Natural (I)) := Std_Ulogic'Val (Val.Arr.V (I).Scal);
-      end loop;
+      case Sarr.Kind is
+         when Sarr_Value =>
+            for I in Val.Arr.V'Range loop
+               Arr (Natural (I)) := Std_Ulogic'Val (Val.Arr.V (I).Scal);
+            end loop;
+         when Sarr_Net =>
+            for I in Arr'Range loop
+               Arr (Natural (I)) := Get_Static_Std_Logic (Sarr, Uns32 (I - 1));
+            end loop;
+      end case;
    end To_Std_Logic_Vector;
 
    function To_Value_Acc (Vec : Std_Logic_Vector; El_Typ : Type_Acc)
@@ -207,7 +216,7 @@ package body Synth.Static_Oper is
                               return Value_Acc
    is
       pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (L.Arr.Len));
+      L_Arr : Std_Logic_Vector (1 .. Natural (L.Typ.W));
       R_Val : constant Uns64 := Uns64 (R.Scal);
    begin
       To_Std_Logic_Vector (L, L_Arr);
