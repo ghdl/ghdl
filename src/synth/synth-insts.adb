@@ -1106,7 +1106,6 @@ package body Synth.Insts is
          Assoc : Node;
          Assoc_Inter : Node;
          Inter : Node;
-         Actual : Node;
          Port : Net;
          O : Value_Acc;
          Nbr_Outputs : Port_Nbr;
@@ -1119,23 +1118,9 @@ package body Synth.Insts is
                Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
                if Mode_To_Port_Kind (Get_Mode (Inter)) = Port_Out then
-                  case Get_Kind (Assoc) is
-                     when Iir_Kind_Association_Element_Open =>
-                        Actual := Get_Default_Value (Inter);
-                        pragma Assert (Actual = Null_Node);
-                     when Iir_Kind_Association_Element_By_Expression =>
-                        Actual := Get_Actual (Assoc);
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-
-                  if Actual /= Null_Node then
-                     O := Get_Value (Comp_Inst, Inter);
-                     Port := Get_Net (O);
-                     Port := Build_Port (Get_Build (Syn_Inst), Port);
-                     O := Create_Value_Net (Port, O.Typ);
-                     Synth_Assignment (Syn_Inst, Actual, O, Assoc);
-                  end if;
+                  O := Get_Value (Comp_Inst, Inter);
+                  Port := Get_Net (O);
+                  Synth_Output_Assoc (Port, Syn_Inst, Assoc, Comp_Inst, Inter);
                   Nbr_Outputs := Nbr_Outputs + 1;
                end if;
             end if;
