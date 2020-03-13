@@ -35,11 +35,17 @@ package Synth.Ieee.Std_Logic_1164 is
       '-'   --  Don't care.
      );
 
+   subtype X01 is Std_Ulogic range 'X' .. '1';
+
    --  Vector of logic state.
    type Std_Logic_Vector is array (Natural range <>) of Std_Ulogic;
 
    type Table_1d is array (Std_Ulogic) of Std_Ulogic;
    type Table_2d is array (Std_Ulogic, Std_Ulogic) of Std_Ulogic;
+
+   type Table_1d_X01 is array (Std_Ulogic) of X01;
+
+   To_X01 : constant Table_1d_X01 := "XX01XX01X";
 
    And_Table : constant Table_2d :=
    --  UX01ZWLH-

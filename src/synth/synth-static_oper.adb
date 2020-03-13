@@ -41,7 +41,8 @@ package body Synth.Static_Oper is
    --  (math library) on unix systems.
    pragma Linker_Options ("-lm");
 
-   --  From openiee:
+   type Compare_Type is
+     (Compare_Less, Compare_Equal, Compare_Greater, Compare_Unknown);
 
    type Static_Arr_Kind is (Sarr_Value, Sarr_Net);
 
@@ -105,6 +106,56 @@ package body Synth.Static_Oper is
             end;
       end case;
    end Get_Static_Std_Logic;
+
+   function Synth_Ucompare (Left, Right : Value_Acc) return Compare_Type
+   is
+      Lw : constant Uns32 := Left.Typ.W;
+      Rw : constant Uns32 := Right.Typ.W;
+      Larr : constant Static_Arr_Type := Get_Static_Array (Left);
+      Rarr : constant Static_Arr_Type := Get_Static_Array (Right);
+      Len : constant Uns32 := Uns32'Min (Left.Typ.W, Right.Typ.W);
+      L, R : Std_Ulogic;
+   begin
+      if Lw > Rw then
+         for I in 0 .. Lw - Rw - 1 loop
+            case To_X01 (Get_Static_Std_Logic (Larr, I)) is
+               when '0' =>
+                  null;
+               when '1' =>
+                  return Compare_Greater;
+               when 'X' =>
+                  --  TODO: assert
+                  return Compare_Unknown;
+            end case;
+         end loop;
+      else
+         for I in 0 .. Rw - Lw - 1 loop
+            case To_X01 (Get_Static_Std_Logic (Rarr, I)) is
+               when '0' =>
+                  null;
+               when '1' =>
+                  return Compare_Less;
+               when 'X' =>
+                  --  TODO: assert
+                  return Compare_Unknown;
+            end case;
+         end loop;
+      end if;
+
+      for I in 0 .. Len loop
+         L := To_X01 (Get_Static_Std_Logic (Larr, Lw - Len + I));
+         R := To_X01 (Get_Static_Std_Logic (Rarr, Rw - Len + I));
+         if L = 'X' or R = 'X' then
+            --  TODO: assert
+            return Compare_Unknown;
+         elsif L = '1' and R = '0' then
+            return Compare_Greater;
+         elsif L = '0' and R = '1' then
+            return Compare_Less;
+         end if;
+      end loop;
+      return Compare_Equal;
+   end Synth_Ucompare;
 
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
@@ -569,6 +620,14 @@ package body Synth.Static_Oper is
               (Std_Ulogic'Pos (Xor_Table (Get_Static_Ulogic (Left),
                                           Get_Static_Ulogic (Right))),
                Res_Typ);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Ucompare (Left, Right) = Compare_Greater;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
             return Synth_Add_Uns_Uns (Left, Right, Expr);
