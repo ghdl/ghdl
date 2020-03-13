@@ -1780,12 +1780,18 @@ package body Synth.Expr is
       end case;
 
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Typ);
+      if Left = null then
+         return null;
+      end if;
       if Is_Static_Val (Left) and then Get_Static_Discrete (Left) = Val then
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
       Strip_Const (Left);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Typ);
+      if Right = null then
+         return null;
+      end if;
       Strip_Const (Right);
 
       --  Return a static value if both operands are static.

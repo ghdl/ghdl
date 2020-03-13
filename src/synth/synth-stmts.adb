@@ -680,6 +680,10 @@ package body Synth.Stmts is
       Phi_False : Phi_Type;
    begin
       Cond_Val := Synth_Expression (C.Inst, Cond);
+      if Cond_Val = null then
+         Set_Error (C.Inst);
+         return;
+      end if;
       if Is_Static (Cond_Val) then
          Strip_Const (Cond_Val);
          if Cond_Val.Scal = 1 then

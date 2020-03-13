@@ -595,7 +595,7 @@ package body Synth.Static_Oper is
             Error_Msg_Synth
               (+Expr, "synth_static_dyadic_predefined: unhandled "
                  & Iir_Predefined_Functions'Image (Def));
-            raise Internal_Error;
+            return null;
       end case;
    end Synth_Static_Dyadic_Predefined;
 
