@@ -532,10 +532,10 @@ package body Synth.Insts is
       Heap_Sort (Value_Offset_Tables.Last (Els));
    end Sort_Value_Offset;
 
-   procedure Synth_Individual_Input_Assoc (Inp : Input;
-                                           Syn_Inst : Synth_Instance_Acc;
-                                           Assoc : Node;
-                                           Inter_Inst : Synth_Instance_Acc)
+   function Synth_Individual_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
+                                          Assoc : Node;
+                                          Inter_Inst : Synth_Instance_Acc)
+                                         return Net
    is
       use Netlists.Concats;
       Iassoc : Node;
@@ -584,14 +584,14 @@ package body Synth.Insts is
 
       --   3. connect
       Build (Get_Build (Syn_Inst), Concat, N);
-      Connect (Inp, N);
+      return N;
    end Synth_Individual_Input_Assoc;
 
-   procedure Synth_Input_Assoc (Inp : Input;
-                                Syn_Inst : Synth_Instance_Acc;
-                                Assoc : Node;
-                                Inter_Inst : Synth_Instance_Acc;
-                                Inter : Node)
+   function Synth_Input_Assoc (Syn_Inst : Synth_Instance_Acc;
+                               Assoc : Node;
+                               Inter_Inst : Synth_Instance_Acc;
+                               Inter : Node)
+                              return Net
    is
       Actual : Node;
       Formal_Typ : Type_Acc;
@@ -614,14 +614,13 @@ package body Synth.Insts is
             end if;
             Act_Inst := Syn_Inst;
          when Iir_Kind_Association_Element_By_Individual =>
-            Synth_Individual_Input_Assoc (Inp, Syn_Inst, Assoc, Inter_Inst);
-            return;
+            return Synth_Individual_Input_Assoc (Syn_Inst, Assoc, Inter_Inst);
       end case;
 
       Formal_Typ := Get_Value_Type (Inter_Inst, Get_Type (Inter));
 
       Act := Synth_Expression_With_Type (Act_Inst, Actual, Formal_Typ);
-      Connect (Inp, Get_Net (Act));
+      return Get_Net (Act);
    end Synth_Input_Assoc;
 
    procedure Synth_Individual_Output_Assoc (Outp : Net;
@@ -718,9 +717,9 @@ package body Synth.Insts is
             case Mode_To_Port_Kind (Get_Mode (Inter)) is
                when Port_In =>
                   --  Connect the net to the input.
-                  Synth_Input_Assoc
-                    (Get_Input (Inst, Nbr_Inputs),
-                     Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter);
+                  Connect (Get_Input (Inst, Nbr_Inputs),
+                           Synth_Input_Assoc
+                             (Syn_Inst, Assoc, Inst_Obj.Syn_Inst, Inter));
                   Nbr_Inputs := Nbr_Inputs + 1;
                when Port_Out =>
                   Synth_Output_Assoc
@@ -1020,37 +1019,32 @@ package body Synth.Insts is
       declare
          Assoc : Node;
          Assoc_Inter : Node;
-         Actual : Node;
          Inter : Node;
          Inter_Type : Type_Acc;
          Val : Value_Acc;
+         N : Net;
       begin
          Assoc := Get_Port_Map_Aspect_Chain (Stmt);
          Assoc_Inter := Get_Port_Chain (Component);
          while Is_Valid (Assoc) loop
-            Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+            if Get_Whole_Association_Flag (Assoc) then
+               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-            case Get_Kind (Assoc) is
-               when Iir_Kind_Association_Element_Open =>
-                  Actual := Get_Default_Value (Inter);
-               when Iir_Kind_Association_Element_By_Expression =>
-                  Actual := Get_Actual (Assoc);
-               when others =>
-                  raise Internal_Error;
-            end case;
+               Inter_Type := Synth_Port_Association_Type
+                 (Comp_Inst, Syn_Inst, Inter, Assoc);
 
-            Inter_Type := Synth_Port_Association_Type
-              (Comp_Inst, Syn_Inst, Inter, Assoc);
-            case Mode_To_Port_Kind (Get_Mode (Inter)) is
-               when Port_In =>
-                  Val := Synth_Expression_With_Type
-                    (Syn_Inst, Actual, Inter_Type);
-               when Port_Out =>
-                  Val := Create_Value_Wire (No_Wire_Id, Inter_Type);
-                  Create_Component_Wire
-                    (Get_Build (Syn_Inst), Assoc_Inter, Val, Inst_Name);
-            end case;
-            Create_Object (Comp_Inst, Assoc_Inter, Val);
+               case Mode_To_Port_Kind (Get_Mode (Inter)) is
+                  when Port_In =>
+                     N := Synth_Input_Assoc
+                       (Syn_Inst, Assoc, Comp_Inst, Inter);
+                     Val := Create_Value_Net (N, Inter_Type);
+                  when Port_Out =>
+                     Val := Create_Value_Wire (No_Wire_Id, Inter_Type);
+                     Create_Component_Wire
+                       (Get_Build (Syn_Inst), Assoc_Inter, Val, Inst_Name);
+               end case;
+               Create_Object (Comp_Inst, Assoc_Inter, Val);
+            end if;
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
       end;
@@ -1121,21 +1115,20 @@ package body Synth.Insts is
          Assoc_Inter := Get_Port_Chain (Component);
          Nbr_Outputs := 0;
          while Is_Valid (Assoc) loop
-            Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+            if Get_Whole_Association_Flag (Assoc) then
+               Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-            case Get_Kind (Assoc) is
-               when Iir_Kind_Association_Element_Open =>
-                  Actual := Get_Default_Value (Inter);
-               when Iir_Kind_Association_Element_By_Expression =>
-                  Actual := Get_Actual (Assoc);
-               when others =>
-                  raise Internal_Error;
-            end case;
+               if Mode_To_Port_Kind (Get_Mode (Inter)) = Port_Out then
+                  case Get_Kind (Assoc) is
+                     when Iir_Kind_Association_Element_Open =>
+                        Actual := Get_Default_Value (Inter);
+                        pragma Assert (Actual = Null_Node);
+                     when Iir_Kind_Association_Element_By_Expression =>
+                        Actual := Get_Actual (Assoc);
+                     when others =>
+                        raise Internal_Error;
+                  end case;
 
-            case Mode_To_Port_Kind (Get_Mode (Inter)) is
-               when Port_In =>
-                  null;
-               when Port_Out =>
                   if Actual /= Null_Node then
                      O := Get_Value (Comp_Inst, Inter);
                      Port := Get_Net (O);
@@ -1144,7 +1137,8 @@ package body Synth.Insts is
                      Synth_Assignment (Syn_Inst, Actual, O, Assoc);
                   end if;
                   Nbr_Outputs := Nbr_Outputs + 1;
-            end case;
+               end if;
+            end if;
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
       end;
