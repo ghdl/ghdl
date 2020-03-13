@@ -513,6 +513,54 @@ package body Synth.Oper is
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Sgn_Sgn;
 
+      type Oper_Kind is (Oper_Left, Oper_Right);
+
+      function Synth_Udivmod (Id : Dyadic_Module_Id; Vec : Oper_Kind)
+                            return Value_Acc
+      is
+         W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
+         L1, R1 : Net;
+         Res_Typ : Type_Acc;
+         N : Net;
+      begin
+         L1 := Synth_Uresize (Left, W, Expr);
+         R1 := Synth_Uresize (Right, W, Expr);
+         case Vec is
+            when Oper_Left =>
+               Res_Typ := Left.Typ;
+            when Oper_Right =>
+               Res_Typ := Right.Typ;
+         end case;
+         Res_Typ := Create_Vec_Type_By_Length (Res_Typ.W, Res_Typ.Vec_El);
+         N := Build_Dyadic (Ctxt, Id, L1, R1);
+         Set_Location (N, Expr);
+         N := Build2_Uresize (Ctxt, N, Res_Typ.W, Get_Location (Expr));
+         return Create_Value_Net (N, Res_Typ);
+      end Synth_Udivmod;
+
+      function Synth_Sdivmod (Id : Dyadic_Module_Id; Vec : Oper_Kind)
+                            return Value_Acc
+      is
+         W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
+         L1, R1 : Net;
+         Res_Typ : Type_Acc;
+         N : Net;
+      begin
+         L1 := Synth_Sresize (Left, W, Expr);
+         R1 := Synth_Sresize (Right, W, Expr);
+         case Vec is
+            when Oper_Left =>
+               Res_Typ := Left.Typ;
+            when Oper_Right =>
+               Res_Typ := Right.Typ;
+         end case;
+         Res_Typ := Create_Vec_Type_By_Length (Res_Typ.W, Res_Typ.Vec_El);
+         N := Build_Dyadic (Ctxt, Id, L1, R1);
+         Set_Location (N, Expr);
+         N := Build2_Sresize (Ctxt, N, Res_Typ.W, Get_Location (Expr));
+         return Create_Value_Net (N, Res_Typ);
+      end Synth_Sdivmod;
+
       function Synth_Shift (Id_Pos : Module_Id; Id_Neg : Module_Id)
                            return Value_Acc
       is
@@ -889,71 +937,39 @@ package body Synth.Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
-            declare
-               Lw : constant Width := Left.Typ.W;
-               W : constant Width := Width'Max (Lw, Right.Typ.W);
-               L1, R1 : Net;
-               Rtype : Type_Acc;
-               N : Net;
-            begin
-               L1 := Synth_Uresize (Left, W, Expr);
-               R1 := Synth_Uresize (Right, W, Expr);
-               Rtype := Create_Vec_Type_By_Length (Lw, Left.Typ.Vec_El);
-               N := Build_Dyadic (Ctxt, Id_Udiv, L1, R1);
-               Set_Location (N, Expr);
-               N := Build2_Uresize (Ctxt, N, Lw, Get_Location (Expr));
-               return Create_Value_Net (N, Rtype);
-            end;
+            return Synth_Udivmod (Id_Udiv, Oper_Left);
          when Iir_Predefined_Ieee_Numeric_Std_Div_Nat_Uns =>
-            declare
-               Rw : constant Width := Right.Typ.W;
-               W : constant Width := Width'Max (Left.Typ.W, Rw);
-               L1, R1 : Net;
-               Rtype : Type_Acc;
-               N : Net;
-            begin
-               L1 := Synth_Uresize (Left, W, Expr);
-               R1 := Synth_Uresize (Right, W, Expr);
-               Rtype := Create_Vec_Type_By_Length (Rw, Right.Typ.Vec_El);
-               N := Build_Dyadic (Ctxt, Id_Udiv, L1, R1);
-               Set_Location (N, Expr);
-               N := Build2_Uresize (Ctxt, N, Rw, Get_Location (Expr));
-               return Create_Value_Net (N, Rtype);
-            end;
+            return Synth_Udivmod (Id_Udiv, Oper_Right);
 
          when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Int
            | Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Sgn =>
-            declare
-               Lw : constant Width := Left.Typ.W;
-               W : constant Width := Width'Max (Lw, Right.Typ.W);
-               L1, R1 : Net;
-               Rtype : Type_Acc;
-               N : Net;
-            begin
-               L1 := Synth_Sresize (Left, W, Expr);
-               R1 := Synth_Sresize (Right, W, Expr);
-               Rtype := Create_Vec_Type_By_Length (Lw, Left.Typ.Vec_El);
-               N := Build_Dyadic (Build_Context, Id_Udiv, L1, R1);
-               Set_Location (N, Expr);
-               N := Build2_Sresize (Ctxt, N, Lw, Get_Location (Expr));
-               return Create_Value_Net (N, Rtype);
-            end;
+            return Synth_Sdivmod (Id_Sdiv, Oper_Left);
          when Iir_Predefined_Ieee_Numeric_Std_Div_Int_Sgn =>
-            declare
-               Rw : constant Width := Right.Typ.W;
-               W : constant Width := Width'Max (Left.Typ.W, Rw);
-               L1, R1 : Net;
-               Rtype : Type_Acc;
-               N : Net;
-            begin
-               L1 := Synth_Sresize (Left, W, Expr);
-               R1 := Synth_Sresize (Right, W, Expr);
-               Rtype := Create_Vec_Type_By_Length (Rw, Right.Typ.Vec_El);
-               N := Build_Dyadic (Build_Context, Id_Udiv, L1, R1);
-               Set_Location (N, Expr);
-               N := Build2_Sresize (Ctxt, N, Rw, Get_Location (Expr));
-               return Create_Value_Net (N, Rtype);
-            end;
+            return Synth_Sdivmod (Id_Sdiv, Oper_Right);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Nat =>
+            return Synth_Udivmod (Id_Umod, Oper_Left);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Rem_Nat_Uns =>
+            return Synth_Udivmod (Id_Umod, Oper_Right);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Int =>
+            return Synth_Sdivmod (Id_Srem, Oper_Left);
+         when Iir_Predefined_Ieee_Numeric_Std_Rem_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Rem_Int_Sgn =>
+            return Synth_Sdivmod (Id_Srem, Oper_Right);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Nat =>
+            return Synth_Udivmod (Id_Umod, Oper_Left);
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Mod_Nat_Uns =>
+            return Synth_Udivmod (Id_Umod, Oper_Right);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Int =>
+            return Synth_Sdivmod (Id_Smod, Oper_Left);
+         when Iir_Predefined_Ieee_Numeric_Std_Mod_Sgn_Sgn
+           | Iir_Predefined_Ieee_Numeric_Std_Mod_Int_Sgn =>
+            return Synth_Sdivmod (Id_Smod, Oper_Right);
 
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv

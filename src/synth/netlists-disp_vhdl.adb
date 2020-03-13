@@ -957,6 +957,9 @@ package body Netlists.Disp_Vhdl is
          when Id_Srem =>
             Disp_Template
               ("  \o0 <= std_logic_vector (\si0 rem \si1);" & NL, Inst);
+         when Id_Umod =>
+            Disp_Template
+              ("  \o0 <= std_logic_vector (\ui0 mod \ui1);" & NL, Inst);
          when Id_Sdiv =>
             Disp_Template
               ("  \o0 <= std_logic_vector (\si0 / \si1);" & NL, Inst);
