@@ -183,7 +183,9 @@ package body Synth.Insts is
       end case;
    end Hash_Bounds;
 
-   procedure Hash_Const (C : in out GNAT.SHA1.Context; Val : Value_Acc) is
+   procedure Hash_Const (C : in out GNAT.SHA1.Context;
+                         Val : Value_Acc;
+                         Typ : Type_Acc) is
    begin
       case Val.Kind is
          when Value_Discrete =>
@@ -191,18 +193,27 @@ package body Synth.Insts is
          when Value_Float =>
             Hash_Uns64 (C, To_Uns64 (Val.Fp));
          when Value_Const_Array =>
-            --  Bounds.
-            Hash_Bounds (C, Val.Typ);
-            --  Values.
-            for I in Val.Arr.V'Range loop
-               Hash_Const (C, Val.Arr.V (I));
-            end loop;
+            declare
+               El_Typ : constant Type_Acc := Get_Array_Element (Typ);
+            begin
+               --  Bounds.
+               Hash_Bounds (C, Typ);
+               --  Values.
+               for I in Val.Arr.V'Range loop
+                  Hash_Const (C, Val.Arr.V (I), El_Typ);
+               end loop;
+            end;
          when Value_Const_Record =>
             for I in Val.Rec.V'Range loop
-               Hash_Const (C, Val.Rec.V (I));
+               Hash_Const (C, Val.Rec.V (I), Typ.Rec.E (I).Typ);
             end loop;
          when Value_Const =>
-            Hash_Const (C, Val.C_Val);
+            Hash_Const (C, Val.C_Val, Typ);
+         when Value_Alias =>
+            if Val.A_Off /= 0 then
+               raise Internal_Error;
+            end if;
+            Hash_Const (C, Val.A_Obj, Typ);
          when Value_Net
            | Value_Wire
            | Value_Array
@@ -210,7 +221,6 @@ package body Synth.Insts is
            | Value_Access
            | Value_File
            | Value_Instance
-           | Value_Alias
            | Value_Subtype =>
             raise Internal_Error;
       end case;
@@ -263,7 +273,7 @@ package body Synth.Insts is
                      begin
                         if Len + S'Length > Str_Len then
                            Has_Hash := True;
-                           Hash_Const (Ctxt, Gen);
+                           Hash_Const (Ctxt, Gen, Gen.Typ);
                         else
                            Str (Len + 1 .. Len + S'Length) := S;
                            pragma Assert (Str (Len + 1) = ' ');
@@ -273,7 +283,7 @@ package body Synth.Insts is
                      end;
                   when others =>
                      Has_Hash := True;
-                     Hash_Const (Ctxt, Gen);
+                     Hash_Const (Ctxt, Gen, Gen.Typ);
                end case;
                Gen_Decl := Get_Chain (Gen_Decl);
             end loop;

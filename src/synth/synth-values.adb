@@ -118,32 +118,56 @@ package body Synth.Values is
       end case;
    end Is_Bounded_Type;
 
-   function Is_Equal (L, R : Value_Acc) return Boolean is
+   function Strip_Alias_Const (V : Value_Acc) return Value_Acc
+   is
+      Res : Value_Acc;
    begin
-      if L.Kind /= R.Kind then
+      Res := V;
+      loop
+         case Res.Kind is
+            when Value_Const =>
+               Res := Res.C_Val;
+            when Value_Alias =>
+               if Res.A_Off /= 0 then
+                  raise Internal_Error;
+               end if;
+               Res := Res.A_Obj;
+            when others =>
+               return Res;
+         end case;
+      end loop;
+   end Strip_Alias_Const;
+
+   function Is_Equal (L, R : Value_Acc) return Boolean
+   is
+      L1 : constant Value_Acc := Strip_Alias_Const (L);
+      R1 : constant Value_Acc := Strip_Alias_Const (R);
+   begin
+      pragma Unreferenced (L, R);
+      if L1.Kind /= R1.Kind then
          return False;
       end if;
-      if L = R then
+      if L1 = R1 then
          return True;
       end if;
 
-      case L.Kind is
+      case L1.Kind is
          when Value_Discrete =>
-            return L.Scal = R.Scal;
+            return L1.Scal = R1.Scal;
+         when Value_Float =>
+            return L1.Fp = R1.Fp;
          when Value_Const_Array =>
-            if L.Arr.Len /= R.Arr.Len then
+            if L1.Arr.Len /= R1.Arr.Len then
                return False;
             end if;
-            for I in L.Arr.V'Range loop
-               if not Is_Equal (L.Arr.V (I), R.Arr.V (I)) then
+            for I in L1.Arr.V'Range loop
+               if not Is_Equal (L1.Arr.V (I), R1.Arr.V (I)) then
                   return False;
                end if;
             end loop;
             return True;
          when Value_Const =>
-            return Is_Equal (L.C_Val, R.C_Val);
-         when Value_Float =>
-            return L.Fp = R.Fp;
+            raise Internal_Error;
          when others =>
             --  TODO.
             raise Internal_Error;
