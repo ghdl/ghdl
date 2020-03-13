@@ -656,6 +656,12 @@ package body Std_Names is
       Def ("conv_unsigned",      Name_Conv_Unsigned);
       Def ("conv_integer",       Name_Conv_Integer);
       Def ("conv_std_logic_vector", Name_Conv_Std_Logic_Vector);
+      Def ("and_reduce",         Name_And_Reduce);
+      Def ("nand_reduce",        Name_Nand_Reduce);
+      Def ("or_reduce",          Name_Or_Reduce);
+      Def ("nor_reduce",         Name_Nor_Reduce);
+      Def ("xor_reduce",         Name_Xor_Reduce);
+      Def ("xnor_reduce",        Name_Xnor_Reduce);
       Def ("ceil",               Name_Ceil);
       Def ("round",              Name_Round);
       Def ("log2",               Name_Log2);
