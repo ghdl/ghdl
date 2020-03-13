@@ -27,11 +27,17 @@ package body Vhdl.Ieee.Std_Logic_Arith is
    Unsigned_Type : Iir := Null_Iir;
    Signed_Type : Iir := Null_Iir;
 
-   type Arg_Kind is (Type_Signed, Type_Unsigned, Type_Int, Type_Log, Type_Slv);
+   type Arg_Kind is (Type_Slv, Type_Signed, Type_Unsigned, Type_Int, Type_Log);
 
    subtype Conv_Arg_Kind is Arg_Kind range Type_Signed .. Type_Log;
    type Conv_Pattern_Type is
      array (Conv_Arg_Kind) of Iir_Predefined_Functions;
+
+   subtype Res_Arg_Kind is Arg_Kind range Type_Slv .. Type_Unsigned;
+
+   type Bin_Pattern_Type is
+     array (Res_Arg_Kind, Conv_Arg_Kind, Conv_Arg_Kind)
+     of Iir_Predefined_Functions;
 
    Conv_Uns_Patterns : constant Conv_Pattern_Type :=
      (Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn,
@@ -50,6 +56,124 @@ package body Vhdl.Ieee.Std_Logic_Arith is
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Log);
+
+   Mul_Patterns : constant Bin_Pattern_Type :=
+     (Type_Slv =>
+        (Type_Unsigned =>
+           (Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv,
+            Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Slv,
+            others => Iir_Predefined_None),
+         Type_Signed =>
+           (Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Slv,
+            Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv,
+            others => Iir_Predefined_None),
+         others =>
+           (others => Iir_Predefined_None)),
+      Type_Signed =>
+        (Type_Signed =>
+           (Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn,
+            Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn,
+            others => Iir_Predefined_None),
+         Type_Unsigned =>
+           (Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn,
+            others => Iir_Predefined_None),
+         others =>
+           (others => Iir_Predefined_None)),
+      Type_Unsigned =>
+        (Type_Unsigned =>
+           (Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns,
+            others => Iir_Predefined_None),
+         others =>
+           (others => Iir_Predefined_None)));
+
+   Add_Patterns : constant Bin_Pattern_Type :=
+     (Type_Slv =>
+        (Type_Unsigned =>
+           (Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv,
+            Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Slv,
+            Type_Int =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Slv,
+            Type_Log =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv,
+            others => Iir_Predefined_None),
+         Type_Signed =>
+           (Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Slv,
+            Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv,
+            Type_Int =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Slv,
+            Type_Log =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv,
+            others => Iir_Predefined_None),
+         Type_Int =>
+           (Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Slv,
+            Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv,
+            others => Iir_Predefined_None),
+         Type_Log =>
+           (Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Slv,
+            Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv,
+            others => Iir_Predefined_None),
+         others =>
+           (others => Iir_Predefined_None)),
+      Type_Signed =>
+        (Type_Signed =>
+           (Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn,
+            Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Sgn,
+            Type_Int =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Sgn,
+            Type_Log =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn,
+            others => Iir_Predefined_None),
+         Type_Unsigned =>
+           (Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Sgn,
+            others => Iir_Predefined_None),
+         Type_Int =>
+           (Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn,
+            others => Iir_Predefined_None),
+         Type_Log =>
+           (Type_Signed =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn,
+            others => Iir_Predefined_None),
+         others =>
+           (others => Iir_Predefined_None)),
+      Type_Unsigned =>
+        (Type_Unsigned =>
+           (Type_Unsigned =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns,
+            Type_Int =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Uns,
+            Type_Log =>
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Uns,
+            others => Iir_Predefined_None),
+         Type_Int =>
+            (Type_Unsigned =>
+               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Uns,
+             others => Iir_Predefined_None),
+         Type_Log =>
+            (Type_Unsigned =>
+               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Uns,
+             others => Iir_Predefined_None),
+         others =>
+           (others => Iir_Predefined_None)));
 
    Error : exception;
 
@@ -79,6 +203,7 @@ package body Vhdl.Ieee.Std_Logic_Arith is
 
       Arg1, Arg2 : Iir;
       Arg1_Kind, Arg2_Kind : Arg_Kind;
+      Res_Kind : Arg_Kind;
 
       function Handle_Conv (Pats : Conv_Pattern_Type)
                            return Iir_Predefined_Functions is
@@ -88,6 +213,12 @@ package body Vhdl.Ieee.Std_Logic_Arith is
          end if;
          return Pats (Arg1_Kind);
       end Handle_Conv;
+
+      function Handle_Bin (Pats : Bin_Pattern_Type)
+                          return Iir_Predefined_Functions is
+      begin
+         return Pats (Res_Kind, Arg1_Kind, Arg2_Kind);
+      end Handle_Bin;
 
       Def : Iir_Predefined_Functions;
    begin
@@ -156,6 +287,12 @@ package body Vhdl.Ieee.Std_Logic_Arith is
                   Classify_Arg (Arg2, Arg2_Kind);
 
                   case Get_Identifier (Decl) is
+                     when Name_Op_Plus =>
+                        Classify_Arg (Decl, Res_Kind);
+                        Def := Handle_Bin (Add_Patterns);
+                     when Name_Op_Mul =>
+                        Classify_Arg (Decl, Res_Kind);
+                        Def := Handle_Bin (Mul_Patterns);
                      when Name_Conv_Unsigned =>
                         Def := Handle_Conv (Conv_Uns_Patterns);
                      when Name_Conv_Std_Logic_Vector =>

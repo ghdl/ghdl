@@ -5751,7 +5751,43 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn,
-      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Log
+      Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Log,
+
+      Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn,
+
+      Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn,
+
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv
      );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.
