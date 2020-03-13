@@ -1144,6 +1144,7 @@ package body Synth.Stmts is
       Sel : Value_Acc;
    begin
       Sel := Synth_Expression_With_Basetype (C.Inst, Expr);
+      Strip_Const (Sel);
       if Is_Static (Sel) then
          case Sel.Typ.Kind is
             when Type_Bit
