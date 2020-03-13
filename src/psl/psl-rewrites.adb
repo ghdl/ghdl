@@ -588,6 +588,9 @@ package body PSL.Rewrites is
          when N_Property_Instance =>
             Rewrite_Instance (N);
             return N;
+         when N_Paren_Prop =>
+            --  Note: discard it.
+            return Rewrite_Property (Get_Property (N));
          when others =>
             Error_Kind ("rewrite_property", N);
       end case;
