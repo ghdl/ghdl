@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-for t in iassoc01 iassoc02 iassoc03 iassoc04 iassoc11; do
+for t in iassoc01 iassoc02 iassoc03 iassoc04 iassoc11 iassoc12; do
     analyze pkg.vhdl $t.vhdl tb_$t.vhdl
     elab_simulate tb_$t
     clean
