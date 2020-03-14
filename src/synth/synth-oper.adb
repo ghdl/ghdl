@@ -810,7 +810,8 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Add, True);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
@@ -821,7 +822,11 @@ package body Synth.Oper is
             return Synth_Dyadic_Int_Sgn (Id_Add);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
            | Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
-           | Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn =>
+           | Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv =>
             --  "+" (Signed, Signed)
             return Synth_Dyadic_Sgn (Id_Add, True);
 
@@ -847,7 +852,9 @@ package body Synth.Oper is
             --  "-" (Signed, Signed)
             return Synth_Dyadic_Sgn (Id_Sub, True);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv =>
             declare
                W : constant Width := Left.Typ.W + Right.Typ.W;
                L, R : Net;
@@ -890,7 +897,9 @@ package body Synth.Oper is
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv =>
             declare
                W : constant Width := Left.Typ.W + Right.Typ.W;
                Rtype : Type_Acc;
