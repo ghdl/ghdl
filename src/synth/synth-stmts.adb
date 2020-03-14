@@ -2649,6 +2649,10 @@ package body Synth.Stmts is
       Inst : Instance;
    begin
       Val := Synth_Expression (Syn_Inst, Cond);
+      if Val = null then
+         Set_Error (Syn_Inst);
+         return;
+      end if;
       if Is_Static (Val) then
          if Val.Scal /= 1 then
             Error_Msg_Synth (+Stmt, "assertion failure");
