@@ -1081,7 +1081,7 @@ package body Trans.Chap7 is
 
       others => ON_Nil);
 
-   function Translate_Shortcut_Operator
+   function Translate_Shortcircuit_Operator
      (Imp : Iir_Function_Declaration; Left, Right : Iir) return O_Enode
    is
       Rtype    : Iir;
@@ -1121,7 +1121,7 @@ package body Trans.Chap7 is
             Invert := True;
             Val := 0;
          when others =>
-            Error_Kind ("translate_shortcut_operator", Kind);
+            Error_Kind ("translate_shortcircuit_operator", Kind);
       end case;
 
       V := Get_Ortho_Literal
@@ -1139,7 +1139,7 @@ package body Trans.Chap7 is
       else
          return New_Obj_Value (Res);
       end if;
-   end Translate_Shortcut_Operator;
+   end Translate_Shortcircuit_Operator;
 
    function Translate_Lib_Operator (Left, Right : O_Enode; Func : O_Dnode)
                                    return O_Enode
@@ -2169,8 +2169,8 @@ package body Trans.Chap7 is
             | Iir_Predefined_Boolean_Or
             | Iir_Predefined_Boolean_Nand
             | Iir_Predefined_Boolean_Nor =>
-            --  Right operand of shortcur operators may not be evaluated.
-            return Translate_Shortcut_Operator (Imp, Left, Right);
+            --  Right operand of shortcircuit operators may not be evaluated.
+            return Translate_Shortcircuit_Operator (Imp, Left, Right);
 
          when Iir_Predefined_Array_Array_Concat
            | Iir_Predefined_Element_Array_Concat
