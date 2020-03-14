@@ -21,9 +21,9 @@ with Std_Names; use Std_Names;
 with Vhdl.Ieee.Std_Logic_1164;
 
 package body Vhdl.Ieee.Std_Logic_Unsigned is
-   type Arg_Kind is (Arg_Slv, Arg_Int, Arg_Sl);
+   type Arg_Kind is (Arg_Slv, Arg_Int, Arg_Log);
    type Args_Kind is (Arg_Slv_Slv, Arg_Slv_Int, Arg_Int_Slv,
-                      Arg_Slv_Sl, Arg_Sl_Slv);
+                      Arg_Slv_Log, Arg_Log_Slv);
 
    type Binary_Pattern_Type is array (Args_Kind) of Iir_Predefined_Functions;
 
@@ -70,29 +70,29 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Int_Slv,
-      Arg_Slv_Sl  => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl,
-      Arg_Sl_Slv  => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Sl_Slv);
+      Arg_Slv_Log => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log,
+      Arg_Log_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Log_Slv);
 
    Sub_Uns_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Int_Slv,
-      Arg_Slv_Sl  => Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Sl,
-      Arg_Sl_Slv  => Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Sl_Slv);
+      Arg_Slv_Log => Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log,
+      Arg_Log_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv);
 
    Add_Sgn_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Add_Int_Slv,
-      Arg_Slv_Sl  => Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Sl,
-      Arg_Sl_Slv  => Iir_Predefined_Ieee_Std_Logic_Signed_Add_Sl_Slv);
+      Arg_Slv_Log => Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Log,
+      Arg_Log_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Add_Log_Slv);
 
    Sub_Sgn_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Int_Slv,
-      Arg_Slv_Sl  => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Sl,
-      Arg_Sl_Slv  => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Sl_Slv);
+      Arg_Slv_Log => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Log,
+      Arg_Log_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Log_Slv);
 
    Error : exception;
 
@@ -106,7 +106,7 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
          if Arg_Type = Vhdl.Std_Package.Integer_Subtype_Definition then
             Kind := Arg_Int;
          elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Type then
-            Kind := Arg_Sl;
+            Kind := Arg_Log;
          elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
             Kind := Arg_Slv;
          else
@@ -129,19 +129,19 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
             when Arg_Slv =>
                case Arg2_Kind is
                   when Arg_Slv => Kind := Arg_Slv_Slv;
-                  when Arg_Sl => Kind := Arg_Slv_Sl;
+                  when Arg_Log => Kind := Arg_Slv_Log;
                   when Arg_Int => Kind := Arg_Slv_Int;
                end case;
             when Arg_Int =>
                case Arg2_Kind is
                   when Arg_Slv => Kind := Arg_Int_Slv;
-                  when Arg_Sl
+                  when Arg_Log
                     | Arg_Int => raise Error;
                end case;
-            when Arg_Sl =>
+            when Arg_Log =>
                case Arg2_Kind is
-                  when Arg_Slv => Kind := Arg_Sl_Slv;
-                  when Arg_Sl
+                  when Arg_Slv => Kind := Arg_Log_Slv;
+                  when Arg_Log
                     | Arg_Int => raise Error;
                end case;
          end case;
@@ -194,6 +194,19 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
                   Res := Handle_Binary (Add_Uns_Patterns, Add_Sgn_Patterns);
                when Name_Op_Minus =>
                   Res := Handle_Binary (Sub_Uns_Patterns, Sub_Sgn_Patterns);
+               when Name_Op_Mul =>
+                  case Sign is
+                     when Pkg_Unsigned =>
+                        pragma Assert (Arg1_Kind = Arg_Slv);
+                        pragma Assert (Arg2_Kind = Arg_Slv);
+                        Res :=
+                          Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv;
+                     when Pkg_Signed =>
+                        pragma Assert (Arg1_Kind = Arg_Slv);
+                        pragma Assert (Arg2_Kind = Arg_Slv);
+                        Res :=
+                          Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv;
+                  end case;
                when others =>
                   null;
             end case;

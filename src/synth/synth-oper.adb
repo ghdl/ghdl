@@ -398,12 +398,20 @@ package body Synth.Oper is
                                 return Value_Acc
       is
          W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
+         El_Typ : Type_Acc;
          Rtype : Type_Acc;
          L1, R1 : Net;
          N : Net;
       begin
          if Is_Res_Vec then
-            Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
+            if Left.Typ.Kind = Type_Vector then
+               El_Typ := Left.Typ.Vec_El;
+            elsif Right.Typ.Kind = Type_Vector then
+               El_Typ := Right.Typ.Vec_El;
+            else
+               raise Internal_Error;
+            end if;
+            Rtype := Create_Vec_Type_By_Length (W, El_Typ);
          else
             Rtype := Left.Typ;
          end if;
@@ -809,7 +817,7 @@ package body Synth.Oper is
             return Synth_Dyadic_Nat_Uns (Id_Add);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
             --  "+" (Unsigned, Unsigned)
@@ -826,7 +834,8 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn
            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn
            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
             --  "+" (Signed, Signed)
             return Synth_Dyadic_Sgn (Id_Add, True);
 
@@ -836,7 +845,8 @@ package body Synth.Oper is
             return Synth_Dyadic_Uns_Nat (Id_Sub);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Sl =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns (Id_Sub, True);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
@@ -854,7 +864,9 @@ package body Synth.Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn
            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv =>
+            --  "*" (Signed, Signed)
             declare
                W : constant Width := Left.Typ.W + Right.Typ.W;
                L, R : Net;
@@ -899,7 +911,9 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv =>
+            --  "*" (unsigned, unsigned)
             declare
                W : constant Width := Left.Typ.W + Right.Typ.W;
                Rtype : Type_Acc;
@@ -1125,7 +1139,8 @@ package body Synth.Oper is
             --  ">=" (Natural, Unsigned) [resize]
             return Synth_Compare_Nat_Uns (Id_Uge, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Nat
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Nat =>
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Int =>
             --  ">=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Uge, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn

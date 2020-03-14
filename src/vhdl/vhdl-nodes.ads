@@ -5689,14 +5689,16 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Int_Slv,
-      Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Sl,
-      Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Sl_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Log_Slv,
 
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Int_Slv,
-      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Sl,
-      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Sl_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv,
 
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Int,
@@ -5728,14 +5730,16 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int,
       Iir_Predefined_Ieee_Std_Logic_Signed_Add_Int_Slv,
-      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Sl,
-      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Sl_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Log,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Add_Log_Slv,
 
       Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int,
       Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Int_Slv,
-      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Sl,
-      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Sl_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Log,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Log_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv,
 
       --  std_logic_arith (synopsys extention).
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int,
