@@ -441,12 +441,14 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Integer_Exp =>
             return Create_Value_Discrete
               (Left.Scal ** Natural (Right.Scal), Res_Typ);
-         when Iir_Predefined_Physical_Minimum =>
+         when Iir_Predefined_Physical_Minimum
+           | Iir_Predefined_Integer_Minimum =>
             return Create_Value_Discrete
               (Int64'Min (Get_Static_Discrete (Left),
                           Get_Static_Discrete (Right)),
                Res_Typ);
-         when Iir_Predefined_Physical_Maximum =>
+         when Iir_Predefined_Physical_Maximum
+           | Iir_Predefined_Integer_Maximum =>
             return Create_Value_Discrete
               (Int64'Max (Get_Static_Discrete (Left),
                           Get_Static_Discrete (Right)),
