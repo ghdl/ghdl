@@ -104,8 +104,7 @@ package body Vhdl.Ieee.Std_Logic_Arith is
             Type_Int =>
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Slv,
             Type_Log =>
-              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv,
-            others => Iir_Predefined_None),
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv),
          Type_Signed =>
            (Type_Unsigned =>
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Uns_Slv,
@@ -114,8 +113,7 @@ package body Vhdl.Ieee.Std_Logic_Arith is
             Type_Int =>
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Slv,
             Type_Log =>
-              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv,
-            others => Iir_Predefined_None),
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv),
          Type_Int =>
            (Type_Unsigned =>
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Uns_Slv,
@@ -127,9 +125,7 @@ package body Vhdl.Ieee.Std_Logic_Arith is
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Slv,
             Type_Signed =>
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv,
-            others => Iir_Predefined_None),
-         others =>
-           (others => Iir_Predefined_None)),
+            others => Iir_Predefined_None)),
       Type_Signed =>
         (Type_Signed =>
            (Type_Signed =>
@@ -139,8 +135,7 @@ package body Vhdl.Ieee.Std_Logic_Arith is
             Type_Int =>
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Int_Sgn,
             Type_Log =>
-              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn,
-            others => Iir_Predefined_None),
+              Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn),
          Type_Unsigned =>
            (Type_Signed =>
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Sgn_Sgn,
@@ -152,9 +147,7 @@ package body Vhdl.Ieee.Std_Logic_Arith is
          Type_Log =>
            (Type_Signed =>
               Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn,
-            others => Iir_Predefined_None),
-         others =>
-           (others => Iir_Predefined_None)),
+            others => Iir_Predefined_None)),
       Type_Unsigned =>
         (Type_Unsigned =>
            (Type_Unsigned =>
