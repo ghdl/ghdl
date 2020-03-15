@@ -28,6 +28,7 @@ with Netlists.Inference;
 
 with Errorout; use Errorout;
 
+with Synth.Flags;
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
 
@@ -324,57 +325,93 @@ package body Synth.Environment is
       Wire_Rec.Nbr_Final_Assign := Wire_Rec.Nbr_Final_Assign + 1;
    end Add_Conc_Assign;
 
+   procedure Pop_And_Merge_Phi_Wire (Ctxt : Builders.Context_Acc;
+                                     Asgn_Rec : Seq_Assign_Record;
+                                     Stmt : Source.Syn_Src)
+   is
+      Wid : constant Wire_Id := Asgn_Rec.Id;
+      Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+      Outport : constant Net := Wire_Rec.Gate;
+      --  Must be connected to an Id_Output or Id_Signal
+      pragma Assert (Outport /= No_Net);
+      P : Partial_Assign;
+   begin
+      --  Check output is not already assigned.
+      pragma Assert (Get_Input_Net (Get_Net_Parent (Outport), 0) = No_Net);
+
+      P := Asgn_Rec.Asgns;
+      pragma Assert (P /= No_Partial_Assign);
+      while P /= No_Partial_Assign loop
+         declare
+            Pa : Partial_Assign_Record renames Partial_Assign_Table.Table (P);
+            Res : Net;
+         begin
+            if Synth.Flags.Flag_Debug_Noinference then
+               Res := Pa.Value;
+            else
+               Res := Inference.Infere
+                 (Ctxt, Pa.Value, Pa.Offset, Outport, Stmt);
+            end if;
+
+            Add_Conc_Assign (Wid, Res, Pa.Offset, Stmt);
+            P := Pa.Next;
+         end;
+      end loop;
+   end Pop_And_Merge_Phi_Wire;
+
    --  This procedure is called after each concurrent statement to assign
    --  values to signals.
    procedure Pop_And_Merge_Phi (Ctxt : Builders.Context_Acc;
                                 Stmt : Source.Syn_Src)
    is
       Phi : Phi_Type;
-      Asgn : Seq_Assign;
+      First, Last : Seq_Assign;
+      Asgn, Next_Asgn : Seq_Assign;
    begin
       Pop_Phi (Phi);
 
+      First := No_Seq_Assign;
+      Last := No_Seq_Assign;
+
+      --  First variables.
       Asgn := Phi.First;
       while Asgn /= No_Seq_Assign loop
          declare
             Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
-            Wid : constant Wire_Id := Asgn_Rec.Id;
-            Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
-            Outport : constant Net := Wire_Rec.Gate;
-            --  Must be connected to an Id_Output or Id_Signal
-            pragma Assert (Outport /= No_Net);
-            P : Partial_Assign;
+            Wire_Rec : Wire_Id_Record renames
+              Wire_Id_Table.Table (Asgn_Rec.Id);
          begin
-            case Wire_Rec.Kind is
-               when Wire_Output
-                 | Wire_Signal
-                 | Wire_Variable =>
-                  --  Check output is not already assigned.
-                  pragma Assert
-                    (Get_Input_Net (Get_Net_Parent (Outport), 0) = No_Net);
+            Next_Asgn := Asgn_Rec.Chain;
+            Asgn_Rec.Chain := No_Seq_Assign;
 
-               when others =>
-                  raise Internal_Error;
-            end case;
+            if Wire_Rec.Kind = Wire_Variable then
+               Pop_And_Merge_Phi_Wire (Ctxt, Asgn_Rec, Stmt);
+            else
+               if First = No_Seq_Assign then
+                  First := Asgn;
+               else
+                  Set_Assign_Chain (Last, Asgn);
+               end if;
+               Last := Asgn;
+            end if;
+            Asgn := Next_Asgn;
+         end;
+      end loop;
 
-            P := Asgn_Rec.Asgns;
-            pragma Assert (P /= No_Partial_Assign);
-            while P /= No_Partial_Assign loop
-               declare
-                  Pa : Partial_Assign_Record renames
-                    Partial_Assign_Table.Table (P);
-                  Res : Net;
-               begin
-                  Res := Inference.Infere
-                    (Ctxt, Pa.Value, Pa.Offset, Outport, Stmt);
-                  Add_Conc_Assign (Wid, Res, Pa.Offset, Stmt);
-                  P := Pa.Next;
-               end;
-            end loop;
-
+      --  Then signals.
+      Asgn := First;
+      while Asgn /= No_Seq_Assign loop
+         declare
+            Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
+            Wire_Rec : Wire_Id_Record renames
+              Wire_Id_Table.Table (Asgn_Rec.Id);
+         begin
+            pragma Assert (Wire_Rec.Kind /= Wire_Variable);
+            Pop_And_Merge_Phi_Wire (Ctxt, Asgn_Rec, Stmt);
             Asgn := Asgn_Rec.Chain;
          end;
       end loop;
+
       --  FIXME: free wires.
    end Pop_And_Merge_Phi;
 

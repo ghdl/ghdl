@@ -27,7 +27,6 @@ with Netlists.Internings;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Memories; use Netlists.Memories;
 
-with Synth.Flags;
 with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
 
@@ -770,32 +769,28 @@ package body Netlists.Inference is
       Enable : Net;
       Res : Net;
    begin
-      if not Synth.Flags.Flag_Debug_Noinference then
-         if Get_First_Sink (Prev_Val) = No_Input then
-            --  PREV_VAL is never read, so there cannot be any loop.
-            --  This is an important optimization for control signals.
-            Len := -1;
-         else
-            Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
-         end if;
-      else
-         Len := -1;
+      if Get_First_Sink (Prev_Val) = No_Input then
+         --  PREV_VAL is never read, so there cannot be any loop.
+         --  This is an important optimization for control signals.
+         return Val;
       end if;
+
+      Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
       if Len <= 0 then
          --  No logical loop or self assignment.
-         Res := Val;
+         return Val;
+      end if;
+
+      --  So there is a logical loop.
+      Sel := Get_Mux2_Sel (Last_Mux);
+      Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
+      if Clk = No_Net then
+         --  No clock -> latch or combinational loop
+         Res := Infere_Latch (Ctxt, Val, Prev_Val, Stmt);
       else
-         --  So there is a logical loop.
-         Sel := Get_Mux2_Sel (Last_Mux);
-         Extract_Clock (Ctxt, Get_Driver (Sel), Clk, Enable);
-         if Clk = No_Net then
-            --  No clock -> latch or combinational loop
-            Res := Infere_Latch (Ctxt, Val, Prev_Val, Stmt);
-         else
-            --  Clock -> FF
-            Res := Infere_FF (Ctxt, Prev_Val, Off, Last_Mux,
-                              Clk, Enable, Stmt);
-         end if;
+         --  Clock -> FF
+         Res := Infere_FF (Ctxt, Prev_Val, Off, Last_Mux,
+                           Clk, Enable, Stmt);
       end if;
 
       return Res;
