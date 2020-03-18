@@ -686,17 +686,25 @@ package body Synth.Expr is
       Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Attr));
       Dim : constant Natural :=
         Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
-      Res : Value_Acc;
+      Obj : Value_Acc;
+      Typ : Type_Acc;
    begin
       --  Prefix is an array object or an array subtype.
-      Res := Synth_Name (Syn_Inst, Prefix);
-      if Res.Typ.Kind = Type_Vector then
+      if Get_Kind (Prefix) = Iir_Kind_Subtype_Declaration then
+         --  TODO: does this cover all the cases ?
+         Typ := Get_Value_Type (Syn_Inst, Get_Subtype_Indication (Prefix));
+      else
+         Obj := Synth_Name (Syn_Inst, Prefix);
+         Typ := Obj.Typ;
+      end if;
+
+      if Typ.Kind = Type_Vector then
          if Dim /= 1 then
             raise Internal_Error;
          end if;
-         return Res.Typ.Vbound;
+         return Typ.Vbound;
       else
-         return Res.Typ.Abounds.D (Iir_Index32 (Dim));
+         return Typ.Abounds.D (Iir_Index32 (Dim));
       end if;
    end Synth_Array_Attribute;
 
