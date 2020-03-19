@@ -995,7 +995,8 @@ package body Synth.Expr is
                      when Value_Discrete =>
                         return Create_Value_Discrete (Val.Scal, Dtype);
                      when Value_Const =>
-                        return Create_Value_Discrete (Val.C_Val.Scal, Dtype);
+                        return Synth_Subtype_Conversion
+                          (Val.C_Val, Dtype, Bounds, Loc);
                      when others =>
                         raise Internal_Error;
                   end case;
