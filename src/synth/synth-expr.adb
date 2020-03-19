@@ -416,7 +416,7 @@ package body Synth.Expr is
                   E : Value_Acc;
                begin
                   for I in 1 .. Len loop
-                     E := Val.Arr.V (Len - I);
+                     E := Val.Arr.V (I);
                      Res.V (Pos + I - 1) := E;
                   end loop;
                   Const_P := Const_P and then Val.Kind = Value_Const_Array;
@@ -450,14 +450,32 @@ package body Synth.Expr is
          loop
             case Get_Kind (Assoc) is
                when Iir_Kind_Choice_By_None =>
-                  if not Get_Element_Type_Flag (Assoc) then
-                     raise Internal_Error;
-                  end if;
-                  if Pos >= First_Pos + Stride * Iir_Index32 (Bound.Len) then
-                     Error_Msg_Synth (+Assoc, "element out of array bound");
+                  if Get_Element_Type_Flag (Assoc) then
+                     if Pos >= First_Pos + Stride * Iir_Index32 (Bound.Len)
+                     then
+                        Error_Msg_Synth (+Assoc, "element out of array bound");
+                     else
+                        Set_Elem (Pos);
+                        Pos := Pos + Stride;
+                     end if;
                   else
-                     Set_Elem (Pos);
-                     Pos := Pos + Stride;
+                     declare
+                        Val : Value_Acc;
+                        Val_Len : Uns32;
+                     begin
+                        Val := Synth_Expression_With_Basetype
+                          (Syn_Inst, Value);
+                        Val_Len := Get_Bound_Length (Val.Typ, 1);
+                        pragma Assert (Stride = 1);
+                        if Pos - First_Pos > Iir_Index32 (Bound.Len - Val_Len)
+                        then
+                           Error_Msg_Synth
+                             (+Assoc, "element out of array bound");
+                        else
+                           Set_Vector (Pos, Iir_Index32 (Val_Len), Val);
+                           Pos := Pos + Iir_Index32 (Val_Len);
+                        end if;
+                     end;
                   end if;
                when Iir_Kind_Choice_By_Others =>
                   pragma Assert (Get_Element_Type_Flag (Assoc));
@@ -515,7 +533,8 @@ package body Synth.Expr is
                                 & "direction of array");
                         end if;
                         --  FIXME: can the expression be unbounded ?
-                        Val := Synth_Expression (Syn_Inst, Value);
+                        Val := Synth_Expression_With_Basetype
+                          (Syn_Inst, Value);
                         --  The length must match the range.
                         Rng_Len := Get_Range_Length (Rng);
                         if Get_Bound_Length (Val.Typ, 1) /= Rng_Len then
