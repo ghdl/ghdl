@@ -2735,6 +2735,9 @@ package body Vhdl.Sem_Expr is
       --  Staticness of all the choices.
       Staticness : Iir_Staticness;
 
+      --  The choice was parsed as a choice by expression, but in fact the
+      --  expression is a range (eg: a subtype name).  Change the choice by
+      --  a range choice.
       function Replace_By_Range_Choice (Name : Iir; Range_Type : Iir)
                                        return Boolean
       is
@@ -2916,6 +2919,8 @@ package body Vhdl.Sem_Expr is
          Pos_Max := Eval_Discrete_Type_Length (Choice_Type);
          if (not Has_Others and not Is_Sub_Range)
            and then Nbr_Pos < Pos_Max
+           --  For aggregates, a positional association can be a vector.
+           and then (Vhdl_Std < Vhdl_08 or Is_Case_Stmt)
          then
             Error_Msg_Sem (+Loc, "not enough elements associated");
          elsif Nbr_Pos > Pos_Max then
