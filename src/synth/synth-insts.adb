@@ -821,6 +821,14 @@ package body Synth.Insts is
                end if;
                return Create_Onedimensional_Array_Subtype (Pfx_Typ, Res_Bnd);
             end;
+         when Iir_Kind_Indexed_Name =>
+            declare
+               Pfx_Typ : Type_Acc;
+            begin
+               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
+               return Get_Array_Element (Pfx_Typ);
+            end;
+
          when others =>
             Vhdl.Errors.Error_Kind ("synth_type_of_object", Expr);
       end case;
