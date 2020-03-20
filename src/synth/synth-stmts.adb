@@ -203,9 +203,9 @@ package body Synth.Stmts is
                        (Get_Build (Syn_Inst), Dest_Voff, Voff);
                   end if;
                else
-                  if Dest_Voff = No_Net then
-                     Dest_Off := Dest_Off + Off;
+                  Dest_Off := Dest_Off + Off;
 
+                  if Dest_Voff = No_Net then
                      Strip_Const (Dest_Obj);
                      if Dest_Obj.Kind in Value_Array .. Value_Const_Array then
                         Dest_Obj := Dest_Obj.Arr.V
@@ -213,12 +213,6 @@ package body Synth.Stmts is
                         Dest_Off := 0;
                         Dest_W := W;
                      end if;
-                  else
-                     if Dest_Off /= 0 then
-                        --  TODO.
-                        raise Internal_Error;
-                     end if;
-                     Dest_Off := Dest_Off + Off;
                   end if;
                end if;
             end;
