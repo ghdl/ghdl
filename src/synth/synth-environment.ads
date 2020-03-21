@@ -279,6 +279,7 @@ private
    type Phi_Type is record
       --  Chain of sequential assignments in the current phi context (BB).
       First : Seq_Assign;
+      Last : Seq_Assign;
       --  Number of assignments.
       Nbr : Uns32;
    end record;

@@ -179,6 +179,7 @@ package body Synth.Environment is
    procedure Push_Phi is
    begin
       Phis_Table.Append ((First => No_Seq_Assign,
+                          Last => No_Seq_Assign,
                           Nbr => 0));
    end Push_Phi;
 
@@ -1153,7 +1154,7 @@ package body Synth.Environment is
       end loop;
    end Merge_Phis;
 
-   procedure Phi_Insert_Assign (Asgn : Seq_Assign)
+   procedure Phi_Append_Assign (Asgn : Seq_Assign)
    is
       pragma Assert (Asgn /= No_Seq_Assign);
       Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
@@ -1162,10 +1163,14 @@ package body Synth.Environment is
       P : Phi_Type renames Phis_Table.Table (Phis_Table.Last);
    begin
       --  Chain assignment in the current sequence.
-      Asgn_Rec.Chain := P.First;
-      P.First := Asgn;
+      if P.First = No_Seq_Assign then
+         P.First := Asgn;
+      else
+         Set_Assign_Chain (P.Last, Asgn);
+      end if;
+      P.Last := Asgn;
       P.Nbr := P.Nbr + 1;
-   end Phi_Insert_Assign;
+   end Phi_Append_Assign;
 
    --  Check consistency:
    --  - ordered.
@@ -1358,7 +1363,7 @@ package body Synth.Environment is
                                Chain => No_Seq_Assign,
                                Asgns => Pasgn));
          Wire_Rec.Cur_Assign := Assign_Table.Last;
-         Phi_Insert_Assign (Assign_Table.Last);
+         Phi_Append_Assign (Assign_Table.Last);
       else
          --  Overwrite.
          Insert_Partial_Assign (Ctxt, Cur_Asgn, Pasgn);
@@ -1442,6 +1447,7 @@ begin
    pragma Assert (Partial_Assign_Table.Last = No_Partial_Assign);
 
    Phis_Table.Append ((First => No_Seq_Assign,
+                       Last => No_Seq_Assign,
                        Nbr => 0));
    pragma Assert (Phis_Table.Last = No_Phi_Id);
 
