@@ -2337,14 +2337,6 @@ package body Vhdl.Sem_Assocs is
             end if;
             Formal_Name := Get_Named_Entity (Formal);
             if Is_Error (Formal_Name) then
-               if Finish then
-                  --  FIXME: display the name of subprg or component/entity.
-                  --  FIXME: fetch the interface (for parenthesis_name).
-                  --  FIXME: this is always a duplicate of a message from
-                  --     Sem_Name.
-                  Error_Msg_Sem (+Assoc, "no interface for %n in association",
-                                 +Get_Formal (Assoc));
-               end if;
                Match := Not_Compatible;
                exit;
             end if;
