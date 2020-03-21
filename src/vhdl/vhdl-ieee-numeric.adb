@@ -256,6 +256,42 @@ package body Vhdl.Ieee.Numeric is
         (others =>
            (others => Iir_Predefined_None)));
 
+   Min_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Min_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Min_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
+   Max_Patterns : constant Binary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Uns,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Nat,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Max_Nat_Uns,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None),
+         Type_Signed =>
+           (Arg_Vect_Vect => Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Sgn,
+            Arg_Vect_Scal => Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Int,
+            Arg_Scal_Vect => Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn,
+            Arg_Vect_Log  => Iir_Predefined_None,
+            Arg_Log_Vect  => Iir_Predefined_None)),
+      Pkg_Bit =>
+        (others =>
+           (others => Iir_Predefined_None)));
+
    Match_Eq_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned =>
@@ -793,6 +829,10 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Binary (Gt_Patterns);
                      when Name_Op_Greater_Equal =>
                         Handle_Binary (Ge_Patterns);
+                     when Name_Minimum =>
+                        Handle_Binary (Min_Patterns);
+                     when Name_Maximum =>
+                        Handle_Binary (Max_Patterns);
                      when Name_Op_Match_Equality =>
                         Handle_Binary (Match_Eq_Patterns);
                      when Name_Op_Match_Inequality =>

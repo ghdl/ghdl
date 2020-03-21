@@ -5583,6 +5583,20 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int,
       Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn,
 
+      Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn,
+
       Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Nat_Uns,
