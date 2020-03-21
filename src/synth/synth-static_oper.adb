@@ -783,7 +783,9 @@ package body Synth.Static_Oper is
                end;
             end;
 
-         when Iir_Predefined_Ieee_1164_Vector_Not =>
+         when Iir_Predefined_Ieee_1164_Vector_Not
+           | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
             return Synth_Vector_Monadic (Operand, Not_Table);
 
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
