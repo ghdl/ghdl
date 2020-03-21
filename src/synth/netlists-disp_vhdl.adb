@@ -943,6 +943,18 @@ package body Netlists.Disp_Vhdl is
                Disp_Template ("  \o0 <= std_logic_vector (\ui0 - \ui1);" & NL,
                               Inst);
             end if;
+         when Id_Umin =>
+            Disp_Template ("  \o0 <= \i0 when \ui0 < \ui1 else \i1;" & NL,
+                           Inst);
+         when Id_Smin =>
+            Disp_Template ("  \o0 <= \i0 when \si0 < \si1 else \i1;" & NL,
+                           Inst);
+         when Id_Umax =>
+            Disp_Template ("  \o0 <= \i0 when \ui0 > \ui1 else \i1;" & NL,
+                           Inst);
+         when Id_Smax =>
+            Disp_Template ("  \o0 <= \i0 when \si0 > \si1 else \i1;" & NL,
+                           Inst);
          when Id_Umul =>
             Disp_Template
               ("  \o0 <= std_logic_vector (resize (\ui0 * \ui1, \n0));" & NL,

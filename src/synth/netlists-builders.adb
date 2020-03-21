@@ -592,6 +592,15 @@ package body Netlists.Builders is
       Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Sub),
                             Get_Identifier ("sub"), Id_Sub);
 
+      Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Umin),
+                            Get_Identifier ("umin"), Id_Umin);
+      Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Smin),
+                            Get_Identifier ("smin"), Id_Smin);
+      Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Umax),
+                            Get_Identifier ("umax"), Id_Umax);
+      Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Smax),
+                            Get_Identifier ("smax"), Id_Smax);
+
       Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Umul),
                             Get_Identifier ("umul"), Id_Umul);
       Create_Dyadic_Module (Design, Res.M_Dyadic (Id_Smul),
