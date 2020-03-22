@@ -26,12 +26,14 @@ package body Netlists.Builders is
    function Create_Input (Id : String; W : Width := 0) return Port_Desc is
    begin
       return (Name => New_Sname_Artificial (Get_Identifier (Id), No_Sname),
+              Is_Inout => False,
               W => W);
    end Create_Input;
 
    function Create_Output (Id : String; W : Width := 0) return Port_Desc is
    begin
       return (Name => New_Sname_Artificial (Get_Identifier (Id), No_Sname),
+              Is_Inout => False,
               W => W);
    end Create_Output;
 

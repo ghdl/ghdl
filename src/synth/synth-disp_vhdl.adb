@@ -44,13 +44,20 @@ package body Synth.Disp_Vhdl is
       Put_Line (";");
    end Disp_Signal;
 
-   procedure Disp_Ports_As_Signals (M : Module) is
+   procedure Disp_Ports_As_Signals (M : Module)
+   is
+      Desc : Port_Desc;
    begin
       for I in 1 .. Get_Nbr_Inputs (M) loop
          Disp_Signal (Get_Input_Desc (M, I - 1));
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
-         Disp_Signal (Get_Output_Desc (M, I - 1));
+         Desc := Get_Output_Desc (M, I - 1);
+         if not Desc.Is_Inout then
+            --  inout ports are not prefixed, so they must not be declared
+            --  as signals.
+            Disp_Signal (Desc);
+         end if;
       end loop;
    end Disp_Ports_As_Signals;
 
@@ -439,7 +446,9 @@ package body Synth.Disp_Vhdl is
       Name_Wrap := Name_Table.Get_Identifier ("wrap");
       for P of Ports_Desc (Main) loop
          pragma Assert (Get_Sname_Prefix (P.Name) = No_Sname);
-         Set_Sname_Prefix (P.Name, New_Sname_User (Name_Wrap, No_Sname));
+         if not P.Is_Inout then
+            Set_Sname_Prefix (P.Name, New_Sname_User (Name_Wrap, No_Sname));
+         end if;
       end loop;
 
       Put_Line ("library ieee;");

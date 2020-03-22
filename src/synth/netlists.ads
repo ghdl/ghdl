@@ -125,7 +125,7 @@ package Netlists is
    subtype Width is Uns32;
    No_Width : constant Width := 0;
 
-   type Port_Kind is (Port_In, Port_Out);
+   type Port_Kind is (Port_In, Port_Out, Port_Inout);
 
    --  Each module has a numeric identifier that can be used to easily identify
    --  a module.  Gates (and, or, ...) have reserved identifiers.
@@ -153,9 +153,12 @@ package Netlists is
       --  Name of the port.
       Name : Sname;
 
+      Is_Inout : Boolean;
+
       --  Port width (number of bits).
       W : Width;
    end record;
+   pragma Pack (Port_Desc);
    pragma Convention (C, Port_Desc);
 
    type Port_Desc_Array is array (Port_Idx range <>) of Port_Desc;

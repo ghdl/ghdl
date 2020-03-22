@@ -119,6 +119,7 @@ package Netlists.Gates is
    Id_Output  : constant Module_Id := 50;
    Id_Ioutput : constant Module_Id := 51;
    Id_Port    : constant Module_Id := 52;
+   Id_Inout   : constant Module_Id := 53;
 
    --  Note: initial values must be constant nets.
    --

@@ -221,6 +221,8 @@ package body Netlists.Dump is
             Put ("input");
          when Port_Out =>
             Put ("output");
+         when Port_Inout =>
+            raise Internal_Error;
       end case;
       Put (' ');
       Dump_Name (Desc.Name);
