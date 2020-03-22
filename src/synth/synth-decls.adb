@@ -120,14 +120,12 @@ package body Synth.Decls is
       El : Node;
       El_Typ : Type_Acc;
       Off : Uns32;
-      Typ : Type_Acc;
    begin
       if not Is_Fully_Constrained_Type (Def) then
          return null;
       end if;
       Rec_Els := Create_Rec_El_Array
         (Iir_Index32 (Get_Nbr_Elements (El_List)));
-      Typ := Create_Record_Type (Rec_Els, 0);
 
       Off := 0;
       for I in Flist_First .. Flist_Last (El_List) loop
@@ -137,9 +135,8 @@ package body Synth.Decls is
                                              Typ => El_Typ);
          Off := Off + Get_Type_Width (El_Typ);
       end loop;
-      Typ.W := Off;
 
-      return Typ;
+      return Create_Record_Type (Rec_Els, Off);
    end Synth_Record_Type_Definition;
 
    function Synth_Access_Type_Definition
@@ -609,38 +606,50 @@ package body Synth.Decls is
                           Get_Declaration_Chain (Bod));
    end Synth_Package_Body;
 
+   procedure Synth_Variable
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean)
+   is
+      Def : constant Iir := Get_Default_Value (Decl);
+      --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+      Init : Value_Acc;
+      Obj_Type : Type_Acc;
+   begin
+      Synth_Declaration_Type (Syn_Inst, Decl);
+      Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
+      if not Obj_Type.Is_Synth
+        and then not Get_Instance_Const (Syn_Inst)
+      then
+         Error_Msg_Synth
+           (+Decl, "variable with access type is not synthesizable");
+         --  FIXME: use a poison value ?
+         Create_Object (Syn_Inst, Decl, Create_Value_Default (Obj_Type));
+      else
+         if Is_Valid (Def) then
+            Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Type);
+            Init := Synth_Subtype_Conversion (Init, Obj_Type, False, Decl);
+         else
+            Init := Create_Value_Default (Obj_Type);
+         end if;
+         if Get_Instance_Const (Syn_Inst) then
+            Create_Object (Syn_Inst, Decl, Unshare (Init, Current_Pool));
+         else
+            Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
+            Create_Var_Wire (Syn_Inst, Decl, Init);
+            if Is_Subprg then
+               Phi_Assign
+                 (Get_Build (Syn_Inst),
+                  Get_Value (Syn_Inst, Decl).W, Get_Net (Init), 0);
+            end if;
+         end if;
+      end if;
+   end Synth_Variable;
+
    procedure Synth_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
-            Synth_Declaration_Type (Syn_Inst, Decl);
-            declare
-               Def : constant Iir := Get_Default_Value (Decl);
-               --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
-               Init : Value_Acc;
-               Obj_Type : Type_Acc;
-            begin
-               Obj_Type := Get_Value_Type (Syn_Inst, Get_Type (Decl));
-               if Is_Valid (Def) then
-                  Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Type);
-                  Init := Synth_Subtype_Conversion
-                    (Init, Obj_Type, False, Decl);
-               else
-                  Init := Create_Value_Default (Obj_Type);
-               end if;
-               if Get_Instance_Const (Syn_Inst) then
-                  Create_Object (Syn_Inst, Decl, Unshare (Init, Current_Pool));
-               else
-                  Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
-                  Create_Var_Wire (Syn_Inst, Decl, Init);
-                  if Is_Subprg then
-                     Phi_Assign
-                       (Get_Build (Syn_Inst),
-                        Get_Value (Syn_Inst, Decl).W, Get_Net (Init), 0);
-                  end if;
-               end if;
-            end;
+            Synth_Variable (Syn_Inst, Decl, Is_Subprg);
          when Iir_Kind_Interface_Variable_Declaration =>
             --  Ignore default value.
             Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);

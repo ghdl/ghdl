@@ -104,7 +104,12 @@ package Synth.Values is
    type Rec_El_Array_Acc is access Rec_El_Array;
 
    type Type_Type (Kind : Type_Kind) is record
+      --  False if the type is not synthesisable: is or contains access/file.
+      Is_Synth : Boolean;
+
+      --  Number of bits for this type.
       W : Width;
+
       case Kind is
          when Type_Bit
            | Type_Logic =>

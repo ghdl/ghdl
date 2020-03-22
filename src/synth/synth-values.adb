@@ -271,7 +271,9 @@ package body Synth.Values is
       subtype Bit_Type_Type is Type_Type (Type_Bit);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Bit_Type_Type);
    begin
-      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit, W => 1)));
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit,
+                                                Is_Synth => True,
+                                                W => 1)));
    end Create_Bit_Type;
 
    function Create_Logic_Type return Type_Acc
@@ -279,7 +281,9 @@ package body Synth.Values is
       subtype Logic_Type_Type is Type_Type (Type_Logic);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Logic_Type_Type);
    begin
-      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Logic, W => 1)));
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Logic,
+                                                Is_Synth => True,
+                                                W => 1)));
    end Create_Logic_Type;
 
    function Create_Discrete_Type (Rng : Discrete_Range_Type; W : Width)
@@ -289,6 +293,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Discrete_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Discrete,
+                                                Is_Synth => True,
                                                 W => W,
                                                 Drange => Rng)));
    end Create_Discrete_Type;
@@ -299,6 +304,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Float_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Float,
+                                                Is_Synth => True,
                                                 W => 64,
                                                 Frange => Rng)));
    end Create_Float_Type;
@@ -310,6 +316,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Vector_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Vector,
+                                                Is_Synth => True,
                                                 W => Bnd.Len,
                                                 Vbound => Bnd,
                                                 Vec_El => El_Type)));
@@ -321,6 +328,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Slice_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Slice,
+                                                Is_Synth => El_Type.Is_Synth,
                                                 W => W,
                                                 Slice_El => El_Type)));
    end Create_Slice_Type;
@@ -374,6 +382,7 @@ package body Synth.Values is
          W := W * Bnd.D (I).Len;
       end loop;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Array,
+                                                Is_Synth => El_Type.Is_Synth,
                                                 W => W,
                                                 Abounds => Bnd,
                                                 Arr_El => El_Type)));
@@ -386,6 +395,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Array,
+                                                Is_Synth => El_Type.Is_Synth,
                                                 W => 0,
                                                 Uarr_Ndim => Ndim,
                                                 Uarr_El => El_Type)));
@@ -397,6 +407,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Unbounded_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Vector,
+                                                Is_Synth => El_Type.Is_Synth,
                                                 W => 0,
                                                 Uvec_El => El_Type)));
    end Create_Unbounded_Vector;
@@ -449,8 +460,17 @@ package body Synth.Values is
    is
       subtype Record_Type_Type is Type_Type (Type_Record);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Record_Type_Type);
+      Is_Synth : Boolean;
    begin
+      Is_Synth := True;
+      for I in Els.E'Range loop
+         if not Els.E (I).Typ.Is_Synth then
+            Is_Synth := False;
+            exit;
+         end if;
+      end loop;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Record,
+                                                Is_Synth => Is_Synth,
                                                 W => W,
                                                 Rec => Els)));
    end Create_Record_Type;
@@ -461,6 +481,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Access_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
+                                                Is_Synth => False,
                                                 W => 32,
                                                 Acc_Acc => Acc_Type)));
    end Create_Access_Type;
@@ -471,6 +492,7 @@ package body Synth.Values is
       function Alloc is new Areapools.Alloc_On_Pool_Addr (File_Type_Type);
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_File,
+                                                Is_Synth => False,
                                                 W => 32,
                                                 File_Typ => File_Type)));
    end Create_File_Type;
