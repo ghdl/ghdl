@@ -417,10 +417,8 @@ package body Netlists.Builders is
    procedure Create_Objects_Module (Ctxt : Context_Acc)
    is
       Outputs : Port_Desc_Array (0 .. 0);
-      Inputs : Port_Desc_Array (0 .. 0);
       Inputs2 : Port_Desc_Array (0 .. 1);
    begin
-      Inputs := (0 => Create_Input ("i"));
       Inputs2 := (0 => Create_Input ("i"),
                   1 => Create_Input ("init"));
       Outputs := (0 => Create_Output ("o"));
@@ -428,7 +426,7 @@ package body Netlists.Builders is
       Ctxt.M_Output := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Name_Output, No_Sname),
          Id_Output, 1, 1, 0);
-      Set_Ports_Desc (Ctxt.M_Output, Inputs, Outputs);
+      Set_Ports_Desc (Ctxt.M_Output, Inputs2 (0 .. 0), Outputs);
 
       Ctxt.M_Ioutput := New_User_Module
         (Ctxt.Design,
@@ -439,7 +437,7 @@ package body Netlists.Builders is
       Ctxt.M_Signal := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Name_Signal, No_Sname),
          Id_Signal, 1, 1, 0);
-      Set_Ports_Desc (Ctxt.M_Signal, Inputs, Outputs);
+      Set_Ports_Desc (Ctxt.M_Signal, Inputs2 (0 .. 0), Outputs);
 
       Ctxt.M_Isignal := New_User_Module
         (Ctxt.Design,
@@ -450,7 +448,12 @@ package body Netlists.Builders is
       Ctxt.M_Port := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Name_Port, No_Sname),
          Id_Port, 1, 1, 0);
-      Set_Ports_Desc (Ctxt.M_Port, Inputs, Outputs);
+      Set_Ports_Desc (Ctxt.M_Port, Inputs2 (0 .. 0), Outputs);
+
+      Ctxt.M_Nop := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("nop"), No_Sname),
+         Id_Nop, 1, 1, 0);
+      Set_Ports_Desc (Ctxt.M_Nop, Inputs2 (0 .. 0), Outputs);
    end Create_Objects_Module;
 
    procedure Create_Dff_Modules (Ctxt : Context_Acc)
@@ -1301,6 +1304,19 @@ package body Netlists.Builders is
       return O;
    end Build_Port;
 
+   function Build_Nop (Ctxt : Context_Acc; I : Net) return Net
+   is
+      Wd : constant Width := Get_Width (I);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Nop);
+      Connect (Get_Input (Inst, 0), I);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      return O;
+   end Build_Nop;
+
    function Build_Dff (Ctxt : Context_Acc;
                        Clk : Net;
                        D : Net) return Net
@@ -1522,5 +1538,4 @@ package body Netlists.Builders is
       Set_Width (O, W);
       return O;
    end Build_Formal_Input;
-
 end Netlists.Builders;

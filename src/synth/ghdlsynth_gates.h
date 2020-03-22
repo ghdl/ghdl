@@ -62,6 +62,7 @@ enum Module_Id {
    Id_Iadff = 59,
    Id_Mdff = 60,
    Id_Midff = 61,
+   Id_Nop = 60,
    Id_Utrunc = 64,
    Id_Strunc = 65,
    Id_Uextend = 66,

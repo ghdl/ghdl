@@ -193,10 +193,12 @@ package Netlists.Builders is
                         D : Net;
                         Els : Net) return Net;
    function Build_Midff (Ctxt : Context_Acc;
-                        Clk : Net;
-                        D : Net;
-                        Els : Net;
-                        Init : Net) return Net;
+                         Clk : Net;
+                         D : Net;
+                         Els : Net;
+                         Init : Net) return Net;
+
+   function Build_Nop (Ctxt : Context_Acc; I : Net) return Net;
 private
    type Module_Arr is array (Module_Id range <>) of Module;
 
@@ -220,6 +222,7 @@ private
       M_Edge : Module;
       M_Mux2 : Module;
       M_Mux4 : Module;
+      M_Nop : Module;
       M_Output : Module;
       M_Ioutput : Module;
       M_Signal : Module;

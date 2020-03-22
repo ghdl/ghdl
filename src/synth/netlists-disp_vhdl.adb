@@ -763,6 +763,8 @@ package body Netlists.Disp_Vhdl is
             Disp_Template ("  \o0 <= \i0; -- (isignal)" & NL, Inst);
          when Id_Port =>
             Disp_Template ("  \o0 <= \i0; -- (port)" & NL, Inst);
+         when Id_Nop =>
+            Disp_Template ("  \o0 <= \i0; -- (nop)" & NL, Inst);
          when Id_Not =>
             Disp_Template ("  \o0 <= not \i0;" & NL, Inst);
          when Id_Neg =>

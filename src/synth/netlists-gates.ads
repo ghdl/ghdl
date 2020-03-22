@@ -172,6 +172,9 @@ package Netlists.Gates is
    --  Output:  0: Q
    Id_Midff : constant Module_Id := 61;
 
+   --  Temporary gate, O = I
+   Id_Nop : constant Module_Id := 60;
+
    --  Width change: truncate or extend.  Sign is know in order to possibly
    --  detect loss of value.
    Id_Utrunc : constant Module_Id := 64;
