@@ -1777,6 +1777,11 @@ package body Vhdl.Scanner is
 
    procedure Scan_Translate_Off is
    begin
+      if Current_Context.Translate_Off then
+         Warning_Msg_Scan (Warnid_Pragma, "nested 'translate_off' ignored");
+         return;
+      end if;
+
       --  'pragma translate_off' has just been scanned.
       Scan_Translate_On_Off (Std_Names.Name_Translate_Off);
 
@@ -1804,6 +1809,13 @@ package body Vhdl.Scanner is
 
    procedure Scan_Translate_On is
    begin
+      if not Current_Context.Translate_Off then
+         Warning_Msg_Scan
+           (Warnid_Pragma,
+            "'translate_on' without coresponding 'translate_off'");
+         return;
+      end if;
+
       --  'pragma translate_off' has just been scanned.
       Scan_Translate_On_Off (Std_Names.Name_Translate_On);
 
@@ -1823,21 +1835,22 @@ package body Vhdl.Scanner is
          when Null_Identifier =>
             Warning_Msg_Scan
               (Warnid_Pragma, "incomplete pragma directive ignored");
+         when Name_Translate =>
+            Scan_Comment_Identifier (Id, True);
+            case Id is
+               when Name_On =>
+                  Scan_Translate_On;
+               when Name_Off =>
+                  Scan_Translate_Off;
+               when others =>
+                  Warning_Msg_Scan
+                    (Warnid_Pragma,
+                     "pragma translate must be followed by 'on' or 'off'");
+            end case;
          when Name_Translate_Off =>
-            if Current_Context.Translate_Off then
-               Warning_Msg_Scan
-                 (Warnid_Pragma, "nested 'translate_off' ignored");
-            else
-               Scan_Translate_Off;
-            end if;
+            Scan_Translate_Off;
          when Name_Translate_On =>
-            if Current_Context.Translate_Off then
-               Scan_Translate_On;
-            else
-               Warning_Msg_Scan
-                 (Warnid_Pragma, "'translate_on' without "
-                    & "coresponding 'translate_off'");
-            end if;
+            Scan_Translate_On;
          when Name_Label
            | Name_Label_Applies_To
            | Name_Return_Port_Name
