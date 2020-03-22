@@ -366,48 +366,83 @@ package body Synth.Environment is
                                 Stmt : Source.Syn_Src)
    is
       Phi : Phi_Type;
-      First, Last : Seq_Assign;
-      Asgn, Next_Asgn : Seq_Assign;
+      Asgn : Seq_Assign;
    begin
       Pop_Phi (Phi);
 
-      First := No_Seq_Assign;
-      Last := No_Seq_Assign;
-
-      --  First variables.
+      --  It is possible that the same value is assigned to different targets.
+      --  Example:
+      --    if rising_edge(clk) then
+      --      a := c;
+      --    end if;
+      --    b := a;
+      --  Because the assignment is not yet done, only the net is stored in
+      --  the partial assign.  When the net for variable A is infered and
+      --  changed to a dff, it is not known that it will also be assigned to
+      --  variable B.
+      --
+      --  Mark gates that will be infered.  And if already marked, insert
+      --  a nop.
       Asgn := Phi.First;
       while Asgn /= No_Seq_Assign loop
          declare
             Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
-            Wire_Rec : Wire_Id_Record renames
-              Wire_Id_Table.Table (Asgn_Rec.Id);
+            P : Partial_Assign;
          begin
-            Next_Asgn := Asgn_Rec.Chain;
-            Asgn_Rec.Chain := No_Seq_Assign;
+            P := Asgn_Rec.Asgns;
+            pragma Assert (P /= No_Partial_Assign);
+            while P /= No_Partial_Assign loop
+               declare
+                  Pa : Partial_Assign_Record
+                    renames Partial_Assign_Table.Table (P);
+                  Res_Inst : constant Instance := Get_Net_Parent (Pa.Value);
+               begin
+                  if Get_Mark_Flag (Res_Inst)
+                    and then Get_Id (Res_Inst) = Gates.Id_Mux2
+                  then
+                     --  A nop is needed iff the value is reused and will be
+                     --  inferred (which is only possible for Id_Mux2).
+                     Pa.Value := Build_Nop (Ctxt, Pa.Value);
+                  else
+                     Set_Mark_Flag (Res_Inst, True);
+                  end if;
 
-            if Wire_Rec.Kind = Wire_Variable then
-               Pop_And_Merge_Phi_Wire (Ctxt, Asgn_Rec, Stmt);
-            else
-               if First = No_Seq_Assign then
-                  First := Asgn;
-               else
-                  Set_Assign_Chain (Last, Asgn);
-               end if;
-               Last := Asgn;
-            end if;
-            Asgn := Next_Asgn;
+                  P := Pa.Next;
+               end;
+            end loop;
+            Asgn := Asgn_Rec.Chain;
          end;
       end loop;
 
-      --  Then signals.
-      Asgn := First;
+      --  Clear mark flag.
+      Asgn := Phi.First;
       while Asgn /= No_Seq_Assign loop
          declare
             Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
-            Wire_Rec : Wire_Id_Record renames
-              Wire_Id_Table.Table (Asgn_Rec.Id);
+            P : Partial_Assign;
          begin
-            pragma Assert (Wire_Rec.Kind /= Wire_Variable);
+            P := Asgn_Rec.Asgns;
+            pragma Assert (P /= No_Partial_Assign);
+            while P /= No_Partial_Assign loop
+               declare
+                  Pa : Partial_Assign_Record
+                    renames Partial_Assign_Table.Table (P);
+                  Res_Inst : constant Instance := Get_Net_Parent (Pa.Value);
+               begin
+                  Set_Mark_Flag (Res_Inst, False);
+
+                  P := Pa.Next;
+               end;
+            end loop;
+            Asgn := Asgn_Rec.Chain;
+         end;
+      end loop;
+
+      Asgn := Phi.First;
+      while Asgn /= No_Seq_Assign loop
+         declare
+            Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
+         begin
             Pop_And_Merge_Phi_Wire (Ctxt, Asgn_Rec, Stmt);
             Asgn := Asgn_Rec.Chain;
          end;

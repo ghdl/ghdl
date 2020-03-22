@@ -525,6 +525,7 @@ package body Netlists is
    is
       pragma Assert (Is_Valid (Inst));
    begin
+      pragma Assert (not Check_Connected (Inst));
       Instances_Table.Table (Inst).Klass := Free_Module;
    end Free_Instance;
 

@@ -469,6 +469,7 @@ package body Netlists.Inference is
 
    --  LAST_MUX is the mux whose input 0 is the loop and clock for selector.
    function Infere_FF (Ctxt : Context_Acc;
+                       Val : Net;
                        Prev_Val : Net;
                        Off : Uns32;
                        Last_Mux : Instance;
@@ -513,17 +514,20 @@ package body Netlists.Inference is
       declare
          Done : Boolean;
          Mux : Instance;
+         --  Previous mux to be free.
+         Prev_Mux : Instance;
          Sel : Net;
          Last_Out : Net;
          Mux_Not_Rst : Net;
          Mux_Rst : Net;
          Mux_Rst_Val : Net;
       begin
+         Prev_Mux := No_Instance;
          Last_Out := O;
 
          --  Initially, the final output is not connected.  So walk from the
          --  clocked mux until reaching the final output.
-         Done := not Is_Connected (Last_Out);
+         Done := Last_Out = Val;
 
          while not Done loop
             if not Has_One_Connection (Last_Out)
@@ -542,12 +546,10 @@ package body Netlists.Inference is
             if Get_Driver (Get_Mux2_I0 (Mux)) = Last_Out then
                Mux_Rst_Val := Get_Driver (Get_Mux2_I1 (Mux));
                Mux_Rst := Sel;
-            elsif Get_Driver (Get_Mux2_I1 (Mux)) = Last_Out then
+            else
+               pragma Assert (Get_Driver (Get_Mux2_I1 (Mux)) = Last_Out);
                Mux_Rst_Val := Get_Driver (Get_Mux2_I0 (Mux));
                Mux_Rst := Build_Monadic (Ctxt, Id_Not, Sel);
-            else
-               --  Cannot happen.
-               raise Internal_Error;
             end if;
 
             Last_Out := Get_Output (Mux, 0);
@@ -579,6 +581,11 @@ package body Netlists.Inference is
                else
                   Enable := Build_Dyadic (Ctxt, Id_And, Enable, Mux_Not_Rst);
                end if;
+
+               if Prev_Mux /= No_Instance then
+                  Remove_Instance (Prev_Mux);
+               end if;
+               Prev_Mux := Mux;
             else
                --  Assume this is a reset value.
                --  FIXME: check for no logical loop.
@@ -592,7 +599,11 @@ package body Netlists.Inference is
 
                   --  The output of the mux is now the reset value.
                   Redirect_Inputs (Last_Out, Mux_Rst_Val);
-                  Free_Instance (Mux);
+
+                  if Prev_Mux /= No_Instance then
+                     Remove_Instance (Prev_Mux);
+                  end if;
+                  Prev_Mux := Mux;
 
                   Rst := Mux_Rst;
                   Rst_Val := Mux_Rst_Val;
@@ -600,12 +611,19 @@ package body Netlists.Inference is
                else
                   Rst := Build_Dyadic (Ctxt, Id_Or, Mux_Rst, Rst);
                   Rst_Val := Last_Out;
+
+                  if Prev_Mux /= No_Instance then
+                     Remove_Instance (Prev_Mux);
+                  end if;
+                  Prev_Mux := No_Instance;
                end if;
             end if;
          end loop;
-      end;
 
-      Free_Instance (Last_Mux);
+         if Prev_Mux /= No_Instance then
+            Free_Instance (Mux);
+         end if;
+      end;
 
       if Off = 0
         and then Can_Infere_RAM (Data, Prev_Val)
@@ -629,6 +647,12 @@ package body Netlists.Inference is
       --  Create the FF.
       Res := Infere_FF_Create (Ctxt, Rst, Rst_Val, Init, Clk, Data,
                                Els, Mux_Loc);
+
+      --  The output may already be used (if the target is a variable that
+      --  is read).  So redirect the net.
+      Redirect_Inputs (Get_Output (Last_Mux, 0), Res);
+      Free_Instance (Last_Mux);
+
       return Res;
    end Infere_FF;
 
@@ -762,7 +786,7 @@ package body Netlists.Inference is
    is
       pragma Assert (Val /= No_Net);
       pragma Assert (Prev_Val /= No_Net);
-      Last_Mux : Instance;
+      First_Mux, Last_Mux : Instance;
       Len : Integer;
       Sel : Input;
       Clk : Net;
@@ -789,7 +813,10 @@ package body Netlists.Inference is
          Res := Infere_Latch (Ctxt, Val, Prev_Val, Stmt);
       else
          --  Clock -> FF
-         Res := Infere_FF (Ctxt, Prev_Val, Off, Last_Mux,
+         First_Mux := Get_Net_Parent (Val);
+         pragma Assert (Get_Id (First_Mux) = Id_Mux2);
+
+         Res := Infere_FF (Ctxt, Val, Prev_Val, Off, Last_Mux,
                            Clk, Enable, Stmt);
       end if;
 
