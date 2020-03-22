@@ -718,6 +718,29 @@ package body Vhdl.Ieee.Numeric is
          Set_Implicit_Definition (Decl, Predefined);
       end Handle_Std_Match;
 
+      procedure Handle_To_01
+      is
+         Predefined : Iir_Predefined_Functions;
+      begin
+         if Arg1_Kind /= Arg_Vect
+           or else Arg2_Kind /= Arg_Scal
+           or else Arg2_Sign /= Type_Log
+         then
+            raise Error;
+         end if;
+
+         case Arg1_Sign is
+            when Type_Unsigned =>
+               Predefined := Iir_Predefined_Ieee_Numeric_Std_To_01_Uns;
+            when Type_Signed =>
+               Predefined := Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn;
+            when others =>
+               raise Error;
+         end case;
+
+         Set_Implicit_Definition (Decl, Predefined);
+      end Handle_To_01;
+
       procedure Handle_Shift (Pats : Shift_Pattern_Type; Sh_Sign : Sign_Kind)
       is
          Res : Iir_Predefined_Functions;
@@ -885,6 +908,8 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Shift (Rol_Patterns, Type_Unsigned);
                      when Name_Rotate_Right =>
                         Handle_Shift (Ror_Patterns, Type_Unsigned);
+                     when Name_To_01 =>
+                        Handle_To_01;
                      when others =>
                         null;
                   end case;

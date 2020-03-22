@@ -735,21 +735,22 @@ package Std_Names is
    Name_To_Stdlogicvector  : constant Name_Id := Name_First_Ieee_Name + 022;
    Name_To_Stdulogicvector : constant Name_Id := Name_First_Ieee_Name + 023;
    Name_Is_X               : constant Name_Id := Name_First_Ieee_Name + 024;
-   Name_Conv_Signed        : constant Name_Id := Name_First_Ieee_Name + 025;
-   Name_Conv_Unsigned      : constant Name_Id := Name_First_Ieee_Name + 026;
-   Name_Conv_Integer       : constant Name_Id := Name_First_Ieee_Name + 027;
-   Name_Conv_Std_Logic_Vector : constant Name_Id := Name_First_Ieee_Name + 028;
-   Name_And_Reduce         : constant Name_Id := Name_First_Ieee_Name + 029;
-   Name_Nand_Reduce        : constant Name_Id := Name_First_Ieee_Name + 030;
-   Name_Or_Reduce          : constant Name_Id := Name_First_Ieee_Name + 031;
-   Name_Nor_Reduce         : constant Name_Id := Name_First_Ieee_Name + 032;
-   Name_Xor_Reduce         : constant Name_Id := Name_First_Ieee_Name + 033;
-   Name_Xnor_Reduce        : constant Name_Id := Name_First_Ieee_Name + 034;
-   Name_Ceil               : constant Name_Id := Name_First_Ieee_Name + 035;
-   Name_Round              : constant Name_Id := Name_First_Ieee_Name + 036;
-   Name_Log2               : constant Name_Id := Name_First_Ieee_Name + 037;
-   Name_Sin                : constant Name_Id := Name_First_Ieee_Name + 038;
-   Name_Cos                : constant Name_Id := Name_First_Ieee_Name + 039;
+   Name_To_01              : constant Name_Id := Name_First_Ieee_Name + 025;
+   Name_Conv_Signed        : constant Name_Id := Name_First_Ieee_Name + 026;
+   Name_Conv_Unsigned      : constant Name_Id := Name_First_Ieee_Name + 027;
+   Name_Conv_Integer       : constant Name_Id := Name_First_Ieee_Name + 028;
+   Name_Conv_Std_Logic_Vector : constant Name_Id := Name_First_Ieee_Name + 029;
+   Name_And_Reduce         : constant Name_Id := Name_First_Ieee_Name + 030;
+   Name_Nand_Reduce        : constant Name_Id := Name_First_Ieee_Name + 031;
+   Name_Or_Reduce          : constant Name_Id := Name_First_Ieee_Name + 032;
+   Name_Nor_Reduce         : constant Name_Id := Name_First_Ieee_Name + 033;
+   Name_Xor_Reduce         : constant Name_Id := Name_First_Ieee_Name + 034;
+   Name_Xnor_Reduce        : constant Name_Id := Name_First_Ieee_Name + 035;
+   Name_Ceil               : constant Name_Id := Name_First_Ieee_Name + 036;
+   Name_Round              : constant Name_Id := Name_First_Ieee_Name + 037;
+   Name_Log2               : constant Name_Id := Name_First_Ieee_Name + 038;
+   Name_Sin                : constant Name_Id := Name_First_Ieee_Name + 039;
+   Name_Cos                : constant Name_Id := Name_First_Ieee_Name + 040;
    Name_Last_Ieee_Name     : constant Name_Id := Name_Cos;
 
    Name_First_Synthesis    : constant Name_Id := Name_Last_Ieee_Name + 1;
@@ -915,7 +916,9 @@ package Std_Names is
    Name_Synopsys :       constant Name_Id := Name_First_Comment + 3;
    Name_Translate_Off :  constant Name_Id := Name_First_Comment + 4;
    Name_Translate_On :   constant Name_Id := Name_First_Comment + 5;
-   Name_Last_Comment :   constant Name_Id := Name_Translate_On;
+   Name_Translate :      constant Name_Id := Name_First_Comment + 6;
+   Name_Off :            constant Name_Id := Name_First_Comment + 7;
+   Name_Last_Comment :   constant Name_Id := Name_Off;
 
    --  PSL words.
    Name_First_PSL :          constant Name_Id := Name_Last_Comment + 1;

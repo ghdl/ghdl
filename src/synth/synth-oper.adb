@@ -1481,13 +1481,11 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_1164_Vector_Is_X =>
             --  Always false.
             return Create_Value_Discrete (0, Boolean_Type);
-         when Iir_Predefined_Ieee_1164_To_Bitvector =>
-            if Is_Static (L) then
-               raise Internal_Error;
-            end if;
-            return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
-         when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
-           | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
+         when Iir_Predefined_Ieee_1164_To_Bitvector
+           | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Suv
+           | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
+           | Iir_Predefined_Ieee_Numeric_Std_To_01_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn =>
             if Is_Static (L) then
                raise Internal_Error;
             end if;

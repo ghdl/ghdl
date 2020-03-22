@@ -5692,6 +5692,9 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Match_Slv,
       Iir_Predefined_Ieee_Numeric_Std_Match_Suv,
 
+      Iir_Predefined_Ieee_Numeric_Std_To_01_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn,
+
       --  Math_Real
       Iir_Predefined_Ieee_Math_Real_Ceil,
       Iir_Predefined_Ieee_Math_Real_Round,

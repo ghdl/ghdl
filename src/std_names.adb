@@ -652,6 +652,7 @@ package body Std_Names is
       Def ("to_stdlogicvector",  Name_To_Stdlogicvector);
       Def ("to_stdulogicvector", Name_To_Stdulogicvector);
       Def ("is_x",               Name_Is_X);
+      Def ("to_01",              Name_To_01);
       Def ("conv_signed",        Name_Conv_Signed);
       Def ("conv_unsigned",      Name_Conv_Unsigned);
       Def ("conv_integer",       Name_Conv_Integer);
@@ -786,6 +787,8 @@ package body Std_Names is
       Def ("synopsys",              Name_Synopsys);
       Def ("translate_off",         Name_Translate_Off);
       Def ("translate_on",          Name_Translate_On);
+      Def ("translate",             Name_Translate);
+      Def ("off",                   Name_Off);
 
       --  PSL keywords
       Def ("a",                  Name_A);
