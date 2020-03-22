@@ -3,15 +3,8 @@
 . ../../testenv.sh
 
 for t in dff01 dff02 dff03 dff04 dff05 dff06 dff07 dff08 dff09 \
-         dff10 dff11 dff12 dff13; do
-    analyze $t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
-
-    synth $t.vhdl -e $t > syn_$t.vhdl
-    analyze syn_$t.vhdl tb_$t.vhdl
-    elab_simulate tb_$t
-    clean
+               dff10 dff11 dff12 dff13 dff14 dff15; do
+    synth_tb $t
 done
 
 echo "Test successful"
