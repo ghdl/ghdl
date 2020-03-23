@@ -570,10 +570,10 @@ package body Synth.Decls is
          Get_Value (Syn_Inst, Universal_Real_Type_Definition));
    end Synth_Convertible_Declarations;
 
-   procedure Synth_Package_Declaration
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+   function Create_Package_Instance (Parent_Inst : Synth_Instance_Acc;
+                                     Pkg : Node)
+                                    return Synth_Instance_Acc
    is
-      pragma Assert (not Is_Uninstantiated_Package (Pkg));
       Syn_Inst : Synth_Instance_Acc;
       Val : Value_Acc;
    begin
@@ -586,6 +586,21 @@ package body Synth.Decls is
          --  Local package: check elaboration order.
          Create_Object (Parent_Inst, Pkg, Val);
       end if;
+      return Syn_Inst;
+   end Create_Package_Instance;
+
+   procedure Synth_Package_Declaration
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+   is
+      Syn_Inst : Synth_Instance_Acc;
+   begin
+      if Is_Uninstantiated_Package (Pkg) then
+         --  Nothing to do (yet) for uninstantiated packages.
+         return;
+      end if;
+
+      Syn_Inst := Create_Package_Instance (Parent_Inst, Pkg);
+
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
       if Pkg = Vhdl.Std_Package.Standard_Package then
          Synth_Convertible_Declarations (Syn_Inst);
@@ -597,14 +612,78 @@ package body Synth.Decls is
    is
       Val : Value_Acc;
    begin
+      if Is_Uninstantiated_Package (Pkg) then
+         --  Nothing to do (yet) for uninstantiated packages.
+         return;
+      end if;
+
       if Get_Kind (Get_Parent (Pkg)) = Iir_Kind_Design_Unit then
          Val := Get_Package_Object (Parent_Inst, Pkg);
       else
          Val := Get_Value (Parent_Inst, Pkg);
       end if;
+
       Synth_Declarations (Get_Value_Instance (Val.Instance),
                           Get_Declaration_Chain (Bod));
    end Synth_Package_Body;
+
+   procedure Synth_Generics_Association (Sub_Inst : Synth_Instance_Acc;
+                                         Syn_Inst : Synth_Instance_Acc;
+                                         Inter_Chain : Node;
+                                         Assoc_Chain : Node)
+   is
+      Inter : Node;
+      Inter_Type : Type_Acc;
+      Assoc : Node;
+      Assoc_Inter : Node;
+      Actual : Node;
+      Val : Value_Acc;
+   begin
+      Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
+      while Is_Valid (Assoc) loop
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+
+         Synth_Declaration_Type (Sub_Inst, Inter);
+         Inter_Type := Get_Value_Type (Sub_Inst, Get_Type (Inter));
+
+         pragma Assert (Iir_Parameter_Modes (Get_Mode (Inter)) = Iir_In_Mode);
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_Open =>
+               Actual := Get_Default_Value (Inter);
+               Val := Synth_Expression_With_Type
+                 (Sub_Inst, Actual, Inter_Type);
+            when Iir_Kind_Association_Element_By_Expression =>
+               Actual := Get_Actual (Assoc);
+               Val := Synth_Expression_With_Type
+                 (Syn_Inst, Actual, Inter_Type);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
+
+         pragma Assert (Is_Static (Val));
+
+         Create_Object (Sub_Inst, Inter, Val);
+
+         Next_Association_Interface (Assoc, Assoc_Inter);
+      end loop;
+   end Synth_Generics_Association;
+
+   procedure Synth_Package_Instantiation
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+   is
+      Sub_Inst : Synth_Instance_Acc;
+   begin
+      Sub_Inst := Create_Package_Instance (Parent_Inst, Pkg);
+
+      Synth_Generics_Association
+        (Sub_Inst, Parent_Inst,
+         Get_Generic_Chain (Pkg), Get_Generic_Map_Aspect_Chain (Pkg));
+
+      Synth_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
+   end Synth_Package_Instantiation;
 
    procedure Synth_Variable
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean)

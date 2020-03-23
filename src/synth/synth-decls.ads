@@ -55,4 +55,12 @@ package Synth.Decls is
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
    procedure Synth_Package_Body
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
+
+   procedure Synth_Generics_Association (Sub_Inst : Synth_Instance_Acc;
+                                         Syn_Inst : Synth_Instance_Acc;
+                                         Inter_Chain : Node;
+                                         Assoc_Chain : Node);
+
+   procedure Synth_Package_Instantiation
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
 end Synth.Decls;

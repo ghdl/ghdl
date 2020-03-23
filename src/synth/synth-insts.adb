@@ -751,50 +751,6 @@ package body Synth.Insts is
       end loop;
    end Synth_Instantiate_Module;
 
-   procedure Synth_Generics_Association (Sub_Inst : Synth_Instance_Acc;
-                                         Syn_Inst : Synth_Instance_Acc;
-                                         Inter_Chain : Node;
-                                         Assoc_Chain : Node)
-   is
-      Inter : Node;
-      Inter_Type : Type_Acc;
-      Assoc : Node;
-      Assoc_Inter : Node;
-      Actual : Node;
-      Val : Value_Acc;
-   begin
-      Assoc := Assoc_Chain;
-      Assoc_Inter := Inter_Chain;
-      while Is_Valid (Assoc) loop
-         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
-
-         Synth_Declaration_Type (Sub_Inst, Inter);
-         Inter_Type := Get_Value_Type (Sub_Inst, Get_Type (Inter));
-
-         pragma Assert (Iir_Parameter_Modes (Get_Mode (Inter)) = Iir_In_Mode);
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_Open =>
-               Actual := Get_Default_Value (Inter);
-               Val := Synth_Expression_With_Type
-                 (Sub_Inst, Actual, Inter_Type);
-            when Iir_Kind_Association_Element_By_Expression =>
-               Actual := Get_Actual (Assoc);
-               Val := Synth_Expression_With_Type
-                 (Syn_Inst, Actual, Inter_Type);
-            when others =>
-               raise Internal_Error;
-         end case;
-
-         Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
-
-         pragma Assert (Is_Static (Val));
-
-         Create_Object (Sub_Inst, Inter, Val);
-
-         Next_Association_Interface (Assoc, Assoc_Inter);
-      end loop;
-   end Synth_Generics_Association;
-
    --  Return the type of EXPR without evaluating it.
    --  FIXME: how dubious is it ?
    function Synth_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
@@ -1199,7 +1155,7 @@ package body Synth.Insts is
                      end if;
                   end;
                when Iir_Kind_Package_Instantiation_Declaration =>
-                  null;
+                  Synth_Package_Instantiation (Parent_Inst, Dep_Unit);
                when Iir_Kind_Package_Body =>
                   null;
                when Iir_Kind_Architecture_Body =>
