@@ -119,6 +119,18 @@ package Netlists.Gates is
    Id_Output  : constant Module_Id := 50;
    Id_Ioutput : constant Module_Id := 51;
    Id_Port    : constant Module_Id := 52;
+
+   --  Id_Inout is a virtual gate used to fit inout direction into the netlist
+   --  model which has only inputs and outputs.
+   --  It is virtual because it doesn't perform any computation.
+   --  Its output 1 must always be connected to an inout port of the module.
+   --  (more precisely: to an input port marked as inout of the self instance).
+   --  If input 0 is connected, it is a driver to the inout port.
+   --  The current value of the inout port can be read from output 0.
+   --
+   --  Inputs:  0: value to be assigned to the port
+   --  Outputs: 0: value of the port
+   --           1: direct and only connection to the port
    Id_Inout   : constant Module_Id := 53;
 
    --  Note: initial values must be constant nets.

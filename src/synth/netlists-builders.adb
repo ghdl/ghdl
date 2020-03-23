@@ -420,6 +420,7 @@ package body Netlists.Builders is
    is
       Outputs : Port_Desc_Array (0 .. 0);
       Inputs2 : Port_Desc_Array (0 .. 1);
+      Outputs2 : Port_Desc_Array (0 .. 1);
    begin
       Inputs2 := (0 => Create_Input ("i"),
                   1 => Create_Input ("init"));
@@ -456,6 +457,13 @@ package body Netlists.Builders is
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("nop"), No_Sname),
          Id_Nop, 1, 1, 0);
       Set_Ports_Desc (Ctxt.M_Nop, Inputs2 (0 .. 0), Outputs);
+
+      Ctxt.M_Inout := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Name_Inout, No_Sname),
+         Id_Inout, 1, 2, 0);
+      Outputs2 := (0 => Outputs (0),
+                   1 => Create_Output ("oport"));
+      Set_Ports_Desc (Ctxt.M_Inout, Inputs2 (0 .. 0), Outputs2);
    end Create_Objects_Module;
 
    procedure Create_Dff_Modules (Ctxt : Context_Acc)
@@ -1253,6 +1261,19 @@ package body Netlists.Builders is
    begin
       return Build_Object (Ctxt, Ctxt.M_Output, W);
    end Build_Output;
+
+   function Build_Inout (Ctxt : Context_Acc; W : Width) return Instance
+   is
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Inout);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      O := Get_Output (Inst, 1);
+      Set_Width (O, W);
+      return Inst;
+   end Build_Inout;
 
    function Build_Ioutput (Ctxt : Context_Acc; Init : Net) return Net
    is

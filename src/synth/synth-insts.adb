@@ -1309,31 +1309,49 @@ package body Synth.Insts is
                                  Val : Value_Acc)
    is
       Default : constant Node := Get_Default_Value (Inter);
+      Desc : constant Port_Desc :=
+        Get_Output_Desc (Get_Module (Self_Inst), Idx);
       Inter_Typ : Type_Acc;
       Value : Net;
       Init : Value_Acc;
       Inp : Input;
-      W : Width;
    begin
       pragma Assert (Val.Kind = Value_Wire);
 
       --  Create a gate for the output, so that it could be read.
       Val.W := Alloc_Wire (Wire_Output, Inter);
-      W := Get_Output_Desc (Get_Module (Self_Inst), Idx).W;
-      pragma Assert (W = Get_Type_Width (Val.Typ));
-      if Default /= Null_Node then
-         Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
-         Init := Synth_Expression_With_Type
-           (Syn_Inst, Default, Inter_Typ);
-         Init := Synth_Subtype_Conversion
-           (Init, Inter_Typ, False, Inter);
-         Value := Builders.Build_Ioutput (Build_Context, Get_Net (Init));
+      pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
+
+      Inp := Get_Input (Self_Inst, Idx);
+
+      if Desc.Is_Inout then
+         if Default /= Null_Node then
+            --  TODO: initialized inout.
+            raise Internal_Error;
+         end if;
+         declare
+            Io_Inst : Instance;
+         begin
+            Io_Inst := Builders.Build_Inout (Build_Context, Desc.W);
+            --  Connect port1 of gate inout to the pin.
+            Connect (Inp, Get_Output (Io_Inst, 1));
+            --  And port0 of the gate will be use to read from the pin.
+            Value := Get_Output (Io_Inst, 0);
+         end;
       else
-         Value := Builders.Build_Output (Build_Context, W);
+         if Default /= Null_Node then
+            Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
+            Init := Synth_Expression_With_Type
+              (Syn_Inst, Default, Inter_Typ);
+            Init := Synth_Subtype_Conversion
+              (Init, Inter_Typ, False, Inter);
+            Value := Builders.Build_Ioutput (Build_Context, Get_Net (Init));
+         else
+            Value := Builders.Build_Output (Build_Context, Desc.W);
+         end if;
+         Connect (Inp, Value);
       end if;
       Set_Location (Value, Inter);
-      Inp := Get_Input (Self_Inst, Idx);
-      Connect (Inp, Value);
       Set_Wire_Gate (Val.W, Value);
    end Create_Output_Wire;
 
