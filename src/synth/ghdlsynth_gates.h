@@ -56,6 +56,7 @@ enum Module_Id {
    Id_Output  = 50,
    Id_Ioutput = 51,
    Id_Port    = 52,
+   Id_Inout   = 53,
    Id_Dff   = 56,
    Id_Adff  = 57,
    Id_Idff  = 58,
