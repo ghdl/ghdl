@@ -2672,6 +2672,9 @@ package body Synth.Stmts is
          raise Internal_Error;
       end if;
 
+      Apply_Block_Configuration
+        (Get_Block_Block_Configuration (Blk), Blk);
+
       Blk_Sname := New_Sname_User (Get_Identifier (Blk), Get_Sname (Syn_Inst));
       Blk_Inst := Make_Instance (Syn_Inst, Blk, Blk_Sname);
       Mark (M, Proc_Pool);
