@@ -448,7 +448,7 @@ package body Synth.Decls is
    end Synth_Declaration_Type;
 
    procedure Synth_Constant_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Last_Type : in out Node)
    is
       Deferred_Decl : constant Node := Get_Deferred_Declaration (Decl);
       First_Decl : Node;
@@ -481,9 +481,14 @@ package body Synth.Decls is
          --  be derived from the value.
          --  FIXME: what about multiple declarations ?
          Decl_Type := Get_Subtype_Indication (Decl);
-         if Get_Kind (Decl_Type) in Iir_Kinds_Denoting_Name then
-            --  Type mark.
-            Decl_Type := Get_Type (Get_Named_Entity (Decl_Type));
+         if Decl_Type = Null_Node then
+            Decl_Type := Last_Type;
+         else
+            if Get_Kind (Decl_Type) in Iir_Kinds_Denoting_Name then
+               --  Type mark.
+               Decl_Type := Get_Type (Get_Named_Entity (Decl_Type));
+            end if;
+            Last_Type := Decl_Type;
          end if;
          Obj_Type := Get_Value_Type (Syn_Inst, Decl_Type);
          Val := Synth_Expression_With_Type
@@ -723,8 +728,10 @@ package body Synth.Decls is
       end if;
    end Synth_Variable;
 
-   procedure Synth_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean) is
+   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                Decl : Node;
+                                Is_Subprg : Boolean;
+                                Last_Type : in out Node) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
@@ -734,7 +741,7 @@ package body Synth.Decls is
             Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
             Create_Var_Wire (Syn_Inst, Decl, null);
          when Iir_Kind_Constant_Declaration =>
-            Synth_Constant_Declaration (Syn_Inst, Decl);
+            Synth_Constant_Declaration (Syn_Inst, Decl, Last_Type);
          when Iir_Kind_Signal_Declaration =>
             Synth_Declaration_Type (Syn_Inst, Decl);
             declare
@@ -839,11 +846,13 @@ package body Synth.Decls is
    procedure Synth_Declarations
      (Syn_Inst : Synth_Instance_Acc; Decls : Iir; Is_Subprg : Boolean := False)
    is
-      Decl : Iir;
+      Decl : Node;
+      Last_Type : Node;
    begin
+      Last_Type := Null_Node;
       Decl := Decls;
       while Is_Valid (Decl) loop
-         Synth_Declaration (Syn_Inst, Decl, Is_Subprg);
+         Synth_Declaration (Syn_Inst, Decl, Is_Subprg, Last_Type);
 
          Decl := Get_Chain (Decl);
       end loop;

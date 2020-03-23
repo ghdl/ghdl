@@ -3238,6 +3238,7 @@ package body Synth.Stmts is
       Unit_Sname : Sname;
       M : Areapools.Mark_Type;
       Item : Node;
+      Last_Type : Node;
    begin
       Unit_Sname := New_Sname_User (Get_Identifier (Unit),
                                     Get_Sname (Syn_Inst));
@@ -3245,6 +3246,7 @@ package body Synth.Stmts is
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
+      Last_Type := Null_Node;
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Node loop
          case Get_Kind (Item) is
@@ -3265,7 +3267,7 @@ package body Synth.Stmts is
               | Iir_Kind_Procedure_Body
               | Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification =>
-               Synth_Declaration (Unit_Inst, Item, False);
+               Synth_Declaration (Unit_Inst, Item, False, Last_Type);
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
                Synth_Concurrent_Statement (Unit_Inst, Item);
             when others =>

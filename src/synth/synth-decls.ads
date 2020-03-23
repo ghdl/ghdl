@@ -40,8 +40,10 @@ package Synth.Decls is
    procedure Synth_Declaration_Type
      (Syn_Inst : Synth_Instance_Acc; Decl : Node);
 
-   procedure Synth_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean);
+   procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                Decl : Node;
+                                Is_Subprg : Boolean;
+                                Last_Type : in out Node);
 
    procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc;
                                  Decls : Iir;
