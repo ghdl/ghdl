@@ -679,6 +679,7 @@ package body Synth.Decls is
    procedure Synth_Package_Instantiation
      (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
    is
+      Bod : constant Node := Get_Instance_Package_Body (Pkg);
       Sub_Inst : Synth_Instance_Acc;
    begin
       Sub_Inst := Create_Package_Instance (Parent_Inst, Pkg);
@@ -688,6 +689,24 @@ package body Synth.Decls is
          Get_Generic_Chain (Pkg), Get_Generic_Map_Aspect_Chain (Pkg));
 
       Synth_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
+
+      if Bod /= Null_Node then
+         --  Macro expended package instantiation.
+         raise Internal_Error;
+      else
+         --  Shared body
+         declare
+            Uninst : constant Node := Get_Uninstantiated_Package_Decl (Pkg);
+            Uninst_Bod : constant Node := Get_Package_Body (Uninst);
+         begin
+            Set_Uninstantiated_Scope (Sub_Inst, Uninst);
+            --  Synth declarations of (optional) body.
+            if Uninst_Bod /= Null_Node then
+               Synth_Declarations
+                 (Sub_Inst, Get_Declaration_Chain (Uninst_Bod));
+            end if;
+         end;
+      end if;
    end Synth_Package_Instantiation;
 
    procedure Synth_Variable

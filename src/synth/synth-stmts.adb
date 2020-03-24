@@ -31,6 +31,7 @@ with Simple_IO;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Types;
 with Vhdl.Sem_Expr;
+with Vhdl.Sem_Inst;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Evaluation;
@@ -1676,7 +1677,7 @@ package body Synth.Stmts is
    is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
-      Bod : constant Node := Get_Subprogram_Body (Imp);
+      Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
       Res : Value_Acc;
       C : Seq_Context (Mode_Dynamic);
       Wire_Mark : Wire_Id;
@@ -1826,16 +1827,21 @@ package body Synth.Stmts is
    is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
-      Bod : constant Node := Get_Subprogram_Body (Imp);
+      Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
       Nbr_Inout : constant Natural := Count_Associations (Init);
       Infos : Target_Info_Array (1 .. Nbr_Inout);
       Area_Mark : Areapools.Mark_Type;
       Res : Value_Acc;
       Sub_Inst : Synth_Instance_Acc;
+      Up_Inst : Synth_Instance_Acc;
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
-      Sub_Inst := Make_Instance (Syn_Inst, Bod,
+
+      Up_Inst := Get_Instance_By_Scope (Syn_Inst, Get_Parent_Scope (Imp));
+      Sub_Inst := Make_Instance (Up_Inst, Bod,
                                  New_Internal_Name (Build_Context));
+      Set_Instance_Base (Sub_Inst, Syn_Inst);
+
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
 
       if Is_Error (Sub_Inst) then
@@ -2618,7 +2624,9 @@ package body Synth.Stmts is
          Unit : Node;
          Lib : Node;
       begin
-         if Get_Kind (Pkg) = Iir_Kind_Package_Declaration then
+         if Get_Kind (Pkg) = Iir_Kind_Package_Declaration
+           and then not Is_Uninstantiated_Package (Pkg)
+         then
             Unit := Get_Parent (Pkg);
             if Get_Kind (Unit) = Iir_Kind_Design_Unit then
                Lib := Get_Library (Get_Design_File (Unit));

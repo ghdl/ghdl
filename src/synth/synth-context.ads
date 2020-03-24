@@ -50,6 +50,12 @@ package Synth.Context is
                            Blk : Node;
                            Name : Sname := No_Sname)
                           return Synth_Instance_Acc;
+
+   --  Only useful for subprograms: set the base (which can be different from
+   --  the parent).  Ideally it should be part of Make_Instance, but in most
+   --  cases they are the same (except sometimes for subprograms).
+   procedure Set_Instance_Base (Inst : Synth_Instance_Acc;
+                                Base : Synth_Instance_Acc);
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc);
 
    function Is_Error (Inst : Synth_Instance_Acc) return Boolean;
@@ -121,6 +127,12 @@ package Synth.Context is
 
    function Get_Package_Object
      (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Value_Acc;
+
+   --  Return the scope of the parent of BLK.  Deals with architecture bodies.
+   function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc;
+
+   procedure Set_Uninstantiated_Scope
+     (Syn_Inst : Synth_Instance_Acc; Bod : Node);
 private
    type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
 
@@ -147,8 +159,16 @@ private
       --  Name prefix for declarations.
       Name : Sname;
 
-      --  The corresponding info for this instance.  This is used for lookup.
+      --  The corresponding info for this instance.
+      --  This is used for lookup.
       Block_Scope : Sim_Info_Acc;
+
+      --  The corresponding info the the uninstantiated specification of
+      --  an instantiated package.  When an object is looked for from the
+      --  uninstantiated body, the scope of the uninstantiated specification
+      --  is used.  And it is different from Block_Scope.
+      --  This is used for lookup of uninstantiated specification.
+      Uninst_Scope : Sim_Info_Acc;
 
       --  Instance of the parent scope.
       Up_Block : Synth_Instance_Acc;

@@ -66,6 +66,7 @@ package body Synth.Context is
                                       Name => No_Sname,
                                       Block_Scope => Global_Info,
                                       Up_Block => null,
+                                      Uninst_Scope => null,
                                       Source_Scope => Null_Node,
                                       Elab_Objects => 0,
                                       Objects => (others => null));
@@ -102,11 +103,18 @@ package body Synth.Context is
                                       Name => Name,
                                       Block_Scope => Scope,
                                       Up_Block => Parent,
+                                      Uninst_Scope => null,
                                       Source_Scope => Blk,
                                       Elab_Objects => 0,
                                       Objects => (others => null));
       return Res;
    end Make_Instance;
+
+   procedure Set_Instance_Base (Inst : Synth_Instance_Acc;
+                                Base : Synth_Instance_Acc) is
+   begin
+      Inst.Base := Base.Base;
+   end Set_Instance_Base;
 
    procedure Free_Instance (Synth_Inst : in out Synth_Instance_Acc)
    is
@@ -278,6 +286,12 @@ package body Synth.Context is
       return Get_Package_Object (Syn_Inst, Get_Info (Pkg));
    end Get_Package_Object;
 
+   procedure Set_Uninstantiated_Scope
+     (Syn_Inst : Synth_Instance_Acc; Bod : Node) is
+   begin
+      Syn_Inst.Uninst_Scope := Get_Info (Bod);
+   end Set_Uninstantiated_Scope;
+
    procedure Destroy_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
@@ -335,7 +349,18 @@ package body Synth.Context is
          when Kind_Package =>
             if Scope.Pkg_Parent = null then
                --  This is a scope for an uninstantiated package.
-               raise Internal_Error;
+               declare
+                  Current : Synth_Instance_Acc;
+               begin
+                  Current := Syn_Inst;
+                  while Current /= null loop
+                     if Current.Uninst_Scope = Scope then
+                        return Current;
+                     end if;
+                  Current := Current.Up_Block;
+                  end loop;
+                  raise Internal_Error;
+               end;
             else
                --  Instantiated package.
                declare
@@ -349,6 +374,18 @@ package body Synth.Context is
             raise Internal_Error;
       end case;
    end Get_Instance_By_Scope;
+
+   function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc
+   is
+      Parent : Node;
+   begin
+      Parent := Get_Parent (Blk);
+      if Get_Kind (Parent) = Iir_Kind_Architecture_Body then
+         Parent := Vhdl.Utils.Get_Entity (Parent);
+      end if;
+      return Get_Info (Parent);
+   end Get_Parent_Scope;
+
 
    function Get_Value (Syn_Inst: Synth_Instance_Acc; Obj : Node)
                       return Value_Acc
