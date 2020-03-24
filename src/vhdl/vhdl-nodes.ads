@@ -7540,6 +7540,17 @@ package Vhdl.Nodes is
    function Get_Simultaneous_Statement_Chain (Target : Iir) return Iir;
    procedure Set_Simultaneous_Statement_Chain (Target : Iir; Chain : Iir);
 
+   --  The body of a subprogram (from the subprogram specification).
+   --  Note that this field is only set when the body has been analyzed (ok,
+   --  that's obvious).  For subprogram specifications in instantiated package,
+   --  this field is in general not set because the package specification may
+   --  be instantiated before the package body is analyzed and there is no
+   --  tracking of all instantiated packages.  So when the package body is
+   --  analyzed, there is no way to set this field for the subprograms in all
+   --  instantiated specifications.
+   --  You could use Get_Subprogram_Body_Origin to extract the body.  It uses
+   --  the Origin link to find the original specification which has this field
+   --  set.
    --  Field: Field9 Forward_Ref
    function Get_Subprogram_Body (Target : Iir) return Iir;
    procedure Set_Subprogram_Body (Target : Iir; A_Body : Iir);

@@ -3311,23 +3311,6 @@ package body Simul.Execution is
         Unshare (Val, Instance_Pool);
    end Execute_Monadic_Association;
 
-   --  Like Get_Subprogram_Body, but also works for instances, where
-   --  instantiated nodes have no bodies.
-   --  FIXME: maybe fix the issue directly in Sem_Inst ?
-   function Get_Subprogram_Body_Origin (Spec : Iir) return Iir
-   is
-      Res : constant Iir := Get_Subprogram_Body (Spec);
-      Orig : Iir;
-   begin
-      if Res /= Null_Iir then
-         return Res;
-      else
-         Orig := Vhdl.Sem_Inst.Get_Origin (Spec);
-         pragma Assert (Orig /= Null_Iir);
-         return Get_Subprogram_Body_Origin (Orig);
-      end if;
-   end Get_Subprogram_Body_Origin;
-
    --  Like Get_Protected_Type_Body, but also works for instances, where
    --  instantiated nodes have no bodies.
    --  FIXME: maybe fix the issue directly in Sem_Inst ?
@@ -3360,7 +3343,7 @@ package body Simul.Execution is
    begin
       case Get_Kind (Imp) is
          when Iir_Kinds_Subprogram_Declaration =>
-            Bod := Get_Subprogram_Body_Origin (Imp);
+            Bod := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
             Parent := Get_Parent (Imp);
             Label := Get_Subprogram_Specification (Bod);
          when Iir_Kind_Protected_Type_Declaration =>

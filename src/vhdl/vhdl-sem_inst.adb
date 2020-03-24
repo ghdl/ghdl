@@ -1220,4 +1220,17 @@ package body Vhdl.Sem_Inst is
       end loop;
    end Substitute_On_Chain;
 
+   function Get_Subprogram_Body_Origin (Spec : Iir) return Iir
+   is
+      Res : constant Iir := Get_Subprogram_Body (Spec);
+      Orig : Iir;
+   begin
+      if Res /= Null_Iir then
+         return Res;
+      else
+         Orig := Get_Origin (Spec);
+         pragma Assert (Orig /= Null_Iir);
+         return Get_Subprogram_Body_Origin (Orig);
+      end if;
+   end Get_Subprogram_Body_Origin;
 end Vhdl.Sem_Inst;

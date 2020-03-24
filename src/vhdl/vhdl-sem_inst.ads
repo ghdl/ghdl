@@ -33,4 +33,9 @@ package Vhdl.Sem_Inst is
 
    --  Deep copy of ORIG.  Doesn't change location.
    function Copy_Tree (Orig : Iir) return Iir;
+
+   --  Like Get_Subprogram_Body, but also works for instances, where
+   --  instantiated nodes have no bodies.
+   --  See comment about Get/Set_Subprogram_body in vhdl-nodes.
+   function Get_Subprogram_Body_Origin (Spec : Iir) return Iir;
 end Vhdl.Sem_Inst;
