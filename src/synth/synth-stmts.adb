@@ -2430,6 +2430,94 @@ package body Synth.Stmts is
       C.Nbr_Ret := C.Nbr_Ret + 1;
    end Synth_Return_Statement;
 
+   procedure Synth_Static_Report
+     (C : in out Seq_Context; Stmt : Node)
+   is
+      use Simple_IO;
+
+      Is_Report : constant Boolean :=
+        Get_Kind (Stmt) = Iir_Kind_Report_Statement;
+      Rep_Expr : constant Node := Get_Report_Expression (Stmt);
+      Sev_Expr : constant Node := Get_Severity_Expression (Stmt);
+      Rep : Value_Acc;
+      Sev : Value_Acc;
+      Sev_V : Natural;
+   begin
+      if Rep_Expr /= Null_Node then
+         Rep := Synth_Expression_With_Basetype (C.Inst, Rep_Expr);
+         if Rep = null then
+            Set_Error (C.Inst);
+            return;
+         end if;
+         Strip_Const (Rep);
+      end if;
+      if Sev_Expr /= Null_Node then
+         Sev := Synth_Expression (C.Inst, Sev_Expr);
+         if Sev = null then
+            Set_Error (C.Inst);
+            return;
+         end if;
+         Strip_Const (Sev);
+      end if;
+
+      Put_Err (Disp_Location (Stmt));
+      Put_Err (":(");
+      if Is_Report then
+         Put_Err ("report");
+      else
+         Put_Err ("assertion");
+      end if;
+      Put_Err (' ');
+      if Sev = null then
+         if Is_Report then
+            Sev_V := 0;
+         else
+            Sev_V := 2;
+         end if;
+      else
+         Sev_V := Natural (Sev.Scal);
+      end if;
+      case Sev_V is
+         when 0 =>
+            Put_Err ("note");
+         when 1 =>
+            Put_Err ("warning");
+         when 2 =>
+            Put_Err ("error");
+         when 3 =>
+            Put_Err ("failure");
+         when others =>
+            Put_Err ("??");
+      end case;
+      Put_Err ("): ");
+
+      Put_Line_Err (Value_To_String (Rep));
+   end Synth_Static_Report;
+
+   procedure Synth_Static_Report_Statement
+     (C : in out Seq_Context; Stmt : Node) is
+   begin
+      Synth_Static_Report (C, Stmt);
+   end Synth_Static_Report_Statement;
+
+   procedure Synth_Static_Assertion_Statement
+     (C : in out Seq_Context; Stmt : Node)
+   is
+      Cond : Value_Acc;
+   begin
+      Cond := Synth_Expression (C.Inst, Get_Assertion_Condition (Stmt));
+      if Cond = null then
+         Set_Error (C.Inst);
+         return;
+      end if;
+      pragma Assert (Is_Static (Cond));
+      Strip_Const (Cond);
+      if Cond.Scal = 1 then
+         return;
+      end if;
+      Synth_Static_Report (C, Stmt);
+   end Synth_Static_Assertion_Statement;
+
    procedure Synth_Sequential_Statements
      (C : in out Seq_Context; Stmts : Node)
    is
@@ -2499,10 +2587,14 @@ package body Synth.Stmts is
                Synth_Return_Statement (C, Stmt);
             when Iir_Kind_Procedure_Call_Statement =>
                Synth_Procedure_Call (C.Inst, Stmt);
-            when Iir_Kind_Report_Statement
-              | Iir_Kind_Assertion_Statement =>
-               --  TODO ?
-               null;
+            when Iir_Kind_Report_Statement =>
+               if not Is_Dyn then
+                  Synth_Static_Report_Statement (C, Stmt);
+               end if;
+            when Iir_Kind_Assertion_Statement =>
+               if not Is_Dyn then
+                  Synth_Static_Assertion_Statement (C, Stmt);
+               end if;
             when Iir_Kind_Exit_Statement
               | Iir_Kind_Next_Statement =>
                if Is_Dyn then
