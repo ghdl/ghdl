@@ -501,11 +501,13 @@ package body Synth.Decls is
          --  For constant functions, the value must be constant.
          pragma Assert (not Get_Instance_Const (Syn_Inst)
                           or else Is_Static (Val));
-         if Val.Kind = Value_Const then
-            Cst := Val;
-         else
-            Cst := Create_Value_Const (Val, Decl);
-         end if;
+         case Val.Kind is
+            when Value_Const
+              | Value_Alias =>
+               Cst := Val;
+            when others =>
+               Cst := Create_Value_Const (Val, Decl);
+         end case;
          Create_Object_Force (Syn_Inst, First_Decl, Cst);
       end if;
    end Synth_Constant_Declaration;
@@ -709,7 +711,7 @@ package body Synth.Decls is
       end if;
    end Synth_Package_Instantiation;
 
-   procedure Synth_Variable
+   procedure Synth_Variable_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean)
    is
       Def : constant Iir := Get_Default_Value (Decl);
@@ -745,7 +747,40 @@ package body Synth.Decls is
             end if;
          end if;
       end if;
-   end Synth_Variable;
+   end Synth_Variable_Declaration;
+
+   procedure Synth_Object_Alias_Declaration
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+   is
+      Atype : constant Node := Get_Type (Decl);
+      Obj : Value_Acc;
+      Off : Uns32;
+      Voff : Net;
+      Rdwd : Width;
+      Typ : Type_Acc;
+      Res : Value_Acc;
+      Obj_Type : Type_Acc;
+   begin
+      --  Subtype indication may not be present.
+      if Is_Anonymous_Type_Definition (Atype) then
+         Synth_Subtype_Indication (Syn_Inst, Atype);
+      end if;
+      Obj_Type := Get_Value_Type (Syn_Inst, Atype);
+
+      Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
+                                     Obj, Off, Voff, Rdwd, Typ);
+      pragma Assert (Voff = No_Net);
+      if Obj.Kind = Value_Net then
+         --  Object is a net if it is not writable.  Extract the
+         --  bits for the alias.
+         Res := Create_Value_Net
+           (Build2_Extract (Get_Build (Syn_Inst), Obj.N, Off, Typ.W), Typ);
+      else
+         Res := Create_Value_Alias (Obj, Off, Typ);
+      end if;
+      Res := Synth_Subtype_Conversion (Res, Obj_Type, True, Decl);
+      Create_Object (Syn_Inst, Decl, Res);
+   end Synth_Object_Alias_Declaration;
 
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;
                                 Decl : Node;
@@ -754,7 +789,7 @@ package body Synth.Decls is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
-            Synth_Variable (Syn_Inst, Decl, Is_Subprg);
+            Synth_Variable_Declaration (Syn_Inst, Decl, Is_Subprg);
          when Iir_Kind_Interface_Variable_Declaration =>
             --  Ignore default value.
             Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
@@ -781,37 +816,7 @@ package body Synth.Decls is
                Create_Var_Wire (Syn_Inst, Decl, Init);
             end;
          when Iir_Kind_Object_Alias_Declaration =>
-            declare
-               Atype : constant Node := Get_Type (Decl);
-               Obj : Value_Acc;
-               Off : Uns32;
-               Voff : Net;
-               Rdwd : Width;
-               Typ : Type_Acc;
-               Res : Value_Acc;
-               Obj_Type : Type_Acc;
-            begin
-               --  Subtype indication may not be present.
-               if Is_Anonymous_Type_Definition (Atype) then
-                  Synth_Subtype_Indication (Syn_Inst, Atype);
-               end if;
-               Obj_Type := Get_Value_Type (Syn_Inst, Atype);
-
-               Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
-                                              Obj, Off, Voff, Rdwd, Typ);
-               pragma Assert (Voff = No_Net);
-               if Obj.Kind = Value_Net then
-                  --  Object is a net if it is not writable.  Extract the
-                  --  bits for the alias.
-                  Res := Create_Value_Net
-                    (Build2_Extract (Get_Build (Syn_Inst), Obj.N, Off, Typ.W),
-                     Typ);
-               else
-                  Res := Create_Value_Alias (Obj, Off, Typ);
-               end if;
-               Res := Synth_Subtype_Conversion (Res, Obj_Type, True, Decl);
-               Create_Object (Syn_Inst, Decl, Res);
-            end;
+            Synth_Object_Alias_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Anonymous_Signal_Declaration =>
             --  Anonymous signals created by inertial associations are
             --  simply ignored.

@@ -207,6 +207,8 @@ package body Synth.Stmts is
                   Dest_Off := Dest_Off + Off;
 
                   if Dest_Voff = No_Net then
+                     --  For constant objects, directly return the indexed
+                     --  object.
                      Strip_Const (Dest_Obj);
                      if Dest_Obj.Kind in Value_Array .. Value_Const_Array then
                         Dest_Obj := Dest_Obj.Arr.V

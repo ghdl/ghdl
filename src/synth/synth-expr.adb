@@ -1027,7 +1027,11 @@ package body Synth.Expr is
          when Type_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
             --  TODO: check bounds, handle elements
-            return Val;
+            if Bounds then
+               return Reshape_Value (Val, Dtype);
+            else
+               return Val;
+            end if;
          when Type_Unbounded_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
             return Val;
