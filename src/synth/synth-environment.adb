@@ -260,13 +260,10 @@ package body Synth.Environment is
    is
       Phi : Phi_Type renames Phis_Table.Table (Current_Phi);
       Asgn, Next_Asgn : Seq_Assign;
-      First, Last : Seq_Assign;
       Wid : Wire_Id;
    begin
-      First := No_Seq_Assign;
-      Last := No_Seq_Assign;
       Asgn := Phi.First;
-      Phi.Nbr := 0;
+      Phi := (First => No_Seq_Assign, Last => No_Seq_Assign, Nbr => 0);
       while Asgn /= No_Seq_Assign loop
          pragma Assert (Assign_Table.Table (Asgn).Phi = Current_Phi);
          Next_Asgn := Get_Assign_Chain (Asgn);
@@ -279,17 +276,16 @@ package body Synth.Environment is
             Wire_Id_Table.Table (Wid).Cur_Assign := No_Seq_Assign;
          else
             --  Append.
-            if First = No_Seq_Assign then
-               First := Asgn;
+            if Phi.First = No_Seq_Assign then
+               Phi.First := Asgn;
             else
-               Set_Assign_Chain (Last, Asgn);
+               Set_Assign_Chain (Phi.Last, Asgn);
             end if;
             Phi.Nbr := Phi.Nbr + 1;
-            Last := Asgn;
+            Phi.Last := Asgn;
          end if;
          Asgn := Next_Asgn;
       end loop;
-      Phi.First := First;
    end Phi_Discard_Wires;
 
    function Get_Conc_Offset (Asgn : Conc_Assign) return Uns32 is
