@@ -1801,19 +1801,26 @@ package body Synth.Stmts is
 
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
 
-      Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
+      if not Is_Error (C.Inst) then
+         Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
+      end if;
 
-      if Is_Func then
-         if C.Nbr_Ret = 0 then
-            raise Internal_Error;
-         elsif C.Nbr_Ret = 1 and then Is_Static (C.Ret_Value) then
-            Res := C.Ret_Value;
-         else
-            raise Internal_Error;
-         end if;
-      else
+      if Is_Error (C.Inst) then
          Res := null;
-         Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
+      else
+         if Is_Func then
+            if C.Nbr_Ret = 0 then
+               --  Function returned without a return statement.
+               raise Internal_Error;
+            else
+               pragma Assert (C.Nbr_Ret = 1);
+               pragma Assert (Is_Static (C.Ret_Value));
+               Res := C.Ret_Value;
+            end if;
+         else
+            Res := null;
+            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
+         end if;
       end if;
 
       Decls.Finalize_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
@@ -1862,6 +1869,11 @@ package body Synth.Stmts is
             Res := Synth_Dynamic_Subprogram_Call
               (Syn_Inst, Sub_Inst, Call, Init, Infos);
          end if;
+      end if;
+
+      --  Propagate error.
+      if Is_Error (Sub_Inst) then
+         Set_Error (Syn_Inst);
       end if;
 
       Free_Instance (Sub_Inst);

@@ -64,16 +64,19 @@ package body Synth.Files_Operations is
    procedure Convert_File_Name (Val : Value_Acc;
                                 Res : out C_File_Name;
                                 Len : out Natural;
-                                Status : out Op_Status) is
+                                Status : out Op_Status)
+   is
+      Name : constant Value_Acc := Strip_Alias_Const (Val);
+      pragma Unreferenced (Val);
    begin
-      Len := Natural (Val.Arr.Len);
+      Len := Natural (Name.Arr.Len);
 
       if Len >= Res'Length - 1 then
          Status := Op_Filename_Error;
          return;
       end if;
 
-      Convert_String (Val, Res (1 .. Len));
+      Convert_String (Name, Res (1 .. Len));
       Res (Len + 1) := Grt.Types.NUL;
 
       Status := Op_Ok;
@@ -149,7 +152,7 @@ package body Synth.Files_Operations is
          if Status = Op_Name_Error then
             Error_Msg_Synth
               (+Decl, "cannot open file: " & C_Name (1 .. C_Name_Len));
-            raise File_Execution_Error;
+            Set_Error (Syn_Inst);
          else
             File_Error (Decl, Status);
          end if;

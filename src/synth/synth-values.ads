@@ -335,6 +335,11 @@ package Synth.Values is
    procedure Strip_Const (Val : in out Value_Acc);
    function Strip_Const (Val : Value_Acc) return Value_Acc;
 
+   --  If VAL is a const or an alias, replace it by its value.
+   --  Used to extract the real data of a static value.  Note that the type
+   --  is not correct anymore.
+   function Strip_Alias_Const (V : Value_Acc) return Value_Acc;
+
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
                     return Value_Acc;
 

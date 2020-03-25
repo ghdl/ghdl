@@ -1426,15 +1426,25 @@ package body Synth.Insts is
       Apply_Block_Configuration (Inst.Config, Arch);
 
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
-      Synth_Concurrent_Statements
-        (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
+      if not Is_Error (Syn_Inst) then
+         Synth_Concurrent_Statements
+           (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
+      end if;
 
-      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
-      Synth_Concurrent_Statements
-        (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+      if not Is_Error (Syn_Inst) then
+         Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
+      end if;
+      if not Is_Error (Syn_Inst) then
+         Synth_Concurrent_Statements
+           (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
+      end if;
 
-      Synth_Verification_Units (Syn_Inst, Entity);
-      Synth_Verification_Units (Syn_Inst, Arch);
+      if not Is_Error (Syn_Inst) then
+         Synth_Verification_Units (Syn_Inst, Entity);
+      end if;
+      if not Is_Error (Syn_Inst) then
+         Synth_Verification_Units (Syn_Inst, Arch);
+      end if;
 
       Finalize_Assignments (Get_Build (Syn_Inst));
 

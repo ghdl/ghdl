@@ -878,6 +878,8 @@ package body Synth.Decls is
       while Is_Valid (Decl) loop
          Synth_Declaration (Syn_Inst, Decl, Is_Subprg, Last_Type);
 
+         exit when Is_Error (Syn_Inst);
+
          Decl := Get_Chain (Decl);
       end loop;
    end Synth_Declarations;
@@ -892,6 +894,11 @@ package body Synth.Decls is
       Def_Val : Net;
    begin
       Val := Get_Value (Syn_Inst, Decl);
+      if Val = null then
+         pragma Assert (Is_Error (Syn_Inst));
+         return;
+      end if;
+
       Gate_Net := Get_Wire_Gate (Val.W);
       Gate := Get_Net_Parent (Gate_Net);
       case Get_Id (Gate) is
