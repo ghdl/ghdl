@@ -399,6 +399,12 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Error =>
             return null;
 
+         when Iir_Predefined_Boolean_Xor =>
+            return Create_Value_Discrete
+              (Boolean'Pos (Boolean'Val (Get_Static_Discrete (Left))
+                              xor Boolean'Val (Get_Static_Discrete (Right))),
+               Res_Typ);
+
          when Iir_Predefined_Enum_Equality =>
             return Create_Value_Discrete
               (Boolean'Pos
