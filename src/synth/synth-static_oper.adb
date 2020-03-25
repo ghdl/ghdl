@@ -536,6 +536,8 @@ package body Synth.Static_Oper is
                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1));
                R_Len : constant Iir_Index32 :=
                  Iir_Index32 (Get_Bound_Length (Right.Typ, 1));
+               L : constant Value_Acc := Strip_Alias_Const (Left);
+               R : constant Value_Acc := Strip_Alias_Const (Right);
                Bnd : Bound_Type;
                Res_Typ : Type_Acc;
                Arr : Value_Array_Acc;
@@ -547,10 +549,10 @@ package body Synth.Static_Oper is
                  (Ret_Typ, Bnd);
                Arr := Create_Value_Array (L_Len + R_Len);
                for I in 1 .. L_Len loop
-                  Arr.V (I) := Left.Arr.V (I);
+                  Arr.V (I) := L.Arr.V (I);
                end loop;
                for I in 1 .. R_Len loop
-                  Arr.V (L_Len + I) := Right.Arr.V (I);
+                  Arr.V (L_Len + I) := R.Arr.V (I);
                end loop;
                return Create_Value_Const_Array (Res_Typ, Arr);
             end;

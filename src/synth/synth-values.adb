@@ -90,7 +90,7 @@ package body Synth.Values is
          when Value_Const =>
             return True;
          when Value_Alias =>
-            return False;
+            return Is_Static_Val (Val.A_Obj);
          when Value_Instance
            | Value_Subtype =>
             --  Not really a value.
