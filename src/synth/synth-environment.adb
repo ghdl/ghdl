@@ -451,7 +451,7 @@ package body Synth.Environment is
                                        Phi : Phi_Type;
                                        Mark : Wire_Id)
    is
-      Asgn : Seq_Assign;
+      Asgn, Next_Asgn : Seq_Assign;
    begin
       Asgn := Phi.First;
       while Asgn /= No_Seq_Assign loop
@@ -460,6 +460,10 @@ package body Synth.Environment is
             Wid : constant Wire_Id := Asgn_Rec.Id;
             Pasgn, Next_Pasgn : Partial_Assign;
          begin
+            --  FIXME: Asgn_Rec may become invalid due to allocation by
+            --  Phi_Assign.  So we read what is needed before calling
+            --  Phi_Assign.
+            Next_Asgn := Asgn_Rec.Chain;
             if Wid <= Mark then
                Pasgn := Asgn_Rec.Asgns;
                while Pasgn /= No_Partial_Assign loop
@@ -469,7 +473,7 @@ package body Synth.Environment is
                   Pasgn := Next_Pasgn;
                end loop;
             end if;
-            Asgn := Asgn_Rec.Chain;
+            Asgn := Next_Asgn;
          end;
       end loop;
    end Propagate_Phi_Until_Mark;
