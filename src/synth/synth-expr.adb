@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Types_Utils; use Types_Utils;
+with Name_Table;
 with Std_Names;
 with Str_Table;
 with Mutils; use Mutils;
@@ -41,6 +42,9 @@ with Synth.Stmts; use Synth.Stmts;
 with Synth.Oper; use Synth.Oper;
 with Synth.Heap; use Synth.Heap;
 with Synth.Debugger;
+
+with Grt.Types;
+with Grt.To_Strings;
 
 package body Synth.Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
@@ -1060,30 +1064,135 @@ package body Synth.Expr is
       Dtype : Type_Acc;
    begin
       V := Synth_Expression (Syn_Inst, Param);
+      if V = null then
+         return null;
+      end if;
+
       Dtype := Get_Value_Type (Syn_Inst, Etype);
       if not Is_Static (V) then
          Error_Msg_Synth (+Attr, "parameter of 'value must be static");
-         return Create_Value_Default (Dtype);
-      end if;
-      if Get_Kind (Btype) /= Iir_Kind_Enumeration_Type_Definition then
-         Error_Msg_Synth (+Attr, "'value supported only for enumeration");
-         return Create_Value_Default (Dtype);
+         return null;
       end if;
 
       declare
          Str : String (1 .. Natural (V.Arr.Len));
          Res_N : Node;
-         Res_V : Value_Acc;
+         Val : Int64;
       begin
          for I in V.Arr.V'Range loop
             Str (Natural (I)) := Character'Val (V.Arr.V (I).Scal);
          end loop;
-         Res_N := Eval_Value_Attribute (Str, Etype, Attr);
-         Res_V := Create_Value_Discrete (Int64 (Get_Enum_Pos (Res_N)), Dtype);
-         Free_Iir (Res_N);
-         return Res_V;
+         case Get_Kind (Btype) is
+            when Iir_Kind_Enumeration_Type_Definition =>
+               Res_N := Eval_Value_Attribute (Str, Etype, Attr);
+               Val := Int64 (Get_Enum_Pos (Res_N));
+               Free_Iir (Res_N);
+            when Iir_Kind_Integer_Type_Definition =>
+               Val := Int64'Value (Str);
+            when others =>
+               Error_Msg_Synth (+Attr, "unhandled type for 'value");
+               return null;
+         end case;
+         return Create_Value_Discrete (Val, Dtype);
       end;
    end Synth_Value_Attribute;
+
+   function Synth_Image_Attribute_Str (Val : Value_Acc; Expr_Type : Iir)
+                                      return String
+   is
+      use Grt.Types;
+   begin
+      case Get_Kind (Expr_Type) is
+         when Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Floating_Subtype_Definition =>
+            declare
+               Str : String (1 .. 24);
+               Last : Natural;
+            begin
+               Grt.To_Strings.To_String (Str, Last, Ghdl_F64 (Val.Fp));
+               return Str (Str'First .. Last);
+            end;
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Integer_Subtype_Definition =>
+            declare
+               Str : String (1 .. 21);
+               First : Natural;
+            begin
+               Grt.To_Strings.To_String (Str, First, Ghdl_I64 (Val.Scal));
+               return Str (First .. Str'Last);
+            end;
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
+            declare
+               Lits : constant Iir_Flist :=
+                 Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
+            begin
+               return Name_Table.Image
+                 (Get_Identifier (Get_Nth_Element (Lits, Natural (Val.Scal))));
+            end;
+         when Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
+            declare
+               Str : String (1 .. 21);
+               First : Natural;
+               Id : constant Name_Id :=
+                 Get_Identifier (Get_Primary_Unit (Get_Base_Type (Expr_Type)));
+            begin
+               Grt.To_Strings.To_String (Str, First, Ghdl_I64 (Val.Scal));
+               return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
+            end;
+         when others =>
+            Error_Kind ("execute_image_attribute", Expr_Type);
+      end case;
+   end Synth_Image_Attribute_Str;
+
+   function String_To_Value_Acc (Str : String; Styp : Type_Acc)
+                                return Value_Acc
+   is
+      Len : constant Natural := Str'Length;
+      Etyp : constant Type_Acc := Styp.Uarr_El;
+      Bnd : Bound_Array_Acc;
+      Typ : Type_Acc;
+      Dat : Value_Array_Acc;
+      P : Iir_Index32;
+   begin
+      Bnd := Create_Bound_Array (1);
+      Bnd.D (1) := (Dir => Iir_To, Left => 1, Right => Int32 (Len),
+                    Len => Width (Len));
+      Typ := Create_Array_Type (Bnd, Styp.Uarr_El);
+
+      Dat := Create_Value_Array (Iir_Index32 (Len));
+      P := Dat.V'First;
+      for I in Str'Range loop
+         Dat.V (P) := Create_Value_Discrete (Int64 (Character'Pos (Str (I))),
+                                             Etyp);
+         P := P + 1;
+      end loop;
+      return Create_Value_Const_Array (Typ, Dat);
+   end String_To_Value_Acc;
+
+   function Synth_Image_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
+                                  return Value_Acc
+   is
+      Param : constant Node := Get_Parameter (Attr);
+      Etype : constant Node := Get_Type (Attr);
+      V : Value_Acc;
+      Dtype : Type_Acc;
+   begin
+      V := Synth_Expression (Syn_Inst, Param);
+      if V = null then
+         return null;
+      end if;
+      Dtype := Get_Value_Type (Syn_Inst, Etype);
+      if not Is_Static (V) then
+         Error_Msg_Synth (+Attr, "parameter of 'image must be static");
+         return null;
+      end if;
+
+      Strip_Const (V);
+      return String_To_Value_Acc
+        (Synth_Image_Attribute_Str (V, Get_Type (Param)), Dtype);
+   end Synth_Image_Attribute;
 
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Value_Acc is
@@ -2058,6 +2167,8 @@ package body Synth.Expr is
             end;
          when Iir_Kind_Value_Attribute =>
             return Synth_Value_Attribute (Syn_Inst, Expr);
+         when Iir_Kind_Image_Attribute =>
+            return Synth_Image_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Null_Literal =>
             return Create_Value_Access (Expr_Type, Null_Heap_Index);
          when Iir_Kind_Allocator_By_Subtype =>
