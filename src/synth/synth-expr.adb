@@ -2014,7 +2014,9 @@ package body Synth.Expr is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Interface_Signal_Declaration --  For PSL.
-           | Iir_Kind_Signal_Declaration =>  -- For PSL.
+           | Iir_Kind_Signal_Declaration   -- For PSL.
+           | Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Dereference =>
             return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Reference_Name =>
             --  Only used for anonymous signals in internal association.
