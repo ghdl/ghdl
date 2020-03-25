@@ -943,6 +943,16 @@ package body Synth.Values is
       end case;
    end Create_Value_Default;
 
+   function Value_To_String (Val : Value_Acc) return String
+   is
+      Str : String (1 .. Natural (Val.Arr.Len));
+   begin
+      for I in Val.Arr.V'Range loop
+         Str (Natural (I)) := Character'Val (Val.Arr.V (I).Scal);
+      end loop;
+      return Str;
+   end Value_To_String;
+
    procedure Init is
    begin
       Instance_Pool := Global_Pool'Access;

@@ -357,6 +357,10 @@ package Synth.Values is
    --  Create a default initial value for TYP.
    function Create_Value_Default (Typ : Type_Acc) return Value_Acc;
 
+   --  Convert a value to a string.  The value must be a const_array of scalar,
+   --  which represent characters.
+   function Value_To_String (Val : Value_Acc) return String;
+
    procedure Init;
 
    --  Set by Init.

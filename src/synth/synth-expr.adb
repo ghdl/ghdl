@@ -1075,13 +1075,10 @@ package body Synth.Expr is
       end if;
 
       declare
-         Str : String (1 .. Natural (V.Arr.Len));
+         Str : constant String := Value_To_String (V);
          Res_N : Node;
          Val : Int64;
       begin
-         for I in V.Arr.V'Range loop
-            Str (Natural (I)) := Character'Val (V.Arr.V (I).Scal);
-         end loop;
          case Get_Kind (Btype) is
             when Iir_Kind_Enumeration_Type_Definition =>
                Res_N := Eval_Value_Attribute (Str, Etype, Attr);
