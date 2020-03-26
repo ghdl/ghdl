@@ -2288,7 +2288,8 @@ package body Vhdl.Sem_Names is
                return;
          end case;
          Error_Msg_Sem
-           (+Name, "use of synopsys packages needs the -fsynopsys option");
+           (+Name, "use of synopsys package %i needs the -fsynopsys option",
+            +Suffix);
       end Check_Synopsys_Package;
    begin
       --  Analyze prefix.
