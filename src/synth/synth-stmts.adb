@@ -1164,12 +1164,11 @@ package body Synth.Stmts is
    is
       use Vhdl.Sem_Expr;
 
-      Targ : constant Node := Get_Target (Stmt);
-
       Expr : constant Node := Get_Expression (Stmt);
       Choices : constant Node := Get_Selected_Waveform_Chain (Stmt);
       Choice : Node;
 
+      Targ : Target_Info;
       Targ_Type : Type_Acc;
 
       Case_Info : Choice_Info_Type;
@@ -1189,7 +1188,9 @@ package body Synth.Stmts is
       Sel : Value_Acc;
       Sel_Net : Net;
    begin
-      Targ_Type := Get_Value_Type (Syn_Inst, Get_Type (Targ));
+      Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
+      Targ_Type := Targ.Targ_Type;
+
       --  Create a net for the expression.
       Sel := Synth_Expression_With_Basetype (Syn_Inst, Expr);
 
@@ -1274,9 +1275,8 @@ package body Synth.Stmts is
          Synth_Case (Get_Build (Syn_Inst),
                      Sel_Net, Case_El.all, Default, Res,
                      Get_Location (Expr));
-         Synth_Assignment (Syn_Inst, Get_Target (Stmt),
-                           Create_Value_Net (Res, Targ_Type),
-                           Stmt);
+         Synth_Assignment
+           (Syn_Inst, Targ, Create_Value_Net (Res, Targ_Type), Stmt);
       end;
 
       --  free.
