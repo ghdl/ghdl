@@ -428,6 +428,22 @@ package body Synth.Values is
       end case;
    end Get_Array_Element;
 
+   function Get_Array_Bound (Typ : Type_Acc; Dim : Dim_Type)
+                            return Bound_Type is
+   begin
+      case Typ.Kind is
+         when Type_Vector =>
+            if Dim /= 1 then
+               raise Internal_Error;
+            end if;
+            return Typ.Vbound;
+         when Type_Array =>
+            return Typ.Abounds.D (Iir_Index32 (Dim));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Array_Bound;
+
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc
    is
       use System;

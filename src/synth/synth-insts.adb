@@ -751,55 +751,6 @@ package body Synth.Insts is
       end loop;
    end Synth_Instantiate_Module;
 
-   --  Return the type of EXPR without evaluating it.
-   --  FIXME: how dubious is it ?
-   function Synth_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                                 return Type_Acc is
-   begin
-      case Get_Kind (Expr) is
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Interface_Signal_Declaration =>
-            declare
-               Val : constant Value_Acc := Get_Value (Syn_Inst, Expr);
-            begin
-               return Val.Typ;
-            end;
-         when Iir_Kind_Simple_Name =>
-            return Synth_Type_Of_Object (Syn_Inst, Get_Named_Entity (Expr));
-         when Iir_Kind_Slice_Name =>
-            declare
-               Pfx_Typ : Type_Acc;
-               Pfx_Bnd : Bound_Type;
-               El_Typ : Type_Acc;
-               Res_Bnd : Bound_Type;
-               Sl_Voff : Net;
-               Sl_Off : Uns32;
-               Wd : Uns32;
-            begin
-               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
-               Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Expr, Pfx_Bnd, El_Typ.W,
-                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
-
-               if Sl_Voff /= No_Net then
-                  raise Internal_Error;
-               end if;
-               return Create_Onedimensional_Array_Subtype (Pfx_Typ, Res_Bnd);
-            end;
-         when Iir_Kind_Indexed_Name =>
-            declare
-               Pfx_Typ : Type_Acc;
-            begin
-               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
-               return Get_Array_Element (Pfx_Typ);
-            end;
-
-         when others =>
-            Vhdl.Errors.Error_Kind ("synth_type_of_object", Expr);
-      end case;
-      return null;
-   end Synth_Type_Of_Object;
-
    function Synth_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
                                          Syn_Inst : Synth_Instance_Acc;
                                          Inter : Node;

@@ -118,6 +118,11 @@ package Synth.Expr is
                                  Off : out Uns32;
                                  W : out Width);
 
+   --  Return the type of EXPR (an object) without evaluating it (except when
+   --  needed, like bounds of a slice).
+   function Synth_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
+                                 return Type_Acc;
+
    --  Conversion to logic vector.
 
    type Logic_32 is record

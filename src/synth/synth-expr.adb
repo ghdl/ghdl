@@ -703,13 +703,79 @@ package body Synth.Expr is
       return ((Get_Direction (Rng), L.Fp, R.Fp));
    end Synth_Float_Range_Expression;
 
+   --  Return the type of EXPR without evaluating it.
+   function Synth_Type_Of_Object (Syn_Inst : Synth_Instance_Acc; Expr : Node)
+                                 return Type_Acc is
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kinds_Object_Declaration =>
+            declare
+               Val : constant Value_Acc := Get_Value (Syn_Inst, Expr);
+            begin
+               return Val.Typ;
+            end;
+         when Iir_Kind_Simple_Name =>
+            return Synth_Type_Of_Object (Syn_Inst, Get_Named_Entity (Expr));
+         when Iir_Kind_Slice_Name =>
+            declare
+               Pfx_Typ : Type_Acc;
+               Pfx_Bnd : Bound_Type;
+               El_Typ : Type_Acc;
+               Res_Bnd : Bound_Type;
+               Sl_Voff : Net;
+               Sl_Off : Uns32;
+               Wd : Uns32;
+            begin
+               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
+               Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
+               Synth_Slice_Suffix (Syn_Inst, Expr, Pfx_Bnd, El_Typ.W,
+                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
+
+               if Sl_Voff /= No_Net then
+                  raise Internal_Error;
+               end if;
+               return Create_Onedimensional_Array_Subtype (Pfx_Typ, Res_Bnd);
+            end;
+         when Iir_Kind_Indexed_Name =>
+            declare
+               Pfx_Typ : Type_Acc;
+            begin
+               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
+               return Get_Array_Element (Pfx_Typ);
+            end;
+         when Iir_Kind_Selected_Element =>
+            declare
+               Idx : constant Iir_Index32 :=
+                 Get_Element_Position (Get_Named_Entity (Expr));
+               Pfx_Typ : Type_Acc;
+            begin
+               Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
+               return Pfx_Typ.Rec.E (Idx + 1).Typ;
+            end;
+
+         when Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Dereference =>
+            declare
+               Val : Value_Acc;
+            begin
+               --  Maybe do not dereference it if its type is known ?
+               Val := Synth_Expression (Syn_Inst, Get_Prefix (Expr));
+               Val := Heap.Synth_Dereference (Val.Acc);
+               return Val.Typ;
+            end;
+
+         when others =>
+            Vhdl.Errors.Error_Kind ("synth_type_of_object", Expr);
+      end case;
+      return null;
+   end Synth_Type_Of_Object;
+
    function Synth_Array_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
                                   return Bound_Type
    is
       Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Attr));
       Dim : constant Natural :=
         Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
-      Obj : Value_Acc;
       Typ : Type_Acc;
    begin
       --  Prefix is an array object or an array subtype.
@@ -717,18 +783,10 @@ package body Synth.Expr is
          --  TODO: does this cover all the cases ?
          Typ := Get_Value_Type (Syn_Inst, Get_Subtype_Indication (Prefix));
       else
-         Obj := Synth_Name (Syn_Inst, Prefix);
-         Typ := Obj.Typ;
+         Typ := Synth_Type_Of_Object (Syn_Inst, Prefix);
       end if;
 
-      if Typ.Kind = Type_Vector then
-         if Dim /= 1 then
-            raise Internal_Error;
-         end if;
-         return Typ.Vbound;
-      else
-         return Typ.Abounds.D (Iir_Index32 (Dim));
-      end if;
+      return Get_Array_Bound (Typ, Dim_Type (Dim));
    end Synth_Array_Attribute;
 
    procedure Synth_Discrete_Range (Syn_Inst : Synth_Instance_Acc;

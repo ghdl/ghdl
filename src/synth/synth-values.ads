@@ -272,6 +272,11 @@ package Synth.Values is
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc;
 
+   --  Return the bounds of dimension DIM of a vector/array.  For a vector,
+   --  DIM must be 1.
+   function Get_Array_Bound (Typ : Type_Acc; Dim : Dim_Type)
+                            return Bound_Type;
+
    --  Return the element of a vector/array/unbounded_array.
    function Get_Array_Element (Arr_Type : Type_Acc) return Type_Acc;
 
