@@ -1403,36 +1403,50 @@ package body Synth.Expr is
                                  W : out Width)
    is
       Indexes : constant Iir_Flist := Get_Index_List (Name);
-      Idx_Expr : constant Node := Get_Nth_Element (Indexes, 0);
+      El_Typ : constant Type_Acc := Get_Array_Element (Pfx_Type);
+      Idx_Expr : Node;
       Idx_Val : Value_Acc;
-      Idx_Type : Type_Acc;
       Bnd : Bound_Type;
-      El_Typ : Type_Acc;
+      Stride : Uns32;
+      Ivoff : Net;
    begin
-      if Get_Nbr_Elements (Indexes) /= 1 then
-         Error_Msg_Synth (+Name, "multi-dim arrays not yet supported");
-         raise Internal_Error;
-      end if;
-
-      --  Use the base type as the subtype of the index is not synth-ed.
-      Idx_Type := Get_Value_Type
-        (Syn_Inst, Get_Base_Type (Get_Type (Idx_Expr)));
-      Idx_Val := Synth_Expression_With_Type (Syn_Inst, Idx_Expr, Idx_Type);
-      Strip_Const (Idx_Val);
-
-      Get_Onedimensional_Array_Bounds (Pfx_Type, Bnd, El_Typ);
       W := El_Typ.W;
+      Voff := No_Net;
+      Off := 0;
 
-      if Idx_Val.Kind = Value_Discrete then
-         Voff := No_Net;
-         Off := Index_To_Offset (Syn_Inst, Bnd, Idx_Val.Scal, Name) * W;
-      else
-         Voff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
-         Voff := Build_Memidx (Get_Build (Syn_Inst), Voff, W, Bnd.Len - 1,
-                               Width (Clog2 (Uns64 (W * Bnd.Len))));
-         Set_Location (Voff, Name);
-         Off := 0;
-      end if;
+      for I in Flist_First .. Flist_Last (Indexes) loop
+         Idx_Expr := Get_Nth_Element (Indexes, I);
+
+         --  Compute stride.  This is O(n**2), but for small n.
+         Stride := W;
+         for J in I + 1 .. Flist_Last (Indexes) loop
+            Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (J + 1));
+            Stride := Stride * Bnd.Len;
+         end loop;
+
+         --  Use the base type as the subtype of the index is not synth-ed.
+         Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
+         Strip_Const (Idx_Val);
+
+         Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (I + 1));
+
+         if Idx_Val.Kind = Value_Discrete then
+            Off := Off
+              + Index_To_Offset (Syn_Inst, Bnd, Idx_Val.Scal, Name) * Stride;
+         else
+            Ivoff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
+            Ivoff := Build_Memidx (Get_Build (Syn_Inst), Ivoff, W, Bnd.Len - 1,
+                                   Width (Clog2 (Uns64 (Stride * Bnd.Len))));
+            Set_Location (Ivoff, Idx_Expr);
+
+            if Voff = No_Net then
+               Voff := Ivoff;
+            else
+               Voff := Build_Addidx (Get_Build (Syn_Inst), Ivoff, Voff);
+               Set_Location (Voff, Idx_Expr);
+            end if;
+         end if;
+      end loop;
    end Synth_Indexed_Name;
 
    function Is_Static (N : Net) return Boolean is
