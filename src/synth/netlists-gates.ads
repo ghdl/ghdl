@@ -225,10 +225,13 @@ package Netlists.Gates is
    subtype Dyn_Insert_Module_Id is
      Module_Id range Id_Dyn_Insert .. Id_Dyn_Insert_En;
 
+   --  Input0: index
+   --  Param0: step
+   --  Param1: max
    --  OUT := IN0 * STEP,  IN0 < MAX
    Id_Memidx : constant Module_Id := 72;
 
-   --  OUT := IN0 + IN1, size extension.
+   --  OUT := IN0 + IN1, size extension (max of inputs width).
    Id_Addidx : constant Module_Id := 73;
 
    --  Represent a memory with a fixed size.
