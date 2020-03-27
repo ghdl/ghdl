@@ -1814,8 +1814,9 @@ package body Synth.Stmts is
       else
          if Is_Func then
             if C.Nbr_Ret = 0 then
-               --  Function returned without a return statement.
-               raise Internal_Error;
+               Error_Msg_Synth
+                 (+Call, "function call completed without a return statement");
+               Res := null;
             else
                pragma Assert (C.Nbr_Ret = 1);
                pragma Assert (Is_Static (C.Ret_Value));
