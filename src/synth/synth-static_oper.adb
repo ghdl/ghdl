@@ -41,8 +41,7 @@ package body Synth.Static_Oper is
    --  (math library) on unix systems.
    pragma Linker_Options ("-lm");
 
-   type Compare_Type is
-     (Compare_Less, Compare_Equal, Compare_Greater, Compare_Unknown);
+   type Compare_Type is (Compare_Less, Compare_Equal, Compare_Greater);
 
    type Static_Arr_Kind is (Sarr_Value, Sarr_Net);
 
@@ -107,7 +106,19 @@ package body Synth.Static_Oper is
       end case;
    end Get_Static_Std_Logic;
 
-   function Synth_Ucompare (Left, Right : Value_Acc) return Compare_Type
+   procedure Warn_Compare_Null (Loc : Node) is
+   begin
+      Warning_Msg_Synth (+Loc, "null argument detected, returning false");
+   end Warn_Compare_Null;
+
+   procedure Warn_Compare_Meta (Loc : Node) is
+   begin
+      Warning_Msg_Synth (+Loc, "metavalue detected, returning false");
+   end Warn_Compare_Meta;
+
+   function Synth_Compare_Uns_Uns
+     (Left, Right : Value_Acc; Err : Compare_Type; Loc : Node)
+     return Compare_Type
    is
       Lw : constant Uns32 := Left.Typ.W;
       Rw : constant Uns32 := Right.Typ.W;
@@ -116,6 +127,11 @@ package body Synth.Static_Oper is
       Len : constant Uns32 := Uns32'Min (Left.Typ.W, Right.Typ.W);
       L, R : Std_Ulogic;
    begin
+      if Len = 0 then
+         Warn_Compare_Null (Loc);
+         return Err;
+      end if;
+
       if Lw > Rw then
          for I in 0 .. Lw - Rw - 1 loop
             case To_X01 (Get_Static_Std_Logic (Larr, I)) is
@@ -124,11 +140,11 @@ package body Synth.Static_Oper is
                when '1' =>
                   return Compare_Greater;
                when 'X' =>
-                  --  TODO: assert
-                  return Compare_Unknown;
+                  Warn_Compare_Meta (Loc);
+                  return Err;
             end case;
          end loop;
-      else
+      elsif Lw < Rw then
          for I in 0 .. Rw - Lw - 1 loop
             case To_X01 (Get_Static_Std_Logic (Rarr, I)) is
                when '0' =>
@@ -136,18 +152,18 @@ package body Synth.Static_Oper is
                when '1' =>
                   return Compare_Less;
                when 'X' =>
-                  --  TODO: assert
-                  return Compare_Unknown;
+                  Warn_Compare_Meta (Loc);
+                  return Err;
             end case;
          end loop;
       end if;
 
-      for I in 0 .. Len loop
+      for I in 0 .. Len - 1 loop
          L := To_X01 (Get_Static_Std_Logic (Larr, Lw - Len + I));
          R := To_X01 (Get_Static_Std_Logic (Rarr, Rw - Len + I));
          if L = 'X' or R = 'X' then
-            --  TODO: assert
-            return Compare_Unknown;
+            Warn_Compare_Meta (Loc);
+            return Err;
          elsif L = '1' and R = '0' then
             return Compare_Greater;
          elsif L = '0' and R = '1' then
@@ -155,7 +171,119 @@ package body Synth.Static_Oper is
          end if;
       end loop;
       return Compare_Equal;
-   end Synth_Ucompare;
+   end Synth_Compare_Uns_Uns;
+
+   function Synth_Compare_Uns_Nat
+     (Left, Right : Value_Acc; Err : Compare_Type; Loc : Node)
+     return Compare_Type
+   is
+      Lw : constant Uns32 := Left.Typ.W;
+      Larr : constant Static_Arr_Type := Get_Static_Array (Left);
+      Rval : constant Uns64 := To_Uns64 (Get_Static_Discrete (Right));
+      L : Std_Ulogic;
+      Cnt : Uns32;
+   begin
+      if Lw = 0 then
+         Warn_Compare_Null (Loc);
+         return Err;
+      end if;
+
+      if Lw > 64 then
+         for I in 0 .. Lw - 64 - 1 loop
+            case To_X01 (Get_Static_Std_Logic (Larr, I)) is
+               when '0' =>
+                  null;
+               when '1' =>
+                  return Compare_Greater;
+               when 'X' =>
+                  Warn_Compare_Meta (Loc);
+                  return Err;
+            end case;
+         end loop;
+         Cnt := 64;
+      elsif Lw < 64 then
+         if Shift_Right (Rval, Natural (Lw)) /= 0 then
+            return Compare_Less;
+         end if;
+         Cnt := Lw;
+      else
+         Cnt := 64;
+      end if;
+
+      for I in reverse 0 .. Cnt - 1 loop
+         L := To_X01 (Get_Static_Std_Logic (Larr, Lw - I - 1));
+         if L = 'X' then
+            Warn_Compare_Meta (Loc);
+            return Err;
+         end if;
+         if (Shift_Right (Rval, Natural (I)) and 1) = 1 then
+            if L = '0' then
+               return Compare_Less;
+            end if;
+         else
+            if L = '1' then
+               return Compare_Greater;
+            end if;
+         end if;
+      end loop;
+      return Compare_Equal;
+   end Synth_Compare_Uns_Nat;
+
+   function Synth_Compare_Nat_Uns
+     (Left, Right : Value_Acc; Err : Compare_Type; Loc : Node)
+     return Compare_Type
+   is
+      Rw : constant Uns32 := Right.Typ.W;
+      Rarr : constant Static_Arr_Type := Get_Static_Array (Right);
+      Lval : constant Uns64 := To_Uns64 (Get_Static_Discrete (Left));
+      R : Std_Ulogic;
+      Cnt : Uns32;
+   begin
+      if Rw = 0 then
+         Warn_Compare_Null (Loc);
+         return Err;
+      end if;
+
+      if Rw > 64 then
+         for I in 0 .. Rw - 64 - 1 loop
+            case To_X01 (Get_Static_Std_Logic (Rarr, I)) is
+               when '0' =>
+                  null;
+               when '1' =>
+                  return Compare_Less;
+               when 'X' =>
+                  Warn_Compare_Meta (Loc);
+                  return Err;
+            end case;
+         end loop;
+         Cnt := 64;
+      elsif Rw < 64 then
+         if Shift_Right (Lval, Natural (Rw)) /= 0 then
+            return Compare_Greater;
+         end if;
+         Cnt := Rw;
+      else
+         Cnt := 64;
+      end if;
+
+      for I in reverse 0 .. Cnt - 1 loop
+         R := To_X01 (Get_Static_Std_Logic (Rarr, Rw - I - 1));
+         if R = 'X' then
+            Warn_Compare_Meta (Loc);
+            return Err;
+         end if;
+         if (Shift_Right (Lval, Natural (I)) and 1) = 1 then
+            if R = '0' then
+               return Compare_Greater;
+            end if;
+         else
+            if R = '1' then
+               return Compare_Less;
+            end if;
+         end if;
+      end loop;
+      return Compare_Equal;
+   end Synth_Compare_Nat_Uns;
 
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
@@ -646,11 +774,79 @@ package body Synth.Static_Oper is
                                           Get_Static_Ulogic (Right))),
                Res_Typ);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Uns_Uns
+                 (Left, Right, Compare_Greater, Expr) = Compare_Equal;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
+
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns =>
             declare
                Res : Boolean;
             begin
-               Res := Synth_Ucompare (Left, Right) = Compare_Greater;
+               Res := Synth_Compare_Uns_Uns
+                 (Left, Right, Compare_Less, Expr) = Compare_Greater;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Nat_Uns
+                 (Left, Right, Compare_Less, Expr) = Compare_Greater;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Uns_Nat
+                 (Left, Right, Compare_Less, Expr) = Compare_Greater;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Uns_Uns
+                 (Left, Right, Compare_Greater, Expr) <= Compare_Equal;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Uns_Nat
+                 (Left, Right, Compare_Greater, Expr) <= Compare_Equal;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Uns_Uns
+                 (Left, Right, Compare_Greater, Expr) < Compare_Equal;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Uns_Nat
+                 (Left, Right, Compare_Greater, Expr) < Compare_Equal;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Nat_Uns
+                 (Left, Right, Compare_Greater, Expr) < Compare_Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -832,35 +1028,59 @@ package body Synth.Static_Oper is
       return Create_Value_Const_Array (Bnd, Arr);
    end Eval_To_Vector;
 
-   function Eval_Unsigned_To_Integer
-     (Arg : Value_Acc; Res_Type : Type_Acc; Loc : Node) return Value_Acc
+   function Eval_Unsigned_To_Integer (Arg : Value_Acc; Loc : Node) return Int64
    is
       Res : Uns64;
    begin
       Res := 0;
       for I in Arg.Arr.V'Range loop
-         case Arg.Arr.V (I).Scal is
-            when Std_Logic_0_Pos
-              | Std_Logic_L_Pos =>
+         case To_X01 (Std_Ulogic'Val (Arg.Arr.V (I).Scal)) is
+            when '0' =>
                Res := Res * 2;
-            when Std_Logic_1_Pos
-              | Std_Logic_H_Pos =>
+            when '1' =>
                Res := Res * 2 + 1;
-            when Std_Logic_U_Pos
-              | Std_Logic_X_Pos
-              | Std_Logic_Z_Pos
-              | Std_Logic_W_Pos
-              | Std_Logic_D_Pos =>
+            when 'X' =>
                Warning_Msg_Synth
                  (+Loc, "metavalue detected, returning 0");
                Res := 0;
                exit;
-            when others =>
-               raise Internal_Error;
          end case;
       end loop;
-      return Create_Value_Discrete (To_Int64 (Res), Res_Type);
+      return To_Int64 (Res);
    end Eval_Unsigned_To_Integer;
+
+   function Eval_Signed_To_Integer (Arg : Value_Acc; Loc : Node) return Int64
+   is
+      Res : Uns64;
+   begin
+      if Arg.Arr.Len = 0 then
+         Warning_Msg_Synth
+           (+Loc, "numeric_std.to_integer: null detected, returning 0");
+         return 0;
+      end if;
+
+      case To_X01 (Std_Ulogic'Val (Arg.Arr.V (1).Scal)) is
+         when '0' =>
+            Res := 0;
+         when '1' =>
+            Res := not 0;
+         when 'X' =>
+            Warning_Msg_Synth (+Loc, "metavalue detected, returning 0");
+            return 0;
+      end case;
+      for I in 2 .. Arg.Arr.Len loop
+         case To_X01 (Std_Ulogic'Val (Arg.Arr.V (I).Scal)) is
+            when '0' =>
+               Res := Res * 2;
+            when '1' =>
+               Res := Res * 2 + 1;
+            when 'X' =>
+               Warning_Msg_Synth (+Loc, "metavalue detected, returning 0");
+               return 0;
+         end case;
+      end loop;
+      return To_Int64 (Res);
+   end Eval_Signed_To_Integer;
 
    function Synth_Static_Predefined_Function_Call
      (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
@@ -913,7 +1133,13 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
-            return Eval_Unsigned_To_Integer (Param1, Res_Typ, Expr);
+            return Create_Value_Discrete
+              (Eval_Unsigned_To_Integer (Param1, Expr), Res_Typ);
+         when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int =>
+            --  SIGNED to Integer
+            return Create_Value_Discrete
+              (Eval_Signed_To_Integer (Param1, Expr), Res_Typ);
+
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
             declare
                El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
