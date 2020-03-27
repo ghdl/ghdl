@@ -628,6 +628,10 @@ package body Synth.Stmts is
       Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
       Val := Synth_Expression_With_Type
         (Syn_Inst, Get_Expression (Stmt), Targ.Targ_Type);
+      if Val = null then
+         Set_Error (Syn_Inst);
+         return;
+      end if;
       Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
    end Synth_Variable_Assignment;
 

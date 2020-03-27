@@ -1348,6 +1348,9 @@ package body Synth.Oper is
       end Synth_Vec_Reduce_Monadic;
    begin
       Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
+      if Operand = null then
+         return null;
+      end if;
       Operand := Synth_Subtype_Conversion (Operand, Oper_Typ, False, Loc);
       Strip_Const (Operand);
 
