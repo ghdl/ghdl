@@ -1,10 +1,30 @@
--- --------------------------------------------------------------------
+-- -----------------------------------------------------------------
 --
---   Title     :  std_logic_1164 multi-value logic system
+-- Copyright 2019 IEEE P1076 WG Authors
+--
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+--
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
+--
+--   Title     :  Standard multivalue logic package
+--             :  (STD_LOGIC_1164 package declaration)
+--             :
 --   Library   :  This package shall be compiled into a library
 --             :  symbolically named IEEE.
 --             :
---   Developers:  IEEE model standards group (par 1164)
+--   Developers:  IEEE model standards group (PAR 1164),
+--             :  Accellera VHDL-TC, and IEEE P1076 Working Group
+--             :
 --   Purpose   :  This packages defines a standard for designers
 --             :  to use in describing the interconnection data types
 --             :  used in vhdl modeling.
@@ -17,159 +37,151 @@
 --             :  issues as it relates to this package and are therefore
 --             :  beyond the scope of this effort.
 --             :
---   Note      :  No declarations or definitions shall be included in,
---             :  or excluded from this package. The "package declaration"
---             :  defines the types, subtypes and declarations of
---             :  std_logic_1164. The std_logic_1164 package body shall be
---             :  considered the formal definition of the semantics of
---             :  this package. Tool developers may choose to implement
---             :  the package body in the most efficient manner available
---             :  to them.
+--   Note      :  This package may be modified to include additional data
+--             :  required by tools, but it must in no way change the
+--             :  external interfaces or simulation behavior of the
+--             :  description. It is permissible to add comments and/or
+--             :  attributes to the package declarations, but not to change
+--             :  or delete any original lines of the package declaration.
+--             :  The package body may be changed only in accordance with
+--             :  the terms of Clause 16 of this standard.
 --             :
 -- --------------------------------------------------------------------
---   modification history :
--- --------------------------------------------------------------------
---  version | mod. date:|
---   v4.200 | 01/02/92  |
+-- $Revision: 1228 $
+-- $Date: 2008-04-30 10:04:53 +0930 (Wed, 30 Apr 2008) $
 -- --------------------------------------------------------------------
 
-PACKAGE std_logic_1164 IS
+package std_logic_1164 is
 
-    -------------------------------------------------------------------
-    -- logic state system  (unresolved)
-    -------------------------------------------------------------------
-    TYPE std_ulogic IS ( 'U',  -- Uninitialized
-                         'X',  -- Forcing  Unknown
-                         '0',  -- Forcing  0
-                         '1',  -- Forcing  1
-                         'Z',  -- High Impedance
-                         'W',  -- Weak     Unknown
-                         'L',  -- Weak     0
-                         'H',  -- Weak     1
-                         '-'   -- Don't care
+  -------------------------------------------------------------------
+  -- logic state system  (unresolved)
+  -------------------------------------------------------------------
+  type STD_ULOGIC is ( 'U',             -- Uninitialized
+                       'X',             -- Forcing  Unknown
+                       '0',             -- Forcing  0
+                       '1',             -- Forcing  1
+                       'Z',             -- High Impedance
+                       'W',             -- Weak     Unknown
+                       'L',             -- Weak     0
+                       'H',             -- Weak     1
+                       '-'              -- Don't care
                        );
-    -------------------------------------------------------------------
-    -- unconstrained array of std_ulogic for use with the resolution function
-    -------------------------------------------------------------------
-    TYPE std_ulogic_vector IS ARRAY ( NATURAL RANGE <> ) OF std_ulogic;
+  -------------------------------------------------------------------
+  -- unconstrained array of std_ulogic for use with the resolution function
+  -- and for use in declaring signal arrays of unresolved elements
+  -------------------------------------------------------------------
+  type STD_ULOGIC_VECTOR is array (NATURAL range <>) of STD_ULOGIC;
 
-    -------------------------------------------------------------------
-    -- resolution function
-    -------------------------------------------------------------------
-    FUNCTION resolved ( s : std_ulogic_vector ) RETURN std_ulogic;
+  -------------------------------------------------------------------
+  -- resolution function
+  -------------------------------------------------------------------
+  function resolved (s : STD_ULOGIC_VECTOR) return STD_ULOGIC;
 
-    -------------------------------------------------------------------
-    -- *** industry standard logic type ***
-    -------------------------------------------------------------------
-    SUBTYPE std_logic IS resolved std_ulogic;
 
-    -------------------------------------------------------------------
-    -- unconstrained array of std_logic for use in declaring signal arrays
-    -------------------------------------------------------------------
-    TYPE std_logic_vector IS ARRAY ( NATURAL RANGE <>) OF std_logic;
+  -------------------------------------------------------------------
+  -- logic state system  (resolved)
+  -------------------------------------------------------------------
+  subtype STD_LOGIC is resolved STD_ULOGIC;
 
-    -------------------------------------------------------------------
-    -- common subtypes
-    -------------------------------------------------------------------
-    SUBTYPE X01     IS resolved std_ulogic RANGE 'X' TO '1'; -- ('X','0','1')
-    SUBTYPE X01Z    IS resolved std_ulogic RANGE 'X' TO 'Z'; -- ('X','0','1','Z')
-    SUBTYPE UX01    IS resolved std_ulogic RANGE 'U' TO '1'; -- ('U','X','0','1')
-    SUBTYPE UX01Z   IS resolved std_ulogic RANGE 'U' TO 'Z'; -- ('U','X','0','1','Z')
+  -------------------------------------------------------------------
+  -- unconstrained array of resolved std_ulogic for use in declaring
+  -- signal arrays of resolved elements
+  -------------------------------------------------------------------
+  type STD_LOGIC_VECTOR is array (NATURAL range <>) of STD_LOGIC;
 
-    -------------------------------------------------------------------
-    -- overloaded logical operators
-    -------------------------------------------------------------------
+  -------------------------------------------------------------------
+  -- common subtypes
+  -------------------------------------------------------------------
+  subtype X01 is resolved STD_ULOGIC range 'X' to '1';    -- ('X','0','1')
+  subtype X01Z is resolved STD_ULOGIC range 'X' to 'Z';   -- ('X','0','1','Z')
+  subtype UX01 is resolved STD_ULOGIC range 'U' to '1';   -- ('U','X','0','1')
+  subtype UX01Z is resolved STD_ULOGIC range 'U' to 'Z';  -- ('U','X','0','1','Z')
 
-    FUNCTION "and"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01;
-    FUNCTION "nand" ( l : std_ulogic; r : std_ulogic ) RETURN UX01;
-    FUNCTION "or"   ( l : std_ulogic; r : std_ulogic ) RETURN UX01;
-    FUNCTION "nor"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01;
-    FUNCTION "xor"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01;
-    FUNCTION "xnor" ( l : std_ulogic; r : std_ulogic ) RETURN UX01; --!V87
-    FUNCTION "not"  ( l : std_ulogic                 ) RETURN UX01;
+  -------------------------------------------------------------------
+  -- overloaded logical operators
+  -------------------------------------------------------------------
 
-    -------------------------------------------------------------------
-    -- vectorized overloaded logical operators
-    -------------------------------------------------------------------
-    FUNCTION "and"  ( l, r : std_logic_vector  ) RETURN std_logic_vector;
-    FUNCTION "and"  ( l, r : std_ulogic_vector ) RETURN std_ulogic_vector;
+  function "and"  (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
+  function "nand" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
+  function "or"   (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
+  function "nor"  (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
+  function "xor"  (l : STD_ULOGIC; r : STD_ULOGIC) return UX01;
+  function "xnor" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01; --!V87
+  function "not"  (l : STD_ULOGIC) return UX01;
 
-    FUNCTION "nand" ( l, r : std_logic_vector  ) RETURN std_logic_vector;
-    FUNCTION "nand" ( l, r : std_ulogic_vector ) RETURN std_ulogic_vector;
+  -------------------------------------------------------------------
+  -- vectorized overloaded logical operators
+  -------------------------------------------------------------------
+  function "and"  (l, r : STD_LOGIC_VECTOR)  return STD_LOGIC_VECTOR;
+  function "and"  (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
 
-    FUNCTION "or"   ( l, r : std_logic_vector  ) RETURN std_logic_vector;
-    FUNCTION "or"   ( l, r : std_ulogic_vector ) RETURN std_ulogic_vector;
+  function "nand" (l, r : STD_LOGIC_VECTOR)  return STD_LOGIC_VECTOR;
+  function "nand" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
 
-    FUNCTION "nor"  ( l, r : std_logic_vector  ) RETURN std_logic_vector;
-    FUNCTION "nor"  ( l, r : std_ulogic_vector ) RETURN std_ulogic_vector;
+  function "or"   (l, r : STD_LOGIC_VECTOR)  return STD_LOGIC_VECTOR;
+  function "or"   (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
 
-    FUNCTION "xor"  ( l, r : std_logic_vector  ) RETURN std_logic_vector;
-    FUNCTION "xor"  ( l, r : std_ulogic_vector ) RETURN std_ulogic_vector;
+  function "nor"  (l, r : STD_LOGIC_VECTOR)  return STD_LOGIC_VECTOR;
+  function "nor"  (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
 
---  -----------------------------------------------------------------------
---  Note : The declaration and implementation of the "xnor" function is
---  specifically commented until at which time the VHDL language has been
---  officially adopted as containing such a function. At such a point,
---  the following comments may be removed along with this notice without
---  further "official" ballotting of this std_logic_1164 package. It is
---  the intent of this effort to provide such a function once it becomes
---  available in the VHDL standard.
---  -----------------------------------------------------------------------
-    FUNCTION "xnor" ( l, r : std_logic_vector  ) RETURN std_logic_vector; --!V87
-    FUNCTION "xnor" ( l, r : std_ulogic_vector ) RETURN std_ulogic_vector;--!V87
+  function "xor"  (l, r : STD_LOGIC_VECTOR)  return STD_LOGIC_VECTOR;
+  function "xor"  (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
 
-    FUNCTION "not"  ( l : std_logic_vector  ) RETURN std_logic_vector;
-    FUNCTION "not"  ( l : std_ulogic_vector ) RETURN std_ulogic_vector;
+  function "xnor" (l, r : STD_LOGIC_VECTOR)  return STD_LOGIC_VECTOR; --!V87
+  function "xnor" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR; --!V87
 
-    -------------------------------------------------------------------
-    -- conversion functions
-    -------------------------------------------------------------------
-    FUNCTION To_bit       ( s : std_ulogic;        xmap : BIT := '0') RETURN BIT;
-    FUNCTION To_bitvector ( s : std_logic_vector ; xmap : BIT := '0') RETURN BIT_VECTOR;
-    FUNCTION To_bitvector ( s : std_ulogic_vector; xmap : BIT := '0') RETURN BIT_VECTOR;
+  function "not"  (l    : STD_LOGIC_VECTOR)  return STD_LOGIC_VECTOR;
+  function "not"  (l    : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
 
-    FUNCTION To_StdULogic       ( b : BIT               ) RETURN std_ulogic;
-    FUNCTION To_StdLogicVector  ( b : BIT_VECTOR        ) RETURN std_logic_vector;
-    FUNCTION To_StdLogicVector  ( s : std_ulogic_vector ) RETURN std_logic_vector;
-    FUNCTION To_StdULogicVector ( b : BIT_VECTOR        ) RETURN std_ulogic_vector;
-    FUNCTION To_StdULogicVector ( s : std_logic_vector  ) RETURN std_ulogic_vector;
+  -------------------------------------------------------------------
+  -- conversion functions
+  -------------------------------------------------------------------
+  function To_bit       (s : STD_ULOGIC; xmap : BIT        := '0') return BIT;
+  function To_bitvector (s : STD_LOGIC_VECTOR; xmap : BIT := '0') return BIT_VECTOR;
+  function To_bitvector (s : STD_ULOGIC_VECTOR; xmap : BIT := '0') return BIT_VECTOR;
 
-    -------------------------------------------------------------------
-    -- strength strippers and type convertors
-    -------------------------------------------------------------------
+  function To_StdULogic       (b : BIT) return STD_ULOGIC;
+  function To_StdLogicVector  (b : BIT_VECTOR) return STD_LOGIC_VECTOR;
+  function To_StdLogicVector  (s : STD_ULOGIC_VECTOR) return STD_LOGIC_VECTOR;
+  function To_StdULogicVector (b : BIT_VECTOR) return STD_ULOGIC_VECTOR;
+  function To_StdULogicVector (s : STD_LOGIC_VECTOR) return STD_ULOGIC_VECTOR;
 
-    FUNCTION To_X01  ( s : std_logic_vector  ) RETURN  std_logic_vector;
-    FUNCTION To_X01  ( s : std_ulogic_vector ) RETURN  std_ulogic_vector;
-    FUNCTION To_X01  ( s : std_ulogic        ) RETURN  X01;
-    FUNCTION To_X01  ( b : BIT_VECTOR        ) RETURN  std_logic_vector;
-    FUNCTION To_X01  ( b : BIT_VECTOR        ) RETURN  std_ulogic_vector;
-    FUNCTION To_X01  ( b : BIT               ) RETURN  X01;
+  -------------------------------------------------------------------
+  -- strength strippers and type convertors
+  -------------------------------------------------------------------
 
-    FUNCTION To_X01Z ( s : std_logic_vector  ) RETURN  std_logic_vector;
-    FUNCTION To_X01Z ( s : std_ulogic_vector ) RETURN  std_ulogic_vector;
-    FUNCTION To_X01Z ( s : std_ulogic        ) RETURN  X01Z;
-    FUNCTION To_X01Z ( b : BIT_VECTOR        ) RETURN  std_logic_vector;
-    FUNCTION To_X01Z ( b : BIT_VECTOR        ) RETURN  std_ulogic_vector;
-    FUNCTION To_X01Z ( b : BIT               ) RETURN  X01Z;
+  function To_X01 (s : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR;
+  function To_X01 (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
+  function To_X01 (s : STD_ULOGIC) return X01;
+  function To_X01 (b : BIT_VECTOR) return STD_LOGIC_VECTOR;
+  function To_X01 (b : BIT_VECTOR) return STD_ULOGIC_VECTOR;
+  function To_X01 (b : BIT) return X01;
 
-    FUNCTION To_UX01  ( s : std_logic_vector  ) RETURN  std_logic_vector;
-    FUNCTION To_UX01  ( s : std_ulogic_vector ) RETURN  std_ulogic_vector;
-    FUNCTION To_UX01  ( s : std_ulogic        ) RETURN  UX01;
-    FUNCTION To_UX01  ( b : BIT_VECTOR        ) RETURN  std_logic_vector;
-    FUNCTION To_UX01  ( b : BIT_VECTOR        ) RETURN  std_ulogic_vector;
-    FUNCTION To_UX01  ( b : BIT               ) RETURN  UX01;
+  function To_X01Z (s : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR;
+  function To_X01Z (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
+  function To_X01Z (s : STD_ULOGIC) return X01Z;
+  function To_X01Z (b : BIT_VECTOR) return STD_LOGIC_VECTOR;
+  function To_X01Z (b : BIT_VECTOR) return STD_ULOGIC_VECTOR;
+  function To_X01Z (b : BIT) return X01Z;
 
-    -------------------------------------------------------------------
-    -- edge detection
-    -------------------------------------------------------------------
-    FUNCTION rising_edge  (SIGNAL s : std_ulogic) RETURN BOOLEAN;
-    FUNCTION falling_edge (SIGNAL s : std_ulogic) RETURN BOOLEAN;
+  function To_UX01 (s : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR;
+  function To_UX01 (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR;
+  function To_UX01 (s : STD_ULOGIC) return UX01;
+  function To_UX01 (b : BIT_VECTOR) return STD_LOGIC_VECTOR;
+  function To_UX01 (b : BIT_VECTOR) return STD_ULOGIC_VECTOR;
+  function To_UX01 (b : BIT) return UX01;
 
-    -------------------------------------------------------------------
-    -- object contains an unknown
-    -------------------------------------------------------------------
-    FUNCTION Is_X ( s : std_ulogic_vector ) RETURN  BOOLEAN;
-    FUNCTION Is_X ( s : std_logic_vector  ) RETURN  BOOLEAN;
-    FUNCTION Is_X ( s : std_ulogic        ) RETURN  BOOLEAN;
+  -------------------------------------------------------------------
+  -- edge detection
+  -------------------------------------------------------------------
+  function rising_edge  (signal s : STD_ULOGIC) return BOOLEAN;
+  function falling_edge (signal s : STD_ULOGIC) return BOOLEAN;
 
-END std_logic_1164;
+  -------------------------------------------------------------------
+  -- object contains an unknown
+  -------------------------------------------------------------------
+  function Is_X (s : STD_ULOGIC_VECTOR) return BOOLEAN;
+  function Is_X (s : STD_LOGIC_VECTOR) return BOOLEAN;
+  function Is_X (s : STD_ULOGIC) return BOOLEAN;
+
+end std_logic_1164;

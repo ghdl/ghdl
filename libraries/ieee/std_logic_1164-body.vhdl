@@ -1,10 +1,30 @@
--- --------------------------------------------------------------------
+-- -----------------------------------------------------------------
 --
---   Title     :  std_logic_1164 multi-value logic system
+-- Copyright 2019 IEEE P1076 WG Authors
+--
+-- See the LICENSE file distributed with this work for copyright and
+-- licensing information and the AUTHORS file.
+--
+-- This file to you under the Apache License, Version 2.0 (the "License").
+-- You may obtain a copy of the License at
+--
+--     http://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+-- implied.  See the License for the specific language governing
+-- permissions and limitations under the License.
+--
+--   Title     :  Standard multivalue logic package
+--             :  (STD_LOGIC_1164 package body)
+--             :
 --   Library   :  This package shall be compiled into a library
 --             :  symbolically named IEEE.
 --             :
---   Developers:  IEEE model standards group (par 1164)
+--   Developers:  IEEE model standards group (PAR 1164),
+--             :  Accellera VHDL-TC, and IEEE P1076 Working Group
+--             :
 --   Purpose   :  This packages defines a standard for designers
 --             :  to use in describing the interconnection data types
 --             :  used in vhdl modeling.
@@ -17,814 +37,844 @@
 --             :  issues as it relates to this package and are therefore
 --             :  beyond the scope of this effort.
 --             :
---   Note      :  No declarations or definitions shall be included in,
---             :  or excluded from this package. The "package declaration"
---             :  defines the types, subtypes and declarations of
---             :  std_logic_1164. The std_logic_1164 package body shall be
---             :  considered the formal definition of the semantics of
---             :  this package. Tool developers may choose to implement
---             :  the package body in the most efficient manner available
---             :  to them.
+--   Note      :  This package may be modified to include additional data
+--             :  required by tools, but it must in no way change the
+--             :  external interfaces or simulation behavior of the
+--             :  description. It is permissible to add comments and/or
+--             :  attributes to the package declarations, but not to change
+--             :  or delete any original lines of the package declaration.
+--             :  The package body may be changed only in accordance with
+--             :  the terms of Clause 16 of this standard.
 --             :
 -- --------------------------------------------------------------------
---   modification history :
--- --------------------------------------------------------------------
---  version | mod. date:|
---   v4.200 | 01/02/91  |
+-- $Revision: 1220 $
+-- $Date: 2008-04-10 17:16:09 +0930 (Thu, 10 Apr 2008) $
 -- --------------------------------------------------------------------
 
-PACKAGE BODY std_logic_1164 IS
-    -------------------------------------------------------------------
-    -- local types
-    -------------------------------------------------------------------
-    TYPE stdlogic_1d IS ARRAY (std_ulogic) OF std_ulogic;
-    TYPE stdlogic_table IS ARRAY(std_ulogic, std_ulogic) OF std_ulogic;
+package body std_logic_1164 is
+  -------------------------------------------------------------------
+  -- local types
+  -------------------------------------------------------------------
+  type stdlogic_1d is array (STD_ULOGIC) of STD_ULOGIC;
+  type stdlogic_table is array(STD_ULOGIC, STD_ULOGIC) of STD_ULOGIC;
 
-    -------------------------------------------------------------------
-    -- resolution function
-    -------------------------------------------------------------------
-    CONSTANT resolution_table : stdlogic_table := (
+  -------------------------------------------------------------------
+  -- resolution function
+  -------------------------------------------------------------------
+  constant resolution_table : stdlogic_table := (
     --      ---------------------------------------------------------
     --      |  U    X    0    1    Z    W    L    H    -        |   |
     --      ---------------------------------------------------------
-            ( 'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U' ), -- | U |
-            ( 'U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X' ), -- | X |
-            ( 'U', 'X', '0', 'X', '0', '0', '0', '0', 'X' ), -- | 0 |
-            ( 'U', 'X', 'X', '1', '1', '1', '1', '1', 'X' ), -- | 1 |
-            ( 'U', 'X', '0', '1', 'Z', 'W', 'L', 'H', 'X' ), -- | Z |
-            ( 'U', 'X', '0', '1', 'W', 'W', 'W', 'W', 'X' ), -- | W |
-            ( 'U', 'X', '0', '1', 'L', 'W', 'L', 'W', 'X' ), -- | L |
-            ( 'U', 'X', '0', '1', 'H', 'W', 'W', 'H', 'X' ), -- | H |
-            ( 'U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X' )  -- | - |
-        );
+             ('U', 'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U'),  -- | U |
+             ('U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'),  -- | X |
+             ('U', 'X', '0', 'X', '0', '0', '0', '0', 'X'),  -- | 0 |
+             ('U', 'X', 'X', '1', '1', '1', '1', '1', 'X'),  -- | 1 |
+             ('U', 'X', '0', '1', 'Z', 'W', 'L', 'H', 'X'),  -- | Z |
+             ('U', 'X', '0', '1', 'W', 'W', 'W', 'W', 'X'),  -- | W |
+             ('U', 'X', '0', '1', 'L', 'W', 'L', 'W', 'X'),  -- | L |
+             ('U', 'X', '0', '1', 'H', 'W', 'W', 'H', 'X'),  -- | H |
+             ('U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X')   -- | - |
+             );
 
-    FUNCTION resolved ( s : std_ulogic_vector ) RETURN std_ulogic IS
-        VARIABLE result : std_ulogic := 'Z';  -- weakest state default
-    BEGIN
-        -- the test for a single driver is essential otherwise the
-        -- loop would return 'X' for a single driver of '-' and that
-        -- would conflict with the value of a single driver unresolved
-        -- signal.
-        IF    (s'LENGTH = 1) THEN    RETURN s(s'LOW);
-        ELSE
-            FOR i IN s'RANGE LOOP
-                result := resolution_table(result, s(i));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END resolved;
+  function resolved (s : STD_ULOGIC_VECTOR) return STD_ULOGIC is
+    variable result : STD_ULOGIC := 'Z';  -- weakest state default
+  begin
+    -- the test for a single driver is essential otherwise the
+    -- loop would return 'X' for a single driver of '-' and that
+    -- would conflict with the value of a single driver unresolved
+    -- signal.
+    if (s'length = 1) then return s(s'low);
+    else
+      for i in s'range loop
+        result := resolution_table(result, s(i));
+      end loop;
+    end if;
+    return result;
+  end resolved;
 
-    -------------------------------------------------------------------
-    -- tables for logical operations
-    -------------------------------------------------------------------
+  -------------------------------------------------------------------
+  -- tables for logical operations
+  -------------------------------------------------------------------
 
-    -- truth table for "and" function
-    CONSTANT and_table : stdlogic_table := (
+  -- truth table for "and" function
+  constant and_table : stdlogic_table := (
     --      ----------------------------------------------------
     --      |  U    X    0    1    Z    W    L    H    -         |   |
     --      ----------------------------------------------------
-            ( 'U', 'U', '0', 'U', 'U', 'U', '0', 'U', 'U' ),  -- | U |
-            ( 'U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X' ),  -- | X |
-            ( '0', '0', '0', '0', '0', '0', '0', '0', '0' ),  -- | 0 |
-            ( 'U', 'X', '0', '1', 'X', 'X', '0', '1', 'X' ),  -- | 1 |
-            ( 'U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X' ),  -- | Z |
-            ( 'U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X' ),  -- | W |
-            ( '0', '0', '0', '0', '0', '0', '0', '0', '0' ),  -- | L |
-            ( 'U', 'X', '0', '1', 'X', 'X', '0', '1', 'X' ),  -- | H |
-            ( 'U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X' )   -- | - |
-    );
+             ('U', 'U', '0', 'U', 'U', 'U', '0', 'U', 'U'),  -- | U |
+             ('U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X'),  -- | X |
+             ('0', '0', '0', '0', '0', '0', '0', '0', '0'),  -- | 0 |
+             ('U', 'X', '0', '1', 'X', 'X', '0', '1', 'X'),  -- | 1 |
+             ('U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X'),  -- | Z |
+             ('U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X'),  -- | W |
+             ('0', '0', '0', '0', '0', '0', '0', '0', '0'),  -- | L |
+             ('U', 'X', '0', '1', 'X', 'X', '0', '1', 'X'),  -- | H |
+             ('U', 'X', '0', 'X', 'X', 'X', '0', 'X', 'X')   -- | - |
+             );
 
-    -- truth table for "or" function
-    CONSTANT or_table : stdlogic_table := (
+  -- truth table for "or" function
+  constant or_table : stdlogic_table := (
     --      ----------------------------------------------------
     --      |  U    X    0    1    Z    W    L    H    -         |   |
     --      ----------------------------------------------------
-            ( 'U', 'U', 'U', '1', 'U', 'U', 'U', '1', 'U' ),  -- | U |
-            ( 'U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X' ),  -- | X |
-            ( 'U', 'X', '0', '1', 'X', 'X', '0', '1', 'X' ),  -- | 0 |
-            ( '1', '1', '1', '1', '1', '1', '1', '1', '1' ),  -- | 1 |
-            ( 'U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X' ),  -- | Z |
-            ( 'U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X' ),  -- | W |
-            ( 'U', 'X', '0', '1', 'X', 'X', '0', '1', 'X' ),  -- | L |
-            ( '1', '1', '1', '1', '1', '1', '1', '1', '1' ),  -- | H |
-            ( 'U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X' )   -- | - |
-    );
+             ('U', 'U', 'U', '1', 'U', 'U', 'U', '1', 'U'),  -- | U |
+             ('U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X'),  -- | X |
+             ('U', 'X', '0', '1', 'X', 'X', '0', '1', 'X'),  -- | 0 |
+             ('1', '1', '1', '1', '1', '1', '1', '1', '1'),  -- | 1 |
+             ('U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X'),  -- | Z |
+             ('U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X'),  -- | W |
+             ('U', 'X', '0', '1', 'X', 'X', '0', '1', 'X'),  -- | L |
+             ('1', '1', '1', '1', '1', '1', '1', '1', '1'),  -- | H |
+             ('U', 'X', 'X', '1', 'X', 'X', 'X', '1', 'X')   -- | - |
+             );
 
-    -- truth table for "xor" function
-    CONSTANT xor_table : stdlogic_table := (
+  -- truth table for "xor" function
+  constant xor_table : stdlogic_table := (
     --      ----------------------------------------------------
     --      |  U    X    0    1    Z    W    L    H    -         |   |
     --      ----------------------------------------------------
-            ( 'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U' ),  -- | U |
-            ( 'U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X' ),  -- | X |
-            ( 'U', 'X', '0', '1', 'X', 'X', '0', '1', 'X' ),  -- | 0 |
-            ( 'U', 'X', '1', '0', 'X', 'X', '1', '0', 'X' ),  -- | 1 |
-            ( 'U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X' ),  -- | Z |
-            ( 'U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X' ),  -- | W |
-            ( 'U', 'X', '0', '1', 'X', 'X', '0', '1', 'X' ),  -- | L |
-            ( 'U', 'X', '1', '0', 'X', 'X', '1', '0', 'X' ),  -- | H |
-            ( 'U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X' )   -- | - |
-    );
+             ('U', 'U', 'U', 'U', 'U', 'U', 'U', 'U', 'U'),  -- | U |
+             ('U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'),  -- | X |
+             ('U', 'X', '0', '1', 'X', 'X', '0', '1', 'X'),  -- | 0 |
+             ('U', 'X', '1', '0', 'X', 'X', '1', '0', 'X'),  -- | 1 |
+             ('U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'),  -- | Z |
+             ('U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X'),  -- | W |
+             ('U', 'X', '0', '1', 'X', 'X', '0', '1', 'X'),  -- | L |
+             ('U', 'X', '1', '0', 'X', 'X', '1', '0', 'X'),  -- | H |
+             ('U', 'X', 'X', 'X', 'X', 'X', 'X', 'X', 'X')   -- | - |
+             );
 
-    -- truth table for "not" function
-    CONSTANT not_table: stdlogic_1d :=
+  -- truth table for "not" function
+  constant not_table : stdlogic_1d :=
     --  -------------------------------------------------
     --  |   U    X    0    1    Z    W    L    H    -   |
     --  -------------------------------------------------
-         ( 'U', 'X', '1', '0', 'X', 'X', '1', '0', 'X' );
+          ('U', 'X', '1', '0', 'X', 'X', '1', '0', 'X');
 
-    -------------------------------------------------------------------
-    -- overloaded logical operators ( with optimizing hints )
-    -------------------------------------------------------------------
+  -------------------------------------------------------------------
+  -- overloaded logical operators ( with optimizing hints )
+  -------------------------------------------------------------------
 
-    FUNCTION "and"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01 IS
-    BEGIN
-        RETURN (and_table(l, r));
-    END "and";
+  function "and" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01 is
+  begin
+    return (and_table(l, r));
+  end "and";
 
-    FUNCTION "nand" ( l : std_ulogic; r : std_ulogic ) RETURN UX01 IS
-    BEGIN
-        RETURN  (not_table ( and_table(l, r)));
-    END "nand";
+  function "nand" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01 is
+  begin
+    return (not_table (and_table(l, r)));
+  end "nand";
 
-    FUNCTION "or"   ( l : std_ulogic; r : std_ulogic ) RETURN UX01 IS
-    BEGIN
-        RETURN (or_table(l, r));
-    END "or";
+  function "or" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01 is
+  begin
+    return (or_table(l, r));
+  end "or";
 
-    FUNCTION "nor"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01 IS
-    BEGIN
-        RETURN  (not_table ( or_table( l, r )));
-    END "nor";
+  function "nor" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01 is
+  begin
+    return (not_table (or_table(l, r)));
+  end "nor";
 
-    FUNCTION "xor"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01 IS
-    BEGIN
-        RETURN (xor_table(l, r));
-    END "xor";
+  function "xor" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01 is
+  begin
+    return (xor_table(l, r));
+  end "xor";
 
---START-!V87
-    FUNCTION "xnor"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01 IS
-    BEGIN
-        RETURN not_table(xor_table(l, r));
-    END "xnor";
---END-!V87
+  --START-!V87
 
-    FUNCTION "not"  ( l : std_ulogic ) RETURN UX01 IS
-    BEGIN
-        RETURN (not_table(l));
-    END "not";
+  function "xnor" (l : STD_ULOGIC; r : STD_ULOGIC) return UX01 is
+  begin
+    return not_table(xor_table(l, r));
+  end "xnor";
 
-    -------------------------------------------------------------------
-    -- and
-    -------------------------------------------------------------------
-    FUNCTION "and"  ( l,r : std_logic_vector ) RETURN std_logic_vector IS
-        ALIAS lv : std_logic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_logic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_logic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'and' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := and_table (lv(i), rv(i));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "and";
-    ---------------------------------------------------------------------
-    FUNCTION "and"  ( l,r : std_ulogic_vector ) RETURN std_ulogic_vector IS
-        ALIAS lv : std_ulogic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_ulogic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_ulogic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'and' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := and_table (lv(i), rv(i));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "and";
-    -------------------------------------------------------------------
-    -- nand
-    -------------------------------------------------------------------
-    FUNCTION "nand"  ( l,r : std_logic_vector ) RETURN std_logic_vector IS
-        ALIAS lv : std_logic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_logic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_logic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'nand' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := not_table(and_table (lv(i), rv(i)));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "nand";
-    ---------------------------------------------------------------------
-    FUNCTION "nand"  ( l,r : std_ulogic_vector ) RETURN std_ulogic_vector IS
-        ALIAS lv : std_ulogic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_ulogic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_ulogic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'nand' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := not_table(and_table (lv(i), rv(i)));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "nand";
-    -------------------------------------------------------------------
-    -- or
-    -------------------------------------------------------------------
-    FUNCTION "or"  ( l,r : std_logic_vector ) RETURN std_logic_vector IS
-        ALIAS lv : std_logic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_logic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_logic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'or' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := or_table (lv(i), rv(i));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "or";
-    ---------------------------------------------------------------------
-    FUNCTION "or"  ( l,r : std_ulogic_vector ) RETURN std_ulogic_vector IS
-        ALIAS lv : std_ulogic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_ulogic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_ulogic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'or' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := or_table (lv(i), rv(i));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "or";
-    -------------------------------------------------------------------
-    -- nor
-    -------------------------------------------------------------------
-    FUNCTION "nor"  ( l,r : std_logic_vector ) RETURN std_logic_vector IS
-        ALIAS lv : std_logic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_logic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_logic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'nor' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := not_table(or_table (lv(i), rv(i)));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "nor";
-    ---------------------------------------------------------------------
-    FUNCTION "nor"  ( l,r : std_ulogic_vector ) RETURN std_ulogic_vector IS
-        ALIAS lv : std_ulogic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_ulogic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_ulogic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'nor' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := not_table(or_table (lv(i), rv(i)));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "nor";
-    ---------------------------------------------------------------------
-    -- xor
-    -------------------------------------------------------------------
-    FUNCTION "xor"  ( l,r : std_logic_vector ) RETURN std_logic_vector IS
-        ALIAS lv : std_logic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_logic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_logic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'xor' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := xor_table (lv(i), rv(i));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "xor";
-    ---------------------------------------------------------------------
-    FUNCTION "xor"  ( l,r : std_ulogic_vector ) RETURN std_ulogic_vector IS
-        ALIAS lv : std_ulogic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_ulogic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_ulogic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'xor' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := xor_table (lv(i), rv(i));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "xor";
---    -------------------------------------------------------------------
---    -- xnor
---    -------------------------------------------------------------------
---  -----------------------------------------------------------------------
---  Note : The declaration and implementation of the "xnor" function is
---  specifically commented until at which time the VHDL language has been
---  officially adopted as containing such a function. At such a point,
---  the following comments may be removed along with this notice without
---  further "official" ballotting of this std_logic_1164 package. It is
---  the intent of this effort to provide such a function once it becomes
---  available in the VHDL standard.
---  -----------------------------------------------------------------------
---START-!V87
-    FUNCTION "xnor"  ( l,r : std_logic_vector ) RETURN std_logic_vector IS
-        ALIAS lv : std_logic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_logic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_logic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'xnor' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := not_table(xor_table (lv(i), rv(i)));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "xnor";
-    ---------------------------------------------------------------------
-    FUNCTION "xnor"  ( l,r : std_ulogic_vector ) RETURN std_ulogic_vector IS
-        ALIAS lv : std_ulogic_vector ( 1 TO l'LENGTH ) IS l;
-        ALIAS rv : std_ulogic_vector ( 1 TO r'LENGTH ) IS r;
-        VARIABLE result : std_ulogic_vector ( 1 TO l'LENGTH );
-    BEGIN
-        IF ( l'LENGTH /= r'LENGTH ) THEN
-            ASSERT FALSE
-            REPORT "arguments of overloaded 'xnor' operator are not of the same length"
-            SEVERITY FAILURE;
-        ELSE
-            FOR i IN result'RANGE LOOP
-                result(i) := not_table(xor_table (lv(i), rv(i)));
-            END LOOP;
-        END IF;
-        RETURN result;
-    END "xnor";
---END-!V87
-    -------------------------------------------------------------------
-    -- not
-    -------------------------------------------------------------------
-    FUNCTION "not"  ( l : std_logic_vector ) RETURN std_logic_vector IS
-        ALIAS lv : std_logic_vector ( 1 TO l'LENGTH ) IS l;
-        VARIABLE result : std_logic_vector ( 1 TO l'LENGTH ) := (OTHERS => 'X');
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := not_table( lv(i) );
-        END LOOP;
-        RETURN result;
-    END;
-    ---------------------------------------------------------------------
-    FUNCTION "not"  ( l : std_ulogic_vector ) RETURN std_ulogic_vector IS
-        ALIAS lv : std_ulogic_vector ( 1 TO l'LENGTH ) IS l;
-        VARIABLE result : std_ulogic_vector ( 1 TO l'LENGTH ) := (OTHERS => 'X');
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := not_table( lv(i) );
-        END LOOP;
-        RETURN result;
-    END;
-    -------------------------------------------------------------------
-    -- conversion tables
-    -------------------------------------------------------------------
-    TYPE logic_x01_table IS ARRAY (std_ulogic'LOW TO std_ulogic'HIGH) OF X01;
-    TYPE logic_x01z_table IS ARRAY (std_ulogic'LOW TO std_ulogic'HIGH) OF X01Z;
-    TYPE logic_ux01_table IS ARRAY (std_ulogic'LOW TO std_ulogic'HIGH) OF UX01;
-    ----------------------------------------------------------
-    -- table name : cvt_to_x01
-    --
-    -- parameters :
-    --        in  :  std_ulogic  -- some logic value
-    -- returns    :  x01         -- state value of logic value
-    -- purpose    :  to convert state-strength to state only
-    --
-    -- example    : if (cvt_to_x01 (input_signal) = '1' ) then ...
-    --
-    ----------------------------------------------------------
-    CONSTANT cvt_to_x01 : logic_x01_table := (
-                         'X',  -- 'U'
-                         'X',  -- 'X'
-                         '0',  -- '0'
-                         '1',  -- '1'
-                         'X',  -- 'Z'
-                         'X',  -- 'W'
-                         '0',  -- 'L'
-                         '1',  -- 'H'
-                         'X'   -- '-'
-                        );
+  --END-!V87
 
-    ----------------------------------------------------------
-    -- table name : cvt_to_x01z
-    --
-    -- parameters :
-    --        in  :  std_ulogic  -- some logic value
-    -- returns    :  x01z        -- state value of logic value
-    -- purpose    :  to convert state-strength to state only
-    --
-    -- example    : if (cvt_to_x01z (input_signal) = '1' ) then ...
-    --
-    ----------------------------------------------------------
-    CONSTANT cvt_to_x01z : logic_x01z_table := (
-                         'X',  -- 'U'
-                         'X',  -- 'X'
-                         '0',  -- '0'
-                         '1',  -- '1'
-                         'Z',  -- 'Z'
-                         'X',  -- 'W'
-                         '0',  -- 'L'
-                         '1',  -- 'H'
-                         'X'   -- '-'
-                        );
+  function "not" (l : STD_ULOGIC) return UX01 is
+  begin
+    return (not_table(l));
+  end "not";
 
-    ----------------------------------------------------------
-    -- table name : cvt_to_ux01
-    --
-    -- parameters :
-    --        in  :  std_ulogic  -- some logic value
-    -- returns    :  ux01        -- state value of logic value
-    -- purpose    :  to convert state-strength to state only
-    --
-    -- example    : if (cvt_to_ux01 (input_signal) = '1' ) then ...
-    --
-    ----------------------------------------------------------
-    CONSTANT cvt_to_ux01 : logic_ux01_table := (
-                         'U',  -- 'U'
-                         'X',  -- 'X'
-                         '0',  -- '0'
-                         '1',  -- '1'
-                         'X',  -- 'Z'
-                         'X',  -- 'W'
-                         '0',  -- 'L'
-                         '1',  -- 'H'
-                         'X'   -- '-'
-                        );
+  -------------------------------------------------------------------
+  -- and
+  -------------------------------------------------------------------
+  function "and" (l, r : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias lv        : STD_LOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_LOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_LOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""and"": "
+        & "arguments of overloaded 'and' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := and_table (lv(i), rv(i));
+      end loop;
+    end if;
+    return result;
+  end "and";
 
-    -------------------------------------------------------------------
-    -- conversion functions
-    -------------------------------------------------------------------
-    FUNCTION To_bit ( s : std_ulogic; xmap : BIT := '0') RETURN BIT IS
-    BEGIN
-            CASE s IS
-                WHEN '0' | 'L' => RETURN ('0');
-                WHEN '1' | 'H' => RETURN ('1');
-                WHEN OTHERS => RETURN xmap;
-            END CASE;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_bitvector ( s : std_logic_vector ; xmap : BIT := '0') RETURN BIT_VECTOR IS
-        ALIAS sv : std_logic_vector ( s'LENGTH-1 DOWNTO 0 ) IS s;
-        VARIABLE result : BIT_VECTOR ( s'LENGTH-1 DOWNTO 0 );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE sv(i) IS
-                WHEN '0' | 'L' => result(i) := '0';
-                WHEN '1' | 'H' => result(i) := '1';
-                WHEN OTHERS => result(i) := xmap;
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_bitvector ( s : std_ulogic_vector; xmap : BIT := '0') RETURN BIT_VECTOR IS
-        ALIAS sv : std_ulogic_vector ( s'LENGTH-1 DOWNTO 0 ) IS s;
-        VARIABLE result : BIT_VECTOR ( s'LENGTH-1 DOWNTO 0 );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE sv(i) IS
-                WHEN '0' | 'L' => result(i) := '0';
-                WHEN '1' | 'H' => result(i) := '1';
-                WHEN OTHERS => result(i) := xmap;
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_StdULogic       ( b : BIT               ) RETURN std_ulogic IS
-    BEGIN
-        CASE b IS
-            WHEN '0' => RETURN '0';
-            WHEN '1' => RETURN '1';
-        END CASE;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_StdLogicVector  ( b : BIT_VECTOR        ) RETURN std_logic_vector IS
-        ALIAS bv : BIT_VECTOR ( b'LENGTH-1 DOWNTO 0 ) IS b;
-        VARIABLE result : std_logic_vector ( b'LENGTH-1 DOWNTO 0 );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE bv(i) IS
-                WHEN '0' => result(i) := '0';
-                WHEN '1' => result(i) := '1';
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_StdLogicVector  ( s : std_ulogic_vector ) RETURN std_logic_vector IS
-        ALIAS sv : std_ulogic_vector ( s'LENGTH-1 DOWNTO 0 ) IS s;
-        VARIABLE result : std_logic_vector ( s'LENGTH-1 DOWNTO 0 );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := sv(i);
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_StdULogicVector ( b : BIT_VECTOR        ) RETURN std_ulogic_vector IS
-        ALIAS bv : BIT_VECTOR ( b'LENGTH-1 DOWNTO 0 ) IS b;
-        VARIABLE result : std_ulogic_vector ( b'LENGTH-1 DOWNTO 0 );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE bv(i) IS
-                WHEN '0' => result(i) := '0';
-                WHEN '1' => result(i) := '1';
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_StdULogicVector ( s : std_logic_vector ) RETURN std_ulogic_vector IS
-        ALIAS sv : std_logic_vector ( s'LENGTH-1 DOWNTO 0 ) IS s;
-        VARIABLE result : std_ulogic_vector ( s'LENGTH-1 DOWNTO 0 );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := sv(i);
-        END LOOP;
-        RETURN result;
-    END;
+  function "and" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_ULOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""and"": "
+        & "arguments of overloaded 'and' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := and_table (lv(i), rv(i));
+      end loop;
+    end if;
+    return result;
+  end "and";
 
-    -------------------------------------------------------------------
-    -- strength strippers and type convertors
-    -------------------------------------------------------------------
-    -- to_x01
-    -------------------------------------------------------------------
-    FUNCTION To_X01  ( s : std_logic_vector ) RETURN  std_logic_vector IS
-        ALIAS sv : std_logic_vector ( 1 TO s'LENGTH ) IS s;
-        VARIABLE result : std_logic_vector ( 1 TO s'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := cvt_to_x01 (sv(i));
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01  ( s : std_ulogic_vector ) RETURN  std_ulogic_vector IS
-        ALIAS sv : std_ulogic_vector ( 1 TO s'LENGTH ) IS s;
-        VARIABLE result : std_ulogic_vector ( 1 TO s'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := cvt_to_x01 (sv(i));
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01  ( s : std_ulogic ) RETURN  X01 IS
-    BEGIN
-        RETURN (cvt_to_x01(s));
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01  ( b : BIT_VECTOR ) RETURN  std_logic_vector IS
-        ALIAS bv : BIT_VECTOR ( 1 TO b'LENGTH ) IS b;
-        VARIABLE result : std_logic_vector ( 1 TO b'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE bv(i) IS
-                WHEN '0' => result(i) := '0';
-                WHEN '1' => result(i) := '1';
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01  ( b : BIT_VECTOR ) RETURN  std_ulogic_vector IS
-        ALIAS bv : BIT_VECTOR ( 1 TO b'LENGTH ) IS b;
-        VARIABLE result : std_ulogic_vector ( 1 TO b'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE bv(i) IS
-                WHEN '0' => result(i) := '0';
-                WHEN '1' => result(i) := '1';
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01  ( b : BIT ) RETURN  X01 IS
-    BEGIN
-            CASE b IS
-                WHEN '0' => RETURN('0');
-                WHEN '1' => RETURN('1');
-            END CASE;
-    END;
-    --------------------------------------------------------------------
-    -- to_x01z
-    -------------------------------------------------------------------
-    FUNCTION To_X01Z  ( s : std_logic_vector ) RETURN  std_logic_vector IS
-        ALIAS sv : std_logic_vector ( 1 TO s'LENGTH ) IS s;
-        VARIABLE result : std_logic_vector ( 1 TO s'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := cvt_to_x01z (sv(i));
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01Z  ( s : std_ulogic_vector ) RETURN  std_ulogic_vector IS
-        ALIAS sv : std_ulogic_vector ( 1 TO s'LENGTH ) IS s;
-        VARIABLE result : std_ulogic_vector ( 1 TO s'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := cvt_to_x01z (sv(i));
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01Z  ( s : std_ulogic ) RETURN  X01Z IS
-    BEGIN
-        RETURN (cvt_to_x01z(s));
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01Z  ( b : BIT_VECTOR ) RETURN  std_logic_vector IS
-        ALIAS bv : BIT_VECTOR ( 1 TO b'LENGTH ) IS b;
-        VARIABLE result : std_logic_vector ( 1 TO b'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE bv(i) IS
-                WHEN '0' => result(i) := '0';
-                WHEN '1' => result(i) := '1';
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01Z  ( b : BIT_VECTOR ) RETURN  std_ulogic_vector IS
-        ALIAS bv : BIT_VECTOR ( 1 TO b'LENGTH ) IS b;
-        VARIABLE result : std_ulogic_vector ( 1 TO b'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE bv(i) IS
-                WHEN '0' => result(i) := '0';
-                WHEN '1' => result(i) := '1';
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_X01Z  ( b : BIT ) RETURN  X01Z IS
-    BEGIN
-            CASE b IS
-                WHEN '0' => RETURN('0');
-                WHEN '1' => RETURN('1');
-            END CASE;
-    END;
-    --------------------------------------------------------------------
-    -- to_ux01
-    -------------------------------------------------------------------
-    FUNCTION To_UX01  ( s : std_logic_vector ) RETURN  std_logic_vector IS
-        ALIAS sv : std_logic_vector ( 1 TO s'LENGTH ) IS s;
-        VARIABLE result : std_logic_vector ( 1 TO s'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := cvt_to_ux01 (sv(i));
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_UX01  ( s : std_ulogic_vector ) RETURN  std_ulogic_vector IS
-        ALIAS sv : std_ulogic_vector ( 1 TO s'LENGTH ) IS s;
-        VARIABLE result : std_ulogic_vector ( 1 TO s'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            result(i) := cvt_to_ux01 (sv(i));
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_UX01  ( s : std_ulogic ) RETURN  UX01 IS
-    BEGIN
-        RETURN (cvt_to_ux01(s));
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_UX01  ( b : BIT_VECTOR ) RETURN  std_logic_vector IS
-        ALIAS bv : BIT_VECTOR ( 1 TO b'LENGTH ) IS b;
-        VARIABLE result : std_logic_vector ( 1 TO b'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE bv(i) IS
-                WHEN '0' => result(i) := '0';
-                WHEN '1' => result(i) := '1';
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_UX01  ( b : BIT_VECTOR ) RETURN  std_ulogic_vector IS
-        ALIAS bv : BIT_VECTOR ( 1 TO b'LENGTH ) IS b;
-        VARIABLE result : std_ulogic_vector ( 1 TO b'LENGTH );
-    BEGIN
-        FOR i IN result'RANGE LOOP
-            CASE bv(i) IS
-                WHEN '0' => result(i) := '0';
-                WHEN '1' => result(i) := '1';
-            END CASE;
-        END LOOP;
-        RETURN result;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION To_UX01  ( b : BIT ) RETURN  UX01 IS
-    BEGIN
-            CASE b IS
-                WHEN '0' => RETURN('0');
-                WHEN '1' => RETURN('1');
-            END CASE;
-    END;
+  -------------------------------------------------------------------
+  -- nand
+  -------------------------------------------------------------------
+  function "nand" (l, r : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias lv        : STD_LOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_LOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_LOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""nand"": "
+        & "arguments of overloaded 'nand' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := not_table(and_table (lv(i), rv(i)));
+      end loop;
+    end if;
+    return result;
+  end "nand";
 
-    -------------------------------------------------------------------
-    -- edge detection
-    -------------------------------------------------------------------
-    FUNCTION rising_edge  (SIGNAL s : std_ulogic) RETURN BOOLEAN IS
-    BEGIN
-        RETURN (s'EVENT AND (To_X01(s) = '1') AND
-                            (To_X01(s'LAST_VALUE) = '0'));
-    END;
+  function "nand" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_ULOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""nand"": "
+        & "arguments of overloaded 'nand' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := not_table(and_table (lv(i), rv(i)));
+      end loop;
+    end if;
+    return result;
+  end "nand";
 
-    FUNCTION falling_edge (SIGNAL s : std_ulogic) RETURN BOOLEAN IS
-    BEGIN
-        RETURN (s'EVENT AND (To_X01(s) = '0') AND
-                            (To_X01(s'LAST_VALUE) = '1'));
-    END;
+  -------------------------------------------------------------------
+  -- or
+  -------------------------------------------------------------------
+  function "or" (l, r : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias lv        : STD_LOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_LOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_LOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""or"": "
+        & "arguments of overloaded 'or' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := or_table (lv(i), rv(i));
+      end loop;
+    end if;
+    return result;
+  end "or";
 
-    -------------------------------------------------------------------
-    -- object contains an unknown
-    -------------------------------------------------------------------
-    FUNCTION Is_X ( s : std_ulogic_vector ) RETURN  BOOLEAN IS
-    BEGIN
-        FOR i IN s'RANGE LOOP
-            CASE s(i) IS
-                WHEN 'U' | 'X' | 'Z' | 'W' | '-' => RETURN TRUE;
-                WHEN OTHERS => NULL;
-            END CASE;
-        END LOOP;
-        RETURN FALSE;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION Is_X ( s : std_logic_vector  ) RETURN  BOOLEAN IS
-    BEGIN
-        FOR i IN s'RANGE LOOP
-            CASE s(i) IS
-                WHEN 'U' | 'X' | 'Z' | 'W' | '-' => RETURN TRUE;
-                WHEN OTHERS => NULL;
-            END CASE;
-        END LOOP;
-        RETURN FALSE;
-    END;
-    --------------------------------------------------------------------
-    FUNCTION Is_X ( s : std_ulogic        ) RETURN  BOOLEAN IS
-    BEGIN
-        CASE s IS
-            WHEN 'U' | 'X' | 'Z' | 'W' | '-' => RETURN TRUE;
-            WHEN OTHERS => NULL;
-        END CASE;
-        RETURN FALSE;
-    END;
+  function "or" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_ULOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""or"": "
+        & "arguments of overloaded 'or' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := or_table (lv(i), rv(i));
+      end loop;
+    end if;
+    return result;
+  end "or";
 
-END std_logic_1164;
+  -------------------------------------------------------------------
+  -- nor
+  -------------------------------------------------------------------
+  function "nor" (l, r : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias lv        : STD_LOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_LOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_LOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""nor"": "
+        & "arguments of overloaded 'nor' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := not_table(or_table (lv(i), rv(i)));
+      end loop;
+    end if;
+    return result;
+  end "nor";
+
+  function "nor" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_ULOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""nor"": "
+        & "arguments of overloaded 'nor' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := not_table(or_table (lv(i), rv(i)));
+      end loop;
+    end if;
+    return result;
+  end "nor";
+
+  ---------------------------------------------------------------------
+  -- xor
+  -------------------------------------------------------------------
+  function "xor" (l, r : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias lv        : STD_LOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_LOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_LOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""xor"": "
+        & "arguments of overloaded 'xor' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := xor_table (lv(i), rv(i));
+      end loop;
+    end if;
+    return result;
+  end "xor";
+
+  function "xor" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_ULOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""xor"": "
+        & "arguments of overloaded 'xor' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := xor_table (lv(i), rv(i));
+      end loop;
+    end if;
+    return result;
+  end "xor";
+
+  -------------------------------------------------------------------
+  -- xnor
+  -------------------------------------------------------------------
+  --START-!V87
+  function "xnor" (l, r : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias lv        : STD_LOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_LOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_LOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""xnor"": "
+        & "arguments of overloaded 'xnor' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := not_table(xor_table (lv(i), rv(i)));
+      end loop;
+    end if;
+    return result;
+  end "xnor";
+
+  function "xnor" (l, r : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
+    alias rv        : STD_ULOGIC_VECTOR (1 to r'length) is r;
+    variable result : STD_ULOGIC_VECTOR (1 to l'length);
+  begin
+    if (l'length /= r'length) then
+      assert false
+        report "STD_LOGIC_1164.""xnor"": "
+        & "arguments of overloaded 'xnor' operator are not of the same length"
+        severity failure;
+    else
+      for i in result'range loop
+        result(i) := not_table(xor_table (lv(i), rv(i)));
+      end loop;
+    end if;
+    return result;
+  end "xnor";
+  --END-!V87
+
+  -------------------------------------------------------------------
+  -- not
+  -------------------------------------------------------------------
+  function "not" (l : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias lv        : STD_LOGIC_VECTOR (1 to l'length) is l;
+    variable result : STD_LOGIC_VECTOR (1 to l'length) := (others => 'X');
+  begin
+    for i in result'range loop
+      result(i) := not_table(lv(i));
+    end loop;
+    return result;
+  end "not";
+
+  function "not" (l : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias lv        : STD_ULOGIC_VECTOR (1 to l'length) is l;
+    variable result : STD_ULOGIC_VECTOR (1 to l'length) := (others => 'X');
+  begin
+    for i in result'range loop
+      result(i) := not_table(lv(i));
+    end loop;
+    return result;
+  end "not";
+
+  -------------------------------------------------------------------
+  -- conversion tables
+  -------------------------------------------------------------------
+  type logic_x01_table is array (STD_ULOGIC'low to STD_ULOGIC'high) of X01;
+  type logic_x01z_table is array (STD_ULOGIC'low to STD_ULOGIC'high) of X01Z;
+  type logic_ux01_table is array (STD_ULOGIC'low to STD_ULOGIC'high) of UX01;
+  ----------------------------------------------------------
+  -- table name : cvt_to_x01
+  --
+  -- parameters :
+  --        in  :  std_ulogic  -- some logic value
+  -- returns    :  x01         -- state value of logic value
+  -- purpose    :  to convert state-strength to state only
+  --
+  -- example    : if (cvt_to_x01 (input_signal) = '1' ) then ...
+  --
+  ----------------------------------------------------------
+  constant cvt_to_x01 : logic_x01_table := (
+    'X',                                -- 'U'
+    'X',                                -- 'X'
+    '0',                                -- '0'
+    '1',                                -- '1'
+    'X',                                -- 'Z'
+    'X',                                -- 'W'
+    '0',                                -- 'L'
+    '1',                                -- 'H'
+    'X'                                 -- '-'
+    );
+
+  ----------------------------------------------------------
+  -- table name : cvt_to_x01z
+  --
+  -- parameters :
+  --        in  :  std_ulogic  -- some logic value
+  -- returns    :  x01z        -- state value of logic value
+  -- purpose    :  to convert state-strength to state only
+  --
+  -- example    : if (cvt_to_x01z (input_signal) = '1' ) then ...
+  --
+  ----------------------------------------------------------
+  constant cvt_to_x01z : logic_x01z_table := (
+    'X',                                -- 'U'
+    'X',                                -- 'X'
+    '0',                                -- '0'
+    '1',                                -- '1'
+    'Z',                                -- 'Z'
+    'X',                                -- 'W'
+    '0',                                -- 'L'
+    '1',                                -- 'H'
+    'X'                                 -- '-'
+    );
+
+  ----------------------------------------------------------
+  -- table name : cvt_to_ux01
+  --
+  -- parameters :
+  --        in  :  std_ulogic  -- some logic value
+  -- returns    :  ux01        -- state value of logic value
+  -- purpose    :  to convert state-strength to state only
+  --
+  -- example    : if (cvt_to_ux01 (input_signal) = '1' ) then ...
+  --
+  ----------------------------------------------------------
+  constant cvt_to_ux01 : logic_ux01_table := (
+    'U',                                -- 'U'
+    'X',                                -- 'X'
+    '0',                                -- '0'
+    '1',                                -- '1'
+    'X',                                -- 'Z'
+    'X',                                -- 'W'
+    '0',                                -- 'L'
+    '1',                                -- 'H'
+    'X'                                 -- '-'
+    );
+
+  -------------------------------------------------------------------
+  -- conversion functions
+  -------------------------------------------------------------------
+  function To_bit (s : STD_ULOGIC; xmap : BIT := '0') return BIT is
+  begin
+    case s is
+      when '0' | 'L' => return ('0');
+      when '1' | 'H' => return ('1');
+      when others    => return xmap;
+    end case;
+  end To_bit;
+  --------------------------------------------------------------------
+  function To_bitvector (s : STD_LOGIC_VECTOR; xmap : BIT := '0')
+    return BIT_VECTOR
+  is
+    alias sv        : STD_LOGIC_VECTOR (s'length-1 downto 0) is s;
+    variable result : BIT_VECTOR (s'length-1 downto 0);
+  begin
+    for i in result'range loop
+      case sv(i) is
+        when '0' | 'L' => result(i) := '0';
+        when '1' | 'H' => result(i) := '1';
+        when others    => result(i) := xmap;
+      end case;
+    end loop;
+    return result;
+  end To_bitvector;
+
+  function To_bitvector (s : STD_ULOGIC_VECTOR; xmap : BIT := '0')
+    return BIT_VECTOR
+  is
+    alias sv        : STD_ULOGIC_VECTOR (s'length-1 downto 0) is s;
+    variable result : BIT_VECTOR (s'length-1 downto 0);
+  begin
+    for i in result'range loop
+      case sv(i) is
+        when '0' | 'L' => result(i) := '0';
+        when '1' | 'H' => result(i) := '1';
+        when others    => result(i) := xmap;
+      end case;
+    end loop;
+    return result;
+  end To_bitvector;
+
+  --------------------------------------------------------------------
+  function To_StdULogic (b : BIT) return STD_ULOGIC is
+  begin
+    case b is
+      when '0' => return '0';
+      when '1' => return '1';
+    end case;
+  end To_StdULogic;
+  --------------------------------------------------------------------
+  function To_StdLogicVector (b : BIT_VECTOR)
+    return STD_LOGIC_VECTOR
+  is
+    alias bv        : BIT_VECTOR (b'length-1 downto 0) is b;
+    variable result : STD_LOGIC_VECTOR (b'length-1 downto 0);
+  begin
+    for i in result'range loop
+      case bv(i) is
+        when '0' => result(i) := '0';
+        when '1' => result(i) := '1';
+      end case;
+    end loop;
+    return result;
+  end To_StdLogicVector;
+  --------------------------------------------------------------------
+  function To_StdLogicVector (s : STD_ULOGIC_VECTOR)
+    return STD_LOGIC_VECTOR
+  is
+    alias sv        : STD_ULOGIC_VECTOR (s'length-1 downto 0) is s;
+    variable result : STD_LOGIC_VECTOR (s'length-1 downto 0);
+  begin
+    for i in result'range loop
+      result(i) := sv(i);
+    end loop;
+    return result;
+  end To_StdLogicVector;
+  --------------------------------------------------------------------
+  function To_StdULogicVector (b : BIT_VECTOR)
+    return STD_ULOGIC_VECTOR
+  is
+    alias bv        : BIT_VECTOR (b'length-1 downto 0) is b;
+    variable result : STD_ULOGIC_VECTOR (b'length-1 downto 0);
+  begin
+    for i in result'range loop
+      case bv(i) is
+        when '0' => result(i) := '0';
+        when '1' => result(i) := '1';
+      end case;
+    end loop;
+    return result;
+  end To_StdULogicVector;
+  --------------------------------------------------------------------
+  function To_StdULogicVector (s : STD_LOGIC_VECTOR)
+    return STD_ULOGIC_VECTOR
+  is
+    alias sv        : STD_LOGIC_VECTOR (s'length-1 downto 0) is s;
+    variable result : STD_ULOGIC_VECTOR (s'length-1 downto 0);
+  begin
+    for i in result'range loop
+      result(i) := sv(i);
+    end loop;
+    return result;
+  end To_StdULogicVector;
+
+  -------------------------------------------------------------------
+  -- strength strippers and type convertors
+  -------------------------------------------------------------------
+  -------------------------------------------------------------------
+  -- to_x01
+  -------------------------------------------------------------------
+  function To_X01 (s : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias sv        : STD_LOGIC_VECTOR (1 to s'length) is s;
+    variable result : STD_LOGIC_VECTOR (1 to s'length);
+  begin
+    for i in result'range loop
+      result(i) := cvt_to_x01 (sv(i));
+    end loop;
+    return result;
+  end To_X01;
+
+  function To_X01 (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias sv        : STD_ULOGIC_VECTOR (1 to s'length) is s;
+    variable result : STD_ULOGIC_VECTOR (1 to s'length);
+  begin
+    for i in result'range loop
+      result(i) := cvt_to_x01 (sv(i));
+    end loop;
+    return result;
+  end To_X01;
+  --------------------------------------------------------------------
+  function To_X01 (s : STD_ULOGIC) return X01 is
+  begin
+    return (cvt_to_x01(s));
+  end To_X01;
+  --------------------------------------------------------------------
+  function To_X01 (b : BIT_VECTOR) return STD_LOGIC_VECTOR is
+    alias bv        : BIT_VECTOR (1 to b'length) is b;
+    variable result : STD_LOGIC_VECTOR (1 to b'length);
+  begin
+    for i in result'range loop
+      case bv(i) is
+        when '0' => result(i) := '0';
+        when '1' => result(i) := '1';
+      end case;
+    end loop;
+    return result;
+  end To_X01;
+
+  function To_X01 (b : BIT_VECTOR) return STD_ULOGIC_VECTOR is
+    alias bv        : BIT_VECTOR (1 to b'length) is b;
+    variable result : STD_ULOGIC_VECTOR (1 to b'length);
+  begin
+    for i in result'range loop
+      case bv(i) is
+        when '0' => result(i) := '0';
+        when '1' => result(i) := '1';
+      end case;
+    end loop;
+    return result;
+  end To_X01;
+
+  --------------------------------------------------------------------
+  function To_X01 (b : BIT) return X01 is
+  begin
+    case b is
+      when '0' => return('0');
+      when '1' => return('1');
+    end case;
+  end To_X01;
+  --------------------------------------------------------------------
+  -- to_x01z
+  -------------------------------------------------------------------
+  function To_X01Z (s : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias sv        : STD_LOGIC_VECTOR (1 to s'length) is s;
+    variable result : STD_LOGIC_VECTOR (1 to s'length);
+  begin
+    for i in result'range loop
+      result(i) := cvt_to_x01z (sv(i));
+    end loop;
+    return result;
+  end To_X01Z;
+
+  function To_X01Z (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias sv        : STD_ULOGIC_VECTOR (1 to s'length) is s;
+    variable result : STD_ULOGIC_VECTOR (1 to s'length);
+  begin
+    for i in result'range loop
+      result(i) := cvt_to_x01z (sv(i));
+    end loop;
+    return result;
+  end To_X01Z;
+
+  --------------------------------------------------------------------
+  function To_X01Z (s : STD_ULOGIC) return X01Z is
+  begin
+    return (cvt_to_x01z(s));
+  end To_X01Z;
+  --------------------------------------------------------------------
+  function To_X01Z (b : BIT_VECTOR) return STD_LOGIC_VECTOR is
+    alias bv        : BIT_VECTOR (1 to b'length) is b;
+    variable result : STD_LOGIC_VECTOR (1 to b'length);
+  begin
+    for i in result'range loop
+      case bv(i) is
+        when '0' => result(i) := '0';
+        when '1' => result(i) := '1';
+      end case;
+    end loop;
+    return result;
+  end To_X01Z;
+
+  function To_X01Z (b : BIT_VECTOR) return STD_ULOGIC_VECTOR is
+    alias bv        : BIT_VECTOR (1 to b'length) is b;
+    variable result : STD_ULOGIC_VECTOR (1 to b'length);
+  begin
+    for i in result'range loop
+      case bv(i) is
+        when '0' => result(i) := '0';
+        when '1' => result(i) := '1';
+      end case;
+    end loop;
+    return result;
+  end To_X01Z;
+
+  --------------------------------------------------------------------
+  function To_X01Z (b : BIT) return X01Z is
+  begin
+    case b is
+      when '0' => return('0');
+      when '1' => return('1');
+    end case;
+  end To_X01Z;
+  --------------------------------------------------------------------
+  -- to_ux01
+  -------------------------------------------------------------------
+  function To_UX01 (s : STD_LOGIC_VECTOR) return STD_LOGIC_VECTOR is
+    alias sv        : STD_LOGIC_VECTOR (1 to s'length) is s;
+    variable result : STD_LOGIC_VECTOR (1 to s'length);
+  begin
+    for i in result'range loop
+      result(i) := cvt_to_ux01 (sv(i));
+    end loop;
+    return result;
+  end To_UX01;
+
+  function To_UX01 (s : STD_ULOGIC_VECTOR) return STD_ULOGIC_VECTOR is
+    alias sv        : STD_ULOGIC_VECTOR (1 to s'length) is s;
+    variable result : STD_ULOGIC_VECTOR (1 to s'length);
+  begin
+    for i in result'range loop
+      result(i) := cvt_to_ux01 (sv(i));
+    end loop;
+    return result;
+  end To_UX01;
+
+  --------------------------------------------------------------------
+  function To_UX01 (s : STD_ULOGIC) return UX01 is
+  begin
+    return (cvt_to_ux01(s));
+  end To_UX01;
+  --------------------------------------------------------------------
+  function To_UX01 (b : BIT_VECTOR) return STD_LOGIC_VECTOR is
+    alias bv        : BIT_VECTOR (1 to b'length) is b;
+    variable result : STD_LOGIC_VECTOR (1 to b'length);
+  begin
+    for i in result'range loop
+      case bv(i) is
+        when '0' => result(i) := '0';
+        when '1' => result(i) := '1';
+      end case;
+    end loop;
+    return result;
+  end To_UX01;
+  
+  function To_UX01 (b : BIT_VECTOR) return STD_ULOGIC_VECTOR is
+    alias bv        : BIT_VECTOR (1 to b'length) is b;
+    variable result : STD_ULOGIC_VECTOR (1 to b'length);
+  begin
+    for i in result'range loop
+      case bv(i) is
+        when '0' => result(i) := '0';
+        when '1' => result(i) := '1';
+      end case;
+    end loop;
+    return result;
+  end To_UX01;
+
+  --------------------------------------------------------------------
+  function To_UX01 (b : BIT) return UX01 is
+  begin
+    case b is
+      when '0' => return('0');
+      when '1' => return('1');
+    end case;
+  end To_UX01;
+
+  -------------------------------------------------------------------
+  -- edge detection
+  -------------------------------------------------------------------
+  function rising_edge (signal s : STD_ULOGIC) return BOOLEAN is
+  begin
+    return (s'event and (To_X01(s) = '1') and
+            (To_X01(s'last_value) = '0'));
+  end rising_edge;
+
+  function falling_edge (signal s : STD_ULOGIC) return BOOLEAN is
+  begin
+    return (s'event and (To_X01(s) = '0') and
+            (To_X01(s'last_value) = '1'));
+  end falling_edge;
+
+  -------------------------------------------------------------------
+  -- object contains an unknown
+  -------------------------------------------------------------------
+  function Is_X (s : STD_LOGIC_VECTOR) return BOOLEAN is
+  begin
+    for i in s'range loop
+      case s(i) is
+        when 'U' | 'X' | 'Z' | 'W' | '-' => return true;
+        when others                      => null;
+      end case;
+    end loop;
+    return false;
+  end Is_X;
+
+  function Is_X (s : STD_ULOGIC_VECTOR) return BOOLEAN is
+  begin
+    for i in s'range loop
+      case s(i) is
+        when 'U' | 'X' | 'Z' | 'W' | '-' => return true;
+        when others                      => null;
+      end case;
+    end loop;
+    return false;
+  end Is_X;
+
+  --------------------------------------------------------------------
+  function Is_X (s : STD_ULOGIC) return BOOLEAN is
+  begin
+    case s is
+      when 'U' | 'X' | 'Z' | 'W' | '-' => return true;
+      when others                      => null;
+    end case;
+    return false;
+  end Is_X;
+
+end std_logic_1164;
