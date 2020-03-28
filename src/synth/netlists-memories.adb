@@ -33,6 +33,10 @@ with Netlists.Folds; use Netlists.Folds;
 with Synth.Errors; use Synth.Errors;
 
 package body Netlists.Memories is
+   --  If set, be verbose why a memory is not found.  But the messages are
+   --  a little bit cryptic.
+   Flag_Memory_Verbose : constant Boolean := False;
+
    --  What is a memory ?
    --
    --  A memory is obviously a memorizing element.  This means there is a
@@ -659,7 +663,7 @@ package body Netlists.Memories is
               | Id_Mem_Multiport =>
                O := Get_Output (Inst, 0);
             when others =>
-               if False then
+               if Flag_Memory_Verbose then
                   Info_Msg_Synth
                     (+Last, "gate %i cannot be part of a memory",
                      (1 => +Inst));
@@ -713,7 +717,7 @@ package body Netlists.Memories is
               | Id_Const_Bit =>
                return Inst;
             when others =>
-               if False then
+               if Flag_Memory_Verbose then
                   Info_Msg_Synth
                     (+Last, "gate %i cannot be part of a memory",
                      (1 => +Last));
@@ -1627,6 +1631,7 @@ package body Netlists.Memories is
          --  Walk all the instances of M:
          case Get_Id (Inst) is
             when Id_Dyn_Insert_En
+              | Id_Dyn_Insert
               | Id_Dyn_Extract =>
                Instance_Tables.Append (Dyns, Inst);
                pragma Assert (Get_Mark_Flag (Inst) = False);
