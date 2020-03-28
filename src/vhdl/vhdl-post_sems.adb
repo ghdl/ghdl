@@ -24,6 +24,7 @@ with Vhdl.Ieee.Numeric;
 with Vhdl.Ieee.Math_Real;
 with Vhdl.Ieee.Std_Logic_Unsigned;
 with Vhdl.Ieee.Std_Logic_Arith;
+with Vhdl.Ieee.Std_Logic_Misc;
 with Flags; use Flags;
 
 package body Vhdl.Post_Sems is
@@ -70,6 +71,8 @@ package body Vhdl.Post_Sems is
                     (Lib_Unit, Vhdl.Ieee.Std_Logic_Unsigned.Pkg_Signed);
                when Name_Std_Logic_Arith =>
                   Vhdl.Ieee.Std_Logic_Arith.Extract_Declarations (Lib_Unit);
+               when Name_Std_Logic_Misc =>
+                  Vhdl.Ieee.Std_Logic_Misc.Extract_Declarations (Lib_Unit);
                when others =>
                   null;
             end case;

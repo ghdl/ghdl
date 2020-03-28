@@ -1457,6 +1457,18 @@ class Iir_Predefined:
     Ieee_Std_Logic_Arith_Add_Log_Uns_Slv = 474
     Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv = 475
     Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv = 476
+    Ieee_Std_Logic_Misc_And_Reduce_Slv = 477
+    Ieee_Std_Logic_Misc_And_Reduce_Suv = 478
+    Ieee_Std_Logic_Misc_Nand_Reduce_Slv = 479
+    Ieee_Std_Logic_Misc_Nand_Reduce_Suv = 480
+    Ieee_Std_Logic_Misc_Or_Reduce_Slv = 481
+    Ieee_Std_Logic_Misc_Or_Reduce_Suv = 482
+    Ieee_Std_Logic_Misc_Nor_Reduce_Slv = 483
+    Ieee_Std_Logic_Misc_Nor_Reduce_Suv = 484
+    Ieee_Std_Logic_Misc_Xor_Reduce_Slv = 485
+    Ieee_Std_Logic_Misc_Xor_Reduce_Suv = 486
+    Ieee_Std_Logic_Misc_Xnor_Reduce_Slv = 487
+    Ieee_Std_Logic_Misc_Xnor_Reduce_Suv = 488
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location

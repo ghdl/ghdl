@@ -5808,7 +5808,21 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv,
       Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Uns_Slv,
       Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv,
-      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv
+      Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv,
+
+      --  std_logic_misc (synopsys extension)
+      Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_And_Reduce_Suv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Nand_Reduce_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Nand_Reduce_Suv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Nor_Reduce_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Nor_Reduce_Suv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Xor_Reduce_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Xor_Reduce_Suv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Misc_Xnor_Reduce_Suv
      );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.
