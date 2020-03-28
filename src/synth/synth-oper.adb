@@ -1420,6 +1420,8 @@ package body Synth.Oper is
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Param1 : Node;
       Param2 : Node;
+      Res_Typ : constant Type_Acc :=
+        Get_Value_Type (Subprg_Inst, Get_Type (Imp));
 
       --  Resize PARAM1 to PARAM2 bit according to IS_SIGNED.
       function Synth_Conv_Vector (Is_Signed : Boolean) return Value_Acc
@@ -1503,22 +1505,12 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
-            declare
-               Int_Type : constant Type_Acc :=
-                 Get_Value_Type (Subprg_Inst, Get_Type (Imp));
-            begin
-               return Create_Value_Net
-                 (Synth_Uresize (Get_Net (L), Int_Type.W, Expr), Int_Type);
-            end;
+            return Create_Value_Net
+              (Synth_Uresize (Get_Net (L), Res_Typ.W, Expr), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int =>
             --  SIGNED to Integer.
-            declare
-               Int_Type : constant Type_Acc :=
-                 Get_Value_Type (Subprg_Inst, Get_Type (Imp));
-            begin
-               return Create_Value_Net
-                 (Synth_Sresize (L, Int_Type.W, Expr), Int_Type);
-            end;
+            return Create_Value_Net
+              (Synth_Sresize (L, Res_Typ.W, Expr), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
             declare
                W : Width;
@@ -1583,11 +1575,13 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn =>
             return Synth_Dyadic_Int_Sgn (Id_Smax, L, R, Expr);
 
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv =>
+            return Create_Value_Net
+              (Build_Reduce (Ctxt, Id_Red_Or, Get_Net (L)), Res_Typ);
+
          when Iir_Predefined_Ieee_Numeric_Std_Match_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Match_Slv =>
             declare
-               L : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-               R : constant Value_Acc := Get_Value (Subprg_Inst, Param2);
                Cst, Oper : Value_Acc;
                Res : Net;
             begin
