@@ -353,15 +353,16 @@ package body Netlists.Dump is
          Disp_Net_Name (N);
 
          W := Get_Width (N);
-         if W /= 1 then
-            Put ('[');
-            Put_Uns32 (W);
-            Put (']');
-         end if;
-
          if Flag_Disp_Id then
             Put_Net_Width (N);
+         else
+            if W /= 1 then
+               Put ('[');
+               Put_Uns32 (W);
+               Put (']');
+            end if;
          end if;
+
       end if;
    end Dump_Net_Name_And_Width;
 
@@ -534,6 +535,11 @@ package body Netlists.Dump is
                   if Desc.Name /= No_Sname then
                      Put ('.');
                      Dump_Name (Desc.Name);
+                     if Flag_Disp_Id then
+                        Put ("{p");
+                        Put_Trim (Input'Image (I));
+                        Put ('}');
+                     end if;
                      Put (": ");
                   end if;
                end if;
