@@ -782,6 +782,14 @@ package body Synth.Static_Oper is
                  (Left, Right, Compare_Greater, Expr) = Compare_Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
+            declare
+               Res : Boolean;
+            begin
+               Res := Synth_Compare_Uns_Nat
+                 (Left, Right, Compare_Greater, Expr) = Compare_Equal;
+               return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
+            end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns =>
             declare
