@@ -913,14 +913,20 @@ package body Synth.Decls is
             raise Internal_Error;
       end case;
       if Drv = No_Net then
+         if Is_Connected (Get_Output (Gate, 0)) then
+            --  No warning if the signal is not used.
+            --  TODO: maybe simply remove it.
+            if Def_Val = No_Net then
+               Warning_Msg_Synth
+                 (+Decl, "%n is never assigned and has no default value",
+                  (1 => +Decl));
+            else
+               Warning_Msg_Synth (+Decl, "%n is never assigned", (1 => +Decl));
+            end if;
+         end if;
          if Def_Val = No_Net then
-            Warning_Msg_Synth
-              (+Decl, "%n is never assigned and has no default value",
-               (1 => +Decl));
             Def_Val := Build_Const_X (Get_Build (Syn_Inst),
                                       Get_Width (Gate_Net));
-         else
-            Warning_Msg_Synth (+Decl, "%n is never assigned", (1 => +Decl));
          end if;
          Connect (Get_Input (Gate, 0), Def_Val);
       end if;
