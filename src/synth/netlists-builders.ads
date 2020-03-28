@@ -150,6 +150,8 @@ package Netlists.Builders is
                                En : Net;
                                Data : Net) return Instance;
 
+   function Build_Mem_Multiport (Ctxt : Context_Acc; I0, I1 : Net) return Net;
+
    function Build_Output (Ctxt : Context_Acc; W : Width) return Net;
    function Build_Ioutput (Ctxt : Context_Acc; Init : Net) return Net;
    function Build_Inout (Ctxt : Context_Acc; W : Width) return Instance;
@@ -250,6 +252,7 @@ private
       M_Mem_Rd : Module;
       M_Mem_Rd_Sync : Module;
       M_Mem_Wr_Sync : Module;
+      M_Mem_Multiport : Module;
       M_Assert : Module;
       M_Assume : Module;
       M_Cover : Module;

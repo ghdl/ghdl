@@ -79,6 +79,7 @@ enum Module_Id {
    Id_Mem_Rd = 76,
    Id_Mem_Rd_Sync = 77,
    Id_Mem_Wr_Sync = 78,
+   Id_Mem_Multiport = 79,
    Id_Edge = 80,
    Id_Assert = 81,
    Id_Assume = 82,

@@ -374,6 +374,15 @@ package body Netlists.Builders is
                  4 => Create_Input ("data"));
       Outputs (0 .. 0) := (0 => Create_Output ("oport"));
       Set_Ports_Desc (Res, Inputs (0 .. 4), Outputs (0 .. 0));
+
+      Res := New_User_Module
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("mem_multiport"), No_Sname),
+         Id_Mem_Multiport, 2, 1, 0);
+      Ctxt.M_Mem_Multiport := Res;
+      Inputs (0 .. 1) := (0 => Create_Input ("i0"),
+                          1 => Create_Input ("i1"));
+      Set_Ports_Desc (Res, Inputs (0 .. 1), Outputs (0 .. 0));
    end Create_Memory_Modules;
 
    procedure Create_Edge_Module (Ctxt : Context_Acc;
@@ -1244,6 +1253,21 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 4), Data);
       return Inst;
    end Build_Mem_Wr_Sync;
+
+   function Build_Mem_Multiport (Ctxt : Context_Acc; I0, I1 : Net) return Net
+   is
+      W : constant Width := Get_Width (I0);
+      pragma Assert (Get_Width (I1) = W);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Mem_Multiport);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, W);
+      Connect (Get_Input (Inst, 0), I0);
+      Connect (Get_Input (Inst, 1), I1);
+      return O;
+   end Build_Mem_Multiport;
 
    function Build_Object (Ctxt : Context_Acc; M : Module; W : Width) return Net
    is

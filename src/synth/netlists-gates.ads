@@ -272,6 +272,9 @@ package Netlists.Gates is
    --  Outputs: NPORT (next memory port)
    Id_Mem_Wr_Sync : constant Module_Id := 78;
 
+   --  Virtual gate to gather 2 dffs of a multiport memory.
+   Id_Mem_Multiport : constant Module_Id := 79;
+
    --  Positive/rising edge detector.  This is a pseudo gate.
    --  A negative edge detector can be made using by negating the clock before
    --  the detector.

@@ -541,17 +541,57 @@ package body Synth.Environment is
       end if;
    end Sort_Conc_Assign;
 
+   --  Return True iff PREV and NEXT are two concurrent assignments for
+   --  a multiport memory.
+   function Is_Finalize_Assignment_Multiport (Prev, Next : Conc_Assign)
+                                             return Boolean
+   is
+      use Netlists.Gates;
+      P_Val : Net;
+      N_Val : Net;
+   begin
+      --  The assignemnts must fully overlap (same offset and same width).
+      if Get_Conc_Offset (Prev) /= Get_Conc_Offset (Next) then
+         return False;
+      end if;
+      P_Val := Get_Conc_Value (Prev);
+      N_Val := Get_Conc_Value (Next);
+      if Get_Width (P_Val) /= Get_Width (N_Val) then
+         return False;
+      end if;
+
+      --  Both assignments must be a dff.
+      case Get_Id (Get_Net_Parent (P_Val)) is
+         when Id_Idff
+           | Id_Dff =>
+            null;
+         when others =>
+            return False;
+      end case;
+      case Get_Id (Get_Net_Parent (N_Val)) is
+         when Id_Idff
+           | Id_Dff =>
+            null;
+         when others =>
+            return False;
+      end case;
+
+      return True;
+   end Is_Finalize_Assignment_Multiport;
+
+   --  Compute the VALUE to be assigned to WIRE_REC.  Handle partial
+   --  assignment, multiple assignments and error cases.
    procedure Finalize_Complex_Assignment (Ctxt : Builders.Context_Acc;
                                           Wire_Rec : Wire_Id_Record;
                                           Value : out Net)
    is
+      Wire_Width : constant Width := Get_Width (Wire_Rec.Gate);
       First_Assign : Conc_Assign;
       Asgn : Conc_Assign;
       Last_Asgn : Conc_Assign;
       New_Asgn : Conc_Assign;
       Next_Off : Uns32;
       Expected_Off : Uns32;
-      Last_Off : Uns32;
       Nbr_Assign : Natural;
    begin
       Nbr_Assign := Wire_Rec.Nbr_Final_Assign;
@@ -563,13 +603,16 @@ package body Synth.Environment is
       --  Report overlaps and holes, count number of inputs
       Last_Asgn := No_Conc_Assign;
       Expected_Off := 0;
-      Last_Off := Get_Width (Wire_Rec.Gate);
-      while (Expected_Off < Last_Off) or Asgn /= No_Conc_Assign loop
+      while (Expected_Off < Wire_Width) or Asgn /= No_Conc_Assign loop
+         --  NEXT_OFF is the offset of the next assignment.
+         --  EXPECTED_OFF is the offset just after the previous assignment.
          if Asgn /= No_Conc_Assign then
             Next_Off := Get_Conc_Offset (Asgn);
          else
-            Next_Off := Last_Off;
+            --  If there is no more assignment, simulate a hole until the end.
+            Next_Off := Wire_Width;
          end if;
+
          if Next_Off = Expected_Off then
             --  Normal case.
             pragma Assert (Asgn /= No_Conc_Assign);
@@ -606,14 +649,33 @@ package body Synth.Environment is
 
             Expected_Off := Next_Off;
          else
+            --  Overlap.
             pragma Assert (Next_Off < Expected_Off);
-            Error_Msg_Synth
-              (+Wire_Rec.Decl, "multiple assignments for offsets %v:%v",
-               (+Next_Off, +(Expected_Off - 1)));
-            --  TODO: insert resolver
             pragma Assert (Asgn /= No_Conc_Assign);
-            Expected_Off := Expected_Off + Get_Width (Get_Conc_Value (Asgn));
-            Last_Asgn := Asgn;
+
+            if Wire_Rec.Kind = Wire_Variable
+              and then Is_Finalize_Assignment_Multiport (Last_Asgn, Asgn)
+            then
+               --  Insert a multiport.
+               declare
+                  Last_Asgn_Rec : Conc_Assign_Record renames
+                    Conc_Assign_Table.Table (Last_Asgn);
+               begin
+                  Last_Asgn_Rec.Value := Build_Mem_Multiport
+                    (Ctxt, Last_Asgn_Rec.Value, Get_Conc_Value (Asgn));
+               end;
+               --  Remove this assignment.
+               Nbr_Assign := Nbr_Assign - 1;
+               Set_Conc_Chain (Last_Asgn, Get_Conc_Chain (Asgn));
+            else
+               Error_Msg_Synth
+                 (+Wire_Rec.Decl, "multiple assignments for offsets %v:%v",
+                  (+Next_Off, +(Expected_Off - 1)));
+               --  TODO: insert resolver
+               Expected_Off :=
+                 Expected_Off + Get_Width (Get_Conc_Value (Asgn));
+               Last_Asgn := Asgn;
+            end if;
             Asgn := Get_Conc_Chain (Asgn);
          end if;
       end loop;
@@ -627,7 +689,7 @@ package body Synth.Environment is
                                  Get_Conc_Value (Last_Asgn),
                                  Get_Conc_Value (First_Assign));
       else
-         Value := Build_Concatn (Ctxt, Last_Off, Uns32 (Nbr_Assign));
+         Value := Build_Concatn (Ctxt, Wire_Width, Uns32 (Nbr_Assign));
          declare
             Inst : constant Instance := Get_Net_Parent (Value);
          begin
@@ -673,11 +735,12 @@ package body Synth.Environment is
                   --  Single and full assignment.
                   Value := Conc_Asgn.Value;
                else
-                  --  Partial or multiple assignments.
+                  --  Partial assignment.
                   Finalize_Complex_Assignment (Ctxt, Wire_Rec, Value);
                end if;
             end;
          when others =>
+            --  Multiple assignments.
             Finalize_Complex_Assignment (Ctxt, Wire_Rec, Value);
       end case;
 
