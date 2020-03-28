@@ -713,8 +713,11 @@ package body Netlists.Memories is
               | Id_Const_Bit =>
                return Inst;
             when others =>
-               Info_Msg_Synth
-                 (+Last, "gate %i cannot be part of a memory", (1 => +Last));
+               if False then
+                  Info_Msg_Synth
+                    (+Last, "gate %i cannot be part of a memory",
+                     (1 => +Last));
+               end if;
                return No_Instance;
          end case;
       end loop;
