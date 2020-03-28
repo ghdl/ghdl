@@ -1510,6 +1510,15 @@ package body Synth.Oper is
                return Create_Value_Net
                  (Synth_Uresize (Get_Net (L), Int_Type.W, Expr), Int_Type);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int =>
+            --  SIGNED to Integer.
+            declare
+               Int_Type : constant Type_Acc :=
+                 Get_Value_Type (Subprg_Inst, Get_Type (Imp));
+            begin
+               return Create_Value_Net
+                 (Synth_Sresize (L, Int_Type.W, Expr), Int_Type);
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
             declare
                W : Width;
