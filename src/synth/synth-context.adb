@@ -436,12 +436,43 @@ package body Synth.Context is
 
    pragma Unreferenced (Vec2net);
 
+   --  Set Is_0 to True iff VEC is 000...
+   --  Set Is_X to True iff VEC is XXX...
+   procedure Is_Full (Vec : Logvec_Array;
+                      Is_0 : out Boolean;
+                      Is_X : out Boolean)
+   is
+      Val : Uns32;
+      Zx : Uns32;
+   begin
+      Val := Vec (0).Val;
+      Zx := Vec (0).Zx;
+      Is_0 := False;
+      Is_X := False;
+      if Val = 0 and Zx = 0 then
+         Is_0 := True;
+         Is_X := False;
+      elsif Val = not 0 and Zx = not 0 then
+         Is_0 := False;
+         Is_X := True;
+      end if;
+
+      for I in 1 .. Vec'Last loop
+         if Vec (I).Val /= Val or else Vec (I).Zx /= Zx then
+            Is_0 := False;
+            Is_X := False;
+            return;
+         end if;
+      end loop;
+   end Is_Full;
+
    procedure Value2net
      (Val : Value_Acc; W : Width; Vec : in out Logvec_Array; Res : out Net)
    is
       Off : Uns32;
       Has_Zx : Boolean;
       Inst : Instance;
+      Is_0, Is_X : Boolean;
    begin
       Has_Zx := False;
       Off := 0;
@@ -459,7 +490,12 @@ package body Synth.Context is
          end if;
          return;
       else
-         if not Has_Zx then
+         Is_Full (Vec, Is_0, Is_X);
+         if Is_0 then
+            Res := Build_Const_UB32 (Build_Context, 0, W);
+         elsif Is_X then
+            Res := Build_Const_X (Build_Context, W);
+         elsif not Has_Zx then
             Inst := Build_Const_Bit (Build_Context, W);
             for I in Vec'Range loop
                Set_Param_Uns32 (Inst, Param_Idx (I), Vec (I).Val);

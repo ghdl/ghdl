@@ -977,11 +977,16 @@ package body Netlists.Memories is
                N : Net;
             begin
                N := Build_Const_UB32 (Ctxt, 0, Mem_Wd);
-               Copy_Const_Content
-                 (Cst, Off, Cst_Wd, Get_Net_Parent (N), Wd, Depth,
-                  Copy_Mode_Bit);
+               --  Optimize: no need to copy if the value is 0.
+               if Get_Param_Uns32 (Cst, 0) /= 0 then
+                  Copy_Const_Content
+                    (Cst, Off, Cst_Wd, Get_Net_Parent (N), Wd, Depth,
+                     Copy_Mode_Bit);
+               end if;
                return N;
             end;
+         when Id_Const_X =>
+            return Build_Const_X (Ctxt, Mem_Wd);
          when others =>
             raise Internal_Error;
       end case;

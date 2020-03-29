@@ -364,9 +364,8 @@ package body Netlists.Disp_Vhdl is
       end case;
    end Disp_Constant_Inline;
 
-   procedure Disp_Const_Bit (Cst : Net; Off : Uns32)
+   procedure Disp_Const_Bit (Inst : Instance; Off : Uns32)
    is
-      Inst : constant Instance := Get_Net_Parent (Cst);
       Val : Uns32;
       Zx : Uns32;
    begin
@@ -388,16 +387,49 @@ package body Netlists.Disp_Vhdl is
                Val := 0;
             end if;
             Val := Shift_Right (Val, Natural (Off mod 32)) and 1;
+         when Id_Const_X =>
+            Zx := 1;
+            Val := 1;
          when others =>
             raise Internal_Error;
       end case;
       Put (Bchar (Zx * 2 + Val));
    end Disp_Const_Bit;
 
+   procedure Disp_Memory_Init_Full (W : Width; Val : Character) is
+   begin
+      Put (" (others => ");
+      if W = 1 then
+         Put ("'");
+         Put (Val);
+         Put ("'");
+      else
+         Put ("(others => '");
+         Put (Val);
+         Put ("')");
+      end if;
+      Put_Line (");");
+   end Disp_Memory_Init_Full;
+
    procedure Disp_Memory_Init (Val : Net; W : Width; Depth : Width)
    is
+      Inst : constant Instance := Get_Net_Parent (Val);
       Q : constant Character := Get_Lit_Quote (W);
    begin
+      case Get_Id (Inst) is
+         when Id_Const_X =>
+            Disp_Memory_Init_Full (W, 'X');
+            return;
+         when Id_Const_UB32 =>
+            if Get_Param_Uns32 (Inst, 0) = 0 then
+               Disp_Memory_Init_Full (W, '0');
+               return;
+            end if;
+         when others =>
+            null;
+      end case;
+
+      New_Line;
       for I in reverse 0 .. Depth - 1 loop
          Put ("      ");
          if I = Depth - 1 then
@@ -409,7 +441,7 @@ package body Netlists.Disp_Vhdl is
          Put (" => ");
          Put (Q);
          for J in reverse 0 .. W - 1 loop
-            Disp_Const_Bit (Val, I * W + J);
+            Disp_Const_Bit (Inst, I * W + J);
          end loop;
          Put (Q);
          if I /= 0 then
@@ -683,7 +715,7 @@ package body Netlists.Disp_Vhdl is
             if Get_Id (Val_Inst) = Id_Isignal then
                Val := Get_Input_Net (Val_Inst, 1);
             end if;
-            Put_Line (" :=");
+            Put (" :=");
             Disp_Memory_Init (Val, Data_W, Depth);
          end;
       else

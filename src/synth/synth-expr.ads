@@ -127,7 +127,7 @@ package Synth.Expr is
 
    type Logic_32 is record
       Val : Uns32;  --  AKA aval
-      Zx  : Uns32;  --  AKA bval
+      Zx  : Uns32;  --  AKA bval  (z=10, x=11)
    end record;
 
    type Digit_Index is new Natural;
