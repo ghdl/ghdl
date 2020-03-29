@@ -752,7 +752,7 @@ package body Synth.Decls is
    procedure Synth_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
-      Atype : constant Node := Get_Type (Decl);
+      Atype : constant Node := Get_Declaration_Type (Decl);
       Obj : Value_Acc;
       Off : Uns32;
       Voff : Net;
@@ -762,10 +762,12 @@ package body Synth.Decls is
       Obj_Type : Type_Acc;
    begin
       --  Subtype indication may not be present.
-      if Is_Anonymous_Type_Definition (Atype) then
+      if Atype /= Null_Node then
          Synth_Subtype_Indication (Syn_Inst, Atype);
+         Obj_Type := Get_Value_Type (Syn_Inst, Atype);
+      else
+         Obj_Type := null;
       end if;
-      Obj_Type := Get_Value_Type (Syn_Inst, Atype);
 
       Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
                                      Obj, Off, Voff, Rdwd, Typ);
@@ -778,7 +780,9 @@ package body Synth.Decls is
       else
          Res := Create_Value_Alias (Obj, Off, Typ);
       end if;
-      Res := Synth_Subtype_Conversion (Res, Obj_Type, True, Decl);
+      if Obj_Type /= null then
+         Res := Synth_Subtype_Conversion (Res, Obj_Type, True, Decl);
+      end if;
       Create_Object (Syn_Inst, Decl, Res);
    end Synth_Object_Alias_Declaration;
 

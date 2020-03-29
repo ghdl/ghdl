@@ -799,7 +799,10 @@ package body Vhdl.Annotations is
             Annotate_Subprogram_Body (Block_Info, Decl);
 
          when Iir_Kind_Object_Alias_Declaration =>
-            Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
+            if Get_Subtype_Indication (Decl) /= Null_Iir then
+               Annotate_Anonymous_Type_Definition
+                 (Block_Info, Get_Type (Decl));
+            end if;
             Create_Object_Info (Block_Info, Decl);
 
          when Iir_Kind_Non_Object_Alias_Declaration =>
