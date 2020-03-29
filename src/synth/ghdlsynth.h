@@ -55,6 +55,12 @@ namespace GhdlSynth {
     return (GHDLSYNTH_ADA_PREFIX(NAME) (arg.id) & 1);	\
   }
 
+#define GHDLSYNTH_ADA_WRAPPER_BWD(NAME, ARGTYPE1, ARGTYPE2)		\
+  extern "C" unsigned int GHDLSYNTH_ADA_PREFIX(NAME) (unsigned, unsigned); \
+  inline bool NAME(ARGTYPE1 arg1, ARGTYPE2 arg2) {			\
+    return (GHDLSYNTH_ADA_PREFIX(NAME) (arg1.id, arg2) & 1);		\
+  }
+
   struct Name_Id { unsigned int id; };
   extern "C" const char *name_table__get_address (unsigned int);
   inline const char *get_cstr(Name_Id n) {
@@ -118,9 +124,11 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_WWD(get_output_name, Sname, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_DWD(get_input_width, Width, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_DWD(get_output_width, Width, Module, Port_Idx);
+  GHDLSYNTH_ADA_WRAPPER_BWD(get_inout_flag, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_BW(has_one_connection, Net);
 
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input_net, Net, Instance, Port_Idx);
+
 
   extern "C" unsigned int ghdlsynth__ghdl_synth(int init,
                                                 int argc, const char **argv);
