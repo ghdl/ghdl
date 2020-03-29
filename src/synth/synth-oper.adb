@@ -1575,7 +1575,8 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn =>
             return Synth_Dyadic_Int_Sgn (Id_Smax, L, R, Expr);
 
-         when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv =>
+         when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
             return Create_Value_Net
               (Build_Reduce (Ctxt, Id_Red_Or, Get_Net (L)), Res_Typ);
 
