@@ -1165,7 +1165,7 @@ package body Netlists.Disp_Vhdl is
                        & NL, Inst, (0 => Iw - 1));
                else
                   Disp_Template
-                    ("  \o0 <= \i1; -- reduce or" & NL, Inst);
+                    ("  \o0 <= \i0; -- reduce or" & NL, Inst);
                end if;
             end;
          when Id_Red_And =>
@@ -1178,7 +1178,7 @@ package body Netlists.Disp_Vhdl is
                        & NL, Inst, (0 => Iw - 1));
                else
                   Disp_Template
-                    ("  \o0 <= \i1; -- reduce and" & NL, Inst);
+                    ("  \o0 <= \i0; -- reduce and" & NL, Inst);
                end if;
             end;
          when Id_Edge =>
