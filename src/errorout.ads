@@ -24,7 +24,7 @@ package Errorout is
    Nbr_Errors : Natural := 0;
 
    --  Maximum number of errors, before silent them.
-   Max_Nbr_Errors : constant Natural := 100;
+   Max_Nbr_Errors : Natural := 100;
 
    type Msgid_Type is
      (

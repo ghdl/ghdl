@@ -174,6 +174,14 @@ package body Options is
                Error_Msg_Option ("numeric value expected after -ftabstop=");
                return Option_Err;
          end;
+      elsif Opt'Length > 13 and then Opt (1 .. 13) = "-fmax-errors=" then
+         begin
+            Max_Nbr_Errors := Natural'Value (Opt (14 .. Opt'Last));
+         exception
+            when Constraint_Error =>
+               Error_Msg_Option ("numeric value expected after -fmax-errors=");
+               return Option_Err;
+         end;
       elsif Opt = "--bootstrap" then
          Bootstrap := True;
       elsif Opt = "-fexplicit" then
