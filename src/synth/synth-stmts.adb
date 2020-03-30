@@ -103,36 +103,6 @@ package body Synth.Stmts is
                   Offset);
    end Synth_Assign;
 
-   procedure Synth_Assignment_Aggregate (Syn_Inst : Synth_Instance_Acc;
-                                         Target : Node;
-                                         Target_Type : Type_Acc;
-                                         Val : Value_Acc;
-                                         Loc : Node)
-   is
-      Choice : Node;
-      Assoc : Node;
-      Pos : Uns32;
-   begin
-      if Target_Type.Kind = Type_Vector then
-         Choice := Get_Association_Choices_Chain (Target);
-         Pos := Target_Type.W;
-         while Is_Valid (Choice) loop
-            Assoc := Get_Associated_Expr (Choice);
-            case Get_Kind (Choice) is
-               when Iir_Kind_Choice_By_None =>
-                  Pos := Pos - 1;
-                  Synth_Assignment
-                    (Syn_Inst, Assoc, Bit_Extract (Val, Pos, Target), Loc);
-               when others =>
-                  Error_Kind ("synth_assignment_aggregate", Choice);
-            end case;
-            Choice := Get_Chain (Choice);
-         end loop;
-      else
-         raise Internal_Error;
-      end if;
-   end Synth_Assignment_Aggregate;
-
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Obj : out Value_Acc;
@@ -450,6 +420,78 @@ package body Synth.Stmts is
             raise Internal_Error;
       end case;
    end Assign_Value;
+
+   procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
+                               Target : Target_Info;
+                               Val : Value_Acc;
+                               Loc : Node);
+
+   --  Extract a part of VAL from a target aggregate at offset OFF (offset
+   --  in the array).
+   function Aggregate_Extract
+     (Val : Value_Acc; Off : Uns32; Typ : Type_Acc; Loc : Node)
+     return Value_Acc
+   is
+      El_Typ : constant Type_Acc := Get_Array_Element (Val.Typ);
+   begin
+      case Val.Kind is
+         when Value_Array
+           | Value_Const_Array =>
+            if Typ /= El_Typ then
+               --  Sub-array (vhdl 2008) not yet supported.
+               raise Internal_Error;
+            end if;
+            pragma Assert (Val.Typ.Vbound.Len >= Off);
+            return Val.Arr.V (Iir_Index32 (Val.Typ.Vbound.Len - Off));
+         when Value_Net
+           | Value_Wire =>
+            declare
+               N : Net;
+            begin
+               N := Build2_Extract
+                 (Build_Context, Get_Net (Val), Off * El_Typ.W, Typ.W);
+               Set_Location (N, Loc);
+               return Create_Value_Net (N, Typ);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Aggregate_Extract;
+
+   procedure Synth_Assignment_Aggregate (Syn_Inst : Synth_Instance_Acc;
+                                         Target : Node;
+                                         Target_Typ : Type_Acc;
+                                         Val : Value_Acc;
+                                         Loc : Node)
+   is
+      Targ_Bnd : constant Bound_Type := Get_Array_Bound (Target_Typ, 1);
+      Choice : Node;
+      Assoc : Node;
+      Pos : Uns32;
+      Targ_Info : Target_Info;
+   begin
+      Choice := Get_Association_Choices_Chain (Target);
+      Pos := Targ_Bnd.Len;
+      while Is_Valid (Choice) loop
+         Assoc := Get_Associated_Expr (Choice);
+         case Get_Kind (Choice) is
+            when Iir_Kind_Choice_By_None =>
+               Targ_Info := Synth_Target (Syn_Inst, Assoc);
+               if Get_Element_Type_Flag (Choice) then
+                  Pos := Pos - 1;
+               else
+                  Pos := Pos - Get_Array_Bound (Targ_Info.Targ_Type, 1).Len;
+               end if;
+               Synth_Assignment
+                 (Syn_Inst, Targ_Info,
+                  Aggregate_Extract (Val, Pos, Targ_Info.Targ_Type, Assoc),
+                  Loc);
+            when others =>
+               Error_Kind ("synth_assignment_aggregate", Choice);
+         end case;
+         Choice := Get_Chain (Choice);
+      end loop;
+   end Synth_Assignment_Aggregate;
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Target_Info;

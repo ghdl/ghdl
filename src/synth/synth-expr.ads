@@ -65,9 +65,6 @@ package Synth.Expr is
    function Synth_Clock_Edge
      (Syn_Inst : Synth_Instance_Acc; Left, Right : Node) return Net;
 
-   function Bit_Extract (Val : Value_Acc; Off : Uns32; Loc : Node)
-                        return Value_Acc;
-
    function Concat_Array (Arr : Net_Array_Acc) return Net;
 
    function Synth_Expression_With_Type

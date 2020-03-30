@@ -223,26 +223,6 @@ package body Synth.Expr is
       end case;
    end Value2logvec;
 
-   function Bit_Extract (Val : Value_Acc; Off : Uns32; Loc : Node)
-                        return Value_Acc
-   is
-      N : Net;
-   begin
-      case Val.Kind is
-         when Value_Array
-           | Value_Const_Array =>
-            pragma Assert (Val.Typ.Vbound.Len >= Off);
-            return Val.Arr.V (Iir_Index32 (Val.Typ.Vbound.Len - Off));
-         when Value_Net
-           | Value_Wire =>
-            N := Build_Extract_Bit (Build_Context, Get_Net (Val), Off);
-            Set_Location (N, Loc);
-            return Create_Value_Net (N, Val.Typ.Vec_El);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Bit_Extract;
-
    --  Resize for a discrete value.
    function Synth_Resize (Val : Value_Acc; W : Width; Loc : Node) return Net
    is
