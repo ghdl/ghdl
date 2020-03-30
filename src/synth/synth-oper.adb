@@ -663,6 +663,7 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_1164_Scalar_And =>
             return Synth_Bit_Dyadic (Id_And);
          when Iir_Predefined_Bit_Xor
+           | Iir_Predefined_Boolean_Xor
            | Iir_Predefined_Ieee_1164_Scalar_Xor =>
             return Synth_Bit_Dyadic (Id_Xor);
          when Iir_Predefined_Bit_Or
@@ -677,6 +678,7 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_1164_Scalar_Nand =>
             return Synth_Bit_Dyadic (Id_Nand);
          when Iir_Predefined_Bit_Xnor
+           | Iir_Predefined_Boolean_Xnor
            | Iir_Predefined_Ieee_1164_Scalar_Xnor =>
             return Synth_Bit_Dyadic (Id_Xnor);
 
@@ -1381,7 +1383,8 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
             return Synth_Vec_Reduce_Monadic(Id_Red_Or);
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
-            return Operand;
+            return Create_Value_Net
+              (Get_Net (Operand), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
          when Iir_Predefined_Integer_Negation =>
             declare
                N : Net;
