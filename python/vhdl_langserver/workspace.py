@@ -78,7 +78,7 @@ class Workspace(object):
         # Create the document.
         # Common case: an error message was reported in a non-open document.
         #  Create a document so that it could be reported to the client.
-        doc_uri = 'file://' + os.path.normpath(abspath)
+        doc_uri = lsp.path_to_uri(os.path.normpath(abspath))
         return self._create_document(doc_uri, sfe)
 
     def create_document_from_uri(self, doc_uri, source=None, version=None):
