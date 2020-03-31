@@ -1394,6 +1394,29 @@ package body Netlists.Disp_Vhdl is
       end if;
    end Disp_Entity_Ports;
 
+   procedure Disp_Entity_Generics (M : Module)
+   is
+      Nbr : constant Param_Nbr := Get_Nbr_Params (M);
+      Desc : Param_Desc;
+   begin
+      if Nbr = 0 then
+         return;
+      end if;
+      for I in 1 .. Nbr loop
+         if I = 1 then
+            Put_Line ("  generic (");
+         else
+            Put_Line (";");
+         end if;
+         Desc := Get_Param_Desc (M, I - 1);
+         Put ("    ");
+         Put_Name (Desc.Name);
+         Put (" : ");
+         Put ("std_logic_vector");
+      end loop;
+      Put_Line (");");
+   end Disp_Entity_Generics;
+
    procedure Disp_Entity (M : Module) is
    begin
       --  Module id and name.
@@ -1404,6 +1427,8 @@ package body Netlists.Disp_Vhdl is
       Put ("entity ");
       Put_Name (Get_Module_Name (M));
       Put_Line (" is");
+
+      Disp_Entity_Generics (M);
 
       Disp_Entity_Ports (M);
 
