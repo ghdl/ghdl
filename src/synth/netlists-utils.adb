@@ -114,6 +114,16 @@ package body Netlists.Utils is
       return Get_Net_Parent (Get_Input_Net (Inst, Idx));
    end Get_Input_Instance;
 
+   function Get_Param_Name (M : Module; I : Param_Idx) return Sname is
+   begin
+      return Get_Param_Desc (M, I).Name;
+   end Get_Param_Name;
+
+   function Get_Param_Type (M : Module; I : Param_Idx) return Param_Type is
+   begin
+      return Get_Param_Desc (M, I).Typ;
+   end Get_Param_Type;
+
    function Is_Const_Module (Id : Module_Id) return Boolean is
    begin
       case Id is

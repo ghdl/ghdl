@@ -18,6 +18,11 @@
    MA 02110-1301, USA.  */
 
 namespace GhdlSynth {
+  struct logic_32 {
+    unsigned int va;
+    unsigned int zx;
+  };
+
   //  Use struct wrappers for type safety.
   //  Convention: W for wrapped, D for direct, B for boolean.
 #define GHDLSYNTH_ADA_PREFIX(N) netlists__##N
@@ -38,7 +43,7 @@ namespace GhdlSynth {
   }
 
 #define GHDLSYNTH_ADA_WRAPPER_DWD(NAME, RESTYPE, ARGTYPE1, ARGTYPE2)	\
-  extern "C" unsigned int GHDLSYNTH_ADA_PREFIX(NAME) (unsigned int, ARGTYPE2);\
+  extern "C" RESTYPE GHDLSYNTH_ADA_PREFIX(NAME) (unsigned int, ARGTYPE2);\
   inline RESTYPE NAME(ARGTYPE1 arg1, ARGTYPE2 arg2) {	\
     return GHDLSYNTH_ADA_PREFIX(NAME) (arg1.id, arg2);	\
   }
@@ -82,6 +87,7 @@ namespace GhdlSynth {
   typedef unsigned int Width;
   typedef unsigned int Port_Idx;
   typedef unsigned int Param_Idx;
+  struct Pval { unsigned int id; };
 
 #include "ghdlsynth_gates.h"
 
@@ -93,6 +99,7 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_DW(get_id, Module_Id, Module);
   GHDLSYNTH_ADA_WRAPPER_DW(get_nbr_outputs, unsigned int, Module);
   GHDLSYNTH_ADA_WRAPPER_DW(get_nbr_inputs, unsigned int, Module);
+  GHDLSYNTH_ADA_WRAPPER_DW(get_nbr_params, unsigned int, Module);
 
   struct Net { unsigned int id; };
   GHDLSYNTH_ADA_WRAPPER_DW(get_width, Width, Net);
@@ -105,7 +112,10 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_WW(get_instance_name, Sname, Instance);
   GHDLSYNTH_ADA_WRAPPER_WW(get_module, Module, Instance);
   GHDLSYNTH_ADA_WRAPPER_WW(get_net_parent, Instance, Net);
-  GHDLSYNTH_ADA_WRAPPER_DWD(get_param_uns32, unsigned int, Instance, Port_Idx);
+  GHDLSYNTH_ADA_WRAPPER_DWD(get_param_uns32, unsigned int, Instance, Param_Idx);
+  GHDLSYNTH_ADA_WRAPPER_WWD(get_param_pval, Pval, Instance, Param_Idx);
+  GHDLSYNTH_ADA_WRAPPER_DW(get_pval_length, unsigned int, Pval);
+  GHDLSYNTH_ADA_WRAPPER_DWD(read_pval, struct logic_32, Pval, unsigned int);
 
   struct Input { unsigned int id; };
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input, Input, Instance, Port_Idx);
@@ -125,6 +135,8 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_DWD(get_input_width, Width, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_DWD(get_output_width, Width, Module, Port_Idx);
   GHDLSYNTH_ADA_WRAPPER_BWD(get_inout_flag, Module, Port_Idx);
+  GHDLSYNTH_ADA_WRAPPER_WWD(get_param_name, Sname, Module, Param_Idx);
+  GHDLSYNTH_ADA_WRAPPER_DWD(get_param_type, Param_Type, Module, Param_Idx);
   GHDLSYNTH_ADA_WRAPPER_BW(has_one_connection, Net);
 
   GHDLSYNTH_ADA_WRAPPER_WWD(get_input_net, Net, Instance, Port_Idx);

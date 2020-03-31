@@ -40,9 +40,11 @@ package Netlists.Utils is
 
    function Get_Id (Inst : Instance) return Module_Id;
 
-   --  For the yosys plugin: name of a port
+   --  For the yosys plugin: name of a port or a parameter
    function Get_Input_Name (M : Module; I : Port_Idx) return Sname;
    function Get_Output_Name (M : Module; I : Port_Idx) return Sname;
+   function Get_Param_Name (M : Module; I : Param_Idx) return Sname;
+   function Get_Param_Type (M : Module; I : Param_Idx) return Param_Type;
 
    --  For the yosys plugin: width of a port
    function Get_Input_Width (M : Module; I : Port_Idx) return Width;
