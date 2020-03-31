@@ -22,6 +22,7 @@ with GNAT.SHA1;
 
 with Types; use Types;
 with Types_Utils; use Types_Utils;
+with Files_Map;
 with Name_Table;
 with Libraries;
 with Hash; use Hash;
@@ -69,19 +70,6 @@ package body Synth.Insts is
             raise Synth_Error;
       end case;
    end Mode_To_Port_Kind;
-
-   function Make_Port_Desc (Syn_Inst : Synth_Instance_Acc;
-                            Inter : Node;
-                            Is_Inout : Boolean := False) return Port_Desc
-   is
-      Val : constant Value_Acc := Get_Value (Syn_Inst, Inter);
-      Name : Sname;
-   begin
-      Name :=  New_Sname_User (Get_Identifier (Inter), No_Sname);
-      return (Name => Name,
-              Is_Inout => Is_Inout,
-              W => Get_Type_Width (Val.Typ));
-   end Make_Port_Desc;
 
    --  Parameters that define an instance.
    type Inst_Params is record
@@ -232,6 +220,23 @@ package body Synth.Insts is
       end case;
    end Hash_Const;
 
+   function Get_Source_Identifier (Decl : Node) return Name_Id
+   is
+      use Files_Map;
+      use Name_Table;
+      Loc : constant Location_Type := Get_Location (Decl);
+      Len : constant Natural := Get_Name_Length (Get_Identifier (Decl));
+      subtype Ident_Str is String (1 .. Len);
+      File : Source_File_Entry;
+      Pos : Source_Ptr;
+      Buf : File_Buffer_Acc;
+   begin
+      Location_To_File_Pos (Loc, File, Pos);
+      Buf := Get_File_Source (File);
+      return Get_Identifier
+        (Ident_Str (Buf (Pos .. Pos + Source_Ptr (Len - 1))));
+   end Get_Source_Identifier;
+
    function Create_Module_Name (Params : Inst_Params) return Sname
    is
       use GNAT.SHA1;
@@ -325,7 +330,7 @@ package body Synth.Insts is
 
          when Name_Asis
            | Name_Parameters =>
-            return New_Sname_User (Id, No_Sname);
+            return New_Sname_User (Get_Source_Identifier (Decl), No_Sname);
 
          when Name_Index =>
             --  TODO.
@@ -335,6 +340,22 @@ package body Synth.Insts is
 
       return New_Sname_User (Get_Identifier (Str (1 .. Len)), No_Sname);
    end Create_Module_Name;
+
+   --  Create the name of an interface.
+   function Create_Inter_Name (Decl : Node; Enc : Name_Encoding) return Sname
+   is
+      Id : Name_Id;
+   begin
+      case Enc is
+         when Name_Asis
+           | Name_Parameters =>
+            Id := Get_Source_Identifier (Decl);
+         when others =>
+            Id := Get_Identifier (Decl);
+      end case;
+
+      return New_Sname_User (Id, No_Sname);
+   end Create_Inter_Name;
 
    function Build (Params : Inst_Params) return Inst_Object
    is
@@ -432,7 +453,7 @@ package body Synth.Insts is
       if Id = Id_User_Parameters then
          declare
             use Vhdl.Std_Package;
-            Params : Param_Desc_Array (1 .. Nbr_Params);
+            Descs : Param_Desc_Array (1 .. Nbr_Params);
             Ptype : Param_Type;
          begin
             Inter := Get_Generic_Chain (Decl);
@@ -456,12 +477,12 @@ package body Synth.Insts is
                   end case;
                end if;
                Nbr_Params := Nbr_Params + 1;
-               Params (Nbr_Params) :=
-                 (Name => New_Sname_User (Get_Identifier (Inter), No_Sname),
+               Descs (Nbr_Params) :=
+                 (Name => Create_Inter_Name (Inter, Params.Encoding),
                   Typ => Ptype);
                Inter := Get_Chain (Inter);
             end loop;
-            Set_Params_Desc (Cur_Module, Params);
+            Set_Params_Desc (Cur_Module, Descs);
          end;
       end if;
 
@@ -470,21 +491,28 @@ package body Synth.Insts is
          Inports : Port_Desc_Array (1 .. Nbr_Inputs);
          Outports : Port_Desc_Array (1 .. Nbr_Outputs);
          Pkind : Port_Kind;
+         Desc : Port_Desc;
+         Val : Value_Acc;
       begin
          Inter := Get_Port_Chain (Decl);
          Nbr_Inputs := 0;
          Nbr_Outputs := 0;
          while Is_Valid (Inter) loop
             Pkind := Mode_To_Port_Kind (Get_Mode (Inter));
+            Val := Get_Value (Syn_Inst, Inter);
+
+            Desc := (Name => Create_Inter_Name (Inter, Params.Encoding),
+                     Is_Inout => Pkind = Port_Inout,
+                     W => Get_Type_Width (Val.Typ));
+
             case Pkind is
                when Port_In =>
                   Nbr_Inputs := Nbr_Inputs + 1;
-                  Inports (Nbr_Inputs) := Make_Port_Desc (Syn_Inst, Inter);
+                  Inports (Nbr_Inputs) := Desc;
                when Port_Out
                  | Port_Inout =>
                   Nbr_Outputs := Nbr_Outputs + 1;
-                  Outports (Nbr_Outputs) :=
-                    Make_Port_Desc (Syn_Inst, Inter, Pkind = Port_Inout);
+                  Outports (Nbr_Outputs) := Desc;
             end case;
             Inter := Get_Chain (Inter);
          end loop;
@@ -922,10 +950,11 @@ package body Synth.Insts is
                                     Get_Port_Chain (Ent),
                                     Get_Port_Map_Aspect_Chain (Stmt));
 
-      --  TODO: change.
-      if True or Arch /= Null_Node then
+      if Arch /= Null_Node then
+         --  For whiteboxes: append parameters or/and hash.
          Enc := Name_Hash;
       else
+         --  For blackboxes: define the parameters.
          Enc := Name_Parameters;
       end if;
 
