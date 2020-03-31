@@ -656,6 +656,7 @@ package body Vhdl.Sem is
                              True, Miss, Assoc_Parent, Match);
       Set_Port_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
       if Match = Not_Compatible then
+         --  TODO: mark actual as used to avoid warnings.
          return;
       end if;
 
