@@ -44,6 +44,16 @@ package Types is
    type Fp64 is new Interfaces.IEEE_Float_64;
    type Fp32 is new Interfaces.IEEE_Float_32;
 
+   --  The verilog logic type (when used in a vector).
+   --  Coding of 01zx:
+   --  For 0 and 1, ZX is 0, VAL is the bit value.
+   --  For z: ZX is 1, VAL is 0.
+   --  For x: ZX is 1, VAL is 1.
+   type Logic_32 is record
+      Val : Uns32;  --  AKA aval
+      Zx  : Uns32;  --  AKA bval
+   end record;
+
    --  Useful types.
    type String_Acc is access String;
    type String_Cst is access constant String;

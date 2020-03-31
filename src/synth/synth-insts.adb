@@ -41,6 +41,7 @@ with Netlists.Concats;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
 with Vhdl.Ieee.Math_Real;
+with Vhdl.Std_Package;
 
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
@@ -102,6 +103,8 @@ package body Synth.Insts is
       Config : Node;
       Syn_Inst : Synth_Instance_Acc;
       M : Module;
+      --  Encoding if the instance name.
+      Encoding : Name_Encoding;
    end record;
 
    function Hash (Params : Inst_Params) return Hash_Value_Type
@@ -320,7 +323,8 @@ package body Synth.Insts is
                Len := Len + 40;
             end if;
 
-         when Name_Asis =>
+         when Name_Asis
+           | Name_Parameters =>
             return New_Sname_User (Id, No_Sname);
 
          when Name_Index =>
@@ -343,8 +347,10 @@ package body Synth.Insts is
       Inter_Typ : Type_Acc;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
+      Nbr_Params : Param_Nbr;
       Cur_Module : Module;
       Val : Value_Acc;
+      Id : Module_Id;
    begin
       if Get_Kind (Params.Decl) = Iir_Kind_Component_Declaration then
          pragma Assert (Params.Arch = Null_Node);
@@ -361,6 +367,7 @@ package body Synth.Insts is
 
       --  Copy values for generics.
       Inter := Get_Generic_Chain (Decl);
+      Nbr_Params := 0;
       while Inter /= Null_Node loop
          --  Bounds or range of the type.
          Inter_Type := Get_Subtype_Indication (Inter);
@@ -373,6 +380,7 @@ package body Synth.Insts is
                when others =>
                   null;
             end case;
+            Nbr_Params := Nbr_Params + 1;
          end if;
 
          --  Object.
@@ -409,9 +417,53 @@ package body Synth.Insts is
       --  Declare module.
       --  Build it now because it may be referenced for instantiations before
       --  being synthetized.
+      if Params.Encoding = Name_Parameters
+        and then Nbr_Params > 0
+      then
+         Id := Id_User_Parameters;
+      else
+         Id := Id_User_None;
+         Nbr_Params := 0;
+      end if;
       Cur_Module := New_User_Module (Get_Top_Module (Root_Instance),
-                                     Create_Module_Name (Params),
-                                     Id_User_None, Nbr_Inputs, Nbr_Outputs, 0);
+                                     Create_Module_Name (Params), Id,
+                                     Nbr_Inputs, Nbr_Outputs, Nbr_Params);
+
+      if Id = Id_User_Parameters then
+         declare
+            use Vhdl.Std_Package;
+            Params : Param_Desc_Array (1 .. Nbr_Params);
+            Ptype : Param_Type;
+         begin
+            Inter := Get_Generic_Chain (Decl);
+            Nbr_Params := 0;
+            while Inter /= Null_Node loop
+               --  Bounds or range of the type.
+               Inter_Type := Get_Type (Inter);
+               Inter_Type := Get_Base_Type (Inter_Type);
+               if Inter_Type = String_Type_Definition then
+                  Ptype := Param_Pval_String;
+               elsif Inter_Type = Time_Type_Definition then
+                  Ptype := Param_Pval_Time_Ps;
+               else
+                  case Get_Kind (Inter_Type) is
+                     when Iir_Kind_Integer_Type_Definition =>
+                        Ptype := Param_Pval_Integer;
+                     when Iir_Kind_Floating_Type_Definition =>
+                        Ptype := Param_Pval_Real;
+                     when others =>
+                        Ptype := Param_Pval_Vector;
+                  end case;
+               end if;
+               Nbr_Params := Nbr_Params + 1;
+               Params (Nbr_Params) :=
+                 (Name => New_Sname_User (Get_Identifier (Inter), No_Sname),
+                  Typ => Ptype);
+               Inter := Get_Chain (Inter);
+            end loop;
+            Set_Params_Desc (Cur_Module, Params);
+         end;
+      end if;
 
       --  Add ports to module.
       declare
@@ -445,7 +497,8 @@ package body Synth.Insts is
                           Arch => Arch,
                           Config => Params.Config,
                           Syn_Inst => Syn_Inst,
-                          M => Cur_Module);
+                          M => Cur_Module,
+                          Encoding => Params.Encoding);
    end Build;
 
    package Insts_Interning is new Interning
@@ -749,6 +802,43 @@ package body Synth.Insts is
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
+
+      if Inst_Obj.Encoding = Name_Parameters then
+         declare
+            Inter : Node;
+            Val : Value_Acc;
+            Vec : Logvec_Array_Acc;
+            Len : Uns32;
+            Off : Uns32;
+            Has_Zx : Boolean;
+            Pv : Pval;
+            Idx : Param_Idx;
+         begin
+            Idx := 0;
+            Inter := Get_Generic_Chain (Inst_Obj.Decl);
+            while Inter /= Null_Node loop
+               Val := Get_Value (Inst_Obj.Syn_Inst, Inter);
+               Len := (Val.Typ.W + 31) / 32;
+               pragma Assert (Len > 0);
+               Vec := new Logvec_Array'(0 .. Digit_Index (Len - 1) => (0, 0));
+               Off := 0;
+               Has_Zx := False;
+               Value2logvec (Val, Vec.all, Off, Has_Zx);
+               if Has_Zx then
+                  Pv := Create_Pval4 (Val.Typ.W);
+               else
+                  Pv := Create_Pval2 (Val.Typ.W);
+               end if;
+               for I in 0 .. Len - 1 loop
+                  Write_Pval (Pv, I, Vec (Digit_Index (I)));
+               end loop;
+               Set_Param_Pval (Inst, Idx, Pv);
+
+               Inter := Get_Chain (Inter);
+               Idx := Idx + 1;
+            end loop;
+         end;
+      end if;
    end Synth_Instantiate_Module;
 
    function Synth_Port_Association_Type (Sub_Inst : Synth_Instance_Acc;
@@ -817,6 +907,7 @@ package body Synth.Insts is
       Sub_Inst : Synth_Instance_Acc;
       Inst_Obj : Inst_Object;
       Inst : Instance;
+      Enc : Name_Encoding;
    begin
       --  Elaborate generic + map aspect
       Sub_Inst := Make_Instance
@@ -831,6 +922,13 @@ package body Synth.Insts is
                                     Get_Port_Chain (Ent),
                                     Get_Port_Map_Aspect_Chain (Stmt));
 
+      --  TODO: change.
+      if True or Arch /= Null_Node then
+         Enc := Name_Hash;
+      else
+         Enc := Name_Parameters;
+      end if;
+
       --  Search if corresponding module has already been used.
       --  If not create a new module
       --   * create a name from the generics and the library
@@ -840,7 +938,7 @@ package body Synth.Insts is
                                         Arch => Arch,
                                         Config => Config,
                                         Syn_Inst => Sub_Inst,
-                                        Encoding => Name_Hash));
+                                        Encoding => Enc));
 
       --  TODO: free sub_inst.
 

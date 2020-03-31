@@ -813,6 +813,24 @@ package body Netlists is
       Params_Table.Table (Get_Param_Idx (Inst, Param)) := Val;
    end Set_Param_Uns32;
 
+   function Get_Param_Pval (Inst : Instance; Param : Param_Idx) return Pval
+   is
+      M : constant Module := Get_Module (Inst);
+      pragma Assert (Param < Get_Nbr_Params (Inst));
+      pragma Assert (Get_Param_Desc (M, Param).Typ in Param_Types_Pval);
+   begin
+      return Pval (Params_Table.Table (Get_Param_Idx (Inst, Param)));
+   end Get_Param_Pval;
+
+   procedure Set_Param_Pval (Inst : Instance; Param : Param_Idx; Val : Pval)
+   is
+      M : constant Module := Get_Module (Inst);
+      pragma Assert (Param < Get_Nbr_Params (Inst));
+      pragma Assert (Get_Param_Desc (M, Param).Typ in Param_Types_Pval);
+   begin
+      Params_Table.Table (Get_Param_Idx (Inst, Param)) := Uns32 (Val);
+   end Set_Param_Pval;
+
    procedure Connect (I : Input; O : Net)
    is
       pragma Assert (Is_Valid (I));
@@ -892,6 +910,91 @@ package body Netlists is
       Nets_Table.Table (Old).First_Sink := No_Input;
    end Redirect_Inputs;
 
+   type Pval_Record is record
+      Len : Uns32;
+      Va_Idx : Uns32;
+      Zx_Idx : Uns32;
+   end record;
+
+   package Pval_Table is new Tables
+     (Table_Component_Type => Pval_Record,
+      Table_Index_Type => Pval,
+      Table_Low_Bound => 0,
+      Table_Initial => 32);
+
+   package Pval_Word_Table is new Tables
+     (Table_Component_Type => Uns32,
+      Table_Index_Type => Uns32,
+      Table_Low_Bound => 0,
+      Table_Initial => 32);
+
+   function Create_Pval4 (Len : Uns32) return Pval
+   is
+      pragma Assert (Len > 0);
+      Nwords : constant Uns32 := (Len + 31) / 32;
+      Idx : constant Uns32 := Pval_Word_Table.Last + 1;
+      Res : Uns32;
+   begin
+      Pval_Table.Append ((Len => Len,
+                          Va_Idx => Idx,
+                          Zx_Idx => Idx + Nwords));
+      Res := Pval_Word_Table.Allocate (Natural (2 * Nwords));
+      pragma Assert (Res = Idx);
+      return Pval_Table.Last;
+   end Create_Pval4;
+
+   function Create_Pval2 (Len : Uns32) return Pval
+   is
+      pragma Assert (Len > 0);
+      Nwords : constant Uns32 := (Len + 31) / 32;
+      Idx : constant Uns32 := Pval_Word_Table.Last + 1;
+      Res : Uns32;
+   begin
+      Pval_Table.Append ((Len => Len,
+                          Va_Idx => Idx,
+                          Zx_Idx => 0));
+      Res := Pval_Word_Table.Allocate (Natural (Nwords));
+      pragma Assert (Res = Idx);
+      return Pval_Table.Last;
+   end Create_Pval2;
+
+   function Get_Pval_Length (P : Pval) return Uns32
+   is
+      pragma Assert (P <= Pval_Table.Last);
+   begin
+      return Pval_Table.Table (P).Len;
+   end Get_Pval_Length;
+
+   function Read_Pval (P : Pval; Off : Uns32) return Logic_32
+   is
+      pragma Assert (P <= Pval_Table.Last);
+      Pval_Rec : Pval_Record renames Pval_Table.Table (P);
+      pragma Assert (Off <= (Pval_Rec.Len - 1) / 32);
+      Res : Logic_32;
+   begin
+      Res.Val := Pval_Word_Table.Table (Pval_Rec.Va_Idx + Off);
+      if Pval_Rec.Zx_Idx = 0 then
+         Res.Zx := 0;
+      else
+         Res.Zx := Pval_Word_Table.Table (Pval_Rec.Zx_Idx + Off);
+      end if;
+      return Res;
+   end Read_Pval;
+
+   procedure Write_Pval (P : Pval; Off : Uns32; Val : Logic_32)
+   is
+      pragma Assert (P <= Pval_Table.Last);
+      Pval_Rec : Pval_Record renames Pval_Table.Table (P);
+      pragma Assert (Off <= (Pval_Rec.Len - 1) / 32);
+   begin
+      Pval_Word_Table.Table (Pval_Rec.Va_Idx + Off) := Val.Val;
+      if Pval_Rec.Zx_Idx = 0 then
+         pragma Assert (Val.Zx = 0);
+         null;
+      else
+         Pval_Word_Table.Table (Pval_Rec.Zx_Idx + Off) := Val.Zx;
+      end if;
+   end Write_Pval;
 begin
    --  Initialize snames_table: create the first entry for No_Sname.
    Snames_Table.Append ((Kind => Sname_Artificial,
@@ -963,4 +1066,11 @@ begin
 
    Params_Table.Append (0);
    pragma Assert (Params_Table.Last = No_Param_Idx);
+
+   Pval_Table.Append ((Len => 0,
+                       Va_Idx => 0,
+                       Zx_Idx => 0));
+   pragma Assert (Pval_Table.Last = No_Pval);
+
+   Pval_Word_Table.Append (0);
 end Netlists;

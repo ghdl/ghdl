@@ -36,7 +36,10 @@ package Synth.Flags is
       --  but the names depend on the whole design.  So it won't be possible
       --  to do partial synthesis (ie synthesizing a sub-module, and then its
       --  parent considering the sub-module as a black-box).
-      Name_Index
+      Name_Index,
+
+      --  Use the entity name but also add parameters to the module.
+      Name_Parameters
      );
 
    Flag_Debug_Noinference : Boolean := False;

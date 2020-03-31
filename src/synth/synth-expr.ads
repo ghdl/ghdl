@@ -122,11 +122,6 @@ package Synth.Expr is
 
    --  Conversion to logic vector.
 
-   type Logic_32 is record
-      Val : Uns32;  --  AKA aval
-      Zx  : Uns32;  --  AKA bval  (z=10, x=11)
-   end record;
-
    type Digit_Index is new Natural;
    type Logvec_Array is array (Digit_Index range <>) of Logic_32;
    type Logvec_Array_Acc is access Logvec_Array;

@@ -154,6 +154,20 @@ package body Netlists.Disp_Vhdl is
       end;
    end Disp_Net_Name;
 
+   Bchar : constant array (Uns32 range 0 .. 3) of Character := "01ZX";
+
+   procedure Disp_Binary_Digit (Va : Uns32; Zx : Uns32; I : Natural) is
+   begin
+      Put (Bchar (((Va / 2**I) and 1) + ((Zx / 2**I) and 1) * 2));
+   end Disp_Binary_Digit;
+
+   procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural) is
+   begin
+      for I in 1 .. W loop
+         Disp_Binary_Digit (Va, Zx, W - I);
+      end loop;
+   end Disp_Binary_Digits;
+
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -161,6 +175,7 @@ package body Netlists.Disp_Vhdl is
       Max_Idx : Port_Idx;
       Name : Sname;
       First : Boolean;
+      Param : Param_Desc;
    begin
       Put ("  ");
       Name := Get_Instance_Name (Inst);
@@ -185,13 +200,37 @@ package body Netlists.Disp_Vhdl is
       if Get_Nbr_Params (Imod) /= 0 then
          Put_Line (" generic map (");
          for P in 1 .. Get_Nbr_Params (Inst) loop
+            Param := Get_Param_Desc (Imod, P - 1);
             if P > 1 then
                Put_Line (",");
             end if;
             Put ("    ");
-            Put_Interface_Name (Get_Param_Desc (Imod, P - 1).Name);
+            Put_Interface_Name (Param.Name);
             Put (" => ");
-            Put_Uns32 (Get_Param_Uns32 (Inst, P - 1));
+            case Param.Typ is
+               when Param_Uns32 =>
+                  Put_Uns32 (Get_Param_Uns32 (Inst, P - 1));
+               when Param_Types_Pval =>
+                  declare
+                     Pv : constant Pval := Get_Param_Pval (Inst, P - 1);
+                     Len : constant Uns32 := Get_Pval_Length (Pv);
+                     V : Logic_32;
+                     Off : Uns32;
+                  begin
+                     Put ('"');
+                     V := Read_Pval (Pv, 0);
+                     for I in reverse 0 .. Len - 1 loop
+                        Off := I mod 32;
+                        if Off = 31 then
+                           V := Read_Pval (Pv, I / 32);
+                        end if;
+                        Disp_Binary_Digit (V.Val, V.Zx, Natural (Off));
+                     end loop;
+                     Put ('"');
+                  end;
+               when Param_Invalid =>
+                  Put ("*invalid*");
+            end case;
          end loop;
          Put_Line (")");
          Put_Line ("    port map (");
@@ -243,8 +282,6 @@ package body Netlists.Disp_Vhdl is
       Put_Line (");");
    end Disp_Instance_Gate;
 
-   Bchar : constant array (Uns32 range 0 .. 3) of Character := "01ZX";
-
    function Get_Lit_Quote (Wd : Width) return Character is
    begin
       if Wd = 1 then
@@ -253,14 +290,6 @@ package body Netlists.Disp_Vhdl is
          return '"';
       end if;
    end Get_Lit_Quote;
-
-   procedure Disp_Binary_Digits (Va : Uns32; Zx : Uns32; W : Natural) is
-   begin
-      for I in 1 .. W loop
-         Put (Bchar (((Va / 2**(W - I)) and 1)
-                     + ((Zx / 2**(W - I)) and 1) * 2));
-      end loop;
-   end Disp_Binary_Digits;
 
    procedure Disp_Binary_Lit (Va : Uns32; Zx : Uns32; Wd : Width)
    is

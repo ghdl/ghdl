@@ -143,7 +143,8 @@ package Netlists is
 
    --  First id for user.
    Id_User_None  : constant Module_Id := 128;
-   Id_User_First : constant Module_Id := Id_User_None + 1;
+   Id_User_Parameters : constant Module_Id := 129;
+   Id_User_First : constant Module_Id := Id_User_Parameters + 1;
 
    --  Port index.  Starts at 0.
    type Port_Nbr is new Uns32;
@@ -171,10 +172,21 @@ package Netlists is
    type Param_Type is
      (Param_Invalid,
 
-      Param_Uns32
       --  An unsigned 32 bit value.
+      Param_Uns32,
+
+      --  A Generic value (with a hint of the type).  This is a bit/logic
+      --  vector.
+      Param_Pval_Vector,
+      Param_Pval_String,
+      Param_Pval_Integer,
+      Param_Pval_Real,
+      Param_Pval_Time_Ps
      );
    pragma Convention (C, Param_Type);
+
+   subtype Param_Types_Pval is
+     Param_Type range Param_Pval_Vector .. Param_Pval_Time_Ps;
 
    type Param_Desc is record
       --  Name of the parameter
@@ -185,6 +197,10 @@ package Netlists is
    end record;
 
    type Param_Desc_Array is array (Param_Idx range <>) of Param_Desc;
+
+   --  Parameter value.
+   type Pval is private;
+   No_Pval : constant Pval;
 
    --  Subprograms for modules.
    function New_Design (Name : Sname) return Module;
@@ -263,6 +279,9 @@ package Netlists is
    function Get_Param_Uns32 (Inst : Instance; Param : Param_Idx) return Uns32;
    procedure Set_Param_Uns32 (Inst : Instance; Param : Param_Idx; Val : Uns32);
 
+   function Get_Param_Pval (Inst : Instance; Param : Param_Idx) return Pval;
+   procedure Set_Param_Pval (Inst : Instance; Param : Param_Idx; Val : Pval);
+
    --  Each instance has a mark flag available for any algorithm.
    --  Please leave this flag clean for the next user.
    function Get_Mark_Flag (Inst : Instance) return Boolean;
@@ -291,6 +310,16 @@ package Netlists is
    --  Reconnect all sinks of OLD to N.
    procedure Redirect_Inputs (Old : Net; N : Net);
 
+   --  For Pval.
+   --  Create a 4-state Pval.  LEN is the number of bits (cannot be 0).
+   function Create_Pval4 (Len : Uns32) return Pval;
+   --  Create a 2-state Pval.  The value cannot have X or Z.
+   function Create_Pval2 (Len : Uns32) return Pval;
+   function Get_Pval_Length (P : Pval) return Uns32;
+
+   --  OFF is the word offset, from 0 to (len - 1) / 32.
+   function Read_Pval (P : Pval; Off : Uns32) return Logic_32;
+   procedure Write_Pval (P : Pval; Off : Uns32; Val : Logic_32);
 private
    type Sname is new Uns32 range 0 .. 2**30 - 1;
    No_Sname : constant Sname := 0;
@@ -410,4 +439,8 @@ private
       First_Sink : Input;
       W : Width;
    end record;
+
+   type Pval is new Uns32;
+   No_Pval : constant Pval := 0;
+
 end Netlists;
