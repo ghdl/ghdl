@@ -2338,7 +2338,7 @@ package body Vhdl.Sem_Assocs is
             Formal_Name := Get_Named_Entity (Formal);
             if Is_Error (Formal_Name) then
                Match := Not_Compatible;
-               exit;
+               --  Continue analysis in order to catch more errors.
             end if;
 
             Assoc := Get_Chain (Assoc);
