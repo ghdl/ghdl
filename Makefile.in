@@ -411,6 +411,10 @@ $(srcdir)/src/synth/ghdlsynth_gates.h: $(srcdir)/src/synth/netlists.ads $(srcdir
 	echo "enum Module_Id {" >> $@
 	grep -h "constant Module_Id :=" $^ | sed -e '/constant Module_Id :=/s/:.*://' -e 's/;/,/' -e 's/ *--.*//' >> $@
 	echo "};" >> $@
+	echo "" >> $@
+	echo "enum Param_Type {" >> $@
+	grep '      Param_' $(srcdir)/src/synth/netlists.ads >> $@
+	echo "};" >> $@
 
 all.libghdl.true: $(libghdl_name)
 all.libghdl.false:

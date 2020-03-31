@@ -101,3 +101,13 @@ enum Module_Id {
    Id_Const_Bit = 120,
    Id_Const_Log = 121,
 };
+
+enum Param_Type {
+      Param_Invalid,
+      Param_Uns32,
+      Param_Pval_Vector,
+      Param_Pval_String,
+      Param_Pval_Integer,
+      Param_Pval_Real,
+      Param_Pval_Time_Ps
+};

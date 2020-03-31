@@ -169,14 +169,21 @@ package Netlists is
 
    subtype Param_Nbr is Param_Idx range 0 .. Param_Idx'Last - 1;
 
+   --  Type of a parameter.  As this is defined in a module, this is valid for
+   --  all instances.
+   --  NOTE: the corresponding C enum is built from this type using the
+   --  'Param_' prefix and indentation.
    type Param_Type is
-     (Param_Invalid,
+     (
+      Param_Invalid,
 
       --  An unsigned 32 bit value.
       Param_Uns32,
 
       --  A Generic value (with a hint of the type).  This is a bit/logic
       --  vector.
+      --  TODO: Replace Integer with Signed/Unsigned.
+      --  TODO: Add boolean.
       Param_Pval_Vector,
       Param_Pval_String,
       Param_Pval_Integer,
