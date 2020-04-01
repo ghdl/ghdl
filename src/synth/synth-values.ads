@@ -58,9 +58,9 @@ package Synth.Values is
       Len : Width;
    end record;
 
-   type Bound_Array_Type is array (Iir_Index32 range <>) of Bound_Type;
+   type Bound_Array_Type is array (Dim_Type range <>) of Bound_Type;
 
-   type Bound_Array (Len : Iir_Index32) is record
+   type Bound_Array (Len : Dim_Type) is record
       D : Bound_Array_Type (1 .. Len);
    end record;
 
@@ -129,7 +129,7 @@ package Synth.Values is
             Abounds : Bound_Array_Acc;
             Arr_El : Type_Acc;
          when Type_Unbounded_Array =>
-            Uarr_Ndim : Iir_Index32;
+            Uarr_Ndim : Dim_Type;
             Uarr_El : Type_Acc;
          when Type_Record =>
             Rec : Rec_El_Array_Acc;
@@ -258,10 +258,10 @@ package Synth.Values is
                                return Type_Acc;
    function Create_Unbounded_Vector (El_Type : Type_Acc) return Type_Acc;
    function Create_Slice_Type (W : Width; El_Type : Type_Acc) return Type_Acc;
-   function Create_Bound_Array (Ndims : Iir_Index32) return Bound_Array_Acc;
+   function Create_Bound_Array (Ndims : Dim_Type) return Bound_Array_Acc;
    function Create_Array_Type (Bnd : Bound_Array_Acc; El_Type : Type_Acc)
                               return Type_Acc;
-   function Create_Unbounded_Array (Ndim : Iir_Index32; El_Type : Type_Acc)
+   function Create_Unbounded_Array (Ndim : Dim_Type; El_Type : Type_Acc)
                                    return Type_Acc;
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc;
 
@@ -353,7 +353,7 @@ package Synth.Values is
    function Get_Array_Flat_Length (Typ : Type_Acc) return Width;
 
    --  Return length of dimension DIM of type T.
-   function Get_Bound_Length (T : Type_Acc; Dim : Iir_Index32) return Width;
+   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Width;
 
    function Is_Matching_Bounds (L, R : Type_Acc) return Boolean;
 

@@ -292,15 +292,15 @@ package body Synth.Expr is
       end if;
    end Get_Index_Offset;
 
-   function Get_Array_Bound (Typ : Type_Acc; Dim : Natural)
+   function Get_Array_Bound (Typ : Type_Acc; Dim : Dim_Type)
                             return Bound_Type is
    begin
       case Typ.Kind is
          when Type_Vector =>
-            pragma Assert (Dim = 0);
+            pragma Assert (Dim = 1);
             return Typ.Vbound;
          when Type_Array =>
-            return Typ.Abounds.D (Iir_Index32 (Dim + 1));
+            return Typ.Abounds.D (Dim);
          when others =>
             raise Internal_Error;
       end case;
@@ -333,7 +333,7 @@ package body Synth.Expr is
          when Type_Array =>
             declare
                Bnds : constant Bound_Array_Acc := Typ.Abounds;
-               Res : Stride_Array (1 .. Dim_Type (Bnds.Len));
+               Res : Stride_Array (1 .. Bnds.Len);
                Stride : Iir_Index32;
             begin
                Stride := 1;
@@ -358,7 +358,7 @@ package body Synth.Expr is
                                    Dim : Dim_Type;
                                    Const_P : out Boolean)
    is
-      Bound : constant Bound_Type := Get_Array_Bound (Typ, Natural (Dim - 1));
+      Bound : constant Bound_Type := Get_Array_Bound (Typ, Dim);
       El_Typ : constant Type_Acc := Get_Array_Element (Typ);
       Stride : constant Iir_Index32 := Strides (Dim);
       Value : Node;
@@ -829,14 +829,15 @@ package body Synth.Expr is
 
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;
-                                Dim : Natural) return Bound_Type
+                                Dim : Dim_Type) return Bound_Type
    is
       Info : constant Sim_Info_Acc := Get_Info (Atype);
    begin
       if Info = null then
          pragma Assert (Get_Type_Declarator (Atype) = Null_Node);
          declare
-            Index_Type : constant Node := Get_Index_Type (Atype, Dim);
+            Index_Type : constant Node :=
+              Get_Index_Type (Atype, Natural (Dim - 1));
          begin
             return Synth_Bounds_From_Range (Syn_Inst, Index_Type);
          end;
@@ -846,10 +847,10 @@ package body Synth.Expr is
          begin
             case Bnds.Typ.Kind is
                when Type_Vector =>
-                  pragma Assert (Dim = 0);
+                  pragma Assert (Dim = 1);
                   return Bnds.Typ.Vbound;
                when Type_Array =>
-                  return Bnds.Typ.Abounds.D (Iir_Index32 (Dim + 1));
+                  return Bnds.Typ.Abounds.D (Dim);
                when others =>
                   raise Internal_Error;
             end case;
@@ -953,7 +954,7 @@ package body Synth.Expr is
       Val : Value_Acc;
    begin
       --  Allocate the result.
-      Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 0);
+      Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 1);
       pragma Assert (Bnd.Len = Uns32 (Last + 1));
 
       if El_Typ.Kind in Type_Nets then
@@ -1922,7 +1923,7 @@ package body Synth.Expr is
             Bounds := Str_Typ.Abounds.D (1);
          when Type_Unbounded_Vector
            | Type_Unbounded_Array =>
-            Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 0);
+            Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 1);
          when others =>
             raise Internal_Error;
       end case;

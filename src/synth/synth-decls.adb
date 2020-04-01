@@ -94,7 +94,7 @@ package body Synth.Decls is
       if El_Typ.Kind in Type_Nets and then Ndims = 1 then
          Typ := Create_Unbounded_Vector (El_Typ);
       else
-         Typ := Create_Unbounded_Array (Iir_Index32 (Ndims), El_Typ);
+         Typ := Create_Unbounded_Array (Dim_Type (Ndims), El_Typ);
       end if;
       return Typ;
    end Synth_Array_Type_Definition;
@@ -325,10 +325,10 @@ package body Synth.Decls is
             Etyp := Get_Value_Type (Syn_Inst, El_Type);
             if Get_Index_Constraint_Flag (Atype) then
                Bnds := Create_Bound_Array
-                 (Iir_Index32 (Get_Nbr_Elements (St_Indexes)));
+                 (Dim_Type (Get_Nbr_Elements (St_Indexes)));
                for I in Flist_First .. Flist_Last (St_Indexes) loop
                   St_El := Get_Index_Type (St_Indexes, I);
-                  Bnds.D (Iir_Index32 (I + 1)) :=
+                  Bnds.D (Dim_Type (I + 1)) :=
                     Synth_Bounds_From_Range (Syn_Inst, St_El);
                end loop;
                return Create_Array_Type (Bnds, Etyp);

@@ -345,7 +345,7 @@ package body Synth.Stmts is
                  Get_Value_Type (Syn_Inst, Get_Base_Type (Targ_Type));
                case Base_Typ.Kind is
                   when Type_Unbounded_Vector =>
-                     Bnd := Expr.Synth_Array_Bounds (Syn_Inst, Targ_Type, 0);
+                     Bnd := Expr.Synth_Array_Bounds (Syn_Inst, Targ_Type, 1);
                      return Target_Info' (Kind => Target_Aggregate,
                                           Targ_Type => Create_Vector_Type
                                             (Bnd, Base_Typ.Uvec_El),

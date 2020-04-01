@@ -84,7 +84,7 @@ package Synth.Expr is
 
    function Synth_Array_Bounds (Syn_Inst : Synth_Instance_Acc;
                                 Atype : Node;
-                                Dim : Natural) return Bound_Type;
+                                Dim : Dim_Type) return Bound_Type;
 
    function Synth_Discrete_Range_Expression
      (L : Int64; R : Int64; Dir : Iir_Direction) return Discrete_Range_Type;

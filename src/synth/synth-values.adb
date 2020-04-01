@@ -343,7 +343,7 @@ package body Synth.Values is
                                  El);
    end Create_Vec_Type_By_Length;
 
-   function Create_Bound_Array (Ndims : Iir_Index32) return Bound_Array_Acc
+   function Create_Bound_Array (Ndims : Dim_Type) return Bound_Array_Acc
    is
       use System;
       subtype Data_Type is Bound_Array (Ndims);
@@ -388,7 +388,7 @@ package body Synth.Values is
                                                 Arr_El => El_Type)));
    end Create_Array_Type;
 
-   function Create_Unbounded_Array (Ndim : Iir_Index32; El_Type : Type_Acc)
+   function Create_Unbounded_Array (Ndim : Dim_Type; El_Type : Type_Acc)
                                    return Type_Acc
    is
       subtype Unbounded_Type_Type is Type_Type (Type_Unbounded_Array);
@@ -438,7 +438,7 @@ package body Synth.Values is
             end if;
             return Typ.Vbound;
          when Type_Array =>
-            return Typ.Abounds.D (Iir_Index32 (Dim));
+            return Typ.Abounds.D (Dim);
          when others =>
             raise Internal_Error;
       end case;
@@ -850,7 +850,7 @@ package body Synth.Values is
       return Atype.W;
    end Get_Type_Width;
 
-   function Get_Bound_Length (T : Type_Acc; Dim : Iir_Index32) return Width is
+   function Get_Bound_Length (T : Type_Acc; Dim : Dim_Type) return Width is
    begin
       case T.Kind is
          when Type_Vector =>
