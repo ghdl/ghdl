@@ -1947,6 +1947,24 @@ package body Synth.Expr is
       return Res;
    end Synth_String_Literal;
 
+   --  Return the left bound if the direction of the range is LEFT_DIR.
+   function Synth_Low_High_Type_Attribute
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Left_Dir : Iir_Direction)
+     return Value_Acc
+   is
+      Typ : Type_Acc;
+      R : Int64;
+   begin
+      Typ := Get_Value_Type (Syn_Inst, Get_Type (Get_Prefix (Expr)));
+      pragma Assert (Typ.Kind = Type_Discrete);
+      if Typ.Drange.Dir = Left_Dir then
+         R := Typ.Drange.Left;
+      else
+         R := Typ.Drange.Right;
+      end if;
+      return Create_Value_Discrete (R, Typ);
+   end Synth_Low_High_Type_Attribute;
+
    subtype And_Or_Module_Id is Module_Id range Id_And .. Id_Or;
 
    function Synth_Short_Circuit (Syn_Inst : Synth_Instance_Acc;
@@ -2216,6 +2234,10 @@ package body Synth.Expr is
                --  subtype conversion.
                return Synth_Subtype_Conversion (V, Dtype, False, Expr);
             end;
+         when Iir_Kind_Low_Type_Attribute =>
+            return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Iir_To);
+         when Iir_Kind_High_Type_Attribute =>
+            return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Iir_Downto);
          when Iir_Kind_Value_Attribute =>
             return Synth_Value_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Image_Attribute =>
