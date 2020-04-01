@@ -252,6 +252,33 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Mul_Uns_Uns;
 
+   procedure To_Unsigned (Res : out Std_Logic_Vector; Val : Uns64)
+   is
+      E : Std_Ulogic;
+   begin
+      for I in Res'Range loop
+         if (Shift_Right (Val, Natural (Res'Last - I)) and 1) = 0 then
+            E := '0';
+         else
+            E := '1';
+         end if;
+         Res (I) := E;
+      end loop;
+   end To_Unsigned;
+
+   function Mul_Nat_Uns (L : Uns64; R : Std_Logic_Vector)
+                        return Std_Logic_Vector
+   is
+      pragma Assert (R'First = 1);
+      T : Std_Logic_Vector (1 .. R'Last);
+   begin
+      if R'Last < 1 then
+         return Null_Vec;
+      end if;
+      To_Unsigned (T, L);
+      return Mul_Uns_Uns (T, R);
+   end Mul_Nat_Uns;
+
    function Mul_Sgn_Sgn (L, R : Std_Logic_Vector) return Std_Logic_Vector
    is
       pragma Assert (L'First = 1);

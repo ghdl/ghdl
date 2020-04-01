@@ -38,6 +38,7 @@ package Synth.Ieee.Std_Logic_1164 is
    subtype X01 is Std_Ulogic range 'X' .. '1';
 
    --  Vector of logic state.
+   --  First index is the leftest.
    type Std_Logic_Vector is array (Natural range <>) of Std_Ulogic;
 
    type Table_1d is array (Std_Ulogic) of Std_Ulogic;
