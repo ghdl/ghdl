@@ -167,6 +167,9 @@ package Grt.Types is
    function To_Ghdl_Location_Ptr is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_Location_Ptr);
 
+   type C_Boolean is new Boolean;
+   pragma Convention (C, C_Boolean);
+
    --  Signal index.
    type Sig_Table_Index is new Integer;
 

@@ -641,6 +641,10 @@ package body Grt.Rtis_Utils is
       Ctxt := Last_Ctxt;
       loop
          Blk := To_Ghdl_Rtin_Block_Acc (Ctxt.Block);
+         if Blk = null then
+            Prepend (Rstr, "???");
+            return;
+         end if;
          case Ctxt.Block.Kind is
             when Ghdl_Rtik_Entity =>
                declare

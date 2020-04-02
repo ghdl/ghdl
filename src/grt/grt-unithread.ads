@@ -43,6 +43,7 @@ package Grt.Unithread is
 
    --  Set and get the current process being executed by the thread.
    procedure Set_Current_Process (Proc : Process_Acc);
+   pragma Export (C, Set_Current_Process, "__ghdl_set_current_process");
    function Get_Current_Process return Process_Acc;
 
    --  The stack2 for all sensitized process.  Since they cannot have

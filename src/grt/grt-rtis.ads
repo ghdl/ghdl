@@ -445,6 +445,7 @@ package Grt.Rtis is
 
    --  Address of the top instance.
    Ghdl_Rti_Top_Instance : Address;
+   pragma Export (C, Ghdl_Rti_Top_Instance, "__ghdl_rti_top_instance");
 
    --  Instances have a pointer to their RTI at offset 0.
    type Ghdl_Rti_Acc_Acc is access Ghdl_Rti_Access;

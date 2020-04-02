@@ -227,6 +227,7 @@ package body Grt.Processes is
                              Subprg => Proc,
                              This => This);
       Process_Table.Append (P);
+      Nbr_Non_Postponed_Processes := Nbr_Non_Postponed_Processes + 1;
       --  Used to create drivers.
       Set_Current_Process (P);
    end Verilog_Process_Register;
@@ -244,6 +245,13 @@ package body Grt.Processes is
    begin
       Verilog_Process_Register (Instance, Proc, Null_Context);
    end Ghdl_Always_Register;
+
+   function Ghdl_Register_Foreign_Process
+     (Instance : Instance_Acc; Proc : Proc_Acc) return Process_Acc is
+   begin
+      Verilog_Process_Register (Instance, Proc, Null_Context);
+      return Get_Current_Process;
+   end Ghdl_Register_Foreign_Process;
 
    procedure Ghdl_Process_Add_Sensitivity (Sig : Ghdl_Signal_Ptr)
    is
@@ -1082,6 +1090,27 @@ package body Grt.Processes is
    is
       use Options;
    begin
+      if Flag_Stats then
+         Stats.Start_Order;
+      end if;
+
+      Grt.Hooks.Call_Start_Hooks;
+
+      Grt.Signals.Order_All_Signals;
+
+      if Grt.Options.Disp_Signals_Map then
+         Grt.Disp_Signals.Disp_Signals_Map;
+      end if;
+      if Grt.Options.Disp_Signals_Table then
+         Grt.Disp_Signals.Disp_Signals_Table;
+      end if;
+      if Disp_Signals_Order then
+         Grt.Disp.Disp_Signals_Order;
+      end if;
+      if Disp_Sensitivity then
+         Grt.Disp_Signals.Disp_All_Sensitivity;
+      end if;
+
       if Nbr_Threads /= 1 then
          Threads.Init;
       end if;
@@ -1133,6 +1162,44 @@ package body Grt.Processes is
          return False;
       end if;
    end Has_Simulation_Timeout;
+
+   function Simulation_Step return Integer
+   is
+      use Options;
+      Status : Integer;
+   begin
+      Status := Simulation_Cycle;
+
+      --  Simulation has been stopped/finished by vpi.
+      if Status = Run_Stop then
+         return 2;
+      end if;
+
+      if Trace_Signals then
+         Grt.Disp_Signals.Disp_All_Signals;
+      end if;
+
+      --  Simulation is finished.
+      if Status = Run_Finished then
+         return 3;
+      end if;
+
+      --  Simulation is stopped by user timeout.
+      if Has_Simulation_Timeout then
+         return 4;
+      end if;
+
+      if Current_Delta = 0 then
+         Grt.Hooks.Call_Cycle_Hooks;
+         return 1;
+      else
+         if Current_Delta >= Stop_Delta then
+            return 5;
+         else
+            return 0;
+         end if;
+      end if;
+   end Simulation_Step;
 
    function Simulation_Main_Loop return Integer
    is

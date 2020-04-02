@@ -22,7 +22,6 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with Grt.Types; use Grt.Types;
 with Grt.Stdio;
 with Grt.Errors; use Grt.Errors;
 with Grt.Processes;
@@ -30,8 +29,6 @@ with Grt.Signals;
 with Grt.Options; use Grt.Options;
 with Grt.Stats;
 with Grt.Hooks;
-with Grt.Disp_Signals;
-with Grt.Disp;
 with Grt.Modules;
 with Grt.Change_Generics;
 
@@ -103,7 +100,26 @@ package body Grt.Main is
       end if;
    end Check_Flag_String;
 
-   procedure Run_Elab (Stop : out Boolean) is
+   Default_Progname : constant String := "ghdl" & NUL;
+
+   --  Initialization: decode options, but no elaboration.
+   --  Return False in case of error.
+   procedure Run_Options (Progname : Ghdl_C_String;
+                          Argc : Integer;
+                          Argv : Grt.Options.Argv_Type) is
+   begin
+      if Progname = null then
+         Grt.Options.Progname := To_Ghdl_C_String (Default_Progname'Address);
+      else
+         Grt.Options.Progname := Progname;
+      end if;
+      Grt.Options.Argc := Argc;
+      Grt.Options.Argv := Argv;
+   end Run_Options;
+
+   function Run_Init return C_Boolean
+   is
+      Stop : Boolean;
    begin
       --  Set stream for error messages
       Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
@@ -117,7 +133,7 @@ package body Grt.Main is
 
       --  Early stop (for options such as --help).
       if Stop then
-         return;
+         return False;
       end if;
 
       --  Check coherency between GRT and GHDL generated code.
@@ -130,6 +146,11 @@ package body Grt.Main is
 
       Grt.Signals.Init;
 
+      return True;
+   end Run_Init;
+
+   function Run_Elab return C_Boolean is
+   begin
       if Flag_Stats then
          Stats.Start_Elaboration;
       end if;
@@ -137,35 +158,11 @@ package body Grt.Main is
       --  Elaboration.  Run through longjump to catch errors.
       if Run_Through_Longjump (Ghdl_Elaborate_Wrapper'Access) < 0 then
          Grt.Errors.Error ("error during elaboration");
-         Stop := True;
-         return;
-      end if;
-
-      if Flag_Stats then
-         Stats.Start_Order;
-      end if;
-
-      Grt.Hooks.Call_Start_Hooks;
-
-      if not Flag_No_Run then
-         Grt.Signals.Order_All_Signals;
-
-         if Grt.Options.Disp_Signals_Map then
-            Grt.Disp_Signals.Disp_Signals_Map;
-         end if;
-         if Grt.Options.Disp_Signals_Table then
-            Grt.Disp_Signals.Disp_Signals_Table;
-         end if;
-         if Disp_Signals_Order then
-            Grt.Disp.Disp_Signals_Order;
-         end if;
-         if Disp_Sensitivity then
-            Grt.Disp_Signals.Disp_All_Sensitivity;
-         end if;
+         return False;
       end if;
 
       --  Can continue.
-      Stop := False;
+      return True;
    end Run_Elab;
 
    function Run_Simul return Integer is
@@ -199,11 +196,15 @@ package body Grt.Main is
 
    procedure Run
    is
-      Stop : Boolean;
+      Ok : C_Boolean;
       Status : Integer;
    begin
-      Run_Elab (Stop);
-      if Stop then
+      Ok := Run_Init;
+      if not Ok then
+         return;
+      end if;
+      Ok := Run_Elab;
+      if not Ok then
          return;
       end if;
 

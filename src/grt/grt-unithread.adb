@@ -69,7 +69,6 @@ package body Grt.Unithread is
       return Current_Process;
    end Grt_Get_Current_Process;
 
-
    procedure Set_Current_Process (Proc : Process_Acc) is
    begin
       Current_Process := Proc;
