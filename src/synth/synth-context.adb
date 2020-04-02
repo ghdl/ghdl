@@ -319,7 +319,7 @@ package body Synth.Context is
    is
       Obj_Type : constant Node := Get_Type (Obj);
       Otyp : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Obj_Type);
-      Val : Value_Acc;
+      Val : Valtyp;
       Wid : Wire_Id;
    begin
       if Kind = Wire_None then
@@ -329,7 +329,7 @@ package body Synth.Context is
       end if;
       Val := Create_Value_Wire (Wid, Otyp);
 
-      Create_Object (Syn_Inst, Obj, (Otyp, Val));
+      Create_Object (Syn_Inst, Obj, Val);
    end Create_Wire_Object;
 
    function Get_Instance_By_Scope
@@ -407,36 +407,6 @@ package body Synth.Context is
       return Obj_Inst.Objects (Info.Slot).T_Typ;
    end Get_Subtype_Object;
 
-   function Vec2net (Val : Value_Acc) return Net is
-   begin
-      if Val.Typ.Vbound.Len <= 32 then
-         declare
-            Len : constant Iir_Index32 := Iir_Index32 (Val.Typ.Vbound.Len);
-            R_Val, R_Zx : Uns32;
-            V, Zx : Uns32;
-         begin
-            R_Val := 0;
-            R_Zx := 0;
-            for I in 1 .. Len loop
-               To_Logic (Val.Arr.V (I).Scal, Val.Typ.Vec_El, V, Zx);
-               R_Val := R_Val or Shift_Left (V, Natural (Len - I));
-               R_Zx := R_Zx or Shift_Left (Zx, Natural (Len - I));
-            end loop;
-            if R_Zx = 0 then
-               return Build_Const_UB32 (Build_Context, R_Val, Uns32 (Len));
-            else
-               return Build_Const_UL32
-                 (Build_Context, R_Val, R_Zx, Uns32 (Len));
-            end if;
-         end;
-      else
-         --  Need Uconst64 / UconstBig
-         raise Internal_Error;
-      end if;
-   end Vec2net;
-
-   pragma Unreferenced (Vec2net);
-
    --  Set Is_0 to True iff VEC is 000...
    --  Set Is_X to True iff VEC is XXX...
    procedure Is_Full (Vec : Logvec_Array;
@@ -468,7 +438,7 @@ package body Synth.Context is
    end Is_Full;
 
    procedure Value2net
-     (Val : Value_Acc; W : Width; Vec : in out Logvec_Array; Res : out Net)
+     (Val : Valtyp; W : Width; Vec : in out Logvec_Array; Res : out Net)
    is
       Off : Uns32;
       Has_Zx : Boolean;
@@ -513,13 +483,13 @@ package body Synth.Context is
       end if;
    end Value2net;
 
-   function Get_Net (Val : Value_Acc) return Net is
+   function Get_Net (Val : Valtyp) return Net is
    begin
-      case Val.Kind is
+      case Val.Val.Kind is
          when Value_Wire =>
-            return Get_Current_Value (Build_Context, Val.W);
+            return Get_Current_Value (Build_Context, Val.Val.W);
          when Value_Net =>
-            return Val.N;
+            return Val.Val.N;
          when Value_Discrete =>
             case Val.Typ.Kind is
                when Type_Bit
@@ -537,7 +507,7 @@ package body Synth.Context is
                         Sh : constant Natural := 64 - Natural (Val.Typ.W);
                         V : Uns64;
                      begin
-                        V := To_Uns64 (Val.Scal);
+                        V := To_Uns64 (Val.Val.Scal);
                         --  Keep only Val.Typ.W bits of the value.
                         V := Shift_Right (Shift_Left (V, Sh), Sh);
                         return Build2_Const_Uns
@@ -577,11 +547,12 @@ package body Synth.Context is
          when Value_Array =>
             declare
                use Netlists.Concats;
+               El_Typ : constant Type_Acc := Get_Array_Element (Val.Typ);
                C : Concat_Type;
                Res : Net;
             begin
-               for I in reverse Val.Arr.V'Range loop
-                  Append (C, Get_Net (Val.Arr.V (I)));
+               for I in reverse Val.Val.Arr.V'Range loop
+                  Append (C, Get_Net ((El_Typ, Val.Val.Arr.V (I))));
                end loop;
                Build (Build_Context, C, Res);
                return Res;
@@ -592,8 +563,9 @@ package body Synth.Context is
                C : Concat_Type;
                Res : Net;
             begin
-               for I in Val.Rec.V'Range loop
-                  Append (C, Get_Net (Val.Rec.V (I)));
+               for I in Val.Typ.Rec.E'Range loop
+                  Append (C, Get_Net ((Val.Typ.Rec.E (I).Typ,
+                                       Val.Val.Rec.V (I))));
                end loop;
                Build (Build_Context, C, Res);
                return Res;
@@ -602,29 +574,24 @@ package body Synth.Context is
             declare
                Res : Net;
             begin
-               if Val.A_Obj.Kind = Value_Wire then
-                  Res := Get_Current_Value (Build_Context, Val.A_Obj.W);
-                  return Build_Extract (Build_Context, Res, Val.A_Off,
-                                        Get_Type_Width (Val.Typ));
+               if Val.Val.A_Obj.Kind = Value_Wire then
+                  Res := Get_Current_Value (Build_Context, Val.Val.A_Obj.W);
+                  return Build2_Extract (Build_Context, Res, Val.Val.A_Off,
+                                         Val.Typ.W);
                else
-                  pragma Assert (Val.A_Off = 0);
-                  return Get_Net (Val.A_Obj);
+                  pragma Assert (Val.Val.A_Off = 0);
+                  return Get_Net ((Val.Typ, Val.Val.A_Obj));
                end if;
             end;
          when Value_Const =>
-            if Val.C_Net = No_Net then
-               Val.C_Net := Get_Net (Val.C_Val);
-               Locations.Set_Location (Get_Net_Parent (Val.C_Net),
-                                       Get_Location (Val.C_Loc));
+            if Val.Val.C_Net = No_Net then
+               Val.Val.C_Net := Get_Net ((Val.Typ, Val.Val.C_Val));
+               Locations.Set_Location (Get_Net_Parent (Val.Val.C_Net),
+                                       Get_Location (Val.Val.C_Loc));
             end if;
-            return Val.C_Net;
+            return Val.Val.C_Net;
          when others =>
             raise Internal_Error;
       end case;
-   end Get_Net;
-
-   function Get_Net (Val : Valtyp) return Net is
-   begin
-      return Get_Net (Val.Val);
    end Get_Net;
 end Synth.Context;

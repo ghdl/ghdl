@@ -197,7 +197,6 @@ package Synth.Values is
    subtype File_Index is Grt.Files_Operations.Ghdl_File_Index;
 
    type Value_Type (Kind : Value_Kind) is record
-      Typ : Type_Acc;
       case Kind is
          when Value_Net =>
             N : Net;
@@ -288,38 +287,35 @@ package Synth.Values is
    function Are_Types_Equal (L, R : Type_Acc) return Boolean;
 
    --  Create a Value_Net.
-   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Value_Acc;
+   function Create_Value_Net (N : Net) return Value_Acc;
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp;
 
    --  Create a Value_Wire.  For a bit wire, RNG must be null.
-   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc;
+   function Create_Value_Wire (W : Wire_Id) return Value_Acc;
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp;
 
-   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
-                                  return Value_Acc;
+   function Create_Value_Discrete (Val : Int64) return Value_Acc;
    function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
                                   return Valtyp;
 
-   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Value_Acc;
+   function Create_Value_Float (Val : Fp64) return Value_Acc;
    function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp;
 
-   function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
-                                return Value_Acc;
+   function Create_Value_Access (Acc : Heap_Index) return Value_Acc;
    function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
                                 return Valtyp;
 
+   function Create_Value_File (File : File_Index) return Value_Acc;
    function Create_Value_File (Vtype : Type_Acc; File : File_Index)
-                              return Value_Acc;
+                              return Valtyp;
 
    function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc;
 
    --  Create a Value_Array.
-   function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                               return Value_Acc;
+   function Create_Value_Array (Arr : Value_Array_Acc) return Value_Acc;
    function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
                                return Valtyp;
-   function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                                     return Value_Acc;
+   function Create_Value_Const_Array (Arr : Value_Array_Acc) return Value_Acc;
    function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
                                      return Valtyp;
 
@@ -327,19 +323,16 @@ package Synth.Values is
    function Create_Value_Array (Bounds : Type_Acc) return Value_Acc;
 
    --  Allocate the ARR component of the Value_Type ARR, using BOUNDS.
-   procedure Create_Array_Data (Arr : Value_Acc);
+   -- procedure Create_Array_Data (Arr : Value_Acc);
 
-   function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
-                                return Value_Acc;
+   function Create_Value_Record (Els : Value_Array_Acc) return Value_Acc;
    function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
                                 return Valtyp;
-   function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
-                                      return Value_Acc;
+   function Create_Value_Const_Record (Els : Value_Array_Acc) return Value_Acc;
    function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
                                       return Valtyp;
 
-   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
-                               return Value_Acc;
+   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32) return Value_Acc;
    function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
                                return Valtyp;
    function Create_Value_Const (Val : Value_Acc; Loc : Syn_Src)

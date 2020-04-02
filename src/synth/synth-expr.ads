@@ -44,7 +44,7 @@ package Synth.Expr is
 
    --  Return True only if discrete value V is known to be positive or 0.
    --  False means either not positive or unknown.
-   function Is_Positive (V : Value_Acc) return Boolean;
+   function Is_Positive (V : Valtyp) return Boolean;
 
    --  Return the bounds of a one dimensional array/vector type and the
    --  width of the element.
@@ -130,7 +130,7 @@ package Synth.Expr is
    procedure Free_Logvec_Array is new Ada.Unchecked_Deallocation
      (Logvec_Array, Logvec_Array_Acc);
 
-   procedure Value2logvec (Val : Value_Acc;
+   procedure Value2logvec (Val : Valtyp;
                            Vec : in out Logvec_Array;
                            Off : in out Uns32;
                            Has_Zx : in out Boolean);

@@ -752,7 +752,8 @@ package body Synth.Decls is
       Rdwd : Width;
       Res : Valtyp;
       Obj_Typ : Type_Acc;
-      Vt : Valtyp;
+      Base : Valtyp;
+      Typ : Type_Acc;
    begin
       --  Subtype indication may not be present.
       if Atype /= Null_Node then
@@ -763,16 +764,16 @@ package body Synth.Decls is
       end if;
 
       Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
-                                     Vt, Off, Voff, Rdwd);
+                                     Base, Typ, Off, Voff, Rdwd);
       pragma Assert (Voff = No_Net);
-      if Vt.Val.Kind = Value_Net then
+      if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
          Res := Create_Value_Net
-           (Build2_Extract (Get_Build (Syn_Inst), Vt.Val.N, Off, Vt.Typ.W),
-            Vt.Typ);
+           (Build2_Extract (Get_Build (Syn_Inst), Base.Val.N, Off, Typ.W),
+            Typ);
       else
-         Res := Create_Value_Alias (Vt.Val, Off, Vt.Typ);
+         Res := Create_Value_Alias (Base.Val, Off, Typ);
       end if;
       if Obj_Typ /= null then
          Res := Synth_Subtype_Conversion (Res, Obj_Typ, True, Decl);
@@ -846,14 +847,14 @@ package body Synth.Decls is
          when Iir_Kind_File_Declaration =>
             declare
                F : File_Index;
-               Res : Value_Acc;
+               Res : Valtyp;
                Obj_Typ : Type_Acc;
             begin
                F := Synth.Files_Operations.Elaborate_File_Declaration
                  (Syn_Inst, Decl);
                Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
                Res := Create_Value_File (Obj_Typ, F);
-               Create_Object (Syn_Inst, Decl, (Obj_Typ, Res));
+               Create_Object (Syn_Inst, Decl, Res);
             end;
          when Iir_Kind_Psl_Default_Clock =>
             --  Ignored; directly used by PSL directives.

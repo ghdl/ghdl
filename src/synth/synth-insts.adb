@@ -368,7 +368,7 @@ package body Synth.Insts is
       Nbr_Outputs : Port_Nbr;
       Nbr_Params : Param_Nbr;
       Cur_Module : Module;
-      Val : Value_Acc;
+      Val : Valtyp;
       Id : Module_Id;
    begin
       if Get_Kind (Params.Decl) = Iir_Kind_Component_Declaration then
@@ -430,7 +430,7 @@ package body Synth.Insts is
                Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
-         Create_Object (Syn_Inst, Inter, (Inter_Typ, Val));
+         Create_Object (Syn_Inst, Inter, Val);
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -850,7 +850,7 @@ package body Synth.Insts is
                Vec := new Logvec_Array'(0 .. Digit_Index (Len - 1) => (0, 0));
                Off := 0;
                Has_Zx := False;
-               Value2logvec (Vt.Val, Vec.all, Off, Has_Zx);
+               Value2logvec (Vt, Vec.all, Off, Has_Zx);
                if Has_Zx then
                   Pv := Create_Pval4 (Vt.Typ.W);
                else
@@ -901,7 +901,7 @@ package body Synth.Insts is
       Inter : Node;
       Assoc : Node;
       Assoc_Inter : Node;
-      Val : Value_Acc;
+      Val : Valtyp;
       Inter_Typ : Type_Acc;
    begin
       Assoc := Assoc_Chain;
@@ -918,7 +918,7 @@ package body Synth.Insts is
                  | Port_Inout =>
                   Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
             end case;
-            Create_Object (Sub_Inst, Inter, (Inter_Typ, Val));
+            Create_Object (Sub_Inst, Inter, Val);
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
@@ -1023,19 +1023,19 @@ package body Synth.Insts is
    end Synth_Blackbox_Instantiation_Statement;
 
    procedure Create_Component_Wire
-     (Ctxt : Context_Acc; Inter : Node; Val : Value_Acc; Pfx_Name : Sname)
+     (Ctxt : Context_Acc; Inter : Node; Val : Valtyp; Pfx_Name : Sname)
    is
       Value : Net;
       W : Width;
    begin
-      case Val.Kind is
+      case Val.Val.Kind is
          when Value_Wire =>
             --  Create a gate for the output, so that it could be read.
-            Val.W := Alloc_Wire (Wire_Output, Inter);
+            Val.Val.W := Alloc_Wire (Wire_Output, Inter);
             W := Get_Type_Width (Val.Typ);
             Value := Build_Signal
               (Ctxt, New_Internal_Name (Ctxt, Pfx_Name), W);
-            Set_Wire_Gate (Val.W, Value);
+            Set_Wire_Gate (Val.Val.W, Value);
          when others =>
             raise Internal_Error;
       end case;
@@ -1082,7 +1082,7 @@ package body Synth.Insts is
          Assoc_Inter : Node;
          Inter : Node;
          Inter_Typ : Type_Acc;
-         Val : Value_Acc;
+         Val : Valtyp;
          N : Net;
       begin
          Assoc := Get_Port_Map_Aspect_Chain (Stmt);
@@ -1105,7 +1105,7 @@ package body Synth.Insts is
                      Create_Component_Wire
                        (Get_Build (Syn_Inst), Assoc_Inter, Val, Inst_Name);
                end case;
-               Create_Object (Comp_Inst, Assoc_Inter, (Val.Typ, Val));
+               Create_Object (Comp_Inst, Assoc_Inter, Val);
             end if;
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
@@ -1181,7 +1181,7 @@ package body Synth.Insts is
 
                if Mode_To_Port_Kind (Get_Mode (Inter)) = Port_Out then
                   O := Get_Value (Comp_Inst, Inter);
-                  Port := Get_Net (O.Val);
+                  Port := Get_Net (O);
                   Synth_Output_Assoc (Port, Syn_Inst, Assoc, Comp_Inst, Inter);
                   Nbr_Outputs := Nbr_Outputs + 1;
                end if;
@@ -1256,7 +1256,7 @@ package body Synth.Insts is
       Inter : Node;
       Inter_Typ : Type_Acc;
       Inst_Obj : Inst_Object;
-      Val : Value_Acc;
+      Val : Valtyp;
    begin
       Root_Instance := Global_Instance;
 
@@ -1309,7 +1309,7 @@ package body Synth.Insts is
               | Port_Inout =>
                Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
          end case;
-         Create_Object (Syn_Inst, Inter, (Inter_Typ, Val));
+         Create_Object (Syn_Inst, Inter, Val);
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -1353,7 +1353,7 @@ package body Synth.Insts is
 
       --  Create a gate for the output, so that it could be read.
       Val.W := Alloc_Wire (Wire_Output, Inter);
-      pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
+      --  pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
 
       Inp := Get_Input (Self_Inst, Idx);
 

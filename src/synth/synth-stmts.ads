@@ -33,9 +33,17 @@ package Synth.Stmts is
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node);
 
+   --  Transform PFX into DEST_*.
+   --  DEST_BASE is the base object.  Can be the result, a net or an array
+   --   larger than the result.
+   --  DEST_TYP is the type of the result.
+   --  DEST_OFF/DEST_VOFF is the offset in the base.  DEST_OFF is used when
+   --   the base is a net, while DEST_VOFF is set when the offset is dynamic.
+   --  DEST_RDWD is the width of what is extracted from the base.
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
-                                      Dest_Valtyp : out Valtyp;
+                                      Dest_Base : out Valtyp;
+                                      Dest_Typ : out Type_Acc;
                                       Dest_Off : out Uns32;
                                       Dest_Voff : out Net;
                                       Dest_Rdwd : out Width);
@@ -46,10 +54,10 @@ package Synth.Stmts is
                                Loc : Node);
 
    function Synth_Read_Memory (Syn_Inst : Synth_Instance_Acc;
-                               Obj : Value_Acc;
+                               Obj : Valtyp;
+                               Res_Typ : Type_Acc;
                                Off : Uns32;
                                Voff : Net;
-                               Typ : Type_Acc;
                                Loc : Node) return Valtyp;
 
    function Synth_User_Function_Call

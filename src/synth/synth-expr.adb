@@ -77,19 +77,19 @@ package body Synth.Expr is
       return Get_Static_Discrete (V.Val);
    end Get_Static_Discrete;
 
-   function Is_Positive (V : Value_Acc) return Boolean
+   function Is_Positive (V : Valtyp) return Boolean
    is
       N : Net;
       Inst : Instance;
    begin
       pragma Assert (V.Typ.Kind = Type_Discrete);
-      case V.Kind is
+      case V.Val.Kind is
          when Value_Discrete =>
-            return V.Scal >= 0;
+            return V.Val.Scal >= 0;
          when Value_Const =>
-            return V.C_Val.Scal >= 0;
+            return V.Val.C_Val.Scal >= 0;
          when Value_Net =>
-            N := V.N;
+            N := V.Val.N;
          when Value_Wire =>
             N := Get_Net (V);
          when others =>
@@ -179,13 +179,13 @@ package body Synth.Expr is
       end loop;
    end Uns2logvec;
 
-   procedure Value2logvec (Val : Value_Acc;
+   procedure Value2logvec (Val : Valtyp;
                            Vec : in out Logvec_Array;
                            Off : in out Uns32;
                            Has_Zx : in out Boolean) is
    begin
-      if Val.Kind = Value_Const then
-         Value2logvec (Val.C_Val, Vec, Off, Has_Zx);
+      if Val.Val.Kind = Value_Const then
+         Value2logvec ((Val.Typ, Val.Val.C_Val), Vec, Off, Has_Zx);
          return;
       end if;
 
@@ -196,7 +196,7 @@ package body Synth.Expr is
                Pos : constant Natural := Natural (Off mod 32);
                Va : Uns32;
             begin
-               Va := Uns32 (Val.Scal);
+               Va := Uns32 (Val.Val.Scal);
                Va := Shift_Left (Va, Pos);
                Vec (Idx).Val := Vec (Idx).Val or Va;
                Vec (Idx).Zx := 0;
@@ -209,7 +209,7 @@ package body Synth.Expr is
                Va : Uns32;
                Zx : Uns32;
             begin
-               From_Std_Logic (Val.Scal, Va, Zx);
+               From_Std_Logic (Val.Val.Scal, Va, Zx);
                Has_Zx := Has_Zx or Zx /= 0;
                Va := Shift_Left (Va, Pos);
                Zx := Shift_Left (Zx, Pos);
@@ -218,24 +218,27 @@ package body Synth.Expr is
                Off := Off + 1;
             end;
          when Type_Discrete =>
-            Uns2logvec (To_Uns64 (Val.Scal), Val.Typ.W, Vec, Off);
+            Uns2logvec (To_Uns64 (Val.Val.Scal), Val.Typ.W, Vec, Off);
          when Type_Vector =>
             --  TODO: optimize off mod 32 = 0.
-            for I in reverse Val.Arr.V'Range loop
-               Value2logvec (Val.Arr.V (I), Vec, Off, Has_Zx);
+            for I in reverse Val.Val.Arr.V'Range loop
+               Value2logvec ((Val.Typ.Vec_El, Val.Val.Arr.V (I)),
+                             Vec, Off, Has_Zx);
             end loop;
          when Type_Array =>
-            for I in reverse Val.Arr.V'Range loop
-               Value2logvec (Val.Arr.V (I), Vec, Off, Has_Zx);
+            for I in reverse Val.Val.Arr.V'Range loop
+               Value2logvec ((Val.Typ.Arr_El, Val.Val.Arr.V (I)),
+                             Vec, Off, Has_Zx);
             end loop;
          when Type_Record =>
-            for I in Val.Rec.V'Range loop
-               Value2logvec (Val.Rec.V (I), Vec, Off, Has_Zx);
+            for I in Val.Val.Rec.V'Range loop
+               Value2logvec ((Val.Typ.Rec.E (I).Typ, Val.Val.Rec.V (I)),
+                             Vec, Off, Has_Zx);
             end loop;
          when Type_Float =>
             --  Fp64 is for sure 64 bits.  Assume the endianness of floats is
             --  the same as integers endianness.
-            Uns2logvec (To_Uns64 (Val.Fp), 64, Vec, Off);
+            Uns2logvec (To_Uns64 (Val.Val.Fp), 64, Vec, Off);
          when others =>
             raise Internal_Error;
       end case;
@@ -435,7 +438,7 @@ package body Synth.Expr is
                   for I in 1 .. Len loop
                      E := Build_Extract (Build_Context, N,
                                          Uns32 (Len - I) * El_Typ.W, El_Typ.W);
-                     Res.V (Pos + I - 1) := Create_Value_Net (E, El_Typ);
+                     Res.V (Pos + I - 1) := Create_Value_Net (E, El_Typ).Val;
                   end loop;
                   Const_P := False;
                end;
@@ -1222,7 +1225,7 @@ package body Synth.Expr is
       P := Dat.V'First;
       for I in Str'Range loop
          Dat.V (P) := Create_Value_Discrete (Int64 (Character'Pos (Str (I))),
-                                             Etyp);
+                                             Etyp).Val;
          P := P + 1;
       end loop;
       return Create_Value_Const_Array (Typ, Dat);
@@ -1274,16 +1277,15 @@ package body Synth.Expr is
                Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Get_Type (Name));
             begin
-               return (Typ, Create_Value_Discrete
-                         (Int64 (Get_Enum_Pos (Name)), Typ));
+               return Create_Value_Discrete (Int64 (Get_Enum_Pos (Name)), Typ);
             end;
          when Iir_Kind_Unit_Declaration =>
             declare
                Typ : constant Type_Acc :=
                  Get_Subtype_Object (Syn_Inst, Get_Type (Name));
             begin
-               return (Typ, Create_Value_Discrete
-                         (Vhdl.Evaluation.Get_Physical_Value (Name), Typ));
+               return Create_Value_Discrete
+                 (Vhdl.Evaluation.Get_Physical_Value (Name), Typ);
             end;
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference =>
@@ -1801,7 +1803,7 @@ package body Synth.Expr is
       Lit : Node;
       Posedge : Boolean;
    begin
-      Clk := Get_Net (Synth_Name (Syn_Inst, Prefix).Val);
+      Clk := Get_Net (Synth_Name (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
          return Build_Edge (Build_Context, Clk);
@@ -1972,7 +1974,7 @@ package body Synth.Expr is
       for I in Arr.V'Range loop
          -- FIXME: use literal from type ??
          Pos := Str_Table.Element_String8 (Id, Pos32 (I));
-         Arr.V (I) := Create_Value_Discrete (Int64 (Pos), El_Type);
+         Arr.V (I) := Create_Value_Discrete (Int64 (Pos), El_Type).Val;
       end loop;
 
       Res := Create_Value_Const_Array (Res_Type, Arr);
@@ -2043,8 +2045,7 @@ package body Synth.Expr is
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
-      N := Build_Dyadic (Build_Context, Id,
-                         Get_Net (Left.Val), Get_Net (Right.Val));
+      N := Build_Dyadic (Build_Context, Id, Get_Net (Left), Get_Net (Right));
       Set_Location (N, Expr);
       return Create_Value_Net (N, Boolean_Type);
    end Synth_Short_Circuit;
@@ -2132,19 +2133,20 @@ package body Synth.Expr is
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
             declare
-               Vt : Valtyp;
+               Base : Valtyp;
+               Typ : Type_Acc;
                Off : Uns32;
 
                Voff : Net;
                Rdwd : Width;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Expr, Vt, Off, Voff, Rdwd);
-               if Voff = No_Net and then Is_Static (Vt.Val) then
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Expr, Base, Typ, Off, Voff, Rdwd);
+               if Voff = No_Net and then Is_Static (Base.Val) then
                   pragma Assert (Off = 0);
-                  return Vt;
+                  return Base;
                end if;
-               return Synth_Read_Memory
-                 (Syn_Inst, Vt.Val, Off, Voff, Vt.Typ, Expr);
+               return Synth_Read_Memory (Syn_Inst, Base, Typ, Off, Voff, Expr);
             end;
          when Iir_Kind_Selected_Element =>
             declare
@@ -2161,7 +2163,7 @@ package body Synth.Expr is
                   return (Res_Typ, Res.Val.Rec.V (Idx + 1));
                else
                   N := Build_Extract
-                    (Build_Context, Get_Net (Res.Val),
+                    (Build_Context, Get_Net (Res),
                      Res.Typ.Rec.E (Idx + 1).Off, Get_Type_Width (Res_Typ));
                   Set_Location (N, Expr);
                   return Create_Value_Net (N, Res_Typ);

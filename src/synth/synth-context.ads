@@ -123,7 +123,6 @@ package Synth.Context is
 
    --  Get a net from a scalar/vector value.  This will automatically create
    --  a net for literals.
-   function Get_Net (Val : Value_Acc) return Net;
    function Get_Net (Val : Valtyp) return Net;
 
    function Get_Package_Object

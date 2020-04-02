@@ -301,7 +301,6 @@ package body Synth.Static_Oper is
                                  Op : Table_2d;
                                  Loc : Syn_Src) return Valtyp
    is
-      El_Typ : constant Type_Acc := Left.Typ.Vec_El;
       Larr : constant Static_Arr_Type := Get_Static_Array (Left);
       Rarr : constant Static_Arr_Type := Get_Static_Array (Right);
       Arr : Value_Array_Acc;
@@ -320,7 +319,7 @@ package body Synth.Static_Oper is
               Get_Static_Std_Logic (Rarr, Uns32 (I - 1));
             V : constant Std_Ulogic := Op (Ls, Rs);
          begin
-            Arr.V (I) := Create_Value_Discrete (Std_Ulogic'Pos (V), El_Typ);
+            Arr.V (I) := Create_Value_Discrete (Std_Ulogic'Pos (V));
          end;
       end loop;
 
@@ -355,7 +354,7 @@ package body Synth.Static_Oper is
       Arr := Create_Value_Array (Iir_Index32 (Vec'Last));
       for I in Vec'Range loop
          Arr.V (Iir_Index32 (I)) :=
-           Create_Value_Discrete (Std_Ulogic'Pos (Vec (I)), El_Typ);
+           Create_Value_Discrete (Std_Ulogic'Pos (Vec (I)));
       end loop;
       return Create_Value_Const_Array (Res_Typ, Arr);
    end To_Valtyp;
@@ -910,7 +909,6 @@ package body Synth.Static_Oper is
    function Synth_Vector_Monadic
      (Vec : Valtyp; Op : Table_1d) return Valtyp
    is
-      El_Typ : constant Type_Acc := Vec.Typ.Vec_El;
       Arr : Value_Array_Acc;
    begin
       Arr := Create_Value_Array (Vec.Val.Arr.Len);
@@ -918,8 +916,7 @@ package body Synth.Static_Oper is
          declare
             V : constant Std_Ulogic := Std_Ulogic'Val (Vec.Val.Arr.V (I).Scal);
          begin
-            Arr.V (I) :=
-              Create_Value_Discrete (Std_Ulogic'Pos (Op (V)), El_Typ);
+            Arr.V (I) := Create_Value_Discrete (Std_Ulogic'Pos (Op (V)));
          end;
       end loop;
 
@@ -1039,19 +1036,19 @@ package body Synth.Static_Oper is
       for I in 1 .. Len loop
          B := Shift_Right_Arithmetic (Arg, Natural (I - 1)) and 1;
          Arr.V (Len - I + 1) := Create_Value_Discrete
-           (Std_Logic_0_Pos + Int64 (B), El_Type);
+           (Std_Logic_0_Pos + Int64 (B));
       end loop;
       Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
       return Create_Value_Const_Array (Bnd, Arr);
    end Eval_To_Vector;
 
-   function Eval_Unsigned_To_Integer (Arg : Value_Acc; Loc : Node) return Int64
+   function Eval_Unsigned_To_Integer (Arg : Valtyp; Loc : Node) return Int64
    is
       Res : Uns64;
    begin
       Res := 0;
-      for I in Arg.Arr.V'Range loop
-         case To_X01 (Std_Ulogic'Val (Arg.Arr.V (I).Scal)) is
+      for I in Arg.Val.Arr.V'Range loop
+         case To_X01 (Std_Ulogic'Val (Arg.Val.Arr.V (I).Scal)) is
             when '0' =>
                Res := Res * 2;
             when '1' =>
@@ -1066,17 +1063,17 @@ package body Synth.Static_Oper is
       return To_Int64 (Res);
    end Eval_Unsigned_To_Integer;
 
-   function Eval_Signed_To_Integer (Arg : Value_Acc; Loc : Node) return Int64
+   function Eval_Signed_To_Integer (Arg : Valtyp; Loc : Node) return Int64
    is
       Res : Uns64;
    begin
-      if Arg.Arr.Len = 0 then
+      if Arg.Val.Arr.Len = 0 then
          Warning_Msg_Synth
            (+Loc, "numeric_std.to_integer: null detected, returning 0");
          return 0;
       end if;
 
-      case To_X01 (Std_Ulogic'Val (Arg.Arr.V (1).Scal)) is
+      case To_X01 (Std_Ulogic'Val (Arg.Val.Arr.V (1).Scal)) is
          when '0' =>
             Res := 0;
          when '1' =>
@@ -1085,8 +1082,8 @@ package body Synth.Static_Oper is
             Warning_Msg_Synth (+Loc, "metavalue detected, returning 0");
             return 0;
       end case;
-      for I in 2 .. Arg.Arr.Len loop
-         case To_X01 (Std_Ulogic'Val (Arg.Arr.V (I).Scal)) is
+      for I in 2 .. Arg.Val.Arr.Len loop
+         case To_X01 (Std_Ulogic'Val (Arg.Val.Arr.V (I).Scal)) is
             when '0' =>
                Res := Res * 2;
             when '1' =>
@@ -1106,25 +1103,25 @@ package body Synth.Static_Oper is
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
-      Param1 : Value_Acc;
-      Param2 : Value_Acc;
+      Param1 : Valtyp;
+      Param2 : Valtyp;
       Res_Typ : Type_Acc;
       Inter : Node;
    begin
       Inter := Inter_Chain;
       if Inter /= Null_Node then
-         Param1 := Get_Value (Subprg_Inst, Inter).Val;
+         Param1 := Get_Value (Subprg_Inst, Inter);
          Strip_Const (Param1);
          Inter := Get_Chain (Inter);
       else
-         Param1 := null;
+         Param1 := No_Valtyp;
       end if;
       if Inter /= Null_Node then
-         Param2 := Get_Value (Subprg_Inst, Inter).Val;
+         Param2 := Get_Value (Subprg_Inst, Inter);
          Strip_Const (Param2);
          Inter := Get_Chain (Inter);
       else
-         Param2 := null;
+         Param2 := No_Valtyp;
       end if;
 
       Res_Typ := Get_Subtype_Object (Subprg_Inst, Get_Type (Imp));
@@ -1134,18 +1131,18 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res := Synth.Files_Operations.Endfile (Param1.File, Expr);
+               Res := Synth.Files_Operations.Endfile (Param1.Val.File, Expr);
                return Create_Value_Discrete (Boolean'Pos (Res), Boolean_Type);
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             return Eval_To_Vector
-              (Uns64 (Param1.Scal), Param2.Scal, Res_Typ);
+              (Uns64 (Param1.Val.Scal), Param2.Val.Scal, Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
             return Eval_To_Vector
-              (To_Uns64 (Param1.Scal), Param2.Scal, Res_Typ);
+              (To_Uns64 (Param1.Val.Scal), Param2.Val.Scal, Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
@@ -1164,17 +1161,17 @@ package body Synth.Static_Oper is
                Bnd : Type_Acc;
                B : Int64;
             begin
-               Arr := Create_Value_Array (Param1.Arr.Len);
-               for I in Param1.Arr.V'Range loop
-                  if Param1.Arr.V (I).Scal = 0 then
+               Arr := Create_Value_Array (Param1.Val.Arr.Len);
+               for I in Param1.Val.Arr.V'Range loop
+                  if Param1.Val.Arr.V (I).Scal = 0 then
                      B := Std_Logic_0_Pos;
                   else
                      B := Std_Logic_1_Pos;
                   end if;
-                  Arr.V (I) := Create_Value_Discrete (B, El_Type);
+                  Arr.V (I) := Create_Value_Discrete (B);
                end loop;
                Bnd := Create_Vec_Type_By_Length
-                 (Width (Param1.Arr.Len), El_Type);
+                 (Width (Param1.Val.Arr.Len), El_Type);
                return Create_Value_Const_Array (Bnd, Arr);
             end;
          when Iir_Predefined_Ieee_Math_Real_Log2 =>
@@ -1182,35 +1179,35 @@ package body Synth.Static_Oper is
                function Log2 (Arg : Fp64) return Fp64;
                pragma Import (C, Log2);
             begin
-               return Create_Value_Float (Log2 (Param1.Fp), Res_Typ);
+               return Create_Value_Float (Log2 (Param1.Val.Fp), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Ceil =>
             declare
                function Ceil (Arg : Fp64) return Fp64;
                pragma Import (C, Ceil);
             begin
-               return Create_Value_Float (Ceil (Param1.Fp), Res_Typ);
+               return Create_Value_Float (Ceil (Param1.Val.Fp), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Round =>
             declare
                function Round (Arg : Fp64) return Fp64;
                pragma Import (C, Round);
             begin
-               return Create_Value_Float (Round (Param1.Fp), Res_Typ);
+               return Create_Value_Float (Round (Param1.Val.Fp), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Sin =>
             declare
                function Sin (Arg : Fp64) return Fp64;
                pragma Import (C, Sin);
             begin
-               return Create_Value_Float (Sin (Param1.Fp), Res_Typ);
+               return Create_Value_Float (Sin (Param1.Val.Fp), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Cos =>
             declare
                function Cos (Arg : Fp64) return Fp64;
                pragma Import (C, Cos);
             begin
-               return Create_Value_Float (Cos (Param1.Fp), Res_Typ);
+               return Create_Value_Float (Cos (Param1.Val.Fp), Res_Typ);
             end;
          when others =>
             Error_Msg_Synth

@@ -510,104 +510,103 @@ package body Synth.Values is
                                                 File_Typ => File_Type)));
    end Create_File_Type;
 
-   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc
+   function Create_Value_Wire (W : Wire_Id) return Value_Acc
    is
       subtype Value_Type_Wire is Value_Type (Values.Value_Wire);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Wire);
    begin
-      pragma Assert (Wtype /= null);
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Wire,
-                                   W => W,
-                                   Typ => Wtype)));
+                                   W => W)));
    end Create_Value_Wire;
 
-   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp is
+   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp
+   is
+      pragma Assert (Wtype /= null);
    begin
-      return (Wtype, Create_Value_Wire (W, Wtype));
+      return (Wtype, Create_Value_Wire (W));
    end Create_Value_Wire;
 
-   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Value_Acc
+   function Create_Value_Net (N : Net) return Value_Acc
    is
       subtype Value_Type_Net is Value_Type (Value_Net);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Net);
    begin
-      pragma Assert (Ntype /= null);
       return To_Value_Acc
-        (Alloc (Current_Pool,
-                Value_Type_Net'(Kind => Value_Net, N => N, Typ => Ntype)));
+        (Alloc (Current_Pool, Value_Type_Net'(Kind => Value_Net, N => N)));
    end Create_Value_Net;
 
-   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp is
+   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp
+   is
+      pragma Assert (Ntype /= null);
    begin
-      return (Ntype, Create_Value_Net (N, Ntype));
+      return (Ntype, Create_Value_Net (N));
    end Create_Value_Net;
 
-   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
-                                  return Value_Acc
+   function Create_Value_Discrete (Val : Int64) return Value_Acc
    is
       subtype Value_Type_Discrete is Value_Type (Value_Discrete);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Discrete);
    begin
-      pragma Assert (Vtype /= null);
       return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Discrete, Scal => Val,
-                                   Typ => Vtype)));
+                                  (Kind => Value_Discrete, Scal => Val)));
    end Create_Value_Discrete;
 
-   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
-                                  return Valtyp is
+   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc) return Valtyp
+   is
+      pragma Assert (Vtype /= null);
    begin
-      return (Vtype, Create_Value_Discrete (Val, Vtype));
+      return (Vtype, Create_Value_Discrete (Val));
    end Create_Value_Discrete;
 
-   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Value_Acc
+   function Create_Value_Float (Val : Fp64) return Value_Acc
    is
       subtype Value_Type_Float is Value_Type (Value_Float);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Float);
    begin
-      pragma Assert (Vtype /= null);
       return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Float,
-                                   Typ => Vtype,
-                                   Fp => Val)));
+                                  (Kind => Value_Float, Fp => Val)));
    end Create_Value_Float;
 
-   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp is
+   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp
+   is
+      pragma Assert (Vtype /= null);
    begin
-      return (Vtype, Create_Value_Float (Val, Vtype));
+      return (Vtype, Create_Value_Float (Val));
    end Create_Value_Float;
 
-   function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
-                                return Value_Acc
+   function Create_Value_Access (Acc : Heap_Index) return Value_Acc
    is
       subtype Value_Type_Access is Value_Type (Value_Access);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Access);
    begin
-      pragma Assert (Vtype /= null);
       return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Access,
-                                   Typ => Vtype,
-                                   Acc => Acc)));
+                                  (Kind => Value_Access, Acc => Acc)));
    end Create_Value_Access;
 
    function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
-                                return Valtyp is
+                                return Valtyp
+   is
+      pragma Assert (Vtype /= null);
    begin
-      return (Vtype, Create_Value_Access (Vtype, Acc));
+      return (Vtype, Create_Value_Access (Acc));
    end Create_Value_Access;
 
-   function Create_Value_File (Vtype : Type_Acc; File : File_Index)
-                              return Value_Acc
+   function Create_Value_File (File : File_Index) return Value_Acc
    is
       subtype Value_Type_File is Value_Type (Value_File);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_File);
    begin
-      pragma Assert (Vtype /= null);
       return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_File,
-                                   Typ => Vtype,
-                                   File => File)));
+                                  (Kind => Value_File, File => File)));
+   end Create_Value_File;
+
+   function Create_Value_File (Vtype : Type_Acc; File : File_Index)
+                              return Valtyp
+   is
+      pragma Assert (Vtype /= null);
+   begin
+      return (Vtype, Create_Value_File (File));
    end Create_Value_File;
 
    function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc
@@ -637,29 +636,27 @@ package body Synth.Values is
       return To_Value_Array_Acc (Res);
    end Create_Value_Array;
 
-   function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                               return Value_Acc
+   function Create_Value_Array (Arr : Value_Array_Acc) return Value_Acc
    is
       subtype Value_Type_Array is Value_Type (Value_Array);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Array);
 
       Res : Value_Acc;
    begin
-      pragma Assert (Bounds /= null);
       Res := To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Array,
-                                   Arr => Arr, Typ => Bounds)));
+                                  (Kind => Value_Array, Arr => Arr)));
       return Res;
    end Create_Value_Array;
 
    function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                               return Valtyp is
+                               return Valtyp
+   is
+      pragma Assert (Bounds /= null);
    begin
-      return (Bounds, Create_Value_Array (Bounds, Arr));
+      return (Bounds, Create_Value_Array (Arr));
    end Create_Value_Array;
 
-   function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                                     return Value_Acc
+   function Create_Value_Const_Array (Arr : Value_Array_Acc) return Value_Acc
    is
       subtype Value_Type_Const_Array is Value_Type (Value_Const_Array);
       function Alloc is
@@ -667,17 +664,17 @@ package body Synth.Values is
 
       Res : Value_Acc;
    begin
-      pragma Assert (Bounds /= null);
       Res := To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Const_Array,
-                                   Arr => Arr, Typ => Bounds)));
+                                  (Kind => Value_Const_Array, Arr => Arr)));
       return Res;
    end Create_Value_Const_Array;
 
    function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                                     return Valtyp is
+                                     return Valtyp
+   is
+      pragma Assert (Bounds /= null);
    begin
-      return (Bounds, Create_Value_Const_Array (Bounds, Arr));
+      return (Bounds, Create_Value_Const_Array (Arr));
    end Create_Value_Const_Array;
 
    function Get_Array_Flat_Length (Typ : Type_Acc) return Width is
@@ -700,7 +697,7 @@ package body Synth.Values is
       end case;
    end Get_Array_Flat_Length;
 
-   procedure Create_Array_Data (Arr : Value_Acc)
+   procedure Create_Array_Data (Arr : Valtyp)
    is
       Len : Width;
    begin
@@ -713,57 +710,55 @@ package body Synth.Values is
             raise Internal_Error;
       end case;
 
-      Arr.Arr := Create_Value_Array (Iir_Index32 (Len));
+      Arr.Val.Arr := Create_Value_Array (Iir_Index32 (Len));
    end Create_Array_Data;
 
    function Create_Value_Array (Bounds : Type_Acc) return Value_Acc
    is
       Res : Value_Acc;
    begin
-      Res := Create_Value_Array (Bounds, null);
-      Create_Array_Data (Res);
+      Res := Create_Value_Array (Value_Array_Acc'(null));
+      Create_Array_Data ((Bounds, Res));
       return Res;
    end Create_Value_Array;
 
-   function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
-                                return Value_Acc
+   function Create_Value_Record (Els : Value_Array_Acc) return Value_Acc
    is
       subtype Value_Type_Record is Value_Type (Value_Record);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Record);
    begin
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Record,
-                                   Typ => Typ,
                                    Rec => Els)));
    end Create_Value_Record;
 
    function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
-                                return Valtyp is
+                                return Valtyp
+   is
+      pragma Assert (Typ /= null);
    begin
-      return (Typ, Create_Value_Record (Typ, Els));
+      return (Typ, Create_Value_Record (Els));
    end Create_Value_Record;
 
-   function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
-                                      return Value_Acc
+   function Create_Value_Const_Record (Els : Value_Array_Acc) return Value_Acc
    is
       subtype Value_Type_Const_Record is Value_Type (Value_Const_Record);
       function Alloc is
          new Areapools.Alloc_On_Pool_Addr (Value_Type_Const_Record);
    begin
       return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Const_Record,
-                                   Typ => Typ,
-                                   Rec => Els)));
+                                  (Kind => Value_Const_Record, Rec => Els)));
    end Create_Value_Const_Record;
 
    function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
-                                      return Valtyp is
+                                      return Valtyp
+   is
+      pragma Assert (Typ /= null);
    begin
-      return (Typ, Create_Value_Const_Record (Typ, Els));
+      return (Typ, Create_Value_Const_Record (Els));
    end Create_Value_Const_Record;
 
-   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
-                               return Value_Acc
+   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32) return Value_Acc
    is
       subtype Value_Type_Alias is Value_Type (Value_Alias);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Alias);
@@ -771,14 +766,15 @@ package body Synth.Values is
       return To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Alias,
                                    A_Obj => Obj,
-                                   A_Off => Off,
-                                   Typ => Typ)));
+                                   A_Off => Off)));
    end Create_Value_Alias;
 
    function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
-                               return Valtyp is
+                               return Valtyp
+   is
+      pragma Assert (Typ /= null);
    begin
-      return (Typ, Create_Value_Alias (Obj, Off, Typ));
+      return (Typ, Create_Value_Alias (Obj, Off));
    end Create_Value_Alias;
 
    function Create_Value_Const (Val : Value_Acc; Loc : Syn_Src)
@@ -792,8 +788,7 @@ package body Synth.Values is
                                   (Kind => Value_Const,
                                    C_Val => Val,
                                    C_Loc => Loc,
-                                   C_Net => No_Net,
-                                   Typ => Val.Typ)));
+                                   C_Net => No_Net)));
    end Create_Value_Const;
 
    function Create_Value_Const (Val : Valtyp; Loc : Syn_Src)
@@ -843,29 +838,29 @@ package body Synth.Values is
    begin
       case Src.Kind is
          when Value_Net =>
-            Res := Create_Value_Net (Src.N, Src.Typ);
+            Res := Create_Value_Net (Src.N);
          when Value_Wire =>
-            Res := Create_Value_Wire (Src.W, Src.Typ);
+            Res := Create_Value_Wire (Src.W);
          when Value_Discrete =>
-            Res := Create_Value_Discrete (Src.Scal, Src.Typ);
+            Res := Create_Value_Discrete (Src.Scal);
          when Value_Float =>
-            Res := Create_Value_Float (Src.Fp, Src.Typ);
+            Res := Create_Value_Float (Src.Fp);
          when Value_Array =>
             Arr := Copy_Array (Src.Arr);
-            Res := Create_Value_Array (Src.Typ, Arr);
+            Res := Create_Value_Array (Arr);
          when Value_Const_Array =>
             Arr := Copy_Array (Src.Arr);
-            Res := Create_Value_Const_Array (Src.Typ, Arr);
+            Res := Create_Value_Const_Array (Arr);
          when Value_Record =>
             Arr := Copy_Array (Src.Rec);
-            Res := Create_Value_Record (Src.Typ, Arr);
+            Res := Create_Value_Record (Arr);
          when Value_Const_Record =>
             Arr := Copy_Array (Src.Rec);
-            Res := Create_Value_Const_Record (Src.Typ, Arr);
+            Res := Create_Value_Const_Record (Arr);
          when Value_Access =>
-            Res := Create_Value_Access (Src.Typ, Src.Acc);
+            Res := Create_Value_Access (Src.Acc);
          when Value_File =>
-            Res := Create_Value_File (Src.Typ, Src.File);
+            Res := Create_Value_File (Src.File);
          when Value_Const =>
             raise Internal_Error;
          when Value_Alias =>
@@ -950,11 +945,11 @@ package body Synth.Values is
          when Type_Bit
            | Type_Logic =>
             --  FIXME: what about subtype ?
-            return Create_Value_Discrete (0, Typ);
+            return Create_Value_Discrete (0);
          when Type_Discrete =>
-            return Create_Value_Discrete (Typ.Drange.Left, Typ);
+            return Create_Value_Discrete (Typ.Drange.Left);
          when Type_Float =>
-            return Create_Value_Float (Typ.Frange.Left, Typ);
+            return Create_Value_Float (Typ.Frange.Left);
          when Type_Vector =>
             declare
                El_Typ : constant Type_Acc := Typ.Vec_El;
@@ -964,7 +959,7 @@ package body Synth.Values is
                for I in Arr.V'Range loop
                   Arr.V (I) := Create_Value_Default (El_Typ);
                end loop;
-               return Create_Value_Const_Array (Typ, Arr);
+               return Create_Value_Const_Array (Arr);
             end;
          when Type_Unbounded_Vector =>
             raise Internal_Error;
@@ -980,7 +975,7 @@ package body Synth.Values is
                for I in Arr.V'Range loop
                   Arr.V (I) := Create_Value_Default (El_Typ);
                end loop;
-               return Create_Value_Const_Array (Typ, Arr);
+               return Create_Value_Const_Array (Arr);
             end;
          when Type_Unbounded_Array =>
             raise Internal_Error;
@@ -992,10 +987,10 @@ package body Synth.Values is
                for I in Els.V'Range loop
                   Els.V (I) := Create_Value_Default (Typ.Rec.E (I).Typ);
                end loop;
-               return Create_Value_Const_Record (Typ, Els);
+               return Create_Value_Const_Record (Els);
             end;
          when Type_Access =>
-            return Create_Value_Access (Typ, Null_Heap_Index);
+            return Create_Value_Access (Null_Heap_Index);
          when Type_File =>
             raise Internal_Error;
       end case;

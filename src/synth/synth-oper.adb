@@ -583,7 +583,7 @@ package body Synth.Oper is
          N : Net;
          Is_Pos : Boolean;
       begin
-         Is_Pos := Is_Positive (Right.Val);
+         Is_Pos := Is_Positive (Right);
 
          L1 := Get_Net (Left);
          R1 := Get_Net (Right);
@@ -611,7 +611,7 @@ package body Synth.Oper is
             Amt := Amt mod Int64 (Left.Typ.W);
             R1 := Build_Const_UB32 (Ctxt, Uns32 (Amt), Right.Typ.W);
             Set_Location (R1, Right_Expr);
-         elsif not Is_Positive (Right.Val) then
+         elsif not Is_Positive (Right) then
             Error_Msg_Synth (+Expr, "rotation quantity must be unsigned");
             return Left;
          else
@@ -1436,7 +1436,7 @@ package body Synth.Oper is
             return No_Valtyp;
          end if;
          Size := Uns32 (Strip_Const (Size_Vt.Val).Scal);
-         Arg_Net := Get_Net (Arg.Val);
+         Arg_Net := Get_Net (Arg);
          Arg_Net := Build2_Resize (Ctxt, Arg_Net, Size, Is_Signed,
                                    Get_Location (Expr));
          return Create_Value_Net

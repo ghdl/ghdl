@@ -37,10 +37,10 @@ package body Synth.Heap is
          when Type_Bit
            | Type_Logic =>
             return new Value_Type'
-              (Kind => Value_Discrete, Typ => T, Scal => 0);
+              (Kind => Value_Discrete, Scal => 0);
          when Type_Discrete =>
             return new Value_Type'
-              (Kind => Value_Discrete, Typ => T, Scal => T.Drange.Left);
+              (Kind => Value_Discrete, Scal => T.Drange.Left);
          when Type_Array =>
             declare
                Len : constant Uns32 := Get_Array_Flat_Length (T);
@@ -52,7 +52,7 @@ package body Synth.Heap is
                   Arr.V (I) := Allocate_By_Type (El_Typ);
                end loop;
                return new Value_Type'
-                 (Kind => Value_Const_Array, Typ => T, Arr => Arr);
+                 (Kind => Value_Const_Array, Arr => Arr);
             end;
          when others =>
             raise Internal_Error;
@@ -73,8 +73,7 @@ package body Synth.Heap is
            | Value_Wire =>
             raise Internal_Error;
          when Value_Discrete =>
-            return new Value_Type'
-              (Kind => Value_Discrete, Typ => V.Typ, Scal => V.Val.Scal);
+            return new Value_Type'(Kind => Value_Discrete, Scal => V.Val.Scal);
          when Value_Array
            | Value_Const_Array =>
             declare
@@ -86,8 +85,7 @@ package body Synth.Heap is
                   Arr.V (I) := Allocate_By_Value
                     ((El_Typ, V.Val.Arr.V (I)));
                end loop;
-               return new Value_Type'
-                 (Kind => Value_Const_Array, Typ => V.Typ, Arr => Arr);
+               return new Value_Type'(Kind => Value_Const_Array, Arr => Arr);
             end;
          when others =>
             raise Internal_Error;

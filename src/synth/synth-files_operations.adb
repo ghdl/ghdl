@@ -44,7 +44,7 @@ package body Synth.Files_Operations is
    end File_Error;
 
    --  VAL represents a string, so an array of characters.
-   procedure Convert_String (Val : Value_Acc; Res : out String)
+   procedure Convert_String (Val : Valtyp; Res : out String)
    is
       Vtyp : constant Type_Acc := Val.Typ;
    begin
@@ -54,9 +54,9 @@ package body Synth.Files_Operations is
       pragma Assert (Vtyp.Abounds.Len = 1);
       pragma Assert (Vtyp.Abounds.D (1).Len = Res'Length);
 
-      for I in Val.Arr.V'Range loop
+      for I in Val.Val.Arr.V'Range loop
          Res (Res'First + Natural (I - 1)) :=
-           Character'Val (Val.Arr.V (I).Scal);
+           Character'Val (Val.Val.Arr.V (I).Scal);
       end loop;
    end Convert_String;
 
@@ -66,10 +66,10 @@ package body Synth.Files_Operations is
                                 Len : out Natural;
                                 Status : out Op_Status)
    is
-      Name : constant Value_Acc := Strip_Alias_Const (Val.Val);
+      Name : constant Valtyp := Strip_Alias_Const (Val);
       pragma Unreferenced (Val);
    begin
-      Len := Natural (Name.Arr.Len);
+      Len := Natural (Name.Val.Arr.Len);
 
       if Len >= Res'Length - 1 then
          Status := Op_Filename_Error;
