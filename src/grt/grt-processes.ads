@@ -45,12 +45,12 @@ package Grt.Processes is
 
    --  Broken down version of Simulation.
    function Simulation_Init return Integer;
-   pragma Export (C, Simulation_Init, "__ghdl_simulation_init");
+   pragma Export (Ada, Simulation_Init, "__ghdl_simulation_init");
    function Simulation_Cycle return Integer;
    procedure Simulation_Finish;
 
    function Simulation_Step return Integer;
-   pragma Export (C, Simulation_Step, "__ghdl_simulation_step");
+   pragma Export (Ada, Simulation_Step, "__ghdl_simulation_step");
    --  Return value:
    --  0: delta cycle
    --  1: non-delta cycle

@@ -1212,7 +1212,7 @@ package body Simul.Simulation.Main is
    procedure Simulation_Entity (Top_Conf : Iir_Design_Unit)
    is
       use Grt.Errors;
-      Stop : Boolean;
+      Ok : C_Boolean;
       Status : Integer;
    begin
       Break_Time := Std_Time'Last;
@@ -1225,8 +1225,8 @@ package body Simul.Simulation.Main is
          Debug (Reason_Start);
       end if;
 
-      Grt.Main.Run_Elab (Stop);
-      if Stop then
+      Ok := Grt.Main.Run_Elab;
+      if not Ok then
          return;
       end if;
 

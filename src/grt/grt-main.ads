@@ -38,12 +38,7 @@ package Grt.Main is
 
    --  What Run does.
 
-   --  Initialization: decode options, but no elaboration.
-   --  Return False in case of error.
-   function Run_Init return C_Boolean;
-   pragma Export (C, Run_Init, "grt_main_init");
-
-   --  Elaborate the design.  Return False in case of error.
+   --  Initialize and elaborate the design.  Return False in case of error.
    function Run_Elab return C_Boolean;
    pragma Export (C, Run_Elab, "grt_main_elab");
 

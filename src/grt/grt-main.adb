@@ -117,7 +117,7 @@ package body Grt.Main is
       Grt.Options.Argv := Argv;
    end Run_Options;
 
-   function Run_Init return C_Boolean
+   function Run_Elab return C_Boolean
    is
       Stop : Boolean;
    begin
@@ -146,11 +146,6 @@ package body Grt.Main is
 
       Grt.Signals.Init;
 
-      return True;
-   end Run_Init;
-
-   function Run_Elab return C_Boolean is
-   begin
       if Flag_Stats then
          Stats.Start_Elaboration;
       end if;
@@ -199,10 +194,6 @@ package body Grt.Main is
       Ok : C_Boolean;
       Status : Integer;
    begin
-      Ok := Run_Init;
-      if not Ok then
-         return;
-      end if;
       Ok := Run_Elab;
       if not Ok then
          return;
