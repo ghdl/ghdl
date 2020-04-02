@@ -158,6 +158,26 @@ package body Synth.Expr is
       end if;
    end To_Logic;
 
+   procedure Uns2logvec (Val : Uns64;
+                         W : Width;
+                         Vec : in out Logvec_Array;
+                         Off : in out Uns32) is
+   begin
+      if W = 0 then
+         return;
+      end if;
+
+      for I in 0 .. W - 1 loop
+         declare
+            B : constant Uns32 := Uns32 (Shift_Right (Val, Natural (I)) and 1);
+            Idx : constant Digit_Index := Digit_Index (Off / 32);
+            Pos : constant Natural := Natural (Off mod 32);
+         begin
+            Vec (Idx).Val := Vec (Idx).Val or Shift_Left (B, Pos);
+         end;
+         Off := Off + 1;
+      end loop;
+   end Uns2logvec;
 
    procedure Value2logvec (Val : Value_Acc;
                            Vec : in out Logvec_Array;
@@ -198,18 +218,7 @@ package body Synth.Expr is
                Off := Off + 1;
             end;
          when Type_Discrete =>
-            for I in 0 .. Val.Typ.W - 1 loop
-               declare
-                  B : constant Uns32 :=
-                    Uns32 (Shift_Right (To_Uns64 (Val.Scal), Natural (I))
-                             and 1);
-                  Idx : constant Digit_Index := Digit_Index (Off / 32);
-                  Pos : constant Natural := Natural (Off mod 32);
-               begin
-                  Vec (Idx).Val := Vec (Idx).Val or Shift_Left (B, Pos);
-               end;
-               Off := Off + 1;
-            end loop;
+            Uns2logvec (To_Uns64 (Val.Scal), Val.Typ.W, Vec, Off);
          when Type_Vector =>
             --  TODO: optimize off mod 32 = 0.
             for I in reverse Val.Arr.V'Range loop
@@ -223,6 +232,10 @@ package body Synth.Expr is
             for I in Val.Rec.V'Range loop
                Value2logvec (Val.Rec.V (I), Vec, Off, Has_Zx);
             end loop;
+         when Type_Float =>
+            --  Fp64 is for sure 64 bits.  Assume the endianness of floats is
+            --  the same as integers endianness.
+            Uns2logvec (To_Uns64 (Val.Fp), 64, Vec, Off);
          when others =>
             raise Internal_Error;
       end case;
