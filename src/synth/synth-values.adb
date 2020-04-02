@@ -61,10 +61,6 @@ package body Synth.Values is
             return Is_Static (Val.A_Obj);
          when Value_Const =>
             return True;
-         when Value_Instance
-           | Value_Subtype =>
-            --  Not really a value.
-            raise Internal_Error;
       end case;
    end Is_Static;
 
@@ -91,10 +87,6 @@ package body Synth.Values is
             return True;
          when Value_Alias =>
             return Is_Static_Val (Val.A_Obj);
-         when Value_Instance
-           | Value_Subtype =>
-            --  Not really a value.
-            raise Internal_Error;
       end case;
    end Is_Static_Val;
 
@@ -136,6 +128,11 @@ package body Synth.Values is
                return Res;
          end case;
       end loop;
+   end Strip_Alias_Const;
+
+   function Strip_Alias_Const (V : Valtyp) return Valtyp is
+   begin
+      return (V.Typ, Strip_Alias_Const (V.Val));
    end Strip_Alias_Const;
 
    function Is_Equal (L, R : Value_Acc) return Boolean
@@ -525,6 +522,11 @@ package body Synth.Values is
                                    Typ => Wtype)));
    end Create_Value_Wire;
 
+   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp is
+   begin
+      return (Wtype, Create_Value_Wire (W, Wtype));
+   end Create_Value_Wire;
+
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Net is Value_Type (Value_Net);
@@ -534,6 +536,11 @@ package body Synth.Values is
       return To_Value_Acc
         (Alloc (Current_Pool,
                 Value_Type_Net'(Kind => Value_Net, N => N, Typ => Ntype)));
+   end Create_Value_Net;
+
+   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp is
+   begin
+      return (Ntype, Create_Value_Net (N, Ntype));
    end Create_Value_Net;
 
    function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
@@ -548,6 +555,12 @@ package body Synth.Values is
                                    Typ => Vtype)));
    end Create_Value_Discrete;
 
+   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
+                                  return Valtyp is
+   begin
+      return (Vtype, Create_Value_Discrete (Val, Vtype));
+   end Create_Value_Discrete;
+
    function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Value_Acc
    is
       subtype Value_Type_Float is Value_Type (Value_Float);
@@ -558,6 +571,11 @@ package body Synth.Values is
                                   (Kind => Value_Float,
                                    Typ => Vtype,
                                    Fp => Val)));
+   end Create_Value_Float;
+
+   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp is
+   begin
+      return (Vtype, Create_Value_Float (Val, Vtype));
    end Create_Value_Float;
 
    function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
@@ -571,6 +589,12 @@ package body Synth.Values is
                                   (Kind => Value_Access,
                                    Typ => Vtype,
                                    Acc => Acc)));
+   end Create_Value_Access;
+
+   function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
+                                return Valtyp is
+   begin
+      return (Vtype, Create_Value_Access (Vtype, Acc));
    end Create_Value_Access;
 
    function Create_Value_File (Vtype : Type_Acc; File : File_Index)
@@ -628,8 +652,14 @@ package body Synth.Values is
       return Res;
    end Create_Value_Array;
 
+   function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
+                               return Valtyp is
+   begin
+      return (Bounds, Create_Value_Array (Bounds, Arr));
+   end Create_Value_Array;
+
    function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                               return Value_Acc
+                                     return Value_Acc
    is
       subtype Value_Type_Const_Array is Value_Type (Value_Const_Array);
       function Alloc is
@@ -642,6 +672,12 @@ package body Synth.Values is
                                   (Kind => Value_Const_Array,
                                    Arr => Arr, Typ => Bounds)));
       return Res;
+   end Create_Value_Const_Array;
+
+   function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
+                                     return Valtyp is
+   begin
+      return (Bounds, Create_Value_Const_Array (Bounds, Arr));
    end Create_Value_Const_Array;
 
    function Get_Array_Flat_Length (Typ : Type_Acc) return Width is
@@ -701,6 +737,12 @@ package body Synth.Values is
                                    Rec => Els)));
    end Create_Value_Record;
 
+   function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
+                                return Valtyp is
+   begin
+      return (Typ, Create_Value_Record (Typ, Els));
+   end Create_Value_Record;
+
    function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
                                       return Value_Acc
    is
@@ -714,24 +756,11 @@ package body Synth.Values is
                                    Rec => Els)));
    end Create_Value_Const_Record;
 
-   function Create_Value_Instance (Inst : Instance_Id) return Value_Acc
-   is
-      subtype Value_Type_Instance is Value_Type (Value_Instance);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Instance);
+   function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
+                                      return Valtyp is
    begin
-      return To_Value_Acc
-        (Alloc (Current_Pool,
-                (Kind => Value_Instance, Instance => Inst, Typ => null)));
-   end Create_Value_Instance;
-
-   function Create_Value_Subtype (Typ : Type_Acc) return Value_Acc
-   is
-      subtype Value_Type_Subtype is Value_Type (Value_Subtype);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Subtype);
-   begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Subtype, Typ => Typ)));
-   end Create_Value_Subtype;
+      return (Typ, Create_Value_Const_Record (Typ, Els));
+   end Create_Value_Const_Record;
 
    function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
                                return Value_Acc
@@ -744,6 +773,12 @@ package body Synth.Values is
                                    A_Obj => Obj,
                                    A_Off => Off,
                                    Typ => Typ)));
+   end Create_Value_Alias;
+
+   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
+                               return Valtyp is
+   begin
+      return (Typ, Create_Value_Alias (Obj, Off, Typ));
    end Create_Value_Alias;
 
    function Create_Value_Const (Val : Value_Acc; Loc : Syn_Src)
@@ -761,6 +796,12 @@ package body Synth.Values is
                                    Typ => Val.Typ)));
    end Create_Value_Const;
 
+   function Create_Value_Const (Val : Valtyp; Loc : Syn_Src)
+                               return Valtyp is
+   begin
+      return (Val.Typ, Create_Value_Const (Val.Val, Loc));
+   end Create_Value_Const;
+
    procedure Strip_Const (Val : in out Value_Acc) is
    begin
       if Val.Kind = Value_Const then
@@ -775,6 +816,11 @@ package body Synth.Values is
       else
          return Val;
       end if;
+   end Strip_Const;
+
+   procedure Strip_Const (Vt : in out Valtyp) is
+   begin
+      Vt.Val := Strip_Const (Vt.Val);
    end Strip_Const;
 
    function Copy (Src : Value_Acc) return Value_Acc;
@@ -804,8 +850,6 @@ package body Synth.Values is
             Res := Create_Value_Discrete (Src.Scal, Src.Typ);
          when Value_Float =>
             Res := Create_Value_Float (Src.Fp, Src.Typ);
-         when Value_Subtype =>
-            Res := Create_Value_Subtype (Src.Typ);
          when Value_Array =>
             Arr := Copy_Array (Src.Arr);
             Res := Create_Value_Array (Src.Typ, Arr);
@@ -822,8 +866,6 @@ package body Synth.Values is
             Res := Create_Value_Access (Src.Typ, Src.Acc);
          when Value_File =>
             Res := Create_Value_File (Src.Typ, Src.File);
-         when Value_Instance =>
-            raise Internal_Error;
          when Value_Const =>
             raise Internal_Error;
          when Value_Alias =>
@@ -957,6 +999,11 @@ package body Synth.Values is
          when Type_File =>
             raise Internal_Error;
       end case;
+   end Create_Value_Default;
+
+   function Create_Value_Default (Typ : Type_Acc) return Valtyp is
+   begin
+      return (Typ, Create_Value_Default (Typ));
    end Create_Value_Default;
 
    function Value_To_String (Val : Value_Acc) return String

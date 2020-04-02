@@ -49,16 +49,17 @@ package body Synth.Oper is
       return Build2_Uresize (Build_Context, N, W, Get_Location (Loc));
    end Synth_Uresize;
 
-   function Synth_Uresize (Val : Value_Acc; W : Width; Loc : Node) return Net
+   function Synth_Uresize (Val : Valtyp; W : Width; Loc : Node) return Net
    is
       Res : Net;
    begin
-      if Is_Static (Val) and then Val.Typ.Kind = Type_Discrete then
-         if Val.Typ.Drange.Is_Signed and then Val.Scal < 0 then
+      if Is_Static (Val.Val) and then Val.Typ.Kind = Type_Discrete then
+         if Val.Typ.Drange.Is_Signed and then Val.Val.Scal < 0 then
             --  TODO.
             raise Internal_Error;
          else
-            Res := Build2_Const_Uns (Build_Context, To_Uns64 (Val.Scal), W);
+            Res := Build2_Const_Uns
+              (Build_Context, To_Uns64 (Val.Val.Scal), W);
          end if;
          Set_Location (Res, Loc);
          return Res;
@@ -66,13 +67,13 @@ package body Synth.Oper is
       return Synth_Uresize (Get_Net (Val), W, Loc);
    end Synth_Uresize;
 
-   function Synth_Sresize (Val : Value_Acc; W : Width; Loc : Node) return Net
+   function Synth_Sresize (Val : Valtyp; W : Width; Loc : Node) return Net
    is
       Res : Net;
    begin
-      if Is_Static (Val) and then Val.Typ.Kind = Type_Discrete then
+      if Is_Static (Val.Val) and then Val.Typ.Kind = Type_Discrete then
          if Val.Typ.Drange.Is_Signed then
-            Res := Build2_Const_Int (Build_Context, Val.Scal, W);
+            Res := Build2_Const_Int (Build_Context, Val.Val.Scal, W);
          else
             --  TODO.
             raise Internal_Error;
@@ -84,19 +85,19 @@ package body Synth.Oper is
                              Get_Location (Loc));
    end Synth_Sresize;
 
-   function Synth_Bit_Eq_Const (Cst : Value_Acc; Expr : Value_Acc; Loc : Node)
-                               return Value_Acc
+   function Synth_Bit_Eq_Const (Cst : Valtyp; Expr : Valtyp; Loc : Node)
+                               return Valtyp
    is
       Val : Uns32;
       Zx : Uns32;
       N : Net;
    begin
-      if Is_Static (Expr) then
-         return Create_Value_Discrete (Boolean'Pos (Cst.Scal = Expr.Scal),
-                                       Boolean_Type);
+      if Is_Static (Expr.Val) then
+         return Create_Value_Discrete
+           (Boolean'Pos (Cst.Val.Scal = Expr.Val.Scal), Boolean_Type);
       end if;
 
-      To_Logic (Cst.Scal, Cst.Typ, Val, Zx);
+      To_Logic (Cst.Val.Scal, Cst.Typ, Val, Zx);
       if Zx /= 0 then
          --  Equal unknown -> return X
          N := Build_Const_UL32 (Build_Context, 0, 1, 1);
@@ -120,7 +121,7 @@ package body Synth.Oper is
 
    --  Create the result range of an operator.  According to the ieee standard,
    --  the range is LEN-1 downto 0.
-   function Create_Res_Bound (Prev : Value_Acc) return Type_Acc
+   function Create_Res_Bound (Prev : Valtyp) return Type_Acc
    is
       Res : Type_Acc;
    begin
@@ -172,8 +173,8 @@ package body Synth.Oper is
 
    --  Do a match comparison between CST and OPER.
    --  Return No_Net if CST has incorrect value.
-   function Synth_Match (Cst : Value_Acc;
-                         Oper : Value_Acc;
+   function Synth_Match (Cst : Valtyp;
+                         Oper : Valtyp;
                          Expr : Node;
                          Op : Compare_Module_Id := Id_Eq) return Net
    is
@@ -196,8 +197,8 @@ package body Synth.Oper is
 
       Boff := 0;
       Woff := 0;
-      for I in reverse Cst.Arr.V'Range loop
-         case Cst.Arr.V (I).Scal is
+      for I in reverse Cst.Val.Arr.V'Range loop
+         case Cst.Val.Arr.V (I).Scal is
             when Std_Logic_0_Pos
               |  Std_Logic_L_Pos =>
                B := 0;
@@ -247,8 +248,7 @@ package body Synth.Oper is
 
    --  Note: LEFT or RIGHT can be a single bit.
    function Synth_Dyadic_Uns_Uns
-     (Id : Dyadic_Module_Id; Left, Right : Value_Acc; Expr : Node)
-     return Value_Acc
+     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
    is
       W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
       El_Typ : Type_Acc;
@@ -272,8 +272,7 @@ package body Synth.Oper is
    end Synth_Dyadic_Uns_Uns;
 
    function Synth_Dyadic_Uns_Nat
-     (Id : Dyadic_Module_Id; Left, Right : Value_Acc; Expr : Node)
-     return Value_Acc
+     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
    is
       L : constant Net := Get_Net (Left);
       R1 : Net;
@@ -286,8 +285,7 @@ package body Synth.Oper is
    end Synth_Dyadic_Uns_Nat;
 
    function Synth_Dyadic_Nat_Uns
-     (Id : Dyadic_Module_Id; Left, Right : Value_Acc; Expr : Node)
-     return Value_Acc
+     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
    is
       R : constant Net := Get_Net (Right);
       L1 : Net;
@@ -301,8 +299,7 @@ package body Synth.Oper is
 
    --  Note: LEFT or RIGHT can be a single bit.
    function Synth_Dyadic_Sgn_Sgn
-     (Id : Dyadic_Module_Id; Left, Right : Value_Acc; Expr : Node)
-     return Value_Acc
+     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
    is
       W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
       El_Typ : Type_Acc;
@@ -326,8 +323,7 @@ package body Synth.Oper is
    end Synth_Dyadic_Sgn_Sgn;
 
    function Synth_Dyadic_Sgn_Int
-     (Id : Dyadic_Module_Id; Left, Right : Value_Acc; Expr : Node)
-     return Value_Acc
+     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
    is
       L : constant Net := Get_Net (Left);
       R1 : Net;
@@ -340,8 +336,7 @@ package body Synth.Oper is
    end Synth_Dyadic_Sgn_Int;
 
    function Synth_Dyadic_Int_Sgn
-     (Id : Dyadic_Module_Id; Left, Right : Value_Acc; Expr : Node)
-     return Value_Acc
+     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
    is
       R : constant Net := Get_Net (Right);
       L1 : Net;
@@ -357,7 +352,7 @@ package body Synth.Oper is
                                     Imp : Node;
                                     Left_Expr : Node;
                                     Right_Expr : Node;
-                                    Expr : Node) return Value_Acc
+                                    Expr : Node) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Iir_Predefined_Functions :=
@@ -367,13 +362,15 @@ package body Synth.Oper is
       Expr_Type : constant Node := Get_Type (Expr);
       Left_Type : constant Node := Get_Type (Inter_Chain);
       Right_Type : constant Node := Get_Type (Get_Chain (Inter_Chain));
-      Left_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Left_Type);
-      Right_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Right_Type);
-      Expr_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Expr_Type);
-      Left : Value_Acc;
-      Right : Value_Acc;
+      Left_Typ : constant Type_Acc :=
+        Get_Subtype_Object (Syn_Inst, Left_Type);
+      Right_Typ : constant Type_Acc :=
+        Get_Subtype_Object (Syn_Inst, Right_Type);
+      Expr_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Expr_Type);
+      Left : Valtyp;
+      Right : Valtyp;
 
-      function Synth_Bit_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
+      function Synth_Bit_Dyadic (Id : Dyadic_Module_Id) return Valtyp
       is
          N : Net;
       begin
@@ -384,7 +381,7 @@ package body Synth.Oper is
       end Synth_Bit_Dyadic;
 
       function Synth_Compare (Id : Compare_Module_Id; Res_Type : Type_Acc)
-                             return Value_Acc
+                             return Valtyp
       is
          N : Net;
       begin
@@ -396,7 +393,7 @@ package body Synth.Oper is
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare;
 
-      function Synth_Minmax (Id : Compare_Module_Id) return Value_Acc
+      function Synth_Minmax (Id : Compare_Module_Id) return Valtyp
       is
          L : constant Net := Get_Net (Left);
          R : constant Net := Get_Net (Right);
@@ -411,7 +408,7 @@ package body Synth.Oper is
       end Synth_Minmax;
 
       function Synth_Compare_Array (Id, Id_Eq : Compare_Module_Id;
-                                    Res_Type : Type_Acc) return Value_Acc
+                                    Res_Type : Type_Acc) return Valtyp
       is
          pragma Unreferenced (Id_Eq);
          N : Net;
@@ -437,7 +434,7 @@ package body Synth.Oper is
       end Synth_Compare_Array;
 
       function Synth_Compare_Uns_Nat
-        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Value_Acc
+        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Valtyp
       is
          N : Net;
       begin
@@ -448,7 +445,7 @@ package body Synth.Oper is
       end Synth_Compare_Uns_Nat;
 
       function Synth_Compare_Nat_Uns
-        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Value_Acc
+        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Valtyp
       is
          N : Net;
       begin
@@ -459,7 +456,7 @@ package body Synth.Oper is
       end Synth_Compare_Nat_Uns;
 
       function Synth_Compare_Sgn_Int
-        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Value_Acc
+        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp
       is
          N : Net;
       begin
@@ -470,7 +467,7 @@ package body Synth.Oper is
       end Synth_Compare_Sgn_Int;
 
       function Synth_Compare_Int_Sgn
-        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Value_Acc
+        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp
       is
          N : Net;
       begin
@@ -480,7 +477,7 @@ package body Synth.Oper is
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Int_Sgn;
 
-      function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
+      function Synth_Vec_Dyadic (Id : Dyadic_Module_Id) return Valtyp
       is
          N : Net;
       begin
@@ -491,9 +488,9 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Vec_Dyadic;
 
-      function Synth_Int_Dyadic (Id : Dyadic_Module_Id) return Value_Acc
+      function Synth_Int_Dyadic (Id : Dyadic_Module_Id) return Valtyp
       is
-         Etype : constant Type_Acc := Get_Value_Type (Syn_Inst, Expr_Type);
+         Etype : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Expr_Type);
          N : Net;
       begin
          N := Build_Dyadic
@@ -503,7 +500,7 @@ package body Synth.Oper is
       end Synth_Int_Dyadic;
 
       function Synth_Compare_Uns_Uns
-        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Value_Acc
+        (Id : Compare_Module_Id; Res_Type : Type_Acc) return Valtyp
       is
          W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          L1, R1 : Net;
@@ -517,7 +514,7 @@ package body Synth.Oper is
       end Synth_Compare_Uns_Uns;
 
       function Synth_Compare_Sgn_Sgn
-        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Value_Acc
+        (Id : Compare_Module_Id; Res_Typ : Type_Acc) return Valtyp
       is
          W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          L1, R1 : Net;
@@ -533,7 +530,7 @@ package body Synth.Oper is
       type Oper_Kind is (Oper_Left, Oper_Right);
 
       function Synth_Udivmod (Id : Dyadic_Module_Id; Vec : Oper_Kind)
-                            return Value_Acc
+                            return Valtyp
       is
          W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          L1, R1 : Net;
@@ -556,7 +553,7 @@ package body Synth.Oper is
       end Synth_Udivmod;
 
       function Synth_Sdivmod (Id : Dyadic_Module_Id; Vec : Oper_Kind)
-                            return Value_Acc
+                            return Valtyp
       is
          W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
          L1, R1 : Net;
@@ -579,14 +576,14 @@ package body Synth.Oper is
       end Synth_Sdivmod;
 
       function Synth_Shift (Id_Pos : Module_Id; Id_Neg : Module_Id)
-                           return Value_Acc
+                           return Valtyp
       is
          pragma Unreferenced (Id_Neg);
          L1, R1 : Net;
          N : Net;
          Is_Pos : Boolean;
       begin
-         Is_Pos := Is_Positive (Right);
+         Is_Pos := Is_Positive (Right.Val);
 
          L1 := Get_Net (Left);
          R1 := Get_Net (Right);
@@ -599,22 +596,22 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Shift;
 
-      function Synth_Rotation (Id : Module_Id) return Value_Acc
+      function Synth_Rotation (Id : Module_Id) return Valtyp
       is
          Amt : Int64;
          Ww : Width;
          L1, R1 : Net;
          N : Net;
       begin
-         if Is_Static_Val (Right) then
-            Amt := Get_Static_Discrete (Right);
+         if Is_Static_Val (Right.Val) then
+            Amt := Get_Static_Discrete (Right.Val);
             if Amt < 0 then
                raise Internal_Error;
             end if;
             Amt := Amt mod Int64 (Left.Typ.W);
             R1 := Build_Const_UB32 (Ctxt, Uns32 (Amt), Right.Typ.W);
             Set_Location (R1, Right_Expr);
-         elsif not Is_Positive (Right) then
+         elsif not Is_Positive (Right.Val) then
             Error_Msg_Synth (+Expr, "rotation quantity must be unsigned");
             return Left;
          else
@@ -637,26 +634,26 @@ package body Synth.Oper is
       end Synth_Rotation;
    begin
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
-      if Left = null then
-         return null;
+      if Left = No_Valtyp then
+         return No_Valtyp;
       end if;
       Left := Synth_Subtype_Conversion (Left, Left_Typ, False, Expr);
       Strip_Const (Left);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
-      if Right = null then
-         return null;
+      if Right = No_Valtyp then
+         return No_Valtyp;
       end if;
       Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
       Strip_Const (Right);
 
-      if Is_Static_Val (Left) and Is_Static_Val (Right) then
+      if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
          return Synth_Static_Dyadic_Predefined
            (Syn_Inst, Imp, Left, Right, Expr);
       end if;
 
       case Def is
          when Iir_Predefined_Error =>
-            return null;
+            return No_Valtyp;
 
          when Iir_Predefined_Bit_And
            | Iir_Predefined_Boolean_And
@@ -712,9 +709,9 @@ package body Synth.Oper is
             if Left_Typ = Bit_Type
               or else Left_Typ = Logic_Type
             then
-               if Is_Static (Left) then
+               if Is_Static (Left.Val) then
                   return Synth_Bit_Eq_Const (Left, Right, Expr);
-               elsif Is_Static (Right) then
+               elsif Is_Static (Right.Val) then
                   return Synth_Bit_Eq_Const (Right, Left, Expr);
                end if;
             end if;
@@ -749,7 +746,7 @@ package body Synth.Oper is
             return Synth_Compare (Id_Eq, Boolean_Type);
          when Iir_Predefined_Std_Ulogic_Array_Match_Equality =>
             declare
-               Cst, Oper : Value_Acc;
+               Cst, Oper : Valtyp;
                Res : Net;
             begin
                if Left.Typ.W /= Right.Typ.W then
@@ -758,10 +755,10 @@ package body Synth.Oper is
                   return Create_Value_Discrete (0, Bit_Type);
                end if;
 
-               if Is_Static (Left) then
+               if Is_Static (Left.Val) then
                   Cst := Left;
                   Oper := Right;
-               elsif Is_Static (Right) then
+               elsif Is_Static (Right.Val) then
                   Cst := Right;
                   Oper := Left;
                else
@@ -778,7 +775,7 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
             declare
-               Cst, Oper : Value_Acc;
+               Cst, Oper : Valtyp;
                Res : Net;
             begin
                if Left.Typ.W /= Right.Typ.W then
@@ -787,10 +784,10 @@ package body Synth.Oper is
                   return Create_Value_Discrete (1, Bit_Type);
                end if;
 
-               if Is_Static (Left) then
+               if Is_Static (Left.Val) then
                   Cst := Left;
                   Oper := Right;
-               elsif Is_Static (Right) then
+               elsif Is_Static (Right.Val) then
                   Cst := Right;
                   Oper := Left;
                else
@@ -1060,7 +1057,7 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat
            | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Nat =>
             --  "<" (Unsigned, Natural)
-            if Is_Static (Right) and then Right.Scal = 0 then
+            if Is_Static (Right.Val) and then Right.Val.Scal = 0 then
                --  Always false.
                return Create_Value_Discrete (0, Expr_Typ);
             end if;
@@ -1238,13 +1235,13 @@ package body Synth.Oper is
          when Iir_Predefined_Integer_Div =>
             return Synth_Int_Dyadic (Id_Sdiv);
          when Iir_Predefined_Integer_Mod =>
-            if Is_Static_Val (Right) then
+            if Is_Static_Val (Right.Val) then
                --  Optimize when the divisor is a power of 2.
                declare
                   use Mutils;
                   Etype : constant Type_Acc :=
-                    Get_Value_Type (Syn_Inst, Expr_Type);
-                  R : constant Int64 := Get_Static_Discrete (Right);
+                    Get_Subtype_Object (Syn_Inst, Expr_Type);
+                  R : constant Int64 := Get_Static_Discrete (Right.Val);
                   Log_R : Natural;
                   N : Net;
                begin
@@ -1265,7 +1262,7 @@ package body Synth.Oper is
          when Iir_Predefined_Integer_Exp =>
             Error_Msg_Synth
               (+Expr, "non-constant exponentiation not supported");
-            return null;
+            return No_Valtyp;
          when Iir_Predefined_Integer_Less_Equal =>
             return Synth_Compare (Id_Sle, Boolean_Type);
          when Iir_Predefined_Integer_Less =>
@@ -1284,11 +1281,11 @@ package body Synth.Oper is
             return Synth_Minmax (Id_Sgt);
          when Iir_Predefined_Physical_Physical_Div =>
             Error_Msg_Synth (+Expr, "non-constant division not supported");
-            return null;
+            return No_Valtyp;
 
          when Iir_Predefined_Floating_Div =>
             Error_Msg_Synth (+Expr, "non-constant division not supported");
-            return null;
+            return No_Valtyp;
 
          when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
             return Synth_Shift (Id_Asr, Id_None);
@@ -1302,24 +1299,24 @@ package body Synth.Oper is
          when others =>
             Error_Msg_Synth (+Expr, "synth_dyadic_operation: unhandled "
                                & Iir_Predefined_Functions'Image (Def));
-            return null;
+            return No_Valtyp;
       end case;
    end Synth_Dyadic_Operation;
 
    function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
                                      Operand_Expr : Node;
-                                     Loc : Node) return Value_Acc
+                                     Loc : Node) return Valtyp
    is
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
       Inter_Chain : constant Node :=
         Get_Interface_Declaration_Chain (Imp);
       Oper_Type : constant Node := Get_Type (Inter_Chain);
-      Oper_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Oper_Type);
-      Operand : Value_Acc;
+      Oper_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Oper_Type);
+      Operand : Valtyp;
 
-      function Synth_Bit_Monadic (Id : Monadic_Module_Id) return Value_Acc
+      function Synth_Bit_Monadic (Id : Monadic_Module_Id) return Valtyp
       is
          N : Net;
       begin
@@ -1328,7 +1325,7 @@ package body Synth.Oper is
          return Create_Value_Net (N, Operand.Typ);
       end Synth_Bit_Monadic;
 
-      function Synth_Vec_Monadic (Id : Monadic_Module_Id) return Value_Acc
+      function Synth_Vec_Monadic (Id : Monadic_Module_Id) return Valtyp
       is
          Op: constant Net := Get_Net (Operand);
          N : Net;
@@ -1338,8 +1335,7 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Operand));
       end Synth_Vec_Monadic;
 
-      function Synth_Vec_Reduce_Monadic (Id : Reduce_Module_Id)
-         return Value_Acc
+      function Synth_Vec_Reduce_Monadic (Id : Reduce_Module_Id) return Valtyp
       is
          Op: constant Net := Get_Net (Operand);
          N : Net;
@@ -1350,20 +1346,20 @@ package body Synth.Oper is
       end Synth_Vec_Reduce_Monadic;
    begin
       Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
-      if Operand = null then
-         return null;
+      if Operand = No_Valtyp then
+         return No_Valtyp;
       end if;
       Operand := Synth_Subtype_Conversion (Operand, Oper_Typ, False, Loc);
       Strip_Const (Operand);
 
-      if Is_Static_Val (Operand) then
+      if Is_Static_Val (Operand.Val) then
          return Synth_Static_Monadic_Predefined
            (Syn_Inst, Imp, Operand, Loc);
       end if;
 
       case Def is
          when Iir_Predefined_Error =>
-            return null;
+            return No_Valtyp;
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Synth_Bit_Monadic (Id_Not);
          when Iir_Predefined_Boolean_Not
@@ -1384,7 +1380,8 @@ package body Synth.Oper is
             return Synth_Vec_Reduce_Monadic(Id_Red_Or);
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             return Create_Value_Net
-              (Get_Net (Operand), Get_Value_Type (Syn_Inst, Get_Type (Imp)));
+              (Get_Net (Operand),
+               Get_Subtype_Object (Syn_Inst, Get_Type (Imp)));
          when Iir_Predefined_Integer_Negation =>
             declare
                N : Net;
@@ -1402,8 +1399,8 @@ package body Synth.Oper is
    end Synth_Monadic_Operation;
 
    function Synth_Shift_Rotate (Id : Shift_Rotate_Module_Id;
-                         Left, Right : Value_Acc;
-                         Expr : Node) return Value_Acc
+                                Left, Right : Valtyp;
+                                Expr : Node) return Valtyp
    is
       L : constant Net := Get_Net (Left);
       N : Net;
@@ -1414,7 +1411,7 @@ package body Synth.Oper is
    end Synth_Shift_Rotate;
 
    function Synth_Dynamic_Predefined_Function_Call
-     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Subprg_Inst);
       Imp  : constant Node := Get_Implementation (Expr);
@@ -1424,31 +1421,30 @@ package body Synth.Oper is
       Param1 : Node;
       Param2 : Node;
       Res_Typ : constant Type_Acc :=
-        Get_Value_Type (Subprg_Inst, Get_Type (Imp));
+        Get_Subtype_Object (Subprg_Inst, Get_Type (Imp));
 
       --  Resize PARAM1 to PARAM2 bit according to IS_SIGNED.
-      function Synth_Conv_Vector (Is_Signed : Boolean) return Value_Acc
+      function Synth_Conv_Vector (Is_Signed : Boolean) return Valtyp
       is
-         Arg : constant Value_Acc := Get_Value (Subprg_Inst, Param1);
-         Size_Val : Value_Acc;
+         Arg : constant Valtyp := Get_Value (Subprg_Inst, Param1);
+         Size_Vt : constant Valtyp := Get_Value (Subprg_Inst, Param2);
          Size : Width;
          Arg_Net : Net;
       begin
-         Size_Val := Get_Value (Subprg_Inst, Param2);
-         if not Is_Static (Size_Val) then
+         if not Is_Static (Size_Vt.Val) then
             Error_Msg_Synth (+Expr, "size parameter must be constant");
-            return null;
+            return No_Valtyp;
          end if;
-         Size := Uns32 (Strip_Const (Size_Val).Scal);
-         Arg_Net := Get_Net (Arg);
+         Size := Uns32 (Strip_Const (Size_Vt.Val).Scal);
+         Arg_Net := Get_Net (Arg.Val);
          Arg_Net := Build2_Resize (Ctxt, Arg_Net, Size, Is_Signed,
                                    Get_Location (Expr));
          return Create_Value_Net
            (Arg_Net, Create_Vec_Type_By_Length (Size, Logic_Type));
       end Synth_Conv_Vector;
 
-      L : Value_Acc;
-      R : Value_Acc;
+      L : Valtyp;
+      R : Valtyp;
    begin
       Param1 := Inter_Chain;
       if Param1 /= Null_Node then
@@ -1457,11 +1453,11 @@ package body Synth.Oper is
          if Param2 /= Null_Node then
             R := Get_Value (Subprg_Inst, Param2);
          else
-            R := null;
+            R := No_Valtyp;
          end if;
       else
-         L := null;
-         R := null;
+         L := No_Valtyp;
+         R := No_Valtyp;
          Param2 := Null_Node;
       end if;
 
@@ -1494,7 +1490,7 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv
            | Iir_Predefined_Ieee_Numeric_Std_To_01_Uns
            | Iir_Predefined_Ieee_Numeric_Std_To_01_Sgn =>
-            if Is_Static (L) then
+            if Is_Static (L.Val) then
                raise Internal_Error;
             end if;
             return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
@@ -1518,11 +1514,11 @@ package body Synth.Oper is
             declare
                W : Width;
             begin
-               if not Is_Static (R) then
+               if not Is_Static (R.Val) then
                   Error_Msg_Synth (+Expr, "size must be constant");
-                  return null;
+                  return No_Valtyp;
                end if;
-               W := Uns32 (R.Scal);
+               W := Uns32 (R.Val.Scal);
                return Create_Value_Net
                  (Synth_Uresize (Get_Net (L), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
@@ -1531,11 +1527,11 @@ package body Synth.Oper is
             declare
                W : Width;
             begin
-               if not Is_Static (R) then
+               if not Is_Static (R.Val) then
                   Error_Msg_Synth (+Expr, "size must be constant");
-                  return null;
+                  return No_Valtyp;
                end if;
-               W := Uns32 (R.Scal);
+               W := Uns32 (R.Val.Scal);
                return Create_Value_Net
                  (Build2_Sresize (Ctxt, Get_Net (L), W, Get_Location (Expr)),
                   Create_Vec_Type_By_Length (W, Logic_Type));
@@ -1586,19 +1582,19 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Match_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Match_Slv =>
             declare
-               Cst, Oper : Value_Acc;
+               Cst, Oper : Valtyp;
                Res : Net;
             begin
-               if Is_Static (L) then
+               if Is_Static (L.Val) then
                   Cst := L;
                   Oper := R;
-               elsif Is_Static (R) then
+               elsif Is_Static (R.Val) then
                   Cst := R;
                   Oper := L;
                else
                   Error_Msg_Synth
                     (+Expr, "one operand of std_match must be constant");
-                  return null;
+                  return No_Valtyp;
                end if;
                if Oper.Typ.W /= Cst.Typ.W then
                   Error_Msg_Synth
@@ -1616,12 +1612,12 @@ package body Synth.Oper is
             Error_Msg_Synth
               (+Expr,
                "unhandled function: " & Iir_Predefined_Functions'Image (Def));
-            return null;
+            return No_Valtyp;
       end case;
    end Synth_Dynamic_Predefined_Function_Call;
 
    function Synth_Predefined_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Expr);
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
@@ -1630,7 +1626,7 @@ package body Synth.Oper is
       Subprg_Inst : Synth_Instance_Acc;
       M : Areapools.Mark_Type;
       Static : Boolean;
-      Res : Value_Acc;
+      Res : Valtyp;
    begin
       Areapools.Mark (M, Instance_Pool.all);
       Subprg_Inst := Make_Instance (Syn_Inst, Imp);
@@ -1642,7 +1638,7 @@ package body Synth.Oper is
       Static := True;
       Inter := Inter_Chain;
       while Inter /= Null_Node loop
-         if not Is_Static (Get_Value (Subprg_Inst, Inter)) then
+         if not Is_Static (Get_Value (Subprg_Inst, Inter).Val) then
             Static := False;
             exit;
          end if;
@@ -1662,7 +1658,7 @@ package body Synth.Oper is
    end Synth_Predefined_Function_Call;
 
    function Synth_Operator_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Expr);
       Assoc : Node;

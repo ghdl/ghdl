@@ -23,9 +23,9 @@ with Synth.Values; use Synth.Values;
 package Synth.Heap is
    --  Allocate a value.
    function Allocate_By_Type (T : Type_Acc) return Heap_Index;
-   function Allocate_By_Value (V : Value_Acc) return Heap_Index;
+   function Allocate_By_Value (V : Valtyp) return Heap_Index;
 
-   function Synth_Dereference (Idx : Heap_Index) return Value_Acc;
+   function Synth_Dereference (Idx : Heap_Index) return Valtyp;
 
    procedure Synth_Deallocate (Idx : Heap_Index);
 end Synth.Heap;

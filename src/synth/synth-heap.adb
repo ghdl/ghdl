@@ -26,7 +26,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 package body Synth.Heap is
 
    package Heap_Table is new Tables
-     (Table_Component_Type => Value_Acc,
+     (Table_Component_Type => Valtyp,
       Table_Index_Type => Heap_Index,
       Table_Low_Bound => 1,
       Table_Initial => 16);
@@ -62,27 +62,29 @@ package body Synth.Heap is
    function Allocate_By_Type (T : Type_Acc) return Heap_Index is
    begin
       --  FIXME: allocate type.
-      Heap_Table.Append (Allocate_By_Type (T));
+      Heap_Table.Append ((T, Allocate_By_Type (T)));
       return Heap_Table.Last;
    end Allocate_By_Type;
 
-   function Allocate_By_Value (V : Value_Acc) return Value_Acc is
+   function Allocate_By_Value (V : Valtyp) return Value_Acc is
    begin
-      case V.Kind is
+      case V.Val.Kind is
          when Value_Net
            | Value_Wire =>
             raise Internal_Error;
          when Value_Discrete =>
             return new Value_Type'
-              (Kind => Value_Discrete, Typ => V.Typ, Scal => V.Scal);
+              (Kind => Value_Discrete, Typ => V.Typ, Scal => V.Val.Scal);
          when Value_Array
            | Value_Const_Array =>
             declare
+               El_Typ : constant Type_Acc := Get_Array_Element (V.Typ);
                Arr : Value_Array_Acc;
             begin
-               Arr := new Value_Array_Type (V.Arr.Len);
+               Arr := new Value_Array_Type (V.Val.Arr.Len);
                for I in Arr.V'Range loop
-                  Arr.V (I) := Allocate_By_Value (V.Arr.V (I));
+                  Arr.V (I) := Allocate_By_Value
+                    ((El_Typ, V.Val.Arr.V (I)));
                end loop;
                return new Value_Type'
                  (Kind => Value_Const_Array, Typ => V.Typ, Arr => Arr);
@@ -92,26 +94,26 @@ package body Synth.Heap is
       end case;
    end Allocate_By_Value;
 
-   function Allocate_By_Value (V : Value_Acc) return Heap_Index is
+   function Allocate_By_Value (V : Valtyp) return Heap_Index is
    begin
-      Heap_Table.Append (Allocate_By_Value (V));
+      Heap_Table.Append ((V.Typ, Allocate_By_Value (V)));
       return Heap_Table.Last;
    end Allocate_By_Value;
 
-   function Synth_Dereference (Idx : Heap_Index) return Value_Acc is
+   function Synth_Dereference (Idx : Heap_Index) return Valtyp is
    begin
       return Heap_Table.Table (Idx);
    end Synth_Dereference;
 
-   procedure Free (Obj : in out Value_Acc) is
+   procedure Free (Obj : in out Valtyp) is
    begin
       -- TODO
-      Obj := null;
+      Obj := No_Valtyp;
    end Free;
 
    procedure Synth_Deallocate (Idx : Heap_Index) is
    begin
-      if Heap_Table.Table (Idx) = null then
+      if Heap_Table.Table (Idx) = No_Valtyp then
          return;
       end if;
       Free (Heap_Table.Table (Idx));

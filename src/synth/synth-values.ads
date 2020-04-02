@@ -169,19 +169,13 @@ package Synth.Values is
       Value_Access,
       Value_File,
 
-      --  A package.
-      Value_Instance,
-
       --  A constant.  This is a named value.  One purpose is to avoid to
       --  create many times the same net for the same value.
       Value_Const,
 
       --  An alias.  This is a reference to another value with a different
       --  (but compatible) type.
-      Value_Alias,
-
-      --  A subtype.  Contains only a type.
-      Value_Subtype
+      Value_Alias
      );
 
    type Value_Type (Kind : Value_Kind);
@@ -196,8 +190,6 @@ package Synth.Values is
    end record;
 
    type Value_Array_Acc is access Value_Array_Type;
-
-   type Instance_Id is new Nat32;
 
    type Heap_Index is new Uns32;
    Null_Heap_Index : constant Heap_Index := 0;
@@ -225,10 +217,6 @@ package Synth.Values is
             Acc : Heap_Index;
          when Value_File =>
             File : File_Index;
-         when Value_Instance =>
-            Instance : Instance_Id;
-         when Value_Subtype =>
-            null;
          when Value_Const =>
             C_Val : Value_Acc;
             C_Loc : Syn_Src;
@@ -238,6 +226,14 @@ package Synth.Values is
             A_Off : Uns32;
       end case;
    end record;
+
+   --  A tuple of type and value.
+   type Valtyp is record
+      Typ : Type_Acc;
+      Val : Value_Acc;
+   end record;
+
+   No_Valtyp : constant Valtyp := (null, null);
 
    Global_Pool : aliased Areapool;
    Expr_Pool : aliased Areapool;
@@ -293,30 +289,39 @@ package Synth.Values is
 
    --  Create a Value_Net.
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Value_Acc;
+   function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp;
 
    --  Create a Value_Wire.  For a bit wire, RNG must be null.
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Value_Acc;
+   function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp;
 
    function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
                                   return Value_Acc;
+   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc)
+                                  return Valtyp;
 
    function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Value_Acc;
+   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp;
 
    function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
                                 return Value_Acc;
+   function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
+                                return Valtyp;
 
    function Create_Value_File (Vtype : Type_Acc; File : File_Index)
                               return Value_Acc;
-
-   function Create_Value_Subtype (Typ : Type_Acc) return Value_Acc;
 
    function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc;
 
    --  Create a Value_Array.
    function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
                                return Value_Acc;
+   function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
+                               return Valtyp;
    function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
                                      return Value_Acc;
+   function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
+                                     return Valtyp;
 
    --  Like the previous one but automatically build the array.
    function Create_Value_Array (Bounds : Type_Acc) return Value_Acc;
@@ -326,24 +331,32 @@ package Synth.Values is
 
    function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
                                 return Value_Acc;
+   function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
+                                return Valtyp;
    function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
                                       return Value_Acc;
-
-   function Create_Value_Instance (Inst : Instance_Id) return Value_Acc;
+   function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
+                                      return Valtyp;
 
    function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
                                return Value_Acc;
+   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
+                               return Valtyp;
    function Create_Value_Const (Val : Value_Acc; Loc : Syn_Src)
                                return Value_Acc;
+   function Create_Value_Const (Val : Valtyp; Loc : Syn_Src)
+                               return Valtyp;
 
    --  If VAL is a const, replace it by its value.
    procedure Strip_Const (Val : in out Value_Acc);
+   procedure Strip_Const (Vt : in out Valtyp);
    function Strip_Const (Val : Value_Acc) return Value_Acc;
 
    --  If VAL is a const or an alias, replace it by its value.
    --  Used to extract the real data of a static value.  Note that the type
    --  is not correct anymore.
    function Strip_Alias_Const (V : Value_Acc) return Value_Acc;
+   function Strip_Alias_Const (V : Valtyp) return Valtyp;
 
    function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
                     return Value_Acc;
@@ -361,6 +374,7 @@ package Synth.Values is
 
    --  Create a default initial value for TYP.
    function Create_Value_Default (Typ : Type_Acc) return Value_Acc;
+   function Create_Value_Default (Typ : Type_Acc) return Valtyp;
 
    --  Convert a value to a string.  The value must be a const_array of scalar,
    --  which represent characters.

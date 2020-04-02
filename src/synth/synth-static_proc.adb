@@ -30,10 +30,10 @@ package body Synth.Static_Proc is
    procedure Synth_Deallocate (Syn_Inst : Synth_Instance_Acc; Imp : Node)
    is
       Inter : constant Node := Get_Interface_Declaration_Chain (Imp);
-      Param : constant Value_Acc := Get_Value (Syn_Inst, Inter);
+      Param : constant Valtyp := Get_Value (Syn_Inst, Inter);
    begin
-      Synth.Heap.Synth_Deallocate (Param.Acc);
-      Param.Acc := Null_Heap_Index;
+      Synth.Heap.Synth_Deallocate (Param.Val.Acc);
+      Param.Val.Acc := Null_Heap_Index;
    end Synth_Deallocate;
 
    procedure Synth_Static_Procedure (Syn_Inst : Synth_Instance_Acc;

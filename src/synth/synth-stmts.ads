@@ -35,15 +35,14 @@ package Synth.Stmts is
 
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
-                                      Dest_Obj : out Value_Acc;
+                                      Dest_Valtyp : out Valtyp;
                                       Dest_Off : out Uns32;
                                       Dest_Voff : out Net;
-                                      Dest_Rdwd : out Width;
-                                      Dest_Type : out Type_Acc);
+                                      Dest_Rdwd : out Width);
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Node;
-                               Val : Value_Acc;
+                               Val : Valtyp;
                                Loc : Node);
 
    function Synth_Read_Memory (Syn_Inst : Synth_Instance_Acc;
@@ -51,16 +50,16 @@ package Synth.Stmts is
                                Off : Uns32;
                                Voff : Net;
                                Typ : Type_Acc;
-                               Loc : Node) return Value_Acc;
+                               Loc : Node) return Valtyp;
 
    function Synth_User_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
 
    --  Operation implemented by a user function.
    function Synth_User_Operator (Syn_Inst : Synth_Instance_Acc;
                                  Left_Expr : Node;
                                  Right_Expr : Node;
-                                 Expr : Node) return Value_Acc;
+                                 Expr : Node) return Valtyp;
 
    --  Generate netlists for concurrent statements STMTS.
    procedure Synth_Concurrent_Statements
@@ -120,7 +119,7 @@ private
 
       Cur_Loop : Loop_Context_Acc;
 
-      Ret_Value : Value_Acc;
+      Ret_Value : Valtyp;
       Ret_Typ : Type_Acc;
       Nbr_Ret : Int32;
 

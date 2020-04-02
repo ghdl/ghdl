@@ -230,7 +230,7 @@ package body Synth.Disp_Vhdl is
       Port_Name : constant String :=
         Name_Table.Image (Get_Identifier (Port));
       Port_Type : constant Node := Get_Type (Port);
-      Typ : constant Type_Acc := Get_Value_Type (Inst, Port_Type);
+      Typ : constant Type_Acc := Get_Subtype_Object (Inst, Port_Type);
    begin
       Disp_In_Converter (Port_Name, Port_Name, 0, Port_Type, Typ, True);
    end Disp_Input_Port_Converter;
@@ -386,7 +386,7 @@ package body Synth.Disp_Vhdl is
       Port_Name : constant String :=
         Name_Table.Image (Get_Identifier (Port));
       Port_Type : constant Node := Get_Type (Port);
-      Typ : constant Type_Acc := Get_Value_Type (Inst, Port_Type);
+      Typ : constant Type_Acc := Get_Subtype_Object (Inst, Port_Type);
    begin
       Disp_Out_Converter (Port_Name, Port_Name, 0, Port_Type, Typ, True);
    end Disp_Output_Port_Converter;

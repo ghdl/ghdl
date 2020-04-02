@@ -48,7 +48,7 @@ with Grt.To_Strings;
 
 package body Synth.Expr is
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                       return Value_Acc;
+                       return Valtyp;
 
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
@@ -70,6 +70,11 @@ package body Synth.Expr is
             raise Internal_Error;
       end case;
       return Get_Net_Int64 (N);
+   end Get_Static_Discrete;
+
+   function Get_Static_Discrete (V : Valtyp) return Int64 is
+   begin
+      return Get_Static_Discrete (V.Val);
    end Get_Static_Discrete;
 
    function Is_Positive (V : Value_Acc) return Boolean
@@ -224,19 +229,21 @@ package body Synth.Expr is
    end Value2logvec;
 
    --  Resize for a discrete value.
-   function Synth_Resize (Val : Value_Acc; W : Width; Loc : Node) return Net
+   function Synth_Resize (Val : Valtyp; W : Width; Loc : Node) return Net
    is
       Wn : constant Width := Val.Typ.W;
       N : Net;
       Res : Net;
    begin
-      if Is_Static (Val) then
+      if Is_Static (Val.Val) then
          if Wn /= W then
-            pragma Assert (Val.Kind = Value_Discrete);
+            pragma Assert (Val.Val.Kind = Value_Discrete);
             if Val.Typ.Drange.Is_Signed then
-               Res := Build2_Const_Int (Build_Context, Val.Scal, W);
+               Res := Build2_Const_Int
+                 (Build_Context, Val.Val.Scal, W);
             else
-               Res := Build2_Const_Uns (Build_Context, To_Uns64 (Val.Scal), W);
+               Res := Build2_Const_Uns
+                 (Build_Context, To_Uns64 (Val.Val.Scal), W);
             end if;
             Set_Location (Res, Loc);
             return Res;
@@ -367,13 +374,13 @@ package body Synth.Expr is
       procedure Set_Elem (Pos : Iir_Index32)
       is
          Sub_Const : Boolean;
-         Val : Value_Acc;
+         Val : Valtyp;
       begin
          if Dim = Strides'Last then
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
             pragma Assert (Res.V (Pos) = null);
-            Res.V (Pos) := Val;
-            if Const_P and then not Is_Static (Val) then
+            Res.V (Pos) := Val.Val;
+            if Const_P and then not Is_Static (Val.Val) then
                Const_P := False;
             end if;
          else
@@ -386,24 +393,24 @@ package body Synth.Expr is
       end Set_Elem;
 
       procedure Set_Vector
-        (Pos : Iir_Index32; Len : Iir_Index32; Val : Value_Acc) is
+        (Pos : Iir_Index32; Len : Iir_Index32; Val : Valtyp) is
       begin
          pragma Assert (Dim = Strides'Last);
          if Len = 0 then
             return;
          end if;
          --  FIXME: factorize with bit_extract ?
-         case Val.Kind is
+         case Val.Val.Kind is
             when Value_Array
               | Value_Const_Array =>
                declare
                   E : Value_Acc;
                begin
                   for I in 1 .. Len loop
-                     E := Val.Arr.V (I);
+                     E := Val.Val.Arr.V (I);
                      Res.V (Pos + I - 1) := E;
                   end loop;
-                  Const_P := Const_P and then Val.Kind = Value_Const_Array;
+                  Const_P := Const_P and then Val.Val.Kind = Value_Const_Array;
                end;
             when Value_Net
               | Value_Wire =>
@@ -444,7 +451,7 @@ package body Synth.Expr is
                      end if;
                   else
                      declare
-                        Val : Value_Acc;
+                        Val : Valtyp;
                         Val_Len : Uns32;
                      begin
                         Val := Synth_Expression_With_Basetype
@@ -478,14 +485,15 @@ package body Synth.Expr is
                   pragma Assert (Get_Element_Type_Flag (Assoc));
                   declare
                      Ch : constant Node := Get_Choice_Expression (Assoc);
-                     Idx : Value_Acc;
+                     Idx : Valtyp;
                      Off : Iir_Index32;
                   begin
                      Idx := Synth_Expression (Syn_Inst, Ch);
-                     if not Is_Static (Idx) then
+                     if not Is_Static (Idx.Val) then
                         Error_Msg_Synth (+Ch, "choice is not static");
                      else
-                        Off := Iir_Index32 (Get_Index_Offset (Idx, Bound, Ch));
+                        Off := Iir_Index32
+                          (Get_Index_Offset (Idx.Val, Bound, Ch));
                         Set_Elem (First_Pos + Off * Stride);
                      end if;
                   end;
@@ -493,7 +501,7 @@ package body Synth.Expr is
                   declare
                      Ch : constant Node := Get_Choice_Range (Assoc);
                      Rng : Discrete_Range_Type;
-                     Val : Value_Acc;
+                     Val : Valtyp;
                      Rng_Len : Width;
                      Off : Iir_Index32;
                   begin
@@ -501,13 +509,13 @@ package body Synth.Expr is
                      if Get_Element_Type_Flag (Assoc) then
                         Val := Create_Value_Discrete
                           (Rng.Left,
-                           Get_Value_Type (Syn_Inst,
-                                           Get_Base_Type (Get_Type (Ch))));
-                        while In_Range (Rng, Val.Scal) loop
+                           Get_Subtype_Object (Syn_Inst,
+                                               Get_Base_Type (Get_Type (Ch))));
+                        while In_Range (Rng, Val.Val.Scal) loop
                            Off := Iir_Index32
-                             (Get_Index_Offset (Val, Bound, Ch));
+                             (Get_Index_Offset (Val.Val, Bound, Ch));
                            Set_Elem (First_Pos + Off * Stride);
-                           Update_Index (Rng, Val.Scal);
+                           Update_Index (Rng, Val.Val.Scal);
                         end loop;
                      else
                         --  The direction must be the same.
@@ -556,17 +564,17 @@ package body Synth.Expr is
 
       procedure Set_Elem (Pos : Natural)
       is
-         Val : Value_Acc;
+         Val : Valtyp;
          El_Type : Type_Acc;
       begin
-         El_Type := Get_Value_Type
+         El_Type := Get_Subtype_Object
            (Syn_Inst, Get_Type (Get_Nth_Element (El_List, Pos)));
          Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type);
-         Rec.V (Iir_Index32 (Pos + 1)) := Synth_Subtype_Conversion
-           (Val, El_Type, False, Value);
-         if Const_P and not Is_Static (Val) then
+         if Const_P and not Is_Static (Val.Val) then
             Const_P := False;
          end if;
+         Val := Synth_Subtype_Conversion (Val, El_Type, False, Value);
+         Rec.V (Iir_Index32 (Pos + 1)) := Val.Val;
       end Set_Elem;
    begin
       Assoc := Get_Association_Choices_Chain (Aggr);
@@ -655,32 +663,32 @@ package body Synth.Expr is
    function Synth_Discrete_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Discrete_Range_Type
    is
-      L, R : Value_Acc;
+      L, R : Valtyp;
    begin
       L := Synth_Expression_With_Basetype (Syn_Inst, Get_Left_Limit (Rng));
       R := Synth_Expression_With_Basetype (Syn_Inst, Get_Right_Limit (Rng));
       Strip_Const (L);
       Strip_Const (R);
 
-      if not (Is_Static (L) and Is_Static (R)) then
+      if not (Is_Static (L.Val) and Is_Static (R.Val)) then
          Error_Msg_Synth (+Rng, "limits of range are not constant");
          raise Internal_Error;
       end if;
 
       return (Dir => Get_Direction (Rng),
-              Left => L.Scal,
-              Right => R.Scal,
-              Is_Signed => L.Scal < 0 or R.Scal < 0);
+              Left => L.Val.Scal,
+              Right => R.Val.Scal,
+              Is_Signed => L.Val.Scal < 0 or R.Val.Scal < 0);
    end Synth_Discrete_Range_Expression;
 
    function Synth_Float_Range_Expression
      (Syn_Inst : Synth_Instance_Acc; Rng : Node) return Float_Range_Type
    is
-      L, R : Value_Acc;
+      L, R : Valtyp;
    begin
       L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng));
       R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng));
-      return ((Get_Direction (Rng), L.Fp, R.Fp));
+      return ((Get_Direction (Rng), L.Val.Fp, R.Val.Fp));
    end Synth_Float_Range_Expression;
 
    --  Return the type of EXPR without evaluating it.
@@ -690,7 +698,7 @@ package body Synth.Expr is
       case Get_Kind (Expr) is
          when Iir_Kinds_Object_Declaration =>
             declare
-               Val : constant Value_Acc := Get_Value (Syn_Inst, Expr);
+               Val : constant Valtyp := Get_Value (Syn_Inst, Expr);
             begin
                return Val.Typ;
             end;
@@ -736,12 +744,13 @@ package body Synth.Expr is
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference =>
             declare
-               Val : Value_Acc;
+               Val : Valtyp;
+               Res : Valtyp;
             begin
                --  Maybe do not dereference it if its type is known ?
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Expr));
-               Val := Heap.Synth_Dereference (Val.Acc);
-               return Val.Typ;
+               Res := Heap.Synth_Dereference (Val.Val.Acc);
+               return Res.Typ;
             end;
 
          when others =>
@@ -761,7 +770,7 @@ package body Synth.Expr is
       --  Prefix is an array object or an array subtype.
       if Get_Kind (Prefix) = Iir_Kind_Subtype_Declaration then
          --  TODO: does this cover all the cases ?
-         Typ := Get_Value_Type (Syn_Inst, Get_Subtype_Indication (Prefix));
+         Typ := Get_Subtype_Object (Syn_Inst, Get_Subtype_Indication (Prefix));
       else
          Typ := Synth_Type_Of_Object (Syn_Inst, Prefix);
       end if;
@@ -783,7 +792,7 @@ package body Synth.Expr is
                   Typ : Type_Acc;
                begin
                   --  This is a named subtype, so it has been evaluated.
-                  Typ := Get_Value_Type (Syn_Inst, Bound);
+                  Typ := Get_Subtype_Object (Syn_Inst, Bound);
                   Rng := Typ.Drange;
                end;
             else
@@ -843,14 +852,14 @@ package body Synth.Expr is
          end;
       else
          declare
-            Bnds : constant Value_Acc := Get_Value (Syn_Inst, Atype);
+            Bnds : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Atype);
          begin
-            case Bnds.Typ.Kind is
+            case Bnds.Kind is
                when Type_Vector =>
                   pragma Assert (Dim = 1);
-                  return Bnds.Typ.Vbound;
+                  return Bnds.Vbound;
                when Type_Array =>
-                  return Bnds.Typ.Abounds.D (Dim);
+                  return Bnds.Abounds.D (Dim);
                when others =>
                   raise Internal_Error;
             end case;
@@ -871,11 +880,11 @@ package body Synth.Expr is
 
    function Synth_Aggregate_Array (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node;
-                                   Aggr_Type : Type_Acc) return Value_Acc
+                                   Aggr_Type : Type_Acc) return Valtyp
    is
       Strides : constant Stride_Array := Fill_Stride (Aggr_Type);
       Arr : Value_Array_Acc;
-      Res : Value_Acc;
+      Res : Valtyp;
       Const_P : Boolean;
    begin
       Arr := Create_Value_Array
@@ -895,10 +904,10 @@ package body Synth.Expr is
 
    function Synth_Aggregate_Record (Syn_Inst : Synth_Instance_Acc;
                                     Aggr : Node;
-                                    Aggr_Type : Type_Acc) return Value_Acc
+                                    Aggr_Type : Type_Acc) return Valtyp
    is
       Arr : Value_Array_Acc;
-      Res : Value_Acc;
+      Res : Valtyp;
       Const_P : Boolean;
    begin
       --  Allocate the result.
@@ -918,7 +927,7 @@ package body Synth.Expr is
    --  Aggr_Type is the type from the context.
    function Synth_Aggregate (Syn_Inst : Synth_Instance_Acc;
                              Aggr : Node;
-                             Aggr_Type : Type_Acc) return Value_Acc is
+                             Aggr_Type : Type_Acc) return Valtyp is
    begin
       case Aggr_Type.Kind is
          when Type_Unbounded_Array | Type_Unbounded_Vector =>
@@ -939,19 +948,19 @@ package body Synth.Expr is
    end Synth_Aggregate;
 
    function Synth_Simple_Aggregate (Syn_Inst : Synth_Instance_Acc;
-                                    Aggr : Node) return Value_Acc
+                                    Aggr : Node) return Valtyp
    is
       Aggr_Type : constant Node := Get_Type (Aggr);
       pragma Assert (Get_Nbr_Dimensions (Aggr_Type) = 1);
       El_Type : constant Node := Get_Element_Subtype (Aggr_Type);
-      El_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, El_Type);
+      El_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, El_Type);
       Els : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
       Last : constant Natural := Flist_Last (Els);
       Bnd : Bound_Type;
       Bnds : Bound_Array_Acc;
       Res_Type : Type_Acc;
       Arr : Value_Array_Acc;
-      Val : Value_Acc;
+      Val : Valtyp;
    begin
       --  Allocate the result.
       Bnd := Synth_Array_Bounds (Syn_Inst, Aggr_Type, 1);
@@ -970,50 +979,49 @@ package body Synth.Expr is
       for I in Flist_First .. Last loop
          Val := Synth_Expression_With_Type
            (Syn_Inst, Get_Nth_Element (Els, I), El_Typ);
-         pragma Assert (Is_Static (Val));
-         Arr.V (Iir_Index32 (I + 1)) := Val;
+         pragma Assert (Is_Static (Val.Val));
+         Arr.V (Iir_Index32 (I + 1)) := Val.Val;
       end loop;
 
       return Create_Value_Const_Array (Res_Type, Arr);
    end Synth_Simple_Aggregate;
 
    --  Change the bounds of VAL.
-   function Reshape_Value (Val : Value_Acc; Ntype : Type_Acc)
-                          return Value_Acc is
+   function Reshape_Value (Val : Valtyp; Ntype : Type_Acc) return Valtyp is
    begin
-      case Val.Kind is
+      case Val.Val.Kind is
          when Value_Array =>
-            return Create_Value_Array (Ntype, Val.Arr);
+            return Create_Value_Array (Ntype, Val.Val.Arr);
          when Value_Const_Array =>
-            return Create_Value_Const_Array (Ntype, Val.Arr);
+            return Create_Value_Const_Array (Ntype, Val.Val.Arr);
          when Value_Wire =>
-            return Create_Value_Wire (Val.W, Ntype);
+            return Create_Value_Wire (Val.Val.W, Ntype);
          when Value_Net =>
-            return Create_Value_Net (Val.N, Ntype);
+            return Create_Value_Net (Val.Val.N, Ntype);
          when Value_Alias =>
-            return Create_Value_Alias (Val.A_Obj, Val.A_Off, Ntype);
+            return Create_Value_Alias (Val.Val.A_Obj, Val.Val.A_Off, Ntype);
          when Value_Const =>
-            return Reshape_Value (Val.C_Val, Ntype);
+            return Reshape_Value ((Val.Typ, Val.Val.C_Val), Ntype);
          when others =>
             raise Internal_Error;
       end case;
    end Reshape_Value;
 
-   function Synth_Subtype_Conversion (Val : Value_Acc;
+   function Synth_Subtype_Conversion (Vt : Valtyp;
                                       Dtype : Type_Acc;
                                       Bounds : Boolean;
                                       Loc : Source.Syn_Src)
-                                     return Value_Acc
+                                     return Valtyp
    is
-      Vtype : constant Type_Acc := Val.Typ;
+      Vtype : constant Type_Acc := Vt.Typ;
    begin
       case Dtype.Kind is
          when Type_Bit =>
             pragma Assert (Vtype.Kind = Type_Bit);
-            return Val;
+            return Vt;
          when Type_Logic =>
             pragma Assert (Vtype.Kind = Type_Logic);
-            return Val;
+            return Vt;
          when Type_Discrete =>
             pragma Assert (Vtype.Kind = Type_Discrete);
             declare
@@ -1022,11 +1030,11 @@ package body Synth.Expr is
                if Vtype.W /= Dtype.W then
                   --  Truncate.
                   --  TODO: check overflow.
-                  case Val.Kind is
+                  case Vt.Val.Kind is
                      when Value_Net
                        | Value_Wire
                        | Value_Alias =>
-                        N := Get_Net (Val);
+                        N := Get_Net (Vt);
                         if Vtype.Drange.Is_Signed then
                            N := Build2_Sresize
                              (Build_Context, N, Dtype.W, Get_Location (Loc));
@@ -1036,22 +1044,22 @@ package body Synth.Expr is
                         end if;
                         return Create_Value_Net (N, Dtype);
                      when Value_Discrete =>
-                        return Create_Value_Discrete (Val.Scal, Dtype);
+                        return Create_Value_Discrete (Vt.Val.Scal, Dtype);
                      when Value_Const =>
                         return Synth_Subtype_Conversion
-                          (Val.C_Val, Dtype, Bounds, Loc);
+                          ((Vt.Typ, Vt.Val.C_Val), Dtype, Bounds, Loc);
                      when others =>
                         raise Internal_Error;
                   end case;
                else
                   --  TODO: check overflow if sign differ.
-                  return Val;
+                  return Vt;
                end if;
             end;
          when Type_Float =>
             pragma Assert (Vtype.Kind = Type_Float);
             --  TODO: check range
-            return Val;
+            return Vt;
          when Type_Vector =>
             pragma Assert (Vtype.Kind = Type_Vector
                              or Vtype.Kind = Type_Slice);
@@ -1060,61 +1068,61 @@ package body Synth.Expr is
                raise Internal_Error;
             end if;
             if Bounds then
-               return Reshape_Value (Val, Dtype);
+               return Reshape_Value (Vt, Dtype);
             else
-               return Val;
+               return Vt;
             end if;
          when Type_Slice =>
             --  TODO: check width
-            return Val;
+            return Vt;
          when Type_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
             --  TODO: check bounds, handle elements
             if Bounds then
-               return Reshape_Value (Val, Dtype);
+               return Reshape_Value (Vt, Dtype);
             else
-               return Val;
+               return Vt;
             end if;
          when Type_Unbounded_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
-            return Val;
+            return Vt;
          when Type_Unbounded_Vector =>
             pragma Assert (Vtype.Kind = Type_Vector
                              or else Vtype.Kind = Type_Slice);
-            return Val;
+            return Vt;
          when Type_Record =>
             --  TODO: handle elements.
-            return Val;
+            return Vt;
          when Type_Access =>
-            return Val;
+            return Vt;
          when Type_File =>
             pragma Assert (Vtype = Dtype);
-            return Val;
+            return Vt;
       end case;
    end Synth_Subtype_Conversion;
 
    function Synth_Value_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
-                                  return Value_Acc
+                                  return Valtyp
    is
       Param : constant Node := Get_Parameter (Attr);
       Etype : constant Node := Get_Type (Attr);
       Btype : constant Node := Get_Base_Type (Etype);
-      V : Value_Acc;
+      V : Valtyp;
       Dtype : Type_Acc;
    begin
       V := Synth_Expression (Syn_Inst, Param);
-      if V = null then
-         return null;
+      if V = No_Valtyp then
+         return No_Valtyp;
       end if;
 
-      Dtype := Get_Value_Type (Syn_Inst, Etype);
-      if not Is_Static (V) then
+      Dtype := Get_Subtype_Object (Syn_Inst, Etype);
+      if not Is_Static (V.Val) then
          Error_Msg_Synth (+Attr, "parameter of 'value must be static");
-         return null;
+         return No_Valtyp;
       end if;
 
       declare
-         Str : constant String := Value_To_String (V);
+         Str : constant String := Value_To_String (V.Val);
          Res_N : Node;
          Val : Int64;
       begin
@@ -1127,13 +1135,13 @@ package body Synth.Expr is
                Val := Int64'Value (Str);
             when others =>
                Error_Msg_Synth (+Attr, "unhandled type for 'value");
-               return null;
+               return No_Valtyp;
          end case;
          return Create_Value_Discrete (Val, Dtype);
       end;
    end Synth_Value_Attribute;
 
-   function Synth_Image_Attribute_Str (Val : Value_Acc; Expr_Type : Iir)
+   function Synth_Image_Attribute_Str (Val : Valtyp; Expr_Type : Iir)
                                       return String
    is
       use Grt.Types;
@@ -1145,7 +1153,7 @@ package body Synth.Expr is
                Str : String (1 .. 24);
                Last : Natural;
             begin
-               Grt.To_Strings.To_String (Str, Last, Ghdl_F64 (Val.Fp));
+               Grt.To_Strings.To_String (Str, Last, Ghdl_F64 (Val.Val.Fp));
                return Str (Str'First .. Last);
             end;
          when Iir_Kind_Integer_Type_Definition
@@ -1154,7 +1162,7 @@ package body Synth.Expr is
                Str : String (1 .. 21);
                First : Natural;
             begin
-               Grt.To_Strings.To_String (Str, First, Ghdl_I64 (Val.Scal));
+               Grt.To_Strings.To_String (Str, First, Ghdl_I64 (Val.Val.Scal));
                return Str (First .. Str'Last);
             end;
          when Iir_Kind_Enumeration_Type_Definition
@@ -1164,7 +1172,8 @@ package body Synth.Expr is
                  Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
             begin
                return Name_Table.Image
-                 (Get_Identifier (Get_Nth_Element (Lits, Natural (Val.Scal))));
+                 (Get_Identifier
+                    (Get_Nth_Element (Lits, Natural (Val.Val.Scal))));
             end;
          when Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
@@ -1174,7 +1183,7 @@ package body Synth.Expr is
                Id : constant Name_Id :=
                  Get_Identifier (Get_Primary_Unit (Get_Base_Type (Expr_Type)));
             begin
-               Grt.To_Strings.To_String (Str, First, Ghdl_I64 (Val.Scal));
+               Grt.To_Strings.To_String (Str, First, Ghdl_I64 (Val.Val.Scal));
                return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
             end;
          when others =>
@@ -1182,8 +1191,7 @@ package body Synth.Expr is
       end case;
    end Synth_Image_Attribute_Str;
 
-   function String_To_Value_Acc (Str : String; Styp : Type_Acc)
-                                return Value_Acc
+   function String_To_Valtyp (Str : String; Styp : Type_Acc) return Valtyp
    is
       Len : constant Natural := Str'Length;
       Etyp : constant Type_Acc := Styp.Uarr_El;
@@ -1205,33 +1213,33 @@ package body Synth.Expr is
          P := P + 1;
       end loop;
       return Create_Value_Const_Array (Typ, Dat);
-   end String_To_Value_Acc;
+   end String_To_Valtyp;
 
    function Synth_Image_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
-                                  return Value_Acc
+                                  return Valtyp
    is
       Param : constant Node := Get_Parameter (Attr);
       Etype : constant Node := Get_Type (Attr);
-      V : Value_Acc;
+      V : Valtyp;
       Dtype : Type_Acc;
    begin
       V := Synth_Expression (Syn_Inst, Param);
-      if V = null then
-         return null;
+      if V = No_Valtyp then
+         return No_Valtyp;
       end if;
-      Dtype := Get_Value_Type (Syn_Inst, Etype);
-      if not Is_Static (V) then
+      Dtype := Get_Subtype_Object (Syn_Inst, Etype);
+      if not Is_Static (V.Val) then
          Error_Msg_Synth (+Attr, "parameter of 'image must be static");
-         return null;
+         return No_Valtyp;
       end if;
 
       Strip_Const (V);
-      return String_To_Value_Acc
+      return String_To_Valtyp
         (Synth_Image_Attribute_Str (V, Get_Type (Param)), Dtype);
    end Synth_Image_Attribute;
 
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
-                       return Value_Acc is
+                       return Valtyp is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
@@ -1249,20 +1257,28 @@ package body Synth.Expr is
            | Iir_Kind_Interface_File_Declaration =>
             return Get_Value (Syn_Inst, Name);
          when Iir_Kind_Enumeration_Literal =>
-            return Create_Value_Discrete
-              (Int64 (Get_Enum_Pos (Name)),
-               Get_Value_Type (Syn_Inst, Get_Type (Name)));
+            declare
+               Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Type (Name));
+            begin
+               return (Typ, Create_Value_Discrete
+                         (Int64 (Get_Enum_Pos (Name)), Typ));
+            end;
          when Iir_Kind_Unit_Declaration =>
-            return Create_Value_Discrete
-              (Vhdl.Evaluation.Get_Physical_Value (Name),
-               Get_Value_Type (Syn_Inst, Get_Type (Name)));
+            declare
+               Typ : constant Type_Acc :=
+                 Get_Subtype_Object (Syn_Inst, Get_Type (Name));
+            begin
+               return (Typ, Create_Value_Discrete
+                         (Vhdl.Evaluation.Get_Physical_Value (Name), Typ));
+            end;
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference =>
             declare
-               Val : Value_Acc;
+               Val : Valtyp;
             begin
                Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
-               return Heap.Synth_Dereference (Val.Acc);
+               return Heap.Synth_Dereference (Val.Val.Acc);
             end;
          when others =>
             Error_Kind ("synth_name", Name);
@@ -1301,7 +1317,7 @@ package body Synth.Expr is
    end Index_To_Offset;
 
    function Dyn_Index_To_Offset
-     (Bnd : Bound_Type; Idx_Val : Value_Acc; Loc : Node) return Net
+     (Bnd : Bound_Type; Idx_Val : Valtyp; Loc : Node) return Net
    is
       Idx2 : Net;
       Off : Net;
@@ -1386,7 +1402,7 @@ package body Synth.Expr is
       Indexes : constant Iir_Flist := Get_Index_List (Name);
       El_Typ : constant Type_Acc := Get_Array_Element (Pfx_Type);
       Idx_Expr : Node;
-      Idx_Val : Value_Acc;
+      Idx_Val : Valtyp;
       Bnd : Bound_Type;
       Stride : Uns32;
       Ivoff : Net;
@@ -1411,9 +1427,10 @@ package body Synth.Expr is
 
          Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (I + 1));
 
-         if Idx_Val.Kind = Value_Discrete then
+         if Idx_Val.Val.Kind = Value_Discrete then
             Off := Off
-              + Index_To_Offset (Syn_Inst, Bnd, Idx_Val.Scal, Name) * Stride;
+              + (Index_To_Offset (Syn_Inst, Bnd, Idx_Val.Val.Scal, Name)
+                   * Stride);
          else
             Ivoff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
             Ivoff := Build_Memidx (Get_Build (Syn_Inst), Ivoff, W, Bnd.Len - 1,
@@ -1654,7 +1671,7 @@ package body Synth.Expr is
                                  Wd : out Width)
    is
       Expr : constant Node := Get_Suffix (Name);
-      Left, Right : Value_Acc;
+      Left, Right : Valtyp;
       Dir : Iir_Direction;
       Step : Uns32;
       Max : Uns32;
@@ -1686,13 +1703,14 @@ package body Synth.Expr is
               (+Expr, "only range expression supported for slices");
       end case;
 
-      if Is_Static_Val (Left) and then Is_Static_Val (Right) then
+      if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
          Inp := No_Net;
-         Synth_Slice_Const_Suffix
-           (Syn_Inst, Expr,
-            Name, Pfx_Bnd,
-            Get_Static_Discrete (Left), Get_Static_Discrete (Right), Dir,
-            El_Wd, Res_Bnd, Off, Wd);
+         Synth_Slice_Const_Suffix (Syn_Inst, Expr,
+                                   Name, Pfx_Bnd,
+                                   Get_Static_Discrete (Left.Val),
+                                   Get_Static_Discrete (Right.Val),
+                                   Dir,
+                                   El_Wd, Res_Bnd, Off, Wd);
       else
          if Pfx_Bnd.Dir /= Dir then
             Error_Msg_Synth (+Name, "direction mismatch in slice");
@@ -1707,7 +1725,7 @@ package body Synth.Expr is
             return;
          end if;
 
-         if Is_Static (Left) or else Is_Static (Right) then
+         if Is_Static (Left.Val) or else Is_Static (Right.Val) then
             Error_Msg_Synth
               (+Name, "left and right bounds of a slice must be "
                  & "either constant or dynamic");
@@ -1770,7 +1788,7 @@ package body Synth.Expr is
       Lit : Node;
       Posedge : Boolean;
    begin
-      Clk := Get_Net (Synth_Name (Syn_Inst, Prefix));
+      Clk := Get_Net (Synth_Name (Syn_Inst, Prefix).Val);
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
          return Build_Edge (Build_Context, Clk);
@@ -1835,16 +1853,16 @@ package body Synth.Expr is
    end Synth_Clock_Edge;
 
    function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc; Conv : Node)
-                                  return Value_Acc
+                                  return Valtyp
    is
       Expr : constant Node := Get_Expression (Conv);
       Conv_Type : constant Node := Get_Type (Conv);
-      Conv_Typ : constant Type_Acc := Get_Value_Type (Syn_Inst, Conv_Type);
-      Val : Value_Acc;
+      Conv_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Conv_Type);
+      Val : Valtyp;
    begin
       Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
-      if Val = null then
-         return null;
+      if Val = No_Valtyp then
+         return No_Valtyp;
       end if;
       Strip_Const (Val);
       case Get_Kind (Conv_Type) is
@@ -1853,17 +1871,17 @@ package body Synth.Expr is
                --  Int to int.
                return Val;
             elsif Val.Typ.Kind = Type_Float then
-               return Create_Value_Discrete (Int64 (Val.Fp), Conv_Typ);
+               return Create_Value_Discrete (Int64 (Val.Val.Fp), Conv_Typ);
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to int)");
-               return null;
+               return No_Valtyp;
             end if;
          when Iir_Kind_Floating_Subtype_Definition =>
-            if Is_Static (Val) then
-               return Create_Value_Float (Fp64 (Val.Scal), Conv_Typ);
+            if Is_Static (Val.Val) then
+               return Create_Value_Float (Fp64 (Val.Val.Scal), Conv_Typ);
             else
                Error_Msg_Synth (+Conv, "unhandled type conversion (to float)");
-               return null;
+               return No_Valtyp;
             end if;
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
@@ -1874,7 +1892,7 @@ package body Synth.Expr is
                when others =>
                   Error_Msg_Synth
                     (+Conv, "unhandled type conversion (to array)");
-                  return null;
+                  return No_Valtyp;
             end case;
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
@@ -1883,7 +1901,7 @@ package body Synth.Expr is
             return Val;
          when others =>
             Error_Msg_Synth (+Conv, "unhandled type conversion");
-            return null;
+            return No_Valtyp;
       end case;
    end Synth_Type_Conversion;
 
@@ -1902,7 +1920,7 @@ package body Synth.Expr is
 
    function Synth_String_Literal
      (Syn_Inst : Synth_Instance_Acc; Str : Node; Str_Typ : Type_Acc)
-                                 return Value_Acc
+     return Valtyp
    is
       pragma Assert (Get_Kind (Str) = Iir_Kind_String_Literal8);
       Id : constant String8_Id := Get_String8_Id (Str);
@@ -1912,7 +1930,7 @@ package body Synth.Expr is
       Bounds : Bound_Type;
       Bnds : Bound_Array_Acc;
       Res_Type : Type_Acc;
-      Res : Value_Acc;
+      Res : Valtyp;
       Arr : Value_Array_Acc;
       Pos : Nat8;
    begin
@@ -1928,7 +1946,7 @@ package body Synth.Expr is
             raise Internal_Error;
       end case;
 
-      El_Type := Get_Value_Type (Syn_Inst, Get_Element_Subtype (Str_Type));
+      El_Type := Get_Subtype_Object (Syn_Inst, Get_Element_Subtype (Str_Type));
       if El_Type.Kind in Type_Nets then
          Res_Type := Create_Vector_Type (Bounds, El_Type);
       else
@@ -1951,12 +1969,12 @@ package body Synth.Expr is
    --  Return the left bound if the direction of the range is LEFT_DIR.
    function Synth_Low_High_Type_Attribute
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Left_Dir : Iir_Direction)
-     return Value_Acc
+     return Valtyp
    is
       Typ : Type_Acc;
       R : Int64;
    begin
-      Typ := Get_Value_Type (Syn_Inst, Get_Type (Get_Prefix (Expr)));
+      Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Get_Prefix (Expr)));
       pragma Assert (Typ.Kind = Type_Discrete);
       if Typ.Drange.Dir = Left_Dir then
          R := Typ.Drange.Left;
@@ -1973,10 +1991,10 @@ package body Synth.Expr is
                                  Left_Expr : Node;
                                  Right_Expr : Node;
                                  Typ : Type_Acc;
-                                 Expr : Node) return Value_Acc
+                                 Expr : Node) return Valtyp
    is
-      Left : Value_Acc;
-      Right : Value_Acc;
+      Left : Valtyp;
+      Right : Valtyp;
       Val : Int64;
       N : Net;
    begin
@@ -1989,38 +2007,40 @@ package body Synth.Expr is
       end case;
 
       Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Typ);
-      if Left = null then
-         return null;
+      if Left = No_Valtyp then
+         return No_Valtyp;
       end if;
-      if Is_Static_Val (Left) and then Get_Static_Discrete (Left) = Val then
+      if Is_Static_Val (Left.Val)
+        and then Get_Static_Discrete (Left.Val) = Val
+      then
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
       Strip_Const (Left);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Typ);
-      if Right = null then
-         return null;
+      if Right = No_Valtyp then
+         return No_Valtyp;
       end if;
       Strip_Const (Right);
 
       --  Return a static value if both operands are static.
       --  Note: we know the value of left if it is not constant.
-      if Is_Static_Val (Left) and then Is_Static_Val (Right) then
-         Val := Get_Static_Discrete (Right);
+      if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
+         Val := Get_Static_Discrete (Right.Val);
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
       N := Build_Dyadic (Build_Context, Id,
-                         Get_Net (Left), Get_Net (Right));
+                         Get_Net (Left.Val), Get_Net (Right.Val));
       Set_Location (N, Expr);
       return Create_Value_Net (N, Boolean_Type);
    end Synth_Short_Circuit;
 
    function Synth_Expression_With_Type
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Type_Acc)
-     return Value_Acc
+     return Valtyp
    is
-      Res : Value_Acc;
+      Res : Valtyp;
    begin
       case Get_Kind (Expr) is
          when Iir_Kinds_Dyadic_Operator =>
@@ -2099,20 +2119,19 @@ package body Synth.Expr is
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
             declare
-               Obj : Value_Acc;
+               Vt : Valtyp;
                Off : Uns32;
-               Typ : Type_Acc;
 
                Voff : Net;
                Rdwd : Width;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Expr,
-                                        Obj, Off, Voff, Rdwd, Typ);
-               if Voff = No_Net and then Is_Static (Obj) then
+               Synth_Assignment_Prefix (Syn_Inst, Expr, Vt, Off, Voff, Rdwd);
+               if Voff = No_Net and then Is_Static (Vt.Val) then
                   pragma Assert (Off = 0);
-                  return Obj;
+                  return Vt;
                end if;
-               return Synth_Read_Memory (Syn_Inst, Obj, Off, Voff, Typ, Expr);
+               return Synth_Read_Memory
+                 (Syn_Inst, Vt.Val, Off, Voff, Vt.Typ, Expr);
             end;
          when Iir_Kind_Selected_Element =>
             declare
@@ -2125,11 +2144,11 @@ package body Synth.Expr is
                Res := Synth_Expression (Syn_Inst, Pfx);
                Strip_Const (Res);
                Res_Typ := Res.Typ.Rec.E (Idx + 1).Typ;
-               if Res.Kind = Value_Const_Record then
-                  return Res.Rec.V (Idx + 1);
+               if Res.Val.Kind = Value_Const_Record then
+                  return (Res_Typ, Res.Val.Rec.V (Idx + 1));
                else
                   N := Build_Extract
-                    (Build_Context, Get_Net (Res),
+                    (Build_Context, Get_Net (Res.Val),
                      Res.Typ.Rec.E (Idx + 1).Off, Get_Type_Width (Res_Typ));
                   Set_Location (N, Expr);
                   return Create_Value_Net (N, Res_Typ);
@@ -2155,7 +2174,7 @@ package body Synth.Expr is
          when Iir_Kind_Qualified_Expression =>
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Expression (Expr),
-               Get_Value_Type (Syn_Inst, Get_Type (Get_Type_Mark (Expr))));
+               Get_Subtype_Object (Syn_Inst, Get_Type (Get_Type_Mark (Expr))));
          when Iir_Kind_Function_Call =>
             declare
                Imp : constant Node := Get_Implementation (Expr);
@@ -2226,11 +2245,11 @@ package body Synth.Expr is
            | Iir_Kind_Val_Attribute =>
             declare
                Param : constant Node := Get_Parameter (Expr);
-               V : Value_Acc;
+               V : Valtyp;
                Dtype : Type_Acc;
             begin
                V := Synth_Expression (Syn_Inst, Param);
-               Dtype := Get_Value_Type (Syn_Inst, Get_Type (Expr));
+               Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                --  FIXME: to be generalized.  Not always as simple as a
                --  subtype conversion.
                return Synth_Subtype_Conversion (V, Dtype, False, Expr);
@@ -2257,7 +2276,7 @@ package body Synth.Expr is
             end;
          when Iir_Kind_Allocator_By_Expression =>
             declare
-               V : Value_Acc;
+               V : Valtyp;
                Acc : Heap_Index;
             begin
                V := Synth_Expression_With_Type
@@ -2280,18 +2299,19 @@ package body Synth.Expr is
    end Synth_Expression_With_Type;
 
    function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                             return Value_Acc is
+                             return Valtyp is
    begin
       return Synth_Expression_With_Type
-        (Syn_Inst, Expr, Get_Value_Type (Syn_Inst, Get_Type (Expr)));
+        (Syn_Inst, Expr, Get_Subtype_Object (Syn_Inst, Get_Type (Expr)));
    end Synth_Expression;
 
    function Synth_Expression_With_Basetype
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
       Basetype : Type_Acc;
    begin
-      Basetype := Get_Value_Type (Syn_Inst, Get_Base_Type (Get_Type (Expr)));
+      Basetype := Get_Subtype_Object
+        (Syn_Inst, Get_Base_Type (Get_Type (Expr)));
       return Synth_Expression_With_Type (Syn_Inst, Expr, Basetype);
    end Synth_Expression_With_Basetype;
 end Synth.Expr;

@@ -32,14 +32,15 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Expr is
    --  Perform a subtype conversion.  Check constraints.
-   function Synth_Subtype_Conversion (Val : Value_Acc;
+   function Synth_Subtype_Conversion (Vt : Valtyp;
                                       Dtype : Type_Acc;
                                       Bounds : Boolean;
                                       Loc : Source.Syn_Src)
-                                     return Value_Acc;
+                                     return Valtyp;
 
    --  For a static value V, return the value.
    function Get_Static_Discrete (V : Value_Acc) return Int64;
+   function Get_Static_Discrete (V : Valtyp) return Int64;
 
    --  Return True only if discrete value V is known to be positive or 0.
    --  False means either not positive or unknown.
@@ -69,15 +70,15 @@ package Synth.Expr is
 
    function Synth_Expression_With_Type
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Type_Acc)
-     return Value_Acc;
+     return Valtyp;
 
    function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                             return Value_Acc;
+                             return Valtyp;
 
    --  Use base type of EXPR to synthesize EXPR.  Useful when the type of
    --  EXPR is defined by itself or a range.
    function Synth_Expression_With_Basetype
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
 
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
                                      Atype : Node) return Bound_Type;

@@ -18,12 +18,14 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-with Synth.Environment; use Synth.Environment;
-with Synth.Values; use Synth.Values;
-with Vhdl.Annotations; use Vhdl.Annotations;
 with Netlists; use Netlists;
 with Netlists.Builders;
+
+with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
+
+with Synth.Environment; use Synth.Environment;
+with Synth.Values; use Synth.Values;
 
 package Synth.Context is
    --  Values are stored into Synth_Instance, which is parallel to simulation
@@ -91,15 +93,20 @@ package Synth.Context is
    function Get_Source_Scope (Inst : Synth_Instance_Acc) return Node;
 
    procedure Create_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc);
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp);
 
-   procedure Create_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc);
+   procedure Create_Package_Object (Syn_Inst : Synth_Instance_Acc;
+                                    Decl : Node;
+                                    Inst : Synth_Instance_Acc;
+                                    Is_Global : Boolean);
+
+   procedure Create_Subtype_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc);
 
    --  Force the value of DECL, without checking for elaboration order.
    --  It is for deferred constants.
    procedure Create_Object_Force
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc);
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp);
 
    procedure Destroy_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node);
@@ -112,21 +119,19 @@ package Synth.Context is
 
    --  Get the value of OBJ.
    function Get_Value (Syn_Inst : Synth_Instance_Acc; Obj : Node)
-                      return Value_Acc;
-   --  Wrapper around Get_Value for types.
-   function Get_Value_Type (Syn_Inst : Synth_Instance_Acc; Atype : Node)
-                           return Type_Acc;
+                      return Valtyp;
 
    --  Get a net from a scalar/vector value.  This will automatically create
    --  a net for literals.
    function Get_Net (Val : Value_Acc) return Net;
-
-   function Create_Value_Instance (Inst : Synth_Instance_Acc)
-                                  return Value_Acc;
-   function Get_Value_Instance (Inst : Instance_Id) return Synth_Instance_Acc;
+   function Get_Net (Val : Valtyp) return Net;
 
    function Get_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Value_Acc;
+     (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Synth_Instance_Acc;
+
+   --  Return the type for DECL (a subtype indication).
+   function Get_Subtype_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc;
 
    --  Return the scope of the parent of BLK.  Deals with architecture bodies.
    function Get_Parent_Scope (Blk : Node) return Sim_Info_Acc;
@@ -134,7 +139,28 @@ package Synth.Context is
    procedure Set_Uninstantiated_Scope
      (Syn_Inst : Synth_Instance_Acc; Bod : Node);
 private
-   type Objects_Array is array (Object_Slot_Type range <>) of Value_Acc;
+   type Obj_Kind is
+     (
+      Obj_None,
+      Obj_Object,
+      Obj_Subtype,
+      Obj_Instance
+     );
+
+   type Obj_Type (Kind : Obj_Kind := Obj_None) is record
+      case Kind is
+         when Obj_None =>
+            null;
+         when Obj_Object =>
+            Obj : Valtyp;
+         when Obj_Subtype =>
+            T_Typ : Type_Acc;
+         when Obj_Instance =>
+            I_Inst : Synth_Instance_Acc;
+      end case;
+   end record;
+
+   type Objects_Array is array (Object_Slot_Type range <>) of Obj_Type;
 
    type Base_Instance_Type is limited record
       Builder : Netlists.Builders.Context_Acc;

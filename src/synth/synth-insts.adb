@@ -118,8 +118,8 @@ package body Synth.Insts is
       end if;
       Inter := Get_Generic_Chain (Params.Decl);
       while Inter /= Null_Node loop
-         if not Is_Equal (Get_Value (Obj.Syn_Inst, Inter),
-                          Get_Value (Params.Syn_Inst, Inter))
+         if not Is_Equal (Get_Value (Obj.Syn_Inst, Inter).Val,
+                          Get_Value (Params.Syn_Inst, Inter).Val)
          then
             return False;
          end if;
@@ -213,9 +213,7 @@ package body Synth.Insts is
            | Value_Array
            | Value_Record
            | Value_Access
-           | Value_File
-           | Value_Instance
-           | Value_Subtype =>
+           | Value_File =>
             raise Internal_Error;
       end case;
    end Hash_Const;
@@ -262,7 +260,7 @@ package body Synth.Insts is
       Len : Natural;
 
       Gen_Decl : Node;
-      Gen : Value_Acc;
+      Gen : Valtyp;
    begin
       Len := Id_Len;
       Str (1 .. Len) := Get_Name_Ptr (Id) (1 .. Len);
@@ -276,15 +274,15 @@ package body Synth.Insts is
             Gen_Decl := Generics;
             while Gen_Decl /= Null_Node loop
                Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
-               case Gen.Kind is
+               case Gen.Val.Kind is
                   when Value_Discrete =>
                      declare
                         S : constant String :=
-                          Uns64'Image (To_Uns64 (Gen.Scal));
+                          Uns64'Image (To_Uns64 (Gen.Val.Scal));
                      begin
                         if Len + S'Length > Str_Len then
                            Has_Hash := True;
-                           Hash_Const (Ctxt, Gen, Gen.Typ);
+                           Hash_Const (Ctxt, Gen.Val, Gen.Typ);
                         else
                            Str (Len + 1 .. Len + S'Length) := S;
                            pragma Assert (Str (Len + 1) = ' ');
@@ -294,7 +292,7 @@ package body Synth.Insts is
                      end;
                   when others =>
                      Has_Hash := True;
-                     Hash_Const (Ctxt, Gen, Gen.Typ);
+                     Hash_Const (Ctxt, Gen.Val, Gen.Typ);
                end case;
                Gen_Decl := Get_Chain (Gen_Decl);
             end loop;
@@ -396,8 +394,9 @@ package body Synth.Insts is
             case Get_Kind (Inter_Type) is
                when Iir_Kind_Array_Subtype_Definition
                  | Iir_Kind_Integer_Subtype_Definition =>
-                  Create_Object (Syn_Inst, Inter_Type,
-                                 Get_Value (Params.Syn_Inst, Inter_Type));
+                  Create_Subtype_Object
+                    (Syn_Inst, Inter_Type,
+                     Get_Subtype_Object (Params.Syn_Inst, Inter_Type));
                when others =>
                   null;
             end case;
@@ -416,7 +415,7 @@ package body Synth.Insts is
       while Is_Valid (Inter) loop
          --  Elaborate the type...
          Synth_Declaration_Type (Syn_Inst, Inter);
-         Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
+         Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
          if not Is_Bounded_Type (Inter_Typ) then
             --  ... but get it from the template (so that unbounded types
             --  are bounded).
@@ -431,7 +430,7 @@ package body Synth.Insts is
                Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
-         Create_Object (Syn_Inst, Inter, Val);
+         Create_Object (Syn_Inst, Inter, (Inter_Typ, Val));
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -492,18 +491,18 @@ package body Synth.Insts is
          Outports : Port_Desc_Array (1 .. Nbr_Outputs);
          Pkind : Port_Kind;
          Desc : Port_Desc;
-         Val : Value_Acc;
+         Vt : Valtyp;
       begin
          Inter := Get_Port_Chain (Decl);
          Nbr_Inputs := 0;
          Nbr_Outputs := 0;
          while Is_Valid (Inter) loop
             Pkind := Mode_To_Port_Kind (Get_Mode (Inter));
-            Val := Get_Value (Syn_Inst, Inter);
+            Vt := Get_Value (Syn_Inst, Inter);
 
             Desc := (Name => Create_Inter_Name (Inter, Params.Encoding),
                      Is_Inout => Pkind = Port_Inout,
-                     W => Get_Type_Width (Val.Typ));
+                     W => Get_Type_Width (Vt.Typ));
 
             case Pkind is
                when Port_In =>
@@ -545,7 +544,7 @@ package body Synth.Insts is
       case Get_Kind (Formal) is
          when Iir_Kind_Interface_Signal_Declaration =>
             Off := 0;
-            Typ := Get_Value_Type (Inter_Inst, Get_Type (Formal));
+            Typ := Get_Subtype_Object (Inter_Inst, Get_Type (Formal));
          when Iir_Kind_Simple_Name =>
             Synth_Individual_Prefix
               (Syn_Inst, Inter_Inst, Get_Named_Entity (Formal), Off, Typ);
@@ -603,7 +602,7 @@ package body Synth.Insts is
 
    type Value_Offset_Record is record
       Off : Uns32;
-      Val : Value_Acc;
+      Val : Valtyp;
    end record;
 
    package Value_Offset_Tables is new Dyn_Tables
@@ -638,7 +637,7 @@ package body Synth.Insts is
    is
       use Netlists.Concats;
       Iassoc : Node;
-      V : Value_Acc;
+      V : Valtyp;
       Off : Uns32;
       Typ : Type_Acc;
       Els : Value_Offset_Tables.Instance;
@@ -695,7 +694,7 @@ package body Synth.Insts is
       Actual : Node;
       Formal_Typ : Type_Acc;
       Act_Inst : Synth_Instance_Acc;
-      Act : Value_Acc;
+      Act : Valtyp;
    begin
       case Iir_Kinds_Association_Element_Parameters (Get_Kind (Assoc)) is
          when Iir_Kind_Association_Element_Open =>
@@ -716,7 +715,7 @@ package body Synth.Insts is
             return Synth_Individual_Input_Assoc (Syn_Inst, Assoc, Inter_Inst);
       end case;
 
-      Formal_Typ := Get_Value_Type (Inter_Inst, Get_Type (Inter));
+      Formal_Typ := Get_Subtype_Object (Inter_Inst, Get_Type (Inter));
 
       Act := Synth_Expression_With_Type (Act_Inst, Actual, Formal_Typ);
       return Get_Net (Act);
@@ -728,7 +727,7 @@ package body Synth.Insts is
                                             Inter_Inst : Synth_Instance_Acc)
    is
       Iassoc : Node;
-      V : Value_Acc;
+      V : Valtyp;
       Off : Uns32;
       Typ : Type_Acc;
       O : Net;
@@ -765,7 +764,7 @@ package body Synth.Insts is
       Actual : Node;
       Formal_Typ : Type_Acc;
       Port : Net;
-      O : Value_Acc;
+      O : Valtyp;
    begin
       case Get_Kind (Assoc) is
          when Iir_Kind_Association_Element_Open =>
@@ -834,7 +833,7 @@ package body Synth.Insts is
       if Inst_Obj.Encoding = Name_Parameters then
          declare
             Inter : Node;
-            Val : Value_Acc;
+            Vt : Valtyp;
             Vec : Logvec_Array_Acc;
             Len : Uns32;
             Off : Uns32;
@@ -845,17 +844,17 @@ package body Synth.Insts is
             Idx := 0;
             Inter := Get_Generic_Chain (Inst_Obj.Decl);
             while Inter /= Null_Node loop
-               Val := Get_Value (Inst_Obj.Syn_Inst, Inter);
-               Len := (Val.Typ.W + 31) / 32;
+               Vt := Get_Value (Inst_Obj.Syn_Inst, Inter);
+               Len := (Vt.Typ.W + 31) / 32;
                pragma Assert (Len > 0);
                Vec := new Logvec_Array'(0 .. Digit_Index (Len - 1) => (0, 0));
                Off := 0;
                Has_Zx := False;
-               Value2logvec (Val, Vec.all, Off, Has_Zx);
+               Value2logvec (Vt.Val, Vec.all, Off, Has_Zx);
                if Has_Zx then
-                  Pv := Create_Pval4 (Val.Typ.W);
+                  Pv := Create_Pval4 (Vt.Typ.W);
                else
-                  Pv := Create_Pval2 (Val.Typ.W);
+                  Pv := Create_Pval2 (Vt.Typ.W);
                end if;
                for I in 0 .. Len - 1 loop
                   Write_Pval (Pv, I, Vec (Digit_Index (I)));
@@ -890,7 +889,7 @@ package body Synth.Insts is
          end case;
       else
          Synth_Declaration_Type (Sub_Inst, Inter);
-         return Get_Value_Type (Sub_Inst, Get_Type (Inter));
+         return Get_Subtype_Object (Sub_Inst, Get_Type (Inter));
       end if;
    end Synth_Port_Association_Type;
 
@@ -919,7 +918,7 @@ package body Synth.Insts is
                  | Port_Inout =>
                   Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
             end case;
-            Create_Object (Sub_Inst, Inter, Val);
+            Create_Object (Sub_Inst, Inter, (Inter_Typ, Val));
          end if;
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
@@ -1082,7 +1081,7 @@ package body Synth.Insts is
          Assoc : Node;
          Assoc_Inter : Node;
          Inter : Node;
-         Inter_Type : Type_Acc;
+         Inter_Typ : Type_Acc;
          Val : Value_Acc;
          N : Net;
       begin
@@ -1092,21 +1091,21 @@ package body Synth.Insts is
             if Get_Whole_Association_Flag (Assoc) then
                Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
-               Inter_Type := Synth_Port_Association_Type
+               Inter_Typ := Synth_Port_Association_Type
                  (Comp_Inst, Syn_Inst, Inter, Assoc);
 
                case Mode_To_Port_Kind (Get_Mode (Inter)) is
                   when Port_In =>
                      N := Synth_Input_Assoc
                        (Syn_Inst, Assoc, Comp_Inst, Inter);
-                     Val := Create_Value_Net (N, Inter_Type);
+                     Val := Create_Value_Net (N, Inter_Typ);
                   when Port_Out
                     | Port_Inout =>
-                     Val := Create_Value_Wire (No_Wire_Id, Inter_Type);
+                     Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
                      Create_Component_Wire
                        (Get_Build (Syn_Inst), Assoc_Inter, Val, Inst_Name);
                end case;
-               Create_Object (Comp_Inst, Assoc_Inter, Val);
+               Create_Object (Comp_Inst, Assoc_Inter, (Val.Typ, Val));
             end if;
             Next_Association_Interface (Assoc, Assoc_Inter);
          end loop;
@@ -1170,7 +1169,7 @@ package body Synth.Insts is
          Assoc_Inter : Node;
          Inter : Node;
          Port : Net;
-         O : Value_Acc;
+         O : Valtyp;
          Nbr_Outputs : Port_Nbr;
       begin
          Assoc := Get_Port_Map_Aspect_Chain (Stmt);
@@ -1182,7 +1181,7 @@ package body Synth.Insts is
 
                if Mode_To_Port_Kind (Get_Mode (Inter)) = Port_Out then
                   O := Get_Value (Comp_Inst, Inter);
-                  Port := Get_Net (O);
+                  Port := Get_Net (O.Val);
                   Synth_Output_Assoc (Port, Syn_Inst, Assoc, Comp_Inst, Inter);
                   Nbr_Outputs := Nbr_Outputs + 1;
                end if;
@@ -1280,13 +1279,13 @@ package body Synth.Insts is
       while Is_Valid (Inter) loop
          Synth_Declaration_Type (Syn_Inst, Inter);
          declare
-            Val : Value_Acc;
-            Inter_Type : Type_Acc;
+            Val : Valtyp;
+            Inter_Typ : Type_Acc;
          begin
-            Inter_Type := Get_Value_Type (Syn_Inst, Get_Type (Inter));
+            Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
             Val := Synth_Expression_With_Type
-              (Syn_Inst, Get_Default_Value (Inter), Inter_Type);
-            pragma Assert (Is_Static (Val));
+              (Syn_Inst, Get_Default_Value (Inter), Inter_Typ);
+            pragma Assert (Is_Static (Val.Val));
             Create_Object (Syn_Inst, Inter, Val);
          end;
          Inter := Get_Chain (Inter);
@@ -1302,7 +1301,7 @@ package body Synth.Insts is
             raise Internal_Error;
          end if;
          Synth_Declaration_Type (Syn_Inst, Inter);
-         Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
+         Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Val := Create_Value_Net (No_Net, Inter_Typ);
@@ -1310,7 +1309,7 @@ package body Synth.Insts is
               | Port_Inout =>
                Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
          end case;
-         Create_Object (Syn_Inst, Inter, Val);
+         Create_Object (Syn_Inst, Inter, (Inter_Typ, Val));
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -1347,7 +1346,7 @@ package body Synth.Insts is
         Get_Output_Desc (Get_Module (Self_Inst), Idx);
       Inter_Typ : Type_Acc;
       Value : Net;
-      Init : Value_Acc;
+      Init : Valtyp;
       Inp : Input;
    begin
       pragma Assert (Val.Kind = Value_Wire);
@@ -1374,7 +1373,7 @@ package body Synth.Insts is
          end;
       else
          if Default /= Null_Node then
-            Inter_Typ := Get_Value_Type (Syn_Inst, Get_Type (Inter));
+            Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
             Init := Synth_Expression_With_Type
               (Syn_Inst, Default, Inter_Typ);
             Init := Synth_Subtype_Conversion
@@ -1464,7 +1463,7 @@ package body Synth.Insts is
       Syn_Inst : constant Synth_Instance_Acc := Inst.Syn_Inst;
       Self_Inst : Instance;
       Inter : Node;
-      Val : Value_Acc;
+      Vt : Valtyp;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
    begin
@@ -1484,15 +1483,15 @@ package body Synth.Insts is
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
-         Val := Get_Value (Syn_Inst, Inter);
+         Vt := Get_Value (Syn_Inst, Inter);
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
-               Create_Input_Wire (Self_Inst, Nbr_Inputs, Val);
+               Create_Input_Wire (Self_Inst, Nbr_Inputs, Vt.Val);
                Nbr_Inputs := Nbr_Inputs + 1;
             when Port_Out
               | Port_Inout =>
                Create_Output_Wire
-                 (Syn_Inst, Self_Inst, Inter, Nbr_Outputs, Val);
+                 (Syn_Inst, Self_Inst, Inter, Nbr_Outputs, Vt.Val);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Inter := Get_Chain (Inter);

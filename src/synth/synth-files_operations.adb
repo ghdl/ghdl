@@ -61,12 +61,12 @@ package body Synth.Files_Operations is
    end Convert_String;
 
    --  Convert filename VAL to RES + LEN.
-   procedure Convert_File_Name (Val : Value_Acc;
+   procedure Convert_File_Name (Val : Valtyp;
                                 Res : out C_File_Name;
                                 Len : out Natural;
                                 Status : out Op_Status)
    is
-      Name : constant Value_Acc := Strip_Alias_Const (Val);
+      Name : constant Value_Acc := Strip_Alias_Const (Val.Val);
       pragma Unreferenced (Val);
    begin
       Len := Natural (Name.Arr.Len);
@@ -88,10 +88,10 @@ package body Synth.Files_Operations is
       File_Type : constant Node := Get_Type (Decl);
       External_Name : constant Node := Get_File_Logical_Name (Decl);
       Open_Kind : constant Node := Get_File_Open_Kind (Decl);
-      File_Name : Value_Acc;
+      File_Name : Valtyp;
       C_Name : C_File_Name;
       C_Name_Len : Natural;
-      Mode : Value_Acc;
+      Mode : Valtyp;
       F : File_Index;
       File_Mode : Ghdl_I32;
       Status : Op_Status;
@@ -125,7 +125,7 @@ package body Synth.Files_Operations is
 
       if Open_Kind /= Null_Node then
          Mode := Synth_Expression (Syn_Inst, Open_Kind);
-         File_Mode := Ghdl_I32 (Mode.Scal);
+         File_Mode := Ghdl_I32 (Mode.Val.Scal);
       else
          case Get_Mode (Decl) is
             when Iir_In_Mode =>
@@ -184,11 +184,11 @@ package body Synth.Files_Operations is
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
    is
       Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
-      F : constant File_Index := Get_Value (Syn_Inst, Inters).File;
+      F : constant File_Index := Get_Value (Syn_Inst, Inters).Val.File;
       Param2 : constant Node := Get_Chain (Inters);
-      File_Name : constant Value_Acc := Get_Value (Syn_Inst, Param2);
+      File_Name : constant Valtyp := Get_Value (Syn_Inst, Param2);
       Param3 : constant Node := Get_Chain (Param2);
-      Open_Kind : constant Value_Acc := Get_Value (Syn_Inst, Param3);
+      Open_Kind : constant Valtyp := Get_Value (Syn_Inst, Param3);
       C_Name : C_File_Name;
       C_Name_Len : Natural;
       File_Mode : Ghdl_I32;
@@ -196,7 +196,7 @@ package body Synth.Files_Operations is
    begin
       Convert_File_Name (File_Name, C_Name, C_Name_Len, Status);
       if Status = Op_Ok then
-         File_Mode := Ghdl_I32 (Open_Kind.Scal);
+         File_Mode := Ghdl_I32 (Open_Kind.Val.Scal);
          if Get_Text_File_Flag (Get_Type (Inters)) then
             Ghdl_Text_File_Open
               (F, File_Mode, To_Ghdl_C_String (C_Name'Address), Status);
@@ -223,7 +223,7 @@ package body Synth.Files_Operations is
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
    is
       Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
-      F : constant File_Index := Get_Value (Syn_Inst, Inters).File;
+      F : constant File_Index := Get_Value (Syn_Inst, Inters).Val.File;
       Status : Op_Status;
    begin
       if Get_Text_File_Flag (Get_Type (Inters)) then
@@ -245,12 +245,12 @@ package body Synth.Files_Operations is
                                           Loc : Node)
    is
       Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
-      File : constant File_Index := Get_Value (Syn_Inst, Inters).File;
+      File : constant File_Index := Get_Value (Syn_Inst, Inters).Val.File;
       Param2 : constant Node := Get_Chain (Inters);
-      Str : constant Value_Acc := Get_Value (Syn_Inst, Param2);
+      Str : constant Valtyp := Get_Value (Syn_Inst, Param2);
       Param3 : constant Node := Get_Chain (Param2);
-      Param_Len : constant Value_Acc := Get_Value (Syn_Inst, Param3);
-      Buf : String (1 .. Natural (Str.Arr.Len));
+      Param_Len : constant Valtyp := Get_Value (Syn_Inst, Param3);
+      Buf : String (1 .. Natural (Str.Val.Arr.Len));
       Len : Std_Integer;
       Status : Op_Status;
    begin
@@ -262,10 +262,10 @@ package body Synth.Files_Operations is
       end if;
 
       for I in 1 .. Natural (Len) loop
-         Str.Arr.V (Iir_Index32 (I)).Scal := Character'Pos (Buf (I));
+         Str.Val.Arr.V (Iir_Index32 (I)).Scal := Character'Pos (Buf (I));
       end loop;
 
-      Param_Len.Scal := Int64 (Len);
+      Param_Len.Val.Scal := Int64 (Len);
    end Synth_Untruncated_Text_Read;
 
 end Synth.Files_Operations;

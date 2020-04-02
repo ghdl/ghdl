@@ -21,7 +21,6 @@
 with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
-with Tables;
 with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
 
@@ -36,12 +35,6 @@ with Synth.Expr; use Synth.Expr;
 with Netlists.Locations;
 
 package body Synth.Context is
-   package Packages_Table is new Tables
-     (Table_Component_Type => Synth_Instance_Acc,
-      Table_Index_Type => Instance_Id,
-      Table_Low_Bound => 1,
-      Table_Initial => 16);
-
    function Make_Base_Instance return Synth_Instance_Acc
    is
       Base : Base_Instance_Acc;
@@ -69,7 +62,8 @@ package body Synth.Context is
                                       Uninst_Scope => null,
                                       Source_Scope => Null_Node,
                                       Elab_Objects => 0,
-                                      Objects => (others => null));
+                                      Objects => (others =>
+                                                    (Kind => Obj_None)));
       return Res;
    end Make_Base_Instance;
 
@@ -77,7 +71,6 @@ package body Synth.Context is
    begin
       --  TODO: really free.
       Build_Context := null;
-      Packages_Table.Init;
    end Free_Base_Instance;
 
    function Make_Instance (Parent : Synth_Instance_Acc;
@@ -106,7 +99,8 @@ package body Synth.Context is
                                       Uninst_Scope => null,
                                       Source_Scope => Blk,
                                       Elab_Objects => 0,
-                                      Objects => (others => null));
+                                      Objects => (others =>
+                                                    (Kind => Obj_None)));
       return Res;
    end Make_Instance;
 
@@ -200,7 +194,7 @@ package body Synth.Context is
                                      return Boolean is
    begin
       for I in 1 .. Inst.Elab_Objects loop
-         if Inst.Objects (I).Kind /= Value_Subtype then
+         if Inst.Objects (I).Kind /= Obj_Subtype then
             return False;
          end if;
       end loop;
@@ -213,20 +207,6 @@ package body Synth.Context is
       Inst.Is_Const := Val;
    end Set_Instance_Const;
 
-   function Create_Value_Instance (Inst : Synth_Instance_Acc)
-                                  return Value_Acc is
-   begin
-      Packages_Table.Append (Inst);
-      return Create_Value_Instance (Packages_Table.Last);
-   end Create_Value_Instance;
-
-   function Get_Value_Instance (Inst : Instance_Id)
-                               return Synth_Instance_Acc is
-   begin
-      pragma Assert (Inst in Packages_Table.First .. Packages_Table.Last);
-      return Packages_Table.Table (Inst);
-   end Get_Value_Instance;
-
    procedure Create_Object (Syn_Inst : Synth_Instance_Acc;
                             Slot : Object_Slot_Type;
                             Num : Object_Slot_Type := 1) is
@@ -236,7 +216,7 @@ package body Synth.Context is
       --  commons (same scope), and package annotation order can be different
       --  from package elaboration order (eg: body).
       if Slot /= Syn_Inst.Elab_Objects + 1
-        or else Syn_Inst.Objects (Slot) /= null
+        or else Syn_Inst.Objects (Slot).Kind /= Obj_None
       then
          Error_Msg_Elab ("synth: bad elaboration order of objects");
          raise Internal_Error;
@@ -245,43 +225,69 @@ package body Synth.Context is
    end Create_Object;
 
    procedure Create_Object_Force
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc)
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
-      pragma Assert (Val = null or else Syn_Inst.Objects (Info.Slot) = null);
-      Syn_Inst.Objects (Info.Slot) := Val;
+      pragma Assert
+        (Syn_Inst.Objects (Info.Slot).Kind = Obj_None
+           or else Vt = (null, null)
+           or else Syn_Inst.Objects (Info.Slot) = (Kind => Obj_Object,
+                                                   Obj => No_Valtyp));
+      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Object, Obj => Vt);
    end Create_Object_Force;
 
    procedure Create_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc)
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Vt : Valtyp)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
       Create_Object (Syn_Inst, Info.Slot, 1);
-      Create_Object_Force (Syn_Inst, Decl, Val);
+      Create_Object_Force (Syn_Inst, Decl, Vt);
    end Create_Object;
 
-   procedure Create_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Val : Value_Acc)
+   procedure Create_Subtype_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc)
+   is
+      pragma Assert (Typ /= null);
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+   begin
+      Create_Object (Syn_Inst, Info.Slot, 1);
+      pragma Assert (Syn_Inst.Objects (Info.Slot).Kind = Obj_None);
+      Syn_Inst.Objects (Info.Slot) := (Kind => Obj_Subtype, T_Typ => Typ);
+   end Create_Subtype_Object;
+
+   procedure Create_Package_Object (Syn_Inst : Synth_Instance_Acc;
+                                    Decl : Node;
+                                    Inst : Synth_Instance_Acc;
+                                    Is_Global : Boolean)
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
-      pragma Assert (Syn_Inst.Objects (Info.Pkg_Slot) = null);
-      Syn_Inst.Objects (Info.Pkg_Slot) := Val;
+      if Is_Global then
+         pragma Assert (Syn_Inst.Objects (Info.Pkg_Slot).Kind = Obj_None);
+         pragma Assert (Syn_Inst.Up_Block = null);
+         null;
+      else
+         pragma Assert (Syn_Inst.Up_Block /= null);
+         Create_Object (Syn_Inst, Info.Slot, 1);
+      end if;
+      Syn_Inst.Objects (Info.Pkg_Slot) := (Kind => Obj_Instance,
+                                           I_Inst => Inst);
    end Create_Package_Object;
 
    function Get_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Info : Sim_Info_Acc) return Value_Acc
+     (Syn_Inst : Synth_Instance_Acc; Info : Sim_Info_Acc)
+     return Synth_Instance_Acc
    is
       Parent : Synth_Instance_Acc;
    begin
       Parent := Get_Instance_By_Scope (Syn_Inst, Info.Pkg_Parent);
-      return Parent.Objects (Info.Pkg_Slot);
+      return Parent.Objects (Info.Pkg_Slot).I_Inst;
    end Get_Package_Object;
 
    function Get_Package_Object
-     (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Value_Acc is
+     (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Synth_Instance_Acc is
    begin
       return Get_Package_Object (Syn_Inst, Get_Info (Pkg));
    end Get_Package_Object;
@@ -303,7 +309,7 @@ package body Synth.Context is
       then
          Error_Msg_Elab ("synth: bad destroy order");
       end if;
-      Syn_Inst.Objects (Slot) := null;
+      Syn_Inst.Objects (Slot) := (Kind => Obj_None);
       Syn_Inst.Elab_Objects := Slot - 1;
    end Destroy_Object;
 
@@ -312,7 +318,7 @@ package body Synth.Context is
                                  Obj : Node)
    is
       Obj_Type : constant Node := Get_Type (Obj);
-      Otyp : constant Type_Acc := Get_Value_Type (Syn_Inst, Obj_Type);
+      Otyp : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Obj_Type);
       Val : Value_Acc;
       Wid : Wire_Id;
    begin
@@ -323,7 +329,7 @@ package body Synth.Context is
       end if;
       Val := Create_Value_Wire (Wid, Otyp);
 
-      Create_Object (Syn_Inst, Obj, Val);
+      Create_Object (Syn_Inst, Obj, (Otyp, Val));
    end Create_Wire_Object;
 
    function Get_Instance_By_Scope
@@ -363,12 +369,7 @@ package body Synth.Context is
                end;
             else
                --  Instantiated package.
-               declare
-                  Inst : Value_Acc;
-               begin
-                  Inst := Get_Package_Object (Syn_Inst, Scope);
-                  return Get_Value_Instance (Inst.Instance);
-               end;
+               return Get_Package_Object (Syn_Inst, Scope);
             end if;
          when others =>
             raise Internal_Error;
@@ -386,25 +387,25 @@ package body Synth.Context is
       return Get_Info (Parent);
    end Get_Parent_Scope;
 
-
    function Get_Value (Syn_Inst: Synth_Instance_Acc; Obj : Node)
-                      return Value_Acc
+                      return Valtyp
    is
       Info : constant Sim_Info_Acc := Get_Info (Obj);
       Obj_Inst : Synth_Instance_Acc;
    begin
       Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Obj_Scope);
-      return Obj_Inst.Objects (Info.Slot);
+      return Obj_Inst.Objects (Info.Slot).Obj;
    end Get_Value;
 
-   function Get_Value_Type (Syn_Inst : Synth_Instance_Acc; Atype : Node)
-                           return Type_Acc
+   function Get_Subtype_Object
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node) return Type_Acc
    is
-      Val : Value_Acc;
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Obj_Inst : Synth_Instance_Acc;
    begin
-      Val := Get_Value (Syn_Inst, Atype);
-      return Val.Typ;
-   end Get_Value_Type;
+      Obj_Inst := Get_Instance_By_Scope (Syn_Inst, Info.Obj_Scope);
+      return Obj_Inst.Objects (Info.Slot).T_Typ;
+   end Get_Subtype_Object;
 
    function Vec2net (Val : Value_Acc) return Net is
    begin
@@ -620,5 +621,10 @@ package body Synth.Context is
          when others =>
             raise Internal_Error;
       end case;
+   end Get_Net;
+
+   function Get_Net (Val : Valtyp) return Net is
+   begin
+      return Get_Net (Val.Val);
    end Get_Net;
 end Synth.Context;

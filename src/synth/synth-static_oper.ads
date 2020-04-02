@@ -25,15 +25,15 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 package Synth.Static_Oper is
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
-                                            Left : Value_Acc;
-                                            Right : Value_Acc;
-                                            Expr : Node) return Value_Acc;
+                                            Left : Valtyp;
+                                            Right : Valtyp;
+                                            Expr : Node) return Valtyp;
    function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                              Imp : Node;
-                                             Operand : Value_Acc;
-                                             Expr : Node) return Value_Acc;
+                                             Operand : Valtyp;
+                                             Expr : Node) return Valtyp;
 
    function Synth_Static_Predefined_Function_Call
-     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
+     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
 
 end Synth.Static_Oper;

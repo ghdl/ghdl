@@ -24,20 +24,20 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Oper is
    function Synth_Predefined_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
    function Synth_Operator_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Value_Acc;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
 
    function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                     Imp : Node;
                                     Left_Expr : Node;
                                     Right_Expr : Node;
-                                    Expr : Node) return Value_Acc;
+                                    Expr : Node) return Valtyp;
 
    function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
                                      Operand_Expr : Node;
-                                     Loc : Node) return Value_Acc;
+                                     Loc : Node) return Valtyp;
 
    function Create_Bounds_From_Length
      (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)
