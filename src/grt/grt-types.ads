@@ -31,7 +31,8 @@ package Grt.Types is
    pragma Preelaborate (Grt.Types);
 
    type Ghdl_B1 is new Boolean;
-   type Ghdl_E8 is new Unsigned_8;
+   type Ghdl_U8 is new Unsigned_8;
+   subtype Ghdl_E8 is Ghdl_U8;
    type Ghdl_U32 is new Unsigned_32;
    subtype Ghdl_E32 is Ghdl_U32;
    type Ghdl_I32 is new Integer_32;
