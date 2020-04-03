@@ -21,7 +21,6 @@
 with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
-with Types_Utils; use Types_Utils;
 with Name_Table; use Name_Table;
 
 with Vhdl.Errors; use Vhdl.Errors;
@@ -29,7 +28,6 @@ with Vhdl.Utils;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
-with Netlists.Concats;
 
 with Synth.Expr; use Synth.Expr;
 with Netlists.Locations;
@@ -490,39 +488,29 @@ package body Synth.Context is
             return Get_Current_Value (Build_Context, Val.Val.W);
          when Value_Net =>
             return Val.Val.N;
-         when Value_Discrete =>
-            case Val.Typ.Kind is
-               when Type_Bit
-                 | Type_Logic =>
-                  declare
-                     V : Logvec_Array (0 .. 0) := (0 => (0, 0));
-                     Res : Net;
-                  begin
-                     Value2net (Val, 1, V, Res);
-                     return Res;
-                  end;
-               when Type_Discrete =>
-                  if Val.Typ.W <= 64 then
-                     declare
-                        Sh : constant Natural := 64 - Natural (Val.Typ.W);
-                        V : Uns64;
-                     begin
-                        V := To_Uns64 (Val.Val.Scal);
-                        --  Keep only Val.Typ.W bits of the value.
-                        V := Shift_Right (Shift_Left (V, Sh), Sh);
-                        return Build2_Const_Uns
-                          (Build_Context, V, Val.Typ.W);
-                     end;
-                  else
-                     raise Internal_Error;
-                  end if;
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Value_Const_Array
-           | Value_Const_Record =>
+         when Value_Alias =>
             declare
-               W : constant Width := Get_Type_Width (Val.Typ);
+               Res : Net;
+            begin
+               if Val.Val.A_Obj.Kind = Value_Wire then
+                  Res := Get_Current_Value (Build_Context, Val.Val.A_Obj.W);
+                  return Build2_Extract
+                    (Build_Context, Res, Val.Val.A_Off.Net_Off, Val.Typ.W);
+               else
+                  pragma Assert (Val.Val.A_Off.Net_Off = 0);
+                  return Get_Net ((Val.Typ, Val.Val.A_Obj));
+               end if;
+            end;
+         when Value_Const =>
+            if Val.Val.C_Net = No_Net then
+               Val.Val.C_Net := Get_Net ((Val.Typ, Val.Val.C_Val));
+               Locations.Set_Location (Get_Net_Parent (Val.Val.C_Net),
+                                       Get_Location (Val.Val.C_Loc));
+            end if;
+            return Val.Val.C_Net;
+         when Value_Memory =>
+            declare
+               W : constant Width := Val.Typ.W;
                Nd : constant Digit_Index := Digit_Index ((W + 31) / 32);
                Res : Net;
             begin
@@ -544,52 +532,6 @@ package body Synth.Context is
                   end;
                end if;
             end;
-         when Value_Array =>
-            declare
-               use Netlists.Concats;
-               El_Typ : constant Type_Acc := Get_Array_Element (Val.Typ);
-               C : Concat_Type;
-               Res : Net;
-            begin
-               for I in reverse Val.Val.Arr.V'Range loop
-                  Append (C, Get_Net ((El_Typ, Val.Val.Arr.V (I))));
-               end loop;
-               Build (Build_Context, C, Res);
-               return Res;
-            end;
-         when Value_Record =>
-            declare
-               use Netlists.Concats;
-               C : Concat_Type;
-               Res : Net;
-            begin
-               for I in Val.Typ.Rec.E'Range loop
-                  Append (C, Get_Net ((Val.Typ.Rec.E (I).Typ,
-                                       Val.Val.Rec.V (I))));
-               end loop;
-               Build (Build_Context, C, Res);
-               return Res;
-            end;
-         when Value_Alias =>
-            declare
-               Res : Net;
-            begin
-               if Val.Val.A_Obj.Kind = Value_Wire then
-                  Res := Get_Current_Value (Build_Context, Val.Val.A_Obj.W);
-                  return Build2_Extract (Build_Context, Res, Val.Val.A_Off,
-                                         Val.Typ.W);
-               else
-                  pragma Assert (Val.Val.A_Off = 0);
-                  return Get_Net ((Val.Typ, Val.Val.A_Obj));
-               end if;
-            end;
-         when Value_Const =>
-            if Val.Val.C_Net = No_Net then
-               Val.Val.C_Net := Get_Net ((Val.Typ, Val.Val.C_Val));
-               Locations.Set_Location (Get_Net_Parent (Val.Val.C_Net),
-                                       Get_Location (Val.Val.C_Loc));
-            end if;
-            return Val.Val.C_Net;
          when others =>
             raise Internal_Error;
       end case;

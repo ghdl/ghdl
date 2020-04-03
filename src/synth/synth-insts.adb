@@ -118,8 +118,8 @@ package body Synth.Insts is
       end if;
       Inter := Get_Generic_Chain (Params.Decl);
       while Inter /= Null_Node loop
-         if not Is_Equal (Get_Value (Obj.Syn_Inst, Inter).Val,
-                          Get_Value (Params.Syn_Inst, Inter).Val)
+         if not Is_Equal (Get_Value (Obj.Syn_Inst, Inter),
+                          Get_Value (Params.Syn_Inst, Inter))
          then
             return False;
          end if;
@@ -156,6 +156,17 @@ package body Synth.Insts is
       GNAT.SHA1.Update (C, S);
    end Hash_Uns64;
 
+   procedure Hash_Memory (C : in out GNAT.SHA1.Context;
+                          M : Memory_Ptr;
+                          Typ : Type_Acc)
+   is
+      S : String (1 .. Natural (Typ.Sz));
+      for S'Address use M (0)'Address;
+      pragma Import (Ada, S);
+   begin
+      GNAT.SHA1.Update (C, S);
+   end Hash_Memory;
+
    procedure Hash_Bound (C : in out GNAT.SHA1.Context; B : Bound_Type) is
    begin
       Hash_Uns64 (C, Iir_Direction'Pos (B.Dir));
@@ -182,37 +193,17 @@ package body Synth.Insts is
                          Typ : Type_Acc) is
    begin
       case Val.Kind is
-         when Value_Discrete =>
-            Hash_Uns64 (C, To_Uns64 (Val.Scal));
-         when Value_Float =>
-            Hash_Uns64 (C, To_Uns64 (Val.Fp));
-         when Value_Const_Array =>
-            declare
-               El_Typ : constant Type_Acc := Get_Array_Element (Typ);
-            begin
-               --  Bounds.
-               Hash_Bounds (C, Typ);
-               --  Values.
-               for I in Val.Arr.V'Range loop
-                  Hash_Const (C, Val.Arr.V (I), El_Typ);
-               end loop;
-            end;
-         when Value_Const_Record =>
-            for I in Val.Rec.V'Range loop
-               Hash_Const (C, Val.Rec.V (I), Typ.Rec.E (I).Typ);
-            end loop;
+         when Value_Memory =>
+            Hash_Memory (C, Val.Mem, Typ);
          when Value_Const =>
             Hash_Const (C, Val.C_Val, Typ);
          when Value_Alias =>
-            if Val.A_Off /= 0 then
+            if Val.A_Off /= (0, 0) then
                raise Internal_Error;
             end if;
             Hash_Const (C, Val.A_Obj, Typ);
          when Value_Net
            | Value_Wire
-           | Value_Array
-           | Value_Record
-           | Value_Access
            | Value_File =>
             raise Internal_Error;
       end case;
@@ -274,11 +265,12 @@ package body Synth.Insts is
             Gen_Decl := Generics;
             while Gen_Decl /= Null_Node loop
                Gen := Get_Value (Params.Syn_Inst, Gen_Decl);
-               case Gen.Val.Kind is
-                  when Value_Discrete =>
+               Strip_Const (Gen);
+               case Gen.Typ.Kind is
+                  when Type_Discrete =>
                      declare
                         S : constant String :=
-                          Uns64'Image (To_Uns64 (Gen.Val.Scal));
+                          Uns64'Image (To_Uns64 (Read_Discrete (Gen)));
                      begin
                         if Len + S'Length > Str_Len then
                            Has_Hash := True;
@@ -555,23 +547,21 @@ package body Synth.Insts is
             begin
                Synth_Individual_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-               Off := Off + Typ.Rec.E (Idx + 1).Off;
+               Off := Off + Typ.Rec.E (Idx + 1).Boff;
                Typ := Typ.Rec.E (Idx + 1).Typ;
             end;
          when Iir_Kind_Indexed_Name =>
             declare
                Voff : Net;
-               Arr_Off : Uns32;
-               W : Width;
+               Arr_Off : Value_Offsets;
             begin
                Synth_Individual_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-               Synth_Indexed_Name
-                 (Syn_Inst, Formal, Typ, Voff, Arr_Off, W);
+               Synth_Indexed_Name (Syn_Inst, Formal, Typ, Voff, Arr_Off);
                if Voff /= No_Net then
                   raise Internal_Error;
                end if;
-               Off := Off + Arr_Off;
+               Off := Off + Arr_Off.Net_Off;
                Typ := Get_Array_Element (Typ);
             end;
          when Iir_Kind_Slice_Name =>
@@ -580,19 +570,18 @@ package body Synth.Insts is
                El_Typ : Type_Acc;
                Res_Bnd : Bound_Type;
                Sl_Voff : Net;
-               Sl_Off : Uns32;
-               Wd : Uns32;
+               Sl_Off : Value_Offsets;
             begin
                Synth_Individual_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
 
                Get_Onedimensional_Array_Bounds (Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Formal, Pfx_Bnd, El_Typ.W,
-                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
+               Synth_Slice_Suffix (Syn_Inst, Formal, Pfx_Bnd, El_Typ,
+                                   Res_Bnd, Sl_Voff, Sl_Off);
                if Sl_Voff /= No_Net then
                   raise Internal_Error;
                end if;
-               Off := Off + Sl_Off;
+               Off := Off + Sl_Off.Net_Off;
                Typ := Create_Onedimensional_Array_Subtype (Typ, Res_Bnd);
             end;
          when others =>

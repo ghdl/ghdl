@@ -37,14 +37,15 @@ package Synth.Stmts is
    --  DEST_BASE is the base object.  Can be the result, a net or an array
    --   larger than the result.
    --  DEST_TYP is the type of the result.
-   --  DEST_OFF/DEST_VOFF is the offset in the base.  DEST_OFF is used when
+   --  DEST_NET_OFF/DEST_MEM_OFF/DEST_VOFF are the offsets in the base.
+   --   DEST_NET_OFF is used when
    --   the base is a net, while DEST_VOFF is set when the offset is dynamic.
    --  DEST_RDWD is the width of what is extracted from the base.
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
-                                      Dest_Off : out Uns32;
+                                      Dest_Off : out Value_Offsets;
                                       Dest_Voff : out Net;
                                       Dest_Rdwd : out Width);
 
@@ -78,7 +79,7 @@ package Synth.Stmts is
 
    --  For iterators.
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean;
-   procedure Update_Index (Rng : Discrete_Range_Type; Idx : in out Int64);
+   procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp);
 
 private
    --  There are 2 execution mode:

@@ -47,16 +47,17 @@ package body Synth.Files_Operations is
    procedure Convert_String (Val : Valtyp; Res : out String)
    is
       Vtyp : constant Type_Acc := Val.Typ;
+      Vlen : constant Uns32 := Vtyp.Abounds.D (1).Len;
    begin
       pragma Assert (Vtyp.Kind = Type_Array);
       pragma Assert (Vtyp.Arr_El.Kind = Type_Discrete);
       pragma Assert (Vtyp.Arr_El.W in 7 .. 8); --  Could be 7 in vhdl87
-      pragma Assert (Vtyp.Abounds.Len = 1);
+      pragma Assert (Vtyp.Abounds.Ndim = 1);
       pragma Assert (Vtyp.Abounds.D (1).Len = Res'Length);
 
-      for I in Val.Val.Arr.V'Range loop
+      for I in 1 .. Vlen loop
          Res (Res'First + Natural (I - 1)) :=
-           Character'Val (Val.Val.Arr.V (I).Scal);
+           Character'Val (Read_U8 (Val.Val.Mem + Size_Type (I - 1)));
       end loop;
    end Convert_String;
 
@@ -69,7 +70,7 @@ package body Synth.Files_Operations is
       Name : constant Valtyp := Strip_Alias_Const (Val);
       pragma Unreferenced (Val);
    begin
-      Len := Natural (Name.Val.Arr.Len);
+      Len := Natural (Name.Typ.Abounds.D (1).Len);
 
       if Len >= Res'Length - 1 then
          Status := Op_Filename_Error;
@@ -125,7 +126,7 @@ package body Synth.Files_Operations is
 
       if Open_Kind /= Null_Node then
          Mode := Synth_Expression (Syn_Inst, Open_Kind);
-         File_Mode := Ghdl_I32 (Mode.Val.Scal);
+         File_Mode := Ghdl_I32 (Read_Discrete (Mode));
       else
          case Get_Mode (Decl) is
             when Iir_In_Mode =>
@@ -196,7 +197,7 @@ package body Synth.Files_Operations is
    begin
       Convert_File_Name (File_Name, C_Name, C_Name_Len, Status);
       if Status = Op_Ok then
-         File_Mode := Ghdl_I32 (Open_Kind.Val.Scal);
+         File_Mode := Ghdl_I32 (Read_Discrete (Open_Kind));
          if Get_Text_File_Flag (Get_Type (Inters)) then
             Ghdl_Text_File_Open
               (F, File_Mode, To_Ghdl_C_String (C_Name'Address), Status);
@@ -250,7 +251,7 @@ package body Synth.Files_Operations is
       Str : constant Valtyp := Get_Value (Syn_Inst, Param2);
       Param3 : constant Node := Get_Chain (Param2);
       Param_Len : constant Valtyp := Get_Value (Syn_Inst, Param3);
-      Buf : String (1 .. Natural (Str.Val.Arr.Len));
+      Buf : String (1 .. Natural (Str.Typ.Abounds.D (1).Len));
       Len : Std_Integer;
       Status : Op_Status;
    begin
@@ -262,10 +263,10 @@ package body Synth.Files_Operations is
       end if;
 
       for I in 1 .. Natural (Len) loop
-         Str.Val.Arr.V (Iir_Index32 (I)).Scal := Character'Pos (Buf (I));
+         Write_U8 (Str.Val.Mem + Size_Type (I - 1), Character'Pos (Buf (I)));
       end loop;
 
-      Param_Len.Val.Scal := Int64 (Len);
+      Write_Discrete (Param_Len, Int64 (Len));
    end Synth_Untruncated_Text_Read;
 
 end Synth.Files_Operations;

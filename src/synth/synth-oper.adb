@@ -54,12 +54,12 @@ package body Synth.Oper is
       Res : Net;
    begin
       if Is_Static (Val.Val) and then Val.Typ.Kind = Type_Discrete then
-         if Val.Typ.Drange.Is_Signed and then Val.Val.Scal < 0 then
+         if Val.Typ.Drange.Is_Signed and then Read_Discrete (Val) < 0 then
             --  TODO.
             raise Internal_Error;
          else
             Res := Build2_Const_Uns
-              (Build_Context, To_Uns64 (Val.Val.Scal), W);
+              (Build_Context, To_Uns64 (Read_Discrete (Val)), W);
          end if;
          Set_Location (Res, Loc);
          return Res;
@@ -73,7 +73,7 @@ package body Synth.Oper is
    begin
       if Is_Static (Val.Val) and then Val.Typ.Kind = Type_Discrete then
          if Val.Typ.Drange.Is_Signed then
-            Res := Build2_Const_Int (Build_Context, Val.Val.Scal, W);
+            Res := Build2_Const_Int (Build_Context, Read_Discrete (Val), W);
          else
             --  TODO.
             raise Internal_Error;
@@ -94,10 +94,11 @@ package body Synth.Oper is
    begin
       if Is_Static (Expr.Val) then
          return Create_Value_Discrete
-           (Boolean'Pos (Cst.Val.Scal = Expr.Val.Scal), Boolean_Type);
+           (Boolean'Pos (Read_Discrete (Cst) = Read_Discrete (Expr)),
+            Boolean_Type);
       end if;
 
-      To_Logic (Cst.Val.Scal, Cst.Typ, Val, Zx);
+      To_Logic (Read_Discrete (Cst), Cst.Typ, Val, Zx);
       if Zx /= 0 then
          --  Equal unknown -> return X
          N := Build_Const_UL32 (Build_Context, 0, 1, 1);
@@ -197,8 +198,8 @@ package body Synth.Oper is
 
       Boff := 0;
       Woff := 0;
-      for I in reverse Cst.Val.Arr.V'Range loop
-         case Cst.Val.Arr.V (I).Scal is
+      for I in reverse 1 .. Vec_Length (Cst.Typ) loop
+         case Read_U8 (Cst.Val.Mem + Size_Type (I - 1)) is
             when Std_Logic_0_Pos
               |  Std_Logic_L_Pos =>
                B := 0;
@@ -604,7 +605,7 @@ package body Synth.Oper is
          N : Net;
       begin
          if Is_Static_Val (Right.Val) then
-            Amt := Get_Static_Discrete (Right.Val);
+            Amt := Get_Static_Discrete (Right);
             if Amt < 0 then
                raise Internal_Error;
             end if;
@@ -1057,7 +1058,7 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat
            | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Nat =>
             --  "<" (Unsigned, Natural)
-            if Is_Static (Right.Val) and then Right.Val.Scal = 0 then
+            if Is_Static (Right.Val) and then Read_Discrete (Right) = 0 then
                --  Always false.
                return Create_Value_Discrete (0, Expr_Typ);
             end if;
@@ -1241,7 +1242,7 @@ package body Synth.Oper is
                   use Mutils;
                   Etype : constant Type_Acc :=
                     Get_Subtype_Object (Syn_Inst, Expr_Type);
-                  R : constant Int64 := Get_Static_Discrete (Right.Val);
+                  R : constant Int64 := Get_Static_Discrete (Right);
                   Log_R : Natural;
                   N : Net;
                begin
@@ -1427,15 +1428,17 @@ package body Synth.Oper is
       function Synth_Conv_Vector (Is_Signed : Boolean) return Valtyp
       is
          Arg : constant Valtyp := Get_Value (Subprg_Inst, Param1);
-         Size_Vt : constant Valtyp := Get_Value (Subprg_Inst, Param2);
+         Size_Vt : Valtyp;
          Size : Width;
          Arg_Net : Net;
       begin
+         Size_Vt := Get_Value (Subprg_Inst, Param2);
+         Strip_Const (Size_Vt);
          if not Is_Static (Size_Vt.Val) then
             Error_Msg_Synth (+Expr, "size parameter must be constant");
             return No_Valtyp;
          end if;
-         Size := Uns32 (Strip_Const (Size_Vt.Val).Scal);
+         Size := Uns32 (Read_Discrete (Size_Vt));
          Arg_Net := Get_Net (Arg);
          Arg_Net := Build2_Resize (Ctxt, Arg_Net, Size, Is_Signed,
                                    Get_Location (Expr));
@@ -1518,7 +1521,7 @@ package body Synth.Oper is
                   Error_Msg_Synth (+Expr, "size must be constant");
                   return No_Valtyp;
                end if;
-               W := Uns32 (R.Val.Scal);
+               W := Uns32 (Read_Discrete (R));
                return Create_Value_Net
                  (Synth_Uresize (Get_Net (L), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
@@ -1531,7 +1534,7 @@ package body Synth.Oper is
                   Error_Msg_Synth (+Expr, "size must be constant");
                   return No_Valtyp;
                end if;
-               W := Uns32 (R.Val.Scal);
+               W := Uns32 (Read_Discrete (R));
                return Create_Value_Net
                  (Build2_Sresize (Ctxt, Get_Net (L), W, Get_Location (Expr)),
                   Create_Vec_Type_By_Length (W, Logic_Type));

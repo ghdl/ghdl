@@ -21,7 +21,6 @@
 with Types; use Types;
 with Tables;
 
-with Vhdl.Nodes; use Vhdl.Nodes;
 
 package body Synth.Heap is
 
@@ -31,32 +30,24 @@ package body Synth.Heap is
       Table_Low_Bound => 1,
       Table_Initial => 16);
 
-   function Allocate_By_Type (T : Type_Acc) return Value_Acc is
+   function Alloc_Mem (Sz : Size_Type) return Memory_Ptr;
+   pragma Import (C, Alloc_Mem, "malloc");
+
+   function Allocate_Memory (T : Type_Acc) return Value_Acc
+   is
+      M : Memory_Ptr;
    begin
-      case T.Kind is
-         when Type_Bit
-           | Type_Logic =>
-            return new Value_Type'
-              (Kind => Value_Discrete, Scal => 0);
-         when Type_Discrete =>
-            return new Value_Type'
-              (Kind => Value_Discrete, Scal => T.Drange.Left);
-         when Type_Array =>
-            declare
-               Len : constant Uns32 := Get_Array_Flat_Length (T);
-               El_Typ : constant Type_Acc := Get_Array_Element (T);
-               Arr : Value_Array_Acc;
-            begin
-               Arr := new Value_Array_Type (Iir_Index32 (Len));
-               for I in Arr.V'Range loop
-                  Arr.V (I) := Allocate_By_Type (El_Typ);
-               end loop;
-               return new Value_Type'
-                 (Kind => Value_Const_Array, Arr => Arr);
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
+      M := Alloc_Mem (T.Sz);
+      return new Value_Type'(Kind => Value_Memory, Mem => M);
+   end Allocate_Memory;
+
+   function Allocate_By_Type (T : Type_Acc) return Value_Acc
+   is
+      Res : Value_Acc;
+   begin
+      Res := Allocate_Memory (T);
+      Write_Value_Default (Res.Mem, T);
+      return Res;
    end Allocate_By_Type;
 
    function Allocate_By_Type (T : Type_Acc) return Heap_Index is
@@ -66,30 +57,13 @@ package body Synth.Heap is
       return Heap_Table.Last;
    end Allocate_By_Type;
 
-   function Allocate_By_Value (V : Valtyp) return Value_Acc is
+   function Allocate_By_Value (V : Valtyp) return Value_Acc
+   is
+      Res : Value_Acc;
    begin
-      case V.Val.Kind is
-         when Value_Net
-           | Value_Wire =>
-            raise Internal_Error;
-         when Value_Discrete =>
-            return new Value_Type'(Kind => Value_Discrete, Scal => V.Val.Scal);
-         when Value_Array
-           | Value_Const_Array =>
-            declare
-               El_Typ : constant Type_Acc := Get_Array_Element (V.Typ);
-               Arr : Value_Array_Acc;
-            begin
-               Arr := new Value_Array_Type (V.Val.Arr.Len);
-               for I in Arr.V'Range loop
-                  Arr.V (I) := Allocate_By_Value
-                    ((El_Typ, V.Val.Arr.V (I)));
-               end loop;
-               return new Value_Type'(Kind => Value_Const_Array, Arr => Arr);
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
+      Res := Allocate_Memory (V.Typ);
+      Write_Value (Res.Mem, V);
+      return Res;
    end Allocate_By_Value;
 
    function Allocate_By_Value (V : Valtyp) return Heap_Index is

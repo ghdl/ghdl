@@ -119,7 +119,6 @@ package body Synth.Decls is
       Rec_Els : Rec_El_Array_Acc;
       El : Node;
       El_Typ : Type_Acc;
-      Off : Uns32;
    begin
       if not Is_Fully_Constrained_Type (Def) then
          return null;
@@ -127,16 +126,13 @@ package body Synth.Decls is
       Rec_Els := Create_Rec_El_Array
         (Iir_Index32 (Get_Nbr_Elements (El_List)));
 
-      Off := 0;
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
          El_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (El));
-         Rec_Els.E (Iir_Index32 (I + 1)) := (Off => Off,
-                                             Typ => El_Typ);
-         Off := Off + Get_Type_Width (El_Typ);
+         Rec_Els.E (Iir_Index32 (I + 1)).Typ := El_Typ;
       end loop;
 
-      return Create_Record_Type (Rec_Els, Off);
+      return Create_Record_Type (Rec_Els);
    end Synth_Record_Type_Definition;
 
    function Synth_Access_Type_Definition
@@ -166,6 +162,20 @@ package body Synth.Decls is
       return Typ;
    end Synth_File_Type_Definition;
 
+   function Scalar_Size_To_Size (Def : Node) return Size_Type is
+   begin
+      case Get_Scalar_Size (Def) is
+         when Scalar_8 =>
+            return 1;
+         when Scalar_16 =>
+            return 2;
+         when Scalar_32 =>
+            return 4;
+         when Scalar_64 =>
+            return 8;
+      end case;
+   end Scalar_Size_To_Size;
+
    procedure Synth_Type_Definition (Syn_Inst : Synth_Instance_Acc; Def : Node)
    is
       Typ : Type_Acc;
@@ -192,7 +202,8 @@ package body Synth.Decls is
                           Is_Signed => False,
                           Left => Int64 (Nbr_El - 1),
                           Right => 0);
-                  Typ := Create_Discrete_Type (Rng, W);
+                  Typ := Create_Discrete_Type
+                    (Rng, Scalar_Size_To_Size (Def), W);
                end;
             end if;
          when Iir_Kind_Array_Type_Definition =>
@@ -231,7 +242,8 @@ package body Synth.Decls is
                Rng := Synth_Discrete_Range_Expression
                  (L, R, Get_Direction (Cst));
                W := Discrete_Range_Width (Rng);
-               Typ := Create_Discrete_Type (Rng, W);
+               Typ := Create_Discrete_Type
+                 (Rng, Scalar_Size_To_Size (Def), W);
             end;
          when Iir_Kind_Floating_Type_Definition =>
             declare
@@ -366,7 +378,8 @@ package body Synth.Decls is
                   Rng := Synth_Discrete_Range_Constraint
                     (Syn_Inst, Get_Range_Constraint (Atype));
                   W := Discrete_Range_Width (Rng);
-                  return Create_Discrete_Type (Rng, W);
+                  return
+                    Create_Discrete_Type (Rng, Btype.Sz, W);
                end if;
             end;
          when Iir_Kind_Floating_Subtype_Definition =>
@@ -719,8 +732,7 @@ package body Synth.Decls is
          Error_Msg_Synth
            (+Decl, "variable with access type is not synthesizable");
          --  FIXME: use a poison value ?
-         Create_Object (Syn_Inst, Decl,
-                        (Obj_Typ, Create_Value_Default (Obj_Typ)));
+         Create_Object (Syn_Inst, Decl, Create_Value_Default (Obj_Typ));
       else
          if Is_Valid (Def) then
             Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
@@ -729,7 +741,7 @@ package body Synth.Decls is
             Init := Create_Value_Default (Obj_Typ);
          end if;
          if Get_Instance_Const (Syn_Inst) then
-            Init.Val := Unshare (Init.Val, Current_Pool);
+            Init := Unshare (Init, Current_Pool);
             Create_Object (Syn_Inst, Decl, Init);
          else
             Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
@@ -747,7 +759,7 @@ package body Synth.Decls is
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
       Atype : constant Node := Get_Declaration_Type (Decl);
-      Off : Uns32;
+      Off : Value_Offsets;
       Voff : Net;
       Rdwd : Width;
       Res : Valtyp;
@@ -770,7 +782,8 @@ package body Synth.Decls is
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
          Res := Create_Value_Net
-           (Build2_Extract (Get_Build (Syn_Inst), Base.Val.N, Off, Typ.W),
+           (Build2_Extract (Get_Build (Syn_Inst),
+                            Base.Val.N, Off.Net_Off, Typ.W),
             Typ);
       else
          Res := Create_Value_Alias (Base.Val, Off, Typ);

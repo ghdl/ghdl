@@ -20,6 +20,8 @@
 
 with Ada.Unchecked_Conversion;
 with System;
+with System.Storage_Elements;
+
 with Mutils; use Mutils;
 
 with Netlists.Utils;
@@ -36,26 +38,21 @@ package body Synth.Values is
 
    function To_Value_Acc is new Ada.Unchecked_Conversion
      (System.Address, Value_Acc);
-   function To_Value_Array_Acc is new Ada.Unchecked_Conversion
-     (System.Address, Values.Value_Array_Acc);
+
+   function "+" (L, R : Value_Offsets) return Value_Offsets is
+   begin
+      return (L.Net_Off + R.Net_Off, L.Mem_Off + R.Mem_Off);
+   end "+";
 
    function Is_Static (Val : Value_Acc) return Boolean is
    begin
       case Val.Kind is
-         when Value_Discrete
-           | Value_Float =>
+         when Value_Memory =>
             return True;
          when Value_Net
            | Value_Wire =>
             return False;
-         when Value_Const_Array
-           | Value_Const_Record =>
-            return True;
-         when Value_Array
-           | Value_Record =>
-            return False;
-         when Value_Access
-           | Value_File =>
+         when Value_File =>
             return True;
          when Value_Alias =>
             return Is_Static (Val.A_Obj);
@@ -67,21 +64,13 @@ package body Synth.Values is
    function Is_Static_Val (Val : Value_Acc) return Boolean is
    begin
       case Val.Kind is
-         when Value_Discrete
-           | Value_Float =>
+         when Value_Memory =>
             return True;
          when Value_Net =>
             return Netlists.Utils.Is_Const_Net (Val.N);
          when Value_Wire =>
             return Is_Const_Wire (Val.W);
-         when Value_Const_Array
-           | Value_Const_Record =>
-            return True;
-         when Value_Array
-           | Value_Record =>
-            return False;
-         when Value_Access
-           | Value_File =>
+         when Value_File =>
             return True;
          when Value_Const =>
             return True;
@@ -120,7 +109,7 @@ package body Synth.Values is
             when Value_Const =>
                Res := Res.C_Val;
             when Value_Alias =>
-               if Res.A_Off /= 0 then
+               if Res.A_Off /= (0, 0) then
                   raise Internal_Error;
                end if;
                Res := Res.A_Obj;
@@ -135,12 +124,11 @@ package body Synth.Values is
       return (V.Typ, Strip_Alias_Const (V.Val));
    end Strip_Alias_Const;
 
-   function Is_Equal (L, R : Value_Acc) return Boolean
+   function Is_Equal (L, R : Valtyp) return Boolean
    is
-      L1 : constant Value_Acc := Strip_Alias_Const (L);
-      R1 : constant Value_Acc := Strip_Alias_Const (R);
+      L1 : constant Value_Acc := Strip_Alias_Const (L.Val);
+      R1 : constant Value_Acc := Strip_Alias_Const (R.Val);
    begin
-      pragma Unreferenced (L, R);
       if L1.Kind /= R1.Kind then
          return False;
       end if;
@@ -149,22 +137,20 @@ package body Synth.Values is
       end if;
 
       case L1.Kind is
-         when Value_Discrete =>
-            return L1.Scal = R1.Scal;
-         when Value_Float =>
-            return L1.Fp = R1.Fp;
-         when Value_Const_Array =>
-            if L1.Arr.Len /= R1.Arr.Len then
+         when Value_Const =>
+            raise Internal_Error;
+         when Value_Memory =>
+            pragma Assert (R1.Kind = Value_Memory);
+            if L.Typ.Sz /= R.Typ.Sz then
                return False;
             end if;
-            for I in L1.Arr.V'Range loop
-               if not Is_Equal (L1.Arr.V (I), R1.Arr.V (I)) then
+            --  FIXME: not correct for records, not correct for floats!
+            for I in 1 .. L.Typ.Sz loop
+               if L1.Mem (I - 1) /= R1.Mem (I - 1) then
                   return False;
                end if;
             end loop;
             return True;
-         when Value_Const =>
-            raise Internal_Error;
          when others =>
             --  TODO.
             raise Internal_Error;
@@ -198,7 +184,7 @@ package body Synth.Values is
          when Type_Slice =>
             return Are_Types_Equal (L.Slice_El, R.Slice_El);
          when Type_Array =>
-            if L.Abounds.Len /= R.Abounds.Len then
+            if L.Abounds.Ndim /= R.Abounds.Ndim then
                return False;
             end if;
             for I in L.Abounds.D'Range loop
@@ -270,6 +256,8 @@ package body Synth.Values is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Bit,
                                                 Is_Synth => True,
+                                                Al => 0,
+                                                Sz => 1,
                                                 W => 1)));
    end Create_Bit_Type;
 
@@ -280,17 +268,32 @@ package body Synth.Values is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Logic,
                                                 Is_Synth => True,
+                                                Al => 0,
+                                                Sz => 1,
                                                 W => 1)));
    end Create_Logic_Type;
 
-   function Create_Discrete_Type (Rng : Discrete_Range_Type; W : Width)
+   function Create_Discrete_Type (Rng : Discrete_Range_Type;
+                                  Sz : Size_Type;
+                                  W : Width)
                                  return Type_Acc
    is
       subtype Discrete_Type_Type is Type_Type (Type_Discrete);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Discrete_Type_Type);
+      Al : Palign_Type;
    begin
+      if Sz <= 1 then
+         Al := 0;
+      elsif Sz <= 4 then
+         Al := 2;
+      else
+         pragma Assert (Sz <= 8);
+         Al := 3;
+      end if;
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Discrete,
                                                 Is_Synth => True,
+                                                Al => Al,
+                                                Sz => Sz,
                                                 W => W,
                                                 Drange => Rng)));
    end Create_Discrete_Type;
@@ -302,6 +305,8 @@ package body Synth.Values is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Float,
                                                 Is_Synth => True,
+                                                Al => 3,
+                                                Sz => 8,
                                                 W => 64,
                                                 Frange => Rng)));
    end Create_Float_Type;
@@ -312,22 +317,29 @@ package body Synth.Values is
       subtype Vector_Type_Type is Type_Type (Type_Vector);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Vector_Type_Type);
    begin
-      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Vector,
-                                                Is_Synth => True,
-                                                W => Bnd.Len,
-                                                Vbound => Bnd,
-                                                Vec_El => El_Type)));
+      return To_Type_Acc
+        (Alloc (Current_Pool, (Kind => Type_Vector,
+                               Is_Synth => True,
+                               Al => El_Type.Al,
+                               Sz => El_Type.Sz * Size_Type (Bnd.Len),
+                               W => Bnd.Len,
+                               Vbound => Bnd,
+                               Vec_El => El_Type)));
    end Create_Vector_Type;
 
-   function Create_Slice_Type (W : Width; El_Type : Type_Acc) return Type_Acc
+   function Create_Slice_Type (Len : Uns32; El_Type : Type_Acc)
+                              return Type_Acc
    is
       subtype Slice_Type_Type is Type_Type (Type_Slice);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Slice_Type_Type);
    begin
-      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Slice,
-                                                Is_Synth => El_Type.Is_Synth,
-                                                W => W,
-                                                Slice_El => El_Type)));
+      return To_Type_Acc (Alloc (Current_Pool,
+                                 (Kind => Type_Slice,
+                                  Is_Synth => El_Type.Is_Synth,
+                                  Al => El_Type.Al,
+                                  Sz => Size_Type (Len) * El_Type.Sz,
+                                  W => Len * El_Type.W,
+                                  Slice_El => El_Type)));
    end Create_Slice_Type;
 
    function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
@@ -372,17 +384,20 @@ package body Synth.Values is
    is
       subtype Array_Type_Type is Type_Type (Type_Array);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Array_Type_Type);
-      W : Width;
+      L : Uns32;
    begin
-      W := El_Type.W;
+      L := 1;
       for I in Bnd.D'Range loop
-         W := W * Bnd.D (I).Len;
+         L := L * Bnd.D (I).Len;
       end loop;
-      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Array,
-                                                Is_Synth => El_Type.Is_Synth,
-                                                W => W,
-                                                Abounds => Bnd,
-                                                Arr_El => El_Type)));
+      return To_Type_Acc (Alloc (Current_Pool,
+                                 (Kind => Type_Array,
+                                  Is_Synth => El_Type.Is_Synth,
+                                  Al => El_Type.Al,
+                                  Sz => El_Type.Sz * Size_Type (L),
+                                  W => El_Type.W * L,
+                                  Abounds => Bnd,
+                                  Arr_El => El_Type)));
    end Create_Array_Type;
 
    function Create_Unbounded_Array (Ndim : Dim_Type; El_Type : Type_Acc)
@@ -393,6 +408,8 @@ package body Synth.Values is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Array,
                                                 Is_Synth => El_Type.Is_Synth,
+                                                Al => El_Type.Al,
+                                                Sz => 0,
                                                 W => 0,
                                                 Uarr_Ndim => Ndim,
                                                 Uarr_El => El_Type)));
@@ -405,6 +422,8 @@ package body Synth.Values is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Vector,
                                                 Is_Synth => El_Type.Is_Synth,
+                                                Al => El_Type.Al,
+                                                Sz => 0,
                                                 W => 0,
                                                 Uvec_El => El_Type)));
    end Create_Unbounded_Vector;
@@ -441,6 +460,23 @@ package body Synth.Values is
       end case;
    end Get_Array_Bound;
 
+   function Get_Range_Length (Rng : Discrete_Range_Type) return Uns32
+   is
+      Len : Int64;
+   begin
+      case Rng.Dir is
+         when Iir_To =>
+            Len := Rng.Right - Rng.Left + 1;
+         when Iir_Downto =>
+            Len := Rng.Left - Rng.Right + 1;
+      end case;
+      if Len < 0 then
+         return 0;
+      else
+         return Uns32 (Len);
+      end if;
+   end Get_Range_Length;
+
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc
    is
       use System;
@@ -468,22 +504,50 @@ package body Synth.Values is
       return To_Rec_El_Array_Acc (Res);
    end Create_Rec_El_Array;
 
-   function Create_Record_Type (Els : Rec_El_Array_Acc; W : Width)
+   function Align (Off : Size_Type; Al : Palign_Type) return Size_Type
+   is
+      Mask : constant Size_Type := 2 ** Natural (Al) - 1;
+   begin
+      return (Off + Mask) and not Mask;
+   end Align;
+
+   function Create_Record_Type (Els : Rec_El_Array_Acc)
                                return Type_Acc
    is
       subtype Record_Type_Type is Type_Type (Type_Record);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Record_Type_Type);
       Is_Synth : Boolean;
+      W : Width;
+      Al : Palign_Type;
+      Sz : Size_Type;
    begin
+      --  Layout the record.
       Is_Synth := True;
+      Al := 0;
+      Sz := 0;
+      W := 0;
       for I in Els.E'Range loop
-         if not Els.E (I).Typ.Is_Synth then
-            Is_Synth := False;
-            exit;
-         end if;
+         declare
+            E : Rec_El_Type renames Els.E (I);
+         begin
+            --  For nets.
+            E.Boff := W;
+            Is_Synth := Is_Synth and E.Typ.Is_Synth;
+            W := W + E.Typ.W;
+
+            --  For memory.
+            Al := Palign_Type'Max (Al, E.Typ.Al);
+            Sz := Align (Sz, E.Typ.Al);
+            E.Moff := Sz;
+            Sz := Sz + E.Typ.Sz;
+         end;
       end loop;
+      Sz := Align (Sz, Al);
+
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Record,
                                                 Is_Synth => Is_Synth,
+                                                Al => Al,
+                                                Sz => Sz,
                                                 W => W,
                                                 Rec => Els)));
    end Create_Record_Type;
@@ -495,6 +559,8 @@ package body Synth.Values is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Access,
                                                 Is_Synth => False,
+                                                Al => 2,
+                                                Sz => 4,
                                                 W => 32,
                                                 Acc_Acc => Acc_Type)));
    end Create_Access_Type;
@@ -506,6 +572,8 @@ package body Synth.Values is
    begin
       return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_File,
                                                 Is_Synth => False,
+                                                Al => 2,
+                                                Sz => 4,
                                                 W => 32,
                                                 File_Typ => File_Type)));
    end Create_File_Type;
@@ -543,54 +611,23 @@ package body Synth.Values is
       return (Ntype, Create_Value_Net (N));
    end Create_Value_Net;
 
-   function Create_Value_Discrete (Val : Int64) return Value_Acc
+   function Create_Value_Memory (Vtype : Type_Acc) return Valtyp
    is
-      subtype Value_Type_Discrete is Value_Type (Value_Discrete);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Discrete);
+      subtype Value_Type_Memory is Value_Type (Value_Memory);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Memory);
+      function To_Memory_Ptr is new Ada.Unchecked_Conversion
+        (System.Address, Memory_Ptr);
+      V : Value_Acc;
+      M : System.Address;
    begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Discrete, Scal => Val)));
-   end Create_Value_Discrete;
+      Areapools.Allocate (Current_Pool.all, M,
+                          Vtype.Sz, Size_Type (2 ** Natural (Vtype.Al)));
+      V := To_Value_Acc
+        (Alloc (Current_Pool, Value_Type_Memory'(Kind => Value_Memory,
+                                                 Mem => To_Memory_Ptr (M))));
 
-   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc) return Valtyp
-   is
-      pragma Assert (Vtype /= null);
-   begin
-      return (Vtype, Create_Value_Discrete (Val));
-   end Create_Value_Discrete;
-
-   function Create_Value_Float (Val : Fp64) return Value_Acc
-   is
-      subtype Value_Type_Float is Value_Type (Value_Float);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Float);
-   begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Float, Fp => Val)));
-   end Create_Value_Float;
-
-   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp
-   is
-      pragma Assert (Vtype /= null);
-   begin
-      return (Vtype, Create_Value_Float (Val));
-   end Create_Value_Float;
-
-   function Create_Value_Access (Acc : Heap_Index) return Value_Acc
-   is
-      subtype Value_Type_Access is Value_Type (Value_Access);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Access);
-   begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Access, Acc => Acc)));
-   end Create_Value_Access;
-
-   function Create_Value_Access (Vtype : Type_Acc; Acc : Heap_Index)
-                                return Valtyp
-   is
-      pragma Assert (Vtype /= null);
-   begin
-      return (Vtype, Create_Value_Access (Acc));
-   end Create_Value_Access;
+      return (Vtype, V);
+   end Create_Value_Memory;
 
    function Create_Value_File (File : File_Index) return Value_Acc
    is
@@ -609,79 +646,16 @@ package body Synth.Values is
       return (Vtype, Create_Value_File (File));
    end Create_Value_File;
 
-   function Create_Value_Array (Len : Iir_Index32) return Value_Array_Acc
-   is
-      use System;
-      subtype Data_Type is Values.Value_Array_Type (Len);
-      Res : Address;
+   function Vec_Length (Typ : Type_Acc) return Iir_Index32 is
    begin
-      --  Manually allocate the array to handle large arrays without
-      --  creating a large temporary value.
-      Areapools.Allocate
-        (Current_Pool.all, Res,
-         Data_Type'Size / Storage_Unit, Data_Type'Alignment);
+      return Iir_Index32 (Typ.Vbound.Len);
+   end Vec_Length;
 
-      declare
-         --  Discard the warnings for no pragma Import as we really want
-         --  to use the default initialization.
-         pragma Warnings (Off);
-         Addr1 : constant Address := Res;
-         Init : Data_Type;
-         for Init'Address use Addr1;
-         pragma Warnings (On);
-      begin
-         null;
-      end;
-
-      return To_Value_Array_Acc (Res);
-   end Create_Value_Array;
-
-   function Create_Value_Array (Arr : Value_Array_Acc) return Value_Acc
-   is
-      subtype Value_Type_Array is Value_Type (Value_Array);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Array);
-
-      Res : Value_Acc;
-   begin
-      Res := To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Array, Arr => Arr)));
-      return Res;
-   end Create_Value_Array;
-
-   function Create_Value_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                               return Valtyp
-   is
-      pragma Assert (Bounds /= null);
-   begin
-      return (Bounds, Create_Value_Array (Arr));
-   end Create_Value_Array;
-
-   function Create_Value_Const_Array (Arr : Value_Array_Acc) return Value_Acc
-   is
-      subtype Value_Type_Const_Array is Value_Type (Value_Const_Array);
-      function Alloc is
-         new Areapools.Alloc_On_Pool_Addr (Value_Type_Const_Array);
-
-      Res : Value_Acc;
-   begin
-      Res := To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Const_Array, Arr => Arr)));
-      return Res;
-   end Create_Value_Const_Array;
-
-   function Create_Value_Const_Array (Bounds : Type_Acc; Arr : Value_Array_Acc)
-                                     return Valtyp
-   is
-      pragma Assert (Bounds /= null);
-   begin
-      return (Bounds, Create_Value_Const_Array (Arr));
-   end Create_Value_Const_Array;
-
-   function Get_Array_Flat_Length (Typ : Type_Acc) return Width is
+   function Get_Array_Flat_Length (Typ : Type_Acc) return Iir_Index32 is
    begin
       case Typ.Kind is
          when Type_Vector =>
-            return Typ.Vbound.Len;
+            return Iir_Index32 (Typ.Vbound.Len);
          when Type_Array =>
             declare
                Len : Width;
@@ -690,91 +664,26 @@ package body Synth.Values is
                for I in Typ.Abounds.D'Range loop
                   Len := Len * Typ.Abounds.D (I).Len;
                end loop;
-               return Len;
+               return Iir_Index32 (Len);
             end;
          when others =>
             raise Internal_Error;
       end case;
    end Get_Array_Flat_Length;
 
-   procedure Create_Array_Data (Arr : Valtyp)
-   is
-      Len : Width;
-   begin
-      case Arr.Typ.Kind is
-         when Type_Array =>
-            Len := Get_Array_Flat_Length (Arr.Typ);
-         when Type_Vector =>
-            Len := Arr.Typ.Vbound.Len;
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      Arr.Val.Arr := Create_Value_Array (Iir_Index32 (Len));
-   end Create_Array_Data;
-
-   function Create_Value_Array (Bounds : Type_Acc) return Value_Acc
-   is
-      Res : Value_Acc;
-   begin
-      Res := Create_Value_Array (Value_Array_Acc'(null));
-      Create_Array_Data ((Bounds, Res));
-      return Res;
-   end Create_Value_Array;
-
-   function Create_Value_Record (Els : Value_Array_Acc) return Value_Acc
-   is
-      subtype Value_Type_Record is Value_Type (Value_Record);
-      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Record);
-   begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Record,
-                                   Rec => Els)));
-   end Create_Value_Record;
-
-   function Create_Value_Record (Typ : Type_Acc; Els : Value_Array_Acc)
-                                return Valtyp
+   function Create_Value_Alias
+     (Obj : Value_Acc; Off : Value_Offsets; Typ : Type_Acc) return Valtyp
    is
       pragma Assert (Typ /= null);
-   begin
-      return (Typ, Create_Value_Record (Els));
-   end Create_Value_Record;
-
-   function Create_Value_Const_Record (Els : Value_Array_Acc) return Value_Acc
-   is
-      subtype Value_Type_Const_Record is Value_Type (Value_Const_Record);
-      function Alloc is
-         new Areapools.Alloc_On_Pool_Addr (Value_Type_Const_Record);
-   begin
-      return To_Value_Acc (Alloc (Current_Pool,
-                                  (Kind => Value_Const_Record, Rec => Els)));
-   end Create_Value_Const_Record;
-
-   function Create_Value_Const_Record (Typ : Type_Acc; Els : Value_Array_Acc)
-                                      return Valtyp
-   is
-      pragma Assert (Typ /= null);
-   begin
-      return (Typ, Create_Value_Const_Record (Els));
-   end Create_Value_Const_Record;
-
-   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32) return Value_Acc
-   is
       subtype Value_Type_Alias is Value_Type (Value_Alias);
       function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Alias);
+      Val : Value_Acc;
    begin
-      return To_Value_Acc (Alloc (Current_Pool,
+      Val := To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Alias,
                                    A_Obj => Obj,
                                    A_Off => Off)));
-   end Create_Value_Alias;
-
-   function Create_Value_Alias (Obj : Value_Acc; Off : Uns32; Typ : Type_Acc)
-                               return Valtyp
-   is
-      pragma Assert (Typ /= null);
-   begin
-      return (Typ, Create_Value_Alias (Obj, Off));
+      return (Typ, Val);
    end Create_Value_Alias;
 
    function Create_Value_Const (Val : Value_Acc; Loc : Syn_Src)
@@ -797,70 +706,45 @@ package body Synth.Values is
       return (Val.Typ, Create_Value_Const (Val.Val, Loc));
    end Create_Value_Const;
 
-   procedure Strip_Const (Val : in out Value_Acc) is
-   begin
-      if Val.Kind = Value_Const then
-         Val := Val.C_Val;
-      end if;
-   end Strip_Const;
-
-   function Strip_Const (Val : Value_Acc) return Value_Acc is
-   begin
-      if Val.Kind = Value_Const then
-         return Val.C_Val;
-      else
-         return Val;
-      end if;
-   end Strip_Const;
-
    procedure Strip_Const (Vt : in out Valtyp) is
    begin
-      Vt.Val := Strip_Const (Vt.Val);
+      if Vt.Val.Kind = Value_Const then
+         Vt.Val := Vt.Val.C_Val;
+      end if;
    end Strip_Const;
 
-   function Copy (Src : Value_Acc) return Value_Acc;
-
-   function Copy_Array (Arr : Value_Array_Acc) return Value_Array_Acc
+   procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type)
    is
-      Res : Value_Array_Acc;
    begin
-      Res := Create_Value_Array (Arr.Len);
-      for I in Res.V'Range loop
-         Res.V (I) := Copy (Arr.V (I));
+      for I in 1 .. Sz loop
+         Dest (I - 1) := Src (I - 1);
       end loop;
-      return Res;
-   end Copy_Array;
+   end Copy_Memory;
 
-   function Copy (Src : Value_Acc) return Value_Acc
+   procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp)
    is
-      Res : Value_Acc;
-      Arr : Value_Array_Acc;
+      Mt : Memtyp;
    begin
-      case Src.Kind is
+      Mt := Get_Memtyp (Vt);
+      Copy_Memory (Dest, Mt.Mem, Mt.Typ.Sz);
+   end Write_Value;
+
+   function Copy (Src : Valtyp) return Valtyp
+   is
+      Res : Valtyp;
+   begin
+      case Src.Val.Kind is
+         when Value_Memory =>
+            Res := Create_Value_Memory (Src.Typ);
+            for I in 1 .. Src.Typ.Sz loop
+               Res.Val.Mem (I - 1) := Src.Val.Mem (I - 1);
+            end loop;
          when Value_Net =>
-            Res := Create_Value_Net (Src.N);
+            Res := Create_Value_Net (Src.Val.N, Src.Typ);
          when Value_Wire =>
-            Res := Create_Value_Wire (Src.W);
-         when Value_Discrete =>
-            Res := Create_Value_Discrete (Src.Scal);
-         when Value_Float =>
-            Res := Create_Value_Float (Src.Fp);
-         when Value_Array =>
-            Arr := Copy_Array (Src.Arr);
-            Res := Create_Value_Array (Arr);
-         when Value_Const_Array =>
-            Arr := Copy_Array (Src.Arr);
-            Res := Create_Value_Const_Array (Arr);
-         when Value_Record =>
-            Arr := Copy_Array (Src.Rec);
-            Res := Create_Value_Record (Arr);
-         when Value_Const_Record =>
-            Arr := Copy_Array (Src.Rec);
-            Res := Create_Value_Const_Record (Arr);
-         when Value_Access =>
-            Res := Create_Value_Access (Src.Acc);
+            Res := Create_Value_Wire (Src.Val.W, Src.Typ);
          when Value_File =>
-            Res := Create_Value_File (Src.File);
+            Res := Create_Value_File (Src.Typ, Src.Val.File);
          when Value_Const =>
             raise Internal_Error;
          when Value_Alias =>
@@ -869,11 +753,10 @@ package body Synth.Values is
       return Res;
    end Copy;
 
-   function Unshare (Src : Value_Acc; Pool : Areapool_Acc)
-                    return Value_Acc
+   function Unshare (Src : Valtyp; Pool : Areapool_Acc) return Valtyp
    is
       Prev_Pool : constant Areapool_Acc := Current_Pool;
-      Res : Value_Acc;
+      Res : Valtyp;
    begin
       Current_Pool := Pool;
       Res := Copy (Src);
@@ -939,27 +822,240 @@ package body Synth.Values is
       end case;
    end Is_Matching_Bounds;
 
-   function Create_Value_Default (Typ : Type_Acc) return Value_Acc is
+   type Ghdl_U8_Ptr is access all Ghdl_U8;
+   function To_U8_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_U8_Ptr);
+
+   procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8) is
+   begin
+      To_U8_Ptr (Mem).all := Val;
+   end Write_U8;
+
+   function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8 is
+   begin
+      return To_U8_Ptr (Mem).all;
+   end Read_U8;
+
+   type Ghdl_I32_Ptr is access all Ghdl_I32;
+   function To_I32_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_I32_Ptr);
+
+   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32) is
+   begin
+      To_I32_Ptr (Mem).all := Val;
+   end Write_I32;
+
+   function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32 is
+   begin
+      return To_I32_Ptr (Mem).all;
+   end Read_I32;
+
+   type Ghdl_U32_Ptr is access all Ghdl_U32;
+   function To_U32_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_U32_Ptr);
+
+   procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32) is
+   begin
+      To_U32_Ptr (Mem).all := Val;
+   end Write_U32;
+
+   function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32 is
+   begin
+      return To_U32_Ptr (Mem).all;
+   end Read_U32;
+
+   type Ghdl_I64_Ptr is access all Ghdl_I64;
+   function To_I64_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_I64_Ptr);
+
+   procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64) is
+   begin
+      To_I64_Ptr (Mem).all := Val;
+   end Write_I64;
+
+   function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64 is
+   begin
+      return To_I64_Ptr (Mem).all;
+   end Read_I64;
+
+   type Fp64_Ptr is access all Fp64;
+   function To_Fp64_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Fp64_Ptr);
+
+   procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64) is
+   begin
+      To_Fp64_Ptr (Mem).all := Val;
+   end Write_Fp64;
+
+   function Read_Fp64 (Mem : Memory_Ptr) return Fp64 is
+   begin
+      return To_Fp64_Ptr (Mem).all;
+   end Read_Fp64;
+
+   type Heap_Index_Ptr is access all Heap_Index;
+   function To_Heap_Index_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Heap_Index_Ptr);
+
+   procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index) is
+   begin
+      To_Heap_Index_Ptr (Mem).all := Val;
+   end Write_Access;
+
+   function Read_Access (Mem : Memory_Ptr) return Heap_Index is
+   begin
+      return To_Heap_Index_Ptr (Mem).all;
+   end Read_Access;
+
+   function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
+   is
+      use System.Storage_Elements;
+
+      function To_Address is new Ada.Unchecked_Conversion
+        (Memory_Ptr, System.Address);
+      function To_Memory_Ptr is new Ada.Unchecked_Conversion
+        (System.Address, Memory_Ptr);
+   begin
+      return To_Memory_Ptr (To_Address (Base) + Storage_Offset (Off));
+   end "+";
+
+   procedure Write_Discrete (Mem : Memory_Ptr; Typ : Type_Acc; Val : Int64) is
+   begin
+      case Typ.Sz is
+         when 1 =>
+            Write_U8 (Mem, Ghdl_U8 (Val));
+         when 4 =>
+            Write_I32 (Mem, Ghdl_I32 (Val));
+         when 8 =>
+            Write_I64 (Mem, Ghdl_I64 (Val));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Write_Discrete;
+
+   procedure Write_Discrete (Vt : Valtyp; Val : Int64) is
+   begin
+      Write_Discrete (Vt.Val.Mem, Vt.Typ, Val);
+   end Write_Discrete;
+
+   function Read_Discrete (Mem : Memory_Ptr; Typ : Type_Acc) return Int64 is
+   begin
+      case Typ.Sz is
+         when 1 =>
+            return Int64 (Read_U8 (Mem));
+         when 4 =>
+            return Int64 (Read_I32 (Mem));
+         when 8 =>
+            return Int64 (Read_I64 (Mem));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Read_Discrete;
+
+   function Read_Discrete (Vt : Valtyp) return Int64 is
+   begin
+      return Read_Discrete (Vt.Val.Mem, Vt.Typ);
+   end Read_Discrete;
+
+   function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp
+   is
+      Res : Valtyp;
+      pragma Assert (Vtype /= null);
+   begin
+      Res := Create_Value_Memory (Vtype);
+      Write_Fp64 (Res.Val.Mem, Val);
+      return Res;
+   end Create_Value_Float;
+
+   function Read_Fp64 (Vt : Valtyp) return Fp64 is
+   begin
+      pragma Assert (Vt.Typ.Kind = Type_Float);
+      pragma Assert (Vt.Typ.Sz = 8);
+      return Read_Fp64 (Vt.Val.Mem);
+   end Read_Fp64;
+
+   function Read_Access (Vt : Valtyp) return Heap_Index is
+   begin
+      pragma Assert (Vt.Typ.Kind = Type_Access);
+      return Read_Access (Vt.Val.Mem);
+   end Read_Access;
+
+   function Create_Value_Discrete (Val : Int64; Vtype : Type_Acc) return Valtyp
+   is
+      Res : Valtyp;
+   begin
+      Res := Create_Value_Memory (Vtype);
+      case Vtype.Sz is
+         when 1 =>
+            Write_U8 (Res.Val.Mem, Ghdl_U8 (Val));
+         when 4 =>
+            Write_I32 (Res.Val.Mem, Ghdl_I32 (Val));
+         when 8 =>
+            Write_I64 (Res.Val.Mem, Ghdl_I64 (Val));
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Create_Value_Discrete;
+
+   function Create_Value_Uns (Val : Uns64; Vtype : Type_Acc) return Valtyp
+   is
+      Res : Valtyp;
+   begin
+      Res := Create_Value_Memory (Vtype);
+      case Vtype.Sz is
+         when 1 =>
+            Write_U8 (Res.Val.Mem, Ghdl_U8 (Val));
+         when 4 =>
+            Write_U32 (Res.Val.Mem, Ghdl_U32 (Val));
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Create_Value_Uns;
+
+   pragma Unreferenced (Read_U32);
+
+   function Create_Value_Int (Val : Int64; Vtype : Type_Acc) return Valtyp
+   is
+      Res : Valtyp;
+   begin
+      Res := Create_Value_Memory (Vtype);
+      case Vtype.Sz is
+         when 4 =>
+            Write_I32 (Res.Val.Mem, Ghdl_I32 (Val));
+         when 8 =>
+            Write_I64 (Res.Val.Mem, Ghdl_I64 (Val));
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Create_Value_Int;
+
+   function Arr_Index (M : Memory_Ptr; Idx : Iir_Index32; El_Typ : Type_Acc)
+                      return Memory_Ptr is
+   begin
+      return M + Size_Type (Idx) * El_Typ.Sz;
+   end Arr_Index;
+
+   procedure Write_Value_Default (M : Memory_Ptr; Typ : Type_Acc) is
    begin
       case Typ.Kind is
          when Type_Bit
            | Type_Logic =>
             --  FIXME: what about subtype ?
-            return Create_Value_Discrete (0);
+            Write_U8 (M, 0);
          when Type_Discrete =>
-            return Create_Value_Discrete (Typ.Drange.Left);
+            Write_Discrete (M, Typ, Typ.Drange.Left);
          when Type_Float =>
-            return Create_Value_Float (Typ.Frange.Left);
+            Write_Fp64 (M, Typ.Frange.Left);
          when Type_Vector =>
             declare
+               Len : constant Iir_Index32 := Vec_Length (Typ);
                El_Typ : constant Type_Acc := Typ.Vec_El;
-               Arr : Value_Array_Acc;
             begin
-               Arr := Create_Value_Array (Iir_Index32 (Typ.Vbound.Len));
-               for I in Arr.V'Range loop
-                  Arr.V (I) := Create_Value_Default (El_Typ);
+               for I in 1 .. Len loop
+                  Write_Value_Default (Arr_Index (M, I - 1, El_Typ), El_Typ);
                end loop;
-               return Create_Value_Const_Array (Arr);
             end;
          when Type_Unbounded_Vector =>
             raise Internal_Error;
@@ -967,49 +1063,77 @@ package body Synth.Values is
             raise Internal_Error;
          when Type_Array =>
             declare
-               El_Typ : constant Type_Acc := Get_Array_Element (Typ);
-               Arr : Value_Array_Acc;
+               Len : constant Iir_Index32 := Get_Array_Flat_Length (Typ);
+               El_Typ : constant Type_Acc := Typ.Arr_El;
             begin
-               Arr := Create_Value_Array
-                 (Iir_Index32 (Get_Array_Flat_Length (Typ)));
-               for I in Arr.V'Range loop
-                  Arr.V (I) := Create_Value_Default (El_Typ);
+               for I in 1 .. Len loop
+                  Write_Value_Default (Arr_Index (M, I - 1, El_Typ), El_Typ);
                end loop;
-               return Create_Value_Const_Array (Arr);
             end;
          when Type_Unbounded_Array =>
             raise Internal_Error;
          when Type_Record =>
-            declare
-               Els : Value_Array_Acc;
-            begin
-               Els := Create_Value_Array (Typ.Rec.Len);
-               for I in Els.V'Range loop
-                  Els.V (I) := Create_Value_Default (Typ.Rec.E (I).Typ);
-               end loop;
-               return Create_Value_Const_Record (Els);
-            end;
+            for I in Typ.Rec.E'Range loop
+               Write_Value_Default (M + Typ.Rec.E (I).Moff, Typ.Rec.E (I).Typ);
+            end loop;
          when Type_Access =>
-            return Create_Value_Access (Null_Heap_Index);
+            Write_Access (M, Null_Heap_Index);
          when Type_File =>
             raise Internal_Error;
       end case;
-   end Create_Value_Default;
+   end Write_Value_Default;
 
-   function Create_Value_Default (Typ : Type_Acc) return Valtyp is
-   begin
-      return (Typ, Create_Value_Default (Typ));
-   end Create_Value_Default;
-
-   function Value_To_String (Val : Value_Acc) return String
+   function Create_Value_Default (Typ : Type_Acc) return Valtyp
    is
-      Str : String (1 .. Natural (Val.Arr.Len));
+      Res : Valtyp;
    begin
-      for I in Val.Arr.V'Range loop
-         Str (Natural (I)) := Character'Val (Val.Arr.V (I).Scal);
+      Res := Create_Value_Memory (Typ);
+      Write_Value_Default (Res.Val.Mem, Typ);
+      return Res;
+   end Create_Value_Default;
+
+   function Create_Value_Access (Val : Heap_Index; Acc_Typ : Type_Acc)
+                                return Valtyp
+   is
+      Res : Valtyp;
+   begin
+      Res := Create_Value_Memory (Acc_Typ);
+      Write_Access (Res.Val.Mem, Val);
+      return Res;
+   end Create_Value_Access;
+
+   function Value_To_String (Val : Valtyp) return String
+   is
+      Str : String (1 .. Natural (Val.Typ.Abounds.D (1).Len));
+   begin
+      for I in Str'Range loop
+         Str (Natural (I)) := Character'Val
+           (Read_U8 (Val.Val.Mem + Size_Type (I - 1)));
       end loop;
       return Str;
    end Value_To_String;
+
+   function Get_Memtyp (V : Valtyp) return Memtyp is
+   begin
+      case V.Val.Kind is
+         when Value_Net
+           | Value_Wire =>
+            raise Internal_Error;
+         when Value_Memory =>
+            return (V.Typ, V.Val.Mem);
+         when Value_Alias =>
+            declare
+               T : Memtyp;
+            begin
+               T := Get_Memtyp ((V.Typ, V.Val.A_Obj));
+               return (T.Typ, T.Mem + V.Val.A_Off.Mem_Off);
+            end;
+         when Value_Const =>
+            return Get_Memtyp ((V.Typ, V.Val.C_Val));
+         when Value_File =>
+            raise Internal_Error;
+      end case;
+   end Get_Memtyp;
 
    procedure Init is
    begin

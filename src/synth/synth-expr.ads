@@ -23,7 +23,6 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 
 with Netlists; use Netlists;
-with Netlists.Utils; use Netlists.Utils;
 
 with Synth.Source;
 with Synth.Values; use Synth.Values;
@@ -39,7 +38,6 @@ package Synth.Expr is
                                      return Valtyp;
 
    --  For a static value V, return the value.
-   function Get_Static_Discrete (V : Value_Acc) return Int64;
    function Get_Static_Discrete (V : Valtyp) return Int64;
 
    --  Return True only if discrete value V is known to be positive or 0.
@@ -66,7 +64,7 @@ package Synth.Expr is
    function Synth_Clock_Edge
      (Syn_Inst : Synth_Instance_Acc; Left, Right : Node) return Net;
 
-   function Concat_Array (Arr : Net_Array_Acc) return Net;
+   procedure Concat_Array (Arr : in out Net_Array; N : out Net);
 
    function Synth_Expression_With_Type
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Type_Acc)
@@ -101,11 +99,10 @@ package Synth.Expr is
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
                                  Pfx_Bnd : Bound_Type;
-                                 El_Wd : Width;
+                                 El_Typ : Type_Acc;
                                  Res_Bnd : out Bound_Type;
                                  Inp : out Net;
-                                 Off : out Uns32;
-                                 Wd : out Width);
+                                 Off : out Value_Offsets);
 
    --  If VOFF is No_Net then OFF is valid, if VOFF is not No_Net then
    --  OFF is 0.
@@ -113,8 +110,7 @@ package Synth.Expr is
                                  Name : Node;
                                  Pfx_Type : Type_Acc;
                                  Voff : out Net;
-                                 Off : out Uns32;
-                                 W : out Width);
+                                 Off : out Value_Offsets);
 
    --  Return the type of EXPR (an object) without evaluating it (except when
    --  needed, like bounds of a slice).

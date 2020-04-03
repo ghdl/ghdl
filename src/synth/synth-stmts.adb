@@ -111,15 +111,15 @@ package body Synth.Stmts is
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
-                                      Dest_Off : out Uns32;
+                                      Dest_Off : out Value_Offsets;
                                       Dest_Voff : out Net;
                                       Dest_Rdwd : out Width) is
    begin
       case Get_Kind (Pfx) is
          when Iir_Kind_Simple_Name =>
             Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx),
-                                     Dest_Base, Dest_Typ, Dest_Off,
-                                     Dest_Voff, Dest_Rdwd);
+                                     Dest_Base, Dest_Typ,
+                                     Dest_Off, Dest_Voff, Dest_Rdwd);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Variable_Declaration
@@ -143,20 +143,19 @@ package body Synth.Stmts is
                   Dest_Off := Targ.Val.A_Off;
                else
                   Dest_Base := Targ;
-                  Dest_Off := 0;
+                  Dest_Off := (0, 0);
                end if;
             end;
          when Iir_Kind_Function_Call =>
             Dest_Base := Synth_Expression (Syn_Inst, Pfx);
             Dest_Typ := Dest_Base.Typ;
-            Dest_Off := 0;
+            Dest_Off := (0, 0);
             Dest_Voff := No_Net;
             Dest_Rdwd := 0;
          when Iir_Kind_Indexed_Name =>
             declare
                Voff : Net;
-               Off : Uns32;
-               W : Width;
+               Off : Value_Offsets;
                Dest_W : Width;
             begin
                Synth_Assignment_Prefix
@@ -164,35 +163,20 @@ package body Synth.Stmts is
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
                Strip_Const (Dest_Base);
                Dest_W := Dest_Base.Typ.W;
-               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Voff, Off, W);
+               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Voff, Off);
 
                Dest_Typ := Get_Array_Element (Dest_Typ);
 
+               Dest_Off.Net_Off := Dest_Off.Net_Off + Off.Net_Off;
+               Dest_Off.Mem_Off := Dest_Off.Mem_Off + Off.Mem_Off;
+
                if Voff /= No_Net then
-                  Dest_Off := Dest_Off + Off;
                   if Dest_Voff = No_Net then
                      Dest_Voff := Voff;
                      Dest_Rdwd := Dest_W;
                   else
                      Dest_Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Voff, Voff);
-                  end if;
-               else
-                  Dest_Off := Dest_Off + Off;
-
-                  if Dest_Voff = No_Net then
-                     --  For constant objects, directly return the indexed
-                     --  object.
-                     if Dest_Base.Val.Kind
-                       in Value_Array .. Value_Const_Array
-                     then
-                        pragma Assert (Dest_Off = Off);
-                        Dest_Base.Val := Dest_Base.Val.Arr.V
-                          (Iir_Index32 ((Dest_W - Dest_Off) / W));
-                        Dest_Base.Typ := Dest_Typ;
-                        Dest_Off := 0;
-                        Dest_W := W;
-                     end if;
                   end if;
                end if;
             end;
@@ -201,26 +185,16 @@ package body Synth.Stmts is
             declare
                Idx : constant Iir_Index32 :=
                  Get_Element_Position (Get_Named_Entity (Pfx));
-               El_Typ : Type_Acc;
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
-               if Dest_Off /= 0 and then Dest_Voff /= No_Net then
-                  --  TODO.
-                  raise Internal_Error;
-               end if;
-               El_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
-               Strip_Const (Dest_Base);
-               if Dest_Base.Val.Kind = Value_Const_Record then
-                  --  Return the selected element.
-                  pragma Assert (Dest_Off = 0);
-                  Dest_Base.Val := Dest_Base.Val.Rec.V (Idx + 1);
-                  Dest_Base.Typ := El_Typ;
-               else
-                  Dest_Off := Dest_Off + Dest_Typ.Rec.E (Idx + 1).Off;
-               end if;
-               Dest_Typ := El_Typ;
+               Dest_Off.Net_Off :=
+                 Dest_Off.Net_Off + Dest_Typ.Rec.E (Idx + 1).Boff;
+               Dest_Off.Mem_Off :=
+                 Dest_Off.Mem_Off + Dest_Typ.Rec.E (Idx + 1).Moff;
+
+               Dest_Typ := Dest_Typ.Rec.E (Idx + 1).Typ;
             end;
 
          when Iir_Kind_Slice_Name =>
@@ -229,8 +203,7 @@ package body Synth.Stmts is
                El_Typ : Type_Acc;
                Res_Bnd : Bound_Type;
                Sl_Voff : Net;
-               Sl_Off : Uns32;
-               Wd : Uns32;
+               Sl_Off : Value_Offsets;
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
@@ -238,12 +211,14 @@ package body Synth.Stmts is
                Strip_Const (Dest_Base);
 
                Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ.W,
-                                   Res_Bnd, Sl_Voff, Sl_Off, Wd);
+               Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
+                                   Res_Bnd, Sl_Voff, Sl_Off);
+
+               Dest_Off.Net_Off := Dest_Off.Net_Off + Sl_Off.Net_Off;
+               Dest_Off.Mem_Off := Dest_Off.Mem_Off + Sl_Off.Mem_Off;
 
                if Sl_Voff /= No_Net then
                   --  Variable slice.
-                  Dest_Off := Dest_Off + Sl_Off;
                   if Dest_Voff /= No_Net then
                      Dest_Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Voff, Sl_Voff);
@@ -251,46 +226,11 @@ package body Synth.Stmts is
                      Dest_Rdwd := Dest_Base.Typ.W;
                      Dest_Voff := Sl_Voff;
                   end if;
-                  Dest_Typ := Create_Slice_Type (Wd, El_Typ);
+                  Dest_Typ := Create_Slice_Type (Res_Bnd.Len, El_Typ);
                else
                   --  Fixed slice.
                   Dest_Typ := Create_Onedimensional_Array_Subtype
                     (Dest_Typ, Res_Bnd);
-                  if Dest_Voff /= No_Net then
-                     --  Slice of a memory.
-                     Dest_Off := Dest_Off + Sl_Off;
-                  else
-                     if Dest_Base.Val.Kind in Value_Array .. Value_Const_Array
-                     then
-                        declare
-                           Arr : Value_Array_Acc;
-                           Off : Iir_Index32;
-                        begin
-                           pragma Assert (Dest_Off = 0);
-                           Arr := Create_Value_Array
-                             (Iir_Index32 (Res_Bnd.Len));
-                           case Pfx_Bnd.Dir is
-                              when Iir_To =>
-                                 Off := Iir_Index32
-                                   (Res_Bnd.Left - Pfx_Bnd.Left);
-                              when Iir_Downto =>
-                                 Off := Iir_Index32
-                                   (Pfx_Bnd.Left - Res_Bnd.Left);
-                           end case;
-                           Arr.V := Dest_Base.Val.Arr.V
-                             (Off + 1 .. Off + Iir_Index32 (Res_Bnd.Len));
-                           if Dest_Base.Val.Kind = Value_Array then
-                              Dest_Base.Val := Create_Value_Array (Arr);
-                           else
-                              Dest_Base.Val := Create_Value_Const_Array (Arr);
-                           end if;
-                           Dest_Base.Typ := Dest_Typ;
-                        end;
-                     else
-                        --  Slice of a vector.
-                        Dest_Off := Dest_Off + Sl_Off;
-                     end if;
-                  end if;
                end if;
             end;
 
@@ -299,10 +239,10 @@ package body Synth.Stmts is
             Synth_Assignment_Prefix
               (Syn_Inst, Get_Prefix (Pfx),
                Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
-            if Dest_Off /= 0 and then Dest_Voff /= No_Net then
+            if Dest_Off /= (0, 0) and then Dest_Voff /= No_Net then
                raise Internal_Error;
             end if;
-            Dest_Base := Heap.Synth_Dereference (Dest_Base.Val.Acc);
+            Dest_Base := Heap.Synth_Dereference (Read_Access (Dest_Base));
             Dest_Typ := Dest_Base.Typ;
 
          when others =>
@@ -320,8 +260,8 @@ package body Synth.Stmts is
       case Kind is
          when Target_Simple =>
             --  For a simple target, the destination is known.
-            Obj : Value_Acc;
-            Off : Uns32;
+            Obj : Valtyp;
+            Off : Value_Offsets;
          when Target_Aggregate =>
             --  For an aggregate: the type is computed and the details will
             --  be handled at the assignment.
@@ -377,7 +317,7 @@ package body Synth.Stmts is
             declare
                Base : Valtyp;
                Typ : Type_Acc;
-               Off : Uns32;
+               Off : Value_Offsets;
 
                Voff : Net;
                Rdwd : Width;
@@ -388,49 +328,22 @@ package body Synth.Stmts is
                   --  FIXME: check index.
                   return Target_Info'(Kind => Target_Simple,
                                       Targ_Type => Typ,
-                                      Obj => Base.Val,
+                                      Obj => Base,
                                       Off => Off);
                else
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => Typ,
                                       Mem_Obj => Base,
                                       Mem_Mwidth => Rdwd,
-                                      Mem_Moff => 0,
+                                      Mem_Moff => 0, -- Uns32 (Off.Mem_Off),
                                       Mem_Voff => Voff,
-                                      Mem_Doff => Off);
+                                      Mem_Doff => Off.Net_Off);
                end if;
             end;
          when others =>
             Error_Kind ("synth_target", Target);
       end case;
    end Synth_Target;
-
-   procedure Assign_Value (Targ : Value_Acc; Val : Value_Acc; Loc : Node) is
-   begin
-      case Targ.Kind is
-         when Value_Discrete =>
-            Targ.Scal := Val.Scal;
-         when Value_Access =>
-            Targ.Acc := Val.Acc;
-         when Value_Const_Array
-           | Value_Array =>
-            declare
-               Len : constant Iir_Index32 := Val.Arr.Len;
-            begin
-               for I in 1 .. Len loop
-                  Assign_Value (Targ.Arr.V (Targ.Arr.Len - Len + I),
-                                Val.Arr.V (I), Loc);
-               end loop;
-            end;
-         when Value_Const_Record
-           | Value_Record =>
-            for I in Targ.Rec.V'Range loop
-               Assign_Value (Targ.Rec.V (I), Val.Rec.V (I), Loc);
-            end loop;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Assign_Value;
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Target_Info;
@@ -446,15 +359,6 @@ package body Synth.Stmts is
       El_Typ : constant Type_Acc := Get_Array_Element (Val.Typ);
    begin
       case Val.Val.Kind is
-         when Value_Array
-           | Value_Const_Array =>
-            if Typ /= El_Typ then
-               --  Sub-array (vhdl 2008) not yet supported.
-               raise Internal_Error;
-            end if;
-            pragma Assert (Val.Typ.Vbound.Len >= Off);
-            return (El_Typ,
-                    Val.Val.Arr.V (Iir_Index32 (Val.Typ.Vbound.Len - Off)));
          when Value_Net
            | Value_Wire =>
             declare
@@ -515,17 +419,23 @@ package body Synth.Stmts is
             Synth_Assignment_Aggregate
               (Syn_Inst, Target.Aggr, Target.Targ_Type, Val, Loc);
          when Target_Simple =>
-            if Target.Obj.Kind = Value_Wire then
-               Synth_Assign (Target.Obj.W, Target.Targ_Type,
-                             Val, Target.Off, Loc);
+            if Target.Obj.Val.Kind = Value_Wire then
+               Synth_Assign (Target.Obj.Val.W, Target.Targ_Type,
+                             Val, Target.Off.Net_Off, Loc);
             else
                if not Is_Static (Val.Val) then
                   --  Maybe the error message is too cryptic ?
                   Error_Msg_Synth
                     (+Loc, "cannot assign a net to a static value");
                else
-                  pragma Assert (Target.Off = 0);
-                  Assign_Value (Target.Obj, Strip_Const (Val.Val), Loc);
+                  declare
+                     V : Valtyp;
+                  begin
+                     V := Val;
+                     Strip_Const (V);
+                     Copy_Memory (Target.Obj.Val.Mem + Target.Off.Mem_Off,
+                                  V.Val.Mem, V.Typ.Sz);
+                  end;
                end if;
             end if;
          when Target_Memory =>
@@ -588,9 +498,8 @@ package body Synth.Stmts is
    begin
       case Targ.Kind is
          when Target_Simple =>
-            N := Build2_Extract (Get_Build (Syn_Inst),
-                                 Get_Net ((Targ.Targ_Type, Targ.Obj)),
-                                 Targ.Off, Targ.Targ_Type.W);
+            N := Build2_Extract (Get_Build (Syn_Inst), Get_Net (Targ.Obj),
+                                 Targ.Off.Net_Off, Targ.Targ_Type.W);
             return Create_Value_Net (N, Targ.Targ_Type);
          when Target_Aggregate =>
             raise Internal_Error;
@@ -736,12 +645,12 @@ package body Synth.Stmts is
       end if;
       if Is_Static (Cond_Val.Val) then
          Strip_Const (Cond_Val);
-         if Cond_Val.Val.Scal = 1 then
+         if Read_Discrete (Cond_Val) = 1 then
             --  True.
             Synth_Sequential_Statements
               (C, Get_Sequential_Statement_Chain (Stmt));
          else
-            pragma Assert (Cond_Val.Val.Scal = 0);
+            pragma Assert (Read_Discrete (Cond_Val) = 0);
             if Is_Valid (Els) then
                --  Else part
                if Is_Null (Get_Condition (Els)) then
@@ -1101,7 +1010,7 @@ package body Synth.Stmts is
    end Synth_Case_Statement_Dynamic;
 
    procedure Synth_Case_Statement_Static_Array
-     (C : in out Seq_Context; Stmt : Node; Sel : Value_Acc)
+     (C : in out Seq_Context; Stmt : Node; Sel : Valtyp)
    is
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
       Choice : Node;
@@ -1122,7 +1031,7 @@ package body Synth.Stmts is
             when Iir_Kind_Choice_By_Expression =>
                Sel_Expr := Get_Choice_Expression (Choice);
                Sel_Val := Synth_Expression_With_Basetype (C.Inst, Sel_Expr);
-               if Is_Equal (Sel_Val.Val, Sel) then
+               if Is_Equal (Sel_Val, Sel) then
                   Synth_Sequential_Statements (C, Stmts);
                   exit;
                end if;
@@ -1200,10 +1109,11 @@ package body Synth.Stmts is
             when Type_Bit
               | Type_Logic
               | Type_Discrete =>
-               Synth_Case_Statement_Static_Scalar (C, Stmt, Sel.Val.Scal);
+               Synth_Case_Statement_Static_Scalar (C, Stmt,
+                                                   Read_Discrete (Sel));
             when Type_Vector
               | Type_Array =>
-               Synth_Case_Statement_Static_Array (C, Stmt, Sel.Val);
+               Synth_Case_Statement_Static_Array (C, Stmt, Sel);
             when others =>
                raise Internal_Error;
          end case;
@@ -1581,12 +1491,12 @@ package body Synth.Stmts is
                      Nbr_Inout := Nbr_Inout + 1;
                      Infos (Nbr_Inout) := Info;
                      if Info.Kind = Target_Simple
-                       and then Is_Static (Info.Obj)
+                       and then Is_Static (Info.Obj.Val)
                      then
-                        if Info.Off /= 0 then
-                           raise Internal_Error;
-                        end if;
-                        Val := (Info.Targ_Type, Info.Obj);
+                        Val := Create_Value_Memory (Info.Targ_Type);
+                        Copy_Memory (Val.Val.Mem,
+                                     Info.Obj.Val.Mem + Info.Off.Mem_Off,
+                                     Info.Targ_Type.Sz);
                      else
                         Val := Synth_Read (Caller_Inst, Info, Assoc);
                      end if;
@@ -1596,9 +1506,9 @@ package body Synth.Stmts is
                         raise Internal_Error;
                      end if;
                      Val := Create_Value_Alias
-                       (Info.Obj, Info.Off, Info.Targ_Type);
+                       (Info.Obj.Val, Info.Off, Info.Targ_Type);
                   when Iir_Kind_Interface_File_Declaration =>
-                     Val := (Info.Targ_Type, Info.Obj);
+                     Val := Info.Obj;
                   when Iir_Kind_Interface_Quantity_Declaration =>
                      raise Internal_Error;
                end case;
@@ -1625,7 +1535,7 @@ package body Synth.Stmts is
                --  Arguments are passed by copy.
                if Is_Static (Val.Val) or else Get_Mode (Inter) = Iir_In_Mode
                then
-                  Val.Val := Unshare (Val.Val, Current_Pool);
+                  Val := Unshare (Val, Current_Pool);
                else
                   --  Will be changed to a wire.
                   null;
@@ -2020,14 +1930,18 @@ package body Synth.Stmts is
       end case;
    end In_Range;
 
-   procedure Update_Index (Rng : Discrete_Range_Type; Idx : in out Int64) is
+   procedure Update_Index (Rng : Discrete_Range_Type; V : in out Valtyp)
+   is
+      T : Int64;
    begin
+      T := Read_Discrete (V);
       case Rng.Dir is
          when Iir_To =>
-            Idx := Idx + 1;
+            T := T + 1;
          when Iir_Downto =>
-            Idx := Idx - 1;
+            T := T - 1;
       end case;
+      Write_Discrete (V, T);
    end Update_Index;
 
    procedure Loop_Control_Init (C : Seq_Context; Stmt : Node)
@@ -2159,7 +2073,7 @@ package body Synth.Stmts is
          Cond_Val := Synth_Expression (C.Inst, Cond);
          Static_Cond := Is_Static_Val (Cond_Val.Val);
          if Static_Cond then
-            if Get_Static_Discrete (Cond_Val.Val) = 0 then
+            if Get_Static_Discrete (Cond_Val) = 0 then
                --  Not executed.
                return;
             end if;
@@ -2215,7 +2129,7 @@ package body Synth.Stmts is
       if Cond /= Null_Node then
          Cond_Val := Synth_Expression (C.Inst, Cond);
          pragma Assert (Is_Static_Val (Cond_Val.Val));
-         if Get_Static_Discrete (Cond_Val.Val) = 0 then
+         if Get_Static_Discrete (Cond_Val) = 0 then
             --  Not executed.
             return;
          end if;
@@ -2297,10 +2211,10 @@ package body Synth.Stmts is
 
       Init_For_Loop_Statement (C, Stmt, Val);
 
-      while In_Range (Val.Typ.Drange, Val.Val.Scal) loop
+      while In_Range (Val.Typ.Drange, Read_Discrete (Val)) loop
          Synth_Sequential_Statements (C, Stmts);
 
-         Update_Index (Val.Typ.Drange, Val.Val.Scal);
+         Update_Index (Val.Typ.Drange, Val);
          Loop_Control_Update (C);
 
          --  Constant exit.
@@ -2331,11 +2245,11 @@ package body Synth.Stmts is
 
       Init_For_Loop_Statement (C, Stmt, Val);
 
-      while In_Range (Val.Typ.Drange, Val.Val.Scal) loop
+      while In_Range (Val.Typ.Drange, Read_Discrete (Val)) loop
          Synth_Sequential_Statements (C, Stmts);
          C.S_En := True;
 
-         Update_Index (Val.Typ.Drange, Val.Val.Scal);
+         Update_Index (Val.Typ.Drange, Val);
 
          exit when Lc.S_Exit or Lc.S_Quit or C.Nbr_Ret > 0;
       end loop;
@@ -2373,7 +2287,7 @@ package body Synth.Stmts is
                Error_Msg_Synth (+Cond, "loop condition must be static");
                exit;
             end if;
-            exit when Val.Val.Scal = 0;
+            exit when Read_Discrete (Val) = 0;
          end if;
 
          Synth_Sequential_Statements (C, Stmts);
@@ -2421,7 +2335,7 @@ package body Synth.Stmts is
          if Cond /= Null_Node then
             Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
             pragma Assert (Is_Static (Val.Val));
-            exit when Val.Val.Scal = 0;
+            exit when Read_Discrete (Val) = 0;
          end if;
 
          Synth_Sequential_Statements (C, Stmts);
@@ -2527,7 +2441,7 @@ package body Synth.Stmts is
             Sev_V := 2;
          end if;
       else
-         Sev_V := Natural (Sev.Val.Scal);
+         Sev_V := Natural (Read_Discrete (Sev));
       end if;
       case Sev_V is
          when 0 =>
@@ -2543,7 +2457,7 @@ package body Synth.Stmts is
       end case;
       Put_Err ("): ");
 
-      Put_Line_Err (Value_To_String (Rep.Val));
+      Put_Line_Err (Value_To_String (Rep));
    end Synth_Static_Report;
 
    procedure Synth_Static_Report_Statement
@@ -2564,7 +2478,7 @@ package body Synth.Stmts is
       end if;
       pragma Assert (Is_Static (Cond.Val));
       Strip_Const (Cond);
-      if Cond.Val.Scal = 1 then
+      if Read_Discrete (Cond) = 1 then
          return;
       end if;
       Synth_Static_Report (C, Stmt);
@@ -2814,7 +2728,7 @@ package body Synth.Stmts is
          return;
       end if;
       if Is_Static (Val.Val) then
-         if Val.Val.Scal /= 1 then
+         if Read_Discrete (Val) /= 1 then
             Error_Msg_Synth (+Stmt, "assertion failure");
          end if;
          return;
@@ -2962,7 +2876,7 @@ package body Synth.Stmts is
          D_Arr (Nbr_States - 1) := Build_Const_UB32 (Build_Context, 0, 1);
       end if;
 
-      Res := Concat_Array (D_Arr);
+      Concat_Array (D_Arr.all, Res);
       Free_Net_Array (D_Arr);
 
       return Res;
@@ -3166,12 +3080,11 @@ package body Synth.Stmts is
          if Icond /= Null_Node then
             Cond := Synth_Expression (Syn_Inst, Icond);
             Strip_Const (Cond);
-            pragma Assert (Cond.Val.Kind = Value_Discrete);
          else
             --  It is the else generate.
             Cond := No_Valtyp;
          end if;
-         if Cond = No_Valtyp or else Cond.Val.Scal = 1 then
+         if Cond = No_Valtyp or else Read_Discrete (Cond) = 1 then
             Bod := Get_Generate_Statement_Body (Gen);
             Apply_Block_Configuration
               (Get_Generate_Block_Configuration (Bod), Bod);
@@ -3206,7 +3119,7 @@ package body Synth.Stmts is
 
       Name := New_Sname_User (Get_Identifier (Stmt), Get_Sname (Syn_Inst));
 
-      while In_Range (It_Rng.Drange, Val.Val.Scal) loop
+      while In_Range (It_Rng.Drange, Read_Discrete (Val)) loop
          --  Find and apply the config block.
          declare
             Spec : Node;
@@ -3229,10 +3142,10 @@ package body Synth.Stmts is
          end;
 
          --  FIXME: get position ?
-         Lname := New_Sname_Version (Uns32 (Val.Val.Scal), Name);
+         Lname := New_Sname_Version (Uns32 (Read_Discrete (Val)), Name);
 
          Synth_Generate_Statement_Body (Syn_Inst, Bod, Lname, Iterator, Val);
-         Update_Index (It_Rng.Drange, Val.Val.Scal);
+         Update_Index (It_Rng.Drange, Val);
       end loop;
    end Synth_For_Generate_Statement;
 
@@ -3343,12 +3256,12 @@ package body Synth.Stmts is
       --  The value must be true
       V := Synth_Expression_With_Type
         (Syn_Inst, Get_Expression (Spec), Boolean_Type);
-      if V.Val.Scal /= 1 then
+      if Read_Discrete (V) /= 1 then
          return;
       end if;
 
       declare
-         Off : Uns32;
+         Off : Value_Offsets;
          Voff : Net;
          Wd : Width;
          N : Net;
@@ -3356,7 +3269,7 @@ package body Synth.Stmts is
          Typ : Type_Acc;
       begin
          Synth_Assignment_Prefix (Syn_Inst, Sig, Base, Typ, Off, Voff, Wd);
-         pragma Assert (Off = 0);
+         pragma Assert (Off = (0, 0));
          pragma Assert (Voff = No_Net);
          pragma Assert (Base.Val.Kind = Value_Wire);
          pragma Assert (Base.Typ = Typ);
