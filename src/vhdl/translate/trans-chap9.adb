@@ -1388,6 +1388,7 @@ package body Trans.Chap9 is
                  | Type_Int32
                  | Type_Fp64
                  | Type_Token_Type
+                 | Type_Scalar_Size
                  | Type_Name_Id =>
                   null;
             end case;

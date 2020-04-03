@@ -381,6 +381,8 @@ package body Vhdl.Sem_Inst is
             Set_Fp64 (Res, F, Get_Fp64 (N, F));
          when Type_Token_Type =>
             Set_Token_Type (Res, F, Get_Token_Type (N, F));
+         when Type_Scalar_Size =>
+            Set_Scalar_Size (Res, F, Get_Scalar_Size (N, F));
          when Type_Name_Id =>
             Set_Name_Id (Res, F, Get_Name_Id (N, F));
       end case;

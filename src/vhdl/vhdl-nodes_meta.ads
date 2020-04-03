@@ -50,6 +50,7 @@ package Vhdl.Nodes_Meta is
       Type_Number_Base_Type,
       Type_PSL_NFA,
       Type_PSL_Node,
+      Type_Scalar_Size,
       Type_Source_File_Entry,
       Type_Source_Ptr,
       Type_String8_Id,
@@ -329,6 +330,7 @@ package Vhdl.Nodes_Meta is
       Field_Alias_Declaration,
       Field_Referenced_Name,
       Field_Expr_Staticness,
+      Field_Scalar_Size,
       Field_Error_Origin,
       Field_Operand,
       Field_Left,
@@ -590,6 +592,11 @@ package Vhdl.Nodes_Meta is
       (N : Iir; F : Fields_Enum) return PSL_Node;
    procedure Set_PSL_Node
       (N : Iir; F : Fields_Enum; V: PSL_Node);
+
+   function Get_Scalar_Size
+      (N : Iir; F : Fields_Enum) return Scalar_Size;
+   procedure Set_Scalar_Size
+      (N : Iir; F : Fields_Enum; V: Scalar_Size);
 
    function Get_Source_File_Entry
       (N : Iir; F : Fields_Enum) return Source_File_Entry;
@@ -894,6 +901,7 @@ package Vhdl.Nodes_Meta is
    function Has_Alias_Declaration (K : Iir_Kind) return Boolean;
    function Has_Referenced_Name (K : Iir_Kind) return Boolean;
    function Has_Expr_Staticness (K : Iir_Kind) return Boolean;
+   function Has_Scalar_Size (K : Iir_Kind) return Boolean;
    function Has_Error_Origin (K : Iir_Kind) return Boolean;
    function Has_Operand (K : Iir_Kind) return Boolean;
    function Has_Left (K : Iir_Kind) return Boolean;

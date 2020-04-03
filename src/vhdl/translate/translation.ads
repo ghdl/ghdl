@@ -47,9 +47,6 @@ package Translation is
    --  If set, generate Run-Time Information nodes.
    Flag_Rti : Boolean := True;
 
-   --  If set, do not generate 64 bits integer types and operations.
-   Flag_Only_32b : Boolean := False;
-
    --  If set, do not generate code for unused subprograms.
    --  Be careful: unless you are in whole compilation mode, this
    --  flag shouldn't be set for packages and entities.

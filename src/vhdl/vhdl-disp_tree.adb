@@ -341,6 +341,20 @@ package body Vhdl.Disp_Tree is
    function Image_Token_Type (Tok : Vhdl.Tokens.Token_Type) return String
      renames Vhdl.Tokens.Image;
 
+   function Image_Scalar_Size (Sz : Scalar_Size) return String is
+   begin
+      case Sz is
+         when Scalar_8 =>
+            return "8";
+         when Scalar_16 =>
+            return "16";
+         when Scalar_32 =>
+            return "32";
+         when Scalar_64 =>
+            return "64";
+      end case;
+   end Image_Scalar_Size;
+
    function Image_String8 (N : Iir) return String
    is
       use Str_Table;
@@ -577,6 +591,8 @@ package body Vhdl.Disp_Tree is
                               (Get_File_Checksum_Id (N, F)));
                when Type_Token_Type =>
                   Log_Line (Image_Token_Type (Get_Token_Type (N, F)));
+               when Type_Scalar_Size =>
+                  Log_Line (Image_Scalar_Size (Get_Scalar_Size (N, F)));
                when Type_Name_Id =>
                   Log (Image_Name_Id (Get_Name_Id (N, F)));
                   Log (" ");

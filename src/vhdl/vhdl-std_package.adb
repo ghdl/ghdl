@@ -404,6 +404,14 @@ package body Vhdl.Std_Package is
          Wildcard_Type_Declaration_Chain := Decl;
       end Create_Wildcard_Type;
 
+      function Is64 (B : Boolean) return Scalar_Size is
+      begin
+         if B then
+            return Scalar_64;
+         else
+            return Scalar_32;
+         end if;
+      end Is64;
    begin
       --  Create design file.
       Std_Standard_File := Create_Std_Iir (Iir_Kind_Design_File);
@@ -457,6 +465,7 @@ package body Vhdl.Std_Package is
          Set_Signal_Type_Flag (Boolean_Type_Definition, True);
          Set_Has_Signal_Flag (Boolean_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
+         Set_Scalar_Size (Boolean_Type_Definition, Scalar_8);
 
          -- type boolean is
          Create_Std_Type (Boolean_Type_Declaration, Boolean_Type_Definition,
@@ -495,6 +504,7 @@ package body Vhdl.Std_Package is
          Set_Has_Signal_Flag (Bit_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
          Set_Only_Characters_Flag (Bit_Type_Definition, True);
+         Set_Scalar_Size (Bit_Type_Definition, Scalar_8);
 
          -- type bit is
          Create_Std_Type (Bit_Type_Declaration, Bit_Type_Definition, Name_Bit);
@@ -531,6 +541,7 @@ package body Vhdl.Std_Package is
          end if;
          Set_Enumeration_Literal_List
            (Character_Type_Definition, Create_Iir_Flist (Len));
+         Set_Scalar_Size (Character_Type_Definition, Scalar_8);
 
          for I in Name_Nul .. Name_Usp loop
             El := Create_Std_Literal
@@ -577,6 +588,7 @@ package body Vhdl.Std_Package is
                         Severity_Level_Type_Definition);
          Set_Enumeration_Literal_List
            (Severity_Level_Type_Definition, Create_Iir_Flist (4));
+         Set_Scalar_Size (Severity_Level_Type_Definition, Scalar_8);
 
          Severity_Level_Note := Create_Std_Literal
            (Name_Note, 0, Severity_Level_Type_Definition);
@@ -607,6 +619,8 @@ package body Vhdl.Std_Package is
                               Universal_Integer_Type_Declaration,
                               Name_Universal_Integer);
          Add_Decl (Universal_Integer_Type_Declaration);
+         Set_Scalar_Size (Universal_Integer_Type_Definition,
+                          Is64 (Flags.Flag_Time_64 or Flags.Flag_Integer_64));
 
          Create_Integer_Subtype (Universal_Integer_Type_Definition,
                                  Universal_Integer_Type_Declaration,
@@ -684,6 +698,8 @@ package body Vhdl.Std_Package is
          Create_Integer_Type (Convertible_Integer_Type_Definition,
                               Convertible_Integer_Type_Declaration,
                               Name_Convertible_Integer);
+         Set_Scalar_Size (Convertible_Integer_Type_Definition,
+                          Is64 (Flags.Flag_Time_64 or Flags.Flag_Integer_64));
          Create_Integer_Subtype (Convertible_Integer_Type_Definition,
                                  Convertible_Integer_Type_Declaration,
                                  Convertible_Integer_Subtype_Definition,
@@ -717,6 +733,8 @@ package body Vhdl.Std_Package is
          Create_Integer_Type (Integer_Type_Definition,
                               Integer_Type_Declaration,
                               Name_Integer);
+         Set_Scalar_Size (Integer_Type_Definition,
+                          Is64 (Flags.Flag_Integer_64));
          Add_Decl (Integer_Type_Declaration);
 
          --  Now that Integer is declared, create operations for universal
@@ -751,6 +769,7 @@ package body Vhdl.Std_Package is
          Set_Signal_Type_Flag (Real_Type_Definition, True);
          Set_Has_Signal_Flag (Real_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
+         Set_Scalar_Size (Real_Type_Definition, Scalar_64);
 
          Real_Type_Declaration :=
            Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
@@ -857,6 +876,8 @@ package body Vhdl.Std_Package is
          Set_Has_Signal_Flag (Time_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
          Set_End_Has_Reserved_Id (Time_Type_Definition, True);
+         Set_Scalar_Size (Time_Type_Definition,
+                          Is64 (Flags.Flag_Time_64));
 
          Chain_Init (First_Unit, Last_Unit);
 
@@ -974,6 +995,7 @@ package body Vhdl.Std_Package is
                         Domain_Type_Type_Definition);
          Set_Enumeration_Literal_List
            (Domain_Type_Type_Definition, Create_Iir_Flist (3));
+         Set_Scalar_Size (Domain_Type_Type_Definition, Scalar_8);
 
          Domain_Type_Quiescent_Domain := Create_Std_Literal
            (Name_Quiescent_Domain, 0, Domain_Type_Type_Definition);
@@ -1237,6 +1259,7 @@ package body Vhdl.Std_Package is
                         File_Open_Kind_Type_Definition);
          Set_Enumeration_Literal_List
            (File_Open_Kind_Type_Definition, Create_Iir_Flist (3));
+         Set_Scalar_Size (File_Open_Kind_Type_Definition, Scalar_8);
 
          File_Open_Kind_Read_Mode := Create_Std_Literal
            (Name_Read_Mode, 0, File_Open_Kind_Type_Definition);
@@ -1275,6 +1298,7 @@ package body Vhdl.Std_Package is
                         File_Open_Status_Type_Definition);
          Set_Enumeration_Literal_List
            (File_Open_Status_Type_Definition, Create_Iir_Flist (4));
+         Set_Scalar_Size (File_Open_Status_Type_Definition, Scalar_8);
 
          File_Open_Status_Open_Ok := Create_Std_Literal
            (Name_Open_Ok, 0, File_Open_Status_Type_Definition);

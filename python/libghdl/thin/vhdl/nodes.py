@@ -2545,6 +2545,10 @@ Get_Expr_Staticness = libghdl.vhdl__nodes__get_expr_staticness
 
 Set_Expr_Staticness = libghdl.vhdl__nodes__set_expr_staticness
 
+Get_Scalar_Size = libghdl.vhdl__nodes__get_scalar_size
+
+Set_Scalar_Size = libghdl.vhdl__nodes__set_scalar_size
+
 Get_Error_Origin = libghdl.vhdl__nodes__get_error_origin
 
 Set_Error_Origin = libghdl.vhdl__nodes__set_error_origin

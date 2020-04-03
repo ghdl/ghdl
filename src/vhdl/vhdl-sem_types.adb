@@ -221,6 +221,22 @@ package body Vhdl.Sem_Types is
       return Expr;
    end Sem_Type_Range_Expression;
 
+   function Compute_Scalar_Size (Rng : Iir) return Scalar_Size
+   is
+      L, H   : Iir;
+      Lv, Hv : Int64;
+      subtype Int64_32 is Int64 range -(2 ** 31) .. 2 ** 31 - 1;
+   begin
+      Get_Low_High_Limit (Rng, L, H);
+      Lv := Get_Value (L);
+      Hv := Get_Value (H);
+      if Lv in Int64_32 and then Hv in Int64_32 then
+         return Scalar_32;
+      else
+         return Scalar_64;
+      end if;
+   end Compute_Scalar_Size;
+
    function Create_Integer_Type (Loc : Iir; Constraint : Iir; Decl : Iir)
                                 return Iir
    is
@@ -244,6 +260,9 @@ package body Vhdl.Sem_Types is
       if Get_Type_Staticness (Ntype) /= Locally then
          Error_Msg_Sem
            (+Decl, "range constraint of type must be locally static");
+         Set_Scalar_Size (Ndef, Scalar_32);
+      else
+         Set_Scalar_Size (Ndef, Compute_Scalar_Size (Constraint));
       end if;
       return Ntype;
    end Create_Integer_Type;
@@ -286,6 +305,7 @@ package body Vhdl.Sem_Types is
                Set_Base_Type (Ndef, Ndef);
                Set_Type_Declarator (Ndef, Decl);
                Set_Type_Staticness (Ndef, Get_Expr_Staticness (Expr));
+               Set_Scalar_Size (Ndef, Scalar_64);
                Set_Signal_Type_Flag (Ndef, True);
                Set_Base_Type (Ntype, Ndef);
                Set_Type_Declarator (Ntype, Decl);
@@ -389,6 +409,7 @@ package body Vhdl.Sem_Types is
                "physical type %i has a null range", (1 => +Decl));
          end if;
       end if;
+      Set_Scalar_Size (Def, Compute_Scalar_Size (Range_Expr1));
 
       --  Create the subtype.
       Sub_Type := Create_Iir (Iir_Kind_Physical_Subtype_Definition);
@@ -830,6 +851,13 @@ package body Vhdl.Sem_Types is
       Set_Resolved_Flag (Def, False);
 
       Create_Range_Constraint_For_Enumeration_Type (Def);
+
+      --  Set the size.
+      if Get_Nbr_Elements (Literal_List) <= 256 then
+         Set_Scalar_Size (Def, Scalar_8);
+      else
+         Set_Scalar_Size (Def, Scalar_32);
+      end if;
 
       --  Identifier IEEE.Std_Logic_1164.Std_Ulogic.
       if Get_Identifier (Decl) = Std_Names.Name_Std_Ulogic

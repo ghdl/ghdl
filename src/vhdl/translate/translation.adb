@@ -438,10 +438,8 @@ package body Translation is
       Ghdl_Real_Type := New_Float_Type;
       New_Type_Decl (Get_Identifier ("__ghdl_real"), Ghdl_Real_Type);
 
-      if not Flag_Only_32b then
-         Ghdl_I64_Type := New_Signed_Type (64);
-         New_Type_Decl (Get_Identifier ("__ghdl_i64"), Ghdl_I64_Type);
-      end if;
+      Ghdl_I64_Type := New_Signed_Type (64);
+      New_Type_Decl (Get_Identifier ("__ghdl_i64"), Ghdl_I64_Type);
 
       --  File index for elaborated file object.
       Ghdl_File_Index_Type := New_Unsigned_Type (32);
@@ -1226,10 +1224,8 @@ package body Translation is
       --  procedure __ghdl_image_p64 (res : std_string_ptr_node;
       --                              val : ghdl_i64_type;
       --                             rti : ghdl_rti_access);
-      if not Flag_Only_32b then
-         Create_Image_Value_Subprograms
-           ("p64", Ghdl_I64_Type, True, Ghdl_Image_P64, Ghdl_Value_P64);
-      end if;
+      Create_Image_Value_Subprograms
+        ("p64", Ghdl_I64_Type, True, Ghdl_Image_P64, Ghdl_Value_P64);
 
       --  procedure __ghdl_image_f64 (res : std_string_ptr_node;
       --                              val : ghdl_real_type);
@@ -1611,17 +1607,15 @@ package body Translation is
                                  Ghdl_Signal_Add_Port_Driver_F64,
                                  Ghdl_Signal_Driving_Value_F64);
 
-      if not Flag_Only_32b then
-         Create_Signal_Subprograms ("i64", Ghdl_I64_Type,
-                                    Ghdl_Create_Signal_I64,
-                                    Ghdl_Signal_Init_I64,
-                                    Ghdl_Signal_Simple_Assign_I64,
-                                    Ghdl_Signal_Start_Assign_I64,
-                                    Ghdl_Signal_Next_Assign_I64,
-                                    Ghdl_Signal_Associate_I64,
-                                    Ghdl_Signal_Add_Port_Driver_I64,
-                                    Ghdl_Signal_Driving_Value_I64);
-      end if;
+      Create_Signal_Subprograms ("i64", Ghdl_I64_Type,
+                                 Ghdl_Create_Signal_I64,
+                                 Ghdl_Signal_Init_I64,
+                                 Ghdl_Signal_Simple_Assign_I64,
+                                 Ghdl_Signal_Start_Assign_I64,
+                                 Ghdl_Signal_Next_Assign_I64,
+                                 Ghdl_Signal_Associate_I64,
+                                 Ghdl_Signal_Add_Port_Driver_I64,
+                                 Ghdl_Signal_Driving_Value_I64);
 
       --  procedure __ghdl_process_add_sensitivity (sig : __ghdl_signal_ptr);
       Start_Procedure_Decl

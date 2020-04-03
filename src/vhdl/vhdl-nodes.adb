@@ -5676,6 +5676,41 @@ package body Vhdl.Nodes is
       Set_State1 (Target, Iir_Staticness'Pos (Static));
    end Set_Expr_Staticness;
 
+   type Scalar_Size_Conv is record
+      Flag6: Boolean;
+      Flag7: Boolean;
+   end record;
+   pragma Pack (Scalar_Size_Conv);
+   pragma Assert (Scalar_Size_Conv'Size = Scalar_Size'Size);
+
+   function Get_Scalar_Size (N : Iir) return Scalar_Size
+   is
+      function To_Scalar_Size is new Ada.Unchecked_Conversion
+         (Scalar_Size_Conv, Scalar_Size);
+      Conv : Scalar_Size_Conv;
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Scalar_Size (Get_Kind (N)),
+                     "no field Scalar_Size");
+      Conv.Flag6 := Get_Flag6 (N);
+      Conv.Flag7 := Get_Flag7 (N);
+      return To_Scalar_Size (Conv);
+   end Get_Scalar_Size;
+
+   procedure Set_Scalar_Size (N : Iir; Sz : Scalar_Size)
+   is
+      function To_Scalar_Size_Conv is new Ada.Unchecked_Conversion
+         (Scalar_Size, Scalar_Size_Conv);
+      Conv : Scalar_Size_Conv;
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Scalar_Size (Get_Kind (N)),
+                     "no field Scalar_Size");
+      Conv := To_Scalar_Size_Conv (Sz);
+      Set_Flag6 (N, Conv.Flag6);
+      Set_Flag7 (N, Conv.Flag7);
+   end Set_Scalar_Size;
+
    function Get_Error_Origin (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

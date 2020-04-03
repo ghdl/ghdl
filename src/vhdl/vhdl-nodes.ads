@@ -2312,6 +2312,9 @@ package Vhdl.Nodes is
    --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Type_Staticness (State1)
+   --
+   --  Note: only 8 or 32.
+   --   Get/Set_Scalar_Size (Flag6,Flag7)
 
    -- Iir_Kind_Enumeration_Literal (Short)
    --
@@ -2372,6 +2375,8 @@ package Vhdl.Nodes is
    --   Get/Set_End_Has_Identifier (Flag9)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Scalar_Size (Flag6,Flag7)
 
    -- Iir_Kind_Unit_Declaration (Short)
    --
@@ -2439,6 +2444,9 @@ package Vhdl.Nodes is
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
    --   Get/Set_Is_Ref (Flag12)
+   --
+   --  Note: only 32 or 64.
+   --   Get/Set_Scalar_Size (Flag6,Flag7)
 
    -- Iir_Kind_Array_Type_Definition (Medium)
    --
@@ -5894,6 +5902,17 @@ package Vhdl.Nodes is
      Iir_Predefined_Functions'Succ (Iir_Predefined_None) ..
      Iir_Predefined_Functions'Last;
 
+   --  Size of scalar types.
+   --  Their size is determined during analysis (using the range), so that
+   --  all backends have the same view.
+   type Scalar_Size is
+     (
+      Scalar_8,
+      Scalar_16,
+      Scalar_32,
+      Scalar_64
+     );
+
    --  Staticness as defined by LRM93 6.1 and 7.4
    type Iir_Staticness is
      (
@@ -5904,7 +5923,7 @@ package Vhdl.Nodes is
      );
 
    -- Staticness as defined by LRM93 6.1 and 7.4
-   function Min (L,R: Iir_Staticness) return Iir_Staticness renames
+   function Min (L, R : Iir_Staticness) return Iir_Staticness renames
      Iir_Staticness'Min;
 
    --  Purity state of a procedure.
@@ -8369,6 +8388,10 @@ package Vhdl.Nodes is
    --  Field: State1 (pos)
    function Get_Expr_Staticness (Target : Iir) return Iir_Staticness;
    procedure Set_Expr_Staticness (Target : Iir; Static : Iir_Staticness);
+
+   --  Field: Flag6,Flag7 (grp)
+   function Get_Scalar_Size (N : Iir) return Scalar_Size;
+   procedure Set_Scalar_Size (N : Iir; Sz : Scalar_Size);
 
    --  Node which couldn't be correctly analyzed.
    --  Field: Field2

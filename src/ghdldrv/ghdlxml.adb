@@ -371,6 +371,8 @@ package body Ghdlxml is
                when Type_Iir_Staticness =>
                   Put_Field (F, Image_Iir_Staticness
                                (Get_Iir_Staticness (N, F)));
+               when Type_Scalar_Size =>
+                  Put_Field (F, Image_Scalar_Size (Get_Scalar_Size (N, F)));
                when Type_Date_State_Type =>
                   Put_Field (F, Image_Date_State_Type
                                (Get_Date_State_Type (N, F)));

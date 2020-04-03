@@ -27,7 +27,6 @@ with Trans.Chap7;
 with Trans.Chap14;
 with Trans_Decls; use Trans_Decls;
 with Trans.Helpers2; use Trans.Helpers2;
-with Translation;
 
 package body Trans.Chap3 is
    use Trans.Helpers;
@@ -332,45 +331,21 @@ package body Trans.Chap3 is
    --  Integer  --
    ---------------
 
-   --  Return the number of bits (32 or 64) required to represent the
-   --  (integer or physical) type definition DEF.
-   type Type_Precision is (Precision_32, Precision_64);
-   function Get_Type_Precision (Def : Iir) return Type_Precision
-   is
-      St     : constant Iir :=
-        Get_Subtype_Definition (Get_Type_Declarator (Def));
-      L, H   : Iir;
-      Lv, Hv : Int64;
-      subtype Int64_32 is Int64 range -(2 ** 31) .. 2 ** 31 - 1;
-   begin
-      Get_Low_High_Limit (Get_Range_Constraint (St), L, H);
-      Lv := Get_Value (L);
-      Hv := Get_Value (H);
-      if Lv in Int64_32 and then Hv in Int64_32 then
-         return Precision_32;
-      else
-         if Translation.Flag_Only_32b then
-            Error_Msg_Sem
-              (+St, "range of %n is too large", +Get_Type_Declarator (St));
-            return Precision_32;
-         end if;
-         return Precision_64;
-      end if;
-   end Get_Type_Precision;
-
    procedure Translate_Integer_Type (Def : Iir_Integer_Type_Definition)
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
    begin
-      case Get_Type_Precision (Def) is
-         when Precision_32 =>
+      case Get_Scalar_Size (Def) is
+         when Scalar_32 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (32);
             Info.Type_Mode := Type_Mode_I32;
             Info.B.Align := Align_32;
-         when Precision_64 =>
+         when Scalar_64 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (64);
             Info.Type_Mode := Type_Mode_I64;
             Info.B.Align := Align_64;
+         when others =>
+            raise Internal_Error;
       end case;
       --  Integers are always in their ranges.
       Info.S.Nocheck_Low := True;
@@ -406,15 +381,17 @@ package body Trans.Chap3 is
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
    begin
-      case Get_Type_Precision (Def) is
-         when Precision_32 =>
+      case Get_Scalar_Size (Def) is
+         when Scalar_32 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (32);
             Info.Type_Mode := Type_Mode_P32;
             Info.B.Align := Align_32;
-         when Precision_64 =>
+         when Scalar_64 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (64);
             Info.Type_Mode := Type_Mode_P64;
             Info.B.Align := Align_64;
+         when others =>
+            raise Internal_Error;
       end case;
       --  Physical types are always in their ranges.
       Info.S.Nocheck_Low := True;
