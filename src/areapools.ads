@@ -19,16 +19,13 @@
 with System; use System;
 with System.Storage_Elements; use System.Storage_Elements;
 
+with Types; use Types;
+
 package Areapools is
    type Areapool is limited private;
    type Mark_Type is private;
 
    type Areapool_Acc is access all Areapool;
-
-   --  Modular type for the size.  We don't use Storage_Offset in order to
-   --  make alignment computation efficient (knowing that alignment is a
-   --  power of two).
-   type Size_Type is mod System.Memory_Size;
 
    --  Allocate SIZE bytes (aligned on ALIGN bytes) in memory pool POOL and
    --  return the address in RES.

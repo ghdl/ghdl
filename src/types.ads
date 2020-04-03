@@ -180,4 +180,9 @@ package Types is
 
    --  Result of a comparaison of two numeric values.
    type Order_Type is (Less, Equal, Greater);
+
+   --  Modular type for the size.  We don't use Storage_Offset in order to
+   --  make alignment computation efficient (knowing that alignment is a
+   --  power of two).
+   type Size_Type is mod System.Memory_Size;
 end Types;
