@@ -338,18 +338,20 @@ package body Netlists.Disp_Vhdl is
       Put ('"');
    end Disp_Const_Log;
 
-   procedure Disp_X_Lit (W : Width)
+   procedure Disp_X_Lit (W : Width; C : Character)
    is
       Q : constant Character := Get_Lit_Quote (W);
    begin
       if W <= 8 then
          Put (Q);
-         Put ((1 .. Natural (W) => 'X'));
+         Put ((1 .. Natural (W) => C));
          Put (Q);
       else
          Put ('(');
          Put_Trim (Uns32'Image (W - 1));
-         Put (" downto 0 => 'X')");
+         Put (" downto 0 => '");
+         Put (C);
+         Put ("')");
       end if;
    end Disp_X_Lit;
 
@@ -359,7 +361,6 @@ package body Netlists.Disp_Vhdl is
    is
       Imod : constant Module := Get_Module (Inst);
       O : constant Net := Get_Output (Inst, 0);
-      W : Width;
    begin
       case Get_Id (Imod) is
          when Id_Const_UB32
@@ -370,18 +371,9 @@ package body Netlists.Disp_Vhdl is
                              Get_Param_Uns32 (Inst, 1),
                              Get_Width (O));
          when Id_Const_Z =>
-            Put ('(');
-            Put_Uns32 (Get_Width (O) - 1);
-            Put (" downto 0 => 'Z')");
+            Disp_X_Lit (Get_Width (O), 'Z');
          when Id_Const_X =>
-            W := Get_Width (O);
-            if W = 1 then
-               Put ("'X'");
-            else
-               Put ('(');
-               Put_Uns32 (Get_Width (O) - 1);
-               Put (" downto 0 => 'X')");
-            end if;
+            Disp_X_Lit (Get_Width (O), 'X');
          when Id_Const_Bit =>
             Disp_Const_Bit (Inst);
          when Id_Const_Log =>
@@ -1003,7 +995,7 @@ package body Netlists.Disp_Vhdl is
                            "    \i3 when ""10""," & NL &
                            "    \i4 when ""11""," & NL, Inst);
             Put ("    ");
-            Disp_X_Lit (Get_Width (Get_Output (Inst, 0)));
+            Disp_X_Lit (Get_Width (Get_Output (Inst, 0)), 'X');
             Put_Line (" when others;");
          when Id_Add =>
             if Get_Width (Get_Output (Inst, 0)) = 1 then
