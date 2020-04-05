@@ -198,10 +198,10 @@ package body Synth.Decls is
                   W : Width;
                begin
                   W := Uns32 (Clog2 (Uns64 (Nbr_El)));
-                  Rng := (Dir => Iir_Downto,
+                  Rng := (Dir => Iir_To,
                           Is_Signed => False,
-                          Left => Int64 (Nbr_El - 1),
-                          Right => 0);
+                          Left => 0,
+                          Right => Int64 (Nbr_El - 1));
                   Typ := Create_Discrete_Type
                     (Rng, Scalar_Size_To_Size (Def), W);
                end;
