@@ -26,6 +26,8 @@ with Synth.Insts; use Synth.Insts;
 
 with Synth.Environment.Debug;
 pragma Unreferenced (Synth.Environment.Debug);
+with Synth.Values.Debug;
+pragma Unreferenced (Synth.Values.Debug);
 
 package body Synthesis is
    procedure Synth_Design (Design : Node;
