@@ -144,10 +144,11 @@ in C:
   extern int ghdl_main (int argc, char **argv);
 
 .. HINT::
-   Further reading is at :ref:`simulation_options`, :ref:`Elaboration:command` and :ref:`Run:command`.
+   To compile the executable with the custom `main()`, its object file will have to be listed in the elaboration step. Analysis must be made of the HDL files, then elaboration with `-Wl,main.o toplevelEntityName` as arguments. Additional object files are flagged separate `-Wl,*` arguments. The elaboration step will compile the executable with the custom `main()` entrypoint.
+   Further reading (particularly about the backend restrictions) is at , :ref:`Elaboration:command` and :ref:`Run:command`.
 
 .. HINT::
-   Immitating the run time flags within your own main(), such as ``-gDEPTH=12``, requires the argv to have the executable's path at index 0, effectively shifting all other indicies along by 1. This can be taken from the 0 index of main()'s argv, or (not suggested, despite a lack of consequences) left empty.
+   Immitating the run time flags within your own `main()`, such as ``-gDEPTH=12`` from :ref:`simulation_options`, requires the argv to have the executable's path at index 0, effectively shifting all other indicies along by 1. This can be taken from the 0 index of the argv passed to `main()`, or (not suggested, despite a lack of consequences) left empty.
 
 in Ada:
 
