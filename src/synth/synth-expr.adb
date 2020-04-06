@@ -657,6 +657,11 @@ package body Synth.Expr is
    is
       Vtype : constant Type_Acc := Vt.Typ;
    begin
+      if Vt = No_Valtyp then
+         --  Propagate error.
+         return No_Valtyp;
+      end if;
+
       case Dtype.Kind is
          when Type_Bit =>
             pragma Assert (Vtype.Kind = Type_Bit);
@@ -706,9 +711,9 @@ package body Synth.Expr is
          when Type_Vector =>
             pragma Assert (Vtype.Kind = Type_Vector
                              or Vtype.Kind = Type_Slice);
-            if False and then Dtype.W /= Vtype.W then
-               --  TODO: bad width.
-               raise Internal_Error;
+            if Dtype.W /= Vtype.W then
+               Error_Msg_Synth (+Loc, "mismatching vector length");
+               return No_Valtyp;
             end if;
             if Bounds then
                return Reshape_Value (Vt, Dtype);

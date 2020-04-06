@@ -98,11 +98,11 @@ package body Synth.Stmts is
       Cval : Valtyp;
       N : Net;
    begin
-      if Val = No_Valtyp then
+      Cval := Synth_Subtype_Conversion (Val, Typ, False, Loc);
+      if Cval = No_Valtyp then
          --  In case of error.
          return;
       end if;
-      Cval := Synth_Subtype_Conversion (Val, Typ, False, Loc);
       N := Get_Net (Cval);
       Phi_Assign (Build_Context, Wid, N, Offset);
    end Synth_Assign;
