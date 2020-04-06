@@ -874,6 +874,8 @@ package body Synth.Decls is
             null;
          when Iir_Kind_Use_Clause =>
             null;
+         when Iir_Kind_Configuration_Specification =>
+            null;
          when others =>
             Vhdl.Errors.Error_Kind ("synth_declaration", Decl);
       end case;
@@ -989,6 +991,8 @@ package body Synth.Decls is
          when Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_File_Declaration =>
+            null;
+         when Iir_Kind_Configuration_Specification =>
             null;
          when Iir_Kind_Psl_Default_Clock =>
             --  Ignored; directly used by PSL directives.

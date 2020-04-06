@@ -1112,12 +1112,12 @@ package body Synth.Insts is
 
       if Arch = Null_Node then
          Arch := Libraries.Get_Latest_Architecture (Ent);
-         Sub_Config := Get_Library_Unit
-           (Get_Default_Configuration_Declaration (Arch));
-         Sub_Config := Get_Block_Configuration (Sub_Config);
       else
-         raise Internal_Error;
+         Arch := Get_Named_Entity (Arch);
       end if;
+      Sub_Config := Get_Library_Unit
+        (Get_Default_Configuration_Declaration (Arch));
+      Sub_Config := Get_Block_Configuration (Sub_Config);
 
       --  Elaborate generic + map aspect for the entity instance.
       Sub_Inst := Make_Instance
