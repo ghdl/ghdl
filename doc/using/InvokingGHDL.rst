@@ -108,6 +108,8 @@ See section :ref:`USING:Simulation`, for details on options.
 
 .. index:: cmd elaborate and run
 
+.. _elab_and_run:command:
+
 Elaborate and run [``--elab-run``]
 ----------------------------------
 
