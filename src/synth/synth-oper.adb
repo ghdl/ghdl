@@ -831,7 +831,8 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns_Uns (Id_Add, Left, Right, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
+           | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int =>
             --  "+" (Signed, Integer)
             return Synth_Dyadic_Sgn_Int (Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn =>
