@@ -63,23 +63,7 @@ upper-case keyword followed by one or more blanks). The linkage name of the
 subprogram follows.
 
 The object file with the source code for the foreign subprogram must then be 
-linked to GHDL, as below.
-
-.. _Linking_with_foreign_object_files:
-
-Linking foreign object files to GHDL
-====================================
-
-You may add additional files or options during the link of `GHDL` using
-``-Wl,`` as described in :ref:`passing-options-to-other-programs`.
-For example::
-
-  ghdl -e -Wl,-lm math_tb
-
-will create the :file:`math_tb` executable with the :file:`lm` (mathematical)
-library.
-
-Note the :file:`c` library is always linked with an executable.
+linked to GHDL, expanded upon in :ref:`Starting_a_simulation_from_a_foreign_program`.
 
 .. _Restrictions_on_foreign_declarations:
 
@@ -129,6 +113,22 @@ Accesses to an unconstrained array are fat pointers. Other accesses correspond t
 Files are represented by a 32 bit word, which corresponds to an index
 in a table.
 
+.. _Linking_with_foreign_object_files:
+
+Linking foreign object files to GHDL
+====================================
+
+You may add additional files or options during the link of `GHDL` using
+``-Wl,`` as described in :ref:`passing-options-to-other-programs`.
+For example::
+
+  ghdl -e -Wl,-lm math_tb
+
+will create the :file:`math_tb` executable with the :file:`lm` (mathematical)
+library.
+
+Note the :file:`c` library is always linked with an executable.
+
 .. _Starting_a_simulation_from_a_foreign_program:
 
 Wrapping and starting a GHDL simulation from a foreign program
@@ -143,8 +143,11 @@ in C:
 
   extern int ghdl_main (int argc, char **argv);
 
+-- HINT::
+   Further reading is at :ref:`USING:Simulation`, :ref:`simulation_options` and :ref:`Elab_Run:command` :ref:`elaborate_and_run_elab_run`.
+
 .. HINT::
-   Immitating the run time flags within your own main(), such as ``-gDEPTH=12``, requires the argv to have an unused entry at index 0, effectively shifting all other indicies along by 1. This first index replicates a command line call which has the executable's path as the first argument. See `here <https://github.com/ghdl/ghdl/issues/1185#issuecomment-606893549>`_ for a related discussion.
+   Immitating the run time flags within your own main(), such as ``-gDEPTH=12``, requires the argv to have the executable's path at index 0, effectively shifting all other indicies along by 1. This can be taken from the 0 index of main()'s argv, or (not suggested, despite a lack of consequences) left empty.
 
 in Ada:
 
