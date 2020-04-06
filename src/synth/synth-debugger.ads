@@ -23,11 +23,15 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 with Synth.Context; use Synth.Context;
 
 package Synth.Debugger is
-   --  If true, call Debug() before executing the next sequential statement.
+   --  If true, debugging is enabled:
+   --  * call Debug_Break() before executing the next sequential statement
+   --  * call Debug_Leave when a frame is destroyed.
    Flag_Need_Debug : Boolean := False;
 
-   procedure Debug_Init;
+   procedure Debug_Init (Top : Node);
    procedure Debug_Break (Inst : Synth_Instance_Acc; Stmt : Node);
+
+   procedure Debug_Leave (Inst : Synth_Instance_Acc);
 
    --  To be called in case of execution error, like:
    --  * index out of bounds.

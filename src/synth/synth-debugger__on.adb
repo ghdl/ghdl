@@ -283,7 +283,7 @@ package body Synth.Debugger is
       return P - 1;
    end Get_Word;
 
-   procedure Disp_Value (Val : Value_Acc; Vtype : Node);
+   procedure Disp_Memtyp (M : Memtyp; Vtype : Node);
 
    procedure Disp_Discrete_Value (Val : Int64; Btype : Node) is
    begin
@@ -305,12 +305,10 @@ package body Synth.Debugger is
       end case;
    end Disp_Discrete_Value;
 
-   procedure Disp_Value_Vector (Value: Value_Acc;
-                                A_Type: Node;
-                                Bound : Bound_Type;
-                                Off : in out Iir_Index32)
+   procedure Disp_Value_Vector (Mem : Memtyp; A_Type: Node; Bound : Bound_Type)
    is
       El_Type : constant Node := Get_Base_Type (Get_Element_Subtype (A_Type));
+      El_Typ : constant Type_Acc := Get_Array_Element (Mem.Typ);
       type Last_Enum_Type is (None, Char, Identifier);
       Last_Enum : Last_Enum_Type;
       Enum_List : Node_Flist;
@@ -322,8 +320,9 @@ package body Synth.Debugger is
          Last_Enum := None;
          Enum_List := Get_Enumeration_Literal_List (El_Type);
          for I in 1 .. Bound.Len loop
-            El_Pos := Natural (Value.Arr.V (Off).Scal);
-            Off := Off + 1;
+            El_Pos := Natural
+              (Read_Discrete (Mem.Mem + Size_Type (I - 1) * El_Typ.Sz,
+                              El_Typ));
             El_Id := Get_Identifier (Get_Nth_Element (Enum_List, El_Pos));
             if Name_Table.Is_Character (El_Id) then
                case Last_Enum is
@@ -363,62 +362,86 @@ package body Synth.Debugger is
             if I /= 1 then
                Put (", ");
             end if;
-            Disp_Value (Value.Arr.V (Off), El_Type);
-            Off := Off + 1;
+            Disp_Memtyp ((El_Typ, Mem.Mem + Size_Type (I - 1) * Mem.Typ.Sz),
+                         El_Type);
          end loop;
          Put (")");
       end if;
    end Disp_Value_Vector;
 
-   procedure Disp_Value_Array (Value: Value_Acc;
-                               A_Type: Node;
-                               Dim: Iir_Index32;
-                               Off : in out Iir_Index32) is
+   procedure Disp_Value_Array (Mem : Memtyp; A_Type: Node; Dim: Dim_Type)
+   is
+      Stride : Size_Type;
    begin
-      if Dim = Value.Typ.Abounds.Len then
+      if Dim = Mem.Typ.Abounds.Ndim then
          --  Last dimension
-         Disp_Value_Vector (Value, A_Type, Value.Typ.Abounds.D (Dim), Off);
+         Disp_Value_Vector (Mem, A_Type, Mem.Typ.Abounds.D (Dim));
       else
+         Stride := Mem.Typ.Arr_El.Sz;
+         for I in Dim + 1 .. Mem.Typ.Abounds.Ndim loop
+            Stride := Stride * Size_Type (Mem.Typ.Abounds.D (I).Len);
+         end loop;
+
          Put ("(");
-         for I in 1 .. Value.Typ.Abounds.D (Dim).Len loop
+         for I in 1 .. Mem.Typ.Abounds.D (Dim).Len loop
             if I /= 1 then
                Put (", ");
             end if;
-            Disp_Value_Array (Value, A_Type, Dim + 1, Off);
+            Disp_Value_Array ((Mem.Typ, Mem.Mem + Stride), A_Type, Dim + 1);
          end loop;
          Put (")");
       end if;
    end Disp_Value_Array;
 
-   procedure Disp_Value (Val : Value_Acc; Vtype : Node) is
+   procedure Disp_Memtyp (M : Memtyp; Vtype : Node) is
    begin
-      if Val = null then
+      if M.Mem = null then
          Put ("*NULL*");
          return;
       end if;
 
-      case Val.Kind is
+      case M.Typ.Kind is
+         when Type_Discrete
+           | Type_Bit
+           | Type_Logic =>
+            Disp_Discrete_Value (Read_Discrete (M.Mem, M.Typ),
+                                 Get_Base_Type (Vtype));
+         when Type_Vector =>
+            Disp_Value_Vector (M, Vtype, M.Typ.Vbound);
+         when Type_Array =>
+            Disp_Value_Array (M, Vtype, 1);
+         when Type_Float =>
+            Put ("*float*");
+         when Type_Slice =>
+            Put ("*slice*");
+         when Type_File =>
+            Put ("*file*");
+         when Type_Record =>
+            Put ("*record*");
+         when Type_Access =>
+            Put ("*access*");
+         when Type_Unbounded_Array
+           | Type_Unbounded_Vector =>
+            Put ("*unbounded*");
+      end case;
+   end Disp_Memtyp;
+
+   procedure Disp_Value (Vt : Valtyp; Vtype : Node) is
+   begin
+      if Vt.Val = null then
+         Put ("*NULL*");
+         return;
+      end if;
+
+      case Vt.Val.Kind is
          when Value_Net =>
             Put ("net");
          when Value_Wire =>
             Put ("wire");
-         when Value_Discrete =>
-            Disp_Discrete_Value (Val.Scal, Get_Base_Type (Vtype));
-         when Value_Float =>
-            Put ("float");
          when Value_Array =>
             Put ("array");
          when Value_Const_Array =>
-            declare
-               Off : Iir_Index32;
-            begin
-               Off := 1;
-               if Val.Typ.Kind = Type_Vector then
-                  Disp_Value_Vector (Val, Vtype, Val.Typ.Vbound, Off);
-               else
-                  Disp_Value_Array (Val, Vtype, 1, Off);
-               end if;
-            end;
+            Put ("const_array");
          when Value_Record =>
             Put ("record");
          when Value_Const_Record =>
@@ -427,15 +450,14 @@ package body Synth.Debugger is
             Put ("access");
          when Value_File =>
             Put ("file");
-         when Value_Instance =>
-            Put ("instance");
          when Value_Const =>
             Put ("const: ");
-            Disp_Value (Val.C_Val, Vtype);
+            Disp_Memtyp (Get_Memtyp (Vt), Vtype);
          when Value_Alias =>
             Put ("alias");
-         when Value_Subtype =>
-            Put ("subtype");
+            Disp_Memtyp (Get_Memtyp (Vt), Vtype);
+         when Value_Memory =>
+            Disp_Memtyp (Get_Memtyp (Vt), Vtype);
       end case;
    end Disp_Value;
 
@@ -498,9 +520,10 @@ package body Synth.Debugger is
            | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Signal_Declaration =>
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_File_Declaration =>
             declare
-               Val : constant Value_Acc := Get_Value (Instance, Decl);
+               Val : constant Valtyp := Get_Value (Instance, Decl);
                Dtype : constant Node := Get_Type (Decl);
             begin
                Put (Vhdl.Errors.Disp_Node (Decl));
@@ -517,6 +540,11 @@ package body Synth.Debugger is
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration =>
             --  FIXME: disp ranges
+            null;
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Procedure_Body =>
             null;
          when others =>
             Vhdl.Errors.Error_Kind ("disp_declaration_object", Decl);
@@ -1135,9 +1163,9 @@ package body Synth.Debugger is
             null;
       end case;
 
---      if Dbg_Cur_Frame /= null then
-      Set_List_Current (Get_Location (Current_Loc));
---      end if;
+      if Current_Loc /= Null_Node then
+         Set_List_Current (Get_Location (Current_Loc));
+      end if;
 
       Command_Status := Status_Default;
 
@@ -1204,10 +1232,10 @@ package body Synth.Debugger is
       --  Put ("resuming");
    end Debug;
 
-   procedure Debug_Init is
+   procedure Debug_Init (Top : Node) is
    begin
       Current_Instance := null;
-      Current_Loc := Null_Node;
+      Current_Loc := Top;
 
       --  To avoid warnings.
       Exec_Statement := Null_Node;
@@ -1223,6 +1251,25 @@ package body Synth.Debugger is
 
       Debug (Reason_Break);
    end Debug_Break;
+
+   procedure Debug_Leave (Inst : Synth_Instance_Acc) is
+   begin
+      if Exec_Instance = Inst then
+         --  Will be destroyed.
+         Exec_Instance := null;
+
+         case Exec_State is
+            when Exec_Run =>
+               null;
+            when Exec_Single_Step =>
+               null;
+            when Exec_Next
+              | Exec_Next_Stmt =>
+               --  Leave the frame, will stop just after.
+               Exec_State := Exec_Single_Step;
+         end case;
+      end if;
+   end Debug_Leave;
 
    procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node) is
    begin

@@ -1842,6 +1842,10 @@ package body Synth.Stmts is
          Set_Error (Syn_Inst);
       end if;
 
+      if Debugger.Flag_Need_Debug then
+         Debugger.Debug_Leave (Sub_Inst);
+      end if;
+
       Free_Instance (Sub_Inst);
       Areapools.Release (Area_Mark, Instance_Pool.all);
 

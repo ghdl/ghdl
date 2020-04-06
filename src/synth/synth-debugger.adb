@@ -21,7 +21,7 @@
 with Types; use Types;
 
 package body Synth.Debugger is
-   procedure Debug_Init is
+   procedure Debug_Init (Top : Node) is
    begin
       null;
    end Debug_Init;
@@ -30,6 +30,11 @@ package body Synth.Debugger is
    begin
       raise Internal_Error;
    end Debug_Break;
+
+   procedure Debug_Leave (Inst : Synth_Instance_Acc) is
+   begin
+      raise Internal_Error;
+   end Debug_Leave;
 
    procedure Debug_Error (Inst : Synth_Instance_Acc; Expr : Node) is
    begin

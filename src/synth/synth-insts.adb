@@ -1252,7 +1252,7 @@ package body Synth.Insts is
       Insts_Interning.Init;
 
       if Flags.Flag_Debug_Init then
-         Synth.Debugger.Debug_Init;
+         Synth.Debugger.Debug_Init (Arch);
       end if;
 
       --  Dependencies first.
