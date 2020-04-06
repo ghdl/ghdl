@@ -862,7 +862,7 @@ package body Ghdllocal is
          Put_Line (":");
       end if;
       Design_File := Vhdl.Sem_Lib.Load_File_Name (Id);
-      if Design_File = Null_Iir then
+      if Errorout.Nbr_Errors /= 0 then
          return;
       end if;
 
