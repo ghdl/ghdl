@@ -143,8 +143,8 @@ in C:
 
   extern int ghdl_main (int argc, char **argv);
 
--- HINT::
-   Further reading is at :ref:`USING:Simulation`, :ref:`simulation_options` and :ref:`Elab_Run:command` :ref:`elaborate_and_run_elab_run`.
+.. HINT::
+   Further reading is at :ref:`simulation_options` and :ref:`elab_and_run:command`.
 
 .. HINT::
    Immitating the run time flags within your own main(), such as ``-gDEPTH=12``, requires the argv to have the executable's path at index 0, effectively shifting all other indicies along by 1. This can be taken from the 0 index of main()'s argv, or (not suggested, despite a lack of consequences) left empty.
