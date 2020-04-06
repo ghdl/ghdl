@@ -891,7 +891,8 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
             return Synth_Add_Sgn_Int (Left, Right, Expr);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
             return Synth_Add_Uns_Nat (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
