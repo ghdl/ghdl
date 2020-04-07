@@ -189,15 +189,6 @@ package Synth.Values is
 
    type Value_Acc is access Value_Type;
 
-   type Value_Type_Array is array (Iir_Index32 range <>) of Value_Acc;
-
-   type Value_Array_Type (Ln : Iir_Index32) is record
-      --  Values are from left to right.  So V(1) is at index 'Left.
-      V : Value_Type_Array (1 .. Ln);
-   end record;
-
-   type Value_Array_Acc is access Value_Array_Type;
-
    type Heap_Index is new Uns32;
    Null_Heap_Index : constant Heap_Index := 0;
 
