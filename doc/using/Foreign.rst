@@ -133,7 +133,7 @@ Note the :file:`c` library is always linked with an executable.
 
 .. HINT::
   The process for personal code is the same, provided the code is compiled to an object file.
-  Analysis must be made of the HDL files, then elaboration with `-Wl,*.o toplevelEntityName` as arguments. 
+  Analysis must be made of the HDL files, then elaboration with `-Wl,personal.o toplevelEntityName` as arguments. 
   Additional object files are flagged separate `-Wl,*` arguments. The elaboration step will compile the executable with the custom resources.
   Further reading (particularly about the backend restrictions) is at :ref:`Elaboration:command` and :ref:`Run:command`.
 
