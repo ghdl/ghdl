@@ -129,8 +129,6 @@ library.
 
 Note the :file:`c` library is always linked with an executable.
 
-.. _hint_elab_with_object_file:
-
 .. HINT::
   The process for personal code is the same, provided the code is compiled to an object file.
   Analysis must be made of the HDL files, then elaboration with `-Wl,personal.o toplevelEntityName` as arguments. 
@@ -152,7 +150,7 @@ in C:
   extern int ghdl_main (int argc, char **argv);
 
 .. TIP::
-  Don't forget to list the object file of this entry point as per :ref:`hint_elab_with_object_file`.
+  Don't forget to list the object file of this entry point as per :ref:`Linking_with_foreign_object_files`.
 
 in Ada:
 
