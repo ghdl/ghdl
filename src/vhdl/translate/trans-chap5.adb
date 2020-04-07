@@ -323,9 +323,8 @@ package body Trans.Chap5 is
       Res : Connect_Data;
    begin
       --  FIXME: should check matching elements!
-      Res := (Actual_Sig =>
-                Chap3.Index_Base (Chap3.Get_Composite_Base (Data.Actual_Sig),
-                  Data.Actual_Type, New_Obj_Value (Index)),
+      Res := (Actual_Sig => Chap6.Translate_Indexed_Name_By_Offset
+                (Data.Actual_Sig, Data.Actual_Type, Index),
               Actual_Type => Get_Element_Subtype (Data.Actual_Type),
               Mode => Data.Mode,
               By_Copy => Data.By_Copy);

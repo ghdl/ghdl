@@ -1885,6 +1885,7 @@ package body Vhdl.Sem_Types is
       if Parent /= Null_Iir then
          Set_Prefix (Parent, Null_Iir);
       end if;
+
       Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Location_Copy (Res, Name);
       Chain := Get_Association_Chain (Name);
@@ -1911,7 +1912,7 @@ package body Vhdl.Sem_Types is
       if Parent /= Null_Iir then
          case Get_Kind (Def_El_Type) is
             when Iir_Kinds_Array_Type_Definition =>
-               Set_Element_Subtype_Indication
+               Set_Array_Element_Constraint
                  (Res, Reparse_As_Array_Constraint (Def, Def_El_Type));
             when others =>
                Error_Kind ("reparse_as_array_constraint", Def_El_Type);

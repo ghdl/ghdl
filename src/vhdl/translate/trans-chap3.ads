@@ -149,6 +149,7 @@ package Trans.Chap3 is
                        return Mnode;
 
    --  Index array ARR of type ATYPE with INDEX.
+   --  Return the base.
    function Index_Array (Arr : Mnode; Atype : Iir; Index : O_Enode)
                         return Mnode;
 
