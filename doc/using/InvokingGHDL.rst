@@ -80,7 +80,7 @@ files required for the executable. Then, it links all these files with the runti
   elaborates the design, this can be skipped.
 
   .. WARNING::
-     This elaboration command is not a complete elaboration in terms of the VHDL standard. The actual elaboration is performed at runtime. Therefore, in order to get a complete VHDL elaboration without running the simulation, ``ghdl --elab-run --no-run`` is required.
+     This elaboration command is not a complete elaboration in terms of the VHDL standard. The actual elaboration is performed at runtime. Therefore, in order to get a complete VHDL elaboration without running the simulation, ``ghdl --elab-run --no-run`` is required. See :option:`--no-run`.
 
 
 .. index:: cmd run
@@ -92,9 +92,9 @@ Run [``-r``]
 
 .. option:: -r <[options...] primary_unit [secondary_unit] [simulation_options...]>
 
-Runs/simulates a design. The options and arguments are the same as for the :ref:`elaboration command <Elaboration:command>`.
+Runs/simulates a design. Two sets of options are accepted, both of them being separated by ``primary_unit [secondary_unit]``. For the first set, ``options...``, arguments are the same as for the :ref:`elaboration command <Elaboration:command>`. For the second set, ``simulation_options...``, arguments are defined in :ref:`USING:Simulation`.
 
-* GGC/LLVM: simply, the filename of the executable is determined and it is executed. Options are ignored. You may also directly execute the program. The executable must be in the current directory.
+* GGC/LLVM: the filename of the executable is determined and it is executed. Elaboration options are ignored. You may also directly execute the program. The executable must be in the current directory.
 * mcode: the design is elaborated and the simulation is launched. As a consequence, you must use the same options used during analysis.
 
 This command exists for three reasons:
@@ -102,8 +102,6 @@ This command exists for three reasons:
 * You are using GCC/LLVM, but you don't need to create the executable program name.
 * It is coherent with the :option:`-a` and :option:`-e` commands.
 * It works with mcode implementation, where the executable code is generated in memory.
-
-See section :ref:`USING:Simulation`, for details on options.
 
 
 .. index:: cmd elaborate and run
@@ -113,9 +111,9 @@ See section :ref:`USING:Simulation`, for details on options.
 Elaborate and run [``--elab-run``]
 ----------------------------------
 
-.. option:: --elab-run <[elab_options...] primary_unit [secondary_unit] [run_options...]>
+.. option:: --elab-run <[options...] primary_unit [secondary_unit] [simulation_options...]>
 
-Acts like the elaboration command (see :option:`-e`) followed by the run command (see :option:`-r`).
+Acts like the elaboration command followed by the run command. Note that this command accepts two sets of options. See :option:`-e`, :option:`-r` and :ref:`USING:Simulation`.
 
 
 .. index:: cmd checking syntax
