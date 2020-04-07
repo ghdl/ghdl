@@ -129,6 +129,13 @@ library.
 
 Note the :file:`c` library is always linked with an executable.
 
+.. _hint_elab_with_object_file:
+.. HINT::
+  The process for personal code the same, provided the code is compiled to an object file.
+  Analysis must be made of the HDL files, then elaboration with `-Wl,*.o toplevelEntityName` as arguments. 
+  Additional object files are flagged separate `-Wl,*` arguments. The elaboration step will compile the executable with the custom resources.
+  Further reading (particularly about the backend restrictions) is at :ref:`Elaboration:command` and :ref:`Run:command`.
+
 .. _Starting_a_simulation_from_a_foreign_program:
 
 Wrapping and starting a GHDL simulation from a foreign program
@@ -143,12 +150,8 @@ in C:
 
   extern int ghdl_main (int argc, char **argv);
 
-.. HINT::
-   To compile the executable with the custom `main()`, its object file will have to be listed in the elaboration step. Analysis must be made of the HDL files, then elaboration with `-Wl,main.o toplevelEntityName` as arguments. Additional object files are flagged separate `-Wl,*` arguments. The elaboration step will compile the executable with the custom `main()` entrypoint.
-   Further reading (particularly about the backend restrictions) is at , :ref:`Elaboration:command` and :ref:`Run:command`.
-
-.. HINT::
-   Immitating the run time flags within your own `main()`, such as ``-gDEPTH=12`` from :ref:`simulation_options`, requires the argv to have the executable's path at index 0, effectively shifting all other indicies along by 1. This can be taken from the 0 index of the argv passed to `main()`, or (not suggested, despite a lack of consequences) left empty.
+.. TIP::
+  Don't forget to list the object file of this entry point as per :ref:`hint_elab_with_object_file`. A full example is on its way.
 
 in Ada:
 
