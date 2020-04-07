@@ -279,6 +279,19 @@ package body Synth.Ieee.Numeric_Std is
       return Mul_Uns_Uns (T, R);
    end Mul_Nat_Uns;
 
+   function Mul_Uns_Nat (L : Std_Logic_Vector; R : Uns64)
+                        return Std_Logic_Vector
+   is
+      pragma Assert (L'First = 1);
+      T : Std_Logic_Vector (1 .. L'Last);
+   begin
+      if L'Last < 1 then
+         return Null_Vec;
+      end if;
+      To_Unsigned (T, R);
+      return Mul_Uns_Uns (L, T);
+   end Mul_Uns_Nat;
+
    function Mul_Sgn_Sgn (L, R : Std_Logic_Vector) return Std_Logic_Vector
    is
       pragma Assert (L'First = 1);

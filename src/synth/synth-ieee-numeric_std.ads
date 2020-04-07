@@ -42,6 +42,8 @@ package Synth.Ieee.Numeric_Std is
    function Mul_Uns_Uns (L, R : Std_Logic_Vector) return Std_Logic_Vector;
    function Mul_Nat_Uns (L : Uns64; R : Std_Logic_Vector)
                         return Std_Logic_Vector;
+   function Mul_Uns_Nat (L : Std_Logic_Vector; R : Uns64)
+                        return Std_Logic_Vector;
 
    function Mul_Sgn_Sgn (L, R : Std_Logic_Vector) return Std_Logic_Vector;
 end Synth.Ieee.Numeric_Std;
