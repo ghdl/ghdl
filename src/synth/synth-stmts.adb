@@ -369,6 +369,18 @@ package body Synth.Stmts is
                Set_Location (N, Loc);
                return Create_Value_Net (N, Typ);
             end;
+         when Value_Memory =>
+            declare
+               Res : Valtyp;
+            begin
+               Res := Create_Value_Memory (Typ);
+               --  Need to reverse offsets.
+               Copy_Memory
+                 (Res.Val.Mem,
+                  Val.Val.Mem + (Val.Typ.Sz - Size_Type (Off + 1) * El_Typ.Sz),
+                  Typ.Sz);
+               return Res;
+            end;
          when others =>
             raise Internal_Error;
       end case;
