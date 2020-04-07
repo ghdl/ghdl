@@ -152,7 +152,7 @@ in C:
   extern int ghdl_main (int argc, char **argv);
 
 .. TIP::
-  Don't forget to list the object file of this entry point as per :ref:`hint_elab_with_object_file`. A full example is on its way.
+  Don't forget to list the object file of this entry point as per :ref:`hint_elab_with_object_file`.
 
 in Ada:
 
