@@ -394,7 +394,8 @@ package body Ghdlsynth is
       return Res;
 
    exception
-      when Option_Error =>
+      when Option_Error
+        | Errorout.Compilation_Error =>
          return No_Module;
       when E: others =>
          --  Avoid possible issues with exceptions...
