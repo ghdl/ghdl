@@ -130,6 +130,7 @@ library.
 Note the :file:`c` library is always linked with an executable.
 
 .. _hint_elab_with_object_file:
+
 .. HINT::
   The process for personal code the same, provided the code is compiled to an object file.
   Analysis must be made of the HDL files, then elaboration with `-Wl,*.o toplevelEntityName` as arguments. 
