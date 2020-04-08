@@ -62,6 +62,9 @@ The value of the attribute must start with ``VHPIDIRECT`` (an
 upper-case keyword followed by one or more blanks). The linkage name of the
 subprogram follows.
 
+The object file with the source code for the foreign subprogram must then be 
+linked to GHDL, expanded upon in :ref:`Starting_a_simulation_from_a_foreign_program`.
+
 .. _Restrictions_on_foreign_declarations:
 
 Restrictions on foreign declarations
@@ -126,6 +129,12 @@ library.
 
 Note the :file:`c` library is always linked with an executable.
 
+.. HINT::
+  The process for personal code is the same, provided the code is compiled to an object file.
+  Analysis must be made of the HDL files, then elaboration with `-Wl,personal.o toplevelEntityName` as arguments. 
+  Additional object files are flagged separate `-Wl,*` arguments. The elaboration step will compile the executable with the custom resources.
+  Further reading (particularly about the backend restrictions) is at :ref:`Elaboration:command` and :ref:`Run:command`.
+
 .. _Starting_a_simulation_from_a_foreign_program:
 
 Wrapping and starting a GHDL simulation from a foreign program
@@ -139,6 +148,9 @@ in C:
 .. code-block:: C
 
   extern int ghdl_main (int argc, char **argv);
+
+.. TIP::
+  Don't forget to list the object file of this entry point as per :ref:`Linking_with_foreign_object_files`.
 
 in Ada:
 
@@ -203,7 +215,7 @@ See :ref:`gccllvm-only-programs` for further details about ``--bind`` and ``--li
 Dynamically loading foreign objects from GHDL
 =============================================
 
-Instead of linking and building foreign objects along with GHDL, it is also possible to load foreign resources dinamically.
+Instead of linking and building foreign objects along with GHDL, it is also possible to load foreign resources dynamically.
 In order to do so, provide the path and name of the shared library where the resource is to be loaded from. For example:
 
 .. code-block:: VHDL
@@ -219,7 +231,7 @@ that all the libraries and sources analyzed by GHDL generate position independen
 Furthermore, when the binary is built, argument ``-Wl,-pie`` needs to be provided.
 
 PIE binaries can be loaded and executed from any language that supports C-alike signatures and types
-(C, C++, golang, Python, Rust, etc.). For example:
+(C, C++, golang, Python, Rust, etc.). For example, in Python:
 
 .. code-block:: Python
 
