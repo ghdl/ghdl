@@ -3,7 +3,7 @@
 Documentation
 #############
 
-* Development/Synthesis. Synthesis, ghdlsynth-beta, formal verification, etc. Copy the 'Usage' section from ghdlsynth's README (https://github.com/1138-4EB/ghdlsynth-beta#usage).
+* Using/Synthesis: formal verification, etc.
 * Development/libghdl. How to interact with GHDL through ``libghdl`` and/or ``libghdl-py``.
 * Development/Related Projects. Brief discussion about similarities/differences with other open source projects such as rust_hdl or pyVHDLParser.
 * Usage/Docker. Probably copy/convert :file:`README.md` and :file:`USE_CASES.md` in ghdl/docker :ghdlsharp:`166`.

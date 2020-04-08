@@ -10,12 +10,17 @@ GHDL can be downloaded as a `zip-file <https://github.com/ghdl/ghdl/archive/mast
 offers HTTPS and SSH as transfer protocols. See the :ref:`RELEASE:Sources`
 page for further details.
 
-.. IMPORTANT ::
+.. IMPORTANT::
    Since GHDL is written in `Ada`, independently of the code generator you use,
    the a compiler is required. Most GNU/Linux package managers provide a package
    named ``gcc-ada`` or ``gcc-gnat``. Alternatively, `GNU Ada compiler`, `GNAT GPL`,
    can be downloaded anonymously from `libre.adacore.com <http://libre.adacore.com/tools/gnat-gpl-edition/>`_ (2014, or later; for x86, 32 or 64 bits).
    Then, untar and run the doinstall script.
+
+.. ATTENTION::
+   Since ``v0.37``, GHDL's synthesis features require GCC >=8.1, due to some new GNAT features which
+   are not available in previous releases. Users with older versions (who don't need synthesis)
+   can configure GHDL with option ``--no-synth``.
 
 .. rubric :: Available back-ends
 

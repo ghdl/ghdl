@@ -227,35 +227,6 @@ Theses rules can then be integrated in another Makefile.
 
 .. _GHDL:options:
 
-Synthesis command
-=================
-
-GHDL supports synthesis, but only as a front-end: it generates a
-generic netlist that is not optimized.
-
-.. index:: synthesis command
-
-.. _Synth:command:
-
-Synthesis [``--synth``]
------------------------
-
-.. option:: --synth <[options] [unit]>
-
-.. option:: --synth <[options] files -e [unit]>
-
-The first command elaborates for synthesis the design whose top unit
-is indicated by ``unit``.  All the units must have been analyzed.  The
-second form analyze only the files present on the command line and
-then elaborate them starting from the top ``unit``.  A generic netlist
-is then displayed using a very simple vhdl subset.
-
-The command line is the same as the ``ghdl`` command added to
-Yosys by the ghdl plugin except ``--synth`` is not present.  With this
-plugin, it is possible to optimize and map to a target the netlist.
-
-This command is useful for checking that a design could be synthesized.
-
 Options
 =======
 
