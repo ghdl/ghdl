@@ -25,6 +25,7 @@ with Grt.Files_Operations; use Grt.Files_Operations;
 
 with Vhdl.Annotations;
 
+with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Expr; use Synth.Expr;
 with Synth.Errors; use Synth.Errors;
 

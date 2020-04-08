@@ -32,7 +32,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Netlists.Iterators; use Netlists.Iterators;
 with Netlists.Disp_Vhdl; use Netlists.Disp_Vhdl;
 
-with Synth.Values; use Synth.Values;
+with Synth.Objtypes; use Synth.Objtypes;
 
 package body Synth.Disp_Vhdl is
    procedure Disp_Signal (Desc : Port_Desc) is

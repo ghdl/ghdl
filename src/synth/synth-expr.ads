@@ -25,6 +25,7 @@ with Types; use Types;
 with Netlists; use Netlists;
 
 with Synth.Source;
+with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;

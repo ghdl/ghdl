@@ -25,6 +25,7 @@ with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Synth.Environment; use Synth.Environment;
+with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 
 package Synth.Context is

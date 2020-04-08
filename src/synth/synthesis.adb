@@ -21,7 +21,7 @@
 with Errorout; use Errorout;
 with Vhdl.Errors; use Vhdl.Errors;
 
-with Synth.Values;
+with Synth.Objtypes;
 with Synth.Insts; use Synth.Insts;
 
 with Synth.Environment.Debug;
@@ -56,7 +56,7 @@ package body Synthesis is
 
       Global_Instance := Make_Base_Instance;
 
-      Synth.Values.Init;
+      Synth.Objtypes.Init;
 
       Synth_Top_Entity (Global_Instance, Arch, Config, Encoding, Inst);
       Synth_All_Instances;

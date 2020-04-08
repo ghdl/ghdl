@@ -38,6 +38,7 @@ with Synth.Stmts;
 with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
 with Synth.Files_Operations;
+with Synth.Values; use Synth.Values;
 
 package body Synth.Decls is
    procedure Synth_Anonymous_Subtype_Indication

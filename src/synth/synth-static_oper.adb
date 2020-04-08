@@ -31,6 +31,7 @@ with Netlists.Utils; use Netlists.Utils;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
+with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Environment;
 with Synth.Expr; use Synth.Expr;
 with Synth.Oper;

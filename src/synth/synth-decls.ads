@@ -21,7 +21,7 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 with Synth.Context; use Synth.Context;
-with Synth.Values; use Synth.Values;
+with Synth.Objtypes; use Synth.Objtypes;
 
 package Synth.Decls is
    --  Get the type of DECL iff it is standalone (not an already existing

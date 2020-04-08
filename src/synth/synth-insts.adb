@@ -44,6 +44,7 @@ with Vhdl.Errors;
 with Vhdl.Ieee.Math_Real;
 with Vhdl.Std_Package;
 
+with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Environment; use Synth.Environment;
 with Synth.Stmts; use Synth.Stmts;

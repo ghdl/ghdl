@@ -20,6 +20,7 @@
 
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
+with Vhdl.Nodes; use Vhdl.Nodes;
 
 package body Synth.Values.Debug is
    procedure Debug_Bound (Bnd : Bound_Type) is
