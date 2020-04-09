@@ -1,29 +1,33 @@
 .. program:: ghdl
 .. _USING:Simulation:
 
-Simulation and runtime
-######################
+Simulation (runtime)
+####################
 
 .. _simulation_options:
 
 Simulation options
 ==================
 
-In most system environments, it is possible to pass options while
+In most system environments, it is possible to pass CLI options while
 invoking a program. Contrary to most programming languages, there is no
 standard method in VHDL to obtain the arguments or to set the exit
 status.
+However, the GHDL runtime behaviour can be modified with some options:
 
-However, the GHDL runtime behaviour can be modified with some options. For
-example, it is possible to pass parameters to your design through the generic
-interfaces of the top entity. It is also possible to stop simulation after a
-certain time.
-
-The exit status of the simulation is ``EXIT_SUCCESS`` (0) if the
-simulation completes, or ``EXIT_FAILURE`` (1) in case of error
-(assertion failure, overflow or any constraint error).
+- It is possible to pass parameters to your design through the generic
+  interfaces of the top entity.
+- It is also possible to stop simulation after a certain time. The exit
+  status of the simulation is ``EXIT_SUCCESS`` (``0``) if the simulation
+  completes, or ``EXIT_FAILURE`` (``1``) in case of error (assertion
+  failure, overflow or any constraint error).
 
 Here is the list of the most useful options. For further info, see :ref:`DEV:Debugging`.
+
+.. HINT::
+   Note that these arguments are represented as ``simulation_options...`` in this documentation.
+   For analysis/elaboration options, see :ref:`USING:Invoking`.
+
 
 .. option:: -gGENERIC=VALUE
 
@@ -128,6 +132,12 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 .. option:: --help
 
   Display a short description of the options accepted by the runtime library.
+
+.. option:: --no-run
+
+  Stop the simulation before the first cycle. This option actually elaborates the design, so it will catch any bound error in port maps. See also :option:`-e`.
+
+  This may be used with :option:`--disp-tree` to display the tree without simulating the whole design.
 
 .. _export_waves:
 
@@ -263,10 +273,6 @@ Export hierarchy and references
   * ``port`` Like ``proc`` but display ports and signals too.
     If `KIND` is not specified, the hierarchy is displayed with the
     ``port`` mode.
-
-.. option:: --no-run
-
-  Stop the simulation before the first cycle. This may be used with :option:`--disp-tree` to display the tree without simulating the whole design. This option actually elaborates the design, so it will catch any bound error in port maps.
 
 .. option:: --xref-html [options] files...
 
