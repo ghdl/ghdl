@@ -142,6 +142,7 @@ texinfo_documents = [
 
 intersphinx_mapping = {
    'python': ('https://docs.python.org/3.6/', None),
+   'cosim': ('https://ghdl.github.io/ghdl-cosim', None),
    'poc': ('https://poc-library.readthedocs.io/en/release', None)
 }
 
