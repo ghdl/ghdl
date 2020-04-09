@@ -748,7 +748,7 @@ package body Synth.Decls is
             Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
             Create_Var_Wire (Syn_Inst, Decl, Init);
             if Is_Subprg then
-               Phi_Assign
+               Phi_Assign_Net
                  (Get_Build (Syn_Inst),
                   Get_Value (Syn_Inst, Decl).Val.W, Get_Net (Init), 0);
             end if;
@@ -787,7 +787,7 @@ package body Synth.Decls is
                             Base.Val.N, Off.Net_Off, Typ.W),
             Typ);
       else
-         Res := Create_Value_Alias (Base.Val, Off, Typ);
+         Res := Create_Value_Alias (Base, Off, Typ);
       end if;
       if Obj_Typ /= null then
          Res := Synth_Subtype_Conversion (Res, Obj_Typ, True, Decl);

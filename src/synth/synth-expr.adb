@@ -55,23 +55,20 @@ package body Synth.Expr is
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
 
-   function Get_Static_Discrete (V : Valtyp) return Int64
-   is
-      N : Net;
+   function Get_Static_Discrete (V : Valtyp) return Int64 is
    begin
       case V.Val.Kind is
          when Value_Memory =>
             return Read_Discrete (V);
          when Value_Const =>
-            return Read_Discrete ((V.Typ, V.Val.C_Val));
+            return Read_Discrete (Get_Memtyp (V));
          when Value_Net =>
-            N := V.Val.N;
+            return Get_Net_Int64 (Get_Net (V));
          when Value_Wire =>
-            N := Synth.Environment.Get_Const_Wire (V.Val.W);
+            return Read_Discrete (Synth.Environment.Get_Static_Wire (V.Val.W));
          when others =>
             raise Internal_Error;
       end case;
-      return Get_Net_Int64 (N);
    end Get_Static_Discrete;
 
    function Is_Positive (V : Valtyp) return Boolean
@@ -81,14 +78,14 @@ package body Synth.Expr is
    begin
       pragma Assert (V.Typ.Kind = Type_Discrete);
       case V.Val.Kind is
-         when Value_Const =>
-            return Read_Discrete ((V.Typ, V.Val.C_Val)) >= 0;
+         when Value_Const
+           | Value_Memory =>
+            return Read_Discrete (Get_Memtyp (V)) >= 0;
          when Value_Net =>
             N := V.Val.N;
          when Value_Wire =>
-            N := Get_Net (V);
-         when Value_Memory =>
-            return Read_Discrete (V) >= 0;
+            return Read_Discrete
+              (Synth.Environment.Get_Static_Wire (V.Val.W)) >= 0;
          when others =>
             raise Internal_Error;
       end case;
@@ -213,37 +210,74 @@ package body Synth.Expr is
 
    procedure Value2logvec (Mem : Memory_Ptr;
                            Typ : Type_Acc;
-                           Vec : in out Logvec_Array;
                            Off : in out Uns32;
+                           W : in out Width;
+                           Vec : in out Logvec_Array;
+                           Vec_Off : in out Uns32;
                            Has_Zx : in out Boolean) is
    begin
+      if Off >= Typ.W then
+         --  Offset not yet reached.
+         Off := Off - Typ.W;
+         return;
+      end if;
+      if W = 0 then
+         return;
+      end if;
+
       case Typ.Kind is
          when Type_Bit =>
-            Bit2logvec (Uns32 (Read_U8 (Mem)), Vec, Off);
+            --  Scalar bits cannot be cut.
+            pragma Assert (Off = 0 and W >= Typ.W);
+            Bit2logvec (Uns32 (Read_U8 (Mem)), Vec, Vec_Off);
+            W := W - Typ.W;
          when Type_Logic =>
-            Logic2logvec (Int64 (Read_U8 (Mem)), Vec, Off, Has_Zx);
+            --  Scalar bits cannot be cut.
+            pragma Assert (Off = 0 and W >= Typ.W);
+            Logic2logvec (Int64 (Read_U8 (Mem)), Vec, Vec_Off, Has_Zx);
+            W := W - Typ.W;
          when Type_Discrete =>
-            Uns2logvec (To_Uns64 (Read_Discrete (Mem, Typ)), Typ.W, Vec, Off);
+            --  Scalar bits cannot be cut.
+            pragma Assert (Off = 0 and W >= Typ.W);
+            Uns2logvec (To_Uns64 (Read_Discrete (Memtyp'(Typ, Mem))),
+                        Typ.W, Vec, Vec_Off);
+            W := W - Typ.W;
+         when Type_Float =>
+            --  Fp64 is for sure 64 bits.  Assume the endianness of floats is
+            --  the same as integers endianness.
+            --  Scalar bits cannot be cut.
+            pragma Assert (Off = 0 and W >= Typ.W);
+            Uns2logvec (To_Uns64 (Read_Fp64 (Mem)), 64, Vec, Vec_Off);
+            W := W - Typ.W;
          when Type_Vector =>
             declare
-               Vlen : constant Iir_Index32 := Vec_Length (Typ);
+               Vlen : Uns32;
             begin
+               Vlen := Uns32 (Vec_Length (Typ));
+               pragma Assert (Off < Vlen);
+               pragma Assert (Vlen > 0);
+
+               if Vlen > Off + W then
+                  Vlen := Off + W;
+               end if;
                case Typ.Vec_El.Kind is
                   when Type_Bit =>
                      --  TODO: optimize off mod 32 = 0.
-                     for I in reverse 1 .. Vlen loop
+                     for I in reverse Off + 1 .. Vlen loop
                         Bit2logvec (Uns32 (Read_U8 (Mem + Size_Type (I - 1))),
-                                    Vec, Off);
+                                    Vec, Vec_Off);
                      end loop;
                   when Type_Logic =>
-                     for I in reverse 1 .. Vlen loop
+                     for I in reverse Off + 1 .. Vlen loop
                         Logic2logvec
                           (Int64 (Read_U8 (Mem + Size_Type (I - 1))),
-                           Vec, Off, Has_Zx);
+                           Vec, Vec_Off, Has_Zx);
                      end loop;
                   when others =>
                      raise Internal_Error;
                end case;
+               W := W - (Vlen - Off);
+               Off := 0;
             end;
          when Type_Array =>
             declare
@@ -251,35 +285,37 @@ package body Synth.Expr is
                El_Typ : constant Type_Acc := Typ.Arr_El;
             begin
                for I in reverse 1 .. Alen loop
-                  Value2logvec (Mem + Size_Type (I - 1) * El_Typ.Sz,
-                                El_Typ, Vec, Off, Has_Zx);
+                  Value2logvec (Mem + Size_Type (I - 1) * El_Typ.Sz, El_Typ,
+                                Off, W, Vec, Vec_Off, Has_Zx);
+                  exit when W = 0;
                end loop;
             end;
          when Type_Record =>
             for I in Typ.Rec.E'Range loop
                Value2logvec (Mem + Typ.Rec.E (I).Moff, Typ.Rec.E (I).Typ,
-                             Vec, Off, Has_Zx);
+                             Off, W, Vec, Vec_Off, Has_Zx);
+               exit when W = 0;
             end loop;
-         when Type_Float =>
-            --  Fp64 is for sure 64 bits.  Assume the endianness of floats is
-            --  the same as integers endianness.
-            Uns2logvec (To_Uns64 (Read_Fp64 (Mem)), 64, Vec, Off);
          when others =>
             raise Internal_Error;
       end case;
    end Value2logvec;
 
-   procedure Value2logvec (Val : Valtyp;
+   procedure Value2logvec (Val : Memtyp;
+                           Off : Uns32;
+                           W : Width;
                            Vec : in out Logvec_Array;
-                           Off : in out Uns32;
-                           Has_Zx : in out Boolean) is
+                           Vec_Off : in out Uns32;
+                           Has_Zx : in out Boolean)
+   is
+      Off1 : Uns32;
+      W1 : Width;
    begin
-      if Val.Val.Kind = Value_Const then
-         Value2logvec (Val.Val.C_Val.Mem, Val.Typ, Vec, Off, Has_Zx);
-         return;
-      end if;
-
-      Value2logvec (Val.Val.Mem, Val.Typ, Vec, Off, Has_Zx);
+      Off1 := Off;
+      W1 := W;
+      Value2logvec (Val.Mem, Val.Typ, Off1, W1, Vec, Vec_Off, Has_Zx);
+      pragma Assert (Off1 = 0);
+      pragma Assert (W1 = 0);
    end Value2logvec;
 
    --  Resize for a discrete value.
@@ -639,7 +675,8 @@ package body Synth.Expr is
          when Value_Net =>
             return Create_Value_Net (Val.Val.N, Ntype);
          when Value_Alias =>
-            return Create_Value_Alias (Val.Val.A_Obj, Val.Val.A_Off, Ntype);
+            return Create_Value_Alias
+              ((Val.Val.A_Typ, Val.Val.A_Obj), Val.Val.A_Off, Ntype);
          when Value_Const =>
             return Reshape_Value ((Val.Typ, Val.Val.C_Val), Ntype);
          when Value_Memory =>
@@ -681,6 +718,11 @@ package body Synth.Expr is
                      when Value_Net
                        | Value_Wire
                        | Value_Alias =>
+                        if Is_Static_Val (Vt.Val) then
+                           return Create_Value_Discrete
+                             (Get_Static_Discrete (Vt), Dtype);
+                        end if;
+
                         N := Get_Net (Vt);
                         if Vtype.Drange.Is_Signed then
                            N := Build2_Sresize

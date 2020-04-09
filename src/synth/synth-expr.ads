@@ -127,8 +127,12 @@ package Synth.Expr is
    procedure Free_Logvec_Array is new Ada.Unchecked_Deallocation
      (Logvec_Array, Logvec_Array_Acc);
 
-   procedure Value2logvec (Val : Valtyp;
+   --  Convert W bits from OFF of VAL to a Logvec_Array.
+   --  OFF and W are offset and width in bit representation.
+   procedure Value2logvec (Val : Memtyp;
+                           Off : Uns32;
+                           W : Width;
                            Vec : in out Logvec_Array;
-                           Off : in out Uns32;
+                           Vec_Off : in out Uns32;
                            Has_Zx : in out Boolean);
 end Synth.Expr;

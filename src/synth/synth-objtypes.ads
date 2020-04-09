@@ -161,6 +161,8 @@ package Synth.Objtypes is
       Mem : Memory_Ptr;
    end record;
 
+   Null_Memtyp : constant Memtyp := (null, null);
+
    --  Offsets for a value.
    type Value_Offsets is record
       Net_Off : Uns32;

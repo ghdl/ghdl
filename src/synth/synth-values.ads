@@ -85,6 +85,7 @@ package Synth.Values is
             C_Net : Net;
          when Value_Alias =>
             A_Obj : Value_Acc;
+            A_Typ : Type_Acc;  --  The type of A_Obj.
             A_Off : Value_Offsets;
       end case;
    end record;
@@ -133,7 +134,7 @@ package Synth.Values is
                               return Valtyp;
 
    function Create_Value_Alias
-     (Obj : Value_Acc; Off : Value_Offsets; Typ : Type_Acc) return Valtyp;
+     (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp;
 
    function Create_Value_Const (Val : Valtyp; Loc : Syn_Src)
                                return Valtyp;
@@ -161,7 +162,7 @@ package Synth.Values is
 
    --  Memory access.
    procedure Write_Discrete (Vt : Valtyp; Val : Int64);
-   function Read_Discrete (Mem : Memory_Ptr; Typ : Type_Acc) return Int64;
+   function Read_Discrete (Mt : Memtyp) return Int64;
    function Read_Discrete (Vt : Valtyp) return Int64;
 
    procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index);

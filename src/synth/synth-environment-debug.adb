@@ -77,7 +77,11 @@ package body Synth.Environment.Debug is
       Put (", chain:" & Seq_Assign'Image (Rec.Chain));
       New_Line;
       Put_Line (" value:");
-      Dump_Partial_Assign (Rec.Asgns);
+      if Rec.Val.Is_Static then
+         Put_Line ("   static");
+      else
+         Dump_Partial_Assign (Rec.Val.Asgns);
+      end if;
    end Dump_Assign;
 
    procedure Dump_Phi (Id : Phi_Id)

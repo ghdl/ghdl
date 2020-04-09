@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Types; use Types;
+
 with Netlists; use Netlists;
 with Netlists.Builders;
 
@@ -125,6 +127,9 @@ package Synth.Context is
    --  Get a net from a scalar/vector value.  This will automatically create
    --  a net for literals.
    function Get_Net (Val : Valtyp) return Net;
+   function Get_Partial_Memtyp_Net (Val : Memtyp; Off : Uns32; Wd : Width)
+                                   return Net;
+   function Get_Memtyp_Net (Val : Memtyp) return Net;
 
    function Get_Package_Object
      (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Synth_Instance_Acc;

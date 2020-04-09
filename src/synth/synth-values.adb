@@ -55,7 +55,7 @@ package body Synth.Values is
          when Value_Net =>
             return Netlists.Utils.Is_Const_Net (Val.N);
          when Value_Wire =>
-            return Is_Const_Wire (Val.W);
+            return Is_Static_Wire (Val.W);
          when Value_File =>
             return True;
          when Value_Const =>
@@ -217,7 +217,7 @@ package body Synth.Values is
    end Get_Array_Flat_Length;
 
    function Create_Value_Alias
-     (Obj : Value_Acc; Off : Value_Offsets; Typ : Type_Acc) return Valtyp
+     (Obj : Valtyp; Off : Value_Offsets; Typ : Type_Acc) return Valtyp
    is
       pragma Assert (Typ /= null);
       subtype Value_Type_Alias is Value_Type (Value_Alias);
@@ -226,7 +226,8 @@ package body Synth.Values is
    begin
       Val := To_Value_Acc (Alloc (Current_Pool,
                                   (Kind => Value_Alias,
-                                   A_Obj => Obj,
+                                   A_Obj => Obj.Val,
+                                   A_Typ => Obj.Typ,
                                    A_Off => Off)));
       return (Typ, Val);
    end Create_Value_Alias;
@@ -424,15 +425,15 @@ package body Synth.Values is
       Write_Discrete (Vt.Val.Mem, Vt.Typ, Val);
    end Write_Discrete;
 
-   function Read_Discrete (Mem : Memory_Ptr; Typ : Type_Acc) return Int64 is
+   function Read_Discrete (Mt : Memtyp) return Int64 is
    begin
-      case Typ.Sz is
+      case Mt.Typ.Sz is
          when 1 =>
-            return Int64 (Read_U8 (Mem));
+            return Int64 (Read_U8 (Mt.Mem));
          when 4 =>
-            return Int64 (Read_I32 (Mem));
+            return Int64 (Read_I32 (Mt.Mem));
          when 8 =>
-            return Int64 (Read_I64 (Mem));
+            return Int64 (Read_I64 (Mt.Mem));
          when others =>
             raise Internal_Error;
       end case;
@@ -440,7 +441,7 @@ package body Synth.Values is
 
    function Read_Discrete (Vt : Valtyp) return Int64 is
    begin
-      return Read_Discrete (Vt.Val.Mem, Vt.Typ);
+      return Read_Discrete (Get_Memtyp (Vt));
    end Read_Discrete;
 
    function Create_Value_Float (Val : Fp64; Vtype : Type_Acc) return Valtyp

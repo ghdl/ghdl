@@ -25,6 +25,7 @@ with Netlists; use Netlists;
 with Netlists.Builders;
 
 with Synth.Source;
+with Synth.Objtypes; use Synth.Objtypes;
 
 package Synth.Environment is
    --  This package declares the type Wire_Id and its methods.
@@ -111,8 +112,11 @@ package Synth.Environment is
      return Net;
 
    --  In the current phi context, assign VAL to DEST.
-   procedure Phi_Assign
+   procedure Phi_Assign_Net
      (Ctxt : Builders.Context_Acc; Dest : Wire_Id; Val : Net; Offset : Uns32);
+
+   --  Assign a static value to DEST.  VAL is copied.
+   procedure Phi_Assign_Static (Dest : Wire_Id; Val : Memtyp);
 
    --  A Phi represent a split in the control flow (two or more branches).
    type Phi_Type is private;
@@ -165,6 +169,9 @@ package Synth.Environment is
 
    function Get_Assign_Partial (Asgn : Seq_Assign) return Partial_Assign;
 
+   --  Force the value of a Seq_Assign to be a net if needed, return it.
+   function Get_Assign_Partial_Force (Asgn : Seq_Assign) return Partial_Assign;
+
    function New_Partial_Assign (Val : Net; Offset : Uns32)
                                return Partial_Assign;
 
@@ -176,7 +183,7 @@ package Synth.Environment is
    procedure Partial_Assign_Append (List : in out Partial_Assign_List;
                                     Pasgn : Partial_Assign);
    procedure Merge_Partial_Assigns (Ctxt : Builders.Context_Acc;
-                                    W : Wire_Id;
+                                    Wid : Wire_Id;
                                     List : in out Partial_Assign_List);
 
    --  P is an array of Partial_Assign.  Each element is a list
@@ -201,13 +208,13 @@ package Synth.Environment is
 
    procedure Finalize_Assignments (Ctxt : Builders.Context_Acc);
 
-   --  A const wire is a wire_signal which has one whole (same width as the
+   --  A static wire is a wire_signal which has one whole (same width as the
    --  wire) assignment and whose assignment value is a const net.
    --  That's rather restrictive but still efficient.
-   function Is_Const_Wire (Wid : Wire_Id) return Boolean;
+   function Is_Static_Wire (Wid : Wire_Id) return Boolean;
 
-   --  Return the corresponding net for a constant wire.
-   function Get_Const_Wire (Wid : Wire_Id) return Net;
+   --  Return the corresponding net for a static wire.
+   function Get_Static_Wire (Wid : Wire_Id) return Memtyp;
 private
    type Wire_Id is new Uns32;
    No_Wire_Id : constant Wire_Id := 0;
@@ -264,6 +271,16 @@ private
       Nbr_Final_Assign : Natural;
    end record;
 
+   type Seq_Assign_Value (Is_Static : Boolean := True) is record
+      case Is_Static is
+         when True =>
+            Val : Memtyp;
+         when False =>
+            --  Values assigned.
+            Asgns : Partial_Assign;
+      end case;
+   end record;
+
    type Seq_Assign_Record is record
       --  Target of the assignment.
       Id : Wire_Id;
@@ -278,8 +295,8 @@ private
       --  Next wire in the phi context.
       Chain : Seq_Assign;
 
-      --  Values assigned.
-      Asgns : Partial_Assign;
+      --  Current value.
+      Val : Seq_Assign_Value;
    end record;
 
    type Partial_Assign_Record is record

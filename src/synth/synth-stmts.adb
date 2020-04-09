@@ -89,24 +89,6 @@ package body Synth.Stmts is
       end if;
    end Synth_Waveform;
 
-   procedure Synth_Assign (Wid : Wire_Id;
-                           Typ : Type_Acc;
-                           Val : Valtyp;
-                           Offset : Uns32;
-                           Loc : Source.Syn_Src)
-   is
-      Cval : Valtyp;
-      N : Net;
-   begin
-      Cval := Synth_Subtype_Conversion (Val, Typ, False, Loc);
-      if Cval = No_Valtyp then
-         --  In case of error.
-         return;
-      end if;
-      N := Get_Net (Cval);
-      Phi_Assign (Build_Context, Wid, N, Offset);
-   end Synth_Assign;
-
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
@@ -139,7 +121,7 @@ package body Synth.Stmts is
 
                if Targ.Val.Kind = Value_Alias then
                   --  Replace alias by the aliased name.
-                  Dest_Base := (Targ.Typ, Targ.Val.A_Obj);
+                  Dest_Base := (Targ.Val.A_Typ, Targ.Val.A_Obj);
                   Dest_Off := Targ.Val.A_Off;
                else
                   Dest_Base := Targ;
@@ -147,6 +129,7 @@ package body Synth.Stmts is
                end if;
             end;
          when Iir_Kind_Function_Call =>
+            --  Can be the prefix of .all
             Dest_Base := Synth_Expression (Syn_Inst, Pfx);
             Dest_Typ := Dest_Base.Typ;
             Dest_Off := (0, 0);
@@ -156,13 +139,13 @@ package body Synth.Stmts is
             declare
                Voff : Net;
                Off : Value_Offsets;
-               Dest_W : Width;
+               Pfx_W : Width;
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
                Strip_Const (Dest_Base);
-               Dest_W := Dest_Base.Typ.W;
+               Pfx_W := Dest_Typ.W;
                Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Voff, Off);
 
                Dest_Typ := Get_Array_Element (Dest_Typ);
@@ -173,7 +156,7 @@ package body Synth.Stmts is
                if Voff /= No_Net then
                   if Dest_Voff = No_Net then
                      Dest_Voff := Voff;
-                     Dest_Rdwd := Dest_W;
+                     Dest_Rdwd := Pfx_W;
                   else
                      Dest_Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Voff, Voff);
@@ -204,11 +187,13 @@ package body Synth.Stmts is
                Res_Bnd : Bound_Type;
                Sl_Voff : Net;
                Sl_Off : Value_Offsets;
+               Pfx_W : Width;
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
                Strip_Const (Dest_Base);
+               Pfx_W := Dest_Typ.W;
 
                Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
                Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
@@ -223,7 +208,7 @@ package body Synth.Stmts is
                      Dest_Voff := Build_Addidx
                        (Get_Build (Syn_Inst), Dest_Voff, Sl_Voff);
                   else
-                     Dest_Rdwd := Dest_Base.Typ.W;
+                     Dest_Rdwd := Pfx_W;
                      Dest_Voff := Sl_Voff;
                   end if;
                   Dest_Typ := Create_Slice_Type (Res_Bnd.Len, El_Typ);
@@ -251,7 +236,16 @@ package body Synth.Stmts is
    end Synth_Assignment_Prefix;
 
    type Target_Kind is
-     (Target_Simple, Target_Aggregate, Target_Memory);
+     (
+      --  The target is an object or a static part of it.
+      Target_Simple,
+
+      --  The target is an aggregate.
+      Target_Aggregate,
+
+      --  The assignment is dynamically indexed.
+      Target_Memory
+     );
 
    type Target_Info (Kind : Target_Kind := Target_Simple) is record
       --  In all cases, the type of the target is known or computed.
@@ -424,46 +418,55 @@ package body Synth.Stmts is
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Target_Info;
                                Val : Valtyp;
-                               Loc : Node) is
+                               Loc : Node)
+   is
+      V : Valtyp;
    begin
+      V := Synth_Subtype_Conversion (Val, Target.Targ_Type, False, Loc);
+      pragma Unreferenced (Val);
+      if V = No_Valtyp then
+         --  In case of error.
+         return;
+      end if;
+
       case Target.Kind is
          when Target_Aggregate =>
             Synth_Assignment_Aggregate
-              (Syn_Inst, Target.Aggr, Target.Targ_Type, Val, Loc);
+              (Syn_Inst, Target.Aggr, Target.Targ_Type, V, Loc);
          when Target_Simple =>
             if Target.Obj.Val.Kind = Value_Wire then
-               Synth_Assign (Target.Obj.Val.W, Target.Targ_Type,
-                             Val, Target.Off.Net_Off, Loc);
+               if Is_Static (V.Val)
+                 and then V.Typ.W = Target.Obj.Typ.W
+               then
+                  pragma Assert (Target.Off = (0, 0));
+                  Phi_Assign_Static (Target.Obj.Val.W, Get_Memtyp (V));
+               else
+                  Phi_Assign_Net (Get_Build (Syn_Inst), Target.Obj.Val.W,
+                                  Get_Net (V), Target.Off.Net_Off);
+               end if;
             else
-               if not Is_Static (Val.Val) then
+               if not Is_Static (V.Val) then
                   --  Maybe the error message is too cryptic ?
                   Error_Msg_Synth
                     (+Loc, "cannot assign a net to a static value");
                else
-                  declare
-                     V : Valtyp;
-                  begin
-                     V := Val;
-                     Strip_Const (V);
-                     Copy_Memory (Target.Obj.Val.Mem + Target.Off.Mem_Off,
-                                  V.Val.Mem, V.Typ.Sz);
-                  end;
+                  Strip_Const (V);
+                  Copy_Memory (Target.Obj.Val.Mem + Target.Off.Mem_Off,
+                               V.Val.Mem, V.Typ.Sz);
                end if;
             end if;
          when Target_Memory =>
             declare
-               V : Net;
+               N : Net;
             begin
-               V := Get_Current_Assign_Value
+               N := Get_Current_Assign_Value
                  (Get_Build (Syn_Inst), Target.Mem_Obj.Val.W,
                   Target.Mem_Moff, Target.Mem_Mwidth);
-               V := Build_Dyn_Insert (Get_Build (Syn_Inst), V, Get_Net (Val),
+               N := Build_Dyn_Insert (Get_Build (Syn_Inst), N, Get_Net (V),
                   Target.Mem_Voff, Target.Mem_Doff);
-               Set_Location (V, Loc);
-               Synth_Assign
-                 (Target.Mem_Obj.Val.W, Target.Targ_Type,
-                  Create_Value_Net (V, Target.Targ_Type),
-                  Target.Mem_Moff, Loc);
+               Set_Location (N, Loc);
+               Phi_Assign_Net (Get_Build (Syn_Inst), Target.Mem_Obj.Val.W,
+                               N, Target.Mem_Moff);
             end;
       end case;
    end Synth_Assignment;
@@ -712,7 +715,8 @@ package body Synth.Stmts is
       Off := 0;
       Has_Zx := False;
       Vec := (others => (0, 0));
-      Value2logvec (Expr_Val, Vec, Off, Has_Zx);
+      Value2logvec (Get_Memtyp (Expr_Val), 0, Expr_Val.Typ.W,
+                    Vec, Off, Has_Zx);
       if Has_Zx then
          Error_Msg_Synth (+Expr, "meta-values never match");
       end if;
@@ -771,6 +775,7 @@ package body Synth.Stmts is
       Wid_Heap_Sort (Arr'Length);
    end Sort_Wire_Id_Array;
 
+   --  Count the number of wires used in all the alternatives.
    function Count_Wires_In_Alternatives (Alts : Alternative_Data_Array)
                                         return Natural
    is
@@ -793,6 +798,7 @@ package body Synth.Stmts is
       return Res;
    end Count_Wires_In_Alternatives;
 
+   --  Fill ARR from wire_id of ALTS.
    procedure Fill_Wire_Id_Array (Arr : out Wire_Id_Array;
                                  Alts : Alternative_Data_Array)
    is
@@ -955,7 +961,8 @@ package body Synth.Stmts is
                --  If there is an assignment to Wi in Alt, it will define the
                --  value.
                if Get_Wire_Id (Alts (I).Asgns) = Wi then
-                  Pasgns (Int32 (I)) := Get_Assign_Partial (Alts (I).Asgns);
+                  Pasgns (Int32 (I)) :=
+                    Get_Assign_Partial_Force (Alts (I).Asgns);
                   Alts (I).Asgns := Get_Assign_Chain (Alts (I).Asgns);
                else
                   Pasgns (Int32 (I)) := No_Partial_Assign;
@@ -1502,7 +1509,7 @@ package body Synth.Stmts is
                      --  Always pass by value.
                      Nbr_Inout := Nbr_Inout + 1;
                      Infos (Nbr_Inout) := Info;
-                     if Info.Kind = Target_Simple
+                     if Info.Kind /= Target_Memory
                        and then Is_Static (Info.Obj.Val)
                      then
                         Val := Create_Value_Memory (Info.Targ_Type);
@@ -1514,11 +1521,11 @@ package body Synth.Stmts is
                      end if;
                   when Iir_Kind_Interface_Signal_Declaration =>
                      --  Always pass by reference (use an alias).
-                     if Info.Kind /= Target_Simple then
+                     if Info.Kind = Target_Memory then
                         raise Internal_Error;
                      end if;
                      Val := Create_Value_Alias
-                       (Info.Obj.Val, Info.Off, Info.Targ_Type);
+                       (Info.Obj, Info.Off, Info.Targ_Type);
                   when Iir_Kind_Interface_File_Declaration =>
                      Val := Info.Obj;
                   when Iir_Kind_Interface_Quantity_Declaration =>
@@ -1694,18 +1701,18 @@ package body Synth.Stmts is
                                       New_Internal_Name (Build_Context),
                                       C.Ret_Typ.W));
          C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
-         Phi_Assign (Build_Context, C.W_Val, C.Ret_Init, 0);
+         Phi_Assign_Net (Build_Context, C.W_Val, C.Ret_Init, 0);
       end if;
 
       Set_Wire_Gate
         (C.W_En, Build_Signal (Build_Context,
                                New_Internal_Name (Build_Context), 1));
-      Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+      Phi_Assign_Net (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
 
       Set_Wire_Gate
         (C.W_Ret, Build_Signal (Build_Context,
                                 New_Internal_Name (Build_Context), 1));
-      Phi_Assign (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
+      Phi_Assign_Net (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
 
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
       if not Is_Error (C.Inst) then
@@ -1736,6 +1743,10 @@ package body Synth.Stmts is
       pragma Unreferenced (Infos);
 
       --  Propagate assignments.
+      --  Wires that have been created for this subprogram will be destroyed.
+      --  But assignment for outer wires (passed through parameters) have
+      --  to be kept.  We cannot merge phi because this won't be allowed for
+      --  local wires.
       Propagate_Phi_Until_Mark (Get_Build (C.Inst), Subprg_Phi, Wire_Mark);
 
       --  Free wires.
@@ -1972,7 +1983,8 @@ package body Synth.Stmts is
          Set_Wire_Gate
            (Lc.W_Quit, Build_Signal (Get_Build (C.Inst),
                                      New_Internal_Name (Build_Context), 1));
-         Phi_Assign (Get_Build (C.Inst), Lc.W_Quit, Get_Inst_Bit1 (C.Inst), 0);
+         Phi_Assign_Net (Get_Build (C.Inst),
+                         Lc.W_Quit, Get_Inst_Bit1 (C.Inst), 0);
       end if;
 
       if Get_Exit_Flag (Stmt) or else Get_Next_Flag (Stmt) then
@@ -1986,7 +1998,8 @@ package body Synth.Stmts is
          Set_Wire_Gate
            (Lc.W_Exit, Build_Signal (Get_Build (C.Inst),
                                      New_Internal_Name (Build_Context), 1));
-         Phi_Assign (Get_Build (C.Inst), Lc.W_Exit, Get_Inst_Bit1 (C.Inst), 0);
+         Phi_Assign_Net (Get_Build (C.Inst),
+                         Lc.W_Exit, Get_Inst_Bit1 (C.Inst), 0);
       end if;
    end Loop_Control_Init;
 
@@ -2032,7 +2045,7 @@ package body Synth.Stmts is
          Res := Loop_Control_And (C, Res, Get_Current_Value (null, Lc.W_Quit));
       end if;
 
-      Phi_Assign (Get_Build (C.Inst), C.W_En, Res, 0);
+      Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Res, 0);
    end Loop_Control_Update;
 
    procedure Loop_Control_Finish (C : Seq_Context)
@@ -2070,7 +2083,7 @@ package body Synth.Stmts is
 
       Release (C.Cur_Loop.Wire_Mark);
 
-      Phi_Assign (Get_Build (C.Inst), C.W_En, Res, 0);
+      Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Res, 0);
    end Loop_Control_Finish;
 
    procedure Synth_Dynamic_Exit_Next_Statement
@@ -2099,7 +2112,7 @@ package body Synth.Stmts is
       end if;
 
       --  Execution is suspended.
-      Phi_Assign (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+      Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
 
       Lc := C.Cur_Loop;
 
@@ -2113,13 +2126,13 @@ package body Synth.Stmts is
       loop
          if Lc.Loop_Stmt = Loop_Label then
             if Is_Exit then
-               Phi_Assign (Get_Build (C.Inst), Lc.W_Exit,
-                           Get_Inst_Bit0 (C.Inst), 0);
+               Phi_Assign_Net (Get_Build (C.Inst),
+                               Lc.W_Exit, Get_Inst_Bit0 (C.Inst), 0);
             end if;
             exit;
          else
-            Phi_Assign (Get_Build (C.Inst), Lc.W_Quit,
-                        Get_Inst_Bit0 (C.Inst), 0);
+            Phi_Assign_Net (Get_Build (C.Inst),
+                            Lc.W_Quit, Get_Inst_Bit0 (C.Inst), 0);
          end if;
          Lc := Lc.Prev_Loop;
       end loop;
@@ -2395,17 +2408,18 @@ package body Synth.Stmts is
             end if;
          end if;
          if Is_Dyn then
-            Phi_Assign (Get_Build (C.Inst), C.W_Val, Get_Net (Val), 0);
+            Phi_Assign_Net (Get_Build (C.Inst), C.W_Val, Get_Net (Val), 0);
          end if;
       end if;
 
       if Is_Dyn then
          --  The subprogram has returned.  Do not execute further statements.
-         Phi_Assign (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+         Phi_Assign_Net (Get_Build (C.Inst),
+                         C.W_En, Get_Inst_Bit0 (C.Inst), 0);
 
          if C.W_Ret /= No_Wire_Id then
-            Phi_Assign (Get_Build (C.Inst), C.W_Ret,
-                        Get_Inst_Bit0 (C.Inst), 0);
+            Phi_Assign_Net (Get_Build (C.Inst),
+                            C.W_Ret, Get_Inst_Bit0 (C.Inst), 0);
          end if;
       end if;
 
@@ -2684,7 +2698,7 @@ package body Synth.Stmts is
       Set_Wire_Gate (C.W_En, Build_Signal (Build_Context,
                                            New_Internal_Name (Build_Context),
                                            1));
-      Phi_Assign (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+      Phi_Assign_Net (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
 
       case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
          when Iir_Kind_Sensitized_Process_Statement =>

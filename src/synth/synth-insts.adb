@@ -840,7 +840,9 @@ package body Synth.Insts is
                Vec := new Logvec_Array'(0 .. Digit_Index (Len - 1) => (0, 0));
                Off := 0;
                Has_Zx := False;
-               Value2logvec (Vt, Vec.all, Off, Has_Zx);
+               Value2logvec
+                 (Get_Memtyp (Vt), 0, Vt.Typ.W, Vec.all, Off, Has_Zx);
+               pragma Assert (Off = Vt.Typ.W);
                if Has_Zx then
                   Pv := Create_Pval4 (Vt.Typ.W);
                else
@@ -1329,7 +1331,7 @@ package body Synth.Insts is
                                  Self_Inst : Instance;
                                  Inter : Node;
                                  Idx : Port_Idx;
-                                 Val : Value_Acc)
+                                 Val : Valtyp)
    is
       Default : constant Node := Get_Default_Value (Inter);
       Desc : constant Port_Desc :=
@@ -1339,10 +1341,10 @@ package body Synth.Insts is
       Init : Valtyp;
       Inp : Input;
    begin
-      pragma Assert (Val.Kind = Value_Wire);
+      pragma Assert (Val.Val.Kind = Value_Wire);
 
       --  Create a gate for the output, so that it could be read.
-      Val.W := Alloc_Wire (Wire_Output, Inter);
+      Val.Val.W := Alloc_Wire (Wire_Output, Inter);
       --  pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
 
       Inp := Get_Input (Self_Inst, Idx);
@@ -1375,7 +1377,7 @@ package body Synth.Insts is
          Connect (Inp, Value);
       end if;
       Set_Location (Value, Inter);
-      Set_Wire_Gate (Val.W, Value);
+      Set_Wire_Gate (Val.Val.W, Value);
    end Create_Output_Wire;
 
    procedure Apply_Block_Configuration (Cfg : Node; Blk : Node)
@@ -1481,7 +1483,7 @@ package body Synth.Insts is
             when Port_Out
               | Port_Inout =>
                Create_Output_Wire
-                 (Syn_Inst, Self_Inst, Inter, Nbr_Outputs, Vt.Val);
+                 (Syn_Inst, Self_Inst, Inter, Nbr_Outputs, Vt);
                Nbr_Outputs := Nbr_Outputs + 1;
          end case;
          Inter := Get_Chain (Inter);

@@ -35,8 +35,8 @@ package Synth.Stmts is
                                            Assoc_Chain : Node);
 
    --  Transform PFX into DEST_*.
-   --  DEST_BASE is the base object.  Can be the result, a net or an array
-   --   larger than the result.
+   --  DEST_BASE is the base object (with its own typ).  Can be the result,
+   --   a net or an object larger than the result.
    --  DEST_TYP is the type of the result.
    --  DEST_NET_OFF/DEST_MEM_OFF/DEST_VOFF are the offsets in the base.
    --   DEST_NET_OFF is used when

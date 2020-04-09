@@ -639,18 +639,19 @@ package body Synth.Oper is
          return No_Valtyp;
       end if;
       Left := Synth_Subtype_Conversion (Left, Left_Typ, False, Expr);
-      Strip_Const (Left);
       Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
       if Right = No_Valtyp then
          return No_Valtyp;
       end if;
       Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
-      Strip_Const (Right);
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
          return Synth_Static_Dyadic_Predefined
            (Syn_Inst, Imp, Left, Right, Expr);
       end if;
+
+      Strip_Const (Left);
+      Strip_Const (Right);
 
       case Def is
          when Iir_Predefined_Error =>

@@ -20,7 +20,6 @@
 
 with Ada.Unchecked_Deallocation;
 
-with Types; use Types;
 with Name_Table; use Name_Table;
 
 with Vhdl.Errors; use Vhdl.Errors;
@@ -435,17 +434,24 @@ package body Synth.Context is
       end loop;
    end Is_Full;
 
-   procedure Value2net
-     (Val : Valtyp; W : Width; Vec : in out Logvec_Array; Res : out Net)
+   procedure Value2net (Val : Memtyp;
+                        Off : Uns32;
+                        W : Width;
+                        Vec : in out Logvec_Array;
+                        Res : out Net)
    is
-      Off : Uns32;
+      Vec_Off : Uns32;
       Has_Zx : Boolean;
       Inst : Instance;
       Is_0, Is_X : Boolean;
    begin
+      --  First convert to logvec.
       Has_Zx := False;
-      Off := 0;
-      Value2logvec (Val, Vec, Off, Has_Zx);
+      Vec_Off := 0;
+      Value2logvec (Val, Off, W, Vec, Vec_Off, Has_Zx);
+      pragma Assert (Vec_Off = W);
+
+      --  Then convert logvec to net.
       if W = 0 then
          --  For null range (like the null string literal "")
          Res := Build_Const_UB32 (Build_Context, 0, 0);
@@ -481,6 +487,36 @@ package body Synth.Context is
       end if;
    end Value2net;
 
+   function Get_Partial_Memtyp_Net (Val : Memtyp; Off : Uns32; Wd : Width)
+                                   return Net
+   is
+      Nd : constant Digit_Index := Digit_Index ((Wd + 31) / 32);
+      Res : Net;
+   begin
+      if Nd > 64 then
+         declare
+            Vecp : Logvec_Array_Acc;
+         begin
+            Vecp := new Logvec_Array'(0 .. Nd - 1 => (0, 0));
+            Value2net (Val, Off, Wd, Vecp.all, Res);
+            Free_Logvec_Array (Vecp);
+            return Res;
+         end;
+      else
+         declare
+            Vec : Logvec_Array (0 .. Nd - 1) := (others => (0, 0));
+         begin
+            Value2net (Val, Off, Wd, Vec, Res);
+            return Res;
+         end;
+      end if;
+   end Get_Partial_Memtyp_Net;
+
+   function Get_Memtyp_Net (Val : Memtyp) return Net is
+   begin
+      return Get_Partial_Memtyp_Net (Val, 0, Val.Typ.W);
+   end Get_Memtyp_Net;
+
    function Get_Net (Val : Valtyp) return Net is
    begin
       case Val.Val.Kind is
@@ -509,29 +545,7 @@ package body Synth.Context is
             end if;
             return Val.Val.C_Net;
          when Value_Memory =>
-            declare
-               W : constant Width := Val.Typ.W;
-               Nd : constant Digit_Index := Digit_Index ((W + 31) / 32);
-               Res : Net;
-            begin
-               if Nd > 64 then
-                  declare
-                     Vecp : Logvec_Array_Acc;
-                  begin
-                     Vecp := new Logvec_Array'(0 .. Nd - 1 => (0, 0));
-                     Value2net (Val, W, Vecp.all, Res);
-                     Free_Logvec_Array (Vecp);
-                     return Res;
-                  end;
-               else
-                  declare
-                     Vec : Logvec_Array (0 .. Nd - 1) := (others => (0, 0));
-                  begin
-                     Value2net (Val, W, Vec, Res);
-                     return Res;
-                  end;
-               end if;
-            end;
+            return Get_Memtyp_Net (Get_Memtyp (Val));
          when others =>
             raise Internal_Error;
       end case;

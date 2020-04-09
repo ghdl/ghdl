@@ -69,7 +69,8 @@ package body Synth.Static_Oper is
          when Value_Net =>
             N := V.Val.N;
          when Value_Wire =>
-            N := Synth.Environment.Get_Const_Wire (V.Val.W);
+            return (Kind => Sarr_Value,
+                    Arr => Synth.Environment.Get_Static_Wire (V.Val.W).Mem);
          when others =>
             raise Internal_Error;
       end case;
@@ -337,8 +338,8 @@ package body Synth.Static_Oper is
       case Sarr.Kind is
          when Sarr_Value =>
             for I in 1 .. Vec_Length (Val.Typ) loop
-               Arr (Natural (I)) :=
-                 Std_Ulogic'Val (Read_U8 (Val.Val.Mem + Size_Type (I - 1)));
+               Arr (Natural (I)) := Std_Ulogic'Val
+                 (Read_U8 (Sarr.Arr + Size_Type (I - 1)));
             end loop;
          when Sarr_Net =>
             for I in Arr'Range loop

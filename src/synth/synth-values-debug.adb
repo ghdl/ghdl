@@ -40,44 +40,45 @@ package body Synth.Values.Debug is
       Put (']');
    end Debug_Bound;
 
-   procedure Debug_Memtyp (M : Memory_Ptr; Typ : Type_Acc) is
+   procedure Debug_Memtyp (M : Memtyp) is
    begin
-      case Typ.Kind is
+      case M.Typ.Kind is
          when Type_Vector =>
             Put ("vector (");
-            Debug_Bound (Typ.Vbound);
+            Debug_Bound (M.Typ.Vbound);
             Put ("): ");
-            for I in 1 .. Typ.Vbound.Len loop
-               Put_Uns32 (Uns32 (Read_U8 (M + Size_Type (I - 1))));
+            for I in 1 .. M.Typ.Vbound.Len loop
+               Put_Uns32 (Uns32 (Read_U8 (M.Mem + Size_Type (I - 1))));
             end loop;
          when Type_Array =>
             Put ("arr (");
-            for I in 1 .. Typ.Abounds.Ndim loop
+            for I in 1 .. M.Typ.Abounds.Ndim loop
                if I > 1 then
                   Put (", ");
                end if;
-               Debug_Bound (Typ.Abounds.D (I));
+               Debug_Bound (M.Typ.Abounds.D (I));
             end loop;
             Put ("): ");
-            for I in 1 .. Get_Array_Flat_Length (Typ) loop
+            for I in 1 .. Get_Array_Flat_Length (M.Typ) loop
                if I > 1 then
                   Put (", ");
                end if;
                Debug_Memtyp
-                 (M + Size_Type (I - 1) * Typ.Arr_El.Sz, Typ.Arr_El);
+                 ((M.Typ.Arr_El, M.Mem + Size_Type (I - 1) * M.Typ.Arr_El.Sz));
             end loop;
          when Type_Record =>
             Put ("rec: (");
-            for I in Typ.Rec.E'Range loop
+            for I in M.Typ.Rec.E'Range loop
                if I > 1 then
                   Put (", ");
                end if;
-               Debug_Memtyp (M + Typ.Rec.E (I).Moff, Typ.Rec.E (I).Typ);
+               Debug_Memtyp
+                 ((M.Typ.Rec.E (I).Typ, M.Mem + M.Typ.Rec.E (I).Moff));
             end loop;
             Put (")");
          when Type_Discrete =>
             Put ("discrete: ");
-            Put_Int64 (Read_Discrete (M, Typ));
+            Put_Int64 (Read_Discrete (M));
          when others =>
             Put ("others");
       end case;
@@ -86,7 +87,7 @@ package body Synth.Values.Debug is
 
    procedure Debug_Valtyp (V : Valtyp) is
    begin
-      Debug_Memtyp (V.Val.Mem, V.Typ);
+      Debug_Memtyp (Get_Memtyp (V));
    end Debug_Valtyp;
 
 end Synth.Values.Debug;
