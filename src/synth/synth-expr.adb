@@ -55,6 +55,27 @@ package body Synth.Expr is
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
 
+   function Get_Value_Memtyp (V : Valtyp) return Memtyp is
+   begin
+      case V.Val.Kind is
+         when Value_Memory =>
+            return (V.Typ, V.Val.Mem);
+         when Value_Const =>
+            return Get_Memtyp (V);
+         when Value_Wire =>
+            return Synth.Environment.Get_Static_Wire (V.Val.W);
+         when Value_Alias =>
+            declare
+               Res : Memtyp;
+            begin
+               Res := Get_Value_Memtyp ((V.Val.A_Typ, V.Val.A_Obj));
+               return (V.Typ, Res.Mem + V.Val.A_Off.Mem_Off);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Value_Memtyp;
+
    function Get_Static_Discrete (V : Valtyp) return Int64 is
    begin
       case V.Val.Kind is
@@ -62,8 +83,6 @@ package body Synth.Expr is
             return Read_Discrete (V);
          when Value_Const =>
             return Read_Discrete (Get_Memtyp (V));
-         when Value_Net =>
-            return Get_Net_Int64 (Get_Net (V));
          when Value_Wire =>
             return Read_Discrete (Synth.Environment.Get_Static_Wire (V.Val.W));
          when others =>

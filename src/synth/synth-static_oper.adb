@@ -31,7 +31,6 @@ with Netlists.Utils; use Netlists.Utils;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
-with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Environment;
 with Synth.Expr; use Synth.Expr;
 with Synth.Oper;
@@ -110,6 +109,11 @@ package body Synth.Static_Oper is
       end case;
    end Get_Static_Std_Logic;
 
+   function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic is
+   begin
+      return Std_Ulogic'Val (Read_U8 (M + Size_Type (Off)));
+   end Read_Std_Logic;
+
    procedure Warn_Compare_Null (Loc : Node) is
    begin
       Warning_Msg_Synth (+Loc, "null argument detected, returning false");
@@ -121,13 +125,11 @@ package body Synth.Static_Oper is
    end Warn_Compare_Meta;
 
    function Synth_Compare_Uns_Uns
-     (Left, Right : Valtyp; Err : Compare_Type; Loc : Node)
+     (Left, Right : Memtyp; Err : Compare_Type; Loc : Node)
      return Compare_Type
    is
       Lw : constant Uns32 := Left.Typ.W;
       Rw : constant Uns32 := Right.Typ.W;
-      Larr : constant Static_Arr_Type := Get_Static_Array (Left);
-      Rarr : constant Static_Arr_Type := Get_Static_Array (Right);
       Len : constant Uns32 := Uns32'Min (Left.Typ.W, Right.Typ.W);
       L, R : Std_Ulogic;
    begin
@@ -138,7 +140,7 @@ package body Synth.Static_Oper is
 
       if Lw > Rw then
          for I in 0 .. Lw - Rw - 1 loop
-            case To_X01 (Get_Static_Std_Logic (Larr, I)) is
+            case To_X01 (Read_Std_Logic (Left.Mem, I)) is
                when '0' =>
                   null;
                when '1' =>
@@ -150,7 +152,7 @@ package body Synth.Static_Oper is
          end loop;
       elsif Lw < Rw then
          for I in 0 .. Rw - Lw - 1 loop
-            case To_X01 (Get_Static_Std_Logic (Rarr, I)) is
+            case To_X01 (Read_Std_Logic (Right.Mem, I)) is
                when '0' =>
                   null;
                when '1' =>
@@ -163,8 +165,8 @@ package body Synth.Static_Oper is
       end if;
 
       for I in 0 .. Len - 1 loop
-         L := To_X01 (Get_Static_Std_Logic (Larr, Lw - Len + I));
-         R := To_X01 (Get_Static_Std_Logic (Rarr, Rw - Len + I));
+         L := To_X01 (Read_Std_Logic (Left.Mem, Lw - Len + I));
+         R := To_X01 (Read_Std_Logic (Right.Mem, Rw - Len + I));
          if L = 'X' or R = 'X' then
             Warn_Compare_Meta (Loc);
             return Err;
@@ -178,12 +180,11 @@ package body Synth.Static_Oper is
    end Synth_Compare_Uns_Uns;
 
    function Synth_Compare_Uns_Nat
-     (Left, Right : Valtyp; Err : Compare_Type; Loc : Node)
+     (Left, Right : Memtyp; Err : Compare_Type; Loc : Node)
      return Compare_Type
    is
       Lw : constant Uns32 := Left.Typ.W;
-      Larr : constant Static_Arr_Type := Get_Static_Array (Left);
-      Rval : constant Uns64 := To_Uns64 (Get_Static_Discrete (Right));
+      Rval : constant Uns64 := To_Uns64 (Read_Discrete (Right));
       L : Std_Ulogic;
       Cnt : Uns32;
    begin
@@ -194,7 +195,7 @@ package body Synth.Static_Oper is
 
       if Lw > 64 then
          for I in 0 .. Lw - 64 - 1 loop
-            case To_X01 (Get_Static_Std_Logic (Larr, I)) is
+            case To_X01 (Read_Std_Logic (Left.Mem, I)) is
                when '0' =>
                   null;
                when '1' =>
@@ -215,7 +216,7 @@ package body Synth.Static_Oper is
       end if;
 
       for I in reverse 0 .. Cnt - 1 loop
-         L := To_X01 (Get_Static_Std_Logic (Larr, Lw - I - 1));
+         L := To_X01 (Read_Std_Logic (Left.Mem, Lw - I - 1));
          if L = 'X' then
             Warn_Compare_Meta (Loc);
             return Err;
@@ -234,12 +235,10 @@ package body Synth.Static_Oper is
    end Synth_Compare_Uns_Nat;
 
    function Synth_Compare_Nat_Uns
-     (Left, Right : Valtyp; Err : Compare_Type; Loc : Node)
-     return Compare_Type
+     (Left, Right : Memtyp; Err : Compare_Type; Loc : Node) return Compare_Type
    is
       Rw : constant Uns32 := Right.Typ.W;
-      Rarr : constant Static_Arr_Type := Get_Static_Array (Right);
-      Lval : constant Uns64 := To_Uns64 (Get_Static_Discrete (Left));
+      Lval : constant Uns64 := To_Uns64 (Read_Discrete (Left));
       R : Std_Ulogic;
       Cnt : Uns32;
    begin
@@ -250,7 +249,7 @@ package body Synth.Static_Oper is
 
       if Rw > 64 then
          for I in 0 .. Rw - 64 - 1 loop
-            case To_X01 (Get_Static_Std_Logic (Rarr, I)) is
+            case To_X01 (Read_Std_Logic (Right.Mem, I)) is
                when '0' =>
                   null;
                when '1' =>
@@ -271,7 +270,7 @@ package body Synth.Static_Oper is
       end if;
 
       for I in reverse 0 .. Cnt - 1 loop
-         R := To_X01 (Get_Static_Std_Logic (Rarr, Rw - I - 1));
+         R := To_X01 (Read_Std_Logic (Right.Mem, Rw - I - 1));
          if R = 'X' then
             Warn_Compare_Meta (Loc);
             return Err;
@@ -301,12 +300,10 @@ package body Synth.Static_Oper is
       return Create_Vec_Type_By_Length (Prev.W, Prev.Vec_El);
    end Create_Res_Bound;
 
-   function Synth_Vector_Dyadic (Left, Right : Valtyp;
+   function Synth_Vector_Dyadic (Left, Right : Memtyp;
                                  Op : Table_2d;
                                  Loc : Syn_Src) return Valtyp
    is
-      Larr : constant Static_Arr_Type := Get_Static_Array (Left);
-      Rarr : constant Static_Arr_Type := Get_Static_Array (Right);
       Res : Valtyp;
    begin
       if Left.Typ.W /= Right.Typ.W then
@@ -315,12 +312,10 @@ package body Synth.Static_Oper is
       end if;
 
       Res := Create_Value_Memory (Create_Res_Bound (Left.Typ));
-      for I in 1 .. Vec_Length (Res.Typ) loop
+      for I in 1 .. Uns32 (Vec_Length (Res.Typ)) loop
          declare
-            Ls : constant Std_Ulogic :=
-              Get_Static_Std_Logic (Larr, Uns32 (I - 1));
-            Rs : constant Std_Ulogic :=
-              Get_Static_Std_Logic (Rarr, Uns32 (I - 1));
+            Ls : constant Std_Ulogic := Read_Std_Logic (Left.Mem, I - 1);
+            Rs : constant Std_Ulogic := Read_Std_Logic (Right.Mem, I - 1);
             V : constant Std_Ulogic := Op (Ls, Rs);
          begin
             Write_U8 (Res.Val.Mem + Size_Type (I - 1), Std_Ulogic'Pos (V));
@@ -348,8 +343,14 @@ package body Synth.Static_Oper is
       end case;
    end To_Std_Logic_Vector;
 
-   function To_Valtyp (Vec : Std_Logic_Vector; El_Typ : Type_Acc)
-                         return Valtyp
+   procedure To_Std_Logic_Vector (Val : Memtyp; Arr : out Std_Logic_Vector) is
+   begin
+      for I in 1 .. Uns32 (Vec_Length (Val.Typ)) loop
+         Arr (Natural (I)) := Read_Std_Logic (Val.Mem, I - 1);
+      end loop;
+   end To_Std_Logic_Vector;
+
+   function To_Valtyp (Vec : Std_Logic_Vector; El_Typ : Type_Acc) return Valtyp
    is
       pragma Assert (Vec'First = 1);
       Res_Typ : Type_Acc;
@@ -363,7 +364,7 @@ package body Synth.Static_Oper is
       return Res;
    end To_Valtyp;
 
-   function Synth_Add_Uns_Uns (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Add_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
@@ -378,7 +379,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Add_Uns_Uns;
 
-   function Synth_Add_Sgn_Int (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Add_Sgn_Int (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
@@ -392,7 +393,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Add_Sgn_Int;
 
-   function Synth_Add_Uns_Nat (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Add_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       L_Arr : Std_Logic_Vector (1 .. Natural (L.Typ.W));
@@ -406,7 +407,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Add_Uns_Nat;
 
-   function Synth_Sub_Uns_Uns (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Sub_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
@@ -421,7 +422,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Sub_Uns_Uns;
 
-   function Synth_Sub_Uns_Nat (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Sub_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
@@ -435,7 +436,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Sub_Uns_Nat;
 
-   function Synth_Mul_Uns_Uns (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Mul_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
@@ -450,7 +451,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Mul_Uns_Uns;
 
-   function Synth_Mul_Nat_Uns (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Mul_Nat_Uns (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
@@ -464,7 +465,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Mul_Nat_Uns;
 
-   function Synth_Mul_Uns_Nat (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Mul_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
@@ -478,7 +479,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Mul_Uns_Nat;
 
-   function Synth_Mul_Sgn_Sgn (L, R : Valtyp; Loc : Syn_Src) return Valtyp
+   function Synth_Mul_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Valtyp
    is
       pragma Unreferenced (Loc);
       L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
@@ -493,7 +494,7 @@ package body Synth.Static_Oper is
       end;
    end Synth_Mul_Sgn_Sgn;
 
-   function Synth_Shift (Val : Valtyp;
+   function Synth_Shift (Val : Memtyp;
                          Amt : Uns32;
                          Right : Boolean;
                          Arith : Boolean) return Valtyp
@@ -531,15 +532,16 @@ package body Synth.Static_Oper is
       return To_Valtyp (Arr, Val.Typ.Vec_El);
    end Synth_Shift;
 
-   function Get_Static_Ulogic (Op : Valtyp) return Std_Ulogic is
+   function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
    begin
-      return Std_Ulogic'Val (Get_Static_Discrete (Op));
+      pragma Assert (Op.Typ.Kind = Type_Logic);
+      return Std_Ulogic'Val (Read_U8 (Op.Mem));
    end Get_Static_Ulogic;
 
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
-                                            Left : Valtyp;
-                                            Right : Valtyp;
+                                            Left : Memtyp;
+                                            Right : Memtyp;
                                             Expr : Node) return Valtyp
    is
       Def : constant Iir_Predefined_Functions :=
@@ -553,46 +555,39 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Boolean_Xor =>
             return Create_Value_Discrete
-              (Boolean'Pos (Boolean'Val (Get_Static_Discrete (Left))
-                              xor Boolean'Val (Get_Static_Discrete (Right))),
+              (Boolean'Pos (Boolean'Val (Read_Discrete (Left))
+                              xor Boolean'Val (Read_Discrete (Right))),
                Res_Typ);
 
          when Iir_Predefined_Enum_Equality =>
             return Create_Value_Discrete
-              (Boolean'Pos
-                 (Get_Static_Discrete (Left) = Get_Static_Discrete (Right)),
+              (Boolean'Pos (Read_Discrete (Left) = Read_Discrete (Right)),
                Boolean_Type);
          when Iir_Predefined_Enum_Inequality =>
             return Create_Value_Discrete
-              (Boolean'Pos
-                 (Get_Static_Discrete (Left) /= Get_Static_Discrete (Right)),
+              (Boolean'Pos (Read_Discrete (Left) /= Read_Discrete (Right)),
                Boolean_Type);
          when Iir_Predefined_Integer_Plus
            | Iir_Predefined_Physical_Plus =>
             return Create_Value_Discrete
-              (Get_Static_Discrete (Left) + Get_Static_Discrete (Right),
-               Res_Typ);
+              (Read_Discrete (Left) + Read_Discrete (Right), Res_Typ);
          when Iir_Predefined_Integer_Minus
            | Iir_Predefined_Physical_Minus =>
             return Create_Value_Discrete
-              (Get_Static_Discrete (Left) - Get_Static_Discrete (Right),
-               Res_Typ);
+              (Read_Discrete (Left) - Read_Discrete (Right), Res_Typ);
          when Iir_Predefined_Integer_Mul
            | Iir_Predefined_Physical_Integer_Mul
            | Iir_Predefined_Integer_Physical_Mul =>
             return Create_Value_Discrete
-              (Get_Static_Discrete (Left) * Get_Static_Discrete (Right),
-               Res_Typ);
+              (Read_Discrete (Left) * Read_Discrete (Right), Res_Typ);
          when Iir_Predefined_Integer_Div
            | Iir_Predefined_Physical_Physical_Div
            | Iir_Predefined_Physical_Integer_Div =>
             return Create_Value_Discrete
-              (Get_Static_Discrete (Left) / Get_Static_Discrete (Right),
-               Res_Typ);
+              (Read_Discrete (Left) / Read_Discrete (Right), Res_Typ);
          when Iir_Predefined_Integer_Mod =>
             return Create_Value_Discrete
-              (Get_Static_Discrete (Left) mod Get_Static_Discrete (Right),
-               Res_Typ);
+              (Read_Discrete (Left) mod Read_Discrete (Right), Res_Typ);
          when Iir_Predefined_Integer_Rem =>
             return Create_Value_Discrete
               (Read_Discrete (Left) rem Read_Discrete (Right), Res_Typ);
@@ -603,14 +598,12 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Physical_Minimum
            | Iir_Predefined_Integer_Minimum =>
             return Create_Value_Discrete
-              (Int64'Min (Get_Static_Discrete (Left),
-                          Get_Static_Discrete (Right)),
+              (Int64'Min (Read_Discrete (Left), Read_Discrete (Right)),
                Res_Typ);
          when Iir_Predefined_Physical_Maximum
            | Iir_Predefined_Integer_Maximum =>
             return Create_Value_Discrete
-              (Int64'Max (Get_Static_Discrete (Left),
-                          Get_Static_Discrete (Right)),
+              (Int64'Max (Read_Discrete (Left), Read_Discrete (Right)),
                Res_Typ);
          when Iir_Predefined_Integer_Less_Equal
            | Iir_Predefined_Physical_Less_Equal =>
@@ -635,13 +628,12 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Integer_Equality
            | Iir_Predefined_Physical_Equality =>
             return Create_Value_Discrete
-              (Boolean'Pos (Get_Static_Discrete (Left)
-                              = Get_Static_Discrete (Right)), Boolean_Type);
+              (Boolean'Pos (Read_Discrete (Left) = Read_Discrete (Right)),
+               Boolean_Type);
          when Iir_Predefined_Integer_Inequality
            | Iir_Predefined_Physical_Inequality =>
             return Create_Value_Discrete
-              (Boolean'Pos (Get_Static_Discrete (Left)
-                              /= Get_Static_Discrete (Right)),
+              (Boolean'Pos (Read_Discrete (Left) /= Read_Discrete (Right)),
                Boolean_Type);
 
          when Iir_Predefined_Physical_Real_Mul =>
@@ -706,8 +698,6 @@ package body Synth.Static_Oper is
                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1));
                R_Len : constant Iir_Index32 :=
                  Iir_Index32 (Get_Bound_Length (Right.Typ, 1));
-               L : constant Valtyp := Strip_Alias_Const (Left);
-               R : constant Valtyp := Strip_Alias_Const (Right);
                Bnd : Bound_Type;
                Res_Typ : Type_Acc;
                Res : Valtyp;
@@ -718,11 +708,12 @@ package body Synth.Static_Oper is
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Ret_Typ, Bnd);
                Res := Create_Value_Memory (Res_Typ);
-               if L.Typ.Sz > 0 then
-                  Copy_Memory (Res.Val.Mem, L.Val.Mem, L.Typ.Sz);
+               if Left.Typ.Sz > 0 then
+                  Copy_Memory (Res.Val.Mem, Left.Mem, Left.Typ.Sz);
                end if;
-               if R.Typ.Sz > 0 then
-                  Copy_Memory (Res.Val.Mem + L.Typ.Sz, R.Val.Mem, R.Typ.Sz);
+               if Right.Typ.Sz > 0 then
+                  Copy_Memory (Res.Val.Mem + Left.Typ.Sz,
+                               Right.Mem, Right.Typ.Sz);
                end if;
                return Res;
             end;
@@ -741,9 +732,9 @@ package body Synth.Static_Oper is
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Ret_Typ, Bnd);
                Res := Create_Value_Memory (Res_Typ);
-               Copy_Memory (Res.Val.Mem, Left.Val.Mem, Left.Typ.Sz);
+               Copy_Memory (Res.Val.Mem, Left.Mem, Left.Typ.Sz);
                Copy_Memory (Res.Val.Mem + Left.Typ.Sz,
-                            Right.Val.Mem, Right.Typ.Sz);
+                            Right.Mem, Right.Typ.Sz);
                return Res;
             end;
          when Iir_Predefined_Array_Element_Concat =>
@@ -760,9 +751,9 @@ package body Synth.Static_Oper is
                Res_Typ := Create_Onedimensional_Array_Subtype
                  (Ret_Typ, Bnd);
                Res := Create_Value_Memory (Res_Typ);
-               Copy_Memory (Res.Val.Mem, Left.Val.Mem, Left.Typ.Sz);
+               Copy_Memory (Res.Val.Mem, Left.Mem, Left.Typ.Sz);
                Copy_Memory (Res.Val.Mem + Left.Typ.Sz,
-                            Right.Val.Mem, Right.Typ.Sz);
+                            Right.Mem, Right.Typ.Sz);
                return Res;
             end;
 
@@ -930,7 +921,7 @@ package body Synth.Static_Oper is
             declare
                Amt : Int64;
             begin
-               Amt := Get_Static_Discrete (Right);
+               Amt := Read_Discrete (Right);
                if Amt >= 0 then
                   return Synth_Shift (Left, Uns32 (Amt), True, False);
                else

@@ -18,6 +18,7 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -25,8 +26,8 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 package Synth.Static_Oper is
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
-                                            Left : Valtyp;
-                                            Right : Valtyp;
+                                            Left : Memtyp;
+                                            Right : Memtyp;
                                             Expr : Node) return Valtyp;
    function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                              Imp : Node;

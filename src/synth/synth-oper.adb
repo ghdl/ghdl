@@ -647,7 +647,8 @@ package body Synth.Oper is
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
          return Synth_Static_Dyadic_Predefined
-           (Syn_Inst, Imp, Left, Right, Expr);
+           (Syn_Inst, Imp,
+            Get_Value_Memtyp (Left), Get_Value_Memtyp (Right), Expr);
       end if;
 
       Strip_Const (Left);

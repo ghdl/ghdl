@@ -111,6 +111,7 @@ package Synth.Values is
    function Is_Static_Val (Val : Value_Acc) return Boolean;
 
    function Is_Equal (L, R : Valtyp) return Boolean;
+   function Is_Equal (L, R : Memtyp) return Boolean;
 
    --  Create a Value_Net.
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp;
@@ -167,8 +168,10 @@ package Synth.Values is
 
    procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index);
    function Read_Access (Vt : Valtyp) return Heap_Index;
+   function Read_Access (Mt : Memtyp) return Heap_Index;
 
    function Read_Fp64 (Mem : Memory_Ptr) return Fp64;
+   function Read_Fp64 (Mt : Memtyp) return Fp64;
    function Read_Fp64 (Vt : Valtyp) return Fp64;
 
    --  Low level subprograms.

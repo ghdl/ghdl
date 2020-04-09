@@ -22,8 +22,6 @@ with Ada.Unchecked_Conversion;
 with System;
 with System.Storage_Elements;
 
-with Netlists.Utils;
-
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package body Synth.Values is
@@ -53,7 +51,7 @@ package body Synth.Values is
          when Value_Memory =>
             return True;
          when Value_Net =>
-            return Netlists.Utils.Is_Const_Net (Val.N);
+            return False;
          when Value_Wire =>
             return Is_Static_Wire (Val.W);
          when Value_File =>
@@ -90,37 +88,28 @@ package body Synth.Values is
       return (V.Typ, Strip_Alias_Const (V.Val));
    end Strip_Alias_Const;
 
-   function Is_Equal (L, R : Valtyp) return Boolean
-   is
-      L1 : constant Value_Acc := Strip_Alias_Const (L.Val);
-      R1 : constant Value_Acc := Strip_Alias_Const (R.Val);
+   function Is_Equal (L, R : Memtyp) return Boolean is
    begin
-      if L1.Kind /= R1.Kind then
-         return False;
-      end if;
-      if L1 = R1 then
+      if L = R then
          return True;
       end if;
 
-      case L1.Kind is
-         when Value_Const =>
-            raise Internal_Error;
-         when Value_Memory =>
-            pragma Assert (R1.Kind = Value_Memory);
-            if L.Typ.Sz /= R.Typ.Sz then
-               return False;
-            end if;
-            --  FIXME: not correct for records, not correct for floats!
-            for I in 1 .. L.Typ.Sz loop
-               if L1.Mem (I - 1) /= R1.Mem (I - 1) then
-                  return False;
-               end if;
-            end loop;
-            return True;
-         when others =>
-            --  TODO.
-            raise Internal_Error;
-      end case;
+      if L.Typ.Sz /= R.Typ.Sz then
+         return False;
+      end if;
+
+      --  FIXME: not correct for records, not correct for floats!
+      for I in 1 .. L.Typ.Sz loop
+         if L.Mem (I - 1) /= R.Mem (I - 1) then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Is_Equal;
+
+   function Is_Equal (L, R : Valtyp) return Boolean is
+   begin
+      return Is_Equal (Get_Memtyp (L), Get_Memtyp (R));
    end Is_Equal;
 
    function Create_Value_Wire (W : Wire_Id) return Value_Acc
@@ -380,6 +369,11 @@ package body Synth.Values is
       return To_Fp64_Ptr (Mem).all;
    end Read_Fp64;
 
+   function Read_Fp64 (Mt : Memtyp) return Fp64 is
+   begin
+      return Read_Fp64 (Mt.Mem);
+   end Read_Fp64;
+
    type Heap_Index_Ptr is access all Heap_Index;
    function To_Heap_Index_Ptr is
       new Ada.Unchecked_Conversion (Memory_Ptr, Heap_Index_Ptr);
@@ -392,6 +386,11 @@ package body Synth.Values is
    function Read_Access (Mem : Memory_Ptr) return Heap_Index is
    begin
       return To_Heap_Index_Ptr (Mem).all;
+   end Read_Access;
+
+   function Read_Access (Mt : Memtyp) return Heap_Index is
+   begin
+      return Read_Access (Mt.Mem);
    end Read_Access;
 
    function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr

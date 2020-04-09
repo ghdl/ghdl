@@ -41,6 +41,9 @@ package Synth.Expr is
    --  For a static value V, return the value.
    function Get_Static_Discrete (V : Valtyp) return Int64;
 
+   --  Return the memory (as a memtyp) of static value V.
+   function Get_Value_Memtyp (V : Valtyp) return Memtyp;
+
    --  Return True only if discrete value V is known to be positive or 0.
    --  False means either not positive or unknown.
    function Is_Positive (V : Valtyp) return Boolean;
