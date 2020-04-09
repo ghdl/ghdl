@@ -3,24 +3,24 @@
 Copyrights | Licenses
 #####################
 
-- The GHDL front-end package :samp:`std.textio`, and the runtime library :samp:`grt` are given under :ref:`LIC:GPLv2`.
+- The GHDL front-end package ``std.textio``, and the runtime library ``GRT`` are given under :ref:`LIC:GPLv2`.
 - The documentation is given under :ref:`LIC:CC-BY-SA`.
 
 .. WARNING::
-	As a consequence of the runtime copyright, you are not allowed to distribute an executable produced by GHDL without the VHDL sources. To my mind, this is not a real restriction, since it is pointless to distribute VHDL executable. Please, send a comment (:ref:`requesting_enhancements`) if you don't like this policy.
+	As a consequence of the runtime copyright, you are not allowed to distribute an executable produced by GHDL without allowing access to the VHDL sources. Please, send a comment (:ref:`requesting_enhancements`) if you don't like this policy.
 
 - The following packages are copyrighted by third parties (see corresponding sources for more information):
 
-	- These from library :samp:`ieee` are copyrighted by `Institute of Electrical and Electronics Engineers (IEEE) <https://www.ieee.org>`_ :
+	- These from library ``ieee`` are copyrighted by `Institute of Electrical and Electronics Engineers (IEEE) <https://www.ieee.org>`_ :
 
-		- :samp:`numeric_bit` and :samp:`numeric_std`: the source files may be distributed without change, except as permitted by the standard; these may not be sold or distributed for profit. [see also `IEEE 1076.3 <http://ieeexplore.ieee.org/document/592543/>`_ ]
-		- :samp:`std_logic_1164`, :samp:`Math_Real` and :samp:`Math_Complex`
-		- :samp:`VITAL_Primitives`, :samp:`VITAL_Timing` and :samp:`VITAL_Memory` [see also `IEEE 1076.4 <http://ieeexplore.ieee.org/document/954750/>`_ ]
+		- ``numeric_bit`` and ``numeric_std``: the source files may be distributed without change, except as permitted by the standard; these may not be sold or distributed for profit. [see also `IEEE 1076.3 <http://ieeexplore.ieee.org/document/592543/>`_ ]
+		- ``std_logic_1164``, ``Math_Real`` and ``Math_Complex``
+		- ``VITAL_Primitives``, ``VITAL_Timing`` and ``VITAL_Memory`` [see also `IEEE 1076.4 <http://ieeexplore.ieee.org/document/954750/>`_ ]
 
 	- The following sources may be used and distributed without restriction, provided that the copyright statements are not removed from the files and that any derivative work contains the copyright notice.
 
-		- :samp:`synopsys` directory: :samp:`std_logic_arith`, :samp:`std_logic_signed`, :samp:`std_logic_unsigned` and :samp:`std_logic_textio` are copyrighted by `Synopsys, Inc. <https://www.synopsys.com/>`_
-		- :samp:`mentor` directory: :samp:`std_logic_arith` is copyrighted by `Mentor Graphics <https://www.mentor.com>`_
+		- ``synopsys`` directory: ``std_logic_arith``, ``std_logic_signed``, ``std_logic_unsigned`` and ``std_logic_textio`` are copyrighted by `Synopsys, Inc. <https://www.synopsys.com/>`_
+		- ``mentor`` directory: ``std_logic_arith`` is copyrighted by `Mentor Graphics <https://www.mentor.com>`_
 
 .. _LIC:GPLv2:
 
@@ -63,7 +63,7 @@ Jensen, Adam               FreeBSD builds
 Koch, Markus               vendor pre-compile script for Lattice (GNU/Linux)
 Koontz, David              Mac OSX builds, LRM compliance work, bugfix analyses
 Lehmann, Patrick           Windows compile scripts, vendor library pre-compile scripts (win+lin), building in MinGW, AppVeyor integration.
-Martinez-Corral, Unai      Docker builds, Travis-CI & Docker, adapt/fix RTD theme
+Martinez-Corral, Unai      Docker, CI, Docs
 van Rantwijk, Joris        Debian packaging
 =========================  ============================================================
 
