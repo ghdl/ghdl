@@ -3,16 +3,23 @@
 Overview
 ########
 
-`GHDL` is architectured like a traditionnal compiler.  It has:
+.. image:: img/internals.png
+   :width: 350px
+   :align: center
+
+`GHDL` is architectured like a traditionnal compiler. It has:
 
 * a driver (sources in :file:`src/ghdldrv`) to call the programs (compiler, assembler, linker) if needed.
 
-* a library (sources in :file:`src/grt`) to help execution at run-time.
+* a runtime library named GRT (sources in :file:`src/grt`) to help execution at run-time. This ensures that execution is cycle-accurate.
 
-* a front-end (sources in :file:`src/vhdl`) to parse and analyse VHDL.
+* a front-end (sources in :file:`src/vhdl`) to parse and analyse VHDL. See :ref:`INT:Frontend` and :ref:`INT:AST`.
 
-* a back-end (in fact many, sources are in :file:`src/ortho`) to generate code.
+* multiple back-ends to generate either code or netlists.
 
-The architecture is modular.  For example, it is possible to use the front-end in the `libghdl` library for the language server or to do synthesis (sources in :file:`src/synth`) instead of code generation.
+  * Three for :ref:`simulation <USING:Simulation>` (sources are in :file:`src/ortho`): mcode, LLVM and GCC. See :ref:`BUILD`.
+  * Two for :ref:`synthesis <USING:Synthesis>` (sources in :file:`src/synth`): :ref:`--synth <Synth:command>` and :ref:`Synth:plugin`.
+
+The architecture is modular. For example, the front-end in the ``libghdl`` library is used for the language server.
 
 The main work is performed by the front-end, which is documented in the next chapter.
