@@ -1,3 +1,5 @@
+.. program:: ghdl
+
 .. only:: html
 
    .. exec::
@@ -38,8 +40,11 @@ Reporting bugs
 .. TIP::
    * If the compiler crashes, this is a bug. Reliable tools never crash.
    * If the compiler emits an error message for a perfectly valid input or does not emit an error message for an invalid input, this may be a bug.
-   * If the executable created from your VHDL sources crashes, this may be a bug at runtime or the code itself may be wrong. However, since VHDL has a notion of pointers, an erroneous VHDL program (using invalid pointers for example) may crash.
+   * If the executable created from your VHDL sources crashes, this may be a bug at runtime or the code itself may be wrong. Since VHDL has a notion of pointers, an erroneous VHDL program (using invalid pointers for example) may crash.
    * If a compiler message is not clear enough, please tell us. The error messages can be improved, but we do not have enough experience with them.
+
+.. TIP::
+   It is suggested to test synthesis features with :option:`--synth`, before processing the design with :ref:`Synth:plugin`.
 
 Please, report issues of this kind through |SHIELD:bug-report|, as this allows us to categorize issues into groups and
 to assign developers to them. You can track the issue’s state and see how it’s getting solved.
@@ -63,7 +68,7 @@ to assign developers to them. You can track the issue’s state and see how it�
      * Anything else that you think would be helpful.
 
 .. NOTE::
-   If you don't know the LRM, be aware that an issue claimed as a bug report may be rejected because there is no bug according to it. GHDL aims at implementing VHDL as defined in `IEEE 1076 <http://ieeexplore.ieee.org/document/4772740/>`_. However, some other tools allow constructs which do not fully follow the standard revisions. Therefore, comparisons with other VHDL is not a solid argument. Some of them are supported by GHDL (see :ref:`IEEE_library_pitfalls`), but any such enhancement will have very low priority.
+   If you don't know the LRM, be aware that an issue claimed as a bug report may be rejected because there is no bug according to it. GHDL aims at implementing VHDL as defined in `IEEE 1076 <http://ieeexplore.ieee.org/document/4772740/>`_. However, some other tools allow constructs which do not fully follow the standard revisions. Therefore, comparisons with other VHDL variants is not a solid argument. Some of them are supported by GHDL (see :ref:`IEEE_library_pitfalls`), but any such enhancement will have very low priority.
 
 .. _requesting_enhancements:
 

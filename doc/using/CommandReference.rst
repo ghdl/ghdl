@@ -1,8 +1,8 @@
 .. program:: ghdl
 .. _REF:Command:
 
-Command Reference
-#################
+Additional Command Reference
+############################
 
 .. HINT:: The most common commands and options are shown in section :ref:`USING:Invoking`. Here the advanced and experimental features are described.
 

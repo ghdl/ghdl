@@ -37,9 +37,17 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 
     $ ghdl -r --std=08 my_unit -gDEPTH=12
 
-  .. WARNING::
-     This is currently a run option; but in the future it will be deprecated to
-     become an elaboration option only.
+  .. NOTE::
+    This is currently a run option; but in the (not near) future it might be deprecated to
+    become an elaboration option only. As a result, now you can generate a single binary and
+    execute it multiple times with different arguments. That might not be possible in the future.
+
+    As explained in :option:`-e`, performing a complete elaboration in terms of the LRM requires
+    to get rid of the compile and link model. This is mostly because delaying certain elaboration
+    steps to the runtime prevents elaboration-time optimisions.
+
+  .. HINT::
+    Currently, GHDL has limited support for generic types in the CLI. It is suggested to use strings or integers. Nonetheless, project `JSON-for-VHDL <https://github.com/Paebbels/JSON-for-VHDL>`_ allows to encode a set of parameters as stringified JSON, and it provides VHDL functions to read specific values from it. It is valid for synthesis.
 
 .. option:: --assert-level=<LEVEL>
 

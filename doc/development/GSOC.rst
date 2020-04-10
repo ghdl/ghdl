@@ -8,7 +8,7 @@ This page contains ideas for enhancing GHDL that can fit internship programs, su
 VHDL frontend for Yosys
 =======================
 
-`Yosys <https://github.com/YosysHQ/yosys>`_ is an open-source synthesis tool with built-in Verilog support and partial SystemVerilog support. `ghdlsynth-beta <https://github.com/tgingold/ghdlsynth-beta>`_ is an experimental plugin for Yosys that allows to use GHDL (precisely, `libghdl <https://github.com/ghdl/ghdl#project-structure>`_) as a frontend for Yosys. Although functional, :ref:`DEV:Synthesis` is work in progress: multiple features are not supported yet, and others need to be tested for bugs.
+`Yosys <https://github.com/YosysHQ/yosys>`_ is an open-source synthesis tool with built-in Verilog support and partial SystemVerilog support. :ref:`Synth:plugin` is an experimental plugin for Yosys that allows to use GHDL. Although functional, :ref:`USING:Synthesis` is work in progress: multiple features are not supported yet, and others need to be tested for bugs.
 
 .. NOTE::
     * `FOSSI GSOC 2019 | VHDL front-end for Yosys <https://fossi-foundation.org/gsoc19-ideas.html#vhdl-front-end--for-yosys>`_

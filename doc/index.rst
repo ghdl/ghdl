@@ -99,8 +99,9 @@
    examples/quick_start/README
    using/InvokingGHDL
    using/Simulation
-   using/Foreign
+   using/Synthesis
    using/CommandReference
+   using/Foreign
    using/ImplementationOfVHDL
    using/ImplementationOfVITAL
    examples/README
@@ -113,7 +114,6 @@
    :caption: Development
    :hidden:
 
-   development/Synthesis
    development/Debugging
    development/CodingStyle
    development/Roadmap
