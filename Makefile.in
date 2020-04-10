@@ -455,9 +455,10 @@ ghwlib.o: $(srcdir)/src/grt/ghwlib.c $(srcdir)/src/grt/ghwlib.h
 
 ############### grt #####################################################
 
-install.grt: $(libdirsuffix)/libgrt.a $(libdirsuffix)/grt.lst install.dirs
+install.grt: $(libdirsuffix)/libgrt.a $(libdirsuffix)/grt.lst $(libdirsuffix)/grt-exec.lst install.dirs
 	$(INSTALL_DATA) $(libdirsuffix)/libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
 	$(INSTALL_DATA) $(libdirsuffix)/grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+	$(INSTALL_DATA) $(libdirsuffix)/grt-exec.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt-exec.lst
 	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
 	test "x$(LIBBACKTRACE)" = x || test "x$(backend)" = xgcc || \
 	  $(INSTALL_DATA) $(LIBBACKTRACE) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
@@ -465,6 +466,7 @@ install.grt: $(libdirsuffix)/libgrt.a $(libdirsuffix)/grt.lst install.dirs
 uninstall.grt:
 	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
 	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/grt-exec.lst
 	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
 	$(RM) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
 

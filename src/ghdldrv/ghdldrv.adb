@@ -1013,6 +1013,13 @@ package body Ghdldrv is
       end loop;
    end Bind_Anaelab;
 
+   --  Add PFX.lst from the install lib directory.
+   procedure Add_Lib_File_List (Pfx : String) is
+   begin
+      Add_File_List (Get_Machine_Path_Prefix & Directory_Separator
+                       & Pfx & List_Suffix, False);
+   end Add_Lib_File_List;
+
    procedure Link (Add_Std : Boolean; Disp_Only : Boolean)
    is
       Last_File : Natural;
@@ -1024,8 +1031,8 @@ package body Ghdldrv is
          Add_File_List (Filelist_Name.all, True);
       end if;
       Last_File := Filelist.Last;
-      Add_File_List (Get_Machine_Path_Prefix & Directory_Separator
-                       & "grt" & List_Suffix, False);
+      Add_Lib_File_List ("grt");
+      Add_Lib_File_List ("grt-exec");
 
       --  call the linker
       declare

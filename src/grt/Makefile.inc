@@ -120,7 +120,7 @@ GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnatdY
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(GNATMAKE) -u -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG)
 
-grt-all: $(libdirsuffix)/libgrt.a $(libdirsuffix)/$(GRT_LIBBACKTRACE) $(libdirsuffix)/grt.lst $(libdirsuffix)/grt.ver
+grt-all: $(libdirsuffix)/libgrt.a $(libdirsuffix)/$(GRT_LIBBACKTRACE) $(libdirsuffix)/grt.lst $(libdirsuffix)/grt-exec.lst $(libdirsuffix)/grt.ver
 
 $(libdirsuffix)/libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-files
 	$(RM) -f $@
@@ -247,11 +247,15 @@ grt/grt-files.in: grt/grt-files
 
 $(libdirsuffix)/grt.lst: grt/grt-files.in
 	echo "@/libgrt.a" > $@
-	for i in $(GRT_EXTRA_LIB) $(GRT_EXEC_OPTS); do echo $$i >> $@; done
+	for i in $(GRT_EXTRA_LIB); do echo $$i >> $@; done
 ifneq ($(LIBBACKTRACE),)
 	echo "@/libbacktrace.a" >> $@
 endif
 	cat $< >> $@
+
+$(libdirsuffix)/grt-exec.lst:
+	echo "# link options for executables" > $@
+	for i in $(GRT_EXEC_OPTS); do echo $$i >> $@; done
 
 $(libdirsuffix)/grt.ver: $(GRTSRCDIR)/grt.ver
 	cp $< $@
