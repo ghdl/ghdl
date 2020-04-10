@@ -163,6 +163,19 @@ package body Synth.Values is
       return (Vtype, V);
    end Create_Value_Memory;
 
+   function Create_Value_Memory (Mt : Memtyp) return Valtyp
+   is
+      subtype Value_Type_Memory is Value_Type (Value_Memory);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Memory);
+      V : Value_Acc;
+   begin
+      V := To_Value_Acc
+        (Alloc (Current_Pool, Value_Type_Memory'(Kind => Value_Memory,
+                                                 Mem => Mt.Mem)));
+
+      return (Mt.Typ, V);
+   end Create_Value_Memory;
+
    function Create_Value_File (File : File_Index) return Value_Acc
    is
       subtype Value_Type_File is Value_Type (Value_File);

@@ -27,11 +27,9 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 
 with Netlists; use Netlists;
-with Netlists.Utils; use Netlists.Utils;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Source; use Synth.Source;
-with Synth.Environment;
 with Synth.Expr; use Synth.Expr;
 with Synth.Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
@@ -44,70 +42,6 @@ package body Synth.Static_Oper is
    pragma Linker_Options ("-lm");
 
    type Compare_Type is (Compare_Less, Compare_Equal, Compare_Greater);
-
-   type Static_Arr_Kind is (Sarr_Value, Sarr_Net);
-
-   type Static_Arr_Type (Kind : Static_Arr_Kind) is record
-      case Kind is
-         when Sarr_Value =>
-            Arr : Memory_Ptr;
-         when Sarr_Net =>
-            N : Net;
-      end case;
-   end record;
-
-   function Get_Static_Array (V : Valtyp) return Static_Arr_Type
-   is
-      N : Net;
-   begin
-      case V.Val.Kind is
-         when Value_Const =>
-            return (Kind => Sarr_Value, Arr => V.Val.C_Val.Mem);
-         when Value_Memory =>
-            return (Kind => Sarr_Value, Arr => V.Val.Mem);
-         when Value_Net =>
-            N := V.Val.N;
-         when Value_Wire =>
-            return (Kind => Sarr_Value,
-                    Arr => Synth.Environment.Get_Static_Wire (V.Val.W).Mem);
-         when others =>
-            raise Internal_Error;
-      end case;
-      return (Kind => Sarr_Net, N => N);
-   end Get_Static_Array;
-
-   function Logic_To_Std_Logic (Va : Uns32; Zx : Uns32) return Std_Ulogic
-   is
-      subtype Uns4 is Uns32 range 0 .. 3;
-   begin
-      case Uns4 (Va + 2 * Zx) is
-         when 0 =>
-            return Std_Ulogic'Val (Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos);
-         when 1 =>
-            return Std_Ulogic'Val (Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos);
-         when 2 =>
-            return Std_Ulogic'Val (Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos);
-         when 3 =>
-            return Std_Ulogic'Val (Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos);
-      end case;
-   end Logic_To_Std_Logic;
-
-   function Get_Static_Std_Logic (Sarr : Static_Arr_Type; Off : Uns32)
-                                 return Std_Ulogic is
-   begin
-      case Sarr.Kind is
-         when Sarr_Value =>
-            return Std_Ulogic'Val (Read_U8 (Sarr.Arr + Size_Type (Off)));
-         when Sarr_Net =>
-            declare
-               Va : Uns32;
-               Zx : Uns32;
-            begin
-               Get_Net_Element (Sarr.N, Off, Va, Zx);
-               return Logic_To_Std_Logic (Va, Zx);
-            end;
-      end case;
-   end Get_Static_Std_Logic;
 
    function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic is
    begin
@@ -324,24 +258,6 @@ package body Synth.Static_Oper is
 
       return Res;
    end Synth_Vector_Dyadic;
-
-   procedure To_Std_Logic_Vector
-     (Val : Valtyp; Arr : out Std_Logic_Vector)
-   is
-      Sarr : constant Static_Arr_Type := Get_Static_Array (Val);
-   begin
-      case Sarr.Kind is
-         when Sarr_Value =>
-            for I in 1 .. Vec_Length (Val.Typ) loop
-               Arr (Natural (I)) := Std_Ulogic'Val
-                 (Read_U8 (Sarr.Arr + Size_Type (I - 1)));
-            end loop;
-         when Sarr_Net =>
-            for I in Arr'Range loop
-               Arr (Natural (I)) := Get_Static_Std_Logic (Sarr, Uns32 (I - 1));
-            end loop;
-      end case;
-   end To_Std_Logic_Vector;
 
    procedure To_Std_Logic_Vector (Val : Memtyp; Arr : out Std_Logic_Vector) is
    begin
@@ -938,16 +854,15 @@ package body Synth.Static_Oper is
    end Synth_Static_Dyadic_Predefined;
 
    function Synth_Vector_Monadic
-     (Vec : Valtyp; Op : Table_1d) return Valtyp
+     (Vec : Memtyp; Op : Table_1d) return Valtyp
    is
       Len : constant Iir_Index32 := Vec_Length (Vec.Typ);
       Res : Valtyp;
    begin
       Res := Create_Value_Memory (Create_Res_Bound (Vec.Typ));
-      for I in 1 .. Len loop
+      for I in 1 .. Uns32 (Len) loop
          declare
-            V : constant Std_Ulogic := Std_Ulogic'Val
-              (Read_U8 (Vec.Val.Mem + Size_Type (I - 1)));
+            V : constant Std_Ulogic := Read_Std_Logic (Vec.Mem, I - 1);
          begin
             Write_U8 (Res.Val.Mem + Size_Type (I - 1),
                       Std_Ulogic'Pos (Op (V)));
@@ -957,16 +872,15 @@ package body Synth.Static_Oper is
    end Synth_Vector_Monadic;
 
    function Synth_Vector_Reduce
-     (Init : Std_Ulogic; Vec : Valtyp; Op : Table_2d) return Valtyp
+     (Init : Std_Ulogic; Vec : Memtyp; Op : Table_2d) return Valtyp
    is
       El_Typ : constant Type_Acc := Vec.Typ.Vec_El;
       Res : Std_Ulogic;
    begin
       Res := Init;
-      for I in 1 .. Vec_Length (Vec.Typ) loop
+      for I in 1 .. Uns32 (Vec_Length (Vec.Typ)) loop
          declare
-            V : constant Std_Ulogic :=
-              Std_Ulogic'Val (Read_U8 (Vec.Val.Mem + Size_Type (I - 1)));
+            V : constant Std_Ulogic := Read_Std_Logic (Vec.Mem, I - 1);
          begin
             Res := Op (Res, V);
          end;
@@ -977,7 +891,7 @@ package body Synth.Static_Oper is
 
    function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                              Imp : Node;
-                                             Operand : Valtyp;
+                                             Operand : Memtyp;
                                              Expr : Node) return Valtyp
    is
       Def : constant Iir_Predefined_Functions :=
@@ -1002,12 +916,12 @@ package body Synth.Static_Oper is
               (abs Read_Discrete(Operand), Oper_Typ);
          when Iir_Predefined_Integer_Identity
            | Iir_Predefined_Physical_Identity =>
-            return Operand;
+            return Create_Value_Memory (Operand);
 
          when Iir_Predefined_Floating_Negation =>
             return Create_Value_Float (-Read_Fp64 (Operand), Oper_Typ);
          when Iir_Predefined_Floating_Identity =>
-            return Operand;
+            return Create_Value_Memory (Operand);
          when Iir_Predefined_Floating_Absolute =>
             return Create_Value_Float (abs Read_Fp64 (Operand), Oper_Typ);
 
@@ -1042,8 +956,7 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Ieee_1164_Scalar_Not =>
             return Create_Value_Discrete
-              (Std_Ulogic'Pos
-                 (Not_Table (Std_Ulogic'Val (Get_Static_Discrete (Operand)))),
+              (Std_Ulogic'Pos (Not_Table (Read_Std_Logic (Operand.Mem, 0))),
                Oper_Typ);
 
          when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>

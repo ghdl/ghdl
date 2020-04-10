@@ -1358,7 +1358,7 @@ package body Synth.Oper is
 
       if Is_Static_Val (Operand.Val) then
          return Synth_Static_Monadic_Predefined
-           (Syn_Inst, Imp, Operand, Loc);
+           (Syn_Inst, Imp, Get_Value_Memtyp (Operand), Loc);
       end if;
 
       case Def is

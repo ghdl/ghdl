@@ -31,7 +31,7 @@ package Synth.Static_Oper is
                                             Expr : Node) return Valtyp;
    function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                              Imp : Node;
-                                             Operand : Valtyp;
+                                             Operand : Memtyp;
                                              Expr : Node) return Valtyp;
 
    function Synth_Static_Predefined_Function_Call

@@ -120,6 +120,7 @@ package Synth.Values is
    function Create_Value_Wire (W : Wire_Id; Wtype : Type_Acc) return Valtyp;
 
    function Create_Value_Memory (Vtype : Type_Acc) return Valtyp;
+   function Create_Value_Memory (Mt : Memtyp) return Valtyp;
 
    function Create_Value_Uns (Val : Uns64; Vtype : Type_Acc) return Valtyp;
    function Create_Value_Int (Val : Int64; Vtype : Type_Acc) return Valtyp;
