@@ -39,17 +39,14 @@ with Errorout;
 with Version;
 
 package body Ghdldrv is
-   --  Name of the tools used.
-   Compiler_Cmd : String_Access := null;
-   Post_Processor_Cmd : String_Access := null;
-   Assembler_Cmd : String_Access := null;
-   Linker_Cmd : String_Access := null;
-
-   --  Path of the tools.
-   Compiler_Path : String_Access;
-   Post_Processor_Path : String_Access;
-   Assembler_Path : String_Access;
-   Linker_Path : String_Access;
+   --  Argument table for the tools.
+   --  Each table low bound is 1 so that the length of a table is equal to
+   --  the last bound.
+   package Argument_Table_Pkg is new Dyn_Tables
+     (Table_Component_Type => String_Access,
+      Table_Index_Type => Integer,
+      Table_Low_Bound => 1);
+   use Argument_Table_Pkg;
 
    --  "-o" string.
    Dash_o : constant String_Access := new String'("-o");
@@ -63,7 +60,27 @@ package body Ghdldrv is
    --  "-fpic" option.
    Dash_Fpic : constant String_Access := new String'("-fpic");
 
+   --  Elaboration mode.
+   type Elab_Mode_Type is
+     (--  Static elaboration (or pre-elaboration).
+      Elab_Static,
+
+      --  Dynamic elaboration: design is elaborated just before being run.
+      Elab_Dynamic);
+
    type Command_Comp is abstract new Command_Lib with record
+      --  Name of the tools used.
+      Compiler_Cmd : String_Access := null;
+      Post_Processor_Cmd : String_Access := null;
+      Assembler_Cmd : String_Access := null;
+      Linker_Cmd : String_Access := null;
+
+      --  Path of the tools.
+      Compiler_Path : String_Access;
+      Post_Processor_Path : String_Access;
+      Assembler_Path : String_Access;
+      Linker_Path : String_Access;
+
       --  Set by the '-o' option: the output filename.  If the option is not
       --  present, then null.
       Output_File : String_Access;
@@ -79,6 +96,15 @@ package body Ghdldrv is
 
       --  True if failure expected.
       Flag_Expect_Failure : Boolean;
+
+      --  Default elaboration mode is dynamic.
+      Elab_Mode : Elab_Mode_Type := Elab_Dynamic;
+
+      --  Arguments for tools.
+      Compiler_Args : Argument_Table_Pkg.Instance;
+      Postproc_Args : Argument_Table_Pkg.Instance;
+      Assembler_Args : Argument_Table_Pkg.Instance;
+      Linker_Args : Argument_Table_Pkg.Instance;
    end record;
 
    --  Setup GHDL.
@@ -93,32 +119,6 @@ package body Ghdldrv is
                             Res : out Option_State);
 
    procedure Disp_Long_Help (Cmd : Command_Comp);
-
-   --  Elaboration mode.
-   type Elab_Mode_Type is
-     (--  Static elaboration (or pre-elaboration).
-      Elab_Static,
-
-      --  Dynamic elaboration: design is elaborated just before being run.
-      Elab_Dynamic);
-
-   --  Default elaboration mode is dynamic.
-   Elab_Mode : Elab_Mode_Type := Elab_Dynamic;
-
-   --  Argument table for the tools.
-   --  Each table low bound is 1 so that the length of a table is equal to
-   --  the last bound.
-   package Argument_Table_Pkg is new Dyn_Tables
-     (Table_Component_Type => String_Access,
-      Table_Index_Type => Integer,
-      Table_Low_Bound => 1);
-   use Argument_Table_Pkg;
-
-   --  Arguments for tools.
-   Compiler_Args : Argument_Table_Pkg.Instance;
-   Postproc_Args : Argument_Table_Pkg.Instance;
-   Assembler_Args : Argument_Table_Pkg.Instance;
-   Linker_Args : Argument_Table_Pkg.Instance;
 
    --  Display the program spawned in Flag_Disp_Commands is TRUE.
    --  Return the exit status.
@@ -191,13 +191,13 @@ package body Ghdldrv is
       declare
          P : Natural;
          Nbr_Args : constant Natural :=
-           Last (Compiler_Args) + Options'Length + 5;
+           Last (Cmd.Compiler_Args) + Options'Length + 5;
          Args : Argument_List (1 .. Nbr_Args);
       begin
          P := 0;
-         for I in First .. Last (Compiler_Args) loop
+         for I in First .. Last (Cmd.Compiler_Args) loop
             P := P + 1;
-            Args (P) := Compiler_Args.Table (I);
+            Args (P) := Cmd.Compiler_Args.Table (I);
          end loop;
          for I in Options'Range loop
             P := P + 1;
@@ -249,7 +249,7 @@ package body Ghdldrv is
          end if;
          Args (P + 3) := new String'(File);
 
-         My_Spawn (Cmd, Compiler_Path.all, Args (1 .. P + 3));
+         My_Spawn (Cmd, Cmd.Compiler_Path.all, Args (1 .. P + 3));
          Free (Args (P + 3));
       exception
          when Compile_Error =>
@@ -263,13 +263,13 @@ package body Ghdldrv is
       if Flag_Postprocess then
          declare
             P : Natural;
-            Nbr_Args : constant Natural := Last (Postproc_Args) + 5;
+            Nbr_Args : constant Natural := Last (Cmd.Postproc_Args) + 5;
             Args : Argument_List (1 .. Nbr_Args);
          begin
             P := 0;
-            for I in First .. Last (Postproc_Args) loop
+            for I in First .. Last (Cmd.Postproc_Args) loop
                P := P + 1;
-               Args (P) := Postproc_Args.Table (I);
+               Args (P) := Cmd.Postproc_Args.Table (I);
             end loop;
 
             case Backend is
@@ -293,7 +293,7 @@ package body Ghdldrv is
                   Args (P + 2) := Obj_File;
             end case;
             Args (P + 3) := Post_File;
-            My_Spawn (Cmd, Post_Processor_Path.all, Args (1 .. P + 3));
+            My_Spawn (Cmd, Cmd.Post_Processor_Path.all, Args (1 .. P + 3));
          end;
 
          Free (Post_File);
@@ -307,20 +307,20 @@ package body Ghdldrv is
             elsif not Cmd.Flag_Asm then
                declare
                   P : Natural;
-                  Nbr_Args : constant Natural := Last (Assembler_Args) + 4;
+                  Nbr_Args : constant Natural := Last (Cmd.Assembler_Args) + 4;
                   Args : Argument_List (1 .. Nbr_Args);
                   Success : Boolean;
                begin
                   P := 0;
-                  for I in First .. Last (Assembler_Args) loop
+                  for I in First .. Last (Cmd.Assembler_Args) loop
                      P := P + 1;
-                     Args (P) := Assembler_Args.Table (I);
+                     Args (P) := Cmd.Assembler_Args.Table (I);
                   end loop;
 
                   Args (P + 1) := Dash_o;
                   Args (P + 2) := Obj_File;
                   Args (P + 3) := Asm_File;
-                  My_Spawn (Cmd, Assembler_Path.all, Args (1 .. P + 3));
+                  My_Spawn (Cmd, Cmd.Assembler_Path.all, Args (1 .. P + 3));
                   Delete_File (Asm_File.all, Success);
                end;
             end if;
@@ -455,31 +455,32 @@ package body Ghdldrv is
    end Tool_Not_Found;
 
    --  Set the compiler command according to the configuration (and switches).
-   procedure Set_Tools_Name is
+   procedure Set_Tools_Name (Cmd : in out Command_Comp'Class) is
    begin
       --  Set tools name.
-      if Compiler_Cmd = null then
+      if Cmd.Compiler_Cmd = null then
          if Flag_Postprocess then
-            Compiler_Cmd := new String'(Default_Paths.Compiler_Debug);
+            Cmd.Compiler_Cmd := new String'(Default_Paths.Compiler_Debug);
          else
             case Backend is
                when Backend_Gcc =>
-                  Compiler_Cmd := new String'(Default_Paths.Compiler_Gcc);
+                  Cmd.Compiler_Cmd := new String'(Default_Paths.Compiler_Gcc);
                when Backend_Mcode =>
-                  Compiler_Cmd := new String'(Default_Paths.Compiler_Mcode);
+                  Cmd.Compiler_Cmd :=
+                    new String'(Default_Paths.Compiler_Mcode);
                when Backend_Llvm =>
-                  Compiler_Cmd := new String'(Default_Paths.Compiler_Llvm);
+                  Cmd.Compiler_Cmd := new String'(Default_Paths.Compiler_Llvm);
             end case;
          end if;
       end if;
-      if Post_Processor_Cmd = null then
-         Post_Processor_Cmd := new String'(Default_Paths.Post_Processor);
+      if Cmd.Post_Processor_Cmd = null then
+         Cmd.Post_Processor_Cmd := new String'(Default_Paths.Post_Processor);
       end if;
-      if Assembler_Cmd = null then
-         Assembler_Cmd := new String'("as");
+      if Cmd.Assembler_Cmd = null then
+         Cmd.Assembler_Cmd := new String'("as");
       end if;
-      if Linker_Cmd = null then
-         Linker_Cmd := new String'("gcc");
+      if Cmd.Linker_Cmd = null then
+         Cmd.Linker_Cmd := new String'("gcc");
       end if;
    end Set_Tools_Name;
 
@@ -540,25 +541,26 @@ package body Ghdldrv is
    procedure Locate_Tools (Cmd : in out Command_Comp'Class) is
    begin
       --  Compiler.
-      Compiler_Path := Locate_Exec_Tool (Compiler_Cmd.all);
-      if Compiler_Path = null then
-         Tool_Not_Found (Compiler_Cmd.all);
+      Cmd.Compiler_Path := Locate_Exec_Tool (Cmd.Compiler_Cmd.all);
+      if Cmd.Compiler_Path = null then
+         Tool_Not_Found (Cmd.Compiler_Cmd.all);
       end if;
 
       --  Postprocessor.
       if Flag_Postprocess then
-         Post_Processor_Path := Locate_Exec_Tool (Post_Processor_Cmd.all);
-         if Post_Processor_Path = null then
-            Tool_Not_Found (Post_Processor_Cmd.all);
+         Cmd.Post_Processor_Path :=
+           Locate_Exec_Tool (Cmd.Post_Processor_Cmd.all);
+         if Cmd.Post_Processor_Path = null then
+            Tool_Not_Found (Cmd.Post_Processor_Cmd.all);
          end if;
       end if;
 
       --  Assembler.
       case Backend is
          when Backend_Gcc =>
-            Assembler_Path := Locate_Exec_On_Path (Assembler_Cmd.all);
-            if Assembler_Path = null and not Cmd.Flag_Asm then
-               Tool_Not_Found (Assembler_Cmd.all);
+            Cmd.Assembler_Path := Locate_Exec_On_Path (Cmd.Assembler_Cmd.all);
+            if Cmd.Assembler_Path = null and not Cmd.Flag_Asm then
+               Tool_Not_Found (Cmd.Assembler_Cmd.all);
             end if;
          when Backend_Llvm
            | Backend_Mcode =>
@@ -566,9 +568,9 @@ package body Ghdldrv is
       end case;
 
       --  Linker.
-      Linker_Path := Locate_Exec_On_Path (Linker_Cmd.all);
-      if Linker_Path = null then
-         Tool_Not_Found (Linker_Cmd.all);
+      Cmd.Linker_Path := Locate_Exec_On_Path (Cmd.Linker_Cmd.all);
+      if Cmd.Linker_Path = null then
+         Tool_Not_Found (Cmd.Linker_Cmd.all);
       end if;
    end Locate_Tools;
 
@@ -576,18 +578,19 @@ package body Ghdldrv is
    is
       use Libraries;
    begin
-      Set_Tools_Name;
+      Set_Tools_Name (Cmd);
       Setup_Libraries (Load);
       Locate_Tools (Cmd);
       for I in 2 .. Get_Nbr_Paths loop
-         Add_Argument (Compiler_Args,
+         Add_Argument (Cmd.Compiler_Args,
                        new String'("-P" & Image (Get_Path (I))));
       end loop;
    end Setup_Compiler;
 
-   procedure Init (Cmd : in out Command_Comp)
-   is
+   procedure Init (Cmd : in out Command_Comp) is
    begin
+      Init (Command_Lib (Cmd));
+
       --  Init options.
       Cmd.Flag_Not_Quiet := False;
       Cmd.Flag_Disp_Commands := False;
@@ -596,11 +599,10 @@ package body Ghdldrv is
       Cmd.Output_File := null;
 
       --  Initialize argument tables.
-      Init (Compiler_Args, 4);
-      Init (Postproc_Args, 4);
-      Init (Assembler_Args, 4);
-      Init (Linker_Args, 4);
-      Init (Command_Lib (Cmd));
+      Init (Cmd.Compiler_Args, 4);
+      Init (Cmd.Postproc_Args, 4);
+      Init (Cmd.Assembler_Args, 4);
+      Init (Cmd.Linker_Args, 4);
    end Init;
 
    procedure Decode_Option (Cmd : in out Command_Comp;
@@ -620,13 +622,13 @@ package body Ghdldrv is
          Cmd.Flag_Disp_Commands := True;
          Res := Option_Ok;
       elsif Opt'Length > 8 and then Opt (1 .. 8) = "--GHDL1=" then
-         Compiler_Cmd := new String'(Opt (9 .. Opt'Last));
+         Cmd.Compiler_Cmd := new String'(Opt (9 .. Opt'Last));
          Res := Option_Ok;
       elsif Opt'Length > 5 and then Opt (1 .. 5) = "--AS=" then
-         Assembler_Cmd := new String'(Opt (6 .. Opt'Last));
+         Cmd.Assembler_Cmd := new String'(Opt (6 .. Opt'Last));
          Res := Option_Ok;
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--LINK=" then
-         Linker_Cmd := new String'(Opt (8 .. Opt'Last));
+         Cmd.Linker_Cmd := new String'(Opt (8 .. Opt'Last));
          Res := Option_Ok;
       elsif Opt = "-S" then
          Cmd.Flag_Asm := True;
@@ -642,21 +644,21 @@ package body Ghdldrv is
             Res := Option_Arg;
          end if;
       elsif Opt = "-m32" then
-         Add_Argument (Compiler_Args, new String'("-m32"));
-         Add_Argument (Assembler_Args, new String'("--32"));
-         Add_Argument (Linker_Args, new String'("-m32"));
+         Add_Argument (Cmd.Compiler_Args, new String'("-m32"));
+         Add_Argument (Cmd.Assembler_Args, new String'("--32"));
+         Add_Argument (Cmd.Linker_Args, new String'("-m32"));
          Decode_Option (Command_Lib (Cmd), Opt, Arg, Res);
       elsif Opt'Length > 4
         and then Opt (2) = 'W' and then Opt (4) = ','
       then
          if Opt (3) = 'c' then
-            Add_Arguments (Compiler_Args, Opt);
+            Add_Arguments (Cmd.Compiler_Args, Opt);
          elsif Opt (3) = 'a' then
-            Add_Arguments (Assembler_Args, Opt);
+            Add_Arguments (Cmd.Assembler_Args, Opt);
          elsif Opt (3) = 'p' then
-            Add_Arguments (Postproc_Args, Opt);
+            Add_Arguments (Cmd.Postproc_Args, Opt);
          elsif Opt (3) = 'l' then
-            Add_Arguments (Linker_Args, Opt);
+            Add_Arguments (Cmd.Linker_Args, Opt);
          else
             Error ("unknown tool name in '-W" & Opt (3) & ",' option");
             Res := Option_Err;
@@ -666,26 +668,26 @@ package body Ghdldrv is
       elsif Opt'Length >= 2 and then Opt (2) = 'g' then
          --  Debugging option.
          Str := new String'(Opt);
-         Add_Argument (Compiler_Args, Str);
-         Add_Argument (Linker_Args, Str);
+         Add_Argument (Cmd.Compiler_Args, Str);
+         Add_Argument (Cmd.Linker_Args, Str);
          Res := Option_Ok;
       elsif Opt = "-Q" then
          Cmd.Flag_Not_Quiet := True;
          Res := Option_Ok;
       elsif Opt = "--expect-failure" then
-         Add_Argument (Compiler_Args, new String'(Opt));
+         Add_Argument (Cmd.Compiler_Args, new String'(Opt));
          Cmd.Flag_Expect_Failure := True;
          Res := Option_Ok;
       elsif Opt = "-C" then
          --  Translate -C into --mb-comments, as gcc already has a definition
          --  for -C.  Done before Flags.Parse_Option.
-         Add_Argument (Compiler_Args, new String'("--mb-comments"));
+         Add_Argument (Cmd.Compiler_Args, new String'("--mb-comments"));
          Res := Option_Ok;
       elsif Opt = "--pre-elab" then
-         Elab_Mode := Elab_Static;
+         Cmd.Elab_Mode := Elab_Static;
          Res := Option_Ok;
       elsif Opt = "--dyn-elab" then
-         Elab_Mode := Elab_Dynamic;
+         Cmd.Elab_Mode := Elab_Dynamic;
          Res := Option_Ok;
       elsif Opt'Length > 18
         and then Opt (1 .. 18) = "--time-resolution="
@@ -696,9 +698,9 @@ package body Ghdldrv is
       elsif Opt = "--ieee=synopsys" or else Opt = "--ieee=none" then
          --  Automatically translate the option.
          if Backend = Backend_Gcc then
-            Add_Argument (Compiler_Args, new String'("--ghdl-fsynopsys"));
+            Add_Argument (Cmd.Compiler_Args, new String'("--ghdl-fsynopsys"));
          else
-            Add_Argument (Compiler_Args, new String'("-fsynopsys"));
+            Add_Argument (Cmd.Compiler_Args, new String'("-fsynopsys"));
          end if;
          Flags.Flag_Synopsys := True;
          Res := Option_Ok;
@@ -717,7 +719,7 @@ package body Ghdldrv is
                else
                   Str := new String'(Opt);
                end if;
-               Add_Argument (Compiler_Args, Str);
+               Add_Argument (Cmd.Compiler_Args, Str);
             end if;
          elsif Res = Option_Unknown then
             if Opt'Length >= 2
@@ -726,7 +728,7 @@ package body Ghdldrv is
                --  Optimization option supported by gcc/llvm.
                --  This is put after Flags.Parse_Option, since it may catch
                --  -fxxx options.
-               Add_Argument (Compiler_Args, new String'(Opt));
+               Add_Argument (Cmd.Compiler_Args, new String'(Opt));
                Res := Option_Ok;
             else
                Decode_Option (Command_Lib (Cmd), Opt, Arg, Res);
@@ -786,24 +788,24 @@ package body Ghdldrv is
          raise Option_Error;
       end if;
 
-      Set_Tools_Name;
+      Set_Tools_Name (Cmd);
       Put_Line ("Paths at configuration:");
       Put ("compiler command: ");
-      Put_Line (Compiler_Cmd.all);
+      Put_Line (Cmd.Compiler_Cmd.all);
       if Flag_Postprocess then
          Put ("post-processor command: ");
-         Put_Line (Post_Processor_Cmd.all);
+         Put_Line (Cmd.Post_Processor_Cmd.all);
       end if;
       case Backend is
          when Backend_Gcc =>
             Put ("assembler command: ");
-            Put_Line (Assembler_Cmd.all);
+            Put_Line (Cmd.Assembler_Cmd.all);
          when Backend_Llvm
            | Backend_Mcode =>
             null;
       end case;
       Put ("linker command: ");
-      Put_Line (Linker_Cmd.all);
+      Put_Line (Cmd.Linker_Cmd.all);
       Put_Line ("default lib prefix: " & Default_Paths.Lib_Prefix);
 
       New_Line;
@@ -812,21 +814,21 @@ package body Ghdldrv is
 
       Locate_Tools (Cmd);
       Put ("compiler path: ");
-      Put_Line (Compiler_Path.all);
+      Put_Line (Cmd.Compiler_Path.all);
       if Flag_Postprocess then
          Put ("post-processor path: ");
-         Put_Line (Post_Processor_Path.all);
+         Put_Line (Cmd.Post_Processor_Path.all);
       end if;
       case Backend is
          when Backend_Gcc =>
             Put ("assembler path: ");
-            Put_Line (Assembler_Path.all);
+            Put_Line (Cmd.Assembler_Path.all);
          when Backend_Llvm
            | Backend_Mcode =>
             null;
       end case;
       Put ("linker path: ");
-      Put_Line (Linker_Path.all);
+      Put_Line (Cmd.Linker_Path.all);
 
       New_Line;
 
@@ -983,7 +985,7 @@ package body Ghdldrv is
    begin
       Filelist_Name := new String'(Elab_Name.all & List_Suffix);
 
-      case Elab_Mode is
+      case Cmd.Elab_Mode is
          when Elab_Static =>
             Elab_Cmd := new String'("--pre-elab");
          when Elab_Dynamic =>
@@ -1042,7 +1044,8 @@ package body Ghdldrv is
       --  call the linker
       declare
          P : Natural;
-         Nbr_Args : constant Natural := Last (Linker_Args) + Filelist.Last + 4;
+         Nbr_Args : constant Natural :=
+           Last (Cmd.Linker_Args) + Filelist.Last + 4;
          Args : Argument_List (1 .. Nbr_Args);
          Obj_File : String_Access;
          Std_File : String_Access;
@@ -1071,9 +1074,9 @@ package body Ghdldrv is
             Args (P) := Filelist.Table (I);
          end loop;
          --  User added options.
-         for I in First .. Last (Linker_Args) loop
+         for I in First .. Last (Cmd.Linker_Args) loop
             P := P + 1;
-            Args (P) := Linker_Args.Table (I);
+            Args (P) := Cmd.Linker_Args.Table (I);
          end loop;
          --  GRT files (should be the last one, since it contains an
          --  optional main).
@@ -1087,7 +1090,7 @@ package body Ghdldrv is
                Put_Line (Args (I).all);
             end loop;
          else
-            My_Spawn (Cmd, Linker_Path.all, Args (1 .. P));
+            My_Spawn (Cmd, Cmd.Linker_Path.all, Args (1 .. P));
          end if;
 
          Free (Obj_File);
