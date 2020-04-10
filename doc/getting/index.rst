@@ -20,7 +20,7 @@ page for further details.
 .. ATTENTION::
    Since ``v0.37``, GHDL's synthesis features require GCC >=8.1, due to some new GNAT features which
    are not available in previous releases. Users with older versions (who don't need synthesis)
-   can configure GHDL with option ``--no-synth``.
+   can configure GHDL with option ``--disable-synth``.
 
 .. rubric :: Available back-ends
 
