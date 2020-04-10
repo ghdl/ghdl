@@ -1295,7 +1295,10 @@ package body Synth.Oper is
             return Synth_Shift (Id_Asr, Id_None);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int =>
-            return Synth_Shift (Id_Lsl, Id_None);
+            return Synth_Shift (Id_Lsl, Id_Lsr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int =>
+            return Synth_Shift (Id_Lsr, Id_Lsl);
 
          when Iir_Predefined_Ieee_1164_Vector_Ror =>
             return Synth_Rotation (Id_Ror);
