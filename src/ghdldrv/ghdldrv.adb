@@ -60,6 +60,9 @@ package body Ghdldrv is
    --  "-fpic" option.
    Dash_Fpic : constant String_Access := new String'("-fpic");
 
+   --  "-shared" string.
+   Dash_Shared : constant String_Access := new String'("-shared");
+
    --  Elaboration mode.
    type Elab_Mode_Type is
      (--  Static elaboration (or pre-elaboration).
@@ -96,6 +99,9 @@ package body Ghdldrv is
 
       --  True if failure expected.
       Flag_Expect_Failure : Boolean;
+
+      --  True if create a shared library.
+      Flag_Shared : Boolean;
 
       --  Default elaboration mode is dynamic.
       Elab_Mode : Elab_Mode_Type := Elab_Dynamic;
@@ -597,6 +603,7 @@ package body Ghdldrv is
       Cmd.Flag_Asm := False;
       Cmd.Flag_Expect_Failure := False;
       Cmd.Output_File := null;
+      Cmd.Flag_Shared := False;
 
       --  Initialize argument tables.
       Init (Cmd.Compiler_Args, 4);
@@ -643,6 +650,9 @@ package body Ghdldrv is
             Cmd.Output_File := new String'(Arg);
             Res := Option_Arg;
          end if;
+      elsif Opt = "-shared" then
+         Cmd.Flag_Shared := True;
+         Res := Option_Ok;
       elsif Opt = "-m32" then
          Add_Argument (Cmd.Compiler_Args, new String'("-m32"));
          Add_Argument (Cmd.Assembler_Args, new String'("--32"));
@@ -949,7 +959,12 @@ package body Ghdldrv is
 
       --  Choose a default name for the executable.
       if Cmd.Output_File = null then
-         Cmd.Output_File := new String'(Base_Name.all);
+         if Cmd.Flag_Shared then
+            Cmd.Output_File := new String'
+              (Base_Name.all & Default_Paths.Shared_Library_Extension);
+         else
+            Cmd.Output_File := new String'(Base_Name.all);
+         end if;
       end if;
 
       --  Set a name for the elaboration files.  Use the basename of the
@@ -1039,13 +1054,15 @@ package body Ghdldrv is
       end if;
       Last_File := Filelist.Last;
       Add_Lib_File_List ("grt");
-      Add_Lib_File_List ("grt-exec");
+      if not Cmd.Flag_Shared then
+         Add_Lib_File_List ("grt-exec");
+      end if;
 
       --  call the linker
       declare
          P : Natural;
          Nbr_Args : constant Natural :=
-           Last (Cmd.Linker_Args) + Filelist.Last + 4;
+           Last (Cmd.Linker_Args) + Filelist.Last + 5;
          Args : Argument_List (1 .. Nbr_Args);
          Obj_File : String_Access;
          Std_File : String_Access;
@@ -1056,6 +1073,10 @@ package body Ghdldrv is
          Args (P + 2) := Cmd.Output_File;
          Args (P + 3) := Obj_File;
          P := P + 3;
+         if Cmd.Flag_Shared then
+            P := P + 1;
+            Args (P) := Dash_Shared;
+         end if;
          if Add_Std then
             Std_File := new
               String'(Get_Machine_Path_Prefix & Directory_Separator
