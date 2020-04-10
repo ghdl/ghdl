@@ -41,8 +41,6 @@ package body Synth.Static_Oper is
    --  (math library) on unix systems.
    pragma Linker_Options ("-lm");
 
-   type Compare_Type is (Compare_Less, Compare_Equal, Compare_Greater);
-
    function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic is
    begin
       return Std_Ulogic'Val (Read_U8 (M + Size_Type (Off)));
@@ -59,8 +57,7 @@ package body Synth.Static_Oper is
    end Warn_Compare_Meta;
 
    function Synth_Compare_Uns_Uns
-     (Left, Right : Memtyp; Err : Compare_Type; Loc : Node)
-     return Compare_Type
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
    is
       Lw : constant Uns32 := Left.Typ.W;
       Rw : constant Uns32 := Right.Typ.W;
@@ -78,7 +75,7 @@ package body Synth.Static_Oper is
                when '0' =>
                   null;
                when '1' =>
-                  return Compare_Greater;
+                  return Greater;
                when 'X' =>
                   Warn_Compare_Meta (Loc);
                   return Err;
@@ -90,7 +87,7 @@ package body Synth.Static_Oper is
                when '0' =>
                   null;
                when '1' =>
-                  return Compare_Less;
+                  return Less;
                when 'X' =>
                   Warn_Compare_Meta (Loc);
                   return Err;
@@ -105,17 +102,16 @@ package body Synth.Static_Oper is
             Warn_Compare_Meta (Loc);
             return Err;
          elsif L = '1' and R = '0' then
-            return Compare_Greater;
+            return Greater;
          elsif L = '0' and R = '1' then
-            return Compare_Less;
+            return Less;
          end if;
       end loop;
-      return Compare_Equal;
+      return Equal;
    end Synth_Compare_Uns_Uns;
 
    function Synth_Compare_Uns_Nat
-     (Left, Right : Memtyp; Err : Compare_Type; Loc : Node)
-     return Compare_Type
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
    is
       Lw : constant Uns32 := Left.Typ.W;
       Rval : constant Uns64 := To_Uns64 (Read_Discrete (Right));
@@ -133,7 +129,7 @@ package body Synth.Static_Oper is
                when '0' =>
                   null;
                when '1' =>
-                  return Compare_Greater;
+                  return Greater;
                when 'X' =>
                   Warn_Compare_Meta (Loc);
                   return Err;
@@ -142,7 +138,7 @@ package body Synth.Static_Oper is
          Cnt := 64;
       elsif Lw < 64 then
          if Shift_Right (Rval, Natural (Lw)) /= 0 then
-            return Compare_Less;
+            return Less;
          end if;
          Cnt := Lw;
       else
@@ -157,19 +153,19 @@ package body Synth.Static_Oper is
          end if;
          if (Shift_Right (Rval, Natural (I)) and 1) = 1 then
             if L = '0' then
-               return Compare_Less;
+               return Less;
             end if;
          else
             if L = '1' then
-               return Compare_Greater;
+               return Greater;
             end if;
          end if;
       end loop;
-      return Compare_Equal;
+      return Equal;
    end Synth_Compare_Uns_Nat;
 
    function Synth_Compare_Nat_Uns
-     (Left, Right : Memtyp; Err : Compare_Type; Loc : Node) return Compare_Type
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
    is
       Rw : constant Uns32 := Right.Typ.W;
       Lval : constant Uns64 := To_Uns64 (Read_Discrete (Left));
@@ -187,7 +183,7 @@ package body Synth.Static_Oper is
                when '0' =>
                   null;
                when '1' =>
-                  return Compare_Less;
+                  return Less;
                when 'X' =>
                   Warn_Compare_Meta (Loc);
                   return Err;
@@ -196,7 +192,7 @@ package body Synth.Static_Oper is
          Cnt := 64;
       elsif Rw < 64 then
          if Shift_Right (Lval, Natural (Rw)) /= 0 then
-            return Compare_Greater;
+            return Greater;
          end if;
          Cnt := Rw;
       else
@@ -211,15 +207,15 @@ package body Synth.Static_Oper is
          end if;
          if (Shift_Right (Lval, Natural (I)) and 1) = 1 then
             if R = '0' then
-               return Compare_Greater;
+               return Greater;
             end if;
          else
             if R = '1' then
-               return Compare_Less;
+               return Less;
             end if;
          end if;
       end loop;
-      return Compare_Equal;
+      return Equal;
    end Synth_Compare_Nat_Uns;
 
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
@@ -728,16 +724,16 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Uns_Uns
-                 (Left, Right, Compare_Greater, Expr) = Compare_Equal;
+               Res :=
+                 Synth_Compare_Uns_Uns (Left, Right, Greater, Expr) = Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Uns_Nat
-                 (Left, Right, Compare_Greater, Expr) = Compare_Equal;
+               Res :=
+                 Synth_Compare_Uns_Nat (Left, Right, Greater, Expr) = Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -745,24 +741,24 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Uns_Uns
-                 (Left, Right, Compare_Less, Expr) = Compare_Greater;
+               Res :=
+                 Synth_Compare_Uns_Uns (Left, Right, Less, Expr) = Greater;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns =>
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Nat_Uns
-                 (Left, Right, Compare_Less, Expr) = Compare_Greater;
+               Res :=
+                 Synth_Compare_Nat_Uns (Left, Right, Less, Expr) = Greater;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Uns_Nat
-                 (Left, Right, Compare_Less, Expr) = Compare_Greater;
+               Res :=
+                 Synth_Compare_Uns_Nat (Left, Right, Less, Expr) = Greater;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -770,16 +766,16 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Uns_Uns
-                 (Left, Right, Compare_Greater, Expr) <= Compare_Equal;
+               Res :=
+                 Synth_Compare_Uns_Uns (Left, Right, Greater, Expr) <= Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Uns_Nat
-                 (Left, Right, Compare_Greater, Expr) <= Compare_Equal;
+               Res :=
+                 Synth_Compare_Uns_Nat (Left, Right, Greater, Expr) <= Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -787,24 +783,24 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Uns_Uns
-                 (Left, Right, Compare_Greater, Expr) < Compare_Equal;
+               Res :=
+                 Synth_Compare_Uns_Uns (Left, Right, Greater, Expr) < Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Uns_Nat
-                 (Left, Right, Compare_Greater, Expr) < Compare_Equal;
+               Res :=
+                 Synth_Compare_Uns_Nat (Left, Right, Greater, Expr) < Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns =>
             declare
                Res : Boolean;
             begin
-               Res := Synth_Compare_Nat_Uns
-                 (Left, Right, Compare_Greater, Expr) < Compare_Equal;
+               Res :=
+                 Synth_Compare_Nat_Uns (Left, Right, Greater, Expr) < Equal;
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
 
