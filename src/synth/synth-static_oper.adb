@@ -46,6 +46,11 @@ package body Synth.Static_Oper is
       return Std_Ulogic'Val (Read_U8 (M + Size_Type (Off)));
    end Read_Std_Logic;
 
+   procedure Write_Std_Logic (M : Memory_Ptr; Off : Uns32; Val : Std_Ulogic) is
+   begin
+      Write_U8 (M + Size_Type (Off), Std_Ulogic'Pos (Val));
+   end Write_Std_Logic;
+
    procedure Warn_Compare_Null (Loc : Node) is
    begin
       Warning_Msg_Synth (+Loc, "null argument detected, returning false");
@@ -248,7 +253,7 @@ package body Synth.Static_Oper is
             Rs : constant Std_Ulogic := Read_Std_Logic (Right.Mem, I - 1);
             V : constant Std_Ulogic := Op (Ls, Rs);
          begin
-            Write_U8 (Res.Val.Mem + Size_Type (I - 1), Std_Ulogic'Pos (V));
+            Write_Std_Logic (Res.Val.Mem, I - 1, V);
          end;
       end loop;
 
@@ -271,7 +276,7 @@ package body Synth.Static_Oper is
       Res_Typ := Create_Vec_Type_By_Length (Uns32 (Vec'Last), El_Typ);
       Res := Create_Value_Memory (Res_Typ);
       for I in 1 .. Vec'Last loop
-         Write_U8 (Res.Val.Mem + Size_Type (I - 1), Std_Ulogic'Pos (Vec (I)));
+         Write_Std_Logic (Res.Val.Mem, Uns32 (I - 1), Vec (I));
       end loop;
       return Res;
    end To_Valtyp;
@@ -849,8 +854,7 @@ package body Synth.Static_Oper is
       end case;
    end Synth_Static_Dyadic_Predefined;
 
-   function Synth_Vector_Monadic
-     (Vec : Memtyp; Op : Table_1d) return Valtyp
+   function Synth_Vector_Monadic (Vec : Memtyp; Op : Table_1d) return Valtyp
    is
       Len : constant Iir_Index32 := Vec_Length (Vec.Typ);
       Res : Valtyp;
@@ -860,8 +864,7 @@ package body Synth.Static_Oper is
          declare
             V : constant Std_Ulogic := Read_Std_Logic (Vec.Mem, I - 1);
          begin
-            Write_U8 (Res.Val.Mem + Size_Type (I - 1),
-                      Std_Ulogic'Pos (Op (V)));
+            Write_Std_Logic (Res.Val.Mem, I - 1, Op (V));
          end;
       end loop;
       return Res;
@@ -979,8 +982,8 @@ package body Synth.Static_Oper is
       Res := Create_Value_Memory (Bnd);
       for I in 1 .. Len loop
          B := Shift_Right_Arithmetic (Arg, Natural (I - 1)) and 1;
-         Write_U8 (Res.Val.Mem + Size_Type (Len - I),
-                   Uns64'Pos (Std_Logic_0_Pos + B));
+         Write_Std_Logic (Res.Val.Mem, Uns32 (Len - I),
+                          Std_Ulogic'Val (Std_Logic_0_Pos + B));
       end loop;
       return Res;
    end Eval_To_Vector;
@@ -1111,18 +1114,18 @@ package body Synth.Static_Oper is
                El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
                Res : Valtyp;
                Bnd : Type_Acc;
-               B : Ghdl_U8;
+               B : Std_Ulogic;
             begin
                Bnd := Create_Vec_Type_By_Length
                  (Uns32 (Vec_Length (Param1.Typ)), El_Type);
                Res := Create_Value_Memory (Bnd);
                for I in 1 .. Vec_Length (Param1.Typ) loop
                   if Read_U8 (Param1.Val.Mem + Size_Type (I - 1)) = 0 then
-                     B := Std_Logic_0_Pos;
+                     B := '0';
                   else
-                     B := Std_Logic_1_Pos;
+                     B := '1';
                   end if;
-                  Write_U8 (Res.Val.Mem + Size_Type (I - 1), B);
+                  Write_Std_Logic (Res.Val.Mem, Uns32 (I - 1), B);
                end loop;
                return Res;
             end;
