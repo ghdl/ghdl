@@ -605,7 +605,7 @@ package body Ghdllocal is
    type Command_Dir is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Dir; Name : String) return Boolean;
    function Get_Short_Help (Cmd : Command_Dir) return String;
-   procedure Perform_Action (Cmd : Command_Dir; Args : Argument_List);
+   procedure Perform_Action (Cmd : in out Command_Dir; Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Dir; Name : String) return Boolean
    is
@@ -622,7 +622,7 @@ package body Ghdllocal is
       return "--dir [LIBs]       Disp contents of the libraries";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Dir; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Dir; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
    begin
@@ -641,7 +641,7 @@ package body Ghdllocal is
    type Command_Find is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Find; Name : String) return Boolean;
    function Get_Short_Help (Cmd : Command_Find) return String;
-   procedure Perform_Action (Cmd : Command_Find; Args : Argument_List);
+   procedure Perform_Action (Cmd : in out Command_Find; Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Find; Name : String) return Boolean
    is
@@ -674,7 +674,7 @@ package body Ghdllocal is
    end Is_Top_Entity;
 
    --  Disp contents design files FILES.
-   procedure Perform_Action (Cmd : Command_Find; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Find; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
 
@@ -718,7 +718,7 @@ package body Ghdllocal is
    function Decode_Command (Cmd : Command_Import; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Import) return String;
-   procedure Perform_Action (Cmd : Command_Import;
+   procedure Perform_Action (Cmd : in out Command_Import;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Import; Name : String)
@@ -736,7 +736,7 @@ package body Ghdllocal is
       return "-i [OPTS] FILEs    Import units of FILEs";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Import; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Import; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Errorout;
@@ -814,7 +814,7 @@ package body Ghdllocal is
                             Arg : String;
                             Res : out Option_State);
    function Get_Short_Help (Cmd : Command_Check_Syntax) return String;
-   procedure Perform_Action (Cmd : Command_Check_Syntax;
+   procedure Perform_Action (Cmd : in out Command_Check_Syntax;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Check_Syntax; Name : String)
@@ -909,7 +909,7 @@ package body Ghdllocal is
       end if;
    end Analyze_Files;
 
-   procedure Perform_Action (Cmd : Command_Check_Syntax;
+   procedure Perform_Action (Cmd : in out Command_Check_Syntax;
                              Args : Argument_List)
    is
       Error : Boolean;
@@ -924,7 +924,7 @@ package body Ghdllocal is
    type Command_Clean is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Clean; Name : String) return Boolean;
    function Get_Short_Help (Cmd : Command_Clean) return String;
-   procedure Perform_Action (Cmd : Command_Clean; Args : Argument_List);
+   procedure Perform_Action (Cmd : in out Command_Clean; Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Clean; Name : String) return Boolean
    is
@@ -950,7 +950,7 @@ package body Ghdllocal is
       end if;
    end Delete;
 
-   procedure Perform_Action (Cmd : Command_Clean; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Clean; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Name_Table;
@@ -1028,7 +1028,7 @@ package body Ghdllocal is
    function Decode_Command (Cmd : Command_Remove; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Remove) return String;
-   procedure Perform_Action (Cmd : Command_Remove;
+   procedure Perform_Action (Cmd : in out Command_Remove;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Remove; Name : String) return Boolean
@@ -1045,7 +1045,7 @@ package body Ghdllocal is
       return "--remove           Remove generated files and library file";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Remove; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Remove; Args : Argument_List)
    is
       use Name_Table;
    begin
@@ -1063,7 +1063,7 @@ package body Ghdllocal is
    type Command_Copy is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Copy; Name : String) return Boolean;
    function Get_Short_Help (Cmd : Command_Copy) return String;
-   procedure Perform_Action (Cmd : Command_Copy; Args : Argument_List);
+   procedure Perform_Action (Cmd : in out Command_Copy; Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Copy; Name : String) return Boolean
    is
@@ -1079,7 +1079,7 @@ package body Ghdllocal is
       return "--copy             Copy work library to current directory";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Copy; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Copy; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Name_Table;
@@ -1139,7 +1139,7 @@ package body Ghdllocal is
    function Decode_Command (Cmd : Command_Disp_Standard; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Disp_Standard) return String;
-   procedure Perform_Action (Cmd : Command_Disp_Standard;
+   procedure Perform_Action (Cmd : in out Command_Disp_Standard;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Disp_Standard; Name : String)
@@ -1157,7 +1157,7 @@ package body Ghdllocal is
       return "--disp-standard    Disp std.standard in pseudo-vhdl";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Disp_Standard;
+   procedure Perform_Action (Cmd : in out Command_Disp_Standard;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1176,7 +1176,7 @@ package body Ghdllocal is
    function Decode_Command (Cmd : Command_Find_Top; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Find_Top) return String;
-   procedure Perform_Action (Cmd : Command_Find_Top;
+   procedure Perform_Action (Cmd : in out Command_Find_Top;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Find_Top; Name : String)
@@ -1194,7 +1194,7 @@ package body Ghdllocal is
       return "--find-top         Disp possible top entity in work library";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Find_Top;
+   procedure Perform_Action (Cmd : in out Command_Find_Top;
                              Args : Argument_List)
    is
       use Libraries;
@@ -1232,7 +1232,7 @@ package body Ghdllocal is
    function Decode_Command (Cmd : Command_Bug_Box; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Bug_Box) return String;
-   procedure Perform_Action (Cmd : Command_Bug_Box;
+   procedure Perform_Action (Cmd : in out Command_Bug_Box;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Bug_Box; Name : String)
@@ -1250,7 +1250,7 @@ package body Ghdllocal is
       return "!--bug-box          Crash and emit a bug-box";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Bug_Box;
+   procedure Perform_Action (Cmd : in out Command_Bug_Box;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd, Args);
@@ -1724,7 +1724,7 @@ package body Ghdllocal is
    function Decode_Command (Cmd : Command_Elab_Order; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Elab_Order) return String;
-   procedure Perform_Action (Cmd : Command_Elab_Order;
+   procedure Perform_Action (Cmd : in out Command_Elab_Order;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Elab_Order; Name : String)
@@ -1750,7 +1750,7 @@ package body Ghdllocal is
       return True;
    end Is_Makeable_File;
 
-   procedure Perform_Action (Cmd : Command_Elab_Order;
+   procedure Perform_Action (Cmd : in out Command_Elab_Order;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);

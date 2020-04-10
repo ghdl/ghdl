@@ -512,7 +512,7 @@ package body Ghdlxml is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_File_To_Xml) return String;
 
-   procedure Perform_Action (Cmd : Command_File_To_Xml;
+   procedure Perform_Action (Cmd : in out Command_File_To_Xml;
                              Files_Name : Argument_List);
 
    function Decode_Command (Cmd : Command_File_To_Xml; Name : String)
@@ -531,7 +531,7 @@ package body Ghdlxml is
    end Get_Short_Help;
 
    procedure Perform_Action
-     (Cmd : Command_File_To_Xml; Files_Name : Argument_List)
+     (Cmd : in out Command_File_To_Xml; Files_Name : Argument_List)
    is
       pragma Unreferenced (Cmd);
 

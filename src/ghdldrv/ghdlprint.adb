@@ -548,7 +548,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Chop; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Chop) return String;
-   procedure Perform_Action (Cmd : Command_Chop;
+   procedure Perform_Action (Cmd : in out Command_Chop;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Chop; Name : String)
@@ -566,7 +566,7 @@ package body Ghdlprint is
       return "--chop [OPTS] FILEs  Chop FILEs";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Chop; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Chop; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Ada.Characters.Latin_1;
@@ -846,7 +846,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Lines; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Lines) return String;
-   procedure Perform_Action (Cmd : Command_Lines;
+   procedure Perform_Action (Cmd : in out Command_Lines;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Lines; Name : String)
@@ -864,7 +864,7 @@ package body Ghdlprint is
       return "--lines FILEs      Precede line with its number";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Lines; Args : Argument_List)
+   procedure Perform_Action (Cmd : in out Command_Lines; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Vhdl.Scanner;
@@ -976,7 +976,7 @@ package body Ghdlprint is
                             Option : String;
                             Arg : String;
                             Res : out Option_State);
-   procedure Perform_Action (Cmd : Command_Reprint;
+   procedure Perform_Action (Cmd : in out Command_Reprint;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Reprint; Name : String)
@@ -1042,7 +1042,7 @@ package body Ghdlprint is
       end if;
    end Decode_Option;
 
-   procedure Perform_Action (Cmd : Command_Reprint;
+   procedure Perform_Action (Cmd : in out Command_Reprint;
                              Args : Argument_List)
    is
       Design_File : Iir_Design_File;
@@ -1122,7 +1122,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Compare_Tokens) return String;
-   procedure Perform_Action (Cmd : Command_Compare_Tokens;
+   procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
@@ -1140,7 +1140,7 @@ package body Ghdlprint is
       return "--compare-tokens [OPTS] REF FILEs    Compare FILEs with REF";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Compare_Tokens;
+   procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1249,7 +1249,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_PP_Html; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_PP_Html) return String;
-   procedure Perform_Action (Cmd : Command_PP_Html;
+   procedure Perform_Action (Cmd : in out Command_PP_Html;
                              Files : Argument_List);
 
    function Decode_Command (Cmd : Command_PP_Html; Name : String)
@@ -1267,7 +1267,7 @@ package body Ghdlprint is
       return "--pp-html FILEs    Pretty-print FILEs in HTML";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_PP_Html;
+   procedure Perform_Action (Cmd : in out Command_PP_Html;
                              Files : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1320,7 +1320,7 @@ package body Ghdlprint is
                             Res : out Option_State);
    procedure Disp_Long_Help (Cmd : Command_Xref_Html);
 
-   procedure Perform_Action (Cmd : Command_Xref_Html;
+   procedure Perform_Action (Cmd : in out Command_Xref_Html;
                              Files_Name : Argument_List);
 
    function Decode_Command (Cmd : Command_Xref_Html; Name : String)
@@ -1391,7 +1391,7 @@ package body Ghdlprint is
    end Analyze_Design_File_Units;
 
    procedure Perform_Action
-     (Cmd : Command_Xref_Html; Files_Name : Argument_List)
+     (Cmd : in out Command_Xref_Html; Files_Name : Argument_List)
    is
       use GNAT.Directory_Operations;
 
@@ -1627,7 +1627,7 @@ package body Ghdlprint is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Xref) return String;
 
-   procedure Perform_Action (Cmd : Command_Xref;
+   procedure Perform_Action (Cmd : in out Command_Xref;
                              Files_Name : Argument_List);
 
    function Decode_Command (Cmd : Command_Xref; Name : String)
@@ -1646,7 +1646,7 @@ package body Ghdlprint is
    end Get_Short_Help;
 
    procedure Perform_Action
-     (Cmd : Command_Xref; Files_Name : Argument_List)
+     (Cmd : in out Command_Xref; Files_Name : Argument_List)
    is
       pragma Unreferenced (Cmd);
 

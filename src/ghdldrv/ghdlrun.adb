@@ -753,7 +753,7 @@ package body Ghdlrun is
    function Decode_Command (Cmd : Command_Run_Help; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Run_Help) return String;
-   procedure Perform_Action (Cmd : Command_Run_Help;
+   procedure Perform_Action (Cmd : in out Command_Run_Help;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Run_Help; Name : String)
@@ -771,7 +771,7 @@ package body Ghdlrun is
       return "--run-help         Disp help for RUNOPTS options";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : Command_Run_Help;
+   procedure Perform_Action (Cmd : in out Command_Run_Help;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);

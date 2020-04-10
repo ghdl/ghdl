@@ -168,7 +168,7 @@ package body Ghdlvpi is
       Extra_Args : Extra_Args_Func;
    end record;
 
-   procedure Perform_Action (Cmd : Command_Spawn_Type;
+   procedure Perform_Action (Cmd : in out Command_Spawn_Type;
                              Args : Argument_List);
    procedure Decode_Option (Cmd : in out Command_Spawn_Type;
                             Option : String;
@@ -191,7 +191,7 @@ package body Ghdlvpi is
       end if;
    end Decode_Option;
 
-   procedure Perform_Action (Cmd : Command_Spawn_Type;
+   procedure Perform_Action (Cmd : in out Command_Spawn_Type;
                              Args : Argument_List) is
    begin
       Spawn_Compile (Args, Cmd.Extra_Args.all, Cmd.Flag_Verbose);
@@ -202,10 +202,10 @@ package body Ghdlvpi is
    type Command_Vpi_Flags is new Command_Str_Type with record
       Flags : Extra_Args_Func;
    end record;
-   procedure Perform_Action (Cmd : Command_Vpi_Flags;
+   procedure Perform_Action (Cmd : in out Command_Vpi_Flags;
                              Args : Argument_List);
 
-   procedure Perform_Action (Cmd : Command_Vpi_Flags;
+   procedure Perform_Action (Cmd : in out Command_Vpi_Flags;
                              Args : Argument_List)
    is
       pragma Unreferenced (Args);

@@ -79,7 +79,7 @@ package body Ghdlsynth is
                             Option : String;
                             Arg : String;
                             Res : out Option_State);
-   procedure Perform_Action (Cmd : Command_Synth;
+   procedure Perform_Action (Cmd : in out Command_Synth;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Synth; Name : String)
@@ -403,7 +403,7 @@ package body Ghdlsynth is
          return No_Module;
    end Ghdl_Synth;
 
-   procedure Perform_Action (Cmd : Command_Synth;
+   procedure Perform_Action (Cmd : in out Command_Synth;
                              Args : Argument_List)
    is
       Res : Module;
