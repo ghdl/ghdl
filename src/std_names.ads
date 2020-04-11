@@ -747,12 +747,13 @@ package Std_Names is
    Name_Xor_Reduce         : constant Name_Id := Name_First_Ieee_Name + 034;
    Name_Xnor_Reduce        : constant Name_Id := Name_First_Ieee_Name + 035;
    Name_Ceil               : constant Name_Id := Name_First_Ieee_Name + 036;
-   Name_Round              : constant Name_Id := Name_First_Ieee_Name + 037;
-   Name_Log2               : constant Name_Id := Name_First_Ieee_Name + 038;
-   Name_Sin                : constant Name_Id := Name_First_Ieee_Name + 039;
-   Name_Cos                : constant Name_Id := Name_First_Ieee_Name + 040;
-   Name_Ext                : constant Name_Id := Name_First_Ieee_Name + 041;
-   Name_Sxt                : constant Name_Id := Name_First_Ieee_Name + 042;
+   Name_Floor              : constant Name_Id := Name_First_Ieee_Name + 037;
+   Name_Round              : constant Name_Id := Name_First_Ieee_Name + 038;
+   Name_Log2               : constant Name_Id := Name_First_Ieee_Name + 039;
+   Name_Sin                : constant Name_Id := Name_First_Ieee_Name + 040;
+   Name_Cos                : constant Name_Id := Name_First_Ieee_Name + 041;
+   Name_Ext                : constant Name_Id := Name_First_Ieee_Name + 042;
+   Name_Sxt                : constant Name_Id := Name_First_Ieee_Name + 043;
    Name_Last_Ieee_Name     : constant Name_Id := Name_Sxt;
 
    Name_First_Synthesis    : constant Name_Id := Name_Last_Ieee_Name + 1;

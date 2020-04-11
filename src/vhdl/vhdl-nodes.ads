@@ -5705,6 +5705,7 @@ package Vhdl.Nodes is
 
       --  Math_Real
       Iir_Predefined_Ieee_Math_Real_Ceil,
+      Iir_Predefined_Ieee_Math_Real_Floor,
       Iir_Predefined_Ieee_Math_Real_Round,
       Iir_Predefined_Ieee_Math_Real_Log2,
       Iir_Predefined_Ieee_Math_Real_Sin,

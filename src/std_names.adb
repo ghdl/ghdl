@@ -664,6 +664,7 @@ package body Std_Names is
       Def ("xor_reduce",         Name_Xor_Reduce);
       Def ("xnor_reduce",        Name_Xnor_Reduce);
       Def ("ceil",               Name_Ceil);
+      Def ("floor",              Name_Floor);
       Def ("round",              Name_Round);
       Def ("log2",               Name_Log2);
       Def ("sin",                Name_Sin);
