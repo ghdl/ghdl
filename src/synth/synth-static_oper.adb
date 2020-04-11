@@ -1147,6 +1147,13 @@ package body Synth.Static_Oper is
             begin
                return Create_Value_Float (Ceil (Read_Fp64 (Param1)), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Math_Real_Floor =>
+            declare
+               function Floor (Arg : Fp64) return Fp64;
+               pragma Import (C, Floor);
+            begin
+               return Create_Value_Float (Floor (Read_Fp64 (Param1)), Res_Typ);
+            end;
          when Iir_Predefined_Ieee_Math_Real_Round =>
             declare
                function Round (Arg : Fp64) return Fp64;
