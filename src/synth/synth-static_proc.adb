@@ -31,9 +31,13 @@ package body Synth.Static_Proc is
    is
       Inter : constant Node := Get_Interface_Declaration_Chain (Imp);
       Param : constant Valtyp := Get_Value (Syn_Inst, Inter);
+      Val : Heap_Index;
    begin
-      Synth.Heap.Synth_Deallocate (Read_Access (Param));
-      Write_Access (Param.Val.Mem, Null_Heap_Index);
+      Val := Read_Access (Param);
+      if Val /= Null_Heap_Index then
+         Synth.Heap.Synth_Deallocate (Val);
+         Write_Access (Param.Val.Mem, Null_Heap_Index);
+      end if;
    end Synth_Deallocate;
 
    procedure Synth_Static_Procedure (Syn_Inst : Synth_Instance_Acc;
