@@ -39,6 +39,11 @@ package body Vhdl.Ieee.Std_Logic_Arith is
      array (Res_Arg_Kind, Conv_Arg_Kind, Conv_Arg_Kind)
      of Iir_Predefined_Functions;
 
+   subtype Cmp_Arg_Kind is Arg_Kind range Type_Signed .. Type_Int;
+
+   type Cmp_Pattern_Type is array (Cmp_Arg_Kind, Cmp_Arg_Kind)
+     of Iir_Predefined_Functions;
+
    Conv_Uns_Patterns : constant Conv_Pattern_Type :=
      (Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Uns,
@@ -168,6 +173,90 @@ package body Vhdl.Ieee.Std_Logic_Arith is
          others =>
            (others => Iir_Predefined_None)));
 
+   Lt_Patterns : constant Cmp_Pattern_Type :=
+     (Type_Unsigned =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Int),
+      Type_Signed =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Sgn_Int),
+      Type_Int =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Int_Sgn,
+         others => Iir_Predefined_None));
+
+   Le_Patterns : constant Cmp_Pattern_Type :=
+     (Type_Unsigned =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Le_Uns_Int),
+      Type_Signed =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Le_Sgn_Int),
+      Type_Int =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Le_Int_Sgn,
+         others => Iir_Predefined_None));
+
+   Gt_Patterns : constant Cmp_Pattern_Type :=
+     (Type_Unsigned =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Uns_Int),
+      Type_Signed =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Int),
+      Type_Int =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Int_Sgn,
+         others => Iir_Predefined_None));
+
+   Ge_Patterns : constant Cmp_Pattern_Type :=
+     (Type_Unsigned =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Int),
+      Type_Signed =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Int),
+      Type_Int =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Int_Sgn,
+         others => Iir_Predefined_None));
+
+   Eq_Patterns : constant Cmp_Pattern_Type :=
+     (Type_Unsigned =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Int),
+      Type_Signed =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Sgn_Int),
+      Type_Int =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Int_Sgn,
+         others => Iir_Predefined_None));
+
+   Ne_Patterns : constant Cmp_Pattern_Type :=
+     (Type_Unsigned =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Int),
+      Type_Signed =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Sgn,
+         Type_Int      => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Sgn_Int),
+      Type_Int =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Uns,
+         Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Sgn,
+         others => Iir_Predefined_None));
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg : Iir_Package_Declaration)
@@ -212,6 +301,12 @@ package body Vhdl.Ieee.Std_Logic_Arith is
       begin
          return Pats (Res_Kind, Arg1_Kind, Arg2_Kind);
       end Handle_Bin;
+
+      function Handle_Cmp (Pats : Cmp_Pattern_Type)
+                          return Iir_Predefined_Functions is
+      begin
+         return Pats (Arg1_Kind, Arg2_Kind);
+      end Handle_Cmp;
 
       Def : Iir_Predefined_Functions;
    begin
@@ -290,6 +385,18 @@ package body Vhdl.Ieee.Std_Logic_Arith is
                         Def := Handle_Conv (Conv_Uns_Patterns);
                      when Name_Conv_Std_Logic_Vector =>
                         Def := Handle_Conv (Conv_Vec_Patterns);
+                     when Name_Op_Less =>
+                        Def := Handle_Cmp (Lt_Patterns);
+                     when Name_Op_Less_Equal =>
+                        Def := Handle_Cmp (Le_Patterns);
+                     when Name_Op_Greater =>
+                        Def := Handle_Cmp (Gt_Patterns);
+                     when Name_Op_Greater_Equal =>
+                        Def := Handle_Cmp (Ge_Patterns);
+                     when Name_Op_Equality =>
+                        Def := Handle_Cmp (Eq_Patterns);
+                     when Name_Op_Inequality =>
+                        Def := Handle_Cmp (Ne_Patterns);
                      when others =>
                         null;
                   end case;
