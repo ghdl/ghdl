@@ -751,7 +751,9 @@ package Std_Names is
    Name_Log2               : constant Name_Id := Name_First_Ieee_Name + 038;
    Name_Sin                : constant Name_Id := Name_First_Ieee_Name + 039;
    Name_Cos                : constant Name_Id := Name_First_Ieee_Name + 040;
-   Name_Last_Ieee_Name     : constant Name_Id := Name_Cos;
+   Name_Ext                : constant Name_Id := Name_First_Ieee_Name + 041;
+   Name_Sxt                : constant Name_Id := Name_First_Ieee_Name + 042;
+   Name_Last_Ieee_Name     : constant Name_Id := Name_Sxt;
 
    Name_First_Synthesis    : constant Name_Id := Name_Last_Ieee_Name + 1;
    Name_Allconst           : constant Name_Id := Name_First_Synthesis + 000;

@@ -5782,6 +5782,9 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Log,
 
+      Iir_Predefined_Ieee_Std_Logic_Arith_Ext,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Sxt,
+
       Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns,
       Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn,
       Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn,

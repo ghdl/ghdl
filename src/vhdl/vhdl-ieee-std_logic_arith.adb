@@ -397,6 +397,16 @@ package body Vhdl.Ieee.Std_Logic_Arith is
                         Def := Handle_Cmp (Eq_Patterns);
                      when Name_Op_Inequality =>
                         Def := Handle_Cmp (Ne_Patterns);
+                     when Name_Ext =>
+                        if Arg1_Kind /= Type_Slv or Arg2_Kind /= Type_Int then
+                           raise Error;
+                        end if;
+                        Def := Iir_Predefined_Ieee_Std_Logic_Arith_Ext;
+                     when Name_Sxt =>
+                        if Arg1_Kind /= Type_Slv or Arg2_Kind /= Type_Int then
+                           raise Error;
+                        end if;
+                        Def := Iir_Predefined_Ieee_Std_Logic_Arith_Sxt;
                      when others =>
                         null;
                   end case;
