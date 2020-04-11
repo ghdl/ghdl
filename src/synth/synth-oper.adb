@@ -1646,21 +1646,25 @@ package body Synth.Oper is
       Synth_Subprogram_Association
         (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
-      --  If all operands are static, handle the call differently.
-      Static := True;
-      Inter := Inter_Chain;
-      while Inter /= Null_Node loop
-         if not Is_Static (Get_Value (Subprg_Inst, Inter).Val) then
-            Static := False;
-            exit;
-         end if;
-         Inter := Get_Chain (Inter);
-      end loop;
-
-      if Static then
-         Res := Synth_Static_Predefined_Function_Call (Subprg_Inst, Expr);
+      if Is_Error (Subprg_Inst) then
+         Res := No_Valtyp;
       else
-         Res := Synth_Dynamic_Predefined_Function_Call (Subprg_Inst, Expr);
+         --  If all operands are static, handle the call differently.
+         Static := True;
+         Inter := Inter_Chain;
+         while Inter /= Null_Node loop
+            if not Is_Static (Get_Value (Subprg_Inst, Inter).Val) then
+               Static := False;
+               exit;
+            end if;
+            Inter := Get_Chain (Inter);
+         end loop;
+
+         if Static then
+            Res := Synth_Static_Predefined_Function_Call (Subprg_Inst, Expr);
+         else
+            Res := Synth_Dynamic_Predefined_Function_Call (Subprg_Inst, Expr);
+         end if;
       end if;
 
       Free_Instance (Subprg_Inst);
