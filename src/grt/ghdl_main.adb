@@ -45,12 +45,18 @@ is
      (Source => System.Address, Target => Grt.Options.Argv_Type);
 
    My_Argv : Grt.Options.Argv_Type := To_Argv_Type (Argv);
+   Progname : Ghdl_C_String;
 begin
    --  Ada elaboration.
    Grt_Init;
 
    --  Set the options.
-   Grt.Main.Run_Options (My_Argv (0), Argc, My_Argv);
+   if Argc > 0 then
+      Progname := My_Argv (0);
+   else
+      Progname := null;
+   end if;
+   Grt.Main.Run_Options (Progname, Argc, My_Argv);
 
    --  Initialize, elaborate and simulate.
    Grt.Main.Run;
