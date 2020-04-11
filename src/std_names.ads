@@ -919,7 +919,9 @@ package Std_Names is
    Name_Translate_Off :  constant Name_Id := Name_First_Comment + 4;
    Name_Translate_On :   constant Name_Id := Name_First_Comment + 5;
    Name_Translate :      constant Name_Id := Name_First_Comment + 6;
-   Name_Off :            constant Name_Id := Name_First_Comment + 7;
+   Name_Synthesis_Off :  constant Name_Id := Name_First_Comment + 7;
+   Name_Synthesis_On :   constant Name_Id := Name_First_Comment + 8;
+   Name_Off :            constant Name_Id := Name_First_Comment + 9;
    Name_Last_Comment :   constant Name_Id := Name_Off;
 
    --  PSL words.

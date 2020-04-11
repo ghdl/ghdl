@@ -1847,16 +1847,18 @@ package body Vhdl.Scanner is
                     (Warnid_Pragma,
                      "pragma translate must be followed by 'on' or 'off'");
             end case;
-         when Name_Translate_Off =>
+         when Name_Translate_Off
+           |  Name_Synthesis_Off =>
             Scan_Translate_Off;
-         when Name_Translate_On =>
+         when Name_Translate_On
+           |  Name_Synthesis_On =>
             Scan_Translate_On;
          when Name_Label
-           | Name_Label_Applies_To
-           | Name_Return_Port_Name
-           | Name_Map_To_Operator
-           | Name_Type_Function
-           | Name_Built_In =>
+           |  Name_Label_Applies_To
+           |  Name_Return_Port_Name
+           |  Name_Map_To_Operator
+           |  Name_Type_Function
+           |  Name_Built_In =>
             --  Used by synopsys, discarded.
             Skip_Until_EOL;
          when others =>

@@ -790,6 +790,8 @@ package body Std_Names is
       Def ("translate_off",         Name_Translate_Off);
       Def ("translate_on",          Name_Translate_On);
       Def ("translate",             Name_Translate);
+      Def ("synthesis_off",         Name_Synthesis_Off);
+      Def ("synthesis_on",          Name_Synthesis_On);
       Def ("off",                   Name_Off);
 
       --  PSL keywords
