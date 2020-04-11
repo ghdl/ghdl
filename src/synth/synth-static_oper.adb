@@ -809,7 +809,11 @@ package body Synth.Static_Oper is
                return Create_Value_Discrete (Boolean'Pos (Res), Res_Typ);
             end;
 
-         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns =>
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
             return Synth_Add_Uns_Uns (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
