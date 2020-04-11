@@ -724,6 +724,7 @@ package body Synth.Decls is
       --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
       Init : Valtyp;
       Obj_Typ : Type_Acc;
+      Wid : Wire_Id;
    begin
       Synth_Declaration_Type (Syn_Inst, Decl);
       Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
@@ -747,10 +748,14 @@ package body Synth.Decls is
          else
             Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
             Create_Var_Wire (Syn_Inst, Decl, Init);
+            Wid := Get_Value (Syn_Inst, Decl).Val.W;
             if Is_Subprg then
-               Phi_Assign_Net
-                 (Get_Build (Syn_Inst),
-                  Get_Value (Syn_Inst, Decl).Val.W, Get_Net (Init), 0);
+               if Is_Static (Init.Val) then
+                  Phi_Assign_Static (Wid, Get_Memtyp (Init));
+               else
+                  Phi_Assign_Net
+                    (Get_Build (Syn_Inst), Wid, Get_Net (Init), 0);
+               end if;
             end if;
          end if;
       end if;
