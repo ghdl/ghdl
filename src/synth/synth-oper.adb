@@ -408,10 +408,9 @@ package body Synth.Oper is
          return Create_Value_Net (N, Expr_Typ);
       end Synth_Minmax;
 
-      function Synth_Compare_Array (Id, Id_Eq : Compare_Module_Id;
+      function Synth_Compare_Array (Id : Compare_Module_Id;
                                     Res_Type : Type_Acc) return Valtyp
       is
-         pragma Unreferenced (Id_Eq);
          N : Net;
       begin
          if Left.Typ.Kind = Type_Vector then
@@ -815,9 +814,11 @@ package body Synth.Oper is
             end if;
             return Synth_Compare (Id_Ne, Boolean_Type);
          when Iir_Predefined_Array_Greater =>
-            return Synth_Compare_Array (Id_Ugt, Id_Uge, Boolean_Type);
+            return Synth_Compare_Array (Id_Ugt, Boolean_Type);
+         when Iir_Predefined_Array_Greater_Equal =>
+            return Synth_Compare_Array (Id_Uge, Boolean_Type);
          when Iir_Predefined_Array_Less =>
-            return Synth_Compare_Array (Id_Ult, Id_Ule, Boolean_Type);
+            return Synth_Compare_Array (Id_Ult, Boolean_Type);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
@@ -1067,8 +1068,9 @@ package body Synth.Oper is
             end if;
             return Synth_Compare_Uns_Nat (Id_Ult, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Lt_Uns_Uns =>
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Lt_Uns_Uns =>
             --  "<" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ult, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns
@@ -1142,8 +1144,9 @@ package body Synth.Oper is
             return Synth_Compare_Int_Sgn (Id_Sgt, Expr_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Ge_Uns_Uns =>
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Uns_Uns =>
             --  ">=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Uge, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Nat_Uns
