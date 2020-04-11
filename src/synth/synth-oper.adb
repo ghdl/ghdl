@@ -871,7 +871,8 @@ package body Synth.Oper is
             return Synth_Dyadic_Int_Sgn (Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn
            | Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
-           | Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn =>
+           | Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv =>
             --  "-" (Signed, Signed)
             return Synth_Dyadic_Sgn_Sgn (Id_Sub, Left, Right, Expr);
 
@@ -1523,7 +1524,8 @@ package body Synth.Oper is
             --  SIGNED to Integer.
             return Create_Value_Net
               (Synth_Sresize (L, Res_Typ.W, Expr), Res_Typ);
-         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Ext =>
             declare
                W : Width;
             begin
@@ -1536,7 +1538,8 @@ package body Synth.Oper is
                  (Synth_Uresize (Get_Net (L), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
             declare
                W : Width;
             begin
