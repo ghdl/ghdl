@@ -1514,6 +1514,7 @@ package body Synth.Oper is
             return Synth_Conv_Vector (True);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
             return Create_Value_Net
