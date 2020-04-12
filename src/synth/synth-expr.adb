@@ -1445,10 +1445,14 @@ package body Synth.Expr is
                  & "either constant or dynamic");
             return;
          end if;
+
          Synth_Extract_Dyn_Suffix
            (Get_Build (Syn_Inst), Name,
             Pfx_Bnd, Get_Net (Left), Get_Net (Right), Inp, Step, Off.Net_Off,
             Res_Bnd.Len);
+         if Inp = No_Net then
+            return;
+         end if;
          Inp_W := Get_Width (Inp);
          --  FIXME: convert range to offset.
          --  Extract max from the range.
