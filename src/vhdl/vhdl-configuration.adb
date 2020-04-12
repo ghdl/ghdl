@@ -207,7 +207,9 @@ package body Vhdl.Configuration is
                      Error_Msg_Elab
                        (Lib_Unit, "body of %n was never analyzed", +Lib_Unit);
                   elsif Get_Date (Bod) < Get_Date (Unit) then
-                     Error_Msg_Elab (Bod, "%n is outdated", +Bod);
+                     --  Cannot use BOD as location, as the location may not
+                     --  exist.
+                     Error_Msg_Elab (Lib_Unit, "%n is outdated", +Bod);
                      Bod := Null_Iir;
                   end if;
                end if;
