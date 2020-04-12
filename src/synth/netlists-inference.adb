@@ -467,18 +467,18 @@ package body Netlists.Inference is
       return Res;
    end Infere_FF_Else;
 
-   --  LAST_MUX is the mux whose input 0 is the loop and clock for selector.
+   --  CLOCK_MUX is the mux whose input 0 is the loop and clock for selector.
    function Infere_FF (Ctxt : Context_Acc;
                        Val : Net;
                        Prev_Val : Net;
                        Off : Uns32;
-                       Last_Mux : Instance;
+                       Clock_Mux : Instance;
                        Clk : Net;
                        Clk_Enable : Net;
                        Stmt : Synth.Source.Syn_Src) return Net
    is
-      O : constant Net := Get_Output (Last_Mux, 0);
-      Mux_Loc : constant Location_Type := Get_Location (Last_Mux);
+      O : constant Net := Get_Output (Clock_Mux, 0);
+      Mux_Loc : constant Location_Type := Get_Location (Clock_Mux);
       Data : Net;
       Res : Net;
       Sig : Instance;
@@ -487,12 +487,15 @@ package body Netlists.Inference is
       Rst_Val : Net;
       Enable : Net;
       Els : Net;
+      Last_Mux : Instance;
+      --  Previous mux to be free.
+      Prev_Mux : Instance;
    begin
       --  Create and return the DFF.
 
       --  1. Remove the mux that creates the loop (will be replaced by the
       --     dff).
-      Infere_FF_Mux (Ctxt, Prev_Val, Off, Last_Mux, Stmt, Els, Data);
+      Infere_FF_Mux (Ctxt, Prev_Val, Off, Clock_Mux, Stmt, Els, Data);
 
       --  If the signal declaration has an initial value, get it.
       Sig := Get_Net_Parent (Prev_Val);
@@ -505,6 +508,8 @@ package body Netlists.Inference is
             Init := No_Net;
       end case;
 
+      --  As an enable signal, start with the enable extracted from the clock
+      --  to handle conditions like: `rising_edge(clk) and en`
       Enable := Clk_Enable;
 
       --  Look for asynchronous set/reset.  They are muxes after the loop
@@ -514,15 +519,17 @@ package body Netlists.Inference is
       declare
          Done : Boolean;
          Mux : Instance;
-         --  Previous mux to be free.
-         Prev_Mux : Instance;
          Sel : Net;
          Last_Out : Net;
          Mux_Not_Rst : Net;
          Mux_Rst : Net;
          Mux_Rst_Val : Net;
+         Prev_Input : Input;
       begin
-         Prev_Mux := No_Instance;
+         Prev_Mux := Clock_Mux;
+
+         --  LAST_MUX is the last handled mux and LAST_OUT its output.
+         Last_Mux := Clock_Mux;
          Last_Out := O;
 
          --  Initially, the final output is not connected.  So walk from the
@@ -539,19 +546,33 @@ package body Netlists.Inference is
 
             --  The parent must be a mux (it's a chain of muxes).
             Mux := Get_Input_Parent (Get_First_Sink (Last_Out));
+            if Get_Id (Mux) = Id_Nop then
+               --  Should have stopped.
+               exit;
+            end if;
             pragma Assert (Get_Id (Mux) = Id_Mux2);
 
             --  Extract the reset condition and the reset value.
             Sel := Get_Driver (Get_Mux2_Sel (Mux));
-            if Get_Driver (Get_Mux2_I0 (Mux)) = Last_Out then
+            Prev_Input := Get_Mux2_I0 (Mux);
+            if Get_Driver (Prev_Input) = Last_Out then
+               --  Normal reset
                Mux_Rst_Val := Get_Driver (Get_Mux2_I1 (Mux));
                Mux_Rst := Sel;
             else
-               pragma Assert (Get_Driver (Get_Mux2_I1 (Mux)) = Last_Out);
+               --  Inverted reset.
+               Prev_Input := Get_Mux2_I1 (Mux);
+               pragma Assert (Get_Driver (Prev_Input) = Last_Out);
                Mux_Rst_Val := Get_Driver (Get_Mux2_I0 (Mux));
                Mux_Rst := Build_Monadic (Ctxt, Id_Not, Sel);
             end if;
 
+            --  Disconnect this mux.
+            Disconnect (Get_Mux2_I0 (Mux));
+            Disconnect (Get_Mux2_I1 (Mux));
+            Disconnect (Get_Mux2_Sel (Mux));
+
+            Last_Mux := Mux;
             Last_Out := Get_Output (Mux, 0);
             Done := not Is_Connected (Last_Out);
 
@@ -564,11 +585,6 @@ package body Netlists.Inference is
                --      q2 <= d2;
                --      q1 <= d1;
                --    end if;
-
-               --  Remove the mux
-               Disconnect (Get_Mux2_I0 (Mux));
-               Disconnect (Get_Mux2_I1 (Mux));
-               Disconnect (Get_Mux2_Sel (Mux));
 
                --  Add the negation of the condition to the enable signal.
                --  Negate the condition for the current reset.
@@ -591,38 +607,36 @@ package body Netlists.Inference is
                --  FIXME: check for no logical loop.
 
                if Rst = No_Net then
-                  --  Remove the last mux.  Dedicated inputs on the FF
-                  --  are used.
-                  Disconnect (Get_Mux2_I0 (Mux));
-                  Disconnect (Get_Mux2_I1 (Mux));
-                  Disconnect (Get_Mux2_Sel (Mux));
+                  --  First async reset condition.
 
-                  --  The output of the mux is now the reset value.
-                  Redirect_Inputs (Last_Out, Mux_Rst_Val);
+                  --  Keep reset value and condition
+                  Rst := Mux_Rst;
+                  Rst_Val := Mux_Rst_Val;
 
+                  --  Remove the last mux.  Will free this mux.
                   if Prev_Mux /= No_Instance then
                      Remove_Instance (Prev_Mux);
                   end if;
                   Prev_Mux := Mux;
-
-                  Rst := Mux_Rst;
-                  Rst_Val := Mux_Rst_Val;
-                  Last_Out := Mux_Rst_Val;
                else
+                  --  New async reset condition.
                   Rst := Build_Dyadic (Ctxt, Id_Or, Mux_Rst, Rst);
-                  Rst_Val := Last_Out;
 
-                  if Prev_Mux /= No_Instance then
-                     Remove_Instance (Prev_Mux);
-                  end if;
-                  Prev_Mux := No_Instance;
+                  --  Use prev_mux to select the reset value.
+                  Connect (Get_Mux2_Sel (Prev_Mux), Mux_Rst);
+                  Connect (Get_Mux2_I0 (Prev_Mux), Rst_Val);
+                  Connect (Get_Mux2_I1 (Prev_Mux), Mux_Rst_Val);
+
+                  --  The reset value is the output of prev_mux.
+                  Rst_Val := Get_Output (Prev_Mux, 0);
+
+                  --  Allow to free this mux.
+                  Prev_Mux := Mux;
                end if;
             end if;
          end loop;
 
-         if Prev_Mux /= No_Instance then
-            Free_Instance (Mux);
-         end if;
+         pragma Assert (Prev_Mux = No_Instance or else Prev_Mux = Last_Mux);
       end;
 
       if Off = 0
@@ -651,7 +665,9 @@ package body Netlists.Inference is
       --  The output may already be used (if the target is a variable that
       --  is read).  So redirect the net.
       Redirect_Inputs (Get_Output (Last_Mux, 0), Res);
-      Free_Instance (Last_Mux);
+      if Prev_Mux /= No_Instance then
+         Free_Instance (Prev_Mux);
+      end if;
 
       return Res;
    end Infere_FF;
