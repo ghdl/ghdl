@@ -793,14 +793,18 @@ package body Ghdlrun is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--run-help";
+      return
+        Name = "run-help" or else
+        Name = "--run-help";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Run_Help) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--run-help         Disp help for RUNOPTS options";
+      return "run-help"
+        & ASCII.LF & "  Display help for RUNOPTS options"
+        & ASCII.LF & "  alias: --run-help";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Run_Help;

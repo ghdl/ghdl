@@ -173,13 +173,20 @@ package body Ghdllocal is
       procedure P (Str : String) renames Put_Line;
    begin
       P ("Main options (try --options-help for details):");
-      P (" --std=XX       Use XX as VHDL standard (87,93c,93,00,02 or 08)");
-      P (" --work=NAME    Set the name of the WORK library");
-      P (" -PDIR          Add DIR in the library search path");
-      P (" --workdir=DIR  Specify the directory of the WORK library");
-      P (" -fsynopsys     Allow to use synopsys packages in ieee library");
-      P (" -frelaxed      Relax semantic rules");
-      P (" -fexplicit     Gives priority to explicit operator redefinitions");
+      P (" --std=XX");
+      P ("   Use XX as VHDL standard (87,93c,93,00,02 or 08)");
+      P (" --work=NAME");
+      P ("   Set the name of the WORK library");
+      P (" -PDIR");
+      P ("   Add DIR in the library search path");
+      P (" --workdir=DIR");
+      P ("   Specify the directory of the WORK library");
+      P (" -fsynopsys");
+      P ("   Allow to use synopsys packages in ieee library");
+      P (" -frelaxed");
+      P ("   Relax semantic rules");
+      P (" -fexplicit");
+      P ("   Gives priority to explicit operator redefinitions");
    end Disp_Long_Help;
 
    function Is_Directory_Separator (C : Character) return Boolean is
@@ -612,15 +619,20 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      --  '-d' is for compatibility.
-      return Name = "-d" or else Name = "--dir";
+      return
+        Name = "dir" or else
+        Name = "--dir" or else
+        --  '-d' is for compatibility.
+        Name = "-d";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Dir) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--dir [LIBs]       Disp contents of the libraries";
+      return "dir [LIBs]"
+        & ASCII.LF & "  Display contents of the libraries"
+        & ASCII.LF & "  alias: --dir";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Dir; Args : Argument_List)
@@ -648,14 +660,19 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-f";
+      return
+        Name = "files" or else
+        Name = "-f";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Find) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-f FILEs           Disp units in FILES";
+      return "files FILEs"
+        & ASCII.LF & "  Display units in FILES"
+        & ASCII.LF & "  alias: -f";
+
    end Get_Short_Help;
 
    --  Return TRUE is UNIT can be at the apex of a design hierarchy.
@@ -727,14 +744,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-i";
+      return
+        Name = "import" or else
+        Name = "-i";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Import) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-i [OPTS] FILEs    Import units of FILEs";
+      return "import [OPTS] FILEs"
+        & ASCII.LF & "  Import units of FILEs"
+        & ASCII.LF & "  alias: -i";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Import; Args : Argument_List)
@@ -823,14 +844,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-s";
+      return
+        Name = "syntax" or else
+        Name = "-s";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Check_Syntax) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-s [OPTS] FILEs    Check syntax of FILEs";
+      return "syntax [OPTS] FILEs"
+        & ASCII.LF & "  Check syntax of FILEs"
+        & ASCII.LF & "  alias: -s";
    end Get_Short_Help;
 
    procedure Decode_Option (Cmd : in out Command_Check_Syntax;
@@ -931,14 +956,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--clean";
+      return
+        Name = "clean" or else
+        Name = "--clean";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Clean) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--clean            Remove generated files";
+      return "clean"
+        & ASCII.LF & "  Remove generated files"
+        & ASCII.LF & "  alias: --clean";
    end Get_Short_Help;
 
    procedure Delete (Str : String)
@@ -1036,14 +1065,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--remove";
+      return
+        Name = "remove" or else
+        Name = "--remove";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Remove) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--remove           Remove generated files and library file";
+      return "remove"
+        & ASCII.LF & "  Remove generated files and library file"
+        & ASCII.LF & "  alias: --remove";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Remove; Args : Argument_List)
@@ -1070,14 +1103,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--copy";
+      return
+        Name = "copy" or else
+        Name = "--copy";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Copy) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--copy             Copy work library to current directory";
+      return "copy"
+        & ASCII.LF & "  Copy work library to current directory"
+        & ASCII.LF & "  alias: --copy";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Copy; Args : Argument_List)
@@ -1148,14 +1185,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--disp-standard";
+      return
+        Name = "disp-std" or else
+        Name = "--disp-standard";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Disp_Standard) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--disp-standard    Disp std.standard in pseudo-vhdl";
+      return "disp-std"
+        & ASCII.LF & "  Disp std.standard in pseudo-vhdl"
+        & ASCII.LF & "  alias: --disp-standard";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Disp_Standard;
@@ -1185,14 +1226,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--find-top";
+      return
+        Name = "find-top" or else
+        Name = "--find-top";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Find_Top) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--find-top         Disp possible top entity in work library";
+      return "find-top"
+        & ASCII.LF & "  Display possible top entity in work library"
+        & ASCII.LF & "  alias: --find-top";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Find_Top;
@@ -1242,14 +1287,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--bug-box";
+      return
+        Name = "bug-box" or else
+        Name = "--bug-box";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Bug_Box) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "!--bug-box          Crash and emit a bug-box";
+      return "!bug-box"
+        & ASCII.LF & "  Crash and emit a bug-box"
+        & ASCII.LF & "  alias: --bug-box";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Bug_Box;
@@ -1735,14 +1784,18 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--elab-order";
+      return
+        Name = "elab-order" or else
+        Name = "--elab-order";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Elab_Order) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--elab-order [OPTS] UNIT [ARCH]  Display ordered source files";
+      return "elab-order [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Display ordered source files"
+        & ASCII.LF & "  alias: --elab-order";
    end Get_Short_Help;
 
    function Is_Makeable_File (File : Iir_Design_File) return Boolean is

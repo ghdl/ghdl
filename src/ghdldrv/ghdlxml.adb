@@ -523,14 +523,18 @@ package body Ghdlxml is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--file-to-xml";
+      return
+        Name = "file-to-xml" or else
+        Name = "--file-to-xml";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_File_To_Xml) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--file-to-xml FILEs  Dump AST in XML";
+      return "file-to-xml FILEs"
+        & ASCII.LF & "  Dump AST in XML"
+        & ASCII.LF & "  alias: --file-to-xml";
    end Get_Short_Help;
 
    procedure Perform_Action
