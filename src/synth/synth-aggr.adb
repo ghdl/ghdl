@@ -269,6 +269,7 @@ package body Synth.Aggr is
       Assoc : Node;
       Pos : Nat32;
 
+      --  POS is the element position, from 0 to nbr el - 1.
       procedure Set_Elem (Pos : Nat32)
       is
          Val : Valtyp;
@@ -281,7 +282,9 @@ package body Synth.Aggr is
             Const_P := False;
          end if;
          Val := Synth_Subtype_Conversion (Val, El_Type, False, Value);
-         Rec (Nat32 (Pos + 1)) := Val;
+         --  Put in reverse order.  The first record element (at position 0)
+         --  will be the LSB, so the last element of REC.
+         Rec (Nat32 (Rec'Last - Pos)) := Val;
       end Set_Elem;
    begin
       Assoc := Get_Association_Choices_Chain (Aggr);
@@ -297,7 +300,7 @@ package body Synth.Aggr is
                when Iir_Kind_Choice_By_Others =>
                   for I in Rec'Range loop
                      if Rec (I) = No_Valtyp then
-                        Set_Elem (I - 1);
+                        Set_Elem (Rec'Last - I);
                      end if;
                   end loop;
                when Iir_Kind_Choice_By_Name =>
@@ -322,7 +325,7 @@ package body Synth.Aggr is
       Arr : Net_Array_Acc;
       Idx : Nat32;
    begin
-      Arr := new Net_Array (Tab'Range);
+      Arr := new Net_Array (1 .. Tab'Length);
       Idx := 0;
       for I in Arr'Range loop
          if Tab (I).Val /= null then
@@ -395,7 +398,7 @@ package body Synth.Aggr is
          Res := Create_Value_Memory (Aggr_Type);
          for I in Aggr_Type.Rec.E'Range loop
             Write_Value (Res.Val.Mem + Aggr_Type.Rec.E (I).Moff,
-                         Tab_Res (Nat32 (I)));
+                         Tab_Res (Tab_Res'Last - Nat32 (I) + 1));
          end loop;
       else
          Res := Create_Value_Net
