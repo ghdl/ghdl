@@ -517,7 +517,6 @@ package body Netlists.Inference is
       Rst_Val := No_Net;
       Rst := No_Net;
       declare
-         Done : Boolean;
          Mux : Instance;
          Sel : Net;
          Last_Out : Net;
@@ -534,9 +533,7 @@ package body Netlists.Inference is
 
          --  Initially, the final output is not connected.  So walk from the
          --  clocked mux until reaching the final output.
-         Done := Last_Out = Val;
-
-         while not Done loop
+         while Last_Out /= Val loop
             if not Has_One_Connection (Last_Out)
               and then not Is_Const_Net (Last_Out)
             then
@@ -572,9 +569,9 @@ package body Netlists.Inference is
             Disconnect (Get_Mux2_I1 (Mux));
             Disconnect (Get_Mux2_Sel (Mux));
 
+            --  Next net to be handled.
             Last_Mux := Mux;
             Last_Out := Get_Output (Mux, 0);
-            Done := not Is_Connected (Last_Out);
 
             if Is_Prev_FF_Value (Mux_Rst_Val, Prev_Val, Off) then
                --  The mux is like an enable.  Like in this example, q2 is not
