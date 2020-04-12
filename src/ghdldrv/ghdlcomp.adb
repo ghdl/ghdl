@@ -116,14 +116,20 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-r" or Name = "--elab-run";
+      return
+        Name = "elab-run" or else
+        Name = "--elab-run" or else
+        Name = "-r" or else
+        Name = "run";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Run) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-r,--elab-run [OPTS] UNIT [ARCH] [RUNOPTS]  Run UNIT";
+      return "elab-run [OPTS] UNIT [ARCH] [RUNOPTS]"
+        & ASCII.LF & "  Elaborate and run design UNIT"
+        & ASCII.LF & "  aliases: --elab-run, -r, run";
    end Get_Short_Help;
 
 
@@ -171,15 +177,18 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-c";
+      return
+        Name = "compile" or else
+        Name = "-c";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Compile) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-c [OPTS] FILEs -r UNIT [ARCH] [RUNOPTS]  "
-        & "Compile, elaborate and run UNIT";
+      return "compile [OPTS] FILEs -e|-r UNIT [ARCH] [RUNOPTS]"
+        & ASCII.LF & "  Compile, elaborate (and run) design UNIT"
+        & ASCII.LF & "  alias: -c";
    end Get_Short_Help;
 
    procedure Decode_Option (Cmd : in out Command_Compile;
@@ -427,14 +436,19 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-a";
+      return
+        Name = "analyze" or else
+        Name = "-a" or else
+        Name = "analyse";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Analyze) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-a [OPTS] FILEs    Analyze FILEs";
+      return "analyze [OPTS] FILEs"
+        & ASCII.LF & "  Analyze one or multiple VHDL files"
+        & ASCII.LF & "  aliases: -a, analyse";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Analyze;
@@ -564,14 +578,18 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-e";
+      return
+        Name = "elaborate" or else
+        Name = "-e";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Elab) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-e [OPTS] UNIT [ARCH]  Elaborate UNIT";
+      return "elaborate [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Elaborate design UNIT"
+        & ASCII.LF & "  alias: -e";
    end Get_Short_Help;
 
    procedure Decode_Option (Cmd : in out Command_Elab;
@@ -639,14 +657,20 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--dispconfig" or else Name = "--disp-config";
+      return
+        Name = "disp-config" or else
+        Name = "--disp-config" or else
+        Name = "dispconfig" or else
+        Name = "--dispconfig";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Dispconfig) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--disp-config      Disp tools path";
+      return "disp-config"
+        & ASCII.LF & "  Display tools path"
+        & ASCII.LF & "  aliases: --disp-config, dispconfig, --dispconfig";
    end Get_Short_Help;
 
    procedure Disp_Config
@@ -691,14 +715,18 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-m";
+      return
+        Name = "make" or else
+        Name = "-m";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Make) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-m [OPTS] UNIT [ARCH]  Make UNIT";
+      return "make [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Make design UNIT"
+        & ASCII.LF & "  alias: -m";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Make; Args : Argument_List)
@@ -818,14 +846,18 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--gen-makefile";
+      return
+        Name = "gen-makefile" or else
+        Name = "--gen-makefile";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Gen_Makefile) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--gen-makefile [OPTS] UNIT [ARCH]  Generate a Makefile for UNIT";
+      return "gen-makefile [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Generate a Makefile for UNIT"
+        & ASCII.LF & "  alias: --gen-makefile";
    end Get_Short_Help;
 
    function Is_Makeable_File (File : Iir_Design_File) return Boolean is

@@ -749,19 +749,30 @@ package body Ghdldrv is
    procedure Disp_Long_Help (Cmd : Command_Comp) is
    begin
       Disp_Long_Help (Command_Lib (Cmd));
-      Put_Line (" -v             Be verbose");
-      Put_Line (" --GHDL1=PATH   Set the path of the ghdl1 compiler");
-      Put_Line (" --AS=as        Use as for the assembler");
-      Put_Line (" --LINK=gcc     Use gcc for the linker driver");
-      Put_Line (" -S             Do not assemble");
-      Put_Line (" -o FILE        Set the name of the output file");
+      Put_Line (" -v");
+      Put_Line ("   Be verbose");
+      Put_Line (" --GHDL1=PATH");
+      Put_Line ("   Set the path of the ghdl1 compiler");
+      Put_Line (" --AS=as");
+      Put_Line ("   Use as for the assembler");
+      Put_Line (" --LINK=gcc");
+      Put_Line ("   Use gcc for the linker driver");
+      Put_Line (" -S");
+      Put_Line ("   Do not assemble");
+      Put_Line (" -o FILE");
+      Put_Line ("   Set the name of the output file");
    -- Put_Line (" -m32           Generate 32bit code on 64bit machines");
-      Put_Line (" -WX,OPTION     Pass OPTION to X, where X is one of");
-      Put_Line ("                 c: compiler, a: assembler, l: linker");
-      Put_Line (" -g[XX]         Pass debugging option to the compiler");
-      Put_Line (" -O[XX]/-f[XX]  Pass optimization option to the compiler");
-      Put_Line (" -Q             Do not add -quiet option to compiler");
-      Put_Line (" --expect-failure  Expect analysis/elaboration failure");
+      Put_Line (" -WX,OPTION");
+      Put_Line ("   Pass OPTION to X, where X is one of");
+      Put_Line ("  c: compiler, a: assembler, l: linker");
+      Put_Line (" -g[XX]");
+      Put_Line ("   Pass debugging option to the compiler");
+      Put_Line (" -O[XX]/-f[XX]");
+      Put_Line ("   Pass optimization option to the compiler");
+      Put_Line (" -Q");
+      Put_Line ("   Do not add -quiet option to compiler");
+      Put_Line (" --expect-failure");
+      Put_Line ("   Expect analysis/elaboration failure");
    end Disp_Long_Help;
 
    --  Command dispconfig.
@@ -777,14 +788,20 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--dispconfig" or else Name = "--disp-config";
+      return
+        Name = "disp-config" or else
+        Name = "--disp-config" or else
+        Name = "dispconfig" or else
+        Name = "--dispconfig";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Dispconfig) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--disp-config      Disp tools path";
+      return "disp-config"
+        & ASCII.LF & "  Display tools path"
+        & ASCII.LF & "  aliases: --disp-config, dispconfig, --dispconfig";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Dispconfig;
@@ -861,14 +878,18 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--bootstrap-standard";
+      return
+        Name = "bootstrap-std" or else
+        Name = "--bootstrap-standard";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Bootstrap) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--bootstrap-standard  (Internal) compile std.standard";
+      return "bootstrap-std"
+        & ASCII.LF & "  (internal) Compile std.standard"
+        & ASCII.LF & "  alias: --bootstrap-standard";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Bootstrap;
@@ -900,14 +921,19 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-a";
+      return
+        Name = "analyze" or else
+        Name = "-a" or else
+        Name = "analyse";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Analyze) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-a [OPTS] FILEs    Analyze FILEs";
+      return "analyze [OPTS] FILEs"
+        & ASCII.LF & "  Analyze one or multiple VHDL files"
+        & ASCII.LF & "  aliases: -a, analyse";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Analyze;
@@ -1137,14 +1163,18 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-e";
+      return
+        Name = "elaborate" or else
+        Name = "-e";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Elab) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-e [OPTS] UNIT [ARCH]      Elaborate UNIT";
+      return "elaborate [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Elaborate design UNIT"
+        & ASCII.LF & "  alias: -e";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Elab; Args : Argument_List)
@@ -1175,14 +1205,18 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-r";
+      return
+        Name = "run" or else
+        Name = "-r";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Run) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-r UNIT [ARCH] [OPTS]      Run UNIT";
+      return "run UNIT [ARCH] [RUNOPTS]"
+        & ASCII.LF & "  Run design UNIT"
+        & ASCII.LF & "  alias: -r";
    end Get_Short_Help;
 
    procedure Run_Design
@@ -1235,14 +1269,18 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--elab-run";
+      return
+        Name = "elab-run" or else
+        Name = "--elab-run";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Elab_Run) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--elab-run [OPTS] UNIT [ARCH] [OPTS]  Elaborate and run UNIT";
+      return "elab-run [OPTS] UNIT [ARCH] [RUNOPTS]"
+        & ASCII.LF & "  Elaborate and run design UNIT"
+        & ASCII.LF & "  alias: --elab-run";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Elab_Run;
@@ -1277,20 +1315,24 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--bind";
+      return
+        Name = "bind" or else
+        Name = "--bind";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Bind) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--bind [OPTS] UNIT [ARCH]  Bind UNIT";
+      return "bind [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Bind design UNIT"
+        & ASCII.LF & "  alias: --bind";
    end Get_Short_Help;
 
    procedure Perform_Action
      (Cmd : in out Command_Bind; Args : Argument_List) is
    begin
-      Set_Elab_Units (Cmd, "--bind", Args);
+      Set_Elab_Units (Cmd, "bind", Args);
       Setup_Compiler (Cmd, False);
 
       Bind (Cmd);
@@ -1308,14 +1350,18 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--link";
+      return
+        Name = "link" or else
+        Name = "--link";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Link) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--link [OPTS] UNIT [ARCH]  Link UNIT";
+      return "link [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Link design UNIT"
+        & ASCII.LF & "  alias: --link";
    end Get_Short_Help;
 
    procedure Perform_Action
@@ -1342,14 +1388,18 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--list-link";
+      return
+        Name = "list-link" or else
+        Name = "--list-link";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_List_Link) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--list-link [OPTS] UNIT [ARCH]  List objects file to link UNIT";
+      return "list-link [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  List objects file to link UNIT"
+        & ASCII.LF & "  alias: --list-link";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_List_Link;
@@ -1381,15 +1431,19 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-c";
+      return
+        Name = "compile" or else
+        Name = "-c";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Anaelab) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-c [OPTS] FILEs -e UNIT [ARCH]  "
-        & "Generate whole code to elab UNIT from FILEs";
+      return "compile [OPTS] FILEs -e UNIT [ARCH]"
+        & ASCII.LF & "  Generate whole sequence to elaborate "
+        & "design UNIT from FILEs"
+        & ASCII.LF & "  alias: -c";
    end Get_Short_Help;
 
    procedure Decode_Option (Cmd : in out Command_Anaelab;
@@ -1464,23 +1518,27 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-m";
+      return
+        Name = "make" or else
+        Name = "-m";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Make) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-m [OPTS] UNIT [ARCH]  Make UNIT";
+      return "make [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Make design UNIT"
+        & ASCII.LF & "  alias: -m";
    end Get_Short_Help;
 
    procedure Disp_Long_Help (Cmd : Command_Make)
    is
    begin
       Disp_Long_Help (Command_Comp (Cmd));
-      Put_Line (" -b             Bind only; don't link");
-      Put_Line (" -f             Force recompilation of work units");
-      Put_Line (" -Mu            Disp unit dependences (human format)");
+      Put_Line (" -b" & ASCII.LF & "  Bind only; don't link");
+      Put_Line (" -f" & ASCII.LF & "  Force recompilation of work units");
+      Put_Line (" -Mu" & ASCII.LF & "  Disp unit dependences (human format)");
    end Disp_Long_Help;
 
    procedure Init (Cmd : in out Command_Make) is
@@ -1752,14 +1810,18 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--gen-makefile";
+      return
+        Name = "gen-makefile" or else
+        Name = "--gen-makefile";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Gen_Makefile) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--gen-makefile [OPTS] UNIT [ARCH]  Generate a Makefile for UNIT";
+      return "gen-makefile [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Generate a Makefile for design UNIT"
+        & ASCII.LF & "  alias: --gen-makefile";
    end Get_Short_Help;
 
    function Is_Makeable_File (File : Iir_Design_File) return Boolean is
@@ -1789,15 +1851,18 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--gen-depends";
+      return
+        Name = "gen-depends" or else
+        Name = "--gen-depends";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Gen_Depends) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--gen-depends [OPTS] UNIT [ARCH]"
-        & "  Generate dependencies of UNIT";
+      return "gen-depends [OPTS] UNIT [ARCH]"
+        & ASCII.LF & "  Generate dependencies of design UNIT"
+        & ASCII.LF & "  alias: --gen-depends";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Gen_Depends;

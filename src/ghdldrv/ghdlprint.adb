@@ -560,14 +560,18 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--chop";
+      return
+        Name = "chop" or else
+        Name = "--chop";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Chop) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--chop [OPTS] FILEs  Chop FILEs";
+      return "chop [OPTS] FILEs"
+        & ASCII.LF & "  Chop FILEs"
+        & ASCII.LF & "  alias: --chop";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Chop; Args : Argument_List)
@@ -858,14 +862,18 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--lines";
+      return
+        Name = "lines" or else
+        Name = "--lines";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Lines) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--lines FILEs      Precede line with its number";
+      return "lines FILEs"
+        & ASCII.LF & "  Precede line with its number"
+        & ASCII.LF & "  alias: --lines";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Lines; Args : Argument_List)
@@ -988,14 +996,18 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--reprint";
+      return
+        Name = "reprint" or else
+        Name = "--reprint";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Reprint) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--reprint [OPTS] FILEs    Redisplay FILEs";
+      return "reprint [OPTS] FILEs"
+        & ASCII.LF & "  Redisplay FILEs"
+        & ASCII.LF & "  alias: --reprint";
    end Get_Short_Help;
 
    procedure Decode_Option (Cmd : in out Command_Reprint;
@@ -1134,14 +1146,18 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--compare-tokens";
+      return
+        Name = "cmp-tokens" or else
+        Name = "--compare-tokens";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Compare_Tokens) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--compare-tokens [OPTS] REF FILEs    Compare FILEs with REF";
+      return "cmp-tokens [OPTS] REF FILEs"
+        & ASCII.LF & "  Compare FILEs with REF"
+        & ASCII.LF & "  alias: --compare-tokens";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
@@ -1261,14 +1277,18 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--pp-html";
+      return
+        Name = "pp-html" or else
+        Name = "--pp-html";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_PP_Html) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--pp-html FILEs    Pretty-print FILEs in HTML";
+      return "pp-html FILEs"
+        & ASCII.LF & "  Pretty-print FILEs in HTML"
+        & ASCII.LF & "  alias: --pp-html";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_PP_Html;
@@ -1332,14 +1352,18 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--xref-html";
+      return
+        Name = "xref-html" or else
+        Name = "--xref-html";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Xref_Html) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--xref-html FILEs  Display FILEs in HTML with xrefs";
+      return "xref-html FILEs"
+        & ASCII.LF & "  Display FILEs in HTML with xrefs"
+        & ASCII.LF & "  alias: --xref-html";
    end Get_Short_Help;
 
    procedure Decode_Option (Cmd : in out Command_Xref_Html;
@@ -1640,14 +1664,18 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--xref";
+      return
+        Name = "xref" or else
+        Name = "--xref";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Xref) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--xref FILEs  Generate xrefs";
+      return "xref FILEs"
+        & ASCII.LF & "  Generate xrefs"
+        & ASCII.LF & "  alias: --xref";
    end Get_Short_Help;
 
    procedure Perform_Action

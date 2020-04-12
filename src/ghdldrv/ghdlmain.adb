@@ -117,7 +117,10 @@ package body Ghdlmain is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-h" or else Name = "--help";
+      return
+        Name = "help" or else
+        Name = "--help" or else
+        Name = "-h";
    end Decode_Command;
 
    procedure Decode_Option (Cmd : in out Command_Help;
@@ -136,7 +139,9 @@ package body Ghdlmain is
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-h or --help [CMD] Disp this help or [help on CMD]";
+      return "help [CMD]"
+        & ASCII.LF & "  Display this help or [help on CMD]"
+        & ASCII.LF & "  aliases: -h, --help";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Help; Args : Argument_List)
@@ -163,8 +168,8 @@ package body Ghdlmain is
          end loop;
          New_Line;
          Put_Line ("To display the options of a GHDL program,");
-         Put_Line ("  run your program with the --help option.");
-         Put_Line ("Also see --options-help for analyzer options.");
+         Put_Line ("  run your program with the 'help' option.");
+         Put_Line ("Also see 'opts-help' for analyzer options.");
          New_Line;
          Put_Line ("Please, refer to the GHDL manual for more information.");
          Put_Line ("Report issues on https://github.com/ghdl/ghdl");
@@ -177,7 +182,7 @@ package body Ghdlmain is
          Put_Line (Get_Short_Help (C.all));
          Disp_Long_Help (C.all);
       else
-         Error ("Command '--help' accepts at most one argument.");
+         Error ("Command 'help' accepts at most one argument.");
          raise Option_Error;
       end if;
    end Perform_Action;
@@ -195,14 +200,18 @@ package body Ghdlmain is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--options-help";
+      return
+        Name = "opts-help" or else
+        Name = "--options-help";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Option_Help) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--options-help     Disp help for analyzer options";
+      return "opts-help"
+        & ASCII.LF & "  Display help for analyzer options"
+        & ASCII.LF & "  alias: --options-help";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Option_Help;
@@ -212,7 +221,7 @@ package body Ghdlmain is
    begin
       if Args'Length /= 0 then
          Error
-           ("warning: command '--option-help' does not accept any argument");
+           ("warning: command 'opts-help' does not accept any argument");
       end if;
       Options.Disp_Options_Help;
    end Perform_Action;
@@ -230,14 +239,19 @@ package body Ghdlmain is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "-v" or Name = "--version";
+      return
+        Name = "version" or else
+        Name = "--version" or else
+        Name = "-v";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Version) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-v or --version    Disp ghdl version";
+      return "version"
+        & ASCII.LF & "  Display ghdl version"
+        & ASCII.LF & "  aliases: -v, --version";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Version;
@@ -300,7 +314,7 @@ package body Ghdlmain is
       --  Decode command.
       Cmd := Find_Command (Cmd_Name);
       if Cmd = null then
-         Error ("unknown command '" & Cmd_Name & "', try --help");
+         Error ("unknown command '" & Cmd_Name & "', try 'help'");
          raise Option_Error;
       end if;
 
@@ -414,7 +428,7 @@ package body Ghdlmain is
 
       --  Handle case of no argument
       if Argument_Count = 0 then
-         Error ("missing command, try " & Command_Name & " --help");
+         Error ("missing command, try " & Command_Name & " 'help'");
          raise Option_Error;
       end if;
 
