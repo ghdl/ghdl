@@ -300,6 +300,8 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                   --  parameter, clear the flag to allow more optimizations.
                   Set_Has_Active_Flag
                     (Get_Interface_Declaration_Chain (Decl), False);
+               when Name_To_Bit =>
+                  Predefined := Iir_Predefined_Ieee_1164_To_Bit;
                when Name_To_Bitvector =>
                   Predefined := Iir_Predefined_Ieee_1164_To_Bitvector;
                when Name_To_Stdulogic =>

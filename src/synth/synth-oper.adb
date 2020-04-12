@@ -831,7 +831,10 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Uns =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns_Uns (Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
@@ -859,7 +862,10 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log =>
+           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Uns
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Slv
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns_Uns (Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
@@ -1132,7 +1138,8 @@ package body Synth.Oper is
             --  ">" (Natural, Unsigned) [resize]
             return Synth_Compare_Nat_Uns (Id_Ugt, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn =>
+           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn
+           | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Sgn =>
             --  ">" (Signed, Signed) [resize]
             return Synth_Compare_Sgn_Sgn (Id_Sgt, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int
@@ -1507,6 +1514,8 @@ package body Synth.Oper is
                raise Internal_Error;
             end if;
             return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
+         when Iir_Predefined_Ieee_1164_To_Bit =>
+            return Create_Value_Net (Get_Net (L), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             return Synth_Conv_Vector (False);
