@@ -2,9 +2,11 @@
 
 . ../../testenv.sh
 
-$GHDL -i hello.vhdl pkg.vhdl
-sleep 1
-$GHDL -r --expect-failure hello
+if $GHDL --version | grep -q mcode; then
+  $GHDL -i hello.vhdl pkg.vhdl
+  sleep 1
+  $GHDL -r --expect-failure hello
+fi
 
 clean
 
