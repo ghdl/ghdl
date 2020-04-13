@@ -26,7 +26,7 @@ The following tips might be useful:
 
   * Use :option:`--ieee=synopsys <--ieee>` if your design depends on a non-standard implementation of the IEEE library.
 
-  * Use :option:`-fexplicit` and :option:`-frelaxed-rules` if needed. For instance when relaxing VHDL 2008's need for shared variables to be protected types, you can use `--std=08 -frelaxed`.
+  * Use :option:`-fexplicit` and :option:`-frelaxed-rules` if needed. For instance when relaxing VHDL 2008's need for shared variables to be protected types, you can use ``--std=08 -frelaxed-rules``.
 
 * Use :option:`--work=LIB_NAME <--work>` to analyze files into the ``LIB_NAME`` library.
   To use files analyzed to a different directory, give the path
