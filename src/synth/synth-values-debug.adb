@@ -43,6 +43,9 @@ package body Synth.Values.Debug is
    procedure Debug_Memtyp (M : Memtyp) is
    begin
       case M.Typ.Kind is
+         when Type_Bit
+           | Type_Logic =>
+            Put ("bit/logic");
          when Type_Vector =>
             Put ("vector (");
             Debug_Bound (M.Typ.Vbound);
@@ -79,8 +82,18 @@ package body Synth.Values.Debug is
          when Type_Discrete =>
             Put ("discrete: ");
             Put_Int64 (Read_Discrete (M));
-         when others =>
-            Put ("others");
+         when Type_Access =>
+            Put ("access");
+         when Type_File =>
+            Put ("file");
+         when Type_Float =>
+            Put ("float");
+         when Type_Slice =>
+            Put ("slice");
+         when Type_Unbounded_Vector =>
+            Put ("unbounded vector");
+         when Type_Unbounded_Array =>
+            Put ("unbounded array");
       end case;
       New_Line;
    end Debug_Memtyp;
