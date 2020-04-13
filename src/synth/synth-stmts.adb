@@ -2157,6 +2157,10 @@ package body Synth.Stmts is
    begin
       if Cond /= Null_Node then
          Cond_Val := Synth_Expression (C.Inst, Cond);
+         if Cond_Val = No_Valtyp then
+            Set_Error (C.Inst);
+            return;
+         end if;
          pragma Assert (Is_Static_Val (Cond_Val.Val));
          if Get_Static_Discrete (Cond_Val) = 0 then
             --  Not executed.
