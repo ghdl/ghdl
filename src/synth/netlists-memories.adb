@@ -154,12 +154,19 @@ package body Netlists.Memories is
       declare
          Inp : Input;
          Extr_Inst : Instance;
+         Idx : Instance;
+         Step : Uns32;
       begin
          Inp := Get_First_Sink (Orig_Net);
          while Inp /= No_Input loop
             Extr_Inst := Get_Input_Parent (Inp);
             case Get_Id (Extr_Inst) is
                when Id_Dyn_Extract =>
+                  --  Extract step from memidx gate.
+                  Idx := Get_Net_Parent (Get_Input_Net (Extr_Inst, 1));
+                  pragma Assert (Get_Id (Idx) = Id_Memidx);
+                  Step := Get_Param_Uns32 (Idx, 0);
+
                   --  Check offset
                   if Get_Param_Uns32 (Extr_Inst, 0) /= 0 then
                      Info_Msg_Synth
@@ -170,10 +177,18 @@ package body Netlists.Memories is
                   end if;
                   --  Check data width.
                   W := Get_Width (Get_Output (Extr_Inst, 0));
+                  pragma Assert (W > 0);
+                  if W > Step then
+                     Info_Msg_Synth
+                       (+Extr_Inst, "overlapping read from memory %n",
+                        (1 => +Orig));
+                     Data_W := 0;
+                     return;
+                  end if;
                   if Data_W = 0 then
-                     pragma Assert (W /= 0);
-                     Data_W := W;
-                  elsif Data_W /= W then
+                     pragma Assert (Step /= 0);
+                     Data_W := Step;
+                  elsif Data_W /= Step then
                      Info_Msg_Synth
                        (+Extr_Inst, "read from memory %n with different size",
                         (1 => +Orig));
@@ -489,12 +504,14 @@ package body Netlists.Memories is
    --
    --  Infere a synchronous read if the dyn_extract is connected to a dff.
    function Create_Read_Port
-     (Ctxt : Context_Acc; Last : Net; Addr : Net; Val : Net) return Instance
+     (Ctxt : Context_Acc; Last : Net; Addr : Net; Val : Net; Step : Width)
+     return Instance
    is
       W : constant Width := Get_Width (Val);
       Res : Instance;
       Inp : Input;
       Iinst : Instance;
+      N : Net;
    begin
       Inp := Get_First_Sink (Val);
       if Get_Next_Sink (Inp) = No_Input then
@@ -513,8 +530,13 @@ package body Netlists.Memories is
                Disconnect (Clk_Inp);
                En := Build_Const_UB32 (Ctxt, 1, 1);
                Disconnect (Inp);
-               Res := Build_Mem_Rd_Sync (Ctxt, Last, Addr, Clk, En, W);
-               Redirect_Inputs (Get_Output (Iinst, 0), Get_Output (Res, 1));
+               Res := Build_Mem_Rd_Sync (Ctxt, Last, Addr, Clk, En, Step);
+
+               --  Slice the output.
+               N := Get_Output (Res, 1);
+               N := Build2_Extract (Ctxt, N, 0, W);
+
+               Redirect_Inputs (Get_Output (Iinst, 0), N);
                Remove_Instance (Iinst);
                return Res;
             end;
@@ -541,8 +563,13 @@ package body Netlists.Memories is
                Disconnect (Dff_Din);
                Disconnect (Clk_Inp);
                Remove_Instance (Iinst);
-               Res := Build_Mem_Rd_Sync (Ctxt, Last, Addr, Clk, En, W);
-               Redirect_Inputs (Dff_Out, Get_Output (Res, 1));
+               Res := Build_Mem_Rd_Sync (Ctxt, Last, Addr, Clk, En, Step);
+
+               --  Slice the output.
+               N := Get_Output (Res, 1);
+               N := Build2_Extract (Ctxt, N, 0, W);
+
+               Redirect_Inputs (Dff_Out, N);
                Remove_Instance (Dff_Inst);
                return Res;
             end;
@@ -550,16 +577,20 @@ package body Netlists.Memories is
       end if;
 
       --  Replace Dyn_Extract with mem_rd.
-      Res := Build_Mem_Rd (Ctxt, Last, Addr, W);
+      Res := Build_Mem_Rd (Ctxt, Last, Addr, Step);
 
-      Redirect_Inputs (Val, Get_Output (Res, 1));
+      --  Slice the output.
+      N := Get_Output (Res, 1);
+      N := Build2_Extract (Ctxt, N, 0, W);
+
+      Redirect_Inputs (Val, N);
 
       return Res;
    end Create_Read_Port;
 
    --  MEM_INST is the memory instance.
    procedure Replace_Read_Ports
-     (Ctxt : Context_Acc; Orig : Instance; Mem_Inst : Instance)
+     (Ctxt : Context_Acc; Orig : Instance; Mem_Inst : Instance; Step : Width)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
       Last : Net;
@@ -569,7 +600,6 @@ package body Netlists.Memories is
       Addr_Inp : Input;
       Addr : Net;
       Val : Net;
-      Val_W : Width;
       Port_Inst : Instance;
    begin
       Last := Get_Output (Mem_Inst, 0);
@@ -595,11 +625,10 @@ package body Netlists.Memories is
                Addr := Get_Driver (Addr_Inp);
                Disconnect (Addr_Inp);
                Val := Get_Output (Extr_Inst, 0);
-               Val_W := Get_Width (Val);
-               Convert_Memidx (Ctxt, Orig, Addr, Val_W);
+               Convert_Memidx (Ctxt, Orig, Addr, Step);
 
                --  Replace Dyn_Extract with mem_rd.
-               Port_Inst := Create_Read_Port (Ctxt, Last, Addr, Val);
+               Port_Inst := Create_Read_Port (Ctxt, Last, Addr, Val, Step);
 
                Remove_Instance (Extr_Inst);
 
@@ -615,14 +644,15 @@ package body Netlists.Memories is
    end Replace_Read_Ports;
 
    --  ORIG (the memory) must be Const.
-   procedure Replace_ROM_Memory (Ctxt : Context_Acc; Orig : Instance)
+   procedure Replace_ROM_Memory
+     (Ctxt : Context_Acc; Orig : Instance; Step : Width)
    is
       Orig_Net : constant Net := Get_Output (Orig, 0);
       Inst : Instance;
    begin
       Inst := Build_Memory_Init (Ctxt, Get_Width (Orig_Net), Orig_Net);
 
-      Replace_Read_Ports (Ctxt, Orig, Inst);
+      Replace_Read_Ports (Ctxt, Orig, Inst, Step);
    end Replace_ROM_Memory;
 
    --  Try to reach Id_Signal/Id_Isignal (TODO: Id_Output) from dyn_insert
@@ -1706,7 +1736,7 @@ package body Netlists.Memories is
                   Info_Msg_Synth
                     (+Inst, "found ROM %n, width: %v bits, depth: %v",
                      (1 => +Inst, 2 => +Data_W, 3 => +Size));
-                  Replace_ROM_Memory (Ctxt, Inst);
+                  Replace_ROM_Memory (Ctxt, Inst, Data_W);
                end if;
             else
                if Validate_RAM_Multiple (Inst) then
