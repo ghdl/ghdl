@@ -2860,6 +2860,7 @@ package body Synth.Stmts is
                            States : Net) return Net
    is
       use PSL.NFAs;
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       S : NFA_State;
       S_Num : Int32;
       D_Num : Int32;
@@ -2875,14 +2876,14 @@ package body Synth.Stmts is
       S := Get_First_State (NFA);
       while S /= No_State loop
          S_Num := Get_State_Label (S);
-         I := Build_Extract_Bit (Build_Context, States, Uns32 (S_Num));
+         I := Build_Extract_Bit (Ctxt, States, Uns32 (S_Num));
 
          --  For each edge:
          E := Get_First_Src_Edge (S);
          while E /= No_Edge loop
             --  Edge condition.
             Cond := Build_Dyadic
-              (Build_Context, Netlists.Gates.Id_And,
+              (Ctxt, Netlists.Gates.Id_And,
                I, Synth_PSL_Expression (Syn_Inst, Get_Edge_Expr (E)));
 
             --  TODO: if EOS is present, then this is a live state.
@@ -2893,7 +2894,7 @@ package body Synth.Stmts is
                D_Arr (D_Num) := Cond;
             else
                D_Arr (D_Num) := Build_Dyadic
-                 (Build_Context, Netlists.Gates.Id_Or, D_Arr (D_Num), Cond);
+                 (Ctxt, Netlists.Gates.Id_Or, D_Arr (D_Num), Cond);
             end if;
 
             E := Get_Next_Src_Edge (E);
@@ -2903,7 +2904,7 @@ package body Synth.Stmts is
       end loop;
 
       if D_Arr (Nbr_States - 1) = No_Net then
-         D_Arr (Nbr_States - 1) := Build_Const_UB32 (Build_Context, 0, 1);
+         D_Arr (Nbr_States - 1) := Build_Const_UB32 (Ctxt, 0, 1);
       end if;
 
       Concat_Array (D_Arr.all, Res);
