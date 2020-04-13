@@ -35,6 +35,7 @@ with Synth.Oper;
 with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 with Synth.Ieee.Numeric_Std; use Synth.Ieee.Numeric_Std;
 with Synth.Files_Operations;
+with Synth.Values; use Synth.Values;
 
 package body Synth.Static_Oper is
    --  As log2(3m) is directly referenced, the program must be linked with -lm
@@ -972,32 +973,32 @@ package body Synth.Static_Oper is
    end Synth_Static_Monadic_Predefined;
 
    function Eval_To_Vector (Arg : Uns64; Sz : Int64; Res_Type : Type_Acc)
-                           return Valtyp
+                           return Memtyp
    is
       Len : constant Iir_Index32 := Iir_Index32 (Sz);
       El_Type : constant Type_Acc := Get_Array_Element (Res_Type);
-      Res : Valtyp;
+      Res : Memtyp;
       Bnd : Type_Acc;
       B : Uns64;
    begin
       Bnd := Create_Vec_Type_By_Length (Width (Len), El_Type);
-      Res := Create_Value_Memory (Bnd);
+      Res := Create_Memory (Bnd);
       for I in 1 .. Len loop
          B := Shift_Right_Arithmetic (Arg, Natural (I - 1)) and 1;
-         Write_Std_Logic (Res.Val.Mem, Uns32 (Len - I),
+         Write_Std_Logic (Res.Mem, Uns32 (Len - I),
                           Std_Ulogic'Val (Std_Logic_0_Pos + B));
       end loop;
       return Res;
    end Eval_To_Vector;
 
-   function Eval_Unsigned_To_Integer (Arg : Valtyp; Loc : Node) return Int64
+   function Eval_Unsigned_To_Integer (Arg : Memtyp; Loc : Node) return Int64
    is
       Res : Uns64;
       V : Std_Ulogic;
    begin
       Res := 0;
       for I in 1 .. Vec_Length (Arg.Typ) loop
-         V := Std_Ulogic'Val (Read_U8 (Arg.Val.Mem + Size_Type (I - 1)));
+         V := Std_Ulogic'Val (Read_U8 (Arg.Mem + Size_Type (I - 1)));
          case To_X01 (V) is
             when '0' =>
                Res := Res * 2;
@@ -1013,7 +1014,7 @@ package body Synth.Static_Oper is
       return To_Int64 (Res);
    end Eval_Unsigned_To_Integer;
 
-   function Eval_Signed_To_Integer (Arg : Valtyp; Loc : Node) return Int64
+   function Eval_Signed_To_Integer (Arg : Memtyp; Loc : Node) return Int64
    is
       Len : constant Iir_Index32 := Vec_Length (Arg.Typ);
       Res : Uns64;
@@ -1025,7 +1026,7 @@ package body Synth.Static_Oper is
          return 0;
       end if;
 
-      E := Std_Ulogic'Val (Read_U8 (Arg.Val.Mem));
+      E := Std_Ulogic'Val (Read_U8 (Arg.Mem));
       case To_X01 (E) is
          when '0' =>
             Res := 0;
@@ -1036,7 +1037,7 @@ package body Synth.Static_Oper is
             return 0;
       end case;
       for I in 2 .. Len loop
-         E := Std_Ulogic'Val (Read_U8 (Arg.Val.Mem + Size_Type (I - 1)));
+         E := Std_Ulogic'Val (Read_U8 (Arg.Mem + Size_Type (I - 1)));
          case To_X01 (E) is
             when '0' =>
                Res := Res * 2;
@@ -1051,7 +1052,7 @@ package body Synth.Static_Oper is
    end Eval_Signed_To_Integer;
 
    function Synth_Static_Predefined_Function_Call
-     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
+     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Memtyp
    is
       Imp  : constant Node := Get_Implementation (Expr);
       Def : constant Iir_Predefined_Functions :=
@@ -1086,7 +1087,7 @@ package body Synth.Static_Oper is
                Res : Boolean;
             begin
                Res := Synth.Files_Operations.Endfile (Param1.Val.File, Expr);
-               return Create_Value_Discrete (Boolean'Pos (Res), Boolean_Type);
+               return Create_Memory_U8 (Boolean'Pos (Res), Boolean_Type);
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
@@ -1103,30 +1104,30 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
-            return Create_Value_Discrete
-              (Eval_Unsigned_To_Integer (Param1, Expr), Res_Typ);
+            return Create_Memory_Discrete
+              (Eval_Unsigned_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int =>
             --  SIGNED to Integer
-            return Create_Value_Discrete
-              (Eval_Signed_To_Integer (Param1, Expr), Res_Typ);
+            return Create_Memory_Discrete
+              (Eval_Signed_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
 
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
             declare
                El_Type : constant Type_Acc := Get_Array_Element (Res_Typ);
-               Res : Valtyp;
+               Res : Memtyp;
                Bnd : Type_Acc;
                B : Std_Ulogic;
             begin
                Bnd := Create_Vec_Type_By_Length
                  (Uns32 (Vec_Length (Param1.Typ)), El_Type);
-               Res := Create_Value_Memory (Bnd);
+               Res := Create_Memory (Bnd);
                for I in 1 .. Vec_Length (Param1.Typ) loop
                   if Read_U8 (Param1.Val.Mem + Size_Type (I - 1)) = 0 then
                      B := '0';
                   else
                      B := '1';
                   end if;
-                  Write_Std_Logic (Res.Val.Mem, Uns32 (I - 1), B);
+                  Write_Std_Logic (Res.Mem, Uns32 (I - 1), B);
                end loop;
                return Res;
             end;
@@ -1135,48 +1136,48 @@ package body Synth.Static_Oper is
                function Log2 (Arg : Fp64) return Fp64;
                pragma Import (C, Log2);
             begin
-               return Create_Value_Float (Log2 (Read_Fp64 (Param1)), Res_Typ);
+               return Create_Memory_Fp64 (Log2 (Read_Fp64 (Param1)), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Ceil =>
             declare
                function Ceil (Arg : Fp64) return Fp64;
                pragma Import (C, Ceil);
             begin
-               return Create_Value_Float (Ceil (Read_Fp64 (Param1)), Res_Typ);
+               return Create_Memory_Fp64 (Ceil (Read_Fp64 (Param1)), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Floor =>
             declare
                function Floor (Arg : Fp64) return Fp64;
                pragma Import (C, Floor);
             begin
-               return Create_Value_Float (Floor (Read_Fp64 (Param1)), Res_Typ);
+               return Create_Memory_Fp64 (Floor (Read_Fp64 (Param1)), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Round =>
             declare
                function Round (Arg : Fp64) return Fp64;
                pragma Import (C, Round);
             begin
-               return Create_Value_Float (Round (Read_Fp64 (Param1)), Res_Typ);
+               return Create_Memory_Fp64 (Round (Read_Fp64 (Param1)), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Sin =>
             declare
                function Sin (Arg : Fp64) return Fp64;
                pragma Import (C, Sin);
             begin
-               return Create_Value_Float (Sin (Read_Fp64 (Param1)), Res_Typ);
+               return Create_Memory_Fp64 (Sin (Read_Fp64 (Param1)), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Math_Real_Cos =>
             declare
                function Cos (Arg : Fp64) return Fp64;
                pragma Import (C, Cos);
             begin
-               return Create_Value_Float (Cos (Read_Fp64 (Param1)), Res_Typ);
+               return Create_Memory_Fp64 (Cos (Read_Fp64 (Param1)), Res_Typ);
             end;
          when others =>
             Error_Msg_Synth
               (+Expr, "unhandled (static) function: "
                  & Iir_Predefined_Functions'Image (Def));
-            return No_Valtyp;
+            return Null_Memtyp;
       end case;
    end Synth_Static_Predefined_Function_Call;
 

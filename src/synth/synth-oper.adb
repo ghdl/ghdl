@@ -1690,7 +1690,8 @@ package body Synth.Oper is
          end loop;
 
          if Static then
-            Res := Synth_Static_Predefined_Function_Call (Subprg_Inst, Expr);
+            Res := Create_Value_Memtyp
+              (Synth_Static_Predefined_Function_Call (Subprg_Inst, Expr));
          else
             Res := Synth_Dynamic_Predefined_Function_Call (Subprg_Inst, Expr);
          end if;

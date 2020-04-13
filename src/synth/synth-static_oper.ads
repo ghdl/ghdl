@@ -19,8 +19,8 @@
 --  MA 02110-1301, USA.
 
 with Synth.Objtypes; use Synth.Objtypes;
-with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Static_Oper is
@@ -35,6 +35,6 @@ package Synth.Static_Oper is
                                              Expr : Node) return Memtyp;
 
    function Synth_Static_Predefined_Function_Call
-     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
+     (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Memtyp;
 
 end Synth.Static_Oper;
