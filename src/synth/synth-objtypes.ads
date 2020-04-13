@@ -153,8 +153,9 @@ package Synth.Objtypes is
    type Memory_Element is mod 2**8;
    type Memory_Array is array (Size_Type range <>) of Memory_Element;
 
-   --  Flat pointer for a generic pointer.
+   --  Thin pointer for a generic pointer.
    type Memory_Ptr is access all Memory_Array (Size_Type);
+   pragma No_Strict_Aliasing (Memory_Ptr);
 
    type Memtyp is record
       Typ : Type_Acc;
