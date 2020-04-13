@@ -164,6 +164,10 @@ package body Netlists.Memories is
                when Id_Dyn_Extract =>
                   --  Extract step from memidx gate.
                   Idx := Get_Net_Parent (Get_Input_Net (Extr_Inst, 1));
+                  if Get_Id (Idx) = Id_Addidx then
+                     --  Multi-dim arrays, lowest index is the first one.
+                     Idx := Get_Net_Parent (Get_Input_Net (Idx, 0));
+                  end if;
                   pragma Assert (Get_Id (Idx) = Id_Memidx);
                   Step := Get_Param_Uns32 (Idx, 0);
 
@@ -247,7 +251,6 @@ package body Netlists.Memories is
    end Count_Memidx;
 
    --  Lower memidx/addidx to simpler gates (concat).
-   --  MEM is the memory (used to get its size).
    --  MEM_SIZE: size of the memory (in bits).
    --  ADDR is the address net with memidx/addidx gates.
    --  VAL_WD is the width of the data port.
@@ -311,7 +314,7 @@ package body Netlists.Memories is
       pragma Unreferenced (Mem_Depth);
 
       --  Do checks on memidx.
-      Last_Size := Mem_Size;
+      Last_Size := 0;
       for I in Indexes'Range loop
          declare
             Inst : constant Instance := Indexes (I).Inst;
@@ -322,10 +325,19 @@ package body Netlists.Memories is
             Max_W : constant Width := Clog2 (Max + 1);
             Sub_Addr1 : Net;
          begin
-            --  Check max
+            --  Check max (from previous dimension).
             pragma Assert (Max /= 0);
-            if (Max + 1) * Step /= Last_Size then
-               raise Internal_Error;
+            if I /= Indexes'First then
+               if Last_Size /= Step then
+                  raise Internal_Error;
+               end if;
+            end if;
+            Last_Size := (Max + 1) * Step;
+
+            if I = Indexes'First then
+               if Step /= Val_Wd then
+                  raise Internal_Error;
+               end if;
             end if;
 
             --  Check addr width.
@@ -340,15 +352,12 @@ package body Netlists.Memories is
                Sub_Addr1 := Sub_Addr;
             end if;
             Indexes (I).Addr := Sub_Addr1;
-
-            if I = Indexes'Last then
-               if Step /= Val_Wd then
-                  raise Internal_Error;
-               end if;
-            end if;
-            Last_Size := Step;
          end;
       end loop;
+
+      if Last_Size /= Mem_Size then
+         raise Internal_Error;
+      end if;
 
       --  Lower (just concat addresses).
       declare
@@ -368,6 +377,7 @@ package body Netlists.Memories is
       --  Free addidx and memidx.
       declare
          N : Net;
+         Inp : Input;
          Inst : Instance;
          Inst2 : Instance;
       begin
@@ -379,12 +389,21 @@ package body Netlists.Memories is
                   Remove_Instance (Inst);
                   exit;
                when Id_Addidx =>
-                  Inst2 := Get_Input_Instance (Inst, 0);
+                  --  Remove the first input (a memidx).
+                  Inp := Get_Input (Inst, 0);
+                  Inst2 := Get_Net_Parent (Get_Driver (Inp));
                   if Get_Id (Inst2) /= Id_Memidx then
                      raise Internal_Error;
                   end if;
+                  Disconnect (Inp);
                   Remove_Instance (Inst2);
-                  N := Get_Input_Net (Inst, 1);
+
+                  --  Continue with the second input.
+                  Inp := Get_Input (Inst, 1);
+                  N := Get_Driver (Inp);
+                  Disconnect (Inp);
+
+                  --  Remove the addidx.
                   Remove_Instance (Inst);
                when others =>
                   raise Internal_Error;

@@ -1150,9 +1150,10 @@ package body Synth.Expr is
               + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
          else
             Ivoff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
-            Ivoff := Build_Memidx (Get_Build (Syn_Inst), Ivoff, El_Typ.W,
-                                   Bnd.Len - 1,
-                                   Width (Clog2 (Uns64 (Stride * Bnd.Len))));
+            Ivoff := Build_Memidx
+              (Get_Build (Syn_Inst), Ivoff, El_Typ.W * Stride,
+               Bnd.Len - 1,
+               Width (Clog2 (Uns64 (Stride * Bnd.Len))));
             Set_Location (Ivoff, Idx_Expr);
 
             if Voff = No_Net then
