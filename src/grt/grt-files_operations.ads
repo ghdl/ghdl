@@ -22,8 +22,11 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with Grt.Types; use Grt.Types;
+
 with Interfaces;
+
+with Grt.Types; use Grt.Types;
+with Grt.Stdio;
 
 package Grt.Files_Operations is
    type Ghdl_File_Index is new Interfaces.Integer_32;
@@ -143,4 +146,15 @@ package Grt.Files_Operations is
                               Status : out Op_Status);
 
    procedure Ghdl_File_Flush (File : Ghdl_File_Index; Status : out Op_Status);
+
+   type Open_Handler_Acc is access function
+     (Name : Ghdl_C_String; Mode : Ghdl_C_String) return Grt.Stdio.FILEs;
+
+   --  Like fopen(3)
+   function Simple_Open (Name : Ghdl_C_String; Mode : Ghdl_C_String)
+                        return Grt.Stdio.FILEs;
+
+   --  Function called to open a file.  This hook can be used to search a file
+   --  on a path.
+   Open_Handler : Open_Handler_Acc := Simple_Open'Access;
 end Grt.Files_Operations;

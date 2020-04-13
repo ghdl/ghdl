@@ -52,6 +52,7 @@ with Synth.Decls; use Synth.Decls;
 with Synth.Expr; use Synth.Expr;
 with Synth.Source; use Synth.Source;
 with Synth.Debugger;
+with Synth.Files_Operations;
 
 package body Synth.Insts is
    Root_Instance : Synth_Instance_Acc;
@@ -1463,6 +1464,10 @@ package body Synth.Insts is
          --  Black box.
          return;
       end if;
+
+      --  Save the current architecture, so that files can be open using a
+      --  path relative to the architecture filename.
+      Synth.Files_Operations.Set_Design_Unit (Arch);
 
       Synth_Dependencies (Root_Instance, Get_Design_Unit (Arch));
 

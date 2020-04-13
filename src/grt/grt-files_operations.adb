@@ -249,6 +249,12 @@ package body Grt.Files_Operations is
       return;
    end Ghdl_File_Endfile;
 
+   function Simple_Open (Name : Ghdl_C_String; Mode : Ghdl_C_String)
+                        return C_Files is
+   begin
+      return fopen (To_Address (Name), To_Address (Mode));
+   end Simple_Open;
+
    Sig_Header : constant String := "#GHDL-BINARY-FILE-0.0" & Nl;
 
    Std_Output_Name : constant String := "STD_OUTPUT" & NUL;
@@ -309,7 +315,7 @@ package body Grt.Files_Operations is
             Str_Mode (2) := 'b';
             Str_Mode (3) := NUL;
          end if;
-         F := fopen (To_Address (Name), Str_Mode'Address);
+         F := Open_Handler (Name, To_Ghdl_C_String (Str_Mode'Address));
          if F = NULL_Stream then
             Status := Op_Name_Error;
             return;

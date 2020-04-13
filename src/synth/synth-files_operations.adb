@@ -19,9 +19,12 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Files_Map;
+with Name_Table;
 
 with Grt.Types; use Grt.Types;
 with Grt.Files_Operations; use Grt.Files_Operations;
+with Grt.Stdio;
 
 with Vhdl.Annotations;
 
@@ -30,6 +33,11 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Errors; use Synth.Errors;
 
 package body Synth.Files_Operations is
+
+   --  Variables to store the search path.
+   Current_Unit : Node := Null_Node;
+   Current_Pfx_Len : Integer := -1;
+   Current_Pfx_Id : Name_Id := No_Name_Id;
 
    --  Representation of file name compatible with C (so NUL terminated).
    subtype C_File_Name is String (1 .. 1025);
@@ -84,6 +92,84 @@ package body Synth.Files_Operations is
       Status := Op_Ok;
    end Convert_File_Name;
 
+   procedure Set_Design_Unit (Unit : Node) is
+   begin
+      Current_Unit := Unit;
+      Current_Pfx_Id := No_Name_Id;
+   end Set_Design_Unit;
+
+   function Synth_Open (Name : Ghdl_C_String; Mode : Ghdl_C_String)
+                       return Grt.Stdio.FILEs
+   is
+      use Grt.Stdio;
+      Res : FILEs;
+   begin
+      --  Try to open the file using the name given.
+      Res := fopen (To_Address (Name), To_Address (Mode));
+      if Res /= NULL_Stream then
+         --  File found.
+         return Res;
+      end if;
+
+      --  Return now if the search path is not used:
+      --  mode is not read, or
+      --  no search path given.
+      if Mode (1) /= 'r' then
+         return Res;
+      end if;
+      if Current_Unit = Null_Node then
+         return NULL_Stream;
+      end if;
+
+      --  The search path is given by the current unit.  Extract it from the
+      --  filename (and cache the result).
+      if Current_Pfx_Id = No_Name_Id then
+         declare
+            use Files_Map;
+            use Name_Table;
+
+            Loc : Location_Type;
+            Sfe : Source_File_Entry;
+            Name_Len : Natural;
+            Name_Ptr : Thin_String_Ptr;
+         begin
+            Loc := Get_Location (Current_Unit);
+            Sfe := Location_To_File (Loc);
+            Current_Pfx_Id := Get_File_Name (Sfe);
+            Name_Len := Get_Name_Length (Current_Pfx_Id);
+            Name_Ptr := Get_Name_Ptr (Current_Pfx_Id);
+            Current_Pfx_Len := 0;
+            for I in reverse 1 .. Name_Len loop
+               if Name_Ptr (I) = '/' or else Name_Ptr (I) = '\' then
+                  Current_Pfx_Len := I;
+                  exit;
+               end if;
+            end loop;
+         end;
+      end if;
+
+      --  No prefix.
+      if Current_Pfx_Len = 0 then
+         return NULL_Stream;
+      end if;
+
+      --  Try with prefix + name.
+      declare
+         use Name_Table;
+         Name_Len : constant Natural := strlen (Name);
+         Pfx : constant Thin_String_Ptr := Get_Name_Ptr (Current_Pfx_Id);
+         Name2 : String (1 .. Name_Len + Current_Pfx_Len + 1);
+      begin
+         Name2 (1 .. Current_Pfx_Len) := Pfx (1 .. Current_Pfx_Len);
+         Name2 (Current_Pfx_Len + 1 .. Current_Pfx_Len + Name_Len) :=
+           Name (1 .. Name_Len);
+         Name2 (Name2'Last) := NUL;
+         Res := fopen (Name2'Address, To_Address (Mode));
+      end;
+
+      return Res;
+   end Synth_Open;
+
    function Elaborate_File_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node) return File_Index
    is
@@ -98,6 +184,11 @@ package body Synth.Files_Operations is
       File_Mode : Ghdl_I32;
       Status : Op_Status;
    begin
+      --  Use our own handler to open a file.
+      --  We need to do this assignment only once, but it is simpler to do it
+      --  here.
+      Open_Handler := Synth_Open'Access;
+
       if Get_Text_File_Flag (File_Type) then
          F := Ghdl_Text_File_Elaborate;
       else
