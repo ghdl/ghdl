@@ -20,7 +20,8 @@
 
 with Ada.Unchecked_Conversion;
 with System;
-with System.Storage_Elements;
+
+with Grt.Types; use Grt.Types;
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
@@ -111,6 +112,17 @@ package body Synth.Values is
    begin
       return Is_Equal (Get_Memtyp (L), Get_Memtyp (R));
    end Is_Equal;
+
+   function Create_Value_Memtyp (Mt : Memtyp) return Valtyp
+   is
+      subtype Value_Type_Memory is Value_Type (Value_Memory);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Value_Type_Memory);
+      Res : Value_Acc;
+   begin
+      Res := To_Value_Acc (Alloc (Current_Pool, (Kind => Value_Memory,
+                                                 Mem => Mt.Mem)));
+      return (Mt.Typ, Res);
+   end Create_Value_Memtyp;
 
    function Create_Value_Wire (W : Wire_Id) return Value_Acc
    is
@@ -312,81 +324,6 @@ package body Synth.Values is
       return Res;
    end Unshare;
 
-   type Ghdl_U8_Ptr is access all Ghdl_U8;
-   function To_U8_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_U8_Ptr);
-
-   procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8) is
-   begin
-      To_U8_Ptr (Mem).all := Val;
-   end Write_U8;
-
-   function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8 is
-   begin
-      return To_U8_Ptr (Mem).all;
-   end Read_U8;
-
-   type Ghdl_I32_Ptr is access all Ghdl_I32;
-   function To_I32_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_I32_Ptr);
-
-   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32) is
-   begin
-      To_I32_Ptr (Mem).all := Val;
-   end Write_I32;
-
-   function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32 is
-   begin
-      return To_I32_Ptr (Mem).all;
-   end Read_I32;
-
-   type Ghdl_U32_Ptr is access all Ghdl_U32;
-   function To_U32_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_U32_Ptr);
-
-   procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32) is
-   begin
-      To_U32_Ptr (Mem).all := Val;
-   end Write_U32;
-
-   function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32 is
-   begin
-      return To_U32_Ptr (Mem).all;
-   end Read_U32;
-
-   type Ghdl_I64_Ptr is access all Ghdl_I64;
-   function To_I64_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_I64_Ptr);
-
-   procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64) is
-   begin
-      To_I64_Ptr (Mem).all := Val;
-   end Write_I64;
-
-   function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64 is
-   begin
-      return To_I64_Ptr (Mem).all;
-   end Read_I64;
-
-   type Fp64_Ptr is access all Fp64;
-   function To_Fp64_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Fp64_Ptr);
-
-   procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64) is
-   begin
-      To_Fp64_Ptr (Mem).all := Val;
-   end Write_Fp64;
-
-   function Read_Fp64 (Mem : Memory_Ptr) return Fp64 is
-   begin
-      return To_Fp64_Ptr (Mem).all;
-   end Read_Fp64;
-
-   function Read_Fp64 (Mt : Memtyp) return Fp64 is
-   begin
-      return Read_Fp64 (Mt.Mem);
-   end Read_Fp64;
-
    type Heap_Index_Ptr is access all Heap_Index;
    function To_Heap_Index_Ptr is
       new Ada.Unchecked_Conversion (Memory_Ptr, Heap_Index_Ptr);
@@ -406,50 +343,10 @@ package body Synth.Values is
       return Read_Access (Mt.Mem);
    end Read_Access;
 
-   function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
-   is
-      use System.Storage_Elements;
-
-      function To_Address is new Ada.Unchecked_Conversion
-        (Memory_Ptr, System.Address);
-      function To_Memory_Ptr is new Ada.Unchecked_Conversion
-        (System.Address, Memory_Ptr);
-   begin
-      return To_Memory_Ptr (To_Address (Base) + Storage_Offset (Off));
-   end "+";
-
-   procedure Write_Discrete (Mem : Memory_Ptr; Typ : Type_Acc; Val : Int64) is
-   begin
-      case Typ.Sz is
-         when 1 =>
-            Write_U8 (Mem, Ghdl_U8 (Val));
-         when 4 =>
-            Write_I32 (Mem, Ghdl_I32 (Val));
-         when 8 =>
-            Write_I64 (Mem, Ghdl_I64 (Val));
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Write_Discrete;
-
    procedure Write_Discrete (Vt : Valtyp; Val : Int64) is
    begin
       Write_Discrete (Vt.Val.Mem, Vt.Typ, Val);
    end Write_Discrete;
-
-   function Read_Discrete (Mt : Memtyp) return Int64 is
-   begin
-      case Mt.Typ.Sz is
-         when 1 =>
-            return Int64 (Read_U8 (Mt.Mem));
-         when 4 =>
-            return Int64 (Read_I32 (Mt.Mem));
-         when 8 =>
-            return Int64 (Read_I64 (Mt.Mem));
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Read_Discrete;
 
    function Read_Discrete (Vt : Valtyp) return Int64 is
    begin
@@ -512,8 +409,6 @@ package body Synth.Values is
       end case;
       return Res;
    end Create_Value_Uns;
-
-   pragma Unreferenced (Read_U32);
 
    function Create_Value_Int (Val : Int64; Vtype : Type_Acc) return Valtyp
    is

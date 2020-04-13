@@ -20,6 +20,7 @@
 
 with Ada.Unchecked_Conversion;
 with System;
+with System.Storage_Elements;
 
 with Mutils; use Mutils;
 
@@ -561,6 +562,185 @@ package body Synth.Objtypes is
             raise Internal_Error;
       end case;
    end Is_Matching_Bounds;
+
+   type Ghdl_U8_Ptr is access all Ghdl_U8;
+   function To_U8_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_U8_Ptr);
+
+   procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8) is
+   begin
+      To_U8_Ptr (Mem).all := Val;
+   end Write_U8;
+
+   function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8 is
+   begin
+      return To_U8_Ptr (Mem).all;
+   end Read_U8;
+
+   function Read_U8 (Mt : Memtyp) return Ghdl_U8
+   is
+      pragma Assert (Mt.Typ.Sz = 1);
+   begin
+      return Read_U8 (Mt.Mem);
+   end Read_U8;
+
+   type Ghdl_I32_Ptr is access all Ghdl_I32;
+   function To_I32_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_I32_Ptr);
+
+   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32) is
+   begin
+      To_I32_Ptr (Mem).all := Val;
+   end Write_I32;
+
+   function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32 is
+   begin
+      return To_I32_Ptr (Mem).all;
+   end Read_I32;
+
+   type Ghdl_U32_Ptr is access all Ghdl_U32;
+   function To_U32_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_U32_Ptr);
+
+   procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32) is
+   begin
+      To_U32_Ptr (Mem).all := Val;
+   end Write_U32;
+
+   function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32 is
+   begin
+      return To_U32_Ptr (Mem).all;
+   end Read_U32;
+
+   type Ghdl_I64_Ptr is access all Ghdl_I64;
+   function To_I64_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_I64_Ptr);
+
+   procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64) is
+   begin
+      To_I64_Ptr (Mem).all := Val;
+   end Write_I64;
+
+   function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64 is
+   begin
+      return To_I64_Ptr (Mem).all;
+   end Read_I64;
+
+   type Fp64_Ptr is access all Fp64;
+   function To_Fp64_Ptr is
+      new Ada.Unchecked_Conversion (Memory_Ptr, Fp64_Ptr);
+
+   procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64) is
+   begin
+      To_Fp64_Ptr (Mem).all := Val;
+   end Write_Fp64;
+
+   function Read_Fp64 (Mem : Memory_Ptr) return Fp64 is
+   begin
+      return To_Fp64_Ptr (Mem).all;
+   end Read_Fp64;
+
+   function Read_Fp64 (Mt : Memtyp) return Fp64 is
+   begin
+      return Read_Fp64 (Mt.Mem);
+   end Read_Fp64;
+
+   function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
+   is
+      use System.Storage_Elements;
+
+      function To_Address is new Ada.Unchecked_Conversion
+        (Memory_Ptr, System.Address);
+      function To_Memory_Ptr is new Ada.Unchecked_Conversion
+        (System.Address, Memory_Ptr);
+   begin
+      return To_Memory_Ptr (To_Address (Base) + Storage_Offset (Off));
+   end "+";
+
+   function Read_Discrete (Mt : Memtyp) return Int64 is
+   begin
+      case Mt.Typ.Sz is
+         when 1 =>
+            return Int64 (Read_U8 (Mt.Mem));
+         when 4 =>
+            return Int64 (Read_I32 (Mt.Mem));
+         when 8 =>
+            return Int64 (Read_I64 (Mt.Mem));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Read_Discrete;
+
+   procedure Write_Discrete (Mem : Memory_Ptr; Typ : Type_Acc; Val : Int64) is
+   begin
+      case Typ.Sz is
+         when 1 =>
+            Write_U8 (Mem, Ghdl_U8 (Val));
+         when 4 =>
+            Write_I32 (Mem, Ghdl_I32 (Val));
+         when 8 =>
+            Write_I64 (Mem, Ghdl_I64 (Val));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Write_Discrete;
+
+   function Alloc_Memory (Vtype : Type_Acc) return Memory_Ptr
+   is
+      function To_Memory_Ptr is new Ada.Unchecked_Conversion
+        (System.Address, Memory_Ptr);
+      M : System.Address;
+   begin
+      Areapools.Allocate (Current_Pool.all, M,
+                          Vtype.Sz, Size_Type (2 ** Natural (Vtype.Al)));
+      return To_Memory_Ptr (M);
+   end Alloc_Memory;
+
+   function Create_Memory (Vtype : Type_Acc) return Memtyp is
+   begin
+      return (Vtype, Alloc_Memory (Vtype));
+   end Create_Memory;
+
+   function Create_Memory_U8 (Val : Ghdl_U8; Vtype : Type_Acc)
+                             return Memtyp
+   is
+      pragma Assert (Vtype.Sz = 1);
+      Res : Memory_Ptr;
+   begin
+      Res := Alloc_Memory (Vtype);
+      Write_U8 (Res, Val);
+      return (Vtype, Res);
+   end Create_Memory_U8;
+
+   function Create_Memory_Fp64 (Val : Fp64; Vtype : Type_Acc)
+                               return Memtyp
+   is
+      pragma Assert (Vtype.Sz = 8);
+      Res : Memory_Ptr;
+   begin
+      Res := Alloc_Memory (Vtype);
+      Write_Fp64 (Res, Val);
+      return (Vtype, Res);
+   end Create_Memory_Fp64;
+
+   function Create_Memory_Discrete (Val : Int64; Vtype : Type_Acc)
+                                   return Memtyp
+   is
+      Res : Memory_Ptr;
+   begin
+      Res := Alloc_Memory (Vtype);
+      case Vtype.Sz is
+         when 1 =>
+            Write_U8 (Res, Ghdl_U8 (Val));
+         when 4 =>
+            Write_I32 (Res, Ghdl_I32 (Val));
+         when 8 =>
+            Write_I64 (Res, Ghdl_I64 (Val));
+         when others =>
+            raise Internal_Error;
+      end case;
+      return (Vtype, Res);
+   end Create_Memory_Discrete;
 
    procedure Init is
    begin

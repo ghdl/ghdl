@@ -656,9 +656,10 @@ package body Synth.Oper is
       Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
-         return Synth_Static_Dyadic_Predefined
-           (Syn_Inst, Imp,
-            Get_Value_Memtyp (Left), Get_Value_Memtyp (Right), Expr);
+         return Create_Value_Memtyp
+           (Synth_Static_Dyadic_Predefined (Syn_Inst, Imp,
+                                            Get_Value_Memtyp (Left),
+                                            Get_Value_Memtyp (Right), Expr));
       end if;
 
       Strip_Const (Left);
@@ -1385,8 +1386,9 @@ package body Synth.Oper is
       Strip_Const (Operand);
 
       if Is_Static_Val (Operand.Val) then
-         return Synth_Static_Monadic_Predefined
-           (Syn_Inst, Imp, Get_Value_Memtyp (Operand), Loc);
+         return Create_Value_Memtyp (Synth_Static_Monadic_Predefined
+                                       (Syn_Inst, Imp,
+                                        Get_Value_Memtyp (Operand), Loc));
       end if;
 
       case Def is

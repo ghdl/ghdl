@@ -28,11 +28,11 @@ package Synth.Static_Oper is
                                             Imp : Node;
                                             Left : Memtyp;
                                             Right : Memtyp;
-                                            Expr : Node) return Valtyp;
+                                            Expr : Node) return Memtyp;
    function Synth_Static_Monadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                              Imp : Node;
                                              Operand : Memtyp;
-                                             Expr : Node) return Valtyp;
+                                             Expr : Node) return Memtyp;
 
    function Synth_Static_Predefined_Function_Call
      (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;

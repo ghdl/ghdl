@@ -23,6 +23,8 @@ with Areapools; use Areapools;
 
 with Netlists; use Netlists;
 
+with Grt.Types; use Grt.Types;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Objtypes is
@@ -236,6 +238,41 @@ package Synth.Objtypes is
    function Is_Matching_Bounds (L, R : Type_Acc) return Boolean;
 
    function Get_Type_Width (Atype : Type_Acc) return Width;
+
+   --  Low-level functions.
+
+   function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr;
+
+   procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8);
+   function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8;
+   function Read_U8 (Mt : Memtyp) return Ghdl_U8;
+
+   procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32);
+   function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32;
+
+   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32);
+   function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32;
+
+   procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64);
+   function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64;
+
+   procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64);
+   function Read_Fp64 (Mem : Memory_Ptr) return Fp64;
+   function Read_Fp64 (Mt : Memtyp) return Fp64;
+
+   procedure Write_Discrete (Mem : Memory_Ptr; Typ : Type_Acc; Val : Int64);
+   function Read_Discrete (Mt : Memtyp) return Int64;
+
+   --  Memory allocation.
+
+   function Create_Memory_U8 (Val : Ghdl_U8; Vtype : Type_Acc)
+                             return Memtyp;
+   function Create_Memory_Fp64 (Val : Fp64; Vtype : Type_Acc)
+                               return Memtyp;
+   function Create_Memory_Discrete (Val : Int64; Vtype : Type_Acc)
+                                   return Memtyp;
+
+   function Create_Memory (Vtype : Type_Acc) return Memtyp;
 
    procedure Init;
 

@@ -23,7 +23,6 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Areapools; use Areapools;
 
-with Grt.Types; use Grt.Types;
 with Grt.Files_Operations;
 
 with Netlists; use Netlists;
@@ -113,6 +112,8 @@ package Synth.Values is
    function Is_Equal (L, R : Valtyp) return Boolean;
    function Is_Equal (L, R : Memtyp) return Boolean;
 
+   function Create_Value_Memtyp (Mt : Memtyp) return Valtyp;
+
    --  Create a Value_Net.
    function Create_Value_Net (N : Net; Ntype : Type_Acc) return Valtyp;
 
@@ -164,22 +165,13 @@ package Synth.Values is
 
    --  Memory access.
    procedure Write_Discrete (Vt : Valtyp; Val : Int64);
-   function Read_Discrete (Mt : Memtyp) return Int64;
    function Read_Discrete (Vt : Valtyp) return Int64;
 
    procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index);
-   function Read_Access (Vt : Valtyp) return Heap_Index;
    function Read_Access (Mt : Memtyp) return Heap_Index;
+   function Read_Access (Vt : Valtyp) return Heap_Index;
 
-   function Read_Fp64 (Mem : Memory_Ptr) return Fp64;
-   function Read_Fp64 (Mt : Memtyp) return Fp64;
    function Read_Fp64 (Vt : Valtyp) return Fp64;
-
-   --  Low level subprograms.
-   function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8;
-   procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8);
-
-   function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr;
 
    procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type);
    procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp);
