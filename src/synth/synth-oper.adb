@@ -868,6 +868,9 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns_Uns (Id_Sub, Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns =>
+            --  "-" (Natural, Unsigned)
+            return Synth_Dyadic_Nat_Uns (Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
             --  "-" (Signed, Integer)
