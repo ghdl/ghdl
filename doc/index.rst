@@ -104,7 +104,6 @@
    using/Foreign
    using/ImplementationOfVHDL
    using/ImplementationOfVITAL
-   examples/README
 
 .. raw:: latex
 
