@@ -575,24 +575,35 @@ package body Synth.Oper is
          return Create_Value_Net (N, Res_Typ);
       end Synth_Sdivmod;
 
-      function Synth_Shift (Id_Pos : Module_Id; Id_Neg : Module_Id)
+      function Synth_Shift (Sh_Pos : Module_Id; Sh_Neg : Module_Id)
                            return Valtyp
       is
-         pragma Unreferenced (Id_Neg);
          L1, R1 : Net;
-         N : Net;
-         Is_Pos : Boolean;
+         N, Nn, Nr1, Cond : Net;
       begin
-         Is_Pos := Is_Positive (Right);
-
          L1 := Get_Net (Left);
          R1 := Get_Net (Right);
-         if Is_Pos then
-            N := Build_Shift_Rotate (Ctxt, Id_Pos, L1, R1);
-         else
-            raise Internal_Error;
-         end if;
+
+         --  Handle the case when the RHS is positive.
+         N := Build_Shift_Rotate (Ctxt, Sh_Pos, L1, R1);
          Set_Location (N, Expr);
+
+         if not Is_Positive (Right) then
+            --  If we cannot trivially prove that the RHS is positive, also
+            --  handle the case when it could be negative.
+            --  At worst, the optimizer will remove that part.
+            Nr1 := Build_Monadic (Ctxt, Id_Neg, R1);
+            Set_Location (Nr1, Expr);
+            Nn := Build_Shift_Rotate (Ctxt, Sh_Neg, L1, Nr1);
+
+            --  Extract the sign bit.
+            Cond := Build_Extract (Ctxt, R1, Get_Width (R1) - 1, 1);
+            Set_Location (Cond, Expr);
+
+            N := Build_Mux2 (Ctxt, Cond, N, Nn);
+            Set_Location (N, Expr);
+         end if;
+
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Shift;
 
@@ -1306,7 +1317,7 @@ package body Synth.Oper is
             return No_Valtyp;
 
          when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
-            return Synth_Shift (Id_Asr, Id_None);
+            return Synth_Shift (Id_Asr, Id_Lsl);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int =>
             return Synth_Shift (Id_Lsl, Id_Lsr);
