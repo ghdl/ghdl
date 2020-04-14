@@ -4548,7 +4548,10 @@ package body Vhdl.Sem_Names is
       Set_Named_Entity (Name, Expr);
       if Expr = Null_Iir then
          Error_Msg_Sem (+Name, "%n cannot be used as expression", +Name);
-         return Create_Error_Expr (Name, A_Type);
+         --  Note: this creates a loop.
+         Res := Create_Error_Expr (Name, A_Type);
+         Set_Named_Entity (Name, Res);
+         return Res;
       end if;
 
       if not Is_Overload_List (Expr) then
