@@ -27,7 +27,6 @@ You can define a subprogram in a foreign language (such as `C` or
 .. ATTENTION::
   As a consequence of the runtime copyright, you are not allowed to distribute an executable produced by GHDL without allowing access to the VHDL sources. See :ref:`INTRO:Copyrights`.
 
-.. _foreign_declarations:
 
 Foreign declarations
 ====================
