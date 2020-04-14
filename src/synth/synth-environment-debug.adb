@@ -22,27 +22,26 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Netlists.Dump; use Netlists.Dump;
 
 package body Synth.Environment.Debug is
-   procedure Dump_Wire_Id (Id : Wire_Id)
+   procedure Dump_Wire (Wid : Wire_Id)
    is
-      W_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Id);
+      W_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
    begin
-      Put ("Wire:" & Wire_Id'Image (Id));
+      Put ("Wire:" & Wire_Id'Image (Wid));
       Put_Line ("  kind: " & Wire_Kind'Image (W_Rec.Kind));
       Put_Line (" decl:" & Source.Syn_Src'Image (W_Rec.Decl));
       Put (" gate: ");
-      Dump_Net_Name (W_Rec.Gate);
+      Dump_Net_Name (W_Rec.Gate, True);
       New_Line;
       Put_Line (" cur_assign:" & Seq_Assign'Image (W_Rec.Cur_Assign));
       Put_Line (" conc_assign:" & Conc_Assign'Image(W_Rec.Final_Assign));
-   end Dump_Wire_Id;
+   end Dump_Wire;
 
    procedure Dump_Partial_Assign (Pasgn : Partial_Assign)
    is
       procedure Dump_Value (N : Net) is
       begin
          if N /= No_Net then
-            Dump_Net_Name (N);
-            Put ("{w=" & Uns32'Image (Get_Width (N)) & '}');
+            Dump_Net_Name (N, True);
             Put (" := ");
             Disp_Instance (Get_Net_Parent (N), False, 0);
          else
@@ -76,6 +75,14 @@ package body Synth.Environment.Debug is
       Put (", phi:" & Phi_Id'Image (Rec.Phi));
       Put (", chain:" & Seq_Assign'Image (Rec.Chain));
       New_Line;
+      declare
+         W_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Rec.Id);
+      begin
+         Put_Line (" wire decl:" & Source.Syn_Src'Image (W_Rec.Decl));
+         Put (" wire gate: ");
+         Dump_Net_Name (W_Rec.Gate, True);
+         New_Line;
+      end;
       Put_Line (" value:");
       if Rec.Val.Is_Static then
          Put_Line ("   static");

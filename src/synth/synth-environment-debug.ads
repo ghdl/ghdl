@@ -19,7 +19,7 @@
 --  MA 02110-1301, USA.
 
 package Synth.Environment.Debug is
-   procedure Dump_Wire_Id (Id : Wire_Id);
+   procedure Dump_Wire (Wid : Wire_Id);
    procedure Dump_Assign (Asgn : Seq_Assign);
    procedure Dump_Conc_Assigns (First : Conc_Assign);
 private
