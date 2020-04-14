@@ -795,7 +795,8 @@ package body Netlists.Inference is
                     Val : Net;
                     Off : Uns32;
                     Prev_Val : Net;
-                    Stmt : Synth.Source.Syn_Src) return Net
+                    Stmt : Synth.Source.Syn_Src;
+                    Last_Use : Boolean) return Net
    is
       pragma Assert (Val /= No_Net);
       pragma Assert (Prev_Val /= No_Net);
@@ -815,6 +816,10 @@ package body Netlists.Inference is
       Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
       if Len <= 0 then
          --  No logical loop or self assignment.
+         return Val;
+      end if;
+      if Last_Use and then Has_One_Connection (Prev_Val) then
+         --  Value is not used, to be removed.  Do not try to infere anything.
          return Val;
       end if;
 

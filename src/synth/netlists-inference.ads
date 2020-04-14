@@ -32,9 +32,13 @@ package Netlists.Inference is
    --  To be called when there is an assignment to a signal/output of VAL and
    --  the previous value is PREV_VAL (an Id_Signal or Id_Output).
    --  If there is a loop, infere a dff or a latch or emit an error.
+   --  LAST_USE is true iff PREV_VAL won't be reused anywhere else.  So, if
+   --   PREV_VAL is only used in VAL, this is a closed logic that could be
+   --   ignored.
    function Infere (Ctxt : Context_Acc;
                     Val : Net;
                     Off : Uns32;
                     Prev_Val : Net;
-                    Stmt : Synth.Source.Syn_Src) return Net;
+                    Stmt : Synth.Source.Syn_Src;
+                    Last_Use : Boolean) return Net;
 end Netlists.Inference;

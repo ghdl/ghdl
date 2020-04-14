@@ -365,8 +365,12 @@ package body Synth.Environment is
                if Synth.Flags.Flag_Debug_Noinference then
                   Res := Pa.Value;
                else
+                  --  Note: lifetime is currently based on the kind of the
+                  --   wire (variable -> not reused beyond this process).
+                  --   This is OK for vhdl but not general.
                   Res := Inference.Infere
-                    (Ctxt, Pa.Value, Pa.Offset, Outport, Stmt);
+                    (Ctxt, Pa.Value, Pa.Offset, Outport, Stmt,
+                     Wire_Rec.Kind = Wire_Variable);
                end if;
 
                Add_Conc_Assign (Wid, Res, Pa.Offset, Stmt);
