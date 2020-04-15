@@ -275,19 +275,20 @@ package Netlists.Gates is
    --  Virtual gate to gather 2 dffs of a multiport memory.
    Id_Mem_Multiport : constant Module_Id := 79;
 
-   --  Positive/rising edge detector.  This is a pseudo gate.
-   --  A negative edge detector can be made using by negating the clock before
-   --  the detector.
-   Id_Edge : constant Module_Id := 80;
+   --  Positive/rising edge and negative/falling edge detector.
+   --  These are pseudo gates.
+   Id_Posedge : constant Module_Id := 80;
+   Id_Negedge : constant Module_Id := 81;
+   subtype Edge_Module_Id is Module_Id range Id_Posedge .. Id_Negedge;
 
    --  Input signal must always be true.
-   Id_Assert : constant Module_Id := 81;
-   Id_Assume : constant Module_Id := 82;
+   Id_Assert : constant Module_Id := 82;
+   Id_Assume : constant Module_Id := 83;
 
    --  Input is true when a sequence is covered.
-   Id_Cover : constant Module_Id := 83;
+   Id_Cover : constant Module_Id := 84;
    --  Use to cover the precedent of an assertion.
-   Id_Assert_Cover : constant Module_Id := 84;
+   Id_Assert_Cover : constant Module_Id := 85;
 
    --  Formal gates.
    Id_Allconst : constant Module_Id := 90;

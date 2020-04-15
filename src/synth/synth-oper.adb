@@ -1500,22 +1500,17 @@ package body Synth.Oper is
       case Def is
          when Iir_Predefined_Ieee_1164_Rising_Edge =>
             declare
-               Clk : Net;
                Edge : Net;
             begin
-               Clk := Get_Net (L);
-               Edge := Build_Edge (Ctxt, Clk);
-               return Create_Value_Net (Edge, Boolean_Type);
+               Edge := Build_Posedge (Ctxt, Get_Net (L));
+               return Create_Value_Net (Edge, Res_Typ);
             end;
          when Iir_Predefined_Ieee_1164_Falling_Edge =>
             declare
-               Clk : Net;
                Edge : Net;
             begin
-               Clk := Get_Net (L);
-               Clk := Build_Monadic (Ctxt, Id_Not, Clk);
-               Edge := Build_Edge (Ctxt, Clk);
-               return Create_Value_Net (Edge, Boolean_Type);
+               Edge := Build_Negedge (Ctxt, Get_Net (L));
+               return Create_Value_Net (Edge, Res_Typ);
             end;
          when Iir_Predefined_Ieee_1164_Scalar_Is_X
            | Iir_Predefined_Ieee_1164_Vector_Is_X =>

@@ -86,7 +86,8 @@ package Netlists.Builders is
    function Build_Const_Log (Ctxt : Context_Acc;
                              W : Width) return Instance;
 
-   function Build_Edge (Ctxt : Context_Acc; Src : Net) return Net;
+   function Build_Posedge (Ctxt : Context_Acc; Src : Net) return Net;
+   function Build_Negedge (Ctxt : Context_Acc; Src : Net) return Net;
 
    function Build_Mux2 (Ctxt : Context_Acc;
                         Sel : Net;
@@ -222,7 +223,8 @@ private
       M_Const_Z : Module;
       M_Const_Bit : Module;
       M_Const_Log : Module;
-      M_Edge : Module;
+      M_Posedge : Module;
+      M_Negedge : Module;
       M_Mux2 : Module;
       M_Mux4 : Module;
       M_Nop : Module;

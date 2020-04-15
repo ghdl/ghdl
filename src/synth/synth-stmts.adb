@@ -2934,13 +2934,11 @@ package body Synth.Stmts is
 
       --  Check the clock is an edge and extract it.
       Clk_Inst := Get_Net_Parent (Clk);
-      if Get_Id (Clk_Inst) /= Id_Edge then
+      if Get_Id (Clk_Inst) not in Edge_Module_Id then
          Error_Msg_Synth (+Stmt, "clock is not an edge");
          Next_States := No_Net;
          return;
       end if;
-
-      Clk := Get_Input_Net (Clk_Inst, 0);
 
       --  build idff
       States := Build_Idff (Build_Context, Clk, No_Net, Init);

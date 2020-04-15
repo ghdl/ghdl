@@ -83,7 +83,7 @@ package body Netlists.Inference is
       Inst : constant Instance := Get_Net_Parent (N);
    begin
       case Get_Id (Inst) is
-         when Id_Edge =>
+         when Edge_Module_Id =>
             return True;
          when Id_And =>
             --  Assume the condition is canonicalized, ie of the form:
@@ -160,7 +160,7 @@ package body Netlists.Inference is
          Inst0 : constant Instance := Get_Net_Parent (N0);
       begin
          case Get_Id (Inst0) is
-            when Id_Edge =>
+            when Edge_Module_Id =>
                null;
             when Id_And =>
                Extract_Clock_And (Ctxt, Inst0);
@@ -175,7 +175,7 @@ package body Netlists.Inference is
                   N3 : constant Net := Get_Driver (I3);
                   Inst3 : constant Instance := Get_Net_Parent (N3);
                begin
-                  if Get_Id (Inst3) = Id_Edge then
+                  if Get_Id (Inst3) in Edge_Module_Id then
                      declare
                         Can_Rotate : constant Boolean :=
                           Has_One_Connection (N0);
@@ -213,7 +213,7 @@ package body Netlists.Inference is
          Inst0 : constant Instance := Get_Net_Parent (N0);
       begin
          case Get_Id (Inst0) is
-            when Id_Edge =>
+            when Edge_Module_Id =>
                --  Swap inputs 0 and 1.
                declare
                   I1 : constant Input := Get_Input (Inst, 0);
@@ -236,7 +236,7 @@ package body Netlists.Inference is
                   I3 : constant Input := Get_Input (Inst0, 0);
                   N3 : constant Net := Get_Driver (I3);
                begin
-                  if Get_Id (Get_Net_Parent (N3)) = Id_Edge then
+                  if Get_Id (Get_Net_Parent (N3)) in Edge_Module_Id then
                      declare
                         Can_Rotate : constant Boolean :=
                           Has_One_Connection (N0);
@@ -275,9 +275,8 @@ package body Netlists.Inference is
       Enable := No_Net;
 
       case Get_Id (Inst) is
-         when Id_Edge =>
-            --  Get rid of the edge gate, just return the signal.
-            Clk := Get_Input_Net (Inst, 0);
+         when Edge_Module_Id =>
+            Clk := N;
          when Id_And =>
             --  Canonicalize conditions.
             Extract_Clock_And (Ctxt, Inst);
@@ -287,12 +286,12 @@ package body Netlists.Inference is
                I0 : constant Net := Get_Input_Net (Inst, 0);
                Inst0 : constant Instance := Get_Net_Parent (I0);
             begin
-               if Get_Id (Inst0) = Id_Edge then
+               if Get_Id (Inst0) in Edge_Module_Id then
                   --  INST is clearly not synthesizable (boolean operation on
                   --  an edge).  Will be removed at the end by
                   --  remove_unused_instances.  Do not remove it now as its
                   --  output may be used by other nets.
-                  Clk := Get_Input_Net (Inst0, 0);
+                  Clk := I0;
                   Enable := Get_Input_Net (Inst, 1);
                   return;
                end if;

@@ -385,19 +385,22 @@ package body Netlists.Builders is
       Set_Ports_Desc (Res, Inputs (0 .. 1), Outputs (0 .. 0));
    end Create_Memory_Modules;
 
-   procedure Create_Edge_Module (Ctxt : Context_Acc;
-                                 Res : out Module;
-                                 Name : Name_Id)
-
+   procedure Create_Edge_Module (Ctxt : Context_Acc)
    is
       Outputs : Port_Desc_Array (0 .. 0);
       Inputs : Port_Desc_Array (0 .. 0);
    begin
-      Res := New_User_Module
-        (Ctxt.Design, New_Sname_Artificial (Name, No_Sname), Id_Edge, 1, 1, 0);
+      Ctxt.M_Posedge := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Name_Posedge, No_Sname),
+         Id_Posedge, 1, 1, 0);
       Inputs := (0 => Create_Input ("i", 1));
       Outputs := (0 => Create_Output ("o", 1));
-      Set_Ports_Desc (Res, Inputs, Outputs);
+      Set_Ports_Desc (Ctxt.M_Posedge, Inputs, Outputs);
+
+      Ctxt.M_Negedge := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Name_Negedge, No_Sname),
+         Id_Negedge, 1, 1, 0);
+      Set_Ports_Desc (Ctxt.M_Negedge, Inputs, Outputs);
    end Create_Edge_Module;
 
    procedure Create_Mux_Modules (Ctxt : Context_Acc)
@@ -707,7 +710,7 @@ package body Netlists.Builders is
       Create_Monadic_Module (Design, Res.M_Reduce (Id_Red_And),
                              Get_Identifier ("red_and"), Id_Red_And);
 
-      Create_Edge_Module (Res, Res.M_Edge, Name_Edge);
+      Create_Edge_Module (Res);
 
       Create_Mux_Modules (Res);
       Create_Objects_Module (Res);
@@ -932,18 +935,30 @@ package body Netlists.Builders is
       return Inst;
    end Build_Const_Log;
 
-   function Build_Edge (Ctxt : Context_Acc; Src : Net) return Net
+   function Build_Edge (Ctxt : Context_Acc; M : Module; Src : Net) return Net
    is
       pragma Assert (Get_Width (Src) = 1);
       Inst : Instance;
       O : Net;
    begin
-      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Edge);
+      Inst := New_Internal_Instance (Ctxt, M);
       O := Get_Output (Inst, 0);
       pragma Assert (Get_Width (O) = 1);
       Connect (Get_Input (Inst, 0), Src);
       return O;
    end Build_Edge;
+
+   pragma Inline (Build_Edge);
+
+   function Build_Posedge (Ctxt : Context_Acc; Src : Net) return Net is
+   begin
+      return Build_Edge (Ctxt, Ctxt.M_Posedge, Src);
+   end Build_Posedge;
+
+   function Build_Negedge (Ctxt : Context_Acc; Src : Net) return Net is
+   begin
+      return Build_Edge (Ctxt, Ctxt.M_Negedge, Src);
+   end Build_Negedge;
 
    function Build_Mux2 (Ctxt : Context_Acc;
                         Sel : Net;

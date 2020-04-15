@@ -507,7 +507,8 @@ package body Netlists.Disp_Vhdl is
       return False;
    end Need_Signal;
 
-   type Conv_Type is (Conv_None, Conv_Slv, Conv_Unsigned, Conv_Signed);
+   type Conv_Type is
+     (Conv_None, Conv_Slv, Conv_Unsigned, Conv_Signed, Conv_Edge, Conv_Clock);
 
    procedure Disp_Net_Expr (N : Net; Inst : Instance; Conv : Conv_Type)
    is
@@ -542,12 +543,27 @@ package body Netlists.Disp_Vhdl is
                Put ("signed'(");
                Disp_Constant_Inline (Net_Inst);
                Put (")");
+            when Conv_Edge
+              | Conv_Clock =>
+               --  Not expected: a constant is not an edge.
+               raise Internal_Error;
          end case;
       else
          case Conv is
             when Conv_None
               | Conv_Slv =>
                Disp_Net_Name (N);
+            when Conv_Edge =>
+               case Edge_Module_Id (Get_Id (Net_Inst)) is
+                  when Id_Posedge =>
+                     Put ("rising_edge (");
+                  when Id_Negedge =>
+                     Put ("falling_edge (");
+               end case;
+               Disp_Net_Name (Get_Input_Net (Net_Inst, 0));
+               Put (")");
+            when Conv_Clock =>
+               Disp_Net_Name (Get_Input_Net (Net_Inst, 0));
             when Conv_Unsigned =>
                Put ("unsigned");
                if Get_Width (N) = 1 then
@@ -597,18 +613,25 @@ package body Netlists.Disp_Vhdl is
          if C = '\' then
             I := I + 1;
             --  Conversion (optional).
-            if S (I) = 'u' then
-               Conv := Conv_Unsigned;
-               I := I + 1;
-            elsif S (I) = 's' then
-               Conv := Conv_Signed;
-               I := I + 1;
-            elsif S (I) = 'f' then
-               Conv := Conv_Slv;
-               I := I + 1;
-            else
-               Conv := Conv_None;
-            end if;
+            case S (I) is
+               when 'u' =>
+                  Conv := Conv_Unsigned;
+                  I := I + 1;
+               when 's' =>
+                  Conv := Conv_Signed;
+                  I := I + 1;
+               when 'f' =>
+                  Conv := Conv_Slv;
+                  I := I + 1;
+               when 'e' =>
+                  Conv := Conv_Edge;
+                  I := I + 1;
+               when 'c' =>
+                  Conv := Conv_Clock;
+                  I := I + 1;
+               when others =>
+                  Conv := Conv_None;
+            end case;
             Idx := Character'Pos (S (I + 1)) - Character'Pos ('0');
             case S (I) is
                when 'o' =>
@@ -630,6 +653,9 @@ package body Netlists.Disp_Vhdl is
                         Put_Uns32 (V);
                      when Conv_Signed =>
                         Put_Int32 (To_Int32 (V));
+                     when Conv_Edge
+                       | Conv_Clock =>
+                        raise Internal_Error;
                   end case;
                when 'l' =>
                   pragma Assert (Idx = 0);
@@ -691,6 +717,8 @@ package body Netlists.Disp_Vhdl is
             when Id_Mem_Wr_Sync =>
                --  Clock
                S := Get_Input_Net (Port_Inst, 2);
+               --  Strip the edge.
+               S := Get_Input_Net (Get_Net_Parent (S), 0);
                Data_W := Get_Width (Get_Input_Net (Port_Inst, 4));
             when Id_Mem_Rd =>
                --  Address
@@ -699,6 +727,8 @@ package body Netlists.Disp_Vhdl is
             when Id_Mem_Rd_Sync =>
                --  Clock
                S := Get_Input_Net (Port_Inst, 2);
+               --  Strip the edge.
+               S := Get_Input_Net (Get_Net_Parent (S), 0);
                Data_W := Get_Width (Get_Output (Port_Inst, 1));
             when Id_Memory
               | Id_Memory_Init =>
@@ -750,7 +780,7 @@ package body Netlists.Disp_Vhdl is
          case Get_Id (Port_Inst) is
             when Id_Mem_Wr_Sync =>
                Disp_Template
-                 ("    if rising_edge(\i2) and (\fi3 = '1') then" & NL,
+                 ("    if \ei2 and (\fi3 = '1') then" & NL,
                   Port_Inst);
                Disp_Template ("      \o0 (", Mem);
                Disp_Template ("to_integer (\ui1)) := \i4;" & NL, Port_Inst);
@@ -761,7 +791,7 @@ package body Netlists.Disp_Vhdl is
                Disp_Template ("(to_integer (\ui1));" & NL, Port_Inst);
             when Id_Mem_Rd_Sync =>
                Disp_Template
-                 ("    if rising_edge(\i2) and (\fi3 = '1') then" & NL,
+                 ("    if \ei2 and (\fi3 = '1') then" & NL,
                   Port_Inst);
                Disp_Template ("      \o1 <= ", Port_Inst);
                Disp_Template ("\o0", Mem);
@@ -969,19 +999,19 @@ package body Netlists.Disp_Vhdl is
             null;
          when Id_Adff
            | Id_Iadff =>
-            Disp_Template ("  process (\i0, \i2)" & NL &
+            Disp_Template ("  process (\ci0, \i2)" & NL &
                            "  begin" & NL &
                            "    if \i2 = '1' then" & NL &
                            "      \o0 <= \i3;" & NL &
-                           "    elsif rising_edge (\i0) then" & NL &
+                           "    elsif \ei0 then" & NL &
                            "      \o0 <= \i1;" & NL &
                            "    end if;" & NL &
                            "  end process;" & NL, Inst);
          when Id_Dff
            | Id_Idff =>
-            Disp_Template ("  process (\i0)" & NL &
+            Disp_Template ("  process (\ci0)" & NL &
                            "  begin" & NL &
-                           "    if rising_edge (\i0) then" & NL &
+                           "    if \ei0 then" & NL &
                            "      \o0 <= \i1;" & NL &
                            "    end if;" & NL &
                            "  end process;" & NL, Inst);
@@ -1202,9 +1232,12 @@ package body Netlists.Disp_Vhdl is
                     ("  \o0 <= \i0; -- reduce and" & NL, Inst);
                end if;
             end;
-         when Id_Edge =>
+         when Id_Posedge =>
             Disp_Template
               ("  \o0 <= '1' when rising_edge (\i0) else '0';" & NL, Inst);
+         when Id_Negedge =>
+            Disp_Template
+              ("  \o0 <= '1' when falling_edge (\i0) else '0';" & NL, Inst);
          when Id_Assert =>
             Disp_Template
               ("  \l0: assert \i0 = '1' severity error;" & NL, Inst);

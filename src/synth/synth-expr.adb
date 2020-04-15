@@ -1510,19 +1510,19 @@ package body Synth.Expr is
       Clk := Get_Net (Synth_Name (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
-         return Build_Edge (Build_Context, Clk);
+         return Build_Posedge (Build_Context, Clk);
       end if;
       Imp := Get_Implementation (Expr);
       if Get_Implicit_Definition (Imp) /= Iir_Predefined_Enum_Equality then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
-         return Build_Edge (Build_Context, Clk);
+         return Build_Posedge (Build_Context, Clk);
       end if;
       Left := Get_Left (Expr);
       Right := Get_Right (Expr);
       if Get_Kind (Right) /= Iir_Kind_Character_Literal then
          Error_Msg_Synth
            (+Expr, "ill-formed clock-level, '0' or '1' expected");
-         return Build_Edge (Build_Context, Clk);
+         return Build_Posedge (Build_Context, Clk);
       end if;
       Lit := Get_Named_Entity (Right);
       if Lit = Vhdl.Std_Package.Bit_0
@@ -1542,10 +1542,11 @@ package body Synth.Expr is
          Error_Msg_Synth
            (+Left, "clock signal name doesn't match");
       end if;
-      if not Posedge then
-         Clk := Build_Monadic (Build_Context, Id_Not, Clk);
+      if Posedge then
+         return Build_Posedge (Build_Context, Clk);
+      else
+         return Build_Negedge (Build_Context, Clk);
       end if;
-      return Build_Edge (Build_Context, Clk);
    end Extract_Clock_Level;
 
    --  Try to match: clk'event and clk = X
