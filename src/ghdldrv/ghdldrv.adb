@@ -1054,7 +1054,9 @@ package body Ghdldrv is
       end if;
       Last_File := Filelist.Last;
       Add_Lib_File_List ("grt");
-      if not Cmd.Flag_Shared then
+      if Cmd.Flag_Shared then
+         Add_Lib_File_List ("grt-shared");
+      else
          Add_Lib_File_List ("grt-exec");
       end if;
 

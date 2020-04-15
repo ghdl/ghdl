@@ -44,9 +44,10 @@ else
   osys:=$(word 3,$(targ))
 endif
 
-GRT_ELF_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
+# Standard GRT_EXEC_OPTS value for ELF platforms.
+GRT_ELF_EXEC_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
 
-# These conditions define 3 variables:
+# These conditions define these variables:
 #  GRT_TARGET_OBJS: platform specific files to be added in the grt library
 #  GRT_EXTRA_LIBS: platform specific libraries and options to be added during
 #     link of simulation binaries.  These are library used by grt.
@@ -54,12 +55,14 @@ GRT_ELF_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
 #     simulation binaries, but not needed when creating a shared library.
 #     It is set on ELF platforms to export some symbols (like the vpi
 #     functions) so that a vpi object file can refer them.
-# Set target files.
+#  GRT_SHARED_OPTS: platform specific options to be added during link of
+#     -shared simulation binaries.  Used instead of GET_EXEC_OPTS
 ifeq ($(filter-out mingw32 mingw64,$(osys)),)
   # For windows.
   GRT_TARGET_OBJS=win32.o clock.o
   GRT_EXTRA_LIB=-ldbghelp
   GRT_EXEC_OPTS=
+  GRT_SHARED_OPTS=-Wl,-u,_ghdl_main
 else
   # For unix variants.
   # Usually needs -dl (for dlopen) and -lm (for math functions).
@@ -67,19 +70,21 @@ else
   GRT_TARGET_OBJS=jumps.o times.o
   GRT_EXTRA_LIB=
   GRT_EXEC_OPTS=
+  GRT_SHARED_OPTS=-Wl,-u,ghdl_main
 
   ifeq ($(filter-out linux%,$(osys)),)
     GRT_EXTRA_LIB=-ldl -lm
-    GRT_EXEC_OPTS=$(GRT_ELF_OPTS)
+    GRT_EXEC_OPTS=$(GRT_ELF_EXEC_OPTS)
   endif
   ifeq ($(filter-out netbsd freebsd% dragonfly%,$(osys)),)
     GRT_EXTRA_LIB=-lm
-    GRT_EXEC_OPTS=$(GRT_ELF_OPTS)
+    GRT_EXEC_OPTS=$(GRT_ELF_EXEC_OPTS)
   endif
   ifeq ($(filter-out solaris%,$(osys)),)
     GRT_EXTRA_LIB=-ldl -lm
   endif
   ifeq ($(filter-out darwin%,$(osys)),)
+    GRT_SHARED_OPTS=-Wl,-u,_ghdl_main
     GRT_EXTRA_LIB=
   endif
 endif
@@ -120,7 +125,12 @@ GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnatdY
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(GNATMAKE) -u -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG)
 
-grt-all: $(libdirsuffix)/libgrt.a $(libdirsuffix)/$(GRT_LIBBACKTRACE) $(libdirsuffix)/grt.lst $(libdirsuffix)/grt-exec.lst $(libdirsuffix)/grt.ver
+grt-all: $(libdirsuffix)/libgrt.a \
+  $(libdirsuffix)/$(GRT_LIBBACKTRACE) \
+  $(libdirsuffix)/grt.lst \
+  $(libdirsuffix)/grt-exec.lst \
+  $(libdirsuffix)/grt-shared.lst \
+  $(libdirsuffix)/grt.ver
 
 $(libdirsuffix)/libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-files
 	$(RM) -f $@
@@ -256,6 +266,10 @@ endif
 $(libdirsuffix)/grt-exec.lst:
 	echo "# link options for executables" > $@
 	for i in $(GRT_EXEC_OPTS); do echo $$i >> $@; done
+
+$(libdirsuffix)/grt-shared.lst:
+	echo "# link options for shared libraries" > $@
+	for i in $(GRT_SHARED_OPTS); do echo $$i >> $@; done
 
 $(libdirsuffix)/grt.ver: $(GRTSRCDIR)/grt.ver
 	cp $< $@
