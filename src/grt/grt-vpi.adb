@@ -1266,9 +1266,39 @@ package body Grt.Vpi is
    --  Wrapper
    procedure Call_Callback (Arg : System.Address)
    is
-      Hand : constant vpiHandle := To_vpiHandle (Arg);
+      Hand : vpiHandle;
    begin
+      Hand := To_vpiHandle (Arg);
+
+      --  Increase/decrease the reference counter as it is referenced by HAND.
+      Hand.Cb_Refcnt := Hand.Cb_Refcnt + 1;
       Execute_Callback (Hand);
+      Hand.Cb_Refcnt := Hand.Cb_Refcnt - 1;
+
+      --  Free handlers if called once.
+      case Hand.Cb.Reason is
+         when cbEndOfCompile
+           |  cbStartOfSimulation
+           |  cbEndOfSimulation
+           |  cbReadOnlySynch
+           |  cbReadWriteSynch
+           |  cbAfterDelay
+           |  cbNextSimTime =>
+            pragma Assert (Hand.Cb_Refcnt = 1);
+            --  The handler has been removed from the queue, so the reference
+            --  counter has to be decremented and its value must be 0.  Time
+            --  to free it.
+            Free (Hand);
+         when cbValueChange =>
+            --  The handler hasn't been removed from the queue, unless the
+            --  user did it while the callback was executed.  If so, the
+            --  reference counter must now be 0 and we can free it.
+            if Hand.Cb_Refcnt = 0 then
+               Free (Hand);
+            end if;
+         when others =>
+            null;
+      end case;
    end Call_Callback;
 
    procedure Call_Valuechange_Callback (Arg : System.Address)
@@ -1324,6 +1354,9 @@ package body Grt.Vpi is
       Res := new struct_vpiHandle (vpiCallback);
       Res.Cb := Data.all;
 
+      --  There is one reference to the callback as it is registered.
+      Res.Cb_Refcnt := 1;
+
       case Data.Reason is
          when cbEndOfCompile =>
             Append_Callback (g_cbEndOfCompile, Res);
@@ -1356,7 +1389,7 @@ package body Grt.Vpi is
               (Cb_Next_Time_Step, Res.Cb_Handle, Oneshot,
                Call_Callback'Access, To_Address (Res));
          when others =>
-            dbgPut_Line ("vpi_register_cb: unknown reason");
+            dbgPut_Line ("vpi_register_cb: unknown callback reason");
             Free (Res);
       end case;
 
@@ -1383,11 +1416,15 @@ package body Grt.Vpi is
       Res := 1;
       Ref_Copy := Ref;
       case Ref.Cb.Reason is
-         when cbValueChange =>
+         when cbValueChange
+           |  cbReadWriteSynch
+           |  cbReadOnlySynch =>
             Delete_Callback (Ref.Cb_Handle);
-         when cbReadWriteSynch
-           | cbReadOnlySynch =>
-            Delete_Callback (Ref.Cb_Handle);
+            Ref.Cb_Refcnt := Ref.Cb_Refcnt - 1;
+            if Ref.Cb_Refcnt > 0 then
+               --  Do not free REF.
+               Ref_Copy := null;
+            end if;
          when others =>
             Res := 0;
             Ref_Copy := null;
@@ -1419,8 +1456,16 @@ package body Grt.Vpi is
          Trace (")");
          Trace_Newline;
       end if;
-      Ref_Copy := aRef;
-      Free (Ref_Copy);
+
+      case aRef.mType is
+         when vpiCallback =>
+            --  Callback are automatically freed.
+            null;
+         when others =>
+            Ref_Copy := aRef;
+            Free (Ref_Copy);
+      end case;
+
       return 1;
    end vpi_free_object;
 

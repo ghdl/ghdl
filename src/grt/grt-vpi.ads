@@ -333,6 +333,8 @@ private
             Cb_Prev, Cb_Next : vpiHandle;
             Cb_Wire : Grt.Vcd.Verilog_Wire_Info;
             Cb_Handle : Callbacks.Callback_Handle;
+            --  Number of reference to the handler by the simulation kernel.
+            Cb_Refcnt : Natural;
          when others =>
             Ref : VhpiHandleT;
       end case;
