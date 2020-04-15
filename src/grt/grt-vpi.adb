@@ -1559,6 +1559,7 @@ package body Grt.Vpi is
       Err : AvhpiErrorT;
       Prop : Integer;
       Res : vpiHandle;
+      Escaped : Boolean;
    begin
       --  Extract the start point.
       if Scope = null then
@@ -1578,9 +1579,19 @@ package body Grt.Vpi is
             C : Character;
          begin
             E := B;
+            Escaped := Name (E) = '\';
             loop
                C := Name (E + 1);
-               exit when C = NUL or C = '.';
+
+               --  '.' is a separator when not inside extended identifiers.
+               exit when C = NUL or (C = '.' and not Escaped);
+
+               if C = '\' then
+                  --  Start or end of extended identifiers.
+                  --  '\' within an extended identifier is doubled, so like
+                  --  if there were two extended identifiers.
+                  Escaped := not Escaped;
+               end if;
                E := E + 1;
             end loop;
          end;
