@@ -2755,6 +2755,25 @@ package body Synth.Stmts is
       return Synth_Subprogram_Call (Syn_Inst, Expr);
    end Synth_User_Function_Call;
 
+   procedure Synth_Failed_Assertion
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Msg : constant Node := Get_Report_Expression (Stmt);
+      Str : Valtyp;
+   begin
+      if Msg /= Null_Node then
+         Str := Synth_Expression_With_Basetype (Syn_Inst, Msg);
+      else
+         Str := No_Valtyp;
+      end if;
+      if Str /= No_Valtyp and then Is_Static (Str.Val) then
+         Error_Msg_Synth
+           (+Stmt, "assertion failure: " & Value_To_String (Str));
+      else
+         Error_Msg_Synth (+Stmt, "assertion failure");
+      end if;
+   end Synth_Failed_Assertion;
+
    procedure Synth_Concurrent_Assertion_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -2769,7 +2788,7 @@ package body Synth.Stmts is
       end if;
       if Is_Static (Val.Val) then
          if Read_Discrete (Val) /= 1 then
-            Error_Msg_Synth (+Stmt, "assertion failure");
+            Synth_Failed_Assertion (Syn_Inst, Stmt);
          end if;
          return;
       end if;
