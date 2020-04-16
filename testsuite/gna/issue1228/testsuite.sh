@@ -12,8 +12,8 @@ if ghdl_has_feature test_load vpi; then
       PATH="$PATH:$vpi_lib"
   fi
 
-  $GHDL --vpi-compile -v gcc -c vpi1.c
-  $GHDL --vpi-link -v gcc -o vpi1.vpi vpi1.o
+  $GHDL --vpi-compile -v gcc $CFLAGS -c vpi1.c
+  $GHDL --vpi-link -v gcc $CFLAGS -o vpi1.vpi vpi1.o
 
   simulate test_load --vpi=./vpi1.vpi
 
