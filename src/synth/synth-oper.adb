@@ -1205,7 +1205,7 @@ package body Synth.Oper is
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
                   Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Width (L) + 1));
+                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1) + 1));
 
                return Create_Value_Net
                  (N, Create_Onedimensional_Array_Subtype (Left_Typ, Bnd));
@@ -1221,7 +1221,7 @@ package body Synth.Oper is
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
                   Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Width (R) + 1));
+                  Iir_Index32 (Get_Bound_Length (Right.Typ, 1) + 1));
 
                return Create_Value_Net
                  (N, Create_Onedimensional_Array_Subtype (Right_Typ, Bnd));
@@ -1251,7 +1251,8 @@ package body Synth.Oper is
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
                   Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Width (L) + Get_Width (R)));
+                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1)
+                                 + Get_Bound_Length (Right.Typ, 1)));
 
                return Create_Value_Net
                  (N, Create_Onedimensional_Array_Subtype (Expr_Typ, Bnd));
