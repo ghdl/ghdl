@@ -434,6 +434,12 @@ package body Synth.Stmts is
             Synth_Assignment_Aggregate
               (Syn_Inst, Target.Aggr, Target.Targ_Type, V, Loc);
          when Target_Simple =>
+            if V.Typ.Sz = 0 then
+               --  If there is nothing to assign (like a null slice),
+               --  return now.
+               return;
+            end if;
+
             if Target.Obj.Val.Kind = Value_Wire then
                if Is_Static (V.Val)
                  and then V.Typ.W = Target.Obj.Typ.W
