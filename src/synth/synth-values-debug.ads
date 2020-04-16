@@ -21,4 +21,5 @@
 package Synth.Values.Debug is
    procedure Debug_Valtyp (V : Valtyp);
    procedure Debug_Memtyp (M : Memtyp);
+   procedure Debug_Typ (T : Type_Acc);
 end Synth.Values.Debug;
