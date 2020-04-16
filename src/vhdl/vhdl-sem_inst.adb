@@ -388,6 +388,23 @@ package body Vhdl.Sem_Inst is
       end case;
    end Instantiate_Iir_Field;
 
+   --  Set designated_entity of attribute_value from attribute_value_chain
+   --  of RES.
+   procedure Instantiate_Attribute_Value_Chain (Res : Iir)
+   is
+      Val : Iir;
+      Ref_Ent : Iir;
+   begin
+      Val := Get_Attribute_Value_Chain (Res);
+      while Val /= Null_Iir loop
+         pragma Assert (Get_Designated_Entity (Val) = Null_Iir);
+         Ref_Ent := Get_Designated_Entity (Get_Origin (Val));
+         Ref_Ent := Instantiate_Iir (Ref_Ent, True);
+         Set_Designated_Entity (Val, Ref_Ent);
+         Val := Get_Value_Chain (Val);
+      end loop;
+   end Instantiate_Attribute_Value_Chain;
+
    function Instantiate_Iir (N : Iir; Is_Ref : Boolean) return Iir
    is
       Res : Iir;
@@ -624,6 +641,24 @@ package body Vhdl.Sem_Inst is
                      Instantiate_Iir_Field (Res, N, F);
                   end if;
 
+               when Field_Designated_Entity =>
+                  --  This is a field of attribute_value.  It is a
+                  --  forward_ref because it may reference a statement.
+                  --  Handle it later.
+                  null;
+
+               when Field_Attribute_Value_Chain =>
+                  --  Chain of attribute_value for a scope parent.  This is
+                  --  a ref.  As the field is declared after the declarations
+                  --  and statements of the scope, the attribute_value have
+                  --  been instantiated.  So the reference can be resolved.
+                  Instantiate_Iir_Field (Res, N, F);
+
+                  --  However, the designated_entity of attribute_value have
+                  --  not been resolved.  As they are now instantiated, the
+                  --  forward_ref links can be fixed.
+                  Instantiate_Attribute_Value_Chain (Res);
+
                when others =>
                   --  Common case.
                   Instantiate_Iir_Field (Res, N, F);
@@ -633,7 +668,6 @@ package body Vhdl.Sem_Inst is
          --  TODO: other forward references:
          --  incomplete constant
          --  incomplete type
-         --  attribute_value
 
          if Get_Kind (Res) in Iir_Kinds_Subprogram_Declaration then
             --  Recompute the hash as the interface may have
@@ -1011,11 +1045,15 @@ package body Vhdl.Sem_Inst is
 
       Is_Within_Shared_Instance := not Get_Macro_Expanded_Flag (Pkg);
 
+      --  Manually instantiate the package declaration.
       Set_Generic_Chain
         (Inst, Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Header)));
       Instantiate_Generic_Map_Chain (Inst, Pkg);
       Set_Declaration_Chain
         (Inst, Instantiate_Iir_Chain (Get_Declaration_Chain (Pkg)));
+      Set_Attribute_Value_Chain
+        (Inst, Instantiate_Iir (Get_Attribute_Value_Chain (Pkg), True));
+      Instantiate_Attribute_Value_Chain (Inst);
 
       Set_Origin (Pkg, Null_Iir);
 

@@ -817,7 +817,8 @@ package Vhdl.Nodes is
    --  entity, marking the entity as decorated by the attribute.
    --  This node is built only by sem.
    --  In fact, the node is member of the chain of attribute of an entity, and
-   --  of the chain of entity of the attribute specification.
+   --  of the chain of a parent node containing all the attributes value for
+   --  a scope.
    --  This makes elaboration (and more precisely, expression evaluation)
    --  easier.
    --
@@ -7486,8 +7487,7 @@ package Vhdl.Nodes is
    function Get_Spec_Chain (Target : Iir) return Iir;
    procedure Set_Spec_Chain (Target : Iir; Chain : Iir);
 
-   --  Next attribute value in the attribute specification chain (of attribute
-   --  value).
+   --  Next attribute value in the parent chain (of attribute value).
    --  Field: Field0 Ref
    function Get_Value_Chain (Target : Iir) return Iir;
    procedure Set_Value_Chain (Target : Iir; Chain : Iir);
