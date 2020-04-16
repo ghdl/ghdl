@@ -717,6 +717,9 @@ package body Synth.Expr is
          --  Propagate error.
          return No_Valtyp;
       end if;
+      if Dtype = Vtype then
+         return Vt;
+      end if;
 
       case Dtype.Kind is
          when Type_Bit =>
@@ -786,7 +789,14 @@ package body Synth.Expr is
             return Vt;
          when Type_Array =>
             pragma Assert (Vtype.Kind = Type_Array);
-            --  TODO: check bounds, handle elements
+            --  Check bounds.
+            for I in Vtype.Abounds.D'Range loop
+               if Vtype.Abounds.D (I).Len /= Dtype.Abounds.D (I).Len then
+                  Error_Msg_Synth (+Loc, "mismatching array bounds");
+                  return No_Valtyp;
+               end if;
+            end loop;
+            --  TODO: check element.
             if Bounds then
                return Reshape_Value (Vt, Dtype);
             else
