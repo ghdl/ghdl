@@ -4,7 +4,7 @@ package pkg is
   procedure showPackageN;
 
   impure function c_int return integer;
-  attribute foreign of c_int : function is "VHPIDIRECT aux.so getInt";
+  attribute foreign of c_int : function is "VHPIDIRECT caux.so getInt";
 end package pkg;
 
 package body pkg is
