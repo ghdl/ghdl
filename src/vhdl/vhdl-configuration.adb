@@ -823,11 +823,22 @@ package body Vhdl.Configuration is
       --  Check generics.
       El := Get_Generic_Chain (Entity);
       while El /= Null_Iir loop
-         if Get_Default_Value (El) = Null_Iir then
-            if not (Enable_Override and Allow_Generic_Override (El)) then
-               Error (El, "(%n has no default value)", +El);
-            end if;
-         end if;
+         case Iir_Kinds_Interface_Declaration (Get_Kind (El)) is
+            when Iir_Kinds_Interface_Object_Declaration =>
+               if Get_Default_Value (El) = Null_Iir then
+                  if not (Enable_Override and Allow_Generic_Override (El)) then
+                     Error (El, "(%n has no default value)", +El);
+                  end if;
+               end if;
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               Error (El, "(%n is a subprogram generic)", +El);
+            when Iir_Kind_Interface_Type_Declaration =>
+               Error (El, "(%n is a type generic)", +El);
+            when Iir_Kind_Interface_Package_Declaration =>
+               Error (El, "(%n is a package generic)", +El);
+            when Iir_Kind_Interface_Terminal_Declaration =>
+               null;
+         end case;
          El := Get_Chain (El);
       end loop;
 
