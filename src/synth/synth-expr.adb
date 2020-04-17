@@ -1940,6 +1940,9 @@ package body Synth.Expr is
             return Synth.Aggr.Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
          when Iir_Kind_Simple_Aggregate =>
             return Synth_Simple_Aggregate (Syn_Inst, Expr);
+         when Iir_Kind_Parenthesis_Expression =>
+            return Synth_Expression_With_Type
+              (Syn_Inst, Get_Expression (Expr), Expr_Type);
          when Iir_Kind_Left_Array_Attribute =>
             declare
                B : Bound_Type;
