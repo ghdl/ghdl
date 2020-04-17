@@ -2,7 +2,8 @@
 
 . ../../testenv.sh
 
-analyze_failure foo.vhdl
+analyze foo.vhdl
+elab_simulate_failure foo
 
 clean
 
