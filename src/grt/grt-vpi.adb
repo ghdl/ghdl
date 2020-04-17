@@ -347,6 +347,15 @@ package body Grt.Vpi is
 -- * * *   V P I   f u n c t i o n s   * * * * * * * * * * * * * * * * * * * *
 -------------------------------------------------------------------------------
 
+   --  Free an handler, when it was not passed by reference.
+   procedure Free_Copy (H : vpiHandle)
+   is
+      Copy : vpiHandle;
+   begin
+      Copy := H;
+      Free (Copy);
+   end Free_Copy;
+
    ------------------------------------------------------------------------
    -- vpiHandle  vpi_iterate(int type, vpiHandle ref)
    -- Obtain an iterator handle to objects with a one-to-many relationship.
@@ -604,6 +613,7 @@ package body Grt.Vpi is
       R : vpiHandle;
       Kind, Expected_Kind : Integer;
    begin
+      --  End of scan reached.  Avoid a crash in case of misuse.
       if Iter = null then
          return null;
       end if;
@@ -617,6 +627,7 @@ package body Grt.Vpi is
                Iter.Ref := Null_Handle;
                return R;
             when VhpiUndefined =>
+               --  End of iteration.
                return null;
             when others =>
                --  Fall through.
@@ -641,11 +652,14 @@ package body Grt.Vpi is
          exit when Error /= AvhpiErrorOk;
 
          Kind := Vhpi_Handle_To_Vpi_Prop (Res);
-         if Kind /= vpiUndefined and then (Kind = Expected_Kind or
-           (Kind = vpiPort and Expected_Kind = vpiNet)) then
+         if Kind /= vpiUndefined
+           and then (Kind = Expected_Kind
+                       or(Kind = vpiPort and Expected_Kind = vpiNet))
+         then
             return Build_vpiHandle (Res, Kind);
          end if;
       end loop;
+
       return null;
    end Vpi_Scan_Internal;
 
@@ -664,6 +678,15 @@ package body Grt.Vpi is
       if Flag_Trace then
          Trace (Res);
          Trace_Newline;
+      end if;
+
+      --  IEEE 1364-2005 27.5 vpi_free_object()
+      --  The iterator object shall automatically be freed when vpi_scan()
+      --  returns NULL because it has either completed an object traversal
+      --  or encountered an error condition.
+      --  Free the iterator.
+      if Res = null then
+         Free_Copy (Iter);
       end if;
 
       return Res;
