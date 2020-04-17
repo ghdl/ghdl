@@ -155,7 +155,8 @@ package Grt.Vpi is
             Scalar : Integer;
          when vpiIntVal =>
             Integer_m : Integer;
-            --when vpiRealVal=>     null; -- what is the equivalent to double?
+         when vpiRealVal=>
+            Real_M : Ghdl_F64;
             --when vpiTimeVal=>     mTime:     p_vpi_time;
             --when vpiVectorVal=>   mVector:   p_vpi_vecval;
             --when vpiStrengthVal=> mStrength: p_vpi_strengthval;
