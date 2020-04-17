@@ -299,10 +299,8 @@ package body Trans.Chap6 is
    --  Translate index EXPR in dimension DIM of thin array into an
    --  offset.
    --  This checks bounds.
-   function Translate_Thin_Index_Offset (Index_Type : Iir;
-                                         Dim        : Natural;
-                                         Expr       : Iir)
-                                            return O_Enode
+   function Translate_Thin_Index_Offset
+     (Index_Type : Iir; Dim : Natural; Expr : Iir) return O_Enode
    is
       Index_Range     : constant Iir := Get_Range_Constraint (Index_Type);
       Obound          : O_Cnode;
@@ -312,17 +310,23 @@ package body Trans.Chap6 is
       Index_Base_Type : Iir;
       V               : Int64;
       B               : Int64;
+      Expr1 : Iir;
    begin
       B := Eval_Pos (Get_Left_Limit (Index_Range));
       if Get_Expr_Staticness (Expr) = Locally then
-         V := Eval_Pos (Eval_Static_Expr (Expr));
+         Expr1 := Eval_Static_Expr (Expr);
+         if not Eval_Is_In_Bound (Expr1, Index_Type) then
+            Gen_Bound_Error (Expr1);
+            return New_Lit (New_Index_Lit (0));
+         end if;
+
+         V := Eval_Pos (Expr1);
          if Get_Direction (Index_Range) = Iir_To then
             B := V - B;
          else
             B := B - V;
          end if;
-         return New_Lit
-           (New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (B)));
+         return New_Lit (New_Index_Lit (Unsigned_64 (B)));
       else
          Index_Base_Type := Get_Base_Type (Index_Type);
          Index := Chap7.Translate_Expression (Expr, Index_Base_Type);

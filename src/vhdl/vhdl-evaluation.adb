@@ -2850,11 +2850,13 @@ package body Vhdl.Evaluation is
             begin
                Param := Get_Parameter (Expr);
                Param := Eval_Static_Expr (Param);
-               Eval_Check_Bound (Param, Get_Type (Get_Prefix (Expr)));
                Set_Parameter (Expr, Param);
 
                --  Special case for overflow.
-               if Get_Kind (Param) = Iir_Kind_Overflow_Literal then
+               if Get_Kind (Param) = Iir_Kind_Overflow_Literal
+                 or else not Eval_Is_In_Bound (Param,
+                                               Get_Type (Get_Prefix (Expr)))
+               then
                   return Build_Overflow (Expr);
                end if;
 
@@ -3507,7 +3509,8 @@ package body Vhdl.Evaluation is
       end if;
 
       if not Eval_Is_In_Bound (Expr, Sub_Type) then
-         Error_Msg_Sem (+Expr, "static expression violates bounds");
+         Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                          "static expression violates bounds");
       end if;
    end Eval_Check_Bound;
 
