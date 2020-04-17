@@ -2,7 +2,7 @@
 
 . ../testenv.sh
 
-common_args="--std=93c $GHDL_FLAGS"
+common_args="--std=93c -Werror=runtime-error $GHDL_FLAGS"
 # Test number.
 test_num="1"
 do_inter_clean="no"
@@ -189,7 +189,7 @@ test_billowitch() {
   . $dir/compliant.exp
 
   # OK but FIXMEs
-  common_args="--std=93 $GHDL_FLAGS"
+  common_args="--std=93 -Werror=runtime-error $GHDL_FLAGS"
 
   dir=vhdl-93/billowitch/non_compliant/analyzer_failure
   . $dir/non_compliant.exp

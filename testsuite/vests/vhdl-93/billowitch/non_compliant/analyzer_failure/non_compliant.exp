@@ -611,7 +611,7 @@ run_non_compliant_test tc1407.vhd
 run_non_compliant_test tc1408.vhd
 run_non_compliant_test tc1411.vhd
 run_non_compliant_test tc1415.vhd
-run_err_non_compliant_test tc1416.vhd
+run_non_compliant_test tc1416.vhd
 run_non_compliant_test tc1417.vhd
 run_non_compliant_test tc1418.vhd
 run_non_compliant_test tc1419.vhd
@@ -1040,9 +1040,9 @@ run_non_compliant_test tc2250.vhd
 run_non_compliant_test tc2251.vhd
 run_non_compliant_test tc2252.vhd
 run_non_compliant_test tc2253.vhd
-run_err_non_compliant_test tc2254.vhd
-run_err_non_compliant_test tc2255.vhd
-run_err_non_compliant_test tc2256.vhd
+run_non_compliant_test tc2254.vhd
+run_non_compliant_test tc2255.vhd
+run_non_compliant_test tc2256.vhd
 run_non_compliant_test tc2273.vhd
 run_non_compliant_test tc2274.vhd
 run_non_compliant_test tc2275.vhd
@@ -1097,7 +1097,7 @@ run_non_compliant_test tc2356.vhd
 run_non_compliant_test tc2357.vhd
 run_non_compliant_test tc2358.vhd
 run_non_compliant_test tc2361.vhd
-run_err_non_compliant_test tc2362.vhd
+run_non_compliant_test tc2362.vhd
 run_non_compliant_test tc2375.vhd
 run_non_compliant_test tc2376.vhd
 run_non_compliant_test tc2377.vhd
