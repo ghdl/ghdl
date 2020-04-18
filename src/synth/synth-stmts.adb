@@ -563,27 +563,32 @@ package body Synth.Stmts is
       while Cwf /= Null_Node loop
          Val := Synth_Waveform
            (Syn_Inst, Get_Waveform_Chain (Cwf), Targ.Targ_Type);
-         V := Get_Net (Val);
-         Cond := Get_Condition (Cwf);
-         if Cond /= Null_Node then
-            Cond_Val := Synth_Expression (Syn_Inst, Cond);
-            if Cond_Val = No_Valtyp then
-               Cond_Net := Build_Const_UB32 (Build_Context, 0, 1);
-            else
-               Cond_Net := Get_Net (Cond_Val);
+         if Val = No_Valtyp then
+            --  Mark the error, but try to continue.
+            Set_Error (Syn_Inst);
+         else
+            V := Get_Net (Val);
+            Cond := Get_Condition (Cwf);
+            if Cond /= Null_Node then
+               Cond_Val := Synth_Expression (Syn_Inst, Cond);
+               if Cond_Val = No_Valtyp then
+                  Cond_Net := Build_Const_UB32 (Build_Context, 0, 1);
+               else
+                  Cond_Net := Get_Net (Cond_Val);
+               end if;
+
+               V := Build_Mux2 (Build_Context, Cond_Net, No_Net, V);
+               Set_Location (V, Cwf);
             end if;
 
-            V := Build_Mux2 (Build_Context, Cond_Net, No_Net, V);
-            Set_Location (V, Cwf);
+            if Last /= No_Net then
+               Inp := Get_Input (Get_Net_Parent (Last), 1);
+               Connect (Inp, V);
+            else
+               First := V;
+            end if;
+            Last := V;
          end if;
-
-         if Last /= No_Net then
-            Inp := Get_Input (Get_Net_Parent (Last), 1);
-            Connect (Inp, V);
-         else
-            First := V;
-         end if;
-         Last := V;
          Cwf := Get_Chain (Cwf);
       end loop;
       if Cond /= Null_Node then
