@@ -77,7 +77,12 @@ package Vhdl.Evaluation is
    function Eval_Physical_Literal (Expr : Iir) return Iir;
 
    --  Return TRUE if literal EXPR is in SUB_TYPE bounds.
-   function Eval_Is_In_Bound (Expr : Iir; Sub_Type : Iir) return Boolean;
+   --  OVERFLOW is the value returned for overflow_literal.  The default is
+   --   False because an overflow is never within the bounds (by definition).
+   --   But if you use this function to report an error, you prefer to
+   --   get True as you don't want to report a second error.
+   function Eval_Is_In_Bound
+     (Expr : Iir; Sub_Type : Iir; Overflow : Boolean := False) return Boolean;
 
    --  Emit an error if EXPR violates SUB_TYPE bounds.
    procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir);

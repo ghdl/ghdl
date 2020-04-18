@@ -396,7 +396,8 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Aggregate
            | Iir_Kind_Allocator_By_Expression
            | Iir_Kind_Allocator_By_Subtype
-           | Iir_Kind_Qualified_Expression =>
+           | Iir_Kind_Qualified_Expression
+           | Iir_Kind_Overflow_Literal =>
             return Expr;
          when Iir_Kinds_Dyadic_Operator
            | Iir_Kinds_Monadic_Operator =>
@@ -4195,6 +4196,7 @@ package body Vhdl.Sem_Expr is
          return Null_Iir;
       end if;
       Check_Read (Res);
+      Res := Eval_Expr_If_Static (Res);
       Set_Expression (Expr, Res);
 
       --  LRM93 7.4.1 Locally static primaries
@@ -4223,7 +4225,14 @@ package body Vhdl.Sem_Expr is
       end case;
 
       --  Emit a warning if the value is known not to be within the bounds.
-      Eval_Check_Bound (Res, N_Type);
+      if Get_Expr_Staticness (Res) = Locally
+        and then not Eval_Is_In_Bound (Res, N_Type)
+      then
+         Warning_Msg_Sem
+           (Warnid_Runtime_Error, +Expr,
+            "static expression out of prefix type bounds");
+         return Build_Overflow (Expr, N_Type);
+      end if;
 
       return Expr;
    end Sem_Qualified_Expression;

@@ -2207,7 +2207,7 @@ package body Vhdl.Evaluation is
       Res := Build_Constant (Val, Conv);
       if Get_Constraint_State (Conv_Type) = Fully_Constrained then
          Set_Type (Res, Conv_Type);
-         if not Eval_Is_In_Bound (Val, Conv_Type) then
+         if not Eval_Is_In_Bound (Val, Conv_Type, True) then
             Warning_Msg_Sem (Warnid_Runtime_Error, +Conv,
                              "non matching length in type conversion");
             return Build_Overflow (Conv);
@@ -2277,13 +2277,11 @@ package body Vhdl.Evaluation is
                Error_Kind ("eval_type_conversion(3)", Conv_Type);
          end case;
       end if;
-      if not Eval_Is_In_Bound (Res, Get_Type (Conv)) then
-         if Get_Kind (Res) /= Iir_Kind_Overflow_Literal then
-            Warning_Msg_Sem (Warnid_Runtime_Error, +Conv,
-                             "result of conversion out of bounds");
-            Free_Eval_Static_Expr (Res, Conv);
-            Res := Build_Overflow (Conv);
-         end if;
+      if not Eval_Is_In_Bound (Res, Get_Type (Conv), True) then
+         Warning_Msg_Sem (Warnid_Runtime_Error, +Conv,
+                          "result of conversion out of bounds");
+         Free_Eval_Static_Expr (Res, Conv);
+         Res := Build_Overflow (Conv);
       end if;
       return Res;
    end Eval_Type_Conversion;
@@ -2551,9 +2549,7 @@ package body Vhdl.Evaluation is
             Set_Nth_Element (Indexes_List, I, Index);
 
             --  Return overflow if out of range.
-            if Get_Kind (Index) = Iir_Kind_Overflow_Literal
-              or else not Eval_Is_In_Bound (Index, Prefix_Index)
-            then
+            if not Eval_Is_In_Bound (Index, Prefix_Index) then
                return Build_Overflow (Expr, Get_Type (Expr));
             end if;
          end loop;
@@ -2853,9 +2849,7 @@ package body Vhdl.Evaluation is
                Set_Parameter (Expr, Param);
 
                --  Special case for overflow.
-               if Get_Kind (Param) = Iir_Kind_Overflow_Literal
-                 or else not Eval_Is_In_Bound (Param,
-                                               Get_Type (Get_Prefix (Expr)))
+               if not Eval_Is_In_Bound (Param, Get_Type (Get_Prefix (Expr)))
                then
                   return Build_Overflow (Expr);
                end if;
@@ -3354,7 +3348,8 @@ package body Vhdl.Evaluation is
    end Eval_Fp_In_Range;
 
    --  Return FALSE if literal EXPR is not in SUB_TYPE bounds.
-   function Eval_Is_In_Bound (Expr : Iir; Sub_Type : Iir) return Boolean
+   function Eval_Is_In_Bound
+     (Expr : Iir; Sub_Type : Iir; Overflow : Boolean := False) return Boolean
    is
       Type_Range : Iir;
       Val : Iir;
@@ -3374,8 +3369,7 @@ package body Vhdl.Evaluation is
             --  Ignore errors.
             return True;
          when Iir_Kind_Overflow_Literal =>
-            --  Never within bounds
-            return False;
+            return Overflow;
          when others =>
             null;
       end case;
@@ -3503,12 +3497,8 @@ package body Vhdl.Evaluation is
 
    procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir) is
    begin
-      if Get_Kind (Expr) = Iir_Kind_Overflow_Literal then
-         --  Nothing to check, and a message was already generated.
-         return;
-      end if;
-
-      if not Eval_Is_In_Bound (Expr, Sub_Type) then
+      --  Note: use True not to repeat a message in case of overflow.
+      if not Eval_Is_In_Bound (Expr, Sub_Type, True) then
          Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
                           "static expression violates bounds");
       end if;

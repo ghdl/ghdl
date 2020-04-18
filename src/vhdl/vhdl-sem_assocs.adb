@@ -2161,7 +2161,7 @@ package body Vhdl.Sem_Assocs is
          Expr := Eval_Expr_Check_If_Static (Expr, Res_Type);
          Set_Actual (Assoc, Expr);
          if In_Conv = Null_Iir and then Out_Conv = Null_Iir then
-            if not Eval_Is_In_Bound (Expr, Formal_Type) then
+            if not Eval_Is_In_Bound (Expr, Formal_Type, True) then
                Error_Msg_Sem
                  (+Assoc, "actual constraints don't match formal ones");
             end if;
