@@ -2036,14 +2036,8 @@ package body Synth.Expr is
                return Create_Value_Access (Acc, Expr_Type);
             end;
          when Iir_Kind_Overflow_Literal =>
-            declare
-               N : Net;
-            begin
-               Error_Msg_Synth
-                 (+Expr, "error detected during analysis injected");
-               N := Build_Const_X (Get_Build (Syn_Inst), Expr_Type.W);
-               return Create_Value_Net (N, Expr_Type);
-            end;
+            Error_Msg_Synth (+Expr, "out of bound expression");
+            return No_Valtyp;
          when others =>
             Error_Kind ("synth_expression_with_type", Expr);
       end case;
