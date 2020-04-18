@@ -89,14 +89,16 @@ package body Netlists.Expands is
                        Els : Case_Element_Array_Acc;
                        Idx : in out Positive;
                        Addr : Net;
-                       Off : in out Uns32;
+                       Init_Off : Uns32;
                        W : Width;
                        Sel : in out Uns64)
    is
       Inst : constant Instance := Memidx_Arr (Arr_Idx);
       Step : constant Uns32 := Get_Param_Uns32 (Inst, 0);
       Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
+      Off : Uns32;
    begin
+      Off := Init_Off;
       for I in 0 .. Max loop
          if Arr_Idx < Memidx_Arr'Last then
             --  Recurse.
@@ -107,8 +109,8 @@ package body Netlists.Expands is
                           Val => Build_Extract (Ctxt, Val, Off, W));
             Idx := Idx + 1;
             Sel := Sel + 1;
-            Off := Off + Step;
          end if;
+         Off := Off + Step;
       end loop;
    end Fill_Els;
 

@@ -135,6 +135,7 @@ package body Synth.Stmts is
             Dest_Off := (0, 0);
             Dest_Voff := No_Net;
             Dest_Rdwd := 0;
+
          when Iir_Kind_Indexed_Name =>
             declare
                Voff : Net;
