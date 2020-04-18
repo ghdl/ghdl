@@ -481,7 +481,10 @@ package body Synth.Oper is
       is
          N : Net;
       begin
-         --  FIXME: check same length.
+         if Left.Typ.W /= Right.Typ.W then
+            Error_Msg_Synth (+Expr, "operands don't have the same length");
+            return No_Valtyp;
+         end if;
          N := Build_Dyadic (Build_Context, Id,
                             Get_Net (Left), Get_Net (Right));
          Set_Location (N, Expr);
