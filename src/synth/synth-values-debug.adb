@@ -147,7 +147,19 @@ package body Synth.Values.Debug is
 
    procedure Debug_Valtyp (V : Valtyp) is
    begin
-      Debug_Memtyp (Get_Memtyp (V));
+      case V.Val.Kind is
+         when Value_Memory
+           | Value_Const =>
+            Debug_Memtyp (Get_Memtyp (V));
+         when Value_Net =>
+            Put_Line ("a net");
+         when Value_Wire =>
+            Put_Line ("a wire");
+         when Value_File =>
+            Put_Line ("a file");
+         when Value_Alias =>
+            Put_Line ("an alias");
+      end case;
    end Debug_Valtyp;
 
 end Synth.Values.Debug;
