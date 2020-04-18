@@ -34,6 +34,34 @@ package body Vhdl.Utils is
       return Get_Kind (N) = Iir_Kind_Overflow_Literal;
    end Is_Overflow_Literal;
 
+   function Strip_Literal_Origin (N : Iir) return Iir
+   is
+      Orig : Iir;
+   begin
+      if N = Null_Iir then
+         return N;
+      end if;
+      case Get_Kind (N) is
+         when Iir_Kind_String_Literal8
+           |  Iir_Kind_Integer_Literal
+           |  Iir_Kind_Floating_Point_Literal
+           |  Iir_Kind_Physical_Int_Literal
+           |  Iir_Kind_Physical_Fp_Literal
+           |  Iir_Kind_Simple_Aggregate
+           |  Iir_Kind_Overflow_Literal
+           |  Iir_Kind_Enumeration_Literal
+           |  Iir_Kind_Aggregate =>
+            Orig := Get_Literal_Origin (N);
+            if Orig /= Null_Iir then
+               return Orig;
+            else
+               return N;
+            end if;
+         when others =>
+            return N;
+      end case;
+   end Strip_Literal_Origin;
+
    function List_To_Flist (L : Iir_List) return Iir_Flist
    is
       Len : constant Natural := Get_Nbr_Elements (L);

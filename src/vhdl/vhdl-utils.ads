@@ -32,6 +32,11 @@ package Vhdl.Utils is
    function Is_Overflow_Literal (N : Iir) return Boolean;
    pragma Inline (Is_Overflow_Literal);
 
+   --  If N is a literal and has a literal origin, return the literal origin.
+   --  Otherwise return N.
+   --  In other words, return the node as it was.
+   function Strip_Literal_Origin (N : Iir) return Iir;
+
    --  Find LIT in the list of identifiers or characters LIST.
    --  Return the literal (whose name is LIT) or null_iir if not found.
    function Find_Name_In_Chain (Chain: Iir; Lit: Name_Id) return Iir;

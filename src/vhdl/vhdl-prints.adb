@@ -4442,6 +4442,24 @@ package body Vhdl.Prints is
       end case;
    end Disp_Vhdl;
 
+   procedure Print_Qualified_Expression (Ctxt : in out Ctxt_Class; Expr: Iir)
+   is
+      Qexpr : constant Iir := Strip_Literal_Origin (Get_Expression (Expr));
+      Has_Paren : constant Boolean :=
+        Get_Kind (Qexpr) = Iir_Kind_Parenthesis_Expression
+        or else Get_Kind (Qexpr) = Iir_Kind_Aggregate;
+   begin
+      Print (Ctxt, Get_Type_Mark (Expr));
+      Disp_Token (Ctxt, Tok_Tick);
+      if not Has_Paren then
+         Disp_Token (Ctxt, Tok_Left_Paren);
+      end if;
+      Print (Ctxt, Qexpr);
+      if not Has_Paren then
+         Disp_Token (Ctxt, Tok_Right_Paren);
+      end if;
+   end Print_Qualified_Expression;
+
    procedure Print (Ctxt : in out Ctxt_Class; Expr: Iir)
    is
       Orig : Iir;
@@ -4571,22 +4589,7 @@ package body Vhdl.Prints is
             Print (Ctxt, Get_Expression (Expr));
             Disp_Token (Ctxt, Tok_Right_Paren);
          when Iir_Kind_Qualified_Expression =>
-            declare
-               Qexpr : constant Iir := Get_Expression (Expr);
-               Has_Paren : constant Boolean :=
-                 Get_Kind (Qexpr) = Iir_Kind_Parenthesis_Expression
-                 or else Get_Kind (Qexpr) = Iir_Kind_Aggregate;
-            begin
-               Print (Ctxt, Get_Type_Mark (Expr));
-               Disp_Token (Ctxt, Tok_Tick);
-               if not Has_Paren then
-                  Disp_Token (Ctxt, Tok_Left_Paren);
-               end if;
-               Print (Ctxt, Qexpr);
-               if not Has_Paren then
-                  Disp_Token (Ctxt, Tok_Right_Paren);
-               end if;
-            end;
+            Print_Qualified_Expression (Ctxt, Expr);
          when Iir_Kind_Allocator_By_Expression =>
             Disp_Token (Ctxt, Tok_New);
             Print (Ctxt, Get_Expression (Expr));
