@@ -4222,6 +4222,9 @@ package body Vhdl.Sem_Expr is
             null;
       end case;
 
+      --  Emit a warning if the value is known not to be within the bounds.
+      Eval_Check_Bound (Res, N_Type);
+
       return Expr;
    end Sem_Qualified_Expression;
 
