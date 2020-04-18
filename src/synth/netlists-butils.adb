@@ -71,29 +71,45 @@ package body Netlists.Butils is
                   G (El_Idx) := Els (Iels).Val;
                   Iels := Iels + 1;
                end loop;
-               if G (3) /= No_Net then
+               if G (0) /= No_Net
+                 and G (1) /= No_Net
+                 and G (2) /= No_Net
+                 and G (3) /= No_Net
+               then
                   Rsel := Build_Mux4 (Ctxt,
                                       Sub_Sel, G (0), G (1), G (2), G (3));
                   Set_Location (Rsel, Sel_Loc);
-               elsif G (2) /= No_Net then
-                  Rsel := Build_Mux2
-                    (Ctxt,
-                     Build_Extract_Bit (Ctxt, Sel, Width (2 * (I - 1)) + 1),
-                     Build_Mux2 (Ctxt,
-                                 Build_Extract_Bit (Ctxt,
-                                                    Sel, Width (2 * (I - 1))),
-                                 G (0), G (1)),
-                     G (2));
-                  Set_Location (Rsel, Sel_Loc);
-               elsif G (1) /= No_Net then
-                  Rsel := Build_Mux2
-                    (Ctxt,
-                     Build_Extract_Bit (Ctxt,
-                                        Sel, Width (2 * (I - 1))),
-                     G (0), G (1));
-                  Set_Location (Rsel, Sel_Loc);
                else
-                  Rsel := G (0);
+                  for K in 0 .. 1 loop
+                     if G (2 * K) /= No_Net and G (2 * K + 1) /= No_Net then
+                        G (K) := Build_Mux2
+                          (Ctxt,
+                           Build_Extract_Bit
+                             (Ctxt, Sel, Width (2 * (I - 1))),
+                           G (2 * K), G (2 * K + 1));
+                        Set_Location (G (K), Sel_Loc);
+                     else
+                        if G (2 * K) /= No_Net then
+                           G (K) := G (2 * K);
+                        else
+                           G (K) := G (2 * K + 1);
+                        end if;
+                     end if;
+                  end loop;
+                  if G (0) /= No_Net and G (1) /= No_Net then
+                     Rsel := Build_Mux2
+                       (Ctxt,
+                        Build_Extract_Bit (Ctxt, Sel,
+                                           Width (2 * (I - 1) + 1)),
+                        G (0), G (1));
+                     Set_Location (Rsel, Sel_Loc);
+                  else
+                     if G (0) /= No_Net then
+                        Rsel := G (0);
+                     else
+                        Rsel := G (1);
+                     end if;
+                  end if;
                end if;
                Els (Oels) := (Sel => S_Group, Val => Rsel);
                Oels := Oels + 1;
