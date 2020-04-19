@@ -817,6 +817,9 @@ package body Synth.Expr is
          when Type_File =>
             pragma Assert (Vtype = Dtype);
             return Vt;
+         when Type_Protected =>
+            pragma Assert (Vtype = Dtype);
+            return Vt;
       end case;
    end Synth_Subtype_Conversion;
 

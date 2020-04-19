@@ -473,7 +473,8 @@ package body Synth.Values is
             end loop;
          when Type_Access =>
             Write_Access (M, Null_Heap_Index);
-         when Type_File =>
+         when Type_File
+           |  Type_Protected =>
             raise Internal_Error;
       end case;
    end Write_Value_Default;

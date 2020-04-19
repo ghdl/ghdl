@@ -54,7 +54,8 @@ package body Synth.Objtypes is
            | Type_File =>
             return True;
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector =>
+           | Type_Unbounded_Vector
+           | Type_Protected =>
             return False;
       end case;
    end Is_Bounded_Type;
@@ -112,6 +113,8 @@ package body Synth.Objtypes is
             return Are_Types_Equal (L.Acc_Acc, R.Acc_Acc);
          when Type_File =>
             return Are_Types_Equal (L.File_Typ, R.File_Typ);
+         when Type_Protected =>
+            return False;
       end case;
    end Are_Types_Equal;
 
@@ -480,6 +483,18 @@ package body Synth.Objtypes is
                                                 File_Typ => File_Type)));
    end Create_File_Type;
 
+   function Create_Protected_Type return Type_Acc
+   is
+      subtype Protected_Type_Type is Type_Type (Type_Protected);
+      function Alloc is new Areapools.Alloc_On_Pool_Addr (Protected_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Protected,
+                                                Is_Synth => False,
+                                                Al => 2,
+                                                Sz => 4,
+                                                W => 32)));
+   end Create_Protected_Type;
+
    function Vec_Length (Typ : Type_Acc) return Iir_Index32 is
    begin
       return Iir_Index32 (Typ.Vbound.Len);
@@ -558,7 +573,8 @@ package body Synth.Objtypes is
             return True;
          when Type_Access =>
             return True;
-         when Type_File =>
+         when Type_File
+           |  Type_Protected =>
             raise Internal_Error;
       end case;
    end Is_Matching_Bounds;

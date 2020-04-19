@@ -216,6 +216,8 @@ package body Synth.Decls is
          when Iir_Kind_Record_Type_Definition =>
             Synth_Record_Elements_Definition (Syn_Inst, Def);
             Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
+         when Iir_Kind_Protected_Type_Declaration =>
+            Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Def));
          when others =>
             Vhdl.Errors.Error_Kind ("synth_type_definition", Def);
       end case;
@@ -720,14 +722,22 @@ package body Synth.Decls is
    procedure Synth_Variable_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean)
    is
-      Def : constant Iir := Get_Default_Value (Decl);
-      --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+      Def : constant Node := Get_Default_Value (Decl);
+      Decl_Type : constant Node := Get_Type (Decl);
       Init : Valtyp;
       Obj_Typ : Type_Acc;
       Wid : Wire_Id;
    begin
       Synth_Declaration_Type (Syn_Inst, Decl);
-      Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
+      if Get_Kind (Decl_Type) = Iir_Kind_Protected_Type_Declaration then
+         Error_Msg_Synth
+           (+Decl, "protected type variable is not synthesizable");
+         Set_Error (Syn_Inst);
+         Create_Object (Syn_Inst, Decl, No_Valtyp);
+         return;
+      end if;
+
+      Obj_Typ := Get_Subtype_Object (Syn_Inst, Decl_Type);
       if not Obj_Typ.Is_Synth
         and then not Get_Instance_Const (Syn_Inst)
       then
@@ -875,6 +885,8 @@ package body Synth.Decls is
                Res := Create_Value_File (Obj_Typ, F);
                Create_Object (Syn_Inst, Decl, Res);
             end;
+         when Iir_Kind_Protected_Type_Body =>
+            null;
          when Iir_Kind_Psl_Default_Clock =>
             --  Ignored; directly used by PSL directives.
             null;
@@ -964,7 +976,9 @@ package body Synth.Decls is
                declare
                   Vt : constant Valtyp := Get_Value (Syn_Inst, Decl);
                begin
-                  Free_Wire (Vt.Val.W);
+                  if Vt /= No_Valtyp then
+                     Free_Wire (Vt.Val.W);
+                  end if;
                end;
             end if;
          when Iir_Kind_Constant_Declaration =>

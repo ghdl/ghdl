@@ -78,6 +78,8 @@ package body Synth.Values.Debug is
             Put ("unbounded vector");
          when Type_Unbounded_Array =>
             Put ("unbounded array");
+         when Type_Protected =>
+            Put ("protected");
       end case;
    end Debug_Typ1;
 
@@ -141,6 +143,8 @@ package body Synth.Values.Debug is
             Put ("unbounded vector");
          when Type_Unbounded_Array =>
             Put ("unbounded array");
+         when Type_Protected =>
+            Put ("protected");
       end case;
       New_Line;
    end Debug_Memtyp;

@@ -80,7 +80,8 @@ package Synth.Objtypes is
       Type_Record,
 
       Type_Access,
-      Type_File
+      Type_File,
+      Type_Protected
      );
 
    subtype Type_Nets is Type_Kind range Type_Bit .. Type_Logic;
@@ -149,6 +150,8 @@ package Synth.Objtypes is
             Acc_Acc : Type_Acc;
          when Type_File =>
             File_Typ : Type_Acc;
+         when Type_Protected =>
+            null;
       end case;
    end record;
 
@@ -209,6 +212,8 @@ package Synth.Objtypes is
    function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc;
 
    function Create_File_Type (File_Type : Type_Acc) return Type_Acc;
+
+   function Create_Protected_Type return Type_Acc;
 
    --  Return the bounds of dimension DIM of a vector/array.  For a vector,
    --  DIM must be 1.
