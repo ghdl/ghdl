@@ -407,14 +407,16 @@ package body Synth.Insts is
       Nbr_Inputs := 0;
       Nbr_Outputs := 0;
       while Is_Valid (Inter) loop
-         --  Elaborate the type...
-         Synth_Declaration_Type (Syn_Inst, Inter);
-         Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
-         if not Is_Bounded_Type (Inter_Typ) then
-            --  ... but get it from the template (so that unbounded types
-            --  are bounded).
-            Inter_Typ := Get_Value (Params.Syn_Inst, Inter).Typ;
+         --  Copy the type from PARAMS if needed.  The subtype indication of
+         --  the port may reference objects that aren't anymore reachable
+         --  (particularly if it is a port of a component).  So the subtype
+         --  cannot be regularly elaborated.
+         --  Also, for unconstrained subtypes, we need the constraint.
+         Inter_Typ := Get_Value (Params.Syn_Inst, Inter).Typ;
+         if Get_Declaration_Type (Inter) /= Null_Node then
+            Create_Subtype_Object (Syn_Inst, Get_Type (Inter), Inter_Typ);
          end if;
+
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
                Val := Create_Value_Net (No_Net, Inter_Typ);
