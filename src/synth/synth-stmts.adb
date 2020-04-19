@@ -2119,15 +2119,17 @@ package body Synth.Stmts is
                return;
             end if;
          else
+            --  Create a branch for the True case.
             Push_Phi;
          end if;
       end if;
 
-      --  Execution is suspended.
+      --  Execution is suspended for the current loop.
       Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
 
       Lc := C.Cur_Loop;
 
+      --  Compute the loop statement indicated by the exit/next statement.
       Loop_Label := Get_Loop_Label (Stmt);
       if Loop_Label = Null_Node then
          Loop_Label := Lc.Loop_Stmt;
@@ -2135,8 +2137,11 @@ package body Synth.Stmts is
          Loop_Label := Get_Named_Entity (Loop_Label);
       end if;
 
+      --  Update the W_Exit and W_Quit flags for the loops.  All the loops
+      --  until the label are canceled.
       loop
          if Lc.Loop_Stmt = Loop_Label then
+            --  Final loop.
             if Is_Exit then
                Phi_Assign_Net (Get_Build (C.Inst),
                                Lc.W_Exit, Get_Inst_Bit0 (C.Inst), 0);
@@ -2151,8 +2156,11 @@ package body Synth.Stmts is
 
       if Cond /= Null_Node and not Static_Cond then
          Pop_Phi (Phi_True);
+
+         --  If the condition is false, do nothing.
          Push_Phi;
          Pop_Phi (Phi_False);
+
          Merge_Phis (Build_Context,
                      Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
       end if;
