@@ -23,16 +23,21 @@ with Utils_IO; use Utils_IO;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package body Synth.Values.Debug is
-   procedure Debug_Bound (Bnd : Bound_Type) is
+   procedure Put_Dir (Dir : Iir_Direction) is
    begin
-      Put_Int32 (Bnd.Left);
-      Put (' ');
-      case Bnd.Dir is
+      case Dir is
          when Iir_To =>
             Put ("to");
          when Iir_Downto =>
             Put ("downto");
       end case;
+   end Put_Dir;
+
+   procedure Debug_Bound (Bnd : Bound_Type) is
+   begin
+      Put_Int32 (Bnd.Left);
+      Put (' ');
+      Put_Dir (Bnd.Dir);
       Put (' ');
       Put_Int32 (Bnd.Right);
       Put (" [");
@@ -66,6 +71,16 @@ package body Synth.Values.Debug is
             Put (")");
          when Type_Discrete =>
             Put ("discrete: ");
+            Put_Int64 (T.Drange.Left);
+            Put (' ');
+            Put_Dir (T.Drange.Dir);
+            Put (' ');
+            Put_Int64 (T.Drange.Right);
+            if T.Drange.Is_Signed then
+               Put (" [signed]");
+            else
+               Put (" [unsigned]");
+            end if;
          when Type_Access =>
             Put ("access");
          when Type_File =>
@@ -81,6 +96,13 @@ package body Synth.Values.Debug is
          when Type_Protected =>
             Put ("protected");
       end case;
+      Put (' ');
+      Put (" al=");
+      Put_Int32 (Int32 (T.Al));
+      Put (" sz=");
+      Put_Uns32 (Uns32 (T.Sz));
+      Put (" w=");
+      Put_Uns32 (Uns32 (T.W));
    end Debug_Typ1;
 
    procedure Debug_Typ (T : Type_Acc) is
