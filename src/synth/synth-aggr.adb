@@ -33,8 +33,11 @@ with Synth.Decls; use Synth.Decls;
 package body Synth.Aggr is
    type Stride_Array is array (Dim_Type range <>) of Nat32;
 
-   function Get_Index_Offset
-     (Index : Int64; Bounds : Bound_Type; Expr : Iir) return Uns32
+   procedure Get_Index_Offset (Index : Int64;
+                               Bounds : Bound_Type;
+                               Expr : Iir;
+                               Off : out Uns32;
+                               Err_P : out Boolean)
    is
       Left : constant Int64 := Int64 (Bounds.Left);
       Right : constant Int64 := Int64 (Bounds.Right);
@@ -43,22 +46,30 @@ package body Synth.Aggr is
          when Iir_To =>
             if Index >= Left and then Index <= Right then
                -- to
-               return Uns32 (Index - Left);
+               Off := Uns32 (Index - Left);
+               Err_P := False;
+               return;
             end if;
          when Iir_Downto =>
             if Index <= Left and then Index >= Right then
                -- downto
-               return Uns32 (Left - Index);
+               Off := Uns32 (Left - Index);
+               Err_P := False;
+               return;
             end if;
       end case;
       Error_Msg_Synth (+Expr, "index out of bounds");
-      return 0;
+      Off := 0;
+      Err_P := True;
    end Get_Index_Offset;
 
-   function Get_Index_Offset
-     (Index : Valtyp; Bounds : Bound_Type; Expr : Iir) return Uns32 is
+   procedure Get_Index_Offset (Index : Valtyp;
+                               Bounds : Bound_Type;
+                               Expr : Iir;
+                               Off : out Uns32;
+                               Err_P : out Boolean) is
    begin
-      return Get_Index_Offset (Read_Discrete (Index), Bounds, Expr);
+      Get_Index_Offset (Read_Discrete (Index), Bounds, Expr, Off, Err_P);
    end Get_Index_Offset;
 
    function Fill_Stride (Typ : Type_Acc) return Stride_Array is
@@ -92,33 +103,43 @@ package body Synth.Aggr is
                                    First_Pos : Nat32;
                                    Strides : Stride_Array;
                                    Dim : Dim_Type;
-                                   Const_P : out Boolean)
+                                   Const_P : out Boolean;
+                                   Err_P : out boolean)
    is
       Bound : constant Bound_Type := Get_Array_Bound (Typ, Dim);
       El_Typ : constant Type_Acc := Get_Array_Element (Typ);
       Stride : constant Nat32 := Strides (Dim);
       Value : Node;
       Assoc : Node;
+      Nbr_Els : Nat32;
+      Sub_Err : Boolean;
 
       procedure Set_Elem (Pos : Nat32)
       is
          Sub_Const : Boolean;
+         Sub_Err : Boolean;
          Val : Valtyp;
       begin
+         Nbr_Els := Nbr_Els + 1;
+
          if Dim = Strides'Last then
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
             Val := Synth_Subtype_Conversion (Val, El_Typ, False, Value);
             pragma Assert (Res (Pos) = No_Valtyp);
             Res (Pos) := Val;
-            if Const_P and then not Is_Static (Val.Val) then
-               Const_P := False;
+            if Val = No_Valtyp then
+               Err_P := True;
+            else
+               if Const_P and then not Is_Static (Val.Val) then
+                  Const_P := False;
+               end if;
             end if;
          else
             Fill_Array_Aggregate
-              (Syn_Inst, Value, Res, Typ, Pos, Strides, Dim + 1, Sub_Const);
-            if not Sub_Const then
-               Const_P := False;
-            end if;
+              (Syn_Inst, Value, Res, Typ, Pos, Strides, Dim + 1,
+               Sub_Const, Sub_Err);
+            Const_P := Const_P and Sub_Const;
+            Err_P := Err_P or Sub_Err;
          end if;
       end Set_Elem;
 
@@ -137,6 +158,7 @@ package body Synth.Aggr is
             Res (Pos + I - 1).Typ := Val.Typ;
          end loop;
 
+         Nbr_Els := Nbr_Els + Len;
          if Const_P and then not Is_Static (Val.Val) then
             Const_P := False;
          end if;
@@ -144,9 +166,12 @@ package body Synth.Aggr is
 
       Pos : Nat32;
    begin
-      Assoc := Get_Association_Choices_Chain (Aggr);
       Pos := First_Pos;
+      Nbr_Els := 0;
       Const_P := True;
+      Err_P := False;
+
+      Assoc := Get_Association_Choices_Chain (Aggr);
       while Is_Valid (Assoc) loop
          Value := Get_Associated_Expr (Assoc);
          loop
@@ -197,14 +222,16 @@ package body Synth.Aggr is
                   declare
                      Ch : constant Node := Get_Choice_Expression (Assoc);
                      Idx : Valtyp;
-                     Off : Nat32;
+                     Off : Uns32;
                   begin
                      Idx := Synth_Expression (Syn_Inst, Ch);
                      if not Is_Static (Idx.Val) then
                         Error_Msg_Synth (+Ch, "choice is not static");
                      else
-                        Off := Nat32 (Get_Index_Offset (Idx, Bound, Ch));
-                        Set_Elem (First_Pos + Off * Stride);
+                        Get_Index_Offset (Idx, Bound, Ch, Off, Sub_Err);
+                        Err_P := Err_P or Sub_Err;
+                        exit when Err_P;
+                        Set_Elem (First_Pos + Nat32 (Off) * Stride);
                      end if;
                   end;
                when Iir_Kind_Choice_By_Range =>
@@ -213,7 +240,7 @@ package body Synth.Aggr is
                      Rng : Discrete_Range_Type;
                      Val : Valtyp;
                      Rng_Len : Width;
-                     Off : Nat32;
+                     Off : Uns32;
                   begin
                      Synth_Discrete_Range (Syn_Inst, Ch, Rng);
                      if Get_Element_Type_Flag (Assoc) then
@@ -222,9 +249,12 @@ package body Synth.Aggr is
                            Get_Subtype_Object (Syn_Inst,
                                                Get_Base_Type (Get_Type (Ch))));
                         while In_Range (Rng, Read_Discrete (Val)) loop
-                           Off := Nat32 (Get_Index_Offset (Val, Bound, Ch));
-                           Set_Elem (First_Pos + Off * Stride);
+                           Get_Index_Offset (Val, Bound, Ch, Off, Sub_Err);
+                           Err_P := Err_P or Sub_Err;
+                           exit when Err_P;
+                           Set_Elem (First_Pos + Nat32 (Off) * Stride);
                            Update_Index (Rng, Val);
+                           exit when Err_P;
                         end loop;
                      else
                         --  The direction must be the same.
@@ -243,8 +273,11 @@ package body Synth.Aggr is
                              (+Value, "length doesn't match range");
                         end if;
                         pragma Assert (Stride = 1);
-                        Off := Nat32 (Get_Index_Offset (Rng.Left, Bound, Ch));
-                        Set_Vector (First_Pos + Off, Nat32 (Rng_Len), Val);
+                        Get_Index_Offset (Rng.Left, Bound, Ch, Off, Sub_Err);
+                        Err_P := Err_P or Sub_Err;
+                        exit when Err_P;
+                        Set_Vector
+                          (First_Pos + Nat32 (Off), Nat32 (Rng_Len), Val);
                      end if;
                   end;
                when others =>
@@ -254,8 +287,14 @@ package body Synth.Aggr is
             Assoc := Get_Chain (Assoc);
             exit when Is_Null (Assoc);
             exit when not Get_Same_Alternative_Flag (Assoc);
+            exit when Err_P;
          end loop;
       end loop;
+
+      if not Err_P and then Nbr_Els /= Nat32 (Bound.Len) then
+         Error_Msg_Synth (+Aggr, "aggregate length doesn't match its bound");
+         Err_P := True;
+      end if;
    end Fill_Array_Aggregate;
 
    procedure Fill_Record_Aggregate (Syn_Inst : Synth_Instance_Acc;
@@ -346,12 +385,16 @@ package body Synth.Aggr is
       Flen : constant Iir_Index32 := Get_Array_Flat_Length (Aggr_Type);
       Tab_Res : Valtyp_Array_Acc;
       Const_P : Boolean;
+      Err_P : Boolean;
       Res : Valtyp;
    begin
       Tab_Res := new Valtyp_Array'(1 .. Nat32 (Flen) => No_Valtyp);
 
       Fill_Array_Aggregate
-        (Syn_Inst, Aggr, Tab_Res, Aggr_Type, 1, Strides, 1, Const_P);
+        (Syn_Inst, Aggr, Tab_Res, Aggr_Type, 1, Strides, 1, Const_P, Err_P);
+      if Err_P then
+         return No_Valtyp;
+      end if;
 
       --  TODO: check all element types have the same bounds ?
 
