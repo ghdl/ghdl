@@ -995,6 +995,21 @@ package body Synth.Oper is
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn =>
+            --  "*" (unsigned, signed)
+            declare
+               W : constant Width := Left.Typ.W + 1 + Right.Typ.W;
+               Rtype : Type_Acc;
+               L, R : Net;
+               N : Net;
+            begin
+               L := Synth_Uresize (Left, W, Left_Expr);
+               R := Synth_Sresize (Right, W, Right_Expr);
+               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
+               N := Build_Dyadic (Build_Context, Id_Smul, L, R);
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Rtype);
+            end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
@@ -1142,30 +1157,31 @@ package body Synth.Oper is
             return Synth_Compare_Int_Sgn (Id_Sle, Expr_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns =>
+           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns =>
             --  ">" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ugt, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Nat =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Nat
+           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int =>
             --  ">" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Ugt, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Nat_Uns =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Nat_Uns =>
             --  ">" (Natural, Unsigned) [resize]
             return Synth_Compare_Nat_Uns (Id_Ugt, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Sgn =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Sgn
+           |  Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Sgn =>
             --  ">" (Signed, Signed) [resize]
             return Synth_Compare_Sgn_Sgn (Id_Sgt, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Int
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Int =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Sgn_Int
+           |  Iir_Predefined_Ieee_Std_Logic_Arith_Gt_Sgn_Int =>
             --  ">" (Signed, Integer)
             return Synth_Compare_Sgn_Int (Id_Sgt, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Int_Sgn
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Int_Sgn =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Int_Sgn =>
             --  ">" (Integer, Signed)
             return Synth_Compare_Int_Sgn (Id_Sgt, Expr_Typ);
 
