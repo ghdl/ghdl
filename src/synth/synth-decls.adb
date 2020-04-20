@@ -776,8 +776,7 @@ package body Synth.Decls is
    is
       Atype : constant Node := Get_Declaration_Type (Decl);
       Off : Value_Offsets;
-      Voff : Net;
-      Rdwd : Width;
+      Dyn : Stmts.Dyn_Name;
       Res : Valtyp;
       Obj_Typ : Type_Acc;
       Base : Valtyp;
@@ -792,8 +791,8 @@ package body Synth.Decls is
       end if;
 
       Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
-                                     Base, Typ, Off, Voff, Rdwd);
-      pragma Assert (Voff = No_Net);
+                                     Base, Typ, Off, Dyn);
+      pragma Assert (Dyn.Voff = No_Net);
       if Base.Val.Kind = Value_Net then
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.

@@ -94,14 +94,12 @@ package body Synth.Stmts is
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
                                       Dest_Off : out Value_Offsets;
-                                      Dest_Voff : out Net;
-                                      Dest_Rdwd : out Width) is
+                                      Dest_Dyn : out Dyn_Name) is
    begin
       case Get_Kind (Pfx) is
          when Iir_Kind_Simple_Name =>
             Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx),
-                                     Dest_Base, Dest_Typ,
-                                     Dest_Off, Dest_Voff, Dest_Rdwd);
+                                     Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Variable_Declaration
@@ -115,8 +113,7 @@ package body Synth.Stmts is
             declare
                Targ : constant Valtyp := Get_Value (Syn_Inst, Pfx);
             begin
-               Dest_Voff := No_Net;
-               Dest_Rdwd := 0;
+               Dest_Dyn := No_Dyn_Name;
                Dest_Typ := Targ.Typ;
 
                if Targ.Val.Kind = Value_Alias then
@@ -133,36 +130,44 @@ package body Synth.Stmts is
             Dest_Base := Synth_Expression (Syn_Inst, Pfx);
             Dest_Typ := Dest_Base.Typ;
             Dest_Off := (0, 0);
-            Dest_Voff := No_Net;
-            Dest_Rdwd := 0;
+            Dest_Dyn := No_Dyn_Name;
 
          when Iir_Kind_Indexed_Name =>
             declare
                Voff : Net;
                Off : Value_Offsets;
-               Pfx_W : Width;
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
-                  Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
+                  Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Strip_Const (Dest_Base);
-               Pfx_W := Dest_Typ.W;
                Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Voff, Off);
 
-               Dest_Typ := Get_Array_Element (Dest_Typ);
-
-               Dest_Off.Net_Off := Dest_Off.Net_Off + Off.Net_Off;
-               Dest_Off.Mem_Off := Dest_Off.Mem_Off + Off.Mem_Off;
-
-               if Voff /= No_Net then
-                  if Dest_Voff = No_Net then
-                     Dest_Voff := Voff;
-                     Dest_Rdwd := Pfx_W;
+               if Voff = No_Net then
+                  --  Static index.
+                  Dest_Off := Dest_Off + Off;
+               else
+                  --  Dynamic index.
+                  if Dest_Dyn.Voff = No_Net then
+                     --  The first one.
+                     Dest_Dyn := (Pfx_Off => Dest_Off,
+                                  Pfx_Typ => Dest_Typ,
+                                  Voff => Voff);
+                     Dest_Off := Off;
                   else
-                     Dest_Voff := Build_Addidx
-                       (Get_Build (Syn_Inst), Dest_Voff, Voff);
+                     --  Nested one.
+                     --  FIXME
+                     Dest_Off := Dest_Off + Off;
+                  --  if Dest_Off /= (0, 0) then
+                  --     Error_Msg_Synth (+Pfx, "nested memory not supported");
+                  --  end if;
+
+                     Dest_Dyn.Voff := Build_Addidx
+                       (Get_Build (Syn_Inst), Dest_Dyn.Voff, Voff);
                   end if;
                end if;
+
+               Dest_Typ := Get_Array_Element (Dest_Typ);
             end;
 
          when Iir_Kind_Selected_Element =>
@@ -172,7 +177,7 @@ package body Synth.Stmts is
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
-                  Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
+                  Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Dest_Off.Net_Off :=
                  Dest_Off.Net_Off + Dest_Typ.Rec.E (Idx + 1).Boff;
                Dest_Off.Mem_Off :=
@@ -188,35 +193,41 @@ package body Synth.Stmts is
                Res_Bnd : Bound_Type;
                Sl_Voff : Net;
                Sl_Off : Value_Offsets;
-               Pfx_W : Width;
             begin
                Synth_Assignment_Prefix
                  (Syn_Inst, Get_Prefix (Pfx),
-                  Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
+                  Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Strip_Const (Dest_Base);
-               Pfx_W := Dest_Typ.W;
 
                Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
                Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
                                    Res_Bnd, Sl_Voff, Sl_Off);
 
-               Dest_Off.Net_Off := Dest_Off.Net_Off + Sl_Off.Net_Off;
-               Dest_Off.Mem_Off := Dest_Off.Mem_Off + Sl_Off.Mem_Off;
 
-               if Sl_Voff /= No_Net then
-                  --  Variable slice.
-                  if Dest_Voff /= No_Net then
-                     Dest_Voff := Build_Addidx
-                       (Get_Build (Syn_Inst), Dest_Voff, Sl_Voff);
-                  else
-                     Dest_Rdwd := Pfx_W;
-                     Dest_Voff := Sl_Voff;
-                  end if;
-                  Dest_Typ := Create_Slice_Type (Res_Bnd.Len, El_Typ);
-               else
+               if Sl_Voff = No_Net then
                   --  Fixed slice.
                   Dest_Typ := Create_Onedimensional_Array_Subtype
                     (Dest_Typ, Res_Bnd);
+                  Dest_Off.Net_Off := Dest_Off.Net_Off + Sl_Off.Net_Off;
+                  Dest_Off.Mem_Off := Dest_Off.Mem_Off + Sl_Off.Mem_Off;
+               else
+                  --  Variable slice.
+                  if Dest_Dyn.Voff = No_Net then
+                     --  First one.
+                     Dest_Dyn := (Pfx_Off => Dest_Off,
+                                  Pfx_Typ => Dest_Typ,
+                                  Voff => Sl_Voff);
+                     Dest_Off := Sl_Off;
+                  else
+                     --  Nested.
+                     if Dest_Off /= (0, 0) then
+                        Error_Msg_Synth (+Pfx, "nested memory not supported");
+                     end if;
+
+                     Dest_Dyn.Voff := Build_Addidx
+                       (Get_Build (Syn_Inst), Dest_Dyn.Voff, Sl_Voff);
+                  end if;
+                  Dest_Typ := Create_Slice_Type (Res_Bnd.Len, El_Typ);
                end if;
             end;
 
@@ -224,8 +235,8 @@ package body Synth.Stmts is
            | Iir_Kind_Dereference =>
             Synth_Assignment_Prefix
               (Syn_Inst, Get_Prefix (Pfx),
-               Dest_Base, Dest_Typ, Dest_Off, Dest_Voff, Dest_Rdwd);
-            if Dest_Off /= (0, 0) and then Dest_Voff /= No_Net then
+               Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
+            if Dest_Off /= (0, 0) and then Dest_Dyn.Voff /= No_Net then
                raise Internal_Error;
             end if;
             Dest_Base := Heap.Synth_Dereference (Read_Access (Dest_Base));
@@ -265,11 +276,7 @@ package body Synth.Stmts is
             --  For a memory: the destination is known.
             Mem_Obj : Valtyp;
             --  The dynamic offset.
-            Mem_Voff : Net;
-            --  Offset of the memory in the wire (usually 0).
-            Mem_Moff : Uns32;
-            --  Width of the whole memory
-            Mem_Mwidth : Width;
+            Mem_Dyn : Dyn_Name;
             --  Offset of the data to be accessed from the memory.
             Mem_Doff : Uns32;
       end case;
@@ -314,12 +321,10 @@ package body Synth.Stmts is
                Typ : Type_Acc;
                Off : Value_Offsets;
 
-               Voff : Net;
-               Rdwd : Width;
+               Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix
-                 (Syn_Inst, Target, Base, Typ, Off, Voff, Rdwd);
-               if Voff = No_Net then
+               Synth_Assignment_Prefix (Syn_Inst, Target, Base, Typ, Off, Dyn);
+               if Dyn.Voff = No_Net then
                   --  FIXME: check index.
                   return Target_Info'(Kind => Target_Simple,
                                       Targ_Type => Typ,
@@ -329,9 +334,7 @@ package body Synth.Stmts is
                   return Target_Info'(Kind => Target_Memory,
                                       Targ_Type => Typ,
                                       Mem_Obj => Base,
-                                      Mem_Mwidth => Rdwd,
-                                      Mem_Moff => 0, -- Uns32 (Off.Mem_Off),
-                                      Mem_Voff => Voff,
+                                      Mem_Dyn => Dyn,
                                       Mem_Doff => Off.Net_Off);
                end if;
             end;
@@ -464,16 +467,17 @@ package body Synth.Stmts is
             end if;
          when Target_Memory =>
             declare
+               Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
                N : Net;
             begin
                N := Get_Current_Assign_Value
-                 (Get_Build (Syn_Inst), Target.Mem_Obj.Val.W,
-                  Target.Mem_Moff, Target.Mem_Mwidth);
-               N := Build_Dyn_Insert (Get_Build (Syn_Inst), N, Get_Net (V),
-                  Target.Mem_Voff, Target.Mem_Doff);
+                 (Ctxt, Target.Mem_Obj.Val.W,
+                  Target.Mem_Dyn.Pfx_Off.Net_Off, Target.Mem_Dyn.Pfx_Typ.W);
+               N := Build_Dyn_Insert
+                 (Ctxt, N, Get_Net (V), Target.Mem_Dyn.Voff, Target.Mem_Doff);
                Set_Location (N, Loc);
-               Phi_Assign_Net (Get_Build (Syn_Inst), Target.Mem_Obj.Val.W,
-                               N, Target.Mem_Moff);
+               Phi_Assign_Net (Ctxt, Target.Mem_Obj.Val.W, N,
+                               Target.Mem_Dyn.Pfx_Off.Net_Off);
             end;
       end case;
    end Synth_Assignment;
@@ -493,20 +497,20 @@ package body Synth.Stmts is
                                Obj : Valtyp;
                                Res_Typ : Type_Acc;
                                Off : Uns32;
-                               Voff : Net;
+                               Dyn : Dyn_Name;
                                Loc : Node) return Valtyp
    is
       N : Net;
    begin
       N := Get_Net (Obj);
-      if Voff /= No_Net then
+      if Dyn.Voff /= No_Net then
          Synth.Source.Set_Location_Maybe (N, Loc);
-         N := Build_Dyn_Extract
-           (Get_Build (Syn_Inst), N, Voff, Off, Res_Typ.W);
+         pragma Assert (Off = 0 or Dyn.Pfx_Off.Net_Off = 0);
+         N := Build_Dyn_Extract (Get_Build (Syn_Inst), N, Dyn.Voff,
+                                 Dyn.Pfx_Off.Net_Off + Off, Res_Typ.W);
       else
          pragma Assert (not Is_Static (Obj.Val));
-         N := Build2_Extract
-           (Get_Build (Syn_Inst), N, Off, Res_Typ.W);
+         N := Build2_Extract (Get_Build (Syn_Inst), N, Off, Res_Typ.W);
       end if;
       Set_Location (N, Loc);
       return Create_Value_Net (N, Res_Typ);
@@ -527,7 +531,7 @@ package body Synth.Stmts is
             raise Internal_Error;
          when Target_Memory =>
             return Synth_Read_Memory (Syn_Inst, Targ.Mem_Obj, Targ.Targ_Type,
-                                      Targ.Mem_Moff, Targ.Mem_Voff, Loc);
+                                      0, Targ.Mem_Dyn, Loc);
       end case;
    end Synth_Read;
 
@@ -3334,15 +3338,14 @@ package body Synth.Stmts is
 
       declare
          Off : Value_Offsets;
-         Voff : Net;
-         Wd : Width;
+         Dyn : Dyn_Name;
          N : Net;
          Base : Valtyp;
          Typ : Type_Acc;
       begin
-         Synth_Assignment_Prefix (Syn_Inst, Sig, Base, Typ, Off, Voff, Wd);
+         Synth_Assignment_Prefix (Syn_Inst, Sig, Base, Typ, Off, Dyn);
          pragma Assert (Off = (0, 0));
-         pragma Assert (Voff = No_Net);
+         pragma Assert (Dyn.Voff = No_Net);
          pragma Assert (Base.Val.Kind = Value_Wire);
          pragma Assert (Base.Typ = Typ);
 

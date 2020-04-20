@@ -1858,19 +1858,17 @@ package body Synth.Expr is
                Off : Value_Offsets;
                Res : Valtyp;
 
-               Voff : Net;
-               Rdwd : Width;
+               Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix
-                 (Syn_Inst, Expr, Base, Typ, Off, Voff, Rdwd);
-               if Voff = No_Net and then Is_Static (Base.Val) then
+               Synth_Assignment_Prefix (Syn_Inst, Expr, Base, Typ, Off, Dyn);
+               if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
                   Res := Create_Value_Memory (Typ);
                   Copy_Memory
                     (Res.Val.Mem, Base.Val.Mem + Off.Mem_Off, Typ.Sz);
                   return Res;
                end if;
                return Synth_Read_Memory
-                 (Syn_Inst, Base, Typ, Off.Net_Off, Voff, Expr);
+                 (Syn_Inst, Base, Typ, Off.Net_Off, Dyn, Expr);
             end;
          when Iir_Kind_Selected_Element =>
             declare

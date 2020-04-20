@@ -175,6 +175,8 @@ package Synth.Objtypes is
       Mem_Off : Size_Type;
    end record;
 
+   No_Value_Offsets : constant Value_Offsets := (0, 0);
+
    function "+" (L, R : Value_Offsets) return Value_Offsets;
 
    Global_Pool : aliased Areapool;

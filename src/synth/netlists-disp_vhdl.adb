@@ -856,7 +856,11 @@ package body Netlists.Disp_Vhdl is
          when Id_Signal =>
             Disp_Template ("  \o0 <= \i0; -- (signal)" & NL, Inst);
          when Id_Isignal =>
-            Disp_Template ("  \o0 <= \i0; -- (isignal)" & NL, Inst);
+            if Get_Driver (Get_Input (Inst, 0)) /= No_Net then
+               --  It is possible (and meaningful) to have unassigned
+               --  isignal.
+               Disp_Template ("  \o0 <= \i0; -- (isignal)" & NL, Inst);
+            end if;
          when Id_Port =>
             Disp_Template ("  \o0 <= \i0; -- (port)" & NL, Inst);
          when Id_Nop =>

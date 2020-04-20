@@ -34,21 +34,34 @@ package Synth.Stmts is
                                            Inter_Chain : Node;
                                            Assoc_Chain : Node);
 
+   --  Dynamic index for Synth_Assignment_Prefix.
+   --  As dynamic is about dynamic (!) index, the index is a net.
+   type Dyn_Name is record
+      --  Start and type of the indexed part, which can be a part of the
+      --  base name.
+      Pfx_Off : Value_Offsets;
+      Pfx_Typ : Type_Acc;
+
+      --  Variable offset.
+      Voff : Net;
+   end record;
+
+   No_Dyn_Name : constant Dyn_Name := (Pfx_Off => No_Value_Offsets,
+                                       Pfx_Typ => null,
+                                       Voff => No_Net);
+
    --  Transform PFX into DEST_*.
    --  DEST_BASE is the base object (with its own typ).  Can be the result,
    --   a net or an object larger than the result.
    --  DEST_TYP is the type of the result.
-   --  DEST_NET_OFF/DEST_MEM_OFF/DEST_VOFF are the offsets in the base.
-   --   DEST_NET_OFF is used when
-   --   the base is a net, while DEST_VOFF is set when the offset is dynamic.
-   --  DEST_RDWD is the width of what is extracted from the base.
+   --  DEST_OFF is the offset, within DEST_DYN.
+   --  DEST_DYN is set (Voff field set) when there is a non-static index.
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
                                       Dest_Off : out Value_Offsets;
-                                      Dest_Voff : out Net;
-                                      Dest_Rdwd : out Width);
+                                      Dest_Dyn : out Dyn_Name);
 
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Node;
@@ -59,7 +72,7 @@ package Synth.Stmts is
                                Obj : Valtyp;
                                Res_Typ : Type_Acc;
                                Off : Uns32;
-                               Voff : Net;
+                               Dyn : Dyn_Name;
                                Loc : Node) return Valtyp;
 
    function Synth_User_Function_Call
