@@ -446,11 +446,15 @@ package body Synth.Stmts is
 
             if Target.Obj.Val.Kind = Value_Wire then
                if Is_Static (V.Val)
-                 and then V.Typ.W = Target.Obj.Typ.W
+                 and then V.Typ.Sz = Target.Obj.Typ.Sz
                then
                   pragma Assert (Target.Off = (0, 0));
                   Phi_Assign_Static (Target.Obj.Val.W, Get_Memtyp (V));
                else
+                  if V.Typ.W = 0 then
+                     --  Forget about null wires.
+                     return;
+                  end if;
                   Phi_Assign_Net (Get_Build (Syn_Inst), Target.Obj.Val.W,
                                   Get_Net (V), Target.Off.Net_Off);
                end if;
