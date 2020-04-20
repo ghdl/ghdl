@@ -687,13 +687,13 @@ package Vhdl.Nodes is
    --  The declaration containing this type declaration.
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Component_Name (Field4)
+   --   Get/Set_Component_Name (Field5)
    --
    --  A list, list_others or list_all.
    --   Get/Set_Instantiation_List (Field1)
    --
    -- Only for Iir_Kind_Component_Configuration:
-   --   Get/Set_Block_Configuration (Field5)
+   --   Get/Set_Block_Configuration (Field4)
    --
    --   Get/Set_Binding_Indication (Field3)
    --
@@ -879,9 +879,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Declaration_Chain (Field1)
    --
-   --   Get/Set_Concurrent_Statement_Chain (Field5)
+   --   Get/Set_Concurrent_Statement_Chain (Field4)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --   Get/Set_Bound_Vunit_Chain (Field8)
    --
@@ -907,9 +907,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Concurrent_Statement_Chain (Field5)
+   --   Get/Set_Concurrent_Statement_Chain (Field4)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --  The default configuration created by canon.  This is a design unit.
    --   Get/Set_Default_Configuration_Declaration (Field6)
@@ -938,9 +938,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
-   --   Get/Set_Block_Configuration (Field5)
+   --   Get/Set_Block_Configuration (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -968,10 +968,10 @@ package Vhdl.Nodes is
    --  For nested packages
    --   Get/Set_Chain (Field2)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --  The package body (not the unit).
-   --   Get/Set_Package_Body (Field5)
+   --   Get/Set_Package_Body (Field4)
    --
    --   Get/Set_Package_Origin (Field7)
    --
@@ -1012,10 +1012,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --  The corresponding package declaration.
-   --   Get/Set_Package (Field5)
+   --   Get/Set_Package (Field4)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
@@ -1046,10 +1046,10 @@ package Vhdl.Nodes is
    --  For nested packages
    --   Get/Set_Chain (Field2)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --  For macro-expanded packages: the body.
-   --   Get/Set_Instance_Package_Body (Field5)
+   --   Get/Set_Instance_Package_Body (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1086,9 +1086,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Inherit_Spec_Chain (Field2)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
-   --   Get/Set_Vunit_Item_Chain (Field5)
+   --   Get/Set_Vunit_Item_Chain (Field4)
    --
    -- Only for Iir_Kind_Vunit_Declaration:
    --   Get/Set_Bound_Vunit_Chain (Field8)
@@ -1474,7 +1474,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Chain (Field2)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1606,9 +1606,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Impure_Depth (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
-   --   Get/Set_Sequential_Statement_Chain (Field5)
+   --   Get/Set_Sequential_Statement_Chain (Field4)
    --
    --   Get/Set_Subprogram_Specification (Field6)
    --
@@ -2620,6 +2620,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Base_Type (Field4)
    --
+   --   Get/Set_Attribute_Value_Chain (Field5)
+   --
    --   Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Resolved_Flag (Flag1)
@@ -2641,6 +2643,8 @@ package Vhdl.Nodes is
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Protected_Type_Declaration (Field4)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
@@ -3161,13 +3165,13 @@ package Vhdl.Nodes is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --  The concurrent statement at the origin of that process.  This is
    --  Null_Iir for a user process.
    --   Get/Set_Process_Origin (Field8)
    --
-   --   Get/Set_Sequential_Statement_Chain (Field5)
+   --   Get/Set_Sequential_Statement_Chain (Field4)
    --
    -- Only for Iir_Kind_Sensitized_Process_Statement:
    --   Get/Set_Sensitivity_List (Field6)
@@ -3352,9 +3356,9 @@ package Vhdl.Nodes is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
-   --   Get/Set_Concurrent_Statement_Chain (Field5)
+   --   Get/Set_Concurrent_Statement_Chain (Field4)
    --
    --   Get/Set_Block_Block_Configuration (Field6)
    --
@@ -3387,9 +3391,9 @@ package Vhdl.Nodes is
    --   Get/Set_Alternative_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
-   --   Get/Set_Concurrent_Statement_Chain (Field5)
+   --   Get/Set_Concurrent_Statement_Chain (Field4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
    --
@@ -3534,9 +3538,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Declaration_Chain (Field1)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
+   --   Get/Set_Sequential_Statement_Chain (Field4)
    --
-   --   Get/Set_Sequential_Statement_Chain (Field5)
+   --   Get/Set_Attribute_Value_Chain (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -3572,9 +3576,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Condition (Field1)
    --
-   --   Get/Set_Simultaneous_Statement_Chain (Field5)
+   --   Get/Set_Simultaneous_Statement_Chain (Field4)
    --
-   --   Get/Set_Else_Clause (Field4)
+   --   Get/Set_Else_Clause (Field5)
    --
    -- Only for Iir_Kind_Simultaneous_If_Statement:
    --   Get/Set_Chain (Field2)
@@ -3638,10 +3642,10 @@ package Vhdl.Nodes is
    --  clause.
    --   Get/Set_Condition (Field1)
    --
-   --   Get/Set_Sequential_Statement_Chain (Field5)
+   --   Get/Set_Sequential_Statement_Chain (Field4)
    --
    --  Must be an Iir_kind_elsif node, or NULL for no more elsif clauses.
-   --   Get/Set_Else_Clause (Field4)
+   --   Get/Set_Else_Clause (Field5)
    --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Chain (Field2)
@@ -3683,7 +3687,7 @@ package Vhdl.Nodes is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Sequential_Statement_Chain (Field5)
+   --   Get/Set_Sequential_Statement_Chain (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -3708,7 +3712,7 @@ package Vhdl.Nodes is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Sequential_Statement_Chain (Field5)
+   --   Get/Set_Sequential_Statement_Chain (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -7470,7 +7474,7 @@ package Vhdl.Nodes is
    --  To be used with Get/Set_Value_Chain.
    --  There is no order, therefore, a new attribute value may be always
    --  prepended.
-   --  Field: Field4 Ref
+   --  Field: Field5 Ref
    function Get_Attribute_Value_Chain (Target : Iir) return Iir;
    procedure Set_Attribute_Value_Chain (Target : Iir; Chain : Iir);
 
@@ -7498,17 +7502,17 @@ package Vhdl.Nodes is
    procedure Set_Entity_Name (Arch : Iir; Entity : Iir);
 
    --  The package declaration corresponding to the body.
-   --  Field: Field5 Ref
+   --  Field: Field4 Ref
    function Get_Package (Package_Body : Iir) return Iir;
    procedure Set_Package (Package_Body : Iir; Decl : Iir);
 
    --  The package body corresponding to the package declaration.
-   --  Field: Field5 Forward_Ref
+   --  Field: Field4 Forward_Ref
    function Get_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
 
    --  The package body corresponding to the package declaration.
-   --  Field: Field5
+   --  Field: Field4
    function Get_Instance_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Instance_Package_Body (Pkg : Iir; Decl : Iir);
 
@@ -7532,7 +7536,7 @@ package Vhdl.Nodes is
    function Get_Inherit_Spec_Chain (Vunit : Iir) return Iir;
    procedure Set_Inherit_Spec_Chain (Vunit : Iir; Chain : Iir);
 
-   --  Field: Field5 Chain
+   --  Field: Field4 Chain
    function Get_Vunit_Item_Chain (Vunit : Iir) return Iir;
    procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir);
 
@@ -7541,11 +7545,11 @@ package Vhdl.Nodes is
    function Get_Bound_Vunit_Chain (Unit : Iir) return Iir;
    procedure Set_Bound_Vunit_Chain (Unit : Iir; Vunit : Iir);
 
-   --  Field: Field5
+   --  Field: Field4
    function Get_Block_Configuration (Target : Iir) return Iir;
    procedure Set_Block_Configuration (Target : Iir; Block : Iir);
 
-   --  Field: Field5 Chain
+   --  Field: Field4 Chain
    function Get_Concurrent_Statement_Chain (Target : Iir) return Iir;
    procedure Set_Concurrent_Statement_Chain (Target : Iir; First : Iir);
 
@@ -7643,11 +7647,11 @@ package Vhdl.Nodes is
    function Get_Subprogram_Specification (Target : Iir) return Iir;
    procedure Set_Subprogram_Specification (Target : Iir; Spec : Iir);
 
-   --  Field: Field5 Chain
+   --  Field: Field4 Chain
    function Get_Sequential_Statement_Chain (Target : Iir) return Iir;
    procedure Set_Sequential_Statement_Chain (Target : Iir; Chain : Iir);
 
-   --  Field: Field5 Chain
+   --  Field: Field4 Chain
    function Get_Simultaneous_Statement_Chain (Target : Iir) return Iir;
    procedure Set_Simultaneous_Statement_Chain (Target : Iir; Chain : Iir);
 
@@ -8395,7 +8399,7 @@ package Vhdl.Nodes is
    function Get_Condition (Target : Iir) return Iir;
    procedure Set_Condition (Target : Iir; Condition : Iir);
 
-   --  Field: Field4
+   --  Field: Field5
    function Get_Else_Clause (Target : Iir) return Iir;
    procedure Set_Else_Clause (Target : Iir; Clause : Iir);
 
@@ -8427,7 +8431,7 @@ package Vhdl.Nodes is
 
    --  Component name for a component_configuration or
    --  a configuration_specification.
-   --  Field: Field4
+   --  Field: Field5
    function Get_Component_Name (Target : Iir) return Iir;
    procedure Set_Component_Name (Target : Iir; Name : Iir);
 

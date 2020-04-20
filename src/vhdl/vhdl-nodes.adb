@@ -2496,7 +2496,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Attribute_Value_Chain (Get_Kind (Target)),
                      "no field Attribute_Value_Chain");
-      return Get_Field4 (Target);
+      return Get_Field5 (Target);
    end Get_Attribute_Value_Chain;
 
    procedure Set_Attribute_Value_Chain (Target : Iir; Chain : Iir) is
@@ -2504,7 +2504,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Attribute_Value_Chain (Get_Kind (Target)),
                      "no field Attribute_Value_Chain");
-      Set_Field4 (Target, Chain);
+      Set_Field5 (Target, Chain);
    end Set_Attribute_Value_Chain;
 
    function Get_Spec_Chain (Target : Iir) return Iir is
@@ -2576,7 +2576,7 @@ package body Vhdl.Nodes is
       pragma Assert (Package_Body /= Null_Iir);
       pragma Assert (Has_Package (Get_Kind (Package_Body)),
                      "no field Package");
-      return Get_Field5 (Package_Body);
+      return Get_Field4 (Package_Body);
    end Get_Package;
 
    procedure Set_Package (Package_Body : Iir; Decl : Iir) is
@@ -2584,7 +2584,7 @@ package body Vhdl.Nodes is
       pragma Assert (Package_Body /= Null_Iir);
       pragma Assert (Has_Package (Get_Kind (Package_Body)),
                      "no field Package");
-      Set_Field5 (Package_Body, Decl);
+      Set_Field4 (Package_Body, Decl);
    end Set_Package;
 
    function Get_Package_Body (Pkg : Iir) return Iir is
@@ -2592,7 +2592,7 @@ package body Vhdl.Nodes is
       pragma Assert (Pkg /= Null_Iir);
       pragma Assert (Has_Package_Body (Get_Kind (Pkg)),
                      "no field Package_Body");
-      return Get_Field5 (Pkg);
+      return Get_Field4 (Pkg);
    end Get_Package_Body;
 
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir) is
@@ -2600,7 +2600,7 @@ package body Vhdl.Nodes is
       pragma Assert (Pkg /= Null_Iir);
       pragma Assert (Has_Package_Body (Get_Kind (Pkg)),
                      "no field Package_Body");
-      Set_Field5 (Pkg, Decl);
+      Set_Field4 (Pkg, Decl);
    end Set_Package_Body;
 
    function Get_Instance_Package_Body (Pkg : Iir) return Iir is
@@ -2608,7 +2608,7 @@ package body Vhdl.Nodes is
       pragma Assert (Pkg /= Null_Iir);
       pragma Assert (Has_Instance_Package_Body (Get_Kind (Pkg)),
                      "no field Instance_Package_Body");
-      return Get_Field5 (Pkg);
+      return Get_Field4 (Pkg);
    end Get_Instance_Package_Body;
 
    procedure Set_Instance_Package_Body (Pkg : Iir; Decl : Iir) is
@@ -2616,7 +2616,7 @@ package body Vhdl.Nodes is
       pragma Assert (Pkg /= Null_Iir);
       pragma Assert (Has_Instance_Package_Body (Get_Kind (Pkg)),
                      "no field Instance_Package_Body");
-      Set_Field5 (Pkg, Decl);
+      Set_Field4 (Pkg, Decl);
    end Set_Instance_Package_Body;
 
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
@@ -2704,7 +2704,7 @@ package body Vhdl.Nodes is
       pragma Assert (Vunit /= Null_Iir);
       pragma Assert (Has_Vunit_Item_Chain (Get_Kind (Vunit)),
                      "no field Vunit_Item_Chain");
-      return Get_Field5 (Vunit);
+      return Get_Field4 (Vunit);
    end Get_Vunit_Item_Chain;
 
    procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir) is
@@ -2712,7 +2712,7 @@ package body Vhdl.Nodes is
       pragma Assert (Vunit /= Null_Iir);
       pragma Assert (Has_Vunit_Item_Chain (Get_Kind (Vunit)),
                      "no field Vunit_Item_Chain");
-      Set_Field5 (Vunit, Chain);
+      Set_Field4 (Vunit, Chain);
    end Set_Vunit_Item_Chain;
 
    function Get_Bound_Vunit_Chain (Unit : Iir) return Iir is
@@ -2736,7 +2736,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Block_Configuration (Get_Kind (Target)),
                      "no field Block_Configuration");
-      return Get_Field5 (Target);
+      return Get_Field4 (Target);
    end Get_Block_Configuration;
 
    procedure Set_Block_Configuration (Target : Iir; Block : Iir) is
@@ -2744,7 +2744,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Block_Configuration (Get_Kind (Target)),
                      "no field Block_Configuration");
-      Set_Field5 (Target, Block);
+      Set_Field4 (Target, Block);
    end Set_Block_Configuration;
 
    function Get_Concurrent_Statement_Chain (Target : Iir) return Iir is
@@ -2752,7 +2752,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Concurrent_Statement_Chain (Get_Kind (Target)),
                      "no field Concurrent_Statement_Chain");
-      return Get_Field5 (Target);
+      return Get_Field4 (Target);
    end Get_Concurrent_Statement_Chain;
 
    procedure Set_Concurrent_Statement_Chain (Target : Iir; First : Iir) is
@@ -2760,7 +2760,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Concurrent_Statement_Chain (Get_Kind (Target)),
                      "no field Concurrent_Statement_Chain");
-      Set_Field5 (Target, First);
+      Set_Field4 (Target, First);
    end Set_Concurrent_Statement_Chain;
 
    function Get_Chain (Target : Iir) return Iir is
@@ -3094,7 +3094,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Sequential_Statement_Chain (Get_Kind (Target)),
                      "no field Sequential_Statement_Chain");
-      return Get_Field5 (Target);
+      return Get_Field4 (Target);
    end Get_Sequential_Statement_Chain;
 
    procedure Set_Sequential_Statement_Chain (Target : Iir; Chain : Iir) is
@@ -3102,7 +3102,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Sequential_Statement_Chain (Get_Kind (Target)),
                      "no field Sequential_Statement_Chain");
-      Set_Field5 (Target, Chain);
+      Set_Field4 (Target, Chain);
    end Set_Sequential_Statement_Chain;
 
    function Get_Simultaneous_Statement_Chain (Target : Iir) return Iir is
@@ -3110,7 +3110,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Simultaneous_Statement_Chain (Get_Kind (Target)),
                      "no field Simultaneous_Statement_Chain");
-      return Get_Field5 (Target);
+      return Get_Field4 (Target);
    end Get_Simultaneous_Statement_Chain;
 
    procedure Set_Simultaneous_Statement_Chain (Target : Iir; Chain : Iir) is
@@ -3118,7 +3118,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Simultaneous_Statement_Chain (Get_Kind (Target)),
                      "no field Simultaneous_Statement_Chain");
-      Set_Field5 (Target, Chain);
+      Set_Field4 (Target, Chain);
    end Set_Simultaneous_Statement_Chain;
 
    function Get_Subprogram_Body (Target : Iir) return Iir is
@@ -5440,7 +5440,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Else_Clause (Get_Kind (Target)),
                      "no field Else_Clause");
-      return Get_Field4 (Target);
+      return Get_Field5 (Target);
    end Get_Else_Clause;
 
    procedure Set_Else_Clause (Target : Iir; Clause : Iir) is
@@ -5448,7 +5448,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Else_Clause (Get_Kind (Target)),
                      "no field Else_Clause");
-      Set_Field4 (Target, Clause);
+      Set_Field5 (Target, Clause);
    end Set_Else_Clause;
 
    function Get_Parameter_Specification (Target : Iir) return Iir is
@@ -5536,7 +5536,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Component_Name (Get_Kind (Target)),
                      "no field Component_Name");
-      return Get_Field4 (Target);
+      return Get_Field5 (Target);
    end Get_Component_Name;
 
    procedure Set_Component_Name (Target : Iir; Name : Iir) is
@@ -5544,7 +5544,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Component_Name (Get_Kind (Target)),
                      "no field Component_Name");
-      Set_Field4 (Target, Name);
+      Set_Field5 (Target, Name);
    end Set_Component_Name;
 
    function Get_Instantiation_List (Target : Iir) return Iir_Flist is
