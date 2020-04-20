@@ -110,7 +110,7 @@ package body Trans.Chap14 is
    begin
       --  FIXME: improve code if constraint is a range expression.
       if Get_Type_Staticness (Atype) = Locally then
-         if Get_Direction (Cons) = Iir_To xor Is_High then
+         if Get_Direction (Cons) = Dir_To xor Is_High then
             return New_Lit
               (Chap7.Translate_Static_Range_Left (Cons, Atype));
          else
@@ -307,10 +307,10 @@ package body Trans.Chap14 is
             Is_Inc := False;
          when Iir_Kind_Leftof_Attribute =>
             Is_Inc :=
-              Get_Direction (Get_Range_Constraint (Prefix_Type)) = Iir_Downto;
+              Get_Direction (Get_Range_Constraint (Prefix_Type)) = Dir_Downto;
          when Iir_Kind_Rightof_Attribute =>
             Is_Inc :=
-              Get_Direction (Get_Range_Constraint (Prefix_Type)) = Iir_To;
+              Get_Direction (Get_Range_Constraint (Prefix_Type)) = Dir_To;
          when others =>
             Error_Kind ("translate_succ_pred_attribute", Attr);
       end case;

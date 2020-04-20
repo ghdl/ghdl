@@ -328,9 +328,9 @@ package body Vhdl.Evaluation is
 
       Pos := Eval_Pos (Left);
       case Get_Direction (A_Range) is
-         when Iir_To =>
+         when Dir_To =>
             Pos := Pos + Len - 1;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Pos := Pos - Len + 1;
       end case;
       if Len > 0
@@ -489,9 +489,9 @@ package body Vhdl.Evaluation is
       Pos : constant Int64 := Eval_Pos (Expr);
    begin
       case Get_Direction (Rng) is
-         when Iir_To =>
+         when Dir_To =>
             return Iir_Index32 (Pos - Left_Pos);
-         when Iir_Downto =>
+         when Dir_Downto =>
             return Iir_Index32 (Left_Pos - Pos);
       end case;
    end Eval_Pos_In_Range;
@@ -2457,9 +2457,9 @@ package body Vhdl.Evaluation is
                when Iir_Kind_Choice_By_None =>
                   exit when Cur_Pos = Eval_Pos (Idx);
                   case Get_Direction (Aggr_Bounds) is
-                     when Iir_To =>
+                     when Dir_To =>
                         Cur_Pos := Cur_Pos + 1;
-                     when Iir_Downto =>
+                     when Dir_Downto =>
                         Cur_Pos := Cur_Pos - 1;
                   end case;
                when Iir_Kind_Choice_By_Expression =>
@@ -2614,9 +2614,9 @@ package body Vhdl.Evaluation is
             when Iir_Kind_Choice_By_Expression =>
                Assoc_Pos := Eval_Pos (Get_Choice_Expression (Assoc));
                case Get_Direction (Aggr_Bounds) is
-                  when Iir_To =>
+                  when Dir_To =>
                      Cur_Off := Iir_Index32 (Assoc_Pos - Left_Pos);
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      Cur_Off := Iir_Index32 (Left_Pos - Assoc_Pos);
                end case;
                if Cur_Off = Off then
@@ -2636,18 +2636,18 @@ package body Vhdl.Evaluation is
                   Left := Eval_Pos (Get_Left_Limit (Rng));
                   Right := Eval_Pos (Get_Right_Limit (Rng));
                   case Get_Direction (Rng) is
-                     when Iir_To =>
+                     when Dir_To =>
                         Lo := Left;
                         Hi := Right;
-                     when Iir_Downto =>
+                     when Dir_Downto =>
                         Lo := Right;
                         Hi := Left;
                   end case;
                   case Get_Direction (Aggr_Bounds) is
-                     when Iir_To =>
+                     when Dir_To =>
                         Lo_Off := Iir_Index32 (Lo - Left_Pos);
                         Hi_Off := Iir_Index32 (Hi - Left_Pos);
-                     when Iir_Downto =>
+                     when Dir_Downto =>
                         Lo_Off := Iir_Index32 (Left_Pos - Lo);
                         Hi_Off := Iir_Index32 (Left_Pos - Hi);
                   end case;
@@ -2900,7 +2900,7 @@ package body Vhdl.Evaluation is
               (Get_Low_Limit (Eval_Static_Range (Get_Prefix (Expr))));
          when Iir_Kind_Ascending_Type_Attribute =>
             return Build_Boolean
-              (Get_Direction (Eval_Static_Range (Get_Prefix (Expr))) = Iir_To);
+              (Get_Direction (Eval_Static_Range (Get_Prefix (Expr))) = Dir_To);
 
          when Iir_Kind_Length_Array_Attribute =>
             declare
@@ -2947,7 +2947,7 @@ package body Vhdl.Evaluation is
             begin
                Index := Eval_Array_Attribute (Expr);
                return Build_Boolean
-                 (Get_Direction (Get_Range_Constraint (Index)) = Iir_To);
+                 (Get_Direction (Get_Range_Constraint (Index)) = Dir_To);
             end;
 
          when Iir_Kind_Pred_Attribute =>
@@ -2970,9 +2970,9 @@ package body Vhdl.Evaluation is
             begin
                Rng := Eval_Static_Range (Prefix_Type);
                case Get_Direction (Rng) is
-                  when Iir_To =>
+                  when Dir_To =>
                      N := 1;
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      N := -1;
                end case;
                case Get_Kind (Expr) is
@@ -3270,13 +3270,13 @@ package body Vhdl.Evaluation is
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
             case Get_Direction (Bound) is
-               when Iir_To =>
+               when Dir_To =>
                   if Val < Eval_Pos (Get_Left_Limit (Bound))
                     or else Val > Eval_Pos (Get_Right_Limit (Bound))
                   then
                      return False;
                   end if;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   if Val > Eval_Pos (Get_Left_Limit (Bound))
                     or else Val < Eval_Pos (Get_Right_Limit (Bound))
                   then
@@ -3308,11 +3308,11 @@ package body Vhdl.Evaluation is
                   Error_Kind ("eval_phys_in_range(1)", Get_Type (Bound));
             end case;
             case Get_Direction (Bound) is
-               when Iir_To =>
+               when Dir_To =>
                   if Val < Left or else Val > Right then
                      return False;
                   end if;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   if Val > Left or else Val < Right then
                      return False;
                   end if;
@@ -3328,13 +3328,13 @@ package body Vhdl.Evaluation is
       case Get_Kind (Bound) is
          when Iir_Kind_Range_Expression =>
             case Get_Direction (Bound) is
-               when Iir_To =>
+               when Dir_To =>
                   if Val < Get_Fp_Value (Get_Left_Limit (Bound))
                     or else Val > Get_Fp_Value (Get_Right_Limit (Bound))
                   then
                      return False;
                   end if;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   if Val > Get_Fp_Value (Get_Left_Limit (Bound))
                     or else Val < Get_Fp_Value (Get_Right_Limit (Bound))
                   then
@@ -3530,11 +3530,11 @@ package body Vhdl.Evaluation is
                L := Eval_Pos (Get_Left_Limit (Range_Constraint));
                R := Eval_Pos (Get_Right_Limit (Range_Constraint));
                case Get_Direction (Range_Constraint) is
-                  when Iir_To =>
+                  when Dir_To =>
                      if L > R then
                         return True;
                      end if;
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      if L < R then
                         return True;
                      end if;
@@ -3550,11 +3550,11 @@ package body Vhdl.Evaluation is
                L := Get_Fp_Value (Get_Left_Limit (Range_Constraint));
                R := Get_Fp_Value (Get_Right_Limit (Range_Constraint));
                case Get_Direction (Range_Constraint) is
-                  when Iir_To =>
+                  when Dir_To =>
                      if L > R then
                         return True;
                      end if;
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      if L < R then
                         return True;
                      end if;
@@ -3590,14 +3590,14 @@ package body Vhdl.Evaluation is
       Left := Eval_Pos (Get_Left_Limit (Constraint));
       Right := Eval_Pos (Get_Right_Limit (Constraint));
       case Get_Direction (Constraint) is
-         when Iir_To =>
+         when Dir_To =>
             if Right < Left then
                --  Null range.
                return 0;
             else
                Res := Right - Left + 1;
             end if;
-         when Iir_Downto =>
+         when Dir_Downto =>
             if Left < Right then
                --  Null range
                return 0;
@@ -3629,9 +3629,9 @@ package body Vhdl.Evaluation is
       Left := Eval_Pos (Get_Left_Limit (Rng));
       Right := Eval_Pos (Get_Right_Limit (Rng));
       case Get_Direction (Rng) is
-         when Iir_To =>
+         when Dir_To =>
             return Right < Left;
-         when Iir_Downto =>
+         when Dir_Downto =>
             return Left < Right;
       end case;
    end Eval_Is_Null_Discrete_Range;
@@ -3727,10 +3727,10 @@ package body Vhdl.Evaluation is
                      Location_Copy (Res, Expr);
                      Set_Type (Res, Get_Type (Expr));
                      case Get_Direction (Expr) is
-                        when Iir_To =>
-                           Set_Direction (Res, Iir_Downto);
-                        when Iir_Downto =>
-                           Set_Direction (Res, Iir_To);
+                        when Dir_To =>
+                           Set_Direction (Res, Dir_Downto);
+                        when Dir_Downto =>
+                           Set_Direction (Res, Dir_To);
                      end case;
                      Set_Left_Limit (Res, Get_Right_Limit (Expr));
                      Set_Right_Limit (Res, Get_Left_Limit (Expr));

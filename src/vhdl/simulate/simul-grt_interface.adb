@@ -16,11 +16,13 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Types; use Types;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package body Simul.Grt_Interface is
-   To_Dir : constant array (Iir_Direction) of Ghdl_Dir_Type :=
-     (Iir_To => Dir_To, Iir_Downto => Dir_Downto);
+   To_Dir : constant array (Direction_Type) of Ghdl_Dir_Type :=
+     (Dir_To => Dir_To, Dir_Downto => Dir_Downto);
 
    function Build_Bound (Arr : Iir_Value_Literal_Acc) return Std_String_Bound
    is

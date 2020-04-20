@@ -639,9 +639,9 @@ package body Trans.Chap7 is
    function Translate_Static_Range_Dir (Expr : Iir) return O_Cnode is
    begin
       case Get_Direction (Expr) is
-         when Iir_To =>
+         when Dir_To =>
             return Ghdl_Dir_To_Node;
-         when Iir_Downto =>
+         when Dir_Downto =>
             return Ghdl_Dir_Downto_Node;
       end case;
    end Translate_Static_Range_Dir;
@@ -682,7 +682,7 @@ package body Trans.Chap7 is
 
    --  Compute the length of LEFT DIR (to/downto) RIGHT.
    function Compute_Range_Length
-     (Left : O_Enode; Right : O_Enode; Dir : Iir_Direction) return O_Enode
+     (Left : O_Enode; Right : O_Enode; Dir : Direction_Type) return O_Enode
    is
       Rng_Type : constant O_Tnode := Ghdl_I32_Type;
       L        : constant O_Enode := New_Convert_Ov (Left, Rng_Type);
@@ -693,9 +693,9 @@ package body Trans.Chap7 is
       If_Blk   : O_If_Block;
    begin
       case Dir is
-         when Iir_To =>
+         when Dir_To =>
             Val := New_Dyadic_Op (ON_Sub_Ov, R, L);
-         when Iir_Downto =>
+         when Dir_Downto =>
             Val := New_Dyadic_Op (ON_Sub_Ov, L, R);
       end case;
 
@@ -4569,13 +4569,13 @@ package body Trans.Chap7 is
          return Null_Iir;
       end if;
       case Get_Direction (Rng) is
-         when Iir_To =>
+         when Dir_To =>
             if (Left_Pat = Pat_1 and Right_Pat = Pat_Length)
               or else (Left_Pat = Pat_0 and Right_Pat = Pat_Length_1)
             then
                return Length_Attr;
             end if;
-         when Iir_Downto =>
+         when Dir_Downto =>
             if (Left_Pat = Pat_Length and Right_Pat = Pat_1)
               or else (Left_Pat = Pat_Length_1 and Right_Pat = Pat_0)
             then

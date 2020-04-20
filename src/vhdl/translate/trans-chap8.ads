@@ -78,7 +78,7 @@ package Trans.Chap8 is
    --  Inc or dec by VAL ITERATOR according to DIR.
    --  Used for loop statements.
    procedure Gen_Update_Iterator (Iterator : O_Dnode;
-                                  Dir      : Iir_Direction;
+                                  Dir      : Direction_Type;
                                   Val      : Unsigned_64;
                                   Itype    : Iir);
 

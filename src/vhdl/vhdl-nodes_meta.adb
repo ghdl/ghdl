@@ -162,7 +162,7 @@ package body Vhdl.Nodes_Meta is
       Field_Label => Type_Name_Id,
       Field_Visible_Flag => Type_Boolean,
       Field_Range_Constraint => Type_Iir,
-      Field_Direction => Type_Iir_Direction,
+      Field_Direction => Type_Direction_Type,
       Field_Left_Limit => Type_Iir,
       Field_Right_Limit => Type_Iir,
       Field_Left_Limit_Expr => Type_Iir,
@@ -5737,6 +5737,30 @@ package body Vhdl.Nodes_Meta is
       end case;
    end Set_Date_Type;
 
+   function Get_Direction_Type
+      (N : Iir; F : Fields_Enum) return Direction_Type is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Direction_Type);
+      case F is
+         when Field_Direction =>
+            return Get_Direction (N);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Direction_Type;
+
+   procedure Set_Direction_Type
+      (N : Iir; F : Fields_Enum; V: Direction_Type) is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Direction_Type);
+      case F is
+         when Field_Direction =>
+            Set_Direction (N, V);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Set_Direction_Type;
+
    function Get_File_Checksum_Id
       (N : Iir; F : Fields_Enum) return File_Checksum_Id is
    begin
@@ -6752,30 +6776,6 @@ package body Vhdl.Nodes_Meta is
             raise Internal_Error;
       end case;
    end Set_Iir_Delay_Mechanism;
-
-   function Get_Iir_Direction
-      (N : Iir; F : Fields_Enum) return Iir_Direction is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Iir_Direction);
-      case F is
-         when Field_Direction =>
-            return Get_Direction (N);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Iir_Direction;
-
-   procedure Set_Iir_Direction
-      (N : Iir; F : Fields_Enum; V: Iir_Direction) is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Iir_Direction);
-      case F is
-         when Field_Direction =>
-            Set_Direction (N, V);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Set_Iir_Direction;
 
    function Get_Iir_Flist
       (N : Iir; F : Fields_Enum) return Iir_Flist is

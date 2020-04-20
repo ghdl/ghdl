@@ -232,7 +232,7 @@ package body Trans.Chap6 is
       Bound := M2E (Chap3.Range_To_Left (Rng));
 
       if Deep_Rng /= Null_Iir then
-         if Get_Direction (Deep_Rng) = Iir_To xor Deep_Reverse then
+         if Get_Direction (Deep_Rng) = Dir_To xor Deep_Reverse then
             --  Direction TO:  INDEX - LEFT.
             New_Assign_Stmt (New_Obj (Off),
                              New_Dyadic_Op (ON_Sub_Ov,
@@ -321,7 +321,7 @@ package body Trans.Chap6 is
          end if;
 
          V := Eval_Pos (Expr1);
-         if Get_Direction (Index_Range) = Iir_To then
+         if Get_Direction (Index_Range) = Dir_To then
             B := V - B;
          else
             B := B - V;
@@ -331,7 +331,7 @@ package body Trans.Chap6 is
          Index_Base_Type := Get_Base_Type (Index_Type);
          Index := Chap7.Translate_Expression (Expr, Index_Base_Type);
 
-         if Get_Direction (Index_Range) = Iir_To then
+         if Get_Direction (Index_Range) = Dir_To then
             --  Direction TO:  INDEX - LEFT.
             if B /= 0 then
                Obound := Chap7.Translate_Static_Range_Left
@@ -582,9 +582,9 @@ package body Trans.Chap6 is
             else
                --  Both prefix and slice are thin array.
                case Get_Direction (Index_Range) is
-                  when Iir_To =>
+                  when Dir_To =>
                      Off := Slice_Left - Prefix_Left;
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      Off := Prefix_Left - Slice_Left;
                end case;
                if Off < 0 then
@@ -672,7 +672,7 @@ package body Trans.Chap6 is
                                      New_Lit (Ghdl_Dir_To_Node),
                                      Ghdl_Bool_Type));
       end if;
-      if not Static_Range or else Get_Direction (Expr_Range) = Iir_To then
+      if not Static_Range or else Get_Direction (Expr_Range) = Dir_To then
          --  Diff = slice - bounds.
          New_Assign_Stmt
            (New_Obj (Diff),
@@ -686,7 +686,7 @@ package body Trans.Chap6 is
       if not Static_Range then
          New_Else_Stmt (If_Blk1);
       end if;
-      if not Static_Range or else Get_Direction (Expr_Range) = Iir_Downto
+      if not Static_Range or else Get_Direction (Expr_Range) = Dir_Downto
       then
          --  Diff = bounds - slice.
          New_Assign_Stmt

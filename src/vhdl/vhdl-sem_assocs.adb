@@ -968,12 +968,12 @@ package body Vhdl.Sem_Assocs is
             High := Copy_Constant (High);
 
             case Get_Direction (Index_Constraint) is
-               when Iir_To =>
+               when Dir_To =>
                   Set_Left_Limit (Index_Subtype_Constraint, Low);
                   Set_Left_Limit_Expr (Index_Subtype_Constraint, Low);
                   Set_Right_Limit (Index_Subtype_Constraint, High);
                   Set_Right_Limit_Expr (Index_Subtype_Constraint, High);
-               when Iir_Downto =>
+               when Dir_Downto =>
                   Set_Left_Limit (Index_Subtype_Constraint, High);
                   Set_Left_Limit_Expr (Index_Subtype_Constraint, High);
                   Set_Right_Limit (Index_Subtype_Constraint, Low);

@@ -962,11 +962,6 @@ class Iir_Constraint:
     Fully_Constrained = 2
 
 
-class Iir_Direction:
-    To = 0
-    Downto = 1
-
-
 class Iir_Delay_Mechanism:
     Inertial_Delay = 0
     Transport_Delay = 1

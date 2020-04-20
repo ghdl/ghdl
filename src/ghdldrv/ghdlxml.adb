@@ -394,9 +394,9 @@ package body Ghdlxml is
                when Type_Iir_Predefined_Functions =>
                   Put_Field (F, Image_Iir_Predefined_Functions
                                (Get_Iir_Predefined_Functions (N, F)));
-               when Type_Iir_Direction =>
-                  Put_Field (F, Image_Iir_Direction
-                               (Get_Iir_Direction (N, F)));
+               when Type_Direction_Type =>
+                  Put_Field (F, Image_Direction_Type
+                               (Get_Direction_Type (N, F)));
                when Type_Iir_Int32 =>
                   Put_Field
                     (F, Strip (Iir_Int32'Image (Get_Iir_Int32 (N, F))));

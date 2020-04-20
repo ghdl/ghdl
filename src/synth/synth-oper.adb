@@ -128,7 +128,7 @@ package body Synth.Oper is
    begin
       Res := Prev.Typ;
 
-      if Res.Vbound.Dir = Iir_Downto
+      if Res.Vbound.Dir = Dir_Downto
         and then Res.Vbound.Right = 0
       then
          --  Normalized range
@@ -156,16 +156,16 @@ package body Synth.Oper is
          --  Special case.
          Res.Right := Res.Left;
          case Index_Bounds.Dir is
-            when Iir_To =>
+            when Dir_To =>
                Res.Left := Res.Right + 1;
-            when Iir_Downto =>
+            when Dir_Downto =>
                Res.Left := Res.Right - 1;
          end case;
       else
          case Index_Bounds.Dir is
-            when Iir_To =>
+            when Dir_To =>
                Res.Right := Res.Left + Int32 (Len - 1);
-            when Iir_Downto =>
+            when Dir_Downto =>
                Res.Right := Res.Left - Int32 (Len - 1);
          end case;
       end if;

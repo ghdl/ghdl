@@ -23,12 +23,12 @@ with Utils_IO; use Utils_IO;
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package body Synth.Values.Debug is
-   procedure Put_Dir (Dir : Iir_Direction) is
+   procedure Put_Dir (Dir : Direction_Type) is
    begin
       case Dir is
-         when Iir_To =>
+         when Dir_To =>
             Put ("to");
-         when Iir_Downto =>
+         when Dir_Downto =>
             Put ("downto");
       end case;
    end Put_Dir;

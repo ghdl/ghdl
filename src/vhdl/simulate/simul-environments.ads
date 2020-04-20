@@ -17,6 +17,9 @@
 --  02111-1307, USA.
 
 with Ada.Unchecked_Deallocation;
+
+with Types; use Types;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
 with Vhdl.Annotations; use Vhdl.Annotations;
 with Grt.Types; use Grt.Types;
@@ -201,7 +204,7 @@ package Simul.Environments is
          when Iir_Value_Instance =>
             Instance : Block_Instance_Acc;
          when Iir_Value_Range =>
-            Dir: Iir_Direction;
+            Dir: Direction_Type;
             Length : Iir_Index32;
             Left: Iir_Value_Literal_Acc;
             Right: Iir_Value_Literal_Acc;
@@ -338,14 +341,14 @@ package Simul.Environments is
    --  Create a range_value of life LIFE.
    function Create_Range_Value
      (Left, Right : Iir_Value_Literal_Acc;
-      Dir : Iir_Direction;
+      Dir : Direction_Type;
       Length : Iir_Index32)
      return Iir_Value_Literal_Acc;
 
    --  Create a range_value (compute the length)
    function Create_Range_Value
      (Left, Right : Iir_Value_Literal_Acc;
-      Dir : Iir_Direction)
+      Dir : Direction_Type)
       return Iir_Value_Literal_Acc;
 
    -- Return true if the value of LEFT and RIGHT are equal.

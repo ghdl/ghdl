@@ -160,9 +160,9 @@ package body Simul.Execution is
                R : Ghdl_E32;
             begin
                case Bounds.Dir is
-                  when Iir_To =>
+                  when Dir_To =>
                      R := Bounds.Left.E32 + Ghdl_E32 (Len - 1);
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      R := Bounds.Left.E32 - Ghdl_E32 (Len - 1);
                end case;
                Bounds.Right := Create_E32_Value (R);
@@ -172,9 +172,9 @@ package body Simul.Execution is
                R : Ghdl_I64;
             begin
                case Bounds.Dir is
-                  when Iir_To =>
+                  when Dir_To =>
                      R := Bounds.Left.I64 + Ghdl_I64 (Len - 1);
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      R := Bounds.Left.I64 - Ghdl_I64 (Len - 1);
                end case;
                Bounds.Right := Create_I64_Value (R);
@@ -205,9 +205,9 @@ package body Simul.Execution is
          case Res.Left.Kind is
             when Iir_Value_I64 =>
                case Index_Bounds.Dir is
-                  when Iir_To =>
+                  when Dir_To =>
                      Res.Left := Create_I64_Value (Res.Right.I64 + 1);
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      Res.Left := Create_I64_Value (Res.Right.I64 - 1);
                end case;
             when others =>
@@ -222,7 +222,7 @@ package body Simul.Execution is
    function Execute_High_Limit (Bounds : Iir_Value_Literal_Acc)
                                 return Iir_Value_Literal_Acc is
    begin
-      if Bounds.Dir = Iir_To then
+      if Bounds.Dir = Dir_To then
          return Bounds.Right;
       else
          return Bounds.Left;
@@ -232,7 +232,7 @@ package body Simul.Execution is
    function Execute_Low_Limit (Bounds : Iir_Value_Literal_Acc)
                                return Iir_Value_Literal_Acc is
    begin
-      if Bounds.Dir = Iir_To then
+      if Bounds.Dir = Dir_To then
          return Bounds.Left;
       else
          return Bounds.Right;
@@ -282,7 +282,7 @@ package body Simul.Execution is
       Res.Bounds.D (1) := Create_Range_Value
         (Create_I64_Value (1),
          Create_I64_Value (Str'Length),
-         Iir_To);
+         Dir_To);
       for I in Str'Range loop
          Res.Val_Array.V (1 + Iir_Index32 (I - Str'First)) :=
            Create_E8_Value (Character'Pos (Str (I)));
@@ -1646,14 +1646,14 @@ package body Simul.Execution is
       case Iir_Value_Discrete (Index.Kind) is
          when Iir_Value_B1 =>
             case Bounds.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   if Index.B1 >= Left_Pos.B1 and then
                     Index.B1 <= Right_Pos.B1
                   then
                      -- to
                      return Ghdl_B1'Pos (Index.B1) - Ghdl_B1'Pos (Left_Pos.B1);
                   end if;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   if Index.B1 <= Left_Pos.B1 and then
                     Index.B1 >= Right_Pos.B1
                   then
@@ -1663,14 +1663,14 @@ package body Simul.Execution is
             end case;
          when Iir_Value_E8 =>
             case Bounds.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   if Index.E8 >= Left_Pos.E8 and then
                     Index.E8 <= Right_Pos.E8
                   then
                      -- to
                      return Iir_Index32 (Index.E8 - Left_Pos.E8);
                   end if;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   if Index.E8 <= Left_Pos.E8 and then
                     Index.E8 >= Right_Pos.E8
                   then
@@ -1680,14 +1680,14 @@ package body Simul.Execution is
             end case;
          when Iir_Value_E32 =>
             case Bounds.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   if Index.E32 >= Left_Pos.E32 and then
                     Index.E32 <= Right_Pos.E32
                   then
                      -- to
                      return Iir_Index32 (Index.E32 - Left_Pos.E32);
                   end if;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   if Index.E32 <= Left_Pos.E32 and then
                     Index.E32 >= Right_Pos.E32
                   then
@@ -1697,14 +1697,14 @@ package body Simul.Execution is
             end case;
          when Iir_Value_I64 =>
             case Bounds.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   if Index.I64 >= Left_Pos.I64 and then
                     Index.I64 <= Right_Pos.I64
                   then
                      -- to
                      return Iir_Index32 (Index.I64 - Left_Pos.I64);
                   end if;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   if Index.I64 <= Left_Pos.I64 and then
                     Index.I64 >= Right_Pos.I64
                   then
@@ -1809,7 +1809,7 @@ package body Simul.Execution is
          Res.Bounds.D (1) :=
            Create_Range_Value (Create_I64_Value (1),
                                Create_I64_Value (Ghdl_I64 (Res.Val_Array.Len)),
-                               Iir_To,
+                               Dir_To,
                                Res.Val_Array.Len);
       else
          Res.Bounds.D (1) :=
@@ -1912,7 +1912,7 @@ package body Simul.Execution is
          if Is_Null_Range (A_Range) then
             return;
          end if;
-         if A_Range.Dir = Iir_To then
+         if A_Range.Dir = Dir_To then
             High := A_Range.Right;
             Low := A_Range.Left;
          else
@@ -2331,12 +2331,12 @@ package body Simul.Execution is
          when Iir_Kind_Reverse_Range_Array_Attribute =>
             Bound := Execute_Indexes (Block, Prefix);
             case Bound.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   Bound := Create_Range_Value
-                    (Bound.Right, Bound.Left, Iir_Downto, Bound.Length);
-               when Iir_Downto =>
+                    (Bound.Right, Bound.Left, Dir_Downto, Bound.Length);
+               when Dir_Downto =>
                   Bound := Create_Range_Value
-                    (Bound.Right, Bound.Left, Iir_To, Bound.Length);
+                    (Bound.Right, Bound.Left, Dir_To, Bound.Length);
             end case;
 
          when Iir_Kind_Floating_Type_Definition
@@ -2616,8 +2616,8 @@ package body Simul.Execution is
       --  discrete range does not belong to the index range of the
       --  prefixing array, unless the slice is a null slice.
       Index_Order := Compare_Value (Srange.Left, Srange.Right);
-      if (Srange.Dir = Iir_To and Index_Order = Greater)
-        or (Srange.Dir = Iir_Downto and Index_Order = Less)
+      if (Srange.Dir = Dir_To and Index_Order = Greater)
+        or (Srange.Dir = Dir_Downto and Index_Order = Less)
       then
          --  Null slice.
          Low := 1;
@@ -3128,7 +3128,7 @@ package body Simul.Execution is
 
          when Iir_Kind_Ascending_Array_Attribute =>
             Res := Execute_Indexes (Block, Expr);
-            return Boolean_To_Lit (Res.Dir = Iir_To);
+            return Boolean_To_Lit (Res.Dir = Dir_To);
 
          when Iir_Kind_Event_Attribute =>
             Res := Execute_Name (Block, Get_Prefix (Expr), True);
@@ -3228,9 +3228,9 @@ package body Simul.Execution is
                Bound := Execute_Bounds
                  (Block, Get_Type (Get_Prefix (Expr)));
                case Bound.Dir is
-                  when Iir_To =>
+                  when Dir_To =>
                      Res := Execute_Dec (Res, Expr);
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      Res := Execute_Inc (Res, Expr);
                end case;
                Check_Constraints (Block, Res, Get_Type (Expr), Expr);
@@ -3245,9 +3245,9 @@ package body Simul.Execution is
                Bound := Execute_Bounds
                  (Block, Get_Type (Get_Prefix (Expr)));
                case Bound.Dir is
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      Res := Execute_Dec (Res, Expr);
-                  when Iir_To =>
+                  when Dir_To =>
                      Res := Execute_Inc (Res, Expr);
                end case;
                Check_Constraints (Block, Res, Get_Type (Expr), Expr);
@@ -3985,7 +3985,7 @@ package body Simul.Execution is
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
             Bound := Execute_Bounds (Instance, Def);
-            if Bound.Dir = Iir_To then
+            if Bound.Dir = Dir_To then
                High := Bound.Right;
                Low := Bound.Left;
             else
@@ -4373,10 +4373,10 @@ package body Simul.Execution is
       Max, Min : Iir_Value_Literal_Acc;
    begin
       case Bounds.Dir is
-         when Iir_To =>
+         when Dir_To =>
             Min := Bounds.Left;
             Max := Bounds.Right;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Min := Bounds.Right;
             Max := Bounds.Left;
       end case;
@@ -4402,30 +4402,30 @@ package body Simul.Execution is
       case Iir_Value_Discrete (Val.Kind) is
          when Iir_Value_E8 =>
             case Bounds.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   Val.E8 := Val.E8 + 1;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   Val.E8 := Val.E8 - 1;
             end case;
          when Iir_Value_E32 =>
             case Bounds.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   Val.E32 := Val.E32 + 1;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   Val.E32 := Val.E32 - 1;
             end case;
          when Iir_Value_B1 =>
             case Bounds.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   Val.B1 := True;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   Val.B1 := False;
             end case;
          when Iir_Value_I64 =>
             case Bounds.Dir is
-               when Iir_To =>
+               when Dir_To =>
                   Val.I64 := Val.I64 + 1;
-               when Iir_Downto =>
+               when Dir_Downto =>
                   Val.I64 := Val.I64 - 1;
             end case;
       end case;

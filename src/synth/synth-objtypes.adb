@@ -124,10 +124,10 @@ package body Synth.Objtypes is
       W : Width;
    begin
       case Rng.Dir is
-         when Iir_To =>
+         when Dir_To =>
             Lo := Rng.Left;
             Hi := Rng.Right;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Lo := Rng.Right;
             Hi := Rng.Left;
       end case;
@@ -250,7 +250,7 @@ package body Synth.Objtypes is
    function Create_Vec_Type_By_Length (Len : Width; El : Type_Acc)
                                       return Type_Acc is
    begin
-      return Create_Vector_Type ((Dir => Iir_Downto,
+      return Create_Vector_Type ((Dir => Dir_Downto,
                                   Left => Int32 (Len) - 1,
                                   Right => 0,
                                   Len => Len),
@@ -370,9 +370,9 @@ package body Synth.Objtypes is
       Len : Int64;
    begin
       case Rng.Dir is
-         when Iir_To =>
+         when Dir_To =>
             Len := Rng.Right - Rng.Left + 1;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Len := Rng.Left - Rng.Right + 1;
       end case;
       if Len < 0 then

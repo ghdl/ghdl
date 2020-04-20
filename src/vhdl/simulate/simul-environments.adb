@@ -19,7 +19,7 @@
 with System;
 with Ada.Unchecked_Conversion;
 with GNAT.Debug_Utilities;
-with Types; use Types;
+
 with Simple_IO;
 with Name_Table;
 with Simul.Debugger; use Simul.Debugger;
@@ -207,9 +207,9 @@ package body Simul.Environments is
    begin
       Cmp := Compare_Value (Arange.Left, Arange.Right);
       case Arange.Dir is
-         when Iir_To =>
+         when Dir_To =>
             return Cmp = Greater;
-         when Iir_Downto =>
+         when Dir_Downto =>
             return Cmp = Less;
       end case;
    end Is_Null_Range;
@@ -462,22 +462,20 @@ package body Simul.Environments is
                 (Kind => Iir_Value_Access, Val_Access => Val)));
    end Create_Access_Value;
 
-   function Create_Range_Value
-     (Left, Right : Iir_Value_Literal_Acc;
-      Dir : Iir_Direction;
-      Length : Iir_Index32)
-     return Iir_Value_Literal_Acc
+   function Create_Range_Value (Left, Right : Iir_Value_Literal_Acc;
+                                Dir : Direction_Type;
+                                Length : Iir_Index32)
+                               return Iir_Value_Literal_Acc
    is
       subtype Range_Value is Iir_Value_Literal (Iir_Value_Range);
       function Alloc is new Alloc_On_Pool_Addr (Range_Value);
    begin
-      return To_Iir_Value_Literal_Acc
-        (Alloc (Current_Pool,
-                (Kind => Iir_Value_Range,
-                 Left => Left,
-                 Right => Right,
-                 Dir => Dir,
-                 Length => Length)));
+      return To_Iir_Value_Literal_Acc (Alloc (Current_Pool,
+                                              (Kind => Iir_Value_Range,
+                                               Left => Left,
+                                               Right => Right,
+                                               Dir => Dir,
+                                               Length => Length)));
    end Create_Range_Value;
 
    function Create_File_Value (Val : Grt.Files.Ghdl_File_Index)
@@ -492,19 +490,18 @@ package body Simul.Environments is
    end Create_File_Value;
 
    --  Create a range_value of life LIFE.
-   function Create_Range_Value
-     (Left, Right : Iir_Value_Literal_Acc;
-      Dir : Iir_Direction)
-      return Iir_Value_Literal_Acc
+   function Create_Range_Value (Left, Right : Iir_Value_Literal_Acc;
+                                Dir : Direction_Type)
+                               return Iir_Value_Literal_Acc
    is
       Low, High : Iir_Value_Literal_Acc;
       Len : Iir_Index32;
    begin
       case Dir is
-         when Iir_To =>
+         when Dir_To =>
             Low := Left;
             High := Right;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Low := Right;
             High := Left;
       end case;
@@ -891,7 +888,7 @@ package body Simul.Environments is
             Put_Line ("range:");
             Put_Indent (Indent);
             Put (" direction: ");
-            Put (Iir_Direction'Image (Value.Dir));
+            Put (Direction_Type'Image (Value.Dir));
             Put (", length:");
             Put_Line (Iir_Index32'Image (Value.Length));
             if Value.Left /= null then

@@ -1466,7 +1466,7 @@ package body Trans.Chap2 is
                   | Type_Iir_Pure_State
                   | Type_Iir_Delay_Mechanism
                   | Type_Iir_Predefined_Functions
-                  | Type_Iir_Direction
+                  | Type_Direction_Type
                   | Type_Iir_Int32
                   | Type_Int32
                   | Type_Fp64

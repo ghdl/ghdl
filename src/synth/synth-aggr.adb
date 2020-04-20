@@ -43,14 +43,14 @@ package body Synth.Aggr is
       Right : constant Int64 := Int64 (Bounds.Right);
    begin
       case Bounds.Dir is
-         when Iir_To =>
+         when Dir_To =>
             if Index >= Left and then Index <= Right then
                -- to
                Off := Uns32 (Index - Left);
                Err_P := False;
                return;
             end if;
-         when Iir_Downto =>
+         when Dir_Downto =>
             if Index <= Left and then Index >= Right then
                -- downto
                Off := Uns32 (Left - Index);

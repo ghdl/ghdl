@@ -171,7 +171,7 @@ package body Synth.Insts is
 
    procedure Hash_Bound (C : in out GNAT.SHA1.Context; B : Bound_Type) is
    begin
-      Hash_Uns64 (C, Iir_Direction'Pos (B.Dir));
+      Hash_Uns64 (C, Direction_Type'Pos (B.Dir));
       Hash_Uns64 (C, To_Uns64 (Int64 (B.Left)));
       Hash_Uns64 (C, To_Uns64 (Int64 (B.Right)));
    end Hash_Bound;

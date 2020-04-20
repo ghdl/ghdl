@@ -407,7 +407,7 @@ package body Trans.Chap8 is
    end Gen_Update_Iterator_Common;
 
    procedure Gen_Update_Iterator (Iterator : O_Dnode;
-                                  Dir      : Iir_Direction;
+                                  Dir      : Direction_Type;
                                   Val      : Unsigned_64;
                                   Itype    : Iir)
    is
@@ -415,9 +415,9 @@ package body Trans.Chap8 is
       V         : O_Enode;
    begin
       case Dir is
-         when Iir_To =>
+         when Dir_To =>
             Op := ON_Add_Ov;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Op := ON_Sub_Ov;
       end case;
       Gen_Update_Iterator_Common (Val, Itype, V);
@@ -426,7 +426,7 @@ package body Trans.Chap8 is
    end Gen_Update_Iterator;
 
    procedure Gen_Update_Iterator (Iterator : Var_Type;
-                                  Dir      : Iir_Direction;
+                                  Dir      : Direction_Type;
                                   Val      : Unsigned_64;
                                   Itype    : Iir)
    is
@@ -434,9 +434,9 @@ package body Trans.Chap8 is
       V         : O_Enode;
    begin
       case Dir is
-         when Iir_To =>
+         when Dir_To =>
             Op := ON_Add_Ov;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Op := ON_Sub_Ov;
       end case;
       Gen_Update_Iterator_Common (Val, Itype, V);
@@ -550,7 +550,7 @@ package body Trans.Chap8 is
       Iter_Type_Info : constant Ortho_Info_Acc := Get_Info (Iter_Base_Type);
       It_Info        : constant Ortho_Info_Acc := Get_Info (Iterator);
       Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
-      Dir            : Iir_Direction;
+      Dir            : Direction_Type;
       Op             : ON_Op_Kind;
       Rng            : O_Lnode;
    begin
@@ -565,9 +565,9 @@ package body Trans.Chap8 is
             Chap7.Translate_Range_Expression_Right (Constraint,
                                                     Iter_Base_Type));
          case Dir is
-            when Iir_To =>
+            when Dir_To =>
                Op := ON_Le;
-            when Iir_Downto =>
+            when Dir_Downto =>
                Op := ON_Ge;
          end case;
          --  Check for at least one iteration.
@@ -632,12 +632,12 @@ package body Trans.Chap8 is
       --  Update the iterator.
       Chap6.Get_Deep_Range_Expression (Iter_Type, Deep_Rng, Deep_Reverse);
       if Deep_Rng /= Null_Iir then
-         if Get_Direction (Deep_Rng) = Iir_To xor Deep_Reverse then
+         if Get_Direction (Deep_Rng) = Dir_To xor Deep_Reverse then
             Gen_Update_Iterator (It_Info.Iterator_Var,
-                                 Iir_To, 1, Iter_Base_Type);
+                                 Dir_To, 1, Iter_Base_Type);
          else
             Gen_Update_Iterator (It_Info.Iterator_Var,
-                                 Iir_Downto, 1, Iter_Base_Type);
+                                 Dir_Downto, 1, Iter_Base_Type);
          end if;
       else
          Start_If_Stmt
@@ -647,10 +647,10 @@ package body Trans.Chap8 is
                New_Lit (Ghdl_Dir_To_Node),
                Ghdl_Bool_Type));
          Gen_Update_Iterator (It_Info.Iterator_Var,
-                              Iir_To, 1, Iter_Base_Type);
+                              Dir_To, 1, Iter_Base_Type);
          New_Else_Stmt (If_Blk1);
          Gen_Update_Iterator (It_Info.Iterator_Var,
-                              Iir_Downto, 1, Iter_Base_Type);
+                              Dir_Downto, 1, Iter_Base_Type);
          Finish_If_Stmt (If_Blk1);
       end if;
    end Update_For_Loop;

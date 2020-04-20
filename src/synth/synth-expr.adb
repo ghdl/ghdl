@@ -418,7 +418,7 @@ package body Synth.Expr is
    end Concat_Array;
 
    function Synth_Discrete_Range_Expression
-     (L : Int64; R : Int64; Dir : Iir_Direction) return Discrete_Range_Type is
+     (L : Int64; R : Int64; Dir : Direction_Type) return Discrete_Range_Type is
    begin
       return (Dir => Dir,
               Left => L,
@@ -585,10 +585,10 @@ package body Synth.Expr is
                B := Synth_Array_Attribute (Syn_Inst, Bound);
                --  Reverse
                case B.Dir is
-                  when Iir_To =>
-                     B.Dir := Iir_Downto;
-                  when Iir_Downto =>
-                     B.Dir := Iir_To;
+                  when Dir_To =>
+                     B.Dir := Dir_Downto;
+                  when Dir_Downto =>
+                     B.Dir := Dir_To;
                end case;
                T := B.Right;
                B.Right := B.Left;
@@ -924,7 +924,7 @@ package body Synth.Expr is
       Res : Valtyp;
    begin
       Bnd := Create_Bound_Array (1);
-      Bnd.D (1) := (Dir => Iir_To, Left => 1, Right => Int32 (Len),
+      Bnd.D (1) := (Dir => Dir_To, Left => 1, Right => Int32 (Len),
                     Len => Width (Len));
       Typ := Create_Array_Type (Bnd, Styp.Uarr_El);
 
@@ -1011,9 +1011,9 @@ package body Synth.Expr is
    function In_Bounds (Bnd : Bound_Type; V : Int32) return Boolean is
    begin
       case Bnd.Dir is
-         when Iir_To =>
+         when Dir_To =>
             return V >= Bnd.Left and then V <= Bnd.Right;
-         when Iir_Downto =>
+         when Dir_Downto =>
             return V <= Bnd.Left and then V >= Bnd.Right;
       end case;
    end In_Bounds;
@@ -1034,10 +1034,10 @@ package body Synth.Expr is
 
       --  The offset is from the LSB (bit 0).  Bit 0 is the rightmost one.
       case Bnd.Dir is
-         when Iir_To =>
+         when Dir_To =>
             Res.Net_Off := Uns32 (Bnd.Right - Int32 (Idx));
             Res.Mem_Off := Size_Type (Int32 (Idx) - Bnd.Left);
-         when Iir_Downto =>
+         when Dir_Downto =>
             Res.Net_Off := Uns32 (Int32 (Idx) - Bnd.Right);
             Res.Mem_Off := Size_Type (Bnd.Left - Int32 (Idx));
       end case;
@@ -1056,7 +1056,7 @@ package body Synth.Expr is
       Wbounds := Clog2 (Bnd.Len);
       Idx2 := Synth_Resize (Idx_Val, Wbounds, Loc);
 
-      if Bnd.Right = 0 and then Bnd.Dir = Iir_Downto then
+      if Bnd.Right = 0 and then Bnd.Dir = Dir_Downto then
          --  Simple case without adjustments.
          return Idx2;
       end if;
@@ -1066,10 +1066,10 @@ package body Synth.Expr is
       Set_Location (Right, Loc);
 
       case Bnd.Dir is
-         when Iir_To =>
+         when Dir_To =>
             --  L <= I <= R    -->   off = R - I
             Off := Build_Dyadic (Build_Context, Id_Sub, Right, Idx2);
-         when Iir_Downto =>
+         when Dir_Downto =>
             --  L >= I >= R    -->   off = I - R
             Off := Build_Dyadic (Build_Context, Id_Sub, Idx2, Right);
       end case;
@@ -1321,10 +1321,10 @@ package body Synth.Expr is
       end if;
 
       case Pfx_Bnd.Dir is
-         when Iir_To =>
+         when Dir_To =>
             Off := Uns32 (L_Add - Pfx_Bnd.Left);
             Width := Uns32 (R_Add - L_Add + 1);
-         when Iir_Downto =>
+         when Dir_Downto =>
             Off := Uns32 (R_Add - Pfx_Bnd.Right);
             Width := Uns32 (L_Add - R_Add + 1);
       end case;
@@ -1335,7 +1335,7 @@ package body Synth.Expr is
                                        Name : Node;
                                        Pfx_Bnd : Bound_Type;
                                        L, R : Int64;
-                                       Dir : Iir_Direction;
+                                       Dir : Direction_Type;
                                        El_Typ : Type_Acc;
                                        Res_Bnd : out Bound_Type;
                                        Off : out Value_Offsets)
@@ -1346,19 +1346,19 @@ package body Synth.Expr is
       if Pfx_Bnd.Dir /= Dir then
          Error_Msg_Synth (+Name, "direction mismatch in slice");
          Off := (0, 0);
-         if Dir = Iir_To then
-            Res_Bnd := (Dir => Iir_To, Left => 1, Right => 0, Len => 0);
+         if Dir = Dir_To then
+            Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
          else
-            Res_Bnd := (Dir => Iir_Downto, Left => 0, Right => 1, Len => 0);
+            Res_Bnd := (Dir => Dir_Downto, Left => 0, Right => 1, Len => 0);
          end if;
          return;
       end if;
 
       --  Might be a null slice.
       case Pfx_Bnd.Dir is
-         when Iir_To =>
+         when Dir_To =>
             Is_Null := L > R;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Is_Null := L < R;
       end case;
       if Is_Null then
@@ -1375,11 +1375,11 @@ package body Synth.Expr is
          end if;
 
          case Pfx_Bnd.Dir is
-            when Iir_To =>
+            when Dir_To =>
                Len := Uns32 (R - L + 1);
                Off.Net_Off := Uns32 (Pfx_Bnd.Right - Int32 (R)) * El_Typ.W;
                Off.Mem_Off := Size_Type (Int32 (L) - Pfx_Bnd.Left) * El_Typ.Sz;
-            when Iir_Downto =>
+            when Dir_Downto =>
                Len := Uns32 (L - R + 1);
                Off.Net_Off := Uns32 (Int32 (R) - Pfx_Bnd.Right) * El_Typ.W;
                Off.Mem_Off := Size_Type (Pfx_Bnd.Left - Int32 (L)) * El_Typ.Sz;
@@ -1401,7 +1401,7 @@ package body Synth.Expr is
    is
       Expr : constant Node := Get_Suffix (Name);
       Left, Right : Valtyp;
-      Dir : Iir_Direction;
+      Dir : Direction_Type;
       Step : Uns32;
       Max : Uns32;
       Inp_W : Width;
@@ -1445,10 +1445,10 @@ package body Synth.Expr is
             Error_Msg_Synth (+Name, "direction mismatch in slice");
             Inp := No_Net;
             Off := (0, 0);
-            if Dir = Iir_To then
-               Res_Bnd := (Dir => Iir_To, Left => 1, Right => 0, Len => 0);
+            if Dir = Dir_To then
+               Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
             else
-               Res_Bnd := (Dir => Iir_Downto, Left => 0, Right => 1, Len => 0);
+               Res_Bnd := (Dir => Dir_Downto, Left => 0, Right => 1, Len => 0);
             end if;
             return;
          end if;
@@ -1705,7 +1705,7 @@ package body Synth.Expr is
 
    --  Return the left bound if the direction of the range is LEFT_DIR.
    function Synth_Low_High_Type_Attribute
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Left_Dir : Iir_Direction)
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Left_Dir : Direction_Type)
      return Valtyp
    is
       Typ : Type_Acc;
@@ -1965,9 +1965,9 @@ package body Synth.Expr is
             begin
                B := Synth_Array_Attribute (Syn_Inst, Expr);
                case B.Dir is
-                  when Iir_To =>
+                  when Dir_To =>
                      V := B.Right;
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      V := B.Left;
                end case;
                return Create_Value_Discrete (Int64 (V), Expr_Type);
@@ -1979,9 +1979,9 @@ package body Synth.Expr is
             begin
                B := Synth_Array_Attribute (Syn_Inst, Expr);
                case B.Dir is
-                  when Iir_To =>
+                  when Dir_To =>
                      V := B.Left;
-                  when Iir_Downto =>
+                  when Dir_Downto =>
                      V := B.Right;
                end case;
                return Create_Value_Discrete (Int64 (V), Expr_Type);
@@ -2007,9 +2007,9 @@ package body Synth.Expr is
                return Synth_Subtype_Conversion (V, Dtype, False, Expr);
             end;
          when Iir_Kind_Low_Type_Attribute =>
-            return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Iir_To);
+            return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Dir_To);
          when Iir_Kind_High_Type_Attribute =>
-            return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Iir_Downto);
+            return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Dir_Downto);
          when Iir_Kind_Value_Attribute =>
             return Synth_Value_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Image_Attribute =>

@@ -5083,12 +5083,6 @@ package Vhdl.Nodes is
       Iir_Transport_Delay
      );
 
-   type Iir_Direction is
-     (
-      Iir_To,
-      Iir_Downto
-     );
-
    --  LRM93 2.7 (conformance rules).
    --  To keep this simple, the layout is stored as a bit-string.
    --  Fields are:
@@ -7860,8 +7854,8 @@ package Vhdl.Nodes is
    procedure Set_Range_Constraint (Target : Iir; Constraint : Iir);
 
    --  Field: State2 (pos)
-   function Get_Direction (Decl : Iir) return Iir_Direction;
-   procedure Set_Direction (Decl : Iir; Dir : Iir_Direction);
+   function Get_Direction (Decl : Iir) return Direction_Type;
+   procedure Set_Direction (Decl : Iir; Dir : Direction_Type);
 
    --  Field: Field4 Ref
    function Get_Left_Limit (Decl : Iir_Range_Expression) return Iir;

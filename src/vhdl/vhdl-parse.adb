@@ -597,9 +597,9 @@ package body Vhdl.Parse is
 
       case Current_Token is
          when Tok_To =>
-            Set_Direction (Res, Iir_To);
+            Set_Direction (Res, Dir_To);
          when Tok_Downto =>
-            Set_Direction (Res, Iir_Downto);
+            Set_Direction (Res, Dir_Downto);
          when others =>
             raise Internal_Error;
       end case;

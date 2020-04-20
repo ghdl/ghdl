@@ -162,12 +162,12 @@ package body Vhdl.Sem_Types is
       if Get_Kind (Left) = Iir_Kind_Overflow_Literal then
          Error_Msg_Sem (+Left, "overflow in left bound");
          Left := Build_Extreme_Value
-           (Get_Direction (Expr) = Iir_Downto, Left);
+           (Get_Direction (Expr) = Dir_Downto, Left);
       end if;
       if Get_Kind (Right) = Iir_Kind_Overflow_Literal then
          Error_Msg_Sem (+Right, "overflow in right bound");
          Right := Build_Extreme_Value
-           (Get_Direction (Expr) = Iir_To, Right);
+           (Get_Direction (Expr) = Dir_To, Right);
       end if;
       Set_Left_Limit_Expr (Expr, Left);
       Set_Right_Limit_Expr (Expr, Right);

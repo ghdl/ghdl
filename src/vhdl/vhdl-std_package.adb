@@ -153,7 +153,7 @@ package body Vhdl.Std_Package is
          Res := Create_Std_Iir (Iir_Kind_Range_Expression);
          Set_Left_Limit (Res, Left);
          Set_Left_Limit_Expr (Res, Left);
-         Set_Direction (Res, Iir_To);
+         Set_Direction (Res, Dir_To);
          Set_Right_Limit (Res, Right);
          Set_Right_Limit_Expr (Res, Right);
          Set_Expr_Staticness (Res, Locally);

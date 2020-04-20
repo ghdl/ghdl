@@ -28,13 +28,13 @@ package Vhdl.Nodes_Meta is
       Type_Boolean,
       Type_Date_State_Type,
       Type_Date_Type,
+      Type_Direction_Type,
       Type_File_Checksum_Id,
       Type_Fp64,
       Type_Iir,
       Type_Iir_All_Sensitized,
       Type_Iir_Constraint,
       Type_Iir_Delay_Mechanism,
-      Type_Iir_Direction,
       Type_Iir_Flist,
       Type_Iir_Index32,
       Type_Iir_Int32,
@@ -483,6 +483,11 @@ package Vhdl.Nodes_Meta is
    procedure Set_Date_Type
       (N : Iir; F : Fields_Enum; V: Date_Type);
 
+   function Get_Direction_Type
+      (N : Iir; F : Fields_Enum) return Direction_Type;
+   procedure Set_Direction_Type
+      (N : Iir; F : Fields_Enum; V: Direction_Type);
+
    function Get_File_Checksum_Id
       (N : Iir; F : Fields_Enum) return File_Checksum_Id;
    procedure Set_File_Checksum_Id
@@ -512,11 +517,6 @@ package Vhdl.Nodes_Meta is
       (N : Iir; F : Fields_Enum) return Iir_Delay_Mechanism;
    procedure Set_Iir_Delay_Mechanism
       (N : Iir; F : Fields_Enum; V: Iir_Delay_Mechanism);
-
-   function Get_Iir_Direction
-      (N : Iir; F : Fields_Enum) return Iir_Direction;
-   procedure Set_Iir_Direction
-      (N : Iir; F : Fields_Enum; V: Iir_Direction);
 
    function Get_Iir_Flist
       (N : Iir; F : Fields_Enum) return Iir_Flist;

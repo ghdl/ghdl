@@ -794,7 +794,7 @@ package body Vhdl.Utils is
       Range_Expr := Create_Iir (Iir_Kind_Range_Expression);
       Location_Copy (Range_Expr, Def);
       Set_Type (Range_Expr, Def);
-      Set_Direction (Range_Expr, Iir_To);
+      Set_Direction (Range_Expr, Dir_To);
       if List_Len >= 1 then
          Set_Left_Limit
            (Range_Expr, Get_Nth_Element (Literal_List, 0));
@@ -1485,10 +1485,10 @@ package body Vhdl.Utils is
    is
    begin
       case Get_Direction (Arange) is
-         when Iir_To =>
+         when Dir_To =>
             Low := Get_Left_Limit (Arange);
             High := Get_Right_Limit (Arange);
-         when Iir_Downto =>
+         when Dir_Downto =>
             High := Get_Left_Limit (Arange);
             Low := Get_Right_Limit (Arange);
       end case;
@@ -1497,9 +1497,9 @@ package body Vhdl.Utils is
    function Get_Low_Limit (Arange : Iir_Range_Expression) return Iir is
    begin
       case Get_Direction (Arange) is
-         when Iir_To =>
+         when Dir_To =>
             return Get_Left_Limit (Arange);
-         when Iir_Downto =>
+         when Dir_Downto =>
             return Get_Right_Limit (Arange);
       end case;
    end Get_Low_Limit;
@@ -1507,9 +1507,9 @@ package body Vhdl.Utils is
    function Get_High_Limit (Arange : Iir_Range_Expression) return Iir is
    begin
       case Get_Direction (Arange) is
-         when Iir_To =>
+         when Dir_To =>
             return Get_Right_Limit (Arange);
-         when Iir_Downto =>
+         when Dir_Downto =>
             return Get_Left_Limit (Arange);
       end case;
    end Get_High_Limit;

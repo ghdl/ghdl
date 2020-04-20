@@ -226,7 +226,7 @@ package body Synth.Static_Oper is
 
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
-      if Prev.Vbound.Dir = Iir_Downto
+      if Prev.Vbound.Dir = Dir_Downto
         and then Prev.Vbound.Right = 0
       then
          --  Normalized range

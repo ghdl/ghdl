@@ -322,7 +322,7 @@ package body Vhdl.Prints is
                else
                   Print (Ctxt, Or_Else (Get_Left_Limit_Expr (Rng),
                                         Get_Left_Limit (Rng)));
-                  if Get_Direction (Rng) = Iir_To then
+                  if Get_Direction (Rng) = Dir_To then
                      Disp_Token (Ctxt, Tok_To);
                   else
                      Disp_Token (Ctxt, Tok_Downto);

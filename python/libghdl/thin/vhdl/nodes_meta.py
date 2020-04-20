@@ -18,13 +18,13 @@ class types:
     Boolean = 0
     Date_State_Type = 1
     Date_Type = 2
-    File_Checksum_Id = 3
-    Fp64 = 4
-    Iir = 5
-    Iir_All_Sensitized = 6
-    Iir_Constraint = 7
-    Iir_Delay_Mechanism = 8
-    Iir_Direction = 9
+    Direction_Type = 3
+    File_Checksum_Id = 4
+    Fp64 = 5
+    Iir = 6
+    Iir_All_Sensitized = 7
+    Iir_Constraint = 8
+    Iir_Delay_Mechanism = 9
     Iir_Flist = 10
     Iir_Index32 = 11
     Iir_Int32 = 12
@@ -430,6 +430,8 @@ Get_Date_State_Type = libghdl.vhdl__nodes_meta__get_date_state_type
 
 Get_Date_Type = libghdl.vhdl__nodes_meta__get_date_type
 
+Get_Direction_Type = libghdl.vhdl__nodes_meta__get_direction_type
+
 Get_File_Checksum_Id = libghdl.vhdl__nodes_meta__get_file_checksum_id
 
 Get_Fp64 = libghdl.vhdl__nodes_meta__get_fp64
@@ -441,8 +443,6 @@ Get_Iir_All_Sensitized = libghdl.vhdl__nodes_meta__get_iir_all_sensitized
 Get_Iir_Constraint = libghdl.vhdl__nodes_meta__get_iir_constraint
 
 Get_Iir_Delay_Mechanism = libghdl.vhdl__nodes_meta__get_iir_delay_mechanism
-
-Get_Iir_Direction = libghdl.vhdl__nodes_meta__get_iir_direction
 
 Get_Iir_Flist = libghdl.vhdl__nodes_meta__get_iir_flist
 

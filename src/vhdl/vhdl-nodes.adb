@@ -3670,20 +3670,20 @@ package body Vhdl.Nodes is
       Set_Field1 (Target, Constraint);
    end Set_Range_Constraint;
 
-   function Get_Direction (Decl : Iir) return Iir_Direction is
+   function Get_Direction (Decl : Iir) return Direction_Type is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Direction (Get_Kind (Decl)),
                      "no field Direction");
-      return Iir_Direction'Val (Get_State2 (Decl));
+      return Direction_Type'Val (Get_State2 (Decl));
    end Get_Direction;
 
-   procedure Set_Direction (Decl : Iir; Dir : Iir_Direction) is
+   procedure Set_Direction (Decl : Iir; Dir : Direction_Type) is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Direction (Get_Kind (Decl)),
                      "no field Direction");
-      Set_State2 (Decl, Iir_Direction'Pos (Dir));
+      Set_State2 (Decl, Direction_Type'Pos (Dir));
    end Set_Direction;
 
    function Get_Left_Limit (Decl : Iir_Range_Expression) return Iir is

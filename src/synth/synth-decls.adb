@@ -199,7 +199,7 @@ package body Synth.Decls is
                   W : Width;
                begin
                   W := Uns32 (Clog2 (Uns64 (Nbr_El)));
-                  Rng := (Dir => Iir_To,
+                  Rng := (Dir => Dir_To,
                           Is_Signed => False,
                           Left => 0,
                           Right => Int64 (Nbr_El - 1));

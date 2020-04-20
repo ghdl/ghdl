@@ -1119,9 +1119,9 @@ package body Synth.Stmts is
                   Synth_Discrete_Range
                     (C.Inst, Get_Choice_Range (Choice), Bnd);
                   case Bnd.Dir is
-                     when Iir_To =>
+                     when Dir_To =>
                         Is_In := Sel >= Bnd.Left and Sel <= Bnd.Right;
-                     when Iir_Downto =>
+                     when Dir_Downto =>
                         Is_In := Sel <= Bnd.Left and Sel >= Bnd.Right;
                   end case;
                   if Is_In then
@@ -1970,9 +1970,9 @@ package body Synth.Stmts is
    function In_Range (Rng : Discrete_Range_Type; V : Int64) return Boolean is
    begin
       case Rng.Dir is
-         when Iir_To =>
+         when Dir_To =>
             return V >= Rng.Left and then V <= Rng.Right;
-         when Iir_Downto =>
+         when Dir_Downto =>
             return V <= Rng.Left and then V >= Rng.Right;
       end case;
    end In_Range;
@@ -1983,9 +1983,9 @@ package body Synth.Stmts is
    begin
       T := Read_Discrete (V);
       case Rng.Dir is
-         when Iir_To =>
+         when Dir_To =>
             T := T + 1;
-         when Iir_Downto =>
+         when Dir_Downto =>
             T := T - 1;
       end case;
       Write_Discrete (V, T);

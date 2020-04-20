@@ -3332,9 +3332,9 @@ package body Trans.Chap3 is
          --  Constraint is a range expression, therefore, direction is
          --  known.
          case Get_Direction (Constr) is
-            when Iir_To =>
+            when Dir_To =>
                return Gen_Compare_To;
-            when Iir_Downto =>
+            when Dir_Downto =>
                return Gen_Compare_Downto;
          end case;
       end if;
@@ -3776,18 +3776,16 @@ package body Trans.Chap3 is
          New_Lit (Chap7.Translate_Static_Range_Dir (Range_Constr)));
 
       case Get_Direction (Range_Constr) is
-         when Iir_To =>
+         when Dir_To =>
             Op := ON_Add_Ov;
-         when Iir_Downto =>
+         when Dir_Downto =>
             Op := ON_Sub_Ov;
       end case;
 
-      Start_If_Stmt
-        (If_Blk,
-         New_Compare_Op (ON_Eq,
-           New_Obj_Value (Length),
-           New_Lit (Ghdl_Index_0),
-           Ghdl_Bool_Type));
+      Start_If_Stmt (If_Blk, New_Compare_Op (ON_Eq,
+                                             New_Obj_Value (Length),
+                                             New_Lit (Ghdl_Index_0),
+                                             Ghdl_Bool_Type));
       --  Null range.
       New_Assign_Stmt
         (M2Lv (Range_To_Left (Res_Range)),

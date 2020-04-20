@@ -30,7 +30,7 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 package Synth.Objtypes is
    type Discrete_Range_Type is record
       --  An integer range.
-      Dir : Iir_Direction;
+      Dir : Direction_Type;
 
       --  Netlist representation: signed or unsigned, width of vector.
       Is_Signed : Boolean;
@@ -43,13 +43,13 @@ package Synth.Objtypes is
    function Discrete_Range_Width (Rng : Discrete_Range_Type) return Width;
 
    type Float_Range_Type is record
-      Dir : Iir_Direction;
+      Dir : Direction_Type;
       Left : Fp64;
       Right : Fp64;
    end record;
 
    type Bound_Type is record
-      Dir : Iir_Direction;
+      Dir : Direction_Type;
       Left : Int32;
       Right : Int32;
       Len : Width;

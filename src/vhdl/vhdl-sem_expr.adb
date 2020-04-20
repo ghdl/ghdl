@@ -3431,7 +3431,7 @@ package body Vhdl.Sem_Expr is
 
       Index_Subtype_Constraint : Iir_Range_Expression;
       Index_Constraint : Iir_Range_Expression; -- FIXME: 'range.
-      Dir : Iir_Direction;
+      Dir : Direction_Type;
       Choice_Staticness : Iir_Staticness;
       Len_Staticness : Iir_Staticness;
       Expr_Staticness : Iir_Staticness;
@@ -3708,7 +3708,7 @@ package body Vhdl.Sem_Expr is
                --  at analysis time (if 'Range), and it doesn't really matter
                --  because of implicit subtype conversion.  So choose one
                --  arbitrary direction.
-               Dir := Iir_To;
+               Dir := Dir_To;
             end if;
 
             --  LRM93 7.3.2.2
@@ -3725,10 +3725,10 @@ package body Vhdl.Sem_Expr is
                else
                   Set_Direction (Index_Subtype_Constraint, Dir);
                   case Dir is
-                     when Iir_To =>
+                     when Dir_To =>
                         Set_Left_Limit (Index_Subtype_Constraint, Low);
                         Set_Right_Limit (Index_Subtype_Constraint, High);
-                     when Iir_Downto =>
+                     when Dir_Downto =>
                         Set_Left_Limit (Index_Subtype_Constraint, High);
                         Set_Right_Limit (Index_Subtype_Constraint, Low);
                   end case;

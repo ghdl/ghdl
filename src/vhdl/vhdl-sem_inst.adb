@@ -371,8 +371,8 @@ package body Vhdl.Sem_Inst is
          when Type_Iir_Predefined_Functions =>
             Set_Iir_Predefined_Functions
               (Res, F, Get_Iir_Predefined_Functions (N, F));
-         when Type_Iir_Direction =>
-            Set_Iir_Direction (Res, F, Get_Iir_Direction (N, F));
+         when Type_Direction_Type =>
+            Set_Direction_Type (Res, F, Get_Direction_Type (N, F));
          when Type_Iir_Int32 =>
             Set_Iir_Int32 (Res, F, Get_Iir_Int32 (N, F));
          when Type_Int32 =>
