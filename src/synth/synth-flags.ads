@@ -57,4 +57,7 @@ package Synth.Flags is
 
    --  True to start debugger on error.
    Flag_Debug_Enable : Boolean := True;
+
+   --  Maximum number of iterations for (while)/loop.  0 means unlimited.
+   Flag_Max_Loop : Natural := 1000;
 end Synth.Flags;

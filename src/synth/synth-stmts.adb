@@ -2328,6 +2328,7 @@ package body Synth.Stmts is
       Cond : constant Node := Get_Condition (Stmt);
       Val : Valtyp;
       Lc : aliased Loop_Context (Mode_Dynamic);
+      Iter_Nbr : Natural;
    begin
       Lc := (Mode => Mode_Dynamic,
              Prev_Loop => C.Cur_Loop,
@@ -2338,6 +2339,8 @@ package body Synth.Stmts is
              W_Quit => No_Wire_Id,
              Wire_Mark => No_Wire_Id);
       C.Cur_Loop := Lc'Unrestricted_Access;
+
+      Iter_Nbr := 0;
 
       Loop_Control_Init (C, Stmt);
 
@@ -2369,6 +2372,14 @@ package body Synth.Stmts is
          if Lc.W_Quit /= No_Wire_Id
            and then Get_Current_Value (null, Lc.W_Quit) = Bit0
          then
+            exit;
+         end if;
+
+         Iter_Nbr := Iter_Nbr + 1;
+         if Iter_Nbr > Flags.Flag_Max_Loop and Flags.Flag_Max_Loop /= 0 then
+            Error_Msg_Synth
+              (+Stmt, "maximum number of iterations (%v) reached",
+               +Uns32 (Flags.Flag_Max_Loop));
             exit;
          end if;
       end loop;
