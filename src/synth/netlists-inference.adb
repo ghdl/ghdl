@@ -29,6 +29,7 @@ with Netlists.Memories; use Netlists.Memories;
 
 with Synth.Source; use Synth.Source;
 with Synth.Errors; use Synth.Errors;
+with Synth.Flags;
 
 package body Netlists.Inference is
    --  DFF inference.
@@ -636,6 +637,7 @@ package body Netlists.Inference is
       end;
 
       if Off = 0
+        and then not Synth.Flags.Flag_Debug_Nomemory
         and then Can_Infere_RAM (Data, Prev_Val)
       then
          --  Maybe it is a RAM.
