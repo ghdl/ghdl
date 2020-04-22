@@ -21,6 +21,7 @@
 with Ada.Unchecked_Deallocation;
 
 with Name_Table; use Name_Table;
+with Types_Utils; use Types_Utils;
 
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils;
@@ -408,7 +409,8 @@ package body Synth.Context is
    --  Set Is_X to True iff VEC is XXX...
    procedure Is_Full (Vec : Logvec_Array;
                       Is_0 : out Boolean;
-                      Is_X : out Boolean)
+                      Is_X : out Boolean;
+                      Is_Z : out Boolean)
    is
       Val : Uns32;
       Zx : Uns32;
@@ -417,18 +419,27 @@ package body Synth.Context is
       Zx := Vec (0).Zx;
       Is_0 := False;
       Is_X := False;
+      Is_Z := False;
       if Val = 0 and Zx = 0 then
          Is_0 := True;
-         Is_X := False;
-      elsif Val = not 0 and Zx = not 0 then
-         Is_0 := False;
-         Is_X := True;
+      elsif Zx = not 0 then
+         if Val = not 0 then
+            Is_X := True;
+         elsif Val = 0 then
+            Is_Z := True;
+         else
+            return;
+         end if;
+      else
+         return;
       end if;
 
       for I in 1 .. Vec'Last loop
          if Vec (I).Val /= Val or else Vec (I).Zx /= Zx then
+            --  Clear flags.
             Is_0 := False;
             Is_X := False;
+            Is_Z := False;
             return;
          end if;
       end loop;
@@ -443,7 +454,7 @@ package body Synth.Context is
       Vec_Off : Uns32;
       Has_Zx : Boolean;
       Inst : Instance;
-      Is_0, Is_X : Boolean;
+      Is_0, Is_X, Is_Z : Boolean;
    begin
       --  First convert to logvec.
       Has_Zx := False;
@@ -459,17 +470,22 @@ package body Synth.Context is
          --  32 bit result.
          if not Has_Zx then
             Res := Build_Const_UB32 (Build_Context, Vec (0).Val, W);
+         elsif Vec (0).Val = 0 and then Sext (Vec (0).Zx, Natural (W)) = not 0
+         then
+            Res := Build_Const_Z (Build_Context, W);
          else
             Res := Build_Const_UL32
               (Build_Context, Vec (0).Val, Vec (0).Zx, W);
          end if;
          return;
       else
-         Is_Full (Vec, Is_0, Is_X);
+         Is_Full (Vec, Is_0, Is_X, Is_Z);
          if Is_0 then
             Res := Build_Const_UB32 (Build_Context, 0, W);
          elsif Is_X then
             Res := Build_Const_X (Build_Context, W);
+         elsif Is_Z then
+            Res := Build_Const_Z (Build_Context, W);
          elsif not Has_Zx then
             Inst := Build_Const_Bit (Build_Context, W);
             for I in Vec'Range loop
