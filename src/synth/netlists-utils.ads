@@ -85,6 +85,10 @@ package Netlists.Utils is
    --  disconnect and free it.
    procedure Disconnect_And_Free (I : Input);
 
+   --  Disconnect an input and return the previous driver.
+   function Disconnect_And_Get (I : Input) return Net;
+   function Disconnect_And_Get (Inst : Instance; I : Port_Idx) return Net;
+
    --  Return true IFF L and R is the same net.
    --  Either because L = R (obvious case) or because both are the same
    --  selection of the same net.

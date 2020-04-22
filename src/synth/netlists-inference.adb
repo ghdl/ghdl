@@ -812,6 +812,32 @@ package body Netlists.Inference is
          return Val;
       end if;
 
+      --  Infere tri-buf.
+      First_Mux := Get_Net_Parent (Val);
+      if Get_Id (First_Mux) = Id_Mux2 then
+         declare
+            Nsel, N0, N1 : Net;
+         begin
+            --  Check for VAL <= SEL ? N1 : 'Z'
+            if Get_Id (Get_Input_Instance (First_Mux, 1)) = Id_Const_Z then
+               --  Disconnect the mux.
+               Nsel := Disconnect_And_Get (First_Mux, 0);
+               N0 := Disconnect_And_Get (First_Mux, 1);
+               N1 := Disconnect_And_Get (First_Mux, 2);
+               --  Build the tri buf.
+               Res := Build_Tri (Ctxt, Nsel, N1);
+               --  Remove the 'Z' (shouldn't be connected).
+               Remove_Instance (Get_Net_Parent (N0));
+               --  Copy location.
+               Copy_Location (Res, First_Mux);
+               --  Redirect tri output.
+               Redirect_Inputs (Get_Output (First_Mux, 0), Res);
+               Remove_Instance (First_Mux);
+               return Res;
+            end if;
+         end;
+      end if;
+
       Find_Longest_Loop (Val, Prev_Val, Last_Mux, Len);
       if Len <= 0 then
          --  No logical loop or self assignment.

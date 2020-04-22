@@ -237,6 +237,20 @@ package body Netlists.Utils is
       return Inp = No_Input;
    end Has_One_Connection;
 
+   function Disconnect_And_Get (I : Input) return Net
+   is
+      N : Net;
+   begin
+      N := Get_Driver (I);
+      Disconnect (I);
+      return N;
+   end Disconnect_And_Get;
+
+   function Disconnect_And_Get (Inst : Instance; I : Port_Idx) return Net is
+   begin
+      return Disconnect_And_Get (Get_Input (Inst, I));
+   end Disconnect_And_Get;
+
    procedure Disconnect_And_Free (I : Input)
    is
       I_Net : constant Net := Get_Driver (I);
