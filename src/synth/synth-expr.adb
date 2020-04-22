@@ -2036,6 +2036,9 @@ package body Synth.Expr is
                Acc := Allocate_By_Value (V);
                return Create_Value_Access (Acc, Expr_Type);
             end;
+         when Iir_Kind_Stable_Attribute =>
+            Error_Msg_Synth (+Expr, "signal attribute not supported");
+            return No_Valtyp;
          when Iir_Kind_Overflow_Literal =>
             Error_Msg_Synth (+Expr, "out of bound expression");
             return No_Valtyp;
