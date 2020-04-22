@@ -231,8 +231,7 @@ package body Netlists.Folds is
                Sh : constant Natural := Natural (Width'Min (Wn, W));
             begin
                V := Get_Net_Uns64 (I);
-               V := Shift_Left (V, 64 - Sh);
-               V := Shift_Right_Arithmetic (V, 64 - Sh);
+               V := Sext (V, Sh);
                Res := Build2_Const_Int (Ctxt, To_Int64 (V), W);
             end;
          else

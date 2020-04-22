@@ -16,27 +16,18 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Unchecked_Conversion;
+package body Types_Utils is
+   function Sext (V : Uns64; Sz : Natural) return Uns64
+   is
+      Sh : constant Natural range 0 .. 64 := 64 - Sz;
+   begin
+      return Shift_Right_Arithmetic (Shift_Left (V, Sh), Sh);
+   end Sext;
 
-with Types; use Types;
-
-package Types_Utils is
-   function To_Int32 is new Ada.Unchecked_Conversion
-     (Uns32, Int32);
-
-   function To_Uns32 is new Ada.Unchecked_Conversion
-     (Int32, Uns32);
-
-   function To_Uns64 is new Ada.Unchecked_Conversion
-     (Int64, Uns64);
-
-   function To_Int64 is new Ada.Unchecked_Conversion
-     (Uns64, Int64);
-
-   function To_Uns64 is new Ada.Unchecked_Conversion
-     (Fp64, Uns64);
-
-   --  Sign extend V: bit SZ is copied to bits SZ + 1 .. 63/31.
-   function Sext (V : Uns64; Sz : Natural) return Uns64;
-   function Sext (V : Uns32; Sz : Natural) return Uns32;
+   function Sext (V : Uns32; Sz : Natural) return Uns32
+   is
+      Sh : constant Natural range 0 .. 32 := 32 - Sz;
+   begin
+      return Shift_Right_Arithmetic (Shift_Left (V, Sh), Sh);
+   end Sext;
 end Types_Utils;
