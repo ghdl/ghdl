@@ -22,6 +22,7 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Concats;
 with Netlists.Gates;
 with Netlists.Gates_Ports;
+with Netlists.Locations; use Netlists.Locations;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Inference;
@@ -611,6 +612,41 @@ package body Synth.Environment is
       return True;
    end Is_Finalize_Assignment_Multiport;
 
+   function Is_Tribuf_Assignment (Prev, Next : Conc_Assign) return Boolean
+   is
+      use Netlists.Gates;
+      P_Val : Net;
+      N_Val : Net;
+   begin
+      --  The assignemnts must fully overlap (same offset and same width).
+      if Get_Conc_Offset (Prev) /= Get_Conc_Offset (Next) then
+         return False;
+      end if;
+      P_Val := Get_Conc_Value (Prev);
+      N_Val := Get_Conc_Value (Next);
+      if Get_Width (P_Val) /= Get_Width (N_Val) then
+         return False;
+      end if;
+
+      --  Both assignments must be a tri or a resolver.
+      case Get_Id (Get_Net_Parent (P_Val)) is
+         when Id_Tri
+           | Id_Resolver =>
+            null;
+         when others =>
+            return False;
+      end case;
+      case Get_Id (Get_Net_Parent (N_Val)) is
+         when Id_Tri
+           | Id_Resolver =>
+            null;
+         when others =>
+            return False;
+      end case;
+
+      return True;
+   end Is_Tribuf_Assignment;
+
    --  Compute the VALUE to be assigned to WIRE_REC.  Handle partial
    --  assignment, multiple assignments and error cases.
    procedure Finalize_Complex_Assignment (Ctxt : Builders.Context_Acc;
@@ -688,7 +724,7 @@ package body Synth.Environment is
             if Wire_Rec.Kind = Wire_Variable
               and then Is_Finalize_Assignment_Multiport (Last_Asgn, Asgn)
             then
-               --  Insert a multiport.
+               --  Insert a multiport (for shared variable).
                declare
                   Last_Asgn_Rec : Conc_Assign_Record renames
                     Conc_Assign_Table.Table (Last_Asgn);
@@ -699,13 +735,26 @@ package body Synth.Environment is
                --  Remove this assignment.
                Nbr_Assign := Nbr_Assign - 1;
                Set_Conc_Chain (Last_Asgn, Get_Conc_Chain (Asgn));
+            elsif Is_Tribuf_Assignment (Last_Asgn, Asgn) then
+               --  Insert a resolver.
+               declare
+                  Last_Asgn_Rec : Conc_Assign_Record renames
+                    Conc_Assign_Table.Table (Last_Asgn);
+                  V : constant Net := Last_Asgn_Rec.Value;
+               begin
+                  Last_Asgn_Rec.Value := Build_Resolver
+                    (Ctxt, V, Get_Conc_Value (Asgn));
+                  Copy_Location (Last_Asgn_Rec.Value, V);
+               end;
+               --  Remove this assignment.
+               Nbr_Assign := Nbr_Assign - 1;
+               Set_Conc_Chain (Last_Asgn, Get_Conc_Chain (Asgn));
             else
                Error_Msg_Synth
                  (+Wire_Rec.Decl, "multiple assignments for offsets %v:%v",
                   (+Next_Off, +(Expected_Off - 1)));
                --  TODO: insert resolver
-               Expected_Off :=
-                 Expected_Off + Get_Width (Get_Conc_Value (Asgn));
+               Expected_Off := Next_Off + Get_Width (Get_Conc_Value (Asgn));
                Last_Asgn := Asgn;
             end if;
             Asgn := Get_Conc_Chain (Asgn);
