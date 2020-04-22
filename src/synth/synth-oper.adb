@@ -128,14 +128,25 @@ package body Synth.Oper is
    begin
       Res := Prev.Typ;
 
-      if Res.Vbound.Dir = Dir_Downto
-        and then Res.Vbound.Right = 0
-      then
-         --  Normalized range
-         return Res;
-      end if;
+      case Res.Kind is
+         when Type_Vector =>
+            if Res.Vbound.Dir = Dir_Downto
+              and then Res.Vbound.Right = 0
+            then
+               --  Normalized range
+               return Res;
+            end if;
+            return Create_Vec_Type_By_Length (Res.W, Res.Vec_El);
 
-      return Create_Vec_Type_By_Length (Res.W, Res.Vec_El);
+         when Type_Slice =>
+            return Create_Vec_Type_By_Length (Res.W, Res.Slice_El);
+
+         when Type_Unbounded_Vector =>
+            raise Internal_Error;
+
+         when others =>
+            raise Internal_Error;
+      end case;
    end Create_Res_Bound;
 
    function Create_Bounds_From_Length
