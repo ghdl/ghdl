@@ -175,7 +175,8 @@ package body Vhdl.Sem_Lib is
       Set_Dependence_List (Design, Null_Iir_List);
    end Free_Dependence_List;
 
-   procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
+   procedure Load_Parse_Design_Unit
+     (Design_Unit: Iir_Design_Unit; Loc : Location_Type)
    is
       use Vhdl.Scanner;
       Design_File : constant Iir_Design_File := Get_Design_File (Design_Unit);
@@ -262,19 +263,16 @@ package body Vhdl.Sem_Lib is
       Free_Iir (Res);
    end Load_Parse_Design_Unit;
 
-   procedure Error_Obsolete (Loc : Iir; Msg : String; Args : Earg_Arr) is
+   procedure Error_Obsolete
+     (Loc : Location_Type; Msg : String; Args : Earg_Arr) is
    begin
       if not Flags.Flag_Elaborate_With_Outdated then
-         if Loc = Null_Iir then
-            Error_Msg_Sem (Command_Line_Location, Msg, Args);
-         else
-            Error_Msg_Sem (+Loc, Msg, Args);
-         end if;
+         Error_Msg_Sem (Loc, Msg, Args);
       end if;
    end Error_Obsolete;
 
    --  Check if one of its dependency makes this unit obsolete.
-   function Check_Obsolete_Dependence (Design_Unit : Iir; Loc : Iir)
+   function Check_Obsolete_Dependence (Design_Unit : Iir; Loc : Location_Type)
                                       return Boolean
    is
       List : constant Iir_List := Get_Dependence_List (Design_Unit);
@@ -305,7 +303,8 @@ package body Vhdl.Sem_Lib is
       return False;
    end Check_Obsolete_Dependence;
 
-   procedure Explain_Obsolete (Design_Unit : Iir_Design_Unit; Loc : Iir)
+   procedure Explain_Obsolete
+     (Design_Unit : Iir_Design_Unit; Loc : Location_Type)
    is
       List : Iir_List;
       It : List_Iterator;
@@ -333,7 +332,8 @@ package body Vhdl.Sem_Lib is
    end Explain_Obsolete;
 
    -- Load, parse, analyze, back-end a design_unit if necessary.
-   procedure Load_Design_Unit (Design_Unit : Iir_Design_Unit; Loc : Iir)
+   procedure Load_Design_Unit
+     (Design_Unit : Iir_Design_Unit; Loc : Location_Type)
    is
       Prev_Nbr_Errors : Natural;
       Warnings : Warnings_Setting;
@@ -418,6 +418,11 @@ package body Vhdl.Sem_Lib is
          when others =>
             raise Internal_Error;
       end case;
+   end Load_Design_Unit;
+
+   procedure Load_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir) is
+   begin
+      Load_Design_Unit (Design_Unit, Get_Location (Loc));
    end Load_Design_Unit;
 
    function Load_Primary_Unit

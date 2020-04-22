@@ -1379,7 +1379,7 @@ package body Ghdlprint is
               | Date_Disk =>
                raise Internal_Error;
             when Date_Parse =>
-               Vhdl.Sem_Lib.Load_Design_Unit (Unit, Unit);
+               Vhdl.Sem_Lib.Load_Design_Unit (Unit, Get_Location (Unit));
                if Errorout.Nbr_Errors /= 0 then
                   raise Compilation_Error;
                end if;

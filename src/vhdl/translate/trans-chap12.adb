@@ -359,7 +359,7 @@ package body Trans.Chap12 is
 
       Decl : Iir;
    begin
-      Load_Design_Unit (Unit, Null_Iir);
+      Load_Design_Unit (Unit, Libraries.Command_Line_Location);
       Pkg := Get_Library_Unit (Unit);
       Reset_Identifier_Prefix;
       Lib := Get_Library (Get_Design_File (Get_Design_Unit (Pkg)));
@@ -433,7 +433,7 @@ package body Trans.Chap12 is
          Lib_Unit : Iir;
       begin
          --  Load the unit in memory to compute the dependence list.
-         Load_Design_Unit (Unit, Null_Iir);
+         Load_Design_Unit (Unit, Libraries.Command_Line_Location);
          Update_Node_Infos;
 
          Set_Elab_Flag (Unit, True);

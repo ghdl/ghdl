@@ -41,8 +41,9 @@ package body Vhdl.Configuration is
    --  UNIT is a design unit of a configuration declaration.
    --  Fill the DESIGN_UNITS table with all design units required to build
    --  UNIT.
-   procedure Add_Design_Unit (Unit : Iir_Design_Unit; From : Iir)
+   procedure Add_Design_Unit (Unit : Iir_Design_Unit; From : Location_Type)
    is
+      Loc : constant Location_Type := Get_Location (Unit);
       List : Iir_List;
       It : List_Iterator;
       El : Iir;
@@ -75,13 +76,8 @@ package body Vhdl.Configuration is
 
       --  May be enabled to debug dependency construction.
       if False then
-         if From = Null_Iir then
-            Report_Msg (Msgid_Note, Elaboration, +Unit,
+         Report_Msg (Msgid_Note, Elaboration, +From,
                         "%n added", (1 => +Unit));
-         else
-            Report_Msg (Msgid_Note, Elaboration, +From,
-                        "%n added by %n", (+Unit, +From));
-         end if;
       end if;
 
       Lib_Unit := Get_Library_Unit (Unit);
@@ -123,12 +119,12 @@ package body Vhdl.Configuration is
          if El /= Null_Iir then
             Lib_Unit := Get_Library_Unit (El);
             if Flag_Build_File_Dependence then
-               Add_Design_Unit (El, Unit);
+               Add_Design_Unit (El, Loc);
             else
                case Get_Kind (Lib_Unit) is
                   when Iir_Kinds_Package_Declaration
                     | Iir_Kind_Context_Declaration =>
-                     Add_Design_Unit (El, Unit);
+                     Add_Design_Unit (El, Loc);
                   when others =>
                      null;
                end case;
@@ -154,7 +150,7 @@ package body Vhdl.Configuration is
             --  find all sub-configuration
             Load_Design_Unit (Unit, From);
             Lib_Unit := Get_Library_Unit (Unit);
-            Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Unit);
+            Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Loc);
             declare
                Blk : Iir_Block_Configuration;
                Prev_Configuration : Iir_Configuration_Declaration;
@@ -166,12 +162,12 @@ package body Vhdl.Configuration is
                Add_Design_Block_Configuration (Blk);
                Current_Configuration := Prev_Configuration;
                Arch := Strip_Denoting_Name (Get_Block_Specification (Blk));
-               Add_Design_Unit (Get_Design_Unit (Arch), Unit);
+               Add_Design_Unit (Get_Design_Unit (Arch), Loc);
             end;
          when Iir_Kind_Architecture_Body =>
             --  Add entity
             --  find all entity/architecture/configuration instantiation
-            Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Unit);
+            Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Loc);
             Add_Design_Concurrent_Stmts (Lib_Unit);
          when Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Body
@@ -224,7 +220,7 @@ package body Vhdl.Configuration is
             end if;
             if Bod /= Null_Iir then
                Set_Package (Get_Library_Unit (Bod), Lib_Unit);
-               Add_Design_Unit (Bod, Unit);
+               Add_Design_Unit (Bod, Loc);
             end if;
          end;
       end if;
@@ -288,6 +284,7 @@ package body Vhdl.Configuration is
    is
       use Libraries;
 
+      Loc : Location_Type;
       Entity : Iir;
       Arch_Name : Iir;
       Arch : Iir;
@@ -299,6 +296,7 @@ package body Vhdl.Configuration is
       if Aspect = Null_Iir then
          return;
       end if;
+      Loc := Get_Location (Aspect);
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
             --  Add the entity.
@@ -308,7 +306,7 @@ package body Vhdl.Configuration is
                return;
             end if;
             Entity := Get_Design_Unit (Entity_Lib);
-            Add_Design_Unit (Entity, Aspect);
+            Add_Design_Unit (Entity, Loc);
 
             --  Extract and add the architecture.
             Arch_Name := Get_Architecture (Aspect);
@@ -361,16 +359,16 @@ package body Vhdl.Configuration is
                   --  Recursive instantiation.
                   return;
                else
-                  Add_Design_Unit (Config, Aspect);
+                  Add_Design_Unit (Config, Loc);
                end if;
             end if;
 
             --  Otherwise, simply the architecture.
-            Add_Design_Unit (Arch, Aspect);
+            Add_Design_Unit (Arch, Loc);
 
          when Iir_Kind_Entity_Aspect_Configuration =>
             Add_Design_Unit
-              (Get_Design_Unit (Get_Configuration (Aspect)), Aspect);
+              (Get_Design_Unit (Get_Configuration (Aspect)), Loc);
          when Iir_Kind_Entity_Aspect_Open =>
             null;
          when others =>
@@ -699,7 +697,7 @@ package body Vhdl.Configuration is
       Set_Configuration_Mark_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
       Set_Configuration_Done_Flag (Vhdl.Std_Package.Std_Standard_Unit, True);
 
-      Add_Design_Unit (Top, Null_Iir);
+      Add_Design_Unit (Top, Command_Line_Location);
       return Top;
    end Configure;
 
@@ -729,7 +727,7 @@ package body Vhdl.Configuration is
       end if;
       Set_Bound_Vunit_Chain (Vunit, Get_Bound_Vunit_Chain (Name));
       Set_Bound_Vunit_Chain (Name, Vunit);
-      Add_Design_Unit (Get_Design_Unit (Vunit), Vunit);
+      Add_Design_Unit (Get_Design_Unit (Vunit), Get_Location (Vunit));
    end Add_Verification_Unit;
 
    procedure Add_Verification_Units
@@ -855,7 +853,8 @@ package body Vhdl.Configuration is
    end Check_Entity_Declaration_Top;
 
    package Top is
-      procedure Mark_Instantiated_Units (Lib : Iir_Library_Declaration);
+      procedure Mark_Instantiated_Units
+        (Lib : Iir_Library_Declaration; Loc : Location_Type);
 
       Nbr_Top_Entities : Natural;
       First_Top_Entity : Iir;
@@ -865,6 +864,8 @@ package body Vhdl.Configuration is
 
    package body Top is
       use Nodes_Walk;
+
+      Loc_Err : Location_Type;
 
       --  Add entities to the name table (so that they easily could be found).
       function Add_Entity_Cb (Design : Iir) return Walk_Status
@@ -881,9 +882,9 @@ package body Vhdl.Configuration is
          case Iir_Kinds_Library_Unit (Kind) is
             when Iir_Kind_Architecture_Body
               | Iir_Kind_Configuration_Declaration =>
-               Load_Design_Unit (Design, Null_Iir);
+               Load_Design_Unit (Design, Loc_Err);
             when Iir_Kind_Entity_Declaration =>
-               Load_Design_Unit (Design, Null_Iir);
+               Load_Design_Unit (Design, Loc_Err);
                Vhdl.Sem_Scopes.Add_Name (Get_Library_Unit (Design));
             when Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Instantiation_Declaration
@@ -998,10 +999,14 @@ package body Vhdl.Configuration is
          return Walk_Continue;
       end Mark_Units_Cb;
 
-      procedure Mark_Instantiated_Units (Lib : Iir_Library_Declaration)
+      procedure Mark_Instantiated_Units
+        (Lib : Iir_Library_Declaration; Loc : Location_Type)
       is
          Status : Walk_Status;
       begin
+         pragma Assert (Loc /= No_Location);
+         Loc_Err := Loc;
+
          --  Name table is used to map names to entities.
          Vhdl.Sem_Scopes.Push_Interpretations;
          Vhdl.Sem_Scopes.Open_Declarative_Region;
@@ -1054,10 +1059,10 @@ package body Vhdl.Configuration is
 
    end Top;
 
-   function Find_Top_Entity (From : Iir) return Iir is
+   function Find_Top_Entity (From : Iir; Loc : Location_Type) return Iir is
    begin
       --  FROM is a library or a design file.
-      Top.Mark_Instantiated_Units (From);
+      Top.Mark_Instantiated_Units (From, Loc);
       Top.Find_First_Top_Entity (From);
 
       if Top.Nbr_Top_Entities = 1 then

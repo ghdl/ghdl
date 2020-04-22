@@ -1218,7 +1218,8 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
 
-      Top := Vhdl.Configuration.Find_Top_Entity (From);
+      Top := Vhdl.Configuration.Find_Top_Entity
+        (From, Libraries.Command_Line_Location);
 
       if Top = Null_Iir then
          Error ("no top entity found");
@@ -1318,7 +1319,8 @@ package body Ghdllocal is
                Set_Design_File_Source (File, Fe);
                Unit := Get_First_Design_Unit (File);
                while Unit /= Null_Iir loop
-                  Vhdl.Sem_Lib.Load_Parse_Design_Unit (Unit, Null_Iir);
+                  Vhdl.Sem_Lib.Load_Parse_Design_Unit
+                    (Unit, Command_Line_Location);
                   Extract_Library_Clauses (Unit);
                   Unit := Get_Chain (Unit);
                end loop;
@@ -1468,7 +1470,7 @@ package body Ghdllocal is
                Unit := Get_First_Design_Unit (File);
                while Unit /= Null_Iir loop
                   if not Get_Elab_Flag (Unit) then
-                     Add_Design_Unit (Unit, Null_Iir);
+                     Add_Design_Unit (Unit, Libraries.Command_Line_Location);
                   end if;
                   Unit := Get_Chain (Unit);
                end loop;

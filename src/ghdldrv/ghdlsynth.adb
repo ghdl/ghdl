@@ -253,7 +253,8 @@ package body Ghdlsynth is
       --  Elaborate
       if E_Opt = Args'Last then
          --  No unit.
-         Top := Vhdl.Configuration.Find_Top_Entity (Libraries.Work_Library);
+         Top := Vhdl.Configuration.Find_Top_Entity
+           (Libraries.Work_Library, Libraries.Command_Line_Location);
          if Top = Null_Node then
             Ghdlmain.Error ("no top unit found");
             return Null_Iir;

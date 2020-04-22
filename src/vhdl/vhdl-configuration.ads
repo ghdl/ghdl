@@ -39,7 +39,7 @@ package Vhdl.Configuration is
      return Iir;
 
    --  Add design unit UNIT (with its dependences) in the design_units table.
-   procedure Add_Design_Unit (Unit : Iir_Design_Unit; From : Iir);
+   procedure Add_Design_Unit (Unit : Iir_Design_Unit; From : Location_Type);
 
    --  Add all vunits that are bound to any configured entity architecture.
    procedure Add_Verification_Units;
@@ -60,7 +60,8 @@ package Vhdl.Configuration is
    --  Use heuritics to find the top entity in FROM (either a library or
    --  a design file): mark all instantiated units and return the unmarked
    --  one if there is only one.
-   function Find_Top_Entity (From : Iir) return Iir;
+   --  LOC is used to report errors.
+   function Find_Top_Entity (From : Iir; Loc : Location_Type) return Iir;
 
    --  Add an override for generic ID.
    procedure Add_Generic_Override (Id : Name_Id; Value : String);

@@ -30,13 +30,16 @@ package Vhdl.Sem_Lib is
    --  Load, parse, analyze, back-end a design_unit if necessary.
    --  Check Design_Unit is not obsolete.
    --  LOC is the location where the design unit was needed, in case of error.
+   procedure Load_Design_Unit
+     (Design_Unit: Iir_Design_Unit; Loc : Location_Type);
    procedure Load_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir);
 
    --  Load and parse DESIGN_UNIT.
    --  Contrary to Load_Design_Unit, the design_unit is not analyzed.
    --  Also, the design_unit must not have been already loaded.
    --  Used almost only by Load_Design_Unit.
-   procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir);
+   procedure Load_Parse_Design_Unit
+     (Design_Unit: Iir_Design_Unit; Loc : Location_Type);
 
       -- Load an already analyzed primary unit NAME from library LIBRARY
    -- and compile it.
