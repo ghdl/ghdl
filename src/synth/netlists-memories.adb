@@ -1798,6 +1798,53 @@ package body Netlists.Memories is
       return Get_Net_Parent (Res);
    end Add_Enable_To_Dyn_Insert;
 
+   --  Return True iff O is to MUX and any number of Dyn_Extract (possibly
+   --  through mux2).
+   function One_Write_Connection (O : Net; Mux : Instance) return Boolean
+   is
+      Inp : Input;
+      Parent : Instance;
+   begin
+      Inp := Get_First_Sink (O);
+      while Inp /= No_Input loop
+         Parent := Get_Input_Parent (Inp);
+         case Get_Id (Parent) is
+            when Id_Dyn_Extract =>
+               null;
+            when Id_Mux2 =>
+               if Parent /= Mux then
+                  --  Can be a mux for a dyn_extract.
+                  declare
+                     In2 : Input;
+                  begin
+                     loop
+                        In2 := Get_First_Sink (Get_Output (Parent, 0));
+                        if In2 = No_Input
+                          or else Get_Next_Sink (In2) /= No_Input
+                        then
+                           --  Drives more than one gate.
+                           return False;
+                        end if;
+                        Parent := Get_Input_Parent (In2);
+                        case Get_Id (Parent) is
+                           when Id_Dyn_Extract =>
+                              exit;
+                           when Id_Mux2 =>
+                              null;
+                           when others =>
+                              return False;
+                        end case;
+                     end loop;
+                  end;
+               end if;
+            when others =>
+               return False;
+         end case;
+         Inp := Get_Next_Sink (Inp);
+      end loop;
+      return True;
+   end One_Write_Connection;
+
    procedure Reduce_Muxes_Mux2 (Ctxt : Context_Acc;
                                 Psel : Net;
                                 Head : in out Instance;
@@ -1938,7 +1985,9 @@ package body Netlists.Memories is
       --          / |--|  |                     |    |
       --   out --|  |   \_|---------------------/    |
       --          \_|--------------------------------+----- inp
-      if Has_One_Connection (Drv0) and then not Has_One_Connection (Drv1) then
+      if One_Write_Connection (Drv0, Mux)
+        and then not Has_One_Connection (Drv1)
+      then
          Disconnect (In0);
          Disconnect (In1);
          Disconnect (Sel_Inp);
@@ -1986,51 +2035,6 @@ package body Netlists.Memories is
       Reduce_Muxes (Ctxt, En, Val, No_Net, Res, Tail);
       return Get_Output (Res, 0);
    end Infere_RAM;
-
-   function One_Write_Connection (O : Net; Mux : Instance) return Boolean
-   is
-      Inp : Input;
-      Parent : Instance;
-   begin
-      Inp := Get_First_Sink (O);
-      while Inp /= No_Input loop
-         Parent := Get_Input_Parent (Inp);
-         case Get_Id (Parent) is
-            when Id_Dyn_Extract =>
-               null;
-            when Id_Mux2 =>
-               if Parent /= Mux then
-                  --  Can be a mux for a dyn_extract.
-                  declare
-                     In2 : Input;
-                  begin
-                     loop
-                        In2 := Get_First_Sink (Get_Output (Parent, 0));
-                        if In2 = No_Input
-                          or else Get_Next_Sink (In2) /= No_Input
-                        then
-                           --  Drives more than one gate.
-                           return False;
-                        end if;
-                        Parent := Get_Input_Parent (In2);
-                        case Get_Id (Parent) is
-                           when Id_Dyn_Extract =>
-                              exit;
-                           when Id_Mux2 =>
-                              null;
-                           when others =>
-                              return False;
-                        end case;
-                     end loop;
-                  end;
-               end if;
-            when others =>
-               return False;
-         end case;
-         Inp := Get_Next_Sink (Inp);
-      end loop;
-      return True;
-   end One_Write_Connection;
 
    function Can_Infere_RAM_Mux2 (Mux : Instance) return Instance
    is
