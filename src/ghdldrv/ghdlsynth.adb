@@ -163,6 +163,12 @@ package body Ghdlsynth is
          Flag_Trace_Statements := True;
       elsif Option = "-i" then
          Flag_Debug_Init := True;
+      elsif Option = "-v" then
+         if not Synth.Flags.Flag_Verbose then
+            Synth.Flags.Flag_Verbose := True;
+         else
+            Flags.Verbose := True;
+         end if;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;

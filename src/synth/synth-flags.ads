@@ -60,4 +60,6 @@ package Synth.Flags is
 
    --  Maximum number of iterations for (while)/loop.  0 means unlimited.
    Flag_Max_Loop : Natural := 1000;
+
+   Flag_Verbose : Boolean := False;
 end Synth.Flags;

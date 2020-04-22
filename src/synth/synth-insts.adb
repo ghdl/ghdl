@@ -53,6 +53,7 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Source; use Synth.Source;
 with Synth.Debugger;
 with Synth.Files_Operations;
+with Synth.Errors;
 
 package body Synth.Insts is
    Root_Instance : Synth_Instance_Acc;
@@ -1465,6 +1466,10 @@ package body Synth.Insts is
       if Arch = Null_Node then
          --  Black box.
          return;
+      end if;
+
+      if Flag_Verbose then
+         Errors.Info_Msg_Synth (+Entity, "synthesizing %n", (1 => +Entity));
       end if;
 
       --  Save the current architecture, so that files can be open using a
