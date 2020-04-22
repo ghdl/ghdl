@@ -202,6 +202,8 @@ package Netlists.Builders is
                          Els : Net;
                          Init : Net) return Net;
 
+   function Build_Tri (Ctxt : Context_Acc; En : Net; D : Net) return Net;
+
    function Build_Nop (Ctxt : Context_Acc; I : Net) return Net;
 private
    type Module_Arr is array (Module_Id range <>) of Module;
@@ -240,6 +242,7 @@ private
       M_Iadff : Module;
       M_Mdff : Module;
       M_Midff : Module;
+      M_Tri : Module;
       M_Truncate : Module_Arr (Truncate_Module_Id);
       M_Extend : Module_Arr (Extend_Module_Id);
       M_Reduce : Module_Arr (Reduce_Module_Id);

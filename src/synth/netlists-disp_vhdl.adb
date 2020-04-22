@@ -1242,6 +1242,10 @@ package body Netlists.Disp_Vhdl is
          when Id_Negedge =>
             Disp_Template
               ("  \o0 <= '1' when falling_edge (\i0) else '0';" & NL, Inst);
+         when Id_Tri =>
+            Disp_Template ("  \o0 <= \i1 when (\i0 = '1') else ", Inst);
+            Disp_X_Lit (Get_Width (Get_Output (Inst, 0)), 'Z');
+            Put_Line (";");
          when Id_Assert =>
             Disp_Template
               ("  \l0: assert \i0 = '1' severity error;" & NL, Inst);

@@ -186,7 +186,14 @@ package Netlists.Gates is
    Id_Midff : constant Module_Id := 61;
 
    --  Temporary gate, O = I
-   Id_Nop : constant Module_Id := 60;
+   Id_Nop : constant Module_Id := 62;
+
+   --  Tri state buffer.
+   --  Inputs:  0: D
+   --           1: EN
+   --  Outputs: 0: O
+   --  O <= EN ? O : 'Z'
+   Id_Tri : constant Module_Id := 63;
 
    --  Width change: truncate or extend.  Sign is know in order to possibly
    --  detect loss of value.
@@ -233,6 +240,9 @@ package Netlists.Gates is
 
    --  OUT := IN0 + IN1, size extension (max of inputs width).
    Id_Addidx : constant Module_Id := 73;
+
+   --  TODO:
+   --  Id_Addidx_Cst : constant Module_Id := XX;
 
    --  Represent a memory with a fixed size.
    --  This is not a regular gate as it has only one output, PORTS.
@@ -297,6 +307,15 @@ package Netlists.Gates is
    Id_Anyseq : constant Module_Id := 93;
 
    subtype Formal_Module_Id is Module_Id range Id_Allconst .. Id_Anyseq;
+
+   --  A resolver for tri-state.  The two inputs (tri or resolver gates) are
+   --  connected together and to the output.
+   --  I0  I1  O
+   --  Z   Z   Z
+   --  Z   v1  v1
+   --  v0  Z   v0
+   --  v0  v1  vo   Ok if v0 = v1, error if v0 /= v1.
+   Id_Resolver : constant Module_Id := 94;
 
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
