@@ -3576,7 +3576,8 @@ package body Vhdl.Evaluation is
    is
    begin
       if not Eval_Is_Range_In_Bound (A_Range, Sub_Type, Any_Dir) then
-         Error_Msg_Sem (+A_Range, "static range violates bounds");
+         Warning_Msg_Sem (Warnid_Runtime_Error, +A_Range,
+                          "static range violates bounds");
       end if;
    end Eval_Check_Range;
 

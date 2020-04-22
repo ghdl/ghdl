@@ -2065,13 +2065,13 @@ package body Trans.Chap3 is
             end;
          when Type_Mode_I32 =>
             declare
-               V : Iir_Int32;
+               V : Int64;
             begin
-               V := Iir_Int32 (Get_Value (Lit));
+               V := Get_Value (Lit);
                if Is_Hi then
-                  return V = Iir_Int32'Last;
+                  return V = Int64 (Iir_Int32'Last);
                else
-                  return V = Iir_Int32'First;
+                  return V = Int64 (Iir_Int32'First);
                end if;
             end;
          when Type_Mode_P32 =>

@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-analyze_failure vc.vhdl
+analyze_failure -Werror=runtime-error vc.vhdl
 
 clean
 

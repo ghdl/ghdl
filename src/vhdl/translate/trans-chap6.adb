@@ -588,14 +588,16 @@ package body Trans.Chap6 is
                      Off := Prefix_Left - Slice_Left;
                end case;
                if Off < 0 then
-                  --  Must have been caught by sem.
-                  raise Internal_Error;
+                  Gen_Bound_Error (Index_Range);
+                  Off := 0;
+                  Slice_Length := 0;
                end if;
                if Off + Slice_Length
                  > Eval_Discrete_Range_Length (Index_Range)
                then
-                  --  Must have been caught by sem.
-                  raise Internal_Error;
+                  Gen_Bound_Error (Index_Range);
+                  Off := 0;
+                  Slice_Length := 0;
                end if;
             end if;
             Data.Off := Unsigned_64 (Off);
