@@ -740,6 +740,8 @@ package body Netlists.Builders is
       Create_Formal_Input (Res, Id_Anyseq, Name_Anyseq);
 
       Create_Tri_Module (Res);
+      Create_Dyadic_Module (Design, Res.M_Resolver,
+                            Get_Identifier ("resolver"), Id_Resolver);
 
       return Res;
    end Build_Builders;
@@ -1533,6 +1535,22 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 1), D);
       return O;
    end Build_Tri;
+
+   --  Reuse Build_Dyadic ?
+   function Build_Resolver (Ctxt : Context_Acc; L, R : Net) return Net
+   is
+      Wd : constant Width := Get_Width (L);
+      pragma Assert (Get_Width (R) = Wd);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Resolver);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Wd);
+      Connect (Get_Input (Inst, 0), L);
+      Connect (Get_Input (Inst, 1), R);
+      return O;
+   end Build_Resolver;
 
    function Build_Extract
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net
