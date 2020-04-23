@@ -1061,28 +1061,29 @@ package body Synth.Oper is
             return Synth_Sdivmod (Id_Smod, Oper_Right);
 
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Uns =>
+           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Uns =>
             --  "=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Eq, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Nat =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Nat
+           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Int =>
             --  "=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Eq, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Nat_Uns =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Nat_Uns =>
             --  "=" (Natural, Unsigned) [resize]
             return Synth_Compare_Nat_Uns (Id_Eq, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Int =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Int =>
             --  "=" (Signed, Integer)
             return Synth_Compare_Sgn_Int (Id_Eq, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Sgn_Sgn =>
             --  "=" (Signed, Signed) [resize]
             return Synth_Compare_Sgn_Sgn (Id_Eq, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Int_Sgn =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Int_Sgn =>
             --  "=" (Integer, Signed)
             return Synth_Compare_Int_Sgn (Id_Eq, Expr_Typ);
 
@@ -1144,28 +1145,29 @@ package body Synth.Oper is
             return Synth_Compare_Int_Sgn (Id_Slt, Expr_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Uns =>
+           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Uns =>
             --  "<=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Ule, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Nat =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Le_Uns_Nat
+           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Int =>
             --  "<=" (Unsigned, Natural)
             return Synth_Compare_Uns_Nat (Id_Ule, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Le_Nat_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Nat_Uns =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Le_Nat_Uns =>
             --  "<=" (Natural, Unsigned) [resize]
             return Synth_Compare_Nat_Uns (Id_Ule, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Sgn =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Sgn =>
             --  "<=" (Signed, Signed)
             return Synth_Compare_Sgn_Sgn (Id_Sle, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Int
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Int =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Le_Sgn_Int =>
             --  "<=" (Signed, Integer)
             return Synth_Compare_Sgn_Int (Id_Sle, Expr_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Le_Int_Sgn
-           | Iir_Predefined_Ieee_Numeric_Std_Match_Le_Int_Sgn =>
+           |  Iir_Predefined_Ieee_Numeric_Std_Match_Le_Int_Sgn =>
             --  "<=" (Integer, Signed)
             return Synth_Compare_Int_Sgn (Id_Sle, Expr_Typ);
 

@@ -467,7 +467,8 @@ package body Synth.Aggr is
                  (Syn_Inst, Get_Type (Aggr));
                return Synth_Aggregate_Array (Syn_Inst, Aggr, Res_Type);
             end;
-         when Type_Vector | Type_Array =>
+         when Type_Vector
+           | Type_Array =>
             return Synth_Aggregate_Array (Syn_Inst, Aggr, Aggr_Type);
          when Type_Record =>
             return Synth_Aggregate_Record (Syn_Inst, Aggr, Aggr_Type);
