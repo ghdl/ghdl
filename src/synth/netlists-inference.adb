@@ -845,8 +845,16 @@ package body Netlists.Inference is
          --  No logical loop or self assignment.
          return Val;
       end if;
-      if Last_Use and then Has_One_Connection (Prev_Val) then
+      if Last_Use
+        and then Has_One_Connection (Prev_Val)
+        and then not Is_Connected (Val)
+      then
          --  Value is not used, to be removed.  Do not try to infere anything.
+         --  Conditions:
+         --   * last_use must be true: the signal won't be use after the call
+         --     to infere (because it goes out of scope).
+         --   * Prev_val must be connected once (to create a loop).
+         --   * Val must not be connected (for variables).
          return Val;
       end if;
 
