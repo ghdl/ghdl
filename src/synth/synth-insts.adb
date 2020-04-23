@@ -350,6 +350,20 @@ package body Synth.Insts is
       return New_Sname_User (Id, No_Sname);
    end Create_Inter_Name;
 
+   procedure Build_Object_Subtype (Syn_Inst : Synth_Instance_Acc;
+                                   Inter : Node;
+                                   Proto_Inst : Synth_Instance_Acc)
+   is
+      Inter_Type : Node;
+      Inter_Typ : Type_Acc;
+   begin
+      if Get_Declaration_Type (Inter) /= Null_Node then
+         Inter_Type := Get_Type (Inter);
+         Inter_Typ := Get_Value (Proto_Inst, Inter).Typ;
+         Create_Subtype_Object (Syn_Inst, Inter_Type, Inter_Typ);
+      end if;
+   end Build_Object_Subtype;
+
    function Build (Params : Inst_Params) return Inst_Object
    is
       Decl : constant Node := Params.Decl;
@@ -384,22 +398,11 @@ package body Synth.Insts is
       Nbr_Params := 0;
       while Inter /= Null_Node loop
          --  Bounds or range of the type.
-         Inter_Type := Get_Subtype_Indication (Inter);
-         if Inter_Type /= Null_Node then
-            case Get_Kind (Inter_Type) is
-               when Iir_Kind_Array_Subtype_Definition
-                 | Iir_Kind_Integer_Subtype_Definition =>
-                  Create_Subtype_Object
-                    (Syn_Inst, Inter_Type,
-                     Get_Subtype_Object (Params.Syn_Inst, Inter_Type));
-               when others =>
-                  null;
-            end case;
-            Nbr_Params := Nbr_Params + 1;
-         end if;
+         Build_Object_Subtype (Syn_Inst, Inter, Params.Syn_Inst);
 
          --  Object.
          Create_Object (Syn_Inst, Inter, Get_Value (Params.Syn_Inst, Inter));
+         Nbr_Params := Nbr_Params + 1;
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -413,10 +416,8 @@ package body Synth.Insts is
          --  (particularly if it is a port of a component).  So the subtype
          --  cannot be regularly elaborated.
          --  Also, for unconstrained subtypes, we need the constraint.
+         Build_Object_Subtype (Syn_Inst, Inter, Params.Syn_Inst);
          Inter_Typ := Get_Value (Params.Syn_Inst, Inter).Typ;
-         if Get_Declaration_Type (Inter) /= Null_Node then
-            Create_Subtype_Object (Syn_Inst, Get_Type (Inter), Inter_Typ);
-         end if;
 
          case Mode_To_Port_Kind (Get_Mode (Inter)) is
             when Port_In =>
