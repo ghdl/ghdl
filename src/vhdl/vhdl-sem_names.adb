@@ -3075,16 +3075,15 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Enumeration_Literal
-           | Iir_Kind_Attribute_Declaration =>
+           | Iir_Kind_Attribute_Declaration
+           | Iir_Kinds_Library_Unit
+           | Iir_Kind_Library_Declaration =>
             Error_Msg_Sem (+Name, "%n cannot be indexed or sliced", +Prefix);
             Res := Null_Iir;
 
          when Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration =>
             Res := Sem_Psl.Sem_Psl_Name (Name);
-
-         when Iir_Kinds_Library_Unit =>
-            Error_Msg_Sem (+Name, "function name is a design unit");
 
          when Iir_Kind_Error =>
             --  Continue with the error.
