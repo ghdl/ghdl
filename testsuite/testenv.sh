@@ -170,6 +170,17 @@ run_failure ()
    fi
 }
 
+# Be sure vpi can be used
+add_vpi_path()
+{
+  if [ "$OS" = "Windows_NT" ]; then
+      # Need to put the directory containing libghdlvpi.dll in the path.
+      vpi_lib=`$GHDL --vpi-library-dir | sed -e 's!\\\\!/!g' -e 's!^C:!/C!g'`
+      echo vpi_lib: $vpi_lib
+      PATH="$PATH:$vpi_lib"
+  fi
+}
+
 # Clean the environment
 clean ()
 {

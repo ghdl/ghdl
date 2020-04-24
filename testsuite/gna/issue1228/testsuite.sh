@@ -6,11 +6,7 @@ analyze test_load.vhdl
 elab test_load
 
 if ghdl_has_feature test_load vpi; then
-  if [ "$OS" = "Windows_NT" ]; then
-      vpi_lib=`$GHDL --vpi-library-dir | sed -e 's!\\\\!/!g' -e 's!^C:!/C!g'`
-      echo vpi_lib: $vpi_lib
-      PATH="$PATH:$vpi_lib"
-  fi
+  add_vpi_path
 
   $GHDL --vpi-compile -v gcc $CFLAGS -c vpi1.c
   $GHDL --vpi-link -v gcc $CFLAGS -o vpi1.vpi vpi1.o
