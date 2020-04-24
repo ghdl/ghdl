@@ -824,6 +824,17 @@ package body Grt.Vpi is
    -- see IEEE 1364-2001, chapter 27.14, page 675
    Buf_Value : Vstring;
 
+   procedure Append_Bin (V : Ghdl_U64; Ndigits : Natural) is
+   begin
+      for I in reverse 0 .. Ndigits - 1 loop
+         if (Shift_Right (V, I) and 1) /= 0 then
+            Append (Buf_Value, '1');
+         else
+            Append (Buf_Value, '0');
+         end if;
+      end loop;
+   end Append_Bin;
+
    type Map_Type_E8 is array (Ghdl_E8 range 0..8) of character;
    Map_Std_E8: constant Map_Type_E8 := "UX01ZWLH-";
 
@@ -866,22 +877,21 @@ package body Grt.Vpi is
 
       case Info.Vtype is
          when Vcd_Bad
-           | Vcd_Enum8
            | Vcd_Float64 =>
             return null;
+         when Vcd_Enum8 =>
+            declare
+               V : Ghdl_E8;
+            begin
+               V := Verilog_Wire_Val (Info).E8;
+               Append_Bin (Ghdl_U64 (V), 8);
+            end;
          when Vcd_Integer32 =>
             declare
                V : Ghdl_U32;
             begin
                V := Verilog_Wire_Val (Info).E32;
-               for I in 0 .. 31 loop
-                  if (V and 16#8000_0000#) /= 0 then
-                     Append (Buf_Value, '1');
-                  else
-                     Append (Buf_Value, '0');
-                  end if;
-                  V := Shift_Left (V, 1);
-               end loop;
+               Append_Bin (Ghdl_U64 (V), 32);
             end;
          when Vcd_Bit
            | Vcd_Bool
@@ -1015,7 +1025,26 @@ package body Grt.Vpi is
                end;
             end loop;
          when Vcd_Enum8 =>
-            null;
+            declare
+               V : Ghdl_E8;
+            begin
+               V := 0;
+               for I in reverse Vec'Range loop
+                  if Vec (I) = '1' then
+                     --  Ok, handles 'X', 'Z'... like '0'.
+                     V := V or Shift_Left (1, Natural (Vec'Last - I));
+                  end if;
+               end loop;
+               case Info.Val is
+                  when Vcd_Effective | Vcd_Driving =>
+                     --  Force_Driving sets both the driving and the
+                     --  effective value.
+                     Ghdl_Signal_Force_Driving_E8
+                       (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
+                  when Vcd_Variable =>
+                     Verilog_Wire_Val (Info).E8 := V;
+               end case;
+            end;
          when Vcd_Integer32
            | Vcd_Float64 =>
             null;
@@ -1151,6 +1180,23 @@ package body Grt.Vpi is
          when vpiObjTypeVal =>
             dbgPut_Line ("vpi_put_value: vpiObjTypeVal");
          when vpiBinStrVal =>
+            --  Convert LEN (number of elements) to number of bits.
+            case Info.Vtype is
+               when Vcd_Bad =>
+                  null;
+               when Vcd_Bit
+                 | Vcd_Bool
+                 | Vcd_Bitvector
+                 | Vcd_Stdlogic
+                 | Vcd_Stdlogic_Vector =>
+                  null;
+               when Vcd_Enum8 =>
+                  Len := Len * 8;
+               when Vcd_Integer32 =>
+                  Len := Len * 32;
+               when Vcd_Float64 =>
+                  Len := Len * 64;
+            end case;
             Ii_Vpi_Put_Value_Bin_Str (Info, Len, aValue.Str);
             -- dbgPut_Line ("vpi_put_value: vpiBinStrVal");
          when vpiOctStrVal =>
