@@ -139,21 +139,21 @@ $(libdirsuffix)/libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-file
 	$(GRT_RANLIB) $@
 
 grt/run-bind.adb: grt $(GRT_SRC_DEPS) grt-force
-	cd grt; $(MSYS2_ARG) $(GNATMAKE) -c -aI$(GRTSRCDIR) -aI.. \
+	cd grt && $(MSYS2_ARG) $(GNATMAKE) -c -aI$(GRTSRCDIR) -aI.. \
 	  $(GRT_PRAGMA_FLAG) ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
 # 	Set No Run-Time flag to suppress references to standard gnat library.
 	sed -e '/^P /s/P /P NR /' < grt/ghdl_main.ali > grt/ghdl_main-tmp.ali
 	$(MV) grt/ghdl_main-tmp.ali grt/ghdl_main.ali
-	cd grt; $(GNATMAKE) -b ghdl_main.ali -bargs  -Lgrt_ -o run-bind.adb -n
+	cd grt && $(GNATMAKE) -b ghdl_main.ali -bargs  -Lgrt_ -o run-bind.adb -n
 
 grt:
 	mkdir grt
 
-grt/run-bind.o: grt/run-bind.adb
-	cd grt; $(MSYS2_ARG) $(GRT_ADACOMPILE) -o run-bind.o run-bind.adb
+grt/run-bind.o: grt grt/run-bind.adb
+	cd grt && $(MSYS2_ARG) $(GRT_ADACOMPILE) -o run-bind.o run-bind.adb
 
-grt/main.o: $(GRTSRCDIR)/main.adb
-	cd grt; $(MSYS2_ARG) $(GRT_ADACOMPILE) -o main.o $< -Igrt
+grt/main.o: grt $(GRTSRCDIR)/main.adb
+	cd grt && $(MSYS2_ARG) $(GRT_ADACOMPILE) -o main.o $(GRTSRCDIR)/main.adb -Igrt
 
 GRT_C_COMPILE = $(CC) -c $(GRT_FLAGS) -o $@ $<
 GRT_C_COMPILE_PIC = $(CC) -c $(GRT_FLAGS) $(PIC_FLAGS) -o $@ $<
