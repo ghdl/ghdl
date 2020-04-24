@@ -1,0 +1,17 @@
+Start of simulation 
+enum in <= 000 iteration 0 
+enum decoded = 000 iteration 1 
+enum out = 00000000 iteration 1 
+enum in <= 001 iteration 1 
+enum decoded = 001 iteration 2 
+enum out = 00000001 iteration 2 
+enum in <= 010 iteration 2 
+enum decoded = 010 iteration 3 
+enum out = 00000010 iteration 3 
+enum in <= 011 iteration 3 
+enum decoded = 011 iteration 4 
+enum out = 00000011 iteration 4 
+enum in <= 100 iteration 4 
+enum decoded = 100 iteration 5 
+enum out = 00000100 iteration 5 
+End of simulation 6 
