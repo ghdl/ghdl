@@ -1285,6 +1285,10 @@ package body Synth.Environment is
                      N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
                end if;
             end;
+         elsif N (0) = N (1) then
+            --  Minor optimization: no need to add a mux if both sides are
+            --  equal.  But this is important for the control wires.
+            Res := N (0);
          else
             Res := Build_Mux2 (Ctxt, Sel, N (0), N (1));
          end if;
