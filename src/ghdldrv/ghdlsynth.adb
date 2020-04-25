@@ -43,6 +43,7 @@ with Vhdl.Utils;
 
 with Netlists.Dump;
 with Netlists.Disp_Vhdl;
+with Netlists.Disp_Dot;
 with Netlists.Errors;
 
 with Synthesis;
@@ -52,7 +53,10 @@ with Synth.Flags; use Synth.Flags;
 
 package body Ghdlsynth is
    type Out_Format is
-     (Format_Default, Format_Raw, Format_Dump, Format_Vhdl, Format_None);
+     (Format_Default,
+      Format_Raw, Format_Dump, Format_Dot,
+      Format_Vhdl,
+      Format_None);
 
    type Name_Id_Array is array (Natural range <>) of Name_Id;
 
@@ -147,6 +151,8 @@ package body Ghdlsynth is
          Cmd.Oformat := Format_Raw;
       elsif Option = "--out=dump" then
          Cmd.Oformat := Format_Dump;
+      elsif Option = "--out=dot" then
+         Cmd.Oformat := Format_Dot;
       elsif Option = "--out=none" then
          Cmd.Oformat := Format_None;
       elsif Option = "--out=vhdl" then
@@ -340,6 +346,8 @@ package body Ghdlsynth is
          when Format_Dump =>
             Netlists.Dump.Flag_Disp_Inline := Cmd.Disp_Inline;
             Netlists.Dump.Dump_Module (Res);
+         when Format_Dot =>
+            Netlists.Disp_Dot.Disp_Dot_Top_Module (Res);
          when Format_Vhdl =>
             if Boolean'(True) then
                Ent := Vhdl.Utils.Get_Entity_From_Configuration (Config);

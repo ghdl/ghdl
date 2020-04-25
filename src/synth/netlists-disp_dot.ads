@@ -18,23 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
-package Netlists.Dump is
-   --  If set, compact print.
-   Flag_Disp_Inline : Boolean := True;
+with Netlists;
 
-   --  If set, print nets/instances/modules identifier.
-   Flag_Disp_Id : Boolean := True;
-
-   procedure Dump_Name (N : Sname);
-
-   procedure Dump_Net_Name (N : Net; With_Id : Boolean := False);
-   procedure Disp_Driver (Drv : Net; Indent : Natural);
-   procedure Disp_Instance
-     (Inst : Instance; With_Name : Boolean; Indent : Natural);
-
-   --  Raw dump.
-   procedure Dump_Module (M : Module; Indent : Natural := 0);
-
-   --  More humain readable output.
-   procedure Disp_Module (M : Module; Indent : Natural := 0);
-end Netlists.Dump;
+package Netlists.Disp_Dot is
+   procedure Disp_Dot_Top_Module (M : Module);
+end Netlists.Disp_Dot;
