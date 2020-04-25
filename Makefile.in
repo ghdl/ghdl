@@ -514,9 +514,6 @@ install.vpi.local: all.vpi
 
 ################ Libraries ###############################################
 
-LIBSRC_DIR:=$(srcdir)/libraries
-LIBDST_DIR:=$(libdirsuffix)
-
 VHDLLIB_SUBDIRS_COMMON= src/std src/std/v87 src/std/v93 src/std/v08 \
   src/synopsys src/synopsys/v08 \
   std/v87 ieee/v87 \
