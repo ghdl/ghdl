@@ -135,7 +135,8 @@ package body Vhdl.Sem_Psl is
             begin
                Name := Get_Named_Entity (Expr);
                if Name /= Null_Iir then
-                  Hnode := PSL.Hash.Get_PSL_Node (HDL_Node (Name));
+                  Hnode := PSL.Hash.Get_PSL_Node
+                    (HDL_Node (Name), Get_Location (Name));
                   N := Create_Node (N_HDL_Expr);
                   Set_Location (N, Get_Location (Expr));
                   Set_HDL_Node (N, HDL_Node (Expr));
@@ -148,7 +149,7 @@ package body Vhdl.Sem_Psl is
       end case;
 
       --  Default.
-      return PSL.Hash.Get_PSL_Node (HDL_Node (Expr));
+      return PSL.Hash.Get_PSL_Node (HDL_Node (Expr), Get_Location (Expr));
    end Convert_Bool;
 
    --  Analyze an HDL expression.  This may mostly a wrapper except in the
@@ -230,7 +231,7 @@ package body Vhdl.Sem_Psl is
       Free_Node (N);
       if not Is_Psl_Bool_Expr (Expr) then
          Error_Msg_Sem (+Expr, "type of expression must be boolean");
-         return PSL.Hash.Get_PSL_Node (HDL_Node (Expr));
+         return PSL.Hash.Get_PSL_Node (HDL_Node (Expr), Get_Location (Expr));
       else
          return Convert_Bool (Expr);
       end if;
@@ -880,7 +881,8 @@ package body Vhdl.Sem_Psl is
             if Get_Kind (Actual) in Iir_Kinds_Name then
                Actual := Get_Named_Entity (Actual);
             end if;
-            Psl_Actual := PSL.Hash.Get_PSL_Node (HDL_Node (Actual));
+            Psl_Actual := PSL.Hash.Get_PSL_Node
+              (HDL_Node (Actual), Get_Location (Actual));
          end if;
 
          Assoc2 := Create_Node (N_Actual);

@@ -477,6 +477,7 @@ package PSL.Nodes is
    --  Note: use field Location
    function Get_Location (N : Node) return Location_Type;
    procedure Set_Location (N : Node; Loc : Location_Type);
+   procedure Copy_Location (N : Node; Src : Node);
 
    function Get_Kind (N : Node) return Nkind;
    pragma Inline (Get_Kind);

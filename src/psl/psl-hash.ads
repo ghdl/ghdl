@@ -25,5 +25,5 @@ package PSL.Hash is
 
    --  Get the PSL node for node HDL.
    --  Only one PSL node is created for an HDL node.
-   function Get_PSL_Node (Hdl : Int32) return Node;
+   function Get_PSL_Node (Hdl : Int32; Loc : Location_Type) return Node;
 end PSL.Hash;

@@ -200,6 +200,10 @@ package body PSL.Nodes is
       Nodet.Table (N).Location := Int32 (Loc);
    end Set_Location;
 
+   procedure Copy_Location (N : Node; Src : Node) is
+   begin
+      Set_Location (N, Get_Location (Src));
+   end Copy_Location;
 
    procedure Set_Field1 (N : Node; V : Node) is
    begin

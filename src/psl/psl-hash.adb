@@ -45,7 +45,8 @@ package body PSL.Hash is
       end loop;
    end Init;
 
-   function Get_PSL_Node (Hdl : Int32) return Node is
+   function Get_PSL_Node (Hdl : Int32; Loc : Location_Type) return Node
+   is
       Idx : Index_Type := Index_Type (Hdl mod Int32 (Hash_Size));
       N_Idx : Index_Type;
       Res : Node;
@@ -55,6 +56,7 @@ package body PSL.Hash is
       if Res = Null_Node then
          Res := Create_Node (N_HDL_Bool);
          Set_HDL_Node (Res, Hdl);
+         Set_Location (Res, Loc);
          Cells.Table (Idx).Res := Res;
          return Res;
       end if;
@@ -71,6 +73,7 @@ package body PSL.Hash is
       end loop;
       Res := Create_Node (N_HDL_Bool);
       Set_HDL_Node (Res, Hdl);
+      Set_Location (Res, Loc);
       Cells.Append ((Res => Res, Next => No_Index));
       Cells.Table (Idx).Next := Cells.Last;
       return Res;

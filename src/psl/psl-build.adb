@@ -97,6 +97,7 @@ package body PSL.Build is
          Res : NFA;
          Start : NFA_State;
          Extra_L, Extra_R : NFA_Edge;
+         T : Node;
       begin
          Start_L := Get_Start_State (L);
          Start_R := Get_Start_State (R);
@@ -142,12 +143,14 @@ package body PSL.Build is
                E_R := Get_First_Src_Edge (S_R);
                while E_R /= No_Edge loop
                   if not (E_L = Extra_L and E_R = Extra_R) then
+                     T := Build_Bool_And (Get_Edge_Expr (E_L),
+                                          Get_Edge_Expr (E_R));
+                     Copy_Location (T, Get_Edge_Expr (E_L));
                      Add_Edge (Get_State (Res, S_L, S_R),
                                Get_State (Res,
                                           Get_Edge_Dest (E_L),
                                           Get_Edge_Dest (E_R)),
-                               Build_Bool_And (Get_Edge_Expr (E_L),
-                                               Get_Edge_Expr (E_R)));
+                               T);
                   end if;
                   E_R := Get_Next_Src_Edge (E_R);
                end loop;
@@ -364,6 +367,7 @@ package body PSL.Build is
          E_R := Get_First_Src_Edge (Start_R);
          while E_R /= No_Edge loop
             Expr := Build_Bool_And (N_L, Get_Edge_Expr (E_R));
+            Copy_Location (Expr, N_L);
             Expr := PSL.QM.Reduce (Expr);
             if Expr /= False_Node then
                Add_Edge (S_L, Get_Edge_Dest (E_R), Expr);
@@ -720,6 +724,7 @@ package body PSL.Build is
                             Expr : Node;
                             V : Bool_Vector)
       is
+         T : Node;
       begin
          if Expr = False_Node then
             return;
@@ -759,13 +764,19 @@ package body PSL.Build is
                N_V (S) := True;
                if Expr = Null_Node then
                   Build_Arcs (N, State, N_States, Exprs, E, N_V);
-                  Build_Arcs (N, State, N_States, Exprs,
-                              Build_Bool_Not (E), V);
+                  T := Build_Bool_Not (E);
+                  Copy_Location (T, E);
+                  Build_Arcs (N, State, N_States, Exprs, T, V);
                else
-                  Build_Arcs (N, State, N_States, Exprs,
-                              Build_Bool_And (E, Expr), N_V);
-                  Build_Arcs (N, State, N_States, Exprs,
-                              Build_Bool_And (Build_Bool_Not (E), Expr), V);
+                  T := Build_Bool_And (E, Expr);
+                  Copy_Location (T, Expr);
+
+                  Build_Arcs (N, State, N_States, Exprs, T, N_V);
+                  T := Build_Bool_Not (E);
+                  Copy_Location (T, E);
+                  T := Build_Bool_And (T, Expr);
+                  Copy_Location (T, Expr);
+                  Build_Arcs (N, State, N_States, Exprs, T, V);
                end if;
             end;
          end if;
@@ -785,6 +796,7 @@ package body PSL.Build is
          States : State_Vector (0 .. Nbr_States - 1);
          Res : NFA;
          State : NFA_State;
+         R : Node;
       begin
          Final := Natural (Get_State_Label (Get_Final_State (N)));
 
@@ -841,11 +853,13 @@ package body PSL.Build is
                      end if;
 
                      if D = Final then
-                        Edge_Expr := Build_Bool_Not (Edge_Expr);
+                        R := Build_Bool_Not (Edge_Expr);
+                        Copy_Location (R, Edge_Expr);
                         if Expr = Null_Node then
-                           Expr := Edge_Expr;
+                           Expr := R;
                         else
-                           Expr := Build_Bool_And (Expr, Edge_Expr);
+                           Expr := Build_Bool_And (Expr, R);
+                           Copy_Location (Expr, R);
                         end if;
                      else
                         if Exprs (D) = Null_Node then
@@ -853,8 +867,8 @@ package body PSL.Build is
                            States (Nbr_Dest) := D;
                            Nbr_Dest := Nbr_Dest + 1;
                         else
-                           Exprs (D) := Build_Bool_Or (Exprs (D),
-                                                       Edge_Expr);
+                           Exprs (D) := Build_Bool_Or (Exprs (D), Edge_Expr);
+                           Copy_Location (Exprs (D), Edge_Expr);
                         end if;
                      end if;
                      E := Get_Next_Src_Edge (E);
@@ -932,13 +946,17 @@ package body PSL.Build is
       S : NFA_State;
       E : NFA_Edge;
       Not_Expr : Node;
+      T : Node;
    begin
       Not_Expr := Build_Bool_Not (Expr);
+      Copy_Location (Not_Expr, Expr);
       S := Get_First_State (N);
       while S /= No_State loop
          E := Get_First_Src_Edge (S);
          while E /= No_Edge loop
-            Set_Edge_Expr (E, Build_Bool_And (Not_Expr, Get_Edge_Expr (E)));
+            T := Build_Bool_And (Not_Expr, Get_Edge_Expr (E));
+            Copy_Location (T, Not_Expr);
+            Set_Edge_Expr (E, T);
             E := Get_Next_Src_Edge (E);
          end loop;
          S := Get_Next_State (S);
