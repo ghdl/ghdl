@@ -379,6 +379,7 @@ package body Synth.Oper is
       Right_Typ : constant Type_Acc :=
         Get_Subtype_Object (Syn_Inst, Right_Type);
       Expr_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Expr_Type);
+      Srec : Memtyp;
       Left : Valtyp;
       Right : Valtyp;
 
@@ -670,10 +671,13 @@ package body Synth.Oper is
       Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
-         return Create_Value_Memtyp
-           (Synth_Static_Dyadic_Predefined (Syn_Inst, Imp,
-                                            Get_Value_Memtyp (Left),
-                                            Get_Value_Memtyp (Right), Expr));
+         Srec := Synth_Static_Dyadic_Predefined
+           (Syn_Inst, Imp,
+            Get_Value_Memtyp (Left), Get_Value_Memtyp (Right), Expr);
+         if Srec = Null_Memtyp then
+            return No_Valtyp;
+         end if;
+         return Create_Value_Memtyp (Srec);
       end if;
 
       Strip_Const (Left);
