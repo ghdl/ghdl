@@ -674,16 +674,82 @@ package body Netlists.Memories is
       Replace_Read_Ports (Ctxt, Orig, Inst, Step);
    end Replace_ROM_Memory;
 
+   type Get_Next_Status is
+     (
+      Status_None,
+      Status_One,
+      Status_Multiple
+     );
+
+   --  O is the output of a gate.  Returns the gate driven by O, ignoring
+   --  Dyn_Extract or muxes to Dyn_Extract.
+   --  Return No_Instance if there is no output or multiple outputs.
+   procedure Get_Next_Non_Extract (O : Net;
+                                   Status : out Get_Next_Status;
+                                   Res : out Instance)
+   is
+      Inp : Input;
+   begin
+      Status := Status_None;
+      Res := No_Instance;
+
+      --  Scan all the gates driven by the output.
+      Inp := Get_First_Sink (O);
+      while Inp /= No_Input loop
+         declare
+            Pinst : constant Instance := Get_Input_Parent (Inp);
+            This_Next_Inst : Instance;
+         begin
+            This_Next_Inst := No_Instance;
+
+            case Get_Id (Pinst) is
+               when Id_Dyn_Extract =>
+                  --  Ignore dyn_extract
+                  null;
+               when Id_Mux2 =>
+                  --  It is OK to have mux2, provided it is connected to
+                  --  a dyn_extract.
+                  declare
+                     Sub_Status : Get_Next_Status;
+                     Sub_Res : Instance;
+                  begin
+                     Get_Next_Non_Extract
+                       (Get_Output (Pinst, 0), Sub_Status, Sub_Res);
+                     --  Expect Dyn_Extract, so no next.
+                     if Sub_Status /= Status_None then
+                        Status := Status_Multiple;
+                        Res := No_Instance;
+                        return;
+                     end if;
+                  end;
+               when others =>
+                  This_Next_Inst := Pinst;
+            end case;
+            if This_Next_Inst /= No_Instance then
+               if Res /= No_Instance then
+                  --  More than one next gate.
+                  Status := Status_Multiple;
+                  Res := No_Instance;
+                  return;
+               end if;
+               Status := Status_One;
+               Res := This_Next_Inst;
+            end if;
+         end;
+         Inp := Get_Next_Sink (Inp);
+      end loop;
+   end Get_Next_Non_Extract;
+
    --  Try to reach Id_Signal/Id_Isignal (TODO: Id_Output) from dyn_insert
    --  gate FIRST_INST.  Can only walk through dyn_insert and muxes.
    --  Return the memory if found.
    function Walk_From_Insert (First_Inst : Instance) return Instance
    is
+      Status : Get_Next_Status;
       Inst : Instance;
       Next_Inst : Instance;
       Last : Instance;
       O : Net;
-      Inp : Input;
    begin
       --  LAST is the last interesting gate (dyn_insert) which has a
       --  meaningful location.
@@ -720,24 +786,25 @@ package body Netlists.Memories is
                return No_Instance;
          end case;
 
-         Next_Inst := No_Instance;
-         Inp := Get_First_Sink (O);
-         while Inp /= No_Input loop
-            declare
-               Pinst : constant Instance := Get_Input_Parent (Inp);
-            begin
-               if Get_Id (Pinst) /= Id_Dyn_Extract then
-                  if Next_Inst /= No_Instance then
-                     Info_Msg_Synth
-                       (+Last, "gate %i drives several gates", (1 => +Inst));
-                     return No_Instance;
-                  end if;
-                  Next_Inst := Pinst;
+         --  Next gate.
+         Get_Next_Non_Extract (O, Status, Next_Inst);
+         case Status is
+            when Status_Multiple =>
+                     --  More than one next gate.
+               if Flag_Memory_Verbose then
+                  Info_Msg_Synth
+                    (+Last, "gate %i drives several gates", (1 => +Inst));
                end if;
-            end;
-            Inp := Get_Next_Sink (Inp);
-         end loop;
-         Inst := Next_Inst;
+               return No_Instance;
+            when Status_None =>
+               if Flag_Memory_Verbose then
+                  Info_Msg_Synth
+                    (+Last, "gate %i drives no gate", (1 => +Inst));
+               end if;
+               return No_Instance;
+            when Status_One =>
+               Inst := Next_Inst;
+         end case;
       end loop;
    end Walk_From_Insert;
 
@@ -767,9 +834,8 @@ package body Netlists.Memories is
                return Inst;
             when others =>
                if Flag_Memory_Verbose then
-                  Info_Msg_Synth
-                    (+Last, "gate %i cannot be part of a memory",
-                     (1 => +Last));
+                  Info_Msg_Synth (+Last, "gate %i cannot be part of a memory",
+                                  (1 => +Last));
                end if;
                return No_Instance;
          end case;
@@ -786,9 +852,11 @@ package body Netlists.Memories is
       end loop;
    end Unmark_Table;
 
+   --  INSERT is a Dyn_Insert[_En].  Get the next gates until reaching a
+   --  signal.
    --  Validate that signal SIG is a RAM.  It must be a loop of inserts
    --  and extracts.
-   function Validate_RAM_Simple (Last : Net) return Instance
+   function Validate_RAM_Simple (Insert : Instance) return Instance
    is
       Inst : Instance;
       N : Net;
@@ -796,7 +864,7 @@ package body Netlists.Memories is
    begin
       --  For each gate of the chain, starting from LAST and going forward
       --  until the signal.
-      N := Last;
+      N := Get_Output (Insert, 0);
       while N /= No_Net loop
          Inp := Get_First_Sink (N);
          N := No_Net;
@@ -847,8 +915,7 @@ package body Netlists.Memories is
             when Id_Dyn_Insert_En
               | Id_Dyn_Insert =>
                --  Look.
-               N := Get_Output (Inst, 0);
-               if Validate_RAM_Simple (N) /= Sig then
+               if Validate_RAM_Simple (Inst) /= Sig then
                   return False;
                end if;
                Ok := True;
@@ -863,6 +930,149 @@ package body Netlists.Memories is
       --  Need at least one dyn_insert.
       return Ok;
    end Validate_RAM_Multiple;
+
+   --  Test if V is part of the conjunction CONJ generated by mux2 controls.
+   function Test_In_Conjuction (Conj : Net; V : Net; Negate : Boolean)
+                               return Boolean
+   is
+      Inst : Instance;
+      N : Net;
+   begin
+      if Negate then
+         --  TODO.
+         raise Internal_Error;
+      end if;
+
+      N := Conj;
+      Inst := Get_Net_Parent (N);
+      loop
+         Inst := Get_Net_Parent (N);
+         if Get_Id (Inst) /= Id_And then
+            return N = V;
+         end if;
+
+         --  Inst is AND2.
+         if Get_Input_Net (Inst, 0) = V then
+            return True;
+         end if;
+         N := Get_Input_Net (Inst, 1);
+      end loop;
+   end Test_In_Conjuction;
+
+   --  Subroutine of Reduce_Extract_Muxes.
+   --  MUX is a mux2 that is removed if possible.
+   procedure Reduce_Extract_Muxes_Mux2 (Mux : Instance; Port : Port_Idx)
+   is
+      pragma Assert (Get_Id (Mux) = Id_Mux2);
+      Sel : constant Net := Get_Input_Net (Mux, 0);
+      Val : constant Net := Get_Input_Net (Mux, 1 + Port);
+      Old : constant Net := Get_Input_Net (Mux, 1 + (1 - Port));
+      First_Parent, Last_Parent : Instance;
+      P : Instance;
+      N : Net;
+   begin
+      --  Search the parent.
+      First_Parent := Get_Net_Parent (Val);
+      P := First_Parent;
+      loop
+         if Get_Id (P) /= Id_Dyn_Insert_En then
+            if Flag_Memory_Verbose then
+               Info_Msg_Synth
+                 (+Mux, "mux %i before extract is not a bypass", (1 => +Mux));
+            end if;
+            return;
+         end if;
+         --  Get the MEM input.
+         N := Get_Input_Net (P, 0);
+         exit when N = Old;
+         P := Get_Net_Parent (N);
+      end loop;
+      Last_Parent := P;
+
+      --  Check not SEL (resp. SEL) implies disable for all dyn_insert_en
+      --  parents.
+      P := First_Parent;
+      loop
+         --  Get the enable of Dyn_Insert_En parent.
+         N := Get_Input_Net (P, 3);
+         if not Test_In_Conjuction (N, Sel, Port = 0) then
+            if Flag_Memory_Verbose then
+               Info_Msg_Synth
+                 (+Mux, "mux %i before extract is required",
+                  (1 => +Mux));
+            end if;
+            return;
+         end if;
+         exit when P = Last_Parent;
+         P := Get_Net_Parent (Get_Input_Net (P, 0));
+      end loop;
+
+      --  So Mux2 is not required.
+      Disconnect (Get_Input (Mux, 0));
+      Disconnect (Get_Input (Mux, 1));
+      Disconnect (Get_Input (Mux, 2));
+      Redirect_Inputs (Get_Output (Mux, 0), Val);
+      Remove_Instance (Mux);
+   end Reduce_Extract_Muxes_Mux2;
+
+   --  SIG is a signal/isignal at the start of a memory, which consists of
+   --  one or more chain of Dyn_Insert.  Dyn_Extract are also allowed on this
+   --  chain.  It is also possible to have Mux2 before Dyn_Extract because of
+   --  enable signals.
+   --  Try to remove these mux2.
+   --  * They should be between the output of a dyn_insert and the input of
+   --    a dyn_extract
+   --  * The other input of the mux2 must be a parent of the dyn_insert input
+   --    (in the chain of dyn_insert).
+   --  * All the dyn_insert until the parent must be disabled when the mux2 is
+   --    disabled.
+   procedure Reduce_Extract_Muxes (Sig : Instance)
+   is
+      N : Net;
+      Inp : Input;
+      Next_Inp : Input;
+      Inst : Instance;
+   begin
+      N := Get_Output (Sig, 0);
+      Inp := Get_First_Sink (N);
+      while Inp /= No_Input loop
+         --  INP can be removed, so get the next input now.
+         Next_Inp := Get_Next_Sink (Inp);
+
+         Inst := Get_Input_Parent (Inp);
+         case Get_Id (Inst) is
+            when Id_Dyn_Insert
+              | Id_Dyn_Insert_En =>
+               --  Recurse on it.
+               Reduce_Extract_Muxes (Inst);
+               Next_Inp := Get_Next_Sink (Inp);
+
+            when Id_Mux2 =>
+               if Inp = Get_Input (Inst, 1) then
+                  --  Selected when Sel = 0
+                  Reduce_Extract_Muxes_Mux2 (Inst, 0);
+               elsif Inp = Get_Input (Inst, 2) then
+                  --  Selected when Sel = 1
+                  Reduce_Extract_Muxes_Mux2 (Inst, 1);
+               else
+                  raise Internal_Error;
+               end if;
+            when Id_Idff
+              | Id_Dff
+              | Id_Isignal
+              | Id_Signal
+              | Id_Mem_Multiport =>
+               --  Stop here: do not recurse.
+               null;
+            when Id_Dyn_Extract =>
+               --  Ignore.
+               null;
+            when others =>
+               null;
+         end case;
+         Inp := Next_Inp;
+      end loop;
+   end Reduce_Extract_Muxes;
 
    --  Extract the step (equivalent to data width) of a dyn_insert/dyn_extract
    --  address.  This is either a memidx or an addidx gate.
@@ -1758,6 +1968,7 @@ package body Netlists.Memories is
                   Replace_ROM_Memory (Ctxt, Inst, Data_W);
                end if;
             else
+               Reduce_Extract_Muxes (Inst);
                if Validate_RAM_Multiple (Inst) then
                   Convert_To_Memory (Ctxt, Inst);
                end if;

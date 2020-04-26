@@ -216,17 +216,17 @@ package Netlists.Gates is
    Id_Dyn_Extract : constant Module_Id := 69;
 
    --  Like Insert but for dynamic values.
-   --  Input0: the memory
-   --  Input1: the value to insert
-   --  Input2: the index.
-   --  Param0: offset
+   --  Params:  0: offset
+   --  Inputs:  0: the memory
+   --           1: the value to insert
+   --           2: the index.
    --  T := IN0
    --  T [IN2+OFF+WD-1:IN2+OFF] := IN1
    --  OUT := T
    Id_Dyn_Insert : constant Module_Id := 70;
 
    --  Like Dyn_Insert but with an enable input.
-   --  Input3: enable
+   --  Inputs:  3: enable
    Id_Dyn_Insert_En : constant Module_Id := 71;
 
    subtype Dyn_Insert_Module_Id is
