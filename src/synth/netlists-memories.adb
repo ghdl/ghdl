@@ -498,6 +498,7 @@ package body Netlists.Memories is
                En := Get_Driver (Mux_En_Inp);
                if Dff_Out = Get_Driver (Mux_I1_Inp) then
                   En := Build_Monadic (Ctxt, Id_Not, En);
+                  Copy_Location (En, Iinst);
                end if;
                Disconnect (Mux_En_Inp);
                Disconnect (Mux_I0_Inp);
@@ -575,6 +576,7 @@ package body Netlists.Memories is
                En := Get_Driver (Mux_En_Inp);
                if Dff_Out = Get_Driver (Mux_I1_Inp) then
                   En := Build_Monadic (Ctxt, Id_Not, En);
+                  Copy_Location (En, Dff_Inst);
                end if;
                Disconnect (Mux_En_Inp);
                Disconnect (Mux_I0_Inp);
@@ -583,6 +585,7 @@ package body Netlists.Memories is
                Disconnect (Clk_Inp);
                Remove_Instance (Iinst);
                Res := Build_Mem_Rd_Sync (Ctxt, Last, Addr, Clk, En, Step);
+               Set_Location (Res, Get_Location (Dff_Inst));
 
                --  Slice the output.
                N := Get_Output (Res, 1);
@@ -2205,6 +2208,7 @@ package body Netlists.Memories is
          Drv := Drv0;
          Src := Drv1;
          Sel := Build_Monadic (Ctxt, Id_Not, Sel);
+         Copy_Location (Sel, Mux);
       elsif Has_One_Connection (Drv1) and then not Has_One_Connection (Drv0)
       then
          Disconnect (In0);
@@ -2219,6 +2223,7 @@ package body Netlists.Memories is
 
       if Psel /= No_Net then
          Sel := Build_Dyadic (Ctxt, Id_And, Psel, Sel);
+         Copy_Location (Sel, Psel);
       end if;
 
       --  Reduce Drv until Src.

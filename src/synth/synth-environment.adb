@@ -1278,11 +1278,13 @@ package body Synth.Environment is
                   Res := N1_Net;
                   Disconnect (N1_Sel);
                   N1_Sel_Net := Build_Dyadic (Ctxt, Id_And, Sel, N1_Sel_Net);
+                  Set_Location (N1_Sel_Net, Stmt);
                   Connect (N1_Sel, N1_Sel_Net);
                else
+                  Res := Build_Dyadic (Ctxt, Id_And, Sel, N1_Sel_Net);
+                  Set_Location (Res, Stmt);
                   Res := Build_Mux2
-                    (Ctxt, Build_Dyadic (Ctxt, Id_And, Sel, N1_Sel_Net),
-                     N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
+                    (Ctxt, Res, N (0), Get_Driver (Get_Mux2_I1 (N1_Inst)));
                end if;
             end;
          elsif N (0) = N (1) then

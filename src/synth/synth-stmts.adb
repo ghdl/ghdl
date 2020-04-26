@@ -1674,6 +1674,18 @@ package body Synth.Stmts is
       pragma Assert (Nbr_Inout = Infos'Last);
    end Synth_Subprogram_Back_Association;
 
+   function Build_Control_Signal (Syn_Inst : Synth_Instance_Acc;
+                                  W : Width;
+                                  Loc : Source.Syn_Src) return Net
+   is
+      Res : Net;
+   begin
+      Res := Build_Signal
+        (Get_Build (Syn_Inst), New_Internal_Name (Build_Context), W);
+      Set_Location (Res, Loc);
+      return Res;
+   end Build_Control_Signal;
+
    function Synth_Dynamic_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                            Sub_Inst : Synth_Instance_Acc;
                                            Call : Node;
@@ -1717,21 +1729,17 @@ package body Synth.Stmts is
          C.Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Return_Type (Imp));
 
          Set_Wire_Gate (C.W_Val,
-                        Build_Signal (Build_Context,
-                                      New_Internal_Name (Build_Context),
-                                      C.Ret_Typ.W));
+                        Build_Control_Signal (Sub_Inst, C.Ret_Typ.W, Imp));
          C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
          Phi_Assign_Net (Build_Context, C.W_Val, C.Ret_Init, 0);
       end if;
 
       Set_Wire_Gate
-        (C.W_En, Build_Signal (Build_Context,
-                               New_Internal_Name (Build_Context), 1));
+        (C.W_En, Build_Control_Signal (Sub_Inst, 1, Imp));
       Phi_Assign_Net (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
 
       Set_Wire_Gate
-        (C.W_Ret, Build_Signal (Build_Context,
-                                New_Internal_Name (Build_Context), 1));
+        (C.W_Ret, Build_Control_Signal (Sub_Inst, 1, Imp));
       Phi_Assign_Net (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
 
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
@@ -2000,9 +2008,7 @@ package body Synth.Stmts is
 
       if (Lc.Prev_Loop /= null and then Lc.Prev_Loop.Need_Quit) then
          Lc.W_Quit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
-         Set_Wire_Gate
-           (Lc.W_Quit, Build_Signal (Get_Build (C.Inst),
-                                     New_Internal_Name (Build_Context), 1));
+         Set_Wire_Gate (Lc.W_Quit, Build_Control_Signal (C.Inst, 1, Stmt));
          Phi_Assign_Net (Get_Build (C.Inst),
                          Lc.W_Quit, Get_Inst_Bit1 (C.Inst), 0);
       end if;
@@ -2015,9 +2021,7 @@ package body Synth.Stmts is
       if Get_Exit_Flag (Stmt) then
          --  Exit statement for this loop.
          Lc.W_Exit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
-         Set_Wire_Gate
-           (Lc.W_Exit, Build_Signal (Get_Build (C.Inst),
-                                     New_Internal_Name (Build_Context), 1));
+         Set_Wire_Gate (Lc.W_Exit, Build_Control_Signal (C.Inst, 1, Stmt));
          Phi_Assign_Net (Get_Build (C.Inst),
                          Lc.W_Exit, Get_Inst_Bit1 (C.Inst), 0);
       end if;
@@ -2738,9 +2742,7 @@ package body Synth.Stmts is
          Synth_Declarations (C.Inst, Decls_Chain);
       end if;
 
-      Set_Wire_Gate (C.W_En, Build_Signal (Build_Context,
-                                           New_Internal_Name (Build_Context),
-                                           1));
+      Set_Wire_Gate (C.W_En, Build_Control_Signal (Syn_Inst, 1, Proc));
       Phi_Assign_Net (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
 
       case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
@@ -2866,6 +2868,10 @@ package body Synth.Stmts is
    is
       use PSL.Types;
       use PSL.Nodes;
+
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Loc : constant Location_Type := Get_Location (Expr);
+      Res : Net;
    begin
       case Get_Kind (Expr) is
          when N_HDL_Bool =>
@@ -2875,10 +2881,12 @@ package body Synth.Stmts is
                return Get_Net (Synth_Expression (Syn_Inst, E));
             end;
          when N_Not_Bool =>
-            return Build_Monadic
-              (Build_Context, Netlists.Gates.Id_Not,
+            pragma Assert (Loc /= No_Location);
+            Res := Build_Monadic
+              (Ctxt, Netlists.Gates.Id_Not,
                Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr)));
          when N_And_Bool =>
+            pragma Assert (Loc /= No_Location);
             declare
                L : constant PSL_Node := Get_Left (Expr);
                R : constant PSL_Node := Get_Right (Expr);
@@ -2894,32 +2902,37 @@ package body Synth.Stmts is
                end if;
                if Get_Kind (R) = N_EOS then
                   --  It is never EOS!
-                  return Build_Const_UB32 (Build_Context, 0, 1);
+                  Res := Build_Const_UB32 (Build_Context, 0, 1);
+               else
+                  Res := Build_Dyadic (Ctxt, Netlists.Gates.Id_And,
+                                       Synth_PSL_Expression (Syn_Inst, L),
+                                       Synth_PSL_Expression (Syn_Inst, R));
                end if;
-               return Build_Dyadic
-                 (Build_Context, Netlists.Gates.Id_And,
-                  Synth_PSL_Expression (Syn_Inst, L),
-                  Synth_PSL_Expression (Syn_Inst, R));
             end;
          when N_Or_Bool =>
-            return Build_Dyadic
+            pragma Assert (Loc /= No_Location);
+            Res := Build_Dyadic
               (Build_Context, Netlists.Gates.Id_Or,
                Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
                Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
          when N_True =>
-            return Build_Const_UB32 (Build_Context, 1, 1);
+            Res := Build_Const_UB32 (Build_Context, 1, 1);
          when N_False
            | N_EOS =>
-            return Build_Const_UB32 (Build_Context, 0, 1);
+            Res := Build_Const_UB32 (Build_Context, 0, 1);
          when others =>
             PSL.Errors.Error_Kind ("synth_psl_expr", Expr);
+            return No_Net;
       end case;
+      Set_Location (Res, Loc);
+      return Res;
    end Synth_PSL_Expression;
 
    function Synth_Psl_NFA (Syn_Inst : Synth_Instance_Acc;
                            NFA : PSL.Types.PSL_NFA;
                            Nbr_States : Int32;
-                           States : Net) return Net
+                           States : Net;
+                           Loc : Source.Syn_Src) return Net
    is
       use PSL.NFAs;
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
@@ -2939,6 +2952,7 @@ package body Synth.Stmts is
       while S /= No_State loop
          S_Num := Get_State_Label (S);
          I := Build_Extract_Bit (Ctxt, States, Uns32 (S_Num));
+         Set_Location (I, Loc);
 
          --  For each edge:
          E := Get_First_Src_Edge (S);
@@ -2947,17 +2961,18 @@ package body Synth.Stmts is
             Cond := Build_Dyadic
               (Ctxt, Netlists.Gates.Id_And,
                I, Synth_PSL_Expression (Syn_Inst, Get_Edge_Expr (E)));
+            Set_Location (Cond, Loc);
 
             --  TODO: if EOS is present, then this is a live state.
 
             --  Reverse order for final concatenation.
             D_Num := Nbr_States - 1 - Get_State_Label (Get_Edge_Dest (E));
-            if D_Arr (D_Num) = No_Net then
-               D_Arr (D_Num) := Cond;
-            else
-               D_Arr (D_Num) := Build_Dyadic
+            if D_Arr (D_Num) /= No_Net then
+               Cond := Build_Dyadic
                  (Ctxt, Netlists.Gates.Id_Or, D_Arr (D_Num), Cond);
+               Set_Location (Cond, Loc);
             end if;
+            D_Arr (D_Num) := Cond;
 
             E := Get_Next_Src_Edge (E);
          end loop;
@@ -2988,6 +3003,7 @@ package body Synth.Stmts is
    begin
       --  create init net, clock net
       Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
+      Set_Location (Init, Stmt);
       Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
 
       --  Check the clock is an edge and extract it.
@@ -3000,11 +3016,12 @@ package body Synth.Stmts is
 
       --  build idff
       States := Build_Idff (Build_Context, Clk, No_Net, Init);
+      Set_Location (States, Stmt);
 
       --  create update nets
       --  For each state: if set, evaluate all outgoing edges.
       Next_States :=
-        Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States);
+        Synth_Psl_NFA (Syn_Inst, Get_PSL_NFA (Stmt), Nbr_States, States, Stmt);
       Connect (Get_Input (Get_Net_Parent (States), 1), Next_States);
    end Synth_Psl_Dff;
 
@@ -3014,19 +3031,26 @@ package body Synth.Stmts is
       use PSL.Types;
       use PSL.NFAs;
       NFA : constant PSL_NFA := Get_PSL_NFA (Stmt);
+      Res : Net;
    begin
-      return Build_Extract_Bit
+      Res := Build_Extract_Bit
         (Get_Build (Syn_Inst), Next_States,
          Uns32 (Get_State_Label (Get_Final_State (NFA))));
+      Set_Location (Res, Stmt);
+      return Res;
    end Synth_Psl_Final;
 
    function Synth_Psl_Not_Final
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node; Next_States : Net)
-     return Net is
+     return Net
+   is
+      Res : Net;
    begin
-      return Build_Monadic
+      Res := Build_Monadic
         (Get_Build (Syn_Inst), Netlists.Gates.Id_Not,
          Synth_Psl_Final (Syn_Inst, Stmt, Next_States));
+      Set_Location (Res, Stmt);
+      return Res;
    end Synth_Psl_Not_Final;
 
    procedure Synth_Psl_Restrict_Directive
@@ -3044,6 +3068,7 @@ package body Synth.Stmts is
          --  The restriction holds as long as there is a 1 in the NFA state.
          Res := Build_Reduce (Build_Context,
                               Netlists.Gates.Id_Red_Or, Next_States);
+         Set_Location (Res, Stmt);
          Inst := Build_Assume (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
@@ -3063,7 +3088,7 @@ package body Synth.Stmts is
       if Next_States /= No_Net then
          --  The sequence is covered as soon as the final state is reached.
          Res := Synth_Psl_Final (Syn_Inst, Stmt, Next_States);
-         Inst := Build_Cover (Build_Context, Synth_Label (Stmt), Res);
+         Inst := Build_Cover (Get_Build (Syn_Inst), Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Cover_Directive;

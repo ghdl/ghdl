@@ -1019,8 +1019,11 @@ package body Synth.Insts is
         (Syn_Inst, Stmt, Comp, Null_Node, Null_Node);
    end Synth_Blackbox_Instantiation_Statement;
 
-   procedure Create_Component_Wire
-     (Ctxt : Context_Acc; Inter : Node; Val : Valtyp; Pfx_Name : Sname)
+   procedure Create_Component_Wire (Ctxt : Context_Acc;
+                                    Inter : Node;
+                                    Val : Valtyp;
+                                    Pfx_Name : Sname;
+                                    Loc : Source.Syn_Src)
    is
       Value : Net;
       W : Width;
@@ -1032,6 +1035,7 @@ package body Synth.Insts is
             W := Get_Type_Width (Val.Typ);
             Value := Build_Signal
               (Ctxt, New_Internal_Name (Ctxt, Pfx_Name), W);
+            Set_Location (Value, Loc);
             Set_Wire_Gate (Val.Val.W, Value);
          when others =>
             raise Internal_Error;
@@ -1100,7 +1104,8 @@ package body Synth.Insts is
                     | Port_Inout =>
                      Val := Create_Value_Wire (No_Wire_Id, Inter_Typ);
                      Create_Component_Wire
-                       (Get_Build (Syn_Inst), Assoc_Inter, Val, Inst_Name);
+                       (Get_Build (Syn_Inst), Assoc_Inter, Val, Inst_Name,
+                        Assoc);
                end case;
                Create_Object (Comp_Inst, Assoc_Inter, Val);
             end if;
@@ -1153,6 +1158,7 @@ package body Synth.Insts is
 
       Inst := New_Instance (Get_Instance_Module (Syn_Inst),
                             Inst_Obj.M, Inst_Name);
+      Set_Location (Inst, Stmt);
 
       Synth_Instantiate_Module
         (Comp_Inst, Inst, Inst_Obj, Get_Port_Map_Aspect_Chain (Bind));

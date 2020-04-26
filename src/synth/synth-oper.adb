@@ -610,6 +610,7 @@ package body Synth.Oper is
             Nr1 := Build_Monadic (Ctxt, Id_Neg, R1);
             Set_Location (Nr1, Expr);
             Nn := Build_Shift_Rotate (Ctxt, Sh_Neg, L1, Nr1);
+            Set_Location (Nn, Expr);
 
             --  Extract the sign bit.
             Cond := Build_Extract (Ctxt, R1, Get_Width (R1) - 1, 1);
@@ -1544,6 +1545,7 @@ package body Synth.Oper is
                Edge : Net;
             begin
                Edge := Build_Posedge (Ctxt, Get_Net (L));
+               Set_Location (Edge, Expr);
                return Create_Value_Net (Edge, Res_Typ);
             end;
          when Iir_Predefined_Ieee_1164_Falling_Edge =>
@@ -1551,6 +1553,7 @@ package body Synth.Oper is
                Edge : Net;
             begin
                Edge := Build_Negedge (Ctxt, Get_Net (L));
+               Set_Location (Edge, Expr);
                return Create_Value_Net (Edge, Res_Typ);
             end;
          when Iir_Predefined_Ieee_1164_Scalar_Is_X
@@ -1653,8 +1656,13 @@ package body Synth.Oper is
 
          when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv
            | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
-            return Create_Value_Net
-              (Build_Reduce (Ctxt, Id_Red_Or, Get_Net (L)), Res_Typ);
+            declare
+               N : Net;
+            begin
+               N := Build_Reduce (Ctxt, Id_Red_Or, Get_Net (L));
+               Set_Location (N, Expr);
+               return Create_Value_Net (N, Res_Typ);
+            end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Match_Suv
             | Iir_Predefined_Ieee_Numeric_Std_Match_Slv =>

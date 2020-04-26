@@ -198,6 +198,7 @@ package body Netlists.Inference is
                            Connect (I2, N1);
                         else
                            N4 := Build_Dyadic (Ctxt, Id_And, N2, N1);
+                           Copy_Location (N4, Inst);
                            Connect (I1, N4);
                         end if;
                      end;
@@ -586,13 +587,16 @@ package body Netlists.Inference is
                --  Add the negation of the condition to the enable signal.
                --  Negate the condition for the current reset.
                Mux_Not_Rst := Build_Monadic (Ctxt, Id_Not, Mux_Rst);
+               Set_Location (Mux_Not_Rst, Stmt);
                if Rst /= No_Net then
                   Rst := Build_Dyadic (Ctxt, Id_And, Rst, Mux_Not_Rst);
+                  Set_Location (Rst, Stmt);
                end if;
                if Enable = No_Net then
                   Enable := Mux_Not_Rst;
                else
                   Enable := Build_Dyadic (Ctxt, Id_And, Enable, Mux_Not_Rst);
+                  Set_Location (Enable, Stmt);
                end if;
 
                if Prev_Mux /= No_Instance then
@@ -618,6 +622,7 @@ package body Netlists.Inference is
                else
                   --  New async reset condition.
                   Rst := Build_Dyadic (Ctxt, Id_Or, Mux_Rst, Rst);
+                  Copy_Location (Rst, Mux_Rst);
 
                   --  Use prev_mux to select the reset value.
                   Connect (Get_Mux2_Sel (Prev_Mux), Mux_Rst);

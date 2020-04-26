@@ -1514,29 +1514,38 @@ package body Synth.Expr is
    function Extract_Clock_Level
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Prefix : Node) return Net
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Clk : Net;
       Imp : Node;
       Left, Right : Node;
       Lit : Node;
       Posedge : Boolean;
+      Res : Net;
    begin
       Clk := Get_Net (Synth_Name (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
-         return Build_Posedge (Build_Context, Clk);
+         Res := Build_Posedge (Ctxt, Clk);
+         Set_Location (Res, Expr);
+         return Res;
       end if;
       Imp := Get_Implementation (Expr);
       if Get_Implicit_Definition (Imp) /= Iir_Predefined_Enum_Equality then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
-         return Build_Posedge (Build_Context, Clk);
+         Res := Build_Posedge (Ctxt, Clk);
+         Set_Location (Res, Expr);
+         return Res;
       end if;
       Left := Get_Left (Expr);
       Right := Get_Right (Expr);
       if Get_Kind (Right) /= Iir_Kind_Character_Literal then
          Error_Msg_Synth
            (+Expr, "ill-formed clock-level, '0' or '1' expected");
-         return Build_Posedge (Build_Context, Clk);
+         Res := Build_Posedge (Ctxt, Clk);
+         Set_Location (Res, Expr);
+         return Res;
       end if;
+
       Lit := Get_Named_Entity (Right);
       if Lit = Vhdl.Std_Package.Bit_0
         or else Lit = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_0
@@ -1552,14 +1561,15 @@ package body Synth.Expr is
          Posedge := True;
       end if;
       if not Is_Same_Node (Prefix, Left) then
-         Error_Msg_Synth
-           (+Left, "clock signal name doesn't match");
+         Error_Msg_Synth (+Left, "clock signal name doesn't match");
       end if;
       if Posedge then
-         return Build_Posedge (Build_Context, Clk);
+         Res := Build_Posedge (Ctxt, Clk);
       else
-         return Build_Negedge (Build_Context, Clk);
+         Res := Build_Negedge (Ctxt, Clk);
       end if;
+      Set_Location (Res, Expr);
+      return Res;
    end Extract_Clock_Level;
 
    --  Try to match: clk'event and clk = X
