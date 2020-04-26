@@ -410,6 +410,20 @@ package body Synth.Static_Oper is
       end;
    end Synth_Sub_Uns_Nat;
 
+   function Synth_Sub_Sgn_Int (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      pragma Unreferenced (Loc);
+      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
+      R_Val : constant Int64 := Read_Discrete (R);
+   begin
+      To_Std_Logic_Vector (L, L_Arr);
+      declare
+         Res_Arr : constant Std_Logic_Vector := Sub_Sgn_Int (L_Arr, R_Val);
+      begin
+         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
+      end;
+   end Synth_Sub_Sgn_Int;
+
    function Synth_Mul_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
       pragma Unreferenced (Loc);
@@ -891,6 +905,9 @@ package body Synth.Static_Oper is
             return Synth_Sub_Uns_Uns (Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
             return Synth_Sub_Uns_Nat (Left, Right, Expr);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int =>
+            return Synth_Sub_Sgn_Int (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
             return Synth_Mul_Uns_Uns (Left, Right, Expr);

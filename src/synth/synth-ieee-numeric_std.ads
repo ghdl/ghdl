@@ -36,6 +36,8 @@ package Synth.Ieee.Numeric_Std is
 
    function Sub_Uns_Uns (L, R : Std_Logic_Vector) return Std_Logic_Vector;
 
+   function Sub_Sgn_Int (L : Std_Logic_Vector; R : Int64)
+                        return Std_Logic_Vector;
    function Sub_Uns_Nat (L : Std_Logic_Vector; R : Uns64)
                         return Std_Logic_Vector;
 
