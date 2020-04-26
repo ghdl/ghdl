@@ -8,6 +8,7 @@ clean
 
 synth_analyze issue
 synth_analyze repro
+synth_analyze issue2
 clean
 
 echo "Test successful"
