@@ -1359,10 +1359,12 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
             return Synth_Shift (Id_Asr, Id_Lsl);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int
+           |  Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int =>
             return Synth_Shift (Id_Lsl, Id_Lsr);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
+           |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
             return Synth_Shift (Id_Lsr, Id_Lsl);
 
          when Iir_Predefined_Ieee_1164_Vector_Ror =>
