@@ -1306,6 +1306,21 @@ package body Netlists.Disp_Vhdl is
                                  and then Id < Id_User_None
                                  and then not Need_Signal (Inst))
                then
+                  if Locations.Get_Location (Inst) = No_Location then
+                     case Get_Id (Inst) is
+                        when Id_Const_UB32
+                          | Id_Const_UL32
+                          | Id_Const_Z
+                          | Id_Concat2
+                          | Id_Concat3
+                          | Id_Concat4
+                          | Id_Concatn
+                          | Id_Extract =>
+                           null;
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                  end if;
                   for N of Outputs (Inst) loop
                      if Id in Constant_Module_Id then
                         Put ("  constant ");
