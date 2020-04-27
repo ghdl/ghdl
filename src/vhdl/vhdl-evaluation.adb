@@ -3959,21 +3959,34 @@ package body Vhdl.Evaluation is
 
       procedure Path_Add_Type_Name (Atype : Iir)
       is
-         Adecl : constant Iir := Get_Type_Declarator (Atype);
+         Mark : Iir;
       begin
-         Path_Add (Image (Get_Identifier (Adecl)));
+         if Get_Kind (Atype) in Iir_Kinds_Denoting_Name then
+            Mark := Atype;
+         else
+            Mark := Get_Subtype_Type_Mark (Atype);
+         end if;
+         Path_Add (Image (Get_Identifier (Mark)));
       end Path_Add_Type_Name;
 
       procedure Path_Add_Signature (Subprg : Iir)
       is
-         Chain : Iir;
+         Inter : Iir;
+         Inter_Type, Prev_Type : Iir;
       begin
          Path_Add ("[");
-         Chain := Get_Interface_Declaration_Chain (Subprg);
-         while Chain /= Null_Iir loop
-            Path_Add_Type_Name (Get_Type (Chain));
-            Chain := Get_Chain (Chain);
-            if Chain /= Null_Iir then
+         Prev_Type := Null_Iir;
+         Inter := Get_Interface_Declaration_Chain (Subprg);
+         while Inter /= Null_Iir loop
+            Inter_Type := Get_Subtype_Indication (Inter);
+            if Inter_Type = Null_Iir then
+               Inter_Type := Prev_Type;
+            end if;
+            Path_Add_Type_Name (Inter_Type);
+            Prev_Type := Inter_Type;
+
+            Inter := Get_Chain (Inter);
+            if Inter /= Null_Iir then
                Path_Add (",");
             end if;
          end loop;
@@ -3981,7 +3994,7 @@ package body Vhdl.Evaluation is
          case Get_Kind (Subprg) is
             when Iir_Kind_Function_Declaration =>
                Path_Add (" return ");
-               Path_Add_Type_Name (Get_Return_Type (Subprg));
+               Path_Add_Type_Name (Get_Return_Type_Mark (Subprg));
             when others =>
                null;
          end case;

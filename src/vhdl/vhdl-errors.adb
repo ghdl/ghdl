@@ -886,6 +886,7 @@ package body Vhdl.Errors is
       use Ada.Strings.Unbounded;
       Res : Unbounded_String;
 
+      --  Cf code in evaluation for 'instance_name ?
       procedure Append_Type (Def : Iir)
       is
          use Name_Table;
