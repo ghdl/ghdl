@@ -1459,17 +1459,18 @@ package body Vhdl.Parse is
    end Parse_Signature_Name;
 
    --  Emit an error message if MARK doesn't have the form of a type mark.
-   procedure Check_Type_Mark (Mark : Iir) is
+   function Check_Type_Mark (Mark : Iir) return Boolean is
    begin
       case Get_Kind (Mark) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
-            null;
+            return True;
          when Iir_Kind_Attribute_Name =>
             --  For O'Subtype.
-            null;
+            return True;
          when others =>
             Error_Msg_Parse (+Mark, "type mark must be a name of a type");
+            return False;
       end case;
    end Check_Type_Mark;
 
@@ -1487,10 +1488,13 @@ package body Vhdl.Parse is
    begin
       Res := Parse_Name (Allow_Indexes => False);
 
-      Check_Type_Mark (Res);
-      if Check_Paren and then Current_Token = Tok_Left_Paren then
-         Error_Msg_Parse ("index constraint not allowed here");
-         Old := Parse_Name_Suffix (Res, True);
+      if Check_Type_Mark (Res) then
+         if Check_Paren and then Current_Token = Tok_Left_Paren then
+            Error_Msg_Parse ("index constraint not allowed here");
+            Old := Parse_Name_Suffix (Res, True);
+         end if;
+      else
+         Res := Null_Iir;
       end if;
       return Res;
    end Parse_Type_Mark;
@@ -3283,8 +3287,12 @@ package body Vhdl.Parse is
 
       if Name /= Null_Iir then
          --  The type_mark was already parsed.
-         Type_Mark := Name;
-         Check_Type_Mark (Name);
+         if Check_Type_Mark (Name) then
+            Type_Mark := Name;
+         else
+            --  Not a type mark.  Ignore it.
+            Type_Mark := Null_Iir;
+         end if;
       else
          if Current_Token = Tok_Left_Paren then
             if Vhdl_Std < Vhdl_08 then

@@ -1539,7 +1539,7 @@ package body Vhdl.Sem_Assocs is
       --  LRM08 6.5.7.2 Generic map aspects
       --  b) If the formal generic package declaration includes an interface
       --     generic map aspect in the form that includes the box (<>) symbol,
-      --     then the instantiaed package denotes by the actual may be any
+      --     then the instantiated package denotes by the actual may be any
       --     instance of the uninstantiated package named in the formal
       --     generic package declaration.
       if Get_Generic_Map_Aspect_Chain (Inter) = Null_Iir then

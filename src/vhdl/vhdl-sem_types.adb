@@ -2370,6 +2370,9 @@ package body Vhdl.Sem_Types is
 
       --  Analyze the type mark.
       Type_Mark_Name := Get_Subtype_Type_Mark (Def);
+      if Type_Mark_Name = Null_Iir then
+         return Create_Error_Type (Def);
+      end if;
       Type_Mark_Name := Sem_Type_Mark (Type_Mark_Name);
       Set_Subtype_Type_Mark (Def, Type_Mark_Name);
       if Is_Error (Type_Mark_Name) then
