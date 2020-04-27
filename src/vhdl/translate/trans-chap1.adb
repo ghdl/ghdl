@@ -163,7 +163,8 @@ package body Trans.Chap1 is
       end if;
 
       if Global_Storage = O_Storage_External then
-         --  Entity declaration subprograms.
+         --  Entity declaration subprograms as they can be called by the
+         --  architectures.
          Chap4.Translate_Declaration_Chain_Subprograms
            (Entity, Subprg_Translate_Spec_And_Body);
       else

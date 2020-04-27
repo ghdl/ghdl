@@ -18,6 +18,7 @@
 
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
+with Trans.Chap2;
 with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap6;
@@ -801,15 +802,28 @@ package body Trans.Chap5 is
                   end if;
                end;
             when Iir_Kind_Association_Element_Open =>
-               declare
-                  Value : constant Iir := Get_Default_Value (Formal);
-               begin
-                  pragma Assert (Is_Valid (Value));
-                  Set_Map_Env (Formal_Env);
-                  Chap4.Elab_Object_Value (Formal, Value);
-                  Chap9.Destroy_Types (Value);
-                  Set_Map_Env (Actual_Env);
-               end;
+               case Get_Kind (Formal) is
+                  when Iir_Kind_Interface_Constant_Declaration =>
+                     declare
+                        Value : constant Iir := Get_Default_Value (Formal);
+                     begin
+                        pragma Assert (Is_Valid (Value));
+                        Set_Map_Env (Formal_Env);
+                        Chap4.Elab_Object_Value (Formal, Value);
+                        Chap9.Destroy_Types (Value);
+                        Set_Map_Env (Actual_Env);
+                     end;
+                  when Iir_Kind_Interface_Package_Declaration =>
+                     --  The package interface have generics and implicitly
+                     --  defines an instantiated package.
+                     pragma Assert
+                       (Get_Generic_Map_Aspect_Chain (Formal) /= Null_Iir);
+                     Set_Map_Env (Formal_Env);
+                     Chap2.Elab_Package_Instantiation_Declaration (Formal);
+                     Set_Map_Env (Actual_Env);
+                  when others =>
+                     Error_Kind ("elab_generic_map_aspect(open)", Formal);
+               end case;
             when Iir_Kind_Association_Element_By_Individual =>
                --  Create the object.
                declare
@@ -845,12 +859,10 @@ package body Trans.Chap5 is
                     Get_Uninstantiated_Package_Decl (Formal);
                   Uninst_Info : constant Ortho_Info_Acc :=
                     Get_Info (Uninst_Pkg);
-                  Formal_Info : constant Ortho_Info_Acc :=
-                    Get_Info (Formal);
+                  Formal_Info : constant Ortho_Info_Acc := Get_Info (Formal);
                   Actual      : constant Iir := Get_Named_Entity
                     (Get_Actual (Assoc));
-                  Actual_Info : constant Ortho_Info_Acc :=
-                    Get_Info (Actual);
+                  Actual_Info : constant Ortho_Info_Acc := Get_Info (Actual);
                begin
                   New_Assign_Stmt
                     (Get_Var (Formal_Info.Package_Instance_Spec_Var),

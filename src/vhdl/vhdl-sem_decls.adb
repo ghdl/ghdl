@@ -505,7 +505,6 @@ package body Vhdl.Sem_Decls is
       if Get_Generic_Map_Aspect_Chain (Inter) /= Null_Iir then
          Sem_Generic_Association_Chain (Get_Package_Header (Pkg), Inter);
          --  Not yet fully supported - need to check the instance.
-         raise Internal_Error;
       end if;
 
       Sem_Inst.Instantiate_Package_Declaration (Inter, Pkg);

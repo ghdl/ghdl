@@ -2679,8 +2679,12 @@ package body Vhdl.Sem_Assocs is
                      when Missing_Allowed =>
                         null;
                   end case;
-               when Iir_Kind_Interface_Package_Declaration
-                 | Iir_Kind_Interface_Function_Declaration
+               when Iir_Kind_Interface_Package_Declaration =>
+                  if Get_Generic_Map_Aspect_Chain (Inter) = Null_Iir then
+                     Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
+                     Match := Not_Compatible;
+                  end if;
+               when Iir_Kind_Interface_Function_Declaration
                  | Iir_Kind_Interface_Procedure_Declaration =>
                   Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
                   Match := Not_Compatible;

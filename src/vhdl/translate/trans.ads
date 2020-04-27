@@ -1989,7 +1989,7 @@ package Trans is
             --  block.
             Block_Id : Nat32;
 
-            --  Subprogram which elaborates the block (for entity or arch).
+            --  Subprograms which elaborates the block (for entity or arch).
             Block_Elab_Subprg   : O_Dnode_Elab;
 
             --  Size of the block instance.

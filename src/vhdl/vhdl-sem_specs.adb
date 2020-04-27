@@ -1898,8 +1898,11 @@ package body Vhdl.Sem_Specs is
          --  current design unit does not depend on the entity.
          Name := Build_Simple_Name (Ent_El, Parent);
          Set_Is_Forward_Ref (Name, True);
-         Set_Type (Name, Get_Type (Ent_El));
          Set_Formal (Assoc, Name);
+
+         if Get_Kind (Ent_El) in Iir_Kinds_Interface_Object_Declaration then
+            Set_Type (Name, Get_Type (Ent_El));
+         end if;
 
          if Kind = Map_Port
            and then not Error
