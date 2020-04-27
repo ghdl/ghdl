@@ -2030,6 +2030,7 @@ package body Synth.Stmts is
    function Loop_Control_And (C : Seq_Context; L, R : Net) return Net
    is
       B1 : constant Net := Get_Inst_Bit1 (C.Inst);
+      Res : Net;
    begin
       --  Optimize common cases.
       if L = B1 then
@@ -2037,7 +2038,9 @@ package body Synth.Stmts is
       elsif R = B1 then
          return L;
       else
-         return Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And, L, R);
+         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And, L, R);
+         Set_Location (Res, C.Cur_Loop.Loop_Stmt);
+         return Res;
       end if;
    end Loop_Control_And;
 
