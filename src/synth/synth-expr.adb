@@ -2058,10 +2058,27 @@ package body Synth.Expr is
    end Synth_Expression_With_Type;
 
    function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                             return Valtyp is
+                             return Valtyp
+   is
+      Etype : Node;
    begin
+      Etype := Get_Type (Expr);
+
+      case Get_Kind (Expr) is
+         when Iir_Kind_High_Array_Attribute
+           |  Iir_Kind_Low_Array_Attribute
+           |  Iir_Kind_Integer_Literal =>
+            --  The type of this attribute is the type of the index, which is
+            --  not synthesized as atype (only as an index).
+            --  For integer_literal, the type is not really needed, and it
+            --  may be created by static evaluation of an array attribute.
+            Etype := Get_Base_Type (Etype);
+         when others =>
+            null;
+      end case;
+
       return Synth_Expression_With_Type
-        (Syn_Inst, Expr, Get_Subtype_Object (Syn_Inst, Get_Type (Expr)));
+        (Syn_Inst, Expr, Get_Subtype_Object (Syn_Inst, Etype));
    end Synth_Expression;
 
    function Synth_Expression_With_Basetype
