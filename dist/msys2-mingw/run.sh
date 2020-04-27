@@ -54,9 +54,7 @@ gend () {
 
 #---
 
-cd $(dirname $0)
-
-build () {
+do_build () {
   gstart 'Install common build dependencies'
     pacman -S --noconfirm base-devel
   gend
@@ -90,7 +88,7 @@ build () {
       gend
     ;;
     *)
-      echo "Unknown MING_INSTALLS=${MINGW_INSTALLS}!"
+      printf "${ANSI_RED}Unknown MING_INSTALLS=${MINGW_INSTALLS}!$ANSI_NOCOLOR"
       exit 1
   esac
   gstart 'Install toolchain'
@@ -105,12 +103,18 @@ build () {
     makepkg-mingw --noconfirm --noprogressbar -R
   gend
 
+  gstart 'List artifacts'
+    ls -la
+  gend
+
   gstart 'Install package'
     pacman --noconfirm -U "mingw-w64-${TARBALL_ARCH}-ghdl-${TARGET}-ci"-*-any.pkg.tar.zst
   gend
 }
 
-test () {
+#---
+
+do_test () {
   gstart 'Environment'
     env | grep MSYSTEM
     env | grep MINGW
@@ -119,11 +123,15 @@ test () {
   GHDL=ghdl ../../testsuite/testsuite.sh
 }
 
+#---
+
+cd $(dirname $0)
+
 case "$1" in
   -t)
-    test
+    do_test
   ;;
   *)
-    build
+    do_build
   ;;
 esac
