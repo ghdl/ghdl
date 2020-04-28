@@ -3329,7 +3329,8 @@ package body Vhdl.Sem_Expr is
                        (+Get_Associated_Expr (El),
                         "type of element not compatible with the "
                           & "expected type");
-                     Set_Type (El_Expr, Error_Type);
+                     Set_Type (Expr, Error_Type);
+                     Set_Associated_Expr (El, Expr);
                      Expr := Null_Iir;
                   elsif Is_Overload_List (Res_Type) then
                      Error_Msg_Sem
