@@ -454,12 +454,13 @@ package body Netlists.Memories is
       end if;
    end Is_Enable_Dff;
 
-   procedure Extract_Extract_Dff
-     (Ctxt : Context_Acc;
-      Inst : Instance;
-      Last_Inst : out Instance;
-      Clk : out Net;
-      En : out Net)
+   --  If INST is followed by a dff or a dff+enable (with mux2), return the
+   --  dff in LAST_INST, the clock in CLK and the enable in EN.
+   procedure Extract_Extract_Dff (Ctxt : Context_Acc;
+                                  Inst : Instance;
+                                  Last_Inst : out Instance;
+                                  Clk : out Net;
+                                  En : out Net)
    is
       Val : constant Net := Get_Output (Inst, 0);
       Inp : Input;
@@ -516,6 +517,90 @@ package body Netlists.Memories is
       Clk := No_Net;
       En := No_Net;
    end Extract_Extract_Dff;
+
+   --  If dyn_extract gate EXTRACT is followed by a concat and a dff, then
+   --  swap the dff and the concat.  This will allow to merge the dff during
+   --  the build of mem_rd_sync.
+   --  This creates new gates (the dff is replicated) that will be removed.
+   procedure Maybe_Swap_Concat_Dff (Ctxt : Context_Acc; Extract : Instance)
+   is
+      Extr_Out : constant Net := Get_Output (Extract, 0);
+      Concat : Instance;
+      Concat_Out : Net;
+      Dff : Instance;
+      Clk, En : Net;
+      Loc : Location_Type;
+   begin
+      if not Has_One_Connection (Extr_Out) then
+         --  The dyn_extract is connected to more than one gate.
+         return;
+      end if;
+
+      Concat := Get_Input_Parent (Get_First_Sink (Extr_Out));
+      case Get_Id (Concat) is
+         when Concat_Module_Id
+           |  Id_Concatn =>
+            null;
+         when others =>
+            --  Not a concat.
+            return;
+      end case;
+
+      Concat_Out := Get_Output (Concat, 0);
+      if not Has_One_Connection (Concat_Out) then
+         --  The concat is connected to more than one gate.
+         return;
+      end if;
+      for I in 1 .. Get_Nbr_Inputs (Concat) loop
+         declare
+            Src : constant Net := Get_Input_Net (Concat, I - 1);
+         begin
+            if Get_Id (Get_Net_Parent (Src)) /= Id_Dyn_Extract then
+               --  A source of concat is not a dyn_extract.
+               return;
+            end if;
+            if not Has_One_Connection (Src) then
+               --  A source of concat drives something else!
+               return;
+            end if;
+         end;
+      end loop;
+
+      Extract_Extract_Dff (Ctxt, Concat, Dff, Clk, En);
+      if Clk = No_Net then
+         return;
+      end if;
+
+      --  Replicate the dff.
+      Loc := Get_Location (Dff);
+      for I in 1 .. Get_Nbr_Inputs (Concat) loop
+         declare
+            Inp : constant Input := Get_Input (Concat, I - 1);
+            Dff2 : Net;
+            Mux : Net;
+            Dff2_Inp : Input;
+            Src : Net;
+         begin
+            Src := Disconnect_And_Get (Inp);
+
+            Dff2 := Build_Dff (Ctxt, Clk, Src);
+            Set_Location (Dff2, Loc);
+            Connect (Inp, Dff2);
+
+            if En /= No_Net then
+               Dff2_Inp := Get_Input (Get_Net_Parent (Dff2), 1);
+               Mux := Build_Mux2 (Ctxt, En, Dff2, Src);
+               Set_Location (Mux, Loc);
+               Disconnect (Dff2_Inp);
+               Connect (Dff2_Inp, Mux);
+            end if;
+         end;
+      end loop;
+
+      --  Reconnect the concat.
+      Redirect_Inputs (Get_Output (Dff, 0), Concat_Out);
+      Remove_Instance (Dff);
+   end Maybe_Swap_Concat_Dff;
 
    --  Create a mem_rd/mem_rd_sync from a dyn_extract gate.
    --  LAST is the last memory port on the chain.
@@ -1460,6 +1545,7 @@ package body Netlists.Memories is
       Addr := Get_Driver (Inp2);
       Disconnect (Inp2);
       Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
+      Maybe_Swap_Concat_Dff (Ctxt, In_Inst);
       Extract_Extract_Dff (Ctxt, In_Inst, Last_Inst, Clk, En);
       if Clk /= No_Net and then En = No_Net then
          En := Build_Const_UB32 (Ctxt, 1, 1);
