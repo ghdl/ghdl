@@ -132,6 +132,7 @@ package body PSL.CSE is
       Res := Create_Node (N_And_Bool);
       Set_Left (Res, L);
       Set_Right (Res, R);
+      Copy_Location (Res, L);
       Set_Hash_Link (Res, Head);
       Set_Hash (Res, Hash);
       Hash_Table (Hash mod Hash_Table'Length) := Res;
@@ -175,6 +176,7 @@ package body PSL.CSE is
       Res := Create_Node (N_Or_Bool);
       Set_Left (Res, L);
       Set_Right (Res, R);
+      Copy_Location (Res, L);
       Set_Hash_Link (Res, Head);
       Set_Hash (Res, Hash);
       Hash_Table (Hash mod Hash_Table'Length) := Res;
@@ -211,6 +213,7 @@ package body PSL.CSE is
 
       Res := Create_Node (N_Not_Bool);
       Set_Boolean (Res, N);
+      Copy_Location (Res, N);
       Set_Hash_Link (Res, Head);
       Set_Hash (Res, Hash);
       Hash_Table (Hash mod Hash_Table'Length) := Res;
