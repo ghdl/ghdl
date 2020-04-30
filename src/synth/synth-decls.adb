@@ -462,8 +462,10 @@ package body Synth.Decls is
       Synth_Subtype_Indication (Syn_Inst, Atype);
    end Synth_Declaration_Type;
 
-   procedure Synth_Constant_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Last_Type : in out Node)
+   procedure Synth_Constant_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                         Decl : Node;
+                                         Is_Subprg : Boolean;
+                                         Last_Type : in out Node)
    is
       Deferred_Decl : constant Node := Get_Deferred_Declaration (Decl);
       First_Decl : Node;
@@ -521,7 +523,16 @@ package body Synth.Decls is
               | Value_Alias =>
                Cst := Val;
             when others =>
-               Cst := Create_Value_Const (Val, Decl);
+               if Is_Static (Val.Val) then
+                  Cst := Create_Value_Const (Val, Decl);
+               else
+                  if not Is_Subprg then
+                     Error_Msg_Synth
+                       (+Decl, "signals cannot be used in default value "
+                          & "of this constant");
+                  end if;
+                  Cst := Val;
+               end if;
          end case;
          Create_Object_Force (Syn_Inst, First_Decl, Cst);
       end if;
@@ -749,6 +760,13 @@ package body Synth.Decls is
          if Is_Valid (Def) then
             Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
             Init := Synth_Subtype_Conversion (Init, Obj_Typ, False, Decl);
+            if not Is_Subprg
+              and then not Is_Static (Init.Val)
+            then
+               Error_Msg_Synth
+                 (+Decl, "signals cannot be used in default value of "
+                    & "this variable");
+            end if;
          else
             Init := Create_Value_Default (Obj_Typ);
          end if;
@@ -822,7 +840,7 @@ package body Synth.Decls is
             Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
             Create_Var_Wire (Syn_Inst, Decl, No_Valtyp);
          when Iir_Kind_Constant_Declaration =>
-            Synth_Constant_Declaration (Syn_Inst, Decl, Last_Type);
+            Synth_Constant_Declaration (Syn_Inst, Decl, Is_Subprg, Last_Type);
          when Iir_Kind_Signal_Declaration =>
             Synth_Declaration_Type (Syn_Inst, Decl);
             declare
