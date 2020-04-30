@@ -7,7 +7,9 @@ end;
 
 architecture a of ent is
     signal x : unsigned(7 downto 0);
-    signal y : unsigned(7 downto 0) := x / 2;
-    signal z : unsigned(15 downto 0) := x * 2;
+    signal y : unsigned(7 downto 0);
+    signal z : unsigned(15 downto 0);
 begin
+    y <= x / 2;
+    z <= x * 2;
 end;
