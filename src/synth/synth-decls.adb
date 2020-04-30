@@ -789,6 +789,30 @@ package body Synth.Decls is
       end if;
    end Synth_Variable_Declaration;
 
+   procedure Synth_Signal_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                       Decl : Node)
+   is
+      Def : constant Iir := Get_Default_Value (Decl);
+      --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+      Init : Valtyp;
+      Obj_Typ : Type_Acc;
+   begin
+      Synth_Declaration_Type (Syn_Inst, Decl);
+      Create_Wire_Object (Syn_Inst, Wire_Signal, Decl);
+      if Is_Valid (Def) then
+         Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
+         Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
+         Init := Synth_Subtype_Conversion (Init, Obj_Typ, False, Decl);
+         if not Is_Static (Init.Val) then
+            Error_Msg_Synth (+Decl, "signals cannot be used in default value "
+                               & "of a signal");
+         end if;
+      else
+         Init := No_Valtyp;
+      end if;
+      Create_Var_Wire (Syn_Inst, Decl, Init);
+   end Synth_Signal_Declaration;
+
    procedure Synth_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node)
    is
@@ -842,24 +866,8 @@ package body Synth.Decls is
          when Iir_Kind_Constant_Declaration =>
             Synth_Constant_Declaration (Syn_Inst, Decl, Is_Subprg, Last_Type);
          when Iir_Kind_Signal_Declaration =>
-            Synth_Declaration_Type (Syn_Inst, Decl);
-            declare
-               Def : constant Iir := Get_Default_Value (Decl);
-               --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
-               Init : Valtyp;
-               Obj_Typ : Type_Acc;
-            begin
-               Create_Wire_Object (Syn_Inst, Wire_Signal, Decl);
-               if Is_Valid (Def) then
-                  Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
-                  Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
-                  Init := Synth_Subtype_Conversion
-                    (Init, Obj_Typ, False, Decl);
-               else
-                  Init := No_Valtyp;
-               end if;
-               Create_Var_Wire (Syn_Inst, Decl, Init);
-            end;
+            pragma Assert (not Is_Subprg);
+            Synth_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Object_Alias_Declaration =>
             Synth_Object_Alias_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Anonymous_Signal_Declaration =>
