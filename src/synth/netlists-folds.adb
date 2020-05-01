@@ -270,4 +270,18 @@ package body Netlists.Folds is
          return Build_Extract (Ctxt, I, Off, W);
       end if;
    end Build2_Extract;
+
+   function Build2_Imp (Ctxt : Context_Acc;
+                        A, B : Net;
+                        Loc : Location_Type := No_Location)
+                       return Net
+   is
+      N : Net;
+   begin
+      N := Build_Monadic (Ctxt, Id_Not, A);
+      Set_Location (N, Loc);
+      N := Build_Dyadic (Ctxt, Id_Or, N, B);
+      Set_Location (N, Loc);
+      return N;
+   end Build2_Imp;
 end Netlists.Folds;
