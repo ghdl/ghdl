@@ -21,7 +21,6 @@
 with Types; use Types;
 with Mutils; use Mutils;
 
-with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils; use Netlists.Utils;
@@ -217,7 +216,7 @@ package body Synth.Decls is
             Synth_Record_Elements_Definition (Syn_Inst, Def);
             Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Protected_Type_Declaration =>
-            Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Def));
+            Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Def), No_Net);
          when others =>
             Vhdl.Errors.Error_Kind ("synth_type_definition", Def);
       end case;
@@ -464,6 +463,7 @@ package body Synth.Decls is
 
    procedure Synth_Constant_Declaration (Syn_Inst : Synth_Instance_Acc;
                                          Decl : Node;
+                                         En : Net;
                                          Is_Subprg : Boolean;
                                          Last_Type : in out Node)
    is
@@ -509,7 +509,7 @@ package body Synth.Decls is
          end if;
          Obj_Type := Get_Subtype_Object (Syn_Inst, Decl_Type);
          Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
+           (Syn_Inst, Get_Default_Value (Decl), Obj_Type, En);
          if Val = No_Valtyp then
             Set_Error (Syn_Inst);
             return;
@@ -539,7 +539,7 @@ package body Synth.Decls is
    end Synth_Constant_Declaration;
 
    procedure Synth_Attribute_Specification
-     (Syn_Inst : Synth_Instance_Acc; Spec : Node)
+     (Syn_Inst : Synth_Instance_Acc; Spec : Node; En : Net)
    is
       Decl : constant Node := Get_Attribute_Designator (Spec);
       Value : Iir_Attribute_Value;
@@ -559,7 +559,7 @@ package body Synth.Decls is
          --     unless the attribute's subtype indication denotes an
          --     unconstrained array type.
          Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Expression (Spec), Val_Type);
+           (Syn_Inst, Get_Expression (Spec), Val_Type, En);
          --  Check_Constraints (Instance, Val, Attr_Type, Decl);
 
          --  3. A new instance of the designated attribute is created
@@ -621,7 +621,7 @@ package body Synth.Decls is
    end Create_Package_Instance;
 
    procedure Synth_Package_Declaration
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; En : Net)
    is
       Syn_Inst : Synth_Instance_Acc;
    begin
@@ -632,14 +632,14 @@ package body Synth.Decls is
 
       Syn_Inst := Create_Package_Instance (Parent_Inst, Pkg);
 
-      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg));
+      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Pkg), En);
       if Pkg = Vhdl.Std_Package.Standard_Package then
          Synth_Convertible_Declarations (Syn_Inst);
       end if;
    end Synth_Package_Declaration;
 
    procedure Synth_Package_Body
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node)
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node; En : Net)
    is
       Pkg_Inst : Synth_Instance_Acc;
    begin
@@ -650,13 +650,14 @@ package body Synth.Decls is
 
       Pkg_Inst := Get_Package_Object (Parent_Inst, Pkg);
 
-      Synth_Declarations (Pkg_Inst, Get_Declaration_Chain (Bod));
+      Synth_Declarations (Pkg_Inst, Get_Declaration_Chain (Bod), En);
    end Synth_Package_Body;
 
    procedure Synth_Generics_Association (Sub_Inst : Synth_Instance_Acc;
                                          Syn_Inst : Synth_Instance_Acc;
                                          Inter_Chain : Node;
-                                         Assoc_Chain : Node)
+                                         Assoc_Chain : Node;
+                                         En : Net)
    is
       Inter : Node;
       Inter_Type : Type_Acc;
@@ -678,11 +679,11 @@ package body Synth.Decls is
             when Iir_Kind_Association_Element_Open =>
                Actual := Get_Default_Value (Inter);
                Val := Synth_Expression_With_Type
-                 (Sub_Inst, Actual, Inter_Type);
+                 (Sub_Inst, Actual, Inter_Type, En);
             when Iir_Kind_Association_Element_By_Expression =>
                Actual := Get_Actual (Assoc);
                Val := Synth_Expression_With_Type
-                 (Syn_Inst, Actual, Inter_Type);
+                 (Syn_Inst, Actual, Inter_Type, En);
             when others =>
                raise Internal_Error;
          end case;
@@ -698,7 +699,7 @@ package body Synth.Decls is
    end Synth_Generics_Association;
 
    procedure Synth_Package_Instantiation
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node)
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; En : Net)
    is
       Bod : constant Node := Get_Instance_Package_Body (Pkg);
       Sub_Inst : Synth_Instance_Acc;
@@ -707,9 +708,9 @@ package body Synth.Decls is
 
       Synth_Generics_Association
         (Sub_Inst, Parent_Inst,
-         Get_Generic_Chain (Pkg), Get_Generic_Map_Aspect_Chain (Pkg));
+         Get_Generic_Chain (Pkg), Get_Generic_Map_Aspect_Chain (Pkg), En);
 
-      Synth_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
+      Synth_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg), En);
 
       if Bod /= Null_Node then
          --  Macro expended package instantiation.
@@ -724,14 +725,16 @@ package body Synth.Decls is
             --  Synth declarations of (optional) body.
             if Uninst_Bod /= Null_Node then
                Synth_Declarations
-                 (Sub_Inst, Get_Declaration_Chain (Uninst_Bod));
+                 (Sub_Inst, Get_Declaration_Chain (Uninst_Bod), En);
             end if;
          end;
       end if;
    end Synth_Package_Instantiation;
 
-   procedure Synth_Variable_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node; Is_Subprg : Boolean)
+   procedure Synth_Variable_Declaration (Syn_Inst : Synth_Instance_Acc;
+                                         Decl : Node;
+                                         En : Net;
+                                         Is_Subprg : Boolean)
    is
       Def : constant Node := Get_Default_Value (Decl);
       Decl_Type : constant Node := Get_Type (Decl);
@@ -758,7 +761,7 @@ package body Synth.Decls is
          Create_Object (Syn_Inst, Decl, Create_Value_Default (Obj_Typ));
       else
          if Is_Valid (Def) then
-            Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
+            Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ, En);
             Init := Synth_Subtype_Conversion (Init, Obj_Typ, False, Decl);
             if not Is_Subprg
               and then not Is_Static (Init.Val)
@@ -801,7 +804,7 @@ package body Synth.Decls is
       Create_Wire_Object (Syn_Inst, Wire_Signal, Decl);
       if Is_Valid (Def) then
          Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
-         Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ);
+         Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ, No_Net);
          Init := Synth_Subtype_Conversion (Init, Obj_Typ, False, Decl);
          if not Is_Static (Init.Val) then
             Error_Msg_Synth (+Decl, "signals cannot be used in default value "
@@ -814,7 +817,7 @@ package body Synth.Decls is
    end Synth_Signal_Declaration;
 
    procedure Synth_Object_Alias_Declaration
-     (Syn_Inst : Synth_Instance_Acc; Decl : Node)
+     (Syn_Inst : Synth_Instance_Acc; Decl : Node; En : Net)
    is
       Atype : constant Node := Get_Declaration_Type (Decl);
       Off : Value_Offsets;
@@ -832,7 +835,7 @@ package body Synth.Decls is
          Obj_Typ := null;
       end if;
 
-      Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl),
+      Stmts.Synth_Assignment_Prefix (Syn_Inst, Get_Name (Decl), En,
                                      Base, Typ, Off, Dyn);
       pragma Assert (Dyn.Voff = No_Net);
       if Base.Val.Kind = Value_Net then
@@ -853,23 +856,26 @@ package body Synth.Decls is
 
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;
                                 Decl : Node;
+                                En : Net;
                                 Is_Subprg : Boolean;
                                 Last_Type : in out Node) is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
-            Synth_Variable_Declaration (Syn_Inst, Decl, Is_Subprg);
+            Synth_Variable_Declaration (Syn_Inst, Decl, En, Is_Subprg);
          when Iir_Kind_Interface_Variable_Declaration =>
             --  Ignore default value.
             Create_Wire_Object (Syn_Inst, Wire_Variable, Decl);
             Create_Var_Wire (Syn_Inst, Decl, No_Valtyp);
          when Iir_Kind_Constant_Declaration =>
-            Synth_Constant_Declaration (Syn_Inst, Decl, Is_Subprg, Last_Type);
+            Synth_Constant_Declaration
+              (Syn_Inst, Decl, En, Is_Subprg, Last_Type);
          when Iir_Kind_Signal_Declaration =>
             pragma Assert (not Is_Subprg);
+            pragma Assert (En = No_Net);
             Synth_Signal_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Object_Alias_Declaration =>
-            Synth_Object_Alias_Declaration (Syn_Inst, Decl);
+            Synth_Object_Alias_Declaration (Syn_Inst, Decl, En);
          when Iir_Kind_Anonymous_Signal_Declaration =>
             --  Anonymous signals created by inertial associations are
             --  simply ignored.
@@ -887,7 +893,7 @@ package body Synth.Decls is
             --  indication.
             null;
          when Iir_Kind_Attribute_Specification =>
-            Synth_Attribute_Specification (Syn_Inst, Decl);
+            Synth_Attribute_Specification (Syn_Inst, Decl, En);
          when Iir_Kind_Type_Declaration =>
             Synth_Type_Definition (Syn_Inst, Get_Type_Definition (Decl));
          when Iir_Kind_Anonymous_Type_Declaration =>
@@ -927,8 +933,10 @@ package body Synth.Decls is
       end case;
    end Synth_Declaration;
 
-   procedure Synth_Declarations
-     (Syn_Inst : Synth_Instance_Acc; Decls : Iir; Is_Subprg : Boolean := False)
+   procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc;
+                                 Decls : Iir;
+                                 En : Net;
+                                 Is_Subprg : Boolean := False)
    is
       Decl : Node;
       Last_Type : Node;
@@ -936,7 +944,7 @@ package body Synth.Decls is
       Last_Type := Null_Node;
       Decl := Decls;
       while Is_Valid (Decl) loop
-         Synth_Declaration (Syn_Inst, Decl, Is_Subprg, Last_Type);
+         Synth_Declaration (Syn_Inst, Decl, En, Is_Subprg, Last_Type);
 
          exit when Is_Error (Syn_Inst);
 

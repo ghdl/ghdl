@@ -563,7 +563,8 @@ package body Synth.Insts is
             begin
                Synth_Individual_Prefix
                  (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
-               Synth_Indexed_Name (Syn_Inst, Formal, Typ, Voff, Arr_Off);
+               Synth_Indexed_Name
+                 (Syn_Inst, Formal, No_Net, Typ, Voff, Arr_Off);
                if Voff /= No_Net then
                   raise Internal_Error;
                end if;
@@ -582,7 +583,7 @@ package body Synth.Insts is
                  (Syn_Inst, Inter_Inst, Get_Prefix (Formal), Off, Typ);
 
                Get_Onedimensional_Array_Bounds (Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Formal, Pfx_Bnd, El_Typ,
+               Synth_Slice_Suffix (Syn_Inst, Formal, No_Net, Pfx_Bnd, El_Typ,
                                    Res_Bnd, Sl_Voff, Sl_Off);
                if Sl_Voff /= No_Net then
                   raise Internal_Error;
@@ -652,7 +653,8 @@ package body Synth.Insts is
            (Syn_Inst, Inter_Inst, Get_Formal (Iassoc), Off, Typ);
 
          --   2. synth expression
-         V := Synth_Expression_With_Type (Syn_Inst, Get_Actual (Iassoc), Typ);
+         V := Synth_Expression_With_Type
+           (Syn_Inst, Get_Actual (Iassoc), Typ, No_Net);
 
          --   3. save in a table
          Value_Offset_Tables.Append (Els, (Off, V));
@@ -712,7 +714,8 @@ package body Synth.Insts is
 
       Formal_Typ := Get_Subtype_Object (Inter_Inst, Get_Type (Inter));
 
-      Act := Synth_Expression_With_Type (Act_Inst, Actual, Formal_Typ);
+      Act := Synth_Expression_With_Type
+        (Act_Inst, Actual, Formal_Typ, No_Net);
       return Get_Net (Act);
    end Synth_Input_Assoc;
 
@@ -744,7 +747,7 @@ package body Synth.Insts is
          V := Create_Value_Net (O, Typ);
 
          --   3. Assign.
-         Synth_Assignment (Syn_Inst, Get_Actual (Iassoc), V, Iassoc);
+         Synth_Assignment (Syn_Inst, Get_Actual (Iassoc), V, Iassoc, No_Net);
 
          Iassoc := Get_Chain (Iassoc);
       end loop;
@@ -779,7 +782,7 @@ package body Synth.Insts is
       Port := Builders.Build_Port (Get_Build (Syn_Inst), Outp);
       O := Create_Value_Net (Port, Formal_Typ);
       --  Assign the port output to the actual (a net).
-      Synth_Assignment (Syn_Inst, Actual, O, Assoc);
+      Synth_Assignment (Syn_Inst, Actual, O, Assoc, No_Net);
    end Synth_Output_Assoc;
 
    --  Subprogram used for instantiation (direct or by component).
@@ -939,7 +942,8 @@ package body Synth.Insts is
 
       Synth_Generics_Association (Sub_Inst, Syn_Inst,
                                   Get_Generic_Chain (Ent),
-                                  Get_Generic_Map_Aspect_Chain (Stmt));
+                                  Get_Generic_Map_Aspect_Chain (Stmt),
+                                  No_Net);
 
       --  Elaborate port types.
       Synth_Ports_Association_Type (Sub_Inst, Syn_Inst,
@@ -1074,7 +1078,8 @@ package body Synth.Insts is
 
       Synth_Generics_Association (Comp_Inst, Syn_Inst,
                                   Get_Generic_Chain (Component),
-                                  Get_Generic_Map_Aspect_Chain (Stmt));
+                                  Get_Generic_Map_Aspect_Chain (Stmt),
+                                  No_Net);
 
       --  Create objects for the inputs and the outputs of the component,
       --  assign inputs (that's nets) and create wires for outputs.
@@ -1137,7 +1142,8 @@ package body Synth.Insts is
         (Comp_Inst, Ent, New_Sname_User (Get_Identifier (Ent), No_Sname));
       Synth_Generics_Association (Sub_Inst, Comp_Inst,
                                   Get_Generic_Chain (Ent),
-                                  Get_Generic_Map_Aspect_Chain (Bind));
+                                  Get_Generic_Map_Aspect_Chain (Bind),
+                                  No_Net);
 
       Synth_Ports_Association_Type (Sub_Inst, Comp_Inst,
                                     Get_Port_Chain (Ent),
@@ -1222,7 +1228,8 @@ package body Synth.Insts is
                      Bod : constant Node := Get_Package_Body (Dep_Unit);
                      Bod_Unit : Node;
                   begin
-                     Synth_Package_Declaration (Parent_Inst, Dep_Unit);
+                     Synth_Package_Declaration
+                       (Parent_Inst, Dep_Unit, No_Net);
                      --  Do not try to elaborate math_real body: there are
                      --  functions with loop.  Currently, try create signals,
                      --  which is not possible during package elaboration.
@@ -1231,11 +1238,12 @@ package body Synth.Insts is
                      then
                         Bod_Unit := Get_Design_Unit (Bod);
                         Synth_Dependencies (Parent_Inst, Bod_Unit);
-                        Synth_Package_Body (Parent_Inst, Dep_Unit, Bod);
+                        Synth_Package_Body
+                          (Parent_Inst, Dep_Unit, Bod, No_Net);
                      end if;
                   end;
                when Iir_Kind_Package_Instantiation_Declaration =>
-                  Synth_Package_Instantiation (Parent_Inst, Dep_Unit);
+                  Synth_Package_Instantiation (Parent_Inst, Dep_Unit, No_Net);
                when Iir_Kind_Package_Body =>
                   null;
                when Iir_Kind_Architecture_Body =>
@@ -1287,7 +1295,7 @@ package body Synth.Insts is
          begin
             Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
             Val := Synth_Expression_With_Type
-              (Syn_Inst, Get_Default_Value (Inter), Inter_Typ);
+              (Syn_Inst, Get_Default_Value (Inter), Inter_Typ, No_Net);
             pragma Assert (Is_Static (Val.Val));
             Create_Object (Syn_Inst, Inter, Val);
          end;
@@ -1378,7 +1386,7 @@ package body Synth.Insts is
          if Default /= Null_Node then
             Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
             Init := Synth_Expression_With_Type
-              (Syn_Inst, Default, Inter_Typ);
+              (Syn_Inst, Default, Inter_Typ, No_Net);
             Init := Synth_Subtype_Conversion
               (Init, Inter_Typ, False, Inter);
             Value := Builders.Build_Ioutput (Build_Context, Get_Net (Init));
@@ -1513,14 +1521,14 @@ package body Synth.Insts is
       pragma Assert (Get_Kind (Inst.Config) = Iir_Kind_Block_Configuration);
       Apply_Block_Configuration (Inst.Config, Arch);
 
-      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Entity));
+      Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Entity), No_Net);
       if not Is_Error (Syn_Inst) then
          Synth_Concurrent_Statements
            (Syn_Inst, Get_Concurrent_Statement_Chain (Entity));
       end if;
 
       if not Is_Error (Syn_Inst) then
-         Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
+         Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch), No_Net);
       end if;
       if not Is_Error (Syn_Inst) then
          Synth_Concurrent_Statements

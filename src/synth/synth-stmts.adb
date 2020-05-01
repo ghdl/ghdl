@@ -67,7 +67,8 @@ package body Synth.Stmts is
 
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
                             Wf : Node;
-                            Targ_Type : Type_Acc) return Valtyp is
+                            Targ_Type : Type_Acc;
+                            En : Net) return Valtyp is
    begin
       if Get_Kind (Wf) = Iir_Kind_Unaffected_Waveform then
          --  TODO
@@ -82,15 +83,16 @@ package body Synth.Stmts is
          null;
       end if;
       if Targ_Type = null then
-         return Synth_Expression (Syn_Inst, Get_We_Value (Wf));
+         return Synth_Expression (Syn_Inst, Get_We_Value (Wf), En);
       else
          return Synth_Expression_With_Type
-           (Syn_Inst, Get_We_Value (Wf), Targ_Type);
+           (Syn_Inst, Get_We_Value (Wf), Targ_Type, En);
       end if;
    end Synth_Waveform;
 
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
+                                      En : Net;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
                                       Dest_Off : out Value_Offsets;
@@ -98,7 +100,7 @@ package body Synth.Stmts is
    begin
       case Get_Kind (Pfx) is
          when Iir_Kind_Simple_Name =>
-            Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx),
+            Synth_Assignment_Prefix (Syn_Inst, Get_Named_Entity (Pfx), En,
                                      Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Variable_Declaration
@@ -126,8 +128,7 @@ package body Synth.Stmts is
                end if;
             end;
          when Iir_Kind_Function_Call =>
-            --  Can be the prefix of .all
-            Dest_Base := Synth_Expression (Syn_Inst, Pfx);
+            Dest_Base := Synth_Expression (Syn_Inst, Pfx, En);
             Dest_Typ := Dest_Base.Typ;
             Dest_Off := (0, 0);
             Dest_Dyn := No_Dyn_Name;
@@ -138,10 +139,10 @@ package body Synth.Stmts is
                Off : Value_Offsets;
             begin
                Synth_Assignment_Prefix
-                 (Syn_Inst, Get_Prefix (Pfx),
+                 (Syn_Inst, Get_Prefix (Pfx), En,
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Strip_Const (Dest_Base);
-               Synth_Indexed_Name (Syn_Inst, Pfx, Dest_Typ, Voff, Off);
+               Synth_Indexed_Name (Syn_Inst, Pfx, En, Dest_Typ, Voff, Off);
 
                if Voff = No_Net then
                   --  Static index.
@@ -176,7 +177,7 @@ package body Synth.Stmts is
                  Get_Element_Position (Get_Named_Entity (Pfx));
             begin
                Synth_Assignment_Prefix
-                 (Syn_Inst, Get_Prefix (Pfx),
+                 (Syn_Inst, Get_Prefix (Pfx), En,
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Dest_Off.Net_Off :=
                  Dest_Off.Net_Off + Dest_Typ.Rec.E (Idx + 1).Boff;
@@ -195,12 +196,12 @@ package body Synth.Stmts is
                Sl_Off : Value_Offsets;
             begin
                Synth_Assignment_Prefix
-                 (Syn_Inst, Get_Prefix (Pfx),
+                 (Syn_Inst, Get_Prefix (Pfx), En,
                   Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
                Strip_Const (Dest_Base);
 
                Get_Onedimensional_Array_Bounds (Dest_Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Pfx, Pfx_Bnd, El_Typ,
+               Synth_Slice_Suffix (Syn_Inst, Pfx, En, Pfx_Bnd, El_Typ,
                                    Res_Bnd, Sl_Voff, Sl_Off);
 
 
@@ -234,7 +235,7 @@ package body Synth.Stmts is
          when Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference =>
             Synth_Assignment_Prefix
-              (Syn_Inst, Get_Prefix (Pfx),
+              (Syn_Inst, Get_Prefix (Pfx), En,
                Dest_Base, Dest_Typ, Dest_Off, Dest_Dyn);
             if Dest_Off /= (0, 0) and then Dest_Dyn.Voff /= No_Net then
                raise Internal_Error;
@@ -285,7 +286,8 @@ package body Synth.Stmts is
    type Target_Info_Array is array (Natural range <>) of Target_Info;
 
    function Synth_Target (Syn_Inst : Synth_Instance_Acc;
-                          Target : Node) return Target_Info is
+                          Target : Node;
+                          En : Net) return Target_Info is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Aggregate =>
@@ -323,7 +325,8 @@ package body Synth.Stmts is
 
                Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Target, Base, Typ, Off, Dyn);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Target, En, Base, Typ, Off, Dyn);
                if Dyn.Voff = No_Net then
                   --  FIXME: check index.
                   return Target_Info'(Kind => Target_Simple,
@@ -346,7 +349,8 @@ package body Synth.Stmts is
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Target_Info;
                                Val : Valtyp;
-                               Loc : Node);
+                               Loc : Node;
+                               En : Net);
 
    --  Extract a part of VAL from a target aggregate at offset OFF (offset
    --  in the array).
@@ -388,7 +392,8 @@ package body Synth.Stmts is
                                          Target : Node;
                                          Target_Typ : Type_Acc;
                                          Val : Valtyp;
-                                         Loc : Node)
+                                         Loc : Node;
+                                         En : Net)
    is
       Targ_Bnd : constant Bound_Type := Get_Array_Bound (Target_Typ, 1);
       Choice : Node;
@@ -402,7 +407,7 @@ package body Synth.Stmts is
          Assoc := Get_Associated_Expr (Choice);
          case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_None =>
-               Targ_Info := Synth_Target (Syn_Inst, Assoc);
+               Targ_Info := Synth_Target (Syn_Inst, Assoc, En);
                if Get_Element_Type_Flag (Choice) then
                   Pos := Pos - 1;
                else
@@ -411,7 +416,7 @@ package body Synth.Stmts is
                Synth_Assignment
                  (Syn_Inst, Targ_Info,
                   Aggregate_Extract (Val, Pos, Targ_Info.Targ_Type, Assoc),
-                  Loc);
+                  Loc, En);
             when others =>
                Error_Kind ("synth_assignment_aggregate", Choice);
          end case;
@@ -422,7 +427,8 @@ package body Synth.Stmts is
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Target_Info;
                                Val : Valtyp;
-                               Loc : Node)
+                               Loc : Node;
+                               En : Net)
    is
       V : Valtyp;
    begin
@@ -436,7 +442,7 @@ package body Synth.Stmts is
       case Target.Kind is
          when Target_Aggregate =>
             Synth_Assignment_Aggregate
-              (Syn_Inst, Target.Aggr, Target.Targ_Type, V, Loc);
+              (Syn_Inst, Target.Aggr, Target.Targ_Type, V, Loc, En);
          when Target_Simple =>
             if V.Typ.Sz = 0 then
                --  If there is nothing to assign (like a null slice),
@@ -489,12 +495,13 @@ package body Synth.Stmts is
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Node;
                                Val : Valtyp;
-                               Loc : Node)
+                               Loc : Node;
+                               En : Net)
    is
       Info : Target_Info;
    begin
-      Info := Synth_Target (Syn_Inst, Target);
-      Synth_Assignment (Syn_Inst, Info, Val, Loc);
+      Info := Synth_Target (Syn_Inst, Target, En);
+      Synth_Assignment (Syn_Inst, Info, Val, Loc, En);
    end Synth_Assignment;
 
    function Synth_Read_Memory (Syn_Inst : Synth_Instance_Acc;
@@ -541,19 +548,19 @@ package body Synth.Stmts is
 
    --  Concurrent or sequential simple signal assignment
    procedure Synth_Simple_Signal_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node; En : Net)
    is
       Targ : Target_Info;
       Val : Valtyp;
    begin
-      Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
+      Targ := Synth_Target (Syn_Inst, Get_Target (Stmt), En);
       Val := Synth_Waveform
-        (Syn_Inst, Get_Waveform_Chain (Stmt), Targ.Targ_Type);
-      Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
+        (Syn_Inst, Get_Waveform_Chain (Stmt), Targ.Targ_Type, En);
+      Synth_Assignment (Syn_Inst, Targ, Val, Stmt, En);
    end Synth_Simple_Signal_Assignment;
 
    procedure Synth_Conditional_Signal_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node; En : Net)
    is
       Targ : Target_Info;
       Cond : Node;
@@ -564,13 +571,13 @@ package body Synth.Stmts is
       First, Last : Net;
       V : Net;
    begin
-      Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
+      Targ := Synth_Target (Syn_Inst, Get_Target (Stmt), En);
       Last := No_Net;
       Cwf := Get_Conditional_Waveform_Chain (Stmt);
       Cond := Null_Node;
       while Cwf /= Null_Node loop
          Val := Synth_Waveform
-           (Syn_Inst, Get_Waveform_Chain (Cwf), Targ.Targ_Type);
+           (Syn_Inst, Get_Waveform_Chain (Cwf), Targ.Targ_Type, En);
          if Val = No_Valtyp then
             --  Mark the error, but try to continue.
             Set_Error (Syn_Inst);
@@ -578,7 +585,7 @@ package body Synth.Stmts is
             V := Get_Net (Val);
             Cond := Get_Condition (Cwf);
             if Cond /= Null_Node then
-               Cond_Val := Synth_Expression (Syn_Inst, Cond);
+               Cond_Val := Synth_Expression (Syn_Inst, Cond, En);
                if Cond_Val = No_Valtyp then
                   Cond_Net := Build_Const_UB32 (Build_Context, 0, 1);
                else
@@ -609,29 +616,44 @@ package body Synth.Stmts is
          end if;
       end if;
       Val := Create_Value_Net (First, Targ.Targ_Type);
-      Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
+      Synth_Assignment (Syn_Inst, Targ, Val, Stmt, En);
    end Synth_Conditional_Signal_Assignment;
 
-   procedure Synth_Variable_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   --  Return the enable net from C.
+   function Get_En (C : Seq_Context) return Net is
+   begin
+      if C.Mode = Mode_Static then
+         return No_Net;
+      end if;
+      if Is_Static_Wire (C.W_En) then
+         --  Must be True!
+         return No_Net;
+      else
+         return Get_Current_Value (Get_Build (C.Inst), C.W_En);
+      end if;
+   end Get_En;
+
+   procedure Synth_Variable_Assignment (C : Seq_Context; Stmt : Node)
    is
+      En : constant Net := Get_En (C);
       Targ : Target_Info;
       Val : Valtyp;
    begin
-      Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
+      Targ := Synth_Target (C.Inst, Get_Target (Stmt), En);
       Val := Synth_Expression_With_Type
-        (Syn_Inst, Get_Expression (Stmt), Targ.Targ_Type);
+        (C.Inst, Get_Expression (Stmt), Targ.Targ_Type, En);
       if Val = No_Valtyp then
-         Set_Error (Syn_Inst);
+         Set_Error (C.Inst);
          return;
       end if;
-      Synth_Assignment (Syn_Inst, Targ, Val, Stmt);
+      Synth_Assignment (C.Inst, Targ, Val, Stmt, En);
    end Synth_Variable_Assignment;
 
    procedure Synth_Conditional_Variable_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+     (C : Seq_Context; Stmt : Node)
    is
       Target : constant Node := Get_Target (Stmt);
+      En : constant Net := Get_En (C);
       Targ_Type : Type_Acc;
       Cond : Node;
       Ce : Node;
@@ -639,16 +661,16 @@ package body Synth.Stmts is
       V : Net;
       First, Last : Net;
    begin
-      Targ_Type := Get_Subtype_Object (Syn_Inst, Get_Type (Target));
+      Targ_Type := Get_Subtype_Object (C.Inst, Get_Type (Target));
       Last := No_Net;
       Ce := Get_Conditional_Expression_Chain (Stmt);
       while Ce /= Null_Node loop
          Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Expression (Ce), Targ_Type);
+           (C.Inst, Get_Expression (Ce), Targ_Type, En);
          V := Get_Net (Val);
          Cond := Get_Condition (Ce);
          if Cond /= Null_Node then
-            Cond_Val := Synth_Expression (Syn_Inst, Cond);
+            Cond_Val := Synth_Expression (C.Inst, Cond, En);
             V := Build_Mux2 (Build_Context, Get_Net (Cond_Val), No_Net, V);
             Set_Location (V, Ce);
          end if;
@@ -662,7 +684,7 @@ package body Synth.Stmts is
          Ce := Get_Chain (Ce);
       end loop;
       Val := Create_Value_Net (First, Targ_Type);
-      Synth_Assignment (Syn_Inst, Target, Val, Stmt);
+      Synth_Assignment (C.Inst, Target, Val, Stmt, En);
    end Synth_Conditional_Variable_Assignment;
 
    procedure Synth_If_Statement (C : in out Seq_Context; Stmt : Node)
@@ -673,7 +695,7 @@ package body Synth.Stmts is
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
    begin
-      Cond_Val := Synth_Expression (C.Inst, Cond);
+      Cond_Val := Synth_Expression (C.Inst, Cond, Get_En (C));
       if Cond_Val = No_Valtyp then
          Set_Error (C.Inst);
          return;
@@ -723,15 +745,15 @@ package body Synth.Stmts is
    end Synth_If_Statement;
 
    --  EXPR is a choice, so a locally static literal.
-   function Convert_To_Uns64 (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                             return Uns64
+   function Convert_To_Uns64
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Uns64
    is
       Expr_Val : Valtyp;
       Vec : Logvec_Array (0 .. 1);
       Off : Uns32;
       Has_Zx : Boolean;
    begin
-      Expr_Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
+      Expr_Val := Synth_Expression_With_Basetype (Syn_Inst, Expr, En);
       Off := 0;
       Has_Zx := False;
       Vec := (others => (0, 0));
@@ -930,7 +952,8 @@ package body Synth.Stmts is
                Annex_Arr (Choice_Idx) := Int32 (Choice_Idx);
                Choice_Data (Choice_Idx) :=
                  (Val => Convert_To_Uns64 (C.Inst,
-                                           Get_Choice_Expression (Choice)),
+                                           Get_Choice_Expression (Choice),
+                                           Get_En (C)),
                   Alt => Alt_Idx);
             when Iir_Kind_Choice_By_Others =>
                Others_Alt_Idx := Alt_Idx;
@@ -1069,7 +1092,8 @@ package body Synth.Stmts is
          case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_Expression =>
                Sel_Expr := Get_Choice_Expression (Choice);
-               Sel_Val := Synth_Expression_With_Basetype (C.Inst, Sel_Expr);
+               Sel_Val := Synth_Expression_With_Basetype
+                 (C.Inst, Sel_Expr, No_Net);
                if Is_Equal (Sel_Val, Sel) then
                   Synth_Sequential_Statements (C, Stmts);
                   exit;
@@ -1141,7 +1165,7 @@ package body Synth.Stmts is
       Expr : constant Node := Get_Expression (Stmt);
       Sel : Valtyp;
    begin
-      Sel := Synth_Expression_With_Basetype (C.Inst, Expr);
+      Sel := Synth_Expression_With_Basetype (C.Inst, Expr, Get_En (C));
       Strip_Const (Sel);
       if Is_Static (Sel.Val) then
          case Sel.Typ.Kind is
@@ -1162,7 +1186,7 @@ package body Synth.Stmts is
    end Synth_Case_Statement;
 
    procedure Synth_Selected_Signal_Assignment
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node; En : Net)
    is
       use Vhdl.Sem_Expr;
 
@@ -1190,11 +1214,11 @@ package body Synth.Stmts is
       Sel : Valtyp;
       Sel_Net : Net;
    begin
-      Targ := Synth_Target (Syn_Inst, Get_Target (Stmt));
+      Targ := Synth_Target (Syn_Inst, Get_Target (Stmt), En);
       Targ_Type := Targ.Targ_Type;
 
       --  Create a net for the expression.
-      Sel := Synth_Expression_With_Basetype (Syn_Inst, Expr);
+      Sel := Synth_Expression_With_Basetype (Syn_Inst, Expr, En);
 
       --  Count choices and alternatives.
       Count_Choices (Case_Info, Choices);
@@ -1220,7 +1244,7 @@ package body Synth.Stmts is
 
             Alts (Alt_Idx).Val := Get_Net
               (Synth_Waveform
-                 (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type));
+                 (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type, En));
          end if;
 
          case Get_Kind (Choice) is
@@ -1229,7 +1253,8 @@ package body Synth.Stmts is
                Annex_Arr (Choice_Idx) := Int32 (Choice_Idx);
                Choice_Data (Choice_Idx) :=
                  (Val => Convert_To_Uns64 (Syn_Inst,
-                                           Get_Choice_Expression (Choice)),
+                                           Get_Choice_Expression (Choice),
+                                           No_Net),
                   Alt => Alt_Idx);
             when Iir_Kind_Choice_By_Others =>
                Others_Alt_Idx := Alt_Idx;
@@ -1278,7 +1303,7 @@ package body Synth.Stmts is
                      Sel_Net, Case_El.all, Default, Res,
                      Get_Location (Expr));
          Synth_Assignment
-           (Syn_Inst, Targ, Create_Value_Net (Res, Targ_Type), Stmt);
+           (Syn_Inst, Targ, Create_Value_Net (Res, Targ_Type), Stmt, En);
       end;
 
       --  free.
@@ -1473,6 +1498,7 @@ package body Synth.Stmts is
 
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
+                                           En : Net;
                                            Init : Association_Iterator_Init;
                                            Infos : out Target_Info_Array)
    is
@@ -1505,7 +1531,7 @@ package body Synth.Stmts is
                then
                   Actual := Get_Default_Value (Inter);
                   Val := Synth_Expression_With_Type
-                    (Subprg_Inst, Actual, Inter_Type);
+                    (Subprg_Inst, Actual, Inter_Type, En);
                else
                   if Get_Kind (Assoc) =
                     Iir_Kind_Association_Element_By_Expression
@@ -1515,11 +1541,11 @@ package body Synth.Stmts is
                      Actual := Assoc;
                   end if;
                   Val := Synth_Expression_With_Type
-                    (Caller_Inst, Actual, Inter_Type);
+                    (Caller_Inst, Actual, Inter_Type, En);
                end if;
             when Iir_Out_Mode | Iir_Inout_Mode =>
                Actual := Get_Actual (Assoc);
-               Info := Synth_Target (Caller_Inst, Actual);
+               Info := Synth_Target (Caller_Inst, Actual, En);
 
                case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter))
                   is
@@ -1593,14 +1619,15 @@ package body Synth.Stmts is
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
-                                           Assoc_Chain : Node)
+                                           Assoc_Chain : Node;
+                                           En : Net)
    is
       Infos : Target_Info_Array (1 .. 0);
       pragma Unreferenced (Infos);
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
-      Synth_Subprogram_Association (Subprg_Inst, Caller_Inst, Init, Infos);
+      Synth_Subprogram_Association (Subprg_Inst, Caller_Inst, En, Init, Infos);
    end Synth_Subprogram_Association;
 
    --  Create wires for out and inout interface variables.
@@ -1637,6 +1664,7 @@ package body Synth.Stmts is
    procedure Synth_Subprogram_Back_Association
      (Subprg_Inst : Synth_Instance_Acc;
       Caller_Inst : Synth_Instance_Acc;
+      En : Net;
       Init : Association_Iterator_Init;
       Infos : Target_Info_Array)
    is
@@ -1660,7 +1688,7 @@ package body Synth.Stmts is
             end if;
             Nbr_Inout := Nbr_Inout + 1;
             Val := Get_Value (Subprg_Inst, Inter);
-            Synth_Assignment (Caller_Inst, Infos (Nbr_Inout), Val, Assoc);
+            Synth_Assignment (Caller_Inst, Infos (Nbr_Inout), Val, Assoc, En);
 
             --  Free wire used for out/inout interface variables.
             if Val.Val.Kind = Value_Wire then
@@ -1689,6 +1717,7 @@ package body Synth.Stmts is
    function Synth_Dynamic_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                            Sub_Inst : Synth_Instance_Acc;
                                            Call : Node;
+                                           En : Net;
                                            Init : Association_Iterator_Init;
                                            Infos : Target_Info_Array)
                                           return Valtyp
@@ -1736,13 +1765,17 @@ package body Synth.Stmts is
 
       Set_Wire_Gate
         (C.W_En, Build_Control_Signal (Sub_Inst, 1, Imp));
-      Phi_Assign_Net (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+      if En = No_Net then
+         Phi_Assign_Net (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+      else
+         Phi_Assign_Net (Build_Context, C.W_En, En, 0);
+      end if;
 
       Set_Wire_Gate
         (C.W_Ret, Build_Control_Signal (Sub_Inst, 1, Imp));
       Phi_Assign_Net (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
 
-      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), En, True);
       if not Is_Error (C.Inst) then
          Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
       end if;
@@ -1761,7 +1794,8 @@ package body Synth.Stmts is
             end if;
          else
             Res := No_Valtyp;
-            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
+            Synth_Subprogram_Back_Association
+              (C.Inst, Syn_Inst, En, Init, Infos);
          end if;
       end if;
 
@@ -1815,7 +1849,7 @@ package body Synth.Stmts is
          C.Ret_Typ := Get_Subtype_Object (Syn_Inst, Get_Return_Type (Imp));
       end if;
 
-      Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), True);
+      Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), No_Net, True);
 
       if not Is_Error (C.Inst) then
          Synth_Sequential_Statements (C, Get_Sequential_Statement_Chain (Bod));
@@ -1836,7 +1870,8 @@ package body Synth.Stmts is
             end if;
          else
             Res := No_Valtyp;
-            Synth_Subprogram_Back_Association (C.Inst, Syn_Inst, Init, Infos);
+            Synth_Subprogram_Back_Association
+              (C.Inst, Syn_Inst, No_Net, Init, Infos);
          end if;
       end if;
 
@@ -1848,6 +1883,7 @@ package body Synth.Stmts is
 
    function Synth_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                    Call : Node;
+                                   En : Net;
                                    Init : Association_Iterator_Init)
                                   return Valtyp
    is
@@ -1868,7 +1904,7 @@ package body Synth.Stmts is
                                  New_Internal_Name (Build_Context));
       Set_Instance_Base (Sub_Inst, Syn_Inst);
 
-      Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
+      Synth_Subprogram_Association (Sub_Inst, Syn_Inst, En, Init, Infos);
 
       if Is_Error (Sub_Inst) then
          Res := No_Valtyp;
@@ -1884,7 +1920,7 @@ package body Synth.Stmts is
               (Syn_Inst, Sub_Inst, Call, Init, Infos);
          else
             Res := Synth_Dynamic_Subprogram_Call
-              (Syn_Inst, Sub_Inst, Call, Init, Infos);
+              (Syn_Inst, Sub_Inst, Call, En, Init, Infos);
          end if;
       end if;
 
@@ -1904,7 +1940,7 @@ package body Synth.Stmts is
    end Synth_Subprogram_Call;
 
    function Synth_Subprogram_Call
-     (Syn_Inst : Synth_Instance_Acc; Call : Node) return Valtyp
+     (Syn_Inst : Synth_Instance_Acc; Call : Node; En : Net) return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Call);
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
@@ -1912,20 +1948,21 @@ package body Synth.Stmts is
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Assoc_Chain);
-      return Synth_Subprogram_Call (Syn_Inst, Call, Init);
+      return Synth_Subprogram_Call (Syn_Inst, Call, En, Init);
    end Synth_Subprogram_Call;
 
    function Synth_User_Operator (Syn_Inst : Synth_Instance_Acc;
                                  Left_Expr : Node;
                                  Right_Expr : Node;
-                                 Expr : Node) return Valtyp
+                                 Expr : Node;
+                                 En : Net) return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Expr);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
       Init : Association_Iterator_Init;
    begin
       Init := Association_Iterator_Build (Inter_Chain, Left_Expr, Right_Expr);
-      return Synth_Subprogram_Call (Syn_Inst, Expr, Init);
+      return Synth_Subprogram_Call (Syn_Inst, Expr, En, Init);
    end Synth_User_Operator;
 
    procedure Synth_Implicit_Procedure_Call
@@ -1945,17 +1982,19 @@ package body Synth.Stmts is
       Sub_Inst := Make_Instance (Syn_Inst, Imp,
                                  New_Internal_Name (Build_Context));
 
-      Synth_Subprogram_Association (Sub_Inst, Syn_Inst, Init, Infos);
+      Synth_Subprogram_Association (Sub_Inst, Syn_Inst, No_Net, Init, Infos);
 
       Synth.Static_Proc.Synth_Static_Procedure (Sub_Inst, Imp, Call);
 
-      Synth_Subprogram_Back_Association (Sub_Inst, Syn_Inst, Init, Infos);
+      Synth_Subprogram_Back_Association
+        (Sub_Inst, Syn_Inst, No_Net, Init, Infos);
 
       Free_Instance (Sub_Inst);
       Areapools.Release (Area_Mark, Instance_Pool.all);
    end Synth_Implicit_Procedure_Call;
 
-   procedure Synth_Procedure_Call (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   procedure Synth_Procedure_Call
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node; En : Net)
    is
       Call : constant Node := Get_Procedure_Call (Stmt);
       Imp  : constant Node := Get_Implementation (Call);
@@ -1967,7 +2006,7 @@ package body Synth.Stmts is
                Error_Msg_Synth
                  (+Stmt, "call to foreign %n is not supported", +Imp);
             else
-               Res := Synth_Subprogram_Call (Syn_Inst, Call);
+               Res := Synth_Subprogram_Call (Syn_Inst, Call, En);
                pragma Assert (Res = No_Valtyp);
             end if;
          when others =>
@@ -2126,7 +2165,7 @@ package body Synth.Stmts is
       Phi_False : Phi_Type;
    begin
       if Cond /= Null_Node then
-         Cond_Val := Synth_Expression (C.Inst, Cond);
+         Cond_Val := Synth_Expression (C.Inst, Cond, Get_En (C));
          Static_Cond := Is_Static_Val (Cond_Val.Val);
          if Static_Cond then
             if Get_Static_Discrete (Cond_Val) = 0 then
@@ -2191,7 +2230,7 @@ package body Synth.Stmts is
       Cond_Val : Valtyp;
    begin
       if Cond /= Null_Node then
-         Cond_Val := Synth_Expression (C.Inst, Cond);
+         Cond_Val := Synth_Expression (C.Inst, Cond, No_Net);
          if Cond_Val = No_Valtyp then
             Set_Error (C.Inst);
             return;
@@ -2353,7 +2392,8 @@ package body Synth.Stmts is
 
       loop
          if Cond /= Null_Node then
-            Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
+            Val := Synth_Expression_With_Type
+              (C.Inst, Cond, Boolean_Type, No_Net);
             if not Is_Static (Val.Val) then
                Error_Msg_Synth (+Cond, "loop condition must be static");
                exit;
@@ -2412,7 +2452,8 @@ package body Synth.Stmts is
 
       loop
          if Cond /= Null_Node then
-            Val := Synth_Expression_With_Type (C.Inst, Cond, Boolean_Type);
+            Val := Synth_Expression_With_Type
+              (C.Inst, Cond, Boolean_Type, No_Net);
             pragma Assert (Is_Static (Val.Val));
             exit when Read_Discrete (Val) = 0;
          end if;
@@ -2435,7 +2476,8 @@ package body Synth.Stmts is
    begin
       if Expr /= Null_Node then
          --  Return in function.
-         Val := Synth_Expression_With_Type (C.Inst, Expr, C.Ret_Typ);
+         Val := Synth_Expression_With_Type
+           (C.Inst, Expr, C.Ret_Typ, Get_En (C));
          if Val = No_Valtyp then
             Set_Error (C.Inst);
             return;
@@ -2490,7 +2532,7 @@ package body Synth.Stmts is
       Sev_V : Natural;
    begin
       if Rep_Expr /= Null_Node then
-         Rep := Synth_Expression_With_Basetype (C.Inst, Rep_Expr);
+         Rep := Synth_Expression_With_Basetype (C.Inst, Rep_Expr, No_Net);
          if Rep = No_Valtyp then
             Set_Error (C.Inst);
             return;
@@ -2498,7 +2540,7 @@ package body Synth.Stmts is
          Strip_Const (Rep);
       end if;
       if Sev_Expr /= Null_Node then
-         Sev := Synth_Expression (C.Inst, Sev_Expr);
+         Sev := Synth_Expression (C.Inst, Sev_Expr, No_Net);
          if Sev = No_Valtyp then
             Set_Error (C.Inst);
             return;
@@ -2551,7 +2593,8 @@ package body Synth.Stmts is
    is
       Cond : Valtyp;
    begin
-      Cond := Synth_Expression (C.Inst, Get_Assertion_Condition (Stmt));
+      Cond := Synth_Expression
+        (C.Inst, Get_Assertion_Condition (Stmt), No_Net);
       if Cond = No_Valtyp then
          Set_Error (C.Inst);
          return;
@@ -2605,13 +2648,13 @@ package body Synth.Stmts is
             when Iir_Kind_If_Statement =>
                Synth_If_Statement (C, Stmt);
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
-               Synth_Simple_Signal_Assignment (C.Inst, Stmt);
+               Synth_Simple_Signal_Assignment (C.Inst, Stmt, Get_En (C));
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
-               Synth_Conditional_Signal_Assignment (C.Inst, Stmt);
+               Synth_Conditional_Signal_Assignment (C.Inst, Stmt, Get_En (C));
             when Iir_Kind_Variable_Assignment_Statement =>
-               Synth_Variable_Assignment (C.Inst, Stmt);
+               Synth_Variable_Assignment (C, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
-               Synth_Conditional_Variable_Assignment (C.Inst, Stmt);
+               Synth_Conditional_Variable_Assignment (C, Stmt);
             when Iir_Kind_Case_Statement =>
                Synth_Case_Statement (C, Stmt);
             when Iir_Kind_For_Loop_Statement =>
@@ -2632,7 +2675,7 @@ package body Synth.Stmts is
             when Iir_Kind_Return_Statement =>
                Synth_Return_Statement (C, Stmt);
             when Iir_Kind_Procedure_Call_Statement =>
-               Synth_Procedure_Call (C.Inst, Stmt);
+               Synth_Procedure_Call (C.Inst, Stmt, Get_En (C));
             when Iir_Kind_Report_Statement =>
                if not Is_Dyn then
                   Synth_Static_Report_Statement (C, Stmt);
@@ -2698,7 +2741,7 @@ package body Synth.Stmts is
          Error_Msg_Synth (+Stmt, "expect wait condition");
          return;
       end if;
-      Cond_Val := Synth_Expression (C.Inst, Cond);
+      Cond_Val := Synth_Expression (C.Inst, Cond, No_Net);
 
       Push_Phi;
       Synth_Sequential_Statements (C, Get_Chain (Stmt));
@@ -2742,7 +2785,7 @@ package body Synth.Stmts is
       Instance_Pool := Proc_Pool'Access;
 
       if Is_Valid (Decls_Chain) then
-         Synth_Declarations (C.Inst, Decls_Chain);
+         Synth_Declarations (C.Inst, Decls_Chain, No_Net);
       end if;
 
       Set_Wire_Gate (C.W_En, Build_Control_Signal (Syn_Inst, 1, Proc));
@@ -2765,7 +2808,7 @@ package body Synth.Stmts is
    end Synth_Process_Statement;
 
    function Synth_User_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp is
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp is
    begin
       --  Is it a call to an ieee function ?
       declare
@@ -2790,9 +2833,10 @@ package body Synth.Stmts is
          end if;
       end;
 
-      return Synth_Subprogram_Call (Syn_Inst, Expr);
+      return Synth_Subprogram_Call (Syn_Inst, Expr, En);
    end Synth_User_Function_Call;
 
+   --  Report an assertion failure (that is known to failed).
    procedure Synth_Failed_Assertion
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -2800,7 +2844,7 @@ package body Synth.Stmts is
       Str : Valtyp;
    begin
       if Msg /= Null_Node then
-         Str := Synth_Expression_With_Basetype (Syn_Inst, Msg);
+         Str := Synth_Expression_With_Basetype (Syn_Inst, Msg, No_Net);
       else
          Str := No_Valtyp;
       end if;
@@ -2819,7 +2863,7 @@ package body Synth.Stmts is
       Val : Valtyp;
       Inst : Instance;
    begin
-      Val := Synth_Expression (Syn_Inst, Cond);
+      Val := Synth_Expression (Syn_Inst, Cond, No_Net);
       if Val = No_Valtyp then
          Set_Error (Syn_Inst);
          return;
@@ -2857,7 +2901,7 @@ package body Synth.Stmts is
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
-      Synth_Declarations (Blk_Inst, Get_Declaration_Chain (Blk));
+      Synth_Declarations (Blk_Inst, Get_Declaration_Chain (Blk), No_Net);
       Synth_Concurrent_Statements
         (Blk_Inst, Get_Concurrent_Statement_Chain (Blk));
 
@@ -2881,7 +2925,7 @@ package body Synth.Stmts is
             declare
                E : constant Vhdl.Types.Vhdl_Node := Get_HDL_Node (Expr);
             begin
-               return Get_Net (Synth_Expression (Syn_Inst, E));
+               return Get_Net (Synth_Expression (Syn_Inst, E, No_Net));
             end;
          when N_Not_Bool =>
             pragma Assert (Loc /= No_Location);
@@ -3173,7 +3217,7 @@ package body Synth.Stmts is
          Create_Object (Bod_Inst, Iterator, Iterator_Val);
       end if;
 
-      Synth_Declarations (Bod_Inst, Decls_Chain);
+      Synth_Declarations (Bod_Inst, Decls_Chain, No_Net);
 
       Synth_Concurrent_Statements
         (Bod_Inst, Get_Concurrent_Statement_Chain (Bod));
@@ -3197,7 +3241,7 @@ package body Synth.Stmts is
       loop
          Icond := Get_Condition (Gen);
          if Icond /= Null_Node then
-            Cond := Synth_Expression (Syn_Inst, Icond);
+            Cond := Synth_Expression (Syn_Inst, Icond, No_Net);
             Strip_Const (Cond);
          else
             --  It is the else generate.
@@ -3274,19 +3318,19 @@ package body Synth.Stmts is
       case Get_Kind (Stmt) is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
             Push_Phi;
-            Synth_Simple_Signal_Assignment (Syn_Inst, Stmt);
+            Synth_Simple_Signal_Assignment (Syn_Inst, Stmt, No_Net);
             Pop_And_Merge_Phi (Build_Context, Stmt);
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
             Push_Phi;
-            Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt);
+            Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt, No_Net);
             Pop_And_Merge_Phi (Build_Context, Stmt);
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             Push_Phi;
-            Synth_Selected_Signal_Assignment (Syn_Inst, Stmt);
+            Synth_Selected_Signal_Assignment (Syn_Inst, Stmt, No_Net);
             Pop_And_Merge_Phi (Build_Context, Stmt);
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             Push_Phi;
-            Synth_Procedure_Call (Syn_Inst, Stmt);
+            Synth_Procedure_Call (Syn_Inst, Stmt, No_Net);
             Pop_And_Merge_Phi (Build_Context, Stmt);
          when Iir_Kinds_Process_Statement =>
             Push_Phi;
@@ -3348,6 +3392,7 @@ package body Synth.Stmts is
       end loop;
    end Synth_Concurrent_Statements;
 
+   --  For allconst/allseq/...
    procedure Synth_Attribute_Formal (Syn_Inst : Synth_Instance_Acc;
                                      Val : Node;
                                      Id : Netlists.Gates.Formal_Module_Id)
@@ -3374,7 +3419,7 @@ package body Synth.Stmts is
 
       --  The value must be true
       V := Synth_Expression_With_Type
-        (Syn_Inst, Get_Expression (Spec), Boolean_Type);
+        (Syn_Inst, Get_Expression (Spec), Boolean_Type, No_Net);
       if Read_Discrete (V) /= 1 then
          return;
       end if;
@@ -3386,7 +3431,7 @@ package body Synth.Stmts is
          Base : Valtyp;
          Typ : Type_Acc;
       begin
-         Synth_Assignment_Prefix (Syn_Inst, Sig, Base, Typ, Off, Dyn);
+         Synth_Assignment_Prefix (Syn_Inst, Sig, No_Net, Base, Typ, Off, Dyn);
          pragma Assert (Off = (0, 0));
          pragma Assert (Dyn.Voff = No_Net);
          pragma Assert (Base.Val.Kind = Value_Wire);
@@ -3395,7 +3440,6 @@ package body Synth.Stmts is
          N := Build_Formal_Input (Get_Build (Syn_Inst), Id, Typ.W);
          Add_Conc_Assign (Base.Val.W, N, 0, Val);
       end;
-
    end Synth_Attribute_Formal;
 
    procedure Synth_Attribute_Values
@@ -3466,7 +3510,7 @@ package body Synth.Stmts is
               | Iir_Kind_Procedure_Body
               | Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification =>
-               Synth_Declaration (Unit_Inst, Item, False, Last_Type);
+               Synth_Declaration (Unit_Inst, Item, No_Net, False, Last_Type);
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
                Synth_Concurrent_Statement (Unit_Inst, Item);
             when others =>

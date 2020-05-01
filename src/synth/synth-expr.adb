@@ -432,8 +432,11 @@ package body Synth.Expr is
       L, R : Valtyp;
       Lval, Rval : Int64;
    begin
-      L := Synth_Expression_With_Basetype (Syn_Inst, Get_Left_Limit (Rng));
-      R := Synth_Expression_With_Basetype (Syn_Inst, Get_Right_Limit (Rng));
+      --  Static values.
+      L := Synth_Expression_With_Basetype
+        (Syn_Inst, Get_Left_Limit (Rng), No_Net);
+      R := Synth_Expression_With_Basetype
+        (Syn_Inst, Get_Right_Limit (Rng), No_Net);
       Strip_Const (L);
       Strip_Const (R);
 
@@ -455,8 +458,9 @@ package body Synth.Expr is
    is
       L, R : Valtyp;
    begin
-      L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng));
-      R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng));
+      --  Static values (so no enable).
+      L := Synth_Expression (Syn_Inst, Get_Left_Limit (Rng), No_Net);
+      R := Synth_Expression (Syn_Inst, Get_Right_Limit (Rng), No_Net);
       return (Get_Direction (Rng), Read_Fp64 (L), Read_Fp64 (R));
    end Synth_Float_Range_Expression;
 
@@ -484,7 +488,7 @@ package body Synth.Expr is
             begin
                Pfx_Typ := Synth_Type_Of_Object (Syn_Inst, Get_Prefix (Expr));
                Get_Onedimensional_Array_Bounds (Pfx_Typ, Pfx_Bnd, El_Typ);
-               Synth_Slice_Suffix (Syn_Inst, Expr, Pfx_Bnd, El_Typ,
+               Synth_Slice_Suffix (Syn_Inst, Expr, No_Net, Pfx_Bnd, El_Typ,
                                    Res_Bnd, Sl_Voff, Sl_Off);
 
                if Sl_Voff /= No_Net then
@@ -516,7 +520,7 @@ package body Synth.Expr is
                Res : Valtyp;
             begin
                --  Maybe do not dereference it if its type is known ?
-               Val := Synth_Expression (Syn_Inst, Get_Prefix (Expr));
+               Val := Synth_Expression (Syn_Inst, Get_Prefix (Expr), No_Net);
                Res := Heap.Synth_Dereference (Read_Access (Val));
                return Res.Typ;
             end;
@@ -676,8 +680,9 @@ package body Synth.Expr is
       Res := Create_Value_Memory (Res_Type);
 
       for I in Flist_First .. Last loop
+         --  Elements are supposed to be static, so no need for enable.
          Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Nth_Element (Els, I), El_Typ);
+           (Syn_Inst, Get_Nth_Element (Els, I), El_Typ, No_Net);
          pragma Assert (Is_Static (Val.Val));
          Write_Value (Res.Val.Mem + Size_Type (I) * El_Typ.Sz, Val);
       end loop;
@@ -832,7 +837,8 @@ package body Synth.Expr is
       V : Valtyp;
       Dtype : Type_Acc;
    begin
-      V := Synth_Expression (Syn_Inst, Param);
+      --  The value is supposed to be static.
+      V := Synth_Expression (Syn_Inst, Param, No_Net);
       if V = No_Valtyp then
          return No_Valtyp;
       end if;
@@ -944,7 +950,8 @@ package body Synth.Expr is
       V : Valtyp;
       Dtype : Type_Acc;
    begin
-      V := Synth_Expression (Syn_Inst, Param);
+      --  The parameter is expected to be static.
+      V := Synth_Expression (Syn_Inst, Param, No_Net);
       if V = No_Valtyp then
          return No_Valtyp;
       end if;
@@ -1000,7 +1007,7 @@ package body Synth.Expr is
             declare
                Val : Valtyp;
             begin
-               Val := Synth_Expression (Syn_Inst, Get_Prefix (Name));
+               Val := Synth_Expression (Syn_Inst, Get_Prefix (Name), No_Net);
                return Heap.Synth_Dereference (Read_Access (Val));
             end;
          when others =>
@@ -1123,6 +1130,7 @@ package body Synth.Expr is
 
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
+                                 En : Net;
                                  Pfx_Type : Type_Acc;
                                  Voff : out Net;
                                  Off : out Value_Offsets)
@@ -1150,7 +1158,7 @@ package body Synth.Expr is
          end loop;
 
          --  Use the base type as the subtype of the index is not synth-ed.
-         Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
+         Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr, En);
          Strip_Const (Idx_Val);
 
          Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (I + 1));
@@ -1393,6 +1401,7 @@ package body Synth.Expr is
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
+                                 En : Net;
                                  Pfx_Bnd : Bound_Type;
                                  El_Typ : Type_Acc;
                                  Res_Bnd : out Bound_Type;
@@ -1411,9 +1420,9 @@ package body Synth.Expr is
       case Get_Kind (Expr) is
          when Iir_Kind_Range_Expression =>
             Left := Synth_Expression_With_Basetype
-              (Syn_Inst, Get_Left_Limit (Expr));
+              (Syn_Inst, Get_Left_Limit (Expr), En);
             Right := Synth_Expression_With_Basetype
-              (Syn_Inst, Get_Right_Limit (Expr));
+              (Syn_Inst, Get_Right_Limit (Expr), En);
             Dir := Get_Direction (Expr);
          when Iir_Kind_Range_Array_Attribute =>
             declare
@@ -1595,15 +1604,15 @@ package body Synth.Expr is
       return No_Net;
    end Synth_Clock_Edge;
 
-   function Synth_Type_Conversion (Syn_Inst : Synth_Instance_Acc; Conv : Node)
-                                  return Valtyp
+   function Synth_Type_Conversion
+     (Syn_Inst : Synth_Instance_Acc; Conv : Node; En : Net) return Valtyp
    is
       Expr : constant Node := Get_Expression (Conv);
       Conv_Type : constant Node := Get_Type (Conv);
       Conv_Typ : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Conv_Type);
       Val : Valtyp;
    begin
-      Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
+      Val := Synth_Expression_With_Basetype (Syn_Inst, Expr, En);
       if Val = No_Valtyp then
          return No_Valtyp;
       end if;
@@ -1738,7 +1747,8 @@ package body Synth.Expr is
                                  Left_Expr : Node;
                                  Right_Expr : Node;
                                  Typ : Type_Acc;
-                                 Expr : Node) return Valtyp
+                                 Expr : Node;
+                                 En : Net) return Valtyp
    is
       Left : Valtyp;
       Right : Valtyp;
@@ -1753,7 +1763,7 @@ package body Synth.Expr is
             Val := 1;
       end case;
 
-      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Typ);
+      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Typ, En);
       if Left = No_Valtyp then
          return No_Valtyp;
       end if;
@@ -1764,7 +1774,7 @@ package body Synth.Expr is
       end if;
 
       Strip_Const (Left);
-      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Typ);
+      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Typ, En);
       if Right = No_Valtyp then
          return No_Valtyp;
       end if;
@@ -1782,9 +1792,10 @@ package body Synth.Expr is
       return Create_Value_Net (N, Boolean_Type);
    end Synth_Short_Circuit;
 
-   function Synth_Expression_With_Type
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node; Expr_Type : Type_Acc)
-     return Valtyp is
+   function Synth_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
+                                        Expr : Node;
+                                        Expr_Type : Type_Acc;
+                                        En : Net) return Valtyp is
    begin
       case Get_Kind (Expr) is
          when Iir_Kinds_Dyadic_Operator =>
@@ -1808,27 +1819,27 @@ package body Synth.Expr is
                   when Iir_Predefined_Boolean_And =>
                      return Synth_Short_Circuit
                        (Syn_Inst, Id_And, Get_Left (Expr), Get_Right (Expr),
-                        Boolean_Type, Expr);
+                        Boolean_Type, Expr, En);
                   when Iir_Predefined_Boolean_Or =>
                      return Synth_Short_Circuit
                        (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
-                        Boolean_Type, Expr);
+                        Boolean_Type, Expr, En);
                   when Iir_Predefined_Bit_And =>
                      return Synth_Short_Circuit
                        (Syn_Inst, Id_And, Get_Left (Expr), Get_Right (Expr),
-                        Bit_Type, Expr);
+                        Bit_Type, Expr, En);
                   when Iir_Predefined_Bit_Or =>
                      return Synth_Short_Circuit
                        (Syn_Inst, Id_Or, Get_Left (Expr), Get_Right (Expr),
-                        Bit_Type, Expr);
+                        Bit_Type, Expr, En);
                   when Iir_Predefined_None =>
                      Error_Ieee_Operator (Imp, Expr);
                      return Synth_User_Operator
-                       (Syn_Inst, Get_Left (Expr), Get_Right (Expr), Expr);
+                       (Syn_Inst, Get_Left (Expr), Get_Right (Expr), Expr, En);
                   when others =>
                      return Synth_Dyadic_Operation
                        (Syn_Inst, Imp,
-                        Get_Left (Expr), Get_Right (Expr), Expr);
+                        Get_Left (Expr), Get_Right (Expr), Expr, En);
                end case;
             end;
          when Iir_Kinds_Monadic_Operator =>
@@ -1840,10 +1851,10 @@ package body Synth.Expr is
                if Def = Iir_Predefined_None then
                   Error_Ieee_Operator (Imp, Expr);
                   return Synth_User_Operator
-                    (Syn_Inst, Get_Operand (Expr), Null_Node, Expr);
+                    (Syn_Inst, Get_Operand (Expr), Null_Node, Expr, En);
                else
                   return Synth_Monadic_Operation
-                    (Syn_Inst, Imp, Get_Operand (Expr), Expr);
+                    (Syn_Inst, Imp, Get_Operand (Expr), Expr, En);
                end if;
             end;
          when Iir_Kind_Simple_Name
@@ -1856,10 +1867,10 @@ package body Synth.Expr is
          when Iir_Kind_Reference_Name =>
             --  Only used for anonymous signals in internal association.
             return Synth_Expression_With_Type
-              (Syn_Inst, Get_Named_Entity (Expr), Expr_Type);
+              (Syn_Inst, Get_Named_Entity (Expr), Expr_Type, En);
          when Iir_Kind_Anonymous_Signal_Declaration =>
             return Synth_Expression_With_Type
-              (Syn_Inst, Get_Expression (Expr), Expr_Type);
+              (Syn_Inst, Get_Expression (Expr), Expr_Type, En);
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
             declare
@@ -1870,7 +1881,8 @@ package body Synth.Expr is
 
                Dyn : Dyn_Name;
             begin
-               Synth_Assignment_Prefix (Syn_Inst, Expr, Base, Typ, Off, Dyn);
+               Synth_Assignment_Prefix
+                 (Syn_Inst, Expr, En, Base, Typ, Off, Dyn);
                if Dyn.Voff = No_Net and then Is_Static (Base.Val) then
                   Res := Create_Value_Memory (Typ);
                   Copy_Memory
@@ -1890,7 +1902,7 @@ package body Synth.Expr is
                Val : Valtyp;
                Res : Valtyp;
             begin
-               Val := Synth_Expression (Syn_Inst, Pfx);
+               Val := Synth_Expression (Syn_Inst, Pfx, En);
                Strip_Const (Val);
                Res_Typ := Val.Typ.Rec.E (Idx + 1).Typ;
                if Is_Static (Val.Val) then
@@ -1909,7 +1921,7 @@ package body Synth.Expr is
             end;
          when Iir_Kind_Character_Literal =>
             return Synth_Expression_With_Type
-              (Syn_Inst, Get_Named_Entity (Expr), Expr_Type);
+              (Syn_Inst, Get_Named_Entity (Expr), Expr_Type, No_Net);
          when Iir_Kind_Integer_Literal =>
             declare
                Res : Valtyp;
@@ -1929,31 +1941,33 @@ package body Synth.Expr is
          when Iir_Kind_Enumeration_Literal =>
             return Synth_Name (Syn_Inst, Expr);
          when Iir_Kind_Type_Conversion =>
-            return Synth_Type_Conversion (Syn_Inst, Expr);
+            return Synth_Type_Conversion (Syn_Inst, Expr, En);
          when Iir_Kind_Qualified_Expression =>
             return Synth_Expression_With_Type
               (Syn_Inst, Get_Expression (Expr),
-               Get_Subtype_Object (Syn_Inst, Get_Type (Get_Type_Mark (Expr))));
+               Get_Subtype_Object (Syn_Inst, Get_Type (Get_Type_Mark (Expr))),
+               En);
          when Iir_Kind_Function_Call =>
             declare
                Imp : constant Node := Get_Implementation (Expr);
             begin
                case Get_Implicit_Definition (Imp) is
                   when Iir_Predefined_Pure_Functions =>
-                     return Synth_Operator_Function_Call (Syn_Inst, Expr);
+                     return Synth_Operator_Function_Call (Syn_Inst, Expr, En);
                   when Iir_Predefined_None =>
-                     return Synth_User_Function_Call (Syn_Inst, Expr);
+                     return Synth_User_Function_Call (Syn_Inst, Expr, En);
                   when others =>
-                     return Synth_Predefined_Function_Call (Syn_Inst, Expr);
+                     return Synth_Predefined_Function_Call
+                       (Syn_Inst, Expr, En);
                end case;
             end;
          when Iir_Kind_Aggregate =>
-            return Synth.Aggr.Synth_Aggregate (Syn_Inst, Expr, Expr_Type);
+            return Synth.Aggr.Synth_Aggregate (Syn_Inst, Expr, En, Expr_Type);
          when Iir_Kind_Simple_Aggregate =>
             return Synth_Simple_Aggregate (Syn_Inst, Expr);
          when Iir_Kind_Parenthesis_Expression =>
             return Synth_Expression_With_Type
-              (Syn_Inst, Get_Expression (Expr), Expr_Type);
+              (Syn_Inst, Get_Expression (Expr), Expr_Type, En);
          when Iir_Kind_Left_Array_Attribute =>
             declare
                B : Bound_Type;
@@ -2010,7 +2024,7 @@ package body Synth.Expr is
                V : Valtyp;
                Dtype : Type_Acc;
             begin
-               V := Synth_Expression (Syn_Inst, Param);
+               V := Synth_Expression (Syn_Inst, Param, En);
                Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                --  FIXME: to be generalized.  Not always as simple as a
                --  subtype conversion.
@@ -2031,6 +2045,7 @@ package body Synth.Expr is
                T : Type_Acc;
                Acc : Heap_Index;
             begin
+               pragma Assert (En = No_Net);
                T := Synth.Decls.Synth_Subtype_Indication
                  (Syn_Inst, Get_Subtype_Indication (Expr));
                Acc := Allocate_By_Type (T);
@@ -2041,8 +2056,9 @@ package body Synth.Expr is
                V : Valtyp;
                Acc : Heap_Index;
             begin
+               pragma Assert (En = No_Net);
                V := Synth_Expression_With_Type
-                 (Syn_Inst, Get_Expression (Expr), Expr_Type.Acc_Acc);
+                 (Syn_Inst, Get_Expression (Expr), Expr_Type.Acc_Acc, No_Net);
                Acc := Allocate_By_Value (V);
                return Create_Value_Access (Acc, Expr_Type);
             end;
@@ -2057,8 +2073,8 @@ package body Synth.Expr is
       end case;
    end Synth_Expression_With_Type;
 
-   function Synth_Expression (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                             return Valtyp
+   function Synth_Expression
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp
    is
       Etype : Node;
    begin
@@ -2078,16 +2094,16 @@ package body Synth.Expr is
       end case;
 
       return Synth_Expression_With_Type
-        (Syn_Inst, Expr, Get_Subtype_Object (Syn_Inst, Etype));
+        (Syn_Inst, Expr, Get_Subtype_Object (Syn_Inst, Etype), En);
    end Synth_Expression;
 
    function Synth_Expression_With_Basetype
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp
    is
       Basetype : Type_Acc;
    begin
       Basetype := Get_Subtype_Object
         (Syn_Inst, Get_Base_Type (Get_Type (Expr)));
-      return Synth_Expression_With_Type (Syn_Inst, Expr, Basetype);
+      return Synth_Expression_With_Type (Syn_Inst, Expr, Basetype, En);
    end Synth_Expression_With_Basetype;
 end Synth.Expr;

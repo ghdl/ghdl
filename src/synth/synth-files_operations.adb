@@ -28,6 +28,8 @@ with Grt.Stdio;
 
 with Vhdl.Annotations;
 
+with Netlists; use Netlists;
+
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Expr; use Synth.Expr;
 with Synth.Errors; use Synth.Errors;
@@ -214,10 +216,11 @@ package body Synth.Files_Operations is
          return F;
       end if;
 
-      File_Name := Synth_Expression_With_Basetype (Syn_Inst, External_Name);
+      File_Name := Synth_Expression_With_Basetype
+        (Syn_Inst, External_Name, No_Net);
 
       if Open_Kind /= Null_Node then
-         Mode := Synth_Expression (Syn_Inst, Open_Kind);
+         Mode := Synth_Expression (Syn_Inst, Open_Kind, No_Net);
          File_Mode := Ghdl_I32 (Read_Discrete (Mode));
       else
          case Get_Mode (Decl) is

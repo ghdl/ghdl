@@ -18,14 +18,18 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Vhdl.Nodes; use Vhdl.Nodes;
+
+with Netlists; use Netlists;
+
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
-with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Aggr is
    --  Aggr_Type is the type from the context.
    function Synth_Aggregate (Syn_Inst : Synth_Instance_Acc;
                              Aggr : Node;
+                             En : Net;
                              Aggr_Type : Type_Acc) return Valtyp;
 end Synth.Aggr;

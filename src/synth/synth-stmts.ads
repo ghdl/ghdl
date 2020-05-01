@@ -32,7 +32,8 @@ package Synth.Stmts is
    procedure Synth_Subprogram_Association (Subprg_Inst : Synth_Instance_Acc;
                                            Caller_Inst : Synth_Instance_Acc;
                                            Inter_Chain : Node;
-                                           Assoc_Chain : Node);
+                                           Assoc_Chain : Node;
+                                           En : Net);
 
    --  Dynamic index for Synth_Assignment_Prefix.
    --  As dynamic is about dynamic (!) index, the index is a net.
@@ -58,6 +59,7 @@ package Synth.Stmts is
    --  DEST_DYN is set (Voff field set) when there is a non-static index.
    procedure Synth_Assignment_Prefix (Syn_Inst : Synth_Instance_Acc;
                                       Pfx : Node;
+                                      En : Net;
                                       Dest_Base : out Valtyp;
                                       Dest_Typ : out Type_Acc;
                                       Dest_Off : out Value_Offsets;
@@ -66,7 +68,8 @@ package Synth.Stmts is
    procedure Synth_Assignment (Syn_Inst : Synth_Instance_Acc;
                                Target : Node;
                                Val : Valtyp;
-                               Loc : Node);
+                               Loc : Node;
+                               En : Net);
 
    function Synth_Read_Memory (Syn_Inst : Synth_Instance_Acc;
                                Obj : Valtyp;
@@ -76,13 +79,14 @@ package Synth.Stmts is
                                Loc : Node) return Valtyp;
 
    function Synth_User_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp;
 
    --  Operation implemented by a user function.
    function Synth_User_Operator (Syn_Inst : Synth_Instance_Acc;
                                  Left_Expr : Node;
                                  Right_Expr : Node;
-                                 Expr : Node) return Valtyp;
+                                 Expr : Node;
+                                 En : Net) return Valtyp;
 
    --  Generate netlists for concurrent statements STMTS.
    procedure Synth_Concurrent_Statements
