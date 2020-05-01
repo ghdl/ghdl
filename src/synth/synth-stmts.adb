@@ -2155,6 +2155,7 @@ package body Synth.Stmts is
    procedure Synth_Dynamic_Exit_Next_Statement
      (C : in out Seq_Context; Stmt : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Cond : constant Node := Get_Condition (Stmt);
       Is_Exit : constant Boolean := Get_Kind (Stmt) = Iir_Kind_Exit_Statement;
       Static_Cond : Boolean;
@@ -2179,7 +2180,7 @@ package body Synth.Stmts is
       end if;
 
       --  Execution is suspended for the current loop.
-      Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+      Phi_Assign_Net (Ctxt, C.W_En, Get_Inst_Bit0 (C.Inst), 0);
 
       Lc := C.Cur_Loop;
 
@@ -2197,13 +2198,11 @@ package body Synth.Stmts is
          if Lc.Loop_Stmt = Loop_Label then
             --  Final loop.
             if Is_Exit then
-               Phi_Assign_Net (Get_Build (C.Inst),
-                               Lc.W_Exit, Get_Inst_Bit0 (C.Inst), 0);
+               Phi_Assign_Net (Ctxt, Lc.W_Exit, Get_Inst_Bit0 (C.Inst), 0);
             end if;
             exit;
          else
-            Phi_Assign_Net (Get_Build (C.Inst),
-                            Lc.W_Quit, Get_Inst_Bit0 (C.Inst), 0);
+            Phi_Assign_Net (Ctxt, Lc.W_Quit, Get_Inst_Bit0 (C.Inst), 0);
          end if;
          Lc := Lc.Prev_Loop;
       end loop;
@@ -2215,8 +2214,7 @@ package body Synth.Stmts is
          Push_Phi;
          Pop_Phi (Phi_False);
 
-         Merge_Phis (Build_Context,
-                     Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
+         Merge_Phis (Ctxt, Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
       end if;
    end Synth_Dynamic_Exit_Next_Statement;
 
@@ -2518,8 +2516,7 @@ package body Synth.Stmts is
       C.Nbr_Ret := C.Nbr_Ret + 1;
    end Synth_Return_Statement;
 
-   procedure Synth_Static_Report
-     (C : in out Seq_Context; Stmt : Node)
+   procedure Synth_Static_Report (C : Seq_Context; Stmt : Node)
    is
       use Simple_IO;
 
@@ -2582,14 +2579,12 @@ package body Synth.Stmts is
       Put_Line_Err (Value_To_String (Rep));
    end Synth_Static_Report;
 
-   procedure Synth_Static_Report_Statement
-     (C : in out Seq_Context; Stmt : Node) is
+   procedure Synth_Static_Report_Statement (C : Seq_Context; Stmt : Node) is
    begin
       Synth_Static_Report (C, Stmt);
    end Synth_Static_Report_Statement;
 
-   procedure Synth_Static_Assertion_Statement
-     (C : in out Seq_Context; Stmt : Node)
+   procedure Synth_Static_Assertion_Statement (C : Seq_Context; Stmt : Node)
    is
       Cond : Valtyp;
    begin
