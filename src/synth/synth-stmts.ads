@@ -152,7 +152,7 @@ private
 
       case Mode is
          when Mode_Dynamic =>
-            --  Enable execution.
+            --  Enable execution.  For loop controls.
             W_En : Wire_Id;
 
             W_Ret : Wire_Id;

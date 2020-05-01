@@ -53,7 +53,7 @@ with Synth.Debugger;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
-with Netlists.Gates;
+with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
 with Netlists.Butils; use Netlists.Butils;
@@ -2077,7 +2077,7 @@ package body Synth.Stmts is
       elsif R = B1 then
          return L;
       else
-         Res := Build_Dyadic (Get_Build (C.Inst), Netlists.Gates.Id_And, L, R);
+         Res := Build_Dyadic (Get_Build (C.Inst), Id_And, L, R);
          Set_Location (Res, C.Cur_Loop.Loop_Stmt);
          return Res;
       end if;
@@ -2930,7 +2930,7 @@ package body Synth.Stmts is
          when N_Not_Bool =>
             pragma Assert (Loc /= No_Location);
             Res := Build_Monadic
-              (Ctxt, Netlists.Gates.Id_Not,
+              (Ctxt, Id_Not,
                Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr)));
          when N_And_Bool =>
             pragma Assert (Loc /= No_Location);
@@ -2951,7 +2951,7 @@ package body Synth.Stmts is
                   --  It is never EOS!
                   Res := Build_Const_UB32 (Build_Context, 0, 1);
                else
-                  Res := Build_Dyadic (Ctxt, Netlists.Gates.Id_And,
+                  Res := Build_Dyadic (Ctxt, Id_And,
                                        Synth_PSL_Expression (Syn_Inst, L),
                                        Synth_PSL_Expression (Syn_Inst, R));
                end if;
@@ -2959,7 +2959,7 @@ package body Synth.Stmts is
          when N_Or_Bool =>
             pragma Assert (Loc /= No_Location);
             Res := Build_Dyadic
-              (Build_Context, Netlists.Gates.Id_Or,
+              (Build_Context, Id_Or,
                Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
                Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
          when N_True =>
@@ -3006,7 +3006,7 @@ package body Synth.Stmts is
          while E /= No_Edge loop
             --  Edge condition.
             Cond := Build_Dyadic
-              (Ctxt, Netlists.Gates.Id_And,
+              (Ctxt, Id_And,
                I, Synth_PSL_Expression (Syn_Inst, Get_Edge_Expr (E)));
             Set_Location (Cond, Loc);
 
@@ -3015,8 +3015,7 @@ package body Synth.Stmts is
             --  Reverse order for final concatenation.
             D_Num := Nbr_States - 1 - Get_State_Label (Get_Edge_Dest (E));
             if D_Arr (D_Num) /= No_Net then
-               Cond := Build_Dyadic
-                 (Ctxt, Netlists.Gates.Id_Or, D_Arr (D_Num), Cond);
+               Cond := Build_Dyadic (Ctxt, Id_Or, D_Arr (D_Num), Cond);
                Set_Location (Cond, Loc);
             end if;
             D_Arr (D_Num) := Cond;
@@ -3041,7 +3040,6 @@ package body Synth.Stmts is
                             Stmt : Node;
                             Next_States : out Net)
    is
-      use Netlists.Gates;
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
       States : Net;
       Init : Net;
@@ -3093,9 +3091,8 @@ package body Synth.Stmts is
    is
       Res : Net;
    begin
-      Res := Build_Monadic
-        (Get_Build (Syn_Inst), Netlists.Gates.Id_Not,
-         Synth_Psl_Final (Syn_Inst, Stmt, Next_States));
+      Res := Build_Monadic (Get_Build (Syn_Inst), Id_Not,
+                            Synth_Psl_Final (Syn_Inst, Stmt, Next_States));
       Set_Location (Res, Stmt);
       return Res;
    end Synth_Psl_Not_Final;
@@ -3113,8 +3110,7 @@ package body Synth.Stmts is
       Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
       if Next_States /= No_Net then
          --  The restriction holds as long as there is a 1 in the NFA state.
-         Res := Build_Reduce (Build_Context,
-                              Netlists.Gates.Id_Red_Or, Next_States);
+         Res := Build_Reduce (Build_Context, Id_Red_Or, Next_States);
          Set_Location (Res, Stmt);
          Inst := Build_Assume (Build_Context, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
@@ -3395,7 +3391,7 @@ package body Synth.Stmts is
    --  For allconst/allseq/...
    procedure Synth_Attribute_Formal (Syn_Inst : Synth_Instance_Acc;
                                      Val : Node;
-                                     Id : Netlists.Gates.Formal_Module_Id)
+                                     Id : Formal_Module_Id)
    is
       Spec : constant Node := Get_Attribute_Specification (Val);
       Sig : constant Node := Get_Designated_Entity (Val);
@@ -3446,7 +3442,6 @@ package body Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Unit : Node)
    is
       use Std_Names;
-      use Netlists.Gates;
 
       Val : Node;
       Spec : Node;
