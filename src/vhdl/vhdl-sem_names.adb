@@ -168,7 +168,8 @@ package body Vhdl.Sem_Names is
               | Iir_Kind_Function_Call
               | Iir_Kind_Indexed_Name
               | Iir_Kind_Slice_Name
-              | Iir_Kind_Selected_Element =>
+              | Iir_Kind_Selected_Element
+              | Iir_Kind_Dereference =>
                Add_Element (Res_List, Get_Type (Decl));
             when others =>
                Error_Kind ("create_list_of_types", Decl);
