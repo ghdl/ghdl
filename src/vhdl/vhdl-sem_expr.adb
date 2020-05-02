@@ -5120,16 +5120,21 @@ package body Vhdl.Sem_Expr is
          return;
       end if;
 
-      --  Use the base type; EXPR may define its own subtype (like in
-      --  qualified expression with forwarding) which must not be referenced
-      --  above it.  In any case, that also makes sense: we need to deal with
-      --  types, not with subtypes.
-      Expr_Type := Get_Base_Type (Get_Type (Expr));
+      Expr_Type := Get_Type (Expr);
       if Is_Error (Expr_Type) then
          return;
       end if;
 
-      pragma Assert (Expr_Type /= Null_Iir);
+      if not Is_Overload_List (Expr_Type) then
+         --  Use the base type; EXPR may define its own subtype (like in
+         --  qualified expression with forwarding) which must not be
+         --  referenced before it is defined (so by a parent).  In any case,
+         --  that also makes sense: we need to deal with types, not with
+         --  subtypes.
+         Expr_Type := Get_Base_Type (Expr_Type);
+         pragma Assert (Expr_Type /= Null_Iir);
+      end if;
+
       Result_Type := Compatible_Types_Intersect (Atype, Expr_Type);
       if Atype /= Null_Iir and then Is_Overload_List (Atype) then
          Free_Overload_List (Atype);
