@@ -110,7 +110,6 @@ package Synth.Values is
    function Is_Static_Val (Val : Value_Acc) return Boolean;
 
    function Is_Equal (L, R : Valtyp) return Boolean;
-   function Is_Equal (L, R : Memtyp) return Boolean;
 
    function Create_Value_Memtyp (Mt : Memtyp) return Valtyp;
 

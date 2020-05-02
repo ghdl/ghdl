@@ -20,6 +20,7 @@
 
 with Ada.Unchecked_Deallocation;
 
+with Grt.Types; use Grt.Types;
 with Grt.Algos;
 with Areapools;
 with Name_Table;
@@ -1725,6 +1726,7 @@ package body Synth.Stmts is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Res : Valtyp;
       C : Seq_Context (Mode_Dynamic);
       Wire_Mark : Wire_Id;
@@ -1760,20 +1762,20 @@ package body Synth.Stmts is
          Set_Wire_Gate (C.W_Val,
                         Build_Control_Signal (Sub_Inst, C.Ret_Typ.W, Imp));
          C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
-         Phi_Assign_Net (Build_Context, C.W_Val, C.Ret_Init, 0);
+         Phi_Assign_Net (Ctxt, C.W_Val, C.Ret_Init, 0);
       end if;
 
       Set_Wire_Gate
         (C.W_En, Build_Control_Signal (Sub_Inst, 1, Imp));
       if En = No_Net then
-         Phi_Assign_Net (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+         Phi_Assign_Static (C.W_En, Bit1);
       else
-         Phi_Assign_Net (Build_Context, C.W_En, En, 0);
+         Phi_Assign_Net (Ctxt, C.W_En, En, 0);
       end if;
 
       Set_Wire_Gate
         (C.W_Ret, Build_Control_Signal (Sub_Inst, 1, Imp));
-      Phi_Assign_Net (Build_Context, C.W_Ret, Get_Inst_Bit1 (Syn_Inst), 0);
+      Phi_Assign_Static (C.W_Ret, Bit1);
 
       Decls.Synth_Declarations (C.Inst, Get_Declaration_Chain (Bod), En, True);
       if not Is_Error (C.Inst) then
@@ -1790,7 +1792,7 @@ package body Synth.Stmts is
                Res := C.Ret_Value;
             else
                Res := Create_Value_Net
-                 (Get_Current_Value (Build_Context, C.W_Val), C.Ret_Value.Typ);
+                 (Get_Current_Value (Ctxt, C.W_Val), C.Ret_Value.Typ);
             end if;
          else
             Res := No_Valtyp;
@@ -1809,7 +1811,7 @@ package body Synth.Stmts is
       --  But assignment for outer wires (passed through parameters) have
       --  to be kept.  We cannot merge phi because this won't be allowed for
       --  local wires.
-      Propagate_Phi_Until_Mark (Get_Build (C.Inst), Subprg_Phi, Wire_Mark);
+      Propagate_Phi_Until_Mark (Ctxt, Subprg_Phi, Wire_Mark);
 
       --  Free wires.
       Free_Wire (C.W_En);
@@ -2038,49 +2040,88 @@ package body Synth.Stmts is
       Write_Discrete (V, T);
    end Update_Index;
 
+   --  Return True iff WID is a static wire and its value is 0.
+   function Is_Static_Bit (Wid : Wire_Id; V : Ghdl_U8) return Boolean
+   is
+      M : Memtyp;
+   begin
+      if not Is_Static_Wire (Wid) then
+         return False;
+      end if;
+      M := Get_Static_Wire (Wid);
+      return Read_U8 (M) = V;
+   end Is_Static_Bit;
+
+   function Is_Static_Bit0 (Wid : Wire_Id) return Boolean is
+   begin
+      return Is_Static_Bit (Wid, 0);
+   end Is_Static_Bit0;
+
+   function Is_Static_Bit1 (Wid : Wire_Id) return Boolean is
+   begin
+      return Is_Static_Bit (Wid, 1);
+   end Is_Static_Bit1;
+
+   pragma Inline (Is_Static_Bit0);
+   pragma Inline (Is_Static_Bit1);
+
    procedure Loop_Control_Init (C : Seq_Context; Stmt : Node)
    is
       Lc : constant Loop_Context_Acc := C.Cur_Loop;
-
    begin
+      --  We might create new wires that will be destroy at the end of the
+      --  loop.  Use mark and sweep to control their lifetime.
       Mark (C.Cur_Loop.Wire_Mark);
 
-      if (Lc.Prev_Loop /= null and then Lc.Prev_Loop.Need_Quit) then
+      if Lc.Prev_Loop /= null and then Lc.Prev_Loop.Need_Quit then
+         --  An exit or next statement that targets an outer loop may suspend
+         --  the execution of this loop.
          Lc.W_Quit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
          Set_Wire_Gate (Lc.W_Quit, Build_Control_Signal (C.Inst, 1, Stmt));
-         Phi_Assign_Net (Get_Build (C.Inst),
-                         Lc.W_Quit, Get_Inst_Bit1 (C.Inst), 0);
+         Phi_Assign_Static (Lc.W_Quit, Bit1);
       end if;
 
       if Get_Exit_Flag (Stmt) or else Get_Next_Flag (Stmt) then
-         Lc.Saved_En := Get_Current_Value (null, C.W_En);
+         --  There is an exit or next statement that target this loop.
+         --  We need to save W_En, as if the execution is suspended due to
+         --  exit or next, it will resume at the end of the loop.
+         if Is_Static_Wire (C.W_En) then
+            pragma Assert (Is_Static_Bit1 (C.W_En));
+            Lc.Saved_En := No_Net;
+         else
+            Lc.Saved_En := Get_Current_Value (null, C.W_En);
+         end if;
+         --  Subloops may be suspended if there is an exit or a next statement
+         --  for this loop within subloops.
          Lc.Need_Quit := True;
       end if;
 
       if Get_Exit_Flag (Stmt) then
-         --  Exit statement for this loop.
+         --  There is an exit statement for this loop.  Create the wire.
          Lc.W_Exit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
          Set_Wire_Gate (Lc.W_Exit, Build_Control_Signal (C.Inst, 1, Stmt));
-         Phi_Assign_Net (Get_Build (C.Inst),
-                         Lc.W_Exit, Get_Inst_Bit1 (C.Inst), 0);
+         Phi_Assign_Static (Lc.W_Exit, Bit1);
       end if;
    end Loop_Control_Init;
 
-   function Loop_Control_And (C : Seq_Context; L, R : Net) return Net
+   function Loop_Control_And (C : Seq_Context; L : Net; R : Wire_Id) return Net
    is
-      B1 : constant Net := Get_Inst_Bit1 (C.Inst);
       Res : Net;
    begin
-      --  Optimize common cases.
-      if L = B1 then
-         return R;
-      elsif R = B1 then
+      if R = No_Wire_Id or else Is_Static_Bit1 (R) then
          return L;
-      else
-         Res := Build_Dyadic (Get_Build (C.Inst), Id_And, L, R);
-         Set_Location (Res, C.Cur_Loop.Loop_Stmt);
-         return Res;
       end if;
+
+      pragma Assert (not Is_Static_Bit0 (R));
+
+      --  Optimize common cases.
+      Res := Get_Current_Value (null, R);
+
+      if L /= No_Net then
+         Res := Build_Dyadic (Get_Build (C.Inst), Id_And, L, Res);
+         Set_Location (Res, C.Cur_Loop.Loop_Stmt);
+      end if;
+      return Res;
    end Loop_Control_And;
 
    procedure Loop_Control_Update (C : Seq_Context)
@@ -2088,30 +2129,29 @@ package body Synth.Stmts is
       Lc : constant Loop_Context_Acc := C.Cur_Loop;
       Res : Net;
    begin
-      --  Execution continue iff:
-      --  1. Loop was enabled (Lc.Saved_En)
-      Res := Lc.Saved_En;
-      if Res = No_Net then
-         --  No loop control.
+      if not Lc.Need_Quit then
+         --  No next/exit statement for this loop.  So no control.
          return;
       end if;
 
+      --  Execution continue iff:
+      --  1. Loop was enabled (Lc.Saved_En)
+      Res := Lc.Saved_En;
+
       --  2. No return (C.W_Ret)
-      if C.W_Ret /= No_Wire_Id then
-         Res := Loop_Control_And (C, Res, Get_Current_Value (null, C.W_Ret));
-      end if;
+      Res := Loop_Control_And (C, Res, C.W_Ret);
 
       --  3. No exit.
-      if Lc.W_Exit /= No_Wire_Id then
-         Res := Loop_Control_And (C, Res, Get_Current_Value (null, Lc.W_Exit));
-      end if;
+      Res := Loop_Control_And (C, Res, Lc.W_Exit);
 
       --  4. No quit.
-      if Lc.W_Quit /= No_Wire_Id then
-         Res := Loop_Control_And (C, Res, Get_Current_Value (null, Lc.W_Quit));
-      end if;
+      Res := Loop_Control_And (C, Res, Lc.W_Quit);
 
-      Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Res, 0);
+      if Res /= No_Net then
+         Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Res, 0);
+      else
+         Phi_Assign_Static (C.W_En, Bit1);
+      end if;
    end Loop_Control_Update;
 
    procedure Loop_Control_Finish (C : Seq_Context)
@@ -2119,23 +2159,20 @@ package body Synth.Stmts is
       Lc : constant Loop_Context_Acc := C.Cur_Loop;
       Res : Net;
    begin
-      --  Execute continue iff:
-      --  1. Loop was enabled (Lc.Saved_En)
-      Res := Lc.Saved_En;
-      if Res = No_Net then
-         --  No loop control.
+      if not Lc.Need_Quit then
+         --  No next/exit statement for this loop.  So no control.
          return;
       end if;
 
+      --  Execution continue after this loop iff:
+      --  1. Loop was enabled (Lc.Saved_En)
+      Res := Lc.Saved_En;
+
       --  2. No return (C.W_Ret)
-      if C.W_Ret /= No_Wire_Id then
-         Res := Loop_Control_And (C, Res, Get_Current_Value (null, C.W_Ret));
-      end if;
+      Res := Loop_Control_And (C, Res, C.W_Ret);
 
       --  3. No quit (C.W_Quit)
-      if Lc.W_Quit /= No_Wire_Id then
-         Res := Loop_Control_And (C, Res, Get_Current_Value (null, Lc.W_Quit));
-      end if;
+      Res := Loop_Control_And (C, Res, Lc.W_Quit);
 
       Phi_Discard_Wires (Lc.W_Quit, Lc.W_Exit);
 
@@ -2149,7 +2186,11 @@ package body Synth.Stmts is
 
       Release (C.Cur_Loop.Wire_Mark);
 
-      Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Res, 0);
+      if Res /= No_Net then
+         Phi_Assign_Net (Get_Build (C.Inst), C.W_En, Res, 0);
+      else
+         Phi_Assign_Static (C.W_En, Bit1);
+      end if;
    end Loop_Control_Finish;
 
    procedure Synth_Dynamic_Exit_Next_Statement
@@ -2180,7 +2221,7 @@ package body Synth.Stmts is
       end if;
 
       --  Execution is suspended for the current loop.
-      Phi_Assign_Net (Ctxt, C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+      Phi_Assign_Static (C.W_En, Bit0);
 
       Lc := C.Cur_Loop;
 
@@ -2198,11 +2239,11 @@ package body Synth.Stmts is
          if Lc.Loop_Stmt = Loop_Label then
             --  Final loop.
             if Is_Exit then
-               Phi_Assign_Net (Ctxt, Lc.W_Exit, Get_Inst_Bit0 (C.Inst), 0);
+               Phi_Assign_Static (Lc.W_Exit, Bit0);
             end if;
             exit;
          else
-            Phi_Assign_Net (Ctxt, Lc.W_Quit, Get_Inst_Bit0 (C.Inst), 0);
+            Phi_Assign_Static (Lc.W_Quit, Bit0);
          end if;
          Lc := Lc.Prev_Loop;
       end loop;
@@ -2323,7 +2364,7 @@ package body Synth.Stmts is
          Loop_Control_Update (C);
 
          --  Constant exit.
-         exit when (Get_Current_Value (null, C.W_En) = Get_Inst_Bit0 (C.Inst));
+         exit when Is_Static_Bit0 (C.W_En);
 
          --  FIXME: dynamic exits.
       end loop;
@@ -2367,7 +2408,6 @@ package body Synth.Stmts is
    procedure Synth_Dynamic_While_Loop_Statement
      (C : in out Seq_Context; Stmt : Node)
    is
-      Bit0 : constant Net := Get_Inst_Bit0 (C.Inst);
       Stmts : constant Node := Get_Sequential_Statement_Chain (Stmt);
       Cond : constant Node := Get_Condition (Stmt);
       Val : Valtyp;
@@ -2404,21 +2444,9 @@ package body Synth.Stmts is
          Loop_Control_Update (C);
 
          --  Exit from the loop if W_Exit/W_Ret/W_Quit = 0
-         if Lc.W_Exit /= No_Wire_Id
-           and then Get_Current_Value (null, Lc.W_Exit) = Bit0
-         then
-            exit;
-         end if;
-         if C.W_Ret /= No_Wire_Id
-           and then Get_Current_Value (null, C.W_Ret) = Bit0
-         then
-            exit;
-         end if;
-         if Lc.W_Quit /= No_Wire_Id
-           and then Get_Current_Value (null, Lc.W_Quit) = Bit0
-         then
-            exit;
-         end if;
+         exit when Lc.W_Exit /= No_Wire_Id and then Is_Static_Bit0 (Lc.W_Exit);
+         exit when C.W_Ret /= No_Wire_Id and then Is_Static_Bit0 (C.W_Ret);
+         exit when Lc.W_Quit /= No_Wire_Id and then Is_Static_Bit0 (Lc.W_Quit);
 
          Iter_Nbr := Iter_Nbr + 1;
          if Iter_Nbr > Flags.Flag_Max_Loop and Flags.Flag_Max_Loop /= 0 then
@@ -2504,12 +2532,10 @@ package body Synth.Stmts is
 
       if Is_Dyn then
          --  The subprogram has returned.  Do not execute further statements.
-         Phi_Assign_Net (Get_Build (C.Inst),
-                         C.W_En, Get_Inst_Bit0 (C.Inst), 0);
+         Phi_Assign_Static (C.W_En, Bit0);
 
          if C.W_Ret /= No_Wire_Id then
-            Phi_Assign_Net (Get_Build (C.Inst),
-                            C.W_Ret, Get_Inst_Bit0 (C.Inst), 0);
+            Phi_Assign_Static (C.W_Ret, Bit0);
          end if;
       end if;
 
@@ -2609,14 +2635,12 @@ package body Synth.Stmts is
       Stmt : Node;
       Phi_T, Phi_F : Phi_Type;
       Has_Phi : Boolean;
-      En : Net;
    begin
       Stmt := Stmts;
       while Is_Valid (Stmt) loop
          if Is_Dyn then
-            En := Get_Current_Value (null, C.W_En);
-            pragma Assert (En /= Get_Inst_Bit0 (C.Inst));
-            Has_Phi := En /= Get_Inst_Bit1 (C.Inst);
+            pragma Assert (not Is_Static_Bit0 (C.W_En));
+            Has_Phi := not Is_Static_Bit1 (C.W_En);
             if Has_Phi then
                Push_Phi;
             end if;
@@ -2698,7 +2722,8 @@ package body Synth.Stmts is
                            Get_Current_Value (Build_Context, C.W_En),
                            Phi_T, Phi_F, Stmt);
             end if;
-            if Get_Current_Value (null, C.W_En) = Get_Inst_Bit0 (C.Inst) then
+            if Is_Static_Bit0 (C.W_En) then
+               --  Not more execution.
                return;
             end if;
          else
@@ -2755,12 +2780,13 @@ package body Synth.Stmts is
       Label : constant Name_Id := Get_Identifier (Proc);
       Decls_Chain : constant Node := Get_Declaration_Chain (Proc);
       Prev_Instance_Pool : constant Areapool_Acc := Instance_Pool;
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       M : Areapools.Mark_Type;
       C_Sname : Sname;
       C : Seq_Context (Mode_Dynamic);
    begin
       if Label = Null_Identifier then
-         C_Sname := New_Internal_Name (Build_Context, Get_Sname (Syn_Inst));
+         C_Sname := New_Internal_Name (Ctxt, Get_Sname (Syn_Inst));
       else
          C_Sname := New_Sname_User (Label, Get_Sname (Syn_Inst));
       end if;
@@ -2784,7 +2810,7 @@ package body Synth.Stmts is
       end if;
 
       Set_Wire_Gate (C.W_En, Build_Control_Signal (Syn_Inst, 1, Proc));
-      Phi_Assign_Net (Build_Context, C.W_En, Get_Inst_Bit1 (Syn_Inst), 0);
+      Phi_Assign_Static (C.W_En, Bit1);
 
       case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
          when Iir_Kind_Sensitized_Process_Statement =>

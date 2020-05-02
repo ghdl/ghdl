@@ -89,25 +89,6 @@ package body Synth.Values is
       return (V.Typ, Strip_Alias_Const (V.Val));
    end Strip_Alias_Const;
 
-   function Is_Equal (L, R : Memtyp) return Boolean is
-   begin
-      if L = R then
-         return True;
-      end if;
-
-      if L.Typ.Sz /= R.Typ.Sz then
-         return False;
-      end if;
-
-      --  FIXME: not correct for records, not correct for floats!
-      for I in 1 .. L.Typ.Sz loop
-         if L.Mem (I - 1) /= R.Mem (I - 1) then
-            return False;
-         end if;
-      end loop;
-      return True;
-   end Is_Equal;
-
    function Is_Equal (L, R : Valtyp) return Boolean is
    begin
       return Is_Equal (Get_Memtyp (L), Get_Memtyp (R));

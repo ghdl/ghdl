@@ -661,14 +661,14 @@ package body Synth.Objtypes is
       return Read_Fp64 (Mt.Mem);
    end Read_Fp64;
 
+   function To_Address is new Ada.Unchecked_Conversion
+     (Memory_Ptr, System.Address);
+   function To_Memory_Ptr is new Ada.Unchecked_Conversion
+     (System.Address, Memory_Ptr);
+
    function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
    is
       use System.Storage_Elements;
-
-      function To_Address is new Ada.Unchecked_Conversion
-        (Memory_Ptr, System.Address);
-      function To_Memory_Ptr is new Ada.Unchecked_Conversion
-        (System.Address, Memory_Ptr);
    begin
       return To_Memory_Ptr (To_Address (Base) + Storage_Offset (Off));
    end "+";
@@ -758,11 +758,36 @@ package body Synth.Objtypes is
       return (Vtype, Res);
    end Create_Memory_Discrete;
 
+   function Is_Equal (L, R : Memtyp) return Boolean is
+   begin
+      if L = R then
+         return True;
+      end if;
+
+      if L.Typ.Sz /= R.Typ.Sz then
+         return False;
+      end if;
+
+      --  FIXME: not correct for records, not correct for floats!
+      for I in 1 .. L.Typ.Sz loop
+         if L.Mem (I - 1) /= R.Mem (I - 1) then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Is_Equal;
+
+   Bit0_Mem : constant Memory_Element := 0;
+   Bit1_Mem : constant Memory_Element := 1;
+
    procedure Init is
    begin
       Instance_Pool := Global_Pool'Access;
       Boolean_Type := Create_Bit_Type;
       Logic_Type := Create_Logic_Type;
       Bit_Type := Create_Bit_Type;
+
+      Bit0 := (Bit_Type, To_Memory_Ptr (Bit0_Mem'Address));
+      Bit1 := (Bit_Type, To_Memory_Ptr (Bit1_Mem'Address));
    end Init;
 end Synth.Objtypes;

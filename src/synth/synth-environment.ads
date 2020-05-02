@@ -281,6 +281,9 @@ private
       end case;
    end record;
 
+   No_Seq_Assign_Value : constant Seq_Assign_Value :=
+     (Is_Static => False, Asgns => No_Partial_Assign);
+
    type Seq_Assign_Record is record
       --  Target of the assignment.
       Id : Wire_Id;

@@ -281,10 +281,16 @@ package Synth.Objtypes is
 
    function Create_Memory (Vtype : Type_Acc) return Memtyp;
 
+   function Is_Equal (L, R : Memtyp) return Boolean;
+
    procedure Init;
 
    --  Set by Init.
    Boolean_Type : Type_Acc := null;
    Logic_Type : Type_Acc := null;
    Bit_Type : Type_Acc := null;
+
+   --  Also set by init.
+   Bit0 : Memtyp;
+   Bit1 : Memtyp;
 end Synth.Objtypes;

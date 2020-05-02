@@ -117,6 +117,7 @@ private
 
       case Mode is
          when Mode_Dynamic =>
+            --  Set when this loop has next/exit statements for itself.
             --  Set to true so that inner loops have to declare W_Quit.
             Need_Quit : Boolean;
 

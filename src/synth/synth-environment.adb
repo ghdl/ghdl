@@ -156,6 +156,11 @@ package body Synth.Environment is
       return Assign_Table.Table (Asgn).Val.Asgns;
    end Get_Assign_Partial;
 
+   function Get_Assign_Partial (Asgn : Seq_Assign) return Seq_Assign_Value is
+   begin
+      return Assign_Table.Table (Asgn).Val;
+   end Get_Assign_Partial;
+
    function New_Partial_Assign (Val : Net; Offset : Uns32)
                                return Partial_Assign is
    begin
@@ -198,8 +203,9 @@ package body Synth.Environment is
                           Nbr => 0));
    end Push_Phi;
 
+   --  Concatenate when possible partial assignments of HEAD.
    procedure Merge_Partial_Assignments
-     (Ctxt : Context_Acc; Head : Partial_Assign)
+     (Ctxt : Context_Acc; Head : Seq_Assign_Value)
    is
       use Netlists.Concats;
       First : Partial_Assign;
@@ -209,7 +215,11 @@ package body Synth.Environment is
       Next_Off : Uns32;
       Next_Val : Net;
    begin
-      First := Head;
+      if Head.Is_Static then
+         return;
+      end if;
+
+      First := Head.Asgns;
       loop
          exit when First = No_Partial_Assign;
 
@@ -1310,25 +1320,80 @@ package body Synth.Environment is
    end Merge_Assigns;
 
    --  Force the value of a Seq_Assign to be a net if needed, return it.
-   function Get_Assign_Partial_Force (Asgn : Seq_Assign) return Partial_Assign
+   function Get_Assign_Value_Force (Val : Seq_Assign_Value)
+                                   return Partial_Assign
    is
-      Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
       N : Net;
-      Res : Partial_Assign;
    begin
-      if Asgn_Rec.Val.Is_Static then
-         N := Synth.Context.Get_Memtyp_Net (Asgn_Rec.Val.Val);
-         Res := New_Partial_Assign (N, 0);
-         if False then
-            --  Overwrite ?
-            Asgn_Rec.Val := (Is_Static => False,
-                             Asgns => Res);
-         end if;
+      if Val.Is_Static then
+         N := Synth.Context.Get_Memtyp_Net (Val.Val);
+         return New_Partial_Assign (N, 0);
       else
-         Res := Asgn_Rec.Val.Asgns;
+         return Val.Asgns;
       end if;
-      return Res;
+   end Get_Assign_Value_Force;
+
+   --  Force the value of a Seq_Assign to be a net if needed, return it.
+   function Get_Assign_Partial_Force (Asgn : Seq_Assign)
+                                     return Partial_Assign is
+   begin
+      return Get_Assign_Value_Force (Get_Assign_Partial (Asgn));
    end Get_Assign_Partial_Force;
+
+   function Merge_Static_Assigns (Wid : Wire_Id; Tv, Fv : Seq_Assign_Value)
+                                 return Boolean
+   is
+      Prev : Memtyp;
+   begin
+      --  First case: both TV and FV are static.
+      if Tv.Is_Static and then Fv.Is_Static then
+         if Is_Equal (Tv.Val, Fv.Val) then
+            Phi_Assign_Static (Wid, Tv.Val);
+            return True;
+         else
+            return False;
+         end if;
+      end if;
+
+      --  If either TV or FV are not static, they cannot be merged.
+      if not Tv.Is_Static and then Tv.Asgns /= No_Partial_Assign
+      then
+         return False;
+      end if;
+      if not Fv.Is_Static and then Fv.Asgns /= No_Partial_Assign
+      then
+         return False;
+      end if;
+
+      --  Get the previous value.
+      declare
+         Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
+         pragma Assert (Wire_Rec.Kind /= Wire_None);
+         First_Seq : Seq_Assign;
+      begin
+         --  Latest seq assign
+         First_Seq := Wire_Rec.Cur_Assign;
+
+         --  If no seq assign, fails.
+         if First_Seq = No_Seq_Assign then
+            return False;
+         end if;
+
+         if not Get_Assign_Is_Static (First_Seq) then
+            return False;
+         end if;
+         Prev := Get_Assign_Static_Val (First_Seq);
+      end;
+
+      if Tv.Is_Static then
+         pragma Assert (Fv = No_Seq_Assign_Value);
+         return Is_Equal (Tv.Val, Prev);
+      else
+         pragma Assert (Fv.Is_Static);
+         pragma Assert (Tv = No_Seq_Assign_Value);
+         return Is_Equal (Fv.Val, Prev);
+      end if;
+   end Merge_Static_Assigns;
 
    --  Add muxes for two lists T and F of assignments.
    procedure Merge_Phis (Ctxt : Builders.Context_Acc;
@@ -1339,7 +1404,7 @@ package body Synth.Environment is
       T_Asgns : Seq_Assign;
       F_Asgns : Seq_Assign;
       W : Wire_Id;
-      Tp, Fp : Partial_Assign;
+      Tv, Fv : Seq_Assign_Value;
    begin
       T_Asgns := Sort_Phi (T);
       F_Asgns := Sort_Phi (F);
@@ -1352,8 +1417,8 @@ package body Synth.Environment is
          then
             --  Has an assignment only for the false branch.
             W := Get_Wire_Id (F_Asgns);
-            Fp := Get_Assign_Partial_Force (F_Asgns);
-            Tp := No_Partial_Assign;
+            Fv := Get_Assign_Partial (F_Asgns);
+            Tv := No_Seq_Assign_Value;
             F_Asgns := Get_Assign_Chain (F_Asgns);
          elsif F_Asgns = No_Seq_Assign
            or else (T_Asgns /= No_Seq_Assign
@@ -1361,23 +1426,28 @@ package body Synth.Environment is
          then
             --  Has an assignment only for the true branch.
             W := Get_Wire_Id (T_Asgns);
-            Fp := No_Partial_Assign;
-            Tp := Get_Assign_Partial_Force (T_Asgns);
+            Fv := No_Seq_Assign_Value;
+            Tv := Get_Assign_Partial (T_Asgns);
             T_Asgns := Get_Assign_Chain (T_Asgns);
          else
             --  Has assignments for both the true and the false branch.
             pragma Assert (Get_Wire_Id (F_Asgns) = Get_Wire_Id (T_Asgns));
             W := Get_Wire_Id (F_Asgns);
-            Fp := Get_Assign_Partial_Force (F_Asgns);
-            Tp := Get_Assign_Partial_Force (T_Asgns);
+            Fv := Get_Assign_Partial (F_Asgns);
+            Tv := Get_Assign_Partial (T_Asgns);
             T_Asgns := Get_Assign_Chain (T_Asgns);
             F_Asgns := Get_Assign_Chain (F_Asgns);
          end if;
          --  Merge partial assigns as much as possible.  This reduce
          --  propagation of splits.
-         Merge_Partial_Assignments (Ctxt, Fp);
-         Merge_Partial_Assignments (Ctxt, Tp);
-         Merge_Assigns (Ctxt, W, Sel, Fp, Tp, Stmt);
+         Merge_Partial_Assignments (Ctxt, Fv);
+         Merge_Partial_Assignments (Ctxt, Tv);
+         if not Merge_Static_Assigns (W, Tv, Fv) then
+            Merge_Assigns (Ctxt, W, Sel,
+                           Get_Assign_Value_Force (Fv),
+                           Get_Assign_Value_Force (Tv),
+                           Stmt);
+         end if;
 
       end loop;
    end Merge_Phis;
