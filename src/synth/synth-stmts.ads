@@ -161,6 +161,11 @@ private
             --  Return value.
             W_Val : Wire_Id;
 
+            --  Condition.
+            --  If No_Net, then it is like True.
+            --  Set when the execution path is enabled.
+            W_Cond : Net;
+
             Ret_Init : Net;
 
          when Mode_Static =>

@@ -1248,7 +1248,7 @@ package body Netlists.Disp_Vhdl is
             Put_Line (";");
          when Id_Assert =>
             Disp_Template
-              ("  \l0: assert \i0 = '1' severity error;" & NL, Inst);
+              ("  \l0: postponed assert \i0 = '1' severity error;" & NL, Inst);
          when Id_Assume =>
             Disp_Template
               ("  \l0: assert \i0 = '1' severity warning; --  assume" & NL,
