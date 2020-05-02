@@ -46,9 +46,7 @@ package body Synth.Context is
 
       Base := new Base_Instance_Type'(Builder => Build_Context,
                                       Top_Module => Top_Module,
-                                      Cur_Module => No_Module,
-                                      Bit0 => No_Net,
-                                      Bit1 => No_Net);
+                                      Cur_Module => No_Module);
 
       Res := new Synth_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
                                       Is_Const => False,
@@ -124,16 +122,12 @@ package body Synth.Context is
    begin
       Base := new Base_Instance_Type'(Builder => Prev_Base.Builder,
                                       Top_Module => Prev_Base.Top_Module,
-                                      Cur_Module => M,
-                                      Bit0 => No_Net,
-                                      Bit1 => No_Net);
+                                      Cur_Module => M);
       Builders.Set_Parent (Base.Builder, M);
 
       Self_Inst := Create_Self_Instance (M);
       pragma Unreferenced (Self_Inst);
 
-      Base.Bit0 := Build_Const_UB32 (Base.Builder, 0, 1);
-      Base.Bit1 := Build_Const_UB32 (Base.Builder, 1, 1);
       Inst.Base := Base;
    end Set_Instance_Module;
 
@@ -172,16 +166,6 @@ package body Synth.Context is
    begin
       return Inst.Base.Builder;
    end Get_Build;
-
-   function Get_Inst_Bit0 (Inst : Synth_Instance_Acc) return Net is
-   begin
-      return Inst.Base.Bit0;
-   end Get_Inst_Bit0;
-
-   function Get_Inst_Bit1 (Inst : Synth_Instance_Acc) return Net is
-   begin
-      return Inst.Base.Bit1;
-   end Get_Inst_Bit1;
 
    function Get_Instance_Const (Inst : Synth_Instance_Acc) return Boolean is
    begin
