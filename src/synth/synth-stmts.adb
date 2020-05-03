@@ -456,7 +456,8 @@ package body Synth.Stmts is
                  and then V.Typ.Sz = Target.Obj.Typ.Sz
                then
                   pragma Assert (Target.Off = (0, 0));
-                  Phi_Assign_Static (Target.Obj.Val.W, Get_Memtyp (V));
+                  Phi_Assign_Static
+                    (Target.Obj.Val.W, Unshare (Get_Memtyp (V)));
                else
                   if V.Typ.W = 0 then
                      --  Forget about null wires.
@@ -2275,7 +2276,7 @@ package body Synth.Stmts is
          end if;
       end if;
 
-      --  Execution is suspended for the current loop.
+      --  Execution is suspended for the current sequence of statements.
       Phi_Assign_Static (C.W_En, Bit0);
 
       Lc := C.Cur_Loop;
