@@ -1066,54 +1066,9 @@ package body Synth.Stmts is
             --  3) The default value is unused *or* it is static
             --  4) All the values are equal.
             --  then assign directly.
-            Sval := Null_Memtyp;
-            declare
-               Prev_Val : Memtyp;
-            begin
-               Prev_Val := Null_Memtyp;
-               for I in Pasgns'Range loop
-                  case Pasgns (I).Is_Static is
-                     when False =>
-                        Sval := Null_Memtyp;
-                        --  It's over.
-                        exit;
-                     when Unknown =>
-                        if Prev_Val = Null_Memtyp then
-                           if not Is_Static_Wire (Wi) then
-                              Sval := Null_Memtyp;
-                              --  It's over.
-                              exit;
-                           end if;
-                           Prev_Val := Get_Static_Wire (Wi);
-                        end if;
-                        if Sval /= Null_Memtyp
-                          and then not Is_Equal (Sval, Prev_Val)
-                        then
-                           Sval := Null_Memtyp;
-                           --  It's over.
-                           exit;
-                        end if;
-                     when True =>
-                        if Sval = Null_Memtyp then
-                           Sval := Pasgns (I).Val;
-                           if Prev_Val /= Null_Memtyp
-                             and then not Is_Equal (Sval, Prev_Val)
-                           then
-                              Sval := Null_Memtyp;
-                              --  It's over.
-                              exit;
-                           end if;
-                        else
-                           if not Is_Equal (Sval, Pasgns (I).Val) then
-                              Sval := Null_Memtyp;
-                              --  It's over.
-                              exit;
-                           end if;
-                        end if;
-                  end case;
-               end loop;
-            end;
+            Sval := Is_Assign_Value_Array_Static (Wi, Pasgns.all);
             if Sval /= Null_Memtyp then
+               --  Use static assignment.
                Phi_Assign_Static (Wi, Sval);
             else
                --  Compute the final value for each partial part of the wire.

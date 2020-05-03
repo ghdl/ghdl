@@ -1239,6 +1239,51 @@ package body Synth.Environment is
       end loop;
    end Extract_Merge_Partial_Assigns;
 
+   function Is_Assign_Value_Array_Static
+     (Wid : Wire_Id; Arr : Seq_Assign_Value_Array) return Memtyp
+   is
+      Res : Memtyp;
+      Prev_Val : Memtyp;
+   begin
+      Prev_Val := Null_Memtyp;
+      for I in Arr'Range loop
+         case Arr (I).Is_Static is
+            when False =>
+               --  A value is not static.
+               return Null_Memtyp;
+            when Unknown =>
+               if Prev_Val = Null_Memtyp then
+                  --  First use of previous value.
+                  if not Is_Static_Wire (Wid) then
+                     --  The previous value is not static.
+                     return Null_Memtyp;
+                  end if;
+                  Prev_Val := Get_Static_Wire (Wid);
+                  if Res /= Null_Memtyp then
+                     --  There is already a result.
+                     if not Is_Equal (Res, Prev_Val) then
+                        --  The previous value is different from the result.
+                        return Null_Memtyp;
+                     else
+                        Res := Prev_Val;
+                     end if;
+                  end if;
+               end if;
+            when True =>
+               if Res = Null_Memtyp then
+                  --  First value.  Keep it.
+                  Res := Arr (I).Val;
+               else
+                  if not Is_Equal (Res, Arr (I).Val) then
+                     --  Value is different.
+                     return  Null_Memtyp;
+                  end if;
+               end if;
+         end case;
+      end loop;
+      return Res;
+   end Is_Assign_Value_Array_Static;
+
    procedure Partial_Assign_Init (List : out Partial_Assign_List) is
    begin
       List := (First | Last => No_Partial_Assign);
@@ -1364,30 +1409,6 @@ package body Synth.Environment is
       --  last assignments which are read to create a partial assignment.
       Merge_Partial_Assigns (Ctxt, W, List);
    end Merge_Assigns;
-
-   --  Force the value of a Seq_Assign to be a net if needed, return it.
-   function Get_Assign_Value_Force (Val : Seq_Assign_Value)
-                                   return Partial_Assign
-   is
-      N : Net;
-   begin
-      case Val.Is_Static is
-         when Unknown =>
-            return No_Partial_Assign;
-         when True =>
-            N := Synth.Context.Get_Memtyp_Net (Val.Val);
-            return New_Partial_Assign (N, 0);
-         when False =>
-            return Val.Asgns;
-      end case;
-   end Get_Assign_Value_Force;
-
-   --  Force the value of a Seq_Assign to be a net if needed, return it.
-   function Get_Assign_Partial_Force (Asgn : Seq_Assign)
-                                     return Partial_Assign is
-   begin
-      return Get_Assign_Value_Force (Get_Seq_Assign_Value (Asgn));
-   end Get_Assign_Partial_Force;
 
    function Merge_Static_Assigns (Wid : Wire_Id; Tv, Fv : Seq_Assign_Value)
                                  return Boolean

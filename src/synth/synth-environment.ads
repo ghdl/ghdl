@@ -167,29 +167,11 @@ package Synth.Environment is
    type Partial_Assign is private;
    No_Partial_Assign : constant Partial_Assign;
 
-   type Seq_Assign_Value (Is_Static : Tri_State_Type := True) is record
-      case Is_Static is
-         when Unknown =>
-            --  Used only for no value (in that case, it will use the previous
-            --  value).
-            --  This is used only for temporary handling, and is never stored
-            --  in Seq_Assign.
-            null;
-         when True =>
-            Val : Memtyp;
-         when False =>
-            --  Values assigned.
-            Asgns : Partial_Assign;
-      end case;
-   end record;
-
+   type Seq_Assign_Value is private;
    No_Seq_Assign_Value : constant Seq_Assign_Value;
 
    function Get_Assign_Partial (Asgn : Seq_Assign) return Partial_Assign;
    function Get_Seq_Assign_Value (Asgn : Seq_Assign) return Seq_Assign_Value;
-
-   --  Force the value of a Seq_Assign to be a net if needed, return it.
-   function Get_Assign_Partial_Force (Asgn : Seq_Assign) return Partial_Assign;
 
    function New_Partial_Assign (Val : Net; Offset : Uns32)
                                return Partial_Assign;
@@ -197,6 +179,17 @@ package Synth.Environment is
    type Partial_Assign_Array is array (Int32 range <>) of Partial_Assign;
 
    type Seq_Assign_Value_Array is array (Int32 range <>) of Seq_Assign_Value;
+
+   --  Return the unique value from array of Seq_Assign_Value if it exists,
+   --  otherwise return Null_Memtyp.
+   --  To be more precise, a value is returned iff:
+   --   1) All present values in Arr are static
+   --   2) There is no missing values *or* the previous value is static.
+   --   3) All the values are equal.
+   --  then assign directly.
+   --  WID is used in case of unknown value.
+   function Is_Assign_Value_Array_Static
+     (Wid : Wire_Id; Arr : Seq_Assign_Value_Array) return Memtyp;
 
    type Partial_Assign_List is limited private;
 
@@ -292,6 +285,22 @@ private
       --  assignments.
       Final_Assign : Conc_Assign;
       Nbr_Final_Assign : Natural;
+   end record;
+
+   type Seq_Assign_Value (Is_Static : Tri_State_Type := True) is record
+      case Is_Static is
+         when Unknown =>
+            --  Used only for no value (in that case, it will use the previous
+            --  value).
+            --  This is used only for temporary handling, and is never stored
+            --  in Seq_Assign.
+            null;
+         when True =>
+            Val : Memtyp;
+         when False =>
+            --  Values assigned.
+            Asgns : Partial_Assign;
+      end case;
    end record;
 
    No_Seq_Assign_Value : constant Seq_Assign_Value := (Is_Static => Unknown);
