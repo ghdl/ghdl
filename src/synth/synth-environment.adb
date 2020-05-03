@@ -51,7 +51,9 @@ package body Synth.Environment is
    end Get_Wire_Mark;
 
    function Alloc_Wire (Kind : Wire_Kind; Obj : Source.Syn_Src)
-                       return Wire_Id is
+                       return Wire_Id
+   is
+      Res : Wire_Id;
    begin
       Wire_Id_Table.Append ((Kind => Kind,
                              Mark_Flag => False,
@@ -60,7 +62,8 @@ package body Synth.Environment is
                              Cur_Assign => No_Seq_Assign,
                              Final_Assign => No_Conc_Assign,
                              Nbr_Final_Assign => 0));
-      return Wire_Id_Table.Last;
+      Res := Wire_Id_Table.Last;
+      return Res;
    end Alloc_Wire;
 
    procedure Free_Wire (Wid : Wire_Id)
