@@ -370,7 +370,7 @@ package body Synth.Environment is
             raise Internal_Error;
          when True =>
             --  Create a net.  No inference to do.
-            Res := Synth.Context.Get_Memtyp_Net (Asgn_Rec.Val.Val);
+            Res := Synth.Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
             Add_Conc_Assign (Wid, Res, 0, Stmt);
          when False =>
             P := Asgn_Rec.Val.Asgns;
@@ -948,7 +948,7 @@ package body Synth.Environment is
       end case;
 
       if Asgn_Rec.Val.Is_Static = True then
-         return Synth.Context.Get_Memtyp_Net (Asgn_Rec.Val.Val);
+         return Synth.Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
       end if;
 
       --  Cannot be empty.
@@ -993,7 +993,7 @@ package body Synth.Environment is
 
    --  Get the current value of W for WD bits at offset OFF.
    function Get_Current_Assign_Value
-     (Ctxt : Builders.Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width)
+     (Ctxt : Context_Acc; Wid : Wire_Id; Off : Uns32; Wd : Width)
      return Net
    is
       Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
@@ -1011,7 +1011,7 @@ package body Synth.Environment is
       --  If the current value is static, just return it.
       if Get_Assign_Is_Static (First_Seq) then
          return Context.Get_Partial_Memtyp_Net
-           (Get_Assign_Static_Val (First_Seq), Off, Wd);
+           (Ctxt, Get_Assign_Static_Val (First_Seq), Off, Wd);
       end if;
 
       --  If the range is the same as the seq assign, return the value.
@@ -1097,9 +1097,9 @@ package body Synth.Environment is
                      end if;
                      if Get_Assign_Is_Static (Seq) then
                         --  Extract from static value.
-                        Append
-                          (Vec, Context.Get_Partial_Memtyp_Net
-                             (Get_Assign_Static_Val (Seq), Cur_Off, Cur_Wd));
+                        Append (Vec, Context.Get_Partial_Memtyp_Net
+                                  (Ctxt, Get_Assign_Static_Val (Seq),
+                                   Cur_Off, Cur_Wd));
                         exit;
                      end if;
                      P := Get_Assign_Partial (Seq);
@@ -1210,7 +1210,8 @@ package body Synth.Environment is
             when Unknown =>
                null;
             when True =>
-               N (I) := Context.Get_Partial_Memtyp_Net (P (I).Val, Off, Wd);
+               N (I) := Context.Get_Partial_Memtyp_Net
+                 (Ctxt, P (I).Val, Off, Wd);
             when False =>
                if Get_Partial_Offset (P (I).Asgns) <= Off then
                   declare
@@ -1734,7 +1735,7 @@ package body Synth.Environment is
                N : Net;
                Pa : Partial_Assign;
             begin
-               N := Synth.Context.Get_Memtyp_Net (Asgn_Rec.Val.Val);
+               N := Synth.Context.Get_Memtyp_Net (Ctxt, Asgn_Rec.Val.Val);
                Pa := New_Partial_Assign (N, 0);
                Asgn_Rec.Val := (Is_Static => False, Asgns => Pa);
             end;

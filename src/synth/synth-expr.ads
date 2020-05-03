@@ -23,6 +23,7 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 
 with Netlists; use Netlists;
+with Netlists.Builders; use Netlists.Builders;
 
 with Synth.Source;
 with Synth.Objtypes; use Synth.Objtypes;
@@ -32,7 +33,8 @@ with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Expr is
    --  Perform a subtype conversion.  Check constraints.
-   function Synth_Subtype_Conversion (Vt : Valtyp;
+   function Synth_Subtype_Conversion (Ctxt : Context_Acc;
+                                      Vt : Valtyp;
                                       Dtype : Type_Acc;
                                       Bounds : Boolean;
                                       Loc : Source.Syn_Src)

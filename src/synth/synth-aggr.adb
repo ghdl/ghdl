@@ -21,6 +21,7 @@
 with Types; use Types;
 
 with Netlists.Utils; use Netlists.Utils;
+with Netlists.Builders; use Netlists.Builders;
 
 with Vhdl.Errors; use Vhdl.Errors;
 
@@ -106,6 +107,7 @@ package body Synth.Aggr is
                                    Const_P : out Boolean;
                                    Err_P : out boolean)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Bound : constant Bound_Type := Get_Array_Bound (Typ, Dim);
       El_Typ : constant Type_Acc := Get_Array_Element (Typ);
       Stride : constant Nat32 := Strides (Dim);
@@ -124,7 +126,7 @@ package body Synth.Aggr is
 
          if Dim = Strides'Last then
             Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ, En);
-            Val := Synth_Subtype_Conversion (Val, El_Typ, False, Value);
+            Val := Synth_Subtype_Conversion (Ctxt, Val, El_Typ, False, Value);
             pragma Assert (Res (Pos) = No_Valtyp);
             Res (Pos) := Val;
             if Val = No_Valtyp then
@@ -303,6 +305,7 @@ package body Synth.Aggr is
                                     Rec : Valtyp_Array_Acc;
                                     Const_P : out Boolean)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       El_List : constant Node_Flist :=
         Get_Elements_Declaration_List (Get_Type (Aggr));
       Value : Node;
@@ -321,7 +324,7 @@ package body Synth.Aggr is
          if Const_P and not Is_Static (Val.Val) then
             Const_P := False;
          end if;
-         Val := Synth_Subtype_Conversion (Val, El_Type, False, Value);
+         Val := Synth_Subtype_Conversion (Ctxt, Val, El_Type, False, Value);
          --  Put in reverse order.  The first record element (at position 0)
          --  will be the LSB, so the last element of REC.
          Rec (Nat32 (Rec'Last - Pos)) := Val;
@@ -359,7 +362,8 @@ package body Synth.Aggr is
       end loop;
    end Fill_Record_Aggregate;
 
-   function Valtyp_Array_To_Net (Tab : Valtyp_Array) return Net
+   function Valtyp_Array_To_Net (Ctxt : Context_Acc; Tab : Valtyp_Array)
+                                return Net
    is
       Res : Net;
       Arr : Net_Array_Acc;
@@ -370,7 +374,7 @@ package body Synth.Aggr is
       for I in Arr'Range loop
          if Tab (I).Val /= null then
             Idx := Idx + 1;
-            Arr (Idx) := Get_Net (Tab (I));
+            Arr (Idx) := Get_Net (Ctxt, Tab (I));
          end if;
       end loop;
       Concat_Array (Arr (1 .. Idx), Res);
@@ -383,6 +387,7 @@ package body Synth.Aggr is
                                    En : Net;
                                    Aggr_Type : Type_Acc) return Valtyp
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Strides : constant Stride_Array := Fill_Stride (Aggr_Type);
       Flen : constant Iir_Index32 := Get_Array_Flat_Length (Aggr_Type);
       Tab_Res : Valtyp_Array_Acc;
@@ -417,7 +422,7 @@ package body Synth.Aggr is
          end;
       else
          Res := Create_Value_Net
-           (Valtyp_Array_To_Net (Tab_Res.all), Aggr_Type);
+           (Valtyp_Array_To_Net (Ctxt, Tab_Res.all), Aggr_Type);
       end if;
 
       Free_Valtyp_Array (Tab_Res);
@@ -430,6 +435,7 @@ package body Synth.Aggr is
                                     En : Net;
                                     Aggr_Type : Type_Acc) return Valtyp
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Tab_Res : Valtyp_Array_Acc;
       Res : Valtyp;
       Const_P : Boolean;
@@ -448,7 +454,7 @@ package body Synth.Aggr is
          end loop;
       else
          Res := Create_Value_Net
-           (Valtyp_Array_To_Net (Tab_Res.all), Aggr_Type);
+           (Valtyp_Array_To_Net (Ctxt, Tab_Res.all), Aggr_Type);
       end if;
 
       Free_Valtyp_Array (Tab_Res);

@@ -26,7 +26,6 @@ with Types_Utils; use Types_Utils;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils;
 
-with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 
 with Synth.Expr; use Synth.Expr;
@@ -429,7 +428,8 @@ package body Synth.Context is
       end loop;
    end Is_Full;
 
-   procedure Value2net (Val : Memtyp;
+   procedure Value2net (Ctxt : Context_Acc;
+                        Val : Memtyp;
                         Off : Uns32;
                         W : Width;
                         Vec : in out Logvec_Array;
@@ -449,35 +449,34 @@ package body Synth.Context is
       --  Then convert logvec to net.
       if W = 0 then
          --  For null range (like the null string literal "")
-         Res := Build_Const_UB32 (Build_Context, 0, 0);
+         Res := Build_Const_UB32 (Ctxt, 0, 0);
       elsif W <= 32 then
          --  32 bit result.
          if not Has_Zx then
-            Res := Build_Const_UB32 (Build_Context, Vec (0).Val, W);
+            Res := Build_Const_UB32 (Ctxt, Vec (0).Val, W);
          elsif Vec (0).Val = 0 and then Sext (Vec (0).Zx, Natural (W)) = not 0
          then
-            Res := Build_Const_Z (Build_Context, W);
+            Res := Build_Const_Z (Ctxt, W);
          else
-            Res := Build_Const_UL32
-              (Build_Context, Vec (0).Val, Vec (0).Zx, W);
+            Res := Build_Const_UL32 (Ctxt, Vec (0).Val, Vec (0).Zx, W);
          end if;
          return;
       else
          Is_Full (Vec, Is_0, Is_X, Is_Z);
          if Is_0 then
-            Res := Build_Const_UB32 (Build_Context, 0, W);
+            Res := Build_Const_UB32 (Ctxt, 0, W);
          elsif Is_X then
-            Res := Build_Const_X (Build_Context, W);
+            Res := Build_Const_X (Ctxt, W);
          elsif Is_Z then
-            Res := Build_Const_Z (Build_Context, W);
+            Res := Build_Const_Z (Ctxt, W);
          elsif not Has_Zx then
-            Inst := Build_Const_Bit (Build_Context, W);
+            Inst := Build_Const_Bit (Ctxt, W);
             for I in Vec'Range loop
                Set_Param_Uns32 (Inst, Param_Idx (I), Vec (I).Val);
             end loop;
             Res := Get_Output (Inst, 0);
          else
-            Inst := Build_Const_Log (Build_Context, W);
+            Inst := Build_Const_Log (Ctxt, W);
             for I in Vec'Range loop
                Set_Param_Uns32 (Inst, Param_Idx (2 * I), Vec (I).Val);
                Set_Param_Uns32 (Inst, Param_Idx (2 * I + 1), Vec (I).Zx);
@@ -487,8 +486,8 @@ package body Synth.Context is
       end if;
    end Value2net;
 
-   function Get_Partial_Memtyp_Net (Val : Memtyp; Off : Uns32; Wd : Width)
-                                   return Net
+   function Get_Partial_Memtyp_Net
+     (Ctxt : Context_Acc; Val : Memtyp; Off : Uns32; Wd : Width) return Net
    is
       Nd : constant Digit_Index := Digit_Index ((Wd + 31) / 32);
       Res : Net;
@@ -498,7 +497,7 @@ package body Synth.Context is
             Vecp : Logvec_Array_Acc;
          begin
             Vecp := new Logvec_Array'(0 .. Nd - 1 => (0, 0));
-            Value2net (Val, Off, Wd, Vecp.all, Res);
+            Value2net (Ctxt, Val, Off, Wd, Vecp.all, Res);
             Free_Logvec_Array (Vecp);
             return Res;
          end;
@@ -506,22 +505,22 @@ package body Synth.Context is
          declare
             Vec : Logvec_Array (0 .. Nd - 1) := (others => (0, 0));
          begin
-            Value2net (Val, Off, Wd, Vec, Res);
+            Value2net (Ctxt, Val, Off, Wd, Vec, Res);
             return Res;
          end;
       end if;
    end Get_Partial_Memtyp_Net;
 
-   function Get_Memtyp_Net (Val : Memtyp) return Net is
+   function Get_Memtyp_Net (Ctxt : Context_Acc; Val : Memtyp) return Net is
    begin
-      return Get_Partial_Memtyp_Net (Val, 0, Val.Typ.W);
+      return Get_Partial_Memtyp_Net (Ctxt, Val, 0, Val.Typ.W);
    end Get_Memtyp_Net;
 
-   function Get_Net (Val : Valtyp) return Net is
+   function Get_Net (Ctxt : Context_Acc; Val : Valtyp) return Net is
    begin
       case Val.Val.Kind is
          when Value_Wire =>
-            return Get_Current_Value (Build_Context, Val.Val.W);
+            return Get_Current_Value (Ctxt, Val.Val.W);
          when Value_Net =>
             return Val.Val.N;
          when Value_Alias =>
@@ -529,23 +528,23 @@ package body Synth.Context is
                Res : Net;
             begin
                if Val.Val.A_Obj.Kind = Value_Wire then
-                  Res := Get_Current_Value (Build_Context, Val.Val.A_Obj.W);
+                  Res := Get_Current_Value (Ctxt, Val.Val.A_Obj.W);
                   return Build2_Extract
-                    (Build_Context, Res, Val.Val.A_Off.Net_Off, Val.Typ.W);
+                    (Ctxt, Res, Val.Val.A_Off.Net_Off, Val.Typ.W);
                else
                   pragma Assert (Val.Val.A_Off.Net_Off = 0);
-                  return Get_Net ((Val.Typ, Val.Val.A_Obj));
+                  return Get_Net (Ctxt, (Val.Typ, Val.Val.A_Obj));
                end if;
             end;
          when Value_Const =>
             if Val.Val.C_Net = No_Net then
-               Val.Val.C_Net := Get_Net ((Val.Typ, Val.Val.C_Val));
+               Val.Val.C_Net := Get_Net (Ctxt, (Val.Typ, Val.Val.C_Val));
                Locations.Set_Location (Get_Net_Parent (Val.Val.C_Net),
                                        Get_Location (Val.Val.C_Loc));
             end if;
             return Val.Val.C_Net;
          when Value_Memory =>
-            return Get_Memtyp_Net (Get_Memtyp (Val));
+            return Get_Memtyp_Net (Ctxt, Get_Memtyp (Val));
          when others =>
             raise Internal_Error;
       end case;

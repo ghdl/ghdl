@@ -632,6 +632,7 @@ package body Synth.Insts is
                                          return Net
    is
       use Netlists.Concats;
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Iassoc : Node;
       V : Valtyp;
       Off : Uns32;
@@ -673,12 +674,12 @@ package body Synth.Insts is
          pragma Assert (N_Off = Els.Table (I).Off);
          V := Els.Table (I).Val;
          N_Off := N_Off + V.Typ.W;
-         Append (Concat, Get_Net (V));
+         Append (Concat, Get_Net (Ctxt, V));
       end loop;
       Value_Offset_Tables.Free (Els);
 
       --   3. connect
-      Build (Get_Build (Syn_Inst), Concat, N);
+      Build (Ctxt, Concat, N);
       return N;
    end Synth_Individual_Input_Assoc;
 
@@ -688,6 +689,7 @@ package body Synth.Insts is
                                Inter : Node)
                               return Net
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Actual : Node;
       Formal_Typ : Type_Acc;
       Act_Inst : Synth_Instance_Acc;
@@ -716,7 +718,7 @@ package body Synth.Insts is
 
       Act := Synth_Expression_With_Type
         (Act_Inst, Actual, Formal_Typ, No_Net);
-      return Get_Net (Act);
+      return Get_Net (Ctxt, Act);
    end Synth_Input_Assoc;
 
    procedure Synth_Individual_Output_Assoc (Outp : Net;
@@ -1049,6 +1051,7 @@ package body Synth.Insts is
    procedure Synth_Component_Instantiation_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Component : constant Node :=
         Get_Named_Entity (Get_Instantiated_Unit (Stmt));
       Config : constant Node := Get_Component_Configuration (Stmt);
@@ -1190,7 +1193,7 @@ package body Synth.Insts is
 
                if Mode_To_Port_Kind (Get_Mode (Inter)) = Port_Out then
                   O := Get_Value (Comp_Inst, Inter);
-                  Port := Get_Net (O);
+                  Port := Get_Net (Ctxt, O);
                   Synth_Output_Assoc (Port, Syn_Inst, Assoc, Comp_Inst, Inter);
                   Nbr_Outputs := Nbr_Outputs + 1;
                end if;
@@ -1352,6 +1355,7 @@ package body Synth.Insts is
                                  Idx : Port_Idx;
                                  Val : Valtyp)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Default : constant Node := Get_Default_Value (Inter);
       Desc : constant Port_Desc :=
         Get_Output_Desc (Get_Module (Self_Inst), Idx);
@@ -1388,10 +1392,10 @@ package body Synth.Insts is
             Init := Synth_Expression_With_Type
               (Syn_Inst, Default, Inter_Typ, No_Net);
             Init := Synth_Subtype_Conversion
-              (Init, Inter_Typ, False, Inter);
-            Value := Builders.Build_Ioutput (Build_Context, Get_Net (Init));
+              (Ctxt, Init, Inter_Typ, False, Inter);
+            Value := Builders.Build_Ioutput (Ctxt, Get_Net (Ctxt, Init));
          else
-            Value := Builders.Build_Output (Build_Context, Desc.W);
+            Value := Builders.Build_Output (Ctxt, Desc.W);
          end if;
          Connect (Inp, Value);
       end if;

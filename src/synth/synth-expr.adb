@@ -32,7 +32,6 @@ with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Annotations; use Vhdl.Annotations;
 
 with Netlists.Gates; use Netlists.Gates;
-with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils; use Netlists.Utils;
 
@@ -338,7 +337,8 @@ package body Synth.Expr is
    end Value2logvec;
 
    --  Resize for a discrete value.
-   function Synth_Resize (Val : Valtyp; W : Width; Loc : Node) return Net
+   function Synth_Resize
+     (Ctxt : Context_Acc; Val : Valtyp; W : Width; Loc : Node) return Net
    is
       Wn : constant Width := Val.Typ.W;
       N : Net;
@@ -351,23 +351,22 @@ package body Synth.Expr is
          --  Optimization: resize directly.
          V := Read_Discrete (Val);
          if Val.Typ.Drange.Is_Signed then
-            Res := Build2_Const_Int (Build_Context, V, W);
+            Res := Build2_Const_Int (Ctxt, V, W);
          else
-            Res := Build2_Const_Uns (Build_Context, To_Uns64 (V), W);
+            Res := Build2_Const_Uns (Ctxt, To_Uns64 (V), W);
          end if;
          Set_Location (Res, Loc);
          return Res;
       end if;
 
-      N := Get_Net (Val);
+      N := Get_Net (Ctxt, Val);
       if Wn > W then
-         return Build2_Trunc (Build_Context, Id_Utrunc, N, W,
-                              Get_Location (Loc));
+         return Build2_Trunc (Ctxt, Id_Utrunc, N, W, Get_Location (Loc));
       elsif Wn < W then
          if Val.Typ.Drange.Is_Signed then
-            Res := Build_Extend (Build_Context, Id_Sextend, N, W);
+            Res := Build_Extend (Ctxt, Id_Sextend, N, W);
          else
-            Res := Build_Extend (Build_Context, Id_Uextend, N, W);
+            Res := Build_Extend (Ctxt, Id_Uextend, N, W);
          end if;
          Set_Location (Res, Loc);
          return Res;
@@ -710,7 +709,8 @@ package body Synth.Expr is
       end case;
    end Reshape_Value;
 
-   function Synth_Subtype_Conversion (Vt : Valtyp;
+   function Synth_Subtype_Conversion (Ctxt : Context_Acc;
+                                      Vt : Valtyp;
                                       Dtype : Type_Acc;
                                       Bounds : Boolean;
                                       Loc : Source.Syn_Src)
@@ -750,18 +750,18 @@ package body Synth.Expr is
                              (Get_Static_Discrete (Vt), Dtype);
                         end if;
 
-                        N := Get_Net (Vt);
+                        N := Get_Net (Ctxt, Vt);
                         if Vtype.Drange.Is_Signed then
                            N := Build2_Sresize
-                             (Build_Context, N, Dtype.W, Get_Location (Loc));
+                             (Ctxt, N, Dtype.W, Get_Location (Loc));
                         else
                            N := Build2_Uresize
-                             (Build_Context, N, Dtype.W, Get_Location (Loc));
+                             (Ctxt, N, Dtype.W, Get_Location (Loc));
                         end if;
                         return Create_Value_Net (N, Dtype);
                      when Value_Const =>
                         return Synth_Subtype_Conversion
-                          ((Vt.Typ, Vt.Val.C_Val), Dtype, Bounds, Loc);
+                          (Ctxt, (Vt.Typ, Vt.Val.C_Val), Dtype, Bounds, Loc);
                      when Value_Memory =>
                         return Create_Value_Discrete
                           (Read_Discrete (Vt), Dtype);
@@ -1053,7 +1053,8 @@ package body Synth.Expr is
    end Index_To_Offset;
 
    function Dyn_Index_To_Offset
-     (Bnd : Bound_Type; Idx_Val : Valtyp; Loc : Node) return Net
+     (Ctxt : Context_Acc; Bnd : Bound_Type; Idx_Val : Valtyp; Loc : Node)
+     return Net
    is
       Idx2 : Net;
       Off : Net;
@@ -1061,24 +1062,23 @@ package body Synth.Expr is
       Wbounds : Width;
    begin
       Wbounds := Clog2 (Bnd.Len);
-      Idx2 := Synth_Resize (Idx_Val, Wbounds, Loc);
+      Idx2 := Synth_Resize (Ctxt, Idx_Val, Wbounds, Loc);
 
       if Bnd.Right = 0 and then Bnd.Dir = Dir_Downto then
          --  Simple case without adjustments.
          return Idx2;
       end if;
 
-      Right := Build_Const_UB32 (Build_Context, To_Uns32 (Bnd.Right),
-                                 Wbounds);
+      Right := Build_Const_UB32 (Ctxt, To_Uns32 (Bnd.Right), Wbounds);
       Set_Location (Right, Loc);
 
       case Bnd.Dir is
          when Dir_To =>
             --  L <= I <= R    -->   off = R - I
-            Off := Build_Dyadic (Build_Context, Id_Sub, Right, Idx2);
+            Off := Build_Dyadic (Ctxt, Id_Sub, Right, Idx2);
          when Dir_Downto =>
             --  L >= I >= R    -->   off = I - R
-            Off := Build_Dyadic (Build_Context, Id_Sub, Idx2, Right);
+            Off := Build_Dyadic (Ctxt, Id_Sub, Idx2, Right);
       end case;
       Set_Location (Off, Loc);
       return Off;
@@ -1135,6 +1135,7 @@ package body Synth.Expr is
                                  Voff : out Net;
                                  Off : out Value_Offsets)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Indexes : constant Iir_Flist := Get_Index_List (Name);
       El_Typ : constant Type_Acc := Get_Array_Element (Pfx_Type);
       Idx_Expr : Node;
@@ -1170,7 +1171,7 @@ package body Synth.Expr is
             Off.Mem_Off := Off.Mem_Off
               + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;
          else
-            Ivoff := Dyn_Index_To_Offset (Bnd, Idx_Val, Name);
+            Ivoff := Dyn_Index_To_Offset (Ctxt, Bnd, Idx_Val, Name);
             Ivoff := Build_Memidx
               (Get_Build (Syn_Inst), Ivoff, El_Typ.W * Stride,
                Bnd.Len - 1,
@@ -1408,6 +1409,7 @@ package body Synth.Expr is
                                  Inp : out Net;
                                  Off : out Value_Offsets)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Expr : constant Node := Get_Suffix (Name);
       Left, Right : Valtyp;
       Dir : Direction_Type;
@@ -1470,9 +1472,8 @@ package body Synth.Expr is
          end if;
 
          Synth_Extract_Dyn_Suffix
-           (Get_Build (Syn_Inst), Name,
-            Pfx_Bnd, Get_Net (Left), Get_Net (Right), Inp, Step, Off.Net_Off,
-            Res_Bnd.Len);
+           (Ctxt, Name, Pfx_Bnd, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right),
+            Inp, Step, Off.Net_Off, Res_Bnd.Len);
          if Inp = No_Net then
             return;
          end if;
@@ -1489,8 +1490,7 @@ package body Synth.Expr is
             Max := 2**Natural (Inp_W) - 1;
          end if;
          Inp := Build_Memidx
-           (Get_Build (Syn_Inst),
-            Inp, Step * El_Typ.W, Max,
+           (Ctxt, Inp, Step * El_Typ.W, Max,
             Inp_W + Width (Clog2 (Uns64 (Step * El_Typ.W))));
       end if;
    end Synth_Slice_Suffix;
@@ -1531,7 +1531,7 @@ package body Synth.Expr is
       Posedge : Boolean;
       Res : Net;
    begin
-      Clk := Get_Net (Synth_Name (Syn_Inst, Prefix));
+      Clk := Get_Net (Ctxt, Synth_Name (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
          Error_Msg_Synth (+Expr, "ill-formed clock-level, '=' expected");
          Res := Build_Posedge (Ctxt, Clk);
@@ -1750,6 +1750,7 @@ package body Synth.Expr is
                                  Expr : Node;
                                  En : Net) return Valtyp
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Left : Valtyp;
       Right : Valtyp;
       Val : Int64;
@@ -1787,7 +1788,8 @@ package body Synth.Expr is
          return Create_Value_Discrete (Val, Boolean_Type);
       end if;
 
-      N := Build_Dyadic (Build_Context, Id, Get_Net (Left), Get_Net (Right));
+      N := Build_Dyadic (Ctxt, Id,
+                         Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
       Set_Location (N, Expr);
       return Create_Value_Net (N, Boolean_Type);
    end Synth_Short_Circuit;
@@ -1894,6 +1896,7 @@ package body Synth.Expr is
             end;
          when Iir_Kind_Selected_Element =>
             declare
+               Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
                Idx : constant Iir_Index32 :=
                  Get_Element_Position (Get_Named_Entity (Expr));
                Pfx : constant Node := Get_Prefix (Expr);
@@ -1913,7 +1916,7 @@ package body Synth.Expr is
                   return Res;
                else
                   N := Build_Extract
-                    (Build_Context, Get_Net (Val),
+                    (Ctxt, Get_Net (Ctxt, Val),
                      Val.Typ.Rec.E (Idx + 1).Boff, Get_Type_Width (Res_Typ));
                   Set_Location (N, Expr);
                   return Create_Value_Net (N, Res_Typ);
@@ -2020,6 +2023,7 @@ package body Synth.Expr is
          when Iir_Kind_Pos_Attribute
            | Iir_Kind_Val_Attribute =>
             declare
+               Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
                Param : constant Node := Get_Parameter (Expr);
                V : Valtyp;
                Dtype : Type_Acc;
@@ -2028,7 +2032,7 @@ package body Synth.Expr is
                Dtype := Get_Subtype_Object (Syn_Inst, Get_Type (Expr));
                --  FIXME: to be generalized.  Not always as simple as a
                --  subtype conversion.
-               return Synth_Subtype_Conversion (V, Dtype, False, Expr);
+               return Synth_Subtype_Conversion (Ctxt, V, Dtype, False, Expr);
             end;
          when Iir_Kind_Low_Type_Attribute =>
             return Synth_Low_High_Type_Attribute (Syn_Inst, Expr, Dir_To);

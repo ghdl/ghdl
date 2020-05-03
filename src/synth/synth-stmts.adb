@@ -355,9 +355,11 @@ package body Synth.Stmts is
 
    --  Extract a part of VAL from a target aggregate at offset OFF (offset
    --  in the array).
-   function Aggregate_Extract
-     (Val : Valtyp; Off : Uns32; Typ : Type_Acc; Loc : Node)
-     return Valtyp
+   function Aggregate_Extract (Ctxt : Context_Acc;
+                               Val : Valtyp;
+                               Off : Uns32;
+                               Typ : Type_Acc;
+                               Loc : Node) return Valtyp
    is
       El_Typ : constant Type_Acc := Get_Array_Element (Val.Typ);
    begin
@@ -368,7 +370,7 @@ package body Synth.Stmts is
                N : Net;
             begin
                N := Build2_Extract
-                 (Build_Context, Get_Net (Val), Off * El_Typ.W, Typ.W);
+                 (Ctxt, Get_Net (Ctxt, Val), Off * El_Typ.W, Typ.W);
                Set_Location (N, Loc);
                return Create_Value_Net (N, Typ);
             end;
@@ -396,6 +398,7 @@ package body Synth.Stmts is
                                          Loc : Node;
                                          En : Net)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Targ_Bnd : constant Bound_Type := Get_Array_Bound (Target_Typ, 1);
       Choice : Node;
       Assoc : Node;
@@ -416,7 +419,8 @@ package body Synth.Stmts is
                end if;
                Synth_Assignment
                  (Syn_Inst, Targ_Info,
-                  Aggregate_Extract (Val, Pos, Targ_Info.Targ_Type, Assoc),
+                  Aggregate_Extract (Ctxt, Val, Pos,
+                                     Targ_Info.Targ_Type, Assoc),
                   Loc, En);
             when others =>
                Error_Kind ("synth_assignment_aggregate", Choice);
@@ -431,9 +435,10 @@ package body Synth.Stmts is
                                Loc : Node;
                                En : Net)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       V : Valtyp;
    begin
-      V := Synth_Subtype_Conversion (Val, Target.Targ_Type, False, Loc);
+      V := Synth_Subtype_Conversion (Ctxt, Val, Target.Targ_Type, False, Loc);
       pragma Unreferenced (Val);
       if V = No_Valtyp then
          --  In case of error.
@@ -463,8 +468,8 @@ package body Synth.Stmts is
                      --  Forget about null wires.
                      return;
                   end if;
-                  Phi_Assign_Net (Get_Build (Syn_Inst), Target.Obj.Val.W,
-                                  Get_Net (V), Target.Off.Net_Off);
+                  Phi_Assign_Net (Ctxt, Target.Obj.Val.W,
+                                  Get_Net (Ctxt, V), Target.Off.Net_Off);
                end if;
             else
                if not Is_Static (V.Val) then
@@ -485,8 +490,8 @@ package body Synth.Stmts is
                N := Get_Current_Assign_Value
                  (Ctxt, Target.Mem_Obj.Val.W,
                   Target.Mem_Dyn.Pfx_Off.Net_Off, Target.Mem_Dyn.Pfx_Typ.W);
-               N := Build_Dyn_Insert
-                 (Ctxt, N, Get_Net (V), Target.Mem_Dyn.Voff, Target.Mem_Doff);
+               N := Build_Dyn_Insert (Ctxt, N, Get_Net (Ctxt, V),
+                                      Target.Mem_Dyn.Voff, Target.Mem_Doff);
                Set_Location (N, Loc);
                Phi_Assign_Net (Ctxt, Target.Mem_Obj.Val.W, N,
                                Target.Mem_Dyn.Pfx_Off.Net_Off);
@@ -513,9 +518,10 @@ package body Synth.Stmts is
                                Dyn : Dyn_Name;
                                Loc : Node) return Valtyp
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       N : Net;
    begin
-      N := Get_Net (Obj);
+      N := Get_Net (Ctxt, Obj);
       if Dyn.Voff /= No_Net then
          Synth.Source.Set_Location_Maybe (N, Loc);
          pragma Assert (Off = 0 or Dyn.Pfx_Off.Net_Off = 0);
@@ -533,11 +539,12 @@ package body Synth.Stmts is
                         Targ : Target_Info;
                         Loc : Node) return Valtyp
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       N : Net;
    begin
       case Targ.Kind is
          when Target_Simple =>
-            N := Build2_Extract (Get_Build (Syn_Inst), Get_Net (Targ.Obj),
+            N := Build2_Extract (Ctxt, Get_Net (Ctxt, Targ.Obj),
                                  Targ.Off.Net_Off, Targ.Targ_Type.W);
             return Create_Value_Net (N, Targ.Targ_Type);
          when Target_Aggregate =>
@@ -585,14 +592,14 @@ package body Synth.Stmts is
             --  Mark the error, but try to continue.
             Set_Error (Syn_Inst);
          else
-            V := Get_Net (Val);
+            V := Get_Net (Ctxt, Val);
             Cond := Get_Condition (Cwf);
             if Cond /= Null_Node then
                Cond_Val := Synth_Expression (Syn_Inst, Cond, En);
                if Cond_Val = No_Valtyp then
                   Cond_Net := Build_Const_UB32 (Ctxt, 0, 1);
                else
-                  Cond_Net := Get_Net (Cond_Val);
+                  Cond_Net := Get_Net (Ctxt, Cond_Val);
                end if;
 
                V := Build_Mux2 (Ctxt, Cond_Net, No_Net, V);
@@ -615,7 +622,7 @@ package body Synth.Stmts is
          if Get_Driver (Inp) = No_Net then
             --  No else.
             Val := Synth_Read (Syn_Inst, Targ, Stmt);
-            Connect (Inp, Get_Net (Val));
+            Connect (Inp, Get_Net (Ctxt, Val));
          end if;
       end if;
       Val := Create_Value_Net (First, Targ.Targ_Type);
@@ -683,11 +690,11 @@ package body Synth.Stmts is
       while Ce /= Null_Node loop
          Val := Synth_Expression_With_Type
            (C.Inst, Get_Expression (Ce), Targ_Type, En);
-         V := Get_Net (Val);
+         V := Get_Net (Ctxt, Val);
          Cond := Get_Condition (Ce);
          if Cond /= Null_Node then
             Cond_Val := Synth_Expression (C.Inst, Cond, En);
-            V := Build_Mux2 (Ctxt, Get_Net (Cond_Val), No_Net, V);
+            V := Build_Mux2 (Ctxt, Get_Net (Ctxt, Cond_Val), No_Net, V);
             Set_Location (V, Ce);
          end if;
 
@@ -742,7 +749,7 @@ package body Synth.Stmts is
          end if;
       else
          Prev_Cond := C.W_Cond;
-         Cond_Net := Get_Net (Cond_Val);
+         Cond_Net := Get_Net (Ctxt, Cond_Val);
 
          --  Set W_Cond (for the 'then' part).
          if Prev_Cond = No_Net then
@@ -1032,7 +1039,7 @@ package body Synth.Stmts is
       Pasgns := new Seq_Assign_Value_Array (1 .. Int32 (Alts'Last));
       Nets := new Net_Array (1 .. Int32 (Alts'Last));
 
-      Sel_Net := Get_Net (Sel);
+      Sel_Net := Get_Net (Ctxt, Sel);
 
       --  For each wire, compute the result.
       for I in Wires'Range loop
@@ -1252,6 +1259,7 @@ package body Synth.Stmts is
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node; En : Net)
    is
       use Vhdl.Sem_Expr;
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
 
       Expr : constant Node := Get_Expression (Stmt);
       Choices : constant Node := Get_Selected_Waveform_Chain (Stmt);
@@ -1306,7 +1314,7 @@ package body Synth.Stmts is
             Alt_Idx := Alt_Idx + 1;
 
             Alts (Alt_Idx).Val := Get_Net
-              (Synth_Waveform
+              (Ctxt, Synth_Waveform
                  (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type, En));
          end if;
 
@@ -1340,7 +1348,7 @@ package body Synth.Stmts is
       --    Build mux2/mux4 tree (group by 4)
       Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
 
-      Sel_Net := Get_Net (Sel);
+      Sel_Net := Get_Net (Ctxt, Sel);
 
       declare
          Res : Net;
@@ -1566,6 +1574,7 @@ package body Synth.Stmts is
                                            Infos : out Target_Info_Array)
    is
       pragma Assert (Infos'First = 1);
+      Ctxt : constant Context_Acc := Get_Build (Caller_Inst);
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
@@ -1648,7 +1657,7 @@ package body Synth.Stmts is
          end if;
 
          --  FIXME: conversion only for constants, reshape for all.
-         Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
+         Val := Synth_Subtype_Conversion (Ctxt, Val, Inter_Type, True, Assoc);
 
          if Get_Instance_Const (Subprg_Inst) and then not Is_Static (Val.Val)
          then
@@ -1697,6 +1706,7 @@ package body Synth.Stmts is
    procedure Synth_Subprogram_Association_Wires
      (Subprg_Inst : Synth_Instance_Acc; Init : Association_Iterator_Init)
    is
+      Ctxt : constant Context_Acc := Get_Build (Subprg_Inst);
       Inter : Node;
       Assoc : Node;
       Val : Valtyp;
@@ -1715,7 +1725,7 @@ package body Synth.Stmts is
             Val := Get_Value (Subprg_Inst, Inter);
             --  Arguments are passed by copy.
             Wire := Alloc_Wire (Wire_Variable, Inter);
-            Set_Wire_Gate (Wire, Get_Net (Val));
+            Set_Wire_Gate (Wire, Get_Net (Ctxt, Val));
 
             Val := Create_Value_Wire (Wire, Val.Typ);
             Create_Object_Force (Subprg_Inst, Inter, No_Valtyp);
@@ -2311,7 +2321,8 @@ package body Synth.Stmts is
          Push_Phi;
          Pop_Phi (Phi_False);
 
-         Merge_Phis (Ctxt, Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
+         Merge_Phis (Ctxt,
+                     Get_Net (Ctxt, Cond_Val), Phi_True, Phi_False, Stmt);
       end if;
    end Synth_Dynamic_Exit_Next_Statement;
 
@@ -2553,6 +2564,7 @@ package body Synth.Stmts is
    procedure Synth_Return_Statement (C : in out Seq_Context; Stmt : Node)
    is
       Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
+      Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Val : Valtyp;
       Expr : constant Node := Get_Expression (Stmt);
    begin
@@ -2565,7 +2577,7 @@ package body Synth.Stmts is
             return;
          end if;
 
-         Val := Synth_Subtype_Conversion (Val, C.Ret_Typ, True, Stmt);
+         Val := Synth_Subtype_Conversion (Ctxt, Val, C.Ret_Typ, True, Stmt);
 
          if C.Nbr_Ret = 0 then
             C.Ret_Value := Val;
@@ -2582,7 +2594,7 @@ package body Synth.Stmts is
             end if;
          end if;
          if Is_Dyn then
-            Phi_Assign_Net (Get_Build (C.Inst), C.W_Val, Get_Net (Val), 0);
+            Phi_Assign_Net (Ctxt, C.W_Val, Get_Net (Ctxt, Val), 0);
          end if;
       end if;
 
@@ -2699,7 +2711,7 @@ package body Synth.Stmts is
          Set_Error (C.Inst);
          return;
       end if;
-      N := Get_Net (Cond);
+      N := Get_Net (Ctxt, Cond);
       if En /= No_Net then
          --  Build: En -> Cond
          N := Build2_Imp (Ctxt, En, N, Loc);
@@ -2854,7 +2866,7 @@ package body Synth.Stmts is
       Push_Phi;
       Pop_Phi (Phi_False);
 
-      Merge_Phis (Ctxt, Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
+      Merge_Phis (Ctxt, Get_Net (Ctxt, Cond_Val), Phi_True, Phi_False, Stmt);
    end Synth_Process_Sequential_Statements;
 
    procedure Synth_Process_Statement
@@ -2981,7 +2993,7 @@ package body Synth.Stmts is
          end if;
          return;
       end if;
-      Inst := Build_Assert (Ctxt, Synth_Label (Stmt), Get_Net (Val));
+      Inst := Build_Assert (Ctxt, Synth_Label (Stmt), Get_Net (Ctxt, Val));
       Set_Location (Inst, Get_Location (Stmt));
    end Synth_Concurrent_Assertion_Statement;
 
@@ -3032,7 +3044,7 @@ package body Synth.Stmts is
             declare
                E : constant Vhdl.Types.Vhdl_Node := Get_HDL_Node (Expr);
             begin
-               return Get_Net (Synth_Expression (Syn_Inst, E, No_Net));
+               return Get_Net (Ctxt, Synth_Expression (Syn_Inst, E, No_Net));
             end;
          when N_Not_Bool =>
             pragma Assert (Loc /= No_Location);

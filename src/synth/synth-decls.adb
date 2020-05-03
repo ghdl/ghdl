@@ -46,6 +46,7 @@ package body Synth.Decls is
    procedure Create_Var_Wire
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Init : Valtyp)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Vt : constant Valtyp := Get_Value (Syn_Inst, Decl);
       Value : Net;
       Ival : Net;
@@ -59,11 +60,11 @@ package body Synth.Decls is
             Name := New_Sname_User (Get_Identifier (Decl),
                                     Get_Sname (Syn_Inst));
             if Init /= No_Valtyp then
-               Ival := Get_Net (Init);
+               Ival := Get_Net (Ctxt, Init);
                pragma Assert (Get_Width (Ival) = W);
-               Value := Build_Isignal (Get_Build (Syn_Inst), Name, Ival);
+               Value := Build_Isignal (Ctxt, Name, Ival);
             else
-               Value := Build_Signal (Get_Build (Syn_Inst), Name, W);
+               Value := Build_Signal (Ctxt, Name, W);
             end if;
             Set_Location (Value, Decl);
             Set_Wire_Gate (Vt.Val.W, Value);
@@ -467,6 +468,7 @@ package body Synth.Decls is
                                          Is_Subprg : Boolean;
                                          Last_Type : in out Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Deferred_Decl : constant Node := Get_Deferred_Declaration (Decl);
       First_Decl : Node;
       Decl_Type : Node;
@@ -514,7 +516,7 @@ package body Synth.Decls is
             Set_Error (Syn_Inst);
             return;
          end if;
-         Val := Synth_Subtype_Conversion (Val, Obj_Type, True, Decl);
+         Val := Synth_Subtype_Conversion (Ctxt, Val, Obj_Type, True, Decl);
          --  For constant functions, the value must be constant.
          pragma Assert (not Get_Instance_Const (Syn_Inst)
                           or else Is_Static (Val.Val));
@@ -659,6 +661,7 @@ package body Synth.Decls is
                                          Assoc_Chain : Node;
                                          En : Net)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Inter : Node;
       Inter_Type : Type_Acc;
       Assoc : Node;
@@ -688,7 +691,7 @@ package body Synth.Decls is
                raise Internal_Error;
          end case;
 
-         Val := Synth_Subtype_Conversion (Val, Inter_Type, True, Assoc);
+         Val := Synth_Subtype_Conversion (Ctxt, Val, Inter_Type, True, Assoc);
 
          pragma Assert (Is_Static (Val.Val));
 
@@ -736,6 +739,7 @@ package body Synth.Decls is
                                          En : Net;
                                          Is_Subprg : Boolean)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Node := Get_Default_Value (Decl);
       Decl_Type : constant Node := Get_Type (Decl);
       Init : Valtyp;
@@ -762,7 +766,8 @@ package body Synth.Decls is
       else
          if Is_Valid (Def) then
             Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ, En);
-            Init := Synth_Subtype_Conversion (Init, Obj_Typ, False, Decl);
+            Init := Synth_Subtype_Conversion
+              (Ctxt, Init, Obj_Typ, False, Decl);
             if not Is_Subprg
               and then not Is_Static (Init.Val)
             then
@@ -784,8 +789,7 @@ package body Synth.Decls is
                if Is_Static (Init.Val) then
                   Phi_Assign_Static (Wid, Get_Memtyp (Init));
                else
-                  Phi_Assign_Net
-                    (Get_Build (Syn_Inst), Wid, Get_Net (Init), 0);
+                  Phi_Assign_Net (Ctxt, Wid, Get_Net (Ctxt, Init), 0);
                end if;
             end if;
          end if;
@@ -795,6 +799,7 @@ package body Synth.Decls is
    procedure Synth_Signal_Declaration (Syn_Inst : Synth_Instance_Acc;
                                        Decl : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Iir := Get_Default_Value (Decl);
       --  Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
       Init : Valtyp;
@@ -805,7 +810,7 @@ package body Synth.Decls is
       if Is_Valid (Def) then
          Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
          Init := Synth_Expression_With_Type (Syn_Inst, Def, Obj_Typ, No_Net);
-         Init := Synth_Subtype_Conversion (Init, Obj_Typ, False, Decl);
+         Init := Synth_Subtype_Conversion (Ctxt, Init, Obj_Typ, False, Decl);
          if not Is_Static (Init.Val) then
             Error_Msg_Synth (+Decl, "signals cannot be used in default value "
                                & "of a signal");
@@ -819,6 +824,7 @@ package body Synth.Decls is
    procedure Synth_Object_Alias_Declaration
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; En : Net)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Atype : constant Node := Get_Declaration_Type (Decl);
       Off : Value_Offsets;
       Dyn : Stmts.Dyn_Name;
@@ -842,14 +848,13 @@ package body Synth.Decls is
          --  Object is a net if it is not writable.  Extract the
          --  bits for the alias.
          Res := Create_Value_Net
-           (Build2_Extract (Get_Build (Syn_Inst),
-                            Base.Val.N, Off.Net_Off, Typ.W),
+           (Build2_Extract (Ctxt, Base.Val.N, Off.Net_Off, Typ.W),
             Typ);
       else
          Res := Create_Value_Alias (Base, Off, Typ);
       end if;
       if Obj_Typ /= null then
-         Res := Synth_Subtype_Conversion (Res, Obj_Typ, True, Decl);
+         Res := Synth_Subtype_Conversion (Ctxt, Res, Obj_Typ, True, Decl);
       end if;
       Create_Object (Syn_Inst, Decl, Res);
    end Synth_Object_Alias_Declaration;

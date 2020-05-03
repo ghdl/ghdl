@@ -48,7 +48,8 @@ package body Synth.Oper is
       return Build2_Uresize (Build_Context, N, W, Get_Location (Loc));
    end Synth_Uresize;
 
-   function Synth_Uresize (Val : Valtyp; W : Width; Loc : Node) return Net
+   function Synth_Uresize
+     (Ctxt : Context_Acc; Val : Valtyp; W : Width; Loc : Node) return Net
    is
       Res : Net;
    begin
@@ -58,15 +59,16 @@ package body Synth.Oper is
             raise Internal_Error;
          else
             Res := Build2_Const_Uns
-              (Build_Context, To_Uns64 (Read_Discrete (Val)), W);
+              (Ctxt, To_Uns64 (Read_Discrete (Val)), W);
          end if;
          Set_Location (Res, Loc);
          return Res;
       end if;
-      return Synth_Uresize (Get_Net (Val), W, Loc);
+      return Synth_Uresize (Get_Net (Ctxt, Val), W, Loc);
    end Synth_Uresize;
 
-   function Synth_Sresize (Val : Valtyp; W : Width; Loc : Node) return Net
+   function Synth_Sresize
+     (Ctxt : Context_Acc; Val : Valtyp; W : Width; Loc : Node) return Net
    is
       Res : Net;
    begin
@@ -80,12 +82,13 @@ package body Synth.Oper is
          Set_Location (Res, Loc);
          return Res;
       end if;
-      return Build2_Sresize (Build_Context, Get_Net (Val), W,
+      return Build2_Sresize (Ctxt, Get_Net (Ctxt, Val), W,
                              Get_Location (Loc));
    end Synth_Sresize;
 
-   function Synth_Bit_Eq_Const (Cst : Valtyp; Expr : Valtyp; Loc : Node)
-                               return Valtyp
+   function Synth_Bit_Eq_Const
+     (Ctxt : Context_Acc; Cst : Valtyp; Expr : Valtyp; Loc : Node)
+     return Valtyp
    is
       Val : Uns32;
       Zx : Uns32;
@@ -100,20 +103,20 @@ package body Synth.Oper is
       To_Logic (Read_Discrete (Cst), Cst.Typ, Val, Zx);
       if Zx /= 0 then
          --  Equal unknown -> return X
-         N := Build_Const_UL32 (Build_Context, 0, 1, 1);
+         N := Build_Const_UL32 (Ctxt, 0, 1, 1);
          Set_Location (N, Loc);
          return Create_Value_Net (N, Boolean_Type);
       elsif Val = 1 then
          --  The result type is a boolean; convert if needed.
          if Expr.Typ.Kind = Type_Logic then
-            return Create_Value_Net (Get_Net (Expr), Boolean_Type);
+            return Create_Value_Net (Get_Net (Ctxt, Expr), Boolean_Type);
          else
             pragma Assert (Expr.Typ.Kind = Type_Bit);
             return Expr;
          end if;
       else
          pragma Assert (Val = 0);
-         N := Build_Monadic (Build_Context, Id_Not, Get_Net (Expr));
+         N := Build_Monadic (Ctxt, Id_Not, Get_Net (Ctxt, Expr));
          Set_Location (N, Loc);
          return Create_Value_Net (N, Boolean_Type);
       end if;
@@ -184,7 +187,8 @@ package body Synth.Oper is
 
    --  Do a match comparison between CST and OPER.
    --  Return No_Net if CST has incorrect value.
-   function Synth_Match (Cst : Valtyp;
+   function Synth_Match (Ctxt : Context_Acc;
+                         Cst : Valtyp;
                          Oper : Valtyp;
                          Expr : Node;
                          Op : Compare_Module_Id := Id_Eq) return Net
@@ -243,23 +247,25 @@ package body Synth.Oper is
       end loop;
 
       --  Generate and + eq
-      Nv := Build2_Const_Vec (Build_Context, Wd, Vals.all);
+      Nv := Build2_Const_Vec (Ctxt, Wd, Vals.all);
       Set_Location (Nv, Expr);
       Unchecked_Deallocate (Vals);
-      Nm := Build2_Const_Vec (Build_Context, Wd, Mask.all);
+      Nm := Build2_Const_Vec (Ctxt, Wd, Mask.all);
       Set_Location (Nm, Expr);
       Unchecked_Deallocate (Mask);
-      Res := Build_Dyadic (Build_Context, Id_And, Get_Net (Oper), Nm);
+      Res := Build_Dyadic (Ctxt, Id_And, Get_Net (Ctxt, Oper), Nm);
       Set_Location (Res, Expr);
-      Res := Build_Compare (Build_Context, Op, Res, Nv);
+      Res := Build_Compare (Ctxt, Op, Res, Nv);
       Set_Location (Res, Expr);
 
       return Res;
    end Synth_Match;
 
    --  Note: LEFT or RIGHT can be a single bit.
-   function Synth_Dyadic_Uns_Uns
-     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
+   function Synth_Dyadic_Uns_Uns (Ctxt : Context_Acc;
+                                  Id : Dyadic_Module_Id;
+                                  Left, Right : Valtyp;
+                                  Expr : Node) return Valtyp
    is
       W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
       El_Typ : Type_Acc;
@@ -275,42 +281,48 @@ package body Synth.Oper is
          raise Internal_Error;
       end if;
       Rtype := Create_Vec_Type_By_Length (W, El_Typ);
-      L1 := Synth_Uresize (Left, W, Expr);
-      R1 := Synth_Uresize (Right, W, Expr);
-      N := Build_Dyadic (Build_Context, Id, L1, R1);
+      L1 := Synth_Uresize (Ctxt, Left, W, Expr);
+      R1 := Synth_Uresize (Ctxt, Right, W, Expr);
+      N := Build_Dyadic (Ctxt, Id, L1, R1);
       Set_Location (N, Expr);
       return Create_Value_Net (N, Rtype);
    end Synth_Dyadic_Uns_Uns;
 
-   function Synth_Dyadic_Uns_Nat
-     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
+   function Synth_Dyadic_Uns_Nat (Ctxt : Context_Acc;
+                                  Id : Dyadic_Module_Id;
+                                  Left, Right : Valtyp;
+                                  Expr : Node) return Valtyp
    is
-      L : constant Net := Get_Net (Left);
+      L : constant Net := Get_Net (Ctxt, Left);
       R1 : Net;
       N : Net;
    begin
-      R1 := Synth_Uresize (Right, Left.Typ.W, Expr);
-      N := Build_Dyadic (Build_Context, Id, L, R1);
+      R1 := Synth_Uresize (Ctxt, Right, Left.Typ.W, Expr);
+      N := Build_Dyadic (Ctxt, Id, L, R1);
       Set_Location (N, Expr);
       return Create_Value_Net (N, Create_Res_Bound (Left));
    end Synth_Dyadic_Uns_Nat;
 
-   function Synth_Dyadic_Nat_Uns
-     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
+   function Synth_Dyadic_Nat_Uns (Ctxt : Context_Acc;
+                                  Id : Dyadic_Module_Id;
+                                  Left, Right : Valtyp;
+                                  Expr : Node) return Valtyp
    is
-      R : constant Net := Get_Net (Right);
+      R : constant Net := Get_Net (Ctxt, Right);
       L1 : Net;
       N : Net;
    begin
-      L1 := Synth_Uresize (Left, Right.Typ.W, Expr);
-      N := Build_Dyadic (Build_Context, Id, L1, R);
+      L1 := Synth_Uresize (Ctxt, Left, Right.Typ.W, Expr);
+      N := Build_Dyadic (Ctxt, Id, L1, R);
       Set_Location (N, Expr);
       return Create_Value_Net (N, Create_Res_Bound (Right));
    end Synth_Dyadic_Nat_Uns;
 
    --  Note: LEFT or RIGHT can be a single bit.
-   function Synth_Dyadic_Sgn_Sgn
-     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
+   function Synth_Dyadic_Sgn_Sgn (Ctxt : Context_Acc;
+                                  Id : Dyadic_Module_Id;
+                                  Left, Right : Valtyp;
+                                  Expr : Node) return Valtyp
    is
       W : constant Width := Width'Max (Left.Typ.W, Right.Typ.W);
       El_Typ : Type_Acc;
@@ -326,35 +338,39 @@ package body Synth.Oper is
          raise Internal_Error;
       end if;
       Rtype := Create_Vec_Type_By_Length (W, El_Typ);
-      L1 := Synth_Sresize (Left, W, Expr);
-      R1 := Synth_Sresize (Right, W, Expr);
-      N := Build_Dyadic (Build_Context, Id, L1, R1);
+      L1 := Synth_Sresize (Ctxt, Left, W, Expr);
+      R1 := Synth_Sresize (Ctxt, Right, W, Expr);
+      N := Build_Dyadic (Ctxt, Id, L1, R1);
       Set_Location (N, Expr);
       return Create_Value_Net (N, Rtype);
    end Synth_Dyadic_Sgn_Sgn;
 
-   function Synth_Dyadic_Sgn_Int
-     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
+   function Synth_Dyadic_Sgn_Int (Ctxt : Context_Acc;
+                                  Id : Dyadic_Module_Id;
+                                  Left, Right : Valtyp;
+                                  Expr : Node) return Valtyp
    is
-      L : constant Net := Get_Net (Left);
+      L : constant Net := Get_Net (Ctxt, Left);
       R1 : Net;
       N : Net;
    begin
-      R1 := Synth_Sresize (Right, Left.Typ.W, Expr);
-      N := Build_Dyadic (Build_Context, Id, L, R1);
+      R1 := Synth_Sresize (Ctxt, Right, Left.Typ.W, Expr);
+      N := Build_Dyadic (Ctxt, Id, L, R1);
       Set_Location (N, Expr);
       return Create_Value_Net (N, Create_Res_Bound (Left));
    end Synth_Dyadic_Sgn_Int;
 
-   function Synth_Dyadic_Int_Sgn
-     (Id : Dyadic_Module_Id; Left, Right : Valtyp; Expr : Node) return Valtyp
+   function Synth_Dyadic_Int_Sgn (Ctxt : Context_Acc;
+                                  Id : Dyadic_Module_Id;
+                                  Left, Right : Valtyp;
+                                  Expr : Node) return Valtyp
    is
-      R : constant Net := Get_Net (Right);
+      R : constant Net := Get_Net (Ctxt, Right);
       L1 : Net;
       N : Net;
    begin
-      L1 := Synth_Sresize (Left, Right.Typ.W, Expr);
-      N := Build_Dyadic (Build_Context, Id, R, L1);
+      L1 := Synth_Sresize (Ctxt, Left, Right.Typ.W, Expr);
+      N := Build_Dyadic (Ctxt, Id, R, L1);
       Set_Location (N, Expr);
       return Create_Value_Net (N, Create_Res_Bound (Right));
    end Synth_Dyadic_Int_Sgn;
@@ -387,8 +403,8 @@ package body Synth.Oper is
       is
          N : Net;
       begin
-         N := Build_Dyadic (Build_Context, Id,
-                            Get_Net (Left), Get_Net (Right));
+         N := Build_Dyadic
+           (Ctxt, Id, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Left.Typ);
       end Synth_Bit_Dyadic;
@@ -401,21 +417,21 @@ package body Synth.Oper is
          pragma Assert (Left_Type = Right_Type);
          pragma Assert (Res_Type = Expr_Typ);
          N := Build_Compare
-           (Build_Context, Id, Get_Net (Left), Get_Net (Right));
+           (Ctxt, Id, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare;
 
       function Synth_Minmax (Id : Compare_Module_Id) return Valtyp
       is
-         L : constant Net := Get_Net (Left);
-         R : constant Net := Get_Net (Right);
+         L : constant Net := Get_Net (Ctxt, Left);
+         R : constant Net := Get_Net (Ctxt, Right);
          Sel, N : Net;
       begin
          pragma Assert (Left_Type = Right_Type);
-         Sel := Build_Compare (Build_Context, Id, L, R);
+         Sel := Build_Compare (Ctxt, Id, L, R);
          Set_Location (Sel, Expr);
-         N := Build_Mux2 (Build_Context, Sel, R, L);
+         N := Build_Mux2 (Ctxt, Sel, R, L);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Expr_Typ);
       end Synth_Minmax;
@@ -430,7 +446,7 @@ package body Synth.Oper is
               (+Expr, "comparing non-numeric vector is unexpected");
             if Left.Typ.W = Right.Typ.W then
                N := Build_Compare
-                 (Get_Build (Syn_Inst), Id, Get_Net (Left), Get_Net (Right));
+                 (Ctxt, Id, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
                Set_Location (N, Expr);
                return Create_Value_Net (N, Res_Type);
             elsif Left.Typ.W < Right.Typ.W then
@@ -450,8 +466,8 @@ package body Synth.Oper is
       is
          N : Net;
       begin
-         N := Synth_Uresize (Right, Left.Typ.W, Expr);
-         N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
+         N := Synth_Uresize (Ctxt, Right, Left.Typ.W, Expr);
+         N := Build_Compare (Ctxt, Id, Get_Net (Ctxt, Left), N);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare_Uns_Nat;
@@ -461,8 +477,8 @@ package body Synth.Oper is
       is
          N : Net;
       begin
-         N := Synth_Uresize (Left, Right.Typ.W, Expr);
-         N := Build_Compare (Build_Context, Id, Get_Net (Right), N);
+         N := Synth_Uresize (Ctxt, Left, Right.Typ.W, Expr);
+         N := Build_Compare (Ctxt, Id, Get_Net (Ctxt, Right), N);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare_Nat_Uns;
@@ -472,8 +488,8 @@ package body Synth.Oper is
       is
          N : Net;
       begin
-         N := Synth_Sresize (Right, Left.Typ.W, Expr);
-         N := Build_Compare (Build_Context, Id, Get_Net (Left), N);
+         N := Synth_Sresize (Ctxt, Right, Left.Typ.W, Expr);
+         N := Build_Compare (Ctxt, Id, Get_Net (Ctxt, Left), N);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Sgn_Int;
@@ -483,8 +499,8 @@ package body Synth.Oper is
       is
          N : Net;
       begin
-         N := Synth_Sresize (Left, Right.Typ.W, Expr);
-         N := Build_Compare (Build_Context, Id, N, Get_Net (Right));
+         N := Synth_Sresize (Ctxt, Left, Right.Typ.W, Expr);
+         N := Build_Compare (Ctxt, Id, N, Get_Net (Ctxt, Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Int_Sgn;
@@ -497,8 +513,8 @@ package body Synth.Oper is
             Error_Msg_Synth (+Expr, "operands don't have the same length");
             return No_Valtyp;
          end if;
-         N := Build_Dyadic (Build_Context, Id,
-                            Get_Net (Left), Get_Net (Right));
+         N := Build_Dyadic (Ctxt, Id,
+                            Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Vec_Dyadic;
@@ -509,7 +525,7 @@ package body Synth.Oper is
          N : Net;
       begin
          N := Build_Dyadic
-           (Build_Context, Id, Get_Net (Left), Get_Net (Right));
+           (Ctxt, Id, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Etype);
       end Synth_Int_Dyadic;
@@ -521,9 +537,9 @@ package body Synth.Oper is
          L1, R1 : Net;
          N : Net;
       begin
-         L1 := Synth_Uresize (Left, W, Expr);
-         R1 := Synth_Uresize (Right, W, Expr);
-         N := Build_Compare (Build_Context, Id, L1, R1);
+         L1 := Synth_Uresize (Ctxt, Left, W, Expr);
+         R1 := Synth_Uresize (Ctxt, Right, W, Expr);
+         N := Build_Compare (Ctxt, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare_Uns_Uns;
@@ -535,9 +551,9 @@ package body Synth.Oper is
          L1, R1 : Net;
          N : Net;
       begin
-         L1 := Synth_Sresize (Left, W, Expr);
-         R1 := Synth_Sresize (Right, W, Expr);
-         N := Build_Compare (Build_Context, Id, L1, R1);
+         L1 := Synth_Sresize (Ctxt, Left, W, Expr);
+         R1 := Synth_Sresize (Ctxt, Right, W, Expr);
+         N := Build_Compare (Ctxt, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Sgn_Sgn;
@@ -552,8 +568,8 @@ package body Synth.Oper is
          Res_Typ : Type_Acc;
          N : Net;
       begin
-         L1 := Synth_Uresize (Left, W, Expr);
-         R1 := Synth_Uresize (Right, W, Expr);
+         L1 := Synth_Uresize (Ctxt, Left, W, Expr);
+         R1 := Synth_Uresize (Ctxt, Right, W, Expr);
          case Vec is
             when Oper_Left =>
                Res_Typ := Left.Typ;
@@ -575,8 +591,8 @@ package body Synth.Oper is
          Res_Typ : Type_Acc;
          N : Net;
       begin
-         L1 := Synth_Sresize (Left, W, Expr);
-         R1 := Synth_Sresize (Right, W, Expr);
+         L1 := Synth_Sresize (Ctxt, Left, W, Expr);
+         R1 := Synth_Sresize (Ctxt, Right, W, Expr);
          case Vec is
             when Oper_Left =>
                Res_Typ := Left.Typ;
@@ -596,8 +612,8 @@ package body Synth.Oper is
          L1, R1 : Net;
          N, Nn, Nr1, Cond : Net;
       begin
-         L1 := Get_Net (Left);
-         R1 := Get_Net (Right);
+         L1 := Get_Net (Ctxt, Left);
+         R1 := Get_Net (Ctxt, Right);
 
          --  Handle the case when the RHS is positive.
          N := Build_Shift_Rotate (Ctxt, Sh_Pos, L1, R1);
@@ -642,7 +658,7 @@ package body Synth.Oper is
             Error_Msg_Synth (+Expr, "rotation quantity must be unsigned");
             return Left;
          else
-            R1 := Get_Net (Right);
+            R1 := Get_Net (Ctxt, Right);
             Ww := Netlists.Utils.Clog2 (Left.Typ.W);
             if Right.Typ.W >= Ww then
                if Mutils.Is_Power2 (Uns64 (Left.Typ.W)) then
@@ -654,7 +670,7 @@ package body Synth.Oper is
                end if;
             end if;
          end if;
-         L1 := Get_Net (Left);
+         L1 := Get_Net (Ctxt, Left);
          N := Build_Shift_Rotate (Ctxt, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Create_Res_Bound (Left));
@@ -665,13 +681,13 @@ package body Synth.Oper is
       if Left = No_Valtyp then
          return No_Valtyp;
       end if;
-      Left := Synth_Subtype_Conversion (Left, Left_Typ, False, Expr);
+      Left := Synth_Subtype_Conversion (Ctxt, Left, Left_Typ, False, Expr);
       Right := Synth_Expression_With_Type
         (Syn_Inst, Right_Expr, Right_Typ, En);
       if Right = No_Valtyp then
          return No_Valtyp;
       end if;
-      Right := Synth_Subtype_Conversion (Right, Right_Typ, False, Expr);
+      Right := Synth_Subtype_Conversion (Ctxt, Right, Right_Typ, False, Expr);
 
       if Is_Static_Val (Left.Val) and Is_Static_Val (Right.Val) then
          Srec := Synth_Static_Dyadic_Predefined
@@ -745,9 +761,9 @@ package body Synth.Oper is
               or else Left_Typ = Logic_Type
             then
                if Is_Static (Left.Val) then
-                  return Synth_Bit_Eq_Const (Left, Right, Expr);
+                  return Synth_Bit_Eq_Const (Ctxt, Left, Right, Expr);
                elsif Is_Static (Right.Val) then
-                  return Synth_Bit_Eq_Const (Right, Left, Expr);
+                  return Synth_Bit_Eq_Const (Ctxt, Right, Left, Expr);
                end if;
             end if;
             return Synth_Compare (Id_Eq, Boolean_Type);
@@ -801,7 +817,7 @@ package body Synth.Oper is
                     (+Expr, "no operand of ?= is constant, handled like =");
                   return Synth_Compare (Id_Eq, Logic_Type);
                end if;
-               Res := Synth_Match (Cst, Oper, Expr);
+               Res := Synth_Match (Ctxt, Cst, Oper, Expr);
                if Res = No_Net then
                   return Create_Value_Discrete (Std_Logic_X_Pos, Expr_Typ);
                else
@@ -830,7 +846,7 @@ package body Synth.Oper is
                     (+Expr, "no operand of ?/= is constant, handled like /=");
                   return Synth_Compare (Id_Ne, Logic_Type);
                end if;
-               Res := Synth_Match (Cst, Oper, Expr, Id_Ne);
+               Res := Synth_Match (Ctxt, Cst, Oper, Expr, Id_Ne);
                if Res = No_Net then
                   return Create_Value_Discrete (Std_Logic_X_Pos, Expr_Typ);
                else
@@ -856,10 +872,10 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
             --  "+" (Unsigned, Natural)
-            return Synth_Dyadic_Uns_Nat (Id_Add, Left, Right, Expr);
+            return Synth_Dyadic_Uns_Nat (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns =>
             --  "+" (Natural, Unsigned)
-            return Synth_Dyadic_Nat_Uns (Id_Add, Left, Right, Expr);
+            return Synth_Dyadic_Nat_Uns (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
            |  Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
            |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
@@ -869,16 +885,16 @@ package body Synth.Oper is
            |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv
            |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Uns =>
             --  "+" (Unsigned, Unsigned)
-            return Synth_Dyadic_Uns_Uns (Id_Add, Left, Right, Expr);
+            return Synth_Dyadic_Uns_Uns (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
            |  Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int =>
             --  "+" (Signed, Integer)
-            return Synth_Dyadic_Sgn_Int (Id_Add, Left, Right, Expr);
+            return Synth_Dyadic_Sgn_Int (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn
            |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn
            |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv =>
             --  "+" (Integer, Signed)
-            return Synth_Dyadic_Int_Sgn (Id_Add, Left, Right, Expr);
+            return Synth_Dyadic_Int_Sgn (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
            |  Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
            |  Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
@@ -888,12 +904,12 @@ package body Synth.Oper is
            |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
            |  Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
             --  "+" (Signed, Signed)
-            return Synth_Dyadic_Sgn_Sgn (Id_Add, Left, Right, Expr);
+            return Synth_Dyadic_Sgn_Sgn (Ctxt, Id_Add, Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat
            |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int =>
             --  "-" (Unsigned, Natural)
-            return Synth_Dyadic_Uns_Nat (Id_Sub, Left, Right, Expr);
+            return Synth_Dyadic_Uns_Nat (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv
@@ -902,23 +918,23 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Slv
            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns =>
             --  "-" (Unsigned, Unsigned)
-            return Synth_Dyadic_Uns_Uns (Id_Sub, Left, Right, Expr);
+            return Synth_Dyadic_Uns_Uns (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns =>
             --  "-" (Natural, Unsigned)
-            return Synth_Dyadic_Nat_Uns (Id_Sub, Left, Right, Expr);
+            return Synth_Dyadic_Nat_Uns (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
             --  "-" (Signed, Integer)
-            return Synth_Dyadic_Sgn_Int (Id_Sub, Left, Right, Expr);
+            return Synth_Dyadic_Sgn_Int (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn =>
             --  "-" (Integer, Signed)
-            return Synth_Dyadic_Int_Sgn (Id_Sub, Left, Right, Expr);
+            return Synth_Dyadic_Int_Sgn (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn
            | Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
            | Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv =>
             --  "-" (Signed, Signed)
-            return Synth_Dyadic_Sgn_Sgn (Id_Sub, Left, Right, Expr);
+            return Synth_Dyadic_Sgn_Sgn (Ctxt, Id_Sub, Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn
            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn
@@ -930,9 +946,9 @@ package body Synth.Oper is
                L, R : Net;
                N : Net;
             begin
-               L := Synth_Sresize (Left, W, Left_Expr);
-               R := Synth_Sresize (Right, W, Right_Expr);
-               N := Build_Dyadic (Build_Context, Id_Smul, L, R);
+               L := Synth_Sresize (Ctxt, Left, W, Left_Expr);
+               R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
+               N := Build_Dyadic (Ctxt, Id_Smul, L, R);
                Set_Location (N, Expr);
                return Create_Value_Net
                  (N, Create_Vec_Type_By_Length (W, Left.Typ.Vec_El));
@@ -945,10 +961,10 @@ package body Synth.Oper is
                L, R : Net;
                N : Net;
             begin
-               L := Synth_Sresize (Left, W, Left_Expr);
-               R := Synth_Sresize (Right, W, Right_Expr);
+               L := Synth_Sresize (Ctxt, Left, W, Left_Expr);
+               R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
                Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-               N := Build_Dyadic (Build_Context, Id_Smul, L, R);
+               N := Build_Dyadic (Ctxt, Id_Smul, L, R);
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
@@ -960,10 +976,10 @@ package body Synth.Oper is
                L, R : Net;
                N : Net;
             begin
-               L := Synth_Sresize (Left, W, Left_Expr);
-               R := Synth_Sresize (Right, W, Right_Expr);
+               L := Synth_Sresize (Ctxt, Left, W, Left_Expr);
+               R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
                Rtype := Create_Vec_Type_By_Length (W, Right.Typ.Vec_El);
-               N := Build_Dyadic (Build_Context, Id_Smul, L, R);
+               N := Build_Dyadic (Ctxt, Id_Smul, L, R);
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
@@ -978,8 +994,8 @@ package body Synth.Oper is
                L, R : Net;
                N : Net;
             begin
-               L := Synth_Uresize (Left, W, Left_Expr);
-               R := Synth_Uresize (Right, W, Right_Expr);
+               L := Synth_Uresize (Ctxt, Left, W, Left_Expr);
+               R := Synth_Uresize (Ctxt, Right, W, Right_Expr);
                Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
                N := Build_Dyadic (Build_Context, Id_Umul, L, R);
                Set_Location (N, Expr);
@@ -993,8 +1009,8 @@ package body Synth.Oper is
                Rtype : Type_Acc;
                N : Net;
             begin
-               L1 := Synth_Uresize (Left, W, Expr);
-               R1 := Synth_Uresize (Right, W, Expr);
+               L1 := Synth_Uresize (Ctxt, Left, W, Expr);
+               R1 := Synth_Uresize (Ctxt, Right, W, Expr);
                Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
                N := Build_Dyadic (Ctxt, Id_Umul, L1, R1);
                Set_Location (N, Expr);
@@ -1008,8 +1024,8 @@ package body Synth.Oper is
                Rtype : Type_Acc;
                N : Net;
             begin
-               L1 := Synth_Uresize (Left, W, Expr);
-               R1 := Synth_Uresize (Right, W, Expr);
+               L1 := Synth_Uresize (Ctxt, Left, W, Expr);
+               R1 := Synth_Uresize (Ctxt, Right, W, Expr);
                Rtype := Create_Vec_Type_By_Length (W, Right.Typ.Vec_El);
                N := Build_Dyadic (Ctxt, Id_Umul, L1, R1);
                Set_Location (N, Expr);
@@ -1023,8 +1039,8 @@ package body Synth.Oper is
                L, R : Net;
                N : Net;
             begin
-               L := Synth_Uresize (Left, W, Left_Expr);
-               R := Synth_Sresize (Right, W, Right_Expr);
+               L := Synth_Uresize (Ctxt, Left, W, Left_Expr);
+               R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
                Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
                N := Build_Dyadic (Build_Context, Id_Smul, L, R);
                Set_Location (N, Expr);
@@ -1237,11 +1253,11 @@ package body Synth.Oper is
 
          when Iir_Predefined_Array_Element_Concat =>
             declare
-               L : constant Net := Get_Net (Left);
+               L : constant Net := Get_Net (Ctxt, Left);
                Bnd : Bound_Type;
                N : Net;
             begin
-               N := Build_Concat2 (Build_Context, L, Get_Net (Right));
+               N := Build_Concat2 (Ctxt, L, Get_Net (Ctxt, Right));
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
@@ -1253,11 +1269,11 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Element_Array_Concat =>
             declare
-               R : constant Net := Get_Net (Right);
+               R : constant Net := Get_Net (Ctxt, Right);
                Bnd : Bound_Type;
                N : Net;
             begin
-               N := Build_Concat2 (Build_Context, Get_Net (Left), R);
+               N := Build_Concat2 (Ctxt, Get_Net (Ctxt, Left), R);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
@@ -1273,7 +1289,7 @@ package body Synth.Oper is
                Bnd : Bound_Type;
             begin
                N := Build_Concat2
-                 (Build_Context, Get_Net (Left), Get_Net (Right));
+                 (Ctxt, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2);
@@ -1282,8 +1298,8 @@ package body Synth.Oper is
             end;
          when Iir_Predefined_Array_Array_Concat =>
             declare
-               L : constant Net := Get_Net (Left);
-               R : constant Net := Get_Net (Right);
+               L : constant Net := Get_Net (Ctxt, Left);
+               R : constant Net := Get_Net (Ctxt, Right);
                Bnd : Bound_Type;
                N : Net;
             begin
@@ -1320,7 +1336,7 @@ package body Synth.Oper is
                   if R > 0 and then Is_Power2 (Uns64 (R)) then
                      Log_R := Clog2 (Uns64 (R));
                      pragma Assert (Log_R <= Natural (Left.Typ.W));
-                     N := Get_Net (Left);
+                     N := Get_Net (Ctxt, Left);
                      N := Build2_Extract (Ctxt, N, 0, Width (Log_R));
                      N := Build2_Uresize (Ctxt, N, Left.Typ.W,
                                           Get_Location (Expr));
@@ -1386,6 +1402,7 @@ package body Synth.Oper is
                                      Loc : Node;
                                      En : Net) return Valtyp
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
       Inter_Chain : constant Node :=
@@ -1398,27 +1415,27 @@ package body Synth.Oper is
       is
          N : Net;
       begin
-         N := Build_Monadic (Build_Context, Id, Get_Net (Operand));
+         N := Build_Monadic (Ctxt, Id, Get_Net (Ctxt, Operand));
          Set_Location (N, Loc);
          return Create_Value_Net (N, Operand.Typ);
       end Synth_Bit_Monadic;
 
       function Synth_Vec_Monadic (Id : Monadic_Module_Id) return Valtyp
       is
-         Op: constant Net := Get_Net (Operand);
+         Op: constant Net := Get_Net (Ctxt, Operand);
          N : Net;
       begin
-         N := Build_Monadic (Build_Context, Id, Op);
+         N := Build_Monadic (Ctxt, Id, Op);
          Set_Location (N, Loc);
          return Create_Value_Net (N, Create_Res_Bound (Operand));
       end Synth_Vec_Monadic;
 
       function Synth_Vec_Reduce_Monadic (Id : Reduce_Module_Id) return Valtyp
       is
-         Op: constant Net := Get_Net (Operand);
+         Op: constant Net := Get_Net (Ctxt, Operand);
          N : Net;
       begin
-         N := Build_Reduce (Build_Context, Id, Op);
+         N := Build_Reduce (Ctxt, Id, Op);
          Set_Location (N, Loc);
          return Create_Value_Net (N, Operand.Typ.Vec_El);
       end Synth_Vec_Reduce_Monadic;
@@ -1428,7 +1445,8 @@ package body Synth.Oper is
       if Operand = No_Valtyp then
          return No_Valtyp;
       end if;
-      Operand := Synth_Subtype_Conversion (Operand, Oper_Typ, False, Loc);
+      Operand := Synth_Subtype_Conversion
+        (Ctxt, Operand, Oper_Typ, False, Loc);
       Strip_Const (Operand);
 
       if Is_Static_Val (Operand.Val) then
@@ -1460,13 +1478,13 @@ package body Synth.Oper is
             return Synth_Vec_Reduce_Monadic(Id_Red_Or);
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             return Create_Value_Net
-              (Get_Net (Operand),
+              (Get_Net (Ctxt, Operand),
                Get_Subtype_Object (Syn_Inst, Get_Type (Imp)));
          when Iir_Predefined_Integer_Negation =>
             declare
                N : Net;
             begin
-               N := Build_Monadic (Build_Context, Id_Neg, Get_Net (Operand));
+               N := Build_Monadic (Ctxt, Id_Neg, Get_Net (Ctxt, Operand));
                Set_Location (N, Loc);
                return Create_Value_Net (N, Operand.Typ);
             end;
@@ -1478,14 +1496,15 @@ package body Synth.Oper is
       end case;
    end Synth_Monadic_Operation;
 
-   function Synth_Shift_Rotate (Id : Shift_Rotate_Module_Id;
+   function Synth_Shift_Rotate (Ctxt : Context_Acc;
+                                Id : Shift_Rotate_Module_Id;
                                 Left, Right : Valtyp;
                                 Expr : Node) return Valtyp
    is
-      L : constant Net := Get_Net (Left);
+      L : constant Net := Get_Net (Ctxt, Left);
       N : Net;
    begin
-      N := Build_Shift_Rotate (Build_Context, Id, L, Get_Net (Right));
+      N := Build_Shift_Rotate (Ctxt, Id, L, Get_Net (Ctxt, Right));
       Set_Location (N, Expr);
       return Create_Value_Net (N, Create_Res_Bound (Left));
    end Synth_Shift_Rotate;
@@ -1518,7 +1537,7 @@ package body Synth.Oper is
             return No_Valtyp;
          end if;
          Size := Uns32 (Read_Discrete (Size_Vt));
-         Arg_Net := Get_Net (Arg);
+         Arg_Net := Get_Net (Ctxt, Arg);
          Arg_Net := Build2_Resize (Ctxt, Arg_Net, Size, Is_Signed,
                                    Get_Location (Expr));
          return Create_Value_Net
@@ -1548,7 +1567,7 @@ package body Synth.Oper is
             declare
                Edge : Net;
             begin
-               Edge := Build_Posedge (Ctxt, Get_Net (L));
+               Edge := Build_Posedge (Ctxt, Get_Net (Ctxt, L));
                Set_Location (Edge, Expr);
                return Create_Value_Net (Edge, Res_Typ);
             end;
@@ -1556,7 +1575,7 @@ package body Synth.Oper is
             declare
                Edge : Net;
             begin
-               Edge := Build_Negedge (Ctxt, Get_Net (L));
+               Edge := Build_Negedge (Ctxt, Get_Net (Ctxt, L));
                Set_Location (Edge, Expr);
                return Create_Value_Net (Edge, Res_Typ);
             end;
@@ -1572,9 +1591,9 @@ package body Synth.Oper is
             if Is_Static (L.Val) then
                raise Internal_Error;
             end if;
-            return Create_Value_Net (Get_Net (L), Create_Res_Bound (L));
+            return Create_Value_Net (Get_Net (Ctxt, L), Create_Res_Bound (L));
          when Iir_Predefined_Ieee_1164_To_Bit =>
-            return Create_Value_Net (Get_Net (L), Res_Typ);
+            return Create_Value_Net (Get_Net (Ctxt, L), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             return Synth_Conv_Vector (False);
@@ -1587,11 +1606,11 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
             return Create_Value_Net
-              (Synth_Uresize (Get_Net (L), Res_Typ.W, Expr), Res_Typ);
+              (Synth_Uresize (Get_Net (Ctxt, L), Res_Typ.W, Expr), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int =>
             --  SIGNED to Integer.
             return Create_Value_Net
-              (Synth_Sresize (L, Res_Typ.W, Expr), Res_Typ);
+              (Synth_Sresize (Ctxt, L, Res_Typ.W, Expr), Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Arith_Ext =>
             declare
@@ -1603,7 +1622,7 @@ package body Synth.Oper is
                end if;
                W := Uns32 (Read_Discrete (R));
                return Create_Value_Net
-                 (Synth_Uresize (Get_Net (L), W, Expr),
+                 (Synth_Uresize (Get_Net (Ctxt, L), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat
@@ -1617,53 +1636,54 @@ package body Synth.Oper is
                end if;
                W := Uns32 (Read_Discrete (R));
                return Create_Value_Net
-                 (Build2_Sresize (Ctxt, Get_Net (L), W, Get_Location (Expr)),
+                 (Build2_Sresize (Ctxt, Get_Net (Ctxt, L),
+                                  W, Get_Location (Expr)),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat
            | Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat =>
-            return Synth_Shift_Rotate (Id_Lsl, L, R, Expr);
+            return Synth_Shift_Rotate (Ctxt, Id_Lsl, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat =>
-            return Synth_Shift_Rotate (Id_Lsr, L, R, Expr);
+            return Synth_Shift_Rotate (Ctxt, Id_Lsr, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat =>
-            return Synth_Shift_Rotate (Id_Asr, L, R, Expr);
+            return Synth_Shift_Rotate (Ctxt, Id_Asr, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat =>
-            return Synth_Shift_Rotate (Id_Rol, L, R, Expr);
+            return Synth_Shift_Rotate (Ctxt, Id_Rol, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat =>
-            return Synth_Shift_Rotate (Id_Ror, L, R, Expr);
+            return Synth_Shift_Rotate (Ctxt, Id_Ror, L, R, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Uns =>
-            return Synth_Dyadic_Uns_Uns (Id_Umin, L, R, Expr);
+            return Synth_Dyadic_Uns_Uns (Ctxt, Id_Umin, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Nat =>
-            return Synth_Dyadic_Uns_Nat (Id_Umin, L, R, Expr);
+            return Synth_Dyadic_Uns_Nat (Ctxt, Id_Umin, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Min_Nat_Uns =>
-            return Synth_Dyadic_Nat_Uns (Id_Umin, L, R, Expr);
+            return Synth_Dyadic_Nat_Uns (Ctxt, Id_Umin, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Sgn =>
-            return Synth_Dyadic_Sgn_Sgn (Id_Smin, L, R, Expr);
+            return Synth_Dyadic_Sgn_Sgn (Ctxt, Id_Smin, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Int =>
-            return Synth_Dyadic_Sgn_Int (Id_Smin, L, R, Expr);
+            return Synth_Dyadic_Sgn_Int (Ctxt, Id_Smin, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Min_Int_Sgn =>
-            return Synth_Dyadic_Int_Sgn (Id_Smin, L, R, Expr);
+            return Synth_Dyadic_Int_Sgn (Ctxt, Id_Smin, L, R, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Uns =>
-            return Synth_Dyadic_Uns_Uns (Id_Umax, L, R, Expr);
+            return Synth_Dyadic_Uns_Uns (Ctxt, Id_Umax, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Nat =>
-            return Synth_Dyadic_Uns_Nat (Id_Umax, L, R, Expr);
+            return Synth_Dyadic_Uns_Nat (Ctxt, Id_Umax, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Max_Nat_Uns =>
-            return Synth_Dyadic_Nat_Uns (Id_Umax, L, R, Expr);
+            return Synth_Dyadic_Nat_Uns (Ctxt, Id_Umax, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Sgn =>
-            return Synth_Dyadic_Sgn_Sgn (Id_Smax, L, R, Expr);
+            return Synth_Dyadic_Sgn_Sgn (Ctxt, Id_Smax, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Int =>
-            return Synth_Dyadic_Sgn_Int (Id_Smax, L, R, Expr);
+            return Synth_Dyadic_Sgn_Int (Ctxt, Id_Smax, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn =>
-            return Synth_Dyadic_Int_Sgn (Id_Smax, L, R, Expr);
+            return Synth_Dyadic_Int_Sgn (Ctxt, Id_Smax, L, R, Expr);
 
          when Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Slv
            | Iir_Predefined_Ieee_Std_Logic_Misc_Or_Reduce_Suv =>
             declare
                N : Net;
             begin
-               N := Build_Reduce (Ctxt, Id_Red_Or, Get_Net (L));
+               N := Build_Reduce (Ctxt, Id_Red_Or, Get_Net (Ctxt, L));
                Set_Location (N, Expr);
                return Create_Value_Net (N, Res_Typ);
             end;
@@ -1690,7 +1710,7 @@ package body Synth.Oper is
                     (+Expr, "operands of std_match don't have the same size");
                   return Create_Value_Discrete (0, Boolean_Type);
                end if;
-               Res := Synth_Match (Cst, Oper, Expr);
+               Res := Synth_Match (Ctxt, Cst, Oper, Expr);
                if Res = No_Net then
                   return Create_Value_Discrete (0, Boolean_Type);
                else

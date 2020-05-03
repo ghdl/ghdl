@@ -21,7 +21,7 @@
 with Types; use Types;
 
 with Netlists; use Netlists;
-with Netlists.Builders;
+with Netlists.Builders; use Netlists.Builders;
 
 with Vhdl.Annotations; use Vhdl.Annotations;
 with Vhdl.Nodes; use Vhdl.Nodes;
@@ -38,7 +38,7 @@ package Synth.Context is
    type Synth_Instance_Acc is access Synth_Instance_Type;
 
    --  Global context.
-   Build_Context : Netlists.Builders.Context_Acc;
+   Build_Context : Context_Acc;
 
    function Get_Instance_By_Scope
      (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
@@ -71,8 +71,7 @@ package Synth.Context is
    function Get_Sname (Inst : Synth_Instance_Acc) return Sname;
    pragma Inline (Get_Sname);
 
-   function Get_Build (Inst : Synth_Instance_Acc)
-                      return Netlists.Builders.Context_Acc;
+   function Get_Build (Inst : Synth_Instance_Acc) return Context_Acc;
    pragma Inline (Get_Build);
 
    function Get_Top_Module (Inst : Synth_Instance_Acc) return Module;
@@ -120,10 +119,10 @@ package Synth.Context is
 
    --  Get a net from a scalar/vector value.  This will automatically create
    --  a net for literals.
-   function Get_Net (Val : Valtyp) return Net;
-   function Get_Partial_Memtyp_Net (Val : Memtyp; Off : Uns32; Wd : Width)
-                                   return Net;
-   function Get_Memtyp_Net (Val : Memtyp) return Net;
+   function Get_Net (Ctxt : Context_Acc; Val : Valtyp) return Net;
+   function Get_Partial_Memtyp_Net
+     (Ctxt : Context_Acc; Val : Memtyp; Off : Uns32; Wd : Width) return Net;
+   function Get_Memtyp_Net (Ctxt : Context_Acc; Val : Memtyp) return Net;
 
    function Get_Package_Object
      (Syn_Inst : Synth_Instance_Acc; Pkg : Node) return Synth_Instance_Acc;
@@ -162,7 +161,7 @@ private
    type Objects_Array is array (Object_Slot_Type range <>) of Obj_Type;
 
    type Base_Instance_Type is limited record
-      Builder : Netlists.Builders.Context_Acc;
+      Builder : Context_Acc;
       Top_Module : Module;
 
       Cur_Module : Module;
