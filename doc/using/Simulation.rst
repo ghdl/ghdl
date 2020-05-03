@@ -133,6 +133,10 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
 
   Load VPI module.
 
+  .. HINT::
+    Currently, although multiple ``--vpi=`` options can be passed, only the last one is kept/used. However, handling
+    more than one shouldn't be a difficult change.
+
 .. option:: --vpi-trace=<FILE>
 
   Trace vpi calls to FILE.
