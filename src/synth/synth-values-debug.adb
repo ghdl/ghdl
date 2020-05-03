@@ -20,7 +20,10 @@
 
 with Simple_IO; use Simple_IO;
 with Utils_IO; use Utils_IO;
+
 with Vhdl.Nodes; use Vhdl.Nodes;
+
+with Synth.Environment.Debug; use Synth.Environment.Debug;
 
 package body Synth.Values.Debug is
    procedure Put_Dir (Dir : Direction_Type) is
@@ -178,9 +181,11 @@ package body Synth.Values.Debug is
            | Value_Const =>
             Debug_Memtyp (Get_Memtyp (V));
          when Value_Net =>
-            Put_Line ("a net");
+            Put_Line (" net");
          when Value_Wire =>
-            Put_Line ("a wire");
+            Put (" wire");
+            Put_Wire_Id (V.Val.W);
+            New_Line;
          when Value_File =>
             Put_Line ("a file");
          when Value_Alias =>

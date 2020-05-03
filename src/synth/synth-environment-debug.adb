@@ -21,12 +21,20 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Netlists.Dump; use Netlists.Dump;
 
+with Synth.Values.Debug; use Synth.Values.Debug;
+
 package body Synth.Environment.Debug is
-   procedure Dump_Wire (Wid : Wire_Id)
+   procedure Put_Wire_Id (Wid : Wire_Id) is
+   begin
+      Put (Wire_Id'Image (Wid));
+   end Put_Wire_Id;
+
+   procedure Debug_Wire (Wid : Wire_Id)
    is
       W_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Wid);
    begin
-      Put ("Wire:" & Wire_Id'Image (Wid));
+      Put ("Wire:");
+      Put_Wire_Id (Wid);
       Put_Line ("  kind: " & Wire_Kind'Image (W_Rec.Kind));
       Put_Line (" decl:" & Source.Syn_Src'Image (W_Rec.Decl));
       Put (" gate: ");
@@ -34,7 +42,7 @@ package body Synth.Environment.Debug is
       New_Line;
       Put_Line (" cur_assign:" & Seq_Assign'Image (W_Rec.Cur_Assign));
       Put_Line (" conc_assign:" & Conc_Assign'Image(W_Rec.Final_Assign));
-   end Dump_Wire;
+   end Debug_Wire;
 
    procedure Dump_Partial_Assign (Pasgn : Partial_Assign)
    is
@@ -65,7 +73,7 @@ package body Synth.Environment.Debug is
       end loop;
    end Dump_Partial_Assign;
 
-   procedure Dump_Assign (Asgn : Seq_Assign)
+   procedure Debug_Assign (Asgn : Seq_Assign)
    is
       Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
    begin
@@ -88,13 +96,14 @@ package body Synth.Environment.Debug is
          when Unknown =>
             Put_Line ("   ??? (unknown)");
          when True =>
-            Put_Line ("   static");
+            Put_Line ("   static:");
+            Debug_Memtyp (Rec.Val.Val);
          when False =>
             Dump_Partial_Assign (Rec.Val.Asgns);
       end case;
-   end Dump_Assign;
+   end Debug_Assign;
 
-   procedure Dump_Phi (Id : Phi_Id)
+   procedure Debug_Phi (Id : Phi_Id)
    is
       Phi : Phi_Type renames Phis_Table.Table (Id);
       Asgn : Seq_Assign;
@@ -103,12 +112,12 @@ package body Synth.Environment.Debug is
       New_Line;
       Asgn := Phi.First;
       while Asgn /= No_Seq_Assign loop
-         Dump_Assign (Asgn);
+         Debug_Assign (Asgn);
          Asgn := Get_Assign_Chain (Asgn);
       end loop;
-   end Dump_Phi;
+   end Debug_Phi;
 
-   procedure Dump_Conc_Assigns (First : Conc_Assign)
+   procedure Debug_Conc_Assigns (First : Conc_Assign)
    is
       Asgn : Conc_Assign;
    begin
@@ -127,5 +136,5 @@ package body Synth.Environment.Debug is
          end;
          New_Line;
       end loop;
-   end Dump_Conc_Assigns;
+   end Debug_Conc_Assigns;
 end Synth.Environment.Debug;

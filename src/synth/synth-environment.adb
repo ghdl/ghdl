@@ -1315,7 +1315,7 @@ package body Synth.Environment is
    end Merge_Partial_Assigns;
 
    procedure Merge_Assigns (Ctxt : Builders.Context_Acc;
-                            W : Wire_Id;
+                            Wid : Wire_Id;
                             Sel : Net;
                             F_Asgns : Seq_Assign_Value;
                             T_Asgns : Seq_Assign_Value;
@@ -1347,7 +1347,7 @@ package body Synth.Environment is
          for I in N'Range loop
             if N (I) = No_Net then
                --  No partial assignment.  Get extract previous value.
-               N (I) := Get_Current_Assign_Value (Ctxt, W, Off, Wd);
+               N (I) := Get_Current_Assign_Value (Ctxt, Wid, Off, Wd);
             end if;
          end loop;
 
@@ -1407,7 +1407,7 @@ package body Synth.Environment is
       --  Do the assignments from the result list.
       --  It cannot be done before because the assignments will overwrite the
       --  last assignments which are read to create a partial assignment.
-      Merge_Partial_Assigns (Ctxt, W, List);
+      Merge_Partial_Assigns (Ctxt, Wid, List);
    end Merge_Assigns;
 
    function Merge_Static_Assigns (Wid : Wire_Id; Tv, Fv : Seq_Assign_Value)

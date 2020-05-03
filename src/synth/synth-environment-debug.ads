@@ -19,9 +19,10 @@
 --  MA 02110-1301, USA.
 
 package Synth.Environment.Debug is
-   procedure Dump_Wire (Wid : Wire_Id);
-   procedure Dump_Assign (Asgn : Seq_Assign);
-   procedure Dump_Conc_Assigns (First : Conc_Assign);
+   procedure Put_Wire_Id (Wid : Wire_Id);
+   procedure Debug_Wire (Wid : Wire_Id);
+   procedure Debug_Assign (Asgn : Seq_Assign);
+   procedure Debug_Conc_Assigns (First : Conc_Assign);
 private
-   procedure Dump_Phi (Id : Phi_Id);
+   procedure Debug_Phi (Id : Phi_Id);
 end Synth.Environment.Debug;
