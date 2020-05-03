@@ -46,9 +46,6 @@ package body Netlists.Butils is
 
       --  Handle SEL bits by 2, so group case_element by 4.
       for I in 1 .. Natural (Wd / 2) loop
-         --  Extract 2 bits from the selector.
-         Sub_Sel := Build_Extract (Ctxt, Sel, Width (2 * (I - 1)), 2);
-         Set_Location (Sub_Sel, Sel_Loc);
          Mask := Shift_Left (not 0, Natural (2 * I));
          Iels := Els'First;
          Oels := Els'First;
@@ -61,6 +58,7 @@ package body Netlists.Butils is
                El_Idx : Natural;
                Rsel : Net;
             begin
+               --  Extract 2 bits from the selector.
                G := (others => Default);
                for K in 0 .. 3 loop
                   exit when Iels > Lels;
@@ -76,9 +74,19 @@ package body Netlists.Butils is
                  and G (2) /= No_Net
                  and G (3) /= No_Net
                then
-                  Rsel := Build_Mux4 (Ctxt,
-                                      Sub_Sel, G (0), G (1), G (2), G (3));
-                  Set_Location (Rsel, Sel_Loc);
+                  --  The 4 choices are available.
+                  if G (0) = G (1) and G (0) = G (2) and G (0) = G (3) then
+                     --  But they are the same: no need to choose!
+                     Rsel := G (0);
+                  else
+                     Sub_Sel := Build_Extract (Ctxt,
+                                               Sel, Width (2 * (I - 1)), 2);
+                     Set_Location (Sub_Sel, Sel_Loc);
+
+                     Rsel := Build_Mux4 (Ctxt,
+                                         Sub_Sel, G (0), G (1), G (2), G (3));
+                     Set_Location (Rsel, Sel_Loc);
+                  end if;
                else
                   for K in 0 .. 1 loop
                      if G (2 * K) /= No_Net and G (2 * K + 1) /= No_Net then
