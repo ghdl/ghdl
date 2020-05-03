@@ -2262,11 +2262,6 @@ package body Synth.Stmts is
       Lc : constant Loop_Context_Acc := C.Cur_Loop;
       Res : Net;
    begin
-      if not Lc.Need_Quit then
-         --  No next/exit statement for this loop.  So no control.
-         return;
-      end if;
-
       --  Execution continue after this loop iff:
       --  1. Loop was enabled (Lc.Saved_En)
       Res := Lc.Saved_En;
