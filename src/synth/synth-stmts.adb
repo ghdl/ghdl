@@ -1041,6 +1041,7 @@ package body Synth.Stmts is
             Min_Off, Off : Uns32;
             Wd : Width;
             List : Partial_Assign_List;
+            Sval : Memtyp;
          begin
             --  Extract the value for each branch.
             for I in Alts'Range loop
@@ -1055,53 +1056,112 @@ package body Synth.Stmts is
                end if;
             end loop;
 
-            --  Compute the final value for each partial part of the wire.
-            Partial_Assign_Init (List);
-            Min_Off := 0;
-            loop
-               Off := Min_Off;
+            --  If:
+            --  1) All present values in PASGNS are static
+            --  2) There is no missing values *or* the previous value is
+            --     static.
+            --  3) The default value is unused *or* it is static
+            --  4) All the values are equal.
+            --  then assign directly.
+            Sval := Null_Memtyp;
+            declare
+               Prev_Val : Memtyp;
+            begin
+               Prev_Val := Null_Memtyp;
+               for I in Pasgns'Range loop
+                  case Pasgns (I).Is_Static is
+                     when False =>
+                        Sval := Null_Memtyp;
+                        --  It's over.
+                        exit;
+                     when Unknown =>
+                        if Prev_Val = Null_Memtyp then
+                           if not Is_Static_Wire (Wi) then
+                              Sval := Null_Memtyp;
+                              --  It's over.
+                              exit;
+                           end if;
+                           Prev_Val := Get_Static_Wire (Wi);
+                        end if;
+                        if Sval /= Null_Memtyp
+                          and then not Is_Equal (Sval, Prev_Val)
+                        then
+                           Sval := Null_Memtyp;
+                           --  It's over.
+                           exit;
+                        end if;
+                     when True =>
+                        if Sval = Null_Memtyp then
+                           Sval := Pasgns (I).Val;
+                           if Prev_Val /= Null_Memtyp
+                             and then not Is_Equal (Sval, Prev_Val)
+                           then
+                              Sval := Null_Memtyp;
+                              --  It's over.
+                              exit;
+                           end if;
+                        else
+                           if not Is_Equal (Sval, Pasgns (I).Val) then
+                              Sval := Null_Memtyp;
+                              --  It's over.
+                              exit;
+                           end if;
+                        end if;
+                  end case;
+               end loop;
+            end;
+            if Sval /= Null_Memtyp then
+               Phi_Assign_Static (Wi, Sval);
+            else
+               --  Compute the final value for each partial part of the wire.
+               Partial_Assign_Init (List);
+               Min_Off := 0;
+               loop
+                  Off := Min_Off;
 
-               --  Extract value of partial assignments to NETS.
-               Extract_Merge_Partial_Assigns
-                 (Build_Context, Pasgns.all, Nets.all, Off, Wd);
-               exit when Off = Uns32'Last and Wd = Width'Last;
+                  --  Extract value of partial assignments to NETS.
+                  Extract_Merge_Partial_Assigns
+                    (Build_Context, Pasgns.all, Nets.all, Off, Wd);
+                  exit when Off = Uns32'Last and Wd = Width'Last;
 
-               --  If a branch has no value, use the value before the case.
-               Last_Val := No_Net;
-               for I in Nets'Range loop
-                  if Nets (I) = No_Net then
-                     if Last_Val = No_Net then
-                        Last_Val := Get_Current_Assign_Value
-                          (Build_Context, Wi, Off, Wd);
+                  --  If a branch has no value, use the value before the case.
+                  Last_Val := No_Net;
+                  for I in Nets'Range loop
+                     if Nets (I) = No_Net then
+                        if Last_Val = No_Net then
+                           Last_Val := Get_Current_Assign_Value
+                             (Build_Context, Wi, Off, Wd);
+                        end if;
+                        Nets (I) := Last_Val;
                      end if;
-                     Nets (I) := Last_Val;
+                  end loop;
+
+                  --  Build the map between choices and values.
+                  for J in Annex_Arr'Range loop
+                     Ch := Natural (Annex_Arr (J));
+                     Case_El (J) :=
+                       (Sel => Choice_Data (Ch).Val,
+                        Val => Nets (Int32 (Choice_Data (Ch).Alt)));
+                  end loop;
+
+                  --  Extract default value (for missing alternative).
+                  if Others_Alt_Idx /= 0 then
+                     Default := Nets (Int32 (Others_Alt_Idx));
+                  else
+                     Default := No_Net;
                   end if;
+
+                  --  Generate the muxes tree.
+                  Synth_Case (Get_Build (C.Inst),
+                              Sel_Net, Case_El.all, Default, Res,
+                              Get_Location (Expr));
+
+                  Partial_Assign_Append (List, New_Partial_Assign (Res, Off));
+                  Min_Off := Off + Wd;
                end loop;
 
-               --  Build the map between choices and values.
-               for J in Annex_Arr'Range loop
-                  Ch := Natural (Annex_Arr (J));
-                  Case_El (J) := (Sel => Choice_Data (Ch).Val,
-                                  Val => Nets (Int32 (Choice_Data (Ch).Alt)));
-               end loop;
-
-               --  Extract default value (for missing alternative).
-               if Others_Alt_Idx /= 0 then
-                  Default := Nets (Int32 (Others_Alt_Idx));
-               else
-                  Default := No_Net;
-               end if;
-
-               --  Generate the muxes tree.
-               Synth_Case (Get_Build (C.Inst),
-                           Sel_Net, Case_El.all, Default, Res,
-                           Get_Location (Expr));
-
-               Partial_Assign_Append (List, New_Partial_Assign (Res, Off));
-               Min_Off := Off + Wd;
-            end loop;
-
-            Merge_Partial_Assigns (Build_Context, Wi, List);
+               Merge_Partial_Assigns (Build_Context, Wi, List);
+            end if;
          end;
       end loop;
 

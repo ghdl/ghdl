@@ -167,7 +167,22 @@ package Synth.Environment is
    type Partial_Assign is private;
    No_Partial_Assign : constant Partial_Assign;
 
-   type Seq_Assign_Value is private;
+   type Seq_Assign_Value (Is_Static : Tri_State_Type := True) is record
+      case Is_Static is
+         when Unknown =>
+            --  Used only for no value (in that case, it will use the previous
+            --  value).
+            --  This is used only for temporary handling, and is never stored
+            --  in Seq_Assign.
+            null;
+         when True =>
+            Val : Memtyp;
+         when False =>
+            --  Values assigned.
+            Asgns : Partial_Assign;
+      end case;
+   end record;
+
    No_Seq_Assign_Value : constant Seq_Assign_Value;
 
    function Get_Assign_Partial (Asgn : Seq_Assign) return Partial_Assign;
@@ -188,6 +203,8 @@ package Synth.Environment is
    procedure Partial_Assign_Init (List : out Partial_Assign_List);
    procedure Partial_Assign_Append (List : in out Partial_Assign_List;
                                     Pasgn : Partial_Assign);
+
+   --  Phi_Assign for each element of LIST.
    procedure Merge_Partial_Assigns (Ctxt : Builders.Context_Acc;
                                     Wid : Wire_Id;
                                     List : in out Partial_Assign_List);
@@ -275,22 +292,6 @@ private
       --  assignments.
       Final_Assign : Conc_Assign;
       Nbr_Final_Assign : Natural;
-   end record;
-
-   type Seq_Assign_Value (Is_Static : Tri_State_Type := True) is record
-      case Is_Static is
-         when Unknown =>
-            --  Used only for no value (in that case, it will use the previous
-            --  value).
-            --  This is used only for temporary handling, and is never stored
-            --  in Seq_Assign.
-            null;
-         when True =>
-            Val : Memtyp;
-         when False =>
-            --  Values assigned.
-            Asgns : Partial_Assign;
-      end case;
    end record;
 
    No_Seq_Assign_Value : constant Seq_Assign_Value := (Is_Static => Unknown);
