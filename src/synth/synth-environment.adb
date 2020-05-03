@@ -159,10 +159,10 @@ package body Synth.Environment is
       return Assign_Table.Table (Asgn).Val.Asgns;
    end Get_Assign_Partial;
 
-   function Get_Assign_Partial (Asgn : Seq_Assign) return Seq_Assign_Value is
+   function Get_Seq_Assign_Value (Asgn : Seq_Assign) return Seq_Assign_Value is
    begin
       return Assign_Table.Table (Asgn).Val;
-   end Get_Assign_Partial;
+   end Get_Seq_Assign_Value;
 
    function New_Partial_Assign (Val : Net; Offset : Uns32)
                                return Partial_Assign is
@@ -1125,7 +1125,7 @@ package body Synth.Environment is
    --  assignments are poped.  Set the offset and width to OFF and WD of the
    --  result.
    procedure Extract_Merge_Partial_Assigns (Ctxt : Builders.Context_Acc;
-                                            P : in out Partial_Assign_Array;
+                                            P : in out Seq_Assign_Value_Array;
                                             N : out Net_Array;
                                             Off : in out Uns32;
                                             Wd : out Width)
@@ -1139,34 +1139,61 @@ package body Synth.Environment is
       Off := Uns32'Last;
       Wd := Width'Last;
       for I in P'Range loop
-         if P (I) /= No_Partial_Assign then
-            declare
-               Pa : Partial_Assign_Record
-                 renames Partial_Assign_Table.Table (P (I));
-               N_Wd : Width;
-               N_Off : Uns32;
-            begin
-               if Pa.Offset < Off and then Min_Off < Off then
-                  --  There is an assignment for an offset before the
-                  --  current one.  Handle it.
-                  pragma Assert (Off >= Min_Off);
-                  N_Off := Uns32'Max (Pa.Offset, Min_Off);
-                  N_Wd := Get_Width (Pa.Value) - (N_Off - Pa.Offset);
-                  Wd := Width'Min (N_Wd, Off - N_Off);
-                  Off := N_Off;
-               elsif Pa.Offset = Off
-                 or else (Off = Min_Off and then Pa.Offset < Off)
-               then
-                  --  Reduce the width if the assignment is shorter.
-                  Wd := Width'Min
-                    (Wd, Get_Width (Pa.Value) - (Off - Pa.Offset));
-               elsif Pa.Offset < Off + Wd then
-                  --  Reduce the width when there is an assignment after
-                  --  the current offset.
-                  Wd := Pa.Offset - Off;
-               end if;
-            end;
-         end if;
+         case P (I).Is_Static is
+            when Unknown =>
+               --  No assignment.
+               null;
+            when True =>
+               declare
+                  P_Wd : constant Width := P (I).Val.Typ.W;
+               begin
+                  if Min_Off >= P_Wd then
+                     --  No net can be beyond the width.
+                     pragma Assert (Off = Uns32'Last);
+                     pragma Assert (Wd = Width'Last);
+                     return;
+                  end if;
+
+                  if Off > Min_Off and then Off < P_Wd then
+                     --  There is already an assignment for an offset after
+                     --  the minimum.  Stick to the min!
+                     Wd := Off - Min_Off;
+                     Off := Min_Off;
+                  else
+                     --  Either no assignment, or an assignment at Min_Off.
+                     Off := Min_Off;
+                     Wd := Width'Min (Wd, P_Wd - Min_Off);
+                  end if;
+               end;
+            when False =>
+               declare
+                  pragma Assert (P (I).Asgns /= No_Partial_Assign);
+                  Pa : Partial_Assign_Record
+                    renames Partial_Assign_Table.Table (P (I).Asgns);
+                  N_Wd : Width;
+                  N_Off : Uns32;
+               begin
+                  if Pa.Offset < Off and then Min_Off < Off then
+                     --  There is an assignment for an offset before the
+                     --  current one.  Handle it.
+                     pragma Assert (Off >= Min_Off);
+                     N_Off := Uns32'Max (Pa.Offset, Min_Off);
+                     N_Wd := Get_Width (Pa.Value) - (N_Off - Pa.Offset);
+                     Wd := Width'Min (N_Wd, Off - N_Off);
+                     Off := N_Off;
+                  elsif Pa.Offset = Off
+                    or else (Off = Min_Off and then Pa.Offset < Off)
+                  then
+                     --  Reduce the width if the assignment is shorter.
+                     Wd := Width'Min
+                       (Wd, Get_Width (Pa.Value) - (Off - Pa.Offset));
+                  elsif Pa.Offset < Off + Wd then
+                     --  Reduce the width when there is an assignment after
+                     --  the current offset.
+                     Wd := Pa.Offset - Off;
+                  end if;
+               end;
+         end case;
       end loop;
 
       --  No more assignments.
@@ -1176,30 +1203,39 @@ package body Synth.Environment is
 
       --  Get the values for that offset/width.  Update lists.
       for I in P'Range loop
-         if P (I) /= No_Partial_Assign
-           and then Get_Partial_Offset (P (I)) <= Off
-         then
-            declare
-               Val : constant Net := Get_Partial_Value (P (I));
-               P_W : constant Width := Get_Width (Val);
-               P_Off : constant Uns32 := Get_Partial_Offset (P (I));
-            begin
-               --  There is a partial assignment.
-               if P_Off = Off and then P_W = Wd then
-                  --  Full covered.
-                  N (I) := Val;
-                  P (I) := Get_Partial_Next (P (I));
-               else
-                  N (I) := Build_Extract (Ctxt, Val, Off - P_Off, Wd);
-                  if P_Off + P_W = Off + Wd then
-                     P (I) := Get_Partial_Next (P (I));
+         --  Default: no partial assignment.  Get extract previous value.
+         N (I) := No_Net;
+
+         case P (I).Is_Static is
+            when Unknown =>
+               null;
+            when True =>
+               N (I) := Context.Get_Partial_Memtyp_Net (P (I).Val, Off, Wd);
+            when False =>
+               if Get_Partial_Offset (P (I).Asgns) <= Off then
+                  declare
+                     Asgn : constant Partial_Assign := P (I).Asgns;
+                     Val : constant Net := Get_Partial_Value (Asgn);
+                     P_W : constant Width := Get_Width (Val);
+                     P_Off : constant Uns32 := Get_Partial_Offset (Asgn);
+                  begin
+                     --  There is a partial assignment.
+                     if P_Off = Off and then P_W = Wd then
+                        --  Full covered.
+                        N (I) := Val;
+                        P (I).Asgns := Get_Partial_Next (Asgn);
+                     else
+                        N (I) := Build_Extract (Ctxt, Val, Off - P_Off, Wd);
+                        if P_Off + P_W = Off + Wd then
+                           P (I).Asgns := Get_Partial_Next (Asgn);
+                        end if;
+                     end if;
+                  end;
+                  if P (I).Asgns = No_Partial_Assign then
+                     P (I) := No_Seq_Assign_Value;
                   end if;
                end if;
-            end;
-         else
-            --  No partial assignment.  Get extract previous value.
-            N (I) := No_Net;
-         end if;
+         end case;
       end loop;
    end Extract_Merge_Partial_Assigns;
 
@@ -1236,13 +1272,13 @@ package body Synth.Environment is
    procedure Merge_Assigns (Ctxt : Builders.Context_Acc;
                             W : Wire_Id;
                             Sel : Net;
-                            F_Asgns : Partial_Assign;
-                            T_Asgns : Partial_Assign;
+                            F_Asgns : Seq_Assign_Value;
+                            T_Asgns : Seq_Assign_Value;
                             Stmt : Source.Syn_Src)
    is
       use Netlists.Gates;
       use Netlists.Gates_Ports;
-      P : Partial_Assign_Array (0 .. 1);
+      P : Seq_Assign_Value_Array (0 .. 1);
       N : Net_Array (0 .. 1);
       Min_Off : Uns32;
       Off : Uns32;
@@ -1350,7 +1386,7 @@ package body Synth.Environment is
    function Get_Assign_Partial_Force (Asgn : Seq_Assign)
                                      return Partial_Assign is
    begin
-      return Get_Assign_Value_Force (Get_Assign_Partial (Asgn));
+      return Get_Assign_Value_Force (Get_Seq_Assign_Value (Asgn));
    end Get_Assign_Partial_Force;
 
    function Merge_Static_Assigns (Wid : Wire_Id; Tv, Fv : Seq_Assign_Value)
@@ -1425,7 +1461,7 @@ package body Synth.Environment is
          then
             --  Has an assignment only for the false branch.
             W := Get_Wire_Id (F_Asgns);
-            Fv := Get_Assign_Partial (F_Asgns);
+            Fv := Get_Seq_Assign_Value (F_Asgns);
             Tv := No_Seq_Assign_Value;
             F_Asgns := Get_Assign_Chain (F_Asgns);
          elsif F_Asgns = No_Seq_Assign
@@ -1435,14 +1471,14 @@ package body Synth.Environment is
             --  Has an assignment only for the true branch.
             W := Get_Wire_Id (T_Asgns);
             Fv := No_Seq_Assign_Value;
-            Tv := Get_Assign_Partial (T_Asgns);
+            Tv := Get_Seq_Assign_Value (T_Asgns);
             T_Asgns := Get_Assign_Chain (T_Asgns);
          else
             --  Has assignments for both the true and the false branch.
             pragma Assert (Get_Wire_Id (F_Asgns) = Get_Wire_Id (T_Asgns));
             W := Get_Wire_Id (F_Asgns);
-            Fv := Get_Assign_Partial (F_Asgns);
-            Tv := Get_Assign_Partial (T_Asgns);
+            Fv := Get_Seq_Assign_Value (F_Asgns);
+            Tv := Get_Seq_Assign_Value (T_Asgns);
             T_Asgns := Get_Assign_Chain (T_Asgns);
             F_Asgns := Get_Assign_Chain (F_Asgns);
          end if;
@@ -1451,10 +1487,7 @@ package body Synth.Environment is
          Merge_Partial_Assignments (Ctxt, Fv);
          Merge_Partial_Assignments (Ctxt, Tv);
          if not Merge_Static_Assigns (W, Tv, Fv) then
-            Merge_Assigns (Ctxt, W, Sel,
-                           Get_Assign_Value_Force (Fv),
-                           Get_Assign_Value_Force (Tv),
-                           Stmt);
+            Merge_Assigns (Ctxt, W, Sel, Fv, Tv, Stmt);
          end if;
 
       end loop;

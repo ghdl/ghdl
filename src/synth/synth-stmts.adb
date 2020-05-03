@@ -907,9 +907,9 @@ package body Synth.Stmts is
       pragma Assert (Idx = Arr'Last + 1);
    end Fill_Wire_Id_Array;
 
-   type Partial_Assign_Array_Acc is access Partial_Assign_Array;
-   procedure Free_Partial_Assign_Array is new Ada.Unchecked_Deallocation
-     (Partial_Assign_Array, Partial_Assign_Array_Acc);
+   type Seq_Assign_Value_Array_Acc is access Seq_Assign_Value_Array;
+   procedure Free_Seq_Assign_Value_Array is new Ada.Unchecked_Deallocation
+     (Seq_Assign_Value_Array, Seq_Assign_Value_Array_Acc);
 
    procedure Synth_Case_Statement_Dynamic
      (C : in out Seq_Context; Stmt : Node; Sel : Valtyp)
@@ -933,7 +933,7 @@ package body Synth.Stmts is
       Choice_Idx : Natural;
 
       Case_El : Case_Element_Array_Acc;
-      Pasgns : Partial_Assign_Array_Acc;
+      Pasgns : Seq_Assign_Value_Array_Acc;
       Nets : Net_Array_Acc;
 
       Nbr_Wires : Natural;
@@ -1025,7 +1025,7 @@ package body Synth.Stmts is
       --    Build mux2/mux4 tree (group by 4)
       Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
 
-      Pasgns := new Partial_Assign_Array (1 .. Int32 (Alts'Last));
+      Pasgns := new Seq_Assign_Value_Array (1 .. Int32 (Alts'Last));
       Nets := new Net_Array (1 .. Int32 (Alts'Last));
 
       Sel_Net := Get_Net (Sel);
@@ -1048,10 +1048,10 @@ package body Synth.Stmts is
                --  value.
                if Get_Wire_Id (Alts (I).Asgns) = Wi then
                   Pasgns (Int32 (I)) :=
-                    Get_Assign_Partial_Force (Alts (I).Asgns);
+                    Get_Seq_Assign_Value (Alts (I).Asgns);
                   Alts (I).Asgns := Get_Assign_Chain (Alts (I).Asgns);
                else
-                  Pasgns (Int32 (I)) := No_Partial_Assign;
+                  Pasgns (Int32 (I)) := No_Seq_Assign_Value;
                end if;
             end loop;
 
@@ -1111,7 +1111,7 @@ package body Synth.Stmts is
       Free_Choice_Data_Array (Choice_Data);
       Free_Annex_Array (Annex_Arr);
       Free_Alternative_Data_Array (Alts);
-      Free_Partial_Assign_Array (Pasgns);
+      Free_Seq_Assign_Value_Array (Pasgns);
       Free_Net_Array (Nets);
    end Synth_Case_Statement_Dynamic;
 

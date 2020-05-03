@@ -167,7 +167,11 @@ package Synth.Environment is
    type Partial_Assign is private;
    No_Partial_Assign : constant Partial_Assign;
 
+   type Seq_Assign_Value is private;
+   No_Seq_Assign_Value : constant Seq_Assign_Value;
+
    function Get_Assign_Partial (Asgn : Seq_Assign) return Partial_Assign;
+   function Get_Seq_Assign_Value (Asgn : Seq_Assign) return Seq_Assign_Value;
 
    --  Force the value of a Seq_Assign to be a net if needed, return it.
    function Get_Assign_Partial_Force (Asgn : Seq_Assign) return Partial_Assign;
@@ -176,6 +180,8 @@ package Synth.Environment is
                                return Partial_Assign;
 
    type Partial_Assign_Array is array (Int32 range <>) of Partial_Assign;
+
+   type Seq_Assign_Value_Array is array (Int32 range <>) of Seq_Assign_Value;
 
    type Partial_Assign_List is limited private;
 
@@ -193,7 +199,7 @@ package Synth.Environment is
    --  assignments are poped.  Set the offset and width to OFF and WD of the
    --  result.
    procedure Extract_Merge_Partial_Assigns (Ctxt : Builders.Context_Acc;
-                                            P : in out Partial_Assign_Array;
+                                            P : in out Seq_Assign_Value_Array;
                                             N : out Net_Array;
                                             Off : in out Uns32;
                                             Wd : out Width);
