@@ -84,11 +84,14 @@ package body Synth.Environment.Debug is
          New_Line;
       end;
       Put_Line (" value:");
-      if Rec.Val.Is_Static then
-         Put_Line ("   static");
-      else
-         Dump_Partial_Assign (Rec.Val.Asgns);
-      end if;
+      case Rec.Val.Is_Static is
+         when Unknown =>
+            Put_Line ("   ??? (unknown)");
+         when True =>
+            Put_Line ("   static");
+         when False =>
+            Dump_Partial_Assign (Rec.Val.Asgns);
+      end case;
    end Dump_Assign;
 
    procedure Dump_Phi (Id : Phi_Id)

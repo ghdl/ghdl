@@ -1055,12 +1055,13 @@ package body Synth.Stmts is
                end if;
             end loop;
 
+            --  Compute the final value for each partial part of the wire.
             Partial_Assign_Init (List);
             Min_Off := 0;
             loop
                Off := Min_Off;
 
-               -- Extract value of partial assignments to NETS.
+               --  Extract value of partial assignments to NETS.
                Extract_Merge_Partial_Assigns
                  (Build_Context, Pasgns.all, Nets.all, Off, Wd);
                exit when Off = Uns32'Last and Wd = Width'Last;

@@ -143,7 +143,7 @@ package body Synth.Environment is
 
    function Get_Assign_Is_Static (Asgn : Seq_Assign) return Boolean is
    begin
-      return Assign_Table.Table (Asgn).Val.Is_Static;
+      return Assign_Table.Table (Asgn).Val.Is_Static = True;
    end Get_Assign_Is_Static;
 
    function Get_Assign_Static_Val (Asgn : Seq_Assign) return Memtyp is
@@ -218,7 +218,7 @@ package body Synth.Environment is
       Next_Off : Uns32;
       Next_Val : Net;
    begin
-      if Head.Is_Static then
+      if Head.Is_Static /= False then
          return;
       end if;
 
@@ -365,33 +365,37 @@ package body Synth.Environment is
       --  Check output is not already assigned.
       pragma Assert (Get_Input_Net (Get_Net_Parent (Outport), 0) = No_Net);
 
-      if Asgn_Rec.Val.Is_Static then
-         Res := Synth.Context.Get_Memtyp_Net (Asgn_Rec.Val.Val);
-         Add_Conc_Assign (Wid, Res, 0, Stmt);
-      else
-         P := Asgn_Rec.Val.Asgns;
-         pragma Assert (P /= No_Partial_Assign);
-         while P /= No_Partial_Assign loop
-            declare
-               Pa : Partial_Assign_Record renames
-                 Partial_Assign_Table.Table (P);
-            begin
-               if Synth.Flags.Flag_Debug_Noinference then
-                  Res := Pa.Value;
-               else
-                  --  Note: lifetime is currently based on the kind of the
-                  --   wire (variable -> not reused beyond this process).
-                  --   This is OK for vhdl but not general.
-                  Res := Inference.Infere
-                    (Ctxt, Pa.Value, Pa.Offset, Outport, Stmt,
-                     Wire_Rec.Kind = Wire_Variable);
-               end if;
+      case Asgn_Rec.Val.Is_Static is
+         when Unknown =>
+            raise Internal_Error;
+         when True =>
+            --  Create a net.  No inference to do.
+            Res := Synth.Context.Get_Memtyp_Net (Asgn_Rec.Val.Val);
+            Add_Conc_Assign (Wid, Res, 0, Stmt);
+         when False =>
+            P := Asgn_Rec.Val.Asgns;
+            pragma Assert (P /= No_Partial_Assign);
+            while P /= No_Partial_Assign loop
+               declare
+                  Pa : Partial_Assign_Record renames
+                    Partial_Assign_Table.Table (P);
+               begin
+                  if Synth.Flags.Flag_Debug_Noinference then
+                     Res := Pa.Value;
+                  else
+                     --  Note: lifetime is currently based on the kind of the
+                     --   wire (variable -> not reused beyond this process).
+                     --   This is OK for vhdl but not general.
+                     Res := Inference.Infere
+                       (Ctxt, Pa.Value, Pa.Offset, Outport, Stmt,
+                        Wire_Rec.Kind = Wire_Variable);
+                  end if;
 
-               Add_Conc_Assign (Wid, Res, Pa.Offset, Stmt);
-               P := Pa.Next;
-            end;
-         end loop;
-      end if;
+                  Add_Conc_Assign (Wid, Res, Pa.Offset, Stmt);
+                  P := Pa.Next;
+               end;
+            end loop;
+      end case;
    end Pop_And_Merge_Phi_Wire;
 
    --  This procedure is called after each concurrent statement to assign
@@ -423,7 +427,7 @@ package body Synth.Environment is
             Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
             P : Partial_Assign;
          begin
-            if not Asgn_Rec.Val.Is_Static then
+            if Asgn_Rec.Val.Is_Static = False then
                P := Asgn_Rec.Val.Asgns;
                pragma Assert (P /= No_Partial_Assign);
                while P /= No_Partial_Assign loop
@@ -457,7 +461,7 @@ package body Synth.Environment is
             Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
             P : Partial_Assign;
          begin
-            if not Asgn_Rec.Val.Is_Static then
+            if Asgn_Rec.Val.Is_Static = False then
                P := Asgn_Rec.Val.Asgns;
                pragma Assert (P /= No_Partial_Assign);
                while P /= No_Partial_Assign loop
@@ -507,17 +511,20 @@ package body Synth.Environment is
             --  Phi_Assign.
             Next_Asgn := Asgn_Rec.Chain;
             if Wid <= Mark then
-               if Asgn_Rec.Val.Is_Static then
-                  Phi_Assign_Static (Wid, Asgn_Rec.Val.Val);
-               else
-                  Pasgn := Asgn_Rec.Val.Asgns;
-                  while Pasgn /= No_Partial_Assign loop
-                     Next_Pasgn := Get_Partial_Next (Pasgn);
-                     Set_Partial_Next (Pasgn, No_Partial_Assign);
-                     Phi_Assign (Ctxt, Wid, Pasgn);
-                     Pasgn := Next_Pasgn;
-                  end loop;
-               end if;
+               case Asgn_Rec.Val.Is_Static is
+                  when Unknown =>
+                     raise Internal_Error;
+                  when True =>
+                     Phi_Assign_Static (Wid, Asgn_Rec.Val.Val);
+                  when False =>
+                     Pasgn := Asgn_Rec.Val.Asgns;
+                     while Pasgn /= No_Partial_Assign loop
+                        Next_Pasgn := Get_Partial_Next (Pasgn);
+                        Set_Partial_Next (Pasgn, No_Partial_Assign);
+                        Phi_Assign (Ctxt, Wid, Pasgn);
+                        Pasgn := Next_Pasgn;
+                     end loop;
+               end case;
             end if;
             Asgn := Next_Asgn;
          end;
@@ -940,7 +947,7 @@ package body Synth.Environment is
             raise Internal_Error;
       end case;
 
-      if Asgn_Rec.Val.Is_Static then
+      if Asgn_Rec.Val.Is_Static = True then
          return Synth.Context.Get_Memtyp_Net (Asgn_Rec.Val.Val);
       end if;
 
@@ -1328,12 +1335,15 @@ package body Synth.Environment is
    is
       N : Net;
    begin
-      if Val.Is_Static then
-         N := Synth.Context.Get_Memtyp_Net (Val.Val);
-         return New_Partial_Assign (N, 0);
-      else
-         return Val.Asgns;
-      end if;
+      case Val.Is_Static is
+         when Unknown =>
+            return No_Partial_Assign;
+         when True =>
+            N := Synth.Context.Get_Memtyp_Net (Val.Val);
+            return New_Partial_Assign (N, 0);
+         when False =>
+            return Val.Asgns;
+      end case;
    end Get_Assign_Value_Force;
 
    --  Force the value of a Seq_Assign to be a net if needed, return it.
@@ -1349,7 +1359,7 @@ package body Synth.Environment is
       Prev : Memtyp;
    begin
       --  First case: both TV and FV are static.
-      if Tv.Is_Static and then Fv.Is_Static then
+      if Tv.Is_Static = True and then Fv.Is_Static = True then
          if Is_Equal (Tv.Val, Fv.Val) then
             Phi_Assign_Static (Wid, Tv.Val);
             return True;
@@ -1358,13 +1368,8 @@ package body Synth.Environment is
          end if;
       end if;
 
-      --  If either TV or FV are not static, they cannot be merged.
-      if not Tv.Is_Static and then Tv.Asgns /= No_Partial_Assign
-      then
-         return False;
-      end if;
-      if not Fv.Is_Static and then Fv.Asgns /= No_Partial_Assign
-      then
+      --  If either TV or FV are nets, they cannot be merged.
+      if Tv.Is_Static = False or else Fv.Is_Static = False then
          return False;
       end if;
 
@@ -1388,11 +1393,11 @@ package body Synth.Environment is
          Prev := Get_Assign_Static_Val (First_Seq);
       end;
 
-      if Tv.Is_Static then
+      if Tv.Is_Static = True then
          pragma Assert (Fv = No_Seq_Assign_Value);
          return Is_Equal (Tv.Val, Prev);
       else
-         pragma Assert (Fv.Is_Static);
+         pragma Assert (Fv.Is_Static = True);
          pragma Assert (Tv = No_Seq_Assign_Value);
          return Is_Equal (Fv.Val, Prev);
       end if;

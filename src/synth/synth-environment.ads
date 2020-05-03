@@ -271,8 +271,14 @@ private
       Nbr_Final_Assign : Natural;
    end record;
 
-   type Seq_Assign_Value (Is_Static : Boolean := True) is record
+   type Seq_Assign_Value (Is_Static : Tri_State_Type := True) is record
       case Is_Static is
+         when Unknown =>
+            --  Used only for no value (in that case, it will use the previous
+            --  value).
+            --  This is used only for temporary handling, and is never stored
+            --  in Seq_Assign.
+            null;
          when True =>
             Val : Memtyp;
          when False =>
@@ -281,8 +287,7 @@ private
       end case;
    end record;
 
-   No_Seq_Assign_Value : constant Seq_Assign_Value :=
-     (Is_Static => False, Asgns => No_Partial_Assign);
+   No_Seq_Assign_Value : constant Seq_Assign_Value := (Is_Static => Unknown);
 
    type Seq_Assign_Record is record
       --  Target of the assignment.
