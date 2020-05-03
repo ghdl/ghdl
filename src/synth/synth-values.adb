@@ -254,14 +254,6 @@ package body Synth.Values is
       end if;
    end Strip_Const;
 
-   procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type)
-   is
-   begin
-      for I in 1 .. Sz loop
-         Dest (I - 1) := Src (I - 1);
-      end loop;
-   end Copy_Memory;
-
    procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp)
    is
       Mt : Memtyp;

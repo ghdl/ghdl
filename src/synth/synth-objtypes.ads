@@ -283,6 +283,10 @@ package Synth.Objtypes is
 
    function Is_Equal (L, R : Memtyp) return Boolean;
 
+   procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type);
+
+   function Unshare (Src : Memtyp) return Memtyp;
+
    procedure Init;
 
    --  Set by Init.

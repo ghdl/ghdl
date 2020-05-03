@@ -172,6 +172,5 @@ package Synth.Values is
 
    function Read_Fp64 (Vt : Valtyp) return Fp64;
 
-   procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type);
    procedure Write_Value (Dest : Memory_Ptr; Vt : Valtyp);
 end Synth.Values;

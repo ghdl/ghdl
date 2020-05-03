@@ -777,6 +777,23 @@ package body Synth.Objtypes is
       return True;
    end Is_Equal;
 
+   procedure Copy_Memory (Dest : Memory_Ptr; Src : Memory_Ptr; Sz : Size_Type)
+   is
+   begin
+      for I in 1 .. Sz loop
+         Dest (I - 1) := Src (I - 1);
+      end loop;
+   end Copy_Memory;
+
+   function Unshare (Src : Memtyp) return Memtyp
+   is
+      Res : Memory_Ptr;
+   begin
+      Res := Alloc_Memory (Src.Typ);
+      Copy_Memory (Res, Src.Mem, Src.Typ.Sz);
+      return (Src.Typ, Res);
+   end Unshare;
+
    Bit0_Mem : constant Memory_Element := 0;
    Bit1_Mem : constant Memory_Element := 1;
 
