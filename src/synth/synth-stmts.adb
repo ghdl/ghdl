@@ -563,6 +563,7 @@ package body Synth.Stmts is
    procedure Synth_Conditional_Signal_Assignment
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node; En : Net)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Targ : Target_Info;
       Cond : Node;
       Cwf : Node;
@@ -588,12 +589,12 @@ package body Synth.Stmts is
             if Cond /= Null_Node then
                Cond_Val := Synth_Expression (Syn_Inst, Cond, En);
                if Cond_Val = No_Valtyp then
-                  Cond_Net := Build_Const_UB32 (Build_Context, 0, 1);
+                  Cond_Net := Build_Const_UB32 (Ctxt, 0, 1);
                else
                   Cond_Net := Get_Net (Cond_Val);
                end if;
 
-               V := Build_Mux2 (Build_Context, Cond_Net, No_Net, V);
+               V := Build_Mux2 (Ctxt, Cond_Net, No_Net, V);
                Set_Location (V, Cwf);
             end if;
 
@@ -665,6 +666,7 @@ package body Synth.Stmts is
    procedure Synth_Conditional_Variable_Assignment
      (C : Seq_Context; Stmt : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Target : constant Node := Get_Target (Stmt);
       En : constant Net := Get_En (C, Stmt);
       Targ_Type : Type_Acc;
@@ -684,7 +686,7 @@ package body Synth.Stmts is
          Cond := Get_Condition (Ce);
          if Cond /= Null_Node then
             Cond_Val := Synth_Expression (C.Inst, Cond, En);
-            V := Build_Mux2 (Build_Context, Get_Net (Cond_Val), No_Net, V);
+            V := Build_Mux2 (Ctxt, Get_Net (Cond_Val), No_Net, V);
             Set_Location (V, Ce);
          end if;
 
@@ -915,6 +917,7 @@ package body Synth.Stmts is
      (C : in out Seq_Context; Stmt : Node; Sel : Valtyp)
    is
       use Vhdl.Sem_Expr;
+      Ctxt : constant Context_Acc := Get_Build (C.Inst);
 
       Expr : constant Node := Get_Expression (Stmt);
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
@@ -1121,7 +1124,7 @@ package body Synth.Stmts is
 
                   --  Extract value of partial assignments to NETS.
                   Extract_Merge_Partial_Assigns
-                    (Build_Context, Pasgns.all, Nets.all, Off, Wd);
+                    (Ctxt, Pasgns.all, Nets.all, Off, Wd);
                   exit when Off = Uns32'Last and Wd = Width'Last;
 
                   --  If a branch has no value, use the value before the case.
@@ -1130,7 +1133,7 @@ package body Synth.Stmts is
                      if Nets (I) = No_Net then
                         if Last_Val = No_Net then
                            Last_Val := Get_Current_Assign_Value
-                             (Build_Context, Wi, Off, Wd);
+                             (Ctxt, Wi, Off, Wd);
                         end if;
                         Nets (I) := Last_Val;
                      end if;
@@ -1152,15 +1155,14 @@ package body Synth.Stmts is
                   end if;
 
                   --  Generate the muxes tree.
-                  Synth_Case (Get_Build (C.Inst),
-                              Sel_Net, Case_El.all, Default, Res,
+                  Synth_Case (Ctxt, Sel_Net, Case_El.all, Default, Res,
                               Get_Location (Expr));
 
                   Partial_Assign_Append (List, New_Partial_Assign (Res, Off));
                   Min_Off := Off + Wd;
                end loop;
 
-               Merge_Partial_Assigns (Build_Context, Wi, List);
+               Merge_Partial_Assigns (Ctxt, Wi, List);
             end if;
          end;
       end loop;
@@ -1811,10 +1813,10 @@ package body Synth.Stmts is
                                   W : Width;
                                   Loc : Source.Syn_Src) return Net
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Res : Net;
    begin
-      Res := Build_Signal
-        (Get_Build (Syn_Inst), New_Internal_Name (Build_Context), W);
+      Res := Build_Signal (Ctxt, New_Internal_Name (Ctxt), W);
       Set_Location (Res, Loc);
       return Res;
    end Build_Control_Signal;
@@ -1866,7 +1868,7 @@ package body Synth.Stmts is
 
          Set_Wire_Gate (C.W_Val,
                         Build_Control_Signal (Sub_Inst, C.Ret_Typ.W, Imp));
-         C.Ret_Init := Build_Const_X (Build_Context, C.Ret_Typ.W);
+         C.Ret_Init := Build_Const_X (Ctxt, C.Ret_Typ.W);
          Phi_Assign_Net (Ctxt, C.W_Val, C.Ret_Init, 0);
       end if;
 
@@ -1992,6 +1994,7 @@ package body Synth.Stmts is
                                    Init : Association_Iterator_Init)
                                   return Valtyp
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
       Bod : constant Node := Vhdl.Sem_Inst.Get_Subprogram_Body_Origin (Imp);
@@ -2005,8 +2008,7 @@ package body Synth.Stmts is
       Areapools.Mark (Area_Mark, Instance_Pool.all);
 
       Up_Inst := Get_Instance_By_Scope (Syn_Inst, Get_Parent_Scope (Imp));
-      Sub_Inst := Make_Instance (Up_Inst, Bod,
-                                 New_Internal_Name (Build_Context));
+      Sub_Inst := Make_Instance (Up_Inst, Bod, New_Internal_Name (Ctxt));
       Set_Instance_Base (Sub_Inst, Syn_Inst);
 
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst, En, Init, Infos);
@@ -2073,6 +2075,7 @@ package body Synth.Stmts is
    procedure Synth_Implicit_Procedure_Call
      (Syn_Inst : Synth_Instance_Acc; Call : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Imp  : constant Node := Get_Implementation (Call);
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Call);
       Inter_Chain : constant Node := Get_Interface_Declaration_Chain (Imp);
@@ -2084,8 +2087,7 @@ package body Synth.Stmts is
       Sub_Inst : Synth_Instance_Acc;
    begin
       Areapools.Mark (Area_Mark, Instance_Pool.all);
-      Sub_Inst := Make_Instance (Syn_Inst, Imp,
-                                 New_Internal_Name (Build_Context));
+      Sub_Inst := Make_Instance (Syn_Inst, Imp, New_Internal_Name (Ctxt));
 
       Synth_Subprogram_Association (Sub_Inst, Syn_Inst, No_Net, Init, Infos);
 
@@ -2754,6 +2756,7 @@ package body Synth.Stmts is
      (C : in out Seq_Context; Stmts : Node)
    is
       Is_Dyn : constant Boolean := not Get_Instance_Const (C.Inst);
+      Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Stmt : Node;
       Phi_T, Phi_F : Phi_Type;
       Has_Phi : Boolean;
@@ -2844,8 +2847,7 @@ package body Synth.Stmts is
                Pop_Phi (Phi_T);
                Push_Phi;
                Pop_Phi (Phi_F);
-               Merge_Phis (Build_Context,
-                           Get_Current_Value (Build_Context, C.W_En),
+               Merge_Phis (Ctxt, Get_Current_Value (Ctxt, C.W_En),
                            Phi_T, Phi_F, Stmt);
             end if;
             if Is_Static_Bit0 (C.W_En) then
@@ -2867,6 +2869,7 @@ package body Synth.Stmts is
    procedure Synth_Process_Sequential_Statements
      (C : in out Seq_Context; Proc : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Stmt : Node;
       Cond : Node;
       Cond_Val : Valtyp;
@@ -2895,8 +2898,7 @@ package body Synth.Stmts is
       Push_Phi;
       Pop_Phi (Phi_False);
 
-      Merge_Phis (Build_Context, Get_Net (Cond_Val),
-                  Phi_True, Phi_False, Stmt);
+      Merge_Phis (Ctxt, Get_Net (Cond_Val), Phi_True, Phi_False, Stmt);
    end Synth_Process_Sequential_Statements;
 
    procedure Synth_Process_Statement
@@ -3007,6 +3009,7 @@ package body Synth.Stmts is
    procedure Synth_Concurrent_Assertion_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Cond : constant Node := Get_Assertion_Condition (Stmt);
       Val : Valtyp;
       Inst : Instance;
@@ -3022,7 +3025,7 @@ package body Synth.Stmts is
          end if;
          return;
       end if;
-      Inst := Build_Assert (Build_Context, Synth_Label (Stmt), Get_Net (Val));
+      Inst := Build_Assert (Ctxt, Synth_Label (Stmt), Get_Net (Val));
       Set_Location (Inst, Get_Location (Stmt));
    end Synth_Concurrent_Assertion_Statement;
 
@@ -3097,7 +3100,7 @@ package body Synth.Stmts is
                end if;
                if Get_Kind (R) = N_EOS then
                   --  It is never EOS!
-                  Res := Build_Const_UB32 (Build_Context, 0, 1);
+                  Res := Build_Const_UB32 (Ctxt, 0, 1);
                else
                   Res := Build_Dyadic (Ctxt, Id_And,
                                        Synth_PSL_Expression (Syn_Inst, L),
@@ -3107,14 +3110,14 @@ package body Synth.Stmts is
          when N_Or_Bool =>
             pragma Assert (Loc /= No_Location);
             Res := Build_Dyadic
-              (Build_Context, Id_Or,
+              (Ctxt, Id_Or,
                Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
                Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
          when N_True =>
-            Res := Build_Const_UB32 (Build_Context, 1, 1);
+            Res := Build_Const_UB32 (Ctxt, 1, 1);
          when N_False
            | N_EOS =>
-            Res := Build_Const_UB32 (Build_Context, 0, 1);
+            Res := Build_Const_UB32 (Ctxt, 0, 1);
          when others =>
             PSL.Errors.Error_Kind ("synth_psl_expr", Expr);
             return No_Net;
@@ -3188,6 +3191,7 @@ package body Synth.Stmts is
                             Stmt : Node;
                             Next_States : out Net)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Nbr_States : constant Int32 := Get_PSL_Nbr_States (Stmt);
       States : Net;
       Init : Net;
@@ -3195,7 +3199,7 @@ package body Synth.Stmts is
       Clk_Inst : Instance;
    begin
       --  create init net, clock net
-      Init := Build_Const_UB32 (Build_Context, 1, Uns32 (Nbr_States));
+      Init := Build_Const_UB32 (Ctxt, 1, Uns32 (Nbr_States));
       Set_Location (Init, Stmt);
       Clk := Synth_PSL_Expression (Syn_Inst, Get_PSL_Clock (Stmt));
 
@@ -3208,7 +3212,7 @@ package body Synth.Stmts is
       end if;
 
       --  build idff
-      States := Build_Idff (Build_Context, Clk, No_Net, Init);
+      States := Build_Idff (Ctxt, Clk, No_Net, Init);
       Set_Location (States, Stmt);
 
       --  create update nets
@@ -3248,6 +3252,7 @@ package body Synth.Stmts is
    procedure Synth_Psl_Restrict_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Next_States : Net;
       Res : Net;
       Inst : Instance;
@@ -3258,9 +3263,9 @@ package body Synth.Stmts is
       Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
       if Next_States /= No_Net then
          --  The restriction holds as long as there is a 1 in the NFA state.
-         Res := Build_Reduce (Build_Context, Id_Red_Or, Next_States);
+         Res := Build_Reduce (Ctxt, Id_Red_Or, Next_States);
          Set_Location (Res, Stmt);
-         Inst := Build_Assume (Build_Context, Synth_Label (Stmt), Res);
+         Inst := Build_Assume (Ctxt, Synth_Label (Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Restrict_Directive;
@@ -3287,6 +3292,7 @@ package body Synth.Stmts is
    procedure Synth_Psl_Assume_Directive
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Next_States : Net;
       Inst : Instance;
    begin
@@ -3296,7 +3302,7 @@ package body Synth.Stmts is
       Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
       if Next_States /= No_Net then
          Inst := Build_Assume
-           (Build_Context, Synth_Label (Stmt),
+           (Ctxt, Synth_Label (Stmt),
             Synth_Psl_Not_Final (Syn_Inst, Stmt, Next_States));
          Set_Location (Inst, Get_Location (Stmt));
       end if;
@@ -3307,6 +3313,7 @@ package body Synth.Stmts is
    is
       use PSL.Types;
       use PSL.NFAs;
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       NFA : constant PSL_NFA := Get_PSL_NFA (Stmt);
       Active : NFA_State;
       Next_States : Net;
@@ -3321,7 +3328,7 @@ package body Synth.Stmts is
          Lab := Synth_Label (Stmt);
 
          Inst := Build_Assert
-           (Build_Context, Lab,
+           (Ctxt, Lab,
             Synth_Psl_Not_Final (Syn_Inst, Stmt, Next_States));
          Set_Location (Inst, Get_Location (Stmt));
 
@@ -3457,29 +3464,31 @@ package body Synth.Stmts is
    end Synth_For_Generate_Statement;
 
    procedure Synth_Concurrent_Statement
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node) is
+     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+   is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
    begin
       case Get_Kind (Stmt) is
          when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
             Push_Phi;
             Synth_Simple_Signal_Assignment (Syn_Inst, Stmt, No_Net);
-            Pop_And_Merge_Phi (Build_Context, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
             Push_Phi;
             Synth_Conditional_Signal_Assignment (Syn_Inst, Stmt, No_Net);
-            Pop_And_Merge_Phi (Build_Context, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
             Push_Phi;
             Synth_Selected_Signal_Assignment (Syn_Inst, Stmt, No_Net);
-            Pop_And_Merge_Phi (Build_Context, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             Push_Phi;
             Synth_Procedure_Call (Syn_Inst, Stmt, No_Net);
-            Pop_And_Merge_Phi (Build_Context, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kinds_Process_Statement =>
             Push_Phi;
             Synth_Process_Statement (Syn_Inst, Stmt);
-            Pop_And_Merge_Phi (Build_Context, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kind_If_Generate_Statement =>
             Synth_If_Generate_Statement (Syn_Inst, Stmt);
          when Iir_Kind_For_Generate_Statement =>
@@ -3503,7 +3512,7 @@ package body Synth.Stmts is
             else
                Synth_Design_Instantiation_Statement (Syn_Inst, Stmt);
             end if;
-            Pop_And_Merge_Phi (Build_Context, Stmt);
+            Pop_And_Merge_Phi (Ctxt, Stmt);
          when Iir_Kind_Block_Statement =>
             Synth_Block_Statement (Syn_Inst, Stmt);
          when Iir_Kind_Psl_Default_Clock =>
