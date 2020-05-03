@@ -498,9 +498,6 @@ Furthermore, GHDL provides a few commands which act on a library:
 
 .. index:: cmd library directory
 
-Directory [``--dir``]
----------------------
-
 .. option:: --dir <[options] [libs]>
 
 Displays the content of the design libraries (by default the ``work`` library). All options are allowed, but only a few are meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
@@ -509,9 +506,6 @@ Displays the content of the design libraries (by default the ``work`` library). 
 .. index:: cmd library clean
 
 .. _Clean:command:
-
-Clean [``--clean``]
--------------------
 
 .. option:: --clean <[options]>
 
@@ -522,9 +516,6 @@ Try to remove any object, executable or temporary file it could have created. So
 
 .. _Remove:command:
 
-Remove [``--remove``]
----------------------
-
 .. option:: --remove <[options]>
 
 Acts like the clean command but removes the library too. Note that after removing a design library, the files are not
@@ -532,9 +523,6 @@ known anymore by GHDL.
 
 
 .. index:: cmd library copy
-
-Copy [``--copy``]
------------------
 
 .. option:: --copy <--work=name [options]>
 
@@ -556,9 +544,6 @@ command before its execution.
 
 .. index:: cmd VPI compile
 
-compile [``--vpi-compile``]
----------------------------
-
 .. option:: --vpi-compile <command>
 
 Add an include path to the command and execute it::
@@ -569,20 +554,12 @@ This will execute::
 
   command -Ixxx/include
 
-For example::
+For example, ``ghdl --vpi-compile gcc -c vpi1.c`` executes ``gcc -c vpi1.c -fPIC -Ixxx/include``.
 
-  ghdl --vpi-compile gcc -c vpi1.c
-
-executes::
-
-  gcc -c vpi1.c -fPIC -Ixxx/include
 
 .. _VPI_link_command:
 
 .. index:: cmd VPI link
-
-link [``--vpi-link``]
----------------------
 
 .. option:: --vpi-link <command>
 
@@ -594,53 +571,41 @@ This will execute::
 
   command -Lxxx/lib -lghdlvpi
 
-For example::
-
-  ghdl --vpi-link gcc -o vpi1.vpi vpi1.o
-
-executes::
-
-  gcc -o vpi1.vpi vpi1.o --shared -Lxxx/lib -lghdlvpi
+For example, ``ghdl --vpi-link gcc -o vpi1.vpi vpi1.o`` executes ``gcc -o vpi1.vpi vpi1.o --shared -Lxxx/lib -lghdlvpi``.
 
 
 .. _VPI_cflags_command:
 
 .. index:: cmd VPI cflags
 
-cflags [``--vpi-cflags``]
--------------------------
-
 .. option:: --vpi-cflags
 
 Display flags added by :option:`--vpi-compile`.
 
-.. index:: cmd VPI ldflags
 
-ldflags [``--vpi-ldflags``]
----------------------------
+.. index:: cmd VPI ldflags
 
 .. option:: --vpi-ldflags
 
 Display flags added by :option:`--vpi-link`.
 
-.. index:: cmd VPI include dir
 
-include dir [``--vpi-include-dir``]
------------------------------------
+.. index:: cmd VPI include dir
 
 .. option:: --vpi-include-dir
 
 Display the include directory added by the compile flags.
 
-.. index:: cmd VPI library dir
 
-library dir [``--vpi-library-dir``]
------------------------------------
+.. index:: cmd VPI library dir
 
 .. option:: --vpi-library-dir
 
 Display the library directory added by the link flags.
 
+.. option:: --vpi-library-dir-unix
+
+Display the library directory added by the link flags, forcing UNIX syntax.
 
 .. _ieee_library_pitfalls:
 
