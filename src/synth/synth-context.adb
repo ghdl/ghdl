@@ -37,13 +37,13 @@ package body Synth.Context is
       Base : Base_Instance_Acc;
       Top_Module : Module;
       Res : Synth_Instance_Acc;
+      Ctxt : Context_Acc;
    begin
       Top_Module :=
         New_Design (New_Sname_Artificial (Get_Identifier ("top"), No_Sname));
-      pragma Assert (Build_Context = null);
-      Build_Context := Build_Builders (Top_Module);
+      Ctxt := Build_Builders (Top_Module);
 
-      Base := new Base_Instance_Type'(Builder => Build_Context,
+      Base := new Base_Instance_Type'(Builder => Ctxt,
                                       Top_Module => Top_Module,
                                       Cur_Module => No_Module);
 
@@ -65,7 +65,7 @@ package body Synth.Context is
    procedure Free_Base_Instance is
    begin
       --  TODO: really free.
-      Build_Context := null;
+      null;
    end Free_Base_Instance;
 
    function Make_Instance (Parent : Synth_Instance_Acc;

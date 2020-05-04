@@ -1380,7 +1380,7 @@ package body Synth.Insts is
          declare
             Io_Inst : Instance;
          begin
-            Io_Inst := Builders.Build_Inout (Build_Context, Desc.W);
+            Io_Inst := Builders.Build_Inout (Ctxt, Desc.W);
             --  Connect port1 of gate inout to the pin.
             Connect (Inp, Get_Output (Io_Inst, 1));
             --  And port0 of the gate will be use to read from the pin.

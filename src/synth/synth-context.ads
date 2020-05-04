@@ -37,9 +37,6 @@ package Synth.Context is
    type Synth_Instance_Type (<>) is limited private;
    type Synth_Instance_Acc is access Synth_Instance_Type;
 
-   --  Global context.
-   Build_Context : Context_Acc;
-
    function Get_Instance_By_Scope
      (Syn_Inst: Synth_Instance_Acc; Scope: Sim_Info_Acc)
      return Synth_Instance_Acc;

@@ -375,7 +375,7 @@ package body Synth.Expr is
       end if;
    end Synth_Resize;
 
-   procedure Concat_Array (Arr : in out Net_Array)
+   procedure Concat_Array (Ctxt : Context_Acc; Arr : in out Net_Array)
    is
       Last : Int32;
       Idx, New_Idx : Int32;
@@ -393,15 +393,15 @@ package body Synth.Expr is
                Idx := Idx + 1;
             elsif Idx + 1 = Last then
                Arr (New_Idx) := Build_Concat2
-                 (Build_Context, Arr (Idx), Arr (Idx + 1));
+                 (Ctxt, Arr (Idx), Arr (Idx + 1));
                Idx := Idx + 2;
             elsif Idx + 2 = Last then
                Arr (New_Idx) := Build_Concat3
-                 (Build_Context, Arr (Idx), Arr (Idx + 1), Arr (Idx + 2));
+                 (Ctxt, Arr (Idx), Arr (Idx + 1), Arr (Idx + 2));
                Idx := Idx + 3;
             else
                Arr (New_Idx) := Build_Concat4
-                 (Build_Context,
+                 (Ctxt,
                   Arr (Idx), Arr (Idx + 1), Arr (Idx + 2), Arr (Idx + 3));
                Idx := Idx + 4;
             end if;
@@ -410,9 +410,10 @@ package body Synth.Expr is
       end loop;
    end Concat_Array;
 
-   procedure Concat_Array (Arr : in out Net_Array; N : out Net) is
+   procedure Concat_Array
+     (Ctxt : Context_Acc; Arr : in out Net_Array; N : out Net) is
    begin
-      Concat_Array (Arr);
+      Concat_Array (Ctxt, Arr);
       N := Arr (Arr'First);
    end Concat_Array;
 

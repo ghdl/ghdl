@@ -3149,7 +3149,7 @@ package body Synth.Stmts is
          D_Arr (Nbr_States - 1) := Build_Const_UB32 (Ctxt, 0, 1);
       end if;
 
-      Concat_Array (D_Arr.all, Res);
+      Concat_Array (Ctxt, D_Arr.all, Res);
       Free_Net_Array (D_Arr);
 
       return Res;

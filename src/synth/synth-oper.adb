@@ -43,9 +43,10 @@ package body Synth.Oper is
    procedure Set_Location (N : Net; Loc : Node)
      renames Synth.Source.Set_Location;
 
-   function Synth_Uresize (N : Net; W : Width; Loc : Node) return Net is
+   function Synth_Uresize
+     (Ctxt : Context_Acc; N : Net; W : Width; Loc : Node) return Net is
    begin
-      return Build2_Uresize (Build_Context, N, W, Get_Location (Loc));
+      return Build2_Uresize (Ctxt, N, W, Get_Location (Loc));
    end Synth_Uresize;
 
    function Synth_Uresize
@@ -64,7 +65,7 @@ package body Synth.Oper is
          Set_Location (Res, Loc);
          return Res;
       end if;
-      return Synth_Uresize (Get_Net (Ctxt, Val), W, Loc);
+      return Synth_Uresize (Ctxt, Get_Net (Ctxt, Val), W, Loc);
    end Synth_Uresize;
 
    function Synth_Sresize
@@ -74,7 +75,7 @@ package body Synth.Oper is
    begin
       if Is_Static (Val.Val) and then Val.Typ.Kind = Type_Discrete then
          if Val.Typ.Drange.Is_Signed then
-            Res := Build2_Const_Int (Build_Context, Read_Discrete (Val), W);
+            Res := Build2_Const_Int (Ctxt, Read_Discrete (Val), W);
          else
             --  TODO.
             raise Internal_Error;
@@ -997,7 +998,7 @@ package body Synth.Oper is
                L := Synth_Uresize (Ctxt, Left, W, Left_Expr);
                R := Synth_Uresize (Ctxt, Right, W, Right_Expr);
                Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-               N := Build_Dyadic (Build_Context, Id_Umul, L, R);
+               N := Build_Dyadic (Ctxt, Id_Umul, L, R);
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
@@ -1042,7 +1043,7 @@ package body Synth.Oper is
                L := Synth_Uresize (Ctxt, Left, W, Left_Expr);
                R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
                Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-               N := Build_Dyadic (Build_Context, Id_Smul, L, R);
+               N := Build_Dyadic (Ctxt, Id_Smul, L, R);
                Set_Location (N, Expr);
                return Create_Value_Net (N, Rtype);
             end;
@@ -1303,7 +1304,7 @@ package body Synth.Oper is
                Bnd : Bound_Type;
                N : Net;
             begin
-               N := Build_Concat2 (Build_Context, L, R);
+               N := Build_Concat2 (Ctxt, L, R);
                Set_Location (N, Expr);
                Bnd := Create_Bounds_From_Length
                  (Syn_Inst,
@@ -1606,7 +1607,8 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
             return Create_Value_Net
-              (Synth_Uresize (Get_Net (Ctxt, L), Res_Typ.W, Expr), Res_Typ);
+              (Synth_Uresize (Ctxt, Get_Net (Ctxt, L), Res_Typ.W, Expr),
+               Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int =>
             --  SIGNED to Integer.
             return Create_Value_Net
@@ -1622,7 +1624,7 @@ package body Synth.Oper is
                end if;
                W := Uns32 (Read_Discrete (R));
                return Create_Value_Net
-                 (Synth_Uresize (Get_Net (Ctxt, L), W, Expr),
+                 (Synth_Uresize (Ctxt, Get_Net (Ctxt, L), W, Expr),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat

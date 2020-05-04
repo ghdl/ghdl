@@ -377,7 +377,7 @@ package body Synth.Aggr is
             Arr (Idx) := Get_Net (Ctxt, Tab (I));
          end if;
       end loop;
-      Concat_Array (Arr (1 .. Idx), Res);
+      Concat_Array (Ctxt, Arr (1 .. Idx), Res);
       Free_Net_Array (Arr);
       return Res;
    end Valtyp_Array_To_Net;

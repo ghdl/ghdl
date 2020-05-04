@@ -70,7 +70,8 @@ package Synth.Expr is
    function Synth_Clock_Edge
      (Syn_Inst : Synth_Instance_Acc; Left, Right : Node) return Net;
 
-   procedure Concat_Array (Arr : in out Net_Array; N : out Net);
+   procedure Concat_Array
+     (Ctxt : Context_Acc; Arr : in out Net_Array; N : out Net);
 
    --  Synthesize EXPR.  The expression must be self-constrained.
    --  If EN is not No_Net, the execution is controlled by EN.  This is used
