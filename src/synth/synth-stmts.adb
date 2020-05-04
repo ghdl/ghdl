@@ -286,30 +286,83 @@ package body Synth.Stmts is
 
    type Target_Info_Array is array (Natural range <>) of Target_Info;
 
+   function Synth_Aggregate_Target_Type (Syn_Inst : Synth_Instance_Acc;
+                                         Target : Node) return Type_Acc
+   is
+      Targ_Type : constant Node := Get_Type (Target);
+      Base_Type : constant Node := Get_Base_Type (Targ_Type);
+      Base_Typ : Type_Acc;
+      Bnd : Bound_Type;
+      Len : Uns32;
+      Res : Type_Acc;
+   begin
+      Base_Typ := Get_Subtype_Object (Syn_Inst, Base_Type);
+      --  It's a basetype, so not bounded.
+      pragma Assert (Base_Typ.Kind = Type_Unbounded_Vector);
+
+      if Is_Fully_Constrained_Type (Targ_Type) then
+         --  If the aggregate subtype is known, just use it.
+         Bnd := Expr.Synth_Array_Bounds (Syn_Inst, Targ_Type, 1);
+      else
+         --  Ok, so the subtype of the aggregate is not known, in general
+         --  because the length of an element is not known.  That's with
+         --  vhdl-2008.
+         Len := 0;
+         declare
+            Choice : Node;
+            El : Node;
+            El_Typ : Type_Acc;
+         begin
+            Choice := Get_Association_Choices_Chain (Target);
+            while Choice /= Null_Node loop
+               pragma Assert (Get_Kind (Choice) = Iir_Kind_Choice_By_None);
+               El := Get_Associated_Expr (Choice);
+               El_Typ := Synth_Type_Of_Object (Syn_Inst, El);
+               Bnd := Get_Array_Bound (El_Typ, 1);
+               Len := Len + Bnd.Len;
+               Choice := Get_Chain (Choice);
+            end loop;
+         end;
+
+         --  Compute the range.
+         declare
+            Idx_Type : constant Node := Get_Index_Type (Base_Type, 0);
+            Idx_Typ : Type_Acc;
+         begin
+            Idx_Typ := Get_Subtype_Object (Syn_Inst, Idx_Type);
+            Bnd := (Dir => Idx_Typ.Drange.Dir,
+                    Left => Int32 (Idx_Typ.Drange.Left),
+                    Right => 0,
+                    Len => Len);
+            case Bnd.Dir is
+               when Dir_To =>
+                  Bnd.Right := Bnd.Left + Int32 (Len);
+               when Dir_Downto =>
+                  Bnd.Right := Bnd.Left - Int32 (Len);
+            end case;
+         end;
+      end if;
+
+      --  Compute the type.
+      case Base_Typ.Kind is
+         when Type_Unbounded_Vector =>
+            Res := Create_Vector_Type (Bnd, Base_Typ.Uvec_El);
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Synth_Aggregate_Target_Type;
+
    function Synth_Target (Syn_Inst : Synth_Instance_Acc;
                           Target : Node;
                           En : Net) return Target_Info is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Aggregate =>
-            declare
-               Targ_Type : constant Node := Get_Type (Target);
-               Base_Typ : Type_Acc;
-               Bnd : Bound_Type;
-            begin
-               Base_Typ :=
-                 Get_Subtype_Object (Syn_Inst, Get_Base_Type (Targ_Type));
-               case Base_Typ.Kind is
-                  when Type_Unbounded_Vector =>
-                     Bnd := Expr.Synth_Array_Bounds (Syn_Inst, Targ_Type, 1);
-                     return Target_Info' (Kind => Target_Aggregate,
-                                          Targ_Type => Create_Vector_Type
-                                            (Bnd, Base_Typ.Uvec_El),
-                                          Aggr => Target);
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end;
+            return Target_Info'(Kind => Target_Aggregate,
+                                Targ_Type => Synth_Aggregate_Target_Type
+                                  (Syn_Inst, Target),
+                                Aggr => Target);
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Element
            | Iir_Kind_Interface_Signal_Declaration
