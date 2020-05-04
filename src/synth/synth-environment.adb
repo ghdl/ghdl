@@ -489,8 +489,6 @@ package body Synth.Environment is
             Asgn := Asgn_Rec.Chain;
          end;
       end loop;
-
-      --  FIXME: free wires.
    end Pop_And_Merge_Phi;
 
    procedure Propagate_Phi_Until_Mark (Ctxt : Builders.Context_Acc;

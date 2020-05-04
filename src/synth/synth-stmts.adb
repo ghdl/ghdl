@@ -1824,6 +1824,7 @@ package body Synth.Stmts is
          C.W_Val := Alloc_Wire (Wire_Variable, Imp);
       end if;
 
+      --  Create a phi so that all assignments are gathered.
       Push_Phi;
 
       Synth_Subprogram_Association_Wires (Sub_Inst, Init);
@@ -1885,6 +1886,8 @@ package body Synth.Stmts is
       Propagate_Phi_Until_Mark (Ctxt, Subprg_Phi, Wire_Mark);
 
       --  Free wires.
+      --  These wires are currently unassigned because they were created
+      --  within the Phi.
       Free_Wire (C.W_En);
       Free_Wire (C.W_Ret);
       if Is_Func then
