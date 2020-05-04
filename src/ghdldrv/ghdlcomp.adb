@@ -539,7 +539,7 @@ package body Ghdlcomp is
    end Perform_Action;
 
    --  Command -e
-   type Command_Elab is new Command_Lib with null record;
+   type Command_Elab is new Command_Comp with null record;
    function Decode_Command (Cmd : Command_Elab; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Elab) return String;
@@ -573,23 +573,19 @@ package body Ghdlcomp is
    is
       pragma Assert (Option'First = 1);
    begin
-      if Option = "--expect-failure" then
-         Flag_Expect_Failure := True;
-         Res := Option_Ok;
-      elsif Option = "-o" then
+      if Option = "-o" then
          if Arg'Length = 0 then
             Res := Option_Arg_Req;
          else
             --  Silently accepted.
             Res := Option_Arg;
          end if;
-      elsif Option'Length >= 4 and then Option (1 .. 4) = "-Wl,"
-      then
+      elsif Option'Length >= 4 and then Option (1 .. 4) = "-Wl," then
          Error_Msg_Option ("option -Wl is not available when ghdl "
                              & "is not configured with gcc or llvm");
          Res := Option_Err;
       else
-         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+         Decode_Option (Command_Comp (Cmd), Option, Arg, Res);
       end if;
    end Decode_Option;
 
