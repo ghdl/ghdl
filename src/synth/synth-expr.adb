@@ -603,6 +603,11 @@ package body Synth.Expr is
                                            Left => Int64 (B.Left),
                                            Right => Int64 (B.Right));
             end;
+         when Iir_Kinds_Denoting_Name =>
+            --  A discrete subtype name.
+            Synth_Discrete_Range
+              (Syn_Inst, Get_Subtype_Indication (Get_Named_Entity (Bound)),
+               Rng);
          when others =>
             Error_Kind ("synth_discrete_range", Bound);
       end case;
@@ -1419,20 +1424,24 @@ package body Synth.Expr is
       Inp_W : Width;
    begin
       Off := (0, 0);
+      Inp := No_Net;
 
       case Get_Kind (Expr) is
          when Iir_Kind_Range_Expression =>
+            --  As the range may be dynamic, cannot use synth_discrete_range.
             Left := Synth_Expression_With_Basetype
               (Syn_Inst, Get_Left_Limit (Expr), En);
             Right := Synth_Expression_With_Basetype
               (Syn_Inst, Get_Right_Limit (Expr), En);
             Dir := Get_Direction (Expr);
-         when Iir_Kind_Range_Array_Attribute =>
+
+         when Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute
+           | Iir_Kinds_Denoting_Name =>
             declare
                Rng : Discrete_Range_Type;
             begin
                Synth_Discrete_Range (Syn_Inst, Expr, Rng);
-               Inp := No_Net;
                Synth_Slice_Const_Suffix (Syn_Inst, Expr,
                                          Name, Pfx_Bnd,
                                          Rng.Left, Rng.Right, Rng.Dir,
@@ -1442,10 +1451,11 @@ package body Synth.Expr is
          when others =>
             Error_Msg_Synth
               (+Expr, "only range expression supported for slices");
+            Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
+            return;
       end case;
 
       if Is_Static_Val (Left.Val) and then Is_Static_Val (Right.Val) then
-         Inp := No_Net;
          Synth_Slice_Const_Suffix (Syn_Inst, Expr,
                                    Name, Pfx_Bnd,
                                    Get_Static_Discrete (Left),
@@ -1455,8 +1465,6 @@ package body Synth.Expr is
       else
          if Pfx_Bnd.Dir /= Dir then
             Error_Msg_Synth (+Name, "direction mismatch in slice");
-            Inp := No_Net;
-            Off := (0, 0);
             if Dir = Dir_To then
                Res_Bnd := (Dir => Dir_To, Left => 1, Right => 0, Len => 0);
             else
