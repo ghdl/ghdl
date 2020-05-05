@@ -682,35 +682,9 @@ package body Synth.Stmts is
       Synth_Assignment (Syn_Inst, Targ, Val, Stmt, En);
    end Synth_Conditional_Signal_Assignment;
 
-   --  Return the enable net from C.
-   function Get_En (C : Seq_Context; Loc : Source.Syn_Src) return Net
-   is
-      Ncond, Nen : Net;
-   begin
-      if C.Mode = Mode_Static then
-         --  Always enabled.
-         return No_Net;
-      end if;
-
-      Ncond := C.W_Cond;
-
-      if Is_Static_Wire (C.W_En) then
-         --  Cannot be 0.
-         return Ncond;
-      end if;
-
-      Nen := Get_Current_Value (Get_Build (C.Inst), C.W_En);
-      if Ncond = No_Net then
-         return Nen;
-      end if;
-      Nen := Build_Dyadic (Get_Build (C.Inst), Id_And, Nen, Ncond);
-      Set_Location (Nen, Loc);
-      return Nen;
-   end Get_En;
-
    procedure Synth_Variable_Assignment (C : Seq_Context; Stmt : Node)
    is
-      En : constant Net := Get_En (C, Stmt);
+      En : constant Net := No_Net;
       Targ : Target_Info;
       Val : Valtyp;
    begin
@@ -729,7 +703,7 @@ package body Synth.Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Target : constant Node := Get_Target (Stmt);
-      En : constant Net := Get_En (C, Stmt);
+      En : constant Net := No_Net;
       Targ_Type : Type_Acc;
       Cond : Node;
       Ce : Node;
@@ -770,12 +744,10 @@ package body Synth.Stmts is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
       Cond_Val : Valtyp;
       Cond_Net : Net;
-      Not_Cond_Net : Net;
       Phi_True : Phi_Type;
       Phi_False : Phi_Type;
-      Prev_Cond : Net;
    begin
-      Cond_Val := Synth_Expression (C.Inst, Cond, Get_En (C, Stmt));
+      Cond_Val := Synth_Expression (C.Inst, Cond, No_Net);
       if Cond_Val = No_Valtyp then
          Set_Error (C.Inst);
          return;
@@ -801,17 +773,6 @@ package body Synth.Stmts is
             end if;
          end if;
       else
-         Prev_Cond := C.W_Cond;
-         Cond_Net := Get_Net (Ctxt, Cond_Val);
-
-         --  Set W_Cond (for the 'then' part).
-         if Prev_Cond = No_Net then
-            C.W_Cond := Cond_Net;
-         else
-            C.W_Cond := Build_Dyadic (Ctxt, Id_And, Prev_Cond, Cond_Net);
-            Set_Location (C.W_Cond, Stmt);
-         end if;
-
          --  The statements for the 'then' part.
          Push_Phi;
          Synth_Sequential_Statements
@@ -821,17 +782,6 @@ package body Synth.Stmts is
          Push_Phi;
 
          if Is_Valid (Els) then
-            --  Set W_Cond (for the 'else' part).
-            Not_Cond_Net := Build_Monadic (Ctxt, Id_Not, Cond_Net);
-            Set_Location (Not_Cond_Net, Stmt);
-            if Prev_Cond = No_Net then
-               C.W_Cond := Not_Cond_Net;
-            else
-               C.W_Cond := Build_Dyadic
-                 (Ctxt, Id_And, Prev_Cond, Not_Cond_Net);
-               Set_Location (C.W_Cond, Stmt);
-            end if;
-
             if Is_Null (Get_Condition (Els)) then
                --  Final else part.
                Synth_Sequential_Statements
@@ -842,10 +792,9 @@ package body Synth.Stmts is
             end if;
          end if;
 
-         --  Restore value.
-         C.W_Cond := Prev_Cond;
          Pop_Phi (Phi_False);
 
+         Cond_Net := Get_Net (Ctxt, Cond_Val);
          Merge_Phis (Ctxt, Cond_Net, Phi_True, Phi_False, Stmt);
       end if;
    end Synth_If_Statement;
@@ -1060,7 +1009,7 @@ package body Synth.Stmts is
                Choice_Data (Choice_Idx) :=
                  (Val => Convert_To_Uns64 (C.Inst,
                                            Get_Choice_Expression (Choice),
-                                           Get_En (C, Stmt)),
+                                           No_Net),
                   Alt => Alt_Idx);
             when Iir_Kind_Choice_By_Others =>
                Others_Alt_Idx := Alt_Idx;
@@ -1287,8 +1236,7 @@ package body Synth.Stmts is
       Expr : constant Node := Get_Expression (Stmt);
       Sel : Valtyp;
    begin
-      Sel := Synth_Expression_With_Basetype
-        (C.Inst, Expr, Get_En (C, Stmt));
+      Sel := Synth_Expression_With_Basetype (C.Inst, Expr, No_Net);
       Strip_Const (Sel);
       if Is_Static (Sel.Val) then
          case Sel.Typ.Kind is
@@ -1864,7 +1812,6 @@ package body Synth.Stmts is
             W_En => No_Wire_Id,
             W_Ret => No_Wire_Id,
             W_Val => No_Wire_Id,
-            W_Cond => No_Net,
             Ret_Init => No_Net,
             Ret_Value => No_Valtyp,
             Ret_Typ => null,
@@ -1895,8 +1842,6 @@ package body Synth.Stmts is
       Set_Wire_Gate
         (C.W_En, Build_Control_Signal (Sub_Inst, 1, Imp));
       Phi_Assign_Static (C.W_En, Bit1);
-
-      C.W_Cond := En;
 
       Set_Wire_Gate
         (C.W_Ret, Build_Control_Signal (Sub_Inst, 1, Imp));
@@ -2329,7 +2274,7 @@ package body Synth.Stmts is
       Phi_False : Phi_Type;
    begin
       if Cond /= Null_Node then
-         Cond_Val := Synth_Expression (C.Inst, Cond, Get_En (C, Stmt));
+         Cond_Val := Synth_Expression (C.Inst, Cond, No_Net);
          Static_Cond := Is_Static_Val (Cond_Val.Val);
          if Static_Cond then
             if Get_Static_Discrete (Cond_Val) = 0 then
@@ -2627,7 +2572,7 @@ package body Synth.Stmts is
       if Expr /= Null_Node then
          --  Return in function.
          Val := Synth_Expression_With_Type
-           (C.Inst, Expr, C.Ret_Typ, Get_En (C, Stmt));
+           (C.Inst, Expr, C.Ret_Typ, No_Net);
          if Val = No_Valtyp then
             Set_Error (C.Inst);
             return;
@@ -2755,7 +2700,7 @@ package body Synth.Stmts is
    procedure Synth_Dynamic_Assertion_Statement (C : Seq_Context; Stmt : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
-      En : constant Net := Get_En (C, Stmt);
+      En : constant Net := No_Net;
       Loc : constant Location_Type := Get_Location (Stmt);
       Cond : Valtyp;
       N : Net;
@@ -2767,13 +2712,15 @@ package body Synth.Stmts is
          Set_Error (C.Inst);
          return;
       end if;
-      N := Get_Net (Ctxt, Cond);
-      if En /= No_Net then
-         --  Build: En -> Cond
-         N := Build2_Imp (Ctxt, En, N, Loc);
+      if Boolean'(False) then
+         N := Get_Net (Ctxt, Cond);
+         if En /= No_Net then
+            --  Build: En -> Cond
+            N := Build2_Imp (Ctxt, En, N, Loc);
+         end if;
+         Inst := Build_Assert (Ctxt, Synth_Label (Stmt), N);
+         Set_Location (Inst, Loc);
       end if;
-      Inst := Build_Assert (Ctxt, Synth_Label (Stmt), N);
-      Set_Location (Inst, Loc);
    end Synth_Dynamic_Assertion_Statement;
 
    procedure Synth_Sequential_Statements
@@ -2816,11 +2763,9 @@ package body Synth.Stmts is
             when Iir_Kind_If_Statement =>
                Synth_If_Statement (C, Stmt);
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
-               Synth_Simple_Signal_Assignment
-                 (C.Inst, Stmt, Get_En (C, Stmt));
+               Synth_Simple_Signal_Assignment (C.Inst, Stmt, No_Net);
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
-               Synth_Conditional_Signal_Assignment
-                 (C.Inst, Stmt, Get_En (C, Stmt));
+               Synth_Conditional_Signal_Assignment (C.Inst, Stmt, No_Net);
             when Iir_Kind_Variable_Assignment_Statement =>
                Synth_Variable_Assignment (C, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
@@ -2845,7 +2790,7 @@ package body Synth.Stmts is
             when Iir_Kind_Return_Statement =>
                Synth_Return_Statement (C, Stmt);
             when Iir_Kind_Procedure_Call_Statement =>
-               Synth_Procedure_Call (C.Inst, Stmt, Get_En (C, Stmt));
+               Synth_Procedure_Call (C.Inst, Stmt, No_Net);
             when Iir_Kind_Report_Statement =>
                if not Is_Dyn then
                   Synth_Static_Report_Statement (C, Stmt);
@@ -2948,7 +2893,6 @@ package body Synth.Stmts is
             W_En => Alloc_Wire (Wire_Variable, Proc),
             W_Ret => No_Wire_Id,
             W_Val => No_Wire_Id,
-            W_Cond => No_Net,
             Ret_Init => No_Net,
             Ret_Value => No_Valtyp,
             Ret_Typ => null,
