@@ -488,7 +488,8 @@ package body Synth.Aggr is
          when Type_Vector
            | Type_Array =>
             return Synth_Aggregate_Array (Syn_Inst, Aggr, En, Aggr_Type);
-         when Type_Record =>
+         when Type_Record
+           |  Type_Unbounded_Record =>
             return Synth_Aggregate_Record (Syn_Inst, Aggr, En, Aggr_Type);
          when others =>
             raise Internal_Error;

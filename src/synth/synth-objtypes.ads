@@ -77,6 +77,7 @@ package Synth.Objtypes is
       Type_Slice,
       Type_Array,
       Type_Unbounded_Array,
+      Type_Unbounded_Record,
       Type_Record,
 
       Type_Access,
@@ -144,7 +145,8 @@ package Synth.Objtypes is
          when Type_Unbounded_Array =>
             Uarr_Ndim : Dim_Type;
             Uarr_El : Type_Acc;
-         when Type_Record =>
+         when Type_Record
+           | Type_Unbounded_Record =>
             Rec : Rec_El_Array_Acc;
          when Type_Access =>
             Acc_Acc : Type_Acc;
@@ -210,6 +212,7 @@ package Synth.Objtypes is
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc;
 
    function Create_Record_Type (Els : Rec_El_Array_Acc) return Type_Acc;
+   function Create_Unbounded_Record (Els : Rec_El_Array_Acc) return Type_Acc;
 
    function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc;
 

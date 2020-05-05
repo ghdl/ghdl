@@ -823,6 +823,9 @@ package body Synth.Expr is
          when Type_Record =>
             --  TODO: handle elements.
             return Vt;
+         when Type_Unbounded_Record =>
+            pragma Assert (Vtype.Kind = Type_Record);
+            return Vt;
          when Type_Access =>
             return Vt;
          when Type_File =>

@@ -121,9 +121,6 @@ package body Synth.Decls is
       El : Node;
       El_Typ : Type_Acc;
    begin
-      if not Is_Fully_Constrained_Type (Def) then
-         return null;
-      end if;
       Rec_Els := Create_Rec_El_Array
         (Iir_Index32 (Get_Nbr_Elements (El_List)));
 
@@ -133,7 +130,11 @@ package body Synth.Decls is
          Rec_Els.E (Iir_Index32 (I + 1)).Typ := El_Typ;
       end loop;
 
-      return Create_Record_Type (Rec_Els);
+      if not Is_Fully_Constrained_Type (Def) then
+         return Create_Unbounded_Record (Rec_Els);
+      else
+         return Create_Record_Type (Rec_Els);
+      end if;
    end Synth_Record_Type_Definition;
 
    function Synth_Access_Type_Definition

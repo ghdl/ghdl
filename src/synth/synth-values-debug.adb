@@ -72,6 +72,8 @@ package body Synth.Values.Debug is
          when Type_Record =>
             Put ("rec: (");
             Put (")");
+         when Type_Unbounded_Record =>
+            Put ("unbounded record");
          when Type_Discrete =>
             Put ("discrete: ");
             Put_Int64 (T.Drange.Left);
@@ -168,6 +170,8 @@ package body Synth.Values.Debug is
             Put ("unbounded vector");
          when Type_Unbounded_Array =>
             Put ("unbounded array");
+         when Type_Unbounded_Record =>
+            Put ("unbounded record");
          when Type_Protected =>
             Put ("protected");
       end case;

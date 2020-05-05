@@ -55,6 +55,7 @@ package body Synth.Objtypes is
             return True;
          when Type_Unbounded_Array
            | Type_Unbounded_Vector
+           | Type_Unbounded_Record
            | Type_Protected =>
             return False;
       end case;
@@ -99,7 +100,8 @@ package body Synth.Objtypes is
          when Type_Unbounded_Array =>
             return L.Uarr_Ndim = R.Uarr_Ndim
               and then Are_Types_Equal (L.Uarr_El, R.Uarr_El);
-         when Type_Record =>
+         when Type_Record
+           | Type_Unbounded_Record =>
             if L.Rec.Len /= R.Rec.Len then
                return False;
             end if;
@@ -457,6 +459,20 @@ package body Synth.Objtypes is
                                                 Rec => Els)));
    end Create_Record_Type;
 
+   function Create_Unbounded_Record (Els : Rec_El_Array_Acc) return Type_Acc
+   is
+      subtype Unbounded_Record_Type_Type is Type_Type (Type_Unbounded_Record);
+      function Alloc is
+         new Areapools.Alloc_On_Pool_Addr (Unbounded_Record_Type_Type);
+   begin
+      return To_Type_Acc (Alloc (Current_Pool, (Kind => Type_Unbounded_Record,
+                                                Is_Synth => True,
+                                                Al => 0,
+                                                Sz => 0,
+                                                W => 0,
+                                                Rec => Els)));
+   end Create_Unbounded_Record;
+
    function Create_Access_Type (Acc_Type : Type_Acc) return Type_Acc
    is
       subtype Access_Type_Type is Type_Type (Type_Access);
@@ -566,7 +582,8 @@ package body Synth.Objtypes is
             end loop;
             return True;
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector =>
+           | Type_Unbounded_Vector
+           | Type_Unbounded_Record =>
             raise Internal_Error;
          when Type_Record =>
             --  FIXME: handle vhdl-08

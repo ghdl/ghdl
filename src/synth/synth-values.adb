@@ -425,7 +425,9 @@ package body Synth.Values is
                   Write_Value_Default (Arr_Index (M, I - 1, El_Typ), El_Typ);
                end loop;
             end;
-         when Type_Unbounded_Vector =>
+         when Type_Unbounded_Vector
+           | Type_Unbounded_Array
+           | Type_Unbounded_Record =>
             raise Internal_Error;
          when Type_Slice =>
             raise Internal_Error;
@@ -438,8 +440,6 @@ package body Synth.Values is
                   Write_Value_Default (Arr_Index (M, I - 1, El_Typ), El_Typ);
                end loop;
             end;
-         when Type_Unbounded_Array =>
-            raise Internal_Error;
          when Type_Record =>
             for I in Typ.Rec.E'Range loop
                Write_Value_Default (M + Typ.Rec.E (I).Moff, Typ.Rec.E (I).Typ);
