@@ -3406,6 +3406,41 @@ package body Vhdl.Sem_Expr is
       end if;
    end Sem_Array_Aggregate_Elements;
 
+   procedure Sem_Array_Aggregate_Choice_Length
+     (Choice : Iir;
+      Len : in out Natural;
+      Len_Staticness : in out Iir_Staticness)
+   is
+      --  Extract length from associated expression.
+      --  Always has an associated expr, as not named.
+      Expr : constant Iir := Get_Associated_Expr (Choice);
+      Expr_Type : constant Iir := Get_Type (Expr);
+      Expr_Index : Iir;
+      Index_Staticness : Iir_Staticness;
+   begin
+      if Is_Error (Expr_Type) then
+         return;
+      end if;
+      if Get_Constraint_State (Expr_Type) /= Fully_Constrained then
+         Len_Staticness := None;
+         return;
+      end if;
+
+      Expr_Index := Get_Index_Type (Expr_Type, 0);
+      Index_Staticness := Get_Type_Staticness (Expr_Index);
+      case Index_Staticness is
+         when Locally =>
+            Len := Len + Natural
+              (Eval_Discrete_Type_Length (Expr_Index));
+         when Globally | None =>
+            Len_Staticness := Nodes.Min
+              (Len_Staticness, Index_Staticness);
+         when Unknown =>
+            --  Must have been caught by Is_Error.
+            raise Internal_Error;
+      end case;
+   end Sem_Array_Aggregate_Choice_Length;
+
    --  Analyze an array aggregate AGGR of *base type* A_TYPE.
    --  The type of the array is computed into A_SUBTYPE.
    --  DIM is the dimension index in A_TYPE.
@@ -3553,30 +3588,8 @@ package body Vhdl.Sem_Expr is
                         Len := Len + 1;
                      else
                         --  Extract length from associated expression.
-                        declare
-                           --  Always has an associated expr, as not named.
-                           Expr : constant Iir := Get_Associated_Expr (Choice);
-                           Expr_Type : constant Iir := Get_Type (Expr);
-                           Expr_Index : Iir;
-                           Index_Staticness : Iir_Staticness;
-                        begin
-                           if not Is_Error (Expr_Type) then
-                              Expr_Index := Get_Index_Type (Expr_Type, 0);
-                              Index_Staticness :=
-                                Get_Type_Staticness (Expr_Index);
-                              case Index_Staticness is
-                                 when Locally =>
-                                    Len := Len + Natural
-                                      (Eval_Discrete_Type_Length (Expr_Index));
-                                 when Globally | None =>
-                                    Len_Staticness := Nodes.Min
-                                      (Len_Staticness, Index_Staticness);
-                                 when Unknown =>
-                                    --  Must have been caught by Is_Error.
-                                    raise Internal_Error;
-                              end case;
-                           end if;
-                        end;
+                        Sem_Array_Aggregate_Choice_Length
+                          (Choice, Len, Len_Staticness);
                      end if;
                   when Iir_Kind_Choice_By_Others =>
                      if not Constrained then
