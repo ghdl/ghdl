@@ -301,13 +301,13 @@ package body Synth.Aggr is
 
    procedure Fill_Record_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                     Aggr : Node;
+                                    Aggr_Typ : Type_Acc;
                                     En : Net;
                                     Rec : Valtyp_Array_Acc;
+                                    Err_P : out Boolean;
                                     Const_P : out Boolean)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      El_List : constant Node_Flist :=
-        Get_Elements_Declaration_List (Get_Type (Aggr));
       Value : Node;
       Assoc : Node;
       Pos : Nat32;
@@ -318,13 +318,16 @@ package body Synth.Aggr is
          Val : Valtyp;
          El_Type : Type_Acc;
       begin
-         El_Type := Get_Subtype_Object
-           (Syn_Inst, Get_Type (Get_Nth_Element (El_List, Natural (Pos))));
+         El_Type := Aggr_Typ.Rec.E (Iir_Index32 (Pos + 1)).Typ;
          Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type, En);
          if Const_P and not Is_Static (Val.Val) then
             Const_P := False;
          end if;
          Val := Synth_Subtype_Conversion (Ctxt, Val, El_Type, False, Value);
+         if Val = No_Valtyp then
+            Err_P := True;
+            return;
+         end if;
          --  Put in reverse order.  The first record element (at position 0)
          --  will be the LSB, so the last element of REC.
          Rec (Nat32 (Rec'Last - Pos)) := Val;
@@ -333,6 +336,7 @@ package body Synth.Aggr is
       Assoc := Get_Association_Choices_Chain (Aggr);
       Pos := 0;
       Const_P := True;
+      Err_P := False;
       while Is_Valid (Assoc) loop
          Value := Get_Associated_Expr (Assoc);
          loop
@@ -438,15 +442,19 @@ package body Synth.Aggr is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Tab_Res : Valtyp_Array_Acc;
       Res : Valtyp;
+      Err_P : Boolean;
       Const_P : Boolean;
    begin
       --  Allocate the result.
       Tab_Res :=
         new Valtyp_Array'(1 .. Nat32 (Aggr_Type.Rec.Len) => No_Valtyp);
 
-      Fill_Record_Aggregate (Syn_Inst, Aggr, En, Tab_Res, Const_P);
+      Fill_Record_Aggregate
+        (Syn_Inst, Aggr, Aggr_Type, En, Tab_Res, Err_P, Const_P);
 
-      if Const_P then
+      if Err_P then
+         Res := No_Valtyp;
+      elsif Const_P then
          Res := Create_Value_Memory (Aggr_Type);
          for I in Aggr_Type.Rec.E'Range loop
             Write_Value (Res.Val.Mem + Aggr_Type.Rec.E (I).Moff,
