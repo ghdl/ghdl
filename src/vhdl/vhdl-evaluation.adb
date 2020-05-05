@@ -554,7 +554,7 @@ package body Vhdl.Evaluation is
       end loop;
    end Build_Array_Choices_Vector;
 
-   function Aggregate_To_Simple_Aggregate (Aggr : Iir) return Iir
+   function Array_Aggregate_To_Simple_Aggregate (Aggr : Iir) return Iir
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
@@ -591,7 +591,7 @@ package body Vhdl.Evaluation is
       end if;
 
       return Build_Simple_Aggregate (List, Aggr, Aggr_Type);
-   end Aggregate_To_Simple_Aggregate;
+   end Array_Aggregate_To_Simple_Aggregate;
 
    function Eval_String_Literal (Str : Iir) return Iir is
    begin
@@ -600,7 +600,7 @@ package body Vhdl.Evaluation is
             return String_Literal8_To_Simple_Aggregate (Str);
 
          when Iir_Kind_Aggregate =>
-            return Aggregate_To_Simple_Aggregate (Str);
+            return Array_Aggregate_To_Simple_Aggregate (Str);
 
          when Iir_Kind_Simple_Aggregate =>
             return Str;
@@ -1411,6 +1411,125 @@ package body Vhdl.Evaluation is
       end if;
    end Eval_Logic_Match_Equality;
 
+   function Eval_Equality (Left, Right : Iir) return Boolean;
+
+   --  CHOICES is a chain of choice from a record aggregate; FEL is an Flist
+   --  whose length is the number of element of the record type.
+   --  Fill FEL with the associated expressions from CHOICES, so that it is
+   --  easier to deal than the aggregate as elements are ordered.
+   procedure Fill_Flist_From_Record_Aggregate (Choices : Iir; Fel : Iir_Flist)
+   is
+      Pos : Natural;
+      Ch : Iir;
+      Expr : Iir;
+   begin
+      Pos := 0;
+      Ch := Choices;
+      while Ch /= Null_Iir loop
+         Expr := Get_Associated_Expr (Ch);
+         case Iir_Kinds_Record_Choice (Get_Kind (Ch)) is
+            when Iir_Kind_Choice_By_None =>
+               Set_Nth_Element (Fel, Pos, Expr);
+               Pos := Pos + 1;
+            when Iir_Kind_Choice_By_Name =>
+               Pos := Natural (Get_Element_Position
+                                 (Get_Named_Entity (Get_Choice_Name (Ch))));
+               Set_Nth_Element (Fel, Pos, Expr);
+            when Iir_Kind_Choice_By_Others =>
+               for I in 0 .. Get_Nbr_Elements (Fel) - 1 loop
+                  if Get_Nth_Element (Fel, I) = Null_Iir then
+                     Set_Nth_Element (Fel, I, Expr);
+                  end if;
+               end loop;
+         end case;
+         Ch := Get_Chain (Ch);
+      end loop;
+   end Fill_Flist_From_Record_Aggregate;
+
+
+   function Eval_Record_Equality (Left, Right : Iir) return Boolean
+   is
+      pragma Assert (Get_Kind (Left) = Iir_Kind_Aggregate);
+      pragma Assert (Get_Kind (Right) = Iir_Kind_Aggregate);
+      Lch, Rch : Iir;
+   begin
+      Lch := Get_Association_Choices_Chain (Left);
+      Rch := Get_Association_Choices_Chain (Right);
+
+      if Get_Kind (Lch) = Iir_Kind_Choice_By_None
+        and then Get_Kind (Rch) = Iir_Kind_Choice_By_None
+      then
+         --  All choices are positionnal.
+         while Lch /= Null_Iir loop
+            pragma Assert (Rch /= Null_Iir);
+            pragma Assert (Get_Kind (Lch) = Iir_Kind_Choice_By_None);
+            pragma Assert (Get_Kind (Rch) = Iir_Kind_Choice_By_None);
+            if not Eval_Equality (Get_Associated_Expr (Lch),
+                                  Get_Associated_Expr (Rch))
+            then
+               return False;
+            end if;
+            Lch := Get_Chain (Lch);
+            Rch := Get_Chain (Rch);
+         end loop;
+         pragma Assert (Rch = Null_Iir);
+         return True;
+      else
+         declare
+            Els : constant Iir_Flist :=
+              Get_Elements_Declaration_List (Get_Type (Left));
+            Nels : constant Natural := Get_Nbr_Elements (Els);
+            Lel, Rel : Iir_Flist;
+            Res : Boolean;
+         begin
+            Lel := Create_Iir_Flist (Nels);
+            Rel := Create_Iir_Flist (Nels);
+            Fill_Flist_From_Record_Aggregate (Lch, Lel);
+            Fill_Flist_From_Record_Aggregate (Rch, Rel);
+
+            Res := True;
+            for I in 0 .. Nels - 1 loop
+               if not Eval_Equality (Get_Nth_Element (Lel, I),
+                                     Get_Nth_Element (Rel, I))
+               then
+                  Res := False;
+                  exit;
+               end if;
+            end loop;
+
+            Destroy_Iir_Flist (Lel);
+            Destroy_Iir_Flist (Rel);
+
+            return Res;
+         end;
+      end if;
+   end Eval_Record_Equality;
+
+   function Eval_Equality (Left, Right : Iir) return Boolean
+   is
+      Ltype : constant Iir := Get_Base_Type (Get_Type (Left));
+   begin
+      pragma Assert
+        (Get_Kind (Ltype) = Get_Kind (Get_Base_Type (Get_Type (Right))));
+
+      case Get_Kind (Ltype) is
+         when Iir_Kind_Enumeration_Type_Definition =>
+            return Get_Enum_Pos (Left) = Get_Enum_Pos (Right);
+         when Iir_Kind_Physical_Type_Definition =>
+            return Get_Physical_Value (Left) = Get_Physical_Value (Right);
+         when Iir_Kind_Integer_Type_Definition =>
+            return Get_Value (Left) = Get_Value (Right);
+         when Iir_Kind_Floating_Type_Definition =>
+            return Get_Fp_Value (Left) = Get_Fp_Value (Right);
+         when Iir_Kind_Array_Type_Definition =>
+            return Eval_Array_Compare (Left, Right) = Compare_Eq;
+         when Iir_Kind_Record_Type_Definition =>
+            return Eval_Record_Equality (Left, Right);
+         when others =>
+            Error_Kind ("eval_equality", Ltype);
+      end case;
+   end Eval_Equality;
+
    --  ORIG is either a dyadic operator or a function call.
    function Eval_Dyadic_Operator (Orig : Iir; Imp : Iir; Left, Right : Iir)
                                  return Iir
@@ -1742,6 +1861,11 @@ package body Vhdl.Evaluation is
             return Build_Boolean
               (Eval_Array_Compare (Left, Right) >= Compare_Eq);
 
+         when Iir_Predefined_Record_Equality =>
+            return Build_Boolean (Eval_Record_Equality (Left, Right));
+         when Iir_Predefined_Record_Inequality =>
+            return Build_Boolean (not Eval_Record_Equality (Left, Right));
+
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Boolean_Rising_Edge
            | Iir_Predefined_Boolean_Falling_Edge
@@ -1758,8 +1882,6 @@ package body Vhdl.Evaluation is
            | Iir_Predefined_Physical_Identity
            | Iir_Predefined_Physical_Negation
            | Iir_Predefined_Error
-           | Iir_Predefined_Record_Equality
-           | Iir_Predefined_Record_Inequality
            | Iir_Predefined_Access_Equality
            | Iir_Predefined_Access_Inequality
            | Iir_Predefined_TF_Array_Not
