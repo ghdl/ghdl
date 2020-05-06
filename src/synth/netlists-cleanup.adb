@@ -126,9 +126,10 @@ package body Netlists.Cleanup is
 
          case Get_Id (Inst) is
             when Id_Output
-              | Id_Ioutput
-              | Id_Port
-              | Id_Nop =>
+              |  Id_Ioutput
+              |  Id_Port
+              |  Id_Enable
+              |  Id_Nop =>
                declare
                   Inp : Input;
                   In_Drv : Net;

@@ -41,4 +41,10 @@ package Netlists.Inference is
                     Prev_Val : Net;
                     Stmt : Synth.Source.Syn_Src;
                     Last_Use : Boolean) return Net;
+
+   --  Called when there is an assignment to a enable gate.
+   function Infere_Assert (Ctxt : Context_Acc;
+                           Val : Net;
+                           En_Gate : Net;
+                           Stmt : Synth.Source.Syn_Src) return Net;
 end Netlists.Inference;

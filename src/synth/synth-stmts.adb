@@ -2700,10 +2700,10 @@ package body Synth.Stmts is
    procedure Synth_Dynamic_Assertion_Statement (C : Seq_Context; Stmt : Node)
    is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
-      En : constant Net := No_Net;
       Loc : constant Location_Type := Get_Location (Stmt);
       Cond : Valtyp;
       N : Net;
+      En : Net;
       Inst : Instance;
    begin
       Cond := Synth_Expression
@@ -2712,15 +2712,14 @@ package body Synth.Stmts is
          Set_Error (C.Inst);
          return;
       end if;
-      if Boolean'(False) then
-         N := Get_Net (Ctxt, Cond);
-         if En /= No_Net then
-            --  Build: En -> Cond
-            N := Build2_Imp (Ctxt, En, N, Loc);
-         end if;
-         Inst := Build_Assert (Ctxt, Synth_Label (Stmt), N);
-         Set_Location (Inst, Loc);
+      N := Get_Net (Ctxt, Cond);
+      En := Phi_Enable (Ctxt, Stmt);
+      if En /= No_Net then
+         --  Build: En -> Cond
+         N := Build2_Imp (Ctxt, En, N, Loc);
       end if;
+      Inst := Build_Assert (Ctxt, Synth_Label (Stmt), N);
+      Set_Location (Inst, Loc);
    end Synth_Dynamic_Assertion_Statement;
 
    procedure Synth_Sequential_Statements

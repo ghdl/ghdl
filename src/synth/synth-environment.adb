@@ -77,37 +77,6 @@ package body Synth.Environment is
       Wire_Rec.Kind := Wire_None;
    end Free_Wire;
 
-   procedure Mark (M : out Wire_Id) is
-   begin
-      M := Wire_Id_Table.Last;
-   end Mark;
-
-   procedure Release (M : in out Wire_Id) is
-   begin
-      --  Check all wires to be released are free.
-      for I in M + 1 .. Wire_Id_Table.Last loop
-         declare
-            Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (I);
-         begin
-            if Wire_Rec.Kind /= Wire_None then
-               raise Internal_Error;
-            end if;
-         end;
-      end loop;
-
-      --  Release.
-      Wire_Id_Table.Set_Last (M);
-
-      M := No_Wire_Id;
-   end Release;
-
-   procedure All_Released is
-   begin
-      if Wire_Id_Table.Last /= No_Wire_Id then
-         raise Internal_Error;
-      end if;
-   end All_Released;
-
    procedure Set_Wire_Gate (Wid : Wire_Id; Gate : Net) is
    begin
       --  Cannot override a gate.
@@ -203,8 +172,60 @@ package body Synth.Environment is
    begin
       Phis_Table.Append ((First => No_Seq_Assign,
                           Last => No_Seq_Assign,
-                          Nbr => 0));
+                          Nbr => 0,
+                          En => No_Wire_Id));
    end Push_Phi;
+
+   procedure Mark (M : out Wire_Id) is
+   begin
+      M := Wire_Id_Table.Last;
+   end Mark;
+
+   procedure Release (M : in out Wire_Id)
+   is
+      Last : Wire_Id;
+   begin
+      --  Check all wires to be released are free.
+      Last := M;
+      for I in M + 1 .. Wire_Id_Table.Last loop
+         declare
+            Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (I);
+            Asgn : Seq_Assign;
+         begin
+            case Wire_Rec.Kind is
+               when Wire_None =>
+                  null;
+               when Wire_Enable =>
+                  --  Keep.  This renames the wire, but the only references
+                  --  must be in the wire.
+                  Last := Last + 1;
+                  if Last /= I then
+                     --  Renames.
+                     Asgn := Wire_Rec.Cur_Assign;
+                     while Asgn /= No_Seq_Assign loop
+                        Assign_Table.Table (Asgn).Id := Last;
+                        Asgn := Get_Assign_Prev (Asgn);
+                     end loop;
+                     Wire_Id_Table.Table (Last) := Wire_Rec;
+                  end if;
+               when others =>
+                  raise Internal_Error;
+            end case;
+         end;
+      end loop;
+
+      --  Release.
+      Wire_Id_Table.Set_Last (Last);
+
+      M := No_Wire_Id;
+   end Release;
+
+   procedure All_Released is
+   begin
+      if Wire_Id_Table.Last /= No_Wire_Id then
+         raise Internal_Error;
+      end if;
+   end All_Released;
 
    --  Concatenate when possible partial assignments of HEAD.
    procedure Merge_Partial_Assignments
@@ -291,7 +312,10 @@ package body Synth.Environment is
       Wid : Wire_Id;
    begin
       Asgn := Phi.First;
-      Phi := (First => No_Seq_Assign, Last => No_Seq_Assign, Nbr => 0);
+      Phi := (First => No_Seq_Assign,
+              Last => No_Seq_Assign,
+              Nbr => 0,
+              En => No_Wire_Id);
       while Asgn /= No_Seq_Assign loop
          pragma Assert (Assign_Table.Table (Asgn).Phi = Current_Phi);
          Next_Asgn := Get_Assign_Chain (Asgn);
@@ -382,6 +406,11 @@ package body Synth.Environment is
                begin
                   if Synth.Flags.Flag_Debug_Noinference then
                      Res := Pa.Value;
+                  elsif Wire_Rec.Kind = Wire_Enable then
+                     --  Possibly infere a idff/iadff.
+                     pragma Assert (Pa.Offset = 0);
+                     Res := Inference.Infere_Assert
+                       (Ctxt, Pa.Value, Outport, Stmt);
                   else
                      --  Note: lifetime is currently based on the kind of the
                      --   wire (variable -> not reused beyond this process).
@@ -407,6 +436,7 @@ package body Synth.Environment is
       Asgn : Seq_Assign;
    begin
       Pop_Phi (Phi);
+      pragma Assert (Phis_Table.Last = No_Phi_Id);
 
       --  It is possible that the same value is assigned to different targets.
       --  Example:
@@ -939,9 +969,10 @@ package body Synth.Environment is
       W : constant Width := Get_Width (Wid_Rec.Gate);
    begin
       case Wid_Rec.Kind is
-         when Wire_Signal | Wire_Output | Wire_Inout | Wire_Variable =>
+         when Wire_Signal | Wire_Output | Wire_Inout
+           | Wire_Variable =>
             null;
-         when Wire_Input | Wire_None =>
+         when Wire_Input | Wire_Enable | Wire_None =>
             raise Internal_Error;
       end case;
 
@@ -981,7 +1012,8 @@ package body Synth.Environment is
             else
                return Get_Assign_Value (Ctxt, Wire_Rec.Cur_Assign);
             end if;
-         when Wire_Signal | Wire_Output | Wire_Inout | Wire_Input =>
+         when Wire_Signal | Wire_Output | Wire_Inout | Wire_Input
+           | Wire_Enable =>
             --  For signals, always read the previous value.
             return Wire_Rec.Gate;
          when Wire_None =>
@@ -1513,13 +1545,7 @@ package body Synth.Environment is
       end loop;
    end Merge_Phis;
 
-   procedure Phi_Append_Assign (Asgn : Seq_Assign)
-   is
-      pragma Assert (Asgn /= No_Seq_Assign);
-      Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
-      pragma Assert (Asgn_Rec.Phi = Current_Phi);
-      pragma Assert (Asgn_Rec.Chain = No_Seq_Assign);
-      P : Phi_Type renames Phis_Table.Table (Phis_Table.Last);
+   procedure Phi_Append_Assign (P : in out Phi_Type; Asgn : Seq_Assign) is
    begin
       --  Chain assignment in the current sequence.
       if P.First = No_Seq_Assign then
@@ -1530,6 +1556,64 @@ package body Synth.Environment is
       P.Last := Asgn;
       P.Nbr := P.Nbr + 1;
    end Phi_Append_Assign;
+
+   procedure Phi_Append_Assign (Asgn : Seq_Assign)
+   is
+      pragma Assert (Asgn /= No_Seq_Assign);
+      Asgn_Rec : Seq_Assign_Record renames Assign_Table.Table (Asgn);
+      pragma Assert (Asgn_Rec.Phi = Current_Phi);
+      pragma Assert (Asgn_Rec.Chain = No_Seq_Assign);
+   begin
+      Phi_Append_Assign (Phis_Table.Table (Phis_Table.Last), Asgn);
+   end Phi_Append_Assign;
+
+   function Phi_Enable (Ctxt : Builders.Context_Acc; Loc : Source.Syn_Src)
+                       return Net
+   is
+      Last : constant Phi_Id := Phis_Table.Last;
+      Wid : Wire_Id;
+      N : Net;
+      Asgn : Seq_Assign;
+   begin
+      if Last = No_Phi_Id then
+         --  Can be called only when a phi is created.
+         raise Internal_Error;
+      end if;
+      if Last = No_Phi_Id + 1 then
+         --  That's the first phi, which is always enabled.
+         return No_Net;
+      end if;
+
+      --  Cached value.
+      Wid := Phis_Table.Table (Last).En;
+      if Wid = No_Wire_Id then
+         Wid := Alloc_Wire (Wire_Enable, Loc);
+         Phis_Table.Table (Last).En := Wid;
+
+         --  Create the Enable gate.
+         N := Build_Enable (Ctxt);
+         Set_Location (N, Loc);
+         Set_Wire_Gate (Wid, N);
+
+         --  Initialize to '0'.
+         --  This is really cheating, as it is like assigning in the first
+         --  phi.
+         Assign_Table.Append ((Phi => No_Phi_Id + 1,
+                               Id => Wid,
+                               Prev => No_Seq_Assign,
+                               Chain => No_Seq_Assign,
+                               Val => (Is_Static => True, Val => Bit0)));
+         Asgn := Assign_Table.Last;
+         Wire_Id_Table.Table (Wid).Cur_Assign := Asgn;
+         Phi_Append_Assign (Phis_Table.Table (No_Phi_Id + 1), Asgn);
+
+         --  Assign to '1'.
+         Phi_Assign_Static (Wid, Bit1);
+         return N;
+      else
+         return Get_Current_Value (Ctxt, Wid);
+      end if;
+   end Phi_Enable;
 
    --  Check consistency:
    --  - ordered.
@@ -1753,7 +1837,8 @@ package body Synth.Environment is
       Phi_Assign (Ctxt, Dest, Pasgn);
    end Phi_Assign_Net;
 
-   procedure Phi_Assign_Static (Dest : Wire_Id; Val : Memtyp) is
+   procedure Phi_Assign_Static (Dest : Wire_Id; Val : Memtyp)
+   is
       Wire_Rec : Wire_Id_Record renames Wire_Id_Table.Table (Dest);
       pragma Assert (Wire_Rec.Kind /= Wire_None);
       Cur_Asgn : constant Seq_Assign := Wire_Rec.Cur_Assign;
@@ -1820,7 +1905,8 @@ begin
 
    Phis_Table.Append ((First => No_Seq_Assign,
                        Last => No_Seq_Assign,
-                       Nbr => 0));
+                       Nbr => 0,
+                       En => No_Wire_Id));
    pragma Assert (Phis_Table.Last = No_Phi_Id);
 
    Conc_Assign_Table.Append ((Next => No_Conc_Assign,

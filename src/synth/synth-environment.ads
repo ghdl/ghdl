@@ -61,7 +61,9 @@ package Synth.Environment is
    type Wire_Kind is
      (
       Wire_None,
-      Wire_Signal, Wire_Variable,
+      Wire_Variable,
+      Wire_Enable,
+      Wire_Signal,
       Wire_Input, Wire_Output, Wire_Inout
      );
 
@@ -144,6 +146,13 @@ package Synth.Environment is
                          Sel : Net;
                          T, F : Phi_Type;
                          Stmt : Source.Syn_Src);
+
+   --  Create or get (if already created) a net that is true iff the current
+   --  phi is selected.  Used to enable sequential assertions.
+   --  Because a wire is created, inference will run on it and therefore
+   --  a dff is created if needed.
+   function Phi_Enable (Ctxt : Builders.Context_Acc; Loc : Source.Syn_Src)
+                       return Net;
 
    --  Lower level part.
    --  Currently public to handle case statements.
@@ -348,6 +357,8 @@ private
       Last : Seq_Assign;
       --  Number of assignments.
       Nbr : Uns32;
+      --  Enable wire created for this phi.
+      En : Wire_Id;
    end record;
 
    package Phis_Table is new Tables

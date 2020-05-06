@@ -880,4 +880,155 @@ package body Netlists.Inference is
 
       return Res;
    end Infere;
+
+   --  INST is a mux2 of a condition chain.
+   --  Return the input that is not 0.  Could be either a mux2 or a const.
+   function Find_Condition_Chain_Next (Inst : Instance) return Instance
+   is
+      Mux_In0, Mux_In1 : Net;
+      In0_Inst, In1_Inst : Instance;
+   begin
+      Mux_In0 := Get_Input_Net (Inst, 1);
+      In0_Inst := Get_Net_Parent (Mux_In0);
+
+      Mux_In1 := Get_Input_Net (Inst, 2);
+      In1_Inst := Get_Net_Parent (Mux_In1);
+
+      if Get_Id (In0_Inst) /= Id_Const_UB32 then
+         --  The other input must be const 0.
+         pragma Assert (Get_Id (In1_Inst) = Id_Const_UB32
+                          and then Get_Param_Uns32 (In1_Inst, 0) = 0);
+         return In0_Inst;
+      else
+         --  Either both are const, or the other input must be const 0.
+         if Get_Id (In1_Inst) = Id_Const_UB32 then
+            --  Both are const.  Return the const 1.
+            if Get_Param_Uns32 (In1_Inst, 0) = 0 then
+               pragma Assert (Get_Param_Uns32 (In0_Inst, 0) = 1);
+               return In0_Inst;
+            else
+               pragma Assert (Get_Param_Uns32 (In1_Inst, 0) = 1);
+               pragma Assert (Get_Param_Uns32 (In0_Inst, 0) = 0);
+               return In1_Inst;
+            end if;
+         end if;
+
+         pragma Assert (Get_Param_Uns32 (In0_Inst, 0) = 0);
+         return In1_Inst;
+      end if;
+   end Find_Condition_Chain_Next;
+
+   --  VAL is a chain of mux2 that define the conditions to enable assertions.
+   function Infere_Assert (Ctxt : Context_Acc;
+                           Val : Net;
+                           En_Gate : Net;
+                           Stmt : Synth.Source.Syn_Src) return Net
+   is
+      Loc : constant Location_Type := Synth.Source."+" (Stmt);
+      Inst : Instance;
+      First_Inst, Last_Inst : Instance;
+      Clk, En : Net;
+      Areset : Net;
+      Zero : Net;
+   begin
+      --  Extract clock (if any) from VAL.  Return VAL is no clock.
+      First_Inst := Get_Net_Parent (Val);
+      Inst := First_Inst;
+      loop
+         if Get_Id (Inst) /= Id_Mux2 then
+            pragma Assert (Get_Id (Inst) = Id_Const_UB32);
+            return Val;
+         end if;
+         Extract_Clock (Ctxt, Get_Input_Net (Inst, 0), Clk, En);
+         exit when Clk /= No_Net;
+
+         --  No clock.  Try the father.
+         Inst := Find_Condition_Chain_Next (Inst);
+      end loop;
+
+      --  Extract enable and asynchronous reset (if any).
+      Last_Inst := Inst;
+      Areset := No_Net;
+      while Last_Inst /= Inst loop
+         declare
+            Cond : Net;
+            Next_Inst : Instance;
+         begin
+            Cond := Get_Input_Net (Inst, 0);
+
+            --  Find the next mux.
+            Next_Inst := Find_Condition_Chain_Next (Inst);
+
+            --  If the next mux is in0, negate COND.
+            if Next_Inst = Get_Net_Parent (Get_Input_Net (Inst, 1)) then
+               Cond := Build_Monadic (Ctxt, Id_Not, Cond);
+               Synth.Source.Set_Location (Cond, Stmt);
+            end if;
+
+            --  'And' COND to Areset.
+            Areset := Build2_And (Ctxt, Areset, Cond, Loc);
+
+            Inst := Next_Inst;
+         end;
+      end loop;
+
+      --  Same for LAST_INST, but check it is on in1.
+      declare
+         Next_Inst : Instance;
+      begin
+         Next_Inst := Find_Condition_Chain_Next (Last_Inst);
+         if Next_Inst /= Get_Net_Parent (Get_Input_Net (Inst, 2)) then
+            Error_Msg_Synth
+              (+Last_Inst, "assertion checked on else branch of an edge");
+            return Val;
+         end if;
+
+         En := Build2_And (Ctxt, En, Get_Output (Next_Inst, 0), Loc);
+         Zero := Get_Input_Net (Inst, 1);
+      end;
+
+      --  Build an idff/iadff for each condition of the assertions.
+      --  The caller will connect the returned value (En) to the enable gate.
+      declare
+         En_Inp : Input;
+         Assert_Inp : Input;
+         N : Net;
+         Dff : Net;
+      begin
+         En_Inp := Get_First_Sink (En_Gate);
+         pragma Assert (En_Inp /= No_Input);
+         while En_Inp /= No_Input loop
+            --  The Enable gate is connected to an implication.
+            Inst := Get_Input_Parent (En_Inp);
+            pragma Assert (Get_Id (Inst) = Id_Not);
+            N := Get_Output (Inst, 0);
+            pragma Assert (Has_One_Connection (N));
+            Inst := Get_Input_Parent (Get_First_Sink (N));
+            pragma Assert (Get_Id (Inst) = Id_Or);
+
+            N := Get_Output (Inst, 0);
+            pragma Assert (Has_One_Connection (N));
+            Inst := Get_Input_Parent (Get_First_Sink (N));
+
+            pragma Assert (Get_Id (Inst) = Id_Assert);
+
+            Assert_Inp := Get_Input (Inst, 0);
+            Disconnect (Assert_Inp);
+
+            if Areset = No_Net then
+               Dff := Build_Idff (Ctxt, Clk, N, Zero);
+            else
+               Dff := Build_Iadff (Ctxt, Clk, N, Areset, Zero, Zero);
+            end if;
+            Set_Location (Dff, Loc);
+
+            Connect (Assert_Inp, Dff);
+
+            En_Inp := Get_Next_Sink (En_Inp);
+         end loop;
+      end;
+
+      return En;
+   end Infere_Assert;
+
 end Netlists.Inference;
