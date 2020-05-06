@@ -1340,11 +1340,27 @@ package body Synth.Expr is
 
       case Pfx_Bnd.Dir is
          when Dir_To =>
-            Off := Uns32 (L_Add - Pfx_Bnd.Left);
             Width := Uns32 (R_Add - L_Add + 1);
+            Off := Uns32 (L_Add - Pfx_Bnd.Left);
          when Dir_Downto =>
-            Off := Uns32 (R_Add - Pfx_Bnd.Right);
             Width := Uns32 (L_Add - R_Add + 1);
+            if R_Add >= Pfx_Bnd.Right then
+               Off := Uns32 (R_Add - Pfx_Bnd.Right);
+            else
+               --  Handle biased values.
+               declare
+                  Bias : constant Uns32 :=
+                    (Uns32 (Pfx_Bnd.Right - R_Add) + Step - 1) / Step;
+                  Bias_Net : Net;
+               begin
+                  --  Add bias to INP and adjust the offset.
+                  Bias_Net := Build2_Const_Uns
+                    (Ctxt, Uns64 (Bias), Get_Width (Inp));
+                  Inp := Build_Dyadic (Ctxt, Id_Add, Inp, Bias_Net);
+                  Set_Location (Inp, Loc);
+                  Off := Uns32 (Int32 (Bias * Step) + R_Add - Pfx_Bnd.Right);
+               end;
+            end if;
       end case;
    end Synth_Extract_Dyn_Suffix;
 
