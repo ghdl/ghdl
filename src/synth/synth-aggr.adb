@@ -20,6 +20,7 @@
 
 with Types; use Types;
 
+with Netlists; use Netlists;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Builders; use Netlists.Builders;
 
@@ -98,7 +99,6 @@ package body Synth.Aggr is
 
    procedure Fill_Array_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node;
-                                   En : Net;
                                    Res : Valtyp_Array_Acc;
                                    Typ : Type_Acc;
                                    First_Pos : Nat32;
@@ -125,7 +125,7 @@ package body Synth.Aggr is
          Nbr_Els := Nbr_Els + 1;
 
          if Dim = Strides'Last then
-            Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ, En);
+            Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Typ);
             Val := Synth_Subtype_Conversion (Ctxt, Val, El_Typ, False, Value);
             pragma Assert (Res (Pos) = No_Valtyp);
             Res (Pos) := Val;
@@ -138,7 +138,7 @@ package body Synth.Aggr is
             end if;
          else
             Fill_Array_Aggregate
-              (Syn_Inst, Value, En, Res, Typ, Pos, Strides, Dim + 1,
+              (Syn_Inst, Value, Res, Typ, Pos, Strides, Dim + 1,
                Sub_Const, Sub_Err);
             Const_P := Const_P and Sub_Const;
             Err_P := Err_P or Sub_Err;
@@ -192,7 +192,7 @@ package body Synth.Aggr is
                         Val_Len : Uns32;
                      begin
                         Val := Synth_Expression_With_Basetype
-                          (Syn_Inst, Value, En);
+                          (Syn_Inst, Value);
                         Val_Len := Get_Bound_Length (Val.Typ, 1);
                         pragma Assert (Stride = 1);
                         if Pos - First_Pos > Nat32 (Bound.Len - Val_Len) then
@@ -226,7 +226,7 @@ package body Synth.Aggr is
                      Idx : Valtyp;
                      Off : Uns32;
                   begin
-                     Idx := Synth_Expression (Syn_Inst, Ch, No_Net);
+                     Idx := Synth_Expression (Syn_Inst, Ch);
                      if not Is_Static (Idx.Val) then
                         Error_Msg_Synth (+Ch, "choice is not static");
                      else
@@ -267,7 +267,7 @@ package body Synth.Aggr is
                         end if;
                         --  FIXME: can the expression be unbounded ?
                         Val := Synth_Expression_With_Basetype
-                          (Syn_Inst, Value, En);
+                          (Syn_Inst, Value);
                         --  The length must match the range.
                         Rng_Len := Get_Range_Length (Rng);
                         if Get_Bound_Length (Val.Typ, 1) /= Rng_Len then
@@ -302,7 +302,6 @@ package body Synth.Aggr is
    procedure Fill_Record_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                     Aggr : Node;
                                     Aggr_Typ : Type_Acc;
-                                    En : Net;
                                     Rec : Valtyp_Array_Acc;
                                     Err_P : out Boolean;
                                     Const_P : out Boolean)
@@ -319,7 +318,7 @@ package body Synth.Aggr is
          El_Type : Type_Acc;
       begin
          El_Type := Aggr_Typ.Rec.E (Iir_Index32 (Pos + 1)).Typ;
-         Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type, En);
+         Val := Synth_Expression_With_Type (Syn_Inst, Value, El_Type);
          if Const_P and not Is_Static (Val.Val) then
             Const_P := False;
          end if;
@@ -388,7 +387,6 @@ package body Synth.Aggr is
 
    function Synth_Aggregate_Array (Syn_Inst : Synth_Instance_Acc;
                                    Aggr : Node;
-                                   En : Net;
                                    Aggr_Type : Type_Acc) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
@@ -401,7 +399,7 @@ package body Synth.Aggr is
    begin
       Tab_Res := new Valtyp_Array'(1 .. Nat32 (Flen) => No_Valtyp);
 
-      Fill_Array_Aggregate (Syn_Inst, Aggr, En, Tab_Res,
+      Fill_Array_Aggregate (Syn_Inst, Aggr, Tab_Res,
                             Aggr_Type, 1, Strides, 1, Const_P, Err_P);
       if Err_P then
          return No_Valtyp;
@@ -436,7 +434,6 @@ package body Synth.Aggr is
 
    function Synth_Aggregate_Record (Syn_Inst : Synth_Instance_Acc;
                                     Aggr : Node;
-                                    En : Net;
                                     Aggr_Type : Type_Acc) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
@@ -450,7 +447,7 @@ package body Synth.Aggr is
         new Valtyp_Array'(1 .. Nat32 (Aggr_Type.Rec.Len) => No_Valtyp);
 
       Fill_Record_Aggregate
-        (Syn_Inst, Aggr, Aggr_Type, En, Tab_Res, Err_P, Const_P);
+        (Syn_Inst, Aggr, Aggr_Type, Tab_Res, Err_P, Const_P);
 
       if Err_P then
          Res := No_Valtyp;
@@ -473,7 +470,6 @@ package body Synth.Aggr is
    --  Aggr_Type is the type from the context.
    function Synth_Aggregate (Syn_Inst : Synth_Instance_Acc;
                              Aggr : Node;
-                             En : Net;
                              Aggr_Type : Type_Acc) return Valtyp is
    begin
       case Aggr_Type.Kind is
@@ -483,14 +479,14 @@ package body Synth.Aggr is
             begin
                Res_Type := Decls.Synth_Array_Subtype_Indication
                  (Syn_Inst, Get_Type (Aggr));
-               return Synth_Aggregate_Array (Syn_Inst, Aggr, En, Res_Type);
+               return Synth_Aggregate_Array (Syn_Inst, Aggr, Res_Type);
             end;
          when Type_Vector
            | Type_Array =>
-            return Synth_Aggregate_Array (Syn_Inst, Aggr, En, Aggr_Type);
+            return Synth_Aggregate_Array (Syn_Inst, Aggr, Aggr_Type);
          when Type_Record
            |  Type_Unbounded_Record =>
-            return Synth_Aggregate_Record (Syn_Inst, Aggr, En, Aggr_Type);
+            return Synth_Aggregate_Record (Syn_Inst, Aggr, Aggr_Type);
          when others =>
             raise Internal_Error;
       end case;

@@ -20,8 +20,6 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Netlists; use Netlists;
-
 with Synth.Context; use Synth.Context;
 with Synth.Objtypes; use Synth.Objtypes;
 
@@ -44,13 +42,11 @@ package Synth.Decls is
 
    procedure Synth_Declaration (Syn_Inst : Synth_Instance_Acc;
                                 Decl : Node;
-                                En : Net;
                                 Is_Subprg : Boolean;
                                 Last_Type : in out Node);
 
    procedure Synth_Declarations (Syn_Inst : Synth_Instance_Acc;
                                  Decls : Iir;
-                                 En : Net;
                                  Is_Subprg : Boolean := False);
 
    procedure Finalize_Declarations (Syn_Inst : Synth_Instance_Acc;
@@ -58,16 +54,15 @@ package Synth.Decls is
                                     Is_Subprg : Boolean := False);
 
    procedure Synth_Package_Declaration
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; En : Net);
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
    procedure Synth_Package_Body
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node; En : Net);
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; Bod : Node);
 
    procedure Synth_Generics_Association (Sub_Inst : Synth_Instance_Acc;
                                          Syn_Inst : Synth_Instance_Acc;
                                          Inter_Chain : Node;
-                                         Assoc_Chain : Node;
-                                         En : Net);
+                                         Assoc_Chain : Node);
 
    procedure Synth_Package_Instantiation
-     (Parent_Inst : Synth_Instance_Acc; Pkg : Node; En : Net);
+     (Parent_Inst : Synth_Instance_Acc; Pkg : Node);
 end Synth.Decls;

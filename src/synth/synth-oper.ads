@@ -20,30 +20,26 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
-with Netlists; use Netlists;
-
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
 
 package Synth.Oper is
    function Synth_Predefined_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
    function Synth_Operator_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
 
    function Synth_Dyadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                     Imp : Node;
                                     Left_Expr : Node;
                                     Right_Expr : Node;
-                                    Expr : Node;
-                                    En : Net) return Valtyp;
+                                    Expr : Node) return Valtyp;
 
    function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
                                      Operand_Expr : Node;
-                                     Loc : Node;
-                                     En : Net) return Valtyp;
+                                     Loc : Node) return Valtyp;
 
    function Create_Bounds_From_Length
      (Syn_Inst : Synth_Instance_Acc; Atype : Iir; Len : Iir_Index32)

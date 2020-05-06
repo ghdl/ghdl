@@ -77,20 +77,18 @@ package Synth.Expr is
    --  If EN is not No_Net, the execution is controlled by EN.  This is used
    --  for assertions and checks.
    function Synth_Expression
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp;
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp;
 
    --  Same as Synth_Expression, but the expression may be constrained by
    --  EXPR_TYPE.
    function Synth_Expression_With_Type (Syn_Inst : Synth_Instance_Acc;
                                         Expr : Node;
-                                        Expr_Type : Type_Acc;
-                                        En : Net) return Valtyp;
+                                        Expr_Type : Type_Acc) return Valtyp;
 
    --  Use base type of EXPR to synthesize EXPR.  Useful when the type of
    --  EXPR is defined by itself or a range.
    function Synth_Expression_With_Basetype (Syn_Inst : Synth_Instance_Acc;
-                                            Expr : Node;
-                                            En : Net) return Valtyp;
+                                            Expr : Node) return Valtyp;
 
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
                                      Atype : Node) return Bound_Type;
@@ -112,7 +110,6 @@ package Synth.Expr is
 
    procedure Synth_Slice_Suffix (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
-                                 En : Net;
                                  Pfx_Bnd : Bound_Type;
                                  El_Typ : Type_Acc;
                                  Res_Bnd : out Bound_Type;
@@ -123,7 +120,6 @@ package Synth.Expr is
    --  OFF is 0.
    procedure Synth_Indexed_Name (Syn_Inst : Synth_Instance_Acc;
                                  Name : Node;
-                                 En : Net;
                                  Pfx_Type : Type_Acc;
                                  Voff : out Net;
                                  Off : out Value_Offsets);

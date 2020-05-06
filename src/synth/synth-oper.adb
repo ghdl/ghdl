@@ -28,6 +28,7 @@ with Vhdl.Utils; use Vhdl.Utils;
 
 with Areapools;
 
+with Netlists; use Netlists;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
@@ -380,8 +381,7 @@ package body Synth.Oper is
                                     Imp : Node;
                                     Left_Expr : Node;
                                     Right_Expr : Node;
-                                    Expr : Node;
-                                    En : Net) return Valtyp
+                                    Expr : Node) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Iir_Predefined_Functions :=
@@ -677,14 +677,12 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Left));
       end Synth_Rotation;
    begin
-      Left := Synth_Expression_With_Type
-        (Syn_Inst, Left_Expr, Left_Typ, En);
+      Left := Synth_Expression_With_Type (Syn_Inst, Left_Expr, Left_Typ);
       if Left = No_Valtyp then
          return No_Valtyp;
       end if;
       Left := Synth_Subtype_Conversion (Ctxt, Left, Left_Typ, False, Expr);
-      Right := Synth_Expression_With_Type
-        (Syn_Inst, Right_Expr, Right_Typ, En);
+      Right := Synth_Expression_With_Type (Syn_Inst, Right_Expr, Right_Typ);
       if Right = No_Valtyp then
          return No_Valtyp;
       end if;
@@ -1400,8 +1398,7 @@ package body Synth.Oper is
    function Synth_Monadic_Operation (Syn_Inst : Synth_Instance_Acc;
                                      Imp : Node;
                                      Operand_Expr : Node;
-                                     Loc : Node;
-                                     En : Net) return Valtyp
+                                     Loc : Node) return Valtyp
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Def : constant Iir_Predefined_Functions :=
@@ -1441,8 +1438,7 @@ package body Synth.Oper is
          return Create_Value_Net (N, Operand.Typ.Vec_El);
       end Synth_Vec_Reduce_Monadic;
    begin
-      Operand := Synth_Expression_With_Type
-        (Syn_Inst, Operand_Expr, Oper_Typ, En);
+      Operand := Synth_Expression_With_Type (Syn_Inst, Operand_Expr, Oper_Typ);
       if Operand = No_Valtyp then
          return No_Valtyp;
       end if;
@@ -1728,7 +1724,7 @@ package body Synth.Oper is
    end Synth_Dynamic_Predefined_Function_Call;
 
    function Synth_Predefined_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Expr);
       Assoc_Chain : constant Node := Get_Parameter_Association_Chain (Expr);
@@ -1743,7 +1739,7 @@ package body Synth.Oper is
       Subprg_Inst := Make_Instance (Syn_Inst, Imp);
 
       Synth_Subprogram_Association
-        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain, En);
+        (Subprg_Inst, Syn_Inst, Inter_Chain, Assoc_Chain);
 
       if Is_Error (Subprg_Inst) then
          Res := No_Valtyp;
@@ -1774,7 +1770,7 @@ package body Synth.Oper is
    end Synth_Predefined_Function_Call;
 
    function Synth_Operator_Function_Call
-     (Syn_Inst : Synth_Instance_Acc; Expr : Node; En : Net) return Valtyp
+     (Syn_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Expr);
       Assoc : Node;
@@ -1786,10 +1782,10 @@ package body Synth.Oper is
 
       Op1 := Get_Actual (Assoc);
       if Get_Chain (Inter) = Null_Node then
-         return Synth_Monadic_Operation (Syn_Inst, Imp, Op1, Expr, En);
+         return Synth_Monadic_Operation (Syn_Inst, Imp, Op1, Expr);
       else
          Op2 := Get_Actual (Get_Chain (Assoc));
-         return Synth_Dyadic_Operation (Syn_Inst, Imp, Op1, Op2, Expr, En);
+         return Synth_Dyadic_Operation (Syn_Inst, Imp, Op1, Op2, Expr);
       end if;
    end Synth_Operator_Function_Call;
 end Synth.Oper;
