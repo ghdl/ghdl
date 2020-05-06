@@ -472,7 +472,7 @@ package body Netlists.Expands is
       Set_Location (Sh_S, Loc);
       R_Amt := Build_Dyadic (Ctxt, Id_Sub,
                              Build_Const_UB32 (Ctxt, W_Val, W_Amt),
-                             Build2_Uresize (Ctxt, Amt_N, W_Amt));
+                             Build2_Uresize (Ctxt, Amt_N, W_Amt, Loc));
       Set_Location (R_Amt, Loc);
       Sh_C := Build_Shift_Rotate (Ctxt, Id_C, Val_N, R_Amt);
       Set_Location (Sh_C, Loc);

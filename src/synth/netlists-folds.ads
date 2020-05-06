@@ -48,14 +48,14 @@ package Netlists.Folds is
    function Build2_Uresize (Ctxt : Context_Acc;
                             I : Net;
                             W : Width;
-                            Loc : Location_Type := No_Location)
+                            Loc : Location_Type)
                            return Net;
 
    --  Sign extend, noop or truncate I so that its width is W.
    function Build2_Sresize (Ctxt : Context_Acc;
                             I : Net;
                             W : Width;
-                            Loc : Location_Type := No_Location)
+                            Loc : Location_Type)
                            return Net;
 
    --  If IS_SIGNED is true, this is Build2_Sresize, otherwise Build2_Uresize.
@@ -63,7 +63,7 @@ package Netlists.Folds is
                            I : Net;
                            W : Width;
                            Is_Signed : Boolean;
-                           Loc : Location_Type := No_Location)
+                           Loc : Location_Type)
                           return Net;
 
    --  Same as Build_Extract, but return I iff extract all the bits.
@@ -71,8 +71,12 @@ package Netlists.Folds is
      (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net;
 
    --  Return A -> B  ==  !A || B
-   function Build2_Imp (Ctxt : Context_Acc;
-                        A, B : Net;
-                        Loc : Location_Type := No_Location)
+   function Build2_Imp (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
+                       return Net;
+
+   --  Return A & B.
+   --  If A is No_Net, simply return B so that it is possible to easily build
+   --  chain of conditions.
+   function Build2_And (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
                        return Net;
 end Netlists.Folds;

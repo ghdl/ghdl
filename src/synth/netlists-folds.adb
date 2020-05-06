@@ -175,7 +175,7 @@ package body Netlists.Folds is
    function Build2_Uresize (Ctxt : Context_Acc;
                             I : Net;
                             W : Width;
-                            Loc : Location_Type := No_Location)
+                            Loc : Location_Type)
                            return Net
    is
       Wn : constant Width := Get_Width (I);
@@ -216,7 +216,7 @@ package body Netlists.Folds is
    function Build2_Sresize (Ctxt : Context_Acc;
                             I : Net;
                             W : Width;
-                            Loc : Location_Type := No_Location)
+                            Loc : Location_Type)
                            return Net
    is
       Wn : constant Width := Get_Width (I);
@@ -251,7 +251,7 @@ package body Netlists.Folds is
                            I : Net;
                            W : Width;
                            Is_Signed : Boolean;
-                           Loc : Location_Type := No_Location)
+                           Loc : Location_Type)
                           return Net is
    begin
       if Is_Signed then
@@ -271,9 +271,7 @@ package body Netlists.Folds is
       end if;
    end Build2_Extract;
 
-   function Build2_Imp (Ctxt : Context_Acc;
-                        A, B : Net;
-                        Loc : Location_Type := No_Location)
+   function Build2_Imp (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
                        return Net
    is
       N : Net;
@@ -284,4 +282,18 @@ package body Netlists.Folds is
       Set_Location (N, Loc);
       return N;
    end Build2_Imp;
+
+   function Build2_And (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
+                       return Net
+   is
+      pragma Assert (B /= No_Net);
+      N : Net;
+   begin
+      if A = No_Net then
+         return B;
+      end if;
+      N := Build_Dyadic (Ctxt, Id_And, A, B);
+      Set_Location (N, Loc);
+      return N;
+   end Build2_And;
 end Netlists.Folds;
