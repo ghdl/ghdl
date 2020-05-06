@@ -1,4 +1,5 @@
 entity tb_assert3 is
+  generic (with_err : boolean := False);
 end tb_assert3;
 
 library ieee;
@@ -22,10 +23,12 @@ begin
     assert res = 5 severity failure;
 
     --  Trigger an error.
-    en <= '1';
-    v <= b"0000_0010";
-    wait for 1 ns;
-    assert res = 1 severity failure;
+    if with_err then
+      en <= '1';
+      v <= b"0000_0010";
+      wait for 1 ns;
+      assert res = 1 severity failure;
+    end if;
 
     wait;
   end process;
