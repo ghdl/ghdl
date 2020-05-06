@@ -133,6 +133,9 @@ package Netlists.Gates is
    --           1: direct and only connection to the port
    Id_Inout   : constant Module_Id := 53;
 
+   --  Behaves like Id_Signal but for enable wires.
+   Id_Enable  : constant Module_Id := 54;
+
    --  Note: initial values must be constant nets.
    --
    --  A simple D flip-flop.  The D input is stored on a rising edge of CLK.

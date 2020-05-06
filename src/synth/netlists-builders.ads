@@ -161,6 +161,7 @@ package Netlists.Builders is
    function Build_Isignal (Ctxt : Context_Acc; Name : Sname; Init : Net)
                           return Net;
    function Build_Port (Ctxt : Context_Acc; N : Net) return Net;
+   function Build_Enable (Ctxt : Context_Acc) return Net;
 
    function Build_Assert (Ctxt : Context_Acc; Name : Sname; Cond : Net)
                          return Instance;
@@ -238,6 +239,7 @@ private
       M_Isignal : Module;
       M_Port : Module;
       M_Inout : Module;
+      M_Enable : Module;
       M_Dff : Module;
       M_Idff : Module;
       M_Adff : Module;

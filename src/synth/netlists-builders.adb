@@ -470,6 +470,12 @@ package body Netlists.Builders is
          Id_Nop, 1, 1, 0);
       Set_Ports_Desc (Ctxt.M_Nop, Inputs2 (0 .. 0), Outputs);
 
+      Ctxt.M_Enable := New_User_Module
+        (Ctxt.Design,
+         New_Sname_Artificial (Get_Identifier ("enable"), No_Sname),
+         Id_Enable, 1, 1, 0);
+      Set_Ports_Desc (Ctxt.M_Enable, Inputs2 (0 .. 0), Outputs);
+
       Ctxt.M_Inout := New_User_Module
         (Ctxt.Design, New_Sname_Artificial (Name_Inout, No_Sname),
          Id_Inout, 1, 2, 0);
@@ -1397,6 +1403,17 @@ package body Netlists.Builders is
       Set_Width (O, Wd);
       return O;
    end Build_Nop;
+
+   function Build_Enable (Ctxt : Context_Acc) return Net
+   is
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Internal_Instance (Ctxt, Ctxt.M_Enable);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, 1);
+      return O;
+   end Build_Enable;
 
    function Build_Dff (Ctxt : Context_Acc;
                        Clk : Net;
