@@ -569,12 +569,13 @@ package body Synth.Stmts is
       N := Get_Net (Ctxt, Obj);
       if Dyn.Voff /= No_Net then
          Synth.Source.Set_Location_Maybe (N, Loc);
-         pragma Assert (Off = 0 or Dyn.Pfx_Off.Net_Off = 0);
-         N := Build_Dyn_Extract (Get_Build (Syn_Inst), N, Dyn.Voff,
-                                 Dyn.Pfx_Off.Net_Off + Off, Res_Typ.W);
+         if Dyn.Pfx_Off.Net_Off /= 0 then
+            N := Build2_Extract (Ctxt, N, Dyn.Pfx_Off.Net_Off, Dyn.Pfx_Typ.W);
+         end if;
+         N := Build_Dyn_Extract (Ctxt, N, Dyn.Voff, Off, Res_Typ.W);
       else
          pragma Assert (not Is_Static (Obj.Val));
-         N := Build2_Extract (Get_Build (Syn_Inst), N, Off, Res_Typ.W);
+         N := Build2_Extract (Ctxt, N, Off, Res_Typ.W);
       end if;
       Set_Location (N, Loc);
       return Create_Value_Net (N, Res_Typ);
