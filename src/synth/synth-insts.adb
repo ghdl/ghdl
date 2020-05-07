@@ -350,17 +350,31 @@ package body Synth.Insts is
       return New_Sname_User (Id, No_Sname);
    end Create_Inter_Name;
 
-   procedure Build_Object_Subtype (Syn_Inst : Synth_Instance_Acc;
-                                   Inter : Node;
-                                   Proto_Inst : Synth_Instance_Acc)
+   procedure Copy_Object_Subtype (Syn_Inst : Synth_Instance_Acc;
+                                  Inter_Type : Node;
+                                  Proto_Inst : Synth_Instance_Acc)
    is
-      Inter_Type : Node;
       Inter_Typ : Type_Acc;
    begin
+      case Get_Kind (Inter_Type) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            if Synth.Decls.Has_Element_Subtype_Indication (Inter_Type) then
+               Copy_Object_Subtype
+                 (Syn_Inst, Get_Element_Subtype (Inter_Type), Proto_Inst);
+            end if;
+         when others =>
+            null;
+      end case;
+      Inter_Typ := Get_Subtype_Object (Proto_Inst, Inter_Type);
+      Create_Subtype_Object (Syn_Inst, Inter_Type, Inter_Typ);
+   end Copy_Object_Subtype;
+
+   procedure Build_Object_Subtype (Syn_Inst : Synth_Instance_Acc;
+                                   Inter : Node;
+                                   Proto_Inst : Synth_Instance_Acc) is
+   begin
       if Get_Declaration_Type (Inter) /= Null_Node then
-         Inter_Type := Get_Type (Inter);
-         Inter_Typ := Get_Value (Proto_Inst, Inter).Typ;
-         Create_Subtype_Object (Syn_Inst, Inter_Type, Inter_Typ);
+         Copy_Object_Subtype (Syn_Inst, Get_Type (Inter), Proto_Inst);
       end if;
    end Build_Object_Subtype;
 

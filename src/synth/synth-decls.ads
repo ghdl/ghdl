@@ -28,6 +28,9 @@ package Synth.Decls is
    --  subtype).
    function Get_Declaration_Type (Decl : Node) return Node;
 
+   --  True if the element subtype indication of ATYPE needs to be created.
+   function Has_Element_Subtype_Indication (Atype : Node) return Boolean;
+
    function Synth_Array_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc;
 

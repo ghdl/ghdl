@@ -290,6 +290,16 @@ package body Synth.Decls is
       end case;
    end Synth_Float_Range_Constraint;
 
+   function Has_Element_Subtype_Indication (Atype : Node) return Boolean is
+   begin
+      return Get_Array_Element_Constraint (Atype) /= Null_Node
+        or else
+        (Get_Resolution_Indication (Atype) /= Null_Node
+           and then
+           (Get_Kind (Get_Resolution_Indication (Atype))
+              = Iir_Kind_Array_Element_Resolution));
+   end Has_Element_Subtype_Indication;
+
    function Synth_Array_Subtype_Indication
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc
    is
@@ -302,13 +312,7 @@ package body Synth.Decls is
       Bnds : Bound_Array_Acc;
    begin
       --  VHDL08
-      if Get_Array_Element_Constraint (Atype) /= Null_Node
-        or else
-        (Get_Resolution_Indication (Atype) /= Null_Node
-           and then
-           (Get_Kind (Get_Resolution_Indication (Atype))
-              = Iir_Kind_Array_Element_Resolution))
-      then
+      if Has_Element_Subtype_Indication (Atype) then
          --  This subtype has created a new anonymous subtype for the
          --  element.
          Synth_Subtype_Indication (Syn_Inst, El_Type);
@@ -383,8 +387,7 @@ package body Synth.Decls is
                   Rng := Synth_Discrete_Range_Constraint
                     (Syn_Inst, Get_Range_Constraint (Atype));
                   W := Discrete_Range_Width (Rng);
-                  return
-                    Create_Discrete_Type (Rng, Btype.Sz, W);
+                  return Create_Discrete_Type (Rng, Btype.Sz, W);
                end if;
             end;
          when Iir_Kind_Floating_Subtype_Definition =>
