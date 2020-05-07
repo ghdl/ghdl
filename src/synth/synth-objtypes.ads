@@ -86,6 +86,7 @@ package Synth.Objtypes is
      );
 
    subtype Type_Nets is Type_Kind range Type_Bit .. Type_Logic;
+   subtype Type_All_Discrete is Type_Kind range Type_Bit .. Type_Discrete;
 
    type Type_Type (Kind : Type_Kind);
    type Type_Acc is access Type_Type;

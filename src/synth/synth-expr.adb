@@ -738,7 +738,7 @@ package body Synth.Expr is
             pragma Assert (Vtype.Kind = Type_Logic);
             return Vt;
          when Type_Discrete =>
-            pragma Assert (Vtype.Kind = Type_Discrete);
+            pragma Assert (Vtype.Kind in Type_All_Discrete);
             declare
                N : Net;
             begin
