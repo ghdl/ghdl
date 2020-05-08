@@ -115,7 +115,6 @@
 
    development/Debugging
    development/CodingStyle
-   development/Roadmap
 
 .. raw:: latex
 
