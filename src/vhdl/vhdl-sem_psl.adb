@@ -461,7 +461,7 @@ package body Vhdl.Sem_Psl is
             Sem_Number (Prop);
             Sem_Property (Prop);
             return Prop;
-         when N_Next_A =>
+         when N_Next_A | N_Next_E =>
             --  FIXME: range.
             Sem_Property (Prop);
             return Prop;
