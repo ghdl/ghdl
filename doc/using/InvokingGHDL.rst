@@ -366,6 +366,11 @@ Options
 
   Be verbose. For example, for analysis, elaboration and make commands, GHDL displays the commands executed.
 
+.. option:: -o=<FNAME>
+
+  All the commands that perform a link (:option:`-e`, :option:`--elab-run`, :option:`--link`, :option:`-c`, :option:`-m`,
+  etc.) support overriding the location and name of the generated artifact.
+
 
 Warnings
 ========
