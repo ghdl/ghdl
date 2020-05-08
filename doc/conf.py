@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'GHDL'
-copyright = u'2002-2019, Tristan Gingold and contributors'
+copyright = u'2002-2020, Tristan Gingold and contributors'
 author = u'Tristan Gingold and contributors'
 
 # The version info for the project you're documenting, acts as replacement for
