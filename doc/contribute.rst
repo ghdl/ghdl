@@ -23,11 +23,14 @@ not covered. In order to improve GHDL, we welcome bug reports, suggestions, and 
 GHDL. Whether it's a bug or an enhancement, have a look at the |SHIELD:issues-open| and |SHIELD:issues-closed| to see
 if someone already told us about it. You might find a solution there.
 
+Ideas for future work, enhancements, documentation, and internship programs are shown in the `GitHub wiki <https://github.com/ghdl/ghdl/wiki>`_.
+
 If you found no information on your topic, please, report so that we are aware! You can reach us through various ways:
 |SHIELD:gitter| or open a |SHIELD:issues-new|.
 
 .. HINT::
-   Since the development of GHDL started fifteen years ago, multiple platforms have been used as a support for both distribution and getting feedback. However, the development is now centralized in github.
+   Since the development of GHDL started in 2002, multiple platforms have been used as a support for both distribution
+   and getting feedback. However, the development is now centralized in GitHub.
 
 .. TIP::
    `How To Ask Questions The Smart Way <www.catb.org/~esr/faqs/smart-questions.html>`_
@@ -39,9 +42,12 @@ Reporting bugs
 
 .. TIP::
    * If the compiler crashes, this is a bug. Reliable tools never crash.
-   * If the compiler emits an error message for a perfectly valid input or does not emit an error message for an invalid input, this may be a bug.
-   * If the executable created from your VHDL sources crashes, this may be a bug at runtime or the code itself may be wrong. Since VHDL has a notion of pointers, an erroneous VHDL program (using invalid pointers for example) may crash.
-   * If a compiler message is not clear enough, please tell us. The error messages can be improved, but we do not have enough experience with them.
+   * If the compiler emits an error message for a perfectly valid input or does not emit an error message for an invalid
+     input, this may be a bug.
+   * If the executable created from your VHDL sources crashes, this may be a bug at runtime or the code itself may be
+     wrong. Since VHDL has a notion of pointers, an erroneous VHDL program (using invalid pointers for example) may crash.
+   * If a compiler message is not clear enough, please tell us. The error messages can be improved, but we do not have
+     enough experience with them.
 
 .. TIP::
    It is suggested to test synthesis features with :option:`--synth`, before processing the design with :ref:`Synth:plugin`.
@@ -50,12 +56,17 @@ Please, report issues of this kind through |SHIELD:bug-report|, as this allows u
 to assign developers to them. You can track the issue’s state and see how it’s getting solved.
 
 .. IMPORTANT::
-   As suggested in the bug report template, please elaborate a `Minimal (non) Working Example` (`MWE <https://en.wikipedia.org/wiki/Minimal_Working_Example>`_) prior to sending the report, so that the possible bug source is isolated. Should it fulfill the format requirements of `issue-runner <https://github.com/1138-4EB/issue-runner>`_, you would be able to test your bug with the latest GHDL version. Please do so in order to ensure that the bug is not solved already.
+   As suggested in the bug report template, please elaborate a `Minimal (non) Working Example` (`MWE <https://en.wikipedia.org/wiki/Minimal_Working_Example>`_)
+   prior to sending the report, so that the possible bug source is isolated. Should it fulfill the format requirements of
+   `issue-runner <https://github.com/eine/issue-runner>`_, you would be able to test your bug with the latest GHDL version.
+   Please do so in order to ensure that the bug is not solved already.
 
-   Also, please include enough information in the bug report, for the maintainers to reproduce the problem. The template includes:
+   Also, please include enough information in the bug report, for the maintainers to reproduce the problem. The template
+   includes:
 
    * Operating system and version of GHDL (you can get it with :samp:`ghdl --version`).
-   * Whether you have built GHDL from sources (provide short SHA of the used commit) or used the binary distribution (note which release/tag).
+   * Whether you have built GHDL from sources (provide short SHA of the used commit) or used the binary distribution
+     (note which release/tag).
 
      * If you cannot compile, please report which compiler you are using and the version.
 
@@ -63,12 +74,17 @@ to assign developers to them. You can track the issue’s state and see how it�
    * Description of the problem:
 
      * Comment explaining whether the MWE should compile or not; if yes, whether or not is should run until the assertion.
-     * What you expect to happen and what you actually get. If you know the LRM well enough, please specify which paragraph might not be implemented well.
+     * What you expect to happen and what you actually get. If you know the LRM well enough, please specify which paragraph
+       might not be implemented well.
      * Samples of any log.
      * Anything else that you think would be helpful.
 
 .. NOTE::
-   If you don't know the LRM, be aware that an issue claimed as a bug report may be rejected because there is no bug according to it. GHDL aims at implementing VHDL as defined in `IEEE 1076 <http://ieeexplore.ieee.org/document/4772740/>`_. However, some other tools allow constructs which do not fully follow the standard revisions. Therefore, comparisons with other VHDL variants is not a solid argument. Some of them are supported by GHDL (see :ref:`IEEE_library_pitfalls`), but any such enhancement will have very low priority.
+   If you don't know the LRM, be aware that an issue claimed as a bug report may be rejected because there is no bug
+   according to it. GHDL aims at implementing VHDL as defined in `IEEE 1076 <http://ieeexplore.ieee.org/document/4772740/>`_.
+   However, some other tools allow constructs which do not fully follow the standard revisions. Therefore, comparisons
+   with other VHDL variants is not a solid argument. Some of them are supported by GHDL (see :ref:`IEEE_library_pitfalls`),
+   but any such enhancement will have very low priority.
 
 .. _requesting_enhancements:
 
@@ -77,7 +93,9 @@ Requesting enhancements
 
 |SHIELD:feature-request| |SHIELD:gitter|
 
-All enhancements and feature requests are welcome. Please `open a new issue <https://github.com/ghdl/ghdl/issues/new>`_ to report any, so you can track the request's status and implementation. Depending on the complexity of the request, you may want to `chat on Gitter <https://gitter.im/ghdl/ghdl1>`_, to polish it before opening an issue.
+All enhancements and feature requests are welcome. Please `open a new issue <https://github.com/ghdl/ghdl/issues/new>`_
+to report any, so you can track the request's status and implementation. Depending on the complexity of the request,
+you may want to `chat on Gitter <https://gitter.im/ghdl/ghdl1>`_, to polish it before opening an issue.
 
 Improving the documentation
 ===========================
@@ -95,8 +113,11 @@ Fork, modify and pull-request
 =============================
 
 .. TIP::
-   * Before starting any modification, you might want to have a look at |SHIELD:issues-pr| and |SHIELD:issues-pr-closed|, to check which other contributions are being made or have been made. If you observe that the modifications you are about to start might conflict with any other, please |SHIELD:gitter| or open a |SHIELD:new-pr| to coordinate.
-   * See section :ref:`BUILD:dir_structure` to faster find the location of the sources you need to modify, and/or to know where to place new ones.
+   * Before starting any modification, you might want to have a look at |SHIELD:issues-pr| and |SHIELD:issues-pr-closed|,
+     to check which other contributions are being made or have been made. If you observe that the modifications you are
+     about to start might conflict with any other, please |SHIELD:gitter| or open a |SHIELD:new-pr| to coordinate.
+   * See section :ref:`BUILD:dir_structure` to faster find the location of the sources you need to modify, and/or to know
+     where to place new ones.
 
 Contributing source code/documentation via `Git <https://git-scm.com/>`_ is very easy. Although we don't provide direct
 write access to our repositories, the project is hosted at GitHub, which follows a fork, edit and pull-request
@@ -105,12 +126,19 @@ write access to our repositories, the project is hosted at GitHub, which follows
 1. Make a copy (`fork <https://help.github.com/articles/fork-a-repo/>`_) of the project.
 2. Do the changes you wish (edit, add, rename, move and/or delete).
 3. When you think that the changes are ready to be merged, notify the maintainers by opening a `Pull Request <https://help.github.com/articles/creating-a-pull-request/>`_ (PR).
-4. The maintainers will review the proposed changes and will reply in the corresponding thread if any further modification is required. If so, you can keep adding commits to the same branch, and the PR will be automatically updated.
-5. Last, the maintainers will merge your branch. You will be notified, the PR will be closed, and you'll be allowed to delete the branch, if you want.
+4. The maintainers will review the proposed changes and will reply in the corresponding thread if any further modification
+   is required. If so, you can keep adding commits to the same branch, and the PR will be automatically updated.
+5. Last, the maintainers will merge your branch. You will be notified, the PR will be closed, and you'll be allowed to
+   delete the branch, if you want.
 
 .. TIP::
-  * It is recommended to read `A successful Git branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_ for a reference on how maintainers expect to handle multiple branches. However, our actual model is not as exhaustive as explained there.
-  * Some commit messages can `automatically close <https://help.github.com/articles/closing-issues-via-commit-messages/>`_ issues. This is a very useful feature, which you are not required to use. However beware that using `fix` anywhere in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it's closed) so that maintainers can check it.
+  * It is recommended to read `A successful Git branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_
+    for a reference on how maintainers expect to handle multiple branches. However, our actual model is not as exhaustive
+    as explained there.
+  * Some commit messages can `automatically close <https://help.github.com/articles/closing-issues-via-commit-messages/>`_
+    issues. This is a very useful feature, which you are not required to use. However beware that using `fix` anywhere
+    in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it's
+    closed) so that maintainers can check it.
   * It is recommended to read :ref:`DEV:Style` before contributing modifications to Ada sources.
 
 Related interesting projects
