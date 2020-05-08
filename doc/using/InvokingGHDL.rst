@@ -371,6 +371,18 @@ Options
   All the commands that perform a link (:option:`-e`, :option:`--elab-run`, :option:`--link`, :option:`-c`, :option:`-m`,
   etc.) support overriding the location and name of the generated artifact.
 
+.. option:: --time-resolution=<UNIT>
+
+  Set the base time resolution of the simulation. This option is supported in commands :option:`-a` and :option:`-r` only.
+  Allowed values are ``auto`` (default with *mcode*), ``fs`` (default with LLVM/GCC), ``ps``, ``ns``, ``us``, ``ms`` or ``sec``.
+
+  .. HINT::
+    When overriding the time resolution, all the time units that are used in the design must be larger. Using units below
+    the resolution will produce a failure.
+
+  .. ATTENTION::
+    This feature is supported with *mcode* backend only. It is not possible to support it with either LLVM or GCC backends,
+    because it needs to apply globally.
 
 Warnings
 ========
