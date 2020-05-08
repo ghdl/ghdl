@@ -1,9 +1,13 @@
-**0.37-dev** (XXXX-XX-XX)
+**1.0-dev** (XXXX-XX-XX)
 
-- python binding added
-- synthesis added
-- PSL keywords are directly handled in vhdl-2008
+**0.37** (2020-02-28)
+
+- Python binding added
+- Experimental support of synthesis (either with --synth or with the Yosys plugin)
+- Fixes and improved support of VHDL 2008
+  - PSL keywords are directly handled in VHDL 2008
 - Add support for assume.
+- Last version that supports the Mentor variation of `std_logic_arith`. The Synopsys one is still available.
 
 **0.36** (2019-03-03)
 
