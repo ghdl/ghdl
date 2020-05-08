@@ -8,8 +8,7 @@ Since this is the user and reference manual for `GHDL`, it does not contain an
 introduction to `VHDL`. Thus, the reader should have at least a basic knowledge
 of `VHDL`. A good knowledge of `VHDL` language reference manual (usually called
 LRM) is a plus. Nevertheless, multiple examples are provided, in the hope that
-they are useful for users to learn about both `GHDL` and `VHDL`. For advanced
-examples using specific features see :ref:`USING:Examples`.
+they are useful for users to learn about both `GHDL` and `VHDL`.
 
 As explained in :ref:`INTRO:GHDL`, `GHDL` is a compiler which translates `VHDL` files to
 machine code. Hence, the regular workflow is composed of three steps:

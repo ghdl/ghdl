@@ -96,7 +96,7 @@
    :caption: GHDL usage
    :hidden:
 
-   examples/quick_start/README
+   quick_start/README
    using/InvokingGHDL
    using/Simulation
    using/Synthesis
