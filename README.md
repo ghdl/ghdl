@@ -58,7 +58,7 @@ GHDL currently supports three different back-ends (code generators). Each has it
 
 ### TL;DR
 
-In order to follow the traditional way to `configure` and `make`, you need the an Ada compiler. Most GNU/Linux package managers provide a package named `gcc-ada` or `gcc-gnat`.
+In order to follow the traditional way to `configure` and `make`, you need an Ada compiler. Most GNU/Linux package managers provide a package named `gcc-ada` or `gcc-gnat`.
 
 > Alternatively, GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/) (later than 2017 is suggested; for x86, 32 or 64 bits). Then, untar and run the *doinstall* script.
 
