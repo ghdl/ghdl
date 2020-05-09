@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <vpi_user.h>
-#define N_NAMES 7
+#define N_NAMES 10
 
 void
 vpi_proc (void)
@@ -13,7 +13,7 @@ vpi_proc (void)
      "myentity.sigint",
      "myentity.iportint",
      "myentity.genint",
-     //"myentity.constint", -- Not supported
+     "myentity.constint",
 
      // Std_logic
      "myentity.sigsl",
@@ -24,8 +24,8 @@ vpi_proc (void)
      // Boolean
      "myentity.sigbool",
      "myentity.iportbool",
-     //"myentity.genbool", -- Not supported
-     //"myentity.constbool", -- Not supported
+     "myentity.genbool",
+     "myentity.constbool",
 
      // String
      //"myentity.genstring", -- Not supported
