@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <vpi_user.h>
-#define N_NAMES 14
+#define N_NAMES 12
 
 void
 vpi_proc (void)

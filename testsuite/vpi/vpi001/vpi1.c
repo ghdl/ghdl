@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <vpi_user.h>
-#define N_NAMES 10
+#define N_NAMES 12
 
 void
 vpi_proc (void)
@@ -18,8 +18,8 @@ vpi_proc (void)
      // Std_logic
      "myentity.sigsl",
      "myentity.iportsl",
-     //"myentity.gensl", -- Not supported
-     //"myentity.constsl",  -- Not supported
+     "myentity.gensl",
+     "myentity.constsl",
 
      // Boolean
      "myentity.sigbool",
