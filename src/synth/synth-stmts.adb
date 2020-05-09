@@ -802,22 +802,66 @@ package body Synth.Stmts is
                            Choice : in out Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Expr_Val : Valtyp;
       Cond : Net;
    begin
       loop
          case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
             when Iir_Kind_Choice_By_Expression =>
-               Expr_Val := Synth_Expression_With_Basetype
-                 (Syn_Inst, Get_Choice_Expression (Choice));
-               Expr_Val := Synth_Subtype_Conversion
-                 (Ctxt, Expr_Val, Choice_Typ, False, Choice);
-               Cond := Build_Compare
-                 (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, Expr_Val));
-               Set_Location (Cond, Choice);
+               declare
+                  V : Valtyp;
+               begin
+                  V := Synth_Expression_With_Basetype
+                    (Syn_Inst, Get_Choice_Expression (Choice));
+                  V := Synth_Subtype_Conversion
+                    (Ctxt, V, Choice_Typ, False, Choice);
+                  Cond := Build_Compare (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, V));
+                  Set_Location (Cond, Choice);
+               end;
 
             when Iir_Kind_Choice_By_Range =>
-               raise Internal_Error;
+               declare
+                  Rng : Discrete_Range_Type;
+                  Cmp_L, Cmp_R : Module_Id;
+                  L, R : Net;
+               begin
+                  Synth_Discrete_Range
+                    (Syn_Inst, Get_Choice_Range (Choice), Rng);
+
+                  if Rng.Is_Signed then
+                     case Rng.Dir is
+                        when Dir_To =>
+                           Cmp_L := Id_Sge;
+                           Cmp_R := Id_Sle;
+                        when Dir_Downto =>
+                           Cmp_L := Id_Sle;
+                           Cmp_R := Id_Sge;
+                     end case;
+                     L := Build2_Const_Int (Ctxt, Rng.Left, Choice_Typ.W);
+                     R := Build2_Const_Int (Ctxt, Rng.Right, Choice_Typ.W);
+                  else
+                     case Rng.Dir is
+                        when Dir_To =>
+                           Cmp_L := Id_Uge;
+                           Cmp_R := Id_Ule;
+                        when Dir_Downto =>
+                           Cmp_L := Id_Ule;
+                           Cmp_R := Id_Uge;
+                     end case;
+                     L := Build2_Const_Uns
+                       (Ctxt, Uns64 (Rng.Left), Choice_Typ.W);
+                     R := Build2_Const_Uns
+                       (Ctxt, Uns64 (Rng.Right), Choice_Typ.W);
+                  end if;
+
+                  L := Build_Compare (Ctxt, Cmp_L, Sel, L);
+                  Set_Location (L, Choice);
+
+                  R := Build_Compare (Ctxt, Cmp_R, Sel, R);
+                  Set_Location (R, Choice);
+
+                  Cond := Build_Dyadic (Ctxt, Id_And, L, R);
+                  Set_Location (Cond, Choice);
+               end;
 
             when Iir_Kind_Choice_By_Others =>
                --  Last one.
