@@ -1096,7 +1096,7 @@ package body Vhdl.Errors is
    begin
       case Format is
          when 'i' =>
-            Output_Identifier (Get_Identifier (N));
+            Output_Quoted_Identifier (Get_Identifier (N));
          when 'l' =>
             Output_Location (Err, Get_Location (N));
          when 'n' =>

@@ -61,6 +61,13 @@ package body Netlists.Errors is
       end case;
    end Output_Name_1;
 
+   procedure Output_Name (N : Sname) is
+   begin
+      Output_Message ("""");
+      Output_Name_1 (N);
+      Output_Message ("""");
+   end Output_Name;
+
    procedure Synth_Instance_Handler
      (Format : Character; Err : Error_Record; Val : Uns32)
    is
@@ -69,7 +76,7 @@ package body Netlists.Errors is
    begin
       case Format is
          when 'n' =>
-            Output_Name_1 (Get_Instance_Name (Inst));
+            Output_Name (Get_Instance_Name (Inst));
          when 'i' =>
             Output_Message ("i");
             Output_Uns32 (Uns32 (Inst));
@@ -96,7 +103,7 @@ package body Netlists.Errors is
                else
                   Name := Get_Output_Desc (Get_Module (Inst), Idx).Name;
                end if;
-               Output_Name_1 (Name);
+               Output_Name (Name);
             end;
          when others =>
             raise Internal_Error;
@@ -110,7 +117,7 @@ package body Netlists.Errors is
       N : constant Sname := Sname (Val);
    begin
       if Format = 'n' then
-         Output_Name_1 (N);
+         Output_Name (N);
       else
          raise Internal_Error;
       end if;

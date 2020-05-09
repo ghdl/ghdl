@@ -158,17 +158,22 @@ package body Errorout is
 
    procedure Output_Identifier (Id : Name_Id) is
    begin
-      Report_Handler.Message ("""");
       Report_Handler.Message (Name_Table.Image (Id));
-      Report_Handler.Message ("""");
    end Output_Identifier;
 
-   procedure Output_Character (C : Character) is
+   procedure Output_Quoted_Identifier (Id : Name_Id) is
+   begin
+      Report_Handler.Message ("""");
+      Output_Identifier (Id);
+      Report_Handler.Message ("""");
+   end Output_Quoted_Identifier;
+
+   procedure Output_Quoted_Character (C : Character) is
    begin
       Report_Handler.Message ("'");
       Report_Handler.Message ((1 => C));
       Report_Handler.Message ("'");
-   end Output_Character;
+   end Output_Quoted_Character;
 
    procedure Location_To_Position (Location : Location_Type;
                                    File : out Source_File_Entry;
@@ -322,13 +327,13 @@ package body Errorout is
                            end if;
                         when Earg_Id =>
                            if Format = 'i' then
-                              Output_Identifier (Arg.Val_Id);
+                              Output_Quoted_Identifier (Arg.Val_Id);
                            else
                               raise Internal_Error;
                            end if;
                         when Earg_Char =>
                            if Format = 'c' then
-                              Output_Character (Arg.Val_Char);
+                              Output_Quoted_Character (Arg.Val_Char);
                            else
                               raise Internal_Error;
                            end if;
