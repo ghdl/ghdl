@@ -791,29 +791,54 @@ package body Synth.Stmts is
 
    type Alternative_Index is new Int32;
 
-   function Synth_Choice (Syn_Inst : Synth_Instance_Acc;
-                          Sel : Net;
-                          Choice_Typ : Type_Acc;
-                          Choice : Node) return Net
+   --  Create the condition for choices of CHOICE chain belonging to the same
+   --  alternative.  Update CHOICE to the next alternative.
+   procedure Synth_Choice (Syn_Inst : Synth_Instance_Acc;
+                           Sel : Net;
+                           Choice_Typ : Type_Acc;
+                           Nets : in out Net_Array;
+                           Other_Choice : in out Nat32;
+                           Choice_Idx : in out Nat32;
+                           Choice : in out Node)
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Expr_Val : Valtyp;
       Cond : Net;
    begin
-      case Get_Kind (Choice) is
-         when Iir_Kind_Choice_By_Expression =>
-            Expr_Val := Synth_Expression_With_Basetype
-              (Syn_Inst, Get_Choice_Expression (Choice));
-            Expr_Val := Synth_Subtype_Conversion
-              (Ctxt, Expr_Val, Choice_Typ, False, Choice);
-            Cond := Build_Compare (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, Expr_Val));
+      loop
+         case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
+            when Iir_Kind_Choice_By_Expression =>
+               Expr_Val := Synth_Expression_With_Basetype
+                 (Syn_Inst, Get_Choice_Expression (Choice));
+               Expr_Val := Synth_Subtype_Conversion
+                 (Ctxt, Expr_Val, Choice_Typ, False, Choice);
+               Cond := Build_Compare
+                 (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, Expr_Val));
+               Set_Location (Cond, Choice);
+
+            when Iir_Kind_Choice_By_Range =>
+               raise Internal_Error;
+
+            when Iir_Kind_Choice_By_Others =>
+               --  Last one.
+               Other_Choice := Choice_Idx + 1;
+               pragma Assert (Get_Chain (Choice) = Null_Node);
+               Choice := Null_Node;
+               return;
+         end case;
+
+         if not Get_Same_Alternative_Flag (Choice) then
+            Choice_Idx := Choice_Idx + 1;
+         else
+            Cond := Build_Dyadic (Ctxt, Id_Or, Nets (Choice_Idx), Cond);
             Set_Location (Cond, Choice);
-         when Iir_Kind_Choice_By_Others =>
-            raise Internal_Error;
-         when others =>
-            raise Internal_Error;
-      end case;
-      return Cond;
+         end if;
+         Nets (Choice_Idx) := Cond;
+
+         Choice := Get_Chain (Choice);
+         exit when Choice = Null_Node
+           or else not Get_Same_Alternative_Flag (Choice);
+      end loop;
    end Synth_Choice;
 
    type Alternative_Data_Type is record
@@ -911,7 +936,6 @@ package body Synth.Stmts is
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
 
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
-      Choice : Node;
 
       Case_Info : Choice_Info_Type;
 
@@ -920,7 +944,6 @@ package body Synth.Stmts is
       Alt_Idx : Alternative_Index;
       Others_Alt_Idx : Alternative_Index;
 
-      Choice_Idx : Nat32;
       Nbr_Choices : Nat32;
 
       Pasgns : Seq_Assign_Value_Array_Acc;
@@ -969,46 +992,34 @@ package body Synth.Stmts is
 
       --  Synth statements and keep list of assignments.
       --  Also synth choices.
-      Alt_Idx := 0;
-      Others_Alt_Idx := 0;
-      Choice_Idx := 0;
-      Choice := Choices;
-      while Is_Valid (Choice) loop
-         if not Get_Same_Alternative_Flag (Choice) then
+      declare
+         Choice : Node;
+         Choice_Idx, Other_Choice : Nat32;
+         Phi : Phi_Type;
+      begin
+         Alt_Idx := 0;
+         Choice_Idx := 0;
+         Other_Choice := 0;
+
+         Choice := Choices;
+         while Is_Valid (Choice) loop
+            --  Must be a choice for a new alternative.
+            pragma Assert (not Get_Same_Alternative_Flag (Choice));
+
             --  A new sequence of statements.
             Alt_Idx := Alt_Idx + 1;
 
-            declare
-               Phi : Phi_Type;
-            begin
-               Push_Phi;
-               Synth_Sequential_Statements (C, Get_Associated_Chain (Choice));
-               Pop_Phi (Phi);
-               Alts (Alt_Idx).Asgns := Sort_Phi (Phi);
-            end;
-         end if;
+            Push_Phi;
+            Synth_Sequential_Statements (C, Get_Associated_Chain (Choice));
+            Pop_Phi (Phi);
+            Alts (Alt_Idx).Asgns := Sort_Phi (Phi);
 
-         case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
-            when Iir_Kind_Choice_By_Expression
-              |  Iir_Kind_Choice_By_Range =>
-               declare
-                  N : Net;
-               begin
-                  N := Synth_Choice (C.Inst, Sel_Net, Sel.Typ, Choice);
-                  if not Get_Same_Alternative_Flag (Choice) then
-                     Choice_Idx := Choice_Idx + 1;
-                  else
-                     N := Build_Dyadic (Ctxt, Id_Or, Nets (Choice_Idx), N);
-                     Set_Location (N, Choice);
-                  end if;
-                  Nets (Choice_Idx) := N;
-               end;
-            when Iir_Kind_Choice_By_Others =>
-               Others_Alt_Idx := Alt_Idx;
-         end case;
-         Choice := Get_Chain (Choice);
-      end loop;
-      pragma Assert (Choice_Idx = Nbr_Choices);
+            Synth_Choice (C.Inst, Sel_Net, Sel.Typ,
+                          Nets.all, Other_Choice, Choice_Idx, Choice);
+         end loop;
+         pragma Assert (Choice_Idx = Nbr_Choices);
+         Others_Alt_Idx := Alternative_Index (Other_Choice);
+      end;
 
       --  Create the one-hot vector.
       if Nbr_Choices = 0 then
@@ -1248,7 +1259,6 @@ package body Synth.Stmts is
 
       Expr : constant Node := Get_Expression (Stmt);
       Choices : constant Node := Get_Selected_Waveform_Chain (Stmt);
-      Choice : Node;
 
       Targ : Target_Info;
       Targ_Type : Type_Acc;
@@ -1261,7 +1271,6 @@ package body Synth.Stmts is
       Others_Alt_Idx : Alternative_Index;
 
       --  Array of choices.  Contains tuple of (Value, Alternative).
-      Choice_Idx : Nat32;
       Nbr_Choices : Nat32;
 
       Nets : Net_Array_Acc;
@@ -1296,40 +1305,30 @@ package body Synth.Stmts is
       Nets := new Net_Array (1 .. Nbr_Choices);
 
       --  Synth statements, extract choice value.
-      Alt_Idx := 0;
-      Others_Alt_Idx := 0;
-      Choice_Idx := 0;
-      Choice := Choices;
-      while Is_Valid (Choice) loop
-         if not Get_Same_Alternative_Flag (Choice) then
+      declare
+         Choice : Node;
+         Choice_Idx, Other_Choice : Nat32;
+      begin
+         Alt_Idx := 0;
+         Choice_Idx := 0;
+         Other_Choice := 0;
+
+         Choice := Choices;
+         while Is_Valid (Choice) loop
+            pragma Assert (not Get_Same_Alternative_Flag (Choice));
+
             Alt_Idx := Alt_Idx + 1;
 
             Alts (Alt_Idx).Val := Get_Net
               (Ctxt, Synth_Waveform
                  (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type));
-         end if;
 
-         case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
-            when Iir_Kind_Choice_By_Expression
-              |  Iir_Kind_Choice_By_Range =>
-               declare
-                  N : Net;
-               begin
-                  N := Synth_Choice (Syn_Inst, Sel_Net, Sel.Typ, Choice);
-                  if not Get_Same_Alternative_Flag (Choice) then
-                     Choice_Idx := Choice_Idx + 1;
-                  else
-                     N := Build_Dyadic (Ctxt, Id_Or, Nets (Choice_Idx), N);
-                     Set_Location (N, Choice);
-                  end if;
-                  Nets (Choice_Idx) := N;
-               end;
-            when Iir_Kind_Choice_By_Others =>
-               Others_Alt_Idx := Alt_Idx;
-         end case;
-         Choice := Get_Chain (Choice);
-      end loop;
-      pragma Assert (Choice_Idx = Nbr_Choices);
+            Synth_Choice (Syn_Inst, Sel_Net, Sel.Typ,
+                          Nets.all, Other_Choice, Choice_Idx, Choice);
+         end loop;
+         pragma Assert (Choice_Idx = Nbr_Choices);
+         Others_Alt_Idx := Alternative_Index (Other_Choice);
+      end;
 
       --  Create the one-hot vector.
       if Nbr_Choices = 0 then
