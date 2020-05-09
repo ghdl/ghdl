@@ -470,6 +470,11 @@ package body Vhdl.Sem_Psl is
             Sem_Boolean (Prop);
             Sem_Property (Prop);
             return Prop;
+         when N_Next_Event_A | N_Next_Event_E =>
+            --  FIXME: range.
+            Sem_Boolean (Prop);
+            Sem_Property (Prop);
+            return Prop;
          when N_HDL_Expr =>
             Res := Sem_Hdl_Expr (Prop);
             if not Top and then Get_Kind (Res) = N_Property_Instance then
