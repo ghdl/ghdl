@@ -416,7 +416,8 @@ package body Grt.Vcd is
             end case;
          when VhpiSigDeclK =>
             Val := Vcd_Effective;
-         when VhpiGenericDeclK =>
+         when VhpiGenericDeclK
+           | VhpiConstDeclK =>
             Val := Vcd_Variable;
          when others =>
             Info := (Vtype => Vcd_Bad,

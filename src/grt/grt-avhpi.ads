@@ -91,6 +91,7 @@ package Grt.Avhpi is
       VhpiFuncCallK,
       VhpiFuncDeclK,
       VhpiGenericDeclK,
+      VhpiConstantDeclK,
       VhpiGroupDeclK,
       VhpiGroupTempDeclK,
       VhpiIfGenerateK,

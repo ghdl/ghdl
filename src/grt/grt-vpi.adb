@@ -574,6 +574,15 @@ package body Grt.Vpi is
                   return vpiParameter;
                end if;
             end;
+         when VhpiConstDeclK =>
+            declare
+               Info : Verilog_Wire_Info;
+            begin
+               Get_Verilog_Wire (Res, Info);
+               if Info.Vtype /= Vcd_Bad then
+                  return vpiConstant;
+               end if;
+            end;
          when others =>
             null;
       end case;
@@ -595,6 +604,9 @@ package body Grt.Vpi is
                                          Ref => Res);
          when vpiParameter =>
             return new struct_vpiHandle'(mType => vpiParameter,
+                                         Ref => Res);
+         when vpiConstant =>
+            return new struct_vpiHandle'(mType => vpiConstant,
                                          Ref => Res);
          when others =>
             return null;
@@ -859,7 +871,8 @@ package body Grt.Vpi is
       case Vhpi_Get_Kind (Obj) is
          when VhpiPortDeclK
            | VhpiSigDeclK
-           | VhpiGenericDeclK =>
+           | VhpiGenericDeclK
+           | VhpiConstDeclK =>
             null;
          when others =>
             return null;
