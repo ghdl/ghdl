@@ -104,6 +104,12 @@ package Netlists.Gates is
    --  Output: o
    Id_Mux4 : constant Module_Id := 47;
 
+   --  Inputs: 0: Selector as one-hot encoding
+   --          1: Default value (when the selector is 0)
+   --          2..1+W: values (2: MSB of sel, 1+W: LSB of sel)
+   --  Output: 0: selected value
+   Id_Pmux : constant Module_Id := 48;
+
    subtype Mux_Module_Id is Module_Id range Id_Mux2 .. Id_Mux4;
 
    --  Like a wire: the output is equal to the input, but could be elimited
@@ -114,11 +120,11 @@ package Netlists.Gates is
    --  by a gate (and thus the value of the output could be read), but that
    --  driving value may not be available early enough.
    --  Id_Ioutput is an output with an initial value.
-   Id_Signal  : constant Module_Id := 48;
-   Id_Isignal : constant Module_Id := 49;
-   Id_Output  : constant Module_Id := 50;
-   Id_Ioutput : constant Module_Id := 51;
-   Id_Port    : constant Module_Id := 52;
+   Id_Signal  : constant Module_Id := 56;
+   Id_Isignal : constant Module_Id := 57;
+   Id_Output  : constant Module_Id := 58;
+   Id_Ioutput : constant Module_Id := 59;
+   Id_Port    : constant Module_Id := 60;
 
    --  Id_Inout is a virtual gate used to fit inout direction into the netlist
    --  model which has only inputs and outputs.
@@ -131,10 +137,13 @@ package Netlists.Gates is
    --  Inputs:  0: value to be assigned to the port
    --  Outputs: 0: value of the port
    --           1: direct and only connection to the port
-   Id_Inout   : constant Module_Id := 53;
+   Id_Inout   : constant Module_Id := 61;
 
    --  Behaves like Id_Signal but for enable wires.
-   Id_Enable  : constant Module_Id := 54;
+   Id_Enable  : constant Module_Id := 62;
+
+   --  Temporary gate, O = I
+   Id_Nop : constant Module_Id := 63;
 
    --  Note: initial values must be constant nets.
    --
@@ -144,7 +153,7 @@ package Netlists.Gates is
    --  Inputs:  0: CLK
    --           1: D
    --  Output:  0: Q
-   Id_Dff   : constant Module_Id := 56;
+   Id_Dff   : constant Module_Id := 64;
 
    --  A DFF with an asynchronous reset.  Note that the asynchronous reset
    --  has priority over the clock.  When RST is asserted, the value is
@@ -154,7 +163,7 @@ package Netlists.Gates is
    --           2: RST
    --           3: RST_VAL
    --  Output:  0: Q
-   Id_Adff  : constant Module_Id := 57;
+   Id_Adff  : constant Module_Id := 65;
 
    --  A simple DFF with an initial value (must be constant).  This is
    --  for FPGAs.
@@ -162,7 +171,7 @@ package Netlists.Gates is
    --           1: D
    --           2: INIT (initial value)
    --  Output:  0: Q
-   Id_Idff  : constant Module_Id := 58;
+   Id_Idff  : constant Module_Id := 66;
 
    --  A DFF with an asynchronous reset and an initial value.
    --  Inputs:  0: CLK
@@ -171,14 +180,14 @@ package Netlists.Gates is
    --           3: RST_VAL
    --           4: INIT (initial value)
    --  Output:  0: Q
-   Id_Iadff : constant Module_Id := 59;
+   Id_Iadff : constant Module_Id := 67;
 
    --  Multi clock dff.  ELSE is the output of the next DFF.
    --  Inputs:  0: CLK
    --           1: D
    --           2: ELSE
    --  Output:  0: Q
-   Id_Mdff : constant Module_Id := 60;
+   Id_Mdff : constant Module_Id := 68;
 
    --  Multi clock dff with initial value.  ELSE is the output of the next DFF.
    --  Inputs:  0: CLK
@@ -186,37 +195,46 @@ package Netlists.Gates is
    --           2: ELSE
    --           3: Init
    --  Output:  0: Q
-   Id_Midff : constant Module_Id := 61;
+   Id_Midff : constant Module_Id := 69;
 
-   --  Temporary gate, O = I
-   Id_Nop : constant Module_Id := 62;
+   --  Reserved.
+   Id_Latch : constant Module_Id := 70;
 
    --  Tri state buffer.
    --  Inputs:  0: D
    --           1: EN
    --  Outputs: 0: O
    --  O <= EN ? O : 'Z'
-   Id_Tri : constant Module_Id := 63;
+   Id_Tri : constant Module_Id := 72;
+
+   --  A resolver for tri-state.  The two inputs (tri or resolver gates) are
+   --  connected together and to the output.
+   --  I0  I1  O
+   --  Z   Z   Z
+   --  Z   v1  v1
+   --  v0  Z   v0
+   --  v0  v1  vo   Ok if v0 = v1, error if v0 /= v1.
+   Id_Resolver : constant Module_Id := 73;
 
    --  Width change: truncate or extend.  Sign is know in order to possibly
    --  detect loss of value.
-   Id_Utrunc : constant Module_Id := 64;
-   Id_Strunc : constant Module_Id := 65;
-   Id_Uextend : constant Module_Id := 66;
-   Id_Sextend : constant Module_Id := 67;
+   Id_Utrunc : constant Module_Id := 82;
+   Id_Strunc : constant Module_Id := 83;
+   Id_Uextend : constant Module_Id := 84;
+   Id_Sextend : constant Module_Id := 85;
 
    subtype Truncate_Module_Id is Module_Id range Id_Utrunc .. Id_Strunc;
    subtype Extend_Module_Id is Module_Id range Id_Uextend .. Id_Sextend;
 
    --  Extract a bit or a slice at a constant offset.
    --  OUT := IN0[OFF+WD-1:OFF]
-   Id_Extract : constant Module_Id := 68;
+   Id_Extract : constant Module_Id := 86;
 
    --  OUT := IN0[IN1+OFF+WD-1:IN1+OFF]
    --  Inputs: MEM (the memory)
    --          IDX (then index)
    --  Param0: offset
-   Id_Dyn_Extract : constant Module_Id := 69;
+   Id_Dyn_Extract : constant Module_Id := 87;
 
    --  Like Insert but for dynamic values.
    --  Params:  0: offset
@@ -226,11 +244,11 @@ package Netlists.Gates is
    --  T := IN0
    --  T [IN2+OFF+WD-1:IN2+OFF] := IN1
    --  OUT := T
-   Id_Dyn_Insert : constant Module_Id := 70;
+   Id_Dyn_Insert : constant Module_Id := 88;
 
    --  Like Dyn_Insert but with an enable input.
    --  Inputs:  3: enable
-   Id_Dyn_Insert_En : constant Module_Id := 71;
+   Id_Dyn_Insert_En : constant Module_Id := 89;
 
    subtype Dyn_Insert_Module_Id is
      Module_Id range Id_Dyn_Insert .. Id_Dyn_Insert_En;
@@ -239,10 +257,10 @@ package Netlists.Gates is
    --  Param0: step
    --  Param1: max
    --  OUT := IN0 * STEP,  IN0 < MAX
-   Id_Memidx : constant Module_Id := 72;
+   Id_Memidx : constant Module_Id := 90;
 
    --  OUT := IN0 + IN1, size extension (max of inputs width).
-   Id_Addidx : constant Module_Id := 73;
+   Id_Addidx : constant Module_Id := 91;
 
    --  TODO:
    --  Id_Addidx_Cst : constant Module_Id := XX;
@@ -254,18 +272,18 @@ package Netlists.Gates is
    --  one connection.  The order is important as it defines the order of
    --  actions.
    --  Outputs: PORTS
-   Id_Memory : constant Module_Id := 74;
+   Id_Memory : constant Module_Id := 92;
 
    --  Same as Id_Memory but with an initial value.
    --  Input: INIT
-   Id_Memory_Init : constant Module_Id := 75;
+   Id_Memory_Init : constant Module_Id := 93;
 
    --  Asynchronous memory read port.
    --  Inputs:  PPORT  (previous memory port)
    --           ADDR
    --  Outputs: NPORT  (next memory port)
    --           DATA
-   Id_Mem_Rd : constant Module_Id := 76;
+   Id_Mem_Rd : constant Module_Id := 94;
 
    --  Synchronous memory read port.
    --  Inputs:  PPORT (previous memory port)
@@ -274,7 +292,7 @@ package Netlists.Gates is
    --           EN
    --  Outputs: NPORT (next memory port)
    --           DATA
-   Id_Mem_Rd_Sync : constant Module_Id := 77;
+   Id_Mem_Rd_Sync : constant Module_Id := 95;
 
    --  Synchronous memory write port
    --  Inputs:  PPORT (previous memory port)
@@ -283,42 +301,33 @@ package Netlists.Gates is
    --           EN
    --           DATA
    --  Outputs: NPORT (next memory port)
-   Id_Mem_Wr_Sync : constant Module_Id := 78;
+   Id_Mem_Wr_Sync : constant Module_Id := 96;
 
    --  Virtual gate to gather 2 dffs of a multiport memory.
-   Id_Mem_Multiport : constant Module_Id := 79;
+   Id_Mem_Multiport : constant Module_Id := 97;
 
    --  Positive/rising edge and negative/falling edge detector.
    --  These are pseudo gates.
-   Id_Posedge : constant Module_Id := 80;
-   Id_Negedge : constant Module_Id := 81;
+   Id_Posedge : constant Module_Id := 100;
+   Id_Negedge : constant Module_Id := 101;
    subtype Edge_Module_Id is Module_Id range Id_Posedge .. Id_Negedge;
 
    --  Input signal must always be true.
-   Id_Assert : constant Module_Id := 82;
-   Id_Assume : constant Module_Id := 83;
+   Id_Assert : constant Module_Id := 104;
+   Id_Assume : constant Module_Id := 105;
 
    --  Input is true when a sequence is covered.
-   Id_Cover : constant Module_Id := 84;
+   Id_Cover : constant Module_Id := 106;
    --  Use to cover the precedent of an assertion.
-   Id_Assert_Cover : constant Module_Id := 85;
+   Id_Assert_Cover : constant Module_Id := 107;
 
    --  Formal gates.
-   Id_Allconst : constant Module_Id := 90;
-   Id_Anyconst : constant Module_Id := 91;
-   Id_Allseq : constant Module_Id := 92;
-   Id_Anyseq : constant Module_Id := 93;
+   Id_Allconst : constant Module_Id := 108;
+   Id_Anyconst : constant Module_Id := 109;
+   Id_Allseq : constant Module_Id := 110;
+   Id_Anyseq : constant Module_Id := 111;
 
    subtype Formal_Module_Id is Module_Id range Id_Allconst .. Id_Anyseq;
-
-   --  A resolver for tri-state.  The two inputs (tri or resolver gates) are
-   --  connected together and to the output.
-   --  I0  I1  O
-   --  Z   Z   Z
-   --  Z   v1  v1
-   --  v0  Z   v0
-   --  v0  v1  vo   Ok if v0 = v1, error if v0 /= v1.
-   Id_Resolver : constant Module_Id := 94;
 
    --  Constants are gates with only one constant output.  There are multiple
    --  kind of constant gates: for small width, the value is stored as a
