@@ -177,6 +177,32 @@ do_synth () {
 
 #---
 
+do_vpi () {
+  gstart "[GHDL - test] vpi"
+  cd vpi
+
+  for d in *[0-9]; do
+    cd $d
+    if ./testsuite.sh > test.log 2>&1 ; then
+      printf "vpi $d: ${ANSI_GREEN}ok${ANSI_NOCOLOR}\n"
+      # Don't disp log
+    else
+      printf "vpi $d: ${ANSI_RED}failed${ANSI_NOCOLOR}\n"
+      cat test.log
+      failures="$failures $d"
+    fi
+    cd ..
+    # Stop at the first failure
+    [ "$failures" = "" ] || break
+  done
+
+  cd ..
+  gend
+  [ "$failures" = "" ] || exit 1
+}
+
+#---
+
 if [ "x$GHDL" = "x" ]; then
   if [ "x$prefix" != "x" ]; then
     export GHDL="$prefix/bin/ghdl"
@@ -200,7 +226,7 @@ for opt; do
   esac
 done
 
-if [ "x$tests" = "x" ]; then tests="sanity gna vests synth"; fi
+if [ "x$tests" = "x" ]; then tests="sanity gna vests synth vpi"; fi
 
 echo "tests: $tests"
 
@@ -211,6 +237,7 @@ do_test() {
     gna)    do_gna;;
     vests)  do_vests;;
     synth)  do_synth;;
+    vpi) do_vpi;;
     *)
       printf "${ANSI_RED}$0: test name '$1' is unknown${ANSI_NOCOLOR}\n"
       exit 1;;
