@@ -709,9 +709,13 @@ package body Netlists.Inference is
          Inp := Get_First_Sink (N);
          while Inp /= No_Input loop
             Inst := Get_Input_Parent (Inp);
-            if Get_Id (Inst) not in Mux_Module_Id then
-               return False;
-            end if;
+            case Get_Id (Inst) is
+               when Mux_Module_Id
+                 | Id_Pmux =>
+                  null;
+               when others =>
+                  return False;
+            end case;
 
             --  Add to T (if not already).
             Get (T, Inst, Inst);

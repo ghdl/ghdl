@@ -57,7 +57,6 @@ with Netlists.Folds; use Netlists.Folds;
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
-with Netlists.Butils; use Netlists.Butils;
 
 package body Synth.Stmts is
    procedure Synth_Sequential_Statements
@@ -790,41 +789,32 @@ package body Synth.Stmts is
       end if;
    end Synth_If_Statement;
 
-   --  EXPR is a choice, so a locally static literal.
-   function Convert_To_Uns64 (Syn_Inst : Synth_Instance_Acc; Expr : Node)
-                             return Uns64
-   is
-      Expr_Val : Valtyp;
-      Vec : Logvec_Array (0 .. 1);
-      Off : Uns32;
-      Has_Zx : Boolean;
-   begin
-      Expr_Val := Synth_Expression_With_Basetype (Syn_Inst, Expr);
-      Off := 0;
-      Has_Zx := False;
-      Vec := (others => (0, 0));
-      Value2logvec (Get_Memtyp (Expr_Val), 0, Expr_Val.Typ.W,
-                    Vec, Off, Has_Zx);
-      if Has_Zx then
-         Error_Msg_Synth (+Expr, "meta-values never match");
-      end if;
-      return Uns64 (Vec (0).Val) or Shift_Left (Uns64 (Vec (1).Val), 32);
-   end Convert_To_Uns64;
-
    type Alternative_Index is new Int32;
 
-   type Choice_Data_Type is record
-      --  Value of the choice
-      Val : Uns64;
-
-      --  Corresponding alternative
-      Alt : Alternative_Index;
-   end record;
-
-   type Choice_Data_Array is array (Natural range <>) of Choice_Data_Type;
-   type Choice_Data_Array_Acc is access Choice_Data_Array;
-   procedure Free_Choice_Data_Array is new Ada.Unchecked_Deallocation
-     (Choice_Data_Array, Choice_Data_Array_Acc);
+   function Synth_Choice (Syn_Inst : Synth_Instance_Acc;
+                          Sel : Net;
+                          Choice_Typ : Type_Acc;
+                          Choice : Node) return Net
+   is
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Expr_Val : Valtyp;
+      Cond : Net;
+   begin
+      case Get_Kind (Choice) is
+         when Iir_Kind_Choice_By_Expression =>
+            Expr_Val := Synth_Expression_With_Basetype
+              (Syn_Inst, Get_Choice_Expression (Choice));
+            Expr_Val := Synth_Subtype_Conversion
+              (Ctxt, Expr_Val, Choice_Typ, False, Choice);
+            Cond := Build_Compare (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, Expr_Val));
+            Set_Location (Cond, Choice);
+         when Iir_Kind_Choice_By_Others =>
+            raise Internal_Error;
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Cond;
+   end Synth_Choice;
 
    type Alternative_Data_Type is record
       Asgns : Seq_Assign;
@@ -920,23 +910,19 @@ package body Synth.Stmts is
       use Vhdl.Sem_Expr;
       Ctxt : constant Context_Acc := Get_Build (C.Inst);
 
-      Expr : constant Node := Get_Expression (Stmt);
       Choices : constant Node := Get_Case_Statement_Alternative_Chain (Stmt);
       Choice : Node;
 
       Case_Info : Choice_Info_Type;
-      Annex_Arr : Annex_Array_Acc;
 
       --  Array of alternatives
       Alts : Alternative_Data_Acc;
       Alt_Idx : Alternative_Index;
       Others_Alt_Idx : Alternative_Index;
 
-      --  Array of choices.  Contains tuple of (Value, Alternative).
-      Choice_Data : Choice_Data_Array_Acc;
-      Choice_Idx : Natural;
+      Choice_Idx : Nat32;
+      Nbr_Choices : Nat32;
 
-      Case_El : Case_Element_Array_Acc;
       Pasgns : Seq_Assign_Value_Array_Acc;
       Nets : Net_Array_Acc;
 
@@ -963,24 +949,33 @@ package body Synth.Stmts is
 
       --  Count choices and alternatives.
       Count_Choices (Case_Info, Choices);
-      Fill_Choices_Array (Case_Info, Choices);
+      --Fill_Choices_Array (Case_Info, Choices);
 
       --  Allocate structures.
       --  Because there is no 1-1 link between choices and alternatives,
       --  create an array for the choices and an array for the alternatives.
       Alts := new Alternative_Data_Array
         (1 .. Alternative_Index (Case_Info.Nbr_Alternatives));
-      Choice_Data := new Choice_Data_Array (1 .. Case_Info.Nbr_Choices);
-      Annex_Arr := new Annex_Array (1 .. Case_Info.Nbr_Choices);
-      Case_Info.Annex_Arr := Annex_Arr;
 
-      --  Synth statements, extract choice value.
+      --  Compute number of non-default alternatives.
+      Nbr_Choices := Nat32 (Case_Info.Nbr_Alternatives);
+      if Case_Info.Others_Choice /= Null_Node then
+         Nbr_Choices := Nbr_Choices - 1;
+      end if;
+
+      Nets := new Net_Array (1 .. Int32 (Alts'Last));
+
+      Sel_Net := Get_Net (Ctxt, Sel);
+
+      --  Synth statements and keep list of assignments.
+      --  Also synth choices.
       Alt_Idx := 0;
       Others_Alt_Idx := 0;
       Choice_Idx := 0;
       Choice := Choices;
       while Is_Valid (Choice) loop
          if not Get_Same_Alternative_Flag (Choice) then
+            --  A new sequence of statements.
             Alt_Idx := Alt_Idx + 1;
 
             declare
@@ -993,28 +988,33 @@ package body Synth.Stmts is
             end;
          end if;
 
-         case Get_Kind (Choice) is
-            when Iir_Kind_Choice_By_Expression =>
-               Choice_Idx := Choice_Idx + 1;
-               Annex_Arr (Choice_Idx) := Int32 (Choice_Idx);
-               Choice_Data (Choice_Idx) :=
-                 (Val => Convert_To_Uns64 (C.Inst,
-                                           Get_Choice_Expression (Choice)),
-                  Alt => Alt_Idx);
+         case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
+            when Iir_Kind_Choice_By_Expression
+              |  Iir_Kind_Choice_By_Range =>
+               declare
+                  N : Net;
+               begin
+                  N := Synth_Choice (C.Inst, Sel_Net, Sel.Typ, Choice);
+                  if not Get_Same_Alternative_Flag (Choice) then
+                     Choice_Idx := Choice_Idx + 1;
+                  else
+                     N := Build_Dyadic (Ctxt, Id_Or, Nets (Choice_Idx), N);
+                     Set_Location (N, Choice);
+                  end if;
+                  Nets (Choice_Idx) := N;
+               end;
             when Iir_Kind_Choice_By_Others =>
                Others_Alt_Idx := Alt_Idx;
-            when others =>
-               raise Internal_Error;
          end case;
          Choice := Get_Chain (Choice);
       end loop;
-      pragma Assert (Choice_Idx = Choice_Data'Last);
+      pragma Assert (Choice_Idx = Nbr_Choices);
 
-      --  Sort by order.
-      if Get_Kind (Get_Type (Expr)) in Iir_Kinds_Discrete_Type_Definition then
-         Sort_Discrete_Choices (Case_Info);
+      --  Create the one-hot vector.
+      if Nbr_Choices = 0 then
+         Sel_Net := No_Net;
       else
-         Sort_String_Choices (Case_Info);
+         Sel_Net := Build2_Concat (Ctxt, Nets (1 .. Nbr_Choices));
       end if;
 
       --  Create list of wire_id, sort it.
@@ -1026,21 +1026,16 @@ package body Synth.Stmts is
       --  Associate each choice with the assign node
       --  For each wire_id:
       --    Build mux2/mux4 tree (group by 4)
-      Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
-
       Pasgns := new Seq_Assign_Value_Array (1 .. Int32 (Alts'Last));
-      Nets := new Net_Array (1 .. Int32 (Alts'Last));
-
-      Sel_Net := Get_Net (Ctxt, Sel);
 
       --  For each wire, compute the result.
       for I in Wires'Range loop
          declare
             Wi : constant Wire_Id := Wires (I);
             Last_Val : Net;
+            Res_Inst : Instance;
             Res : Net;
             Default : Net;
-            Ch : Natural;
             Min_Off, Off : Uns32;
             Wd : Width;
             List : Partial_Assign_List;
@@ -1083,6 +1078,7 @@ package body Synth.Stmts is
                   exit when Off = Uns32'Last and Wd = Width'Last;
 
                   --  If a branch has no value, use the value before the case.
+                  --  Also do it for the default value!
                   Last_Val := No_Net;
                   for I in Nets'Range loop
                      if Nets (I) = No_Net then
@@ -1094,24 +1090,26 @@ package body Synth.Stmts is
                      end if;
                   end loop;
 
-                  --  Build the map between choices and values.
-                  for J in Annex_Arr'Range loop
-                     Ch := Natural (Annex_Arr (J));
-                     Case_El (J) :=
-                       (Sel => Choice_Data (Ch).Val,
-                        Val => Nets (Int32 (Choice_Data (Ch).Alt)));
-                  end loop;
-
                   --  Extract default value (for missing alternative).
                   if Others_Alt_Idx /= 0 then
                      Default := Nets (Int32 (Others_Alt_Idx));
                   else
-                     Default := No_Net;
+                     Default := Build_Const_X (Ctxt, Wd);
                   end if;
 
-                  --  Generate the muxes tree.
-                  Synth_Case (Ctxt, Sel_Net, Case_El.all, Default, Res,
-                              Get_Location (Expr));
+                  if Nbr_Choices = 0 then
+                     Res := Default;
+                  else
+                     Res := Build_Pmux (Ctxt, Sel_Net, Default);
+                     Res_Inst := Get_Net_Parent (Res);
+                     Set_Location (Res_Inst, Get_Location (Stmt));
+
+                     for I in 1 .. Nbr_Choices loop
+                        Connect
+                          (Get_Input (Res_Inst, Port_Nbr (2 + I - Nets'First)),
+                           Nets (I));
+                     end loop;
+                  end if;
 
                   Partial_Assign_Append (List, New_Partial_Assign (Res, Off));
                   Min_Off := Off + Wd;
@@ -1123,10 +1121,7 @@ package body Synth.Stmts is
       end loop;
 
       --  free.
-      Free_Case_Element_Array (Case_El);
       Free_Wire_Id_Array (Wires);
-      Free_Choice_Data_Array (Choice_Data);
-      Free_Annex_Array (Annex_Arr);
       Free_Alternative_Data_Array (Alts);
       Free_Seq_Assign_Value_Array (Pasgns);
       Free_Net_Array (Nets);
@@ -1259,7 +1254,6 @@ package body Synth.Stmts is
       Targ_Type : Type_Acc;
 
       Case_Info : Choice_Info_Type;
-      Annex_Arr : Annex_Array_Acc;
 
       --  Array of alternatives
       Alts : Alternative_Data_Acc;
@@ -1267,10 +1261,11 @@ package body Synth.Stmts is
       Others_Alt_Idx : Alternative_Index;
 
       --  Array of choices.  Contains tuple of (Value, Alternative).
-      Choice_Data : Choice_Data_Array_Acc;
-      Choice_Idx : Natural;
+      Choice_Idx : Nat32;
+      Nbr_Choices : Nat32;
 
-      Case_El : Case_Element_Array_Acc;
+      Nets : Net_Array_Acc;
+
 
       Sel : Valtyp;
       Sel_Net : Net;
@@ -1280,19 +1275,25 @@ package body Synth.Stmts is
 
       --  Create a net for the expression.
       Sel := Synth_Expression_With_Basetype (Syn_Inst, Expr);
+      Sel_Net := Get_Net (Ctxt, Sel);
 
       --  Count choices and alternatives.
       Count_Choices (Case_Info, Choices);
-      Fill_Choices_Array (Case_Info, Choices);
+      --  Fill_Choices_Array (Case_Info, Choices);
 
       --  Allocate structures.
       --  Because there is no 1-1 link between choices and alternatives,
       --  create an array for the choices and an array for the alternatives.
       Alts := new Alternative_Data_Array
         (1 .. Alternative_Index (Case_Info.Nbr_Alternatives));
-      Choice_Data := new Choice_Data_Array (1 .. Case_Info.Nbr_Choices);
-      Annex_Arr := new Annex_Array (1 .. Case_Info.Nbr_Choices);
-      Case_Info.Annex_Arr := Annex_Arr;
+
+      --  Compute number of non-default alternatives.
+      Nbr_Choices := Nat32 (Case_Info.Nbr_Alternatives);
+      if Case_Info.Others_Choice /= Null_Node then
+         Nbr_Choices := Nbr_Choices - 1;
+      end if;
+
+      Nets := new Net_Array (1 .. Nbr_Choices);
 
       --  Synth statements, extract choice value.
       Alt_Idx := 0;
@@ -1308,69 +1309,68 @@ package body Synth.Stmts is
                  (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type));
          end if;
 
-         case Get_Kind (Choice) is
-            when Iir_Kind_Choice_By_Expression =>
-               Choice_Idx := Choice_Idx + 1;
-               Annex_Arr (Choice_Idx) := Int32 (Choice_Idx);
-               Choice_Data (Choice_Idx) :=
-                 (Val => Convert_To_Uns64 (Syn_Inst,
-                                           Get_Choice_Expression (Choice)),
-                  Alt => Alt_Idx);
+         case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
+            when Iir_Kind_Choice_By_Expression
+              |  Iir_Kind_Choice_By_Range =>
+               declare
+                  N : Net;
+               begin
+                  N := Synth_Choice (Syn_Inst, Sel_Net, Sel.Typ, Choice);
+                  if not Get_Same_Alternative_Flag (Choice) then
+                     Choice_Idx := Choice_Idx + 1;
+                  else
+                     N := Build_Dyadic (Ctxt, Id_Or, Nets (Choice_Idx), N);
+                     Set_Location (N, Choice);
+                  end if;
+                  Nets (Choice_Idx) := N;
+               end;
             when Iir_Kind_Choice_By_Others =>
                Others_Alt_Idx := Alt_Idx;
-            when others =>
-               raise Internal_Error;
          end case;
          Choice := Get_Chain (Choice);
       end loop;
-      pragma Assert (Choice_Idx = Choice_Data'Last);
+      pragma Assert (Choice_Idx = Nbr_Choices);
 
-      --  Sort by order.
-      if Get_Kind (Get_Type (Expr)) in Iir_Kinds_Discrete_Type_Definition then
-         Sort_Discrete_Choices (Case_Info);
+      --  Create the one-hot vector.
+      if Nbr_Choices = 0 then
+         Sel_Net := No_Net;
       else
-         Sort_String_Choices (Case_Info);
+         Sel_Net := Build2_Concat (Ctxt, Nets (1 .. Nbr_Choices));
       end if;
-
-      --  Associate each choice with the assign node
-      --  For each wire_id:
-      --    Build mux2/mux4 tree (group by 4)
-      Case_El := new Case_Element_Array (1 .. Case_Info.Nbr_Choices);
-
-      Sel_Net := Get_Net (Ctxt, Sel);
 
       declare
          Res : Net;
+         Res_Inst : Instance;
          Default : Net;
-         C : Natural;
       begin
-         --  Build the map between choices and values.
-         for J in Annex_Arr'Range loop
-            C := Natural (Annex_Arr (J));
-            Case_El (J) := (Sel => Choice_Data (C).Val,
-                            Val => Alts (Choice_Data (C).Alt).Val);
-         end loop;
-
          --  Extract default value (for missing alternative).
          if Others_Alt_Idx /= 0 then
             Default := Alts (Others_Alt_Idx).Val;
          else
-            Default := No_Net;
+            Default := Build_Const_X (Ctxt, Targ_Type.W);
          end if;
 
-         --  Generate the muxes tree.
-         Synth_Case (Get_Build (Syn_Inst),
-                     Sel_Net, Case_El.all, Default, Res,
-                     Get_Location (Expr));
+         if Nbr_Choices = 0 then
+            Res := Default;
+         else
+            Res := Build_Pmux (Ctxt, Sel_Net, Default);
+            Res_Inst := Get_Net_Parent (Res);
+            Set_Location (Res_Inst, Get_Location (Stmt));
+
+            for I in 1 .. Nbr_Choices loop
+               Connect
+                 (Get_Input (Res_Inst, Port_Nbr (2 + I - Nets'First)),
+                  Alts (Alternative_Index (I)).Val);
+            end loop;
+         end if;
+
          Synth_Assignment
            (Syn_Inst, Targ, Create_Value_Net (Res, Targ_Type), Stmt);
       end;
 
       --  free.
-      Free_Case_Element_Array (Case_El);
-      Free_Choice_Data_Array (Choice_Data);
-      Free_Annex_Array (Annex_Arr);
       Free_Alternative_Data_Array (Alts);
+      Free_Net_Array (Nets);
    end Synth_Selected_Signal_Assignment;
 
    function Synth_Label (Stmt : Node) return Sname
