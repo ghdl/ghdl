@@ -914,7 +914,7 @@ package body Grt.Vpi is
                Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info, J).B1));
             end loop;
          when Vcd_Stdlogic =>
-            Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info).B1));
+            Append (Buf_Value, E8_To_Char (Verilog_Wire_Val (Info).E8));
          when Vcd_Stdlogic_Vector =>
             for J in 0 .. Len - 1 loop
                Append (Buf_Value, E8_To_Char (Verilog_Wire_Val (Info, J).E8));
