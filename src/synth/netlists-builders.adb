@@ -426,6 +426,17 @@ package body Netlists.Builders is
         (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("mux4"), No_Sname),
          Id_Mux4, 5, 1, 0);
       Set_Ports_Desc (Ctxt.M_Mux4, Inputs (0 .. 4), Outputs);
+
+      Inputs (0).W := 0;
+      Inputs (1) := Create_Input ("def");
+      Ctxt.M_Pmux := New_User_Module
+        (Ctxt.Design, New_Sname_Artificial (Get_Identifier ("pmux"), No_Sname),
+         Id_Pmux, 2, 1, 1);
+      Set_Ports_Desc (Ctxt.M_Pmux, Inputs (0 .. 1), Outputs);
+      Set_Params_Desc
+        (Ctxt.M_Pmux,
+         (0 => (New_Sname_Artificial (Get_Identifier ("n"), No_Sname),
+                Typ => Param_Uns32)));
    end Create_Mux_Modules;
 
    procedure Create_Objects_Module (Ctxt : Context_Acc)
@@ -1029,6 +1040,24 @@ package body Netlists.Builders is
       Connect (Get_Input (Inst, 4), I3);
       return O;
    end Build_Mux4;
+
+   function Build_Pmux (Ctxt : Context_Acc; Sel : Net; Def : Net) return Net
+   is
+      Sel_W : constant Width := Get_Width (Sel);
+      Def_W : constant Width := Get_Width (Def);
+      Inst : Instance;
+      O : Net;
+   begin
+      Inst := New_Var_Instance (Ctxt.Parent, Ctxt.M_Pmux,
+                                New_Internal_Name (Ctxt),
+                                2 + Port_Nbr (Sel_W), 1, 1);
+      Set_Param_Uns32 (Inst, 0, 2 + Sel_W);
+      O := Get_Output (Inst, 0);
+      Set_Width (O, Def_W);
+      Connect (Get_Input (Inst, 0), Sel);
+      Connect (Get_Input (Inst, 1), Def);
+      return O;
+   end Build_Pmux;
 
    function Build_Concat2 (Ctxt : Context_Acc; I0, I1 : Net) return Net
    is

@@ -30,7 +30,8 @@ package body Netlists.Utils is
       M : constant Module := Get_Module (Inst);
    begin
       case Get_Id (M) is
-         when Id_Concatn =>
+         when Id_Concatn
+           | Id_Pmux =>
             return Port_Nbr (Get_Param_Uns32 (Inst, 0));
          when others =>
             if Is_Self_Instance (Inst) then

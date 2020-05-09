@@ -96,6 +96,12 @@ package Netlists.Builders is
                         Sel : Net;
                         I0, I1, I2, I3 : Net) return Net;
 
+   --  The width of SEL gives the number of inputs (+ 2).
+   --  The width of DEF (default value) gives the width of the output.
+   function Build_Pmux (Ctxt : Context_Acc;
+                        Sel : Net;
+                        Def : Net) return Net;
+
    --  Build: I0 & I1 [ & I2 [ & I3 ]]
    function Build_Concat2 (Ctxt : Context_Acc; I0, I1 : Net) return Net;
    function Build_Concat3 (Ctxt : Context_Acc; I0, I1, I2 : Net) return Net;
@@ -232,6 +238,7 @@ private
       M_Negedge : Module;
       M_Mux2 : Module;
       M_Mux4 : Module;
+      M_Pmux : Module;
       M_Nop : Module;
       M_Output : Module;
       M_Ioutput : Module;

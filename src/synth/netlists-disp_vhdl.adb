@@ -808,6 +808,33 @@ package body Netlists.Disp_Vhdl is
       Put_Line ("  end process;");
    end Disp_Memory;
 
+   procedure Disp_Pmux (Inst : Instance)
+   is
+      Def : constant Net := Get_Input_Net (Inst, 0);
+      W : constant Width := Get_Width (Def);
+      Q : constant Character := Get_Lit_Quote (W);
+   begin
+      Disp_Template ("  with \i0 select \o0 <=" & NL, Inst);
+      for I in 1 .. W loop
+         Put ("    ");
+         Disp_Net_Expr
+           (Get_Input_Net (Inst, Port_Idx (2 + W - I)), Inst, Conv_None);
+         Put (" when ");
+         --  One hot encoding.
+         Put (Q);
+         for J in 1 .. W loop
+            if I = J then
+               Put ('1');
+            else
+               Put ('0');
+            end if;
+         end loop;
+         Put (Q);
+         Put ("," & NL);
+      end loop;
+      Disp_Template ("    \i1 when others;" & NL, Inst);
+   end Disp_Pmux;
+
    procedure Disp_Instance_Inline (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -1033,6 +1060,8 @@ package body Netlists.Disp_Vhdl is
             Put ("    ");
             Disp_X_Lit (Get_Width (Get_Output (Inst, 0)), 'X');
             Put_Line (" when others;");
+         when Id_Pmux =>
+            Disp_Pmux (Inst);
          when Id_Add =>
             if Get_Width (Get_Output (Inst, 0)) = 1 then
                Disp_Template ("  \o0 <= \i0 xor \i1;  --  add" & NL, Inst);
