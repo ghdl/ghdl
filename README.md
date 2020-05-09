@@ -24,7 +24,7 @@
   <a title="AppVeyor branch" href="https://ci.appveyor.com/project/tgingold/ghdl-psgys/history"><img src="https://img.shields.io/appveyor/ci/tgingold/ghdl-psgys/master.svg?logo=appveyor&logoColor=e8ecef&style=flat-square"></a>
 </p>
 
-This directory contains the sources of GHDL, the open-source analyzer, compiler and simulator for [VHDL](https://en.wikipedia.org/wiki/VHDL), a Hardware Description Language ([HDL](https://en.wikipedia.org/wiki/Hardware_description_language)). GHDL is not an interpreter: it allows you to analyse and elaborate sources to generate machine code from your design. Native program execution is the only way for high speed simulation.
+This directory contains the sources of GHDL, the open-source analyzer, compiler, simulator and (experimental) synthesizer for [VHDL](https://en.wikipedia.org/wiki/VHDL), a Hardware Description Language ([HDL](https://en.wikipedia.org/wiki/Hardware_description_language)). GHDL is not an interpreter: it allows you to analyse and elaborate sources to generate machine code from your design. Native program execution is the only way for high speed simulation.
 
 # Main features
 
@@ -38,7 +38,7 @@ GHDL runs on [GNU/Linux](http://en.wikipedia.org/wiki/Linux_distribution), [Wind
 
 Can write waveforms to a [GHW](http://ghdl.readthedocs.io/en/latest/using/Simulation.html?highlight=GHW#cmdoption-wave), [VCD](https://en.wikipedia.org/wiki/Value_change_dump) or FST file. Combined with a [GUI](http://en.wikipedia.org/wiki/Graphical_user_interface)-based [waveform viewer](https://en.wikipedia.org/wiki/Waveform_viewer) and a good text editor, GHDL is a very powerful tool for writing, testing and simulating your code.
 
-Supported third party projects: [VUnit](https://vunit.github.io), [UVVM](https://github.com/UVVM/UVVM), [OSVVM](http://osvvm.org), [cocotb](https://github.com/potentialventures/cocotb) (through the [VPI interface](https://en.wikipedia.org/wiki/Verilog_Procedural_Interface)), ...
+Supported third party projects: [cocotb](https://github.com/potentialventures/cocotb) (through the [VPI interface](https://en.wikipedia.org/wiki/Verilog_Procedural_Interface)), [OSVVM](http://osvvm.org), [UVVM](https://github.com/UVVM/UVVM), [VUnit](https://vunit.github.io), ...
 
 GHDL is free software:
 
@@ -48,9 +48,9 @@ GHDL is free software:
 
 # Getting GHDL
 
-## Pre-built releases
+Periodically (not regularly), several binary distributions are made available through the [releases](https://github.com/ghdl/ghdl/releases) tab.
 
-Periodically (not regularly), several binary distributions are made available through the [releases](https://github.com/ghdl/ghdl/releases) tab. You may use [GHDL Docker images](https://github.com/ghdl/docker) in case your didn't find a suitable release, or build GHDL yourself!
+You may use [GHDL Docker images](https://github.com/ghdl/docker) in case your didn't find a suitable release, or build GHDL yourself!
 
 ## Building GHDL
 
@@ -85,7 +85,7 @@ That's all!
 
 ## Regular users
 
-- The 'regular' tool allows analysis, compilation, simulation and (very experimental) synthesis of EDIF netlists. It is written in Ada and C, and three different backends are supported, which are sometimes named `ghdl_mcode`, `ghdl_gcc` and `ghdl_llvm`. This is the entrypoint for most users.
+- The 'regular' tool allows analysis, compilation, simulation and (very experimental) synthesis of VHDL 1993 netlists. It is written in Ada and C, and three different backends are supported, which are sometimes named `ghdl_mcode`, `ghdl_gcc` and `ghdl_llvm`. This is the entrypoint for most users.
 
 - `ghdl-ls` implements Language Server Protocol (LSP) in Python. VHDL analysis features provided by GHDL are accessed through `libghdl-py`. This can be integrated in text editors or IDES, such as, Vim, Emacs, Atom or Visual Studio Code.
 
@@ -97,6 +97,6 @@ That's all!
 
 - [libghdl-py](python/libghdl) is a Python interface to `libghdl`. Currently, it is only used by `ghdl-ls`; however, it can be useful for advanced users which are willing to build Python utilities based on GHDL.
 
-- **[experimental]** [ghdlsynth-beta](https://github.com/tgingold/ghdlsynth-beta) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdl` library (built with `--enable-synth`).
+- **[experimental]** [ghdl-yosys-plugin](https://github.com/ghdl/ghdl-yosys-plugin) is the integration of GHDL as a frontend plugin module for [Yosys Open SYnthesis Suite](http://www.clifford.at/yosys/), which uses the `libghdl` library (built with `--enable-synth`).
 
 - **[deprecated]** `ghdl_simul`, which supports interpreted simulation, is available for historical reasons and for development/debugging only. It is very slow compared to the 'regular' compiled simulation and not all the features are supported.
