@@ -724,8 +724,7 @@ package body Grt.Avhpi is
                when VhpiSigDeclK
                  | VhpiPortDeclK
                  | VhpiGenericDeclK
-                 | VhpiConstDeclK
-                 =>
+                 | VhpiConstDeclK =>
                   Add (Obj.Obj.Name);
                when VhpiIfGenerateK =>
                   Add (To_Ghdl_Rtin_Generate_Acc
@@ -947,8 +946,8 @@ package body Grt.Avhpi is
                     | VhpiSubtypeDeclK
                     | VhpiArrayTypeDeclK =>
                      Atype := Ref.Atype;
-                  when VhpiGenericDeclK |
-                       VhpiConstDeclK =>
+                  when VhpiGenericDeclK
+                    | VhpiConstDeclK =>
                      Atype := Ref.Obj.Obj_Type;
                   when VhpiIndexedNameK =>
                      Atype := Ref.N_Type;

@@ -6,16 +6,12 @@ analyze mydesign.vhdl
 elab myentity
 
 if ghdl_has_feature myentity vpi; then
-  if [ "$OS" = "Windows_NT" ]; then
-      vpi_lib=`$GHDL --vpi-library-dir | sed -e 's!\\\\!/!g' -e 's!^C:!/C!g'`
-      echo vpi_lib: $vpi_lib
-      PATH="$PATH:$vpi_lib"
-  fi
-
   $GHDL --vpi-compile -v gcc -c vpi1.c
   $GHDL --vpi-link -v gcc -o vpi1.vpi vpi1.o
 
-  simulate myentity --vpi=./vpi1.vpi --vpi-trace | tee myentity.out
+  add_vpi_path
+
+  simulate myentity --vpi=./vpi1.vpi | tee myentity.out
   if grep -q Error myentity.out; then
       echo "Error in output"
       exit 1;
