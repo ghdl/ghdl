@@ -429,7 +429,7 @@ ci_run () {
   if [ "x$IS_MACOS" = "xtrue" ]; then
       CC=clang \
       prefix="`cd ./install-mcode; pwd`/usr/local" \
-      ./testsuite/testsuite.sh sanity gna vests
+      ./testsuite/testsuite.sh sanity gna vests vpi
   else
       # Build ghdl/ghdl:$GHDL_IMAGE_TAG image
       build_img_ghdl
@@ -442,6 +442,7 @@ ci_run () {
       if [ "x$ISSYNTH" = "xtrue" ]; then
         tests="$tests synth"
       fi
+      tests="$tests vpi"
       $RUN "ghdl/ghdl:$GHDL_IMAGE_TAG" bash -c "GHDL=ghdl ./testsuite/testsuite.sh $tests"
   fi
 
