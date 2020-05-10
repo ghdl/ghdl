@@ -1300,8 +1300,8 @@ package body Grt.Avhpi is
             Vptr := To_Ghdl_Value_Ptr (Obj.N_Addr);
             Atype := Obj.N_Type;
          when VhpiGenericDeclK =>
-            -- FIXME: Do we really want to allow changing the values
-            -- of generics via VPI?
+            --  Putting values for generics is necessary to support SDF
+            --  annotations.
             Vptr := To_Ghdl_Value_Ptr (Avhpi_Get_Address (Obj));
             Atype := Obj.Obj.Obj_Type;
          when VhpiConstDeclK =>
