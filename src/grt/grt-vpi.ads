@@ -38,6 +38,7 @@ package Grt.Vpi is
    vpiSize :          constant Integer :=  4;
    vpiFile :          constant Integer :=  5;
    vpiLineNo :        constant Integer :=  6;
+   vpiConstant :      constant Integer :=  7;
 
    vpiDefName :       constant Integer :=  9;
    vpiTimePrecision : constant Integer := 12;

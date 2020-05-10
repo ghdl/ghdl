@@ -574,6 +574,15 @@ package body Grt.Vpi is
                   return vpiParameter;
                end if;
             end;
+         when VhpiConstDeclK =>
+            declare
+               Info : Verilog_Wire_Info;
+            begin
+               Get_Verilog_Wire (Res, Info);
+               if Info.Vtype /= Vcd_Bad then
+                  return vpiConstant;
+               end if;
+            end;
          when others =>
             null;
       end case;
@@ -595,6 +604,9 @@ package body Grt.Vpi is
                                          Ref => Res);
          when vpiParameter =>
             return new struct_vpiHandle'(mType => vpiParameter,
+                                         Ref => Res);
+         when vpiConstant =>
+            return new struct_vpiHandle'(mType => vpiConstant,
                                          Ref => Res);
          when others =>
             return null;
@@ -859,7 +871,8 @@ package body Grt.Vpi is
       case Vhpi_Get_Kind (Obj) is
          when VhpiPortDeclK
            | VhpiSigDeclK
-           | VhpiGenericDeclK =>
+           | VhpiGenericDeclK
+           | VhpiConstDeclK =>
             null;
          when others =>
             return null;
@@ -894,13 +907,15 @@ package body Grt.Vpi is
                Append_Bin (Ghdl_U64 (V), 32);
             end;
          when Vcd_Bit
-           | Vcd_Bool
-           | Vcd_Bitvector =>
+           | Vcd_Bool =>
+            Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info).B1));
+         when Vcd_Bitvector =>
             for J in 0 .. Len - 1 loop
                Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info, J).B1));
             end loop;
-         when Vcd_Stdlogic
-           | Vcd_Stdlogic_Vector =>
+         when Vcd_Stdlogic =>
+            Append (Buf_Value, E8_To_Char (Verilog_Wire_Val (Info).E8));
+         when Vcd_Stdlogic_Vector =>
             for J in 0 .. Len - 1 loop
                Append (Buf_Value, E8_To_Char (Verilog_Wire_Val (Info, J).E8));
             end loop;
