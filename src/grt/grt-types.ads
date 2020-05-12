@@ -140,6 +140,10 @@ package Grt.Types is
 
    function To_Ghdl_C_String is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_C_String);
+   -- Converts an Ada String to a Ghdl_C_String
+   -- Doesn't add the NULL character (hence the name).
+   function To_Ghdl_C_String_Assuming_Null is new Ada.Unchecked_Conversion
+     (Source => String, Target => Ghdl_C_String);
    function To_Address is new Ada.Unchecked_Conversion
      (Source => Ghdl_C_String, Target => Address);
 

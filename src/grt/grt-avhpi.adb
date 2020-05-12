@@ -52,21 +52,6 @@ package body Grt.Avhpi is
               Max2 => 0);
    end Get_Package_Inst;
 
-   --  Number of elements in an array.
-   function Ranges_To_Length (Rngs : Ghdl_Range_Array;
-                              Indexes : Ghdl_Rti_Arr_Acc)
-                             return Ghdl_Index_Type
-   is
-      Res : Ghdl_Index_Type;
-   begin
-      Res := 1;
-      for I in Rngs'Range loop
-         Res := Res * Range_To_Length
-           (Rngs (I), Get_Base_Type (Indexes (I - Rngs'First)));
-      end loop;
-      return Res;
-   end Ranges_To_Length;
-
    procedure Vhpi_Iterator (Rel : VhpiOneToManyT;
                             Ref : VhpiHandleT;
                             Res : out VhpiHandleT;
@@ -127,44 +112,23 @@ package body Grt.Avhpi is
          when VhpiIndexedNames =>
             case Ref.Kind is
                when VhpiGenericDeclK |
-                    VhpiConstDeclK=>
-                  Res := (Kind => AvhpiNameIteratorK,
-                          Ctxt => Ref.Ctxt,
-                          N_Addr => Avhpi_Get_Address (Ref),
-                          N_Type => Ref.Obj.Obj_Type,
-                          N_Idx => 0,
-                          N_Obj => Ref.Obj);
-               when VhpiIndexedNameK =>
-                  Res := (Kind => AvhpiNameIteratorK,
-                          Ctxt => Ref.Ctxt,
-                          N_Addr => Ref.N_Addr,
-                          N_Type => Ref.N_Type,
-                          N_Idx => 0,
-                          N_Obj => Ref.N_Obj);
+                    VhpiConstDeclK |
+                    VhpiIndexedNameK =>
+                  if Is_Array(Ref.Obj) or Is_Record(Ref.Obj) then
+                     Res := (Kind => AvhpiNameIteratorK,
+                             Ctxt => Ref.Ctxt,
+                             N_Idx => 0,
+                             N_Size => Get_Size(Ref.Obj),
+                             N_Obj => Ref.Obj);
+                     return;
+                  else
+                     Error := AvhpiErrorNotImplemented;
+                     Res := Null_Handle;
+                     return;
+                  end if;
                when others =>
-                  Error := AvhpiErrorNotImplemented;
-                  return;
+               null;
             end case;
-            case Res.N_Type.Kind is
-               when Ghdl_Rtik_Subtype_Array =>
-                  declare
-                     St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
-                       To_Ghdl_Rtin_Subtype_Composite_Acc (Res.N_Type);
-                     Bt : constant Ghdl_Rtin_Type_Array_Acc :=
-                       To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
-                     Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
-                     Layout : Address;
-                  begin
-                     Layout :=
-                       Loc_To_Addr (St.Common.Depth, St.Layout, Res.Ctxt);
-                     Bound_To_Range
-                       (Array_Layout_To_Bounds (Layout), Bt, Rngs);
-                     Res.N_Idx := Ranges_To_Length (Rngs, Bt.Indexes);
-                  end;
-               when others =>
-                  Error := AvhpiErrorBadRel;
-            end case;
-            return;
          when others =>
             null;
       end case;
@@ -173,85 +137,23 @@ package body Grt.Avhpi is
       Error := AvhpiErrorNotImplemented;
    end Vhpi_Iterator;
 
-   --  OBJ_RTI is the RTI for the base name.
-   function Add_Index (Ctxt : Rti_Context;
-                       Obj_Base : Address;
-                       Obj_Rti : Ghdl_Rtin_Object_Acc;
-                       El_Type : Ghdl_Rti_Access;
-                       Off : Ghdl_Index_Type) return Address
-   is
-      Is_Sig : Boolean;
-      El_Size : Ghdl_Index_Type;
-      El_Type1 : Ghdl_Rti_Access;
-   begin
-      case Obj_Rti.Common.Kind is
-         when Ghdl_Rtik_Generic |
-              Ghdl_Rtik_Constant =>
-            Is_Sig := False;
-         when others =>
-            Internal_Error ("add_index");
-      end case;
-
-      if El_Type.Kind = Ghdl_Rtik_Subtype_Scalar then
-         El_Type1 := Get_Base_Type (El_Type);
-      else
-         El_Type1 := El_Type;
-      end if;
-
-      case El_Type1.Kind is
-         when Ghdl_Rtik_Type_P64 =>
-            if Is_Sig then
-               El_Size := Address'Size / Storage_Unit;
-            else
-               El_Size := Ghdl_I64'Size / Storage_Unit;
-            end if;
-         when Ghdl_Rtik_Subtype_Array =>
-            declare
-               Sizes : Ghdl_Indexes_Ptr;
-            begin
-               Sizes := To_Ghdl_Indexes_Ptr
-                 (Loc_To_Addr
-                    (El_Type1.Depth,
-                     To_Ghdl_Rtin_Subtype_Composite_Acc (El_Type1).Layout,
-                     Ctxt));
-               if Is_Sig then
-                  El_Size := Sizes.Signal;
-               else
-                  El_Size := Sizes.Value;
-               end if;
-            end;
-         when others =>
-            Internal_Error ("add_index");
-      end case;
-      return Obj_Base + Off * El_Size;
-   end Add_Index;
-
    procedure Vhpi_Scan_Indexed_Name (Iterator : in out VhpiHandleT;
                                      Res : out VhpiHandleT;
                                      Error : out AvhpiErrorT)
    is
-      El_Type : Ghdl_Rti_Access;
+      Child : Ghdl_Object_Rtii;
    begin
-      if Iterator.N_Idx = 0 then
+      if Iterator.N_Idx = Iterator.N_Size then
          Error := AvhpiErrorIteratorEnd;
          return;
       end if;
-
-      El_Type := To_Ghdl_Rtin_Type_Array_Acc
-        (Get_Base_Type (Iterator.N_Type)).Element;
+      Child := Get_Rtii_Child(Iterator.N_Obj, Iterator.N_Idx);
 
       Res := (Kind => VhpiIndexedNameK,
               Ctxt => Iterator.Ctxt,
-              N_Addr => Iterator.N_Addr,
-              N_Type => El_Type,
-              N_Idx => 0,
-              N_Obj => Iterator.N_Obj);
+              Comp_Obj => Child);
 
-      --  Increment Address.
-      Iterator.N_Addr := Add_Index
-        (Iterator.Ctxt, Iterator.N_Addr, Iterator.N_Obj, El_Type, 1);
-
-      Iterator.N_Idx := Iterator.N_Idx - 1;
+      Iterator.N_Idx := Iterator.N_Idx + 1;
       Error := AvhpiErrorOk;
    end Vhpi_Scan_Indexed_Name;
 
@@ -384,19 +286,23 @@ package body Grt.Avhpi is
          when Ghdl_Rtik_Signal =>
             Res := (Kind => VhpiSigDeclK,
                     Ctxt => Ctxt,
-                    Obj => To_Ghdl_Rtin_Object_Acc (Rti));
+                    Obj => To_Ghdl_Object_Rtii(
+                             To_Ghdl_Rtin_Object_Acc(Rti), Ctxt));
          when Ghdl_Rtik_Port =>
             Res := (Kind => VhpiPortDeclK,
                     Ctxt => Ctxt,
-                    Obj => To_Ghdl_Rtin_Object_Acc (Rti));
+                    Obj => To_Ghdl_Object_Rtii(
+                             To_Ghdl_Rtin_Object_Acc(Rti), Ctxt));
          when Ghdl_Rtik_Generic =>
             Res := (Kind => VhpiGenericDeclK,
                     Ctxt => Ctxt,
-                    Obj => To_Ghdl_Rtin_Object_Acc (Rti));
+                    Obj => To_Ghdl_Object_Rtii(
+                             To_Ghdl_Rtin_Object_Acc(Rti), Ctxt));
          when Ghdl_Rtik_Constant =>
             Res := (Kind => VhpiConstDeclK,
                     Ctxt => Ctxt,
-                    Obj => To_Ghdl_Rtin_Object_Acc (Rti));
+                    Obj => To_Ghdl_Object_Rtii(
+                             To_Ghdl_Rtin_Object_Acc(Rti), Ctxt));
          when Ghdl_Rtik_Subtype_Array =>
             declare
                Atype : constant Ghdl_Rtin_Subtype_Composite_Acc :=
@@ -543,7 +449,7 @@ package body Grt.Avhpi is
    begin
       case Iterator.Kind is
          when AvhpiNameIteratorK =>
-            case Iterator.N_Type.Kind is
+            case Iterator.N_Obj.Typ.Rti.Kind is
                when Ghdl_Rtik_Subtype_Array =>
                   Vhpi_Scan_Indexed_Name (Iterator, Res, Error);
                when others =>
@@ -608,7 +514,7 @@ package body Grt.Avhpi is
            | VhpiPortDeclK
            | VhpiGenericDeclK
            | VhpiConstDeclK =>
-            return Obj.Obj.Name;
+            return To_Ghdl_C_String(Obj.Obj.Name);
          when VhpiSubtypeDeclK =>
             return To_Ghdl_Rtin_Subtype_Scalar_Acc (Obj.Atype).Name;
          when others =>
@@ -725,7 +631,7 @@ package body Grt.Avhpi is
                  | VhpiPortDeclK
                  | VhpiGenericDeclK
                  | VhpiConstDeclK =>
-                  Add (Obj.Obj.Name);
+                  Add (To_Ghdl_C_String(Obj.Obj.Name));
                when VhpiIfGenerateK =>
                   Add (To_Ghdl_Rtin_Generate_Acc
                          (To_Ghdl_Rtin_Block_Acc
@@ -829,7 +735,7 @@ package body Grt.Avhpi is
                   when VhpiPortDeclK
                     | VhpiSigDeclK =>
                      Add (':');
-                     Add (Obj.Obj.Name);
+                     Add (To_Ghdl_C_String(Obj.Obj.Name));
                   when others =>
                      null;
                end case;
@@ -901,9 +807,10 @@ package body Grt.Avhpi is
                   declare
                      Blk : constant Ghdl_Rtin_Block_Acc :=
                        To_Ghdl_Rtin_Block_Acc (Ref.Ctxt.Block);
-                     Iter : Ghdl_Rtin_Object_Acc;
+                     Iter : Ghdl_Object_Rtii;
                   begin
-                     Iter := To_Ghdl_Rtin_Object_Acc (Blk.Children (0));
+                     Iter := To_Ghdl_Object_Rtii(
+                        To_Ghdl_Rtin_Object_Acc (Blk.Children (0)), Ref.Ctxt);
                      Res := (Kind => VhpiConstDeclK,
                              Ctxt => Ref.Ctxt,
                              Obj => Iter);
@@ -920,7 +827,7 @@ package body Grt.Avhpi is
                  | VhpiConstDeclK =>
                   Res := (Kind => VhpiSubtypeIndicK,
                           Ctxt => Ref.Ctxt,
-                          Atype => Ref.Obj.Obj_Type);
+                          Atype => Ref.Obj.Typ.Rti);
                   Error := AvhpiErrorOk;
                when others =>
                   return;
@@ -947,10 +854,9 @@ package body Grt.Avhpi is
                     | VhpiArrayTypeDeclK =>
                      Atype := Ref.Atype;
                   when VhpiGenericDeclK
-                    | VhpiConstDeclK =>
-                     Atype := Ref.Obj.Obj_Type;
-                  when VhpiIndexedNameK =>
-                     Atype := Ref.N_Type;
+                    | VhpiConstDeclK
+                    | VhpiIndexedNameK =>
+                     Atype := Ref.Obj.Typ.Rti;
                   when others =>
                      return;
                end case;
@@ -1062,33 +968,32 @@ package body Grt.Avhpi is
             end case;
          when VhpiIndexedNames =>
             declare
-               Base_Type, El_Type : VhpiHandleT;
+               Child : Ghdl_Object_Rtii;
             begin
-               Vhpi_Handle (VhpiBaseType, Ref, Base_Type, Error);
-               if Error /= AvhpiErrorOk then
-                  return;
-               end if;
-               if Vhpi_Get_Kind (Base_Type) /= VhpiArrayTypeDeclK then
+               case Ref.Kind is
+                  when VhpiSigDeclK
+                    | VhpiPortDeclK
+                    | VhpiGenericDeclK
+                    | VhpiConstDeclK
+                    | VhpiIndexedNameK =>
+                     --Rtii := To_Ghdl_Object_Rtii(
+                     --   To_Ghdl_Rtin_Object_Acc(Ref.Obj), Ref.Ctxt);
+                     if not Is_Array(Ref.Obj) then
+                        Error := AvhpiErrorBadRel;
+                     end if;
+                  when others =>
+                     Error := AvhpiErrorBadRel;
+                     return;
+               end case;
+               if Ghdl_Index_Type'Mod(Index) >= Get_Rtii_Nbr_Children(Ref.Obj)
+               then
                   Error := AvhpiErrorBadRel;
                   return;
                end if;
-               Vhpi_Handle (VhpiElemSubtype, Base_Type, El_Type, Error);
-               if Error /= AvhpiErrorOk then
-                  return;
-               end if;
+               Child := Get_Rtii_Child(Ref.Obj, Ghdl_Index_Type'Mod(Index));
                Res := (Kind => VhpiIndexedNameK,
                        Ctxt => Ref.Ctxt,
-                       N_Addr => Avhpi_Get_Address (Ref),
-                       N_Type => El_Type.Atype,
-                       N_Idx => Ghdl_Index_Type (Index),
-                       N_Obj => Ref.Obj);
-               if Res.N_Addr = Null_Address then
-                  Error := AvhpiErrorBadRel;
-                  return;
-               end if;
-               Res.N_Addr := Add_Index
-                 (Res.Ctxt, Res.N_Addr, Res.N_Obj, Res.N_Type,
-                  Ghdl_Index_Type (Index));
+                       Comp_Obj => Child);
             end;
          when others =>
             Res := Null_Handle;
@@ -1143,7 +1048,7 @@ package body Grt.Avhpi is
                     | VhpiGenericDeclK
                     | VhpiConstDeclK =>
                      --  Objects.
-                     Linecol := Obj.Obj.Linecol;
+                     Linecol := Obj.Obj.Base_Rti.Linecol;
                   when VhpiPackInstK
                     | VhpiArchBodyK
                     | VhpiEntityDeclK
@@ -1214,7 +1119,7 @@ package body Grt.Avhpi is
    begin
       case Obj.Kind is
          when VhpiPortDeclK =>
-            case Obj.Obj.Common.Mode and Ghdl_Rti_Signal_Mode_Mask is
+            case Obj.Obj.Base_Rti.Common.Mode and Ghdl_Rti_Signal_Mode_Mask is
                when Ghdl_Rti_Signal_Mode_In =>
                   return VhpiInMode;
                when Ghdl_Rti_Signal_Mode_Out =>
@@ -1243,7 +1148,7 @@ package body Grt.Avhpi is
            | VhpiPortDeclK
            | VhpiGenericDeclK
            | VhpiConstDeclK =>
-            return To_Ghdl_Rti_Access (Obj.Obj);
+            return To_Ghdl_Rti_Access (Obj.Obj.Base_Rti);
          when others =>
             return null;
       end case;
@@ -1256,9 +1161,7 @@ package body Grt.Avhpi is
            | VhpiSigDeclK
            | VhpiGenericDeclK
            | VhpiConstDeclK =>
-            return Loc_To_Addr (Obj.Ctxt.Block.Depth,
-                                Obj.Obj.Loc,
-                                Obj.Ctxt);
+            return Obj.Obj.Addr;
          when others =>
             return Null_Address;
       end case;
@@ -1297,13 +1200,13 @@ package body Grt.Avhpi is
    begin
       case Obj.Kind is
          when VhpiIndexedNameK =>
-            Vptr := To_Ghdl_Value_Ptr (Obj.N_Addr);
-            Atype := Obj.N_Type;
+            Vptr := To_Ghdl_Value_Ptr (Obj.Obj.Addr);
+            Atype := Obj.Obj.Typ.Rti;
          when VhpiGenericDeclK =>
             --  Putting values for generics is necessary to support SDF
             --  annotations.
             Vptr := To_Ghdl_Value_Ptr (Avhpi_Get_Address (Obj));
-            Atype := Obj.Obj.Obj_Type;
+            Atype := Obj.Obj.Typ.Rti;
          when VhpiConstDeclK =>
             -- Don't support changing values of constants.
             return AvhpiErrorNotImplemented;
