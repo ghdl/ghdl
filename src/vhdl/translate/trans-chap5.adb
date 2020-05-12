@@ -424,19 +424,28 @@ package body Trans.Chap5 is
 
                --  Copy pointer to the values.
                Formal_Tinfo := Get_Info (Formal_Type);
-               if Formal_Tinfo.Type_Mode in Type_Mode_Composite then
-                  --  Need to convert base, as you can assign a bounded type
-                  --  to an unbounded type (or the opposite).  Maybe convert
-                  --  only when needed ?  Subtype matching is checked below.
-                  New_Assign_Stmt
-                    (M2Lp (Chap3.Get_Composite_Base (Formal_Val)),
-                     New_Convert_Ov
-                       (M2Addr
-                          (Chap3.Get_Composite_Unbounded_Base (Actual_Val)),
-                       Formal_Tinfo.B.Base_Ptr_Type (Mode_Value)));
-               else
-                  New_Assign_Stmt (M2Lp (Formal_Val), M2Addr (Actual_Val));
-               end if;
+               --  Need to convert base, as you can assign a bounded type
+               --  to an unbounded type (or the opposite).  Maybe convert
+               --  only when needed ?  Subtype matching is checked below.
+               case Formal_Tinfo.Type_Mode is
+                  when Type_Mode_Unbounded_Array
+                     | Type_Mode_Unbounded_Record =>
+                     New_Assign_Stmt
+                       (M2Lp (Chap3.Get_Composite_Base (Formal_Val)),
+                        New_Convert_Ov
+                          (M2Addr (Chap3.Get_Composite_Base (Actual_Val)),
+                           Formal_Tinfo.B.Base_Ptr_Type (Mode_Value)));
+                  when Type_Mode_Bounded_Arrays
+                     | Type_Mode_Bounded_Records =>
+                     New_Assign_Stmt
+                       (M2Lp (Formal_Val),
+                        New_Convert_Ov
+                          (M2Addr (Chap3.Get_Composite_Base (Actual_Val)),
+                           Formal_Tinfo.Ortho_Ptr_Type (Mode_Value)));
+                  when others =>
+                     New_Assign_Stmt
+                       (M2Lp (Formal_Val), M2Addr (Actual_Val));
+               end case;
             else
                Set_Map_Env (Actual_Env);
                Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
