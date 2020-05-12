@@ -1350,20 +1350,22 @@ package body Trans.Chap3 is
 
    procedure Translate_Record_Subtype (Def : Iir; With_Vars : Boolean)
    is
-      Base_Type  : constant Iir := Get_Base_Type (Def);
-      Base_Info  : constant Type_Info_Acc := Get_Info (Base_Type);
-      Info       : constant Type_Info_Acc := Get_Info (Def);
-      El_List    : constant Iir_Flist := Get_Elements_Declaration_List (Def);
-      Type_Mark  : constant Iir := Get_Subtype_Type_Mark (Def);
-      El_Blist   : constant Iir_Flist :=
+      Base_Type   : constant Iir := Get_Base_Type (Def);
+      Base_Info   : constant Type_Info_Acc := Get_Info (Base_Type);
+      Info        : constant Type_Info_Acc := Get_Info (Def);
+      El_List     : constant Iir_Flist := Get_Elements_Declaration_List (Def);
+      Type_Mark   : constant Iir := Get_Subtype_Type_Mark (Def);
+      El_Blist    : constant Iir_Flist :=
         Get_Elements_Declaration_List (Base_Type);
-      El_Tm_List : Iir_Flist;
-      El, B_El   : Iir_Element_Declaration;
-      El_Type    : Iir;
-      El_Btype   : Iir;
+      Parent_Type : Iir;
+      Parent_Info : Type_Info_Acc;
+      El_Tm_List  : Iir_Flist;
+      El, B_El    : Iir_Element_Declaration;
+      El_Type     : Iir;
+      El_Btype    : Iir;
 
       Has_New_Constraints : Boolean;
-      Has_Boxed_Elements : Boolean;
+      Has_Boxed_Elements  : Boolean;
 
       Rec        : O_Element_List;
       Field_Info : Ortho_Info_Acc;
@@ -1372,20 +1374,24 @@ package body Trans.Chap3 is
 
       Mark : Id_Mark_Type;
    begin
-      --  Translate the newly constrained elements.
       if Is_Valid (Type_Mark) then
-         --  Type_mark may be null for anonymous subtype.
-         El_Tm_List := Get_Elements_Declaration_List
-           (Get_Type (Get_Named_Entity (Type_Mark)));
+         Parent_Type := Get_Type (Get_Named_Entity (Type_Mark));
       else
-         El_Tm_List := El_Blist;
+         --  Type_mark may be null for anonymous subtype, like ones created
+         --  for an aggregate.
+         Parent_Type := Get_Base_Type (Def);
       end if;
+      El_Tm_List := Get_Elements_Declaration_List (Parent_Type);
+      Parent_Info := Get_Info (Parent_Type);
+
+      --  Translate the newly constrained elements.
       Has_New_Constraints := False;
       Has_Boxed_Elements := False;
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Type (El);
          El_Btype := Get_Type (Get_Nth_Element (El_Tm_List, I));
+         --  Constrained can only be added.
          if Is_Fully_Constrained_Type (El_Type)
            and then not Is_Fully_Constrained_Type (El_Btype)
          then
@@ -1399,8 +1405,8 @@ package body Trans.Chap3 is
          end if;
       end loop;
 
-      --  By default, use the same representation as the base type.
-      Info.all := Base_Info.all;
+      --  By default, use the same representation as the parent type.
+      Info.all := Parent_Info.all;
       --  Info.S := Ortho_Info_Subtype_Record_Init;
       --  However, it is a different subtype which has its own rti.
       Info.Type_Rti := O_Dnode_Null;
