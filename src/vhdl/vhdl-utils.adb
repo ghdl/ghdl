@@ -1227,6 +1227,17 @@ package body Vhdl.Utils is
       end if;
    end Get_Denoted_Type_Mark;
 
+   function Get_Parent_Type (Subtyp : Iir) return Iir
+   is
+      Type_Mark_Name : constant Iir := Get_Subtype_Type_Mark (Subtyp);
+   begin
+      if Type_Mark_Name = Null_Iir then
+         return Get_Base_Type (Subtyp);
+      else
+         return Get_Type (Get_Named_Entity (Type_Mark_Name));
+      end if;
+   end Get_Parent_Type;
+
    function Get_Base_Element_Declaration (El : Iir) return Iir
    is
       Rec_Type : constant Iir := Get_Base_Type (Get_Parent (El));

@@ -861,10 +861,23 @@ package body Trans.Chap7 is
    function Convert_To_Constrained
      (Expr : Mnode; Expr_Type : Iir; Atype : Iir; Loc : Iir) return Mnode
    is
+      Parent_Type : Iir;
       Expr_Stable   : Mnode;
       Success_Label : O_Snode;
       Failure_Label : O_Snode;
    begin
+      --  If ATYPE is a parent type of EXPR_TYPE, then all the constrained
+      --  are inherited and there is nothing to check.
+      Parent_Type := Expr_Type;
+      loop
+         if Parent_Type = Atype then
+            return Expr;
+         end if;
+         exit when (Get_Kind (Parent_Type)
+                    not in Iir_Kinds_Composite_Subtype_Definition);
+         Parent_Type := Get_Parent_Type (Parent_Type);
+      end loop;
+
       Expr_Stable := Stabilize (Expr);
 
       Open_Temp;
@@ -4958,46 +4971,43 @@ package body Trans.Chap7 is
    function Translate_Equality (L, R : Mnode; Etype : Iir) return O_Enode
    is
       Tinfo : Type_Info_Acc;
+      Eq : Iir_Predefined_Functions;
    begin
       Tinfo := Get_Type_Info (L);
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar
-           | Type_Mode_Bounds_Acc
-           | Type_Mode_Acc =>
+            | Type_Mode_Bounds_Acc
+            | Type_Mode_Acc =>
+            --  Direct comparison.
             return New_Compare_Op (ON_Eq, M2E (L), M2E (R),
                                    Ghdl_Bool_Type);
 
          when Type_Mode_Arrays =>
-            declare
-               Base_Type : constant Iir_Array_Type_Definition
-                 := Get_Base_Type (Etype);
-               Lc, Rc    : O_Enode;
-               Func      : Iir;
-            begin
-               Func := Find_Predefined_Function
-                 (Base_Type, Iir_Predefined_Array_Equality);
-               Lc := Translate_Implicit_Conv
-                 (M2E (L), Etype, Base_Type, Mode_Value, Null_Iir);
-               Rc := Translate_Implicit_Conv
-                 (M2E (R), Etype, Base_Type, Mode_Value, Null_Iir);
-               return Translate_Predefined_Lib_Operator (Lc, Rc, Func);
-            end;
+            Eq := Iir_Predefined_Array_Equality;
 
          when Type_Mode_Records =>
-            declare
-               Func : Iir;
-            begin
-               Func := Find_Predefined_Function
-                 (Get_Base_Type (Etype), Iir_Predefined_Record_Equality);
-               return Translate_Predefined_Lib_Operator
-                 (M2E (L), M2E (R), Func);
-            end;
+            Eq := Iir_Predefined_Record_Equality;
 
          when Type_Mode_Unknown
-           | Type_Mode_File
-           | Type_Mode_Protected =>
+            | Type_Mode_File
+            | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
+
+      --  Common code for arrays and records: use the equality function
+      --  defined for the base type.
+      declare
+         Base_Type : constant Iir := Get_Base_Type (Etype);
+         Lc, Rc    : O_Enode;
+         Func      : Iir;
+      begin
+         Func := Find_Predefined_Function (Base_Type, Eq);
+         Lc := Translate_Implicit_Conv
+           (M2E (L), Etype, Base_Type, Mode_Value, Null_Iir);
+         Rc := Translate_Implicit_Conv
+           (M2E (R), Etype, Base_Type, Mode_Value, Null_Iir);
+         return Translate_Predefined_Lib_Operator (Lc, Rc, Func);
+      end;
    end Translate_Equality;
 
    procedure Translate_Predefined_Array_Equality_Spec (Subprg : Iir)
