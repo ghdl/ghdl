@@ -165,14 +165,17 @@ package body Grt.Rtis_Utils is
          when  Ghdl_Rtik_Subtype_Array
            | Ghdl_Rtik_Type_Record
            | Ghdl_Rtik_Subtype_Record =>
-            --  Object is a pointer.
+            --  If the type is complex then the location
+            --  contains a pointer to the instantiation data.
             if Rti_Complex_Type (Obj_Type) then
                Addr := To_Addr_Acc (Obj_Loc).all;
             end if;
          when Ghdl_Rtik_Type_Array
            | Ghdl_Rtik_Type_Unbounded_Record
            | Ghdl_Rtik_Subtype_Unbounded_Record =>
-            --  Object is a fat pointer.
+            --  If the type is unbounded then the location
+            --  for the object containts a pointer to the bounds
+            --  and a pointer to the data.
             Bounds := To_Ghdl_Uc_Array_Acc (Obj_Loc).Bounds;
             Addr := To_Ghdl_Uc_Array_Acc (Obj_Loc).Base;
          when others =>
