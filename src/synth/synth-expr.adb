@@ -1547,13 +1547,14 @@ package body Synth.Expr is
    function Extract_Clock_Level
      (Syn_Inst : Synth_Instance_Acc; Expr : Node; Prefix : Node) return Net
    is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Clk : Net;
-      Imp : Node;
+      Ctxt        : constant Context_Acc := Get_Build (Syn_Inst);
+      Clk         : Net;
+      Imp         : Node;
       Left, Right : Node;
-      Lit : Node;
-      Posedge : Boolean;
-      Res : Net;
+      Lit         : Valtyp;
+      Lit_Type    : Node;
+      Posedge     : Boolean;
+      Res         : Net;
    begin
       Clk := Get_Net (Ctxt, Synth_Name (Syn_Inst, Prefix));
       if Get_Kind (Expr) /= Iir_Kind_Equality_Operator then
@@ -1569,32 +1570,41 @@ package body Synth.Expr is
          Set_Location (Res, Expr);
          return Res;
       end if;
-      Left := Get_Left (Expr);
-      Right := Get_Right (Expr);
-      if Get_Kind (Right) /= Iir_Kind_Character_Literal then
-         Error_Msg_Synth
-           (+Expr, "ill-formed clock-level, '0' or '1' expected");
-         Res := Build_Posedge (Ctxt, Clk);
-         Set_Location (Res, Expr);
-         return Res;
-      end if;
 
-      Lit := Get_Named_Entity (Right);
-      if Lit = Vhdl.Std_Package.Bit_0
-        or else Lit = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_0
-      then
-         Posedge := False;
-      elsif Lit = Vhdl.Std_Package.Bit_1
-        or else Lit = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_1
-      then
-         Posedge := True;
-      else
-         Error_Msg_Synth
-           (+Lit, "ill-formed clock-level, '0' or '1' expected");
-         Posedge := True;
-      end if;
+      Left := Get_Left (Expr);
       if not Is_Same_Node (Prefix, Left) then
          Error_Msg_Synth (+Left, "clock signal name doesn't match");
+      end if;
+
+      Right := Get_Right (Expr);
+      Lit_Type := Get_Base_Type (Get_Type (Right));
+      Lit := Synth_Expression (Syn_Inst, Right);
+      if Lit.Val.Kind /= Value_Memory then
+         Error_Msg_Synth (+Right, "clock-level is not a constant");
+         Posedge := True;
+      else
+         if Lit_Type = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type then
+            case Read_U8 (Lit.Val.Mem) is
+               when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos =>
+                  Posedge := False;
+               when Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos =>
+                  Posedge := True;
+               when others =>
+                  Error_Msg_Synth
+                    (+Right, "clock-level must be either '0' or '1'");
+                  Posedge := True;
+            end case;
+         else
+            pragma Assert (Lit_Type = Vhdl.Std_Package.Bit_Type_Definition);
+            case Read_U8 (Lit.Val.Mem) is
+               when 0 =>
+                  Posedge := False;
+               when 1 =>
+                  Posedge := True;
+               when others =>
+                  raise Internal_Error;
+            end case;
+         end if;
       end if;
       if Posedge then
          Res := Build_Posedge (Ctxt, Clk);
