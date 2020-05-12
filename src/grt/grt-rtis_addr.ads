@@ -66,6 +66,12 @@ package Grt.Rtis_Addr is
      (Ctxt : Rti_Context; Gen : Ghdl_Rti_Access) return Rti_Context;
 
    --  Convert a location to an address.
+   --  `Depth` is the position in the design hierarchy of the object
+   --  we are finding the address of.
+   --  `Loc` is the location of that object, relative to the address
+   --  of it's parent.
+   --  `Context` is the RTI node and address of an object deeper in
+   --  the hierarchy that is referencing this object.
    function Loc_To_Addr (Depth : Ghdl_Rti_Depth;
                          Loc : Ghdl_Rti_Loc;
                          Ctxt : Rti_Context)
