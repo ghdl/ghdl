@@ -1158,7 +1158,20 @@ package body Vhdl.Configuration is
             end loop;
          end;
       else
-         Append_String8_String (Value.all);
+         declare
+            Eid : Name_Id;
+            Elit : Iir;
+         begin
+            for I in Value'Range loop
+               Eid := Get_Identifier (Value (I));
+               Elit := Find_Name_In_Flist (Elist, Eid);
+               if Elit = Null_Iir then
+                  Error_Msg_Elab ("incorrect character %i in string", +Eid);
+                  Elit := Get_Nth_Element (Elist, 0);
+               end if;
+               Append_String8 (Nat8 (Get_Enum_Pos (Elit)));
+            end loop;
+         end;
          Len := Value'Length;
       end if;
       Res := Create_Iir (Iir_Kind_String_Literal8);
@@ -1201,6 +1214,7 @@ package body Vhdl.Configuration is
       end case;
       if Res = Null_Iir then
          Error_Msg_Elab ("unhandled override for %n", +Gen);
+         return;
       end if;
 
       if Get_Is_Ref (Gen) then
