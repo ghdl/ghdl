@@ -66,6 +66,9 @@ jobs:
       shell: msys2 {0}
       run: |
         ./dist/msys2-mingw/run.sh -b
+    - uses: actions/upload-artifact@v2
+      with:
+	path: mingw-w64-*-any.pkg.tar.zst
     - name: Test package
       shell: msys2 {0}
       run: |
