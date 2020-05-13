@@ -621,60 +621,76 @@ package body Synth.Objtypes is
       return Read_U8 (Mt.Mem);
    end Read_U8;
 
-   type Ghdl_I32_Ptr is access all Ghdl_I32;
-   function To_I32_Ptr is
-      new Ada.Unchecked_Conversion (Address, Ghdl_I32_Ptr);
-
-   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32) is
+   procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32)
+   is
+      V : Ghdl_I32;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
    begin
-      To_I32_Ptr (To_Address (Mem)).all := Val;
+      V := Val;
    end Write_I32;
 
-   function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32 is
+   function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32
+   is
+      V : Ghdl_I32;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
    begin
-      return To_I32_Ptr (To_Address (Mem)).all;
+      return V;
    end Read_I32;
 
-   type Ghdl_U32_Ptr is access all Ghdl_U32;
-   function To_U32_Ptr is
-      new Ada.Unchecked_Conversion (Address, Ghdl_U32_Ptr);
-
-   procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32) is
+   procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32)
+   is
+      V : Ghdl_U32;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
    begin
-      To_U32_Ptr (To_Address (Mem)).all := Val;
+      V := Val;
    end Write_U32;
 
-   function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32 is
+   function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32
+   is
+      V : Ghdl_U32;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
    begin
-      return To_U32_Ptr (To_Address (Mem)).all;
+      return V;
    end Read_U32;
 
-   type Ghdl_I64_Ptr is access all Ghdl_I64;
-   function To_I64_Ptr is
-      new Ada.Unchecked_Conversion (Address, Ghdl_I64_Ptr);
-
-   procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64) is
+   procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64)
+   is
+      V : Ghdl_I64;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
    begin
-      To_I64_Ptr (To_Address (Mem)).all := Val;
+      V := Val;
    end Write_I64;
 
-   function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64 is
+   function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64
+   is
+      V : Ghdl_I64;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
    begin
-      return To_I64_Ptr (To_Address (Mem)).all;
+      return V;
    end Read_I64;
 
-   type Fp64_Ptr is access all Fp64;
-   function To_Fp64_Ptr is
-      new Ada.Unchecked_Conversion (Address, Fp64_Ptr);
-
-   procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64) is
+   procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64)
+   is
+      V : Fp64;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
    begin
-      To_Fp64_Ptr (To_Address (Mem)).all := Val;
+      V := Val;
    end Write_Fp64;
 
-   function Read_Fp64 (Mem : Memory_Ptr) return Fp64 is
+   function Read_Fp64 (Mem : Memory_Ptr) return Fp64
+   is
+      V : Fp64;
+      for V'Address use To_Address (Mem);
+      pragma Import (Ada, V);
    begin
-      return To_Fp64_Ptr (To_Address (Mem)).all;
+      return V;
    end Read_Fp64;
 
    function Read_Fp64 (Mt : Memtyp) return Fp64 is
