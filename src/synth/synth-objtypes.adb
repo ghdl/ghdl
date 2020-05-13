@@ -19,7 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Ada.Unchecked_Conversion;
-with System;
+with System; use System;
 with System.Storage_Elements;
 
 with Mutils; use Mutils;
@@ -261,7 +261,6 @@ package body Synth.Objtypes is
 
    function Create_Bound_Array (Ndims : Dim_Type) return Bound_Array_Acc
    is
-      use System;
       subtype Data_Type is Bound_Array (Ndims);
       Res : Address;
    begin
@@ -386,7 +385,6 @@ package body Synth.Objtypes is
 
    function Create_Rec_El_Array (Nels : Iir_Index32) return Rec_El_Array_Acc
    is
-      use System;
       subtype Data_Type is Rec_El_Array (Nels);
       Res : Address;
    begin
@@ -596,18 +594,24 @@ package body Synth.Objtypes is
       end case;
    end Is_Matching_Bounds;
 
+   --  For conversions use Address to avoidcompiler warnings about alignment.
+   function To_Address is new Ada.Unchecked_Conversion
+     (Memory_Ptr, Address);
+   function To_Memory_Ptr is new Ada.Unchecked_Conversion
+     (Address, Memory_Ptr);
+
    type Ghdl_U8_Ptr is access all Ghdl_U8;
    function To_U8_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_U8_Ptr);
+      new Ada.Unchecked_Conversion (Address, Ghdl_U8_Ptr);
 
    procedure Write_U8 (Mem : Memory_Ptr; Val : Ghdl_U8) is
    begin
-      To_U8_Ptr (Mem).all := Val;
+      To_U8_Ptr (To_Address (Mem)).all := Val;
    end Write_U8;
 
    function Read_U8 (Mem : Memory_Ptr) return Ghdl_U8 is
    begin
-      return To_U8_Ptr (Mem).all;
+      return To_U8_Ptr (To_Address (Mem)).all;
    end Read_U8;
 
    function Read_U8 (Mt : Memtyp) return Ghdl_U8
@@ -619,69 +623,64 @@ package body Synth.Objtypes is
 
    type Ghdl_I32_Ptr is access all Ghdl_I32;
    function To_I32_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_I32_Ptr);
+      new Ada.Unchecked_Conversion (Address, Ghdl_I32_Ptr);
 
    procedure Write_I32 (Mem : Memory_Ptr; Val : Ghdl_I32) is
    begin
-      To_I32_Ptr (Mem).all := Val;
+      To_I32_Ptr (To_Address (Mem)).all := Val;
    end Write_I32;
 
    function Read_I32 (Mem : Memory_Ptr) return Ghdl_I32 is
    begin
-      return To_I32_Ptr (Mem).all;
+      return To_I32_Ptr (To_Address (Mem)).all;
    end Read_I32;
 
    type Ghdl_U32_Ptr is access all Ghdl_U32;
    function To_U32_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_U32_Ptr);
+      new Ada.Unchecked_Conversion (Address, Ghdl_U32_Ptr);
 
    procedure Write_U32 (Mem : Memory_Ptr; Val : Ghdl_U32) is
    begin
-      To_U32_Ptr (Mem).all := Val;
+      To_U32_Ptr (To_Address (Mem)).all := Val;
    end Write_U32;
 
    function Read_U32 (Mem : Memory_Ptr) return Ghdl_U32 is
    begin
-      return To_U32_Ptr (Mem).all;
+      return To_U32_Ptr (To_Address (Mem)).all;
    end Read_U32;
 
    type Ghdl_I64_Ptr is access all Ghdl_I64;
    function To_I64_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Ghdl_I64_Ptr);
+      new Ada.Unchecked_Conversion (Address, Ghdl_I64_Ptr);
 
    procedure Write_I64 (Mem : Memory_Ptr; Val : Ghdl_I64) is
    begin
-      To_I64_Ptr (Mem).all := Val;
+      To_I64_Ptr (To_Address (Mem)).all := Val;
    end Write_I64;
 
    function Read_I64 (Mem : Memory_Ptr) return Ghdl_I64 is
    begin
-      return To_I64_Ptr (Mem).all;
+      return To_I64_Ptr (To_Address (Mem)).all;
    end Read_I64;
 
    type Fp64_Ptr is access all Fp64;
    function To_Fp64_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Fp64_Ptr);
+      new Ada.Unchecked_Conversion (Address, Fp64_Ptr);
 
    procedure Write_Fp64 (Mem : Memory_Ptr; Val : Fp64) is
    begin
-      To_Fp64_Ptr (Mem).all := Val;
+      To_Fp64_Ptr (To_Address (Mem)).all := Val;
    end Write_Fp64;
 
    function Read_Fp64 (Mem : Memory_Ptr) return Fp64 is
    begin
-      return To_Fp64_Ptr (Mem).all;
+      return To_Fp64_Ptr (To_Address (Mem)).all;
    end Read_Fp64;
 
    function Read_Fp64 (Mt : Memtyp) return Fp64 is
    begin
       return Read_Fp64 (Mt.Mem);
    end Read_Fp64;
-
-   function To_Address is new Ada.Unchecked_Conversion
-     (Memory_Ptr, System.Address);
-   function To_Memory_Ptr is new Ada.Unchecked_Conversion
-     (System.Address, Memory_Ptr);
 
    function "+" (Base : Memory_Ptr; Off : Size_Type) return Memory_Ptr
    is
