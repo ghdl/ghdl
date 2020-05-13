@@ -5002,6 +5002,9 @@ package body Trans.Chap7 is
          Func      : Iir;
       begin
          Func := Find_Predefined_Function (Base_Type, Eq);
+         --  Note: no location is passed as the conversion goes to the base
+         --  type (which is always OK).
+         --  If the location is used, compilation will fail.
          Lc := Translate_Implicit_Conv
            (M2E (L), Etype, Base_Type, Mode_Value, Null_Iir);
          Rc := Translate_Implicit_Conv
