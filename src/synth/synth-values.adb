@@ -297,18 +297,22 @@ package body Synth.Values is
       return Res;
    end Unshare;
 
-   type Heap_Index_Ptr is access all Heap_Index;
-   function To_Heap_Index_Ptr is
-      new Ada.Unchecked_Conversion (Memory_Ptr, Heap_Index_Ptr);
-
-   procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index) is
+   procedure Write_Access (Mem : Memory_Ptr; Val : Heap_Index)
+   is
+      V : Heap_Index;
+      for V'Address use Mem.all'Address;
+      pragma Import (Ada, V);
    begin
-      To_Heap_Index_Ptr (Mem).all := Val;
+      V := Val;
    end Write_Access;
 
-   function Read_Access (Mem : Memory_Ptr) return Heap_Index is
+   function Read_Access (Mem : Memory_Ptr) return Heap_Index
+   is
+      V : Heap_Index;
+      for V'Address use Mem.all'Address;
+      pragma Import (Ada, V);
    begin
-      return To_Heap_Index_Ptr (Mem).all;
+      return V;
    end Read_Access;
 
    function Read_Access (Mt : Memtyp) return Heap_Index is
