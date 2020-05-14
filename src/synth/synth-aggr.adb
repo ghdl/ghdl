@@ -438,6 +438,7 @@ package body Synth.Aggr is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Tab_Res : Valtyp_Array_Acc;
+      Res_Typ : Type_Acc;
       Res : Valtyp;
       Err_P : Boolean;
       Const_P : Boolean;
@@ -451,15 +452,32 @@ package body Synth.Aggr is
 
       if Err_P then
          Res := No_Valtyp;
-      elsif Const_P then
-         Res := Create_Value_Memory (Aggr_Type);
-         for I in Aggr_Type.Rec.E'Range loop
-            Write_Value (Res.Val.Mem + Aggr_Type.Rec.E (I).Moff,
-                         Tab_Res (Tab_Res'Last - Nat32 (I) + 1));
-         end loop;
       else
-         Res := Create_Value_Net
-           (Valtyp_Array_To_Net (Ctxt, Tab_Res.all), Aggr_Type);
+         case Type_Records (Aggr_Type.Kind) is
+            when Type_Unbounded_Record =>
+               declare
+                  Els_Typ : Rec_El_Array_Acc;
+               begin
+                  Els_Typ := Create_Rec_El_Array (Aggr_Type.Rec.Len);
+                  for I in Els_Typ.E'Range loop
+                     Els_Typ.E (I).Typ := Tab_Res (Nat32 (I)).Typ;
+                  end loop;
+                  Res_Typ := Create_Record_Type (Els_Typ);
+               end;
+            when Type_Record =>
+               Res_Typ := Aggr_Type;
+         end case;
+
+         if Const_P then
+            Res := Create_Value_Memory (Res_Typ);
+            for I in Aggr_Type.Rec.E'Range loop
+               Write_Value (Res.Val.Mem + Aggr_Type.Rec.E (I).Moff,
+                            Tab_Res (Tab_Res'Last - Nat32 (I) + 1));
+            end loop;
+         else
+            Res := Create_Value_Net
+              (Valtyp_Array_To_Net (Ctxt, Tab_Res.all), Res_Typ);
+         end if;
       end if;
 
       Free_Valtyp_Array (Tab_Res);
