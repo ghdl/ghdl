@@ -66,10 +66,10 @@ jobs:
       shell: msys2 {0}
       run: |
         ./dist/msys2-mingw/run.sh -b
-    - uses: actions/upload-artifact@v2
-      with:
-         name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-pkg
-         path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.z
+#    - uses: actions/upload-artifact@v2
+#      with:
+#         name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-pkg
+#         path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
     - name: Test package
       shell: msys2 {0}
       run: |
