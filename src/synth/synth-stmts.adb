@@ -22,6 +22,7 @@ with Ada.Unchecked_Deallocation;
 
 with Grt.Types; use Grt.Types;
 with Grt.Algos;
+with Grt.Severity; use Grt.Severity;
 with Areapools;
 with Name_Table;
 with Std_Names;
@@ -2630,7 +2631,7 @@ package body Synth.Stmts is
       C.Nbr_Ret := C.Nbr_Ret + 1;
    end Synth_Return_Statement;
 
-   procedure Synth_Static_Report (C : Seq_Context; Stmt : Node)
+   procedure Synth_Static_Report (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
       use Simple_IO;
 
@@ -2643,17 +2644,17 @@ package body Synth.Stmts is
       Sev_V : Natural;
    begin
       if Rep_Expr /= Null_Node then
-         Rep := Synth_Expression_With_Basetype (C.Inst, Rep_Expr);
+         Rep := Synth_Expression_With_Basetype (Syn_Inst, Rep_Expr);
          if Rep = No_Valtyp then
-            Set_Error (C.Inst);
+            Set_Error (Syn_Inst);
             return;
          end if;
          Strip_Const (Rep);
       end if;
       if Sev_Expr /= Null_Node then
-         Sev := Synth_Expression (C.Inst, Sev_Expr);
+         Sev := Synth_Expression (Syn_Inst, Sev_Expr);
          if Sev = No_Valtyp then
-            Set_Error (C.Inst);
+            Set_Error (Syn_Inst);
             return;
          end if;
          Strip_Const (Sev);
@@ -2677,25 +2678,33 @@ package body Synth.Stmts is
          Sev_V := Natural (Read_Discrete (Sev));
       end if;
       case Sev_V is
-         when 0 =>
+         when Note_Severity =>
             Put_Err ("note");
-         when 1 =>
+         when Warning_Severity =>
             Put_Err ("warning");
-         when 2 =>
+         when Error_Severity =>
             Put_Err ("error");
-         when 3 =>
+         when Failure_Severity =>
             Put_Err ("failure");
          when others =>
             Put_Err ("??");
       end case;
       Put_Err ("): ");
 
-      Put_Line_Err (Value_To_String (Rep));
+      if Rep = No_Valtyp then
+         Put_Line_Err ("assertion failure");
+      else
+         Put_Line_Err (Value_To_String (Rep));
+      end if;
+
+      if Sev_V >= Flags.Severity_Level then
+         Error_Msg_Synth (+Stmt, "error due to assertion failure");
+      end if;
    end Synth_Static_Report;
 
    procedure Synth_Static_Report_Statement (C : Seq_Context; Stmt : Node) is
    begin
-      Synth_Static_Report (C, Stmt);
+      Synth_Static_Report (C.Inst, Stmt);
    end Synth_Static_Report_Statement;
 
    procedure Synth_Static_Assertion_Statement (C : Seq_Context; Stmt : Node)
@@ -2712,7 +2721,7 @@ package body Synth.Stmts is
       if Read_Discrete (Cond) = 1 then
          return;
       end if;
-      Synth_Static_Report (C, Stmt);
+      Synth_Static_Report (C.Inst, Stmt);
    end Synth_Static_Assertion_Statement;
 
    procedure Synth_Dynamic_Assertion_Statement (C : Seq_Context; Stmt : Node)
@@ -2969,26 +2978,6 @@ package body Synth.Stmts is
       return Synth_Subprogram_Call (Syn_Inst, Expr);
    end Synth_User_Function_Call;
 
-   --  Report an assertion failure (that is known to failed).
-   procedure Synth_Failed_Assertion
-     (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
-   is
-      Msg : constant Node := Get_Report_Expression (Stmt);
-      Str : Valtyp;
-   begin
-      if Msg /= Null_Node then
-         Str := Synth_Expression_With_Basetype (Syn_Inst, Msg);
-      else
-         Str := No_Valtyp;
-      end if;
-      if Str /= No_Valtyp and then Is_Static (Str.Val) then
-         Error_Msg_Synth
-           (+Stmt, "assertion failure: " & Value_To_String (Str));
-      else
-         Error_Msg_Synth (+Stmt, "assertion failure");
-      end if;
-   end Synth_Failed_Assertion;
-
    procedure Synth_Concurrent_Assertion_Statement
      (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
    is
@@ -3004,7 +2993,7 @@ package body Synth.Stmts is
       end if;
       if Is_Static (Val.Val) then
          if Read_Discrete (Val) /= 1 then
-            Synth_Failed_Assertion (Syn_Inst, Stmt);
+            Synth_Static_Report (Syn_Inst, Stmt);
          end if;
          return;
       end if;

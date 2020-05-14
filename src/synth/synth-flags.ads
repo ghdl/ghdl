@@ -18,6 +18,8 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Grt.Severity;
+
 package Synth.Flags is
    --  Control name generation.  The same entity can be synthesized in very
    --  different designs because of the generics.  We need to give unique names
@@ -60,6 +62,9 @@ package Synth.Flags is
 
    --  Maximum number of iterations for (while)/loop.  0 means unlimited.
    Flag_Max_Loop : Natural := 1000;
+
+   --  Level at which an assert stop the simulation.
+   Severity_Level : Integer := Grt.Severity.Failure_Severity;
 
    Flag_Verbose : Boolean := False;
 end Synth.Flags;
