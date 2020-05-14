@@ -26,6 +26,7 @@
 with Interfaces;
 with Grt.Errors; use Grt.Errors;
 with Grt.Errors_Exec; use Grt.Errors_Exec;
+with Grt.Severity;
 with Grt.Options;
 with Grt.Fcvt;
 
@@ -49,6 +50,7 @@ package body Grt.Lib is
                         Severity : Integer;
                         Loc : Ghdl_Location_Ptr)
    is
+      use Grt.Severity;
       Level : constant Integer := Severity mod 256;
       Bt : Backtrace_Addrs;
    begin
@@ -120,7 +122,7 @@ package body Grt.Lib is
    procedure Ghdl_Psl_Assume_Failed (Loc : Ghdl_Location_Ptr) is
    begin
       Do_Report ("psl assumption", null, "Assumption violation",
-                 Error_Severity, Loc);
+                 Grt.Severity.Error_Severity, Loc);
    end Ghdl_Psl_Assume_Failed;
 
    procedure Ghdl_Psl_Cover

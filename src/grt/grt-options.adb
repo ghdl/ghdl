@@ -25,6 +25,7 @@
 with Interfaces; use Interfaces;
 with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
+with Grt.Severity; use Grt.Severity;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio;
 with Grt.Hooks;

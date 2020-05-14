@@ -25,6 +25,7 @@
 
 with Grt.Lib;
 with Grt.Errors; use Grt.Errors;
+with Grt.Severity; use Grt.Severity;
 
 package body Grt.Std_Logic_1164 is
    Assert_DC_Msg : constant String :=

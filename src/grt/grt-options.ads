@@ -23,7 +23,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Grt.Types; use Grt.Types;
-with Grt.Errors;
+with Grt.Severity;
 
 package Grt.Options is
    pragma Preelaborate (Grt.Options);
@@ -120,7 +120,7 @@ package Grt.Options is
    Checks : Boolean := False;
 
    --  Level at which an assert stop the simulation.
-   Severity_Level : Integer := Grt.Errors.Failure_Severity;
+   Severity_Level : Integer := Grt.Severity.Failure_Severity;
 
    --  How assertions are handled.
    type Assert_Handling is

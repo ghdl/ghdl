@@ -123,11 +123,6 @@ package Grt.Errors is
    --  If true, an error is expected and the exit status is inverted.
    Expect_Failure : Boolean := False;
 
-   Note_Severity    : constant Integer := 0;
-   Warning_Severity : constant Integer := 1;
-   Error_Severity   : constant Integer := 2;
-   Failure_Severity : constant Integer := 3;
-
    --  Internal subprograms, to be called only by the symbolizer.
    procedure Put_Err (C : Character) renames Diag_C;
    procedure Put_Err (Str : String) renames Diag_C;
