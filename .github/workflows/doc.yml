@@ -1,5 +1,9 @@
 name: 'doc'
-on: [push, pull_request]
+
+on:
+  push:
+  pull_request:
+
 jobs:
   linux:
     runs-on: ubuntu-latest
