@@ -417,7 +417,7 @@ package body Synth.Oper is
       begin
          pragma Assert (Left_Type = Right_Type);
          pragma Assert (Res_Type = Expr_Typ);
-         N := Build_Compare
+         N := Build2_Compare
            (Ctxt, Id, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
@@ -430,7 +430,7 @@ package body Synth.Oper is
          Sel, N : Net;
       begin
          pragma Assert (Left_Type = Right_Type);
-         Sel := Build_Compare (Ctxt, Id, L, R);
+         Sel := Build2_Compare (Ctxt, Id, L, R);
          Set_Location (Sel, Expr);
          N := Build_Mux2 (Ctxt, Sel, R, L);
          Set_Location (N, Expr);
@@ -446,7 +446,7 @@ package body Synth.Oper is
             Warning_Msg_Synth
               (+Expr, "comparing non-numeric vector is unexpected");
             if Left.Typ.W = Right.Typ.W then
-               N := Build_Compare
+               N := Build2_Compare
                  (Ctxt, Id, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
                Set_Location (N, Expr);
                return Create_Value_Net (N, Res_Type);
@@ -468,7 +468,7 @@ package body Synth.Oper is
          N : Net;
       begin
          N := Synth_Uresize (Ctxt, Right, Left.Typ.W, Expr);
-         N := Build_Compare (Ctxt, Id, Get_Net (Ctxt, Left), N);
+         N := Build2_Compare (Ctxt, Id, Get_Net (Ctxt, Left), N);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare_Uns_Nat;
@@ -479,7 +479,7 @@ package body Synth.Oper is
          N : Net;
       begin
          N := Synth_Uresize (Ctxt, Left, Right.Typ.W, Expr);
-         N := Build_Compare (Ctxt, Id, Get_Net (Ctxt, Right), N);
+         N := Build2_Compare (Ctxt, Id, Get_Net (Ctxt, Right), N);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare_Nat_Uns;
@@ -490,7 +490,7 @@ package body Synth.Oper is
          N : Net;
       begin
          N := Synth_Sresize (Ctxt, Right, Left.Typ.W, Expr);
-         N := Build_Compare (Ctxt, Id, Get_Net (Ctxt, Left), N);
+         N := Build2_Compare (Ctxt, Id, Get_Net (Ctxt, Left), N);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Sgn_Int;
@@ -501,7 +501,7 @@ package body Synth.Oper is
          N : Net;
       begin
          N := Synth_Sresize (Ctxt, Left, Right.Typ.W, Expr);
-         N := Build_Compare (Ctxt, Id, N, Get_Net (Ctxt, Right));
+         N := Build2_Compare (Ctxt, Id, N, Get_Net (Ctxt, Right));
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Int_Sgn;
@@ -540,7 +540,7 @@ package body Synth.Oper is
       begin
          L1 := Synth_Uresize (Ctxt, Left, W, Expr);
          R1 := Synth_Uresize (Ctxt, Right, W, Expr);
-         N := Build_Compare (Ctxt, Id, L1, R1);
+         N := Build2_Compare (Ctxt, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Type);
       end Synth_Compare_Uns_Uns;
@@ -554,7 +554,7 @@ package body Synth.Oper is
       begin
          L1 := Synth_Sresize (Ctxt, Left, W, Expr);
          R1 := Synth_Sresize (Ctxt, Right, W, Expr);
-         N := Build_Compare (Ctxt, Id, L1, R1);
+         N := Build2_Compare (Ctxt, Id, L1, R1);
          Set_Location (N, Expr);
          return Create_Value_Net (N, Res_Typ);
       end Synth_Compare_Sgn_Sgn;

@@ -20,7 +20,6 @@
 
 with Types_Utils; use Types_Utils;
 
-with Netlists.Gates; use Netlists.Gates;
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Locations; use Netlists.Locations;
 
@@ -296,4 +295,32 @@ package body Netlists.Folds is
       Set_Location (N, Loc);
       return N;
    end Build2_And;
+
+   function Build2_Compare (Ctxt : Context_Acc;
+                            Id   : Compare_Module_Id;
+                            L, R : Net) return Net
+   is
+      W : constant Width := Get_Width (L);
+   begin
+      if W > 0 then
+         --  A real gate.
+         return Build_Compare (Ctxt, Id, L, R);
+      end if;
+
+      pragma Assert (Get_Width (R) = 0);
+      case Id is
+         when Id_Eq
+            | Id_Sle
+            | Id_Ule
+            | Id_Sge
+            | Id_Uge =>
+            return Build_Const_UB32 (Ctxt, 1, 1);
+         when Id_Ne
+            | Id_Slt
+            | Id_Ult
+            | Id_Sgt
+            | Id_Ugt =>
+            return Build_Const_UB32 (Ctxt, 0, 1);
+      end case;
+   end Build2_Compare;
 end Netlists.Folds;

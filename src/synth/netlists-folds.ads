@@ -18,6 +18,7 @@
 --  Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 --  MA 02110-1301, USA.
 
+with Netlists.Gates; use Netlists.Gates;
 with Netlists.Builders; use Netlists.Builders;
 
 package Netlists.Folds is
@@ -78,5 +79,11 @@ package Netlists.Folds is
    --  If A is No_Net, simply return B so that it is possible to easily build
    --  chain of conditions.
    function Build2_And (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
-                       return Net;
+                        return Net;
+
+   --  Like Build_Compare but handle net of width 0.
+   function Build2_Compare (Ctxt : Context_Acc;
+                            Id   : Compare_Module_Id;
+                            L, R : Net) return Net;
+
 end Netlists.Folds;
