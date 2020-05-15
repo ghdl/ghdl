@@ -16,4 +16,6 @@ begin
     assert (signed'("0111") >= signed'("1111"));
     assert (signed'("1111") <  signed'("0111"));
     assert (signed'("1111") <= signed'("0111"));
+
+    assert signed'("1111") = -1;
 end architecture beh;
