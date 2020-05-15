@@ -1361,14 +1361,15 @@ package body Synth.Insts is
                                  Idx : Port_Idx;
                                  Val : Valtyp)
    is
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Default : constant Node := Get_Default_Value (Inter);
-      Desc : constant Port_Desc :=
+      Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
+      Default   : constant Node := Get_Default_Value (Inter);
+      Desc      : constant Port_Desc :=
         Get_Output_Desc (Get_Module (Self_Inst), Idx);
       Inter_Typ : Type_Acc;
-      Value : Net;
-      Init : Valtyp;
-      Inp : Input;
+      Value     : Net;
+      Init      : Valtyp;
+      Init_Net  : Net;
+      Inp       : Input;
    begin
       pragma Assert (Val.Val.Kind = Value_Wire);
 
@@ -1378,27 +1379,34 @@ package body Synth.Insts is
 
       Inp := Get_Input (Self_Inst, Idx);
 
+      if Default /= Null_Node then
+         Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
+         Init := Synth_Expression_With_Type (Syn_Inst, Default, Inter_Typ);
+         Init := Synth_Subtype_Conversion
+           (Ctxt, Init, Inter_Typ, False, Inter);
+         Init_Net := Get_Net (Ctxt, Init);
+      else
+         Init_Net := No_Net;
+      end if;
+
       if Desc.Is_Inout then
-         if Default /= Null_Node then
-            --  TODO: initialized inout.
-            raise Internal_Error;
-         end if;
          declare
             Io_Inst : Instance;
          begin
-            Io_Inst := Builders.Build_Inout (Ctxt, Desc.W);
+            if Init_Net /= No_Net then
+               Io_Inst := Builders.Build_Iinout (Ctxt, Desc.W);
+               Connect (Get_Input (Io_Inst, 1), Init_Net);
+            else
+               Io_Inst := Builders.Build_Inout (Ctxt, Desc.W);
+            end if;
             --  Connect port1 of gate inout to the pin.
             Connect (Inp, Get_Output (Io_Inst, 1));
             --  And port0 of the gate will be use to read from the pin.
             Value := Get_Output (Io_Inst, 0);
          end;
       else
-         if Default /= Null_Node then
-            Inter_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Inter));
-            Init := Synth_Expression_With_Type (Syn_Inst, Default, Inter_Typ);
-            Init := Synth_Subtype_Conversion
-              (Ctxt, Init, Inter_Typ, False, Inter);
-            Value := Builders.Build_Ioutput (Ctxt, Get_Net (Ctxt, Init));
+         if Init_Net /= No_Net then
+            Value := Builders.Build_Ioutput (Ctxt, Init_Net);
          else
             Value := Builders.Build_Output (Ctxt, Desc.W);
          end if;

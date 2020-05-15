@@ -162,6 +162,7 @@ package Netlists.Builders is
    function Build_Output (Ctxt : Context_Acc; W : Width) return Net;
    function Build_Ioutput (Ctxt : Context_Acc; Init : Net) return Net;
    function Build_Inout (Ctxt : Context_Acc; W : Width) return Instance;
+   function Build_Iinout (Ctxt : Context_Acc; W : Width) return Instance;
    function Build_Signal (Ctxt : Context_Acc; Name : Sname; W : Width)
                          return Net;
    function Build_Isignal (Ctxt : Context_Acc; Name : Sname; Init : Net)
@@ -246,6 +247,7 @@ private
       M_Isignal : Module;
       M_Port : Module;
       M_Inout : Module;
+      M_Iinout : Module;
       M_Enable : Module;
       M_Dff : Module;
       M_Idff : Module;

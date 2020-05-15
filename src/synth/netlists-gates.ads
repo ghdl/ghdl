@@ -120,11 +120,11 @@ package Netlists.Gates is
    --  by a gate (and thus the value of the output could be read), but that
    --  driving value may not be available early enough.
    --  Id_Ioutput is an output with an initial value.
-   Id_Signal  : constant Module_Id := 56;
-   Id_Isignal : constant Module_Id := 57;
-   Id_Output  : constant Module_Id := 58;
-   Id_Ioutput : constant Module_Id := 59;
-   Id_Port    : constant Module_Id := 60;
+   Id_Signal  : constant Module_Id := 52;
+   Id_Isignal : constant Module_Id := 53;
+   Id_Output  : constant Module_Id := 54;
+   Id_Ioutput : constant Module_Id := 55;
+   Id_Port    : constant Module_Id := 56;
 
    --  Id_Inout is a virtual gate used to fit inout direction into the netlist
    --  model which has only inputs and outputs.
@@ -137,13 +137,16 @@ package Netlists.Gates is
    --  Inputs:  0: value to be assigned to the port
    --  Outputs: 0: value of the port
    --           1: direct and only connection to the port
-   Id_Inout   : constant Module_Id := 61;
+   Id_Inout   : constant Module_Id := 57;
+
+   --  Like Id_Inout but with an initial value.
+   Id_Iinout  : constant Module_Id := 58;
 
    --  Behaves like Id_Signal but for enable wires.
-   Id_Enable  : constant Module_Id := 62;
+   Id_Enable  : constant Module_Id := 59;
 
    --  Temporary gate, O = I
-   Id_Nop : constant Module_Id := 63;
+   Id_Nop : constant Module_Id := 60;
 
    --  Note: initial values must be constant nets.
    --
@@ -340,6 +343,7 @@ package Netlists.Gates is
    Id_Const_X : constant Module_Id := 117;
    Id_Const_Z : constant Module_Id := 118;
    Id_Const_0 : constant Module_Id := 119;
+   Id_Const_1 : constant Module_Id := 120;
 
    --  Should we keep them ?
    pragma Unreferenced (Id_Const_UB64, Id_Const_UL64);
@@ -348,8 +352,8 @@ package Netlists.Gates is
    --  For Const_Bit: param N is for bits 32*N .. 32*N+31
    --  For Const_Log: param 2*N   is for 0/1 of bits 32*N .. 32*N+31
    --                 param 2*N+1 is for Z/X of bits 32*N .. 32*N+31
-   Id_Const_Bit : constant Module_Id := 120;
-   Id_Const_Log : constant Module_Id := 121;
+   Id_Const_Bit : constant Module_Id := 121;
+   Id_Const_Log : constant Module_Id := 122;
 
    subtype Constant_Module_Id is Module_Id range Id_Const_UB32 .. Id_Const_Log;
 
