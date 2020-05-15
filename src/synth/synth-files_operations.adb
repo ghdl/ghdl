@@ -26,8 +26,6 @@ with Grt.Types; use Grt.Types;
 with Grt.Files_Operations; use Grt.Files_Operations;
 with Grt.Stdio;
 
-with Vhdl.Annotations;
-
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Expr; use Synth.Expr;
 with Synth.Errors; use Synth.Errors;
@@ -193,14 +191,14 @@ package body Synth.Files_Operations is
          F := Ghdl_Text_File_Elaborate;
       else
          declare
-            Sig : constant String_Acc :=
-              Vhdl.Annotations.Get_Info (File_Type).File_Signature;
+            File_Typ : Type_Acc;
             Cstr : Ghdl_C_String;
          begin
-            if Sig = null then
+            File_Typ := Get_Subtype_Object (Syn_Inst, File_Type);
+            if File_Typ.File_Signature = null then
                Cstr := null;
             else
-               Cstr := To_Ghdl_C_String (Sig.all'Address);
+               Cstr := To_Ghdl_C_String (File_Typ.File_Signature.all'Address);
             end if;
             F := Ghdl_File_Elaborate (Cstr);
          end;
@@ -360,5 +358,60 @@ package body Synth.Files_Operations is
 
       Write_Discrete (Param_Len, Int64 (Len));
    end Synth_Untruncated_Text_Read;
+
+   procedure File_Read_Value (File : File_Index; Val : Memtyp; Loc : Node)
+   is
+      Status : Op_Status;
+   begin
+      case Val.Typ.Kind is
+         when Type_Discrete
+            | Type_Bit
+            | Type_Logic
+            | Type_Float =>
+            Ghdl_Read_Scalar (File, Ghdl_Ptr (Val.Mem.all'Address),
+                              Ghdl_Index_Type (Val.Typ.Sz), Status);
+            if Status /= Op_Ok then
+               File_Error (Loc, Status);
+            end if;
+         when Type_Vector
+            | Type_Array =>
+            declare
+               El_Typ : constant Type_Acc := Get_Array_Element (Val.Typ);
+               Off    : Size_Type;
+            begin
+               Off := 0;
+               for I in 1 .. Get_Array_Flat_Length (Val.Typ) loop
+                  File_Read_Value (File, (El_Typ, Val.Mem + Off), Loc);
+                  Off := Off + El_Typ.Sz;
+               end loop;
+            end;
+         when Type_Record =>
+            for I in Val.Typ.Rec.E'Range loop
+               File_Read_Value
+                 (File,
+                  (Val.Typ.Rec.E (I).Typ, Val.Mem + Val.Typ.Rec.E (I).Moff),
+                  Loc);
+            end loop;
+         when Type_Unbounded_Record
+            | Type_Unbounded_Array
+            | Type_Unbounded_Vector
+            | Type_Protected
+            | Type_Slice
+            | Type_File
+            | Type_Access =>
+            raise Internal_Error;
+      end case;
+   end File_Read_Value;
+
+   procedure Synth_File_Read
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node)
+   is
+      Inters : constant Node := Get_Interface_Declaration_Chain (Imp);
+      File : constant File_Index := Get_Value (Syn_Inst, Inters).Val.File;
+      Param2 : constant Node := Get_Chain (Inters);
+      Value : constant Valtyp := Get_Value (Syn_Inst, Param2);
+   begin
+      File_Read_Value (File, (Value.Typ, Value.Val.Mem), Loc);
+   end Synth_File_Read;
 
 end Synth.Files_Operations;

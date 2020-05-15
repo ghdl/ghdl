@@ -53,6 +53,8 @@ package body Synth.Static_Proc is
             Synth_Untruncated_Text_Read (Syn_Inst, Imp, Loc);
          when Iir_Predefined_Deallocate =>
             Synth_Deallocate (Syn_Inst, Imp);
+         when Iir_Predefined_Read =>
+            Synth_File_Read (Syn_Inst, Imp, Loc);
          when others =>
             Error_Msg_Synth
               (+Loc, "call to implicit %n is not supported", +Imp);

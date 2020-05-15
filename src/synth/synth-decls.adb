@@ -156,12 +156,32 @@ package body Synth.Decls is
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
       File_Type : constant Node := Get_Type (Get_File_Type_Mark (Def));
-      File_Typ : Type_Acc;
-      Typ : Type_Acc;
+      File_Typ  : Type_Acc;
+      Typ       : Type_Acc;
+      Sig       : String_Acc;
    begin
       File_Typ := Get_Subtype_Object (Syn_Inst, File_Type);
 
+      if Get_Text_File_Flag (Def)
+        or else
+          Get_Kind (File_Type) in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+      then
+         Sig := null;
+      else
+         declare
+            Sig_Str : String (1 .. Get_File_Signature_Length (File_Type) + 2);
+            Off : Natural := Sig_Str'First;
+         begin
+            Get_File_Signature (File_Type, Sig_Str, Off);
+            Sig_Str (Off + 0) := '.';
+            Sig_Str (Off + 1) := ASCII.NUL;
+            Sig := new String'(Sig_Str);
+         end;
+      end if;
+
       Typ := Create_File_Type (File_Typ);
+      Typ.File_Signature := Sig;
+
       return Typ;
    end Synth_File_Type_Definition;
 

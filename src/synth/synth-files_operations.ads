@@ -44,4 +44,7 @@ package Synth.Files_Operations is
 
    procedure Synth_Untruncated_Text_Read
      (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
+
+   procedure Synth_File_Read
+     (Syn_Inst : Synth_Instance_Acc; Imp : Node; Loc : Node);
 end Synth.Files_Operations;

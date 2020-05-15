@@ -494,7 +494,8 @@ package body Synth.Objtypes is
                                                 Al => 2,
                                                 Sz => 4,
                                                 W => 32,
-                                                File_Typ => File_Type)));
+                                                File_Typ => File_Type,
+                                                File_Signature => null)));
    end Create_File_Type;
 
    function Create_Protected_Type return Type_Acc

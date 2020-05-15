@@ -154,7 +154,8 @@ package Synth.Objtypes is
          when Type_Access =>
             Acc_Acc : Type_Acc;
          when Type_File =>
-            File_Typ : Type_Acc;
+            File_Typ  : Type_Acc;
+            File_Signature : String_Acc;
          when Type_Protected =>
             null;
       end case;
