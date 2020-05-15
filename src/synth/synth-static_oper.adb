@@ -828,6 +828,14 @@ package body Synth.Static_Oper is
                  Synth_Compare_Uns_Uns (Left, Right, Less, Expr) = Greater;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
+         when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res :=
+                 Synth_Compare_Sgn_Sgn (Left, Right, Less, Expr) = Greater;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns =>
             declare
                Res : Boolean;
@@ -845,6 +853,23 @@ package body Synth.Static_Oper is
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Uns_Uns =>
+            declare
+               Res : Boolean;
+            begin
+               Res :=
+                 Synth_Compare_Uns_Uns (Left, Right, Greater, Expr) >= Equal;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res :=
+                 Synth_Compare_Sgn_Sgn (Left, Right, Less, Expr) >= Equal;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
+
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Uns =>
             declare
                Res : Boolean;
@@ -859,6 +884,14 @@ package body Synth.Static_Oper is
             begin
                Res :=
                  Synth_Compare_Uns_Nat (Left, Right, Greater, Expr) <= Equal;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res :=
+                 Synth_Compare_Sgn_Sgn (Left, Right, Less, Expr) <= Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -884,6 +917,14 @@ package body Synth.Static_Oper is
             begin
                Res :=
                  Synth_Compare_Nat_Uns (Left, Right, Greater, Expr) < Equal;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn =>
+            declare
+               Res : Boolean;
+            begin
+               Res :=
+                 Synth_Compare_Sgn_Sgn (Left, Right, Less, Expr) < Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
