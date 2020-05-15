@@ -2539,17 +2539,7 @@ package body Trans.Chap3 is
       if Is_Anonymous_Type_Definition (Def) then
          Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
          Push_Identifier_Prefix (Mark2, "OT");
-         Parent_Type := Get_Subtype_Type_Mark (Def);
-         if Parent_Type /= Null_Iir then
-            Parent_Type := Get_Type (Get_Named_Entity (Parent_Type));
-         else
-            Parent_Type := Get_Base_Type (Def);
-            --  Parent_Type should be integer_type_definition for iterators,
-            --  or the subtype indication for constant (in the case the
-            --  default value constrains the subtype indication), or an
-            --  object alias, or anywhere because of 'Subtype applied on one
-            --  of the above object...
-         end if;
+         Parent_Type := Get_Parent_Type (Def);
          Chap3.Translate_Subtype_Definition (Def, Parent_Type, With_Vars);
          Pop_Identifier_Prefix (Mark2);
          Pop_Identifier_Prefix (Mark);
