@@ -64,7 +64,7 @@ package Synth.Flags is
    Flag_Max_Loop : Natural := 1000;
 
    --  Level at which an assert stop the simulation.
-   Severity_Level : Integer := Grt.Severity.Failure_Severity;
+   Severity_Level : Integer := Grt.Severity.Error_Severity;
 
    Flag_Verbose : Boolean := False;
 end Synth.Flags;
