@@ -280,6 +280,54 @@ package body Synth.Static_Oper is
       return Res;
    end Synth_Compare_Sgn_Sgn;
 
+   function Synth_Compare_Sgn_Int
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
+   is
+      Lw     : constant Uns32 := Left.Typ.W;
+      Rval   : constant Int64 := Read_Discrete (Right);
+      Rd      : Uns32;
+      R1     : Uns64;
+      Res    : Order_Type;
+      L      : Std_Ulogic;
+   begin
+      if Lw = 0 then
+         Warn_Compare_Null (Loc);
+         return Err;
+      end if;
+
+      Res := Equal;
+      R1 := To_Uns64 (Rval);
+
+      --  Same sign.
+      for I in 0 .. Lw - 1 loop
+         L := To_X01 (Read_Std_Logic (Left.Mem, Lw - 1 - I));
+         if L = 'X' then
+            Warn_Compare_Meta (Loc);
+            return Err;
+         end if;
+
+         Rd := Uns32 (R1 and 1);
+         R1 := Shift_Right_Arithmetic (R1, 1);
+
+         if L = '1' and then Rd = 0 then
+            Res := Greater;
+         elsif L = '0' and then Rd = 1 then
+            Res := Less;
+         end if;
+      end loop;
+
+      if L = '1' then
+         if Rval >= 0 then
+            Res := Less;
+         end if;
+      else
+         if Rval < 0 then
+            Res := Greater;
+         end if;
+      end if;
+      return Res;
+   end Synth_Compare_Sgn_Int;
+
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
       if Prev.Vbound.Dir = Dir_Downto
@@ -817,6 +865,14 @@ package body Synth.Static_Oper is
             begin
                Res :=
                  Synth_Compare_Uns_Nat (Left, Right, Greater, Expr) = Equal;
+               return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
+            end;
+         when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int =>
+            declare
+               Res : Boolean;
+            begin
+               Res :=
+                 Synth_Compare_Sgn_Int (Left, Right, Greater, Expr) = Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
