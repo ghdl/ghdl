@@ -400,6 +400,18 @@ package Vhdl.Utils is
    function Get_Attribute_Parameter
      (Attr : Iir; N : Parameter_Index) return Iir;
 
+   --  Return the expected signature length that will be used by
+   --  Get_File_Signature.
+   function Get_File_Signature_Length (Def : Iir) return Natural;
+
+   --  Store in RES the file signature for type DEF.
+   --  Set the length of the buffer to OFF.
+   --  Parameters are 'in out' as they are updated, so you should call this
+   --  procedure with OFF = RES'First.
+   procedure Get_File_Signature (Def : Iir;
+                                 Res : in out String;
+                                 Off : in out Natural);
+
    --  IIR wrapper around Get_HDL_Node/Set_HDL_Node.
    function Get_HDL_Node (N : PSL_Node) return Iir;
    procedure Set_HDL_Node (N : PSL_Node; Expr : Iir);

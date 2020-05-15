@@ -1774,6 +1774,107 @@ package body Vhdl.Utils is
       end case;
    end Get_Attribute_Parameter;
 
+   function Get_File_Signature_Length (Def : Iir) return Natural is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
+            return 1;
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            return 2
+              + Get_File_Signature_Length (Get_Element_Subtype (Def));
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            declare
+               List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Def));
+               El : Iir;
+               Res : Natural;
+            begin
+               Res := 2;
+               for I in Flist_First .. Flist_Last (List) loop
+                  El := Get_Nth_Element (List, I);
+                  Res := Res + Get_File_Signature_Length (Get_Type (El));
+               end loop;
+               return Res;
+            end;
+         when others =>
+            Error_Kind ("get_file_signature_length", Def);
+      end case;
+   end Get_File_Signature_Length;
+
+   procedure Get_File_Signature (Def : Iir;
+                                 Res : in out String;
+                                 Off : in out Natural)
+   is
+      Base_Type : constant Iir := Get_Base_Type (Def);
+   begin
+      case Get_Kind (Base_Type) is
+         when Iir_Kind_Integer_Type_Definition =>
+            case Get_Scalar_Size (Base_Type) is
+               when Scalar_32 =>
+                  Res (Off) := 'i';
+               when Scalar_64 =>
+                  Res (Off) := 'I';
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Off := Off + 1;
+         when Iir_Kind_Physical_Type_Definition =>
+            case Get_Scalar_Size (Base_Type) is
+               when Scalar_32 =>
+                  Res (Off) := 'p';
+               when Scalar_64 =>
+                  Res (Off) := 'P';
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Off := Off + 1;
+         when Iir_Kind_Floating_Type_Definition =>
+            Res (Off) := 'F';
+            Off := Off + 1;
+         when Iir_Kind_Enumeration_Type_Definition =>
+            if Base_Type = Std_Package.Boolean_Type_Definition then
+               Res (Off) := 'b';
+            else
+               case Get_Scalar_Size (Base_Type) is
+                  when Scalar_8 =>
+                     Res (Off) := 'e';
+                  when Scalar_32 =>
+                     Res (Off) := 'E';
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end if;
+            Off := Off + 1;
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            Res (Off) := '[';
+            Off := Off + 1;
+            Get_File_Signature (Get_Element_Subtype (Def), Res, Off);
+            Res (Off) := ']';
+            Off := Off + 1;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            declare
+               List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Def));
+               El : Iir;
+            begin
+               Res (Off) := '<';
+               Off := Off + 1;
+               for I in Flist_First .. Flist_Last (List) loop
+                  El := Get_Nth_Element (List, I);
+                  Get_File_Signature (Get_Type (El), Res, Off);
+               end loop;
+               Res (Off) := '>';
+               Off := Off + 1;
+            end;
+         when others =>
+            Error_Kind ("get_file_signature", Def);
+      end case;
+   end Get_File_Signature;
+
    function Get_HDL_Node (N : PSL_Node) return Iir is
    begin
       return Iir (PSL.Nodes.Get_HDL_Node (N));
