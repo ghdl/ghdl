@@ -37,6 +37,7 @@ with Vhdl.Sem_Inst;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 with Vhdl.Evaluation;
+with Vhdl.Ieee.Std_Logic_1164;
 
 with PSL.Types;
 with PSL.Nodes;
@@ -792,6 +793,63 @@ package body Synth.Stmts is
 
    type Alternative_Index is new Int32;
 
+   --  Only keep '0' and '1' in choices for std_logic.
+   function Ignore_Choice_Logic (V : Ghdl_U8; Loc : Node) return Boolean is
+   begin
+      case V is
+         when Vhdl.Ieee.Std_Logic_1164.Std_Logic_0_Pos
+            | Vhdl.Ieee.Std_Logic_1164.Std_Logic_1_Pos =>
+            return False;
+         when Vhdl.Ieee.Std_Logic_1164.Std_Logic_L_Pos
+            | Vhdl.Ieee.Std_Logic_1164.Std_Logic_H_Pos =>
+            Warning_Msg_Synth
+              (+Loc, "choice with 'L' or 'H' value is ignored");
+            return True;
+         when Vhdl.Ieee.Std_Logic_1164.Std_Logic_U_Pos
+            | Vhdl.Ieee.Std_Logic_1164.Std_Logic_X_Pos
+            | Vhdl.Ieee.Std_Logic_1164.Std_Logic_D_Pos
+            | Vhdl.Ieee.Std_Logic_1164.Std_Logic_Z_Pos
+            | Vhdl.Ieee.Std_Logic_1164.Std_Logic_W_Pos =>
+            Warning_Msg_Synth (+Loc, "choice with meta-value is ignored");
+            return True;
+         when others =>
+            --  Only 9 values.
+            raise Internal_Error;
+      end case;
+   end Ignore_Choice_Logic;
+
+   function Ignore_Choice_Expression (V : Valtyp; Loc : Node) return Boolean is
+   begin
+      case V.Typ.Kind is
+         when Type_Bit =>
+            return False;
+         when Type_Logic =>
+            if V.Typ = Logic_Type then
+               return Ignore_Choice_Logic (Read_U8 (V.Val.Mem), Loc);
+            else
+               return False;
+            end if;
+         when Type_Discrete =>
+            return False;
+         when Type_Vector =>
+            if V.Typ.Vec_El = Logic_Type then
+               for I in 1 .. Size_Type (V.Typ.Vbound.Len) loop
+                  if Ignore_Choice_Logic (Read_U8 (V.Val.Mem + (I - 1)), Loc)
+                  then
+                     return True;
+                  end if;
+               end loop;
+               return False;
+            else
+               return False;
+            end if;
+         when Type_Array =>
+            return False;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Ignore_Choice_Expression;
+
    --  Create the condition for choices of CHOICE chain belonging to the same
    --  alternative.  Update CHOICE to the next alternative.
    procedure Synth_Choice (Syn_Inst : Synth_Instance_Acc;
@@ -804,7 +862,9 @@ package body Synth.Stmts is
    is
       Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
       Cond : Net;
+      Res : Net;
    begin
+      Res := No_Net;
       loop
          case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
             when Iir_Kind_Choice_By_Expression =>
@@ -815,8 +875,13 @@ package body Synth.Stmts is
                     (Syn_Inst, Get_Choice_Expression (Choice));
                   V := Synth_Subtype_Conversion
                     (Ctxt, V, Choice_Typ, False, Choice);
-                  Cond := Build_Compare (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, V));
-                  Set_Location (Cond, Choice);
+                  if Ignore_Choice_Expression (V, Choice) then
+                     Cond := No_Net;
+                  else
+                     Cond := Build_Compare
+                       (Ctxt, Id_Eq, Sel, Get_Net (Ctxt, V));
+                     Set_Location (Cond, Choice);
+                  end if;
                end;
 
             when Iir_Kind_Choice_By_Range =>
@@ -865,7 +930,8 @@ package body Synth.Stmts is
                end;
 
             when Iir_Kind_Choice_By_Others =>
-               --  Last one.
+               --  Last and only one.
+               pragma Assert (Res = No_Net);
                Other_Choice := Choice_Idx + 1;
                pragma Assert (Get_Chain (Choice) = Null_Node);
                Choice := Null_Node;
@@ -873,17 +939,31 @@ package body Synth.Stmts is
          end case;
 
          if not Get_Same_Alternative_Flag (Choice) then
+            --  First choice.
             Choice_Idx := Choice_Idx + 1;
+            Res := Cond;
          else
-            Cond := Build_Dyadic (Ctxt, Id_Or, Nets (Choice_Idx), Cond);
-            Set_Location (Cond, Choice);
+            if Cond = No_Net then
+               --  No new condition.
+               null;
+            else
+               if Res /= No_Net then
+                  Res := Build_Dyadic (Ctxt, Id_Or, Res, Cond);
+                  Set_Location (Res, Choice);
+               else
+                  Res := Cond;
+               end if;
+            end if;
          end if;
-         Nets (Choice_Idx) := Cond;
 
          Choice := Get_Chain (Choice);
          exit when Choice = Null_Node
            or else not Get_Same_Alternative_Flag (Choice);
       end loop;
+      if Res = No_Net then
+         Res := Build_Const_UB32 (Ctxt, 0, 1);
+      end if;
+      Nets (Choice_Idx) := Res;
    end Synth_Choice;
 
    type Alternative_Data_Type is record
