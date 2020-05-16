@@ -1985,7 +1985,8 @@ package body Synth.Expr is
                Imp : constant Node := Get_Implementation (Expr);
             begin
                case Get_Implicit_Definition (Imp) is
-                  when Iir_Predefined_Pure_Functions =>
+                  when Iir_Predefined_Pure_Functions
+                     | Iir_Predefined_Ieee_Numeric_Std_Binary_Operators =>
                      return Synth_Operator_Function_Call (Syn_Inst, Expr);
                   when Iir_Predefined_None =>
                      return Synth_User_Function_Call (Syn_Inst, Expr);

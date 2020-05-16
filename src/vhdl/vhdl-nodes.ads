@@ -5498,6 +5498,7 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Sgn,
 
+      --  Numeric_Std operators (Start)
       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,
@@ -5590,20 +5591,6 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Ne_Sgn_Int,
       Iir_Predefined_Ieee_Numeric_Std_Ne_Int_Sgn,
 
-      Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Uns,
-      Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Min_Nat_Uns,
-      Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Sgn,
-      Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Int,
-      Iir_Predefined_Ieee_Numeric_Std_Min_Int_Sgn,
-
-      Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Uns,
-      Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Max_Nat_Uns,
-      Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Sgn,
-      Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Int,
-      Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn,
-
       Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Match_Gt_Nat_Uns,
@@ -5646,11 +5633,6 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Sgn_Int,
       Iir_Predefined_Ieee_Numeric_Std_Match_Ne_Int_Sgn,
 
-      Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat,
-
       Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int,
       Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int,
       Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int,
@@ -5664,11 +5646,6 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Nat,
-
-      Iir_Predefined_Ieee_Numeric_Std_Not_Uns,
-      Iir_Predefined_Ieee_Numeric_Std_Not_Sgn,
-
-      Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn,
 
       Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn,
@@ -5687,10 +5664,37 @@ package Vhdl.Nodes is
 
       Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn,
+      --  Numeric_Std binary operators (end)
 
       --  Unary functions for numeric_std
+      Iir_Predefined_Ieee_Numeric_Std_Not_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Not_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn,
+
       Iir_Predefined_Ieee_Numeric_Std_Neg_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn,
+
+      --  Min and Max.
+      Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Min_Int_Sgn,
+
+      Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn,
+
+      --  Shift and rotate functions.
+      Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat,
 
       --  Std_Match functions.
       Iir_Predefined_Ieee_Numeric_Std_Match_Log,
@@ -5984,6 +5988,11 @@ package Vhdl.Nodes is
    subtype Iir_Predefined_IEEE_Explicit is Iir_Predefined_Functions range
      Iir_Predefined_Functions'Succ (Iir_Predefined_None) ..
      Iir_Predefined_Functions'Last;
+
+   subtype Iir_Predefined_Ieee_Numeric_Std_Binary_Operators
+     is Iir_Predefined_Functions range
+       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns ..
+       Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn_Sgn;
 
    --  Size of scalar types.
    --  Their size is determined during analysis (using the range), so that
