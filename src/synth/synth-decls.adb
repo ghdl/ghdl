@@ -801,6 +801,7 @@ package body Synth.Decls is
             Init := Create_Value_Default (Obj_Typ);
          end if;
          if Get_Instance_Const (Syn_Inst) then
+            Init := Strip_Alias_Const (Init);
             Init := Unshare (Init, Current_Pool);
             Create_Object (Syn_Inst, Decl, Init);
          else
