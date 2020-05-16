@@ -401,6 +401,21 @@ package body Synth.Static_Oper is
       end;
    end Synth_Add_Uns_Uns;
 
+   function Synth_Add_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      pragma Unreferenced (Loc);
+      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
+      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
+   begin
+      To_Std_Logic_Vector (L, L_Arr);
+      To_Std_Logic_Vector (R, R_Arr);
+      declare
+         Res_Arr : constant Std_Logic_Vector := Add_Sgn_Sgn (L_Arr, R_Arr);
+      begin
+         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
+      end;
+   end Synth_Add_Sgn_Sgn;
+
    function Synth_Add_Sgn_Int (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
       pragma Unreferenced (Loc);
@@ -457,6 +472,21 @@ package body Synth.Static_Oper is
          return To_Memtyp (Res_Arr, L.Typ.Vec_El);
       end;
    end Synth_Sub_Uns_Nat;
+
+   function Synth_Sub_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      pragma Unreferenced (Loc);
+      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
+      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
+   begin
+      To_Std_Logic_Vector (L, L_Arr);
+      To_Std_Logic_Vector (R, R_Arr);
+      declare
+         Res_Arr : constant Std_Logic_Vector := Sub_Sgn_Sgn (L_Arr, R_Arr);
+      begin
+         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
+      end;
+   end Synth_Sub_Sgn_Sgn;
 
    function Synth_Sub_Sgn_Int (L, R : Memtyp; Loc : Syn_Src) return Memtyp
    is
@@ -997,6 +1027,8 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
             return Synth_Add_Uns_Nat (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn =>
+            return Synth_Add_Sgn_Sgn (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
             return Synth_Sub_Uns_Uns (Left, Right, Expr);
@@ -1005,6 +1037,8 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int =>
             return Synth_Sub_Sgn_Int (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>
+            return Synth_Sub_Sgn_Sgn (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
             return Synth_Mul_Uns_Uns (Left, Right, Expr);

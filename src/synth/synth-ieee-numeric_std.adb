@@ -82,6 +82,45 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Add_Uns_Uns;
 
+   function Add_Sgn_Sgn (L, R : Std_Logic_Vector) return Std_Logic_Vector
+   is
+      pragma Assert (L'First = 1);
+      pragma Assert (R'First = 1);
+      Len : constant Integer := Integer'Max (L'Last, R'Last);
+      subtype Res_Type is Std_Logic_Vector (1 .. Len);
+      Res : Res_Type;
+      Lb, Rb, Carry : Sl_X01;
+   begin
+      if L'Last < 1 or R'Last < 1 then
+         return Null_Vec;
+      end if;
+      Carry := '0';
+      for I in 0 .. Len - 1 loop
+         if I >= L'Last then
+            Lb := L (1);
+         else
+            Lb := L (L'Last - I);
+         end if;
+         Lb := Sl_To_X01 (Lb);
+         if I >= R'Last then
+            Rb := R (1);
+         else
+            Rb := R (R'Last - I);
+         end if;
+         Rb := Sl_To_X01 (Rb);
+         if Lb = 'X' or Rb = 'X' then
+            --assert NO_WARNING
+            --  report "NUMERIC_STD.""+"": non logical value detected"
+            --  severity warning;
+            Res := (others => 'X');
+            exit;
+         end if;
+         Res (Res'Last - I) := Compute_Sum (Carry, Rb, Lb);
+         Carry := Compute_Carry (Carry, Rb, Lb);
+      end loop;
+      return Res;
+   end Add_Sgn_Sgn;
+
    function Add_Sgn_Int (L : Std_Logic_Vector; R : Int64)
                         return Std_Logic_Vector
    is
@@ -210,6 +249,46 @@ package body Synth.Ieee.Numeric_Std is
       end loop;
       return Res;
    end Sub_Uns_Nat;
+
+   function Sub_Sgn_Sgn (L, R : Std_Logic_Vector) return Std_Logic_Vector
+   is
+      pragma Assert (L'First = 1);
+      pragma Assert (R'First = 1);
+      Len : constant Integer := Integer'Max (L'Last, R'Last);
+      subtype Res_Type is Std_Logic_Vector (1 .. Len);
+      Res : Res_Type;
+      Lb, Rb, Carry : Sl_X01;
+   begin
+      if L'Last < 1 or R'Last < 1 then
+         return Null_Vec;
+      end if;
+      Carry := '1';
+      for I in 0 .. Len - 1 loop
+         if I >= L'Last then
+            Lb := L (1);
+         else
+            Lb := L (L'Last - I);
+         end if;
+         Lb := Sl_To_X01 (Lb);
+         if I >= R'Last then
+            Rb := R (1);
+         else
+            Rb := R (R'Last - I);
+         end if;
+         Rb := Sl_To_X01 (Rb);
+         Rb := Not_Table (Rb);
+         if Lb = 'X' or Rb = 'X' then
+            --assert NO_WARNING
+            --  report "NUMERIC_STD.""+"": non logical value detected"
+            --  severity warning;
+            Res := (others => 'X');
+            exit;
+         end if;
+         Res (Res'Last - I) := Compute_Sum (Carry, Rb, Lb);
+         Carry := Compute_Carry (Carry, Rb, Lb);
+      end loop;
+      return Res;
+   end Sub_Sgn_Sgn;
 
    function Sub_Sgn_Int (L : Std_Logic_Vector; R : Int64)
                         return Std_Logic_Vector
