@@ -20,10 +20,9 @@
 
 with Types_Utils; use Types_Utils;
 with Synth.Errors; use Synth.Errors;
+with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
 package body Synth.Ieee.Numeric_Std is
-   Null_Vec : constant Std_Logic_Vector (1 .. 0) := (others => '0');
-
    subtype Sl_01 is Std_Ulogic range '0' .. '1';
    subtype Sl_X01 is Std_Ulogic range 'X' .. '1';
 
@@ -466,32 +465,33 @@ package body Synth.Ieee.Numeric_Std is
       return Mul_Sgn_Sgn (L, Rv, Loc);
    end Mul_Sgn_Int;
 
-   function Neg_Sgn (V : Std_Logic_Vector) return Std_Logic_Vector
+   function Neg_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp
    is
-      pragma Assert (V'First = 1);
-      Len : constant Integer := V'Last;
-      subtype Res_Type is Std_Logic_Vector (1 .. Len);
-      Res : Res_Type;
+      Len : constant Uns32 := V.Typ.Vbound.Len;
+      Res : Memtyp;
       Vb, Carry : Sl_X01;
    begin
-      if Len < 1 then
-         return Null_Vec;
+      Res.Typ := Create_Res_Type (V.Typ, Len);
+      Res := Create_Memory (Res.Typ);
+
+      if Len = 0 then
+         return Res;
       end if;
+
       Carry := '1';
-      for I in 0 .. Len - 1 loop
-         Vb := Sl_To_X01 (V (V'Last - I));
+      for I in 1 .. Len loop
+         Vb := Sl_To_X01 (Read_Std_Logic (V.Mem, Len - I));
          if Vb = 'X' then
-            --assert NO_WARNING
-            --  report "NUMERIC_STD.""+"": non logical value detected"
-            --  severity warning;
-            Res := (others => 'X');
+            Warning_Msg_Synth
+              (+Loc, "NUMERIC_STD.""-"": non logical value detected");
+            Fill (Res, 'X');
             exit;
          end if;
          Vb := Not_Table (Vb);
-         Res (Res'Last - I) := Xor_Table (Carry, Vb);
+         Write_Std_Logic (Res.Mem, Len - I, Xor_Table (Carry, Vb));
          Carry := And_Table (Carry, Vb);
       end loop;
       return Res;
-   end Neg_Sgn;
+   end Neg_Vec;
 
 end Synth.Ieee.Numeric_Std;

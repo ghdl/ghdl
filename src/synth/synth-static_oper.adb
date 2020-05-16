@@ -984,17 +984,7 @@ package body Synth.Static_Oper is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
-            declare
-               Op_Arr : Std_Logic_Vector
-                 (1 .. Natural (Vec_Length (Operand.Typ)));
-            begin
-               To_Std_Logic_Vector (Operand, Op_Arr);
-               declare
-                  Res_Arr : constant Std_Logic_Vector := Neg_Sgn (Op_Arr);
-               begin
-                  return To_Memtyp (Res_Arr, Operand.Typ.Vec_El);
-               end;
-            end;
+            return Neg_Vec (Operand, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Not
            | Iir_Predefined_Ieee_Numeric_Std_Not_Uns

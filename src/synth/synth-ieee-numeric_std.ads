@@ -22,12 +22,12 @@ with Types; use Types;
 
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Source; use Synth.Source;
-with Synth.Ieee.Std_Logic_1164; use Synth.Ieee.Std_Logic_1164;
 
 package Synth.Ieee.Numeric_Std is
    --  Reminder: vectors elements are from left to right.
 
-   function Neg_Sgn (V : Std_Logic_Vector) return Std_Logic_Vector;
+   --  Unary "-"
+   function Neg_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp;
 
    --  "+"
    function Add_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
