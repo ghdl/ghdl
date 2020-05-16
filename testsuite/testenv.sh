@@ -119,6 +119,12 @@ synth_failure ()
   fi
 }
 
+# Synthesis of a single file
+synth_only()
+{
+  synth $1.vhdl -e > syn_$1.vhdl
+}
+
 # Synthesis of a single file and analyze the result
 synth_analyze()
 {
