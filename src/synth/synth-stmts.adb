@@ -1497,14 +1497,15 @@ package body Synth.Stmts is
       Free_Net_Array (Nets);
    end Synth_Selected_Signal_Assignment;
 
-   function Synth_Label (Stmt : Node) return Sname
+   function Synth_Label (Syn_Inst : Synth_Instance_Acc; Stmt : Node)
+                         return Sname
    is
       Label : constant Name_Id := Get_Label (Stmt);
    begin
       if Label = Null_Identifier then
          return No_Sname;
       else
-         return New_Sname_User (Label, No_Sname);
+         return New_Sname_User (Label, Get_Sname (Syn_Inst));
       end if;
    end Synth_Label;
 
@@ -2824,7 +2825,7 @@ package body Synth.Stmts is
          --  Build: En -> Cond
          N := Build2_Imp (Ctxt, En, N, Loc);
       end if;
-      Inst := Build_Assert (Ctxt, Synth_Label (Stmt), N);
+      Inst := Build_Assert (Ctxt, Synth_Label (C.Inst, Stmt), N);
       Set_Location (Inst, Loc);
    end Synth_Dynamic_Assertion_Statement;
 
@@ -3077,7 +3078,8 @@ package body Synth.Stmts is
          end if;
          return;
       end if;
-      Inst := Build_Assert (Ctxt, Synth_Label (Stmt), Get_Net (Ctxt, Val));
+      Inst := Build_Assert
+        (Ctxt, Synth_Label (Syn_Inst, Stmt), Get_Net (Ctxt, Val));
       Set_Location (Inst, Get_Location (Stmt));
    end Synth_Concurrent_Assertion_Statement;
 
@@ -3317,7 +3319,7 @@ package body Synth.Stmts is
          --  The restriction holds as long as there is a 1 in the NFA state.
          Res := Build_Reduce (Ctxt, Id_Red_Or, Next_States);
          Set_Location (Res, Stmt);
-         Inst := Build_Assume (Ctxt, Synth_Label (Stmt), Res);
+         Inst := Build_Assume (Ctxt, Synth_Label (Syn_Inst, Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Restrict_Directive;
@@ -3336,7 +3338,8 @@ package body Synth.Stmts is
       if Next_States /= No_Net then
          --  The sequence is covered as soon as the final state is reached.
          Res := Synth_Psl_Final (Syn_Inst, Stmt, Next_States);
-         Inst := Build_Cover (Get_Build (Syn_Inst), Synth_Label (Stmt), Res);
+         Inst := Build_Cover
+           (Get_Build (Syn_Inst), Synth_Label (Syn_Inst, Stmt), Res);
          Set_Location (Inst, Get_Location (Stmt));
       end if;
    end Synth_Psl_Cover_Directive;
@@ -3354,7 +3357,7 @@ package body Synth.Stmts is
       Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
       if Next_States /= No_Net then
          Inst := Build_Assume
-           (Ctxt, Synth_Label (Stmt),
+           (Ctxt, Synth_Label (Syn_Inst, Stmt),
             Synth_Psl_Not_Final (Syn_Inst, Stmt, Next_States));
          Set_Location (Inst, Get_Location (Stmt));
       end if;
@@ -3377,7 +3380,7 @@ package body Synth.Stmts is
       --  (If we assert on States, then the first cycle is ignored).
       Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
       if Next_States /= No_Net then
-         Lab := Synth_Label (Stmt);
+         Lab := Synth_Label (Syn_Inst, Stmt);
 
          Inst := Build_Assert
            (Ctxt, Lab,
