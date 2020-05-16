@@ -42,16 +42,6 @@ package body Synth.Static_Oper is
    --  (math library) on unix systems.
    pragma Linker_Options ("-lm");
 
-   function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic is
-   begin
-      return Std_Ulogic'Val (Read_U8 (M + Size_Type (Off)));
-   end Read_Std_Logic;
-
-   procedure Write_Std_Logic (M : Memory_Ptr; Off : Uns32; Val : Std_Ulogic) is
-   begin
-      Write_U8 (M + Size_Type (Off), Std_Ulogic'Pos (Val));
-   end Write_Std_Logic;
-
    procedure Warn_Compare_Null (Loc : Node) is
    begin
       Warning_Msg_Synth (+Loc, "null argument detected, returning false");
@@ -385,180 +375,6 @@ package body Synth.Static_Oper is
       end loop;
       return Res;
    end To_Memtyp;
-
-   function Synth_Add_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Add_Uns_Uns (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Add_Uns_Uns;
-
-   function Synth_Add_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Add_Sgn_Sgn (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Add_Sgn_Sgn;
-
-   function Synth_Add_Sgn_Int (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Val : constant Int64 := Read_Discrete (R);
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Add_Sgn_Int (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Add_Sgn_Int;
-
-   function Synth_Add_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (L.Typ.W));
-      R_Val : constant Uns64 := Uns64 (Read_Discrete (R));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Add_Uns_Nat (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Add_Uns_Nat;
-
-   function Synth_Sub_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Sub_Uns_Uns (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Sub_Uns_Uns;
-
-   function Synth_Sub_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Val : constant Uns64 := Uns64 (Read_Discrete (R));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Sub_Uns_Nat (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Sub_Uns_Nat;
-
-   function Synth_Sub_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Sub_Sgn_Sgn (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Sub_Sgn_Sgn;
-
-   function Synth_Sub_Sgn_Int (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Val : constant Int64 := Read_Discrete (R);
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Sub_Sgn_Int (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Sub_Sgn_Int;
-
-   function Synth_Mul_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Mul_Uns_Uns (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Mul_Uns_Uns;
-
-   function Synth_Mul_Nat_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-      L_Val : constant Uns64 := Uns64 (Read_Discrete (L));
-   begin
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Mul_Nat_Uns (L_Val, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, R.Typ.Vec_El);
-      end;
-   end Synth_Mul_Nat_Uns;
-
-   function Synth_Mul_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Val : constant Uns64 := Uns64 (Read_Discrete (R));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Mul_Uns_Nat (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Mul_Uns_Nat;
-
-   function Synth_Mul_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Mul_Sgn_Sgn (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Mul_Sgn_Sgn;
 
    function Synth_Shift (Val : Memtyp;
                          Amt : Uns32;
@@ -1019,36 +835,40 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
-            return Synth_Add_Uns_Uns (Left, Right, Expr);
+            return Add_Uns_Uns (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
-            return Synth_Add_Sgn_Int (Left, Right, Expr);
+            return Add_Sgn_Int (Left, Read_Discrete (Right), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
-            return Synth_Add_Uns_Nat (Left, Right, Expr);
+            return Add_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn =>
-            return Synth_Add_Sgn_Sgn (Left, Right, Expr);
+            return Add_Sgn_Sgn (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
-            return Synth_Sub_Uns_Uns (Left, Right, Expr);
+            return Sub_Uns_Uns (Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
-            return Synth_Sub_Uns_Nat (Left, Right, Expr);
+            return Sub_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int =>
-            return Synth_Sub_Sgn_Int (Left, Right, Expr);
+            return Sub_Sgn_Int (Left, Read_Discrete (Right), Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>
-            return Synth_Sub_Sgn_Sgn (Left, Right, Expr);
+            return Sub_Sgn_Sgn (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
-            return Synth_Mul_Uns_Uns (Left, Right, Expr);
+            return Mul_Uns_Uns (Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Nat_Uns =>
-            return Synth_Mul_Nat_Uns (Left, Right, Expr);
+            return Mul_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
-            return Synth_Mul_Uns_Nat (Left, Right, Expr);
+            return Mul_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
-            return Synth_Mul_Sgn_Sgn (Left, Right, Expr);
+            return Mul_Sgn_Sgn (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Int =>
+            return Mul_Sgn_Int (Left, Read_Discrete (Right), Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Int_Sgn =>
+            return Mul_Int_Sgn (Read_Discrete (Left), Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
            |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
