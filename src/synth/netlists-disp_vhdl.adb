@@ -867,7 +867,8 @@ package body Netlists.Disp_Vhdl is
             null;
          when Id_Output =>
             Disp_Template ("  \o0 <= \i0; -- (output)" & NL, Inst);
-         when Id_Inout =>
+         when Id_Inout
+            | Id_Iinout =>
             --  Gates inout are special: output 1 must be connected to an
             --  output (with the is_inout flag set) of the module.
             Disp_Template ("  \o1 <= \i0; -- (inout - port)" & NL, Inst);

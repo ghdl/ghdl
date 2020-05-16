@@ -848,7 +848,11 @@ package body Synth.Environment is
             then
                Warning_Msg_Synth
                  (+Wire_Rec.Decl, "no assignment for %n", +Wire_Rec.Decl);
-               Value := Build_Const_Z (Ctxt, Get_Width (Wire_Rec.Gate));
+               if Get_Id (Gate_Inst) = Gates.Id_Iinout then
+                  Value := Get_Input_Net (Gate_Inst, 1);
+               else
+                  Value := Build_Const_Z (Ctxt, Get_Width (Wire_Rec.Gate));
+               end if;
             else
                return;
             end if;
