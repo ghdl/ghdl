@@ -58,7 +58,7 @@ cd $(dirname $0)
 
 build () {
   gstart 'Install common build dependencies'
-    pacman -S --noconfirm base-devel git
+    pacman -S --noconfirm base-devel
   gend
 
   if [ -z "$TARGET" ]; then
@@ -66,6 +66,12 @@ build () {
     exit 1
   fi
   cd "$TARGET"
+
+  gstart "Fetch --unshallow"
+  # The command 'git describe' (used for version) needs the history. Get it.
+  # But the following command fails if the repository is complete.
+  git fetch --unshallow || true
+  gend
 
   MINGW_INSTALLS="$(echo "$MINGW_INSTALLS" | tr '[:upper:]' '[:lower:]')"
 
@@ -92,7 +98,6 @@ build () {
   gend
 
   gstart 'Build package'
-    dos2unix PKGBUILD
     makepkg-mingw --noconfirm --noprogressbar -sCLf --noarchive
   gend
 
