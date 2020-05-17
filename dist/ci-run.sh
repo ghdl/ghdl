@@ -402,21 +402,12 @@ ci_run () {
   else
       # Assume linux
 
-      gstart "[CI] Build version.tmp and replace version.in with it (so that the version is correctly set)" "$ANSI_BLUE"
-      # This is a little bit hack-ish, as it assumes that 'git' is not
-      # available in docker (otherwise it will describe as -dirty
-      # because this modifies the source file version.in).
-      ghdl_version_line=`grep -e '^ghdl_version' configure`
-      make -f Makefile.in srcdir=. $ghdl_version_line version.tmp
-      cp version.tmp src/version.in
-      gend
-
       gstart "[CI] Docker pull ghdl/build:$BUILD_IMAGE_TAG" "$ANSI_BLUE"
       docker pull ghdl/build:$BUILD_IMAGE_TAG
       gend
 
       printf "$ANSI_BLUE[CI] Build ghdl in docker image ghdl/build:$BUILD_IMAGE_TAG\n"
-      $RUN -e CONFIG_OPTS="$CONFIG_OPTS" "ghdl/build:$BUILD_IMAGE_TAG" bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
+      $RUN -e GHDL_DESC="$(git describe --dirty)@${BUILD_IMAGE_TAG}" -e CONFIG_OPTS="$CONFIG_OPTS" "ghdl/build:$BUILD_IMAGE_TAG" bash -c "${scriptdir}/ci-run.sh $BUILD_CMD_OPTS build"
   fi
 
   if [ ! -f build_ok ]; then
