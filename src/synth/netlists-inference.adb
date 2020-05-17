@@ -939,10 +939,15 @@ package body Netlists.Inference is
       First_Inst := Get_Net_Parent (Val);
       Inst := First_Inst;
       loop
-         if Get_Id (Inst) /= Id_Mux2 then
-            pragma Assert (Get_Id (Inst) = Id_Const_UB32);
-            return Val;
-         end if;
+         case Get_Id (Inst) is
+            when Id_Mux2 =>
+               null;
+            when Id_Const_UB32
+               | Id_Pmux =>
+               return Val;
+            when others =>
+               raise Internal_Error;
+         end case;
          Extract_Clock (Ctxt, Get_Input_Net (Inst, 0), Clk, En);
          exit when Clk /= No_Net;
 
