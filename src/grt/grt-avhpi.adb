@@ -127,7 +127,7 @@ package body Grt.Avhpi is
                      return;
                   end if;
                when others =>
-               null;
+                  null;
             end case;
          when others =>
             null;
@@ -976,8 +976,6 @@ package body Grt.Avhpi is
                     | VhpiGenericDeclK
                     | VhpiConstDeclK
                     | VhpiIndexedNameK =>
-                     --Rtii := To_Ghdl_Object_Rtii(
-                     --   To_Ghdl_Rtin_Object_Acc(Ref.Obj), Ref.Ctxt);
                      if not Is_Array(Ref.Obj) then
                         Error := AvhpiErrorBadRel;
                      end if;

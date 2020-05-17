@@ -40,8 +40,8 @@ package body Grt.Rtiis is
          exit when V = 0;
          Pos_In_Str := Pos_In_Str + 1;
          if Pos_In_Str > 32 then
-            -- Ghdl_Index_Type should only be 32 bits which is way less
-            -- that what we've allowed.
+            --  Ghdl_Index_Type should only be 32 bits which is way less
+            --  that what we've allowed.
             Internal_Error("ghdl_index_type_image");
          end if;
       end loop;
@@ -71,8 +71,8 @@ package body Grt.Rtiis is
       New_Name : Ghdl_Object_Rtii_Name := Name;
    begin
       if S'Length + Name.Length > Rtii_Name_Length - 4 then
-         -- If we can't fit the name in then just put '....' in the rest of
-         -- the space.
+         --  If we can't fit the name in then just put '....' in the rest of
+         --  the space.
          New_Name.Length := Rtii_Name_Length-1;
          New_Name.Value(Name.Length+1 .. Rtii_Name_Length-1) :=
            (others => '.');
@@ -127,8 +127,8 @@ package body Grt.Rtiis is
       return Base_Record;
    end Rti_Record_Base_Type;
 
-   -- Find the layout information address for a Rti type given it's context.
-   -- For types that have no layout information a null address is returned.
+   --  Find the layout information address for a Rti type given it's context.
+   --  For types that have no layout information a null address is returned.
    function Get_Type_Layout(Rti : Ghdl_Rti_Access; Ctxt : Rti_Context)
                            return Address is
       Layout_Addr : Address;
@@ -165,8 +165,8 @@ package body Grt.Rtiis is
                   Layout_Addr := Loc_To_Addr (
                      Bt.Common.Depth, Bt.Layout, Ctxt);
                else
-                  -- FIXME:  Is this right?
-                  --Layout_Addr := Bt.Layout;
+                  --  FIXME:  Is this right?
+                  --  Layout_Addr := Bt.Layout;
                   null;
                end if;
             end;
@@ -208,14 +208,14 @@ package body Grt.Rtiis is
       return Res;
    end Get_Array_Base_And_Layout;
 
-   -- Get the length of a flattened multidimensional array.
-   -- index into an equivalent flattened array.  Also returns
-   -- the length of the flattened array.
+   --  Get the length of a flattened multidimensional array.
+   --  index into an equivalent flattened array.  Also returns
+   --  the length of the flattened array.
    function Get_Flattened_Length (
       Nbr_Dim : Ghdl_Index_Type;
-      -- An array of the index types.
+      --  An array of the index types.
       Index_Types : Ghdl_Rti_Arr_Acc;
-      -- The location of the bounds of the indices.
+      --  The location of the bounds of the indices.
       Bounds_Address : Address)
       return Ghdl_Index_Type is
       Idx_Rti : Ghdl_Rti_Access;
@@ -274,13 +274,13 @@ package body Grt.Rtiis is
       end if;
       Bounds_Addr := Base_And_Layout.Layout + Ghdl_Index_Type'(
                         Ghdl_Indexes_Type'Size / 8);
-      -- FIXME: At the moment we're treating the indices at 0-based integer
-      -- indices.  It would be much nicer for the type of these indices to
-      -- correspond to the actual type used in the VHDL.
-      -- e.g. for a signal `blah(6 downto 1)`, current the index 0 will
-      -- point at blah[6] which is confusing.
-      -- Also we're currently use a flattened index for
-      -- multidimensional arrays.
+      --  FIXME: At the moment we're treating the indices at 0-based integer
+      --  indices.  It would be much nicer for the type of these indices to
+      --  correspond to the actual type used in the VHDL.
+      --  e.g. for a signal `blah(6 downto 1)`, current the index 0 will
+      --  point at blah[6] which is confusing.
+      --  Also we're currently use a flattened index for
+      --  multidimensional arrays.
       Length := Get_Flattened_Length(
          Nbr_Dim => Base_And_Layout.Base.Nbr_Dim,
          Index_Types => Base_And_Layout.Base.Indexes,
@@ -499,7 +499,7 @@ package body Grt.Rtiis is
    function Get_Bit_Size (Rtii : Ghdl_Object_Rtii) return Ghdl_Index_Type is
    begin
       case Rtii.Typ.Rti.Kind is
-         -- For records we sum the bit sizes of all the elements.
+         --  For records we sum the bit sizes of all the elements.
          when Ghdl_Rtik_Type_Record
            | Ghdl_Rtik_Subtype_Record =>
             declare
