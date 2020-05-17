@@ -85,6 +85,25 @@ package body Synth.Static_Oper is
       return Std_Ulogic'Val (Read_U8 (Op.Mem));
    end Get_Static_Ulogic;
 
+   procedure Check_Integer_Overflow
+     (Val : in out Int64; Typ : Type_Acc; Loc : Syn_Src) is
+   begin
+      pragma Assert (Typ.Kind = Type_Discrete);
+      case Typ.Sz is
+         when 4 =>
+            if Val < -2**31 or Val >= 2**31 then
+               Error_Msg_Synth (+Loc, "integer overflow");
+               --  Just keep the lower 32bit (and sign extend).
+               Val := Int64
+                 (To_Int32 (Uns32 (To_Uns64 (Val) and 16#ffff_ffff#)));
+            end if;
+         when 8 =>
+            null;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Check_Integer_Overflow;
+
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
                                             Left : Memtyp;
@@ -114,34 +133,67 @@ package body Synth.Static_Oper is
             return Create_Memory_U8
               (Boolean'Pos (Read_Discrete (Left) /= Read_Discrete (Right)),
                Boolean_Type);
+
          when Iir_Predefined_Integer_Plus
            | Iir_Predefined_Physical_Plus =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) + Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) + Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Minus
-           | Iir_Predefined_Physical_Minus =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) - Read_Discrete (Right), Res_Typ);
+            | Iir_Predefined_Physical_Minus =>
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) - Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Mul
            | Iir_Predefined_Physical_Integer_Mul
            | Iir_Predefined_Integer_Physical_Mul =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) * Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) * Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Div
            | Iir_Predefined_Physical_Physical_Div
            | Iir_Predefined_Physical_Integer_Div =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) / Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) / Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Mod =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) mod Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) mod Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Rem =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) rem Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) rem Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
+
          when Iir_Predefined_Integer_Exp =>
             return Create_Memory_Discrete
               (Read_Discrete (Left) ** Natural (Read_Discrete (Right)),
                Res_Typ);
+
          when Iir_Predefined_Physical_Minimum
            | Iir_Predefined_Integer_Minimum =>
             return Create_Memory_Discrete
@@ -152,6 +204,7 @@ package body Synth.Static_Oper is
             return Create_Memory_Discrete
               (Int64'Max (Read_Discrete (Left), Read_Discrete (Right)),
                Res_Typ);
+
          when Iir_Predefined_Integer_Less_Equal
            | Iir_Predefined_Physical_Less_Equal =>
             return Create_Memory_U8
