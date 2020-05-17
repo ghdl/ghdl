@@ -532,17 +532,20 @@ package body Synth.Expr is
    function Synth_Array_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
                                   return Bound_Type
    is
-      Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Attr));
-      Dim : constant Natural :=
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
+      Prefix : constant Iir := Strip_Denoting_Name (Prefix_Name);
+      Dim    : constant Natural :=
         Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
-      Typ : Type_Acc;
+      Typ    : Type_Acc;
+      Val    : Valtyp;
    begin
       --  Prefix is an array object or an array subtype.
       if Get_Kind (Prefix) = Iir_Kind_Subtype_Declaration then
          --  TODO: does this cover all the cases ?
          Typ := Get_Subtype_Object (Syn_Inst, Get_Subtype_Indication (Prefix));
       else
-         Typ := Synth_Type_Of_Object (Syn_Inst, Prefix);
+         Val := Synth_Expression_With_Basetype (Syn_Inst, Prefix_Name);
+         Typ := Val.Typ;
       end if;
 
       return Get_Array_Bound (Typ, Dim_Type (Dim));
