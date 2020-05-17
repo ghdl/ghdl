@@ -355,65 +355,6 @@ package body Synth.Static_Oper is
       return Res;
    end Synth_Vector_Dyadic;
 
-   procedure To_Std_Logic_Vector (Val : Memtyp; Arr : out Std_Logic_Vector) is
-   begin
-      for I in 1 .. Uns32 (Vec_Length (Val.Typ)) loop
-         Arr (Natural (I)) := Read_Std_Logic (Val.Mem, I - 1);
-      end loop;
-   end To_Std_Logic_Vector;
-
-   function To_Memtyp (Vec : Std_Logic_Vector; El_Typ : Type_Acc) return Memtyp
-   is
-      pragma Assert (Vec'First = 1);
-      Res_Typ : Type_Acc;
-      Res : Memtyp;
-   begin
-      Res_Typ := Create_Vec_Type_By_Length (Uns32 (Vec'Last), El_Typ);
-      Res := Create_Memory (Res_Typ);
-      for I in 1 .. Vec'Last loop
-         Write_Std_Logic (Res.Mem, Uns32 (I - 1), Vec (I));
-      end loop;
-      return Res;
-   end To_Memtyp;
-
-   function Synth_Shift (Val : Memtyp;
-                         Amt : Uns32;
-                         Right : Boolean;
-                         Arith : Boolean) return Memtyp
-   is
-      Len : constant Uns32 := Uns32 (Vec_Length (Val.Typ));
-      Arr : Std_Logic_Vector (1 .. Natural (Len));
-      Pad : Std_Ulogic;
-   begin
-      if Len = 0 or Amt >= Len then
-         Arr := (others => '0');
-      else
-         To_Std_Logic_Vector (Val, Arr);
-         if Arith then
-            Pad := Arr (1);
-         else
-            Pad := '0';
-         end if;
-
-         if Right then
-            for I in reverse Amt + 1 .. Len loop
-               Arr (Natural (I)) := Arr (Natural (I - Amt));
-            end loop;
-            for I in 1 .. Amt loop
-               Arr (Natural (I)) := Pad;
-            end loop;
-         else
-            for I in 1 .. Len - Amt loop
-               Arr (Natural (I)) := Arr (Natural (I + Amt));
-            end loop;
-            for I in Len - Amt + 1 .. Len loop
-               Arr (Natural (I)) := Pad;
-            end loop;
-         end if;
-      end if;
-      return To_Memtyp (Arr, Val.Typ.Vec_El);
-   end Synth_Shift;
-
    function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
    begin
       pragma Assert (Op.Typ.Kind = Type_Logic);
@@ -877,9 +818,9 @@ package body Synth.Static_Oper is
             begin
                Amt := Read_Discrete (Right);
                if Amt >= 0 then
-                  return Synth_Shift (Left, Uns32 (Amt), True, False);
+                  return Shift_Vec (Left, Uns32 (Amt), True, False);
                else
-                  return Synth_Shift (Left, Uns32 (-Amt), False, False);
+                  return Shift_Vec (Left, Uns32 (-Amt), False, False);
                end if;
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int
@@ -889,9 +830,9 @@ package body Synth.Static_Oper is
             begin
                Amt := Read_Discrete (Right);
                if Amt >= 0 then
-                  return Synth_Shift (Left, Uns32 (Amt), False, False);
+                  return Shift_Vec (Left, Uns32 (Amt), False, False);
                else
-                  return Synth_Shift (Left, Uns32 (-Amt), True, False);
+                  return Shift_Vec (Left, Uns32 (-Amt), True, False);
                end if;
             end;
 
@@ -1145,6 +1086,23 @@ package body Synth.Static_Oper is
             --  SIGNED to Integer
             return Create_Memory_Discrete
               (Eval_Signed_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat =>
+            return Shift_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
+               False, False);
+         when Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat =>
+            return Shift_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
+               False, False);
+         when Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat =>
+            return Shift_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
+               True, False);
+         when Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat =>
+            return Shift_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
+               True, True);
 
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
             declare

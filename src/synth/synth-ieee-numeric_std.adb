@@ -494,4 +494,55 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Neg_Vec;
 
+   function Shift_Vec (Val : Memtyp;
+                       Amt : Uns32;
+                       Right : Boolean;
+                       Arith : Boolean) return Memtyp
+   is
+      Len : constant Uns32 := Uns32 (Vec_Length (Val.Typ));
+      Res : Memtyp;
+      Pad, B : Std_Ulogic;
+   begin
+      Res.Typ := Create_Res_Type (Val.Typ, Len);
+      Res := Create_Memory (Res.Typ);
+
+      if Len = 0 then
+         Fill (Res, '0');
+         return Res;
+      end if;
+
+      if Arith then
+         Pad := Read_Std_Logic (Val.Mem, 0);
+      else
+         Pad := '0';
+      end if;
+
+      if Amt >= Len then
+         if Right then
+            Fill (Res, Pad);
+         else
+            Fill (Res, '0');
+         end if;
+         return Res;
+      end if;
+
+      if Right then
+         for I in 1 .. Amt loop
+            Write_Std_Logic (Res.Mem, I - 1, Pad);
+         end loop;
+         for I in Amt + 1 .. Len loop
+            B := Read_Std_Logic (Val.Mem, I - 1 - Amt);
+            Write_Std_Logic (Res.Mem, I - 1, B);
+         end loop;
+      else
+         for I in 1 .. Len - Amt loop
+            B := Read_Std_Logic (Val.Mem, Amt + I - 1);
+            Write_Std_Logic (Res.Mem, I - 1, B);
+         end loop;
+         for I in Len - Amt + 1 .. Len loop
+            Write_Std_Logic (Res.Mem, I - 1, Pad);
+         end loop;
+      end if;
+      return Res;
+   end Shift_Vec;
 end Synth.Ieee.Numeric_Std;
