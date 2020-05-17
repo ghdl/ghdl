@@ -26,6 +26,17 @@ with Synth.Source; use Synth.Source;
 package Synth.Ieee.Numeric_Std is
    --  Reminder: vectors elements are from left to right.
 
+   function Compare_Uns_Uns
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type;
+   function Compare_Uns_Nat
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type;
+   function Compare_Nat_Uns
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type;
+   function Compare_Sgn_Sgn
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type;
+   function Compare_Sgn_Int
+     (Left, Right : Memtyp; Err : Order_Type; Loc : Syn_Src) return Order_Type;
+
    --  Unary "-"
    function Neg_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp;
 
