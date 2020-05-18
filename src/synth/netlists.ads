@@ -342,7 +342,7 @@ private
    for Sname_Record'Size use 2*32;
    pragma Warnings (On, "*convention*");
 
-   type Module is new Uns32;
+   type Module is mod 2**30;
    No_Module : constant Module := 0;
    Free_Module : constant Module := 1;
 
@@ -361,18 +361,18 @@ private
    No_Net : constant Net := 0;
 
    type Module_Record is record
-      Parent : Module;
-      Name : Sname;
-      Id : Module_Id;
-      First_Port_Desc : Port_Desc_Idx;
-      Nbr_Inputs : Port_Nbr;
-      Nbr_Outputs : Port_Nbr;
+      Parent           : Module;
+      Name             : Sname;
+      Id               : Module_Id;
+      First_Port_Desc  : Port_Desc_Idx;
+      Nbr_Inputs       : Port_Nbr;
+      Nbr_Outputs      : Port_Nbr;
       First_Param_Desc : Param_Desc_Idx;
-      Nbr_Params : Param_Nbr;
+      Nbr_Params       : Param_Nbr;
 
       --  First sub-module child.
       First_Sub_Module : Module;
-      Last_Sub_Module : Module;
+      Last_Sub_Module  : Module;
 
       --  Sub-module brother.
       Next_Sub_Module : Module;
@@ -381,7 +381,7 @@ private
       --  The self instance is the first instance.
       --  FIXME: use an array instead ?
       First_Instance : Instance;
-      Last_Instance : Instance;
+      Last_Instance  : Instance;
    end record;
 
    function Get_First_Port_Desc (M : Module) return Port_Desc_Idx;
@@ -396,19 +396,24 @@ private
    type Instance_Record is record
       --  The instance is instantiated in Parent.
       Parent : Module;
+      Flag3  : Boolean;
+      Flag4  : Boolean;
 
       --  Instances are in a doubly-linked list.
       Prev_Instance : Instance;
       Next_Instance : Instance;
 
       --  For a self-instance, Klass is equal to Parent, and Name is No_Sname.
-      Klass : Module;
-      Name : Sname;
-      Flag_Mark : Boolean;
-      Flag2 : Boolean;
+      Klass     : Module;
+      Flag5     : Boolean;
+      Flag6     : Boolean;
 
-      First_Param : Param_Idx;
-      First_Input : Input;
+      Name      : Sname;
+      Flag_Mark : Boolean;
+      Flag2     : Boolean;
+
+      First_Param  : Param_Idx;
+      First_Input  : Input;
       First_Output : Net;
    end record;
    pragma Pack (Instance_Record);
@@ -428,6 +433,9 @@ private
    --  Extract INST from the list of instance of its module.
    --  Will still be connected, but won't appear anymore in the list of
    --  instances.
+   --  Once extracted, the instance is not in a consistent state anymore.  So
+   --  it should be either fully disconnected and freed or re-inserted in the
+   --  parent module.
    procedure Extract_Instance (Inst : Instance);
 
    --  Remove and free the unconnected instance INST.

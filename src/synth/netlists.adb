@@ -402,10 +402,12 @@ package body Netlists is
         Params_Table.Allocate (Natural (Nbr_Params));
    begin
       Instances_Table.Append ((Parent => Parent,
+                               Flag3 | Flag4 => False,
                                Next_Instance => No_Instance,
                                Prev_Instance => No_Instance,
                                Klass => M,
                                Flag_Mark => False,
+                               Flag5 | Flag6 => False,
                                Flag2 => False,
                                Name => Name,
                                First_Param => Params,
@@ -1035,9 +1037,11 @@ begin
    pragma Assert (Modules_Table.Last = Free_Module);
 
    Instances_Table.Append ((Parent => No_Module,
+                            Flag3 | Flag4 => False,
                             Next_Instance => No_Instance,
                             Prev_Instance => No_Instance,
                             Klass => No_Module,
+                            Flag5 | Flag6 => False,
                             Flag_Mark => False,
                             Flag2 => False,
                             Name => No_Sname,
