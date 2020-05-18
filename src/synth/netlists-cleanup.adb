@@ -173,6 +173,7 @@ package body Netlists.Cleanup is
    procedure Mark_And_Sweep (M : Module)
    is
       use Netlists.Gates;
+      --  Table of new gates to be inspected.
       Inspect : Instance_Tables.Instance;
 
       Inst : Instance;
@@ -298,7 +299,8 @@ package body Netlists.Cleanup is
                Inst := First_Unused;
                exit when Inst = No_Instance;
                First_Unused := Get_Next_Instance (Inst);
-
+               Set_Next_Instance (Inst, No_Instance);
+               Set_Prev_Instance (Inst, No_Instance);
                Free_Instance (Inst);
             end loop;
          end if;

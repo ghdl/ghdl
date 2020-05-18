@@ -669,7 +669,7 @@ package body Netlists.Inference is
       --  is read).  So redirect the net.
       Redirect_Inputs (Get_Output (Last_Mux, 0), Res);
       if Prev_Mux /= No_Instance then
-         Free_Instance (Prev_Mux);
+         Remove_Instance (Prev_Mux);
       end if;
 
       return Res;

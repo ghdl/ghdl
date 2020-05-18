@@ -81,10 +81,6 @@ package Netlists.Utils is
    --  Return True iff O has one sink (is connected to one input).
    function Has_One_Connection (O : Net) return Boolean;
 
-   --  Disconnect input I.  If the driver of I has no output(s) connected,
-   --  disconnect and free it.
-   procedure Disconnect_And_Free (I : Input);
-
    --  Disconnect an input and return the previous driver.
    function Disconnect_And_Get (I : Input) return Net;
    function Disconnect_And_Get (Inst : Instance; I : Port_Idx) return Net;

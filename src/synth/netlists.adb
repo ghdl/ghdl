@@ -529,9 +529,15 @@ package body Netlists is
    procedure Free_Instance (Inst : Instance)
    is
       pragma Assert (Is_Valid (Inst));
+      Inst_Rec : Instance_Record renames Instances_Table.Table (Inst);
    begin
       pragma Assert (not Check_Connected (Inst));
-      Instances_Table.Table (Inst).Klass := Free_Module;
+
+      --  Instance must not be linked anymore.
+      pragma Assert (Inst_Rec.Prev_Instance = No_Instance);
+      pragma Assert (Inst_Rec.Next_Instance = No_Instance);
+
+      Inst_Rec.Klass := Free_Module;
    end Free_Instance;
 
    function Get_Module (Inst : Instance) return Module is
