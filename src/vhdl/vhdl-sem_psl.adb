@@ -315,7 +315,9 @@ package body Vhdl.Sem_Psl is
             R := Sem_Sequence (Get_Right (Seq));
             Set_Right (Seq, R);
             return Seq;
-         when N_Star_Repeat_Seq =>
+         when N_Star_Repeat_Seq
+            | N_Equal_Repeat_Seq
+            | N_Goto_Repeat_Seq =>
             Res := Get_Sequence (Seq);
             if Res /= Null_PSL_Node then
                Res := Sem_Sequence (Get_Sequence (Seq));
