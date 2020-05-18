@@ -270,10 +270,8 @@ package Netlists is
                               Nbr_Params : Param_Nbr)
                              return Instance;
 
-   --  Mark INST as free, but keep it in the module.
-   --  Use Remove_Free_Instances for a cleanup.
-   --  TODO: Destroy instance in Remove_Free_Instances.
-   procedure Free_Instance (Inst : Instance);
+   --  Remove and free the unconnected instance INST.
+   procedure Remove_Instance (Inst : Instance);
 
    function Is_Self_Instance (I : Instance) return Boolean;
    function Get_Module (Inst : Instance) return Module;
@@ -441,8 +439,8 @@ private
    --  parent module.
    procedure Extract_Instance (Inst : Instance);
 
-   --  Remove and free the unconnected instance INST.
-   procedure Remove_Instance (Inst : Instance);
+   --  Mark INST as free.  Must be unconnected and removed from its module.
+   procedure Free_Instance (Inst : Instance);
 
    type Input_Record is record
       Parent : Instance;
