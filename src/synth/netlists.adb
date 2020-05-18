@@ -382,6 +382,7 @@ package body Netlists is
    begin
       pragma Assert (not Check_Connected (Inst));
       Extract_Instance (Inst);
+      Free_Instance (Inst);
    end Remove_Instance;
 
    function New_Instance_Internal (Parent : Module;

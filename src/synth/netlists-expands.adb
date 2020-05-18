@@ -31,10 +31,10 @@ with Netlists.Folds; use Netlists.Folds;
 package body Netlists.Expands is
    type Memidx_Array_Type is array (Natural range <>) of Instance;
 
-   --  Extract Memidx from ADDR_NET and return the number of elements NBR_ELS
-   --  (which is usually 2**width(ADDR_NET)).
-   --  Memidx are ordered from the one with the largest step to the one with
-   --   the smallest step.
+   --  Extract Memidx from ADDR_NET and return the number of
+   --  elements NBR_ELS (which is usually 2**width(ADDR_NET)).
+   --  Memidx are ordered from the one with the largest step to the one
+   --   with the smallest step.
    procedure Gather_Memidx (Addr_Net : Net;
                             Memidx_Arr : out Memidx_Array_Type;
                             Nbr_Els : out Natural)
@@ -79,6 +79,21 @@ package body Netlists.Expands is
       end loop;
    end Gather_Memidx;
 
+   procedure Remove_Memidx (Memidx_Arr : Memidx_Array_Type)
+   is
+      Inst : Instance;
+   begin
+      for I in Memidx_Arr'Range loop
+         Inst := Memidx_Arr (I);
+         if not Is_Connected (Get_Output (Inst, 0)) then
+            --  A memidx can be shared between several insert/extract.
+            --  FIXME: what about memidx ?
+            Disconnect (Get_Input (Inst, 0));
+            Remove_Instance (Inst);
+         end if;
+      end loop;
+   end Remove_Memidx;
+
    --  IDX is the next index to be fill in ELS.
    --  OFF is offset for extraction from VAL.
    --  ADDR_OFF is the address offset.
@@ -114,7 +129,7 @@ package body Netlists.Expands is
       end loop;
    end Fill_Els;
 
-   --  Extract address from memidx/addidx and remove those gates.
+   --  Extract address from memidx/addidx and disconnect those gates.
    procedure Extract_Address
      (Ctxt : Context_Acc; Addr_Net : Net; Ndims : Natural; Addr : out Net)
    is
@@ -130,6 +145,7 @@ package body Netlists.Expands is
          Inst := Get_Net_Parent (N);
          case Get_Id (Inst) is
             when Id_Memidx =>
+               --  Must be the last one!
                Inst1 := Inst;
             when Id_Addidx =>
                --  Extract memidx.
@@ -143,7 +159,9 @@ package body Netlists.Expands is
                N := Get_Driver (Inp);
                Disconnect (Inp);
 
+               --  Remove the Addidx.
                Remove_Instance (Inst);
+
             when others =>
                raise Internal_Error;
          end case;
@@ -152,13 +170,6 @@ package body Netlists.Expands is
          Inp := Get_Input (Inst1, 0);
          Res_Arr (P) := Get_Driver (Inp);
          P := P + 1;
-
-         if not Is_Connected (Get_Output (Inst1, 0)) then
-            --  A memidx can be shared between several insert/extract.
-            --  FIXME: what about memidx ?
-            Disconnect (Inp);
-            Remove_Instance (Inst1);
-         end if;
 
          exit when Inst1 = Inst;
       end loop;
@@ -228,6 +239,8 @@ package body Netlists.Expands is
       Disconnect (Get_Input (Inst, 0));
       Redirect_Inputs (Get_Output (Inst, 0), Res);
       Remove_Instance (Inst);
+
+      Remove_Memidx (Memidx_Arr);
 
       Free_Case_Element_Array (Els);
    end Expand_Dyn_Extract;
@@ -419,7 +432,7 @@ package body Netlists.Expands is
 
       --  Generate decoder.
       Net_Arr := new Net_Array(0 .. Int32 (Nbr_Els - 1));
-      Disconnect (Get_Input (Inst, 2));
+      Disconnect (Get_Input (Inst, 2));  --  Disconnect address
       Extract_Address (Ctxt, Addr_Net, Ndims, Addr);
       Truncate_Address (Ctxt, Addr, Nbr_Els);
       Generate_Decoder (Ctxt, Addr, Net_Arr.all, Loc);
@@ -448,6 +461,8 @@ package body Netlists.Expands is
          Disconnect (Get_Input (Inst, 3));
       end if;
       Remove_Instance (Inst);
+
+      Remove_Memidx (Memidx_Arr);
    end Expand_Dyn_Insert;
 
    --  Replace instance INST a ROT b by: S (a, b) | C (a, l - b)
