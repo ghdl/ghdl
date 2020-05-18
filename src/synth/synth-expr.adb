@@ -822,6 +822,7 @@ package body Synth.Expr is
                              or else Vtype.Kind = Type_Slice);
             return Vt;
          when Type_Record =>
+            pragma Assert (Vtype.Kind = Type_Record);
             --  TODO: handle elements.
             return Vt;
          when Type_Unbounded_Record =>
@@ -829,12 +830,12 @@ package body Synth.Expr is
             return Vt;
          when Type_Access =>
             return Vt;
-         when Type_File =>
-            pragma Assert (Vtype = Dtype);
-            return Vt;
-         when Type_Protected =>
-            pragma Assert (Vtype = Dtype);
-            return Vt;
+         when Type_File
+            | Type_Protected =>
+            --  No conversion expected.
+            --  As the subtype is identical, it is already handled by the
+            --  above check.
+            raise Internal_Error;
       end case;
    end Synth_Subtype_Conversion;
 
