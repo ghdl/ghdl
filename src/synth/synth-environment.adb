@@ -1299,9 +1299,9 @@ package body Synth.Environment is
                      if not Is_Equal (Res, Prev_Val) then
                         --  The previous value is different from the result.
                         return Null_Memtyp;
-                     else
-                        Res := Prev_Val;
                      end if;
+                  else
+                     Res := Prev_Val;
                   end if;
                end if;
             when True =>
