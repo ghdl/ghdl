@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Std_Names;
+with Name_Table;
 with Tables;
 with Simple_IO;
 
@@ -530,12 +531,32 @@ package body Netlists is
    is
       pragma Assert (Is_Valid (Inst));
       Inst_Rec : Instance_Record renames Instances_Table.Table (Inst);
+      Nbr_Outputs : Port_Nbr;
+      Nbr_Inputs : Port_Nbr;
    begin
       pragma Assert (not Check_Connected (Inst));
 
       --  Instance must not be linked anymore.
       pragma Assert (Inst_Rec.Prev_Instance = No_Instance);
       pragma Assert (Inst_Rec.Next_Instance = No_Instance);
+
+      Nbr_Outputs := Get_Nbr_Outputs (Inst);
+      for I in 1 .. Nbr_Outputs loop
+         declare
+            N : constant Net := Get_Output (Inst, I - 1);
+         begin
+            Nets_Table.Table (N).Parent := No_Instance;
+         end;
+      end loop;
+
+      Nbr_Inputs := Get_Nbr_Inputs (Inst);
+      for I in 1 .. Nbr_Inputs loop
+         declare
+            Inp : constant Input := Get_Input (Inst, I - 1);
+         begin
+            Inputs_Table.Table (Inp).Parent := No_Instance;
+         end;
+      end loop;
 
       Inst_Rec.Klass := Free_Module;
    end Free_Instance;
@@ -1010,13 +1031,15 @@ package body Netlists is
    is
       use Simple_IO;
       Unused : Natural;
+      Nbr_Modules : array (Module range 1 .. 130) of Natural := (others => 0);
    begin
       Put_Line_Err ("Statistics for netlists:");
       Put_Line_Err
         (" snames:    " & Sname'Image (Snames_Table.Last));
       Put_Line_Err
         (" modules:   " & Module'Image (Modules_Table.Last));
-      Put_Line_Err
+
+      Put_Err
         (" instances: " & Instance'Image (Instances_Table.Last));
       Unused := 0;
       for I in No_Instance + 1 .. Instances_Table.Last loop
@@ -1025,13 +1048,60 @@ package body Netlists is
          end if;
       end loop;
       Put_Line_Err
-        (" free instances: " & Natural'Image (Unused));
-      Put_Line_Err
+        (" (free:" & Natural'Image (Unused) & ')');
+
+      Put_Err
         (" nets:      " & Net'Image (Nets_Table.Last));
+      Unused := 0;
+      for I in No_Net + 1 .. Nets_Table.Last loop
+         if Get_Net_Parent (I) = No_Instance then
+            Unused := Unused + 1;
+         end if;
+      end loop;
       Put_Line_Err
+        (" (free:" & Natural'Image (Unused) & ')');
+
+      Put_Err
         (" inputs:    " & Input'Image (Inputs_Table.Last));
+      Unused := 0;
+      for I in No_Input + 1 .. Inputs_Table.Last loop
+         if Get_Input_Parent (I) = No_Instance then
+            Unused := Unused + 1;
+         end if;
+      end loop;
+      Put_Line_Err
+        (" (free:" & Natural'Image (Unused) & ')');
+
       Put_Line_Err
         (" params:    " & Param_Idx'Image (Params_Table.Last));
+
+      for I in No_Instance + 1 .. Instances_Table.Last loop
+         declare
+            M : constant Module := Get_Module (I);
+         begin
+            if M <= Nbr_Modules'Last then
+               Nbr_Modules (M) := Nbr_Modules (M) + 1;
+            end if;
+         end;
+      end loop;
+      for I in Nbr_Modules'Range loop
+         if Nbr_Modules (I) /= 0 then
+            declare
+               Name : constant Sname := Get_Module_Name (I);
+            begin
+               case Get_Sname_Kind (Name) is
+                  when Sname_User
+                     | Sname_Artificial =>
+                     Put_Err
+                       ("  " & Name_Table.Image (Get_Sname_Suffix (Name)));
+                  when others =>
+                     Put_Err
+                       ("  module " & Module_Id'Image (Get_Id (I)));
+               end case;
+               Put_Line_Err (":" & Natural'Image (Nbr_Modules (I)));
+            end;
+         end if;
+      end loop;
    end Disp_Stats;
 
 begin
