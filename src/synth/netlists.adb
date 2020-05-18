@@ -20,6 +20,7 @@
 
 with Std_Names;
 with Tables;
+with Simple_IO;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
@@ -998,6 +999,35 @@ package body Netlists is
          Pval_Word_Table.Table (Pval_Rec.Zx_Idx + Off) := Val.Zx;
       end if;
    end Write_Pval;
+
+   procedure Disp_Stats
+   is
+      use Simple_IO;
+      Unused : Natural;
+   begin
+      Put_Line_Err ("Statistics for netlists:");
+      Put_Line_Err
+        (" snames:    " & Sname'Image (Snames_Table.Last));
+      Put_Line_Err
+        (" modules:   " & Module'Image (Modules_Table.Last));
+      Put_Line_Err
+        (" instances: " & Instance'Image (Instances_Table.Last));
+      Unused := 0;
+      for I in No_Instance + 1 .. Instances_Table.Last loop
+         if Get_Module (I) = Free_Module then
+            Unused := Unused + 1;
+         end if;
+      end loop;
+      Put_Line_Err
+        (" free instances: " & Natural'Image (Unused));
+      Put_Line_Err
+        (" nets:      " & Net'Image (Nets_Table.Last));
+      Put_Line_Err
+        (" inputs:    " & Input'Image (Inputs_Table.Last));
+      Put_Line_Err
+        (" params:    " & Param_Idx'Image (Params_Table.Last));
+   end Disp_Stats;
+
 begin
    --  Initialize snames_table: create the first entry for No_Sname.
    Snames_Table.Append ((Kind => Sname_Artificial,

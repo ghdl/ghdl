@@ -327,6 +327,9 @@ package Netlists is
    --  OFF is the word offset, from 0 to (len - 1) / 32.
    function Read_Pval (P : Pval; Off : Uns32) return Logic_32;
    procedure Write_Pval (P : Pval; Off : Uns32; Val : Logic_32);
+
+   --  Display some usage stats on the standard error.
+   procedure Disp_Stats;
 private
    type Sname is new Uns32 range 0 .. 2**30 - 1;
    No_Sname : constant Sname := 0;
