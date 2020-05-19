@@ -25,6 +25,7 @@ with Simple_IO;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
+with Dyn_Interning;
 
 package body Netlists is
 
@@ -131,7 +132,8 @@ package body Netlists is
                              Last_Sub_Module => No_Module,
                              Next_Sub_Module => No_Module,
                              First_Instance => No_Instance,
-                             Last_Instance => No_Instance));
+                             Last_Instance => No_Instance,
+                             Attrs => null));
       Res := Modules_Table.Last;
       Self := Create_Self_Instance (Res);
       pragma Unreferenced (Self);
@@ -176,7 +178,8 @@ package body Netlists is
           Last_Sub_Module => No_Module,
           Next_Sub_Module => No_Module,
           First_Instance => No_Instance,
-          Last_Instance => No_Instance));
+          Last_Instance => No_Instance,
+          Attrs => null));
       Res := Modules_Table.Last;
 
       --  Append
@@ -1171,6 +1174,40 @@ package body Netlists is
       end if;
    end Write_Pval;
 
+   --  Attributes
+
+   type Attribute_Record is record
+      Inst : Instance;
+      First : Attribute;
+   end record;
+
+   function Attribute_Hash (Params : Instance) return Hash_Value_Type is
+   begin
+      return Hash_Value_Type (Params);
+   end Attribute_Hash;
+
+   function Attribute_Build (Params : Instance) return Attribute_Record is
+   begin
+      return Attribute_Record'(Inst => Params,
+                               First => No_Attribute);
+   end Attribute_Build;
+
+   function Attribute_Equal (Obj : Attribute_Record; Params : Instance)
+                             return Boolean is
+   begin
+      return Obj.Inst = Params;
+   end Attribute_Equal;
+
+   package Attribute_Tables is new Dyn_Interning
+     (Params_Type => Instance,
+      Object_Type => Attribute_Record,
+      Hash => Attribute_Hash,
+      Build => Attribute_Build,
+      Equal => Attribute_Equal);
+
+   type Attribute_Tables_Instance is new Attribute_Tables.Instance;
+   --  Statistics
+
    function Count_Free_Inputs (Head : Input) return Natural
    is
       Unused : Natural;
@@ -1306,7 +1343,8 @@ begin
                           Last_Sub_Module => No_Module,
                           Next_Sub_Module => No_Module,
                           First_Instance => No_Instance,
-                          Last_Instance => No_Instance));
+                          Last_Instance => No_Instance,
+                          Attrs => null));
    pragma Assert (Modules_Table.Last = No_Module);
 
    Modules_Table.Append ((Parent => No_Module,
@@ -1322,7 +1360,8 @@ begin
                           Last_Sub_Module => No_Module,
                           Next_Sub_Module => No_Module,
                           First_Instance => No_Instance,
-                          Last_Instance => No_Instance));
+                          Last_Instance => No_Instance,
+                          Attrs => null));
    pragma Assert (Modules_Table.Last = Free_Module);
 
    Instances_Table.Append ((Parent => No_Module,

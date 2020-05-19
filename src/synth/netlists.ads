@@ -361,6 +361,23 @@ private
    type Net is new Uns32;
    No_Net : constant Net := 0;
 
+   type Instance is new Uns32;
+   No_Instance : constant Instance := 0;
+
+   type Attribute is new Uns32;
+   No_Attribute : Attribute := 0;
+
+   type Attribute_Tables_Instance;
+
+   type Attribute_Table_Acc is access Attribute_Tables_Instance;
+
+   type Attribute_Value is record
+      Name  : Name_Id;
+      Val   : Pval;
+      Typ   : Param_Type;
+      Chain : Attribute;
+   end record;
+
    type Module_Record is record
       Parent           : Module;
       Name             : Sname;
@@ -383,14 +400,13 @@ private
       --  FIXME: use an array instead ?
       First_Instance : Instance;
       Last_Instance  : Instance;
+
+      Attrs          : Attribute_Table_Acc;
    end record;
 
    function Get_First_Port_Desc (M : Module) return Port_Desc_Idx;
    function Get_First_Output (Inst : Instance) return Net;
    function Get_Port_Desc (Idx : Port_Desc_Idx) return Port_Desc;
-
-   type Instance is new Uns32;
-   No_Instance : constant Instance := 0;
 
    function Is_Valid (I : Instance) return Boolean;
 
