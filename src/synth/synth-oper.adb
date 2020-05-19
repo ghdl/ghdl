@@ -1638,16 +1638,16 @@ package body Synth.Oper is
                                   W, Get_Location (Expr)),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat
-           | Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
+           | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Lsl, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Lsr, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Asr, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Rol, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Ror, L, R, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Uns =>

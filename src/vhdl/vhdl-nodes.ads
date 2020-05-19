@@ -5642,11 +5642,6 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int,
       Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int,
 
-      Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Nat,
-
       Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn,
 
@@ -5691,10 +5686,15 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn,
 
       --  Shift and rotate functions.
-      Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat,
+
+      Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat,
 
       --  Std_Match functions.
       Iir_Predefined_Ieee_Numeric_Std_Match_Log,

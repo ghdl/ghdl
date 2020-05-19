@@ -847,19 +847,16 @@ package body Synth.Static_Oper is
             return Create_Memory_Discrete
               (Eval_Signed_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
 
-         when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
                False, False);
-         when Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat =>
-            return Shift_Vec
-              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
-               False, False);
-         when Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat =>
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
                True, False);
-         when Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat =>
             return Shift_Vec
               (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
                True, True);
