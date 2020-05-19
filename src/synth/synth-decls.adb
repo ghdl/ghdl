@@ -41,9 +41,6 @@ with Synth.Files_Operations;
 with Synth.Values; use Synth.Values;
 
 package body Synth.Decls is
-   procedure Synth_Anonymous_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node);
-
    procedure Create_Var_Wire
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Init : Valtyp)
    is
@@ -82,6 +79,16 @@ package body Synth.Decls is
       end if;
    end Synth_Subtype_Indication_If_Anonymous;
 
+   function Synth_Subtype_Indication_If_Anonymous
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc is
+   begin
+      if Get_Type_Declarator (Atype) = Null_Node then
+         return Synth_Subtype_Indication (Syn_Inst, Atype);
+      else
+         return Get_Subtype_Object (Syn_Inst, Atype);
+      end if;
+   end Synth_Subtype_Indication_If_Anonymous;
+
    function Synth_Array_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
@@ -101,33 +108,22 @@ package body Synth.Decls is
       return Typ;
    end Synth_Array_Type_Definition;
 
-   --  Synth subtype of record elements.
-   procedure Synth_Record_Elements_Definition
-     (Syn_Inst : Synth_Instance_Acc; Def : Node)
-   is
-      El_List : constant Node_Flist := Get_Elements_Declaration_List (Def);
-      El : Node;
-   begin
-      for I in Flist_First .. Flist_Last (El_List) loop
-         El := Get_Nth_Element (El_List, I);
-         Synth_Declaration_Type (Syn_Inst, El);
-      end loop;
-   end Synth_Record_Elements_Definition;
-
    function Synth_Record_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
       El_List : constant Node_Flist := Get_Elements_Declaration_List (Def);
       Rec_Els : Rec_El_Array_Acc;
-      El : Node;
-      El_Typ : Type_Acc;
+      El      : Node;
+      El_Type : Node;
+      El_Typ  : Type_Acc;
    begin
       Rec_Els := Create_Rec_El_Array
         (Iir_Index32 (Get_Nbr_Elements (El_List)));
 
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         El_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (El));
+         El_Type := Get_Type (El);
+         El_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
          Rec_Els.E (Iir_Index32 (I + 1)).Typ := El_Typ;
       end loop;
 
@@ -236,7 +232,6 @@ package body Synth.Decls is
          when Iir_Kind_File_Type_Definition =>
             Typ := Synth_File_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Record_Type_Definition =>
-            Synth_Record_Elements_Definition (Syn_Inst, Def);
             Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Protected_Type_Declaration =>
             Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Def));
@@ -431,19 +426,6 @@ package body Synth.Decls is
       Typ := Synth_Subtype_Indication (Syn_Inst, Atype);
       Create_Subtype_Object (Syn_Inst, Atype, Typ);
    end Synth_Subtype_Indication;
-
-   procedure Synth_Anonymous_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
-   begin
-      if Atype = Null_Node
-        or else Get_Type_Declarator (Atype) /= Null_Node
-      then
-         return;
-      end if;
-      Synth_Subtype_Indication (Syn_Inst, Atype);
-   end Synth_Anonymous_Subtype_Indication;
-
-   pragma Unreferenced (Synth_Anonymous_Subtype_Indication);
 
    function Get_Declaration_Type (Decl : Node) return Node
    is
