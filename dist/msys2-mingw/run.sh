@@ -93,10 +93,12 @@ build () {
 
   gstart 'Build package'
     dos2unix PKGBUILD
-    makepkg-mingw -sCLfc --noconfirm --noprogressbar
+    makepkg-mingw --noconfirm --noprogressbar -sCLf --noarchive
   gend
 
-  ls -la
+  gstart 'Archive package'
+    makepkg-mingw --noconfirm --noprogressbar -R
+  gend
 
   gstart 'Install package'
     pacman --noconfirm -U "mingw-w64-${TARBALL_ARCH}-ghdl-${TARGET}-ci"-*-any.pkg.tar.zst
