@@ -13,6 +13,8 @@ testsuite/get_entities
 
 # Generated files on windows.
 /build/
+/dist/msys2-mingw/**/logpipe.*
+/dist/msys2-mingw/**/*.log
 
 # Generated directories on Linux
 lib/

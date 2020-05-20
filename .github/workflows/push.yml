@@ -10,7 +10,7 @@ jobs:
   gpl:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - run: |
         TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
 
@@ -22,14 +22,14 @@ jobs:
         task: [ mcode, llvm-7, gcc-8.3.0 ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - run: |
         TASK=buster+${{ matrix.task }} ./dist/ci-run.sh -c
 
   osx:
     runs-on: macOS-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - run: |
         brew update
         brew install p7zip
@@ -61,7 +61,9 @@ jobs:
       with:
         msystem: MSYS
         update: true
-    - uses: actions/checkout@v1
+        install: base-devel git
+    - run: git config --global core.autocrlf input
+    - uses: actions/checkout@v2
     - name: Build and (hopefully) install package
       shell: msys2 {0}
       run: |

@@ -19,6 +19,7 @@ build() {
   cd "${srcdir}/builddir"
   ../../../../../configure --prefix=${MINGW_PREFIX} LDFLAGS=-static --enable-libghdl --enable-synth
   make GNATMAKE="gnatmake -j$(nproc)"
+  exit
 }
 
 package() {
