@@ -1090,6 +1090,7 @@ ghw_read_hie (struct ghw_handler *h)
 	  /* Should not be here.  */
 	  abort ();
 	case ghw_hie_process:
+	  el->u.blk.child = NULL;
 	  break;
 	case ghw_hie_block:
 	case ghw_hie_generate_if:
