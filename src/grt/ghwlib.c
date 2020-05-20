@@ -1313,8 +1313,8 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 	    ghw_disp_subtype_indication (h, hie->u.sig.type);
 	    printf (":");
 	    k = 0;
-
-	    while (1)
+	    /* There can be 0-length signals.  */
+	    while (sigs[k] != GHW_NO_SIG)
 	      {
 		/* First signal of the range.  */
 		printf (" #%u", sigs[k]);
@@ -1324,9 +1324,6 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 		if (num > 1)
 		  printf ("-#%u", sigs[k + num - 1]);
 		k += num;
-		/* End of signals ? */
-		if (sigs[k] == GHW_NO_SIG)
-		  break;
 	      }
 	    n = hie->brother;
 	  }
