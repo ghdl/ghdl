@@ -2927,7 +2927,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Expr_Staticness (State1)
    --
-   --   Get/Set_Direction (State2)
+   --   Get/Set_Direction (Flag1)
 
    -- Iir_Kind_Subtype_Definition (Medium)
    --  Such a node is only created by parse and transformed into the correct
@@ -7866,7 +7866,7 @@ package Vhdl.Nodes is
    function Get_Range_Constraint (Target : Iir) return Iir;
    procedure Set_Range_Constraint (Target : Iir; Constraint : Iir);
 
-   --  Field: State2 (pos)
+   --  Field: Flag1 (uc)
    function Get_Direction (Decl : Iir) return Direction_Type;
    procedure Set_Direction (Decl : Iir; Dir : Direction_Type);
 

@@ -2993,8 +2993,8 @@ package body Vhdl.Nodes_Meta is
       Field_Type_Declarator,
       Field_Base_Type,
       --  Iir_Kind_Range_Expression
-      Field_Expr_Staticness,
       Field_Direction,
+      Field_Expr_Staticness,
       Field_Left_Limit_Expr,
       Field_Right_Limit_Expr,
       Field_Range_Origin,
