@@ -20,10 +20,17 @@
 
 with Vhdl.Nodes; use Vhdl.Nodes;
 
+with Netlists; use Netlists;
 with Synth.Context; use Synth.Context;
 with Synth.Objtypes; use Synth.Objtypes;
 
 package Synth.Decls is
+   --  Return the Param_Type for ATYPE.
+   function Type_To_Param_Type (Atype : Node) return Param_Type;
+
+   --  Convert MT to a Pval.
+   function Memtyp_To_Pval (Mt : Memtyp) return Pval;
+
    --  Get the type of DECL iff it is standalone (not an already existing
    --  subtype).
    function Get_Declaration_Type (Decl : Node) return Node;

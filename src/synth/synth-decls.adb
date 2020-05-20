@@ -21,7 +21,6 @@
 with Types; use Types;
 with Mutils; use Mutils;
 
-with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils; use Netlists.Utils;
@@ -70,6 +69,53 @@ package body Synth.Decls is
             raise Internal_Error;
       end case;
    end Create_Var_Wire;
+
+   function Type_To_Param_Type (Atype : Node) return Param_Type
+   is
+      use Vhdl.Std_Package;
+      Btype : constant Node := Get_Base_Type (Atype);
+   begin
+      if Btype = String_Type_Definition then
+         return Param_Pval_String;
+      elsif Btype = Time_Type_Definition then
+         return Param_Pval_Time_Ps;
+      else
+         case Get_Kind (Btype) is
+            when Iir_Kind_Integer_Type_Definition =>
+               return Param_Pval_Integer;
+            when Iir_Kind_Floating_Type_Definition =>
+               return Param_Pval_Real;
+            when others =>
+               return Param_Pval_Vector;
+         end case;
+      end if;
+   end Type_To_Param_Type;
+
+   function Memtyp_To_Pval (Mt : Memtyp) return Pval
+   is
+      Len    : constant Uns32 := (Mt.Typ.W + 31) / 32;
+      pragma Assert (Len > 0);
+      Vec    : Logvec_Array_Acc;
+      Off    : Uns32;
+      Has_Zx : Boolean;
+      Pv     : Pval;
+   begin
+      Vec := new Logvec_Array'(0 .. Digit_Index (Len - 1) => (0, 0));
+      Off := 0;
+      Has_Zx := False;
+      Value2logvec (Mt, 0, Mt.Typ.W, Vec.all, Off, Has_Zx);
+      pragma Assert (Off = Mt.Typ.W);
+      if Has_Zx then
+         Pv := Create_Pval4 (Mt.Typ.W);
+      else
+         Pv := Create_Pval2 (Mt.Typ.W);
+      end if;
+      for I in 0 .. Len - 1 loop
+         Write_Pval (Pv, I, Vec (Digit_Index (I)));
+      end loop;
+      Free_Logvec_Array (Vec);
+      return Pv;
+   end Memtyp_To_Pval;
 
    procedure Synth_Subtype_Indication_If_Anonymous
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
@@ -888,10 +934,10 @@ package body Synth.Decls is
             --  simply ignored.
             null;
          when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Function_Declaration =>
+            | Iir_Kind_Function_Declaration =>
             Synth_Subprogram_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Procedure_Body
-           | Iir_Kind_Function_Body =>
+            | Iir_Kind_Function_Body =>
             null;
          when Iir_Kind_Non_Object_Alias_Declaration =>
             null;
@@ -907,7 +953,7 @@ package body Synth.Decls is
             Synth_Anonymous_Type_Definition
               (Syn_Inst, Get_Type_Definition (Decl),
                Get_Subtype_Definition (Decl));
-         when  Iir_Kind_Subtype_Declaration =>
+         when Iir_Kind_Subtype_Declaration =>
             Synth_Declaration_Type (Syn_Inst, Decl);
          when Iir_Kind_Component_Declaration =>
             null;
