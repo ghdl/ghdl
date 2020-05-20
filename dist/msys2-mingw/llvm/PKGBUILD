@@ -19,6 +19,7 @@ build() {
   cd "${srcdir}/builddir"
   ../../../../../configure --prefix=${MINGW_PREFIX} --with-llvm-config="llvm-config --link-static" LDFLAGS="-static" --enable-libghdl --enable-synth
   make GNATMAKE="gnatmake -j$(nproc)"
+  make ghwdump
 }
 
 package() {
