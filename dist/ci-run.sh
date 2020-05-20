@@ -135,7 +135,7 @@ vertag() {
     echo $1 | cut -c2-
   else
     # Regular tag (like snapshots), nothing to change.
-    echo "$2"
+    echo "$1"
   fi
 }
 
@@ -163,7 +163,7 @@ buildCmdOpts () {
   # Compute package name
   case "$GITHUB_REF" in
     *tags*)
-      PKG_TAG="$(vertag "`echo "$GITHUB_REF" | sed 's#^refs/tags/\(.*\)#\1#g'`" "$GITHUB_REF")"
+      PKG_TAG="$(vertag "`echo "$GITHUB_REF" | sed 's#^refs/tags/\(.*\)#\1#g'`")"
     ;;
     *heads*|*pull*)
       PKG_TAG="`notag`"
@@ -172,7 +172,7 @@ buildCmdOpts () {
       if [ -z "$TRAVIS_TAG" ]; then
         PKG_TAG="`notag`"
       else
-        PKG_TAG="`vertag "$TRAVIS_TAG" "$TRAVIS_TAG"`"
+        PKG_TAG="`vertag "$TRAVIS_TAG"`"
       fi
     ;;
     *)
