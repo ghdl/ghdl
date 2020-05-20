@@ -1,3 +1,7 @@
+branches:
+  except:
+    - nightly
+
 os: linux
 dist: xenial
 services: docker
