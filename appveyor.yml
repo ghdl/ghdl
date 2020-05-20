@@ -8,6 +8,7 @@ version: '{branch}-{build}'
 # Branches to build
 branches:
   except:
+    - nightly
     - travis
 
 # =============================================================================
