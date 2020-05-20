@@ -1313,7 +1313,7 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 	    ghw_disp_subtype_indication (h, hie->u.sig.type);
 	    printf (":");
 	    k = 0;
-	    assert (sigs[0] != GHW_NO_SIG);
+
 	    while (1)
 	      {
 		/* First signal of the range.  */
