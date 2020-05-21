@@ -347,7 +347,7 @@ package body Netlists.Memories is
             if Addr_W > Max_W then
                --  Need to truncate.
                Sub_Addr1 := Build2_Trunc
-                 (Ctxt, Id_Utrunc, Sub_Addr, Max_W, No_Location);
+                 (Ctxt, Id_Utrunc, Sub_Addr, Max_W, Get_Location (Inst));
             else
                Sub_Addr1 := Sub_Addr;
             end if;

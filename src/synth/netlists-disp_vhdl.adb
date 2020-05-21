@@ -1341,16 +1341,17 @@ package body Netlists.Disp_Vhdl is
                   if Locations.Get_Location (Inst) = No_Location then
                      case Get_Id (Inst) is
                         when Id_Const_UB32
-                          |  Id_Const_SB32
-                          |  Id_Const_UL32
-                          |  Id_Const_Bit
-                          |  Id_Const_Log
-                          |  Id_Const_Z
-                          |  Id_Concat2
-                          |  Id_Concat3
-                          |  Id_Concat4
-                          |  Id_Concatn
-                          |  Id_Extract =>
+                           | Id_Const_SB32
+                           | Id_Const_UL32
+                           | Id_Const_Bit
+                           | Id_Const_Log
+                           | Id_Const_Z
+                           | Id_Const_0
+                           | Id_Concat2
+                           | Id_Concat3
+                           | Id_Concat4
+                           | Id_Concatn
+                           | Id_Extract =>
                            null;
                         when others =>
                            raise Internal_Error;

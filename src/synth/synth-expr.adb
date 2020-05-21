@@ -1520,6 +1520,7 @@ package body Synth.Expr is
          Inp := Build_Memidx
            (Ctxt, Inp, Step * El_Typ.W, Max,
             Inp_W + Width (Clog2 (Uns64 (Step * El_Typ.W))));
+         Set_Location (Inp, Name);
       end if;
    end Synth_Slice_Suffix;
 
