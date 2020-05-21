@@ -136,4 +136,11 @@ package body Dyn_Interning is
       pragma Assert (Index <= Wrapper_Tables.Last (Inst.Els));
       return Inst.Els.Table (Index).Obj;
    end Get_By_Index;
+
+   procedure Modify
+     (Inst : in out Instance; Index : Index_Type; Obj : Object_Type) is
+   begin
+      pragma Assert (Index <= Wrapper_Tables.Last (Inst.Els));
+      Inst.Els.Table (Index).Obj := Obj;
+   end Modify;
 end Dyn_Interning;

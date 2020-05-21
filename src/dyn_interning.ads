@@ -66,7 +66,13 @@ package Dyn_Interning is
    --  Get an element by index.  The index has no real meaning, but the
    --  current implementation allocates index incrementally.
    function Get_By_Index (Inst : Instance; Index : Index_Type)
-                         return Object_Type;
+                          return Object_Type;
+
+   --  Modify an existing object.
+   --  Must not change the definition of Equal!
+   procedure Modify
+     (Inst : in out Instance; Index : Index_Type; Obj : Object_Type);
+
 private
    type Element_Wrapper is record
       Hash : Hash_Value_Type;
