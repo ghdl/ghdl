@@ -2054,6 +2054,21 @@ package body Synth.Expr is
                B := Synth_Array_Attribute (Syn_Inst, Expr);
                return Create_Value_Discrete (Int64 (B.Len), Expr_Type);
             end;
+         when Iir_Kind_Ascending_Array_Attribute =>
+            declare
+               B : Bound_Type;
+               V : Int64;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Expr);
+               case B.Dir is
+                  when Dir_To =>
+                     V := 1;
+                  when Dir_Downto =>
+                     V := 0;
+               end case;
+               return Create_Value_Discrete (V, Expr_Type);
+            end;
+
          when Iir_Kind_Pos_Attribute
            | Iir_Kind_Val_Attribute =>
             declare
