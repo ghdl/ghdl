@@ -144,7 +144,7 @@ synth_tb()
 
   synth $t.vhdl -e $t > syn_$t.vhdl
   analyze syn_$t.vhdl tb_$t.vhdl
-  elab_simulate tb_$t --ieee-asserts=disable-at-0
+  elab_simulate tb_$t --ieee-asserts=disable-at-0 --assert-level=error
   clean
 }
 
