@@ -20,6 +20,7 @@
 
 with Types; use Types;
 with Mutils; use Mutils;
+with Std_Names;
 
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
@@ -592,16 +593,57 @@ package body Synth.Decls is
       end if;
    end Synth_Constant_Declaration;
 
+   procedure Synth_Attribute_Object (Syn_Inst : Synth_Instance_Acc;
+                                     Attr_Value : Node;
+                                     Attr_Decl  : Node;
+                                     Val        : Valtyp)
+   is
+      Obj   : constant Node := Get_Designated_Entity (Attr_Value);
+      Id    : constant Name_Id := Get_Identifier (Attr_Decl);
+      Inst  : Instance;
+      V     : Valtyp;
+      Ptype : Param_Type;
+      Pv    : Pval;
+   begin
+      if Id = Std_Names.Name_Foreign then
+         --  Not for synthesis.
+         return;
+      end if;
+
+      case Get_Kind (Obj) is
+         when Iir_Kind_Signal_Declaration
+            | Iir_Kind_Variable_Declaration =>
+            V := Get_Value (Syn_Inst, Obj);
+            pragma Assert (V.Val.Kind = Value_Wire);
+            Inst := Get_Net_Parent (Get_Wire_Gate (V.Val.W));
+         when Iir_Kind_Component_Instantiation_Statement =>
+            --  TODO
+            return;
+         when others =>
+            --  TODO: components ?
+            --  TODO: Interface_Signal ?  But no instance for them.
+            Warning_Msg_Synth
+              (+Attr_Value, "attribute %i for %n is not kept in the netlist",
+               (+Attr_Decl, +Obj));
+            return;
+      end case;
+
+      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
+      Pv := Memtyp_To_Pval (Get_Memtyp (Val));
+
+      Set_Attribute (Inst, Id, Ptype, Pv);
+   end Synth_Attribute_Object;
+
    procedure Synth_Attribute_Specification
      (Syn_Inst : Synth_Instance_Acc; Spec : Node)
    is
-      Decl : constant Node := Get_Attribute_Designator (Spec);
-      Value : Iir_Attribute_Value;
+      Attr_Decl : constant Node :=
+        Get_Named_Entity (Get_Attribute_Designator (Spec));
+      Value : Node;
       Val : Valtyp;
       Val_Type : Type_Acc;
    begin
-      Val_Type := Get_Subtype_Object
-        (Syn_Inst, Get_Type (Get_Named_Entity (Decl)));
+      Val_Type := Get_Subtype_Object (Syn_Inst, Get_Type (Attr_Decl));
       Value := Get_Attribute_Value_Spec_Chain (Spec);
       while Value /= Null_Iir loop
          --  2. The expression is evaluated to determine the value
@@ -623,6 +665,10 @@ package body Synth.Decls is
          --     the expression.
          Create_Object (Syn_Inst, Value, Val);
          --  Unshare (Val, Instance_Pool);
+
+         if not Get_Instance_Const (Syn_Inst) then
+            Synth_Attribute_Object (Syn_Inst, Value, Attr_Decl, Val);
+         end if;
 
          Value := Get_Spec_Chain (Value);
       end loop;

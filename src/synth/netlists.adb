@@ -25,7 +25,6 @@ with Simple_IO;
 
 with Netlists.Utils; use Netlists.Utils;
 with Netlists.Gates;
-with Dyn_Interning;
 
 package body Netlists is
 
@@ -1176,36 +1175,60 @@ package body Netlists is
 
    --  Attributes
 
-   type Attribute_Record is record
-      Inst : Instance;
-      First : Attribute;
-   end record;
-
    function Attribute_Hash (Params : Instance) return Hash_Value_Type is
    begin
       return Hash_Value_Type (Params);
    end Attribute_Hash;
 
-   function Attribute_Build (Params : Instance) return Attribute_Record is
+   function Attribute_Build (Params : Instance) return Attribute_Map_Element is
    begin
-      return Attribute_Record'(Inst => Params,
-                               First => No_Attribute);
+      return Attribute_Map_Element'(Inst => Params,
+                                    First => No_Attribute);
    end Attribute_Build;
 
-   function Attribute_Equal (Obj : Attribute_Record; Params : Instance)
+   function Attribute_Equal (Obj : Attribute_Map_Element; Params : Instance)
                              return Boolean is
    begin
       return Obj.Inst = Params;
    end Attribute_Equal;
 
-   package Attribute_Tables is new Dyn_Interning
-     (Params_Type => Instance,
-      Object_Type => Attribute_Record,
-      Hash => Attribute_Hash,
-      Build => Attribute_Build,
-      Equal => Attribute_Equal);
+   package Attributes_Table is new Tables
+     (Table_Component_Type => Attribute_Record,
+      Table_Index_Type     => Attribute,
+      Table_Low_Bound      => 0,
+      Table_Initial        => 64);
 
-   type Attribute_Tables_Instance is new Attribute_Tables.Instance;
+
+   procedure Set_Attribute
+     (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval)
+   is
+      pragma Assert (Is_Valid (Inst));
+      M          : constant Module := Get_Instance_Parent (Inst);
+      Module_Rec : Module_Record renames Modules_Table.Table (M);
+      Attr       : Attribute;
+      Idx        : Attribute_Maps.Index_Type;
+      Prev       : Attribute_Map_Element;
+   begin
+
+      if Module_Rec.Attrs = null then
+         Module_Rec.Attrs := new Attribute_Maps.Instance;
+         Attribute_Maps.Init (Module_Rec.Attrs.all);
+      end if;
+
+      Attribute_Maps.Get_Index (Module_Rec.Attrs.all, Inst, Idx);
+
+      Prev := Attribute_Maps.Get_By_Index (Module_Rec.Attrs.all, Idx);
+      Attributes_Table.Append ((Name => Id,
+                                Typ => Ptype,
+                                Val => Pv,
+                                Chain => Prev.First));
+      Attr := Attributes_Table.Last;
+
+      Attribute_Maps.Modify (Module_Rec.Attrs.all, Idx,
+                             Attribute_Map_Element'(Inst => Inst,
+                                                    First => Attr));
+   end Set_Attribute;
+
    --  Statistics
 
    function Count_Free_Inputs (Head : Input) return Natural
@@ -1406,4 +1429,10 @@ begin
    pragma Assert (Pval_Table.Last = No_Pval);
 
    Pval_Word_Table.Append (0);
+
+   Attributes_Table.Append ((Name => No_Name_Id,
+                             Typ => Param_Invalid,
+                             Val => No_Pval,
+                             Chain => No_Attribute));
+   pragma Assert (Attributes_Table.Last = No_Attribute);
 end Netlists;

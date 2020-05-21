@@ -20,6 +20,7 @@
 
 with Types; use Types;
 with Hash; use Hash;
+with Dyn_Interning;
 
 package Netlists is
    --  Netlists.
@@ -326,6 +327,10 @@ package Netlists is
    function Read_Pval (P : Pval; Off : Uns32) return Logic_32;
    procedure Write_Pval (P : Pval; Off : Uns32; Val : Logic_32);
 
+   --  Add an attribute to INST.
+   procedure Set_Attribute
+     (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval);
+
    --  Display some usage stats on the standard error.
    procedure Disp_Stats;
 private
@@ -367,16 +372,31 @@ private
    type Attribute is new Uns32;
    No_Attribute : Attribute := 0;
 
-   type Attribute_Tables_Instance;
-
-   type Attribute_Table_Acc is access Attribute_Tables_Instance;
-
-   type Attribute_Value is record
+   type Attribute_Record is record
       Name  : Name_Id;
       Val   : Pval;
       Typ   : Param_Type;
       Chain : Attribute;
    end record;
+
+   type Attribute_Map_Element is record
+      Inst : Instance;
+      First : Attribute;
+   end record;
+
+   function Attribute_Hash (Params : Instance) return Hash_Value_Type;
+   function Attribute_Build (Params : Instance) return Attribute_Map_Element;
+   function Attribute_Equal (Obj : Attribute_Map_Element; Params : Instance)
+                             return Boolean;
+
+   package Attribute_Maps is new Dyn_Interning
+     (Params_Type => Instance,
+      Object_Type => Attribute_Map_Element,
+      Hash => Attribute_Hash,
+      Build => Attribute_Build,
+      Equal => Attribute_Equal);
+
+   type Attribute_Map_Acc is access Attribute_Maps.Instance;
 
    type Module_Record is record
       Parent           : Module;
@@ -401,7 +421,8 @@ private
       First_Instance : Instance;
       Last_Instance  : Instance;
 
-      Attrs          : Attribute_Table_Acc;
+      --  Map of instance (of this module) to its attributes.
+      Attrs          : Attribute_Map_Acc;
    end record;
 
    function Get_First_Port_Desc (M : Module) return Port_Desc_Idx;
