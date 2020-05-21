@@ -162,7 +162,7 @@ def createReleasesShields(tag='latest'):
    from dateutil.parser import parse as parseTime
    releases = [['Date', 'Downloads']]
    if tag == 'latest':
-      t = d[0]
+      t = d[1] if d[0]['name'] == 'nightly' else d[0]
    for x in d:
       name = x['tag_name']
       if tag == name:
@@ -204,6 +204,12 @@ def printReleasesList(releases, latex=False):
       releases = getJSON(releases)["releases"]
 
    rs = [releases[0]]
+
+   for x, r in enumerate(releases):
+      if 'nightly' in r[1]:
+         releases.remove(r)
+         break
+
    rs.extend(releases[2:])
 
    if latex:

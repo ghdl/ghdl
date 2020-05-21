@@ -6,10 +6,19 @@ Releases and sources
 .. contents:: Contents of this Page
    :local:
 
+Using package managers
+**********************
+
+Package managers of many popular distributions provide pre-built packages of GHDL. This is the case for `apt` (Debian/Ubuntu), `dnf` (Fedora/CentOS) or `pacman` (Arch Linux). Since GHDL supports three different backends and two library sets (ieee or openieee), at least six packages with different features might be available in each package manager. See differences between backends in :ref:`BUILD`.
+
 .. _RELEASE:packages:
 
 Downloading pre-built packages
 ******************************
+
+Assets from nightly GHDL builds are available at `github.com/ghdl/ghdl/releases/nightly <https://github.com/ghdl/ghdl/releases/nightly>`_. These are mostly meant to be used in Continuous Integration (CI) workflows. Precisely, `setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`_ allows to easily setup nightly assets in GitHub Actions workflows.
+
+Furthermore, assets from stable builds are available for a larger set of platforms:
 
 .. TODO How to extend this directive to use `.. only:: html` and `.. only:: html` in the python code passed to it?
 
