@@ -19,6 +19,14 @@ begin
     borrow <= '0';
     wait for 1 ns;
     assert res = b"00000_0011" severity failure;
+
+
+    a <= b"00000_0010";
+    b <= b"00000_0001";
+    borrow <= '1';
+    wait for 1 ns;
+    assert res = b"00000_0000" severity failure;
+
     wait;
   end process;
 end behav;
