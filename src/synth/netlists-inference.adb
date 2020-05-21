@@ -928,12 +928,13 @@ package body Netlists.Inference is
                            En_Gate : Net;
                            Stmt : Synth.Source.Syn_Src) return Net
    is
-      Loc : constant Location_Type := Synth.Source."+" (Stmt);
-      Inst : Instance;
-      First_Inst, Last_Inst : Instance;
-      Clk, En : Net;
-      Areset : Net;
-      Zero : Net;
+      Loc        : constant Location_Type := Synth.Source."+" (Stmt);
+      Inst       : Instance;
+      First_Inst : Instance;
+      Last_Inst  : Instance;
+      Clk, En    : Net;
+      Areset     : Net;
+      One        : Net;
    begin
       --  Extract clock (if any) from VAL.  Return VAL is no clock.
       First_Inst := Get_Net_Parent (Val);
@@ -955,10 +956,13 @@ package body Netlists.Inference is
          Inst := Find_Condition_Chain_Next (Inst);
       end loop;
 
+      --  INST is the mux2 with clock CLK.
+
       --  Extract enable and asynchronous reset (if any).
       Last_Inst := Inst;
       Areset := No_Net;
-      while Last_Inst /= Inst loop
+      Inst := First_Inst;
+      while Inst /= Last_Inst loop
          declare
             Cond : Net;
             Next_Inst : Instance;
@@ -968,8 +972,8 @@ package body Netlists.Inference is
             --  Find the next mux.
             Next_Inst := Find_Condition_Chain_Next (Inst);
 
-            --  If the next mux is in0, negate COND.
-            if Next_Inst = Get_Net_Parent (Get_Input_Net (Inst, 1)) then
+            --  If the next mux is in1, negate COND.
+            if Next_Inst = Get_Net_Parent (Get_Input_Net (Inst, 2)) then
                Cond := Build_Monadic (Ctxt, Id_Not, Cond);
                Synth.Source.Set_Location (Cond, Stmt);
             end if;
@@ -993,8 +997,9 @@ package body Netlists.Inference is
          end if;
 
          En := Build2_And (Ctxt, En, Get_Output (Next_Inst, 0), Loc);
-         Zero := Get_Input_Net (Inst, 1);
       end;
+
+      One := Build_Const_UB32 (Ctxt, 1, 1);
 
       --  Build an idff/iadff for each condition of the assertions.
       --  The caller will connect the returned value (En) to the enable gate.
@@ -1025,9 +1030,9 @@ package body Netlists.Inference is
             Disconnect (Assert_Inp);
 
             if Areset = No_Net then
-               Dff := Build_Idff (Ctxt, Clk, N, Zero);
+               Dff := Build_Idff (Ctxt, Clk, N, One);
             else
-               Dff := Build_Iadff (Ctxt, Clk, N, Areset, Zero, Zero);
+               Dff := Build_Iadff (Ctxt, Clk, N, Areset, One, One);
             end if;
             Set_Location (Dff, Loc);
 
