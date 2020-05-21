@@ -1235,7 +1235,7 @@ package body Netlists.Disp_Vhdl is
                Disp_Template ("  \o0 <= ", Inst);
                if Iw = 1 then
                   Disp_Template ("(\n0 downto 0 => \i0); -- sext" & NL,
-                                 Inst, (0 => Ow));
+                                 Inst, (0 => Ow - 1));
                else
                   Disp_Template
                     ("std_logic_vector (resize (\si0, \n0));  --  sext" & NL,
