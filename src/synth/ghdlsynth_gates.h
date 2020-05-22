@@ -118,5 +118,6 @@ enum Param_Type {
       Param_Pval_String,
       Param_Pval_Integer,
       Param_Pval_Real,
-      Param_Pval_Time_Ps
+      Param_Pval_Time_Ps,
+      Param_Pval_Boolean
 };

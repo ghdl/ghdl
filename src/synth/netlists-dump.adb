@@ -125,10 +125,11 @@ package body Netlists.Dump is
          when Param_Uns32 =>
             Put_Uns32 (Get_Param_Uns32 (Inst, Idx));
          when Param_Pval_Vector
-           | Param_Pval_String
-           | Param_Pval_Integer
-           | Param_Pval_Real
-           | Param_Pval_Time_Ps =>
+            | Param_Pval_String
+            | Param_Pval_Integer
+            | Param_Pval_Real
+            | Param_Pval_Time_Ps
+            | Param_Pval_Boolean =>
             Put ("generic");
       end case;
    end Dump_Parameter;
@@ -272,6 +273,8 @@ package body Netlists.Dump is
                Put ("pval.real");
             when Param_Pval_Time_Ps =>
                Put ("pval.time.ps");
+            when Param_Pval_Boolean =>
+               Put ("pval.boolean");
          end case;
          New_Line;
       end loop;
