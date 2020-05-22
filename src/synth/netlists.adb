@@ -1180,24 +1180,23 @@ package body Netlists is
       return Hash_Value_Type (Params);
    end Attribute_Hash;
 
-   function Attribute_Build (Params : Instance) return Attribute_Map_Element is
+   function Attribute_Build (Params : Instance) return Instance is
    begin
-      return Attribute_Map_Element'(Inst => Params,
-                                    First => No_Attribute);
+      return Params;
    end Attribute_Build;
 
-   function Attribute_Equal (Obj : Attribute_Map_Element; Params : Instance)
-                             return Boolean is
+   function Attribute_Build_Value (Obj : Instance) return Attribute
+   is
+      pragma Unreferenced (Obj);
    begin
-      return Obj.Inst = Params;
-   end Attribute_Equal;
+      return No_Attribute;
+   end Attribute_Build_Value;
 
    package Attributes_Table is new Tables
      (Table_Component_Type => Attribute_Record,
       Table_Index_Type     => Attribute,
       Table_Low_Bound      => 0,
       Table_Initial        => 64);
-
 
    procedure Set_Attribute
      (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval)
@@ -1207,9 +1206,8 @@ package body Netlists is
       Module_Rec : Module_Record renames Modules_Table.Table (M);
       Attr       : Attribute;
       Idx        : Attribute_Maps.Index_Type;
-      Prev       : Attribute_Map_Element;
+      Prev       : Attribute;
    begin
-
       if Module_Rec.Attrs = null then
          Module_Rec.Attrs := new Attribute_Maps.Instance;
          Attribute_Maps.Init (Module_Rec.Attrs.all);
@@ -1217,16 +1215,14 @@ package body Netlists is
 
       Attribute_Maps.Get_Index (Module_Rec.Attrs.all, Inst, Idx);
 
-      Prev := Attribute_Maps.Get_By_Index (Module_Rec.Attrs.all, Idx);
+      Prev := Attribute_Maps.Get_Value (Module_Rec.Attrs.all, Idx);
       Attributes_Table.Append ((Name => Id,
                                 Typ => Ptype,
                                 Val => Pv,
-                                Chain => Prev.First));
+                                Chain => Prev));
       Attr := Attributes_Table.Last;
 
-      Attribute_Maps.Modify (Module_Rec.Attrs.all, Idx,
-                             Attribute_Map_Element'(Inst => Inst,
-                                                    First => Attr));
+      Attribute_Maps.Set_Value (Module_Rec.Attrs.all, Idx, Attr);
    end Set_Attribute;
 
    --  Statistics

@@ -20,7 +20,7 @@
 
 with Types; use Types;
 with Hash; use Hash;
-with Dyn_Interning;
+with Dyn_Maps;
 
 package Netlists is
    --  Netlists.
@@ -379,22 +379,18 @@ private
       Chain : Attribute;
    end record;
 
-   type Attribute_Map_Element is record
-      Inst : Instance;
-      First : Attribute;
-   end record;
-
    function Attribute_Hash (Params : Instance) return Hash_Value_Type;
-   function Attribute_Build (Params : Instance) return Attribute_Map_Element;
-   function Attribute_Equal (Obj : Attribute_Map_Element; Params : Instance)
-                             return Boolean;
+   function Attribute_Build (Params : Instance) return Instance;
+   function Attribute_Build_Value (Obj : Instance) return Attribute;
 
-   package Attribute_Maps is new Dyn_Interning
+   package Attribute_Maps is new Dyn_Maps
      (Params_Type => Instance,
-      Object_Type => Attribute_Map_Element,
+      Object_Type => Instance,
+      Value_Type => Attribute,
       Hash => Attribute_Hash,
       Build => Attribute_Build,
-      Equal => Attribute_Equal);
+      Build_Value => Attribute_Build_Value,
+      Equal => "=");
 
    type Attribute_Map_Acc is access Attribute_Maps.Instance;
 
