@@ -81,7 +81,7 @@ ifeq "$(build_mode)" "coverage"
 OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
-GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf $(OPT_FLAGS) $(ADA_FLAGS)
+GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatwC -gnatf $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)
 
 ifeq "$(default_pic)" "true"
