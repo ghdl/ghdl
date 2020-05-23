@@ -210,6 +210,9 @@ package Netlists is
    type Pval is private;
    No_Pval : constant Pval;
 
+   --  Attribute of an instance.
+   type Attribute is private;
+
    --  Subprograms for modules.
    function New_Design (Name : Sname) return Module;
    function New_User_Module (Parent : Module;
@@ -331,6 +334,17 @@ package Netlists is
    procedure Set_Attribute
      (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval);
 
+   --  Return the first attribute for INST.  Returns No_Attribute if none.
+   function Get_First_Attribute (Inst : Instance) return Attribute;
+
+   --  Get name/type/value of an attribute.
+   function Get_Attribute_Name (Attr : Attribute) return Name_Id;
+   function Get_Attribute_Type (Attr : Attribute) return Param_Type;
+   function Get_Attribute_Pval (Attr : Attribute) return Pval;
+
+   --  Get the next attribute for the same instance.
+   function Get_Attribute_Next (Attr : Attribute) return Attribute;
+
    --  Display some usage stats on the standard error.
    procedure Disp_Stats;
 private
@@ -425,13 +439,15 @@ private
    function Get_First_Output (Inst : Instance) return Net;
    function Get_Port_Desc (Idx : Port_Desc_Idx) return Port_Desc;
 
+   function Get_Attributes (M : Module) return Attribute_Map_Acc;
+
    function Is_Valid (I : Instance) return Boolean;
 
    type Instance_Record is record
       --  The instance is instantiated in Parent.
-      Parent : Module;
-      Flag3  : Boolean;
-      Flag4  : Boolean;
+      Parent     : Module;
+      Has_Attr  : Boolean;  --  Set when there is at least one attribute.
+      Flag4      : Boolean;
 
       --  Instances are in a doubly-linked list.
       Prev_Instance : Instance;

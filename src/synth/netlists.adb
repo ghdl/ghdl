@@ -479,7 +479,8 @@ package body Netlists is
       end if;
 
       Instances_Table.Table (Res) := ((Parent => Parent,
-                                       Flag3 | Flag4 => False,
+                                       Has_Attr => False,
+                                       Flag4 => False,
                                        Next_Instance => No_Instance,
                                        Prev_Instance => No_Instance,
                                        Klass => M,
@@ -1213,6 +1214,9 @@ package body Netlists is
          Attribute_Maps.Init (Module_Rec.Attrs.all);
       end if;
 
+      --  There is now at least one attribute for INST.
+      Instances_Table.Table (Inst).Has_Attr := True;
+
       Attribute_Maps.Get_Index (Module_Rec.Attrs.all, Inst, Idx);
 
       Prev := Attribute_Maps.Get_Value (Module_Rec.Attrs.all, Idx);
@@ -1224,6 +1228,64 @@ package body Netlists is
 
       Attribute_Maps.Set_Value (Module_Rec.Attrs.all, Idx, Attr);
    end Set_Attribute;
+
+   function Get_Attributes (M : Module) return Attribute_Map_Acc is
+   begin
+      return Modules_Table.Table (M).Attrs;
+   end Get_Attributes;
+
+   function Get_First_Attribute (Inst : Instance) return Attribute
+   is
+      pragma Assert (Is_Valid (Inst));
+   begin
+      if not Instances_Table.Table (Inst).Has_Attr then
+         return No_Attribute;
+      end if;
+      declare
+         M          : constant Module := Get_Instance_Parent (Inst);
+         Attrs      : constant Attribute_Map_Acc := Get_Attributes (M);
+         Idx        : Attribute_Maps.Index_Type;
+         Res        : Attribute;
+      begin
+         pragma Assert (Attrs /= null);
+         Attribute_Maps.Get_Index (Attrs.all, Inst, Idx);
+         Res := Attribute_Maps.Get_Value (Attrs.all, Idx);
+         return Res;
+      end;
+   end Get_First_Attribute;
+
+   function Is_Valid (Attr : Attribute) return Boolean is
+   begin
+      return Attr > No_Attribute and then Attr <= Attributes_Table.Last;
+   end Is_Valid;
+
+   function Get_Attribute_Name (Attr : Attribute) return Name_Id
+   is
+      pragma Assert (Is_Valid (Attr));
+   begin
+      return Attributes_Table.Table (Attr).Name;
+   end Get_Attribute_Name;
+
+   function Get_Attribute_Type (Attr : Attribute) return Param_Type
+   is
+      pragma Assert (Is_Valid (Attr));
+   begin
+      return Attributes_Table.Table (Attr).Typ;
+   end Get_Attribute_Type;
+
+   function Get_Attribute_Pval (Attr : Attribute) return Pval
+   is
+      pragma Assert (Is_Valid (Attr));
+   begin
+      return Attributes_Table.Table (Attr).Val;
+   end Get_Attribute_Pval;
+
+   function Get_Attribute_Next (Attr : Attribute) return Attribute
+   is
+      pragma Assert (Is_Valid (Attr));
+   begin
+      return Attributes_Table.Table (Attr).Chain;
+   end Get_Attribute_Next;
 
    --  Statistics
 
@@ -1384,7 +1446,8 @@ begin
    pragma Assert (Modules_Table.Last = Free_Module);
 
    Instances_Table.Append ((Parent => No_Module,
-                            Flag3 | Flag4 => False,
+                            Has_Attr => False,
+                            Flag4 => False,
                             Next_Instance => No_Instance,
                             Prev_Instance => No_Instance,
                             Klass => No_Module,

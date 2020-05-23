@@ -289,6 +289,20 @@ package body Netlists.Utils is
       end;
    end Same_Net;
 
+   procedure Copy_Attributes (Dest : Instance; Src : Instance)
+   is
+      Attr : Attribute;
+   begin
+      Attr := Get_First_Attribute (Src);
+      while Attr /= No_Attribute loop
+         Set_Attribute (Dest,
+                        Get_Attribute_Name (Attr),
+                        Get_Attribute_Type (Attr),
+                        Get_Attribute_Pval (Attr));
+         Attr := Get_Attribute_Next (Attr);
+      end loop;
+   end Copy_Attributes;
+
    function Clog2 (W : Width) return Width is
    begin
       return Uns32 (Mutils.Clog2 (Uns64 (W)));

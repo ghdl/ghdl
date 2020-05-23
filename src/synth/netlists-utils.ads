@@ -96,6 +96,9 @@ package Netlists.Utils is
 
    function Clog2 (W : Width) return Width;
 
+   --  Copy attribtues of SRC to DEST.
+   procedure Copy_Attributes (Dest : Instance; Src : Instance);
+
    --  Used at many places.
    package Net_Tables is new Dyn_Tables
      (Table_Component_Type => Net,
