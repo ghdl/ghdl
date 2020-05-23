@@ -215,7 +215,7 @@ package body Grt.Fst is
 
    procedure Fst_Add_Signal (Sig : VhpiHandleT)
    is
-      Sig_Type, Sig_Base_Type : VhpiHandleT;
+      Sig_Typemark, Sig_Subtype, Sig_Base_Type : VhpiHandleT;
       Err : AvhpiErrorT;
       Vcd_El : Verilog_Wire_Info;
       Vt : fstVarType;
@@ -325,18 +325,18 @@ package body Grt.Fst is
       end if;
 
       --  Extract type name.
-      Vhpi_Handle (VhpiSubtype, Sig, Sig_Type, Err);
+      Vhpi_Handle (VhpiSubtype, Sig, Sig_Subtype, Err);
       if Err /= AvhpiErrorOk then
          Avhpi_Error (Err);
       end if;
-      Vhpi_Handle (VhpiTypeMark, Sig_Type, Sig_Type, Err);
+      Vhpi_Handle (VhpiTypeMark, Sig_Subtype, Sig_Typemark, Err);
       if Err /= AvhpiErrorOk then
          Avhpi_Error (Err);
       end if;
-      Vhpi_Get_Str (VhpiNameP, Sig_Type, Type_Name, Type_Name_Len);
+      Vhpi_Get_Str (VhpiNameP, Sig_Typemark, Type_Name, Type_Name_Len);
       if Type_Name_Len = 0 then
          --  Try with the base type.
-         Vhpi_Handle (VhpiBaseType, Sig_Type, Sig_Base_Type, Err);
+         Vhpi_Handle (VhpiBaseType, Sig_Subtype, Sig_Base_Type, Err);
          if Err /= AvhpiErrorOk then
             Avhpi_Error (Err);
          end if;

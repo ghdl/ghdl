@@ -165,6 +165,7 @@ package body Grt.Vital_Annotate is
                            Status : out Boolean)
    is
       pragma Unreferenced (Context);
+      New_Inst : VhpiHandleT;
    begin
       if Flag_Dump then
          Put (' ');
@@ -173,7 +174,8 @@ package body Grt.Vital_Annotate is
          return;
       end if;
 
-      Find_Instance (Sdf_Inst, Sdf_Inst, Instance, Status);
+      Find_Instance (Sdf_Inst, New_Inst, Instance, Status);
+      Sdf_Inst := New_Inst;
    end Sdf_Instance;
 
    procedure Sdf_Instance_End (Context : Sdf_Context_Type;
@@ -456,6 +458,7 @@ package body Grt.Vital_Annotate is
    is
       S, E : Natural;
       Ok : Boolean;
+      New_Top : VhpiHandleT;
    begin
       if Flag_Verbose then
          Put ("sdf annotate: ");
@@ -485,13 +488,14 @@ package body Grt.Vital_Annotate is
 
          --  Path element.
          if E - 1 >= S then
-            Find_Instance (Sdf_Top, Sdf_Top, Arg (S .. E - 1), Ok);
+            Find_Instance (Sdf_Top, New_Top, Arg (S .. E - 1), Ok);
             if not Ok then
                Error_S ("cannot find instance '");
                Diag_C (Arg (S .. E - 1));
                Error_E ("' for sdf annotation");
                return;
             end if;
+            Sdf_Top := New_Top;
          end if;
       end loop L1;
 

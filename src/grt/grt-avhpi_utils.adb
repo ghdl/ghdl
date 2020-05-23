@@ -28,17 +28,18 @@ with Grt.Errors; use Grt.Errors;
 package body Grt.Avhpi_Utils is
    function Get_Root_Entity (Root : VhpiHandleT) return VhpiHandleT
    is
-      Hdl : VhpiHandleT;
+      Hdl   : VhpiHandleT;
+      Unit  : VhpiHandleT;
       Error : AvhpiErrorT;
    begin
-      Vhpi_Handle (VhpiDesignUnit, Root, Hdl, Error);
+      Vhpi_Handle (VhpiDesignUnit, Root, Unit, Error);
       if Error /= AvhpiErrorOk then
          Internal_Error ("VhpiDesignUnit");
       end if;
 
-      case Vhpi_Get_Kind (Hdl) is
+      case Vhpi_Get_Kind (Unit) is
          when VhpiArchBodyK =>
-            Vhpi_Handle (VhpiPrimaryUnit, Hdl, Hdl, Error);
+            Vhpi_Handle (VhpiPrimaryUnit, Unit, Hdl, Error);
             if Error /= AvhpiErrorOk then
                Internal_Error ("VhpiPrimaryUnit");
             end if;
