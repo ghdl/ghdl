@@ -126,6 +126,13 @@ namespace GhdlSynth {
   GHDLSYNTH_ADA_WRAPPER_WW(get_first_sink, Input, Net);
   GHDLSYNTH_ADA_WRAPPER_WW(get_next_sink, Input, Input);
 
+  struct Attribute { unsigned int id; };
+  GHDLSYNTH_ADA_WRAPPER_WW(get_first_attribute, Attribute, Instance);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_attribute_name, Name_Id, Attribute);
+  GHDLSYNTH_ADA_WRAPPER_DW(get_attribute_type, Param_Type, Attribute);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_attribute_pval, Pval, Attribute);
+  GHDLSYNTH_ADA_WRAPPER_WW(get_attribute_next, Attribute, Attribute);
+
   //  Utils
 #undef GHDLSYNTH_ADA_PREFIX
 #define GHDLSYNTH_ADA_PREFIX(N) netlists__utils__##N
