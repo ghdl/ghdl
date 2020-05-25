@@ -71,6 +71,7 @@ package body Grt.Options is
       P (" --help, -h        disp this help");
       P (" --assert-level=LEVEL   stop simulation if assert at LEVEL");
       P ("       LEVEL is note,warning,error,failure,none");
+      P (" --backtrace-severity=LEVEL  display a backtrace for assertions");
       P (" --ieee-asserts=POLICY  enable or disable asserts from IEEE");
       P ("       POLICY is enable,disable,disable-at-0");
       P (" --stop-time=X     stop the simulation at time X");
@@ -191,6 +192,26 @@ package body Grt.Options is
       return Std_Time (Time);
    end Parse_Time;
 
+   function Parse_Severity (Opt_Name : String; Arg : String) return Integer is
+   begin
+      if Arg = "note" then
+         return Note_Severity;
+      elsif Arg = "warning" then
+         return Warning_Severity;
+      elsif Arg = "error" then
+         return Error_Severity;
+      elsif Arg = "failure" then
+         return Failure_Severity;
+      elsif Arg = "none" then
+         return 4;
+      else
+         Error_S ("bad argument for ");
+         Diag_C (Opt_Name);
+         Error_E (" option, try --help");
+         return -1;
+      end if;
+   end Parse_Severity;
+
    procedure Decode_Option
      (Option : String; Status : out Decode_Option_Status)
    is
@@ -265,19 +286,24 @@ package body Grt.Options is
             end if;
          end;
       elsif Len > 15 and then Option (1 .. 15) = "--assert-level=" then
-         if Option (16 .. Len) = "note" then
-            Severity_Level := Note_Severity;
-         elsif Option (16 .. Len) = "warning" then
-            Severity_Level := Warning_Severity;
-         elsif Option (16 .. Len) = "error" then
-            Severity_Level := Error_Severity;
-         elsif Option (16 .. Len) = "failure" then
-            Severity_Level := Failure_Severity;
-         elsif Option (16 .. Len) = "none" then
-            Severity_Level := 4;
-         else
-            Error ("bad argument for --assert-level option, try --help");
-         end if;
+         declare
+            Level : Integer;
+         begin
+            Level := Parse_Severity ("--assert-level", Option (16 .. Len));
+            if Level >= 0 then
+               Severity_Level := Level;
+            end if;
+         end;
+      elsif Len > 21 and then Option (1 .. 21) = "--backtrace-severity=" then
+         declare
+            Level : Integer;
+         begin
+            Level := Parse_Severity
+              ("--backtrace-severity", Option (22 .. Len));
+            if Level >= 0 then
+               Backtrace_Severity := Level;
+            end if;
+         end;
       elsif Len > 15 and then Option (1 .. 15) = "--ieee-asserts=" then
          if Option (16 .. Len) = "disable" then
             Ieee_Asserts := Disable_Asserts;
