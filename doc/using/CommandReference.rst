@@ -142,7 +142,7 @@ Performs only the second stage of the elaboration command: the executable is cre
 .. index:: cmd GCC/LLVM list link
 
 List link [``--list-link``]
--------------------------------
+---------------------------
 
 .. option:: --list-link <primary_unit [secondary_unit]>
 
@@ -154,22 +154,21 @@ This command may be used only after a bind command. GHDL displays all the files 
    * Filter the output of ``--list-link`` with e.g. ``sed``.
    * Provide an additional non-anonymous version script: ``-Wl,-Wl,--version-script=file.ver``.
 
+.. index:: cmd XML generation
+
+XML tree generation [``--file-to-xml``]
+---------------------------------------
+
+.. option:: --file-to-xml
+
+  Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation, etc.
+
+.. WARNING::
+   * The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
+   * Note that at this time there is no XML dump of the elaborated design.
+
 Options
 =======
-
-.. option:: --mb-comments, -C
-
-Allow multi-bytes chars in a comment.
-
-.. option:: --syn-binding
-
-Use synthesizer rules for component binding. During elaboration, if a component is not bound to an entity using VHDL LRM rules, try to find in any known library an entity whose name is the same as the component name.
-
-This rule is known as the synthesizer rule.
-
-There are two key points: normal VHDL LRM rules are tried first and entities are searched only in known libraries. A known library is a library which has been named in your design.
-
-This option is only useful during elaboration.
 
 .. option:: --GHDL1<=COMMAND>
 

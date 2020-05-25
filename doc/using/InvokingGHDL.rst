@@ -341,6 +341,31 @@ Options
 
   Enable parsing of PSL assertions within comments. See section :ref:`PSL_implementation` for more details.
 
+.. option:: --mb-comments, -C
+
+  Allow UTF8 or multi-bytes chars in a comment.
+
+  According to the VHDL standards before 2002, the only characters
+  allowed in a source file (and that includes the comments) are the
+  graphical characters of the ISO 8859-1 character set.  This is
+  incompatible with comments using UTF-8 or some other encoding.  This
+  option lift this restriction.
+
+.. option:: --syn-binding
+
+  Use synthesizer rules for component binding. During elaboration, if
+  a component is not bound to an entity using VHDL LRM rules, try to
+  find in any known library an entity whose name is the same as the
+  component name.
+
+  This rule is known as the synthesizer rule.
+
+  There are two key points: normal VHDL LRM rules are tried first and
+  entities are searched only in known libraries. A known library is a
+  library which has been named in your design.
+
+  This option is only useful during elaboration.
+
 .. option:: --format=<FORMAT>
 
   Define the output format of some options, such as :option:`--pp-html` or :option:`--xref-html`.

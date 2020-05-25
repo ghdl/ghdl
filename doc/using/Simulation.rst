@@ -299,11 +299,3 @@ Export hierarchy and references
 .. option:: --psl-report=<FILENAME>
 
   Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but is still human readable.
-
-.. option:: --file-to-xml
-
-  Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation, etc.
-
-.. WARNING::
-   * The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
-   * Note that at this time there is no XML dump of the elaborated design.
