@@ -697,7 +697,7 @@ package body Synth.Static_Oper is
               (Std_Ulogic'Pos (Not_Table (Read_Std_Logic (Operand.Mem, 0))),
                Oper_Typ);
 
-         when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
+         when Iir_Predefined_Ieee_1164_Or_Suv =>
             return Synth_Vector_Reduce ('0', Operand, Or_Table);
 
          when others =>

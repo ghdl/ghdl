@@ -748,6 +748,8 @@ package body Netlists.Builders is
                              Get_Identifier ("red_or"), Id_Red_Or);
       Create_Monadic_Module (Design, Res.M_Reduce (Id_Red_And),
                              Get_Identifier ("red_and"), Id_Red_And);
+      Create_Monadic_Module (Design, Res.M_Reduce (Id_Red_Xor),
+                             Get_Identifier ("red_xor"), Id_Red_Xor);
 
       Create_Edge_Module (Res);
 

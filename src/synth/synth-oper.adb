@@ -1430,13 +1430,18 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Operand));
       end Synth_Vec_Monadic;
 
-      function Synth_Vec_Reduce_Monadic (Id : Reduce_Module_Id) return Valtyp
+      function Synth_Vec_Reduce_Monadic
+        (Id : Reduce_Module_Id; Neg : Boolean := False) return Valtyp
       is
          Op: constant Net := Get_Net (Ctxt, Operand);
          N : Net;
       begin
          N := Build_Reduce (Ctxt, Id, Op);
          Set_Location (N, Loc);
+         if Neg then
+            N := Build_Monadic (Ctxt, Id_Not, N);
+            Set_Location (N, Loc);
+         end if;
          return Create_Value_Net (N, Operand.Typ.Vec_El);
       end Synth_Vec_Reduce_Monadic;
    begin
@@ -1471,10 +1476,20 @@ package body Synth.Oper is
             return Synth_Vec_Monadic (Id_Neg);
          when Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn =>
             return Synth_Vec_Monadic (Id_Abs);
-         when Iir_Predefined_Ieee_1164_Vector_And_Reduce =>
-            return Synth_Vec_Reduce_Monadic(Id_Red_And);
-         when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
-            return Synth_Vec_Reduce_Monadic(Id_Red_Or);
+
+         when Iir_Predefined_Ieee_1164_And_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_And);
+         when Iir_Predefined_Ieee_1164_Nand_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_And, True);
+         when Iir_Predefined_Ieee_1164_Or_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_Or);
+         when Iir_Predefined_Ieee_1164_Nor_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_Or, True);
+         when Iir_Predefined_Ieee_1164_Xor_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_Xor);
+         when Iir_Predefined_Ieee_1164_Xnor_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_Xor, True);
+
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             return Create_Value_Net
               (Get_Net (Ctxt, Operand),

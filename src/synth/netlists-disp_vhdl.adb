@@ -1296,6 +1296,22 @@ package body Netlists.Disp_Vhdl is
                     ("  \o0 <= \i0; -- reduce and" & NL, Inst);
                end if;
             end;
+         when Id_Red_Xor =>
+            declare
+               Iw : constant Width := Get_Width (Get_Input_Net (Inst, 0));
+            begin
+               if Iw > 1 then
+                  Disp_Template ("  \o0 <= \i0(0)", Inst);
+                  for I in 1 .. Iw - 1 loop
+                     Disp_Template (" xor \i0(\n0)", Inst, (0 => I));
+                  end loop;
+                  Disp_Template (";" & NL, Inst);
+               else
+                  Disp_Template
+                    ("  \o0 <= \i0; -- reduce xor" & NL, Inst);
+               end if;
+            end;
+
          when Id_Posedge =>
             Disp_Template
               ("  \o0 <= '1' when rising_edge (\i0) else '0';" & NL, Inst);
