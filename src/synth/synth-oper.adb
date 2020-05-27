@@ -1615,7 +1615,8 @@ package body Synth.Oper is
               (Synth_Sresize (Ctxt, L, Res_Typ.W, Expr), Res_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Ext =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ext =>
             declare
                W : Width;
             begin
@@ -1645,7 +1646,7 @@ package body Synth.Oper is
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
-           | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
+            | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Lsl, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Lsr, L, R, Expr);
