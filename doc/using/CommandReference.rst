@@ -113,6 +113,19 @@ Lines [``--lines``]
 
 Display on the standard output lines of files preceded by line number.
 
+.. index:: cmd XML generation
+
+XML tree generation [``--file-to-xml``]
+---------------------------------------
+
+.. option:: --file-to-xml
+
+  Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation, etc.
+
+.. WARNING::
+   * The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
+   * Note that at this time there is no XML dump of the elaborated design.
+
 .. _gccllvm-only-programs:
 
 GCC/LLVM only commands
@@ -153,19 +166,6 @@ This command may be used only after a bind command. GHDL displays all the files 
 
    * Filter the output of ``--list-link`` with e.g. ``sed``.
    * Provide an additional non-anonymous version script: ``-Wl,-Wl,--version-script=file.ver``.
-
-.. index:: cmd XML generation
-
-XML tree generation [``--file-to-xml``]
----------------------------------------
-
-.. option:: --file-to-xml
-
-  Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation, etc.
-
-.. WARNING::
-   * The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
-   * Note that at this time there is no XML dump of the elaborated design.
 
 Options
 =======
