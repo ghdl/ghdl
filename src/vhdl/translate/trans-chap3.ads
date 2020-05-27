@@ -164,6 +164,9 @@ package Trans.Chap3 is
    --  automatically stabilized if necessary.
    function Get_Bounds_Length (Bounds : Mnode; Atype : Iir) return O_Enode;
 
+   --  Return the number of elements for statically bounded array ATYPE.
+   function Get_Static_Array_Length (Atype : Iir) return Int64;
+
    --  Get the number of elements in array ATYPE.
    function Get_Array_Type_Length (Atype : Iir) return O_Enode;
 

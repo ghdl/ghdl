@@ -420,20 +420,29 @@ package body Ortho_Code.Consts is
    end Finish_Record_Aggr;
 
 
-   procedure Start_Array_Aggr (List : out O_Array_Aggr_List; Atype : O_Tnode)
+   procedure Start_Array_Aggr
+     (List : out O_Array_Aggr_List; Arr_Type : O_Tnode; Len : Unsigned_32)
    is
-      Num : constant Uns32 := Get_Type_Subarray_Length (Atype);
       Val : Int32;
    begin
-      Val := Els.Allocate (Integer (Num));
+      case Get_Type_Kind (Arr_Type) is
+         when OT_Subarray =>
+            pragma Assert (Uns32 (Len) = Get_Type_Subarray_Length (Arr_Type));
+         when OT_Ucarray =>
+            null;
+         when others =>
+            --  The type of an array aggregate must be an array type.
+            raise Syntax_Error;
+      end case;
+      Val := Els.Allocate (Integer (Len));
 
       Cnodes.Append (Cnode_Common'(Kind => OC_Array,
-                                   Lit_Type => Atype));
+                                   Lit_Type => Arr_Type));
       List := (Res => Cnodes.Last,
                El => Val,
-               Len => Num);
+               Len => Uns32 (Len));
       Cnodes.Append (To_Cnode_Common (Cnode_Aggr'(Els => Val,
-                                                  Nbr => Int32 (Num))));
+                                                  Nbr => Int32 (Len))));
    end Start_Array_Aggr;
 
    procedure New_Array_Aggr_El (List : in out O_Array_Aggr_List;
@@ -657,6 +666,27 @@ package body Ortho_Code.Consts is
             raise Syntax_Error;
       end case;
    end Get_Const_Bytes;
+
+   function Get_Const_Size (Cst : O_Cnode) return Uns32
+   is
+      T : constant O_Tnode := Get_Const_Type (Cst);
+   begin
+      case Get_Type_Kind (T) is
+         when OT_Ucarray =>
+            declare
+               Len : constant Int32 := Get_Const_Aggr_Length (Cst);
+               El_Sz : Uns32;
+            begin
+               if Len = 0 then
+                  return 0;
+               end if;
+               El_Sz := Get_Const_Size (Get_Const_Aggr_Element (Cst, 0));
+               return Uns32 (Len) * El_Sz;
+            end;
+         when others =>
+            return Get_Type_Size (T);
+      end case;
+   end Get_Const_Size;
 
    procedure Mark (M : out Mark_Type) is
    begin

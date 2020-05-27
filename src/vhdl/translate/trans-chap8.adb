@@ -1423,7 +1423,6 @@ package body Trans.Chap8 is
       --  Dichotomy table (table of choices).
       String_Type     : O_Tnode;
       Table_Base_Type : O_Tnode;
-      Table_Type      : O_Tnode;
       Table           : O_Dnode;
       List            : O_Array_Aggr_List;
       Table_Cst       : O_Cnode;
@@ -1433,7 +1432,6 @@ package body Trans.Chap8 is
       --   statement list.
       --  Could be replaced by jump table.
       Assoc_Table_Base_Type : O_Tnode;
-      Assoc_Table_Type      : O_Tnode;
       Assoc_Table           : O_Dnode;
    begin
       --  Fill Choices_Info array, and count number of associations.
@@ -1541,14 +1539,10 @@ package body Trans.Chap8 is
          New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Sel_Length)));
       Table_Base_Type := New_Array_Type (String_Type, Ghdl_Index_Type);
       New_Type_Decl (Create_Uniq_Identifier, Table_Base_Type);
-      Table_Type := New_Constrained_Array_Type
-        (Table_Base_Type,
-         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Choices)));
-      New_Type_Decl (Create_Uniq_Identifier, Table_Type);
       New_Const_Decl (Table, Create_Uniq_Identifier, O_Storage_Private,
-                      Table_Type);
+                      Table_Base_Type);
       Start_Init_Value (Table);
-      Start_Array_Aggr (List, Table_Type);
+      Start_Array_Aggr (List, Table_Base_Type, Unsigned_32 (Nbr_Choices));
 
       El := First;
       while El /= No_Choice_Id loop
@@ -1563,14 +1557,11 @@ package body Trans.Chap8 is
       Assoc_Table_Base_Type :=
         New_Array_Type (Ghdl_Index_Type, Ghdl_Index_Type);
       New_Type_Decl (Create_Uniq_Identifier, Assoc_Table_Base_Type);
-      Assoc_Table_Type := New_Constrained_Array_Type
-        (Assoc_Table_Base_Type,
-         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Choices)));
-      New_Type_Decl (Create_Uniq_Identifier, Assoc_Table_Type);
       New_Const_Decl (Assoc_Table, Create_Uniq_Identifier,
-                      O_Storage_Private, Assoc_Table_Type);
+                      O_Storage_Private, Assoc_Table_Base_Type);
       Start_Init_Value (Assoc_Table);
-      Start_Array_Aggr (List, Assoc_Table_Type);
+      Start_Array_Aggr
+        (List, Assoc_Table_Base_Type, Unsigned_32 (Nbr_Choices));
       El := First;
       while El /= No_Choice_Id loop
          New_Array_Aggr_El

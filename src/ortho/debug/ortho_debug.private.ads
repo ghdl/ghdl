@@ -135,7 +135,8 @@ private
       OC_Alignof_Lit,
       OC_Offsetof_Lit,
       OC_Default_Lit,
-      OC_Aggregate,
+      OC_Array_Aggregate,
+      OC_Record_Aggregate,
       OC_Aggr_Element,
       OC_Union_Aggr,
       OC_Address,
@@ -170,8 +171,11 @@ private
             S_Type : O_Tnode;
          when OC_Offsetof_Lit =>
             Off_Field : O_Fnode;
-         when OC_Aggregate =>
-            Aggr_Els : O_Cnode;
+         when OC_Array_Aggregate =>
+            Arr_Len : Unsigned_32;
+            Arr_Els : O_Cnode;
+         when OC_Record_Aggregate =>
+            Rec_Els : O_Cnode;
          when OC_Union_Aggr =>
             Uaggr_Field : O_Fnode;
             Uaggr_Value : O_Cnode;

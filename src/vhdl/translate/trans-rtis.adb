@@ -877,20 +877,16 @@ package body Trans.Rtis is
 
       function Generate_Rti_Array (Id : O_Ident) return O_Dnode
       is
-         Arr_Type : O_Tnode;
          List     : O_Array_Aggr_List;
          L        : Rti_Array_List_Acc;
          Nbr      : Integer;
          Val      : O_Cnode;
          Res      : O_Dnode;
       begin
-         Arr_Type := New_Constrained_Array_Type
-           (Ghdl_Rti_Array,
-            New_Unsigned_Literal (Ghdl_Index_Type,
-                                  Unsigned_64 (Cur_Block.Nbr + 1)));
-         New_Const_Decl (Res, Id, O_Storage_Private, Arr_Type);
+         New_Const_Decl (Res, Id, O_Storage_Private, Ghdl_Rti_Array);
          Start_Init_Value (Res);
-         Start_Array_Aggr (List, Arr_Type);
+         Start_Array_Aggr
+           (List, Ghdl_Rti_Array, Unsigned_32 (Cur_Block.Nbr + 1));
          Nbr := Cur_Block.Nbr;
 
          --  First chunk.
@@ -1098,7 +1094,6 @@ package body Trans.Rtis is
          type Dnode_Array is array (Natural range <>) of O_Dnode;
          Name_Lits : Dnode_Array (0 .. Nbr_Lit - 1);
          Mark : Id_Mark_Type;
-         Name_Arr_Type : O_Tnode;
          Name_Arr : O_Dnode;
 
          Arr_Aggr : O_Array_Aggr_List;
@@ -1115,14 +1110,11 @@ package body Trans.Rtis is
          end loop;
 
          --  Generate array of names.
-         Name_Arr_Type := New_Constrained_Array_Type
-           (Char_Ptr_Array_Type,
-            New_Unsigned_Literal (Ghdl_Index_Type,
-              Unsigned_64 (Nbr_Lit)));
          New_Const_Decl (Name_Arr, Create_Identifier ("RTINAMES"),
-                         O_Storage_Private, Name_Arr_Type);
+                         O_Storage_Private, Char_Ptr_Array_Type);
          Start_Init_Value (Name_Arr);
-         Start_Array_Aggr (Arr_Aggr, Name_Arr_Type);
+         Start_Array_Aggr
+           (Arr_Aggr, Char_Ptr_Array_Type, Unsigned_32 (Nbr_Lit));
          for I in Name_Lits'Range loop
             New_Array_Aggr_El (Arr_Aggr, New_Name_Address (Name_Lits (I)));
          end loop;
@@ -1413,7 +1405,6 @@ package body Trans.Rtis is
       Index       : Iir;
       Tmp         : O_Dnode;
       pragma Unreferenced (Tmp);
-      Arr_Type    : O_Tnode;
       Arr_Aggr    : O_Array_Aggr_List;
       Val         : O_Cnode;
       Mark        : Id_Mark_Type;
@@ -1429,14 +1420,11 @@ package body Trans.Rtis is
       end loop;
 
       --  Generate array of index.
-      Arr_Type := New_Constrained_Array_Type
-        (Ghdl_Rti_Array,
-         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Indexes)));
       New_Const_Decl (Res, Create_Identifier ("RTIINDEXES"),
-                      Global_Storage, Arr_Type);
+                      Global_Storage, Ghdl_Rti_Array);
       Start_Init_Value (Res);
 
-      Start_Array_Aggr (Arr_Aggr, Arr_Type);
+      Start_Array_Aggr (Arr_Aggr, Ghdl_Rti_Array, Unsigned_32 (Nbr_Indexes));
       for I in 1 .. Nbr_Indexes loop
          Index := Get_Index_Type (List, I - 1);
          New_Array_Aggr_El

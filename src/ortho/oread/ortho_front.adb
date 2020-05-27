@@ -2674,31 +2674,54 @@ package body Ortho_Front is
       return Res;
    end Parse_Constant_Address;
 
+   function Parse_Array_Aggregate (Aggr_Type : Node_Acc; El_Type : Node_Acc)
+                                  return O_Cnode
+   is
+      Res : O_Cnode;
+      Constr : O_Array_Aggr_List;
+      Len : Unsigned_32;
+   begin
+      --  Parse '[' LEN ']'
+      Expect (Tok_Left_Brack);
+      Next_Token;
+      Expect (Tok_Num);
+      Len := Unsigned_32 (Token_Number);
+      Next_Token;
+      Expect (Tok_Right_Brack);
+      Next_Token;
+
+      Expect (Tok_Left_Brace);
+      Next_Token;
+      Start_Array_Aggr (Constr, Aggr_Type.Type_Onode, Len);
+      for I in Unsigned_32 loop
+         if Tok = Tok_Right_Brace then
+            if I /= Len then
+               Parse_Error ("bad number of aggregate element");
+            end if;
+            exit;
+         end if;
+
+         if I /= 0 then
+            Expect (Tok_Comma);
+            Next_Token;
+         end if;
+         New_Array_Aggr_El (Constr, Parse_Constant_Value (El_Type));
+      end loop;
+      Finish_Array_Aggr (Constr, Res);
+      Next_Token;
+      return Res;
+   end Parse_Array_Aggregate;
+
    function Parse_Constant_Value (Atype : Node_Acc) return O_Cnode
    is
       Res : O_Cnode;
    begin
       case Atype.Kind is
          when Type_Subarray =>
-            declare
-               El : constant Node_Acc := Atype.Subarray_Base.Array_Element;
-               Constr : O_Array_Aggr_List;
-            begin
-               Expect (Tok_Left_Brace);
-               Next_Token;
-               Start_Array_Aggr (Constr, Atype.Type_Onode);
-               for I in Natural loop
-                  exit when Tok = Tok_Right_Brace;
-                  if I /= 0 then
-                     Expect (Tok_Comma);
-                     Next_Token;
-                  end if;
-                  New_Array_Aggr_El (Constr, Parse_Constant_Value (El));
-               end loop;
-               Finish_Array_Aggr (Constr, Res);
-               Next_Token;
-               return Res;
-            end;
+            return Parse_Array_Aggregate
+              (Atype, Atype.Subarray_Base.Array_Element);
+         when Type_Array =>
+            return Parse_Array_Aggregate (Atype, Atype.Array_Element);
          when Type_Unsigned
            | Type_Signed
            | Type_Enum

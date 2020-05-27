@@ -2563,7 +2563,7 @@ package body Trans.Chap3 is
       Elab_Type_Definition (Get_Type (Decl));
    end Elab_Subtype_Declaration;
 
-   function Get_Thin_Array_Length (Atype : Iir) return O_Cnode
+   function Get_Static_Array_Length (Atype : Iir) return Int64
    is
       Indexes_List : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Dim      : constant Natural := Get_Nbr_Elements (Indexes_List);
@@ -2577,7 +2577,13 @@ package body Trans.Chap3 is
          Rng := Get_Range_Constraint (Index);
          Val := Val * Eval_Discrete_Range_Length (Rng);
       end loop;
-      return New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Val));
+      return Val;
+      --  return New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Val));
+   end Get_Static_Array_Length;
+
+   function Get_Thin_Array_Length (Atype : Iir) return O_Cnode is
+   begin
+      return New_Index_Lit (Unsigned_64 (Get_Static_Array_Length (Atype)));
    end Get_Thin_Array_Length;
 
    function Bounds_To_Range (B : Mnode; Atype : Iir; Dim : Positive)
