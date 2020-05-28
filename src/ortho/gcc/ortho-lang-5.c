@@ -1706,8 +1706,10 @@ new_interface_decl (struct o_inter_list *interfaces,
     case ENUMERAL_TYPE:
     case BOOLEAN_TYPE:
       DECL_ARG_TYPE (r) = integer_type_node;
+      break;
     default:
       DECL_ARG_TYPE (r) = atype;
+      break;
     }
 
   layout_decl (r, 0);
