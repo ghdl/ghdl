@@ -68,6 +68,9 @@ jobs:
     env:
       MINGW_INSTALLS: ${{ matrix.task.installs }}
       TARGET: ${{ matrix.task.pkg }}
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
     - uses: eine/setup-msys2@v0
       with:
@@ -75,9 +78,9 @@ jobs:
         update: true
         install: base-devel git
     - run: git config --global core.autocrlf input
+      shell: bash
     - uses: actions/checkout@v2
     - name: Build and (hopefully) install package
-      shell: msys2 {0}
       run: |
         ./dist/msys2-mingw/run.sh -b
         cp ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst ghdl-gha-${{ matrix.installs }}-${{ matrix.task }}.zst
@@ -93,7 +96,6 @@ jobs:
       with:
          path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
     - name: Test package
-      shell: msys2 {0}
       run: |
         ./dist/msys2-mingw/run.sh -t
       env:
