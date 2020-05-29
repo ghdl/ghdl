@@ -460,7 +460,7 @@ package PSL.Nodes is
 
    -- General methods.
 
-   procedure Init;
+   procedure Init (Loc : Location_Type);
 
    --  Get the number of the last node.
    --  To be used to size lateral tables.

@@ -304,23 +304,32 @@ package body PSL.Nodes is
       Errors.Error_Kind (Msg, N);
    end Failed;
 
-   procedure Init is
+   procedure Init (Loc : Location_Type) is
    begin
+      pragma Assert (Loc /= No_Location);
       Nodet.Init;
+
       if Create_Node (N_False) /= False_Node then
          raise Internal_Error;
       end if;
+      Set_Location (False_Node, Loc);
+
       if Create_Node (N_True) /= True_Node then
          raise Internal_Error;
       end if;
+      Set_Location (True_Node, Loc);
+
       if Create_Node (N_Number) /= One_Node then
          raise Internal_Error;
       end if;
       Set_Value (One_Node, 1);
+      Set_Location (One_Node, Loc);
+
       if Create_Node (N_EOS) /= EOS_Node then
          raise Internal_Error;
       end if;
       Set_Hash (EOS_Node, 0);
+      Set_Location (EOS_Node, Loc);
       PSL.Hash.Init;
    end Init;
 
