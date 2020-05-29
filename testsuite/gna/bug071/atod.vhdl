@@ -39,14 +39,14 @@ begin
     --  the first digit.
     v := csts (2);
     assert
-      to_string (v, "%.13a") = "0x1.dcd0089c1314ep+218"
-      or to_string (v, "%.13a") = "0xe.e68044e098a7p+215"
+         to_string (v, "%.13a") = "0x1.dcd0089c1314ep+218"
+      or to_string (v, "%.13a") = "0xe.e68044e098a70p+215"
       severity failure;
 
     v := csts (3);
     assert
-      to_string (v, "%.13a") = "0x1.62644c61d41aap+885"
-      or to_string (v, "%.13a") = "0xb.1322630ea0d5p+882"
+         to_string (v, "%.13a") = "0x1.62644c61d41aap+885"
+      or to_string (v, "%.13a") = "0xb.1322630ea0d50p+882"
       severity failure;
     wait;
   end process;
