@@ -29,6 +29,7 @@ with Netlists.Locations; use Netlists.Locations;
 with Netlists.Errors; use Netlists.Errors;
 with Netlists.Concats;
 with Netlists.Folds; use Netlists.Folds;
+with Netlists.Inference;
 
 with Synth.Errors; use Synth.Errors;
 
@@ -261,6 +262,7 @@ package body Netlists.Memories is
    is
       --  Number of memidx.
       Nbr_Idx : constant Positive := Count_Memidx (Addr);
+      Can_Free : constant Boolean := not Is_Connected (Addr);
 
       Mem_Depth : Uns32;
       Last_Size : Uns32;
@@ -366,8 +368,10 @@ package body Netlists.Memories is
          Inp : Input;
       begin
          for I in Indexes'Range loop
-            Inp := Get_Input (Indexes (I).Inst, 0);
-            Disconnect (Inp);
+            if Can_Free then
+               Inp := Get_Input (Indexes (I).Inst, 0);
+               Disconnect (Inp);
+            end if;
             Append (Concat, Indexes (I).Addr);
          end loop;
 
@@ -375,41 +379,41 @@ package body Netlists.Memories is
       end;
 
       --  Free addidx and memidx.
-      declare
-         N : Net;
-         Inp : Input;
-         Inst : Instance;
-         Inst2 : Instance;
-      begin
-         N := Addr;
-         loop
-            Inst := Get_Net_Parent (N);
-            case Get_Id (Inst) is
-               when Id_Memidx =>
-                  Remove_Instance (Inst);
-                  exit;
-               when Id_Addidx =>
-                  --  Remove the first input (a memidx).
-                  Inp := Get_Input (Inst, 0);
-                  Inst2 := Get_Net_Parent (Get_Driver (Inp));
-                  if Get_Id (Inst2) /= Id_Memidx then
+      if Can_Free then
+         declare
+            N : Net;
+            Inp : Input;
+            Inst : Instance;
+            Inst2 : Instance;
+         begin
+            N := Addr;
+            loop
+               Inst := Get_Net_Parent (N);
+               case Get_Id (Inst) is
+                  when Id_Memidx =>
+                     Remove_Instance (Inst);
+                     exit;
+                  when Id_Addidx =>
+                     --  Remove the first input (a memidx).
+                     Inp := Get_Input (Inst, 0);
+                     Inst2 := Get_Net_Parent (Get_Driver (Inp));
+                     pragma Assert (Get_Id (Inst2) = Id_Memidx);
+                     Disconnect (Inp);
+                     Remove_Instance (Inst2);
+
+                     --  Continue with the second input.
+                     Inp := Get_Input (Inst, 1);
+                     N := Get_Driver (Inp);
+                     Disconnect (Inp);
+
+                     --  Remove the addidx.
+                     Remove_Instance (Inst);
+                  when others =>
                      raise Internal_Error;
-                  end if;
-                  Disconnect (Inp);
-                  Remove_Instance (Inst2);
-
-                  --  Continue with the second input.
-                  Inp := Get_Input (Inst, 1);
-                  N := Get_Driver (Inp);
-                  Disconnect (Inp);
-
-                  --  Remove the addidx.
-                  Remove_Instance (Inst);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         end loop;
-      end;
+               end case;
+            end loop;
+         end;
+      end if;
 
       Addr := Low_Addr;
    end Convert_Memidx;
@@ -1652,12 +1656,16 @@ package body Netlists.Memories is
                     | Id_Idff =>
                      Dff_Clk := Get_Input_Net (In_Inst, 0);
                      exit;
+                  when Id_Mem_Multiport =>
+                     exit;
                   when others =>
                      raise Internal_Error;
                end case;
                Inp := Get_Next_Sink (Inp);
             end loop;
          end loop;
+
+         pragma Assert (Dff_Clk = No_Net);
 
          --  Do the real work: transform gates to ports.
          Disconnect (Get_Input (Inst2, 0));
@@ -1688,11 +1696,11 @@ package body Netlists.Memories is
                      Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
                      if Get_Id (Inst) = Id_Dyn_Insert_En then
                         Inp2 := Get_Input (Inst, 3);
-                        En := Get_Driver (Inp2);
+                        Inference.Extract_Clock
+                          (Ctxt, Get_Driver (Inp2), Clk, En);
                         Disconnect (Inp2);
-                        Clk := Dff_Clk;
                      else
-                        Clk := Dff_Clk;
+                        Clk := No_Net;
                         En := No_Net;
                      end if;
                      pragma Assert (Clk /= No_Net);
@@ -1795,6 +1803,7 @@ package body Netlists.Memories is
          end loop;
          Inp2 := N_Inp2;
       end loop;
+      pragma Unreferenced (Dff_Clk);
    end Create_Memory_Ports;
 
    procedure Convert_To_Memory (Ctxt : Context_Acc; Sig : Instance)
@@ -2089,7 +2098,6 @@ package body Netlists.Memories is
       In_V : constant Input := Get_Input (Inst, 1);
       In_Idx : constant Input := Get_Input (Inst, 2);
       Off : constant Uns32 := Get_Param_Uns32 (Inst, 0);
-      Dest : constant Input := Get_First_Sink (Get_Output (Inst, 0));
       Res : Net;
    begin
       Res := Build_Dyn_Insert_En
@@ -2100,12 +2108,7 @@ package body Netlists.Memories is
       Disconnect (In_Mem);
       Disconnect (In_V);
       Disconnect (In_Idx);
-      if Dest /= No_Input then
-         --  Only one connection.
-         pragma Assert (Get_Next_Sink (Dest) = No_Input);
-         Disconnect (Dest);
-         Connect (Dest, Res);
-      end if;
+      Redirect_Inputs (Get_Output (Inst, 0), Res);
 
       Remove_Instance (Inst);
 
@@ -2160,6 +2163,7 @@ package body Netlists.Memories is
    end One_Write_Connection;
 
    procedure Reduce_Muxes_Mux2 (Ctxt : Context_Acc;
+                                Clk  : Net;
                                 Psel : Net;
                                 Head : in out Instance;
                                 Tail : out Instance);
@@ -2167,6 +2171,7 @@ package body Netlists.Memories is
    --  Remove the mux2 MUX (by adding enable to dyn_insert).
    --  Return the new head.
    procedure Reduce_Muxes (Ctxt : Context_Acc;
+                           Clk : Net;
                            Sel : Net;
                            Head_In : Net;
                            Tail_In : Net;
@@ -2187,28 +2192,37 @@ package body Netlists.Memories is
          case Get_Id (Inst) is
             when Id_Mux2 =>
                --  Recurse on the mux.
-               Reduce_Muxes_Mux2 (Ctxt, Sel, Inst, Tail_Out);
+               Reduce_Muxes_Mux2 (Ctxt, Clk, Sel, Inst, Tail_Out);
             when Id_Dyn_Insert =>
                --  Transform dyn_insert to dyn_insert_en.
-               if Sel /= No_Net then
-                  Tail_Out := Add_Enable_To_Dyn_Insert (Ctxt, Inst, Sel);
+               declare
+                  En : Net;
+               begin
+                  if Sel /= No_Net then
+                     En := Build_Dyadic (Ctxt, Id_And, Clk, Sel);
+                     Copy_Location (En, Sel);
+                  else
+                     En := Clk;
+                  end if;
+                  Tail_Out := Add_Enable_To_Dyn_Insert (Ctxt, Inst, En);
                   Inst := Tail_Out;
-               else
-                  Tail_Out := Inst;
-               end if;
+               end;
             when Id_Dyn_Insert_En =>
                --  Simply add SEL to the enable input.
-               if Sel /= No_Net then
-                  declare
-                     En_Inp : constant Input := Get_Input (Inst, 3);
-                     En : Net;
-                  begin
-                     En := Get_Driver (En_Inp);
-                     Disconnect (En_Inp);
+               declare
+                  En_Inp : constant Input := Get_Input (Inst, 3);
+                  En     : Net;
+               begin
+                  En := Get_Driver (En_Inp);
+                  Disconnect (En_Inp);
+                  if Sel /= No_Net then
                      En := Build_Dyadic (Ctxt, Id_And, En, Sel);
-                     Connect (En_Inp, En);
-                  end;
-               end if;
+                     Copy_Location (En, Sel);
+                  end if;
+                  En := Build_Dyadic (Ctxt, Id_And, Clk, En);
+                  Copy_Location (En, Inst);
+                  Connect (En_Inp, En);
+               end;
                Tail_Out := Inst;
             when Id_Signal
               | Id_Isignal =>
@@ -2257,6 +2271,7 @@ package body Netlists.Memories is
    --  Remove the mux2 MUX (by adding enable to dyn_insert).
    --  Return the new head.
    procedure Reduce_Muxes_Mux2 (Ctxt : Context_Acc;
+                                Clk : Net;
                                 Psel : Net;
                                 Head : in out Instance;
                                 Tail : out Instance)
@@ -2330,7 +2345,7 @@ package body Netlists.Memories is
       --  Transform dyn_insert to dyn_insert_en by adding SEL, or simply add
       --  SEL to existing dyn_insert_en.
       --  RES is the head of the result chain.
-      Reduce_Muxes (Ctxt, Sel, Drv, Src, Res, Tail);
+      Reduce_Muxes (Ctxt, Clk, Sel, Drv, Src, Res, Tail);
 
       Redirect_Inputs (Muxout, Get_Output (Res, 0));
       Remove_Instance (Mux);
@@ -2338,17 +2353,19 @@ package body Netlists.Memories is
       Head := Res;
    end Reduce_Muxes_Mux2;
 
-   function Infere_RAM (Ctxt : Context_Acc; Val : Net; En : Net) return Net
+   function Infere_RAM (Ctxt : Context_Acc; Val : Net; Clk : Net; En : Net)
+                        return Net
    is
+      pragma Assert (Clk /= No_Net);
       --  pragma Assert (not Is_Connected (Val));
       Tail : Instance;
       Res : Instance;
    begin
-      --  From VAL, move all the muxes to the dyn_insert.  The  dyn_insert may
+      --  From VAL, move all the muxes to the dyn_insert.  The dyn_insert may
       --  be transformed to dyn_insert_en.
       --  At the end, the loop is linear and without muxes.
       --  Return the new head.
-      Reduce_Muxes (Ctxt, En, Val, No_Net, Res, Tail);
+      Reduce_Muxes (Ctxt, Clk, En, Val, No_Net, Res, Tail);
       return Get_Output (Res, 0);
    end Infere_RAM;
 

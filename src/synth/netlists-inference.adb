@@ -457,25 +457,28 @@ package body Netlists.Inference is
         and then Can_Infere_RAM (Data, Prev_Val)
       then
          --  Maybe it is a RAM.
-         Ndata := Infere_RAM (Ctxt, Data, Clk_Enable);
-      elsif Clk_Enable /= No_Net then
-         --  If there is a condition with the clock, that's an enable which
-         --  keep the previous value if the condition is false.  Add the mux
-         --  for it.
-         declare
-            Prev : Net;
-         begin
-            Prev := Build2_Extract (Ctxt, Prev_Val, Off, Get_Width (Data));
-
-            Ndata := Build_Mux2 (Ctxt, Clk_Enable, Prev, Data);
-            Copy_Location (Ndata, Clk_Enable);
-         end;
+         Res := Infere_RAM (Ctxt, Data, Clk, Clk_Enable);
       else
-         Ndata := Data;
-      end if;
+         if Clk_Enable /= No_Net then
+            --  If there is a condition with the clock, that's an enable which
+            --  keep the previous value if the condition is false.  Add the mux
+            --  for it, to create a synchronous enable.
+            declare
+               Prev : Net;
+            begin
+               Prev := Build2_Extract (Ctxt, Prev_Val, Off, Get_Width (Data));
 
-      --  Create the FF.
-      Res := Infere_FF_Create (Ctxt, Rst, Rst_Val, Init, Clk, Ndata, Els, Loc);
+               Ndata := Build_Mux2 (Ctxt, Clk_Enable, Prev, Data);
+               Copy_Location (Ndata, Clk_Enable);
+            end;
+         else
+            Ndata := Data;
+         end if;
+
+         --  Create the FF.
+         Res := Infere_FF_Create (Ctxt, Rst, Rst_Val,
+                                  Init, Clk, Ndata, Els, Loc);
+      end if;
 
       --  The output may already be used (if the target is a variable that
       --  is read).  So redirect the net.

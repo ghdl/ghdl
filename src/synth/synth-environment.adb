@@ -646,12 +646,16 @@ package body Synth.Environment is
          when Id_Idff
            | Id_Dff =>
             null;
+         when Id_Dyn_Insert_En =>
+            null;
          when others =>
             return False;
       end case;
       case Get_Id (Get_Net_Parent (N_Val)) is
          when Id_Idff
            | Id_Dff =>
+            null;
+         when Id_Dyn_Insert_En =>
             null;
          when others =>
             return False;
