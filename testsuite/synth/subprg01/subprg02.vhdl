@@ -5,6 +5,7 @@ entity subprg02 is
   port (a : std_logic_vector (3 downto 0);
         n : natural range 0 to 1;
         clk : std_logic;
+        n0 : out std_logic_vector (3 downto 0);
         na : out std_logic_vector (3 downto 0));
 end subprg02;
 
@@ -24,5 +25,8 @@ begin
       neg (mem (n));
       na <= mem (n);
     end if;
+
+    --  FIXME: this is needed so that MEM is not considered as a memory.
+    n0 <= mem (0);
   end process;
 end behav;
