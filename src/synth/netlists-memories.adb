@@ -365,13 +365,8 @@ package body Netlists.Memories is
       declare
          use Netlists.Concats;
          Concat : Concat_Type;
-         Inp : Input;
       begin
          for I in Indexes'Range loop
-            if Can_Free then
-               Inp := Get_Input (Indexes (I).Inst, 0);
-               Disconnect (Inp);
-            end if;
             Append (Concat, Indexes (I).Addr);
          end loop;
 
@@ -391,6 +386,8 @@ package body Netlists.Memories is
                Inst := Get_Net_Parent (N);
                case Get_Id (Inst) is
                   when Id_Memidx =>
+                     Inp := Get_Input (Inst, 0);
+                     Disconnect (Inp);
                      Remove_Instance (Inst);
                      exit;
                   when Id_Addidx =>
@@ -398,6 +395,8 @@ package body Netlists.Memories is
                      Inp := Get_Input (Inst, 0);
                      Inst2 := Get_Net_Parent (Get_Driver (Inp));
                      pragma Assert (Get_Id (Inst2) = Id_Memidx);
+                     Disconnect (Inp);
+                     Inp := Get_Input (Inst2, 0);
                      Disconnect (Inp);
                      Remove_Instance (Inst2);
 
@@ -1604,7 +1603,6 @@ package body Netlists.Memories is
       N_Inp, N_Inp2 : Input;
       N_Inst : Instance;
       In_Inst : Instance;
-      Dff_Clk : Net;
    begin
       --  Start from the end.
       --  First: the read ports at the end.
@@ -1632,40 +1630,6 @@ package body Netlists.Memories is
       while Inp2 /= No_Input loop
          N_Inp2 := Get_Next_Sink (Inp2);
          Inst2 := Get_Input_Parent (Inp2);
-
-         --  Find the dff (if any).
-         Dff_Clk := No_Net;
-         Inst := Inst2;
-         while Inst /= No_Instance loop
-            Inp := Get_First_Sink (Get_Output (Inst, 0));
-            Inst := No_Instance;
-            while Inp /= No_Input loop
-               In_Inst := Get_Input_Parent (Inp);
-               case Get_Id (In_Inst) is
-                  when Id_Dyn_Extract =>
-                     null;
-                  when Id_Dyn_Insert_En
-                    | Id_Dyn_Insert =>
-                     Inst := Get_Net_Parent (Get_Output (In_Inst, 0));
-                     exit;
-                  when Id_Signal
-                    | Id_Isignal =>
-                     --  No dff.
-                     exit;
-                  when Id_Dff
-                    | Id_Idff =>
-                     Dff_Clk := Get_Input_Net (In_Inst, 0);
-                     exit;
-                  when Id_Mem_Multiport =>
-                     exit;
-                  when others =>
-                     raise Internal_Error;
-               end case;
-               Inp := Get_Next_Sink (Inp);
-            end loop;
-         end loop;
-
-         pragma Assert (Dff_Clk = No_Net);
 
          --  Do the real work: transform gates to ports.
          Disconnect (Get_Input (Inst2, 0));
@@ -1803,7 +1767,6 @@ package body Netlists.Memories is
          end loop;
          Inp2 := N_Inp2;
       end loop;
-      pragma Unreferenced (Dff_Clk);
    end Create_Memory_Ports;
 
    procedure Convert_To_Memory (Ctxt : Context_Acc; Sig : Instance)
