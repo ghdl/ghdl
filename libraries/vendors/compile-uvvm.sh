@@ -57,7 +57,9 @@ fi
 uvvm_pkgs="uvvm_util
  uvvm_vvc_framework"
 
-uvvm_vips="bitvis_vip_sbi
+uvvm_vips="
+ bitvis_vip_scoreboard
+ bitvis_vip_sbi
  bitvis_vip_avalon_mm
  bitvis_vip_axilite
  bitvis_vip_axistream
@@ -66,9 +68,7 @@ uvvm_vips="bitvis_vip_sbi
  bitvis_vip_spi
  bitvis_vip_uart
  bitvis_vip_wishbone
-
  bitvis_vip_clock_generator
- bitvis_vip_scoreboard
 "
 
 # command line argument processing
