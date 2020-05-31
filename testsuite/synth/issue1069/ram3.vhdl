@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all,
     ieee.numeric_std.all;
 
-entity tdp_ram is
+entity ram3 is
     generic (
         ADDRWIDTH : positive := 12;
         WIDTH     : positive := 8
@@ -22,9 +22,9 @@ entity tdp_ram is
         data_read_b  : out std_logic_vector(WIDTH - 1 downto 0);
         data_write_b : in  std_logic_vector(WIDTH - 1 downto 0)
     );
-end tdp_ram;
+end ram3;
 
-architecture behavioral of tdp_ram is
+architecture behavioral of ram3 is
     signal reg_a : std_logic_vector(WIDTH - 1 downto 0);
     signal reg_b : std_logic_vector(WIDTH - 1 downto 0);
 begin
