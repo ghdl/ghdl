@@ -2316,19 +2316,20 @@ package body Netlists.Memories is
       Head := Res;
    end Reduce_Muxes_Mux2;
 
-   function Infere_RAM (Ctxt : Context_Acc; Val : Net; Clk : Net; En : Net)
-                        return Net
+   function Infere_RAM
+     (Ctxt : Context_Acc; Val : Net; Tail : Net; Clk : Net; En : Net)
+      return Net
    is
       pragma Assert (Clk /= No_Net);
       --  pragma Assert (not Is_Connected (Val));
-      Tail : Instance;
+      New_Tail : Instance;
       Res : Instance;
    begin
       --  From VAL, move all the muxes to the dyn_insert.  The dyn_insert may
       --  be transformed to dyn_insert_en.
       --  At the end, the loop is linear and without muxes.
       --  Return the new head.
-      Reduce_Muxes (Ctxt, Clk, En, Val, No_Net, Res, Tail);
+      Reduce_Muxes (Ctxt, Clk, En, Val, Tail, Res, New_Tail);
       return Get_Output (Res, 0);
    end Infere_RAM;
 

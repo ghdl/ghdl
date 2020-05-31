@@ -33,6 +33,7 @@ package Netlists.Memories is
    function Can_Infere_RAM (Val : Net; Prev_Val : Net) return Boolean;
 
    --  Transform VAL to a RAM.
-   function Infere_RAM (Ctxt : Context_Acc; Val : Net; Clk : Net; En : Net)
-                        return Net;
+   function Infere_RAM
+     (Ctxt : Context_Acc; Val : Net; Tail : Net; Clk : Net; En : Net)
+      return Net;
 end Netlists.Memories;
