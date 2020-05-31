@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-synth_analyze tdp_ram
+synth_tb tdp_ram
 synth_tb ram3
 synth_tb ram4
 #synth_tb ram41

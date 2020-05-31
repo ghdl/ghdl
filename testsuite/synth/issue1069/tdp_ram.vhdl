@@ -56,8 +56,8 @@ architecture behavioral of tdp_ram is
 
     constant TOTAL_COLS : positive := eq_assert(COLS_A * 2 ** ADDRWIDTH_A, COLS_B * 2 ** ADDRWIDTH_B);
 
-    constant EXTRA_ADDR_BITS_A : positive := log2(COLS_A);
-    constant EXTRA_ADDR_BITS_B : positive := log2(COLS_B);
+    constant EXTRA_ADDR_BITS_A : natural := log2(COLS_A);
+    constant EXTRA_ADDR_BITS_B : natural := log2(COLS_B);
 
     type ram_t is array(0 to TOTAL_COLS - 1) of std_logic_vector(COL_WIDTH - 1 downto 0);
     shared variable store : ram_t := (others => (others => '0'));
