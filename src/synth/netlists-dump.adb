@@ -470,7 +470,11 @@ package body Netlists.Dump is
                   Put_Width (W);
                   Put ("'uh");
                   V := Get_Param_Uns32 (Inst, 0);
-                  I := (Natural (W) + 3) / 4;
+                  if W >= 32 then
+                     I := 8;
+                  else
+                     I := (Natural (W) + 3) / 4;
+                  end if;
                   while I > 0 loop
                      I := I - 1;
                      Put (Xdigits (Shift_Right (V, I * 4) and 15));
