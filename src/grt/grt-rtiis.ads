@@ -71,6 +71,10 @@ package Grt.Rtiis is
       Addr : Address;
       -- The name of the signal/port/constant/generic of subcomponent of it.
       Name : Ghdl_Object_Rtii_Name;
+      -- This is a pointer to the RTI name.  It is only defined for the top
+      -- level component.  Necessary because grt-waves expects to get a
+      -- a pointer to a string that outlasts the avhpi handle.
+      Name_Ptr: Ghdl_C_String;
       --  The Rti of the base signal/port/constant/generic.
       --  Useful for accessing the mode and location in source code.
       Base_Rti : Ghdl_Rtin_Object_Acc;

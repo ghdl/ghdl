@@ -514,7 +514,7 @@ package body Grt.Avhpi is
            | VhpiPortDeclK
            | VhpiGenericDeclK
            | VhpiConstDeclK =>
-            return To_Ghdl_C_String(Obj.Obj.Name);
+            return Obj.Obj.Name_Ptr;
          when VhpiSubtypeDeclK =>
             return To_Ghdl_Rtin_Subtype_Scalar_Acc (Obj.Atype).Name;
          when others =>

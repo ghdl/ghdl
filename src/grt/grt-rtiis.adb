@@ -310,6 +310,7 @@ package body Grt.Rtiis is
          Is_Sig => Rtii.Is_Sig,
          Typ => El_Type,
          Name => El_Name,
+         Name_Ptr => null,
          Base_Rti => Rtii.Base_Rti,
          Addr => Child_Addr);
       return Child;
@@ -357,6 +358,7 @@ package body Grt.Rtiis is
             Is_Sig => Rtii.Is_Sig,
             Typ => El_Type,
             Name => El_Name,
+            Name_Ptr => null,
             Base_Rti => Rtii.Base_Rti,
             Addr => Child_Addr);
       end if;
@@ -468,6 +470,7 @@ package body Grt.Rtiis is
          Base_Rti => Rti,
          Typ => Typ,
          Name => New_Name(Rti.Name),
+         Name_Ptr => Rti.Name,
          Addr => Addr);
       return Rtii;
    end To_Ghdl_Object_Rtii;
