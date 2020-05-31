@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all,
     ieee.numeric_std.all;
 
-entity tdp_ram is
+entity tdp_ram2 is
     generic (
         ADDRWIDTH_A : positive := 12;
         WIDTH_A     : positive := 8;
@@ -29,9 +29,9 @@ entity tdp_ram is
         data_read_b  : out std_logic_vector(WIDTH_B - 1 downto 0);
         data_write_b : in  std_logic_vector(WIDTH_B - 1 downto 0)
     );
-end tdp_ram;
+end tdp_ram2;
 
-architecture behavioral of tdp_ram is
+architecture behavioral of tdp_ram2 is
     function log2(val : INTEGER) return natural is
         variable res : natural;
     begin
@@ -56,8 +56,8 @@ architecture behavioral of tdp_ram is
 
     constant TOTAL_COLS : positive := eq_assert(COLS_A * 2 ** ADDRWIDTH_A, COLS_B * 2 ** ADDRWIDTH_B);
 
-    constant EXTRA_ADDR_BITS_A : positive := log2(COLS_A);
-    constant EXTRA_ADDR_BITS_B : positive := log2(COLS_B);
+    constant EXTRA_ADDR_BITS_A : natural := log2(COLS_A);
+    constant EXTRA_ADDR_BITS_B : natural := log2(COLS_B);
 
     signal reg_a : std_logic_vector(WIDTH_A - 1 downto 0);
     signal reg_b : std_logic_vector(WIDTH_B - 1 downto 0);
