@@ -164,7 +164,11 @@ package body Ghdlsynth is
       elsif Option = "-dc" then
          Flag_Debug_Nocleanup := True;
       elsif Option = "-dm" then
-         Flag_Debug_Nomemory := True;
+         Flag_Debug_Nomemory1 := True;
+         Flag_Debug_Nomemory2 := True;
+      elsif Option = "-dm2" then
+         --  Reduce muxes, but do not create memories.
+         Flag_Debug_Nomemory2 := True;
       elsif Option = "-de" then
          Flag_Debug_Noexpand := True;
       elsif Option = "-t" then

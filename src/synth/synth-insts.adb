@@ -1535,7 +1535,7 @@ package body Synth.Insts is
          Netlists.Cleanup.Remove_Output_Gates (Inst.M);
       end if;
 
-      if not Synth.Flags.Flag_Debug_Nomemory then
+      if not Synth.Flags.Flag_Debug_Nomemory2 then
          Netlists.Memories.Extract_Memories2 (Get_Build (Syn_Inst), Inst.M);
          --  Remove remaining clock edge gates.
          Netlists.Cleanup.Mark_And_Sweep (Inst.M);
