@@ -16,9 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Types; use Types;
 with Hash; use Hash;
-with Dyn_Tables;
+with Dyn_Maps;
 
 --  This generic package provides a factory to build unique objects.
 --  Get will return an existing object or create a new one.
@@ -40,16 +39,33 @@ generic
    with function Equal (Obj : Object_Type; Params : Params_Type)
                        return Boolean;
 package Dyn_Interning is
-   type Instance is limited private;
+   type No_Value_Type is null record;
+   function Build_No_Value (Obj : Object_Type) return No_Value_Type;
+
+   package Map is new Dyn_Maps
+     (Params_Type => Params_Type,
+      Object_Type => Object_Type,
+      Value_Type  => No_Value_Type,
+      Hash        => Hash,
+      Build       => Build,
+      Build_Value => Build_No_Value,
+      Equal       => Equal);
+
+   subtype Instance is Map.Instance;
 
    --  Initialize.  Required before any other operation.
-   procedure Init (Inst : out Instance);
+   procedure Init (Inst : out Instance) renames Map.Init;
 
-   procedure Free (Inst : in out Instance);
+   procedure Free (Inst : in out Instance) renames Map.Free;
 
-   type Index_Type is new Uns32;
-   No_Index : constant Index_Type := 0;
-   First_Index : constant Index_Type := 1;
+   --  Export Index_Type...
+   subtype Index_Type is Map.Index_Type;
+   function "+" (L, R : Index_Type) return Index_Type renames Map."+";
+   function ">" (L, R : Index_Type) return Boolean renames Map.">";
+   function "<=" (L, R : Index_Type) return Boolean renames Map."<=";
+
+   No_Index : constant Index_Type := Map.No_Index;
+   First_Index : constant Index_Type := Map.First_Index;
 
    --  If there is already an existing object for PARAMS, return it.
    --  Otherwise create it.
@@ -58,35 +74,16 @@ package Dyn_Interning is
 
    --  Likewise, but return its index.
    procedure Get_Index
-     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type);
+     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type)
+     renames Map.Get_Index;
 
    --  Get the number of elements in the table.
-   function Last_Index (Inst : Instance) return Index_Type;
+   function Last_Index (Inst : Instance) return Index_Type
+     renames Map.Last_Index;
 
    --  Get an element by index.  The index has no real meaning, but the
    --  current implementation allocates index incrementally.
    function Get_By_Index (Inst : Instance; Index : Index_Type)
-                         return Object_Type;
-private
-   type Element_Wrapper is record
-      Hash : Hash_Value_Type;
-      Next : Index_Type := No_Index;
-      Obj  : Object_Type;
-   end record;
-
-   package Wrapper_Tables is new Dyn_Tables
-     (Table_Index_Type => Index_Type,
-      Table_Component_Type => Element_Wrapper,
-      Table_Low_Bound => No_Index + 1);
-
-   type Hash_Array is array (Hash_Value_Type range <>) of Index_Type;
-   type Hash_Array_Acc is access Hash_Array;
-
-   Initial_Size : constant Hash_Value_Type := 1024;
-
-   type Instance is record
-      Els : Wrapper_Tables.Instance;
-      Size : Hash_Value_Type;
-      Hash_Table : Hash_Array_Acc;
-   end record;
+                          return Object_Type
+     renames Map.Get_By_Index;
 end Dyn_Interning;

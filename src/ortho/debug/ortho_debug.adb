@@ -811,17 +811,17 @@ package body Ortho_Debug is
 
    procedure Start_Record_Aggr (List : out O_Record_Aggr_List; Atype : O_Tnode)
    is
-      subtype O_Cnode_Aggregate is O_Cnode_Type (OC_Aggregate);
+      subtype O_Cnode_Aggregate is O_Cnode_Type (OC_Record_Aggregate);
       Res : O_Cnode;
    begin
       if Atype.Kind /= ON_Record_Type then
          raise Type_Error;
       end if;
       Check_Complete_Type (Atype);
-      Res := new O_Cnode_Aggregate'(Kind => OC_Aggregate,
+      Res := new O_Cnode_Aggregate'(Kind => OC_Record_Aggregate,
                                     Ctype => Atype,
                                     Ref => False,
-                                    Aggr_Els => null);
+                                    Rec_Els => null);
       List.Res := Res;
       List.Last := null;
       List.Field := Atype.Elements;
@@ -844,7 +844,7 @@ package body Ortho_Debug is
                                      Aggr_Value => Value,
                                      Aggr_Next => null);
       if List.Last = null then
-         List.Res.Aggr_Els := El;
+         List.Res.Rec_Els := El;
       else
          List.Last.Aggr_Next := El;
       end if;
@@ -863,22 +863,31 @@ package body Ortho_Debug is
       Res := List.Res;
    end Finish_Record_Aggr;
 
-   procedure Start_Array_Aggr (List : out O_Array_Aggr_List; Atype : O_Tnode)
+   procedure Start_Array_Aggr
+     (List : out O_Array_Aggr_List; Atype : O_Tnode; Len : Unsigned_32)
    is
-      subtype O_Cnode_Aggregate is O_Cnode_Type (OC_Aggregate);
+      subtype O_Cnode_Aggregate is O_Cnode_Type (OC_Array_Aggregate);
       Res : O_Cnode;
    begin
-      if Atype.Kind /= ON_Array_Sub_Type then
-         raise Type_Error;
-      end if;
+      case Atype.Kind is
+         when ON_Array_Sub_Type =>
+            if Atype.Length.U_Val /= Unsigned_64 (Len) then
+               raise Type_Error;
+            end if;
+            List.El_Type := Atype.Base_Type.El_Type;
+         when ON_Array_Type =>
+            List.El_Type := Atype.El_Type;
+         when others =>
+            raise Type_Error;
+      end case;
       Check_Complete_Type (Atype);
-      Res := new O_Cnode_Aggregate'(Kind => OC_Aggregate,
+      Res := new O_Cnode_Aggregate'(Kind => OC_Array_Aggregate,
                                     Ctype => Atype,
                                     Ref => False,
-                                    Aggr_Els => null);
+                                    Arr_Len => Len,
+                                    Arr_Els => null);
       List.Res := Res;
       List.Last := null;
-      List.El_Type := Atype.Base_Type.El_Type;
    end Start_Array_Aggr;
 
    procedure New_Array_Aggr_El (List : in out O_Array_Aggr_List;
@@ -894,7 +903,7 @@ package body Ortho_Debug is
                                      Aggr_Value => Value,
                                      Aggr_Next => null);
       if List.Last = null then
-         List.Res.Aggr_Els := El;
+         List.Res.Arr_Els := El;
       else
          List.Last.Aggr_Next := El;
       end if;

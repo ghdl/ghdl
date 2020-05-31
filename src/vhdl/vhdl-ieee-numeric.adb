@@ -494,20 +494,20 @@ package body Vhdl.Ieee.Numeric is
            (others => Iir_Predefined_None)));
 
    Shl_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat);
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat);
 
    Shr_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat);
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat);
 
    Rol_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Nat,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat);
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat);
 
    Ror_Patterns : constant Shift_Pattern_Type :=
-     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Nat,
-      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat);
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat);
 
    Sll_Patterns : constant Shift_Pattern_Type :=
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sll_Sgn_Int,

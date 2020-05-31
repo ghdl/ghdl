@@ -320,17 +320,21 @@ package body Netlists.Inference is
 
    function Infere_FF_Else (Ctxt : Context_Acc;
                             Prev_Val : Net;
-                            Off : Uns32;
+                            Off      : Uns32;
                             Last_Mux : Instance;
-                            Clk : Net;
+                            Init     : Net;
+                            Rst      : Net;
+                            Rst_Val  : Net;
+                            Data     : Net;
+                            Els      : Net;
+                            Clk      : Net;
                             Clk_Enable : Net;
-                            Stmt : Synth.Source.Syn_Src) return Net;
+                            Loc        : Location_Type) return Net;
 
    procedure Infere_FF_Mux (Ctxt : Context_Acc;
                             Prev_Val : Net;
                             Off : Uns32;
                             Last_Mux : Instance;
-                            Stmt : Synth.Source.Syn_Src;
                             Els : out Net;
                             Data : out Net)
    is
@@ -340,7 +344,9 @@ package body Netlists.Inference is
       I1 : constant Input := Get_Mux2_I1 (Last_Mux);
       Els_Inst : Instance;
       Els_Clk : Net;
-      Els_En : Net;
+      Els_En   : Net;
+      Data2    : Net;
+      Els2     : Net;
    begin
       --  There must be no 'else' part for clock expression.
       Els := Get_Driver (I0);
@@ -360,8 +366,16 @@ package body Netlists.Inference is
               (Mux_Loc, "clocked logic requires clocked logic on else part");
             Els := No_Net;
          else
-            Els := Infere_FF_Else (Ctxt, Prev_Val, Off, Els_Inst,
-                                   Els_Clk, Els_En, Stmt);
+            --  Create and return the DFF.
+
+            --  1. Remove the mux that creates the loop (will be replaced by
+            --     the dff).
+            Infere_FF_Mux (Ctxt, Prev_Val, Off, Last_Mux, Els2, Data2);
+
+            Els := Infere_FF_Else (Ctxt, Prev_Val, Off, Last_Mux, No_Net,
+                                   No_Net, No_Net, Data2, Els2,
+                                   Els_Clk, Els_En, Get_Location (Last_Mux));
+            Remove_Instance (Last_Mux);
          end if;
       end if;
 
@@ -424,47 +438,51 @@ package body Netlists.Inference is
 
    function Infere_FF_Else (Ctxt : Context_Acc;
                             Prev_Val : Net;
-                            Off : Uns32;
+                            Off      : Uns32;
                             Last_Mux : Instance;
-                            Clk : Net;
+                            Init     : Net;
+                            Rst      : Net;
+                            Rst_Val  : Net;
+                            Data     : Net;
+                            Els      : Net;
+                            Clk      : Net;
                             Clk_Enable : Net;
-                            Stmt : Synth.Source.Syn_Src) return Net
+                            Loc        : Location_Type) return Net
    is
-      Mux_Loc : constant Location_Type := Get_Location (Last_Mux);
-      Data : Net;
-      Res : Net;
-      Els : Net;
+      Ndata : Net;
+      Res   : Net;
    begin
-      --  Create and return the DFF.
-
-      --  1. Remove the mux that creates the loop (will be replaced by the
-      --     dff).
-      Infere_FF_Mux (Ctxt, Prev_Val, Off, Last_Mux, Stmt, Els, Data);
-
-      Free_Instance (Last_Mux);
-
       if Off = 0
+        and then not Synth.Flags.Flag_Debug_Nomemory
         and then Can_Infere_RAM (Data, Prev_Val)
       then
          --  Maybe it is a RAM.
-         Data := Infere_RAM (Ctxt, Data, Clk_Enable);
-      elsif Clk_Enable /= No_Net then
-         --  If there is a condition with the clock, that's an enable which
-         --  keep the previous value if the condition is false.  Add the mux
-         --  for it.
-         declare
-            Prev : Net;
-         begin
-            Prev := Build2_Extract (Ctxt, Prev_Val, Off, Get_Width (Data));
+         Res := Infere_RAM (Ctxt, Data, Clk, Clk_Enable);
+      else
+         if Clk_Enable /= No_Net then
+            --  If there is a condition with the clock, that's an enable which
+            --  keep the previous value if the condition is false.  Add the mux
+            --  for it, to create a synchronous enable.
+            declare
+               Prev : Net;
+            begin
+               Prev := Build2_Extract (Ctxt, Prev_Val, Off, Get_Width (Data));
 
-            Data := Build_Mux2 (Ctxt, Clk_Enable, Prev, Data);
-            Copy_Location (Data, Clk_Enable);
-         end;
+               Ndata := Build_Mux2 (Ctxt, Clk_Enable, Prev, Data);
+               Copy_Location (Ndata, Clk_Enable);
+            end;
+         else
+            Ndata := Data;
+         end if;
+
+         --  Create the FF.
+         Res := Infere_FF_Create (Ctxt, Rst, Rst_Val,
+                                  Init, Clk, Ndata, Els, Loc);
       end if;
 
-      --  Create the FF.
-      Res := Infere_FF_Create (Ctxt, No_Net, No_Net, No_Net, Clk, Data,
-                               Els, Mux_Loc);
+      --  The output may already be used (if the target is a variable that
+      --  is read).  So redirect the net.
+      Redirect_Inputs (Get_Output (Last_Mux, 0), Res);
       return Res;
    end Infere_FF_Else;
 
@@ -496,7 +514,7 @@ package body Netlists.Inference is
 
       --  1. Remove the mux that creates the loop (will be replaced by the
       --     dff).
-      Infere_FF_Mux (Ctxt, Prev_Val, Off, Clock_Mux, Stmt, Els, Data);
+      Infere_FF_Mux (Ctxt, Prev_Val, Off, Clock_Mux, Els, Data);
 
       --  If the signal declaration has an initial value, get it.
       Sig := Get_Net_Parent (Prev_Val);
@@ -641,35 +659,11 @@ package body Netlists.Inference is
          pragma Assert (Prev_Mux = No_Instance or else Prev_Mux = Last_Mux);
       end;
 
-      if Off = 0
-        and then not Synth.Flags.Flag_Debug_Nomemory
-        and then Can_Infere_RAM (Data, Prev_Val)
-      then
-         --  Maybe it is a RAM.
-         Data := Infere_RAM (Ctxt, Data, Enable);
-      elsif Enable /= No_Net then
-         --  If there is a condition with the clock, that's an enable which
-         --  keep the previous value if the condition is false.  Add the mux
-         --  for it.
-         declare
-            Prev : Net;
-         begin
-            Prev := Build2_Extract (Ctxt, Prev_Val, Off, Get_Width (Data));
+      Res := Infere_FF_Else (Ctxt, Prev_Val, Off, Last_Mux, Init,
+                             Rst, Rst_Val, Data, Els, Clk, Enable, Mux_Loc);
 
-            Data := Build_Mux2 (Ctxt, Enable, Prev, Data);
-            Copy_Location (Data, Enable);
-         end;
-      end if;
-
-      --  Create the FF.
-      Res := Infere_FF_Create (Ctxt, Rst, Rst_Val, Init, Clk, Data,
-                               Els, Mux_Loc);
-
-      --  The output may already be used (if the target is a variable that
-      --  is read).  So redirect the net.
-      Redirect_Inputs (Get_Output (Last_Mux, 0), Res);
       if Prev_Mux /= No_Instance then
-         Free_Instance (Prev_Mux);
+         Remove_Instance (Prev_Mux);
       end if;
 
       return Res;
@@ -928,21 +922,27 @@ package body Netlists.Inference is
                            En_Gate : Net;
                            Stmt : Synth.Source.Syn_Src) return Net
    is
-      Loc : constant Location_Type := Synth.Source."+" (Stmt);
-      Inst : Instance;
-      First_Inst, Last_Inst : Instance;
-      Clk, En : Net;
-      Areset : Net;
-      Zero : Net;
+      Loc        : constant Location_Type := Synth.Source."+" (Stmt);
+      Inst       : Instance;
+      First_Inst : Instance;
+      Last_Inst  : Instance;
+      Clk, En    : Net;
+      Areset     : Net;
+      One        : Net;
    begin
       --  Extract clock (if any) from VAL.  Return VAL is no clock.
       First_Inst := Get_Net_Parent (Val);
       Inst := First_Inst;
       loop
-         if Get_Id (Inst) /= Id_Mux2 then
-            pragma Assert (Get_Id (Inst) = Id_Const_UB32);
-            return Val;
-         end if;
+         case Get_Id (Inst) is
+            when Id_Mux2 =>
+               null;
+            when Id_Const_UB32
+               | Id_Pmux =>
+               return Val;
+            when others =>
+               raise Internal_Error;
+         end case;
          Extract_Clock (Ctxt, Get_Input_Net (Inst, 0), Clk, En);
          exit when Clk /= No_Net;
 
@@ -950,10 +950,13 @@ package body Netlists.Inference is
          Inst := Find_Condition_Chain_Next (Inst);
       end loop;
 
+      --  INST is the mux2 with clock CLK.
+
       --  Extract enable and asynchronous reset (if any).
       Last_Inst := Inst;
       Areset := No_Net;
-      while Last_Inst /= Inst loop
+      Inst := First_Inst;
+      while Inst /= Last_Inst loop
          declare
             Cond : Net;
             Next_Inst : Instance;
@@ -963,8 +966,8 @@ package body Netlists.Inference is
             --  Find the next mux.
             Next_Inst := Find_Condition_Chain_Next (Inst);
 
-            --  If the next mux is in0, negate COND.
-            if Next_Inst = Get_Net_Parent (Get_Input_Net (Inst, 1)) then
+            --  If the next mux is in1, negate COND.
+            if Next_Inst = Get_Net_Parent (Get_Input_Net (Inst, 2)) then
                Cond := Build_Monadic (Ctxt, Id_Not, Cond);
                Synth.Source.Set_Location (Cond, Stmt);
             end if;
@@ -988,8 +991,9 @@ package body Netlists.Inference is
          end if;
 
          En := Build2_And (Ctxt, En, Get_Output (Next_Inst, 0), Loc);
-         Zero := Get_Input_Net (Inst, 1);
       end;
+
+      One := Build_Const_UB32 (Ctxt, 1, 1);
 
       --  Build an idff/iadff for each condition of the assertions.
       --  The caller will connect the returned value (En) to the enable gate.
@@ -1020,9 +1024,9 @@ package body Netlists.Inference is
             Disconnect (Assert_Inp);
 
             if Areset = No_Net then
-               Dff := Build_Idff (Ctxt, Clk, N, Zero);
+               Dff := Build_Idff (Ctxt, Clk, N, One);
             else
-               Dff := Build_Iadff (Ctxt, Clk, N, Areset, Zero, Zero);
+               Dff := Build_Iadff (Ctxt, Clk, N, Areset, One, One);
             end if;
             Set_Location (Dff, Loc);
 

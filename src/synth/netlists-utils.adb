@@ -252,43 +252,6 @@ package body Netlists.Utils is
       return Disconnect_And_Get (Get_Input (Inst, I));
    end Disconnect_And_Get;
 
-   procedure Disconnect_And_Free (I : Input)
-   is
-      I_Net : constant Net := Get_Driver (I);
-      Inst : constant Instance := Get_Net_Parent (I_Net);
-      Nbr_Inputs : Port_Nbr;
-      Nbr_Outputs : Port_Nbr;
-   begin
-      --  First disconnect.
-      Disconnect (I);
-
-      --  Quick check: is output (of I) still used ?
-      if Is_Connected (I_Net) then
-         return;
-      end if;
-
-      --  Check that all outputs are unused.
-      Nbr_Outputs := Get_Nbr_Outputs (Inst);
-      if Nbr_Outputs > 1 then
-         for K in 0 .. Nbr_Outputs - 1 loop
-            if Is_Connected (Get_Output (Inst, K)) then
-               return;
-            end if;
-         end loop;
-      end if;
-
-      --  First disconnect inputs.
-      Nbr_Inputs := Get_Nbr_Inputs (Inst);
-      if Nbr_Inputs > 0 then
-         for K in 0 .. Nbr_Inputs - 1 loop
-            Disconnect_And_Free (Get_Input (Inst, K));
-         end loop;
-      end if;
-
-      --  Free Inst
-      Free_Instance (Inst);
-   end Disconnect_And_Free;
-
    function Same_Net (L, R : Net) return Boolean is
    begin
       if L = R then
@@ -325,6 +288,20 @@ package body Netlists.Utils is
          end case;
       end;
    end Same_Net;
+
+   procedure Copy_Attributes (Dest : Instance; Src : Instance)
+   is
+      Attr : Attribute;
+   begin
+      Attr := Get_First_Attribute (Src);
+      while Attr /= No_Attribute loop
+         Set_Attribute (Dest,
+                        Get_Attribute_Name (Attr),
+                        Get_Attribute_Type (Attr),
+                        Get_Attribute_Pval (Attr));
+         Attr := Get_Attribute_Next (Attr);
+      end loop;
+   end Copy_Attributes;
 
    function Clog2 (W : Width) return Width is
    begin

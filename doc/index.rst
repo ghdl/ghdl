@@ -11,6 +11,12 @@
    News
    ****
 
+   21.05.2020 - Nightly build assets available
+   ===========================================
+
+   * After each successful CI run of branch ``master``, packages are published as assets of pre-release `nightly <https://github.com/ghdl/ghdl/releases/tag/nightly>`_.
+   * GitHub Action `ghdl/setup-ghdl-ci <https://github.com/ghdl/setup-ghdl-ci>`_ was created, to allow easy installation of nightly GHDL assets in GitHub Actions workflows.
+
    09.05.2020 - New repositories and a wiki were created
    =====================================================
 
@@ -63,6 +69,8 @@
    ===================================
 
 .. only:: latex
+
+   .. rubric:: 21.05.2020 - Nightly build assets available.
 
    .. rubric:: 09.05.2020 - New repositories and a wiki were created.
 

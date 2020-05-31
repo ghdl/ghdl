@@ -300,14 +300,12 @@ package Vhdl.Utils is
    --  Return True is component instantiation statement INST instantiate a
    --  component.
    function Is_Component_Instantiation
-     (Inst : Iir_Component_Instantiation_Statement)
-     return Boolean;
+     (Inst : Iir_Component_Instantiation_Statement) return Boolean;
 
    --  Return True is component instantiation statement INST instantiate a
    --  design entity.
    function Is_Entity_Instantiation
-     (Inst : Iir_Component_Instantiation_Statement)
-     return Boolean;
+     (Inst : Iir_Component_Instantiation_Statement) return Boolean;
 
    --  Get the expression of the attribute specification corresponding to the
    --  attribute name NAME.  Meaningful only for static values.

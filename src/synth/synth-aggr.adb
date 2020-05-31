@@ -471,7 +471,7 @@ package body Synth.Aggr is
          if Const_P then
             Res := Create_Value_Memory (Res_Typ);
             for I in Aggr_Type.Rec.E'Range loop
-               Write_Value (Res.Val.Mem + Aggr_Type.Rec.E (I).Moff,
+               Write_Value (Res.Val.Mem + Res_Typ.Rec.E (I).Moff,
                             Tab_Res (Tab_Res'Last - Nat32 (I) + 1));
             end loop;
          else

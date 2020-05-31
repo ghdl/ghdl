@@ -41,7 +41,7 @@ RM = rm -f
 
 
 # Extra flags to pass to recursive makes.
-GHDL_ADAFLAGS=-gnata -gnaty3befhkmr -gnatwa
+GHDL_ADAFLAGS=-gnata -gnaty3befhkmr -gnatwa -gnatwC
 GNATBIND = gnatbind
 GNATMAKE = gnatmake
 

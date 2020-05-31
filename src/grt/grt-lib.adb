@@ -29,6 +29,7 @@ with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.Severity;
 with Grt.Options;
 with Grt.Fcvt;
+with Grt.Backtraces;
 
 package body Grt.Lib is
    --procedure Memcpy (Dst : Address; Src : Address; Size : Size_T);
@@ -89,6 +90,9 @@ package body Grt.Lib is
          Error_S (Msg);
          Diag_C (" failed");
          Error_E_Call_Stack (Bt);
+      elsif Level >= Grt.Options.Backtrace_Severity then
+         Save_Backtrace (Bt, 2);
+         Grt.Backtraces.Put_Err_Backtrace (Bt);
       end if;
    end Do_Report;
 

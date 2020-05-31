@@ -42,7 +42,6 @@ with Netlists.Concats;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Errors;
 with Vhdl.Ieee.Math_Real;
-with Vhdl.Std_Package;
 
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
@@ -385,7 +384,6 @@ package body Synth.Insts is
       Imp : Node;
       Syn_Inst : Synth_Instance_Acc;
       Inter : Node;
-      Inter_Type : Node;
       Inter_Typ : Type_Acc;
       Nbr_Inputs : Port_Nbr;
       Nbr_Outputs : Port_Nbr;
@@ -463,7 +461,6 @@ package body Synth.Insts is
 
       if Id = Id_User_Parameters then
          declare
-            use Vhdl.Std_Package;
             Descs : Param_Desc_Array (1 .. Nbr_Params);
             Ptype : Param_Type;
          begin
@@ -471,22 +468,7 @@ package body Synth.Insts is
             Nbr_Params := 0;
             while Inter /= Null_Node loop
                --  Bounds or range of the type.
-               Inter_Type := Get_Type (Inter);
-               Inter_Type := Get_Base_Type (Inter_Type);
-               if Inter_Type = String_Type_Definition then
-                  Ptype := Param_Pval_String;
-               elsif Inter_Type = Time_Type_Definition then
-                  Ptype := Param_Pval_Time_Ps;
-               else
-                  case Get_Kind (Inter_Type) is
-                     when Iir_Kind_Integer_Type_Definition =>
-                        Ptype := Param_Pval_Integer;
-                     when Iir_Kind_Floating_Type_Definition =>
-                        Ptype := Param_Pval_Real;
-                     when others =>
-                        Ptype := Param_Pval_Vector;
-                  end case;
-               end if;
+               Ptype := Type_To_Param_Type (Get_Type (Inter));
                Nbr_Params := Nbr_Params + 1;
                Descs (Nbr_Params) :=
                  (Name => Create_Inter_Name (Inter, Params.Encoding),
@@ -845,10 +827,6 @@ package body Synth.Insts is
          declare
             Inter : Node;
             Vt : Valtyp;
-            Vec : Logvec_Array_Acc;
-            Len : Uns32;
-            Off : Uns32;
-            Has_Zx : Boolean;
             Pv : Pval;
             Idx : Param_Idx;
          begin
@@ -856,22 +834,7 @@ package body Synth.Insts is
             Inter := Get_Generic_Chain (Inst_Obj.Decl);
             while Inter /= Null_Node loop
                Vt := Get_Value (Inst_Obj.Syn_Inst, Inter);
-               Len := (Vt.Typ.W + 31) / 32;
-               pragma Assert (Len > 0);
-               Vec := new Logvec_Array'(0 .. Digit_Index (Len - 1) => (0, 0));
-               Off := 0;
-               Has_Zx := False;
-               Value2logvec
-                 (Get_Memtyp (Vt), 0, Vt.Typ.W, Vec.all, Off, Has_Zx);
-               pragma Assert (Off = Vt.Typ.W);
-               if Has_Zx then
-                  Pv := Create_Pval4 (Vt.Typ.W);
-               else
-                  Pv := Create_Pval2 (Vt.Typ.W);
-               end if;
-               for I in 0 .. Len - 1 loop
-                  Write_Pval (Pv, I, Vec (Digit_Index (I)));
-               end loop;
+               Pv := Memtyp_To_Pval (Get_Memtyp (Vt));
                Set_Param_Pval (Inst, Idx, Pv);
 
                Inter := Get_Chain (Inter);

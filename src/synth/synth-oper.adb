@@ -876,62 +876,64 @@ package body Synth.Oper is
             --  "+" (Natural, Unsigned)
             return Synth_Dyadic_Nat_Uns (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
-           |  Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
-           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
-           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Uns =>
+            | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Log_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn =>
             --  "+" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns_Uns (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int
-           |  Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int =>
             --  "+" (Signed, Integer)
             return Synth_Dyadic_Sgn_Int (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv =>
             --  "+" (Integer, Signed)
             return Synth_Dyadic_Int_Sgn (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn
-           |  Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
-           |  Iir_Predefined_Ieee_Numeric_Std_Add_Log_Sgn
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn
-           |  Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
-           |  Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv =>
             --  "+" (Signed, Signed)
             return Synth_Dyadic_Sgn_Sgn (Ctxt, Id_Add, Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat
-           |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Int =>
             --  "-" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Slv
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns =>
+            | Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
+            | Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Log_Sgn =>
             --  "-" (Unsigned, Unsigned)
             return Synth_Dyadic_Uns_Uns (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Nat_Uns =>
             --  "-" (Natural, Unsigned)
             return Synth_Dyadic_Nat_Uns (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int
-           | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Int =>
             --  "-" (Signed, Integer)
             return Synth_Dyadic_Sgn_Int (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Int_Sgn =>
             --  "-" (Integer, Signed)
             return Synth_Dyadic_Int_Sgn (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn
-           | Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
-           | Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
-           | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Slv =>
             --  "-" (Signed, Signed)
             return Synth_Dyadic_Sgn_Sgn (Ctxt, Id_Sub, Left, Right, Expr);
 
@@ -1428,13 +1430,18 @@ package body Synth.Oper is
          return Create_Value_Net (N, Create_Res_Bound (Operand));
       end Synth_Vec_Monadic;
 
-      function Synth_Vec_Reduce_Monadic (Id : Reduce_Module_Id) return Valtyp
+      function Synth_Vec_Reduce_Monadic
+        (Id : Reduce_Module_Id; Neg : Boolean := False) return Valtyp
       is
          Op: constant Net := Get_Net (Ctxt, Operand);
          N : Net;
       begin
          N := Build_Reduce (Ctxt, Id, Op);
          Set_Location (N, Loc);
+         if Neg then
+            N := Build_Monadic (Ctxt, Id_Not, N);
+            Set_Location (N, Loc);
+         end if;
          return Create_Value_Net (N, Operand.Typ.Vec_El);
       end Synth_Vec_Reduce_Monadic;
    begin
@@ -1469,10 +1476,20 @@ package body Synth.Oper is
             return Synth_Vec_Monadic (Id_Neg);
          when Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn =>
             return Synth_Vec_Monadic (Id_Abs);
-         when Iir_Predefined_Ieee_1164_Vector_And_Reduce =>
-            return Synth_Vec_Reduce_Monadic(Id_Red_And);
-         when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
-            return Synth_Vec_Reduce_Monadic(Id_Red_Or);
+
+         when Iir_Predefined_Ieee_1164_And_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_And);
+         when Iir_Predefined_Ieee_1164_Nand_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_And, True);
+         when Iir_Predefined_Ieee_1164_Or_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_Or);
+         when Iir_Predefined_Ieee_1164_Nor_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_Or, True);
+         when Iir_Predefined_Ieee_1164_Xor_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_Xor);
+         when Iir_Predefined_Ieee_1164_Xnor_Suv =>
+            return Synth_Vec_Reduce_Monadic (Id_Red_Xor, True);
+
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             return Create_Value_Net
               (Get_Net (Ctxt, Operand),
@@ -1591,6 +1608,7 @@ package body Synth.Oper is
             return Create_Value_Net (Get_Net (Ctxt, L), Create_Res_Bound (L));
          when Iir_Predefined_Ieee_1164_To_Bit =>
             return Create_Value_Net (Get_Net (Ctxt, L), Res_Typ);
+
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             return Synth_Conv_Vector (False);
@@ -1605,12 +1623,15 @@ package body Synth.Oper is
             return Create_Value_Net
               (Synth_Uresize (Ctxt, Get_Net (Ctxt, L), Res_Typ.W, Expr),
                Res_Typ);
-         when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int =>
+         when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Sgn =>
             --  SIGNED to Integer.
             return Create_Value_Net
               (Synth_Sresize (Ctxt, L, Res_Typ.W, Expr), Res_Typ);
+
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Uns_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Ext =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Ext =>
             declare
                W : Width;
             begin
@@ -1624,7 +1645,8 @@ package body Synth.Oper is
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Resize_Sgn_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Sxt =>
             declare
                W : Width;
             begin
@@ -1638,16 +1660,16 @@ package body Synth.Oper is
                                   W, Get_Location (Expr)),
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
-         when Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat
-           | Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Lsl, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Lsr, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Asr, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Rol, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Ror, L, R, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Min_Uns_Uns =>

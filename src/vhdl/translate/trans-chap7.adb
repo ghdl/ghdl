@@ -266,7 +266,9 @@ package body Trans.Chap7 is
       Res       : O_Cnode;
    begin
       Chap3.Translate_Anonymous_Subtype_Definition (Aggr_Type, False);
-      Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
+      Start_Array_Aggr
+        (List, Get_Ortho_Type (Aggr_Type, Mode_Value),
+         Unsigned_32 (Chap3.Get_Static_Array_Length (Aggr_Type)));
 
       Translate_Static_Array_Aggregate_1 (List, Aggr, Aggr_Type, 1);
       Finish_Array_Aggr (List, Res);
@@ -283,7 +285,9 @@ package body Trans.Chap7 is
       Res       : O_Cnode;
    begin
       Chap3.Translate_Anonymous_Subtype_Definition (Aggr_Type, False);
-      Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
+      Start_Array_Aggr (List,
+                        Get_Ortho_Type (Aggr_Type, Mode_Value),
+                        Unsigned_32 (Get_Nbr_Elements (El_List)));
 
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
@@ -306,7 +310,9 @@ package body Trans.Chap7 is
       Chap3.Translate_Anonymous_Subtype_Definition (Lit_Type, False);
       Arr_Type := Get_Ortho_Type (Lit_Type, Mode_Value);
 
-      Start_Array_Aggr (List, Arr_Type);
+      Start_Array_Aggr
+        (List, Arr_Type,
+         Unsigned_32 (Chap3.Get_Static_Array_Length (Lit_Type)));
 
       Translate_Static_String_Literal8_Inner (List, Str, Element_Type);
 
@@ -318,12 +324,13 @@ package body Trans.Chap7 is
    --  The type of the literal element is ELEMENT_TYPE, and the ortho type
    --  of the string (a constrained array type) is STR_TYPE.
    function Create_String_Literal_Var_Inner
-     (Str : Iir; Element_Type : Iir; Str_Type : O_Tnode) return Var_Type
+     (Str : Iir; Element_Type : Iir; Arr_Type : O_Tnode) return Var_Type
    is
       Val_Aggr : O_Array_Aggr_List;
       Res      : O_Cnode;
    begin
-      Start_Array_Aggr (Val_Aggr, Str_Type);
+      Start_Array_Aggr
+        (Val_Aggr, Arr_Type, Unsigned_32 (Get_String_Length (Str)));
       case Get_Kind (Str) is
          when Iir_Kind_String_Literal8 =>
             Translate_Static_String_Literal8_Inner
@@ -334,7 +341,7 @@ package body Trans.Chap7 is
       Finish_Array_Aggr (Val_Aggr, Res);
 
       return Create_Global_Const
-        (Create_Uniq_Identifier, Str_Type, O_Storage_Private, Res);
+        (Create_Uniq_Identifier, Arr_Type, O_Storage_Private, Res);
    end Create_String_Literal_Var_Inner;
 
    --  Create a variable (constant) for string or bit string literal STR.
@@ -344,11 +351,7 @@ package body Trans.Chap7 is
       Arr_Type : O_Tnode;
    begin
       --  Create the string value.
-      Arr_Type := New_Constrained_Array_Type
-        (Get_Info (Str_Type).B.Base_Type (Mode_Value),
-         New_Unsigned_Literal (Ghdl_Index_Type,
-           Unsigned_64 (Get_String_Length (Str))));
-
+      Arr_Type := Get_Info (Str_Type).B.Base_Type (Mode_Value);
       return Create_String_Literal_Var_Inner
         (Str, Get_Element_Subtype (Str_Type), Arr_Type);
    end Create_String_Literal_Var;
@@ -445,7 +448,8 @@ package body Trans.Chap7 is
    begin
       Chap3.Translate_Anonymous_Subtype_Definition (Str_Type, False);
 
-      Start_Array_Aggr (List, Get_Ortho_Type (Str_Type, Mode_Value));
+      Start_Array_Aggr
+        (List, Get_Ortho_Type (Str_Type, Mode_Value), Img'Length);
 
       for I in Img'Range loop
          Lit := Get_Nth_Element (Literal_List, Character'Pos (Img (I)));
@@ -2913,9 +2917,6 @@ package body Trans.Chap7 is
       --  Type of the unconstrained array type.
       Arr_Type : O_Tnode;
 
-      --  Type of the constrained array type.
-      Str_Type : O_Tnode;
-
       Cst   : Var_Type;
       Var_I : O_Dnode;
       Label : O_Snode;
@@ -2928,9 +2929,7 @@ package body Trans.Chap7 is
       Arr_Type := New_Array_Type
         (Get_Ortho_Type (Expr_Type, Mode_Value), Ghdl_Index_Type);
       New_Type_Decl (Create_Uniq_Identifier, Arr_Type);
-      Str_Type := New_Constrained_Array_Type
-        (Arr_Type, New_Index_Lit (Unsigned_64 (Len)));
-      Cst := Create_String_Literal_Var_Inner (Aggr, Expr_Type, Str_Type);
+      Cst := Create_String_Literal_Var_Inner (Aggr, Expr_Type, Arr_Type);
 
       --  Copy it.
       Open_Temp;

@@ -341,6 +341,7 @@ package body Grt.Vcd is
       Rti : Ghdl_Rti_Access;
       Error : AvhpiErrorT;
       Sig_Addr : Address;
+      Base : Address;
       Bounds : Address;
 
       Kind : Vcd_Var_Type;
@@ -356,7 +357,8 @@ package body Grt.Vcd is
 
       Rti := Avhpi_Get_Rti (Sig_Type);
       Sig_Addr := Avhpi_Get_Address (Sig);
-      Object_To_Base_Bounds (Rti, Sig_Addr, Sig_Addr, Bounds);
+      Object_To_Base_Bounds (Rti, Sig_Addr, Base, Bounds);
+      Sig_Addr := Base;
 
       case Rti.Kind is
          when Ghdl_Rtik_Type_B1

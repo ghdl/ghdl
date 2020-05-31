@@ -3216,7 +3216,7 @@ package body Ortho_Code.X86.Emits is
 
       Gen_Pow_Align (Get_Type_Align (Dtype));
       Set_Symbol_Pc (Sym, Get_Decl_Storage (Decl) = O_Storage_Public);
-      Prealloc (Pc_Type (Get_Type_Size (Dtype)));
+      Prealloc (Pc_Type (Consts.Get_Const_Size (Val)));
       Emit_Const (Val);
 
       Set_Current_Section (Sect_Text);

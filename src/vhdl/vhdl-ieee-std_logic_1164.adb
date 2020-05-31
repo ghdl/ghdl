@@ -375,11 +375,17 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                         when Name_Not =>
                            Predefined := Iir_Predefined_Ieee_1164_Vector_Not;
                         when Name_And =>
-                           Predefined :=
-                             Iir_Predefined_Ieee_1164_Vector_And_Reduce;
+                           Predefined := Iir_Predefined_Ieee_1164_And_Suv;
+                        when Name_Nand =>
+                           Predefined := Iir_Predefined_Ieee_1164_Nand_Suv;
                         when Name_Or =>
-                           Predefined :=
-                             Iir_Predefined_Ieee_1164_Vector_Or_Reduce;
+                           Predefined := Iir_Predefined_Ieee_1164_Or_Suv;
+                        when Name_Nor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Nor_Suv;
+                        when Name_Xor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Xor_Suv;
+                        when Name_Xnor =>
+                           Predefined := Iir_Predefined_Ieee_1164_Xnor_Suv;
                         when Name_Is_X =>
                            Predefined :=
                              Iir_Predefined_Ieee_1164_Scalar_Is_X;

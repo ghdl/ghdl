@@ -945,6 +945,11 @@ package body Vhdl.Nodes is
    function Iir_Signal_Kind_To_Boolean is new Ada.Unchecked_Conversion
      (Source => Iir_Signal_Kind, Target => Boolean);
 
+   function Boolean_To_Direction_Type is new Ada.Unchecked_Conversion
+     (Source => Boolean, Target => Direction_Type);
+   function Direction_Type_To_Boolean is new Ada.Unchecked_Conversion
+     (Source => Direction_Type, Target => Boolean);
+
    function Iir_To_String8_Id is new Ada.Unchecked_Conversion
      (Source => Iir, Target => String8_Id);
    function String8_Id_To_Iir is new Ada.Unchecked_Conversion

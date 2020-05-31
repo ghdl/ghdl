@@ -119,8 +119,12 @@ package Grt.Options is
    --  Set by --checks to do internal checks.
    Checks : Boolean := False;
 
+   --  For --assert-level
    --  Level at which an assert stop the simulation.
    Severity_Level : Integer := Grt.Severity.Failure_Severity;
+
+   --  Level at which an assert displays a backtrace.
+   Backtrace_Severity : Integer := Grt.Severity.None_Severity;
 
    --  How assertions are handled.
    type Assert_Handling is

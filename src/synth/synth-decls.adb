@@ -20,8 +20,8 @@
 
 with Types; use Types;
 with Mutils; use Mutils;
+with Std_Names;
 
-with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils; use Netlists.Utils;
@@ -41,9 +41,6 @@ with Synth.Files_Operations;
 with Synth.Values; use Synth.Values;
 
 package body Synth.Decls is
-   procedure Synth_Anonymous_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node);
-
    procedure Create_Var_Wire
      (Syn_Inst : Synth_Instance_Acc; Decl : Iir; Init : Valtyp)
    is
@@ -74,11 +71,68 @@ package body Synth.Decls is
       end case;
    end Create_Var_Wire;
 
+   function Type_To_Param_Type (Atype : Node) return Param_Type
+   is
+      use Vhdl.Std_Package;
+      Btype : constant Node := Get_Base_Type (Atype);
+   begin
+      if Btype = String_Type_Definition then
+         return Param_Pval_String;
+      elsif Btype = Time_Type_Definition then
+         return Param_Pval_Time_Ps;
+      else
+         case Get_Kind (Btype) is
+            when Iir_Kind_Integer_Type_Definition =>
+               return Param_Pval_Integer;
+            when Iir_Kind_Floating_Type_Definition =>
+               return Param_Pval_Real;
+            when others =>
+               return Param_Pval_Vector;
+         end case;
+      end if;
+   end Type_To_Param_Type;
+
+   function Memtyp_To_Pval (Mt : Memtyp) return Pval
+   is
+      Len    : constant Uns32 := (Mt.Typ.W + 31) / 32;
+      pragma Assert (Len > 0);
+      Vec    : Logvec_Array_Acc;
+      Off    : Uns32;
+      Has_Zx : Boolean;
+      Pv     : Pval;
+   begin
+      Vec := new Logvec_Array'(0 .. Digit_Index (Len - 1) => (0, 0));
+      Off := 0;
+      Has_Zx := False;
+      Value2logvec (Mt, 0, Mt.Typ.W, Vec.all, Off, Has_Zx);
+      pragma Assert (Off = Mt.Typ.W);
+      if Has_Zx then
+         Pv := Create_Pval4 (Mt.Typ.W);
+      else
+         Pv := Create_Pval2 (Mt.Typ.W);
+      end if;
+      for I in 0 .. Len - 1 loop
+         Write_Pval (Pv, I, Vec (Digit_Index (I)));
+      end loop;
+      Free_Logvec_Array (Vec);
+      return Pv;
+   end Memtyp_To_Pval;
+
    procedure Synth_Subtype_Indication_If_Anonymous
      (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
    begin
       if Get_Type_Declarator (Atype) = Null_Node then
          Synth_Subtype_Indication (Syn_Inst, Atype);
+      end if;
+   end Synth_Subtype_Indication_If_Anonymous;
+
+   function Synth_Subtype_Indication_If_Anonymous
+     (Syn_Inst : Synth_Instance_Acc; Atype : Node) return Type_Acc is
+   begin
+      if Get_Type_Declarator (Atype) = Null_Node then
+         return Synth_Subtype_Indication (Syn_Inst, Atype);
+      else
+         return Get_Subtype_Object (Syn_Inst, Atype);
       end if;
    end Synth_Subtype_Indication_If_Anonymous;
 
@@ -101,33 +155,22 @@ package body Synth.Decls is
       return Typ;
    end Synth_Array_Type_Definition;
 
-   --  Synth subtype of record elements.
-   procedure Synth_Record_Elements_Definition
-     (Syn_Inst : Synth_Instance_Acc; Def : Node)
-   is
-      El_List : constant Node_Flist := Get_Elements_Declaration_List (Def);
-      El : Node;
-   begin
-      for I in Flist_First .. Flist_Last (El_List) loop
-         El := Get_Nth_Element (El_List, I);
-         Synth_Declaration_Type (Syn_Inst, El);
-      end loop;
-   end Synth_Record_Elements_Definition;
-
    function Synth_Record_Type_Definition
      (Syn_Inst : Synth_Instance_Acc; Def : Node) return Type_Acc
    is
       El_List : constant Node_Flist := Get_Elements_Declaration_List (Def);
       Rec_Els : Rec_El_Array_Acc;
-      El : Node;
-      El_Typ : Type_Acc;
+      El      : Node;
+      El_Type : Node;
+      El_Typ  : Type_Acc;
    begin
       Rec_Els := Create_Rec_El_Array
         (Iir_Index32 (Get_Nbr_Elements (El_List)));
 
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         El_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (El));
+         El_Type := Get_Type (El);
+         El_Typ := Synth_Subtype_Indication_If_Anonymous (Syn_Inst, El_Type);
          Rec_Els.E (Iir_Index32 (I + 1)).Typ := El_Typ;
       end loop;
 
@@ -236,7 +279,6 @@ package body Synth.Decls is
          when Iir_Kind_File_Type_Definition =>
             Typ := Synth_File_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Record_Type_Definition =>
-            Synth_Record_Elements_Definition (Syn_Inst, Def);
             Typ := Synth_Record_Type_Definition (Syn_Inst, Def);
          when Iir_Kind_Protected_Type_Declaration =>
             Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Def));
@@ -432,19 +474,6 @@ package body Synth.Decls is
       Create_Subtype_Object (Syn_Inst, Atype, Typ);
    end Synth_Subtype_Indication;
 
-   procedure Synth_Anonymous_Subtype_Indication
-     (Syn_Inst : Synth_Instance_Acc; Atype : Node) is
-   begin
-      if Atype = Null_Node
-        or else Get_Type_Declarator (Atype) /= Null_Node
-      then
-         return;
-      end if;
-      Synth_Subtype_Indication (Syn_Inst, Atype);
-   end Synth_Anonymous_Subtype_Indication;
-
-   pragma Unreferenced (Synth_Anonymous_Subtype_Indication);
-
    function Get_Declaration_Type (Decl : Node) return Node
    is
       Ind : constant Node := Get_Subtype_Indication (Decl);
@@ -564,16 +593,57 @@ package body Synth.Decls is
       end if;
    end Synth_Constant_Declaration;
 
+   procedure Synth_Attribute_Object (Syn_Inst : Synth_Instance_Acc;
+                                     Attr_Value : Node;
+                                     Attr_Decl  : Node;
+                                     Val        : Valtyp)
+   is
+      Obj   : constant Node := Get_Designated_Entity (Attr_Value);
+      Id    : constant Name_Id := Get_Identifier (Attr_Decl);
+      Inst  : Instance;
+      V     : Valtyp;
+      Ptype : Param_Type;
+      Pv    : Pval;
+   begin
+      if Id = Std_Names.Name_Foreign then
+         --  Not for synthesis.
+         return;
+      end if;
+
+      case Get_Kind (Obj) is
+         when Iir_Kind_Signal_Declaration
+            | Iir_Kind_Variable_Declaration =>
+            V := Get_Value (Syn_Inst, Obj);
+            pragma Assert (V.Val.Kind = Value_Wire);
+            Inst := Get_Net_Parent (Get_Wire_Gate (V.Val.W));
+         when Iir_Kind_Component_Instantiation_Statement =>
+            --  TODO
+            return;
+         when others =>
+            --  TODO: components ?
+            --  TODO: Interface_Signal ?  But no instance for them.
+            Warning_Msg_Synth
+              (+Attr_Value, "attribute %i for %n is not kept in the netlist",
+               (+Attr_Decl, +Obj));
+            return;
+      end case;
+
+      Ptype := Type_To_Param_Type (Get_Type (Attr_Decl));
+      Pv := Memtyp_To_Pval (Get_Memtyp (Val));
+
+      Set_Attribute (Inst, Id, Ptype, Pv);
+   end Synth_Attribute_Object;
+
    procedure Synth_Attribute_Specification
      (Syn_Inst : Synth_Instance_Acc; Spec : Node)
    is
-      Decl : constant Node := Get_Attribute_Designator (Spec);
-      Value : Iir_Attribute_Value;
+      Attr_Decl : constant Node :=
+        Get_Named_Entity (Get_Attribute_Designator (Spec));
+      Value : Node;
       Val : Valtyp;
       Val_Type : Type_Acc;
    begin
-      Val_Type := Get_Subtype_Object
-        (Syn_Inst, Get_Type (Get_Named_Entity (Decl)));
+      Val_Type := Get_Subtype_Object (Syn_Inst, Get_Type (Attr_Decl));
       Value := Get_Attribute_Value_Spec_Chain (Spec);
       while Value /= Null_Iir loop
          --  2. The expression is evaluated to determine the value
@@ -595,6 +665,10 @@ package body Synth.Decls is
          --     the expression.
          Create_Object (Syn_Inst, Value, Val);
          --  Unshare (Val, Instance_Pool);
+
+         if not Get_Instance_Const (Syn_Inst) then
+            Synth_Attribute_Object (Syn_Inst, Value, Attr_Decl, Val);
+         end if;
 
          Value := Get_Spec_Chain (Value);
       end loop;
@@ -801,6 +875,7 @@ package body Synth.Decls is
             Init := Create_Value_Default (Obj_Typ);
          end if;
          if Get_Instance_Const (Syn_Inst) then
+            Init := Strip_Alias_Const (Init);
             Init := Unshare (Init, Current_Pool);
             Create_Object (Syn_Inst, Decl, Init);
          else
@@ -905,10 +980,10 @@ package body Synth.Decls is
             --  simply ignored.
             null;
          when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Function_Declaration =>
+            | Iir_Kind_Function_Declaration =>
             Synth_Subprogram_Declaration (Syn_Inst, Decl);
          when Iir_Kind_Procedure_Body
-           | Iir_Kind_Function_Body =>
+            | Iir_Kind_Function_Body =>
             null;
          when Iir_Kind_Non_Object_Alias_Declaration =>
             null;
@@ -924,7 +999,7 @@ package body Synth.Decls is
             Synth_Anonymous_Type_Definition
               (Syn_Inst, Get_Type_Definition (Decl),
                Get_Subtype_Definition (Decl));
-         when  Iir_Kind_Subtype_Declaration =>
+         when Iir_Kind_Subtype_Declaration =>
             Synth_Declaration_Type (Syn_Inst, Decl);
          when Iir_Kind_Component_Declaration =>
             null;

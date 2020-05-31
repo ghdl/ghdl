@@ -77,7 +77,7 @@ package body Netlists.Disp_Vhdl is
          when Sname_User =>
             Put_Id (Get_Sname_Suffix (N));
          when Sname_Artificial =>
-            Put (Image (Get_Sname_Suffix (N)));
+            Put_Id (Get_Sname_Suffix (N));
          when Sname_Version =>
             Put ("n");
             Put_Name_Version (N);
@@ -95,7 +95,7 @@ package body Netlists.Disp_Vhdl is
       if Get_Sname_Kind (N) = Sname_User
         and then Get_Sname_Prefix (N) = No_Sname
       then
-         Put (Name_Table.Image (Get_Sname_Suffix (N)));
+         Put_Id (Get_Sname_Suffix (N));
       else
          Put_Name_1 (N);
       end if;
@@ -113,7 +113,7 @@ package body Netlists.Disp_Vhdl is
       if Get_Sname_Kind (N) in Sname_User .. Sname_Artificial
         and then Get_Sname_Prefix (N) = No_Sname
       then
-         Put (Name_Table.Image (Get_Sname_Suffix (N)));
+         Put_Id (Get_Sname_Suffix (N));
       else
          Put ("*err*");
       end if;
@@ -168,6 +168,50 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Binary_Digits;
 
+   procedure Disp_Pval_Binary (Pv : Pval)
+   is
+      Len : constant Uns32 := Get_Pval_Length (Pv);
+      V   : Logic_32;
+      Off : Uns32;
+   begin
+      Put ('"');
+      if Len > 0 then
+         V := Read_Pval (Pv, (Len - 1) / 32);
+         for I in reverse 0 .. Len - 1 loop
+            Off := I mod 32;
+            if Off = 31 then
+               V := Read_Pval (Pv, I / 32);
+            end if;
+            Disp_Binary_Digit (V.Val, V.Zx, Natural (Off));
+         end loop;
+      end if;
+      Put ('"');
+   end Disp_Pval_Binary;
+
+   procedure Disp_Pval_String (Pv : Pval)
+   is
+      Len : constant Uns32 := Get_Pval_Length (Pv);
+      pragma Assert (Len rem 8 = 0);
+      V   : Logic_32;
+      Off : Uns32;
+      C   : Uns32;
+   begin
+      Put ('"');
+      if Len > 0 then
+         V := Read_Pval (Pv, (Len - 1) / 32);
+         for I in reverse 0 .. (Len / 8) - 1 loop
+            Off := I mod 4;
+            if Off = 3 then
+               V := Read_Pval (Pv, I / 4);
+            end if;
+            pragma Assert (V.Zx = 0);
+            C := Shift_Right (V.Val, Natural (8 * Off)) and 16#ff#;
+            Put (Character'Val (C));
+         end loop;
+      end if;
+      Put ('"');
+   end Disp_Pval_String;
+
    procedure Disp_Instance_Gate (Inst : Instance)
    is
       Imod : constant Module := Get_Module (Inst);
@@ -211,23 +255,7 @@ package body Netlists.Disp_Vhdl is
                when Param_Uns32 =>
                   Put_Uns32 (Get_Param_Uns32 (Inst, P - 1));
                when Param_Types_Pval =>
-                  declare
-                     Pv : constant Pval := Get_Param_Pval (Inst, P - 1);
-                     Len : constant Uns32 := Get_Pval_Length (Pv);
-                     V : Logic_32;
-                     Off : Uns32;
-                  begin
-                     Put ('"');
-                     V := Read_Pval (Pv, 0);
-                     for I in reverse 0 .. Len - 1 loop
-                        Off := I mod 32;
-                        if Off = 31 then
-                           V := Read_Pval (Pv, I / 32);
-                        end if;
-                        Disp_Binary_Digit (V.Val, V.Zx, Natural (Off));
-                     end loop;
-                     Put ('"');
-                  end;
+                  Disp_Pval_Binary (Get_Param_Pval (Inst, P - 1));
                when Param_Invalid =>
                   Put ("*invalid*");
             end case;
@@ -404,10 +432,20 @@ package body Netlists.Disp_Vhdl is
             Zx := 0;
             if Off < 32 then
                Val := Get_Param_Uns32 (Inst, 0);
+               Val := Shift_Right (Val, Natural (Off mod 32)) and 1;
             else
                Val := 0;
             end if;
-            Val := Shift_Right (Val, Natural (Off mod 32)) and 1;
+         when Id_Const_UL32 =>
+            if Off < 32 then
+               Val := Get_Param_Uns32 (Inst, 0);
+               Val := Shift_Right (Val, Natural (Off mod 32)) and 1;
+               Zx := Get_Param_Uns32 (Inst, 1);
+               Zx := Shift_Right (Zx, Natural (Off mod 32)) and 1;
+            else
+               Val := 0;
+               Zx := 0;
+            end if;
          when Id_Const_X =>
             Zx := 1;
             Val := 1;
@@ -1235,7 +1273,7 @@ package body Netlists.Disp_Vhdl is
                Disp_Template ("  \o0 <= ", Inst);
                if Iw = 1 then
                   Disp_Template ("(\n0 downto 0 => \i0); -- sext" & NL,
-                                 Inst, (0 => Ow));
+                                 Inst, (0 => Ow - 1));
                else
                   Disp_Template
                     ("std_logic_vector (resize (\si0, \n0));  --  sext" & NL,
@@ -1268,6 +1306,22 @@ package body Netlists.Disp_Vhdl is
                     ("  \o0 <= \i0; -- reduce and" & NL, Inst);
                end if;
             end;
+         when Id_Red_Xor =>
+            declare
+               Iw : constant Width := Get_Width (Get_Input_Net (Inst, 0));
+            begin
+               if Iw > 1 then
+                  Disp_Template ("  \o0 <= \i0(0)", Inst);
+                  for I in 1 .. Iw - 1 loop
+                     Disp_Template (" xor \i0(\n0)", Inst, (0 => I));
+                  end loop;
+                  Disp_Template (";" & NL, Inst);
+               else
+                  Disp_Template
+                    ("  \o0 <= \i0; -- reduce xor" & NL, Inst);
+               end if;
+            end;
+
          when Id_Posedge =>
             Disp_Template
               ("  \o0 <= '1' when rising_edge (\i0) else '0';" & NL, Inst);
@@ -1341,16 +1395,17 @@ package body Netlists.Disp_Vhdl is
                   if Locations.Get_Location (Inst) = No_Location then
                      case Get_Id (Inst) is
                         when Id_Const_UB32
-                          |  Id_Const_SB32
-                          |  Id_Const_UL32
-                          |  Id_Const_Bit
-                          |  Id_Const_Log
-                          |  Id_Const_Z
-                          |  Id_Concat2
-                          |  Id_Concat3
-                          |  Id_Concat4
-                          |  Id_Concatn
-                          |  Id_Extract =>
+                           | Id_Const_SB32
+                           | Id_Const_UL32
+                           | Id_Const_Bit
+                           | Id_Const_Log
+                           | Id_Const_Z
+                           | Id_Const_0
+                           | Id_Concat2
+                           | Id_Concat3
+                           | Id_Concat4
+                           | Id_Concatn
+                           | Id_Extract =>
                            null;
                         when others =>
                            raise Internal_Error;
@@ -1415,6 +1470,51 @@ package body Netlists.Disp_Vhdl is
       end loop;
    end Disp_Architecture_Statements;
 
+   procedure Disp_Architecture_Attributes (M : Module)
+   is
+      Attrs : constant Attribute_Map_Acc := Get_Attributes (M);
+      Attr  : Attribute;
+      Inst  : Instance;
+      Kind  : Param_Type;
+      Val   : Pval;
+   begin
+      if Attrs = null then
+         --  No attributes at all.
+         return;
+      end if;
+
+      for I in
+        Attribute_Maps.First_Index .. Attribute_Maps.Last_Index (Attrs.all)
+      loop
+         Attr := Attribute_Maps.Get_Value (Attrs.all, I);
+         Inst := Attribute_Maps.Get_By_Index (Attrs.all, I);
+         while Attr /= No_Attribute loop
+            Put ("  -- attribute ");
+            Put_Id (Get_Attribute_Name (Attr));
+            Put (" of ");
+            Put_Name (Get_Instance_Name (Inst));
+            Put (" is ");
+            Kind := Get_Attribute_Type (Attr);
+            Val := Get_Attribute_Pval (Attr);
+            case Kind is
+               when Param_Invalid
+                  | Param_Uns32 =>
+                  Put ("??");
+               when Param_Pval_String =>
+                  Disp_Pval_String (Val);
+               when Param_Pval_Vector
+                  | Param_Pval_Integer
+                  | Param_Pval_Boolean
+                  | Param_Pval_Real
+                  | Param_Pval_Time_Ps =>
+                  Disp_Pval_Binary (Val);
+            end case;
+            Put_Line (";");
+            Attr := Get_Attribute_Next (Attr);
+         end loop;
+      end loop;
+   end Disp_Architecture_Attributes;
+
    procedure Disp_Architecture (M : Module)
    is
       Self_Inst : constant Instance := Get_Self_Instance (M);
@@ -1433,6 +1533,8 @@ package body Netlists.Disp_Vhdl is
       --  * generate instances
 
       Disp_Architecture_Declarations (M);
+
+      Disp_Architecture_Attributes (M);
 
       Put_Line ("begin");
 

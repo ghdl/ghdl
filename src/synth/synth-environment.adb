@@ -643,15 +643,13 @@ package body Synth.Environment is
 
       --  Both assignments must be a dff.
       case Get_Id (Get_Net_Parent (P_Val)) is
-         when Id_Idff
-           | Id_Dff =>
+         when Id_Dyn_Insert_En =>
             null;
          when others =>
             return False;
       end case;
       case Get_Id (Get_Net_Parent (N_Val)) is
-         when Id_Idff
-           | Id_Dff =>
+         when Id_Dyn_Insert_En =>
             null;
          when others =>
             return False;
@@ -1299,9 +1297,9 @@ package body Synth.Environment is
                      if not Is_Equal (Res, Prev_Val) then
                         --  The previous value is different from the result.
                         return Null_Memtyp;
-                     else
-                        Res := Prev_Val;
                      end if;
+                  else
+                     Res := Prev_Val;
                   end if;
                end if;
             when True =>

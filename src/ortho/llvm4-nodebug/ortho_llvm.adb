@@ -630,13 +630,12 @@ package body Ortho_LLVM is
    ----------------------
 
    procedure Start_Array_Aggr
-     (List : out O_Array_Aggr_List;
-      Atype : O_Tnode)
+     (List : out O_Array_Aggr_List; Atype : O_Tnode; Len : Unsigned_32)
    is
       Llvm : constant TypeRef := Get_LLVM_Type (Atype);
    begin
       List := (Len => 0,
-               Vals => new ValueRefArray (1 .. GetArrayLength (Llvm)),
+               Vals => new ValueRefArray (1 .. unsigned (Len)),
                El_Type => GetElementType (Llvm),
                Atype => Atype);
    end Start_Array_Aggr;

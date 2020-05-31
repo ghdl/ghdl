@@ -65,7 +65,9 @@ package body Ghdlsynth is
       --  Control format of the output.
       Disp_Inline : Boolean := True;
       Disp_Id : Boolean := True;
-      Oformat : Out_Format := Format_Default;
+      Oformat     : Out_Format := Format_Default;
+
+      Flag_Stats : Boolean := False;
 
       --  Control name encoding of the top-entity.
       Top_Encoding : Name_Encoding := Name_Asis;
@@ -175,6 +177,8 @@ package body Ghdlsynth is
          else
             Flags.Verbose := True;
          end if;
+      elsif Option = "--stats" then
+         Cmd.Flag_Stats := True;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
@@ -449,6 +453,10 @@ package body Ghdlsynth is
       end if;
 
       Disp_Design (Cmd, Format_Vhdl, Res, Config, Inst);
+
+      if Cmd.Flag_Stats then
+         Netlists.Disp_Stats;
+      end if;
    end Perform_Action;
 
    function Get_Libghdl_Name return String

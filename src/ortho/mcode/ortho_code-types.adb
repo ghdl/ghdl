@@ -96,6 +96,7 @@ package body Ortho_Code.Types is
 
    function Get_Type_Size (Atype : O_Tnode) return Uns32 is
    begin
+      pragma Assert (Get_Type_Kind (Atype) /= OT_Ucarray);
       return Tnodes.Table (Atype).Size;
    end Get_Type_Size;
 

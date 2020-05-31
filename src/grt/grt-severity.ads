@@ -30,4 +30,7 @@ package Grt.Severity is
    Warning_Severity : constant Integer := 1;
    Error_Severity   : constant Integer := 2;
    Failure_Severity : constant Integer := 3;
+
+   --  Value returned by Parse_Severity for 'none'.
+   None_Severity    : constant Integer := 4;
 end Grt.Severity;

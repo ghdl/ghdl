@@ -945,6 +945,11 @@ package body Vhdl.Nodes is
    function Iir_Signal_Kind_To_Boolean is new Ada.Unchecked_Conversion
      (Source => Iir_Signal_Kind, Target => Boolean);
 
+   function Boolean_To_Direction_Type is new Ada.Unchecked_Conversion
+     (Source => Boolean, Target => Direction_Type);
+   function Direction_Type_To_Boolean is new Ada.Unchecked_Conversion
+     (Source => Direction_Type, Target => Boolean);
+
    function Iir_To_String8_Id is new Ada.Unchecked_Conversion
      (Source => Iir, Target => String8_Id);
    function String8_Id_To_Iir is new Ada.Unchecked_Conversion
@@ -3675,7 +3680,7 @@ package body Vhdl.Nodes is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Direction (Get_Kind (Decl)),
                      "no field Direction");
-      return Direction_Type'Val (Get_State2 (Decl));
+      return Boolean_To_Direction_Type (Get_Flag1 (Decl));
    end Get_Direction;
 
    procedure Set_Direction (Decl : Iir; Dir : Direction_Type) is
@@ -3683,7 +3688,7 @@ package body Vhdl.Nodes is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Direction (Get_Kind (Decl)),
                      "no field Direction");
-      Set_State2 (Decl, Direction_Type'Pos (Dir));
+      Set_Flag1 (Decl, Direction_Type_To_Boolean (Dir));
    end Set_Direction;
 
    function Get_Left_Limit (Decl : Iir_Range_Expression) return Iir is

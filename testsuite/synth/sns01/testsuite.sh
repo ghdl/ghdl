@@ -15,4 +15,6 @@ done
 synth_analyze sns02
 clean
 
+synth_tb add03
+
 echo "Test successful"

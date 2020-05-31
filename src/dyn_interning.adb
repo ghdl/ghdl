@@ -16,105 +16,14 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Unchecked_Deallocation;
 
 package body Dyn_Interning is
-   procedure Deallocate is new Ada.Unchecked_Deallocation
-     (Hash_Array, Hash_Array_Acc);
-
-   procedure Init (Inst : out Instance) is
-   begin
-      Inst.Size := Initial_Size;
-      Inst.Hash_Table := new Hash_Array'(0 .. Initial_Size - 1 => No_Index);
-      Wrapper_Tables.Init (Inst.Els, 128);
-      pragma Assert (Wrapper_Tables.Last (Inst.Els) = No_Index);
-   end Init;
-
-   procedure Free (Inst : in out Instance) is
-   begin
-      Deallocate (Inst.Hash_Table);
-      Inst.Size := 0;
-      Wrapper_Tables.Free (Inst.Els);
-   end Free;
-
-   --  Expand the hash table (double the size).
-   procedure Expand (Inst : in out Instance)
+   function Build_No_Value (Obj : Object_Type) return No_Value_Type
    is
-      Old_Hash_Table : Hash_Array_Acc;
-      Idx : Index_Type;
+      pragma Unreferenced (Obj);
    begin
-      Old_Hash_Table := Inst.Hash_Table;
-      Inst.Size := Inst.Size * 2;
-      Inst.Hash_Table := new Hash_Array'(0 .. Inst.Size - 1 => No_Index);
-
-      --  Rehash.
-      for I in Old_Hash_Table'Range loop
-         Idx := Old_Hash_Table (I);
-         while Idx /= No_Index loop
-            --  Note: collisions are put in reverse order.
-            declare
-               Ent : Element_Wrapper renames Inst.Els.Table (Idx);
-               Hash_Index : constant Hash_Value_Type :=
-                 Ent.Hash and (Inst.Size - 1);
-               Next_Idx : constant Index_Type := Ent.Next;
-            begin
-               Ent.Next := Inst.Hash_Table (Hash_Index);
-               Inst.Hash_Table (Hash_Index) := Idx;
-               Idx := Next_Idx;
-            end;
-         end loop;
-      end loop;
-
-      Deallocate (Old_Hash_Table);
-   end Expand;
-
-   procedure Get_Index
-     (Inst : in out Instance; Params : Params_Type; Idx : out Index_Type)
-   is
-      Hash_Value : Hash_Value_Type;
-      Hash_Index : Hash_Value_Type;
-   begin
-      --  Check if the package was initialized.
-      pragma Assert (Inst.Hash_Table /= null);
-
-      Hash_Value := Hash (Params);
-      Hash_Index := Hash_Value and (Inst.Size - 1);
-
-      Idx := Inst.Hash_Table (Hash_Index);
-      while Idx /= No_Index loop
-         declare
-            E : Element_Wrapper renames Inst.Els.Table (Idx);
-         begin
-            if E.Hash = Hash_Value and then Equal (E.Obj, Params) then
-               return;
-            end if;
-            Idx := E.Next;
-         end;
-      end loop;
-
-      --  Maybe expand the table.
-      if Hash_Value_Type (Wrapper_Tables.Last (Inst.Els)) > 2 * Inst.Size then
-         Expand (Inst);
-
-         --  Recompute hash index.
-         Hash_Index := Hash_Value and (Inst.Size - 1);
-      end if;
-
-      declare
-         Res : Object_Type;
-      begin
-         Res := Build (Params);
-
-         --  Insert.
-         Wrapper_Tables.Append (Inst.Els,
-                                (Hash => Hash_Value,
-                                 Next => Inst.Hash_Table (Hash_Index),
-                                 Obj => Res));
-         Inst.Hash_Table (Hash_Index) := Wrapper_Tables.Last (Inst.Els);
-      end;
-
-      Idx := Wrapper_Tables.Last (Inst.Els);
-   end Get_Index;
+      return (null record);
+   end Build_No_Value;
 
    procedure Get
      (Inst : in out Instance; Params : Params_Type; Res : out Object_Type)
@@ -124,16 +33,4 @@ package body Dyn_Interning is
       Get_Index (Inst, Params, Idx);
       Res := Get_By_Index (Inst, Idx);
    end Get;
-
-   function Last_Index (Inst : Instance) return Index_Type is
-   begin
-      return Wrapper_Tables.Last (Inst.Els);
-   end Last_Index;
-
-   function Get_By_Index (Inst : Instance; Index : Index_Type)
-                         return Object_Type is
-   begin
-      pragma Assert (Index <= Wrapper_Tables.Last (Inst.Els));
-      return Inst.Els.Table (Index).Obj;
-   end Get_By_Index;
 end Dyn_Interning;

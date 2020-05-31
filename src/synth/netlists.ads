@@ -20,6 +20,7 @@
 
 with Types; use Types;
 with Hash; use Hash;
+with Dyn_Maps;
 
 package Netlists is
    --  Netlists.
@@ -183,17 +184,17 @@ package Netlists is
       --  A Generic value (with a hint of the type).  This is a bit/logic
       --  vector.
       --  TODO: Replace Integer with Signed/Unsigned.
-      --  TODO: Add boolean.
       Param_Pval_Vector,
       Param_Pval_String,
       Param_Pval_Integer,
       Param_Pval_Real,
-      Param_Pval_Time_Ps
+      Param_Pval_Time_Ps,
+      Param_Pval_Boolean
      );
    pragma Convention (C, Param_Type);
 
    subtype Param_Types_Pval is
-     Param_Type range Param_Pval_Vector .. Param_Pval_Time_Ps;
+     Param_Type range Param_Pval_Vector .. Param_Pval_Boolean;
 
    type Param_Desc is record
       --  Name of the parameter
@@ -208,6 +209,9 @@ package Netlists is
    --  Parameter value.
    type Pval is private;
    No_Pval : constant Pval;
+
+   --  Attribute of an instance.
+   type Attribute is private;
 
    --  Subprograms for modules.
    function New_Design (Name : Sname) return Module;
@@ -270,10 +274,8 @@ package Netlists is
                               Nbr_Params : Param_Nbr)
                              return Instance;
 
-   --  Mark INST as free, but keep it in the module.
-   --  Use Remove_Free_Instances for a cleanup.
-   --  TODO: Destroy instance in Remove_Free_Instances.
-   procedure Free_Instance (Inst : Instance);
+   --  Remove and free the unconnected instance INST.
+   procedure Remove_Instance (Inst : Instance);
 
    function Is_Self_Instance (I : Instance) return Boolean;
    function Get_Module (Inst : Instance) return Module;
@@ -327,6 +329,24 @@ package Netlists is
    --  OFF is the word offset, from 0 to (len - 1) / 32.
    function Read_Pval (P : Pval; Off : Uns32) return Logic_32;
    procedure Write_Pval (P : Pval; Off : Uns32; Val : Logic_32);
+
+   --  Add an attribute to INST.
+   procedure Set_Attribute
+     (Inst : Instance; Id : Name_Id; Ptype : Param_Type; Pv : Pval);
+
+   --  Return the first attribute for INST.  Returns No_Attribute if none.
+   function Get_First_Attribute (Inst : Instance) return Attribute;
+
+   --  Get name/type/value of an attribute.
+   function Get_Attribute_Name (Attr : Attribute) return Name_Id;
+   function Get_Attribute_Type (Attr : Attribute) return Param_Type;
+   function Get_Attribute_Pval (Attr : Attribute) return Pval;
+
+   --  Get the next attribute for the same instance.
+   function Get_Attribute_Next (Attr : Attribute) return Attribute;
+
+   --  Display some usage stats on the standard error.
+   procedure Disp_Stats;
 private
    type Sname is new Uns32 range 0 .. 2**30 - 1;
    No_Sname : constant Sname := 0;
@@ -342,7 +362,7 @@ private
    for Sname_Record'Size use 2*32;
    pragma Warnings (On, "*convention*");
 
-   type Module is new Uns32;
+   type Module is mod 2**30;
    No_Module : constant Module := 0;
    Free_Module : constant Module := 1;
 
@@ -360,19 +380,47 @@ private
    type Net is new Uns32;
    No_Net : constant Net := 0;
 
+   type Instance is new Uns32;
+   No_Instance : constant Instance := 0;
+
+   type Attribute is new Uns32;
+   No_Attribute : Attribute := 0;
+
+   type Attribute_Record is record
+      Name  : Name_Id;
+      Val   : Pval;
+      Typ   : Param_Type;
+      Chain : Attribute;
+   end record;
+
+   function Attribute_Hash (Params : Instance) return Hash_Value_Type;
+   function Attribute_Build (Params : Instance) return Instance;
+   function Attribute_Build_Value (Obj : Instance) return Attribute;
+
+   package Attribute_Maps is new Dyn_Maps
+     (Params_Type => Instance,
+      Object_Type => Instance,
+      Value_Type => Attribute,
+      Hash => Attribute_Hash,
+      Build => Attribute_Build,
+      Build_Value => Attribute_Build_Value,
+      Equal => "=");
+
+   type Attribute_Map_Acc is access Attribute_Maps.Instance;
+
    type Module_Record is record
-      Parent : Module;
-      Name : Sname;
-      Id : Module_Id;
-      First_Port_Desc : Port_Desc_Idx;
-      Nbr_Inputs : Port_Nbr;
-      Nbr_Outputs : Port_Nbr;
+      Parent           : Module;
+      Name             : Sname;
+      Id               : Module_Id;
+      First_Port_Desc  : Port_Desc_Idx;
+      Nbr_Inputs       : Port_Nbr;
+      Nbr_Outputs      : Port_Nbr;
       First_Param_Desc : Param_Desc_Idx;
-      Nbr_Params : Param_Nbr;
+      Nbr_Params       : Param_Nbr;
 
       --  First sub-module child.
       First_Sub_Module : Module;
-      Last_Sub_Module : Module;
+      Last_Sub_Module  : Module;
 
       --  Sub-module brother.
       Next_Sub_Module : Module;
@@ -381,34 +429,41 @@ private
       --  The self instance is the first instance.
       --  FIXME: use an array instead ?
       First_Instance : Instance;
-      Last_Instance : Instance;
+      Last_Instance  : Instance;
+
+      --  Map of instance (of this module) to its attributes.
+      Attrs          : Attribute_Map_Acc;
    end record;
 
    function Get_First_Port_Desc (M : Module) return Port_Desc_Idx;
    function Get_First_Output (Inst : Instance) return Net;
    function Get_Port_Desc (Idx : Port_Desc_Idx) return Port_Desc;
 
-   type Instance is new Uns32;
-   No_Instance : constant Instance := 0;
+   function Get_Attributes (M : Module) return Attribute_Map_Acc;
 
    function Is_Valid (I : Instance) return Boolean;
 
    type Instance_Record is record
       --  The instance is instantiated in Parent.
-      Parent : Module;
+      Parent     : Module;
+      Has_Attr  : Boolean;  --  Set when there is at least one attribute.
+      Flag4      : Boolean;
 
       --  Instances are in a doubly-linked list.
       Prev_Instance : Instance;
       Next_Instance : Instance;
 
       --  For a self-instance, Klass is equal to Parent, and Name is No_Sname.
-      Klass : Module;
-      Name : Sname;
-      Flag_Mark : Boolean;
-      Flag2 : Boolean;
+      Klass     : Module;
+      Flag5     : Boolean;
+      Flag6     : Boolean;
 
-      First_Param : Param_Idx;
-      First_Input : Input;
+      Name      : Sname;
+      Flag_Mark : Boolean;
+      Flag2     : Boolean;
+
+      First_Param  : Param_Idx;
+      First_Input  : Input;
       First_Output : Net;
    end record;
    pragma Pack (Instance_Record);
@@ -428,10 +483,13 @@ private
    --  Extract INST from the list of instance of its module.
    --  Will still be connected, but won't appear anymore in the list of
    --  instances.
+   --  Once extracted, the instance is not in a consistent state anymore.  So
+   --  it should be either fully disconnected and freed or re-inserted in the
+   --  parent module.
    procedure Extract_Instance (Inst : Instance);
 
-   --  Remove and free the unconnected instance INST.
-   procedure Remove_Instance (Inst : Instance);
+   --  Mark INST as free.  Must be unconnected and removed from its module.
+   procedure Free_Instance (Inst : Instance);
 
    type Input_Record is record
       Parent : Instance;

@@ -2927,7 +2927,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Expr_Staticness (State1)
    --
-   --   Get/Set_Direction (State2)
+   --   Get/Set_Direction (Flag1)
 
    -- Iir_Kind_Subtype_Definition (Medium)
    --  Such a node is only created by parse and transformed into the correct
@@ -5471,8 +5471,12 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_1164_Falling_Edge,
 
       -- VHDL-2008 unary logic operators
-      Iir_Predefined_Ieee_1164_Vector_And_Reduce,
-      Iir_Predefined_Ieee_1164_Vector_Or_Reduce,
+      Iir_Predefined_Ieee_1164_And_Suv,
+      Iir_Predefined_Ieee_1164_Nand_Suv,
+      Iir_Predefined_Ieee_1164_Or_Suv,
+      Iir_Predefined_Ieee_1164_Nor_Suv,
+      Iir_Predefined_Ieee_1164_Xor_Suv,
+      Iir_Predefined_Ieee_1164_Xnor_Suv,
 
       Iir_Predefined_Ieee_1164_Vector_Sll,
       Iir_Predefined_Ieee_1164_Vector_Srl,
@@ -5642,11 +5646,6 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int,
       Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int,
 
-      Iir_Predefined_Ieee_Numeric_Std_Rol_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Ror_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Rol_Sgn_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Ror_Sgn_Nat,
-
       Iir_Predefined_Ieee_Numeric_Std_And_Uns_Uns,
       Iir_Predefined_Ieee_Numeric_Std_And_Sgn_Sgn,
 
@@ -5691,10 +5690,15 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Max_Int_Sgn,
 
       --  Shift and rotate functions.
-      Iir_Predefined_Ieee_Numeric_Std_Shl_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shr_Uns_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shl_Sgn_Nat,
-      Iir_Predefined_Ieee_Numeric_Std_Shr_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat,
+
+      Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat,
 
       --  Std_Match functions.
       Iir_Predefined_Ieee_Numeric_Std_Match_Log,
@@ -7866,7 +7870,7 @@ package Vhdl.Nodes is
    function Get_Range_Constraint (Target : Iir) return Iir;
    procedure Set_Range_Constraint (Target : Iir; Constraint : Iir);
 
-   --  Field: State2 (pos)
+   --  Field: Flag1 (uc)
    function Get_Direction (Decl : Iir) return Direction_Type;
    procedure Set_Direction (Decl : Iir; Dir : Direction_Type);
 

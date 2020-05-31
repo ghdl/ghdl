@@ -882,18 +882,18 @@ package body Grt.Disp_Rti is
                           Ctxt : Rti_Context;
                           Indent : Natural)
    is
-      Addr, Bounds : Address;
+      Obj_Addr, Base, Bounds : Address;
       Obj_Type : Ghdl_Rti_Access;
    begin
       Disp_Obj_Header (Obj, Indent);
 
-      Addr := Loc_To_Addr (Obj.Common.Depth, Obj.Loc, Ctxt);
+      Obj_Addr := Loc_To_Addr (Obj.Common.Depth, Obj.Loc, Ctxt);
       Obj_Type := Obj.Obj_Type;
-      Disp_Subtype_Indication (Obj_Type, Ctxt, Addr);
+      Disp_Subtype_Indication (Obj_Type, Ctxt, Obj_Addr);
       Put (" := ");
 
-      Object_To_Base_Bounds (Obj_Type, Addr, Addr, Bounds);
-      Disp_Value (stdout, Obj_Type, Ctxt, Addr, Bounds, Is_Sig);
+      Object_To_Base_Bounds (Obj_Type, Obj_Addr, Base, Bounds);
+      Disp_Value (stdout, Obj_Type, Ctxt, Base, Bounds, Is_Sig);
       New_Line;
    end Disp_Object;
 

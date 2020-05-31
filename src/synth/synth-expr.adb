@@ -532,17 +532,20 @@ package body Synth.Expr is
    function Synth_Array_Attribute (Syn_Inst : Synth_Instance_Acc; Attr : Node)
                                   return Bound_Type
    is
-      Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Attr));
-      Dim : constant Natural :=
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
+      Prefix : constant Iir := Strip_Denoting_Name (Prefix_Name);
+      Dim    : constant Natural :=
         Vhdl.Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
-      Typ : Type_Acc;
+      Typ    : Type_Acc;
+      Val    : Valtyp;
    begin
       --  Prefix is an array object or an array subtype.
       if Get_Kind (Prefix) = Iir_Kind_Subtype_Declaration then
          --  TODO: does this cover all the cases ?
          Typ := Get_Subtype_Object (Syn_Inst, Get_Subtype_Indication (Prefix));
       else
-         Typ := Synth_Type_Of_Object (Syn_Inst, Prefix);
+         Val := Synth_Expression_With_Basetype (Syn_Inst, Prefix_Name);
+         Typ := Val.Typ;
       end if;
 
       return Get_Array_Bound (Typ, Dim_Type (Dim));
@@ -819,6 +822,7 @@ package body Synth.Expr is
                              or else Vtype.Kind = Type_Slice);
             return Vt;
          when Type_Record =>
+            pragma Assert (Vtype.Kind = Type_Record);
             --  TODO: handle elements.
             return Vt;
          when Type_Unbounded_Record =>
@@ -826,12 +830,12 @@ package body Synth.Expr is
             return Vt;
          when Type_Access =>
             return Vt;
-         when Type_File =>
-            pragma Assert (Vtype = Dtype);
-            return Vt;
-         when Type_Protected =>
-            pragma Assert (Vtype = Dtype);
-            return Vt;
+         when Type_File
+            | Type_Protected =>
+            --  No conversion expected.
+            --  As the subtype is identical, it is already handled by the
+            --  above check.
+            raise Internal_Error;
       end case;
    end Synth_Subtype_Conversion;
 
@@ -1516,6 +1520,7 @@ package body Synth.Expr is
          Inp := Build_Memidx
            (Ctxt, Inp, Step * El_Typ.W, Max,
             Inp_W + Width (Clog2 (Uns64 (Step * El_Typ.W))));
+         Set_Location (Inp, Name);
       end if;
    end Synth_Slice_Suffix;
 
@@ -2050,6 +2055,21 @@ package body Synth.Expr is
                B := Synth_Array_Attribute (Syn_Inst, Expr);
                return Create_Value_Discrete (Int64 (B.Len), Expr_Type);
             end;
+         when Iir_Kind_Ascending_Array_Attribute =>
+            declare
+               B : Bound_Type;
+               V : Int64;
+            begin
+               B := Synth_Array_Attribute (Syn_Inst, Expr);
+               case B.Dir is
+                  when Dir_To =>
+                     V := 1;
+                  when Dir_Downto =>
+                     V := 0;
+               end case;
+               return Create_Value_Discrete (V, Expr_Type);
+            end;
+
          when Iir_Kind_Pos_Attribute
            | Iir_Kind_Val_Attribute =>
             declare

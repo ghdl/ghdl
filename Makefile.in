@@ -56,6 +56,7 @@ CP=cp
 MV=mv
 SED=sed
 GRT_RANLIB=ranlib
+GHDL_DESC?=tarball
 
 VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 
@@ -80,7 +81,7 @@ ifeq "$(build_mode)" "coverage"
 OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
-GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf $(OPT_FLAGS) $(ADA_FLAGS)
+GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatwC -gnatf $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)
 
 ifeq "$(default_pic)" "true"
@@ -162,14 +163,9 @@ GRTSRCDIR=$(abs_srcdir)/src/grt
 include $(srcdir)/src/grt/Makefile.inc
 
 version.tmp: $(srcdir)/src/version.in force
-#	Create version.tmp from version.in, using git date/hash
-	if test -d $(srcdir)/.git \
-	   && desc=`cd $(srcdir); git describe --dirty`; then \
-          sub="s/[(].*[)]/($$desc)/"; \
-	else \
-	  sub="s/tarball/tarball/"; \
-        fi; \
-	$(SED) -e "$$sub" -e "s/@VER@/$(ghdl_version)/" < $< > $@; \
+#	Create version.tmp from version.in, using git date/hash, or envvar GHDL_DESC. Defaults to 'tarball'.
+	if test -d $(srcdir)/.git && desc=`cd $(srcdir); git describe --dirty`; then GHDL_DESC="$$desc"; fi; \
+	$(SED) -e "s/[(].*[)]/($$GHDL_DESC)/" -e "s/@VER@/$(ghdl_version)/" < $< > $@; \
 
 version.ads: version.tmp
 #	Change version.ads only if version.tmp has been modified to avoid
@@ -409,13 +405,22 @@ libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 LIBGHDL_GRT_OBJS= pic/grt-cstdio.o
 
 $(libghdl_name): $(GRT_SRC_DEPS) $(LIBGHDL_GRT_OBJS) version.ads force
-	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS) $(LIBGHDL_GRT_OBJS)
+#	Use -g for gnatlink so that the binder file is not removed.  We need
+#	it for libghdl.a
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ -gnat12 $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -g -shared $(SHLIB_FLAGS) $(LIBGHDL_GRT_OBJS)
 #       On windows, gnatmake (via Osint.Executable_Name) always appends .exe
 #       Adjust.  (Other solution: use gnatmake for compilation and binding,
 #       then use gnatlink directly for linking).
 ifeq ($(SOEXT),.dll)
 	-mv $(libghdl_name).exe $(libghdl_name)
 endif
+
+libghdl.a: $(libghdl_name)
+#	Also create a static library
+	sed -e '1,/--  BEGIN/d' -e '/--  END/,$$d' -e 's/^   --   //' < b~libghdl.adb > libghdl.bind
+	$(RM) -f $@
+	ar rc $@ b~libghdl.o $(LIBGHDL_GRT_OBJS) `sed -e /^-/d < libghdl.bind`
+	grep adalib libghdl.bind | sed -e 's/^-L//' -e 's@adalib/@adalib/libgnat.a@' > libghdl.link
 
 $(srcdir)/src/synth/ghdlsynth_gates.h: $(srcdir)/src/synth/netlists.ads $(srcdir)/src/synth/netlists-gates.ads
 	echo "/* DO NOT MODIFY" > $@
@@ -428,7 +433,7 @@ $(srcdir)/src/synth/ghdlsynth_gates.h: $(srcdir)/src/synth/netlists.ads $(srcdir
 	grep '      Param_' $(srcdir)/src/synth/netlists.ads >> $@
 	echo "};" >> $@
 
-all.libghdl.true: $(libghdl_name)
+all.libghdl.true: $(libghdl_name) libghdl.a
 all.libghdl.false:
 all.libghdl: all.libghdl.$(enable_libghdl)
 
@@ -438,6 +443,8 @@ install.libghdl.include: install.dirs $(srcdir)/src/synth/ghdlsynth_gates.h
 
 install.libghdl.lib:
 	$(INSTALL_PROGRAM) -p $(libghdl_name) $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) -p libghdl.a $(DESTDIR)$(libdir)/
+	$(INSTALL_DATA) -p libghdl.link $(DESTDIR)$(libdir)/
 
 install.libghdl.true: install.libghdl.lib install.libghdl.include
 

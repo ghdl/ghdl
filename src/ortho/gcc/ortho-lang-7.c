@@ -1222,7 +1222,11 @@ finish_access_type (tree atype, tree dtype)
 tree
 new_array_type (tree el_type, tree index_type)
 {
-  return build_array_type (el_type, index_type);
+  /* Incomplete array.  */
+  tree range_type;
+
+  range_type = build_range_type (index_type, size_zero_node, NULL_TREE);
+  return build_array_type (el_type, range_type);
 }
 
 
@@ -1232,10 +1236,10 @@ new_constrained_array_type (tree atype, tree length)
   tree range_type;
   tree index_type;
   tree len;
-  tree one;
   tree res;
 
   index_type = TYPE_DOMAIN (atype);
+
   if (integer_zerop (length))
     {
       /*  Handle null array, by creating a one-length array...  */
@@ -1243,11 +1247,10 @@ new_constrained_array_type (tree atype, tree length)
     }
   else
     {
-      one = build_int_cstu (index_type, 1);
-      len = build2 (MINUS_EXPR, index_type, length, one);
-      len = fold (len);
+      len = fold_build2 (MINUS_EXPR, index_type,
+			 convert (index_type, length),
+			 convert (index_type, size_one_node));
     }
-
   range_type = build_range_type (index_type, size_zero_node, len);
   res = build_array_type (TREE_TYPE (atype), range_type);
 
@@ -1347,19 +1350,13 @@ struct GTY(()) o_array_aggr_list
 };
 
 void
-start_array_aggr (struct o_array_aggr_list *list, tree atype)
+start_array_aggr (struct o_array_aggr_list *list, tree atype, unsigned len)
 {
-  tree nelts;
-  unsigned HOST_WIDE_INT n;
+  tree length;
 
-  list->atype = atype;
-  list->elts = NULL;
-
-  nelts = array_type_nelts (atype);
-  gcc_assert (nelts != NULL_TREE && tree_fits_uhwi_p (nelts));
-
-  n = tree_to_uhwi (nelts) + 1;
-  vec_alloc(list->elts, n);
+  length = new_unsigned_literal (sizetype, len);
+  list->atype = new_constrained_array_type (atype, length);
+  vec_alloc(list->elts, len);
 }
 
 void
@@ -1636,6 +1633,11 @@ finish_init_value (tree *decl, tree val)
   DECL_INITIAL (*decl) = val;
   TREE_CONSTANT (val) = 1;
   TREE_STATIC (*decl) = 1;
+
+  /* The variable may be declared with an incomplete array, so be sure it
+     has a completed type.  */
+  TREE_TYPE (*decl) = TREE_TYPE (val);
+
   rest_of_decl_compilation (*decl, current_function_decl == NULL_TREE, 0);
 }
 
@@ -1716,8 +1718,10 @@ new_interface_decl (struct o_inter_list *interfaces,
     case ENUMERAL_TYPE:
     case BOOLEAN_TYPE:
       DECL_ARG_TYPE (r) = integer_type_node;
+      break;
     default:
       DECL_ARG_TYPE (r) = atype;
+      break;
     }
 
   layout_decl (r, 0);

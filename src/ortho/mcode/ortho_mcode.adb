@@ -283,12 +283,14 @@ package body Ortho_Mcode is
          Ortho_Code.O_Cnode (Res));
    end Finish_Record_Aggr;
 
-   procedure Start_Array_Aggr (List : out O_Array_Aggr_List; Atype : O_Tnode)
+   procedure Start_Array_Aggr
+     (List : out O_Array_Aggr_List; Arr_Type : O_Tnode; Len : Unsigned_32)
    is
    begin
       Ortho_Code.Consts.Start_Array_Aggr
         (Ortho_Code.Consts.O_Array_Aggr_List (List),
-         Ortho_Code.O_Tnode (Atype));
+         Ortho_Code.O_Tnode (Arr_Type),
+         Len);
    end Start_Array_Aggr;
 
    procedure New_Array_Aggr_El (List : in out O_Array_Aggr_List;

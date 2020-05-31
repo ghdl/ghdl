@@ -582,36 +582,55 @@ package body Ortho_Debug.Disp is
             Put (".");
             Disp_Ident (C.Off_Field.Ident);
             Put (")");
-         when OC_Aggregate =>
+         when OC_Array_Aggregate =>
+            declare
+               El : O_Cnode;
+               El_Type : O_Tnode;
+            begin
+               El := C.Arr_Els;
+               case C.Ctype.Kind is
+                  when ON_Array_Sub_Type =>
+                     El_Type := C.Ctype.Base_Type.El_Type;
+                  when ON_Array_Type =>
+                     El_Type := C.Ctype.El_Type;
+                  when others =>
+                     raise Program_Error;
+               end case;
+               Put ('[');
+               Put_Trim (Unsigned_32'Image (C.Arr_Len));
+               Put (']');
+               Put ('{');
+               if El /= null then
+                  loop
+                     Set_Mark;
+                     Disp_Cnode (El.Aggr_Value, El_Type);
+                     El := El.Aggr_Next;
+                     exit when El = null;
+                     Put (", ");
+                  end loop;
+               end if;
+               Put ('}');
+            end;
+         when OC_Record_Aggregate =>
             declare
                El : O_Cnode;
                El_Type : O_Tnode;
                Field : O_Fnode;
             begin
                Put ('{');
-               El := C.Aggr_Els;
-               case C.Ctype.Kind is
-                  when ON_Record_Type =>
-                     Field := C.Ctype.Elements;
-                     El_Type := Field.Ftype;
-                  when ON_Array_Sub_Type =>
-                     Field := null;
-                     El_Type := C.Ctype.Base_Type.El_Type;
-                  when others =>
-                     raise Program_Error;
-               end case;
+               El := C.Rec_Els;
+               pragma Assert (C.Ctype.Kind = ON_Record_Type);
+               Field := C.Ctype.Elements;
                if El /= null then
                   loop
                      Set_Mark;
-                     if Field /= null then
-                        if Disp_All_Types then
-                           Put ('.');
-                           Disp_Ident (Field.Ident);
-                           Put (" = ");
-                        end if;
-                        El_Type := Field.Ftype;
-                        Field := Field.Next;
+                     if Disp_All_Types then
+                        Put ('.');
+                        Disp_Ident (Field.Ident);
+                        Put (" = ");
                      end if;
+                     El_Type := Field.Ftype;
+                     Field := Field.Next;
                      Disp_Cnode (El.Aggr_Value, El_Type);
                      El := El.Aggr_Next;
                      exit when El = null;

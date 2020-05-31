@@ -27,7 +27,7 @@ project Ghdl is
 
    package Compiler is
       for Default_Switches ("Ada") use
-         ("-gnaty3befhkmr", "-gnata", "-gnatwae", "-gnatf", "-gnat12", "-g");
+         ("-gnaty3befhkmr", "-gnata", "-gnatwa", "-gnatf", "-gnat12", "-g");
       for Default_Switches ("C") use ("-DWITH_GNAT_RUN_TIME");
    end Compiler;
 

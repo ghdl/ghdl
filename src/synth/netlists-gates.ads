@@ -85,30 +85,31 @@ package Netlists.Gates is
 
    Id_Red_And : constant Module_Id := 40;
    Id_Red_Or  : constant Module_Id := 41;
+   Id_Red_Xor : constant Module_Id := 42;
 
-   subtype Reduce_Module_Id is Module_Id range Id_Red_And .. Id_Red_Or;
+   subtype Reduce_Module_Id is Module_Id range Id_Red_And .. Id_Red_Xor;
 
-   Id_Concat2 : constant Module_Id := 42;
-   Id_Concat3 : constant Module_Id := 43;
-   Id_Concat4 : constant Module_Id := 44;
+   Id_Concat2 : constant Module_Id := 43;
+   Id_Concat3 : constant Module_Id := 44;
+   Id_Concat4 : constant Module_Id := 45;
 
    subtype Concat_Module_Id is Module_Id range Id_Concat2 .. Id_Concat4;
 
    --  Concatenation with N inputs.
-   Id_Concatn : constant Module_Id := 45;
+   Id_Concatn : constant Module_Id := 46;
 
    --  Inputs: s, i0, i1
    --  Output: o
-   Id_Mux2 : constant Module_Id := 46;
+   Id_Mux2 : constant Module_Id := 47;
    --  Inputs: s, i0, i1, s2, s3
    --  Output: o
-   Id_Mux4 : constant Module_Id := 47;
+   Id_Mux4 : constant Module_Id := 48;
 
    --  Inputs: 0: Selector as one-hot encoding
    --          1: Default value (when the selector is 0)
    --          2..1+W: values (2: MSB of sel, 1+W: LSB of sel)
    --  Output: 0: selected value
-   Id_Pmux : constant Module_Id := 48;
+   Id_Pmux : constant Module_Id := 49;
 
    subtype Mux_Module_Id is Module_Id range Id_Mux2 .. Id_Mux4;
 

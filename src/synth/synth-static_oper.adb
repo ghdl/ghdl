@@ -42,292 +42,6 @@ package body Synth.Static_Oper is
    --  (math library) on unix systems.
    pragma Linker_Options ("-lm");
 
-   function Read_Std_Logic (M : Memory_Ptr; Off : Uns32) return Std_Ulogic is
-   begin
-      return Std_Ulogic'Val (Read_U8 (M + Size_Type (Off)));
-   end Read_Std_Logic;
-
-   procedure Write_Std_Logic (M : Memory_Ptr; Off : Uns32; Val : Std_Ulogic) is
-   begin
-      Write_U8 (M + Size_Type (Off), Std_Ulogic'Pos (Val));
-   end Write_Std_Logic;
-
-   procedure Warn_Compare_Null (Loc : Node) is
-   begin
-      Warning_Msg_Synth (+Loc, "null argument detected, returning false");
-   end Warn_Compare_Null;
-
-   procedure Warn_Compare_Meta (Loc : Node) is
-   begin
-      Warning_Msg_Synth (+Loc, "metavalue detected, returning false");
-   end Warn_Compare_Meta;
-
-   function Synth_Compare_Uns_Uns
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
-   is
-      Lw : constant Uns32 := Left.Typ.W;
-      Rw : constant Uns32 := Right.Typ.W;
-      Len : constant Uns32 := Uns32'Min (Left.Typ.W, Right.Typ.W);
-      L, R : Std_Ulogic;
-   begin
-      if Len = 0 then
-         Warn_Compare_Null (Loc);
-         return Err;
-      end if;
-
-      if Lw > Rw then
-         for I in 0 .. Lw - Rw - 1 loop
-            case To_X01 (Read_Std_Logic (Left.Mem, I)) is
-               when '0' =>
-                  null;
-               when '1' =>
-                  return Greater;
-               when 'X' =>
-                  Warn_Compare_Meta (Loc);
-                  return Err;
-            end case;
-         end loop;
-      elsif Lw < Rw then
-         for I in 0 .. Rw - Lw - 1 loop
-            case To_X01 (Read_Std_Logic (Right.Mem, I)) is
-               when '0' =>
-                  null;
-               when '1' =>
-                  return Less;
-               when 'X' =>
-                  Warn_Compare_Meta (Loc);
-                  return Err;
-            end case;
-         end loop;
-      end if;
-
-      for I in 0 .. Len - 1 loop
-         L := To_X01 (Read_Std_Logic (Left.Mem, Lw - Len + I));
-         R := To_X01 (Read_Std_Logic (Right.Mem, Rw - Len + I));
-         if L = 'X' or R = 'X' then
-            Warn_Compare_Meta (Loc);
-            return Err;
-         elsif L = '1' and R = '0' then
-            return Greater;
-         elsif L = '0' and R = '1' then
-            return Less;
-         end if;
-      end loop;
-      return Equal;
-   end Synth_Compare_Uns_Uns;
-
-   function Synth_Compare_Uns_Nat
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
-   is
-      Lw : constant Uns32 := Left.Typ.W;
-      Rval : constant Uns64 := To_Uns64 (Read_Discrete (Right));
-      L : Std_Ulogic;
-      Cnt : Uns32;
-   begin
-      if Lw = 0 then
-         Warn_Compare_Null (Loc);
-         return Err;
-      end if;
-
-      if Lw > 64 then
-         for I in 0 .. Lw - 64 - 1 loop
-            case To_X01 (Read_Std_Logic (Left.Mem, I)) is
-               when '0' =>
-                  null;
-               when '1' =>
-                  return Greater;
-               when 'X' =>
-                  Warn_Compare_Meta (Loc);
-                  return Err;
-            end case;
-         end loop;
-         Cnt := 64;
-      elsif Lw < 64 then
-         if Shift_Right (Rval, Natural (Lw)) /= 0 then
-            return Less;
-         end if;
-         Cnt := Lw;
-      else
-         Cnt := 64;
-      end if;
-
-      for I in reverse 0 .. Cnt - 1 loop
-         L := To_X01 (Read_Std_Logic (Left.Mem, Lw - I - 1));
-         if L = 'X' then
-            Warn_Compare_Meta (Loc);
-            return Err;
-         end if;
-         if (Shift_Right (Rval, Natural (I)) and 1) = 1 then
-            if L = '0' then
-               return Less;
-            end if;
-         else
-            if L = '1' then
-               return Greater;
-            end if;
-         end if;
-      end loop;
-      return Equal;
-   end Synth_Compare_Uns_Nat;
-
-   function Synth_Compare_Nat_Uns
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
-   is
-      Rw : constant Uns32 := Right.Typ.W;
-      Lval : constant Uns64 := To_Uns64 (Read_Discrete (Left));
-      R : Std_Ulogic;
-      Cnt : Uns32;
-   begin
-      if Rw = 0 then
-         Warn_Compare_Null (Loc);
-         return Err;
-      end if;
-
-      if Rw > 64 then
-         for I in 0 .. Rw - 64 - 1 loop
-            case To_X01 (Read_Std_Logic (Right.Mem, I)) is
-               when '0' =>
-                  null;
-               when '1' =>
-                  return Less;
-               when 'X' =>
-                  Warn_Compare_Meta (Loc);
-                  return Err;
-            end case;
-         end loop;
-         Cnt := 64;
-      elsif Rw < 64 then
-         if Shift_Right (Lval, Natural (Rw)) /= 0 then
-            return Greater;
-         end if;
-         Cnt := Rw;
-      else
-         Cnt := 64;
-      end if;
-
-      for I in reverse 0 .. Cnt - 1 loop
-         R := To_X01 (Read_Std_Logic (Right.Mem, Rw - I - 1));
-         if R = 'X' then
-            Warn_Compare_Meta (Loc);
-            return Err;
-         end if;
-         if (Shift_Right (Lval, Natural (I)) and 1) = 1 then
-            if R = '0' then
-               return Greater;
-            end if;
-         else
-            if R = '1' then
-               return Less;
-            end if;
-         end if;
-      end loop;
-      return Equal;
-   end Synth_Compare_Nat_Uns;
-
-   function Synth_Compare_Sgn_Sgn
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
-   is
-      Lw : constant Uns32 := Left.Typ.W;
-      Rw : constant Uns32 := Right.Typ.W;
-      Len : constant Uns32 := Uns32'Min (Lw, Rw);
-      P : Uns32;
-      L, R : Std_Ulogic;
-      Res : Order_Type;
-   begin
-      if Len = 0 then
-         Warn_Compare_Null (Loc);
-         return Err;
-      end if;
-
-      --  Compare the sign bit.
-      L := To_X01 (Read_Std_Logic (Left.Mem, 0));
-      R := To_X01 (Read_Std_Logic (Right.Mem, 0));
-      if L = '1' and R = '0' then
-         return Less;
-      elsif L = '0' and R = '1' then
-         return Greater;
-      else
-         Res := Equal;
-      end if;
-
-      --  Same sign.
-      for I in 0 .. Uns32'Max (Lw, Rw) - 1 loop
-         if I >= Lw then
-            P := Lw - 1;
-         else
-            P := I;
-         end if;
-         L := To_X01 (Read_Std_Logic (Left.Mem, Lw - 1 - P));
-
-         if I >= Rw then
-            P := Rw - 1;
-         else
-            P := I;
-         end if;
-         R := To_X01 (Read_Std_Logic (Right.Mem, Rw - 1 - P));
-
-         if L = 'X' or R = 'X' then
-            Warn_Compare_Meta (Loc);
-            return Err;
-         end if;
-
-         if L = '1' and R = '0' then
-            Res := Greater;
-         elsif L = '0' and R = '1' then
-            Res := Less;
-         end if;
-      end loop;
-      return Res;
-   end Synth_Compare_Sgn_Sgn;
-
-   function Synth_Compare_Sgn_Int
-     (Left, Right : Memtyp; Err : Order_Type; Loc : Node) return Order_Type
-   is
-      Lw     : constant Uns32 := Left.Typ.W;
-      Rval   : constant Int64 := Read_Discrete (Right);
-      Rd      : Uns32;
-      R1     : Uns64;
-      Res    : Order_Type;
-      L      : Std_Ulogic;
-   begin
-      if Lw = 0 then
-         Warn_Compare_Null (Loc);
-         return Err;
-      end if;
-
-      Res := Equal;
-      R1 := To_Uns64 (Rval);
-
-      --  Same sign.
-      for I in 0 .. Lw - 1 loop
-         L := To_X01 (Read_Std_Logic (Left.Mem, Lw - 1 - I));
-         if L = 'X' then
-            Warn_Compare_Meta (Loc);
-            return Err;
-         end if;
-
-         Rd := Uns32 (R1 and 1);
-         R1 := Shift_Right_Arithmetic (R1, 1);
-
-         if L = '1' and then Rd = 0 then
-            Res := Greater;
-         elsif L = '0' and then Rd = 1 then
-            Res := Less;
-         end if;
-      end loop;
-
-      if L = '1' then
-         if Rval >= 0 then
-            Res := Less;
-         end if;
-      else
-         if Rval < 0 then
-            Res := Greater;
-         end if;
-      end if;
-      return Res;
-   end Synth_Compare_Sgn_Int;
-
    function Create_Res_Bound (Prev : Type_Acc) return Type_Acc is
    begin
       if Prev.Vbound.Dir = Dir_Downto
@@ -365,244 +79,30 @@ package body Synth.Static_Oper is
       return Res;
    end Synth_Vector_Dyadic;
 
-   procedure To_Std_Logic_Vector (Val : Memtyp; Arr : out Std_Logic_Vector) is
-   begin
-      for I in 1 .. Uns32 (Vec_Length (Val.Typ)) loop
-         Arr (Natural (I)) := Read_Std_Logic (Val.Mem, I - 1);
-      end loop;
-   end To_Std_Logic_Vector;
-
-   function To_Memtyp (Vec : Std_Logic_Vector; El_Typ : Type_Acc) return Memtyp
-   is
-      pragma Assert (Vec'First = 1);
-      Res_Typ : Type_Acc;
-      Res : Memtyp;
-   begin
-      Res_Typ := Create_Vec_Type_By_Length (Uns32 (Vec'Last), El_Typ);
-      Res := Create_Memory (Res_Typ);
-      for I in 1 .. Vec'Last loop
-         Write_Std_Logic (Res.Mem, Uns32 (I - 1), Vec (I));
-      end loop;
-      return Res;
-   end To_Memtyp;
-
-   function Synth_Add_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Add_Uns_Uns (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Add_Uns_Uns;
-
-   function Synth_Add_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Add_Sgn_Sgn (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Add_Sgn_Sgn;
-
-   function Synth_Add_Sgn_Int (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Val : constant Int64 := Read_Discrete (R);
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Add_Sgn_Int (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Add_Sgn_Int;
-
-   function Synth_Add_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (L.Typ.W));
-      R_Val : constant Uns64 := Uns64 (Read_Discrete (R));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Add_Uns_Nat (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Add_Uns_Nat;
-
-   function Synth_Sub_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Sub_Uns_Uns (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Sub_Uns_Uns;
-
-   function Synth_Sub_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Val : constant Uns64 := Uns64 (Read_Discrete (R));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Sub_Uns_Nat (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Sub_Uns_Nat;
-
-   function Synth_Sub_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Sub_Sgn_Sgn (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Sub_Sgn_Sgn;
-
-   function Synth_Sub_Sgn_Int (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Val : constant Int64 := Read_Discrete (R);
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Sub_Sgn_Int (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Sub_Sgn_Int;
-
-   function Synth_Mul_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Mul_Uns_Uns (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Mul_Uns_Uns;
-
-   function Synth_Mul_Nat_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-      L_Val : constant Uns64 := Uns64 (Read_Discrete (L));
-   begin
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Mul_Nat_Uns (L_Val, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, R.Typ.Vec_El);
-      end;
-   end Synth_Mul_Nat_Uns;
-
-   function Synth_Mul_Uns_Nat (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Val : constant Uns64 := Uns64 (Read_Discrete (R));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Mul_Uns_Nat (L_Arr, R_Val);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Mul_Uns_Nat;
-
-   function Synth_Mul_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
-   is
-      pragma Unreferenced (Loc);
-      L_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (L.Typ)));
-      R_Arr : Std_Logic_Vector (1 .. Natural (Vec_Length (R.Typ)));
-   begin
-      To_Std_Logic_Vector (L, L_Arr);
-      To_Std_Logic_Vector (R, R_Arr);
-      declare
-         Res_Arr : constant Std_Logic_Vector := Mul_Sgn_Sgn (L_Arr, R_Arr);
-      begin
-         return To_Memtyp (Res_Arr, L.Typ.Vec_El);
-      end;
-   end Synth_Mul_Sgn_Sgn;
-
-   function Synth_Shift (Val : Memtyp;
-                         Amt : Uns32;
-                         Right : Boolean;
-                         Arith : Boolean) return Memtyp
-   is
-      Len : constant Uns32 := Uns32 (Vec_Length (Val.Typ));
-      Arr : Std_Logic_Vector (1 .. Natural (Len));
-      Pad : Std_Ulogic;
-   begin
-      if Len = 0 or Amt >= Len then
-         Arr := (others => '0');
-      else
-         To_Std_Logic_Vector (Val, Arr);
-         if Arith then
-            Pad := Arr (1);
-         else
-            Pad := '0';
-         end if;
-
-         if Right then
-            for I in reverse Amt + 1 .. Len loop
-               Arr (Natural (I)) := Arr (Natural (I - Amt));
-            end loop;
-            for I in 1 .. Amt loop
-               Arr (Natural (I)) := Pad;
-            end loop;
-         else
-            for I in 1 .. Len - Amt loop
-               Arr (Natural (I)) := Arr (Natural (I + Amt));
-            end loop;
-            for I in Len - Amt + 1 .. Len loop
-               Arr (Natural (I)) := Pad;
-            end loop;
-         end if;
-      end if;
-      return To_Memtyp (Arr, Val.Typ.Vec_El);
-   end Synth_Shift;
-
    function Get_Static_Ulogic (Op : Memtyp) return Std_Ulogic is
    begin
       pragma Assert (Op.Typ.Kind = Type_Logic);
       return Std_Ulogic'Val (Read_U8 (Op.Mem));
    end Get_Static_Ulogic;
+
+   procedure Check_Integer_Overflow
+     (Val : in out Int64; Typ : Type_Acc; Loc : Syn_Src) is
+   begin
+      pragma Assert (Typ.Kind = Type_Discrete);
+      case Typ.Sz is
+         when 4 =>
+            if Val < -2**31 or Val >= 2**31 then
+               Error_Msg_Synth (+Loc, "integer overflow");
+               --  Just keep the lower 32bit (and sign extend).
+               Val := Int64
+                 (To_Int32 (Uns32 (To_Uns64 (Val) and 16#ffff_ffff#)));
+            end if;
+         when 8 =>
+            null;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Check_Integer_Overflow;
 
    function Synth_Static_Dyadic_Predefined (Syn_Inst : Synth_Instance_Acc;
                                             Imp : Node;
@@ -633,34 +133,67 @@ package body Synth.Static_Oper is
             return Create_Memory_U8
               (Boolean'Pos (Read_Discrete (Left) /= Read_Discrete (Right)),
                Boolean_Type);
+
          when Iir_Predefined_Integer_Plus
            | Iir_Predefined_Physical_Plus =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) + Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) + Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Minus
-           | Iir_Predefined_Physical_Minus =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) - Read_Discrete (Right), Res_Typ);
+            | Iir_Predefined_Physical_Minus =>
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) - Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Mul
            | Iir_Predefined_Physical_Integer_Mul
            | Iir_Predefined_Integer_Physical_Mul =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) * Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) * Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Div
            | Iir_Predefined_Physical_Physical_Div
            | Iir_Predefined_Physical_Integer_Div =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) / Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) / Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Mod =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) mod Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) mod Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
          when Iir_Predefined_Integer_Rem =>
-            return Create_Memory_Discrete
-              (Read_Discrete (Left) rem Read_Discrete (Right), Res_Typ);
+            declare
+               Res : Int64;
+            begin
+               Res := Read_Discrete (Left) rem Read_Discrete (Right);
+               Check_Integer_Overflow (Res, Res_Typ, Expr);
+               return Create_Memory_Discrete (Res, Res_Typ);
+            end;
+
          when Iir_Predefined_Integer_Exp =>
             return Create_Memory_Discrete
               (Read_Discrete (Left) ** Natural (Read_Discrete (Right)),
                Res_Typ);
+
          when Iir_Predefined_Physical_Minimum
            | Iir_Predefined_Integer_Minimum =>
             return Create_Memory_Discrete
@@ -671,6 +204,7 @@ package body Synth.Static_Oper is
             return Create_Memory_Discrete
               (Int64'Max (Read_Discrete (Left), Read_Discrete (Right)),
                Res_Typ);
+
          when Iir_Predefined_Integer_Less_Equal
            | Iir_Predefined_Physical_Less_Equal =>
             return Create_Memory_U8
@@ -877,32 +411,28 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Uns (Left, Right, Greater, Expr) = Equal;
+               Res := Compare_Uns_Uns (Left, Right, Greater, Expr) = Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Sgn_Sgn (Left, Right, Greater, Expr) = Equal;
+               Res := Compare_Sgn_Sgn (Left, Right, Greater, Expr) = Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Nat (Left, Right, Greater, Expr) = Equal;
+               Res := Compare_Uns_Nat (Left, Right, Greater, Expr) = Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Sgn_Int (Left, Right, Greater, Expr) = Equal;
+               Res := Compare_Sgn_Int (Left, Right, Greater, Expr) = Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -910,32 +440,28 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Uns (Left, Right, Less, Expr) = Greater;
+               Res := Compare_Uns_Uns (Left, Right, Less, Expr) = Greater;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Sgn_Sgn (Left, Right, Less, Expr) = Greater;
+               Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) = Greater;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Nat_Uns =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Nat_Uns (Left, Right, Less, Expr) = Greater;
+               Res := Compare_Nat_Uns (Left, Right, Less, Expr) = Greater;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Gt_Uns_Nat =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Nat (Left, Right, Less, Expr) = Greater;
+               Res := Compare_Uns_Nat (Left, Right, Less, Expr) = Greater;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -943,16 +469,14 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Uns (Left, Right, Greater, Expr) >= Equal;
+               Res := Compare_Uns_Uns (Left, Right, Greater, Expr) >= Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Ge_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Sgn_Sgn (Left, Right, Less, Expr) >= Equal;
+               Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) >= Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -960,24 +484,21 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Uns (Left, Right, Greater, Expr) <= Equal;
+               Res := Compare_Uns_Uns (Left, Right, Greater, Expr) <= Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Le_Uns_Nat =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Nat (Left, Right, Greater, Expr) <= Equal;
+               Res := Compare_Uns_Nat (Left, Right, Greater, Expr) <= Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Le_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Sgn_Sgn (Left, Right, Less, Expr) <= Equal;
+               Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) <= Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -985,32 +506,28 @@ package body Synth.Static_Oper is
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Uns (Left, Right, Greater, Expr) < Equal;
+               Res := Compare_Uns_Uns (Left, Right, Greater, Expr) < Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Uns_Nat =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Uns_Nat (Left, Right, Greater, Expr) < Equal;
+               Res := Compare_Uns_Nat (Left, Right, Greater, Expr) < Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Nat_Uns =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Nat_Uns (Left, Right, Greater, Expr) < Equal;
+               Res := Compare_Nat_Uns (Left, Right, Greater, Expr) < Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Lt_Sgn_Sgn =>
             declare
                Res : Boolean;
             begin
-               Res :=
-                 Synth_Compare_Sgn_Sgn (Left, Right, Less, Expr) < Equal;
+               Res := Compare_Sgn_Sgn (Left, Right, Less, Expr) < Equal;
                return Create_Memory_U8 (Boolean'Pos (Res), Res_Typ);
             end;
 
@@ -1019,36 +536,40 @@ package body Synth.Static_Oper is
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Log
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Slv
            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv =>
-            return Synth_Add_Uns_Uns (Left, Right, Expr);
+            return Add_Uns_Uns (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int =>
-            return Synth_Add_Sgn_Int (Left, Right, Expr);
+            return Add_Sgn_Int (Left, Read_Discrete (Right), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
-            return Synth_Add_Uns_Nat (Left, Right, Expr);
+            return Add_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn =>
-            return Synth_Add_Sgn_Sgn (Left, Right, Expr);
+            return Add_Sgn_Sgn (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns =>
-            return Synth_Sub_Uns_Uns (Left, Right, Expr);
+            return Sub_Uns_Uns (Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Nat =>
-            return Synth_Sub_Uns_Nat (Left, Right, Expr);
+            return Sub_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Int =>
-            return Synth_Sub_Sgn_Int (Left, Right, Expr);
+            return Sub_Sgn_Int (Left, Read_Discrete (Right), Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Sgn =>
-            return Synth_Sub_Sgn_Sgn (Left, Right, Expr);
+            return Sub_Sgn_Sgn (Left, Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns =>
-            return Synth_Mul_Uns_Uns (Left, Right, Expr);
+            return Mul_Uns_Uns (Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Nat_Uns =>
-            return Synth_Mul_Nat_Uns (Left, Right, Expr);
+            return Mul_Nat_Uns (To_Uns64 (Read_Discrete (Left)), Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
-            return Synth_Mul_Uns_Nat (Left, Right, Expr);
+            return Mul_Uns_Nat (Left, To_Uns64 (Read_Discrete (Right)), Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Sgn =>
-            return Synth_Mul_Sgn_Sgn (Left, Right, Expr);
+            return Mul_Sgn_Sgn (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Int =>
+            return Mul_Sgn_Int (Left, Read_Discrete (Right), Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Mul_Int_Sgn =>
+            return Mul_Int_Sgn (Read_Discrete (Left), Right, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
            |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
@@ -1057,9 +578,9 @@ package body Synth.Static_Oper is
             begin
                Amt := Read_Discrete (Right);
                if Amt >= 0 then
-                  return Synth_Shift (Left, Uns32 (Amt), True, False);
+                  return Shift_Vec (Left, Uns32 (Amt), True, False);
                else
-                  return Synth_Shift (Left, Uns32 (-Amt), False, False);
+                  return Shift_Vec (Left, Uns32 (-Amt), False, False);
                end if;
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Sll_Uns_Int
@@ -1069,9 +590,9 @@ package body Synth.Static_Oper is
             begin
                Amt := Read_Discrete (Right);
                if Amt >= 0 then
-                  return Synth_Shift (Left, Uns32 (Amt), False, False);
+                  return Shift_Vec (Left, Uns32 (Amt), False, False);
                else
-                  return Synth_Shift (Left, Uns32 (-Amt), True, False);
+                  return Shift_Vec (Left, Uns32 (-Amt), True, False);
                end if;
             end;
 
@@ -1164,17 +685,7 @@ package body Synth.Static_Oper is
             end;
 
          when Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
-            declare
-               Op_Arr : Std_Logic_Vector
-                 (1 .. Natural (Vec_Length (Operand.Typ)));
-            begin
-               To_Std_Logic_Vector (Operand, Op_Arr);
-               declare
-                  Res_Arr : constant Std_Logic_Vector := Neg_Sgn (Op_Arr);
-               begin
-                  return To_Memtyp (Res_Arr, Operand.Typ.Vec_El);
-               end;
-            end;
+            return Neg_Vec (Operand, Expr);
 
          when Iir_Predefined_Ieee_1164_Vector_Not
            | Iir_Predefined_Ieee_Numeric_Std_Not_Uns
@@ -1186,7 +697,7 @@ package body Synth.Static_Oper is
               (Std_Ulogic'Pos (Not_Table (Read_Std_Logic (Operand.Mem, 0))),
                Oper_Typ);
 
-         when Iir_Predefined_Ieee_1164_Vector_Or_Reduce =>
+         when Iir_Predefined_Ieee_1164_Or_Suv =>
             return Synth_Vector_Reduce ('0', Operand, Or_Table);
 
          when others =>
@@ -1335,6 +846,20 @@ package body Synth.Static_Oper is
             --  SIGNED to Integer
             return Create_Memory_Discrete
               (Eval_Signed_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
+
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
+            | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
+            return Shift_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
+               False, False);
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat =>
+            return Shift_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
+               True, False);
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat =>
+            return Shift_Vec
+              (Get_Memtyp (Param1), Uns32 (Read_Discrete (Param2)),
+               True, True);
 
          when Iir_Predefined_Ieee_1164_To_Stdlogicvector_Bv =>
             declare

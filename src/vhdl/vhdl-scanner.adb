@@ -2038,7 +2038,9 @@ package body Vhdl.Scanner is
                   --  A comment [...] may contain any character except the
                   --  format effectors vertical tab, carriage return, line
                   --  feed and form feed.
-                  if not (Flags.Mb_Comment or Vhdl_Std >= Vhdl_02)
+                  if not (Flags.Mb_Comment
+                          or Flags.Flag_Relaxed_Rules
+                          or Vhdl_Std >= Vhdl_02)
                     and then Characters_Kind (Source (Pos)) = Invalid
                   then
                      Error_Msg_Scan ("invalid character, even in a comment");

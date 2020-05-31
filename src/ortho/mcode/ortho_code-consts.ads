@@ -68,6 +68,9 @@ package Ortho_Code.Consts is
    --  Get the type from an OC_Alignof node.
    function Get_Alignof_Type (Cst : O_Cnode) return O_Tnode;
 
+   --  Get the size (number of bytes) for CST.
+   function Get_Const_Size (Cst : O_Cnode) return Uns32;
+
    --  Get the value of a named literal.
    --function Get_Const_Literal (Cst : O_Cnode) return Uns32;
 
@@ -122,7 +125,8 @@ package Ortho_Code.Consts is
    procedure Finish_Record_Aggr (List : in out O_Record_Aggr_List;
                                  Res : out O_Cnode);
 
-   procedure Start_Array_Aggr (List : out O_Array_Aggr_List; Atype : O_Tnode);
+   procedure Start_Array_Aggr
+     (List : out O_Array_Aggr_List; Arr_Type : O_Tnode; Len : Unsigned_32);
    procedure New_Array_Aggr_El (List : in out O_Array_Aggr_List;
                                 Value : O_Cnode);
    procedure Finish_Array_Aggr (List : in out O_Array_Aggr_List;

@@ -1,6 +1,8 @@
 name: 'push'
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 env:
   CI: true
@@ -10,31 +12,41 @@ jobs:
   gpl:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - run: |
         TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
 
-  linux:
+  lin:
     strategy:
       fail-fast: false
       max-parallel: 3
       matrix:
-        task: [ mcode, llvm-7, gcc-8.3.0 ]
+        task: [
+          { backend: mcode, version: '' },
+          { backend: llvm,  version: '-5.0' },
+          { backend: gcc,   version: '-8.3.0' }
+        ]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - run: |
-        TASK=buster+${{ matrix.task }} ./dist/ci-run.sh -c
+    - uses: actions/checkout@v2
+    - name: Build and test GHDL in containers
+      run: |
+        TASK=ubuntu18+${{ matrix.task.backend }}${{ matrix.task.version }} ./dist/ci-run.sh -c
+        mv ghdl-*-ubuntu18-*.tgz ghdl-gha-ubuntu-${{ matrix.task.backend }}.tgz
+    - uses: actions/upload-artifact@v2
+      with:
+        path: ghdl-gha-ubuntu-*.tgz
 
   osx:
     runs-on: macOS-latest
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - run: |
         brew update
         brew install p7zip
         ./dist/macosx/install-ada.sh
-    - run: |
+    - name: Build and test GHDL
+      run: |
         PATH=$PWD/gnat/bin:$PATH
         ./dist/ci-run.sh -c
       env:
@@ -61,21 +73,43 @@ jobs:
       with:
         msystem: MSYS
         update: true
-    - uses: actions/checkout@v1
+        install: base-devel git
+    - run: git config --global core.autocrlf input
+    - uses: actions/checkout@v2
     - name: Build and (hopefully) install package
       shell: msys2 {0}
       run: |
         ./dist/msys2-mingw/run.sh -b
-#    - uses: actions/upload-artifact@v2
-#      with:
-#         name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-pkg
-#         path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
+        cp ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst ghdl-gha-${{ matrix.installs }}-${{ matrix.task }}.zst
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-builddir
+        path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/src/
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-builddir
+        path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/pkg/
+    - uses: actions/upload-artifact@v2
+      with:
+         path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
     - name: Test package
       shell: msys2 {0}
       run: |
         ./dist/msys2-mingw/run.sh -t
       env:
         MSYSTEM: ${{ matrix.task.installs }}
+
+  nightly:
+    needs: [ lin, win ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v2
+    - if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+      uses: eine/tip@master
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: 'nightly'
+        files: artifact/*
 
 #---
 
