@@ -2,9 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all,
     ieee.numeric_std.all;
 
-entity tdp_ram is
+entity ram4 is
     generic (
-        ADDRWIDTH : positive := 7;
+        ADDRWIDTH : positive := 12;
         WIDTH     : positive := 8
     );
     port (
@@ -22,9 +22,9 @@ entity tdp_ram is
         data_read_b  : out std_logic_vector(WIDTH - 1 downto 0);
         data_write_b : in  std_logic_vector(WIDTH - 1 downto 0)
     );
-end tdp_ram;
+end ram4;
 
-architecture behavioral of tdp_ram is
+architecture behavioral of ram4 is
 begin
     process(clk_a, clk_b)
       type ram_t is array(0 to 2**ADDRWIDTH - 1) of std_logic_vector(WIDTH - 1 downto 0);
