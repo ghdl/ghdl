@@ -171,6 +171,8 @@ package body Grt.Main is
 
    procedure Run_Finish (Status : Integer) is
    begin
+      Grt.Processes.Simulation_Finish;
+
       Grt.Hooks.Call_Finish_Hooks;
 
       if Flag_Stats then

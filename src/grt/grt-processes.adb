@@ -1249,7 +1249,7 @@ package body Grt.Processes is
 
       Status := Simulation_Main_Loop;
 
-      Simulation_Finish;
+      --  Note: the caller must call Simulation_Finish.
 
       return Status;
    end Simulation;
