@@ -391,38 +391,42 @@ package body Ghdlprint is
             when Tok_Across .. Tok_Tolerance =>
                Disp_Reserved;
             when Tok_Psl_Clock
-              | Tok_Psl_Endpoint
-              | Tok_Psl_Boolean
-              | Tok_Psl_Const
-              | Tok_Inf
-              | Tok_Within
-              | Tok_Abort
-              | Tok_Before
-              | Tok_Before_Em
-              | Tok_Before_Un
-              | Tok_Before_Em_Un
-              | Tok_Until_Em
-              | Tok_Until_Un
-              | Tok_Until_Em_Un
-              | Tok_Always
-              | Tok_Never
-              | Tok_Eventually_Em
-              | Tok_Next_Em
-              | Tok_Next_A
-              | Tok_Next_A_Em
-              | Tok_Next_E
-              | Tok_Next_E_Em
-              | Tok_Next_Event
-              | Tok_Next_Event_Em
-              | Tok_Next_Event_A
-              | Tok_Next_Event_A_Em
-              | Tok_Next_Event_E_Em
-              | Tok_Next_Event_E =>
+               | Tok_Psl_Endpoint
+               | Tok_Psl_Boolean
+               | Tok_Psl_Const
+               | Tok_Inf
+               | Tok_Within
+               | Tok_Abort
+               | Tok_Before
+               | Tok_Before_Em
+               | Tok_Before_Un
+               | Tok_Before_Em_Un
+               | Tok_Until_Em
+               | Tok_Until_Un
+               | Tok_Until_Em_Un
+               | Tok_Always
+               | Tok_Never
+               | Tok_Eventually_Em
+               | Tok_Next_Em
+               | Tok_Next_A
+               | Tok_Next_A_Em
+               | Tok_Next_E
+               | Tok_Next_E_Em
+               | Tok_Next_Event
+               | Tok_Next_Event_Em
+               | Tok_Next_Event_A
+               | Tok_Next_Event_A_Em
+               | Tok_Next_Event_E_Em
+               | Tok_Next_Event_E
+               | Tok_Prev
+               | Tok_Stable
+               | Tok_Rose
+               | Tok_Fell =>
                Disp_Spaces;
                Disp_Text;
             when Tok_String
-              | Tok_Bit_String
-              | Tok_Character =>
+               | Tok_Bit_String
+               | Tok_Character =>
                Disp_Spaces;
                case Html_Format is
                   when Html_2 =>

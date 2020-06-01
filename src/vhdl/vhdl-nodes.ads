@@ -846,6 +846,32 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Psl_Expression (Field3)
 
+   -- Iir_Kind_Psl_Prev (Short)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Count_Expression (Field2)
+   --
+   --   Get/Set_Clock_Expression (Field4)
+   --
+   --  Reference to the clock node (can be the default one).
+   --   Get/Set_Clock (Field3)
+
+   -- Iir_Kind_Psl_Stable (Short)
+   -- Iir_Kind_Psl_Rose (Short)
+   -- Iir_Kind_Psl_Fell (Short)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Clock_Expression (Field4)
+   --
+   --  Reference to the clock node (can be the default one).
+   --   Get/Set_Clock (Field3)
+
    -- Iir_Kind_Signature (Medium)
    --
    --  LRM08 4.5.3 Signatures
@@ -4923,6 +4949,10 @@ package Vhdl.Nodes is
       Iir_Kind_Implicit_Dereference,
       Iir_Kind_Slice_Name,
       Iir_Kind_Indexed_Name,
+      Iir_Kind_Psl_Prev,
+      Iir_Kind_Psl_Stable,
+      Iir_Kind_Psl_Rose,
+      Iir_Kind_Psl_Fell,
       Iir_Kind_Psl_Expression,
 
    -- Concurrent statements.
@@ -6305,6 +6335,12 @@ package Vhdl.Nodes is
    --Iir_Kind_Modulus_Operator
    --Iir_Kind_Remainder_Operator
      Iir_Kind_Exponentiation_Operator;
+
+   subtype Iir_Kinds_Psl_Builtin is Iir_Kind range
+     Iir_Kind_Psl_Prev ..
+   --Iir_Kind_Psl_Stable
+   --Iir_Kind_Psl_Rose
+     Iir_Kind_Psl_Fell;
 
    subtype Iir_Kinds_Functions_And_Literals is Iir_Kind range
      Iir_Kind_Enumeration_Literal ..
@@ -8948,4 +8984,16 @@ package Vhdl.Nodes is
    function Get_PSL_EOS_Flag (N : Iir) return Boolean;
    procedure Set_PSL_EOS_Flag (N : Iir; Flag : Boolean);
 
+   --  Field: Field2
+   function Get_Count_Expression (N : Iir) return Iir;
+   procedure Set_Count_Expression (N : Iir; Count : Iir);
+
+   --  Field: Field4
+   function Get_Clock_Expression (N : Iir) return Iir;
+   procedure Set_Clock_Expression (N : Iir; Clk : Iir);
+
+   --  Reference to the clock node (can be the default one).
+   --  Field: Field3 Ref
+   function Get_Clock (N : Iir) return Iir;
+   procedure Set_Clock (N : Iir; Clk : Iir);
 end Vhdl.Nodes;

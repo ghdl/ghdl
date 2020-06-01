@@ -972,12 +972,15 @@ package body Vhdl.Parse is
       Res : Iir;
    begin
       case Current_Token is
-         when Tok_Range | Tok_Identifier =>
+         when Tok_Range
+            | Tok_Identifier
+            | Tok_Stable =>
+            --  Tok_Stable is possible within PSL expressions.
             null;
          when Tok_Across
-           | Tok_Through
-           | Tok_Reference
-           | Tok_Tolerance =>
+            | Tok_Through
+            | Tok_Reference
+            | Tok_Tolerance =>
             --  AMS reserved words.
             null;
          when Tok_Subtype =>
@@ -6011,6 +6014,53 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Integer_Literal;
 
+   function Parse_PSL_Builtin_Call (Kind : Iir_Kinds_Psl_Builtin) return Iir
+   is
+      Res : Iir;
+      Expr : Iir;
+   begin
+      Res := Create_Iir (Kind);
+      Set_Location (Res);
+
+      --  Skip builtin.
+      Scan;
+
+      Expect_Scan (Tok_Left_Paren);
+
+      Set_Expression (Res, Parse_Expression);
+
+      if Current_Token = Tok_Comma then
+         --  Skip ','.
+         Scan;
+
+         Expr := Parse_Expression;
+         case Kind is
+            when Iir_Kind_Psl_Fell
+               | Iir_Kind_Psl_Rose
+               | Iir_Kind_Psl_Stable =>
+               Set_Clock_Expression (Res, Expr);
+            when Iir_Kind_Psl_Prev =>
+               Set_Count_Expression (Res, Expr);
+         end case;
+      end if;
+
+      if Current_Token = Tok_Comma then
+         --  Skip ','.
+         Scan;
+
+         case Kind is
+            when Iir_Kind_Psl_Prev =>
+               Set_Clock_Expression (Res, Parse_Expression);
+            when others =>
+               Error_Msg_Parse ("too many parameter for PSL builtin");
+         end case;
+      end if;
+
+      Expect_Scan (Tok_Right_Paren);
+
+      return Res;
+   end Parse_PSL_Builtin_Call;
+
    --  precond : next token
    --  postcond: next token
    --
@@ -6165,6 +6215,15 @@ package body Vhdl.Parse is
             Scan;
 
             return Res;
+
+         when Tok_Prev =>
+            return Parse_PSL_Builtin_Call (Iir_Kind_Psl_Prev);
+         when Tok_Stable =>
+            return Parse_PSL_Builtin_Call (Iir_Kind_Psl_Stable);
+         when Tok_Rose =>
+            return Parse_PSL_Builtin_Call (Iir_Kind_Psl_Rose);
+         when Tok_Fell =>
+            return Parse_PSL_Builtin_Call (Iir_Kind_Psl_Fell);
 
          when Tok_Minus
            | Tok_Plus =>

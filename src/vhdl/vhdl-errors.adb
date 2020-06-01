@@ -782,6 +782,14 @@ package body Vhdl.Errors is
             return "PSL restrict";
          when Iir_Kind_Psl_Default_Clock =>
             return "PSL default clock";
+         when Iir_Kind_Psl_Prev =>
+            return "PSL prev function";
+         when Iir_Kind_Psl_Stable =>
+            return "PSL stable function";
+         when Iir_Kind_Psl_Rose =>
+            return "PSL rose function";
+         when Iir_Kind_Psl_Fell =>
+            return "PSL fell function";
 
          when Iir_Kind_If_Statement =>
             return Disp_Label (Node, "if statement");

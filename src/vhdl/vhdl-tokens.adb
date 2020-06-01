@@ -405,6 +405,7 @@ package body Vhdl.Tokens is
          when Tok_Tolerance =>
             return "tolerance";
 
+         --  PSL operators
          when Tok_And_And =>
             return "&&";
          when Tok_Bar_Bar =>
@@ -432,8 +433,17 @@ package body Vhdl.Tokens is
          when Tok_Arobase =>
             return "@";
 
+         --  PSL keywords
          when Tok_Psl_Clock =>
             return "clock";
+         when Tok_Fell =>
+            return "fell";
+         when Tok_Rose =>
+            return "rose";
+         when Tok_Stable =>
+            return "stable";
+         when Tok_Prev =>
+            return "prev";
          when Tok_Psl_Endpoint =>
             return "endpoint";
          when Tok_Psl_Const =>

@@ -422,6 +422,9 @@ class fields:
     PSL_Nbr_States = 357
     PSL_Clock_Sensitivity = 358
     PSL_EOS_Flag = 359
+    Count_Expression = 360
+    Clock_Expression = 361
+    Clock = 362
 
 
 Get_Boolean = libghdl.vhdl__nodes_meta__get_boolean
@@ -1568,3 +1571,12 @@ Has_PSL_Clock_Sensitivity =\
 
 Has_PSL_EOS_Flag =\
     libghdl.vhdl__nodes_meta__has_psl_eos_flag
+
+Has_Count_Expression =\
+    libghdl.vhdl__nodes_meta__has_count_expression
+
+Has_Clock_Expression =\
+    libghdl.vhdl__nodes_meta__has_clock_expression
+
+Has_Clock =\
+    libghdl.vhdl__nodes_meta__has_clock

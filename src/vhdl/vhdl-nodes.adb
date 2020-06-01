@@ -1132,6 +1132,10 @@ package body Vhdl.Nodes is
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name
+           | Iir_Kind_Psl_Prev
+           | Iir_Kind_Psl_Stable
+           | Iir_Kind_Psl_Rose
+           | Iir_Kind_Psl_Fell
            | Iir_Kind_Psl_Expression
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
@@ -7179,5 +7183,53 @@ package body Vhdl.Nodes is
                      "no field PSL_EOS_Flag");
       Set_Flag1 (N, Flag);
    end Set_PSL_EOS_Flag;
+
+   function Get_Count_Expression (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Count_Expression (Get_Kind (N)),
+                     "no field Count_Expression");
+      return Get_Field2 (N);
+   end Get_Count_Expression;
+
+   procedure Set_Count_Expression (N : Iir; Count : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Count_Expression (Get_Kind (N)),
+                     "no field Count_Expression");
+      Set_Field2 (N, Count);
+   end Set_Count_Expression;
+
+   function Get_Clock_Expression (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Clock_Expression (Get_Kind (N)),
+                     "no field Clock_Expression");
+      return Get_Field4 (N);
+   end Get_Clock_Expression;
+
+   procedure Set_Clock_Expression (N : Iir; Clk : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Clock_Expression (Get_Kind (N)),
+                     "no field Clock_Expression");
+      Set_Field4 (N, Clk);
+   end Set_Clock_Expression;
+
+   function Get_Clock (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Clock (Get_Kind (N)),
+                     "no field Clock");
+      return Get_Field3 (N);
+   end Get_Clock;
+
+   procedure Set_Clock (N : Iir; Clk : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Clock (Get_Kind (N)),
+                     "no field Clock");
+      Set_Field3 (N, Clk);
+   end Set_Clock;
 
 end Vhdl.Nodes;

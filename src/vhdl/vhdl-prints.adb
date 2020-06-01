@@ -2267,6 +2267,27 @@ package body Vhdl.Prints is
       Close_Hbox (Ctxt);
    end Disp_Psl_Default_Clock;
 
+   procedure Disp_Psl_Prev (Ctxt : in out Ctxt_Class; Call : Iir)
+   is
+      Expr : Iir;
+   begin
+      Disp_Token (Ctxt, Tok_Prev);
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      Print (Ctxt, Get_Expression (Call));
+      Expr := Get_Count_Expression (Call);
+      if Expr /= Null_Iir then
+         Disp_Token (Ctxt, Tok_Comma);
+         Print (Ctxt, Expr);
+
+         Expr := Get_Clock_Expression (Call);
+         if Expr /= Null_Iir then
+            Disp_Token (Ctxt, Tok_Comma);
+            Print (Ctxt, Expr);
+         end if;
+      end if;
+      Disp_Token (Ctxt, Tok_Right_Paren);
+   end Disp_Psl_Prev;
+
    procedure Disp_Psl_Declaration (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
       Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
@@ -4728,6 +4749,9 @@ package body Vhdl.Prints is
          when Iir_Kind_Path_Name_Attribute =>
             Disp_Name_Attribute (Ctxt, Expr, Name_Path_Name);
 
+         when Iir_Kind_Psl_Prev =>
+            Disp_Psl_Prev (Ctxt, Expr);
+
          when Iir_Kinds_Type_And_Subtype_Definition =>
             Disp_Type (Ctxt, Expr);
 
@@ -4847,7 +4871,6 @@ package body Vhdl.Prints is
       end loop;
    end Disp_Str;
 
-
    function Need_Space (Tok, Prev_Tok : Token_Type) return Boolean is
    begin
       if Prev_Tok = Tok_Newline then
@@ -4900,6 +4923,7 @@ package body Vhdl.Prints is
         or Tok in Token_Relational_Operator_Type
         or Tok in Token_Adding_Operator_Type
         or Tok in Token_Multiplying_Operator_Type
+        or Tok = Tok_Minus_Greater
         or Tok = Tok_Bar
       then
          --  Always a space before '[', ':='.

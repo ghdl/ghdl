@@ -213,3 +213,7 @@ class Tok:
     Until_Em = 209
     Until_Un = 210
     Until_Em_Un = 211
+    Prev = 212
+    Stable = 213
+    Fell = 214
+    Rose = 215

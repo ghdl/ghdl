@@ -205,120 +205,124 @@ class Iir_Kind:
     Implicit_Dereference = 190
     Slice_Name = 191
     Indexed_Name = 192
-    Psl_Expression = 193
-    Sensitized_Process_Statement = 194
-    Process_Statement = 195
-    Concurrent_Simple_Signal_Assignment = 196
-    Concurrent_Conditional_Signal_Assignment = 197
-    Concurrent_Selected_Signal_Assignment = 198
-    Concurrent_Assertion_Statement = 199
-    Concurrent_Procedure_Call_Statement = 200
-    Concurrent_Break_Statement = 201
-    Psl_Assert_Directive = 202
-    Psl_Assume_Directive = 203
-    Psl_Cover_Directive = 204
-    Psl_Restrict_Directive = 205
-    Block_Statement = 206
-    If_Generate_Statement = 207
-    Case_Generate_Statement = 208
-    For_Generate_Statement = 209
-    Component_Instantiation_Statement = 210
-    Psl_Default_Clock = 211
-    Generate_Statement_Body = 212
-    If_Generate_Else_Clause = 213
-    Simple_Simultaneous_Statement = 214
-    Simultaneous_Null_Statement = 215
-    Simultaneous_Procedural_Statement = 216
-    Simultaneous_Case_Statement = 217
-    Simultaneous_If_Statement = 218
-    Simultaneous_Elsif = 219
-    Simple_Signal_Assignment_Statement = 220
-    Conditional_Signal_Assignment_Statement = 221
-    Selected_Waveform_Assignment_Statement = 222
-    Null_Statement = 223
-    Assertion_Statement = 224
-    Report_Statement = 225
-    Wait_Statement = 226
-    Variable_Assignment_Statement = 227
-    Conditional_Variable_Assignment_Statement = 228
-    Return_Statement = 229
-    For_Loop_Statement = 230
-    While_Loop_Statement = 231
-    Next_Statement = 232
-    Exit_Statement = 233
-    Case_Statement = 234
-    Procedure_Call_Statement = 235
-    Break_Statement = 236
-    If_Statement = 237
-    Elsif = 238
-    Character_Literal = 239
-    Simple_Name = 240
-    Selected_Name = 241
-    Operator_Symbol = 242
-    Reference_Name = 243
-    External_Constant_Name = 244
-    External_Signal_Name = 245
-    External_Variable_Name = 246
-    Selected_By_All_Name = 247
-    Parenthesis_Name = 248
-    Package_Pathname = 249
-    Absolute_Pathname = 250
-    Relative_Pathname = 251
-    Pathname_Element = 252
-    Base_Attribute = 253
-    Subtype_Attribute = 254
-    Element_Attribute = 255
-    Across_Attribute = 256
-    Through_Attribute = 257
-    Nature_Reference_Attribute = 258
-    Left_Type_Attribute = 259
-    Right_Type_Attribute = 260
-    High_Type_Attribute = 261
-    Low_Type_Attribute = 262
-    Ascending_Type_Attribute = 263
-    Image_Attribute = 264
-    Value_Attribute = 265
-    Pos_Attribute = 266
-    Val_Attribute = 267
-    Succ_Attribute = 268
-    Pred_Attribute = 269
-    Leftof_Attribute = 270
-    Rightof_Attribute = 271
-    Signal_Slew_Attribute = 272
-    Quantity_Slew_Attribute = 273
-    Ramp_Attribute = 274
-    Zoh_Attribute = 275
-    Ltf_Attribute = 276
-    Ztf_Attribute = 277
-    Dot_Attribute = 278
-    Integ_Attribute = 279
-    Above_Attribute = 280
-    Quantity_Delayed_Attribute = 281
-    Delayed_Attribute = 282
-    Stable_Attribute = 283
-    Quiet_Attribute = 284
-    Transaction_Attribute = 285
-    Event_Attribute = 286
-    Active_Attribute = 287
-    Last_Event_Attribute = 288
-    Last_Active_Attribute = 289
-    Last_Value_Attribute = 290
-    Driving_Attribute = 291
-    Driving_Value_Attribute = 292
-    Behavior_Attribute = 293
-    Structure_Attribute = 294
-    Simple_Name_Attribute = 295
-    Instance_Name_Attribute = 296
-    Path_Name_Attribute = 297
-    Left_Array_Attribute = 298
-    Right_Array_Attribute = 299
-    High_Array_Attribute = 300
-    Low_Array_Attribute = 301
-    Length_Array_Attribute = 302
-    Ascending_Array_Attribute = 303
-    Range_Array_Attribute = 304
-    Reverse_Range_Array_Attribute = 305
-    Attribute_Name = 306
+    Psl_Prev = 193
+    Psl_Stable = 194
+    Psl_Rose = 195
+    Psl_Fell = 196
+    Psl_Expression = 197
+    Sensitized_Process_Statement = 198
+    Process_Statement = 199
+    Concurrent_Simple_Signal_Assignment = 200
+    Concurrent_Conditional_Signal_Assignment = 201
+    Concurrent_Selected_Signal_Assignment = 202
+    Concurrent_Assertion_Statement = 203
+    Concurrent_Procedure_Call_Statement = 204
+    Concurrent_Break_Statement = 205
+    Psl_Assert_Directive = 206
+    Psl_Assume_Directive = 207
+    Psl_Cover_Directive = 208
+    Psl_Restrict_Directive = 209
+    Block_Statement = 210
+    If_Generate_Statement = 211
+    Case_Generate_Statement = 212
+    For_Generate_Statement = 213
+    Component_Instantiation_Statement = 214
+    Psl_Default_Clock = 215
+    Generate_Statement_Body = 216
+    If_Generate_Else_Clause = 217
+    Simple_Simultaneous_Statement = 218
+    Simultaneous_Null_Statement = 219
+    Simultaneous_Procedural_Statement = 220
+    Simultaneous_Case_Statement = 221
+    Simultaneous_If_Statement = 222
+    Simultaneous_Elsif = 223
+    Simple_Signal_Assignment_Statement = 224
+    Conditional_Signal_Assignment_Statement = 225
+    Selected_Waveform_Assignment_Statement = 226
+    Null_Statement = 227
+    Assertion_Statement = 228
+    Report_Statement = 229
+    Wait_Statement = 230
+    Variable_Assignment_Statement = 231
+    Conditional_Variable_Assignment_Statement = 232
+    Return_Statement = 233
+    For_Loop_Statement = 234
+    While_Loop_Statement = 235
+    Next_Statement = 236
+    Exit_Statement = 237
+    Case_Statement = 238
+    Procedure_Call_Statement = 239
+    Break_Statement = 240
+    If_Statement = 241
+    Elsif = 242
+    Character_Literal = 243
+    Simple_Name = 244
+    Selected_Name = 245
+    Operator_Symbol = 246
+    Reference_Name = 247
+    External_Constant_Name = 248
+    External_Signal_Name = 249
+    External_Variable_Name = 250
+    Selected_By_All_Name = 251
+    Parenthesis_Name = 252
+    Package_Pathname = 253
+    Absolute_Pathname = 254
+    Relative_Pathname = 255
+    Pathname_Element = 256
+    Base_Attribute = 257
+    Subtype_Attribute = 258
+    Element_Attribute = 259
+    Across_Attribute = 260
+    Through_Attribute = 261
+    Nature_Reference_Attribute = 262
+    Left_Type_Attribute = 263
+    Right_Type_Attribute = 264
+    High_Type_Attribute = 265
+    Low_Type_Attribute = 266
+    Ascending_Type_Attribute = 267
+    Image_Attribute = 268
+    Value_Attribute = 269
+    Pos_Attribute = 270
+    Val_Attribute = 271
+    Succ_Attribute = 272
+    Pred_Attribute = 273
+    Leftof_Attribute = 274
+    Rightof_Attribute = 275
+    Signal_Slew_Attribute = 276
+    Quantity_Slew_Attribute = 277
+    Ramp_Attribute = 278
+    Zoh_Attribute = 279
+    Ltf_Attribute = 280
+    Ztf_Attribute = 281
+    Dot_Attribute = 282
+    Integ_Attribute = 283
+    Above_Attribute = 284
+    Quantity_Delayed_Attribute = 285
+    Delayed_Attribute = 286
+    Stable_Attribute = 287
+    Quiet_Attribute = 288
+    Transaction_Attribute = 289
+    Event_Attribute = 290
+    Active_Attribute = 291
+    Last_Event_Attribute = 292
+    Last_Active_Attribute = 293
+    Last_Value_Attribute = 294
+    Driving_Attribute = 295
+    Driving_Value_Attribute = 296
+    Behavior_Attribute = 297
+    Structure_Attribute = 298
+    Simple_Name_Attribute = 299
+    Instance_Name_Attribute = 300
+    Path_Name_Attribute = 301
+    Left_Array_Attribute = 302
+    Right_Array_Attribute = 303
+    High_Array_Attribute = 304
+    Low_Array_Attribute = 305
+    Length_Array_Attribute = 306
+    Ascending_Array_Attribute = 307
+    Range_Array_Attribute = 308
+    Reverse_Range_Array_Attribute = 309
+    Attribute_Name = 310
 
 
 class Iir_Kinds:
@@ -450,6 +454,10 @@ class Iir_Kinds:
         Iir_Kind.External_Signal_Name,
         Iir_Kind.External_Variable_Name]
 
+    Dereference = [
+        Iir_Kind.Dereference,
+        Iir_Kind.Implicit_Dereference]
+
     Primary_Unit = [
         Iir_Kind.Entity_Declaration,
         Iir_Kind.Configuration_Declaration,
@@ -482,9 +490,11 @@ class Iir_Kinds:
         Iir_Kind.Package_Declaration,
         Iir_Kind.Package_Instantiation_Declaration]
 
-    Dereference = [
-        Iir_Kind.Dereference,
-        Iir_Kind.Implicit_Dereference]
+    Psl_Builtin = [
+        Iir_Kind.Psl_Prev,
+        Iir_Kind.Psl_Stable,
+        Iir_Kind.Psl_Rose,
+        Iir_Kind.Psl_Fell]
 
     Composite_Subtype_Definition = [
         Iir_Kind.Array_Subtype_Definition,
@@ -2986,3 +2996,15 @@ Set_PSL_Clock_Sensitivity = libghdl.vhdl__nodes__set_psl_clock_sensitivity
 Get_PSL_EOS_Flag = libghdl.vhdl__nodes__get_psl_eos_flag
 
 Set_PSL_EOS_Flag = libghdl.vhdl__nodes__set_psl_eos_flag
+
+Get_Count_Expression = libghdl.vhdl__nodes__get_count_expression
+
+Set_Count_Expression = libghdl.vhdl__nodes__set_count_expression
+
+Get_Clock_Expression = libghdl.vhdl__nodes__get_clock_expression
+
+Set_Clock_Expression = libghdl.vhdl__nodes__set_clock_expression
+
+Get_Clock = libghdl.vhdl__nodes__get_clock
+
+Set_Clock = libghdl.vhdl__nodes__set_clock
