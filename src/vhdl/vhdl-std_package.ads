@@ -174,14 +174,17 @@ package Vhdl.Std_Package is
    --  Wilcard types.
    --  Err, we break privacy for iir numbers, but this allow use of them in
    --  case statements.
-   Wildcard_Any_Type : constant Iir := 7;
+   Wildcard_Any_Type           : constant Iir := 7;
    Wildcard_Any_Aggregate_Type : constant Iir := 8;
-   Wildcard_Any_String_Type : constant Iir := 9;
-   Wildcard_Any_Access_Type : constant Iir := 10;
+   Wildcard_Any_String_Type    : constant Iir := 9;
+   Wildcard_Any_Access_Type    : constant Iir := 10;
+   Wildcard_Any_Integer_Type   : constant Iir := 11;
+   Wildcard_Psl_Bit_Type       : constant Iir := 12;
+   Wildcard_Psl_Bitvector_Type : constant Iir := 13;
 
    --  Subtype for all wildcard types, so that missing choice can be detected
    --  at compilation time.
-   subtype Iir_Wildcard_Types is Iir range 7 .. 10;
+   subtype Iir_Wildcard_Types is Iir range 7 .. 13;
 
    --  Chain of wildcard declarations, to own the nodes.
    Wildcard_Type_Declaration_Chain : Iir;

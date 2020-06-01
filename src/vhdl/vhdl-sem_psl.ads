@@ -19,6 +19,11 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Sem_Psl is
+   function Is_Psl_Bit_Type (Atype : Iir) return Boolean;
+   function Is_Psl_Bitvector_Type (Atype : Iir) return Boolean;
+
+   function Sem_Prev_Builtin (Call : Iir; Atype : Iir) return Iir;
+
    procedure Sem_Psl_Declaration (Stmt : Iir);
    procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir);
 

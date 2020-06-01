@@ -63,6 +63,66 @@ package body Vhdl.Sem_Psl is
       return Is_Psl_Bool_Type (Get_Type (Expr));
    end Is_Psl_Bool_Expr;
 
+   function Is_Psl_Bit_Type (Atype : Iir) return Boolean
+   is
+      Btype : constant Iir := Get_Base_Type (Atype);
+   begin
+      return Btype = Vhdl.Std_Package.Bit_Type_Definition
+        or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type;
+   end Is_Psl_Bit_Type;
+
+   function Is_Psl_Bitvector_Type (Atype : Iir) return Boolean is
+   begin
+      if not Is_One_Dimensional_Array_Type (Atype) then
+         return False;
+      end if;
+      return Is_Psl_Bit_Type (Get_Element_Subtype (Atype));
+   end Is_Psl_Bitvector_Type;
+
+   function Sem_Prev_Builtin (Call : Iir; Atype : Iir) return Iir
+   is
+      use Vhdl.Sem_Expr;
+      use Vhdl.Std_Package;
+      Expr  : Iir;
+      Count : Iir;
+      Clock : Iir;
+      First : Boolean;
+   begin
+      Expr := Get_Expression (Call);
+      First := Is_Expr_Not_Analyzed (Expr);
+      Expr := Sem_Expression_Ov (Expr, Atype);
+      if Expr /= Null_Iir then
+         Set_Expression (Call, Expr);
+         Set_Type (Call, Get_Type (Expr));
+         Set_Expr_Staticness (Call, None);
+      end if;
+
+      if First then
+         --  Analyze count and clock only once.
+         Count := Get_Count_Expression (Call);
+         if Count /= Null_Iir then
+            Count := Sem_Expression_Wildcard
+              (Count, Wildcard_Any_Integer_Type);
+            Count := Eval_Expr (Count);
+            Set_Count_Expression (Call, Count);
+         end if;
+
+         Clock := Get_Clock_Expression (Call);
+         if Clock /= Null_Iir then
+            Clock := Sem_Expression_Wildcard (Clock, Wildcard_Psl_Bit_Type);
+            Set_Clock_Expression (Call, Clock);
+         else
+            if Current_Psl_Default_Clock = Null_Iir then
+               Error_Msg_Sem (+Call, "no clock for PSL prev builtin");
+            else
+               Set_Default_Clock (Call, Current_Psl_Default_Clock);
+            end if;
+         end if;
+      end if;
+
+      return Call;
+   end Sem_Prev_Builtin;
+
    --  Convert VHDL and/or/not nodes to PSL nodes.
    function Convert_Bool (Expr : Iir) return PSL_Node
    is

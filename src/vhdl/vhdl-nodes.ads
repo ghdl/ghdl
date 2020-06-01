@@ -856,8 +856,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Clock_Expression (Field4)
    --
-   --  Reference to the clock node (can be the default one).
-   --   Get/Set_Clock (Field3)
+   --  Reference to the default_clock node.
+   --   Get/Set_Default_Clock (Field3)
+   --
+   --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_Psl_Stable (Short)
    -- Iir_Kind_Psl_Rose (Short)
@@ -869,8 +871,10 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Clock_Expression (Field4)
    --
-   --  Reference to the clock node (can be the default one).
-   --   Get/Set_Clock (Field3)
+   --  Reference to the defult_clock node.
+   --   Get/Set_Default_Clock (Field3)
+   --
+   --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_Signature (Medium)
    --
@@ -8992,8 +8996,8 @@ package Vhdl.Nodes is
    function Get_Clock_Expression (N : Iir) return Iir;
    procedure Set_Clock_Expression (N : Iir; Clk : Iir);
 
-   --  Reference to the clock node (can be the default one).
+   --  Reference to the default_clock node.
    --  Field: Field3 Ref
-   function Get_Clock (N : Iir) return Iir;
-   procedure Set_Clock (N : Iir; Clk : Iir);
+   function Get_Default_Clock (N : Iir) return Iir;
+   procedure Set_Default_Clock (N : Iir; Clk : Iir);
 end Vhdl.Nodes;

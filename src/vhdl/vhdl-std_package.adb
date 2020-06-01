@@ -108,6 +108,12 @@ package body Vhdl.Std_Package is
                         Wildcard_Any_String_Type);
       Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
                         Wildcard_Any_Access_Type);
+      Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
+                        Wildcard_Any_Integer_Type);
+      Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
+                        Wildcard_Psl_Bit_Type);
+      Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
+                        Wildcard_Psl_Bitvector_Type);
    end Create_First_Nodes;
 
    procedure Create_Std_Standard_Package (Parent : Iir_Library_Declaration)

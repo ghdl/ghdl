@@ -31,7 +31,6 @@ with Files_Map;
 with Simple_IO;
 
 with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Types;
 with Vhdl.Sem_Expr;
 with Vhdl.Sem_Inst;
 with Vhdl.Utils; use Vhdl.Utils;
@@ -40,9 +39,7 @@ with Vhdl.Evaluation;
 with Vhdl.Ieee.Std_Logic_1164;
 
 with PSL.Types;
-with PSL.Nodes;
 with PSL.NFAs;
-with PSL.Errors;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Decls; use Synth.Decls;
@@ -3114,71 +3111,6 @@ package body Synth.Stmts is
       Release (M, Proc_Pool);
       Instance_Pool := Prev_Instance_Pool;
    end Synth_Block_Statement;
-
-   function Synth_PSL_Expression
-     (Syn_Inst : Synth_Instance_Acc; Expr : PSL.Types.PSL_Node) return Net
-   is
-      use PSL.Types;
-      use PSL.Nodes;
-
-      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
-      Loc : constant Location_Type := Get_Location (Expr);
-      Res : Net;
-   begin
-      case Get_Kind (Expr) is
-         when N_HDL_Bool =>
-            declare
-               E : constant Vhdl.Types.Vhdl_Node := Get_HDL_Node (Expr);
-            begin
-               return Get_Net (Ctxt, Synth_Expression (Syn_Inst, E));
-            end;
-         when N_Not_Bool =>
-            pragma Assert (Loc /= No_Location);
-            Res := Build_Monadic
-              (Ctxt, Id_Not,
-               Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr)));
-         when N_And_Bool =>
-            pragma Assert (Loc /= No_Location);
-            declare
-               L : constant PSL_Node := Get_Left (Expr);
-               R : constant PSL_Node := Get_Right (Expr);
-               Edge : Net;
-            begin
-               --  Handle edge (as it can be in default clock).
-               if Get_Kind (L) in N_HDLs and then Get_Kind (R) in N_HDLs then
-                  Edge := Synth_Clock_Edge
-                    (Syn_Inst, Get_HDL_Node (L), Get_HDL_Node (R));
-                  if Edge /= No_Net then
-                     return Edge;
-                  end if;
-               end if;
-               if Get_Kind (R) = N_EOS then
-                  --  It is never EOS!
-                  Res := Build_Const_UB32 (Ctxt, 0, 1);
-               else
-                  Res := Build_Dyadic (Ctxt, Id_And,
-                                       Synth_PSL_Expression (Syn_Inst, L),
-                                       Synth_PSL_Expression (Syn_Inst, R));
-               end if;
-            end;
-         when N_Or_Bool =>
-            pragma Assert (Loc /= No_Location);
-            Res := Build_Dyadic
-              (Ctxt, Id_Or,
-               Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
-               Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
-         when N_True =>
-            Res := Build_Const_UB32 (Ctxt, 1, 1);
-         when N_False
-           | N_EOS =>
-            Res := Build_Const_UB32 (Ctxt, 0, 1);
-         when others =>
-            PSL.Errors.Error_Kind ("synth_psl_expr", Expr);
-            return No_Net;
-      end case;
-      Set_Location (Res, Loc);
-      return Res;
-   end Synth_PSL_Expression;
 
    function Synth_Psl_NFA (Syn_Inst : Synth_Instance_Acc;
                            NFA : PSL.Types.PSL_NFA;

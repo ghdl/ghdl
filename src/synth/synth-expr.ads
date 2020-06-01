@@ -22,6 +22,9 @@ with Ada.Unchecked_Deallocation;
 
 with Types; use Types;
 
+with PSL.Types;
+with Vhdl.Nodes; use Vhdl.Nodes;
+
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
 
@@ -29,7 +32,6 @@ with Synth.Source;
 with Synth.Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 with Synth.Context; use Synth.Context;
-with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Synth.Expr is
    --  Perform a subtype conversion.  Check constraints.
@@ -89,6 +91,9 @@ package Synth.Expr is
    --  EXPR is defined by itself or a range.
    function Synth_Expression_With_Basetype (Syn_Inst : Synth_Instance_Acc;
                                             Expr : Node) return Valtyp;
+
+   function Synth_PSL_Expression
+     (Syn_Inst : Synth_Instance_Acc; Expr : PSL.Types.PSL_Node) return Net;
 
    function Synth_Bounds_From_Range (Syn_Inst : Synth_Instance_Acc;
                                      Atype : Node) return Bound_Type;

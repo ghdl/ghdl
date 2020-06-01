@@ -3005,6 +3005,6 @@ Get_Clock_Expression = libghdl.vhdl__nodes__get_clock_expression
 
 Set_Clock_Expression = libghdl.vhdl__nodes__set_clock_expression
 
-Get_Clock = libghdl.vhdl__nodes__get_clock
+Get_Default_Clock = libghdl.vhdl__nodes__get_default_clock
 
-Set_Clock = libghdl.vhdl__nodes__set_clock
+Set_Default_Clock = libghdl.vhdl__nodes__set_default_clock

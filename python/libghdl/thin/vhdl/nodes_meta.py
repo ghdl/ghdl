@@ -424,7 +424,7 @@ class fields:
     PSL_EOS_Flag = 359
     Count_Expression = 360
     Clock_Expression = 361
-    Clock = 362
+    Default_Clock = 362
 
 
 Get_Boolean = libghdl.vhdl__nodes_meta__get_boolean
@@ -1578,5 +1578,5 @@ Has_Count_Expression =\
 Has_Clock_Expression =\
     libghdl.vhdl__nodes_meta__has_clock_expression
 
-Has_Clock =\
-    libghdl.vhdl__nodes_meta__has_clock
+Has_Default_Clock =\
+    libghdl.vhdl__nodes_meta__has_default_clock

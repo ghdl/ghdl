@@ -21,18 +21,20 @@ with Errorout; use Errorout;
 with Name_Table;
 with Str_Table;
 with Flags; use Flags;
+
 with Vhdl.Std_Package; use Vhdl.Std_Package;
-with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
-with Vhdl.Sem_Names; use Vhdl.Sem_Names;
-with Vhdl.Sem;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
+with Vhdl.Sem_Scopes; use Vhdl.Sem_Scopes;
+with Vhdl.Sem_Names; use Vhdl.Sem_Names;
+with Vhdl.Sem;
 with Vhdl.Sem_Types;
 with Vhdl.Sem_Stmts; use Vhdl.Sem_Stmts;
 with Vhdl.Sem_Assocs; use Vhdl.Sem_Assocs;
 with Vhdl.Sem_Decls;
+with Vhdl.Sem_Psl;
 with Vhdl.Xrefs; use Vhdl.Xrefs;
 
 package body Vhdl.Sem_Expr is
@@ -4436,6 +4438,8 @@ package body Vhdl.Sem_Expr is
             when Iir_Kind_Simple_Name
               | Iir_Kind_Selected_Name =>
                Obj := Get_Named_Entity (Obj);
+            when Iir_Kinds_Psl_Builtin =>
+               return;
             when Iir_Kind_Error =>
                return;
             when others =>
@@ -4821,6 +4825,9 @@ package body Vhdl.Sem_Expr is
                return Create_Error_Expr (Res, A_Type);
             end;
 
+         when Iir_Kind_Psl_Prev =>
+            return Sem_Psl.Sem_Prev_Builtin (Expr, A_Type);
+
          when Iir_Kind_Error =>
             --  Always ok.
             --  Use the error as a type.
@@ -4858,25 +4865,72 @@ package body Vhdl.Sem_Expr is
                      return Wildcard_Any_Aggregate_Type;
                   when Wildcard_Any_String_Type =>
                      return Wildcard_Any_String_Type;
-                  when Wildcard_Any_Access_Type =>
+                  when Wildcard_Psl_Bitvector_Type =>
+                     return Wildcard_Psl_Bitvector_Type;
+                  when Wildcard_Any_Access_Type
+                     | Wildcard_Any_Integer_Type
+                     | Wildcard_Psl_Bit_Type =>
                      return Null_Iir;
                end case;
             when Wildcard_Any_String_Type =>
                case Iir_Wildcard_Types (Atype) is
                   when Wildcard_Any_Type
-                    | Wildcard_Any_Aggregate_Type
-                    | Wildcard_Any_String_Type =>
+                     | Wildcard_Any_Aggregate_Type
+                     | Wildcard_Any_String_Type =>
                      return Wildcard_Any_String_Type;
-                  when Wildcard_Any_Access_Type =>
+                  when Wildcard_Psl_Bitvector_Type =>
+                     return Wildcard_Psl_Bitvector_Type;
+                  when Wildcard_Any_Access_Type
+                     | Wildcard_Any_Integer_Type
+                     | Wildcard_Psl_Bit_Type =>
                      return Null_Iir;
                end case;
             when Wildcard_Any_Access_Type =>
                case Iir_Wildcard_Types (Atype) is
                   when Wildcard_Any_Type
-                    | Wildcard_Any_Access_Type =>
+                     | Wildcard_Any_Access_Type =>
                      return Wildcard_Any_Access_Type;
                   when Wildcard_Any_Aggregate_Type
-                    | Wildcard_Any_String_Type =>
+                     | Wildcard_Any_String_Type
+                     | Wildcard_Any_Integer_Type
+                     | Wildcard_Psl_Bit_Type
+                     | Wildcard_Psl_Bitvector_Type =>
+                     return Null_Iir;
+               end case;
+            when Wildcard_Any_Integer_Type =>
+               case Iir_Wildcard_Types (Atype) is
+                  when Wildcard_Any_Type
+                     | Wildcard_Any_Integer_Type =>
+                     return Wildcard_Any_Integer_Type;
+                  when Wildcard_Any_Access_Type
+                     | Wildcard_Any_Aggregate_Type
+                     | Wildcard_Any_String_Type
+                     | Wildcard_Psl_Bit_Type
+                     | Wildcard_Psl_Bitvector_Type =>
+                     return Null_Iir;
+               end case;
+            when Wildcard_Psl_Bit_Type =>
+               case Iir_Wildcard_Types (Atype) is
+                  when Wildcard_Any_Type
+                     | Wildcard_Psl_Bit_Type =>
+                     return Wildcard_Psl_Bit_Type;
+                  when Wildcard_Any_Access_Type
+                     | Wildcard_Any_Aggregate_Type
+                     | Wildcard_Any_String_Type
+                     | Wildcard_Any_Integer_Type
+                     | Wildcard_Psl_Bitvector_Type =>
+                     return Null_Iir;
+               end case;
+            when Wildcard_Psl_Bitvector_Type =>
+               case Iir_Wildcard_Types (Atype) is
+                  when Wildcard_Any_Type
+                     | Wildcard_Any_Aggregate_Type
+                     | Wildcard_Any_String_Type
+                     | Wildcard_Psl_Bitvector_Type =>
+                     return Wildcard_Psl_Bitvector_Type;
+                  when Wildcard_Any_Access_Type
+                     | Wildcard_Any_Integer_Type
+                     | Wildcard_Psl_Bit_Type =>
                      return Null_Iir;
                end case;
          end case;
@@ -4897,6 +4951,20 @@ package body Vhdl.Sem_Expr is
                if Get_Kind (Get_Base_Type (Atype))
                  = Iir_Kind_Access_Type_Definition
                then
+                  return Atype;
+               end if;
+            when Wildcard_Any_Integer_Type =>
+               if Get_Kind (Get_Base_Type (Atype))
+                 = Iir_Kind_Integer_Type_Definition
+               then
+                  return Atype;
+               end if;
+            when Wildcard_Psl_Bit_Type =>
+               if Sem_Psl.Is_Psl_Bit_Type (Atype) then
+                  return Atype;
+               end if;
+            when Wildcard_Psl_Bitvector_Type =>
+               if Sem_Psl.Is_Psl_Bitvector_Type (Atype) then
                   return Atype;
                end if;
          end case;

@@ -24,6 +24,7 @@ with Std_Names;
 with Str_Table;
 with Mutils; use Mutils;
 
+with Vhdl.Types;
 with Vhdl.Ieee.Std_Logic_1164; use Vhdl.Ieee.Std_Logic_1164;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -31,9 +32,13 @@ with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Annotations; use Vhdl.Annotations;
 
+with PSL.Nodes;
+with PSL.Errors;
+
 with Netlists.Gates; use Netlists.Gates;
 with Netlists.Folds; use Netlists.Folds;
 with Netlists.Utils; use Netlists.Utils;
+with Netlists.Locations;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Environment;
@@ -1779,6 +1784,113 @@ package body Synth.Expr is
       return Create_Value_Discrete (R, Typ);
    end Synth_Low_High_Type_Attribute;
 
+   function Synth_PSL_Expression
+     (Syn_Inst : Synth_Instance_Acc; Expr : PSL.Types.PSL_Node) return Net
+   is
+      use PSL.Types;
+      use PSL.Nodes;
+
+      Ctxt : constant Context_Acc := Get_Build (Syn_Inst);
+      Loc : constant Location_Type := Get_Location (Expr);
+      Res : Net;
+   begin
+      case Get_Kind (Expr) is
+         when N_HDL_Bool =>
+            declare
+               E : constant Vhdl.Types.Vhdl_Node := Get_HDL_Node (Expr);
+            begin
+               return Get_Net (Ctxt, Synth_Expression (Syn_Inst, E));
+            end;
+         when N_Not_Bool =>
+            pragma Assert (Loc /= No_Location);
+            Res := Build_Monadic
+              (Ctxt, Id_Not,
+               Synth_PSL_Expression (Syn_Inst, Get_Boolean (Expr)));
+         when N_And_Bool =>
+            pragma Assert (Loc /= No_Location);
+            declare
+               L : constant PSL_Node := Get_Left (Expr);
+               R : constant PSL_Node := Get_Right (Expr);
+               Edge : Net;
+            begin
+               --  Handle edge (as it can be in default clock).
+               if Get_Kind (L) in N_HDLs and then Get_Kind (R) in N_HDLs then
+                  Edge := Synth_Clock_Edge
+                    (Syn_Inst, Get_HDL_Node (L), Get_HDL_Node (R));
+                  if Edge /= No_Net then
+                     return Edge;
+                  end if;
+               end if;
+               if Get_Kind (R) = N_EOS then
+                  --  It is never EOS!
+                  Res := Build_Const_UB32 (Ctxt, 0, 1);
+               else
+                  Res := Build_Dyadic (Ctxt, Id_And,
+                                       Synth_PSL_Expression (Syn_Inst, L),
+                                       Synth_PSL_Expression (Syn_Inst, R));
+               end if;
+            end;
+         when N_Or_Bool =>
+            pragma Assert (Loc /= No_Location);
+            Res := Build_Dyadic
+              (Ctxt, Id_Or,
+               Synth_PSL_Expression (Syn_Inst, Get_Left (Expr)),
+               Synth_PSL_Expression (Syn_Inst, Get_Right (Expr)));
+         when N_True =>
+            Res := Build_Const_UB32 (Ctxt, 1, 1);
+         when N_False
+           | N_EOS =>
+            Res := Build_Const_UB32 (Ctxt, 0, 1);
+         when others =>
+            PSL.Errors.Error_Kind ("synth_psl_expr", Expr);
+            return No_Net;
+      end case;
+      Netlists.Locations.Set_Location (Get_Net_Parent (Res), Loc);
+      return Res;
+   end Synth_PSL_Expression;
+
+   function Synth_Psl_Prev (Syn_Inst : Synth_Instance_Acc; Call : Node)
+                            return Valtyp
+   is
+      Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
+      Count     : constant Node := Get_Count_Expression (Call);
+      Clock     : Node;
+      Count_Val : Valtyp;
+      Dff       : Net;
+      Clk       : Valtyp;
+      Expr      : Valtyp;
+      Clk_Net   : Net;
+      Num       : Int64;
+   begin
+      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+
+      Clock := Get_Clock_Expression (Call);
+      if Clock /= Null_Node then
+         Clk := Synth_Expression (Syn_Inst, Clock);
+         Clk_Net := Get_Net (Ctxt, Clk);
+      else
+         Clock := Get_Default_Clock (Call);
+         pragma Assert (Clock /= Null_Node);
+         Clk_Net := Synth_PSL_Expression (Syn_Inst, Get_Psl_Boolean (Clock));
+      end if;
+
+      if Count /= Null_Node then
+         Count_Val := Synth_Expression (Syn_Inst, Count);
+         Num := Read_Discrete (Count_Val);
+         pragma Assert (Num >= 1);
+      else
+         Num := 1;
+      end if;
+
+      Dff := Get_Net (Ctxt, Expr);
+      for I in 1 .. Num loop
+         Dff := Build_Dff (Ctxt, Clk_Net, Dff);
+         Set_Location (Dff, Call);
+      end loop;
+
+      return Create_Value_Net (Dff, Expr.Typ);
+   end Synth_Psl_Prev;
+
    subtype And_Or_Module_Id is Module_Id range Id_And .. Id_Or;
 
    function Synth_Short_Circuit (Syn_Inst : Synth_Instance_Acc;
@@ -2117,6 +2229,8 @@ package body Synth.Expr is
          when Iir_Kind_Stable_Attribute =>
             Error_Msg_Synth (+Expr, "signal attribute not supported");
             return No_Valtyp;
+         when Iir_Kind_Psl_Prev =>
+            return Synth_Psl_Prev (Syn_Inst, Expr);
          when Iir_Kind_Overflow_Literal =>
             Error_Msg_Synth (+Expr, "out of bound expression");
             return No_Valtyp;
