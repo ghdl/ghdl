@@ -77,14 +77,20 @@ Here is the list of the most useful options. For further info, see :ref:`DEV:Deb
   useful.
 
 .. option:: --ieee-asserts=<POLICY>
+.. option:: --asserts=<POLICY>
 
-  Select how the assertions from ``ieee`` units are
-  handled. `POLICY` can be ``enable`` (the default),
-  ``disable`` which disables all assertions from ``ieee`` packages
-  and ``disable-at-0`` which disables only at the start of simulation.
+  Select how assertions are handled.  `POLICY` can be ``enable`` (the
+  default), ``disable`` which disables all assertions and
+  ``disable-at-0`` which disables only at the start of simulation.
 
-  This option can be useful to avoid assertion messages from
+  The ``--ieee-asserts`` applies only to assertions from ``ieee``
+  package.  This option can be useful to avoid assertion messages from
   ``ieee.numeric_std`` (and other ``ieee`` packages).
+
+  The ``--asserts`` option applies to all assertions, including those
+  from the ``ieee`` units.  The behaviour of the latter can be
+  overridden by using the ``--ieee-asserts`` option after the
+  ``--asserts`` option.
 
 .. option:: --stop-time=<TIME>
 

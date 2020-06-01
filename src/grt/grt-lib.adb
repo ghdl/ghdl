@@ -27,7 +27,7 @@ with Interfaces;
 with Grt.Errors; use Grt.Errors;
 with Grt.Errors_Exec; use Grt.Errors_Exec;
 with Grt.Severity;
-with Grt.Options;
+with Grt.Options; use Grt.Options;
 with Grt.Fcvt;
 with Grt.Backtraces;
 
@@ -96,25 +96,28 @@ package body Grt.Lib is
       end if;
    end Do_Report;
 
-   procedure Ghdl_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr)
-   is
+   function Is_Assert_Disabled (Policy : Assert_Handling) return Boolean is
    begin
+      return Policy = Disable_Asserts
+        or else (Policy = Disable_Asserts_At_Time_0 and Current_Time = 0);
+   end Is_Assert_Disabled;
+
+   procedure Ghdl_Assert_Failed
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
+   begin
+      if Is_Assert_Disabled (Asserts_Policy) then
+         return;
+      end if;
       Do_Report ("assertion", Str, "Assertion violation", Severity, Loc);
    end Ghdl_Assert_Failed;
 
    procedure Ghdl_Ieee_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr)
-   is
-      use Grt.Options;
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
    begin
-      if Ieee_Asserts = Disable_Asserts
-        or else (Ieee_Asserts = Disable_Asserts_At_Time_0 and Current_Time = 0)
-      then
+      if Is_Assert_Disabled (Ieee_Asserts) then
          return;
-      else
-         Do_Report ("assertion", Str, "Assertion violation", Severity, Loc);
       end if;
+      Do_Report ("assertion", Str, "Assertion violation", Severity, Loc);
    end Ghdl_Ieee_Assert_Failed;
 
    procedure Ghdl_Psl_Assert_Failed
@@ -290,7 +293,6 @@ package body Grt.Lib is
 
    procedure Ghdl_Check_Stack_Allocation (Size : Ghdl_Index_Type)
    is
-      use Options;
       Bt : Backtrace_Addrs;
    begin
       if Max_Stack_Allocation = 0 then

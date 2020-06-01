@@ -135,6 +135,9 @@ package Grt.Options is
    --  Handling of assertions from IEEE library.
    Ieee_Asserts : Assert_Handling := Enable_Asserts;
 
+   --  Handling of assertions (except from IEEE library).
+   Asserts_Policy : Assert_Handling := Enable_Asserts;
+
    --  Set by --stop-delta=XXX to stop the simulation after XXX delta cycles.
    Stop_Delta : Natural := 5000;
 

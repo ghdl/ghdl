@@ -73,7 +73,8 @@ package body Grt.Options is
       P ("       LEVEL is note,warning,error,failure,none");
       P (" --backtrace-severity=LEVEL  display a backtrace for assertions");
       P (" --ieee-asserts=POLICY  enable or disable asserts from IEEE");
-      P ("       POLICY is enable,disable,disable-at-0");
+      P ("       POLICY is enable, disable, disable-at-0");
+      P (" --asserts=POLICY  enable or disable asserts");
       P (" --stop-time=X     stop the simulation at time X");
       P ("       X is expressed as a time value, without spaces: 1ns, ps...");
       P (" --stop-delta=X    stop the simulation cycle after X delta");
@@ -212,6 +213,23 @@ package body Grt.Options is
       end if;
    end Parse_Severity;
 
+   function Parse_Policy (Opt_Name : String; Arg : String)
+                          return Assert_Handling is
+   begin
+      if Arg = "disable" then
+         return Disable_Asserts;
+      elsif Arg = "enable" then
+         return Enable_Asserts;
+      elsif Arg = "disable-at-0" then
+         return Disable_Asserts_At_Time_0;
+      else
+         Error_S ("bad argument for ");
+         Diag_C (Opt_Name);
+         Error_E (" option, try --help");
+         return Enable_Asserts;
+      end if;
+   end Parse_Policy;
+
    procedure Decode_Option
      (Option : String; Status : out Decode_Option_Status)
    is
@@ -305,15 +323,10 @@ package body Grt.Options is
             end if;
          end;
       elsif Len > 15 and then Option (1 .. 15) = "--ieee-asserts=" then
-         if Option (16 .. Len) = "disable" then
-            Ieee_Asserts := Disable_Asserts;
-         elsif Option (16 .. Len) = "enable" then
-            Ieee_Asserts := Enable_Asserts;
-         elsif Option (16 .. Len) = "disable-at-0" then
-            Ieee_Asserts := Disable_Asserts_At_Time_0;
-         else
-            Error ("bad argument for --ieee-asserts option, try --help");
-         end if;
+         Ieee_Asserts := Parse_Policy ("--ieee-asserts", Option (16 .. Len));
+      elsif Len > 10 and then Option (1 .. 10) = "--asserts=" then
+         Asserts_Policy := Parse_Policy ("--asserts", Option (11 .. Len));
+         Ieee_Asserts := Asserts_Policy;
       elsif Option = "--expect-failure" then
          Expect_Failure := True;
       elsif Len >= 13 and then Option (1 .. 13) = "--stack-size=" then
