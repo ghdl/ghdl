@@ -525,7 +525,7 @@ package body Netlists.Memories is
    --  swap the dff and the concat.  This will allow to merge the dff during
    --  the build of mem_rd_sync.
    --  This creates new gates (the dff is replicated) that will be removed.
-   procedure Maybe_Swap_Concat_Dff (Ctxt : Context_Acc; Extract : Instance)
+   procedure Maybe_Swap_Concat_Mux_Dff (Ctxt : Context_Acc; Extract : Instance)
    is
       Extr_Out : constant Net := Get_Output (Extract, 0);
       Concat : Instance;
@@ -603,7 +603,155 @@ package body Netlists.Memories is
       --  Reconnect the concat.
       Redirect_Inputs (Get_Output (Dff, 0), Concat_Out);
       Remove_Instance (Dff);
-   end Maybe_Swap_Concat_Dff;
+   end Maybe_Swap_Concat_Mux_Dff;
+
+   procedure Maybe_Swap_Mux_Concat_Dff (Ctxt : Context_Acc; Extract : Instance)
+   is
+      Concat     : Instance;
+      Concat_Out : Net;
+      Dff        : Instance;
+      Dff_Inp    : Input;
+      Dff_Out    : Net;
+      Dff_Off    : Uns32;
+      Clk, En    : Net;
+      Loc        : Location_Type;
+   begin
+      declare
+         Extr_Out   : constant Net := Get_Output (Extract, 0);
+         Mux_Inp    : Input;
+         Mux        : Instance;
+         Mux_Out    : Net;
+         Concat_Inp : Input;
+      begin
+         if not Has_One_Connection (Extr_Out) then
+            --  The dyn_extract is connected to more than one gate.
+            return;
+         end if;
+
+         --  The output is connected to a Mux2.
+         Mux_Inp := Get_First_Sink (Extr_Out);
+         Mux := Get_Input_Parent (Mux_Inp);
+         if Get_Id (Mux) /= Id_Mux2 then
+            --  Not a mux2.
+            return;
+         end if;
+         Mux_Out := Get_Output (Mux, 0);
+
+         if not Has_One_Connection (Mux_Out) then
+            return;
+         end if;
+
+         --  The Mux2 output is connected to a concat.
+         Concat_Inp := Get_First_Sink (Mux_Out);
+         Concat := Get_Input_Parent (Concat_Inp);
+         case Get_Id (Concat) is
+            when Concat_Module_Id
+               | Id_Concatn =>
+               null;
+            when others =>
+               --  Not a concat.
+               return;
+         end case;
+
+         --  The concat is connected to a dff.
+         Concat_Out := Get_Output (Concat, 0);
+         if not Has_One_Connection (Concat_Out) then
+            --  The concat is connected to more than one gate.
+            return;
+         end if;
+         Dff_Inp := Get_First_Sink (Concat_Out);
+         Dff := Get_Input_Parent (Dff_Inp);
+         if Get_Id (Dff) /= Id_Dff then
+            return;
+         end if;
+      end;
+
+      --  Check all concat inputs are connected to a mux2, which is
+      --  connected to a dyn_extract.
+      Dff_Out := Get_Output (Dff, 0);
+      Dff_Off := 0;
+      for I in reverse 1 .. Get_Nbr_Inputs (Concat) loop
+         declare
+            Mux_Net   : constant Net := Get_Input_Net (Concat, I - 1);
+            Mux_Inst  : constant Instance := Get_Net_Parent (Mux_Net);
+            Extr_Net  : Net;
+            Extr_Inst : Instance;
+         begin
+            if Get_Id (Mux_Inst) /= Id_Mux2 then
+               return;
+            end if;
+            if not Has_One_Connection (Mux_Net) then
+               --  A source of concat drives something else!
+               return;
+            end if;
+
+            Extr_Net := Get_Input_Net (Mux_Inst, 2);
+            if Get_Id (Get_Net_Parent (Extr_Net)) /= Id_Dyn_Extract then
+               --  A source of concat is not a dyn_extract.
+               return;
+            end if;
+            if not Has_One_Connection (Extr_Net) then
+               --  A source of concat drives something else!
+               return;
+            end if;
+
+            --  Check the Mux2 is a enable for the dff.
+            Extr_Net := Get_Input_Net (Mux_Inst, 1);
+            Extr_Inst := Get_Net_Parent (Extr_Net);
+            if Get_Id (Extr_Inst) /= Id_Extract then
+               return;
+            end if;
+            if Get_Param_Uns32 (Extr_Inst, 0) /= Dff_Off then
+               return;
+            end if;
+            if Get_Input_Net (Extr_Inst, 0) /= Dff_Out then
+               return;
+            end if;
+            Dff_Off := Dff_Off + Get_Width (Mux_Net);
+         end;
+      end loop;
+
+      Extract_Extract_Dff (Ctxt, Concat, Dff, Clk, En);
+      if Clk = No_Net then
+         return;
+      end if;
+      --  There is no additional enabler for the dff.
+      pragma Assert (En = No_Net);
+
+      --  Replicate the dff.
+      Loc := Get_Location (Dff);
+      for I in 1 .. Get_Nbr_Inputs (Concat) loop
+         declare
+            Inp       : constant Input := Get_Input (Concat, I - 1);
+            Dff2      : Net;
+            Mux_Inst2 : Instance;
+            Mux_Inp2  : Input;
+            Src       : Net;
+            Extr_Out2 : Net;
+            Extr_Inst2 : Instance;
+         begin
+            --  Disconnect the mux2.
+            Src := Disconnect_And_Get (Inp);
+
+            Dff2 := Build_Dff (Ctxt, Clk, Src);
+            Set_Location (Dff2, Loc);
+            Connect (Inp, Dff2);
+
+            Mux_Inst2 := Get_Net_Parent (Src);
+            Mux_Inp2 := Get_Input (Mux_Inst2, 1);
+            Extr_Out2 := Disconnect_And_Get (Mux_Inp2);
+            Connect (Mux_Inp2, Dff2);
+
+            Extr_Inst2 := Get_Net_Parent (Extr_Out2);
+            Disconnect (Get_Input (Extr_Inst2, 0));
+            Remove_Instance (Extr_Inst2);
+         end;
+      end loop;
+
+      --  Reconnect the concat.
+      Redirect_Inputs (Get_Output (Dff, 0), Concat_Out);
+      Remove_Instance (Dff);
+   end Maybe_Swap_Mux_Concat_Dff;
 
    --  Create a mem_rd/mem_rd_sync from a dyn_extract gate.
    --  LAST is the last memory port on the chain.
@@ -1561,7 +1709,10 @@ package body Netlists.Memories is
       Addr := Get_Driver (Inp2);
       Disconnect (Inp2);
       Convert_Memidx (Ctxt, Mem_Sz, Addr, Mem_W);
-      Maybe_Swap_Concat_Dff (Ctxt, In_Inst);
+
+      Maybe_Swap_Concat_Mux_Dff (Ctxt, In_Inst);
+      Maybe_Swap_Mux_Concat_Dff (Ctxt, In_Inst);
+
       Extract_Extract_Dff (Ctxt, In_Inst, Last_Inst, Clk, En);
       if Clk /= No_Net and then En = No_Net then
          En := Build_Const_UB32 (Ctxt, 1, 1);
