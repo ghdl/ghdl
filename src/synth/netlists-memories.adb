@@ -753,6 +753,246 @@ package body Netlists.Memories is
       Remove_Instance (Dff);
    end Maybe_Swap_Mux_Concat_Dff;
 
+   --  Generic procedure to call CB on each memory future port (dyn_insert
+   --  or dyn_extract).
+   generic
+      type Data_Type is private;
+      with procedure Cb (Inst : Instance;
+                         Data : in out Data_Type;
+                         Fail : out Boolean);
+   procedure Foreach_Port (Sig : Instance; Data : in out Data_Type);
+
+   procedure Foreach_Port (Sig : Instance; Data : in out Data_Type)
+   is
+      Fail : Boolean;
+      Inst, Inst2 : Instance;
+      Inp2        : Input;
+   begin
+      --  Top-level loop, for each parallel path of multiport RAMs.
+      Inp2 := Get_First_Sink (Get_Output (Sig, 0));
+      while Inp2 /= No_Input loop
+         Inst2 := Get_Input_Parent (Inp2);
+         case Get_Id (Inst2) is
+            when Id_Dyn_Extract =>
+               Cb (Inst2, Data, Fail);
+               if Fail then
+                  return;
+               end if;
+            when Id_Dyn_Insert
+               | Id_Dyn_Insert_En =>
+               Cb (Inst2, Data, Fail);
+               if Fail then
+                  return;
+               end if;
+               --  Walk till the signal.
+               Inst := Inst2;
+               loop
+                  declare
+                     Inp : Input;
+                     N_Inst : Instance;
+                     In_Inst : Instance;
+                  begin
+                     --  Check gates connected to the output.
+                     Inp := Get_First_Sink (Get_Output (Inst, 0));
+                     N_Inst := No_Instance;
+                     while Inp /= No_Input loop
+                        In_Inst := Get_Input_Parent (Inp);
+                        case Get_Id (In_Inst) is
+                           when Id_Dyn_Extract =>
+                              Cb (In_Inst, Data, Fail);
+                              if Fail then
+                                 return;
+                              end if;
+                           when Id_Dyn_Insert_En
+                              | Id_Dyn_Insert =>
+                              Cb (In_Inst, Data, Fail);
+                              if Fail then
+                                 return;
+                              end if;
+                              pragma Assert (N_Inst = No_Instance);
+                              N_Inst := In_Inst;
+                           when Id_Signal
+                              | Id_Isignal
+                              | Id_Mem_Multiport =>
+                              pragma Assert (N_Inst = No_Instance);
+                              N_Inst := In_Inst;
+                           when others =>
+                              raise Internal_Error;
+                        end case;
+                        Inp := Get_Next_Sink (Inp);
+                     end loop;
+                     Inst := N_Inst;
+                     exit when Inst = Sig;
+                  end;
+               end loop;
+            when others =>
+               raise Internal_Error;
+         end case;
+         Inp2 := Get_Next_Sink (Inp2);
+      end loop;
+   end Foreach_Port;
+
+   type Gather_Ports_Type is record
+      Ports : Instance_Array_Acc;
+      Nports : Nat32;
+   end record;
+
+   procedure Gather_Ports_Cb
+     (Inst : Instance; Data : in out Gather_Ports_Type; Fail : out Boolean) is
+   begin
+      Data.Nports := Data.Nports + 1;
+      Data.Ports (Data.Nports) := Inst;
+      Fail := False;
+   end Gather_Ports_Cb;
+
+   procedure Gather_Ports_Foreach is
+     new Foreach_Port (Data_Type => Gather_Ports_Type,
+                       Cb => Gather_Ports_Cb);
+
+   --  Fill PORTS with all the ports from the SIG chain.
+   procedure Gather_Ports (Sig : Instance; Ports : Instance_Array_Acc)
+   is
+      Data : Gather_Ports_Type;
+   begin
+      Data := (Ports, 0);
+      Gather_Ports_Foreach (Sig, Data);
+      pragma Assert (Data.Nports = Ports'Last);
+   end Gather_Ports;
+
+   --  Check if the index of Memidx MIDX is of the form: MAX - off,
+   --  where MAX is the maximum value of off.
+   function Is_Reverse_Range (Midx : Instance) return Boolean
+   is
+      pragma Assert (Get_Id (Midx) = Id_Memidx);
+      Sub : constant Instance := Get_Input_Instance (Midx, 0);
+      Val : Instance;
+   begin
+      if Get_Id (Sub) /= Id_Sub then
+         return False;
+      end if;
+      Val := Get_Input_Instance (Sub, 0);
+      if Get_Id (Val) /= Id_Const_UB32 then
+         return False;
+      end if;
+      return Get_Param_Uns32 (Val, 0) = Get_Param_Uns32 (Midx, 1);
+   end Is_Reverse_Range;
+
+   procedure Maybe_Remap_Address
+     (Ctxt : Context_Acc; Sig : Instance; Nbr_Ports : Nat32)
+   is
+      pragma Unreferenced (Ctxt);
+      Ports : Instance_Array_Acc;
+   begin
+      Ports := new Instance_Array (1 .. Nbr_Ports);
+
+      --  1. Gather all ports.
+      Gather_Ports (Sig, Ports);
+
+      --  2. From ports, get the index.
+      for I in Ports'Range loop
+         declare
+            P   : constant Instance := Ports (I);
+            Idx : Input;
+         begin
+            case Get_Id (P) is
+               when Id_Dyn_Extract =>
+                  Idx := Get_Input (P, 1);
+               when Id_Dyn_Insert
+                  | Id_Dyn_Insert_En =>
+                  Idx := Get_Input (P, 2);
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Ports (I) := Get_Net_Parent (Get_Driver (Idx));
+         end;
+      end loop;
+
+      --  3.  For each dimension
+      loop
+         declare
+            M          : Instance;
+            Done       : Boolean;
+            Idx        : Net;
+            Is_Reverse : Boolean;
+            W          : Width;
+            Step       : Uns32;
+            Max        : Uns32;
+         begin
+            Done := False;
+            for I in Ports'Range loop
+               --  Get the index (memidx gate).
+               M := Ports (I);
+               case Get_Id (M) is
+                  when Id_Memidx =>
+                     null;
+                  when Id_Addidx =>
+                     M := Get_Net_Parent (Get_Output (M, 0));
+                     pragma Assert (Get_Id (M) = Id_Memidx);
+                  when others =>
+                     raise Internal_Error;
+               end case;
+
+               Idx := Get_Input_Net (M, 0);
+               if I = 1 then
+                  W := Get_Width (Idx);
+                  Step := Get_Param_Uns32 (M, 0);
+                  Max := Get_Param_Uns32 (M, 1);
+                  Is_Reverse := Is_Reverse_Range (M);
+               else
+                  if Get_Width (Idx) /= W
+                    or else Get_Param_Uns32 (M, 0) /= Step
+                    or else Get_Param_Uns32 (M, 1) /= Max
+                    or else Is_Reverse_Range (M) /= Is_Reverse
+                  then
+                     --  Different width, steps or direction.
+                     Done := True;
+                     exit;
+                  end if;
+               end if;
+            end loop;
+
+            exit when Done;
+
+            --  Update ports.
+            for I in Ports'Range loop
+               M := Ports (I);
+               case Get_Id (M) is
+                  when Id_Memidx =>
+                     Ports (I) := No_Instance;
+                     Done := True;
+                  when Id_Addidx =>
+                     M := Get_Net_Parent (Get_Output (M, 0));
+                     pragma Assert (Get_Id (M) = Id_Memidx);
+                     Ports (I) := Get_Net_Parent (Get_Output (M, 1));
+                  when others =>
+                     raise Internal_Error;
+               end case;
+
+               if Is_Reverse then
+                  declare
+                     Inp : constant Input := Get_Input (M, 0);
+                     Sub : constant Instance :=
+                       Get_Net_Parent (Get_Driver (Inp));
+                     Addr_Inp : constant Input := Get_Input (Sub, 1);
+                     Val : Net;
+                  begin
+                     --  Disconnect the sub, and connect the address directly.
+                     Disconnect (Inp);
+                     Connect (Inp, Disconnect_And_Get (Addr_Inp));
+                     --  Remove the sub and the constant.
+                     Val := Disconnect_And_Get (Get_Input (Sub, 0));
+                     Remove_Instance (Get_Net_Parent (Val));
+                     Remove_Instance (Sub);
+                  end;
+               end if;
+            end loop;
+            exit when Done;
+         end;
+      end loop;
+
+      Free_Instance_Array (Ports);
+   end Maybe_Remap_Address;
+
    --  Create a mem_rd/mem_rd_sync from a dyn_extract gate.
    --  LAST is the last memory port on the chain.
    --  ADDR is the address (from the dyn_extract).
@@ -1891,6 +2131,24 @@ package body Netlists.Memories is
       end loop;
    end Create_Memory_Ports;
 
+   --  Return True iff the initial value of SIG is uniform (same value for
+   --  all bits).
+   function Is_Simple_Init (Sig : Instance) return Boolean
+   is
+      pragma Assert (Get_Id (Sig) = Id_Isignal);
+      Cst : constant Instance := Get_Input_Instance (Sig, 1);
+   begin
+      case Get_Id (Cst) is
+         when Id_Const_0
+            | Id_Const_X =>
+            return True;
+         when Id_Const_UB32 =>
+            return Get_Param_Uns32 (Cst, 0) = 0;
+         when others =>
+            return False;
+      end case;
+   end Is_Simple_Init;
+
    procedure Convert_To_Memory (Ctxt : Context_Acc; Sig : Instance)
    is
       --  Size of RAM (in bits).
@@ -1937,6 +2195,12 @@ package body Netlists.Memories is
       Info_Msg_Synth
         (+Sig, "found RAM %n, width: %v bits, depth: %v",
          (1 => +Sig, 2 => +Mem_W, 3 => +Mem_Depth));
+
+      if Get_Id (Sig) = Id_Signal
+        or else (Get_Id (Sig) = Id_Isignal and then Is_Simple_Init (Sig))
+      then
+         Maybe_Remap_Address (Ctxt, Sig, Nbr_Ports);
+      end if;
 
       --  2. Walk to extract offsets/width
       Offs := new Off_Array (1 .. 2 * Nbr_Ports);
