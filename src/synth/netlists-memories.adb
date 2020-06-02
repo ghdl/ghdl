@@ -998,7 +998,7 @@ package body Netlists.Memories is
       loop
          case Get_Id (Inst) is
             when Id_Dyn_Insert
-              | Id_Dyn_Insert_En =>
+               | Id_Dyn_Insert_En =>
                if Get_Mark_Flag (Inst) then
                   --  Already seen.
                   return No_Instance;
@@ -1007,14 +1007,12 @@ package body Netlists.Memories is
                Last := Inst;
                O := Get_Output (Inst, 0);
             when Id_Mux2
-              | Id_Mux4 =>
+               | Id_Mux4 =>
                O := Get_Output (Inst, 0);
             when Id_Isignal
               | Id_Signal =>
                return Inst;
-            when Id_Dff
-              | Id_Idff
-              | Id_Mem_Multiport =>
+            when Id_Mem_Multiport =>
                O := Get_Output (Inst, 0);
             when others =>
                if Flag_Memory_Verbose then
@@ -1068,8 +1066,8 @@ package body Netlists.Memories is
                Last := Inst;
                Inst := Get_Input_Instance (Inst, 0);
             when Id_Isignal
-              | Id_Signal
-              | Id_Const_Bit =>
+               | Id_Signal
+               | Id_Const_Bit =>
                return Inst;
             when others =>
                if Flag_Memory_Verbose then
@@ -1112,9 +1110,7 @@ package body Netlists.Memories is
             Inst := Get_Input_Parent (Inp);
             case Get_Id (Inst) is
                when Id_Dyn_Insert_En
-                 | Id_Dff
-                 | Id_Idff
-                 | Id_Mem_Multiport =>
+                  | Id_Mem_Multiport =>
                   if N /= No_Net then
                      --  There must be only one such gate per stage.
                      return No_Instance;
@@ -1123,7 +1119,7 @@ package body Netlists.Memories is
                when Id_Dyn_Extract =>
                   null;
                when Id_Isignal
-                 | Id_Signal =>
+                  | Id_Signal =>
                   return Inst;
                when others =>
                   return No_Instance;
@@ -1152,7 +1148,7 @@ package body Netlists.Memories is
          Inst := Get_Input_Parent (Inp);
          case Get_Id (Inst) is
             when Id_Dyn_Insert_En
-              | Id_Dyn_Insert =>
+               | Id_Dyn_Insert =>
                --  Look.
                if Validate_RAM_Simple (Inst) /= Sig then
                   return False;
@@ -1281,7 +1277,7 @@ package body Netlists.Memories is
          Inst := Get_Input_Parent (Inp);
          case Get_Id (Inst) is
             when Id_Dyn_Insert
-              | Id_Dyn_Insert_En =>
+               | Id_Dyn_Insert_En =>
                --  Recurse on it.
                Reduce_Extract_Muxes (Inst);
                Next_Inp := Get_Next_Sink (Inp);
@@ -1296,11 +1292,9 @@ package body Netlists.Memories is
                else
                   raise Internal_Error;
                end if;
-            when Id_Idff
-              | Id_Dff
-              | Id_Isignal
-              | Id_Signal
-              | Id_Mem_Multiport =>
+            when Id_Isignal
+               | Id_Signal
+               | Id_Mem_Multiport =>
                --  Stop here: do not recurse.
                null;
             when Id_Dyn_Extract =>
@@ -1566,7 +1560,7 @@ package body Netlists.Memories is
                                  return;
                               end if;
                            when Id_Dyn_Insert_En
-                             | Id_Dyn_Insert =>
+                              | Id_Dyn_Insert =>
                               Add_Port_And_Width
                                 (Get_Input_Instance (In_Inst, 2));
                               if Nbr_Ports = 0 then
@@ -1574,11 +1568,9 @@ package body Netlists.Memories is
                               end if;
                               pragma Assert (N_Inst = No_Instance);
                               N_Inst := In_Inst;
-                           when Id_Dff
-                             | Id_Idff
-                             | Id_Signal
-                             | Id_Isignal
-                             | Id_Mem_Multiport =>
+                           when Id_Signal
+                              | Id_Isignal
+                              | Id_Mem_Multiport =>
                               pragma Assert (N_Inst = No_Instance);
                               N_Inst := In_Inst;
                            when others =>
@@ -1657,15 +1649,13 @@ package body Netlists.Memories is
                            when Id_Dyn_Extract =>
                               Add_Extract_Offset (In_Inst);
                            when Id_Dyn_Insert_En
-                             | Id_Dyn_Insert =>
+                              | Id_Dyn_Insert =>
                               Add_Insert_Offset (In_Inst);
                               pragma Assert (N_Inst = No_Instance);
                               N_Inst := In_Inst;
-                           when Id_Dff
-                             | Id_Idff
-                             | Id_Signal
-                             | Id_Isignal
-                             | Id_Mem_Multiport =>
+                           when Id_Signal
+                              | Id_Isignal
+                              | Id_Mem_Multiport =>
                               pragma Assert (N_Inst = No_Instance);
                               N_Inst := In_Inst;
                            when others =>
@@ -1833,11 +1823,8 @@ package body Netlists.Memories is
                      end loop;
                      Disconnect (Inp2);
                   end;
-               when Id_Dff
-                 | Id_Idff =>
-                  null;
                when Id_Signal
-                 | Id_Isignal =>
+                  | Id_Isignal =>
                   null;
                when others =>
                   raise Internal_Error;
@@ -1859,18 +1846,10 @@ package body Netlists.Memories is
                      Disconnect (Inp);
                      Remove_Instance (In_Inst);
                   when Id_Dyn_Insert_En
-                    | Id_Dyn_Insert
-                    | Id_Signal
-                    | Id_Isignal =>
+                     | Id_Dyn_Insert
+                     | Id_Signal
+                     | Id_Isignal =>
                      pragma Assert (Inp = Get_Input (In_Inst, 0));
-                     Disconnect (Inp);
-                     --  This is the next instance (and there must be only
-                     --  one next instance).
-                     pragma Assert (N_Inst = No_Instance);
-                     N_Inst := In_Inst;
-                  when Id_Idff
-                    | Id_Dff =>
-                     pragma Assert (Inp = Get_Input (In_Inst, 1));
                      Disconnect (Inp);
                      --  This is the next instance (and there must be only
                      --  one next instance).
@@ -1889,18 +1868,10 @@ package body Netlists.Memories is
             --  Remove INST.
             case Get_Id (Inst) is
                when Id_Dyn_Insert_En
-                 | Id_Dyn_Insert =>
-                  Remove_Instance (Inst);
-               when Id_Dff
-                 | Id_Idff =>
-                  --  Disconnect clock and init value.
-                  Disconnect (Get_Input (Inst, 0));
-                  if Get_Id (Inst) = Id_Idff then
-                     Disconnect (Get_Input (Inst, 2));
-                  end if;
+                  | Id_Dyn_Insert =>
                   Remove_Instance (Inst);
                when Id_Signal
-                 | Id_Isignal =>
+                  | Id_Isignal =>
                   null;
                when others =>
                   raise Internal_Error;
@@ -1909,8 +1880,8 @@ package body Netlists.Memories is
             Inst := N_Inst;
             case Get_Id (Inst) is
                when Id_Signal
-                 | Id_Isignal
-                 | Id_Mem_Multiport =>
+                  | Id_Isignal
+                  | Id_Mem_Multiport =>
                   exit;
                when others =>
                   null;
