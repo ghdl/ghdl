@@ -235,9 +235,9 @@ package Netlists.Gates is
    Id_Extract : constant Module_Id := 86;
 
    --  OUT := IN0[IN1+OFF+WD-1:IN1+OFF]
-   --  Inputs: MEM (the memory)
-   --          IDX (then index)
-   --  Param0: offset
+   --  Param:   0: offset
+   --  Inputs:  0: MEM (the memory)
+   --           1: IDX (then index)
    Id_Dyn_Extract : constant Module_Id := 87;
 
    --  Like Insert but for dynamic values.
@@ -257,13 +257,15 @@ package Netlists.Gates is
    subtype Dyn_Insert_Module_Id is
      Module_Id range Id_Dyn_Insert .. Id_Dyn_Insert_En;
 
-   --  Input0: index
-   --  Param0: step
-   --  Param1: max
+   --  Inputs:  0: index
+   --  Params:  0: step
+   --           1: max
    --  OUT := IN0 * STEP,  IN0 < MAX
    Id_Memidx : constant Module_Id := 90;
 
    --  OUT := IN0 + IN1, size extension (max of inputs width).
+   --  Inputs:  0: a memidx
+   --           1: chain (addidx or memidx).
    Id_Addidx : constant Module_Id := 91;
 
    --  TODO:
