@@ -210,8 +210,11 @@ package body Trans.Chap8 is
       Ret_Type := Get_Return_Type (Chap2.Current_Subprogram);
       Ret_Info := Get_Info (Ret_Type);
       case Ret_Info.Type_Mode is
-         when Type_Mode_Scalar =>
+         when Type_Mode_Scalar
+            | Type_Mode_Acc
+            | Type_Mode_Bounds_Acc =>
             --  * if the return type is scalar, simply returns.
+            --  * access: no range.
             declare
                V : O_Dnode;
                R : O_Enode;
@@ -232,15 +235,6 @@ package body Trans.Chap8 is
                else
                   Gen_Return_Value (R);
                end if;
-            end;
-         when Type_Mode_Acc
-           | Type_Mode_Bounds_Acc =>
-            --  * access: no range.
-            declare
-               Res : O_Enode;
-            begin
-               Res := Chap7.Translate_Expression (Expr, Ret_Type);
-               Gen_Return_Value (Res);
             end;
          when Type_Mode_Unbounded_Array
            | Type_Mode_Unbounded_Record =>
