@@ -58,6 +58,12 @@ package Grt.Stack2 is
 
    --  Create a secondary stack.
    function Create return Stack2_Ptr;
+
+   --  Return True iff S is null or empty.
+   function Is_Empty (S : Stack2_Ptr) return Boolean;
+
+   --  May be used to debug.
+   procedure Dump_Stack2 (S : Stack2_Ptr);
 private
    type Stack2_Ptr is new System.Address;
    Null_Stack2_Ptr : constant Stack2_Ptr := Stack2_Ptr (System.Null_Address);

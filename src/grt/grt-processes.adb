@@ -807,6 +807,13 @@ package body Grt.Processes is
                Set_Current_Process (Proc);
                Proc.Subprg.all (Proc.This);
                if Grt.Options.Checks then
+                  if Proc.State = State_Sensitized
+                    and then not Is_Empty (Proc.Stack2)
+                  then
+                     --  A non-sensitized process may store its state
+                     --  on stack2.
+                     Internal_Error ("non-empty stack2");
+                  end if;
                   Ghdl_Signal_Internal_Checks;
                end if;
             end;

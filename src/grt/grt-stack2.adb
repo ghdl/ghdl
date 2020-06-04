@@ -142,7 +142,8 @@ package body Grt.Stack2 is
       return Chunk.Mem (Chunk.First)'Address;
    end Allocate;
 
-   function Create return Stack2_Ptr is
+   function Create return Stack2_Ptr
+   is
       Res : Stack2_Acc;
       Chunk : Chunk_Acc;
    begin
@@ -154,9 +155,15 @@ package body Grt.Stack2 is
       return To_Addr (Res);
    end Create;
 
-   --  May be used to debug.
-   procedure Dump_Stack2 (S : Stack2_Ptr);
-   pragma Unreferenced (Dump_Stack2);
+   function Is_Empty (S : Stack2_Ptr) return Boolean
+   is
+      S2 : constant Stack2_Acc := To_Acc (S);
+   begin
+      if S2 = null then
+         return True;
+      end if;
+      return S2.Top = 1;
+   end Is_Empty;
 
    procedure Dump_Stack2 (S : Stack2_Ptr)
    is
@@ -174,6 +181,9 @@ package body Grt.Stack2 is
       Put ("Stack 2 at ");
       Put (stdout, Address (S));
       New_Line;
+      if S2 = null then
+         return;
+      end if;
       Put ("First Chunk at ");
       Put (stdout, To_Address (S2.First_Chunk));
       Put (", last chunk at ");
