@@ -145,11 +145,9 @@ package body Grt.Lib is
                  Str, "sequence not covered", Severity, Loc);
    end Ghdl_Psl_Cover_Failed;
 
-   procedure Ghdl_Report
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr)
-   is
+   procedure Ghdl_Report (Str : Std_String_Ptr;
+                          Severity : Integer;
+                          Loc      : Ghdl_Location_Ptr) is
    begin
       Do_Report ("report", Str, "Assertion violation", Severity, Loc);
    end Ghdl_Report;
