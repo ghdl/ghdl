@@ -40,6 +40,7 @@ with Grt.Disp_Signals;
 with Grt.Stats;
 with Grt.Threads; use Grt.Threads;
 pragma Elaborate_All (Grt.Table);
+with Grt.Stdio;
 
 package body Grt.Processes is
    Last_Time : constant Std_Time := Std_Time'Last;

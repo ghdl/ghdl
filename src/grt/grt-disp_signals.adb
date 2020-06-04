@@ -341,7 +341,7 @@ package body Grt.Disp_Signals is
       Action := Sig.Event_List;
       while Action /= null loop
          Put (stdout, "  wakeup ");
-         Grt.Processes.Disp_Process_Name (stdout, Action.Proc);
+         Put (stdout, Grt.Processes.Get_Rti_Context (Action.Proc));
          New_Line (stdout);
          Action := Action.Next;
       end loop;
@@ -349,8 +349,8 @@ package body Grt.Disp_Signals is
       if Sig.S.Mode_Sig in Mode_Signal_User then
          for I in 1 .. Sig.S.Nbr_Drivers loop
             Put (stdout, "  driven ");
-            Grt.Processes.Disp_Process_Name
-              (stdout, Sig.S.Drivers (I - 1).Proc);
+            Put (stdout,
+                 Grt.Processes.Get_Rti_Context (Sig.S.Drivers (I - 1).Proc));
             New_Line (stdout);
          end loop;
       end if;
