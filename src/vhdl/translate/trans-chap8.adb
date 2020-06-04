@@ -285,6 +285,37 @@ package body Trans.Chap8 is
       end case;
    end Translate_Return_Statement;
 
+   --  Translate the condition COND of a control statement.
+   --  This is special as it frees immediately the stack2 (if needed) because
+   --  the control statement may prevent the execution of the normal stack2
+   --  release at the end of the temporary region.
+   --  As a consequence, this function must be called within a brand new
+   --  and dedicated temporary region.
+   --  Use of this function is not needed for processes with state, because
+   --  the control statement becomes an assignment to the next state.
+   function Translate_Condition (Cond : Iir) return O_Enode
+   is
+      Res     : O_Enode;
+      Res_Var : O_Dnode;
+   begin
+      --  As a statement is always wrapped into a temporary region, the
+      --  stack2 is not used (in the inner region).
+      pragma Assert (not Has_Stack2_Mark);
+
+      --  Translate the condition.
+      Res := Chap7.Translate_Expression (Cond);
+
+      --  If the condition needs stack2, free it now as a inner statement
+      --  may return (and this skipping the release of stack2).
+      if Has_Stack2_Mark then
+         Res_Var := Create_Temp_Init (Std_Boolean_Type_Node, Res);
+         Stack2_Release;
+         Res := New_Obj_Value (Res_Var);
+      end if;
+
+      return Res;
+   end Translate_Condition;
+
    procedure Translate_If_Statement_State_Jumps
      (Stmt : Iir; Fall_State : State_Type)
    is
@@ -344,11 +375,12 @@ package body Trans.Chap8 is
    is
       Blk         : O_If_Block;
       Else_Clause : Iir;
+      Cond        : O_Enode;
    begin
-      Start_If_Stmt
-        (Blk, Chap7.Translate_Expression (Strip_Reference_Name
-                                            (Get_Condition (Stmt))));
+      Cond := Translate_Condition
+        (Strip_Reference_Name (Get_Condition (Stmt)));
 
+      Start_If_Stmt (Blk, Cond);
       Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
 
       Else_Clause := Get_Else_Clause (Stmt);
@@ -830,13 +862,13 @@ package body Trans.Chap8 is
             Start_Loop_Stmt (Info.Label_Exit);
             Info.Label_Next := O_Snode_Null;
 
-            Open_Temp;
             if Cond /= Null_Iir then
+               Open_Temp;
                Gen_Exit_When
                  (Info.Label_Exit,
-                  New_Monadic_Op (ON_Not, Chap7.Translate_Expression (Cond)));
+                  New_Monadic_Op (ON_Not, Translate_Condition (Cond)));
+               Close_Temp;
             end if;
-            Close_Temp;
 
             Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
 
@@ -867,7 +899,7 @@ package body Trans.Chap8 is
 
       --  Common part.
       if Cond /= Null_Iir then
-         Start_If_Stmt (If_Blk, Chap7.Translate_Expression (Cond));
+         Start_If_Stmt (If_Blk, Translate_Condition (Cond));
       end if;
 
       if Get_Suspend_Flag (Loop_Stmt) then
@@ -894,10 +926,6 @@ package body Trans.Chap8 is
          --  A new state cannot be created here, as the outer construct is the
          --  if statement and not the case statement for the state machine.
          State_Jump_Force;
-
-         if Cond /= Null_Iir then
-            Finish_If_Stmt (If_Blk);
-         end if;
       else
          case Get_Kind (Stmt) is
             when Iir_Kind_Exit_Statement =>
@@ -913,9 +941,10 @@ package body Trans.Chap8 is
             when others =>
                raise Internal_Error;
          end case;
-         if Cond /= Null_Iir then
-            Finish_If_Stmt (If_Blk);
-         end if;
+      end if;
+
+      if Cond /= Null_Iir then
+         Finish_If_Stmt (If_Blk);
       end if;
    end Translate_Exit_Next_Statement;
 
