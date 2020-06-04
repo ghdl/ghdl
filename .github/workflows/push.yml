@@ -110,6 +110,12 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: 'nightly'
         files: artifact/*
+    - run: |
+        curl -X POST https://api.github.com/repos/ghdl/docker/dispatches \
+        -H "Content-Type: application/json" \
+        -H 'Accept: application/vnd.github.everest-preview+json' \
+        -H "Authorization: token ${{ secrets.GHDL_BOT }}" \
+        --data '{"event_type": "ghdl"}'
 
 #---
 
