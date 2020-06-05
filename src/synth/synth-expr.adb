@@ -1849,21 +1849,14 @@ package body Synth.Expr is
       return Res;
    end Synth_PSL_Expression;
 
-   function Synth_Psl_Prev (Syn_Inst : Synth_Instance_Acc; Call : Node)
-                            return Valtyp
+   function Synth_Psl_Function_Clock
+     (Syn_Inst : Synth_Instance_Acc; Call : Node; Ctxt : Context_Acc)
+     return Net
    is
-      Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
-      Count     : constant Node := Get_Count_Expression (Call);
-      Clock     : Node;
-      Count_Val : Valtyp;
-      Dff       : Net;
-      Clk       : Valtyp;
-      Expr      : Valtyp;
-      Clk_Net   : Net;
-      Num       : Int64;
+      Clock   : Node;
+      Clk     : Valtyp;
+      Clk_Net : Net;
    begin
-      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
-
       Clock := Get_Clock_Expression (Call);
       if Clock /= Null_Node then
          Clk := Synth_Expression (Syn_Inst, Clock);
@@ -1873,6 +1866,23 @@ package body Synth.Expr is
          pragma Assert (Clock /= Null_Node);
          Clk_Net := Synth_PSL_Expression (Syn_Inst, Get_Psl_Boolean (Clock));
       end if;
+      return Clk_Net;
+   end Synth_Psl_Function_Clock;
+
+   function Synth_Psl_Prev (Syn_Inst : Synth_Instance_Acc; Call : Node)
+                            return Valtyp
+   is
+      Ctxt      : constant Context_Acc := Get_Build (Syn_Inst);
+      Count     : constant Node := Get_Count_Expression (Call);
+      Count_Val : Valtyp;
+      Dff       : Net;
+      Expr      : Valtyp;
+      Clk_Net   : Net;
+      Num       : Int64;
+   begin
+      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+
+      Clk_Net := Synth_Psl_Function_Clock(Syn_Inst, Call, Ctxt);
 
       if Count /= Null_Node then
          Count_Val := Synth_Expression (Syn_Inst, Count);
@@ -1890,6 +1900,32 @@ package body Synth.Expr is
 
       return Create_Value_Net (Dff, Expr.Typ);
    end Synth_Psl_Prev;
+
+   function Synth_Psl_Stable (Syn_Inst : Synth_Instance_Acc; Call : Node)
+                              return Valtyp
+   is
+      Ctxt    : constant Context_Acc := Get_Build (Syn_Inst);
+      DffCurr : Net;
+      Dff     : Net;
+      Expr    : Valtyp;
+      Clk_Net : Net;
+      Res     : Net;
+   begin
+      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+
+      Clk_Net := Synth_Psl_Function_Clock(Syn_Inst, Call, Ctxt);
+
+      DffCurr := Get_Net (Ctxt, Expr);
+      Set_Location (DffCurr, Call);
+      Dff := Build_Dff (Ctxt, Clk_Net, DffCurr);
+      Set_Location (Dff, Call);
+
+      Res := Build_Compare(Ctxt, Id_Eq, DffCurr, Dff);
+      Set_Location (Res, Call);
+
+      return Create_Value_Net (Res, Boolean_Type);
+
+   end Synth_Psl_Stable;
 
    subtype And_Or_Module_Id is Module_Id range Id_And .. Id_Or;
 
@@ -2231,6 +2267,8 @@ package body Synth.Expr is
             return No_Valtyp;
          when Iir_Kind_Psl_Prev =>
             return Synth_Psl_Prev (Syn_Inst, Expr);
+         when Iir_Kind_Psl_Stable =>
+            return Synth_Psl_Stable (Syn_Inst, Expr);
          when Iir_Kind_Overflow_Literal =>
             Error_Msg_Synth (+Expr, "out of bound expression");
             return No_Valtyp;
