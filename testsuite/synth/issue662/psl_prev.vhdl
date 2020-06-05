@@ -1,12 +1,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity issue is
+entity psl_prev is
   port (clk, a, b : std_logic);
-end entity issue;
+end entity psl_prev;
 
 
-architecture psl of issue is
+architecture psl of psl_prev is
 begin
   -- All is sensitive to rising edge of clk
   default clock is rising_edge(clk);

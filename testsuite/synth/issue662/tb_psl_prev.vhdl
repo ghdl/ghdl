@@ -1,11 +1,11 @@
 library ieee;
   use ieee.std_logic_1164.all;
 
-entity tb_issue is
-end entity tb_issue;
+entity tb_psl_prev is
+end entity tb_psl_prev;
 
 
-architecture psl of tb_issue is
+architecture psl of tb_psl_prev is
   procedure seq (s : string; signal clk : std_logic; signal o : out std_logic)
   is
   begin
@@ -24,7 +24,7 @@ architecture psl of tb_issue is
   signal clk   : std_logic := '1';
 
 begin
-  dut: entity work.issue port map (clk, a, b);
+  dut: entity work.psl_prev port map (clk, a, b);
 
   clk <= not clk after 500 ps;
 
