@@ -72,7 +72,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    - uses: eine/setup-msys2@v0
+    - uses: eine/setup-msys2@v1
       with:
         msystem: MSYS
         update: true
