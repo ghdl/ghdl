@@ -141,7 +141,7 @@ package body Vhdl.Sem_Psl is
       end if;
 
       if First then
-         --  Analyze count and clock only once.
+         --  Analyze clock only once.
          Clock := Get_Clock_Expression (Call);
          if Clock /= Null_Iir then
             Clock := Sem_Expression_Wildcard (Clock, Wildcard_Psl_Bit_Type);
@@ -157,6 +157,41 @@ package body Vhdl.Sem_Psl is
 
       return Call;
    end Sem_Stable_Builtin;
+
+   function Sem_Rose_Builtin (Call : Iir) return Iir
+   is
+      use Vhdl.Sem_Expr;
+      use Vhdl.Std_Package;
+      Expr  : Iir;
+      Clock : Iir;
+      First : Boolean;
+   begin
+      Expr := Get_Expression (Call);
+      First := Is_Expr_Not_Analyzed (Expr);
+      Expr := Sem_Expression (Expr, Null_Iir);
+      if Expr /= Null_Iir then
+         Set_Expression (Call, Expr);
+         Set_Type (Call, Vhdl.Std_Package.Boolean_Type_Definition);
+         Set_Expr_Staticness (Call, None);
+      end if;
+
+      if First then
+         --  Analyze clock only once.
+         Clock := Get_Clock_Expression (Call);
+         if Clock /= Null_Iir then
+            Clock := Sem_Expression_Wildcard (Clock, Wildcard_Psl_Bit_Type);
+            Set_Clock_Expression (Call, Clock);
+         else
+            if Current_Psl_Default_Clock = Null_Iir then
+               Error_Msg_Sem (+Call, "no clock for PSL rose builtin");
+            else
+               Set_Default_Clock (Call, Current_Psl_Default_Clock);
+            end if;
+         end if;
+      end if;
+
+      return Call;
+   end Sem_Rose_Builtin;
 
    --  Convert VHDL and/or/not nodes to PSL nodes.
    function Convert_Bool (Expr : Iir) return PSL_Node
