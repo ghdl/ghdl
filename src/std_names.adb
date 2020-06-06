@@ -813,7 +813,7 @@ package body Std_Names is
       Def ("endpoint",           Name_Endpoint);
       Def ("eventually",         Name_Eventually);
       Def ("fairness",           Name_Fairness);
-      Def ("fell ",              Name_Fell);
+      Def ("fell",               Name_Fell);
       Def ("forall",             Name_Forall);
       Def ("g",                  Name_G);
       Def ("inf",                Name_Inf);
