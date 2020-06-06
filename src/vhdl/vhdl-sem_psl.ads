@@ -25,6 +25,7 @@ package Vhdl.Sem_Psl is
    function Sem_Prev_Builtin (Call : Iir; Atype : Iir) return Iir;
    function Sem_Stable_Builtin (Call : Iir) return Iir;
    function Sem_Rose_Builtin (Call : Iir) return Iir;
+   function Sem_Fell_Builtin (Call : Iir) return Iir;
 
    procedure Sem_Psl_Declaration (Stmt : Iir);
    procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir);

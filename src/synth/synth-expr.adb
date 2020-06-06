@@ -1882,7 +1882,7 @@ package body Synth.Expr is
    begin
       Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
 
-      Clk_Net := Synth_Psl_Function_Clock(Syn_Inst, Call, Ctxt);
+      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call, Ctxt);
 
       if Count /= Null_Node then
          Count_Val := Synth_Expression (Syn_Inst, Count);
@@ -1913,7 +1913,7 @@ package body Synth.Expr is
    begin
       Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
 
-      Clk_Net := Synth_Psl_Function_Clock(Syn_Inst, Call, Ctxt);
+      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call, Ctxt);
 
       DffCurr := Get_Net (Ctxt, Expr);
       Set_Location (DffCurr, Call);
@@ -1928,7 +1928,7 @@ package body Synth.Expr is
    end Synth_Psl_Stable;
 
    function Synth_Psl_Rose (Syn_Inst : Synth_Instance_Acc; Call : Node)
-                              return Valtyp
+                            return Valtyp
    is
       Ctxt    : constant Context_Acc := Get_Build (Syn_Inst);
       DffCurr : Net;
@@ -1940,7 +1940,7 @@ package body Synth.Expr is
    begin
       Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
 
-      Clk_Net := Synth_Psl_Function_Clock(Syn_Inst, Call, Ctxt);
+      Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call, Ctxt);
 
       DffCurr := Get_Net (Ctxt, Expr);
       Set_Location (DffCurr, Call);
@@ -1957,6 +1957,36 @@ package body Synth.Expr is
       return Create_Value_Net (Res, Boolean_Type);
 
    end Synth_Psl_Rose;
+
+   function Synth_Psl_Fell (Syn_Inst : Synth_Instance_Acc; Call : Node)
+                            return Valtyp
+   is
+      Ctxt       : constant Context_Acc := Get_Build (Syn_Inst);
+      DffCurr    : Net;
+      NotDffCurr : Net;
+      Dff        : Net;
+      Clk_Net    : Net;
+      Expr       : Valtyp;
+      Res        : Net;
+   begin
+      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+
+      Clk_Net := Synth_Psl_Function_Clock(Syn_Inst, Call, Ctxt);
+
+      DffCurr := Get_Net (Ctxt, Expr);
+      Set_Location (DffCurr, Call);
+      Dff := Build_Dff (Ctxt, Clk_Net, DffCurr);
+      Set_Location (Dff, Call);
+
+      NotDffCurr := Build_Monadic (Ctxt, Id_Not, DffCurr);
+      Set_Location (NotDffCurr, Call);
+
+      Res := Build_Dyadic (Ctxt, Id_And, Dff, NotDffCurr);
+      Set_Location (Res, Call);
+
+      return Create_Value_Net (Res, Boolean_Type);
+
+   end Synth_Psl_Fell;
 
    subtype And_Or_Module_Id is Module_Id range Id_And .. Id_Or;
 
@@ -2302,6 +2332,8 @@ package body Synth.Expr is
             return Synth_Psl_Stable (Syn_Inst, Expr);
          when Iir_Kind_Psl_Rose =>
             return Synth_Psl_Rose(Syn_Inst, Expr);
+         when Iir_Kind_Psl_Fell =>
+            return Synth_Psl_Fell(Syn_Inst, Expr);
          when Iir_Kind_Overflow_Literal =>
             Error_Msg_Synth (+Expr, "out of bound expression");
             return No_Valtyp;
