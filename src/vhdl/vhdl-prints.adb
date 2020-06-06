@@ -2318,6 +2318,21 @@ package body Vhdl.Prints is
       Disp_Token (Ctxt, Tok_Right_Paren);
    end Disp_Psl_Rose;
 
+   procedure Disp_Psl_Fell (Ctxt : in out Ctxt_Class; Call : Iir)
+   is
+      Expr : Iir;
+   begin
+      Disp_Token (Ctxt, Tok_Fell);
+      Disp_Token (Ctxt, Tok_Left_Paren);
+      Print (Ctxt, Get_Expression (Call));
+      Expr := Get_Clock_Expression (Call);
+      if Expr /= Null_Iir then
+         Disp_Token (Ctxt, Tok_Comma);
+         Print (Ctxt, Expr);
+      end if;
+      Disp_Token (Ctxt, Tok_Right_Paren);
+   end Disp_Psl_Fell;
+
    procedure Disp_Psl_Declaration (Ctxt : in out Ctxt_Class; Stmt : Iir)
    is
       Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
@@ -4785,6 +4800,8 @@ package body Vhdl.Prints is
             Disp_Psl_Stable (Ctxt, Expr);
          when Iir_Kind_Psl_Rose =>
             Disp_Psl_Rose (Ctxt, Expr);
+         when Iir_Kind_Psl_Fell =>
+            Disp_Psl_Fell (Ctxt, Expr);
 
          when Iir_Kinds_Type_And_Subtype_Definition =>
             Disp_Type (Ctxt, Expr);
