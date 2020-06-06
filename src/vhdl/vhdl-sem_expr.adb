@@ -416,7 +416,8 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Function_Call =>
             return Expr;
          when Iir_Kind_Psl_Endpoint_Declaration
-           | Iir_Kind_Psl_Stable =>
+           | Iir_Kind_Psl_Stable
+           | Iir_Kind_Psl_Rose =>
             return Expr;
          when Iir_Kind_Simple_Name
            | Iir_Kind_Parenthesis_Name
@@ -4831,6 +4832,9 @@ package body Vhdl.Sem_Expr is
 
          when Iir_Kind_Psl_Stable =>
             return Sem_Psl.Sem_Stable_Builtin (Expr);
+
+         when Iir_Kind_Psl_Rose =>
+            return Sem_Psl.Sem_Rose_Builtin (Expr);
 
          when Iir_Kind_Error =>
             --  Always ok.
