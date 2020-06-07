@@ -416,6 +416,7 @@ package body Vhdl.Sem_Expr is
            | Iir_Kind_Function_Call =>
             return Expr;
          when Iir_Kind_Psl_Endpoint_Declaration
+           | Iir_Kind_Psl_Prev
            | Iir_Kind_Psl_Stable
            | Iir_Kind_Psl_Rose
            | Iir_Kind_Psl_Fell =>
