@@ -3,16 +3,10 @@ pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=ci
 pkgrel=1
-pkgdesc="GHDL: the open-source analyzer, compiler and simulator for VHDL (LLVM backend) (mingw-w64)"
+pkgdesc="GHDL: the open-source analyzer, compiler, simulator and (experimental) synthesizer for VHDL (LLVM backend) (mingw-w64)"
 arch=('any')
-#depends=()
-makedepends=("${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-gcc-ada")
-#source=(
-#  "ghdl::git://github.com/ghdl/ghdl.git#branch=master"
-#)
-#sha512sums=(
-#  'SKIP'
-#)
+depends=('zlib-devel' "${MINGW_PACKAGE_PREFIX}-clang")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gcc-ada")
 
 build() {
   mkdir "${srcdir}/builddir"

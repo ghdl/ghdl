@@ -94,10 +94,12 @@ jobs:
         path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/pkg/
     - uses: actions/upload-artifact@v2
       with:
-         path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
+        path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
     - name: Test package
       run: |
-        ./dist/msys2-mingw/run.sh -t
+        env | grep MSYSTEM
+        env | grep MINGW
+        GHDL=ghdl ./testsuite/testsuite.sh
       env:
         MSYSTEM: ${{ matrix.task.installs }}
 
