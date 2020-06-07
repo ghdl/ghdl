@@ -63,7 +63,8 @@ Jensen, Adam               FreeBSD builds
 Koch, Markus               vendor pre-compile script for Lattice (GNU/Linux)
 Koontz, David              Mac OSX builds, LRM compliance work, bugfix analyses
 Lehmann, Patrick           Windows compile scripts, vendor library pre-compile scripts (win+lin), building in MinGW, AppVeyor integration.
-Martinez-Corral, Unai      ghdl-cosim, setup-ghdl-ci, docs, docker/CI, termux build script, building/testing on ARM
+Meißner, Torsten           Property Specification Language (PSL): docs, tests, synthesis support
+Martinez-Corral, Unai      ghdl-cosim, setup-ghdl-ci, docs, docker/CI, termux/MSYS2 builds, building/testing on ARM
 van Rantwijk, Joris        Debian packaging
 =========================  ============================================================
 
