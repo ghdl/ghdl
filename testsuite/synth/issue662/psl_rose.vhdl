@@ -17,7 +17,7 @@ begin
   ROSE_0_a : assert always {not a; a} |-> rose(a);
 
   -- This assertion holds
-  ROSE_1_a : assert always (rose(a) -> (prev(a) = '0' and a = '1'));
+  ROSE_1_a : assert always (rose(a) -> (not prev(a) and a));
 
   -- This assertion should fail at cycle 11
   ROSE_2_a : assert always rose(a) -> b;
