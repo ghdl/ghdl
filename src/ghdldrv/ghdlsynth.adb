@@ -251,13 +251,14 @@ package body Ghdlsynth is
          declare
             Arg : String renames Args (I).all;
             pragma Assert (Arg'First = 1);
+            Id : Name_Id;
          begin
             if Arg'Last > 7 and then Arg (1 .. 7) = "--work=" then
-               if Libraries.Decode_Work_Option (Arg) then
-                  Libraries.Load_Work_Library (True);
-               else
+               Id := Libraries.Decode_Work_Option (Arg);
+               if Id = Null_Identifier then
                   return Null_Iir;
                end if;
+               Libraries.Load_Work_Library (True);
             else
                Ghdlcomp.Compile_Load_File (Arg);
             end if;

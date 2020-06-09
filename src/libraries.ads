@@ -167,11 +167,12 @@ package Libraries is
    --  If there are severals entities, return NULL_IIR;
    function Find_Entity_For_Component (Name: Name_Id) return Iir_Design_Unit;
 
-   --  Decode '--work=NAME' command line option and set the name of the
-   --  work library.  The library has to be loaded later by calling
-   --  Load_Work_Library.
-   --  Return false if NAME is not a valid name.
-   function Decode_Work_Option (Opt : String) return Boolean;
+   --  Decode '--work=NAME' command line option and return the identifier
+   --  for the library.
+   --  To effectively use the library, assign Work_Library_Name and load the
+   --  library by calling Load_Work_Library.
+   --  Return Null_Identifier if NAME is not a valid name.
+   function Decode_Work_Option (Opt : String) return Name_Id;
 
    --  Get the chain of libraries.  Can be used only to read (it musn't be
    --  modified).

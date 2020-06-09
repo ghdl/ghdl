@@ -18,6 +18,7 @@
 
 with Simple_IO;
 with Errorout; use Errorout;
+with Types; use Types;
 with Libraries;
 with Std_Names;
 with PSL.Nodes;
@@ -138,7 +139,8 @@ package body Options is
       elsif Opt'Length > 2 and then Opt (1 .. 2) = "-W" then
          return Option_Warning (Opt (3 .. Opt'Last), True);
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--work=" then
-         if not Libraries.Decode_Work_Option (Opt) then
+         Libraries.Work_Library_Name := Libraries.Decode_Work_Option (Opt);
+         if Libraries.Work_Library_Name = Null_Identifier then
             return Option_Err;
          end if;
       elsif Opt = "-C" or else Opt = "--mb-comments" then

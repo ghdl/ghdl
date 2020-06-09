@@ -155,7 +155,7 @@ package body Ghdlcomp is
    end Perform_Action;
 
 
-   --  Command -c xx -r
+   --  Command -c xx -r/-e
    type Command_Compile is new Command_Comp with null record;
    function Decode_Command (Cmd : Command_Compile; Name : String)
                            return Boolean;
@@ -371,6 +371,13 @@ package body Ghdlcomp is
                   if Arg = "-r" or else Arg = "-e" then
                      Elab_Arg := I + 1;
                      exit;
+                  elsif Arg'Last > 7 and then Arg (1 .. 7) = "--work=" then
+                     Libraries.Work_Library_Name :=
+                       Libraries.Decode_Work_Option (Arg);
+                     if Libraries.Work_Library_Name = Null_Identifier then
+                        raise Compilation_Error;
+                     end if;
+                     Libraries.Load_Work_Library (True);
                   else
                      Compile_Load_File (Arg);
                   end if;

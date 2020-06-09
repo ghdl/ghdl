@@ -1420,6 +1420,7 @@ package body Ghdldrv is
          end if;
       end loop;
       if Elab_Index < 0 then
+         --  No elaboration.
          Analyze_Files (Args, True, Error);
          if Error then
             raise Errorout.Compilation_Error;

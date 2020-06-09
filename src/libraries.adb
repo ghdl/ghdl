@@ -1648,18 +1648,17 @@ package body Libraries is
       return Libraries_Chain;
    end Get_Libraries_Chain;
 
-   function Decode_Work_Option (Opt : String) return Boolean
+   function Decode_Work_Option (Opt : String) return Name_Id
    is
-      pragma Assert (Opt'First = 1);
-      Name : String (1 .. Opt'Last - 8 + 1);
+      Name : String (Opt'First + 7 .. Opt'Last);
       Err : Boolean;
    begin
-      Name := Opt (8 .. Opt'Last);
+      Name := Opt (Opt'First + 7 .. Opt'Last);
       Vhdl.Scanner.Convert_Identifier (Name, Err);
       if Err then
-         return False;
+         return Null_Identifier;
       end if;
-      Libraries.Work_Library_Name := Get_Identifier (Name);
-      return True;
+      return Get_Identifier (Name);
+      -- Libraries.Work_Library_Name :=
    end Decode_Work_Option;
 end Libraries;

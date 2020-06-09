@@ -72,6 +72,9 @@ package body Ortho_Front is
    type Id_Link;
    type Id_Link_Acc is access Id_Link;
    type Id_Link is record
+      --  If true, ID is the name of a library (for --work=LIB)
+      --  If false, ID is the name of a file.
+      Is_Library : Boolean;
       Id : Name_Id;
       Link : Id_Link_Acc;
    end record;
@@ -195,16 +198,26 @@ package body Ortho_Front is
               ("--ghdl-source option allowed only after --anaelab options");
             return 0;
          end if;
-         if Arg /= null then
-            Error_Msg_Option ("no argument allowed after --ghdl-source");
-            return 0;
-         end if;
          declare
             L : Id_Link_Acc;
          begin
-            L := new Id_Link'(Id => Name_Table.Get_Identifier
-                                (Opt (Opt'First + 14 .. Opt'Last)),
-                              Link => null);
+            if Opt'Length > 15
+              and then Opt (Opt'First + 14 .. Opt'First + 20) = "--work="
+            then
+               L := new Id_Link' (Is_Library => True,
+                                  Id => Libraries.Decode_Work_Option
+                                    (Opt (Opt'First + 14 .. Opt'Last)),
+                                  Link => null);
+               if L.Id = Null_Identifier then
+                  return 0;
+               end if;
+            else
+               L := new Id_Link'(Is_Library => False,
+                                 Id => Name_Table.Get_Identifier
+                                   (Opt (Opt'First + 14 .. Opt'Last)),
+                                 Link => null);
+            end if;
+
             if Anaelab_Files = null then
                Anaelab_Files := L;
             else
@@ -587,19 +600,24 @@ package body Ortho_Front is
                begin
                   L := Anaelab_Files;
                   while L /= null loop
-                     Res := Load_File_Name (L.Id);
-                     if Errorout.Nbr_Errors > 0 then
-                        raise Compilation_Error;
-                     end if;
+                     if L.Is_Library then
+                        Libraries.Work_Library_Name := L.Id;
+                        Libraries.Load_Work_Library (True);
+                     else
+                        Res := Load_File_Name (L.Id);
+                        if Errorout.Nbr_Errors > 0 then
+                           raise Compilation_Error;
+                        end if;
 
-                     --  Put units into library.
-                     Design := Get_First_Design_Unit (Res);
-                     while not Is_Null (Design) loop
-                        Next_Design := Get_Chain (Design);
-                        Set_Chain (Design, Null_Iir);
-                        Libraries.Add_Design_Unit_Into_Library (Design);
-                        Design := Next_Design;
-                     end loop;
+                        --  Put units into library.
+                        Design := Get_First_Design_Unit (Res);
+                        while not Is_Null (Design) loop
+                           Next_Design := Get_Chain (Design);
+                           Set_Chain (Design, Null_Iir);
+                           Libraries.Add_Design_Unit_Into_Library (Design);
+                           Design := Next_Design;
+                        end loop;
+                     end if;
                      L := L.Link;
                   end loop;
                end;
