@@ -191,6 +191,9 @@ package Vhdl.Evaluation is
    --  using the same format as SIMPLE_NAME attribute.
    function Eval_Simple_Name (Id : Name_Id) return String;
 
+   --  Convert aggregate or string literal to a simple agggregate.
+   function Eval_String_Literal (Str : Iir) return Iir;
+
    --  Compare two string literals (of same length).
    type Compare_Type is (Compare_Lt, Compare_Eq, Compare_Gt);
    function Compare_String_Literals (L, R : Iir) return Compare_Type;

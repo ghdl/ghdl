@@ -2315,6 +2315,13 @@ package body Vhdl.Sem_Expr is
             return;
          end if;
 
+         --  If the choice is an aggregate (which could be static in vhdl08),
+         --  transform it into a simple aggregate to ease the comparisons.
+         if Get_Kind (Expr) = Iir_Kind_Aggregate then
+            Expr := Eval_String_Literal (Expr);
+            Set_Choice_Expression (Choice, Expr);
+         end if;
+
          Choice_Len := Eval_Discrete_Type_Length
            (Get_String_Type_Bound_Type (Get_Type (Expr)));
          if Sel_Length = -1 then
