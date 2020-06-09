@@ -955,7 +955,7 @@ package body Ortho_LLVM is
                   end case;
 
                when ON_Mod_Ov
-                 | ON_Rem_Ov => -- FIXME...
+                 | ON_Rem_Ov =>
                   case Left.Etype.Kind is
                      when ON_Unsigned_Type =>
                         Build := BuildURem'Access;
