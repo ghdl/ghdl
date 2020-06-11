@@ -223,7 +223,7 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 
   //  Create a target machine
   TheTargetMachine = LLVMCreateTargetMachine
-    (TheTarget, Triple, NULL, NULL, Optimization, TheReloc,
+    (TheTarget, Triple, "", "", Optimization, TheReloc,
      LLVMCodeModelDefault);
 
   TheTargetData = LLVMCreateTargetDataLayout(TheTargetMachine);
@@ -461,7 +461,7 @@ extern "C" void
 finish_access_type(OTnodeAcc *AccType, OTnode DType)
 {
   //  Must be incomplete.
-  assert (AccType->Acc -= nullptr);
+  assert (AccType->Acc == nullptr);
 
   LLVMTypeRef Types[1] = { DType->Ref };
   LLVMStructSetBody(LLVMGetElementType(AccType->Ref), Types, 1, 0);
@@ -620,7 +620,7 @@ extern "C" void
 start_uncomplete_record_type(OTnodeRec *Res, OElementList *Els)
 {
   //  Must be incomplete.
-  assert (Res->Ref == nullptr);
+  assert (Res->Kind == OTKIncompleteRecord);
 
   *Els = {OF_Record,
 	  0,
@@ -1520,7 +1520,7 @@ finish_case_stmt (OCaseBlock *Blk)
     LE = LLVMIntSLE;
     break;
   default:
-    llvm_unreachable();
+    llvm_unreachable("bad expr type for case");
   }
 
   //  BB for the default case.
@@ -1753,7 +1753,7 @@ new_monadic_op (ONOpKind Kind, OEnode Operand)
 	 "");
       break;
     default:
-      llvm_unreachable();
+      llvm_unreachable("bad scalar monadic op");
     }
     break;
   case OTKFloat:
@@ -1917,7 +1917,7 @@ new_dyadic_op (ONOpKind Kind, OEnode Left, OEnode Right)
       Build = &LLVMBuildFDiv;
       break;
     default:
-      llvm_unreachable();
+      llvm_unreachable("bad float dyadic op");
     }
     break;
 
@@ -1985,7 +1985,7 @@ new_convert_ov (OEnode Val, OTnode Rtype)
       }
       break;
     default:
-      llvm_unreachable();
+      llvm_unreachable("bad convert type");
     }
     break;
   case OTKFloat:
@@ -2112,7 +2112,8 @@ new_obj (ODnode Obj)
     return { true, Obj->Ref, Obj->Dtype };
   case ODKType:
   case ODKSubprg:
-    llvm_unreachable();
+  default:
+    llvm_unreachable("bad new_obj obj");
   }
 }
 
@@ -2219,7 +2220,7 @@ new_access_element (OEnode Acc)
     }
     break;
   default:
-    llvm_unreachable();
+    llvm_unreachable("bad new_access_element");
   }
   return {false, Res, static_cast<OTnodeAccBase *>(Acc.Etype)->Acc };
 }
@@ -2245,7 +2246,7 @@ new_address (OLnode *Lvalue, OTnode Atype)
 extern "C" void
 new_assign_stmt (OLnode *Target, OEnode Value)
 {
-  assert (!Targ->Direct);
+  assert (!Target->Direct);
   if (!Unreach) {
     LLVMBuildStore(Builder, Value.Ref, Target->Ref);
   }

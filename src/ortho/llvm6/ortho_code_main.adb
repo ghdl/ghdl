@@ -18,7 +18,6 @@
 
 with Ada.Command_Line; use Ada.Command_Line;
 with Ada.Unchecked_Deallocation;
-with Ada.Unchecked_Conversion;
 with Ada.Text_IO; use Ada.Text_IO;
 
 with Ortho_Front; use Ortho_Front;
