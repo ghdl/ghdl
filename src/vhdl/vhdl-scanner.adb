@@ -2427,21 +2427,11 @@ package body Vhdl.Scanner is
             Pos := Pos + 1;
             return;
          when '{' =>
-            if Flag_Psl then
-               Current_Token := Tok_Left_Curly;
-            else
-               Error_Msg_Scan ("'{' is an invalid character, replaced by '('");
-               Current_Token := Tok_Left_Paren;
-            end if;
+            Current_Token := Tok_Left_Curly;
             Pos := Pos + 1;
             return;
          when '}' =>
-            if Flag_Psl then
-               Current_Token := Tok_Right_Curly;
-            else
-               Error_Msg_Scan ("'}' is an invalid character, replaced by ')'");
-               Current_Token := Tok_Right_Paren;
-            end if;
+            Current_Token := Tok_Right_Curly;
             Pos := Pos + 1;
             return;
          when '\' =>
