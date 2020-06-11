@@ -38,6 +38,7 @@
 --    + Integer signals aren't displayed correctly but only their lowest bit is
 --      shown.
 
+with Ada.Unchecked_Deallocation;
 with Interfaces; use Interfaces;
 with Interfaces.C;
 with Grt.Types; use Grt.Types;
@@ -54,7 +55,7 @@ with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.To_Strings;
 with Grt.Wave_Opt; use Grt.Wave_Opt;
 with Grt.Wave_Opt.Design; use Grt.Wave_Opt.Design;
-with Ada.Unchecked_Deallocation;
+with Grt.Options;
 pragma Elaborate_All (Grt.Table);
 
 package body Grt.Fst is
@@ -113,7 +114,7 @@ package body Grt.Fst is
 
       fstWriterSetFileType (Context, FST_FT_VHDL);
       fstWriterSetPackType (Context, FST_WR_PT_LZ4);
-      fstWriterSetTimescale (Context, -15); --  fs
+      fstWriterSetTimescale (Context, -3 * Options.Time_Resolution_Scale);
       fstWriterSetVersion (Context, To_Ghdl_C_String (Version'Address));
       fstWriterSetRepackOnClose (Context, 1);
       fstWriterSetParallelMode (Context, 0);
