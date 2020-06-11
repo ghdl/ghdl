@@ -23,13 +23,23 @@
 #include "llvm-c/TargetMachine.h"
 #include "llvm-c/Core.h"
 #include "llvm-c/BitWriter.h"
+
 #include "llvm-c/Analysis.h"
 #include "llvm-c/Transforms/Scalar.h"
+#if LLVM_VERSION_MAJOR >= 4
+#include "llvm-c/Transforms/Utils.h"
+#endif
 
+#ifdef USE_DEBUG
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/DIBuilder.h"
 #include "llvm/Support/FileSystem.h"
 #include <vector>
+#endif
+
+#if LLVM_VERSION_MAJOR >= 4
+#define USE_ATTRIBUTES
+#endif
 
 using namespace llvm;
 
@@ -57,17 +67,22 @@ static LLVMValueRef StackRestoreFun;
 static LLVMValueRef CopySignFun;
 
 static LLVMValueRef Fp0_5;
+
+#ifdef USE_ATTRIBUTES
 static LLVMAttributeRef NounwindAttr;
 static LLVMAttributeRef UwtableAttr;
+#endif
 
 static bool Unreach;
 
+#ifdef USE_DEBUG
 static unsigned DebugCurrentLine;
 static std::string *DebugCurrentFilename;
 static std::string *DebugCurrentDirectory;
 static DIFile *DebugCurrentFile;
 
 static DIBuilder *DBuilder;
+#endif
 
 extern "C" void
 set_optimization_level (unsigned level)
@@ -150,7 +165,7 @@ extern "C" void
 generate_object(char *Filename)
 {
   char *Msg;
-  
+
   generateCommon();
 
   if (LLVMTargetMachineEmitToFile (TheTargetMachine, TheModule, Filename,
@@ -226,8 +241,13 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
     (TheTarget, Triple, "", "", Optimization, TheReloc,
      LLVMCodeModelDefault);
 
+#if LLVM_VERSION_MAJOR < 4
+  TheTargetData = LLVMGetTargetMachineData (TheTargetMachine);
+  LLVMSetDataLayout (TheModule, LLVMCopyStringRepOfTargetData (TheTargetData));
+#else
   TheTargetData = LLVMCreateTargetDataLayout(TheTargetMachine);
   LLVMSetModuleDataLayout(TheModule, TheTargetData);
+#endif
 
   Builder = LLVMCreateBuilder();
   DeclBuilder = LLVMCreateBuilder();
@@ -253,6 +273,7 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 
   Fp0_5 = LLVMConstReal(LLVMDoubleType(), 0.5);
 
+#ifdef USE_ATTRIBUTES
   unsigned AttrId;
 
   AttrId = LLVMGetEnumAttributeKindForName("nounwind", 8);
@@ -262,10 +283,12 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
   AttrId = LLVMGetEnumAttributeKindForName("uwtable", 7);
   assert (AttrId != 0);
   UwtableAttr = LLVMCreateEnumAttribute(LLVMGetGlobalContext(), AttrId, 0);
+#endif
 
+#ifdef USE_DEBUG
   if (FlagDebugLines) {
     DBuilder = new DIBuilder(*unwrap(TheModule));
-    
+
     DebugCurrentFilename = new std::string(Filename, FilenameLength);
     SmallString<128> CurrentDir;
     llvm::sys::fs::current_path(CurrentDir);
@@ -275,6 +298,7 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
     DebugCurrentFile = DBuilder->createFile(StringRef(*DebugCurrentFilename),
 					    StringRef(*DebugCurrentDirectory));
   }
+#endif
 }
 
 enum OTKind : unsigned char {
@@ -1080,8 +1104,13 @@ finish_subprogram_decl(OInterList *Inters, ODnode *Res)
     Decl = nullptr;
   if (Decl == nullptr) {
     Decl = LLVMAddFunction(TheModule, Inters->Ident.cstr, Ftype);
+#ifdef USE_ATTRIBUTES
     LLVMAddAttributeAtIndex(Decl, LLVMAttributeFunctionIndex, NounwindAttr);
     LLVMAddAttributeAtIndex(Decl, LLVMAttributeFunctionIndex, UwtableAttr);
+#else
+    LLVMAddFunctionAttr (Decl, LLVMNoUnwindAttribute);
+    LLVMAddFunctionAttr (Decl, LLVMUWTable);
+#endif
     LLVMSetFunctionCallConv(Decl, LLVMCCallConv);
   }
 
@@ -2255,11 +2284,15 @@ new_assign_stmt (OLnode *Target, OEnode Value)
 extern "C" void
 new_debug_line_decl (unsigned Line)
 {
+#ifdef USE_DEBUG
   DebugCurrentLine = Line;
+#endif
 }
 
 extern "C" void
 new_debug_line_stmt (unsigned Line)
 {
+#ifdef USE_DEBUG
   DebugCurrentLine = Line;
+#endif
 }
