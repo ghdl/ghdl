@@ -3435,14 +3435,19 @@ package body Vhdl.Canon is
             when Iir_Kind_Psl_Cover_Directive =>
                Canon_Psl_Cover_Directive (Item);
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Function_Body
-              | Iir_Kind_Procedure_Body
-              | Iir_Kind_Attribute_Declaration
-              | Iir_Kind_Attribute_Specification =>
+               | Iir_Kind_Function_Declaration
+               | Iir_Kind_Procedure_Declaration
+               | Iir_Kind_Function_Body
+               | Iir_Kind_Procedure_Body
+               | Iir_Kind_Attribute_Declaration
+               | Iir_Kind_Attribute_Specification =>
                Item := Canon_Declaration (Unit, Item, Null_Iir);
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            when Iir_Kinds_Concurrent_Signal_Assignment
+               | Iir_Kinds_Process_Statement
+               | Iir_Kinds_Generate_Statement
+               | Iir_Kind_Block_Statement
+               | Iir_Kind_Concurrent_Procedure_Call_Statement
+               | Iir_Kind_Component_Instantiation_Statement =>
                Canon_Concurrent_Label (Item, Proc_Num);
                Canon_Concurrent_Statement (Item, Unit);
             when others =>

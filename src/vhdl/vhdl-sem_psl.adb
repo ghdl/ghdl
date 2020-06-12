@@ -1195,15 +1195,20 @@ package body Vhdl.Sem_Psl is
             when Iir_Kind_Psl_Cover_Directive =>
                Sem_Psl_Cover_Directive (Item);
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Function_Body
-              | Iir_Kind_Procedure_Body
-              | Iir_Kind_Attribute_Declaration
-              | Iir_Kind_Attribute_Specification =>
+               | Iir_Kind_Function_Declaration
+               | Iir_Kind_Procedure_Declaration
+               | Iir_Kind_Function_Body
+               | Iir_Kind_Procedure_Body
+               | Iir_Kind_Attribute_Declaration
+               | Iir_Kind_Attribute_Specification =>
                Sem_Decls.Sem_Declaration
                  (Item, Prev_Item, False, Attr_Spec_Chain);
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            when Iir_Kinds_Concurrent_Signal_Assignment
+               | Iir_Kinds_Process_Statement
+               | Iir_Kinds_Generate_Statement
+               | Iir_Kind_Block_Statement
+               | Iir_Kind_Concurrent_Procedure_Call_Statement
+               | Iir_Kind_Component_Instantiation_Statement =>
                Sem_Stmts.Sem_Concurrent_Statement (Item, False);
             when others =>
                Error_Kind ("sem_psl_verification_unit", Item);

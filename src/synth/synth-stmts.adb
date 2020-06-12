@@ -3650,7 +3650,12 @@ package body Synth.Stmts is
               | Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification =>
                Synth_Declaration (Unit_Inst, Item, False, Last_Type);
-            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            when Iir_Kinds_Concurrent_Signal_Assignment
+               | Iir_Kinds_Process_Statement
+               | Iir_Kinds_Generate_Statement
+               | Iir_Kind_Block_Statement
+               | Iir_Kind_Concurrent_Procedure_Call_Statement
+               | Iir_Kind_Component_Instantiation_Statement =>
                Synth_Concurrent_Statement (Unit_Inst, Item);
             when others =>
                Error_Kind ("synth_verification_unit", Item);

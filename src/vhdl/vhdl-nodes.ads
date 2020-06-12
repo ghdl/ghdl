@@ -6664,6 +6664,11 @@ package Vhdl.Nodes is
    --Iir_Kind_Psl_Cover_Directive
      Iir_Kind_Psl_Restrict_Directive;
 
+   subtype Iir_Kinds_Generate_Statement is Iir_Kind range
+     Iir_Kind_If_Generate_Statement ..
+   --Iir_Kind_Case_Generate_Statement
+     Iir_Kind_For_Generate_Statement;
+
    subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range
      Iir_Kind_Concurrent_Simple_Signal_Assignment ..
    --Iir_Kind_Concurrent_Conditional_Signal_Assignment

@@ -496,6 +496,11 @@ class Iir_Kinds:
         Iir_Kind.Psl_Rose,
         Iir_Kind.Psl_Fell]
 
+    Generate_Statement = [
+        Iir_Kind.If_Generate_Statement,
+        Iir_Kind.Case_Generate_Statement,
+        Iir_Kind.For_Generate_Statement]
+
     Composite_Subtype_Definition = [
         Iir_Kind.Array_Subtype_Definition,
         Iir_Kind.Record_Subtype_Definition]
