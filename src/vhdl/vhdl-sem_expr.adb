@@ -4624,6 +4624,21 @@ package body Vhdl.Sem_Expr is
       end if;
    end Sem_Dyadic_Operator;
 
+   function Sem_Parenthesis_Expression (Expr : Iir; Atype: Iir) return Iir
+   is
+      Sub_Expr : Iir;
+   begin
+      Sub_Expr := Get_Expression (Expr);
+      Sub_Expr := Sem_Expression_Ov (Sub_Expr, Atype);
+      if Sub_Expr = Null_Iir then
+         return Null_Iir;
+      end if;
+      Set_Expression (Expr, Sub_Expr);
+      Set_Type (Expr, Get_Type (Sub_Expr));
+      Set_Expr_Staticness (Expr, Get_Expr_Staticness (Sub_Expr));
+      return Expr;
+   end Sem_Parenthesis_Expression;
+
    -- Set semantic to EXPR.
    --  Replace simple_name with the referenced node,
    --  Set type to nodes,
@@ -4800,19 +4815,7 @@ package body Vhdl.Sem_Expr is
             end if;
 
          when Iir_Kind_Parenthesis_Expression =>
-            declare
-               Sub_Expr : Iir;
-            begin
-               Sub_Expr := Get_Expression (Expr);
-               Sub_Expr := Sem_Expression_Ov (Sub_Expr, A_Type1);
-               if Sub_Expr = Null_Iir then
-                  return Null_Iir;
-               end if;
-               Set_Expression (Expr, Sub_Expr);
-               Set_Type (Expr, Get_Type (Sub_Expr));
-               Set_Expr_Staticness (Expr, Get_Expr_Staticness (Sub_Expr));
-               return Expr;
-            end;
+            return Sem_Parenthesis_Expression (Expr, A_Type1);
 
          when Iir_Kind_Qualified_Expression =>
             return Sem_Qualified_Expression (Expr, A_Type);
@@ -5144,7 +5147,7 @@ package body Vhdl.Sem_Expr is
                Ntype : Iir;
             begin
                Sub_Expr := Get_Expression (Expr);
-               if Atype_Defined then
+               if Atype_Defined and then not Flag_Relaxed_Rules then
                   --  Very important: loose the subtype due to
                   --  LRM93 7.3.2.2 Array aggregate.
                   Ntype := Get_Base_Type (Atype);
@@ -5304,6 +5307,28 @@ package body Vhdl.Sem_Expr is
                Set_Type (Expr, A_Type);
                Sem_String_Literal (Expr);
                return Expr;
+            end if;
+         when Iir_Kind_Parenthesis_Expression =>
+            if Flag_Relaxed_Rules then
+               --  With -frelaxed, consider parentheses as a no-op.
+               --  The difference is significant for aggregates with 'others'
+               --  choice.
+               declare
+                  Sub_Expr : Iir;
+               begin
+                  Sub_Expr := Get_Expression (Expr);
+                  Sub_Expr := Sem_Expression (Sub_Expr, A_Type);
+                  if Sub_Expr = Null_Iir then
+                     return Null_Iir;
+                  end if;
+                  Set_Expression (Expr, Sub_Expr);
+                  Set_Type (Expr, Get_Type (Sub_Expr));
+                  Set_Expr_Staticness (Expr, Get_Expr_Staticness (Sub_Expr));
+                  return Expr;
+               end;
+            else
+               --  Loose the subtype, use the type.
+               Res := Sem_Parenthesis_Expression (Expr, A_Type1);
             end if;
          when others =>
             Res := Sem_Expression_Ov (Expr, A_Type1);
