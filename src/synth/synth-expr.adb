@@ -1880,7 +1880,7 @@ package body Synth.Expr is
       Clk_Net   : Net;
       Num       : Int64;
    begin
-      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+      Expr := Synth_Expression_With_Basetype (Syn_Inst, Get_Expression (Call));
 
       Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call, Ctxt);
 
@@ -1911,7 +1911,7 @@ package body Synth.Expr is
       Clk_Net : Net;
       Res     : Net;
    begin
-      Expr := Synth_Expression (Syn_Inst, Get_Expression (Call));
+      Expr := Synth_Expression_With_Basetype (Syn_Inst, Get_Expression (Call));
 
       Clk_Net := Synth_Psl_Function_Clock (Syn_Inst, Call, Ctxt);
 
