@@ -225,8 +225,7 @@ echo "Build machine is: $build"
 
 # For mcode, check that gcc emits i386
 if test $backend = mcode; then
-  gcc_machine=`$CC $CFLAGS -dumpmachine`
-  case "$gcc_machine" in
+  case "$build" in
     i[3-6]86*) mcode64="" ;;
     x86_64*) mcode64="64" ;;
     *)
