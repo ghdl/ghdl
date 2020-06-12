@@ -2,7 +2,9 @@
 
 . ../../testenv.sh
 
-analyze_failure mwe.vhdl
+analyze_failure mwe_aggr.vhdl
+analyze -frelaxed mwe_aggr.vhdl
+analyze mwe_case.vhdl
 
 clean
 
