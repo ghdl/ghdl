@@ -560,7 +560,7 @@ package body Vhdl.Sem is
             Set_Collapse_Signal_Flag (Assoc, False);
 
             pragma Assert (Is_Null (Get_Actual_Conversion (Assoc)));
-            if Flags.Vhdl_Std >= Vhdl_93c then
+            if Flags.Vhdl_Std >= Vhdl_93 then
                --  LRM93 1.1.1.2 Ports
                --  Moreover, the ports of a block may be associated
                --  with an expression, in order to provide these ports

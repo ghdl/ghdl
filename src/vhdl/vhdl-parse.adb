@@ -4200,7 +4200,9 @@ package body Vhdl.Parse is
 
             case Current_Token is
                when Tok_In | Tok_Out | Tok_Inout =>
-                  if Flags.Vhdl_Std >= Vhdl_93 then
+                  if Flags.Vhdl_Std /= Vhdl_87
+                    and then not Flags.Flag_Relaxed_Files87
+                  then
                      Error_Msg_Parse ("mode allowed only in vhdl 87");
                   end if;
                   Mode := Parse_Mode;
@@ -7478,7 +7480,7 @@ package body Vhdl.Parse is
       Expect_Scan (Tok_End);
       Expect_Scan (Tok_Case);
 
-      if Flags.Vhdl_Std >= Vhdl_93c then
+      if Flags.Vhdl_Std >= Vhdl_93 then
          Check_End_Name (Stmt);
       end if;
 
@@ -7782,7 +7784,7 @@ package body Vhdl.Parse is
                Stmt := Parse_If_Statement (Parent);
                Set_Label (Stmt, Label);
                Set_Location (Stmt, Loc);
-               if Flags.Vhdl_Std >= Vhdl_93c then
+               if Flags.Vhdl_Std >= Vhdl_93 then
                   Check_End_Name (Stmt);
                end if;
             when Tok_Case =>

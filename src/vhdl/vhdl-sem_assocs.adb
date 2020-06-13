@@ -353,7 +353,9 @@ package body Vhdl.Sem_Assocs is
                            --  LRM87 4.3.1.4
                            --  Such an object is a member of the variable
                            --  class of objects;
-                           if Flags.Vhdl_Std >= Vhdl_93 then
+                           if Flags.Vhdl_Std >= Vhdl_93
+                             and then not Flags.Flag_Relaxed_Files87
+                           then
                               Error_Msg_Sem
                                 (+Assoc, "variable parameter cannot be a "
                                    & "file (vhdl93)");
@@ -372,9 +374,12 @@ package body Vhdl.Sem_Assocs is
                            null;
                         when Iir_Kind_Variable_Declaration
                           | Iir_Kind_Interface_Variable_Declaration =>
-                           if Flags.Vhdl_Std >= Vhdl_93 then
-                              Error_Msg_Sem (+Assoc, "file parameter "
-                                               & "must be a file (vhdl93)");
+                           if Flags.Vhdl_Std >= Vhdl_93
+                             and then not Flags.Flag_Relaxed_Files87
+                           then
+                              Error_Msg_Sem
+                                (+Assoc,
+                                 "file parameter must be a file (vhdl93)");
                            end if;
                         when others =>
                            Error_Msg_Sem
@@ -492,7 +497,7 @@ package body Vhdl.Sem_Assocs is
       pragma Assert (Amode /= Iir_Unknown_Mode);
 
       case Flags.Vhdl_Std is
-         when Vhdl_87 | Vhdl_93c | Vhdl_93 | Vhdl_00 =>
+         when Vhdl_87 | Vhdl_93 | Vhdl_00 =>
             if Vhdl93_Assocs_Map (Fmode, Amode) then
                return True;
             end if;
@@ -544,9 +549,8 @@ package body Vhdl.Sem_Assocs is
          --  (during elaboration).
 
          --  In vhdl08, the subtypes must be compatible.  Use the that rule
-         --  for 93c and relaxed rules.
+         --  for relaxed rules.
          if Vhdl_Std >= Vhdl_08
-           or else Vhdl_Std = Vhdl_93c
            or else Flag_Relaxed_Rules
          then
             return Eval_Is_Range_In_Bound (Src, Dest, True);

@@ -253,7 +253,9 @@ Options
 
 .. option:: --std=<STANDARD>
 
-  Specify the standard to use. By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax. For details on ``STANDARD`` values see section :ref:`VHDL_standards`.
+  Specify the standard to use. By default, the standard is ``93c``,
+  which means VHDL-93 with relaxed rules. For details on ``STANDARD``
+  values see section :ref:`VHDL_standards`.
 
 .. option:: -fsynopsys
 
@@ -318,22 +320,33 @@ Options
 .. option:: -frelaxed
 .. option:: -frelaxed-rules
 
-  Within an object declaration, allow references to the name (which references the hidden declaration). This ignores the error in the following code:
+  Slightly relax some rules to be compatible with various other
+  simulators or synthesizers:
 
-  .. code-block:: VHDL
+  * VHDL-87 file declarations are accepted;
 
-   package pkg1 is
-     type state is (state1, state2, state3);
-   end pkg1;
+  * Default binding indication rules of VHDL-02 are used. Default binding rules
+    are often used, but they are particularly obscure before VHDL-02.
 
-   use work.pkg1.all;
-   package pkg2 is
-     constant state1 : state := state1;
-   end pkg2;
+  * Within an object declaration, allow references to the name (which references the hidden declaration). This ignores the error in the following code:
 
-  Some code (such as Xilinx packages) have such constructs, which are valid.
+    .. code-block:: VHDL
 
-  (The scope of the ``state1`` constant starts at the `constant` keyword. Because the constant ``state1`` and the enumeration literal ``state1`` are homographs, the enumeration literal is hidden in the immediate scope of the constant).
+     package pkg1 is
+       type state is (state1, state2, state3);
+     end pkg1;
+
+     use work.pkg1.all;
+     package pkg2 is
+       constant state1 : state := state1;
+     end pkg2;
+
+    Some code (such as Xilinx packages) have such constructs, which are valid.
+
+    (The scope of the ``state1`` constant starts at the `constant`
+    keyword. Because the constant ``state1`` and the enumeration
+    literal ``state1`` are homographs, the enumeration literal is
+    hidden in the immediate scope of the constant).
 
   This option also relaxes the rules about pure functions. Violations result in warnings instead of errors.
 

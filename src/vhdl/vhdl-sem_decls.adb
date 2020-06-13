@@ -279,6 +279,7 @@ package body Vhdl.Sem_Decls is
                      --  parameter includes the reserved word BUS.
                      if Flags.Vhdl_Std >= Vhdl_93
                        and then Interface_Kind in Parameter_Interface_List
+                       and then not Flags.Flag_Relaxed_Rules
                      then
                         Error_Msg_Sem
                           (+Inter, "signal parameter can't be of kind bus");
@@ -307,7 +308,9 @@ package body Vhdl.Sem_Decls is
             when Iir_Kind_Interface_Variable_Declaration =>
                case Get_Kind (Get_Base_Type (A_Type)) is
                   when Iir_Kind_File_Type_Definition =>
-                     if Flags.Vhdl_Std >= Vhdl_93 then
+                     if Flags.Vhdl_Std >= Vhdl_93
+                       and then not Flags.Flag_Relaxed_Rules
+                     then
                         Error_Msg_Sem
                           (+Inter,
                            "variable formal can't be a file (vhdl 93)");

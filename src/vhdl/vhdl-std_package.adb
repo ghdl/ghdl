@@ -868,7 +868,7 @@ package body Vhdl.Std_Package is
 
          Constraint : Iir_Range_Expression;
       begin
-         if Vhdl_Std >= Vhdl_93c then
+         if Vhdl_Std >= Vhdl_93 then
             Time_Staticness := Globally;
          else
             Time_Staticness := Locally;
@@ -953,7 +953,7 @@ package body Vhdl.Std_Package is
 
          --  VHDL93
          --  subtype DELAY_LENGTH is TIME range 0 to TIME'HIGH
-         if Vhdl_Std >= Vhdl_93c then
+         if Vhdl_Std >= Vhdl_93 then
             Delay_Length_Subtype_Definition :=
               Create_Std_Iir (Iir_Kind_Physical_Subtype_Definition);
             Set_Subtype_Type_Mark
@@ -1258,7 +1258,7 @@ package body Vhdl.Std_Package is
 
       --  VHDL93:
       --  type file_open_kind is (read_mode, write_mode, append_mode);
-      if Vhdl_Std >= Vhdl_93c then
+      if Vhdl_Std >= Vhdl_93 then
          File_Open_Kind_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Base_Type (File_Open_Kind_Type_Definition,
@@ -1297,7 +1297,7 @@ package body Vhdl.Std_Package is
       --  VHDL93:
       --  type file_open_status is
       --      (open_ok, status_error, name_error, mode_error);
-      if Vhdl_Std >= Vhdl_93c then
+      if Vhdl_Std >= Vhdl_93 then
          File_Open_Status_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Base_Type (File_Open_Status_Type_Definition,
@@ -1337,7 +1337,7 @@ package body Vhdl.Std_Package is
 
       --  VHDL93:
       --  attribute FOREIGN: string;
-      if Vhdl_Std >= Vhdl_93c then
+      if Vhdl_Std >= Vhdl_93 then
          Foreign_Attribute := Create_Std_Decl (Iir_Kind_Attribute_Declaration);
          Set_Std_Identifier (Foreign_Attribute, Name_Foreign);
          Set_Type_Mark (Foreign_Attribute,
@@ -1445,7 +1445,7 @@ package body Vhdl.Std_Package is
       Change_Unit (Get_Right_Limit (Rng), Prim);
 
       --  Adjust range of DELAY_LENGTH.
-      if Vhdl_Std >= Vhdl_93c then
+      if Vhdl_Std >= Vhdl_93 then
          Rng := Get_Range_Constraint (Delay_Length_Subtype_Definition);
          Change_Unit (Get_Left_Limit (Rng), Prim);
          Change_Unit (Get_Right_Limit (Rng), Prim);

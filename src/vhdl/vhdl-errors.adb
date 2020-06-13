@@ -120,7 +120,7 @@ package body Vhdl.Errors is
    is
       Level : Msgid_Type;
    begin
-      if Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c then
+      if Flag_Relaxed_Rules then
          if not Is_Warning_Enabled (Id) then
             return;
          end if;

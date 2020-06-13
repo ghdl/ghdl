@@ -147,7 +147,7 @@ package body Vhdl.Sem_Utils is
       Last := Decl;
       Loc := Get_Location (Decl);
 
-      if Flags.Vhdl_Std >= Vhdl_93c then
+      if Flags.Vhdl_Std >= Vhdl_93 then
          for I in 1 .. 2 loop
             --  Create the implicit file_open (form 1) declaration.
             --  Create the implicit file_open (form 2) declaration.

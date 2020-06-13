@@ -81,13 +81,7 @@ You can select the VHDL standard expected by GHDL with the
   Select VHDL-93; VHDL-87 file declarations are not accepted.
 
 93c
-  Select VHDL-93 standard with relaxed rules:
-
-
-  * VHDL-87 file declarations are accepted;
-
-  * default binding indication rules of VHDL-02 are used. Default binding rules
-    are often used, but they are particularly obscure before VHDL-02.
+  Same as 93 and :option:`-frelaxed`.
 
 00
   Select VHDL-2000 standard, which adds protected types.

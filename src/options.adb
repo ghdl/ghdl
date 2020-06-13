@@ -89,6 +89,8 @@ package body Options is
       pragma Assert (Opt'First = 1);
    begin
       if Opt'Last > 5 and then Opt (1 .. 6) = "--std=" then
+         Flag_Relaxed_Rules := False;
+         Flag_Relaxed_Files87 := False;
          if Opt'Length = 8 then
             if Opt (7 .. 8) = "87" then
                Vhdl_Std := Vhdl_87;
@@ -105,7 +107,9 @@ package body Options is
                return Option_Err;
             end if;
          elsif Opt'Length = 9 and then Opt (7 .. 9) = "93c" then
-            Vhdl_Std := Vhdl_93c;
+            Vhdl_Std := Vhdl_93;
+            Flag_Relaxed_Rules := True;
+            Flag_Relaxed_Files87 := True;
          else
             Error_Msg_Option ("unknown language standard");
             return Option_Err;

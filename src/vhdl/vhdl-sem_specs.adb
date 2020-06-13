@@ -365,10 +365,10 @@ package body Vhdl.Sem_Specs is
       Set_Attribute_Value_Spec_Chain (Attr, El);
 
       --  Special handling for 'Foreign.
-      if (Flags.Vhdl_Std >= Vhdl_93c
+      if (Flags.Vhdl_Std >= Vhdl_93
           and then Attr_Decl = Foreign_Attribute)
         or else
-        (Flags.Vhdl_Std <= Vhdl_93c
+        (Flags.Vhdl_Std <= Vhdl_93
          and then Get_Identifier (Attr_Decl) = Std_Names.Name_Foreign)
       then
          --  LRM93 12.4
@@ -769,7 +769,7 @@ package body Vhdl.Sem_Specs is
          Inter : Name_Interpretation_Type;
          Decl : Iir;
       begin
-         if Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c then
+         if Flag_Relaxed_Rules then
             --  Some (clueless ?) vendors put attribute specifications in
             --  architectures for ports (declared in entities).  This is not
             --  valid according to the LRM (eg: LRM02 5.1 Attribute
@@ -2003,8 +2003,8 @@ package body Vhdl.Sem_Specs is
       --     containing the design unit in which the component C is
       --     declared.
       if Flags.Flag_Syn_Binding
+        or Flags.Flag_Relaxed_Rules
         or Flags.Vhdl_Std >= Vhdl_02
-        or Flags.Vhdl_Std = Vhdl_93c
       then
          --  Find target library.
          Target_Lib := Comp;
@@ -2077,7 +2077,7 @@ package body Vhdl.Sem_Specs is
       --     containing the design unit in which the component C is
       --     declared.
       if Flags.Vhdl_Std >= Vhdl_02
-        or else Flags.Vhdl_Std = Vhdl_93c
+        or else Flags.Flag_Relaxed_Rules
       then
          Decl := Comp;
          while Get_Kind (Decl) /= Iir_Kind_Library_Declaration loop

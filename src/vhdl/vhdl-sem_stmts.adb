@@ -1031,10 +1031,8 @@ package body Vhdl.Sem_Stmts is
                end if;
                --  GHDL: I don't understand why the indexing expressions
                --  must be locally static.  So I don't check this in 93c.
-               if Flags.Vhdl_Std /= Vhdl_93c
-                 and then
-                 (Get_Expr_Staticness
-                    (Get_Nth_Element (Get_Index_List (Expr), 0)) /= Locally)
+               if (Get_Expr_Staticness
+                   (Get_Nth_Element (Get_Index_List (Expr), 0)) /= Locally)
                then
                   Error_Msg_Sem
                     (+Expr, "indexing expression must be locally static");

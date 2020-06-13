@@ -124,7 +124,7 @@ package body Libraries is
       case Vhdl_Std is
          when Vhdl_87 =>
             return Image_Identifier (Library) & "-obj87.cf";
-         when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>
+         when Vhdl_93 | Vhdl_00 | Vhdl_02 =>
             return Image_Identifier (Library) & "-obj93.cf";
          when Vhdl_08 =>
             return Image_Identifier (Library) & "-obj08.cf";
@@ -166,7 +166,7 @@ package body Libraries is
             case Vhdl_Std is
                when Vhdl_87 =>
                   Path (L + 2 .. L + 4) := "v87";
-               when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>
+               when Vhdl_93 | Vhdl_00 | Vhdl_02 =>
                   Path (L + 2 .. L + 4) := "v93";
                when Vhdl_08 =>
                   Path (L + 2 .. L + 4) := "v08";

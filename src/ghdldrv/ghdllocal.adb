@@ -361,10 +361,9 @@ package body Ghdllocal is
       case Vhdl_Std is
          when Vhdl_87 =>
             return "v87";
-         when Vhdl_93c
-           | Vhdl_93
-           | Vhdl_00
-           | Vhdl_02 =>
+         when Vhdl_93
+            | Vhdl_00
+            | Vhdl_02 =>
             return "v93";
          when Vhdl_08 =>
             return "v08";

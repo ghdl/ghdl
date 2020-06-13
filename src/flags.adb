@@ -22,10 +22,9 @@ package body Flags is
       case Vhdl_Std is
          when Vhdl_87 =>
             Flag_String (1 .. 2) := "87";
-         when Vhdl_93c
-           | Vhdl_93
-           | Vhdl_00
-           | Vhdl_02 =>
+         when Vhdl_93
+            | Vhdl_00
+            | Vhdl_02 =>
             Flag_String (1 .. 2) := "93";
          when Vhdl_08 =>
             Flag_String (1 .. 2) := "08";

@@ -1364,7 +1364,7 @@ package body Vhdl.Sem_Types is
       end if;
       -- LRM93 2.4
       --  A resolution function must be a [pure] function;
-      if Flags.Vhdl_Std >= Vhdl_93 and then Get_Pure_Flag (Func) = False then
+      if not Flags.Flag_Relaxed_Rules and then not Get_Pure_Flag (Func) then
          if Atype /= Null_Iir then
             Error_Msg_Sem (+Atype, "resolution %n must be pure", +Func);
          end if;

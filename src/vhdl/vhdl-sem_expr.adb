@@ -842,7 +842,7 @@ package body Vhdl.Sem_Expr is
             --  predefined type INTEGER is assumed if the type of both bounds
             --  (prior the implicit conversion) is the type universal_integer.
             null;
-         elsif Vhdl_Std = Vhdl_93c or else Flag_Relaxed_Rules then
+         elsif Flag_Relaxed_Rules then
             null;
          elsif Vhdl_Std /= Vhdl_93 then
             --  GHDL: this is not allowed, however often used:

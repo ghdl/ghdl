@@ -26,10 +26,10 @@ package Flags is
    --  List of vhdl standards.
    --  VHDL_93c is vhdl_93 with backward compatibility with 87 (file).
    type Vhdl_Std_Type is
-     (Vhdl_87, Vhdl_93c, Vhdl_93, Vhdl_00, Vhdl_02, Vhdl_08);
+     (Vhdl_87, Vhdl_93, Vhdl_00, Vhdl_02, Vhdl_08);
 
    --  Standard accepted.
-   Vhdl_Std: Vhdl_Std_Type := Vhdl_93c;
+   Vhdl_Std: Vhdl_Std_Type := Vhdl_93;
 
    --  Enable AMS-VHDL extensions.
    AMS_Vhdl : Boolean := False;
@@ -146,7 +146,10 @@ package Flags is
    --  * the scope of an object declaration names start after the declaration,
    --    so that it is possible to use the old name in the default expression:
    --    constant x : xtype := x;
-   Flag_Relaxed_Rules : Boolean := False;
+   Flag_Relaxed_Rules : Boolean := True;
+
+   --  If true allows vhdl-87 file style.  Enabled with --std=93c
+   Flag_Relaxed_Files87 : Boolean := True;
 
    --  If true, allow to use synopsys packages (std_logic_arith & co).
    Flag_Synopsys : Boolean := False;
