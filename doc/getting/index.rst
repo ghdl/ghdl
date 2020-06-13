@@ -80,5 +80,7 @@ created.
 .. HINT :: On Windows, building GHDL with mcode backend and GNAT GPL 32 bit seems to be the only way to get a standalone native executable.
 
   * MINGW/MSYS2 builds depend on the environment/runtime.
-  * For 64 bit, no native compiler exists from AdaCore.
-  * That Ada to .NET compiler, which might work for 32 or 64 bit. is not up-to-date.
+
+.. HINT ::
+  For MacOS 10.15 (Catalina), see `https://github.com/ghdl/ghdl/issues/1368` for
+  workarounds to link failures.
