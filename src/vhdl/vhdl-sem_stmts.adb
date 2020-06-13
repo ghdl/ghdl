@@ -1087,6 +1087,10 @@ package body Vhdl.Sem_Stmts is
             when Iir_Kind_Simple_Name
               | Iir_Kind_Selected_Name =>
                return Check_Odcat_Expression (Get_Named_Entity (Expr));
+            when Iir_Kind_Parenthesis_Expression =>
+               --  GHDL: not part of the list but expected to be allowed by
+               --  IR2080 and too commonly used!
+               return Check_Odcat_Expression (Get_Expression (Expr));
             when others =>
                Error_Msg_Sem
                  (+Choice, "bad form of case expression (refer to LRM 8.8)");

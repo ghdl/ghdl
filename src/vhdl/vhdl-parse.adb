@@ -6810,6 +6810,21 @@ package body Vhdl.Parse is
       return Res;
    end Parse_Concurrent_Conditional_Signal_Assignment;
 
+   --  Like Parse_Expression, but keep parentheses.
+   --  Parentheses are significant in case expressions, because of
+   --  LRM02 8.8 Case Statement.
+   function Parse_Case_Expression return Iir
+   is
+      Prev_Flag : constant Boolean := Flag_Parse_Parenthesis;
+      Res : Iir;
+   begin
+      Flag_Parse_Parenthesis := True;
+      Res := Parse_Expression;
+      Flag_Parse_Parenthesis := Prev_Flag;
+
+      return Res;
+   end Parse_Case_Expression;
+
    --  precond : WITH
    --  postcond: next token
    --
@@ -6836,7 +6851,7 @@ package body Vhdl.Parse is
 
       Res := Create_Iir (Iir_Kind_Concurrent_Selected_Signal_Assignment);
       Set_Location (Res);
-      Set_Expression (Res, Parse_Expression);
+      Set_Expression (Res, Parse_Case_Expression);
 
       Expect_Scan (Tok_Select, "'select' expected after expression");
 
@@ -7428,7 +7443,7 @@ package body Vhdl.Parse is
       --  Skip 'case'.
       Scan;
 
-      Set_Expression (Stmt, Parse_Expression);
+      Set_Expression (Stmt, Parse_Case_Expression);
 
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
@@ -9135,7 +9150,7 @@ package body Vhdl.Parse is
       --  Skip 'case'.
       Scan;
 
-      Expr := Parse_Expression;
+      Expr := Parse_Case_Expression;
 
       if Current_Token = Tok_Use then
          if not AMS_Vhdl then
