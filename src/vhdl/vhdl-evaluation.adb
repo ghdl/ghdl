@@ -38,6 +38,7 @@ package body Vhdl.Evaluation is
 
    function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir;
    function Eval_Integer_Image (Val : Int64; Orig : Iir) return Iir;
+   function Eval_Floating_Image (Val : Fp64; Orig : Iir) return Iir;
 
    function Eval_Scalar_Compare (Left, Right : Iir) return Compare_Type;
 
@@ -686,6 +687,8 @@ package body Vhdl.Evaluation is
             return Eval_Enum_To_String (Operand, Orig);
          when Iir_Predefined_Integer_To_String =>
             return Eval_Integer_Image (Get_Value (Operand), Orig);
+         when Iir_Predefined_Floating_To_String =>
+            return Eval_Floating_Image (Get_Fp_Value (Operand), Orig);
 
          when Iir_Predefined_Array_Char_To_String =>
             --  LRM08 5.7 String representation
