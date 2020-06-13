@@ -3,7 +3,7 @@
 . ../../testenv.sh
 
 analyze issue_pkg.vhdl
-analyze_failure issue.vhdl
+analyze_failure --std=93 issue.vhdl
 analyze fixed.vhdl
 
 clean

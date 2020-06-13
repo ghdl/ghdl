@@ -2,9 +2,9 @@
 
 . ../../testenv.sh
 
-analyze_failure repro.vhdl
-analyze -C repro.vhdl
-analyze --mb-comments repro.vhdl
+analyze_failure --std=93 repro.vhdl
+analyze --std=93 -C repro.vhdl
+analyze --std=93 --mb-comments repro.vhdl
 
 clean
 

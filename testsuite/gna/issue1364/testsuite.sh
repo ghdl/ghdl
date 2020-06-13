@@ -2,10 +2,10 @@
 
 . ../../testenv.sh
 
-analyze_failure mwe_aggr.vhdl
-analyze -frelaxed mwe_aggr.vhdl
+analyze_failure --std=93 mwe_aggr.vhdl
+analyze mwe_aggr.vhdl
+analyze --std=93 mwe_case.vhdl
 analyze mwe_case.vhdl
-analyze -frelaxed mwe_case.vhdl
 
 clean
 

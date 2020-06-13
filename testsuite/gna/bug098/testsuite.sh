@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-analyze_failure loopy.vhdl
+analyze_failure --std=93 loopy.vhdl
 
 clean
 

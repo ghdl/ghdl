@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-analyze_failure aggr1.vhdl
+analyze_failure --std=93 aggr1.vhdl
 
 clean
 
