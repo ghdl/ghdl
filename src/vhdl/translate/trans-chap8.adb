@@ -19,7 +19,7 @@
 with Simple_IO;
 with Std_Names;
 with Vhdl.Errors; use Vhdl.Errors;
-with Vhdl.Nodes_Utils;
+with Vhdl.Nodes_Utils; use Vhdl.Nodes_Utils;
 with Vhdl.Canon;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
@@ -1156,6 +1156,24 @@ package body Trans.Chap8 is
       end case;
    end Assignment_Overlap;
 
+   --  Return True if AGGR can be easily assigned.
+   --  Currently: is of the form (others => VAL) where VAL is static.
+   function Is_Aggregate_Loop (Aggr : Iir) return Boolean
+   is
+      Chain : Iir;
+      Assoc : Iir;
+   begin
+      pragma Assert (Get_Kind (Aggr) = Iir_Kind_Aggregate);
+      Chain := Get_Association_Choices_Chain (Aggr);
+      if not Is_Chain_Length_One (Chain)
+        or else Get_Kind (Chain) /= Iir_Kind_Choice_By_Others
+      then
+         return False;
+      end if;
+      Assoc := Get_Associated_Expr (Chain);
+      return Get_Expr_Staticness (Assoc) >= Globally;
+   end Is_Aggregate_Loop;
+
    procedure Translate_Variable_Assignment_Statement
      (Stmt : Iir_Variable_Assignment_Statement)
    is
@@ -1189,7 +1207,10 @@ package body Trans.Chap8 is
       else
          Targ_Node := Chap6.Translate_Name (Target, Mode_Value);
          if Get_Kind (Expr) = Iir_Kind_Aggregate then
-            if Get_Constraint_State (Get_Type (Expr)) /= Fully_Constrained then
+            if Is_Aggregate_Loop (Expr) then
+               Chap7.Translate_Aggregate (Targ_Node, Targ_Type, Expr);
+            elsif Get_Constraint_State (Get_Type (Expr)) /= Fully_Constrained
+            then
                declare
                   Expr_Type : constant Iir := Get_Type (Expr);
                   Expr_Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);

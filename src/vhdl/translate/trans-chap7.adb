@@ -2818,14 +2818,8 @@ package body Trans.Chap7 is
    is
       Chain : Iir;
       Aggr1 : Iir;
-      --Type_Info : Type_Info_Acc;
    begin
       Aggr1 := Aggr;
-      --  Do not use translate_aggregate_others for a complex type.
-      --Type_Info := Get_Info (Get_Type (Aggr));
-      --if Type_Info.C /= null and then Type_Info.C.Builder_Need_Func then
-      --   return Null_Iir;
-      --end if;
       loop
          Chain := Get_Association_Choices_Chain (Aggr1);
          if not Is_Chain_Length_One (Chain) then
