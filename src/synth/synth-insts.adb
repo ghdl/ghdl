@@ -1387,7 +1387,7 @@ package body Synth.Insts is
       pragma Assert (Get_Block_From_Block_Specification
                        (Get_Block_Specification (Cfg)) = Blk);
 
-      Clear_Instantiation_Configuration (Blk);
+      --  Clear_Instantiation_Configuration (Blk);
 
       Item := Get_Configuration_Item_Chain (Cfg);
       while Item /= Null_Node loop

@@ -1906,6 +1906,10 @@ Get_Bound_Vunit_Chain = libghdl.vhdl__nodes__get_bound_vunit_chain
 
 Set_Bound_Vunit_Chain = libghdl.vhdl__nodes__set_bound_vunit_chain
 
+Get_Verification_Block_Configuration = libghdl.vhdl__nodes__get_verification_block_configuration
+
+Set_Verification_Block_Configuration = libghdl.vhdl__nodes__set_verification_block_configuration
+
 Get_Block_Configuration = libghdl.vhdl__nodes__get_block_configuration
 
 Set_Block_Configuration = libghdl.vhdl__nodes__set_block_configuration

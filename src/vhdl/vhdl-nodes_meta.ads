@@ -148,6 +148,7 @@ package Vhdl.Nodes_Meta is
       Field_Inherit_Spec_Chain,
       Field_Vunit_Item_Chain,
       Field_Bound_Vunit_Chain,
+      Field_Verification_Block_Configuration,
       Field_Block_Configuration,
       Field_Concurrent_Statement_Chain,
       Field_Chain,
@@ -718,6 +719,8 @@ package Vhdl.Nodes_Meta is
    function Has_Inherit_Spec_Chain (K : Iir_Kind) return Boolean;
    function Has_Vunit_Item_Chain (K : Iir_Kind) return Boolean;
    function Has_Bound_Vunit_Chain (K : Iir_Kind) return Boolean;
+   function Has_Verification_Block_Configuration (K : Iir_Kind)
+      return Boolean;
    function Has_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Concurrent_Statement_Chain (K : Iir_Kind) return Boolean;
    function Has_Chain (K : Iir_Kind) return Boolean;

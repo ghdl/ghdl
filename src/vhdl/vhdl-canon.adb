@@ -3143,17 +3143,13 @@ package body Vhdl.Canon is
       end loop;
    end Canon_Declarations;
 
-   procedure Canon_Block_Configuration (Top : Iir_Design_Unit;
-                                        Conf : Iir_Block_Configuration)
+   --  Append for FIRST_ITEM/LAST_ITEM the default block or component
+   --  configuration for statement EL (unless there is already a configuration
+   --  for it).
+   --  Always clear the association to the configuration for the statement.
+   procedure Canon_Block_Configuration_Statement
+     (El : Iir; Blk : Iir; Parent : Iir; First_Item, Last_Item : in out Iir)
    is
-      --  use Iir_Chains.Configuration_Item_Chain_Handling;
-      Spec : constant Iir := Get_Block_Specification (Conf);
-      Blk : constant Iir := Get_Block_From_Block_Specification (Spec);
-      Stmts : constant Iir := Get_Concurrent_Statement_Chain (Blk);
-      El : Iir;
-      Sub_Blk : Iir;
-      First_Item, Last_Item : Iir;
-
       procedure Create_Default_Block_Configuration (Targ : Iir)
       is
          Res : Iir;
@@ -3161,7 +3157,7 @@ package body Vhdl.Canon is
       begin
          Res := Create_Iir (Iir_Kind_Block_Configuration);
          Location_Copy (Res, Targ);
-         Set_Parent (Res, Conf);
+         Set_Parent (Res, Parent);
          if True then
             --  For debugging.  Display as user block configuration.
             Spec := Build_Simple_Name (Targ, Targ);
@@ -3173,6 +3169,167 @@ package body Vhdl.Canon is
          Set_Block_Specification (Res, Spec);
          Chain_Append (First_Item, Last_Item, Res);
       end Create_Default_Block_Configuration;
+   begin
+      case Get_Kind (El) is
+         when Iir_Kind_Component_Instantiation_Statement =>
+            declare
+               Comp_Conf       : Iir;
+               Res             : Iir_Component_Configuration;
+               Designator_List : Iir_List;
+               Inst_List       : Iir_Flist;
+               Inst            : Iir;
+               Inst_Name       : Iir;
+            begin
+               Comp_Conf := Get_Component_Configuration (El);
+               if Comp_Conf = Null_Iir then
+                  if Is_Component_Instantiation (El) then
+                     --  Create a component configuration.
+                     --  FIXME: should merge all these default configuration
+                     --    of the same component.
+                     Res := Create_Iir (Iir_Kind_Component_Configuration);
+                     Location_Copy (Res, El);
+                     Set_Parent (Res, Parent);
+                     Set_Component_Name
+                       (Res,
+                        Build_Reference_Name (Get_Instantiated_Unit (El)));
+                     Designator_List := Create_Iir_List;
+                     Append_Element
+                       (Designator_List, Build_Simple_Name (El, El));
+                     Set_Instantiation_List
+                       (Res, List_To_Flist (Designator_List));
+                     Chain_Append (First_Item, Last_Item, Res);
+                  end if;
+               elsif Get_Kind (Comp_Conf)
+                 = Iir_Kind_Configuration_Specification
+               then
+                  --  Create component configuration
+                  Res := Create_Iir (Iir_Kind_Component_Configuration);
+                  Location_Copy (Res, Comp_Conf);
+                  Set_Parent (Res, Parent);
+                  Set_Component_Name
+                    (Res,
+                     Build_Reference_Name (Get_Component_Name (Comp_Conf)));
+                  --  Keep in the designator list only the non-incrementally
+                  --  bound instances, and only the instances in the current
+                  --  statements parts (vhdl-87 generate issue).
+                  Inst_List := Get_Instantiation_List (Comp_Conf);
+                  Designator_List := Create_Iir_List;
+                  for I in Flist_First .. Flist_Last (Inst_List) loop
+                     Inst_Name := Get_Nth_Element (Inst_List, I);
+                     Inst := Get_Named_Entity (Inst_Name);
+                     if Get_Component_Configuration (Inst) = Comp_Conf
+                       and then Get_Parent (Inst) = Blk
+                     then
+                        Set_Component_Configuration (Inst, Res);
+                        Append_Element (Designator_List,
+                                        Build_Reference_Name (Inst_Name));
+                     end if;
+                  end loop;
+                  Set_Instantiation_List
+                    (Res, List_To_Flist (Designator_List));
+                  Set_Binding_Indication
+                    (Res, Get_Binding_Indication (Comp_Conf));
+                  Set_Is_Ref (Res, True);
+                  Chain_Append (First_Item, Last_Item, Res);
+               end if;
+               Set_Component_Configuration (El, Null_Iir);
+            end;
+         when Iir_Kind_Block_Statement =>
+            if Get_Block_Block_Configuration (El) = Null_Iir then
+               Create_Default_Block_Configuration (El);
+            end if;
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Clause     : Iir;
+               Bod        : Iir;
+               Blk_Config : Iir_Block_Configuration;
+            begin
+               Clause := El;
+               while Clause /= Null_Iir loop
+                  Bod := Get_Generate_Statement_Body (Clause);
+                  Blk_Config := Get_Generate_Block_Configuration (Bod);
+                  if Blk_Config = Null_Iir then
+                     Create_Default_Block_Configuration (Bod);
+                  end if;
+                  Set_Generate_Block_Configuration (Bod, Null_Iir);
+                  Clause := Get_Generate_Else_Clause (Clause);
+               end loop;
+            end;
+         when Iir_Kind_Case_Generate_Statement =>
+            declare
+               Alt        : Iir;
+               Bod        : Iir;
+               Blk_Config : Iir_Block_Configuration;
+            begin
+               Alt := Get_Case_Statement_Alternative_Chain (El);
+               while Alt /= Null_Iir loop
+                  if not Get_Same_Alternative_Flag (Alt) then
+                     Bod := Get_Associated_Block (Alt);
+                     Blk_Config := Get_Generate_Block_Configuration (Bod);
+                     if Blk_Config = Null_Iir then
+                        Create_Default_Block_Configuration (Bod);
+                     end if;
+                     Set_Generate_Block_Configuration (Bod, Null_Iir);
+                  end if;
+                  Alt := Get_Chain (Alt);
+               end loop;
+            end;
+         when Iir_Kind_For_Generate_Statement =>
+            declare
+               Bod        : constant Iir := Get_Generate_Statement_Body (El);
+               Blk_Config : constant Iir_Block_Configuration :=
+                 Get_Generate_Block_Configuration (Bod);
+               Res        : Iir_Block_Configuration;
+               Blk_Spec   : Iir;
+            begin
+               if Blk_Config = Null_Iir then
+                  Create_Default_Block_Configuration (Bod);
+               else
+                  Blk_Spec := Strip_Denoting_Name
+                    (Get_Block_Specification (Blk_Config));
+                  if Get_Kind (Blk_Spec) /= Iir_Kind_Generate_Statement_Body
+                  then
+                     --  There are generate specification with range or
+                     --  expression.  Create a default block configuration
+                     --  for the (possible) non-covered values.
+                     Res := Create_Iir (Iir_Kind_Block_Configuration);
+                     Location_Copy (Res, El);
+                     Set_Parent (Res, Parent);
+                     Blk_Spec := Create_Iir (Iir_Kind_Indexed_Name);
+                     Location_Copy (Blk_Spec, Res);
+                     Set_Index_List (Blk_Spec, Iir_Flist_Others);
+                     Set_Base_Name (Blk_Spec, El);
+                     Set_Prefix (Blk_Spec, Build_Simple_Name (Bod, Res));
+                     Set_Block_Specification (Res, Blk_Spec);
+                     Chain_Append (First_Item, Last_Item, Res);
+                  end if;
+               end if;
+               Set_Generate_Block_Configuration (Bod, Null_Iir);
+            end;
+
+         when Iir_Kinds_Simple_Concurrent_Statement
+            | Iir_Kind_Psl_Default_Clock
+            | Iir_Kind_Psl_Declaration
+            | Iir_Kind_Psl_Endpoint_Declaration
+            | Iir_Kind_Simple_Simultaneous_Statement =>
+            null;
+
+         when others =>
+            Error_Kind ("canon_block_configuration(3)", El);
+      end case;
+   end Canon_Block_Configuration_Statement;
+
+   procedure Canon_Block_Configuration (Top : Iir_Design_Unit;
+                                        Conf : Iir_Block_Configuration)
+   is
+      --  use Iir_Chains.Configuration_Item_Chain_Handling;
+      Spec : constant Iir := Get_Block_Specification (Conf);
+      Blk : constant Iir := Get_Block_From_Block_Specification (Spec);
+      Stmts : constant Iir := Get_Concurrent_Statement_Chain (Blk);
+      El : Iir;
+      Sub_Blk : Iir;
+      First_Item, Last_Item : Iir;
+
    begin
       --  Note: the only allowed declarations are use clauses, which are not
       --  canonicalized.
@@ -3237,149 +3394,8 @@ package body Vhdl.Canon is
       --     Add default block configuration for unconfigured block statements.
       El := Stmts;
       while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Component_Instantiation_Statement =>
-               declare
-                  Comp_Conf : Iir;
-                  Res : Iir_Component_Configuration;
-                  Designator_List : Iir_List;
-                  Inst_List : Iir_Flist;
-                  Inst : Iir;
-                  Inst_Name : Iir;
-               begin
-                  Comp_Conf := Get_Component_Configuration (El);
-                  if Comp_Conf = Null_Iir then
-                     if Is_Component_Instantiation (El) then
-                        --  Create a component configuration.
-                        --  FIXME: should merge all these default configuration
-                        --    of the same component.
-                        Res := Create_Iir (Iir_Kind_Component_Configuration);
-                        Location_Copy (Res, El);
-                        Set_Parent (Res, Conf);
-                        Set_Component_Name
-                          (Res,
-                           Build_Reference_Name (Get_Instantiated_Unit (El)));
-                        Designator_List := Create_Iir_List;
-                        Append_Element
-                          (Designator_List, Build_Simple_Name (El, El));
-                        Set_Instantiation_List
-                          (Res, List_To_Flist (Designator_List));
-                        Chain_Append (First_Item, Last_Item, Res);
-                     end if;
-                  elsif Get_Kind (Comp_Conf)
-                    = Iir_Kind_Configuration_Specification
-                  then
-                     --  Create component configuration
-                     Res := Create_Iir (Iir_Kind_Component_Configuration);
-                     Location_Copy (Res, Comp_Conf);
-                     Set_Parent (Res, Conf);
-                     Set_Component_Name
-                       (Res,
-                        Build_Reference_Name (Get_Component_Name (Comp_Conf)));
-                     --  Keep in the designator list only the non-incrementally
-                     --  bound instances, and only the instances in the current
-                     --  statements parts (vhdl-87 generate issue).
-                     Inst_List := Get_Instantiation_List (Comp_Conf);
-                     Designator_List := Create_Iir_List;
-                     for I in Flist_First .. Flist_Last (Inst_List) loop
-                        Inst_Name := Get_Nth_Element (Inst_List, I);
-                        Inst := Get_Named_Entity (Inst_Name);
-                        if Get_Component_Configuration (Inst) = Comp_Conf
-                          and then Get_Parent (Inst) = Blk
-                        then
-                           Set_Component_Configuration (Inst, Res);
-                           Append_Element (Designator_List,
-                                           Build_Reference_Name (Inst_Name));
-                        end if;
-                     end loop;
-                     Set_Instantiation_List
-                       (Res, List_To_Flist (Designator_List));
-                     Set_Binding_Indication
-                       (Res, Get_Binding_Indication (Comp_Conf));
-                     Set_Is_Ref (Res, True);
-                     Chain_Append (First_Item, Last_Item, Res);
-                  end if;
-               end;
-            when Iir_Kind_Block_Statement =>
-               if Get_Block_Block_Configuration (El) = Null_Iir then
-                  Create_Default_Block_Configuration (El);
-               end if;
-            when Iir_Kind_If_Generate_Statement =>
-               declare
-                  Clause : Iir;
-                  Bod : Iir;
-                  Blk_Config : Iir_Block_Configuration;
-               begin
-                  Clause := El;
-                  while Clause /= Null_Iir loop
-                     Bod := Get_Generate_Statement_Body (Clause);
-                     Blk_Config := Get_Generate_Block_Configuration (Bod);
-                     if Blk_Config = Null_Iir then
-                        Create_Default_Block_Configuration (Bod);
-                     end if;
-                     Clause := Get_Generate_Else_Clause (Clause);
-                  end loop;
-               end;
-            when Iir_Kind_Case_Generate_Statement =>
-               declare
-                  Alt : Iir;
-                  Bod : Iir;
-                  Blk_Config : Iir_Block_Configuration;
-               begin
-                  Alt := Get_Case_Statement_Alternative_Chain (El);
-                  while Alt /= Null_Iir loop
-                     if not Get_Same_Alternative_Flag (Alt) then
-                        Bod := Get_Associated_Block (Alt);
-                        Blk_Config := Get_Generate_Block_Configuration (Bod);
-                        if Blk_Config = Null_Iir then
-                           Create_Default_Block_Configuration (Bod);
-                        end if;
-                     end if;
-                     Alt := Get_Chain (Alt);
-                  end loop;
-               end;
-            when Iir_Kind_For_Generate_Statement =>
-               declare
-                  Bod : constant Iir := Get_Generate_Statement_Body (El);
-                  Blk_Config : constant Iir_Block_Configuration :=
-                    Get_Generate_Block_Configuration (Bod);
-                  Res : Iir_Block_Configuration;
-                  Blk_Spec : Iir;
-               begin
-                  if Blk_Config = Null_Iir then
-                     Create_Default_Block_Configuration (Bod);
-                  else
-                     Blk_Spec := Strip_Denoting_Name
-                       (Get_Block_Specification (Blk_Config));
-                     if Get_Kind (Blk_Spec) /= Iir_Kind_Generate_Statement_Body
-                     then
-                        --  There are generate specification with range or
-                        --  expression.  Create a default block configuration
-                        --  for the (possible) non-covered values.
-                        Res := Create_Iir (Iir_Kind_Block_Configuration);
-                        Location_Copy (Res, El);
-                        Set_Parent (Res, Conf);
-                        Blk_Spec := Create_Iir (Iir_Kind_Indexed_Name);
-                        Location_Copy (Blk_Spec, Res);
-                        Set_Index_List (Blk_Spec, Iir_Flist_Others);
-                        Set_Base_Name (Blk_Spec, El);
-                        Set_Prefix (Blk_Spec, Build_Simple_Name (Bod, Res));
-                        Set_Block_Specification (Res, Blk_Spec);
-                        Chain_Append (First_Item, Last_Item, Res);
-                     end if;
-                  end if;
-               end;
-
-            when Iir_Kinds_Simple_Concurrent_Statement
-              | Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Declaration
-              | Iir_Kind_Psl_Endpoint_Declaration
-              | Iir_Kind_Simple_Simultaneous_Statement =>
-               null;
-
-            when others =>
-               Error_Kind ("canon_block_configuration(3)", El);
-         end case;
+         Canon_Block_Configuration_Statement
+           (El, Blk, Conf, First_Item, Last_Item);
          El := Get_Chain (El);
       end loop;
       Set_Configuration_Item_Chain (Conf, First_Item);
@@ -3415,11 +3431,23 @@ package body Vhdl.Canon is
 
    procedure Canon_Psl_Verification_Unit (Unit : Iir_Design_Unit)
    is
-      Decl : constant Iir := Get_Library_Unit (Unit);
-      Item : Iir;
-      Prev_Item : Iir;
-      Proc_Num : Natural := 0;
+      Decl       : constant Iir := Get_Library_Unit (Unit);
+      Item       : Iir;
+      Prev_Item  : Iir;
+      Blk_Cfg    : Iir;
+      First_Conf : Iir;
+      Last_Conf  : Iir;
+      Proc_Num   : Natural := 0;
    begin
+      Blk_Cfg := Create_Iir (Iir_Kind_Block_Configuration);
+      Set_Location (Blk_Cfg, Get_Location (Unit));
+      Set_Parent (Blk_Cfg, Unit);
+      Set_Block_Specification (Blk_Cfg, Build_Simple_Name (Decl, Blk_Cfg));
+      Set_Verification_Block_Configuration (Decl, Blk_Cfg);
+
+      First_Conf := Null_Iir;
+      Last_Conf := Null_Iir;
+
       Prev_Item := Null_Iir;
       Item := Get_Vunit_Item_Chain (Decl);
       while Item /= Null_Iir loop
@@ -3450,6 +3478,8 @@ package body Vhdl.Canon is
                | Iir_Kind_Component_Instantiation_Statement =>
                Canon_Concurrent_Label (Item, Proc_Num);
                Canon_Concurrent_Statement (Item, Unit);
+               Canon_Block_Configuration_Statement
+                 (Item, Unit, Unit, First_Conf, Last_Conf);
             when others =>
                Error_Kind ("canon_psl_verification_unit", Item);
          end case;
@@ -3462,6 +3492,8 @@ package body Vhdl.Canon is
          Prev_Item := Item;
          Item := Get_Chain (Item);
       end loop;
+
+      Set_Configuration_Item_Chain (Blk_Cfg, First_Conf);
    end Canon_Psl_Verification_Unit;
 
    procedure Canonicalize (Unit: Iir_Design_Unit)

@@ -1043,8 +1043,6 @@ package body Vhdl.Nodes is
            | Iir_Kind_Overload_List
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
-           | Iir_Kind_Vmode_Declaration
-           | Iir_Kind_Vprop_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
@@ -1248,6 +1246,8 @@ package body Vhdl.Nodes is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Vmode_Declaration
+           | Iir_Kind_Vprop_Declaration
            | Iir_Kind_Vunit_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Header
@@ -2713,7 +2713,7 @@ package body Vhdl.Nodes is
       pragma Assert (Vunit /= Null_Iir);
       pragma Assert (Has_Vunit_Item_Chain (Get_Kind (Vunit)),
                      "no field Vunit_Item_Chain");
-      return Get_Field4 (Vunit);
+      return Get_Field6 (Vunit);
    end Get_Vunit_Item_Chain;
 
    procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir) is
@@ -2721,7 +2721,7 @@ package body Vhdl.Nodes is
       pragma Assert (Vunit /= Null_Iir);
       pragma Assert (Has_Vunit_Item_Chain (Get_Kind (Vunit)),
                      "no field Vunit_Item_Chain");
-      Set_Field4 (Vunit, Chain);
+      Set_Field6 (Vunit, Chain);
    end Set_Vunit_Item_Chain;
 
    function Get_Bound_Vunit_Chain (Unit : Iir) return Iir is
@@ -2739,6 +2739,22 @@ package body Vhdl.Nodes is
                      "no field Bound_Vunit_Chain");
       Set_Field8 (Unit, Vunit);
    end Set_Bound_Vunit_Chain;
+
+   function Get_Verification_Block_Configuration (Vunit : Iir) return Iir is
+   begin
+      pragma Assert (Vunit /= Null_Iir);
+      pragma Assert (Has_Verification_Block_Configuration (Get_Kind (Vunit)),
+                     "no field Verification_Block_Configuration");
+      return Get_Field4 (Vunit);
+   end Get_Verification_Block_Configuration;
+
+   procedure Set_Verification_Block_Configuration (Vunit : Iir; Conf : Iir) is
+   begin
+      pragma Assert (Vunit /= Null_Iir);
+      pragma Assert (Has_Verification_Block_Configuration (Get_Kind (Vunit)),
+                     "no field Verification_Block_Configuration");
+      Set_Field4 (Vunit, Conf);
+   end Set_Verification_Block_Configuration;
 
    function Get_Block_Configuration (Target : Iir) return Iir is
    begin

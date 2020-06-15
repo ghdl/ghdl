@@ -3628,6 +3628,9 @@ package body Synth.Stmts is
       Mark (M, Proc_Pool);
       Instance_Pool := Proc_Pool'Access;
 
+      Apply_Block_Configuration
+        (Get_Verification_Block_Configuration (Unit), Unit);
+
       Last_Type := Null_Node;
       Item := Get_Vunit_Item_Chain (Unit);
       while Item /= Null_Node loop

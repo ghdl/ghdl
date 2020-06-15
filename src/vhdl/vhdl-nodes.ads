@@ -1104,8 +1104,8 @@ package Vhdl.Nodes is
    --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Vunit_Declaration (Medium)
-   -- Iir_Kind_Vmode_Declaration (Short)
-   -- Iir_Kind_Vprop_Declaration (Short)
+   -- Iir_Kind_Vmode_Declaration (Medium)
+   -- Iir_Kind_Vprop_Declaration (Medium)
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
@@ -1118,7 +1118,9 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Attribute_Value_Chain (Field5)
    --
-   --   Get/Set_Vunit_Item_Chain (Field4)
+   --   Get/Set_Vunit_Item_Chain (Field6)
+   --
+   --   Get/Set_Verification_Block_Configuration (Field4)
    --
    -- Only for Iir_Kind_Vunit_Declaration:
    --   Get/Set_Bound_Vunit_Chain (Field8)
@@ -7594,7 +7596,7 @@ package Vhdl.Nodes is
    function Get_Inherit_Spec_Chain (Vunit : Iir) return Iir;
    procedure Set_Inherit_Spec_Chain (Vunit : Iir; Chain : Iir);
 
-   --  Field: Field4 Chain
+   --  Field: Field6 Chain
    function Get_Vunit_Item_Chain (Vunit : Iir) return Iir;
    procedure Set_Vunit_Item_Chain (Vunit : Iir; Chain : Iir);
 
@@ -7602,6 +7604,10 @@ package Vhdl.Nodes is
    --  Field: Field8 Chain
    function Get_Bound_Vunit_Chain (Unit : Iir) return Iir;
    procedure Set_Bound_Vunit_Chain (Unit : Iir; Vunit : Iir);
+
+   --  Field: Field4
+   function Get_Verification_Block_Configuration (Vunit : Iir) return Iir;
+   procedure Set_Verification_Block_Configuration (Vunit : Iir; Conf : Iir);
 
    --  Field: Field4
    function Get_Block_Configuration (Target : Iir) return Iir;
