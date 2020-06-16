@@ -430,6 +430,8 @@ package body Vhdl.Tokens is
             return "|=>";
          when Tok_Minus_Greater =>
             return "->";
+         when Tok_Equiv_Arrow =>
+            return "<->";
          when Tok_Arobase =>
             return "@";
 

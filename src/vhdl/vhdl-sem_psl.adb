@@ -552,7 +552,7 @@ package body Vhdl.Sem_Psl is
          when N_Braced_SERE =>
             return Sem_Sequence (Prop);
          when N_Always
-           | N_Never =>
+            | N_Never =>
             --  By extension, clock_event is allowed within outermost
             --  always/never.
             Sem_Property (Prop, Top);
@@ -572,15 +572,16 @@ package body Vhdl.Sem_Psl is
             Sem_Boolean (Prop);
             return Prop;
          when N_Until
-           | N_Before =>
+            | N_Before =>
             Res := Sem_Property (Get_Left (Prop));
             Set_Left (Prop, Res);
             Res := Sem_Property (Get_Right (Prop));
             Set_Right (Prop, Res);
             return Prop;
          when N_Log_Imp_Prop
-           | N_And_Prop
-           | N_Or_Prop =>
+            | N_Log_Equiv_Prop
+            | N_And_Prop
+            | N_Or_Prop =>
             declare
                L, R : PSL_Node;
             begin
@@ -598,6 +599,8 @@ package body Vhdl.Sem_Psl is
                         return Reduce_Logic_Binary_Node (Prop, N_Or_Bool);
                      when N_Log_Imp_Prop =>
                         return Reduce_Logic_Binary_Node (Prop, N_Imp_Bool);
+                     when N_Log_Equiv_Prop =>
+                        return Reduce_Logic_Binary_Node (Prop, N_Equiv_Bool);
                      when others =>
                         Error_Kind ("psl.sem_property(log)", Prop);
                   end case;

@@ -2257,6 +2257,14 @@ package body Vhdl.Scanner is
                when '<' =>
                   Current_Token := Tok_Double_Less;
                   Pos := Pos + 2;
+               when '-' =>
+                  if Flag_Psl and then Source (Pos + 2) = '>' then
+                     Current_Token := Tok_Equiv_Arrow;
+                     Pos := Pos + 3;
+                  else
+                     Current_Token := Tok_Less;
+                     Pos := Pos + 1;
+                  end if;
                when others =>
                   Current_Token := Tok_Less;
                   Pos := Pos + 1;

@@ -337,43 +337,44 @@ package body PSL.Nodes is
    begin
       case Get_Kind (N) is
          when N_And_Prop
-           | N_Or_Prop
-           | N_Paren_Prop
-           | N_Log_Imp_Prop
-           | N_Always
-           | N_Never
-           | N_Eventually
-           | N_Next
-           | N_Next_E
-           | N_Next_A
-           | N_Next_Event
-           | N_Next_Event_A
-           | N_Next_Event_E
-           | N_Before
-           | N_Until
-           | N_Abort
-           | N_Strong
-           | N_Property_Parameter
-           | N_Property_Instance =>
+            | N_Or_Prop
+            | N_Paren_Prop
+            | N_Log_Imp_Prop
+            | N_Log_Equiv_Prop
+            | N_Always
+            | N_Never
+            | N_Eventually
+            | N_Next
+            | N_Next_E
+            | N_Next_A
+            | N_Next_Event
+            | N_Next_Event_A
+            | N_Next_Event_E
+            | N_Before
+            | N_Until
+            | N_Abort
+            | N_Strong
+            | N_Property_Parameter
+            | N_Property_Instance =>
             return Type_Property;
          when N_Braced_SERE
-           | N_Concat_SERE
-           | N_Fusion_SERE
-           | N_Within_SERE
-           | N_Clocked_SERE
-           | N_Overlap_Imp_Seq
-           | N_Imp_Seq
-           | N_And_Seq
-           | N_Or_Seq
-           | N_Match_And_Seq
-           | N_Star_Repeat_Seq
-           | N_Goto_Repeat_Seq
-           | N_Equal_Repeat_Seq
-           | N_Plus_Repeat_Seq
-           | N_Clock_Event
-           | N_Sequence_Instance
-           | N_Endpoint_Instance
-           | N_Sequence_Parameter =>
+            | N_Concat_SERE
+            | N_Fusion_SERE
+            | N_Within_SERE
+            | N_Clocked_SERE
+            | N_Overlap_Imp_Seq
+            | N_Imp_Seq
+            | N_And_Seq
+            | N_Or_Seq
+            | N_Match_And_Seq
+            | N_Star_Repeat_Seq
+            | N_Goto_Repeat_Seq
+            | N_Equal_Repeat_Seq
+            | N_Plus_Repeat_Seq
+            | N_Clock_Event
+            | N_Sequence_Instance
+            | N_Endpoint_Instance
+            | N_Sequence_Parameter =>
             return Type_Sequence;
          when N_Name =>
             return Get_Psl_Type (Get_Decl (N));
@@ -381,30 +382,31 @@ package body PSL.Nodes is
             --  FIXME.
             return Type_Boolean;
          when N_Or_Bool
-           | N_And_Bool
-           | N_Not_Bool
-           | N_Imp_Bool
-           | N_False
-           | N_True
-           | N_Boolean_Parameter
-           | N_Paren_Bool
-           | N_HDL_Bool =>
+            | N_And_Bool
+            | N_Not_Bool
+            | N_Imp_Bool
+            | N_Equiv_Bool
+            | N_False
+            | N_True
+            | N_Boolean_Parameter
+            | N_Paren_Bool
+            | N_HDL_Bool =>
             return Type_Boolean;
          when N_Number
-           | N_Const_Parameter =>
+            | N_Const_Parameter =>
             return Type_Numeric;
          when N_Vmode
-           | N_Vunit
-           | N_Vprop
-           | N_Hdl_Mod_Name
-           | N_Assert_Directive
-           | N_Sequence_Declaration
-           | N_Endpoint_Declaration
-           | N_Property_Declaration
-           | N_Actual
-           | N_Name_Decl
-           | N_Error
-           | N_EOS =>
+            | N_Vunit
+            | N_Vprop
+            | N_Hdl_Mod_Name
+            | N_Assert_Directive
+            | N_Sequence_Declaration
+            | N_Endpoint_Declaration
+            | N_Property_Declaration
+            | N_Actual
+            | N_Name_Decl
+            | N_Error
+            | N_EOS =>
             PSL.Errors.Error_Kind ("get_psl_type", N);
       end case;
    end Get_Psl_Type;
@@ -444,6 +446,7 @@ package body PSL.Nodes is
            | N_Imp_Seq
            | N_Overlap_Imp_Seq
            | N_Log_Imp_Prop
+           | N_Log_Equiv_Prop
            | N_Next
            | N_Next_A
            | N_Next_E
@@ -473,6 +476,7 @@ package body PSL.Nodes is
            | N_And_Bool
            | N_Or_Bool
            | N_Imp_Bool
+           | N_Equiv_Bool
            | N_HDL_Expr
            | N_HDL_Bool
            | N_False

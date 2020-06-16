@@ -100,6 +100,7 @@ package Vhdl.Tokens is
       Tok_Bar_Arrow,           -- |->
       Tok_Bar_Double_Arrow,    -- |=>
       Tok_Minus_Greater,       -- ->
+      Tok_Equiv_Arrow,         -- <->
       Tok_Arobase,             -- @
 
    -- multiplying operator

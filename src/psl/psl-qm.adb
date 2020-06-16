@@ -275,6 +275,22 @@ package body PSL.QM is
                return Build_Primes_And (Build_Primes (Get_Left (N), False),
                                         Build_Primes (Get_Right (N), True));
             end if;
+         when N_Equiv_Bool =>
+            if not Negate then
+               --  a <-> b  <->  (a && b) || (!a && !b)
+               return Build_Primes_Or
+                 (Build_Primes_And (Build_Primes (Get_Left (N), False),
+                                    Build_Primes (Get_Right (N), False)),
+                  Build_Primes_And (Build_Primes (Get_Left (N), True),
+                                    Build_Primes (Get_Right (N), True)));
+            else
+               -- !(a <-> b)  <->  (!a && b) || (a && !b)
+               return Build_Primes_Or
+                 (Build_Primes_And (Build_Primes (Get_Left (N), True),
+                                    Build_Primes (Get_Right (N), False)),
+                  Build_Primes_And (Build_Primes (Get_Left (N), False),
+                                    Build_Primes (Get_Right (N), True)));
+            end if;
          when others =>
             Error_Kind ("build_primes", N);
       end case;

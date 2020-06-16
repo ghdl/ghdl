@@ -103,8 +103,9 @@ package body PSL.Rewrites is
             Set_Boolean (N, Rewrite_Boolean (Get_Boolean (N)));
             return N;
          when N_And_Bool
-           | N_Or_Bool
-           | N_Imp_Bool =>
+            | N_Or_Bool
+            | N_Imp_Bool
+            | N_Equiv_Bool =>
             Set_Left (N, Rewrite_Boolean (Get_Left (N)));
             Set_Right (N, Rewrite_Boolean (Get_Right (N)));
             return N;

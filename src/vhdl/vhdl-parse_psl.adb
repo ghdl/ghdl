@@ -679,12 +679,12 @@ package body Vhdl.Parse_Psl is
    begin
       case Get_Kind (N) is
          when N_Sequence_Instance
-           | N_Star_Repeat_Seq
-           | N_Plus_Repeat_Seq
-           | N_Equal_Repeat_Seq
-           | N_Goto_Repeat_Seq
-           | N_Braced_SERE
-           | N_Clocked_SERE =>
+            | N_Star_Repeat_Seq
+            | N_Plus_Repeat_Seq
+            | N_Equal_Repeat_Seq
+            | N_Goto_Repeat_Seq
+            | N_Braced_SERE
+            | N_Clocked_SERE =>
             return N;
          when N_And_Prop =>
             Res := Create_Node (N_And_Seq);
@@ -699,52 +699,54 @@ package body Vhdl.Parse_Psl is
             Set_Right (N, Property_To_Sequence (Get_Right (N)));
             return N;
          when N_Clock_Event
-           | N_Always
-           | N_Never
-           | N_Eventually
-           | N_Until
-           | N_Property_Parameter
-           | N_Property_Instance
-           | N_Endpoint_Instance
-           | N_Strong
-           | N_Abort
-           | N_Next_Event_E
-           | N_Next_Event_A
-           | N_Next_Event
-           | N_Next_E
-           | N_Next_A
-           | N_Next
-           | N_Log_Imp_Prop
-           | N_Paren_Prop =>
+            | N_Always
+            | N_Never
+            | N_Eventually
+            | N_Until
+            | N_Property_Parameter
+            | N_Property_Instance
+            | N_Endpoint_Instance
+            | N_Strong
+            | N_Abort
+            | N_Next_Event_E
+            | N_Next_Event_A
+            | N_Next_Event
+            | N_Next_E
+            | N_Next_A
+            | N_Next
+            | N_Log_Imp_Prop
+            | N_Log_Equiv_Prop
+            | N_Paren_Prop =>
             Error_Msg_Parse (+N, "construct not allowed in sequences");
             return N;
          when N_Const_Parameter
-           | N_Boolean_Parameter
-           | N_Sequence_Parameter
-           | N_Actual
-           | N_And_Seq
-           | N_Or_Seq
-           | N_Imp_Seq
-           | N_Overlap_Imp_Seq
-           | N_Match_And_Seq
-           | N_Imp_Bool
-           | N_Or_Bool
-           | N_And_Bool
-           | N_Not_Bool
-           | N_Paren_Bool
-           | N_Fusion_SERE
-           | N_HDL_Expr
-           | N_HDL_Bool
-           | N_Hdl_Mod_Name
-           | N_Concat_SERE
-           | N_Within_SERE
-           | N_False
-           | N_True
-           | N_Number
-           | N_Name_Decl
-           | N_Name
-           | N_EOS
-           | N_Error =>
+            | N_Boolean_Parameter
+            | N_Sequence_Parameter
+            | N_Actual
+            | N_And_Seq
+            | N_Or_Seq
+            | N_Imp_Seq
+            | N_Equiv_Bool
+            | N_Overlap_Imp_Seq
+            | N_Match_And_Seq
+            | N_Imp_Bool
+            | N_Or_Bool
+            | N_And_Bool
+            | N_Not_Bool
+            | N_Paren_Bool
+            | N_Fusion_SERE
+            | N_HDL_Expr
+            | N_HDL_Bool
+            | N_Hdl_Mod_Name
+            | N_Concat_SERE
+            | N_Within_SERE
+            | N_False
+            | N_True
+            | N_Number
+            | N_Name_Decl
+            | N_Name
+            | N_EOS
+            | N_Error =>
             return N;
          when N_Vmode
            | N_Vunit
@@ -812,10 +814,20 @@ package body Vhdl.Parse_Psl is
       loop
          case Current_Token is
             when Tok_Minus_Greater =>
+               --   ->
                if Prio > Prio_Bool_Imp then
                   return Res;
                end if;
                N := Create_Node_Loc (N_Log_Imp_Prop);
+               Set_Left (N, Res);
+               Scan;
+               Set_Right (N, Parse_FL_Property (Prio_Bool_Imp));
+               Res := N;
+            when Tok_Equiv_Arrow =>
+               if Prio > Prio_Bool_Imp then
+                  return Res;
+               end if;
+               N := Create_Node_Loc (N_Log_Equiv_Prop);
                Set_Left (N, Res);
                Scan;
                Set_Right (N, Parse_FL_Property (Prio_Bool_Imp));

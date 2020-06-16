@@ -56,6 +56,7 @@ package PSL.Nodes is
       N_Imp_Seq,         --  |=>
       N_Overlap_Imp_Seq, --  |->
       N_Log_Imp_Prop,    --  ->
+      N_Log_Equiv_Prop,  --  <->
       N_Next,
       N_Next_A,
       N_Next_E,
@@ -91,6 +92,7 @@ package PSL.Nodes is
       N_And_Bool,
       N_Or_Bool,
       N_Imp_Bool,       -- ->
+      N_Equiv_Bool,     -- <->
       N_HDL_Expr,
       N_HDL_Bool,
       N_False,
@@ -307,6 +309,7 @@ package PSL.Nodes is
    --   Get/Set_Property (Field4)
 
    -- N_Log_Imp_Prop (Short)
+   -- N_Log_Equiv_Prop (Short)
    --
    --   Get/Set_Left (Field1)
    --
@@ -420,6 +423,7 @@ package PSL.Nodes is
    -- N_And_Bool (Short)
    -- N_Or_Bool (Short)
    -- N_Imp_Bool (Short)
+   -- N_Equiv_Bool (Short)
    --
    --   Get/Set_Presence (State1)
    --

@@ -93,8 +93,8 @@ package body PSL.Subsets is
          when N_Hdl_Mod_Name =>
             null;
          when N_Vunit
-           | N_Vmode
-           | N_Vprop =>
+            | N_Vmode
+            | N_Vprop =>
             declare
                Item : Node;
             begin
@@ -107,32 +107,32 @@ package body PSL.Subsets is
          when N_Name_Decl =>
             null;
          when N_Assert_Directive
-           | N_Property_Declaration =>
+            | N_Property_Declaration =>
             Check_Simple (Get_Property (N));
          when N_Endpoint_Declaration
-           | N_Sequence_Declaration =>
+            | N_Sequence_Declaration =>
             Check_Simple (Get_Sequence (N));
          when N_Clock_Event =>
             Check_Simple (Get_Property (N));
             Check_Simple (Get_Boolean (N));
          when N_Always
-           | N_Never
-           | N_Eventually
-           | N_Strong =>
+            | N_Never
+            | N_Eventually
+            | N_Strong =>
             Check_Simple (Get_Property (N));
          when N_Braced_SERE
-           | N_Clocked_SERE =>
+            | N_Clocked_SERE =>
             Check_Simple (Get_SERE (N));
          when N_Concat_SERE
-           | N_Fusion_SERE
-           | N_Within_SERE =>
+            | N_Fusion_SERE
+            | N_Within_SERE =>
             Check_Simple (Get_Left (N));
             Check_Simple (Get_Right (N));
          when N_Name =>
             null;
          when N_Star_Repeat_Seq
-           | N_Goto_Repeat_Seq
-           | N_Equal_Repeat_Seq =>
+            | N_Goto_Repeat_Seq
+            | N_Equal_Repeat_Seq =>
             declare
                N2 : constant Node := Get_Sequence (N);
             begin
@@ -143,28 +143,30 @@ package body PSL.Subsets is
          when N_Plus_Repeat_Seq =>
             Check_Simple (Get_Sequence (N));
          when N_Match_And_Seq
-           | N_And_Seq
-           | N_Or_Seq =>
+            | N_And_Seq
+            | N_Or_Seq =>
             Check_Simple (Get_Left (N));
             Check_Simple (Get_Right (N));
          when N_Imp_Seq
-           | N_Overlap_Imp_Seq =>
+            | N_Overlap_Imp_Seq =>
             Check_Simple (Get_Sequence (N));
             Check_Simple (Get_Property (N));
          when N_Log_Imp_Prop
-           | N_Until
-           | N_Before
-           | N_Or_Prop
-           | N_And_Prop
-           | N_And_Bool
-           | N_Or_Bool
-           | N_Imp_Bool =>
+            | N_Log_Equiv_Prop
+            | N_Until
+            | N_Before
+            | N_Or_Prop
+            | N_And_Prop
+            | N_And_Bool
+            | N_Or_Bool
+            | N_Imp_Bool
+            | N_Equiv_Bool =>
             Check_Simple (Get_Left (N));
             Check_Simple (Get_Right (N));
          when N_Next
-           | N_Next_A
-           | N_Next_E
-           | N_Paren_Prop =>
+            | N_Next_A
+            | N_Next_E
+            | N_Paren_Prop =>
             Check_Simple (Get_Property (N));
          when N_Next_Event
            | N_Next_Event_A
