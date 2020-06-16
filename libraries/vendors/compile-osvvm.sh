@@ -181,8 +181,8 @@ fi
 
 
 # create local set of GHDL parameters
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--std=08)
+GHDL_PARAMS=(--std=08)
+GHDL_PARAMS+=(${GHDL_OPTIONS[@]})
 VHDLVersion="v08"
 
 # Library osvvm

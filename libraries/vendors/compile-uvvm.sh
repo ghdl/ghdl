@@ -280,8 +280,8 @@ SetupGRCat
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
 # create a set of GHDL parameters
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
+GHDL_PARAMS=(--std=08 -P$DestinationDirectory)
+GHDL_PARAMS+=(${GHDL_OPTIONS[@]})
 
 # Cleanup directory
 # ==============================================================================

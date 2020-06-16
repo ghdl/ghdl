@@ -150,7 +150,7 @@ cd $DestinationDirectory
 $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables
 
 # define global GHDL Options
-$GHDLOptions = @("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "--std=$VHDLStandard", "-P$DestinationDirectory")
+$GHDLOptions = @("-a", "--std=$VHDLStandard", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "-P$DestinationDirectory")
 
 # extract data from configuration
 # $SourceDir =			$InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"

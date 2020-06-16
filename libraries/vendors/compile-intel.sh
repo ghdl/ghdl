@@ -245,8 +245,8 @@ GHDLSetup
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
 
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
+GHDL_PARAMS=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
+GHDL_PARAMS+=(${GHDL_OPTIONS[@]})
 
 STOPCOMPILING=0
 ERRORCOUNT=0
