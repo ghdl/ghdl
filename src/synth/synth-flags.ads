@@ -69,5 +69,8 @@ package Synth.Flags is
    --  Level at which an assert stop the simulation.
    Severity_Level : Integer := Grt.Severity.Error_Severity;
 
+   --  Synthesize PSL and assertions.
+   Flag_Formal : Boolean := True;
+
    Flag_Verbose : Boolean := False;
 end Synth.Flags;

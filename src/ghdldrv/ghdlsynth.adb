@@ -29,6 +29,7 @@ with Errorout.Console;
 with Version;
 with Default_Paths;
 with Bug;
+with Simple_IO;
 
 with Libraries;
 with Flags;
@@ -81,6 +82,7 @@ package body Ghdlsynth is
    function Decode_Command (Cmd : Command_Synth; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Synth) return String;
+   procedure Disp_Long_Help (Cmd : Command_Synth);
    procedure Decode_Option (Cmd : in out Command_Synth;
                             Option : String;
                             Arg : String;
@@ -103,6 +105,23 @@ package body Ghdlsynth is
       return "--synth [FILES... -e] UNIT [ARCH]   Synthesis from UNIT";
    end Get_Short_Help;
 
+   procedure Disp_Long_Help (Cmd : Command_Synth)
+   is
+      pragma Unreferenced (Cmd);
+      procedure P (Str : String) renames Simple_IO.Put_Line;
+   begin
+      P ("You can directly pass the list of files to synthesize:");
+      P ("   --synth [OPTIONS] { [--work=NAME] FILE } -e [UNIT]");
+      P (" If UNIT is not present, the top unit is automatically found");
+      P (" You can use --work=NAME to change the library between files");
+      P ("Or use already analysed files:");
+      P ("   --synth [OPTIONS] -e UNIT");
+      P ("In addition to analyze options, you can use:");
+      P ("  -gNAME=VALUE          Override the generic NAME of the top unit");
+      P ("  --vendor-library=NAME Any unit from library NAME is a black boxe");
+      P ("  --no-formal           Neither synthesize assert nor PSL");
+   end Disp_Long_Help;
+
    procedure Decode_Option (Cmd : in out Command_Synth;
                             Option : String;
                             Arg : String;
@@ -117,6 +136,10 @@ package body Ghdlsynth is
         and then Is_Generic_Override_Option (Option)
       then
          Res := Decode_Generic_Override_Option (Option);
+      elsif Option = "--no-formal" then
+         Synth.Flags.Flag_Formal := False;
+      elsif Option = "--formal" then
+         Synth.Flags.Flag_Formal := True;
       elsif Option = "--top-name=hash" then
          Cmd.Top_Encoding := Name_Hash;
       elsif Option = "--top-name=asis" then

@@ -2811,6 +2811,10 @@ package body Synth.Stmts is
       En : Net;
       Inst : Instance;
    begin
+      if not Flags.Flag_Formal then
+         return;
+      end if;
+
       Cond := Synth_Expression (C.Inst, Get_Assertion_Condition (Stmt));
       if Cond = No_Valtyp then
          Set_Error (C.Inst);
@@ -3075,6 +3079,12 @@ package body Synth.Stmts is
          end if;
          return;
       end if;
+
+      if not Flags.Flag_Formal then
+         --  Ignore the net.
+         return;
+      end if;
+
       Inst := Build_Assert
         (Ctxt, Synth_Label (Syn_Inst, Stmt), Get_Net (Ctxt, Val));
       Set_Location (Inst, Get_Location (Stmt));
@@ -3243,6 +3253,10 @@ package body Synth.Stmts is
       Res : Net;
       Inst : Instance;
    begin
+      if not Flags.Flag_Formal then
+         return;
+      end if;
+
       --  Build assume gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
@@ -3263,6 +3277,10 @@ package body Synth.Stmts is
       Res : Net;
       Inst : Instance;
    begin
+      if not Flags.Flag_Formal then
+         return;
+      end if;
+
       --  Build cover gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
@@ -3283,6 +3301,10 @@ package body Synth.Stmts is
       Next_States : Net;
       Inst : Instance;
    begin
+      if not Flags.Flag_Formal then
+         return;
+      end if;
+
       --  Build assume gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assume on States, then the first cycle is ignored).
@@ -3307,6 +3329,10 @@ package body Synth.Stmts is
       Inst : Instance;
       Lab : Sname;
    begin
+      if not Flags.Flag_Formal then
+         return;
+      end if;
+
       --  Build assert gate.
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assert on States, then the first cycle is ignored).
