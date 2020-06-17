@@ -933,7 +933,7 @@ new_compare_op (enum ON_op_kind kind, tree left, tree right, tree ntype)
 }
 
 tree
-new_convert_ov (tree val, tree rtype)
+new_convert (tree val, tree rtype)
 {
   tree val_type;
   enum tree_code val_code;
@@ -993,6 +993,12 @@ new_convert_ov (tree val, tree rtype)
     gcc_unreachable ();
 
   return build1 (code, rtype, val);
+}
+
+tree
+new_convert_ov (tree val, tree rtype)
+{
+  return new_convert (val, rtype);
 }
 
 tree

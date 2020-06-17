@@ -2056,7 +2056,8 @@ package body Ortho_Code.X86.Insns is
             Set_Expr_Reg (Stmt, Alloc_Reg (Reg_Res, Stmt, Pnum));
             Link_Stmt (Stmt);
             return Stmt;
-         when OE_Conv =>
+         when OE_Conv_Ov
+            | OE_Conv =>
             Left := Get_Expr_Operand (Stmt);
             declare
                --  Operand mode

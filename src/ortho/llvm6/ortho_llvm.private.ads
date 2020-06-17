@@ -326,6 +326,7 @@ private
    pragma Import (C, New_Compare_Op);
 
    pragma Import (C, New_Convert_Ov);
+   pragma Import (C, New_Convert);
    pragma Import (C, New_Alloca);
 
    pragma Import (C, New_Signed_Literal);

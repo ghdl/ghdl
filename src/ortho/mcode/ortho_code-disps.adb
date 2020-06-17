@@ -291,7 +291,7 @@ package body Ortho_Code.Disps is
             Put ("alloca (");
             Disp_Expr (Get_Expr_Operand (Expr));
             Put (")");
-         when OE_Conv =>
+         when OE_Conv_Ov =>
             Disp_Type (Get_Conv_Type (Expr));
             Put ("'conv (");
             Disp_Expr (Get_Expr_Operand (Expr));

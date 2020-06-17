@@ -1034,8 +1034,17 @@ package body Ortho_Code.Exprs is
          Check_Ref (Val);
       end if;
 
-      return New_Enode (OE_Conv, Rtype, Val, O_Enode (Rtype));
+      return New_Enode (OE_Conv_Ov, Rtype, Val, O_Enode (Rtype));
    end New_Convert_Ov;
+
+   function New_Convert (Val : O_Enode; Rtype : O_Tnode) return O_Enode is
+   begin
+      if Flag_Debug_Assert then
+         Check_Ref (Val);
+      end if;
+
+      return New_Enode (OE_Conv, Rtype, Val, O_Enode (Rtype));
+   end New_Convert;
 
    function New_Unchecked_Address (Lvalue : O_Lnode; Atype : O_Tnode)
                                   return O_Enode is
@@ -1194,7 +1203,7 @@ package body Ortho_Code.Exprs is
             raise Program_Error;
       end case;
       if N_Mode /= Mode and not Flag_Debug_Hli then
-         Res := New_Enode (OE_Conv, N_Mode, V_Type, Val, O_Enode (V_Type));
+         Res := New_Enode (OE_Conv_Ov, N_Mode, V_Type, Val, O_Enode (V_Type));
       else
          Res := Val;
       end if;

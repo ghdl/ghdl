@@ -313,6 +313,7 @@ package Ortho_Gcc is
    --  Allowed conversions are:
    --  FIXME: to write.
    function New_Convert_Ov (Val : O_Enode; Rtype : O_Tnode) return O_Enode;
+   function New_Convert (Val : O_Enode; Rtype : O_Tnode) return O_Enode;
 
    --  Get the address of LVALUE.
    --  ATYPE must be a type access whose designated type is the type of LVALUE.
@@ -610,6 +611,7 @@ private
    pragma Import (C, New_Compare_Op);
 
    pragma Import (C, New_Convert_Ov);
+   pragma Import (C, New_Convert);
    pragma Import (C, New_Alloca);
 
    pragma Import (C, New_Signed_Literal);

@@ -227,6 +227,7 @@ private
 
       --  Misc.
       OE_Convert_Ov,
+      OE_Convert,
       OE_Address,
       OE_Unchecked_Address,
       OE_Alloca,
@@ -261,7 +262,8 @@ private
          when OE_Address
            | OE_Unchecked_Address =>
             Lvalue : O_Lnode;
-         when OE_Convert_Ov =>
+         when OE_Convert_Ov
+            | OE_Convert =>
             Conv : O_Enode;
          when OE_Function_Call =>
             Func : O_Dnode;

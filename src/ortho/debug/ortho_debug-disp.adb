@@ -366,6 +366,8 @@ package body Ortho_Debug.Disp is
             return "function call";
          when OE_Convert_Ov =>
             return "convert_ov";
+         when OE_Convert =>
+            return "convert";
          when OE_Address =>
             return "address";
          when OE_Unchecked_Address =>
@@ -754,6 +756,11 @@ package body Ortho_Debug.Disp is
             Disp_Lnode (E.Lvalue);
             Put (")");
          when OE_Convert_Ov =>
+            Disp_Tnode_Name (E.Rtype);
+            Put ("'conv# (");
+            Disp_Enode (E.Conv, O_Tnode_Null);
+            Put (')');
+         when OE_Convert =>
             Disp_Tnode_Name (E.Rtype);
             Put ("'conv (");
             Disp_Enode (E.Conv, O_Tnode_Null);

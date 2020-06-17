@@ -550,7 +550,7 @@ package body Ortho_Code.X86.Abi is
             end case;
             --Disp_Decl_Name (Get_Call_Subprg (Stmt));
             New_Line;
-         when OE_Conv =>
+         when OE_Conv_Ov =>
             Disp_Reg_Op_Name ("conv");
             Disp_Irm_Code (Get_Expr_Operand (Stmt));
             New_Line;

@@ -1959,7 +1959,7 @@ new_dyadic_op (ONOpKind Kind, OEnode Left, OEnode Right)
 }
 
 extern "C" OEnode
-new_convert_ov (OEnode Val, OTnode Rtype)
+new_convert (OEnode Val, OTnode Rtype)
 {
   if (Unreach) {
     return {nullptr, Rtype};
@@ -2039,6 +2039,12 @@ new_convert_ov (OEnode Val, OTnode Rtype)
     abort();
   }
   return {Res, Rtype};
+}
+
+extern "C" OEnode
+new_convert_ov (OEnode Val, OTnode Rtype)
+{
+  return new_convert(Val, Rtype);
 }
 
 extern "C" OEnode

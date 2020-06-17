@@ -329,6 +329,7 @@ package Ortho_LLVM is
    --  Allowed conversions are:
    --  FIXME: to write.
    function New_Convert_Ov (Val : O_Enode; Rtype : O_Tnode) return O_Enode;
+   function New_Convert (Val : O_Enode; Rtype : O_Tnode) return O_Enode;
 
    --  Get the address of LVALUE.
    --  ATYPE must be a type access whose designated type is the type of LVALUE.

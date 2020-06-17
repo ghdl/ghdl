@@ -1094,19 +1094,33 @@ package body Ortho_Debug is
 
    function New_Convert_Ov (Val : O_Enode; Rtype : O_Tnode) return O_Enode
    is
-      subtype O_Enode_Convert is O_Enode_Type (OE_Convert_Ov);
       Res : O_Enode;
    begin
       Check_Ref (Val);
       if not Check_Conv (Val.Rtype.Kind, Rtype.Kind) then
          raise Type_Error;
       end if;
-      Res := new O_Enode_Convert'(Kind => OE_Convert_Ov,
-                                  Rtype => Rtype,
-                                  Ref => False,
-                                  Conv => Val);
+      Res := new O_Enode_Type'(Kind => OE_Convert_Ov,
+                               Rtype => Rtype,
+                               Ref => False,
+                               Conv => Val);
       return Res;
    end New_Convert_Ov;
+
+   function New_Convert (Val : O_Enode; Rtype : O_Tnode) return O_Enode
+   is
+      Res : O_Enode;
+   begin
+      Check_Ref (Val);
+      if not Check_Conv (Val.Rtype.Kind, Rtype.Kind) then
+         raise Type_Error;
+      end if;
+      Res := new O_Enode_Type'(Kind => OE_Convert,
+                               Rtype => Rtype,
+                               Ref => False,
+                               Conv => Val);
+      return Res;
+   end New_Convert;
 
    function New_Unchecked_Address (Lvalue : O_Lnode; Atype : O_Tnode)
      return O_Enode

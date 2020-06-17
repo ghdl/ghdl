@@ -1689,15 +1689,30 @@ package body Ortho_Front is
          elsif Tok = Tok_Ident then
             --  Attribute.
             if Token_Sym = Id_Conv then
-               Next_Expect (Tok_Left_Paren);
-               Next_Token;
-               Parse_Expression (null, Res, Res_Type);
-               --  Discard Res_Type.
-               Expect (Tok_Right_Paren);
-               Next_Token;
-               Res_Type := Name.Decl_Dtype;
-               Res := New_Convert_Ov (Res, Res_Type.Type_Onode);
-               --  Fall-through.
+               declare
+                  Ov : Boolean;
+               begin
+                  Next_Token;
+                  if Tok = Tok_Sharp then
+                     Ov := True;
+                     Next_Token;
+                  else
+                     Ov := False;
+                  end if;
+                  Expect (Tok_Left_Paren);
+                  Next_Token;
+                  Parse_Expression (null, Res, Res_Type);
+                  --  Discard Res_Type.
+                  Expect (Tok_Right_Paren);
+                  Next_Token;
+                  Res_Type := Name.Decl_Dtype;
+                  if Ov then
+                     Res := New_Convert_Ov (Res, Res_Type.Type_Onode);
+                  else
+                     Res := New_Convert (Res, Res_Type.Type_Onode);
+                  end if;
+                  --  Fall-through.
+               end;
             elsif Token_Sym = Id_Address
               or Token_Sym = Id_Unchecked_Address
               or Token_Sym = Id_Subprg_Addr

@@ -75,6 +75,7 @@ package Ortho_Code.Exprs is
       --  ARG1 is expression.
       --  ARG2: type
       OE_Conv_Ptr,
+      OE_Conv_Ov,
       OE_Conv,
 
       --  Typed expression.
@@ -478,6 +479,7 @@ package Ortho_Code.Exprs is
    --  Allowed conversions are:
    --  FIXME: to write.
    function New_Convert_Ov (Val : O_Enode; Rtype : O_Tnode) return O_Enode;
+   function New_Convert (Val : O_Enode; Rtype : O_Tnode) return O_Enode;
 
    --  Get the address of LVALUE.
    --  ATYPE must be a type access whose designated type is the type of LVALUE.

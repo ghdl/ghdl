@@ -1715,7 +1715,7 @@ package body Ortho_Code.X86.Emits is
    end Emit_Move_Xmm;
 
    --  Convert U32 to xx.
-   procedure Gen_Conv_U32 (Stmt : O_Enode)
+   procedure Gen_Conv_U32 (Stmt : O_Enode; Ov : Boolean)
    is
       Op : constant O_Enode := Get_Expr_Operand (Stmt);
       Reg_Op : constant O_Reg := Get_Expr_Reg (Op);
@@ -1727,8 +1727,10 @@ package body Ortho_Code.X86.Emits is
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32);
             end if;
-            Emit_Tst (Reg_Res, Sz_32);
-            Gen_Ov_Check (R_Sge);
+            if Ov then
+               Emit_Tst (Reg_Res, Sz_32);
+               Gen_Ov_Check (R_Sge);
+            end if;
          when Mode_I64 =>
             if Flags.M64 then
                Emit_Move (Op, Sz_32, Reg_Res);
@@ -1744,21 +1746,23 @@ package body Ortho_Code.X86.Emits is
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32);
             end if;
-            --  cmpl VAL, 0xff
-            Start_Insn;
-            Init_Modrm_Expr (Op, Sz_32);
-            Gen_8 (Opc_Grp1v_Rm_Imm32);
-            Gen_Mod_Rm_Opc (Opc2_Grp1_Cmp);
-            Gen_32 (16#00_00_00_Ff#);
-            End_Insn;
-            Gen_Ov_Check (R_Ule);
+            if Ov then
+               --  cmpl VAL, 0xff
+               Start_Insn;
+               Init_Modrm_Expr (Op, Sz_32);
+               Gen_8 (Opc_Grp1v_Rm_Imm32);
+               Gen_Mod_Rm_Opc (Opc2_Grp1_Cmp);
+               Gen_32 (16#00_00_00_Ff#);
+               End_Insn;
+               Gen_Ov_Check (R_Ule);
+            end if;
          when others =>
             Error_Emit ("gen_conv_u32", Stmt);
       end case;
    end Gen_Conv_U32;
 
    --  Convert I32 to xxx
-   procedure Gen_Conv_I32 (Stmt : O_Enode)
+   procedure Gen_Conv_I32 (Stmt : O_Enode; Ov : Boolean)
    is
       Op : constant O_Enode := Get_Expr_Operand (Stmt);
       Reg_Op : constant O_Reg := Get_Expr_Reg (Op);
@@ -1778,20 +1782,26 @@ package body Ortho_Code.X86.Emits is
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32);
             end if;
-            Emit_Tst (Reg_Res, Sz_32);
-            Gen_Ov_Check (R_Sge);
+            if Ov then
+               Emit_Tst (Reg_Res, Sz_32);
+               Gen_Ov_Check (R_Sge);
+            end if;
          when Mode_B2 =>
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32);
             end if;
-            Gen_Cmp_Imm (Reg_Res, 1, Sz_32);
-            Gen_Ov_Check (R_Ule);
+            if Ov then
+               Gen_Cmp_Imm (Reg_Res, 1, Sz_32);
+               Gen_Ov_Check (R_Ule);
+            end if;
          when Mode_U8 =>
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32);
             end if;
-            Gen_Cmp_Imm (Reg_Res, 16#Ff#, Sz_32);
-            Gen_Ov_Check (R_Ule);
+            if Ov then
+               Gen_Cmp_Imm (Reg_Res, 16#Ff#, Sz_32);
+               Gen_Ov_Check (R_Ule);
+            end if;
          when Mode_F64 =>
             if Reg_Res in Regs_Xmm then
                --  cvtsi2sd
@@ -1878,7 +1888,7 @@ package body Ortho_Code.X86.Emits is
    end Gen_Conv_B2;
 
    --  Convert I64 to xxx
-   procedure Gen_Conv_I64 (Stmt : O_Enode)
+   procedure Gen_Conv_I64 (Stmt : O_Enode; Ov : Boolean)
    is
       Mode : constant Mode_Type := Get_Expr_Mode (Stmt);
       Op : constant O_Enode := Get_Expr_Operand (Stmt);
@@ -1890,12 +1900,16 @@ package body Ortho_Code.X86.Emits is
             if Flags.M64 then
                --  movsxd src, dst
                Gen_Movsxd (Reg_Op, Reg_Res);
-               --  cmp src,dst
-               Start_Insn;
-               Init_Modrm_Reg (Reg_Op, Sz_64, Reg_Res, Sz_64);
-               Gen_8 (Opc_Cmpl_Rm_Reg);
-               Gen_Mod_Rm_Reg;
-               End_Insn;
+               if Ov then
+                  --  cmp src,dst
+                  Start_Insn;
+                  Init_Modrm_Reg (Reg_Op, Sz_64, Reg_Res, Sz_64);
+                  Gen_8 (Opc_Cmpl_Rm_Reg);
+                  Gen_Mod_Rm_Reg;
+                  End_Insn;
+                  --  Overflow if extended value is different from initial one.
+                  Gen_Ov_Check (R_Eq);
+               end if;
             else
                pragma Assert (Reg_Op = R_Edx_Eax);
                pragma Assert (Reg_Res = R_Ax);
@@ -1906,14 +1920,16 @@ package body Ortho_Code.X86.Emits is
                End_Insn;
                --  Sign extend eax.
                Gen_Cdq (Sz_32);
-               --  cmp reg_helper, dx
-               Start_Insn;
-               Gen_8 (Opc_Cmpl_Rm_Reg);
-               Gen_8 (2#11_010_000# + To_Reg32 (Reg_Helper));
-               End_Insn;
+               if Ov then
+                  --  cmp reg_helper, dx
+                  Start_Insn;
+                  Gen_8 (Opc_Cmpl_Rm_Reg);
+                  Gen_8 (2#11_010_000# + To_Reg32 (Reg_Helper));
+                  End_Insn;
+                  --  Overflow if extended value is different from initial one.
+                  Gen_Ov_Check (R_Eq);
+               end if;
             end if;
-            --  Overflow if extended value is different from initial value.
-            Gen_Ov_Check (R_Eq);
          when Mode_U8
            | Mode_B2 =>
             declare
@@ -1927,15 +1943,20 @@ package body Ortho_Code.X86.Emits is
 
                if Flags.M64 then
                   Emit_Load (Reg_Res, Op, Sz_64);
-                  Start_Insn;
-                  Init_Modrm_Reg (Reg_Res, Sz_64);
-                  Gen_Insn_Grp1 (Opc2_Grp1_Cmp, Ubound);
-                  End_Insn;
+                  if Ov then
+                     Start_Insn;
+                     Init_Modrm_Reg (Reg_Res, Sz_64);
+                     Gen_Insn_Grp1 (Opc2_Grp1_Cmp, Ubound);
+                     End_Insn;
+                     Gen_Ov_Check (R_Ule);
+                  end if;
                else
                   pragma Assert (Reg_Op in Regs_Pair);
-                  --  Check MSB = 0
-                  Emit_Tst (Reg_Op, Sz_32h);
-                  Gen_Ov_Check (R_Eq);
+                  if Ov then
+                     --  Check MSB = 0
+                     Emit_Tst (Reg_Op, Sz_32h);
+                     Gen_Ov_Check (R_Eq);
+                  end if;
                   --  Check LSB <= 255 (U8) or LSB <= 1 (B2)
                   if Reg_Op /= Reg_Res then
                      --  Move reg_op -> reg_res
@@ -1946,10 +1967,12 @@ package body Ortho_Code.X86.Emits is
                      Gen_Mod_Rm_Reg;
                      End_Insn;
                   end if;
-                  Gen_Cmp_Imm (Reg_Res, Ubound, Sz_32);
+                  if Ov then
+                     Gen_Cmp_Imm (Reg_Res, Ubound, Sz_32);
+                     Gen_Ov_Check (R_Ule);
+                  end if;
                end if;
             end;
-            Gen_Ov_Check (R_Ule);
          when Mode_F64 =>
             if Flags.M64 then
                --  cvtsi2sd
@@ -2586,19 +2609,20 @@ package body Ortho_Code.X86.Emits is
                   Error_Emit ("emit_insn: indir", Stmt);
             end case;
 
-         when OE_Conv =>
+         when OE_Conv_Ov
+            | OE_Conv =>
             --  Call Gen_Conv_FROM
             case Get_Expr_Mode (Get_Expr_Operand (Stmt)) is
                when Mode_U32 =>
-                  Gen_Conv_U32 (Stmt);
+                  Gen_Conv_U32 (Stmt, Kind = OE_Conv_Ov);
                when Mode_I32 =>
-                  Gen_Conv_I32 (Stmt);
+                  Gen_Conv_I32 (Stmt, Kind = OE_Conv_Ov);
                when Mode_U8 =>
                   Gen_Conv_U8 (Stmt);
                when Mode_B2 =>
                   Gen_Conv_B2 (Stmt);
                when Mode_I64 =>
-                  Gen_Conv_I64 (Stmt);
+                  Gen_Conv_I64 (Stmt, Kind = OE_Conv_Ov);
                when Mode_F32
                  | Mode_F64 =>
                   Gen_Conv_Fp (Stmt);
