@@ -84,9 +84,9 @@ package Trans.Chap6 is
    --  For unconstrained ranges, INDEX_EXPR must be NULL_IIR and RANGE_TYPE
    --   must be set.
    function Translate_Index_To_Offset (Rng        : Mnode;
-                                       Index      : O_Enode;
+                                       Index      : Mnode;
                                        Index_Expr : Iir;
                                        Range_Type : Iir;
                                        Loc        : Iir)
-                                          return O_Enode;
+                                       return O_Enode;
 end Trans.Chap6;

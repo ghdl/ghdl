@@ -736,6 +736,7 @@ package body Trans.Chap1 is
                High        : O_Dnode;
                If_Blk      : O_If_Block;
                Label       : O_Snode;
+               Rng_Idx     : Mnode;
             begin
                Open_Temp;
                Rng := Stabilize (Chap3.Type_To_Range (Iter_Type));
@@ -744,21 +745,20 @@ package body Trans.Chap1 is
                  (Dv2M (Slice, Type_Info, Mode_Value,
                         Type_Info.B.Range_Type, Type_Info.B.Range_Ptr_Type),
                   Get_Suffix (Spec));
+               Rng_Idx := Lv2M (New_Selected_Element
+                                (New_Obj (Slice), Type_Info.B.Range_Left),
+                                Type_Info, Mode_Value);
                Left := Create_Temp_Init
                  (Ghdl_Index_Type,
                   Chap6.Translate_Index_To_Offset
-                    (Rng,
-                     New_Value (New_Selected_Element
-                                  (New_Obj (Slice), Type_Info.B.Range_Left)),
-                     Spec, Iter_Type, Spec));
+                    (Rng, Rng_Idx, Spec, Iter_Type, Spec));
+               Rng_Idx := Lv2M (New_Selected_Element
+                                (New_Obj (Slice), Type_Info.B.Range_Right),
+                                Type_Info, Mode_Value);
                Right := Create_Temp_Init
                  (Ghdl_Index_Type,
                   Chap6.Translate_Index_To_Offset
-                    (Rng,
-                     New_Value (New_Selected_Element
-                                  (New_Obj (Slice),
-                                   Type_Info.B.Range_Right)),
-                     Spec, Iter_Type, Spec));
+                    (Rng, Rng_Idx, Spec, Iter_Type, Spec));
                Index := Create_Temp (Ghdl_Index_Type);
                High := Create_Temp (Ghdl_Index_Type);
                Start_If_Stmt
@@ -771,27 +771,23 @@ package body Trans.Chap1 is
                                         Type_Info.B.Range_Dir)),
                                   Ghdl_Bool_Type));
                --  Same direction, so left to right.
-               New_Assign_Stmt (New_Obj (Index),
-                                New_Value (New_Obj (Left)));
-               New_Assign_Stmt (New_Obj (High),
-                                New_Value (New_Obj (Right)));
+               New_Assign_Stmt (New_Obj (Index), New_Obj_Value (Left));
+               New_Assign_Stmt (New_Obj (High), New_Obj_Value (Right));
                New_Else_Stmt (If_Blk);
                --  Opposite direction, so right to left.
-               New_Assign_Stmt (New_Obj (Index),
-                                New_Value (New_Obj (Right)));
-               New_Assign_Stmt (New_Obj (High),
-                                New_Value (New_Obj (Left)));
+               New_Assign_Stmt (New_Obj (Index), New_Obj_Value (Right));
+               New_Assign_Stmt (New_Obj (High), New_Obj_Value (Left));
                Finish_If_Stmt (If_Blk);
 
                --  Loop.
                Start_Loop_Stmt (Label);
                Gen_Exit_When
                  (Label, New_Compare_Op (ON_Gt,
-                                         New_Value (New_Obj (Index)),
-                                         New_Value (New_Obj (High)),
+                                         New_Obj_Value (Index),
+                                         New_Obj_Value (High),
                                          Ghdl_Bool_Type));
                Open_Temp;
-               Gen_Subblock_Call (New_Value (New_Obj (Index)), True);
+               Gen_Subblock_Call (New_Obj_Value (Index), True);
                Close_Temp;
                Inc_Var (Index);
                Finish_Loop_Stmt (Label);

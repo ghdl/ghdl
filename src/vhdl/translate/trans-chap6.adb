@@ -194,31 +194,34 @@ package body Trans.Chap6 is
    end Get_Deep_Range_Expression;
 
    function Translate_Index_To_Offset (Rng        : Mnode;
-                                       Index      : O_Enode;
+                                       Index      : Mnode;
                                        Index_Expr : Iir;
                                        Range_Type : Iir;
                                        Loc        : Iir)
-                                          return O_Enode
+                                       return O_Enode
    is
+      Range_Btype  : constant Iir := Get_Base_Type (Range_Type);
+      Index_Tinfo  : constant Type_Info_Acc := Get_Info (Range_Btype);
+      Index_Tnode  : constant O_Tnode := Index_Tinfo.Ortho_Type (Mode_Value);
+      Index1       : Mnode;
       Need_Check   : Boolean;
-      Dir          : O_Enode;
       If_Blk       : O_If_Block;
       Res          : O_Dnode;
       Off          : O_Dnode;
-      Bound        : O_Enode;
-      Cond1, Cond2 : O_Enode;
-      Index_Node   : O_Dnode;
-      Bound_Node   : O_Dnode;
-      Index_Info   : Type_Info_Acc;
+      Bound        : Mnode;
       Deep_Rng     : Iir;
       Deep_Reverse : Boolean;
    begin
-      Index_Info := Get_Info (Get_Base_Type (Range_Type));
+      Index1 := Stabilize (Index);
+      pragma Unreferenced (Index);
+
       if Index_Expr = Null_Iir then
+         --  Unconstrained range so the direction of the range is not known.
          Need_Check := True;
          Deep_Rng := Null_Iir;
          Deep_Reverse := False;
       else
+         --  Extract the direction of the range.
          Need_Check := Need_Index_Check (Get_Type (Index_Expr), Range_Type);
          Get_Deep_Range_Expression (Range_Type, Deep_Rng, Deep_Reverse);
       end if;
@@ -227,68 +230,66 @@ package body Trans.Chap6 is
 
       Open_Temp;
 
-      Off := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
+      Off := Create_Temp (Index_Tinfo.Ortho_Type (Mode_Value));
 
-      Bound := M2E (Chap3.Range_To_Left (Rng));
+      Bound := Chap3.Range_To_Left (Rng);
 
       if Deep_Rng /= Null_Iir then
          if Get_Direction (Deep_Rng) = Dir_To xor Deep_Reverse then
             --  Direction TO:  INDEX - LEFT.
-            New_Assign_Stmt (New_Obj (Off),
-                             New_Dyadic_Op (ON_Sub_Ov,
-                               Index, Bound));
+            New_Assign_Stmt
+              (New_Obj (Off),
+               New_Dyadic_Op (ON_Sub_Ov, M2E (Index1), M2E (Bound)));
          else
             --  Direction DOWNTO: LEFT - INDEX.
-            New_Assign_Stmt (New_Obj (Off),
-                             New_Dyadic_Op (ON_Sub_Ov,
-                               Bound, Index));
+            New_Assign_Stmt
+              (New_Obj (Off),
+               New_Dyadic_Op (ON_Sub_Ov, M2E (Bound), M2E (Index1)));
          end if;
       else
-         Index_Node := Create_Temp_Init
-           (Index_Info.Ortho_Type (Mode_Value), Index);
-         Bound_Node := Create_Temp_Init
-           (Index_Info.Ortho_Type (Mode_Value), Bound);
-         Dir := M2E (Chap3.Range_To_Dir (Rng));
+         Stabilize (Bound);
 
          --  Non-static direction.
          Start_If_Stmt (If_Blk,
-                        New_Compare_Op (ON_Eq, Dir,
+                        New_Compare_Op (ON_Eq, M2E (Chap3.Range_To_Dir (Rng)),
                           New_Lit (Ghdl_Dir_To_Node),
                           Ghdl_Bool_Type));
          --  Direction TO:  INDEX - LEFT.
-         New_Assign_Stmt (New_Obj (Off),
-                          New_Dyadic_Op (ON_Sub_Ov,
-                            New_Obj_Value (Index_Node),
-                            New_Obj_Value (Bound_Node)));
+         New_Assign_Stmt
+           (New_Obj (Off),
+            New_Dyadic_Op (ON_Sub_Ov, M2E (Index1), M2E (Bound)));
          New_Else_Stmt (If_Blk);
          --  Direction DOWNTO: LEFT - INDEX.
-         New_Assign_Stmt (New_Obj (Off),
-                          New_Dyadic_Op (ON_Sub_Ov,
-                            New_Obj_Value (Bound_Node),
-                            New_Obj_Value (Index_Node)));
+         New_Assign_Stmt
+           (New_Obj (Off),
+            New_Dyadic_Op (ON_Sub_Ov, M2E (Bound), M2E (Index1)));
          Finish_If_Stmt (If_Blk);
       end if;
 
       --  Get the offset.
       New_Assign_Stmt
-        (New_Obj (Res), New_Convert_Ov (New_Obj_Value (Off),
-         Ghdl_Index_Type));
+        (New_Obj (Res), New_Convert_Ov (New_Obj_Value (Off), Ghdl_Index_Type));
 
       --  Check bounds.
       if Need_Check then
-         Cond1 := New_Compare_Op
-           (ON_Lt,
-            New_Obj_Value (Off),
-            New_Lit (New_Signed_Literal (Index_Info.Ortho_Type (Mode_Value),
-              0)),
-            Ghdl_Bool_Type);
+         declare
+            Cond1, Cond2 : O_Enode;
+            Cond         : O_Enode;
+         begin
+            Cond1 := New_Compare_Op
+              (ON_Lt,
+               New_Obj_Value (Off),
+               New_Lit (New_Signed_Literal (Index_Tnode, 0)),
+               Ghdl_Bool_Type);
 
-         Cond2 := New_Compare_Op
-           (ON_Ge,
-            New_Obj_Value (Res),
-            M2E (Chap3.Range_To_Length (Rng)),
-            Ghdl_Bool_Type);
-         Check_Bound_Error (New_Dyadic_Op (ON_Or, Cond1, Cond2), Loc, 0);
+            Cond2 := New_Compare_Op
+              (ON_Ge,
+               New_Obj_Value (Res),
+               M2E (Chap3.Range_To_Length (Rng)),
+               Ghdl_Bool_Type);
+            Cond := New_Dyadic_Op (ON_Or, Cond1, Cond2);
+            Check_Bound_Error (Cond, Loc, 0);
+         end;
       end if;
 
       Close_Temp;
