@@ -70,7 +70,7 @@ package Trans.Chap6 is
    --  index violation for dimension DIM of an array.  LOC is usually
    --  the expression which has computed the index and is used only for
    --  its location.
-   procedure Check_Bound_Error (Cond : O_Enode; Loc : Iir; Dim : Natural);
+   procedure Check_Bound_Error (Cond : O_Enode; Loc : Iir);
 
    --  Get the deepest range_expression of ATYPE.
    --   This follows 'range and 'reverse_range.

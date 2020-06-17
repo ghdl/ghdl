@@ -205,6 +205,38 @@ package body Grt.Lib is
       Error_E_Call_Stack (Bt);
    end Ghdl_Direction_Check_Failed;
 
+   procedure Diag_C_Range (Rng : Std_Integer_Range_Ptr) is
+   begin
+      Diag_C (Rng.Left);
+      case Rng.Dir is
+         when Dir_Downto =>
+            Diag_C (" downto ");
+         when Dir_To =>
+            Diag_C (" to ");
+      end case;
+      Diag_C (Rng.Right);
+   end Diag_C_Range;
+
+   procedure Ghdl_Integer_Index_Check_Failed
+     (Filename : Ghdl_C_String;
+      Line     : Ghdl_I32;
+      Val      : Std_Integer;
+      Rng      : Std_Integer_Range_Ptr)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      Save_Backtrace (Bt, 1);
+      Error_S ("index (");
+      Diag_C (Val);
+      Diag_C (") out of bounds (");
+      Diag_C_Range (Rng);
+      Diag_C (") at ");
+      Diag_C (Filename);
+      Diag_C (":");
+      Diag_C (Line);
+      Error_E_Call_Stack (Bt);
+   end Ghdl_Integer_Index_Check_Failed;
+
    function Hi (V : Ghdl_I64) return Ghdl_U32 is
    begin
       return Ghdl_U32 (Shift_Right (To_Ghdl_U64 (V), 32) and 16#ffff_ffff#);

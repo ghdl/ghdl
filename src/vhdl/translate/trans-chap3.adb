@@ -3562,7 +3562,7 @@ package body Trans.Chap3 is
          when Unknown =>
             Res := Check_Match_Cond (L_Type, Get_Composite_Bounds (L_Node),
                                      R_Type, Get_Composite_Bounds (R_Node));
-            Chap6.Check_Bound_Error (Res, Loc, 0);
+            Chap6.Check_Bound_Error (Res, Loc);
       end case;
    end Check_Composite_Match;
 

@@ -20,6 +20,8 @@ with Files_Map;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Evaluation; use Vhdl.Evaluation;
+with Vhdl.Std_Package;
+
 with Trans.Chap3;
 with Trans.Chap7;
 with Trans.Chap14;
@@ -95,9 +97,8 @@ package body Trans.Chap6 is
    --  index violation for dimension DIM of an array.  LOC is usually
    --  the expression which has computed the index and is used only for
    --  its location.
-   procedure Check_Bound_Error (Cond : O_Enode; Loc : Iir; Dim : Natural)
+   procedure Check_Bound_Error (Cond : O_Enode; Loc : Iir)
    is
-      pragma Unreferenced (Dim);
       If_Blk : O_If_Block;
    begin
       Start_If_Stmt (If_Blk, Cond);
@@ -193,6 +194,31 @@ package body Trans.Chap6 is
       end loop;
    end Get_Deep_Range_Expression;
 
+   --  Give a nice error message when the index is an integer
+   --  (with the bounds and the index).
+   --  This is a special case that would handle more than 95% of
+   --  the user cases.
+   procedure Check_Integer_Bound_Error
+     (Cond : O_Enode; Index : Mnode; Rng : Mnode; Loc : Iir)
+   is
+      If_Blk       : O_If_Block;
+      Constr       : O_Assoc_List;
+      Name         : Name_Id;
+      Line, Col    : Natural;
+   begin
+      Start_If_Stmt (If_Blk, Cond);
+
+      Files_Map.Location_To_Position  (Get_Location (Loc), Name, Line, Col);
+
+      Start_Association (Constr, Ghdl_Integer_Index_Check_Failed);
+      Assoc_Filename_Line (Constr, Line);
+      New_Association (Constr, M2E (Index));
+      New_Association (Constr, M2Addr (Rng));
+      New_Procedure_Call (Constr);
+
+      Finish_If_Stmt (If_Blk);
+   end Check_Integer_Bound_Error;
+
    function Translate_Index_To_Offset (Rng        : Mnode;
                                        Index      : Mnode;
                                        Index_Expr : Iir;
@@ -203,6 +229,8 @@ package body Trans.Chap6 is
       Range_Btype  : constant Iir := Get_Base_Type (Range_Type);
       Index_Tinfo  : constant Type_Info_Acc := Get_Info (Range_Btype);
       Index_Tnode  : constant O_Tnode := Index_Tinfo.Ortho_Type (Mode_Value);
+      Is_Integer   : constant Boolean :=
+        Range_Btype = Vhdl.Std_Package.Integer_Type_Definition;
       Index1       : Mnode;
       Need_Check   : Boolean;
       If_Blk       : O_If_Block;
@@ -268,7 +296,7 @@ package body Trans.Chap6 is
 
       --  Get the offset.
       New_Assign_Stmt
-        (New_Obj (Res), New_Convert_Ov (New_Obj_Value (Off), Ghdl_Index_Type));
+        (New_Obj (Res), New_Convert (New_Obj_Value (Off), Ghdl_Index_Type));
 
       --  Check bounds.
       if Need_Check then
@@ -288,7 +316,11 @@ package body Trans.Chap6 is
                M2E (Chap3.Range_To_Length (Rng)),
                Ghdl_Bool_Type);
             Cond := New_Dyadic_Op (ON_Or, Cond1, Cond2);
-            Check_Bound_Error (Cond, Loc, 0);
+            if Is_Integer then
+               Check_Integer_Bound_Error (Cond, Index1, Rng, Loc);
+            else
+               Check_Bound_Error (Cond, Loc);
+            end if;
          end;
       end if;
 
@@ -301,20 +333,23 @@ package body Trans.Chap6 is
    --  offset.
    --  This checks bounds.
    function Translate_Thin_Index_Offset
-     (Index_Type : Iir; Dim : Natural; Expr : Iir) return O_Enode
+     (Index_Type : Iir; Expr : Iir; Rng : Mnode) return O_Enode
    is
       Index_Range     : constant Iir := Get_Range_Constraint (Index_Type);
       Obound          : O_Cnode;
       Res             : O_Dnode;
       Cond2           : O_Enode;
-      Index           : O_Enode;
+      Index           : Mnode;
+      Off             : O_Enode;
       Index_Base_Type : Iir;
       V               : Int64;
       B               : Int64;
       Expr1 : Iir;
    begin
       B := Eval_Pos (Get_Left_Limit (Index_Range));
+
       if Get_Expr_Staticness (Expr) = Locally then
+         --  Both range and index are static.
          Expr1 := Eval_Static_Expr (Expr);
          if not Eval_Is_In_Bound (Expr1, Index_Type) then
             Gen_Bound_Error (Expr1);
@@ -328,42 +363,49 @@ package body Trans.Chap6 is
             B := B - V;
          end if;
          return New_Lit (New_Index_Lit (Unsigned_64 (B)));
-      else
-         Index_Base_Type := Get_Base_Type (Index_Type);
-         Index := Chap7.Translate_Expression (Expr, Index_Base_Type);
+      end if;
 
-         if Get_Direction (Index_Range) = Dir_To then
-            --  Direction TO:  INDEX - LEFT.
-            if B /= 0 then
-               Obound := Chap7.Translate_Static_Range_Left
-                 (Index_Range, Index_Base_Type);
-               Index := New_Dyadic_Op (ON_Sub_Ov, Index, New_Lit (Obound));
-            end if;
-         else
-            --  Direction DOWNTO:  LEFT - INDEX.
+      Index_Base_Type := Get_Base_Type (Index_Type);
+      Index := Chap7.Translate_Expression (Expr, Index_Base_Type);
+      Stabilize (Index);
+
+      if Get_Direction (Index_Range) = Dir_To then
+         --  Direction TO:  INDEX - LEFT.
+         if B /= 0 then
             Obound := Chap7.Translate_Static_Range_Left
               (Index_Range, Index_Base_Type);
-            Index := New_Dyadic_Op (ON_Sub_Ov, New_Lit (Obound), Index);
+            Off := New_Dyadic_Op (ON_Sub_Ov, M2E (Index), New_Lit (Obound));
+         else
+            Off := M2E (Index);
          end if;
-
-         --  Get the offset.
-         Index := New_Convert_Ov (Index, Ghdl_Index_Type);
-
-         --  Since the value is unsigned, both left and right bounds are
-         --  checked in the same time.
-         if Get_Type (Expr) /= Index_Type then
-            Res := Create_Temp_Init (Ghdl_Index_Type, Index);
-
-            Cond2 := New_Compare_Op
-              (ON_Ge, New_Obj_Value (Res),
-               New_Lit (Chap7.Translate_Static_Range_Length (Index_Range)),
-               Ghdl_Bool_Type);
-            Check_Bound_Error (Cond2, Expr, Dim);
-            Index := New_Obj_Value (Res);
-         end if;
-
-         return Index;
+      else
+         --  Direction DOWNTO:  LEFT - INDEX.
+         Obound := Chap7.Translate_Static_Range_Left
+           (Index_Range, Index_Base_Type);
+         Off := New_Dyadic_Op (ON_Sub_Ov, New_Lit (Obound), M2E (Index));
       end if;
+
+      --  Get the offset.
+      Off := New_Convert (Off, Ghdl_Index_Type);
+
+      --  Since the value is unsigned, both left and right bounds are
+      --  checked in the same time.
+      if Get_Type (Expr) /= Index_Type then
+         Res := Create_Temp_Init (Ghdl_Index_Type, Off);
+
+         Cond2 := New_Compare_Op
+           (ON_Ge, New_Obj_Value (Res),
+            New_Lit (Chap7.Translate_Static_Range_Length (Index_Range)),
+            Ghdl_Bool_Type);
+         if Index_Base_Type = Vhdl.Std_Package.Integer_Type_Definition then
+            Check_Integer_Bound_Error (Cond2, Index, Rng, Expr);
+         else
+            Check_Bound_Error (Cond2, Expr);
+         end if;
+         Off := New_Obj_Value (Res);
+      end if;
+
+      return Off;
    end Translate_Thin_Index_Offset;
 
    function Stabilize_If_Unbounded (Val : Mnode) return Mnode is
@@ -410,14 +452,14 @@ package body Trans.Chap6 is
                   Chap7.Translate_Expression (Index, Ibasetype),
                   Null_Iir, Itype, Index);
             when Type_Mode_Bounded_Arrays =>
+               --  Manually extract range since there is no infos for
+               --   index subtype.
+               Range_Ptr := Chap3.Bounds_To_Range
+                 (Chap3.Get_Composite_Type_Bounds (Prefix_Type),
+                  Prefix_Type, Dim);
                if Prefix_Info.Type_Locally_Constrained then
-                  R := Translate_Thin_Index_Offset (Itype, Dim, Index);
+                  R := Translate_Thin_Index_Offset (Itype, Index, Range_Ptr);
                else
-                  --  Manually extract range since there is no infos for
-                  --   index subtype.
-                  Range_Ptr := Chap3.Bounds_To_Range
-                    (Chap3.Get_Composite_Type_Bounds (Prefix_Type),
-                     Prefix_Type, Dim);
                   Stabilize (Range_Ptr);
                   R := Translate_Index_To_Offset
                     (Range_Ptr,
@@ -729,7 +771,7 @@ package body Trans.Chap6 is
                            M2E (Chap3.Range_To_Length (Slice_Range))),
             M2E (Chap3.Range_To_Length (Prefix_Range)),
             Ghdl_Bool_Type);
-         Check_Bound_Error (New_Dyadic_Op (ON_Or, Err_1, Err_2), Expr, 1);
+         Check_Bound_Error (New_Dyadic_Op (ON_Or, Err_1, Err_2), Expr);
       end;
       Finish_If_Stmt (If_Blk);
 

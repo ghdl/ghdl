@@ -72,6 +72,9 @@ package Grt.Types is
       Length : Ghdl_Index_Type;
    end record;
 
+   type Std_Integer_Range_Ptr is access Std_Integer_Trt;
+   pragma Convention (C, Std_Integer_Range_Ptr);
+
    subtype Std_Character is Character;
    type Std_String_Uncons is array (Ghdl_Index_Type range <>) of Std_Character;
    subtype Std_String_Base is Std_String_Uncons (Ghdl_Index_Type);

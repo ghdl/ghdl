@@ -328,6 +328,9 @@ package body Ghdlrun is
            Grt.Lib.Ghdl_Bound_Check_Failed'Address);
       Def (Trans_Decls.Ghdl_Direction_Check_Failed,
            Grt.Lib.Ghdl_Direction_Check_Failed'Address);
+      Def (Trans_Decls.Ghdl_Integer_Index_Check_Failed,
+           Grt.Lib.Ghdl_Integer_Index_Check_Failed'Address);
+
       Def (Trans_Decls.Ghdl_Malloc0,
            Grt.Lib.Ghdl_Malloc0'Address);
       Def (Trans_Decls.Ghdl_Std_Ulogic_To_Boolean_Array,

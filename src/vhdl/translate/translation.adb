@@ -1107,6 +1107,21 @@ package body Translation is
          Check_Stack_Allocation_Threshold := O_Cnode_Null;
       end if;
 
+      --  procedure __ghdl_integer_indexed_check_failed
+      --   (filename : char_ptr_type;
+      --    line : ghdl_i32;
+      --    val : standard_integer;
+      --    rng : integer_range_ptr);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_integer_index_check_failed"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Val, Std_Integer_Otype);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("rng"),
+                          Get_Info (Integer_Type_Definition).B.Range_Ptr_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Integer_Index_Check_Failed);
+
       --  procedure __ghdl_text_write (file : __ghdl_file_index;
       --                               str  : std_string_ptr);
       Start_Procedure_Decl

@@ -425,7 +425,7 @@ package body Trans.Chap7 is
                New_Lit (New_Index_Lit (Unsigned_64 (Len))),
                Chap3.Get_Array_Type_Length (Lit_Type),
                Ghdl_Bool_Type),
-            Str, 1);
+            Str);
       else
          raise Internal_Error;
       end if;
@@ -3392,7 +3392,7 @@ package body Trans.Chap7 is
                             (Chap3.Bounds_To_Range
                                (Bounds, Target_Type, I + 1))),
                      Ghdl_Bool_Type),
-                  Aggr, I);
+                  Aggr);
             end;
             Close_Temp;
          elsif Get_Type_Staticness (Subaggr_Type) /= Locally
@@ -3465,7 +3465,7 @@ package body Trans.Chap7 is
                   end if;
                   New_Assign_Stmt (New_Obj (Var_Err), E);
                end if;
-               Chap6.Check_Bound_Error (New_Obj_Value (Var_Err), Aggr, I);
+               Chap6.Check_Bound_Error (New_Obj_Value (Var_Err), Aggr);
                Close_Temp;
             end if;
          end if;
@@ -5312,7 +5312,7 @@ package body Trans.Chap7 is
                  (Dp2M (F_Info.Operator_Right, Tinfo, Mode_Value),
                   Arr_Type, 1),
                Ghdl_Bool_Type),
-            Subprg, 0);
+            Subprg);
       end if;
 
       --  Create the result from LEFT bound.
@@ -5952,10 +5952,10 @@ package body Trans.Chap7 is
 
                Chap6.Check_Bound_Error
                  (New_Compare_Op (ON_Gt,
-                  New_Obj_Value (Var_Len),
-                  Chap3.Get_Array_Length (Var, Etype),
-                  Ghdl_Bool_Type),
-                  Subprg, 1);
+                                  New_Obj_Value (Var_Len),
+                                  Chap3.Get_Array_Length (Var, Etype),
+                                  Ghdl_Bool_Type),
+                  Subprg);
                Translate_Rw_Array (Chap3.Get_Composite_Base (Var), Etype,
                                    Var_Len, Ghdl_Read_Scalar);
                New_Return_Stmt (New_Convert_Ov (New_Obj_Value (Var_Len),

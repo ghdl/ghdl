@@ -54,6 +54,12 @@ package Grt.Lib is
    procedure Ghdl_Direction_Check_Failed (Filename : Ghdl_C_String;
                                           Line: Ghdl_I32);
 
+   procedure Ghdl_Integer_Index_Check_Failed
+     (Filename : Ghdl_C_String;
+      Line     : Ghdl_I32;
+      Val      : Std_Integer;
+      Rng      : Std_Integer_Range_Ptr);
+
    --  Program error has occurred:
    --  * configuration of an already configured block.
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
@@ -117,6 +123,9 @@ private
                   "__ghdl_bound_check_failed");
    pragma Export (C, Ghdl_Direction_Check_Failed,
                   "__ghdl_direction_check_failed");
+   pragma Export (C, Ghdl_Integer_Index_Check_Failed,
+                  "__ghdl_integer_index_check_failed");
+
    pragma Export (C, Ghdl_Program_Error, "__ghdl_program_error");
 
    pragma Export (C, Ghdl_Check_Stack_Allocation,

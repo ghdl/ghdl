@@ -342,7 +342,7 @@ package body Trans.Chap14 is
                   New_Obj_Value (L),
                   New_Lit (Get_Ortho_Literal (Get_Nth_Element (List, Limit))),
                   Ghdl_Bool_Type),
-                  Attr, 0);
+                  Attr);
                return New_Convert_Ov
                  (New_Dyadic_Op
                     (Op,

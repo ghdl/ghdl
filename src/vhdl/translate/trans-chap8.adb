@@ -1415,7 +1415,7 @@ package body Trans.Chap8 is
                Expr_Type),
             New_Lit (New_Index_Lit (Unsigned_64 (Sel_Length))),
             Ghdl_Bool_Type);
-         Chap6.Check_Bound_Error (Cond, Expr, 0);
+         Chap6.Check_Bound_Error (Cond, Expr);
       end if;
    end Translate_String_Case_Statement_Common;
 
