@@ -869,7 +869,8 @@ package body Synth.Oper is
             return Synth_Compare_Array (Id_Ult, Boolean_Type);
 
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Add_Uns_Int_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Add_Slv_Int =>
             --  "+" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Ctxt, Id_Add, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns =>
