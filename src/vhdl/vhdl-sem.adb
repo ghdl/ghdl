@@ -3141,6 +3141,14 @@ package body Vhdl.Sem is
          Set_Library_Declaration (Decl, Lib);
          Sem_Scopes.Add_Name (Lib, Ident, False);
          Set_Visible_Flag (Lib, True);
+
+         --  Override the location of the library.  Even if the library is
+         --  not really declared by the library clause (it is almost pre-
+         --  declared), it improves error messages.
+         --  Note: library clauses of dependences will overwrite the location,
+         --   defeating the purpose of it.
+         Location_Copy (Lib, Decl);
+
          Xref_Ref (Decl, Lib);
       end if;
    end Sem_Library_Clause;
@@ -3368,6 +3376,12 @@ package body Vhdl.Sem is
       Sem_Scopes.Add_Name (Libraries.Std_Library, Std_Names.Name_Std, False);
       Sem_Scopes.Add_Name (Library, Std_Names.Name_Work, False);
       Sem_Scopes.Use_All_Names (Standard_Package);
+
+      --  Use pre-defined locations for STD and WORK library (as they may
+      --  be later overriden).
+      Set_Location (Libraries.Std_Library, Libraries.Library_Location);
+      Set_Location (Library, Libraries.Library_Location);
+
       if Get_Dependence_List (Design_Unit) = Null_Iir_List then
          Set_Dependence_List (Design_Unit, Create_Iir_List);
       end if;
