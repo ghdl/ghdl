@@ -653,6 +653,9 @@ package body Std_Names is
       Def ("to_stdulogicvector", Name_To_Stdulogicvector);
       Def ("is_x",               Name_Is_X);
       Def ("to_01",              Name_To_01);
+      Def ("to_x01",             Name_To_X01);
+      Def ("to_x01z",            Name_To_X01Z);
+      Def ("to_ux01",            Name_To_UX01);
       Def ("conv_signed",        Name_Conv_Signed);
       Def ("conv_unsigned",      Name_Conv_Unsigned);
       Def ("conv_integer",       Name_Conv_Integer);

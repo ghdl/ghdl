@@ -322,6 +322,13 @@ package body Vhdl.Ieee.Std_Logic_1164 is
                      Predefined :=
                        Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv;
                   end if;
+               when Name_To_X01 =>
+                  if Is_Vector_Function (Decl) then
+                     --  TODO: distinguish slv/suv.
+                     Predefined := Iir_Predefined_Ieee_1164_To_X01_Slv;
+                  elsif Is_Scalar_Function (Decl) then
+                     Predefined := Iir_Predefined_Ieee_1164_To_X01_Log;
+                  end if;
                when others =>
                   if Is_Scalar_Scalar_Function (Decl) then
                      case Get_Identifier (Decl) is

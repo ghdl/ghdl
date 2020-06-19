@@ -5500,6 +5500,27 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_1164_To_Stdulogicvector_Bv,
       Iir_Predefined_Ieee_1164_To_Stdulogicvector_Slv,
 
+      Iir_Predefined_Ieee_1164_To_X01_Slv,
+      Iir_Predefined_Ieee_1164_To_X01_Suv,
+      Iir_Predefined_Ieee_1164_To_X01_Log,
+      Iir_Predefined_Ieee_1164_To_X01_Bv_Slv,
+      Iir_Predefined_Ieee_1164_To_X01_Bv_Suv,
+      Iir_Predefined_Ieee_1164_To_X01_Bit_Log,
+
+      Iir_Predefined_Ieee_1164_To_X01Z_Slv,
+      Iir_Predefined_Ieee_1164_To_X01Z_Suv,
+      Iir_Predefined_Ieee_1164_To_X01Z_Log,
+      Iir_Predefined_Ieee_1164_To_X01Z_Bv_Slv,
+      Iir_Predefined_Ieee_1164_To_X01Z_Bv_Suv,
+      Iir_Predefined_Ieee_1164_To_X01Z_Bit_Log,
+
+      Iir_Predefined_Ieee_1164_To_UX01_Slv,
+      Iir_Predefined_Ieee_1164_To_UX01_Suv,
+      Iir_Predefined_Ieee_1164_To_UX01_Log,
+      Iir_Predefined_Ieee_1164_To_UX01_Bv_Slv,
+      Iir_Predefined_Ieee_1164_To_UX01_Bv_Suv,
+      Iir_Predefined_Ieee_1164_To_UX01_Bit_Log,
+
       Iir_Predefined_Ieee_1164_Vector_Is_X,
       Iir_Predefined_Ieee_1164_Scalar_Is_X,
 
