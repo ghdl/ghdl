@@ -1,4 +1,4 @@
---  Nodes recognizer for ieee.numeric_std and ieee.numeric_bit.
+--  Nodes recognizer for ieee.std_logic_unsigned and ieee.std_logic_signed
 --  Copyright (C) 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -96,26 +96,23 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
 
    Error : exception;
 
-   procedure Extract_Declarations
-     (Pkg : Iir_Package_Declaration; Sign : Sign_Kind)
+   procedure Classify_Arg (Arg : Iir; Kind : out Arg_Kind)
    is
-      procedure Classify_Arg (Arg : Iir; Kind : out Arg_Kind)
-      is
-         Arg_Type : constant Iir := Get_Type (Arg);
-      begin
-         if Arg_Type = Vhdl.Std_Package.Integer_Subtype_Definition then
-            Kind := Arg_Int;
-         elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Type then
-            Kind := Arg_Log;
-         elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
-            Kind := Arg_Slv;
-         else
-            raise Error;
-         end if;
-      end Classify_Arg;
+      Arg_Type : constant Iir := Get_Type (Arg);
+   begin
+      if Arg_Type = Vhdl.Std_Package.Integer_Subtype_Definition then
+         Kind := Arg_Int;
+      elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Type then
+         Kind := Arg_Log;
+      elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
+         Kind := Arg_Slv;
+      else
+         raise Error;
+      end if;
+   end Classify_Arg;
 
-      Decl : Iir;
-
+   procedure Extract_Declaration (Decl : Iir; Sign : Sign_Kind)
+   is
       Arg1, Arg2 : Iir;
       Arg1_Kind, Arg2_Kind : Arg_Kind;
 
@@ -156,6 +153,74 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
 
       Res : Iir_Predefined_Functions;
    begin
+      Arg1 := Get_Interface_Declaration_Chain (Decl);
+      if Is_Null (Arg1) then
+         raise Error;
+      end if;
+
+      Res := Iir_Predefined_None;
+
+      Classify_Arg (Arg1, Arg1_Kind);
+      Arg2 := Get_Chain (Arg1);
+      if Is_Valid (Arg2) then
+         --  Dyadic function.
+         Classify_Arg (Arg2, Arg2_Kind);
+
+         case Get_Identifier (Decl) is
+            when Name_Op_Equality =>
+               Res := Handle_Binary (Eq_Patterns, None_Patterns);
+            when Name_Op_Inequality =>
+               Res := Handle_Binary (Ne_Patterns, None_Patterns);
+            when Name_Op_Less =>
+               Res := Handle_Binary (Lt_Patterns, None_Patterns);
+            when Name_Op_Less_Equal =>
+               Res := Handle_Binary (Le_Patterns, None_Patterns);
+            when Name_Op_Greater =>
+               Res := Handle_Binary (Gt_Patterns, None_Patterns);
+            when Name_Op_Greater_Equal =>
+               Res := Handle_Binary (Ge_Patterns, None_Patterns);
+            when Name_Op_Plus =>
+               Res := Handle_Binary (Add_Uns_Patterns, Add_Sgn_Patterns);
+            when Name_Op_Minus =>
+               Res := Handle_Binary (Sub_Uns_Patterns, Sub_Sgn_Patterns);
+            when Name_Op_Mul =>
+               case Sign is
+                  when Pkg_Unsigned =>
+                     pragma Assert (Arg1_Kind = Arg_Slv);
+                     pragma Assert (Arg2_Kind = Arg_Slv);
+                     Res := Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv;
+                  when Pkg_Signed =>
+                     pragma Assert (Arg1_Kind = Arg_Slv);
+                     pragma Assert (Arg2_Kind = Arg_Slv);
+                     Res :=
+                       Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv;
+               end case;
+            when others =>
+               null;
+         end case;
+      else
+         --  Monadic function.
+         case Get_Identifier (Decl) is
+            when Name_Conv_Integer =>
+               case Sign is
+                  when Pkg_Unsigned =>
+                     Res :=
+                       Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer;
+                  when Pkg_Signed =>
+                     Res := Iir_Predefined_Ieee_Std_Logic_Signed_Conv_Integer;
+               end case;
+            when others =>
+               null;
+         end case;
+      end if;
+      Set_Implicit_Definition (Decl, Res);
+   end Extract_Declaration;
+
+   procedure Extract_Declarations
+     (Pkg : Iir_Package_Declaration; Sign : Sign_Kind)
+   is
+      Decl : Iir;
+   begin
       Decl := Get_Declaration_Chain (Pkg);
 
       --  Handle functions.
@@ -164,67 +229,9 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
             raise Error;
          end if;
 
-         Arg1 := Get_Interface_Declaration_Chain (Decl);
-         if Is_Null (Arg1) then
-            raise Error;
-         end if;
+         Extract_Declaration (Decl, Sign);
 
-         Res := Iir_Predefined_None;
-
-         Classify_Arg (Arg1, Arg1_Kind);
-         Arg2 := Get_Chain (Arg1);
-         if Is_Valid (Arg2) then
-            --  Dyadic function.
-            Classify_Arg (Arg2, Arg2_Kind);
-
-            case Get_Identifier (Decl) is
-               when Name_Op_Equality =>
-                  Res := Handle_Binary (Eq_Patterns, None_Patterns);
-               when Name_Op_Inequality =>
-                  Res := Handle_Binary (Ne_Patterns, None_Patterns);
-               when Name_Op_Less =>
-                  Res := Handle_Binary (Lt_Patterns, None_Patterns);
-               when Name_Op_Less_Equal =>
-                  Res := Handle_Binary (Le_Patterns, None_Patterns);
-               when Name_Op_Greater =>
-                  Res := Handle_Binary (Gt_Patterns, None_Patterns);
-               when Name_Op_Greater_Equal =>
-                  Res := Handle_Binary (Ge_Patterns, None_Patterns);
-               when Name_Op_Plus =>
-                  Res := Handle_Binary (Add_Uns_Patterns, Add_Sgn_Patterns);
-               when Name_Op_Minus =>
-                  Res := Handle_Binary (Sub_Uns_Patterns, Sub_Sgn_Patterns);
-               when Name_Op_Mul =>
-                  case Sign is
-                     when Pkg_Unsigned =>
-                        pragma Assert (Arg1_Kind = Arg_Slv);
-                        pragma Assert (Arg2_Kind = Arg_Slv);
-                        Res :=
-                          Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv;
-                     when Pkg_Signed =>
-                        pragma Assert (Arg1_Kind = Arg_Slv);
-                        pragma Assert (Arg2_Kind = Arg_Slv);
-                        Res :=
-                          Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv;
-                  end case;
-               when others =>
-                  null;
-            end case;
-         else
-            --  Monadic function.
-            case Get_Identifier (Decl) is
-               when Name_Conv_Integer =>
-                  if Sign = Pkg_Unsigned then
-                     Res :=
-                       Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer;
-                  end if;
-               when others =>
-                  null;
-            end case;
-         end if;
-         Set_Implicit_Definition (Decl, Res);
          Decl := Get_Chain (Decl);
       end loop;
    end Extract_Declarations;
-
 end Vhdl.Ieee.Std_Logic_Unsigned;

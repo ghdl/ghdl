@@ -5831,6 +5831,8 @@ package Vhdl.Nodes is
 
       Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv,
 
+      Iir_Predefined_Ieee_Std_Logic_Signed_Conv_Integer,
+
       --  std_logic_arith (synopsys extention).
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int,
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Uns,

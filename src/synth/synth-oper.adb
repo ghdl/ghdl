@@ -1615,21 +1615,22 @@ package body Synth.Oper is
             return Create_Value_Net (Get_Net (Ctxt, L), Res_Typ);
 
          when Iir_Predefined_Ieee_Numeric_Std_Touns_Nat_Nat_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int =>
             return Synth_Conv_Vector (False);
          when Iir_Predefined_Ieee_Numeric_Std_Tosgn_Int_Nat_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Vector_Int =>
             return Synth_Conv_Vector (True);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Uns_Nat
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
-           | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log
-           | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Log
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer =>
             --  UNSIGNED to Natural.
             return Create_Value_Net
               (Synth_Uresize (Ctxt, Get_Net (Ctxt, L), Res_Typ.W, Expr),
                Res_Typ);
          when Iir_Predefined_Ieee_Numeric_Std_Toint_Sgn_Int
-            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Sgn =>
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Signed_Conv_Integer =>
             --  SIGNED to Integer.
             return Create_Value_Net
               (Synth_Sresize (Ctxt, L, Res_Typ.W, Expr), Res_Typ);
