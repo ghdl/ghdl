@@ -26,8 +26,13 @@
 
 #include "llvm-c/Analysis.h"
 #include "llvm-c/Transforms/Scalar.h"
-#if LLVM_VERSION_MAJOR >= 4
+#if LLVM_VERSION_MAJOR >= 7
+//  Not present in llvm-6, present in llvm-7
 #include "llvm-c/Transforms/Utils.h"
+#endif
+
+#if LLVM_VERSION_MAJOR >= 6
+#define USE_DEBUG
 #endif
 
 #ifdef USE_DEBUG
@@ -151,8 +156,8 @@ generateCommon()
     LLVMPassManagerRef PassManager;
     PassManager = LLVMCreateFunctionPassManagerForModule (TheModule);
 
-    LLVMAddPromoteMemoryToRegisterPass (PassManager);
     LLVMAddCFGSimplificationPass (PassManager);
+    LLVMAddPromoteMemoryToRegisterPass (PassManager);
 
     for (LLVMValueRef Func = LLVMGetFirstFunction (TheModule);
 	 Func != nullptr;
