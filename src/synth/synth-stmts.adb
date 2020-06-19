@@ -3015,14 +3015,16 @@ package body Synth.Stmts is
       Set_Wire_Gate (C.W_En, Build_Control_Signal (Syn_Inst, 1, Proc));
       Phi_Assign_Static (C.W_En, Bit1);
 
-      case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
-         when Iir_Kind_Sensitized_Process_Statement =>
-            Synth_Sequential_Statements
-              (C, Get_Sequential_Statement_Chain (Proc));
-            --  FIXME: check sensitivity list.
-         when Iir_Kind_Process_Statement =>
-            Synth_Process_Sequential_Statements (C, Proc);
-      end case;
+      if not Is_Error (C.Inst) then
+         case Iir_Kinds_Process_Statement (Get_Kind (Proc)) is
+            when Iir_Kind_Sensitized_Process_Statement =>
+               Synth_Sequential_Statements
+                 (C, Get_Sequential_Statement_Chain (Proc));
+               --  FIXME: check sensitivity list.
+            when Iir_Kind_Process_Statement =>
+               Synth_Process_Sequential_Statements (C, Proc);
+         end case;
+      end if;
 
       --  FIXME: free W_En ?
 

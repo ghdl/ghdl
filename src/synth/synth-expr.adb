@@ -445,7 +445,11 @@ package body Synth.Expr is
 
       if not (Is_Static (L.Val) and Is_Static (R.Val)) then
          Error_Msg_Synth (+Rng, "limits of range are not constant");
-         raise Internal_Error;
+         Set_Error (Syn_Inst);
+         return (Dir => Get_Direction (Rng),
+                 Left => 0,
+                 Right => 0,
+                 Is_Signed => False);
       end if;
 
       Lval := Read_Discrete (L);
