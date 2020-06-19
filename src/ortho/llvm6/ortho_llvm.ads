@@ -34,6 +34,9 @@ package Ortho_LLVM is
    procedure Set_Optimization_Level (Level : Natural);
    pragma Import (C, Set_Optimization_Level);
 
+   procedure Set_Debug_Level (Level : Natural);
+   pragma Import (C, Set_Debug_Level);
+
    procedure Set_Dump_LLVM (Flag : Natural);
    pragma Import (C, Set_Dump_LLVM);
 
@@ -530,16 +533,6 @@ private
 
    O_Tnode_Null : constant O_Tnode := null;
 
-   type O_Inter;
-   type O_Inter_Acc is access O_Inter;
-   type O_Inter is record
-      Ival : ValueRef;
-      Ident : O_Ident;
-      Itype : O_Tnode;
-      Next : O_Inter_Acc;
-   end record;
-   pragma Convention (C, O_Inter);
-
    type O_Dnode is access Opaque_Type;
    pragma Convention (C, O_Dnode);
 
@@ -640,30 +633,20 @@ private
    O_Snode_Null : constant O_Snode := (Null_BasicBlockRef,
                                        Null_BasicBlockRef);
 
+   type Opaque_Acc is access Opaque_Type;
+
    type O_Inter_List is record
       Ident : O_Ident;
       Storage : O_Storage;
       Res_Type : O_Tnode;
-      Nbr_Inter : Natural;
-      First_Inter, Last_Inter : O_Inter_Acc;
+
+      --  Vector of interfaces.
+      Inters : Opaque_Acc;
    end record;
    pragma Convention (C, O_Inter_List);
 
-   type O_Element;
-   type O_Element_Acc is access O_Element;
-   pragma Convention (C, O_Element_Acc);
-
-   type O_Element is record
-      --  Identifier for the element
-      Ident : O_Ident;
-
-      --  Type of the element
-      Etype : O_Tnode;
-
-      --  Next element (in the linked list)
-      Next : O_Element_Acc;
-   end record;
-   pragma Convention (C, O_Element);
+   type O_Element_Vec is access Opaque_Type;
+   pragma Convention (C, O_Element_Vec);
 
    --  Record and union builder.
    type O_Element_List is record
@@ -680,7 +663,7 @@ private
       Align : Unsigned_32;
       Align_Type : TypeRef;
 
-      First_Elem, Last_Elem : O_Element_Acc;
+      Els : O_Element_Vec;
    end record;
    pragma Convention (C, O_Element_List);
 
@@ -723,6 +706,7 @@ private
       LLVM : TypeRef;
       Num : Natural;
       Etype : O_Tnode;
+      Dbg : ValueRefArray_Acc;
    end record;
 
    type O_Choice_Type is record

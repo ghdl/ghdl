@@ -88,9 +88,11 @@ begin
             elsif Arg = "-glines"
               or else Arg = "-gline-tables-only"
             then
-               null;
+               Set_Debug_Level (1);
             elsif Arg = "-g" then
-               null;
+               Set_Debug_Level (2);
+            elsif Arg = "-g0" then
+               Set_Debug_Level (0);
             else
                --  This is really an argument.
                declare

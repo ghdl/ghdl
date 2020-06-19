@@ -15,6 +15,13 @@
   along with GHDL; see the file COPYING.  If not, write to the Free
   Software Foundation, 59 Temple Place - Suite 330, Boston, MA
   02111-1307, USA.  */
+
+//  Style:
+//  C bindings for types, instructions
+//  C++ API for debug
+//
+//  Later move to C++ only.
+
 #include "llvm-c/Target.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
@@ -55,6 +62,7 @@ static bool FlagDumpLLVM = false;
 static bool FlagVerifyLLVM = false;
 
 static bool FlagDebugLines = true;
+static bool FlagDebug = false;
 
 static LLVMModuleRef TheModule;
 static LLVMTargetRef TheTarget;
@@ -85,7 +93,9 @@ static unsigned DebugCurrentLine;
 static std::string *DebugCurrentFilename;
 static std::string *DebugCurrentDirectory;
 static DIFile *DebugCurrentFile;
-
+static DICompileUnit *DebugCurrentCU;
+static DISubprogram *DebugCurrentSubprg;
+static DIScope *DebugCurrentScope;
 static DIBuilder *DBuilder;
 #endif
 
@@ -104,6 +114,25 @@ set_optimization_level (unsigned level)
     break;
   default:
     Optimization = LLVMCodeGenLevelAggressive;
+    break;
+  }
+}
+
+extern "C" void
+set_debug_level (unsigned level)
+{
+  switch(level) {
+  case 0:
+    FlagDebug = false;
+    FlagDebugLines = false;
+    break;
+  case 1:
+    FlagDebug = false;
+    FlagDebugLines = true;
+    break;
+  default:
+    FlagDebug = true;
+    FlagDebugLines = true;
     break;
   }
 }
@@ -141,6 +170,12 @@ static void
 generateCommon()
 {
   char *Msg;
+
+#ifdef USE_DEBUG
+  if (FlagDebugLines) {
+    DBuilder->finalize();
+  }
+#endif
 
   if (FlagDumpLLVM)
     LLVMDumpModule(TheModule);
@@ -302,6 +337,22 @@ ortho_llvm_init(const char *Filename, unsigned FilenameLength)
 
     DebugCurrentFile = DBuilder->createFile(StringRef(*DebugCurrentFilename),
 					    StringRef(*DebugCurrentDirectory));
+    DebugCurrentCU = DBuilder->createCompileUnit
+      (llvm::dwarf::DW_LANG_C, DebugCurrentFile, StringRef("ortho-llvm"),
+       Optimization > LLVMCodeGenLevelNone, StringRef(), 0);
+
+    DebugCurrentScope = DebugCurrentCU;
+  }
+#endif
+}
+
+//  Set debug location on instruction RES
+static void
+setDebugLocation(LLVMValueRef Res)
+{
+#ifdef USE_DEBUG
+  if (FlagDebugLines) {
+    unwrap(Builder)->SetInstDebugLocation(static_cast<Instruction*>(unwrap(Res)));
   }
 #endif
 }
@@ -317,18 +368,31 @@ enum OTKind : unsigned char {
 
 struct OTnodeBase {
   LLVMTypeRef Ref;
-  LLVMValueRef Dbg;
+#ifdef USE_DEBUG
+  DIType *Dbg;
+#endif
 
   OTKind Kind;
   bool Bounded;
   OTnodeBase (LLVMTypeRef R, OTKind K, bool Bounded) :
-    Ref(R), Dbg(nullptr), Kind(K), Bounded(Bounded) {}
+    Ref(R),
+#ifdef USE_DEBUG
+    Dbg(nullptr),
+#endif
+    Kind(K), Bounded(Bounded) {}
+
+  unsigned getAlignment() const {
+    return LLVMABIAlignmentOfType(TheTargetData, Ref);
+  }
+  unsigned long long getSize() const {
+    return LLVMABISizeOfType(TheTargetData, Ref);
+  }
 };
 
 typedef OTnodeBase *OTnode;
 
 struct OTnodeScal : OTnodeBase {
-  //  For scalar: the size
+  //  For scalar: the size in bits
   unsigned ScalSize;
 
   OTnodeScal (LLVMTypeRef R, OTKind K, unsigned Sz) :
@@ -348,15 +412,6 @@ struct OTnodeSigned : OTnodeScal {
 struct OTnodeFloat : OTnodeScal {
   OTnodeFloat (LLVMTypeRef R, unsigned Sz) :
     OTnodeScal(R, OTKFloat, Sz) {}
-};
-
-struct OTnodeEnum : OTnodeScal {
-  OTnodeEnum (LLVMTypeRef R, unsigned Sz) :
-    OTnodeScal(R, OTKEnum, Sz) {}
-};
-
-struct OTnodeBool : OTnodeScal {
-  OTnodeBool (LLVMTypeRef R) : OTnodeScal(R, OTKBool, 1) {}
 };
 
 static LLVMTypeRef
@@ -392,10 +447,26 @@ new_float_type()
   return new OTnodeFloat(LLVMDoubleType(), 64);
 }
 
+struct OTnodeEnumBase : OTnodeScal {
+#ifdef USE_DEBUG
+  DINodeArray *DbgEls;
+#endif
+  OTnodeEnumBase (LLVMTypeRef R, OTKind K, unsigned Sz) :
+    OTnodeScal(R, K, Sz) {}
+};
+
+struct OTnodeEnum : OTnodeEnumBase {
+  OTnodeEnum (LLVMTypeRef R, unsigned Sz) :
+    OTnodeEnumBase(R, OTKEnum, Sz) {}
+};
+
 struct OEnumList {
   LLVMTypeRef Ref;
   unsigned Pos;
   OTnodeEnum *Etype;
+#ifdef USE_DEBUG
+  SmallVector<Metadata *, 8> *Dbg;
+#endif
 };
 
 extern "C" void
@@ -403,7 +474,16 @@ start_enum_type (OEnumList *List, unsigned Sz)
 {
   LLVMTypeRef T = SizeToLLVM(Sz);
 
-  *List = {T, 0, new OTnodeEnum(T, Sz)};
+  *List = {T, 0, new OTnodeEnum(T, Sz)
+#ifdef USE_DEBUG
+           , nullptr
+#endif
+  };
+
+#ifdef USE_DEBUG
+  if (FlagDebug)
+    List->Dbg = new SmallVector<Metadata *, 8>();
+#endif
 }
 
 struct OCnode {
@@ -418,26 +498,58 @@ struct OIdent {
 extern "C" void
 new_enum_literal (OEnumList *List, OIdent Ident, OCnode *Res)
 {
-  *Res = {LLVMConstInt(List->Ref, List->Pos++, 0),
-	  List->Etype};
+  *Res = {LLVMConstInt(List->Ref, List->Pos, 0), List->Etype};
+
+#ifdef USE_DEBUG
+  if (FlagDebug) {
+    DIEnumerator *D;
+
+    //  Note: IsUnsigned argument is not available in LLVM 6.0
+    D = DBuilder->createEnumerator (StringRef(Ident.cstr), List->Pos);
+
+    List->Dbg->push_back(D);
+  }
+#endif
+
+  List->Pos++;
 }
 
 extern "C" void
-finish_enum_type (OEnumList *List, OTnode *Res)
+finish_enum_type (OEnumList *List, OTnodeEnum **Res)
 {
   *Res = List->Etype;
+#ifdef USE_DEBUG
+  if (FlagDebug) {
+    List->Etype->DbgEls =
+      new DINodeArray(DBuilder->getOrCreateArray(*List->Dbg));
+    delete List->Dbg;
+  }
+#endif
 }
+
+struct OTnodeBool : OTnodeEnumBase {
+  OTnodeBool (LLVMTypeRef R) : OTnodeEnumBase(R, OTKBool, 1) {}
+};
 
 extern "C" void
 new_boolean_type(OTnode *Res,
-		 OIdent False_Id, OCnode *False_E,
-		 OIdent True_Id, OCnode *True_E)
+		 OIdent FalseId, OCnode *False_E,
+		 OIdent TrueId, OCnode *True_E)
 {
   OTnodeBool *T = new OTnodeBool(LLVMInt1Type());
   *Res = T;
 
   *False_E = {LLVMConstInt(T->Ref, 0, 0), T};
   *True_E = {LLVMConstInt(T->Ref, 1, 0), T};
+
+#ifdef USE_DEBUG
+  if (FlagDebug) {
+    SmallVector<Metadata *, 2> DbgEls;
+    DbgEls.push_back(DBuilder->createEnumerator (StringRef(FalseId.cstr), 0));
+    DbgEls.push_back(DBuilder->createEnumerator (StringRef(TrueId.cstr), 1));
+    T->DbgEls = new DINodeArray(DBuilder->getOrCreateArray(DbgEls));
+  }
+#endif
 }
 
 extern "C" OCnode
@@ -495,6 +607,13 @@ finish_access_type(OTnodeAcc *AccType, OTnode DType)
   LLVMTypeRef Types[1] = { DType->Ref };
   LLVMStructSetBody(LLVMGetElementType(AccType->Ref), Types, 1, 0);
   AccType->Acc = DType;
+#ifdef USE_DEBUG
+  if (FlagDebug) {
+    //  The '3' is a little bit magic, but correspond to the base type as
+    //  defined (e.g.) in DebugInfoMetadata.h for DIDerivedType::getBaseType()
+    AccType->Dbg->replaceOperandWith(3, DType->Dbg);
+  }
+#endif
 }
 
 extern "C" OCnode
@@ -505,15 +624,12 @@ new_null_access (OTnode LType)
 
 enum OFKind { OF_Record, OF_Union};
 
-struct OElement {
-  //  Identifier for the element
+struct OFnodeBase {
+  OFKind Kind;
+  OTnode FType;
   OIdent Ident;
-
-  // Type of the element
-  OTnode Etype;
-
-  //  Next element (in the linked list)
-  OElement *Next;
+  OFnodeBase(OFKind Kind, OTnode FType, OIdent Ident) :
+    Kind(Kind), FType(FType), Ident(Ident) {}
 };
 
 struct OElementList {
@@ -531,8 +647,7 @@ struct OElementList {
   //  For unions: type with the biggest alignment.
   LLVMTypeRef AlignType;
 
-  struct OElement *FirstElem;
-  struct OElement *LastElem;
+  std::vector<OFnodeBase *> *Els;
 };
 
 extern "C" void
@@ -542,65 +657,34 @@ start_record_type (OElementList *Elements)
 	       0,
 	       nullptr,
 	       0, 0, nullptr,
-	       nullptr,
-	       nullptr};
+               new std::vector<OFnodeBase *>()};
 }
-
-static void
-addField(OElementList *Elements, OIdent Ident, OTnode Etype)
-{
-  Elements->Count++;
-
-  OElement *El = new OElement{Ident, Etype, nullptr};
-  if (Elements->FirstElem == nullptr)
-    Elements->FirstElem = El;
-  else
-    Elements->LastElem->Next = El;
-  Elements->LastElem = El;
-}
-
-struct OFnodeBase {
-  OFKind Kind;
-  OTnode FType;
-  OFnodeBase(OFKind Kind, OTnode FType) : Kind(Kind), FType(FType) {}
-};
 
 struct OFnodeRec : OFnodeBase {
   unsigned Index;
-  OFnodeRec(OTnode Etype, unsigned Index) :
-    OFnodeBase(OF_Record, Etype), Index(Index) {}
+  OFnodeRec(OTnode Etype, OIdent Ident, unsigned Index) :
+    OFnodeBase(OF_Record, Etype, Ident), Index(Index) {}
 };
 
 struct OFnodeUnion : OFnodeBase {
   LLVMTypeRef Utype;
   //  Pointer type - used to do conversion between the union and the field.
   LLVMTypeRef PtrType;
-  OFnodeUnion(OTnode Etype, LLVMTypeRef PtrType) :
-    OFnodeBase(OF_Union, Etype), Utype(Etype->Ref), PtrType(PtrType) {}
+  OFnodeUnion(OTnode Etype, OIdent Ident, LLVMTypeRef PtrType) :
+    OFnodeBase(OF_Union, Etype, Ident), Utype(Etype->Ref), PtrType(PtrType) {}
 };
 
 extern "C" void
 new_record_field(OElementList *Elements,
 		 OFnodeRec **El, OIdent Ident, OTnode Etype)
 {
-  *El = new OFnodeRec(Etype, Elements->Count);
-  addField(Elements, Ident, Etype);
-}
-
-static void
-freeElements(OElementList *Els)
-{
-  OElement *El, *NEl;
-
-  for (El = Els->FirstElem; El != nullptr; El = NEl) {
-    NEl = El->Next;
-    delete El;
-  }
-  Els->FirstElem = nullptr;
-  Els->LastElem = nullptr;
+  *El = new OFnodeRec(Etype, Ident, Elements->Count);
+  Elements->Els->push_back(*El);
+  Elements->Count++;
 }
 
 struct OTnodeRecBase : OTnodeBase {
+  std::vector<OFnodeBase *> Els;
   OTnodeRecBase (LLVMTypeRef R, OTKind Kind, bool Bounded) :
     OTnodeBase(R, Kind, Bounded) {}
 };
@@ -615,28 +699,63 @@ struct OTnodeIncompleteRec : OTnodeRecBase {
     OTnodeRecBase(nullptr, OTKIncompleteRecord, false) {}
 };
 
+#ifdef USE_DEBUG
+static DINodeArray
+buildDebugRecordElements(OTnodeRecBase *Atype)
+{
+  unsigned Count = Atype->Els.size();
+  std::vector<Metadata *> els(Count);
+
+  unsigned i = 0;
+  for (OFnodeBase *e : Atype->Els) {
+    unsigned off = LLVMOffsetOfElement(TheTargetData, Atype->Ref, i);
+    els[i++] = DBuilder->createMemberType
+      (DebugCurrentScope, StringRef(e->Ident.cstr), DebugCurrentFile,
+       DebugCurrentLine, e->FType->getSize(), e->FType->getAlignment(),
+       off, DINode::DIFlags::FlagPublic, e->FType->Dbg);
+  }
+
+  return DBuilder->getOrCreateArray(els);
+}
+#endif
+
 extern "C" void
 finish_record_type(OElementList *Els, OTnode *Res)
 {
   LLVMTypeRef *Types = new LLVMTypeRef[Els->Count];
 
-  OElement *El;
-  int i;
+  int i = 0;
   bool Bounded = true;
-  for (i = 0, El = Els->FirstElem; El != nullptr; El = El->Next, i++) {
-    Bounded &= El->Etype->Bounded;
-    Types[i] = El->Etype->Ref;
+  for (OFnodeBase *Field : *Els->Els) {
+    Bounded &= Field->FType->Bounded;
+    Types[i++] = Field->FType->Ref;
   }
+
+  OTnodeRecBase *T;
 
   if (Els->RecType != nullptr) {
     //  Completion
     LLVMStructSetBody (Els->RecType->Ref, Types, Els->Count, 0);
     Els->RecType->Bounded = Bounded;
-    *Res = Els->RecType;
+    T = static_cast<OTnodeRecBase *>(Els->RecType);
+#ifdef USE_DEBUG
+    if (FlagDebug) {
+      DICompositeType *Dbg;
+      Dbg = DBuilder->createStructType
+        (DebugCurrentScope, T->Dbg->getName(), DebugCurrentFile,
+         DebugCurrentLine, T->getSize(), T->getAlignment(),
+         DINode::DIFlags::FlagPublic, nullptr,
+         buildDebugRecordElements(T));
+      llvm::TempMDNode fwd_decl(T->Dbg);
+      T->Dbg = DBuilder->replaceTemporary(std::move(fwd_decl), Dbg);
+    }
+#endif
   } else {
-    *Res = new OTnodeRec(LLVMStructType(Types, Els->Count, 0), Bounded);
+    T = new OTnodeRec(LLVMStructType(Types, Els->Count, 0), Bounded);
   }
-  freeElements(Els);
+  T->Els = std::move(*Els->Els);
+  *Res = T;
+  delete Els->Els;
 }
 
 extern "C" void
@@ -655,8 +774,7 @@ start_uncomplete_record_type(OTnodeRec *Res, OElementList *Els)
 	  0,
 	  Res,
 	  0, 0, nullptr,
-	  nullptr,
-	  nullptr};
+          new std::vector<OFnodeBase *>()};
 }
 
 extern "C" void
@@ -666,18 +784,17 @@ start_union_type(OElementList *Els)
 	  0,
 	  nullptr,
 	  0, 0, nullptr,
-	  nullptr,
-	  nullptr};
+          new std::vector<OFnodeBase *>()};
 }
 
 extern "C" void
 new_union_field(OElementList *Els, OFnodeUnion **El,
 		OIdent Ident, OTnode Etype)
 {
-  unsigned Size = LLVMABISizeOfType(TheTargetData, Etype->Ref);
-  unsigned Align = LLVMABIAlignmentOfType(TheTargetData, Etype->Ref);
+  unsigned Size = Etype->getSize();
+  unsigned Align = Etype->getAlignment();
 
-  *El = new OFnodeUnion(Etype, LLVMPointerType(Etype->Ref, 0));
+  *El = new OFnodeUnion(Etype, Ident, LLVMPointerType(Etype->Ref, 0));
 
   if (Size > Els->Size)
     Els->Size = Size;
@@ -685,11 +802,12 @@ new_union_field(OElementList *Els, OFnodeUnion **El,
     Els->Align = Align;
     Els->AlignType = Etype->Ref;
   }
-  addField(Els, Ident, Etype);
+  Els->Els->push_back(*El);
 }
 
 struct OTnodeUnion : OTnodeBase {
   //  For unions
+  std::vector<OFnodeBase *> Els;
   unsigned Size;
   LLVMTypeRef MainField;
 
@@ -720,17 +838,20 @@ finish_union_type(OElementList *Els, OTnode *Res)
     }
   }
 
-  *Res = new OTnodeUnion(LLVMStructType(Types, Count, 0),
-			 Els->Size, Els->AlignType);
-  freeElements(Els);
+  OTnodeUnion *T;
+  T = new OTnodeUnion(LLVMStructType(Types, Count, 0),
+                      Els->Size, Els->AlignType);
+  T->Els = std::move(*Els->Els);
+  *Res = T;
+  delete Els->Els;
 }
 
 struct OTnodeArr : OTnodeBase {
   //  For arrays: type of the element
   OTnode ElType;
 
-  OTnodeArr(LLVMTypeRef R, bool Complete, OTnode E) :
-    OTnodeBase(R, OTKArray, Complete), ElType(E) {}
+  OTnodeArr(LLVMTypeRef R, bool Bounded, OTnode E) :
+    OTnodeBase(R, OTKArray, Bounded), ElType(E) {}
 };
 
 extern "C" OTnode
@@ -763,6 +884,110 @@ new_type_decl(OIdent Ident, OTnode Atype)
   default:
     break;
   }
+
+#ifdef USE_DEBUG
+  //  Add dwarf type.
+  if (FlagDebug) {
+    switch(Atype->Kind) {
+    case OTKUnsigned:
+      Atype->Dbg = DBuilder->createBasicType
+        (StringRef(Ident.cstr), static_cast<OTnodeScal*>(Atype)->ScalSize,
+         dwarf::DW_ATE_unsigned);
+      break;
+    case OTKSigned:
+      Atype->Dbg = DBuilder->createBasicType
+        (StringRef(Ident.cstr), static_cast<OTnodeScal*>(Atype)->ScalSize,
+         dwarf::DW_ATE_signed);
+      break;
+    case OTKFloat:
+      Atype->Dbg = DBuilder->createBasicType
+        (StringRef(Ident.cstr), static_cast<OTnodeScal*>(Atype)->ScalSize,
+         dwarf::DW_ATE_float);
+      break;
+    case OTKEnum:
+    case OTKBool:
+      Atype->Dbg = DBuilder->createEnumerationType
+        (DebugCurrentScope, StringRef(Ident.cstr), DebugCurrentFile,
+         DebugCurrentLine, static_cast<OTnodeEnumBase*>(Atype)->ScalSize,
+         Atype->getAlignment(),
+         *static_cast<OTnodeEnumBase*>(Atype)->DbgEls, nullptr);
+      delete static_cast<OTnodeEnumBase*>(Atype)->DbgEls;
+      break;
+
+    case OTKIncompleteAccess:
+      if (static_cast<OTnodeAccBase*>(Atype)->Acc == nullptr) {
+        //  Still incomplete
+        Atype->Dbg = DBuilder->createPointerType
+          (nullptr, Atype->getSize(), 0, None, StringRef(Ident.cstr));
+        break;
+      }
+      // Fallthrough
+    case OTKAccess:
+      Atype->Dbg = DBuilder->createPointerType
+        (static_cast<OTnodeAcc*>(Atype)->Acc->Dbg,
+         Atype->getSize(), 0, None, StringRef(Ident.cstr));
+      break;
+
+    case OTKArray:
+      {
+        unsigned Len;
+        DISubrange *Rng;
+
+        if (Atype->Bounded)
+          Len = LLVMGetArrayLength(Atype->Ref);
+        else
+          Len = 0;
+
+        Rng = DBuilder->getOrCreateSubrange(0, Len);
+        SmallVector<Metadata *, 1> Subscripts;
+        Subscripts.push_back(Rng);
+
+        Atype->Dbg = DBuilder->createArrayType
+          (Atype->getSize(), Atype->getAlignment(),
+           static_cast<OTnodeArr *>(Atype)->ElType->Dbg,
+           DBuilder->getOrCreateArray(Subscripts));
+        Atype->Dbg = DBuilder->createTypedef
+          (Atype->Dbg, StringRef(Ident.cstr), DebugCurrentFile,
+           DebugCurrentLine, DebugCurrentScope);
+      }
+      break;
+
+    case OTKRecord:
+      Atype->Dbg = DBuilder->createStructType
+        (DebugCurrentScope, StringRef(Ident.cstr), DebugCurrentFile,
+         DebugCurrentLine, Atype->getSize(), Atype->getAlignment(),
+         DINode::DIFlags::FlagPublic, nullptr,
+         buildDebugRecordElements(static_cast<OTnodeRecBase *>(Atype)));
+      break;
+
+    case OTKUnion:
+      {
+        unsigned Count = static_cast<OTnodeUnion *>(Atype)->Els.size();
+        std::vector<Metadata *> els(Count);
+
+        unsigned i = 0;
+        for (OFnodeBase *e : static_cast<OTnodeUnion *>(Atype)->Els) {
+          els[i++] = DBuilder->createMemberType
+            (DebugCurrentScope, StringRef(e->Ident.cstr), DebugCurrentFile,
+             DebugCurrentLine, e->FType->getSize(), e->FType->getAlignment(),
+             0, DINode::DIFlags::FlagPublic, e->FType->Dbg);
+        }
+
+        Atype->Dbg = DBuilder->createUnionType
+          (DebugCurrentScope, StringRef(Ident.cstr), DebugCurrentFile,
+           DebugCurrentLine, Atype->getSize(), Atype->getAlignment(),
+           DINode::DIFlags::FlagPublic, DBuilder->getOrCreateArray(els));
+      }
+      break;
+
+    case OTKIncompleteRecord:
+      Atype->Dbg = DBuilder->createReplaceableCompositeType
+        (dwarf::DW_TAG_structure_type, StringRef(Ident.cstr),
+         DebugCurrentScope, DebugCurrentFile, DebugCurrentLine);
+      break;
+    }
+  }
+#endif
 }
 
 struct ORecordAggrList {
@@ -941,6 +1166,19 @@ new_var_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
     else
       Decl = LLVMBuildAlloca (DeclBuilder, Atype->Ref, Ident.cstr);
     *Res = new ODnodeLocalVar(Decl, Atype);
+#ifdef USE_DEBUG
+    if (FlagDebug && !Unreach) {
+      DILocalVariable *D;
+
+      D = DBuilder->createAutoVariable
+        (DebugCurrentScope, StringRef(Ident.cstr), DebugCurrentFile,
+         DebugCurrentLine, Atype->Dbg, true);
+      DBuilder->insertDeclare
+        (unwrap(Decl), D, DBuilder->createExpression(),
+         DebugLoc::get(DebugCurrentLine, 0, DebugCurrentScope),
+         unwrap(LLVMGetInsertBlock(DeclBuilder)));
+    }
+#endif
   } else {
     if (Storage == O_Storage_External) {
       Decl = LLVMGetNamedGlobal(TheModule, Ident.cstr);
@@ -959,9 +1197,22 @@ new_var_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
     case O_Storage_Private:
       LLVMSetInitializer(Decl, LLVMConstNull(Atype->Ref));
       break;
-    default:
+    case O_Storage_External:
+    case O_Storage_Local:
       break;
     }
+
+#ifdef USE_DEBUG
+    if (FlagDebug) {
+      DIGlobalVariableExpression *GVE;
+
+      GVE = DBuilder->createGlobalVariableExpression
+        (DebugCurrentScope, StringRef(Ident.cstr), StringRef(),
+         DebugCurrentFile, DebugCurrentLine, Atype->Dbg,
+         Storage == O_Storage_Private);
+      static_cast<GlobalVariable*>(unwrap(Decl))->addDebugInfo(GVE);
+    }
+#endif
   }
 }
 
@@ -1004,6 +1255,19 @@ new_const_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
   }
 
   *Res = new ODnodeConst(Decl, Atype, Storage, Ident);
+
+#ifdef USE_DEBUG
+  if (FlagDebug) {
+    DIGlobalVariableExpression *GVE;
+
+    GVE = DBuilder->createGlobalVariableExpression
+      (DebugCurrentScope, StringRef(Ident.cstr), StringRef(),
+       DebugCurrentFile, DebugCurrentLine,
+       DBuilder->createQualifiedType(dwarf::DW_TAG_const_type, Atype->Dbg),
+       Storage == O_Storage_Private);
+    static_cast<GlobalVariable*>(unwrap(Decl))->addDebugInfo(GVE);
+    }
+#endif
 }
 
 extern "C" void
@@ -1026,81 +1290,79 @@ finish_init_value(ODnodeConst **Decl, OCnode *Val)
 }
 
 struct ODnodeInter : ODnodeBase {
-  ODKind getKind() const override { return ODKInterface; }
-  ODnodeInter(LLVMValueRef R, OTnode T) : ODnodeBase(R, T) {}
-};
-
-struct OInter {
-  ODnodeInter *Decl;
   OIdent Ident;
-  OInter *Next;
+  ODKind getKind() const override { return ODKInterface; }
+  ODnodeInter(LLVMValueRef R, OTnode T, OIdent Id) :
+    ODnodeBase(R, T), Ident(Id) {}
 };
 
 struct OInterList {
+  //  Subprogram
   OIdent Ident;
   OStorage Storage;
   OTnode Rtype;
 
   //  Number of interfaces.
-  unsigned Count;
-  OInter *FirstInter;
-  OInter *LastInter;
+  std::vector<ODnodeInter *> *Inters;
 };
 
 extern "C" void
 start_function_decl(OInterList *Inters, OIdent Ident, OStorage Storage,
 		    OTnode Rtype)
 {
-  *Inters = { Ident, Storage, Rtype, 0, nullptr, nullptr };
+  *Inters = { Ident, Storage, Rtype,
+              new std::vector<ODnodeInter *>() };
 }
 
 extern "C" void
 start_procedure_decl(OInterList *Inters, OIdent Ident, OStorage Storage)
 {
-  *Inters = { Ident, Storage, nullptr, 0, nullptr, nullptr };
+  *Inters = { Ident, Storage, nullptr,
+              new std::vector<ODnodeInter *>() };
 }
 
 extern "C" void
 new_interface_decl(OInterList *Inters,
 		   ODnode *Res, OIdent Ident, OTnode Itype)
 {
-  ODnodeInter *Decl = new ODnodeInter(nullptr, Itype);
-  OInter *Inter = new OInter{Decl, Ident, nullptr};
+  ODnodeInter *Decl = new ODnodeInter(nullptr, Itype, Ident);
 
   *Res = Decl;
-  Inters->Count++;
-  if (Inters->FirstInter == nullptr)
-    Inters->FirstInter = Inter;
-  else
-    Inters->LastInter->Next = Inter;
-  Inters->LastInter = Inter;
+
+  Inters->Inters->push_back(Decl);
 }
 
 struct ODnodeSubprg : ODnodeBase {
-  //  Number of interfaces.
-  unsigned Count;
+  // Interfaces
+  std::vector<ODnodeInter *> Inters;
+  //  Storage
+  OStorage Storage;
+  OIdent Ident;
   ODKind getKind() const override { return ODKSubprg; }
-  ODnodeSubprg(LLVMValueRef R, OTnode T, unsigned Count) :
-    ODnodeBase(R, T), Count(Count) {}
+  ODnodeSubprg(LLVMValueRef R, OTnode T, OStorage S, OIdent Id,
+               std::vector<ODnodeInter *> Inters) :
+    ODnodeBase(R, T), Inters(Inters), Storage(S), Ident(Id) {}
 };
 
 extern "C" void
-finish_subprogram_decl(OInterList *Inters, ODnode *Res)
+finish_subprogram_decl(OInterList *Inters, ODnodeSubprg **Res)
 {
-  LLVMTypeRef *Types = new LLVMTypeRef[Inters->Count];
+  unsigned ArgsCount = Inters->Inters->size();
+  LLVMTypeRef *Types = new LLVMTypeRef[ArgsCount];
 
   //  Build array of interface types.
   int i = 0;
-  for (OInter *Inter = Inters->FirstInter; Inter; Inter = Inter->Next, i++)
-    Types[i] = Inter->Decl->Dtype->Ref;
+  for (ODnodeInter *Inter: *Inters->Inters)
+    Types[i++] = Inter->Dtype->Ref;
 
+  //  Return type.
   LLVMTypeRef Rtype;
   if (Inters->Rtype == nullptr)
     Rtype = LLVMVoidType();
   else
     Rtype = Inters->Rtype->Ref;
 
-  LLVMTypeRef Ftype = LLVMFunctionType(Rtype, Types, Inters->Count, 0);
+  LLVMTypeRef Ftype = LLVMFunctionType(Rtype, Types, ArgsCount, 0);
 
   LLVMValueRef Decl;
   if (Inters->Storage == O_Storage_External)
@@ -1119,16 +1381,19 @@ finish_subprogram_decl(OInterList *Inters, ODnode *Res)
     LLVMSetFunctionCallConv(Decl, LLVMCCallConv);
   }
 
-  *Res = new ODnodeSubprg(Decl, Inters->Rtype, Inters->Count);
-
   //  Translate interfaces
   i = 0;
-  for (OInter *Inter = Inters->FirstInter, *Next; Inter; Inter = Next, i++) {
-    Inter->Decl->Ref = LLVMGetParam(Decl, i);
-    LLVMSetValueName(Inter->Decl->Ref, Inter->Ident.cstr);
-    Next = Inter->Next;
-    delete Inter;
+  for (ODnodeInter *Inter: *Inters->Inters) {
+    Inter->Ref = LLVMGetParam(Decl, i);
+    LLVMSetValueName(Inter->Ref, Inter->Ident.cstr);
+    i++;
   }
+
+  //  Create the result.
+  ODnodeSubprg *R;
+  R = new ODnodeSubprg(Decl, Inters->Rtype, Inters->Storage, Inters->Ident,
+                       std::move(*Inters->Inters));
+  *Res = R;
 }
 
 //  Data for a declare block.
@@ -1143,6 +1408,10 @@ struct DeclareBlock {
 
   //  Previous value block.
   DeclareBlock *Prev;
+
+#ifdef USE_DEBUG
+  DIScope *DebugPrevScope;
+#endif
 };
 
 static DeclareBlock *CurrentDeclareBlock;
@@ -1163,7 +1432,11 @@ CreateDeclareBlock()
   } else {
     Res = new DeclareBlock;
   }
-  *Res = { nullptr, nullptr, CurrentDeclareBlock };
+  *Res = { nullptr, nullptr, CurrentDeclareBlock
+#ifdef USE_DEBUG
+           , nullptr
+#endif
+  };
   CurrentDeclareBlock = Res;
 
   if (!Unreach) {
@@ -1200,6 +1473,66 @@ start_subprogram_body(ODnodeSubprg *Func)
 
   CreateDeclareBlock();
   LLVMPositionBuilderAtEnd(Builder, CurrentDeclareBlock->StmtBB);
+#ifdef USE_DEBUG
+  if (FlagDebugLines) {
+    DISubroutineType *Ty;
+
+    std::vector<Metadata *> ParamsArr;
+
+    if (FlagDebug) {
+      //  First, the return type.
+      if (Func->Dtype != nullptr)
+        ParamsArr.push_back(Func->Dtype->Dbg);
+      else
+        ParamsArr.push_back(nullptr);
+
+      //  Then the arguments type.
+      for (ODnodeInter *Inter: Func->Inters)
+        ParamsArr.push_back(Inter->Dtype->Dbg);
+    }
+
+    DITypeRefArray Params = DBuilder->getOrCreateTypeArray(ParamsArr);
+    Ty = DBuilder->createSubroutineType(Params);
+
+#if LLVM_VERSION_MAJOR >= 8
+    //  For LLVM 8.0
+    DebugCurrentSubprg = DBuilder->createFunction
+      (DebugCurrentScope, StringRef(Func->Ident.cstr), StringRef(),
+       DebugCurrentFile, DebugCurrentLine, Ty, DebugCurrentLine,
+       Func->Storage == O_Storage_Private ? DINode::FlagPrivate : DINode::FlagPublic,
+       DISubprogram::SPFlagDefinition);
+#else
+    DebugCurrentSubprg = DBuilder->createFunction
+      (DebugCurrentScope, StringRef(Func->Ident.cstr), StringRef(),
+       DebugCurrentFile, DebugCurrentLine, Ty,
+       Func->Storage == O_Storage_Private, true, DebugCurrentLine);
+#endif
+    static_cast<Function*>(unwrap(CurrentFunc))->setSubprogram(DebugCurrentSubprg);
+    DebugCurrentScope = DebugCurrentSubprg;
+
+    unwrap(Builder)->SetCurrentDebugLocation
+      (DebugLoc::get(DebugCurrentLine, 0, DebugCurrentScope));
+  }
+
+  if (FlagDebug) {
+    //  Crate local variables for arguments
+    unsigned ArgNo = 0;
+    for (ODnodeInter *Inter: Func->Inters) {
+      LLVMValueRef Var;
+
+      Var = LLVMBuildAlloca(DeclBuilder, Inter->Dtype->Ref, "");
+      DILocalVariable *D = DBuilder->createParameterVariable
+        (DebugCurrentScope, StringRef(Inter->Ident.cstr), ArgNo++,
+         DebugCurrentFile, DebugCurrentLine, Inter->Dtype->Dbg, true);
+      DBuilder->insertDeclare
+        (unwrap(Var), D, DBuilder->createExpression(),
+         DebugLoc::get(DebugCurrentLine, 0, DebugCurrentScope),
+         unwrap(LLVMGetInsertBlock(DeclBuilder)));
+      LLVMBuildStore(DeclBuilder, Inter->Ref, Var);
+      Inter->Ref = Var;
+    }
+  }
+#endif
 }
 
 extern "C" void
@@ -1220,6 +1553,14 @@ finish_subprogram_body()
 
   CurrentFunc = nullptr;
   Unreach = false;
+
+#ifdef USE_DEBUG
+  if (FlagDebugLines) {
+    DBuilder->finalizeSubprogram(DebugCurrentSubprg);
+    DebugCurrentSubprg = nullptr;
+    DebugCurrentScope = DebugCurrentCU;
+  }
+#endif
 }
 
 extern "C" void
@@ -1234,6 +1575,14 @@ start_declare_stmt ()
   LLVMBuildBr(Builder, CurrentDeclareBlock->StmtBB);
 
   LLVMPositionBuilderAtEnd(Builder, CurrentDeclareBlock->StmtBB);
+
+#ifdef USE_DEBUG
+  if (FlagDebug) {
+    CurrentDeclareBlock->DebugPrevScope = DebugCurrentScope;
+    DebugCurrentScope = DBuilder->createLexicalBlock
+      (DebugCurrentScope, DebugCurrentFile, DebugCurrentLine, 0);
+  }
+#endif
 }
 
 extern "C" void
@@ -1254,6 +1603,12 @@ finish_declare_stmt ()
     LLVMBuildBr(Builder, Bb);
 
     LLVMPositionBuilderAtEnd(Builder, Bb);
+
+#ifdef USE_DEBUG
+    if (FlagDebug) {
+      DebugCurrentScope = CurrentDeclareBlock->DebugPrevScope;
+    }
+#endif
   }
 
   //  Do not reset Unreach.
@@ -1617,7 +1972,7 @@ struct OAssocList {
 extern "C" void
 start_association (OAssocList *Assocs, ODnodeSubprg *Subprg)
 {
-  *Assocs = { Subprg, 0, new LLVMValueRef[Subprg->Count] };
+  *Assocs = { Subprg, 0, new LLVMValueRef[Subprg->Inters.size()] };
 }
 
 extern "C" void
@@ -1633,7 +1988,7 @@ new_function_call (OAssocList *Assocs)
 
   if (!Unreach) {
     Res = LLVMBuildCall(Builder, Assocs->Subprg->Ref,
-			Assocs->Vals, Assocs->Subprg->Count, "");
+			Assocs->Vals, Assocs->Subprg->Inters.size(), "");
   } else {
     Res = nullptr;
   }
@@ -1646,7 +2001,7 @@ new_procedure_call (OAssocList *Assocs)
 {
   if (!Unreach) {
     LLVMBuildCall(Builder, Assocs->Subprg->Ref,
-		  Assocs->Vals, Assocs->Subprg->Count, "");
+		  Assocs->Vals, Assocs->Subprg->Inters.size(), "");
   }
   delete Assocs->Vals;
 }
@@ -1656,7 +2011,9 @@ new_func_return_stmt (OEnode Value)
 {
   if (Unreach)
     return;
-  LLVMBuildRet(Builder, Value.Ref);
+  LLVMValueRef Res = LLVMBuildRet(Builder, Value.Ref);
+  setDebugLocation(Res);
+
   Unreach = true;
 }
 
@@ -1665,7 +2022,8 @@ new_proc_return_stmt ()
 {
   if (Unreach)
     return;
-  LLVMBuildRetVoid(Builder);
+  LLVMValueRef Res = LLVMBuildRetVoid(Builder);
+  setDebugLocation(Res);
   Unreach = true;
 }
 
@@ -2149,7 +2507,12 @@ new_obj (ODnode Obj)
   case ODKLocal:
     return { false, Obj->Ref, Obj->Dtype };
   case ODKInterface:
-    return { true, Obj->Ref, Obj->Dtype };
+    if (FlagDebug) {
+      //  The argument was allocated on the stack
+      return { false, Obj->Ref, Obj->Dtype };
+    } else {
+      return { true, Obj->Ref, Obj->Dtype };
+    }
   case ODKType:
   case ODKSubprg:
   default:
@@ -2287,9 +2650,11 @@ extern "C" void
 new_assign_stmt (OLnode *Target, OEnode Value)
 {
   assert (!Target->Direct);
-  if (!Unreach) {
-    LLVMBuildStore(Builder, Value.Ref, Target->Ref);
-  }
+  if (Unreach)
+    return;
+
+  LLVMValueRef Res = LLVMBuildStore(Builder, Value.Ref, Target->Ref);
+  setDebugLocation(Res);
 }
 
 extern "C" void
@@ -2304,6 +2669,10 @@ extern "C" void
 new_debug_line_stmt (unsigned Line)
 {
 #ifdef USE_DEBUG
-  DebugCurrentLine = Line;
+  if (FlagDebugLines && Line != DebugCurrentLine) {
+    DebugCurrentLine = Line;
+    unwrap(Builder)->SetCurrentDebugLocation
+      (DebugLoc::get(DebugCurrentLine, 0, DebugCurrentScope));
+  }
 #endif
 }
