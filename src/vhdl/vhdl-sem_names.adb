@@ -1913,10 +1913,9 @@ package body Vhdl.Sem_Names is
                Free_Parenthesis_Name (Name, Res);
             end if;
             return Res;
-         when Iir_Kind_Subtype_Attribute
-           | Iir_Kind_Across_Attribute
-           | Iir_Kind_Through_Attribute
-           | Iir_Kind_Nature_Reference_Attribute =>
+         when Iir_Kind_Across_Attribute
+            | Iir_Kind_Through_Attribute
+            | Iir_Kind_Nature_Reference_Attribute =>
             null;
          when Iir_Kinds_Signal_Value_Attribute =>
             null;
@@ -1943,11 +1942,12 @@ package body Vhdl.Sem_Names is
             end if;
             return Res;
          when Iir_Kind_Dot_Attribute
-           | Iir_Kind_Integ_Attribute =>
+            | Iir_Kind_Integ_Attribute =>
             --  Already finished.
             return Res;
          when Iir_Kinds_Type_Attribute
-           |  Iir_Kind_Base_Attribute =>
+            | Iir_Kind_Subtype_Attribute
+            | Iir_Kind_Base_Attribute =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Attribute_Name);
             Free_Iir (Name);
             return Res;
@@ -3609,31 +3609,39 @@ package body Vhdl.Sem_Names is
    --  For 'Subtype
    function Sem_Subtype_Attribute (Attr : Iir_Attribute_Name) return Iir
    is
-      Prefix_Name : constant Iir := Get_Prefix (Attr);
-      Prefix : Iir;
-      Prefix_Type : Iir;
-      Res : Iir;
+      Prefix_Name : Iir;
+      Attr_Type   : Iir;
+      Res         : Iir;
    begin
-      Prefix := Get_Named_Entity (Prefix_Name);
+      Prefix_Name := Get_Prefix (Attr);
+      Prefix_Name := Finish_Sem_Name (Prefix_Name);
+      Set_Prefix (Attr, Prefix_Name);
 
       --  LRM08 16.2 Predefined attributes
       --  Prefix: Any prefix O that is appropriate for an object, or an alias
       --  thereof
-      if Get_Kind (Prefix) not in Iir_Kinds_Object_Declaration then
+      if (Get_Kind (Get_Base_Name (Prefix_Name))
+          not in Iir_Kinds_Object_Declaration)
+      then
          Error_Msg_Sem (+Attr, "prefix must denote an object");
          return Error_Mark;
       end if;
 
-      Prefix_Type := Get_Type (Prefix);
+      --  The type defined by 'subtype is always constrained.  Create
+      --  a subtype if it is not.
+      Attr_Type := Get_Type (Prefix_Name);
+      if False then
+         Attr_Type := Sem_Types.Build_Constrained_Subtype (Attr_Type, Attr);
+      end if;
 
       Res := Create_Iir (Iir_Kind_Subtype_Attribute);
       Location_Copy (Res, Attr);
-      Set_Prefix (Res, Prefix);
-      Set_Type (Res, Prefix_Type);
+      Set_Prefix (Res, Prefix_Name);
+      Set_Type (Res, Attr_Type);
 
-      Set_Base_Name (Res, Get_Base_Name (Prefix_Name));
-      Set_Name_Staticness (Res, Get_Name_Staticness (Prefix));
-      Set_Type_Staticness (Res, Get_Type_Staticness (Prefix_Type));
+      Set_Base_Name (Res, Res);
+      Set_Name_Staticness (Res, Get_Name_Staticness (Prefix_Name));
+      Set_Type_Staticness (Res, Get_Type_Staticness (Attr_Type));
 
       return Res;
    end Sem_Subtype_Attribute;

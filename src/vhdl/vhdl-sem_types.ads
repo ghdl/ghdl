@@ -56,6 +56,10 @@ package Vhdl.Sem_Types is
    --  none.
    function Copy_Resolution_Indication (Subdef : Iir) return Iir;
 
+   --  If ATYPE is not fully constrained, build a fully constrained subtype.
+   --  This is for 'subtype attribute.
+   function Build_Constrained_Subtype (Atype : Iir; Loc : Iir) return Iir;
+
    --  Adjust the constraint state CONSTRAINT given new element EL_TYPE.
    --  Initially CONSTRAINT must be Fully_Constrained and COMPOSITE_FOUND
    --  must be false.

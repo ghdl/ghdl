@@ -1545,6 +1545,48 @@ package body Vhdl.Sem_Types is
       return Res;
    end Copy_Subtype_Indication;
 
+   function Build_Constrained_Subtype (Atype : Iir; Loc : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      if Is_Fully_Constrained_Type (Atype) then
+         --  Already constrained, nothing to do.
+         return Atype;
+      end if;
+
+      --  The type defined by 'subtype is always constrained.  Create
+      --  a subtype if it is not.
+      case Get_Kind (Atype) is
+         when Iir_Kind_Array_Subtype_Definition
+            | Iir_Kind_Array_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            --  Humm, the element is also constrained...
+            Set_Element_Subtype (Res, Get_Element_Subtype (Atype));
+            Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Atype));
+            Set_Index_Constraint_Flag (Res, True);
+         when Iir_Kind_Record_Subtype_Definition
+            | Iir_Kind_Record_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            --  Humm, the elements are also constrained.
+            Set_Elements_Declaration_List
+              (Res, Get_Elements_Declaration_List (Atype));
+            Set_Is_Ref (Res, True);
+         when others =>
+            Error_Kind ("build_constrained_subtype", Atype);
+      end case;
+      Location_Copy (Res, Loc);
+      --  FIXME: can be globally!
+      Set_Type_Staticness (Res, None);
+      Set_Base_Type (Res, Get_Base_Type (Atype));
+      Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Atype));
+      Set_Resolved_Flag (Res, Get_Resolved_Flag (Atype));
+      Set_Constraint_State (Res, Fully_Constrained);
+      if Get_Kind (Atype) in Iir_Kinds_Subtype_Definition then
+         Set_Resolution_Indication (Res, Copy_Resolution_Indication (Atype));
+      end if;
+      return Res;
+   end Build_Constrained_Subtype;
+
    --  DEF is an array_subtype_definition or array_subnature_definition
    --   which contains indexes constraints.
    --  MARK_DEF is the parent type or nature, given by the type or nature mark.

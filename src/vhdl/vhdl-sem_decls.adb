@@ -1134,15 +1134,24 @@ package body Vhdl.Sem_Decls is
             --  For a variable or signal declared by an object declaration, the
             --  subtype indication of the corresponding object declaration
             --  must define a constrained array subtype.
-            if not Is_Fully_Constrained_Type (Atype) then
-               Error_Msg_Sem
-                 (+Decl,
-                  "declaration of %n with unconstrained %n is not allowed",
-                  (+Decl, +Atype));
-               if Default_Value /= Null_Iir then
-                  Error_Msg_Sem (+Decl, "(even with a default value)");
+            declare
+               Ind : constant Iir := Get_Subtype_Indication (Decl);
+            begin
+               if not (Is_Valid (Ind)
+                       and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute)
+                 and then not Is_Fully_Constrained_Type (Atype)
+               then
+                  Report_Start_Group;
+                  Error_Msg_Sem
+                    (+Decl,
+                     "declaration of %n with unconstrained %n is not allowed",
+                     (+Decl, +Atype));
+                  if Default_Value /= Null_Iir then
+                     Error_Msg_Sem (+Decl, "(even with a default value)");
+                  end if;
+                  Report_End_Group;
                end if;
-            end if;
+            end;
 
          when others =>
             Error_Kind ("sem_object_declaration(2)", Decl);
