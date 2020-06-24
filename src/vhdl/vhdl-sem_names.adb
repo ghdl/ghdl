@@ -3630,7 +3630,7 @@ package body Vhdl.Sem_Names is
       --  The type defined by 'subtype is always constrained.  Create
       --  a subtype if it is not.
       Attr_Type := Get_Type (Prefix_Name);
-      if False then
+      if not Is_Fully_Constrained_Type (Attr_Type) then
          Attr_Type := Sem_Types.Build_Constrained_Subtype (Attr_Type, Attr);
       end if;
 

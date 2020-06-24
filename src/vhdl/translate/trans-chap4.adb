@@ -114,19 +114,16 @@ package body Trans.Chap4 is
       Info     : Object_Info_Acc;
       Tinfo    : Type_Info_Acc;
       Def      : Iir;
-      Val      : Iir;
+      Val      : constant Iir := Get_Default_Value (El);
       Storage  : O_Storage;
       Deferred : Iir;
    begin
-      Def := Get_Type (El);
-      Val := Get_Default_Value (El);
-
       --  Be sure the object type was translated.
       if Get_Kind (El) = Iir_Kind_Constant_Declaration
         and then Get_Deferred_Declaration_Flag (El) = False
         and then Get_Deferred_Declaration (El) /= Null_Iir
       then
-         --  This is a full constant declaration which complete a previous
+         --  This is a full constant declaration which completes a previous
          --  incomplete constant declaration.
          --
          --  Do not create the subtype of this full constant declaration,
@@ -137,8 +134,9 @@ package body Trans.Chap4 is
          Info := Get_Info (Deferred);
          Set_Info (El, Info);
       else
-         Chap3.Translate_Object_Subtype (El);
+         Chap3.Translate_Object_Subtype_Indication (El);
          Info := Add_Info (El, Kind_Object);
+         Def := Get_Type (El);
       end if;
 
       Tinfo := Get_Info (Def);
@@ -197,7 +195,9 @@ package body Trans.Chap4 is
       Type_Info    : Type_Info_Acc;
       Info         : Signal_Info_Acc;
    begin
-      Chap3.Translate_Object_Subtype (Decl);
+      if Get_Kind (Decl) /= Iir_Kind_Anonymous_Signal_Declaration then
+         Chap3.Translate_Object_Subtype_Indication (Decl);
+      end if;
 
       Type_Info := Get_Info (Sig_Type_Def);
       Info := Add_Info (Decl, Kind_Signal);
@@ -494,7 +494,12 @@ package body Trans.Chap4 is
       Size : O_Enode;
    begin
       --  Elaborate subtype.
-      Chap3.Elab_Object_Subtype (Obj_Type);
+      case Get_Kind (Obj) is
+         when Iir_Kind_Attribute_Value =>
+            null;
+         when others =>
+            Chap3.Elab_Object_Subtype_Indication (Obj);
+      end case;
 
       Type_Info := Get_Info (Obj_Type);
 
@@ -1076,12 +1081,18 @@ package body Trans.Chap4 is
 
       Open_Temp;
 
-      Chap3.Elab_Object_Subtype (Sig_Type);
+      if Get_Kind (Decl) /= Iir_Kind_Anonymous_Signal_Declaration then
+         Chap3.Elab_Object_Subtype_Indication (Decl);
+      end if;
+
       Type_Info := Get_Info (Sig_Type);
 
       if Type_Info.Type_Mode in Type_Mode_Unbounded then
          --  Unbounded types are only allowed for ports; in that case the
          --  bounds have already been set.
+         pragma Assert (Is_Port);
+
+         --  Allocate storage.
          if Has_Copy then
             Name_Sig := Chap6.Translate_Name (Decl, Mode_Signal);
             Name_Val := Mnode_Null;
@@ -1586,7 +1597,7 @@ package body Trans.Chap4 is
       Atype     : O_Tnode;
       Id        : Var_Ident_Type;
    begin
-      Chap3.Translate_Object_Subtype (Decl, True);
+      Chap3.Translate_Object_Subtype_Indication (Decl, True);
 
       Info := Add_Info (Decl, Kind_Alias);
       if Is_Signal_Name (Decl) then
@@ -1659,7 +1670,7 @@ package body Trans.Chap4 is
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Decl));
 
-      Chap3.Elab_Object_Subtype (Decl_Type);
+      Chap3.Elab_Object_Subtype_Indication (Decl);
 
       Open_Temp;
 
@@ -1841,8 +1852,8 @@ package body Trans.Chap4 is
             Create_File_Object (Decl);
 
          when Iir_Kind_Attribute_Declaration =>
-            --  Useless as attribute declarations have a type mark.
-            Chap3.Translate_Object_Subtype (Decl);
+            --  Attribute declarations have a type mark.
+            null;
 
          when Iir_Kind_Attribute_Specification =>
             Chap5.Translate_Attribute_Specification (Decl);
@@ -2607,7 +2618,8 @@ package body Trans.Chap4 is
                Need_Final := True;
 
             when Iir_Kind_Attribute_Declaration =>
-               Chap3.Elab_Object_Subtype (Get_Type (Decl));
+               --  An attribute declaration can only have a type mark.
+               null;
 
             when Iir_Kind_Attribute_Specification =>
                Chap5.Elab_Attribute_Specification (Decl);

@@ -21,9 +21,9 @@ package Trans.Chap3 is
    --  a subtype.
    --  This can be done only for a declaration.
    --  DECL must have an identifier and a type.
-   procedure Translate_Object_Subtype
+   procedure Translate_Object_Subtype_Indication
      (Decl : Iir; With_Vars : Boolean := True);
-   procedure Elab_Object_Subtype (Def : Iir);
+   procedure Elab_Object_Subtype_Indication (Decl : Iir);
 
    --  Translate the subtype of a literal.
    --  This can be done not at declaration time, ie no variables are created

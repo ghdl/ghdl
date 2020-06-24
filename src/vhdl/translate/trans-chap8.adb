@@ -534,7 +534,7 @@ package body Trans.Chap8 is
       Range_Type : O_Tnode;
    begin
       --  Iterator range.
-      Chap3.Translate_Object_Subtype (Iterator, False);
+      Chap3.Translate_Object_Subtype_Indication (Iterator, False);
 
       --  Iterator variable.
       It_Info := Add_Info (Iterator, Kind_Iterator);

@@ -101,8 +101,6 @@ package body Trans.Chap5 is
       Expr : constant Iir := Get_Expression (Spec);
       Val    : Iir;
    begin
-      Chap3.Elab_Object_Subtype (Get_Type (Expr));
-
       Val := Get_Attribute_Value_Spec_Chain (Spec);
       while Is_Valid (Val) loop
          Chap4.Elab_Object_Value (Val, Expr);
@@ -844,7 +842,7 @@ package body Trans.Chap5 is
                   Bounds      : Mnode;
                begin
                   Set_Map_Env (Formal_Env);
-                  Chap3.Elab_Object_Subtype (Formal_Type);
+                  Chap3.Elab_Object_Subtype_Indication (Formal); -- FIXME?
                   Type_Info := Get_Info (Formal_Type);
                   Formal_Node := Get_Var
                     (Obj_Info.Object_Var, Type_Info, Mode_Value);

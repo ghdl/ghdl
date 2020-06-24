@@ -148,7 +148,7 @@ package body Trans.Chap2 is
       --  Translate interface types.
       Inter := Get_Interface_Declaration_Chain (Spec);
       while Inter /= Null_Iir loop
-         Chap3.Translate_Object_Subtype (Inter);
+         Chap3.Translate_Object_Subtype_Indication (Inter);
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -211,7 +211,7 @@ package body Trans.Chap2 is
       --  Translate interface types.
       Inter := Get_Interface_Declaration_Chain (Spec);
       while Inter /= Null_Iir loop
-         Chap3.Elab_Object_Subtype (Get_Type (Inter));
+         Chap3.Elab_Object_Subtype_Indication (Inter);
          Inter := Get_Chain (Inter);
       end loop;
    end Elab_Subprogram_Interfaces;

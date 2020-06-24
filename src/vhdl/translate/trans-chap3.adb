@@ -2465,6 +2465,7 @@ package body Trans.Chap3 is
 
    procedure Elab_Type_Definition_Depend is new Handle_Anonymous_Subtypes
      (Handle_A_Subtype => Elab_Type_Definition);
+
    procedure Elab_Type_Definition (Def : Iir) is
    begin
       case Get_Kind (Def) is
@@ -2528,30 +2529,71 @@ package body Trans.Chap3 is
       Pop_Identifier_Prefix (Mark);
    end Translate_Anonymous_Subtype_Definition;
 
-   procedure Translate_Object_Subtype (Decl      : Iir;
-                                       With_Vars : Boolean := True)
+   procedure Translate_Object_Subtype_Definition
+     (Decl : Iir; Def : Iir; With_Vars : Boolean := True)
    is
-      Def : constant Iir := Get_Type (Decl);
       Parent_Type : Iir;
       Mark  : Id_Mark_Type;
       Mark2 : Id_Mark_Type;
    begin
-      if Is_Anonymous_Type_Definition (Def) then
-         Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-         Push_Identifier_Prefix (Mark2, "OT");
-         Parent_Type := Get_Parent_Type (Def);
-         Chap3.Translate_Subtype_Definition (Def, Parent_Type, With_Vars);
-         Pop_Identifier_Prefix (Mark2);
-         Pop_Identifier_Prefix (Mark);
-      end if;
-   end Translate_Object_Subtype;
+      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+      Push_Identifier_Prefix (Mark2, "OT");
+      Parent_Type := Get_Parent_Type (Def);
+      Chap3.Translate_Subtype_Definition (Def, Parent_Type, With_Vars);
+      Pop_Identifier_Prefix (Mark2);
+      Pop_Identifier_Prefix (Mark);
+   end Translate_Object_Subtype_Definition;
 
-   procedure Elab_Object_Subtype (Def : Iir) is
+   procedure Translate_Object_Subtype_Indication (Decl      : Iir;
+                                                  With_Vars : Boolean := True)
+   is
+      Def : constant Iir := Get_Type (Decl);
    begin
-      if Is_Anonymous_Type_Definition (Def) then
-         Elab_Type_Definition (Def);
+      if not Is_Anonymous_Type_Definition (Def) then
+         --  The type refers to a declared type, so already handled.
+         return;
       end if;
-   end Elab_Object_Subtype;
+
+      declare
+         Ind : constant Iir := Get_Subtype_Indication (Decl);
+      begin
+         if Ind /= Null_Iir
+           and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute
+         then
+            if Is_Fully_Constrained_Type (Get_Type (Get_Prefix (Ind))) then
+               return;
+            end if;
+            raise Internal_Error;
+         else
+            Translate_Object_Subtype_Definition (Decl, Def, With_Vars);
+         end if;
+      end;
+   end Translate_Object_Subtype_Indication;
+
+   procedure Elab_Object_Subtype_Indication (Decl : Iir)
+   is
+      Def : constant Iir := Get_Type (Decl);
+   begin
+      if not Is_Anonymous_Type_Definition (Def) then
+         --  The type refers to a declared type, so already handled.
+         return;
+      end if;
+
+      declare
+         Ind : constant Iir := Get_Subtype_Indication (Decl);
+      begin
+         if Ind /= Null_Iir
+           and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute
+         then
+            if Is_Fully_Constrained_Type (Get_Type (Get_Prefix (Ind))) then
+               return;
+            end if;
+            raise Internal_Error;
+         else
+            Elab_Type_Definition (Def);
+         end if;
+      end;
+   end Elab_Object_Subtype_Indication;
 
    procedure Elab_Type_Declaration (Decl : Iir) is
    begin
