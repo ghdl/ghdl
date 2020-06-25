@@ -326,7 +326,9 @@ package body Ghdlcomp is
       Flags.Flag_Elaborate := True;
 
       Config := Vhdl.Configuration.Configure (Prim_Id, Sec_Id);
-      if Config = Null_Iir then
+      if Config = Null_Iir
+        or else Errorout.Nbr_Errors > 0
+      then
          raise Compilation_Error;
       end if;
 

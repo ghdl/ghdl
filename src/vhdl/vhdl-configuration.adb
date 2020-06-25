@@ -162,7 +162,9 @@ package body Vhdl.Configuration is
                Add_Design_Block_Configuration (Blk);
                Current_Configuration := Prev_Configuration;
                Arch := Strip_Denoting_Name (Get_Block_Specification (Blk));
-               Add_Design_Unit (Get_Design_Unit (Arch), Loc);
+               if Arch /= Null_Iir then
+                  Add_Design_Unit (Get_Design_Unit (Arch), Loc);
+               end if;
             end;
          when Iir_Kind_Architecture_Body =>
             --  Add entity
