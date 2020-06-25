@@ -94,8 +94,13 @@ static std::string *DebugCurrentFilename;
 static std::string *DebugCurrentDirectory;
 static DIFile *DebugCurrentFile;
 static DICompileUnit *DebugCurrentCU;
+
+// Current subprogram.  Used by types, parameters and static consts.
 static DISubprogram *DebugCurrentSubprg;
+
+// Current scope.  Used by automatic variables and line locations.
 static DIScope *DebugCurrentScope;
+
 static DIBuilder *DBuilder;
 #endif
 
@@ -710,7 +715,7 @@ buildDebugRecordElements(OTnodeRecBase *Atype)
   for (OFnodeBase *e : Atype->Els) {
     unsigned off = LLVMOffsetOfElement(TheTargetData, Atype->Ref, i);
     els[i++] = DBuilder->createMemberType
-      (DebugCurrentScope, StringRef(e->Ident.cstr), DebugCurrentFile,
+      (DebugCurrentSubprg, StringRef(e->Ident.cstr), DebugCurrentFile,
        DebugCurrentLine, e->FType->getSize(), e->FType->getAlignment(),
        off, DINode::DIFlags::FlagPublic, e->FType->Dbg);
   }
@@ -724,6 +729,7 @@ finish_record_type(OElementList *Els, OTnode *Res)
 {
   LLVMTypeRef *Types = new LLVMTypeRef[Els->Count];
 
+  //  Create types array for elements.
   int i = 0;
   bool Bounded = true;
   for (OFnodeBase *Field : *Els->Els) {
@@ -742,7 +748,7 @@ finish_record_type(OElementList *Els, OTnode *Res)
     if (FlagDebug) {
       DICompositeType *Dbg;
       Dbg = DBuilder->createStructType
-        (DebugCurrentScope, T->Dbg->getName(), DebugCurrentFile,
+        (DebugCurrentSubprg, T->Dbg->getName(), DebugCurrentFile,
          DebugCurrentLine, T->getSize(), T->getAlignment(),
          DINode::DIFlags::FlagPublic, nullptr,
          buildDebugRecordElements(T));
@@ -854,20 +860,56 @@ struct OTnodeArr : OTnodeBase {
     OTnodeBase(R, OTKArray, Bounded), ElType(E) {}
 };
 
+#ifdef USE_DEBUG
+static void
+addArrayDebug(OTnodeArr *Atype, unsigned Len)
+{
+  DISubrange *Rng;
+
+  Rng = DBuilder->getOrCreateSubrange(0, Len);
+  SmallVector<Metadata *, 1> Subscripts;
+  Subscripts.push_back(Rng);
+
+  OTnode ElType = static_cast<OTnodeArr *>(Atype)->ElType;
+
+  Atype->Dbg = DBuilder->createArrayType
+    (Atype->getSize(), Atype->getAlignment(),
+     ElType->Dbg, DBuilder->getOrCreateArray(Subscripts));
+}
+#endif
+
 extern "C" OTnode
 new_array_type(OTnode ElType, OTnode IndexType)
 {
-  return new OTnodeArr(LLVMArrayType(ElType->Ref, 0), false, ElType);
+  OTnodeArr *Res;
+  unsigned Len = 0;
+
+  Res = new OTnodeArr(LLVMArrayType(ElType->Ref, Len), false, ElType);
+
+#ifdef USE_DEBUG
+  if (FlagDebug)
+    addArrayDebug(Res, Len);
+#endif
+
+  return Res;
 }
 
 extern "C" OTnode
 new_constrained_array_type(OTnodeArr *ArrType, OCnode *Length)
 {
+  OTnodeArr *Res;
   unsigned Len = LLVMConstIntGetZExtValue(Length->Ref);
 
-  return new OTnodeArr(LLVMArrayType(ArrType->ElType->Ref, Len),
-		       ArrType->ElType->Bounded,
-		       ArrType->ElType);
+  Res = new OTnodeArr(LLVMArrayType(ArrType->ElType->Ref, Len),
+                      ArrType->ElType->Bounded,
+                      ArrType->ElType);
+
+#ifdef USE_DEBUG
+  if (FlagDebug)
+    addArrayDebug(Res, Len);
+#endif
+
+  return Res;
 }
 
 extern "C" void
@@ -907,7 +949,7 @@ new_type_decl(OIdent Ident, OTnode Atype)
     case OTKEnum:
     case OTKBool:
       Atype->Dbg = DBuilder->createEnumerationType
-        (DebugCurrentScope, StringRef(Ident.cstr), DebugCurrentFile,
+        (DebugCurrentSubprg, StringRef(Ident.cstr), DebugCurrentFile,
          DebugCurrentLine, static_cast<OTnodeEnumBase*>(Atype)->ScalSize,
          Atype->getAlignment(),
          *static_cast<OTnodeEnumBase*>(Atype)->DbgEls, nullptr);
@@ -929,32 +971,16 @@ new_type_decl(OIdent Ident, OTnode Atype)
       break;
 
     case OTKArray:
-      {
-        unsigned Len;
-        DISubrange *Rng;
-
-        if (Atype->Bounded)
-          Len = LLVMGetArrayLength(Atype->Ref);
-        else
-          Len = 0;
-
-        Rng = DBuilder->getOrCreateSubrange(0, Len);
-        SmallVector<Metadata *, 1> Subscripts;
-        Subscripts.push_back(Rng);
-
-        Atype->Dbg = DBuilder->createArrayType
-          (Atype->getSize(), Atype->getAlignment(),
-           static_cast<OTnodeArr *>(Atype)->ElType->Dbg,
-           DBuilder->getOrCreateArray(Subscripts));
-        Atype->Dbg = DBuilder->createTypedef
-          (Atype->Dbg, StringRef(Ident.cstr), DebugCurrentFile,
-           DebugCurrentLine, DebugCurrentScope);
-      }
+      //  The debug info has already been created for arrays, as they can be
+      //  anonymous
+      Atype->Dbg = DBuilder->createTypedef
+        (Atype->Dbg, StringRef(Ident.cstr), DebugCurrentFile,
+         DebugCurrentLine, DebugCurrentSubprg);
       break;
 
     case OTKRecord:
       Atype->Dbg = DBuilder->createStructType
-        (DebugCurrentScope, StringRef(Ident.cstr), DebugCurrentFile,
+        (DebugCurrentSubprg, StringRef(Ident.cstr), DebugCurrentFile,
          DebugCurrentLine, Atype->getSize(), Atype->getAlignment(),
          DINode::DIFlags::FlagPublic, nullptr,
          buildDebugRecordElements(static_cast<OTnodeRecBase *>(Atype)));
@@ -968,13 +994,13 @@ new_type_decl(OIdent Ident, OTnode Atype)
         unsigned i = 0;
         for (OFnodeBase *e : static_cast<OTnodeUnion *>(Atype)->Els) {
           els[i++] = DBuilder->createMemberType
-            (DebugCurrentScope, StringRef(e->Ident.cstr), DebugCurrentFile,
+            (DebugCurrentSubprg, StringRef(e->Ident.cstr), DebugCurrentFile,
              DebugCurrentLine, e->FType->getSize(), e->FType->getAlignment(),
              0, DINode::DIFlags::FlagPublic, e->FType->Dbg);
         }
 
         Atype->Dbg = DBuilder->createUnionType
-          (DebugCurrentScope, StringRef(Ident.cstr), DebugCurrentFile,
+          (DebugCurrentSubprg, StringRef(Ident.cstr), DebugCurrentFile,
            DebugCurrentLine, Atype->getSize(), Atype->getAlignment(),
            DINode::DIFlags::FlagPublic, DBuilder->getOrCreateArray(els));
       }
@@ -983,7 +1009,7 @@ new_type_decl(OIdent Ident, OTnode Atype)
     case OTKIncompleteRecord:
       Atype->Dbg = DBuilder->createReplaceableCompositeType
         (dwarf::DW_TAG_structure_type, StringRef(Ident.cstr),
-         DebugCurrentScope, DebugCurrentFile, DebugCurrentLine);
+         DebugCurrentSubprg, DebugCurrentFile, DebugCurrentLine);
       break;
     }
   }
@@ -1207,7 +1233,7 @@ new_var_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
       DIGlobalVariableExpression *GVE;
 
       GVE = DBuilder->createGlobalVariableExpression
-        (DebugCurrentScope, StringRef(Ident.cstr), StringRef(),
+        (DebugCurrentSubprg, StringRef(Ident.cstr), StringRef(),
          DebugCurrentFile, DebugCurrentLine, Atype->Dbg,
          Storage == O_Storage_Private);
       static_cast<GlobalVariable*>(unwrap(Decl))->addDebugInfo(GVE);
@@ -1237,6 +1263,9 @@ new_const_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
 {
   LLVMValueRef Decl;
 
+  if (Storage == O_Storage_Local)
+    abort();
+
   if (Storage == O_Storage_External) {
     //  It is possible to re-declare an external const.
     Decl = LLVMGetNamedGlobal(TheModule, Ident.cstr);
@@ -1255,19 +1284,6 @@ new_const_decl(ODnode *Res, OIdent Ident, OStorage Storage, OTnode Atype)
   }
 
   *Res = new ODnodeConst(Decl, Atype, Storage, Ident);
-
-#ifdef USE_DEBUG
-  if (FlagDebug) {
-    DIGlobalVariableExpression *GVE;
-
-    GVE = DBuilder->createGlobalVariableExpression
-      (DebugCurrentScope, StringRef(Ident.cstr), StringRef(),
-       DebugCurrentFile, DebugCurrentLine,
-       DBuilder->createQualifiedType(dwarf::DW_TAG_const_type, Atype->Dbg),
-       Storage == O_Storage_Private);
-    static_cast<GlobalVariable*>(unwrap(Decl))->addDebugInfo(GVE);
-    }
-#endif
 }
 
 extern "C" void
@@ -1278,15 +1294,32 @@ start_init_value(ODnodeConst **Decl)
 extern "C" void
 finish_init_value(ODnodeConst **Decl, OCnode *Val)
 {
-  LLVMValueRef Ref = (*Decl)->Ref;
+  ODnodeConst *Cst = *Decl;
+
+  LLVMValueRef Ref = Cst->Ref;
 
   if (Ref == nullptr) {
-    Ref = LLVMAddGlobal(TheModule, LLVMTypeOf(Val->Ref), (*Decl)->Ident.cstr);
-    setConstAttributes(Ref, (*Decl)->Storage);
-    (*Decl)->Ref = Ref;
+    Ref = LLVMAddGlobal(TheModule, LLVMTypeOf(Val->Ref), Cst->Ident.cstr);
+    setConstAttributes(Ref, Cst->Storage);
+    Cst->Ref = Ref;
   }
 
   LLVMSetInitializer(Ref, Val->Ref);
+
+#ifdef USE_DEBUG
+  if (FlagDebug && Cst->Dtype->Dbg != nullptr) {
+    DIGlobalVariableExpression *GVE;
+
+    //  Note: the scope of a global expression cannot be a lexical scope.
+    GVE = DBuilder->createGlobalVariableExpression
+      (DebugCurrentSubprg,
+       StringRef(Cst->Ident.cstr), StringRef(),
+       DebugCurrentFile, DebugCurrentLine,
+       DBuilder->createQualifiedType(dwarf::DW_TAG_const_type, Cst->Dtype->Dbg),
+       Cst->Storage == O_Storage_Private);
+    static_cast<GlobalVariable*>(unwrap(Ref))->addDebugInfo(GVE);
+    }
+#endif
 }
 
 struct ODnodeInter : ODnodeBase {
@@ -1516,17 +1549,17 @@ start_subprogram_body(ODnodeSubprg *Func)
 
   if (FlagDebug) {
     //  Crate local variables for arguments
-    unsigned ArgNo = 0;
+    unsigned ArgNo = 1;
     for (ODnodeInter *Inter: Func->Inters) {
       LLVMValueRef Var;
 
       Var = LLVMBuildAlloca(DeclBuilder, Inter->Dtype->Ref, "");
       DILocalVariable *D = DBuilder->createParameterVariable
-        (DebugCurrentScope, StringRef(Inter->Ident.cstr), ArgNo++,
+        (DebugCurrentSubprg, StringRef(Inter->Ident.cstr), ArgNo++,
          DebugCurrentFile, DebugCurrentLine, Inter->Dtype->Dbg, true);
       DBuilder->insertDeclare
         (unwrap(Var), D, DBuilder->createExpression(),
-         DebugLoc::get(DebugCurrentLine, 0, DebugCurrentScope),
+         DebugLoc::get(DebugCurrentLine, 0, DebugCurrentSubprg),
          unwrap(LLVMGetInsertBlock(DeclBuilder)));
       LLVMBuildStore(DeclBuilder, Inter->Ref, Var);
       Inter->Ref = Var;
@@ -2507,12 +2540,13 @@ new_obj (ODnode Obj)
   case ODKLocal:
     return { false, Obj->Ref, Obj->Dtype };
   case ODKInterface:
+#ifdef USE_DEBUG
     if (FlagDebug) {
       //  The argument was allocated on the stack
       return { false, Obj->Ref, Obj->Dtype };
-    } else {
-      return { true, Obj->Ref, Obj->Dtype };
     }
+#endif
+    return { true, Obj->Ref, Obj->Dtype };
   case ODKType:
   case ODKSubprg:
   default:
