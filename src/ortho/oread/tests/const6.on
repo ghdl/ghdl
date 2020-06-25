@@ -1,0 +1,23 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE index_array_type IS ARRAY[__ghdl_index_type] OF __ghdl_index_type;
+
+PUBLIC FUNCTION main (a : __ghdl_index_type) RETURN __ghdl_index_type
+DECLARE
+BEGIN
+  DECLARE
+    TYPE my_array IS SUBARRAY index_array_type[2];
+
+        TYPE _UI00000030 IS ARRAY [__ghdl_index_type] OF SUBARRAY
+          index_array_type[2];
+        PRIVATE CONSTANT _UI00000031 : _UI00000030;
+        CONSTANT _UI00000031 := [3]{
+                 [2]{1, 2},
+                 [2]{2, 3},
+                 [2]{3, 4}};
+    LOCAL VAR v : __ghdl_index_type;
+  BEGIN
+    v := a;
+    RETURN a;
+  END;
+END;

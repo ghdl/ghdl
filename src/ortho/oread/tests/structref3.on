@@ -13,10 +13,12 @@ TYPE __ghdl_str_len IS RECORD
   len: __ghdl_index_type;
 END RECORD;
 
+TYPE ghdl_str_len_acc IS ACCESS __ghdl_str_len;
+
 PUBLIC VAR var1 : __ghdl_str_len;
 
-PUBLIC FUNCTION get_len () RETURN __ghdl_index_type
+PUBLIC FUNCTION get_len (arg : ghdl_str_len_acc) RETURN __ghdl_index_type
 DECLARE
 BEGIN
-  RETURN var1.len;
+  RETURN arg.ALL.len;
 END;

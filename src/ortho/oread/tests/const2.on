@@ -1,0 +1,20 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+PUBLIC FUNCTION inc (a : __ghdl_index_type) RETURN __ghdl_index_type;
+
+PUBLIC FUNCTION inc (a : __ghdl_index_type) RETURN __ghdl_index_type
+DECLARE
+BEGIN
+  RETURN a +# 1;
+END;
+
+PUBLIC FUNCTION main (a : __ghdl_index_type) RETURN __ghdl_index_type
+DECLARE
+BEGIN
+  DECLARE
+    PRIVATE CONSTANT cst : __ghdl_index_type;
+    CONSTANT cst := __ghdl_index_type'[1];
+  BEGIN
+    RETURN inc (a +# cst);
+  END;
+END;

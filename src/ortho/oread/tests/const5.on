@@ -1,0 +1,17 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE index_array_type IS ARRAY[__ghdl_index_type] OF __ghdl_index_type;
+
+PUBLIC FUNCTION main (a : __ghdl_index_type) RETURN __ghdl_index_type
+DECLARE
+BEGIN
+  DECLARE
+    TYPE my_array IS SUBARRAY index_array_type[2];
+    PRIVATE CONSTANT cst : my_array;
+    CONSTANT cst := [2]{__ghdl_index_type'[1], __ghdl_index_type'[2]};
+    LOCAL VAR v : __ghdl_index_type;
+  BEGIN
+    v := a;
+    RETURN a +# cst[0];
+  END;
+END;
