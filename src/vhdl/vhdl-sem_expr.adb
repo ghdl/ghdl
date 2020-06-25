@@ -638,6 +638,9 @@ package body Vhdl.Sem_Expr is
          end if;
       end if;
 
+      Check_Read (Left);
+      Check_Read (Right);
+
       Left := Eval_Expr_If_Static (Left);
       Right := Eval_Expr_If_Static (Right);
 

@@ -652,6 +652,7 @@ package body Vhdl.Sem_Names is
             Index := Sem_Expression (Index, Get_Base_Type (Index_Subtype));
          end if;
          if Index /= Null_Iir then
+            Check_Read (Index);
             if Get_Expr_Staticness (Index) = Locally
               and then Get_Type_Staticness (Index_Subtype) = Locally
             then
