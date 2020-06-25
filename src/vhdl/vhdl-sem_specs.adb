@@ -1761,7 +1761,7 @@ package body Vhdl.Sem_Specs is
       --  Create a name for the entity.  As this is a default binding
       --  indication, the design unit does *NOT* depend on the entity, so the
       --  reference is a forward reference.
-      Entity_Name := Build_Simple_Name (Entity, Parent);
+      Entity_Name := Build_Simple_Name (Entity, Entity);
       Set_Is_Forward_Ref (Entity_Name, True);
 
       Set_Entity_Name (Aspect, Entity_Name);
@@ -1883,7 +1883,7 @@ package body Vhdl.Sem_Specs is
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);
-            Name := Build_Simple_Name (Comp_El, Parent);
+            Name := Build_Simple_Name (Comp_El, Comp_El);
             Set_Type (Name, Get_Type (Comp_El));
             Set_Actual (Assoc, Name);
             if Kind = Map_Port and then not Error then
@@ -1896,7 +1896,7 @@ package body Vhdl.Sem_Specs is
 
          --  Create the formal name.  This is a forward reference as the
          --  current design unit does not depend on the entity.
-         Name := Build_Simple_Name (Ent_El, Parent);
+         Name := Build_Simple_Name (Ent_El, Ent_El);
          Set_Is_Forward_Ref (Name, True);
          Set_Formal (Assoc, Name);
 
