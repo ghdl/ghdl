@@ -2549,25 +2549,26 @@ package body Trans.Chap3 is
    is
       Def : constant Iir := Get_Type (Decl);
    begin
+      --  Note about subtype_indication and type in a declaration:
+      --  1) The subtype_indication is present only on the first declared
+      --     object when there is a list of identifiers.  This could be
+      --     changed by making the subtype_indication Maybe_Ref.
+      --  2) Constants may have a type that is different from the subtype
+      --     indication, when the subtype indication is not fully constrained.
+      --     TODO: explain why!
+      --  3) An object alias always have a type but may have no subtype
+      --     indication.  Maybe this should be handled separately.
+      --  4) An anonymous_signal_declaration has no subtype indication.
+      --  5) It is not possible to translate the type when the subtype
+      --     indication is a subtype_attribute.  So this is an exception
+      --     TODO: if there is a list of identifiers.
+
       if not Is_Anonymous_Type_Definition (Def) then
          --  The type refers to a declared type, so already handled.
          return;
       end if;
 
-      declare
-         Ind : constant Iir := Get_Subtype_Indication (Decl);
-      begin
-         if Ind /= Null_Iir
-           and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute
-         then
-            if Is_Fully_Constrained_Type (Get_Type (Get_Prefix (Ind))) then
-               return;
-            end if;
-            raise Internal_Error;
-         else
-            Translate_Object_Subtype_Definition (Decl, Def, With_Vars);
-         end if;
-      end;
+      Translate_Object_Subtype_Definition (Decl, Def, With_Vars);
    end Translate_Object_Subtype_Indication;
 
    procedure Elab_Object_Subtype_Indication (Decl : Iir)

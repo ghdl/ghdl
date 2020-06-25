@@ -1067,6 +1067,37 @@ package body Trans.Chap4 is
       Update_Data_Record => Elab_Signal_Update_Record,
       Finish_Data_Record => Elab_Signal_Finish_Composite);
 
+   procedure Elab_Maybe_Subtype_Attribute
+     (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode)
+   is
+      Ind : Iir;
+      Name : Mnode;
+      Bnd : Mnode;
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Anonymous_Signal_Declaration =>
+            return;
+         when others =>
+            Ind := Get_Subtype_Indication (Decl);
+            if Ind = Null_Iir
+              or else Get_Kind (Ind) /= Iir_Kind_Subtype_Attribute
+            then
+               return;
+            end if;
+      end case;
+
+      Name := Chap6.Translate_Name (Get_Prefix (Ind), Mode_Value);
+      Bnd := Chap3.Get_Composite_Bounds (Name);
+
+      if Name_Sig /= Mnode_Null then
+         Stabilize (Bnd);
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Name_Sig)),
+                          M2Addr (Bnd));
+      end if;
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Name_Val)),
+                       M2Addr (Bnd));
+   end Elab_Maybe_Subtype_Attribute;
+
    --  Elaborate signal subtypes and allocate the storage for the object.
    procedure Elab_Signal_Declaration_Storage (Decl : Iir; Has_Copy : Boolean)
    is
@@ -1088,10 +1119,6 @@ package body Trans.Chap4 is
       Type_Info := Get_Info (Sig_Type);
 
       if Type_Info.Type_Mode in Type_Mode_Unbounded then
-         --  Unbounded types are only allowed for ports; in that case the
-         --  bounds have already been set.
-         pragma Assert (Is_Port);
-
          --  Allocate storage.
          if Has_Copy then
             Name_Sig := Chap6.Translate_Name (Decl, Mode_Signal);
@@ -1099,16 +1126,21 @@ package body Trans.Chap4 is
          else
             Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
          end if;
+
          Name_Sig := Stabilize (Name_Sig);
+
+         if Name_Val /= Mnode_Null then
+            Name_Val := Stabilize (Name_Val);
+            Elab_Maybe_Subtype_Attribute (Decl, Name_Val, Name_Sig);
+            Chap3.Allocate_Unbounded_Composite_Base
+              (Alloc_System, Name_Val, Sig_Type);
+         else
+            Elab_Maybe_Subtype_Attribute (Decl, Name_Sig, Mnode_Null);
+         end if;
 
          Chap3.Allocate_Unbounded_Composite_Base
            (Alloc_System, Name_Sig, Sig_Type);
 
-         if Name_Val /= Mnode_Null then
-            Name_Val := Stabilize (Name_Val);
-            Chap3.Allocate_Unbounded_Composite_Base
-              (Alloc_System, Name_Val, Sig_Type);
-         end if;
          if Is_Port and then Get_Default_Value (Decl) /= Null_Iir then
             Name_Val := Chap6.Get_Port_Init_Value (Decl);
             Name_Val := Stabilize (Name_Val);
