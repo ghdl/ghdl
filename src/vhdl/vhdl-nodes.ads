@@ -1421,6 +1421,7 @@ package Vhdl.Nodes is
    --   Get/Set_Is_Ref (Flag12)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
+   -- Only for Iir_Kind_Interface_Constant_Declaration:
    --   Get/Set_Open_Flag (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -1473,6 +1474,8 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Ref (Flag12)
    --
+   --   Get/Set_Open_Flag (Flag7)
+   --
    --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Interface_Package_Declaration (Medium)
@@ -1511,6 +1514,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_Open_Flag (Flag7)
 
    -- Iir_Kind_Function_Declaration (Medium)
    -- Iir_Kind_Procedure_Declaration (Medium)
@@ -1589,7 +1594,7 @@ package Vhdl.Nodes is
    --   Get/Set_Use_Flag (Flag6)
    --
    -- Only for Iir_Kind_Function_Declaration:
-   --   Get/Set_Resolution_Function_Flag (Flag7)
+   --   Get/Set_Resolution_Function_Flag (Flag13)
    --
    -- Only for Iir_Kind_Function_Declaration:
    --   Get/Set_Has_Pure (Flag8)
@@ -1706,7 +1711,7 @@ package Vhdl.Nodes is
    --   Get/Set_Use_Flag (Flag6)
    --
    -- Only for Iir_Kind_Interface_Function_Declaration:
-   --   Get/Set_Resolution_Function_Flag (Flag7)
+   --   Get/Set_Resolution_Function_Flag (Flag13)
    --
    -- Only for Iir_Kind_Interface_Function_Declaration:
    --   Get/Set_Has_Pure (Flag8)
@@ -1714,6 +1719,8 @@ package Vhdl.Nodes is
    --   Get/Set_Has_Parameter (Flag10)
    --
    --   Get/Set_All_Sensitized_State (State3)
+   --
+   --   Get/Set_Open_Flag (Flag7)
 
    -- Iir_Kind_Signal_Declaration (Short)
    --
@@ -8230,7 +8237,7 @@ package Vhdl.Nodes is
    procedure Set_Passive_Flag (Proc : Iir; Flag : Boolean);
 
    --  True if the function is used as a resolution function.
-   --  Field: Flag7
+   --  Field: Flag13
    function Get_Resolution_Function_Flag (Func : Iir) return Boolean;
    procedure Set_Resolution_Function_Flag (Func : Iir; Flag : Boolean);
 

@@ -4710,7 +4710,7 @@ package body Vhdl.Nodes is
       pragma Assert (Func /= Null_Iir);
       pragma Assert (Has_Resolution_Function_Flag (Get_Kind (Func)),
                      "no field Resolution_Function_Flag");
-      return Get_Flag7 (Func);
+      return Get_Flag13 (Func);
    end Get_Resolution_Function_Flag;
 
    procedure Set_Resolution_Function_Flag (Func : Iir; Flag : Boolean) is
@@ -4718,7 +4718,7 @@ package body Vhdl.Nodes is
       pragma Assert (Func /= Null_Iir);
       pragma Assert (Has_Resolution_Function_Flag (Get_Kind (Func)),
                      "no field Resolution_Function_Flag");
-      Set_Flag7 (Func, Flag);
+      Set_Flag13 (Func, Flag);
    end Set_Resolution_Function_Flag;
 
    function Get_Wait_State (Proc : Iir) return Tri_State_Type is
