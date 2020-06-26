@@ -65,4 +65,37 @@ package Vhdl.Sem_Assocs is
    procedure Check_Port_Association_Bounds_Restrictions
      (Formal : Iir; Actual : Iir; Assoc : Iir);
 
+   --  LRM93 8.6 Procedure Call Statement
+   --  For each formal parameter of a procedure, a procedure call must
+   --  specify exactly one corresponding actual parameter.
+   --  This actual parameter is specified either explicitly, by an
+   --  association element (other than the actual OPEN) in the association
+   --  list, or in the absence of such an association element, by a default
+   --  expression (see Section 4.3.3.2).
+   --
+   --  LRM93 7.3.3 Function Calls
+   --  For each formal parameter of a function, a function call must
+   --  specify exactly one corresponding actual parameter.
+   --  This actual parameter is specified either explicitly, by an
+   --  association element (other than the actual OPEN) in the association
+   --  list, or in the absence of such an association element, by a default
+   --  expression (see Section 4.3.3.2).
+   --
+   --  LRM93 1.1.1.2 / LRM08 6.5.6.3 Port clauses
+   --  A port of mode IN may be unconnected or unassociated only if its
+   --  declaration includes a default expression.
+   --  A port of any mode other than IN may be unconnected or unassociated
+   --  as long as its type is not an unconstrained array type.
+   --
+   --  LRM08 6.5.6.2 Generic clauses
+   --  It is an error if no such actual [instantiated package] is specified
+   --  for a given formal generic package (either because the formal generic
+   --  is unassociated or because the actual is OPEN).
+   --
+   --  INTER is an interface that is known not to be associated.
+   --  Report an error according to MISSING iff FINISH is true.
+   --  Return True iff not associating INTER is an error.
+   function Sem_Check_Missing_Association
+     (Inter : Iir; Missing : Missing_Type; Finish : Boolean; Loc : Iir)
+      return Boolean;
 end Vhdl.Sem_Assocs;

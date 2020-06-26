@@ -2634,67 +2634,13 @@ package body Vhdl.Sem_Assocs is
       Pos := 0;
       while Inter /= Null_Iir loop
          if Inter_Matched (Pos) <= Open then
-            --  Interface is unassociated (none or open).
-            case Get_Kind (Inter) is
-               when Iir_Kinds_Interface_Object_Declaration =>
-                  case Missing is
-                     when Missing_Parameter
-                       | Missing_Generic =>
-                        if Get_Mode (Inter) /= Iir_In_Mode
-                          or else Get_Default_Value (Inter) = Null_Iir
-                        then
-                           if Finish then
-                              Error_Msg_Sem (+Loc, "no actual for %n", +Inter);
-                           end if;
-                           Match := Not_Compatible;
-                           return;
-                        end if;
-                     when Missing_Port =>
-                        case Get_Mode (Inter) is
-                           when Iir_In_Mode =>
-                              --  No overloading for components/entities.
-                              pragma Assert (Finish);
-                              if Get_Default_Value (Inter) = Null_Iir then
-                                 Error_Msg_Sem
-                                   (+Loc,
-                                    "%n of mode IN must be connected", +Inter);
-                                 Match := Not_Compatible;
-                                 return;
-                              end if;
-                           when Iir_Out_Mode
-                             | Iir_Linkage_Mode
-                             | Iir_Inout_Mode
-                             | Iir_Buffer_Mode =>
-                              --  No overloading for components/entities.
-                              pragma Assert (Finish);
-                              if not (Is_Fully_Constrained_Type
-                                        (Get_Type (Inter)))
-                              then
-                                 Error_Msg_Sem
-                                   (+Loc,
-                                    "unconstrained %n must be connected",
-                                    +Inter);
-                                 Match := Not_Compatible;
-                                 return;
-                              end if;
-                           when Iir_Unknown_Mode =>
-                              raise Internal_Error;
-                           end case;
-                     when Missing_Allowed =>
-                        null;
-                  end case;
-               when Iir_Kind_Interface_Package_Declaration =>
-                  if Get_Generic_Map_Aspect_Chain (Inter) = Null_Iir then
-                     Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
-                     Match := Not_Compatible;
-                  end if;
-               when Iir_Kind_Interface_Function_Declaration
-                 | Iir_Kind_Interface_Procedure_Declaration =>
-                  Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
-                  Match := Not_Compatible;
-               when others =>
-                  Error_Kind ("sem_association_chain", Inter);
-            end case;
+            if Sem_Check_Missing_Association (Inter, Missing, Finish, Loc)
+            then
+               Match := Not_Compatible;
+               if not Finish then
+                  return;
+               end if;
+            end if;
          end if;
 
          --  Clear associated type of interface type.
@@ -2706,4 +2652,71 @@ package body Vhdl.Sem_Assocs is
          Pos := Pos + 1;
       end loop;
    end Sem_Association_Chain;
+
+   function Sem_Check_Missing_Association
+     (Inter : Iir; Missing : Missing_Type; Finish : Boolean; Loc : Iir)
+      return Boolean
+   is
+      Err : Boolean;
+   begin
+      --  Interface is unassociated (none or open).
+      Err := False;
+      case Get_Kind (Inter) is
+         when Iir_Kinds_Interface_Object_Declaration =>
+            case Missing is
+               when Missing_Parameter
+                  | Missing_Generic =>
+                  if Get_Mode (Inter) /= Iir_In_Mode
+                    or else Get_Default_Value (Inter) = Null_Iir
+                  then
+                     Err := True;
+                     if Finish then
+                        Error_Msg_Sem (+Loc, "no actual for %n", +Inter);
+                     else
+                        return True;
+                     end if;
+                  end if;
+               when Missing_Port =>
+                  case Get_Mode (Inter) is
+                     when Iir_In_Mode =>
+                        --  No overloading for components/entities.
+                        pragma Assert (Finish);
+                        if Get_Default_Value (Inter) = Null_Iir then
+                           Error_Msg_Sem
+                             (+Loc, "%n of mode IN must be connected", +Inter);
+                           Err := True;
+                        end if;
+                     when Iir_Out_Mode
+                        | Iir_Linkage_Mode
+                        | Iir_Inout_Mode
+                        | Iir_Buffer_Mode =>
+                        --  No overloading for components/entities.
+                        pragma Assert (Finish);
+                        if not Is_Fully_Constrained_Type (Get_Type (Inter))
+                        then
+                           Error_Msg_Sem
+                             (+Loc,
+                              "unconstrained %n must be connected", +Inter);
+                           Err := True;
+                        end if;
+                     when Iir_Unknown_Mode =>
+                        raise Internal_Error;
+                  end case;
+               when Missing_Allowed =>
+                  null;
+            end case;
+         when Iir_Kind_Interface_Package_Declaration =>
+            if Get_Generic_Map_Aspect_Chain (Inter) = Null_Iir then
+               Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
+               Err := True;
+            end if;
+         when Iir_Kind_Interface_Function_Declaration
+            | Iir_Kind_Interface_Procedure_Declaration =>
+            Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
+            Err := True;
+         when others =>
+            Error_Kind ("sem_association_chain", Inter);
+      end case;
+      return Err;
+   end Sem_Check_Missing_Association;
 end Vhdl.Sem_Assocs;
