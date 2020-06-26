@@ -1240,7 +1240,7 @@ package body Vhdl.Sem is
       Binding : Iir;
       Entity : Iir_Design_Unit;
       Comp : Iir_Component_Declaration;
-      Primary_Entity_Aspect : Iir;
+      Primary_Binding : Iir;
    begin
       --  LRM 10.1 Declarative Region
       --  11. A component configuration.
@@ -1268,7 +1268,7 @@ package body Vhdl.Sem is
       end if;
       --  FIXME: this is wrong (all declarations should be considered).
       Sem_Component_Specification
-        (Configured_Block, Conf, Primary_Entity_Aspect);
+        (Configured_Block, Conf, Primary_Binding);
 
       Comp := Get_Named_Entity (Get_Component_Name (Conf));
       if Get_Kind (Comp) /= Iir_Kind_Component_Declaration then
@@ -1290,9 +1290,9 @@ package body Vhdl.Sem is
       Sem_Scopes.Add_Component_Declarations (Comp);
       Binding := Get_Binding_Indication (Conf);
       if Binding /= Null_Iir then
-         Sem_Binding_Indication (Binding, Conf, Primary_Entity_Aspect);
+         Sem_Binding_Indication (Binding, Conf, Primary_Binding);
 
-         if Primary_Entity_Aspect /= Null_Iir then
+         if Primary_Binding /= Null_Iir then
             --  LRM93 5.2.1  Binding Indication
             --  It is an error if a formal port appears in the port map aspect
             --  of the incremental binding indication and it is a formal
@@ -1300,7 +1300,7 @@ package body Vhdl.Sem is
             --  of the primary binding indications.
             Check_Incremental_Binding (Configured_Block, Conf);
          end if;
-      elsif Primary_Entity_Aspect = Null_Iir then
+      elsif Primary_Binding = Null_Iir then
          --  LRM93 5.2.1
          --  If the generic map aspect or port map aspect of a primary binding
          --  indication is not present, then the default rules as described

@@ -2437,6 +2437,15 @@ package body Vhdl.Canon is
          Set_Binding_Indication (Cfg, Bind);
          Set_Is_Ref (Cfg, True);
          Add_Binding_Indication_Dependence (Top, Bind);
+         if Is_Config then
+            Entity_Aspect := Get_Entity_Aspect (Bind);
+            Entity := Get_Entity_From_Entity_Aspect (Entity_Aspect);
+            Sem_Specs.Sem_Check_Missing_Generic_Association
+              (Get_Generic_Chain (Entity),
+               Get_Generic_Map_Aspect_Chain (Bind),
+               Null_Iir,
+               Cfg);
+         end if;
          return;
       else
          Entity_Aspect := Get_Entity_Aspect (Bind);

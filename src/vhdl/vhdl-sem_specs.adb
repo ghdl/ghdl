@@ -1331,22 +1331,67 @@ package body Vhdl.Sem_Specs is
       end case;
    end Sem_Entity_Aspect;
 
-   procedure Sem_Binding_Indication (Bind : Iir_Binding_Indication;
-                                     Parent : Iir;
-                                     Primary_Entity_Aspect : Iir)
+   procedure Sem_Check_Missing_Generic_Association
+     (Inter_Chain : Iir;  Assoc1 : Iir; Assoc2 : Iir; Loc : Iir)
    is
-      Entity_Aspect : Iir;
-      Entity : Iir_Entity_Declaration;
+      Inter : Iir;
+      Inter_Iter : Iir;
+      Assoc      : Iir;
+      Err        : Boolean;
+      pragma Unreferenced (Err);
    begin
-      pragma Assert (Bind /= Null_Iir);
-      Entity_Aspect := Get_Entity_Aspect (Bind);
+      --  Set open flag.
+      Inter := Inter_Chain;
+      while Inter /= Null_Iir loop
+         Set_Open_Flag (Inter, True);
+         Inter := Get_Chain (Inter);
+      end loop;
 
+      --  Clear the open flag on associated interface.
+      for I in 1 .. 2 loop
+         case I is
+            when 1 =>
+               Assoc := Assoc1;
+            when 2 =>
+               Assoc := Assoc2;
+         end case;
+         Inter_Iter := Inter_Chain;
+         while Assoc /= Null_Iir loop
+            if Get_Kind (Assoc) /= Iir_Kind_Association_Element_Open then
+               Inter := Get_Association_Interface (Assoc, Inter_Iter);
+               Set_Open_Flag (Inter, False);
+            end if;
+            Next_Association_Interface (Assoc, Inter_Iter);
+         end loop;
+      end loop;
+
+      --  Check open interface.
+      Inter := Inter_Chain;
+      while Inter /= Null_Iir loop
+         if Get_Open_Flag (Inter) then
+            Set_Open_Flag (Inter, False);
+            Err := Sem_Check_Missing_Association
+              (Inter, Missing_Generic, True, Loc);
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+   end Sem_Check_Missing_Generic_Association;
+
+   procedure Sem_Binding_Indication (Bind  : Iir_Binding_Indication;
+                                     Parent                : Iir;
+                                     Primary_Binding       : Iir)
+   is
+      pragma Assert (Bind /= Null_Iir);
+      Entity_Aspect : constant Iir := Get_Entity_Aspect (Bind);
+      Entity        : Iir_Entity_Declaration;
+      Primary_Aspect : Iir;
+   begin
       if Entity_Aspect /= Null_Iir then
          Entity := Sem_Entity_Aspect (Entity_Aspect);
 
          --  LRM93 5.2.1  Binding Indication
          --  An incremental binding indication must not have an entity aspect.
-         if Primary_Entity_Aspect /= Null_Iir then
+         if Primary_Binding /= Null_Iir then
             Error_Msg_Sem
               (+Bind, "entity aspect not allowed for incremental binding");
          end if;
@@ -1361,15 +1406,16 @@ package body Vhdl.Sem_Specs is
          --  specification, it is an error if the entity aspect is absent.
          case Get_Kind (Parent) is
             when Iir_Kind_Component_Configuration =>
-               if Primary_Entity_Aspect = Null_Iir then
+               if Primary_Binding = Null_Iir then
                   Entity := Null_Iir;
                else
-                  case Get_Kind (Primary_Entity_Aspect) is
+                  Primary_Aspect := Get_Entity_Aspect (Primary_Binding);
+                  case Get_Kind (Primary_Aspect) is
                      when Iir_Kind_Entity_Aspect_Entity =>
-                        Entity := Get_Entity (Primary_Entity_Aspect);
+                        Entity := Get_Entity (Primary_Aspect);
                      when others =>
                         Error_Kind
-                          ("sem_binding_indication", Primary_Entity_Aspect);
+                          ("sem_binding_indication", Primary_Aspect);
                   end case;
                end if;
             when Iir_Kind_Configuration_Specification =>
@@ -1405,6 +1451,31 @@ package body Vhdl.Sem_Specs is
       else
          Sem_Generic_Port_Association_Chain (Entity, Bind);
 
+         --  If the binding is final (cannot be incrementally bound), check
+         --  that all generics are associated when required (like no default
+         --  value).
+         --  Do not check if there is no generic map aspect.
+         if Get_Kind (Parent) = Iir_Kind_Component_Configuration
+           and then Get_Generic_Map_Aspect_Chain (Bind) /= Null_Iir
+         then
+            declare
+               Primary_Assoc : Iir;
+            begin
+               if Primary_Binding /= Null_Iir then
+                  Primary_Assoc := Get_Generic_Map_Aspect_Chain
+                    (Primary_Binding);
+               else
+                  Primary_Assoc := Null_Iir;
+               end if;
+
+               Sem_Check_Missing_Generic_Association
+                 (Get_Generic_Chain (Entity),
+                  Get_Generic_Map_Aspect_Chain (Bind),
+                  Primary_Assoc,
+                  Bind);
+            end;
+         end if;
+
          --  LRM 5.2.1 Binding Indication
          --  If the generic map aspect or port map aspect of a binding
          --  indication is not present, then the default rules as described
@@ -1418,7 +1489,7 @@ package body Vhdl.Sem_Specs is
    procedure Apply_Configuration_Specification
      (Comp : Iir_Component_Instantiation_Statement;
       Spec : Iir;
-      Primary_Entity_Aspect : in out Iir)
+      Primary_Binding : in out Iir)
    is
       Prev_Spec : Iir;
       Prev_Conf : Iir;
@@ -1434,7 +1505,6 @@ package body Vhdl.Sem_Specs is
       end Prev_Spec_Error;
 
       Prev_Binding : Iir_Binding_Indication;
-      Prev_Entity_Aspect : Iir;
    begin
       Prev_Spec := Get_Configuration_Specification (Comp);
       if Prev_Spec /= Null_Iir then
@@ -1452,9 +1522,8 @@ package body Vhdl.Sem_Specs is
                --  Incremental binding.
                Prev_Binding := Get_Binding_Indication (Prev_Spec);
                if Prev_Binding /= Null_Iir then
-                  Prev_Entity_Aspect := Get_Entity_Aspect (Prev_Binding);
-                  if Primary_Entity_Aspect = Null_Iir then
-                     Primary_Entity_Aspect := Prev_Entity_Aspect;
+                  if Primary_Binding = Null_Iir then
+                     Primary_Binding := Prev_Binding;
                   else
                      --  FIXME: checks to do ?
                      null;
@@ -1491,7 +1560,7 @@ package body Vhdl.Sem_Specs is
    --  Analyze component_configuration or configuration_specification SPEC.
    --  STMTS is the concurrent statement list related to SPEC.
    procedure Sem_Component_Specification
-     (Parent_Stmts : Iir; Spec : Iir; Primary_Entity_Aspect : out Iir)
+     (Parent_Stmts : Iir; Spec : Iir; Primary_Binding : out Iir)
    is
       function Apply_Component_Specification
         (Chain : Iir; Check_Applied : Boolean) return Boolean
@@ -1517,7 +1586,7 @@ package body Vhdl.Sem_Specs is
                      or else Get_Component_Configuration (El) = Null_Iir)
                   then
                      Apply_Configuration_Specification
-                       (El, Spec, Primary_Entity_Aspect);
+                       (El, Spec, Primary_Binding);
                      Res := True;
                   end if;
                when Iir_Kind_For_Generate_Statement
@@ -1542,7 +1611,7 @@ package body Vhdl.Sem_Specs is
       Inst : Iir;
       Inst_Unit : Iir;
    begin
-      Primary_Entity_Aspect := Null_Iir;
+      Primary_Binding := Null_Iir;
       Comp_Name := Get_Component_Name (Spec);
       if Is_Error (Comp_Name) then
          pragma Assert (Flags.Flag_Force_Analysis);
@@ -1632,7 +1701,7 @@ package body Vhdl.Sem_Specs is
                      Error_Msg_Sem (+El, "component names mismatch");
                   else
                      Apply_Configuration_Specification
-                       (Inst, Spec, Primary_Entity_Aspect);
+                       (Inst, Spec, Primary_Binding);
                      Xref_Ref (El, Inst);
                      Set_Named_Entity (El, Inst);
                      Set_Is_Forward_Ref (El, True);
@@ -1646,11 +1715,11 @@ package body Vhdl.Sem_Specs is
    procedure Sem_Configuration_Specification
      (Parent_Stmts : Iir; Conf : Iir_Configuration_Specification)
    is
-      Primary_Entity_Aspect : Iir;
+      Primary_Binding : Iir;
       Component : Iir;
       Bind : Iir;
    begin
-      Sem_Component_Specification (Parent_Stmts, Conf, Primary_Entity_Aspect);
+      Sem_Component_Specification (Parent_Stmts, Conf, Primary_Binding);
       Component := Get_Component_Name (Conf);
       if Is_Error (Component) then
          pragma Assert (Flags.Flag_Force_Analysis);
@@ -1672,7 +1741,7 @@ package body Vhdl.Sem_Specs is
          --  Extend scope of component interface declaration.
          Sem_Scopes.Open_Scope_Extension;
          Sem_Scopes.Add_Component_Declarations (Component);
-         Sem_Binding_Indication (Bind, Conf, Primary_Entity_Aspect);
+         Sem_Binding_Indication (Bind, Conf, Primary_Binding);
          --  FIXME: check default port and generic association.
          Sem_Scopes.Close_Scope_Extension;
       end if;

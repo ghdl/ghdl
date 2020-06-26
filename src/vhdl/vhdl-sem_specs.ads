@@ -50,10 +50,10 @@ package Vhdl.Sem_Specs is
 
    --  Analyze binding indication BIND of configuration specification or
    --  component configuration PARENT.
-   --  PRIMARY_ENTITY_ASPECT is not Null_Iir for an incremental binding.
+   --  PRIMARY_BINDING is not Null_Iir for an incremental binding.
    procedure Sem_Binding_Indication (Bind : Iir_Binding_Indication;
                                      Parent : Iir;
-                                     Primary_Entity_Aspect : Iir);
+                                     Primary_Binding : Iir);
 
    --  Analyze entity aspect ASPECT and return the entity declaration.
    --  Return NULL_IIR if not found.
@@ -62,7 +62,12 @@ package Vhdl.Sem_Specs is
    --  Analyze component_configuration or configuration_specification SPEC.
    --  STMTS is the concurrent statement list related to SPEC.
    procedure Sem_Component_Specification
-     (Parent_Stmts : Iir; Spec : Iir; Primary_Entity_Aspect : out Iir);
+     (Parent_Stmts : Iir; Spec : Iir; Primary_Binding : out Iir);
+
+   --  Check that all interfaces of INTER_CHAIN are associated either by
+   --  ASSOC1 or ASSOC2 (if not null_iir) when they need to be associated.
+   procedure Sem_Check_Missing_Generic_Association
+     (Inter_Chain : Iir;  Assoc1 : Iir; Assoc2 : Iir; Loc : Iir);
 
    --  Create a default binding indication for component COMP which will be
    --  bound with entity ENTITY_UNIT.
