@@ -2736,7 +2736,7 @@ package body Trans.Chap3 is
                  (New_Selected_Element (M2Lv (Obj),
                                         Info.B.Bounds_Field (Kind)),
                   Info,
-                  Mode_Value,
+                  Kind,
                   Info.B.Bounds_Type,
                   Info.B.Bounds_Ptr_Type);
             end;
