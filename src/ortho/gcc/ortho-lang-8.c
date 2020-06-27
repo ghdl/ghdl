@@ -1226,26 +1226,11 @@ finish_access_type (tree atype, tree dtype)
   TREE_TYPE (atype) = dtype;
 }
 
-tree
-new_array_type (tree el_type, tree index_type)
+/*  Create a range type from INDEX_TYPE of length LENGTH.  */
+static tree
+ortho_build_array_range(tree index_type, tree length)
 {
-  /* Incomplete array.  */
-  tree range_type;
-
-  range_type = build_range_type (index_type, size_zero_node, NULL_TREE);
-  return build_array_type (el_type, range_type);
-}
-
-
-tree
-new_constrained_array_type (tree atype, tree length)
-{
-  tree range_type;
-  tree index_type;
   tree len;
-  tree res;
-
-  index_type = TYPE_DOMAIN (atype);
 
   if (integer_zerop (length))
     {
@@ -1258,12 +1243,38 @@ new_constrained_array_type (tree atype, tree length)
 			 convert (index_type, length),
 			 convert (index_type, size_one_node));
     }
-  range_type = build_range_type (index_type, size_zero_node, len);
+  return build_range_type (index_type, size_zero_node, len);
+}
+
+tree
+new_array_type (tree el_type, tree index_type)
+{
+  /* Incomplete array.  */
+  tree range_type;
+  tree res;
+
+  /* Build an incomplete array.  */
+  range_type = build_range_type (index_type, size_zero_node, NULL_TREE);
+  res = build_array_type (el_type, range_type);
+  return res;
+}
+
+tree
+new_constrained_array_type (tree atype, tree length)
+{
+  tree range_type;
+  tree index_type;
+  tree res;
+
+  index_type = TYPE_DOMAIN (atype);
+
+  range_type = ortho_build_array_range(index_type, length);
   res = build_array_type (TREE_TYPE (atype), range_type);
 
   /* Constrained arrays are *always* a subtype of its array type.
      Just copy alias set.  */
   TYPE_ALIAS_SET (res) = get_alias_set (atype);
+
   return res;
 }
 
@@ -1406,6 +1417,14 @@ tree
 new_slice (tree arr, tree res_type, tree index)
 {
   gcc_assert (TREE_CODE (res_type) == ARRAY_TYPE);
+
+  /* gcc needs a complete array type, so create the biggest one if it is
+     not.  */
+  if (TYPE_MAX_VALUE (TYPE_DOMAIN (res_type)) == NULL_TREE)
+    {
+      res_type = build_array_type (TREE_TYPE (res_type),
+                                   TREE_TYPE (TYPE_DOMAIN (res_type)));
+    }
 
   ortho_mark_addressable (arr);
   return build4 (ARRAY_RANGE_REF, res_type, arr, index, NULL_TREE, NULL_TREE);
@@ -1642,8 +1661,11 @@ finish_init_value (tree *decl, tree val)
   TREE_STATIC (*decl) = 1;
 
   /* The variable may be declared with an incomplete array, so be sure it
-     has a completed type.  */
+     has a completed type.
+     Force re-layout by clearing the size.  */
+  DECL_SIZE (*decl) = NULL_TREE;
   TREE_TYPE (*decl) = TREE_TYPE (val);
+  layout_decl (*decl, 0);
 
   rest_of_decl_compilation (*decl, current_function_decl == NULL_TREE, 0);
 }
