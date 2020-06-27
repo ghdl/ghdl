@@ -63,6 +63,9 @@ begin
       elsif Argument (I)'Length >= 2 and then Argument (I)(2) = 'g' then
          --  Skip -g[XXX] flags.
          I := I + 1;
+      elsif Argument (I)'Length >= 2 and then Argument (I)(2) = 'O' then
+         --  Skip -O[XXX] flags.
+         I := I + 1;
       elsif Argument (I) = "-o" and then I + 1 <= Argc then
          --  TODO: write the output to the file ?
          if Output /= NULL_Stream then
