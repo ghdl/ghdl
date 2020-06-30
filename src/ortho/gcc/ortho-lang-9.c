@@ -719,6 +719,14 @@ type_for_mode (enum machine_mode mode, int unsignedp)
   if (mode == TYPE_MODE (long_double_type_node))
     return long_double_type_node;
 
+   if (VECTOR_MODE_P (mode))
+    {
+      machine_mode inner_mode = GET_MODE_INNER (mode);
+      tree inner_type = type_for_mode (inner_mode, unsignedp);
+      if (inner_type)
+	return build_vector_type_for_mode (inner_type, mode);
+    }
+
   return NULL_TREE;
 }
 
