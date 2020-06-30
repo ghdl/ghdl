@@ -23,7 +23,12 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+with System.Address_Image;
 with Grt.Errors; use Grt.Errors;
+with Grt.Astdio; use Grt.Astdio;
+with Grt.Signals; use Grt.Signals;
+with Interfaces; use Interfaces;
+
 
 package body Grt.Rtiis is
 
@@ -358,7 +363,7 @@ package body Grt.Rtiis is
             Is_Sig => Rtii.Is_Sig,
             Typ => El_Type,
             Name => El_Name,
-            Name_Ptr => null,
+            Name_Ptr => El_Rti.Name,
             Base_Rti => Rtii.Base_Rti,
             Addr => Child_Addr);
       end if;
@@ -428,6 +433,7 @@ package body Grt.Rtiis is
       Typ : Ghdl_Type_Rtii;
       Rtii : Ghdl_Object_Rtii;
    begin
+      Put("To_Ghdl_Object_Rtii" & Nl);
       case Rti.Common.Kind is
          when Ghdl_Rtik_Port |
               Ghdl_Rtik_Signal =>
@@ -450,9 +456,28 @@ package body Grt.Rtiis is
          when others =>
             Internal_Error("to_ghdl_rtii : Unknown Kind");
       end case;
+      Put("To_Ghdl_Object_Rtii: Sig is " & Boolean'Image(Is_Sig) & Nl);
       Addr := Loc_To_Addr(Depth => Rti.Common.Depth,
                           Loc => Rti.Loc,
                           Ctxt => Ctxt);
+      Put("To_Ghdl_Object_Rtii: Address is " & Address_Image(Addr) & Nl);
+      if Is_Sig then
+         Put ("To_Ghdl_Object_Rtii: It's a signal so...");
+         Put ("address of the signal pointer is.  It is " &
+                System.Address_Image(Addr) & Nl);
+         Put ("value ptr address is " &
+                Address_Image(To_Address(To_Ghdl_Signal_Ptr(Addr).Value_Ptr))
+                & Nl);
+         -- Presumably if it's a signal this is the offset for the location of
+         -- the signal structure.
+         -- Let's assume it's the offset from the current context.
+         --Addr := Loc_To_Addr(Depth => Rti.Common.Depth,
+         --                    Loc => Addr,
+         --                    Ctxt => Ctxt);
+         --Put ("now the value ptr address is " &
+         --       Address_Image(To_Address(To_Ghdl_Signal_Ptr(Addr).Value_Ptr))
+         --       & Nl);
+      end if;
       if Is_Bound(Rti.Obj_Type) then
          Layout_Addr := Get_Type_Layout(Rti.Obj_Type, Ctxt);
          Binding_Layout_Addr := Null_Address;
@@ -566,5 +591,167 @@ package body Grt.Rtiis is
             Internal_Error("get_size: unknown type kind");
       end case;
    end Get_Size;
+
+   --  Get a child of an Rtii by name.
+   function Get_Rtii_Child_By_Name (Rtii : Ghdl_Object_Rtii; Name : String;
+                                    Child : out Ghdl_Object_Rtii)
+                           return Boolean is
+      Nbr_Children : Ghdl_Index_Type;
+   begin
+      Nbr_Children := Get_Rtii_Nbr_Children(Rtii);
+      for Child_Index in 0 .. Nbr_Children-1 loop
+         Child := Get_Rtii_Child(Rtii, Child_Index);
+         if Child.Name_Ptr(1 .. Name'Length) = Name then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Get_Rtii_Child_By_Name;
+
+   function Get_Val (Rtii : Ghdl_Object_Rtii) return Ghdl_Value_Ptr is
+      Base_Rti : constant Ghdl_Rtin_Object_Acc := Rtii.Base_Rti;
+      Val : Ghdl_Value_Ptr;
+   begin
+      case Base_Rti.Common.Kind is
+         when Ghdl_Rtik_Port =>
+            case Base_Rti.Common.Mode and Ghdl_Rti_Signal_Mode_Mask is
+               when Ghdl_Rti_Signal_Mode_In
+                 | Ghdl_Rti_Signal_Mode_Inout
+                 | Ghdl_Rti_Signal_Mode_Buffer
+                 | Ghdl_Rti_Signal_Mode_Linkage =>
+                  Put ("Get_Val: port in" & Nl);
+                  Val := To_Ghdl_Signal_Ptr(Rtii.Addr).Value_Ptr;
+               when Ghdl_Rti_Signal_Mode_Out =>
+                  Put ("Get_Val: port out" & Nl);
+                  Val := To_Ghdl_Signal_Ptr(Rtii.Addr).Driving_Value'Access;
+               when others =>
+                  Internal_Error("Get_Val: Bad mode");
+            end case;
+         when Ghdl_Rtik_Signal =>
+            Put ("Get_Val: signal" & Nl);
+            Put ("Get_Val: address of the signal pointer is.  It is " &
+                   System.Address_Image(Rtii.Addr) & Nl);
+            Val := To_Ghdl_Signal_Ptr(Rtii.Addr).Value_Ptr;
+            Put ("Get_Val: got the value pointer.  It is " &
+                   System.Address_Image(To_Address(Val)) & Nl);
+            Put ("Get_Val: Data is ");
+            Put (Integer_32'Image(To_Integer_32(Val.I32)));
+            Put (Nl);
+         when Ghdl_Rtik_Generic
+           | Ghdl_Rtik_Constant =>
+            Put ("Get_Val: generic or constant" & Nl);
+            Val := To_Ghdl_Value_Ptr(Rtii.Addr);
+         when others =>
+            Internal_Error("Get_Val: Bad rti kind");
+      end case;
+      return Val;
+   end Get_Val;
+
+   procedure Append_Bin (V : Ghdl_U64; Ndigits : Natural;
+                         Buf_Value : in out Vstring) is
+   begin
+      for I in reverse 0 .. Ndigits - 1 loop
+         if (Shift_Right (V, I) and 1) /= 0 then
+            Append (Buf_Value, '1');
+         else
+            Append (Buf_Value, '0');
+         end if;
+      end loop;
+   end Append_Bin;
+
+   type Map_Type_E8 is array (Ghdl_E8 range 0..8) of character;
+   Map_Std_E8: constant Map_Type_E8 := "UX01ZWLH-";
+
+   function E8_To_Char (Val : Ghdl_E8) return Character is
+   begin
+      if Val not in Map_Type_E8'range then
+         return '?';
+      else
+         return Map_Std_E8 (Val);
+      end if;
+   end E8_To_Char;
+
+   type Map_Type_B1 is array (Ghdl_B1) of character;
+   Map_Std_B1: constant Map_Type_B1 := "01";
+
+   procedure Append_Simple_Bin_Str (Rtii : Ghdl_Object_Rtii;
+                                    Buf_Value : in out Vstring) is
+      Val : Ghdl_Value_Ptr;
+   begin
+      Put ("Append_Simple_Bin_Str: Start" & Nl);
+      Val := Get_Val(Rtii);
+      Put ("Append_Simple_Bin_Str: Got value" & Nl);
+      case Rtii.Typ.Rti.Kind is
+         when Ghdl_Rtik_Type_B1 =>
+            Append (Buf_Value, Map_Std_B1 (Val.B1));
+         when Ghdl_Rtik_Type_E8 =>
+            Append (Buf_Value, E8_To_Char(Val.E8));
+         when others =>
+            Internal_Error("append_simple_bin_str: unknown type kind");
+      end case;
+   end Append_Simple_Bin_Str;
+
+   procedure Append_Bin_Str (Rtii : Ghdl_Object_Rtii;
+                             Buf_Value : in out Vstring) is
+      Val : constant Ghdl_Value_Ptr := Get_Val(Rtii);
+   begin
+      Put ("Append_Bin_Str: Start" & Nl);
+      case Rtii.Typ.Rti.Kind is
+         when Ghdl_Rtik_Type_Record
+           | Ghdl_Rtik_Subtype_Record =>
+            Internal_Error(
+              "append_bin_str: Cannot get binary string for a record type.");
+         when Ghdl_Rtik_Type_Array
+           | Ghdl_Rtik_Subtype_Array =>
+            for Child_Index in 0 .. Get_Array_Nbr_Children(Rtii) loop
+               Append_Simple_Bin_Str(
+                 Get_Array_Child(Rtii, Child_Index), Buf_Value);
+            end loop;
+         when Ghdl_Rtik_Subtype_Scalar =>
+            case To_Ghdl_Rtin_Subtype_Scalar_Acc(Rtii.Typ.Rti).Basetype.Kind is
+               when Ghdl_Rtik_Type_I32 =>
+                  Put (" Putting I32 down" & Nl);
+                  Append_Bin (Ghdl_U64 (Val.I32), 32, Buf_Value);
+                  Put ("Middle: Buf Value is "); Put(Get_C_String(Buf_Value));
+                  Put(Nl);
+               when Ghdl_Rtik_Type_I64 =>
+                  Put (" Putting I64 down" & Nl);
+                  Append_Bin (Ghdl_U64 (Val.I64), 32, Buf_Value);
+               when others =>
+                  Internal_Error("append_bin_str: Unknown scalar base type");
+            end case;
+         when Ghdl_Rtik_Type_B1 =>
+            Append (Buf_Value, Map_Std_B1 (Val.B1));
+         when Ghdl_Rtik_Type_E8 =>
+            Append (Buf_Value, Map_Std_E8 (Val.E8));
+         when Ghdl_Rtik_Type_E32 =>
+            Append_Bin (Ghdl_U64 (Val.E32), 32, Buf_Value);
+         when Ghdl_Rtik_Type_I32 =>
+            Put (" Putting I32 down" & Nl);
+            Append_Bin (Ghdl_U64 (Val.I32), 32, Buf_Value);
+            Put ("Middle: Buf Value is "); Put(Get_C_String(Buf_Value));
+            Put(Nl);
+         when Ghdl_Rtik_Type_I64 =>
+                  Put (" Putting I64 down" & Nl);
+            Append_Bin (Ghdl_U64 (Val.I64), 32, Buf_Value);
+         when Ghdl_Rtik_Type_F64
+           | Ghdl_Rtik_Type_P32
+           | Ghdl_Rtik_Type_P64
+           | Ghdl_Rtik_Type_Access =>
+            Internal_Error("append_bin_str: Mooooo");
+         when Ghdl_Rtik_Type_Unbounded_Record
+           | Ghdl_Rtik_Type_File =>
+            Internal_Error("append_bin_str: Baaa3");
+         when Ghdl_Rtik_Subtype_Unconstrained_Array =>
+            Internal_Error("append_bin_str: Baaa1");
+         when Ghdl_Rtik_Subtype_Unbounded_Record
+           | Ghdl_Rtik_Subtype_Access
+           | Ghdl_Rtik_Type_Protected
+           | Ghdl_Rtik_Element =>
+            Internal_Error("append_bin_str: Baaa2");
+         when others =>
+            Internal_Error("append_bin_str: unknown type kind");
+      end case;
+   end Append_Bin_Str;
 
 end Grt.Rtiis;

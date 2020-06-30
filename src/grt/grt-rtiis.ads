@@ -26,6 +26,7 @@ with System; use System;
 with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
+with Grt.Vstrings; use Grt.Vstrings;
 
 package Grt.Rtiis is
 
@@ -88,6 +89,11 @@ package Grt.Rtiis is
    function Get_Rtii_Child (Rtii : Ghdl_Object_Rtii; Index : Ghdl_Index_Type)
    return Ghdl_Object_Rtii;
 
+   -- Get a child of an Rtii by the element name.
+   function Get_Rtii_Child_By_Name (Rtii : Ghdl_Object_Rtii; Name : String;
+                                    Child : out Ghdl_Object_Rtii)
+   return Boolean;
+
    --  Get number of children in a Rtii.
    function Get_Rtii_Nbr_Children (Rtii : Ghdl_Object_Rtii)
                                   return Ghdl_Index_Type;
@@ -112,5 +118,8 @@ package Grt.Rtiis is
 
    --  Whether this is record-like.
    function Is_Record (Rtii : Ghdl_Object_Rtii) return Boolean;
+
+   procedure Append_Bin_Str (Rtii : Ghdl_Object_Rtii;
+                             Buf_Value : in out Vstring);
 
 end Grt.Rtiis;

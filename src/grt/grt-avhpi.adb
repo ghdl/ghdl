@@ -26,6 +26,7 @@ with Grt.Errors; use Grt.Errors;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.To_Strings;
+with Grt.Astdio; use Grt.Astdio;
 
 package body Grt.Avhpi is
    procedure Get_Root_Inst (Res : out VhpiHandleT) is
@@ -57,6 +58,7 @@ package body Grt.Avhpi is
                             Res : out VhpiHandleT;
                             Error : out AvhpiErrorT) is
    begin
+      Put("Vhpi_Iterator" & Nl);
       --  Default value in case of success.
       Res := (Kind => VhpiIteratorK,
               Ctxt => Ref.Ctxt,
@@ -143,6 +145,7 @@ package body Grt.Avhpi is
    is
       Child : Ghdl_Object_Rtii;
    begin
+      Put ("Vhpi_Scan_Indexed_Name" & Nl);
       if Iterator.N_Idx = Iterator.N_Size then
          Error := AvhpiErrorIteratorEnd;
          return;
@@ -165,6 +168,7 @@ package body Grt.Avhpi is
       Ch : Ghdl_Rti_Access;
       Nblk : Ghdl_Rtin_Block_Acc;
    begin
+      Put ("Vhpi_Scan_Internal_Regions" & Nl);
       Blk := To_Ghdl_Rtin_Block_Acc (Iterator.Ctxt.Block);
       if Blk = null then
          Error := AvhpiErrorIteratorEnd;
@@ -268,6 +272,7 @@ package body Grt.Avhpi is
                                     Res : out VhpiHandleT;
                                     Error : out AvhpiErrorT) is
    begin
+      Put ("Vhpi_Scan_Root_Design" & Nl);
       if Iterator.It_Cur = 0 then
          Get_Root_Inst (Res);
          Iterator.It_Cur := 1;
@@ -357,6 +362,7 @@ package body Grt.Avhpi is
       Blk : Ghdl_Rtin_Block_Acc;
       Ch : Ghdl_Rti_Access;
    begin
+      Put ("Vhpi_Scan_Decls" & Nl);
       Blk := To_Ghdl_Rtin_Block_Acc (Iterator.Ctxt.Block);
 
       --  If there is no context, returns now.
@@ -430,6 +436,7 @@ package body Grt.Avhpi is
    is
       Blk : Ghdl_Rtin_Block_Acc;
    begin
+      Put ("Vhpi_Scan_Pack_Insts" & Nl);
       Blk := To_Ghdl_Rtin_Block_Acc (Iterator.Ctxt.Block);
       if Iterator.It_Cur >= Blk.Nbr_Child then
          Error := AvhpiErrorIteratorEnd;
@@ -447,6 +454,7 @@ package body Grt.Avhpi is
                         Error : out AvhpiErrorT)
    is
    begin
+      Put ("Vhpi_Scan" & Nl);
       case Iterator.Kind is
          when AvhpiNameIteratorK =>
             case Iterator.N_Obj.Typ.Rti.Kind is
@@ -907,6 +915,14 @@ package body Grt.Avhpi is
       end case;
    end Vhpi_Handle;
 
+   function Vhpi_Handle_From_Rtii (Rtii : Ghdl_Object_Rtii)
+                                  return VhpiHandleT is
+   begin
+      return (Kind => VhpiIndexedNameK,
+              Ctxt => Null_Context,
+              Comp_Obj => Rtii);
+   end Vhpi_Handle_From_Rtii;
+
    procedure Vhpi_Handle_By_Index (Rel : VhpiOneToManyT;
                                    Ref : VhpiHandleT;
                                    Index : Natural;
@@ -1151,6 +1167,21 @@ package body Grt.Avhpi is
             return null;
       end case;
    end Avhpi_Get_Rti;
+
+   function Avhpi_Get_Rtii (Obj : VhpiHandleT) return Ghdl_Object_Rtii is
+   begin
+      case Obj.Kind is
+         when VhpiSigDeclK
+           | VhpiPortDeclK
+           | VhpiGenericDeclK
+           | VhpiConstDeclK =>
+            return Obj.Obj;
+         when VhpiIndexedNameK =>
+            return Obj.Comp_Obj;
+         when others =>
+            Internal_Error("avhpi_get_rtii");
+      end case;
+   end Avhpi_Get_Rtii;
 
    function Avhpi_Get_Address (Obj : VhpiHandleT) return Address is
    begin

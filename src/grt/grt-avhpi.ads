@@ -432,6 +432,9 @@ package Grt.Avhpi is
                           Res : out VhpiHandleT;
                           Error : out AvhpiErrorT);
 
+   function Vhpi_Handle_From_Rtii (Rtii : Ghdl_Object_Rtii)
+                                  return VhpiHandleT;
+
    procedure Vhpi_Handle_By_Index (Rel : VhpiOneToManyT;
                                    Ref : VhpiHandleT;
                                    Index : Natural;
@@ -515,6 +518,8 @@ package Grt.Avhpi is
    function Vhpi_Get_Mode (Obj : VhpiHandleT) return VhpiModeT;
 
    function Avhpi_Get_Rti (Obj : VhpiHandleT) return Ghdl_Rti_Access;
+
+   function Avhpi_Get_Rtii (Obj : VhpiHandleT) return Ghdl_Object_Rtii;
 
    function Avhpi_Get_Address (Obj : VhpiHandleT) return Address;
 

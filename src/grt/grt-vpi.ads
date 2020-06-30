@@ -25,6 +25,7 @@ with Interfaces; use Interfaces;
 with Ada.Unchecked_Conversion;
 with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
+with Grt.Rtis; use Grt.Rtis;
 with Grt.Vcd;
 with Grt.Callbacks;
 
@@ -51,6 +52,9 @@ package Grt.Vpi is
    vpiModule :        constant Integer := 32;
    vpiNet :           constant Integer := 36;
    vpiPort :          constant Integer := 44;
+   vpiNetArray :      constant Integer := 114;
+   -- object codes, see sv_vpi_user.h
+   vpiStructNet :     constant Integer := 683;
    --
    vpiDirection :     constant Integer := 20;
    vpiInput :         constant Integer :=  1;
