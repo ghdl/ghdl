@@ -24,6 +24,7 @@ with PSL.Types; use PSL.Types;
 with PSL.Nodes; use PSL.Nodes;
 with PSL.Subsets;
 with PSL.Hash;
+with PSL.Rewrites;
 with PSL.Errors; use PSL.Errors;
 
 with Vhdl.Sem_Expr;
@@ -1002,6 +1003,7 @@ package body Vhdl.Sem_Psl is
          Report_End_Group;
       end if;
       Expr := Sem_Boolean (Get_Psl_Boolean (Stmt));
+      Expr := PSL.Rewrites.Rewrite_Boolean (Expr);
       Set_Psl_Boolean (Stmt, Expr);
       Current_Psl_Default_Clock := Stmt;
    end Sem_Psl_Default_Clock;
