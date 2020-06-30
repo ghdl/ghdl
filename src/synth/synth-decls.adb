@@ -479,8 +479,8 @@ package body Synth.Decls is
       Ind : constant Node := Get_Subtype_Indication (Decl);
       Atype : Node;
    begin
-      if Ind = Null_Node then
-         --  No subtype indication; use the same type.
+      if Get_Is_Ref (Decl) or else Ind = Null_Iir then
+         --  A secondary declaration in a list.
          return Null_Node;
       end if;
       Atype := Ind;

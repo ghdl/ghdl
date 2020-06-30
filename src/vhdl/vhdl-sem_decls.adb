@@ -235,8 +235,10 @@ package body Vhdl.Sem_Decls is
             A_Type := Create_Error_Type (Null_Iir);
             Set_Subtype_Indication (Inter, A_Type);
          else
+            pragma Assert (Get_Is_Ref (Inter));
             A_Type := Get_Type (Last);
             Default_Value := Get_Default_Value (Last);
+            Set_Subtype_Indication (Inter, Get_Subtype_Indication (Last));
          end if;
       else
          A_Type := Sem_Subtype_Indication (A_Type);

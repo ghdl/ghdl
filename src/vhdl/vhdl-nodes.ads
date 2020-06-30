@@ -1222,6 +1222,8 @@ package Vhdl.Nodes is
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Non_Object_Alias_Declaration (Short)
    --
@@ -1327,6 +1329,8 @@ package Vhdl.Nodes is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Nature_Declaration (Short)
    --
@@ -1876,7 +1880,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   -- Only for Iir_Kind_Constant_Declaration:
    --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -1958,6 +1961,8 @@ package Vhdl.Nodes is
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Element_Declaration (Short)
    --
@@ -1987,6 +1992,8 @@ package Vhdl.Nodes is
    --   Get/Set_Has_Identifier_List (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Record_Element_Constraint (Short)
    --
@@ -4208,6 +4215,8 @@ package Vhdl.Nodes is
    --   Get/Set_Allocator_Designated_Type (Field2)
    --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    ------------
    --  Names --
@@ -4322,6 +4331,8 @@ package Vhdl.Nodes is
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Selected_By_All_Name (Short)
    --
@@ -7668,8 +7679,8 @@ package Vhdl.Nodes is
    --  The subtype indication of a declaration.  If several declarations share
    --  the same subtype_indication like in:
    --    variable a, b : integer := 5;
-   --  then only the first declaration has a subtype_indication.
-   --  Field: Field5
+   --  then only the first declaration is the owner of the subtype_indication.
+   --  Field: Field5 Maybe_Ref
    function Get_Subtype_Indication (Target : Iir) return Iir;
    procedure Set_Subtype_Indication (Target : Iir; Atype : Iir);
 
