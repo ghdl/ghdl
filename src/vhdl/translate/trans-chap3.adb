@@ -677,12 +677,18 @@ package body Trans.Chap3 is
                --  Element.
                if Tinfo.B.Bounds_El /= O_Fnode_Null then
                   --  TODO: should be directly elaborated in place.
-                  El_Tinfo := Get_Info (Get_Element_Subtype (Def));
-                  Gen_Memcpy
-                    (M2Addr (Array_Bounds_To_Element_Layout (Targ, Def)),
-                     M2Addr (Get_Composite_Type_Layout (El_Tinfo)),
-                     New_Lit (New_Sizeof (El_Tinfo.B.Layout_Type,
-                                          Ghdl_Index_Type)));
+                  if False then
+                     El_Tinfo := Get_Info (Get_Element_Subtype (Def));
+                     Gen_Memcpy
+                       (M2Addr (Array_Bounds_To_Element_Layout (Targ, Def)),
+                        M2Addr (Get_Composite_Type_Layout (El_Tinfo)),
+                        New_Lit (New_Sizeof (El_Tinfo.B.Layout_Type,
+                                             Ghdl_Index_Type)));
+                  else
+                     Elab_Composite_Subtype_Layout
+                       (Get_Element_Subtype (Def),
+                        Array_Bounds_To_Element_Layout (Targ, Def));
+                  end if;
                end if;
             end;
 
