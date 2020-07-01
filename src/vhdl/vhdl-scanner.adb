@@ -1702,16 +1702,29 @@ package body Vhdl.Scanner is
       Id := Null_Identifier;
       Skip_Spaces;
 
-      --  The identifier shall start with a lower case letter.
-      if Source (Pos) not in 'a' .. 'z' then
-         return;
-      end if;
+      --  The identifier shall start with a letter.
+      case Source (Pos) is
+         when 'a' .. 'z'
+            | 'A' .. 'Z' =>
+            null;
+         when others =>
+            return;
+      end case;
 
-      --  Scan the identifier (in lower cases).
+      --  Scan the identifier.
       Len := 0;
       loop
          C := Source (Pos);
-         exit when C not in 'a' .. 'z' and C /= '_';
+         case C is
+            when 'a' .. 'z' =>
+               null;
+            when 'A' .. 'Z' =>
+               C := Character'Val (Character'Pos (C) + 32);
+            when '_' =>
+               null;
+            when others =>
+               exit;
+         end case;
          Len := Len + 1;
          Buffer (Len) := C;
          Pos := Pos + 1;
