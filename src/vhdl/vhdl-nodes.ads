@@ -1835,7 +1835,7 @@ package Vhdl.Nodes is
    --   Get/Set_Signal_Attribute_Chain (Field3)
 
    -- Iir_Kind_Constant_Declaration (Medium)
-   -- Iir_Kind_Iterator_Declaration (Medium)
+   -- Iir_Kind_Iterator_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1847,7 +1847,7 @@ package Vhdl.Nodes is
    --   Get/Set_Subtype_Indication (Field5)
    --
    -- Only for Iir_Kind_Iterator_Declaration:
-   --   Get/Set_Discrete_Range (Field6)
+   --   Get/Set_Discrete_Range (Field4)
    --
    -- Only for Iir_Kind_Constant_Declaration:
    --  Default value of a deferred constant points to the full constant
@@ -7686,7 +7686,7 @@ package Vhdl.Nodes is
 
    --  Discrete range of an iterator.  During analysis, a subtype indiciation
    --  is created from this range.
-   --  Field: Field6
+   --  Field: Field4
    function Get_Discrete_Range (Target : Iir) return Iir;
    procedure Set_Discrete_Range (Target : Iir; Rng : Iir);
 

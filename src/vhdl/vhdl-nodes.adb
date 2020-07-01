@@ -1065,6 +1065,7 @@ package body Vhdl.Nodes is
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
@@ -1263,7 +1264,6 @@ package body Vhdl.Nodes is
            | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Interface_Function_Declaration
            | Iir_Kind_Interface_Procedure_Declaration
@@ -2873,7 +2873,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Discrete_Range (Get_Kind (Target)),
                      "no field Discrete_Range");
-      return Get_Field6 (Target);
+      return Get_Field4 (Target);
    end Get_Discrete_Range;
 
    procedure Set_Discrete_Range (Target : Iir; Rng : Iir) is
@@ -2881,7 +2881,7 @@ package body Vhdl.Nodes is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Discrete_Range (Get_Kind (Target)),
                      "no field Discrete_Range");
-      Set_Field6 (Target, Rng);
+      Set_Field4 (Target, Rng);
    end Set_Discrete_Range;
 
    function Get_Type_Definition (Decl : Iir) return Iir is
