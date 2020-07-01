@@ -439,7 +439,7 @@ package body Vhdl.Annotations is
               | Iir_Kind_Interface_Variable_Declaration
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
-               if Get_Subtype_Indication (El) /= Null_Iir then
+               if not Get_Is_Ref (El) then
                   Annotate_Anonymous_Type_Definition
                     (Block_Info, Get_Type (El));
                end if;
