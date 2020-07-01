@@ -281,6 +281,7 @@ package body Ghdlsynth is
                if Id = Null_Identifier then
                   return Null_Iir;
                end if;
+               Libraries.Work_Library_Name := Id;
                Libraries.Load_Work_Library (True);
             else
                Ghdlcomp.Compile_Load_File (Arg);
