@@ -836,10 +836,10 @@ package body Vhdl.Sem_Specs is
               | Tok_Architecture
               | Tok_Configuration =>
                if Get_Expr_Staticness (Expr) /= Locally then
-                  Error_Msg_Sem
-                    (+Spec,
+                  Error_Msg_Sem_Relaxed
+                    (Spec, Warnid_Attribute,
                      "attribute expression for %t must be locally static",
-                     +Get_Entity_Class (Spec));
+                     (1 => +Get_Entity_Class (Spec)));
                end if;
             when others =>
                null;
