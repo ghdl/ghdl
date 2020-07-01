@@ -1774,7 +1774,7 @@ package body Vhdl.Sem_Expr is
    begin
       Operator := Utils.Get_Operator_Name (Expr);
       Report_Start_Group;
-      Error_Msg_Sem (+Expr, "operator ""%i"" is overloaded", +Operator);
+      Error_Msg_Sem (+Expr, "operator %i is overloaded", +Operator);
       Disp_Overload_List (List, Expr);
       Report_End_Group;
    end Error_Operator_Overload;
