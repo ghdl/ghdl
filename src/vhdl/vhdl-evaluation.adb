@@ -2590,7 +2590,13 @@ package body Vhdl.Evaluation is
                when Iir_Kind_Choice_By_Expression =>
                   exit when Eval_Is_Eq (Get_Choice_Expression (Assoc), Idx);
                when Iir_Kind_Choice_By_Range =>
-                  exit when Eval_Is_In_Bound (Idx, Get_Choice_Range (Assoc));
+                  declare
+                     Rng : Iir;
+                  begin
+                     Rng := Get_Choice_Range (Assoc);
+                     Rng := Eval_Static_Range (Rng);
+                     exit when Eval_Int_In_Range (Eval_Pos (Idx), Rng);
+                  end;
                when Iir_Kind_Choice_By_Others =>
                   exit;
                when others =>
