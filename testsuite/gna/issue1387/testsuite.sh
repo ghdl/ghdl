@@ -11,6 +11,8 @@ elab_simulate repro3
 
 analyze repro4.vhdl
 
+analyze repro5.vhdl
+
 clean
 
 echo "Test successful"
