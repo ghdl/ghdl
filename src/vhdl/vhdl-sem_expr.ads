@@ -70,6 +70,7 @@ package Vhdl.Sem_Expr is
    --  In VHDL87 and 93, type of COND must be a boolean.
    --  A check is made that COND can be read.
    function Sem_Condition (Cond : Iir) return Iir;
+   function Sem_Condition_Pass2 (Cond : Iir) return Iir;
 
    --  Insert a call to condition operator.
    function Insert_Condition_Operator (Cond : Iir) return Iir;

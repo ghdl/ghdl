@@ -19,6 +19,7 @@
 with Vhdl.Nodes; use Vhdl.Nodes;
 
 package Vhdl.Sem_Psl is
+   function Is_Psl_Boolean_Type (Atype : Iir) return Boolean;
    function Is_Psl_Bit_Type (Atype : Iir) return Boolean;
    function Is_Psl_Bitvector_Type (Atype : Iir) return Boolean;
 

@@ -114,6 +114,8 @@ package body Vhdl.Std_Package is
                         Wildcard_Psl_Bit_Type);
       Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
                         Wildcard_Psl_Bitvector_Type);
+      Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
+                        Wildcard_Psl_Boolean_Type);
    end Create_First_Nodes;
 
    procedure Create_Std_Standard_Package (Parent : Iir_Library_Declaration)

@@ -4952,7 +4952,8 @@ package body Vhdl.Sem_Expr is
                      return Wildcard_Psl_Bitvector_Type;
                   when Wildcard_Any_Access_Type
                      | Wildcard_Any_Integer_Type
-                     | Wildcard_Psl_Bit_Type =>
+                     | Wildcard_Psl_Bit_Type
+                     | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
                end case;
             when Wildcard_Any_String_Type =>
@@ -4965,7 +4966,8 @@ package body Vhdl.Sem_Expr is
                      return Wildcard_Psl_Bitvector_Type;
                   when Wildcard_Any_Access_Type
                      | Wildcard_Any_Integer_Type
-                     | Wildcard_Psl_Bit_Type =>
+                     | Wildcard_Psl_Bit_Type
+                     | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
                end case;
             when Wildcard_Any_Access_Type =>
@@ -4977,7 +4979,8 @@ package body Vhdl.Sem_Expr is
                      | Wildcard_Any_String_Type
                      | Wildcard_Any_Integer_Type
                      | Wildcard_Psl_Bit_Type
-                     | Wildcard_Psl_Bitvector_Type =>
+                     | Wildcard_Psl_Bitvector_Type
+                     | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
                end case;
             when Wildcard_Any_Integer_Type =>
@@ -4989,6 +4992,7 @@ package body Vhdl.Sem_Expr is
                      | Wildcard_Any_Aggregate_Type
                      | Wildcard_Any_String_Type
                      | Wildcard_Psl_Bit_Type
+                     | Wildcard_Psl_Boolean_Type
                      | Wildcard_Psl_Bitvector_Type =>
                      return Null_Iir;
                end case;
@@ -5001,7 +5005,8 @@ package body Vhdl.Sem_Expr is
                      | Wildcard_Any_Aggregate_Type
                      | Wildcard_Any_String_Type
                      | Wildcard_Any_Integer_Type
-                     | Wildcard_Psl_Bitvector_Type =>
+                     | Wildcard_Psl_Bitvector_Type
+                     | Wildcard_Psl_Boolean_Type =>
                      return Null_Iir;
                end case;
             when Wildcard_Psl_Bitvector_Type =>
@@ -5013,7 +5018,22 @@ package body Vhdl.Sem_Expr is
                      return Wildcard_Psl_Bitvector_Type;
                   when Wildcard_Any_Access_Type
                      | Wildcard_Any_Integer_Type
-                     | Wildcard_Psl_Bit_Type =>
+                     | Wildcard_Psl_Bit_Type
+                     | Wildcard_Psl_Boolean_Type =>
+                     return Null_Iir;
+               end case;
+            when Wildcard_Psl_Boolean_Type =>
+               case Iir_Wildcard_Types (Atype) is
+                  when Wildcard_Any_Type
+                     | Wildcard_Psl_Boolean_Type =>
+                     return Wildcard_Psl_Boolean_Type;
+                  when Wildcard_Psl_Bit_Type =>
+                     return Wildcard_Psl_Bit_Type;
+                  when Wildcard_Any_Access_Type
+                     | Wildcard_Any_Aggregate_Type
+                     | Wildcard_Any_String_Type
+                     | Wildcard_Any_Integer_Type
+                     | Wildcard_Psl_Bitvector_Type =>
                      return Null_Iir;
                end case;
          end case;
@@ -5048,6 +5068,10 @@ package body Vhdl.Sem_Expr is
                end if;
             when Wildcard_Psl_Bitvector_Type =>
                if Sem_Psl.Is_Psl_Bitvector_Type (Atype) then
+                  return Atype;
+               end if;
+            when Wildcard_Psl_Boolean_Type =>
+               if Sem_Psl.Is_Psl_Boolean_Type (Atype) then
                   return Atype;
                end if;
          end case;
@@ -5605,6 +5629,67 @@ package body Vhdl.Sem_Expr is
       return Res;
    end Insert_Condition_Operator;
 
+   function Sem_Condition_Pass2 (Cond : Iir) return Iir
+   is
+      Cond_Type : Iir;
+   begin
+      Cond_Type := Get_Type (Cond);
+      if Cond_Type = Null_Iir then
+         --  Error.
+         return Cond;
+      end if;
+
+      if not Is_Overload_List (Cond_Type) then
+         --  Only one result.  Operator "??" is not applied if the result
+         --  is of type boolean.
+         if Are_Types_Compatible (Cond_Type, Boolean_Type_Definition)
+           /= Not_Compatible
+         then
+            Check_Read (Cond);
+            return Cond;
+         end if;
+      else
+         --  Many interpretations.
+         declare
+            Res_List : constant Iir_List := Get_Overload_List (Cond_Type);
+            It : List_Iterator;
+            El : Iir;
+            Nbr_Booleans : Natural;
+            Res : Iir;
+         begin
+            Nbr_Booleans := 0;
+
+            --  Extract boolean interpretations.
+            It := List_Iterate (Res_List);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
+               if Are_Types_Compatible (El, Boolean_Type_Definition)
+                 /= Not_Compatible
+               then
+                  Nbr_Booleans := Nbr_Booleans + 1;
+               end if;
+               Next (It);
+            end loop;
+
+            if Nbr_Booleans >= 1 then
+               --  There is one or more boolean interpretations: keep them.
+               --  In case of multiple boolean interpretations, an error
+               --  message will be generated.
+               Res := Sem_Expression_Ov (Cond, Boolean_Type_Definition);
+               Check_Read (Res);
+               return Res;
+            end if;
+         end;
+      end if;
+
+      --  LRM08 9.2.9
+      --  Otherwise, the condition operator is implicitely applied, and the
+      --  type of the expresion with the implicit application shall be
+      --  BOOLEAN defined in package STANDARD.
+
+      return Insert_Condition_Operator (Cond);
+   end Sem_Condition_Pass2;
+
    function Sem_Condition (Cond : Iir) return Iir
    is
       Res : Iir;
@@ -5632,58 +5717,10 @@ package body Vhdl.Sem_Expr is
 
          if Res = Null_Iir then
             --  Error occurred.
-            return Res;
+            return Null_Iir;
          end if;
 
-         if not Is_Overloaded (Res) then
-            --  Only one result.  Operator "??" is not applied if the result
-            --  is of type boolean.
-            if Are_Types_Compatible (Get_Type (Res), Boolean_Type_Definition)
-              /= Not_Compatible
-            then
-               Check_Read (Res);
-               return Res;
-            end if;
-         elsif Get_Type (Res) /= Null_Iir then
-            --  Many interpretations.
-            declare
-               Res_List : constant Iir_List :=
-                 Get_Overload_List (Get_Type (Res));
-               It : List_Iterator;
-               El : Iir;
-               Nbr_Booleans : Natural;
-            begin
-               Nbr_Booleans := 0;
-
-               --  Extract boolean interpretations.
-               It := List_Iterate (Res_List);
-               while Is_Valid (It) loop
-                  El := Get_Element (It);
-                  if Are_Types_Compatible (El, Boolean_Type_Definition)
-                    /= Not_Compatible
-                  then
-                     Nbr_Booleans := Nbr_Booleans + 1;
-                  end if;
-                  Next (It);
-               end loop;
-
-               if Nbr_Booleans >= 1 then
-                  --  There is one or more boolean interpretations: keep them.
-                  --  In case of multiple boolean interpretations, an error
-                  --  message will be generated.
-                  Res := Sem_Expression_Ov (Cond, Boolean_Type_Definition);
-                  Check_Read (Res);
-                  return Res;
-               end if;
-            end;
-         end if;
-
-         --  LRM08 9.2.9
-         --  Otherwise, the condition operator is implicitely applied, and the
-         --  type of the expresion with the implicit application shall be
-         --  BOOLEAN defined in package STANDARD.
-
-         return Insert_Condition_Operator (Res);
+         return Sem_Condition_Pass2 (Res);
       end if;
    end Sem_Condition;
 

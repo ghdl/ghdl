@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Std_Names;
 with Errorout; use Errorout;
 
 with PSL.Types; use PSL.Types;
@@ -45,7 +44,7 @@ package body Vhdl.Sem_Psl is
 
    --  Return TRUE iff Atype is a PSL boolean type.
    --  See PSL1.1 5.1.2  Boolean expressions
-   function Is_Psl_Bool_Type (Atype : Iir) return Boolean
+   function Is_Psl_Boolean_Type (Atype : Iir) return Boolean
    is
       Btype : Iir;
    begin
@@ -56,13 +55,13 @@ package body Vhdl.Sem_Psl is
       return Btype = Vhdl.Std_Package.Boolean_Type_Definition
         or else Btype = Vhdl.Std_Package.Bit_Type_Definition
         or else Btype = Vhdl.Ieee.Std_Logic_1164.Std_Ulogic_Type;
-   end Is_Psl_Bool_Type;
+   end Is_Psl_Boolean_Type;
 
    --  Return TRUE if EXPR type is a PSL boolean type.
-   function Is_Psl_Bool_Expr (Expr : Iir) return Boolean is
+   function Is_Psl_Boolean_Expr (Expr : Iir) return Boolean is
    begin
-      return Is_Psl_Bool_Type (Get_Type (Expr));
-   end Is_Psl_Bool_Expr;
+      return Is_Psl_Boolean_Type (Get_Type (Expr));
+   end Is_Psl_Boolean_Expr;
 
    function Is_Psl_Bit_Type (Atype : Iir) return Boolean
    is
@@ -230,68 +229,67 @@ package body Vhdl.Sem_Psl is
    end Sem_Fell_Builtin;
 
    --  Convert VHDL and/or/not nodes to PSL nodes.
+   function Convert_Bool (Expr : Iir) return PSL_Node;
+
+   function Convert_Bool_Dyadic_Operator (Expr : Iir; Kind : PSL.Nodes.Nkind)
+                                         return PSL_Node
+   is
+      Left  : constant Iir := Get_Left (Expr);
+      Right : constant Iir := Get_Right (Expr);
+      N : PSL_Node;
+   begin
+      if Is_Psl_Boolean_Expr (Left)
+        and then Is_Psl_Boolean_Expr (Right)
+      then
+         N := Create_Node (Kind);
+         Set_Location (N, Get_Location (Expr));
+         Set_Left (N, Convert_Bool (Left));
+         Set_Right (N, Convert_Bool (Right));
+         Free_Iir (Expr);
+         return N;
+      else
+         return Null_PSL_Node;
+      end if;
+   end Convert_Bool_Dyadic_Operator;
+
+   function Convert_Bool_Monadic_Operator (Expr : Iir; Kind : PSL.Nodes.Nkind)
+                                          return PSL_Node
+   is
+      Operand : constant Iir := Get_Operand (Expr);
+      N : PSL_Node;
+   begin
+      if Is_Psl_Boolean_Expr (Operand) then
+         N := Create_Node (Kind);
+         Set_Location (N, Get_Location (Expr));
+         Set_Boolean (N, Convert_Bool (Operand));
+         Free_Iir (Expr);
+         return N;
+      else
+         return Null_PSL_Node;
+      end if;
+   end Convert_Bool_Monadic_Operator;
+
+   --  Convert VHDL and/or/not nodes to PSL nodes.
    function Convert_Bool (Expr : Iir) return PSL_Node
    is
-      use Std_Names;
-      Impl : Iir;
+      Res : PSL_Node;
    begin
       case Get_Kind (Expr) is
-         when Iir_Kinds_Dyadic_Operator =>
-            declare
-               Left : Iir;
-               Right : Iir;
-
-               function Build_Op (Kind : Nkind) return PSL_Node
-               is
-                  N : PSL_Node;
-               begin
-                  N := Create_Node (Kind);
-                  Set_Location (N, Get_Location (Expr));
-                  Set_Left (N, Convert_Bool (Left));
-                  Set_Right (N, Convert_Bool (Right));
-                  Free_Iir (Expr);
-                  return N;
-               end Build_Op;
-            begin
-               Impl := Get_Implementation (Expr);
-               Left := Get_Left (Expr);
-               Right := Get_Right (Expr);
-               if Impl /= Null_Iir
-                 and then Is_Psl_Bool_Expr (Left)
-                 and then Is_Psl_Bool_Expr (Right)
-               then
-                  if Get_Identifier (Impl) = Name_And then
-                     return Build_Op (N_And_Bool);
-                  elsif Get_Identifier (Impl) = Name_Or then
-                     return Build_Op (N_Or_Bool);
-                  end if;
-               end if;
-            end;
-         when Iir_Kinds_Monadic_Operator =>
-            declare
-               Operand : Iir;
-
-               function Build_Op (Kind : Nkind) return PSL_Node
-               is
-                  N : PSL_Node;
-               begin
-                  N := Create_Node (Kind);
-                  Set_Location (N, Get_Location (Expr));
-                  Set_Boolean (N, Convert_Bool (Operand));
-                  Free_Iir (Expr);
-                  return N;
-               end Build_Op;
-            begin
-               Impl := Get_Implementation (Expr);
-               Operand := Get_Operand (Expr);
-               if Impl /= Null_Iir
-                 and then Is_Psl_Bool_Expr (Operand)
-               then
-                  if Get_Identifier (Impl) = Name_Not then
-                     return Build_Op (N_Not_Bool);
-                  end if;
-               end if;
-            end;
+         when Iir_Kind_And_Operator =>
+            Res := Convert_Bool_Dyadic_Operator (Expr, N_And_Bool);
+            if Res /= Null_PSL_Node then
+               return Res;
+            end if;
+         when Iir_Kind_Or_Operator =>
+            Res := Convert_Bool_Dyadic_Operator (Expr, N_Or_Bool);
+            if Res /= Null_PSL_Node then
+               return Res;
+            end if;
+         when Iir_Kind_Not_Operator =>
+            Res := Convert_Bool_Monadic_Operator (Expr, N_Not_Bool);
+            if Res /= Null_PSL_Node then
+               return Res;
+            end if;
          when Iir_Kinds_Name =>
             --  Get the named entity for names in order to hash it.
             declare
@@ -325,6 +323,7 @@ package body Vhdl.Sem_Psl is
       use Sem_Names;
 
       Expr : Iir;
+      Expr_Type : Iir;
       Name : Iir;
       Decl : PSL_Node;
       Res : PSL_Node;
@@ -388,14 +387,18 @@ package body Vhdl.Sem_Psl is
                Expr := Name_To_Expression (Expr, Null_Iir);
          end case;
       else
-         Expr := Sem_Expr.Sem_Expression (Expr, Null_Iir);
+         Expr := Sem_Expr.Sem_Expression_Wildcard
+           (Expr, Std_Package.Wildcard_Psl_Boolean_Type);
       end if;
 
       if Expr = Null_Iir then
          return N;
       end if;
       Free_Node (N);
-      if not Is_Psl_Bool_Expr (Expr) then
+      Expr_Type := Get_Type (Expr);
+      if not Is_Overload_List (Expr_Type)
+        and then not  Is_Psl_Boolean_Type (Expr_Type)
+      then
          Error_Msg_Sem (+Expr, "type of expression must be boolean");
          return PSL.Hash.Get_PSL_Node (HDL_Node (Expr), Get_Location (Expr));
       else
@@ -842,15 +845,15 @@ package body Vhdl.Sem_Psl is
    begin
       Res := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
       Set_Location (Res, Get_Location (Stmt));
+
       Cond := Rewrite_As_Boolean_Expression (Get_Psl_Property (Stmt));
       if Get_Type (Cond) = Null_Iir then
          Cond := Sem_Expr.Sem_Condition (Cond);
-      elsif Get_Base_Type (Get_Type (Cond))
-        /= Vhdl.Std_Package.Boolean_Type_Definition
-      then
-         Cond := Sem_Expr.Insert_Condition_Operator (Cond);
+      else
+         Cond := Sem_Expr.Sem_Condition_Pass2 (Cond);
       end if;
       Cond := Eval_Expr_If_Static (Cond);
+
       Set_Assertion_Condition (Res, Cond);
       Set_Label (Res, Get_Label (Stmt));
       Set_Severity_Expression (Res, Get_Severity_Expression (Stmt));
