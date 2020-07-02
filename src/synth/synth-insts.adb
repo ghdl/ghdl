@@ -727,6 +727,7 @@ package body Synth.Insts is
       Port : Net;
    begin
       Port := Builders.Build_Port (Get_Build (Syn_Inst), Outp);
+      Set_Location (Port, Assoc);
 
       Iassoc := Get_Chain (Assoc);
       while Iassoc /= Null_Node
@@ -775,6 +776,7 @@ package body Synth.Insts is
 
       --  Create a port gate (so that is has a name).
       Port := Builders.Build_Port (Get_Build (Syn_Inst), Outp);
+      Set_Location (Port, Assoc);
       O := Create_Value_Net (Port, Formal_Typ);
       --  Assign the port output to the actual (a net).
       Synth_Assignment (Syn_Inst, Actual, O, Assoc);
