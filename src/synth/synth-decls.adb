@@ -902,6 +902,11 @@ package body Synth.Decls is
       Init : Valtyp;
       Obj_Typ : Type_Acc;
    begin
+      if Get_Kind (Get_Parent (Decl)) = Iir_Kind_Package_Declaration then
+         Error_Msg_Synth (+Decl, "signals in packages are not supported");
+         return;
+      end if;
+
       Synth_Declaration_Type (Syn_Inst, Decl);
       Create_Wire_Object (Syn_Inst, Wire_Signal, Decl);
       if Is_Valid (Def) then
