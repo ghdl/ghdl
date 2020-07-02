@@ -1811,18 +1811,80 @@ package body Vhdl.Sem_Expr is
       return True;
    end Sem_Operator_Operands;
 
+   --  Return the compatibility level between operation EXPR (either monadic
+   --  or dyadic) and operator DECL (also monadic or dyadic).
+   --  RES_TYPE is the expected expression type, which can be NULL_IIR.
+   --  Note: even if the result is fully_compatible, at the end the
+   --  compatibility could be via_conversion if the result has be to be
+   --  converted.
+   function Sem_Operator_Compatibility
+     (Decl : Iir; Expr : Iir; Is_Dyadic : Boolean; Res_Type : Iir)
+     return Compatibility_Level
+   is
+      Left_Inter, Right_Inter : Iir;
+      Res, Level : Compatibility_Level;
+   begin
+      --  Check return type.
+      if Res_Type /= Null_Iir then
+         Res := Are_Types_Compatible (Res_Type, Get_Return_Type (Decl));
+         if Res = Not_Compatible then
+            return Not_Compatible;
+         end if;
+      else
+         Res := Fully_Compatible;
+      end if;
+
+      Left_Inter := Get_Interface_Declaration_Chain (Decl);
+      Right_Inter := Get_Chain (Left_Inter);
+
+      --  Operator can be either monadic or dyadic.
+      pragma Assert (Right_Inter = Null_Iir
+                       or else Get_Chain (Right_Inter) = Null_Iir);
+
+      --  Check arity.
+
+      --  LRM93 2.5.2 Operator overloading
+      --  The subprogram specification of a unary operator must have
+      --  a single parameter [...]
+      --  The subprogram specification of a binary operator must have
+      --  two parameters [...]
+      --
+      --  GHDL: So even in presence of default expression in a parameter,
+      --  a unary operation has to match with a binary operator.
+      if (Right_Inter /= Null_Iir) /= Is_Dyadic then
+         return Not_Compatible;
+      end if;
+
+      -- Check operands.
+      Level := Is_Expr_Compatible (Get_Type (Left_Inter), Get_Left (Expr));
+      if Level = Not_Compatible then
+         return Not_Compatible;
+      end if;
+      Res := Compatibility_Level'Min (Res, Level);
+
+      if Is_Dyadic then
+         Level := Is_Expr_Compatible (Get_Type (Right_Inter),
+                                      Get_Right (Expr));
+         if Level = Not_Compatible then
+            return Not_Compatible;
+         end if;
+         Res := Compatibility_Level'Min (Res, Level);
+      end if;
+
+      return Res;
+   end Sem_Operator_Compatibility;
+
    function Sem_Operator_Pass1 (Expr : Iir; Res_Type : Iir) return Iir
    is
       Is_Dyadic : constant Boolean :=
         Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator;
       Operator : constant Name_Id := Utils.Get_Operator_Name (Expr);
       Interpretation : Name_Interpretation_Type;
+      Level : Compatibility_Level;
       Decl : Iir;
       Overload_List : Iir_List;
       Res_Type_List : Iir;
       It : List_Iterator;
-
-      Interfaces : Iir;
    begin
       --  First pass.
       --  Analyze operands.
@@ -1846,53 +1908,16 @@ package body Vhdl.Sem_Expr is
          --  [...] or all visible declarations denote the same named entity.
          --
          --  GHDL: If DECL has already been seen, then skip it.
-         if Get_Seen_Flag (Decl) then
-            goto Continue;
+         if not Get_Seen_Flag (Decl) then
+            Level := Sem_Operator_Compatibility
+              (Decl, Expr, Is_Dyadic, Res_Type);
+            if Level /= Not_Compatible then
+               --  Match.
+               Set_Seen_Flag (Decl, True);
+               Append_Element (Overload_List, Decl);
+            end if;
          end if;
 
-         --  Check return type.
-         if Res_Type /= Null_Iir
-           and then (Are_Types_Compatible (Res_Type, Get_Return_Type (Decl))
-                       = Not_Compatible)
-         then
-            goto Continue;
-         end if;
-
-         Interfaces := Get_Interface_Declaration_Chain (Decl);
-
-         --  Check arity.
-
-         --  LRM93 2.5.2 Operator overloading
-         --  The subprogram specification of a unary operator must have
-         --  a single parameter [...]
-         --  The subprogram specification of a binary operator must have
-         --  two parameters [...]
-         --
-         --  GHDL: So even in presence of default expression in a parameter,
-         --  a unary operation has to match with a binary operator.
-         if Get_Chain_Length (Interfaces) /= 1 + Boolean'Pos (Is_Dyadic) then
-            goto Continue;
-         end if;
-
-         -- Check operands.
-         if Is_Expr_Compatible (Get_Type (Interfaces), Get_Left (Expr))
-           = Not_Compatible
-         then
-            goto Continue;
-         end if;
-         if Is_Dyadic
-           and then (Is_Expr_Compatible (Get_Type (Get_Chain (Interfaces)),
-                                         Get_Right (Expr))
-                       = Not_Compatible)
-         then
-            goto Continue;
-         end if;
-
-         --  Match.
-         Set_Seen_Flag (Decl, True);
-         Append_Element (Overload_List, Decl);
-
-         << Continue >> null;
          Interpretation := Get_Next_Interpretation (Interpretation);
       end loop;
 
