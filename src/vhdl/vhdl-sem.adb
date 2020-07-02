@@ -1611,6 +1611,16 @@ package body Vhdl.Sem is
            | Iir_Kind_Ascending_Type_Attribute =>
             return Are_Trees_Equal (Get_Prefix (Left), Get_Prefix (Right));
 
+         when Iir_Kind_Length_Array_Attribute
+            | Iir_Kind_Left_Array_Attribute
+            | Iir_Kind_Right_Array_Attribute
+            | Iir_Kind_Low_Array_Attribute
+            | Iir_Kind_High_Array_Attribute
+            | Iir_Kind_Ascending_Array_Attribute =>
+            return Are_Trees_Equal (Get_Prefix (Left), Get_Prefix (Right))
+              and then
+              Are_Trees_Equal (Get_Parameter (Left), Get_Parameter (Right));
+
          when Iir_Kind_String_Literal8 =>
             if Get_Bit_String_Base (Left) /= Get_Bit_String_Base (Right) then
                return False;
