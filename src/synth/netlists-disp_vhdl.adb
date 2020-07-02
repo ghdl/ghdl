@@ -1562,7 +1562,7 @@ package body Netlists.Disp_Vhdl is
          when Port_Out =>
             Put ("out");
          when Port_Inout =>
-            raise Internal_Error;
+            Put ("inout");
       end case;
       Put (' ');
       Put_Type (Desc.W);
@@ -1571,13 +1571,19 @@ package body Netlists.Disp_Vhdl is
    procedure Disp_Entity_Ports (M : Module)
    is
       First : Boolean;
+      Desc : Port_Desc;
    begin
       First := True;
       for I in 1 .. Get_Nbr_Inputs (M) loop
          Disp_Entity_Port (Get_Input_Desc (M, I - 1), Port_In, First);
       end loop;
       for I in 1 .. Get_Nbr_Outputs (M) loop
-         Disp_Entity_Port (Get_Output_Desc (M, I - 1), Port_Out, First);
+         Desc := Get_Output_Desc (M, I - 1);
+         if Desc.Is_Inout then
+            Disp_Entity_Port (Desc, Port_Inout, First);
+         else
+            Disp_Entity_Port (Desc, Port_Out, First);
+         end if;
       end loop;
       if not First then
          Put_Line (");");
