@@ -658,9 +658,22 @@ package body Synth.Environment is
       return True;
    end Is_Finalize_Assignment_Multiport;
 
-   function Is_Tribuf_Assignment (Prev, Next : Conc_Assign) return Boolean
+   function Is_Tribuf_Net (N : Net) return Boolean
    is
       use Netlists.Gates;
+   begin
+      case Get_Id (Get_Net_Parent (N)) is
+         when Id_Tri
+           | Id_Resolver
+           | Id_Port =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Tribuf_Net;
+
+   function Is_Tribuf_Assignment (Prev, Next : Conc_Assign) return Boolean
+   is
       P_Val : Net;
       N_Val : Net;
    begin
@@ -675,22 +688,8 @@ package body Synth.Environment is
       end if;
 
       --  Both assignments must be a tri or a resolver.
-      case Get_Id (Get_Net_Parent (P_Val)) is
-         when Id_Tri
-           | Id_Resolver =>
-            null;
-         when others =>
-            return False;
-      end case;
-      case Get_Id (Get_Net_Parent (N_Val)) is
-         when Id_Tri
-           | Id_Resolver =>
-            null;
-         when others =>
-            return False;
-      end case;
-
-      return True;
+      return Is_Tribuf_Net (P_Val)
+        and then Is_Tribuf_Net (N_Val);
    end Is_Tribuf_Assignment;
 
    --  Compute the VALUE to be assigned to WIRE_REC.  Handle partial
