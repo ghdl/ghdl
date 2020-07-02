@@ -2005,33 +2005,66 @@ package body Vhdl.Sem_Expr is
    function Sem_Operator_Pass2_Interpretation
      (Expr : Iir; Res_Type : Iir) return Iir
    is
+      Is_Dyadic : constant Boolean :=
+        Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator;
       Decl : Iir;
       Overload : Iir;
       Overload_List : Iir_List;
       Full_Compat : Iir;
+      Conv_Compat : Iir;
       It : List_Iterator;
+      Level : Compatibility_Level;
    begin
       --  Second pass
       --  Find the uniq implementation for this call.
       Overload := Get_Implementation (Expr);
       Overload_List := Get_Overload_List (Overload);
+
       Full_Compat := Null_Iir;
+      Conv_Compat := Null_Iir;
+
       It := List_Iterate (Overload_List);
       while Is_Valid (It) loop
          Decl := Get_Element (It);
-         --  FIXME: wrong: compatibilty with return type and args.
-         if Are_Types_Compatible (Get_Return_Type (Decl), Res_Type)
-           /= Not_Compatible
-         then
-            if Full_Compat /= Null_Iir then
-               Error_Operator_Overload (Expr, Overload_List);
-               return Null_Iir;
-            else
-               Full_Compat := Decl;
-            end if;
-         end if;
+         Level := Sem_Operator_Compatibility (Decl, Expr, Is_Dyadic, Res_Type);
+         case Level is
+            when Not_Compatible =>
+               --  Ignored
+               null;
+            when Fully_Compatible =>
+               if Full_Compat = Null_Iir then
+                  Full_Compat := Decl;
+               else
+                  --  There are several fully compatible functions.
+                  --  TODO: remove non-fully compatible functions from the list
+                  --   before displaying the list.
+                  Error_Operator_Overload (Expr, Overload_List);
+                  return Null_Iir;
+               end if;
+            when Via_Conversion =>
+               if Conv_Compat = Null_Iir then
+                  Conv_Compat := Decl;
+               else
+                  --  Not yet an error, as there can be one fully compatible
+                  --  function.
+                  Conv_Compat := Overload;
+               end if;
+         end case;
          Next (It);
       end loop;
+
+      if Full_Compat = Null_Iir then
+         if Conv_Compat = Overload then
+            --  Several results through implicit conversion.
+            --  TODO: remove incompatible declarations from the list before
+            --   displaying it.
+            Error_Operator_Overload (Expr, Overload_List);
+            return Null_Iir;
+         else
+            Full_Compat := Conv_Compat;
+         end if;
+      end if;
+
       Free_Iir (Overload);
       Overload := Get_Type (Expr);
       Free_Overload_List (Overload);
@@ -2041,7 +2074,6 @@ package body Vhdl.Sem_Expr is
                         "no matching function declarations for %n", +Expr);
          return Null_Iir;
       else
-         Destroy_Iir_List (Overload_List);
          return Full_Compat;
       end if;
    end Sem_Operator_Pass2_Interpretation;
