@@ -1,5 +1,6 @@
 package repro1_pkg is
   signal s : bit;
+  constant cst : natural := 5;
 end;
 
 use work.repro1_pkg.all;
