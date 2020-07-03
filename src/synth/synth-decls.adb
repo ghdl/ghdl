@@ -902,12 +902,14 @@ package body Synth.Decls is
       Init : Valtyp;
       Obj_Typ : Type_Acc;
    begin
+      Synth_Declaration_Type (Syn_Inst, Decl);
       if Get_Kind (Get_Parent (Decl)) = Iir_Kind_Package_Declaration then
          Error_Msg_Synth (+Decl, "signals in packages are not supported");
+         --  Avoid elaboration error.
+         Create_Object (Syn_Inst, Decl, No_Valtyp);
          return;
       end if;
 
-      Synth_Declaration_Type (Syn_Inst, Decl);
       Create_Wire_Object (Syn_Inst, Wire_Signal, Decl);
       if Is_Valid (Def) then
          Obj_Typ := Get_Subtype_Object (Syn_Inst, Get_Type (Decl));
