@@ -546,6 +546,9 @@ package body Vhdl.Configuration is
       Parent : Iir;
    begin
       Parent := Strip_Denoting_Name (Inst);
+      if Is_Error (Parent) then
+         return False;
+      end if;
       loop
          Parent := Get_Parent (Parent);
          if Get_Kind (Parent) = Iir_Kind_Library_Declaration then
