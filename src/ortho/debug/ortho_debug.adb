@@ -268,7 +268,9 @@ package body Ortho_Debug is
       then
          return;
       end if;
-      raise Type_Error;
+      if not Disable_Checks then
+         raise Type_Error;
+      end if;
    end Check_Type;
 
    procedure Check_Ref (N : O_Enode) is
