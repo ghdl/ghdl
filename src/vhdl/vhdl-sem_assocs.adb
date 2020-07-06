@@ -1059,11 +1059,13 @@ package body Vhdl.Sem_Assocs is
          declare
             Inter : constant Iir :=
               Get_Interface_Of_Formal (Get_Formal (Assoc));
-            Ntype : Iir;
-            Nel_List : Iir_Flist;
-            Nrec_El : Iir;
+            Ntype       : Iir;
+            Nel_List    : Iir_Flist;
+            Nrec_El     : Iir;
             Rec_El_Type : Iir;
-            Staticness : Iir_Staticness;
+            Staticness  : Iir_Staticness;
+            Assoc_Expr  : Iir;
+            Assoc_Type  : Iir;
          begin
             Ntype := Create_Iir (Iir_Kind_Record_Subtype_Definition);
             Location_Copy (Ntype, Assoc);
@@ -1101,8 +1103,15 @@ package body Vhdl.Sem_Assocs is
                   Set_Identifier (Nrec_El, Get_Identifier (Rec_El));
                   pragma Assert (I = Natural (Get_Element_Position (Rec_El)));
                   Set_Element_Position (Nrec_El, Iir_Index32 (I));
-                  Ch := Get_Associated_Expr (Ch);
-                  Set_Type (Nrec_El, Get_Type (Get_Actual (Ch)));
+                  Assoc_Expr := Get_Associated_Expr (Ch);
+                  if (Get_Kind (Assoc_Expr)
+                      = Iir_Kind_Association_Element_By_Individual)
+                  then
+                     Assoc_Type := Get_Actual_Type (Assoc_Expr);
+                  else
+                     Assoc_Type := Get_Type (Get_Actual (Assoc_Expr));
+                  end if;
+                  Set_Type (Nrec_El, Assoc_Type);
                   Append_Owned_Element_Constraint (Ntype, Nrec_El);
                end if;
                Staticness := Min (Staticness,
@@ -1187,7 +1196,7 @@ package body Vhdl.Sem_Assocs is
       Atype : Iir;
    begin
       --  Guard.
-      if Assoc = Null_Iir or else Get_Choice_Staticness (Assoc) /= Locally then
+      if Get_Choice_Staticness (Assoc) /= Locally then
          return;
       end if;
 
@@ -1239,7 +1248,9 @@ package body Vhdl.Sem_Assocs is
          if Formal = Null_Iir or else Formal /= Cur_Iface then
             --  New formal name, analyze the current individual association
             --  (if any).
-            Finish_Individual_Association (Iassoc);
+            if Iassoc /= Null_Iir then
+               Finish_Individual_Association (Iassoc);
+            end if;
             Cur_Iface := Formal;
             Iassoc := Null_Iir;
          end if;
@@ -1273,7 +1284,9 @@ package body Vhdl.Sem_Assocs is
          Assoc := Get_Chain (Assoc);
       end loop;
       --  There is maybe a remaining iassoc.
-      Finish_Individual_Association (Iassoc);
+      if Iassoc /= Null_Iir then
+         Finish_Individual_Association (Iassoc);
+      end if;
    end Sem_Individual_Association;
 
    function Is_Conversion_Function (Assoc_Chain : Iir) return Boolean is
