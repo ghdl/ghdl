@@ -292,22 +292,19 @@ package body Synth.Static_Oper is
 
          when Iir_Predefined_Array_Array_Concat =>
             declare
-               Ret_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Return_Type (Imp));
                L_Len : constant Iir_Index32 :=
                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1));
                R_Len : constant Iir_Index32 :=
                  Iir_Index32 (Get_Bound_Length (Right.Typ, 1));
                Bnd : Bound_Type;
-               Res_Typ : Type_Acc;
+               Res_St : Type_Acc;
                Res : Memtyp;
             begin
                Bnd := Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0),
                   L_Len + R_Len);
-               Res_Typ := Create_Onedimensional_Array_Subtype
-                 (Ret_Typ, Bnd);
-               Res := Create_Memory (Res_Typ);
+               Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
+               Res := Create_Memory (Res_St);
                if Left.Typ.Sz > 0 then
                   Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
                end if;
@@ -318,19 +315,16 @@ package body Synth.Static_Oper is
             end;
          when Iir_Predefined_Element_Array_Concat =>
             declare
-               Ret_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Return_Type (Imp));
                Rlen : constant Iir_Index32 :=
                  Get_Array_Flat_Length (Right.Typ);
                Bnd : Bound_Type;
-               Res_Typ : Type_Acc;
+               Res_St : Type_Acc;
                Res : Memtyp;
             begin
                Bnd := Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 1 + Rlen);
-               Res_Typ := Create_Onedimensional_Array_Subtype
-                 (Ret_Typ, Bnd);
-               Res := Create_Memory (Res_Typ);
+               Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
+               Res := Create_Memory (Res_St);
                Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
                Copy_Memory (Res.Mem + Left.Typ.Sz,
                             Right.Mem, Right.Typ.Sz);
@@ -338,18 +332,15 @@ package body Synth.Static_Oper is
             end;
          when Iir_Predefined_Array_Element_Concat =>
             declare
-               Ret_Typ : constant Type_Acc :=
-                 Get_Subtype_Object (Syn_Inst, Get_Return_Type (Imp));
                Llen : constant Iir_Index32 := Get_Array_Flat_Length (Left.Typ);
                Bnd : Bound_Type;
-               Res_Typ : Type_Acc;
+               Res_St : Type_Acc;
                Res : Memtyp;
             begin
                Bnd := Oper.Create_Bounds_From_Length
                  (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), Llen + 1);
-               Res_Typ := Create_Onedimensional_Array_Subtype
-                 (Ret_Typ, Bnd);
-               Res := Create_Memory (Res_Typ);
+               Res_St := Create_Onedimensional_Array_Subtype (Res_Typ, Bnd);
+               Res := Create_Memory (Res_St);
                Copy_Memory (Res.Mem, Left.Mem, Left.Typ.Sz);
                Copy_Memory (Res.Mem + Left.Typ.Sz,
                             Right.Mem, Right.Typ.Sz);
