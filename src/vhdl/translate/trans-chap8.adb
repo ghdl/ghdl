@@ -977,6 +977,7 @@ package body Trans.Chap8 is
                         Sub_Aggr := Chap3.Slice_Base
                           (Chap3.Get_Composite_Base (Val),
                            Sub_Type, New_Obj_Value (Index));
+                        Stabilize (Sub_Aggr);
                      end if;
                      Translate_Variable_Aggregate_Assignment
                        (Expr, Sub_Type, Sub_Aggr);
