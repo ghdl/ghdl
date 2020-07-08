@@ -244,11 +244,13 @@ package body Vhdl.Sem_Decls is
          A_Type := Sem_Subtype_Indication (A_Type);
          Set_Subtype_Indication (Inter, A_Type);
          A_Type := Get_Type_Of_Subtype_Indication (A_Type);
+         Set_Type (Inter, A_Type);
 
          Default_Value := Get_Default_Value (Inter);
          if Default_Value /= Null_Iir and then not Is_Error (A_Type) then
             Deferred_Constant_Allowed := True;
-            Default_Value := Sem_Expression (Default_Value, A_Type);
+            Default_Value := Sem_Expression_Wildcard
+              (Default_Value, A_Type, Is_Object_Fully_Constrained (Inter));
             Default_Value :=
               Eval_Expr_Check_If_Static (Default_Value, A_Type);
             Deferred_Constant_Allowed := False;
@@ -935,10 +937,12 @@ package body Vhdl.Sem_Decls is
          if Atype = Null_Iir then
             Atype := Create_Error_Type (Get_Type (Decl));
          end if;
+         Set_Type (Decl, Atype);
 
          Default_Value := Get_Default_Value (Decl);
          if Default_Value /= Null_Iir then
-            Default_Value := Sem_Expression (Default_Value, Atype);
+            Default_Value := Sem_Expression_Wildcard
+              (Default_Value, Atype, Is_Object_Fully_Constrained (Decl));
             if Default_Value = Null_Iir then
                Default_Value :=
                  Create_Error_Expr (Get_Default_Value (Decl), Atype);
@@ -954,9 +958,9 @@ package body Vhdl.Sem_Decls is
             Set_Is_Ref (Decl, True);
          end if;
          Atype := Get_Type (Last_Decl);
+         Set_Type (Decl, Atype);
       end if;
 
-      Set_Type (Decl, Atype);
       Set_Default_Value (Decl, Default_Value);
       Set_Name_Staticness (Decl, Locally);
       Set_Visible_Flag (Decl, True);

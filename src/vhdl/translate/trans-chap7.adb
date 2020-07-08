@@ -3702,7 +3702,8 @@ package body Trans.Chap7 is
 
    function Translate_Allocator_By_Expression (Expr : Iir) return O_Enode
    is
-      A_Type : constant Iir := Get_Type (Expr);
+      --  TODO: the constraint from an access subtype is ignored.
+      A_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
       A_Info : constant Type_Info_Acc := Get_Info (A_Type);
       D_Type : constant Iir := Get_Designated_Type (A_Type);
       D_Info : constant Type_Info_Acc := Get_Info (D_Type);

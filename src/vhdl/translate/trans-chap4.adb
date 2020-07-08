@@ -448,6 +448,49 @@ package body Trans.Chap4 is
       end case;
    end Init_Object;
 
+   --  Return True iff subtype indication of DECL is a subtype attribute.
+   function Is_Object_Subtype_Attribute (Decl : Iir) return Boolean
+   is
+      Ind : constant Iir := Get_Subtype_Indication (Decl);
+   begin
+      return Ind /= Null_Iir
+        and then Get_Kind (Ind) = Iir_Kind_Subtype_Attribute;
+   end Is_Object_Subtype_Attribute;
+
+   procedure Elab_Subtype_Attribute
+     (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode)
+   is
+      Ind : constant Iir := Get_Subtype_Indication (Decl);
+      Name : Mnode;
+      Bnd : Mnode;
+   begin
+      Name := Chap6.Translate_Name (Get_Prefix (Ind), Mode_Value);
+      Bnd := Chap3.Get_Composite_Bounds (Name);
+
+      if Name_Sig /= Mnode_Null then
+         Stabilize (Bnd);
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Name_Sig)),
+                          M2Addr (Bnd));
+      end if;
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Name_Val)),
+                       M2Addr (Bnd));
+   end Elab_Subtype_Attribute;
+
+   procedure Elab_Maybe_Subtype_Attribute
+     (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode) is
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Anonymous_Signal_Declaration =>
+            return;
+         when others =>
+            if not Is_Object_Subtype_Attribute (Decl) then
+               return;
+            end if;
+      end case;
+
+      Elab_Subtype_Attribute (Decl, Name_Val, Name_Sig);
+   end Elab_Maybe_Subtype_Attribute;
+
    --  If SIZE is larger than the threshold, call __ghdl_check_stack_allocation
    --  to raise an error if the size is too large.  There are two threshold:
    --  one set at compile time (Check_Stack_Allocation_Threshold) and one set
@@ -498,9 +541,25 @@ package body Trans.Chap4 is
          when Iir_Kind_Attribute_Value =>
             null;
          when others =>
-            Chap3.Elab_Object_Subtype_Indication (Obj);
+            if Is_Object_Subtype_Attribute (Obj) then
+               Type_Info := Get_Info (Obj_Type);
+               if Type_Info.Type_Mode in Type_Mode_Unbounded then
+                  --  Copy bounds and allocate base.
+                  Name_Node :=
+                    Get_Var (Obj_Info.Object_Var, Type_Info, Mode_Value);
+                  Stabilize (Name_Node);
+                  Elab_Maybe_Subtype_Attribute (Obj, Name_Node, Mnode_Null);
+                  Alloc_Kind := Get_Alloc_Kind_For_Var (Obj_Info.Object_Var);
+                  Chap3.Allocate_Unbounded_Composite_Base
+                    (Alloc_Kind, Name_Node, Get_Base_Type (Obj_Type));
+               return;
+               end if;
+            else
+               Chap3.Elab_Object_Subtype_Indication (Obj);
+            end if;
       end case;
 
+      --  Now the subtype is elaborated, its info is defined.
       Type_Info := Get_Info (Obj_Type);
 
       --  FIXME: the object type may be a fat array!
@@ -549,7 +608,9 @@ package body Trans.Chap4 is
          Init_Object (Name, Obj_Type);
          Close_Temp;
       elsif Get_Kind (Value) = Iir_Kind_Aggregate then
-         if Type_Info.Type_Mode in Type_Mode_Unbounded then
+         if Type_Info.Type_Mode in Type_Mode_Unbounded
+           and then not Is_Object_Subtype_Attribute (Obj)
+         then
             --  Allocate.
             declare
                Aggr_Type : constant Iir := Get_Type (Value);
@@ -1066,37 +1127,6 @@ package body Trans.Chap4 is
       Prepare_Data_Record => Elab_Signal_Prepare_Composite,
       Update_Data_Record => Elab_Signal_Update_Record,
       Finish_Data_Record => Elab_Signal_Finish_Composite);
-
-   procedure Elab_Maybe_Subtype_Attribute
-     (Decl : Iir; Name_Val : Mnode; Name_Sig : Mnode)
-   is
-      Ind : Iir;
-      Name : Mnode;
-      Bnd : Mnode;
-   begin
-      case Get_Kind (Decl) is
-         when Iir_Kind_Anonymous_Signal_Declaration =>
-            return;
-         when others =>
-            Ind := Get_Subtype_Indication (Decl);
-            if Ind = Null_Iir
-              or else Get_Kind (Ind) /= Iir_Kind_Subtype_Attribute
-            then
-               return;
-            end if;
-      end case;
-
-      Name := Chap6.Translate_Name (Get_Prefix (Ind), Mode_Value);
-      Bnd := Chap3.Get_Composite_Bounds (Name);
-
-      if Name_Sig /= Mnode_Null then
-         Stabilize (Bnd);
-         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Name_Sig)),
-                          M2Addr (Bnd));
-      end if;
-      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Name_Val)),
-                       M2Addr (Bnd));
-   end Elab_Maybe_Subtype_Attribute;
 
    --  Elaborate signal subtypes and allocate the storage for the object.
    procedure Elab_Signal_Declaration_Storage (Decl : Iir; Has_Copy : Boolean)

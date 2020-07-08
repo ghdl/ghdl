@@ -652,6 +652,8 @@ package body Trans.Chap5 is
             declare
                Actual_Type : constant Iir := Get_Actual_Type (Assoc);
             begin
+               Chap3.Translate_Anonymous_Subtype_Definition
+                 (Actual_Type, False);
                Chap3.Create_Composite_Subtype (Actual_Type);
                Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
             end;

@@ -259,8 +259,7 @@ package Vhdl.Sem_Expr is
    --  If EXPR is partially or fully analyzed, ATYPE must not be null_iir and
    --  it is checked with the types of EXPR.  EXPR may become fully analyzed.
    function Sem_Expression_Wildcard
-     (Expr : Iir; Atype : Iir; Force_Constrained : Boolean := False)
-     return Iir;
+     (Expr : Iir; Atype : Iir; Constrained : Boolean := False) return Iir;
 
    --  To be used after Sem_Expression_Wildcard to update list ATYPE of
    --  possible types.

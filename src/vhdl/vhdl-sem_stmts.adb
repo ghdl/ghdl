@@ -494,6 +494,7 @@ package body Vhdl.Sem_Stmts is
    --  Analyze a waveform_list WAVEFORM_LIST that is assigned via statement
    --  ASSIGN_STMT to a subelement or a slice of a signal SIGNAL_DECL.
    procedure Sem_Waveform_Chain (Waveform_Chain : Iir_Waveform_Element;
+                                 Constrained : Boolean;
                                  Waveform_Type : in out Iir)
    is
       Expr: Iir;
@@ -515,7 +516,8 @@ package body Vhdl.Sem_Stmts is
             --  sem_check_waveform_list.
             null;
          else
-            Expr := Sem_Expression_Wildcard (Expr, Waveform_Type, True);
+            Expr := Sem_Expression_Wildcard
+              (Expr, Waveform_Type, Constrained);
 
             if Expr /= Null_Iir then
                if Is_Expr_Fully_Analyzed (Expr) then
@@ -729,25 +731,33 @@ package body Vhdl.Sem_Stmts is
 
    procedure Sem_Signal_Assignment (Stmt: Iir)
    is
-      Cond_Wf : Iir_Conditional_Waveform;
-      Wf_Chain : Iir_Waveform_Element;
+      Cond_Wf     : Iir_Conditional_Waveform;
+      Wf_Chain    : Iir_Waveform_Element;
+      Target      : Iir;
       Target_Type : Iir;
-      Done : Boolean;
+      Done        : Boolean;
+      Constrained : Boolean;
    begin
       Target_Type := Wildcard_Any_Type;
+      Constrained := True;
 
       Done := False;
       for S in Resolve_Stages loop
          Sem_Signal_Assignment_Target_And_Option (Stmt, Target_Type);
          if Is_Defined_Type (Target_Type) then
             Done := True;
+            Target := Get_Target (Stmt);
+            Constrained := Get_Kind (Target) /= Iir_Kind_Aggregate
+              and then Is_Object_Name_Fully_Constrained (Target);
+         else
+            Constrained := False;
          end if;
 
          case Get_Kind (Stmt) is
             when Iir_Kind_Concurrent_Simple_Signal_Assignment
               | Iir_Kind_Simple_Signal_Assignment_Statement =>
                Wf_Chain := Get_Waveform_Chain (Stmt);
-               Sem_Waveform_Chain (Wf_Chain, Target_Type);
+               Sem_Waveform_Chain (Wf_Chain, Constrained, Target_Type);
                if Done then
                   Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
                end if;
@@ -757,7 +767,7 @@ package body Vhdl.Sem_Stmts is
                Cond_Wf := Get_Conditional_Waveform_Chain (Stmt);
                while Cond_Wf /= Null_Iir loop
                   Wf_Chain := Get_Waveform_Chain (Cond_Wf);
-                  Sem_Waveform_Chain (Wf_Chain, Target_Type);
+                  Sem_Waveform_Chain (Wf_Chain, Constrained, Target_Type);
                   if Done then
                      Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
                   end if;
@@ -777,7 +787,8 @@ package body Vhdl.Sem_Stmts is
                      Wf_Chain := Get_Associated_Chain (El);
                      if Is_Valid (Wf_Chain) then
                         --  The first choice of a list.
-                        Sem_Waveform_Chain (Wf_Chain, Target_Type);
+                        Sem_Waveform_Chain
+                          (Wf_Chain, Constrained, Target_Type);
                         if Done then
                            Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
                         end if;
@@ -807,7 +818,7 @@ package body Vhdl.Sem_Stmts is
    end Sem_Signal_Assignment;
 
    procedure Sem_Conditional_Expression_Chain
-     (Cond_Expr : Iir; Atype : in out Iir)
+     (Cond_Expr : Iir; Atype : in out Iir; Constrained : Boolean)
    is
       El : Iir;
       Expr : Iir;
@@ -816,7 +827,7 @@ package body Vhdl.Sem_Stmts is
       El := Cond_Expr;
       while El /= Null_Iir loop
          Expr := Get_Expression (El);
-         Expr := Sem_Expression_Wildcard (Expr, Atype, True);
+         Expr := Sem_Expression_Wildcard (Expr, Atype, Constrained);
 
          if Expr /= Null_Iir then
             Set_Expression (El, Expr);
@@ -844,10 +855,11 @@ package body Vhdl.Sem_Stmts is
    procedure Sem_Variable_Assignment (Stmt: Iir)
    is
       Target : Iir;
-      Expr : Iir;
+      Expr   : Iir;
       Target_Type : Iir;
-      Stmt_Type : Iir;
-      Done : Boolean;
+      Stmt_Type   : Iir;
+      Done        : Boolean;
+      Constrained : Boolean;
    begin
       --  LRM93 8.5 Variable assignment statement
       --  If the target of the variable assignment statement is in the form of
@@ -868,11 +880,18 @@ package body Vhdl.Sem_Stmts is
          Target := Sem_Expression_Wildcard (Target, Stmt_Type);
          if Target = Null_Iir then
             Target_Type := Stmt_Type;
+            --  To avoid spurious errors, assume the target is fully
+            --  constrained.
+            Constrained := True;
          else
             Set_Target (Stmt, Target);
             if Is_Expr_Fully_Analyzed (Target) then
                Check_Target (Stmt, Target);
                Done := True;
+               Constrained := Get_Kind (Target) /= Iir_Kind_Aggregate
+                 and then Is_Object_Name_Fully_Constrained (Target);
+            else
+               Constrained := False;
             end if;
             Target_Type := Get_Type (Target);
             Stmt_Type := Target_Type;
@@ -881,7 +900,8 @@ package body Vhdl.Sem_Stmts is
          case Iir_Kinds_Variable_Assignment_Statement (Get_Kind (Stmt)) is
             when Iir_Kind_Variable_Assignment_Statement =>
                Expr := Get_Expression (Stmt);
-               Expr := Sem_Expression_Wildcard (Expr, Stmt_Type, True);
+               Expr := Sem_Expression_Wildcard
+                 (Expr, Stmt_Type, Constrained);
                if Expr /= Null_Iir then
                   if Is_Expr_Fully_Analyzed (Expr) then
                      Check_Read (Expr);
@@ -902,7 +922,8 @@ package body Vhdl.Sem_Stmts is
 
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>
                Expr := Get_Conditional_Expression_Chain (Stmt);
-               Sem_Conditional_Expression_Chain (Expr, Stmt_Type);
+               Sem_Conditional_Expression_Chain
+                 (Expr, Stmt_Type, Constrained);
          end case;
 
          exit when Done;

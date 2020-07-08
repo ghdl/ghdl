@@ -3034,7 +3034,8 @@ package body Vhdl.Sem_Expr is
    -- Perform semantisation on a (sub)aggregate AGGR, which is of type
    -- A_TYPE.
    -- return FALSE is case of failure
-   function Sem_Record_Aggregate (Aggr: Iir_Aggregate; A_Type: Iir)
+   function Sem_Record_Aggregate
+     (Aggr : Iir_Aggregate; A_Type : Iir; Constrained : Boolean)
      return boolean
    is
       El_List : constant Iir_Flist := Get_Elements_Declaration_List (A_Type);
@@ -3195,7 +3196,8 @@ package body Vhdl.Sem_Expr is
          if not Get_Same_Alternative_Flag (El) then
             if El_Type /= Null_Iir then
                --  Analyze the expression only if the choice is correct.
-               Expr := Sem_Expression (Expr, El_Type);
+               Expr := Sem_Expression_Wildcard
+                 (Expr, El_Type, Constrained);
                if Expr /= Null_Iir then
                   Set_Associated_Expr (El, Eval_Expr_If_Static (Expr));
                   Expr_Staticness := Min (Expr_Staticness,
@@ -4039,11 +4041,7 @@ package body Vhdl.Sem_Expr is
    --     the target is a fully constrained array subtype or the target is a
    --     slice name.
    function Sem_Aggregate
-     (Expr: Iir_Aggregate; A_Type: Iir; Force_Constrained : Boolean)
-     return Iir_Aggregate
-   is
-      Force_Constrained2 : constant Boolean :=
-        Force_Constrained and Flag_Relaxed_Rules;
+     (Expr: Iir_Aggregate; A_Type: Iir; Constrained : Boolean) return Iir is
    begin
       pragma Assert (A_Type /= Null_Iir);
 
@@ -4061,12 +4059,12 @@ package body Vhdl.Sem_Expr is
          when Iir_Kind_Array_Subtype_Definition =>
             return Sem_Array_Aggregate
               (Expr, A_Type,
-               Force_Constrained2 or else Get_Index_Constraint_Flag (A_Type));
+               Constrained or Get_Index_Constraint_Flag (A_Type));
          when Iir_Kind_Array_Type_Definition =>
-            return Sem_Array_Aggregate (Expr, A_Type, Force_Constrained2);
+            return Sem_Array_Aggregate (Expr, A_Type, Constrained);
          when Iir_Kind_Record_Type_Definition
-           | Iir_Kind_Record_Subtype_Definition =>
-            if not Sem_Record_Aggregate (Expr, A_Type) then
+            | Iir_Kind_Record_Subtype_Definition =>
+            if not Sem_Record_Aggregate (Expr, A_Type, Constrained) then
                return Null_Iir;
             end if;
             return Expr;
@@ -5151,7 +5149,7 @@ package body Vhdl.Sem_Expr is
    end Compatible_Types_Intersect;
 
    function Sem_Expression_Wildcard
-     (Expr : Iir; Atype : Iir; Force_Constrained : Boolean := False)
+     (Expr : Iir; Atype : Iir; Constrained : Boolean := False)
      return Iir
    is
       Expr_Type : constant Iir := Get_Type (Expr);
@@ -5173,7 +5171,7 @@ package body Vhdl.Sem_Expr is
       case Get_Kind (Expr) is
          when Iir_Kind_Aggregate =>
             if Atype_Defined then
-               return Sem_Aggregate (Expr, Atype, Force_Constrained);
+               return Sem_Aggregate (Expr, Atype, Constrained);
             else
                pragma Assert (Expr_Type = Null_Iir);
                Set_Type (Expr, Wildcard_Any_Aggregate_Type);

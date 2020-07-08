@@ -173,6 +173,13 @@ package Vhdl.Utils is
    --  Return TRUE iff DEF is a fully constrained type (or subtype) definition.
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean;
 
+   --  Return True iff OBJ can be the target of an aggregate with an others
+   --  choice (cf LRM08 9.3.3.3).
+   --  Return True iff object or member of it is declared to be a fully
+   --  constrained subtype.
+   function Is_Object_Fully_Constrained (Decl : Iir) return Boolean;
+   function Is_Object_Name_Fully_Constrained (Obj : Iir) return Boolean;
+
    --  Return the type definition/subtype indication of NAME if NAME denotes
    --  a type or subtype name.  Otherwise, return Null_Iir;
    function Is_Type_Name (Name : Iir) return Iir;

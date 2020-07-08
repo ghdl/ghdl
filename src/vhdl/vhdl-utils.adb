@@ -19,6 +19,7 @@
 with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
+with Flags;
 with Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
 with PSL.Nodes;
@@ -1006,6 +1007,58 @@ package body Vhdl.Utils is
       return Get_Kind (Def) not in Iir_Kinds_Composite_Type_Definition
         or else Get_Constraint_State (Def) = Fully_Constrained;
    end Is_Fully_Constrained_Type;
+
+   function Is_Object_Fully_Constrained (Decl : Iir) return Boolean is
+   begin
+      --  That's true if the object type is constrained.
+      if Is_Fully_Constrained_Type (Get_Type (Decl)) then
+         return True;
+      end if;
+
+      --  That's also true if the object is declared with a subtype attribute.
+      if Get_Kind (Get_Subtype_Indication (Decl)) = Iir_Kind_Subtype_Attribute
+      then
+         return True;
+      end if;
+
+      --  Otherwise this is false.
+      return False;
+   end Is_Object_Fully_Constrained;
+
+   function Is_Object_Name_Fully_Constrained (Obj : Iir) return Boolean
+   is
+      Base : Iir;
+   begin
+      --  That's true if the object type is constrained.
+      if Flags.Flag_Relaxed_Rules
+        or else Is_Fully_Constrained_Type (Get_Type (Obj))
+      then
+         return True;
+      end if;
+
+      --  That's also true if the object is declared with a subtype attribute.
+      Base := Get_Base_Name (Obj);
+      case Get_Kind (Base) is
+         when Iir_Kind_Variable_Declaration
+            | Iir_Kind_Signal_Declaration
+            | Iir_Kind_Interface_Variable_Declaration
+            | Iir_Kind_Interface_Signal_Declaration
+            | Iir_Kind_Object_Alias_Declaration =>
+            if (Get_Kind (Get_Subtype_Indication (Base))
+                = Iir_Kind_Subtype_Attribute)
+            then
+               return True;
+            end if;
+         when Iir_Kind_Dereference
+            | Iir_Kind_Implicit_Dereference =>
+            null;
+         when others =>
+            Error_Kind ("is_object_name_fully_constrained", Base);
+      end case;
+
+      --  Otherwise this is false.
+      return False;
+   end Is_Object_Name_Fully_Constrained;
 
    function Strip_Denoting_Name (Name : Iir) return Iir is
    begin
