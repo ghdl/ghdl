@@ -2071,6 +2071,7 @@ package body Vhdl.Sem_Types is
                         Set_Parent (El, Res);
                         Append_Owned_Element_Constraint (Res, El);
                      end if;
+                     Xref_Ref (El, Tm_El);
                      El_Type := Get_Type (El);
                      Tm_El_Type := Get_Type (Tm_El);
                      if Get_Kind (El_Type) = Iir_Kind_Parenthesis_Name then
