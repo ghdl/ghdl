@@ -1068,6 +1068,7 @@ package body Vhdl.Sem_Assocs is
             Assoc_Type  : Iir;
          begin
             Ntype := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            Set_Is_Ref (Ntype, True);
             Location_Copy (Ntype, Assoc);
             Set_Base_Type (Ntype, Get_Base_Type (Atype));
             if Get_Kind (Atype) = Iir_Kind_Record_Subtype_Definition then
@@ -1108,6 +1109,7 @@ package body Vhdl.Sem_Assocs is
                       = Iir_Kind_Association_Element_By_Individual)
                   then
                      Assoc_Type := Get_Actual_Type (Assoc_Expr);
+                     Set_Subtype_Indication (Nrec_El, Assoc_Type);
                   else
                      Assoc_Type := Get_Type (Get_Actual (Assoc_Expr));
                   end if;
@@ -1122,6 +1124,7 @@ package body Vhdl.Sem_Assocs is
             Set_Constraint_State (Ntype, Fully_Constrained);
 
             Set_Actual_Type (Assoc, Ntype);
+            Set_Actual_Type_Definition (Assoc, Ntype);
          end;
       else
          Set_Actual_Type (Assoc, Atype);

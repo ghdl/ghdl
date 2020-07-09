@@ -1995,7 +1995,8 @@ package body Vhdl.Sem_Types is
             El_List := Null_Iir_Flist;
 
          when Iir_Kind_Array_Subtype_Definition =>
-            --  Record constraints are parsed as array constraints.
+            --  Record constraints were parsed as array constraints.
+            --  Reparse.
             pragma Assert (Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition);
             Index_List := Get_Index_Constraint_List (Def);
             El_List := Create_Iir_Flist (Get_Nbr_Elements (Index_List));
@@ -2068,6 +2069,7 @@ package body Vhdl.Sem_Types is
                      else
                         Els (Pos) := El;
                         Set_Parent (El, Res);
+                        Append_Owned_Element_Constraint (Res, El);
                      end if;
                      El_Type := Get_Type (El);
                      Tm_El_Type := Get_Type (Tm_El);
@@ -2088,6 +2090,7 @@ package body Vhdl.Sem_Types is
                                 (+El_Type,
                                  "only composite types may be constrained");
                         end case;
+                        Set_Subtype_Indication (El, El_Type);
                      end if;
                      Set_Type (El, El_Type);
                   end if;
@@ -2152,6 +2155,7 @@ package body Vhdl.Sem_Types is
                                                      Get_Type (Tm_El),
                                                      Res_Els (I));
                   Set_Type (El, El_Type);
+                  Set_Subtype_Indication (El, El_Type);
                   Set_Element_Position (El, Get_Element_Position (Tm_El));
                end if;
                Set_Nth_Element (El_List, I, El);

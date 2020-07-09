@@ -2000,8 +2000,6 @@ package Vhdl.Nodes is
    --  Record subtype definition which defines this constraint.
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Type (Field1)
-   --
    --  For Owned_Elements_Chain, so that the node has an owner.
    --   Get/Set_Chain (Field2)
    --
@@ -2011,7 +2009,13 @@ package Vhdl.Nodes is
    --  the first record element, increasing by one for each successive element.
    --   Get/Set_Element_Position (Field4)
    --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   --   Get/Set_Type (Field1)
+   --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Attribute_Declaration (Short)
    --
@@ -2912,7 +2916,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Constraint_State (State2)
    --
-   --  Always false for record type: elements are owned through
+   --  Always true for record subtype: elements are owned through
    --  Owned_Elements_Chain
    --   Get/Set_Is_Ref (Flag12)
 
