@@ -953,10 +953,10 @@ package body Vhdl.Sem_Decls is
       else
          pragma Assert (Get_Kind (Last_Decl) = Get_Kind (Decl));
          pragma Assert (Get_Has_Identifier_List (Last_Decl));
+         Set_Is_Ref (Decl, True);
          Default_Value := Get_Default_Value (Last_Decl);
-         if Is_Valid (Default_Value) then
-            Set_Is_Ref (Decl, True);
-         end if;
+         Atype := Get_Subtype_Indication (Last_Decl);
+         Set_Subtype_Indication (Decl, Atype);
          Atype := Get_Type (Last_Decl);
          Set_Type (Decl, Atype);
       end if;

@@ -641,9 +641,13 @@ package body Vhdl.Annotations is
 
    procedure Annotate_Declaration_Type (Block_Info: Sim_Info_Acc; Decl: Iir)
    is
-      Ind : constant Iir := Get_Subtype_Indication (Decl);
+      Ind : Iir;
    begin
-      if Ind = Null_Iir or else Get_Kind (Ind) in Iir_Kinds_Denoting_Name then
+      if Get_Is_Ref (Decl) then
+         return;
+      end if;
+      Ind := Get_Subtype_Indication (Decl);
+      if Get_Kind (Ind) in Iir_Kinds_Denoting_Name then
          return;
       end if;
       Annotate_Type_Definition (Block_Info, Ind);
