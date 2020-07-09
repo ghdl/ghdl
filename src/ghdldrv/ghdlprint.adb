@@ -1356,6 +1356,7 @@ package body Ghdlprint is
          end if;
       elsif Option = "--check-missing" then
          Cmd.Check_Missing := True;
+         Enable_Warning (Warnid_Missing_Xref, True);
          Res := Option_Ok;
       else
          Decode_Option (Command_Html (Cmd), Option, Arg, Res);
