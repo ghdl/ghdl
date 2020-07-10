@@ -102,12 +102,12 @@ jobs:
         MSYSTEM: ${{ matrix.task.installs }}
 
   nightly:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
     needs: [ lin, win ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v2
-    - if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-      uses: eine/tip@master
+    - uses: eine/tip@master
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: 'nightly'
