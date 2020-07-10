@@ -87,11 +87,9 @@ jobs:
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-builddir
-        path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/src/
-    - uses: actions/upload-artifact@v2
-      with:
-        name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-builddir
-        path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/pkg/
+        path: |
+          ./dist/msys2-mingw/${{ matrix.task.pkg }}/src/
+          ./dist/msys2-mingw/${{ matrix.task.pkg }}/pkg/
     - uses: actions/upload-artifact@v2
       with:
         path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
