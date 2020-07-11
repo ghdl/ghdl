@@ -32,6 +32,7 @@ with System; use System;
 with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
+with Grt.Rtiis; use Grt.Rtiis;
 
 package Grt.Avhpi is
    --  Object Kinds.
@@ -431,6 +432,9 @@ package Grt.Avhpi is
                           Res : out VhpiHandleT;
                           Error : out AvhpiErrorT);
 
+   function Vhpi_Handle_From_Rtii (Rtii : Ghdl_Object_Rtii)
+                                  return VhpiHandleT;
+
    procedure Vhpi_Handle_By_Index (Rel : VhpiOneToManyT;
                                    Ref : VhpiHandleT;
                                    Index : Natural;
@@ -515,6 +519,8 @@ package Grt.Avhpi is
 
    function Avhpi_Get_Rti (Obj : VhpiHandleT) return Ghdl_Rti_Access;
 
+   function Avhpi_Get_Rtii (Obj : VhpiHandleT) return Ghdl_Object_Rtii;
+
    function Avhpi_Get_Address (Obj : VhpiHandleT) return Address;
 
    function Avhpi_Get_Context (Obj : VhpiHandleT) return Rti_Context;
@@ -535,17 +541,18 @@ private
             It_Cur : Ghdl_Index_Type;
             It2 : Ghdl_Index_Type;
             Max2 : Ghdl_Index_Type;
-         when AvhpiNameIteratorK
-           | VhpiIndexedNameK =>
-            N_Addr : Address;
-            N_Type : Ghdl_Rti_Access;
+         when AvhpiNameIteratorK =>
+            N_Obj : Ghdl_Object_Rtii;
             N_Idx : Ghdl_Index_Type;
-            N_Obj : Ghdl_Rtin_Object_Acc;
+            N_Size : Ghdl_Index_Type;
+         when VhpiIndexedNameK =>
+            Comp_Obj : Ghdl_Object_Rtii;
          when VhpiSigDeclK
            | VhpiPortDeclK
            | VhpiGenericDeclK
            | VhpiConstDeclK =>
-            Obj : Ghdl_Rtin_Object_Acc;
+            -- Doesn't use shared context.
+            Obj : Ghdl_Object_Rtii;
          when VhpiSubtypeIndicK
            | VhpiSubtypeDeclK
            | VhpiArrayTypeDeclK
@@ -564,8 +571,6 @@ private
          when others =>
             null;
       end case;
-      --  Current Object.
-      --Obj : Ghdl_Rti_Access;
    end record;
 
    Null_Handle : constant VhpiHandleT := (Kind => VhpiUndefined,

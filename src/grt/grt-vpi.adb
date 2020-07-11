@@ -51,10 +51,11 @@ with Grt.Hooks; use Grt.Hooks;
 with Grt.Options;
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Errors; use Grt.Errors;
-with Grt.Rtis_Types;
 with Grt.Std_Logic_1164; use Grt.Std_Logic_1164;
 with Grt.Callbacks; use Grt.Callbacks;
 with Grt.Vstrings; use Grt.Vstrings;
+with Grt.Rtis_Types; use Grt.Rtis_Types;
+with Grt.Rtiis; use Grt.Rtiis;
 
 package body Grt.Vpi is
    --  The VPI interface requires libdl (dlopen, dlsym) to be linked in.
@@ -537,8 +538,43 @@ package body Grt.Vpi is
       return Res;
    end vpi_get;
 
+   function Rti_To_Vpi_Kind (Rti : Ghdl_Rtin_Type_Array_Acc)
+                             return Integer
+   is
+      It : Ghdl_Rti_Access;
+   begin
+      --  Support only one-dimensional arrays...
+      if Rti.Nbr_Dim /= 1 then
+         return vpiUndefined;
+      end if;
+      --  ... whose index is a scalar...
+      It := Rti.Indexes (0);
+      if It.Kind /= Ghdl_Rtik_Subtype_Scalar then
+         return vpiUndefined;
+      end if;
+      --  ... integer.
+      if To_Ghdl_Rtin_Subtype_Scalar_Acc (It).Basetype.Kind
+        /= Ghdl_Rtik_Type_I32
+      then
+         return vpiUndefined;
+      end if;
+
+      -- bit and std_logic are a special case
+      -- and arrays of them are mapped to vpiNet.
+      if Rti.Element = Std_Standard_Bit_RTI_Ptr then
+         return vpiNet;
+      elsif Rti.Element = Ieee_Std_Logic_1164_Std_Ulogic_RTI_Ptr then
+         return vpiNet;
+      --elsif Rti.Element = Ieee_Std_Logic_1164_Std_Logic_RTI_Ptr then
+      --   return vpiNet;
+      else
+         return vpiNetArray;
+      end if;
+   end Rti_To_Vpi_Kind;
+
    function Vhpi_Handle_To_Vpi_Prop (Res : VhpiHandleT) return Integer is
    begin
+      Put("Vhpi_Handle_To_Vpi_Prop" & Nl);
       case Vhpi_Get_Kind (Res) is
          when VhpiEntityDeclK
            | VhpiArchBodyK
@@ -547,41 +583,33 @@ package body Grt.Vpi is
            | VhpiForGenerateK
            | VhpiCompInstStmtK =>
             return vpiModule;
-         when VhpiPortDeclK =>
+         when VhpiPortDeclK
+           | VhpiSigDeclK
+           | VhpiConstDeclK
+           | VhpiGenericDeclK
+           | VhpiIndexedNameK =>
             declare
-               Info : Verilog_Wire_Info;
+               Rti : Ghdl_Rti_Access;
             begin
-               Get_Verilog_Wire (Res, Info);
-               if Info.Vtype /= Vcd_Bad then
+               Rti := Avhpi_Get_Rtii(Res).Typ.Rti;
+               case Rti.Kind is
+                  when Ghdl_Rtik_Type_B1
+                     | Ghdl_Rtik_Type_E8
+                     | Ghdl_Rtik_Subtype_Scalar =>
                   return vpiNet;
-               end if;
-            end;
-         when VhpiSigDeclK =>
-            declare
-               Info : Verilog_Wire_Info;
-            begin
-               Get_Verilog_Wire (Res, Info);
-               if Info.Vtype /= Vcd_Bad then
-                  return vpiNet;
-               end if;
-            end;
-         when VhpiGenericDeclK =>
-            declare
-               Info : Verilog_Wire_Info;
-            begin
-               Get_Verilog_Wire (Res, Info);
-               if Info.Vtype /= Vcd_Bad then
-                  return vpiParameter;
-               end if;
-            end;
-         when VhpiConstDeclK =>
-            declare
-               Info : Verilog_Wire_Info;
-            begin
-               Get_Verilog_Wire (Res, Info);
-               if Info.Vtype /= Vcd_Bad then
-                  return vpiConstant;
-               end if;
+                  when Ghdl_Rtik_Subtype_Array
+                     | Ghdl_Rtik_Type_Array =>
+                     declare
+                        Arr_Rti : Ghdl_Rtin_Type_Array_Acc;
+                     begin
+                        Arr_Rti := To_Ghdl_Rtin_Type_Array_Acc (Rti);
+                        return Rti_To_Vpi_Kind (Arr_Rti);
+                     end;
+                  when Ghdl_Rtik_Type_Record =>
+                     return vpiStructNet;
+                  when others =>
+                     return vpiUndefined;
+               end case;
             end;
          when others =>
             null;
@@ -604,6 +632,12 @@ package body Grt.Vpi is
                                          Ref => Res);
          when vpiParameter =>
             return new struct_vpiHandle'(mType => vpiParameter,
+                                         Ref => Res);
+         when vpiNetArray =>
+            return new struct_vpiHandle'(mType => vpiNetArray,
+                                         Ref => Res);
+         when vpiStructNet =>
+            return new struct_vpiHandle'(mType => vpiStructNet,
                                          Ref => Res);
          when vpiConstant =>
             return new struct_vpiHandle'(mType => vpiConstant,
@@ -836,96 +870,31 @@ package body Grt.Vpi is
    -- see IEEE 1364-2001, chapter 27.14, page 675
    Buf_Value : Vstring;
 
-   procedure Append_Bin (V : Ghdl_U64; Ndigits : Natural) is
-   begin
-      for I in reverse 0 .. Ndigits - 1 loop
-         if (Shift_Right (V, I) and 1) /= 0 then
-            Append (Buf_Value, '1');
-         else
-            Append (Buf_Value, '0');
-         end if;
-      end loop;
-   end Append_Bin;
-
-   type Map_Type_E8 is array (Ghdl_E8 range 0..8) of character;
-   Map_Std_E8: constant Map_Type_E8 := "UX01ZWLH-";
-
-   type Map_Type_B1 is array (Ghdl_B1) of character;
-   Map_Std_B1: constant Map_Type_B1 := "01";
-
    function ii_vpi_get_value_bin_str (Obj : VhpiHandleT)
                                      return Ghdl_C_String
    is
-      function E8_To_Char (Val : Ghdl_E8) return Character is
-      begin
-         if Val not in Map_Type_E8'range then
-            return '?';
-         else
-            return Map_Std_E8 (Val);
-         end if;
-      end E8_To_Char;
-
-      Info : Verilog_Wire_Info;
-      Len : Ghdl_Index_Type;
+      Rtii : Ghdl_Object_Rtii;
    begin
+      Put ("ii_vpi_get_value_bin_str: Starting" & Nl);
       case Vhpi_Get_Kind (Obj) is
          when VhpiPortDeclK
            | VhpiSigDeclK
            | VhpiGenericDeclK
-           | VhpiConstDeclK =>
-            null;
+           | VhpiConstDeclK
+           | VhpiIndexedNameK =>
+            Rtii := Avhpi_Get_Rtii(Obj);
          when others =>
             return null;
       end case;
-
-      --  Get verilog compat info.
-      Get_Verilog_Wire (Obj, Info);
-      if Info.Vtype = Vcd_Bad then
-         return null;
-      end if;
-
-      Len := Get_Wire_Length (Info);
-
-      Reset (Buf_Value); -- reset string buffer
-
-      case Info.Vtype is
-         when Vcd_Bad
-           | Vcd_Float64 =>
-            return null;
-         when Vcd_Enum8 =>
-            declare
-               V : Ghdl_E8;
-            begin
-               V := Verilog_Wire_Val (Info).E8;
-               Append_Bin (Ghdl_U64 (V), 8);
-            end;
-         when Vcd_Integer32 =>
-            declare
-               V : Ghdl_U32;
-            begin
-               V := Verilog_Wire_Val (Info).E32;
-               Append_Bin (Ghdl_U64 (V), 32);
-            end;
-         when Vcd_Bit
-           | Vcd_Bool =>
-            Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info).B1));
-         when Vcd_Bitvector =>
-            for J in 0 .. Len - 1 loop
-               Append (Buf_Value, Map_Std_B1 (Verilog_Wire_Val (Info, J).B1));
-            end loop;
-         when Vcd_Stdlogic =>
-            Append (Buf_Value, E8_To_Char (Verilog_Wire_Val (Info).E8));
-         when Vcd_Stdlogic_Vector =>
-            for J in 0 .. Len - 1 loop
-               Append (Buf_Value, E8_To_Char (Verilog_Wire_Val (Info, J).E8));
-            end loop;
-      end case;
-      Append (Buf_Value, NUL);
+      Reset (Buf_Value);
+      Append_Bin_Str (Rtii, Buf_Value);
+      Append (Buf_Value, ASCII.NUL);
       return Get_C_String (Buf_Value);
    end ii_vpi_get_value_bin_str;
 
    procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value) is
    begin
+      Put ("vpi_get_value: Starting " & Nl);
       if Flag_Trace then
          Trace_Start ("vpi_get_value (");
          Trace (Expr);
@@ -1619,8 +1588,10 @@ package body Grt.Vpi is
       It : VhpiHandleT;
       El_Name : Ghdl_C_String;
    begin
+      Put ("Find_By_Name" & Nl);
       Vhpi_Iterator (Rel, Scope, It, Err);
       if Err /= AvhpiErrorOk then
+         Put ("Faid_By_Name: Failed to make iterator." & Nl);
          return;
       end if;
 
@@ -1631,9 +1602,29 @@ package body Grt.Vpi is
          exit when Err /= AvhpiErrorOk;
 
          El_Name := Avhpi_Get_Base_Name (Res);
+         Put ("El_Name is "); Put(El_Name); Put(Nl);
          exit when El_Name /= null and then Strcasecmp (Name, El_Name);
       end loop;
    end Find_By_Name;
+
+   -- The purpose of this is to take a string referencing the index
+   -- of an array and return the index.
+   -- We assume the string is of the form [5].
+   function Name_To_Index (Name : String) return Ghdl_Index_Type is
+      Res: Ghdl_Index_Type;
+   begin
+      if Name'Length < 3 then
+         Internal_Error("Invalid index string form");
+      end if;
+      if Name(Name'first) /= '[' then
+         Internal_Error("Invalid index string form");
+      end if;
+      if Name(Name'last) /= ']' then
+         Internal_Error("Invalid index string form");
+      end if;
+      Res := Ghdl_Index_Type'Value(Name(Name'First+1 .. Name'Last-1));
+      return Res;
+   end Name_To_Index;
 
    function Vpi_Handle_By_Name_Internal
      (Name : Ghdl_C_String; Scope : vpiHandle) return vpiHandle
@@ -1645,6 +1636,7 @@ package body Grt.Vpi is
       Res : vpiHandle;
       Escaped : Boolean;
    begin
+      Put ("Vpi_Handle_By_Name_Internal" & Nl);
       --  Extract the start point.
       if Scope = null then
          Get_Root_Scope (Base);
@@ -1680,16 +1672,55 @@ package body Grt.Vpi is
             end loop;
          end;
 
-         --  Find name in Base, first as a decl, then as a sub-region.
-         Find_By_Name (Base, VhpiDecls, Name (B .. E), El, Err);
-         if Err /= AvhpiErrorOk then
-            Find_By_Name (Base, VhpiInternalRegions, Name (B .. E), El, Err);
-         end if;
+         case Vhpi_Get_Kind(Base) is
+            when VhpiPortDeclK
+               | VhpiSigDeclK
+               | VhpiGenericDeclK
+               | VhpiConstDeclK
+               | VhpiIndexedNameK =>
+               declare
+                  Rtii : Ghdl_Object_Rtii;
+                  Child : Ghdl_Object_Rtii;
+                  Child_Index : Ghdl_Index_Type;
+                  Nbr_Children : Ghdl_Index_Type;
+                  Found_Child : Boolean;
+               begin
+                  Rtii := Avhpi_Get_Rtii(Base);
+                  if Is_Record(Rtii) then
+                     Found_Child := Get_Rtii_Child_By_Name(
+                        Rtii, Name(B .. E), Child);
+                     if not Found_Child then
+                        return null;
+                     end if;
+                  elsif Is_Array(Rtii) then
+                     Child_Index := Name_To_Index(Name(B .. E));
+                     Nbr_Children := Get_Rtii_Nbr_Children(Rtii);
+                     if Child_Index >= Nbr_Children then
+                        return null;
+                     end if;
+                     Child := Get_Rtii_Child(Rtii, Child_Index);
+                  else
+                     -- If the object isn't an array or record we can find
+                     -- a subcomponent with matching name.
+                     return null;
+                  end if;
+                  El := Vhpi_Handle_From_Rtii(Child);
+               end;
+            when others =>
+               --  Find name in Base, first as a decl, then as a sub-region.
+               Find_By_Name (Base, VhpiDecls, Name (B .. E), El, Err);
+               if Err /= AvhpiErrorOk then
+                  Find_By_Name (Base, VhpiInternalRegions,
+                                Name (B .. E), El, Err);
+               end if;
+         end case;
 
          if Err = AvhpiErrorOk then
+            Put("Found!" & Nl);
             --  Found!
             Base := El;
          else
+            Put("Not Found!" & Nl);
             --  Not found.
             return null;
          end if;

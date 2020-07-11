@@ -36,6 +36,8 @@ package Grt.Types is
    type Ghdl_U32 is new Unsigned_32;
    subtype Ghdl_E32 is Ghdl_U32;
    type Ghdl_I32 is new Integer_32;
+   function To_Integer_32 is new Ada.Unchecked_Conversion
+     (Ghdl_I32, Integer_32);
    type Ghdl_I64 is new Integer_64;
    type Ghdl_U64 is new Unsigned_64;
    type Ghdl_F64 is new IEEE_Float_64;
@@ -227,6 +229,8 @@ package Grt.Types is
    type Ghdl_Value_Ptr is access all Value_Union;
    function To_Ghdl_Value_Ptr is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_Value_Ptr);
+   function To_Address is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Value_Ptr, Target => Address);
 
    --  Ranges.
    type Ghdl_Range_B1 is record
