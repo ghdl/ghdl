@@ -67,6 +67,7 @@ package body Errorout.Console is
    procedure Set_Color (Color : Color_Type)
    is
       use Simple_IO;
+      E : constant Character := ASCII.ESC;
    begin
       if Flag_Color_Diagnostics = Off then
          return;
@@ -76,17 +77,15 @@ package body Errorout.Console is
       --  They are also documented on msdn in 'Console Virtual Terminal
       --  sequences'.
 
-      Put_Err (ASCII.ESC & '[');
       case Color is
-         when Color_Locus   => Put_Err ("1");    --  Bold
-         when Color_Note    => Put_Err ("1;36"); --  Bold, cyan
-         when Color_Warning => Put_Err ("1;35"); --  Bold, magenta
-         when Color_Error   => Put_Err ("1;31"); --  Bold, red
-         when Color_Fatal   => Put_Err ("1;33"); --  Bold, yellow
-         when Color_Message => Put_Err ("0;1");  --  Normal, bold
-         when Color_None    => Put_Err ("0");    --  Normal
+         when Color_Locus   => Put_Err (E & "[1m");    --  Bold
+         when Color_Note    => Put_Err (E & "[1;36m"); --  Bold, cyan
+         when Color_Warning => Put_Err (E & "[1;35m"); --  Bold, magenta
+         when Color_Error   => Put_Err (E & "[1;31m"); --  Bold, red
+         when Color_Fatal   => Put_Err (E & "[1;33m"); --  Bold, yellow
+         when Color_Message => Put_Err (E & "[0;1m");  --  Normal, bold
+         when Color_None    => Put_Err (E & "[0m");    --  Normal
       end case;
-      Put_Err ("m");
    end Set_Color;
 
    Msg_Len : Natural;
