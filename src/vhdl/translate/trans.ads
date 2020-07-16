@@ -1466,10 +1466,13 @@ package Trans is
    --  State of an Mmode.
    type Mstate is
      (
-      --  The Mnode contains an Enode, which can be either a value or a
-      --  pointer.
+      --  The Mnode contains an Enode for a value.
       --  This Mnode can be used only once.
-      Mstate_E,
+      Mstate_Ev,
+
+      --  The Mnode contains an Enode for a pointer.
+      --  This Mnode can be used only once.
+      Mstate_Ep,
 
       --  The Mnode contains an Lnode representing a value.
       --  This Lnode can be used only once.
@@ -1505,8 +1508,10 @@ package Trans is
       Ptype : O_Tnode;
 
       case State is
-         when Mstate_E =>
-            E  : O_Enode;
+         when Mstate_Ev =>
+            Ev : O_Enode;
+         when Mstate_Ep =>
+            Ep : O_Enode;
          when Mstate_Lv =>
             Lv : O_Lnode;
          when Mstate_Lp =>

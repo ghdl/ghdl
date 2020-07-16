@@ -4660,7 +4660,7 @@ package body Trans.Chap8 is
             else
                Translate_Waveform_Expression
                  (Value, Target_Type, Var_Targ, Val);
-               Stabilize (Val);
+               Val := Stabilize (Val, True);
                Chap3.Check_Composite_Match
                  (Target_Type, Var_Targ, Get_Type (Value), Val, We);
             end if;

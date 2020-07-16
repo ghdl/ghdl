@@ -240,7 +240,7 @@ package body Trans.Chap6 is
       Deep_Rng     : Iir;
       Deep_Reverse : Boolean;
    begin
-      Index1 := Stabilize (Index);
+      Index1 := Stabilize (Index, True);
       pragma Unreferenced (Index);
 
       if Index_Expr = Null_Iir then
@@ -367,7 +367,7 @@ package body Trans.Chap6 is
 
       Index_Base_Type := Get_Base_Type (Index_Type);
       Index := Chap7.Translate_Expression (Expr, Index_Base_Type);
-      Stabilize (Index);
+      Index := Stabilize (Index, True);
 
       if Get_Direction (Index_Range) = Dir_To then
          --  Direction TO:  INDEX - LEFT.
