@@ -55,6 +55,7 @@ with Grt.Rtis_Types;
 with Grt.Std_Logic_1164; use Grt.Std_Logic_1164;
 with Grt.Callbacks; use Grt.Callbacks;
 with Grt.Vstrings; use Grt.Vstrings;
+with Version;
 
 package body Grt.Vpi is
    --  The VPI interface requires libdl (dlopen, dlsym) to be linked in.
@@ -65,7 +66,8 @@ package body Grt.Vpi is
    --errNoString:      constant String := "grt-vcd.adb: no string" & NUL;
 
    Product : constant String := "GHDL" & NUL;
-   Version : constant String := "0.1" & NUL;
+   GhdlVersion : constant String :=
+      Version.Ghdl_Ver & " " & Version.Ghdl_Release & NUL;
 
    --  If true, emit traces
    Flag_Trace : Boolean := False;
@@ -1568,7 +1570,7 @@ package body Grt.Vpi is
       info.all := (Argc => 0,
                    Argv => Null_Address,
                    Product => To_Ghdl_C_String (Product'Address),
-                   Version => To_Ghdl_C_String (Version'Address));
+                   Version => To_Ghdl_C_String (GhdlVersion'Address));
       return 0;
    end vpi_get_vlog_info;
 
