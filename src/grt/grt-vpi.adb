@@ -1571,7 +1571,7 @@ package body Grt.Vpi is
                    Argv => Null_Address,
                    Product => To_Ghdl_C_String (Product'Address),
                    Version => To_Ghdl_C_String (GhdlVersion'Address));
-      return 0;
+      return 1;
    end vpi_get_vlog_info;
 
    -- vpiHandle vpi_handle_by_index(vpiHandle ref, int index)
