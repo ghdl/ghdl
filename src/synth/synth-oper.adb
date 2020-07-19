@@ -911,6 +911,7 @@ package body Synth.Oper is
             --  "-" (Unsigned, Natural)
             return Synth_Dyadic_Uns_Nat (Ctxt, Id_Sub, Left, Right, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Uns
+            | Iir_Predefined_Ieee_Numeric_Std_Sub_Uns_Log
             | Iir_Predefined_Ieee_Numeric_Std_Sub_Sgn_Log
             | Iir_Predefined_Ieee_Numeric_Std_Sub_Log_Sgn
             | Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Slv
