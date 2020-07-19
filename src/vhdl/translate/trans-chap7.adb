@@ -5820,9 +5820,9 @@ package body Trans.Chap7 is
          Gen_Exit_When
            (Label,
             New_Compare_Op (ON_Eq,
-              New_Obj_Value (Var_It),
-              New_Obj_Value (Var_Max),
-              Ghdl_Bool_Type));
+                            New_Obj_Value (Var_It),
+                            New_Obj_Value (Var_Max),
+                            Ghdl_Bool_Type));
          Translate_Rw
            (Chap3.Index_Base (Val, Val_Type, New_Obj_Value (Var_It)),
             Get_Element_Subtype (Val_Type), Proc);
@@ -5945,22 +5945,81 @@ package body Trans.Chap7 is
 
          when Iir_Predefined_Read_Length =>
             declare
+               El_Type  : constant Iir := Get_Element_Subtype (Etype);
+               El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
                Var_Len : O_Dnode;
+               Var_Max : O_Dnode;
+               Var_It  : O_Dnode;
+               Label   : O_Snode;
+               If_Blk  : O_If_Block;
+               Targ    : O_Dnode;
+               Dummy   : Mnode;
             begin
                Open_Temp;
+               Var_Max := Create_Temp (Ghdl_Index_Type);
+               New_Assign_Stmt (New_Obj (Var_Max),
+                                Chap3.Get_Array_Length (Var, Etype));
+               --  TODO: complex element type.
+               pragma Assert (Is_Static_Type (El_Tinfo));
+               Dummy := Create_Temp (El_Tinfo);
+               Targ := Create_Temp (El_Tinfo.Ortho_Ptr_Type (Mode_Value));
+
+               --  Read length.
                Var_Len := Create_Temp (Ghdl_Index_Type);
                Translate_Rw_Length (Var_Len, Ghdl_Read_Scalar);
 
-               Chap6.Check_Bound_Error
-                 (New_Compare_Op (ON_Gt,
+               --  LRM08 5.5.2 File Operations
+               --  If the object associated with formal parameter VALUE is
+               --  shorter than this length, then only that portion of the
+               --  array value read by the operation that can be contained in
+               --  the object is returned by the READ operation, and the rest
+               --  of the value is lost.  If the object associated with formal
+               --  parameter VALUE is longer than this length, then the entire
+               --  value is returned and remaining elements of the object are
+               --  unaffected.
+
+               --  Iterate on length.
+               Var_It := Create_Temp (Ghdl_Index_Type);
+               Init_Var (Var_It);
+               Start_Loop_Stmt (Label);
+               Gen_Exit_When
+                 (Label,
+                  New_Compare_Op (ON_Eq,
+                                  New_Obj_Value (Var_It),
                                   New_Obj_Value (Var_Len),
-                                  Chap3.Get_Array_Length (Var, Etype),
-                                  Ghdl_Bool_Type),
-                  Subprg);
-               Translate_Rw_Array (Chap3.Get_Composite_Base (Var), Etype,
-                                   Var_Len, Ghdl_Read_Scalar);
-               New_Return_Stmt (New_Convert_Ov (New_Obj_Value (Var_Len),
+                                  Ghdl_Bool_Type));
+               Start_If_Stmt
+                 (If_Blk, New_Compare_Op (ON_Gt,
+                                          New_Obj_Value (Var_It),
+                                          New_Obj_Value (Var_Max),
+                                          Ghdl_Bool_Type));
+               New_Assign_Stmt (New_Obj (Targ), M2Addr (Dummy));
+               New_Else_Stmt (If_Blk);
+               New_Assign_Stmt
+                 (New_Obj (Targ),
+                  M2Addr (Chap3.Index_Base (Chap3.Get_Composite_Base (Var),
+                                            Etype,
+                                            New_Obj_Value (Var_It))));
+               Finish_If_Stmt (If_Blk);
+
+               Translate_Rw (Dp2M (Targ, El_Tinfo, Mode_Value),
+                             El_Type, Ghdl_Read_Scalar);
+               Inc_Var (Var_It);
+               Finish_Loop_Stmt (Label);
+
+               --  Return the length (the minimum of len, max)
+               Start_If_Stmt
+                 (If_Blk, New_Compare_Op (ON_Gt,
+                                          New_Obj_Value (Var_Len),
+                                          New_Obj_Value (Var_Max),
+                                          Ghdl_Bool_Type));
+               New_Assign_Stmt (New_Obj (Var_It), New_Obj_Value (Var_Max));
+               New_Else_Stmt (If_Blk);
+               New_Assign_Stmt (New_Obj (Var_It), New_Obj_Value (Var_Len));
+               Finish_If_Stmt (If_Blk);
+               New_Return_Stmt (New_Convert_Ov (New_Obj_Value (Var_It),
                                 Std_Integer_Otype));
+
                Close_Temp;
             end;
          when others =>
