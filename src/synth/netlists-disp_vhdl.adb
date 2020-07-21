@@ -1400,6 +1400,7 @@ package body Netlists.Disp_Vhdl is
                            | Id_Const_Bit
                            | Id_Const_Log
                            | Id_Const_Z
+                           | Id_Const_X
                            | Id_Const_0
                            | Id_Concat2
                            | Id_Concat3
