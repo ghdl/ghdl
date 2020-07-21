@@ -38,7 +38,7 @@ libdirreverse=../..
 gcc_src_dir=
 llvm_config=
 backtrace_lib=
-llvm_be=llvm
+llvm_be=llvm6
 build=
 build_mode=
 enable_werror=true
@@ -262,26 +262,22 @@ if test $backend = llvm; then
     echo "cannot run $llvm_config"
     exit 1
   fi
-  if check_version 3.5 $llvm_version; then
-    llvm_be=llvm35
-  elif check_version 3.6 $llvm_version ||
-       check_version 3.7 $llvm_version ||
-       check_version 3.8 $llvm_version ||
-       false; then
-    echo "Debugging is not enabled with llvm $llvm_version"
-    llvm_be=llvm-nodebug
-    # Tested with llvm 3.5, so assume 3.6, 3.7 and 3.8
-  elif check_version  3.9 $llvm_version ||
+  if   check_version  3.5 $llvm_version ||
+       check_version  3.6 $llvm_version ||
+       check_version  3.7 $llvm_version ||
+       check_version  3.8 $llvm_version ||
+       check_version  3.9 $llvm_version ||
        check_version  4.0 $llvm_version ||
        check_version  5.0 $llvm_version ||
-       check_version  6.0 $llvm_version ||
+       false; then
+    echo "Debugging is not enabled with llvm $llvm_version"
+  elif check_version  6.0 $llvm_version ||
        check_version  7.0 $llvm_version ||
        check_version  8.0 $llvm_version ||
        check_version  9.0 $llvm_version ||
        check_version 10.0 $llvm_version ||
        false; then
     echo "Debugging is not enabled with llvm $llvm_version"
-    llvm_be=llvm4-nodebug
   else
     echo "Unhandled version llvm $llvm_version"
     exit 1
