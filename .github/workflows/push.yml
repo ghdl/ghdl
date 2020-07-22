@@ -9,14 +9,25 @@ env:
 
 jobs:
 
+#
+# GPL
+#
+
   gpl:
     runs-on: ubuntu-latest
     steps:
+
     - uses: actions/checkout@v2
+
     - run: |
         TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
 
+#
+# GNU/Linux
+#
+
   lin:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 3
@@ -26,25 +37,34 @@ jobs:
           { backend: llvm,  version: '-5.0' },
           { backend: gcc,   version: '-8.3.0' }
         ]
-    runs-on: ubuntu-latest
     steps:
+
     - uses: actions/checkout@v2
+
     - name: Build and test GHDL in containers
       run: |
         TASK=ubuntu18+${{ matrix.task.backend }}${{ matrix.task.version }} ./dist/ci-run.sh -c
         mv ghdl-*-ubuntu18-*.tgz ghdl-gha-ubuntu-${{ matrix.task.backend }}.tgz
+
     - uses: actions/upload-artifact@v2
       with:
         path: ghdl-gha-ubuntu-*.tgz
 
+#
+# MacOS
+#
+
   osx:
     runs-on: macOS-latest
     steps:
+
     - uses: actions/checkout@v2
+
     - run: |
         brew update
         brew install p7zip
         ./dist/macosx/install-ada.sh
+
     - name: Build and test GHDL
       run: |
         PATH=$PWD/gnat/bin:$PATH
@@ -53,7 +73,12 @@ jobs:
         TASK: macosx+mcode
         GITHUB_OS: ${{ runner.os }}
 
+#
+# Windows
+#
+
   win:
+    runs-on: windows-latest
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -64,7 +89,6 @@ jobs:
           #{installs: "MINGW64", pkg: "mcode"}, ! mcode is not yet supported on win64
           {installs: "MINGW64", pkg: "llvm"},
         ]
-    runs-on: windows-latest
     env:
       MINGW_INSTALLS: ${{ matrix.task.installs }}
       TARGET: ${{ matrix.task.pkg }}
@@ -72,27 +96,34 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    - uses: eine/setup-msys2@v1
+
+    - uses: msys2/setup-msys2@v2
       with:
         msystem: MSYS
         update: true
         install: base-devel git
+
     - run: git config --global core.autocrlf input
       shell: bash
+
     - uses: actions/checkout@v2
+
     - name: Build and (hopefully) install package
       run: |
         ./dist/msys2-mingw/run.sh -b
         cp ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst ghdl-gha-${{ matrix.installs }}-${{ matrix.task }}.zst
+
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ matrix.task.installs }}-${{ matrix.task.pkg }}-builddir
         path: |
           ./dist/msys2-mingw/${{ matrix.task.pkg }}/src/
           ./dist/msys2-mingw/${{ matrix.task.pkg }}/pkg/
+
     - uses: actions/upload-artifact@v2
       with:
         path: ./dist/msys2-mingw/${{ matrix.task.pkg }}/mingw-*ghdl*.pkg.tar.zst
+
     - name: Test package
       run: |
         env | grep MSYSTEM
@@ -101,17 +132,24 @@ jobs:
       env:
         MSYSTEM: ${{ matrix.task.installs }}
 
+#
+# NIGHTLY
+#
+
   nightly:
     if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
     needs: [ lin, win ]
     runs-on: ubuntu-latest
     steps:
+
     - uses: actions/download-artifact@v2
+
     - uses: eine/tip@master
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: 'nightly'
         files: artifact/*
+
     - run: |
         curl -X POST https://api.github.com/repos/ghdl/docker/dispatches \
         -H "Content-Type: application/json" \

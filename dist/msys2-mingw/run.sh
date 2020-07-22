@@ -72,13 +72,11 @@ cd "$TARGET"
 # But the following command fails if the repository is complete.
 gblock "Fetch --unshallow" git fetch --unshallow || true
 
-MINGW_INSTALLS="$(echo "$MINGW_INSTALLS" | tr '[:upper:]' '[:lower:]')"
-
 case "$MINGW_INSTALLS" in
-  mingw32)
+  *32)
     TARBALL_ARCH="i686"
   ;;
-  mingw64)
+  *64)
     TARBALL_ARCH="x86_64"
   ;;
   *)
@@ -86,7 +84,7 @@ case "$MINGW_INSTALLS" in
     exit 1
 esac
 
-gblock 'Install toolchain' pacman -S --noconfirm base-devel mingw-w64-${TARBALL_ARCH}-toolchain
+gblock 'Install toolchain' pacman -S --noconfirm --needed base-devel mingw-w64-${TARBALL_ARCH}-toolchain
 gblock 'Build package' makepkg-mingw --noconfirm --noprogressbar -sCLf --noarchive
 gblock 'Archive package' makepkg-mingw --noconfirm --noprogressbar -R
 gblock 'List artifacts' ls -la
