@@ -201,8 +201,8 @@ package body Netlists.Memories is
                      return;
                   end if;
                when Id_Dyn_Insert
-                 | Id_Dyn_Insert_En
-                 |  Id_Mux2 =>
+                  | Id_Dyn_Insert_En
+                  | Id_Mux2 =>
                   --  Probably a writer.
                   --  FIXME: check it has already been by writes.
                   null;
