@@ -392,7 +392,7 @@ package body Vhdl.Evaluation is
             Error_Kind ("create_range_subtype_by_length", A_Type);
       end case;
       Set_Location (Res, Loc);
-      Set_Base_Type (Res, Get_Base_Type (A_Type));
+      Set_Parent_Type (Res, A_Type);
       Set_Type_Staticness (Res, Locally);
 
       return Res;
@@ -1199,18 +1199,20 @@ package body Vhdl.Evaluation is
                     Get_Range_Constraint (Left_Index);
                   Ret_Type : constant Iir :=
                     Get_Return_Type (Get_Implementation (Orig));
+                  Rng_Type : constant Iir := Get_Index_Type (Ret_Type, 0);
                   A_Range : Iir;
                   Index_Type : Iir;
                begin
                   A_Range := Create_Iir (Iir_Kind_Range_Expression);
-                  Set_Type (A_Range, Get_Index_Type (Ret_Type, 0));
+                  Location_Copy (A_Range, Orig);
+                  Set_Type (A_Range, Rng_Type);
                   Set_Expr_Staticness (A_Range, Locally);
                   Set_Left_Limit (A_Range, Get_Left_Limit (Left_Range));
                   Set_Direction (A_Range, Get_Direction (Left_Range));
-                  Location_Copy (A_Range, Orig);
                   Set_Right_Limit_By_Length (A_Range, Int64 (Res_Len));
+
                   Index_Type := Create_Range_Subtype_From_Type
-                    (Left_Index, Get_Location (Orig));
+                    (Rng_Type, Get_Location (Orig));
                   Set_Range_Constraint (Index_Type, A_Range);
                   Res_Type := Create_Unidim_Array_From_Index
                     (Origin_Type, Index_Type, Orig);
@@ -2350,7 +2352,7 @@ package body Vhdl.Evaluation is
             Index_Type := Create_Iir (Iir_Kind_Integer_Subtype_Definition);
             Location_Copy (Index_Type, Conv);
             Set_Range_Constraint (Index_Type, Rng);
-            Set_Base_Type (Index_Type, Get_Base_Type (Conv_Index_Type));
+            Set_Parent_Type (Index_Type, Conv_Index_Type);
             Set_Type_Staticness (Index_Type, Locally);
          end if;
          Res_Type := Create_Unidim_Array_From_Index

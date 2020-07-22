@@ -3775,7 +3775,7 @@ package body Vhdl.Sem_Expr is
                   Error_Kind ("sem_array_aggregate(2)", Index_Type);
             end case;
             Location_Copy (Info.Index_Subtype, Aggr);
-            Set_Base_Type (Info.Index_Subtype, Get_Base_Type (Index_Type));
+            Set_Parent_Type (Info.Index_Subtype, Get_Base_Type (Index_Type));
             Index_Constraint := Get_Range_Constraint (Index_Type);
 
             --  LRM93 7.3.2.2
@@ -4913,7 +4913,6 @@ package body Vhdl.Sem_Expr is
             --  Always ok.
             --  Use the error as a type.
             Set_Type (Expr, Expr);
-            Set_Base_Type (Expr, Expr);
             return Expr;
 
          when others =>

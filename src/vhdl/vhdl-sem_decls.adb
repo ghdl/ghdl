@@ -552,7 +552,6 @@ package body Vhdl.Sem_Decls is
       Set_Location (Def, Get_Location (Inter));
       Set_Type_Declarator (Def, Inter);
       Set_Type (Inter, Def);
-      Set_Base_Type (Def, Def);
       Set_Type_Staticness (Def, None);
       Set_Resolved_Flag (Def, False);
       Set_Signal_Type_Flag (Def, True);
@@ -704,7 +703,6 @@ package body Vhdl.Sem_Decls is
          Def := Create_Iir (Iir_Kind_Incomplete_Type_Definition);
          Location_Copy (Def, Decl);
          Set_Type_Definition (Decl, Def);
-         Set_Base_Type (Def, Def);
          Set_Signal_Type_Flag (Def, True);
          Set_Type_Declarator (Def, Decl);
          Set_Visible_Flag (Decl, True);

@@ -160,6 +160,10 @@ package Vhdl.Utils is
    --  Clear flag of TOP and all of its callees.
    procedure Clear_Seen_Flag (Top : Iir);
 
+   --  Return the base type of ATYPE.  Will always return ATYPE if ATYPE is
+   --  a proper type (and not a subtype).
+   function Get_Base_Type (Atype : Iir) return Iir;
+
    --  Return TRUE iff DEF is an anonymous type (or subtype) definition.
    --  Note: DEF is required to be a type (or subtype) definition.
    --  Note: type (and not subtype) are never anonymous.
@@ -262,10 +266,6 @@ package Vhdl.Utils is
 
    --  Return the type or subtype definition of the SUBTYP type mark.
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir;
-
-   --  Return the parent type, which is either the type of the type mark, or
-   --  the base type if SUBTYP has no type mark.
-   function Get_Parent_Type (Subtyp : Iir) return Iir;
 
    --  From element declaration or element constraint EL, get the corresponding
    --  element declaration in the base record type.

@@ -19,6 +19,7 @@ with Types; use Types;
 with Name_Table;
 with Std_Names; use Std_Names;
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 with Vhdl.Std_Package;
 
 package body Vhdl.Ieee.Std_Logic_1164 is

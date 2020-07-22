@@ -22,6 +22,7 @@ with GNAT.Debug_Utilities;
 
 with Simple_IO;
 with Name_Table;
+with Vhdl.Utils; use Vhdl.Utils;
 with Simul.Debugger; use Simul.Debugger;
 
 package body Simul.Environments is

@@ -27,7 +27,7 @@ with Vhdl.Sem_Scopes;
 with Vhdl.Sem_Specs;
 with Vhdl.Evaluation;
 with Vhdl.Sem;
-with Vhdl.Utils;
+with Vhdl.Utils; use Vhdl.Utils;
 
 package body Vhdl.Ieee.Vital_Timing is
    --  This package is based on IEEE 1076.4 1995.

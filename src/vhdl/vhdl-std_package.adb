@@ -261,7 +261,6 @@ package body Vhdl.Std_Package is
       begin
          --Integer_Type_Definition :=
          --  Create_Std_Iir (Iir_Kind_Integer_Type_Definition);
-         Set_Base_Type (Type_Definition, Type_Definition);
          Set_Type_Staticness (Type_Definition, Locally);
          Set_Signal_Type_Flag (Type_Definition, True);
          Set_Has_Signal_Flag (Type_Definition, not Flags.Flag_Whole_Analyze);
@@ -282,7 +281,7 @@ package body Vhdl.Std_Package is
       begin
          Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
-         Set_Base_Type (Subtype_Definition, Type_Definition);
+         Set_Parent_Type (Subtype_Definition, Type_Definition);
          Constraint := Create_Std_Range_Expr
            (Create_Std_Integer (Low_Bound (Is_64),
                                 Universal_Integer_Type_Definition),
@@ -316,7 +315,6 @@ package body Vhdl.Std_Package is
          Index := Create_Std_Type_Mark (Natural_Subtype_Declaration);
 
          Def := Create_Std_Iir (Iir_Kind_Array_Type_Definition);
-         Set_Base_Type (Def, Def);
 
          Index_List := Create_Iir_Flist (1);
          Set_Index_Subtype_Definition_List (Def, Index_List);
@@ -403,7 +401,6 @@ package body Vhdl.Std_Package is
       begin
          Decl := Create_Std_Decl (Iir_Kind_Type_Declaration);
          Set_Identifier (Decl, Name_Table.Get_Identifier (Name));
-         Set_Base_Type (Def, Def);
          Set_Type_Staticness (Def, None);
          Set_Type_Definition (Decl, Def);
          Set_Type_Declarator (Def, Decl);
@@ -462,7 +459,6 @@ package body Vhdl.Std_Package is
          -- (false, true)
          Boolean_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
-         Set_Base_Type (Boolean_Type_Definition, Boolean_Type_Definition);
          Set_Enumeration_Literal_List
            (Boolean_Type_Definition, Create_Iir_Flist (2));
          Boolean_False := Create_Std_Literal
@@ -501,7 +497,6 @@ package body Vhdl.Std_Package is
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Enumeration_Literal_List
            (Bit_Type_Definition, Create_Iir_Flist (2));
-         Set_Base_Type (Bit_Type_Definition, Bit_Type_Definition);
          Set_Is_Character_Type (Bit_Type_Definition, True);
          Bit_0 := Create_Std_Literal
            (Get_Std_Character ('0'), 0, Bit_Type_Definition);
@@ -540,7 +535,6 @@ package body Vhdl.Std_Package is
       begin
          Character_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
-         Set_Base_Type (Character_Type_Definition, Character_Type_Definition);
          Set_Is_Character_Type (Character_Type_Definition, True);
          if Vhdl_Std = Vhdl_87 then
             Len := 128;
@@ -592,8 +586,6 @@ package body Vhdl.Std_Package is
          -- (note, warning, error, failure)
          Severity_Level_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
-         Set_Base_Type (Severity_Level_Type_Definition,
-                        Severity_Level_Type_Definition);
          Set_Enumeration_Literal_List
            (Severity_Level_Type_Definition, Create_Iir_Flist (4));
          Set_Scalar_Size (Severity_Level_Type_Definition, Scalar_8);
@@ -652,8 +644,6 @@ package body Vhdl.Std_Package is
       declare
          Constraint : Iir_Range_Expression;
       begin
-         Set_Base_Type (Universal_Real_Type_Definition,
-                        Universal_Real_Type_Definition);
          Set_Type_Staticness (Universal_Real_Type_Definition, Locally);
          Set_Signal_Type_Flag (Universal_Real_Type_Definition, True);
          Set_Has_Signal_Flag (Universal_Real_Type_Definition, False);
@@ -670,8 +660,8 @@ package body Vhdl.Std_Package is
 
          Universal_Real_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Floating_Subtype_Definition);
-         Set_Base_Type (Universal_Real_Subtype_Definition,
-                        Universal_Real_Type_Definition);
+         Set_Parent_Type (Universal_Real_Subtype_Definition,
+                          Universal_Real_Type_Definition);
          Constraint := Create_Std_Range_Expr
            (Create_Std_Fp (Fp64'First, Universal_Real_Type_Definition),
             Create_Std_Fp (Fp64'Last, Universal_Real_Type_Definition),
@@ -718,8 +708,6 @@ package body Vhdl.Std_Package is
       end;
 
       begin
-         Set_Base_Type (Convertible_Real_Type_Definition,
-                        Convertible_Real_Type_Definition);
          Set_Type_Staticness (Convertible_Real_Type_Definition, Locally);
          Set_Signal_Type_Flag (Convertible_Real_Type_Definition, True);
          Set_Has_Signal_Flag (Convertible_Real_Type_Definition, False);
@@ -772,7 +760,6 @@ package body Vhdl.Std_Package is
       begin
          Real_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Floating_Type_Definition);
-         Set_Base_Type (Real_Type_Definition, Real_Type_Definition);
          Set_Type_Staticness (Real_Type_Definition, Locally);
          Set_Signal_Type_Flag (Real_Type_Definition, True);
          Set_Has_Signal_Flag (Real_Type_Definition,
@@ -790,7 +777,7 @@ package body Vhdl.Std_Package is
 
          Real_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Floating_Subtype_Definition);
-         Set_Base_Type (Real_Subtype_Definition, Real_Type_Definition);
+         Set_Parent_Type (Real_Subtype_Definition, Real_Type_Definition);
          Constraint := Create_Std_Range_Expr
            (Create_Std_Fp (Fp64'First, Universal_Real_Type_Definition),
             Create_Std_Fp (Fp64'Last, Universal_Real_Type_Definition),
@@ -878,7 +865,6 @@ package body Vhdl.Std_Package is
 
          Time_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Physical_Type_Definition);
-         Set_Base_Type (Time_Type_Definition, Time_Type_Definition);
          Set_Type_Staticness (Time_Type_Definition, Locally);--Time_Staticness
          Set_Signal_Type_Flag (Time_Type_Definition, True);
          Set_Has_Signal_Flag (Time_Type_Definition,
@@ -932,7 +918,7 @@ package body Vhdl.Std_Package is
                                  Time_Fs_Unit),
             Time_Type_Definition);
          Set_Range_Constraint (Time_Subtype_Definition, Constraint);
-         Set_Base_Type (Time_Subtype_Definition, Time_Type_Definition);
+         Set_Parent_Type (Time_Subtype_Definition, Time_Type_Definition);
          --Set_Subtype_Type_Mark (Time_Subtype_Definition,
          --                       Time_Type_Definition);
          Set_Type_Staticness (Time_Subtype_Definition, Time_Staticness);
@@ -967,7 +953,7 @@ package body Vhdl.Std_Package is
                                     Time_Fs_Unit),
                Time_Type_Definition);
             Set_Range_Constraint (Delay_Length_Subtype_Definition, Constraint);
-            Set_Base_Type
+            Set_Parent_Type
               (Delay_Length_Subtype_Definition, Time_Type_Definition);
             Set_Type_Staticness
               (Delay_Length_Subtype_Definition, Time_Staticness);
@@ -999,8 +985,6 @@ package body Vhdl.Std_Package is
       if AMS_Vhdl then
          Domain_Type_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
-         Set_Base_Type (Domain_Type_Type_Definition,
-                        Domain_Type_Type_Definition);
          Set_Enumeration_Literal_List
            (Domain_Type_Type_Definition, Create_Iir_Flist (3));
          Set_Scalar_Size (Domain_Type_Type_Definition, Scalar_8);
@@ -1119,7 +1103,7 @@ package body Vhdl.Std_Package is
       begin
          Natural_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
-         Set_Base_Type (Natural_Subtype_Definition, Integer_Type_Definition);
+         Set_Parent_Type (Natural_Subtype_Definition, Integer_Type_Definition);
          Set_Subtype_Type_Mark
            (Natural_Subtype_Definition,
             Create_Std_Type_Mark (Integer_Subtype_Declaration));
@@ -1151,8 +1135,8 @@ package body Vhdl.Std_Package is
       begin
          Positive_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
-         Set_Base_Type (Positive_Subtype_Definition,
-                        Integer_Type_Definition);
+         Set_Parent_Type (Positive_Subtype_Definition,
+                          Integer_Type_Definition);
          Set_Subtype_Type_Mark
            (Positive_Subtype_Definition,
             Create_Std_Type_Mark (Integer_Subtype_Declaration));
@@ -1188,7 +1172,6 @@ package body Vhdl.Std_Package is
 
          String_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Array_Type_Definition);
-         Set_Base_Type (String_Type_Definition, String_Type_Definition);
          Index_List := Create_Iir_Flist (1);
          Set_Nth_Element (Index_List, 0,
                          Create_Std_Type_Mark (Positive_Subtype_Declaration));
@@ -1263,8 +1246,6 @@ package body Vhdl.Std_Package is
       if Vhdl_Std >= Vhdl_93 then
          File_Open_Kind_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
-         Set_Base_Type (File_Open_Kind_Type_Definition,
-                        File_Open_Kind_Type_Definition);
          Set_Enumeration_Literal_List
            (File_Open_Kind_Type_Definition, Create_Iir_Flist (3));
          Set_Scalar_Size (File_Open_Kind_Type_Definition, Scalar_8);
@@ -1302,8 +1283,6 @@ package body Vhdl.Std_Package is
       if Vhdl_Std >= Vhdl_93 then
          File_Open_Status_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
-         Set_Base_Type (File_Open_Status_Type_Definition,
-                        File_Open_Status_Type_Definition);
          Set_Enumeration_Literal_List
            (File_Open_Status_Type_Definition, Create_Iir_Flist (4));
          Set_Scalar_Size (File_Open_Status_Type_Definition, Scalar_8);

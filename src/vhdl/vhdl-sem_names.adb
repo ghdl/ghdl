@@ -825,7 +825,7 @@ package body Vhdl.Sem_Names is
             Set_Range_Constraint (Slice_Type, Suffix_Rng);
             Set_Is_Ref (Slice_Type, True);
             Set_Type_Staticness (Slice_Type, Staticness);
-            Set_Base_Type (Slice_Type, Get_Base_Type (Index_Type));
+            Set_Parent_Type (Slice_Type, Get_Base_Type (Index_Type));
             Set_Location (Slice_Type, Get_Location (Suffix));
 
             --  Attach the new index subtype to the array subtype.
@@ -838,7 +838,7 @@ package body Vhdl.Sem_Names is
       Set_Index_Subtype_List (Expr_Type, Index_List);
       Set_Nth_Element (Index_List, 0, Slice_Type);
       Prefix_Base_Type := Get_Base_Type (Prefix_Type);
-      Set_Base_Type (Expr_Type, Prefix_Base_Type);
+      Set_Parent_Type (Expr_Type, Prefix_Base_Type);
       Set_Signal_Type_Flag (Expr_Type,
                             Get_Signal_Type_Flag (Prefix_Base_Type));
       Set_Element_Subtype (Expr_Type, Get_Element_Subtype (Prefix_Type));

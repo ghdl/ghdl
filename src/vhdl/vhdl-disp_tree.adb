@@ -25,6 +25,7 @@ with Files_Map;
 with PSL.Types; use PSL.Types;
 with PSL.Dump_Tree;
 with Vhdl.Nodes_Meta;
+with Vhdl.Utils; use Vhdl.Utils;
 
 --  Do not add a use clause for iirs_utils, as it may crash for ill-formed
 --  trees, which is annoying while debugging.

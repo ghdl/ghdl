@@ -842,7 +842,6 @@ package body Vhdl.Nodes is
    begin
       Res := Create_Node (Format_Short);
       Set_Nkind (Res, Iir_Kind'Pos (Iir_Kind_Error));
-      Set_Base_Type (Res, Res);
       return Res;
    end Create_Iir_Error;
 
@@ -3776,21 +3775,21 @@ package body Vhdl.Nodes is
       Set_Field3 (Decl, Limit);
    end Set_Right_Limit_Expr;
 
-   function Get_Base_Type (Decl : Iir) return Iir is
+   function Get_Parent_Type (Decl : Iir) return Iir is
    begin
       pragma Assert (Decl /= Null_Iir);
-      pragma Assert (Has_Base_Type (Get_Kind (Decl)),
-                     "no field Base_Type");
+      pragma Assert (Has_Parent_Type (Get_Kind (Decl)),
+                     "no field Parent_Type");
       return Get_Field4 (Decl);
-   end Get_Base_Type;
+   end Get_Parent_Type;
 
-   procedure Set_Base_Type (Decl : Iir; Base_Type : Iir) is
+   procedure Set_Parent_Type (Decl : Iir; Base_Type : Iir) is
    begin
       pragma Assert (Decl /= Null_Iir);
-      pragma Assert (Has_Base_Type (Get_Kind (Decl)),
-                     "no field Base_Type");
+      pragma Assert (Has_Parent_Type (Get_Kind (Decl)),
+                     "no field Parent_Type");
       Set_Field4 (Decl, Base_Type);
-   end Set_Base_Type;
+   end Set_Parent_Type;
 
    function Get_Simple_Nature (Def : Iir) return Iir is
    begin

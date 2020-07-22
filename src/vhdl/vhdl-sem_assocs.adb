@@ -955,7 +955,7 @@ package body Vhdl.Sem_Assocs is
                   Error_Kind ("finish_individual_assoc_array", Base_Index);
             end case;
             Location_Copy (Actual_Index, Actual);
-            Set_Base_Type (Actual_Index, Get_Base_Type (Base_Index));
+            Set_Parent_Type (Actual_Index, Base_Index);
             Index_Constraint := Get_Range_Constraint (Base_Index);
 
             Index_Subtype_Constraint := Create_Iir (Iir_Kind_Range_Expression);
@@ -1070,7 +1070,7 @@ package body Vhdl.Sem_Assocs is
             Ntype := Create_Iir (Iir_Kind_Record_Subtype_Definition);
             Set_Is_Ref (Ntype, True);
             Location_Copy (Ntype, Assoc);
-            Set_Base_Type (Ntype, Get_Base_Type (Atype));
+            Set_Parent_Type (Ntype, Atype);
             if Get_Kind (Atype) = Iir_Kind_Record_Subtype_Definition then
                Set_Resolution_Indication
                  (Ntype, Get_Resolution_Indication (Atype));

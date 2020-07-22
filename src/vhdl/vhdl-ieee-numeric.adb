@@ -21,6 +21,7 @@ with Vhdl.Std_Package;
 with Std_Names; use Std_Names;
 with Vhdl.Errors; use Vhdl.Errors;
 with Vhdl.Ieee.Std_Logic_1164;
+with Vhdl.Utils; use Vhdl.Utils;
 
 package body Vhdl.Ieee.Numeric is
    type Pkg_Kind is (Pkg_Std, Pkg_Bit);

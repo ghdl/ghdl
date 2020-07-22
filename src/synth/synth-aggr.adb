@@ -25,6 +25,7 @@ with Netlists.Utils; use Netlists.Utils;
 with Netlists.Builders; use Netlists.Builders;
 
 with Vhdl.Errors; use Vhdl.Errors;
+with Vhdl.Utils; use Vhdl.Utils;
 
 with Synth.Errors; use Synth.Errors;
 with Synth.Expr; use Synth.Expr;

@@ -992,6 +992,41 @@ package body Vhdl.Utils is
       end if;
    end Clear_Seen_Flag;
 
+   function Get_Base_Type (Atype : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Atype;
+      loop
+         case Get_Kind (Res) is
+            when Iir_Kind_Access_Type_Definition
+               | Iir_Kind_Integer_Type_Definition
+               | Iir_Kind_Floating_Type_Definition
+               | Iir_Kind_Enumeration_Type_Definition
+               | Iir_Kind_Physical_Type_Definition
+               | Iir_Kind_Array_Type_Definition
+               | Iir_Kind_Record_Type_Definition
+               | Iir_Kind_Protected_Type_Declaration
+               | Iir_Kind_File_Type_Definition
+               | Iir_Kind_Incomplete_Type_Definition
+               | Iir_Kind_Interface_Type_Definition
+               | Iir_Kind_Wildcard_Type_Definition
+               | Iir_Kind_Error =>
+               return Res;
+            when Iir_Kind_Access_Subtype_Definition
+               | Iir_Kind_Integer_Subtype_Definition
+               | Iir_Kind_Floating_Subtype_Definition
+               | Iir_Kind_Enumeration_Subtype_Definition
+               | Iir_Kind_Physical_Subtype_Definition
+               | Iir_Kind_Array_Subtype_Definition
+               | Iir_Kind_Record_Subtype_Definition =>
+               Res := Get_Parent_Type (Res);
+            when others =>
+               Error_Kind ("get_base_type", Res);
+         end case;
+      end loop;
+   end Get_Base_Type;
+
    function Is_Anonymous_Type_Definition (Def : Iir) return Boolean is
    begin
       return Get_Type_Declarator (Def) = Null_Iir;
@@ -1283,17 +1318,6 @@ package body Vhdl.Utils is
          return Get_Type (Get_Named_Entity (Type_Mark_Name));
       end if;
    end Get_Denoted_Type_Mark;
-
-   function Get_Parent_Type (Subtyp : Iir) return Iir
-   is
-      Type_Mark_Name : constant Iir := Get_Subtype_Type_Mark (Subtyp);
-   begin
-      if Type_Mark_Name = Null_Iir then
-         return Get_Base_Type (Subtyp);
-      else
-         return Get_Type (Get_Named_Entity (Type_Mark_Name));
-      end if;
-   end Get_Parent_Type;
 
    function Get_Base_Element_Declaration (El : Iir) return Iir
    is
@@ -1625,7 +1649,7 @@ package body Vhdl.Utils is
    begin
       Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Res, Loc);
-      Set_Base_Type (Res, Base_Type);
+      Set_Parent_Type (Res, Base_Type);
       Set_Element_Subtype (Res, El_Type);
       if Get_Kind (Arr_Type) = Iir_Kind_Array_Subtype_Definition then
          Set_Resolution_Indication (Res, Get_Resolution_Indication (Arr_Type));
@@ -1705,7 +1729,6 @@ package body Vhdl.Utils is
    begin
       Res := Create_Error (Orig);
       --Set_Expr_Staticness (Res, Locally);
-      Set_Base_Type (Res, Res);
       Set_Type_Declarator (Res, Null_Iir);
       Set_Resolved_Flag (Res, True);
       Set_Signal_Type_Flag (Res, True);

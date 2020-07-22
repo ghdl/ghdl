@@ -211,7 +211,7 @@ class fields:
     Right_Limit = 146
     Left_Limit_Expr = 147
     Right_Limit_Expr = 148
-    Base_Type = 149
+    Parent_Type = 149
     Simple_Nature = 150
     Base_Nature = 151
     Resolution_Indication = 152
@@ -940,8 +940,8 @@ Has_Left_Limit_Expr =\
 Has_Right_Limit_Expr =\
     libghdl.vhdl__nodes_meta__has_right_limit_expr
 
-Has_Base_Type =\
-    libghdl.vhdl__nodes_meta__has_base_type
+Has_Parent_Type =\
+    libghdl.vhdl__nodes_meta__has_parent_type
 
 Has_Simple_Nature =\
     libghdl.vhdl__nodes_meta__has_simple_nature

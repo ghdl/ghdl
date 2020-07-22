@@ -2177,9 +2177,9 @@ Get_Right_Limit_Expr = libghdl.vhdl__nodes__get_right_limit_expr
 
 Set_Right_Limit_Expr = libghdl.vhdl__nodes__set_right_limit_expr
 
-Get_Base_Type = libghdl.vhdl__nodes__get_base_type
+Get_Parent_Type = libghdl.vhdl__nodes__get_parent_type
 
-Set_Base_Type = libghdl.vhdl__nodes__set_base_type
+Set_Parent_Type = libghdl.vhdl__nodes__set_parent_type
 
 Get_Simple_Nature = libghdl.vhdl__nodes__get_simple_nature
 

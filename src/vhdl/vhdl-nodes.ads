@@ -2315,10 +2315,10 @@ package Vhdl.Nodes is
    --  Note: a type definition cannot be anoynymous.
    --   Get/Set_Type_Declarator (Field3)
    --
-   --  The base type.
-   --  For a subtype, it returns the type.
-   --  For a type, it must return the type itself.
-   --   Get/Set_Base_Type (Field4)
+   --  The parent type.
+   --  This is the type or subtype which was used to build a subtype.  This
+   --  creates a path to the base type.  Only for subtypes.
+   --   Get/Set_Parent_Type (Field4)
    --
    --  The staticness of a type, according to LRM93 7.4.1.
    --  Note: These types definition are always locally static:
@@ -2346,9 +2346,6 @@ package Vhdl.Nodes is
    --   Get/Set_Range_Constraint (Field1)
    --
    --   Get/Set_Type_Declarator (Field3)
-   --
-   --  Always itself
-   --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -2410,8 +2407,6 @@ package Vhdl.Nodes is
    --   Get/Set_Primary_Unit (Alias Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
-   --
-   --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -2483,8 +2478,6 @@ package Vhdl.Nodes is
    --  The type declarator that has created this type.
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
-   --
    --  Type staticness is always locally.
    --   Get/Set_Type_Staticness (State1)
    --
@@ -2521,8 +2514,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
-   --
    --   Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Constraint_State (State2)
@@ -2549,8 +2540,6 @@ package Vhdl.Nodes is
    --   Get/Set_Elements_Declaration_List (Field1)
    --
    --   Get/Set_Type_Declarator (Field3)
-   --
-   --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Type_Staticness (State1)
    --
@@ -2584,8 +2573,6 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
-   --
    --  Next access type that also referenced the same incomplete type when
    --  defined.
    --   Get/Set_Incomplete_Type_Ref_Chain (Field0)
@@ -2601,8 +2588,6 @@ package Vhdl.Nodes is
    --   Get/Set_File_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
-   --
-   --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -2626,8 +2611,6 @@ package Vhdl.Nodes is
    --  Set to the incomplete type declaration.
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
-   --
    --  Set to the complete type definition when completed.
    --   Get/Set_Complete_Type_Definition (Field5)
    --
@@ -2644,8 +2627,6 @@ package Vhdl.Nodes is
    --
    --  Set to interface type declaration.
    --   Get/Set_Type_Declarator (Field3)
-   --
-   --   Get/Set_Base_Type (Field4)
    --
    --  Set only during analysis of association: type associated with this
    --  interface, so that references to this interface can use the actual
@@ -2667,8 +2648,6 @@ package Vhdl.Nodes is
    --   Get/Set_Protected_Type_Body (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
-   --
-   --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Attribute_Value_Chain (Field5)
    --
@@ -2710,8 +2689,6 @@ package Vhdl.Nodes is
    --  restrictions depends on the node.  See std_package.ads
    --
    --   Get/Set_Type_Declarator (Field3)
-   --
-   --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -2796,7 +2773,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
+   --   Get/Set_Parent_Type (Field4)
    --
    --   Get/Set_Resolution_Indication (Field5)
    --
@@ -2818,7 +2795,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
+   --   Get/Set_Parent_Type (Field4)
    --
    --   Get/Set_Resolution_Indication (Field5)
    --
@@ -2842,7 +2819,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
+   --   Get/Set_Parent_Type (Field4)
    --
    --   Get/Set_Designated_Subtype_Indication (Field5)
    --
@@ -2900,7 +2877,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
+   --   Get/Set_Parent_Type (Field4)
    --
    --   Get/Set_Resolution_Indication (Field5)
    --
@@ -2942,7 +2919,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
+   --   Get/Set_Parent_Type (Field4)
    --
    --   Get/Set_Type_Staticness (State1)
    --
@@ -2989,7 +2966,7 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Type_Declarator (Field3)
    --
-   --   Get/Set_Base_Type (Field4)
+   --   Get/Set_Parent_Type (Field4)
    --
    --   Get/Set_Resolution_Indication (Field5)
    --
@@ -4739,8 +4716,6 @@ package Vhdl.Nodes is
    --   Get/Set_Error_Origin (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
-   --
-   --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -7987,9 +7962,9 @@ package Vhdl.Nodes is
    procedure Set_Right_Limit_Expr (Decl : Iir_Range_Expression; Limit : Iir);
 
    --  Field: Field4 Ref
-   function Get_Base_Type (Decl : Iir) return Iir;
-   procedure Set_Base_Type (Decl : Iir; Base_Type : Iir);
-   pragma Inline (Get_Base_Type);
+   function Get_Parent_Type (Decl : Iir) return Iir;
+   procedure Set_Parent_Type (Decl : Iir; Base_Type : Iir);
+   pragma Inline (Get_Parent_Type);
 
    --  Only for composite base nature: the simple nature.
    --  Field: Field7 Ref

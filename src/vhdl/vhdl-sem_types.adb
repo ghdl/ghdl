@@ -247,11 +247,10 @@ package body Vhdl.Sem_Types is
       Location_Copy (Ntype, Loc);
       Ndef := Create_Iir (Iir_Kind_Integer_Type_Definition);
       Location_Copy (Ndef, Loc);
-      Set_Base_Type (Ndef, Ndef);
       Set_Type_Declarator (Ndef, Decl);
       Set_Type_Staticness (Ndef, Locally);
       Set_Signal_Type_Flag (Ndef, True);
-      Set_Base_Type (Ntype, Ndef);
+      Set_Parent_Type (Ntype, Ndef);
       Set_Type_Declarator (Ntype, Decl);
       Set_Range_Constraint (Ntype, Constraint);
       Set_Type_Staticness (Ntype, Get_Expr_Staticness (Constraint));
@@ -302,12 +301,11 @@ package body Vhdl.Sem_Types is
                Location_Copy (Ntype, Expr);
                Ndef := Create_Iir (Iir_Kind_Floating_Type_Definition);
                Location_Copy (Ndef, Expr);
-               Set_Base_Type (Ndef, Ndef);
                Set_Type_Declarator (Ndef, Decl);
                Set_Type_Staticness (Ndef, Get_Expr_Staticness (Expr));
                Set_Scalar_Size (Ndef, Scalar_64);
                Set_Signal_Type_Flag (Ndef, True);
-               Set_Base_Type (Ntype, Ndef);
+               Set_Parent_Type (Ntype, Ndef);
                Set_Type_Declarator (Ntype, Decl);
                Set_Range_Constraint (Ntype, Rng);
                Set_Resolved_Flag (Ntype, False);
@@ -369,7 +367,6 @@ package body Vhdl.Sem_Types is
       --  type and a subtype of the base type, in which case the simple name
       --  denotes the subtype, and the base type is anonymous.
       Set_Type_Declarator (Def, Decl);
-      Set_Base_Type (Def, Def);
       Set_Resolved_Flag (Def, False);
       Set_Type_Staticness (Def, Locally);
       Set_Signal_Type_Flag (Def, True);
@@ -414,7 +411,7 @@ package body Vhdl.Sem_Types is
       --  Create the subtype.
       Sub_Type := Create_Iir (Iir_Kind_Physical_Subtype_Definition);
       Location_Copy (Sub_Type, Range_Expr);
-      Set_Base_Type (Sub_Type, Def);
+      Set_Parent_Type (Sub_Type, Def);
       Set_Signal_Type_Flag (Sub_Type, True);
 
       --  Analyze the primary unit.
@@ -579,7 +576,6 @@ package body Vhdl.Sem_Types is
       El : Iir;
    begin
       Decl := Get_Type_Definition (Type_Decl);
-      Set_Base_Type (Decl, Decl);
       Set_Resolved_Flag (Decl, False);
       Set_Signal_Type_Flag (Decl, False);
       Set_Type_Staticness (Decl, None);
@@ -822,7 +818,6 @@ package body Vhdl.Sem_Types is
       El: Iir;
       Only_Characters : Boolean;
    begin
-      Set_Base_Type (Def, Def);
       Set_Type_Staticness (Def, Locally);
       Set_Signal_Type_Flag (Def, True);
 
@@ -939,7 +934,6 @@ package body Vhdl.Sem_Types is
          Xref_Decl (El);
       end loop;
       Close_Declarative_Region;
-      Set_Base_Type (Def, Def);
       Set_Resolved_Flag (Def, Resolved_Flag);
       Set_Type_Staticness (Def, Type_Staticness);
       Set_Constraint_State (Def, Constraint);
@@ -973,8 +967,6 @@ package body Vhdl.Sem_Types is
 
    function Sem_Unbounded_Array_Type_Definition (Def: Iir) return Iir is
    begin
-      Set_Base_Type (Def, Def);
-
       Sem_Unbounded_Array_Indexes (Def);
 
       Sem_Array_Element (Def);
@@ -1044,7 +1036,6 @@ package body Vhdl.Sem_Types is
       -- Create a definition for the base type of subtype DEF.
       Base_Type := Create_Iir (Iir_Kind_Array_Type_Definition);
       Location_Copy (Base_Type, Def);
-      Set_Base_Type (Base_Type, Base_Type);
       Set_Type_Declarator (Base_Type, Decl);
       Base_Index_List := Create_Iir_Flist (Get_Nbr_Elements (Index_List));
       Set_Index_Subtype_Definition_List (Base_Type, Base_Index_List);
@@ -1116,7 +1107,7 @@ package body Vhdl.Sem_Types is
       Set_Index_Constraint_Flag (Def, True);
       Set_Constraint_State (Def, Get_Array_Constraint (Def));
       Set_Constraint_State (Base_Type, Get_Array_Constraint (Base_Type));
-      Set_Base_Type (Def, Base_Type);
+      Set_Parent_Type (Def, Base_Type);
       Set_Subtype_Type_Mark (Def, Null_Iir);
       return Def;
    end Sem_Constrained_Array_Type_Definition;
@@ -1151,7 +1142,6 @@ package body Vhdl.Sem_Types is
          end case;
          Set_Designated_Type (Def, D_Type);
       end if;
-      Set_Base_Type (Def, Def);
       Set_Type_Staticness (Def, None);
       Set_Resolved_Flag (Def, False);
       Set_Signal_Type_Flag (Def, False);
@@ -1210,7 +1200,6 @@ package body Vhdl.Sem_Types is
          end case;
       end if;
 
-      Set_Base_Type (Def, Def);
       Set_Resolved_Flag (Def, False);
       Set_Text_File_Flag (Def, Is_Text_Type_Declaration (Decl));
       Set_Signal_Type_Flag (Def, False);
@@ -1311,7 +1300,7 @@ package body Vhdl.Sem_Types is
       end case;
       Location_Copy (Sub_Type, A_Range);
       Set_Range_Constraint (Sub_Type, A_Range);
-      Set_Base_Type (Sub_Type, Get_Base_Type (Range_Type));
+      Set_Parent_Type (Sub_Type, Get_Base_Type (Range_Type));
       Set_Type_Staticness (Sub_Type, Get_Expr_Staticness (A_Range));
       Set_Signal_Type_Flag (Sub_Type, True);
       return Sub_Type;
@@ -1539,7 +1528,7 @@ package body Vhdl.Sem_Types is
             Error_Kind ("copy_subtype_indication", Def);
       end case;
       Location_Copy (Res, Def);
-      Set_Base_Type (Res, Get_Base_Type (Def));
+      Set_Parent_Type (Res, Get_Base_Type (Def));
       Set_Type_Staticness (Res, Get_Type_Staticness (Def));
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Def));
       return Res;
@@ -1577,7 +1566,7 @@ package body Vhdl.Sem_Types is
       Location_Copy (Res, Loc);
       --  FIXME: can be globally!
       Set_Type_Staticness (Res, None);
-      Set_Base_Type (Res, Get_Base_Type (Atype));
+      Set_Parent_Type (Res, Get_Base_Type (Atype));
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Atype));
       Set_Resolved_Flag (Res, Get_Resolved_Flag (Atype));
       Set_Constraint_State (Res, Fully_Constrained);
@@ -1700,7 +1689,7 @@ package body Vhdl.Sem_Types is
       Index_Staticness : Iir_Staticness;
    begin
       -- Check each index constraint against array type.
-      Set_Base_Type (Def, Base_Type);
+      Set_Parent_Type (Def, Base_Type);
 
       Sem_Array_Constraint_Indexes
         (Def, Type_Mark, Base_Type, Index_Staticness);
@@ -1980,7 +1969,7 @@ package body Vhdl.Sem_Types is
       Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
       Set_Is_Ref (Res, True);
       Location_Copy (Res, Def);
-      Set_Base_Type (Res, Get_Base_Type (Type_Mark));
+      Set_Parent_Type (Res, Type_Mark);
       if Get_Kind (Type_Mark) = Iir_Kind_Record_Subtype_Definition then
          Set_Resolution_Indication
            (Res, Get_Resolution_Indication (Type_Mark));
@@ -2222,7 +2211,7 @@ package body Vhdl.Sem_Types is
             Res := Create_Iir (Get_Kind (Type_Mark));
          end if;
          Location_Copy (Res, Def);
-         Set_Base_Type (Res, Get_Base_Type (Type_Mark));
+         Set_Parent_Type (Res, Type_Mark);
          Set_Resolution_Indication (Res, Get_Resolution_Indication (Def));
          A_Range := Get_Range_Constraint (Def);
          if A_Range = Null_Iir then
@@ -2324,7 +2313,7 @@ package body Vhdl.Sem_Types is
                        (Def, Base_Type, Null_Iir);
                      Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
                      Location_Copy (Res, Def);
-                     Set_Base_Type (Res, Type_Mark);
+                     Set_Parent_Type (Res, Type_Mark);
                      Set_Designated_Subtype_Indication (Res, Sub_Type);
                      Set_Signal_Type_Flag (Res, False);
 
@@ -2409,7 +2398,6 @@ package body Vhdl.Sem_Types is
             Type_Mark := Sem_Type_Mark (Def, Incomplete);
             return Type_Mark;
          when Iir_Kind_Error =>
-            Set_Base_Type (Def, Def);
             return Def;
          when others =>
             null;
@@ -2529,7 +2517,7 @@ package body Vhdl.Sem_Types is
             Location_Copy (St_Def, Def);
             Set_Index_Subtype_List (St_Def, Get_Index_Subtype_List (Def));
             Set_Element_Subtype (St_Def, Get_Element_Subtype (Br_Def));
-            Set_Base_Type (St_Def, Get_Base_Type (Br_Def));
+            Set_Parent_Type (St_Def, Br_Def);
             Set_Type_Staticness (St_Def, Get_Nature_Staticness (Def));
             Set_Constraint_State (St_Def, Get_Constraint_State (Def));
             Set_Type_Declarator (St_Def, Get_Nature_Declarator (Def));
@@ -2636,7 +2624,6 @@ package body Vhdl.Sem_Types is
          Arr := Create_Iir (Iir_Kind_Array_Type_Definition);
          Location_Copy (Arr, Def);
          Set_Index_Subtype_List (Arr, Get_Index_Subtype_List (Def));
-         Set_Base_Type (Arr, Arr);
          Set_Type_Staticness (Arr, None);
          Set_Type_Declarator (Arr, Decl);
          Set_Element_Subtype (Arr, Get_Branch_Type (El_Nat, I));
@@ -2748,7 +2735,6 @@ package body Vhdl.Sem_Types is
             St_Def := Create_Iir (Iir_Kind_Record_Type_Definition);
             Location_Copy (St_Def, Def);
             Set_Type_Declarator (St_Def, Decl);
-            Set_Base_Type (St_Def, St_Def);
             St_List := Create_Iir_Flist (Get_Nbr_Elements (El_List));
             Set_Elements_Declaration_List (St_Def, St_List);
             Staticness := Locally;
