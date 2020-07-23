@@ -200,7 +200,7 @@ install.mcode: install.mcode.program install.vhdllib install.vpi install.libghdl
 uninstall.mcode: uninstall.mcode.program uninstall.vhdllib uninstall.vpi uninstall.libghdl
 
 test.mcode: ghdl_mcode$(EXEEXT)
-	cd testsuite; GHDL=$(CURDIR)/ghdl_mcode$(EXEEXT) ./testsuite.sh
+	cd $(srcdir)/testsuite; GHDL=$(CURDIR)/ghdl_mcode$(EXEEXT) ./testsuite.sh
 
 oread-mcode$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/mcode/Makefile \
@@ -281,7 +281,7 @@ install.gcc: install.vhdllib install.grt install.vpi install.libghdl
 uninstall.gcc: uninstall.vhdllib uninstall.grt uninstall.vpi uninstall.libghdl
 
 test.gcc:
-	cd testsuite; GHDL=$(GHDL_GCC_BIN) ./testsuite.sh
+	cd $(srcdir)/testsuite; GHDL=$(GHDL_GCC_BIN) ./testsuite.sh
 
 #################### For gcc backend - development only (local build) ####
 
@@ -366,7 +366,7 @@ install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl1-llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 
 test.llvm: ghdl_llvm$(EXEEXT)
-	cd testsuite; GHDL=$(CURDIR)/ghdl_llvm$(EXEEXT) ./testsuite.sh
+	cd $(srcdir)/testsuite; GHDL=$(CURDIR)/ghdl_llvm$(EXEEXT) ./testsuite.sh
 
 uninstall.llvm.program:
 	$(RM) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
