@@ -708,10 +708,10 @@ package body Ortho_Code.Exprs is
       else
          case Get_Const_Kind (Lit) is
             when OC_Signed
-              | OC_Unsigned
-              | OC_Float
-              | OC_Null
-              | OC_Lit =>
+               | OC_Unsigned
+               | OC_Float
+               | OC_Null
+               | OC_Lit =>
                declare
                   H, L : Uns32;
                begin
@@ -726,11 +726,12 @@ package body Ortho_Code.Exprs is
                return New_Enode (OE_Addrd, L_Type,
                                  O_Enode (Get_Const_Decl (Lit)), O_Enode_Null);
             when OC_Array
-              | OC_Record
-              | OC_Union
-              | OC_Sizeof
-              | OC_Alignof
-              | OC_Zero =>
+               | OC_Record
+               | OC_Record_Sizeof
+               | OC_Union
+               | OC_Sizeof
+               | OC_Alignof
+               | OC_Zero =>
                raise Syntax_Error;
          end case;
       end if;

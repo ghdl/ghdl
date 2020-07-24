@@ -110,6 +110,14 @@ private
    end record;
    pragma Convention (C, O_Element_List);
 
+   type O_Element_Sublist is record
+      Base : Tree;
+      Field : Tree;
+      Res : Tree;
+      Chain : Chain_Constr_Type;
+   end record;
+   pragma Convention (C, O_Element_Sublist);
+
    type O_Case_Block is record
       Prev_Stmts : Tree;
       Case_Type : Tree;
@@ -176,6 +184,11 @@ private
    pragma Import (C, Start_Record_Type);
    pragma Import (C, New_Record_Field);
    pragma Import (C, Finish_Record_Type);
+
+   pragma Import (C, Start_Record_Subtype);
+   pragma Import (C, New_Subrecord_Field);
+   pragma Import (C, Finish_Record_Subtype);
+
    pragma Import (C, New_Uncomplete_Record_Type);
    pragma Import (C, Start_Uncomplete_Record_Type);
 
@@ -191,7 +204,7 @@ private
    pragma Import (C, Finish_Access_Type);
 
    pragma Import (C, New_Array_Type);
-   pragma Import (C, New_Constrained_Array_Type);
+   pragma Import (C, New_Array_Subtype);
 
    pragma Import (C, New_Boolean_Type);
    pragma Import (C, Start_Enum_Type);
@@ -213,6 +226,7 @@ private
    pragma Import (C, New_Access_Element);
 
    pragma Import (C, New_Sizeof);
+   pragma Import (C, New_Record_Sizeof);
    pragma Import (C, New_Alignof);
    pragma Import (C, New_Offsetof);
 

@@ -174,7 +174,8 @@ package body Ortho_Front is
        Tok_Left_Brack, Tok_Right_Brack,
        Tok_Unsigned, Tok_Signed, Tok_Float,
        Tok_Array, Tok_Subarray,
-       Tok_Access, Tok_Record, Tok_Union,
+       Tok_Access,
+       Tok_Record, Tok_Subrecord, Tok_Union,
        Tok_Boolean, Tok_Enum,
        Tok_If, Tok_Then, Tok_Else, Tok_Elsif,
        Tok_Loop, Tok_Exit, Tok_Next,
@@ -213,6 +214,7 @@ package body Ortho_Front is
    Id_Subprg_Addr : Syment_Acc;
    Id_Conv : Syment_Acc;
    Id_Sizeof : Syment_Acc;
+   Id_Record_Sizeof : Syment_Acc;
    Id_Alignof : Syment_Acc;
    Id_Alloca : Syment_Acc;
    Id_Offsetof : Syment_Acc;
@@ -253,7 +255,7 @@ package body Ortho_Front is
                       Node_Lit,
                       Type_Boolean, Type_Enum,
                       Type_Unsigned, Type_Signed, Type_Float,
-                      Type_Array, Type_Subarray,
+                      Type_Array, Type_Subarray, Type_Subrecord,
                       Type_Access, Type_Record, Type_Union);
    subtype Nodes_Subprogram is Node_Kind range Node_Function .. Node_Procedure;
 
@@ -266,6 +268,8 @@ package body Ortho_Front is
       Map : Node_Array (1 .. Len);
    end record;
    type Node_Map_Acc is access Node_Map;
+
+   type Node_Array_Acc is access Node_Array;
 
    type Node (Kind : Node_Kind) is record
       case Kind is
@@ -322,6 +326,7 @@ package body Ortho_Front is
             end case;
          when Node_Field =>
             --  Record field.
+            Field_Pos : Natural;  --  From 1 to N.
             Field_Ident : Syment_Acc;
             Field_Fnode : O_Fnode;
             Field_Type : Node_Acc;
@@ -334,6 +339,7 @@ package body Ortho_Front is
            | Type_Array
            | Type_Subarray
            | Type_Record
+           | Type_Subrecord
            | Type_Union
            | Type_Access
            | Type_Boolean
@@ -353,9 +359,12 @@ package body Ortho_Front is
                  | Type_Union =>
                   --  Simply linked list of fields.  Works well unless the
                   --  number of fields is too high.
-                  Record_Union_Fields : Node_Acc;
+                  Record_Union_Fields : Node_Array_Acc;
                   --  Hash map of fields (the key is the hash of the ident).
                   Record_Union_Map : Node_Map_Acc;
+               when Type_Subrecord =>
+                  Subrecord_Base : Node_Acc;
+                  Subrecord_Fields : Node_Array_Acc;
                when Type_Enum
                  | Type_Boolean =>
                   Enum_Lits : Node_Acc;
@@ -1100,30 +1109,37 @@ package body Ortho_Front is
    --  Grammar:
    --      { ident : type ; }
    --    end
-   procedure Parse_Fields (Aggr_Type : Node_Acc;
-                           Constr : in out O_Element_List)
+   function Parse_Fields return Node_Array_Acc
    is
       F_Type : Node_Acc;
       F : Syment_Acc;
+      First_Field : Node_Acc;
       Last_Field : Node_Acc;
       Field : Node_Acc;
       Num : Natural;
+      Res : Node_Array_Acc;
    begin
       Push_Scope;
 
       Last_Field := null;
+      First_Field := null;
       Num := 0;
       loop
          exit when Tok = Tok_End;
+         exit when Tok = Tok_Right_Paren;
 
          if Tok /= Tok_Ident then
             Parse_Error ("field name expected");
          end if;
+
+         Num := Num + 1;
+
          F := Token_Sym;
          Next_Expect (Tok_Colon, "':' expected");
          Next_Token;
          F_Type := Parse_Type;
          Field := new Node'(Kind => Node_Field,
+                            Field_Pos => Num,
                             Field_Ident => F,
                             Field_Fnode => O_Fnode_Null,
                             Field_Type => F_Type,
@@ -1133,26 +1149,13 @@ package body Ortho_Front is
          --  Check fields are uniq.
          Add_Decl (F, Field);
 
-         case Aggr_Type.Kind is
-            when Type_Record =>
-               New_Record_Field (Constr, Field.Field_Fnode, F.Ident,
-                                 F_Type.Type_Onode);
-            when Type_Union =>
-               New_Union_Field (Constr, Field.Field_Fnode, F.Ident,
-                                F_Type.Type_Onode);
-            when others =>
-               raise Program_Error;
-         end case;
-
          --  Append field
          if Last_Field = null then
-            Aggr_Type.Record_Union_Fields := Field;
+            First_Field := Field;
          else
             Last_Field.Field_Next := Field;
          end if;
          Last_Field := Field;
-
-         Num := Num + 1;
 
          Expect (Tok_Semicolon, "';' expected");
          Next_Token;
@@ -1160,21 +1163,55 @@ package body Ortho_Front is
 
       Pop_Scope;
 
+      Res := new Node_Array(1 .. Num);
+      for I in Res'Range loop
+         Res (I) := First_Field;
+         First_Field := First_Field.Field_Next;
+      end loop;
+
+      return Res;
+   end Parse_Fields;
+
+   procedure Parse_Fields (Aggr_Type : Node_Acc;
+                           Constr : in out O_Element_List)
+   is
+      Fields : Node_Array_Acc;
+      Field : Node_Acc;
+   begin
+      Fields := Parse_Fields;
+      Expect (Tok_End, "end expected");
+      Aggr_Type.Record_Union_Fields := Fields;
+
+      for I in Fields'Range loop
+         Field := Fields (I);
+         case Aggr_Type.Kind is
+            when Type_Record =>
+               New_Record_Field (Constr, Field.Field_Fnode,
+                                 Field.Field_Ident.Ident,
+                                 Field.Field_Type.Type_Onode);
+            when Type_Union =>
+               New_Union_Field (Constr, Field.Field_Fnode,
+                                Field.Field_Ident.Ident,
+                                Field.Field_Type.Type_Onode);
+            when others =>
+               raise Program_Error;
+         end case;
+      end loop;
+
       --  Create a map if there are a lot of fields.
-      if Num > 16 then
+      if Fields'Last > 16 then
          declare
             Map : Node_Map_Acc;
             Idx : Natural;
          begin
-            Map := new Node_Map'(Len => Num / 3, Map => (others => null));
+            Map := new Node_Map'(Len => Fields'Last / 3,
+                                 Map => (others => null));
             Aggr_Type.Record_Union_Map := Map;
-            Field := Aggr_Type.Record_Union_Fields;
-            while Field /= null loop
+            for I in Fields'Range loop
+               Field := Fields (I);
                Idx := Field_Map_Index (Map, Field.Field_Ident);
                Field.Field_Hash_Next := Map.Map (Idx);
                Map.Map (Idx) := Field;
-
-               Field := Field.Field_Next;
             end loop;
          end;
       end if;
@@ -1193,6 +1230,34 @@ package body Ortho_Front is
       Next_Expect (Tok_Record, "end record expected");
       Finish_Record_Type (Constr, Def.Type_Onode);
    end Parse_Record_Type;
+
+   procedure Parse_Subrecord_Type (Def : Node_Acc)
+   is
+      Base : Node_Acc;
+      Constr : O_Element_Sublist;
+      Fields : Node_Array_Acc;
+      Field : Node_Acc;
+   begin
+      Base := Parse_Type;
+      if Base.Kind /= Type_Record then
+         Parse_Error ("subrecord base type must be a record type");
+      end if;
+      Def.Subrecord_Base := Base;
+      Expect (Tok_Left_Paren);
+      Next_Token;
+
+      Fields := Parse_Fields;
+      Def.Subrecord_Fields := Fields;
+      Expect (Tok_Right_Paren);
+
+      Start_Record_Subtype (Base.Type_Onode, Constr);
+      for I in Fields'Range loop
+         Field := Fields (I);
+         New_Subrecord_Field (Constr, Field.Field_Fnode,
+                              Field.Field_Type.Type_Onode);
+      end loop;
+      Finish_Record_Subtype (Constr, Def.Type_Onode);
+   end Parse_Subrecord_Type;
 
    procedure Parse_Union_Type (Def : Node_Acc)
    is
@@ -1267,8 +1332,9 @@ package body Ortho_Front is
                end if;
                Expect (Tok_Left_Brack);
                Next_Token;
-               Res_Type := New_Constrained_Array_Type
+               Res_Type := New_Array_Subtype
                  (Base_Node.Type_Onode,
+                  Base_Node.Array_Element.Type_Onode,
                   Parse_Constant_Value (Base_Node.Array_Index));
                Expect (Tok_Right_Brack);
                Next_Token;
@@ -1327,6 +1393,13 @@ package body Ortho_Front is
                              Record_Union_Fields => null,
                              Record_Union_Map => null);
             Parse_Record_Type (Res);
+         when Tok_Subrecord =>
+            Next_Token;
+            Res := new Node'(Kind => Type_Subrecord,
+                             Type_Onode => O_Tnode_Null,
+                             Subrecord_Base => null,
+                             Subrecord_Fields => null);
+            Parse_Subrecord_Type (Res);
          when Tok_Union =>
             Next_Token;
             Res := new Node'(Kind => Type_Union,
@@ -1462,22 +1535,42 @@ package body Ortho_Front is
 
    function Find_Field_By_Name (Aggr_Type : Node_Acc) return Node_Acc
    is
-      Map : constant Node_Map_Acc := Aggr_Type.Record_Union_Map;
+      Map : Node_Map_Acc;
       Field : Node_Acc;
+      Fields : Node_Array_Acc;
    begin
+      case Aggr_Type.Kind is
+         when Type_Record
+           | Type_Union =>
+            Map := Aggr_Type.Record_Union_Map;
+            Fields := Aggr_Type.Record_Union_Fields;
+         when Type_Subrecord =>
+            Map := Aggr_Type.Subrecord_Base.Record_Union_Map;
+            Fields := Aggr_Type.Subrecord_Fields;
+         when others =>
+            raise Program_Error;
+      end case;
+
       if Map /= null then
          --  Look in the hash map if it is present.
          Field := Map.Map (Field_Map_Index (Map, Token_Sym));
          while Field /= null loop
-            exit when Field.Field_Ident = Token_Sym;
+            if Field.Field_Ident = Token_Sym then
+               --  Get the field by position as the map is shared between
+               --  a record and its subrecords.
+               Field := Fields (Field.Field_Pos);
+               exit;
+            end if;
             Field := Field.Field_Hash_Next;
          end loop;
       else
          --  Linear look.
-         Field := Aggr_Type.Record_Union_Fields;
-         while Field /= null loop
-            exit when Field.Field_Ident = Token_Sym;
-            Field := Field.Field_Next;
+         Field := null;
+         for I in Fields'Range loop
+            if Fields (I).Field_Ident = Token_Sym then
+               Field := Fields (I);
+               exit;
+            end if;
          end loop;
       end if;
 
@@ -1497,9 +1590,10 @@ package body Ortho_Front is
       Next_Expect (Tok_Ident);
       Rec_Type := Get_Decl (Token_Sym);
       if Rec_Type.Kind /= Decl_Type
-        or else Rec_Type.Decl_Dtype.Kind /= Type_Record
+        or else (Rec_Type.Decl_Dtype.Kind /= Type_Record
+                   and then Rec_Type.Decl_Dtype.Kind /= Type_Subrecord)
       then
-         Parse_Error ("type name expected");
+         Parse_Error ("record type name expected");
       end if;
       Next_Expect (Tok_Dot);
       Next_Expect (Tok_Ident);
@@ -1510,36 +1604,42 @@ package body Ortho_Front is
                            Atype.Type_Onode);
    end Parse_Offsetof;
 
-   function Parse_Sizeof (Atype : Node_Acc) return O_Cnode
+   function Parse_Type_Attribute return Node_Acc
    is
-      Res : O_Cnode;
+      Res : Node_Acc;
    begin
       Next_Expect (Tok_Left_Paren);
       Next_Token;
       if Tok /= Tok_Ident then
          Parse_Error ("type name expected");
       end if;
-      Res := New_Sizeof
-        (Get_Decl (Token_Sym).Decl_Dtype.Type_Onode,
-         Atype.Type_Onode);
+      Res := Get_Decl (Token_Sym).Decl_Dtype;
       Next_Expect (Tok_Right_Paren);
       return Res;
+   end Parse_Type_Attribute;
+
+   function Parse_Sizeof (Atype : Node_Acc) return O_Cnode
+   is
+      T : Node_Acc;
+   begin
+      T := Parse_Type_Attribute;
+      return New_Sizeof (T.Type_Onode, Atype.Type_Onode);
    end Parse_Sizeof;
+
+   function Parse_Record_Sizeof (Atype : Node_Acc) return O_Cnode
+   is
+      T : Node_Acc;
+   begin
+      T := Parse_Type_Attribute;
+      return New_Record_Sizeof (T.Type_Onode, Atype.Type_Onode);
+   end Parse_Record_Sizeof;
 
    function Parse_Alignof (Atype : Node_Acc) return O_Cnode
    is
-      Res : O_Cnode;
+      T : Node_Acc;
    begin
-      Next_Expect (Tok_Left_Paren);
-      Next_Token;
-      if Tok /= Tok_Ident then
-         Parse_Error ("type name expected");
-      end if;
-      Res := New_Alignof
-        (Get_Decl (Token_Sym).Decl_Dtype.Type_Onode,
-         Atype.Type_Onode);
-      Next_Expect (Tok_Right_Paren);
-      return Res;
+      T := Parse_Type_Attribute;
+      return New_Alignof (T.Type_Onode, Atype.Type_Onode);
    end Parse_Alignof;
 
    function Parse_Minus_Num (Atype : Node_Acc) return O_Cnode
@@ -1613,6 +1713,8 @@ package body Ortho_Front is
                         Res := Parse_Offsetof (N);
                      elsif Token_Sym = Id_Sizeof then
                         Res := Parse_Sizeof (N);
+                     elsif Token_Sym = Id_Record_Sizeof then
+                        Res := Parse_Record_Sizeof (N);
                      elsif Token_Sym = Id_Alignof then
                         Res := Parse_Alignof (N);
                      elsif Token_Sym = Id_Address
@@ -1723,6 +1825,11 @@ package body Ortho_Front is
             elsif Token_Sym = Id_Sizeof then
                Res_Type := Name.Decl_Dtype;
                Res := New_Lit (Parse_Sizeof (Res_Type));
+               Next_Token;
+               return;
+            elsif Token_Sym = Id_Record_Sizeof then
+               Res_Type := Name.Decl_Dtype;
+               Res := New_Lit (Parse_Record_Sizeof (Res_Type));
                Next_Token;
                return;
             elsif Token_Sym = Id_Alignof then
@@ -1957,9 +2064,14 @@ package body Ortho_Front is
 
    procedure Check_Selected_Prefix (N_Type : Node_Acc) is
    begin
-      if N_Type.Kind /= Type_Record and N_Type.Kind /= Type_Union then
-         Parse_Error ("type of prefix is neither a record nor an union");
-      end if;
+      case N_Type.Kind is
+         when Type_Record
+           | Type_Union
+           | Type_Subrecord =>
+            null;
+         when others =>
+            Parse_Error ("type of prefix is neither a record nor an union");
+      end case;
    end Check_Selected_Prefix;
 
    --  Expect and leave: next token
@@ -2753,28 +2865,27 @@ package body Ortho_Front is
 
             declare
                Constr : O_Record_Aggr_List;
-               Field : Node_Acc;
+               Fields : Node_Array_Acc;
             begin
                Expect (Tok_Left_Brace);
                Next_Token;
                Start_Record_Aggr (Constr, Atype.Type_Onode);
-               Field := Atype.Record_Union_Fields;
-               while Field /= null loop
+               Fields := Atype.Record_Union_Fields;
+               for I in Fields'Range loop
+                  if I /= 1 then
+                     Expect (Tok_Comma);
+                     Next_Token;
+                  end if;
                   if Tok = Tok_Dot then
                      Next_Expect (Tok_Ident);
-                     if Token_Sym /= Field.Field_Ident then
+                     if Token_Sym /= Fields (I).Field_Ident then
                         Parse_Error ("bad field name");
                      end if;
                      Next_Expect (Tok_Equal);
                      Next_Token;
                   end if;
                   New_Record_Aggr_El
-                    (Constr, Parse_Constant_Value (Field.Field_Type));
-                  Field := Field.Field_Next;
-                  if Field /= null then
-                     Expect (Tok_Comma);
-                     Next_Token;
-                  end if;
+                    (Constr, Parse_Constant_Value (Fields (I).Field_Type));
                end loop;
                Finish_Record_Aggr (Constr, Res);
                Expect (Tok_Right_Brace);
@@ -2998,6 +3109,7 @@ package body Ortho_Front is
       Add_Keyword ("array", Tok_Array);
       Add_Keyword ("access", Tok_Access);
       Add_Keyword ("record", Tok_Record);
+      Add_Keyword ("subrecord", Tok_Subrecord);
       Add_Keyword ("union", Tok_Union);
       Add_Keyword ("end", Tok_End);
       Add_Keyword ("boolean", Tok_Boolean);
@@ -3024,6 +3136,7 @@ package body Ortho_Front is
       Id_Subprg_Addr := New_Symbol ("subprg_addr");
       Id_Conv := New_Symbol ("conv");
       Id_Sizeof := New_Symbol ("sizeof");
+      Id_Record_Sizeof := New_Symbol ("record_sizeof");
       Id_Alignof := New_Symbol ("alignof");
       Id_Alloca := New_Symbol ("alloca");
       Id_Offsetof := New_Symbol ("offsetof");

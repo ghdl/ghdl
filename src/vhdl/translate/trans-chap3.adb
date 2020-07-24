@@ -1022,8 +1022,9 @@ package body Trans.Chap3 is
                when Mode_Signal =>
                   Id := Create_Identifier ("SIG");
             end case;
-            Info.Ortho_Type (I) := New_Constrained_Array_Type
-              (Base (I), New_Index_Lit (Unsigned_64 (Len)));
+            Info.Ortho_Type (I) := New_Array_Subtype
+              (Base (I), Get_Ortho_Type (El_Type, I),
+               New_Index_Lit (Unsigned_64 (Len)));
             New_Type_Decl (Id, Info.Ortho_Type (I));
          end loop;
       end if;

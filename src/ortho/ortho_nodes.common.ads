@@ -51,8 +51,8 @@ package ORTHO_NODES is
 
    --  Build a record type.
    procedure Start_Record_Type (Elements : out O_Element_List);
-   --  Add a field in the record; not constrained array are prohibited, since
-   --  its size is unlimited.
+   --  Add a field in the record.  Unconstrained fields must be at the end,
+   --  and cannot be followed by a constrained one.
    procedure New_Record_Field
      (Elements : in out O_Element_List;
       El : out O_Fnode;
@@ -60,6 +60,17 @@ package ORTHO_NODES is
    --  Finish the record type.
    procedure Finish_Record_Type
      (Elements : in out O_Element_List; Res : out O_Tnode);
+
+   type O_Element_Sublist is limited private;
+
+   --  Build a record subtype.
+   --  Re-declare only unconstrained fields with a subtype of them.
+   procedure Start_Record_Subtype
+     (Rtype : O_Tnode; Elements : out O_Element_Sublist);
+   procedure New_Subrecord_Field
+     (Elements : in out O_Element_Sublist; El : out O_Fnode; Etype : O_Tnode);
+   procedure Finish_Record_Subtype
+     (Elements : in out O_Element_Sublist; Res : out O_Tnode);
 
    -- Build an uncomplete record type:
    -- First call NEW_UNCOMPLETE_RECORD_TYPE, which returns a record type.
@@ -92,8 +103,8 @@ package ORTHO_NODES is
      return O_Tnode;
 
    --  Build a constrained array type.
-   function New_Constrained_Array_Type (Atype : O_Tnode; Length : O_Cnode)
-     return O_Tnode;
+   function New_Array_Subtype
+     (Atype : O_Tnode; El_Type : O_Tnode; Length : O_Cnode) return O_Tnode;
 
    --  Build a scalar type; size may be 8, 16, 32 or 64.
    function New_Unsigned_Type (Size : Natural) return O_Tnode;
@@ -166,8 +177,12 @@ package ORTHO_NODES is
 
    --  Returns the size in bytes of ATYPE.  The result is a literal of
    --  unsigned type RTYPE
-   --  ATYPE cannot be an unconstrained array type.
+   --  ATYPE cannot be an unconstrained type.
    function New_Sizeof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
+
+   --  Get the size of the bounded part of a record.
+   function New_Record_Sizeof
+     (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
 
    --  Returns the alignment in bytes for ATYPE.  The result is a literal of
    --  unsgined type RTYPE.

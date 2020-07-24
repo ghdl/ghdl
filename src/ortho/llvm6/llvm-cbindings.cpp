@@ -392,6 +392,9 @@ struct OTnodeBase {
   unsigned long long getSize() const {
     return LLVMABISizeOfType(TheTargetData, Ref);
   }
+  unsigned long long getBitSize() const {
+    return 8 * getSize();
+  }
 };
 
 typedef OTnodeBase *OTnode;
@@ -713,11 +716,11 @@ buildDebugRecordElements(OTnodeRecBase *Atype)
 
   unsigned i = 0;
   for (OFnodeBase *e : Atype->Els) {
-    unsigned off = LLVMOffsetOfElement(TheTargetData, Atype->Ref, i);
+    unsigned bitoff = 8 * LLVMOffsetOfElement(TheTargetData, Atype->Ref, i);
     els[i++] = DBuilder->createMemberType
-      (DebugCurrentSubprg, StringRef(e->Ident.cstr), DebugCurrentFile,
-       DebugCurrentLine, e->FType->getSize(), e->FType->getAlignment(),
-       off, DINode::DIFlags::FlagPublic, e->FType->Dbg);
+      (DebugCurrentSubprg, StringRef(e->Ident.cstr), NULL, 0,
+       e->FType->getBitSize(), /* align */ 0,
+       bitoff, DINode::DIFlags::FlagZero, e->FType->Dbg);
   }
 
   return DBuilder->getOrCreateArray(els);
@@ -744,24 +747,68 @@ finish_record_type(OElementList *Els, OTnode *Res)
     LLVMStructSetBody (Els->RecType->Ref, Types, Els->Count, 0);
     Els->RecType->Bounded = Bounded;
     T = static_cast<OTnodeRecBase *>(Els->RecType);
+    T->Els = std::move(*Els->Els);
 #ifdef USE_DEBUG
     if (FlagDebug) {
       DICompositeType *Dbg;
       Dbg = DBuilder->createStructType
         (DebugCurrentSubprg, T->Dbg->getName(), DebugCurrentFile,
-         DebugCurrentLine, T->getSize(), T->getAlignment(),
-         DINode::DIFlags::FlagPublic, nullptr,
+         DebugCurrentLine, T->getBitSize(), /* Align */ 0,
+         DINode::DIFlags::FlagZero, nullptr,
          buildDebugRecordElements(T));
       llvm::TempMDNode fwd_decl(T->Dbg);
       T->Dbg = DBuilder->replaceTemporary(std::move(fwd_decl), Dbg);
     }
 #endif
   } else {
+    //  Non-completion.
+    //  Debug info are created when the type is declared.
     T = new OTnodeRec(LLVMStructType(Types, Els->Count, 0), Bounded);
+    T->Els = std::move(*Els->Els);
   }
+  *Res = T;
+}
+
+struct OElementSublist {
+  //  Number of fields.
+  unsigned Count;
+  std::vector<OFnodeBase *> *Base_Els;
+  std::vector<OFnodeBase *> *Els;
+};
+
+extern "C" void
+start_record_subtype (OTnodeRec *Rtype, OElementSublist *Elements)
+{
+  *Elements = {0,
+               &Rtype->Els,
+               new std::vector<OFnodeBase *>()};
+}
+
+extern "C" void
+new_subrecord_field(OElementSublist *Elements,
+                    OFnodeRec **El, OTnode Etype)
+{
+  OFnodeBase *Bel = (*Elements->Base_Els)[Elements->Count];
+  *El = new OFnodeRec(Etype, Bel->Ident, Elements->Count);
+  Elements->Els->push_back(*El);
+  Elements->Count++;
+}
+
+extern "C" void
+finish_record_subtype(OElementSublist *Els, OTnode *Res)
+{
+  LLVMTypeRef *Types = new LLVMTypeRef[Els->Count];
+
+  //  Create types array for elements.
+  int i = 0;
+  for (OFnodeBase *Field : *Els->Els) {
+    Types[i++] = Field->FType->Ref;
+  }
+
+  OTnodeRecBase *T;
+  T = new OTnodeRec(LLVMStructType(Types, Els->Count, 0), true);
   T->Els = std::move(*Els->Els);
   *Res = T;
-  delete Els->Els;
 }
 
 extern "C" void
@@ -895,14 +942,14 @@ new_array_type(OTnode ElType, OTnode IndexType)
 }
 
 extern "C" OTnode
-new_constrained_array_type(OTnodeArr *ArrType, OCnode *Length)
+new_array_subtype(OTnodeArr *ArrType, OTnode ElType, OCnode *Length)
 {
   OTnodeArr *Res;
   unsigned Len = LLVMConstIntGetZExtValue(Length->Ref);
 
-  Res = new OTnodeArr(LLVMArrayType(ArrType->ElType->Ref, Len),
-                      ArrType->ElType->Bounded,
-                      ArrType->ElType);
+  Res = new OTnodeArr(LLVMArrayType(ElType->Ref, Len),
+                      ElType->Bounded,
+                      ElType);
 
 #ifdef USE_DEBUG
   if (FlagDebug)
@@ -960,14 +1007,14 @@ new_type_decl(OIdent Ident, OTnode Atype)
       if (static_cast<OTnodeAccBase*>(Atype)->Acc == nullptr) {
         //  Still incomplete
         Atype->Dbg = DBuilder->createPointerType
-          (nullptr, Atype->getSize(), 0, None, StringRef(Ident.cstr));
+          (nullptr, Atype->getBitSize(), 0, None, StringRef(Ident.cstr));
         break;
       }
       // Fallthrough
     case OTKAccess:
       Atype->Dbg = DBuilder->createPointerType
         (static_cast<OTnodeAcc*>(Atype)->Acc->Dbg,
-         Atype->getSize(), 0, None, StringRef(Ident.cstr));
+         Atype->getBitSize(), 0, None, StringRef(Ident.cstr));
       break;
 
     case OTKArray:
@@ -981,7 +1028,7 @@ new_type_decl(OIdent Ident, OTnode Atype)
     case OTKRecord:
       Atype->Dbg = DBuilder->createStructType
         (DebugCurrentSubprg, StringRef(Ident.cstr), DebugCurrentFile,
-         DebugCurrentLine, Atype->getSize(), Atype->getAlignment(),
+         DebugCurrentLine, Atype->getBitSize(), /* align */ 0,
          DINode::DIFlags::FlagPublic, nullptr,
          buildDebugRecordElements(static_cast<OTnodeRecBase *>(Atype)));
       break;
@@ -995,13 +1042,14 @@ new_type_decl(OIdent Ident, OTnode Atype)
         for (OFnodeBase *e : static_cast<OTnodeUnion *>(Atype)->Els) {
           els[i++] = DBuilder->createMemberType
             (DebugCurrentSubprg, StringRef(e->Ident.cstr), DebugCurrentFile,
-             DebugCurrentLine, e->FType->getSize(), e->FType->getAlignment(),
-             0, DINode::DIFlags::FlagPublic, e->FType->Dbg);
+             DebugCurrentLine, e->FType->getBitSize(),
+             e->FType->getAlignment(), 0, DINode::DIFlags::FlagPublic,
+             e->FType->Dbg);
         }
 
         Atype->Dbg = DBuilder->createUnionType
           (DebugCurrentSubprg, StringRef(Ident.cstr), DebugCurrentFile,
-           DebugCurrentLine, Atype->getSize(), Atype->getAlignment(),
+           DebugCurrentLine, Atype->getBitSize(), Atype->getAlignment(),
            DINode::DIFlags::FlagPublic, DBuilder->getOrCreateArray(els));
       }
       break;
@@ -1118,6 +1166,12 @@ extern "C" OCnode
 new_sizeof(OTnode Atype, OTnode Rtype)
 {
   return constToConst(Rtype, LLVMABISizeOfType(TheTargetData, Atype->Ref));
+}
+
+extern "C" OCnode
+new_record_sizeof(OTnode Atype, OTnode Rtype)
+{
+  return new_sizeof(Atype, Rtype);
 }
 
 extern "C" OCnode

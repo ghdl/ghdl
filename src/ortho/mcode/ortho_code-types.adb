@@ -32,8 +32,9 @@ package body Ortho_Code.Types is
       Mode : Mode_Type; -- 4 bits.
       Align : Small_Natural; -- 2 bits.
       Deferred : Boolean; -- 1 bit (True if the type was incomplete at first)
+      Sized : Boolean; -- 1 bit (True if the type has a size, is constrained)
       Flag1 : Boolean;
-      Pad0 : Bool_Array (0 .. 19);
+      Pad0 : Bool_Array (0 .. 18);
       Size : Uns32;
    end record;
    pragma Pack (Tnode_Common);
@@ -49,7 +50,7 @@ package body Ortho_Code.Types is
       Index_Type : O_Tnode;
    end record;
 
-   type Tnode_Subarray is record
+   type Tnode_Subarray_2 is record
       Base_Type : O_Tnode;
       Length : Uns32;
    end record;
@@ -57,6 +58,11 @@ package body Ortho_Code.Types is
    type Tnode_Record is record
       Fields : O_Fnode;
       Nbr_Fields : Uns32;
+   end record;
+
+   type Tnode_Subrecord_2 is record
+      Base_Type : O_Tnode;
+      Pad       : Uns32;
    end record;
 
    type Tnode_Enum is record
@@ -94,11 +100,27 @@ package body Ortho_Code.Types is
       return Tnodes.Table (Atype).Kind;
    end Get_Type_Kind;
 
+   function Get_Type_Sized (Atype : O_Tnode) return Boolean is
+   begin
+      return Tnodes.Table (Atype).Sized;
+   end Get_Type_Sized;
+
+   procedure Set_Type_Sized (Atype : O_Tnode; Sized : Boolean) is
+   begin
+      Tnodes.Table (Atype).Sized := Sized;
+   end Set_Type_Sized;
+
    function Get_Type_Size (Atype : O_Tnode) return Uns32 is
    begin
-      pragma Assert (Get_Type_Kind (Atype) /= OT_Ucarray);
+      pragma Assert (Get_Type_Sized (Atype));
       return Tnodes.Table (Atype).Size;
    end Get_Type_Size;
+
+   function Get_Type_Record_Size (Atype : O_Tnode) return Uns32 is
+   begin
+      pragma Assert (Get_Type_Kind (Atype) = OT_Record);
+      return Tnodes.Table (Atype).Size;
+   end Get_Type_Record_Size;
 
    function Get_Type_Align (Atype : O_Tnode) return Small_Natural is
    begin
@@ -154,18 +176,24 @@ package body Ortho_Code.Types is
    end Get_Type_Ucarray_Element;
 
 
-   function To_Tnode_Subarray is new Ada.Unchecked_Conversion
-     (Source => Tnode_Common, Target => Tnode_Subarray);
+   function To_Tnode_Subarray_2 is new Ada.Unchecked_Conversion
+     (Source => Tnode_Common, Target => Tnode_Subarray_2);
 
    function Get_Type_Subarray_Base (Atype : O_Tnode) return O_Tnode is
    begin
-      return To_Tnode_Subarray (Tnodes.Table (Atype + 1)).Base_Type;
+      return To_Tnode_Subarray_2 (Tnodes.Table (Atype + 2)).Base_Type;
    end Get_Type_Subarray_Base;
 
    function Get_Type_Subarray_Length (Atype : O_Tnode) return Uns32 is
    begin
-      return To_Tnode_Subarray (Tnodes.Table (Atype + 1)).Length;
+      return To_Tnode_Subarray_2 (Tnodes.Table (Atype + 2)).Length;
    end Get_Type_Subarray_Length;
+
+
+   function Get_Type_Subarray_Element (Atype : O_Tnode) return O_Tnode is
+   begin
+      return To_Tnode_Array (Tnodes.Table (Atype + 1)).Element_Type;
+   end Get_Type_Subarray_Element;
 
 
    function To_Tnode_Record is new Ada.Unchecked_Conversion
@@ -180,6 +208,14 @@ package body Ortho_Code.Types is
    begin
       return To_Tnode_Record (Tnodes.Table (Atype + 1)).Nbr_Fields;
    end Get_Type_Record_Nbr_Fields;
+
+   function To_Tnode_Subrecord_2 is new Ada.Unchecked_Conversion
+     (Source => Tnode_Common, Target => Tnode_Subrecord_2);
+
+   function Get_Type_Subrecord_Base (Atype : O_Tnode) return O_Tnode is
+   begin
+      return To_Tnode_Subrecord_2 (Tnodes.Table (Atype + 2)).Base_Type;
+   end Get_Type_Subrecord_Base;
 
    function To_Tnode_Enum is new Ada.Unchecked_Conversion
      (Source => Tnode_Common, Target => Tnode_Enum);
@@ -271,6 +307,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode,
                                    Align => Mode_Align (Mode),
                                    Deferred => False,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => Sz));
@@ -302,6 +339,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode,
                                    Align => Mode_Align (Mode),
                                    Deferred => False,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => Sz));
@@ -314,6 +352,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode_F64,
                                    Align => Mode_Align (Mode_F64),
                                    Deferred => False,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => 8));
@@ -348,6 +387,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode,
                                    Align => Mode_Align (Mode),
                                    Deferred => False,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => Sz));
@@ -393,6 +433,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode_B2,
                                    Align => 0,
                                    Deferred => False,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => 1));
@@ -415,6 +456,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode_Blk,
                                    Align => Get_Type_Align (El_Type),
                                    Deferred => False,
+                                   Sized => False,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => 0));
@@ -425,27 +467,32 @@ package body Ortho_Code.Types is
    end New_Array_Type;
 
    function To_Tnode_Common is new Ada.Unchecked_Conversion
-     (Source => Tnode_Subarray, Target => Tnode_Common);
+     (Source => Tnode_Subarray_2, Target => Tnode_Common);
 
-   function New_Constrained_Array_Type (Atype : O_Tnode; Length : Uns32)
-                                       return O_Tnode
+   function New_Array_Subtype
+     (Atype : O_Tnode; El_Type : O_Tnode; Length : Uns32) return O_Tnode
    is
       Res : O_Tnode;
       Size : Uns32;
    begin
-      Size := Get_Type_Size (Get_Type_Array_Element (Atype));
+      Size := Get_Type_Size (El_Type);
       Tnodes.Append (Tnode_Common'(Kind => OT_Subarray,
                                    Mode => Mode_Blk,
                                    Align => Get_Type_Align (Atype),
                                    Deferred => False,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => Size * Length));
       Res := Tnodes.Last;
-      Tnodes.Append (To_Tnode_Common (Tnode_Subarray'(Base_Type => Atype,
-                                                      Length => Length)));
+      Tnodes.Append (To_Tnode_Common
+                     (Tnode_Array'(Element_Type => El_Type,
+                                   Index_Type => O_Tnode_Null)));
+      Tnodes.Append (To_Tnode_Common
+                     (Tnode_Subarray_2'(Base_Type => Atype,
+                                        Length => Length)));
       return Res;
-   end New_Constrained_Array_Type;
+   end New_Array_Subtype;
 
    procedure Create_Completer (Atype : O_Tnode) is
    begin
@@ -453,6 +500,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode_Nil,
                                    Align => 0,
                                    Deferred => False,
+                                   Sized => False,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => To_Uns32 (Int32 (Atype))));
@@ -476,6 +524,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode_Ptr,
                                    Align => Mode_Align (Mode_Ptr),
                                    Deferred => Dtype = O_Tnode_Null,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => Sz));
@@ -502,6 +551,9 @@ package body Ortho_Code.Types is
    function To_Tnode_Common is new Ada.Unchecked_Conversion
      (Source => Tnode_Record, Target => Tnode_Common);
 
+   function To_Tnode_Common is new Ada.Unchecked_Conversion
+     (Source => Tnode_Subrecord_2, Target => Tnode_Common);
+
    function Create_Record_Type (Deferred : Boolean) return O_Tnode
    is
       Res : O_Tnode;
@@ -510,6 +562,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode_Blk,
                                    Align => 0,
                                    Deferred => Deferred,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => 0));
@@ -518,17 +571,6 @@ package body Ortho_Code.Types is
                                                     Nbr_Fields => 0)));
       return Res;
    end Create_Record_Type;
-
-   procedure Start_Record_Type (Elements : out O_Element_List)
-   is
-   begin
-      Elements := (Res => Create_Record_Type (False),
-                   First_Field => O_Fnode_Null,
-                   Last_Field => O_Fnode_Null,
-                   Off => 0,
-                   Align => 0,
-                   Nbr => 0);
-   end Start_Record_Type;
 
    procedure New_Uncomplete_Record_Type (Res : out O_Tnode) is
    begin
@@ -544,7 +586,8 @@ package body Ortho_Code.Types is
                    Last_Field => O_Fnode_Null,
                    Off => 0,
                    Align => 0,
-                   Nbr => 0);
+                   Nbr => 0,
+                   Base_Field => O_Fnode_Null);
    end Start_Uncomplete_Record_Type;
 
    function Get_Mode_Size (Mode : Mode_Type) return Uns32 is
@@ -590,12 +633,10 @@ package body Ortho_Code.Types is
       return (Off + Msk) and (not Msk);
    end Do_Align;
 
-   procedure New_Record_Field
-     (Elements : in out O_Element_List;
-      El : out O_Fnode;
-      Ident : O_Ident;
-      Etype : O_Tnode)
-   is
+   procedure Append_Field (Elements : in out O_Element_List;
+                           El       : out O_Fnode;
+                           Ident    : O_Ident;
+                           Etype    : O_Tnode) is
    begin
       Elements.Off := Do_Align (Elements.Off, Etype);
 
@@ -605,7 +646,11 @@ package body Ortho_Code.Types is
                                  Offset => Elements.Off,
                                  Next => O_Fnode_Null));
       El := Fnodes.Last;
-      Elements.Off := Elements.Off + Get_Type_Size (Etype);
+      if Get_Type_Sized (Etype) then
+         Elements.Off := Elements.Off + Get_Type_Size (Etype);
+      else
+         Set_Type_Sized (Elements.Res, False);
+      end if;
       if Get_Type_Align (Etype) > Elements.Align then
          Elements.Align := Get_Type_Align (Etype);
       end if;
@@ -615,12 +660,35 @@ package body Ortho_Code.Types is
          Elements.First_Field := Fnodes.Last;
       end if;
       Elements.Last_Field := Fnodes.Last;
+   end Append_Field;
+
+   procedure Start_Record_Type (Elements : out O_Element_List) is
+   begin
+      Elements := (Res => Create_Record_Type (False),
+                   First_Field => O_Fnode_Null,
+                   Last_Field => O_Fnode_Null,
+                   Off => 0,
+                   Align => 0,
+                   Nbr => 0,
+                   Base_Field => O_Fnode_Null);
+   end Start_Record_Type;
+
+   procedure New_Record_Field (Elements : in out O_Element_List;
+                               El       : out O_Fnode;
+                               Ident    : O_Ident;
+                               Etype    : O_Tnode) is
+   begin
+      if Get_Type_Sized (Etype) then
+         --  Cannot append bounded elements after unbounded onces.
+         pragma Assert (Get_Type_Sized (Elements.Res));
+         null;
+      end if;
+
+      Append_Field (Elements, El, Ident, Etype);
       Elements.Nbr := Elements.Nbr + 1;
    end New_Record_Field;
 
-   procedure Finish_Record_Type
-     (Elements : in out O_Element_List; Res : out O_Tnode)
-   is
+   procedure Finish_Record (Elements : O_Element_List) is
    begin
       Tnodes.Table (Elements.Res).Align := Elements.Align;
       Tnodes.Table (Elements.Res).Size := Do_Align (Elements.Off,
@@ -628,6 +696,12 @@ package body Ortho_Code.Types is
       Tnodes.Table (Elements.Res + 1) := To_Tnode_Common
         (Tnode_Record'(Fields => Elements.First_Field,
                        Nbr_Fields => Elements.Nbr));
+   end Finish_Record;
+
+   procedure Finish_Record_Type
+     (Elements : in out O_Element_List; Res : out O_Tnode) is
+   begin
+      Finish_Record (Elements);
       Res := Elements.Res;
       if Flag_Type_Completer
         and then Tnodes.Table (Elements.Res).Deferred
@@ -636,6 +710,71 @@ package body Ortho_Code.Types is
       end if;
    end Finish_Record_Type;
 
+   procedure Start_Record_Subtype
+     (Rtype : O_Tnode; Elements : out O_Element_List)
+   is
+      Res : O_Tnode;
+      Nbr : Uns32;
+   begin
+      pragma Assert (Get_Type_Kind (Rtype) = OT_Record);
+      Nbr := Get_Type_Record_Nbr_Fields (Rtype);
+
+      Tnodes.Append (Tnode_Common'(Kind => OT_Subrecord,
+                                   Mode => Mode_Blk,
+                                   Align => 0,
+                                   Deferred => False,
+                                   Sized => True,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => 0));
+      Res := Tnodes.Last;
+      Tnodes.Append (To_Tnode_Common (Tnode_Record'(Fields => O_Fnode_Null,
+                                                    Nbr_Fields => Nbr)));
+      Tnodes.Append (To_Tnode_Common (Tnode_Subrecord_2'(Base_Type => Rtype,
+                                                         Pad => 0)));
+      Elements := (Res => Res,
+                   First_Field => O_Fnode_Null,
+                   Last_Field => O_Fnode_Null,
+                   Off => 0,
+                   Align => 0,
+                   Nbr => Nbr,
+                   Base_Field => Get_Type_Record_Fields (Rtype));
+   end Start_Record_Subtype;
+
+   procedure New_Subrecord_Field
+     (Elements : in out O_Element_List; El : out O_Fnode; Etype : O_Tnode)
+   is
+      Base_Type : O_Tnode;
+   begin
+      pragma Assert (Elements.Nbr > 0);
+      Elements.Nbr := Elements.Nbr - 1;
+
+      Base_Type := Get_Field_Type (Elements.Base_Field);
+      if Get_Type_Sized (Base_Type) then
+         --  For bounded elements, the type must be the same.
+         pragma Assert (Etype = Base_Type);
+         null;
+      else
+         --  For unbounded elements, those from the subtype must be bounded.
+         pragma Assert (Get_Base_Type (Etype) = Base_Type);
+         pragma Assert (Get_Type_Sized (Etype));
+         null;
+      end if;
+
+      Append_Field (Elements,
+                    El, Get_Field_Ident (Elements.Base_Field), Etype);
+      Elements.Base_Field := Get_Field_Chain (Elements.Base_Field);
+   end New_Subrecord_Field;
+
+   procedure Finish_Record_Subtype
+     (Elements : in out O_Element_List; Res : out O_Tnode) is
+   begin
+      Elements.Nbr := Get_Type_Record_Nbr_Fields (Elements.Res);
+      Finish_Record (Elements);
+      Res := Elements.Res;
+   end Finish_Record_Subtype;
+
+
    procedure Start_Union_Type (Elements : out O_Element_List)
    is
    begin
@@ -643,6 +782,7 @@ package body Ortho_Code.Types is
                                    Mode => Mode_Blk,
                                    Align => 0,
                                    Deferred => False,
+                                   Sized => True,
                                    Flag1 => False,
                                    Pad0 => (others => False),
                                    Size => 0));
@@ -651,7 +791,8 @@ package body Ortho_Code.Types is
                    Last_Field => O_Fnode_Null,
                    Off => 0,
                    Align => 0,
-                   Nbr => 0);
+                   Nbr => 0,
+                   Base_Field => O_Fnode_Null);
       Tnodes.Append (To_Tnode_Common (Tnode_Record'(Fields => O_Fnode_Null,
                                                    Nbr_Fields => 0)));
    end Start_Union_Type;
@@ -679,22 +820,19 @@ package body Ortho_Code.Types is
       Finish_Record_Type (Elements, Res);
    end Finish_Union_Type;
 
-   function Get_Type_Array_Element (Atype : O_Tnode) return O_Tnode
-   is
-      Base : O_Tnode;
+   function Get_Type_Array_Element (Atype : O_Tnode) return O_Tnode is
    begin
       case Get_Type_Kind (Atype) is
          when OT_Ucarray =>
-            Base := Atype;
+            return Get_Type_Ucarray_Element (Atype);
          when OT_Subarray =>
-            Base := Get_Type_Subarray_Base (Atype);
+            return Get_Type_Subarray_Element (Atype);
          when others =>
             raise Program_Error;
       end case;
-      return Get_Type_Ucarray_Element (Base);
    end Get_Type_Array_Element;
 
-   procedure Debug_Type (Atype : O_Tnode)
+   procedure Dump_Tnode (Atype : O_Tnode)
    is
       use Ortho_Code.Debug.Int32_IO;
       use Ada.Text_IO;
@@ -733,13 +871,15 @@ package body Ortho_Code.Types is
             Put (Int32 (Get_Type_Subarray_Base (Atype)));
             Put (", length: ");
             Put (To_Int32 (Get_Type_Subarray_Length (Atype)));
+            Put (", el_type: ");
+            Put (Int32 (Get_Type_Subarray_Element (Atype)));
             New_Line;
          when others =>
             null;
       end case;
-   end Debug_Type;
+   end Dump_Tnode;
 
-   procedure Debug_Field (Field : O_Fnode)
+   procedure Dump_Fnode (Field : O_Fnode)
    is
       use Ortho_Code.Debug.Int32_IO;
       use Ada.Text_IO;
@@ -755,7 +895,7 @@ package body Ortho_Code.Types is
       Put (", Chain=");
       Put (Int32 (Get_Field_Chain (Field)), 0);
       New_Line;
-   end Debug_Field;
+   end Dump_Fnode;
 
    function Get_Type_Limit return O_Tnode is
    begin
@@ -766,28 +906,31 @@ package body Ortho_Code.Types is
    begin
       case Tnodes.Table (Atype).Kind is
          when OT_Unsigned
-           | OT_Signed
-           | OT_Float =>
+            | OT_Signed
+            | OT_Float =>
             return Atype + 1;
          when OT_Boolean
-           | OT_Enum
-           | OT_Ucarray
-           | OT_Subarray
-           | OT_Access
-           | OT_Record
-           | OT_Union =>
+            | OT_Enum
+            | OT_Ucarray
+            | OT_Access
+            | OT_Record
+            | OT_Union =>
             return Atype + 2;
+         when OT_Subarray
+            | OT_Subrecord =>
+            return Atype + 3;
          when OT_Complete =>
             return Atype + 1;
       end case;
    end Get_Type_Next;
 
-   function Get_Base_Type (Atype : O_Tnode) return O_Tnode
-   is
+   function Get_Base_Type (Atype : O_Tnode) return O_Tnode is
    begin
       case Get_Type_Kind (Atype) is
          when OT_Subarray =>
             return Get_Type_Subarray_Base (Atype);
+         when OT_Subrecord =>
+            return Get_Type_Subrecord_Base (Atype);
          when others =>
             return Atype;
       end case;

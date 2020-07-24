@@ -348,12 +348,17 @@ package body Trans.Chap7 is
    function Create_String_Literal_Var (Str : Iir) return Var_Type
    is
       Str_Type : constant Iir := Get_Type (Str);
+      El_Type : constant Iir := Get_Element_Subtype (Str_Type);
       Arr_Type : O_Tnode;
+      Arr_St   : O_Tnode;
    begin
       --  Create the string value.
       Arr_Type := Get_Info (Str_Type).B.Base_Type (Mode_Value);
-      return Create_String_Literal_Var_Inner
-        (Str, Get_Element_Subtype (Str_Type), Arr_Type);
+      Arr_St := New_Array_Subtype
+        (Arr_Type,
+         Get_Ortho_Type (El_Type, Mode_Value),
+         New_Index_Lit (Unsigned_64 (Get_String_Length (Str))));
+      return Create_String_Literal_Var_Inner (Str, El_Type, Arr_St);
    end Create_String_Literal_Var;
 
    --  Some strings literal have an unconstrained array type,

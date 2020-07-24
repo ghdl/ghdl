@@ -1364,8 +1364,10 @@ package body Translation is
       --  Max length of a scalar type.
       --  Note: this type is not correctly aligned.  Restricted use only.
       --  type __ghdl_scalar_bytes is __ghdl_chararray (0 .. 8);
-      Ghdl_Scalar_Bytes := New_Constrained_Array_Type
-        (Chararray_Type, New_Unsigned_Literal (Ghdl_Index_Type, 8));
+      Ghdl_Scalar_Bytes := New_Array_Subtype
+        (Chararray_Type,
+         Char_Type_Node,
+         New_Unsigned_Literal (Ghdl_Index_Type, 8));
       New_Type_Decl (Get_Identifier ("__ghdl_scalar_bytes"),
                      Ghdl_Scalar_Bytes);
 
@@ -2130,8 +2132,8 @@ package body Translation is
 
       --  Std_Ulogic indexed array of STD.Boolean.
       --  Used by PSL to convert Std_Ulogic to boolean.
-      Std_Ulogic_Boolean_Array_Type :=
-        New_Constrained_Array_Type (Std_Boolean_Array_Type, New_Index_Lit (9));
+      Std_Ulogic_Boolean_Array_Type := New_Array_Subtype
+        (Std_Boolean_Array_Type, Std_Boolean_Type_Node, New_Index_Lit (9));
       New_Type_Decl (Get_Identifier ("__ghdl_std_ulogic_boolean_array_type"),
                      Std_Ulogic_Boolean_Array_Type);
       New_Const_Decl (Ghdl_Std_Ulogic_To_Boolean_Array,

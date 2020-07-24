@@ -59,9 +59,10 @@ package body Trans.Chap12 is
 
       --  Create the array of RTIs for packages (as a variable, initialized
       --  during elaboration).
-      Arr_Type := New_Constrained_Array_Type
+      Arr_Type := New_Array_Subtype
         (Rtis.Ghdl_Rti_Array,
-         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Elab_Nbr_Pkgs)));
+         Rtis.Ghdl_Rti_Access,
+         Helpers.New_Index_Lit (Unsigned_64 (Elab_Nbr_Pkgs)));
       New_Var_Decl (Pkgs_Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
                     O_Storage_Private, Arr_Type);
 

@@ -17,8 +17,10 @@
 --  02111-1307, USA.
 package Ortho_Code.Types is
    type OT_Kind is (OT_Unsigned, OT_Signed, OT_Boolean, OT_Enum, OT_Float,
-                    OT_Ucarray, OT_Subarray, OT_Access,
-                    OT_Record, OT_Union,
+                    OT_Ucarray, OT_Subarray,
+                    OT_Access,
+                    OT_Record, OT_Subrecord,
+                    OT_Union,
 
                     --  Type completion.  Mark the completion of a type.
                     --  Optionnal.
@@ -31,6 +33,9 @@ package Ortho_Code.Types is
 
    --  Number of bytes of type ATYPE.
    function Get_Type_Size (Atype : O_Tnode) return Uns32;
+
+   --  True if ATYPE is bounded (and therefore its size is valid).
+   function Get_Type_Sized (Atype : O_Tnode) return Boolean;
 
    --  Same as Get_Type_Size but for modes.
    --  Returns 0 in case of error.
@@ -75,11 +80,20 @@ package Ortho_Code.Types is
    --  Get number of element for array type ATYPE.
    function Get_Type_Subarray_Length (Atype : O_Tnode) return Uns32;
 
+   --  Get the element type of subarray type ATYPE.
+   function Get_Type_Subarray_Element (Atype : O_Tnode) return O_Tnode;
+
+   --  Get the size of the bounded part of ATYPE.
+   function Get_Type_Record_Size (Atype : O_Tnode) return Uns32;
+
    --  Get the first field of record/union ATYPE.
    function Get_Type_Record_Fields (Atype : O_Tnode) return O_Fnode;
 
    --  Get the number of fields of record/union ATYPE.
    function Get_Type_Record_Nbr_Fields (Atype : O_Tnode) return Uns32;
+
+   --  Get the base type of subrecord ATYPE.
+   function Get_Type_Subrecord_Base (Atype : O_Tnode) return O_Tnode;
 
    --  Get the first literal of enum type ATYPE.
    function Get_Type_Enum_Lits (Atype : O_Tnode) return O_Cnode;
@@ -148,11 +162,11 @@ package Ortho_Code.Types is
    --  Build an array type.
    --  The array is not constrained and unidimensional.
    function New_Array_Type (El_Type : O_Tnode; Index_Type : O_Tnode)
-     return O_Tnode;
+                            return O_Tnode;
 
    --  Build a constrained array type.
-   function New_Constrained_Array_Type (Atype : O_Tnode; Length : Uns32)
-     return O_Tnode;
+   function New_Array_Subtype
+     (Atype : O_Tnode; El_Type : O_Tnode; Length : Uns32) return O_Tnode;
 
    --  Return the base type of ATYPE: for a subarray this is the uc array,
    --  otherwise this is the type.
@@ -170,6 +184,14 @@ package Ortho_Code.Types is
       Ident : O_Ident; Etype : O_Tnode);
    --  Finish the record type.
    procedure Finish_Record_Type
+     (Elements : in out O_Element_List; Res : out O_Tnode);
+
+   --  Record subtype.
+   procedure Start_Record_Subtype
+     (Rtype : O_Tnode; Elements : out O_Element_List);
+   procedure New_Subrecord_Field
+     (Elements : in out O_Element_List; El : out O_Fnode; Etype : O_Tnode);
+   procedure Finish_Record_Subtype
      (Elements : in out O_Element_List; Res : out O_Tnode);
 
    -- Build an uncomplete record type:
@@ -214,23 +236,25 @@ package Ortho_Code.Types is
    procedure Mark (M : out Mark_Type);
    procedure Release (M : Mark_Type);
 
-   procedure Debug_Type (Atype : O_Tnode);
-   procedure Debug_Field (Field : O_Fnode);
+   procedure Dump_Tnode (Atype : O_Tnode);
+   procedure Dump_Fnode (Field : O_Fnode);
 private
    type O_Enum_List is record
-      Res : O_Tnode;
+      Res   : O_Tnode;
       First : O_Cnode;
-      Last : O_Cnode;
-      Nbr : Uns32;
+      Last  : O_Cnode;
+      Nbr   : Uns32;
    end record;
 
    type O_Element_List is record
-      Res : O_Tnode;
-      Nbr : Uns32;
-      Off : Uns32;
-      Align : Small_Natural;
+      Res         : O_Tnode;
+      Nbr         : Uns32;
+      Off         : Uns32;
+      Align       : Small_Natural;
       First_Field : O_Fnode;
-      Last_Field : O_Fnode;
+      Last_Field  : O_Fnode;
+      --  For subrecords
+      Base_Field  : O_Fnode;
    end record;
 
    type Mark_Type is record

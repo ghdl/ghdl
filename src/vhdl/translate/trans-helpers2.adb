@@ -38,10 +38,10 @@ package body Trans.Helpers2 is
    --  Append a NUL terminator (to make interfaces with C easier).
    function Create_String_Type (Str : String) return O_Tnode is
    begin
-      return New_Constrained_Array_Type
+      return New_Array_Subtype
         (Chararray_Type,
-         New_Unsigned_Literal (Ghdl_Index_Type,
-           Unsigned_64 (Str'Length + 1)));
+         Char_Type_Node,
+         New_Index_Lit (Str'Length + 1));
    end Create_String_Type;
 
    procedure Create_String_Value
@@ -65,9 +65,11 @@ package body Trans.Helpers2 is
    function Create_String (Str : String; Id : O_Ident) return O_Dnode
    is
       Const : O_Dnode;
+      Stype : O_Tnode;
    begin
-      New_Const_Decl (Const, Id, O_Storage_Private, Chararray_Type);
-      Create_String_Value (Const, Chararray_Type, Str);
+      Stype := Create_String_Type (Str);
+      New_Const_Decl (Const, Id, O_Storage_Private, Stype);
+      Create_String_Value (Const, Stype, Str);
       return Const;
    end Create_String;
 

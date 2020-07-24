@@ -1368,13 +1368,13 @@ package body Trans.Chap8 is
      (Stmt       : Iir_Case_Statement;
       Choices    : Iir;
       Len_Type   : out Iir;
-      Tinfo      : out Type_Info_Acc;
+      Base_Type  : out Iir;
       Expr_Node  : out O_Dnode;
       C_Node     : out O_Dnode)
    is
       Expr       : constant Iir := Get_Expression (Stmt);
       Expr_Type  : Iir;
-      Base_Type  : Iir;
+      Tinfo      : Type_Info_Acc;
       Sel_Length : Int64;
       Cond       : O_Enode;
    begin
@@ -1446,7 +1446,8 @@ package body Trans.Chap8 is
       Handler : in out Case_Handler'Class)
    is
       First, Last : Choice_Id;
-      El : Choice_Id;
+      El          : Choice_Id;
+      Base_Type   : Iir;
 
       --  Selector.
       Tinfo     : Type_Info_Acc;
@@ -1468,6 +1469,7 @@ package body Trans.Chap8 is
       --  Dichotomy table (table of choices).
       String_Type     : O_Tnode;
       Table_Base_Type : O_Tnode;
+      Table_Type      : O_Tnode;
       Table           : O_Dnode;
       List            : O_Array_Aggr_List;
       Table_Cst       : O_Cnode;
@@ -1477,6 +1479,7 @@ package body Trans.Chap8 is
       --   statement list.
       --  Could be replaced by jump table.
       Assoc_Table_Base_Type : O_Tnode;
+      Assoc_Table_Type      : O_Tnode;
       Assoc_Table           : O_Dnode;
    begin
       --  Fill Choices_Info array, and count number of associations.
@@ -1573,21 +1576,27 @@ package body Trans.Chap8 is
 
       Open_Temp;
       Translate_String_Case_Statement_Common
-        (Stmt, Choices_Chain, Len_Type, Tinfo, Expr_Node, C_Node);
+        (Stmt, Choices_Chain, Len_Type, Base_Type, Expr_Node, C_Node);
+
+      Tinfo := Get_Info (Base_Type);
 
       --  Generate the sorted array of choices.
       Sel_Length := Eval_Discrete_Type_Length
         (Get_String_Type_Bound_Type (Len_Type));
 
-      String_Type := New_Constrained_Array_Type
+      String_Type := New_Array_Subtype
         (Tinfo.B.Base_Type (Mode_Value),
-         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Sel_Length)));
+         Get_Ortho_Type (Get_Element_Subtype (Base_Type), Mode_Value),
+         New_Index_Lit (Unsigned_64 (Sel_Length)));
       Table_Base_Type := New_Array_Type (String_Type, Ghdl_Index_Type);
       New_Type_Decl (Create_Uniq_Identifier, Table_Base_Type);
+      Table_Type := New_Array_Subtype
+        (Table_Base_Type,
+         String_Type, New_Index_Lit (Unsigned_64 (Nbr_Choices)));
       New_Const_Decl (Table, Create_Uniq_Identifier, O_Storage_Private,
-                      Table_Base_Type);
+                      Table_Type);
       Start_Init_Value (Table);
-      Start_Array_Aggr (List, Table_Base_Type, Unsigned_32 (Nbr_Choices));
+      Start_Array_Aggr (List, Table_Type, Unsigned_32 (Nbr_Choices));
 
       El := First;
       while El /= No_Choice_Id loop
@@ -1602,11 +1611,14 @@ package body Trans.Chap8 is
       Assoc_Table_Base_Type :=
         New_Array_Type (Ghdl_Index_Type, Ghdl_Index_Type);
       New_Type_Decl (Create_Uniq_Identifier, Assoc_Table_Base_Type);
+      Assoc_Table_Type := New_Array_Subtype
+        (Assoc_Table_Base_Type,
+         Ghdl_Index_Type, New_Index_Lit (Unsigned_64 (Nbr_Choices)));
       New_Const_Decl (Assoc_Table, Create_Uniq_Identifier,
-                      O_Storage_Private, Assoc_Table_Base_Type);
+                      O_Storage_Private, Assoc_Table_Type);
       Start_Init_Value (Assoc_Table);
       Start_Array_Aggr
-        (List, Assoc_Table_Base_Type, Unsigned_32 (Nbr_Choices));
+        (List, Assoc_Table_Type, Unsigned_32 (Nbr_Choices));
       El := First;
       while El /= No_Choice_Id loop
          New_Array_Aggr_El
@@ -1824,6 +1836,7 @@ package body Trans.Chap8 is
       Expr_Node : O_Dnode;
       --  Node containing the current choice.
       Val_Node  : O_Dnode;
+      Base_Type : Iir;
       Tinfo     : Type_Info_Acc;
 
       Cond_Var : O_Dnode;
@@ -1887,7 +1900,8 @@ package body Trans.Chap8 is
    begin
       Open_Temp;
       Translate_String_Case_Statement_Common
-        (Stmt, Choices, Len_Type, Tinfo, Expr_Node, Val_Node);
+        (Stmt, Choices, Len_Type, Base_Type, Expr_Node, Val_Node);
+      Tinfo := Get_Info (Base_Type);
 
       Func := Chap7.Find_Predefined_Function
         (Get_Base_Type (Len_Type), Iir_Predefined_Array_Equality);

@@ -1104,6 +1104,14 @@ struct GTY(()) o_element_list
   struct chain_constr_type chain;
 };
 
+struct GTY(()) o_element_sublist
+{
+  tree base;
+  tree field;
+  tree res;
+  struct chain_constr_type chain;
+};
+
 void
 new_uncomplete_record_type (tree *res)
 {
@@ -1162,9 +1170,40 @@ finish_record_type (struct o_element_list *elements, tree *res)
 }
 
 void
+start_record_subtype (tree rtype, struct o_element_sublist *elements)
+{
+  elements->base = rtype;
+  elements->field = TYPE_FIELDS (rtype);
+  elements->res = make_node (RECORD_TYPE);
+  chain_init (&elements->chain);
+}
+
+void
+new_subrecord_field (struct o_element_sublist *list,
+                     tree *el,
+                     tree etype)
+{
+  tree res;
+
+  res = build_decl (input_location, FIELD_DECL, DECL_NAME(list->field), etype);
+  DECL_CONTEXT (res) = list->res;
+  chain_append (&list->chain, res);
+  list->field = TREE_CHAIN(list->field);
+  *el = res;
+}
+
+void
+finish_record_subtype (struct o_element_sublist *elements, tree *res)
+{
+  TYPE_FIELDS (elements->res) = elements->chain.first;
+  layout_type (elements->res);
+  *res = elements->res;
+}
+
+void
 start_union_type (struct o_element_list *elements)
 {
-  elements->res =  make_node (UNION_TYPE);
+  elements->res = make_node (UNION_TYPE);
   chain_init (&elements->chain);
 }
 
@@ -1269,7 +1308,7 @@ new_array_type (tree el_type, tree index_type)
 }
 
 tree
-new_constrained_array_type (tree atype, tree length)
+new_array_subtype (tree atype, tree eltype, tree length)
 {
   tree range_type;
   tree index_type;
@@ -1278,7 +1317,7 @@ new_constrained_array_type (tree atype, tree length)
   index_type = TYPE_DOMAIN (atype);
 
   range_type = ortho_build_array_range(index_type, length);
-  res = build_array_type (TREE_TYPE (atype), range_type);
+  res = build_array_type (eltype, range_type);
 
   /* Constrained arrays are *always* a subtype of its array type.
      Just copy alias set.  */
@@ -1382,7 +1421,7 @@ start_array_aggr (struct o_array_aggr_list *list, tree atype, unsigned len)
   tree length;
 
   length = new_unsigned_literal (sizetype, len);
-  list->atype = new_constrained_array_type (atype, length);
+  list->atype = new_array_subtype (atype, TREE_TYPE (atype), length);
   vec_alloc(list->elts, len);
 }
 
@@ -1495,6 +1534,12 @@ new_sizeof (tree atype, tree rtype)
  size = TYPE_SIZE_UNIT (atype);
 
  return fold (build1 (NOP_EXPR, rtype, size));
+}
+
+tree
+new_record_sizeof (tree atype, tree rtype)
+{
+  return new_sizeof (atype, rtype);
 }
 
 tree

@@ -52,14 +52,15 @@ private
    O_Snode_Null : constant O_Snode := O_Snode (Ortho_Code.Exprs.O_Snode_Null);
    O_Tnode_Null : constant O_Tnode := O_Tnode (Ortho_Code.O_Tnode_Null);
 
-   type O_Element_List is new Ortho_Code.Types.O_Element_List;
-   type O_Enum_List    is new Ortho_Code.Types.O_Enum_List;
-   type O_Inter_List   is new Ortho_Code.Decls.O_Inter_List;
+   type O_Element_List     is new Ortho_Code.Types.O_Element_List;
+   type O_Element_Sublist  is new Ortho_Code.Types.O_Element_List;
+   type O_Enum_List        is new Ortho_Code.Types.O_Enum_List;
+   type O_Inter_List       is new Ortho_Code.Decls.O_Inter_List;
    type O_Record_Aggr_List is new Ortho_Code.Consts.O_Record_Aggr_List;
-   type O_Array_Aggr_List is new Ortho_Code.Consts.O_Array_Aggr_List;
-   type O_Assoc_List is new Ortho_Code.Exprs.O_Assoc_List;
-   type O_If_Block   is new Ortho_Code.Exprs.O_If_Block;
-   type O_Case_Block is new Ortho_Code.Exprs.O_Case_Block;
+   type O_Array_Aggr_List  is new Ortho_Code.Consts.O_Array_Aggr_List;
+   type O_Assoc_List       is new Ortho_Code.Exprs.O_Assoc_List;
+   type O_If_Block         is new Ortho_Code.Exprs.O_If_Block;
+   type O_Case_Block       is new Ortho_Code.Exprs.O_Case_Block;
 
    pragma Inline (New_Lit);
    pragma Inline (New_Dyadic_Op);

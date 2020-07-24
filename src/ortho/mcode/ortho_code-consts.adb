@@ -507,11 +507,11 @@ package body Ortho_Code.Consts is
       return To_Cnode_Union (Cnodes.Table (Cst + 1)).El;
    end Get_Const_Union_Value;
 
+   function To_Cnode_Common is new Ada.Unchecked_Conversion
+     (Source => Cnode_Sizeof, Target => Cnode_Common);
+
    function New_Sizeof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode
    is
-      function To_Cnode_Common is new Ada.Unchecked_Conversion
-        (Source => Cnode_Sizeof, Target => Cnode_Common);
-
       Res : O_Cnode;
    begin
       if Debug.Flag_Debug_Hli then
@@ -526,6 +526,24 @@ package body Ortho_Code.Consts is
            (Rtype, Unsigned_64 (Get_Type_Size (Atype)));
       end if;
    end New_Sizeof;
+
+   function New_Record_Sizeof
+     (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode
+   is
+      Res : O_Cnode;
+   begin
+      if Debug.Flag_Debug_Hli then
+         Cnodes.Append (Cnode_Common'(Kind => OC_Record_Sizeof,
+                                      Lit_Type => Rtype));
+         Res := Cnodes.Last;
+         Cnodes.Append (To_Cnode_Common (Cnode_Sizeof'(Atype => Atype,
+                                                       Pad => 0)));
+         return Res;
+      else
+         return New_Unsigned_Literal
+           (Rtype, Unsigned_64 (Get_Type_Record_Size (Atype)));
+      end if;
+   end New_Record_Sizeof;
 
    function Get_Sizeof_Type (Cst : O_Cnode) return O_Tnode
    is
@@ -645,8 +663,8 @@ package body Ortho_Code.Consts is
    begin
       case Get_Const_Kind (Cst) is
          when OC_Signed
-           | OC_Unsigned
-           | OC_Float =>
+            | OC_Unsigned
+            | OC_Float =>
             H := Get_Const_High (Cst);
             L := Get_Const_Low (Cst);
          when OC_Null =>
@@ -656,13 +674,14 @@ package body Ortho_Code.Consts is
             H := 0;
             L := To_Cnode_Enum (Cnodes.Table (Cst + 1)).Val;
          when OC_Array
-           | OC_Record
-           | OC_Union
-           | OC_Sizeof
-           | OC_Alignof
-           | OC_Address
-           | OC_Subprg_Address
-           | OC_Zero =>
+            | OC_Record
+            | OC_Union
+            | OC_Sizeof
+            | OC_Record_Sizeof
+            | OC_Alignof
+            | OC_Address
+            | OC_Subprg_Address
+            | OC_Zero =>
             raise Syntax_Error;
       end case;
    end Get_Const_Bytes;

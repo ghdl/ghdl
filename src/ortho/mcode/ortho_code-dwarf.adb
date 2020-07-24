@@ -674,10 +674,9 @@ package body Ortho_Code.Dwarf is
       end if;
    end Emit_Access_Type;
 
-   procedure Emit_Ucarray_Type (Atype : O_Tnode; Decl : O_Dnode)
+   procedure Emit_Array_Type
+     (Decl : O_Dnode; El_Type : O_Tnode; Idx_Type : O_Tnode)
    is
-      use Ortho_Code.Types;
-
       procedure Finish_Gen_Abbrev is
       begin
          Gen_Abbrev_Tuple (DW_AT_Type, DW_FORM_Ref4);
@@ -701,7 +700,7 @@ package body Ortho_Code.Dwarf is
          Gen_Info_Header (Abbrev_Ucarray_Name);
          Emit_Decl_Ident (Decl);
       end if;
-      Emit_Type_Ref (Get_Type_Ucarray_Element (Atype));
+      Emit_Type_Ref (El_Type);
 
       if Abbrev_Uc_Subrange = 0 then
          Generate_Abbrev (Abbrev_Uc_Subrange);
@@ -712,9 +711,18 @@ package body Ortho_Code.Dwarf is
       end if;
 
       Gen_Info_Header (Abbrev_Uc_Subrange);
-      Emit_Type_Ref (Get_Type_Ucarray_Index (Atype));
+      Emit_Type_Ref (Idx_Type);
 
       Gen_Uleb128 (0);
+   end Emit_Array_Type;
+
+   procedure Emit_Ucarray_Type (Atype : O_Tnode; Decl : O_Dnode)
+   is
+      use Ortho_Code.Types;
+   begin
+      Emit_Array_Type (Decl,
+                       Get_Type_Ucarray_Element (Atype),
+                       Get_Type_Ucarray_Index (Atype));
    end Emit_Ucarray_Type;
 
    procedure Emit_Subarray_Type (Atype : O_Tnode; Decl : O_Dnode)
@@ -747,9 +755,8 @@ package body Ortho_Code.Dwarf is
          Emit_Decl_Ident (Decl);
       end if;
 
-      Base := Get_Type_Subarray_Base (Atype);
 
-      Emit_Type_Ref (Get_Type_Ucarray_Element (Base));
+      Emit_Type_Ref (Get_Type_Subarray_Element (Atype));
       Gen_Uleb128 (Unsigned_32 (Get_Type_Size (Atype)));
 
       if Abbrev_Subrange = 0 then
@@ -763,6 +770,7 @@ package body Ortho_Code.Dwarf is
       end if;
 
       Gen_Info_Header (Abbrev_Subrange);
+      Base := Get_Type_Subarray_Base (Atype);
       Emit_Type_Ref (Get_Type_Ucarray_Index (Base));
       Gen_8 (0);
       Gen_Uleb128 (Unsigned_32 (Get_Type_Subarray_Length (Atype)));
@@ -777,6 +785,7 @@ package body Ortho_Code.Dwarf is
       F : O_Fnode;
       Loc_Pc : Pc_Type;
       Sibling_Pc : Pc_Type;
+      Sz : Uns32;
    begin
       if Abbrev_Member = 0 then
          Generate_Abbrev (Abbrev_Member);
@@ -792,7 +801,12 @@ package body Ortho_Code.Dwarf is
       Set_Current_Section (Info_Sect);
       Sibling_Pc := Gen_Info_Sibling;
       Emit_Decl_Ident_If_Set (Decl);
-      Gen_Uleb128 (Unsigned_32 (Get_Type_Size (Atype)));
+      if Get_Type_Sized (Atype) then
+         Sz := Get_Type_Size (Atype);
+      else
+         Sz := Get_Type_Record_Size (Atype);
+      end if;
+      Gen_Uleb128 (Unsigned_32 (Sz));
 
       Nbr := Get_Type_Record_Nbr_Fields (Atype);
       F := Get_Type_Record_Fields (Atype);
@@ -975,10 +989,10 @@ package body Ortho_Code.Dwarf is
       --  First step: emit inner types (if any).
       case Kind is
          when OT_Signed
-           | OT_Unsigned
-           | OT_Float
-           | OT_Boolean
-           | OT_Enum =>
+            | OT_Unsigned
+            | OT_Float
+            | OT_Boolean
+            | OT_Enum =>
             null;
          when OT_Access =>
             null;
@@ -988,7 +1002,8 @@ package body Ortho_Code.Dwarf is
          when OT_Subarray =>
             Emit_Type (Get_Type_Subarray_Base (Atype));
          when OT_Record
-           | OT_Union =>
+            | OT_Subrecord
+            | OT_Union =>
             declare
                Nbr : Uns32;
                F : O_Fnode;
@@ -1013,8 +1028,8 @@ package body Ortho_Code.Dwarf is
       --  Second step: emit info.
       case Kind is
          when OT_Signed
-           | OT_Unsigned
-           | OT_Float =>
+            | OT_Unsigned
+            | OT_Float =>
             Emit_Base_Type (Atype, Decl);
             -- base types.
          when OT_Access =>
@@ -1023,12 +1038,13 @@ package body Ortho_Code.Dwarf is
             Emit_Ucarray_Type (Atype, Decl);
          when OT_Subarray =>
             Emit_Subarray_Type (Atype, Decl);
-         when OT_Record =>
+         when OT_Record
+            | OT_Subrecord =>
             Emit_Record_Type (Atype, Decl);
          when OT_Union =>
             Emit_Union_Type (Atype, Decl);
          when OT_Enum
-           | OT_Boolean =>
+            | OT_Boolean =>
             Emit_Enum_Type (Atype, Decl);
          when OT_Complete =>
             null;

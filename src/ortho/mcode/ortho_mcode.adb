@@ -60,6 +60,31 @@ package body Ortho_Mcode is
          Ortho_Code.O_Tnode (Res));
    end Finish_Record_Type;
 
+   procedure Start_Record_Subtype
+     (Rtype : O_Tnode; Elements : out O_Element_Sublist) is
+   begin
+      Ortho_Code.Types.Start_Record_Subtype
+        (Ortho_Code.O_Tnode (Rtype),
+         Ortho_Code.Types.O_Element_List (Elements));
+   end Start_Record_Subtype;
+
+   procedure New_Subrecord_Field
+     (Elements : in out O_Element_Sublist; El : out O_Fnode; Etype : O_Tnode)
+   is
+   begin
+      Ortho_Code.Types.New_Subrecord_Field
+        (Ortho_Code.Types.O_Element_List (Elements),
+         Ortho_Code.O_Fnode (El), Ortho_Code.O_Tnode (Etype));
+   end New_Subrecord_Field;
+
+   procedure Finish_Record_Subtype
+     (Elements : in out O_Element_Sublist; Res : out O_Tnode) is
+   begin
+      Ortho_Code.Types.Finish_Record_Subtype
+        (Ortho_Code.Types.O_Element_List (Elements),
+         Ortho_Code.O_Tnode (Res));
+   end Finish_Record_Subtype;
+
    procedure New_Uncomplete_Record_Type (Res : out O_Tnode) is
    begin
       Ortho_Code.Types.New_Uncomplete_Record_Type (Ortho_Code.O_Tnode (Res));
@@ -127,8 +152,8 @@ package body Ortho_Mcode is
                                           Ortho_Code.O_Tnode (Index_Type)));
    end New_Array_Type;
 
-   function New_Constrained_Array_Type (Atype : O_Tnode; Length : O_Cnode)
-                                       return O_Tnode
+   function New_Array_Subtype
+     (Atype : O_Tnode; El_Type : O_Tnode; Length : O_Cnode) return O_Tnode
    is
       Len : constant Ortho_Code.O_Cnode := Ortho_Code.O_Cnode (Length);
       L_Type : Ortho_Code.O_Tnode;
@@ -137,9 +162,10 @@ package body Ortho_Mcode is
       if Get_Type_Kind (L_Type) /= OT_Unsigned then
          raise Syntax_Error;
       end if;
-      return O_Tnode (New_Constrained_Array_Type
-                        (Ortho_Code.O_Tnode (Atype), Get_Const_U32 (Len)));
-   end New_Constrained_Array_Type;
+      return O_Tnode (New_Array_Subtype (Ortho_Code.O_Tnode (Atype),
+                      Ortho_Code.O_Tnode (El_Type),
+                      Get_Const_U32 (Len)));
+   end New_Array_Subtype;
 
    function New_Unsigned_Type (Size : Natural) return O_Tnode is
    begin
@@ -324,6 +350,14 @@ package body Ortho_Mcode is
         (Ortho_Code.Consts.New_Sizeof (Ortho_Code.O_Tnode (Atype),
                                        Ortho_Code.O_Tnode (Rtype)));
    end New_Sizeof;
+
+   function New_Record_Sizeof
+     (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode is
+   begin
+      return O_Cnode
+        (Ortho_Code.Consts.New_Record_Sizeof (Ortho_Code.O_Tnode (Atype),
+                                              Ortho_Code.O_Tnode (Rtype)));
+   end New_Record_Sizeof;
 
    function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode is
    begin

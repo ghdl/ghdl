@@ -338,10 +338,10 @@ package body Trans.Chap9 is
       Push_Instance_Factory (Info.Psl_Scope'Access);
 
       --  Create the state vector type.
-      Info.Psl_Vect_Type := New_Constrained_Array_Type
+      Info.Psl_Vect_Type := New_Array_Subtype
         (Std_Boolean_Array_Type,
-         New_Unsigned_Literal (Ghdl_Index_Type,
-                               Unsigned_64 (Get_PSL_Nbr_States (Stmt))));
+         Std_Boolean_Type_Node,
+         New_Index_Lit (Unsigned_64 (Get_PSL_Nbr_States (Stmt))));
       New_Type_Decl (Create_Identifier ("VECTTYPE"), Info.Psl_Vect_Type);
 
       --  Create the variables.

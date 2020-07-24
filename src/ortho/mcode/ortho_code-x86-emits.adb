@@ -3163,10 +3163,10 @@ package body Ortho_Code.X86.Emits is
    begin
       case Get_Const_Kind (Val) is
          when OC_Signed
-           | OC_Unsigned
-           | OC_Float
-           | OC_Null
-           | OC_Lit =>
+            | OC_Unsigned
+            | OC_Float
+            | OC_Null
+            | OC_Lit =>
             Get_Const_Bytes (Val, H, L);
             case Get_Type_Mode (Get_Const_Type (Val)) is
                when Mode_U8
@@ -3216,8 +3216,9 @@ package body Ortho_Code.X86.Emits is
                Gen_8 (0);
             end loop;
          when OC_Sizeof
-           | OC_Alignof
-           | OC_Union =>
+            | OC_Record_Sizeof
+            | OC_Alignof
+            | OC_Union =>
             raise Program_Error;
       end case;
    end Emit_Const;
