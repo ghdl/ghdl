@@ -45,7 +45,8 @@ def run(keep):
             test = tests.pop(0)
             j = Job(test, poll)
             jobs.append(j)
-            print('Starting {}'.format(test))
+            print('Starting {} [{}+{} err/{}]'.format(
+                test, nbr_run, nbr_err, nbr_tests))
             j.start()
         elif len(jobs) > 0:
             # Wait for output or end of job.
@@ -91,4 +92,3 @@ if __name__ == '__main__':
                         help="keep running", action='store_true')
     args = parser.parse_args()
     run(args.keep)
-
