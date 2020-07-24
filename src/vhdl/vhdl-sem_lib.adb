@@ -323,7 +323,10 @@ package body Vhdl.Sem_Lib is
       It := List_Iterate (List);
       while Is_Valid (It) loop
          El := Get_Element (It);
-         if Get_Date (El) = Date_Obsolete then
+         --  Just handle design unit; but there could also be entity aspects.
+         if Get_Kind (El) = Iir_Kind_Design_Unit
+           and then Get_Date (El) = Date_Obsolete
+         then
             Error_Obsolete (Loc, "%n is obsoleted by %n", (+Design_Unit, +El));
             return;
          end if;
