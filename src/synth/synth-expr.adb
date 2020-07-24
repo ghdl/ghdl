@@ -1167,15 +1167,9 @@ package body Synth.Expr is
       Voff := No_Net;
       Off := (0, 0);
 
-      for I in Flist_First .. Flist_Last (Indexes) loop
+      Stride := 1;
+      for I in reverse Flist_First .. Flist_Last (Indexes) loop
          Idx_Expr := Get_Nth_Element (Indexes, I);
-
-         --  Compute stride.  This is O(n**2), but for small n.
-         Stride := 1;
-         for J in I + 1 .. Flist_Last (Indexes) loop
-            Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (J + 1));
-            Stride := Stride * Bnd.Len;
-         end loop;
 
          --  Use the base type as the subtype of the index is not synth-ed.
          Idx_Val := Synth_Expression_With_Basetype (Syn_Inst, Idx_Expr);
@@ -1204,6 +1198,8 @@ package body Synth.Expr is
                Set_Location (Voff, Idx_Expr);
             end if;
          end if;
+
+         Stride := Stride * Bnd.Len;
       end loop;
    end Synth_Indexed_Name;
 

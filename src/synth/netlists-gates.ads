@@ -257,12 +257,21 @@ package Netlists.Gates is
    subtype Dyn_Insert_Module_Id is
      Module_Id range Id_Dyn_Insert .. Id_Dyn_Insert_En;
 
+   --  Gate to compute dynamic insert or extract offsets.
+   --  Provides the scale (step) factor (needed for insert/extract wider than
+   --   1 bit), also provides the maximum index value.
+   --  For multi-dimensional insert/extract, memidx needs to be combined with
+   --   addidx.
    --  Inputs:  0: index
    --  Params:  0: step
    --           1: max
    --  OUT := IN0 * STEP,  IN0 < MAX
    Id_Memidx : constant Module_Id := 90;
 
+   --  Combine (simply add) indexes for dynamic insert or extract.
+   --  Despite the addition being commutative, the inputs are ordered.
+   --  Input 0 must be a memidx (the most significant one, so with the larger
+   --   step), and input 1 must be either a memidx or an addidx.
    --  OUT := IN0 + IN1, size extension (max of inputs width).
    --  Inputs:  0: a memidx
    --           1: chain (addidx or memidx).

@@ -165,10 +165,10 @@ package body Netlists.Memories is
                when Id_Dyn_Extract =>
                   --  Extract step from memidx gate.
                   Idx := Get_Net_Parent (Get_Input_Net (Extr_Inst, 1));
-                  if Get_Id (Idx) = Id_Addidx then
-                     --  Multi-dim arrays, lowest index is the first one.
-                     Idx := Get_Net_Parent (Get_Input_Net (Idx, 0));
-                  end if;
+                  while Get_Id (Idx) = Id_Addidx loop
+                     --  Multi-dim arrays, lowest index is the last one.
+                     Idx := Get_Net_Parent (Get_Input_Net (Idx, 1));
+                  end loop;
                   pragma Assert (Get_Id (Idx) = Id_Memidx);
                   Step := Get_Param_Uns32 (Idx, 0);
 
@@ -316,7 +316,7 @@ package body Netlists.Memories is
       pragma Unreferenced (Mem_Depth);
 
       --  Do checks on memidx.
-      Last_Size := 0;
+      Last_Size := Mem_Size;
       for I in Indexes'Range loop
          declare
             Inst : constant Instance := Indexes (I).Inst;
@@ -326,17 +326,18 @@ package body Netlists.Memories is
             Max : constant Uns32 := Get_Param_Uns32 (Inst, 1);
             Max_W : constant Width := Clog2 (Max + 1);
             Sub_Addr1 : Net;
+            Sz : Uns32;
          begin
             --  Check max (from previous dimension).
+            --  Check the memidx can index its whole input.
             pragma Assert (Max /= 0);
-            if I /= Indexes'First then
-               if Last_Size /= Step then
-                  raise Internal_Error;
-               end if;
+            Sz := (Max + 1) * Step;
+            if Sz /= Last_Size then
+               raise Internal_Error;
             end if;
-            Last_Size := (Max + 1) * Step;
+            Last_Size := Step;
 
-            if I = Indexes'First then
+            if I = Indexes'Last then
                if Step /= Val_Wd then
                   raise Internal_Error;
                end if;
@@ -357,16 +358,12 @@ package body Netlists.Memories is
          end;
       end loop;
 
-      if Last_Size /= Mem_Size then
-         raise Internal_Error;
-      end if;
-
       --  Lower (just concat addresses).
       declare
          use Netlists.Concats;
          Concat : Concat_Type;
       begin
-         for I in Indexes'Range loop
+         for I in reverse Indexes'Range loop
             Append (Concat, Indexes (I).Addr);
          end loop;
 
