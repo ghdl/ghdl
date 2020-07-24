@@ -281,7 +281,7 @@ build () {
           CXX=""
       ;;
       llvm)
-          CXX="clang"
+          CXX="clang++"
           CONFIG_OPTS+=" --with-llvm-config CXX=$CXX"
       ;;
       llvm-3.5)
