@@ -336,6 +336,7 @@ package body Netlists.Inference is
       Res   : Net;
    begin
       if Off = 0
+        and then Rst = No_Net
         and then not Synth.Flags.Flag_Debug_Nomemory1
         and then Can_Infere_RAM (Data, Prev_Val)
       then
