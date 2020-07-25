@@ -286,8 +286,8 @@ package body Trans.Rtis is
             Ghdl_Rtik_Subtype_Array);
          New_Enum_Literal
            (Constr,
-            Get_Identifier ("__ghdl_rtik_subtype_unconstrained_array"),
-            Ghdl_Rtik_Subtype_Unconstrained_Array);
+            Get_Identifier ("__ghdl_rtik_subtype_unbounded_array"),
+            Ghdl_Rtik_Subtype_Unbounded_Array);
          New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_subtype_record"),
             Ghdl_Rtik_Subtype_Record);
@@ -1550,7 +1550,7 @@ package body Trans.Rtis is
          when Type_Mode_Bounded_Arrays =>
             Kind := Ghdl_Rtik_Subtype_Array;
          when Type_Mode_Unbounded_Array =>
-            Kind := Ghdl_Rtik_Subtype_Unconstrained_Array;
+            Kind := Ghdl_Rtik_Subtype_Unbounded_Array;
          when Type_Mode_Bounded_Records =>
             Kind := Ghdl_Rtik_Subtype_Record;
          when Type_Mode_Unbounded_Record =>

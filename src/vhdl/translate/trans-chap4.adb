@@ -1757,15 +1757,18 @@ package body Trans.Chap4 is
             A : Var_Type renames Alias_Info.Alias_Var (Mode);
             Alias_Node : Mnode;
          begin
+            --  FIXME: use subtype conversion ?
             case Tinfo.Type_Mode is
                when Type_Mode_Unbounded =>
                   Stabilize (N);
                   Alias_Node := Stabilize (Get_Var (A, Tinfo, Mode));
-                  Copy_Fat_Pointer (Alias_Node, N);
+                  Chap7.Convert_Constrained_To_Unconstrained (Alias_Node, N);
                when Type_Mode_Bounded_Arrays =>
                   Stabilize (N);
-                  New_Assign_Stmt (Get_Var (A),
-                                   M2E (Chap3.Get_Composite_Base (N)));
+                  New_Assign_Stmt
+                    (Get_Var (A),
+                     New_Convert_Ov (M2E (Chap3.Get_Composite_Base (N)),
+                                     Tinfo.Ortho_Ptr_Type (Mode)));
                   Chap3.Check_Composite_Match
                     (Decl_Type, T2M (Decl_Type, Mode),
                      Name_Type, N, Decl);

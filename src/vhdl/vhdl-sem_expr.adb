@@ -3240,6 +3240,7 @@ package body Vhdl.Sem_Expr is
             Rec_El : Iir;
             Rec_El_Type : Iir;
             New_Rec_El : Iir;
+            Assoc_Expr : Iir;
             Constraint : Iir_Constraint;
             Composite_Found : Boolean;
             Staticness : Iir_Staticness;
@@ -3251,7 +3252,8 @@ package body Vhdl.Sem_Expr is
             Staticness := Locally;
             for I in Flist_First .. Flist_Last (El_List) loop
                El := Matches (I);
-               El_Type := Get_Type (Get_Associated_Expr (El));
+               Assoc_Expr := Get_Associated_Expr (El);
+               El_Type := Get_Type (Assoc_Expr);
                Rec_El := Get_Nth_Element (Rec_El_List, I);
                Rec_El_Type := Get_Type (Rec_El);
                if Is_Fully_Constrained_Type (El_Type)
@@ -4028,7 +4030,7 @@ package body Vhdl.Sem_Expr is
 
    --  Analyze aggregate EXPR whose type is expected to be A_TYPE.
    --  A_TYPE cannot be null_iir (this case is handled in sem_expression_ov)
-   --  If FORCE_CONSTRAINED is true, the aggregate type is constrained by the
+   --  If CONSTRAINED is true, the aggregate type is constrained by the
    --  context, even if its type isn't.  This is to deal with cases like:
    --    procedure set (v : out string) is
    --    begin

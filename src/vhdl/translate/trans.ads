@@ -812,201 +812,6 @@ package Trans is
 
    function Align_Val (Algn : Alignment_Type) return O_Cnode;
 
-   type Ortho_Info_Basetype_Type
-     (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar) is record
-      --  For all types:
-      --  This is the maximum depth of RTI, that is the max of the depth of
-      --  the type itself and every types it depends on.
-      Rti_Max_Depth : Rti_Depth_Type;
-
-      Align : Alignment_Type;
-
-      case Kind is
-         when Kind_Type_Scalar =>
-            --  For scalar types:
-            --  Ortho type for the range record type.
-            Range_Type : O_Tnode;
-
-            --  Ortho type for an access to the range record type.
-            Range_Ptr_Type : O_Tnode;
-
-            --  Fields of TYPE_RANGE_TYPE.
-            Range_Left   : O_Fnode;
-            Range_Right  : O_Fnode;
-            Range_Dir    : O_Fnode;
-            Range_Length : O_Fnode;
-
-         when Kind_Type_Array
-           | Kind_Type_Record =>
-            --  For unbounded types:
-            --  The base type.
-            Base_Type       : O_Tnode_Array;
-            Base_Ptr_Type   : O_Tnode_Array;
-            --  The dope vector.
-            --  For arrays:
-            --    range of indexes
-            --    layout of element (if element is unbounded)
-            --  For record:
-            --    offsets of complex elements
-            --    layout of unbounded elements
-            Bounds_Type     : O_Tnode;
-            Bounds_Ptr_Type : O_Tnode;
-
-            --  For arrays with unbounded element, the layout field of the
-            --  bounds type.
-            Bounds_El       : O_Fnode;
-
-            --  Size + bounds.
-            --  Always created for arrays, created for unbounded and complex
-            --  records.
-            Layout_Type     : O_Tnode;
-            Layout_Ptr_Type : O_Tnode;
-
-            --  Size and bounds fields of the layout type.
-            Layout_Size     : O_Fnode;
-            Layout_Bounds   : O_Fnode;
-
-            --  The ortho type is a fat pointer to the base and the bounds.
-            --  These are the fields of the fat pointer.
-            Base_Field   : O_Fnode_Array;
-            Bounds_Field : O_Fnode_Array;
-
-            --  Parameters for type builders.
-            --  NOTE: this is only set for types (and *not* for subtypes).
-            Builder      : Complex_Type_Arr_Info;
-
-         when Kind_Type_File =>
-            --  Constant containing the signature of the file.
-            File_Signature : O_Dnode;
-
-         when Kind_Type_Protected =>
-            Prot_Scope : aliased Var_Scope_Type;
-            Prot_Prev_Scope : Var_Scope_Acc;
-
-            --  Init procedure for the protected type.
-            Prot_Init_Subprg           : O_Dnode;
-            Prot_Init_Instance         : Subprgs.Subprg_Instance_Type;
-            --  Final procedure.
-            Prot_Final_Subprg          : O_Dnode;
-            Prot_Final_Instance        : Subprgs.Subprg_Instance_Type;
-            --  The outer instance, if any.
-            Prot_Subprg_Instance_Field : O_Fnode;
-            --  The LOCK field in the object type
-            Prot_Lock_Field            : O_Fnode;
-      end case;
-   end record;
-
-   type Ortho_Info_Subtype_Type
-     (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar) is record
-      case Kind is
-         when Kind_Type_Scalar =>
-            --  For scalar types:
-            --  True if no need to check against low/high bound.
-            Nocheck_Low : Boolean := False;
-            Nocheck_Hi  : Boolean := False;
-
-            --  For scalar types:
-            --  Range_Var is the same as its type mark (there is no need to
-            --  create a new range var if the range is the same).
-            Same_Range : Boolean := False;
-
-            --  Tree for the range record declaration.
-            Range_Var : Var_Type := Null_Var;
-
-         when Kind_Type_Array
-           | Kind_Type_Record =>
-            --  Variable containing the layout for a constrained type.
-            Composite_Layout : Var_Type;
-
-            --  For a locally constrained record subtype whose base type has
-            --  unbounded elements: the field containing the base record.
-            Box_Field : O_Fnode_Array;
-
-         when Kind_Type_File =>
-            null;
-
-         when Kind_Type_Protected =>
-            null;
-      end case;
-   end record;
-
-   --    Ortho_Info_Type_Scalar_Init : constant Ortho_Info_Type_Type :=
-   --      (Kind => Kind_Type_Scalar,
-   --       Range_Type => O_Tnode_Null,
-   --       Range_Ptr_Type => O_Tnode_Null,
-   --       Range_Var => null,
-   --       Range_Left => O_Fnode_Null,
-   --       Range_Right => O_Fnode_Null,
-   --       Range_Dir => O_Fnode_Null,
-   --       Range_Length => O_Fnode_Null);
-
-   Ortho_Info_Basetype_Array_Init : constant Ortho_Info_Basetype_Type :=
-     (Kind => Kind_Type_Array,
-      Rti_Max_Depth => 0,
-      Align => Align_Undef,
-      Base_Type => (O_Tnode_Null, O_Tnode_Null),
-      Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
-      Bounds_Type => O_Tnode_Null,
-      Bounds_Ptr_Type => O_Tnode_Null,
-      Bounds_El => O_Fnode_Null,
-      Layout_Type => O_Tnode_Null,
-      Layout_Ptr_Type => O_Tnode_Null,
-      Layout_Size => O_Fnode_Null,
-      Layout_Bounds => O_Fnode_Null,
-      Base_Field => (O_Fnode_Null, O_Fnode_Null),
-      Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
-      Builder => (others => (Builder_Instance => Subprgs.Null_Subprg_Instance,
-                             Builder_Layout_Param => O_Dnode_Null,
-                             Builder_Proc => O_Dnode_Null)));
-
-   Ortho_Info_Subtype_Array_Init : constant Ortho_Info_Subtype_Type :=
-     (Kind => Kind_Type_Array,
-      Composite_Layout => Null_Var,
-      Box_Field => (O_Fnode_Null, O_Fnode_Null));
-
-   Ortho_Info_Basetype_Record_Init : constant Ortho_Info_Basetype_Type :=
-     (Kind => Kind_Type_Record,
-      Rti_Max_Depth => 0,
-      Align => Align_Undef,
-      Base_Type => (O_Tnode_Null, O_Tnode_Null),
-      Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
-      Bounds_Type => O_Tnode_Null,
-      Bounds_Ptr_Type => O_Tnode_Null,
-      Bounds_El => O_Fnode_Null,
-      Layout_Type => O_Tnode_Null,
-      Layout_Ptr_Type => O_Tnode_Null,
-      Layout_Size => O_Fnode_Null,
-      Layout_Bounds => O_Fnode_Null,
-      Base_Field => (O_Fnode_Null, O_Fnode_Null),
-      Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
-      Builder => (others => (Builder_Instance => Subprgs.Null_Subprg_Instance,
-                             Builder_Layout_Param => O_Dnode_Null,
-                             Builder_Proc => O_Dnode_Null)));
-
-   Ortho_Info_Subtype_Record_Init : constant Ortho_Info_Subtype_Type :=
-     (Kind => Kind_Type_Record,
-      Composite_Layout => Null_Var,
-      Box_Field => (O_Fnode_Null, O_Fnode_Null));
-
-   Ortho_Info_Basetype_File_Init : constant Ortho_Info_Basetype_Type :=
-     (Kind => Kind_Type_File,
-      Rti_Max_Depth => 0,
-      Align => Align_Undef,
-      File_Signature => O_Dnode_Null);
-
-   Ortho_Info_Basetype_Prot_Init : constant Ortho_Info_Basetype_Type :=
-     (Kind => Kind_Type_Protected,
-      Rti_Max_Depth => 0,
-      Align => Align_Undef,
-      Prot_Scope => Null_Var_Scope,
-      Prot_Prev_Scope => null,
-      Prot_Init_Subprg => O_Dnode_Null,
-      Prot_Init_Instance => Subprgs.Null_Subprg_Instance,
-      Prot_Final_Subprg => O_Dnode_Null,
-      Prot_Subprg_Instance_Field => O_Fnode_Null,
-      Prot_Final_Instance => Subprgs.Null_Subprg_Instance,
-      Prot_Lock_Field => O_Fnode_Null);
-
    --  Mode of the type; roughly speaking, this corresponds to its size
    --  (for scalars) or its layout (for composite types).
    --  Used to select library subprograms for signals.
@@ -1449,6 +1254,220 @@ package Trans is
    type Hexstr_Type is array (Integer range 0 .. 15) of Character;
    N2hex : constant Hexstr_Type := "0123456789abcdef";
 
+   type Ortho_Info_Basetype_Type
+     (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar) is record
+      --  For all types:
+      --  This is the maximum depth of RTI, that is the max of the depth of
+      --  the type itself and every types it depends on.
+      Rti_Max_Depth : Rti_Depth_Type;
+
+      Align : Alignment_Type;
+
+      case Kind is
+         when Kind_Type_Scalar =>
+            --  For scalar types:
+            --  Ortho type for the range record type.
+            Range_Type : O_Tnode;
+
+            --  Ortho type for an access to the range record type.
+            Range_Ptr_Type : O_Tnode;
+
+            --  Fields of TYPE_RANGE_TYPE.
+            Range_Left   : O_Fnode;
+            Range_Right  : O_Fnode;
+            Range_Dir    : O_Fnode;
+            Range_Length : O_Fnode;
+
+         when Kind_Type_Array
+           | Kind_Type_Record =>
+            --  For unbounded types:
+            --  The base type.
+            Base_Type       : O_Tnode_Array;
+            Base_Ptr_Type   : O_Tnode_Array;
+            --  The dope vector.
+            --  For arrays:
+            --    range of indexes
+            --    layout of element (if element is unbounded)
+            --  For record:
+            --    offsets of complex elements
+            --    layout of unbounded elements
+            Bounds_Type     : O_Tnode;
+            Bounds_Ptr_Type : O_Tnode;
+
+            --  For arrays with unbounded element, the layout field of the
+            --  bounds type.
+            Bounds_El       : O_Fnode;
+
+            --  Size + bounds.
+            --  Always created for arrays, created for unbounded and complex
+            --  records.
+            Layout_Type     : O_Tnode;
+            Layout_Ptr_Type : O_Tnode;
+
+            --  Size and bounds fields of the layout type.
+            Layout_Size     : O_Fnode;
+            Layout_Bounds   : O_Fnode;
+
+            --  The ortho type is a fat pointer to the base and the bounds.
+            --  These are the fields of the fat pointer.
+            Base_Field   : O_Fnode_Array;
+            Bounds_Field : O_Fnode_Array;
+
+            --  Parameters for type builders.
+            --  NOTE: this is only set for types (and *not* for subtypes).
+            Builder      : Complex_Type_Arr_Info;
+
+         when Kind_Type_File =>
+            --  Constant containing the signature of the file.
+            File_Signature : O_Dnode;
+
+         when Kind_Type_Protected =>
+            Prot_Scope : aliased Var_Scope_Type;
+            Prot_Prev_Scope : Var_Scope_Acc;
+
+            --  Init procedure for the protected type.
+            Prot_Init_Subprg           : O_Dnode;
+            Prot_Init_Instance         : Subprgs.Subprg_Instance_Type;
+            --  Final procedure.
+            Prot_Final_Subprg          : O_Dnode;
+            Prot_Final_Instance        : Subprgs.Subprg_Instance_Type;
+            --  The outer instance, if any.
+            Prot_Subprg_Instance_Field : O_Fnode;
+            --  The LOCK field in the object type
+            Prot_Lock_Field            : O_Fnode;
+      end case;
+   end record;
+
+   type Subtype_Fields_Type is record
+      Tinfo : Type_Info_Acc;
+      Fields : O_Fnode_Array;
+   end record;
+
+   Subtype_Fields_Null : constant Subtype_Fields_Type :=
+     (Tinfo => null, Fields => (others => O_Fnode_Null));
+
+   type Subtype_Fields_Array is
+     array (Iir_Index32 range <>) of Subtype_Fields_Type;
+   type Subtype_Fields_Array_Acc is access Subtype_Fields_Array;
+
+   type Ortho_Info_Subtype_Type
+     (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar) is record
+      case Kind is
+         when Kind_Type_Scalar =>
+            --  For scalar types:
+            --  True if no need to check against low/high bound.
+            Nocheck_Low : Boolean := False;
+            Nocheck_Hi  : Boolean := False;
+
+            --  For scalar types:
+            --  Range_Var is the same as its type mark (there is no need to
+            --  create a new range var if the range is the same).
+            Same_Range : Boolean := False;
+
+            --  Tree for the range record declaration.
+            Range_Var : Var_Type := Null_Var;
+
+         when Kind_Type_Array
+           | Kind_Type_Record =>
+            --  Variable containing the layout for a constrained type.
+            Composite_Layout : Var_Type;
+
+            Subtype_Owner : Type_Info_Acc := null;
+            Owner_Field : Field_Info_Acc := null;
+
+            --  For static record subtype: the fields of the constraints.
+            Rec_Fields : Subtype_Fields_Array_Acc;
+
+         when Kind_Type_File =>
+            null;
+
+         when Kind_Type_Protected =>
+            null;
+      end case;
+   end record;
+
+   --    Ortho_Info_Type_Scalar_Init : constant Ortho_Info_Type_Type :=
+   --      (Kind => Kind_Type_Scalar,
+   --       Range_Type => O_Tnode_Null,
+   --       Range_Ptr_Type => O_Tnode_Null,
+   --       Range_Var => null,
+   --       Range_Left => O_Fnode_Null,
+   --       Range_Right => O_Fnode_Null,
+   --       Range_Dir => O_Fnode_Null,
+   --       Range_Length => O_Fnode_Null);
+
+   Ortho_Info_Basetype_Array_Init : constant Ortho_Info_Basetype_Type :=
+     (Kind => Kind_Type_Array,
+      Rti_Max_Depth => 0,
+      Align => Align_Undef,
+      Base_Type => (O_Tnode_Null, O_Tnode_Null),
+      Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
+      Bounds_Type => O_Tnode_Null,
+      Bounds_Ptr_Type => O_Tnode_Null,
+      Bounds_El => O_Fnode_Null,
+      Layout_Type => O_Tnode_Null,
+      Layout_Ptr_Type => O_Tnode_Null,
+      Layout_Size => O_Fnode_Null,
+      Layout_Bounds => O_Fnode_Null,
+      Base_Field => (O_Fnode_Null, O_Fnode_Null),
+      Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
+      Builder => (others => (Builder_Instance => Subprgs.Null_Subprg_Instance,
+                             Builder_Layout_Param => O_Dnode_Null,
+                             Builder_Proc => O_Dnode_Null)));
+
+   Ortho_Info_Subtype_Array_Init : constant Ortho_Info_Subtype_Type :=
+     (Kind => Kind_Type_Array,
+      Composite_Layout => Null_Var,
+      Subtype_Owner => null,
+      Owner_Field => null,
+      Rec_Fields => null);
+
+   Ortho_Info_Basetype_Record_Init : constant Ortho_Info_Basetype_Type :=
+     (Kind => Kind_Type_Record,
+      Rti_Max_Depth => 0,
+      Align => Align_Undef,
+      Base_Type => (O_Tnode_Null, O_Tnode_Null),
+      Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
+      Bounds_Type => O_Tnode_Null,
+      Bounds_Ptr_Type => O_Tnode_Null,
+      Bounds_El => O_Fnode_Null,
+      Layout_Type => O_Tnode_Null,
+      Layout_Ptr_Type => O_Tnode_Null,
+      Layout_Size => O_Fnode_Null,
+      Layout_Bounds => O_Fnode_Null,
+      Base_Field => (O_Fnode_Null, O_Fnode_Null),
+      Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
+      Builder => (others => (Builder_Instance => Subprgs.Null_Subprg_Instance,
+                             Builder_Layout_Param => O_Dnode_Null,
+                             Builder_Proc => O_Dnode_Null)));
+
+   Ortho_Info_Subtype_Record_Init : constant Ortho_Info_Subtype_Type :=
+     (Kind => Kind_Type_Record,
+      Composite_Layout => Null_Var,
+      Subtype_Owner => null,
+      Owner_Field => null,
+      Rec_Fields => null);
+
+   Ortho_Info_Basetype_File_Init : constant Ortho_Info_Basetype_Type :=
+     (Kind => Kind_Type_File,
+      Rti_Max_Depth => 0,
+      Align => Align_Undef,
+      File_Signature => O_Dnode_Null);
+
+   Ortho_Info_Basetype_Prot_Init : constant Ortho_Info_Basetype_Type :=
+     (Kind => Kind_Type_Protected,
+      Rti_Max_Depth => 0,
+      Align => Align_Undef,
+      Prot_Scope => Null_Var_Scope,
+      Prot_Prev_Scope => null,
+      Prot_Init_Subprg => O_Dnode_Null,
+      Prot_Init_Instance => Subprgs.Null_Subprg_Instance,
+      Prot_Final_Subprg => O_Dnode_Null,
+      Prot_Subprg_Instance_Field => O_Fnode_Null,
+      Prot_Final_Instance => Subprgs.Null_Subprg_Instance,
+      Prot_Lock_Field => O_Fnode_Null);
+
+
    --  In order to unify and have a common handling of Enode/Lnode/Dnode,
    --  let's introduce Mnode (yes, another node).
    --
@@ -1689,7 +1708,7 @@ package Trans is
             --   bounded record (complex or not) ->  record
             --   constrained non-complex array   ->  constrained array
             --   constrained complex array       ->  the element
-            --   unboubded array or record       ->  fat pointer
+            --   unbounded array or record       ->  fat pointer
             --   access to unconstrained array   ->  fat pointer
             --   access (others)                 ->  access
             --   file                            ->  file_index_type

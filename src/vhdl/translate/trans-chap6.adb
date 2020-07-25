@@ -913,43 +913,50 @@ package body Trans.Chap6 is
    function Translate_Selected_Element
      (Prefix : Mnode; El : Iir_Element_Declaration) return Mnode
    is
-      El_Type       : constant Iir := Get_Type (El);
-      El_Btype      : constant Iir := Get_Base_Type (El_Type);
-      El_Tinfo      : constant Type_Info_Acc := Get_Info (El_Type);
+      --  Note: EL can be an element_declaration or a record_element_constraint
+      --  It can be an element_declaration even if the prefix is of a record
+      --   subtype with a constraint on EL.
+      Prefix_Tinfo  : constant Type_Info_Acc := Get_Type_Info (Prefix);
       Kind          : constant Object_Kind_Type := Get_Object_Kind (Prefix);
-      Base_El       : constant Iir := Get_Base_Element_Declaration (El);
-      El_Info       : Field_Info_Acc;
-      Base_Tinfo    : Type_Info_Acc;
+      Pos           : constant Iir_Index32 := Get_Element_Position (El);
+      Res_Type      : constant Iir := Get_Type (El);
+      Res_Tinfo     : constant Type_Info_Acc := Get_Info (Res_Type);
+      El_Tinfo      : Type_Info_Acc;
       Stable_Prefix : Mnode;
-      Base, Res, Fat_Res : Mnode;
-      Rec_Layout : Mnode;
-      El_Descr : Mnode;
-      Box_Field : O_Fnode;
-      B : O_Lnode;
+      Base          : Mnode;
+      Res, Fat_Res  : Mnode;
+      Rec_Layout    : Mnode;
+      El_Descr      : Mnode;
+      F             : O_Fnode;
    begin
-      --  There are 3 cases:
-      --  a) the record is bounded (and so is the element).
-      --  b) the record is unbounded and the element is bounded
-      --  c) the record is unbounded and the element is unbounded.
-      --  If the record is unbounded, PREFIX is a fat pointer.
-      --  On top of that, the element may be complex.
-
-      --  For record subtypes, there is no info for elements that have not
-      --  changed.
-      El_Info := Get_Info (El);
-      if El_Info = null then
-         El_Info := Get_Info (Base_El);
+      --  RES_TINFO is the type info of the result.
+      --  EL_TINFO is the type info of the field.
+      --  They can be different when the record subtype is partially
+      --  constrained or is complex.
+      if Prefix_Tinfo.S.Rec_Fields /= null then
+         F := Prefix_Tinfo.S.Rec_Fields (Pos).Fields (Kind);
+         El_Tinfo := Prefix_Tinfo.S.Rec_Fields (Pos).Tinfo;
+         pragma Assert (El_Tinfo = Res_Tinfo);
+      else
+         --  Use the base element.
+         declare
+            Bel : constant Iir := Get_Base_Element_Declaration (El);
+            Bel_Info : constant Field_Info_Acc := Get_Info (Bel);
+         begin
+            F := Bel_Info.Field_Node (Kind);
+            El_Tinfo := Get_Info (Get_Type (Bel));
+         end;
       end if;
 
-      if Is_Unbounded_Type (El_Tinfo) then
+      if Is_Unbounded_Type (Res_Tinfo) then
          Stable_Prefix := Stabilize (Prefix);
 
          --  Result is a fat pointer, create it and set bounds.
          --  FIXME: layout for record, bounds for array!
-         Fat_Res := Create_Temp (El_Tinfo, Kind);
+         Fat_Res := Create_Temp (Res_Tinfo, Kind);
          El_Descr := Chap3.Record_Layout_To_Element_Layout
            (Chap3.Get_Composite_Bounds (Stable_Prefix), El);
-         case El_Tinfo.Type_Mode is
+         case Res_Tinfo.Type_Mode is
             when Type_Mode_Unbounded_Record =>
                null;
             when Type_Mode_Unbounded_Array =>
@@ -965,58 +972,41 @@ package body Trans.Chap6 is
 
       --  Get the base.
       Base := Chap3.Get_Composite_Base (Stable_Prefix);
-      Base_Tinfo := Get_Type_Info (Base);
-      Box_Field := Base_Tinfo.S.Box_Field (Kind);
 
-      if (Box_Field = O_Fnode_Null
-            or else Get_Type_Staticness (El_Type) /= Locally)
-        and then (Is_Complex_Type (El_Tinfo) or Is_Unbounded_Type (El_Tinfo))
+      if Prefix_Tinfo.Type_Mode = Type_Mode_Static_Record
+        or else Is_Static_Type (El_Tinfo)
       then
+         --  If the base element type is static or if the prefix is static,
+         --  then the element can directly be accessed.
+         Res := Lv2M (New_Selected_Element (M2Lv (Base), F), El_Tinfo, Kind);
+      else
+         --  Unbounded or complex element.
          Stabilize (Base);
-
-         if Box_Field /= O_Fnode_Null
-           and then Get_Type_Staticness (El_Type) /= Locally
-         then
-            --  Unbox.
-            B := New_Selected_Element (M2Lv (Base), Box_Field);
-         else
-            B := M2Lv (Base);
-         end if;
 
          --  The element is complex: it's an offset.
          Rec_Layout := Chap3.Get_Composite_Bounds (Stable_Prefix);
-         Res := E2M
-           (New_Unchecked_Address
-              (New_Slice
-                   (New_Access_Element
-                        (New_Unchecked_Address (M2Lv (Base), Char_Ptr_Type)),
-                    Chararray_Type,
-                    New_Value
-                      (Chap3.Record_Layout_To_Element_Offset
-                         (Rec_Layout, El, Kind))),
-               El_Tinfo.B.Base_Ptr_Type (Kind)),
-            El_Tinfo, Kind);
-      else
-         --  Normal element.
-         B := M2Lv (Base);
-
-         if Box_Field /= O_Fnode_Null
-           and then El_Type = Get_Type (Base_El)
-         then
-            --  Unbox.
-            B := New_Selected_Element (B, Box_Field);
-         end if;
-
-         Res := Lv2M (New_Selected_Element (B, El_Info.Field_Node (Kind)),
-                      El_Tinfo, Kind);
+         Res := Lv2M
+           (New_Access_Element
+              (New_Unchecked_Address
+                 (New_Slice
+                    (New_Access_Element (New_Unchecked_Address (M2Lv (Base),
+                                         Char_Ptr_Type)),
+                     Chararray_Type,
+                     New_Value (Chap3.Record_Layout_To_Element_Offset
+                                  (Rec_Layout, El, Kind))),
+                    El_Tinfo.B.Base_Ptr_Type (Kind))),
+            Res_Tinfo,
+            Kind,
+            Res_Tinfo.B.Base_Type (Kind),
+            Res_Tinfo.B.Base_Ptr_Type (Kind));
       end if;
 
-      if Is_Unbounded_Type (El_Tinfo) then
+      if Is_Unbounded_Type (Res_Tinfo) then
          --  Ok, we know that Get_Composite_Base doesn't return a copy.
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Composite_Base (Fat_Res)),
             New_Convert_Ov (M2Addr (Res),
-                            Get_Info (El_Btype).B.Base_Ptr_Type (Kind)));
+                            Res_Tinfo.B.Base_Ptr_Type (Kind)));
          return Fat_Res;
       else
          return Res;

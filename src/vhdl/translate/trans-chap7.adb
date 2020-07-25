@@ -789,15 +789,13 @@ package body Trans.Chap7 is
         (Res, Get_Return_Type (Imp), Res_Type, Mode_Value, Left);
    end Translate_Operator_Function_Call;
 
-   function Convert_Constrained_To_Unconstrained
-     (Expr : Mnode; Res_Type : Iir) return Mnode
+   procedure Convert_Constrained_To_Unconstrained
+     (Res : in out Mnode; Expr : Mnode)
    is
-      Type_Info   : constant Type_Info_Acc := Get_Info (Res_Type);
+      Type_Info   : constant Type_Info_Acc := Get_Type_Info (Res);
       Kind        : constant Object_Kind_Type := Get_Object_Kind (Expr);
       Stable_Expr : Mnode;
-      Res         : Mnode;
    begin
-      Res := Create_Temp (Type_Info, Kind);
       Stable_Expr := Stabilize (Expr);
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Composite_Base (Res)),
@@ -806,6 +804,16 @@ package body Trans.Chap7 is
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Composite_Bounds (Res)),
          M2Addr (Chap3.Get_Composite_Bounds (Stable_Expr)));
+   end Convert_Constrained_To_Unconstrained;
+
+   function Convert_Constrained_To_Unconstrained
+     (Expr : Mnode; Res_Tinfo : Type_Info_Acc) return Mnode
+   is
+      Mode : constant Object_Kind_Type := Get_Object_Kind (Expr);
+      Res  : Mnode;
+   begin
+      Res := Create_Temp (Res_Tinfo, Mode);
+      Convert_Constrained_To_Unconstrained (Res, Expr);
       return Res;
    end Convert_Constrained_To_Unconstrained;
 
@@ -921,9 +929,9 @@ package body Trans.Chap7 is
    function Translate_Implicit_Array_Conversion
      (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir) return Mnode
    is
-      Ainfo : Type_Info_Acc;
+      Res_Tinfo : Type_Info_Acc;
       Einfo : Type_Info_Acc;
-      Mode : Object_Kind_Type;
+      Mode  : Object_Kind_Type;
    begin
       pragma Assert
         (Get_Kind (Expr_Type) in Iir_Kinds_Array_Type_Definition);
@@ -932,9 +940,9 @@ package body Trans.Chap7 is
          return Expr;
       end if;
 
-      Ainfo := Get_Info (Res_Type);
+      Res_Tinfo := Get_Info (Res_Type);
       Einfo := Get_Info (Expr_Type);
-      case Ainfo.Type_Mode is
+      case Res_Tinfo.Type_Mode is
          when Type_Mode_Unbounded_Array =>
             --  X to unconstrained.
             case Einfo.Type_Mode is
@@ -943,7 +951,8 @@ package body Trans.Chap7 is
                   return Expr;
                when Type_Mode_Bounded_Arrays =>
                   --  constrained to unconstrained.
-                  return Convert_Constrained_To_Unconstrained (Expr, Res_Type);
+                  return Convert_Constrained_To_Unconstrained
+                    (Expr, Res_Tinfo);
                when others =>
                   raise Internal_Error;
             end case;
@@ -962,8 +971,8 @@ package body Trans.Chap7 is
                --  different.
                Mode := Get_Object_Kind (Expr);
                return E2M (New_Convert_Ov (M2Addr (Expr),
-                                           Ainfo.Ortho_Ptr_Type (Mode)),
-                           Ainfo, Mode);
+                                           Res_Tinfo.Ortho_Ptr_Type (Mode)),
+                           Res_Tinfo, Mode);
             else
                --  Unbounded/bounded array to bounded array.
                return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
@@ -978,16 +987,16 @@ package body Trans.Chap7 is
    function Translate_Implicit_Record_Conversion
      (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir) return Mnode
    is
-      Ainfo : Type_Info_Acc;
+      Res_Tinfo : Type_Info_Acc;
       Einfo : Type_Info_Acc;
    begin
       if Res_Type = Expr_Type then
          return Expr;
       end if;
 
-      Ainfo := Get_Info (Res_Type);
+      Res_Tinfo := Get_Info (Res_Type);
       Einfo := Get_Info (Expr_Type);
-      case Ainfo.Type_Mode is
+      case Res_Tinfo.Type_Mode is
          when Type_Mode_Unbounded_Record =>
             --  X to unbounded.
             case Einfo.Type_Mode is
@@ -996,7 +1005,8 @@ package body Trans.Chap7 is
                   return Expr;
                when Type_Mode_Bounded_Records =>
                   --  bounded to unconstrained.
-                  return Convert_Constrained_To_Unconstrained (Expr, Res_Type);
+                  return Convert_Constrained_To_Unconstrained
+                    (Expr, Res_Tinfo);
                when others =>
                   raise Internal_Error;
             end case;
@@ -1461,9 +1471,11 @@ package body Trans.Chap7 is
             M2Addr (Chap3.Get_Composite_Bounds (M)));
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Composite_Base (Var_Sub_Arr)),
-            M2Addr (Chap3.Slice_Base (Var_Arr,
-                                      Expr_Type,
-                                      New_Obj_Value (Var_Off))));
+            New_Convert_Ov
+              (M2Addr (Chap3.Slice_Base (Var_Arr,
+                                         Expr_Type,
+                                         New_Obj_Value (Var_Off))),
+               Info.B.Base_Ptr_Type (Mode_Value)));
 
          --  Copy
          Chap3.Translate_Object_Copy (Var_Sub_Arr, M, Expr_Type);
@@ -3234,16 +3246,13 @@ package body Trans.Chap7 is
       end case;
    end Translate_Array_Aggregate_Gen;
 
-   procedure Translate_Record_Aggregate (Target : Mnode; Aggr : Iir)
+   procedure Translate_Record_Aggregate
+     (Target : Mnode; Target_Type : Iir; Aggr : Iir)
    is
-      Targ           : Mnode;
-      Aggr_Type      : constant Iir := Get_Type (Aggr);
-      Aggr_Base_Type : constant Iir_Record_Type_Definition :=
-        Get_Base_Type (Aggr_Type);
-      El_List        : constant Iir_Flist :=
-        Get_Elements_Declaration_List (Aggr_Base_Type);
-      El_Index       : Natural;
-      Nbr_El         : constant Natural := Get_Nbr_Elements (El_List);
+      El_List  : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Target_Type);
+      El_Index : Natural;
+      Nbr_El   : constant Natural := Get_Nbr_Elements (El_List);
 
       --  Record which elements of the record have been set.  The 'others'
       --  clause applies to all elements not already set.
@@ -3253,22 +3262,24 @@ package body Trans.Chap7 is
 
       --  The expression associated.
       El_Expr : Iir;
-      Assoc     : Iir;
+      Assoc   : Iir;
+      Targ    : Mnode;
 
       --  Set an elements.
       procedure Set_El (El : Iir_Element_Declaration)
       is
          Info : constant Ortho_Info_Acc := Get_Info (Assoc);
+         El_Type : constant Iir := Get_Type (El);
          Dest : Mnode;
       begin
          Dest := Chap6.Translate_Selected_Element (Targ, El);
          if Info /= null then
             --  The expression was already evaluated to compute the bounds.
             --  Just copy it.
-            Chap3.Translate_Object_Copy (Dest, Info.Expr_Eval, Get_Type (El));
+            Chap3.Translate_Object_Copy (Dest, Info.Expr_Eval, El_Type);
             Clear_Info (Assoc);
          else
-            Translate_Assign (Dest, El_Expr, Get_Type (El));
+            Translate_Assign (Dest, El_Expr, El_Type);
          end if;
          Set_Array (Natural (Get_Element_Position (El))) := True;
       end Set_El;
@@ -3277,19 +3288,26 @@ package body Trans.Chap7 is
    begin
       Open_Temp;
       Targ := Stabilize (Target);
+
       El_Index := 0;
       Assoc := Get_Association_Choices_Chain (Aggr);
       while Assoc /= Null_Iir loop
+         --  Get the associated expression, possibly from the first choice
+         --  in a lidt of choices.
          N_El_Expr := Get_Associated_Expr (Assoc);
          if N_El_Expr /= Null_Iir then
             El_Expr := N_El_Expr;
          end if;
+
          case Get_Kind (Assoc) is
             when Iir_Kind_Choice_By_None =>
                Set_El (Get_Nth_Element (El_List, El_Index));
                El_Index := El_Index + 1;
             when Iir_Kind_Choice_By_Name =>
-               Set_El (Get_Named_Entity (Get_Choice_Name (Assoc)));
+               El_Index := Natural
+                 (Get_Element_Position
+                    (Get_Named_Entity (Get_Choice_Name (Assoc))));
+               Set_El (Get_Nth_Element (El_List, El_Index));
                El_Index := Natural'Last;
             when Iir_Kind_Choice_By_Others =>
                for J in Set_Array'Range loop
@@ -3508,7 +3526,7 @@ package body Trans.Chap7 is
             end;
          when Iir_Kind_Record_Type_Definition
             | Iir_Kind_Record_Subtype_Definition =>
-            Translate_Record_Aggregate (Target, Aggr);
+            Translate_Record_Aggregate (Target, Target_Type, Aggr);
       end case;
    end Translate_Aggregate;
 
@@ -3564,6 +3582,7 @@ package body Trans.Chap7 is
                      L : Mnode;
                   begin
                      Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
+
                      L := Chap3.Range_To_Length
                        (Chap3.Bounds_To_Range (Bnd, Expr_Type, 1));
                      New_Assign_Stmt
@@ -3937,10 +3956,10 @@ package body Trans.Chap7 is
      (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir)
    is
       Res_Indexes  : constant Iir_Flist := Get_Index_Subtype_List (Res_Type);
-      Src_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Src_Type);
-      Res_Base_Type     : constant Iir := Get_Base_Type (Res_Type);
+      Src_Indexes  : constant Iir_Flist := Get_Index_Subtype_List (Src_Type);
+      Res_Base_Type    : constant Iir := Get_Base_Type (Res_Type);
       Src_Base_Type    : constant Iir := Get_Base_Type (Src_Type);
-      Res_Base_Indexes  : constant Iir_Flist :=
+      Res_Base_Indexes : constant Iir_Flist :=
         Get_Index_Subtype_List (Res_Base_Type);
       Src_Base_Indexes : constant Iir_Flist :=
         Get_Index_Subtype_List (Src_Base_Type);
@@ -3990,12 +4009,12 @@ package body Trans.Chap7 is
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
      return O_Enode
    is
-      Res_Info     : constant Type_Info_Acc := Get_Info (Res_Type);
-      Expr_Info    : constant Type_Info_Acc := Get_Info (Expr_Type);
+      Res_Info  : constant Type_Info_Acc := Get_Info (Res_Type);
+      Expr_Info : constant Type_Info_Acc := Get_Info (Expr_Type);
 
-      Res               : Mnode;
-      E                 : Mnode;
-      Bounds            : O_Dnode;
+      Res       : Mnode;
+      E         : Mnode;
+      Bounds    : O_Dnode;
    begin
       Res := Create_Temp (Res_Info, Mode_Value);
       Bounds := Create_Temp (Res_Info.B.Bounds_Type);
@@ -4173,6 +4192,69 @@ package body Trans.Chap7 is
       end if;
    end Translate_Overflow_Literal;
 
+   function Translate_Aggregate_Expression (Expr : Iir; Rtype : Iir)
+                                            return  O_Enode
+   is
+      Expr_Type : constant Iir := Get_Type (Expr);
+      Aggr_Type : Iir;
+      Tinfo     : Type_Info_Acc;
+      Bounds    : Mnode;
+      Mres      : Mnode;
+      Res       : O_Enode;
+   begin
+      --  Extract the type of the aggregate.  Use the type of the
+      --  context if it is fully constrained.
+      Aggr_Type := Expr_Type;
+      if Rtype /= Null_Iir
+        and then Is_Fully_Constrained_Type (Rtype)
+      then
+         Aggr_Type := Rtype;
+      end if;
+
+      if Get_Constraint_State (Aggr_Type) /= Fully_Constrained then
+         Tinfo := Get_Info (Aggr_Type);
+         if Tinfo = null then
+            --  AGGR_TYPE may be a subtype that has not been
+            --  translated.  Use the base type in that case.
+            Aggr_Type := Get_Base_Type (Aggr_Type);
+            Tinfo := Get_Info (Aggr_Type);
+         end if;
+
+         Mres := Create_Temp (Tinfo);
+         Bounds := Create_Temp_Bounds (Tinfo);
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Mres)),
+                          M2Addr (Bounds));
+         --  Build bounds from aggregate.
+         Chap7.Translate_Aggregate_Bounds (Bounds, Expr);
+         Chap3.Allocate_Unbounded_Composite_Base
+           (Alloc_Stack, Mres, Aggr_Type);
+      else
+         Chap3.Create_Composite_Subtype (Aggr_Type);
+
+         --  FIXME: this may be not necessary
+         Tinfo := Get_Info (Aggr_Type);
+
+         --  The result area has to be created
+         if Is_Complex_Type (Tinfo) then
+            Mres := Create_Temp (Tinfo);
+            Chap4.Allocate_Complex_Object (Aggr_Type, Alloc_Stack, Mres);
+         else
+            --  if thin array/record:
+            --    create result
+            Mres := Create_Temp (Tinfo);
+         end if;
+      end if;
+
+      Translate_Aggregate (Mres, Aggr_Type, Expr);
+      Res := M2E (Mres);
+
+      if Rtype /= Null_Iir and then Aggr_Type /= Rtype then
+         Res := Translate_Implicit_Conv
+           (Res, Aggr_Type, Rtype, Mode_Value, Expr);
+      end if;
+      return Res;
+   end Translate_Aggregate_Expression;
+
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
                                  return Mnode
    is
@@ -4235,67 +4317,7 @@ package body Trans.Chap7 is
             if Get_Aggregate_Expand_Flag (Expr) then
                return Translate_Composite_Literal (Expr, Res_Type);
             else
-               declare
-                  Aggr_Type : Iir;
-                  Tinfo     : Type_Info_Acc;
-                  Bounds    : Mnode;
-                  Mres      : Mnode;
-               begin
-                  --  Extract the type of the aggregate.  Use the type of the
-                  --  context if it is fully constrained.
-                  Aggr_Type := Expr_Type;
-                  if Rtype /= Null_Iir
-                    and then Is_Fully_Constrained_Type (Rtype)
-                  then
-                     Aggr_Type := Rtype;
-                  end if;
-
-                  if Get_Constraint_State (Aggr_Type) /= Fully_Constrained
-                  then
-                     Tinfo := Get_Info (Aggr_Type);
-                     if Tinfo = null then
-                        --  AGGR_TYPE may be a subtype that has not been
-                        --  translated.  Use the base type in that case.
-                        Aggr_Type := Get_Base_Type (Aggr_Type);
-                        Tinfo := Get_Info (Aggr_Type);
-                     end if;
-
-                     Mres := Create_Temp (Tinfo);
-                     Bounds := Create_Temp_Bounds (Tinfo);
-                     New_Assign_Stmt
-                       (M2Lp (Chap3.Get_Composite_Bounds (Mres)),
-                        M2Addr (Bounds));
-                     --  Build bounds from aggregate.
-                     Chap7.Translate_Aggregate_Bounds (Bounds, Expr);
-                     Chap3.Allocate_Unbounded_Composite_Base
-                       (Alloc_Stack, Mres, Aggr_Type);
-                  else
-                     Chap3.Create_Composite_Subtype (Aggr_Type);
-
-                     --  FIXME: this may be not necessary
-                     Tinfo := Get_Info (Aggr_Type);
-
-                     --  The result area has to be created
-                     if Is_Complex_Type (Tinfo) then
-                        Mres := Create_Temp (Tinfo);
-                        Chap4.Allocate_Complex_Object
-                          (Aggr_Type, Alloc_Stack, Mres);
-                     else
-                        --  if thin array/record:
-                        --    create result
-                        Mres := Create_Temp (Tinfo);
-                     end if;
-                  end if;
-
-                  Translate_Aggregate (Mres, Aggr_Type, Expr);
-                  Res := M2E (Mres);
-
-                  if Rtype /= Null_Iir and then Aggr_Type /= Rtype then
-                     Res := Translate_Implicit_Conv
-                       (Res, Aggr_Type, Rtype, Mode_Value, Expr);
-                  end if;
-                  return Res;
-               end;
+               return Translate_Aggregate_Expression (Expr, Rtype);
             end if;
 
          when Iir_Kind_Null_Literal =>

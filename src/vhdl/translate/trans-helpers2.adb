@@ -235,7 +235,7 @@ package body Trans.Helpers2 is
       case Type_Info.Type_Mode is
          when Type_Mode_Arrays =>
             Res := Chap3.Get_Composite_Base (Res);
-            Res := Chap3.Convert_Array_Base (Res);
+            -- Res := Chap3.Convert_Array_Base (Res);
          when Type_Mode_Records =>
             Res := Stabilize (Res);
          when others =>

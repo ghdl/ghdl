@@ -81,6 +81,10 @@ package Trans.Chap7 is
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
      return O_Enode;
 
+   --  Subtype conversions.
+   procedure Convert_Constrained_To_Unconstrained
+     (Res : in out Mnode; Expr : Mnode);
+
    --  Convert bounds SRC (of type SRC_TYPE) to RES (of type RES_TYPE).
    procedure Translate_Type_Conversion_Bounds
      (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir);

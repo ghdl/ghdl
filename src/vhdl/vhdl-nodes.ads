@@ -2911,6 +2911,9 @@ package Vhdl.Nodes is
    --  index subtypes of the type_mark.
    --   Get/Set_Index_Subtype_List (Field9)
    --
+   --  Set when the element is re-constrained.
+   --  Note that the element subtype may be different from the parent also if
+   --  it is resolved.  This is mostly for ownership.
    --   Get/Set_Array_Element_Constraint (Field8)
    --
    --   Get/Set_Tolerance (Field7)

@@ -1350,7 +1350,7 @@ package body Trans.Chap8 is
    begin
       New_Assign_Stmt (New_Selected_Element (New_Obj (Val_Node),
                                              Tinfo.B.Base_Field (Mode_Value)),
-                       Val);
+                       New_Convert (Val, Tinfo.B.Base_Ptr_Type (Mode_Value)));
       Func_Info := Get_Info (Func);
       Start_Association (Assoc, Func_Info.Operator_Node);
       Subprgs.Add_Subprg_Instance_Assoc (Assoc, Func_Info.Operator_Instance);
