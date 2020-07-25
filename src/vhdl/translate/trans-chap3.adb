@@ -1081,9 +1081,9 @@ package body Trans.Chap3 is
       Finish_Subprogram_Body;
    end Create_Array_Type_Builder;
 
-   procedure Translate_Array_Subtype_Definition
-     (Def : Iir; Parent_Type : Iir)
+   procedure Translate_Array_Subtype_Definition (Def : Iir)
    is
+      Parent_Type : constant Iir := Get_Parent_Type (Def);
       Parent_El_Type : constant Iir := Get_Element_Subtype (Parent_Type);
       El_Type : constant Iir := Get_Element_Subtype (Def);
       El_Tinfo : Type_Info_Acc;
@@ -1094,7 +1094,7 @@ package body Trans.Chap3 is
          --  Do not create vars for element subtype, but use
          --  the layout field of the array vars.
          Push_Identifier_Prefix (Mark, "ET");
-         Translate_Subtype_Definition (El_Type, Parent_El_Type, False);
+         Translate_Subtype_Definition (El_Type, False);
          Pop_Identifier_Prefix (Mark);
 
          El_Tinfo := Get_Info (El_Type);
@@ -1280,11 +1280,10 @@ package body Trans.Chap3 is
       end if;
    end Translate_Record_Type;
 
-   procedure Translate_Record_Subtype_Definition
-     (Def : Iir; Parent_Type : Iir)
+   procedure Translate_Record_Subtype_Definition (Def : Iir)
    is
-      Base_Type   : constant Iir := Get_Base_Type (Def);
-      Base_Info   : constant Type_Info_Acc := Get_Info (Base_Type);
+      Parent_Type : constant Iir := Get_Parent_Type (Def);
+      Base_Type   : constant Iir := Get_Base_Type (Parent_Type);
       Info        : constant Type_Info_Acc := Get_Info (Def);
       El_List     : constant Iir_Flist := Get_Elements_Declaration_List (Def);
       El_Blist    : constant Iir_Flist :=
@@ -1304,13 +1303,11 @@ package body Trans.Chap3 is
       El := Get_Owned_Elements_Chain (Def);
       while El /= Null_Iir loop
          declare
-            El_Type   : constant Iir := Get_Type (El);
-            Pos       : constant Iir_Index32 := Get_Element_Position (El);
-            B_El      : constant Iir :=
-              Get_Nth_Element (El_Tm_List, Natural (Pos));
-            B_El_Type : constant Iir := Get_Type (B_El);
+            El_Type : constant Iir := Get_Type (El);
+            Pos     : constant Natural := Natural (Get_Element_Position (El));
+            B_El    : constant Iir := Get_Nth_Element (El_Tm_List, Pos);
             El_Info : Field_Info_Acc;
-            Mark      : Id_Mark_Type;
+            Mark    : Id_Mark_Type;
          begin
             --  Copy info (for the bound field).
             El_Info := Get_Info (B_El);
@@ -1323,7 +1320,7 @@ package body Trans.Chap3 is
                --  from an element which can be a string or an aggregate that
                --  owns the bound.
                Push_Identifier_Prefix (Mark, Get_Identifier (El));
-               Translate_Subtype_Definition (El_Type, B_El_Type, False);
+               Translate_Subtype_Definition (El_Type, False);
                Pop_Identifier_Prefix (Mark);
 
                El_Tinfo := Get_Info (El_Type);
@@ -1382,8 +1379,8 @@ package body Trans.Chap3 is
             --  initially unbounded as complex.
             Info.Type_Mode := Type_Mode_Complex_Record;
 
-            Info.Ortho_Type := Base_Info.B.Base_Type;
-            Info.Ortho_Ptr_Type := Base_Info.B.Base_Ptr_Type;
+            Info.Ortho_Type := Parent_Info.B.Base_Type;
+            Info.Ortho_Ptr_Type := Parent_Info.B.Base_Ptr_Type;
 
          when Type_Mode_Static_Record =>
             --  The subtype is static.
@@ -2336,7 +2333,7 @@ package body Trans.Chap3 is
    end Translate_Bool_Type_Definition;
 
    procedure Translate_Subtype_Definition
-     (Def : Iir; Parent_Type : Iir; With_Vars : Boolean := True)
+     (Def : Iir; With_Vars : Boolean := True)
    is
       Info          : Ortho_Info_Acc;
       Complete_Info : Incomplete_Type_Info_Acc;
@@ -2363,13 +2360,13 @@ package body Trans.Chap3 is
 
       case Get_Kind (Def) is
          when Iir_Kinds_Scalar_Subtype_Definition =>
-            Create_Subtype_Info_From_Type (Def, Parent_Type, Info);
+            Create_Subtype_Info_From_Type (Def, Get_Parent_Type (Def), Info);
             if With_Vars and then not Info.S.Same_Range then
                Create_Type_Range_Var (Def);
             end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
-            Translate_Array_Subtype_Definition (Def, Parent_Type);
+            Translate_Array_Subtype_Definition (Def);
             if With_Vars
 --              and then Get_Index_Constraint_Flag (Def)
             then
@@ -2377,7 +2374,7 @@ package body Trans.Chap3 is
             end if;
 
          when Iir_Kind_Record_Subtype_Definition =>
-            Translate_Record_Subtype_Definition (Def, Parent_Type);
+            Translate_Record_Subtype_Definition (Def);
             if With_Vars
               and then Get_Owned_Elements_Chain (Def) /= Null_Iir
             then
@@ -2387,7 +2384,7 @@ package body Trans.Chap3 is
          when Iir_Kind_Access_Subtype_Definition =>
             --  Like the access type.
             Free_Info (Def);
-            Set_Info (Def, Get_Info (Parent_Type));
+            Set_Info (Def, Get_Info (Get_Parent_Type (Def)));
 
          when others =>
             Error_Kind ("translate_subtype_definition", Def);
@@ -2509,14 +2506,9 @@ package body Trans.Chap3 is
       Elab_Type_Definition_Type_Range (Def);
    end Elab_Type_Definition;
 
-   procedure Translate_Subtype_Indication (Def : Iir; With_Vars : Boolean)
-   is
-      Parent_Type : Iir;
+   procedure Translate_Subtype_Indication (Def : Iir; With_Vars : Boolean) is
    begin
-      Parent_Type := Get_Subtype_Type_Mark (Def);
-      pragma Assert (Parent_Type /= Null_Iir);
-      Parent_Type := Get_Type (Get_Named_Entity (Parent_Type));
-      Translate_Subtype_Definition (Def, Parent_Type, With_Vars);
+      Translate_Subtype_Definition (Def, With_Vars);
    end Translate_Subtype_Indication;
 
    procedure Translate_Named_Subtype_Definition (Def : Iir; Id : Name_Id)
@@ -2538,21 +2530,19 @@ package body Trans.Chap3 is
          return;
       end if;
       Push_Identifier_Prefix_Uniq (Mark);
-      Chap3.Translate_Subtype_Definition (Def, Get_Base_Type (Def), With_Vars);
+      Chap3.Translate_Subtype_Definition (Def, With_Vars);
       Pop_Identifier_Prefix (Mark);
    end Translate_Anonymous_Subtype_Definition;
 
    procedure Translate_Object_Subtype_Definition
      (Decl : Iir; Def : Iir; With_Vars : Boolean := True)
    is
-      Parent_Type : Iir;
       Mark  : Id_Mark_Type;
       Mark2 : Id_Mark_Type;
    begin
       Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
       Push_Identifier_Prefix (Mark2, "OT");
-      Parent_Type := Get_Parent_Type (Def);
-      Chap3.Translate_Subtype_Definition (Def, Parent_Type, With_Vars);
+      Chap3.Translate_Subtype_Definition (Def, With_Vars);
       Pop_Identifier_Prefix (Mark2);
       Pop_Identifier_Prefix (Mark);
    end Translate_Object_Subtype_Definition;
@@ -3096,7 +3086,7 @@ package body Trans.Chap3 is
    --  For aliases of a slice.
    procedure Translate_Array_Subtype (Arr_Type : Iir) is
    begin
-      Translate_Subtype_Definition (Arr_Type, Get_Base_Type (Arr_Type), False);
+      Translate_Subtype_Definition (Arr_Type, False);
       Create_Composite_Subtype_Layout_Var (Arr_Type, False);
    end Translate_Array_Subtype;
 
@@ -3112,8 +3102,7 @@ package body Trans.Chap3 is
       Push_Identifier_Prefix_Uniq (Mark);
       if Get_Info (Sub_Type) = null then
          --  Minimal subtype creation.
-         Translate_Subtype_Definition
-           (Sub_Type, Get_Base_Type (Sub_Type), False);
+         Translate_Subtype_Definition (Sub_Type, False);
       end if;
       --  Force creation of variables.
       Chap3.Create_Composite_Subtype_Layout_Var (Sub_Type, True);

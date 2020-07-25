@@ -72,7 +72,7 @@ package body Trans.Chap5 is
       Push_Identifier_Prefix_Uniq (Mark);
       if Is_Anonymous_Type_Definition (Spec_Type) then
          Push_Identifier_Prefix (Mark2, "OT");
-         Chap3.Translate_Subtype_Definition (Spec_Type, Get_Type (Attr), True);
+         Chap3.Translate_Subtype_Definition (Spec_Type, True);
          Pop_Identifier_Prefix (Mark2);
       end if;
 

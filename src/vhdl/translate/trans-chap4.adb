@@ -1625,18 +1625,9 @@ package body Trans.Chap4 is
    is
       Def : constant Iir := Get_Type (Decl);
       Mark  : Id_Mark_Type;
-      Parent_Type : Iir;
    begin
       Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-      Parent_Type := Get_Subtype_Type_Mark (Def);
-      if Parent_Type /= Null_Iir then
-         --  For normal user subtype declaration.
-         Parent_Type := Get_Type (Get_Named_Entity (Parent_Type));
-      else
-         --  For implicit subtype declaration of a type declaration.
-         Parent_Type := Get_Base_Type (Def);
-      end if;
-      Chap3.Translate_Subtype_Definition (Def, Parent_Type, True);
+      Chap3.Translate_Subtype_Definition (Def, True);
       Pop_Identifier_Prefix (Mark);
    end Translate_Subtype_Declaration;
 

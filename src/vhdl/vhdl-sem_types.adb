@@ -1528,7 +1528,7 @@ package body Vhdl.Sem_Types is
             Error_Kind ("copy_subtype_indication", Def);
       end case;
       Location_Copy (Res, Def);
-      Set_Parent_Type (Res, Get_Base_Type (Def));
+      Set_Parent_Type (Res, Def);
       Set_Type_Staticness (Res, Get_Type_Staticness (Def));
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Def));
       return Res;
