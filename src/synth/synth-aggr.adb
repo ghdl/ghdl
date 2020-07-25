@@ -19,6 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
+with Str_Table;
 
 with Netlists; use Netlists;
 with Netlists.Utils; use Netlists.Utils;
@@ -173,6 +174,30 @@ package body Synth.Aggr is
       Nbr_Els := 0;
       Const_P := True;
       Err_P := False;
+
+      if Get_Kind (Aggr) = Iir_Kind_String_Literal8 then
+         declare
+            Str_Id  : constant String8_Id := Get_String8_Id (Aggr);
+            Str_Len : constant Int32 := Get_String_Length (Aggr);
+            E       : Valtyp;
+            V       : Nat8;
+         begin
+            pragma Assert (Stride = 1);
+            if Bound.Len /= Width (Str_Len) then
+               Error_Msg_Synth
+                 (+Aggr, "string length doesn't match bound length");
+               Err_P := True;
+            end if;
+            for I in 1 .. Pos32'Min (Pos32 (Str_Len), Pos32 (Bound.Len)) loop
+               E := Create_Value_Memory (El_Typ);
+               V := Str_Table.Element_String8 (Str_Id, I);
+               Write_U8 (E.Val.Mem, Nat8'Pos (V));
+               Res (Pos) := E;
+               Pos := Pos + 1;
+            end loop;
+            return;
+         end;
+      end if;
 
       Assoc := Get_Association_Choices_Chain (Aggr);
       while Is_Valid (Assoc) loop
