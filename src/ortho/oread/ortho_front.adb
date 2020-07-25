@@ -352,7 +352,7 @@ package body Ortho_Front is
                   Array_Element : Node_Acc;
                when Type_Subarray =>
                   Subarray_Base : Node_Acc;
-                  --Subarray_Length : Natural;
+                  Subarray_El : Node_Acc;
                when Type_Access =>
                   Access_Dtype : Node_Acc;
                when Type_Record
@@ -1320,9 +1320,11 @@ package body Ortho_Front is
             return Res;
          when Tok_Subarray =>
             --  Grammar:
-            --    SUBARRAY type [ len ]
+            --    SUBARRAY type '[' len ']' [ OF eltype ]
             declare
                Base_Node : Node_Acc;
+               Len : O_Cnode;
+               El_Node : Node_Acc;
                Res_Type : O_Tnode;
             begin
                Next_Token;
@@ -1332,15 +1334,23 @@ package body Ortho_Front is
                end if;
                Expect (Tok_Left_Brack);
                Next_Token;
-               Res_Type := New_Array_Subtype
-                 (Base_Node.Type_Onode,
-                  Base_Node.Array_Element.Type_Onode,
-                  Parse_Constant_Value (Base_Node.Array_Index));
+               Len := Parse_Constant_Value (Base_Node.Array_Index);
                Expect (Tok_Right_Brack);
                Next_Token;
+               if Tok = Tok_Of then
+                  Next_Token;
+                  El_Node := Parse_Type;
+                  --  TODO: check this is a subtype of the element
+               else
+                  El_Node := Base_Node.Array_Element;
+                  --  TODO: check EL_NODE is constrained.
+               end if;
+               Res_Type := New_Array_Subtype
+                 (Base_Node.Type_Onode, El_Node.Type_Onode, Len);
                Res := new Node' (Kind => Type_Subarray,
                                  Type_Onode => Res_Type,
-                                 Subarray_Base => Base_Node);
+                                 Subarray_Base => Base_Node,
+                                 Subarray_El => El_Node);
                return Res;
             end;
          when Tok_Ident =>
