@@ -1362,7 +1362,7 @@ package body Trans.Chap3 is
          --  resolution is different.
          return;
       end if;
-      --  Info.S := Ortho_Info_Subtype_Record_Init;
+      Info.S := Ortho_Info_Subtype_Record_Init;
 
       case Type_Mode_Records (Mode) is
          when Type_Mode_Unbounded_Record =>
@@ -2534,28 +2534,18 @@ package body Trans.Chap3 is
       Pop_Identifier_Prefix (Mark);
    end Translate_Anonymous_Subtype_Definition;
 
-   procedure Translate_Object_Subtype_Definition
-     (Decl : Iir; Def : Iir; With_Vars : Boolean := True)
-   is
-      Mark  : Id_Mark_Type;
-      Mark2 : Id_Mark_Type;
-   begin
-      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-      Push_Identifier_Prefix (Mark2, "OT");
-      Chap3.Translate_Subtype_Definition (Def, With_Vars);
-      Pop_Identifier_Prefix (Mark2);
-      Pop_Identifier_Prefix (Mark);
-   end Translate_Object_Subtype_Definition;
-
    procedure Translate_Object_Subtype_Indication (Decl      : Iir;
                                                   With_Vars : Boolean := True)
    is
-      Def : constant Iir := Get_Type (Decl);
+      Def : Iir;
+      Ind : Iir;
+      Mark  : Id_Mark_Type;
+      Mark2 : Id_Mark_Type;
    begin
       --  Note about subtype_indication and type in a declaration:
-      --  1) The subtype_indication is present only on the first declared
-      --     object when there is a list of identifiers.  This could be
-      --     changed by making the subtype_indication Maybe_Ref.
+      --  1) The subtype_indication is owned by the first declared
+      --     object when there is a list of identifiers.  The following
+      --     declarations are ref.
       --  2) Constants may have a type that is different from the subtype
       --     indication, when the subtype indication is not fully constrained.
       --     TODO: explain why!
@@ -2565,13 +2555,28 @@ package body Trans.Chap3 is
       --  5) It is not possible to translate the type when the subtype
       --     indication is a subtype_attribute.  So this is an exception
       --     TODO: if there is a list of identifiers.
-
-      if not Is_Anonymous_Type_Definition (Def) then
-         --  The type refers to a declared type, so already handled.
+      if Get_Is_Ref (Decl) then
          return;
       end if;
 
-      Translate_Object_Subtype_Definition (Decl, Def, With_Vars);
+      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+
+      Def := Get_Type (Decl);
+      if Get_Kind (Decl) = Iir_Kind_Constant_Declaration then
+         Ind := Get_Subtype_Indication (Decl);
+         Ind := Get_Type_Of_Subtype_Indication (Ind);
+         if Ind /= Def then
+            Push_Identifier_Prefix (Mark2, "OTI");
+            Chap3.Translate_Subtype_Definition (Ind, With_Vars);
+            Pop_Identifier_Prefix (Mark2);
+         end if;
+      end if;
+
+      Push_Identifier_Prefix (Mark2, "OT");
+      Chap3.Translate_Subtype_Definition (Def, With_Vars);
+      Pop_Identifier_Prefix (Mark2);
+
+      Pop_Identifier_Prefix (Mark);
    end Translate_Object_Subtype_Indication;
 
    procedure Elab_Object_Subtype_Indication (Decl : Iir)
