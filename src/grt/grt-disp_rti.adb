@@ -294,6 +294,15 @@ package body Grt.Disp_Rti is
             Disp_Array_Value_1
               (Stream, To_Ghdl_Rtin_Type_Array_Acc (Rti), Ctxt, 0,
                Obj, Bounds, Is_Sig);
+         when Ghdl_Rtik_Subtype_Unbounded_Array =>
+            declare
+               St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+               Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+                 To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
+            begin
+               Disp_Array_Value_1 (Stream, Bt, Ctxt, 0, Obj, Bounds, Is_Sig);
+            end;
          when Ghdl_Rtik_Subtype_Array =>
             declare
                St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
@@ -441,6 +450,8 @@ package body Grt.Disp_Rti is
             Put ("ghdl_rtik_type_array");
          when Ghdl_Rtik_Subtype_Array =>
             Put ("ghdl_rtik_subtype_array");
+         when Ghdl_Rtik_Subtype_Unbounded_Array =>
+            Put ("ghdl_rtik_subtype_unbounded_array");
 
          when Ghdl_Rtik_Type_Record =>
             Put ("ghdl_rtik_type_record");
@@ -742,6 +753,17 @@ package body Grt.Disp_Rti is
                   Disp_Type_Array_Name
                     (To_Ghdl_Rtin_Type_Array_Acc (Sdef.Basetype),
                      Array_Layout_To_Bounds (Layout));
+               end if;
+            end;
+         when Ghdl_Rtik_Subtype_Unbounded_Array =>
+            declare
+               Sdef : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Def);
+            begin
+               if Sdef.Name /= null then
+                  Disp_Name (Sdef.Name);
+               else
+                  Put ("??");
                end if;
             end;
          when Ghdl_Rtik_Type_Protected =>

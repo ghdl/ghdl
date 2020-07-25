@@ -700,7 +700,8 @@ package body Grt.Waves is
                Create_String_Id (Rec.Name);
                Create_Type (Rec.Basetype, N_Ctxt);
             end;
-         when Ghdl_Rtik_Subtype_Unbounded_Record =>
+         when Ghdl_Rtik_Subtype_Unbounded_Record
+            | Ghdl_Rtik_Subtype_Unbounded_Array =>
             --  Only the base type.
             declare
                St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
@@ -714,7 +715,7 @@ package body Grt.Waves is
                end if;
                Create_Type (St.Basetype, B_Ctxt);
 
-               return;
+--               return;
             end;
          when others =>
             Internal_Error ("wave.create_type");
@@ -746,8 +747,9 @@ package body Grt.Waves is
       --  The real type will be written to the file.
       case Rti.Kind is
          when Ghdl_Rtik_Type_Array
-           | Ghdl_Rtik_Type_Unbounded_Record
-           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            | Ghdl_Rtik_Subtype_Unbounded_Array
+            | Ghdl_Rtik_Type_Unbounded_Record
+            | Ghdl_Rtik_Subtype_Unbounded_Record =>
             Add_Type (Avhpi_Get_Rti (Obj), Avhpi_Get_Context (Obj));
          when others =>
             null;
@@ -769,8 +771,9 @@ package body Grt.Waves is
       Rti := Avhpi_Get_Rti (Obj_Type);
       case Rti.Kind is
          when Ghdl_Rtik_Type_Array
-           | Ghdl_Rtik_Type_Unbounded_Record
-           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            | Ghdl_Rtik_Subtype_Unbounded_Array
+            | Ghdl_Rtik_Type_Unbounded_Record
+            | Ghdl_Rtik_Subtype_Unbounded_Record =>
             Write_Type_Id (Avhpi_Get_Rti (Obj), Avhpi_Get_Context (Obj));
          when others =>
             Write_Type_Id (Rti, Avhpi_Get_Context (Obj_Type));
@@ -1370,6 +1373,24 @@ package body Grt.Waves is
                         Bounds := Addr.Bounds;
                         Write_Array_Bounds (Arr, Bounds);
                      end;
+                  when Ghdl_Rtik_Subtype_Unbounded_Array =>
+                     declare
+                        St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                          To_Ghdl_Rtin_Subtype_Composite_Acc
+                          (Obj_Rti.Obj_Type);
+                        Arr : constant Ghdl_Rtin_Type_Array_Acc :=
+                          To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
+                        Addr : Ghdl_Uc_Array_Acc;
+                        Bounds : Address;
+                     begin
+                        Wave_Put_Byte (Ghw_Rtik'Pos (Ghw_Rtik_Subtype_Array));
+                        Write_String_Id (null);
+                        Write_Type_Id (St.Basetype, Ctxt);
+                        Addr := To_Ghdl_Uc_Array_Acc
+                          (Loc_To_Addr (Rti.Depth, Obj_Rti.Loc, Ctxt));
+                        Bounds := Addr.Bounds;
+                        Write_Array_Bounds (Arr, Bounds);
+                     end;
                   when Ghdl_Rtik_Type_Unbounded_Record =>
                      declare
                         Rec : constant Ghdl_Rtin_Type_Record_Acc :=
@@ -1480,7 +1501,8 @@ package body Grt.Waves is
                         Write_Record_Bounds (Base, Layout);
                      end if;
                   end;
-               when Ghdl_Rtik_Subtype_Unbounded_Record =>
+               when Ghdl_Rtik_Subtype_Unbounded_Record
+                  | Ghdl_Rtik_Subtype_Unbounded_Array =>
                   declare
                      Rec : constant Ghdl_Rtin_Subtype_Composite_Acc :=
                        To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);

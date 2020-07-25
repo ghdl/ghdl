@@ -171,8 +171,9 @@ package body Grt.Rtis_Utils is
                Addr := To_Addr_Acc (Obj_Loc).all;
             end if;
          when Ghdl_Rtik_Type_Array
-           | Ghdl_Rtik_Type_Unbounded_Record
-           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            | Ghdl_Rtik_Subtype_Unbounded_Array
+            | Ghdl_Rtik_Type_Unbounded_Record
+            | Ghdl_Rtik_Subtype_Unbounded_Record =>
             --  If the type is unbounded then the location
             --  for the object containts a pointer to the bounds
             --  and a pointer to the data.
@@ -211,9 +212,14 @@ package body Grt.Rtis_Utils is
             Off_Addr := Rec_Layout + Off;
             El_Addr := Obj + To_Ghdl_Index_Ptr (Off_Addr).all;
             El_Bounds := Rec_Layout + El.Layout_Off;
-            if El.Eltype.Kind = Ghdl_Rtik_Type_Array then
-               El_Bounds := Array_Layout_To_Bounds (El_Bounds);
-            end if;
+            case El.Eltype.Kind is
+               when Ghdl_Rtik_Type_Array
+                 | Ghdl_Rtik_Subtype_Unbounded_Array =>
+                  El_Bounds := Array_Layout_To_Bounds (El_Bounds);
+               when others =>
+                  --  Keep layout.
+                  null;
+            end case;
          when others =>
             Internal_Error ("record_to_element");
       end case;
@@ -413,6 +419,15 @@ package body Grt.Rtis_Utils is
                Handle_Scalar (Rti);
             when Ghdl_Rtik_Type_Array =>
                Handle_Array_1 (To_Ghdl_Rtin_Type_Array_Acc (Rti), 0);
+            when Ghdl_Rtik_Subtype_Unbounded_Array =>
+               declare
+                  St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                    To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+                  Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+                    To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
+               begin
+                  Handle_Array_1 (Bt, 0);
+               end;
             when Ghdl_Rtik_Subtype_Array =>
                declare
                   St : constant Ghdl_Rtin_Subtype_Composite_Acc :=

@@ -79,7 +79,7 @@ package Grt.Rtis is
       Ghdl_Rtik_Type_File,                    --  Rtin_Type_Fileacc
       Ghdl_Rtik_Subtype_Scalar,               --  Rtin_Subtype_Scalar
       Ghdl_Rtik_Subtype_Array,                --  Rtin_Subtype_Composite
-      Ghdl_Rtik_Subtype_Unconstrained_Array,
+      Ghdl_Rtik_Subtype_Unbounded_Array,
 
       Ghdl_Rtik_Subtype_Record, -- 40         --  Rtin_Subtype_Composite
       Ghdl_Rtik_Subtype_Unbounded_Record,
