@@ -690,28 +690,48 @@ package body Trans.Chap3 is
 
          when Iir_Kind_Array_Subtype_Definition =>
             declare
+               Parent_Type : constant Iir := Get_Parent_Type (Def);
+               Parent_Tinfo : constant Type_Info_Acc := Get_Info (Parent_Type);
+               New_Indexes : constant Boolean :=
+                 not Get_Index_Constraint_Flag (Parent_Type);
                Indexes_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Def);
                El_Type : Iir;
                El_Tinfo : Type_Info_Acc;
                Targ : Mnode;
+               Rng : Mnode;
                Index : Iir;
             begin
                Targ := Layout_To_Bounds (Target);
 
-               --  Indexes
-               if Tinfo.B.Bounds_El /= O_Fnode_Null
-                 or else Get_Nbr_Elements (Indexes_List) > 1
-               then
-                  Targ := Stabilize (Targ);
+               --  Indexes.
+               --  Set only if the array subtype has indexes constraints.
+               if Get_Index_Constraint_Flag (Def) then
+                  if Tinfo.B.Bounds_El /= O_Fnode_Null
+                    or else Get_Nbr_Elements (Indexes_List) > 1
+                  then
+                     Targ := Stabilize (Targ);
+                  end if;
+                  for I in Flist_First .. Flist_Last (Indexes_List) loop
+                     Index := Get_Index_Type (Indexes_List, I);
+                     Open_Temp;
+                     Rng := Bounds_To_Range (Targ, Def, I + 1);
+                     if New_Indexes then
+                        Chap7.Translate_Discrete_Range (Rng, Index);
+                     else
+                        Gen_Memcpy
+                          (M2Addr (Rng),
+                           M2Addr
+                             (Bounds_To_Range
+                                (Layout_To_Bounds
+                                   (Get_Composite_Type_Layout (Parent_Tinfo)),
+                                 Parent_Type, I + 1)),
+                           New_Lit (New_Sizeof (Rng.M1.Vtype,
+                                                Ghdl_Index_Type)));
+                     end if;
+                     Close_Temp;
+                  end loop;
                end if;
-               for I in Flist_First .. Flist_Last (Indexes_List) loop
-                  Index := Get_Index_Type (Indexes_List, I);
-                  Open_Temp;
-                  Chap7.Translate_Discrete_Range
-                    (Bounds_To_Range (Targ, Def, I + 1), Index);
-                  Close_Temp;
-               end loop;
 
                --  Element.
                if Tinfo.B.Bounds_El /= O_Fnode_Null then

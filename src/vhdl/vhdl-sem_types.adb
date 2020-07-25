@@ -1689,7 +1689,7 @@ package body Vhdl.Sem_Types is
       Index_Staticness : Iir_Staticness;
    begin
       -- Check each index constraint against array type.
-      Set_Parent_Type (Def, Base_Type);
+      Set_Parent_Type (Def, Type_Mark);
 
       Sem_Array_Constraint_Indexes
         (Def, Type_Mark, Base_Type, Index_Staticness);
