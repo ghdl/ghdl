@@ -1,21 +1,21 @@
-type __ghdl_int is unsigned (32);
+TYPE __ghdl_int IS UNSIGNED (32);
 
-public function main (a : __ghdl_int) return __ghdl_int
-declare
-  local var b : __ghdl_int;
-  local var z : __ghdl_int;
-begin
+PUBLIC FUNCTION main (a : __ghdl_int) RETURN __ghdl_int
+DECLARE
+  LOCAL VAR b : __ghdl_int;
+  LOCAL VAR z : __ghdl_int;
+BEGIN
   b := a;
-  declare
-    local var c : __ghdl_int;
-  begin
+  DECLARE
+    LOCAL VAR c : __ghdl_int;
+  BEGIN
     c := b;
-  end;
-  declare
-    local var d : __ghdl_int;
-  begin
+  END;
+  DECLARE
+    LOCAL VAR d : __ghdl_int;
+  BEGIN
     d := b;
     z := d;
-  end;
-  return z +# 1;
-end;
+  END;
+  RETURN z +# 1;
+END;
