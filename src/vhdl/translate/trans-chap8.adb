@@ -945,53 +945,55 @@ package body Trans.Chap8 is
    procedure Translate_Variable_Aggregate_Assignment
      (Targ : Iir; Targ_Type : Iir; Val : Mnode);
 
-   procedure Translate_Variable_Array_Aggr
-     (Targ      : Iir_Aggregate;
-      Targ_Type : Iir;
-      Val       : Mnode;
-      Index     : O_Dnode;
-      Dim       : Natural)
+   procedure Translate_Variable_Array_Aggr_Final
+     (Choice : Iir; Targ_Type : Iir; Val : Mnode; Index : O_Dnode)
+   is
+      Targ : constant Iir := Get_Associated_Expr (Choice);
+      Sub_Aggr  : Mnode;
+      Sub_Type  : Iir;
+      Dest : Mnode;
+   begin
+      if Get_Element_Type_Flag (Choice) then
+         Sub_Aggr := Chap3.Index_Base (Chap3.Get_Composite_Base (Val),
+                                       Targ_Type, New_Obj_Value (Index));
+         Sub_Type := Get_Element_Subtype (Targ_Type);
+         Translate_Variable_Aggregate_Assignment (Targ, Sub_Type, Sub_Aggr);
+         Inc_Var (Index);
+      else
+         Sub_Type := Get_Type (Targ);
+         Sub_Aggr := Chap3.Slice_Base (Chap3.Get_Composite_Base (Val),
+                                       Sub_Type, New_Obj_Value (Index));
+         Stabilize (Sub_Aggr);
+         Dest := Chap6.Translate_Name (Targ, Mode_Value);
+         Stabilize (Dest);
+         Gen_Memcpy (M2Addr (Chap3.Get_Composite_Base (Dest)),
+                     M2Addr (Sub_Aggr),
+                     Chap3.Get_Object_Size (Dest, Sub_Type));
+         New_Assign_Stmt
+           (New_Obj (Index),
+            New_Dyadic_Op (ON_Add_Ov,
+                           New_Obj_Value (Index),
+                           Chap3.Get_Array_Length (Dest, Sub_Type)));
+      end if;
+   end Translate_Variable_Array_Aggr_Final;
+
+   procedure Translate_Variable_Array_Aggr (Targ      : Iir_Aggregate;
+                                            Targ_Type : Iir;
+                                            Val       : Mnode;
+                                            Index     : O_Dnode;
+                                            Dim       : Natural)
    is
       Choice  : Iir;
       Final   : Boolean;
-      Expr    : Iir;
    begin
       Final := Dim = Get_Nbr_Elements (Get_Index_Subtype_List (Targ_Type));
       Choice := Get_Association_Choices_Chain (Targ);
       while Choice /= Null_Iir loop
-         Expr := Get_Associated_Expr (Choice);
          case Get_Kind (Choice) is
             when Iir_Kind_Choice_By_None =>
                if Final then
-                  declare
-                     Sub_Aggr   : Mnode;
-                     Sub_Type   : Iir;
-                  begin
-                     if Get_Element_Type_Flag (Choice) then
-                        Sub_Aggr := Chap3.Index_Base
-                          (Chap3.Get_Composite_Base (Val), Targ_Type,
-                           New_Obj_Value (Index));
-                        Sub_Type := Get_Element_Subtype (Targ_Type);
-                     else
-                        Sub_Type := Get_Type (Expr);
-                        Sub_Aggr := Chap3.Slice_Base
-                          (Chap3.Get_Composite_Base (Val),
-                           Sub_Type, New_Obj_Value (Index));
-                        Stabilize (Sub_Aggr);
-                     end if;
-                     Translate_Variable_Aggregate_Assignment
-                       (Expr, Sub_Type, Sub_Aggr);
-                     if Get_Element_Type_Flag (Choice) then
-                        Inc_Var (Index);
-                     else
-                        New_Assign_Stmt
-                          (New_Obj (Index),
-                           New_Dyadic_Op
-                             (ON_Add_Ov,
-                              New_Obj_Value (Index),
-                              Chap3.Get_Array_Length (Sub_Aggr, Sub_Type)));
-                     end if;
-                  end;
+                  Translate_Variable_Array_Aggr_Final
+                    (Choice, Targ_Type, Val, Index);
                else
                   Translate_Variable_Array_Aggr
                     (Get_Associated_Expr (Choice),
@@ -1145,6 +1147,8 @@ package body Trans.Chap8 is
 
       case Get_Kind (Base) is
          when Iir_Kinds_Dereference =>
+            --  FIXME: cannot overlap as aggregate is composed of locally
+            --  static names that denote variables.
             return Aggregate_Overlap_Dereference
               (Targ, Get_Base_Type (Get_Type (Base)));
          when Iir_Kind_Interface_Variable_Declaration
@@ -1188,6 +1192,13 @@ package body Trans.Chap8 is
             E    : Mnode;
             Temp : Mnode;
          begin
+            --  According to LRM08 9.3.3.3 Array aggregates, the expression
+            --  cannot depend on the target aggregate, so it can be evaluated
+            --  directly.  In other words, it shouldn't be an aggregate with
+            --  'others'.
+            --  TODO: Because the aggregate is composed only of locally static
+            --  variable names, it is possible to compute the bounds and check
+            --  matching constraints.
             Chap3.Translate_Anonymous_Subtype_Definition (Targ_Type, False);
             E := Chap7.Translate_Expression (Expr, Targ_Type);
 
