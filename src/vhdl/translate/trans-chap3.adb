@@ -2542,26 +2542,30 @@ package body Trans.Chap3 is
       Mark  : Id_Mark_Type;
       Mark2 : Id_Mark_Type;
    begin
-      --  Note about subtype_indication and type in a declaration:
+      --  Notes about subtype_indication and type in a declaration:
       --  1) The subtype_indication is owned by the first declared
       --     object when there is a list of identifiers.  The following
       --     declarations are ref.
-      --  2) Constants may have a type that is different from the subtype
-      --     indication, when the subtype indication is not fully constrained.
-      --     TODO: explain why!
+      if Get_Is_Ref (Decl) then
+         return;
+      end if;
+
       --  3) An object alias always have a type but may have no subtype
       --     indication.  Maybe this should be handled separately.
       --  4) An anonymous_signal_declaration has no subtype indication.
       --  5) It is not possible to translate the type when the subtype
       --     indication is a subtype_attribute.  So this is an exception
       --     TODO: if there is a list of identifiers.
-      if Get_Is_Ref (Decl) then
-         return;
-      end if;
 
       Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
 
       Def := Get_Type (Decl);
+
+      --  2) Constants may have a type that is different from the subtype
+      --     indication, when the subtype indication is not fully constrained.
+      --     This is new with vhdl 2008, where the subtype indication may
+      --     add some constraints on the type mark and the initial value add
+      --     even more constraints.
       if Get_Kind (Decl) = Iir_Kind_Constant_Declaration then
          Ind := Get_Subtype_Indication (Decl);
          Ind := Get_Type_Of_Subtype_Indication (Ind);
