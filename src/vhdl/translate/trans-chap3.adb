@@ -772,6 +772,11 @@ package body Trans.Chap3 is
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
    begin
+      if Is_Static_Type (Info) then
+         --  Created as a constant.
+         return;
+      end if;
+
       Elab_Composite_Subtype_Layout (Def, Get_Composite_Type_Layout (Info));
 
       if Is_Complex_Type (Info) then
