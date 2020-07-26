@@ -34,7 +34,9 @@ with Grt.Readline;
 with Vhdl.Errors;
 with Vhdl.Nodes_Walk; use Vhdl.Nodes_Walk;
 with Vhdl.Parse;
+with Vhdl.Utils; use Vhdl.Utils;
 
+with Synth. Objtypes; use Synth.Objtypes;
 with Synth.Values; use Synth.Values;
 -- with Synth.Environment; use Synth.Environment;
 with Synth.Flags;
@@ -321,8 +323,8 @@ package body Synth.Debugger is
          Enum_List := Get_Enumeration_Literal_List (El_Type);
          for I in 1 .. Bound.Len loop
             El_Pos := Natural
-              (Read_Discrete (Mem.Mem + Size_Type (I - 1) * El_Typ.Sz,
-                              El_Typ));
+              (Read_Discrete
+                 (Memtyp'(El_Typ, Mem.Mem + Size_Type (I - 1) * El_Typ.Sz)));
             El_Id := Get_Identifier (Get_Nth_Element (Enum_List, El_Pos));
             if Name_Table.Is_Character (El_Id) then
                case Last_Enum is
@@ -404,8 +406,7 @@ package body Synth.Debugger is
          when Type_Discrete
            | Type_Bit
            | Type_Logic =>
-            Disp_Discrete_Value (Read_Discrete (M.Mem, M.Typ),
-                                 Get_Base_Type (Vtype));
+            Disp_Discrete_Value (Read_Discrete (M), Get_Base_Type (Vtype));
          when Type_Vector =>
             Disp_Value_Vector (M, Vtype, M.Typ.Vbound);
          when Type_Array =>
@@ -420,8 +421,11 @@ package body Synth.Debugger is
             Put ("*record*");
          when Type_Access =>
             Put ("*access*");
+         when Type_Protected =>
+            Put ("*protected*");
          when Type_Unbounded_Array
-           | Type_Unbounded_Vector =>
+            | Type_Unbounded_Record
+            | Type_Unbounded_Vector =>
             Put ("*unbounded*");
       end case;
    end Disp_Memtyp;
@@ -438,16 +442,6 @@ package body Synth.Debugger is
             Put ("net");
          when Value_Wire =>
             Put ("wire");
-         when Value_Array =>
-            Put ("array");
-         when Value_Const_Array =>
-            Put ("const_array");
-         when Value_Record =>
-            Put ("record");
-         when Value_Const_Record =>
-            Put ("const_record");
-         when Value_Access =>
-            Put ("access");
          when Value_File =>
             Put ("file");
          when Value_Const =>
@@ -466,9 +460,9 @@ package body Synth.Debugger is
       Put_Int32 (Bound.Left);
       Put (' ');
       case Bound.Dir is
-         when Iir_To =>
+         when Dir_To =>
             Put ("to");
-         when Iir_Downto =>
+         when Dir_Downto =>
             Put ("downto");
       end case;
       Put (' ');
@@ -498,6 +492,8 @@ package body Synth.Debugger is
             Put ("array");
          when Type_Unbounded_Array =>
             Put ("unbounded_array");
+         when Type_Unbounded_Record =>
+            Put ("unbounded_record");
          when Type_Record =>
             Put ("record");
          when Type_Slice =>
@@ -506,6 +502,8 @@ package body Synth.Debugger is
             Put ("access");
          when Type_File =>
             Put ("file");
+         when Type_Protected =>
+            Put ("protected");
       end case;
    end Disp_Type;
 
