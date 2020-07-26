@@ -1,3 +1,4 @@
+import logging
 import libghdl.thin.name_table as name_table
 import libghdl.thin.files_map as files_map
 import libghdl.thin.vhdl.pyutils as pyutils
@@ -6,6 +7,8 @@ import libghdl.thin.vhdl.nodes_meta as nodes_meta
 import libghdl.thin.vhdl.elocations as elocations
 
 from . import lsp
+
+log = logging.getLogger(__name__)
 
 SYMBOLS_MAP = {
     nodes.Iir_Kind.Package_Declaration: {'kind': lsp.SymbolKind.Package, 'detail': '(declaration)'},
@@ -78,7 +81,8 @@ def get_symbols(fe, n):
         return get_symbols(fe, nodes.Get_Library_Unit(n))
     m = SYMBOLS_MAP.get(k, None)
     if m is None:
-        raise AssertionError("get_symbol: unhandled {}".format(pyutils.kind_image(k)))
+        log.error("get_symbol: unhandled {}".format(pyutils.kind_image(k)))
+        return None
     kind = m['kind']
     if kind is None:
         return None
