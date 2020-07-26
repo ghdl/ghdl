@@ -52,19 +52,3 @@ build_script:
 # test scripts to run
 test_script:
   - ps: .\scripts\windows\appveyor\test.ps1
-
-
-# =============================================================================
-# Deployment configuration
-# =============================================================================
-deploy:
-  - provider: GitHub
-    release: $(APPVEYOR_REPO_TAG_NAME)
-    description: 'Release'
-    draft: true
-    prerelease: false
-    artifact: /.*\.zip/
-    on:
-      appveyor_repo_tag: true
-    auth_token:
-      secure: Qli1B9/I6B1uTMeyGolw8N/zh/PRhLdT8fjUUTcd4Vp14UQki+YTjxKjAe+65Oqv

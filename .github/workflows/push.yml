@@ -3,12 +3,71 @@ name: 'push'
 on:
   push:
   pull_request:
+  workflow_dispatch:
 
 env:
   CI: true
   DOCKER_BUILDKIT: 1
 
 jobs:
+
+#
+# Doc
+#
+
+  doc:
+    runs-on: ubuntu-latest
+    name: '📓 Docs'
+    steps:
+
+    - name: '🧰 Checkout'
+      uses: actions/checkout@v2
+
+    - name: Build ghdl/doc
+      run: |
+        docker build -t ghdl/doc - <<-EOF
+        FROM ghdl/vunit:llvm
+        ENV PYTHONPATH=/src/pyGHDL
+        RUN apt update -qq && apt install -y gnat-gps graphviz \
+         && ln -s /usr/bin/pip3 /usr/bin/pip
+        EOF
+
+    - name: Run gnatdoc
+      run: |
+        cat > run.sh <<-EOF
+        #!/usr/bin/env sh
+        ./configure
+        make
+        gnatdoc -P./ghdl
+        mkdir public
+        mv gnatdoc public
+        EOF
+        chmod +x run.sh
+        docker run --rm -v $(pwd):/src -w /src ghdl/doc ./run.sh
+
+    - name: '📓 BuildTheDocs (BTD)'
+      if: github.event_name != 'pull_request'
+      uses: buildthedocs/btd@v0
+      with:
+        token: ${{ github.token }}
+
+    #- run: nroff -man doc/_build/man/ghdl.1
+
+    - name: '📤 Upload artifact: HTML and LaTeX'
+      if: github.event_name != 'pull_request'
+      uses: actions/upload-artifact@v2
+      with:
+        name: doc
+        path: |
+          doc/_build/html
+          doc/_build/latex
+          doc/_build/man
+
+    - name: '📤 Upload artifact: ghdl.1'
+      if: github.event_name != 'pull_request'
+      uses: actions/upload-artifact@v2
+      with:
+        path: doc/_build/man/ghdl.1
 
 #
 # pyGHDL
@@ -109,9 +168,15 @@ jobs:
       run: |
         PATH=$PWD/gnat/bin:$PATH
         ./scripts/ci-run.sh -c
+        mv ghdl-*.tgz ghdl-osx-mcode.tgz
       env:
         TASK: macosx+mcode
         GITHUB_OS: ${{ runner.os }}
+
+    - name: '📤 Upload artifact: package'
+      uses: actions/upload-artifact@v2
+      with:
+        path: ghdl-osx-mcode.tgz
 
 #
 # Windows Build
@@ -231,24 +296,37 @@ jobs:
       run: GHDL=ghdl ./testsuite/testsuite.sh ${{ matrix.suite }}
 
 #
-# NIGHTLY
+# Release
 #
 
-  nightly:
-    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
-    needs: [ lin, win-test ]
+  Release:
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || contains(github.ref, 'refs/tags/'))
+    needs: [ doc, lin, osx, win-test ]
     runs-on: ubuntu-latest
-    name: '📦 Nightly'
+    name: '📦 Release'
     steps:
 
     - name: '📥 Download artifacts'
+      if: "!contains(github.ref, 'refs/tags/')"
       uses: actions/download-artifact@v2
 
+    # Do not upload assets to tagged releases
+    - name: Set list of files for uploading
+      id: files
+      run: |
+        case '${{ github.ref }}' in
+          'refs/tags/'*) _list='none' ;;
+          *)             _list='artifact/*' ;;
+        esac
+        echo "::set-output name=list::${_list}"
+
+    # Tagged: create a pre-release or a release (semver)
+    # Untagged: update the assets of pre-release 'nightly'
     - uses: eine/tip@master
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: 'nightly'
-        files: artifact/*
+        files: ${{ steps.files.outputs.list }}
 
     - run: |
         curl -X POST https://api.github.com/repos/ghdl/docker/dispatches \
