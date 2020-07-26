@@ -198,6 +198,8 @@ package body Ghdlsynth is
          Flag_Trace_Statements := True;
       elsif Option = "-i" then
          Flag_Debug_Init := True;
+      elsif Option = "-g" then
+         Flag_Debug_Enable := True;
       elsif Option = "-v" then
          if not Synth.Flags.Flag_Verbose then
             Synth.Flags.Flag_Verbose := True;
