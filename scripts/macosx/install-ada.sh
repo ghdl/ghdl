@@ -7,7 +7,6 @@ if [ -e gnat/etc/install_ok ] && [ "x$(cat gnat/etc/install_ok)" = "x2019" ]; th
     exit 0
 fi
 
-echo "Download and install gnat-gpl"
 set -x
 
 # Remove old gnat directory
