@@ -741,14 +741,14 @@ package body Synth.Stmts is
          Set_Error (C.Inst);
          return;
       end if;
-      if Is_Static (Cond_Val.Val) then
+      if Is_Static_Val (Cond_Val.Val) then
          Strip_Const (Cond_Val);
-         if Read_Discrete (Cond_Val) = 1 then
+         if Read_Discrete (Get_Value_Memtyp (Cond_Val)) = 1 then
             --  True.
             Synth_Sequential_Statements
               (C, Get_Sequential_Statement_Chain (Stmt));
          else
-            pragma Assert (Read_Discrete (Cond_Val) = 0);
+            pragma Assert (Read_Discrete (Get_Value_Memtyp (Cond_Val)) = 0);
             if Is_Valid (Els) then
                --  Else part
                if Is_Null (Get_Condition (Els)) then
@@ -2213,7 +2213,7 @@ package body Synth.Stmts is
       Write_Discrete (V, T);
    end Update_Index;
 
-   --  Return True iff WID is a static wire and its value is 0.
+   --  Return True iff WID is a static wire and its value is V.
    function Is_Static_Bit (Wid : Wire_Id; V : Ghdl_U8) return Boolean
    is
       M : Memtyp;
