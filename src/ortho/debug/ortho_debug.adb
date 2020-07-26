@@ -786,14 +786,11 @@ package body Ortho_Debug is
       --  The element must either be ATYPE element or a constrained subtype
       --  of it.
       if El_Type /= Atype.El_Type then
-         if El_Type.Kind = ON_Array_Subtype then
-            if El_Type.Arr_Base /= Atype.El_Type then
-               raise Type_Error;
-            end if;
-         else
+         if Get_Base_Type (El_Type) /= Atype.El_Type then
             raise Type_Error;
          end if;
       end if;
+      Check_Constrained_Type (El_Type);
 
       return new O_Tnode_Sub_Array'(Kind => ON_Array_Subtype,
                                     Decl => O_Dnode_Null,
