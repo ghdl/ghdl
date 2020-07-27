@@ -962,7 +962,8 @@ package body Trans.Chap8 is
       else
          Sub_Type := Get_Type (Targ);
          Sub_Aggr := Chap3.Slice_Base (Chap3.Get_Composite_Base (Val),
-                                       Sub_Type, New_Obj_Value (Index));
+                                       Sub_Type, New_Obj_Value (Index),
+                                       O_Enode_Null);
          Stabilize (Sub_Aggr);
          Dest := Chap6.Translate_Name (Targ, Mode_Value);
          Stabilize (Dest);
@@ -4231,7 +4232,7 @@ package body Trans.Chap8 is
                else
                   Sub_Type := Get_Type (Expr);
                   Sub_Aggr := Chap3.Slice_Base
-                    (Aggr, Sub_Type, New_Obj_Value (Idx));
+                    (Aggr, Sub_Type, New_Obj_Value (Idx), O_Enode_Null);
                end if;
             when others =>
                Error_Kind ("translate_signal_target_array_aggr", El);

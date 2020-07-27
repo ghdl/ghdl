@@ -559,15 +559,19 @@ package body Trans.Chap6 is
       --  Type of the first (and only) index of the prefix array type.
       Index_Type : constant Iir := Get_Index_Type (Prefix_Type, 0);
 
+      --  Element type.
+      El_Type    : constant Iir := Get_Element_Subtype (Prefix_Type);
+      El_Tinfo   : constant Type_Info_Acc := Get_Info (El_Type);
+
       --  Type of the slice.
       Slice_Type : constant Iir := Get_Type (Expr);
       Slice_Info : Type_Info_Acc;
 
-      --  True iff the direction of the slice is known at compile time.
-      Static_Range : Boolean;
-
       --  Suffix of the slice (discrete range).
       Expr_Range : constant Iir := Get_Suffix (Expr);
+
+      --  True iff the direction of the slice is known at compile time.
+      Static_Range : Boolean;
 
       --  Variable pointing to the prefix.
       Prefix_Var : Mnode;
@@ -584,11 +588,32 @@ package body Trans.Chap6 is
       Unsigned_Diff   : O_Dnode;
       If_Blk, If_Blk1 : O_If_Block;
    begin
-      --  Evaluate slice bounds.
-      Chap3.Create_Composite_Subtype (Slice_Type);
+      pragma Assert (Get_Info (Prefix_Type) /= null);
 
+      --  Evaluate slice bounds.
+      Chap3.Create_Composite_Subtype (Slice_Type, False);
       --  The info may have just been created.
       Prefix_Info := Get_Info (Prefix_Type);
+
+      Prefix_Var := Prefix;
+
+      if Is_Unbounded_Type (El_Tinfo) then
+         --  Copy layout of element before building the bounds
+         pragma Assert (Is_Unbounded_Type (Prefix_Info));
+         Stabilize (Prefix_Var);
+         Gen_Memcpy
+           (M2Addr (Chap3.Array_Bounds_To_Element_Layout
+                      (Chap3.Get_Composite_Type_Bounds (Slice_Type),
+                       Slice_Type)),
+            M2Addr (Chap3.Array_Bounds_To_Element_Layout
+                      (Chap3.Get_Composite_Bounds (Prefix_Var),
+                       Prefix_Type)),
+            New_Lit (New_Sizeof (El_Tinfo.B.Layout_Type,
+                                 Ghdl_Index_Type)));
+      end if;
+      Chap3.Elab_Array_Subtype (Slice_Type);
+
+      --  The info may have just been created.
       Slice_Info := Get_Info (Slice_Type);
 
       if Slice_Info.Type_Mode = Type_Mode_Static_Array
@@ -652,7 +677,7 @@ package body Trans.Chap6 is
       Data.Is_Off := False;
 
       --  Save prefix.
-      Prefix_Var := Stabilize (Prefix);
+      Stabilize (Prefix_Var);
 
       Index_Info := Get_Info (Get_Base_Type (Index_Type));
 
@@ -797,12 +822,23 @@ package body Trans.Chap6 is
       Kind : constant Object_Kind_Type := Get_Object_Kind (Prefix);
 
       Off : O_Enode;
+      El_Size : O_Enode;
 
       Res_Base : Mnode;
       Res_D : O_Dnode;
    begin
       if Is_Unbounded_Type (El_Tinfo) then
-         raise Internal_Error;
+         --  pragma Assert (Is_Unbounded_Type (Slice_Tinfo));
+         El_Size := New_Value
+           (Chap3.Layout_To_Size
+              (Chap3.Array_Bounds_To_Element_Layout
+                 (Chap3.Get_Composite_Bounds (Data.Prefix_Var), Slice_Type),
+               Kind));
+      elsif Is_Complex_Type (El_Tinfo) then
+         El_Size := Chap3.Get_Subtype_Size (El_Type, Mnode_Null, Kind);
+      else
+         pragma Assert (Is_Static_Type (El_Tinfo));
+         El_Size := O_Enode_Null;
       end if;
 
       if Data.Is_Off then
@@ -812,7 +848,7 @@ package body Trans.Chap6 is
       end if;
 
       Res_Base := Chap3.Slice_Base
-        (Chap3.Get_Composite_Base (Prefix), Slice_Type, Off);
+        (Chap3.Get_Composite_Base (Prefix), Slice_Type, Off, El_Size);
 
       case Type_Mode_Arrays (Slice_Tinfo.Type_Mode) is
          when Type_Mode_Unbounded_Array =>
@@ -826,7 +862,8 @@ package body Trans.Chap6 is
               (New_Selected_Element (New_Obj (Res_D),
                                      Slice_Tinfo.B.Bounds_Field (Kind)),
                New_Value (M2Lp (Data.Slice_Range)));
-            return Dv2M (Res_D, Slice_Tinfo, Kind);
+            raise Internal_Error;
+            --return Dv2M (Res_D, Slice_Tinfo, Kind);
          when Type_Mode_Bounded_Arrays =>
             return Res_Base;
       end case;

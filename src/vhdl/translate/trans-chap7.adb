@@ -1474,7 +1474,8 @@ package body Trans.Chap7 is
             New_Convert_Ov
               (M2Addr (Chap3.Slice_Base (Var_Arr,
                                          Expr_Type,
-                                         New_Obj_Value (Var_Off))),
+                                         New_Obj_Value (Var_Off),
+                                         O_Enode_Null)),
                Info.B.Base_Ptr_Type (Mode_Value)));
 
          --  Copy
@@ -2989,7 +2990,8 @@ package body Trans.Chap7 is
                Inc_Var (Var_Index);
             else
                Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
-                                         New_Obj_Value (Var_Index));
+                                         New_Obj_Value (Var_Index),
+                                         O_Enode_Null);
                Translate_Assign (Dest, Expr, Get_Type (Expr));
                --  FIXME: handle non-static expression type (at least for
                --  choice by range).

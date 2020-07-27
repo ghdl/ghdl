@@ -3049,17 +3049,29 @@ package body Trans.Chap3 is
       end if;
    end Index_Array;
 
-   function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
-                        return Mnode
+   function Slice_Base
+     (Base : Mnode; Atype : Iir; Index : O_Enode; Stride : O_Enode)
+     return Mnode
    is
       T_Info   : constant Type_Info_Acc := Get_Info (Atype);
       El_Type  : constant Iir := Get_Element_Subtype (Atype);
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
    begin
-      if Is_Complex_Type (El_Tinfo) then
-         return Reindex_Complex_Array (Base, Atype, Index, T_Info);
-      elsif T_Info.Type_Mode = Type_Mode_Static_Array then
+      if not Is_Static_Type (El_Tinfo) then
+         pragma Assert (T_Info.Type_Mode /= Type_Mode_Static_Array);
+         if Stride /= O_Enode_Null then
+            return E2M
+              (Add_Pointer (M2E (Base),
+                            New_Dyadic_Op (ON_Mul_Ov, Stride, Index),
+                            T_Info.Ortho_Ptr_Type (Kind)),
+               T_Info, Kind);
+         else
+            return Reindex_Complex_Array (Base, Atype, Index, T_Info);
+         end if;
+      end if;
+
+      if T_Info.Type_Mode = Type_Mode_Static_Array then
          --  Static array.  Use the type of the array.
          return Lv2M (New_Slice (M2Lv (Base),
                                  T_Info.Ortho_Type (Kind),
@@ -3124,7 +3136,7 @@ package body Trans.Chap3 is
       Chap3.Elab_Composite_Subtype_Layout (Arr_Type);
    end Elab_Array_Subtype;
 
-   procedure Create_Composite_Subtype (Sub_Type : Iir)
+   procedure Create_Composite_Subtype (Sub_Type : Iir; Elab : Boolean := True)
    is
       Mark : Id_Mark_Type;
    begin
@@ -3134,7 +3146,7 @@ package body Trans.Chap3 is
          Translate_Subtype_Definition (Sub_Type, False);
       end if;
       --  Force creation of variables.
-      Chap3.Create_Composite_Subtype_Layout_Var (Sub_Type, True);
+      Chap3.Create_Composite_Subtype_Layout_Var (Sub_Type, Elab);
       Pop_Identifier_Prefix (Mark);
    end Create_Composite_Subtype;
 

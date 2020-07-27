@@ -152,8 +152,9 @@ package Trans.Chap3 is
                         return Mnode;
 
    --  Same for for slicing.
-   function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
-                       return Mnode;
+   function Slice_Base
+     (Base : Mnode; Atype : Iir; Index : O_Enode; Stride : O_Enode)
+     return Mnode;
 
    --  Get the length of the array (the number of elements).
    function Get_Array_Length (Arr : Mnode; Atype : Iir) return O_Enode;
@@ -216,6 +217,9 @@ package Trans.Chap3 is
 
    --  Return bounds from layout B.
    function Layout_To_Bounds (B : Mnode) return Mnode;
+
+   function Layout_To_Size (Layout : Mnode; Kind : Object_Kind_Type)
+                           return O_Lnode;
 
    --  From a record layout B, return the layout of element EL.  EL must be
    --  an unbounded element.
@@ -292,13 +296,17 @@ package Trans.Chap3 is
 
    --  Used for alias: create the vars for the subtype of the name (when the
    --  name is a slice).  The identifier prefix must have been set.
+   --
+   --  Slices are special because they create new bounds variables.  These
+   --  variables are expected to be transcient.  But in some cases (like
+   --  aliases), they have a longer life.
    procedure Translate_Array_Subtype (Arr_Type : Iir);
    procedure Elab_Array_Subtype (Arr_Type : Iir);
 
    --  Create the bounds for SUB_TYPE.
    --  SUB_TYPE is expected to be a non-static, anonymous array or record
    --  subtype.
-   procedure Create_Composite_Subtype (Sub_Type : Iir);
+   procedure Create_Composite_Subtype (Sub_Type : Iir; Elab : Boolean := True);
 
    --  Return TRUE if VALUE is not is the range specified by ATYPE.
    --  VALUE must be stable.
