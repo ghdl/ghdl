@@ -137,11 +137,11 @@ package body Trans.Chap3 is
       return New_Selected_Element (M2Lv (B), El_Info.Field_Node (Kind));
    end Record_Layout_To_Element_Offset;
 
-   function Array_Bounds_To_Element_Layout (B : Mnode; Atype : Iir)
+   function Array_Bounds_To_Element_Layout (B : Mnode; Arr_Type : Iir)
                                            return Mnode
    is
-      Arr_Tinfo : constant Type_Info_Acc := Get_Info (Atype);
-      El_Type : constant Iir := Get_Element_Subtype (Atype);
+      Arr_Tinfo : constant Type_Info_Acc := Get_Info (Arr_Type);
+      El_Type : constant Iir := Get_Element_Subtype (Arr_Type);
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
    begin
       return Lv2M (New_Selected_Element (M2Lv (B), Arr_Tinfo.B.Bounds_El),
@@ -2720,17 +2720,17 @@ package body Trans.Chap3 is
       return Layout_To_Bounds (Record_Layout_To_Element_Layout (B, El));
    end Record_Bounds_To_Element_Bounds;
 
-   function Array_Bounds_To_Element_Bounds (B : Mnode; Atype : Iir)
+   function Array_Bounds_To_Element_Bounds (B : Mnode; Arr_Type : Iir)
                                            return Mnode is
    begin
-      return Layout_To_Bounds (Array_Bounds_To_Element_Layout (B, Atype));
+      return Layout_To_Bounds (Array_Bounds_To_Element_Layout (B, Arr_Type));
    end Array_Bounds_To_Element_Bounds;
 
-   function Array_Bounds_To_Element_Size (B : Mnode; Atype : Iir)
+   function Array_Bounds_To_Element_Size (B : Mnode; Arr_Type : Iir)
                                          return O_Lnode is
    begin
       return Layout_To_Size
-        (Array_Bounds_To_Element_Layout (B, Atype), Get_Object_Kind (B));
+        (Array_Bounds_To_Element_Layout (B, Arr_Type), Get_Object_Kind (B));
    end Array_Bounds_To_Element_Size;
 
    function Type_To_Range (Atype : Iir) return Mnode
