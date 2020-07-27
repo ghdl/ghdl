@@ -2004,14 +2004,14 @@ package body Synth.Stmts is
 
    function Synth_Static_Subprogram_Call (Syn_Inst : Synth_Instance_Acc;
                                           Sub_Inst : Synth_Instance_Acc;
-                                          Call : Node;
+                                          Call     : Node;
+                                          Bod      : Node;
                                           Init : Association_Iterator_Init;
                                           Infos : Target_Info_Array)
                                          return Valtyp
    is
       Imp  : constant Node := Get_Implementation (Call);
       Is_Func : constant Boolean := Is_Function_Declaration (Imp);
-      Bod : constant Node := Get_Subprogram_Body (Imp);
       Res : Valtyp;
       C : Seq_Context (Mode_Static);
    begin
@@ -2094,7 +2094,7 @@ package body Synth.Stmts is
 
          if Get_Instance_Const (Sub_Inst) then
             Res := Synth_Static_Subprogram_Call
-              (Syn_Inst, Sub_Inst, Call, Init, Infos);
+              (Syn_Inst, Sub_Inst, Call, Bod, Init, Infos);
          else
             Res := Synth_Dynamic_Subprogram_Call
               (Syn_Inst, Sub_Inst, Call, Init, Infos);
