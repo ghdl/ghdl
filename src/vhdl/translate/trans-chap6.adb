@@ -775,10 +775,11 @@ package body Trans.Chap6 is
       end;
       Finish_If_Stmt (If_Blk);
 
-      Data.Slice_Range := Slice_Range;
-      Data.Prefix_Var := Prefix_Var;
-      Data.Unsigned_Diff := Unsigned_Diff;
-      Data.Is_Off := False;
+      Data := (Slice_Range => Slice_Range,
+               Prefix_Var => Prefix_Var,
+               Unsigned_Diff => Unsigned_Diff,
+               Is_Off => False,
+               Off => 0);
    end Translate_Slice_Name_Init;
 
    function Translate_Slice_Name_Finish
@@ -786,43 +787,49 @@ package body Trans.Chap6 is
          return Mnode
    is
       --  Type of the slice.
-      Slice_Type : constant Iir := Get_Type (Expr);
-      Slice_Info : constant Type_Info_Acc := Get_Info (Slice_Type);
+      Slice_Type  : constant Iir := Get_Type (Expr);
+      Slice_Tinfo : constant Type_Info_Acc := Get_Info (Slice_Type);
+
+      El_Type  : constant Iir := Get_Element_Subtype (Slice_Type);
+      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
 
       --  Object kind of the prefix.
       Kind : constant Object_Kind_Type := Get_Object_Kind (Prefix);
 
+      Off : O_Enode;
+
+      Res_Base : Mnode;
       Res_D : O_Dnode;
    begin
-      if Data.Is_Off then
-         return Chap3.Slice_Base
-           (Prefix, Slice_Type, New_Lit (New_Index_Lit (Data.Off)));
-      else
-         --  Create the result (fat array) and assign the bounds field.
-         case Slice_Info.Type_Mode is
-            when Type_Mode_Unbounded_Array =>
-               Res_D := Create_Temp (Slice_Info.Ortho_Type (Kind));
-               New_Assign_Stmt
-                 (New_Selected_Element (New_Obj (Res_D),
-                  Slice_Info.B.Bounds_Field (Kind)),
-                  New_Value (M2Lp (Data.Slice_Range)));
-               New_Assign_Stmt
-                 (New_Selected_Element (New_Obj (Res_D),
-                                        Slice_Info.B.Base_Field (Kind)),
-                  M2E (Chap3.Slice_Base
-                         (Chap3.Get_Composite_Base (Prefix),
-                          Slice_Type,
-                          New_Obj_Value (Data.Unsigned_Diff))));
-               return Dv2M (Res_D, Slice_Info, Kind);
-            when Type_Mode_Bounded_Arrays =>
-               return Chap3.Slice_Base
-                 (Chap3.Get_Composite_Base (Prefix),
-                  Slice_Type,
-                  New_Obj_Value (Data.Unsigned_Diff));
-            when others =>
-               raise Internal_Error;
-         end case;
+      if Is_Unbounded_Type (El_Tinfo) then
+         raise Internal_Error;
       end if;
+
+      if Data.Is_Off then
+         Off := New_Lit (New_Index_Lit (Data.Off));
+      else
+         Off := New_Obj_Value (Data.Unsigned_Diff);
+      end if;
+
+      Res_Base := Chap3.Slice_Base
+        (Chap3.Get_Composite_Base (Prefix), Slice_Type, Off);
+
+      case Type_Mode_Arrays (Slice_Tinfo.Type_Mode) is
+         when Type_Mode_Unbounded_Array =>
+            --  Create the result (fat array) and assign the bounds field.
+            Res_D := Create_Temp (Slice_Tinfo.Ortho_Type (Kind));
+            New_Assign_Stmt
+              (New_Selected_Element (New_Obj (Res_D),
+                                     Slice_Tinfo.B.Base_Field (Kind)),
+               M2E (Res_Base));
+            New_Assign_Stmt
+              (New_Selected_Element (New_Obj (Res_D),
+                                     Slice_Tinfo.B.Bounds_Field (Kind)),
+               New_Value (M2Lp (Data.Slice_Range)));
+            return Dv2M (Res_D, Slice_Tinfo, Kind);
+         when Type_Mode_Bounded_Arrays =>
+            return Res_Base;
+      end case;
    end Translate_Slice_Name_Finish;
 
    function Translate_Slice_Name (Prefix : Mnode; Expr : Iir_Slice_Name)
