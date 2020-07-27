@@ -234,7 +234,8 @@ package body Trans.Helpers2 is
       Res := E2M (Val, Type_Info, Mode_Value);
       case Type_Info.Type_Mode is
          when Type_Mode_Arrays =>
-            Res := Chap3.Get_Composite_Base (Res);
+            null;
+            --  Res := Chap3.Get_Composite_Base (Res);
             -- Res := Chap3.Convert_Array_Base (Res);
          when Type_Mode_Records =>
             Res := Stabilize (Res);
@@ -250,7 +251,8 @@ package body Trans.Helpers2 is
                                           Index     : O_Dnode)
                                          return O_Enode is
    begin
-      return M2E (Chap3.Index_Base (Val, Targ_Type, New_Obj_Value (Index)));
+      return M2E (Chap6.Translate_Indexed_Name_By_Offset
+                    (Val, Targ_Type, Index));
    end Gen_Oenode_Update_Data_Array;
 
    function Gen_Oenode_Update_Data_Record

@@ -2726,11 +2726,11 @@ package body Trans.Chap3 is
       return Layout_To_Bounds (Array_Bounds_To_Element_Layout (B, Arr_Type));
    end Array_Bounds_To_Element_Bounds;
 
-   function Array_Bounds_To_Element_Size (B : Mnode; Arr_Type : Iir)
-                                         return O_Lnode is
+   function Array_Bounds_To_Element_Size
+     (B : Mnode; Arr_Type : Iir; Mode : Object_Kind_Type) return O_Lnode is
    begin
       return Layout_To_Size
-        (Array_Bounds_To_Element_Layout (B, Arr_Type), Get_Object_Kind (B));
+        (Array_Bounds_To_Element_Layout (B, Arr_Type), Mode);
    end Array_Bounds_To_Element_Size;
 
    function Type_To_Range (Atype : Iir) return Mnode
@@ -3039,7 +3039,8 @@ package body Trans.Chap3 is
                  (ON_Mul_Ov,
                   Index,
                   New_Value (Array_Bounds_To_Element_Size
-                    (Get_Composite_Bounds (Arr), Atype))),
+                               (Get_Composite_Bounds (Arr), Atype,
+                                Get_Object_Kind (Arr)))),
                El_Tinfo.B.Base_Ptr_Type (Kind)),
             El_Tinfo, Kind,
             El_Tinfo.B.Base_Type (Kind),

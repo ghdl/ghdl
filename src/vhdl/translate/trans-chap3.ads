@@ -131,6 +131,8 @@ package Trans.Chap3 is
    --  set the bounds of it (from ARR), and return it.
    --  Otherwise, return a null mnode.
    --  Used to build a var for a subelement of ARR.
+   --  This is used by foreach_non_composite to factorize fat-pointer
+   --  building.
    function Create_Maybe_Fat_Array_Element (Arr : Mnode; Arr_Type : Iir)
                                            return Mnode;
 
