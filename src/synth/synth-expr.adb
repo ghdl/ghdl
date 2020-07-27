@@ -986,6 +986,18 @@ package body Synth.Expr is
         (Synth_Image_Attribute_Str (V, Get_Type (Param)), Dtype);
    end Synth_Image_Attribute;
 
+   function Synth_Instance_Name_Attribute
+     (Syn_Inst : Synth_Instance_Acc; Attr : Node) return Valtyp
+   is
+      Atype : constant Node := Get_Type (Attr);
+      Atyp  : constant Type_Acc := Get_Subtype_Object (Syn_Inst, Atype);
+      Name  : constant Path_Instance_Name_Type :=
+        Get_Path_Instance_Name_Suffix (Attr);
+   begin
+      --  Return a truncated name, as the prefix is not completly known.
+      return String_To_Valtyp (Name.Suffix, Atyp);
+   end Synth_Instance_Name_Attribute;
+
    function Synth_Name (Syn_Inst : Synth_Instance_Acc; Name : Node)
                        return Valtyp is
    begin
@@ -2301,6 +2313,8 @@ package body Synth.Expr is
             return Synth_Value_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Image_Attribute =>
             return Synth_Image_Attribute (Syn_Inst, Expr);
+         when Iir_Kind_Instance_Name_Attribute =>
+            return Synth_Instance_Name_Attribute (Syn_Inst, Expr);
          when Iir_Kind_Null_Literal =>
             return Create_Value_Access (Null_Heap_Index, Expr_Type);
          when Iir_Kind_Allocator_By_Subtype =>
