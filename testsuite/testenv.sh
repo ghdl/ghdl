@@ -10,9 +10,10 @@
 # User defined variables (can be set to run the testsuite in some
 #  configuration, such as optimization or debugging):
 # GHDL_STD_FLAGS
-# GHDL_FLAGS
-# GHDL_ELABFLAGS
-# GHDL_SIMFLAGS
+#
+# Testbench flags.  Can be used to run the whole testsuite under a specific
+#  flag (like -O, -g).  Should not be set in testsuite.sh files.
+#  GHDL_FLAGS
 
 #GHDL=ghdl
 RM=rm
@@ -59,7 +60,7 @@ analyze_failure ()
 elab ()
 {
   echo "elaborate $@"
-  "$GHDL" -e $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
+  "$GHDL" -e $GHDL_STD_FLAGS $GHDL_FLAGS $@
 }
 
 # Elaborate a design (failure expected)
@@ -67,15 +68,15 @@ elab ()
 elab_failure ()
 {
   echo "elaborate (failure expected) $@"
-  "$GHDL" -e --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
+  "$GHDL" -e --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $@
 }
 
 # Simulate a design (no error expected)
 # Note: somewhat deprecated, use elab_simulate instead.
 simulate ()
 {
-  echo "simulate $@ ($GHDL_FLAGS $@ $GHDL_SIMFLAGS)" >&2
-  "$GHDL" -r $GHDL_STD_FLAGS $GHDL_FLAGS "$@" $GHDL_SIMFLAGS
+  echo "simulate $@ ($GHDL_FLAGS $@)" >&2
+  "$GHDL" -r $GHDL_STD_FLAGS $GHDL_FLAGS "$@"
   #./$@
 }
 
@@ -92,15 +93,14 @@ simulate_failure ()
 elab_simulate ()
 {
   echo "elaborate and simulate $@"
-  "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
+  "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $@
 }
 
 # Elaborate and simulate a design (failure expected)
 elab_simulate_failure ()
 {
   echo "elaborate and simulate (failure expected) $@"
-  "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS \
-    $@ --expect-failure
+  "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $@ --expect-failure
 }
 
 synth()

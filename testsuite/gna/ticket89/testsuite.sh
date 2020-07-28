@@ -10,12 +10,12 @@ elab_simulate repro2
 
 clean
 
-GHDL_FLAGS=--work=ieee_proposed
+GHDL_STD_FLAGS=--work=ieee_proposed
 analyze x_ieee_proposed/src/std_logic_1164_additions.vhdl
 analyze x_ieee_proposed/src/standard_additions_c.vhdl
 analyze x_ieee_proposed/src/standard_textio_additions_c.vhdl
 
-GHDL_FLAGS=--work=bitvis_util
+GHDL_STD_FLAGS=--work=bitvis_util
 analyze project/src93/types_pkg.vhd
 analyze project/src93/adaptations_pkg.vhd
 analyze project/src93/string_methods_pkg.vhd

@@ -2,8 +2,7 @@
 
 . ../../testenv.sh
 
-GHDL_STD_FLAGS=--std=08
-GHDL_FLAGS=--ieee=mentor
+GHDL_STD_FLAGS="--std=08 --ieee=mentor"
 analyze simple.vhdl
 clean
 

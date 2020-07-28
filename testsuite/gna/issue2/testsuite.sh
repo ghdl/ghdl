@@ -2,8 +2,7 @@
 
 . ../../testenv.sh
 
-GHDL_STD_FLAGS=--std=08
-GHDL_FLAGS=--work=test
+GHDL_STD_FLAGS="--std=08 --work=test"
 
 analyze repro.vhdl
 analyze repro2.vhdl

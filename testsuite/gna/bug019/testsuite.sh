@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-GHDL_FLAGS="--syn-binding -g"
+GHDL_STD_FLAGS="--syn-binding -g"
 
 analyze --work=poc PoC/tb/common/my_config_ML505.vhdl
 analyze --work=poc PoC/tb/common/my_project.vhdl

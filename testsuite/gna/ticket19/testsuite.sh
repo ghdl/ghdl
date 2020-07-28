@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-GHDL_FLAGS="-fpsl --std=02"
+GHDL_STD_FLAGS="-fpsl --std=02"
 
 analyze psl_test_cover.vhd
 elab_simulate psl_test_cover --stop-time=200ns
