@@ -785,27 +785,30 @@ def disp_divmod():
   --  No 'X'.
   procedure divmod (num, dem : UNSIGNED; quot, remain : out UNSIGNED)
   is
+     --  An extra bit is needed so that it is always possible that DEM >= REG.
      variable reg : unsigned (dem'left + 1 downto 0) := (others => '0');
      variable sub : unsigned (dem'range) := (others => '0');
      variable carry, d : """ + logic_type () + """;
   begin
      for i in num'range loop
-        --  Shift
+        --  Shift to add a new bit from NUM to REG.
         reg (reg'left downto 1) := reg (reg'left - 1 downto 0);
         reg (0) := num (i);
-        --  Substract
+        --  Substract: REG - DEM
         carry := '1';
         for j in dem'reverse_range loop
            d := not dem (j);
            sub (j) := compute_sum (carry, reg (j), d);
            carry := compute_carry (carry, reg (j), d);
         end loop;
+        --  Do not forget the extra bit in REG.
         carry := compute_carry (carry, reg (reg'left), '1');
         --  Test
         if carry = '0' then
-           --  Greater than
+           --  REG < DEM
            quot (i) := '0';
         else
+           --  REG >= DEM: do the substraction
            quot (i) := '1';
            reg (reg'left) := '0';
            reg (sub'range) := sub;
