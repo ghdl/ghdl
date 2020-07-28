@@ -2594,6 +2594,16 @@ package body Trans.Chap8 is
                   Act_Type := Get_Type (Actual);
             end case;
 
+            --  If the actual is a slice, create the type early so that they
+            --  could be used in different states.  If they are created too
+            --  late, they could be created in a state but referenced in
+            --  a different one.
+            if Actual /= Null_Iir
+              and then Get_Kind (Actual) = Iir_Kind_Slice_Name
+            then
+               Chap3.Create_Composite_Subtype (Act_Type, False);
+            end if;
+
             --  For out or inout scalar variable, create a field for the
             --  actual value.
             if Actual /= Null_Iir
