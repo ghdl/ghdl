@@ -965,10 +965,13 @@ package body Trans.Chap6 is
       Pos           : constant Iir_Index32 := Get_Element_Position (El);
       Res_Type      : constant Iir := Get_Type (El);
       Res_Tinfo     : constant Type_Info_Acc := Get_Info (Res_Type);
+      Unbounded     : constant Boolean := Is_Unbounded_Type (Res_Tinfo);
       El_Tinfo      : Type_Info_Acc;
       Stable_Prefix : Mnode;
       Base          : Mnode;
       Res, Fat_Res  : Mnode;
+      Res_Lnode     : O_Lnode;
+      Res_Addr      : O_Enode;
       Rec_Layout    : Mnode;
       El_Descr      : Mnode;
       F             : O_Fnode;
@@ -992,7 +995,7 @@ package body Trans.Chap6 is
          end;
       end if;
 
-      if Is_Unbounded_Type (Res_Tinfo) then
+      if Unbounded then
          Stable_Prefix := Stabilize (Prefix);
 
          --  Result is a fat pointer, create it and set bounds.
@@ -1023,38 +1026,39 @@ package body Trans.Chap6 is
          --  If the base element type is static or if the prefix is static,
          --  then the element can directly be accessed.
          Res := Lv2M (New_Selected_Element (M2Lv (Base), F), El_Tinfo, Kind);
+         if not Unbounded then
+            return Res;
+         end if;
+         Res_Addr := New_Convert_Ov
+           (M2Addr (Res), Res_Tinfo.B.Base_Ptr_Type (Kind));
       else
          --  Unbounded or complex element.
          Stabilize (Base);
 
          --  The element is complex: it's an offset.
          Rec_Layout := Chap3.Get_Composite_Bounds (Stable_Prefix);
-         Res := Lv2M
+         Res_Lnode := New_Slice
            (New_Access_Element
-              (New_Unchecked_Address
-                 (New_Slice
-                    (New_Access_Element (New_Unchecked_Address (M2Lv (Base),
-                                         Char_Ptr_Type)),
-                     Chararray_Type,
-                     New_Value (Chap3.Record_Layout_To_Element_Offset
-                                  (Rec_Layout, El, Kind))),
-                    El_Tinfo.B.Base_Ptr_Type (Kind))),
-            Res_Tinfo,
-            Kind,
-            Res_Tinfo.B.Base_Type (Kind),
-            Res_Tinfo.B.Base_Ptr_Type (Kind));
+              (New_Unchecked_Address (M2Lv (Base), Char_Ptr_Type)),
+            Chararray_Type,
+            New_Value (Chap3.Record_Layout_To_Element_Offset
+                         (Rec_Layout, El, Kind)));
+
+         if not Unbounded then
+            Res_Addr := New_Unchecked_Address
+              (Res_Lnode, Res_Tinfo.Ortho_Ptr_Type (Kind));
+            return Lv2M (New_Access_Element (Res_Addr), Res_Tinfo, Kind);
+         end if;
+
+         Res_Addr := New_Unchecked_Address
+           (Res_Lnode, Res_Tinfo.B.Base_Ptr_Type (Kind));
       end if;
 
-      if Is_Unbounded_Type (Res_Tinfo) then
-         --  Ok, we know that Get_Composite_Base doesn't return a copy.
-         New_Assign_Stmt
-           (M2Lp (Chap3.Get_Composite_Base (Fat_Res)),
-            New_Convert_Ov (M2Addr (Res),
-                            Res_Tinfo.B.Base_Ptr_Type (Kind)));
-         return Fat_Res;
-      else
-         return Res;
-      end if;
+      pragma Assert (Unbounded);
+      --  Ok, we know that Get_Composite_Base doesn't return a copy.
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Composite_Base (Fat_Res)), Res_Addr);
+      return Fat_Res;
    end Translate_Selected_Element;
 
    function Translate_Object_Alias_Name (Name : Iir; Mode : Object_Kind_Type)
