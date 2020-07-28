@@ -113,7 +113,20 @@ class LanguageProtocolServer(object):
         if fmethod:
             if params is None:
                 params = {}
-            response = fmethod(**params)
+            try:
+                response = fmethod(**params)
+            except Exception as e:
+                log.exception(
+                    "Caught exception while handling %s with params %s:",
+                    method, params
+                )
+                self.show_message(
+                    MessageType.Error,
+                    ("Caught exception while handling {}, " +
+                     "see VHDL language server output for details.").format(
+                        method)
+                )
+                response = None
             if tid is None:
                 # If this was just a notification, discard it
                 return None
