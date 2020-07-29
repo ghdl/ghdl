@@ -68,6 +68,16 @@ package body Trans.Chap3 is
                    Info.B.Layout_Ptr_Type);
    end Get_Composite_Type_Layout;
 
+   function Get_Composite_Type_Layout_Alloc (Info : Type_Info_Acc)
+                                             return Allocation_Kind is
+   begin
+      if Info.S.Subtype_Owner /= null then
+         return Get_Composite_Type_Layout_Alloc (Info.S.Subtype_Owner);
+      else
+         return Get_Alloc_Kind_For_Var (Info.S.Composite_Layout);
+      end if;
+   end Get_Composite_Type_Layout_Alloc;
+
    function Layout_To_Bounds (B : Mnode) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Type_Info (B);

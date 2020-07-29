@@ -171,6 +171,10 @@ package Trans.Chap3 is
    --  Get the number of elements in array ATYPE.
    function Get_Array_Type_Length (Atype : Iir) return O_Enode;
 
+   --  Return the allocation kind used for layout variable of type INFO.
+   function Get_Composite_Type_Layout_Alloc (Info : Type_Info_Acc)
+                                             return Allocation_Kind;
+
    --  Get the base of array or record OBJ.  If OBJ is already constrained,
    --  return it.
    function Get_Composite_Base (Obj : Mnode) return Mnode;

@@ -561,7 +561,7 @@ package body Trans.Chap5 is
             Tinfo := Get_Info (Actual_Type);
             if Save
               and then
-              Get_Alloc_Kind_For_Var (Tinfo.S.Composite_Layout) = Alloc_Stack
+                Chap3.Get_Composite_Type_Layout_Alloc (Tinfo) = Alloc_Stack
             then
                --  We need a copy.
                Bounds_Copy := Alloc_Bounds (Actual_Type, Alloc_System);
