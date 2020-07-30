@@ -118,10 +118,10 @@ GHDL implements a subset of :wikipedia:`PSL <Property_Specification_Language>`.
 PSL implementation
 ------------------
 
-A PSL statement is considered a process, so it's not allowed within
+A PSL statement is considered as a process, so it's not allowed within
 a process.
 
-All PSL assertions must be clocked (GHDL doesn't support unclocked assertion).
+All PSL assertions must be clocked (GHDL doesn't support unclocked assertions).
 Furthermore only one clock per assertion is allowed.
 
 You can either use a default clock like this:
@@ -142,6 +142,7 @@ or use a clocked expression (note the use of parentheses):
 Of course only the simple subset of PSL is allowed.
 
 Currently the built-in functions are not implemented, see `issue #662 <https://github.com/ghdl/ghdl/issues/662>`_.
+PSL functions `prev()`, `stable()`, `rose()` and `fell()` are supported with GHDL synthesis.
 
 PSL usage
 ---------
@@ -195,14 +196,14 @@ PSL in a VHDL(-2008) design without embedding it in comments.
        ghdl -a --std=08 vhdl_design.vhdl
        ghdl -e --std=08 vhdl_design
 
-PSL vunit files
+PSL vunit files (VHDL-2008 / Synthesis only)
 ^^^^^^^^^^^^^^^
 
 GHDL supports vunit (Verification Unit) files.
 
 .. code-block:: VHDL
 
-    vunit vunit_name (design_name)
+    vunit vunit_name (entity_name(architecture_name))
     {
       default clock is rising_edge(clk);
       assert always cnt /= 5 abort rst;
@@ -218,12 +219,17 @@ GHDL supports vunit (Verification Unit) files.
 
 .. HINT::
 
-   The PSL vunit file has to be analyzed/elaborated together with the VHDL design file, for example:
+   The PSL vunit file has to be analyzed together with the VHDL design file, for example:
 
    .. code-block:: bash
 
        ghdl -a --std=08 vhdl_design.vhdl vunit.psl
-       ghdl -e --std=08 vhdl_design
+
+   Or when using the `--synth` command:
+
+   .. code-block:: bash
+
+       ghdl --synth --std=08 vhdl_design.vhdl vunit.psl -e vhdl_design
 
 
 Source representation
