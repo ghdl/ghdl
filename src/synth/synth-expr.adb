@@ -1715,16 +1715,33 @@ package body Synth.Expr is
       end case;
    end Synth_Type_Conversion;
 
-   procedure Error_Ieee_Operator (Imp : Node; Loc : Node) is
+   procedure Error_Ieee_Operator (Imp : Node; Loc : Node)
+   is
+      use Std_Names;
+      Parent : constant Iir := Get_Parent (Imp);
    begin
-      if Get_Kind (Get_Parent (Imp)) = Iir_Kind_Package_Declaration
+      if Get_Kind (Parent) = Iir_Kind_Package_Declaration
         and then (Get_Identifier
-                    (Get_Library
-                       (Get_Design_File (Get_Design_Unit (Get_Parent (Imp)))))
-                    = Std_Names.Name_Ieee)
+                    (Get_Library (Get_Design_File (Get_Design_Unit (Parent))))
+                    = Name_Ieee)
       then
-         Error_Msg_Synth (+Loc, "unhandled predefined IEEE operator %i", +Imp);
-         Error_Msg_Synth (+Imp, " declared here");
+         case Get_Identifier (Parent) is
+            when Name_Std_Logic_1164
+               | Name_Std_Logic_Arith
+               | Name_Std_Logic_Signed
+               | Name_Std_Logic_Unsigned
+               | Name_Std_Logic_Misc
+               | Name_Numeric_Std
+               | Name_Numeric_Bit
+               | Name_Math_Real =>
+               Error_Msg_Synth
+                 (+Loc, "unhandled predefined IEEE operator %i", +Imp);
+               Error_Msg_Synth
+                 (+Imp, " declared here");
+            when others =>
+               --  ieee 2008 packages are handled like regular packages.
+               null;
+         end case;
       end if;
    end Error_Ieee_Operator;
 
