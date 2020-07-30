@@ -741,6 +741,38 @@ package body Synth.Ieee.Numeric_Std is
       return Mul_Sgn_Sgn (L, Rv, Loc);
    end Mul_Sgn_Int;
 
+   function Neg_Vec_Notyp (V : Memtyp) return Memory_Ptr
+   is
+      Len : constant Uns32 := V.Typ.Vbound.Len;
+      Vb, Carry : Sl_X01;
+      Res       : Memory_Ptr;
+   begin
+      Res := Alloc_Memory (V.Typ);
+
+      Carry := '1';
+      for I in 1 .. Len loop
+         Vb := Sl_To_X01 (Read_Std_Logic (V.Mem, Len - I));
+         Vb := Not_Table (Vb);
+         Write_Std_Logic (Res, Len - I, Xor_Table (Carry, Vb));
+         Carry := And_Table (Carry, Vb);
+      end loop;
+      return Res;
+   end Neg_Vec_Notyp;
+
+   procedure Neg_Vec (V : Memtyp)
+   is
+      Len : constant Uns32 := V.Typ.Vbound.Len;
+      Vb, Carry : Sl_X01;
+   begin
+      Carry := '1';
+      for I in 1 .. Len loop
+         Vb := Sl_To_X01 (Read_Std_Logic (V.Mem, Len - I));
+         Vb := Not_Table (Vb);
+         Write_Std_Logic (V.Mem, Len - I, Xor_Table (Carry, Vb));
+         Carry := And_Table (Carry, Vb);
+      end loop;
+   end Neg_Vec;
+
    function Neg_Vec (V : Memtyp; Loc : Syn_Src) return Memtyp
    is
       Len : constant Uns32 := V.Typ.Vbound.Len;
@@ -821,4 +853,150 @@ package body Synth.Ieee.Numeric_Std is
       end if;
       return Res;
    end Shift_Vec;
+
+   type Std_Logic_Vector_Type is array (Uns32 range <>) of Std_Ulogic;
+
+   procedure Divmod (Num, Dem : Memtyp; Quot, Remain : Memtyp)
+   is
+      Nlen  : constant Uns32 := Num.Typ.Vbound.Len;
+      Dlen  : constant Uns32 := Dem.Typ.Vbound.Len;
+      pragma Assert (Nlen > 0);
+      pragma Assert (Dlen > 0);
+      pragma Assert (Quot.Typ.Vbound.Len = Nlen);
+      Reg   : Std_Logic_Vector_Type (0 .. Dlen);
+      Sub   : Std_Logic_Vector_Type (0 .. Dlen - 1);
+      Carry : Sl_X01;
+      D     : Sl_X01;
+   begin
+      Reg := (others => '0');
+      Sub := (others => '0');
+
+      -- Stupid pen and paper division algorithm.
+      for I in 0 .. Nlen - 1 loop
+         --  Shift
+         Reg (0 .. Dlen - 1) := Reg (1 .. Dlen);
+         Reg (Dlen) := Sl_To_X01 (Read_Std_Logic (Num.Mem, I));
+         --  Substract
+         Carry := '1';
+         for J in reverse 0 .. Dlen - 1 loop
+            D := Not_Table (Read_Std_Logic (Dem.Mem, J));
+            Sub (J) := Compute_Sum (Carry, Reg (J + 1), D);
+            Carry := Compute_Carry (Carry, Reg (J + 1), D);
+         end loop;
+         --  Extra REG bit.
+         Carry := Compute_Carry (Carry, Reg (0), '1');
+         --  Test
+         Write_Std_Logic (Quot.Mem, I, Carry);
+         if Carry = '1' then
+            Reg (0) := '0';
+            Reg (1 .. Dlen) := Sub;
+         end if;
+      end loop;
+      if Remain /= Null_Memtyp then
+         pragma Assert (Remain.Typ.Vbound.Len = Dlen);
+         for I in 0 .. Dlen - 1 loop
+            Write_Std_Logic (Remain.Mem, I, Reg (I + 1));
+         end loop;
+      end if;
+   end Divmod;
+
+   function Has_0x (V : Memtyp) return Sl_X01
+   is
+      Res : Sl_X01 := '0';
+      E : Sl_X01;
+   begin
+      for I in 0 .. V.Typ.Vbound.Len - 1 loop
+         E := To_X01 (Read_Std_Logic (V.Mem, I));
+         if E = 'X' then
+            return 'X';
+         elsif E = '1' then
+            Res := '1';
+         end if;
+      end loop;
+      return Res;
+   end Has_0x;
+
+   function Div_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Nlen  : constant Uns32 := L.Typ.Vbound.Len;
+      Dlen  : constant Uns32 := R.Typ.Vbound.Len;
+      Quot  : Memtyp;
+      R0    : Sl_X01;
+   begin
+      Quot.Typ := Create_Res_Type (L.Typ, Nlen);
+      Quot := Create_Memory (Quot.Typ);
+      if Nlen = 0 or Dlen = 0 then
+         return Quot;
+      end if;
+
+      R0 := Has_0x (R);
+      if Has_0x (L) = 'X' or R0 = 'X' then
+         Warning_Msg_Synth
+           (+Loc, "NUMERIC_STD.""/"": non logical value detected");
+         Fill (Quot, 'X');
+         return Quot;
+      end if;
+      if R0 = '0' then
+         Error_Msg_Synth (+Loc, "NUMERIC_STD.""/"": division by 0");
+         Fill (Quot, 'X');
+         return Quot;
+      end if;
+      Divmod (L, R, Quot, Null_Memtyp);
+      return Quot;
+   end Div_Uns_Uns;
+
+   function Div_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp
+   is
+      Nlen  : constant Uns32 := L.Typ.Vbound.Len;
+      Dlen  : constant Uns32 := R.Typ.Vbound.Len;
+      Quot  : Memtyp;
+      R0    : Sl_X01;
+      Lu    : Memtyp;
+      Ru    : Memtyp;
+      Neg   : Boolean;
+   begin
+      Quot.Typ := Create_Res_Type (L.Typ, Nlen);
+      Quot := Create_Memory (Quot.Typ);
+      if Nlen = 0 or Dlen = 0 then
+         return Quot;
+      end if;
+
+      R0 := Has_0x (R);
+      if Has_0x (L) = 'X' or R0 = 'X' then
+         Warning_Msg_Synth
+           (+Loc, "NUMERIC_STD.""/"": non logical value detected");
+         Fill (Quot, 'X');
+         return Quot;
+      end if;
+      if R0 = '0' then
+         Error_Msg_Synth (+Loc, "NUMERIC_STD.""/"": division by 0");
+         Fill (Quot, 'X');
+         return Quot;
+      end if;
+
+      if To_X01 (Read_Std_Logic (L.Mem, 0)) = '1' then
+         Lu.Typ := L.Typ;
+         Lu.Mem := Neg_Vec_Notyp (L);
+         Neg := True;
+      else
+         Lu := L;
+         Neg := False;
+      end if;
+
+      if To_X01 (Read_Std_Logic (R.Mem, 0)) = '1' then
+         Ru.Typ := R.Typ;
+         Ru.Mem := Neg_Vec_Notyp (R);
+         Neg := not Neg;
+      else
+         Ru := R;
+      end if;
+
+      Divmod (Lu, Ru, Quot, Null_Memtyp);
+
+      if Neg then
+         Neg_Vec (Quot);
+      end if;
+      return Quot;
+   end Div_Sgn_Sgn;
+
 end Synth.Ieee.Numeric_Std;

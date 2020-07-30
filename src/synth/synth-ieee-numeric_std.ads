@@ -61,6 +61,10 @@ package Synth.Ieee.Numeric_Std is
    function Mul_Int_Sgn (L : Int64; R : Memtyp; Loc : Syn_Src) return Memtyp;
    function Mul_Sgn_Int (L : Memtyp; R : Int64; Loc : Syn_Src) return Memtyp;
 
+   --  "/"
+   function Div_Uns_Uns (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
+   function Div_Sgn_Sgn (L, R : Memtyp; Loc : Syn_Src) return Memtyp;
+
    --  Shift
    function Shift_Vec (Val : Memtyp;
                        Amt : Uns32;

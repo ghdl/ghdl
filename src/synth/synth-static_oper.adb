@@ -562,6 +562,11 @@ package body Synth.Static_Oper is
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Int_Sgn =>
             return Mul_Int_Sgn (Read_Discrete (Left), Right, Expr);
 
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns =>
+            return Div_Uns_Uns (Left, Right, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Div_Sgn_Sgn =>
+            return Div_Sgn_Sgn (Left, Right, Expr);
+
          when Iir_Predefined_Ieee_Numeric_Std_Srl_Uns_Int
            |  Iir_Predefined_Ieee_Numeric_Std_Srl_Sgn_Int =>
             declare

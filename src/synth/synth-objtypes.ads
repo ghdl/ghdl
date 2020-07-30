@@ -286,6 +286,7 @@ package Synth.Objtypes is
    function Create_Memory_Discrete (Val : Int64; Vtype : Type_Acc)
                                    return Memtyp;
 
+   function Alloc_Memory (Vtype : Type_Acc) return Memory_Ptr;
    function Create_Memory (Vtype : Type_Acc) return Memtyp;
 
    function Is_Equal (L, R : Memtyp) return Boolean;
