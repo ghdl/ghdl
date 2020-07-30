@@ -160,5 +160,9 @@ package Ghdllocal is
    --  option).
    procedure Expect_Filenames (Args : Argument_List);
 
+   --  Used by --gen-makefile
+   procedure Gen_Makefile_Disp_Header;
+   procedure Gen_Makefile_Disp_Variables;
+
    procedure Register_Commands;
 end Ghdllocal;
