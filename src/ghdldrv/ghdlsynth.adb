@@ -120,6 +120,7 @@ package body Ghdlsynth is
       P ("  -gNAME=VALUE          Override the generic NAME of the top unit");
       P ("  --vendor-library=NAME Any unit from library NAME is a black boxe");
       P ("  --no-formal           Neither synthesize assert nor PSL");
+      P ("  --no-assert-cover     Cover PSL assertion activation");
    end Disp_Long_Help;
 
    procedure Decode_Option (Cmd : in out Command_Synth;
@@ -140,6 +141,10 @@ package body Ghdlsynth is
          Synth.Flags.Flag_Formal := False;
       elsif Option = "--formal" then
          Synth.Flags.Flag_Formal := True;
+      elsif Option = "--no-assert-cover" then
+         Synth.Flags.Flag_Assert_Cover := False;
+      elsif Option = "--assert-cover" then
+         Synth.Flags.Flag_Assert_Cover := True;
       elsif Option = "--top-name=hash" then
          Cmd.Top_Encoding := Name_Hash;
       elsif Option = "--top-name=asis" then

@@ -72,5 +72,9 @@ package Synth.Flags is
    --  Synthesize PSL and assertions.
    Flag_Formal : Boolean := True;
 
+   --  If true, automatically add a cover on PSL asserts to know if the
+   --  asserted has been started.
+   Flag_Assert_Cover : Boolean := True;
+
    Flag_Verbose : Boolean := False;
 end Synth.Flags;

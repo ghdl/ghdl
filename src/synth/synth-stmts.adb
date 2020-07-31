@@ -3339,14 +3339,17 @@ package body Synth.Stmts is
       --  Note: for synthesis, we assume the next state will be correct.
       --  (If we assert on States, then the first cycle is ignored).
       Synth_Psl_Dff (Syn_Inst, Stmt, Next_States);
-      if Next_States /= No_Net then
-         Lab := Synth_Label (Syn_Inst, Stmt);
+      if Next_States = No_Net then
+         return;
+      end if;
+      Lab := Synth_Label (Syn_Inst, Stmt);
 
-         Inst := Build_Assert
-           (Ctxt, Lab,
-            Synth_Psl_Not_Final (Syn_Inst, Stmt, Next_States));
-         Set_Location (Inst, Get_Location (Stmt));
+      Inst := Build_Assert
+        (Ctxt, Lab, Synth_Psl_Not_Final (Syn_Inst, Stmt, Next_States));
+      Set_Location (Inst, Get_Location (Stmt));
 
+      --  Also add a cover gate to cover assertion activation.
+      if Flags.Flag_Assert_Cover then
          Active := Get_Active_State (NFA);
          if Active /= No_State then
             if Lab /= No_Sname then
