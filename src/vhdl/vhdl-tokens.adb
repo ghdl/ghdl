@@ -360,10 +360,14 @@ package body Vhdl.Tokens is
             return "cover";
          when Tok_Default =>
             return "default";
+         when Tok_Force =>
+            return "force";
          when Tok_Parameter =>
             return "parameter";
          when Tok_Property =>
             return "property";
+         when Tok_Release =>
+            return "release";
          when Tok_Restrict =>
             return "restrict";
          when Tok_Restrict_Guarantee =>

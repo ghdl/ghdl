@@ -157,8 +157,10 @@ package body Std_Names is
       Def ("context",            Name_Context);
       Def ("cover",              Name_Cover);
       Def ("default",            Name_Default);
+      Def ("force",              Name_Force);
       Def ("parameter",          Name_Parameter);
       Def ("property",           Name_Property);
+      Def ("release",            Name_Release);
       Def ("restrict",           Name_Restrict);
       Def ("restrict_guarantee", Name_Restrict_Guarantee);
       Def ("sequence",           Name_Sequence);
@@ -200,7 +202,6 @@ package body Std_Names is
       Def ("endspecify",   Name_Endspecify);
       Def ("endtable",     Name_Endtable);
       Def ("endtask",      Name_Endtask);
-      Def ("force",        Name_Force);
       Def ("forever",      Name_Forever);
       Def ("fork",         Name_Fork);
       Def ("highz0",       Name_Highz0);
@@ -226,7 +227,6 @@ package body Std_Names is
       Def ("pulldown",     Name_Pulldown);
       Def ("pullup",       Name_Pullup);
       Def ("realtime",     Name_Realtime);
-      Def ("release",      Name_Release);
       Def ("reg",          Name_Reg);
       Def ("repeat",       Name_Repeat);
       Def ("rcmos",        Name_Rcmos);
