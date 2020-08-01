@@ -939,6 +939,11 @@ package body Vhdl.Nodes is
    function Iir_Delay_Mechanism_To_Boolean is new Ada.Unchecked_Conversion
      (Source => Iir_Delay_Mechanism, Target => Boolean);
 
+   function Boolean_To_Iir_Force_Mode is new Ada.Unchecked_Conversion
+     (Source => Boolean, Target => Iir_Force_Mode);
+   function Iir_Force_Mode_To_Boolean is new Ada.Unchecked_Conversion
+     (Source => Iir_Force_Mode, Target => Boolean);
+
    function Boolean_To_Iir_Signal_Kind is new Ada.Unchecked_Conversion
      (Source => Boolean, Target => Iir_Signal_Kind);
    function Iir_Signal_Kind_To_Boolean is new Ada.Unchecked_Conversion

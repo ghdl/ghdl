@@ -3786,6 +3786,32 @@ package Vhdl.Nodes is
    --
    --   Get/Set_Is_Ref (Flag12)
 
+   -- Iir_Kind_Signal_Force_Assignment_Statement (Short)
+   -- Iir_Kind_Signal_Release_Assignment_Statement (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Target (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   -- Only for Iir_Kind_Signal_Force_Assignment_Statement:
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Force_Mode (Flag1)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --  True if the target of the assignment is guarded
+   --   Get/Set_Guarded_Target_State (State1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
+   --
+   --   Get/Set_Has_Force_Mode (Flag2)
+
    -- Iir_Kind_Simple_Signal_Assignment_Statement (Short)
    -- Iir_Kind_Conditional_Signal_Assignment_Statement (Short)
    -- Iir_Kind_Selected_Waveform_Assignment_Statement (Medium)
@@ -4999,6 +5025,8 @@ package Vhdl.Nodes is
       Iir_Kind_Simple_Signal_Assignment_Statement,
       Iir_Kind_Conditional_Signal_Assignment_Statement,
       Iir_Kind_Selected_Waveform_Assignment_Statement,
+      Iir_Kind_Signal_Force_Assignment_Statement,
+      Iir_Kind_Signal_Release_Assignment_Statement,
       Iir_Kind_Null_Statement,
       Iir_Kind_Assertion_Statement,
       Iir_Kind_Report_Statement,
@@ -5123,6 +5151,12 @@ package Vhdl.Nodes is
      (
       Iir_Inertial_Delay,
       Iir_Transport_Delay
+     );
+
+   type Iir_Force_Mode is
+     (
+      Iir_Force_In,
+      Iir_Force_Out
      );
 
    --  LRM93 2.7 (conformance rules).
@@ -6716,6 +6750,8 @@ package Vhdl.Nodes is
      Iir_Kind_Simple_Signal_Assignment_Statement ..
    --Iir_Kind_Conditional_Signal_Assignment_Statement
    --Iir_Kind_Selected_Waveform_Assignment_Statement
+   --Iir_Kind_Signal_Force_Assignment_Statement
+   --Iir_Kind_Signal_Release_Assignment_Statement
    --Iir_Kind_Null_Statement
    --Iir_Kind_Assertion_Statement
    --Iir_Kind_Report_Statement
@@ -8175,6 +8211,14 @@ package Vhdl.Nodes is
    --  Field: Field4
    function Get_Reject_Time_Expression (Target : Iir) return Iir;
    procedure Set_Reject_Time_Expression (Target : Iir; Expr : Iir);
+
+   --  Field: Flag1 (uc)
+   function Get_Force_Mode (Stmt : Iir) return Iir_Force_Mode;
+   procedure Set_Force_Mode (Stmt : Iir; Mode : Iir_Force_Mode);
+
+   --  Field: Flag2
+   function Get_Has_Force_Mode (Stmt : Iir) return Boolean;
+   procedure Set_Has_Force_Mode (Stmt : Iir; Flag : Boolean);
 
    --  The Is_Ref flag is set for extracted sensitivity lists.
    --  Field: Field6 Of_Maybe_Ref (uc)

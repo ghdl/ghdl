@@ -308,13 +308,11 @@ package body Vhdl.Sem_Stmts is
       end loop;
    end Check_Aggregate_Target;
 
-   procedure Check_Simple_Signal_Target
-     (Stmt : Iir; Target : Iir; Staticness : Iir_Staticness)
+   --  Return the object of signal TARGET.
+   --  Return Null_Iir if TARGET is not a signal (with an error message).
+   function Check_Simple_Signal_Target_Object (Target : Iir) return Iir
    is
       Target_Object : Iir;
-      Target_Prefix : Iir;
-      Guarded_Target : Tri_State_Type;
-      Targ_Obj_Kind : Iir_Kind;
    begin
       Target_Object := Name_To_Object (Target);
       if Target_Object = Null_Iir then
@@ -323,11 +321,27 @@ package body Vhdl.Sem_Stmts is
          then
             --  Common case: target is not declared.  There was already
             --  an error message for it.
-            return;
+            return Null_Iir;
          end if;
 
          --  Uncommon case: target is not an object (could be a component).
          Error_Msg_Sem (+Target, "target is not a signal name");
+         return Null_Iir;
+      end if;
+
+      return Target_Object;
+   end Check_Simple_Signal_Target_Object;
+
+   procedure Check_Simple_Signal_Target
+     (Stmt : Iir; Target : Iir; Staticness : Iir_Staticness)
+   is
+      Target_Object : Iir;
+      Target_Prefix : Iir;
+      Guarded_Target : Tri_State_Type;
+      Targ_Obj_Kind : Iir_Kind;
+   begin
+      Target_Object := Check_Simple_Signal_Target_Object (Target);
+      if Target_Object = Null_Iir then
          return;
       end if;
 
@@ -851,6 +865,125 @@ package body Vhdl.Sem_Stmts is
          El := Get_Chain (El);
       end loop;
    end Sem_Conditional_Expression_Chain;
+
+   procedure Sem_Signal_Force_Release_Assignment (Stmt: Iir)
+   is
+      Target        : Iir;
+      Target_Type   : Iir;
+      Target_Object : Iir;
+      Expr          : Iir;
+      Constrained   : Boolean;
+   begin
+      Target := Get_Target (Stmt);
+
+      --  LRM08 10.5.2 Simple signal assignments
+      --  It is an error if the target of a simple force assignment or a
+      --  simple release assignment is in the form of an aggregate.
+      if Get_Kind (Target) = Iir_Kind_Aggregate then
+         Error_Msg_Sem (+Stmt, "target of %n cannot be an aggregate", +Stmt);
+         return;
+      end if;
+
+      Target := Sem_Expression_Wildcard (Target, Wildcard_Any_Type);
+      Target_Object := Null_Iir;
+      Target_Type := Wildcard_Any_Type;
+      if Target = Null_Iir then
+         --  To avoid spurious errors, assume the target is fully
+         --  constrained.
+         Constrained := True;
+      else
+         Set_Target (Stmt, Target);
+         if Is_Expr_Fully_Analyzed (Target) then
+            Check_Target (Stmt, Target);
+            Target_Type := Get_Type (Target);
+            Target_Object := Check_Simple_Signal_Target_Object (Target);
+            Constrained := Is_Object_Name_Fully_Constrained (Target_Object);
+         else
+            Constrained := False;
+         end if;
+      end if;
+
+      if Target_Object /= Null_Iir then
+         --  LRM08 10.5.2 Simple signal assignments
+         --  If the right-hand side of a simple force assignment or a simple
+         --  release assignment does not specify a force mode, then a default
+         --  force mode is used as follow:
+         if not Get_Has_Force_Mode (Stmt) then
+            case Get_Kind (Target_Object) is
+               when Iir_Kind_Interface_Signal_Declaration =>
+                  case Get_Mode (Target_Object) is
+                     when Iir_In_Mode =>
+                        --  - If the target is a port or signal parameter of
+                        --    mode IN, a force mode IN is used.
+                        Set_Force_Mode (Stmt, Iir_Force_In);
+                     when Iir_Out_Mode
+                       | Iir_Inout_Mode
+                       | Iir_Buffer_Mode =>
+                        --  - If the target is a port of mode OUT, INOUT, or
+                        --    BUFFER, or a signal parameter of mode OUT or
+                        --    INOUT, a force mode OUT is used.
+                        Set_Force_Mode (Stmt, Iir_Force_Out);
+                     when Iir_Linkage_Mode =>
+                        --  FIXME: not specified.
+                        null;
+                     when Iir_Unknown_Mode =>
+                        --  An error.
+                        null;
+                  end case;
+               when Iir_Kind_Signal_Declaration
+                 | Iir_Kind_Guard_Signal_Declaration =>
+                  --  - If the target is not a port or a signal parameter,
+                  --    a force mode of IN is used.
+                  Set_Force_Mode (Stmt, Iir_Force_In);
+               when others =>
+                  Error_Msg_Sem (+Stmt, "target (%n) is not a signal",
+                                 +Get_Base_Name (Target));
+            end case;
+         else
+            --  It is an error if a force mode of OUT is specified and the
+            --  target is a port of mode IN.
+            case Get_Kind (Target_Object) is
+               when Iir_Kind_Interface_Signal_Declaration =>
+                  if Get_Force_Mode (Stmt) = Iir_Force_Out
+                    and then Get_Mode (Target_Object) = Iir_In_Mode
+                  then
+                     Error_Msg_Sem
+                       (+Stmt, "cannot use force OUT for IN port %n",
+                        +Get_Base_Name (Target));
+                  end if;
+               when Iir_Kind_Signal_Declaration
+                 | Iir_Kind_Guard_Signal_Declaration =>
+                  --  FIXME: guard is dubious
+                  null;
+               when others =>
+                  Error_Msg_Sem (+Stmt, "target (%n) is not a signal",
+                                 +Get_Base_Name (Target));
+            end case;
+         end if;
+
+         --  TODO:
+         --  LRM08 10.5.2 Simple signal assignments
+         --  It is an error if a simple force assignemtn schedules a driving
+         --  value force or an effective value force for a member of a
+         --  resolved composite signal.
+      end if;
+
+      if Get_Kind (Stmt) = Iir_Kind_Signal_Force_Assignment_Statement then
+         --  LRM08 10.5.2 Simple signal assignments
+         --  For simple force assignment, the base type of the expression on
+         --  the right-hand side shall be the same as the base type of the
+         --  signal denoted by the target.
+         Expr := Get_Expression (Stmt);
+         Expr := Sem_Expression_Wildcard (Expr, Target_Type, Constrained);
+         if Expr /= Null_Iir then
+            if Is_Expr_Fully_Analyzed (Expr) then
+               Check_Read (Expr);
+               Expr := Eval_Expr_If_Static (Expr);
+            end if;
+            Set_Expression (Stmt, Expr);
+         end if;
+      end if;
+   end Sem_Signal_Force_Release_Assignment;
 
    procedure Sem_Variable_Assignment (Stmt: Iir)
    is
@@ -1563,6 +1696,25 @@ package body Vhdl.Sem_Stmts is
       Sem_Condition_Opt (Stmt);
    end Sem_Break_Statement;
 
+   --  LRM08 11.3 Process statement
+   --  A process statement is said to be a passive process if neither the
+   --  process itself, nor any procedure of which the process is a parent,
+   --  contains a signal assignment statement.  It is an error if a process
+   --  or a concurrent statement, other than a passive process or a concurrent
+   --  statement equivalent to such a process, appears in the entity statement
+   --  part of an entity declaration.
+   procedure Sem_Passive_Statement (Stmt : Iir) is
+   begin
+      if Current_Concurrent_Statement /= Null_Iir
+        and then (Get_Kind (Current_Concurrent_Statement)
+                    in Iir_Kinds_Process_Statement)
+        and then Get_Passive_Flag (Current_Concurrent_Statement)
+      then
+         Error_Msg_Sem
+           (+Stmt, "signal statement forbidden in passive process");
+      end if;
+   end Sem_Passive_Statement;
+
    -- Process is the scope, this is also the process for which drivers can
    -- be created.
    procedure Sem_Sequential_Statements_Internal (First_Stmt : Iir)
@@ -1609,18 +1761,15 @@ package body Vhdl.Sem_Stmts is
                Sem_Sequential_Statements_Internal
                  (Get_Sequential_Statement_Chain (Stmt));
             when Iir_Kind_Simple_Signal_Assignment_Statement
-              | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               Sem_Passive_Statement (Stmt);
                Sem_Signal_Assignment (Stmt);
-               if Current_Concurrent_Statement /= Null_Iir and then
-                 Get_Kind (Current_Concurrent_Statement)
-                 in Iir_Kinds_Process_Statement
-                 and then Get_Passive_Flag (Current_Concurrent_Statement)
-               then
-                  Error_Msg_Sem
-                    (+Stmt, "signal statement forbidden in passive process");
-               end if;
+            when Iir_Kind_Signal_Force_Assignment_Statement
+               | Iir_Kind_Signal_Release_Assignment_Statement =>
+               Sem_Passive_Statement (Stmt);
+               Sem_Signal_Force_Release_Assignment (Stmt);
             when Iir_Kind_Variable_Assignment_Statement
-              | Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               | Iir_Kind_Conditional_Variable_Assignment_Statement =>
                Sem_Variable_Assignment (Stmt);
             when Iir_Kind_Return_Statement =>
                Sem_Return_Statement (Stmt);

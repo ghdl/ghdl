@@ -939,6 +939,11 @@ package body Vhdl.Nodes is
    function Iir_Delay_Mechanism_To_Boolean is new Ada.Unchecked_Conversion
      (Source => Iir_Delay_Mechanism, Target => Boolean);
 
+   function Boolean_To_Iir_Force_Mode is new Ada.Unchecked_Conversion
+     (Source => Boolean, Target => Iir_Force_Mode);
+   function Iir_Force_Mode_To_Boolean is new Ada.Unchecked_Conversion
+     (Source => Iir_Force_Mode, Target => Boolean);
+
    function Boolean_To_Iir_Signal_Kind is new Ada.Unchecked_Conversion
      (Source => Boolean, Target => Iir_Signal_Kind);
    function Iir_Signal_Kind_To_Boolean is new Ada.Unchecked_Conversion
@@ -1150,6 +1155,8 @@ package body Vhdl.Nodes is
            | Iir_Kind_Simultaneous_Elsif
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Signal_Force_Assignment_Statement
+           | Iir_Kind_Signal_Release_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
@@ -4527,6 +4534,38 @@ package body Vhdl.Nodes is
                      "no field Reject_Time_Expression");
       Set_Field4 (Target, Expr);
    end Set_Reject_Time_Expression;
+
+   function Get_Force_Mode (Stmt : Iir) return Iir_Force_Mode is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Force_Mode (Get_Kind (Stmt)),
+                     "no field Force_Mode");
+      return Boolean_To_Iir_Force_Mode (Get_Flag1 (Stmt));
+   end Get_Force_Mode;
+
+   procedure Set_Force_Mode (Stmt : Iir; Mode : Iir_Force_Mode) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Force_Mode (Get_Kind (Stmt)),
+                     "no field Force_Mode");
+      Set_Flag1 (Stmt, Iir_Force_Mode_To_Boolean (Mode));
+   end Set_Force_Mode;
+
+   function Get_Has_Force_Mode (Stmt : Iir) return Boolean is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Has_Force_Mode (Get_Kind (Stmt)),
+                     "no field Has_Force_Mode");
+      return Get_Flag2 (Stmt);
+   end Get_Has_Force_Mode;
+
+   procedure Set_Has_Force_Mode (Stmt : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Has_Force_Mode (Get_Kind (Stmt)),
+                     "no field Has_Force_Mode");
+      Set_Flag2 (Stmt, Flag);
+   end Set_Has_Force_Mode;
 
    function Get_Sensitivity_List (Wait : Iir) return Iir_List is
    begin

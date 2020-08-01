@@ -811,6 +811,10 @@ package body Vhdl.Errors is
          when Iir_Kind_Selected_Waveform_Assignment_Statement =>
             return Disp_Label
               (Node, "selected waveform assignment statement");
+         when Iir_Kind_Signal_Force_Assignment_Statement =>
+            return Disp_Label (Node, "signal force assignment");
+         when Iir_Kind_Signal_Release_Assignment_Statement =>
+            return Disp_Label (Node, "signal release assignment");
          when Iir_Kind_Variable_Assignment_Statement =>
             return Disp_Label (Node, "variable assignment statement");
          when Iir_Kind_Conditional_Variable_Assignment_Statement =>

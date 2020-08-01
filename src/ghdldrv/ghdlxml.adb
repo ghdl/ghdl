@@ -362,6 +362,9 @@ package body Ghdlxml is
                     (F, Image_Iir_Constraint (Get_Iir_Constraint (N, F)));
                when Type_Iir_Mode =>
                   Put_Field (F, Image_Iir_Mode (Get_Iir_Mode (N, F)));
+               when Type_Iir_Force_Mode =>
+                  Put_Field (F, Image_Iir_Force_Mode
+                               (Get_Iir_Force_Mode (N, F)));
                when Type_Iir_Index32 =>
                   Put_Field (F, Iir_Index32'Image (Get_Iir_Index32 (N, F)));
                when Type_Int64 =>

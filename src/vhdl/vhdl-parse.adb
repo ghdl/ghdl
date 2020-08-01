@@ -7250,30 +7250,26 @@ package body Vhdl.Parse is
       return Decl;
    end Parse_Parameter_Specification;
 
-   --  precond:  '<='
+   --  precond:  delay_mechanism or waveform
    --  postcond: next token
    --
    --  [ LRM93 8.4 ]
    --  signal_assignment_statement ::=
-   --      [ label : ] target <= [ delay_mechanism ] waveform ;
+   --    [ label : ] target <= [ delay_mechanism ] waveform ;
    --
    --  [ LRM08 10.5 Signal assignment statement ]
-   --  signal_assignement_statement ::=
-   --      [ label : ] simple_signal_assignement
-   --    | [ label : ] conditional_signal_assignement
-   --    | [ label : ] selected_signal_assignement (TODO)
-   function Parse_Signal_Assignment_Statement (Target : Iir) return Iir
+   --  simple_waveform_assignment ::=
+   --    target <= [ delay_mechanism ] waveform ;
+   function Parse_Signal_Waveform_Assignment
+     (Target : Iir; Loc : Location_Type) return Iir
    is
       Stmt : Iir;
       N_Stmt : Iir;
       Wave_Chain : Iir;
    begin
       Stmt := Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
-      Set_Location (Stmt);
+      Set_Location (Stmt, Loc);
       Set_Target (Stmt, Target);
-
-      --  Skip '<='.
-      Scan;
 
       Parse_Delay_Mechanism (Stmt);
 
@@ -7308,6 +7304,109 @@ package body Vhdl.Parse is
       end if;
 
       return Stmt;
+   end Parse_Signal_Waveform_Assignment;
+
+   --  precond:  -
+   --  postcond: next token
+   --
+   --  [ LRM08 10.5.2 Simple signal assignments ]
+   --  force_mode ::= IN | OUT
+   procedure Parse_Force_Mode_Opt (Stmt : Iir) is
+   begin
+      case Current_Token is
+         when Tok_In =>
+            Set_Force_Mode (Stmt, Iir_Force_In);
+            Set_Has_Force_Mode (Stmt, True);
+         when Tok_Out =>
+            Set_Force_Mode (Stmt, Iir_Force_Out);
+            Set_Has_Force_Mode (Stmt, True);
+         when others =>
+            null;
+      end case;
+   end Parse_Force_Mode_Opt;
+
+   --  precond:  'force'
+   --  postcond: next token
+   --
+   --  [ LRM08 10.5 Signal assignment statement ]
+   --  simple_force_assignment ::=
+   --    target <= FORCE [ force_mode ] expression ;
+   function Parse_Signal_Force_Assignment
+     (Target : Iir; Loc : Location_Type) return Iir
+   is
+      Stmt : Iir;
+   begin
+      Stmt := Create_Iir (Iir_Kind_Signal_Force_Assignment_Statement);
+      Set_Location (Stmt, Loc);
+      Set_Target (Stmt, Target);
+
+      --  Skip 'force'.
+      Scan;
+
+      Parse_Force_Mode_Opt (Stmt);
+
+      Set_Expression (Stmt, Parse_Expression);
+
+      return Stmt;
+   end Parse_Signal_Force_Assignment;
+
+   --  precond:  'release'
+   --  postcond: next token
+   --
+   --  [ LRM08 10.5 Signal assignment statement ]
+   --  simple_release_assignment ::=
+   --    target <= RELEASE [ force_mode ] expression ;
+   function Parse_Signal_Release_Assignment
+     (Target : Iir; Loc : Location_Type) return Iir
+   is
+      Stmt : Iir;
+   begin
+      Stmt := Create_Iir (Iir_Kind_Signal_Release_Assignment_Statement);
+      Set_Location (Stmt, Loc);
+      Set_Target (Stmt, Target);
+
+      --  Skip 'release'.
+      Scan;
+
+      Parse_Force_Mode_Opt (Stmt);
+
+      return Stmt;
+   end Parse_Signal_Release_Assignment;
+
+   --  precond:  '<='
+   --  postcond: next token
+   --
+   --  [ LRM93 8.4 ]
+   --  signal_assignment_statement ::=
+   --      [ label : ] target <= [ delay_mechanism ] waveform ;
+   --
+   --  [ LRM08 10.5 Signal assignment statement ]
+   --  signal_assignement_statement ::=
+   --      [ label : ] simple_signal_assignement
+   --    | [ label : ] conditional_signal_assignement
+   --    | [ label : ] selected_signal_assignement
+   --
+   --  simple_signal_assignment ::=
+   --      simple_waveform_assignment
+   --    | simple_force_assignment
+   --    | simple_release_assignment
+   function Parse_Signal_Assignment_Statement (Target : Iir) return Iir
+   is
+      Loc : Location_Type;
+   begin
+      Loc := Get_Token_Location;
+
+      --  Skip '<='.
+      Scan;
+
+      case Current_Token is
+         when Tok_Force =>
+            return Parse_Signal_Force_Assignment (Target, Loc);
+         when Tok_Release =>
+            return Parse_Signal_Release_Assignment (Target, Loc);
+         when others =>
+            return Parse_Signal_Waveform_Assignment (Target, Loc);
+      end case;
    end Parse_Signal_Assignment_Statement;
 
    --  precond:  WHEN

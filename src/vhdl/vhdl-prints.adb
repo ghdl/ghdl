@@ -3081,6 +3081,18 @@ package body Vhdl.Prints is
       Disp_End_Label (Ctxt, Stmt, Tok_Loop);
    end Disp_For_Loop_Statement;
 
+   procedure Disp_Force_Mode_Opt (Ctxt : in out Ctxt_Class; Stmt : Iir) is
+   begin
+      if Get_Has_Force_Mode (Stmt) then
+         case Get_Force_Mode (Stmt) is
+            when Iir_Force_In =>
+               Disp_Token (Ctxt, Tok_In);
+            when Iir_Force_Out =>
+               Disp_Token (Ctxt, Tok_Out);
+         end case;
+      end if;
+   end Disp_Force_Mode_Opt;
+
    procedure Disp_Sequential_Statements (Ctxt : in out Ctxt_Class; First : Iir)
    is
       Stmt: Iir;
@@ -3122,6 +3134,25 @@ package body Vhdl.Prints is
                Close_Hbox (Ctxt);
             when Iir_Kind_Selected_Waveform_Assignment_Statement =>
                Disp_Selected_Waveform_Assignment (Ctxt, Stmt);
+            when Iir_Kind_Signal_Force_Assignment_Statement =>
+               Start_Hbox (Ctxt);
+               Disp_Label (Ctxt, Stmt);
+               Print (Ctxt, Get_Target (Stmt));
+               Disp_Token (Ctxt, Tok_Less_Equal);
+               Disp_Token (Ctxt, Tok_Force);
+               Disp_Force_Mode_Opt (Ctxt, Stmt);
+               Print (Ctxt, Get_Expression (Stmt));
+               Disp_Token (Ctxt, Tok_Semi_Colon);
+               Close_Hbox (Ctxt);
+            when Iir_Kind_Signal_Release_Assignment_Statement =>
+               Start_Hbox (Ctxt);
+               Disp_Label (Ctxt, Stmt);
+               Print (Ctxt, Get_Target (Stmt));
+               Disp_Token (Ctxt, Tok_Less_Equal);
+               Disp_Token (Ctxt, Tok_Release);
+               Disp_Force_Mode_Opt (Ctxt, Stmt);
+               Disp_Token (Ctxt, Tok_Semi_Colon);
+               Close_Hbox (Ctxt);
             when Iir_Kind_Variable_Assignment_Statement =>
                Disp_Variable_Assignment (Ctxt, Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>

@@ -409,6 +409,9 @@ package Vhdl.Elocations is
    --
    --   Get/Set_Start_Location (Field1)
 
+   -- Iir_Kind_Signal_Force_Assignment_Statement (None)
+   -- Iir_Kind_Signal_Release_Assignment_Statement (None)
+
    -- Iir_Kind_Sensitized_Process_Statement (L4)
    -- Iir_Kind_Process_Statement (L4)
    --

@@ -239,90 +239,92 @@ class Iir_Kind:
     Simple_Signal_Assignment_Statement = 224
     Conditional_Signal_Assignment_Statement = 225
     Selected_Waveform_Assignment_Statement = 226
-    Null_Statement = 227
-    Assertion_Statement = 228
-    Report_Statement = 229
-    Wait_Statement = 230
-    Variable_Assignment_Statement = 231
-    Conditional_Variable_Assignment_Statement = 232
-    Return_Statement = 233
-    For_Loop_Statement = 234
-    While_Loop_Statement = 235
-    Next_Statement = 236
-    Exit_Statement = 237
-    Case_Statement = 238
-    Procedure_Call_Statement = 239
-    Break_Statement = 240
-    If_Statement = 241
-    Elsif = 242
-    Character_Literal = 243
-    Simple_Name = 244
-    Selected_Name = 245
-    Operator_Symbol = 246
-    Reference_Name = 247
-    External_Constant_Name = 248
-    External_Signal_Name = 249
-    External_Variable_Name = 250
-    Selected_By_All_Name = 251
-    Parenthesis_Name = 252
-    Package_Pathname = 253
-    Absolute_Pathname = 254
-    Relative_Pathname = 255
-    Pathname_Element = 256
-    Base_Attribute = 257
-    Subtype_Attribute = 258
-    Element_Attribute = 259
-    Across_Attribute = 260
-    Through_Attribute = 261
-    Nature_Reference_Attribute = 262
-    Left_Type_Attribute = 263
-    Right_Type_Attribute = 264
-    High_Type_Attribute = 265
-    Low_Type_Attribute = 266
-    Ascending_Type_Attribute = 267
-    Image_Attribute = 268
-    Value_Attribute = 269
-    Pos_Attribute = 270
-    Val_Attribute = 271
-    Succ_Attribute = 272
-    Pred_Attribute = 273
-    Leftof_Attribute = 274
-    Rightof_Attribute = 275
-    Signal_Slew_Attribute = 276
-    Quantity_Slew_Attribute = 277
-    Ramp_Attribute = 278
-    Zoh_Attribute = 279
-    Ltf_Attribute = 280
-    Ztf_Attribute = 281
-    Dot_Attribute = 282
-    Integ_Attribute = 283
-    Above_Attribute = 284
-    Quantity_Delayed_Attribute = 285
-    Delayed_Attribute = 286
-    Stable_Attribute = 287
-    Quiet_Attribute = 288
-    Transaction_Attribute = 289
-    Event_Attribute = 290
-    Active_Attribute = 291
-    Last_Event_Attribute = 292
-    Last_Active_Attribute = 293
-    Last_Value_Attribute = 294
-    Driving_Attribute = 295
-    Driving_Value_Attribute = 296
-    Behavior_Attribute = 297
-    Structure_Attribute = 298
-    Simple_Name_Attribute = 299
-    Instance_Name_Attribute = 300
-    Path_Name_Attribute = 301
-    Left_Array_Attribute = 302
-    Right_Array_Attribute = 303
-    High_Array_Attribute = 304
-    Low_Array_Attribute = 305
-    Length_Array_Attribute = 306
-    Ascending_Array_Attribute = 307
-    Range_Array_Attribute = 308
-    Reverse_Range_Array_Attribute = 309
-    Attribute_Name = 310
+    Signal_Force_Assignment_Statement = 227
+    Signal_Release_Assignment_Statement = 228
+    Null_Statement = 229
+    Assertion_Statement = 230
+    Report_Statement = 231
+    Wait_Statement = 232
+    Variable_Assignment_Statement = 233
+    Conditional_Variable_Assignment_Statement = 234
+    Return_Statement = 235
+    For_Loop_Statement = 236
+    While_Loop_Statement = 237
+    Next_Statement = 238
+    Exit_Statement = 239
+    Case_Statement = 240
+    Procedure_Call_Statement = 241
+    Break_Statement = 242
+    If_Statement = 243
+    Elsif = 244
+    Character_Literal = 245
+    Simple_Name = 246
+    Selected_Name = 247
+    Operator_Symbol = 248
+    Reference_Name = 249
+    External_Constant_Name = 250
+    External_Signal_Name = 251
+    External_Variable_Name = 252
+    Selected_By_All_Name = 253
+    Parenthesis_Name = 254
+    Package_Pathname = 255
+    Absolute_Pathname = 256
+    Relative_Pathname = 257
+    Pathname_Element = 258
+    Base_Attribute = 259
+    Subtype_Attribute = 260
+    Element_Attribute = 261
+    Across_Attribute = 262
+    Through_Attribute = 263
+    Nature_Reference_Attribute = 264
+    Left_Type_Attribute = 265
+    Right_Type_Attribute = 266
+    High_Type_Attribute = 267
+    Low_Type_Attribute = 268
+    Ascending_Type_Attribute = 269
+    Image_Attribute = 270
+    Value_Attribute = 271
+    Pos_Attribute = 272
+    Val_Attribute = 273
+    Succ_Attribute = 274
+    Pred_Attribute = 275
+    Leftof_Attribute = 276
+    Rightof_Attribute = 277
+    Signal_Slew_Attribute = 278
+    Quantity_Slew_Attribute = 279
+    Ramp_Attribute = 280
+    Zoh_Attribute = 281
+    Ltf_Attribute = 282
+    Ztf_Attribute = 283
+    Dot_Attribute = 284
+    Integ_Attribute = 285
+    Above_Attribute = 286
+    Quantity_Delayed_Attribute = 287
+    Delayed_Attribute = 288
+    Stable_Attribute = 289
+    Quiet_Attribute = 290
+    Transaction_Attribute = 291
+    Event_Attribute = 292
+    Active_Attribute = 293
+    Last_Event_Attribute = 294
+    Last_Active_Attribute = 295
+    Last_Value_Attribute = 296
+    Driving_Attribute = 297
+    Driving_Value_Attribute = 298
+    Behavior_Attribute = 299
+    Structure_Attribute = 300
+    Simple_Name_Attribute = 301
+    Instance_Name_Attribute = 302
+    Path_Name_Attribute = 303
+    Left_Array_Attribute = 304
+    Right_Array_Attribute = 305
+    High_Array_Attribute = 306
+    Low_Array_Attribute = 307
+    Length_Array_Attribute = 308
+    Ascending_Array_Attribute = 309
+    Range_Array_Attribute = 310
+    Reverse_Range_Array_Attribute = 311
+    Attribute_Name = 312
 
 
 class Iir_Kinds:
@@ -682,6 +684,8 @@ class Iir_Kinds:
         Iir_Kind.Simple_Signal_Assignment_Statement,
         Iir_Kind.Conditional_Signal_Assignment_Statement,
         Iir_Kind.Selected_Waveform_Assignment_Statement,
+        Iir_Kind.Signal_Force_Assignment_Statement,
+        Iir_Kind.Signal_Release_Assignment_Statement,
         Iir_Kind.Null_Statement,
         Iir_Kind.Assertion_Statement,
         Iir_Kind.Report_Statement,
@@ -2364,6 +2368,14 @@ Set_Delay_Mechanism = libghdl.vhdl__nodes__set_delay_mechanism
 Get_Reject_Time_Expression = libghdl.vhdl__nodes__get_reject_time_expression
 
 Set_Reject_Time_Expression = libghdl.vhdl__nodes__set_reject_time_expression
+
+Get_Force_Mode = libghdl.vhdl__nodes__get_force_mode
+
+Set_Force_Mode = libghdl.vhdl__nodes__set_force_mode
+
+Get_Has_Force_Mode = libghdl.vhdl__nodes__get_has_force_mode
+
+Set_Has_Force_Mode = libghdl.vhdl__nodes__set_has_force_mode
 
 Get_Sensitivity_List = libghdl.vhdl__nodes__get_sensitivity_list
 

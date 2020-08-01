@@ -86,6 +86,9 @@ package body Trans_Analyzes is
                     (Get_Target (Stmt), Extract_Driver_Target'Access);
                end if;
             end;
+         when Iir_Kind_Signal_Force_Assignment_Statement
+            | Iir_Kind_Signal_Release_Assignment_Statement =>
+            null;
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             declare
                Cond_Wf : Iir;

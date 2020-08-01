@@ -35,6 +35,7 @@ package Vhdl.Disp_Tree is
    function Image_Iir_Delay_Mechanism (Mech : Iir_Delay_Mechanism)
                                       return String;
    function Image_Iir_Mode (Mode : Iir_Mode) return String;
+   function Image_Iir_Force_Mode (Mode : Iir_Force_Mode) return String;
    function Image_Iir_Signal_Kind (Kind : Iir_Signal_Kind) return String;
    function Image_Iir_Pure_State (State : Iir_Pure_State) return String;
    function Image_Iir_All_Sensitized (Sig : Iir_All_Sensitized)

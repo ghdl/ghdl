@@ -368,6 +368,8 @@ package body Vhdl.Sem_Inst is
             Set_Iir_Pure_State (Res, F, Get_Iir_Pure_State (N, F));
          when Type_Iir_Delay_Mechanism =>
             Set_Iir_Delay_Mechanism (Res, F, Get_Iir_Delay_Mechanism (N, F));
+         when Type_Iir_Force_Mode =>
+            Set_Iir_Force_Mode (Res, F, Get_Iir_Force_Mode (N, F));
          when Type_Iir_Predefined_Functions =>
             Set_Iir_Predefined_Functions
               (Res, F, Get_Iir_Predefined_Functions (N, F));

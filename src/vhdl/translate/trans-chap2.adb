@@ -1470,6 +1470,7 @@ package body Trans.Chap2 is
                   | Type_Tri_State_Type
                   | Type_Iir_Pure_State
                   | Type_Iir_Delay_Mechanism
+                  | Type_Iir_Force_Mode
                   | Type_Iir_Predefined_Functions
                   | Type_Direction_Type
                   | Type_Iir_Int32

@@ -206,6 +206,16 @@ package body Vhdl.Disp_Tree is
       end case;
    end Image_Iir_Delay_Mechanism;
 
+   function Image_Iir_Force_Mode (Mode : Iir_Force_Mode) return String is
+   begin
+      case Mode is
+         when Iir_Force_In =>
+            return "in";
+         when Iir_Force_Out =>
+            return "out";
+      end case;
+   end Image_Iir_Force_Mode;
+
    function Image_Iir_Mode (Mode : Iir_Mode) return String is
    begin
       case Mode is
@@ -572,6 +582,8 @@ package body Vhdl.Disp_Tree is
                when Type_Iir_Delay_Mechanism =>
                   Log_Line (Image_Iir_Delay_Mechanism
                               (Get_Iir_Delay_Mechanism (N, F)));
+               when Type_Iir_Force_Mode =>
+                  Log_Line (Image_Iir_Force_Mode (Get_Iir_Force_Mode (N, F)));
                when Type_Iir_Predefined_Functions =>
                   Log_Line (Image_Iir_Predefined_Functions
                               (Get_Iir_Predefined_Functions (N, F)));
