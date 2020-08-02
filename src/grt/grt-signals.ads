@@ -286,6 +286,18 @@ package Grt.Signals is
       --  Only reset by GHW file dumper.
       RO_Event : Boolean;
 
+      --  True if the signal is being forced.
+      --  Set by force, cleared by release unless Is_Force_Scheduled is set.
+      Is_Drv_Forced : Boolean;
+      Is_Eff_Forced : Boolean;
+
+      --  True if a force is being scheduled for the current cycle.
+      --  This flag is set when a force is applied and cleared when all force
+      --  are applied.  The purpose of it is to discard release for the same
+      --  cycle as force have the priority over release.
+      Is_Drv_Force_Scheduled : Boolean;
+      Is_Eff_Force_Scheduled : Boolean;
+
       --  Set only on an implicit signal when the signal will stay active on
       --  the next cycle.  For example, 'Quiet(0ns) or 'Stable(0ns) are
       --  generally active for 2 cycles, as they are first False and then True.
@@ -569,6 +581,9 @@ package Grt.Signals is
 
    procedure Ghdl_Signal_Disconnect (Sign : Ghdl_Signal_Ptr);
 
+   procedure Ghdl_Signal_Release_Eff (Sig : Ghdl_Signal_Ptr);
+   procedure Ghdl_Signal_Release_Drv (Sig : Ghdl_Signal_Ptr);
+
    procedure Ghdl_Signal_Start_Assign_Null (Sign : Ghdl_Signal_Ptr;
                                             Rej : Std_Time;
                                             After : Std_Time);
@@ -642,6 +657,10 @@ package Grt.Signals is
                                               Val : Ghdl_E32);
    function Ghdl_Signal_Driving_Value_E32 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E32;
+   procedure Ghdl_Signal_Force_Driving_E32 (Sig : Ghdl_Signal_Ptr;
+                                            Val : Ghdl_E32);
+   procedure Ghdl_Signal_Force_Effective_E32 (Sig : Ghdl_Signal_Ptr;
+                                              Val : Ghdl_E32);
 
    function Ghdl_Create_Signal_I32 (Val_Ptr : Ghdl_Value_Ptr;
                                     Resolv_Func : Resolver_Acc;
@@ -662,6 +681,10 @@ package Grt.Signals is
                                               Val : Ghdl_I32);
    function Ghdl_Signal_Driving_Value_I32 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_I32;
+   procedure Ghdl_Signal_Force_Driving_I32 (Sig : Ghdl_Signal_Ptr;
+                                            Val : Ghdl_I32);
+   procedure Ghdl_Signal_Force_Effective_I32 (Sig : Ghdl_Signal_Ptr;
+                                              Val : Ghdl_I32);
 
    function Ghdl_Create_Signal_I64 (Val_Ptr : Ghdl_Value_Ptr;
                                     Resolv_Func : Resolver_Acc;
@@ -682,6 +705,10 @@ package Grt.Signals is
                                               Val : Ghdl_I64);
    function Ghdl_Signal_Driving_Value_I64 (Sig : Ghdl_Signal_Ptr)
                                           return Ghdl_I64;
+   procedure Ghdl_Signal_Force_Driving_I64 (Sig : Ghdl_Signal_Ptr;
+                                            Val : Ghdl_I64);
+   procedure Ghdl_Signal_Force_Effective_I64 (Sig : Ghdl_Signal_Ptr;
+                                              Val : Ghdl_I64);
 
    function Ghdl_Create_Signal_F64 (Val_Ptr : Ghdl_Value_Ptr;
                                     Resolv_Func : Resolver_Acc;
@@ -702,6 +729,10 @@ package Grt.Signals is
                                               Val : Ghdl_F64);
    function Ghdl_Signal_Driving_Value_F64 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_F64;
+   procedure Ghdl_Signal_Force_Driving_F64 (Sig : Ghdl_Signal_Ptr;
+                                           Val : Ghdl_F64);
+   procedure Ghdl_Signal_Force_Effective_F64 (Sig : Ghdl_Signal_Ptr;
+                                              Val : Ghdl_F64);
 
    --  Add a driver to SIGN for the current process.
    procedure Ghdl_Process_Add_Driver (Sign : Ghdl_Signal_Ptr);
@@ -832,6 +863,11 @@ private
    pragma Export (Ada, Ghdl_Signal_Driving,
                   "__ghdl_signal_driving");
 
+   pragma Export (C, Ghdl_Signal_Release_Eff,
+                  "__ghdl_signal_release_eff");
+   pragma Export (C, Ghdl_Signal_Release_Drv,
+                  "__ghdl_signal_release_drv");
+
    pragma Export (Ada, Ghdl_Create_Signal_B1,
                   "__ghdl_create_signal_b1");
    pragma Export (Ada, Ghdl_Signal_Init_B1,
@@ -848,6 +884,10 @@ private
                   "__ghdl_signal_add_port_driver_b1");
    pragma Export (Ada, Ghdl_Signal_Driving_Value_B1,
                   "__ghdl_signal_driving_value_b1");
+   pragma Export (Ada, Ghdl_Signal_Force_Driving_B1,
+                  "__ghdl_signal_force_drv_b1");
+   pragma Export (Ada, Ghdl_Signal_Force_Effective_B1,
+                  "__ghdl_signal_force_eff_b1");
 
    pragma Export (C, Ghdl_Create_Signal_E8,
                   "__ghdl_create_signal_e8");
@@ -865,6 +905,10 @@ private
                   "__ghdl_signal_add_port_driver_e8");
    pragma Export (C, Ghdl_Signal_Driving_Value_E8,
                   "__ghdl_signal_driving_value_e8");
+   pragma Export (C, Ghdl_Signal_Force_Driving_E8,
+                  "__ghdl_signal_force_drv_e8");
+   pragma Export (C, Ghdl_Signal_Force_Effective_E8,
+                  "__ghdl_signal_force_eff_e8");
 
    pragma Export (C, Ghdl_Create_Signal_E32,
                   "__ghdl_create_signal_e32");
@@ -882,6 +926,10 @@ private
                   "__ghdl_signal_add_port_driver_e32");
    pragma Export (C, Ghdl_Signal_Driving_Value_E32,
                   "__ghdl_signal_driving_value_e32");
+   pragma Export (C, Ghdl_Signal_Force_Driving_E32,
+                  "__ghdl_signal_force_drv_e32");
+   pragma Export (C, Ghdl_Signal_Force_Effective_E32,
+                  "__ghdl_signal_force_eff_e32");
 
    pragma Export (C, Ghdl_Create_Signal_I32,
                   "__ghdl_create_signal_i32");
@@ -899,6 +947,10 @@ private
                   "__ghdl_signal_add_port_driver_i32");
    pragma Export (C, Ghdl_Signal_Driving_Value_I32,
                   "__ghdl_signal_driving_value_i32");
+   pragma Export (C, Ghdl_Signal_Force_Driving_I32,
+                  "__ghdl_signal_force_drv_i32");
+   pragma Export (C, Ghdl_Signal_Force_Effective_I32,
+                  "__ghdl_signal_force_eff_i32");
 
    pragma Export (C, Ghdl_Create_Signal_I64,
                   "__ghdl_create_signal_i64");
@@ -916,6 +968,10 @@ private
                   "__ghdl_signal_add_port_driver_i64");
    pragma Export (C, Ghdl_Signal_Driving_Value_I64,
                   "__ghdl_signal_driving_value_i64");
+   pragma Export (C, Ghdl_Signal_Force_Driving_I64,
+                  "__ghdl_signal_force_drv_i64");
+   pragma Export (C, Ghdl_Signal_Force_Effective_I64,
+                  "__ghdl_signal_force_eff_i64");
 
    pragma Export (C, Ghdl_Create_Signal_F64,
                   "__ghdl_create_signal_f64");
@@ -933,6 +989,10 @@ private
                   "__ghdl_signal_add_port_driver_f64");
    pragma Export (C, Ghdl_Signal_Driving_Value_F64,
                   "__ghdl_signal_driving_value_f64");
+   pragma Export (C, Ghdl_Signal_Force_Driving_F64,
+                  "__ghdl_signal_force_drv_f64");
+   pragma Export (C, Ghdl_Signal_Force_Effective_F64,
+                  "__ghdl_signal_force_eff_f64");
 
    pragma Export (C, Ghdl_Process_Add_Driver,
                   "__ghdl_process_add_driver");

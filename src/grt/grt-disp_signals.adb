@@ -167,30 +167,28 @@ package body Grt.Disp_Signals is
       end loop;
    end Disp_Transaction;
 
+   procedure Disp_Flag (Name : Character; Cond : Boolean)
+   is
+      C : Character;
+   begin
+      if Cond then
+         C := Name;
+      else
+         C := '-';
+      end if;
+      Put (C);
+   end Disp_Flag;
+
    procedure Disp_Single_Signal_Attributes (Sig : Ghdl_Signal_Ptr) is
    begin
       Disp_Mode (Sig.Mode);
       Put (' ');
-      if Sig.Active then
-         Put ('A');
-      else
-         Put ('-');
-      end if;
-      if Sig.Event then
-         Put ('E');
-      else
-         Put ('-');
-      end if;
-      if Sig.Has_Active then
-         Put ('a');
-      else
-         Put ('-');
-      end if;
-      if Sig.S.Effective /= null then
-         Put ('e');
-      else
-         Put ('-');
-      end if;
+      Disp_Flag ('A', Sig.Active);
+      Disp_Flag ('E', Sig.Event);
+      Disp_Flag ('a', Sig.Has_Active);
+      Disp_Flag ('e', Sig.S.Effective /= null);
+      Disp_Flag ('F', Sig.Flags.Is_Drv_Forced);
+      Disp_Flag ('f', Sig.Flags.Is_Eff_Forced);
       if Boolean'(True) then
          Put (" last_event=");
          Put_Time (stdout, Sig.Last_Event);

@@ -80,6 +80,9 @@ package Trans_Decls is
    Ghdl_Signal_Start_Assign_Null : O_Dnode;
    Ghdl_Signal_Next_Assign_Null : O_Dnode;
 
+   Ghdl_Signal_Release_Eff : O_Dnode;
+   Ghdl_Signal_Release_Drv : O_Dnode;
+
    Ghdl_Create_Signal_B1 : O_Dnode;
    Ghdl_Signal_Simple_Assign_B1 : O_Dnode;
    Ghdl_Signal_Start_Assign_B1 : O_Dnode;
@@ -88,6 +91,8 @@ package Trans_Decls is
    Ghdl_Signal_Add_Port_Driver_B1 : O_Dnode;
    Ghdl_Signal_Init_B1 : O_Dnode;
    Ghdl_Signal_Driving_Value_B1 : O_Dnode;
+   Ghdl_Signal_Force_Eff_B1 : O_Dnode;
+   Ghdl_Signal_Force_Drv_B1 : O_Dnode;
 
    Ghdl_Create_Signal_E8 : O_Dnode;
    Ghdl_Signal_Simple_Assign_E8 : O_Dnode;
@@ -97,6 +102,8 @@ package Trans_Decls is
    Ghdl_Signal_Add_Port_Driver_E8 : O_Dnode;
    Ghdl_Signal_Init_E8 : O_Dnode;
    Ghdl_Signal_Driving_Value_E8 : O_Dnode;
+   Ghdl_Signal_Force_Eff_E8 : O_Dnode;
+   Ghdl_Signal_Force_Drv_E8 : O_Dnode;
 
    Ghdl_Create_Signal_E32 : O_Dnode;
    Ghdl_Signal_Simple_Assign_E32 : O_Dnode;
@@ -106,6 +113,8 @@ package Trans_Decls is
    Ghdl_Signal_Add_Port_Driver_E32 : O_Dnode;
    Ghdl_Signal_Init_E32 : O_Dnode;
    Ghdl_Signal_Driving_Value_E32 : O_Dnode;
+   Ghdl_Signal_Force_Eff_E32 : O_Dnode;
+   Ghdl_Signal_Force_Drv_E32 : O_Dnode;
 
    Ghdl_Create_Signal_I32 : O_Dnode;
    Ghdl_Signal_Simple_Assign_I32 : O_Dnode;
@@ -115,6 +124,8 @@ package Trans_Decls is
    Ghdl_Signal_Add_Port_Driver_I32 : O_Dnode;
    Ghdl_Signal_Init_I32 : O_Dnode;
    Ghdl_Signal_Driving_Value_I32 : O_Dnode;
+   Ghdl_Signal_Force_Eff_I32 : O_Dnode;
+   Ghdl_Signal_Force_Drv_I32 : O_Dnode;
 
    Ghdl_Create_Signal_F64 : O_Dnode;
    Ghdl_Signal_Simple_Assign_F64 : O_Dnode;
@@ -124,6 +135,8 @@ package Trans_Decls is
    Ghdl_Signal_Add_Port_Driver_F64 : O_Dnode;
    Ghdl_Signal_Init_F64 : O_Dnode;
    Ghdl_Signal_Driving_Value_F64 : O_Dnode;
+   Ghdl_Signal_Force_Eff_F64 : O_Dnode;
+   Ghdl_Signal_Force_Drv_F64 : O_Dnode;
 
    Ghdl_Create_Signal_I64 : O_Dnode;
    Ghdl_Signal_Simple_Assign_I64 : O_Dnode;
@@ -133,6 +146,8 @@ package Trans_Decls is
    Ghdl_Signal_Add_Port_Driver_I64 : O_Dnode;
    Ghdl_Signal_Init_I64 : O_Dnode;
    Ghdl_Signal_Driving_Value_I64 : O_Dnode;
+   Ghdl_Signal_Force_Eff_I64 : O_Dnode;
+   Ghdl_Signal_Force_Drv_I64 : O_Dnode;
 
    Ghdl_Signal_In_Conversion : O_Dnode;
    Ghdl_Signal_Out_Conversion : O_Dnode;

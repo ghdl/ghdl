@@ -1014,7 +1014,10 @@ package body Grt.Vpi is
                     Ghdl_B1 (Vec (J) = '1' or Vec (J) = 'H');
                begin
                   case Info.Val is
-                     when Vcd_Effective | Vcd_Driving =>
+                     when Vcd_Effective =>
+                        Ghdl_Signal_Force_Effective_B1
+                          (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
+                     when Vcd_Driving =>
                         --  Force_Driving sets both the driving and the
                         --  effective value.
                         Ghdl_Signal_Force_Driving_B1
@@ -1031,9 +1034,10 @@ package body Grt.Vpi is
                   V : constant Ghdl_E8 := Std_Ulogic'Pos (Vec (J));
                begin
                   case Info.Val is
-                     when Vcd_Effective | Vcd_Driving =>
-                        --  Force_Driving sets both the driving and the
-                        --  effective value.
+                     when Vcd_Effective =>
+                        Ghdl_Signal_Force_Effective_E8
+                          (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
+                     when Vcd_Driving =>
                         Ghdl_Signal_Force_Driving_E8
                           (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
                      when Vcd_Variable =>
@@ -1053,9 +1057,10 @@ package body Grt.Vpi is
                   end if;
                end loop;
                case Info.Val is
-                  when Vcd_Effective | Vcd_Driving =>
-                     --  Force_Driving sets both the driving and the
-                     --  effective value.
+                  when Vcd_Effective =>
+                     Ghdl_Signal_Force_Effective_E8
+                       (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
+                  when Vcd_Driving =>
                      Ghdl_Signal_Force_Driving_E8
                        (To_Signal_Arr_Ptr (Info.Ptr)(0), V);
                   when Vcd_Variable =>

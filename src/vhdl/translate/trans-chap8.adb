@@ -4843,8 +4843,131 @@ package body Trans.Chap8 is
       Close_Temp;
    end Translate_Selected_Waveform_Assignment_Statement;
 
-   procedure Translate_Statement (Stmt : Iir)
+   procedure Translate_Signal_Release_Assignment_Statement (Stmt : Iir)
    is
+      Target : constant Iir := Get_Target (Stmt);
+      Targ : Mnode;
+      Proc : O_Dnode;
+   begin
+      Targ := Chap6.Translate_Name (Target, Mode_Signal);
+      case Get_Force_Mode (Stmt) is
+         when Iir_Force_In =>
+            Proc := Ghdl_Signal_Release_Eff;
+         when Iir_Force_Out =>
+            Proc := Ghdl_Signal_Release_Drv;
+      end case;
+      Register_Signal (Targ, Get_Type (Target), Proc);
+   end Translate_Signal_Release_Assignment_Statement;
+
+   Signal_Force_Stmt : Iir;
+   procedure Gen_Signal_Force_Non_Composite (Targ      : Mnode;
+                                             Targ_Type : Iir;
+                                             Val       : O_Enode)
+   is
+      Type_Info : constant Type_Info_Acc := Get_Info (Targ_Type);
+      Subprg    : O_Dnode;
+      Conv      : O_Tnode;
+      Assoc     : O_Assoc_List;
+      Val2      : O_Enode;
+   begin
+      case Type_Mode_Scalar (Type_Info.Type_Mode) is
+         when Type_Mode_B1 =>
+            case Get_Force_Mode (Signal_Force_Stmt) is
+               when Iir_Force_In =>
+                  Subprg := Ghdl_Signal_Force_Eff_B1;
+               when Iir_Force_Out =>
+                  Subprg := Ghdl_Signal_Force_Drv_B1;
+            end case;
+            Conv := Ghdl_Bool_Type;
+         when Type_Mode_E8 =>
+            case Get_Force_Mode (Signal_Force_Stmt) is
+               when Iir_Force_In =>
+                  Subprg := Ghdl_Signal_Force_Eff_E8;
+               when Iir_Force_Out =>
+                  Subprg := Ghdl_Signal_Force_Drv_E8;
+            end case;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_E32 =>
+            case Get_Force_Mode (Signal_Force_Stmt) is
+               when Iir_Force_In =>
+                  Subprg := Ghdl_Signal_Force_Eff_E32;
+               when Iir_Force_Out =>
+                  Subprg := Ghdl_Signal_Force_Drv_E32;
+            end case;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_I32
+            | Type_Mode_P32 =>
+            case Get_Force_Mode (Signal_Force_Stmt) is
+               when Iir_Force_In =>
+                  Subprg := Ghdl_Signal_Force_Eff_I32;
+               when Iir_Force_Out =>
+                  Subprg := Ghdl_Signal_Force_Drv_I32;
+            end case;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_P64
+            | Type_Mode_I64 =>
+            case Get_Force_Mode (Signal_Force_Stmt) is
+               when Iir_Force_In =>
+                  Subprg := Ghdl_Signal_Force_Eff_I64;
+               when Iir_Force_Out =>
+                  Subprg := Ghdl_Signal_Force_Drv_I64;
+            end case;
+            Conv := Ghdl_I64_Type;
+         when Type_Mode_F64 =>
+            case Get_Force_Mode (Signal_Force_Stmt) is
+               when Iir_Force_In =>
+                  Subprg := Ghdl_Signal_Force_Eff_F64;
+               when Iir_Force_Out =>
+                  Subprg := Ghdl_Signal_Force_Drv_F64;
+            end case;
+            Conv := Ghdl_Real_Type;
+      end case;
+      Val2 := Chap3.Insert_Scalar_Check
+        (Val, Null_Iir, Targ_Type, Signal_Force_Stmt);
+      Start_Association (Assoc, Subprg);
+      New_Association (Assoc, New_Convert_Ov (New_Value (M2Lv (Targ)),
+                                              Ghdl_Signal_Ptr));
+      New_Association (Assoc, New_Convert_Ov (Val2, Conv));
+      New_Procedure_Call (Assoc);
+   end Gen_Signal_Force_Non_Composite;
+
+   procedure Gen_Signal_Force is new Foreach_Non_Composite
+     (Data_Type => O_Enode,
+      Composite_Data_Type => Mnode,
+      Do_Non_Composite => Gen_Signal_Force_Non_Composite,
+      Prepare_Data_Array => Gen_Oenode_Prepare_Data_Composite,
+      Update_Data_Array => Gen_Oenode_Update_Data_Array,
+      Finish_Data_Array => Gen_Oenode_Finish_Data_Composite,
+      Prepare_Data_Record => Gen_Oenode_Prepare_Data_Composite,
+      Update_Data_Record => Gen_Oenode_Update_Data_Record,
+      Finish_Data_Record => Gen_Oenode_Finish_Data_Composite);
+
+   procedure Translate_Signal_Force_Assignment_Statement (Stmt : Iir)
+   is
+      Target : constant Iir := Get_Target (Stmt);
+      Target_Type : constant Iir := Get_Type (Target);
+      Targ_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
+      Expr : constant Iir := Get_Expression (Stmt);
+      Value : Mnode;
+      Targ  : Mnode;
+   begin
+      Targ := Chap6.Translate_Name (Target, Mode_Signal);
+      Value := Chap7.Translate_Expression (Expr, Target_Type);
+
+      if Is_Composite (Targ_Tinfo)
+        and then Get_Constraint_State (Target_Type) /= Fully_Constrained
+      then
+         Stabilize (Targ);
+         Stabilize (Value);
+         Chap3.Check_Composite_Match
+           (Target_Type, Targ, Get_Type (Expr), Value, Stmt);
+      end if;
+
+      Signal_Force_Stmt := Stmt;
+      Gen_Signal_Force (Targ, Target_Type, M2E (Value));
+   end Translate_Signal_Force_Assignment_Statement;
+
+   procedure Translate_Statement (Stmt : Iir) is
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Stmt));
       Open_Temp;
@@ -4895,6 +5018,10 @@ package body Trans.Chap8 is
                Trans.Update_Node_Infos;
                Translate_If_Statement (C_Stmt);
             end;
+         when Iir_Kind_Signal_Release_Assignment_Statement =>
+            Translate_Signal_Release_Assignment_Statement (Stmt);
+         when Iir_Kind_Signal_Force_Assignment_Statement =>
+            Translate_Signal_Force_Assignment_Statement (Stmt);
 
          when Iir_Kind_Null_Statement =>
             --  A null statement is translated to a NOP, so that the
