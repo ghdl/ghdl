@@ -1189,9 +1189,9 @@ package body Synth.Expr is
 
          Bnd := Get_Array_Bound (Pfx_Type, Dim_Type (I + 1));
 
-         if Is_Static (Idx_Val.Val) then
+         if Is_Static_Val (Idx_Val.Val) then
             Idx_Off := Index_To_Offset (Syn_Inst, Bnd,
-                                        Read_Discrete (Idx_Val), Name);
+                                        Get_Static_Discrete (Idx_Val), Name);
             Off.Net_Off := Off.Net_Off + Idx_Off.Net_Off * Stride * El_Typ.W;
             Off.Mem_Off := Off.Mem_Off
               + Idx_Off.Mem_Off * Size_Type (Stride) * El_Typ.Sz;

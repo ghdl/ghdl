@@ -107,6 +107,7 @@ package Synth.Values is
    function Is_Static (Val : Value_Acc) return Boolean;
 
    --  Can also return true for nets and wires.
+   --  Use Get_Static_Discrete to get the value.
    function Is_Static_Val (Val : Value_Acc) return Boolean;
 
    function Is_Equal (L, R : Valtyp) return Boolean;
