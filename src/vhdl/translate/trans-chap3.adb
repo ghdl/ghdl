@@ -1140,7 +1140,7 @@ package body Trans.Chap3 is
          Set_Info (El_Type, Get_Info (Parent_El_Type));
       end if;
 
-      if Get_Index_Constraint_Flag (Def) then
+      if Get_Constraint_State (Def) = Fully_Constrained then
          --  Index constrained.
          Translate_Bounded_Array_Subtype_Definition (Def, Parent_Type);
       else

@@ -168,7 +168,7 @@ package body Trans.Chap9 is
       Mark, Mark2 : Id_Mark_Type;
       Assoc, Inter : Iir;
       Num : Iir_Int32;
-      Has_Conv_Record      : Boolean := False;
+      Has_Conv_Record : Boolean := False;
    begin
       Info := Add_Info (Inst, Kind_Block);
       Push_Identifier_Prefix (Mark, Get_Label (Inst));

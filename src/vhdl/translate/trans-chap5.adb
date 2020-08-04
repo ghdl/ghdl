@@ -708,9 +708,7 @@ package body Trans.Chap5 is
             if Get_Whole_Association_Flag (Assoc)
               and then Fbt_Info.Type_Mode in Type_Mode_Unbounded
             then
-               Open_Temp;
                Elab_Unconstrained_Port_Bounds (Formal, Assoc);
-               Close_Temp;
             end if;
 
             --  Allocate storage of ports.
