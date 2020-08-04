@@ -920,7 +920,7 @@ addArrayDebug(OTnodeArr *Atype, unsigned Len)
   OTnode ElType = static_cast<OTnodeArr *>(Atype)->ElType;
 
   Atype->Dbg = DBuilder->createArrayType
-    (Atype->getSize(), Atype->getAlignment(),
+    (Atype->getBitSize(), /* align */ 0,
      ElType->Dbg, DBuilder->getOrCreateArray(Subscripts));
 }
 #endif
