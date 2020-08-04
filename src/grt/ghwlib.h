@@ -78,16 +78,19 @@ enum ghdl_rtik {
   ghdl_rtik_type_file,
   ghdl_rtik_subtype_scalar,
   ghdl_rtik_subtype_array,	/* 35 */
-  ghdl_rtik_subtype_array_ptr,             /* Obsolete.  */
-  ghdl_rtik_subtype_unconstrained_array,   /* Obsolete.  */
+  ghdl_rtik_subtype_array_ptr,  /* Obsolete.  */
+  ghdl_rtik_subtype_unbounded_array,
   ghdl_rtik_subtype_record,
-  ghdl_rtik_subtype_access,
+  ghdl_rtik_subtype_unbounded_record,
+#if 0
+  ghdl_rtik_subtype_access,     /* 40 */
   ghdl_rtik_type_protected,
   ghdl_rtik_element,
   ghdl_rtik_unit,
   ghdl_rtik_attribute_transaction,
   ghdl_rtik_attribute_quiet,
   ghdl_rtik_attribute_stable,
+#endif
   ghdl_rtik_error
 };
 
@@ -198,14 +201,23 @@ struct ghw_type_array
   union ghw_type **dims;
 };
 
+struct ghw_subtype_unbounded_array
+{
+  enum ghdl_rtik kind;
+  const char *name;
+
+  union ghw_type *base;
+};
+
 struct ghw_subtype_array
 {
   enum ghdl_rtik kind;
   const char *name;
 
-  struct ghw_type_array *base;
+  union ghw_type *base;
   int nbr_scalars;
   union ghw_range **rngs;
+  union ghw_type *el;
 };
 
 struct ghw_subtype_scalar
@@ -243,6 +255,14 @@ struct ghw_subtype_record
   struct ghw_record_element *els;
 };
 
+struct ghw_subtype_unbounded_record
+{
+  enum ghdl_rtik kind;
+  const char *name;
+
+  struct ghw_type_record *base;
+};
+
 union ghw_type
 {
   enum ghdl_rtik kind;
@@ -251,10 +271,12 @@ union ghw_type
   struct ghw_type_scalar sc;
   struct ghw_type_physical ph;
   struct ghw_subtype_scalar ss;
-  struct ghw_subtype_array sa;
-  struct ghw_subtype_record sr;
   struct ghw_type_array ar;
   struct ghw_type_record rec;
+  struct ghw_subtype_array sa;
+  struct ghw_subtype_unbounded_array sua;
+  struct ghw_subtype_record sr;
+  struct ghw_subtype_unbounded_record sur;
 };
 
 union ghw_val

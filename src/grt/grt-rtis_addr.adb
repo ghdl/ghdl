@@ -323,20 +323,37 @@ package body Grt.Rtis_Addr is
       end loop;
    end Bound_To_Range;
 
-   function Get_Base_Type (Atype : Ghdl_Rti_Access) return Ghdl_Rti_Access is
+   function Get_Base_Type (Atype : Ghdl_Rti_Access) return Ghdl_Rti_Access
+   is
+      Res : Ghdl_Rti_Access;
    begin
-      case Atype.Kind is
-         when Ghdl_Rtik_Subtype_Scalar =>
-            return To_Ghdl_Rtin_Subtype_Scalar_Acc (Atype).Basetype;
-         when Ghdl_Rtik_Subtype_Array =>
-            return To_Ghdl_Rtin_Subtype_Composite_Acc (Atype).Basetype;
-         when Ghdl_Rtik_Type_E8
-           | Ghdl_Rtik_Type_E32
-           | Ghdl_Rtik_Type_B1 =>
-            return Atype;
-         when others =>
-            Internal_Error ("rtis_addr.get_base_type");
-      end case;
+      Res := Atype;
+      loop
+         case Res.Kind is
+            when Ghdl_Rtik_Type_E8
+               | Ghdl_Rtik_Type_E32
+               | Ghdl_Rtik_Type_B1
+               | Ghdl_Rtik_Type_I32
+               | Ghdl_Rtik_Type_I64
+               | Ghdl_Rtik_Type_P32
+               | Ghdl_Rtik_Type_P64
+               | Ghdl_Rtik_Type_F64 =>
+               return Res;
+            when Ghdl_Rtik_Subtype_Scalar =>
+               Res := To_Ghdl_Rtin_Subtype_Scalar_Acc (Res).Basetype;
+            when Ghdl_Rtik_Type_Array
+               | Ghdl_Rtik_Type_Record
+               | Ghdl_Rtik_Type_Unbounded_Record =>
+               return Res;
+            when Ghdl_Rtik_Subtype_Array
+               | Ghdl_Rtik_Subtype_Unbounded_Array
+               | Ghdl_Rtik_Subtype_Record
+               | Ghdl_Rtik_Subtype_Unbounded_Record =>
+               Res := To_Ghdl_Rtin_Subtype_Composite_Acc (Res).Basetype;
+            when others =>
+               Internal_Error ("rtis_addr.get_base_type");
+         end case;
+      end loop;
    end Get_Base_Type;
 
    function Rti_Complex_Type (Atype : Ghdl_Rti_Access) return Boolean is

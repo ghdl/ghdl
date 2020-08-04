@@ -578,12 +578,29 @@ package body Grt.Disp_Rti is
       end case;
    end Disp_Scalar_Type_Name;
 
+   function Is_Unbounded (Rti : Ghdl_Rti_Access) return Boolean is
+   begin
+      case Rti.Kind is
+         when Ghdl_Rtik_Type_Array
+           | Ghdl_Rtik_Subtype_Unbounded_Array
+           | Ghdl_Rtik_Type_Unbounded_Record
+           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Unbounded;
+
+   procedure Disp_Type_Composite_Bounds
+     (Def : Ghdl_Rti_Access; Bounds : Address);
+
    procedure Disp_Type_Array_Bounds (Def : Ghdl_Rtin_Type_Array_Acc;
                                      Bounds : Address)
    is
       Rng : Ghdl_Range_Ptr;
       Idx_Base : Ghdl_Rti_Access;
       Bounds1 : Address;
+      El_Type : Ghdl_Rti_Access;
    begin
       Bounds1 := Bounds;
       Put (" (");
@@ -600,6 +617,10 @@ package body Grt.Disp_Rti is
          Disp_Range (stdout, Idx_Base, Rng);
       end loop;
       Put (")");
+      El_Type := Def.Element;
+      if Is_Unbounded (El_Type) then
+         Disp_Type_Composite_Bounds (El_Type, Bounds1);
+      end if;
    end Disp_Type_Array_Bounds;
 
    procedure Disp_Type_Record_Bounds (Def : Ghdl_Rtin_Type_Record_Acc;
@@ -607,39 +628,46 @@ package body Grt.Disp_Rti is
    is
       El : Ghdl_Rtin_Element_Acc;
       El_Layout : Address;
+      El_Type : Ghdl_Rti_Access;
       First : Boolean;
    begin
       Put (" (");
       First := True;
       for I in 1 .. Def.Nbrel loop
          El := To_Ghdl_Rtin_Element_Acc (Def.Elements (I - 1));
-         case El.Eltype.Kind is
-            when Ghdl_Rtik_Type_Array
-              | Ghdl_Rtik_Type_Unbounded_Record =>
-               if First then
-                  First := False;
-               else
-                  Put (", ");
-               end if;
-               Put (El.Name);
-               El_Layout := Layout + El.Layout_Off;
-               case El.Eltype.Kind is
-                  when Ghdl_Rtik_Type_Array =>
-                     Disp_Type_Array_Bounds
-                       (To_Ghdl_Rtin_Type_Array_Acc (El.Eltype),
-                        Array_Layout_To_Bounds (El_Layout));
-                  when Ghdl_Rtik_Type_Unbounded_Record =>
-                     Disp_Type_Record_Bounds
-                       (To_Ghdl_Rtin_Type_Record_Acc (El.Eltype), El_Layout);
-                  when others =>
-                     raise Program_Error;
-               end case;
-            when others =>
-               null;
-         end case;
+         El_Type := El.Eltype;
+         if Is_Unbounded (El_Type) then
+            if First then
+               First := False;
+            else
+               Put (", ");
+            end if;
+            Put (El.Name);
+            El_Layout := Layout + El.Layout_Off;
+            Disp_Type_Composite_Bounds (El_Type, El_Layout);
+         end if;
       end loop;
       Put (")");
    end Disp_Type_Record_Bounds;
+
+
+   procedure Disp_Type_Composite_Bounds
+     (Def : Ghdl_Rti_Access; Bounds : Address)
+   is
+      El_Type : constant Ghdl_Rti_Access := Get_Base_Type (Def);
+   begin
+      case El_Type.Kind is
+         when Ghdl_Rtik_Type_Array =>
+            Disp_Type_Array_Bounds
+              (To_Ghdl_Rtin_Type_Array_Acc (El_Type),
+               Array_Layout_To_Bounds (Bounds));
+         when Ghdl_Rtik_Type_Unbounded_Record =>
+            Disp_Type_Record_Bounds
+              (To_Ghdl_Rtin_Type_Record_Acc (El_Type), Bounds);
+         when others =>
+            raise Program_Error;
+      end case;
+   end Disp_Type_Composite_Bounds;
 
    procedure Disp_Type_Array_Name (Def : Ghdl_Rtin_Type_Array_Acc;
                                    Bounds_Ptr : Address)
@@ -1069,7 +1097,9 @@ package body Grt.Disp_Rti is
       Bt := Def.Basetype;
       case Bt.Kind is
          when Ghdl_Rtik_Type_I32
-           | Ghdl_Rtik_Type_F64 =>
+           | Ghdl_Rtik_Type_F64
+           | Ghdl_Rtik_Type_E8
+           | Ghdl_Rtik_Type_E32 =>
             declare
                Bdef : Ghdl_Rtin_Type_Scalar_Acc;
             begin
@@ -1178,6 +1208,24 @@ package body Grt.Disp_Rti is
       end if;
       New_Line;
    end Disp_Subtype_Array_Decl;
+
+   procedure Disp_Subtype_Unbounded_Array_Decl
+     (Def : Ghdl_Rtin_Subtype_Composite_Acc;
+      Ctxt : Rti_Context;
+      Indent : Natural)
+   is
+      pragma Unreferenced (Ctxt);
+      Basetype : constant Ghdl_Rtin_Type_Array_Acc :=
+        To_Ghdl_Rtin_Type_Array_Acc (Def.Basetype);
+   begin
+      Disp_Indent (Indent);
+      Disp_Kind (Def.Common.Kind);
+      Put (": ");
+      Disp_Name (Def.Name);
+      Put (" is ");
+      Disp_Name (Basetype.Name);
+      New_Line;
+   end Disp_Subtype_Unbounded_Array_Decl;
 
    procedure Disp_Type_File_Or_Access (Def : Ghdl_Rtin_Type_Fileacc_Acc;
                                        Ctxt : Rti_Context;
@@ -1315,6 +1363,9 @@ package body Grt.Disp_Rti is
               (To_Ghdl_Rtin_Type_Array_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Subtype_Array =>
             Disp_Subtype_Array_Decl
+              (To_Ghdl_Rtin_Subtype_Composite_Acc (Rti), Ctxt, Indent);
+         when Ghdl_Rtik_Subtype_Unbounded_Array =>
+            Disp_Subtype_Unbounded_Array_Decl
               (To_Ghdl_Rtin_Subtype_Composite_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Type_Access
            | Ghdl_Rtik_Type_File =>
