@@ -95,6 +95,11 @@ package Grt.Rtis_Addr is
 
    function Array_Layout_To_Bounds (Layout : Address) return Address;
 
+   --  Return bounds (for arrays) or layout (for recors) of array
+   --  layout LAYOUT according to element type EL_RTI.
+   function Array_Layout_To_Element
+     (Layout : Address; El_Rti : Ghdl_Rti_Access) return Address;
+
    --  Extract range of every dimension from bounds.
    procedure Bound_To_Range (Bounds_Addr : Address;
                              Def : Ghdl_Rtin_Type_Array_Acc;

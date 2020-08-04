@@ -283,6 +283,26 @@ package body Grt.Rtis_Addr is
       return Layout + Ghdl_Index_Type'(Ghdl_Indexes_Type'Size / 8);
    end Array_Layout_To_Bounds;
 
+   function Array_Layout_To_Element
+     (Layout : Address; El_Rti : Ghdl_Rti_Access) return Address is
+   begin
+      case El_Rti.Kind is
+         when Ghdl_Rtik_Type_Array
+           | Ghdl_Rtik_Subtype_Array
+           | Ghdl_Rtik_Subtype_Unbounded_Array =>
+            --  Trim size to pass the bounds
+            return Array_Layout_To_Bounds (Layout);
+         when Ghdl_Rtik_Type_Unbounded_Record
+           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            --  Keep full layout.
+            return Layout;
+         when Ghdl_Rtik_Type_Record =>
+            return Null_Address;
+         when others =>
+            return Null_Address;
+      end case;
+   end Array_Layout_To_Element;
+
    procedure Bound_To_Range (Bounds_Addr : Address;
                              Def : Ghdl_Rtin_Type_Array_Acc;
                              Res : out Ghdl_Range_Array)

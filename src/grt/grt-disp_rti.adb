@@ -230,9 +230,7 @@ package body Grt.Disp_Rti is
                Put (Stream, ", ");
             end if;
             if Index = Last_Idx then
-               --  Humm, not always an array, and BOUNDS may not be followed
-               --  by subelement bounds.
-               Bounds2 := Array_Layout_To_Bounds (Bounds);
+               Bounds2 := Array_Layout_To_Element (Bounds, El_Rti);
                Disp_Value (Stream, El_Rti, Ctxt, Obj, Bounds2, Is_Sig);
             else
                Bounds2 := Bounds;
