@@ -761,7 +761,7 @@ package body Grt.Disp_Rti is
                if Sdef.Name /= null then
                   Disp_Name (Sdef.Name);
                else
-                  Put ("??");
+                  Put ("?sub-arr?");
                end if;
             end;
          when Ghdl_Rtik_Type_Protected =>

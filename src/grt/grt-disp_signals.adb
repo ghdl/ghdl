@@ -297,8 +297,7 @@ package body Grt.Disp_Signals is
    procedure Disp_Scalar_Signal (Val_Addr : Address;
                                  Val_Name : Vstring;
                                  Val_Type : Ghdl_Rti_Access;
-                                 Parent : Rti_Object)
-   is
+                                 Parent : Rti_Object) is
    begin
       Disp_Signal_Name (stdout, Parent.Ctxt,
                         To_Ghdl_Rtin_Object_Acc (Parent.Obj));
@@ -482,8 +481,7 @@ package body Grt.Disp_Signals is
       Grt.Stdio.fflush (stdout);
    end Disp_Signals_Table;
 
-   procedure Disp_A_Signal (Sig : Ghdl_Signal_Ptr)
-   is
+   procedure Disp_A_Signal (Sig : Ghdl_Signal_Ptr) is
    begin
       Put_Signal_Name (stdout, Sig);
       Disp_Simple_Signal (Sig, null, True);
@@ -516,10 +514,8 @@ package body Grt.Disp_Signals is
       procedure Foreach_Scalar is new Grt.Rtis_Utils.Foreach_Scalar
         (Param_Type => Boolean, Process => Process_Scalar);
 
-      function Process_Block (Ctxt : Rti_Context;
-                              Obj : Ghdl_Rti_Access)
-                             return Traverse_Result
-      is
+      function Process_Block (Ctxt : Rti_Context; Obj : Ghdl_Rti_Access)
+                             return Traverse_Result is
       begin
          case Obj.Kind is
             when Ghdl_Rtik_Signal

@@ -367,7 +367,7 @@ package body Grt.Rtis_Utils is
             Pos_To_Vstring (Name, Base_Type, Rng, I - 1);
             if Index = Last_Index then
                --  FIXME: not always needed.
-               Bounds := Array_Layout_To_Bounds (Cur_Bounds);
+               Bounds := Array_Layout_To_Element (Cur_Bounds, El_Rti);
                Append (Name, ')');
                Handle_Any (El_Rti);
             else
