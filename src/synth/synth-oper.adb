@@ -1088,6 +1088,7 @@ package body Synth.Oper is
 
          when Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns
            |  Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv
+           |  Iir_Predefined_Ieee_Std_Logic_Arith_Eq_Uns_Uns
            |  Iir_Predefined_Ieee_Numeric_Std_Match_Eq_Uns_Uns =>
             --  "=" (Unsigned, Unsigned) [resize]
             return Synth_Compare_Uns_Uns (Id_Eq, Expr_Typ);
