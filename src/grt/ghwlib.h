@@ -24,6 +24,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* To be libraries friendly.  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 /* The ghwlib uses the standard c99 int32_t and int64_t.  They are declared
    in stdint.h.  Header inttypes.h includes stdint.h and provides macro for
    printf and co specifiers.  Use it if known to be available.  */
@@ -431,6 +436,8 @@ enum ghw_res {
   ghw_res_cycle = 2,
   ghw_res_other = 3
 };
+
+enum ghw_res ghw_read_sm_hdr (struct ghw_handler *h, int *list);
 
 int ghw_read_sm (struct ghw_handler *h, enum ghw_sm_type *sm);
 

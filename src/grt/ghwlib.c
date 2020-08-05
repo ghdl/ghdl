@@ -200,7 +200,7 @@ ghw_read_sleb128 (struct ghw_handler *h, int32_t *res)
       if ((v & 0x80) == 0)
 	{
 	  if ((v & 0x40) && off < 32)
-	    r |= -1 << off;
+	    r |= ~0U << off;
 	  break;
 	}
     }
