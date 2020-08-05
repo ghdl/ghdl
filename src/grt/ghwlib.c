@@ -653,7 +653,7 @@ ghw_read_type (struct ghw_handler *h)
       t = fgetc (h->stream);
       if (t == EOF)
 	return -1;
-      if (h->flag_verbose > 2)
+      if (h->flag_verbose > 1)
         printf ("type[%d]= %d\n", i, t);
       switch (t)
 	{
