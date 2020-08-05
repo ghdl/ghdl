@@ -1094,6 +1094,7 @@ package body Ortho_Debug is
                                 return O_Lnode
    is
       subtype O_Lnode_Indexed is O_Lnode_Type (OL_Indexed_Element);
+      El_Type : O_Tnode;
       Res : O_Lnode;
    begin
       if Arr.Rtype.Kind not in ON_Array_Kinds then
@@ -1101,10 +1102,11 @@ package body Ortho_Debug is
          raise Type_Error;
       end if;
       --  The element type of ARR must be constrained.
-      Check_Constrained_Type (Get_Array_El_Type (Arr.Rtype));
+      El_Type := Get_Array_El_Type (Arr.Rtype);
+      Check_Constrained_Type (El_Type);
       Check_Ref (Arr);
       Res := new O_Lnode_Indexed'(Kind => OL_Indexed_Element,
-                                  Rtype => Get_Base_Type (Arr.Rtype).El_Type,
+                                  Rtype => El_Type,
                                   Ref => False,
                                   Array_Base => Arr,
                                   Index => Index);
