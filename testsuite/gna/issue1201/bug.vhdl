@@ -33,7 +33,7 @@ architecture Behavioral of bug is
 
   signal mysig_ok_2 : rc_peripheral_1(params(0 to 4));  -- This is accepted by ghdl
 
-  -- signal mysig_wrong : rc_peripheral_2(params(0 to 4)(0 to 4));  -- This is not accepted
+  signal mysig_wrong : rc_peripheral_2(params(0 to 4)(0 to 4));  -- This is not accepted
 
 begin
 
