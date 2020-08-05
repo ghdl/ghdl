@@ -1298,6 +1298,7 @@ package body Grt.Waves is
                  To_Ghdl_Rtin_Type_Array_Acc (Rti);
                Rng : Ghdl_Range_Ptr;
                Index_Type : Ghdl_Rti_Access;
+               El_Type : Ghdl_Rti_Access;
                Bounds1 : Address;
             begin
                Bounds1 := Bounds;
@@ -1306,8 +1307,14 @@ package body Grt.Waves is
                   Extract_Range (Bounds1, Index_Type, Rng);
                   Write_Range (Index_Type, Rng);
                end loop;
-               Bounds1 := Array_Layout_To_Element (Bounds1, Arr.Element);
-               Write_Composite_Bounds (Get_Base_Type (Arr.Element), Bounds1);
+               --  Write bounds only if the element subtype of the base type
+               --  is unbounded.
+               El_Type := Arr.Element;
+               if Rtis_Utils.Is_Unbounded (El_Type) then
+                  El_Type := Get_Base_Type (El_Type);
+                  Bounds1 := Array_Layout_To_Element (Bounds1, El_Type);
+                  Write_Composite_Bounds (El_Type, Bounds1);
+               end if;
             end;
          when Ghdl_Rtik_Type_Record =>
             return;
@@ -1316,15 +1323,20 @@ package body Grt.Waves is
                Rec : constant Ghdl_Rtin_Type_Record_Acc :=
                  To_Ghdl_Rtin_Type_Record_Acc (Rti);
                El : Ghdl_Rtin_Element_Acc;
-               Eltype : Ghdl_Rti_Access;
+               El_Type : Ghdl_Rti_Access;
                Bounds1 : Address;
             begin
                for I in 1 .. Rec.Nbrel loop
                   El := To_Ghdl_Rtin_Element_Acc (Rec.Elements (I - 1));
-                  Eltype := Get_Base_Type (El.Eltype);
-                  Bounds1 := Array_Layout_To_Element
-                    (Bounds + El.Layout_Off, Eltype);
-                  Write_Composite_Bounds (Eltype, Bounds1);
+                  --  Write bounds only if the element subtype of the base
+                  --  type is unbounded.
+                  El_Type := El.Eltype;
+                  if Rtis_Utils.Is_Unbounded (El_Type) then
+                     El_Type := Get_Base_Type (El_Type);
+                     Bounds1 := Array_Layout_To_Element
+                       (Bounds + El.Layout_Off, El_Type);
+                     Write_Composite_Bounds (El_Type, Bounds1);
+                  end if;
                end loop;
             end;
          when others =>

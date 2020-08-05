@@ -77,6 +77,9 @@ package Grt.Rtis_Utils is
                                 El_Addr : out Address;
                                 El_Bounds : out Address);
 
+   --  Return True iff RTI is an unbounded type.
+   function Is_Unbounded (Rti : Ghdl_Rti_Access) return Boolean;
+
    procedure Get_Value (Str : in out Vstring;
                         Value : Value_Union;
                         Type_Rti : Ghdl_Rti_Access);

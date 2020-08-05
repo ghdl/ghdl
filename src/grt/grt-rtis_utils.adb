@@ -225,6 +225,19 @@ package body Grt.Rtis_Utils is
       end case;
    end Record_To_Element;
 
+   function Is_Unbounded (Rti : Ghdl_Rti_Access) return Boolean is
+   begin
+      case Rti.Kind is
+         when Ghdl_Rtik_Type_Array
+           | Ghdl_Rtik_Subtype_Unbounded_Array
+           | Ghdl_Rtik_Type_Unbounded_Record
+           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Unbounded;
+
    procedure Foreach_Scalar (Ctxt : Rti_Context;
                              Obj_Type : Ghdl_Rti_Access;
                              Obj_Addr : Address;

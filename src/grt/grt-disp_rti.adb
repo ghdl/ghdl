@@ -578,19 +578,6 @@ package body Grt.Disp_Rti is
       end case;
    end Disp_Scalar_Type_Name;
 
-   function Is_Unbounded (Rti : Ghdl_Rti_Access) return Boolean is
-   begin
-      case Rti.Kind is
-         when Ghdl_Rtik_Type_Array
-           | Ghdl_Rtik_Subtype_Unbounded_Array
-           | Ghdl_Rtik_Type_Unbounded_Record
-           | Ghdl_Rtik_Subtype_Unbounded_Record =>
-            return True;
-         when others =>
-            return False;
-      end case;
-   end Is_Unbounded;
-
    procedure Disp_Type_Composite_Bounds
      (Def : Ghdl_Rti_Access; Bounds : Address);
 
