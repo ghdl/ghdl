@@ -20,4 +20,7 @@ architecture tb of repro1  is
   signal arr_fifo_o :
     fifo_array_o_t(0 to NB_CHAN_G - 1) (tx_dat(W_DAT_G - 1 downto 0));
 begin
+  arr_fifo_o (0).tx_dat(2) <= '1' after 1 ns, '0' after 2 ns;
+
+  arr_fifo_o (1).tx_dat(3) <= '1' after 200 ps;
 end tb;

@@ -24,6 +24,9 @@ architecture Behav of repro2 is
 
         signal barr1 : my_bust_arr;
         signal barr2 : bust_arr (1 downto 0)(a(3 downto 0), f(3 downto 0));
+	signal s : bit;
 begin
-
+  s <= '1' after 1 ns, '0' after 2 ns;
+  businst.f(0) <= '1' after 200 ps;
+  barr1(1).a(2) <= '1' after 200 ps;
 end architecture;
