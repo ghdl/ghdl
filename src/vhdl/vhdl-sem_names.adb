@@ -2687,7 +2687,7 @@ package body Vhdl.Sem_Names is
       function Sem_As_Indexed_Or_Slice_Name (Sub_Name : Iir; Finish : Boolean)
         return Iir
       is
-         Base_Type : Iir;
+         Arr_Type : Iir;
          Ptr_Type : Iir;
          P : Iir;
          R : Iir;
@@ -2713,21 +2713,26 @@ package body Vhdl.Sem_Names is
          end if;
 
          --  Extract type of prefix, handle possible implicit deference.
-         Base_Type := Get_Base_Type (Get_Type (Sub_Name));
-         if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition then
-            Ptr_Type := Base_Type;
-            Base_Type := Get_Base_Type (Get_Designated_Type (Base_Type));
+         Arr_Type := Get_Type (Sub_Name);
+         if Kind_In (Arr_Type, Iir_Kind_Access_Type_Definition,
+                     Iir_Kind_Access_Subtype_Definition)
+         then
+            --  FIXME: use base type until full support of access subtypes.
+            Ptr_Type := Get_Base_Type (Arr_Type);
+            Arr_Type := Get_Designated_Type (Arr_Type);
          else
             Ptr_Type := Null_Iir;
          end if;
 
-         if Get_Kind (Base_Type) /= Iir_Kind_Array_Type_Definition then
-            if Finish and then not Is_Error (Base_Type) then
+         if not Kind_In (Arr_Type, Iir_Kind_Array_Type_Definition,
+                         Iir_Kind_Array_Subtype_Definition)
+         then
+            if Finish and then not Is_Error (Arr_Type) then
                Error_Msg_Sem (+Name, "type of prefix is not an array");
             end if;
             return Null_Iir;
          end if;
-         if Get_Nbr_Elements (Get_Index_Subtype_List (Base_Type)) /=
+         if Get_Nbr_Elements (Get_Index_Subtype_List (Arr_Type)) /=
            Get_Chain_Length (Assoc_Chain)
          then
             if Finish then
@@ -2743,7 +2748,7 @@ package body Vhdl.Sem_Names is
          if Slice_Index_Kind = Iir_Kind_Indexed_Name and then not Finish then
             declare
                Type_Index_List : constant Iir_Flist :=
-                 Get_Index_Subtype_List (Base_Type);
+                 Get_Index_Subtype_List (Arr_Type);
                Type_Index : Iir;
                Assoc : Iir;
             begin
@@ -2800,7 +2805,7 @@ package body Vhdl.Sem_Names is
                   end loop;
                   Set_Index_List (R, List_To_Flist (Idx_List));
                end;
-               Set_Type (R, Get_Element_Subtype (Base_Type));
+               Set_Type (R, Get_Element_Subtype (Arr_Type));
             when others =>
                raise Internal_Error;
          end case;

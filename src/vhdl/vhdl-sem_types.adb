@@ -2315,6 +2315,7 @@ package body Vhdl.Sem_Types is
                      Location_Copy (Res, Def);
                      Set_Parent_Type (Res, Type_Mark);
                      Set_Designated_Subtype_Indication (Res, Sub_Type);
+                     Set_Designated_Type (Res, Sub_Type);
                      Set_Signal_Type_Flag (Res, False);
 
                      --  The type_mark is a type_mark of the access subtype,
