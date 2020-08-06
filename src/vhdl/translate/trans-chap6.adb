@@ -1300,6 +1300,7 @@ package body Trans.Chap6 is
                Offset := Translate_Indexed_Name_Offset (Pfx_Sig, Name);
                Sig := Translate_Indexed_Name_By_Offset
                  (Pfx_Sig, Prefix_Type, Offset);
+               Pfx_Drv := Stabilize_If_Unbounded (Pfx_Drv);
                Drv := Translate_Indexed_Name_By_Offset
                  (Pfx_Drv, Prefix_Type, Offset);
             end;
