@@ -1264,7 +1264,8 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Uns =>
             --  "/=" (Integer, Unsigned)
             return Synth_Compare_Int_Uns (Id_Ne, Expr_Typ);
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Int =>
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Int
+            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int =>
             --  "/=" (Unsigned, Integer)
             return Synth_Compare_Uns_Int (Id_Ne, Expr_Typ);
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Uns_Sgn =>
