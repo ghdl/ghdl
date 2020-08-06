@@ -842,6 +842,8 @@ package body Synth.Static_Oper is
             --  SIGNED to Integer
             return Create_Memory_Discrete
               (Eval_Signed_To_Integer (Get_Memtyp (Param1), Expr), Res_Typ);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Integer_Int =>
+            return Get_Memtyp (Param1);
 
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
             | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
