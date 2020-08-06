@@ -770,6 +770,8 @@ package body Synth.Oper is
             --  TODO: Optimize ?
             return Synth_Compare (Id_Ne, Boolean_Type);
          when Iir_Predefined_Enum_Less_Equal =>
+            return Synth_Compare (Id_Ule, Boolean_Type);
+         when Iir_Predefined_Enum_Less =>
             return Synth_Compare (Id_Ult, Boolean_Type);
 
          when Iir_Predefined_Std_Ulogic_Match_Equality =>
