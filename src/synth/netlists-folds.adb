@@ -270,6 +270,34 @@ package body Netlists.Folds is
       end if;
    end Build2_Extract;
 
+   function Build2_Extract_Push
+     (Ctxt : Context_Acc; I : Net; Off, W : Width) return Net
+   is
+      Inst : constant Instance := Get_Net_Parent (I);
+      Res : Net;
+   begin
+      if Off = 0 and then W = Get_Width (I) then
+         return I;
+      end if;
+
+      case Get_Id (Inst) is
+         when Id_Extract =>
+            return Build2_Extract_Push
+              (Ctxt, Get_Input_Net (Inst, 0),
+               Off + Get_Param_Uns32 (Inst, 0), W);
+         when Id_Mux2 =>
+            Res := Build_Mux2
+              (Ctxt,
+               Get_Input_Net (Inst, 0),
+               Build2_Extract_Push (Ctxt, Get_Input_Net (Inst, 1), Off, W),
+               Build2_Extract_Push (Ctxt, Get_Input_Net (Inst, 2), Off, W));
+            Set_Location (Res, Get_Location (Inst));
+            return Res;
+         when others =>
+            return Build_Extract (Ctxt, I, Off, W);
+      end case;
+   end Build2_Extract_Push;
+
    function Build2_Imp (Ctxt : Context_Acc; A, B : Net; Loc : Location_Type)
                        return Net
    is
