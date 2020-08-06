@@ -318,7 +318,7 @@ package body Synth.Disp_Vhdl is
                   --  netlist.
                   Put ("(0 => to_bit (");
                else
-                  Put (" to_bitvector (");
+                  Put ("to_bitvector (");
                end if;
                Disp_Out_Rhs (Mname, Off, W, Full);
                if W = 1 then
