@@ -4,6 +4,19 @@
 
 GHDL_STD_FLAGS=-fsynopsys
 
+# Compare opers.
+for f in adds subs cmplt cmple cmpgt cmpge cmpeq cmpne; do
+    analyze $f.vhdl
+    analyze tb_$f.vhdl
+    elab_simulate tb_$f > $f.ref
+
+    synth $f.vhdl -e > syn_$f.vhdl
+    analyze tb_$f.vhdl
+    elab_simulate tb_$f > $f.out
+
+    diff --strip-trailing-cr $f.out $f.ref
+done
+
 for t in sns01; do
     synth $t.vhdl -e $t > syn_$t.vhdl
     # No analysis because of conflict between numeric_std.unsigned and
