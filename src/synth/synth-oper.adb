@@ -1766,6 +1766,7 @@ package body Synth.Oper is
       M : Areapools.Mark_Type;
       Static : Boolean;
       Res : Valtyp;
+      Mt : Memtyp;
    begin
       Areapools.Mark (M, Instance_Pool.all);
       Subprg_Inst := Make_Instance (Syn_Inst, Imp);
@@ -1788,8 +1789,12 @@ package body Synth.Oper is
          end loop;
 
          if Static then
-            Res := Create_Value_Memtyp
-              (Synth_Static_Predefined_Function_Call (Subprg_Inst, Expr));
+            Mt := Synth_Static_Predefined_Function_Call (Subprg_Inst, Expr);
+            if Mt /= Null_Memtyp then
+               Res := Create_Value_Memtyp (Mt);
+            else
+               Res := No_Valtyp;
+            end if;
          else
             Res := Synth_Dynamic_Predefined_Function_Call (Subprg_Inst, Expr);
          end if;
