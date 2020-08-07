@@ -931,6 +931,130 @@ package body Synth.Oper is
          when Iir_Predefined_Array_Less =>
             return Synth_Compare_Array (Id_Ult, Boolean_Type);
 
+         when Iir_Predefined_Array_Element_Concat =>
+            declare
+               L : constant Net := Get_Net (Ctxt, Left);
+               Bnd : Bound_Type;
+               N : Net;
+            begin
+               N := Build_Concat2 (Ctxt, L, Get_Net (Ctxt, Right));
+               Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst,
+                  Get_Index_Type (Get_Type (Expr), 0),
+                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1) + 1));
+
+               return Create_Value_Net
+                 (N, Create_Onedimensional_Array_Subtype (Left_Typ, Bnd));
+            end;
+         when Iir_Predefined_Element_Array_Concat =>
+            declare
+               R : constant Net := Get_Net (Ctxt, Right);
+               Bnd : Bound_Type;
+               N : Net;
+            begin
+               N := Build_Concat2 (Ctxt, Get_Net (Ctxt, Left), R);
+               Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst,
+                  Get_Index_Type (Get_Type (Expr), 0),
+                  Iir_Index32 (Get_Bound_Length (Right.Typ, 1) + 1));
+
+               return Create_Value_Net
+                 (N, Create_Onedimensional_Array_Subtype (Right_Typ, Bnd));
+            end;
+         when Iir_Predefined_Element_Element_Concat =>
+            declare
+               N : Net;
+               Bnd : Bound_Type;
+            begin
+               N := Build_Concat2
+                 (Ctxt, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
+               Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2);
+               return Create_Value_Net
+                 (N, Create_Onedimensional_Array_Subtype (Expr_Typ, Bnd));
+            end;
+         when Iir_Predefined_Array_Array_Concat =>
+            declare
+               L : constant Net := Get_Net (Ctxt, Left);
+               R : constant Net := Get_Net (Ctxt, Right);
+               Bnd : Bound_Type;
+               N : Net;
+            begin
+               N := Build_Concat2 (Ctxt, L, R);
+               Set_Location (N, Expr);
+               Bnd := Create_Bounds_From_Length
+                 (Syn_Inst,
+                  Get_Index_Type (Get_Type (Expr), 0),
+                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1)
+                                 + Get_Bound_Length (Right.Typ, 1)));
+
+               return Create_Value_Net
+                 (N, Create_Onedimensional_Array_Subtype (Expr_Typ, Bnd));
+            end;
+         when Iir_Predefined_Integer_Plus =>
+            return Synth_Int_Dyadic (Id_Add);
+         when Iir_Predefined_Integer_Minus =>
+            return Synth_Int_Dyadic (Id_Sub);
+         when Iir_Predefined_Integer_Mul =>
+            return Synth_Int_Dyadic (Id_Smul);
+         when Iir_Predefined_Integer_Div =>
+            return Synth_Int_Dyadic (Id_Sdiv);
+         when Iir_Predefined_Integer_Mod =>
+            if Is_Static_Val (Right.Val) then
+               --  Optimize when the divisor is a power of 2.
+               declare
+                  use Mutils;
+                  Etype : constant Type_Acc :=
+                    Get_Subtype_Object (Syn_Inst, Expr_Type);
+                  R : constant Int64 := Get_Static_Discrete (Right);
+                  Log_R : Natural;
+                  N : Net;
+               begin
+                  if R > 0 and then Is_Power2 (Uns64 (R)) then
+                     Log_R := Clog2 (Uns64 (R));
+                     pragma Assert (Log_R <= Natural (Left.Typ.W));
+                     N := Get_Net (Ctxt, Left);
+                     N := Build2_Extract (Ctxt, N, 0, Width (Log_R));
+                     N := Build2_Uresize (Ctxt, N, Left.Typ.W,
+                                          Get_Location (Expr));
+                     return Create_Value_Net (N, Etype);
+                  end if;
+               end;
+            end if;
+            return Synth_Int_Dyadic (Id_Smod);
+         when Iir_Predefined_Integer_Rem =>
+            return Synth_Int_Dyadic (Id_Srem);
+         when Iir_Predefined_Integer_Exp =>
+            Error_Msg_Synth
+              (+Expr, "non-constant exponentiation not supported");
+            return No_Valtyp;
+         when Iir_Predefined_Integer_Less_Equal =>
+            return Synth_Compare (Id_Sle, Boolean_Type);
+         when Iir_Predefined_Integer_Less =>
+            return Synth_Compare (Id_Slt, Boolean_Type);
+         when Iir_Predefined_Integer_Greater_Equal =>
+            return Synth_Compare (Id_Sge, Boolean_Type);
+         when Iir_Predefined_Integer_Greater =>
+            return Synth_Compare (Id_Sgt, Boolean_Type);
+         when Iir_Predefined_Integer_Equality =>
+            return Synth_Compare (Id_Eq, Boolean_Type);
+         when Iir_Predefined_Integer_Inequality =>
+            return Synth_Compare (Id_Ne, Boolean_Type);
+         when Iir_Predefined_Integer_Minimum =>
+            return Synth_Minmax (Id_Slt);
+         when Iir_Predefined_Integer_Maximum =>
+            return Synth_Minmax (Id_Sgt);
+         when Iir_Predefined_Physical_Physical_Div =>
+            Error_Msg_Synth (+Expr, "non-constant division not supported");
+            return No_Valtyp;
+
+         when Iir_Predefined_Floating_Div =>
+            Error_Msg_Synth (+Expr, "non-constant division not supported");
+            return No_Valtyp;
+
          when Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns
             | Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Log
             | Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Log
@@ -1047,111 +1171,49 @@ package body Synth.Oper is
            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv
            | Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv =>
             --  "*" (Signed, Signed)
-            declare
-               W : constant Width := Left.Typ.W + Right.Typ.W;
-               L, R : Net;
-               N : Net;
-            begin
-               L := Synth_Sresize (Ctxt, Left, W, Left_Expr);
-               R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
-               N := Build_Dyadic (Ctxt, Id_Smul, L, R);
-               Set_Location (N, Expr);
-               return Create_Value_Net
-                 (N, Create_Vec_Type_By_Length (W, Left.Typ.Vec_El));
-            end;
+            return Synth_Dyadic_Xxx_Xxx
+              (Ctxt, Id_Smul, Left.Typ.W + Right.Typ.W,
+               Left, Right, True, True, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Sgn_Int =>
-            declare
-               Lw : constant Width := Left.Typ.W;
-               W : constant Width := 2 * Lw;
-               Rtype : Type_Acc;
-               L, R : Net;
-               N : Net;
-            begin
-               L := Synth_Sresize (Ctxt, Left, W, Left_Expr);
-               R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
-               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-               N := Build_Dyadic (Ctxt, Id_Smul, L, R);
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Rtype);
-            end;
+            --  "*" (Signed, Integer)
+            return Synth_Dyadic_Xxx_Xxx
+              (Ctxt, Id_Smul, 2 * Left.Typ.W,
+               Left, Right, True, True, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Int_Sgn =>
-            declare
-               Rw : constant Width := Right.Typ.W;
-               W : constant Width := 2 * Rw;
-               Rtype : Type_Acc;
-               L, R : Net;
-               N : Net;
-            begin
-               L := Synth_Sresize (Ctxt, Left, W, Left_Expr);
-               R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
-               Rtype := Create_Vec_Type_By_Length (W, Right.Typ.Vec_El);
-               N := Build_Dyadic (Ctxt, Id_Smul, L, R);
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Rtype);
-            end;
+            --  "*" (Integer, Signed)
+            return Synth_Dyadic_Xxx_Xxx
+              (Ctxt, Id_Smul, 2 * Right.Typ.W,
+               Left, Right, True, True, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns
            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv
            | Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv =>
             --  "*" (unsigned, unsigned)
-            declare
-               W : constant Width := Left.Typ.W + Right.Typ.W;
-               Rtype : Type_Acc;
-               L, R : Net;
-               N : Net;
-            begin
-               L := Synth_Uresize (Ctxt, Left, W, Left_Expr);
-               R := Synth_Uresize (Ctxt, Right, W, Right_Expr);
-               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-               N := Build_Dyadic (Ctxt, Id_Umul, L, R);
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Rtype);
-            end;
+            return Synth_Dyadic_Xxx_Xxx
+              (Ctxt, Id_Smul, Left.Typ.W + Right.Typ.W,
+               Left, Right, False, False, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Uns_Nat =>
-            declare
-               Lw : constant Width := Left.Typ.W;
-               W : constant Width := 2 * Lw;
-               L1, R1 : Net;
-               Rtype : Type_Acc;
-               N : Net;
-            begin
-               L1 := Synth_Uresize (Ctxt, Left, W, Expr);
-               R1 := Synth_Uresize (Ctxt, Right, W, Expr);
-               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-               N := Build_Dyadic (Ctxt, Id_Umul, L1, R1);
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Rtype);
-            end;
+            --  "*" (unsigned, natural)
+            return Synth_Dyadic_Xxx_Xxx
+              (Ctxt, Id_Smul, 2 * Left.Typ.W,
+               Left, Right, False, False, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Mul_Nat_Uns =>
-            declare
-               Rw : constant Width := Right.Typ.W;
-               W : constant Width := 2 * Rw;
-               L1, R1 : Net;
-               Rtype : Type_Acc;
-               N : Net;
-            begin
-               L1 := Synth_Uresize (Ctxt, Left, W, Expr);
-               R1 := Synth_Uresize (Ctxt, Right, W, Expr);
-               Rtype := Create_Vec_Type_By_Length (W, Right.Typ.Vec_El);
-               N := Build_Dyadic (Ctxt, Id_Umul, L1, R1);
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Rtype);
-            end;
-         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn =>
+            --  "*" (natural, unsigned)
+            return Synth_Dyadic_Xxx_Xxx
+              (Ctxt, Id_Smul, 2 * Right.Typ.W,
+               Left, Right, False, False, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Slv =>
             --  "*" (unsigned, signed)
-            declare
-               W : constant Width := Left.Typ.W + 1 + Right.Typ.W;
-               Rtype : Type_Acc;
-               L, R : Net;
-               N : Net;
-            begin
-               L := Synth_Uresize (Ctxt, Left, W, Left_Expr);
-               R := Synth_Sresize (Ctxt, Right, W, Right_Expr);
-               Rtype := Create_Vec_Type_By_Length (W, Left.Typ.Vec_El);
-               N := Build_Dyadic (Ctxt, Id_Smul, L, R);
-               Set_Location (N, Expr);
-               return Create_Value_Net (N, Rtype);
-            end;
+            return Synth_Dyadic_Xxx_Xxx
+              (Ctxt, Id_Smul, Left.Typ.W + 1 + Right.Typ.W,
+               Left, Right, False, True, Expr);
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Slv =>
+            --  "*" (signed, unsigned)
+            return Synth_Dyadic_Xxx_Xxx
+              (Ctxt, Id_Smul, Left.Typ.W + Right.Typ.W + 1,
+               Left, Right, True, False, Expr);
 
          when Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Uns
            | Iir_Predefined_Ieee_Numeric_Std_Div_Uns_Nat =>
@@ -1449,131 +1511,6 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_Std_Logic_Arith_Ge_Sgn_Uns =>
             --  ">=" (Signed, Unsigned)
             return Synth_Compare_Sgn_Uns (Id_Sge, Expr_Typ);
-
-         when Iir_Predefined_Array_Element_Concat =>
-            declare
-               L : constant Net := Get_Net (Ctxt, Left);
-               Bnd : Bound_Type;
-               N : Net;
-            begin
-               N := Build_Concat2 (Ctxt, L, Get_Net (Ctxt, Right));
-               Set_Location (N, Expr);
-               Bnd := Create_Bounds_From_Length
-                 (Syn_Inst,
-                  Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1) + 1));
-
-               return Create_Value_Net
-                 (N, Create_Onedimensional_Array_Subtype (Left_Typ, Bnd));
-            end;
-         when Iir_Predefined_Element_Array_Concat =>
-            declare
-               R : constant Net := Get_Net (Ctxt, Right);
-               Bnd : Bound_Type;
-               N : Net;
-            begin
-               N := Build_Concat2 (Ctxt, Get_Net (Ctxt, Left), R);
-               Set_Location (N, Expr);
-               Bnd := Create_Bounds_From_Length
-                 (Syn_Inst,
-                  Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Bound_Length (Right.Typ, 1) + 1));
-
-               return Create_Value_Net
-                 (N, Create_Onedimensional_Array_Subtype (Right_Typ, Bnd));
-            end;
-         when Iir_Predefined_Element_Element_Concat =>
-            declare
-               N : Net;
-               Bnd : Bound_Type;
-            begin
-               N := Build_Concat2
-                 (Ctxt, Get_Net (Ctxt, Left), Get_Net (Ctxt, Right));
-               Set_Location (N, Expr);
-               Bnd := Create_Bounds_From_Length
-                 (Syn_Inst, Get_Index_Type (Get_Type (Expr), 0), 2);
-               return Create_Value_Net
-                 (N, Create_Onedimensional_Array_Subtype (Expr_Typ, Bnd));
-            end;
-         when Iir_Predefined_Array_Array_Concat =>
-            declare
-               L : constant Net := Get_Net (Ctxt, Left);
-               R : constant Net := Get_Net (Ctxt, Right);
-               Bnd : Bound_Type;
-               N : Net;
-            begin
-               N := Build_Concat2 (Ctxt, L, R);
-               Set_Location (N, Expr);
-               Bnd := Create_Bounds_From_Length
-                 (Syn_Inst,
-                  Get_Index_Type (Get_Type (Expr), 0),
-                  Iir_Index32 (Get_Bound_Length (Left.Typ, 1)
-                                 + Get_Bound_Length (Right.Typ, 1)));
-
-               return Create_Value_Net
-                 (N, Create_Onedimensional_Array_Subtype (Expr_Typ, Bnd));
-            end;
-         when Iir_Predefined_Integer_Plus =>
-            return Synth_Int_Dyadic (Id_Add);
-         when Iir_Predefined_Integer_Minus =>
-            return Synth_Int_Dyadic (Id_Sub);
-         when Iir_Predefined_Integer_Mul =>
-            return Synth_Int_Dyadic (Id_Smul);
-         when Iir_Predefined_Integer_Div =>
-            return Synth_Int_Dyadic (Id_Sdiv);
-         when Iir_Predefined_Integer_Mod =>
-            if Is_Static_Val (Right.Val) then
-               --  Optimize when the divisor is a power of 2.
-               declare
-                  use Mutils;
-                  Etype : constant Type_Acc :=
-                    Get_Subtype_Object (Syn_Inst, Expr_Type);
-                  R : constant Int64 := Get_Static_Discrete (Right);
-                  Log_R : Natural;
-                  N : Net;
-               begin
-                  if R > 0 and then Is_Power2 (Uns64 (R)) then
-                     Log_R := Clog2 (Uns64 (R));
-                     pragma Assert (Log_R <= Natural (Left.Typ.W));
-                     N := Get_Net (Ctxt, Left);
-                     N := Build2_Extract (Ctxt, N, 0, Width (Log_R));
-                     N := Build2_Uresize (Ctxt, N, Left.Typ.W,
-                                          Get_Location (Expr));
-                     return Create_Value_Net (N, Etype);
-                  end if;
-               end;
-            end if;
-            return Synth_Int_Dyadic (Id_Smod);
-         when Iir_Predefined_Integer_Rem =>
-            return Synth_Int_Dyadic (Id_Srem);
-         when Iir_Predefined_Integer_Exp =>
-            Error_Msg_Synth
-              (+Expr, "non-constant exponentiation not supported");
-            return No_Valtyp;
-         when Iir_Predefined_Integer_Less_Equal =>
-            return Synth_Compare (Id_Sle, Boolean_Type);
-         when Iir_Predefined_Integer_Less =>
-            return Synth_Compare (Id_Slt, Boolean_Type);
-         when Iir_Predefined_Integer_Greater_Equal =>
-            return Synth_Compare (Id_Sge, Boolean_Type);
-         when Iir_Predefined_Integer_Greater =>
-            return Synth_Compare (Id_Sgt, Boolean_Type);
-         when Iir_Predefined_Integer_Equality =>
-            return Synth_Compare (Id_Eq, Boolean_Type);
-         when Iir_Predefined_Integer_Inequality =>
-            return Synth_Compare (Id_Ne, Boolean_Type);
-         when Iir_Predefined_Integer_Minimum =>
-            return Synth_Minmax (Id_Slt);
-         when Iir_Predefined_Integer_Maximum =>
-            return Synth_Minmax (Id_Sgt);
-         when Iir_Predefined_Physical_Physical_Div =>
-            Error_Msg_Synth (+Expr, "non-constant division not supported");
-            return No_Valtyp;
-
-         when Iir_Predefined_Floating_Div =>
-            Error_Msg_Synth (+Expr, "non-constant division not supported");
-            return No_Valtyp;
-
          when Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int =>
             return Synth_Shift (Id_Asr, Id_Lsl);
 
@@ -1670,9 +1607,13 @@ package body Synth.Oper is
             | Iir_Predefined_Ieee_Numeric_Std_Not_Sgn =>
             return Synth_Vec_Monadic (Id_Not);
          when Iir_Predefined_Ieee_Numeric_Std_Neg_Uns
-           | Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn =>
+            | Iir_Predefined_Ieee_Numeric_Std_Neg_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Slv =>
             return Synth_Vec_Monadic (Id_Neg);
-         when Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn =>
+         when Iir_Predefined_Ieee_Numeric_Std_Abs_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Slv =>
             return Synth_Vec_Monadic (Id_Abs);
 
          when Iir_Predefined_Ieee_1164_And_Suv =>
@@ -1688,6 +1629,14 @@ package body Synth.Oper is
          when Iir_Predefined_Ieee_1164_Xnor_Suv =>
             return Synth_Vec_Reduce_Monadic (Id_Red_Xor, True);
 
+         when Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Slv
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Sgn
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Slv =>
+            --  Unary "+": nop
+            return Create_Value_Net (Get_Net (Ctxt, Operand),
+                                     Create_Res_Bound (Operand));
+
          when Iir_Predefined_Ieee_1164_Condition_Operator =>
             return Create_Value_Net
               (Get_Net (Ctxt, Operand),
@@ -1700,11 +1649,12 @@ package body Synth.Oper is
                Set_Location (N, Loc);
                return Create_Value_Net (N, Operand.Typ);
             end;
+
          when others =>
             Error_Msg_Synth
               (+Loc,
                "unhandled monadic: " & Iir_Predefined_Functions'Image (Def));
-            raise Internal_Error;
+            return No_Valtyp;
       end case;
    end Synth_Monadic_Operation;
 
@@ -1867,11 +1817,15 @@ package body Synth.Oper is
                   Create_Vec_Type_By_Length (W, Logic_Type));
             end;
          when Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Uns_Nat
-            | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat =>
+            | Iir_Predefined_Ieee_Numeric_Std_Shf_Left_Sgn_Nat
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Uns
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Sgn =>
             return Synth_Shift_Rotate (Ctxt, Id_Lsl, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Uns_Nat
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Uns =>
             return Synth_Shift_Rotate (Ctxt, Id_Lsr, L, R, Expr);
-         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat =>
+         when Iir_Predefined_Ieee_Numeric_Std_Shf_Right_Sgn_Nat
+            | Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Sgn =>
             return Synth_Shift_Rotate (Ctxt, Id_Asr, L, R, Expr);
          when Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Uns_Nat =>
             return Synth_Shift_Rotate (Ctxt, Id_Rol, L, R, Expr);
