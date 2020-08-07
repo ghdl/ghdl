@@ -27,43 +27,78 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
 
    type Binary_Pattern_Type is array (Args_Kind) of Iir_Predefined_Functions;
 
-   None_Patterns : constant Binary_Pattern_Type :=
-     (others => Iir_Predefined_None);
+   type Unary_Pattern_Type is array (Sign_Kind) of Iir_Predefined_Functions;
 
-   Eq_Patterns : constant Binary_Pattern_Type :=
+   Eq_Uns_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Eq_Int_Slv,
       others => Iir_Predefined_None);
 
-   Ne_Patterns : constant Binary_Pattern_Type :=
+   Eq_Sgn_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Int_Slv,
+      others => Iir_Predefined_None);
+
+   Ne_Uns_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ne_Int_Slv,
       others => Iir_Predefined_None);
 
-   Lt_Patterns : constant Binary_Pattern_Type :=
+   Ne_Sgn_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Int_Slv,
+      others => Iir_Predefined_None);
+
+   Lt_Uns_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Int_Slv,
       others => Iir_Predefined_None);
 
-   Le_Patterns : constant Binary_Pattern_Type :=
+   Lt_Sgn_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Int_Slv,
+      others => Iir_Predefined_None);
+
+   Le_Uns_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Le_Int_Slv,
       others => Iir_Predefined_None);
 
-   Gt_Patterns : constant Binary_Pattern_Type :=
+   Le_Sgn_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Le_Int_Slv,
+      others => Iir_Predefined_None);
+
+   Gt_Uns_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Gt_Int_Slv,
       others => Iir_Predefined_None);
 
-   Ge_Patterns : constant Binary_Pattern_Type :=
+   Gt_Sgn_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Int_Slv,
+      others => Iir_Predefined_None);
+
+   Ge_Uns_Patterns : constant Binary_Pattern_Type :=
      (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Slv,
       Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Slv_Int,
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Unsigned_Ge_Int_Slv,
+      others => Iir_Predefined_None);
+
+   Ge_Sgn_Patterns : constant Binary_Pattern_Type :=
+     (Arg_Slv_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Slv,
+      Arg_Slv_Int => Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Int,
+      Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Int_Slv,
       others => Iir_Predefined_None);
 
    Add_Uns_Patterns : constant Binary_Pattern_Type :=
@@ -93,6 +128,26 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
       Arg_Int_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Int_Slv,
       Arg_Slv_Log => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Log,
       Arg_Log_Slv => Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Log_Slv);
+
+   Id_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Unsigned => Iir_Predefined_Ieee_Std_Logic_Unsigned_Id_Slv,
+      Pkg_Signed   => Iir_Predefined_Ieee_Std_Logic_Signed_Id_Slv);
+
+   Conv_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Unsigned => Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer,
+      Pkg_Signed   => Iir_Predefined_Ieee_Std_Logic_Signed_Conv_Integer);
+
+   Mul_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Unsigned => Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv,
+      Pkg_Signed   => Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv);
+
+   Shl_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Unsigned => Iir_Predefined_Ieee_Std_Logic_Unsigned_Shl,
+      Pkg_Signed   => Iir_Predefined_Ieee_Std_Logic_Signed_Shl);
+
+   Shr_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Unsigned => Iir_Predefined_Ieee_Std_Logic_Unsigned_Shr,
+      Pkg_Signed   => Iir_Predefined_Ieee_Std_Logic_Signed_Shr);
 
    Error : exception;
 
@@ -168,33 +223,33 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
 
          case Get_Identifier (Decl) is
             when Name_Op_Equality =>
-               Res := Handle_Binary (Eq_Patterns, None_Patterns);
+               Res := Handle_Binary (Eq_Uns_Patterns, Eq_Sgn_Patterns);
             when Name_Op_Inequality =>
-               Res := Handle_Binary (Ne_Patterns, None_Patterns);
+               Res := Handle_Binary (Ne_Uns_Patterns, Ne_Sgn_Patterns);
             when Name_Op_Less =>
-               Res := Handle_Binary (Lt_Patterns, None_Patterns);
+               Res := Handle_Binary (Lt_Uns_Patterns, Lt_Sgn_Patterns);
             when Name_Op_Less_Equal =>
-               Res := Handle_Binary (Le_Patterns, None_Patterns);
+               Res := Handle_Binary (Le_Uns_Patterns, Le_Sgn_Patterns);
             when Name_Op_Greater =>
-               Res := Handle_Binary (Gt_Patterns, None_Patterns);
+               Res := Handle_Binary (Gt_Uns_Patterns, Gt_Sgn_Patterns);
             when Name_Op_Greater_Equal =>
-               Res := Handle_Binary (Ge_Patterns, None_Patterns);
+               Res := Handle_Binary (Ge_Uns_Patterns, Ge_Sgn_Patterns);
             when Name_Op_Plus =>
                Res := Handle_Binary (Add_Uns_Patterns, Add_Sgn_Patterns);
             when Name_Op_Minus =>
                Res := Handle_Binary (Sub_Uns_Patterns, Sub_Sgn_Patterns);
             when Name_Op_Mul =>
-               case Sign is
-                  when Pkg_Unsigned =>
-                     pragma Assert (Arg1_Kind = Arg_Slv);
-                     pragma Assert (Arg2_Kind = Arg_Slv);
-                     Res := Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv;
-                  when Pkg_Signed =>
-                     pragma Assert (Arg1_Kind = Arg_Slv);
-                     pragma Assert (Arg2_Kind = Arg_Slv);
-                     Res :=
-                       Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv;
-               end case;
+               pragma Assert (Arg1_Kind = Arg_Slv);
+               pragma Assert (Arg2_Kind = Arg_Slv);
+               Res := Mul_Patterns (Sign);
+            when Name_Shl =>
+               pragma Assert (Arg1_Kind = Arg_Slv);
+               pragma Assert (Arg2_Kind = Arg_Slv);
+               Res := Shl_Patterns (Sign);
+            when Name_Shr =>
+               pragma Assert (Arg1_Kind = Arg_Slv);
+               pragma Assert (Arg2_Kind = Arg_Slv);
+               Res := Shr_Patterns (Sign);
             when others =>
                null;
          end case;
@@ -202,13 +257,18 @@ package body Vhdl.Ieee.Std_Logic_Unsigned is
          --  Monadic function.
          case Get_Identifier (Decl) is
             when Name_Conv_Integer =>
-               case Sign is
-                  when Pkg_Unsigned =>
-                     Res :=
-                       Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer;
-                  when Pkg_Signed =>
-                     Res := Iir_Predefined_Ieee_Std_Logic_Signed_Conv_Integer;
-               end case;
+               Res := Conv_Patterns (Sign);
+            when Name_Op_Plus =>
+               pragma Assert (Arg1_Kind = Arg_Slv);
+               Res := Id_Patterns (Sign);
+            when Name_Op_Minus =>
+               if Sign = Pkg_Signed and Arg1_Kind = Arg_Slv then
+                  Res := Iir_Predefined_Ieee_Std_Logic_Signed_Neg_Slv;
+               end if;
+            when Name_Abs =>
+               if Sign = Pkg_Signed and Arg1_Kind = Arg_Slv then
+                  Res := Iir_Predefined_Ieee_Std_Logic_Signed_Abs_Slv;
+               end if;
             when others =>
                null;
          end case;

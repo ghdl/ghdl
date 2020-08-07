@@ -5824,6 +5824,8 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Slv_Log,
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Sub_Log_Slv,
 
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Id_Slv,
+
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Mul_Slv_Slv,
 
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Lt_Slv_Slv,
@@ -5852,6 +5854,9 @@ package Vhdl.Nodes is
 
       Iir_Predefined_Ieee_Std_Logic_Unsigned_Conv_Integer,
 
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Shl,
+      Iir_Predefined_Ieee_Std_Logic_Unsigned_Shr,
+
       --  Std_Logic_Signed (synopsys extension).
       Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Slv,
       Iir_Predefined_Ieee_Std_Logic_Signed_Add_Slv_Int,
@@ -5865,9 +5870,40 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Slv_Log,
       Iir_Predefined_Ieee_Std_Logic_Signed_Sub_Log_Slv,
 
+      Iir_Predefined_Ieee_Std_Logic_Signed_Id_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Neg_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Abs_Slv,
+
       Iir_Predefined_Ieee_Std_Logic_Signed_Mul_Slv_Slv,
 
+      Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Lt_Int_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Le_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Le_Int_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Gt_Int_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Ge_Int_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Eq_Int_Slv,
+
+      Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Slv_Int,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Ne_Int_Slv,
+
       Iir_Predefined_Ieee_Std_Logic_Signed_Conv_Integer,
+
+      Iir_Predefined_Ieee_Std_Logic_Signed_Shl,
+      Iir_Predefined_Ieee_Std_Logic_Signed_Shr,
 
       --  std_logic_arith (synopsys extention).
       Iir_Predefined_Ieee_Std_Logic_Arith_Conv_Unsigned_Int,
