@@ -5,7 +5,7 @@
 GHDL_STD_FLAGS=-fsynopsys
 
 # Compare opers.
-for f in adds subs cmplt cmple cmpgt cmpge cmpeq cmpne; do
+for f in adds subs unaries muls cmplt cmple cmpgt cmpge cmpeq cmpne shrs exts; do
     analyze $f.vhdl
     analyze tb_$f.vhdl
     elab_simulate tb_$f > $f.ref
