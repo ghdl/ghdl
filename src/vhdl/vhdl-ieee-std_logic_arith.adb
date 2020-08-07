@@ -27,6 +27,8 @@ package body Vhdl.Ieee.Std_Logic_Arith is
    Unsigned_Type : Iir := Null_Iir;
    Signed_Type : Iir := Null_Iir;
 
+   Error : exception;
+
    type Arg_Kind is (Type_Slv, Type_Signed, Type_Unsigned, Type_Int, Type_Log);
 
    subtype Conv_Arg_Kind is Arg_Kind range Type_Signed .. Type_Log;
@@ -331,28 +333,89 @@ package body Vhdl.Ieee.Std_Logic_Arith is
          Type_Signed   => Iir_Predefined_Ieee_Std_Logic_Arith_Ne_Int_Sgn,
          others => Iir_Predefined_None));
 
-   Error : exception;
+   procedure Classify_Arg (Arg : Iir; Kind : out Arg_Kind)
+   is
+      Arg_Type : constant Iir := Get_Type (Arg);
+   begin
+      if Arg_Type = Signed_Type then
+         Kind := Type_Signed;
+      elsif Arg_Type = Unsigned_Type then
+         Kind := Type_Unsigned;
+      elsif Arg_Type = Vhdl.Std_Package.Integer_Subtype_Definition then
+         Kind := Type_Int;
+      elsif Arg_Type = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+         Kind := Type_Log;
+      elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
+         Kind := Type_Slv;
+      else
+         raise Error;
+      end if;
+   end Classify_Arg;
+
+   function Handle_Unary (Decl : Iir; Arg : Arg_Kind)
+                         return Iir_Predefined_Functions
+   is
+      Res_Kind : Arg_Kind;
+   begin
+      case Get_Identifier (Decl) is
+         when Name_Conv_Integer =>
+            return Conv_Int_Patterns (Arg);
+         when Name_Op_Plus =>
+            Classify_Arg (Decl, Res_Kind);
+            case Arg is
+               when Type_Unsigned =>
+                  case Res_Kind is
+                     when Type_Unsigned =>
+                        return Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Uns;
+                     when Type_Slv =>
+                        return Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Slv;
+                     when others =>
+                        null;
+                  end case;
+               when Type_Signed =>
+                  case Res_Kind is
+                     when Type_Signed =>
+                        return Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Sgn;
+                     when Type_Slv =>
+                        return Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Slv;
+                     when others =>
+                        null;
+                  end case;
+               when others =>
+                  null;
+            end case;
+         when Name_Op_Minus =>
+            Classify_Arg (Decl, Res_Kind);
+            if Arg = Type_Signed then
+               case Res_Kind is
+                  when Type_Signed =>
+                     return Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Sgn;
+                  when Type_Slv =>
+                     return Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Slv;
+                  when others =>
+                     null;
+               end case;
+            end if;
+         when Name_Abs =>
+            Classify_Arg (Decl, Res_Kind);
+            if Arg = Type_Signed then
+               case Res_Kind is
+                  when Type_Signed =>
+                     return Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Sgn;
+                  when Type_Slv =>
+                     return Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Slv;
+                  when others =>
+                     null;
+               end case;
+            end if;
+         when others =>
+            null;
+      end case;
+      return Iir_Predefined_None;
+   end Handle_Unary;
 
    procedure Extract_Declarations (Pkg : Iir_Package_Declaration)
    is
-      procedure Classify_Arg (Arg : Iir; Kind : out Arg_Kind)
-      is
-         Arg_Type : constant Iir := Get_Type (Arg);
-      begin
-         if Arg_Type = Signed_Type then
-            Kind := Type_Signed;
-         elsif Arg_Type = Unsigned_Type then
-            Kind := Type_Unsigned;
-         elsif Arg_Type = Vhdl.Std_Package.Integer_Subtype_Definition then
-            Kind := Type_Int;
-         elsif Arg_Type = Ieee.Std_Logic_1164.Std_Ulogic_Type then
-            Kind := Type_Log;
-         elsif Arg_Type = Ieee.Std_Logic_1164.Std_Logic_Vector_Type then
-            Kind := Type_Slv;
-         else
-            raise Error;
-         end if;
-      end Classify_Arg;
 
       Decl : Iir;
       Type_Def : Iir;
@@ -484,17 +547,30 @@ package body Vhdl.Ieee.Std_Logic_Arith is
                            raise Error;
                         end if;
                         Def := Iir_Predefined_Ieee_Std_Logic_Arith_Sxt;
+                     when Name_Shl =>
+                        if Arg2_Kind /= Type_Unsigned then
+                           raise Error;
+                        end if;
+                        if Arg1_Kind = Type_Unsigned then
+                           Def := Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Uns;
+                        elsif Arg1_Kind = Type_Signed then
+                           Def := Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Sgn;
+                        end if;
+                     when Name_Shr =>
+                        if Arg2_Kind /= Type_Unsigned then
+                           raise Error;
+                        end if;
+                        if Arg1_Kind = Type_Unsigned then
+                           Def := Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Uns;
+                        elsif Arg1_Kind = Type_Signed then
+                           Def := Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Sgn;
+                        end if;
                      when others =>
                         null;
                   end case;
                else
                   --  Monadic function.
-                  case Get_Identifier (Decl) is
-                     when Name_Conv_Integer =>
-                        Def := Conv_Int_Patterns (Arg1_Kind);
-                     when others =>
-                        null;
-                  end case;
+                  Def := Handle_Unary (Decl, Arg1_Kind);
                end if;
 
             when Iir_Kind_Non_Object_Alias_Declaration

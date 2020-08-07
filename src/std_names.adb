@@ -672,6 +672,8 @@ package body Std_Names is
       Def ("log2",               Name_Log2);
       Def ("sin",                Name_Sin);
       Def ("cos",                Name_Cos);
+      Def ("shl",                Name_Shl);
+      Def ("shr",                Name_Shr);
       Def ("ext",                Name_Ext);
       Def ("sxt",                Name_Sxt);
 

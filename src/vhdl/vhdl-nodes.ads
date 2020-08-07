@@ -5888,6 +5888,21 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Std_Logic_Arith_Ext,
       Iir_Predefined_Ieee_Std_Logic_Arith_Sxt,
 
+      Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Sgn,
+
+      Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Shl_Sgn,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Uns,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Shr_Sgn,
+
+      Iir_Predefined_Ieee_Std_Logic_Arith_Id_Uns_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Id_Sgn_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Neg_Sgn_Slv,
+      Iir_Predefined_Ieee_Std_Logic_Arith_Abs_Sgn_Slv,
+
       Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns,
       Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn,
       Iir_Predefined_Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn,
