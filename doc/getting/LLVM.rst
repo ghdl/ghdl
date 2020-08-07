@@ -14,7 +14,7 @@ LLVM backend
 GCC/GNAT: GNU/Linux or Windows (MinGW/MSYS2)
 ============================================
 
-.. HINT:: You need to install LLVM (usually depends on ``libedit``, see :ghdlsharp:`29`). Debugging is only supported with LLVM 3.5.
+.. HINT:: You need to install LLVM (usually depends on ``libedit``, see :ghdlsharp:`29`). Debugging is supported with LLVM 3.5 or ``>=6``.
 
 GHDL is configured by ``configure`` and built by ``make``.
 
