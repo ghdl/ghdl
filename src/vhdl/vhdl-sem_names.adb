@@ -1217,37 +1217,70 @@ package body Vhdl.Sem_Names is
       Set_Name_Staticness (Attr, Get_Expr_Staticness (Attr));
    end Finish_Sem_Scalar_Type_Attribute;
 
-   procedure Finish_Sem_Signal_Attribute
-     (Attr_Name : Iir; Attr : Iir; Parameter : Iir)
+   --  Finish analysis of attributes for signals.
+   procedure Finish_Sem_Signal_Attribute (Attr : Iir)
    is
-      Param : Iir;
-      Prefix : Iir;
-      Prefix_Name : Iir;
+      Prefix : constant Iir := Get_Prefix (Attr);
    begin
-      Prefix_Name := Get_Prefix (Attr_Name);
-      Prefix := Finish_Sem_Name (Prefix_Name, Get_Prefix (Attr));
-      Set_Prefix (Attr, Prefix);
-      Free_Iir (Attr_Name);
+      --  According to LRM 7.4, signal attributes are not static expressions
+      --  since the prefix (a signal) is not a static expression.
+      Set_Expr_Staticness (Attr, None);
 
-      if Parameter = Null_Iir then
-         return;
+      --  For all signal attributes:
+      --
+      --  LRM93 14.1 Predefined attributes
+      --  Prefix: any signal denoted by the static signal name S.
+      if Get_Name_Staticness (Prefix) < Globally then
+         Error_Msg_Sem
+           (+Attr, "prefix of %n must be a static name", +Attr);
       end if;
-      if Get_Kind (Attr) = Iir_Kind_Transaction_Attribute then
-         Error_Msg_Sem (+Attr, "'transaction does not allow a parameter");
+
+      --  LRM02 6.1 / LRM08 8.1
+      --  A name is said to be a static name if and only if at least one of
+      --  the following conditions holds:
+      --  [...]
+      --  -  The name is a attribute name whose prefix is a static signal name
+      --     and whose suffix is one of the predefined attributes 'DELAYED,
+      --     'STABLE, 'QUIET or 'TRANSACTION.
+      --  According to LRM 6.1, attributes are not static names.
+      if Flag_Relaxed_Rules or Flags.Vhdl_Std >= Vhdl_02 then
+         case Get_Kind (Attr) is
+            when Iir_Kind_Stable_Attribute
+              | Iir_Kind_Quiet_Attribute
+              | Iir_Kind_Delayed_Attribute
+              | Iir_Kind_Transaction_Attribute =>
+               Set_Name_Staticness (Attr, Get_Name_Staticness (Prefix));
+            when others =>
+               Set_Name_Staticness (Attr, None);
+         end case;
       else
-         Param := Sem_Expression (Parameter, Time_Subtype_Definition);
-         if Param /= Null_Iir then
-            --  LRM93 14.1
-            --  Parameter: A static expression of type TIME [that evaluate
-            --  to a nonnegative value.]
-            if Get_Expr_Staticness (Param) = None then
-               Error_Msg_Sem
-                 (+Param, "parameter of signal attribute must be static");
-            end if;
-            Set_Parameter (Attr, Param);
-         end if;
+         Set_Name_Staticness (Attr, None);
       end if;
    end Finish_Sem_Signal_Attribute;
+
+   --  Finish analysis of attributes that are signals for signals
+   procedure Finish_Sem_Signal_Attribute_Signal (Attr : Iir; Parameter : Iir)
+   is
+      pragma Assert (Parameter /= Null_Iir);
+      Param : Iir;
+   begin
+      if Get_Kind (Attr) = Iir_Kind_Transaction_Attribute then
+         Error_Msg_Sem (+Attr, "'transaction does not allow a parameter");
+         return;
+      end if;
+
+      Param := Sem_Expression (Parameter, Time_Subtype_Definition);
+      if Param /= Null_Iir then
+         --  LRM93 14.1
+         --  Parameter: A static expression of type TIME [that evaluate
+         --  to a nonnegative value.]
+         if Get_Expr_Staticness (Param) = None then
+            Error_Msg_Sem
+              (+Param, "parameter of signal attribute must be static");
+         end if;
+         Set_Parameter (Attr, Param);
+      end if;
+   end Finish_Sem_Signal_Attribute_Signal;
 
    procedure Sem_Quantity_Attribute_Parameters
      (Attr : Iir; Params : Iir_Array; Params_Type : Iir_Array; Min : Natural)
@@ -1921,11 +1954,23 @@ package body Vhdl.Sem_Names is
          when Iir_Kinds_Signal_Value_Attribute =>
             null;
          when Iir_Kinds_Signal_Attribute =>
-            if Get_Parameter (Res) = Null_Iir then
-               Finish_Sem_Signal_Attribute (Name, Res, Null_Iir);
-            else
+            --  Cannot use the common code below for the prefix, because
+            --  the parenthesis_name is absorbed as a parameter.
+            Prefix := Get_Prefix (Res);
+            Name_Prefix := Get_Prefix (Name);
+            if Get_Kind (Name) = Iir_Kind_Parenthesis_Name then
+               --  Skip the parenthesis name.
+               Prefix := Finish_Sem_Name_1 (Get_Prefix (Name_Prefix), Prefix);
+               Set_Prefix (Res, Prefix);
+               --  But free it.
                Free_Parenthesis_Name (Name, Res);
+            else
+               pragma Assert (Get_Parameter (Res) = Null_Iir);
+               Prefix := Finish_Sem_Name (Name_Prefix, Prefix);
+               Set_Prefix (Res, Prefix);
+               Free_Iir (Name);
             end if;
+            Finish_Sem_Signal_Attribute (Res);
             return Res;
          when Iir_Kind_Above_Attribute
            | Iir_Kind_Ramp_Attribute
@@ -1997,12 +2042,14 @@ package body Vhdl.Sem_Names is
             pragma Assert (Get_Kind (Name) = Iir_Kind_Selected_By_All_Name);
             Finish_Sem_Dereference (Res);
             Free_Iir (Name);
-         when Iir_Kinds_Signal_Value_Attribute
-           | Iir_Kind_Subtype_Attribute
-           | Iir_Kind_Through_Attribute
-           | Iir_Kind_Across_Attribute
-           | Iir_Kind_Nature_Reference_Attribute =>
+         when Iir_Kind_Subtype_Attribute
+            | Iir_Kind_Through_Attribute
+            | Iir_Kind_Across_Attribute
+            | Iir_Kind_Nature_Reference_Attribute =>
             Sem_Name_Free_Result (Name, Res);
+         when Iir_Kinds_Signal_Value_Attribute =>
+            Sem_Name_Free_Result (Name, Res);
+            Finish_Sem_Signal_Attribute (Res);
          when others =>
             Error_Kind ("finish_sem_name_1(2)", Res);
       end case;
@@ -3026,7 +3073,7 @@ package body Vhdl.Sem_Names is
            | Iir_Kind_Quiet_Attribute
            | Iir_Kind_Delayed_Attribute =>
             if Actual /= Null_Iir then
-               Finish_Sem_Signal_Attribute (Prefix_Name, Prefix, Actual);
+               Finish_Sem_Signal_Attribute_Signal (Prefix, Actual);
                Set_Named_Entity (Name, Prefix);
             else
                Error_Msg_Sem (+Name, "bad attribute parameter");
@@ -4036,32 +4083,6 @@ package body Vhdl.Sem_Names is
          when others =>
             null;
       end case;
-
-      --  According to LRM 7.4, signal attributes are not static expressions
-      --  since the prefix (a signal) is not a static expression.
-      Set_Expr_Staticness (Res, None);
-
-      --  LRM02 6.1 / LRM08 8.1
-      --  A name is said to be a static name if and only if at least one of
-      --  the following conditions holds:
-      --  [...]
-      --  -  The name is a attribute name whose prefix is a static signal name
-      --     and whose suffix is one of the predefined attributes 'DELAYED,
-      --     'STABLE, 'QUIET or 'TRANSACTION.
-      --  According to LRM 6.1, attributes are not static names.
-      if Flag_Relaxed_Rules or Flags.Vhdl_Std >= Vhdl_02 then
-         case Get_Kind (Res) is
-            when Iir_Kind_Stable_Attribute
-              | Iir_Kind_Quiet_Attribute
-              | Iir_Kind_Delayed_Attribute
-              | Iir_Kind_Transaction_Attribute =>
-               Set_Name_Staticness (Res, Get_Name_Staticness (Prefix));
-            when others =>
-               Set_Name_Staticness (Res, None);
-         end case;
-      else
-         Set_Name_Staticness (Res, None);
-      end if;
 
       Set_Prefix (Res, Prefix);
 
