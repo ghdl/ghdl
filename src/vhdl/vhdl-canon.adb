@@ -611,56 +611,6 @@ package body Vhdl.Canon is
       return Res;
    end Canon_Extract_Sensitivity_Process;
 
---   function Make_Aggregate (Array_Type : Iir_Array_Type_Definition; El : Iir)
---      return Iir_Aggregate
---    is
---       Res : Iir_Aggregate;
---       Choice : Iir;
---    begin
---       Res := Create_Iir (Iir_Kind_Aggregate);
---       Location_Copy (Res, El);
---       Choice := Create_Iir (Iir_Kind_Association_Choice_By_None);
---       Set_Associated (Choice, El);
---       Append_Element (Get_Association_Choices_List (Res), Choice);
-
---       --  will call sem_aggregate
---       return Sem_Expr.Sem_Expression (Res, Array_Type);
---    end Make_Aggregate;
-
---    procedure Canon_Concatenation_Operator (Expr : Iir)
---    is
---       Array_Type : Iir_Array_Type_Definition;
---       El_Type : Iir;
---       Left, Right : Iir;
---       Func_List : Iir_Implicit_Functions_List;
---       Func : Iir_Implicit_Function_Declaration;
---    begin
---       Array_Type := Get_Type (Expr);
---       El_Type := Get_Base_Type (Get_Element_Subtype (Array_Type));
---       Left := Get_Left (Expr);
---       if Get_Type (Left) = El_Type then
---          Set_Left (Expr, Make_Aggregate (Array_Type, Left));
---       end if;
---       Right := Get_Right (Expr);
---       if Get_Type (Right) = El_Type then
---          Set_Right (Expr, Make_Aggregate (Array_Type, Right));
---       end if;
-
---       --  FIXME: must convert the implementation.
---       --  Use implicit declaration list from the array_type ?
---       Func_List := Get_Implicit_Functions_List
---         (Get_Type_Declarator (Array_Type));
---       for I in Natural loop
---          Func := Get_Nth_Element (Func_List, I);
---          if Get_Implicit_Definition (Func)
---            = Iir_Predefined_Array_Array_Concat
---          then
---             Set_Implementation (Expr, Func);
---             exit;
---          end if;
---       end loop;
---    end Canon_Concatenation_Operator;
-
    procedure Canon_Aggregate_Expression (Expr: Iir)
    is
       Assoc : Iir;
@@ -738,13 +688,6 @@ package body Vhdl.Canon is
          when Iir_Kinds_Dyadic_Operator =>
             Canon_Expression (Get_Left (Expr));
             Canon_Expression (Get_Right (Expr));
-            if Get_Kind (Expr) = Iir_Kind_Concatenation_Operator
-              and then Canon_Concatenation
-              and then Is_Implicit_Subprogram (Get_Implementation (Expr))
-            then
-               --Canon_Concatenation_Operator (Expr);
-               raise Internal_Error;
-            end if;
 
          when Iir_Kind_Function_Call =>
             Canon_Subprogram_Call_And_Actuals (Expr);
