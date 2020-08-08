@@ -86,16 +86,16 @@ package Vhdl.Canon is
    --  If IS_TARGET is true, the longuest static prefix of the signal name
    --  is not added to the sensitivity list, but other static prefix (such
    --  as indexes of an indexed name) are added.
-   procedure Canon_Extract_Sensitivity
+   procedure Canon_Extract_Sensitivity_Expression
      (Expr: Iir; Sensitivity_List: Iir_List; Is_Target: Boolean := False);
 
    --  Likewise, but for all expressions appearing in statements CHAIN.
-   procedure Canon_Extract_Sequential_Statement_Chain_Sensitivity
+   procedure Canon_Extract_Sensitivity_Sequential_Statement_Chain
      (Chain : Iir; List : Iir_List);
 
    --  Compute the sensitivity list of all-sensitized process PROC.
    --  Used for vhdl 08.
-   function Canon_Extract_Process_Sensitivity
+   function Canon_Extract_Sensitivity_Process
      (Proc : Iir_Sensitized_Process_Statement)
      return Iir_List;
 end Vhdl.Canon;

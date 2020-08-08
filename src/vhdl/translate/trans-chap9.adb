@@ -1784,7 +1784,7 @@ package body Trans.Chap9 is
       if Is_Sensitized then
          List_Orig := Get_Sensitivity_List (Proc);
          if List_Orig = Iir_List_All then
-            List := Vhdl.Canon.Canon_Extract_Process_Sensitivity (Proc);
+            List := Vhdl.Canon.Canon_Extract_Sensitivity_Process (Proc);
          else
             List := List_Orig;
          end if;

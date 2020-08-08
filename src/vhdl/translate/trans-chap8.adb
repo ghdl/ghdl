@@ -3753,7 +3753,7 @@ package body Trans.Chap8 is
       if Sensitivity = Null_Iir_List and Cond /= Null_Iir then
          --  Extract sensitivity from condition.
          Sensitivity := Create_Iir_List;
-         Vhdl.Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
+         Vhdl.Canon.Canon_Extract_Sensitivity_Expression (Cond, Sensitivity);
          Set_Sensitivity_List (Stmt, Sensitivity);
       end if;
 

@@ -30,7 +30,8 @@ package body Vhdl.Canon_PSL is
       case Get_Kind (Expr) is
          when N_HDL_Expr
            | N_HDL_Bool =>
-            Canon_Extract_Sensitivity (Get_HDL_Node (Expr), Sensitivity_List);
+            Canon_Extract_Sensitivity_Expression
+              (Get_HDL_Node (Expr), Sensitivity_List);
          when N_And_Bool
            | N_Or_Bool =>
             Canon_Extract_Sensitivity (Get_Left (Expr), Sensitivity_List);
