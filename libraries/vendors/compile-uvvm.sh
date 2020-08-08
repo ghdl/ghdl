@@ -55,20 +55,29 @@ fi
 . $ScriptDir/shared.sh
 
 uvvm_pkgs="uvvm_util
- uvvm_vvc_framework"
+ uvvm_vvc_framework
+ xConstrRandFuncCov
+"
 
 uvvm_vips="
  bitvis_vip_scoreboard
- bitvis_vip_sbi
  bitvis_vip_avalon_mm
+ bitvis_vip_avalon_st
  bitvis_vip_axilite
  bitvis_vip_axistream
+ bitvis_vip_clock_generator
+ bitvis_vip_error_injection
+ bitvis_vip_gmii
  bitvis_vip_gpio
  bitvis_vip_i2c
+ bitvis_vip_rgmii
+ bitvis_vip_sbi
  bitvis_vip_spi
  bitvis_vip_uart
- bitvis_vip_wishbone
- bitvis_vip_clock_generator
+ bitvis_vip_hvvc_to_vvc_bridge
+ bitvis_vip_ethernet
+ bitvis_irqc
+ bitvis_vip_spec_cov
 "
 
 # command line argument processing
