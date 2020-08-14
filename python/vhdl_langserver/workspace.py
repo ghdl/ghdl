@@ -21,11 +21,13 @@ from . import document, symbols
 
 log = logging.getLogger(__name__)
 
+
 class ProjectError(Exception):
     "Exception raised in case of unrecoverable error in the project file."
     def __init__(self, msg):
         super().__init__()
         self.msg = msg
+
 
 class Workspace(object):
     def __init__(self, root_uri, server):
@@ -192,7 +194,6 @@ class Workspace(object):
         except ProjectError as e:
             self._server.show_message(lsp.MessageType.Error,
                 "error in project file: {}".format(e.msg))
-
 
     def read_files_from_project(self):
         try:
@@ -430,7 +431,6 @@ class Workspace(object):
                 'entity': name,
                 'generics': create_interfaces(nodes.Get_Generic_Chain(ent)),
                 'ports': create_interfaces(nodes.Get_Port_Chain(ent))}
-
 
     def compute_anti_dependences(self):
         """Return a dictionnary of anti dependencies for design unit"""

@@ -67,15 +67,18 @@ SYMBOLS_MAP = {
     nodes.Iir_Kind.Configuration_Specification: {'kind': None},
 }
 
+
 def location_to_position(fe, loc):
     assert loc != files_map.No_Location
     line = files_map.Location_File_To_Line(loc, fe)
     off = files_map.Location_File_Line_To_Offset(loc, fe, line)
     return {'line': line - 1, 'character': off}
 
+
 def get_symbols_chain(fe, n):
     res = [get_symbols(fe, el) for el in pyutils.chain_iter(n)]
     return [e for e in res if e is not None]
+
 
 def get_symbols(fe, n):
     if n == nodes.Null_Iir:

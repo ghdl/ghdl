@@ -5,6 +5,7 @@ from os.path import dirname, join, exists, normpath
 from shutil import which
 from libghdl.version import __version__
 
+
 def _to_char_p(arg):
     return ctypes.c_char_p(arg), len(arg)
 
@@ -82,6 +83,7 @@ libghdl.libghdl__set_hooks_for_analysis()
 # Set the prefix in order to locate the vhdl libraries.
 libghdl.libghdl__set_exec_prefix(
     *_to_char_p(dirname(dirname(_libghdl_path)).encode('utf-8')))
+
 
 def set_option(opt):
     "Set option OPT.  Return true iff the option is known and handled"

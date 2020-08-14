@@ -14,6 +14,7 @@ from . import symbols, references
 
 log = logging.getLogger(__name__)
 
+
 class Document(object):
     # The encoding used for the files.
     # Unfortunately this is not fully reliable.  The client can read the

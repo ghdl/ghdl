@@ -15,6 +15,7 @@ from . import vhdl_ls
 
 logger = logging.getLogger('ghdl-ls')
 
+
 class LSPConnTrace(object):
     """Wrapper class to save in and out packets"""
     def __init__(self, basename, conn):
@@ -46,6 +47,7 @@ def rotate_log_files(basename, num):
             os.rename(oldfile, '{}.{}'.format(basename, i))
     if os.path.isfile(basename):
         os.rename(basename, '{}.0'.format(basename))
+
 
 def main():
     parser = argparse.ArgumentParser(
