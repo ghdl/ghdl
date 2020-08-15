@@ -192,7 +192,7 @@ fi
 if [ "$enable_libghdl" = true ]; then
     libghdl_version="$srcdir/python/libghdl/version.py"
     # Extract content between single quotes in version.py, to avoid false positives due to LF/CRLF mismatch.
-    if [ "$ghdl_version" != "`sed "s/.*'\(.*\)'.*/\1/g" $libghdl_version`" ]; then
+    if [ "$ghdl_version" != "`sed 's/.*"\(.*\)".*/\1/g' $libghdl_version`" ]; then
       echo "Sorry, the version of $libghdl_version is not correct"
       echo "update the version to: $ghdl_version"
       echo "or use --disable-libghdl"

@@ -13,12 +13,11 @@ prefix_name = "Iir_Kind_"
 prefix_range_name = "Iir_Kinds_"
 type_name = "Iir_Kind"
 node_type = "Iir"
-conversions = ['uc', 'pos', 'grp']
+conversions = ["uc", "pos", "grp"]
 
 
 class FuncDesc:
-    def __init__(self, name, fields, conv, acc,
-                 pname, ptype, rname, rtype):
+    def __init__(self, name, fields, conv, acc, pname, ptype, rname, rtype):
         self.name = name
         self.fields = fields  # List of physical fields used
         self.conv = conv
@@ -35,8 +34,8 @@ class NodeDesc:
         self.name = name
         self.format = format
         self.fields = fields  # {field: FuncDesc} dict, defined for all fields
-        self.attrs = attrs    # A {attr: FuncDesc} dict
-        self.order = []       # List of fields name, in order of appearance.
+        self.attrs = attrs  # A {attr: FuncDesc} dict
+        self.order = []  # List of fields name, in order of appearance.
 
 
 class line:
@@ -58,7 +57,7 @@ class linereader:
         self.filename = filename
         self.f = open(filename)
         self.lineno = 0
-        self.l = ''
+        self.l = ""
 
     def get(self):
         self.l = self.f.readline()
@@ -74,9 +73,10 @@ class ParseError(Exception):
         self.msg = msg
 
     def __str__(self):
-        return 'Error: ' + self.msg
-        return 'Parse error at ' + self.lr.filname + ':' + self.lr.lineno + \
-               ': ' + self.msg
+        return "Error: " + self.msg
+        return (
+            "Parse error at " + self.lr.filname + ":" + self.lr.lineno + ": " + self.msg
+        )
 
 
 # Return fields description.
@@ -89,21 +89,21 @@ def read_fields(file):
     lr = linereader(file)
 
     #  Search for 'type Format_Type is'
-    while lr.get() != '   type Format_Type is\n':
+    while lr.get() != "   type Format_Type is\n":
         pass
 
     # Skip '('
-    if lr.get() != '     (\n':
-        raise 'no open parenthesis after Format_Type'
+    if lr.get() != "     (\n":
+        raise "no open parenthesis after Format_Type"
 
     # Read formats
     l = lr.get()
-    pat_field_name = re.compile('      Format_(\w+),?\n')
-    while l != '     );\n':
+    pat_field_name = re.compile("      Format_(\w+),?\n")
+    while l != "     );\n":
         m = pat_field_name.match(l)
         if m is None:
             print l
-            raise 'bad literal within Format_Type'
+            raise "bad literal within Format_Type"
         name = m.group(1)
         formats.append(name)
         fields[name] = {}
@@ -111,15 +111,15 @@ def read_fields(file):
 
     # Read fields
     l = lr.get()
-    pat_fields = re.compile('   -- Fields of Format_(\w+):\n')
-    pat_field_desc = re.compile('   --   (\w+) : (\w+).*\n')
-    format_name = ''
+    pat_fields = re.compile("   -- Fields of Format_(\w+):\n")
+    pat_field_desc = re.compile("   --   (\w+) : (\w+).*\n")
+    format_name = ""
     common_desc = {}
 
     # Read until common fields.
-    while l != '   -- Common fields are:\n':
+    while l != "   -- Common fields are:\n":
         l = lr.get()
-    format_name = 'Common'
+    format_name = "Common"
     nbr_formats = 0
 
     while True:
@@ -135,13 +135,13 @@ def read_fields(file):
             # print 'For: ' + format_name + ': ' + m.group(1)
 
         # 2) Disp
-        if format_name == 'Common':
+        if format_name == "Common":
             common_desc = desc
         else:
             fields[format_name] = desc
 
         # 3) Read next format
-        if l == '\n':
+        if l == "\n":
             if nbr_formats == len(fields):
                 break
             else:
@@ -152,11 +152,10 @@ def read_fields(file):
         if m is not None:
             format_name = m.group(1)
             if format_name not in fields:
-                raise ParseError(
-                    lr, 'Format ' + format_name + ' is unknown')
+                raise ParseError(lr, "Format " + format_name + " is unknown")
             nbr_formats = nbr_formats + 1
         else:
-            raise ParseError(lr, 'unhandled format line')
+            raise ParseError(lr, "unhandled format line")
 
     return (formats, fields)
 
@@ -166,19 +165,18 @@ def read_kinds(filename):
     lr = linereader(filename)
     kinds = []
     #  Search for 'type Iir_Kind is'
-    while lr.get() != '   type ' + type_name + ' is\n':
+    while lr.get() != "   type " + type_name + " is\n":
         pass
     # Skip '('
-    if lr.get() != '     (\n':
-        raise ParseError(
-            lr, 'no open parenthesis after "type ' + type_name + '"')
+    if lr.get() != "     (\n":
+        raise ParseError(lr, 'no open parenthesis after "type ' + type_name + '"')
 
     # Read literals
-    pat_node = re.compile('      ' + prefix_name + '(\w+),?( +-- .*)?\n')
-    pat_comment = re.compile('( +-- .*)?\n')
+    pat_node = re.compile("      " + prefix_name + "(\w+),?( +-- .*)?\n")
+    pat_comment = re.compile("( +-- .*)?\n")
     while True:
         l = lr.get()
-        if l == '     );\n':
+        if l == "     );\n":
             break
         m = pat_node.match(l)
         if m:
@@ -186,19 +184,18 @@ def read_kinds(filename):
             continue
         m = pat_comment.match(l)
         if not m:
-            raise ParseError(lr, 'Unknown line within kind declaration')
+            raise ParseError(lr, "Unknown line within kind declaration")
 
     # Check subtypes
-    pat_subtype = re.compile('   subtype ' + r'(\w+) is '
-                              + type_name + ' range\n')
-    pat_first = re.compile('     ' + prefix_name + r'(\w+) ..\n')
-    pat_last = re.compile('     ' + prefix_name + r'(\w+);\n')
-    pat_middle = re.compile('   --' + prefix_name + r'(\w+)\n')
+    pat_subtype = re.compile("   subtype " + r"(\w+) is " + type_name + " range\n")
+    pat_first = re.compile("     " + prefix_name + r"(\w+) ..\n")
+    pat_last = re.compile("     " + prefix_name + r"(\w+);\n")
+    pat_middle = re.compile("   --" + prefix_name + r"(\w+)\n")
     kinds_ranges = {}
     while True:
         l = lr.get()
         # Start of methods is also end of subtypes.
-        if l == '   -- General methods.\n':
+        if l == "   -- General methods.\n":
             break
         # Found a subtype.
         m = pat_subtype.match(l)
@@ -206,12 +203,12 @@ def read_kinds(filename):
             # Check first bound
             name = m.group(1)
             if not name.startswith(prefix_range_name):
-                raise ParseError(lr, 'incorrect prefix for subtype')
-            name = name[len(prefix_range_name):]
+                raise ParseError(lr, "incorrect prefix for subtype")
+            name = name[len(prefix_range_name) :]
             l = lr.get()
             mf = pat_first.match(l)
             if not mf:
-                raise ParseError(lr, 'badly formated first bound of subtype')
+                raise ParseError(lr, "badly formated first bound of subtype")
             first = kinds.index(mf.group(1))
             idx = first
             has_middle = None
@@ -223,11 +220,11 @@ def read_kinds(filename):
                     # Check element in the middle
                     n = ml.group(1)
                     if n not in kinds:
-                        raise ParseError(
-                            lr, "unknown kind " + n + " in subtype")
+                        raise ParseError(lr, "unknown kind " + n + " in subtype")
                     if kinds.index(n) != idx + 1:
                         raise ParseError(
-                            lr, "missing " + kinds[idx + 1] + " in subtype")
+                            lr, "missing " + kinds[idx + 1] + " in subtype"
+                        )
                     has_middle = True
                     idx = idx + 1
                 else:
@@ -237,27 +234,27 @@ def read_kinds(filename):
                         last = kinds.index(ml.group(1))
                         if last != idx + 1 and has_middle:
                             raise ParseError(
-                                lr, "missing " + kinds[idx] + " in subtype")
+                                lr, "missing " + kinds[idx] + " in subtype"
+                            )
                         break
                     raise ParseError(lr, "unhandled line in subtype")
-            kinds_ranges[name] = kinds[first:last+1]
+            kinds_ranges[name] = kinds[first : last + 1]
     return (kinds, kinds_ranges)
+
 
 # Read functions
 def read_methods(filename):
     lr = linereader(filename)
     funcs = []
-    pat_field = re.compile(r'   --  Field: ([\w,]+)( \w+)?( \(\w+\))?\n')
-    pat_conv = re.compile(r'^ \((\w+)\)$')
-    pat_func = re.compile(
-        r'   function Get_(\w+) \((\w+) : (\w+)\) return (\w+);\n')
-    pat_proc = re.compile(
-        r'   procedure Set_(\w+) \((\w+) : (\w+); (\w+) : (\w+)\);\n')
-    pat_end = re.compile('end [A-Za-z.]+;\n')
+    pat_field = re.compile(r"   --  Field: ([\w,]+)( \w+)?( \(\w+\))?\n")
+    pat_conv = re.compile(r"^ \((\w+)\)$")
+    pat_func = re.compile(r"   function Get_(\w+) \((\w+) : (\w+)\) return (\w+);\n")
+    pat_proc = re.compile(r"   procedure Set_(\w+) \((\w+) : (\w+); (\w+) : (\w+)\);\n")
+    pat_end = re.compile("end [A-Za-z.]+;\n")
     while True:
         l = lr.get()
         # Start of methods
-        if l == '   -- General methods.\n':
+        if l == "   -- General methods.\n":
             break
     while True:
         l = lr.get()
@@ -265,7 +262,7 @@ def read_methods(filename):
             break
         m = pat_field.match(l)
         if m:
-            fields = m.group(1).split(',')
+            fields = m.group(1).split(",")
             # Extract access modifier
             acc = m.group(2)
             if acc:
@@ -275,38 +272,45 @@ def read_methods(filename):
             if conv:
                 mc = pat_conv.match(conv)
                 if not mc:
-                    raise ParseError(lr, 'conversion ill formed')
+                    raise ParseError(lr, "conversion ill formed")
                 conv = mc.group(1)
                 if conv not in conversions:
-                    raise ParseError(lr, 'unknown conversion ' + conv)
+                    raise ParseError(lr, "unknown conversion " + conv)
             else:
                 conv = None
-            if len(fields) > 1 and conv != 'grp':
-                raise ParseError(lr, 'bad conversion for multiple fields')
+            if len(fields) > 1 and conv != "grp":
+                raise ParseError(lr, "bad conversion for multiple fields")
             # Read function
             l = lr.get()
             mf = pat_func.match(l)
             if not mf:
-                raise ParseError(
-                    lr, 'function declaration expected after Field')
+                raise ParseError(lr, "function declaration expected after Field")
             # Read procedure
             l = lr.get()
             mp = pat_proc.match(l)
             if not mp:
-                raise ParseError(
-                    lr, 'procedure declaration expected after function')
+                raise ParseError(lr, "procedure declaration expected after function")
             # Consistency check between function and procedure
             if mf.group(1) != mp.group(1):
-                raise ParseError(lr, 'function and procedure name mismatch')
+                raise ParseError(lr, "function and procedure name mismatch")
             if mf.group(2) != mp.group(2):
-                raise ParseError(lr, 'parameter name mismatch with function')
+                raise ParseError(lr, "parameter name mismatch with function")
             if mf.group(3) != mp.group(3):
-                raise ParseError(lr, 'parameter type mismatch with function')
+                raise ParseError(lr, "parameter type mismatch with function")
             if mf.group(4) != mp.group(5):
-                raise ParseError(lr, 'result type mismatch with function')
-            funcs.append(FuncDesc(mf.group(1), fields, conv, acc,
-                                  mp.group(2), mp.group(3),
-                                  mp.group(4), mp.group(5)))
+                raise ParseError(lr, "result type mismatch with function")
+            funcs.append(
+                FuncDesc(
+                    mf.group(1),
+                    fields,
+                    conv,
+                    acc,
+                    mp.group(2),
+                    mp.group(3),
+                    mp.group(4),
+                    mp.group(5),
+                )
+            )
 
     return funcs
 
@@ -316,10 +320,10 @@ def read_methods(filename):
 #  (one description may describe several nodes).
 # A comment start at column 2 or 4 or later.
 def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
-    pat_only = re.compile('   -- Only for ' + prefix_name + '(\w+):\n')
-    pat_only_bad = re.compile ('   -- *Only for.*\n')
-    pat_field = re.compile('   --   Get/Set_(\w+) \((Alias )?([\w,]+)\)\n')
-    pat_comment = re.compile('   --(|  [^ ].*|    .*)\n')
+    pat_only = re.compile("   -- Only for " + prefix_name + "(\w+):\n")
+    pat_only_bad = re.compile("   -- *Only for.*\n")
+    pat_field = re.compile("   --   Get/Set_(\w+) \((Alias )?([\w,]+)\)\n")
+    pat_comment = re.compile("   --(|  [^ ].*|    .*)\n")
 
     # Create nodes
     cur_nodes = []
@@ -336,7 +340,7 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
         l = lr.get()
 
     # Look for fields
-    while l != '\n':
+    while l != "\n":
         # Skip comments
         while pat_comment.match(l):
             l = lr.get()
@@ -349,9 +353,9 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
                 name = m.group(1)
                 n = nodes.get(name, None)
                 if n is None:
-                    raise ParseError(lr, 'node is unknown')
+                    raise ParseError(lr, "node is unknown")
                 if n not in cur_nodes:
-                    raise ParseError(lr, 'node not currently described')
+                    raise ParseError(lr, "node not currently described")
                 only_nodes.append(n)
                 l = lr.get()
                 m = pat_only.match(l)
@@ -371,29 +375,27 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
             if pat_only_bad.match(l):
                 raise ParseError(lr, "misleading 'Only for' comment")
             else:
-                raise ParseError(lr, 'bad line in node description')
+                raise ParseError(lr, "bad line in node description")
 
         func = m.group(1)
         alias = m.group(2)
-        fields = m.group(3).split(',')
+        fields = m.group(3).split(",")
 
         # Check the function exists and if the field is correct.
         if func not in funcs_dict:
-            raise ParseError(lr, 'unknown function')
+            raise ParseError(lr, "unknown function")
         func = funcs_dict[func]
         if func.fields != fields:
-            raise ParseError(lr, 'fields mismatch')
+            raise ParseError(lr, "fields mismatch")
 
         for c in only_nodes:
             for f in fields:
                 if f not in c.fields:
-                    raise ParseError(
-                        lr, 'field ' + f + ' does not exist in node')
+                    raise ParseError(lr, "field " + f + " does not exist in node")
             if not alias:
                 for f in fields:
                     if c.fields[f]:
-                        raise ParseError(
-                            lr, 'field ' + f + ' already used')
+                        raise ParseError(lr, "field " + f + " already used")
                     c.fields[f] = func
                     c.order.append(f)
             c.attrs[func.name] = func
@@ -408,18 +410,18 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
     nodes = {}
 
     # Skip until start
-    while lr.get() != '   -- Start of ' + type_name + '.\n':
+    while lr.get() != "   -- Start of " + type_name + ".\n":
         pass
 
-    pat_decl = re.compile('   -- ' + prefix_name + '(\w+) \((\w+)\)\n')
-    pat_decls = re.compile('   -- ' + prefix_range_name + '(\w+) \((\w+)\)\n')
-    pat_comment_line = re.compile('   --+\n')
-    pat_comment_box = re.compile('   --(  .*)?\n')
+    pat_decl = re.compile("   -- " + prefix_name + "(\w+) \((\w+)\)\n")
+    pat_decls = re.compile("   -- " + prefix_range_name + "(\w+) \((\w+)\)\n")
+    pat_comment_line = re.compile("   --+\n")
+    pat_comment_box = re.compile("   --(  .*)?\n")
     while True:
         l = lr.get()
-        if l == '   -- End of ' + type_name + '.\n':
+        if l == "   -- End of " + type_name + ".\n":
             break
-        if l == '\n':
+        if l == "\n":
             continue
         m = pat_decl.match(l)
         if m:
@@ -430,12 +432,11 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
             while True:
                 name = m.group(1)
                 if name not in kinds:
-                    raise ParseError(lr, 'unknown node')
+                    raise ParseError(lr, "unknown node")
                 fmt = m.group(2)
                 names.append((name, fmt))
                 if name in nodes:
-                    raise ParseError(
-                        lr, 'node {} already described'.format(name));
+                    raise ParseError(lr, "node {} already described".format(name))
                 # There might be several nodes described at once.
                 l = lr.get()
                 m = pat_decl.match(l)
@@ -454,7 +455,7 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
             continue
         if pat_comment_line.match(l) or pat_comment_box.match(l):
             continue
-        raise ParseError(lr, 'bad line in node description')
+        raise ParseError(lr, "bad line in node description")
 
     for k in kinds:
         if k not in nodes:
@@ -467,51 +468,50 @@ def gen_choices(choices):
     is_first = True
     for c in choices:
         if is_first:
-            print '        ',
-            print 'when',
+            print "        ",
+            print "when",
         else:
             print
-            print '        ',
-            print '  |',
+            print "        ",
+            print "  |",
         print prefix_name + c,
         is_first = False
-    print '=>'
+    print "=>"
 
 
 def gen_get_format(formats, nodes, kinds):
     """Generate the Get_Format function."""
-    print '   function Get_Format (Kind : ' + type_name + ') ' + \
-          'return Format_Type is'
-    print '   begin'
-    print '      case Kind is'
+    print "   function Get_Format (Kind : " + type_name + ") " + "return Format_Type is"
+    print "   begin"
+    print "      case Kind is"
     for f in formats:
         choices = [k for k in kinds if nodes[k].format == f]
         gen_choices(choices)
-        print '            return Format_' + f + ';'
-    print '      end case;'
-    print '   end Get_Format;'
+        print "            return Format_" + f + ";"
+    print "      end case;"
+    print "   end Get_Format;"
 
 
 def gen_subprg_header(decl):
     if len(decl) < 76:
-        print decl + ' is'
+        print decl + " is"
     else:
         print decl
-        print '   is'
-    print '   begin'
+        print "   is"
+    print "   begin"
 
 
 def gen_assert(func):
-    print '      pragma Assert (' + func.pname + ' /= Null_' + node_type + ');'
-    cond = '(Has_' + func.name + ' (Get_Kind (' + func.pname + ')),'
+    print "      pragma Assert (" + func.pname + " /= Null_" + node_type + ");"
+    cond = "(Has_" + func.name + " (Get_Kind (" + func.pname + ")),"
     msg = '"no field ' + func.name + '");'
     if len(cond) < 60:
-        print '      pragma Assert ' + cond
-        print '                     ' + msg
+        print "      pragma Assert " + cond
+        print "                     " + msg
     else:
-        print '      pragma Assert'
-        print '         ' + cond
-        print '          ' + msg
+        print "      pragma Assert"
+        print "         " + cond
+        print "          " + msg
 
 
 def get_field_type(fields, f):
@@ -525,70 +525,86 @@ def gen_get_set(func, nodes, fields):
     """Generate Get_XXX/Set_XXX subprograms for FUNC."""
     rtype = func.rtype
     # If the function needs several fields, it must be user defined
-    if func.conv == 'grp':
-        print '   type %s_Conv is record' % rtype
+    if func.conv == "grp":
+        print "   type %s_Conv is record" % rtype
         for f in func.fields:
-            print '      %s: %s;' % (f, get_field_type(fields, f))
-        print '   end record;'
-        print '   pragma Pack (%s_Conv);' % rtype
+            print "      %s: %s;" % (f, get_field_type(fields, f))
+        print "   end record;"
+        print "   pragma Pack (%s_Conv);" % rtype
         print "   pragma Assert (%s_Conv'Size = %s'Size);" % (rtype, rtype)
         print
     else:
         f = func.fields[0]
-        g = 'Get_' + f + ' (' + func.pname + ')'
+        g = "Get_" + f + " (" + func.pname + ")"
 
     s = func.rname
     if func.conv:
-        if func.conv == 'uc':
+        if func.conv == "uc":
             field_type = get_field_type(fields, f)
-            g = field_type + '_To_' + rtype + ' (' + g + ')'
-            s = rtype + '_To_' + field_type + ' (' + s + ')'
-        elif func.conv == 'pos':
-            g = rtype + "'Val (" + g + ')'
-            s = rtype + "'Pos (" + s + ')'
+            g = field_type + "_To_" + rtype + " (" + g + ")"
+            s = rtype + "_To_" + field_type + " (" + s + ")"
+        elif func.conv == "pos":
+            g = rtype + "'Val (" + g + ")"
+            s = rtype + "'Pos (" + s + ")"
 
-    subprg = '   function Get_' + func.name + ' (' + func.pname \
-             + ' : ' + func.ptype + ') return ' + rtype
-    if func.conv == 'grp':
+    subprg = (
+        "   function Get_"
+        + func.name
+        + " ("
+        + func.pname
+        + " : "
+        + func.ptype
+        + ") return "
+        + rtype
+    )
+    if func.conv == "grp":
         print subprg
-        print '   is'
-        print '      function To_%s is new Ada.Unchecked_Conversion' % \
-            func.rtype
-        print '         (%s_Conv, %s);' % (rtype, rtype)
-        print '      Conv : %s_Conv;' % rtype
-        print '   begin'
+        print "   is"
+        print "      function To_%s is new Ada.Unchecked_Conversion" % func.rtype
+        print "         (%s_Conv, %s);" % (rtype, rtype)
+        print "      Conv : %s_Conv;" % rtype
+        print "   begin"
     else:
         gen_subprg_header(subprg)
     gen_assert(func)
-    if func.conv == 'grp':
+    if func.conv == "grp":
         for f in func.fields:
-            print '      Conv.%s := Get_%s (%s);' % (f, f, func.pname)
-        g = 'To_%s (Conv)' % rtype
-    print '      return ' + g + ';'
-    print '   end Get_' + func.name + ';'
+            print "      Conv.%s := Get_%s (%s);" % (f, f, func.pname)
+        g = "To_%s (Conv)" % rtype
+    print "      return " + g + ";"
+    print "   end Get_" + func.name + ";"
     print
 
-    subprg = '   procedure Set_' + func.name + ' (' \
-             + func.pname + ' : ' + func.ptype + '; ' \
-             + func.rname + ' : ' + func.rtype + ')'
-    if func.conv == 'grp':
+    subprg = (
+        "   procedure Set_"
+        + func.name
+        + " ("
+        + func.pname
+        + " : "
+        + func.ptype
+        + "; "
+        + func.rname
+        + " : "
+        + func.rtype
+        + ")"
+    )
+    if func.conv == "grp":
         print subprg
-        print '   is'
-        print '      function To_%s_Conv is new Ada.Unchecked_Conversion' % \
-            func.rtype
-        print '         (%s, %s_Conv);' % (rtype, rtype)
-        print '      Conv : %s_Conv;' % rtype
-        print '   begin'
+        print "   is"
+        print "      function To_%s_Conv is new Ada.Unchecked_Conversion" % func.rtype
+        print "         (%s, %s_Conv);" % (rtype, rtype)
+        print "      Conv : %s_Conv;" % rtype
+        print "   begin"
     else:
         gen_subprg_header(subprg)
     gen_assert(func)
-    if func.conv == 'grp':
-        print '      Conv := To_%s_Conv (%s);' % (rtype, func.rname)
+    if func.conv == "grp":
+        print "      Conv := To_%s_Conv (%s);" % (rtype, func.rname)
         for f in func.fields:
-            print '      Set_%s (%s, Conv.%s);' % (f, func.pname, f)
+            print "      Set_%s (%s, Conv.%s);" % (f, func.pname, f)
     else:
-        print '      Set_' + f + ' (' + func.pname + ', ' + s + ');'
-    print '   end Set_' + func.name + ';'
+        print "      Set_" + f + " (" + func.pname + ", " + s + ");"
+    print "   end Set_" + func.name + ";"
     print
 
 
@@ -597,38 +613,38 @@ def funcs_of_node(n):
 
 
 def gen_has_func_spec(name, suff):
-    spec = '   function Has_' + name + ' (K : ' + type_name + ')'
-    ret = ' return Boolean' + suff
+    spec = "   function Has_" + name + " (K : " + type_name + ")"
+    ret = " return Boolean" + suff
     if len(spec) < 60:
         print spec + ret
     else:
         print spec
-        print '     ' + ret
+        print "     " + ret
 
 
 def do_disp_formats():
     for fmt in fields:
-        print "Fields of Format_"+fmt
+        print "Fields of Format_" + fmt
         fld = fields[fmt]
         for k in fld:
-            print '  ' + k + ' (' + fld[k] + ')'
+            print "  " + k + " (" + fld[k] + ")"
 
 
 def do_disp_kinds():
     print "Kinds are:"
     for k in kinds:
-        print '  ' + prefix_name + k
+        print "  " + prefix_name + k
 
 
 def do_disp_funcs():
     print "Functions are:"
     for f in funcs:
-        s = '{0} ({1}: {2}'.format(f.name, f.field, f.rtype)
+        s = "{0} ({1}: {2}".format(f.name, f.field, f.rtype)
         if f.acc:
-            s += ' acc:' + f.acc
+            s += " acc:" + f.acc
         if f.conv:
-            s += ' conv:' + f.conv
-        s += ')'
+            s += " conv:" + f.conv
+        s += ")"
         print s
 
 
@@ -638,16 +654,16 @@ def do_disp_types():
     for f in funcs:
         s |= set([f.rtype])
     for t in sorted(s):
-        print '  ' + t
+        print "  " + t
 
 
 def do_disp_nodes():
     for k in kinds:
         v = nodes[k]
-        print prefix_name + k + ' (' + v.format + ')'
+        print prefix_name + k + " (" + v.format + ")"
         flds = [fk for fk, fv in v.fields.items() if fv]
         for fk in sorted(flds):
-            print '  ' + fk + ': ' + v.fields[fk].name
+            print "  " + fk + ": " + v.fields[fk].name
 
 
 def do_get_format():
@@ -659,12 +675,12 @@ def do_body():
     while True:
         l = lr.get().rstrip()
         print l
-        if l == '   --  Subprograms':
+        if l == "   --  Subprograms":
             gen_get_format(formats, nodes, kinds)
             print
             for f in funcs:
                 gen_get_set(f, nodes, fields)
-        if l[0:3] == 'end':
+        if l[0:3] == "end":
             break
 
 
@@ -681,7 +697,7 @@ def get_attributes():
         if f.acc:
             s |= set([f.acc])
     res = [t for t in sorted(s)]
-    res.insert(0, 'None')
+    res.insert(0, "None")
     return res
 
 
@@ -689,34 +705,32 @@ def gen_enum(prefix, vals):
     last = None
     for v in vals:
         if last:
-            print last + ','
+            print last + ","
         last = prefix + v
     print last
 
 
 def do_meta_specs():
-    lr = linereader(meta_base_file + '.ads.in')
+    lr = linereader(meta_base_file + ".ads.in")
     types = get_types()
     while True:
         l = lr.get().rstrip()
-        if l == '      --  TYPES':
-            gen_enum('      Type_', types)
-        elif l == '      --  FIELDS':
-            gen_enum('      Field_', [f.name for f in funcs])
-        elif l == '      --  ATTRS':
-            gen_enum('      Attr_', get_attributes())
-        elif l == '   --  FUNCS':
+        if l == "      --  TYPES":
+            gen_enum("      Type_", types)
+        elif l == "      --  FIELDS":
+            gen_enum("      Field_", [f.name for f in funcs])
+        elif l == "      --  ATTRS":
+            gen_enum("      Attr_", get_attributes())
+        elif l == "   --  FUNCS":
             for t in types:
-                print '   function Get_' + t
-                print '      (N : ' + node_type + '; F : Fields_Enum) return '\
-                      + t + ';'
-                print '   procedure Set_' + t
-                print '      (N : ' + node_type + '; F : Fields_Enum; V: ' \
-                      + t + ');'
+                print "   function Get_" + t
+                print "      (N : " + node_type + "; F : Fields_Enum) return " + t + ";"
+                print "   procedure Set_" + t
+                print "      (N : " + node_type + "; F : Fields_Enum; V: " + t + ");"
                 print
             for f in funcs:
-                gen_has_func_spec(f.name, ';')
-        elif l[0:3] == 'end':
+                gen_has_func_spec(f.name, ";")
+        elif l[0:3] == "end":
             print l
             break
         else:
@@ -724,68 +738,71 @@ def do_meta_specs():
 
 
 def do_meta_body():
-    lr = linereader(meta_base_file + '.adb.in')
+    lr = linereader(meta_base_file + ".adb.in")
     while True:
         l = lr.get().rstrip()
-        if l == '      --  FIELDS_TYPE':
+        if l == "      --  FIELDS_TYPE":
             last = None
             for f in funcs:
                 if last:
-                    print last + ','
-                last = '      Field_' + f.name + ' => Type_' + f.rtype
+                    print last + ","
+                last = "      Field_" + f.name + " => Type_" + f.rtype
             print last
-        elif l == '         --  FIELD_IMAGE':
+        elif l == "         --  FIELD_IMAGE":
             for f in funcs:
-                print '         when Field_' + f.name + ' =>'
+                print "         when Field_" + f.name + " =>"
                 print '            return "' + f.name.lower() + '";'
-        elif l == '         --  IIR_IMAGE':
+        elif l == "         --  IIR_IMAGE":
             for k in kinds:
-                print '         when ' + prefix_name + k + ' =>'
+                print "         when " + prefix_name + k + " =>"
                 print '            return "' + k.lower() + '";'
-        elif l == '         --  FIELD_ATTRIBUTE':
+        elif l == "         --  FIELD_ATTRIBUTE":
             for f in funcs:
-                print '         when Field_' + f.name + ' =>'
+                print "         when Field_" + f.name + " =>"
                 if f.acc:
                     attr = f.acc
                 else:
-                    attr = 'None'
-                print '            return Attr_' + attr + ';'
-        elif l == '      --  FIELDS_ARRAY':
+                    attr = "None"
+                print "            return Attr_" + attr + ";"
+        elif l == "      --  FIELDS_ARRAY":
             last = None
-            nodes_types = [node_type,
-                           node_type + '_List', node_type + '_Flist']
+            nodes_types = [node_type, node_type + "_List", node_type + "_Flist"]
             for k in kinds:
                 v = nodes[k]
                 if last:
-                    print last + ','
+                    print last + ","
                 last = None
-                print '      --  ' + prefix_name + k
+                print "      --  " + prefix_name + k
                 # Get list of physical fields for V, in some order.
                 if flag_keep_order:
                     flds = v.order
                 else:
                     # First non Iir and no Iir_List.
-                    flds = sorted([fk for fk, fv in v.fields.items()
-                                   if fv and fv.rtype not in nodes_types])
+                    flds = sorted(
+                        [
+                            fk
+                            for fk, fv in v.fields.items()
+                            if fv and fv.rtype not in nodes_types
+                        ]
+                    )
                     # Then Iir and Iir_List in order of appearance
-                    flds += (fv for fv in v.order
-                             if v.fields[fv].rtype in nodes_types)
+                    flds += (fv for fv in v.order if v.fields[fv].rtype in nodes_types)
                 # Print the corresponding node field, but remove duplicate due
                 # to 'grp'.
                 fldsn = []
                 for fk in flds:
                     if last:
-                        print last + ','
+                        print last + ","
                     # Remove duplicate
                     fn = v.fields[fk].name
                     if fn not in fldsn:
-                        last = '      Field_' + fn
+                        last = "      Field_" + fn
                         fldsn.append(fn)
                     else:
                         last = None
             if last:
                 print last
-        elif l == '      --  FIELDS_ARRAY_POS':
+        elif l == "      --  FIELDS_ARRAY_POS":
             pos = -1
             last = None
             for k in kinds:
@@ -794,117 +811,140 @@ def do_meta_body():
                 flds = set([fv.name for fk, fv in v.fields.items() if fv])
                 pos += len(flds)
                 if last:
-                    print last + ','
-                last = '      ' + prefix_name + k + ' => {}'.format(pos)
+                    print last + ","
+                last = "      " + prefix_name + k + " => {}".format(pos)
             print last
-        elif l == '   --  FUNCS_BODY':
+        elif l == "   --  FUNCS_BODY":
             # Build list of types
             s = set([])
             for f in funcs:
                 s |= set([f.rtype])
             types = [t for t in sorted(s)]
             for t in types:
-                print '   function Get_' + t
-                print '      (N : ' + node_type + '; F : Fields_Enum) return '\
-                      + t + ' is'
-                print '   begin'
-                print '      pragma Assert (Fields_Type (F) = Type_' + t + ');'
-                print '      case F is'
+                print "   function Get_" + t
+                print "      (N : " + node_type + "; F : Fields_Enum) return " + t + " is"
+                print "   begin"
+                print "      pragma Assert (Fields_Type (F) = Type_" + t + ");"
+                print "      case F is"
                 for f in funcs:
                     if f.rtype == t:
-                        print '         when Field_' + f.name + ' =>'
-                        print '            return Get_' + f.name + ' (N);'
-                print '         when others =>'
-                print '            raise Internal_Error;'
-                print '      end case;'
-                print '   end Get_' + t + ';'
+                        print "         when Field_" + f.name + " =>"
+                        print "            return Get_" + f.name + " (N);"
+                print "         when others =>"
+                print "            raise Internal_Error;"
+                print "      end case;"
+                print "   end Get_" + t + ";"
                 print
-                print '   procedure Set_' + t
-                print '      (N : ' + node_type + '; F : Fields_Enum; V: ' \
-                      + t + ') is'
-                print '   begin'
-                print '      pragma Assert (Fields_Type (F) = Type_' + t + ');'
-                print '      case F is'
+                print "   procedure Set_" + t
+                print "      (N : " + node_type + "; F : Fields_Enum; V: " + t + ") is"
+                print "   begin"
+                print "      pragma Assert (Fields_Type (F) = Type_" + t + ");"
+                print "      case F is"
                 for f in funcs:
                     if f.rtype == t:
-                        print '         when Field_' + f.name + ' =>'
-                        print '            Set_' + f.name + ' (N, V);'
-                print '         when others =>'
-                print '            raise Internal_Error;'
-                print '      end case;'
-                print '   end Set_' + t + ';'
+                        print "         when Field_" + f.name + " =>"
+                        print "            Set_" + f.name + " (N, V);"
+                print "         when others =>"
+                print "            raise Internal_Error;"
+                print "      end case;"
+                print "   end Set_" + t + ";"
                 print
             for f in funcs:
-                gen_has_func_spec(f.name, ' is')
+                gen_has_func_spec(f.name, " is")
                 choices = [k for k in kinds if f.name in nodes[k].attrs]
                 if len(choices) == 0:
-                    print '      pragma Unreferenced (K);'
-                print '   begin'
+                    print "      pragma Unreferenced (K);"
+                print "   begin"
                 if len(choices) == 0:
-                    print '      return False;'
+                    print "      return False;"
                 elif len(choices) == 1:
-                    print '      return K = ' + prefix_name + choices[0] + ';'
+                    print "      return K = " + prefix_name + choices[0] + ";"
                 else:
-                    print '      case K is'
+                    print "      case K is"
                     gen_choices(choices)
-                    print '            return True;'
-                    print '         when others =>'
-                    print '            return False;'
-                    print '      end case;'
-                print '   end Has_' + f.name + ';'
+                    print "            return True;"
+                    print "         when others =>"
+                    print "            return False;"
+                    print "      end case;"
+                print "   end Has_" + f.name + ";"
                 print
-        elif l[0:3] == 'end':
+        elif l[0:3] == "end":
             print l
             break
         else:
             print l
 
 
-actions = {'disp-nodes': do_disp_nodes,
-           'disp-kinds': do_disp_kinds,
-           'disp-formats': do_disp_formats,
-           'disp-funcs': do_disp_funcs,
-           'disp-types': do_disp_types,
-           'get_format': do_get_format,
-           'body': do_body,
-           'meta_specs': do_meta_specs,
-           'meta_body': do_meta_body}
+actions = {
+    "disp-nodes": do_disp_nodes,
+    "disp-kinds": do_disp_kinds,
+    "disp-formats": do_disp_formats,
+    "disp-funcs": do_disp_funcs,
+    "disp-types": do_disp_types,
+    "get_format": do_get_format,
+    "body": do_body,
+    "meta_specs": do_meta_specs,
+    "meta_body": do_meta_body,
+}
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Meta-grammar processor')
-    parser.add_argument('action', choices=actions.keys(),
-                        default='disp-nodes')
-    parser.add_argument('--field-file', dest='field_file',
-                        default='nodes.ads',
-                        help='specify file which defines fields')
-    parser.add_argument('--kind-file', dest='kind_file',
-                        default='iirs.ads',
-                        help='specify file which defines nodes kind')
-    parser.add_argument('--node-file', dest='node_file',
-                        default='iirs.ads',
-                        help='specify file which defines nodes and methods')
-    parser.add_argument('--template-file', dest='template_file',
-                        default='iirs.adb.in',
-                        help='specify template body file')
-    parser.add_argument('--meta-basename', dest='meta_basename',
-                        default='nodes_meta',
-                        help='specify base name of meta files')
-    parser.add_argument('--kind-type', dest='kind_type',
-                        default='Iir_Kind',
-                        help='name of kind type')
-    parser.add_argument('--kind-prefix', dest='kind_prefix',
-                        default='Iir_Kind_',
-                        help='prefix for kind literals')
-    parser.add_argument('--kind-range-prefix', dest='kind_range_prefix',
-                        default='Iir_Kinds_',
-                        help='prefix for kind subtype (range)')
-    parser.add_argument('--node-type', dest='node_type',
-                        default='Iir',
-                        help='name of the node type')
-    parser.add_argument('--keep-order', dest='flag_keep_order',
-                        action='store_true',
-                        help='keep field order of nodes')
+    parser = argparse.ArgumentParser(description="Meta-grammar processor")
+    parser.add_argument("action", choices=actions.keys(), default="disp-nodes")
+    parser.add_argument(
+        "--field-file",
+        dest="field_file",
+        default="nodes.ads",
+        help="specify file which defines fields",
+    )
+    parser.add_argument(
+        "--kind-file",
+        dest="kind_file",
+        default="iirs.ads",
+        help="specify file which defines nodes kind",
+    )
+    parser.add_argument(
+        "--node-file",
+        dest="node_file",
+        default="iirs.ads",
+        help="specify file which defines nodes and methods",
+    )
+    parser.add_argument(
+        "--template-file",
+        dest="template_file",
+        default="iirs.adb.in",
+        help="specify template body file",
+    )
+    parser.add_argument(
+        "--meta-basename",
+        dest="meta_basename",
+        default="nodes_meta",
+        help="specify base name of meta files",
+    )
+    parser.add_argument(
+        "--kind-type", dest="kind_type", default="Iir_Kind", help="name of kind type"
+    )
+    parser.add_argument(
+        "--kind-prefix",
+        dest="kind_prefix",
+        default="Iir_Kind_",
+        help="prefix for kind literals",
+    )
+    parser.add_argument(
+        "--kind-range-prefix",
+        dest="kind_range_prefix",
+        default="Iir_Kinds_",
+        help="prefix for kind subtype (range)",
+    )
+    parser.add_argument(
+        "--node-type", dest="node_type", default="Iir", help="name of the node type"
+    )
+    parser.add_argument(
+        "--keep-order",
+        dest="flag_keep_order",
+        action="store_true",
+        help="keep field order of nodes",
+    )
     parser.set_defaults(flag_keep_order=False)
     args = parser.parse_args()
 
@@ -934,8 +974,7 @@ def main():
 
     except ParseError as e:
         print >> sys.stderr, e
-        print >> sys.stderr, \
-            "in {0}:{1}:{2}".format(e.lr.filename, e.lr.lineno, e.lr.l)
+        print >> sys.stderr, "in {0}:{1}:{2}".format(e.lr.filename, e.lr.lineno, e.lr.l)
         sys.exit(1)
 
     f = actions.get(args.action, None)
@@ -945,5 +984,5 @@ def main():
     f()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

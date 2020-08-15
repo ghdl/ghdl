@@ -22,12 +22,14 @@ def find_def(n, loc):
     if n == nodes.Null_Iir:
         return None
     k = nodes.Get_Kind(n)
-    if k in [nodes.Iir_Kind.Simple_Name,
-             nodes.Iir_Kind.Character_Literal,
-             nodes.Iir_Kind.Operator_Symbol,
-             nodes.Iir_Kind.Selected_Name,
-             nodes.Iir_Kind.Attribute_Name,
-             nodes.Iir_Kind.Selected_Element]:
+    if k in [
+        nodes.Iir_Kind.Simple_Name,
+        nodes.Iir_Kind.Character_Literal,
+        nodes.Iir_Kind.Operator_Symbol,
+        nodes.Iir_Kind.Selected_Name,
+        nodes.Iir_Kind.Attribute_Name,
+        nodes.Iir_Kind.Selected_Element,
+    ]:
         n_loc = nodes.Get_Location(n)
         if loc >= n_loc:
             ident = nodes.Get_Identifier(n)
@@ -39,7 +41,7 @@ def find_def(n, loc):
     elif k == nodes.Iir_Kind.Design_File:
         return find_def_chain(nodes.Get_First_Design_Unit(n), loc)
     elif k == nodes.Iir_Kind.Design_Unit:
-        #if loc > elocations.Get_End_Location(unit):
+        # if loc > elocations.Get_End_Location(unit):
         #    return None
         res = find_def_chain(nodes.Get_Context_Items(n), loc)
         if res is not None:
@@ -89,6 +91,10 @@ def goto_definition(n, loc):
     log.debug("for loc %u found node %s", loc, ref)
     if ref is None:
         return None
-    log.debug("for loc %u id=%s", loc, name_table.Get_Name_Ptr(nodes.Get_Identifier(ref)).decode('utf-8'))
+    log.debug(
+        "for loc %u id=%s",
+        loc,
+        name_table.Get_Name_Ptr(nodes.Get_Identifier(ref)).decode("utf-8"),
+    )
     ent = nodes.Get_Named_Entity(ref)
     return None if ent == nodes.Null_Iir else ent

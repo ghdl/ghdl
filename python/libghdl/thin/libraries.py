@@ -3,8 +3,7 @@ from ctypes import c_int32
 
 Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
 
-Add_Design_Unit_Into_Library = \
-    libghdl.libraries__add_design_unit_into_library
+Add_Design_Unit_Into_Library = libghdl.libraries__add_design_unit_into_library
 
 # Use .value
 Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
