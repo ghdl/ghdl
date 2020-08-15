@@ -12,8 +12,10 @@ except ImportError:
 
 log = logging.getLogger('ghdl-ls')
 
+
 class ProtocolError(Exception):
     pass
+
 
 class LSPConn:
     def __init__(self, reader, writer):
@@ -31,6 +33,7 @@ class LSPConn:
     def write(self, out):
         self.writer.write(out.encode())
         self.writer.flush()
+
 
 def path_from_uri(uri):
     # Convert file uri to path (strip html like head part)
@@ -193,6 +196,7 @@ class LanguageProtocolServer(object):
 #  Standard defines and object types
 #
 
+
 class JSONErrorCodes(object):
     # Defined by JSON RPC
     ParseError = -32700
@@ -237,16 +241,19 @@ class DiagnosticSeverity(object):
     Information = 3
     Hint = 4
 
+
 class TextDocumentSyncKind(object):
     NONE = 0,
     FULL = 1
     INCREMENTAL = 2
+
 
 class MessageType(object):
     Error = 1
     Warning = 2
     Info = 3
     Log = 4
+
 
 class SymbolKind(object):
     File = 1
@@ -268,6 +275,7 @@ class SymbolKind(object):
     Boolean = 17
     Array = 18
 
+
 @attr.s
 class HoverInfo(object):
     language = attr.ib()
@@ -286,6 +294,7 @@ class Completion(object):
 class Position(object):
     line = attr.ib()
     character = attr.ib()
+
 
 @attr.s
 class Range(object):

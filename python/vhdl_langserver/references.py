@@ -6,6 +6,7 @@ import libghdl.thin.name_table as name_table
 
 log = logging.getLogger(__name__)
 
+
 def find_def_chain(first, loc):
     n1 = first
     while n1 != nodes.Null_Iir:
@@ -80,6 +81,7 @@ def find_def(n, loc):
                         return res
 
     return None
+
 
 def goto_definition(n, loc):
     "Return the declaration (as a node) under :param loc: or None"
