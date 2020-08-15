@@ -29,11 +29,9 @@ def json2lsp():
 def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help="sub-command help")
-    parser_l2j = subparsers.add_parser('lsp2json',
-                                       help='convert lsp dump to JSON')
+    parser_l2j = subparsers.add_parser("lsp2json", help="convert lsp dump to JSON")
     parser_l2j.set_defaults(func=lsp2json)
-    parser_j2l = subparsers.add_parser('json2lsp',
-                                       help='convert JSON to lsp dump')
+    parser_j2l = subparsers.add_parser("json2lsp", help="convert JSON to lsp dump")
     parser_j2l.set_defaults(func=json2lsp)
     args = parser.parse_args()
     args.func()

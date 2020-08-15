@@ -3,10 +3,10 @@ from ctypes import c_int32, c_bool, POINTER, Structure
 
 List_Type = c_int32
 
+
 class Iterator(Structure):
-    _fields_ = [("chunk", c_int32),
-                ("chunk_idx", c_int32),
-                ("remain", c_int32)]
+    _fields_ = [("chunk", c_int32), ("chunk_idx", c_int32), ("remain", c_int32)]
+
 
 Iterate = libghdl.vhdl__lists__iterate
 Iterate.argstype = [List_Type]

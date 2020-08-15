@@ -5,9 +5,9 @@ from ctypes import c_int32
 Std_Location = c_int32.in_dll(libghdl, "vhdl__std_package__std_location")
 
 # Use .value
-Standard_Package = c_int32.in_dll(
-    libghdl, "vhdl__std_package__standard_package")
+Standard_Package = c_int32.in_dll(libghdl, "vhdl__std_package__standard_package")
 
 # Use .value
 Character_Type_Definition = c_int32.in_dll(
-    libghdl, "vhdl__std_package__character_type_definition")
+    libghdl, "vhdl__std_package__character_type_definition"
+)

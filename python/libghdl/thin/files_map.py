@@ -1,7 +1,7 @@
 from libghdl import libghdl
 from ctypes import c_void_p
 
-EOT = b'\x04'
+EOT = b"\x04"
 
 No_Source_File_Entry = 0
 
@@ -13,8 +13,7 @@ Location_File_To_Pos = libghdl.files_map__location_file_to_pos
 
 Location_File_To_Line = libghdl.files_map__location_file_to_line
 
-Location_File_Line_To_Offset = \
-    libghdl.files_map__location_file_line_to_offset
+Location_File_Line_To_Offset = libghdl.files_map__location_file_line_to_offset
 
 Location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
 

@@ -1,13 +1,16 @@
 from libghdl import libghdl
 from ctypes import c_int8, c_int32, c_char_p, Structure
 
+
 class Error_Message(Structure):
-    _fields_ = [("id", c_int8),
-                ("group", c_int8),
-                ("file", c_int32),
-                ("line", c_int32),
-                ("offset", c_int32),
-                ("length", c_int32)]
+    _fields_ = [
+        ("id", c_int8),
+        ("group", c_int8),
+        ("file", c_int32),
+        ("line", c_int32),
+        ("offset", c_int32),
+        ("length", c_int32),
+    ]
 
 
 # Values for group:
