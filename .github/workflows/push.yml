@@ -10,6 +10,24 @@ env:
 jobs:
 
 #
+# Format
+#
+
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - run: python -m pip install black
+
+    - run: python -m black --check python
+
+#
 # GPL
 #
 
@@ -19,8 +37,7 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - run: |
-        TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
+    - run: TASK=buster+mcode ./dist/ci-run.sh -c --gpl --no-synth
 
 #
 # GNU/Linux
