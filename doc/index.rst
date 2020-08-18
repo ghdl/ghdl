@@ -152,6 +152,18 @@
 
 .. raw:: latex
 
+   \part{Libghdl}
+
+.. toctree::
+   :caption: Libghdl
+   :hidden:
+
+   libghdl/Overview
+   libghdl/Initialization
+   libghdl/ASTTraversing
+
+.. raw:: latex
+
    \part{Index}
 
 .. toctree::
