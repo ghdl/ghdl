@@ -66,7 +66,9 @@ package body Synth.Stmts is
 
    function Synth_Waveform (Syn_Inst : Synth_Instance_Acc;
                             Wf : Node;
-                            Targ_Type : Type_Acc) return Valtyp is
+                            Targ_Type : Type_Acc) return Valtyp
+   is
+      Res : Valtyp;
    begin
       if Get_Kind (Wf) = Iir_Kind_Unaffected_Waveform then
          --  TODO
@@ -83,8 +85,11 @@ package body Synth.Stmts is
       if Targ_Type = null then
          return Synth_Expression (Syn_Inst, Get_We_Value (Wf));
       else
-         return Synth_Expression_With_Type
+         Res := Synth_Expression_With_Type
            (Syn_Inst, Get_We_Value (Wf), Targ_Type);
+         Res := Synth_Subtype_Conversion
+           (Get_Build (Syn_Inst), Res, Targ_Type, False, Wf);
+         return Res;
       end if;
    end Synth_Waveform;
 
@@ -1428,7 +1433,8 @@ package body Synth.Stmts is
 
       --  Synth statements, extract choice value.
       declare
-         Choice : Node;
+         Choice, Wf : Node;
+         Val : Valtyp;
          Choice_Idx, Other_Choice : Nat32;
       begin
          Alt_Idx := 0;
@@ -1439,11 +1445,11 @@ package body Synth.Stmts is
          while Is_Valid (Choice) loop
             pragma Assert (not Get_Same_Alternative_Flag (Choice));
 
-            Alt_Idx := Alt_Idx + 1;
+            Wf := Get_Associated_Chain (Choice);
+            Val := Synth_Waveform (Syn_Inst, Wf, Targ_Type);
 
-            Alts (Alt_Idx).Val := Get_Net
-              (Ctxt, Synth_Waveform
-                 (Syn_Inst, Get_Associated_Chain (Choice), Targ_Type));
+            Alt_Idx := Alt_Idx + 1;
+            Alts (Alt_Idx).Val := Get_Net (Ctxt, Val);
 
             Synth_Choice (Syn_Inst, Sel_Net, Sel.Typ,
                           Nets.all, Other_Choice, Choice_Idx, Choice);
