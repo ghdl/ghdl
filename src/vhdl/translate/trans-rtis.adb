@@ -1630,9 +1630,8 @@ package body Trans.Rtis is
             Push_Identifier_Prefix (Mark, Get_Identifier (El));
 
             Type_Rti := Generate_Type_Definition (El_Type);
-            Max_Depth :=
-              Rti_Depth_Type'Max (Max_Depth,
-                                  Get_Info (El_Type).B.Rti_Max_Depth);
+            Max_Depth := Rti_Depth_Type'Max
+              (Max_Depth, Get_Info (El_Type).B.Rti_Max_Depth);
 
             case El_Tinfo.Type_Mode is
                when Type_Mode_Unbounded_Array
@@ -1713,6 +1712,11 @@ package body Trans.Rtis is
          else
             Rtik := Ghdl_Rtik_Type_Unbounded_Record;
          end if;
+
+         --  The layout variable may be deeper than the sub-elements (because
+         --  the record can be declared in a deeper scope).
+         Max_Depth := Rti_Depth_Type'Max (Max_Depth, Depth);
+
          New_Record_Aggr_El
            (Aggr, Generate_Common_Type
               (Rtik, Depth, Max_Depth, Type_To_Mode (Atype)));
