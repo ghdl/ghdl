@@ -223,6 +223,14 @@ package body Grt.Disp_Signals is
       else
          Disp_Value (Sig.Driving_Value, Sig.Mode);
       end if;
+      if Boolean'(False) then
+         Put ("; lst=");
+         if Sig_Type /= null then
+            Disp_Value (stdout, Sig.Last_Value, Sig_Type);
+         else
+            Disp_Value (Sig.Last_Value, Sig.Mode);
+         end if;
+      end if;
       if Sources then
          if Sig.Nbr_Ports > 0 then
             Put (';');
