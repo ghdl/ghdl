@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import distutils.command.build_py
 from distutils.core import setup
 import re
 
