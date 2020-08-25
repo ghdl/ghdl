@@ -4377,11 +4377,11 @@ package body Trans.Chap8 is
       --   with weird resolution functions.
       New_Assign_Stmt
         (New_Obj (Cond),
-         New_Compare_Op (ON_Neq,
-           Chap7.Translate_Signal_Driving_Value
-             (M2E (Targ_Sig), Targ_Type),
-           M2E (Drv),
-           Ghdl_Bool_Type));
+         New_Compare_Op
+           (ON_Neq,
+            M2E (Chap7.Translate_Signal_Driving_Value (Targ_Sig, Targ_Type)),
+            M2E (Drv),
+            Ghdl_Bool_Type));
       Finish_If_Stmt (If_Blk);
 
       --  Put signal into active list (if not already in the list).

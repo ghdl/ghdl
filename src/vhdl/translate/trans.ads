@@ -126,11 +126,11 @@ package Trans is
    --  Signals.
    Ghdl_Scalar_Bytes               : O_Tnode;
    Ghdl_Signal_Type                : O_Tnode;
-   Ghdl_Signal_Value_Field         : O_Fnode;
    Ghdl_Signal_Driving_Value_Field : O_Fnode;
    Ghdl_Signal_Last_Value_Field    : O_Fnode;
    Ghdl_Signal_Last_Event_Field    : O_Fnode;
    Ghdl_Signal_Last_Active_Field   : O_Fnode;
+   Ghdl_Signal_Value_Field         : O_Fnode;
    Ghdl_Signal_Event_Field         : O_Fnode;
    Ghdl_Signal_Active_Field        : O_Fnode;
    Ghdl_Signal_Has_Active_Field    : O_Fnode;

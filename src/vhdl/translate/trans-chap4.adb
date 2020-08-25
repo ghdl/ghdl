@@ -2813,6 +2813,7 @@ package body Trans.Chap4 is
       Constr      : O_Assoc_List;
       Subprg_Info : Subprg_Info_Acc;
       Res         : Mnode;
+      M1          : Mnode;
       Imp         : Iir;
       Func        : Iir;
       Obj         : Iir;  --  Method object for function conversion
@@ -2975,8 +2976,9 @@ package body Trans.Chap4 is
          when Conv_Mode_Out =>
             V1 := New_Selected_Acc_Value (New_Obj (Var_Data),
                                           Conv_Info.In_Sig_Field);
-            R := M2E (Lop2M (V1, In_Info, Mode_Signal));
-            R := Chap7.Translate_Signal_Driving_Value (R, In_Type);
+            M1 := Lop2M (V1, In_Info, Mode_Signal);
+            M1 := Chap7.Translate_Signal_Driving_Value (M1, In_Type);
+            R := M2E (M1);
       end case;
 
       case Get_Kind (Imp) is

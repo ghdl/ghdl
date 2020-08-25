@@ -4089,8 +4089,33 @@ package body Trans.Chap7 is
       Prepare_Data_Record => Sig2val_Prepare_Composite,
       Update_Data_Record => Sig2val_Update_Data_Record);
 
-   function Translate_Signal_Value (Sig : O_Enode; Sig_Type : Iir)
-                                   return O_Enode
+   function Allocate_Value_From_Signal (Sig : Mnode; Sig_Type : Iir)
+                                       return Mnode
+   is
+      Tinfo : constant Type_Info_Acc := Get_Info (Sig_Type);
+      Res     : Mnode;
+   begin
+      if Tinfo.Type_Mode in Type_Mode_Unbounded then
+         Res := Create_Temp (Tinfo);
+
+         --  Copy bounds.
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+            M2Addr (Chap3.Get_Composite_Bounds (Sig)));
+
+         --  Allocate base.
+         Chap3.Allocate_Unbounded_Composite_Base (Alloc_Stack, Res, Sig_Type);
+      elsif Is_Complex_Type (Tinfo) then
+         Res := Create_Temp (Tinfo);
+         Chap4.Allocate_Complex_Object (Sig_Type, Alloc_Stack, Res);
+      else
+         Res := Create_Temp (Tinfo);
+      end if;
+
+      return Res;
+   end Allocate_Value_From_Signal;
+
+   function Translate_Signal_Value (Sig : Mnode; Sig_Type : Iir) return Mnode
    is
       procedure Translate_Signal_Non_Composite
         (Targ      : Mnode;
@@ -4110,47 +4135,23 @@ package body Trans.Chap7 is
          Prepare_Data_Record => Sig2val_Prepare_Composite,
          Update_Data_Record => Sig2val_Update_Data_Record);
 
-      Tinfo : Type_Info_Acc;
+      Tinfo : constant Type_Info_Acc := Get_Info (Sig_Type);
+      Sig2 : Mnode;
+      Res : Mnode;
    begin
-      Tinfo := Get_Info (Sig_Type);
       if Tinfo.Type_Mode in Type_Mode_Scalar then
-         return Read_Value (Sig, Sig_Type);
+         return E2M (Read_Value (M2E (Sig), Sig_Type), Tinfo, Mode_Value);
       else
-         declare
-            Res     : Mnode;
-            Var_Val : Mnode;
-         begin
-            --  allocate result array
-            if Tinfo.Type_Mode in Type_Mode_Unbounded then
-               Res := Create_Temp (Tinfo);
+         Sig2 := Stabilize (Sig);
+         pragma Unreferenced (Sig);
 
-               Var_Val := Stabilize (E2M (Sig, Tinfo, Mode_Signal));
+         Res := Allocate_Value_From_Signal (Sig2, Sig_Type);
 
-               --  Copy bounds.
-               New_Assign_Stmt
-                 (M2Lp (Chap3.Get_Composite_Bounds (Res)),
-                  M2Addr (Chap3.Get_Composite_Bounds (Var_Val)));
+         Open_Temp;
+         Translate_Signal_Target (Res, Sig_Type, Sig2);
+         Close_Temp;
 
-               --  Allocate base.
-               Chap3.Allocate_Unbounded_Composite_Base
-                 (Alloc_Stack, Res, Sig_Type);
-            elsif Is_Complex_Type (Tinfo) then
-               Res := Create_Temp (Tinfo);
-               Chap4.Allocate_Complex_Object (Sig_Type, Alloc_Stack, Res);
-            else
-               Res := Create_Temp (Tinfo);
-            end if;
-
-            Open_Temp;
-
-            if Tinfo.Type_Mode not in Type_Mode_Unbounded then
-               Var_Val := Stabilize (E2M (Sig, Tinfo, Mode_Signal));
-            end if;
-
-            Translate_Signal_Target (Res, Sig_Type, Var_Val);
-            Close_Temp;
-            return M2Addr (Res);
-         end;
+         return Res;
       end if;
    end Translate_Signal_Value;
 
@@ -4165,7 +4166,7 @@ package body Trans.Chap7 is
      (Read_Value => Read_Signal_Driving_Value);
 
    function Translate_Signal_Driving_Value
-     (Sig : O_Enode; Sig_Type : Iir) return O_Enode
+     (Sig : Mnode; Sig_Type : Iir) return Mnode
          renames Translate_Signal_Driving_Value_1;
 
    procedure Set_Driving_Value

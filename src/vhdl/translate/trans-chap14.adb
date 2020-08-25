@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Flags;
+
 with Vhdl.Evaluation; use Vhdl.Evaluation;
 with Vhdl.Std_Package; use Vhdl.Std_Package;
 with Vhdl.Errors; use Vhdl.Errors;
@@ -477,26 +479,6 @@ package body Trans.Chap14 is
       return New_Selected_Element (New_Access_Element (S), Field);
    end Get_Signal_Field;
 
-   function Read_Last_Value (Sig : O_Enode; Sig_Type : Iir) return O_Enode
-   is
-   begin
-      return New_Value (Get_Signal_Value_Field
-                        (Sig, Sig_Type, Ghdl_Signal_Last_Value_Field));
-   end Read_Last_Value;
-
-   function Translate_Last_Value is new Chap7.Translate_Signal_Value
-     (Read_Value => Read_Last_Value);
-
-   function Translate_Last_Value_Attribute (Attr : Iir) return O_Enode
-   is
-      Prefix      : constant Iir := Get_Prefix (Attr);
-      Prefix_Type : constant Iir := Get_Type (Prefix);
-      Name        : Mnode;
-   begin
-      Name := Chap6.Translate_Name (Prefix, Mode_Signal);
-      return Translate_Last_Value (M2E (Name), Prefix_Type);
-   end Translate_Last_Value_Attribute;
-
    function Read_Last_Time (Sig : O_Enode; Field : O_Fnode) return O_Enode
    is
       T : O_Lnode;
@@ -573,15 +555,15 @@ package body Trans.Chap14 is
                                               return O_Enode
    is
       Prefix_Type : constant Iir := Get_Type (Prefix);
+      Info        : constant Type_Info_Acc := Get_Info (Prefix_Type);
       Name        : Mnode;
-      Info        : Type_Info_Acc;
       Var         : O_Dnode;
       Data        : Last_Time_Data;
       Right_Bound : Int64;
       If_Blk      : O_If_Block;
    begin
       Name := Chap6.Translate_Name (Prefix, Mode_Signal);
-      Info := Get_Info (Prefix_Type);
+
       Var := Create_Temp (Std_Time_Otype);
 
       if Info.Type_Mode in Type_Mode_Scalar then
@@ -621,6 +603,150 @@ package body Trans.Chap14 is
       Finish_If_Stmt (If_Blk);
       return New_Obj_Value (Var);
    end Translate_Last_Time_Attribute;
+
+   function Read_Last_Value (Sig : O_Enode; Sig_Type : Iir) return O_Enode is
+   begin
+      return New_Value (Get_Signal_Value_Field
+                        (Sig, Sig_Type, Ghdl_Signal_Last_Value_Field));
+   end Read_Last_Value;
+
+   function Translate_Last_Value_87 is new Chap7.Translate_Signal_Value
+     (Read_Value => Read_Last_Value);
+
+   type Last_Value_Data is record
+      Var_Time : O_Dnode;
+      Res : Mnode;
+   end record;
+
+   procedure Translate_Last_Value_93_Non_Composite
+     (Targ : Mnode; Targ_Type : Iir; Data : Last_Value_Data)
+   is
+      Tinfo   : constant Type_Info_Acc := Get_Info (Targ_Type);
+      If_Blk  : O_If_Block;
+      Targ1   : Mnode;
+      Val     : O_Enode;
+      Val_Ptr : O_Lnode;
+      Res     : O_Dnode;
+   begin
+      Open_Temp;
+      Targ1 := Stabilize (Targ, Can_Copy => True);
+      pragma Unreferenced (Targ);
+
+      Res := Create_Temp (Tinfo.Ortho_Type (Mode_Value));
+
+      Start_If_Stmt
+        (If_Blk,
+         New_Compare_Op (ON_Ge,
+                         Read_Last_Time (M2E (Targ1),
+                                         Ghdl_Signal_Last_Event_Field),
+                         New_Obj_Value (Data.Var_Time),
+                         Ghdl_Bool_Type));
+      New_Assign_Stmt (New_Obj (Res),
+                       Read_Last_Value (M2E (Targ1), Targ_Type));
+      New_Else_Stmt (If_Blk);
+      --  Read the pointer to the value.
+      Val_Ptr := Get_Signal_Field (Targ1, Ghdl_Signal_Value_Field);
+      Val := New_Value (Val_Ptr);
+      --  Convert the pointer to the correct pointer type.
+      Val := New_Convert (Val, Tinfo.Ortho_Ptr_Type (Mode_Value));
+      --  Read the current value
+      Val := New_Value (New_Access_Element (Val));
+      New_Assign_Stmt (New_Obj (Res), Val);
+      Finish_If_Stmt (If_Blk);
+      New_Assign_Stmt (M2Lv (Data.Res), New_Obj_Value (Res));
+
+      Close_Temp;
+   end Translate_Last_Value_93_Non_Composite;
+
+   function Last_Value_Prepare_Data_Composite
+     (Targ : Mnode; Targ_Type : Iir; Data : Last_Value_Data)
+         return Last_Value_Data
+   is
+      pragma Unreferenced (Targ, Targ_Type);
+      New_Res : Mnode;
+   begin
+      if Get_Type_Info (Data.Res).Type_Mode in Type_Mode_Unbounded then
+         New_Res := Stabilize (Chap3.Get_Composite_Base (Data.Res));
+      else
+         New_Res := Stabilize (Data.Res);
+      end if;
+      return (Var_Time => Data.Var_Time, Res => New_Res);
+   end Last_Value_Prepare_Data_Composite;
+
+   function Last_Value_Update_Data_Array (Data      : Last_Value_Data;
+                                          Targ_Type : Iir;
+                                          Index     : O_Dnode)
+                                         return Last_Value_Data is
+   begin
+      return (Var_Time => Data.Var_Time,
+              Res => Chap3.Index_Base (Data.Res, Targ_Type,
+                                       New_Obj_Value (Index)));
+   end Last_Value_Update_Data_Array;
+
+   function Last_Value_Update_Data_Record (Data      : Last_Value_Data;
+                                           Targ_Type : Iir;
+                                           El        : Iir_Element_Declaration)
+                                          return Last_Value_Data
+   is
+      pragma Unreferenced (Targ_Type);
+   begin
+      return (Var_Time => Data.Var_Time,
+              Res => Chap6.Translate_Selected_Element (Data.Res, El));
+   end Last_Value_Update_Data_Record;
+
+   procedure Translate_Last_Value_93 is new Foreach_Non_Composite
+     (Data_Type => Last_Value_Data,
+      Composite_Data_Type => Last_Value_Data,
+      Do_Non_Composite => Translate_Last_Value_93_Non_Composite,
+      Prepare_Data_Array => Last_Value_Prepare_Data_Composite,
+      Update_Data_Array => Last_Value_Update_Data_Array,
+      Prepare_Data_Record => Last_Value_Prepare_Data_Composite,
+      Update_Data_Record => Last_Value_Update_Data_Record);
+
+   function Translate_Last_Value_Attribute (Attr : Iir) return O_Enode
+   is
+      use Flags;
+
+      Prefix      : constant Iir := Get_Prefix (Attr);
+      Prefix_Type : constant Iir := Get_Type (Prefix);
+      Info        : constant Type_Info_Acc := Get_Info (Prefix_Type);
+      Name        : Mnode;
+      Last        : O_Dnode;
+      Res         : Mnode;
+      Data_Time   : Last_Time_Data;
+      Data_Value  : Last_Value_Data;
+   begin
+      Name := Chap6.Translate_Name (Prefix, Mode_Signal);
+      if Info.Type_Mode in Type_Mode_Scalar then
+         --  Very simple for scalar: read the last value.
+         return Read_Last_Value (M2E (Name), Prefix_Type);
+      end if;
+
+      if Flags.Vhdl_Std = Vhdl_87 then
+         return M2E (Translate_Last_Value_87 (Name, Prefix_Type));
+      end if;
+
+      --  For composite: first compute the last_event.
+      Stabilize (Name);
+      Last := Create_Temp (Std_Time_Otype);
+      New_Assign_Stmt
+        (New_Obj (Last),
+         New_Lit (New_Signed_Literal (Std_Time_Otype, 0)));
+      Data_Time := Last_Time_Data'(Var => Last,
+                                   Field => Ghdl_Signal_Last_Event_Field);
+      Translate_Last_Time (Name, Prefix_Type, Data_Time);
+
+      --  Then for each scalar signal:
+      --  * read the last_value if the global last_event is before the
+      --    last_event of the signal
+      --  * read the current value if the global last_event is after the
+      --    last_event of the signal.
+      Res := Chap7.Allocate_Value_From_Signal (Name, Prefix_Type);
+      Data_Value := (Var_Time => Last, Res => Res);
+
+      Translate_Last_Value_93 (Name, Prefix_Type, Data_Value);
+      return M2Addr (Res);
+   end Translate_Last_Value_Attribute;
 
    --  Return TRUE if the scalar signal SIG is being driven.
    function Read_Driving_Attribute (Sig : O_Enode) return O_Enode
@@ -754,7 +880,7 @@ package body Trans.Chap14 is
       Name        : Mnode;
    begin
       Name := Chap6.Translate_Name (Prefix, Mode_Signal);
-      return Translate_Driving_Value (M2E (Name), Get_Type (Prefix));
+      return M2E (Translate_Driving_Value (Name, Get_Type (Prefix)));
    end Translate_Driving_Value_Attribute;
 
    function Translate_Image_Attribute (Attr : Iir) return O_Enode
