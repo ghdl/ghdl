@@ -665,6 +665,27 @@ package body Synth.Expr is
               Len => Get_Range_Length (Rng));
    end Synth_Bounds_From_Range;
 
+   function Synth_Bounds_From_Length (Atype : Node; Len : Int32)
+                                     return Bound_Type
+   is
+      Rng : constant Node := Get_Range_Constraint (Atype);
+      Limit : Int32;
+   begin
+      Limit := Int32 (Eval_Pos (Get_Left_Limit (Rng)));
+      case Get_Direction (Rng) is
+         when Dir_To =>
+            return (Dir => Dir_To,
+                    Left => Limit,
+                    Right => Limit + Len - 1,
+                    Len => Uns32 (Len));
+         when Dir_Downto =>
+            return (Dir => Dir_Downto,
+                    Left => Limit,
+                    Right => Limit - Len + 1,
+                    Len => Uns32 (Len));
+      end case;
+   end Synth_Bounds_From_Length;
+
    function Synth_Simple_Aggregate (Syn_Inst : Synth_Instance_Acc;
                                     Aggr : Node) return Valtyp
    is
@@ -1766,8 +1787,9 @@ package body Synth.Expr is
          when Type_Array =>
             Bounds := Str_Typ.Abounds.D (1);
          when Type_Unbounded_Vector
-           | Type_Unbounded_Array =>
-            Bounds := Synth_Array_Bounds (Syn_Inst, Str_Type, 1);
+            | Type_Unbounded_Array =>
+            Bounds := Synth_Bounds_From_Length
+              (Get_Index_Type (Str_Type, 0), Get_String_Length (Str));
          when others =>
             raise Internal_Error;
       end case;
