@@ -172,6 +172,17 @@ version.ads: version.tmp
 #	useless rebuild.
 	if [ ! -r $@ ] || ! cmp $< $@ > /dev/null; then $(CP) $< $@; fi
 
+# Same tasks, but generate a C header instead
+version.tmp_h: $(srcdir)/src/version.in_h force
+#	Create version.tmp_h from version.in, using git date/hash, or envvar GHDL_DESC. Defaults to 'tarball'.
+	if test -d $(srcdir)/.git && desc=`cd $(srcdir); git describe --dirty`; then GHDL_DESC="$$desc"; fi; \
+	$(SED) -e "s/[(].*[)]/($$GHDL_DESC)/" -e "s/@VER@/$(ghdl_version)/" < $< > $@; \
+
+ghdl_version.h: version.tmp_h
+#	Change ghdl_version.h only if version.tmp_h has been modified to avoid
+#	useless rebuild.
+	if [ ! -r $@ ] || ! cmp $< $@ > /dev/null; then $(CP) $< $@; fi
+
 #################### For mcode backend ##############################
 
 all.mcode: ghdl_mcode$(EXEEXT) libs.vhdl.mcode all.vpi
@@ -439,6 +450,7 @@ all.libghdl.false:
 all.libghdl: all.libghdl.$(enable_libghdl)
 
 install.libghdl.include: install.dirs $(srcdir)/src/synth/ghdlsynth_gates.h
+	$(INSTALL_DATA) -p ghdl_version.h $(DESTDIR)$(incdir)/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth.h $(DESTDIR)$(incdir)/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth_gates.h $(DESTDIR)$(incdir)/
 
@@ -571,7 +583,7 @@ uninstall.vhdllib:
 ####################### clean ############################################
 
 clean: force
-	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.so *.deps *.bexch version.* *.dll *.dylib
+	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.so *.deps *.bexch version.* ghdl_version.* *.dll *.dylib
 	$(RM) -f ghdl_gcc$(EXEEXT) ghdl_mcode$(EXEEXT) ghdl$(EXEEXT) ghdl_llvm$(EXEEXT) ghdl_llvm_jit$(EXEEXT) ghdl_simul$(EXEEXT)
 	$(RM) -f ghdl1-gcc$(EXEEXT) ghdl1-llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
 	$(RM) -f grt/run-bind.ad? grt.lst grt/grt-files grt/grt-files.in
