@@ -1012,7 +1012,7 @@ package body Synth.Insts is
       case Val.Val.Kind is
          when Value_Wire =>
             --  Create a gate for the output, so that it could be read.
-            Val.Val.W := Alloc_Wire (Wire_Output, Inter);
+            Val.Val.W := Alloc_Wire (Wire_Output, Bit_Type, Inter);
             W := Get_Type_Width (Val.Typ);
             Value := Build_Signal
               (Ctxt, New_Internal_Name (Ctxt, Pfx_Name), W);
@@ -1339,7 +1339,7 @@ package body Synth.Insts is
       pragma Assert (Val.Val.Kind = Value_Wire);
 
       --  Create a gate for the output, so that it could be read.
-      Val.Val.W := Alloc_Wire (Wire_Output, Inter);
+      Val.Val.W := Alloc_Wire (Wire_Output, Val.Typ, Inter);
       --  pragma Assert (Desc.W = Get_Type_Width (Val.Typ));
 
       Inp := Get_Input (Self_Inst, Idx);

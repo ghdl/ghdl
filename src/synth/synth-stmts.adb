@@ -1839,7 +1839,7 @@ package body Synth.Stmts is
          then
             Val := Get_Value (Subprg_Inst, Inter);
             --  Arguments are passed by copy.
-            Wire := Alloc_Wire (Wire_Variable, Inter);
+            Wire := Alloc_Wire (Wire_Variable, Val.Typ, Inter);
             Set_Wire_Gate (Wire, Get_Net (Ctxt, Val));
 
             Val := Create_Value_Wire (Wire, Val.Typ);
@@ -1929,11 +1929,11 @@ package body Synth.Stmts is
             Ret_Typ => null,
             Nbr_Ret => 0);
 
-      C.W_En := Alloc_Wire (Wire_Variable, Imp);
-      C.W_Ret := Alloc_Wire (Wire_Variable, Imp);
+      C.W_En := Alloc_Wire (Wire_Variable, Bit_Type, Imp);
+      C.W_Ret := Alloc_Wire (Wire_Variable, Bit_Type, Imp);
 
       if Is_Func then
-         C.W_Val := Alloc_Wire (Wire_Variable, Imp);
+         C.W_Val := Alloc_Wire (Wire_Variable, null, Imp);
       end if;
 
       --  Create a phi so that all assignments are gathered.
@@ -2255,7 +2255,7 @@ package body Synth.Stmts is
       if Lc.Prev_Loop /= null and then Lc.Prev_Loop.Need_Quit then
          --  An exit or next statement that targets an outer loop may suspend
          --  the execution of this loop.
-         Lc.W_Quit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
+         Lc.W_Quit := Alloc_Wire (Wire_Variable, Bit_Type, Lc.Loop_Stmt);
          Set_Wire_Gate (Lc.W_Quit, Build_Control_Signal (C.Inst, 1, Stmt));
          Phi_Assign_Static (Lc.W_Quit, Bit1);
       end if;
@@ -2277,7 +2277,7 @@ package body Synth.Stmts is
 
       if Get_Exit_Flag (Stmt) then
          --  There is an exit statement for this loop.  Create the wire.
-         Lc.W_Exit := Alloc_Wire (Wire_Variable, Lc.Loop_Stmt);
+         Lc.W_Exit := Alloc_Wire (Wire_Variable, Bit_Type, Lc.Loop_Stmt);
          Set_Wire_Gate (Lc.W_Exit, Build_Control_Signal (C.Inst, 1, Stmt));
          Phi_Assign_Static (Lc.W_Exit, Bit1);
       end if;
@@ -3003,7 +3003,7 @@ package body Synth.Stmts is
       C := (Mode => Mode_Dynamic,
             Inst => Make_Instance (Syn_Inst, Proc, C_Sname),
             Cur_Loop => null,
-            W_En => Alloc_Wire (Wire_Variable, Proc),
+            W_En => Alloc_Wire (Wire_Variable, Bit_Type, Proc),
             W_Ret => No_Wire_Id,
             W_Val => No_Wire_Id,
             Ret_Init => No_Net,

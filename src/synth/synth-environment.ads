@@ -68,7 +68,8 @@ package Synth.Environment is
      );
 
    --  Create a wire.
-   function Alloc_Wire (Kind : Wire_Kind; Obj : Source.Syn_Src) return Wire_Id;
+   function Alloc_Wire (Kind : Wire_Kind; Typ : Type_Acc; Obj : Source.Syn_Src)
+                       return Wire_Id;
 
    --  Mark the wire as free.
    procedure Free_Wire (Wid : Wire_Id);
@@ -279,6 +280,9 @@ private
 
       --  Source node that created the wire.
       Decl : Source.Syn_Src;
+
+      --  Type of the net.  Only for diagnostic purposes.
+      Typ : Type_Acc;
 
       --  The initial net for the wire.
       --  This is a pseudo gate that is needed because the value of the wire

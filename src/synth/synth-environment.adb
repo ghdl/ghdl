@@ -28,6 +28,7 @@ with Netlists.Folds; use Netlists.Folds;
 with Netlists.Inference;
 
 with Errorout; use Errorout;
+with Name_Table;
 
 with Synth.Flags;
 with Synth.Errors; use Synth.Errors;
@@ -35,6 +36,7 @@ with Synth.Source; use Synth.Source;
 with Synth.Context;
 
 with Vhdl.Nodes;
+with Vhdl.Utils;
 
 package body Synth.Environment is
    procedure Phi_Assign
@@ -50,7 +52,7 @@ package body Synth.Environment is
       return Wire_Id_Table.Table (Wid).Mark_Flag;
    end Get_Wire_Mark;
 
-   function Alloc_Wire (Kind : Wire_Kind; Obj : Source.Syn_Src)
+   function Alloc_Wire (Kind : Wire_Kind; Typ : Type_Acc; Obj : Source.Syn_Src)
                        return Wire_Id
    is
       Res : Wire_Id;
@@ -58,6 +60,7 @@ package body Synth.Environment is
       Wire_Id_Table.Append ((Kind => Kind,
                              Mark_Flag => False,
                              Decl => Obj,
+                             Typ => Typ,
                              Gate => No_Net,
                              Cur_Assign => No_Seq_Assign,
                              Final_Assign => No_Conc_Assign,
@@ -692,6 +695,149 @@ package body Synth.Environment is
         and then Is_Tribuf_Net (N_Val);
    end Is_Tribuf_Assignment;
 
+   function Info_Subrange_Vhdl (Off : Width; Wd : Width; Bnd: Bound_Type)
+                               return String
+   is
+      function Image (V : Int32) return String
+      is
+         Res : constant String := Int32'Image (V);
+      begin
+         if V >= 0 then
+            return Res (2 .. Res'Last);
+         else
+            return Res;
+         end if;
+      end Image;
+   begin
+      case Bnd.Dir is
+         when Dir_To =>
+            if Wd = 1 then
+               return Image (Bnd.Right - Int32 (Off));
+            else
+               return Image (Bnd.Left + Int32 (Bnd.Len - (Off + Wd)))
+                 & " to "
+                 & Image (Bnd.Right - Int32 (Off));
+            end if;
+         when Dir_Downto =>
+            if Wd = 1 then
+               return Image (Bnd.Right + Int32 (Off));
+            else
+               return Image (Bnd.Left - Int32 (Bnd.Len - (Off + Wd)))
+                 & " downto "
+                 & Image (Bnd.Right + Int32 (Off));
+            end if;
+      end case;
+   end Info_Subrange_Vhdl;
+
+   procedure Info_Subnet_Vhdl (Loc    : Location_Type;
+                               Prefix : String;
+                               Otype  : Vhdl.Nodes.Node;
+                               Typ    : Type_Acc;
+                               Off    : Width;
+                               Wd     : Width) is
+   begin
+      case Typ.Kind is
+         when Type_Bit
+            | Type_Logic
+            | Type_Discrete
+            | Type_Float =>
+            pragma Assert (Wd = Typ.W);
+            pragma Assert (Off = 0);
+            Info_Msg_Synth (+Loc, "  " & Prefix);
+         when Type_File
+            | Type_Protected
+            | Type_Access
+            | Type_Unbounded_Array
+            | Type_Unbounded_Record
+            | Type_Unbounded_Vector =>
+            raise Internal_Error;
+         when Type_Vector =>
+            pragma Assert (Wd <= Typ.W);
+            if Off = 0 and Wd = Typ.W then
+               Info_Msg_Synth (+Loc, "  " & Prefix);
+            else
+               Info_Msg_Synth
+                 (+Loc,
+                  "  " & Prefix
+                    & "(" & Info_Subrange_Vhdl (Off, Wd, Typ.Vbound) & ")");
+            end if;
+         when Type_Slice
+            | Type_Array =>
+            Info_Msg_Synth (+Loc, "  " & Prefix & "(??)");
+         when Type_Record =>
+            declare
+               use Vhdl.Nodes;
+               Els : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Otype);
+            begin
+               for I in Typ.Rec.E'Range loop
+                  declare
+                     El : Rec_El_Type renames Typ.Rec.E (I);
+                     Field : constant Vhdl.Nodes.Node :=
+                       Get_Nth_Element (Els, Natural (I - 1));
+                     Sub_Off : Uns32;
+                     Sub_Wd : Width;
+                  begin
+                     if Off + Wd <= El.Boff then
+                        --  Not covered anymore.
+                        exit;
+                     elsif Off >= El.Boff + El.Typ.W then
+                        --  Not yet covered.
+                        null;
+                     elsif Off <= El.Boff
+                       and then Off + Wd >= El.Boff + El.Typ.W
+                     then
+                        --  Fully covered.
+                        Info_Msg_Synth
+                          (+Loc,
+                           "  " & Prefix & '.'
+                             & Vhdl.Utils.Image_Identifier (Field));
+                     else
+                        --  Partially covered.
+                        if Off < El.Boff then
+                           Sub_Off := 0;
+                           Sub_Wd := Wd - (El.Boff - Off);
+                           Sub_Wd := Width'Min (Sub_Wd, El.Typ.W);
+                        else
+                           Sub_Off := Off - El.Boff;
+                           Sub_Wd := El.Typ.W - (Off - El.Boff);
+                           Sub_Wd := Width'Min (Sub_Wd, Wd);
+                        end if;
+                        Info_Subnet_Vhdl
+                          (+Loc,
+                           Prefix & '.' & Vhdl.Utils.Image_Identifier (Field),
+                           Get_Type (Field), El.Typ, Sub_Off, Sub_Wd);
+                     end if;
+                  end;
+               end loop;
+            end;
+      end case;
+   end Info_Subnet_Vhdl;
+
+   procedure Info_Subnet
+     (Decl : Vhdl.Nodes.Node; Typ : Type_Acc; Off : Width; Wd : Width)
+   is
+      Loc : Location_Type;
+   begin
+      if Typ = null then
+         --  Type is unknown, cannot display more infos.
+         return;
+      end if;
+
+      if Off = 0 and Wd = Typ.W then
+         --  Whole object, no need to give details.
+         --  TODO: just say it ?
+         return;
+      end if;
+
+      Loc := Vhdl.Nodes.Get_Location (Decl);
+      Info_Msg_Synth (+Loc, " this concerns these parts of the signal:");
+      Info_Subnet_Vhdl (Loc,
+                        Name_Table.Image (Vhdl.Nodes.Get_Identifier (Decl)),
+                        Vhdl.Nodes.Get_Type (Decl),
+                        Typ, Off, Wd);
+   end Info_Subnet;
+
    --  Compute the VALUE to be assigned to WIRE_REC.  Handle partial
    --  assignment, multiple assignments and error cases.
    procedure Finalize_Complex_Assignment (Ctxt : Builders.Context_Acc;
@@ -795,12 +941,33 @@ package body Synth.Environment is
                Nbr_Assign := Nbr_Assign - 1;
                Set_Conc_Chain (Last_Asgn, Get_Conc_Chain (Asgn));
             else
-               Error_Msg_Synth
-                 (+Wire_Rec.Decl, "multiple assignments for offsets %v:%v",
-                  (+Next_Off, +(Expected_Off - 1)));
-               --  TODO: insert resolver
-               Expected_Off := Next_Off + Get_Width (Get_Conc_Value (Asgn));
-               Last_Asgn := Asgn;
+               declare
+                  Asgn_Wd : constant Width :=
+                    Get_Width (Get_Conc_Value (Asgn));
+                  Overlap_Wd : Width;
+               begin
+                  Overlap_Wd := Asgn_Wd;
+                  if Next_Off + Overlap_Wd > Expected_Off then
+                     Overlap_Wd := Expected_Off - Next_Off;
+                  end if;
+
+                  Error_Msg_Synth
+                    (+Wire_Rec.Decl,
+                     "multiple assignments for %i offsets %v:%v",
+                     (+Wire_Rec.Decl,
+                      +Next_Off, +(Next_Off + Overlap_Wd - 1)));
+                  Info_Subnet (Wire_Rec.Decl, Wire_Rec.Typ,
+                               Next_Off, Overlap_Wd);
+
+                  if Next_Off + Asgn_Wd < Expected_Off then
+                     --  Remove this assignment
+                     Nbr_Assign := Nbr_Assign - 1;
+                     Set_Conc_Chain (Last_Asgn, Get_Conc_Chain (Asgn));
+                  else
+                     Expected_Off := Next_Off + Asgn_Wd;
+                     Last_Asgn := Asgn;
+                  end if;
+               end;
             end if;
             Asgn := Get_Conc_Chain (Asgn);
          end if;
@@ -1589,7 +1756,7 @@ package body Synth.Environment is
       --  Cached value.
       Wid := Phis_Table.Table (Last).En;
       if Wid = No_Wire_Id then
-         Wid := Alloc_Wire (Wire_Enable, Loc);
+         Wid := Alloc_Wire (Wire_Enable, Bit_Type, Loc);
          Phis_Table.Table (Last).En := Wid;
 
          --  Create the Enable gate.
@@ -1886,6 +2053,7 @@ begin
    Wire_Id_Table.Append ((Kind => Wire_None,
                           Mark_Flag => False,
                           Decl => Source.No_Syn_Src,
+                          Typ => null,
                           Gate => No_Net,
                           Cur_Assign => No_Seq_Assign,
                           Final_Assign => No_Conc_Assign,

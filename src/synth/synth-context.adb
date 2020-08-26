@@ -306,7 +306,7 @@ package body Synth.Context is
       if Kind = Wire_None then
          Wid := No_Wire_Id;
       else
-         Wid := Alloc_Wire (Kind, Obj);
+         Wid := Alloc_Wire (Kind, Otyp, Obj);
       end if;
       Val := Create_Value_Wire (Wid, Otyp);
 
