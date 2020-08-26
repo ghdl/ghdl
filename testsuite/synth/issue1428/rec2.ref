@@ -1,0 +1,3 @@
+rec2.vhdl:15:10: multiple assignments for "s" offsets 2:2
+rec2.vhdl:15:10:note:  this concerns these parts of the signal:
+rec2.vhdl:15:10:note:   s.b(1)

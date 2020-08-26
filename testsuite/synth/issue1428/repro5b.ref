@@ -1,0 +1,3 @@
+repro5b.vhdl:10:10: multiple assignments for "s" offsets 4:6
+repro5b.vhdl:10:10:note:  this concerns these parts of the signal:
+repro5b.vhdl:10:10:note:   s(2 to 4)

@@ -1,0 +1,3 @@
+repro2.vhdl:10:10: multiple assignments for "s" offsets 0:0
+repro2.vhdl:10:10:note:  this concerns these parts of the signal:
+repro2.vhdl:10:10:note:   s(0)
