@@ -288,7 +288,7 @@ package body Synth.Static_Oper is
                                        Res_Typ);
          when Iir_Predefined_Floating_Exp =>
             return Create_Memory_Fp64
-              (Read_Fp64 (Left) ** Natural (Read_Discrete (Right)), Res_Typ);
+              (Read_Fp64 (Left) ** Integer (Read_Discrete (Right)), Res_Typ);
 
          when Iir_Predefined_Array_Array_Concat =>
             declare
