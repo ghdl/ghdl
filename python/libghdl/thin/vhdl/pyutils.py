@@ -298,7 +298,7 @@ def concurrent_stmts_iter(n):
 
 def constructs_iter(n):
     """Iterator on library unit, concurrent statements and declarations
-       that appear directly within a declarative part."""
+    that appear directly within a declarative part."""
     if n == thin.Null_Iir:
         return
     k = nodes.Get_Kind(n)
@@ -365,7 +365,7 @@ def constructs_iter(n):
 
 def sequential_iter(n):
     """Iterator on sequential statements.  The first node must be either
-       a process or a subprogram body."""
+    a process or a subprogram body."""
     if n == thin.Null_Iir:
         return
     k = nodes.Get_Kind(n)
