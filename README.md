@@ -48,9 +48,12 @@ GHDL is free software:
 
 # Getting GHDL
 
-Periodically (not regularly), several binary distributions are made available through the [releases](https://github.com/ghdl/ghdl/releases) tab.
-
-You may use [GHDL Docker images](https://github.com/ghdl/docker) in case your didn't find a suitable release, or build GHDL yourself!
+- Pre-built packages:
+  - Approximately once a year, tagged binary distributions are made available through the [releases](https://github.com/ghdl/ghdl/releases) tab.
+  - After each succesful CI run, [nightly](https://github.com/ghdl/ghdl/releases/tag/nightly) tarballs/zipfiles for Ubuntu Focal and Windows (MSYS2) are updated.
+- For using GHDL in CI, [setup-ghdl-ci](https://github.com/ghdl/setup-ghdl-ci) is provided. It is a GitHub Action (see [github.com/features/actions](https://github.com/features/actions)) to setup GHDL in just 3 lines.
+- You may use [GHDL Docker images](https://github.com/ghdl/docker) in case your didn't find a suitable release.
+- Build GHDL yourself (see below)!
 
 ## Building GHDL
 
