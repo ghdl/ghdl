@@ -1,7 +1,7 @@
 #ifndef _GHDL_VERSION
 #define _GHDL_VERSION
 
-const char* ghdl_ver const = "@VER@";
+const char* ghdl_ver = "@VER@";
 const char* ghdl_release = "(tarball) [Dunoon edition]";
 
 #endif
