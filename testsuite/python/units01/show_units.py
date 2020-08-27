@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import libghdl
-import libghdl.thin.name_table as name_table
-import libghdl.thin.files_map as files_map
-import libghdl.thin.vhdl.nodes as nodes
-import libghdl.thin.vhdl.sem_lib as sem_lib
+from libghdl.thin import name_table
+from libghdl.thin import files_map
+from libghdl.thin.vhdl import nodes
+from libghdl.thin.vhdl import sem_lib
 
 
 def init():
@@ -22,10 +22,10 @@ def list_units(filename):
     file_id = name_table.Get_Identifier(filename.encode("utf_8"))
     sfe = files_map.Read_Source_File(name_table.Null_Identifier, file_id)
     if sfe == files_map.No_Source_File_Entry:
-        print("cannot open file '{}'".format(filename))
+        print("cannot open file '%s'" % filename)
         return
 
-    # Parse and analyze
+    # Parse
     file = sem_lib.Load_File(sfe)
 
     # Display all design units
@@ -33,9 +33,9 @@ def list_units(filename):
     while unit != nodes.Null_Iir:
         lib_unit = nodes.Get_Library_Unit(unit)
         if nodes.Get_Kind(lib_unit) == nodes.Iir_Kind.Entity_Declaration:
-            print("entity {}".format(get_identifier_ptr(lib_unit)))
+            print("entity %s" % get_identifier_ptr(lib_unit))
         elif nodes.Get_Kind(lib_unit) == nodes.Iir_Kind.Architecture_Body:
-            print("architecture {}".format(get_identifier_ptr(lib_unit)))
+            print("architecture %s" % get_identifier_ptr(lib_unit))
         else:
             print("unknown unit!")
         unit = nodes.Get_Chain(unit)
