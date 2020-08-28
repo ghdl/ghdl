@@ -3,11 +3,7 @@ from sys import argv
 from pathlib import Path
 
 import libghdl
-from libghdl.thin import name_table
-from libghdl.thin import files_map
-from libghdl.thin.vhdl import nodes
-from libghdl.thin.vhdl import sem_lib
-from libghdl.thin.vhdl import pyutils
+from libghdl.thin import name_table, files_map, nodes, sem_lib, pyutils
 
 
 def get_identifier_ptr(n):
