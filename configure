@@ -276,6 +276,7 @@ if test $backend = llvm; then
        check_version  8.0 $llvm_version ||
        check_version  9.0 $llvm_version ||
        check_version 10.0 $llvm_version ||
+       check_version 11.0 $llvm_version ||
        false; then
     echo "Debugging is not enabled with llvm $llvm_version"
   else
