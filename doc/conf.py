@@ -16,6 +16,7 @@ needs_sphinx = '1.5'
 extensions = [
     # Standard Sphinx extensions
     'recommonmark',
+    'sphinx.ext.autodoc',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
@@ -26,6 +27,13 @@ extensions = [
     # Other
     'exec',
 ]
+
+autodoc_default_options = {
+    "members": True,
+    'undoc-members': True,
+    #'private-members': True,
+    'inherited-members': True,
+}
 
 templates_path = ['_templates', '_themes']
 
