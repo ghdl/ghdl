@@ -2,12 +2,28 @@ name: 'doc'
 
 on:
   push:
-  pull_request:
 
 jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
+
     - uses: actions/checkout@v2
-    - name: build doc
-      run: ./doc/make.sh
+
+    - name: Build ghdl/doc
+      run: |
+        docker build -t ghdl/doc - <<-EOF
+        FROM ghdl/vunit:llvm
+        ENV PYTHONPATH=/src/python
+        EOF
+
+    - uses: buildthedocs/btd@v0
+      with:
+        token: ${{ github.token }}
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: doc
+        path: |
+          doc/_build/html
+          doc/_build/latex

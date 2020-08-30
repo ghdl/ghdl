@@ -8,14 +8,6 @@ p{font-size:95%;margin-bottom:12px}
 footer {font-size: 75%;}
 .rst-footer-buttons {font-size: 140%;}
 
-/*Header and footer margins*/
-footer p {margin-bottom: 0px}
-footer hr {margin-bottom: 10px}
-[role=navigation] hr {margin-top: 5px}
-
-/*Do not center main content and allow wider display*/
-.wy-nav-content{margin: auto; max-width: 1020px}
-
 /*Shrink left nav to 260px*/
 .wy-nav-side,.rst-versions,.wy-side-nav-search,.wy-menu-vertical{width: 260px}
 .wy-nav-content-wrap{margin-left:260px;background:#fcfcfc;min-height:100%}
@@ -60,10 +52,6 @@ div.wy-menu.rst-pro{display: none !important;max-width: 260px}
 
 /*Reduce space between footnotes*/
 .footnotes > .wy-table-responsive {margin-top:-12px;margin-bottom:12px}
-
-/* Set text justification in paragraphs and list items to fully justified [borrowed from PoC-Library]*/
-.section p {text-align:justify;}
-.simple li {text-align:justify;}
 
 /*Reduce margin below lists*/
 .rst-content .section ul, .rst-content .toctree-wrapper ul, article ul {margin-bottom: 12px}
