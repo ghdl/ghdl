@@ -5,13 +5,12 @@ set -e
 cd "$(dirname $0)"
 
 docker build -t ghdl/sphinx -f- . <<EOF
-FROM btdi/sphinx:featured
+FROM ghdl/vunit:llvm
 COPY requirements.txt /
-RUN apk add -U --no-cache make \
- && pip3 install -r /requirements.txt
+RUN pip3 install -r /requirements.txt
 EOF
 
-dcmd="docker run --rm -u $(id -u) -v /$(pwd)/..://tmp/src -w //tmp/src/doc"
+dcmd="docker run --rm -u $(id -u) -e PYTHONPATH=//tmp/src/python -v /$(pwd)/..://tmp/src -w //tmp/src/doc"
 
 $dcmd ghdl/sphinx sh -c "make html latex man"
 

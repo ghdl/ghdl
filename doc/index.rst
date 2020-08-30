@@ -126,6 +126,7 @@
    using/Foreign
    using/ImplementationOfVHDL
    using/ImplementationOfVITAL
+   using/py/libghdl
 
 .. raw:: latex
 
