@@ -149,6 +149,7 @@
    internals/Overview
    internals/Frontend
    internals/AST
+   internals/RTI
 
 .. raw:: latex
 
