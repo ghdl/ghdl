@@ -270,7 +270,7 @@ if test $backend = llvm; then
        check_version  4.0 $llvm_version ||
        check_version  5.0 $llvm_version ||
        false; then
-    echo "Debugging is not enabled with llvm $llvm_version"
+    echo "Debugging not enabled with llvm $llvm_version"
   elif check_version  6.0 $llvm_version ||
        check_version  7.0 $llvm_version ||
        check_version  8.0 $llvm_version ||
@@ -278,7 +278,7 @@ if test $backend = llvm; then
        check_version 10.0 $llvm_version ||
        check_version 11.0 $llvm_version ||
        false; then
-    echo "Debugging is not enabled with llvm $llvm_version"
+    echo "Debugging is enabled with llvm $llvm_version"
   else
     echo "Unhandled version llvm $llvm_version"
     exit 1
