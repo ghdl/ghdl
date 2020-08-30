@@ -9,6 +9,6 @@ Flag_Configurations = c_bool.in_dll(libghdl, "vhdl__canon__canon_flag_configurat
 
 Flag_Associations = c_bool.in_dll(libghdl, "vhdl__canon__canon_flag_associations")
 
-Extract_Sequential_Statement_Chain_Sensitivity = (
-    libghdl.vhdl__canon__canon_extract_sequential_statement_chain_sensitivity
-)
+# Extract_Sequential_Statement_Chain_Sensitivity = (
+#    libghdl.vhdl__canon__canon_extract_sequential_statement_chain_sensitivity
+# )

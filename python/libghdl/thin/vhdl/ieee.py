@@ -14,7 +14,7 @@ Std_Logic_Vector_Type = c_int.in_dll(
 )
 
 # Get value
-Rising_Edge = c_int.in_dll(libghdl, "vhdl__ieee__std_logic_1164__rising_edge")
+# Rising_Edge = c_int.in_dll(libghdl, "vhdl__ieee__std_logic_1164__rising_edge")
 
 # Get value
-Falling_Edge = c_int.in_dll(libghdl, "vhdl__ieee__std_logic_1164__falling_edge")
+# Falling_Edge = c_int.in_dll(libghdl, "vhdl__ieee__std_logic_1164__falling_edge")
