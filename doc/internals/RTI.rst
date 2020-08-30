@@ -1,13 +1,13 @@
 
-Run Time Information
-####################
+Run Time Information (RTI)
+##########################
 
 .. WARNING::
-   I wrote this documentation while trying to understand how the RTI is
-   organized.  It almost certainly contains errors, and it likely
+   This section was written while trying to understand how the RTI is
+   organized. It almost certainly contains errors, and it likely
    won't be updated with the codebase, so don't belive any of the
-   information here.  Nevertheless, it may be help for a developer new
-   to Ghdl trying to understand the organization of the RTI.
+   information here. Nevertheless, it may be helpful for a developer new
+   to GHDL trying to understand the organization of the RTI.
 
 Useful Definitions
 ==================
@@ -50,7 +50,7 @@ RTI Nodes / RTII Nodes
 All RTI node records have a `Ghdl_Rtin_Common` record as their first
 element. This record contains the following elements:
 
-Kind \: Ghdl_Rtik 
+Kind \: Ghdl_Rtik
 
  This specified what kind of node it is. For example a `process` and
  an `entity` node are both represented by `Ghdl_Rtin_Block` records
@@ -66,7 +66,7 @@ Depth \: Ghdl_Rti_Depth
 Mode \: Ghdl_Rti_U8
 
  ??
- 
+
 Max_Depth \: Ghdl_Rti_Depth
 
  ??
@@ -155,7 +155,7 @@ Child \: Ghdl_Rti_Access
 Size \: Ghdl_Index_Type
 
  The amount of memory requrired for the context of their child.
- 
+
 The Child element is a generate body. There is only a single RTI-node
 structure which Child points to, however a different context is used
 each time we go around the for-generate loop.
@@ -238,7 +238,7 @@ The functions are often pass the RTI object, a context (of a object
 higher in the hierarcy, and a pointer to a local context (often called
 layout)).
 
-The context of an Array Type has a defined structure which is `Ghdl_Uc_Array`. 
+The context of an Array Type has a defined structure which is `Ghdl_Uc_Array`.
 This contains a `Base` and a `Bounds` field.
 
 Base \: Address
@@ -369,29 +369,29 @@ Examples
 
    library ieee ;
    use ieee.std_logic_1164.all;
-   
+
    package mypkg is
-   
+
      type mytype is record
        a: std_logic;
        b: std_logic;
      end record;
-   
+
    end package;
-   
+
    library ieee ;
    use ieee.std_logic_1164.all;
    use work.mypkg.all;
-   
+
    entity myentity is
      port(
        x: in mytype
        );
    end myentity;
-   
+
    architecture arch of myentity is
    begin
-   end arch; 
+   end arch;
 
 
 What will be the structure of the RTI for the port `myentity.x`?
@@ -418,46 +418,47 @@ Address is A + 24
 
    library ieee ;
    use ieee.std_logic_1164.all;
-   
+
    package mypkg is
-   
+
      type mytype is record
        a: std_logic_vector(1 downto 0);
        b: std_logic_vector(1 downto 0);
      end record;
-   
+
    end package;
-   
+
    library ieee ;
    use ieee.std_logic_1164.all;
    use work.mypkg.all;
-   
+
    entity myentity is
      port(
        x: in mytype
        );
    end myentity;
-   
+
    architecture arch of myentity is
    begin
-   end arch; 
+   end arch;
 
+.. code-block::
 
-- Architecture (A)
-  - Entity (A)
-    - port x (A+16)
-      - x.a (A+16)
-      - x.a(?) (A+16)
-      - x.a(?) (A+24)
-      - x.b (A+32)
-      - x.b(?) (A+40)
-      - x.b(?) (A+48)
+   - Architecture (A)
+     - Entity (A)
+       - port x (A+16)
+         - x.a (A+16)
+         - x.a(?) (A+16)
+         - x.a(?) (A+24)
+         - x.b (A+32)
+         - x.b(?) (A+40)
+         - x.b(?) (A+48)
 
 .. code-block:: vhdl
 
    library ieee ;
    use ieee.std_logic_1164.all;
-   
+
    entity myentity is
      generic (
        WIDTH: natural := 2
@@ -466,19 +467,21 @@ Address is A + 24
        x: in std_logic_vector(WIDTH-1 downto 0)
        );
    end myentity;
-   
+
    architecture arch of myentity is
    begin
-   end arch; 
+   end arch;
 
-- Architecture (A)
-  - Entity (A)
-    - generic WIDTH (A+16)
-    - port x (A+48) content of address (A+48) is B
-      - type information
-        analyze a type with context (address=A, rti=entity)
-        layout is located at A+20
-        so bounds is located at A+28
-      - x subtype array (B)
-        - x(?) (B)
-        - x(?) (B+8)
+.. code-block::
+
+   - Architecture (A)
+     - Entity (A)
+       - generic WIDTH (A+16)
+       - port x (A+48) content of address (A+48) is B
+         - type information
+           analyze a type with context (address=A, rti=entity)
+           layout is located at A+20
+           so bounds is located at A+28
+         - x subtype array (B)
+           - x(?) (B)
+           - x(?) (B+8)
