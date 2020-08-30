@@ -1,5 +1,5 @@
 <p align="center">
-  <a title="Read the Docs" href="http://ghdl.readthedocs.io"><img src="https://img.shields.io/readthedocs/ghdl.svg?longCache=true&style=flat-square&logo=read-the-docs&logoColor=e8ecef"></a><!--
+  <a title="Documentation" href="https://ghdl.github.io/ghdl"><img src="https://img.shields.io/website.svg?label=ghdl.github.io%2Fghdl&longCache=true&style=flat-square&url=http%3A%2F%2Fghdl.github.io%2Fghdl%2Findex.html"></a><!--
   -->
   <a title="Join the chat at https://gitter.im/ghdl1/Lobby" href="https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://img.shields.io/badge/chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef"></a><!--
   -->
@@ -9,15 +9,15 @@
 </p>
 
 <p align="center">
-  <img src="./logo.png"/>
+  <img src="./doc/_static/logo.png"/>
 </p>
 
 <p align="center">
   <a title="CII Best Practices" href="https://bestpractices.coreinfrastructure.org/en/projects/3157"><img src="https://img.shields.io/cii/percentage/3157??longCache=true&style=flat-square"></a><!--
   -->
-  <a title="'doc' workflow Status" href="https://github.com/ghdl/ghdl/actions?query=workflow%3Adoc"><img alt="'cache' workflow Status" src="https://img.shields.io/github/workflow/status/ghdl/ghdl/doc?longCache=true&style=flat-square&label=cache&logo=github"></a><!--
+  <a title="'push' workflow Status" href="https://github.com/ghdl/ghdl/actions?query=workflow%3Apush"><img alt="'push' workflow Status" src="https://img.shields.io/github/workflow/status/ghdl/ghdl/push?longCache=true&style=flat-square&label=push&logo=github%20actions&logoColor=fff"></a><!--
   -->
-  <a title="'push' workflow Status" href="https://github.com/ghdl/ghdl/actions?query=workflow%3Apush"><img alt="'push' workflow Status" src="https://img.shields.io/github/workflow/status/ghdl/ghdl/push?longCache=true&style=flat-square&label=push&logo=github"></a><!--
+  <a title="'doc' workflow Status" href="https://github.com/ghdl/ghdl/actions?query=workflow%3Adoc"><img alt="'doc' workflow Status" src="https://img.shields.io/github/workflow/status/ghdl/ghdl/doc?longCache=true&style=flat-square&label=doc&logo=github%20actions&logoColor=fff"></a><!--
   -->
   <a title="Linux/Mac boxes at Travis-CI" href="https://travis-ci.org/ghdl/ghdl/branches"><img src="https://img.shields.io/travis/ghdl/ghdl/master.svg?longCache=true&style=flat-square&logo=travis-ci&logoColor=e8ecef"></a><!--
   -->
@@ -36,14 +36,14 @@ By using a code generator ([LLVM](http://llvm.org/), [GCC](http://gcc.gnu.org/) 
 
 GHDL runs on [GNU/Linux](http://en.wikipedia.org/wiki/Linux_distribution), [Windows](http://en.wikipedia.org/wiki/Microsoft_Windows) and [macOS](http://en.wikipedia.org/wiki/MacOS); on `x86`, `x86_64`, `armv6/armv7/aarch32` and `aarch64`. You can freely [download](https://github.com/ghdl/ghdl/releases) a binary distribution for your OS, use [GHDL Docker images](https://github.com/ghdl/docker), or try to build it on your own machine (see *'Getting GHDL'* below).
 
-Can write waveforms to a [GHW](http://ghdl.readthedocs.io/en/latest/using/Simulation.html?highlight=GHW#cmdoption-wave), [VCD](https://en.wikipedia.org/wiki/Value_change_dump) or FST file. Combined with a [GUI](http://en.wikipedia.org/wiki/Graphical_user_interface)-based [waveform viewer](https://en.wikipedia.org/wiki/Waveform_viewer) and a good text editor, GHDL is a very powerful tool for writing, testing and simulating your code.
+Can write waveforms to a [GHW](http://ghdl.github.io/ghdl/using/Simulation.html?highlight=GHW#cmdoption-wave), [VCD](https://en.wikipedia.org/wiki/Value_change_dump) or FST file. Combined with a [GUI](http://en.wikipedia.org/wiki/Graphical_user_interface)-based [waveform viewer](https://en.wikipedia.org/wiki/Waveform_viewer) and a good text editor, GHDL is a very powerful tool for writing, testing and simulating your code.
 
 Supported third party projects: [cocotb](https://github.com/potentialventures/cocotb) (through the [VPI interface](https://en.wikipedia.org/wiki/Verilog_Procedural_Interface)), [OSVVM](http://osvvm.org), [UVVM](https://github.com/UVVM/UVVM), [VUnit](https://vunit.github.io), ...
 
 GHDL is free software:
 
 - [![GNU General Public License 2](https://img.shields.io/badge/code%20license-GPLv2-bd0000.svg?longCache=true&style=flat-square&label=license&logo=gnu)](https://github.com/ghdl/ghdl/blob/master/COPYING.md)
-- [![Creative Commons Attribution-ShareAlike](https://img.shields.io/badge/doc%20license-Creative%20Commons%20Attribution--ShareAlike--4.0-bf7600.svg?longCache=true&style=flat-square&logo=Creative%20Commons)](https://github.com/ghdl/ghdl/blob/master/doc/COPYING_DOC.md) available at [ghdl.rtfd.io](https://ghdl.readthedocs.io).
+- [![Creative Commons Attribution-ShareAlike](https://img.shields.io/badge/doc%20license-Creative%20Commons%20Attribution--ShareAlike--4.0-bf7600.svg?longCache=true&style=flat-square&logo=Creative%20Commons)](https://github.com/ghdl/ghdl/blob/master/doc/COPYING_DOC.md) available at [ghdl.github.io/ghdl](https://ghdl.github.io/ghdl).
 - Some of the runtime libraries, are under different terms; see the individual source files for details.
 
 # Getting GHDL
@@ -57,7 +57,7 @@ GHDL is free software:
 
 ## Building GHDL
 
-GHDL currently supports three different back-ends (code generators). Each has its pros and cons. You can find specific instructions for each of the options in '[Building](https://ghdl.rtfd.io/en/latest/getting/)'.
+GHDL currently supports three different back-ends (code generators). Each has its pros and cons. You can find specific instructions for each of the options in '[Building](https://ghdl.github.io/ghdl/getting/)'.
 
 ### TL;DR
 
@@ -65,7 +65,7 @@ In order to follow the traditional way to `configure` and `make`, you need an Ad
 
 > Alternatively, GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/) (later than 2017 is suggested; for x86, 32 or 64 bits). Then, untar and run the *doinstall* script.
 
-> Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](https://ghdl.rtfd.io/en/latest/getting/)' for specific package names.
+> Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](https://ghdl.github.io/ghdl/getting/)' for specific package names.
 
 To use mcode backend (easiest to build), in the GHDL base directory, configure and build:
 

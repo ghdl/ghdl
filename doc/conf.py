@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import sys, re
-from os.path import abspath, join
+from os.path import abspath
+from pathlib import Path
+from json import dump, loads
+
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -35,7 +38,7 @@ autodoc_default_options = {
     'inherited-members': True,
 }
 
-templates_path = ['_templates', '_themes']
+templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 source_suffix = {
@@ -80,9 +83,6 @@ language = None
 # directories to ignore when looking for source files.
 exclude_patterns = []
 
-# The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
-
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 todo_link_only = True
@@ -99,16 +99,19 @@ except Exception as ex:
 
 # -- Options for HTML output ----------------------------------------------
 
-html_theme = "sphinx_rtd_theme"
-
-# Override default css to get a larger width for ReadTheDoc build
-html_context = {
-    'css_files': [
-        'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
-        'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
-        '_static/theme_overrides.css',
-    ],
+html_theme_options = {
+    'logo_only': True,
+    'home_breadcrumbs': False,
+    'vcs_pageview_mode': 'blob',
 }
+
+html_context = {}
+ctx = Path(__file__).resolve().parent / 'context.json'
+if ctx.is_file():
+    html_context.update(loads(ctx.open('r').read()))
+
+html_theme_path = ["."]
+html_theme = "_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

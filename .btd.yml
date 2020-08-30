@@ -1,0 +1,9 @@
+input: doc
+output: _build
+requirements: requirements.txt
+target: gh-pages
+formats: [ html, pdf, man ]
+images:
+  base: ghdl/doc
+  latex: btdi/latex
+theme: https://codeload.github.com/buildthedocs/sphinx.theme/tar.gz/v0

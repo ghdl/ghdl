@@ -1,7 +1,6 @@
 #-r ../requirements.txt
-sphinx>=1.5.2
+sphinx>=3.0.0
 recommonmark
-sphinx_rtd_theme
 python-dateutil
 # sphinxcontrib-textstyle>=0.2.1
 # sphinxcontrib-spelling>=2.2.0
