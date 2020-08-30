@@ -197,7 +197,7 @@ PSL in a VHDL(-2008) design without embedding it in comments.
        ghdl -e --std=08 vhdl_design
 
 PSL vunit files (VHDL-2008 / Synthesis only)
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 GHDL supports vunit (Verification Unit) files.
 
