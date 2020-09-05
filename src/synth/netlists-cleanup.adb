@@ -189,9 +189,13 @@ package body Netlists.Cleanup is
 
          case Get_Id (Inst) is
             when Id_Assert
-              | Id_Assume
-              | Id_Cover
-              | Id_Assert_Cover =>
+               | Id_Assume
+               | Id_Cover
+               | Id_Assert_Cover =>
+               Insert_Mark_And_Sweep (Inspect, Inst);
+            when Id_User_None
+               | Id_User_Parameters =>
+               --  Always keep user modules.
                Insert_Mark_And_Sweep (Inspect, Inst);
             when others =>
                null;
