@@ -3132,7 +3132,11 @@ package body Vhdl.Sem_Names is
             | Iir_Kind_Attribute_Declaration
             | Iir_Kinds_Library_Unit
             | Iir_Kind_Library_Declaration
-            | Iir_Kinds_Type_Attribute =>
+            | Iir_Kinds_Type_Attribute
+            | Iir_Kind_Nature_Declaration
+            | Iir_Kind_Subnature_Declaration
+            | Iir_Kind_Group_Declaration
+            | Iir_Kind_Group_Template_Declaration =>
             Error_Msg_Sem (+Name, "%n cannot be indexed or sliced", +Prefix);
             Res := Null_Iir;
 
