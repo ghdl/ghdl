@@ -3026,14 +3026,14 @@ package body Vhdl.Sem_Names is
             end if;
 
          when Iir_Kinds_Object_Declaration
-           | Iir_Kind_Indexed_Name
-           | Iir_Kind_Slice_Name
-           | Iir_Kind_Dereference
-           | Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Selected_Element
-           | Iir_Kind_Attribute_Value
-           | Iir_Kind_Simple_Name_Attribute
-           | Iir_Kind_Function_Call =>
+            | Iir_Kind_Indexed_Name
+            | Iir_Kind_Slice_Name
+            | Iir_Kind_Dereference
+            | Iir_Kind_Implicit_Dereference
+            | Iir_Kind_Selected_Element
+            | Iir_Kind_Attribute_Value
+            | Iir_Kind_Simple_Name_Attribute
+            | Iir_Kind_Function_Call =>
             Add_Result (Res, Sem_As_Indexed_Or_Slice_Name (Prefix, True));
 
          when Iir_Kinds_Array_Attribute =>
@@ -3047,8 +3047,8 @@ package body Vhdl.Sem_Names is
             return;
 
          when Iir_Kinds_Scalar_Type_Attribute
-           | Iir_Kind_Image_Attribute
-           | Iir_Kind_Value_Attribute =>
+            | Iir_Kind_Image_Attribute
+            | Iir_Kind_Value_Attribute =>
             if Get_Parameter (Prefix) /= Null_Iir then
                --  Attribute already has a parameter, the expression
                --  is either a slice or an index.
@@ -3124,14 +3124,15 @@ package body Vhdl.Sem_Names is
                            +Prefix);
 
          when Iir_Kinds_Sequential_Statement
-           | Iir_Kinds_Concurrent_Statement
-           | Iir_Kind_Component_Declaration
-           | Iir_Kind_Type_Conversion
-           | Iir_Kind_Unit_Declaration
-           | Iir_Kind_Enumeration_Literal
-           | Iir_Kind_Attribute_Declaration
-           | Iir_Kinds_Library_Unit
-           | Iir_Kind_Library_Declaration =>
+            | Iir_Kinds_Concurrent_Statement
+            | Iir_Kind_Component_Declaration
+            | Iir_Kind_Type_Conversion
+            | Iir_Kind_Unit_Declaration
+            | Iir_Kind_Enumeration_Literal
+            | Iir_Kind_Attribute_Declaration
+            | Iir_Kinds_Library_Unit
+            | Iir_Kind_Library_Declaration
+            | Iir_Kinds_Type_Attribute =>
             Error_Msg_Sem (+Name, "%n cannot be indexed or sliced", +Prefix);
             Res := Null_Iir;
 
