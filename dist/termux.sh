@@ -3,8 +3,8 @@
 cd $(dirname "$0")/..
 
 curl -fsSL https://its-pointless.github.io/setup-pointless-repo.sh | bash -
-pkg install gnat-9
-setupgcc-9
+pkg install gnat-10 llvm make
+setupgcc-10
 
 mkdir -p build-termux
 cd build-termux
