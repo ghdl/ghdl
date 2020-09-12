@@ -184,8 +184,16 @@ package body Vhdl.Sem is
 
       --  Makes the entity name visible.
       --  FIXME: quote LRM.
-      Sem_Scopes.Add_Name
-        (Entity_Library, Get_Identifier (Entity_Library), False);
+      declare
+         Prev_Hide : constant Boolean := Is_Warning_Enabled (Warnid_Hide);
+      begin
+         --  Avoid spurious warning from entity name (if it has the same
+         --   identifier as a library clause).
+         Enable_Warning (Warnid_Hide, False);
+         Sem_Scopes.Add_Name
+           (Entity_Library, Get_Identifier (Entity_Library), False);
+         Enable_Warning (Warnid_Hide, Prev_Hide);
+      end;
 
       --  LRM 10.1 Declarative Region
       --  1. An entity declaration, together with a corresponding architecture

@@ -477,6 +477,8 @@ package body Vhdl.Sem_Scopes is
       end if;
 
       if Is_Conflict_Declaration (Raw_Inter) then
+         --  The current declaration for RAW_INTER is a conflict: there are
+         --  multiple *potentially* visible declarations for the identifier.
          if Potentially then
             --  Yet another conflicting interpretation.
             return;
@@ -920,21 +922,30 @@ package body Vhdl.Sem_Scopes is
             if Is_In_Current_Declarative_Region (Current_Inter) then
                --  They are perhaps visible in the same declarative region.
 
-               --  LRM93 11.2
-               --  If two or more logical names having the same
-               --  identifier appear in library clauses in the same
-               --  context, the second and subsequent occurences of the
-               --  logical name have no effect.  The same is true of
-               --  logical names appearing both in the context clause
-               --  of a primary unit and in the context clause of a
-               --  corresponding secondary unit.
-               --  GHDL: we apply this rule with VHDL-87, because of implicits
-               --  library clauses STD and WORK.
-               if Get_Kind (Decl) = Iir_Kind_Library_Declaration
-                 and then
-                 Get_Kind (Current_Decl) = Iir_Kind_Library_Declaration
-               then
-                  return;
+               if Get_Kind (Current_Decl) = Iir_Kind_Library_Declaration then
+                  --  LRM93 11.2
+                  --  If two or more logical names having the same
+                  --  identifier appear in library clauses in the same
+                  --  context, the second and subsequent occurences of the
+                  --  logical name have no effect.  The same is true of
+                  --  logical names appearing both in the context clause
+                  --  of a primary unit and in the context clause of a
+                  --  corresponding secondary unit.
+                  --  GHDL: we apply this rule with VHDL-87, because of
+                  --  implicit library clauses STD and WORK.
+                  if Get_Kind (Decl) = Iir_Kind_Library_Declaration then
+                     return;
+                  end if;
+
+                  if Flag_Relaxed_Rules
+                    and then Get_Kind (Decl) in Iir_Kinds_Library_Unit
+                  then
+                     Warning_Msg_Sem
+                       (Warnid_Hide, +Decl,
+                        "unit %i hides library %i", (+Decl, +Decl));
+                     Interpretations.Table (Current_Inter).Decl := Decl;
+                     return;
+                  end if;
                end if;
 
                -- None of the two declarations are potentially visible, ie
@@ -1263,11 +1274,18 @@ package body Vhdl.Sem_Scopes is
    -- This is needed when an architecture is analysed.
    procedure Add_Entity_Declarations (Entity : Iir_Entity_Declaration)
    is
+      Prev_Hide : constant Boolean := Is_Warning_Enabled (Warnid_Hide);
    begin
+      --  Temporarly disable hide warning to avoid spurious messages.
+      Enable_Warning (Warnid_Hide, False);
+
       Add_Declarations_From_Interface_Chain (Get_Generic_Chain (Entity));
       Add_Declarations_From_Interface_Chain (Get_Port_Chain (Entity));
       Add_Declarations (Get_Declaration_Chain (Entity), False);
       Add_Declarations_Of_Concurrent_Statement (Entity);
+
+      --  Restore
+      Enable_Warning (Warnid_Hide, Prev_Hide);
    end Add_Entity_Declarations;
 
    --  Add declarations from a package into the current declarative region.
