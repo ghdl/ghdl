@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-analyze_failure std.vhdl
+analyze_failure --std=02 std.vhdl
 
 clean
 
