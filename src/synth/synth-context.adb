@@ -257,6 +257,18 @@ package body Synth.Context is
                                            I_Inst => Inst);
    end Create_Package_Object;
 
+   procedure Create_Package_Interface (Syn_Inst : Synth_Instance_Acc;
+                                       Decl     : Node;
+                                       Inst     : Synth_Instance_Acc)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+   begin
+      pragma Assert (Syn_Inst.Up_Block /= null);
+      Create_Object (Syn_Inst, Info.Pkg_Slot, 1);
+      Syn_Inst.Objects (Info.Pkg_Slot) := (Kind => Obj_Instance,
+                                           I_Inst => Inst);
+   end Create_Package_Interface;
+
    function Get_Package_Object
      (Syn_Inst : Synth_Instance_Acc; Info : Sim_Info_Acc)
      return Synth_Instance_Acc

@@ -93,6 +93,10 @@ package Synth.Context is
                                     Inst : Synth_Instance_Acc;
                                     Is_Global : Boolean);
 
+   procedure Create_Package_Interface (Syn_Inst : Synth_Instance_Acc;
+                                       Decl     : Node;
+                                       Inst     : Synth_Instance_Acc);
+
    procedure Create_Subtype_Object
      (Syn_Inst : Synth_Instance_Acc; Decl : Node; Typ : Type_Acc);
 

@@ -538,59 +538,59 @@ package body Synth.Decls is
          Create_Object (Syn_Inst, Decl, No_Valtyp);
       end if;
       --  Initialize the value (except for a deferred declaration).
+      if Get_Deferred_Declaration_Flag (Decl) then
+         return;
+      end if;
       if Deferred_Decl = Null_Node then
          --  A normal constant declaration
          First_Decl := Decl;
-      elsif not Get_Deferred_Declaration_Flag (Decl) then
+      else
          --  The full declaration of a deferred constant.
          First_Decl := Deferred_Decl;
+      end if;
+      pragma Assert (First_Decl /= Null_Node);
+
+      --  Use the type of the declaration.  The type of the constant may
+      --  be derived from the value.
+      --  FIXME: what about multiple declarations ?
+      Decl_Type := Get_Subtype_Indication (Decl);
+      if Decl_Type = Null_Node then
+         Decl_Type := Last_Type;
       else
-         --  The first declaration of a deferred constant.
-         First_Decl := Null_Node;
+         if Get_Kind (Decl_Type) in Iir_Kinds_Denoting_Name then
+            --  Type mark.
+            Decl_Type := Get_Type (Get_Named_Entity (Decl_Type));
+         end if;
+         Last_Type := Decl_Type;
       end if;
-      if First_Decl /= Null_Node then
-         --  Use the type of the declaration.  The type of the constant may
-         --  be derived from the value.
-         --  FIXME: what about multiple declarations ?
-         Decl_Type := Get_Subtype_Indication (Decl);
-         if Decl_Type = Null_Node then
-            Decl_Type := Last_Type;
-         else
-            if Get_Kind (Decl_Type) in Iir_Kinds_Denoting_Name then
-               --  Type mark.
-               Decl_Type := Get_Type (Get_Named_Entity (Decl_Type));
-            end if;
-            Last_Type := Decl_Type;
-         end if;
-         Obj_Type := Get_Subtype_Object (Syn_Inst, Decl_Type);
-         Val := Synth_Expression_With_Type
-           (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
-         if Val = No_Valtyp then
-            Set_Error (Syn_Inst);
-            return;
-         end if;
-         Val := Synth_Subtype_Conversion (Ctxt, Val, Obj_Type, True, Decl);
-         --  For constant functions, the value must be constant.
-         pragma Assert (not Get_Instance_Const (Syn_Inst)
-                          or else Is_Static (Val.Val));
-         case Val.Val.Kind is
-            when Value_Const
-              | Value_Alias =>
-               Cst := Val;
-            when others =>
-               if Is_Static (Val.Val) then
-                  Cst := Create_Value_Const (Val, Decl);
-               else
-                  if not Is_Subprg then
-                     Error_Msg_Synth
-                       (+Decl, "signals cannot be used in default value "
-                          & "of this constant");
-                  end if;
-                  Cst := Val;
+      Obj_Type := Get_Subtype_Object (Syn_Inst, Decl_Type);
+      Val := Synth_Expression_With_Type
+        (Syn_Inst, Get_Default_Value (Decl), Obj_Type);
+      if Val = No_Valtyp then
+         Set_Error (Syn_Inst);
+         return;
+      end if;
+      Val := Synth_Subtype_Conversion (Ctxt, Val, Obj_Type, True, Decl);
+      --  For constant functions, the value must be constant.
+      pragma Assert (not Get_Instance_Const (Syn_Inst)
+                     or else Is_Static (Val.Val));
+      case Val.Val.Kind is
+         when Value_Const
+            | Value_Alias =>
+            Cst := Val;
+         when others =>
+            if Is_Static (Val.Val) then
+               Cst := Create_Value_Const (Val, Decl);
+            else
+               if not Is_Subprg then
+                  Error_Msg_Synth
+                    (+Decl, "signals cannot be used in default value "
+                     & "of this constant");
                end if;
-         end case;
-         Create_Object_Force (Syn_Inst, First_Decl, Cst);
-      end if;
+               Cst := Val;
+            end if;
+      end case;
+      Create_Object_Force (Syn_Inst, First_Decl, Cst);
    end Synth_Constant_Declaration;
 
    procedure Synth_Attribute_Object (Syn_Inst : Synth_Instance_Acc;
@@ -770,29 +770,52 @@ package body Synth.Decls is
       Assoc_Inter := Inter_Chain;
       while Is_Valid (Assoc) loop
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               Synth_Declaration_Type (Sub_Inst, Inter);
+               Inter_Type := Get_Subtype_Object (Sub_Inst, Get_Type (Inter));
 
-         Synth_Declaration_Type (Sub_Inst, Inter);
-         Inter_Type := Get_Subtype_Object (Sub_Inst, Get_Type (Inter));
+               case Get_Kind (Assoc) is
+                  when Iir_Kind_Association_Element_Open =>
+                     Actual := Get_Default_Value (Inter);
+                     Val := Synth_Expression_With_Type
+                       (Sub_Inst, Actual, Inter_Type);
+                  when Iir_Kind_Association_Element_By_Expression =>
+                     Actual := Get_Actual (Assoc);
+                     Val := Synth_Expression_With_Type
+                       (Syn_Inst, Actual, Inter_Type);
+                  when others =>
+                     raise Internal_Error;
+               end case;
 
-         pragma Assert (Iir_Parameter_Modes (Get_Mode (Inter)) = Iir_In_Mode);
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_Open =>
-               Actual := Get_Default_Value (Inter);
-               Val := Synth_Expression_With_Type
-                 (Sub_Inst, Actual, Inter_Type);
-            when Iir_Kind_Association_Element_By_Expression =>
-               Actual := Get_Actual (Assoc);
-               Val := Synth_Expression_With_Type
-                 (Syn_Inst, Actual, Inter_Type);
-            when others =>
+               Val := Synth_Subtype_Conversion
+                 (Ctxt, Val, Inter_Type, True, Assoc);
+
+               pragma Assert (Is_Static (Val.Val));
+
+               Create_Object (Sub_Inst, Inter, Val);
+
+            when Iir_Kind_Interface_Package_Declaration =>
+               declare
+                  Actual : constant Iir :=
+                    Strip_Denoting_Name (Get_Actual (Assoc));
+                  Pkg_Inst : Synth_Instance_Acc;
+               begin
+                  Pkg_Inst := Get_Package_Object (Sub_Inst, Actual);
+                  Create_Package_Interface (Sub_Inst, Inter, Pkg_Inst);
+               end;
+
+            when Iir_Kind_Interface_Variable_Declaration
+               | Iir_Kind_Interface_File_Declaration
+               | Iir_Kind_Interface_Signal_Declaration
+               | Iir_Kind_Interface_Quantity_Declaration
+               | Iir_Kind_Interface_Terminal_Declaration =>
+               raise Internal_Error;
+
+            when Iir_Kinds_Interface_Subprogram_Declaration
+               | Iir_Kind_Interface_Type_Declaration =>
                raise Internal_Error;
          end case;
-
-         Val := Synth_Subtype_Conversion (Ctxt, Val, Inter_Type, True, Assoc);
-
-         pragma Assert (Is_Static (Val.Val));
-
-         Create_Object (Sub_Inst, Inter, Val);
 
          Next_Association_Interface (Assoc, Assoc_Inter);
       end loop;
@@ -813,7 +836,7 @@ package body Synth.Decls is
       Synth_Declarations (Sub_Inst, Get_Declaration_Chain (Pkg));
 
       if Bod /= Null_Node then
-         --  Macro expended package instantiation.
+         --  Macro expanded package instantiation.
          raise Internal_Error;
       else
          --  Shared body
