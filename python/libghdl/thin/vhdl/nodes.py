@@ -10,6 +10,7 @@ Iir_Flist_Others = 1
 Iir_Flist_All = 2
 
 
+
 class Iir_Kind:
     Unused = 0
     Error = 1
@@ -389,7 +390,9 @@ class Iir_Kinds:
         Iir_Kind.Enumeration_Subtype_Definition,
     ]
 
-    Subnature_Definition = [Iir_Kind.Array_Subnature_Definition]
+    Subnature_Definition = [
+        Iir_Kind.Array_Subnature_Definition,
+    ]
 
     Literal = [
         Iir_Kind.Integer_Literal,
@@ -438,7 +441,11 @@ class Iir_Kinds:
         Iir_Kind.Interface_Quantity_Declaration,
     ]
 
-    Clause = [Iir_Kind.Library_Clause, Iir_Kind.Use_Clause, Iir_Kind.Context_Reference]
+    Clause = [
+        Iir_Kind.Library_Clause,
+        Iir_Kind.Use_Clause,
+        Iir_Kind.Context_Reference,
+    ]
 
     Type_And_Subtype_Definition = [
         Iir_Kind.Access_Type_Definition,
@@ -467,7 +474,10 @@ class Iir_Kinds:
         Iir_Kind.External_Variable_Name,
     ]
 
-    Dereference = [Iir_Kind.Dereference, Iir_Kind.Implicit_Dereference]
+    Dereference = [
+        Iir_Kind.Dereference,
+        Iir_Kind.Implicit_Dereference,
+    ]
 
     Primary_Unit = [
         Iir_Kind.Entity_Declaration,
@@ -497,7 +507,10 @@ class Iir_Kinds:
         Iir_Kind.Vunit_Declaration,
     ]
 
-    Secondary_Unit = [Iir_Kind.Package_Body, Iir_Kind.Architecture_Body]
+    Secondary_Unit = [
+        Iir_Kind.Package_Body,
+        Iir_Kind.Architecture_Body,
+    ]
 
     Package_Declaration = [
         Iir_Kind.Package_Declaration,
@@ -569,7 +582,10 @@ class Iir_Kinds:
         Iir_Kind.Entity_Aspect_Open,
     ]
 
-    Subprogram_Body = [Iir_Kind.Function_Body, Iir_Kind.Procedure_Body]
+    Subprogram_Body = [
+        Iir_Kind.Function_Body,
+        Iir_Kind.Procedure_Body,
+    ]
 
     Source_Quantity_Declaration = [
         Iir_Kind.Spectrum_Quantity_Declaration,
@@ -794,7 +810,10 @@ class Iir_Kinds:
         Iir_Kind.Subtype_Declaration,
     ]
 
-    Next_Exit_Statement = [Iir_Kind.Next_Statement, Iir_Kind.Exit_Statement]
+    Next_Exit_Statement = [
+        Iir_Kind.Next_Statement,
+        Iir_Kind.Exit_Statement,
+    ]
 
     Association_Element = [
         Iir_Kind.Association_Element_By_Expression,
@@ -941,7 +960,10 @@ class Iir_Kinds:
         Iir_Kind.Reverse_Range_Array_Attribute,
     ]
 
-    Physical_Literal = [Iir_Kind.Physical_Int_Literal, Iir_Kind.Physical_Fp_Literal]
+    Physical_Literal = [
+        Iir_Kind.Physical_Int_Literal,
+        Iir_Kind.Physical_Fp_Literal,
+    ]
 
     Simultaneous_Statement = [
         Iir_Kind.Simple_Simultaneous_Statement,
@@ -1000,7 +1022,11 @@ class Iir_Kinds:
         Iir_Kind.Enumeration_Subtype_Definition,
     ]
 
-    Allocator = [Iir_Kind.Allocator_By_Expression, Iir_Kind.Allocator_By_Subtype]
+    Allocator = [
+        Iir_Kind.Allocator_By_Expression,
+        Iir_Kind.Allocator_By_Subtype,
+    ]
+
 
 
 class Iir_Mode:
@@ -1440,230 +1466,241 @@ class Iir_Predefined:
     Ieee_Numeric_Std_Rot_Right_Uns_Nat = 399
     Ieee_Numeric_Std_Rot_Left_Sgn_Nat = 400
     Ieee_Numeric_Std_Rot_Right_Sgn_Nat = 401
-    Ieee_Numeric_Std_Match_Log = 402
-    Ieee_Numeric_Std_Match_Uns = 403
-    Ieee_Numeric_Std_Match_Sgn = 404
-    Ieee_Numeric_Std_Match_Slv = 405
-    Ieee_Numeric_Std_Match_Suv = 406
-    Ieee_Numeric_Std_To_01_Uns = 407
-    Ieee_Numeric_Std_To_01_Sgn = 408
-    Ieee_Math_Real_Ceil = 409
-    Ieee_Math_Real_Floor = 410
-    Ieee_Math_Real_Round = 411
-    Ieee_Math_Real_Log2 = 412
-    Ieee_Math_Real_Sin = 413
-    Ieee_Math_Real_Cos = 414
-    Ieee_Std_Logic_Unsigned_Add_Slv_Slv = 415
-    Ieee_Std_Logic_Unsigned_Add_Slv_Int = 416
-    Ieee_Std_Logic_Unsigned_Add_Int_Slv = 417
-    Ieee_Std_Logic_Unsigned_Add_Slv_Log = 418
-    Ieee_Std_Logic_Unsigned_Add_Log_Slv = 419
-    Ieee_Std_Logic_Unsigned_Sub_Slv_Slv = 420
-    Ieee_Std_Logic_Unsigned_Sub_Slv_Int = 421
-    Ieee_Std_Logic_Unsigned_Sub_Int_Slv = 422
-    Ieee_Std_Logic_Unsigned_Sub_Slv_Log = 423
-    Ieee_Std_Logic_Unsigned_Sub_Log_Slv = 424
-    Ieee_Std_Logic_Unsigned_Id_Slv = 425
-    Ieee_Std_Logic_Unsigned_Mul_Slv_Slv = 426
-    Ieee_Std_Logic_Unsigned_Lt_Slv_Slv = 427
-    Ieee_Std_Logic_Unsigned_Lt_Slv_Int = 428
-    Ieee_Std_Logic_Unsigned_Lt_Int_Slv = 429
-    Ieee_Std_Logic_Unsigned_Le_Slv_Slv = 430
-    Ieee_Std_Logic_Unsigned_Le_Slv_Int = 431
-    Ieee_Std_Logic_Unsigned_Le_Int_Slv = 432
-    Ieee_Std_Logic_Unsigned_Gt_Slv_Slv = 433
-    Ieee_Std_Logic_Unsigned_Gt_Slv_Int = 434
-    Ieee_Std_Logic_Unsigned_Gt_Int_Slv = 435
-    Ieee_Std_Logic_Unsigned_Ge_Slv_Slv = 436
-    Ieee_Std_Logic_Unsigned_Ge_Slv_Int = 437
-    Ieee_Std_Logic_Unsigned_Ge_Int_Slv = 438
-    Ieee_Std_Logic_Unsigned_Eq_Slv_Slv = 439
-    Ieee_Std_Logic_Unsigned_Eq_Slv_Int = 440
-    Ieee_Std_Logic_Unsigned_Eq_Int_Slv = 441
-    Ieee_Std_Logic_Unsigned_Ne_Slv_Slv = 442
-    Ieee_Std_Logic_Unsigned_Ne_Slv_Int = 443
-    Ieee_Std_Logic_Unsigned_Ne_Int_Slv = 444
-    Ieee_Std_Logic_Unsigned_Conv_Integer = 445
-    Ieee_Std_Logic_Unsigned_Shl = 446
-    Ieee_Std_Logic_Unsigned_Shr = 447
-    Ieee_Std_Logic_Signed_Add_Slv_Slv = 448
-    Ieee_Std_Logic_Signed_Add_Slv_Int = 449
-    Ieee_Std_Logic_Signed_Add_Int_Slv = 450
-    Ieee_Std_Logic_Signed_Add_Slv_Log = 451
-    Ieee_Std_Logic_Signed_Add_Log_Slv = 452
-    Ieee_Std_Logic_Signed_Sub_Slv_Slv = 453
-    Ieee_Std_Logic_Signed_Sub_Slv_Int = 454
-    Ieee_Std_Logic_Signed_Sub_Int_Slv = 455
-    Ieee_Std_Logic_Signed_Sub_Slv_Log = 456
-    Ieee_Std_Logic_Signed_Sub_Log_Slv = 457
-    Ieee_Std_Logic_Signed_Id_Slv = 458
-    Ieee_Std_Logic_Signed_Neg_Slv = 459
-    Ieee_Std_Logic_Signed_Abs_Slv = 460
-    Ieee_Std_Logic_Signed_Mul_Slv_Slv = 461
-    Ieee_Std_Logic_Signed_Lt_Slv_Slv = 462
-    Ieee_Std_Logic_Signed_Lt_Slv_Int = 463
-    Ieee_Std_Logic_Signed_Lt_Int_Slv = 464
-    Ieee_Std_Logic_Signed_Le_Slv_Slv = 465
-    Ieee_Std_Logic_Signed_Le_Slv_Int = 466
-    Ieee_Std_Logic_Signed_Le_Int_Slv = 467
-    Ieee_Std_Logic_Signed_Gt_Slv_Slv = 468
-    Ieee_Std_Logic_Signed_Gt_Slv_Int = 469
-    Ieee_Std_Logic_Signed_Gt_Int_Slv = 470
-    Ieee_Std_Logic_Signed_Ge_Slv_Slv = 471
-    Ieee_Std_Logic_Signed_Ge_Slv_Int = 472
-    Ieee_Std_Logic_Signed_Ge_Int_Slv = 473
-    Ieee_Std_Logic_Signed_Eq_Slv_Slv = 474
-    Ieee_Std_Logic_Signed_Eq_Slv_Int = 475
-    Ieee_Std_Logic_Signed_Eq_Int_Slv = 476
-    Ieee_Std_Logic_Signed_Ne_Slv_Slv = 477
-    Ieee_Std_Logic_Signed_Ne_Slv_Int = 478
-    Ieee_Std_Logic_Signed_Ne_Int_Slv = 479
-    Ieee_Std_Logic_Signed_Conv_Integer = 480
-    Ieee_Std_Logic_Signed_Shl = 481
-    Ieee_Std_Logic_Signed_Shr = 482
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Int = 483
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Uns = 484
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn = 485
-    Ieee_Std_Logic_Arith_Conv_Unsigned_Log = 486
-    Ieee_Std_Logic_Arith_Conv_Integer_Int = 487
-    Ieee_Std_Logic_Arith_Conv_Integer_Uns = 488
-    Ieee_Std_Logic_Arith_Conv_Integer_Sgn = 489
-    Ieee_Std_Logic_Arith_Conv_Integer_Log = 490
-    Ieee_Std_Logic_Arith_Conv_Vector_Int = 491
-    Ieee_Std_Logic_Arith_Conv_Vector_Uns = 492
-    Ieee_Std_Logic_Arith_Conv_Vector_Sgn = 493
-    Ieee_Std_Logic_Arith_Conv_Vector_Log = 494
-    Ieee_Std_Logic_Arith_Ext = 495
-    Ieee_Std_Logic_Arith_Sxt = 496
-    Ieee_Std_Logic_Arith_Id_Uns_Uns = 497
-    Ieee_Std_Logic_Arith_Id_Sgn_Sgn = 498
-    Ieee_Std_Logic_Arith_Neg_Sgn_Sgn = 499
-    Ieee_Std_Logic_Arith_Abs_Sgn_Sgn = 500
-    Ieee_Std_Logic_Arith_Shl_Uns = 501
-    Ieee_Std_Logic_Arith_Shl_Sgn = 502
-    Ieee_Std_Logic_Arith_Shr_Uns = 503
-    Ieee_Std_Logic_Arith_Shr_Sgn = 504
-    Ieee_Std_Logic_Arith_Id_Uns_Slv = 505
-    Ieee_Std_Logic_Arith_Id_Sgn_Slv = 506
-    Ieee_Std_Logic_Arith_Neg_Sgn_Slv = 507
-    Ieee_Std_Logic_Arith_Abs_Sgn_Slv = 508
-    Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns = 509
-    Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn = 510
-    Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn = 511
-    Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn = 512
-    Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv = 513
-    Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv = 514
-    Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Slv = 515
-    Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Slv = 516
-    Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns = 517
-    Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn = 518
-    Ieee_Std_Logic_Arith_Add_Uns_Sgn_Sgn = 519
-    Ieee_Std_Logic_Arith_Add_Sgn_Uns_Sgn = 520
-    Ieee_Std_Logic_Arith_Add_Uns_Int_Uns = 521
-    Ieee_Std_Logic_Arith_Add_Int_Uns_Uns = 522
-    Ieee_Std_Logic_Arith_Add_Sgn_Int_Sgn = 523
-    Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn = 524
-    Ieee_Std_Logic_Arith_Add_Uns_Log_Uns = 525
-    Ieee_Std_Logic_Arith_Add_Log_Uns_Uns = 526
-    Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn = 527
-    Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn = 528
-    Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv = 529
-    Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv = 530
-    Ieee_Std_Logic_Arith_Add_Uns_Sgn_Slv = 531
-    Ieee_Std_Logic_Arith_Add_Sgn_Uns_Slv = 532
-    Ieee_Std_Logic_Arith_Add_Uns_Int_Slv = 533
-    Ieee_Std_Logic_Arith_Add_Int_Uns_Slv = 534
-    Ieee_Std_Logic_Arith_Add_Sgn_Int_Slv = 535
-    Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv = 536
-    Ieee_Std_Logic_Arith_Add_Uns_Log_Slv = 537
-    Ieee_Std_Logic_Arith_Add_Log_Uns_Slv = 538
-    Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv = 539
-    Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv = 540
-    Ieee_Std_Logic_Arith_Sub_Uns_Uns_Uns = 541
-    Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Sgn = 542
-    Ieee_Std_Logic_Arith_Sub_Uns_Sgn_Sgn = 543
-    Ieee_Std_Logic_Arith_Sub_Sgn_Uns_Sgn = 544
-    Ieee_Std_Logic_Arith_Sub_Uns_Int_Uns = 545
-    Ieee_Std_Logic_Arith_Sub_Int_Uns_Uns = 546
-    Ieee_Std_Logic_Arith_Sub_Sgn_Int_Sgn = 547
-    Ieee_Std_Logic_Arith_Sub_Int_Sgn_Sgn = 548
-    Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns = 549
-    Ieee_Std_Logic_Arith_Sub_Log_Uns_Uns = 550
-    Ieee_Std_Logic_Arith_Sub_Sgn_Log_Sgn = 551
-    Ieee_Std_Logic_Arith_Sub_Log_Sgn_Sgn = 552
-    Ieee_Std_Logic_Arith_Sub_Uns_Uns_Slv = 553
-    Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Slv = 554
-    Ieee_Std_Logic_Arith_Sub_Uns_Sgn_Slv = 555
-    Ieee_Std_Logic_Arith_Sub_Sgn_Uns_Slv = 556
-    Ieee_Std_Logic_Arith_Sub_Uns_Int_Slv = 557
-    Ieee_Std_Logic_Arith_Sub_Int_Uns_Slv = 558
-    Ieee_Std_Logic_Arith_Sub_Sgn_Int_Slv = 559
-    Ieee_Std_Logic_Arith_Sub_Int_Sgn_Slv = 560
-    Ieee_Std_Logic_Arith_Sub_Uns_Log_Slv = 561
-    Ieee_Std_Logic_Arith_Sub_Log_Uns_Slv = 562
-    Ieee_Std_Logic_Arith_Sub_Sgn_Log_Slv = 563
-    Ieee_Std_Logic_Arith_Sub_Log_Sgn_Slv = 564
-    Ieee_Std_Logic_Arith_Lt_Uns_Uns = 565
-    Ieee_Std_Logic_Arith_Lt_Sgn_Sgn = 566
-    Ieee_Std_Logic_Arith_Lt_Uns_Sgn = 567
-    Ieee_Std_Logic_Arith_Lt_Sgn_Uns = 568
-    Ieee_Std_Logic_Arith_Lt_Uns_Int = 569
-    Ieee_Std_Logic_Arith_Lt_Int_Uns = 570
-    Ieee_Std_Logic_Arith_Lt_Sgn_Int = 571
-    Ieee_Std_Logic_Arith_Lt_Int_Sgn = 572
-    Ieee_Std_Logic_Arith_Le_Uns_Uns = 573
-    Ieee_Std_Logic_Arith_Le_Sgn_Sgn = 574
-    Ieee_Std_Logic_Arith_Le_Uns_Sgn = 575
-    Ieee_Std_Logic_Arith_Le_Sgn_Uns = 576
-    Ieee_Std_Logic_Arith_Le_Uns_Int = 577
-    Ieee_Std_Logic_Arith_Le_Int_Uns = 578
-    Ieee_Std_Logic_Arith_Le_Sgn_Int = 579
-    Ieee_Std_Logic_Arith_Le_Int_Sgn = 580
-    Ieee_Std_Logic_Arith_Gt_Uns_Uns = 581
-    Ieee_Std_Logic_Arith_Gt_Sgn_Sgn = 582
-    Ieee_Std_Logic_Arith_Gt_Uns_Sgn = 583
-    Ieee_Std_Logic_Arith_Gt_Sgn_Uns = 584
-    Ieee_Std_Logic_Arith_Gt_Uns_Int = 585
-    Ieee_Std_Logic_Arith_Gt_Int_Uns = 586
-    Ieee_Std_Logic_Arith_Gt_Sgn_Int = 587
-    Ieee_Std_Logic_Arith_Gt_Int_Sgn = 588
-    Ieee_Std_Logic_Arith_Ge_Uns_Uns = 589
-    Ieee_Std_Logic_Arith_Ge_Sgn_Sgn = 590
-    Ieee_Std_Logic_Arith_Ge_Uns_Sgn = 591
-    Ieee_Std_Logic_Arith_Ge_Sgn_Uns = 592
-    Ieee_Std_Logic_Arith_Ge_Uns_Int = 593
-    Ieee_Std_Logic_Arith_Ge_Int_Uns = 594
-    Ieee_Std_Logic_Arith_Ge_Sgn_Int = 595
-    Ieee_Std_Logic_Arith_Ge_Int_Sgn = 596
-    Ieee_Std_Logic_Arith_Eq_Uns_Uns = 597
-    Ieee_Std_Logic_Arith_Eq_Sgn_Sgn = 598
-    Ieee_Std_Logic_Arith_Eq_Uns_Sgn = 599
-    Ieee_Std_Logic_Arith_Eq_Sgn_Uns = 600
-    Ieee_Std_Logic_Arith_Eq_Uns_Int = 601
-    Ieee_Std_Logic_Arith_Eq_Int_Uns = 602
-    Ieee_Std_Logic_Arith_Eq_Sgn_Int = 603
-    Ieee_Std_Logic_Arith_Eq_Int_Sgn = 604
-    Ieee_Std_Logic_Arith_Ne_Uns_Uns = 605
-    Ieee_Std_Logic_Arith_Ne_Sgn_Sgn = 606
-    Ieee_Std_Logic_Arith_Ne_Uns_Sgn = 607
-    Ieee_Std_Logic_Arith_Ne_Sgn_Uns = 608
-    Ieee_Std_Logic_Arith_Ne_Uns_Int = 609
-    Ieee_Std_Logic_Arith_Ne_Int_Uns = 610
-    Ieee_Std_Logic_Arith_Ne_Sgn_Int = 611
-    Ieee_Std_Logic_Arith_Ne_Int_Sgn = 612
-    Ieee_Std_Logic_Misc_And_Reduce_Slv = 613
-    Ieee_Std_Logic_Misc_And_Reduce_Suv = 614
-    Ieee_Std_Logic_Misc_Nand_Reduce_Slv = 615
-    Ieee_Std_Logic_Misc_Nand_Reduce_Suv = 616
-    Ieee_Std_Logic_Misc_Or_Reduce_Slv = 617
-    Ieee_Std_Logic_Misc_Or_Reduce_Suv = 618
-    Ieee_Std_Logic_Misc_Nor_Reduce_Slv = 619
-    Ieee_Std_Logic_Misc_Nor_Reduce_Suv = 620
-    Ieee_Std_Logic_Misc_Xor_Reduce_Slv = 621
-    Ieee_Std_Logic_Misc_Xor_Reduce_Suv = 622
-    Ieee_Std_Logic_Misc_Xnor_Reduce_Slv = 623
-    Ieee_Std_Logic_Misc_Xnor_Reduce_Suv = 624
-
+    Ieee_Numeric_Std_And_Sgn = 402
+    Ieee_Numeric_Std_Nand_Sgn = 403
+    Ieee_Numeric_Std_Or_Sgn = 404
+    Ieee_Numeric_Std_Nor_Sgn = 405
+    Ieee_Numeric_Std_Xor_Sgn = 406
+    Ieee_Numeric_Std_Xnor_Sgn = 407
+    Ieee_Numeric_Std_And_Uns = 408
+    Ieee_Numeric_Std_Nand_Uns = 409
+    Ieee_Numeric_Std_Or_Uns = 410
+    Ieee_Numeric_Std_Nor_Uns = 411
+    Ieee_Numeric_Std_Xor_Uns = 412
+    Ieee_Numeric_Std_Xnor_Uns = 413
+    Ieee_Numeric_Std_Match_Log = 414
+    Ieee_Numeric_Std_Match_Uns = 415
+    Ieee_Numeric_Std_Match_Sgn = 416
+    Ieee_Numeric_Std_Match_Slv = 417
+    Ieee_Numeric_Std_Match_Suv = 418
+    Ieee_Numeric_Std_To_01_Uns = 419
+    Ieee_Numeric_Std_To_01_Sgn = 420
+    Ieee_Math_Real_Ceil = 421
+    Ieee_Math_Real_Floor = 422
+    Ieee_Math_Real_Round = 423
+    Ieee_Math_Real_Log2 = 424
+    Ieee_Math_Real_Sin = 425
+    Ieee_Math_Real_Cos = 426
+    Ieee_Std_Logic_Unsigned_Add_Slv_Slv = 427
+    Ieee_Std_Logic_Unsigned_Add_Slv_Int = 428
+    Ieee_Std_Logic_Unsigned_Add_Int_Slv = 429
+    Ieee_Std_Logic_Unsigned_Add_Slv_Log = 430
+    Ieee_Std_Logic_Unsigned_Add_Log_Slv = 431
+    Ieee_Std_Logic_Unsigned_Sub_Slv_Slv = 432
+    Ieee_Std_Logic_Unsigned_Sub_Slv_Int = 433
+    Ieee_Std_Logic_Unsigned_Sub_Int_Slv = 434
+    Ieee_Std_Logic_Unsigned_Sub_Slv_Log = 435
+    Ieee_Std_Logic_Unsigned_Sub_Log_Slv = 436
+    Ieee_Std_Logic_Unsigned_Id_Slv = 437
+    Ieee_Std_Logic_Unsigned_Mul_Slv_Slv = 438
+    Ieee_Std_Logic_Unsigned_Lt_Slv_Slv = 439
+    Ieee_Std_Logic_Unsigned_Lt_Slv_Int = 440
+    Ieee_Std_Logic_Unsigned_Lt_Int_Slv = 441
+    Ieee_Std_Logic_Unsigned_Le_Slv_Slv = 442
+    Ieee_Std_Logic_Unsigned_Le_Slv_Int = 443
+    Ieee_Std_Logic_Unsigned_Le_Int_Slv = 444
+    Ieee_Std_Logic_Unsigned_Gt_Slv_Slv = 445
+    Ieee_Std_Logic_Unsigned_Gt_Slv_Int = 446
+    Ieee_Std_Logic_Unsigned_Gt_Int_Slv = 447
+    Ieee_Std_Logic_Unsigned_Ge_Slv_Slv = 448
+    Ieee_Std_Logic_Unsigned_Ge_Slv_Int = 449
+    Ieee_Std_Logic_Unsigned_Ge_Int_Slv = 450
+    Ieee_Std_Logic_Unsigned_Eq_Slv_Slv = 451
+    Ieee_Std_Logic_Unsigned_Eq_Slv_Int = 452
+    Ieee_Std_Logic_Unsigned_Eq_Int_Slv = 453
+    Ieee_Std_Logic_Unsigned_Ne_Slv_Slv = 454
+    Ieee_Std_Logic_Unsigned_Ne_Slv_Int = 455
+    Ieee_Std_Logic_Unsigned_Ne_Int_Slv = 456
+    Ieee_Std_Logic_Unsigned_Conv_Integer = 457
+    Ieee_Std_Logic_Unsigned_Shl = 458
+    Ieee_Std_Logic_Unsigned_Shr = 459
+    Ieee_Std_Logic_Signed_Add_Slv_Slv = 460
+    Ieee_Std_Logic_Signed_Add_Slv_Int = 461
+    Ieee_Std_Logic_Signed_Add_Int_Slv = 462
+    Ieee_Std_Logic_Signed_Add_Slv_Log = 463
+    Ieee_Std_Logic_Signed_Add_Log_Slv = 464
+    Ieee_Std_Logic_Signed_Sub_Slv_Slv = 465
+    Ieee_Std_Logic_Signed_Sub_Slv_Int = 466
+    Ieee_Std_Logic_Signed_Sub_Int_Slv = 467
+    Ieee_Std_Logic_Signed_Sub_Slv_Log = 468
+    Ieee_Std_Logic_Signed_Sub_Log_Slv = 469
+    Ieee_Std_Logic_Signed_Id_Slv = 470
+    Ieee_Std_Logic_Signed_Neg_Slv = 471
+    Ieee_Std_Logic_Signed_Abs_Slv = 472
+    Ieee_Std_Logic_Signed_Mul_Slv_Slv = 473
+    Ieee_Std_Logic_Signed_Lt_Slv_Slv = 474
+    Ieee_Std_Logic_Signed_Lt_Slv_Int = 475
+    Ieee_Std_Logic_Signed_Lt_Int_Slv = 476
+    Ieee_Std_Logic_Signed_Le_Slv_Slv = 477
+    Ieee_Std_Logic_Signed_Le_Slv_Int = 478
+    Ieee_Std_Logic_Signed_Le_Int_Slv = 479
+    Ieee_Std_Logic_Signed_Gt_Slv_Slv = 480
+    Ieee_Std_Logic_Signed_Gt_Slv_Int = 481
+    Ieee_Std_Logic_Signed_Gt_Int_Slv = 482
+    Ieee_Std_Logic_Signed_Ge_Slv_Slv = 483
+    Ieee_Std_Logic_Signed_Ge_Slv_Int = 484
+    Ieee_Std_Logic_Signed_Ge_Int_Slv = 485
+    Ieee_Std_Logic_Signed_Eq_Slv_Slv = 486
+    Ieee_Std_Logic_Signed_Eq_Slv_Int = 487
+    Ieee_Std_Logic_Signed_Eq_Int_Slv = 488
+    Ieee_Std_Logic_Signed_Ne_Slv_Slv = 489
+    Ieee_Std_Logic_Signed_Ne_Slv_Int = 490
+    Ieee_Std_Logic_Signed_Ne_Int_Slv = 491
+    Ieee_Std_Logic_Signed_Conv_Integer = 492
+    Ieee_Std_Logic_Signed_Shl = 493
+    Ieee_Std_Logic_Signed_Shr = 494
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Int = 495
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Uns = 496
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Sgn = 497
+    Ieee_Std_Logic_Arith_Conv_Unsigned_Log = 498
+    Ieee_Std_Logic_Arith_Conv_Integer_Int = 499
+    Ieee_Std_Logic_Arith_Conv_Integer_Uns = 500
+    Ieee_Std_Logic_Arith_Conv_Integer_Sgn = 501
+    Ieee_Std_Logic_Arith_Conv_Integer_Log = 502
+    Ieee_Std_Logic_Arith_Conv_Vector_Int = 503
+    Ieee_Std_Logic_Arith_Conv_Vector_Uns = 504
+    Ieee_Std_Logic_Arith_Conv_Vector_Sgn = 505
+    Ieee_Std_Logic_Arith_Conv_Vector_Log = 506
+    Ieee_Std_Logic_Arith_Ext = 507
+    Ieee_Std_Logic_Arith_Sxt = 508
+    Ieee_Std_Logic_Arith_Id_Uns_Uns = 509
+    Ieee_Std_Logic_Arith_Id_Sgn_Sgn = 510
+    Ieee_Std_Logic_Arith_Neg_Sgn_Sgn = 511
+    Ieee_Std_Logic_Arith_Abs_Sgn_Sgn = 512
+    Ieee_Std_Logic_Arith_Shl_Uns = 513
+    Ieee_Std_Logic_Arith_Shl_Sgn = 514
+    Ieee_Std_Logic_Arith_Shr_Uns = 515
+    Ieee_Std_Logic_Arith_Shr_Sgn = 516
+    Ieee_Std_Logic_Arith_Id_Uns_Slv = 517
+    Ieee_Std_Logic_Arith_Id_Sgn_Slv = 518
+    Ieee_Std_Logic_Arith_Neg_Sgn_Slv = 519
+    Ieee_Std_Logic_Arith_Abs_Sgn_Slv = 520
+    Ieee_Std_Logic_Arith_Mul_Uns_Uns_Uns = 521
+    Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Sgn = 522
+    Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Sgn = 523
+    Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Sgn = 524
+    Ieee_Std_Logic_Arith_Mul_Uns_Uns_Slv = 525
+    Ieee_Std_Logic_Arith_Mul_Sgn_Sgn_Slv = 526
+    Ieee_Std_Logic_Arith_Mul_Sgn_Uns_Slv = 527
+    Ieee_Std_Logic_Arith_Mul_Uns_Sgn_Slv = 528
+    Ieee_Std_Logic_Arith_Add_Uns_Uns_Uns = 529
+    Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Sgn = 530
+    Ieee_Std_Logic_Arith_Add_Uns_Sgn_Sgn = 531
+    Ieee_Std_Logic_Arith_Add_Sgn_Uns_Sgn = 532
+    Ieee_Std_Logic_Arith_Add_Uns_Int_Uns = 533
+    Ieee_Std_Logic_Arith_Add_Int_Uns_Uns = 534
+    Ieee_Std_Logic_Arith_Add_Sgn_Int_Sgn = 535
+    Ieee_Std_Logic_Arith_Add_Int_Sgn_Sgn = 536
+    Ieee_Std_Logic_Arith_Add_Uns_Log_Uns = 537
+    Ieee_Std_Logic_Arith_Add_Log_Uns_Uns = 538
+    Ieee_Std_Logic_Arith_Add_Sgn_Log_Sgn = 539
+    Ieee_Std_Logic_Arith_Add_Log_Sgn_Sgn = 540
+    Ieee_Std_Logic_Arith_Add_Uns_Uns_Slv = 541
+    Ieee_Std_Logic_Arith_Add_Sgn_Sgn_Slv = 542
+    Ieee_Std_Logic_Arith_Add_Uns_Sgn_Slv = 543
+    Ieee_Std_Logic_Arith_Add_Sgn_Uns_Slv = 544
+    Ieee_Std_Logic_Arith_Add_Uns_Int_Slv = 545
+    Ieee_Std_Logic_Arith_Add_Int_Uns_Slv = 546
+    Ieee_Std_Logic_Arith_Add_Sgn_Int_Slv = 547
+    Ieee_Std_Logic_Arith_Add_Int_Sgn_Slv = 548
+    Ieee_Std_Logic_Arith_Add_Uns_Log_Slv = 549
+    Ieee_Std_Logic_Arith_Add_Log_Uns_Slv = 550
+    Ieee_Std_Logic_Arith_Add_Sgn_Log_Slv = 551
+    Ieee_Std_Logic_Arith_Add_Log_Sgn_Slv = 552
+    Ieee_Std_Logic_Arith_Sub_Uns_Uns_Uns = 553
+    Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Sgn = 554
+    Ieee_Std_Logic_Arith_Sub_Uns_Sgn_Sgn = 555
+    Ieee_Std_Logic_Arith_Sub_Sgn_Uns_Sgn = 556
+    Ieee_Std_Logic_Arith_Sub_Uns_Int_Uns = 557
+    Ieee_Std_Logic_Arith_Sub_Int_Uns_Uns = 558
+    Ieee_Std_Logic_Arith_Sub_Sgn_Int_Sgn = 559
+    Ieee_Std_Logic_Arith_Sub_Int_Sgn_Sgn = 560
+    Ieee_Std_Logic_Arith_Sub_Uns_Log_Uns = 561
+    Ieee_Std_Logic_Arith_Sub_Log_Uns_Uns = 562
+    Ieee_Std_Logic_Arith_Sub_Sgn_Log_Sgn = 563
+    Ieee_Std_Logic_Arith_Sub_Log_Sgn_Sgn = 564
+    Ieee_Std_Logic_Arith_Sub_Uns_Uns_Slv = 565
+    Ieee_Std_Logic_Arith_Sub_Sgn_Sgn_Slv = 566
+    Ieee_Std_Logic_Arith_Sub_Uns_Sgn_Slv = 567
+    Ieee_Std_Logic_Arith_Sub_Sgn_Uns_Slv = 568
+    Ieee_Std_Logic_Arith_Sub_Uns_Int_Slv = 569
+    Ieee_Std_Logic_Arith_Sub_Int_Uns_Slv = 570
+    Ieee_Std_Logic_Arith_Sub_Sgn_Int_Slv = 571
+    Ieee_Std_Logic_Arith_Sub_Int_Sgn_Slv = 572
+    Ieee_Std_Logic_Arith_Sub_Uns_Log_Slv = 573
+    Ieee_Std_Logic_Arith_Sub_Log_Uns_Slv = 574
+    Ieee_Std_Logic_Arith_Sub_Sgn_Log_Slv = 575
+    Ieee_Std_Logic_Arith_Sub_Log_Sgn_Slv = 576
+    Ieee_Std_Logic_Arith_Lt_Uns_Uns = 577
+    Ieee_Std_Logic_Arith_Lt_Sgn_Sgn = 578
+    Ieee_Std_Logic_Arith_Lt_Uns_Sgn = 579
+    Ieee_Std_Logic_Arith_Lt_Sgn_Uns = 580
+    Ieee_Std_Logic_Arith_Lt_Uns_Int = 581
+    Ieee_Std_Logic_Arith_Lt_Int_Uns = 582
+    Ieee_Std_Logic_Arith_Lt_Sgn_Int = 583
+    Ieee_Std_Logic_Arith_Lt_Int_Sgn = 584
+    Ieee_Std_Logic_Arith_Le_Uns_Uns = 585
+    Ieee_Std_Logic_Arith_Le_Sgn_Sgn = 586
+    Ieee_Std_Logic_Arith_Le_Uns_Sgn = 587
+    Ieee_Std_Logic_Arith_Le_Sgn_Uns = 588
+    Ieee_Std_Logic_Arith_Le_Uns_Int = 589
+    Ieee_Std_Logic_Arith_Le_Int_Uns = 590
+    Ieee_Std_Logic_Arith_Le_Sgn_Int = 591
+    Ieee_Std_Logic_Arith_Le_Int_Sgn = 592
+    Ieee_Std_Logic_Arith_Gt_Uns_Uns = 593
+    Ieee_Std_Logic_Arith_Gt_Sgn_Sgn = 594
+    Ieee_Std_Logic_Arith_Gt_Uns_Sgn = 595
+    Ieee_Std_Logic_Arith_Gt_Sgn_Uns = 596
+    Ieee_Std_Logic_Arith_Gt_Uns_Int = 597
+    Ieee_Std_Logic_Arith_Gt_Int_Uns = 598
+    Ieee_Std_Logic_Arith_Gt_Sgn_Int = 599
+    Ieee_Std_Logic_Arith_Gt_Int_Sgn = 600
+    Ieee_Std_Logic_Arith_Ge_Uns_Uns = 601
+    Ieee_Std_Logic_Arith_Ge_Sgn_Sgn = 602
+    Ieee_Std_Logic_Arith_Ge_Uns_Sgn = 603
+    Ieee_Std_Logic_Arith_Ge_Sgn_Uns = 604
+    Ieee_Std_Logic_Arith_Ge_Uns_Int = 605
+    Ieee_Std_Logic_Arith_Ge_Int_Uns = 606
+    Ieee_Std_Logic_Arith_Ge_Sgn_Int = 607
+    Ieee_Std_Logic_Arith_Ge_Int_Sgn = 608
+    Ieee_Std_Logic_Arith_Eq_Uns_Uns = 609
+    Ieee_Std_Logic_Arith_Eq_Sgn_Sgn = 610
+    Ieee_Std_Logic_Arith_Eq_Uns_Sgn = 611
+    Ieee_Std_Logic_Arith_Eq_Sgn_Uns = 612
+    Ieee_Std_Logic_Arith_Eq_Uns_Int = 613
+    Ieee_Std_Logic_Arith_Eq_Int_Uns = 614
+    Ieee_Std_Logic_Arith_Eq_Sgn_Int = 615
+    Ieee_Std_Logic_Arith_Eq_Int_Sgn = 616
+    Ieee_Std_Logic_Arith_Ne_Uns_Uns = 617
+    Ieee_Std_Logic_Arith_Ne_Sgn_Sgn = 618
+    Ieee_Std_Logic_Arith_Ne_Uns_Sgn = 619
+    Ieee_Std_Logic_Arith_Ne_Sgn_Uns = 620
+    Ieee_Std_Logic_Arith_Ne_Uns_Int = 621
+    Ieee_Std_Logic_Arith_Ne_Int_Uns = 622
+    Ieee_Std_Logic_Arith_Ne_Sgn_Int = 623
+    Ieee_Std_Logic_Arith_Ne_Int_Sgn = 624
+    Ieee_Std_Logic_Misc_And_Reduce_Slv = 625
+    Ieee_Std_Logic_Misc_And_Reduce_Suv = 626
+    Ieee_Std_Logic_Misc_Nand_Reduce_Slv = 627
+    Ieee_Std_Logic_Misc_Nand_Reduce_Suv = 628
+    Ieee_Std_Logic_Misc_Or_Reduce_Slv = 629
+    Ieee_Std_Logic_Misc_Or_Reduce_Suv = 630
+    Ieee_Std_Logic_Misc_Nor_Reduce_Slv = 631
+    Ieee_Std_Logic_Misc_Nor_Reduce_Suv = 632
+    Ieee_Std_Logic_Misc_Xor_Reduce_Slv = 633
+    Ieee_Std_Logic_Misc_Xor_Reduce_Suv = 634
+    Ieee_Std_Logic_Misc_Xnor_Reduce_Slv = 635
+    Ieee_Std_Logic_Misc_Xnor_Reduce_Suv = 636
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location

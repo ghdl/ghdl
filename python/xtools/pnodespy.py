@@ -21,20 +21,14 @@ def print_enum(name, vals):
 
 def do_class_kinds():
     print_enum(pnodes.prefix_name.rstrip("_"), pnodes.kinds)
-
     print()
     print()
     print("class Iir_Kinds:")
     for k, v in pnodes.kinds_ranges.items():
         print("    {0} = [".format(k))
-        first = True
         for e in v:
-            if first:
-                first = False
-            else:
-                print(",")
-            print("        Iir_Kind.{}".format(e), end="")
-        print("]")
+            print("        Iir_Kind.{},".format(e))
+        print("    ]")
         print()
 
 
@@ -174,7 +168,6 @@ def do_libghdl_meta():
     print(
         """
 
-
 # From nodes_meta
 get_fields_first = libghdl.vhdl__nodes_meta__get_fields_first
 
@@ -244,11 +237,8 @@ def do_libghdl_tokens():
 
 def do_libghdl_errorout():
     print("from libghdl import libghdl")
-    print(
-        """
-Enable_Warning = libghdl.errorout__enable_warning
-"""
-    )
+    print("\n"
+          "Enable_Warning = libghdl.errorout__enable_warning")
     read_enum(
         "../errorout.ads",
         "Msgid_Type",

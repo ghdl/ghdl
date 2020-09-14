@@ -5793,6 +5793,20 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Rot_Left_Sgn_Nat,
       Iir_Predefined_Ieee_Numeric_Std_Rot_Right_Sgn_Nat,
 
+      --  Reduction
+      Iir_Predefined_Ieee_Numeric_Std_And_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Or_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_And_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Nand_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Or_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Nor_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Xor_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns,
+
       --  Std_Match functions.
       Iir_Predefined_Ieee_Numeric_Std_Match_Log,
       Iir_Predefined_Ieee_Numeric_Std_Match_Uns,

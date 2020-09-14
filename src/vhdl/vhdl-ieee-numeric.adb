@@ -422,6 +422,48 @@ package body Vhdl.Ieee.Numeric is
       Pkg_Bit =>
         (others => Iir_Predefined_None));
 
+   Red_And_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_And_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_And_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
+
+   Red_Nand_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Nand_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Nand_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
+
+   Red_Or_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Or_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Or_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
+
+   Red_Nor_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Nor_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Nor_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
+
+   Red_Xor_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Xor_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Xor_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
+
+   Red_Xnor_Patterns : constant Unary_Pattern_Type :=
+     (Pkg_Std =>
+        (Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns,
+         Type_Signed => Iir_Predefined_Ieee_Numeric_Std_Xnor_Sgn),
+      Pkg_Bit =>
+        (others => Iir_Predefined_None));
+
    And_Patterns : constant Binary_Pattern_Type :=
      (Pkg_Std =>
         (Type_Unsigned =>
@@ -925,6 +967,18 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Unary (Abs_Patterns);
                      when Name_To_Integer =>
                         Handle_To_Integer;
+                     when Name_And =>
+                        Handle_Unary (Red_And_Patterns);
+                     when Name_Nand =>
+                        Handle_Unary (Red_Nand_Patterns);
+                     when Name_Or =>
+                        Handle_Unary (Red_Or_Patterns);
+                     when Name_Nor =>
+                        Handle_Unary (Red_Nor_Patterns);
+                     when Name_Xor =>
+                        Handle_Unary (Red_Xor_Patterns);
+                     when Name_Xnor =>
+                        Handle_Unary (Red_Xnor_Patterns);
                      when others =>
                         null;
                   end case;
