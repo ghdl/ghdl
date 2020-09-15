@@ -10,7 +10,6 @@ Iir_Flist_Others = 1
 Iir_Flist_All = 2
 
 
-
 class Iir_Kind:
     Unused = 0
     Error = 1
@@ -1028,7 +1027,6 @@ class Iir_Kinds:
     ]
 
 
-
 class Iir_Mode:
     Unknown_Mode = 0
     Linkage_Mode = 1
@@ -1701,6 +1699,7 @@ class Iir_Predefined:
     Ieee_Std_Logic_Misc_Xor_Reduce_Suv = 634
     Ieee_Std_Logic_Misc_Xnor_Reduce_Slv = 635
     Ieee_Std_Logic_Misc_Xnor_Reduce_Suv = 636
+
 
 Get_Kind = libghdl.vhdl__nodes__get_kind
 Get_Location = libghdl.vhdl__nodes__get_location
