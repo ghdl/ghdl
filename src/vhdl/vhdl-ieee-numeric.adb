@@ -568,6 +568,14 @@ package body Vhdl.Ieee.Numeric is
      (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Sra_Sgn_Int,
       Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Sra_Uns_Int);
 
+   Leftmost_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns);
+
+   Rightmost_Patterns : constant Shift_Pattern_Type :=
+     (Type_Signed   => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn,
+      Type_Unsigned => Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns);
+
    Error : exception;
 
    procedure Extract_Declarations (Pkg_Decl : Iir_Package_Declaration;
@@ -801,6 +809,24 @@ package body Vhdl.Ieee.Numeric is
             Set_Implicit_Definition (Decl, Res);
          end if;
       end Handle_Shift;
+
+      procedure Handle_Find (Pats : Shift_Pattern_Type)
+      is
+         Res : Iir_Predefined_Functions;
+      begin
+         if Arg1_Kind = Arg_Vect
+           and then Arg2_Kind = Arg_Scal
+           and then Arg2_Sign = Type_Log
+         then
+            case Arg1_Sign is
+               when Type_Signed | Type_Unsigned =>
+                  Res := Pats (Arg1_Sign);
+               when others =>
+                  Res := Iir_Predefined_None;
+            end case;
+            Set_Implicit_Definition (Decl, Res);
+         end if;
+      end Handle_Find;
    begin
       Decl := Get_Declaration_Chain (Pkg_Decl);
 
@@ -951,6 +977,10 @@ package body Vhdl.Ieee.Numeric is
                         Handle_Shift (Rol_Patterns, Type_Unsigned);
                      when Name_Rotate_Right =>
                         Handle_Shift (Ror_Patterns, Type_Unsigned);
+                     when Name_Find_Leftmost =>
+                        Handle_Find (Leftmost_Patterns);
+                     when Name_Find_Rightmost =>
+                        Handle_Find (Rightmost_Patterns);
                      when Name_To_01 =>
                         Handle_To_01;
                      when others =>

@@ -676,6 +676,8 @@ package body Std_Names is
       Def ("shr",                Name_Shr);
       Def ("ext",                Name_Ext);
       Def ("sxt",                Name_Sxt);
+      Def ("find_leftmost",      Name_Find_Leftmost);
+      Def ("find_rightmost",     Name_Find_Rightmost);
 
       Def ("allconst",           Name_Allconst);
       Def ("allseq",             Name_Allseq);

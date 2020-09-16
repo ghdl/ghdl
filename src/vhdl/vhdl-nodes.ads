@@ -5807,6 +5807,12 @@ package Vhdl.Nodes is
       Iir_Predefined_Ieee_Numeric_Std_Xor_Uns,
       Iir_Predefined_Ieee_Numeric_Std_Xnor_Uns,
 
+      --  Find.
+      Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn,
+
       --  Std_Match functions.
       Iir_Predefined_Ieee_Numeric_Std_Match_Log,
       Iir_Predefined_Ieee_Numeric_Std_Match_Uns,
