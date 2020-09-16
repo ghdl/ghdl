@@ -249,5 +249,10 @@ for t in $tests; do do_test $t; done
 printf "${ANSI_GREEN}[GHDL - test] SUCCESSFUL${ANSI_NOCOLOR}\n"
 touch test_ok
 
-printf "GHDL is: %s\n\n" "$GHDL"
-$GHDL --version
+gstart "GHDL is: $GHDL"
+$GHDL version
+gend
+
+gstart "GHDL help"
+$GHDL help
+gend
