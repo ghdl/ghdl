@@ -1714,6 +1714,75 @@ package body Synth.Oper is
       return Create_Value_Net (N, Create_Res_Bound (Left));
    end Synth_Shift_Rotate;
 
+   function Synth_Find_Bit (Ctxt : Context_Acc;
+                            Left, Right : Valtyp;
+                            Res_Typ     : Type_Acc;
+                            Leftmost    : Boolean;
+                            Expr        : Node) return Valtyp
+   is
+      pragma Assert (Left.Typ.Kind = Type_Vector);
+      Len : constant Uns32 := Left.Typ.Vbound.Len;
+      Max : Int32;
+      Rng : Discrete_Range_Type;
+      W   : Uns32;
+      Typ : Type_Acc;
+      R_Net : Net;
+      L_Net : Net;
+      Res : Net;
+   begin
+      if Len = 0 then
+         return Create_Value_Int (-1, Res_Typ);
+      end if;
+
+      --  The intermediate result is computed using the least number of bits,
+      --  which must represent all positive values in the bounds using a
+      --  signed word (so that -1 is also represented).
+      Max := Int32'Max (Left.Typ.Vbound.Left, Left.Typ.Vbound.Right);
+      W := Utils.Clog2 (Uns32 (Max)) + 1;
+      Rng := (Dir => Dir_To,
+              Is_Signed => True,
+              Left => -1,
+              Right => Int64 (Max));
+      Typ := Create_Discrete_Type (Rng, Res_Typ.Sz, W);
+
+      R_Net := Get_Net (Ctxt, Right);
+      L_Net := Get_Net (Ctxt, Left);
+      Res := Build2_Const_Int (Ctxt, -1, W);
+      for I in 0 .. Len - 1 loop
+         declare
+            Pos : Uns32;
+            V   : Int64;
+            Sel : Net;
+         begin
+            if Leftmost then
+               --  Iterate from the right to the left.
+               Pos := I;
+               if Left.Typ.Vbound.Dir = Dir_To then
+                  V := Int64 (Left.Typ.Vbound.Right) - Int64 (I);
+               else
+                  V := Int64 (Left.Typ.Vbound.Right) + Int64 (I);
+               end if;
+            else
+               Pos := Len - I - 1;
+               if Left.Typ.Vbound.Dir = Dir_To then
+                  V := Int64 (Left.Typ.Vbound.Left) + Int64 (I);
+               else
+                  V := Int64 (Left.Typ.Vbound.Left) - Int64 (I);
+               end if;
+            end if;
+            Sel := Build2_Compare (Ctxt, Id_Eq,
+                                   Build2_Extract (Ctxt, L_Net, Pos, 1),
+                                   R_Net);
+            Set_Location (Sel, Expr);
+            Res := Build_Mux2 (Ctxt, Sel, Res, Build2_Const_Int (Ctxt, V, W));
+            Set_Location (Res, Expr);
+         end;
+      end loop;
+
+      return Synth_Subtype_Conversion (Ctxt, Create_Value_Net (Res, Typ),
+                                       Res_Typ, False, Expr);
+   end Synth_Find_Bit;
+
    function Synth_Dynamic_Predefined_Function_Call
      (Subprg_Inst : Synth_Instance_Acc; Expr : Node) return Valtyp
    is
@@ -1943,6 +2012,14 @@ package body Synth.Oper is
                   return Create_Value_Net (Res, Boolean_Type);
                end if;
             end;
+
+         when Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Sgn
+            | Iir_Predefined_Ieee_Numeric_Std_Find_Leftmost_Uns =>
+            return Synth_Find_Bit (Ctxt, L, R, Res_Typ, True, Expr);
+         when Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Sgn
+            | Iir_Predefined_Ieee_Numeric_Std_Find_Rightmost_Uns =>
+            return Synth_Find_Bit (Ctxt, L, R, Res_Typ, False, Expr);
+
          when others =>
             Error_Msg_Synth
               (+Expr,
