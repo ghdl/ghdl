@@ -788,11 +788,10 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "disp-config" or else
-        Name = "--disp-config" or else
-        Name = "dispconfig" or else
-        Name = "--dispconfig";
+      return Name = "disp-config"
+        or else Name = "--disp-config"
+        or else Name = "dispconfig"
+        or else Name = "--dispconfig";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Dispconfig) return String
@@ -878,9 +877,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "bootstrap-std" or else
-        Name = "--bootstrap-standard";
+      return Name = "bootstrap-std"
+        or else Name = "--bootstrap-standard";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Bootstrap) return String
@@ -921,10 +919,9 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "analyze" or else
-        Name = "-a" or else
-        Name = "analyse";
+      return Name = "analyze"
+        or else Name = "-a"
+        or else Name = "analyse";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Analyze) return String
@@ -1163,9 +1160,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "elaborate" or else
-        Name = "-e";
+      return Name = "elaborate"
+        or else Name = "-e";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Elab) return String
@@ -1205,9 +1201,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "run" or else
-        Name = "-r";
+      return Name = "run"
+        or else Name = "-r";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Run) return String
@@ -1269,9 +1264,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "elab-run" or else
-        Name = "--elab-run";
+      return Name = "elab-run"
+        or else Name = "--elab-run";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Elab_Run) return String
@@ -1315,9 +1309,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "bind" or else
-        Name = "--bind";
+      return Name = "bind"
+        or else Name = "--bind";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Bind) return String
@@ -1350,9 +1343,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "link" or else
-        Name = "--link";
+      return Name = "link"
+        or else Name = "--link";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Link) return String
@@ -1388,9 +1380,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "list-link" or else
-        Name = "--list-link";
+      return Name = "list-link"
+        or else Name = "--list-link";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_List_Link) return String
@@ -1431,9 +1422,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "compile" or else
-        Name = "-c";
+      return Name = "compile"
+        or else Name = "-c";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Anaelab) return String
@@ -1518,9 +1508,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "make" or else
-        Name = "-m";
+      return Name = "make"
+        or else Name = "-m";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Make) return String
@@ -1810,9 +1799,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "gen-makefile" or else
-        Name = "--gen-makefile";
+      return Name = "gen-makefile"
+        or else Name = "--gen-makefile";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Gen_Makefile) return String
@@ -1851,9 +1839,8 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "gen-depends" or else
-        Name = "--gen-depends";
+      return Name = "gen-depends"
+        or else Name = "--gen-depends";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Gen_Depends) return String

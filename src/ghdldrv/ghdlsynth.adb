@@ -95,9 +95,8 @@ package body Ghdlsynth is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "synth" or else
-        Name = "--synth";
+      return Name = "synth"
+        or else Name = "--synth";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Synth) return String

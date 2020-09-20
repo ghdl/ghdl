@@ -619,11 +619,9 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "dir" or else
-        Name = "--dir" or else
-        --  '-d' is for compatibility.
-        Name = "-d";
+      return Name = "dir"
+        or else Name = "--dir"
+        or else Name = "-d";  --  '-d' is for compatibility.
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Dir) return String
@@ -660,9 +658,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "files" or else
-        Name = "-f";
+      return Name = "files"
+        or else Name = "-f";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Find) return String
@@ -744,9 +741,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "import" or else
-        Name = "-i";
+      return Name = "import"
+        or else Name = "-i";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Import) return String
@@ -844,9 +840,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "syntax" or else
-        Name = "-s";
+      return Name = "syntax"
+        or else Name = "-s";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Check_Syntax) return String
@@ -956,9 +951,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "clean" or else
-        Name = "--clean";
+      return Name = "clean"
+        or else Name = "--clean";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Clean) return String
@@ -1015,7 +1009,7 @@ package body Ghdllocal is
       Str : String_Access;
    begin
       if Args'Length /= 0 then
-         Error ("command '--clean' does not accept any argument");
+         Error ("command 'clean' does not accept any argument");
          raise Option_Error;
       end if;
 
@@ -1065,9 +1059,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "remove" or else
-        Name = "--remove";
+      return Name = "remove"
+        or else Name = "--remove";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Remove) return String
@@ -1084,7 +1077,7 @@ package body Ghdllocal is
       use Name_Table;
    begin
       if Args'Length /= 0 then
-         Error ("command '--remove' does not accept any argument");
+         Error ("command 'remove' does not accept any argument");
          raise Option_Error;
       end if;
       Perform_Action (Command_Clean (Cmd), Args);
@@ -1103,9 +1096,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "copy" or else
-        Name = "--copy";
+      return Name = "copy"
+        or else Name = "--copy";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Copy) return String
@@ -1127,7 +1119,7 @@ package body Ghdllocal is
       Dir : Name_Id;
    begin
       if Args'Length /= 0 then
-         Error ("command '--copy' does not accept any argument");
+         Error ("command 'copy' does not accept any argument");
          raise Option_Error;
       end if;
 
@@ -1185,16 +1177,15 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "disp-std" or else
-        Name = "--disp-standard";
+      return Name = "disp-standard"
+        or else Name = "--disp-standard";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Disp_Standard) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "disp-std"
+      return "disp-standard"
         & ASCII.LF & "  Disp std.standard in pseudo-vhdl"
         & ASCII.LF & "  alias: --disp-standard";
    end Get_Short_Help;
@@ -1205,7 +1196,7 @@ package body Ghdllocal is
       pragma Unreferenced (Cmd);
    begin
       if Args'Length /= 0 then
-         Error ("command '--disp-standard' does not accept any argument");
+         Error ("command 'disp-standard' does not accept any argument");
          raise Option_Error;
       end if;
       Flags.Bootstrap := True;
@@ -1226,9 +1217,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "find-top" or else
-        Name = "--find-top";
+      return Name = "find-top"
+        or else Name = "--find-top";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Find_Top) return String
@@ -1260,7 +1250,7 @@ package body Ghdllocal is
             raise Option_Error;
          end if;
       else
-         Error ("command '--find-top' accepts at most one argument");
+         Error ("command 'find-top' accepts at most one argument");
          raise Option_Error;
       end if;
 
@@ -1287,9 +1277,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "bug-box" or else
-        Name = "--bug-box";
+      return Name = "bug-box"
+        or else Name = "--bug-box";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Bug_Box) return String
@@ -1784,9 +1773,8 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "elab-order" or else
-        Name = "--elab-order";
+      return Name = "elab-order"
+        or else Name = "--elab-order";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Elab_Order) return String

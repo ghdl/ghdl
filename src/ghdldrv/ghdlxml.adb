@@ -523,9 +523,8 @@ package body Ghdlxml is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "file-to-xml" or else
-        Name = "--file-to-xml";
+      return Name = "file-to-xml"
+        or else Name = "--file-to-xml";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_File_To_Xml) return String

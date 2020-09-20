@@ -560,9 +560,8 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "chop" or else
-        Name = "--chop";
+      return Name = "chop"
+        or else Name = "--chop";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Chop) return String
@@ -862,9 +861,8 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "lines" or else
-        Name = "--lines";
+      return Name = "lines"
+        or else Name = "--lines";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Lines) return String
@@ -996,9 +994,8 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "reprint" or else
-        Name = "--reprint";
+      return Name = "reprint"
+        or else Name = "--reprint";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Reprint) return String
@@ -1146,16 +1143,15 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "cmp-tokens" or else
-        Name = "--compare-tokens";
+      return Name = "compare-tokens"
+        or else Name = "--compare-tokens";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Compare_Tokens) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "cmp-tokens [OPTS] REF FILEs"
+      return "compare-tokens [OPTS] REF FILEs"
         & ASCII.LF & "  Compare FILEs with REF"
         & ASCII.LF & "  alias: --compare-tokens";
    end Get_Short_Help;
@@ -1277,9 +1273,8 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "pp-html" or else
-        Name = "--pp-html";
+      return Name = "pp-html"
+        or else Name = "--pp-html";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_PP_Html) return String
@@ -1352,9 +1347,8 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "xref-html" or else
-        Name = "--xref-html";
+      return Name = "xref-html"
+        or else Name = "--xref-html";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Xref_Html) return String
@@ -1664,9 +1658,8 @@ package body Ghdlprint is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "xref" or else
-        Name = "--xref";
+      return Name = "xref"
+        or else Name = "--xref";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Xref) return String

@@ -793,9 +793,8 @@ package body Ghdlrun is
    is
       pragma Unreferenced (Cmd);
    begin
-      return
-        Name = "run-help" or else
-        Name = "--run-help";
+      return Name = "run-help"
+        or else Name = "--run-help";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Run_Help) return String
@@ -813,7 +812,7 @@ package body Ghdlrun is
       pragma Unreferenced (Cmd);
    begin
       if Args'Length /= 0 then
-         Error ("warning: command '--run-help' does not accept any argument");
+         Error ("warning: command 'run-help' does not accept any argument");
       end if;
       Put_Line ("These options can only be placed at [RUNOPTS]");
       --  Register modules, since they add commands.
