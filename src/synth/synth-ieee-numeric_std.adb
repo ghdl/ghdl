@@ -854,6 +854,35 @@ package body Synth.Ieee.Numeric_Std is
       return Res;
    end Shift_Vec;
 
+   function Resize_Vec (Val : Memtyp;
+                        Size : Uns32;
+                        Signed : Boolean) return Memtyp
+   is
+      Old_Size : constant Uns32 := Uns32 (Vec_Length (Val.Typ));
+      Res : Memtyp;
+      Pad, B : Std_Ulogic;
+   begin
+      Res.Typ := Create_Res_Type (Val.Typ, Size);
+      Res := Create_Memory (Res.Typ);
+
+      if Signed and then Old_Size > 0 then
+         Pad := Read_Std_Logic (Val.Mem, 0);
+      else
+         Pad := '0';
+      end if;
+
+      for I in 1 .. Size loop
+         if I <= Old_Size then
+            B := Read_Std_Logic (Val.Mem, I - 1);
+         else
+            B := Pad;
+         end if;
+         Write_Std_Logic (Res.Mem, I - 1, B);
+      end loop;
+
+      return Res;
+   end Resize_Vec;
+
    type Std_Logic_Vector_Type is array (Uns32 range <>) of Std_Ulogic;
 
    procedure Divmod (Num, Dem : Memtyp; Quot, Remain : Memtyp)

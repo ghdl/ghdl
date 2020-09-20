@@ -70,4 +70,8 @@ package Synth.Ieee.Numeric_Std is
                        Amt : Uns32;
                        Right : Boolean;
                        Arith : Boolean) return Memtyp;
+
+   function Resize_Vec (Val : Memtyp;
+                        Size : Uns32;
+                        Signed : Boolean) return Memtyp;
 end Synth.Ieee.Numeric_Std;
