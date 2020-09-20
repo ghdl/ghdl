@@ -37,10 +37,22 @@ with Synth.Objtypes; use Synth.Objtypes;
 package body Synth.Disp_Vhdl is
    procedure Disp_Signal (Desc : Port_Desc) is
    begin
+      if Desc.W > 1 then
+         Put ("  subtype typ");
+         Put_Name (Desc.Name);
+         Put (" is ");
+         Put_Type (Desc.W);
+         Put_Line (";");
+      end if;
       Put ("  signal ");
       Put_Name (Desc.Name);
       Put (": ");
-      Put_Type (Desc.W);
+      if Desc.W > 1 then
+         Put ("typ");
+         Put_Name (Desc.Name);
+      else
+         Put_Type (Desc.W);
+      end if;
       Put_Line (";");
    end Disp_Signal;
 
@@ -160,7 +172,13 @@ package body Synth.Disp_Vhdl is
                W := Typ.Vbound.Len;
                Disp_In_Lhs (Mname, Off, W, Full);
                if W > 1 then
-                  Put ("std_logic_vector(");
+                  if Full then
+                     Put ("typwrap_");
+                     Put (Mname);
+                  else
+                     Put ("std_logic_vector");
+                  end if;
+                  Put ("(");
                end if;
                Put (Pfx);
                if W = 1 then
