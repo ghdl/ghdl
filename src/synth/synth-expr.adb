@@ -107,8 +107,12 @@ package body Synth.Expr is
          when Value_Net =>
             N := V.Val.N;
          when Value_Wire =>
-            return Read_Discrete
-              (Synth.Environment.Get_Static_Wire (V.Val.W)) >= 0;
+            if Synth.Environment.Is_Static_Wire (V.Val.W) then
+               return Read_Discrete
+                 (Synth.Environment.Get_Static_Wire (V.Val.W)) >= 0;
+            else
+               return False;
+            end if;
          when others =>
             raise Internal_Error;
       end case;
