@@ -1610,6 +1610,7 @@ package body Vhdl.Sem_Types is
          --  constrained on indexes.
          Set_Index_Constraint_Flag (Def, Get_Index_Constraint_Flag (Mark_Def));
          Set_Index_Subtype_List (Def, Get_Index_Subtype_List (Mark_Def));
+         Index_Staticness := Get_Type_Staticness (Mark_Def);
       else
          if Get_Index_Constraint_Flag (Mark_Def) then
             Error_Msg_Sem (+Def, "constrained array cannot be re-constrained");
