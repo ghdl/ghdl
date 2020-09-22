@@ -113,10 +113,8 @@ if ctx.is_file():
 html_theme_path = ["."]
 html_theme = "_theme"
 
-# Add any paths that contain custom static files (such as style sheets) here,
-# relative to this directory. They are copied after the builtin static files,
-# so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_extra_path = [str(Path(__file__).resolve().parent.parent / 'public')]
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'GHDLdoc'
