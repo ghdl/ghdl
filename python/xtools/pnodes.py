@@ -459,7 +459,7 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
 
     for k in kinds:
         if k not in nodes:
-            raise ParseError(lr, 'no desription for "{}"'.format(k))
+            raise ParseError(lr, 'no description for "{}"'.format(k))
     return nodes
 
 
